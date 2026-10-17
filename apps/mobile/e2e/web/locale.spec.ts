@@ -127,14 +127,16 @@ test.describe('every language shown (es and ko ship)', () => {
     // Only `lang` leaves the address bar.
     await expect(page).toHaveURL(/\?from=site$/);
     await waitForSaved(page, ['device:settings']);
-    expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko' });
+    // A hand-off seeds a device that never chose, stamped when it seeds (AMENDMENTS-DISPLAY-NAV section 3.4).
+    const seeded = await readStored<{ uiLocale: string; uiLocaleAt: string }>(page, 'device:settings');
+    expect(seeded).toEqual({ uiLocale: 'ko', uiLocaleAt: expect.stringMatching(ISO) });
 
     // The device has chosen now, so a later hand-off does not change it.
     await page.goto('/?lang=es');
     await expect(page.getByRole('radio', { name: '한국어' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     await expect(page).not.toHaveURL(/lang=/);
-    await expectStoredStays(page, 'device:settings', { uiLocale: 'ko' }, 'ko');
+    await expectStoredStays(page, 'device:settings', seeded, 'ko');
   });
 
   test('one language per device: the Display sheet on Profile switches every screen, and it survives a reload (owner items 6 and 7)', async ({ page }) => {
@@ -148,12 +150,13 @@ test.describe('every language shown (es and ko ship)', () => {
     const sheet = page.getByTestId('display-sheet');
     await expect(sheet).toBeVisible();
     await sheet.getByRole('radio', { name: 'Español' }).click();
+    await sheet.getByRole('button', { name: nameIn('es', (m) => m.common.display.confirm.use('Español')) }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
     await waitForSaved(page, ['device:settings']);
     expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: expect.stringMatching(ISO) });
     // No profile holds a language of its own any more.
     expect((await readStored<Record<string, unknown>>(page, `settings:${id}`)) ?? {}).not.toHaveProperty('uiLocale');
-    await sheet.getByRole('button', { name: nameIn('es', (m) => m.common.display.done.cta) }).click();
+    await sheet.getByRole('button', { name: nameIn('es', (m) => m.common.buttons.done) }).click();
 
     await page.reload();
     await expect(page.getByText(nameIn('es', (m) => m.learner.home.greeting('Dani')))).toBeVisible();

@@ -80,7 +80,7 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
     await grownUp.goto('/parent');
     await expect(grownUp.getByTestId('adult-frame')).toBeVisible();
     await expect(grownUp.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(grownUp.getByTestId('frame-display')).toHaveAccessibleName(en.common.display.open);
+    await expect(grownUp.getByTestId('frame-display')).toHaveAccessibleName(en.common.display.a11y);
     // A presenter tab open on its home, in English too (a classroom screen size, so a lesson can run).
     const presenter = await context.newPage();
     await presenter.setViewportSize({ width: 1280, height: 720 });
@@ -90,12 +90,13 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
     await page.bringToFront();
     await openProfileDisplay(page);
     await page.getByTestId('display-sheet').getByRole('radio', { name: '한국어' }).click();
+    await page.getByTestId('display-sheet').getByRole('button', { name: ko.common.display.confirm.use('한국어') }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     await waitForSaved(page, ['device:settings']);
 
     // Live: the open tabs switch without a reload (BroadcastChannel 'hr-prefs').
     await expect(grownUp.locator('html')).toHaveAttribute('lang', 'ko');
-    await expect(grownUp.getByTestId('frame-display')).toHaveAccessibleName(ko.common.display.open);
+    await expect(grownUp.getByTestId('frame-display')).toHaveAccessibleName(ko.common.display.a11y);
     await expect(grownUp).toHaveTitle(ko.console.docTitle.console);
     await expect(presenter.getByRole('heading', { level: 1, name: ko.learner.presenter.home.title })).toBeVisible();
 
@@ -103,7 +104,7 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
     for (const path of ['/parent', '/teach', '/signin']) {
       await grownUp.goto(path);
       await expect(grownUp.locator('html'), path).toHaveAttribute('lang', 'ko');
-      await expect(grownUp.getByRole('button', { name: ko.common.display.open }).first(), path).toBeVisible();
+      await expect(grownUp.getByRole('button', { name: ko.common.display.a11y }).first(), path).toBeVisible();
     }
     await expect(grownUp).toHaveTitle(ko.console.docTitle.signIn);
     await shot(grownUp, 'or67-signin-ko-pixel5');
@@ -130,17 +131,14 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
   test('an English learner app with a console that once stored Korean shows the console in English', async ({ page, context }) => {
     await signedInOnGrownUpPages(context);
     await onboardSelf(page, { name: 'Dani', startJourney: false });
-    // The learner app chose English on this device.
-    await openProfileDisplay(page);
-    await page.getByTestId('display-sheet').getByRole('radio', { name: 'Español' }).click();
-    await page.getByTestId('display-sheet').getByRole('radio', { name: 'English' }).click();
-    await expect.poll(async () => (await readStored<{ uiLocale?: string }>(page, 'device:settings'))?.uiLocale).toBe('en');
+    // The learner app chose English on this device (Welcome's chips, a deliberate choice).
+    await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
     // The console's own stored choice from before (now only a mirror) says Korean.
     await page.evaluate(() => window.localStorage.setItem('hr:console:uiLocale', 'ko'));
     await page.goto('/parent');
     await expect(page.getByTestId('adult-frame')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByTestId('frame-display')).toHaveAccessibleName(en.common.display.open);
+    await expect(page.getByTestId('frame-display')).toHaveAccessibleName(en.common.display.a11y);
     // The mirror follows the record.
     expect(await page.evaluate(() => window.localStorage.getItem('hr:console:uiLocale'))).toBe('en');
   });
@@ -152,8 +150,9 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
     await page.goto('/parent?lang=en');
     await expect(page.getByTestId('adult-frame')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    // The hand-off seeded the device (it never chose), without a time: a seed, not a choice.
-    await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'en' });
+    // The hand-off seeded the device (it never chose), stamped when it seeded, and left the address.
+    await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'en', uiLocaleAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/) });
+    await expect(page).toHaveURL(/\/parent$/);
   });
 
   test('a console deck with no explicit slide language opens the home and the start screen in the device language', async ({ page }) => {
@@ -184,7 +183,7 @@ for (const viewport of [
       await expect(page.getByRole('radiogroup', { name: 'Presenter language' })).toHaveCount(0);
       const aa = page.getByTestId('presenter-home-display');
       await expect(aa).toBeVisible();
-      await expect(aa).toHaveAccessibleName('Display');
+      await expect(aa).toHaveAccessibleName('Display: language and text size');
       const box = (await aa.boundingBox())!;
       expect(box.width).toBeGreaterThanOrEqual(64);
       expect(box.height).toBeGreaterThanOrEqual(64);
@@ -204,6 +203,7 @@ test.describe('text size Largest at 360 x 640', () => {
     await onboardSelf(page, { name: 'Dani', startJourney: false });
     await openProfileDisplay(page);
     await page.getByTestId('display-sheet').getByRole('radio', { name: 'Largest' }).click();
+    await expect(page.getByTestId('profile-display-row')).toContainText('English · Largest text');
     await waitForSaved(page, ['device:settings']);
     await shot(page, 'or67-display-sheet-largest-360x640');
     await page.getByTestId('display-sheet').getByRole('button', { name: 'Done' }).click();

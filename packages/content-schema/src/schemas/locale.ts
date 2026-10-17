@@ -79,8 +79,10 @@ export const DeviceSettingsSchema = z.object({
   uiLocale: UiLocaleSchema.optional(),
   /**
    * When `uiLocale` was chosen (ISO 8601), for the newer-wins merge with a signed-in grown-up's
-   * account. Absent on a choice stored before this field existed and on a `?lang=` seed; such a
-   * device choice wins the merge. A value that is not an ISO date-time reads as absent.
+   * account; a `?lang=` seed is stamped when it seeds. A language migrated from an old per-profile
+   * override is stamped 1970-01-01 (older than any real choice, AMENDMENTS-DISPLAY-NAV section 3.3).
+   * Absent only on a choice stored before this field existed: such a device choice wins the merge.
+   * A value that is not an ISO date-time reads as absent.
    */
   uiLocaleAt: z.string().datetime({ offset: true }).optional().catch(undefined),
   /** Absent = `DEFAULT_TEXT_SIZE`. A step this version does not know reads as absent, never resetting the record. */
@@ -144,8 +146,9 @@ const time = (iso: string | undefined): number | null => {
  * - only the device has one: the account takes it;
  * - both, and they agree: nothing to do (a missing account timestamp is filled in);
  * - both differ: the newer timestamp wins on both sides. A missing timestamp means the device
- *   wins (a choice stored before timestamps existed, or a `?lang=` seed, is still a choice made
- *   on this device); an account with no timestamp loses to any device choice.
+ *   wins (a choice stored before timestamps existed is still a choice made on this device); an
+ *   account with no timestamp loses to any device choice. A migrated language (stamped 1970) loses
+ *   to any stamped account choice.
  *
  * `now` stamps a device choice that has no timestamp when it is copied to the account. The text
  * size is a device setting only and is kept as it is.

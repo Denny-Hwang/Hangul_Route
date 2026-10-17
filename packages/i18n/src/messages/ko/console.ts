@@ -777,8 +777,9 @@ export const consoleMsgs = {
       strokeGuide: '획순 안내',
       strokeNote: '간단히 나타낸 거예요: 서예 기준이 아니에요.',
       sound: '소리 재생',
-      slidesLanguage: '슬라이드 언어',
-      sameAsDevice: '이 기기와 같게',
+      language: '슬라이드 언어',
+      languageSame: '이 기기와 같게',
+      languageHint: '복사한 링크는 링크를 여는 기기의 언어로 보여요.',
     },
     picker: {
       title: '도우미 뽑기',

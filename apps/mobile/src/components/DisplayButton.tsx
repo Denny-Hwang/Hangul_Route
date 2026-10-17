@@ -4,9 +4,10 @@ import { Pressable, Text } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 
 /**
- * The Aa button (owner items 6 and 7): opens the Display sheet (language and text size). A pill
- * of one touch target that draws "Aa"; its accessible name is the dictionary's "Display", so a
- * screen reader says what it opens. Used on the presenter home and the start screen.
+ * The Aa button (AMENDMENTS-DISPLAY-NAV section 3.6): opens the Display sheet (language and text
+ * size). A pill of one touch target that draws the dictionary's sign ("Aa"; "가가" in Korean),
+ * hidden from assistive tech; its accessible name says what it opens ("Display: language and text
+ * size"). Used on Home, All lessons, the presenter home and the start screen.
  */
 export function DisplayButton({ onPress, testID = 'display-button' }: { onPress: () => void; testID?: string }): React.ReactElement {
   const d = useMessages().common.display;
@@ -16,7 +17,7 @@ export function DisplayButton({ onPress, testID = 'display-button' }: { onPress:
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={d.open}
+      accessibilityLabel={d.a11y}
       aria-haspopup="dialog"
       hitSlop={spacing.xs}
       style={({ pressed, focused }: { pressed: boolean; focused?: boolean }) => ({
@@ -37,7 +38,7 @@ export function DisplayButton({ onPress, testID = 'display-button' }: { onPress:
         importantForAccessibility="no"
         style={{ fontSize: size, fontWeight: typography.weight.bold, color: colors.text.primary }}
       >
-        {d.glyph}
+        {d.button}
       </Text>
     </Pressable>
   );

@@ -41,7 +41,7 @@ import { dateKey } from '@/lib/console/plans';
 import { classRollup } from '@/lib/console/rollup';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 const TITLE_MAX = 60;
 
@@ -156,7 +156,7 @@ function LectureInner(): JSX.Element {
     return (
       <AdultFrame onSignOut={signOut} title={l.title}>
         {back}
-        <h1 style={{ fontSize: rem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
+        <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
         <Notice>{l.comingSoon}</Notice>
       </AdultFrame>
     );
@@ -245,7 +245,7 @@ function LectureInner(): JSX.Element {
 
       {roster && choices ? (
         <>
-          <h1 style={{ fontSize: rem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
+          <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
           <Muted>{l.intro}</Muted>
 
           <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={plansFailed} omitted={omitted} onChoose={pickSource} onRetry={() => void load()} />

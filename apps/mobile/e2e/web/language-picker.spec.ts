@@ -9,10 +9,10 @@ import { answerForkNew, readStored, seedStored, waitForSaved } from './helpers';
  *
  * English, Spanish and Korean all ship (`LOCALE_STATUS`, F-I18N-001 rows 15b / 16b), so the default build
  * draws the pickers; a Spanish-speaking device starts in Spanish. The suite itself runs as an en-US
- * browser (`playwright.config.ts`). A language chosen on the sheet applies at once; the sheet, now in the
- * new language, offers the one-tap way back (it replaced the confirm step).
+ * browser (`playwright.config.ts`). A text size chosen on the sheet applies at once; another
+ * language chosen first asks in that language (Use / Back), the F-I18N-001 §3.3 safety rule.
  */
-/** The Spanish and Korean words of the Display sheet. */
+/** The Spanish and Korean words of the Display sheet (AMENDMENTS-DISPLAY-NAV section 10). */
 const es = getMessages('es').common.display;
 const ko = getMessages('ko').common.display;
 const esWelcome = getMessages('es').learner.language;
@@ -110,32 +110,37 @@ test.describe('every build shows English, Spanish and Korean (F-I18N-001 rows 15
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
 
-  test('Profile: the Display row opens the sheet; a language applies at once, with a way back in the new language', async ({ page }) => {
+  test('Profile: the Display row opens the sheet; another language asks first, in that language, with a way back', async ({ page }) => {
     await page.goto('/');
     const id = await onboardAndOpenProfile(page);
 
-    await page.getByTestId('profile-display-row').click();
+    const row = page.getByTestId('profile-display-row');
+    await expect(row).toContainText('English · Standard text');
+    await row.click();
     const sheet = page.getByTestId('display-sheet');
     await expect(sheet.getByRole('heading', { name: 'Display' })).toBeVisible();
-    const language = sheet.getByRole('radiogroup', { name: 'Language on this device' });
+    const language = sheet.getByRole('radiogroup', { name: 'Language' });
     await expect(language.getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
     await expect(language.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
 
-    // A mis-tap: the sheet is now in Spanish, and "Volver a English" undoes it.
+    // A mis-tap: the step is written in Spanish, and "Volver a English" changes nothing.
     await language.getByRole('radio', { name: 'Español' }).click();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-    await expect(sheet.getByRole('heading', { name: es.title })).toBeVisible();
-    await sheet.getByRole('button', { name: es.back('English') }).click();
+    const step = sheet.getByTestId('display-sheet-language-confirm');
+    await expect(step.getByText(es.confirm.question('Español'))).toBeVisible();
+    await expect(step).toHaveAttribute('lang', 'es');
+    await sheet.getByRole('button', { name: es.confirm.back('English') }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    expect(await readStored(page, 'device:settings')).toBeNull();
 
-    // Korean for the whole device: stored once, with its time; the profile holds no language.
-    await sheet.getByRole('radiogroup', { name: 'Language on this device' }).getByRole('radio', { name: '한국어' }).click();
+    // Korean for the whole device: Use writes it once, with its time; the profile holds no language.
+    await sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: '한국어' }).click();
+    await sheet.getByRole('button', { name: ko.confirm.use('한국어') }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     await expect(sheet.getByRole('heading', { name: ko.title })).toBeVisible();
     await waitForSaved(page, ['device:settings']);
     await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: expect.stringMatching(ISO) });
     expect(await readStored<Record<string, unknown> | null>(page, `settings:${id}`)).toBeNull();
-    await sheet.getByRole('button', { name: ko.done.cta }).click();
+    await sheet.getByRole('button', { name: getMessages('ko').common.buttons.done }).click();
     await expect(sheet).toHaveCount(0);
   });
 
@@ -170,7 +175,8 @@ test.describe('every build shows English, Spanish and Korean (F-I18N-001 rows 15
     await seedStored(page, `settings:${id}`, { uiLocale: 'ko', romanizationMode: 'tap' });
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
-    await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko' });
+    // Stamped older than any real choice (AMENDMENTS-DISPLAY-NAV section 3.3): an account's choice wins over it.
+    await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: '1970-01-01T00:00:00.000Z' });
     await expect.poll(() => readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'tap' });
   });
 });

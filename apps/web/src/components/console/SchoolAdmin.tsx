@@ -13,7 +13,7 @@ import { ROUTES, loadErrorKey, type LoadError } from '@/lib/console/routing';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '@/lib/console/school';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 type SchoolNote = keyof Messages['console']['school']['notes'];
 
@@ -164,7 +164,7 @@ export function SchoolAdminView({
 
       <section style={{ ...panelStyle, marginBottom: spacing.lg, textAlign: empty ? 'center' : 'left' }} aria-label={s.invite.title}>
         <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` }}>{s.invite.title}</h2>
-        <div data-testid="invite-code" style={{ fontSize: rem(empty ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>
+        <div data-testid="invite-code" style={{ fontSize: headRem(empty ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>
           {view.invite.joinCode ?? '—'}
         </div>
         <Muted>{s.invite.role(codeExpiry(view.invite.joinCodeExpiresAt, now, locale))}</Muted>

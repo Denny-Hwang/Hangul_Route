@@ -227,8 +227,8 @@ describe('caregiver.browse (BR-7)', () => {
     expect(`${browse.item.where.stage(1)} · Letters · ${browse.item.where.lesson(1, 3)}`).toBe('Stage 1 · Letters · lesson 1 of 3');
     expect(browse.minutes(5)).toBe('About 5 minutes');
     expect(browse.minutes(1)).toBe('About 1 minute');
-    // The language and text size are the device's one record now (owner items 6 and 7), so the note says which choice reaches what.
-    expect(browse.display.note).toBe("Romanization changes only this preview, never a learner's settings. Language and text size apply to every screen on this device.");
+    // Lesson display holds Romanization only (AMENDMENTS-DISPLAY-NAV section 6): the note stays true as it was.
+    expect(browse.display.note).toBe("These choices change only this preview. No learner's settings change.");
   });
 });
 

@@ -13,3 +13,17 @@ export function rem(px: number): string {
 
 /** The root font size the provider puts on `<html>`: it follows the chosen step (1 when unset). */
 export const ROOT_FONT_SIZE = 'calc(100% * var(--hr-text-scale, 1))';
+
+/** The heading ratio the provider puts on `<html>`: large type grows `1 + (f - 1) / 2`, so its rem is multiplied by that over `f`. */
+export const HEAD_RATIO_CSS_VAR = '--hr-head-ratio';
+
+/** `(1 + (f - 1) / 2) / f` (AMENDMENTS-DISPLAY-NAV section 4); 1 at standard or for a bad factor. */
+export function headRatio(f: number): number {
+  if (!Number.isFinite(f) || f <= 1) return 1;
+  return (1 + (f - 1) / 2) / f;
+}
+
+/** A heading size (title, display, hero) in rem that grows half as much as body text with the chosen step. */
+export function headRem(px: number): string {
+  return `calc(${rem(px)} * var(${HEAD_RATIO_CSS_VAR}, 1))`;
+}

@@ -49,12 +49,18 @@ export type ChallengeSource = 'profile' | 'start_sheet';
 /** What a root does with a `?lang=` hand-off: seed a device that never chose, or only clean the address (the presenter). */
 export type HandoffUse = 'seed' | 'ignore';
 
+/**
+ * The time a migrated language is stamped with (AMENDMENTS-DISPLAY-NAV section 3.3: older than any
+ * real choice), so a signed-in account's choice always wins the merge over it.
+ */
+export const MIGRATED_AT = new Date(0).toISOString();
+
 interface State {
   /** What the platform prefers (hidden locales excluded); a default, not a choice. */
   detected: UiLocale;
   /** The device record's language; `null` = never chosen. */
   device: UiLocale | null;
-  /** When the device language was chosen (ISO), `null` for a choice stored before timestamps or a seed. */
+  /** When the device language was chosen (ISO); `null` for a choice stored before timestamps; `MIGRATED_AT` for a migrated one. */
   deviceAt: string | null;
   /** The device record's text size. */
   textSize: TextSize;
@@ -72,7 +78,7 @@ interface Actions {
   hydrate: (profileIds: string[], options?: { handoff?: HandoffUse; activeProfileId?: string | null }) => Promise<void>;
   /** The person chose a language on this device: stored with its time, told to the other tabs. */
   setDeviceLocale: (locale: UiLocale, source?: LocaleChangeSource) => void;
-  /** A `?lang=` or All lessons pass language: only for a device that never chose, and without a time (a seed, not a choice). */
+  /** A `?lang=` or All lessons pass language: only for a device that never chose (stamped now, AMENDMENTS-DISPLAY-NAV section 3.4). */
   seedDeviceLocale: (locale: UiLocale) => void;
   setTextSize: (size: TextSize) => void;
   /** A record another tab wrote (BroadcastChannel) or a re-read found: applied in memory, never written back. */
@@ -196,13 +202,14 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
       if (parsed.data.uiLocale !== undefined) overrides[id] = parsed.data.uiLocale;
       byProfile[id] = withoutLocale(parsed.data);
     }
-    // One-time migration (owner items 6 and 7): a device that never chose takes the active (or
-    // only) profile's old override, then every profile's stored override is stripped.
+    // One-time migration (AMENDMENTS-DISPLAY-NAV section 3.3): a device that never chose takes the
+    // active (or only) profile's old override, stamped older than any real choice, then every
+    // profile's stored override is stripped.
     const source = promotionSource(profileIds, options?.activeProfileId);
     const promoted = record.uiLocale === undefined && source !== null ? overrides[source] : undefined;
     if (promoted !== undefined) {
-      record = { ...record, uiLocale: promoted };
-      persist(writeRecord((stored) => (stored.uiLocale === undefined ? { ...stored, uiLocale: promoted } : stored), record));
+      record = { ...record, uiLocale: promoted, uiLocaleAt: MIGRATED_AT };
+      persist(writeRecord((stored) => (stored.uiLocale === undefined ? { ...stored, uiLocale: promoted, uiLocaleAt: MIGRATED_AT } : stored), record));
     }
     for (const id of Object.keys(overrides)) persist(writeJson(profileKey(id), byProfile[id]!));
     // Always taken so the address bar is cleaned; it only counts when the device never chose.
@@ -223,13 +230,9 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     // A stored choice in a currently hidden locale is ignored, so it does not block the seed either.
     if (deviceChose(get()) || visible(locale) === undefined) return;
     const from = activeLocale(get());
-    set({ device: locale, deviceAt: null });
-    persist(
-      writeRecord((stored) => {
-        const { uiLocaleAt: _seedHasNoTime, ...rest } = stored;
-        return { ...rest, uiLocale: locale };
-      }, recordOf(get())),
-    );
+    const at = new Date().toISOString();
+    set({ device: locale, deviceAt: at });
+    persist(writeRecord((stored) => ({ ...stored, uiLocale: locale, uiLocaleAt: at }), recordOf(get())));
     reportLocaleChange(from, activeLocale(get()), 'handoff');
   },
 

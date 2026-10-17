@@ -11,7 +11,7 @@ import type { RelinkView, Roster } from '@/lib/console/api';
 import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
 import { aroundSlot } from '@/lib/i18n/slot';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /** console/relink-approval — F-TCH-001 §10.1. Identity and timing only; no progress numbers. */
 function RelinkInner(): JSX.Element {
@@ -124,7 +124,7 @@ function RelinkInner(): JSX.Element {
           {issued ? (
             <div style={{ margin: `${spacing.md}px 0` }}>
               <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted }}>{issued.name}</div>
-              <div data-testid="rescue-code" style={{ fontSize: rem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.xs, fontFamily: typography.family.mono, overflowWrap: 'anywhere' }}>{issued.code}</div>
+              <div data-testid="rescue-code" style={{ fontSize: headRem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.xs, fontFamily: typography.family.mono, overflowWrap: 'anywhere' }}>{issued.code}</div>
               <Muted>{c.rescueIssued}</Muted>
               <Button onClick={() => setIssued(null)}>{c.relink.done.cta}</Button>
             </div>

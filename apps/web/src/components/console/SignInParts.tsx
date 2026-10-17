@@ -4,7 +4,7 @@ import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
 import { DisplayButton } from './DisplaySheet';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The parts of `/signin` and the grown-up routers (F-APP-001 A-4b; design mock
@@ -111,7 +111,7 @@ export function SignInHead({ mark, title, intro }: { mark: string; title: string
       >
         {mark}
       </span>
-      <h1 style={{ margin: 0, fontSize: rem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>{title}</h1>
+      <h1 style={{ margin: 0, fontSize: headRem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>{title}</h1>
       {intro ? <p style={{ margin: 0, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>{intro}</p> : null}
     </>
   );
@@ -337,7 +337,7 @@ export function ReverifyPanel(props: { title: string; line: string; backLabel: s
         borderRadius: radii.lg,
       }}
     >
-      <h1 id={titleId} style={{ margin: 0, fontSize: rem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>
+      <h1 id={titleId} style={{ margin: 0, fontSize: headRem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>
         {props.title}
       </h1>
       <p style={{ margin: 0, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>{props.line}</p>

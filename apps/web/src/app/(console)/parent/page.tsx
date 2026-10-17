@@ -26,7 +26,7 @@ import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The family home `/parent` (F-APP-001 A-5b, section 3.8; design mock design/screens/app-shell/parent-home.md,
@@ -104,7 +104,7 @@ const textLink: CSSProperties = {
 const cardShadow = `0 ${shadows.card.shadowOffset.height}px ${shadows.card.shadowRadius}px ${shadows.card.shadowColor}${Math.round(shadows.card.shadowOpacity * 255)
   .toString(16)
   .padStart(2, '0')}`;
-const familyHeading: CSSProperties = { margin: 0, fontSize: rem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' };
+const familyHeading: CSSProperties = { margin: 0, fontSize: headRem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' };
 const cardStyle: CSSProperties = {
   backgroundColor: colors.surface.paper,
   border: `${borderWidth.thin}px solid ${colors.border.subtle}`,
@@ -269,7 +269,7 @@ export default function ParentHomePage(): JSX.Element {
         <span style={{ fontSize: rem(typography.size.caption), fontWeight: typography.weight.semibold, color: colors.text.muted }}>{c.space.codeLabel.family}</span>
         {roster.joinCode ? (
           <>
-            <span data-testid="join-code" aria-hidden={true} style={{ fontFamily: typography.family.mono, fontSize: rem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: typography.tracking.wide }}>
+            <span data-testid="join-code" aria-hidden={true} style={{ fontFamily: typography.family.mono, fontSize: headRem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: typography.tracking.wide }}>
               {roster.joinCode}
             </span>
             <span className="hr-ph-hidden">{roster.joinCode.split('').join(' ')}</span>

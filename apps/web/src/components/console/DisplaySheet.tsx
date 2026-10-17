@@ -3,7 +3,7 @@
 import { TEXT_SIZES, type TextSize } from '@hangul-route/content-schema';
 import { TEXT_SIZE_FACTORS, typeScale } from '@hangul-route/design-system/text-size';
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
-import { LOCALE_META, type UiLocale } from '@hangul-route/i18n';
+import { LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
@@ -14,8 +14,9 @@ import { rem } from '@/lib/console/rem';
  * learner app, All lessons and the presenter read. The Aa button opens it from the adult frame
  * header (every width), `/signin` and the grown-up lock. A modal sheet (a bottom sheet on phones,
  * a centred dialog from 45em): Language (endonyms, each in its own `lang`; hidden with one
- * language) with a one-tap way back after a change, Text size (four steps, each drawing its Aa),
- * a live sample line, the note and Done. Escape, the scrim and Done close it; focus returns to
+ * language; another language first shows the confirm step written in that language, Use / Back,
+ * AMENDMENTS-DISPLAY-NAV section 3.6), Text size (four steps, each drawing its Aa, applied at
+ * once), the live preview line, the note and Done. Escape, the scrim and Done close it; focus returns to
  * the Aa button. Sizes are in rem, so the chosen text size (`--hr-text-scale` on `<html>`) grows
  * the sheet itself live; each segment's Aa is drawn in px at its own step, a fixed preview. Not behind the grown-up gate (display only, reversible).
  */
@@ -36,6 +37,8 @@ const SHEET_CSS = `
 .hr-display-steps .hr-display-option{flex-basis:45%}
 .hr-display-option[aria-checked="true"]{background:${colors.brand.primary};border-color:${colors.brand.primary};color:${colors.text.onPrimary}}
 .hr-display-glyph{font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
+.hr-display-confirm{display:flex;flex-direction:column;gap:0}
+.hr-display-question{margin:0;font-size:${rem(typography.size.body)};font-weight:${typography.weight.semibold};line-height:${typography.leading.normal}}
 .hr-display-sample{margin-top:${rem(spacing.sm)};padding:${rem(spacing.md)};border-radius:${radii.md}px;background:${colors.surface.sunken};font-size:${rem(typography.size.bodyLg)};line-height:${typography.leading.normal}}
 .hr-display-note{margin:${rem(spacing.md)} 0 0;color:${colors.text.secondary};font-size:${rem(typography.size.body)};line-height:${typography.leading.normal}}
 .hr-display-button{display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;box-sizing:border-box;padding:${rem(spacing.xs)} ${rem(spacing.lg)};border-radius:${radii.pill}px;font-size:${rem(typography.size.body)};font-weight:${typography.weight.bold};cursor:pointer}
@@ -110,7 +113,8 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
   const headingId = useId();
   const sheetRef = useRef<FocusTarget | null>(null);
   const headingRef = useRef<FocusTarget | null>(null);
-  const [previous, setPrevious] = useState<UiLocale | null>(null);
+  // Another language waits on its confirm step, written in that language (F-I18N-001 §3.3 safety rule).
+  const [pending, setPending] = useState<UiLocale | null>(null);
 
   useEffect(() => {
     const opener = typeof document === 'undefined' ? null : (document.activeElement as FocusTarget | null);
@@ -142,13 +146,12 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
   };
 
   const chooseLanguage = (next: UiLocale): void => {
-    if (next === locale) return;
-    setPrevious(locale);
-    setLocale(next);
+    setPending(next === locale ? null : next);
   };
 
   const languages = available.map((l) => ({ value: l, label: LOCALE_META[l].endonym, lang: LOCALE_META[l].htmlLang }));
-  const sizes = TEXT_SIZES.map((step) => ({ value: step, label: d.sizes[step] }));
+  const sizes = TEXT_SIZES.map((step) => ({ value: step, label: d.size[step] }));
+  const confirm = pending === null ? null : getMessages(pending).common.display.confirm;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: z.modal }} data-testid="console-display">
@@ -177,20 +180,27 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
         {languages.length > 1 ? (
           <>
             <p className="hr-display-label">{d.language}</p>
-            <RadioRow label={d.language} options={languages} selected={locale} onSelect={chooseLanguage} testId="console-display-language" render={(o) => <span>{o.label}</span>} />
-            {previous !== null && previous !== locale ? (
-              <button
-                type="button"
-                className="hr-display-button hr-display-undo"
-                onClick={() => {
-                  setLocale(previous);
-                  setPrevious(null);
-                }}
-                data-testid="console-display-language-undo"
-              >
-                {d.back(LOCALE_META[previous].endonym)}
-              </button>
-            ) : null}
+            {pending !== null && confirm !== null ? (
+              <div className="hr-display-confirm" lang={LOCALE_META[pending].htmlLang} aria-live="polite" data-testid="console-display-language-confirm">
+                <p className="hr-display-question">{confirm.question(LOCALE_META[pending].endonym)}</p>
+                <button
+                  type="button"
+                  className="hr-display-button hr-display-done"
+                  onClick={() => {
+                    setLocale(pending);
+                    setPending(null);
+                  }}
+                  data-testid="console-display-language-use"
+                >
+                  {confirm.use(LOCALE_META[pending].endonym)}
+                </button>
+                <button type="button" className="hr-display-button hr-display-undo" onClick={() => setPending(null)} data-testid="console-display-language-back">
+                  {confirm.back(LOCALE_META[locale].endonym)}
+                </button>
+              </div>
+            ) : (
+              <RadioRow label={d.language} options={languages} selected={locale} onSelect={chooseLanguage} testId="console-display-language" render={(o) => <span>{o.label}</span>} />
+            )}
           </>
         ) : null}
         <p className="hr-display-label">{d.textSize}</p>
@@ -204,18 +214,18 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
           render={(o) => (
             <>
               <span className="hr-display-glyph" aria-hidden="true" style={{ fontSize: `${typeScale(TEXT_SIZE_FACTORS[o.value]).size.body}px` }}>
-                {d.glyph}
+                {d.button}
               </span>
               <span>{o.label}</span>
             </>
           )}
         />
         <p className="hr-display-sample" aria-live="polite" data-testid="console-display-sample">
-          {d.sample}
+          {d.preview}
         </p>
         <p className="hr-display-note">{d.note}</p>
         <button type="button" className="hr-display-button hr-display-done" onClick={onClose} data-testid="console-display-done">
-          {d.done.cta}
+          {messages.common.buttons.done}
         </button>
       </div>
     </div>
@@ -248,8 +258,8 @@ export function DisplayButton({ testId = 'console-display-open' }: { testId?: st
   const d = messages.common.display;
   return (
     <>
-      <button type="button" style={aaStyle} aria-label={d.open} aria-haspopup="dialog" onClick={() => setOpen(true)} data-testid={testId}>
-        <span aria-hidden="true">{d.glyph}</span>
+      <button type="button" style={aaStyle} aria-label={d.a11y} aria-haspopup="dialog" onClick={() => setOpen(true)} data-testid={testId}>
+        <span aria-hidden="true">{d.button}</span>
       </button>
       {open ? <ConsoleDisplaySheet onClose={() => setOpen(false)} /> : null}
     </>

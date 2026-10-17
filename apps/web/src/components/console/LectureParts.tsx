@@ -329,22 +329,25 @@ export function LectureOptionsSection({
         {l.options.sound}
       </label>
       {available.length > 1 ? (
-        <label style={blockChoiceStyle}>
-          <span>{l.options.slidesLanguage}</span>
-          <select
-            value={value.uiLocale ?? SAME_AS_DEVICE}
-            style={selectStyle}
-            data-testid="lecture-slides-language"
-            onChange={(e) => onChange({ ...value, uiLocale: available.find((a) => a === e.target.value) ?? null })}
-          >
-            <option value={SAME_AS_DEVICE}>{l.options.sameAsDevice}</option>
-            {available.map((option) => (
-              <option key={option} value={option} lang={LOCALE_META[option].htmlLang}>
-                {LOCALE_META[option].endonym}
-              </option>
-            ))}
-          </select>
-        </label>
+        <>
+          <label style={blockChoiceStyle}>
+            <span>{l.options.language}</span>
+            <select
+              value={value.uiLocale ?? SAME_AS_DEVICE}
+              style={selectStyle}
+              data-testid="lecture-slides-language"
+              onChange={(e) => onChange({ ...value, uiLocale: available.find((a) => a === e.target.value) ?? null })}
+            >
+              <option value={SAME_AS_DEVICE}>{l.options.languageSame}</option>
+              {available.map((option) => (
+                <option key={option} value={option} lang={LOCALE_META[option].htmlLang}>
+                  {LOCALE_META[option].endonym}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Muted>{l.options.languageHint}</Muted>
+        </>
       ) : null}
     </section>
   );

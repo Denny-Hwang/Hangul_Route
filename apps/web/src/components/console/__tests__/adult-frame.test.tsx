@@ -395,7 +395,7 @@ describe('the phone layout and the footer (section 3.8)', () => {
     expect(r.root.findAll((n) => n.type === 'select')).toHaveLength(0);
     const aa = byTestId(r, 'frame-display').filter((n) => n.type === 'button');
     expect(aa).toHaveLength(1);
-    expect(aa[0]?.props['aria-label']).toBe('Display');
+    expect(aa[0]?.props['aria-label']).toBe('Display: language and text size');
     expect(aa[0]?.props['aria-haspopup']).toBe('dialog');
     expect(aa[0]?.props.className).toBeUndefined();
     expect(textOf(byTestId(r, 'frame-foot-sign-out')[0] as ReactTestInstance)).toBe('Sign out');

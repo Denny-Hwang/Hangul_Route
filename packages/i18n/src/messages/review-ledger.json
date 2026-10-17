@@ -1,7 +1,7 @@
 {
   "es": {
     "common": {
-      "enSha": "5d43eb0d18a690785669b03dd4dbdfb5667a16d0ca354b1d388783d30586863d",
+      "enSha": "bb25e0dcee223bc574e5902d233f841c96133516a9e7672cef11c68683233dff",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
@@ -11,17 +11,17 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "021dcd3da20a0b01420b71d9d5dbb8b5e2b01de98be4164172ea6e3cb7b7ef5d",
+      "enSha": "46bbb4e09d81ddac8d1078afa4f2f49380850091f9e5f29376275b7308817b8f",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "1777bb8b5b8154a684fca5cbfcace65d511cd2777bc27aeb4c5d4e967c511cfa",
+      "enSha": "95b2f7830d5fe5c540a68f8ff5743ab317f3106821493fff8153b58de9f5a49c",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "console": {
-      "enSha": "71b43fdf796087c3cbd54deb114ab0a46e7aec1ac352f11bf313b6dd52a7436b",
+      "enSha": "083484434d1d7ec8ad8b24fe4258abfdc03552956885938fccc69384f606bb03",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
@@ -38,7 +38,7 @@
   },
   "ko": {
     "common": {
-      "enSha": "5d43eb0d18a690785669b03dd4dbdfb5667a16d0ca354b1d388783d30586863d",
+      "enSha": "bb25e0dcee223bc574e5902d233f841c96133516a9e7672cef11c68683233dff",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
@@ -48,17 +48,17 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "021dcd3da20a0b01420b71d9d5dbb8b5e2b01de98be4164172ea6e3cb7b7ef5d",
+      "enSha": "46bbb4e09d81ddac8d1078afa4f2f49380850091f9e5f29376275b7308817b8f",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "1777bb8b5b8154a684fca5cbfcace65d511cd2777bc27aeb4c5d4e967c511cfa",
+      "enSha": "95b2f7830d5fe5c540a68f8ff5743ab317f3106821493fff8153b58de9f5a49c",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "console": {
-      "enSha": "71b43fdf796087c3cbd54deb114ab0a46e7aec1ac352f11bf313b6dd52a7436b",
+      "enSha": "083484434d1d7ec8ad8b24fe4258abfdc03552956885938fccc69384f606bb03",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },

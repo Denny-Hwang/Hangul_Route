@@ -8,7 +8,7 @@ import type { ApiResult, ConsoleApi, TransferPreview, TransferView } from '@/lib
 import { startError, startErrorText, type StartError } from '@/lib/console/transfer';
 import { subscribeTransferLock, transfersShown } from '@/lib/console/transfer-lock';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * Class-move parts of the console (F-SPACE-002 section 4.8, PR T-6c): the settings row's Move button, the sheet frame
@@ -272,7 +272,7 @@ export function ClassCodeField({
           boxSizing: 'border-box',
           minHeight: touchTarget.hero,
           padding: `0 ${spacing.md}px`,
-          fontSize: rem(typography.size.display),
+          fontSize: headRem(typography.size.display),
           fontWeight: typography.weight.bold,
           letterSpacing: spacing.sm,
           textAlign: 'center',

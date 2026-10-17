@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DeviceSettingsRead } from '../device-settings';
-import { LocaleProvider, RECORD_WAIT_MS, useConsoleLocale, useLocale, useMessages, type ConsoleLocale, type LocaleProviderDeps } from '../locale-context';
+import { LocaleProvider, RECORD_WAIT_MS, useConsoleLocale, useLocale, useMessages, withoutLang, type ConsoleLocale, type LocaleProviderDeps } from '../locale-context';
 
 /**
  * The console's locale and text size provider (F-I18N-001 §3.2; owner items 6 and 7): the static
@@ -83,6 +83,7 @@ function browser(opts: { record?: DeviceSettings | 'unreadable'; mirror?: Record
   vi.stubGlobal('document', doc);
   vi.stubGlobal('navigator', { languages: opts.languages ?? ['en-US'] });
   let onRecord: ((v: DeviceSettings) => void) | null = null;
+  let dropped = 0;
   let onReturn: (() => void) | null = null;
   const deps: Required<LocaleProviderDeps> = {
     readDevice: async (): Promise<DeviceSettingsRead> => (record === 'unreadable' ? { readable: false } : { readable: true, value: record }),
@@ -101,6 +102,9 @@ function browser(opts: { record?: DeviceSettings | 'unreadable'; mirror?: Record
       };
     },
     now: () => '2026-10-16T12:00:00.000Z',
+    dropLang: () => {
+      dropped += 1;
+    },
   };
   return {
     deps,
@@ -114,6 +118,7 @@ function browser(opts: { record?: DeviceSettings | 'unreadable'; mirror?: Record
     },
     post: (v: DeviceSettings) => onRecord?.(v),
     comeBack: () => onReturn?.(),
+    dropped: () => dropped,
   };
 }
 
@@ -151,6 +156,8 @@ describe('console LocaleProvider: the device record (owner items 6 and 7)', () =
     expect(ctx?.textSize).toBe('larger');
     expect(b.doc.documentElement.lang).toBe('ko');
     expect(b.style.get('--hr-text-scale')).toBe('1.3');
+    // Headings grow half as much: (1 + 0.15) / 1.3.
+    expect(Number(b.style.get('--hr-head-ratio'))).toBeCloseTo(1.15 / 1.3);
     expect(b.style.get('font-size')).toBe('calc(100% * var(--hr-text-scale, 1))');
     // The mirrors follow the record, for the next first paint.
     expect(b.local.get('hr:console:uiLocale')).toBe('ko');
@@ -165,16 +172,33 @@ describe('console LocaleProvider: the device record (owner items 6 and 7)', () =
     expect(b.local.get('hr:console:uiLocale')).toBe('en');
   });
 
-  it('?lang= seeds a device that never chose (no time: a seed, not a choice), and never one that chose', async () => {
+  it('?lang= seeds a device that never chose (stamped now), never one that chose, and leaves the address either way', async () => {
     const b = browser({ record: { textSize: 'large' }, search: '?lang=es' });
     await mount(b.deps);
     expect(ctx?.locale).toBe('es');
-    expect(b.writes).toEqual([{ textSize: 'large', uiLocale: 'es' }]);
+    expect(b.writes).toEqual([{ textSize: 'large', uiLocale: 'es', uiLocaleAt: '2026-10-16T12:00:00.000Z' }]);
+    expect(b.dropped()).toBe(1);
     act(() => mounted?.unmount());
     const c = browser({ record: { uiLocale: 'en', uiLocaleAt: '2026-10-01T00:00:00.000Z' }, search: '?lang=ko' });
     await mount(c.deps);
     expect(ctx?.locale).toBe('en');
     expect(c.writes).toEqual([]);
+    expect(c.dropped()).toBe(1);
+    // A junk lang leaves the address too; no lang at all touches nothing.
+    act(() => mounted?.unmount());
+    const d = browser({ record: {}, search: '?x=1&lang=fr' });
+    await mount(d.deps);
+    expect(d.dropped()).toBe(1);
+    act(() => mounted?.unmount());
+    const e = browser({ record: {}, search: '?x=1' });
+    await mount(e.deps);
+    expect(e.dropped()).toBe(0);
+  });
+
+  it('withoutLang keeps the rest of the query and the hash as written', () => {
+    expect(withoutLang({ pathname: '/parent', search: '?lang=en', hash: '' })).toBe('/parent');
+    expect(withoutLang({ pathname: '/signin', search: '?persona=teacher&lang=en', hash: '#x' })).toBe('/signin?persona=teacher#x');
+    expect(withoutLang({ pathname: '/teach/space', search: '?lang=ko&id=sp_1&next=%2Fa', hash: '' })).toBe('/teach/space?id=sp_1&next=%2Fa');
   });
 
   it('a choice here writes the record with its time, the mirror, and offers it to the account sync', async () => {

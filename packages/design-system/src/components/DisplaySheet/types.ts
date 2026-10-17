@@ -9,8 +9,22 @@ export interface DisplaySheetLanguage {
   options: readonly DisplayOption[];
   selected: string;
   onSelect: (value: string) => void;
-  /** After a change: a one-tap way back, written in the new language ("Back to English"). */
-  undo?: { label: string; onPress: () => void } | null;
+  /**
+   * Another language was chosen: the confirm step drawn in place of the radios, written in the language
+   * chosen ("Use Español on this device?", Use Español / Back to English; F-I18N-001 §3.3 safety rule).
+   * Use writes the choice; Back changes nothing.
+   */
+  confirm?: DisplaySheetConfirm | null;
+}
+
+export interface DisplaySheetConfirm {
+  question: string;
+  use: string;
+  back: string;
+  /** The chosen language's `lang`, so a screen reader reads the step in that language. */
+  lang: string;
+  onUse: () => void;
+  onBack: () => void;
 }
 
 export interface DisplaySheetTextSize {

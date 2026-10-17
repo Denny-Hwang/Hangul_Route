@@ -15,7 +15,7 @@ import { personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView } from '@/lib/console/teacher-home';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The teacher home `/teach/home` (F-APP-001 A-5a, section 3.8; design mock
@@ -55,7 +55,7 @@ const textLink: CSSProperties = {
 const columnStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.xl, maxWidth: layout.maxWidth.reading };
 const rowsStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.sm };
 const headStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm };
-const h1Style: CSSProperties = { margin: 0, fontSize: rem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold };
+const h1Style: CSSProperties = { margin: 0, fontSize: headRem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold };
 const groupTitle: CSSProperties = { margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold };
 
 export default function HomePage(): JSX.Element {

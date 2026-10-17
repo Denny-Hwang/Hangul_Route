@@ -36,7 +36,7 @@ import { dateKey, livePublished, planReaches, planReadout, readoutLine, rosterPl
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { consoleWords, studentWords } from '@/lib/console/vocab-words';
 import { aroundSlot } from '@/lib/i18n/slot';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /** console/roster — F-CONSOLE-001 §3.5. Summaries only; the API never sends payloads here. */
 function SpaceInner(): JSX.Element {
@@ -171,7 +171,7 @@ function SpaceInner(): JSX.Element {
             <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted, textTransform: 'uppercase' }}>
               {c.space.codeLabel[roster.space.kind]}
             </div>
-            <div data-testid="join-code" style={{ fontSize: rem(empty ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, margin: `${spacing.xs}px 0` }}>
+            <div data-testid="join-code" style={{ fontSize: headRem(empty ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, margin: `${spacing.xs}px 0` }}>
               {roster.joinCode ?? '—'}
             </div>
             <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>

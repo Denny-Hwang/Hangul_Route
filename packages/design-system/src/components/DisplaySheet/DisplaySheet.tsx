@@ -15,10 +15,11 @@ import type { DisplaySheetProps } from './types';
  * size, the one record every surface reads. A bottom sheet on phones and a centred dialog from
  * the regular class. Two segmented controls (radio groups): Language (endonyms, each in its own
  * `lang`; hidden with one language) and Text size (four steps, each segment drawing the caller's
- * glyph, "Aa", at that step), then a live sample line at the chosen size. A choice applies at once; Done only
- * closes. After a language change the caller passes `undo`, a one-tap way back written in the new
- * language. No copy of its own: every label comes from the caller's dictionary. Not behind the
- * grown-up gate (display only, reversible). Spec: design/components/DisplaySheet/spec.md.
+ * glyph, "Aa", at that step), then a live preview line at the chosen size. A text size applies at
+ * once; another language first shows the caller's confirm step, written in that language, in place
+ * of the radios (Use / Back; F-I18N-001 §3.3). Done only closes. No copy of its own: every label
+ * comes from the caller's dictionary. Not behind the grown-up gate (display only, reversible).
+ * Spec: docs/specs/AMENDMENTS-DISPLAY-NAV.md section 3.6, design/components/DisplaySheet/spec.md.
  */
 
 /** The handle drawn on the phone sheet (32 x 4). */
@@ -196,21 +197,28 @@ export function DisplaySheet({
                 <Spacer size="md" />
                 <Body weight="bold">{language.label}</Body>
                 <Spacer size="xs" />
-                <RadioRow
-                  label={language.label}
-                  options={language.options}
-                  selected={language.selected}
-                  onSelect={language.onSelect}
-                  testID={`${testID}-language`}
-                  layout="content"
-                  renderOption={(option, isSelected) => optionText(option.label, isSelected, option.lang ? { lang: option.lang } : {})}
-                />
-                {language.undo ? (
-                  <>
-                    <Spacer size="sm" />
-                    <Button label={language.undo.label} tone="ghost" size="md" fullWidth onPress={language.undo.onPress} testID={`${testID}-language-undo`} />
-                  </>
-                ) : null}
+                {language.confirm ? (
+                  <View
+                    testID={`${testID}-language-confirm`}
+                    accessibilityLiveRegion="polite"
+                    {...{ accessibilityLanguage: language.confirm.lang, lang: language.confirm.lang }}
+                    style={{ gap: spacing.sm }}
+                  >
+                    <Body weight="semibold">{language.confirm.question}</Body>
+                    <Button label={language.confirm.use} tone="primary" size="md" fullWidth onPress={language.confirm.onUse} testID={`${testID}-language-use`} />
+                    <Button label={language.confirm.back} tone="ghost" size="md" fullWidth onPress={language.confirm.onBack} testID={`${testID}-language-back`} />
+                  </View>
+                ) : (
+                  <RadioRow
+                    label={language.label}
+                    options={language.options}
+                    selected={language.selected}
+                    onSelect={language.onSelect}
+                    testID={`${testID}-language`}
+                    layout="content"
+                    renderOption={(option, isSelected) => optionText(option.label, isSelected, option.lang ? { lang: option.lang } : {})}
+                  />
+                )}
               </>
             ) : null}
             <Spacer size="md" />

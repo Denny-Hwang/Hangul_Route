@@ -84,6 +84,8 @@ import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { PictureArt } from '../minigames/PictureArt';
+import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
+import { DisplayButton } from '../../components/DisplayButton';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
@@ -253,6 +255,8 @@ export function HomeScreen(): React.ReactElement {
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const ensure = useProgressStore((s) => s.ensure);
+  // The Display (Aa) sheet (AMENDMENTS-DISPLAY-NAV section 3.6): not behind the grown-up gate.
+  const [displayOpen, setDisplayOpen] = useState(false);
   const markCardsSeen = useProgressStore((s) => s.markCardsSeen);
   // Session-only (F-STORY-006 §3.5): the cards a reconcile added this app session.
   const catchUpListed = useProgressStore((s) => (profile ? s.catchUp[profile.id] : undefined));
@@ -725,6 +729,8 @@ export function HomeScreen(): React.ReactElement {
           <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
           <Body tone="secondary">{m.learner.home.subtitle}</Body>
         </View>
+        {/* The Aa button (AMENDMENTS-DISPLAY-NAV section 3.6): the device's language and text size, beside Profile. */}
+        <DisplayButton onPress={() => setDisplayOpen(true)} testID="home-display" />
         {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
             colour its avatar name says (not the Pillar theme), with a visible
             label — the only way to profiles, backup, classes and the grown-up zone. */}
@@ -791,6 +797,7 @@ export function HomeScreen(): React.ReactElement {
         </>
       )}
     </Screen>
+    <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="home-display-sheet" />
       {/* Web only (F-PWA-001): asks a grown-up to install once the app is cached. */}
       <InstallGuideSheet />
     </View>

@@ -181,20 +181,38 @@ describe('DisplaySheet element tree', () => {
     textSize.factor = 1;
   });
 
-  it('no Language row with one language or none, and no undo until a change offers one', () => {
+  it('no Language row with one language or none, and no confirm step until another language is chosen', () => {
     const one = render(props({ language: { ...props().language!, options: [{ value: 'en', label: 'English' }] } }));
     expect(one.filter((e) => e.props.role === 'radiogroup')).toHaveLength(1);
     expect(render(props({ language: null })).filter((e) => e.props.role === 'radiogroup')).toHaveLength(1);
-    expect(byTestId(render(props()), 'display-sheet-language-undo')).toBeUndefined();
+    expect(byTestId(render(props()), 'display-sheet-language-confirm')).toBeUndefined();
   });
 
-  it('after a language change: a one-tap way back in the new language', () => {
-    const undo = vi.fn();
-    const tree = render(props({ language: { ...props().language!, selected: 'ko', undo: { label: 'Back to English', onPress: undo } } }));
-    const back = byTestId(tree, 'display-sheet-language-undo') as El;
-    expect(back.props.label).toBe('Back to English');
+  it('another language: the confirm step in that language replaces the radios; Use and Back reach the caller', () => {
+    const onUse = vi.fn();
+    const onBack = vi.fn();
+    const tree = render(
+      props({
+        language: {
+          ...props().language!,
+          confirm: { question: '¿Usar Español en este dispositivo?', use: 'Usar Español', back: 'Volver a English', lang: 'es', onUse, onBack },
+        },
+      }),
+    );
+    const step = byTestId(tree, 'display-sheet-language-confirm') as El;
+    expect(step.props.lang).toBe('es');
+    expect(step.props.accessibilityLanguage).toBe('es');
+    expect(segments(tree, 'language')).toHaveLength(0);
+    expect(tree.some((e) => e.type === 'Body' && textOf(e) === '¿Usar Español en este dispositivo?')).toBe(true);
+    const use = byTestId(tree, 'display-sheet-language-use') as El;
+    const back = byTestId(tree, 'display-sheet-language-back') as El;
+    expect([use.props.label, back.props.label]).toEqual(['Usar Español', 'Volver a English']);
+    (use.props.onPress as () => void)();
     (back.props.onPress as () => void)();
-    expect(undo).toHaveBeenCalledTimes(1);
+    expect(onUse).toHaveBeenCalledTimes(1);
+    expect(onBack).toHaveBeenCalledTimes(1);
+    // The Text size row stays usable under it.
+    expect(segments(tree, 'text-size')).toHaveLength(4);
   });
 
   it('extra rows (All lessons romanization) come above Language', () => {

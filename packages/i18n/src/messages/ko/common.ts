@@ -69,18 +69,19 @@ export const common = {
   },
   /** 화면(Aa) 시트: 이 기기의 하나뿐인 언어와 글자 크기. */
   display: {
-    glyph: 'Aa',
-    open: '화면 설정',
-    title: '화면 설정',
-    summary: '언어와 글자 크기',
-    language: '이 기기의 언어',
+    button: '가가',
+    a11y: '보기 설정: 언어와 글자 크기',
+    title: '보기 설정',
+    language: '언어',
     textSize: '글자 크기',
-    sizes: { standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' },
-    sample: '글자가 이렇게 보여요.',
-    note: '이 기기의 모든 화면에 적용돼요.',
-    back: (endonym: string) => `돌아가기: ${endonym}`,
-    done: { cta: '완료' },
-    close: '닫기',
+    size: { standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' },
+    preview: '글자는 이렇게 보여요.',
+    note: '이 기기를 쓰는 모두에게 적용돼요. 언제든 바꿀 수 있어요.',
+    confirm: {
+      question: (endonym: string) => `이 기기의 언어를 바꿀까요? (${endonym})`,
+      use: (endonym: string) => `${endonym} 쓰기`,
+      back: (endonym: string) => `돌아가기: ${endonym}`,
+    },
   },
   /** 읽기 수준 (F-LEARN-001 §3.7): 얼마나 읽는지를 말하고, 나이는 말하지 않아요. */
   levels: {

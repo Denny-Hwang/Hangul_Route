@@ -848,8 +848,9 @@ export const consoleMsgs = {
       strokeGuide: 'Guía de trazos',
       strokeNote: 'Simplificada: no es una referencia de caligrafía.',
       sound: 'Con sonido',
-      slidesLanguage: 'Idioma de diapositivas',
-      sameAsDevice: 'Igual que este dispositivo',
+      language: 'Idioma de las diapositivas',
+      languageSame: 'Igual que este dispositivo',
+      languageHint: 'Un enlace copiado usa el idioma del dispositivo que lo abre.',
     },
     picker: {
       title: 'Elegir ayudantes',

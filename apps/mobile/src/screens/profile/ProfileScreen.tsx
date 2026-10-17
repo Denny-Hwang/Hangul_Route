@@ -13,7 +13,7 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
-import { levelWords } from '@hangul-route/i18n';
+import { LOCALE_META, levelWords } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
@@ -34,6 +34,7 @@ import { useAudioStore } from '../../store/audio-store';
 import { useTierStore } from '../../store/tier-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useLocaleStore } from '../../store/locale-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
@@ -74,6 +75,8 @@ export function ProfileScreen(): React.ReactElement {
   const [voiceHelpOpen, setVoiceHelpOpen] = useState(false);
   // The Display (Aa) sheet: the device's language and text size (owner items 6 and 7); not behind the grown-up gate.
   const [displayOpen, setDisplayOpen] = useState(false);
+  const textSize = useLocaleStore((s) => s.textSize);
+  const displayLine = t.display.line(LOCALE_META[locale].endonym, m.common.display.size[textSize]);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
@@ -293,13 +296,13 @@ export function ProfileScreen(): React.ReactElement {
           onPress={() => setDisplayOpen(true)}
           accessibilityRole="button"
           aria-haspopup="dialog"
-          accessibilityLabel={m.common.display.title}
-          accessibilityHint={m.common.display.summary}
+          accessibilityLabel={m.common.display.a11y}
+          accessibilityHint={displayLine}
           style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
         >
           <View style={{ flex: 1 }}>
-            <Body weight="semibold">{m.common.display.title}</Body>
-            <Caption tone="muted">{m.common.display.summary}</Caption>
+            <Body weight="semibold">{t.display.row}</Body>
+            <Caption tone="muted">{displayLine}</Caption>
           </View>
           <Icon name="arrow-right" size={24} color={colors.text.muted} />
         </Pressable>

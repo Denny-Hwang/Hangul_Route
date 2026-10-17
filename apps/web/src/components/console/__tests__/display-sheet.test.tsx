@@ -72,7 +72,7 @@ describe('the Aa button', () => {
     });
     const r = mounted as unknown as ReactTestRenderer;
     const button = byTestId(r, 'frame-display')[0]!;
-    expect(button.props['aria-label']).toBe('Display');
+    expect(button.props['aria-label']).toBe('Display: language and text size');
     expect(button.props['aria-haspopup']).toBe('dialog');
     expect(textOf(button)).toBe('Aa');
     expect(button.props.style.minHeight).toBe(64);
@@ -95,9 +95,9 @@ describe('the sheet', () => {
     expect(heading.props.id).toBe(dialog.props['aria-labelledby']);
     expect(textOf(heading)).toBe('Display');
     const groups = r.root.findAll((n) => n.type === 'div' && n.props.role === 'radiogroup');
-    expect(groups.map((g) => g.props['aria-label'])).toEqual(['Language on this device', 'Text size']);
-    expect(textOf(byTestId(r, 'console-display-sample')[0]!)).toBe('Text looks like this.');
-    expect(r.root.findAll((n) => n.type === 'p' && textOf(n) === 'Every screen on this device uses these.')).toHaveLength(1);
+    expect(groups.map((g) => g.props['aria-label'])).toEqual(['Language', 'Text size']);
+    expect(textOf(byTestId(r, 'console-display-sample')[0]!)).toBe('This is how text looks.');
+    expect(r.root.findAll((n) => n.type === 'p' && textOf(n) === 'For everyone on this device. Change it any time.')).toHaveLength(1);
   });
 
   it('language radios: endonyms in their own lang, the current one checked, one tab stop', () => {
@@ -110,20 +110,28 @@ describe('the sheet', () => {
     ]);
   });
 
-  it('a language change applies at once and offers the way back, in the new language', () => {
+  it('another language first asks in that language; Use writes it, Back changes nothing', () => {
     const { r } = renderSheet();
     act(() => byTestId(r, 'console-display-language-ko')[0]!.props.onClick());
+    // Nothing is written yet: the confirm step replaces the radios, in Korean.
+    expect(view.locales).toEqual([]);
+    const step = byTestId(r, 'console-display-language-confirm')[0]!;
+    expect(step.props.lang).toBe('ko');
+    const ko = getMessages('ko').common.display.confirm;
+    expect(textOf(step.findAll((n) => n.type === 'p')[0]!)).toBe(ko.question('한국어'));
+    expect(byTestId(r, 'console-display-language')).toHaveLength(0);
+    expect(textOf(byTestId(r, 'console-display-language-back')[0]!)).toBe(ko.back('English'));
+    act(() => byTestId(r, 'console-display-language-back')[0]!.props.onClick());
+    expect(view.locales).toEqual([]);
+    expect(byTestId(r, 'console-display-language-confirm')).toHaveLength(0);
+    act(() => byTestId(r, 'console-display-language-ko')[0]!.props.onClick());
+    expect(textOf(byTestId(r, 'console-display-language-use')[0]!)).toBe(ko.use('한국어'));
+    act(() => byTestId(r, 'console-display-language-use')[0]!.props.onClick());
     expect(view.locales).toEqual(['ko']);
+    // The language already shown asks nothing.
     act(() => mounted?.update(<ConsoleDisplaySheet onClose={vi.fn()} />));
-    const undo = byTestId(r, 'console-display-language-undo')[0]!;
-    expect(textOf(undo)).toBe(getMessages('ko').common.display.back('English'));
-    act(() => undo.props.onClick());
-    expect(view.locales).toEqual(['ko', 'en']);
-    act(() => mounted?.update(<ConsoleDisplaySheet onClose={vi.fn()} />));
-    expect(byTestId(r, 'console-display-language-undo')).toHaveLength(0);
-    // The language already shown: nothing to change, no way back offered.
-    act(() => byTestId(r, 'console-display-language-en')[0]!.props.onClick());
-    expect(view.locales).toEqual(['ko', 'en']);
+    act(() => byTestId(r, 'console-display-language-ko')[0]!.props.onClick());
+    expect(byTestId(r, 'console-display-language-confirm')).toHaveLength(0);
   });
 
   it('arrow keys move and choose within a radio group', () => {

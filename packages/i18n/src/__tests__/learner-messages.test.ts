@@ -26,20 +26,24 @@ describe('learner.language (the Welcome row) and common.display (the Display she
     expect(m.learner.language).toEqual({ groupLabel: 'Language' });
   });
 
-  it('words the Display sheet once for every surface', () => {
+  it('words the Display sheet once for every surface (AMENDMENTS-DISPLAY-NAV section 10)', () => {
     const d = m.common.display;
-    expect([d.open, d.title, d.summary, d.language, d.textSize]).toEqual(['Display', 'Display', 'Language and text size', 'Language on this device', 'Text size']);
-    expect(d.sizes).toEqual({ standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' });
-    expect(d.sample).toBe('Text looks like this.');
-    expect(d.note).toBe('Every screen on this device uses these.');
-    expect(d.back('English')).toBe('Back to English');
-    expect([d.done.cta, d.close]).toEqual(['Done', 'Close']);
+    expect([d.button, d.a11y, d.title, d.language, d.textSize]).toEqual(['Aa', 'Display: language and text size', 'Display', 'Language', 'Text size']);
+    expect(d.size).toEqual({ standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' });
+    expect(d.preview).toBe('This is how text looks.');
+    expect(d.note).toBe('For everyone on this device. Change it any time.');
+    expect([d.confirm.question('Español'), d.confirm.use('Español'), d.confirm.back('English')]).toEqual(['Use Español on this device?', 'Use Español', 'Back to English']);
+    expect(m.learner.profile.display.row).toBe('Display');
+    expect(m.learner.profile.display.line('English', 'Largest')).toBe('English · Largest text');
   });
 
   it('Spanish and Korean word the sheet too, with no particle on the endonym', () => {
-    expect(getMessages('es').common.display.back('English')).toBe('Volver a English');
-    expect(getMessages('ko').common.display.back('English')).toBe('돌아가기: English');
-    expect(getMessages('ko').common.display.sizes).toEqual({ standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' });
+    expect(getMessages('es').common.display.confirm.back('English')).toBe('Volver a English');
+    expect(getMessages('ko').common.display.confirm.back('English')).toBe('돌아가기: English');
+    expect(getMessages('ko').common.display.confirm.question('Español')).toBe('이 기기의 언어를 바꿀까요? (Español)');
+    expect(getMessages('ko').common.display.size).toEqual({ standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' });
+    // Ordered beyond doubt: "Más grande" then "Máximo" (MAR: "Muy grande" read as possibly smaller than "Más grande").
+    expect(getMessages('es').common.display.size).toEqual({ standard: 'Normal', large: 'Grande', larger: 'Más grande', largest: 'Máximo' });
   });
 });
 

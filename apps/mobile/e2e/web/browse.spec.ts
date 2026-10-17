@@ -739,13 +739,9 @@ test('Lesson display: romanization choices apply at once, Done and Escape close,
   const sheet = page.getByRole('dialog', { name: 'Lesson display' });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole('radio', { name: 'Always shown' })).toHaveAttribute('aria-checked', 'true');
-  // es and ko ship (F-I18N-001 rows 15b / 16b): the device's Language row lists all three, English chosen, and the
-  // Text size row follows (owner items 6 and 7: the Display sheet's rows under Romanization).
-  const language = sheet.getByRole('radiogroup', { name: 'Language on this device' });
-  await expect(language.getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
-  await expect(sheet.getByTestId('browse-display-sheet-language-en')).toHaveAttribute('aria-checked', 'true');
-  await expect(sheet.getByRole('radiogroup', { name: 'Text size' }).getByRole('radio')).toHaveCount(4);
-  await expect(sheet.getByText("Romanization changes only this preview, never a learner's settings. Language and text size apply to every screen on this device.")).toBeVisible();
+  // Romanization only (AMENDMENTS-DISPLAY-NAV section 6): the language and text size are the device's, on the Aa sheet.
+  await expect(sheet.getByRole('radiogroup')).toHaveCount(1);
+  await expect(sheet.getByText("These choices change only this preview. No learner's settings change.")).toBeVisible();
   await sheet.getByRole('radio', { name: 'Hidden until tap' }).click();
   await expect(sheet.getByRole('radio', { name: 'Hidden until tap' })).toHaveAttribute('aria-checked', 'true');
   await shot(page, 'br7-browse-lesson-display-pixel5');
@@ -757,6 +753,21 @@ test('Lesson display: romanization choices apply at once, Done and Escape close,
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Lesson display' })).toHaveCount(0);
   await expect(opener).toBeFocused();
+});
+
+test('the Aa button beside Lesson display opens the device Display sheet: the language reaches the whole device', async ({ page }) => {
+  await openBrowse(page, 'account');
+  const aa = page.getByTestId('browse-display-open').first();
+  await expect(aa).toHaveAccessibleName('Display: language and text size');
+  await aa.click();
+  const sheet = page.getByTestId('browse-device-display');
+  await expect(sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
+  await expect(sheet.getByRole('radiogroup', { name: 'Text size' }).getByRole('radio')).toHaveCount(4);
+  await sheet.getByRole('radio', { name: 'Español' }).click();
+  await sheet.getByRole('button', { name: 'Usar Español' }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+  // The device record, which the write fence admits (it holds no learner data).
+  await expect.poll(async () => JSON.parse((await readAllStored(page))['hr:device:settings'] ?? '{}').uiLocale).toBe('es');
 });
 
 test('keep switch: on keeps the pass for a new tab, also offline; off removes it, and this tab keeps working', async ({ page, context }) => {

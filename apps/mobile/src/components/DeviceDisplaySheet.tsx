@@ -1,88 +1,86 @@
 import { DisplaySheet, textSizeOptions, type DisplayOption } from '@hangul-route/design-system';
-import { LOCALE_META, availableLocales, type UiLocale } from '@hangul-route/i18n';
+import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { TextSize } from '@hangul-route/content-schema';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { languageOptions } from '../logic/locale/language-picker';
-import { useLocaleStore, type LocaleChangeSource } from '../store/locale-store';
+import { useLocaleStore } from '../store/locale-store';
 
 /**
- * The Display (Aa) sheet of the learner app, All lessons and the presenter (owner items 6 and
- * 7): the design-system `DisplaySheet` wired to the device record (`useLocaleStore`), so a
- * language or text size chosen here applies to every screen and every open tab of the device.
- * A language change applies at once and the sheet, now in the new language, offers a one-tap
- * way back to the language it came from (the mis-tap rule of F-I18N-001 §3.3). Not behind the
+ * The Display (Aa) sheet of the learner app and the presenter (AMENDMENTS-DISPLAY-NAV section 3.6;
+ * owner items 6 and 7): the design-system `DisplaySheet` wired to the device record
+ * (`useLocaleStore`), so a language or text size chosen here applies to every screen and every
+ * open tab of the device. A text size applies at once. Another language first shows the confirm
+ * step written in that language ("Use Español on this device?", Use / Back; the F-I18N-001 §3.3
+ * safety rule); Use writes the record and the sheet re-renders in the new language. Not behind the
  * grown-up gate: display only, reversible, no learner data.
  */
 export interface DeviceDisplaySheetProps {
   visible: boolean;
   onClose: () => void;
-  /** The sheet's title; defaults to "Display" (All lessons: "Lesson display"). */
-  title?: string;
-  /** Rows above Language (All lessons: Romanization). */
-  children?: React.ReactNode;
-  /** The line under the controls; defaults to the device-wide note. */
-  note?: string;
   testID?: string;
 }
 
-export function DeviceDisplaySheet({ visible, onClose, title, children, note, testID }: DeviceDisplaySheetProps): React.ReactElement {
-  const d = useMessages().common.display;
+export function DeviceDisplaySheet({ visible, onClose, testID }: DeviceDisplaySheetProps): React.ReactElement {
+  const messages = useMessages();
+  const d = messages.common.display;
   const locale = useLocale();
   const textSize = useLocaleStore((s) => s.textSize);
   const setDeviceLocale = useLocaleStore((s) => s.setDeviceLocale);
   const setTextSize = useLocaleStore((s) => s.setTextSize);
-  const [previous, setPrevious] = useState<UiLocale | null>(null);
-  // The way back is offered for the change made while this sheet is open, and only then.
+  const [pending, setPending] = useState<UiLocale | null>(null);
+  // A confirm step belongs to the sheet that asked it; closing the sheet drops it.
   useEffect(() => {
-    if (!visible) setPrevious(null);
+    if (!visible) setPending(null);
   }, [visible]);
 
   const options = useMemo<DisplayOption[]>(
     () => languageOptions(availableLocales()).map((o) => ({ value: o.locale, label: o.endonym, lang: o.htmlLang })),
     [],
   );
-  const choose = (next: UiLocale, source: LocaleChangeSource): void => {
-    if (next === locale) return;
-    setPrevious(locale);
-    setDeviceLocale(next, source);
-  };
+  // The step speaks the language being chosen, so the person sees at once whether they can read it.
+  const confirm = pending === null ? null : getMessages(dictionaryLocale(pending)).common.display.confirm;
 
   return (
     <DisplaySheet
       visible={visible}
-      title={title ?? d.title}
+      title={d.title}
       testID={testID}
       language={{
         label: d.language,
         options,
         selected: locale,
-        onSelect: (value) => choose(value as UiLocale, 'settings'),
-        undo:
-          previous !== null && previous !== locale
+        onSelect: (value) => {
+          const next = value as UiLocale;
+          setPending(next === locale ? null : next);
+        },
+        confirm:
+          pending !== null && confirm !== null
             ? {
-                label: d.back(LOCALE_META[previous].endonym),
-                onPress: () => {
-                  setDeviceLocale(previous, 'settings');
-                  setPrevious(null);
+                question: confirm.question(LOCALE_META[pending].endonym),
+                use: confirm.use(LOCALE_META[pending].endonym),
+                back: confirm.back(LOCALE_META[locale].endonym),
+                lang: LOCALE_META[pending].htmlLang,
+                onUse: () => {
+                  setDeviceLocale(pending, 'settings');
+                  setPending(null);
                 },
+                onBack: () => setPending(null),
               }
             : null,
       }}
       textSize={{
         label: d.textSize,
-        options: textSizeOptions(d.sizes),
+        options: textSizeOptions(d.size),
         selected: textSize,
         onSelect: (step: TextSize) => setTextSize(step),
-        sample: d.sample,
-        glyph: d.glyph,
+        sample: d.preview,
+        glyph: d.button,
       }}
-      note={note ?? d.note}
-      doneLabel={d.done.cta}
-      closeLabel={d.close}
+      note={d.note}
+      doneLabel={messages.common.buttons.done}
+      closeLabel={messages.common.buttons.close}
       onClose={onClose}
-    >
-      {children}
-    </DisplaySheet>
+    />
   );
 }

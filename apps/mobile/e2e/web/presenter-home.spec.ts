@@ -162,10 +162,11 @@ test.describe('presenter home, wide (two columns)', () => {
     await page.goto('/present');
     await expect(page.getByRole('radiogroup', { name: 'Presenter language' })).toHaveCount(0);
     const aa = page.getByTestId('presenter-home-display');
-    await expect(aa).toHaveAccessibleName('Display');
+    await expect(aa).toHaveAccessibleName('Display: language and text size');
     await aa.click();
     const sheet = page.getByTestId('presenter-display-sheet');
-    await sheet.getByRole('radiogroup', { name: 'Language on this device' }).getByRole('radio', { name: 'Español' }).click();
+    await sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Español' }).click();
+    await sheet.getByRole('button', { name: 'Usar Español' }).click();
     // The home speaks the device's language at once, and the choice is the device's (stored with its time).
     await expect(page.getByRole('heading', { level: 1, name: 'Proyección' })).toBeVisible();
     await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/) });

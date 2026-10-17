@@ -835,5 +835,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.classScope.notice': [['Mina', 'Saturday Class B']],
   'console.reportScope.firstTry': [[0], [76], [100]],
   'learner.classUpdate.moved': [['Mina', 'Saturday Class B']],
-  'common.display.back': [['English'], ['Español']],
+  'common.display.confirm.question': [['English'], ['Español']],
+  'common.display.confirm.use': [['English'], ['Español']],
+  'common.display.confirm.back': [['English'], ['Español']],
+  'learner.profile.display.line': [['English', 'Standard'], ['Español', 'Largest']],
 };

@@ -1018,9 +1018,10 @@ export const consoleMsgs = {
       strokeGuide: 'Stroke guide',
       strokeNote: 'Simplified: not a calligraphy reference.',
       sound: 'Play sounds',
-      /** The deck's slide language; the default follows the presenting device and puts no language in the link. */
-      slidesLanguage: 'Slides language',
-      sameAsDevice: 'Same as this device',
+      /** The deck's slide language (AMENDMENTS-LECTURE-V2 section 18.4); the default writes no `options.uiLocale`. */
+      language: 'Slides language',
+      languageSame: 'Same as this device',
+      languageHint: 'A copied link uses the language of the device that opens it.',
     },
     picker: {
       title: 'Helper picker',

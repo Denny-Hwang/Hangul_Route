@@ -175,6 +175,11 @@ export const learner = {
     install: { label: 'Install on this device', a11yLabel: 'Install Hangul Route on this device' },
     /** The link at the foot of Profiles & settings to the site's /licenses page (owner decision 2026-10-14). */
     licenses: { label: 'Open-source notices', fallback: 'Open hangulroute.com/licenses in a browser.', gateDone: 'Grown-up check done. Tap Open-source notices again to open the page.' },
+    /** The Display row (AMENDMENTS-DISPLAY-NAV section 10): opens the Display sheet; its line names the device's language and text size. */
+    display: {
+      row: 'Display',
+      line: (language: string, size: string) => `${language} · ${size} text`,
+    },
     /** Always shown: it does not depend on a second language (F-I18N-001 D2). */
     reading: {
       title: 'Reading practice',

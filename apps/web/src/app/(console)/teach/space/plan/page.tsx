@@ -20,7 +20,7 @@ import { addFrom, draftForAdd, withQuest } from '@/lib/console/plan-add';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 interface Draft {
   id?: string;
@@ -299,7 +299,7 @@ function PlanInner(): JSX.Element {
         />
       ) : (
         <section aria-label={p.builderLabel}>
-          <h1 style={{ fontSize: rem(typography.size.title), margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
+          <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
           {suggestNotice ? <Notice>{suggestNotice}</Notice> : null}
           {plans && plans.length === 0 ? (
             <Notice>

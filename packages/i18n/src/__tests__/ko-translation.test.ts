@@ -317,6 +317,4 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'landing.localeBanner.close.cta',
   // F-TCH-004 PR 6: the presenter's slide counter, two numbers and a slash.
   'learner.presenter.bar.counter',
-  // Owner items 6 and 7: the Aa sign of the Display sheet, a glyph hidden from assistive tech.
-  'common.display.glyph',
 ];

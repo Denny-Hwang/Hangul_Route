@@ -11,7 +11,7 @@ import type { PlanView } from '@/lib/console/api';
 import { type ReadoutRow, memberKind, planStatusLabel, planSummary, readoutLine } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The published plan's readout (wireframe console/plan-builder, F-PLAN-001 §3.5): summary,
@@ -49,7 +49,7 @@ export function PlanReadout({
   return (
     <section aria-label={p.readoutLabel}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md, flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: rem(typography.size.title), margin: 0 }}>{plan.title}</h1>
+        <h1 style={{ fontSize: headRem(typography.size.title), margin: 0 }}>{plan.title}</h1>
         <span style={{ color: colors.text.muted }}>{planStatusLabel(plan, locale)}</span>
       </div>
       <Muted>{planSummary(plan.items.length, plan.targetLearnerIds ? plan.targetLearnerIds.length : null, kind, locale)}</Muted>

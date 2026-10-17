@@ -17,7 +17,7 @@ import { useMessages } from '@/lib/i18n/locale-context';
 import { BrowseLink, useBrowseLinksShown } from './BrowseLink';
 import { PipShape, stageStateParts } from './JourneyParts';
 import { Notice, panelStyle } from './ui';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The grown-up Learning Route (AMENDMENTS-ROUTE-LEARNING-ROUTE section 6.1, LR-8; screen spec
@@ -239,7 +239,7 @@ function StageRowItem({ row, preview, previewLabel }: { row: LearningRouteRow; p
   );
 }
 
-const headingStyle: CSSProperties = { fontSize: rem(typography.size.title), margin: 0, lineHeight: typography.leading.tight };
+const headingStyle: CSSProperties = { fontSize: headRem(typography.size.title), margin: 0, lineHeight: typography.leading.tight };
 const updatedStyle: CSSProperties = { ...reset, fontSize: rem(typography.size.bodySm), color: colors.text.muted };
 
 /**

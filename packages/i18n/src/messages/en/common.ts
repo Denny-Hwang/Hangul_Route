@@ -76,26 +76,25 @@ export const common = {
   /**
    * The Display (Aa) sheet (owner items 6 and 7): the device's one UI language and text size, read by
    * the learner app, All lessons, the presenter and the grown-up pages, so every surface words it the
-   * same way. The Aa button draws a sign, not a word; `open` is its accessible name.
+   * same way (AMENDMENTS-DISPLAY-NAV section 10). Done and the scrim reuse `buttons.done` and `buttons.close`.
    */
   display: {
-    /** The sign the Aa button and each Text size step draw; hidden from assistive tech. */
-    glyph: 'Aa',
-    open: 'Display',
+    /** The Aa button: the sign it draws (hidden from assistive tech) and its accessible name. */
+    button: 'Aa',
+    a11y: 'Display: language and text size',
     title: 'Display',
-    /** The second line of the Display row on Profiles & settings. */
-    summary: 'Language and text size',
-    language: 'Language on this device',
+    language: 'Language',
     textSize: 'Text size',
-    sizes: { standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' },
-    /** The live sample line, drawn at the chosen size. */
-    sample: 'Text looks like this.',
-    note: 'Every screen on this device uses these.',
-    /** After a language change, written in the new language: the one-tap way back. */
-    back: (endonym: string) => `Back to ${endonym}`,
-    done: { cta: 'Done' },
-    /** The scrim's accessible name. */
-    close: 'Close',
+    size: { standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' },
+    /** The live preview line, drawn at the chosen size. */
+    preview: 'This is how text looks.',
+    note: 'For everyone on this device. Change it any time.',
+    /** Choosing another language: the confirm step, drawn in the language chosen (F-I18N-001 §3.3 safety rule). */
+    confirm: {
+      question: (endonym: string) => `Use ${endonym} on this device?`,
+      use: (endonym: string) => `Use ${endonym}`,
+      back: (endonym: string) => `Back to ${endonym}`,
+    },
   },
   /**
    * The learner level's words (F-LEARN-001 §3.7, content-schema `LEARNER_LEVELS`) in level order: how much the learner

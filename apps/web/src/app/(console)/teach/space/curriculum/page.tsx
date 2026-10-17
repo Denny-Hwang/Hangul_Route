@@ -47,7 +47,7 @@ import {
 } from '@/lib/console/curriculum';
 import { dateKey } from '@/lib/console/plans';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 const STEPS = 4;
 
@@ -251,7 +251,7 @@ function CurriculumInner(): JSX.Element {
       ) : null}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md, flexWrap: 'wrap', marginBottom: spacing.md }}>
-        <h1 ref={heading} tabIndex={-1} style={{ fontSize: rem(typography.size.title), margin: 0 }}>{step === STEPS ? c.preview.title : c.title}</h1>
+        <h1 ref={heading} tabIndex={-1} style={{ fontSize: headRem(typography.size.title), margin: 0 }}>{step === STEPS ? c.preview.title : c.title}</h1>
         <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}>{c.step(step, STEPS)}</span>
       </div>
 

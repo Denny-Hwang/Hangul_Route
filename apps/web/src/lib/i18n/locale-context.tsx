@@ -21,7 +21,7 @@ import {
   writeStoredLocale,
   writeStoredTextSize,
 } from './console-locale';
-import { ROOT_FONT_SIZE } from '../console/rem';
+import { HEAD_RATIO_CSS_VAR, ROOT_FONT_SIZE, headRatio } from '../console/rem';
 import { followDeviceSettings, readDeviceSettings, writeDeviceSettings, type DeviceSettingsRead } from './device-settings';
 
 /**
@@ -86,6 +86,23 @@ export interface LocaleProviderDeps {
   writeDevice?: typeof writeDeviceSettings;
   follow?: typeof followDeviceSettings;
   now?: () => string;
+  /** Takes `lang` out of the address bar (`history.replaceState`); the rest of the query stays as written. */
+  dropLang?: () => void;
+}
+
+/** The address without `lang`, the rest of the query and the hash kept as written. */
+export function withoutLang(location: { pathname: string; search: string; hash: string }): string {
+  const pairs = location.search.replace(/^\?/, '').split('&').filter((pair) => pair !== '' && pair.split('=')[0] !== 'lang');
+  return `${location.pathname}${pairs.length > 0 ? `?${pairs.join('&')}` : ''}${location.hash}`;
+}
+
+function browserDropLang(): void {
+  try {
+    if (typeof window === 'undefined') return;
+    window.history.replaceState(window.history.state, '', withoutLang(window.location));
+  } catch {
+    // A history that refuses (a sandboxed frame) keeps the parameter; it never wins over the device anyway.
+  }
 }
 
 export function LocaleProvider({ children, available, deps }: { children: ReactNode; available?: readonly UiLocale[]; deps?: LocaleProviderDeps }): JSX.Element {
@@ -95,6 +112,7 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
     writeDevice: deps?.writeDevice ?? writeDeviceSettings,
     follow: deps?.follow ?? followDeviceSettings,
     now: deps?.now ?? (() => new Date().toISOString()),
+    dropLang: deps?.dropLang ?? browserDropLang,
   });
   const [locale, setLocaleState] = useState<UiLocale>(DEFAULT_LOCALE);
   const [textSize, setTextSizeState] = useState<TextSize>(DEFAULT_TEXT_SIZE);
@@ -126,6 +144,8 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
       if (live) setReady(true);
     }, RECORD_WAIT_MS);
     const query = queryLocale(typeof window === 'undefined' ? '' : window.location.search);
+    // The hand-off has been read: it leaves the address, so a reload or a bookmark never carries it.
+    if (query !== null || (typeof window !== 'undefined' && /[?&]lang=/.test(window.location.search))) io.current.dropLang();
     void io.current
       .readDevice()
       .catch((): DeviceSettingsRead => ({ readable: false }))
@@ -140,13 +160,10 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
         clearTimeout(wait);
         if (picked.seed !== null) {
           const seed = picked.seed;
-          // A `?lang=` seed is not a person's choice here: stored without a time, so a signed-in account's choice can still win.
+          const at = io.current.now();
+          // A `?lang=` seeds a device that never chose, stamped now (AMENDMENTS-DISPLAY-NAV section 3.4).
           void io.current
-            .writeDevice((stored) => {
-              if (stored.uiLocale !== undefined) return stored;
-              const { uiLocaleAt: _seedHasNoTime, ...rest } = stored;
-              return { ...rest, uiLocale: seed };
-            })
+            .writeDevice((stored) => (stored.uiLocale !== undefined ? stored : { ...stored, uiLocale: seed, uiLocaleAt: at }))
             .then((written) => {
               if (live && written) setRecord(written);
             });
@@ -183,10 +200,14 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
 
   useEffect(() => {
     const style = document.documentElement.style;
-    style.setProperty(TEXT_SCALE_CSS_VAR, String(textSizeFactor(textSize)));
+    const f = textSizeFactor(textSize);
+    style.setProperty(TEXT_SCALE_CSS_VAR, String(f));
+    // Headings grow half as much (AMENDMENTS-DISPLAY-NAV section 4): their rem is multiplied by this ratio.
+    style.setProperty(HEAD_RATIO_CSS_VAR, String(headRatio(f)));
     style.setProperty('font-size', ROOT_FONT_SIZE);
     return () => {
       style.removeProperty(TEXT_SCALE_CSS_VAR);
+      style.removeProperty(HEAD_RATIO_CSS_VAR);
       style.removeProperty('font-size');
     };
   }, [textSize]);

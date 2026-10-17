@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useId, type ReactNode } from 'react';
 import type { BillingAccountCardView, BillingCardView, BillingHomeView, BillingOfferView, ContactRowView, ReceiptRowView } from '@/lib/console/billing-summary';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { headRem } from '@/lib/console/rem';
 
 /**
  * The billing home's parts (F-BILL-002 B-8a; screen spec `design/screens/billing/billing-home.md`, mocks
@@ -37,7 +38,7 @@ export const BILLING_CSS = `
 .hr-bill p,.hr-bill h1,.hr-bill h2,.hr-bill h3,.hr-bill h4,.hr-bill ul,.hr-bill form{margin:0;padding:0}
 .hr-bill ul{list-style:none}
 .hr-bill-reading{max-width:${px(layout.maxWidth.reading)}}
-.hr-bill h1{font-size:${rem(typography.size.title)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
+.hr-bill h1{font-size:${headRem(typography.size.title)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
 .hr-bill-hidden{position:absolute;width:${px(borderWidth.thin)};height:${px(borderWidth.thin)};margin:-${px(borderWidth.thin)};padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .hr-bill-section{display:flex;flex-direction:column;gap:${rem(spacing.md)}}
 .hr-bill-section>h2{font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}

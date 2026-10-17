@@ -8,7 +8,7 @@ import type { MemberView, Roster } from '@/lib/console/api';
 import { canDeleteLearnerData } from '@/lib/console/relink';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The sections of console/space-settings (F-TCH-001 §10.3) once the roster and members have
@@ -86,7 +86,7 @@ export function SettingsSections({
       {!archived ? (
         <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.joinCode.title}>
           <h2 style={h2Style}>{s.joinCode.title}</h2>
-          <div style={{ fontSize: rem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>{roster.joinCode ?? '—'}</div>
+          <div style={{ fontSize: headRem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>{roster.joinCode ?? '—'}</div>
           <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
           <Button disabled={busy} onClick={onRegenerate}>
             {roster.joinCode ? s.joinCode.regenerate.cta : s.joinCode.create.cta}

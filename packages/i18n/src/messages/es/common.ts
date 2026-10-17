@@ -64,18 +64,19 @@ export const common = {
   },
   /** Hoja Pantalla (Aa): el único idioma y el tamaño del texto de este dispositivo. */
   display: {
-    glyph: 'Aa',
-    open: 'Pantalla',
+    button: 'Aa',
+    a11y: 'Pantalla: idioma y tamaño del texto',
     title: 'Pantalla',
-    summary: 'Idioma y tamaño del texto',
-    language: 'Idioma de este dispositivo',
+    language: 'Idioma',
     textSize: 'Tamaño del texto',
-    sizes: { standard: 'Normal', large: 'Grande', larger: 'Más grande', largest: 'Máximo' },
-    sample: 'El texto se ve así.',
-    note: 'Se aplica a todas las pantallas de este dispositivo.',
-    back: (endonym: string) => `Volver a ${endonym}`,
-    done: { cta: 'Listo' },
-    close: 'Cerrar',
+    size: { standard: 'Normal', large: 'Grande', larger: 'Más grande', largest: 'Máximo' },
+    preview: 'Así se ve el texto.',
+    note: 'Para todos en este dispositivo. Cámbialo cuando quieras.',
+    confirm: {
+      question: (endonym: string) => `¿Usar ${endonym} en este dispositivo?`,
+      use: (endonym: string) => `Usar ${endonym}`,
+      back: (endonym: string) => `Volver a ${endonym}`,
+    },
   },
   /** Niveles de lectura (F-LEARN-001 §3.7): cuánto lee la persona, nunca una edad. */
   levels: {

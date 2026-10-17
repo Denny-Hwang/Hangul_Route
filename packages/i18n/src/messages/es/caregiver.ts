@@ -692,7 +692,7 @@ export const caregiver = {
       romanization: 'Romanización',
       always: 'Siempre visible',
       tap: 'Oculta hasta tocar',
-      note: 'La romanización cambia solo en esta vista previa, nunca la configuración de un estudiante. El idioma y el tamaño del texto se aplican a todas las pantallas de este dispositivo.',
+      note: 'Estas opciones cambian solo esta vista previa. La configuración de los estudiantes no cambia.',
       done: { cta: 'Listo' },
     },
     episode: {

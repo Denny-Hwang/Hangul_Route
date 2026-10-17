@@ -12,7 +12,7 @@ import { readTrustedEpoch } from '@/lib/console/shell-store';
 import { clearGrownUpTab, readUnlock, touchUnlock } from '@/lib/console/unlock';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { DisplayButton } from './DisplaySheet';
-import { rem } from '@/lib/console/rem';
+import { headRem, rem } from '@/lib/console/rem';
 
 /**
  * The grown-up lock (F-APP-001 section 3.9, OD-3; wireframe design/wireframes/shell/grown-up-lock.md).
@@ -425,7 +425,7 @@ export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToL
         </LockButton>
         <section role="region" aria-labelledby={TITLE_ID} data-testid="grown-up-lock" style={sectionStyle}>
           <IconSvg name="lock" size={spacing.xxxl} color={colors.text.secondary} />
-          <h1 id={TITLE_ID} tabIndex={-1} ref={headingRef} style={{ margin: 0, fontSize: rem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight, outline: 'none' }}>
+          <h1 id={TITLE_ID} tabIndex={-1} ref={headingRef} style={{ margin: 0, fontSize: headRem(typography.size.title), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight, outline: 'none' }}>
             {lock.title}
           </h1>
           <p style={{ margin: 0, marginBottom: spacing.sm, fontSize: rem(typography.size.body), lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>{line}</p>

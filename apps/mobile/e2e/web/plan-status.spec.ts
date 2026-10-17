@@ -143,7 +143,7 @@ async function openPlanDetails(page: Page): Promise<void> {
 
 /** The console's billing page, in this tab, with the mocked plan and no lock. */
 async function expectBillingPage(page: Page): Promise<void> {
-  await expect(page).toHaveURL(/\/account\/billing\?lang=en$/);
+  await expect(page).toHaveURL(/\/account\/billing$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Billing' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 3, name: /Kim family/ })).toBeVisible();
   await expect(page.getByText(LOCK_TITLE, { exact: true })).toHaveCount(0);
