@@ -74,6 +74,38 @@ export interface PresenterEnv {
   screen?: { orientation?: { lock?: (o: string) => Promise<void>; unlock?: () => void } } | null;
   /** Makes the Web Audio context the timer chime plays on; null without Web Audio. */
   createAudioContext?: (() => ChimeContextLike) | null;
+  /** `navigator.serviceWorker`; null without one (the stale-presenter Reload then only reloads). */
+  serviceWorker?: ServiceWorkerContainerLike | null;
+  /**
+   * The page's `BroadcastChannel('hr-tabs')` (`window.__hrTabs`, made by the PWA shell script),
+   * which every open tab of the app answers; null without one.
+   */
+  tabs?: TabsChannelLike | null;
+}
+
+/** The slice of `BroadcastChannel` the stale-presenter Reload uses to find other open tabs. */
+export interface TabsChannelLike {
+  postMessage(message: unknown): void;
+  addEventListener(type: 'message', fn: (event: { data?: unknown }) => void): void;
+  removeEventListener(type: 'message', fn: (event: { data?: unknown }) => void): void;
+}
+
+interface ServiceWorkerLike {
+  state?: string;
+  postMessage(message: unknown): void;
+  addEventListener?(type: 'statechange', fn: () => void): void;
+}
+
+interface ServiceWorkerRegistrationLike {
+  update(): Promise<unknown>;
+  waiting?: ServiceWorkerLike | null;
+  installing?: ServiceWorkerLike | null;
+}
+
+/** The slice of `navigator.serviceWorker` the stale-presenter Reload uses. */
+export interface ServiceWorkerContainerLike {
+  getRegistration(): Promise<ServiceWorkerRegistrationLike | undefined>;
+  addEventListener?(type: 'controllerchange', fn: () => void): void;
 }
 
 interface AudioParamLike {
@@ -102,7 +134,7 @@ type Globals = {
   history?: PresenterEnv['history'];
   document?: DocumentLike & { activeElement?: unknown };
   opener?: unknown;
-  navigator?: PresenterEnv['navigator'];
+  navigator?: PresenterEnv['navigator'] & { serviceWorker?: ServiceWorkerContainerLike };
   screen?: PresenterEnv['screen'];
   addEventListener?: EventTargetLike['addEventListener'];
   removeEventListener?: EventTargetLike['removeEventListener'];
@@ -125,6 +157,8 @@ function browserEnv(): PresenterEnv {
     navigator: g.navigator ?? null,
     screen: g.screen ?? null,
     createAudioContext: browserAudioContext,
+    serviceWorker: g.navigator?.serviceWorker ?? null,
+    tabs: (g as { __hrTabs?: TabsChannelLike }).__hrTabs ?? null,
   };
 }
 
@@ -250,6 +284,150 @@ export function reloadOnDeckLink(env: PresenterEnv = browserEnv()): () => void {
   };
   target.addEventListener('hashchange', onHash);
   return () => target.removeEventListener('hashchange', onHash);
+}
+
+// --- stale presenter (AMENDMENTS-LECTURE-V2 section 4.5) ------------------------------------------
+
+/** How long Reload waits for a newer presenter to install and take over before it reloads anyway. */
+export const UPDATE_WAIT_MS = 8000;
+/** How long Reload waits for another open tab of the app to answer the `hr-tabs` ping. */
+export const TABS_WAIT_MS = 300;
+
+/**
+ * Whether another tab of the app is open: pings `hr-tabs` and waits `ms` for an answer. A channel
+ * never delivers a message to the object that sent it, so this tab's own answer never counts.
+ * False without a channel or on any fault.
+ */
+export function otherTabsOpen(env: PresenterEnv = browserEnv(), ms: number = TABS_WAIT_MS): Promise<boolean> {
+  const tabs = env.tabs;
+  if (!tabs) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (open: boolean): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try {
+        tabs.removeEventListener('message', onMessage);
+      } catch {
+        // Nothing to remove.
+      }
+      resolve(open);
+    };
+    const onMessage = (event: { data?: unknown }): void => {
+      if ((event.data as { type?: unknown } | null | undefined)?.type === 'hr-tab-here') finish(true);
+    };
+    const timer = setTimeout(() => finish(false), ms);
+    try {
+      tabs.addEventListener('message', onMessage);
+      tabs.postMessage({ type: 'hr-tab-ping' });
+    } catch {
+      finish(false);
+    }
+  });
+}
+
+/** `promise`'s value, or undefined once `ms` pass or it fails. */
+function within<T>(promise: Promise<T>, ms: number): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(undefined), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(undefined);
+      },
+    );
+  });
+}
+
+async function registration(env: PresenterEnv, ms: number): Promise<ServiceWorkerRegistrationLike | undefined> {
+  const container = env.serviceWorker;
+  if (!container) return undefined;
+  try {
+    return await within(container.getRegistration(), ms);
+  } catch {
+    return undefined;
+  }
+}
+
+/** The worker that installs after an update, once it is installed (it then waits); undefined after `ms`. */
+function installed(worker: ServiceWorkerLike, ms: number): Promise<ServiceWorkerLike | undefined> {
+  return within(
+    new Promise<ServiceWorkerLike>((resolve) => {
+      if (worker.state === 'installed') resolve(worker);
+      worker.addEventListener?.('statechange', () => {
+        if (worker.state === 'installed') resolve(worker);
+      });
+    }),
+    ms,
+  );
+}
+
+/**
+ * A link this presenter cannot read (`unsupported_version`) usually comes from a newer one: asks
+ * the service worker to look for it now, so a Reload finds it installed. Never throws.
+ */
+export async function checkForUpdate(env: PresenterEnv = browserEnv(), ms: number = UPDATE_WAIT_MS): Promise<void> {
+  const reg = await registration(env, ms);
+  if (reg) await within(Promise.resolve().then(() => reg.update()), ms);
+}
+
+/**
+ * The invalid-link page's Reload: holds the link in this tab again (the invalid page let it go),
+ * so the reload opens it; asks the service worker for a newer presenter and, when one installed
+ * and no other tab of the app is open (`otherTabsOpen`), lets it take over (`SKIP_WAITING`) and
+ * reloads on `controllerchange`. With another tab open (a learner mid-quest, a second presenter
+ * mid-lecture) it only reloads: taking over would switch that tab to the new worker and delete the
+ * precache it runs on (`clientsClaim`, `cleanupOutdatedCaches`), and the page's line asks to close
+ * the other tabs. Offline or with nothing newer, it reloads at once.
+ *
+ * One deadline covers the whole flow: every stage (registration, update, install, the tab ping,
+ * the takeover) gets only what is left of `ms`, so the page reloads exactly once, `ms` after the
+ * tap at the latest. Resolves once the reload has been asked for. Never throws.
+ *
+ * Limit: a background tab the browser has frozen or discarded (tab freezing, the back-forward
+ * cache) cannot answer the ping in time and counts as closed, so a takeover can still reach it;
+ * that is why the page's line asks to close the other tabs first.
+ */
+export function reloadForUpdate(raw: string, env: PresenterEnv = browserEnv(), ms: number = UPDATE_WAIT_MS): Promise<void> {
+  holdOpenDeck(raw, {}, env);
+  const start = Date.now();
+  const left = (): number => Math.max(0, ms - (Date.now() - start));
+  return new Promise<void>((resolve) => {
+    let done = false;
+    const once = (): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(deadline);
+      try {
+        env.reload?.();
+      } catch {
+        // The reload itself is the browser's.
+      }
+      resolve();
+    };
+    const deadline = setTimeout(once, ms);
+    const flow = async (): Promise<void> => {
+      const reg = await registration(env, left());
+      if (done) return;
+      if (!reg) return once();
+      await within(Promise.resolve().then(() => reg.update()), left());
+      if (done) return;
+      const waiting = reg.waiting ?? (reg.installing ? await installed(reg.installing, left()) : undefined);
+      if (done) return;
+      if (!waiting) return once();
+      const others = await otherTabsOpen(env, Math.min(TABS_WAIT_MS, left()));
+      if (done) return;
+      if (others) return once();
+      env.serviceWorker?.addEventListener?.('controllerchange', once);
+      waiting.postMessage({ type: 'SKIP_WAITING' });
+    };
+    flow().catch(once);
+  });
 }
 
 /** The fixed tab title (`learner.presenter.docTitle`); the deck title never goes here (section 3.2). */

@@ -215,12 +215,21 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
   });
 
   test('a teacher laptop that never ran the learner app keeps the console language it chose before the record existed', async ({ page }) => {
+    // The console's own choice from before the record existed is on the laptop before any grown-up page runs (an init
+    // script, once per tab). Written by `page.evaluate` after a page has loaded, it raced that page's own mirror sync
+    // (which clears a mirror the record does not hold) and the reload, and CI's Chromium read English.
+    await page.addInitScript(() => {
+      if (window.sessionStorage.getItem('e2e:console-choice') !== null) return;
+      window.sessionStorage.setItem('e2e:console-choice', 'set');
+      window.localStorage.setItem('hr:console:uiLocale', 'ko');
+    });
     await page.goto('/signin');
-    await page.evaluate(() => window.localStorage.setItem('hr:console:uiLocale', 'ko'));
-    await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     // Folded into the device record with the 1970 stamp (an account choice still wins over it).
     await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: '1970-01-01T00:00:00.000Z' });
+    // The record holds it now: a reload keeps Korean.
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
   });
 
   test('a console deck with no explicit slide language opens the home and the start screen in the device language', async ({ page }) => {

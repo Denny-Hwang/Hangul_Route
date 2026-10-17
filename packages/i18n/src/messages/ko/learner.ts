@@ -1708,6 +1708,8 @@ export const learner = {
         title: '이 링크는 열리지 않아요',
         line: '빠른 수업을 열거나 콘솔 페이지에서 새 링크를 받아요.',
         cta: '빠른 수업 열기',
+        reload: '다시 불러오기',
+        staleLine: '새 버전에서 만든 링크예요. 다른 Hangul Route 탭을 닫고 다시 불러와요.',
       },
       loading: '수업을 불러오고 있어요',
       tooSmall: '창을 키우거나 화면을 돌려 주세요.',
