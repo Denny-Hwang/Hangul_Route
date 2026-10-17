@@ -107,3 +107,23 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
     ]);
   });
 });
+
+describe('vocabWord: one word for a Word review (AMENDMENTS-LECTURE-V2 section 4.5, LV-2)', () => {
+  it('gives a bundled word by id in the presenter language, with its picture', () => {
+    expect(lectureVocabTopics('en').vocabWord('vocab:sagwa-apple')).toEqual({ id: 'vocab:sagwa-apple', ko: '사과', romanization: 'sagwa', gloss: 'apple', wordArt: 'food-apple' });
+    expect(lectureVocabTopics('es').vocabWord('vocab:sagwa-apple')).toMatchObject({ ko: '사과', romanization: 'sagwa', gloss: 'manzana' });
+    expect(lectureVocabTopics('en').vocabWord('vocab:nope')).toBeUndefined();
+  });
+
+  it('a word whose topics are all draft or preview is not ready; one ready topic is enough', () => {
+    const items = [
+      item({ id: 'vocab:hidden', topics: ['animals'] }),
+      item({ id: 'vocab:shared', topics: ['animals', 'food'] }),
+      item({ id: 'vocab:orphan', topics: ['body'] }),
+    ];
+    const source = lectureVocabTopicsFrom([topic({ id: 'vocab-topic:animals', key: 'animals', status: 'draft' }), food], items, 'en');
+    expect(source.vocabWord('vocab:hidden')).toBe('not-ready');
+    expect(source.vocabWord('vocab:shared')).toMatchObject({ id: 'vocab:shared' });
+    expect(source.vocabWord('vocab:orphan')).toBe('not-ready');
+  });
+});

@@ -1,17 +1,24 @@
 import {
   CATALOG,
+  LECTURE_PRESETS,
   LectureDeckSchema,
+  PRESET_LENGTHS,
   presetDeck,
+  presetMinutesOf,
   resolvePreset,
+  StageKeySchema,
   type Episode,
   type HeritageCard,
   type LectureDeckInput,
+  type LecturePreset,
+  type PresetContext,
   type Quest,
   type QuestStep,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import type { MinigameScope } from '../../minigame-config';
+import { lectureBundle } from '../content';
 import {
   expandDeck,
   withBuilds,
@@ -177,6 +184,7 @@ const sunMoon: LectureStory = {
   title: { ko: '해와 달', romanization: 'haewa dal', en: 'The Sun and the Moon' },
   hoyaIntroEn: 'A story about the sky.',
   coverSceneId: 's1',
+  minutes: 5,
   keywords: [
     { id: 'sun', ko: '해', romanization: 'hae', en: 'sun' },
     { id: 'moon', ko: '달', romanization: 'dal', en: 'moon' },
@@ -309,7 +317,8 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     expect(slides[11]!.key).toBe('end');
     expect(new Set(keys(slides)).size).toBe(slides.length);
     expect(skipped).toEqual([]);
-    expect(minutes).toBe(4 + 3);
+    // Rule 12 (section 4.4, LV-0b O1): the quest's own 3 quiz slides are inside its 4 catalogue minutes.
+    expect(minutes).toBe(4);
   });
 
   it('a Discover step gives a letter per jamo item and a vocab slide per word item; the Check is a counted skip', () => {
@@ -546,7 +555,9 @@ describe('expandDeck: episodes (rule 1)', () => {
     expect(titles).toEqual(['episode:first/title', 'episode:first/quest:letters/title', 'episode:first/quest:words/title']);
     expect(slides[2]!.key).toBe('episode:first/quest:letters/s2/jamo:giyeok');
     expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:gone', reason: 'unknown-id' });
-    expect(minutes).toBe(4 + 4 + 3 + 2);
+    // Two quests of 4 minutes; their own quiz slides are inside those minutes (section 4.4, O1).
+    expect(only(slides, 'quiz').length).toBeGreaterThan(0);
+    expect(minutes).toBe(4 + 4);
   });
 
   it('a preview episode, an episode with no quests and an unknown episode are skipped', () => {
@@ -566,8 +577,10 @@ describe('expandDeck: episodes (rule 1)', () => {
 
   it('a story episode with storyIds expands its title slide and each story', () => {
     const { slides, minutes } = expand([{ kind: 'episode', id: 'episode:shelf-sun-moon' }]);
-    // Rule 12: the episode's quests count their estimated minutes on the storyIds path too.
-    expect(minutes).toBe(4 + only(slides, 'quiz').length);
+    // Rule 12: the episode's quests count their estimated minutes on the storyIds path too; the
+    // stories' check slides are inside them (section 4.4, O1).
+    expect(only(slides, 'quiz').length).toBeGreaterThan(0);
+    expect(minutes).toBe(4);
     expect(keys(slides).slice(0, 3)).toEqual([
       'episode:shelf-sun-moon/title',
       'episode:shelf-sun-moon/story:sun-moon/title',
@@ -993,14 +1006,193 @@ describe('expandDeck: review fixes (never a crash, trace-stroke order, chosen wo
   });
 });
 
-describe('expandDeck: a v2 word-review block before LV-2 (AMENDMENTS-LECTURE-V2 4.5)', () => {
-  it('is a counted skip, never a silent drop, and the rest of the deck still builds', () => {
-    const { slides, skipped } = expand(
-      [{ kind: 'quest', id: 'quest:letters' }, { kind: 'word-review', questIds: ['quest:letters'], vocabIds: [], rounds: 5 }],
-      { v: 2 },
-    );
-    expect(slides[0]?.kind).toBe('title');
-    expect(skipped).toContainEqual({ blockIndex: 1, ref: 'word-review', reason: 'unsupported-step' });
+describe('expandDeck: one card per word per deck (AMENDMENTS-LECTURE-V2 section 5.1, LV-2)', () => {
+  const pw = (ko: string, romanization: string, en: string) => ({ id: `pw-${romanization}`, word: { ko, romanization, en } });
+  const lvScopes: Record<string, MinigameScope> = {
+    'mg:cards4': { kind: 'card-match', cardPairs: pairs4 },
+    'mg:cards4-again': { kind: 'card-match', cardPairs: [...pairs4].reverse(), rounds: 3 },
+    'mg:cards3': { kind: 'card-match', cardPairs: pairs4.slice(0, 3) },
+    'mg:cards-mixed': { kind: 'card-match', cardPairs: [...pairs4.slice(0, 2), { ko: '해', en: 'Sun', romanization: 'hae' }] },
+    'mg:cards-norom': { kind: 'card-match', cardPairs: [...pairs4, { ko: '별', en: 'Star' }] },
+    'mg:pic': {
+      kind: 'pic-word-match',
+      picWord: {
+        boards: [
+          { pairs: [pw('김치', 'gimchi', 'Kimchi'), pw('밥', 'bap', 'Rice'), pw('물', 'mul', 'Water')] },
+          { pairs: [pw('밥', 'bap', 'Rice'), pw('산', 'san', 'Mountain'), pw('김치', 'gimchi', 'Kimchi')] },
+        ],
+      },
+    },
+  };
+  const lvQuests: Quest[] = [
+    quest('cards4', [['present', 'mg:cards4'], ['practice', 'mg:cards4-again']], { rewardCardId: undefined }),
+    quest('cards3', [['present', 'mg:cards3'], ['practice', 'mg:cards3']], { rewardCardId: undefined }),
+    quest('mixed', [['present', 'mg:cards4'], ['practice', 'mg:cards-mixed']], { rewardCardId: undefined }),
+    quest('pic', [['present', 'mg:pic'], ['practice', 'mg:pic']], { rewardCardId: undefined }),
+    quest('norom', [['present', 'mg:cards4'], ['practice', 'mg:cards-norom']], { rewardCardId: undefined }),
+  ];
+  const lv = bundle({
+    scopeFor: (ref) => lvScopes[ref] ?? scopes[ref],
+    questById: (id) => lvQuests.find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+  });
+  const run = (blocks: LectureDeckInput['blocks'], over: Partial<LectureDeckInput> = {}) => expand(blocks, over, lv);
+  const wordKos = (slides: readonly Slide[]) => only(slides, 'vocab').map((s) => s.word.ko);
+
+  it('a word card is shown once per deck, across steps, quests and blocks; a repeat is not a skip', () => {
+    const { slides, skipped, taught } = run([
+      { kind: 'quest', id: 'quest:pic' },
+      { kind: 'quest', id: 'quest:words' },
+      { kind: 'vocab', topicId: 'vocab-topic:food' },
+    ]);
+    expect(wordKos(slides)).toEqual(['김치', '밥', '물', '산']);
+    expect(skipped.filter((s) => s.reason !== 'no-romanization' && s.reason !== 'unknown-id')).toEqual([]);
+    // Each word is taught once, with its first gloss.
+    expect(taught.filter((t) => t.kind === 'word').map((t) => t.ko)).toEqual(['김치', '밥', '물', '산']);
+  });
+
+  it('a pic-word board repeating its words gives each word one card', () => {
+    const { slides } = run([{ kind: 'quest', id: 'quest:pic' }]);
+    expect(keys(only(slides, 'vocab'))).toEqual(['quest:pic/s1/김치', 'quest:pic/s1/밥', 'quest:pic/s1/물', 'quest:pic/s1/산']);
+  });
+
+  it('card-match whose words were all shown, with 4 or more pairs, becomes word-to-meaning quiz rounds', () => {
+    const { slides } = run([{ kind: 'quest', id: 'quest:cards4' }]);
+    expect(kinds(slides)).toEqual(['title', 'vocab', 'vocab', 'vocab', 'vocab', 'quiz', 'quiz', 'quiz', 'end']);
+    const quiz = only(slides, 'quiz');
+    expect(keys(quiz)).toEqual(['quest:cards4/s2/q1', 'quest:cards4/s2/q2', 'quest:cards4/s2/q3']);
+    for (const q of quiz) {
+      expect(q.prompt.ask).toBe('meaning');
+      if (q.prompt.ask === 'meaning') expect(['김치', '밥', '물', '산']).toContain(q.prompt.ko);
+      expect(q.options.filter((o) => o.correct)).toHaveLength(1);
+    }
+  });
+
+  it('pic-word-match whose words were all shown becomes a quiz of min(quizRounds, scope rounds) rounds', () => {
+    const { slides } = run([{ kind: 'quest', id: 'quest:pic' }], { options: { quizRounds: 2 } });
+    expect(kinds(slides)).toEqual(['title', 'vocab', 'vocab', 'vocab', 'vocab', 'quiz', 'quiz', 'end']);
+  });
+
+  it('under 4 pairs, or a word not yet shown, keeps word cards (only the new ones)', () => {
+    const small = run([{ kind: 'quest', id: 'quest:cards3' }]).slides;
+    expect(kinds(small)).toEqual(['title', 'vocab', 'vocab', 'vocab', 'end']);
+    const mixed = run([{ kind: 'quest', id: 'quest:mixed' }]).slides;
+    expect(wordKos(mixed)).toEqual(['김치', '밥', '물', '산', '해']);
+    expect(only(mixed, 'quiz')).toHaveLength(0);
+  });
+
+  it('a pair without romanization is still a counted skip and does not block the quiz', () => {
+    const { slides, skipped } = run([{ kind: 'quest', id: 'quest:norom' }]);
+    expect(only(slides, 'quiz')).toHaveLength(4);
+    expect(skipped).toEqual([{ blockIndex: 0, ref: 'quest:norom/s2/별', reason: 'no-romanization' }]);
+  });
+
+  it('a word met first without a gloss (a syllable) still gets its card and gloss when taught as a word', () => {
+    const { slides, taught } = run([{ kind: 'quest', id: 'quest:discover-q1' }]);
+    expect(wordKos(slides).filter((ko) => ko === '나')).toHaveLength(1);
+    expect(taught.find((t) => t.kind === 'word' && t.ko === '나')).toMatchObject({ gloss: 'I, me' });
+  });
+
+  it('the same deck gives the same quiz; another seed reshuffles it', () => {
+    const blocks: LectureDeckInput['blocks'] = [{ kind: 'quest', id: 'quest:cards4' }];
+    expect(run(blocks).slides).toEqual(run(blocks).slides);
+    const quizText = (seed: number) => JSON.stringify(only(run(blocks, { seed }).slides, 'quiz'));
+    expect(quizText(7)).not.toBe(quizText(9));
+  });
+});
+
+describe('expandDeck: rule 12 as amended (AMENDMENTS-LECTURE-V2 section 4.4, LV-2)', () => {
+  it('jamo-set, cards and revisit count ceil(slides / 2) for their non-quiz slides, plus 1 per quiz slide', () => {
+    expect(expand([{ kind: 'jamo-set', jamoIds: [J('giyeok'), J('nieun'), J('digeut')] }]).minutes).toBe(2);
+    expect(expand([{ kind: 'cards', cardIds: ['card:book'] }]).minutes).toBe(1);
+    const revisit = expand([{ kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㅏ', 'ㅓ', 'ㅗ'] }]);
+    expect(only(revisit.slides, 'letter')).toHaveLength(6);
+    expect(revisit.minutes).toBe(3 + only(revisit.slides, 'quiz').length);
+  });
+
+  it('a warm-up of letters and an activity is never about 0 minutes', () => {
+    const { minutes } = expand([
+      { kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ'] },
+      { kind: 'activity', preset: 'air-write', minutes: 3 },
+    ]);
+    expect(minutes).toBeGreaterThan(3);
+  });
+
+  it('a letter already shown adds no slide and no minute; quests keep their catalogue minutes', () => {
+    expect(expand([{ kind: 'jamo-set', jamoIds: [J('giyeok')] }, { kind: 'jamo-set', jamoIds: [J('giyeok')] }]).minutes).toBe(1);
+    expect(expand([{ kind: 'jamo-set', jamoIds: [J('nope')] }, { kind: 'quest', id: 'quest:again' }]).minutes).toBe(4);
+  });
+
+  // LV-0b observation O1: the 20-minute Hangul week 1 deck previewed as about 38 minutes because
+  // the Match Sound rounds inside its quests were counted again on top of the quests' minutes.
+  it("a quest's own quiz slides are inside its catalogue minutes; quiz slides outside a quest or story count 1 each", () => {
+    const quest = expand([{ kind: 'quest', id: 'quest:letters' }]);
+    expect(only(quest.slides, 'quiz')).toHaveLength(3);
+    expect(quest.minutes).toBe(4);
+    const withQuiz = expand([{ kind: 'quest', id: 'quest:letters' }, { kind: 'quiz', from: 'previous', rounds: 4 }]);
+    const outside = only(withQuiz.slides, 'quiz').filter((s) => !s.key.startsWith('quest:letters/'));
+    expect(outside).toHaveLength(4);
+    expect(withQuiz.minutes).toBe(4 + 4);
+    const words = expand([{ kind: 'quest', id: 'quest:words' }, { kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㅏ'] }]);
+    expect(only(words.slides, 'quiz').filter((s) => s.key.startsWith('quest:words/')).length).toBeGreaterThan(0);
+    expect(words.minutes).toBe(4 + 2 + 4);
+  });
+
+  it("a story block counts the story's minutes, its check slides inside them; a skipped story counts none", () => {
+    const story = expand([{ kind: 'story', storyId: 'story:sun-moon' }]);
+    expect(only(story.slides, 'quiz')).toHaveLength(3);
+    expect(story.minutes).toBe(5);
+    expect(expand([{ kind: 'story', storyId: 'story:sun-moon', checks: false }]).minutes).toBe(5);
+    const skipped = expand([
+      { kind: 'story', storyId: 'story:draft' },
+      { kind: 'story', storyId: 'story:no-tiers' },
+      { kind: 'activity', preset: 'air-write', minutes: 3 },
+    ]);
+    expect(skipped.skipped.map((s) => s.reason)).toEqual(['not-ready', 'not-ready']);
+    expect(skipped.minutes).toBe(3);
+  });
+
+  it('a story inside a quest or a story episode is inside their minutes', () => {
+    const inQuest = expand([{ kind: 'quest', id: 'quest:story' }]);
+    expect(only(inQuest.slides, 'title').some((t) => t.source === 'story')).toBe(true);
+    expect(inQuest.minutes).toBe(4);
+    expect(expand([{ kind: 'episode', id: 'episode:book' }]).minutes).toBe(4);
+  });
+});
+
+describe('expandDeck: every preset previews within its length on the shipped bundle (AMENDMENTS-LECTURE-V2 4.4, LV-0b O1)', () => {
+  const shipped = lectureBundle('en');
+  const meta = { id: 'lecture:preset01', title: 'Preset', createdAt: '2026-10-17T09:00:00Z', seed: 7, source: 'quick' as const };
+  const previewOf = (preset: LecturePreset, minutes: number, ctx: PresetContext) => {
+    const resolved = resolvePreset(preset, minutes, ctx);
+    const expanded = expandDeck(LectureDeckSchema.parse(presetDeck(resolved, meta)), shipped, VOICE);
+    return { resolved, expanded, console: presetMinutesOf(resolved.blocks, CATALOG) };
+  };
+  const contexts: [string, PresetContext][] = [
+    ['a first visit', { catalog: CATALOG }],
+    ...StageKeySchema.options.map((stage): [string, PresetContext] => [stage, { catalog: CATALOG, stage }]),
+    ['a Stage 3 position', { catalog: CATALOG, position: { questId: 'quest:stage3-life-q2' } }],
+    ['a Stage 1 position', { catalog: CATALOG, position: { questId: 'quest:stage1-life-q3' } }],
+    ['a story shown before', { catalog: CATALOG, shown: { questIds: [], storyIds: ['story:sejong-new-letters'] } }],
+    ['recent words', { catalog: CATALOG, recentWords: { questIds: ['quest:stage2-life-q1', 'quest:stage2-letters-q1'], vocabIds: [] } }],
+    ['two recent letters', { catalog: CATALOG, revisitChars: ['ㅓ', 'ㄹ'] }],
+  ];
+  const cases = contexts.flatMap(([label, ctx]) => LECTURE_PRESETS.flatMap((p) => PRESET_LENGTHS[p].map((m): [string, LecturePreset, number, PresetContext] => [label, p, m, ctx])));
+
+  it.each(cases)('%s: %s at %i min previews within its length, and as the console counts it', (_, preset, minutes, ctx) => {
+    const { resolved, expanded, console: estimate } = previewOf(preset, minutes, ctx);
+    expect(expanded.slides.length).toBeGreaterThan(0);
+    expect(expanded.minutes).toBeLessThanOrEqual(resolved.minutes);
+    // No less than the length minus 5, except Hangul week 1 at 30 minutes: 24, its section 4.2 H row.
+    const floor = resolved.preset === 'hangul-week-1' && resolved.minutes === 30 ? 24 : resolved.minutes - 5;
+    expect(expanded.minutes).toBeGreaterThanOrEqual(floor);
+    // A Word review counts its card cap on the console (an upper bound, section 4.4); every other
+    // preset's blocks expand in full on the shipped bundle, so both sides give the same minutes.
+    if (resolved.blocks.some((b) => b.kind === 'word-review')) expect(expanded.minutes).toBeLessThanOrEqual(estimate);
+    else expect(expanded.minutes).toBe(estimate);
+  });
+
+  it('Hangul week 1 previews as the section 4.2 H rows (10, 19 and 24 minutes), not about 38', () => {
+    expect([10, 20, 30].map((m) => previewOf('hangul-week-1', m, { catalog: CATALOG }).expanded.minutes)).toEqual([10, 19, 24]);
   });
 });
 
@@ -1023,5 +1215,119 @@ describe('expandDeck: the warm-up preset (AMENDMENTS-LECTURE-V2 4.2 U, section 1
     expect(only(slides, 'letter').length).toBeGreaterThanOrEqual(4);
     expect(skipped.filter((s) => s.reason === 'scope-too-small')).toEqual([]);
     expect(skipped.filter((s) => s.reason === 'unknown-id')).toEqual([]);
+  });
+});
+
+describe('expandDeck: word-review (deck v2, AMENDMENTS-LECTURE-V2 section 4.5, LV-2)', () => {
+  // Hangul syllables 가, 각, 갂, ... : 30 different words with a gloss each.
+  const many = Array.from({ length: 30 }, (_, i) => ({ ko: String.fromCharCode(0xac00 + i), en: `word ${i + 1}`, romanization: `w${i + 1}` }));
+  const wrScopes: Record<string, MinigameScope> = {
+    'mg:many-a': { kind: 'card-match', cardPairs: many.slice(0, 8) },
+    'mg:many-b': { kind: 'card-match', cardPairs: many.slice(4, 30) },
+  };
+  const wrQuests: Quest[] = [
+    quest('review-a', [['intro'], ['present', 'mg:many-a'], ['apply', 'mg:build']], { rewardCardId: undefined }),
+    quest('review-b', [['present', 'mg:many-b']], { rewardCardId: undefined }),
+  ];
+  const vocabWords: Record<string, LectureVocabTopic['words'][number] | 'not-ready'> = {
+    'vocab:dal': { id: 'vocab:dal', ko: '달', romanization: 'dal', gloss: 'moon', wordArt: 'sky-moon' },
+    'vocab:hae': { id: 'vocab:hae', ko: '해', romanization: 'hae', gloss: 'sun', cardId: 'card:sun' },
+    'vocab:byeol': { id: 'vocab:byeol', ko: '별', romanization: 'byeol', gloss: 'star' },
+    'vocab:gimchi': { id: 'vocab:gimchi', ko: '김치', romanization: 'gimchi', gloss: 'kimchi' },
+    'vocab:draft': 'not-ready',
+  };
+  const wr = bundle({
+    scopeFor: (ref) => wrScopes[ref] ?? scopes[ref],
+    questById: (id) => wrQuests.find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+    vocabWord: (id) => vocabWords[id],
+  });
+  const review = (block: { questIds?: string[]; vocabIds?: string[]; rounds: number }, b: LectureBundle = wr, before: LectureDeckInput['blocks'] = []) =>
+    expandDeck(deckOf([...before, { kind: 'word-review', questIds: block.questIds ?? [], vocabIds: block.vocabIds ?? [], rounds: block.rounds }], { v: 2 }), b, VOICE);
+
+  it('the words its quests teach, one card each with no title slide, then a word-to-meaning quiz of its rounds', () => {
+    const { slides, skipped } = review({ questIds: ['quest:review-a'], rounds: 5 });
+    // Syllables (가 and 물 of mg:build) have no gloss: not reviewed words.
+    expect(kinds(slides)).toEqual([...Array(8).fill('vocab'), ...Array(5).fill('quiz'), 'end']);
+    expect(only(slides, 'vocab').map((s) => s.word.ko)).toEqual(many.slice(0, 8).map((w) => w.ko));
+    expect(only(slides, 'vocab')[0]).toMatchObject({ key: 'word-review/가', word: { ko: '가', romanization: 'w1', gloss: 'word 1' } });
+    for (const q of only(slides, 'quiz')) {
+      expect(q.prompt.ask).toBe('meaning');
+      if (q.prompt.ask === 'meaning') expect(many.slice(0, 8).map((w) => w.ko)).toContain(q.prompt.ko);
+    }
+    expect(skipped).toEqual([]);
+  });
+
+  it('at most 10 cards with 5 rounds and 20 with 10 rounds; a full deck is 10 and 20 minutes (rule 12)', () => {
+    const ten = review({ questIds: ['quest:review-a', 'quest:review-b'], rounds: 5 });
+    expect(only(ten.slides, 'vocab')).toHaveLength(10);
+    expect(only(ten.slides, 'quiz')).toHaveLength(5);
+    expect(ten.minutes).toBe(10);
+    const twenty = review({ questIds: ['quest:review-a', 'quest:review-b'], rounds: 10 });
+    expect(only(twenty.slides, 'vocab')).toHaveLength(20);
+    expect(only(twenty.slides, 'quiz')).toHaveLength(10);
+    expect(twenty.minutes).toBe(20);
+    // The quiz asks only words that had a card.
+    const shownKo = new Set(only(twenty.slides, 'vocab').map((s) => s.word.ko));
+    for (const q of only(twenty.slides, 'quiz')) if (q.prompt.ask === 'meaning') expect(shownKo.has(q.prompt.ko)).toBe(true);
+  });
+
+  it('de-duplicates by Korean across quests and vocabIds, keeping the first; vocab words keep their picture', () => {
+    const { slides } = review({ questIds: ['quest:words'], vocabIds: ['vocab:gimchi', 'vocab:dal', 'vocab:hae', 'vocab:byeol'], rounds: 5 });
+    const cards = only(slides, 'vocab');
+    expect(cards.map((s) => s.word.ko)).toEqual(['김치', '달', '해', '별']);
+    // 김치 came from the quest first (its place and its gloss as the quest teaches it), and the
+    // Word review asked for it by vocab id too, so its card still gets the vocab entry's picture.
+    expect(cards[0]).toMatchObject({ word: { gloss: 'Kimchi' }, wordId: 'vocab:gimchi' });
+    expect(cards[1]).toMatchObject({ wordId: 'vocab:dal', wordArt: 'sky-moon' });
+    expect(cards[2]).toMatchObject({ wordId: 'vocab:hae', cardId: 'card:sun' });
+    expect(only(slides, 'quiz')).toHaveLength(4);
+  });
+
+  it('expanding its quests adds no slide of theirs and no skip of theirs', () => {
+    const { slides, skipped } = review({ questIds: ['quest:words', 'quest:odd'], vocabIds: ['vocab:dal', 'vocab:hae', 'vocab:byeol'], rounds: 5 });
+    expect(new Set(kinds(slides))).toEqual(new Set(['vocab', 'quiz', 'end']));
+    expect(skipped).toEqual([]);
+  });
+
+  it('unknown and not-ready ids are counted skips; under 4 words the quiz is a counted scope-too-small', () => {
+    const { slides, skipped } = review({ questIds: ['quest:nope'], vocabIds: ['vocab:nope', 'vocab:draft', 'vocab:dal'], rounds: 5 });
+    expect(kinds(slides)).toEqual(['vocab', 'end']);
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'quest:nope', reason: 'unknown-id' },
+      { blockIndex: 0, ref: 'vocab:nope', reason: 'unknown-id' },
+      { blockIndex: 0, ref: 'vocab:draft', reason: 'not-ready' },
+      { blockIndex: 0, ref: 'word-review/quiz', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('a bundle with no vocab lookup yet counts vocabIds as not ready, never a crash', () => {
+    const noLookup = bundle({ scopeFor: wr.scopeFor, questById: wr.questById });
+    const { slides, skipped } = review({ vocabIds: ['vocab:dal'], rounds: 5 }, noLookup);
+    expect(slides).toEqual([]);
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'vocab:dal', reason: 'not-ready' },
+      { blockIndex: 0, ref: 'word-review/quiz', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('a word already shown earlier in the deck gets no second card but is still asked', () => {
+    const { slides } = review({ questIds: ['quest:review-a'], rounds: 10 }, wr, [{ kind: 'quest', id: 'quest:review-a' }]);
+    const words = only(slides, 'vocab').map((s) => s.word.ko);
+    expect(words).toEqual(many.slice(0, 8).map((w) => w.ko));
+    expect(only(slides, 'quiz').filter((q) => q.key.startsWith('word-review/'))).toHaveLength(8);
+  });
+
+  it('words not yet shown in the deck fill the card cap first, so an earlier block never shrinks the review', () => {
+    const { slides } = review({ questIds: ['quest:review-a', 'quest:review-b'], rounds: 5 }, wr, [{ kind: 'quest', id: 'quest:review-a' }]);
+    const reviewCards = only(slides, 'vocab').filter((s) => s.key.startsWith('word-review/'));
+    expect(reviewCards.map((s) => s.word.ko)).toEqual(many.slice(8, 18).map((w) => w.ko));
+    expect(only(slides, 'quiz').filter((q) => q.key.startsWith('word-review/'))).toHaveLength(5);
+  });
+
+  it('is deterministic for a seed, and the End slide lists the reviewed words', () => {
+    const blocks = { questIds: ['quest:review-a', 'quest:review-b'], rounds: 10 };
+    expect(review(blocks).slides).toEqual(review(blocks).slides);
+    const end = only(review(blocks).slides, 'end')[0]!;
+    expect(end.words).toHaveLength(20);
   });
 });
