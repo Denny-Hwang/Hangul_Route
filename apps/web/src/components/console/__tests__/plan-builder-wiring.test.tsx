@@ -214,10 +214,18 @@ describe('the stored draft, the room and the bar', () => {
     expect(one(root, 'plan-picker-row-episode:stage5-life').props.disabled).toBe(false);
   });
 
-  it('the builder section carries the bar height for the picker\'s scroll margin', async () => {
+  it('the page is padded by the sticky bar while the builder shows it (keyboard focus never under the bar)', async () => {
     state.entitlements = { ok: true, data: [LICENSE] };
-    const root = await open();
-    const section = root.find((n) => n.type === 'section' && n.props['aria-label'] === en.plan.builderLabel);
-    expect(section.props.style['--hr-sticky-clearance']).toMatch(/^\d+px$/);
+    const root = { style: { scrollPaddingBottom: '' } };
+    vi.stubGlobal('document', { documentElement: root });
+    try {
+      await open();
+      expect(root.style.scrollPaddingBottom).toMatch(/^\d+px$/);
+      act(() => mounted?.unmount());
+      mounted = null;
+      expect(root.style.scrollPaddingBottom).toBe('');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

@@ -102,8 +102,8 @@ function PlanInner(): JSX.Element {
   const pickerGroups = useMemo(() => consoleChooserGroups(locale, 'plan', planStages(unlocked)), [locale, unlocked]);
   const pickerKeys = useMemo(() => chooserKeys(pickerGroups), [pickerGroups]);
   const pickerParents = useMemo(() => lessonParents(pickerGroups), [pickerGroups]);
-  // The sticky bar's height, so a focused row is never scrolled under it (WCAG 2.4.11).
-  const [barRef, clearance] = useStickyClearance<HTMLDivElement>();
+  // The sticky bar's height as the page's scroll padding, so a focused row is never left under it (WCAG 2.4.11).
+  const barRef = useStickyClearance<HTMLDivElement>();
 
   /** Replace the draft (a stored plan, a suggestion, a link's add): not an edit. */
   const replaceDraft = (next: Draft): void => {
@@ -340,7 +340,7 @@ function PlanInner(): JSX.Element {
           presentHref={presentable ? ROUTES.spaceLecture(spaceId, 'plan', current.id, roster?.space.kind) : undefined}
         />
       ) : (
-        <section aria-label={p.builderLabel} style={clearance}>
+        <section aria-label={p.builderLabel}>
           <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
           {suggestNotice ? <Notice>{suggestNotice}</Notice> : null}
           {plans && plans.length === 0 ? (

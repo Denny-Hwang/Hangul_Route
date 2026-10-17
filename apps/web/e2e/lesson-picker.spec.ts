@@ -99,11 +99,18 @@ test.describe('the plan builder\'s grouped lesson picker at 360 (LV-3a)', () => 
     await expect(page.getByTestId('publish-plan')).toBeInViewport();
     await page.screenshot({ path: test.info().outputPath('plan-picker-360.png') });
 
-    // Keyboard focus on a row near the bottom stops above the bar (scroll-margin from the bar's height, WCAG 2.4.11).
-    await picker.getByTestId('plan-picker-row-episode:stage2-crafts').focus();
-    const row = await picker.getByTestId('plan-picker-row-episode:stage2-crafts').evaluate((el) => el.closest('label')!.getBoundingClientRect().bottom);
-    const barTop = await bar.evaluate((el) => el.getBoundingClientRect().top);
-    expect(row).toBeLessThanOrEqual(barTop);
+    // Keyboard focus never lands under the bar (WCAG 2.4.11): with a row hidden just under the bar's top edge, Tab
+    // onto it scrolls it above the bar (the page's scroll-padding-bottom is the measured bar height).
+    const crafts = picker.getByTestId('plan-picker-row-episode:stage2-crafts');
+    const rowTop = await crafts.evaluate((el) => el.closest('label')!.getBoundingClientRect().top + window.scrollY);
+    const barTopBefore = await bar.evaluate((el) => el.getBoundingClientRect().top);
+    await page.evaluate((y) => window.scrollTo(0, y), Math.round(rowTop - barTopBefore - 10));
+    expect(await crafts.evaluate((el) => el.closest('label')!.getBoundingClientRect().bottom)).toBeGreaterThan(barTopBefore);
+    await picker.getByTestId('plan-picker-open-episode:stage2-nature').evaluate((el) => (el as HTMLElement).focus({ preventScroll: true }));
+    await page.keyboard.press('Tab');
+    await expect(crafts).toBeFocused();
+    const rowBottom = await crafts.evaluate((el) => el.closest('label')!.getBoundingClientRect().bottom);
+    expect(rowBottom).toBeLessThanOrEqual(await bar.evaluate((el) => el.getBoundingClientRect().top));
 
     await page.getByLabel(en.console.plan.titleField.label).fill('Week 2 words');
     await expect(page.getByTestId('publish-plan')).toBeInViewport();
@@ -124,6 +131,8 @@ test.describe('the plan builder\'s grouped lesson picker at 360 (LV-3a)', () => 
     // The export is built with the free-plan switch off: the wizard's words for it, See plans for a class.
     await expect(picker.getByTestId('plan-picker-notice')).toContainText(en.console.curriculum.preview.warnings.premium(92));
     await expect(picker.getByTestId('plan-picker-notice').getByRole('link', { name: en.console.curriculum.preview.warnings.seePlans.cta })).toBeVisible();
+    await picker.getByTestId('plan-picker-notice').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: test.info().outputPath('plan-picker-uncovered-360.png') });
     await picker.getByTestId('plan-picker-row-episode:stage1-life').check();
     await page.getByLabel(en.console.plan.titleField.label).fill('Week 1');
     await page.getByTestId('publish-plan').click();

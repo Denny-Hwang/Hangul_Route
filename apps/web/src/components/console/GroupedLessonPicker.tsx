@@ -56,7 +56,6 @@ export const PICKER_CSS = `
 .hr-pick-chip input,.hr-pick-check input{width:${px(spacing.xl)};height:${px(spacing.xl)};margin:0;flex:none;accent-color:${colors.brand.primary}}
 .hr-pick-chip:has(input:focus-visible),.hr-pick-check:has(input:focus-visible),.hr-pick-btn:focus-visible,.hr-pick-input:focus-visible{${focusRing}}
 .hr-pick-status{color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)}}
-.hr-pick-input,.hr-pick-chip,.hr-pick-check,.hr-pick-btn{scroll-margin-bottom:var(--hr-sticky-clearance,0px)}
 .hr-pick-group{display:flex;flex-direction:column;gap:${rem(spacing.xs)}}
 .hr-pick-rows{display:flex;flex-direction:column;gap:${rem(spacing.xs)}}
 .hr-pick-line{display:flex;align-items:stretch;gap:${rem(spacing.xs)};min-width:0}
@@ -68,7 +67,8 @@ export const PICKER_CSS = `
 .hr-pick .hr-pick-lessons{display:flex;flex-direction:column;gap:${rem(spacing.xs)};margin:${rem(spacing.xs)} 0 0 ${rem(spacing.xl)};padding-left:${rem(spacing.md)};border-left:${px(borderWidth.base)} solid ${colors.border.subtle}}
 .hr-pick .hr-pick-lessons[hidden]{display:none}
 .hr-pick-lessons .hr-pick-title{font-weight:${typography.weight.regular}}
-.hr-pick-note{padding:${rem(spacing.sm)} ${rem(spacing.md)};border-left:${px(borderWidth.thick)} solid ${colors.feedback.nudge};border-radius:${px(radii.sm)};background:${colors.feedback.nudgeLight};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)}}
+.hr-pick .hr-pick-note{padding:${rem(spacing.sm)} ${rem(spacing.md)};border-left:${px(borderWidth.thick)} solid ${colors.feedback.nudge};border-radius:${px(radii.sm)};background:${colors.feedback.nudgeLight};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)}}
+.hr-pick-note a{color:inherit;font-weight:${typography.weight.semibold};text-decoration:underline;text-underline-offset:${px(borderWidth.thick)}}
 .hr-pick-hidden{position:absolute;width:${px(borderWidth.thin)};height:${px(borderWidth.thin)};margin:-${px(borderWidth.thin)};padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 `;
 

@@ -60,7 +60,7 @@ One pure model, `chooserGroups()` in `packages/content-schema/src/schemas/lesson
 ## 6. The plan builder's sticky bar and accessibility
 
 - Under the builder, a bar sticks to the bottom of the window (`position: sticky`, `surface.canvas`, a `border.subtle` top line, bottom padding `max(spacing.sm, safe-area-inset-bottom)`). It holds the count line (`chooser.chosen` "2 chosen · about 17 min", a status, rem text) above **Publish plan**, **Save draft** and Cancel. It is a labelled region (`chooser.bar`). Publish plan is in sight without scrolling at 360 x 640 and at 320 with 200 % text.
-- Focus is never hidden under the bar (WCAG 2.4.11). The bar is measured (`useStickyClearance`, again when it wraps), and the picker's search field, chips, rows and buttons keep a `scroll-margin-bottom` that tall.
+- Focus is never hidden under the bar (WCAG 2.4.11). The bar is measured (`useStickyClearance`, again when it wraps), and while it is on the page the document's `scroll-padding-bottom` is that tall, so Tab onto a row the bar covers scrolls the row above the bar (a `scroll-margin` on the rows does not: Chromium does not scroll an element that is already inside the viewport).
 - **Clear** keeps keyboard focus in the search field. The status line ("4 matches") is a polite live region that stays in the accessibility tree, only visually hidden while empty.
 - Every chip, box and button is at least `touchTarget.min`. The picker's text is rem, so 200 % browser text doubles it and nothing scrolls sideways at 320.
 - When the page replaces its list (a stored draft loads, a link's `?add=`, another plan opened), the picker opens on the group of the first chosen item in the plan's order, with the search cleared and every episode folded. An edit never moves the open chip.
