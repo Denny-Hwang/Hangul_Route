@@ -261,7 +261,11 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike); a first
         // run begun at "Got a class code?" goes to Join a class instead, with Home under it (Back and Done land there).
         const next = profileCreatedNext(route.params?.then, levelCheckOn);
-        if (next === 'JoinSpace') navigation.getParent<NavigationProp<RootStackParamList>>()?.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'JoinSpace' }] });
+        if (next === 'JoinSpace') {
+          // The class join link's code rides along (owner decision 2026-10-17); Welcome's link has none.
+          const code = route.params?.code;
+          navigation.getParent<NavigationProp<RootStackParamList>>()?.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'JoinSpace', params: code === undefined ? undefined : { code } }] });
+        }
         else navigation.replace(next, { profileId: result.profile.id });
       } else if (result.reason === 'pin-failed') {
         setPinError(c.pinFailed);

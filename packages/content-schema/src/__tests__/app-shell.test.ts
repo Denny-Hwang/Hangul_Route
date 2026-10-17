@@ -12,6 +12,8 @@ import {
   GrownUpUnlockSchema,
   JOIN_HANDOFF_KEY,
   JOIN_HANDOFF_MS,
+  JOIN_LINK_CODE_KEY,
+  JOIN_LINK_PATH,
   JoinHandoffSchema,
   LEARNER_ROOTS,
   LastPersonaSchema,
@@ -25,7 +27,9 @@ import {
   homeFor,
   isGrownUpPath,
   isLearnerRoot,
+  joinLinkUrl,
   legacyAppTarget,
+  parseJoinLink,
   parseLenient,
   personaHint,
   personasFor,
@@ -463,5 +467,47 @@ describe('shell.* telemetry codes (section 3.18)', () => {
       'shell.path_bounced': { prefix: ['signin', 'start', 'teach', 'parent', 'account'] },
     });
     expect(TELEMETRY_EVENT_NAMES.filter((name) => name.startsWith(SHELL_TELEMETRY_PREFIX))).toEqual(Object.keys(SHELL_TELEMETRY_PAYLOADS));
+  });
+});
+
+describe('the class join link (owner decision 2026-10-17)', () => {
+  it('is /join with the code alone in the fragment', () => {
+    expect(JOIN_LINK_PATH).toBe('/join');
+    expect(JOIN_LINK_CODE_KEY).toBe('c');
+    expect(joinLinkUrl(APP_ORIGIN, 'ABC234')).toBe('https://app.hangulroute.com/join#c=ABC234');
+    // A typed code is normalized; a trailing slash on the origin is not doubled.
+    expect(joinLinkUrl('https://app.hangulroute.com/', 'abc 234')).toBe('https://app.hangulroute.com/join#c=ABC234');
+    expect(joinLinkUrl('http://localhost:4173', 'ABC-234')).toBe('http://localhost:4173/join#c=ABC234');
+  });
+
+  it('is null for anything that is not a join code', () => {
+    for (const bad of ['', 'ABC23', 'ABC2345', 'ABCO10', 'ABC 23!']) expect(joinLinkUrl(APP_ORIGIN, bad), bad).toBeNull();
+  });
+
+  it('is never a grown-up path, so the service worker serves the learner app there', () => {
+    expect(isGrownUpPath(JOIN_LINK_PATH)).toBe(false);
+    expect(isLearnerRoot(JOIN_LINK_PATH)).toBe(false);
+  });
+
+  it('reads the code from the fragment of /join, upper-cased', () => {
+    expect(parseJoinLink({ pathname: '/join', hash: '#c=ABC234' })).toEqual({ code: 'ABC234' });
+    expect(parseJoinLink({ pathname: '/join/', hash: '#c=abc234' })).toEqual({ code: 'ABC234' });
+    expect(parseJoinLink({ pathname: '/join.html', hash: 'c=ABC234' })).toEqual({ code: 'ABC234' });
+    expect(parseJoinLink({ pathname: '/join', hash: '#x=1&c=ABC234' })).toEqual({ code: 'ABC234' });
+  });
+
+  it('opens the Join screen empty for a missing or broken code', () => {
+    for (const hash of ['', '#', '#c=', '#c=ABC23', '#c=ABCO10', '#c=%E0%A4%A', '#code=ABC234']) expect(parseJoinLink({ pathname: '/join', hash }), hash).toEqual({ code: null });
+  });
+
+  it('is not a join link on any other path', () => {
+    for (const pathname of ['/', '/joins', '/join/x', '/teach/join', '/Join', '/present']) expect(parseJoinLink({ pathname, hash: '#c=ABC234' }), pathname).toBeNull();
+  });
+
+  it('round-trips: the link it builds reads back as its code', () => {
+    const url = new URL(joinLinkUrl(APP_ORIGIN, 'XYZ789') ?? '');
+    expect(parseJoinLink({ pathname: url.pathname, hash: url.hash })).toEqual({ code: 'XYZ789' });
+    // The code is in the fragment only: nothing of it in the path or the query a server would see.
+    expect(url.pathname + url.search).toBe('/join');
   });
 });

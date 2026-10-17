@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { JOIN_CODE_RE, type SpaceKind, type SpaceRole } from './space';
+import { JOIN_CODE_RE, normalizeJoinCode, type SpaceKind, type SpaceRole } from './space';
 
 /**
  * Persona app shell on app.hangulroute.com (F-APP-001 section 3.14). One
@@ -197,6 +197,37 @@ export function parseLenient<T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, raw
   }
   const parsed = schema.safeParse(value);
   return parsed.success ? parsed.data : null;
+}
+
+/**
+ * The class join link (owner decision 2026-10-17): `https://app.hangulroute.com/join#c=<code>`. The code rides only in
+ * the address fragment, which a browser never sends to a server, and the link never holds a learner's name. The
+ * learner app reads it once at boot, takes it out of the address and opens Join a class with the code filled in;
+ * every F-SPACE-001 step after that is unchanged. `/join` is a path of the learner app, never a grown-up path.
+ */
+export const JOIN_LINK_PATH = '/join';
+/** The fragment key of the join link's code. */
+export const JOIN_LINK_CODE_KEY = 'c';
+
+/** The join link of a join code on an app origin (`https://app.hangulroute.com`); null when it is not a join code. */
+export function joinLinkUrl(origin: string, code: string): string | null {
+  const normalized = normalizeJoinCode(code);
+  if (normalized === null) return null;
+  return `${origin.replace(/\/+$/, '')}${JOIN_LINK_PATH}#${JOIN_LINK_CODE_KEY}=${normalized}`;
+}
+
+/**
+ * Reads the address the learner app opened on: null when the path is not the join link's (`/join`, with or without
+ * a trailing slash or `.html`); else `{ code }`, the fragment's join code upper-cased, or `null` when the fragment
+ * holds none that is valid (the Join screen then opens empty). Anything else in the fragment is ignored.
+ */
+export function parseJoinLink(location: { pathname: string; hash: string }): { code: string | null } | null {
+  const path = location.pathname;
+  if (path !== JOIN_LINK_PATH && path !== `${JOIN_LINK_PATH}/` && path !== `${JOIN_LINK_PATH}.html`) return null;
+  const fragment = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
+  // URLSearchParams never throws: a broken escape stays as typed and fails the code check.
+  const raw = new URLSearchParams(fragment).get(JOIN_LINK_CODE_KEY);
+  return { code: raw === null ? null : normalizeJoinCode(raw) };
 }
 
 /** Idle window of a grown-up unlock: the learner gate's 15-minute session. */

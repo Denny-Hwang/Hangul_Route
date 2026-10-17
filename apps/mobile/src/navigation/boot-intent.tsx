@@ -4,6 +4,7 @@ import { openBootIntentWhenReady } from '../logic/shell/boot-intent';
 import { consumeBootIntent, peekBootIntent } from '../platform/app-root';
 import { openBrowseFromGate } from '../platform/browse-handoff';
 import { gateOpensDirectlyNow } from '../store/gate-now';
+import { useProfileStore } from '../store/profile-store';
 
 /**
  * Acts on the boot intent the app root read (F-APP-001 section 3.9): `gate=grown-up&next=` is the
@@ -11,7 +12,8 @@ import { gateOpensDirectlyNow } from '../store/gate-now';
  * learner start screen, once, as soon as the navigator is ready (`openBootIntentWhenReady`). A
  * correct PIN returns the tab to `next` with a PIN unlock; Cancel lands on the start screen.
  * `gate=browse` (F-BROWSE-001 BR-12b) opens the PIN screen for All lessons, or, when the gate opens
- * directly, the gate hand-off at once (`openBrowseFromGate`).
+ * directly, the gate hand-off at once (`openBrowseFromGate`). The class join link `/join#c=<code>` (owner decision
+ * 2026-10-17) opens Join a class with the code filled in, or the class-code first run on a device with no profile.
  * Rendered beside the root stack; native builds never have an intent (`platform/app-root.ts`).
  */
 export function BootIntentHook(): null {
@@ -29,6 +31,8 @@ export function BootIntentHook(): null {
         opensDirectly: () => gateOpensDirectlyNow(),
         open: () => openBrowseFromGate(),
       },
+      // Read when the intent is acted on: the profile store has hydrated before the root stack mounts.
+      { hasProfile: () => useProfileStore.getState().profiles.length > 0 },
     );
   }, [root]);
   return null;

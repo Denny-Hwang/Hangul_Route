@@ -173,6 +173,32 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(peekBootIntent()).toBeNull();
   });
 
+  it('the class join link (owner decision 2026-10-17): the code becomes the intent and leaves the address with the path', () => {
+    const h = harness('/join?lang=ko#c=abc234');
+    expect(bootRoot(h.env)).toBe('app');
+    expect(h.log).toEqual(['replaceState {"s":1} /?lang=ko']);
+    expect(peekBootIntent()).toEqual({ kind: 'join', code: 'ABC234' });
+    // The tab is cleared as on any app boot.
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+  });
+
+  it('a join link with no valid code still opens Join a class; a history that refuses keeps the intent', () => {
+    const h = harness('/join#c=nope');
+    bootRoot(h.env);
+    expect(h.log).toEqual(['replaceState {"s":1} /']);
+    expect(peekBootIntent()).toEqual({ kind: 'join', code: null });
+    const refused = harness('/join#c=ABC234', { replaceStateThrows: true });
+    bootRoot(refused.env);
+    expect(peekBootIntent()).toEqual({ kind: 'join', code: 'ABC234' });
+  });
+
+  it('a fragment that is not on /join is no join intent and stays where it was', () => {
+    const h = harness('/#c=ABC234');
+    bootRoot(h.env);
+    expect(h.log).toEqual([]);
+    expect(peekBootIntent()).toBeNull();
+  });
+
   it('a persona entry the host had no page for mounts the learner app (and clears, like any app boot)', () => {
     const h = harness('/teach');
     expect(bootRoot(h.env)).toBe('app');

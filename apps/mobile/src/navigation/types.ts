@@ -188,7 +188,8 @@ export type RootStackParamList = {
    */
   ApproveTransfer: { profileId: string; transferId: string };
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
-  JoinSpace: undefined;
+  /** `code`: the class join link's code (owner decision 2026-10-17), filled in on the code step; the learner still taps Join. */
+  JoinSpace: { code?: string } | undefined;
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
   Paywall: { from: 'journey' | 'settings' | AskFrom } | undefined;
   /** `browseBlocked`: the browser refused the All lessons gate pass, so the storage line shows under Open all lessons (F-BROWSE-001 BR-12a). */
@@ -307,8 +308,11 @@ export type PlacementStackParamList = {
 
 export type OnboardingStackParamList = {
   Welcome: undefined;
-  /** `then: 'join'`: started at Welcome's "Got a class code?"; Join a class opens after the profile is made. */
-  CreateProfile: { firstRun: boolean; then?: 'join' };
+  /**
+   * `then: 'join'`: started at Welcome's "Got a class code?" or at the class join link; Join a class opens after the
+   * profile is made, with the link's `code` filled in (owner decision 2026-10-17).
+   */
+  CreateProfile: { firstRun: boolean; then?: 'join'; code?: string };
   FirstQuestPreview: { profileId: string };
   /** The level check's fork (F-PLC-001 section 3.1 step 1), between CreateProfile and FirstQuestPreview. */
   PlacementInvite: { profileId: string };
