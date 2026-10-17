@@ -103,7 +103,7 @@ Panel C — the same home at 1180 (laptop, tablet landscape, classroom PC), **Cu
 |   What to add:  ( Lessons )( Stories )( Word topics )( Letters )   <- tabs, one at a time |
 |   Choose a stage: (Stage 1)(•Stage 2•)(Stage 3)(Stage 4)(Stage 5)(Stage 6)(Stage 7)       |
 |   [x] Word Builder                     about 25 min   [ v 6 lessons inside ]              |
-|   [ ] Lunch Box Words                  about 13 min   [ v 3 lessons inside ]              |
+|   [-] Lunch Box Words                  about 13 min   [ v 3 lessons inside ]              |
 |   [ ] Holiday Words                    about 13 min   [ v 3 lessons inside ]              |
 |   [ ] Outdoor Words · Playground Words (one row per theme: five rows at most)             |
 |   Your lesson                                                                            |
@@ -182,8 +182,8 @@ Panel F — console setup page, presets first (teacher; the family page is the s
 |     + Activity, + Class code / + Family code)             |
 |   Options: Romanization · Stroke guide · Sound ·          |
 |     Slides language [ Same as this device v ]             |  <- default writes no uiLocale
-|     "A copied link uses the language of the device that   |
-|      opens it."                                           |
+|     "A copied link uses the language of the device that   |  <- with a language chosen: "Slides show in
+|      opens it."                                           |     {endonym} on every device, a copied link too."
 |   Lesson title · Check the classroom device               |  <- family: "Check the TV or screen"
 |===========================================================|
 | about 20 min      [[ OPEN PRESENTER ]]   [ Copy link ]    |  <- sticky footer
@@ -200,9 +200,9 @@ Panel F — console setup page, presets first (teacher; the family page is the s
 - [[ Start ]] on Panel E → the lesson (`classroom/lecture-presenter.md` C), unchanged.
 - [ Customize ] on Panel E → back to the home with Customize open and nothing chosen (Quick lesson cannot hold arbitrary blocks; the preset stays one tap away).
 - [< Back to lessons] on Panel E, or the browser back → the home as it was: the open card, its chips, Customize, the chooser tab and choices, the scroll position (row LV-3).
-- [< Back] on the home → `history.back()` when the tab came from another app page, else `/` (`AMENDMENTS-LECTURE-V2.md` section 7 item 3).
+- [< Back] on the home → `history.back()` (1 s fallback to `/`) only when this tab has an app page before `/present`, recorded at boot; otherwise, as in every new tab the console, All lessons and E5 open, a link to `/` (`AMENDMENTS-LECTURE-V2.md` section 7 item 3).
 - (Aa) → the Display sheet (`shell/display-sheet.md`): device language and text size.
-- Chooser tab → shows that group (one at a time); stage chip → that stage's episodes; [ v n lessons inside ] → the episode's single lessons as checkbox rows; [ Show 8 more ] → the next 8 stories or topics; a checkbox → adds to Your lesson (presenter) or appends to the Outline (console); [x remove] → takes it out.
+- Chooser tab → shows that group (one at a time); stage chip → that stage's episodes; [ v n lessons inside ] → the episode's single lessons as checkbox rows; an episode and its lessons are one tri-state choice (checking the episode checks and disables its lessons; some lessons chosen draws the episode **mixed** `[-]`; checking a mixed episode replaces those lessons with the episode, so nothing is in the lesson twice); [ Show 8 more ] → the next 8 stories or topics; a checkbox → adds to Your lesson (presenter) or appends to the Outline (console); [x remove] → takes it out.
 - [[ BUILD LESSON ]] (sticky) → the start screen of the built deck (Panel E).
 - [ v Customize ] (home) → the grouped chooser (Panel C; it replaces the flat Quick lesson list, `design/screens/presenter/home.md` as revised).
 - Console [[ Open presenter ]] / [ Copy link ] → unchanged hand-off (F-TCH-004 §3.2); the deck is the resolved preset.

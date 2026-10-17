@@ -82,7 +82,7 @@ Panel C — a self-only device (an adult learning alone): the row reads **Accoun
 - Got a class code? → Join (`JoinSpace`).
 - Plan card → Plan screen (no PIN).
 - Grown-up area → PIN (or sign-in where the device has no PIN, F-APP-001 §3.9) → Panel B.
-- Panel B rows: each keeps its current action and gate (backup buttons, Account pages hand-off with `?lang=`, Classes & family, Install, notices).
+- Panel B rows: each keeps its current action and gate (backup buttons, Account pages hand-off with `?lang=`, Classes & family, Install, notices). One gate is new and deliberate: **Leave a class or a family** now sits behind the grown-up gate (on Profile it had none); Join stays open through **Got a class code?** on Profile. On a self-only device the area opens directly, so nothing changes there (AMENDMENTS-DISPLAY-NAV section 9.2, review 2026-10-17).
 
 ## Navigation graph
 
@@ -93,7 +93,7 @@ Exit to: Edit profile · create profile · placement · route proposal · Notes 
 
 - **success**: Panels A and B.
 - **self-only device**: Panel C.
-- **one locale offered**: the Display row reads "Standard text" only (no language part).
+- **one locale offered**: the Display row reads "Text: Standard" only (no language part).
 - **no learner yet** (a grown-up on a fresh device): Profile shows Add a profile and the Grown-up area row.
 - **gate lapsed** while in Panel B: back to Profile with the gate's own line (unchanged).
 

@@ -55,7 +55,7 @@ Panel C — console `PageBack` and the Learner app exit, phone (375) and wide (1
 |   Plan the week (h1)                                                                  |
 ```
 
-Panel D — a root screen: no leading control (Home, Route, Journey, Library, Welcome, All lessons home, a console persona home)
+Panel D — a root screen: no leading control (Home, Route, Journey, Library, Welcome, All lessons home, BrowseAccess with its own exit button, a console persona home)
 
 ```
 +--------------------------------+
@@ -79,7 +79,8 @@ Exit to: the previous screen in the stack (learner), the parent page (console), 
 ## States
 
 - **success**: Panels A to D.
-- **exception**: PlacementInvite (end of first-run setup) has no Back; its Take the level check and Not now are the ways on.
+- **exception**: PlacementInvite and FirstQuestPreview (the end of first-run setup) have no Back: CreateProfile reached them with `replace`, so a Back would land on Welcome after the profile was saved (and Welcome leads into a second profile), and after the level check FirstQuestPreview is the only route. Their own buttons (Take the level check, Not now; the first quest's Start) are the ways on.
+- **nothing to go back to**: a `back` or `close` variant is drawn only when the navigator can go back; otherwise the screen must be a root or an exception.
 - **no history** (a console page opened in a new tab): PageBack still goes to the parent page (it is a link, not `history.back()`).
 - **a session clock running**: ( Aa ) hidden (`shell/display-sheet.md` States); Back / Close stay.
 - **200 % or Largest text at 320**: the title wraps to two lines; Back and Aa keep their 64 px targets; nothing scrolls sideways.

@@ -207,7 +207,7 @@ Blank                            Pause
 Grid (G)                                           Help (H or ?)
 +-----------------------------------------------+  +--------------------------------------+
 | [1 title][2 g][3 g sound][4 n] ... (thumbs)   |  | Next: Right / Space / PageDown       |
-| tap = jump        (hide) toggles a slide      |  | Back: Left / PageUp                  |
+| tap = jump        (hide) toggles a slide      |  | Previous: Left / PageUp              |
 | for this lesson only                          |  | B or . blank   T timer   P picker    |
 +-----------------------------------------------+  | S sound   R strokes   F full screen  |
                                                    | Shift+R romanization   Esc close     |
@@ -282,7 +282,7 @@ portrait               exit
 
 ## Interaction points
 
-- Next / Reveal: Space, Enter, Right, Down, PageDown, tap right two thirds, swipe left, [Reveal >]. Back: Left, Up, PageUp, Backspace, tap left third, swipe right, [<].
+- Next / Reveal: Space, Enter, Right, Down, PageDown, tap right two thirds, swipe left, [Reveal >]. Previous (labelled Back until LV-M1, 2026-10-16): Left, Up, PageUp, Backspace, tap left third, swipe right, [< Previous].
 - Blank: B or `.` (clickers) or [Blank]. Timer T, Picker P, Grid G, Fullscreen F, Help H or ?, Sound S, Strokes R, Romanization Shift+R, Close Esc (Esc with nothing open = Exit confirm).
 - Start: one tap unlocks everything that needs a gesture (sound, fullscreen, wake lock, landscape).
 - Console [[ Open presenter ]] -> new tab at `app.hangulroute.com/present#d=…` (ids and options only); the fragment is read and removed from the address bar before anything is drawn; names follow by message, never by URL.

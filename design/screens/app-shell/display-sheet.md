@@ -8,7 +8,7 @@ One sheet, drawn the same on every surface of `app.hangulroute.com`: the learner
 
 ## Anatomy
 
-1. **Control** (`.aa-btn`): "Aa" (`common.display.button`; ko "가가"), accessible name "Display: language and text size" (`common.display.a11y`); pill, `borderWidth.base` `border.strong` on paper, `touchTarget.min` square at least, `size.bodyLg` bold. It is the last control of a header row.
+1. **Control** (`.aa-btn`): "Aa" (`common.display.button`; ko "가가"), accessible name "Aa, Display: language and text size" (`common.display.a11y`; it begins with the visible label, WCAG 2.5.3, so "tap Aa" works with voice control); pill, `borderWidth.base` `border.strong` on paper, `touchTarget.min` square at least, `size.bodyLg` bold. It is the last control of a header row.
 2. **Sheet** below `layout.breakpoint.regular` (600): a bottom sheet on `surface.paper` with `radii.lg` top corners over `surface.overlay`, at most 92 % of the window tall, scrolling inside. From 600: a centred dialog at most `layout.maxWidth.reading` wide, the two groups side by side (`display-sheet-768.png`).
 3. **Display** (h2, `common.display.title`; the heading size follows the text-size half rule).
 4. **Language** (`common.display.language`, a fieldset; drawn only when two or more locales are offered): one radio row per offered locale by endonym (`LOCALE_META`), each `lang`-tagged, `touchTarget.min` tall, the chosen one with a `borderWidth.thick` `text.primary` outline (shape, not colour alone).

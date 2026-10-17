@@ -17,7 +17,7 @@ Built by:
 | `access.md` | the Access screen for the gate, account and unknown sources, offline, and the form it takes until BR-12b ships |
 | `preview-frame.md` | the strip on lesson screens and on the end screen: placement, the Leave preview button, wrapping, announcement |
 | `home.md` | the home header and its lines, the section control, the Route trail, the Journey grid (two panes on wide windows), the Library groups, the keep switch, and every pass and switch state |
-| `lesson-display.md` | the bottom sheet: Romanization, Language (hidden while only English ships), Done |
+| `lesson-display.md` | the bottom sheet: Romanization, Language (hidden while only English ships), Done; **revision 2026-10-17 (DN-7)**: no Language row, renamed **Romanization**, the header's Display (Aa) control (`mock/romanization-sheet.html`) |
 | `episode.md` | the episode outline: lesson rows, closed rows, a taste, coming later, a story episode |
 | `item.md` | the item page: focus line, What this teaches, Where it sits, the card, the primary action, the closed forms, a story |
 | `preview-player.md` | the learner lesson under the strip, the leave confirm, the story reader, a game step, the error screen |

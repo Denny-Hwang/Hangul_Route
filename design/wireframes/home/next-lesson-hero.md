@@ -36,7 +36,9 @@ Panel A — 360 x 740, a learner on Stage 1 with a goal from the family plan
 |+------------------------------+|
 | Today with Hoya           (h2) |
 | [ card 1: story / replay     ] |  <- F-HW-001 slots: unchanged chains,
-| [ card 2: Meet o, u, m ...   ] |     order and completion
+|  Meet o, u, m and the circle   |     order and completion; card 2 is
+|  Same as your next lesson above|     COMPACT (not a button) when it
+|                                |     names the hero's lesson
 | [ card 3: story / test       ] |
 | [ Already know some Korean? ]  |  <- unchanged (placement card), then Homework, Tip
 +--------------------------------+
@@ -73,6 +75,7 @@ Panel C — wide (1180): the hero spans the main column above the cards; the rig
 ## Interaction points
 
 - [[ START ]] → the hero lesson's quest player (the same target as card ② when they match; finishing collects card ② as F-HW-001 §3.2 says).
+- Card ② when it names the hero's lesson: compact, not a button ("Same as your next lesson above", `learner.home.mission.sameAsHero`), so the same lesson has one Start on Home; it still shows done. When it names another quest it is the normal card with its own Start.
 - See your Learning Route → the Route tab.
 - Rest state button → its existing target.
 - ( Aa ) → `shell/display-sheet.md`; (Profile) → `profile/profile-split.md` A.
@@ -96,4 +99,4 @@ Exit to: quest player · Route tab · Profile · the three cards' targets (uncha
 
 ## Open questions
 
-- None blocking. The hero and card ② usually name the same lesson; that is by design (one big Start; the day's plan keeps its shape).
+- None blocking. The hero and card ② usually name the same lesson; card ② then draws compact with no second Start (AMENDMENTS-DISPLAY-NAV section 9.1, review 2026-10-17), and the day's plan keeps its shape.

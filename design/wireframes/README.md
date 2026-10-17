@@ -51,7 +51,7 @@
 | `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `classroom/lecture-presets.md` · `classroom/lecture-big-screen-v2.md` · `classroom/lecture-entry-points.md` | R | AMENDMENTS-LECTURE-V2 (LV-0: presets on the presenter home and the setup page, the Stage 2-7 slide families, entry points for teachers and parents; mocks in LV-0b) |
 | `classroom/lecture-phone.md` | R | AMENDMENTS-LECTURE-V2 §18, F-TCH-004 §3.5 / §3.6 (2026-10-16, DN-0: the stage on a phone sideways with a floating bar, the rotate page upright, the phone start screen; row LV-M1; `classroom/lecture-presets.md` Panels C, E, F revised in the same pass: grouped chooser, sticky footer, no picker, no language chips) |
-| `home/next-lesson-hero.md` · `profile/profile-split.md` · `library/cards-collected-first.md` | R | AMENDMENTS-DISPLAY-NAV §9 (2026-10-16, DN-0: the learner UX pass; mocks `design/screens/learner-shell/`; rows DN-8, DN-9) |
+| `home/next-lesson-hero.md` · `profile/profile-split.md` · `library/cards-collected-first.md` · `journey/route-tab-collapsed.md` | R | AMENDMENTS-DISPLAY-NAV §9 (2026-10-16, DN-0: the learner UX pass; mocks `design/screens/learner-shell/` and, for the Route tab, `design/screens/learning-route/route-tab-collapsed.md`; rows DN-8, DN-9) |
 | `layout/wide.md` | S | F-LAYOUT-001 §3.1-3.8 (PR 0; built in PRs 1-7: classes, Home columns, Journey / Library panes, portrait guard also in `pwa/system-banners.md` panel 4; adoption checklist in `.github/pull_request_template.md`) |
 | `console/class-transfer.md` | D | F-SPACE-002 |
 | `journey/grid-plan-and-access.md` · `episode/detail-access-preview.md` · `home/next-and-free-end-card.md` · `results/back-to-plan-and-free-end.md` · `library/access-and-plan-tags.md` | R | F-ENT-003 §3.7-3.8 (E3-0; mock E3-D) |

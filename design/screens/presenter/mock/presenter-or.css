@@ -23,9 +23,15 @@
 .presenter.phone .stage-btn { min-width: max(var(--touch-min), calc(var(--u) * var(--touch-n-hero))); min-height: max(var(--touch-min), calc(var(--u) * var(--touch-n-hero))); }
 .presenter.phone .stage-btn svg { width: max(calc(var(--touch-min) / 2), calc(var(--u) * var(--spacing-n-xxxl))); height: max(calc(var(--touch-min) / 2), calc(var(--u) * var(--spacing-n-xxxl))); }
 
-/* The compact bar floats over the stage bottom (real pixels); it fades out after presenter.autoHideMs.    */
+/* The compact bar floats over the stage bottom (real pixels). Every step hides it at once (a stage tap,  */
+/* a swipe, a key, Previous / Next / Reveal on the bar), so a new slide is always seen whole; it shows at  */
+/* the start of the lesson, on a tap in its own strip and while focus is inside it, and fades out after    */
+/* presenter.autoHideMs otherwise. A hidden bar takes no taps but stays in the focus order.                */
 .cbar { position: absolute; left: var(--spacing-sm); right: var(--spacing-sm); width: max-content; margin-inline: auto; bottom: calc(var(--inset-b, var(--spacing-none)) + var(--spacing-sm)); z-index: var(--z-raised); display: flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-sm); background: var(--colors-surface-sunken); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); }
-.cbar.hidden { opacity: 0; } /* the slide under it is drawn in full: nothing moves when it hides or shows */
+.cbar.hidden { opacity: 0; pointer-events: none; } /* the slide under it is drawn in full: nothing moves when it hides or shows */
+/* The grabber marks the bar's strip (a tap there shows the bar). It sits centred in the stage's bottom     */
+/* margin (--stage-pad, which no slide draws in), so it covers nothing; decorative, aria-hidden.           */
+.presenter.phone .grabber { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc((var(--stage-pad) - var(--spacing-xs)) / 2); width: var(--spacing-xxxl); height: var(--spacing-xs); border-radius: var(--radii-pill); background: var(--colors-border-strong); z-index: var(--z-raised); }
 .cbar .ctl { flex-direction: row; min-width: var(--touch-min); min-height: var(--touch-min); max-width: none; padding: var(--spacing-xs) var(--spacing-md); gap: var(--spacing-xs); }
 .cbar .ctl.primary { min-width: var(--next-min-phone); }
 .cbar .ctl .icon { width: var(--spacing-xl); height: var(--spacing-xl); }

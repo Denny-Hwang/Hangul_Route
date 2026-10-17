@@ -13,13 +13,13 @@ The one top row of every learner-app and All lessons screen. It carries the way 
 
 | Prop | Type | Notes |
 |---|---|---|
-| `leading` | `'back' \| 'close' \| 'none'` | `back` for stack screens, `close` for modals and flows that ask before leaving, `none` for roots (Welcome, the four tabs, All lessons home); the variant per route lives in `SCREEN_HEADER_VARIANTS`, the exception list in `SCREEN_HEADER_EXCEPTIONS` (`PlacementInvite` only) |
+| `leading` | `'back' \| 'close' \| 'none'` | `back` for stack screens, `close` for modals and flows that ask before leaving, `none` for roots (Welcome, the four tabs, All lessons home, BrowseAccess); the variant per route lives in `SCREEN_HEADER_VARIANTS`, the exception list in `SCREEN_HEADER_EXCEPTIONS` (`PlacementInvite` and `FirstQuestPreview`, the end of first-run setup). `back` and `close` are drawn only when `navigation.canGoBack()`; a screen that cannot go back is a root or an exception |
 | `leadingLabel` | `string` | `common.buttons.back` or `common.buttons.close` |
 | `onLeading` | `() => void` | `navigation.goBack()` through the screen's `beforeRemove` guard |
 | `title` | `string?` | the h1 (`accessibilityRole="header"`); wraps to two lines, never truncates |
 | `titleSize` | `'title' \| 'prompt'` | `prompt` for long content titles (a topic, a story) |
 | `middle` | `ReactNode?` | a flow's own middle part (a quest's step dots); replaces the title |
-| `displayLabel`, `onDisplay` | `string`, `() => void` | the Aa control (`common.display.button`, named `common.display.a11y`); hidden while a session clock runs (`displayHidden`) |
+| `displayLabel`, `displayA11y`, `onDisplay` | `string`, `string`, `() => void` | the Aa control: visible `common.display.button`, accessible name `common.display.a11y` ("Aa, Display: language and text size", which begins with the visible label, WCAG 2.5.3); hidden while a session clock runs (`displayHidden`) |
 | `trailing` | `ReactNode?` | at most one more control after Aa (Home's Profile button) |
 
 ## Anatomy and tokens
@@ -39,6 +39,7 @@ The one top row of every learner-app and All lessons screen. It carries the way 
 
 ## Accessibility
 
-- The leading control is the first focus stop; its accessible name is its visible label. The title is the screen's heading.
+- The leading control is the first focus stop; its accessible name is its visible label. The Aa control's name begins with "Aa" (the render test asserts that `common.display.a11y` starts with `common.display.button` in every locale). The title is the screen's heading.
+- `Screen` takes the header as a **required** prop (`header`: these props, or `'exception'`, which type-checks only for the routes in `SCREEN_HEADER_EXCEPTIONS`), so no screen can forget it (AMENDMENTS-DISPLAY-NAV section 7.1).
 - The browser and phone back do what the leading control does (web history bridge, section 7.2).
 - At 320 with 200 % text and at Largest the title wraps and the controls keep 64 px (`screen-header-375-text200.png`).

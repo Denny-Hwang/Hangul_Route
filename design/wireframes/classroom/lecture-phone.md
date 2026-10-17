@@ -9,7 +9,7 @@ Mock: `design/screens/presenter/stage-and-bar.md` "Phone", `states.md` (rotate p
 
 Given: a grown-up opens a lesson on a phone (`isPhoneWindow`: short side under 600, long side at most 1000)
 When: they tap Start and turn the phone sideways
-Then: the slide fills the screen (no 120 px band, no "make the window bigger" page); a small bar floats over the bottom and hides by itself; upright, a rotate page says to turn the phone, with a way back
+Then: the slide fills the screen (no 120 px band, no "make the window bigger" page); a small bar floats over the bottom, hides at every step so a new slide is always seen whole, and comes back from its own strip; upright, a rotate page says to turn the phone, with a way back
 
 ## Screen goal
 
@@ -17,7 +17,7 @@ Then: the slide fills the screen (no 120 px band, no "make the window bigger" pa
 
 ## Box diagram
 
-Panel A — 640 x 360 sideways, bar shown (just after a tap)
+Panel A — 640 x 360 sideways, bar shown (the start of the lesson, or a tap in the bar's strip)
 
 ```
 +--------------------------------------------------------------+
@@ -27,12 +27,12 @@ Panel A — 640 x 360 sideways, bar shown (just after a tap)
 |        ㄱ                                 example word        |
 |       g/k                                                    |
 |  +--------------------------------------------------------+  |
-|  | [< Back]   [[  Next  >  ]]   [ Sound ]   [ More ]      |  |  <- compact bar: floats over the stage bottom
+|  | [< Previous] [[ Next  > ]]   [ Sound ]   [ More ]      |  |  <- compact bar: floats over the stage bottom
 |  +--------------------------------------------------------+  |     inside the bottom safe-area inset
 +--------------------------------------------------------------+
 ```
 
-Panel B — 640 x 360, bar hidden (3 s after the last touch)
+Panel B — 640 x 360, bar hidden (after any step, or 3 s with no touch on it)
 
 ```
 +--------------------------------------------------------------+
@@ -42,9 +42,10 @@ Panel B — 640 x 360, bar hidden (3 s after the last touch)
 |        ㄱ                                 example word        |
 |       g/k                                                    |
 |                                                              |  <- the slide is drawn in full; nothing moved
-|                                                              |
+|                            ====                              |  <- grabber: marks the bar's strip, in the stage margin
 +--------------------------------------------------------------+
-   tap anywhere: shows the bar only (does not advance)
+   tap above the strip: steps (right two thirds next, left third previous); the bar stays hidden
+   tap in the strip (the bottom 80 px): shows the bar
 ```
 
 Panel C — 844 x 390 sideways (a notched phone), bar shown; the stage box is the window minus the insets
@@ -56,7 +57,7 @@ Panel C — 844 x 390 sideways (a notched phone), bar shown; the stage box is th
 |     |      ㄱ                                    example word         |     |
 |     |     g/k                                                        |     |
 |     |  +----------------------------------------------------------+  |     |
-|     |  | [< Back]    [[   Next   >   ]]    [ Sound ]    [ More ]   |  |     |
+|     |  | [< Previous]  [[   Next   >   ]]  [ Sound ]    [ More ]   |  |     |
 |     |  +----------------------------------------------------------+  |     |
 +-----+----------------------------------------------------------------+-----+
                               (home indicator inset below)
@@ -126,10 +127,11 @@ Panel G — the same start screen at 640 x 360 sideways: one column, the same st
 
 ## Interaction points
 
-- Tap the stage while the bar shows: right two thirds next, left third back (F-TCH-004 §3.5); restarts the 3 s hide timer.
-- Tap the stage while the bar is hidden: shows the bar only.
-- Swipe left or right: next / back, bar shown or not.
-- [ Next ] / Reveal, [< Back], [ Sound]: as the docked bar.
+- Tap the stage above the bar's strip: right two thirds next, left third previous (F-TCH-004 §3.5). It never shows the bar, and it hides the bar if it was showing, so the new slide is seen whole.
+- Tap in the bar's strip (the bottom `touchTarget.min + 2 x spacing.sm`, marked by the grabber): shows the bar; tap there again: hides it.
+- Swipe left or right: next / previous; hides the bar.
+- [ Next ] / Reveal, [< Previous], [ Sound ]: as the docked bar; Next, Reveal and Previous hide the bar at once after the step. A focused control keeps the bar shown (keyboard, switch, screen reader).
+- Lesson start: the bar shows for 3 s so its place is learned, then hides.
 - [ More ] → Panel D; [ Close ] or `Esc` closes it. Its buttons do what the docked bar's do; [ Exit ] opens the Exit confirm.
 - Rotate the phone upright during a lesson → Panel E; back sideways → the same slide and build.
 - Panel E [< Back] → the Exit confirm (Keep going / Exit).

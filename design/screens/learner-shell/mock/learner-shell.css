@@ -32,6 +32,10 @@
 .mission .m-text { display: flex; flex-direction: column; min-width: 0; }
 .mission .m-text b { font-size: var(--size-bodyLg); overflow-wrap: anywhere; }
 .mission .m-text span { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+/* Card 2 in its compact form when it names the hero's lesson (AMENDMENTS-DISPLAY-NAV 9.1): not a button, no art, */
+/* sunken and flat, so Home offers that lesson once (the hero's Start); it still shows done and still collects.   */
+.mission.same { min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); background: var(--colors-surface-sunken); box-shadow: none; }
+.mission.same .m-text b { font-size: var(--size-body); }
 .tabbar { position: sticky; bottom: var(--spacing-none); margin: var(--spacing-md) calc(-1 * var(--gutter-compact)) calc(-1 * var(--spacing-xl)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--colors-surface-paper); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
 .tabbar a { min-width: 0; padding: var(--spacing-xxs); text-align: center; overflow-wrap: anywhere; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xxs); min-height: var(--touch-min); color: var(--colors-text-secondary); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); text-decoration: none; }
 .tabbar a[aria-current="page"] { color: var(--colors-brand-primaryDark); font-weight: var(--weight-bold); }
