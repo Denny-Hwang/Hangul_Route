@@ -111,7 +111,7 @@ test.describe('the lock PIN path', () => {
     await typeDigits(page, E2E_PIN);
     await page.getByRole('button', { name: 'Unlock' }).click();
     await expect(page.getByText('Grown-up page stand-in')).toBeVisible();
-    await expect(page).toHaveURL(/\/parent$/);
+    await expect(page).toHaveURL(/\/parent\?lang=en$/);
     const unlock = JSON.parse((await sessionValue(page, UNLOCK)) ?? 'null') as Record<string, unknown> | null;
     expect(unlock).toMatchObject({ v: 1, src: 'pin', pinEpoch: pinSetAt });
     expect(Math.abs(Number(unlock?.seen) - Date.now())).toBeLessThan(60_000);

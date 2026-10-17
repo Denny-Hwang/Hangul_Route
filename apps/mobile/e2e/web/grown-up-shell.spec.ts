@@ -160,7 +160,7 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await shot(page, 'a10-welcome-375');
 
     await teacher.click();
-    await expect(page).toHaveURL(/\/signin\?persona=teacher$/);
+    await expect(page).toHaveURL(/\/signin\?persona=teacher&lang=en$/);
     await expect(page.getByRole('heading', { level: 1, name: en.console.signIn.title })).toBeVisible();
     await expect(page.getByText(en.console.signIn.persona.teacher.intro)).toBeVisible();
     await expect(page.getByRole('link', { name: /sign up|create an account/i })).toHaveCount(0);
@@ -183,7 +183,7 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
 
     await page.getByRole('button', { name: lock.usePin.cta }).or(page.getByRole('link', { name: lock.usePin.cta })).click();
     await unlockWithPin(page);
-    await expect(page).toHaveURL(/\/parent$/);
+    await expect(page).toHaveURL(/\/parent\?lang=en$/);
     await expectOpen(page);
     const unlock = JSON.parse((await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_SESSION_KEY)) ?? 'null') as Record<string, unknown> | null;
     expect(unlock).toMatchObject({ v: 1, src: 'pin', pinEpoch: pinSetAt });
@@ -195,7 +195,7 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await familyDevice(page);
     await page.goto('/?gate=grown-up&next=%2Fparent');
     await unlockWithPin(page);
-    await expect(page).toHaveURL(/\/parent$/);
+    await expect(page).toHaveURL(/\/parent\?lang=en$/);
     await expectOpen(page);
 
     await page.clock.fastForward(GROWN_UP_IDLE_MS + 30_000);
@@ -210,7 +210,7 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await familyDevice(page);
     await page.goto('/?gate=grown-up&next=%2Fparent');
     await unlockWithPin(page);
-    await expect(page).toHaveURL(/\/parent$/);
+    await expect(page).toHaveURL(/\/parent\?lang=en$/);
     await expectOpen(page);
 
     await backToLearning(page).first().click();
@@ -218,7 +218,7 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_SESSION_KEY)).toBeNull();
 
     await page.goBack();
-    await expect(page).toHaveURL(/\/parent$/);
+    await expect(page).toHaveURL(/\/parent\?lang=en$/);
     await expect(lockTitle(page)).toBeVisible();
     await expect(page.getByText(en.console.shell.noApi)).toHaveCount(0);
     await expect(page.getByText(parentHome.title)).toHaveCount(0);
@@ -284,7 +284,7 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await row.click();
     await unlockWithPin(page);
     // The /signin router; with an API address it goes on to the family home (the API group below).
-    await expect(page).toHaveURL(/\/signin$/);
+    await expect(page).toHaveURL(/\/signin\?lang=en$/);
     const unlock = JSON.parse((await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_SESSION_KEY)) ?? 'null') as Record<string, unknown> | null;
     expect(unlock).toMatchObject({ v: 1, src: 'pin', pinEpoch: pinSetAt });
   });
@@ -371,7 +371,7 @@ test.describe('the family home with data (an API address, GROWN_UP_SHELL_E2E=1)'
     const spaces = page.waitForRequest((r) => new URL(r.url()).pathname === '/api/spaces');
     await page.getByRole('button', { name: lock.usePin.cta }).or(page.getByRole('link', { name: lock.usePin.cta })).click();
     await unlockWithPin(page);
-    await expect(page).toHaveURL(/\/parent$/);
+    await expect(page).toHaveURL(/\/parent\?lang=en$/);
     await spaces;
     await expect(page.getByTestId('learner-card')).toHaveCount(1);
     expect(api.count).toBeGreaterThan(0);
@@ -425,7 +425,7 @@ test.describe('the family home with data (an API address, GROWN_UP_SHELL_E2E=1)'
     await openProfile(page);
     await page.getByRole('button', { name: /^Grown-up home, / }).click();
     await unlockWithPin(page);
-    await expect(page).toHaveURL(/\/parent$/);
+    await expect(page).toHaveURL(/\/parent\?lang=en$/);
     await expectOpen(page);
     await expect(page.getByTestId('learner-card')).toHaveCount(1);
   });

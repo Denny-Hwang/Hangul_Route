@@ -197,12 +197,12 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await standInSignIn(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Teacher', exact: true }).click();
-    await expect(page).toHaveURL(/\/signin\?persona=teacher$/);
+    await expect(page).toHaveURL(/\/signin\?persona=teacher&lang=en$/);
     await expect(page.getByText('Sign-in stand-in')).toBeVisible();
 
     await page.goto('/');
     await page.getByRole('button', { name: 'Parent or caregiver' }).click();
-    await expect(page).toHaveURL(/\/signin\?persona=parent$/);
+    await expect(page).toHaveURL(/\/signin\?persona=parent&lang=en$/);
   });
 
   test('keyboard: Tab order equals the visual order in Panel A and Panel B (section 3.16)', async ({ page }) => {
@@ -253,7 +253,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
 
     await page.goto('/');
     await page.getByRole('button', { name: 'Continue as teacher' }).click();
-    await expect(page).toHaveURL(/\/signin$/);
+    await expect(page).toHaveURL(/\/signin\?lang=en$/);
   });
 
   test('Panel C: offline, the buttons keep their labels, disabled, with "Needs the internet"; online again re-enables them', async ({ page, context }) => {
@@ -288,7 +288,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
 
     await row.click();
     await unlockWithPin(page);
-    await expect(page).toHaveURL(/\/signin$/);
+    await expect(page).toHaveURL(/\/signin\?lang=en$/);
     const unlock = await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK);
     expect(JSON.parse(unlock ?? '{}')).toMatchObject({ v: 1, src: 'pin' });
   });
@@ -300,7 +300,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     const row = page.getByRole('button', { name: 'Account home, Your family, classes and billing' });
     await expect(row).toBeVisible();
     await row.click();
-    await expect(page).toHaveURL(/\/signin$/);
+    await expect(page).toHaveURL(/\/signin\?lang=en$/);
     // Marker `none`: no unlock is needed and none is written.
     expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK)).toBeNull();
   });
@@ -328,7 +328,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await shot(page, 'a7-dashboard-card-375');
 
     await card.getByRole('button', { name: 'Open' }).click();
-    await expect(page).toHaveURL(/\/signin$/);
+    await expect(page).toHaveURL(/\/signin\?lang=en$/);
     const unlock = await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK);
     expect(JSON.parse(unlock ?? '{}')).toMatchObject({ v: 1, src: 'pin' });
   });

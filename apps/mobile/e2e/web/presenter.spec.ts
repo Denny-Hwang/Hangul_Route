@@ -281,7 +281,7 @@ test.describe('presenter at 1280 x 720', () => {
   test('learner data already on the device is left byte for byte, and ?lang= is never stored', async ({ page }) => {
     await page.goto('/present?lang=ko');
     await expect(page.getByTestId('presenter-home')).toBeVisible();
-    // The hand-off left the address and was held for this page only (section 3.9).
+    // The hand-off left the address and is never used: the presenter speaks the device's language (owner items 6 and 7).
     await expect.poll(() => new URL(page.url()).search).toBe('');
     expect(await storedKeys(page)).not.toContain('hr:device:settings');
 
@@ -1347,36 +1347,17 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await expect(page.getByRole('toolbar').locator('..')).toHaveCSS('opacity', '1');
   });
 
-  test('Keys and controls switches the presenter language for this session only', async ({ page }) => {
+  test('Keys and controls has no language chips: the presenter speaks the device language (owner items 6 and 7)', async ({ page }) => {
     await page.goto(link(TOOLS_DECK));
     await startLesson(page);
     await page.keyboard.press('h');
-    const chips = page.getByTestId('presenter-help-language');
-    if ((await chips.count()) === 0) test.skip(true, 'one UI locale in this build: no chips are drawn');
-    await expect(chips).toHaveAttribute('aria-label', 'Presenter language');
-    const english = page.getByTestId('presenter-help-language-en');
-    await expect(english).toHaveAttribute('aria-checked', 'true');
-    // One radiogroup: an arrow moves and selects, and the chrome follows at once.
-    await english.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(page.getByTestId('presenter-help-language-es')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('presenter-help-language-es')).toBeFocused();
-    await expect(page.getByTestId('presenter-help-close')).toHaveAccessibleName('Cerrar');
-    // The device locale write would be an async IndexedDB put, so a wrong write can land after a first read.
-    for (let read = 0; read < 4; read += 1) {
-      await page.waitForTimeout(250);
-      expect(await readStored(page, 'device:settings'), `device:settings after ${(read + 1) * 250} ms`).toBeNull();
-    }
-    await shot(page, 'presenter-help-language-1280x720');
+    await expect(page.getByTestId('presenter-help')).toBeVisible();
+    await expect(page.getByTestId('presenter-help-language')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-help-close')).toHaveAccessibleName('Close');
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('presenter-help')).toHaveCount(0);
-    // Session only: a reload opens the presenter in the device language again.
-    await page.reload();
-    await startLesson(page);
-    await page.keyboard.press('h');
-    await expect(page.getByTestId('presenter-help-language-en')).toHaveAttribute('aria-checked', 'true');
     expect(await readStored(page, 'device:settings')).toBeNull();
   });
+
 });
 
 test.describe('PR 9 with no Korean voice at 1280 x 720', () => {

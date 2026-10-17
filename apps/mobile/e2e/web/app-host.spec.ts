@@ -87,7 +87,9 @@ function readSaved(page: Page): Promise<SavedData> {
         const local: Record<string, string | null> = {};
         for (let i = 0; i < localStorage.length; i += 1) {
           const key = localStorage.key(i);
-          if (key !== null) local[key] = localStorage.getItem(key);
+          // The console's own read-through mirrors of the device's language and text size (owner items 6 and 7)
+          // are the console's, not the learner's: they are written on every console visit.
+          if (key !== null && !key.startsWith('hr:console:')) local[key] = localStorage.getItem(key);
         }
         const open = indexedDB.open('keyval-store');
         open.onerror = () => reject(open.error);

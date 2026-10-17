@@ -74,7 +74,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await page.getByRole('button', { name: 'Open billing' }).click();
     await unlockWithPin(page);
     // No "Tap Open billing again": no tab opens, so nothing can be blocked.
-    await expect(page).toHaveURL(/\/account\/billing$/);
+    await expect(page).toHaveURL(/\/account\/billing\?lang=en$/);
     await expect(page.getByText('Billing stand-in')).toBeVisible();
     expect(tabs.seen()).toBe(0);
     expect(await unlockOf(page)).toMatchObject({ v: 1, src: 'pin' });
@@ -88,7 +88,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     const tabs = watchTabs(context);
 
     await page.getByRole('button', { name: 'Open billing' }).click();
-    await expect(page).toHaveURL(/\/account\/billing$/);
+    await expect(page).toHaveURL(/\/account\/billing\?lang=en$/);
     expect(tabs.seen()).toBe(0);
     // Marker `none`: no unlock is needed and none is written.
     expect(await unlockOf(page)).toBeNull();
@@ -111,7 +111,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     // The session opens the gate directly, but the PIN is stale: the grown-up area's own PIN screen.
     await page.getByRole('button', { name: 'Open billing' }).click();
     await unlockWithPin(page);
-    await expect(page).toHaveURL(/\/account\/billing$/);
+    await expect(page).toHaveURL(/\/account\/billing\?lang=en$/);
     expect(await unlockOf(page)).toMatchObject({ v: 1, src: 'pin' });
   });
 });

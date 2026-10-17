@@ -739,11 +739,13 @@ test('Lesson display: romanization choices apply at once, Done and Escape close,
   const sheet = page.getByRole('dialog', { name: 'Lesson display' });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole('radio', { name: 'Always shown' })).toHaveAttribute('aria-checked', 'true');
-  // es and ko ship (F-I18N-001 rows 15b / 16b): the Language row lists all three, English chosen.
-  const language = sheet.getByRole('radiogroup', { name: 'Language' });
+  // es and ko ship (F-I18N-001 rows 15b / 16b): the device's Language row lists all three, English chosen, and the
+  // Text size row follows (owner items 6 and 7: the Display sheet's rows under Romanization).
+  const language = sheet.getByRole('radiogroup', { name: 'Language on this device' });
   await expect(language.getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
-  await expect(sheet.getByTestId('browse-display-language-en')).toHaveAttribute('aria-checked', 'true');
-  await expect(sheet.getByText("These choices change only this preview. No learner's settings change.")).toBeVisible();
+  await expect(sheet.getByTestId('browse-display-sheet-language-en')).toHaveAttribute('aria-checked', 'true');
+  await expect(sheet.getByRole('radiogroup', { name: 'Text size' }).getByRole('radio')).toHaveCount(4);
+  await expect(sheet.getByText("Romanization changes only this preview, never a learner's settings. Language and text size apply to every screen on this device.")).toBeVisible();
   await sheet.getByRole('radio', { name: 'Hidden until tap' }).click();
   await expect(sheet.getByRole('radio', { name: 'Hidden until tap' })).toHaveAttribute('aria-checked', 'true');
   await shot(page, 'br7-browse-lesson-display-pixel5');
