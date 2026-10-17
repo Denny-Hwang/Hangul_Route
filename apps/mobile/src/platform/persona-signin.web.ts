@@ -2,7 +2,6 @@ import type { UiLocale } from '@hangul-route/i18n';
 import { personaChosen, personaSignInPath, type PersonaChoice } from '../logic/shell/entry-points';
 import { handoffUrl } from '../logic/shell/handoff-rules';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
-import { useProfileStore } from '../store/profile-store';
 import { trackThenLeave } from './grown-up-handoff.web';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
 
@@ -26,7 +25,7 @@ function browserEnv(): PersonaSignInEnv {
   return {
     track: (event) => sendEvent(event),
     assign: (url) => (globalThis as { location?: { assign: (to: string) => void } }).location?.assign(url),
-    locale: () => activeLocale(useLocaleStore.getState(), useProfileStore.getState().activeId),
+    locale: () => activeLocale(useLocaleStore.getState()),
   };
 }
 

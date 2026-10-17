@@ -34,7 +34,7 @@ function seed(answer: () => Promise<'full' | 'class'>): void {
   useProfileStore.setState({ profiles: [learner()], activeId: LEARNER_ID });
   useAccountStore.setState({ parentPinHash: null, selfConsentAcceptedAt: '2026-10-01T00:00:00.000Z' });
   useUiStore.setState({ parentGateOpenedAt: null });
-  useLocaleStore.setState({ device: 'en', session: null, byProfile: {} });
+  useLocaleStore.setState({ device: 'en', byProfile: {} });
   useMembershipStore.setState({
     byLearner: { [LEARNER_ID]: [{ spaceId: 'space:c', kind: 'class', name: 'Sunflower', role: 'learner', joinedAt: '2026-10-02T00:00:00.000Z' } as never] },
     deviceScope: vi.fn(answer),

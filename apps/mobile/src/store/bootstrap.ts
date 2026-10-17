@@ -35,7 +35,7 @@ import { useTierStore } from './tier-store';
  */
 export async function hydrateLearnerData(): Promise<void> {
   await useProfileStore.getState().hydrate();
-  const { profiles } = useProfileStore.getState();
+  const { profiles, activeId } = useProfileStore.getState();
   const progress = useProgressStore.getState();
   const stories = useStoryStore.getState();
   const tiers = useTierStore.getState();
@@ -45,7 +45,10 @@ export async function hydrateLearnerData(): Promise<void> {
   const results = await Promise.allSettled([
     useAudioStore.getState().hydrate(),
     useLayoutStore.getState().hydrate(),
-    useLocaleStore.getState().hydrate(profiles.map((p) => p.id)),
+    useLocaleStore.getState().hydrate(
+      profiles.map((p) => p.id),
+      { activeProfileId: activeId },
+    ),
     useAccountStore.getState().hydrate(),
     ...profiles.map((p) => progress.hydrate(p.id)),
     ...profiles.map((p) => stories.hydrate(p.id)),

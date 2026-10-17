@@ -1,6 +1,6 @@
-import { KoreanText, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
+import { KoreanText, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass, useEffectiveFontScale } from '@hangul-route/design-system';
 import React, { useState } from 'react';
-import { Pressable, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { Pressable, View, type LayoutChangeEvent } from 'react-native';
 import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
 import { wallArtSize, wallColumns, type WallTileView } from '../../logic/vocab/topic-view';
 import { PictureArt } from '../minigames/PictureArt';
@@ -27,7 +27,8 @@ export function WordWall({
   tiles: readonly WallTileView[];
   onOpen?: (id: string) => void;
 }): React.ReactElement {
-  const { fontScale } = useWindowDimensions();
+  // OS text size x the chosen Display text size (owner items 6 and 7).
+  const fontScale = useEffectiveFontScale();
   const lc = useLayoutClass();
   const [measured, setMeasured] = useState<number | null>(null);
   const onLayout = (e: LayoutChangeEvent): void => {

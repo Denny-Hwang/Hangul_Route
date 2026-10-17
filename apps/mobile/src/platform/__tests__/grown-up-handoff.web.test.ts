@@ -307,7 +307,7 @@ describe('openGrownUpArea with the default env (the learner stores and the brows
   });
 
   it('reads the marker the writer computed, the PIN time and the UI locale; writes this tab; leaves', async () => {
-    useLocaleStore.setState({ detected: 'en', device: null, session: null, byProfile: {} });
+    useLocaleStore.setState({ detected: 'en', device: null, byProfile: {} });
     useProfileStore.setState({
       profiles: [{ id: 'profile:a', displayName: 'A', ageGroup: '8-9', avatar: 'hoya-orange', role: 'learner', createdAt: '2026-10-01T00:00:00.000Z' }],
       activeId: 'profile:a',

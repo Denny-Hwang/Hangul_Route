@@ -8,8 +8,9 @@ import { TEXT_FLOOR } from './stage-metrics';
 
 /**
  * What every presenter component reads (F-TCH-004 PR 6): the dictionary of the presenter locale
- * (the deck's `options.uiLocale`, else the device locale; never a learner profile's), the stage
- * unit (window pixels per stage unit) and whether motion is reduced.
+ * (owner items 6 and 7: the chrome speaks the device's one language; the stage alone gets the
+ * slide language, the deck's explicit `options.uiLocale` else the device's), the stage unit
+ * (window pixels per stage unit) and whether motion is reduced.
  */
 export interface PresenterView {
   messages: Messages;

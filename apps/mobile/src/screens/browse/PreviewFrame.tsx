@@ -1,4 +1,4 @@
-import { borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK, useCappedFont } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
@@ -36,6 +36,8 @@ export interface PreviewFrameProps {
 export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.ReactElement {
   const m = useMessages().caregiver.browse.preview;
   const { gutter } = useLayoutClass();
+  // Drawn at the chosen text size; the native cap stays a budget for the step and the OS together.
+  const capped = useCappedFont('body', BROWSE_TEXT_SCALE_CAP);
   const insets = useSafeAreaInsets();
   const [focused, setFocused] = useState(false);
 
@@ -68,12 +70,12 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.Re
         <View style={{ flex: 1 }}>
           <Text {...KOREAN_LINE_BREAK}
             testID="preview-strip-text"
-            maxFontSizeMultiplier={BROWSE_TEXT_SCALE_CAP}
+            maxFontSizeMultiplier={capped.maxFontSizeMultiplier}
             style={{
               color: colors.text.primary,
-              fontSize: typography.size.body,
+              fontSize: capped.fontSize,
               fontWeight: typography.weight.semibold,
-              lineHeight: typography.size.body * typography.leading.normal,
+              lineHeight: capped.fontSize * typography.leading.normal,
             }}
           >
             {m.strip}
@@ -103,10 +105,10 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.Re
           >
             {({ pressed }) => (
               <Text {...KOREAN_LINE_BREAK}
-                maxFontSizeMultiplier={BROWSE_TEXT_SCALE_CAP}
+                maxFontSizeMultiplier={capped.maxFontSizeMultiplier}
                 style={{
                   color: pressed ? colors.brand.primaryDark : colors.brand.primary,
-                  fontSize: typography.size.body,
+                  fontSize: capped.fontSize,
                   fontWeight: typography.weight.semibold,
                   textAlign: 'center',
                 }}

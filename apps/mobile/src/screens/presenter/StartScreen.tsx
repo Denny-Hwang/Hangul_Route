@@ -1,4 +1,4 @@
-import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { distinctParts, type SkipPart, type VoiceCheck } from '../../logic/lecture/shell';
@@ -6,13 +6,16 @@ import { PICKER_COUNT_MAX, PICKER_COUNT_MIN } from '../../logic/lecture/stage-co
 import { PICKER_LABEL_BASIS, START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 import { GhostButton, PrimaryButton } from './StatePage';
+import { DisplayButton } from '../../components/DisplayButton';
 
 /**
  * The start screen (design/screens/presenter/start-screen.md, README D10, D15): a teacher page in
  * real pixels on paper, not stage-scaled. The deck title (teacher text), the facts, the device
  * checks (none blocks Start), the skipped parts with [ See which ], the helper picker row (a count
  * only, never a label), and one big Start, disabled while the presenter font loads (at most
- * 1.5 s) and focused when it is ready. Back to lessons, above the title, returns to the home.
+ * 1.5 s) and focused when it is ready. Back to lessons, above the title, returns to the home; the
+ * Aa button beside it opens the Display sheet (owner items 6 and 7). The page's type follows the
+ * chosen text size (`useTypeScale`); the slides keep their stage units.
  */
 
 export type { VoiceCheck } from '../../logic/lecture/shell';
@@ -40,6 +43,8 @@ export interface StartScreenProps {
   onStart: () => void;
   /** Back to lessons: the presenter home, before anything starts (nothing is saved or sent). */
   onBack?: () => void;
+  /** Opens the Display (Aa) sheet (owner items 6 and 7); without it the Aa button is not drawn. */
+  onDisplay?: () => void;
 }
 
 function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNode; testID?: string }): React.ReactElement {
@@ -55,13 +60,14 @@ function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNod
 }
 
 function Line({ children, secondary, bold }: { children: React.ReactNode; secondary?: boolean; bold?: boolean }): React.ReactElement {
+  const ts = useTypeScale().size;
   return (
     <Text {...KOREAN_LINE_BREAK}
       style={{
-        fontSize: typography.size.body,
+        fontSize: ts.body,
         color: secondary ? colors.text.secondary : colors.text.primary,
         fontWeight: bold ? typography.weight.bold : typography.weight.regular,
-        lineHeight: Math.round(typography.size.body * typography.leading.normal),
+        lineHeight: Math.round(ts.body * typography.leading.normal),
       }}
     >
       {children}
@@ -100,6 +106,7 @@ function StepButton({ icon, label, disabled, onPress }: { icon: IconName; label:
 }
 
 export function StartScreen(props: StartScreenProps): React.ReactElement {
+  const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
   const [listOpen, setListOpen] = useState(false);
@@ -129,23 +136,24 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
     <ScrollView testID="presenter-start" style={{ flex: 1, backgroundColor: colors.surface.paper }} contentContainerStyle={{ paddingVertical: spacing.xxl, paddingHorizontal: layout.gutter.compact }}>
       <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: spacing.xl }}>
         <View style={{ gap: spacing.md }}>
-          {props.onBack ? (
-            <View style={{ alignItems: 'flex-start' }}>
-              <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} />
+          {props.onBack || props.onDisplay ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+              {props.onBack ? <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} /> : <View />}
+              {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-start-display" /> : null}
             </View>
           ) : null}
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{messages.learner.presenter.home.title}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.body, color: colors.text.secondary }}>{messages.learner.presenter.home.title}</Text>
           {/* The deck title is the teacher's own text (TD8): shown here, never in document.title. */}
-          <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={1} style={{ fontSize: typography.size.hero, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(typography.size.hero * typography.leading.tight) }}>
+          <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={1} style={{ fontSize: ts.hero, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(ts.hero * typography.leading.tight) }}>
             {props.deckTitle}
           </Text>
-          <Text {...KOREAN_LINE_BREAK} testID="presenter-start-facts" style={{ fontSize: typography.size.bodyLg, color: colors.text.secondary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-start-facts" style={{ fontSize: ts.bodyLg, color: colors.text.secondary }}>
             {`${m.slides(props.slides)} · ${m.minutes(props.minutes)}`}
           </Text>
         </View>
 
         <View style={{ gap: spacing.md }}>
-          <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {m.checks}
           </Text>
           <Check ok={props.offlineReady} testID="presenter-check-offline">
@@ -216,6 +224,7 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
 }
 
 function PickerRowView({ row, onCount }: { row: NonNullable<PickerRow>; onCount: (count: number) => void }): React.ReactElement {
+  const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start.picker;
   return (
@@ -246,7 +255,7 @@ function PickerRowView({ row, onCount }: { row: NonNullable<PickerRow>; onCount:
       {row.kind === 'numbers' ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <StepButton icon="dash" label={m.fewer} disabled={row.count <= PICKER_COUNT_MIN} onPress={() => onCount(Math.max(PICKER_COUNT_MIN, row.count - 1))} />
-          <Text {...KOREAN_LINE_BREAK} role="status" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary, minWidth: touchTarget.min, textAlign: 'center' }}>
+          <Text {...KOREAN_LINE_BREAK} role="status" style={{ fontSize: ts.title, fontWeight: typography.weight.bold, color: colors.text.primary, minWidth: touchTarget.min, textAlign: 'center' }}>
             {String(row.count)}
           </Text>
           <StepButton icon="plus" label={m.more} disabled={row.count >= PICKER_COUNT_MAX} onPress={() => onCount(Math.min(PICKER_COUNT_MAX, row.count + 1))} />

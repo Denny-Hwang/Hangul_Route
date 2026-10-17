@@ -72,7 +72,7 @@ function seed(audience: Audience, tier: TierCase, locale: UiLocale = 'en'): void
   useProfileStore.setState({ profiles: [learner(audience)], activeId: LEARNER_ID });
   useAccountStore.setState({ parentPinHash: 'pin-hash', subscription: null });
   useUiStore.setState({ parentGateOpenedAt: null });
-  useLocaleStore.setState({ device: locale, session: null, byProfile: {} });
+  useLocaleStore.setState({ device: locale, byProfile: {} });
   useTierStore.setState({
     byLearner: { [LEARNER_ID]: { tier: tier.tier, source: tier.source, validUntil: null, fetchedAt: '2026-10-14T00:00:00.000Z' } },
     spaceMembers: {},

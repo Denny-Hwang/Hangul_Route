@@ -1,6 +1,6 @@
 import { createBottomTabNavigator, type BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { useIsFocused } from '@react-navigation/native';
-import { Icon, borderWidth, colors, spacing, tabBarMetrics, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, spacing, tabBarMetrics, typography, useLayoutClass, KOREAN_LINE_BREAK, useCappedFont } from '@hangul-route/design-system';
 import React, { useEffect } from 'react';
 import { Platform, Text, type TextStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,8 +33,17 @@ const LABEL_BESIDE: TextStyle = { marginLeft: spacing.lg + spacing.xs, marginTop
  */
 function fittedLabel(text: string): NonNullable<BottomTabNavigationOptions['tabBarLabel']> {
   return function FittedTabLabel({ color, position }) {
+    // Native: drawn at the chosen text size with the 1.3 x caption cap kept as a budget for the step
+    // and the OS together (owner items 6 and 7). The web label stays at the caption size, as before.
+    const capped = useCappedFont('caption', FOUR_TAB_LABEL_FIT.maxFontSizeMultiplier);
+    const native = Platform.OS !== 'web';
     return (
-      <Text {...KOREAN_LINE_BREAK} {...FOUR_TAB_LABEL_FIT} style={[{ textAlign: 'center', color }, position === 'beside-icon' ? LABEL_BESIDE : null, LABEL_STYLE]}>
+      <Text
+        {...KOREAN_LINE_BREAK}
+        {...FOUR_TAB_LABEL_FIT}
+        {...(native ? { maxFontSizeMultiplier: capped.maxFontSizeMultiplier } : {})}
+        style={[{ textAlign: 'center', color }, position === 'beside-icon' ? LABEL_BESIDE : null, LABEL_STYLE, native ? { fontSize: capped.fontSize } : null]}
+      >
         {text}
       </Text>
     );

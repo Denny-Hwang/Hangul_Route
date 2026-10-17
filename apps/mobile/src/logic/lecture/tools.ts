@@ -1,6 +1,4 @@
 import type { PickerMode, RomanizationMode } from '@hangul-route/content-schema';
-import type { UiLocale } from '@hangul-route/i18n';
-import type { LanguageOption } from '../locale/language-picker';
 import type { QuizOption, SlideKind } from './build-steps';
 import type { PresenterEvent, PresenterState } from './controls';
 import type { Slide } from './deck-builder';
@@ -85,12 +83,6 @@ export function optionContent(option: QuizOption): OptionContent {
  */
 export function fullscreenToggle(isFull: boolean): { action: 'enter' | 'exit'; tools: LectureTool[] } {
   return { action: isFull ? 'exit' : 'enter', tools: ['fullscreen'] };
-}
-
-/** The Help overlay's Presenter language chips (section 3.12): drawn only when the build offers two or more locales. */
-export function helpLanguageChips(languages: readonly LanguageOption[]): { value: UiLocale; label: string; lang: string }[] | null {
-  if (languages.length < 2) return null;
-  return languages.map((o) => ({ value: o.locale, label: o.endonym, lang: o.htmlLang }));
 }
 
 /** The control bar's status chips (stage-and-bar.md); nothing about a learner ever shows there. */

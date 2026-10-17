@@ -20,7 +20,7 @@ function seed(locale: UiLocale): void {
   // es and ko are hidden at launch (LOCALE_STATUS); the QA switch shows them.
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
   useProfileStore.setState({ profiles: [], activeId: null });
-  useLocaleStore.setState({ device: locale, session: null, byProfile: {} });
+  useLocaleStore.setState({ device: locale, byProfile: {} });
 }
 
 const book = (): NonNullable<ReturnType<typeof cardById>> => {

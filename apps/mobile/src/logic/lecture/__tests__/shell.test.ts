@@ -16,6 +16,7 @@ import {
   gestureCommand,
   homeStart,
   presenterLocale,
+  slideLocale,
   resolveBoot,
   runDeck,
   slideDetail,
@@ -499,7 +500,7 @@ describe('stroke guide play (going back to a complete slide is silent)', () => {
   });
 });
 
-describe('homeStart and presenterLocale (the presenter home, F-TCH-004 PR 8)', () => {
+describe('homeStart, presenterLocale and slideLocale (the presenter home, F-TCH-004 PR 8)', () => {
   const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
   const item = { deck, savedAt: '2026-10-13T09:00:00Z', lastSlideKey: 'episode:stage1-letters/x' };
 
@@ -518,16 +519,22 @@ describe('homeStart and presenterLocale (the presenter home, F-TCH-004 PR 8)', (
     expect(homeStart({ kind: 'quick', deck: quick })).toEqual({ kind: 'ready', deck: quick, source: 'quick' });
   });
 
-  it('the session chip wins, then the deck language, then the device locale', () => {
-    const es = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }], { options: { uiLocale: 'es' } });
+  it('the chrome speaks the device record only; it never follows the deck (owner items 6 and 7)', () => {
     const available = ['en', 'es', 'ko'] as const;
-    expect(presenterLocale({ deck: null, session: null, device: 'en', available })).toBe('en');
-    expect(presenterLocale({ deck: es, session: null, device: 'en', available })).toBe('es');
-    expect(presenterLocale({ deck: es, session: 'ko', device: 'en', available })).toBe('ko');
-    expect(presenterLocale({ deck: null, session: 'ko', device: 'en', available })).toBe('ko');
-    // A chip for a locale this build does not offer is ignored.
-    expect(presenterLocale({ deck: null, session: 'ko', device: 'en', available: ['en'] })).toBe('en');
-    // So is a deck's language this build does not offer (the English-only release build).
-    expect(presenterLocale({ deck: es, session: null, device: 'en', available: ['en'] })).toBe('en');
+    expect(presenterLocale({ device: 'en', available })).toBe('en');
+    expect(presenterLocale({ device: 'ko', available })).toBe('ko');
+    // A device language this build does not offer (the English-only release build) is English.
+    expect(presenterLocale({ device: 'ko', available: ['en'] })).toBe('en');
+  });
+
+  it('the slides speak the deck language only when the deck was given one, else the device language', () => {
+    const es = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }], { options: { uiLocale: 'es' } });
+    const plain = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }]);
+    const available = ['en', 'es', 'ko'] as const;
+    expect(slideLocale({ deck: es, device: 'ko', available })).toBe('es');
+    expect(slideLocale({ deck: plain, device: 'ko', available })).toBe('ko');
+    expect(slideLocale({ deck: null, device: 'en', available })).toBe('en');
+    // A deck language this build does not offer is passed over.
+    expect(slideLocale({ deck: es, device: 'en', available: ['en'] })).toBe('en');
   });
 });

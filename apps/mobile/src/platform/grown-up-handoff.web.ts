@@ -15,7 +15,6 @@ import {
 } from '../logic/shell/handoff-rules';
 import { currentDeviceGateMarker } from '../store/device-gate';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
-import { useProfileStore } from '../store/profile-store';
 import { useUiStore } from '../store/ui-store';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
 
@@ -87,7 +86,7 @@ function browserEnv(): HandoffEnv {
     state: () => ({
       marker: currentDeviceGateMarker(),
       lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt,
-      locale: activeLocale(useLocaleStore.getState(), useProfileStore.getState().activeId),
+      locale: activeLocale(useLocaleStore.getState()),
     }),
     track: (event) => sendEvent(event),
     assign: browserAssign,

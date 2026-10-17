@@ -18,6 +18,18 @@ vi.mock('../../platform/storage', () => ({
 const track = vi.hoisted(() => vi.fn(async () => true));
 vi.mock('../../platform/telemetry', () => ({ track }));
 const platform = vi.hoisted(() => ({ languages: [] as string[], handoff: null as string | null }));
+const posted = vi.hoisted(() => [] as unknown[]);
+const subscription = vi.hoisted(() => ({ onRecord: null as ((v: unknown) => void) | null, onReturn: null as (() => void) | null, stopped: 0 }));
+vi.mock('../../platform/prefs-channel', () => ({
+  postDeviceSettings: (value: unknown) => posted.push(value),
+  subscribeDeviceSettings: (onRecord: (v: unknown) => void, onReturn: () => void) => {
+    subscription.onRecord = onRecord;
+    subscription.onReturn = onReturn;
+    return () => {
+      subscription.stopped += 1;
+    };
+  },
+}));
 vi.mock('../../platform/locale', () => ({
   deviceLanguages: () => platform.languages,
   takeLangHandoff: () => platform.handoff,
@@ -38,7 +50,7 @@ vi.mock('@hangul-route/i18n', async (importOriginal) => {
   };
 });
 
-import { activeLocale, detectInitialLocale, useLocaleStore } from '../locale-store';
+import { activeLocale, deviceChose, detectInitialLocale, followDeviceSettings, useLocaleStore } from '../locale-store';
 import { useProfileStore } from '../profile-store';
 
 // The fixture's hidden locales (es, ko) are only available when the QA flag is set.
@@ -49,13 +61,21 @@ const showAll = (on: boolean): void => {
 
 const reset = (): void => {
   mem.clear();
+  posted.length = 0;
   storage.failReads = false;
   storage.failWrites = false;
   platform.handoff = null;
   showAll(true);
   track.mockClear();
-  useLocaleStore.setState({ detected: 'en', device: null, session: null, byProfile: {}, hydrated: false });
+  useLocaleStore.setState({ detected: 'en', device: null, deviceAt: null, textSize: 'standard', byProfile: {}, hydrated: false });
 };
+
+/** The device record writes read the stored record first, so they land a few ticks later. */
+const settle = async (): Promise<void> => {
+  for (let i = 0; i < 5; i += 1) await Promise.resolve();
+};
+
+const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 afterAll(() => showAll(false));
 
@@ -73,43 +93,53 @@ describe('locale-store: detection at creation', () => {
   });
 });
 
-describe('locale-store: resolution (activeLocale)', () => {
+describe('locale-store: resolution (one UI language per device)', () => {
   beforeEach(reset);
 
-  it('profile override > device choice > detected', () => {
-    useLocaleStore.setState({
-      detected: 'es',
-      device: 'ko',
-      byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' }, 'profile:b': { romanizationMode: 'always' } },
-    });
-    const s = useLocaleStore.getState();
-    expect(activeLocale(s, 'profile:a')).toBe('es');
-    expect(activeLocale(s, 'profile:b')).toBe('ko');
-    expect(activeLocale(s, null)).toBe('ko');
+  it('device record > detected > en, the same for every profile', () => {
+    useLocaleStore.setState({ detected: 'es', device: 'ko', byProfile: { 'profile:a': { romanizationMode: 'always' } } });
+    expect(activeLocale(useLocaleStore.getState())).toBe('ko');
+    expect(deviceChose(useLocaleStore.getState())).toBe(true);
     useLocaleStore.setState({ device: null });
-    expect(activeLocale(useLocaleStore.getState(), 'profile:b')).toBe('es');
+    expect(activeLocale(useLocaleStore.getState())).toBe('es');
+    expect(deviceChose(useLocaleStore.getState())).toBe(false);
+    useLocaleStore.setState({ detected: 'en' });
+    expect(activeLocale(useLocaleStore.getState())).toBe('en');
   });
 
   it('detection is a default, not a choice: device stays null', () => {
     useLocaleStore.setState({ detected: 'es' });
     const s = useLocaleStore.getState();
     expect(s.device).toBeNull();
-    expect(activeLocale(s, null)).toBe('es');
+    expect(activeLocale(s)).toBe('es');
+  });
+
+  it('there is no per-profile override and no tab-only session override any more', () => {
+    const s = useLocaleStore.getState() as unknown as Record<string, unknown>;
+    expect('setProfileLocale' in s).toBe(false);
+    expect('setSessionLocale' in s).toBe(false);
+    expect('session' in s).toBe(false);
   });
 });
 
 describe('locale-store: hydrate', () => {
   beforeEach(reset);
 
-  it('loads the device choice and every profile setting', async () => {
-    mem.set('device:settings', { uiLocale: 'ko' });
-    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'tap' });
+  it('loads the device record (language, its time, text size) and every profile setting', async () => {
+    mem.set('device:settings', { uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'larger' });
+    mem.set('settings:profile:a', { romanizationMode: 'tap' });
     await useLocaleStore.getState().hydrate(['profile:a', 'profile:b']);
     const s = useLocaleStore.getState();
-    expect(s.hydrated).toBe(true);
-    expect(s.device).toBe('ko');
-    expect(s.byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
+    expect(s).toMatchObject({ hydrated: true, device: 'ko', deviceAt: '2026-10-16T09:00:00.000Z', textSize: 'larger' });
+    expect(s.byProfile['profile:a']).toEqual({ romanizationMode: 'tap' });
     expect(s.byProfile['profile:b']).toBeUndefined();
+  });
+
+  it('a record stored before the new fields parses unchanged: no time, standard text', async () => {
+    mem.set('device:settings', { uiLocale: 'es' });
+    await useLocaleStore.getState().hydrate([]);
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'es', deviceAt: null, textSize: 'standard' });
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es' });
   });
 
   it('ignores a value that fails to parse and starts normally', async () => {
@@ -118,102 +148,170 @@ describe('locale-store: hydrate', () => {
     mem.set('settings:profile:b', { uiLocale: 'zz' });
     await useLocaleStore.getState().hydrate(['profile:a', 'profile:b']);
     const s = useLocaleStore.getState();
-    expect(s).toMatchObject({ hydrated: true, device: null, byProfile: {} });
+    expect(s).toMatchObject({ hydrated: true, device: null, textSize: 'standard', byProfile: {} });
   });
 
   it('applies the default romanization mode to a stored profile without one', async () => {
-    mem.set('settings:profile:a', { uiLocale: 'es' });
+    mem.set('settings:profile:a', { readToMe: true });
     await useLocaleStore.getState().hydrate(['profile:a']);
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'always' });
-  });
-
-  it('keeps a stored readToMe (F-STORY-002 PR 2.5) and parses settings saved before it existed', async () => {
-    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'tap', readToMe: false });
-    mem.set('settings:profile:b', { uiLocale: 'es', romanizationMode: 'tap' });
-    await useLocaleStore.getState().hydrate(['profile:a', 'profile:b']);
-    const s = useLocaleStore.getState();
-    expect(s.byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: false });
-    expect(s.byProfile['profile:b']).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
-    expect('readToMe' in (s.byProfile['profile:b'] ?? {})).toBe(false);
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'always', readToMe: true });
   });
 
   it('survives storage that cannot be read (private mode): detection applies, nothing persisted', async () => {
     storage.failReads = true;
     useLocaleStore.setState({ detected: 'es' });
     await useLocaleStore.getState().hydrate(['profile:a']);
+    await settle();
     const s = useLocaleStore.getState();
     expect(s.hydrated).toBe(true);
     expect(s.device).toBeNull();
-    expect(activeLocale(s, 'profile:a')).toBe('es');
+    expect(activeLocale(s)).toBe('es');
     expect(mem.size).toBe(0);
   });
 
-  it('?lang= becomes the device choice when none was ever made', async () => {
+  it('?lang= seeds a device that never chose: stored without a time (a seed, not a choice)', async () => {
     platform.handoff = 'ko';
     await useLocaleStore.getState().hydrate([]);
-    expect(useLocaleStore.getState().device).toBe('ko');
+    await settle();
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'ko', deviceAt: null });
     expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko' });
+    expect(posted).toEqual([{ uiLocale: 'ko' }]);
     expect(track).toHaveBeenCalledWith({
       name: 'locale.changed',
       payload: { from: 'en', to: 'ko', scope: 'device', source: 'handoff' },
     });
   });
 
-  it("with handoff 'session' (the presenter), ?lang= is held for the session and never stored", async () => {
-    platform.handoff = 'ko';
-    await useLocaleStore.getState().hydrate([], { handoff: 'session' });
-    const s = useLocaleStore.getState();
-    expect(s.device).toBeNull();
-    expect(s.session).toBe('ko');
-    expect(activeLocale(s, null)).toBe('ko');
-    expect(mem.has('device:settings')).toBe(false);
-    expect(track).not.toHaveBeenCalled();
-    // A stored device choice still wins, as for the device hand-off.
-    reset();
-    mem.set('device:settings', { uiLocale: 'en' });
-    platform.handoff = 'ko';
-    await useLocaleStore.getState().hydrate([], { handoff: 'session' });
-    expect(useLocaleStore.getState().session).toBeNull();
-  });
-
   it('?lang= never overrides a stored device choice', async () => {
-    mem.set('device:settings', { uiLocale: 'en' });
+    mem.set('device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
     platform.handoff = 'ko';
     await useLocaleStore.getState().hydrate([]);
+    await settle();
     expect(useLocaleStore.getState().device).toBe('en');
-    expect(mem.get('device:settings')).toEqual({ uiLocale: 'en' });
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
     expect(track).not.toHaveBeenCalled();
+  });
+
+  it("with handoff 'ignore' (the presenter), ?lang= is taken out of the address and never used or stored", async () => {
+    platform.handoff = 'ko';
+    await useLocaleStore.getState().hydrate([], { handoff: 'ignore' });
+    await settle();
+    expect(useLocaleStore.getState().device).toBeNull();
+    expect(mem.has('device:settings')).toBe(false);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('a seed keeps the text size already stored', async () => {
+    mem.set('device:settings', { textSize: 'largest' });
+    platform.handoff = 'es';
+    await useLocaleStore.getState().hydrate([]);
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ textSize: 'largest', uiLocale: 'es' });
   });
 });
 
-describe('locale-store: setters', () => {
+describe('locale-store: the one-time migration from per-profile languages', () => {
   beforeEach(reset);
 
-  it('setDeviceLocale persists, removes the key when cleared, and reports the effective change once', () => {
+  it('a device that never chose takes the active profile\'s override; every override is stripped', async () => {
+    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'tap' });
+    mem.set('settings:profile:b', { uiLocale: 'ko', romanizationMode: 'always', readToMe: true });
+    await useLocaleStore.getState().hydrate(['profile:a', 'profile:b'], { activeProfileId: 'profile:b' });
+    await settle();
+    expect(useLocaleStore.getState().device).toBe('ko');
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko' });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap' });
+    expect(mem.get('settings:profile:b')).toEqual({ romanizationMode: 'always', readToMe: true });
+    expect(useLocaleStore.getState().byProfile).toEqual({ 'profile:a': { romanizationMode: 'tap' }, 'profile:b': { romanizationMode: 'always', readToMe: true } });
+    // A migration is not a person's change: no event.
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('with no active profile, the only profile\'s override is promoted', async () => {
+    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'always' });
+    await useLocaleStore.getState().hydrate(['profile:a']);
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es' });
+  });
+
+  it('several profiles and none active: nothing is promoted, the overrides are still stripped', async () => {
+    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'always' });
+    mem.set('settings:profile:b', { uiLocale: 'ko', romanizationMode: 'always' });
+    await useLocaleStore.getState().hydrate(['profile:a', 'profile:b'], { activeProfileId: null });
+    await settle();
+    expect(mem.has('device:settings')).toBe(false);
+    expect(useLocaleStore.getState().device).toBeNull();
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always' });
+    expect(mem.get('settings:profile:b')).toEqual({ romanizationMode: 'always' });
+  });
+
+  it('a device that already chose keeps its language; the overrides are stripped', async () => {
+    mem.set('device:settings', { uiLocale: 'en', textSize: 'large' });
+    mem.set('settings:profile:a', { uiLocale: 'ko', romanizationMode: 'always' });
+    await useLocaleStore.getState().hydrate(['profile:a'], { activeProfileId: 'profile:a' });
+    await settle();
+    expect(useLocaleStore.getState().device).toBe('en');
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'en', textSize: 'large' });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always' });
+  });
+
+  it('runs once: a second start finds nothing to promote or strip', async () => {
+    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'always' });
+    await useLocaleStore.getState().hydrate(['profile:a']);
+    await settle();
+    const before = Object.fromEntries(mem.entries());
+    expect(before).toEqual({ 'device:settings': { uiLocale: 'es' }, 'settings:profile:a': { romanizationMode: 'always' } });
+    reset();
+    mem.set('device:settings', { uiLocale: 'es' });
+    mem.set('settings:profile:a', { romanizationMode: 'always' });
+    await useLocaleStore.getState().hydrate(['profile:a']);
+    await settle();
+    expect(Object.fromEntries(mem.entries())).toEqual(before);
+    expect(posted).toEqual([]);
+  });
+
+  it('profiles without an override are not rewritten', async () => {
+    mem.set('settings:profile:a', { romanizationMode: 'tap' });
+    await useLocaleStore.getState().hydrate(['profile:a']);
+    await settle();
+    expect(posted).toEqual([]);
+    expect([...mem.keys()]).toEqual(['settings:profile:a']);
+  });
+});
+
+describe('locale-store: device record setters', () => {
+  beforeEach(reset);
+
+  it('setDeviceLocale stores the choice with its time, tells the other tabs and reports the change once', async () => {
     useLocaleStore.setState({ detected: 'en' });
     useLocaleStore.getState().setDeviceLocale('es', 'welcome');
     expect(useLocaleStore.getState().device).toBe('es');
-    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es' });
+    expect(useLocaleStore.getState().deviceAt).toMatch(ISO);
+    await settle();
+    const stored = mem.get('device:settings') as { uiLocale: string; uiLocaleAt: string };
+    expect(stored).toEqual({ uiLocale: 'es', uiLocaleAt: useLocaleStore.getState().deviceAt });
+    expect(posted).toEqual([stored]);
     expect(track).toHaveBeenCalledTimes(1);
     expect(track).toHaveBeenCalledWith({
       name: 'locale.changed',
       payload: { from: 'en', to: 'es', scope: 'device', source: 'welcome' },
     });
-
-    useLocaleStore.getState().setDeviceLocale(null, 'settings');
-    expect(useLocaleStore.getState().device).toBeNull();
-    expect(mem.has('device:settings')).toBe(false);
-    expect(track).toHaveBeenLastCalledWith({
-      name: 'locale.changed',
-      payload: { from: 'es', to: 'en', scope: 'device', source: 'settings' },
-    });
   });
 
-  it('records the choice without telemetry when the effective locale does not change', () => {
+  it('never reports a profile scope (the Worker still accepts it; nothing sends it)', async () => {
+    useLocaleStore.getState().setDeviceLocale('ko');
+    useLocaleStore.getState().setDeviceLocale('es', 'settings');
+    useLocaleStore.getState().seedDeviceLocale('en');
+    await settle();
+    for (const [event] of track.mock.calls as unknown as [{ payload: { scope: string } }][]) expect(event.payload.scope).toBe('device');
+  });
+
+  it('records the choice without telemetry when the effective locale does not change', async () => {
     useLocaleStore.setState({ detected: 'en' });
     useLocaleStore.getState().setDeviceLocale('en', 'welcome');
+    await settle();
     expect(useLocaleStore.getState().device).toBe('en');
-    expect(mem.get('device:settings')).toEqual({ uiLocale: 'en' });
+    expect(mem.get('device:settings')).toMatchObject({ uiLocale: 'en' });
     expect(track).not.toHaveBeenCalled();
   });
 
@@ -222,47 +320,114 @@ describe('locale-store: setters', () => {
     expect(track).toHaveBeenCalledWith(expect.objectContaining({ payload: expect.objectContaining({ source: 'settings' }) }));
   });
 
-  it('setProfileLocale stores the override per profile, carries the profile id, and clears it again', () => {
-    useLocaleStore.setState({ detected: 'en', device: 'ko' });
-    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'always' });
-    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'always' });
-    expect(track).toHaveBeenCalledWith({
-      name: 'locale.changed',
-      profileId: 'profile:a',
-      payload: { from: 'ko', to: 'es', scope: 'profile', source: 'settings' },
-    });
-
-    useLocaleStore.getState().setProfileLocale('profile:a', null);
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'always' });
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always' });
-    expect('uiLocale' in (mem.get('settings:profile:a') as object)).toBe(false);
-    expect(track).toHaveBeenLastCalledWith({
-      name: 'locale.changed',
-      profileId: 'profile:a',
-      payload: { from: 'es', to: 'ko', scope: 'profile', source: 'settings' },
-    });
+  it('a write keeps the fields another tab stored meanwhile (read-modify-write)', async () => {
+    mem.set('device:settings', { textSize: 'largest' });
+    useLocaleStore.getState().setDeviceLocale('ko');
+    await settle();
+    expect(mem.get('device:settings')).toMatchObject({ uiLocale: 'ko', textSize: 'largest' });
+    mem.set('device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+    useLocaleStore.getState().setTextSize('large');
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
   });
 
-  it('changing or clearing the locale override keeps the profile\'s readToMe', () => {
-    useLocaleStore.setState({
-      byProfile: { 'profile:a': { romanizationMode: 'tap', readToMe: true } },
-    });
-    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
-    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: true });
-    useLocaleStore.getState().setProfileLocale('profile:a', null);
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', readToMe: true });
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: true });
-    useLocaleStore.getState().setRomanizationMode('profile:a', 'always');
-    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always', readToMe: true });
+  it('setTextSize stores the step, tells the other tabs, sends no event, and ignores a repeat', async () => {
+    useLocaleStore.getState().setTextSize('larger');
+    expect(useLocaleStore.getState().textSize).toBe('larger');
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ textSize: 'larger' });
+    expect(posted).toEqual([{ textSize: 'larger' }]);
+    useLocaleStore.getState().setTextSize('larger');
+    await settle();
+    expect(posted).toHaveLength(1);
+    expect(track).not.toHaveBeenCalled();
   });
 
-  it('setRomanizationMode persists per profile, keeps the locale override, and fires its event on change only', () => {
-    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
+  it('with the record unreadable, a write falls back to what this tab holds', async () => {
+    useLocaleStore.setState({ device: 'ko', deviceAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    storage.failReads = true;
+    useLocaleStore.getState().setTextSize('largest');
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+    useLocaleStore.setState({ textSize: 'standard', device: null });
+    useLocaleStore.getState().setTextSize('large');
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ textSize: 'large' });
+  });
+
+  it('seedDeviceLocale applies only to a device that never chose, and only an available locale', async () => {
+    useLocaleStore.setState({ device: 'en', deviceAt: '2026-10-16T09:00:00.000Z' });
+    useLocaleStore.getState().seedDeviceLocale('ko');
+    expect(useLocaleStore.getState().device).toBe('en');
+    reset();
+    showAll(false);
+    useLocaleStore.getState().seedDeviceLocale('ko');
+    expect(useLocaleStore.getState().device).toBeNull();
+    showAll(true);
+    mem.set('device:settings', { uiLocale: 'ko', uiLocaleAt: 'stale' });
+    useLocaleStore.getState().seedDeviceLocale('es');
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es' });
+  });
+
+  it('a failing write never throws or loses the in-memory choice', async () => {
+    storage.failWrites = true;
+    expect(() => useLocaleStore.getState().setDeviceLocale('es')).not.toThrow();
+    expect(() => useLocaleStore.getState().setTextSize('large')).not.toThrow();
+    await settle();
+    expect(useLocaleStore.getState().device).toBe('es');
+    expect(useLocaleStore.getState().textSize).toBe('large');
+  });
+});
+
+describe('locale-store: other tabs (BroadcastChannel hr-prefs, visibilitychange, pageshow)', () => {
+  beforeEach(reset);
+
+  it('a record another tab posted applies in memory and is never written back', async () => {
+    const stop = followDeviceSettings();
+    subscription.onRecord!({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'ko', deviceAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+    await settle();
+    expect(mem.size).toBe(0);
+    expect(posted).toEqual([]);
+    expect(track).not.toHaveBeenCalled();
+    stop();
+    expect(subscription.stopped).toBe(1);
+  });
+
+  it('coming back to the front re-reads the record', async () => {
+    followDeviceSettings();
+    useLocaleStore.setState({ device: 'en' });
+    mem.set('device:settings', { uiLocale: 'es', textSize: 'large' });
+    subscription.onReturn!();
+    await settle();
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'es', deviceAt: null, textSize: 'large' });
+  });
+
+  it('a re-read that finds nothing or fails keeps what the tab shows', async () => {
+    useLocaleStore.setState({ device: 'ko', textSize: 'larger' });
+    await useLocaleStore.getState().rereadDevice();
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'ko', textSize: 'larger' });
+    mem.set('device:settings', { uiLocale: 'es' });
+    storage.failReads = true;
+    await useLocaleStore.getState().rereadDevice();
+    expect(useLocaleStore.getState().device).toBe('ko');
+    storage.failReads = false;
+    mem.set('device:settings', 'damaged');
+    await useLocaleStore.getState().rereadDevice();
+    expect(useLocaleStore.getState().device).toBe('ko');
+  });
+});
+
+describe('locale-store: per-profile settings that stay per profile', () => {
+  beforeEach(reset);
+
+  it('setRomanizationMode persists per profile, keeps the other settings, and fires its event on change only', () => {
+    useLocaleStore.getState().setReadToMe('profile:a', true);
     track.mockClear();
     useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
-    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', readToMe: true });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: true });
     expect(track).toHaveBeenCalledTimes(1);
     expect(track).toHaveBeenCalledWith({
       name: 'romanization.mode_changed',
@@ -274,14 +439,13 @@ describe('locale-store: setters', () => {
   });
 
   it('setReadToMe (F-STORY-002 §3.4) persists per profile and keeps every other setting', () => {
-    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
     useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
     track.mockClear();
     useLocaleStore.getState().setReadToMe('profile:a', true);
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: true });
-    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: true });
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', readToMe: true });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: true });
     useLocaleStore.getState().setReadToMe('profile:a', false);
-    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: false });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: false });
     // No telemetry for the switch (§3.12 defines none) and other profiles are untouched.
     expect(track).not.toHaveBeenCalled();
     expect(useLocaleStore.getState().byProfile['profile:b']).toBeUndefined();
@@ -294,12 +458,11 @@ describe('locale-store: setters', () => {
   });
 
   it('setChallengeMode (F-VOC-004 S8) persists per profile, keeps every other setting and reports the change', () => {
-    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
     useLocaleStore.getState().setReadToMe('profile:a', true);
     track.mockClear();
     useLocaleStore.getState().setChallengeMode('profile:a', true, 'start_sheet');
-    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'always', readToMe: true, challengeMode: true });
-    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'always', readToMe: true, challengeMode: true });
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'always', readToMe: true, challengeMode: true });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always', readToMe: true, challengeMode: true });
     expect(track).toHaveBeenCalledTimes(1);
     expect(track).toHaveBeenCalledWith({
       name: 'vocab.challenge_toggled',
@@ -375,18 +538,16 @@ describe('locale-store: setters', () => {
     });
   });
 
-  it('a failing write never throws or loses the in-memory choice', async () => {
+  it('a failing write never throws or loses the in-memory setting', async () => {
     storage.failWrites = true;
-    expect(() => useLocaleStore.getState().setDeviceLocale('es')).not.toThrow();
-    expect(() => useLocaleStore.getState().setProfileLocale('profile:a', 'ko')).not.toThrow();
-    await Promise.resolve();
-    expect(useLocaleStore.getState().device).toBe('es');
-    expect(useLocaleStore.getState().byProfile['profile:a']?.uiLocale).toBe('ko');
+    expect(() => useLocaleStore.getState().setRomanizationMode('profile:a', 'tap')).not.toThrow();
+    await settle();
+    expect(useLocaleStore.getState().byProfile['profile:a']?.romanizationMode).toBe('tap');
   });
 
   it('forgetProfile drops the profile settings and their key, leaving others alone', () => {
-    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
-    useLocaleStore.getState().setProfileLocale('profile:b', 'ko');
+    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
+    useLocaleStore.getState().setRomanizationMode('profile:b', 'tap');
     useLocaleStore.getState().forgetProfile('profile:a');
     expect(useLocaleStore.getState().byProfile['profile:a']).toBeUndefined();
     expect(mem.has('settings:profile:a')).toBe(false);
@@ -403,25 +564,25 @@ describe('locale-store: profile removal', () => {
     const input = { displayName: 'Mina', ageGroup: '8-9' as const, avatar: 'hoya-blue' as const };
     const a = useProfileStore.getState().createProfile(input);
     const b = useProfileStore.getState().createProfile({ ...input, displayName: 'Jin' });
-    useLocaleStore.getState().setProfileLocale(a.id, 'es');
-    useLocaleStore.getState().setProfileLocale(b.id, 'ko');
+    useLocaleStore.getState().setRomanizationMode(a.id, 'tap');
+    useLocaleStore.getState().setRomanizationMode(b.id, 'tap');
 
     useProfileStore.getState().remove(a.id);
 
     expect(useLocaleStore.getState().byProfile[a.id]).toBeUndefined();
     expect(mem.has(`settings:${a.id}`)).toBe(false);
-    expect(useLocaleStore.getState().byProfile[b.id]?.uiLocale).toBe('ko');
+    expect(useLocaleStore.getState().byProfile[b.id]?.romanizationMode).toBe('tap');
     expect(mem.has(`settings:${b.id}`)).toBe(true);
   });
 
-  it('adding or switching profiles leaves every setting alone', () => {
+  it('switching profiles never changes the UI language', () => {
     useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
     const input = { displayName: 'Mina', ageGroup: '8-9' as const, avatar: 'hoya-blue' as const };
     const a = useProfileStore.getState().createProfile(input);
-    useLocaleStore.getState().setProfileLocale(a.id, 'es');
+    useLocaleStore.getState().setDeviceLocale('ko');
     useProfileStore.getState().createProfile({ ...input, displayName: 'Jin' });
     useProfileStore.getState().setActive(a.id);
-    expect(useLocaleStore.getState().byProfile[a.id]?.uiLocale).toBe('es');
+    expect(activeLocale(useLocaleStore.getState())).toBe('ko');
   });
 });
 
@@ -430,48 +591,29 @@ describe('locale-store: profile removal', () => {
 describe('locale-store: a stored locale that is currently hidden is ignored', () => {
   beforeEach(reset);
 
-  it('activeLocale skips a hidden profile override, device choice and detected locale', () => {
+  it('activeLocale skips a hidden device choice and detected locale', () => {
     showAll(false);
-    useLocaleStore.setState({
-      detected: 'es',
-      device: 'ko',
-      byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' } },
-    });
-    const s = useLocaleStore.getState();
-    expect(activeLocale(s, 'profile:a')).toBe('en');
-    expect(activeLocale(s, null)).toBe('en');
-  });
-
-  it('a hidden override falls through to the next visible level, not straight to English', () => {
-    showAll(false);
-    useLocaleStore.setState({
-      detected: 'en',
-      device: 'en',
-      byProfile: { 'profile:a': { uiLocale: 'ko', romanizationMode: 'always' } },
-    });
-    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('en');
+    useLocaleStore.setState({ detected: 'es', device: 'ko' });
+    expect(activeLocale(useLocaleStore.getState())).toBe('en');
   });
 
   it('un-hiding the locale brings the stored choice back (no data change)', async () => {
     mem.set('device:settings', { uiLocale: 'ko' });
-    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'tap' });
     showAll(false);
-    await useLocaleStore.getState().hydrate(['profile:a']);
-    const hidden = useLocaleStore.getState();
-    expect(activeLocale(hidden, 'profile:a')).toBe('en');
+    await useLocaleStore.getState().hydrate([]);
+    await settle();
+    expect(activeLocale(useLocaleStore.getState())).toBe('en');
     expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko' });
-    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
-    expect(hidden.byProfile['profile:a']?.romanizationMode).toBe('tap');
     showAll(true);
-    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('es');
-    expect(activeLocale(useLocaleStore.getState(), null)).toBe('ko');
+    expect(activeLocale(useLocaleStore.getState())).toBe('ko');
   });
 
-  it('hydrate treats a hidden stored device choice as unset, so ?lang= can apply', async () => {
+  it('hydrate treats a hidden stored device choice as unset, so ?lang= can seed', async () => {
     mem.set('device:settings', { uiLocale: 'ko' });
     platform.handoff = 'en';
     showAll(false);
     await useLocaleStore.getState().hydrate([]);
+    await settle();
     expect(useLocaleStore.getState().device).toBe('en');
     expect(mem.get('device:settings')).toEqual({ uiLocale: 'en' });
   });
@@ -481,55 +623,5 @@ describe('locale-store: a stored locale that is currently hidden is ignored', ()
     useLocaleStore.setState({ detected: 'en', device: 'ko' });
     useLocaleStore.getState().setDeviceLocale('en', 'settings');
     expect(track).not.toHaveBeenCalled();
-    useLocaleStore.setState({ detected: 'en', device: null, byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' } } });
-    useLocaleStore.getState().setProfileLocale('profile:a', null);
-    expect(track).not.toHaveBeenCalled();
-  });
-});
-
-describe('locale-store: setSessionLocale (F-BROWSE-001 §4.9, BR-5c)', () => {
-  beforeEach(reset);
-
-  it('sets the active UI locale in memory only: no storage write and no event', async () => {
-    useLocaleStore.setState({ detected: 'en', device: 'ko' });
-    useLocaleStore.getState().setSessionLocale('es');
-    await Promise.resolve();
-    expect(useLocaleStore.getState().session).toBe('es');
-    expect(activeLocale(useLocaleStore.getState(), null)).toBe('es');
-    expect(useLocaleStore.getState().device).toBe('ko');
-    expect(mem.size).toBe(0);
-    expect(track).not.toHaveBeenCalled();
-  });
-
-  it('wins over a profile override and the device choice while set, and clears back to them', () => {
-    useLocaleStore.setState({
-      detected: 'en',
-      device: 'ko',
-      byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' } },
-    });
-    useLocaleStore.getState().setSessionLocale('en');
-    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('en');
-    expect(activeLocale(useLocaleStore.getState(), null)).toBe('en');
-    useLocaleStore.getState().setSessionLocale(null);
-    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('es');
-    expect(activeLocale(useLocaleStore.getState(), null)).toBe('ko');
-    expect(mem.size).toBe(0);
-    expect(track).not.toHaveBeenCalled();
-  });
-
-  it('a hidden session locale falls through to the next visible level', () => {
-    showAll(false);
-    useLocaleStore.setState({ detected: 'en', device: null });
-    useLocaleStore.getState().setSessionLocale('ko');
-    expect(activeLocale(useLocaleStore.getState(), null)).toBe('en');
-  });
-
-  it('survives hydrate, which never touches it', async () => {
-    mem.set('device:settings', { uiLocale: 'ko' });
-    useLocaleStore.getState().setSessionLocale('es');
-    await useLocaleStore.getState().hydrate([]);
-    expect(useLocaleStore.getState().session).toBe('es');
-    expect(activeLocale(useLocaleStore.getState(), null)).toBe('es');
-    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko' });
   });
 });

@@ -39,7 +39,8 @@ import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
-import { LanguageCard } from '../../components/LanguageCard';
+import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
+import { ReadingPracticeCard } from '../../components/ReadingPracticeCard';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
@@ -71,6 +72,8 @@ export function ProfileScreen(): React.ReactElement {
   const voice = useAudioStore((s) => s.tts);
   const soundCard = soundCardView(voice, !soundOn, m.learner.audio);
   const [voiceHelpOpen, setVoiceHelpOpen] = useState(false);
+  // The Display (Aa) sheet: the device's language and text size (owner items 6 and 7); not behind the grown-up gate.
+  const [displayOpen, setDisplayOpen] = useState(false);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
@@ -282,6 +285,27 @@ export function ProfileScreen(): React.ReactElement {
       </Card>
       <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
 
+      {/* Display: the one UI language and text size of this device (owner items 6 and 7), directly under Sound. */}
+      <Spacer size="lg" />
+      <Card padding="md">
+        <Pressable
+          testID="profile-display-row"
+          onPress={() => setDisplayOpen(true)}
+          accessibilityRole="button"
+          aria-haspopup="dialog"
+          accessibilityLabel={m.common.display.title}
+          accessibilityHint={m.common.display.summary}
+          style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+        >
+          <View style={{ flex: 1 }}>
+            <Body weight="semibold">{m.common.display.title}</Body>
+            <Caption tone="muted">{m.common.display.summary}</Caption>
+          </View>
+          <Icon name="arrow-right" size={24} color={colors.text.muted} />
+        </Pressable>
+      </Card>
+      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} />
+
       {active && wordsOffered() ? (
         <>
           {/* F-VOC-004 S-6: the Speed Round's Challenge opt-in; only where Words (and so the Speed Round) is offered. */}
@@ -293,7 +317,7 @@ export function ProfileScreen(): React.ReactElement {
       {active ? (
         <>
           <Spacer size="lg" />
-          <LanguageCard profileId={active.id} />
+          <ReadingPracticeCard profileId={active.id} />
         </>
       ) : null}
 

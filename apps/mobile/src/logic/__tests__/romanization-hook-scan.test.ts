@@ -32,10 +32,10 @@ const DIRECT_READS: RegExp[] = [
 ];
 
 /**
- * The one editor: `LanguageCard` changes a profile's stored setting, so it shows
+ * The one editor: `ReadingPracticeCard` changes a profile's stored setting, so it shows
  * the stored value (`resolveRomanizationMode(null, settings)`), never an override.
  */
-const EDITOR = 'components/LanguageCard.tsx';
+const EDITOR = 'components/ReadingPracticeCard.tsx';
 
 /** The other nine call sites of F-BROWSE-001 §1. */
 const CALL_SITES = [

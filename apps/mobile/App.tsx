@@ -1,4 +1,4 @@
-import { Screen } from '@hangul-route/design-system';
+import { Screen, TextSizeProvider } from '@hangul-route/design-system';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
@@ -18,6 +18,7 @@ import { flushQueue } from './src/platform/telemetry';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
 import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
+import { followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 import { usePwaStore } from './src/store/pwa-store';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
@@ -34,6 +35,8 @@ export default function App(): React.ReactElement {
   useDocumentLang();
 
   const countVisit = usePwaStore((s) => s.hydrateAndCountVisit);
+  // The device record's text size (owner items 6 and 7): every design-system text reads it.
+  const textSize = useLocaleStore((s) => s.textSize);
   // Profiles and every profile's saved progress are in memory before any
   // screen mounts, so nothing shows — or writes over — an empty record
   // (audit UX-01 / L16). The account and every cached tier load in the same
@@ -50,6 +53,9 @@ export default function App(): React.ReactElement {
     // The device gate marker the console's grown-up lock reads (F-APP-001 section 3.9): written once
     // the profiles and the account are in, and again whenever they change; independent of the flag.
     const unbindGate = bindDeviceGateMarker();
+    // A language or text size chosen in another tab of this origin (the grown-up pages, All
+    // lessons, the presenter) applies here live; a page back in front re-reads the record.
+    const unfollow = followDeviceSettings();
     void countVisit();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
@@ -82,6 +88,7 @@ export default function App(): React.ReactElement {
       uninstallUnlock();
       unbindLevel();
       unbindGate();
+      unfollow();
       off();
       offInbox();
       foreground.remove();
@@ -93,6 +100,7 @@ export default function App(): React.ReactElement {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
+          <TextSizeProvider step={textSize}>
           {/* Production crash guard — a thrown render error shows OopsScreen
               instead of closing the app; Try again remounts the navigator. */}
           <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
@@ -104,6 +112,7 @@ export default function App(): React.ReactElement {
             {/* F-LAYOUT-001 §3.4: a touch phone held sideways is asked, once, to turn upright. */}
             <PortraitGuard />
           </ErrorBoundary>
+          </TextSizeProvider>
         </SafeAreaProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

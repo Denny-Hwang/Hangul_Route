@@ -14,6 +14,7 @@ import {
   touchTarget,
   useLayoutClass,
   useMediaSize,
+  useEffectiveFontScale,
 } from '@hangul-route/design-system';
 import { currentQuestion, type AssessmentQuestion } from '@hangul-route/content-schema';
 import React, { useEffect, useRef, useState } from 'react';
@@ -212,8 +213,10 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   const layout = useLayoutClass();
   const window = useWindowDimensions();
   const contentWidth = Math.min(layout.windowWidth - 2 * layout.gutter, layout.maxWidth.reading);
-  const columns = choiceColumns({ mode, contentWidth, fontScale: window.fontScale });
-  const arrangement = short ? shortLayout(window, window.fontScale) : 'portrait';
+  // OS text size x the chosen Display text size (owner items 6 and 7).
+  const fontScale = useEffectiveFontScale();
+  const columns = choiceColumns({ mode, contentWidth, fontScale });
+  const arrangement = short ? shortLayout(window, fontScale) : 'portrait';
   // Short in landscape: smaller pictures so two rows and "I am not sure" fit 568 x 320 (cards keep touchTarget.child).
   const artSize = useMediaSize(short ? (arrangement === 'portrait' ? touchTarget.child : spacing.xxxl) : touchTarget.hero);
   // Standard and Deep: the speaker grows with the window like the games' speakers.

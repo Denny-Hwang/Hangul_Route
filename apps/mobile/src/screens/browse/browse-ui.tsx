@@ -13,6 +13,7 @@ import {
   typography,
   type IconName,
   KOREAN_LINE_BREAK,
+  useCappedFont,
 } from '@hangul-route/design-system';
 import React, { useEffect } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType, type ViewStyle } from 'react-native';
@@ -235,6 +236,8 @@ export function HeaderBack({
 /** [ Lesson display ]: the pill chip at the right of the header row. */
 export function LessonDisplayButton({ onPress }: { onPress: () => void }): React.ReactElement {
   const m = useMessages().caregiver.browse.home;
+  // Drawn at the chosen text size; the native 1.3 cap stays a budget for the step and the OS together.
+  const capped = useCappedFont('body', 1.3);
   return (
     <Pressable
       testID="browse-lesson-display"
@@ -254,7 +257,7 @@ export function LessonDisplayButton({ onPress }: { onPress: () => void }): React
       })}
     >
       <Icon name="settings" size={spacing.lg + spacing.xxs} color={colors.text.primary} />
-      <Text {...KOREAN_LINE_BREAK} maxFontSizeMultiplier={1.3} style={{ color: colors.text.primary, fontSize: typography.size.body, fontWeight: typography.weight.semibold }}>
+      <Text {...KOREAN_LINE_BREAK} maxFontSizeMultiplier={capped.maxFontSizeMultiplier} style={{ color: colors.text.primary, fontSize: capped.fontSize, fontWeight: typography.weight.semibold }}>
         {m.lessonDisplay.cta}
       </Text>
     </Pressable>

@@ -77,7 +77,7 @@ export function letterWallOf(i: LetterWallInput): LetterTile[] {
 }
 
 /**
- * The width of one wall tile at the device text size (`useWindowDimensions().fontScale`):
+ * The width of one wall tile at the effective text size (`useEffectiveFontScale()`: OS x the Display step):
  * the base width at 1x and wider in step with larger text, so a grown letter chip never
  * spills into the next tile; the row then wraps to fewer tiles across. Never narrower
  * than the base, and a missing or broken scale reads as 1x.

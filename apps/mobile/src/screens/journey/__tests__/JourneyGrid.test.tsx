@@ -23,13 +23,13 @@ afterEach(async () => {
   await cleanup();
   resetPlatform();
   vi.unstubAllEnvs();
-  useLocaleStore.setState({ device: 'en', session: null, byProfile: {} });
+  useLocaleStore.setState({ device: 'en', byProfile: {} });
 });
 
 function useUiLocale(locale: UiLocale): void {
   // es and ko are hidden until they ship (LOCALE_STATUS); the QA switch shows them.
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
-  useLocaleStore.setState({ device: locale, session: null, byProfile: {} });
+  useLocaleStore.setState({ device: locale, byProfile: {} });
 }
 
 const grid = (episodes = gridEpisodes(episodesAll)): React.ReactElement => (

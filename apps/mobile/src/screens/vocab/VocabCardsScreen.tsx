@@ -17,12 +17,13 @@ import {
   touchTarget,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useEffectiveFontScale,
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { EventArg, NavigationAction } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import { AccessibilityInfo, Modal, Platform, Pressable, Text, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -456,7 +457,8 @@ function CardsPhase({
     else AccessibilityInfo.announceForAccessibility(text);
   }, [state.index, state.face, labels.turnedBack, labels.turnedFront]);
 
-  const { fontScale } = useWindowDimensions();
+  // OS text size x the chosen Display text size (owner items 6 and 7).
+  const fontScale = useEffectiveFontScale();
   const [width, setWidth] = useState<number | null>(null);
   const onLayout = (e: LayoutChangeEvent): void => setWidth(e.nativeEvent.layout.width);
   const stacked = width !== null && markButtonsStacked(width, fontScale);

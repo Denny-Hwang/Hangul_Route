@@ -1,5 +1,6 @@
-import { WORD_ART_KEYS, colors, presenter, supportedCardIds } from '@hangul-route/design-system';
+import { TextSizeProvider, WORD_ART_KEYS, colors, presenter, supportedCardIds } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { DeviceDisplaySheet } from './src/components/DeviceDisplaySheet';
 import { encodeDeck, type LectureDeck, type PickerMode } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -20,13 +21,13 @@ import { clearPickerLabels, heldLabels } from './src/logic/lecture/picker-labels
 import { recentView } from './src/logic/lecture/home-view';
 import { quickSource } from './src/logic/lecture/quick-source';
 import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
-import { languageOptions } from './src/logic/locale/language-picker';
 import {
   completePayload,
   homeStart,
   nextStrokePlay,
   presenterLocale,
   resolveBoot,
+  slideLocale,
   runDeck,
   SHELL_SLIDE_KINDS,
   startPayload,
@@ -43,7 +44,7 @@ import {
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
-import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, narrationStops, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
+import { firstUses, fullscreenToggle, gridItems, narrationStops, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
@@ -92,7 +93,7 @@ import { Stage, StageHint } from './src/screens/presenter/Stage';
 import { StartScreen, type PickerRow } from './src/screens/presenter/StartScreen';
 import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
-import { activeLocale, useLocaleStore } from './src/store/locale-store';
+import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 
 /**
  * The lecture presenter, the `/present` root of the learner web build (F-TCH-004 PR 6; spec
@@ -105,7 +106,9 @@ import { activeLocale, useLocaleStore } from './src/store/locale-store';
  * reload reopens the tab's open lesson from Recent at its slide. It hydrates the audio settings
  * and the device locale only (section 3.9). The start screen checks the device, waits for the
  * presenter font, and its Start tap unlocks audio and asks for fullscreen, the wake lock and
- * landscape. Writes: `lecture:recent` (a deck has no name field) and the telemetry queue.
+ * landscape. Writes: `lecture:recent` (a deck has no name field), the telemetry queue and, only
+ * when someone chooses on the Display (Aa) sheet of the home or the start screen, the device's
+ * display record (`device:settings`, owner items 6 and 7).
  * Picker labels arrive only from the console tab that opened this one and stay in memory.
  *
  * The class tools (PR 9): the timer (corner or full), the helper picker, Blank and its Pause, the
@@ -155,13 +158,18 @@ export default function PresenterApp(): React.ReactElement {
         return next;
       });
   }, []);
-  const deviceLocale = useLocaleStore((s) => activeLocale(s, null));
-  // A language chip on the home holds for this session only (memory; section 3.12).
-  const [sessionLocale, setSessionLocale] = useState<UiLocale | null>(null);
+  // One UI language per device (owner items 6 and 7): the chrome speaks the device record's language,
+  // never the deck's; a deck's explicit `options.uiLocale` drives the slide text only.
+  const deviceLocale = useLocaleStore(activeLocale);
+  const textSize = useLocaleStore((s) => s.textSize);
   const available = useMemo(() => availableLocales(), []);
   const deck = phase.kind === 'ready' || phase.kind === 'running' ? phase.deck : null;
-  const locale: UiLocale = presenterLocale({ deck, session: sessionLocale, device: deviceLocale, available });
+  const locale: UiLocale = presenterLocale({ device: deviceLocale, available });
+  const slidesIn: UiLocale = slideLocale({ deck, device: deviceLocale, available });
   const messages = useMemo(() => getMessages(dictionaryLocale(locale)), [locale]);
+  const slideMessages = useMemo(() => getMessages(dictionaryLocale(slidesIn)), [slidesIn]);
+  // The Display (Aa) sheet of the home and the start screen.
+  const [displayOpen, setDisplayOpen] = useState(false);
   const reducedMotion = useReducedMotion();
   const window = useWindowDimensions();
   const [band, setBand] = useState<number>(BAR_BAND);
@@ -183,8 +191,10 @@ export default function PresenterApp(): React.ReactElement {
   useEffect(() => {
     let live = true;
     void useAudioStore.getState().hydrate().catch(() => undefined);
-    // A `?lang=` hand-off is held for this page only: the presenter never writes the device locale (section 3.9).
-    void useLocaleStore.getState().hydrate([], { handoff: 'session' }).catch(() => undefined);
+    // A `?lang=` is taken out of the address and never used or stored: the presenter speaks the device's language (section 3.9).
+    void useLocaleStore.getState().hydrate([], { handoff: 'ignore' }).catch(() => undefined);
+    // A language or text size chosen in another tab of this origin applies here live.
+    const unfollow = followDeviceSettings();
     const offCapability = subscribeCapability(setCapability);
     void refreshCapability()
       .catch(() => undefined)
@@ -208,6 +218,7 @@ export default function PresenterApp(): React.ReactElement {
     });
     return () => {
       live = false;
+      unfollow();
       offCapability();
       offPwa();
       offLink();
@@ -220,9 +231,10 @@ export default function PresenterApp(): React.ReactElement {
     setDocumentLang(LOCALE_META[locale].htmlLang);
   }, [messages, locale]);
 
-  const bundle = useMemo(() => lectureBundle(locale), [locale]);
+  // The slide content speaks the slide language (the deck's explicit one, else the device's).
+  const bundle = useMemo(() => lectureBundle(slidesIn), [slidesIn]);
   // Story scenes for the story slides: art, theme, accessible name and Read-to-me's voice (PR 11).
-  const stories = useMemo(() => lectureStories(locale), [locale]);
+  const stories = useMemo(() => lectureStories(slidesIn), [slidesIn]);
   const narrator = useMemo(() => createAudioRunner({ playPrompt, stop: stopAudio }), []);
   const canPlay = canPlayKorean(capability);
   const expanded = useMemo(() => (deck ? expandDeck(deck, bundle, { canPlayKorean: canPlay }) : null), [deck, bundle, canPlay]);
@@ -527,7 +539,6 @@ export default function PresenterApp(): React.ReactElement {
 
   // ---- the presenter home (section 3.12) ----
   const quick = useMemo(() => quickSource(locale), [locale]);
-  const languages = useMemo(() => languageOptions(available), [available]);
   const openFromHome = useCallback((choice: HomeChoice) => {
     const next = homeStart(choice);
     // The tab holds the deck, as a link does, so a reload reopens this lesson (section 3.2).
@@ -557,7 +568,9 @@ export default function PresenterApp(): React.ReactElement {
   // Too small is judged on the one-row band, so a bar that wraps on a phone cannot decide it; then the
   // hint page takes the whole window with its own Exit, and the bar is not drawn (states.md).
   const tooSmall = stageScale(stageBox(window, BAR_BAND), STAGE_BOUNDS).tooSmall || scale.tooSmall;
+  // The bar's overlays speak the chrome language; only the stage (the slides) speaks the slide language.
   const stageView: PresenterView = { ...view, unit: scale.unit };
+  const slideView: PresenterView = { ...stageView, messages: slideMessages, locale: slidesIn };
 
   const partTitle = useCallback(
     (blockIndex: number | null): string | null => {
@@ -593,9 +606,7 @@ export default function PresenterApp(): React.ReactElement {
         <PresenterHomeScreen
           messages={messages}
           locale={locale}
-          languages={languages}
-          sessionLocale={sessionLocale}
-          onLanguage={setSessionLocale}
+          onDisplay={() => setDisplayOpen(true)}
           recent={recentView(recentLoaded)}
           onResume={(item) => openFromHome({ kind: 'resume', item })}
           onStartOver={(item) => openFromHome({ kind: 'start-over', item })}
@@ -609,9 +620,6 @@ export default function PresenterApp(): React.ReactElement {
           <HelpOverlay
             romanization={null}
             onRomanization={() => undefined}
-            languages={helpLanguageChips(languages)}
-            locale={locale}
-            onLanguage={setSessionLocale}
             keepVisible={keepVisible}
             onKeepVisible={setKeepVisible}
             onClose={() => setHomeHelp(false)}
@@ -650,6 +658,7 @@ export default function PresenterApp(): React.ReactElement {
           fontReady={fontReady}
           onStart={onStart}
           onBack={backToHome}
+          onDisplay={() => setDisplayOpen(true)}
         />
       );
   } else {
@@ -712,7 +721,9 @@ export default function PresenterApp(): React.ReactElement {
               onCta={() => dispatch({ overlay: 'exit' })}
             />
           ) : (
-            <PresenterViewProvider value={stageView}>
+            <PresenterViewProvider value={slideView}>
+              {/* Slides keep their stage units: the chosen text size never reaches the stage. */}
+              <TextSizeProvider step="standard">
               <Stage
                 scale={scale}
                 slides={slides}
@@ -728,6 +739,7 @@ export default function PresenterApp(): React.ReactElement {
                 sayIt={sayIt}
                 storyScene={stories.scene}
               />
+              </TextSizeProvider>
             </PresenterViewProvider>
           )}
           {scale.portrait && !tooSmall ? <StageHint text={messages.learner.presenter.state.portrait} /> : null}
@@ -760,9 +772,6 @@ export default function PresenterApp(): React.ReactElement {
                 <HelpOverlay
                   romanization={romanizationNow}
                   onRomanization={setRomanization}
-                  languages={helpLanguageChips(languages)}
-                  locale={locale}
-                  onLanguage={setSessionLocale}
                   keepVisible={keepVisible}
                   onKeepVisible={(on) => {
                     setKeepVisible(on);
@@ -783,6 +792,7 @@ export default function PresenterApp(): React.ReactElement {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <TextSizeProvider step={textSize}>
         <PresenterViewProvider value={view}>
           {/* The presenter's own fallback, in the presenter locale (not the app's OopsScreen, which reads the profile locale). */}
           <ErrorBoundary
@@ -799,7 +809,11 @@ export default function PresenterApp(): React.ReactElement {
           >
             <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>{body}</View>
           </ErrorBoundary>
+          {phase.kind === 'home' || phase.kind === 'ready' ? (
+            <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="presenter-display-sheet" />
+          ) : null}
         </PresenterViewProvider>
+        </TextSizeProvider>
         <StatusBar style="dark" />
       </SafeAreaProvider>
     </GestureHandlerRootView>

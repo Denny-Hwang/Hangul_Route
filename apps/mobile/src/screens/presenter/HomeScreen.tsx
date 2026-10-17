@@ -1,20 +1,21 @@
-import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { LectureDeck } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type PressableStateCallbackType, type TextStyle, type ViewStyle } from 'react-native';
-import { radioAfter, recentDayLabel, type RecentState } from '../../logic/lecture/home-view';
+import { recentDayLabel, type RecentState } from '../../logic/lecture/home-view';
 import { buildQuickDeck, canChoose, quickFull, quickGroups, toggleChoice, type QuickGroupId, type QuickItem, type QuickSource } from '../../logic/lecture/quick-lesson';
 import type { RecentItem } from '../../logic/lecture/recent';
-import type { LanguageOption } from '../../logic/locale/language-picker';
+import { DisplayButton } from '../../components/DisplayButton';
 
 /**
  * The presenter home (F-TCH-004 §3.12; design `design/screens/presenter/home.md`,
  * mocks `home.html` and `home-empty.html`, README D2, D14, D19): Recent lessons
  * and Quick lesson on a teacher page in real pixels (not stage-scaled).
  *
- * Header: Hoya, the h1, the session language chips (a radiogroup: one tab stop,
- * arrows move and select) and Keys and help. Below 900 px one column with Recent
+ * Header: Hoya, the h1, the Aa button (the Display sheet: the device's one language and text size,
+ * owner items 6 and 7; the presenter has no language of its own) and Keys and help. The page's
+ * type follows the chosen text size (`useTypeScale`); slides keep their stage units. Below 900 px one column with Recent
  * first; from 900 px Recent left and Quick lesson right. Recent rows show the
  * deck title and the day only: a deck has no name field, so no row can hold a
  * learner's name. With storage off the Recent list is replaced by one line and
@@ -25,14 +26,11 @@ import type { LanguageOption } from '../../logic/locale/language-picker';
  * reads no learner store (§3.9).
  */
 export interface PresenterHomeProps {
-  /** The dictionary of the presenter's session language. */
+  /** The dictionary of the presenter's language (the device's). */
   messages: Messages;
   locale: UiLocale;
-  /** The chips; fewer than two draws none (`showLanguagePickers`). */
-  languages: readonly LanguageOption[];
-  /** The chip chosen in this session, or null; only this, never the device locale, goes into a built deck. */
-  sessionLocale: UiLocale | null;
-  onLanguage: (locale: UiLocale) => void;
+  /** Opens the Display (Aa) sheet; without it the Aa button is not drawn. */
+  onDisplay?: () => void;
   /** Opens the Help overlay (PR 9); without it the Keys and help button is not drawn, so it never leads nowhere. */
   onHelp?: () => void;
   recent: RecentState;
@@ -93,6 +91,7 @@ function HomeButton({
   disabled?: boolean;
   testID?: string;
 }): React.ReactElement {
+  const ts = useTypeScale().size;
   const fill = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.surface.paper;
   const edge = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.border.strong;
   return (
@@ -123,7 +122,7 @@ function HomeButton({
     >
       <Text {...KOREAN_LINE_BREAK}
         style={{
-          ...text(compact ? typography.size.body : typography.size.bodyLg, 'bold', primary && !disabled ? colors.text.onPrimary : colors.text.primary),
+          ...text(compact ? ts.body : ts.bodyLg, 'bold', primary && !disabled ? colors.text.onPrimary : colors.text.primary),
           textAlign: 'center',
         }}
       >
@@ -142,7 +141,8 @@ const GROUP_KEY: Record<QuickGroupId, keyof Messages['learner']['presenter']['ho
 };
 
 export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactElement {
-  const { messages, locale } = props;
+  const ts = useTypeScale().size;
+  const { messages } = props;
   const m = messages.learner.presenter;
   const { width } = useWindowDimensions();
   const wide = width >= layout.breakpoint.wide;
@@ -173,14 +173,12 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
             <Hoya pose="waving" size={touchTarget.min} />
-            <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(typography.size.title, 'bold', colors.text.primary), flexShrink: 1 }}>
+            <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(ts.title, 'bold', colors.text.primary), flexShrink: 1 }}>
               {m.home.title}
             </Text>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-            {props.languages.length >= 2 ? (
-              <LanguageRadios options={props.languages} selected={locale} onSelect={props.onLanguage} label={m.language.title} />
-            ) : null}
+            {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-home-display" /> : null}
             {props.onHelp ? <HomeButton label={m.home.help.cta} onPress={props.onHelp} compact testID="presenter-home-help" /> : null}
           </View>
         </View>
@@ -200,66 +198,8 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
   );
 }
 
-/** README D19: one tab stop on the chosen chip; arrows, Home and End move and select. */
-function LanguageRadios({
-  options,
-  selected,
-  onSelect,
-  label,
-}: {
-  options: readonly LanguageOption[];
-  selected: UiLocale;
-  onSelect: (locale: UiLocale) => void;
-  label: string;
-}): React.ReactElement {
-  const refs = useRef(new Map<UiLocale, View | null>());
-  const locales = options.map((o) => o.locale);
-  const onKey = (e: { key: string; preventDefault?: () => void }): void => {
-    const next = radioAfter(locales, selected, e.key);
-    if (next === null) return;
-    e.preventDefault?.();
-    if (next !== selected) onSelect(next);
-    refs.current.get(next)?.focus?.();
-  };
-  return (
-    <View role="radiogroup" aria-label={label} testID="presenter-home-language" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-      {options.map((o) => {
-        const on = o.locale === selected;
-        return (
-          <Pressable
-            key={o.locale}
-            ref={(el) => {
-              refs.current.set(o.locale, el);
-            }}
-            role="radio"
-            aria-checked={on}
-            accessibilityState={{ checked: on }}
-            tabIndex={on ? 0 : -1}
-            onPress={() => {
-              if (!on) onSelect(o.locale);
-            }}
-            {...{ onKeyDown: onKey, lang: o.htmlLang }}
-            testID={`presenter-home-language-${o.locale}`}
-            style={({ focused }: Focusable) => ({
-              minHeight: touchTarget.min,
-              justifyContent: 'center',
-              paddingHorizontal: spacing.lg,
-              borderRadius: radii.pill,
-              borderWidth: on ? borderWidth.thick : borderWidth.base,
-              borderColor: on ? colors.text.primary : colors.border.strong,
-              backgroundColor: colors.surface.paper,
-              ...ring(focused),
-            })}
-          >
-            <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'bold', colors.text.primary)}>{o.endonym}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove, now }: PresenterHomeProps): React.ReactElement {
+  const ts = useTypeScale().size;
   const m = messages.learner.presenter.home.recent;
   // After a remove, focus moves to the next row's remove button (or the one before), else the h2,
   // so keyboard and screen-reader focus never falls to the page body.
@@ -286,7 +226,7 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
     <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       style={{
-        ...text(typography.size.body, 'regular', colors.text.secondary),
+        ...text(ts.body, 'regular', colors.text.secondary),
         padding: spacing.lg,
         borderWidth: borderWidth.base,
         borderStyle: 'dashed',
@@ -321,8 +261,8 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing.md }}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text {...KOREAN_LINE_BREAK} style={{ ...text(typography.size.bodyLg, 'bold', colors.text.primary), overflowWrap: 'anywhere' } as TextStyle}>{item.deck.title}</Text>
-                <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{recentDayLabel(locale, day, item.savedAt, today)}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ ...text(ts.bodyLg, 'bold', colors.text.primary), overflowWrap: 'anywhere' } as TextStyle}>{item.deck.title}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>{recentDayLabel(locale, day, item.savedAt, today)}</Text>
               </View>
               <Pressable
                 role="button"
@@ -357,7 +297,7 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
     );
   return (
     <View role="region" aria-label={m.title} style={{ gap: spacing.md }} testID="presenter-home-recent">
-      <Text {...KOREAN_LINE_BREAK} ref={headingRef} role="heading" aria-level={2} {...{ tabIndex: -1 }} style={text(typography.size.prompt, 'bold', colors.text.primary)}>
+      <Text {...KOREAN_LINE_BREAK} ref={headingRef} role="heading" aria-level={2} {...{ tabIndex: -1 }} style={text(ts.prompt, 'bold', colors.text.primary)}>
         {m.title}
       </Text>
       {body}
@@ -365,7 +305,8 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
   );
 }
 
-function QuickPanel({ messages, sessionLocale, quick, onBuild, now, rng }: PresenterHomeProps): React.ReactElement {
+function QuickPanel({ messages, quick, onBuild, now, rng }: PresenterHomeProps): React.ReactElement {
+  const ts = useTypeScale().size;
   const m = messages.learner.presenter.home.quick;
   const groups = useMemo(() => quickGroups(quick, { consonants: m.consonants, vowels: m.vowels }), [quick, m.consonants, m.vowels]);
   const items = useMemo(() => groups.flatMap((g) => g.items), [groups]);
@@ -380,20 +321,19 @@ function QuickPanel({ messages, sessionLocale, quick, onBuild, now, rng }: Prese
       now: (now ?? (() => new Date()))(),
       rng: rng ?? Math.random,
       fallbackTitle: m.title,
-      // Only a chip the teacher chose is kept with the deck; with none it opens in the device language.
-      ...(sessionLocale !== null ? { uiLocale: sessionLocale } : {}),
+      // No language in the deck: it opens in the language of the device that presents it.
     });
     if (deck) onBuild(deck);
   };
   return (
     <View role="region" aria-label={m.title} style={{ gap: spacing.md }} testID="presenter-home-quick">
-      <H level={2} style={text(typography.size.prompt, 'bold', colors.text.primary)}>
+      <H level={2} style={text(ts.prompt, 'bold', colors.text.primary)}>
         {m.title}
       </H>
-      <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{m.line}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>{m.line}</Text>
       {groups.map((group) => (
         <View key={group.id} style={{ gap: spacing.xs }}>
-          <H level={3} style={{ ...text(typography.size.body, 'bold', colors.text.secondary), paddingTop: spacing.sm }}>
+          <H level={3} style={{ ...text(ts.body, 'bold', colors.text.secondary), paddingTop: spacing.sm }}>
             {m.group[GROUP_KEY[group.id]]}
           </H>
           <View style={{ gap: spacing.xs }}>
@@ -422,12 +362,11 @@ function QuickPanel({ messages, sessionLocale, quick, onBuild, now, rng }: Prese
           gap: spacing.md,
         }}
       >
-        <Text {...KOREAN_LINE_BREAK} role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(typography.size.body, 'regular', colors.text.primary), flexShrink: 1 }}>
+        <Text {...KOREAN_LINE_BREAK} role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(ts.body, 'regular', colors.text.primary), flexShrink: 1 }}>
           {chosen.length === 0 ? m.nothing : full ? `${m.chosen(chosen.length)} ${m.full}` : m.chosen(chosen.length)}
         </Text>
         <HomeButton label={m.build.cta} onPress={build} primary disabled={chosen.length === 0} testID="presenter-home-build" />
       </View>
-      <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{messages.learner.presenter.language.note}</Text>
     </View>
   );
 }
@@ -445,6 +384,7 @@ function QuickRow({
   disabled: boolean;
   onToggle: () => void;
 }): React.ReactElement {
+  const ts = useTypeScale().size;
   return (
     <Pressable
       role="checkbox"
@@ -485,8 +425,8 @@ function QuickRow({
         {on ? <Icon name="check" size={spacing.xl} color={colors.text.primary} /> : null}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'bold', colors.text.primary)}>{item.title}</Text>
-        <Text {...KOREAN_LINE_BREAK} style={text(typography.size.body, 'regular', colors.text.secondary)}>{detail}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'bold', colors.text.primary)}>{item.title}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>{detail}</Text>
       </View>
     </Pressable>
   );
