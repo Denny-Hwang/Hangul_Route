@@ -744,7 +744,21 @@ test('Romanization (formerly Lesson display): the choices apply at once, Done an
   const opener = page.getByRole('button', { name: 'Romanization', exact: true });
   await opener.click();
   const sheet = page.getByRole('dialog', { name: 'Romanization', exact: true });
-  await expect(sheet).toBeVisible();
+  // TEMP diagnostics (DN-4 review, a CI-only failure): what the page holds when the sheet is not there.
+  try {
+    await expect(sheet).toBeVisible();
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      dialogs: Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"]')).map((d) => `${d.getAttribute('role')} ${d.getAttribute('aria-labelledby')} ${(d.textContent ?? '').slice(0, 60)}`),
+      buttons: Array.from(document.querySelectorAll('[role="button"],button')).map((b) => { const r = b.getBoundingClientRect(); return `${b.getAttribute('aria-label') ?? (b.textContent ?? '').trim().slice(0, 30)}@${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.width)}x${Math.round(r.height)}`; }).slice(0, 20),
+      at: (() => { const b = document.querySelector('[data-testid="browse-lesson-display"]')?.getBoundingClientRect(); if (!b) return 'no chip'; const el = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2); return `${el?.tagName} ${el?.getAttribute('data-testid')} ${(el?.textContent ?? '').slice(0, 30)}`; })(),
+      chips: document.querySelectorAll('[data-testid="browse-lesson-display"]').length,
+      url: location.href,
+      history: JSON.stringify(history.state),
+    }));
+    console.log('DIAG', JSON.stringify(state));
+    throw error;
+  }
   await expect(sheet.getByRole('radio', { name: 'Always shown' })).toHaveAttribute('aria-checked', 'true');
   // Romanization only (AMENDMENTS-DISPLAY-NAV section 6): the language and text size are the device's, on the Aa sheet.
   await expect(sheet.getByRole('radiogroup')).toHaveCount(1);
