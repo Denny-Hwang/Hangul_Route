@@ -354,8 +354,11 @@ describe('DisplaySheet element tree', () => {
       const cleanup = effects.map((fn) => fn()).find((c) => typeof c === 'function');
       expect(added).toEqual(['keydown']);
       handler!({ key: 'Enter' });
-      handler!({ key: 'Escape' });
+      const stop = vi.fn();
+      (handler as unknown as (e: { key?: string; stopPropagation?: () => void }) => void)({ key: 'Escape', stopPropagation: stop });
       expect(p.onClose).toHaveBeenCalledTimes(1);
+      // The page under the sheet does not hear the same Escape (an All lessons card page would close too).
+      expect(stop).toHaveBeenCalledTimes(1);
       (cleanup as () => void)();
       expect(added).toEqual(['keydown', '-keydown']);
       added.length = 0;

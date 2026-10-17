@@ -109,7 +109,8 @@ describe('ConfirmSheet', () => {
     expect(sheet.props['aria-describedby']).toBeUndefined();
   });
 
-  it('cancel, the backdrop and the system back cancel; confirm confirms', () => {
+  it('cancel, the backdrop and (on native) the system back cancel; confirm confirms', () => {
+    platform.OS = 'android';
     const p = props();
     const tree = render(p);
     (byTestId(tree, 'confirm-sheet-cancel')!.props.onPress as () => void)();
@@ -118,15 +119,32 @@ describe('ConfirmSheet', () => {
     expect(p.onCancel).toHaveBeenCalledTimes(3);
     (byTestId(tree, 'confirm-sheet-confirm')!.props.onPress as () => void)();
     expect(p.onConfirm).toHaveBeenCalledTimes(1);
+    platform.OS = 'web';
+  });
+
+  it('the backdrop is hidden from assistive tech: Cancel is the one control with its name', () => {
+    const backdrop = byTestId(render(props()), 'confirm-sheet-backdrop')!;
+    expect(backdrop.props.accessibilityRole).toBeUndefined();
+    expect(backdrop.props.accessibilityLabel).toBeUndefined();
+    expect(backdrop.props.accessible).toBe(false);
+    expect(backdrop.props['aria-hidden']).toBe(true);
+    expect(backdrop.props.importantForAccessibility).toBe('no-hide-descendants');
+  });
+
+  it('on the web one Escape press is one cancel: the Modal\'s keyup does not answer it again', () => {
+    const p = props();
+    const tree = render(p);
+    (tree.find((e) => e.type === 'Modal')!.props.onRequestClose as () => void)();
+    expect(p.onCancel).not.toHaveBeenCalled();
   });
 
   it('on the web: the safe choice takes focus, Escape cancels, and the opener gets focus back', () => {
     const log: string[] = [];
-    const listeners = new Map<string, (event: { key?: string }) => void>();
+    const listeners = new Map<string, (event: { key?: string; repeat?: boolean; stopPropagation?: () => void }) => void>();
     const opener = { focus: () => log.push('opener') };
     vi.stubGlobal('document', {
       activeElement: opener,
-      addEventListener: (type: string, fn: (event: { key?: string }) => void) => listeners.set(type, fn),
+      addEventListener: (type: string, fn: (event: { key?: string; repeat?: boolean; stopPropagation?: () => void }) => void) => listeners.set(type, fn),
       removeEventListener: (type: string) => listeners.delete(type),
     });
     const p = props();
@@ -137,7 +155,12 @@ describe('ConfirmSheet', () => {
     expect(log).toEqual(['cancel']);
     listeners.get('keydown')!({ key: 'Enter' });
     expect(p.onCancel).not.toHaveBeenCalled();
-    listeners.get('keydown')!({ key: 'Escape' });
+    const stop = vi.fn();
+    listeners.get('keydown')!({ key: 'Escape', stopPropagation: stop });
+    expect(p.onCancel).toHaveBeenCalledTimes(1);
+    // The page under the sheet does not hear it; a held key's repeats cancel nothing more.
+    expect(stop).toHaveBeenCalledTimes(1);
+    listeners.get('keydown')!({ key: 'Escape', repeat: true, stopPropagation: stop });
     expect(p.onCancel).toHaveBeenCalledTimes(1);
     (cleanup as () => void)();
     expect(log).toEqual(['cancel', 'opener']);

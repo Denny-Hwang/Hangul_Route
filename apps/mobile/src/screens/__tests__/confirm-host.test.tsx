@@ -55,6 +55,39 @@ describe('ConfirmHost (the web confirm step)', () => {
     await unmount(renderer);
   });
 
+  it('one Escape press answers only the question it was pressed on: the next one waits for its own answer', async () => {
+    const keydown: ((event: { key?: string; repeat?: boolean; stopPropagation?: () => void }) => void)[] = [];
+    vi.stubGlobal('document', {
+      activeElement: null,
+      addEventListener: (type: string, fn: (typeof keydown)[number]) => {
+        if (type === 'keydown') keydown.push(fn);
+      },
+      removeEventListener: (type: string, fn: (typeof keydown)[number]) => {
+        if (type === 'keydown') keydown.splice(keydown.indexOf(fn), 1);
+      },
+    });
+    const renderer = await render(<ConfirmHost />);
+    let first: Promise<boolean> | null = null;
+    let second: Promise<boolean> | null = null;
+    await act(async () => {
+      first = dialog.confirm({ title: 'A?', confirmLabel: 'Yes A', cancelLabel: 'No' });
+      second = dialog.confirm({ title: 'B?', confirmLabel: 'Yes B', cancelLabel: 'No' });
+    });
+    // The press: its keydown cancels A ...
+    await act(async () => {
+      for (const fn of [...keydown]) fn({ key: 'Escape', stopPropagation: () => undefined });
+    });
+    await expect(first).resolves.toBe(false);
+    expect(sheetOf(renderer)).toMatchObject({ visible: true, title: 'B?' });
+    // ... and its keyup, which react-native-web's Modal answers with onRequestClose, cancels nothing more.
+    const modal = renderer.root.find((n) => typeof (n.props as { onRequestClose?: unknown }).onRequestClose === 'function');
+    await act(async () => (modal.props as { onRequestClose: () => void }).onRequestClose());
+    expect(sheetOf(renderer)).toMatchObject({ visible: true, title: 'B?' });
+    await act(async () => sheetOf(renderer).onConfirm());
+    await expect(second).resolves.toBe(true);
+    await unmount(renderer);
+  });
+
   it('a host that goes away answers every open question with the safe choice; then the browser confirm is the fallback', async () => {
     const renderer = await render(<ConfirmHost />);
     let open: Promise<boolean> | null = null;
