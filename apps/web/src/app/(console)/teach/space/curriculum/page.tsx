@@ -225,7 +225,7 @@ function CurriculumInner(): JSX.Element {
     router.push(ROUTES.spacePlan(spaceId, result.data.id, roster?.space.kind));
   };
 
-  const rows = draft ? weekGroups(draft.weeks, draft.items).rows : [];
+  const rows = draft ? weekGroups(draft.weeks, draft.items, undefined, locale).rows : [];
   const stats = draft ? statsText(draft.stats, locale) : null;
   const shorter = free?.shorter ?? null;
   // **Use {weeks} weeks** re-runs the preview with that length preset; the long plan stays allowed.

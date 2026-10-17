@@ -15,6 +15,8 @@ import {
   rosterNotesLinks,
 } from '../notes-page';
 import type { RecipientRow } from '../notes';
+import { catalogTitle } from '@/data/catalog';
+import { CATALOGUE_TITLES } from '@/data/catalogue-titles.generated';
 
 /**
  * F-FEEDBACK-001 FB-11a (section 6.13; wireframes console/notes-sent.md, console/note-composer.md): the pure parts of
@@ -108,6 +110,17 @@ describe('questOptions', () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect(groups[0]?.title).toBe(`T-${groups[0]?.stage}`);
     for (const g of groups) for (const q of g.quests) expect(CATALOG.quests.find((c) => c.id === q.id)?.stage).toBe(g.stage);
+  });
+
+  it('titles every quest in the console language, English where no overlay has one (owner report 2026-10-16)', () => {
+    const en = questOptions((stage) => stage).flatMap((g) => g.quests);
+    expect(en.find((q) => q.id === 'quest:stage1-life-q1')?.title).toBe(CATALOG.quests.find((q) => q.id === 'quest:stage1-life-q1')?.title);
+    for (const locale of ['es', 'ko'] as const) {
+      const local = questOptions((stage) => stage, CATALOG, locale).flatMap((g) => g.quests);
+      expect(local.map((q) => q.id)).toEqual(en.map((q) => q.id));
+      for (const q of local) expect(q.title).toBe(catalogTitle(q.id, locale));
+      expect(local.find((q) => q.id === 'quest:stage1-letters-q1')?.title).toBe(CATALOGUE_TITLES[locale]!['quest:stage1-letters-q1']);
+    }
   });
 });
 
