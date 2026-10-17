@@ -1,4 +1,4 @@
-import { Hoya, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, type HoyaPose, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Hoya, Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, type HoyaPose, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { READABLE_LINE, STATE_HOYA } from './stage-metrics';
 import React, { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -6,9 +6,11 @@ import { usePresenterView } from './presenter-context';
 
 /**
  * The presenter's state pages (design/screens/presenter/states.md): the invalid link, loading,
- * too small, and the presenter home of this build. Teacher pages in real pixels on paper: Hoya,
- * a title, one line, and at most one action, focused on arrival. A link from a newer presenter
- * (AMENDMENTS-LECTURE-V2 section 4.5) adds a second, quieter one (`secondary`) under Reload.
+ * too small, the rotate page, and the presenter home of this build. Teacher pages in real pixels
+ * on paper: Hoya, a title, one line, and at most one action, focused on arrival. A link from a
+ * newer presenter (AMENDMENTS-LECTURE-V2 section 4.5) adds a second, quieter one (`secondary`)
+ * under Reload. The rotate page (a phone upright during a lesson, F-TCH-004 section 3.6) has its
+ * way out top-left instead (`back`), focused on arrival.
  */
 export function StatePage({
   pose,
@@ -19,6 +21,7 @@ export function StatePage({
   status,
   testID,
   secondary,
+  back,
 }: {
   pose: HoyaPose;
   title?: string;
@@ -30,13 +33,19 @@ export function StatePage({
   testID?: string;
   /** A ghost button under the primary one. */
   secondary?: { label: string; onPress: () => void; testID?: string };
+  /** A top-left Back (the rotate page's way out, `common.buttons.back`). */
+  back?: { label: string; onPress: () => void; testID?: string };
 }): React.ReactElement {
   const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const action = useRef<View>(null);
+  const backRef = useRef<View>(null);
   useEffect(() => {
     if (cta !== undefined) action.current?.focus?.();
-  }, [cta]);
+    else if (back !== undefined) backRef.current?.focus?.();
+    // Focus is taken when the page's action appears.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cta, back === undefined]);
   return (
     <View
       testID={testID}
@@ -50,6 +59,11 @@ export function StatePage({
         backgroundColor: colors.surface.paper,
       }}
     >
+      {back !== undefined ? (
+        <View style={{ position: 'absolute', top: spacing.md, left: layout.gutter.compact }}>
+          <BackLink ref={backRef} label={back.label} onPress={back.onPress} {...(back.testID !== undefined ? { testID: back.testID } : {})} />
+        </View>
+      ) : null}
       <Hoya pose={pose} size={STATE_HOYA} accessibilityLabel={messages.a11y.hoya(pose)} />
       {title !== undefined ? (
         <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: ts.display, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center' }}>
@@ -75,8 +89,8 @@ export function StatePage({
 type PressState = { pressed: boolean; focused?: boolean };
 
 /** The presenter's primary pill (real pixels, `touchTarget.hero` tall): `brand.primaryDark` with `text.onPrimary` (7.65:1). */
-export const PrimaryButton = React.forwardRef<View, { label: string; onPress: () => void; disabled?: boolean; large?: boolean; testID?: string; minHeight?: number }>(
-  function PrimaryButton({ label, onPress, disabled, large, testID, minHeight }, ref) {
+export const PrimaryButton = React.forwardRef<View, { label: string; onPress: () => void; disabled?: boolean; large?: boolean; testID?: string; minHeight?: number; grow?: boolean }>(
+  function PrimaryButton({ label, onPress, disabled, large, testID, minHeight, grow }, ref) {
     const ts = useTypeScale().size;
     return (
       <Pressable
@@ -94,7 +108,8 @@ export const PrimaryButton = React.forwardRef<View, { label: string; onPress: ()
             paddingHorizontal: large ? spacing.jumbo : spacing.xxl,
             alignItems: 'center',
             justifyContent: 'center',
-            alignSelf: 'center',
+            alignSelf: grow ? 'stretch' : 'center',
+            ...(grow ? { flexGrow: 1, flexShrink: 1 } : {}),
             borderRadius: radii.pill,
             backgroundColor: colors.brand.primaryDark,
             borderWidth: borderWidth.thick,
@@ -137,6 +152,42 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
       }}
     >
       <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
+    </Pressable>
+  );
+});
+
+/**
+ * A top-left Back (the mock's `.back-link`): the `arrow-left` glyph and the label, `touchTarget.min`
+ * tall, bold body text, a pill focus ring.
+ */
+export const BackLink = React.forwardRef<View, { label: string; onPress: () => void; testID?: string }>(function BackLink({ label, onPress, testID }, ref) {
+  const ts = useTypeScale().size;
+  return (
+    <Pressable
+      ref={ref}
+      testID={testID}
+      role="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={(state) => {
+        const { focused } = state as PressState;
+        return {
+          minHeight: touchTarget.min,
+          minWidth: touchTarget.min,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
+          paddingVertical: spacing.xs,
+          paddingLeft: spacing.xs,
+          paddingRight: spacing.md,
+          borderRadius: radii.pill,
+          borderWidth: borderWidth.thick,
+          borderColor: focused ? colors.border.focus : 'transparent',
+        };
+      }}
+    >
+      <Icon name="arrow-left" size={spacing.xl} color={colors.text.primary} />
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
     </Pressable>
   );
 });

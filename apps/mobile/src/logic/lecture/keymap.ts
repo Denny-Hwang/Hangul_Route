@@ -32,7 +32,7 @@ export type KeyCommand =
   | 'replay-stroke'
   | 'toggle-romanization'
   | 'fullscreen'
-  | { overlay: 'blank' | 'timer' | 'picker' | 'grid' | 'help' };
+  | { overlay: 'blank' | 'timer' | 'grid' | 'help' };
 
 export interface KeyInput {
   /** `KeyboardEvent.key`. */
@@ -78,7 +78,6 @@ const LETTERS = new Map<string, KeyCommand>([
   ['s', 'replay-sound'],
   ['r', 'replay-stroke'],
   ['t', { overlay: 'timer' }],
-  ['p', { overlay: 'picker' }],
   ['g', { overlay: 'grid' }],
   ['f', 'fullscreen'],
   ['h', { overlay: 'help' }],

@@ -767,11 +767,11 @@ describe('the deck a preset becomes', () => {
     }
   });
 
-  it('keeps the options and picker it is given, and defaults the picker to none', () => {
+  it('keeps the options it is given and never names a helper picker (LV-H)', () => {
     const r = resolvePreset('hangul-week-1', 10, empty);
     expect(presetDeck(r, meta).picker).toBeNull();
-    const deck = presetDeck(r, { ...meta, options: { uiLocale: 'ko' }, picker: { mode: 'numbers', count: 20 }, source: 'catalogue' });
-    expect([deck.options, deck.picker, deck.source]).toEqual([{ uiLocale: 'ko' }, { mode: 'numbers', count: 20 }, 'catalogue']);
+    const deck = presetDeck(r, { ...meta, options: { uiLocale: 'ko' }, source: 'catalogue' });
+    expect([deck.options, deck.picker, deck.source]).toEqual([{ uiLocale: 'ko' }, null, 'catalogue']);
   });
 });
 

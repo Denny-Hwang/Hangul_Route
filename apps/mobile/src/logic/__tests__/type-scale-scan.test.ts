@@ -35,7 +35,7 @@ const ALLOWED: Readonly<Record<string, { count: number; why: Why }>> = {
   'apps/mobile/src/screens/my-route/StageBadge.tsx': { count: 2, why: 'media' },
   'apps/mobile/src/screens/presenter/overlays/TimerOverlay.tsx': { count: 1, why: 'stage' },
   'apps/mobile/src/screens/presenter/slides/LetterSlide.tsx': { count: 2, why: 'stage' },
-  'apps/mobile/src/screens/presenter/stage-metrics.ts': { count: 10, why: 'stage' },
+  'apps/mobile/src/screens/presenter/stage-metrics.ts': { count: 9, why: 'stage' },
   'packages/design-system/src/components/HangulKeyboard/HangulKeyboard.tsx': { count: 5, why: 'keyboard' },
   'packages/design-system/src/components/RouteMarkers/geometry.ts': { count: 1, why: 'media' },
   'packages/design-system/src/components/SectionTabs/style.ts': { count: 1, why: 'style' },

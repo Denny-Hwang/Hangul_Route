@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./overlays": "./overlays.ts",
-    "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts"
+    "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts",
+    "./testing/lecture-decks": "./src/__tests__/fixtures/lecture-decks.ts"
   },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/content-schema)'",

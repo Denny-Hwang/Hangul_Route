@@ -12,10 +12,10 @@
  *   last build, so going back shows the complete slide.
  * - Slides skipped in the grid (this session only) are jumped over.
  * - Overlays: `blank` and `pause` swallow the first navigation (it only clears
- *   them); `grid`, `help`, `exit` and the helper `picker` swallow too, except
- *   that a `goto` from the grid jumps and closes it.
+ *   them); `grid`, `help` and `exit` swallow too, except that a `goto` from
+ *   the grid jumps and closes it.
  * - The class timer is not one of those overlays (`timerOpen`): a running
- *   corner timer stays on screen while the picker, blank, grid, help or exit
+ *   corner timer stays on screen while blank, grid, help or exit
  *   covers the slide and is still there when that overlay closes. In the
  *   corner it lets slides move; full screen swallows navigation.
  * - `escape` / `close` close the covering overlay first, then a full-screen
@@ -29,7 +29,7 @@
  */
 
 /** Overlays that cover the slide; at most one is open. */
-export type CoveringOverlay = null | 'picker' | 'blank' | 'pause' | 'grid' | 'help' | 'exit';
+export type CoveringOverlay = null | 'blank' | 'pause' | 'grid' | 'help' | 'exit';
 /** What `{ overlay }` can ask for: a covering overlay, or `timer` (T) which toggles the class timer. */
 export type Overlay = CoveringOverlay | 'timer';
 export type TimerMode = 'corner' | 'full';

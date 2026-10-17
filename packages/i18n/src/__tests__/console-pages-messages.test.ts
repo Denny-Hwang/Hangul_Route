@@ -220,6 +220,8 @@ const SLOTTED: readonly [string, (m: Messages) => (value: string) => string][] =
   // Split around the romanization, so the Hangul and its romanization stay on one line (F-VOC-005 P-4).
   ['console.space.wordGloss', (m) => (romanization) => m.console.space.wordGloss(romanization, 'gloss')],
   ['console.lecture.source.revisitWith', (m) => m.console.lecture.source.revisitWith],
+  // Split around the endonym, marked with its own language (AMENDMENTS-LECTURE-V2 section 18.4).
+  ['console.lecture.options.languageHintChosen', (m) => m.console.lecture.options.languageHintChosen],
   ['console.school.footer', (m) => m.console.school.footer],
 ];
 
