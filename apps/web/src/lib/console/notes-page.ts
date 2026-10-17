@@ -1,4 +1,6 @@
 import { APP_ROUTES, CATALOG, type AdultPersona, type Catalog, type NoteReactionId, type SpaceKind, type SpaceRole, type StageKey } from '@hangul-route/content-schema';
+import { DEFAULT_LOCALE, type UiLocale } from '@hangul-route/i18n';
+import { catalogTitle } from '@/data/catalog';
 import type { iconNames } from '@hangul-route/design-system/icon-glyphs';
 import type { SpaceListItem } from './api';
 import type { RecipientRow } from './notes';
@@ -76,8 +78,11 @@ export interface QuestOptionGroup {
   quests: Array<{ id: string; title: string }>;
 }
 
-/** The quest picker: every catalogue quest, grouped by stage in catalogue order (never by a learner's progress). */
-export function questOptions(stageTitle: (stage: StageKey) => string, catalog: Catalog = CATALOG): QuestOptionGroup[] {
+/**
+ * The quest picker: every catalogue quest, grouped by stage in catalogue order (never by a learner's progress), each
+ * titled in the console language (`catalogTitle`, English where no overlay has one; owner report 2026-10-16).
+ */
+export function questOptions(stageTitle: (stage: StageKey) => string, catalog: Catalog = CATALOG, locale: UiLocale = DEFAULT_LOCALE): QuestOptionGroup[] {
   const groups: QuestOptionGroup[] = [];
   for (const quest of catalog.quests) {
     let group = groups.find((g) => g.stage === quest.stage);
@@ -85,7 +90,7 @@ export function questOptions(stageTitle: (stage: StageKey) => string, catalog: C
       group = { stage: quest.stage, title: stageTitle(quest.stage), quests: [] };
       groups.push(group);
     }
-    group.quests.push({ id: quest.id, title: quest.title });
+    group.quests.push({ id: quest.id, title: catalogTitle(quest.id, locale, catalog) });
   }
   return groups;
 }

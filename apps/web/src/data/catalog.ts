@@ -1,4 +1,4 @@
-import { CATALOG, ThemeKeySchema, cellIsReady, storyIsReady, type Catalog, type CatalogCell, type CatalogQuest, type PlanItem, type StageKey } from '@hangul-route/content-schema';
+import { CATALOG, cellIsReady, storyIsReady, type Catalog, type CatalogCell, type CatalogQuest, type PlanItem } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { CATALOGUE_TITLES } from './catalogue-titles.generated';
 
@@ -103,14 +103,3 @@ export function plannableQuest(id: string, source: Catalog = CATALOG): boolean {
   return cell !== undefined && cellIsReady(cell);
 }
 
-/** The quests of an episode, in the cell's own order (empty for an episode that is not released yet). */
-export function questsOf(episodeId: string, source: Catalog = CATALOG): CatalogQuest[] {
-  const index = indexOf(source);
-  return (index.cells.get(episodeId)?.questIds ?? []).map((id) => index.quests.get(id)).filter((q): q is CatalogQuest => q !== undefined);
-}
-
-/** The ready episodes of one stage in grid (theme) order (Stage 1 by default); the pickers draw every stage through `chooserGroups`. */
-export function builderEpisodes(stage: StageKey = 'stage1'): CatalogCell[] {
-  const rank = (cell: CatalogCell): number => ThemeKeySchema.options.indexOf(cell.theme);
-  return CATALOG.cells.filter((cell) => cell.stage === stage && cellIsReady(cell)).sort((a, b) => rank(a) - rank(b));
-}

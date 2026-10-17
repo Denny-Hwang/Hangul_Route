@@ -3,10 +3,10 @@ import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { LectureCatalogueSection, LectureOptionsSection, LectureOutlineSection, LecturePickerSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
-import { builderEpisodes, questsOf } from '@/data/catalog';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
 import { expectAllPseudo } from './pseudo-text';
+import { STAGE1_EPISODES, STAGE1_TITLES, questsOfCell } from './stage1-catalog';
 
 /**
  * F-TCH-004 §3.11 with F-I18N-001 §3.11: the loaded states of the lecture setup page's
@@ -28,10 +28,10 @@ afterAll(() => {
   vi.unstubAllEnvs();
 });
 
-const episode = builderEpisodes()[0]!;
-const quest = questsOf(episode.episodeId)[0]!;
+const episode = STAGE1_EPISODES[0]!;
+const quest = questsOfCell(episode)[0]!;
 const contentTitles = [
-  ...builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]),
+  ...STAGE1_TITLES,
   ...LECTURE_STORIES.map((s) => s.titleEn),
   ...LECTURE_VOCAB_TOPICS.map((t) => t.titleEn),
 ];

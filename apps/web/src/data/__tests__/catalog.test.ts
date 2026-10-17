@@ -2,7 +2,7 @@ import { CATALOG, type Catalog } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { CATALOGUE_TITLES } from '../catalogue-titles.generated';
-import { builderEpisodes, catalogLabel, catalogTitle, catalogTitleEntry, itemCategory, itemTitle, plannableQuest, questsOf } from '../catalog';
+import { catalogLabel, catalogTitle, catalogTitleEntry, itemCategory, itemTitle, plannableQuest } from '../catalog';
 
 /**
  * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
@@ -45,28 +45,6 @@ describe('console catalogue adapter over the shared catalogue', () => {
     expect(catalogLabel('episode', 'episode:stage7-crafts', 'ko', SOON)).toBe(getMessages('ko').console.curriculum.catalog.comingSoon(CATALOGUE_TITLES.ko!['episode:stage7-crafts']!));
   });
 
-  it('lists the quests of an episode in catalogue order', () => {
-    expect(questsOf('episode:stage1-life').map((q) => q.id)).toEqual(['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']);
-    expect(questsOf('episode:stage1-life').map((q) => [q.title, q.minutes])).toEqual([
-      ['Hello Kimchi & Rice', 4],
-      ['Family at the Table', 4],
-      ['Picnic Snacks', 4],
-    ]);
-    expect(questsOf('episode:stage1-letters').map((q) => q.minutes)).toEqual([5, 5, 5]);
-    expect(questsOf('episode:stage7-crafts', SOON)).toEqual([]);
-    expect(questsOf('episode:nope')).toEqual([]);
-  });
-
-  it('offers the builder the ready Stage 1 episodes in grid order', () => {
-    expect(builderEpisodes().map((cell) => cell.episodeId)).toEqual([
-      'episode:stage1-letters',
-      'episode:stage1-life',
-      'episode:stage1-rites',
-      'episode:stage1-nature',
-      'episode:stage1-crafts',
-    ]);
-    expect(builderEpisodes('stage2').map((cell) => cell.episodeId)).toEqual(['episode:stage2-letters', 'episode:stage2-life', 'episode:stage2-rites', 'episode:stage2-nature', 'episode:stage2-crafts']);
-  });
 
   it('sorts an item into lesson, story, coming soon or unknown', () => {
     expect(itemCategory('quest', 'quest:stage1-letters-q1')).toBe('lesson');
