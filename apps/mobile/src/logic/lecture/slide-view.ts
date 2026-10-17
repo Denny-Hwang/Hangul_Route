@@ -1,5 +1,7 @@
+import type { FallbackReason, PlayResult } from '../audio/prompt-state';
+import type { PromptKind } from '../audio/rate';
 import type { SpokenForm } from '../audio/spoken';
-import type { BuildName, SequenceStep } from './build-steps';
+import type { BuildName, QuizPrompt, SequenceStep } from './build-steps';
 import type { Slide } from './deck-builder';
 
 /**
@@ -93,12 +95,99 @@ export function activityTimerMs(slide: Of<'activity'>): number {
   return slide.minutes * 60_000;
 }
 
+/** What Sound plays on a slide and the speech rate it plays at (F-AUDIO-004 `RATE_BASE`). */
+export interface SlideSound {
+  spoken: SpokenForm;
+  kind: PromptKind;
+}
+
+const wordSound = (ko: string, romanization: string): SlideSound => ({ spoken: { text: ko, romanization }, kind: 'word' });
+
+const koStep = (step: SequenceStep): step is SequenceStep & { ko: string; romanization: string } => step.ko !== undefined && step.romanization !== undefined;
+
+/** A question's sound: Match Sound its carrier syllable, a meaning question its word, a story check its target. */
+function quizSound(prompt: QuizPrompt): SlideSound | undefined {
+  switch (prompt.ask) {
+    case 'sound':
+      return { spoken: prompt.spoken, kind: 'sound' };
+    case 'meaning':
+      return wordSound(prompt.ko, prompt.romanization);
+    case 'check':
+      return prompt.target ? wordSound(prompt.target.ko, prompt.target.romanization) : undefined;
+    case 'odd-one-out':
+      // Its letters are the answer.
+      return undefined;
+  }
+}
+
 /**
- * What the speaker plays on a slide: a letter's carrier syllable, a syllable itself, a Match Sound
- * quiz's prompt; nothing elsewhere.
+ * What Sound, S or a stage speaker plays on a slide (section 3.4 amendment 2026-10-17): the Korean
+ * the slide draws. A letter's carrier syllable, a syllable and a Match Sound prompt play at the
+ * sound rate; a word card its spoken form (`spokenKo` or the word, a Discover sentence at the
+ * sentence rate); a heritage card its Korean chip; a word-to-meaning question its word; a story
+ * check its target word; an order slide the last Korean step on screen at `reveal`, in the order
+ * drawn (the shuffled order at the order question; the full reveal when `reveal` is not given).
+ * A title, a story scene (Read-to-me has its own path, `readToMePlan`), an activity,
+ * the End slide, Odd One Out (the letters are the answer), a card without Korean and a check
+ * without a target play nothing.
  */
-export function slideSound(slide: Slide | undefined): SpokenForm | undefined {
-  if (slide?.kind === 'letter' || slide?.kind === 'syllable') return slide.spoken;
-  if (slide?.kind === 'quiz' && slide.prompt.ask === 'sound') return slide.prompt.spoken;
-  return undefined;
+export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
+  if (slide === undefined) return undefined;
+  switch (slide.kind) {
+    case 'letter':
+    case 'syllable':
+      return { spoken: slide.spoken, kind: 'sound' };
+    case 'vocab':
+      return { spoken: slide.spoken, kind: slide.speech };
+    case 'card':
+      return slide.ko !== undefined && slide.romanization !== undefined ? wordSound(slide.ko, slide.romanization) : undefined;
+    case 'quiz':
+      return quizSound(slide.prompt);
+    case 'sequence': {
+      // The steps on screen, in the order drawn (`sequenceView`): the story order while they build,
+      // the shuffled order at the order question, so the sound never hints at the answer.
+      const view = sequenceView(slide, reveal ?? slide.builds.length - 1);
+      const steps = view.mode === 'order' ? view.steps : slide.steps.slice(0, view.count);
+      const step = steps.filter(koStep).pop();
+      return step ? { spoken: { text: step.ko, romanization: step.romanization }, kind: 'sentence' } : undefined;
+    }
+    case 'title':
+    case 'story':
+    case 'activity':
+    case 'end':
+      return undefined;
+  }
+}
+
+/** What a Sound press, a forward `sound` build or a stage speaker does (section 3.7 amendment 2026-10-17). */
+export type SoundPress = 'play' | 'unmute-then-play' | 'flash-no-sound' | 'flash-deck-sound-off' | 'skip';
+
+/**
+ * An explicit press (the bar's Sound, S, a stage speaker) always answers: while muted it turns the
+ * device sound on and plays (the chip's Turn sound on, then the sound); in a deck set up with sound
+ * off it flashes "Sound is off for this lesson."; on a slide with nothing to play it flashes "This
+ * slide has no sound.". A forward `sound` build stays silent while muted (the Sound is off chip
+ * says why) and never flashes.
+ */
+export function soundPress(input: { hasSound: boolean; explicit: boolean; muted: boolean; deckSound: boolean }): SoundPress {
+  if (!input.deckSound) return input.explicit ? 'flash-deck-sound-off' : 'skip';
+  if (!input.hasSound) return input.explicit ? 'flash-no-sound' : 'skip';
+  if (input.muted) return input.explicit ? 'unmute-then-play' : 'skip';
+  return 'play';
+}
+
+/**
+ * The flash after an explicit press that did not play: no Korean voice shows the no-voice chip's
+ * words; a blocked or failed voice "The sound did not play. You say it!". A played or muted result
+ * flashes nothing (the Sound is off chip already shows).
+ */
+export function soundFlashFor(result: PlayResult, failureReason: FallbackReason | null): 'no-voice' | 'failed' | null {
+  if (result === 'played' || result === 'muted') return null;
+  return failureReason === 'no_voice' ? 'no-voice' : 'failed';
+}
+
+/** The `playPrompt` spec of a slide's sound (the presenter adds `source`). */
+export function soundPrompt(sound: SlideSound): { text: string; audioRef?: string; kind: PromptKind } {
+  const { text, audioRef } = sound.spoken;
+  return audioRef !== undefined ? { text, audioRef, kind: sound.kind } : { text, kind: sound.kind };
 }

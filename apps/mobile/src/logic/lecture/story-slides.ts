@@ -40,6 +40,16 @@ export interface ReadToMeInput {
   voiceChecked: boolean;
   /** The narration's voice (`LectureSceneView.narrationLang`; English when the scene is not known). */
   narrationLang: SpeechLang;
+  /** The slide's current build: the scene's Korean is read once its `korean` build shows (every part when not given). */
+  reveal?: number;
+}
+
+/** The fields of a story slide Read-to-me reads. */
+export interface ReadToMeSlide {
+  kind: string;
+  narration?: readonly NarrationPiece[];
+  korean?: KoLine & { speech: 'word' | 'sentence' };
+  builds?: readonly BuildName[];
 }
 
 export interface ReadToMePlan {
@@ -52,11 +62,19 @@ export interface ReadToMePlan {
  * (F-STORY-002 section 3.4, `use-reader-audio.ts`): with no Korean voice only the English plays
  * (an all-Korean narration still asks, so the fallback is learned); while the voice check has not
  * settled, a Korean step that turns out unavailable is skipped rather than ending the chain.
+ * Once the `korean` build shows, the scene's Korean line (or keyword) follows the narration in
+ * Korean, as the story reader's `planSceneAudio(view, ['narration', 'korean'])` reads it (section
+ * 3.4 amendment 2026-10-17), unless a keyword chip of the narration already said it.
  * Null when there is nothing to play: sound off, not a story scene, or nothing sayable.
  */
-export function readToMePlan(slide: { kind: string; narration?: readonly NarrationPiece[] }, input: ReadToMeInput): ReadToMePlan | null {
+export function readToMePlan(slide: ReadToMeSlide, input: ReadToMeInput): ReadToMePlan | null {
   if (!input.sound || slide.kind !== 'story' || !slide.narration) return null;
   const steps = storyNarrationSteps(slide.narration, input.narrationLang);
+  const { korean } = slide;
+  const koreanShown = korean !== undefined && (input.reveal === undefined || slide.builds === undefined || slide.builds.slice(0, input.reveal + 1).includes('korean'));
+  if (koreanShown && !slide.narration.some((piece) => 'ko' in piece && piece.ko === korean.ko)) {
+    steps.push({ text: korean.ko, language: 'ko-KR', kind: korean.speech, source: PRESENTER_AUDIO_SOURCE });
+  }
   if (steps.length === 0) return null;
   const spoken = stepsForVoice(steps, input.canPlayKorean);
   return { steps: spoken.length > 0 ? spoken : steps, options: { skipUnavailableKorean: !input.voiceChecked } };

@@ -613,11 +613,12 @@ describe('expandDeck: stories (rule 5, D14)', () => {
       storyId: 'story:sun-moon',
       sceneId: 's1',
       narration: [{ text: 'Scene s1 with the ' }, { ko: '해', romanization: 'hae', gloss: 'sun' }, { text: '.' }],
-      korean: { ko: '해', romanization: 'hae', gloss: 'sun' },
+      // A keyword is read at the word rate, a line at the sentence rate (Read-to-me, section 3.4 amendment 2026-10-17).
+      korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' },
       caption: 'Caption s1',
       builds: ['art', 'narration', 'korean'],
     });
-    expect(stories[1]).toMatchObject({ narration: [{ text: 'Night came.' }], korean: { ko: '달이 떴다', romanization: 'dari tteotda', gloss: 'The moon rose' } });
+    expect(stories[1]).toMatchObject({ narration: [{ text: 'Night came.' }], korean: { ko: '달이 떴다', romanization: 'dari tteotda', gloss: 'The moon rose', speech: 'sentence' } });
     expect(stories[2]!.korean).toBeUndefined();
   });
 
@@ -1399,5 +1400,104 @@ describe('expandDeck: word-review (deck v2, AMENDMENTS-LECTURE-V2 section 4.5, L
     expect(review(blocks).slides).toEqual(review(blocks).slides);
     const end = only(review(blocks).slides, 'end')[0]!;
     expect(end.words).toHaveLength(20);
+  });
+});
+
+describe('expandDeck: every word card carries its sound (section 3.4 amendment 2026-10-17)', () => {
+  const sagwaClip = 'audio/vocab/sagwa-apple.mp3';
+  const helloClip = 'audio/vocab/annyeong.mp3';
+  const spokenScopes: Record<string, MinigameScope> = {
+    'mg:pic-spoken': {
+      kind: 'pic-word-match',
+      picWord: {
+        boards: [
+          {
+            pairs: [
+              { id: 'bap', word: { ko: '밥', romanization: 'bap', en: 'rice', spokenKo: '밥이요', audioRef: 'audio/vocab/bap.mp3' } },
+              { id: 'mul', word: { ko: '물', romanization: 'mul', en: 'water' } },
+              { id: 'san', word: { ko: '산', romanization: 'san', en: 'mountain' } },
+            ],
+          },
+        ],
+      },
+    },
+  };
+  const spokenQuest: Quest = {
+    ...quest('spoken', [['intro'], ['discover'], ['practice', 'mg:pic-spoken']], { rewardCardId: undefined }),
+  };
+  const withSpokenDiscover: Quest = {
+    ...spokenQuest,
+    steps: spokenQuest.steps.map((step) =>
+      step.kind === 'discover'
+        ? {
+            ...step,
+            discover: {
+              pages: [
+                { items: [{ type: 'word', word: { ko: '사과', romanization: 'sagwa', en: 'apple', spokenKo: '사과요', audioRef: sagwaClip } }] },
+                { items: [{ type: 'sentence', sentence: { ko: '안녕하세요', romanization: 'annyeonghaseyo', en: 'Hello', audioRef: helloClip } }] },
+              ],
+            },
+          }
+        : step,
+    ),
+  };
+  const spokenTopic: LectureVocabTopic = {
+    title: 'Food',
+    words: [
+      { id: 'vocab:gimbap', ko: '김밥', romanization: 'gimbap', gloss: 'gimbap', spokenKo: '김빱', audioRef: 'audio/vocab/gimbap.mp3' },
+      { id: 'vocab:bap', ko: '밥', romanization: 'bap', gloss: 'rice' },
+    ],
+  };
+  const spoken = bundle({
+    scopeFor: (ref) => spokenScopes[ref] ?? scopes[ref],
+    questById: (id) => (id === withSpokenDiscover.id ? withSpokenDiscover : quests.find((q) => q.id === id)),
+    vocabTopic: (id) => (id === 'vocab-topic:spoken' ? spokenTopic : undefined),
+    vocabWord: (id) => spokenTopic.words.find((w) => w.id === id),
+  });
+  const vocabSlides = (blocks: LectureDeckInput['blocks'], v: 1 | 2 = 1) => only(expandDeck(deckOf(blocks, { v }), spoken, VOICE).slides, 'vocab');
+  const byKo = (slides: ReturnType<typeof vocabSlides>, ko: string) => slides.find((s) => s.word.ko === ko);
+
+  it('a topic word with spokenKo and audioRef plays them; one without plays its word', () => {
+    const slides = vocabSlides([{ kind: 'vocab', topicId: 'vocab-topic:spoken' }]);
+    expect(byKo(slides, '김밥')).toMatchObject({ spoken: { text: '김빱', romanization: 'gimbap', audioRef: 'audio/vocab/gimbap.mp3' }, speech: 'word' });
+    expect(byKo(slides, '밥')?.spoken).toEqual({ text: '밥', romanization: 'bap' });
+  });
+
+  it('a Discover KoText carries its spokenKo and audioRef; a sentence plays at the sentence rate', () => {
+    const slides = vocabSlides([{ kind: 'quest', id: 'quest:spoken' }]);
+    expect(byKo(slides, '사과')).toMatchObject({ spoken: { text: '사과요', romanization: 'sagwa', audioRef: sagwaClip }, speech: 'word' });
+    expect(byKo(slides, '안녕하세요')).toMatchObject({ spoken: { text: '안녕하세요', romanization: 'annyeonghaseyo', audioRef: helloClip }, speech: 'sentence' });
+  });
+
+  it('a pic-word board word carries its KoText sound; a card pair without one plays its word', () => {
+    expect(byKo(vocabSlides([{ kind: 'quest', id: 'quest:spoken' }]), '밥')).toMatchObject({ spoken: { text: '밥이요', romanization: 'bap', audioRef: 'audio/vocab/bap.mp3' }, speech: 'word' });
+    const cards = vocabSlides([{ kind: 'quest', id: 'quest:words' }]);
+    expect(byKo(cards, '김치')).toMatchObject({ spoken: { text: '김치', romanization: 'gimchi' }, speech: 'word' });
+    expect(byKo(cards, '김치')?.spoken).not.toHaveProperty('audioRef');
+  });
+
+  it('a Word review card keeps the sound its quest gave it, and the vocab entry its clip', () => {
+    const slides = vocabSlides([{ kind: 'word-review', questIds: ['quest:spoken'], vocabIds: ['vocab:gimbap', 'vocab:bap'], rounds: 5 }], 2);
+    expect(byKo(slides, '안녕하세요')).toMatchObject({ spoken: { text: '안녕하세요', audioRef: helloClip }, speech: 'sentence' });
+    expect(byKo(slides, '김밥')).toMatchObject({ spoken: { text: '김빱', audioRef: 'audio/vocab/gimbap.mp3' }, speech: 'word' });
+    // 밥 came first from the quest board, with its own clip; the vocab entry has none to give.
+    expect(byKo(slides, '밥')?.spoken).toEqual({ text: '밥이요', romanization: 'bap', audioRef: 'audio/vocab/bap.mp3' });
+  });
+
+  it('a word the quest taught without a clip takes the vocab entry clip in a Word review', () => {
+    const plain: LectureVocabTopic['words'][number] = { id: 'vocab:mul', ko: '물', romanization: 'mul', gloss: 'water', audioRef: 'audio/vocab/mul.mp3' };
+    const b = bundle({ ...spoken, vocabWord: (id) => (id === plain.id ? plain : undefined) });
+    const slides = only(expandDeck(deckOf([{ kind: 'word-review', questIds: ['quest:spoken'], vocabIds: ['vocab:mul'], rounds: 5 }], { v: 2 }), b, VOICE).slides, 'vocab');
+    expect(byKo(slides, '물')?.spoken).toEqual({ text: '물', romanization: 'mul', audioRef: 'audio/vocab/mul.mp3' });
+  });
+
+  it('a syllable slide plays the syllable itself (the scope syllable has no clip in the schema)', () => {
+    const syllable = only(expand([{ kind: 'quest', id: 'quest:letters' }]).slides, 'syllable')[0];
+    expect(syllable?.spoken).toEqual({ text: '가', romanization: 'ga' });
+  });
+
+  it('what a deck teaches is unchanged: taught words carry no sound', () => {
+    const { taught } = expandDeck(deckOf([{ kind: 'quest', id: 'quest:spoken' }]), spoken, VOICE);
+    expect(taught.find((t) => t.ko === '사과')).toEqual({ kind: 'word', ko: '사과', romanization: 'sagwa', gloss: 'apple' });
   });
 });
