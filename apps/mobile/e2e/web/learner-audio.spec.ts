@@ -376,12 +376,12 @@ test.describe('learner audio surfaces (fixture bundle)', () => {
       await newLearner(page);
       if (c.muted) await soundOff(page);
       await openTraceWord(page);
-      // The block's opening sound waits for a tap while sound is off or nothing could sound (no Korean
-      // voice); with a voice it is tried on open, and the browser drops it.
-      if (c.mode !== 'blocked') {
-        await expect(shown(page, 'trace-word-sound-detail')).toHaveCount(0);
-        await shown(page, 'trace-word-strip').getByRole('button').first().click();
-      }
+      // The block's opening sound never shows the row (its late result must not move the canvas mid-stroke);
+      // a tap on the block's speaker does.
+      await page.waitForTimeout(1_700);
+      await expect(shown(page, 'trace-word-sound-action')).toHaveCount(0);
+      await expect(shown(page, 'trace-word-sound-help')).toHaveCount(0);
+      await shown(page, 'trace-word-strip').getByRole('button').first().click();
       await expectPanel(page, 'trace-word-sound', c);
       if (c.name === 'no Korean voice') await shot(page, 'learner-audio-trace-word-no-voice');
       await expectActionPlays(page, 'trace-word-sound', c);

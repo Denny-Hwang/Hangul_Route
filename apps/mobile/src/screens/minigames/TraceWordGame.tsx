@@ -50,10 +50,8 @@ import {
 } from '../../logic/trace-word/flow';
 import { buildTraceWordRounds, letterCounts, type TraceWordBlock, type TraceWordPlayRound } from '../../logic/trace-word/rounds';
 import { traceWordCanvases, traceWordMessage, traceWordTone, type TraceWordCoaching, type TraceWordTone } from '../../logic/trace-word/view';
-import { playsOnOpen } from '../../logic/audio/opening-play';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
-import { useAudioStore } from '../../store/audio-store';
 import type { MinigameHost } from './host';
 
 interface Props {
@@ -84,6 +82,8 @@ const CHIP_INK_WIDTH = 14;
 
 /** The surface id of Trace a Word for the audio telemetry (F-AUDIO-004 §3.14). */
 const TRACE_WORD_AUDIO_SOURCE = 'trace-word';
+/** A block's syllable, said as a sound. */
+const blockSpeech = (syllable: string) => ({ text: syllable, kind: 'sound' as const, source: TRACE_WORD_AUDIO_SOURCE });
 
 type Look = 'live' | 'pass' | 'retry' | 'waiting';
 
@@ -140,7 +140,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
   const lastSyllable = useRef<string | null>(null);
   const say = (syllable: string): void => {
     lastSyllable.current = syllable;
-    void soundPlay(() => playPrompt({ text: syllable, kind: 'sound', source: TRACE_WORD_AUDIO_SOURCE }));
+    void soundPlay(() => playPrompt(blockSpeech(syllable)));
   };
   // Leaving the game mid-syllable (Done on the last word, Skip, Back) stops it.
   useEffect(() => () => stop(), []);
@@ -206,13 +206,13 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Each new block plays its sound once, as Trace Stroke plays its letter: a new prompt slot. With sound
-  // switched off, or nothing that could sound, it waits for a tap, so the learner is not told why it is
-  // silent on every block.
+  // Each new block plays its sound once, as Trace Stroke plays its letter, and starts a new prompt slot.
+  // The opening sound is not the slot's: its result can come in mid-stroke (a voice list still loading, a
+  // speak the browser drops), and a status row appearing then would move the canvas under the finger.
+  // A tap on a block speaker or Show me plays through the slot and says why when it is silent.
   useEffect(() => {
     soundReset();
-    const audio = useAudioStore.getState();
-    if (block && state.phase === 'drawing' && state.letter === 0 && playsOnOpen(audio.muted, audio.tts, false)) say(block.syllable);
+    if (block && state.phase === 'drawing' && state.letter === 0) void playPrompt(blockSpeech(block.syllable));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.round, state.block]);
 

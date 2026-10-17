@@ -104,6 +104,14 @@ describe('no direct speak from screens', () => {
     },
   );
 
+  it('the trace games play their block speakers and Show me through the slot', () => {
+    const word = files.find((f) => f.rel === 'minigames/TraceWordGame.tsx')!;
+    expect(word.source).toMatch(/onPress=\{\(\) => say\(b\.syllable\)\}/);
+    expect(word.source).toMatch(/void soundPlay\(\(\) => playPrompt\(blockSpeech\(syllable\)\)\)/);
+    const stroke = files.find((f) => f.rel === 'minigames/TraceStrokeGame.tsx')!;
+    expect(stroke.source).toMatch(/setHintPlaying\(true\);[\s\S]{0,200}void soundPlay\(\(\) => playJamo\(round\.jamo, 'sound'\)\)/);
+  });
+
   it('the quest player stops the speech when its step changes, and Discover when it unmounts', () => {
     const player = files.find((f) => f.rel === 'quest/QuestPlayerView.tsx')!;
     expect(player.source).toMatch(/useEffect\(\(\) => \(\) => stop\(\), \[stepIndex\]\)/);
@@ -119,8 +127,12 @@ describe('no direct speak from screens', () => {
     expect(file.source).not.toMatch(/void playPrompt\(/);
   });
 
-  /** No play is fire-and-forget on these screens any more: a silent speaker always says why. */
-  it.each(['minigames/TraceWordGame.tsx', 'minigames/TraceStrokeGame.tsx', 'minigames/PicWordMatchGame.tsx', 'quest/DiscoverStep.tsx'])(
+  /**
+   * No play is fire-and-forget on these screens any more: a silent speaker always says why. (The trace
+   * games keep one: a round's opening sound, whose late result must not move the canvas mid-stroke; their
+   * speakers and Show me play through the slot, which the slot-screen test above checks.)
+   */
+  it.each(['minigames/PicWordMatchGame.tsx', 'quest/DiscoverStep.tsx'])(
     '%s has no bare void playPrompt / playJamo',
     (rel) => {
       const file = files.find((f) => f.rel === rel)!;

@@ -71,7 +71,7 @@ For a screen that must keep its own controls on screen and must not shrink its d
 - No `Card`: the detail is a `Caption` (muted), the action a `Button` secondary size `sm`, the help link a `Button` ghost size `sm` (both `touchTarget.min` 64 high), in one row that wraps under 200 % text.
 - The row carries its own top space (`spacing.sm`), so the always-mounted live region takes no height while nothing is shown.
 - In the side-by-side layout the prompt column above the controls scrolls if the row makes it too tall, so Done and Skip stay on screen.
-- The trace games play a round's opening sound only when something could sound (sound on, and a Korean voice or a bundled clip; `playsOnOpen`), so the row appears after the learner asked to hear (Show me, a block speaker), not on every letter.
+- The row appears after the learner asked to hear (Show me, a block speaker), never from a round's opening sound, whose late result would move the canvas under a finger mid-stroke.
 
 ## Tokens (no literals)
 
