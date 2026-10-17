@@ -106,26 +106,20 @@ export function barBand(hero: number, gap: number): number {
 }
 
 /**
- * A phone window's stage is judged too small only below this width (README Constants; owner report
- * 2026-10-16 item 1): 568 x 320, the smallest landscape phone in use, still gets a stage, while a
- * desktop window keeps `layout.breakpoint.regular` (600). Text keeps the 18 px floor either way.
+ * `PHONE_STAGE_MIN`, the phone gate (F-TCH-004 section 3.6 phone exception; README Constants): in a
+ * phone window the stage is judged too small only below this width, so 568 x 320, the smallest
+ * landscape phone in use, draws slides, while every other window keeps `layout.breakpoint.regular`
+ * (600). Text keeps the 18 px floor either way.
  */
-export const PHONE_COMPACT_WIDTH = 560;
-
-/** The layout tokens of a phone window (`layout.phoneShortSide`, `layout.phoneMaxLongSide`), passed in. */
-export interface PhoneRule {
-  readonly shortSide: number;
-  readonly maxLongSide: number;
-}
+export const PHONE_STAGE_MIN = 560;
 
 /**
- * A phone window (the design system's `phone` form factor): the short side below `shortSide` and
- * the long side at most `maxLongSide`, in either orientation, so 1100 x 500 (a short desktop
- * window) is not a phone. A window of unknown size is not a phone.
+ * The compact bar's strip at the bottom of a phone stage (section 3.6): as tall as the bar's own
+ * footprint, its `touchTarget.min` row and `spacing.sm` padding (`min + 2 x gap`). A tap there shows
+ * or hides the bar instead of stepping.
  */
-export function isPhoneWindow(width: number, height: number, rule: PhoneRule): boolean {
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return false;
-  return Math.min(width, height) < rule.shortSide && Math.max(width, height) <= rule.maxLongSide;
+export function phoneBarStrip(min: number, gap: number): number {
+  return min + 2 * gap;
 }
 
 /** The safe-area insets of the window (the notch and the home indicator), in window pixels. */

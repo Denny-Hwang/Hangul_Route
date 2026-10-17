@@ -842,6 +842,8 @@ export const caregiver = {
       present: { cta: 'Present this' },
       /** [ Present this ]'s accessible description, one line for every item kind (lesson, story, word topic). Recent keeps the deck on the device, so it never says nothing is saved. */
       presentNote: "Opens this as slides for a classroom screen or a TV. No one's progress changes.",
+      /** Under [ Present this ] when the browser gave no new tab (a pop-up blocker, an in-app browser); the tap is kept, nothing else changes. */
+      presentBlocked: 'The new tab did not open. Allow pop-ups for this site, then try again.',
       /** The grown-up line in place of the preview button (switch on, sampler pass); F-ENT-003 section 3.11 [BY]. */
       closed: 'Opens with the Family Plan or a Group License',
       /** Under the closed line, an account pass that is not kept and not a fallback (F-BILL-002's label). */

@@ -13,7 +13,7 @@ import type { LanguageOption } from '../../logic/locale/language-picker';
  * mocks `home.html` and `home-empty.html`, README D2, D14, D19): Recent lessons
  * and Quick lesson on a teacher page in real pixels (not stage-scaled).
  *
- * Header: Back (top left, owner report 2026-10-16 item 3: every screen has a way
+ * Header: Back (top left, `common.buttons.back`; F-TCH-004 section 3.5 "History" rule 5: every screen has a way
  * back), Hoya, the h1, the session language chips (a radiogroup: one tab stop,
  * arrows move and select) and Keys and help. Below 900 px one column with Recent
  * first; from 900 px Recent left and Quick lesson right. Recent rows show the
@@ -175,7 +175,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
       >
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
-            {props.onBack ? <HomeButton label={m.home.back.cta} onPress={props.onBack} compact testID="presenter-home-back" /> : null}
+            {props.onBack ? <HomeButton label={messages.common.buttons.back} onPress={props.onBack} compact testID="presenter-home-back" /> : null}
             <Hoya pose="waving" size={touchTarget.min} />
             <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(typography.size.title, 'bold', colors.text.primary), flexShrink: 1 }}>
               {m.home.title}

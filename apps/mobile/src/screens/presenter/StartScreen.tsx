@@ -1,4 +1,4 @@
-import { Hoya, Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, z, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,10 +14,12 @@ import { GhostButton, PrimaryButton } from './StatePage';
  * while the presenter font loads (at most 1.5 s) and focused when it is ready. Back to lessons,
  * above the title, returns to the home.
  *
- * In a phone window (owner report 2026-10-16 item 3) the page is short: one "Ready to start" line
- * with a Details disclosure that lists only what the teacher can act on (offline not ready, no
- * Korean voice), the turn-sideways line in portrait, and Start pinned to the bottom edge (clear of
- * the home indicator) with Back beside it.
+ * In a phone window (F-TCH-004 section 3.5 amendment; start-screen.md "Phone") the page is short:
+ * under the title and the facts, one "Ready to start" line, with "Some checks need a look: see
+ * Details." under it when a device check is not ready, and a Details disclosure that opens the check
+ * list and the skipped parts exactly as on the wide page; while the phone is upright, the hint to
+ * turn it sideways (information, never a blocker); and a sticky footer with Back beside Start, clear
+ * of the bottom safe-area inset.
  */
 
 export type { VoiceCheck } from '../../logic/lecture/shell';
@@ -35,12 +37,14 @@ export interface StartScreenProps {
   wakeLockSupported: boolean;
   fontReady: boolean;
   onStart: () => void;
-  /** Back to lessons: the presenter home, before anything starts (nothing is saved or sent). */
+  /** Back to lessons (the phone footer's Back): the presenter home, before anything starts (nothing is saved or sent). */
   onBack?: () => void;
-  /** A phone window: the short page with the pinned Start. */
+  /** A phone window: the short page with the sticky footer. */
   phone?: boolean;
-  /** Taller than wide (a phone held upright): the turn-sideways line. */
+  /** Taller than wide (a phone held upright): the turn hint. */
   portrait?: boolean;
+  /** A short window (under `layout.shortHeight`, a phone sideways): the title and Start step down. */
+  short?: boolean;
 }
 
 function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNode; testID?: string }): React.ReactElement {
@@ -55,14 +59,15 @@ function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNod
   );
 }
 
-function Line({ children, secondary, bold }: { children: React.ReactNode; secondary?: boolean; bold?: boolean }): React.ReactElement {
+function Line({ children, secondary, bold, large }: { children: React.ReactNode; secondary?: boolean; bold?: boolean; large?: boolean }): React.ReactElement {
+  const size = large ? typography.size.bodyLg : typography.size.body;
   return (
     <Text {...KOREAN_LINE_BREAK}
       style={{
-        fontSize: typography.size.body,
+        fontSize: size,
         color: secondary ? colors.text.secondary : colors.text.primary,
         fontWeight: bold ? typography.weight.bold : typography.weight.regular,
-        lineHeight: Math.round(typography.size.body * typography.leading.normal),
+        lineHeight: Math.round(size * typography.leading.normal),
       }}
     >
       {children}
@@ -122,6 +127,62 @@ function FontWait(): React.ReactElement {
   );
 }
 
+/** Before you start: the device checks and the skipped parts with [ See which ] (the same list on the wide page and in the phone's Details). */
+function Checks(props: StartScreenProps): React.ReactElement {
+  const { messages } = usePresenterView();
+  const m = messages.learner.presenter.start;
+  const [listOpen, setListOpen] = useState(false);
+  const voiceLine = useVoiceLine(props.voice);
+  return (
+    <View style={{ gap: spacing.md }}>
+      <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        {m.checks}
+      </Text>
+      <Check ok={props.offlineReady} testID="presenter-check-offline">
+        <Line>{props.offlineReady ? m.offlineReady : m.offlineNotReady}</Line>
+        {props.offlineReady ? null : <Line secondary>{m.installHint}</Line>}
+      </Check>
+      {voiceLine !== null ? (
+        <Check ok={voiceLine.ok} testID="presenter-check-voice">
+          <Line>{voiceLine.text}</Line>
+        </Check>
+      ) : null}
+      <Check ok={props.fullscreenSupported} testID="presenter-check-fullscreen">
+        <Line>{props.fullscreenSupported ? m.fullscreen : m.fullscreenNone}</Line>
+      </Check>
+      <Check ok={props.wakeLockSupported} testID="presenter-check-awake">
+        <Line>{props.wakeLockSupported ? m.awake : m.awakeNone}</Line>
+      </Check>
+      {props.parts.length > 0 ? (
+        <Check ok={false} testID="presenter-check-skipped">
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
+            <Line>{m.skipped(props.parts.length)}</Line>
+            <GhostButton
+              testID="presenter-see-which"
+              label={listOpen ? m.hideWhich.cta : m.seeWhich.cta}
+              expanded={listOpen}
+              onPress={() => setListOpen((open) => !open)}
+            />
+          </View>
+          {listOpen ? (
+            <View testID="presenter-skipped-list" role="list" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.md }}>
+              {distinctParts(props.parts).map((part) => {
+                const title = props.partTitle(part.blockIndex);
+                return (
+                  <View key={`${part.blockIndex ?? 'none'}-${part.reason}`} role="listitem">
+                    {title !== null ? <Line bold>{title}</Line> : null}
+                    <Line>{m.reason[part.reason]}</Line>
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
+        </Check>
+      ) : null}
+    </View>
+  );
+}
+
 function PhoneStart(props: StartScreenProps): React.ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
@@ -132,77 +193,66 @@ function PhoneStart(props: StartScreenProps): React.ReactElement {
     if (props.fontReady) start.current?.focus?.();
   }, [props.fontReady]);
   const voiceLine = useVoiceLine(props.voice);
-  // Only what the teacher can act on before Start; every other check is fine or out of their hands.
-  const actionable: { key: string; lines: string[] }[] = [
-    ...(props.offlineReady ? [] : [{ key: 'offline', lines: [m.offlineNotReady, m.installHint] }]),
-    ...(voiceLine !== null && !voiceLine.ok ? [{ key: 'voice', lines: [voiceLine.text] }] : []),
-  ];
+  // Every device check ready: the Ready line alone; otherwise it says that a check needs a look.
+  const allReady = props.offlineReady && voiceLine?.ok !== false && props.fullscreenSupported && props.wakeLockSupported;
   return (
     <View testID="presenter-start" style={{ flex: 1, backgroundColor: colors.surface.paper }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: spacing.lg + insets.top,
+          paddingTop: (props.short ? spacing.sm : spacing.lg) + insets.top,
           paddingBottom: spacing.lg,
           paddingLeft: layout.gutter.compact + insets.left,
           paddingRight: layout.gutter.compact + insets.right,
         }}
       >
-        <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: spacing.md }}>
-          <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} compact />
+        <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: props.short ? spacing.sm : spacing.md }}>
+          <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} compact={props.short === true} />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-            <View testID="presenter-start-ready" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 }}>
-              <Icon name="check-circle" size={spacing.xxl} color={colors.feedback.success} />
-              <Line bold>{m.ready}</Line>
-            </View>
-            {actionable.length > 0 ? (
-              <GhostButton
-                testID="presenter-start-details"
-                label={m.details}
-                expanded={detailsOpen}
-                onPress={() => setDetailsOpen((open) => !open)}
-              />
-            ) : null}
-          </View>
-          {detailsOpen && actionable.length > 0 ? (
-            <View testID="presenter-start-details-list" role="list" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.md }}>
-              {actionable.map((item) => (
-                <View key={item.key} role="listitem" testID={`presenter-check-${item.key}`} style={{ gap: spacing.xxs }}>
-                  {item.lines.map((line, i) => (
-                    <Line key={line} secondary={i > 0}>
-                      {line}
-                    </Line>
-                  ))}
+            <View testID="presenter-start-ready" style={{ flexShrink: 1, gap: spacing.xs }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Icon name={allReady ? 'check-circle' : 'dash'} size={spacing.xxl} color={allReady ? colors.feedback.success : colors.text.secondary} />
+                <Line bold large>
+                  {m.ready}
+                </Line>
+              </View>
+              {allReady ? null : (
+                <View testID="presenter-start-some-checks">
+                  <Line secondary>{m.someChecks}</Line>
                 </View>
-              ))}
+              )}
+            </View>
+            <GhostButton testID="presenter-start-details" label={m.details.cta} expanded={detailsOpen} onPress={() => setDetailsOpen((open) => !open)} />
+          </View>
+          {detailsOpen ? (
+            <View testID="presenter-start-details-panel">
+              <Checks {...props} />
             </View>
           ) : null}
           {props.portrait ? (
-            <View testID="presenter-start-sideways" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-              <Hoya pose="waving" size={touchTarget.min} accessibilityLabel={messages.a11y.hoya('waving')} />
-              <View style={{ flex: 1 }}>
-                <Line bold>{m.turnSideways}</Line>
-              </View>
+            <View testID="presenter-start-turn" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
+              <Line secondary>{m.turnHint}</Line>
             </View>
           ) : null}
           {!props.fontReady ? <FontWait /> : null}
         </View>
       </ScrollView>
-      {/* Pinned to the bottom edge, clear of the home indicator: Back and Start are always in reach. */}
+      {/* The sticky footer: it stays at the bottom while the page scrolls, clear of the home indicator. */}
       <View
         testID="presenter-start-footer"
         style={{
           flexDirection: 'row',
+          flexWrap: 'wrap',
           alignItems: 'center',
-          justifyContent: 'center',
           gap: spacing.md,
-          paddingTop: spacing.sm,
-          paddingBottom: spacing.sm + insets.bottom,
+          paddingTop: spacing.md,
+          paddingBottom: spacing.md + insets.bottom,
           paddingLeft: layout.gutter.compact + insets.left,
           paddingRight: layout.gutter.compact + insets.right,
           borderTopWidth: borderWidth.thin,
           borderTopColor: colors.border.subtle,
           backgroundColor: colors.surface.paper,
+          zIndex: z.sticky,
         }}
       >
         {props.onBack ? <GhostButton testID="presenter-start-back" label={messages.common.buttons.back} onPress={props.onBack} /> : null}
@@ -210,7 +260,8 @@ function PhoneStart(props: StartScreenProps): React.ReactElement {
           ref={start}
           testID="presenter-start-button"
           label={m.cta}
-          minHeight={touchTarget.min}
+          grow
+          minHeight={props.short ? touchTarget.child : touchTarget.hero}
           disabled={!props.fontReady}
           onPress={props.onStart}
         />
@@ -222,12 +273,10 @@ function PhoneStart(props: StartScreenProps): React.ReactElement {
 function WideStart(props: StartScreenProps): React.ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
-  const [listOpen, setListOpen] = useState(false);
   const start = useRef<View>(null);
   useEffect(() => {
     if (props.fontReady) start.current?.focus?.();
   }, [props.fontReady]);
-  const voiceLine = useVoiceLine(props.voice);
 
   return (
     <ScrollView testID="presenter-start" style={{ flex: 1, backgroundColor: colors.surface.paper }} contentContainerStyle={{ paddingVertical: spacing.xxl, paddingHorizontal: layout.gutter.compact }}>
@@ -241,52 +290,7 @@ function WideStart(props: StartScreenProps): React.ReactElement {
           <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} />
         </View>
 
-        <View style={{ gap: spacing.md }}>
-          <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-            {m.checks}
-          </Text>
-          <Check ok={props.offlineReady} testID="presenter-check-offline">
-            <Line>{props.offlineReady ? m.offlineReady : m.offlineNotReady}</Line>
-            {props.offlineReady ? null : <Line secondary>{m.installHint}</Line>}
-          </Check>
-          {voiceLine !== null ? (
-            <Check ok={voiceLine.ok} testID="presenter-check-voice">
-              <Line>{voiceLine.text}</Line>
-            </Check>
-          ) : null}
-          <Check ok={props.fullscreenSupported}>
-            <Line>{props.fullscreenSupported ? m.fullscreen : m.fullscreenNone}</Line>
-          </Check>
-          <Check ok={props.wakeLockSupported}>
-            <Line>{props.wakeLockSupported ? m.awake : m.awakeNone}</Line>
-          </Check>
-          {props.parts.length > 0 ? (
-            <Check ok={false} testID="presenter-check-skipped">
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-                <Line>{m.skipped(props.parts.length)}</Line>
-                <GhostButton
-                  testID="presenter-see-which"
-                  label={listOpen ? m.hideWhich.cta : m.seeWhich.cta}
-                  expanded={listOpen}
-                  onPress={() => setListOpen((open) => !open)}
-                />
-              </View>
-              {listOpen ? (
-                <View testID="presenter-skipped-list" role="list" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.md }}>
-                  {distinctParts(props.parts).map((part) => {
-                    const title = props.partTitle(part.blockIndex);
-                    return (
-                      <View key={`${part.blockIndex ?? 'none'}-${part.reason}`} role="listitem">
-                        {title !== null ? <Line bold>{title}</Line> : null}
-                        <Line>{m.reason[part.reason]}</Line>
-                      </View>
-                    );
-                  })}
-                </View>
-              ) : null}
-            </Check>
-          ) : null}
-        </View>
+        <Checks {...props} />
 
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
           <PrimaryButton

@@ -224,18 +224,18 @@ export function gestureCommand(g: { x: number; width: number; dx: number; dy: nu
 }
 
 /**
- * The stage's bottom strip under a hidden compact bar (a phone window, owner report 2026-10-16):
- * a tap there only brings the bar back, so a tap on the hidden bar presses nothing, the slide
- * included. A swipe that starts there still moves. `guard` is the bar's overlap with the stage, in
- * stage pixels (0: no guard).
+ * A tap in the compact bar's strip at the bottom of a phone stage (F-TCH-004 section 3.6): it shows
+ * the bar (or hides it while it shows) instead of stepping, so the bar is never brought up by a
+ * step and a tap on a hidden bar presses nothing. A swipe that starts there still moves. `strip`:
+ * the strip's height on the stage, in stage pixels (0: none).
  */
-export function tapGuarded(g: { y: number; height: number; guard: number; dx: number; dy: number }): boolean {
-  if (!(g.guard > 0) || !(g.height > 0)) return false;
+export function inBarStrip(g: { y: number; height: number; strip: number; dx: number; dy: number }): boolean {
+  if (!(g.strip > 0) || !(g.height > 0)) return false;
   const swipe = Math.abs(g.dx) >= SWIPE_MIN || Math.abs(g.dy) >= SWIPE_MIN;
-  return !swipe && g.y >= g.height - g.guard;
+  return !swipe && g.y >= g.height - g.strip;
 }
 
-/** How much of the stage a compact bar of `barHeight` covers: the bar sits on the window bottom, the stage `insetBottom + offsetY` above it. */
+/** How much of the stage the bar's strip of `barHeight` covers: the strip sits on the window bottom, the stage `insetBottom + offsetY` above it. */
 export function barOverlap(barHeight: number, insetBottom: number, offsetY: number): number {
   return Math.max(0, barHeight - Math.max(0, insetBottom) - Math.max(0, offsetY));
 }

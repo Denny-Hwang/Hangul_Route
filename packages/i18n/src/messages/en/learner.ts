@@ -2009,8 +2009,6 @@ export const learner = {
     home: {
       title: 'Lecture',
       help: { cta: 'Keys and help' },
-      /** Leaves the presenter for the page before it (owner report 2026-10-16: every screen has a way back). */
-      back: { cta: 'Back' },
       recent: {
         title: 'Recent lessons',
         empty: 'Lessons you open appear here. Names are never saved.',
@@ -2036,13 +2034,15 @@ export const learner = {
       label: 'Lesson controls',
       counter: (i: number, n: number) => `${i} / ${n}`,
       /** Next while the slide has builds left (README D3). */
+      /** The slide step back on both bars (LV-M1): "Back" only ever means leaving a screen. */
+      prev: { cta: 'Previous' },
       reveal: { cta: 'Reveal' },
       sound: { cta: 'Sound' },
       timer: { cta: 'Timer' },
       blank: { cta: 'Blank' },
       grid: { cta: 'Slides' },
-      /** The compact (phone) bar's sheet of the other tools: Timer, Blank, Full screen. */
-      more: 'More',
+      /** The phone bar's sheet of the other controls (F-TCH-004 section 3.6). */
+      more: { cta: 'More' },
       fullscreen: { cta: 'Full screen' },
       exit: { cta: 'Exit' },
       /** Status chips (PR 9, spec sections 3.7 and 3.8); nothing about a learner ever shows here. */
@@ -2122,8 +2122,7 @@ export const learner = {
         codeTitle: 'Join our class',
         /** `cta` is the shipped Join label (`caregiver.spaces.join.cta`). */
         howToJoin: (cta: string) => `Tap “${cta}” in Hangul Route and type this code.`,
-        /** Ends the lesson from the End slide, without the Exit confirm. */
-        finish: { cta: 'Finish' },
+        exitHint: 'To finish, choose Exit.',
       },
     },
     start: {
@@ -2132,11 +2131,12 @@ export const learner = {
       slides: (n: number) => plural('en', n, { one: '1 slide', other: `${n} slides` }),
       minutes: (n: number) => plural('en', n, { one: 'about 1 minute', other: `about ${n} minutes` }),
       checks: 'Before you start',
-      /** The phone start screen: one line for every check, and Details for the ones to act on. */
+      /** The phone start screen's one line (section 3.5); `someChecks` under it when a check is not ready, Details opens the list. */
       ready: 'Ready to start',
-      details: 'Details',
-      /** The phone start screen, held upright. */
-      turnSideways: 'Turn your phone sideways when you start.',
+      someChecks: 'Some checks need a look: see Details.',
+      details: { cta: 'Details' },
+      /** The phone start screen, held upright: information, never a blocker. */
+      turnHint: 'Turn your phone sideways for the lesson.',
       offlineReady: 'Ready for offline',
       offlineNotReady: 'Open this page once with Wi-Fi to use it offline.',
       installHint: 'You can also add it to the home screen from the browser menu.',
@@ -2189,13 +2189,8 @@ export const learner = {
     help: {
       title: 'Keys and controls',
       clicker: 'A presentation clicker works with no setup.',
-      /** How to use, first on a touch-only device. */
-      touch: {
-        title: 'How to use',
-        tap: 'Tap the right side to go on, the left side to go back.',
-        swipe: 'Swipe left or right to change the slide.',
-        bar: 'Tap the screen to show the controls. They hide after a few seconds.',
-      },
+      /** Under the title in a phone window only (the bar's strip shows it, section 3.6). */
+      phoneBar: 'On a phone, tap the bottom of the slide to show the controls.',
       keepVisible: 'Keep controls visible',
       romanization: 'Romanization',
       romanizationAlways: 'always',
@@ -2203,7 +2198,7 @@ export const learner = {
       key: { space: 'Space', backspace: 'Backspace' },
       row: {
         next: 'Next',
-        back: 'Back',
+        back: 'Previous',
         first: 'First and last slide',
         blank: 'Blank the screen',
         sound: 'Play the sound again',
@@ -2227,11 +2222,9 @@ export const learner = {
         staleLine: 'This link is from a newer version. Close other Hangul Route tabs, then reload.',
       },
       loading: 'Loading lesson',
-      /** A desktop window too small for the stage. */
-      tooSmallWindow: 'Make the window bigger.',
-      /** A phone held upright, and how to turn off its rotation lock. */
-      rotatePhone: 'Turn your phone sideways to see the lesson.',
-      rotateLock: 'If the screen does not turn, turn off rotation lock in your phone settings.',
+      tooSmall: 'Make the window bigger or turn the screen.',
+      /** The rotate page: a phone held upright during a lesson (section 3.6). */
+      rotate: { title: 'Turn your phone sideways', line: 'The lesson shows when the phone is sideways. Nothing is lost.' },
       portrait: 'Turn the screen for a bigger view',
     },
     /** The session language chips (section 3.12): this session only, the device locale is not written. */

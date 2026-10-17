@@ -15,7 +15,7 @@ import {
   fitShown,
   barOverlap,
   gestureCommand,
-  tapGuarded,
+  inBarStrip,
   homeStart,
   presenterLocale,
   resolveBoot,
@@ -474,22 +474,22 @@ describe('stage box (README D1)', () => {
   });
 });
 
-describe('the strip under the hidden compact bar (a phone window, owner report 2026-10-16)', () => {
-  it('a tap on the strip only brings the bar back; above it the stage takes the tap', () => {
-    expect(tapGuarded({ y: 300, height: 320, guard: 60, dx: 0, dy: 0 })).toBe(true);
-    expect(tapGuarded({ y: 260, height: 320, guard: 60, dx: 2, dy: 3 })).toBe(true);
-    expect(tapGuarded({ y: 259, height: 320, guard: 60, dx: 0, dy: 0 })).toBe(false);
+describe("the compact bar's strip on a phone stage (F-TCH-004 section 3.6)", () => {
+  it('a tap in the strip shows or hides the bar instead of stepping; above it the stage takes the tap', () => {
+    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: 0, dy: 0 })).toBe(true);
+    expect(inBarStrip({ y: 260, height: 320, strip: 60, dx: 2, dy: 3 })).toBe(true);
+    expect(inBarStrip({ y: 259, height: 320, strip: 60, dx: 0, dy: 0 })).toBe(false);
   });
 
-  it('a swipe that starts on the strip still moves the slide', () => {
-    expect(tapGuarded({ y: 300, height: 320, guard: 60, dx: -80, dy: 0 })).toBe(false);
-    expect(tapGuarded({ y: 300, height: 320, guard: 60, dx: 0, dy: -70 })).toBe(false);
+  it('a swipe that starts in the strip still moves the slide', () => {
+    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: -80, dy: 0 })).toBe(false);
+    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: 0, dy: -70 })).toBe(false);
   });
 
-  it('no guard, or a stage before layout, guards nothing', () => {
-    expect(tapGuarded({ y: 300, height: 320, guard: 0, dx: 0, dy: 0 })).toBe(false);
-    expect(tapGuarded({ y: 0, height: 0, guard: 60, dx: 0, dy: 0 })).toBe(false);
-    expect(tapGuarded({ y: 300, height: 320, guard: Number.NaN, dx: 0, dy: 0 })).toBe(false);
+  it('no strip, or a stage before layout, takes no tap', () => {
+    expect(inBarStrip({ y: 300, height: 320, strip: 0, dx: 0, dy: 0 })).toBe(false);
+    expect(inBarStrip({ y: 0, height: 0, strip: 60, dx: 0, dy: 0 })).toBe(false);
+    expect(inBarStrip({ y: 300, height: 320, strip: Number.NaN, dx: 0, dy: 0 })).toBe(false);
   });
 
   it('the strip is what of the bar reaches above the bottom inset and the letterbox', () => {

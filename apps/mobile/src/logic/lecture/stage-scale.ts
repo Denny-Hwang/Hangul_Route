@@ -111,3 +111,40 @@ export function stageScale(size: WindowSize, bounds: StageBounds): StageScale {
 export function stageText(unit: number, n: number, floor: number): number {
   return Math.max(floor, Math.round(unit * n));
 }
+
+/** The layout tokens of a phone (`layout.phoneShortSide`, `layout.phoneMaxLongSide`), passed in. */
+export interface PhoneRule {
+  readonly shortSide: number;
+  readonly maxLongSide: number;
+}
+
+/**
+ * A phone window (F-TCH-004 section 3.6 phone exception): the window's short side under
+ * `shortSide` and its long side at most `maxLongSide`, on a screen whose short side is under
+ * `shortSide`, with a coarse pointer (`matchMedia('(pointer: coarse)')`). The window decides the
+ * layout; the screen and the pointer make sure it is a phone, so a small desktop window (800 x 500,
+ * a fine pointer) or an iPad in split view (320 x 744 on a 1024 x 1366 screen) is not one. An
+ * unknown screen counts as the window. A window of unknown size is not a phone.
+ */
+export function isPhoneWindow(
+  input: { w: number; h: number; screenW?: number | null; screenH?: number | null; coarse: boolean },
+  rule: PhoneRule,
+): boolean {
+  const { w, h, coarse } = input;
+  if (!coarse || !usable(w) || !usable(h)) return false;
+  const screenW = input.screenW != null && usable(input.screenW) ? input.screenW : w;
+  const screenH = input.screenH != null && usable(input.screenH) ? input.screenH : h;
+  return Math.min(w, h) < rule.shortSide && Math.max(w, h) <= rule.maxLongSide && Math.min(screenW, screenH) < rule.shortSide;
+}
+
+/** What the presenter draws for a running lesson: the slide, the too-small page, or (a phone held upright) the rotate page. */
+export type StageView = 'slide' | 'too-small' | 'rotate';
+
+/**
+ * Section 3.6: in a phone window taller than wide the lesson shows the rotate page, never a
+ * letterboxed strip; otherwise a stage under its gate shows the too-small page.
+ */
+export function stageView(input: { phone: boolean; window: WindowSize; tooSmall: boolean }): StageView {
+  if (input.phone && input.window.height > input.window.width) return 'rotate';
+  return input.tooSmall ? 'too-small' : 'slide';
+}

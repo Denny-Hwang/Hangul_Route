@@ -1,15 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as native from '../presenter';
 import {
-  CLOSE_WAIT_MS,
   LEAVE_WAIT_MS,
   PRESENTER_PATH,
   RETURN_WAIT_MS,
   checkForUpdate,
-  currentPresenterStep,
-  enterPresenterStep,
+  clearPresenterForward,
+  currentPresenterEntry,
   leavePresenter,
+  presenterHomeBack,
+  pushPresenterEntry,
   returnToPresenterHome,
+  stepBackPresenter,
   subscribePresenterPop,
   enterFullscreen,
   enterFullscreenLandscape,
@@ -93,9 +95,12 @@ describe('route', () => {
     expect(native.wakeLockSupported()).toBe(false);
     native.forgetOpenDeck();
     native.holdOpenDeck('1.abc');
-    expect(native.currentPresenterStep()).toEqual({ step: 'home', depth: 0 });
-    native.enterPresenterStep('start', '1.abc');
-    native.returnToPresenterHome();
+    expect(native.currentPresenterEntry()).toBeNull();
+    expect(native.presenterHomeBack()).toBe(false);
+    await native.pushPresenterEntry('ready', '1.abc');
+    await native.returnToPresenterHome();
+    await native.clearPresenterForward();
+    await native.stepBackPresenter();
     native.subscribePresenterPop(() => undefined)();
     native.leavePresenter();
     native.reloadOnDeckLink()();
@@ -119,120 +124,161 @@ describe('route', () => {
   });
 });
 
-describe('takeDeckFragment', () => {
-  function addressEnv(href: { pathname: string; hash: string }, state: unknown = null) {
-    const calls: { state: unknown; url: string }[] = [];
+describe('takeDeckFragment (section 3.5 "History", rules 1, 5 and 6)', () => {
+  function addressEnv(href: { pathname: string; hash: string; search?: string }, state: unknown = null, extra: Partial<PresenterEnv> = {}) {
+    const calls: { kind: 'replace' | 'push'; state: unknown; url: string }[] = [];
     const history = {
       state,
+      length: 1,
       replaceState(next: unknown, _unused: string, url: string) {
         this.state = next;
-        calls.push({ state: next, url });
+        calls.push({ kind: 'replace', state: next, url });
+      },
+      pushState(next: unknown, _unused: string, url: string) {
+        this.state = next;
+        this.length += 1;
+        calls.push({ kind: 'push', state: next, url });
       },
     };
-    return { e: env({ location: { pathname: href.pathname, hash: href.hash }, history }), calls, history };
+    return { e: env({ location: { origin: 'https://app.example', ...href }, history, ...extra }), calls, history };
   }
+  const home = { hrPresenter: 'home', hrIndex: 0, hrHomeBack: false };
 
-  it('reads the d= value, takes the fragment out of the address and keeps the deck in the history state', () => {
+  it('a link: the address is cleaned, the entry becomes the home and a start-screen entry holding the deck is pushed over it', () => {
     const { e, calls } = addressEnv({ pathname: '/present', hash: '#d=1.eyJ2IjoxfQ' });
     expect(takeDeckFragment(e)).toEqual({ raw: '1.eyJ2IjoxfQ', reloaded: false });
-    expect(calls).toEqual([{ state: { hrLectureFragment: '1.eyJ2IjoxfQ' }, url: PRESENTER_PATH }]);
+    expect(calls).toEqual([
+      { kind: 'replace', state: home, url: PRESENTER_PATH },
+      { kind: 'push', state: { hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.eyJ2IjoxfQ', hrHomeBack: false }, url: PRESENTER_PATH },
+    ]);
   });
 
-  it('a reload (no fragment, the state kept) returns the same deck as reloaded and leaves the history alone', () => {
-    const { e, calls } = addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: '1.abc' });
+  it('a link the presenter cannot open pushes nothing (the invalid page sits on the home entry)', () => {
+    const { e, calls } = addressEnv({ pathname: '/present', hash: '#d=9.bad' });
+    expect(takeDeckFragment(e, () => false)).toEqual({ raw: '9.bad', reloaded: false });
+    expect(calls).toEqual([{ kind: 'replace', state: home, url: PRESENTER_PATH }]);
+  });
+
+  it('a reload on the start screen returns the deck as reloaded and leaves the history alone', () => {
+    const state = { hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc', hrHomeBack: true };
+    const { e, calls, history } = addressEnv({ pathname: '/present', hash: '' }, state);
     expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
-    expect(calls).toEqual([]);
+    expect(calls).toHaveLength(1);
+    expect(history.state).toEqual(state);
   });
 
-  it('a new link in a tab that held another deck replaces it', () => {
-    const { e, history } = addressEnv({ pathname: '/present', hash: '#d=1.new' }, { hrLectureFragment: '1.old' });
-    expect(takeDeckFragment(e)).toEqual({ raw: '1.new', reloaded: false });
-    expect(history.state).toEqual({ hrLectureFragment: '1.new' });
+  it('a Start over deck keeps its fresh mark through a reload and a cleaned address', () => {
+    const { e, history } = addressEnv({ pathname: '/present/x', hash: '' }, { hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc', hrLectureFresh: true });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, fresh: true });
+    expect(history.state).toMatchObject({ hrLectureFresh: true });
+  });
+
+  it('a reload in a lesson steps back to its start-screen entry (the step is the presenter\'s own, never reported)', async () => {
+    const { history, win } = fakeHistory({ hrPresenter: 'home', hrIndex: 0 });
+    history.pushState({ hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc' });
+    history.pushState({ hrPresenter: 'running', hrIndex: 2, hrLectureFragment: '1.abc' });
+    const e = env({ location: { pathname: '/present/', hash: '' }, history, window: win });
+    const onPop = vi.fn();
+    subscribePresenterPop(onPop, e);
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
+    await vi.waitFor(() => expect(history.index).toBe(1));
+    expect(history.entries).toHaveLength(3);
+    expect(onPop).not.toHaveBeenCalled();
+  });
+
+  it('an entry from a build before this plan (only the fragment) opens as a link', () => {
+    const { e, calls } = addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: '1.old' });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.old', reloaded: true });
+    expect(calls.map((c) => c.kind)).toEqual(['replace', 'push']);
+  });
+
+  it('the home Back is decided at boot: a same-origin referrer and a page before it', () => {
+    const same = addressEnv({ pathname: '/present', hash: '' }, null, { document: { referrer: 'https://app.example/browse' } });
+    same.history.length = 3;
+    takeDeckFragment(same.e);
+    expect(presenterHomeBack(same.e)).toBe(true);
+    const other = addressEnv({ pathname: '/present', hash: '' }, null, { document: { referrer: 'https://classroom.example/' } });
+    other.history.length = 3;
+    takeDeckFragment(other.e);
+    expect(presenterHomeBack(other.e)).toBe(false);
+    const fresh = addressEnv({ pathname: '/present', hash: '' }, null, { document: { referrer: 'https://app.example/browse' } });
+    takeDeckFragment(fresh.e);
+    expect(presenterHomeBack(fresh.e)).toBe(false);
+    const broken = addressEnv({ pathname: '/present', hash: '' }, null, { document: { referrer: 'not a url' } });
+    broken.history.length = 2;
+    takeDeckFragment(broken.e);
+    expect(presenterHomeBack(broken.e)).toBe(false);
+    // A reload keeps what the entry holds.
+    const kept = addressEnv({ pathname: '/present', hash: '' }, { hrPresenter: 'home', hrIndex: 0, hrHomeBack: true });
+    takeDeckFragment(kept.e);
+    expect(presenterHomeBack(kept.e)).toBe(true);
   });
 
   it('an empty d= is an empty fragment (the codec rejects it as empty)', () => {
-    const { e } = addressEnv({ pathname: '/present', hash: '#d=' });
-    expect(takeDeckFragment(e)).toEqual({ raw: '', reloaded: false });
-    const bare = addressEnv({ pathname: '/present', hash: '#d' });
-    expect(takeDeckFragment(bare.e)).toEqual({ raw: '', reloaded: false });
+    expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '#d=' }).e)).toEqual({ raw: '', reloaded: false });
+    expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '#d' }).e)).toEqual({ raw: '', reloaded: false });
   });
 
   it('a fragment without d= is not a deck, and the fragment still leaves the address', () => {
     const { e, calls } = addressEnv({ pathname: '/present', hash: '#x=1' });
     expect(takeDeckFragment(e)).toBeNull();
-    expect(calls).toEqual([{ state: null, url: PRESENTER_PATH }]);
+    expect(calls).toEqual([{ kind: 'replace', state: home, url: PRESENTER_PATH }]);
   });
 
   it('keeps a ?lang= hand-off for the locale store to take, and drops every other query', () => {
-    const calls: { state: unknown; url: string }[] = [];
-    const history = { state: null as unknown, replaceState: (next: unknown, _u: string, url: string) => calls.push({ state: next, url }) };
-    const e = env({ location: { pathname: '/present', search: '?x=1&lang=es', hash: '#d=1.abc' }, history });
+    const { e, calls } = addressEnv({ pathname: '/present', search: '?x=1&lang=es', hash: '#d=1.abc' });
     expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: false });
-    expect(calls).toEqual([{ state: { hrLectureFragment: '1.abc' }, url: `${PRESENTER_PATH}?lang=es` }]);
-    const plain = env({ location: { pathname: '/present/x', search: '?x=1', hash: '' }, history });
-    takeDeckFragment(plain);
-    expect(calls[1]!.url).toBe(PRESENTER_PATH);
+    expect(calls.map((c) => c.url)).toEqual([`${PRESENTER_PATH}?lang=es`, `${PRESENTER_PATH}?lang=es`]);
+    const plain = addressEnv({ pathname: '/present/x', search: '?x=1', hash: '' });
+    takeDeckFragment(plain.e);
+    expect(plain.calls[0]!.url).toBe(PRESENTER_PATH);
   });
 
   it('a d= among other keys is found', () => {
-    const { e } = addressEnv({ pathname: '/present', hash: '#a=1&d=1.abc&b=2' });
-    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: false });
+    expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '#a=1&d=1.abc&b=2' }).e)).toEqual({ raw: '1.abc', reloaded: false });
   });
 
-  it('an unknown path under /present is cleaned to /present (the presenter home, no 404), keeping a held deck', () => {
+  it('an unknown path under /present is cleaned to /present (the presenter home, no 404)', () => {
     const { e, calls } = addressEnv({ pathname: '/present/old/link', hash: '' });
     expect(takeDeckFragment(e)).toBeNull();
-    expect(calls).toEqual([{ state: null, url: PRESENTER_PATH }]);
-    const held = addressEnv({ pathname: '/present/', hash: '' }, { hrLectureFragment: '1.abc' });
-    expect(takeDeckFragment(held.e)).toEqual({ raw: '1.abc', reloaded: true });
-    expect(held.history.state).toEqual({ hrLectureFragment: '1.abc' });
+    expect(calls).toEqual([{ kind: 'replace', state: home, url: PRESENTER_PATH }]);
   });
 
-  it('ignores a state that is not a deck', () => {
+  it('a running entry with a dirty address is cleaned in place before the step back', () => {
+    const { e, calls } = addressEnv({ pathname: '/present/x', hash: '' }, { hrPresenter: 'running', hrIndex: 2, hrLectureFragment: '1.abc' });
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
+    expect(calls).toEqual([{ kind: 'replace', state: { hrPresenter: 'running', hrIndex: 2, hrLectureFragment: '1.abc' }, url: PRESENTER_PATH }]);
+  });
+
+  it('ignores a state that is not the presenter\'s', () => {
     expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: 3 }).e)).toBeNull();
     expect(takeDeckFragment(addressEnv({ pathname: '/present', hash: '' }, 'x').e)).toBeNull();
   });
 
-  it('holdOpenDeck keeps a deck started from the home in this tab, so a reload reopens it', () => {
-    const { e, history } = addressEnv({ pathname: '/present', hash: '' }, null);
-    holdOpenDeck('1.abc', {}, e);
-    expect(history.state).toEqual({ hrLectureFragment: '1.abc' });
-    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
-  });
-
-  it('holdOpenDeck marks a Start over deck fresh, and a reload keeps the mark until Start holds it again', () => {
-    const { e, history } = addressEnv({ pathname: '/present', hash: '' }, null);
+  it('holdOpenDeck writes a start screen at the entry\'s place; forgetOpenDeck makes it the home again', () => {
+    const { e, history } = addressEnv({ pathname: '/present', hash: '' }, { hrPresenter: 'home', hrIndex: 0, hrHomeBack: true });
     holdOpenDeck('1.abc', { fresh: true }, e);
-    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrLectureFresh: true });
-    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, fresh: true });
-    holdOpenDeck('1.abc', {}, e);
-    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
-  });
-
-  it('a fresh held deck keeps its mark when the address is cleaned', () => {
-    const { e, history } = addressEnv({ pathname: '/present/x', hash: '' }, { hrLectureFragment: '1.abc', hrLectureFresh: true });
-    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, fresh: true });
-    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrLectureFresh: true });
-  });
-
-  it('forgetOpenDeck clears the held deck', () => {
-    const { e, history } = addressEnv({ pathname: '/present', hash: '' }, { hrLectureFragment: '1.abc' });
+    expect(history.state).toEqual({ hrPresenter: 'ready', hrIndex: 0, hrLectureFragment: '1.abc', hrLectureFresh: true, hrHomeBack: true });
     forgetOpenDeck(e);
-    expect(history.state).toBeNull();
-    expect(takeDeckFragment(e)).toBeNull();
+    expect(history.state).toEqual({ hrPresenter: 'home', hrIndex: 0, hrHomeBack: true });
+    const bare = addressEnv({ pathname: '/present', hash: '' });
+    holdOpenDeck('1.abc', {}, bare.e);
+    expect(bare.history.state).toEqual({ hrPresenter: 'ready', hrIndex: 0, hrLectureFragment: '1.abc' });
+    forgetOpenDeck(bare.e);
+    expect(bare.history.state).toEqual({ hrPresenter: 'home', hrIndex: 0 });
   });
 
   it('a history that refuses (a sandboxed frame) still returns the deck', () => {
-    const e = env({
-      location: { pathname: '/present', hash: '#d=1.abc' },
-      history: {
-        replaceState: () => {
-          throw new Error('SecurityError');
-        },
-      },
-    });
+    const refusing = () => {
+      throw new Error('SecurityError');
+    };
+    const e = env({ location: { pathname: '/present', hash: '#d=1.abc' }, history: { replaceState: refusing, pushState: refusing } });
     expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: false });
     expect(() => forgetOpenDeck(e)).not.toThrow();
+    // Without pushState the start screen's entry is written over the one there is.
+    const flat = { state: null as unknown, replaceState: vi.fn((next: unknown) => void (flat.state = next)) };
+    expect(takeDeckFragment(env({ location: { pathname: '/present', hash: '#d=1.abc' }, history: flat }))).toEqual({ raw: '1.abc', reloaded: false });
+    expect(flat.state).toEqual({ hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc', hrHomeBack: false });
   });
 
   it('no location (not a browser): nothing', () => {
@@ -299,115 +345,122 @@ function fakeHistory(first: unknown = null, win = fakeTarget()) {
   return { history: h, win };
 }
 
-describe('the way back: one history entry per step (owner report 2026-10-16 item 3)', () => {
+describe('the way back: one history entry per phase (section 3.5 "History", owner report 2026-10-16 item 3)', () => {
   const location = { pathname: '/present', hash: '', origin: 'https://app.example' };
+  const deckEntry = (step: 'ready' | 'running', index: number) => ({ hrPresenter: step, hrIndex: index, hrLectureFragment: '1.abc' });
 
-  it('the start screen and the lesson each push one entry holding the deck; a reload of the step keeps it', () => {
-    const { history, win } = fakeHistory({ hrLectureFragment: '1.abc' });
-    const e = env({ location, history, window: win });
-    enterPresenterStep('start', '1.abc', {}, e);
-    expect(history.entries).toEqual([{ hrLectureFragment: '1.abc' }, { hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 }]);
-    expect(currentPresenterStep(e)).toEqual({ step: 'start', depth: 1 });
-    enterPresenterStep('start', '1.abc', {}, e);
-    expect(history.entries).toHaveLength(2);
-    enterPresenterStep('lesson', '1.abc', {}, e);
-    expect(history.entries[2]).toEqual({ hrLectureFragment: '1.abc', hrPresenter: 'lesson', hrPresenterDepth: 2 });
-    // A reload on the lesson entry opens the start screen: that entry becomes the start entry, at its depth.
-    enterPresenterStep('start', '1.abc', { fresh: true }, e);
-    expect(history.entries).toHaveLength(3);
-    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrLectureFresh: true, hrPresenter: 'start', hrPresenterDepth: 2 });
-    // The deck stays in the entry, so a reload still resumes.
-    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, fresh: true });
-  });
-
-  it('holdOpenDeck and forgetOpenDeck keep the step; the home entry with no deck holds nothing', () => {
-    const { history, win } = fakeHistory(null);
-    const e = env({ location, history, window: win });
-    enterPresenterStep('start', null, {}, e);
-    expect(history.state).toEqual({ hrPresenter: 'start', hrPresenterDepth: 1 });
-    holdOpenDeck('1.abc', {}, e);
-    expect(history.state).toEqual({ hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 });
-    forgetOpenDeck(e);
-    expect(history.state).toEqual({ hrPresenter: 'start', hrPresenterDepth: 1 });
-    history.index = 0;
-    forgetOpenDeck(e);
-    expect(history.state).toBeNull();
-  });
-
-  it('a history without pushState keeps one entry; a refusing pushState still holds the deck', () => {
-    const replaced: unknown[] = [];
-    const flat = env({ location, history: { state: null, replaceState: (next: unknown) => replaced.push(next) } });
-    enterPresenterStep('lesson', '1.abc', {}, flat);
-    expect(replaced).toEqual([{ hrLectureFragment: '1.abc', hrPresenter: 'lesson', hrPresenterDepth: 2 }]);
-    const refusing = { state: null as unknown, replaceState: vi.fn(), pushState: vi.fn(() => {
-      throw new Error('denied');
-    }) };
-    enterPresenterStep('start', '1.abc', {}, env({ location, history: refusing }));
-    expect(refusing.replaceState).toHaveBeenCalledWith({ hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 }, '', PRESENTER_PATH);
-  });
-
-  it('a broken step or depth reads as the home, or as the step at its own depth', () => {
-    expect(currentPresenterStep(env({ history: { state: { hrPresenter: 'other' }, replaceState: vi.fn() } }))).toEqual({ step: 'home', depth: 0 });
-    expect(currentPresenterStep(env({ history: { state: { hrPresenter: 'lesson', hrPresenterDepth: -3 }, replaceState: vi.fn() } }))).toEqual({ step: 'lesson', depth: 2 });
-    expect(currentPresenterStep(env({ history: { state: 'x', replaceState: vi.fn() } }))).toEqual({ step: 'home', depth: 0 });
-    expect(currentPresenterStep(env())).toEqual({ step: 'home', depth: 0 });
-  });
-
-  it("returnToPresenterHome goes back past the presenter's own entries, clears the deck there, and its popstate is not the browser's Back", () => {
-    const { history, win } = fakeHistory({ hrLectureFragment: '1.abc' });
+  /** A tab at the presenter home with a fresh boot. */
+  function boot(first: unknown = { hrPresenter: 'home', hrIndex: 0 }) {
+    const { history, win } = fakeHistory(first);
     const e = env({ location, history, window: win });
     const onPop = vi.fn();
-    const stop = subscribePresenterPop(onPop, e);
-    enterPresenterStep('start', '1.abc', {}, e);
-    enterPresenterStep('lesson', '1.abc', {}, e);
-    returnToPresenterHome(e);
+    subscribePresenterPop(onPop, e);
+    return { history, win, e, onPop };
+  }
+
+  it('the home pushes the start screen, Start pushes the lesson; a second push of the same step writes over it', async () => {
+    const { history, e } = boot();
+    await pushPresenterEntry('ready', '1.abc', { fresh: true }, e);
+    expect(history.entries).toEqual([{ hrPresenter: 'home', hrIndex: 0 }, { hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc', hrLectureFresh: true }]);
+    await pushPresenterEntry('running', '1.abc', {}, e);
+    expect(history.entries[2]).toEqual(deckEntry('running', 2));
+    await pushPresenterEntry('running', '1.abc', {}, e);
+    expect(history.entries).toHaveLength(3);
+    expect(currentPresenterEntry(e)).toEqual({ step: 'running', index: 2, fragment: '1.abc' });
+    // A deck too long for a link still gets its entry (a reload then opens the home).
+    await pushPresenterEntry('running', null, {}, e);
+    expect(history.state).toEqual({ hrPresenter: 'running', hrIndex: 2 });
+  });
+
+  it("the browser's Back is reported with the entry it landed on", async () => {
+    const { history, e, onPop } = boot();
+    await pushPresenterEntry('ready', '1.abc', {}, e);
+    await pushPresenterEntry('running', '1.abc', {}, e);
+    history.go(-1);
+    expect(onPop).toHaveBeenLastCalledWith({ step: 'ready', index: 1, fragment: '1.abc' });
+    history.go(-1);
+    expect(onPop).toHaveBeenLastCalledWith({ step: 'home', index: 0 });
+  });
+
+  it('Exit (or Back to lessons) goes back to the home (history.go(-hrIndex)) and clears the entries ahead, so a Forward finds no deck', async () => {
+    const { history, e, onPop } = boot();
+    await pushPresenterEntry('ready', '1.abc', {}, e);
+    await pushPresenterEntry('running', '1.abc', {}, e);
+    await returnToPresenterHome(e);
     expect(history.go).toHaveBeenCalledWith(-2);
     expect(history.index).toBe(0);
-    expect(history.state).toBeNull();
+    expect(history.entries).toEqual([{ hrPresenter: 'home', hrIndex: 0 }, { hrPresenter: 'home', hrIndex: 1 }]);
     expect(onPop).not.toHaveBeenCalled();
-    stop();
-    expect(win.count('popstate')).toBe(0);
+    // The browser's Forward lands on the placeholder: reported, and it holds no deck.
+    history.go(1);
+    expect(onPop).toHaveBeenLastCalledWith({ step: 'home', index: 1 });
+    await stepBackPresenter(e);
+    expect(history.index).toBe(0);
+    expect(onPop).toHaveBeenCalledTimes(1);
   });
 
-  it("the browser's Back is reported with the entry it landed on", () => {
-    const { history, win } = fakeHistory(null);
-    const e = env({ location, history, window: win });
-    const onPop = vi.fn();
-    subscribePresenterPop(onPop, e);
-    enterPresenterStep('start', '1.abc', {}, e);
-    enterPresenterStep('lesson', '1.abc', {}, e);
+  it('a back onto the home from the start screen clears the entries ahead (rule 7)', async () => {
+    const { history, e, onPop } = boot({ hrPresenter: 'home', hrIndex: 0, hrHomeBack: true });
+    await pushPresenterEntry('ready', '1.abc', {}, e);
     history.go(-1);
-    expect(onPop).toHaveBeenLastCalledWith({ step: 'start', depth: 1 });
-    history.go(-1);
-    expect(onPop).toHaveBeenLastCalledWith({ step: 'home', depth: 0 });
+    expect(onPop).toHaveBeenCalledTimes(1);
+    await clearPresenterForward(e);
+    expect(history.entries).toEqual([{ hrPresenter: 'home', hrIndex: 0, hrHomeBack: true }, { hrPresenter: 'home', hrIndex: 1, hrHomeBack: true }]);
+    expect(history.index).toBe(0);
   });
 
-  it('at the home, or with no go, returnToPresenterHome only clears the entry; a go that throws clears it too', () => {
-    const { history, win } = fakeHistory({ hrLectureFragment: '1.abc' });
-    returnToPresenterHome(env({ location, history, window: win }));
-    expect(history.go).not.toHaveBeenCalled();
-    expect(history.state).toBeNull();
-    const flat = { state: { hrLectureFragment: '1.abc', hrPresenter: 'start', hrPresenterDepth: 1 } as unknown, replaceState: vi.fn() };
-    returnToPresenterHome(env({ location, history: flat }));
-    expect(flat.replaceState).toHaveBeenCalledWith(null, '', PRESENTER_PATH);
-    const throwing = { ...fakeHistory({ hrPresenter: 'start', hrPresenterDepth: 1 }).history, go: vi.fn(() => {
-      throw new Error('no');
-    }) };
-    returnToPresenterHome(env({ location, history: throwing }));
-    expect(throwing.replaceState).toHaveBeenCalledWith(null, '', PRESENTER_PATH);
+  it('Exit after a reload in the lesson lands on the home', async () => {
+    const { history, e } = boot();
+    history.pushState(deckEntry('ready', 1));
+    history.pushState(deckEntry('running', 2));
+    expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true });
+    await pushPresenterEntry('running', '1.abc', {}, e);
+    expect(history.index).toBe(2);
+    await returnToPresenterHome(e);
+    expect(history.index).toBe(0);
   });
 
-  it('a return whose popstate never comes stops being expected, so a later Back is reported', () => {
+  it('the presenter\'s own steps run one after another: a push made during a return lands after it', async () => {
+    const { history, e } = boot();
+    await pushPresenterEntry('ready', '1.abc', {}, e);
+    void returnToPresenterHome(e);
+    await pushPresenterEntry('ready', '1.def', {}, e);
+    expect(history.entries.slice(0, history.index + 1)).toEqual([{ hrPresenter: 'home', hrIndex: 0 }, { hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.def' }]);
+  });
+
+  it('a return whose popstate never comes stops being expected, so a later Back is reported', async () => {
     vi.useFakeTimers();
     const win = fakeTarget();
-    const history = { state: { hrPresenter: 'start', hrPresenterDepth: 1 } as unknown, replaceState: vi.fn(), go: vi.fn() };
+    const history = { state: deckEntry('ready', 1) as unknown, replaceState: vi.fn(), go: vi.fn() };
     const e = env({ location, history, window: win });
     const onPop = vi.fn();
     subscribePresenterPop(onPop, e);
-    returnToPresenterHome(e);
-    vi.advanceTimersByTime(RETURN_WAIT_MS);
+    const done = returnToPresenterHome(e);
+    await vi.advanceTimersByTimeAsync(RETURN_WAIT_MS);
+    await done;
     win.fire('popstate', {});
     expect(onPop).toHaveBeenCalledTimes(1);
+  });
+
+  it('a go that throws, no go, no pushState or no window: the steps still finish', async () => {
+    const throwing = { ...fakeHistory(deckEntry('ready', 1)).history, go: vi.fn(() => {
+      throw new Error('no');
+    }) };
+    await expect(returnToPresenterHome(env({ location, history: throwing, window: fakeTarget() }))).resolves.toBeUndefined();
+    expect(throwing.replaceState).toHaveBeenCalledWith({ hrPresenter: 'home', hrIndex: 0 }, '', PRESENTER_PATH);
+    const flat = { state: deckEntry('ready', 1) as unknown, replaceState: vi.fn() };
+    await expect(returnToPresenterHome(env({ location, history: flat }))).resolves.toBeUndefined();
+    const noWindow = fakeHistory(deckEntry('running', 2));
+    await stepBackPresenter(env({ location, history: noWindow.history }));
+    expect(noWindow.history.go).toHaveBeenCalledWith(-1);
+    const noWindowThrows = { state: null as unknown, replaceState: vi.fn(), go: vi.fn(() => {
+      throw new Error('no');
+    }) };
+    await expect(stepBackPresenter(env({ location, history: noWindowThrows }))).resolves.toBeUndefined();
+    const refusingPush = { ...fakeHistory({ hrPresenter: 'home', hrIndex: 0 }).history, pushState: vi.fn(() => {
+      throw new Error('denied');
+    }) };
+    await expect(clearPresenterForward(env({ location, history: refusingPush, window: fakeTarget() }))).resolves.toBeUndefined();
   });
 
   it('without a window nothing is listened to', () => {
@@ -415,31 +468,26 @@ describe('the way back: one history entry per step (owner report 2026-10-16 item
   });
 });
 
-describe("leavePresenter: the home's Back", () => {
+describe("leavePresenter: the home's Back (rule 5)", () => {
   const location = { pathname: '/present', hash: '', origin: 'https://app.example' };
-  const doc = (referrer: string) => ({ referrer });
 
-  it('goes back to a page of this origin before the presenter (the Navigation API knows)', () => {
-    const { history, win } = fakeHistory(null);
+  it('a tab that came from a page of this origin goes back to it, past its own entries', () => {
+    const { history, win } = fakeHistory({ hrPresenter: 'home', hrIndex: 0, hrHomeBack: true });
     const assign = vi.fn();
-    // Index 1 at the home: one page of this origin before it, whatever the referrer says.
-    leavePresenter(env({ location, history, window: win, assign, navigation: { currentEntry: { index: 1 } }, document: doc('') }));
+    leavePresenter(env({ location, history, window: win, assign }));
     expect(history.go).toHaveBeenCalledWith(-1);
+    const placeholder = fakeHistory({ hrPresenter: 'home', hrIndex: 1, hrHomeBack: true });
+    leavePresenter(env({ location, history: placeholder.history, window: placeholder.win, assign }));
+    expect(placeholder.history.go).toHaveBeenCalledWith(-2);
     expect(assign).not.toHaveBeenCalled();
-    // Index 2 on the start entry (depth 1): back past it too.
-    const start = fakeHistory({ hrPresenter: 'start', hrPresenterDepth: 1 });
-    leavePresenter(env({ location, history: start.history, window: start.win, assign, navigation: { currentEntry: { index: 2 } } }));
-    expect(start.history.go).toHaveBeenCalledWith(-2);
   });
 
-  it('goes back past its own entries; leaves for / when the page does not start to leave', () => {
+  it('leaves for / when going back does not start leaving the page in 1 s', () => {
     vi.useFakeTimers();
     const win = fakeTarget();
-    const go = vi.fn();
     const assign = vi.fn();
-    const history = { state: null as unknown, length: 3, replaceState: vi.fn(), go };
-    leavePresenter(env({ location, history, window: win, assign, document: doc('https://app.example/browse') }));
-    expect(go).toHaveBeenCalledWith(-1);
+    const history = { state: { hrPresenter: 'home', hrIndex: 0, hrHomeBack: true } as unknown, replaceState: vi.fn(), go: vi.fn() };
+    leavePresenter(env({ location, history, window: win, assign }));
     vi.advanceTimersByTime(LEAVE_WAIT_MS);
     expect(assign).toHaveBeenCalledWith('/');
     expect(win.count('pagehide')).toBe(0);
@@ -449,51 +497,29 @@ describe("leavePresenter: the home's Back", () => {
     vi.useFakeTimers();
     const win = fakeTarget();
     const assign = vi.fn();
-    const history = { state: null as unknown, length: 2, replaceState: vi.fn(), go: vi.fn(() => win.fire('pagehide', {})) };
-    leavePresenter(env({ location, history, window: win, assign, navigation: { currentEntry: { index: 1 } } }));
+    const history = { state: { hrPresenter: 'home', hrIndex: 0, hrHomeBack: true } as unknown, replaceState: vi.fn(), go: vi.fn(() => win.fire('pagehide', {})) };
+    leavePresenter(env({ location, history, window: win, assign }));
     vi.advanceTimersByTime(LEAVE_WAIT_MS);
     expect(assign).not.toHaveBeenCalled();
   });
 
-  it('closes a tab a script opened (a same-origin referrer, nothing before it), then leaves for / if the browser refuses', () => {
-    vi.useFakeTimers();
-    const close = vi.fn();
+  it('every new tab (the console, All lessons, E5) and a link from elsewhere is a link to /', () => {
     const assign = vi.fn();
-    const history = { state: null as unknown, length: 1, replaceState: vi.fn(), go: vi.fn() };
-    leavePresenter(env({ location, history, close, assign, navigation: { currentEntry: { index: 0 } }, document: doc('https://app.example/teach/space/lecture') }));
-    expect(history.go).not.toHaveBeenCalled();
-    expect(close).toHaveBeenCalledTimes(1);
-    expect(assign).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(CLOSE_WAIT_MS);
-    expect(assign).toHaveBeenCalledWith('/');
+    leavePresenter(env({ location, history: { state: { hrPresenter: 'home', hrIndex: 0, hrHomeBack: false }, replaceState: vi.fn(), go: vi.fn() }, assign }));
+    leavePresenter(env({ location, history: { state: null, replaceState: vi.fn() }, assign }));
+    leavePresenter(env({ location, history: { state: { hrPresenter: 'home', hrIndex: 0, hrHomeBack: true }, replaceState: vi.fn() }, assign }));
+    expect(assign.mock.calls).toEqual([['/'], ['/'], ['/']]);
   });
 
-  it('a typed address or a link from elsewhere leaves for /', () => {
-    const assign = vi.fn();
-    const close = vi.fn();
-    leavePresenter(env({ location, history: { state: null, length: 1, replaceState: vi.fn() }, close, assign, document: doc('') }));
-    leavePresenter(env({ location, history: { state: null, length: 4, replaceState: vi.fn(), go: vi.fn() }, close, assign, document: doc('https://other.example/') }));
-    expect(close).not.toHaveBeenCalled();
-    expect(assign.mock.calls).toEqual([['/'], ['/']]);
-    // A broken referrer counts as none.
-    leavePresenter(env({ location, history: { state: null, length: 2, replaceState: vi.fn() }, assign, document: doc('not a url') }));
-    expect(assign).toHaveBeenCalledTimes(3);
-  });
-
-  it('a close or a go that throws still leaves', () => {
+  it('a go that throws still leaves', () => {
     vi.useFakeTimers();
     const assign = vi.fn();
-    leavePresenter(env({ location, history: { state: null, length: 1, replaceState: vi.fn() }, assign, close: () => {
-      throw new Error('no');
-    }, document: doc('https://app.example/x') }));
-    vi.advanceTimersByTime(CLOSE_WAIT_MS);
-    expect(assign).toHaveBeenCalledWith('/');
     const win = fakeTarget();
-    leavePresenter(env({ location, window: win, assign, history: { state: null, length: 3, replaceState: vi.fn(), go: () => {
+    leavePresenter(env({ location, window: win, assign, history: { state: { hrPresenter: 'home', hrIndex: 0, hrHomeBack: true }, replaceState: vi.fn(), go: () => {
       throw new Error('no');
-    } }, navigation: { currentEntry: { index: 2 } } }));
+    } } }));
     vi.advanceTimersByTime(LEAVE_WAIT_MS);
-    expect(assign).toHaveBeenCalledTimes(2);
+    expect(assign).toHaveBeenCalledWith('/');
   });
 });
 

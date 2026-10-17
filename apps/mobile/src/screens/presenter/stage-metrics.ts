@@ -13,11 +13,11 @@ import {
   THUMB_W_REM,
   START_BUTTON_FACTOR,
   STATE_HOYA_FACTOR,
-  PHONE_COMPACT_WIDTH,
+  PHONE_STAGE_MIN,
   barBand,
-  type PhoneRule,
+  phoneBarStrip,
 } from '../../logic/lecture/stage-constants';
-import type { StageBounds } from '../../logic/lecture/stage-scale';
+import type { PhoneRule, StageBounds } from '../../logic/lecture/stage-scale';
 
 /**
  * The presenter's layout numbers with the design tokens applied (design/screens/presenter/README.md
@@ -27,8 +27,10 @@ import type { StageBounds } from '../../logic/lecture/stage-scale';
 
 /** `presenter.stage` and the compact breakpoint for `stageScale` (spec section 3.6 amendment). */
 export const STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: layout.breakpoint.regular };
-/** A phone window's stage: the same stage, judged too small only below `PHONE_COMPACT_WIDTH` (README Constants). */
-export const PHONE_STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: PHONE_COMPACT_WIDTH };
+/** A phone window's stage: the same stage, judged too small only below `PHONE_STAGE_MIN` (README Constants). */
+export const PHONE_STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: PHONE_STAGE_MIN };
+/** The compact bar's strip at the bottom of a phone stage: `touchTarget.min + 2 x spacing.sm` (section 3.6). */
+export const PHONE_BAR_STRIP = phoneBarStrip(touchTarget.min, spacing.sm);
 /** The design system's phone form factor (`layout.phoneShortSide`, `layout.phoneMaxLongSide`). */
 export const PHONE_RULE: PhoneRule = { shortSide: layout.phoneShortSide, maxLongSide: layout.phoneMaxLongSide };
 /** No text below `typography.size.body` anywhere (README D2). */

@@ -1,6 +1,6 @@
-import { borderWidth, colors, presenter, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { KoLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { countRows, endLetters, fitShown } from '../../../logic/lecture/shell';
@@ -14,22 +14,10 @@ type EndBody = Extract<Slide, { kind: 'end' }>;
  * End slide (design/screens/presenter/slide-end.md, README D7): "Today we met" with the letters
  * and words of the lesson, each list at most two rows and then one "+ n more" pill (rows are
  * measured, not counted; glosses are never dropped, fewer items show instead), the practice line,
- * and the class code panel when the deck has one. [ Finish ] beside the title ends the lesson
- * without the Exit confirm (owner report 2026-10-16 item 3): the lesson is over, so there is nothing
- * to keep going with. Next on this slide moves focus to it. When the column still does not fit (a
- * phone's small stage, where text keeps its 18 px floor), the words drop to one row, then the letters.
+ * and the class code panel when the deck has one. When the column still does not fit (a phone's
+ * small stage, where text keeps its 18 px floor), the words drop to one row, then the letters.
  */
-export function EndSlide({
-  slide,
-  joinCta,
-  onFinish,
-  finishRef,
-}: {
-  slide: EndBody;
-  joinCta: string;
-  onFinish?: () => void;
-  finishRef?: React.Ref<View>;
-}): React.ReactElement {
+export function EndSlide({ slide, joinCta }: { slide: EndBody; joinCta: string }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.slide.end;
@@ -62,12 +50,9 @@ export function EndSlide({
       <View onLayout={(e) => setRoom(e.nativeEvent.layout.height)} style={{ flex: 1 }}>
         <View onLayout={(e) => setContent(e.nativeEvent.layout.height)} style={{ flexGrow: 1, gap, justifyContent: 'space-between' }}>
           <View style={{ gap }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap }}>
-              <Text {...KOREAN_LINE_BREAK} role="heading" style={{ flexShrink: 1, fontSize: title, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(title * typography.leading.tight) }}>
-                {m.title}
-              </Text>
-              {onFinish ? <FinishButton ref={finishRef} label={m.finish.cta} onPress={onFinish} /> : null}
-            </View>
+            <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: title, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(title * typography.leading.tight) }}>
+              {m.title}
+            </Text>
             {/* Keyed by their row limit: a new limit fits the list again from every item. */}
             {letters.length > 0 ? (
               <EndList key={`letters-${rows.letters}`} label={m.letters} items={letters} moreLabel={m.more} maxRows={rows.letters} onFit={setLettersFit} testID="presenter-end-letters" />
@@ -204,36 +189,3 @@ function CodePanel({ code, joinCta }: { code: string; joinCta: string }): React.
   );
 }
 
-/** [ Finish ]: a teacher control in real pixels (`touchTarget.min` tall), so it never pushes the title row taller on a projector. */
-const FinishButton = React.forwardRef<View, { label: string; onPress: () => void }>(function FinishButton({ label, onPress }, ref) {
-  return (
-    <Pressable
-      ref={ref}
-      testID="presenter-finish"
-      role="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={(state) => {
-        const focused = (state as { focused?: boolean }).focused === true;
-        return {
-          minHeight: touchTarget.min,
-          paddingHorizontal: spacing.xl,
-          borderRadius: radii.pill,
-          borderWidth: borderWidth.thick,
-          borderColor: colors.brand.primaryDark,
-          backgroundColor: colors.brand.primaryDark,
-          alignItems: 'center',
-          justifyContent: 'center',
-          outlineStyle: focused ? 'solid' : undefined,
-          outlineWidth: focused ? borderWidth.thick : undefined,
-          outlineColor: focused ? colors.border.focus : undefined,
-          outlineOffset: focused ? borderWidth.base : undefined,
-        };
-      }}
-    >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.onPrimary, textAlign: 'center' }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-});

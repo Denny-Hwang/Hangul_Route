@@ -126,7 +126,7 @@ const BR9_KEYS = ['topic.hearA11y'];
 const BR9B_KEYS = ['topic.previewFlashcards.cta'];
 
 /** BR-13: [ Present this ] on the item page and its accessible description (presenter README, Strings). */
-const BR13_KEYS = ['item.present.cta', 'item.presentNote'];
+const BR13_KEYS = ['item.present.cta', 'item.presentNote', 'item.presentBlocked'];
 
 describe('caregiver.browse (BR-6)', () => {
   it('names the tab, the page and the preview strip as OD-8 says', () => {
@@ -254,10 +254,12 @@ describe('caregiver.browse (BR-13)', () => {
     }
   });
 
-  it('has no pop-up line: Present this opens the presenter in the same tab (owner report 2026-10-16)', () => {
-    for (const locale of ['en', 'es', 'ko'] as const) {
-      expect((getMessages(locale).caregiver.browse.item as Record<string, unknown>).presentBlocked, locale).toBeUndefined();
-    }
+  it('says what to do when the browser gave no new tab, without blame (review of #590)', () => {
+    expect(browse.item.presentBlocked).toBe('The new tab did not open. Allow pop-ups for this site, then try again.');
+    expect(getMessages('es').caregiver.browse.item.presentBlocked).toBe(
+      'La pestaña nueva no se abrió. Permite las ventanas emergentes de este sitio y vuelve a intentarlo.',
+    );
+    expect(getMessages('ko').caregiver.browse.item.presentBlocked).toBe('새 탭이 열리지 않았어요. 이 사이트의 팝업을 허용한 뒤 다시 눌러 주세요.');
   });
 });
 

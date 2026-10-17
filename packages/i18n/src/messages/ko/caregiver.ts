@@ -617,6 +617,7 @@ export const caregiver = {
       previewQuestions: { cta: '질문 미리 보기' },
       present: { cta: '큰 화면에 띄우기' },
       presentNote: '교실 화면이나 TV에 슬라이드로 띄워요. 누구의 진도도 바뀌지 않아요.',
+      presentBlocked: '새 탭이 열리지 않았어요. 이 사이트의 팝업을 허용한 뒤 다시 눌러 주세요.',
       closed: '가족 플랜 또는 그룹 라이선스로 열려요',
       openBilling: { cta: '결제 화면 열기' },
       wordCount: (n: number) => `낱말 ${n}개`,

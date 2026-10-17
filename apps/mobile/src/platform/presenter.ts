@@ -1,3 +1,4 @@
+import type { HistoryEntry } from '../logic/lecture/history';
 import type { KeyCommand } from '../logic/lecture/keymap';
 
 /**
@@ -19,7 +20,9 @@ export interface DeckAddress {
   fresh?: true;
 }
 
-export function takeDeckFragment(): DeckAddress | null {
+export type { HistoryEntry } from '../logic/lecture/history';
+
+export function takeDeckFragment(_env?: unknown, _accepts?: (raw: string) => boolean): DeckAddress | null {
   return null;
 }
 
@@ -35,27 +38,32 @@ export function holdOpenDeck(_raw: string, _options: { fresh?: boolean } = {}): 
   // No history on native.
 }
 
-/** The presenter's history steps (owner report 2026-10-16 item 3); web only. */
-export type PresenterStep = 'home' | 'start' | 'lesson';
-
-export interface StepEntry {
-  step: PresenterStep;
-  depth: number;
+/** The presenter's history entries (F-TCH-004 section 3.5 "History"); web only. */
+export function currentPresenterEntry(): HistoryEntry | null {
+  return null;
 }
 
-export function currentPresenterStep(): StepEntry {
-  return { step: 'home', depth: 0 };
+export function presenterHomeBack(): boolean {
+  return false;
 }
 
-export function enterPresenterStep(_step: 'start' | 'lesson', _raw: string | null, _options: { fresh?: boolean } = {}): void {
+export async function pushPresenterEntry(_step: 'ready' | 'running', _raw: string | null, _options: { fresh?: boolean } = {}): Promise<void> {
   // No history on native.
 }
 
-export function returnToPresenterHome(): void {
+export async function returnToPresenterHome(): Promise<void> {
   // No history on native.
 }
 
-export function subscribePresenterPop(_handler: (landed: StepEntry) => void): () => void {
+export async function clearPresenterForward(): Promise<void> {
+  // No history on native.
+}
+
+export async function stepBackPresenter(): Promise<void> {
+  // No history on native.
+}
+
+export function subscribePresenterPop(_handler: (landed: HistoryEntry | null) => void): () => void {
   return () => undefined;
 }
 
