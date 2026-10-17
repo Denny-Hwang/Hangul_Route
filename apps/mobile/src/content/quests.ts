@@ -363,7 +363,7 @@ export const stage1Quests: Quest[] = [
             },
             {
               items: [
-                { type: 'jamo', jamoId: 'jamo:hieut', example: { ko: '한복', romanization: 'hanbok', en: 'hanbok, traditional clothes', syllables: ['han', 'bok'] } },
+                { type: 'jamo', jamoId: 'jamo:hieut', example: { ko: '한복', romanization: 'hanbok', en: 'traditional Korean clothes', syllables: ['han', 'bok'] } },
                 { type: 'jamo', jamoId: 'jamo:giyeok-batchim', example: { ko: '한국', romanization: 'hanguk', en: 'Korea', syllables: ['han', 'guk'] } },
               ],
             },

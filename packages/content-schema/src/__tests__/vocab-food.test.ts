@@ -36,7 +36,7 @@ const TABLE: Row[] = [
   { id: 'vocab:ppang', ko: '빵', romanization: 'ppang', en: 'bread', es: 'pan', visual: 'word:food-bread', level: 1 },
   { id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'cooked rice', es: 'arroz cocido', visual: 'card:rice', level: 1, note: { en: 'It also means a meal. Uncooked rice is ssal.', es: 'También significa una comida. El arroz sin cocinar es ssal.' } },
   { id: 'vocab:gimchi', ko: '김치', romanization: 'gimchi', en: 'kimchi', es: 'kimchi', visual: 'card:kimchi', level: 1, note: { en: 'A Korean side dish of fermented vegetables, often spicy.', es: 'Acompañamiento coreano de verduras fermentadas, a menudo picante.' } },
-  { id: 'vocab:gimbap', ko: '김밥', romanization: 'gimbap', en: 'gimbap (seaweed rice roll)', es: 'gimbap (rollo de arroz con alga)', visual: 'card:kimbap', level: 2 },
+  { id: 'vocab:gimbap', ko: '김밥', romanization: 'gimbap', en: 'seaweed rice roll', es: 'rollo de arroz con alga', visual: 'card:kimbap', level: 2 },
   { id: 'vocab:ramyeon', ko: '라면', romanization: 'ramyeon', en: 'instant noodles', es: 'fideos instantáneos', visual: 'word:food-ramyeon', level: 2 },
   { id: 'vocab:mul', ko: '물', romanization: 'mul', en: 'water', es: 'agua', visual: 'word:food-water', level: 1 },
   { id: 'vocab:dalgyal', ko: '달걀', romanization: 'dalgyal', en: 'egg', es: 'huevo', visual: 'word:food-egg', level: 2, note: { en: 'Also called gyeran, which is just as common.', es: 'También se dice gyeran, igual de común.' } },

@@ -93,12 +93,12 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:gimbap",
     "ko": "김밥",
     "romanization": "gimbap",
-    "en": "gimbap (seaweed rice roll)",
+    "en": "seaweed rice roll",
     "topic": "food",
     "visual": "card:kimbap",
     "glosses": {
-      "en": "gimbap (seaweed rice roll)",
-      "es": "gimbap (rollo de arroz con alga)",
+      "en": "seaweed rice roll",
+      "es": "rollo de arroz con alga",
       "ko": "김 위에 밥과 재료를 올려 돌돌 만 음식"
     }
   },
@@ -1575,12 +1575,12 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:hanbok",
     "ko": "한복",
     "romanization": "hanbok",
-    "en": "hanbok (traditional clothes)",
+    "en": "traditional Korean clothes",
     "topic": "k-culture",
     "visual": "card:hanbok",
     "glosses": {
-      "en": "hanbok (traditional clothes)",
-      "es": "hanbok (ropa tradicional)",
+      "en": "traditional Korean clothes",
+      "es": "ropa tradicional coreana",
       "ko": "한국의 전통 옷"
     }
   },
@@ -1601,12 +1601,12 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:hanok",
     "ko": "한옥",
     "romanization": "hanok",
-    "en": "hanok (traditional house)",
+    "en": "traditional Korean house",
     "topic": "k-culture",
     "visual": "word:culture-hanok",
     "glosses": {
-      "en": "hanok (traditional house)",
-      "es": "hanok (casa tradicional)",
+      "en": "traditional Korean house",
+      "es": "casa tradicional coreana",
       "ko": "한국의 전통 집"
     }
   },
@@ -1614,12 +1614,12 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:bibimbap",
     "ko": "비빔밥",
     "romanization": "bibimbap",
-    "en": "bibimbap (mixed rice bowl)",
+    "en": "mixed rice bowl",
     "topic": "k-culture",
     "visual": "word:culture-bibimbap",
     "glosses": {
-      "en": "bibimbap (mixed rice bowl)",
-      "es": "bibimbap (tazón de arroz mezclado)",
+      "en": "mixed rice bowl",
+      "es": "tazón de arroz mezclado",
       "ko": "밥에 나물과 고추장을 넣고 섞어 먹는 음식"
     }
   },
@@ -1627,12 +1627,12 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:tteokbokki",
     "ko": "떡볶이",
     "romanization": "tteokbokki",
-    "en": "tteokbokki (spicy rice cakes)",
+    "en": "spicy rice cakes",
     "topic": "k-culture",
     "visual": "word:culture-tteokbokki",
     "glosses": {
-      "en": "tteokbokki (spicy rice cakes)",
-      "es": "tteokbokki (pasteles de arroz picantes)",
+      "en": "spicy rice cakes",
+      "es": "pasteles de arroz picantes",
       "ko": "가래떡을 고추장 양념에 졸인 매콤한 음식"
     }
   },
@@ -1679,12 +1679,12 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:gayageum",
     "ko": "가야금",
     "romanization": "gayageum",
-    "en": "gayageum (Korean zither)",
+    "en": "Korean zither",
     "topic": "k-culture",
     "visual": "card:gayageum",
     "glosses": {
-      "en": "gayageum (Korean zither)",
-      "es": "gayageum (cítara coreana)",
+      "en": "Korean zither",
+      "es": "cítara coreana",
       "ko": "한국의 전통 현악기"
     }
   },

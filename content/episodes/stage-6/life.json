@@ -46,7 +46,7 @@
                       {
                         "ko": "김밥",
                         "romanization": "gimbap",
-                        "en": "gimbap (seaweed rice roll)"
+                        "en": "seaweed rice roll"
                       },
                       {
                         "ko": "라면",
@@ -164,7 +164,7 @@
                 "text": {
                   "ko": "김밥",
                   "romanization": "gimbap",
-                  "en": "gimbap (seaweed rice roll)"
+                  "en": "seaweed rice roll"
                 },
                 "value": {
                   "ko": "이천 원",
@@ -252,7 +252,7 @@
                   "text": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -300,7 +300,7 @@
                   "text": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 }
               ],
@@ -324,7 +324,7 @@
                   "text": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -607,7 +607,7 @@
                 "text": {
                   "ko": "김밥",
                   "romanization": "gimbap",
-                  "en": "gimbap (seaweed rice roll)"
+                  "en": "seaweed rice roll"
                 },
                 "value": {
                   "ko": "하나",
@@ -1060,7 +1060,7 @@
                       {
                         "ko": "원",
                         "romanization": "won",
-                        "en": "won (Korean money)"
+                        "en": "Korean money"
                       },
                       {
                         "ko": "천 원",
@@ -1226,7 +1226,7 @@
                 "text": {
                   "ko": "김밥",
                   "romanization": "gimbap",
-                  "en": "gimbap (seaweed rice roll)"
+                  "en": "seaweed rice roll"
                 },
                 "value": {
                   "ko": "이천 원",
@@ -1283,7 +1283,7 @@
               "key": {
                 "ko": "김밥",
                 "romanization": "gimbap",
-                "en": "gimbap (seaweed rice roll)"
+                "en": "seaweed rice roll"
               },
               "options": [
                 {

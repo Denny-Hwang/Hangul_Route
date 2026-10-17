@@ -318,7 +318,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:gimbap",
     "ko": "김밥",
     "romanization": "gimbap",
-    "en": "gimbap (seaweed rice roll)",
+    "en": "seaweed rice roll",
     "pos": "noun",
     "topics": [
       "food"
@@ -326,8 +326,8 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "card:kimbap",
     "glosses": {
-      "en": "gimbap (seaweed rice roll)",
-      "es": "gimbap (rollo de arroz con alga)",
+      "en": "seaweed rice roll",
+      "es": "rollo de arroz con alga",
       "ko": "김 위에 밥과 재료를 올려 돌돌 만 음식"
     }
   },
@@ -2298,7 +2298,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:hanbok",
     "ko": "한복",
     "romanization": "hanbok",
-    "en": "hanbok (traditional clothes)",
+    "en": "traditional Korean clothes",
     "pos": "noun",
     "topics": [
       "k-culture"
@@ -2307,8 +2307,8 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "card:hanbok",
     "senseNote": "Often worn on holidays such as Seollal and Chuseok.",
     "glosses": {
-      "en": "hanbok (traditional clothes)",
-      "es": "hanbok (ropa tradicional)",
+      "en": "traditional Korean clothes",
+      "es": "ropa tradicional coreana",
       "ko": "한국의 전통 옷"
     }
   },
@@ -2334,7 +2334,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:hanok",
     "ko": "한옥",
     "romanization": "hanok",
-    "en": "hanok (traditional house)",
+    "en": "traditional Korean house",
     "pos": "noun",
     "topics": [
       "k-culture"
@@ -2342,8 +2342,8 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:culture-hanok",
     "glosses": {
-      "en": "hanok (traditional house)",
-      "es": "hanok (casa tradicional)",
+      "en": "traditional Korean house",
+      "es": "casa tradicional coreana",
       "ko": "한국의 전통 집"
     }
   },
@@ -2351,7 +2351,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:bibimbap",
     "ko": "비빔밥",
     "romanization": "bibimbap",
-    "en": "bibimbap (mixed rice bowl)",
+    "en": "mixed rice bowl",
     "pos": "noun",
     "topics": [
       "k-culture"
@@ -2360,8 +2360,8 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:culture-bibimbap",
     "senseNote": "Rice topped with vegetables, mixed together before you eat.",
     "glosses": {
-      "en": "bibimbap (mixed rice bowl)",
-      "es": "bibimbap (tazón de arroz mezclado)",
+      "en": "mixed rice bowl",
+      "es": "tazón de arroz mezclado",
       "ko": "밥에 나물과 고추장을 넣고 섞어 먹는 음식"
     }
   },
@@ -2369,7 +2369,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:tteokbokki",
     "ko": "떡볶이",
     "romanization": "tteokbokki",
-    "en": "tteokbokki (spicy rice cakes)",
+    "en": "spicy rice cakes",
     "pos": "noun",
     "topics": [
       "k-culture"
@@ -2377,8 +2377,8 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:culture-tteokbokki",
     "glosses": {
-      "en": "tteokbokki (spicy rice cakes)",
-      "es": "tteokbokki (pasteles de arroz picantes)",
+      "en": "spicy rice cakes",
+      "es": "pasteles de arroz picantes",
       "ko": "가래떡을 고추장 양념에 졸인 매콤한 음식"
     }
   },
@@ -2440,7 +2440,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:gayageum",
     "ko": "가야금",
     "romanization": "gayageum",
-    "en": "gayageum (Korean zither)",
+    "en": "Korean zither",
     "pos": "noun",
     "topics": [
       "k-culture"
@@ -2449,8 +2449,8 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "card:gayageum",
     "senseNote": "A long string instrument, plucked with the fingers.",
     "glosses": {
-      "en": "gayageum (Korean zither)",
-      "es": "gayageum (cítara coreana)",
+      "en": "Korean zither",
+      "es": "cítara coreana",
       "ko": "한국의 전통 현악기"
     }
   },

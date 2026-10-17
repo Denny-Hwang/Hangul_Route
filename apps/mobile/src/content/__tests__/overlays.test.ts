@@ -11,6 +11,7 @@ import {
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { glossRepeatsRomanization } from '../../../../../scripts/overlay-rules.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import { lp, minigameScopes, type MinigameScope } from '../../logic/minigame-config';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
@@ -29,7 +30,9 @@ import { stages, themes } from '../stages';
  * is a jamo hint an overlay may add). Ids of JSON content (vocab, pitem, story) are
  * the validator's business. The validator's base-aware rules are repeated here for
  * the TypeScript base: a Korean gloss never echoes the Korean it explains
- * (`overlay-circular-gloss`), and the glosses of one minigame stay distinct per locale
+ * (`overlay-circular-gloss`), a Spanish gloss never opens with the romanization of the
+ * Korean it glosses (`gloss-repeats-romanization`, F-CNT-002; the English TypeScript base is
+ * held to the same rule below), and the glosses of one minigame stay distinct per locale
  * (Culture Quiz keys and locks its options by their text).
  */
 
@@ -75,6 +78,35 @@ function circular(entity: object, path: ReadonlyArray<string | number>, value: s
   return same(holder?.ko, value) || same(sibling, value) || same((entity as Rec).char, value);
 }
 
+/** A gloss value landing on an `en` / `gloss_en` beside a `ko` that opens with that Korean's romanization. */
+function repeatsRomanization(entity: object, path: ReadonlyArray<string | number>, value: string): boolean {
+  const key = String(path[path.length - 1]);
+  if (key !== 'en' && key !== 'gloss_en') return false;
+  const holder = getIn(entity, path.slice(0, -1)) as Rec | undefined;
+  return glossRepeatsRomanization({ ko: holder?.ko, romanization: holder?.romanization, gloss: value });
+}
+
+/** Every `{ ko, romanization, en | gloss_en }` of the TypeScript-resident base whose English opens with its romanization. */
+function baseGlossesRepeatingRomanization(shippedByPrefix: Shipped = SHIPPED): string[] {
+  const problems: string[] = [];
+  const walk = (id: string, node: unknown, at: string): void => {
+    if (Array.isArray(node)) {
+      node.forEach((child, i) => walk(id, child, `${at}[${i}]`));
+      return;
+    }
+    if (node === null || typeof node !== 'object') return;
+    const rec = node as Rec;
+    for (const key of ['en', 'gloss_en'] as const) {
+      if (glossRepeatsRomanization({ ko: rec.ko, romanization: rec.romanization, gloss: rec[key] })) {
+        problems.push(`${id}${at}.${key}: "${String(rec[key])}" opens with its romanization (gloss-repeats-romanization)`);
+      }
+    }
+    for (const [key, child] of Object.entries(rec)) walk(id, child, `${at}.${key}`);
+  };
+  for (const shipped of Object.values(shippedByPrefix)) for (const [id, entity] of shipped) walk(id, entity, '');
+  return problems;
+}
+
 function overlayProblems(overlays: Overlays, shippedByPrefix: Shipped = SHIPPED): string[] {
   const problems: string[] = [];
   for (const [locale, entries] of Object.entries(overlays)) {
@@ -94,6 +126,8 @@ function overlayProblems(overlays: Overlays, shippedByPrefix: Shipped = SHIPPED)
         else if (targets.length === 0) problems.push(`${locale} ${id}.${field}: lands on no English source`);
         else if (locale === 'ko' && targets.some((path) => circular(entity, path, value))) {
           problems.push(`ko ${id}.${field}: echoes the Korean it explains (overlay-circular-gloss)`);
+        } else if (locale === 'es' && targets.some((path) => repeatsRomanization(entity, path, value))) {
+          problems.push(`es ${id}.${field}: opens with the romanization of its Korean (gloss-repeats-romanization)`);
         }
       }
     }
@@ -149,6 +183,41 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
     for (const locale of ['es', 'ko'] as const) {
       for (const id of Object.keys(fromIndex[locale])) expect(['episode', 'quest'], id).toContain(overlayPrefix(id));
     }
+  });
+
+  it('no TypeScript-resident English gloss opens with the romanization of its Korean (gloss-repeats-romanization)', () => {
+    expect(baseGlossesRepeatingRomanization()).toEqual([]);
+  });
+
+  it('reports a gloss that opens with its romanization, in the TypeScript base and in a Spanish overlay', () => {
+    const scope: MinigameScope = {
+      kind: 'listen-pick',
+      rounds: 1,
+      listenPick: {
+        rounds: [
+          {
+            id: 'r1',
+            prompt: { ko: '김밥', romanization: 'gimbap', en: 'gimbap (seaweed rice roll)' },
+            options: [
+              { id: 'a', text: { ko: '김밥', romanization: 'gimbap', en: 'seaweed rice roll' } },
+              { id: 'b', text: { ko: '서울', romanization: 'Seoul', en: 'Seoul (a city)' } },
+            ],
+            answerId: 'a',
+          },
+        ],
+      },
+    };
+    const shipped: Shipped = { minigame: new Map([['minigame:gloss-demo', scope]]) };
+    expect(baseGlossesRepeatingRomanization(shipped)).toEqual([
+      'minigame:gloss-demo.listenPick.rounds[0].prompt.en: "gimbap (seaweed rice roll)" opens with its romanization (gloss-repeats-romanization)',
+    ]);
+    const overlays: Overlays = {
+      es: { 'minigame:gloss-demo': { 'listenPick.rounds.r1.prompt': 'gimbap (rollo de arroz con alga)' } },
+      ko: {},
+    };
+    expect(overlayProblems(overlays, { ...SHIPPED, ...shipped })).toEqual([
+      'es minigame:gloss-demo.listenPick.rounds.r1.prompt: opens with the romanization of its Korean (gloss-repeats-romanization)',
+    ]);
   });
 
   it('reports a minigame whose translated glosses collide (two foods both "arroz")', () => {

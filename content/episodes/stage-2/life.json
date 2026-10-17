@@ -56,7 +56,7 @@
                     "word": {
                       "ko": "김밥",
                       "romanization": "gimbap",
-                      "en": "gimbap (seaweed rice roll)",
+                      "en": "seaweed rice roll",
                       "syllables": [
                         "gim",
                         "bap"
@@ -173,7 +173,7 @@
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -266,7 +266,7 @@
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -306,7 +306,7 @@
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -346,7 +346,7 @@
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 }
               ]
@@ -365,7 +365,7 @@
             {
               "ko": "김밥",
               "romanization": "gimbap",
-              "en": "gimbap (seaweed rice roll)"
+              "en": "seaweed rice roll"
             },
             {
               "ko": "우유",
@@ -388,7 +388,7 @@
               "prompt": {
                 "ko": "김밥",
                 "romanization": "gimbap",
-                "en": "gimbap (seaweed rice roll)"
+                "en": "seaweed rice roll"
               },
               "options": [
                 {
@@ -648,7 +648,7 @@
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -1007,7 +1007,7 @@
                   "word": {
                     "ko": "비빔밥",
                     "romanization": "bibimbap",
-                    "en": "bibimbap (mixed rice bowl)"
+                    "en": "mixed rice bowl"
                   }
                 },
                 {
@@ -1016,7 +1016,7 @@
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -1069,7 +1069,7 @@
                   "word": {
                     "ko": "비빔밥",
                     "romanization": "bibimbap",
-                    "en": "bibimbap (mixed rice bowl)"
+                    "en": "mixed rice bowl"
                   }
                 },
                 {
@@ -1131,7 +1131,7 @@
                   "word": {
                     "ko": "김밥",
                     "romanization": "gimbap",
-                    "en": "gimbap (seaweed rice roll)"
+                    "en": "seaweed rice roll"
                   }
                 },
                 {
@@ -1140,7 +1140,7 @@
                   "word": {
                     "ko": "비빔밥",
                     "romanization": "bibimbap",
-                    "en": "bibimbap (mixed rice bowl)"
+                    "en": "mixed rice bowl"
                   }
                 },
                 {
@@ -1191,7 +1191,7 @@
               "prompt": {
                 "ko": "비빔밥",
                 "romanization": "bibimbap",
-                "en": "bibimbap (mixed rice bowl)"
+                "en": "mixed rice bowl"
               },
               "options": [
                 {

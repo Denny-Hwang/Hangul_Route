@@ -73,7 +73,7 @@
       "glossEn": "hanbok (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"한복","romanization":"hanbok","en":"hanbok"},
+        "prompt": {"ko":"한복","romanization":"hanbok","en":"traditional Korean clothes"},
         "options": [
           {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
           {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
@@ -136,7 +136,7 @@
       "glossEn": "songpyeon (rice cake) (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"송편","romanization":"songpyeon","en":"songpyeon (rice cake)"},
+        "prompt": {"ko":"송편","romanization":"songpyeon","en":"half-moon rice cake"},
         "options": [
           {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":true},
           {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
@@ -304,7 +304,7 @@
       "glossEn": "jegi (foot shuttlecock) (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"제기","romanization":"jegi","en":"jegi (foot shuttlecock)"},
+        "prompt": {"ko":"제기","romanization":"jegi","en":"foot shuttlecock"},
         "options": [
           {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":true},
           {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
@@ -388,7 +388,7 @@
       "glossEn": "gayageum (zither) (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"가야금","romanization":"gayageum","en":"gayageum (zither)"},
+        "prompt": {"ko":"가야금","romanization":"gayageum","en":"Korean zither"},
         "options": [
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":true},
           {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false},
@@ -661,7 +661,7 @@
       "glossEn": "hanbok (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"한복","romanization":"hanbok","en":"hanbok"},
+        "prompt": {"ko":"한복","romanization":"hanbok","en":"traditional Korean clothes"},
         "options": [
           {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
           {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
@@ -703,7 +703,7 @@
       "glossEn": "songpyeon (rice cake) (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"송편","romanization":"songpyeon","en":"songpyeon (rice cake)"},
+        "prompt": {"ko":"송편","romanization":"songpyeon","en":"half-moon rice cake"},
         "options": [
           {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":true},
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
@@ -913,7 +913,7 @@
       "glossEn": "gayageum (zither) (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"가야금","romanization":"gayageum","en":"gayageum (zither)"},
+        "prompt": {"ko":"가야금","romanization":"gayageum","en":"Korean zither"},
         "options": [
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":true},
           {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},

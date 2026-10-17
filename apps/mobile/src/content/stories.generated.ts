@@ -13112,7 +13112,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:kim-hongdo-genre-paintings",
     "state": "ready",
-    "contentVer": 5,
+    "contentVer": 6,
     "title": {
       "ko": "김홍도의 풍속화, 씨름과 서당",
       "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -13327,7 +13327,7 @@ export const storiesAll: Story[] = [
               "id": "ssireum",
               "ko": "씨름",
               "romanization": "ssireum",
-              "en": "ssireum, Korean wrestling",
+              "en": "Korean wrestling",
               "kind": "word"
             },
             "factIds": [
@@ -15020,7 +15020,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:pansori-tales",
     "state": "ready",
-    "contentVer": 5,
+    "contentVer": 6,
     "title": {
       "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
       "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -15060,7 +15060,7 @@ export const storiesAll: Story[] = [
         "id": "pansori",
         "ko": "판소리",
         "romanization": "pansori",
-        "en": "pansori (musical storytelling)",
+        "en": "musical storytelling",
         "kind": "word"
       },
       {
@@ -15147,7 +15147,7 @@ export const storiesAll: Story[] = [
               "id": "pansori",
               "ko": "판소리",
               "romanization": "pansori",
-              "en": "pansori (musical storytelling)",
+              "en": "musical storytelling",
               "kind": "word"
             },
             "factIds": [

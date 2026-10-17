@@ -22,7 +22,7 @@
       "steps.s6.hoyaLine": "Leíste palabras de la lonchera. ¡Aquí tienes una tarjeta!",
       "steps.s2.discover.pages.2.caption": "Solo mira y escucha: estas letras se aprenden en Constructor de palabras.",
       "steps.s2.discover.pages.0.items.0.word.gloss": "lonchera, fiambrera",
-      "steps.s2.discover.pages.0.items.1.word.gloss": "gimbap (rollo de arroz con alga)",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "rollo de arroz con alga",
       "steps.s2.discover.pages.1.items.0.word.gloss": "leche",
       "steps.s2.discover.pages.1.items.1.word.gloss": "huevo",
       "steps.s2.discover.pages.2.items.0.word.gloss": "manzana",
@@ -65,12 +65,12 @@
     },
     "minigame:s2-life-q1-apply": {
       "cardPairs.dosirak.gloss": "lonchera, fiambrera",
-      "cardPairs.gimbap.gloss": "gimbap (rollo de arroz con alga)",
+      "cardPairs.gimbap.gloss": "rollo de arroz con alga",
       "cardPairs.uyu.gloss": "leche",
       "cardPairs.dalgyal.gloss": "huevo"
     },
     "minigame:s2-life-q1-check": {
-      "listenPick.rounds.pic-gimbap.prompt": "gimbap (rollo de arroz con alga)",
+      "listenPick.rounds.pic-gimbap.prompt": "rollo de arroz con alga",
       "listenPick.rounds.read-dosirak.prompt": "lonchera, fiambrera"
     },
     "minigame:s2-life-q2-check": {
@@ -84,11 +84,11 @@
       "cardPairs.namul.gloss": "verduras sazonadas"
     },
     "minigame:s2-life-q3-check": {
-      "listenPick.rounds.pic-bibimbap.prompt": "bibimbap (arroz mezclado en tazón)",
+      "listenPick.rounds.pic-bibimbap.prompt": "tazón de arroz mezclado",
       "listenPick.rounds.read-banchan.prompt": "acompañamientos"
     },
     "minigame:s2-life-q1-practice": {
-      "picWord.boards.0.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "rollo de arroz con alga",
       "picWord.boards.0.pairs.uyu.word.gloss": "leche",
       "picWord.boards.0.pairs.dalgyal.word.gloss": "huevo",
       "picWord.boards.1.pairs.uyu.word.gloss": "leche",
@@ -97,15 +97,15 @@
       "picWord.boards.2.pairs.dalgyal.word.gloss": "huevo",
       "picWord.boards.2.pairs.gimchi.word.gloss": "kimchi",
       "picWord.boards.2.pairs.banana.word.gloss": "plátano, banana",
-      "picWord.boards.3.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
+      "picWord.boards.3.pairs.gimbap.word.gloss": "rollo de arroz con alga",
       "picWord.boards.3.pairs.ramyeon.word.gloss": "fideos instantáneos",
       "picWord.boards.3.pairs.uyu.word.gloss": "leche",
       "picWord.boards.4.pairs.dalgyal.word.gloss": "huevo",
-      "picWord.boards.4.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
+      "picWord.boards.4.pairs.gimbap.word.gloss": "rollo de arroz con alga",
       "picWord.boards.4.pairs.mul.word.gloss": "agua",
       "picWord.boards.5.pairs.gimchi.word.gloss": "kimchi",
       "picWord.boards.5.pairs.uyu.word.gloss": "leche",
-      "picWord.boards.5.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)"
+      "picWord.boards.5.pairs.gimbap.word.gloss": "rollo de arroz con alga"
     },
     "minigame:s2-life-q2-practice": {
       "picWord.boards.0.pairs.banana.word.gloss": "plátano, banana",
@@ -115,7 +115,7 @@
       "picWord.boards.1.pairs.dalgyal.word.gloss": "huevo",
       "picWord.boards.1.pairs.mul.word.gloss": "agua",
       "picWord.boards.2.pairs.ramyeon.word.gloss": "fideos instantáneos",
-      "picWord.boards.2.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
+      "picWord.boards.2.pairs.gimbap.word.gloss": "rollo de arroz con alga",
       "picWord.boards.2.pairs.banana.word.gloss": "plátano, banana",
       "picWord.boards.3.pairs.uyu.word.gloss": "leche",
       "picWord.boards.3.pairs.mul.word.gloss": "agua",
@@ -131,20 +131,20 @@
       "picWord.boards.0.pairs.bap.word.gloss": "arroz cocido",
       "picWord.boards.0.pairs.gimchi.word.gloss": "kimchi",
       "picWord.boards.0.pairs.mul.word.gloss": "agua",
-      "picWord.boards.1.pairs.bibimbap.word.gloss": "bibimbap (tazón de arroz mezclado)",
-      "picWord.boards.1.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
+      "picWord.boards.1.pairs.bibimbap.word.gloss": "tazón de arroz mezclado",
+      "picWord.boards.1.pairs.gimbap.word.gloss": "rollo de arroz con alga",
       "picWord.boards.1.pairs.ramyeon.word.gloss": "fideos instantáneos",
       "picWord.boards.2.pairs.bap.word.gloss": "arroz cocido",
       "picWord.boards.2.pairs.dalgyal.word.gloss": "huevo",
       "picWord.boards.2.pairs.gimchi.word.gloss": "kimchi",
-      "picWord.boards.3.pairs.bibimbap.word.gloss": "bibimbap (tazón de arroz mezclado)",
+      "picWord.boards.3.pairs.bibimbap.word.gloss": "tazón de arroz mezclado",
       "picWord.boards.3.pairs.mul.word.gloss": "agua",
       "picWord.boards.3.pairs.uyu.word.gloss": "leche",
       "picWord.boards.4.pairs.gimchi.word.gloss": "kimchi",
       "picWord.boards.4.pairs.ramyeon.word.gloss": "fideos instantáneos",
       "picWord.boards.4.pairs.bap.word.gloss": "arroz cocido",
-      "picWord.boards.5.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
-      "picWord.boards.5.pairs.bibimbap.word.gloss": "bibimbap (tazón de arroz mezclado)",
+      "picWord.boards.5.pairs.gimbap.word.gloss": "rollo de arroz con alga",
+      "picWord.boards.5.pairs.bibimbap.word.gloss": "tazón de arroz mezclado",
       "picWord.boards.5.pairs.dalgyal.word.gloss": "huevo"
     }
   }

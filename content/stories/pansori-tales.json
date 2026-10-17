@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:pansori-tales",
   "state": "ready",
-  "contentVer": 5,
+  "contentVer": 6,
   "title": {
     "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
     "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -42,7 +42,7 @@
       "id": "pansori",
       "ko": "판소리",
       "romanization": "pansori",
-      "en": "pansori (musical storytelling)",
+      "en": "musical storytelling",
       "kind": "word"
     },
     {
@@ -129,7 +129,7 @@
             "id": "pansori",
             "ko": "판소리",
             "romanization": "pansori",
-            "en": "pansori (musical storytelling)",
+            "en": "musical storytelling",
             "kind": "word"
           },
           "factIds": [

@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:kim-hongdo-genre-paintings",
   "state": "ready",
-  "contentVer": 5,
+  "contentVer": 6,
   "title": {
     "ko": "김홍도의 풍속화, 씨름과 서당",
     "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -217,7 +217,7 @@
             "id": "ssireum",
             "ko": "씨름",
             "romanization": "ssireum",
-            "en": "ssireum, Korean wrestling",
+            "en": "Korean wrestling",
             "kind": "word"
           },
           "factIds": [
