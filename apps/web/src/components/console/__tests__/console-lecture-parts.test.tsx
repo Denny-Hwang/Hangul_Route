@@ -6,6 +6,7 @@ import * as LectureParts from '@/components/console/LectureParts';
 import { LectureCatalogueSection, LectureOptionsSection, LectureOutlineSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
+import { aroundSlot } from '@/lib/i18n/slot';
 import { expectAllPseudo } from './pseudo-text';
 import { STAGE1_EPISODES, STAGE1_TITLES, questsOfCell } from './stage1-catalog';
 
@@ -54,6 +55,8 @@ const noop = (): void => undefined;
 const l = getMessages('en').console.lecture;
 /** The page splits "Revisit together: …" around the jamo (`aroundSlot`); join it back so the message reads as one text node. */
 const joined = (html: string): string => html.split(`<span lang="ko">${jamo}</span>`).join(jamo);
+/** The chosen Slides language hint is split around the endonym (`aroundSlot`); join it back the same way. */
+const joinedHint = (html: string, locale: UiLocale): string => html.split(`<span lang="${LOCALE_META[locale].htmlLang}">${LOCALE_META[locale].endonym}</span>`).join(LOCALE_META[locale].endonym);
 /** A row's words inside its buttons' names ("Move up: <row>") are data there (the row's own message). */
 const rowWords = (blocks: readonly LectureBlock[]): string[] => blocks.map((b) => blockText(b, getMessages(PSEUDO).console.lecture));
 
@@ -123,11 +126,54 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
   it('options, with the presenter language when more than one locale has shipped', () => {
     const html = renderToStaticMarkup(<LectureOptionsSection value={{ romanization: 'tap', strokeGuide: true, sound: false, uiLocale: 'en' }} available={['en', 'es', 'ko']} onChange={noop} />);
     expect(html).toContain('<legend');
+    expectAllPseudo(joinedHint(html, 'en'), (['en', 'es', 'ko'] as const).map((k) => LOCALE_META[k].endonym));
+  });
+
+  it('options, with Same as this device: the copied-link hint', () => {
+    const html = renderToStaticMarkup(<LectureOptionsSection value={{ romanization: 'always', strokeGuide: false, sound: true, uiLocale: null }} available={['en', 'es', 'ko']} onChange={noop} />);
     expectAllPseudo(html, (['en', 'es', 'ko'] as const).map((k) => LOCALE_META[k].endonym));
   });
 
   it('has no helper picker section (LV-H)', () => {
     expect(Object.keys(LectureParts)).not.toContain('LecturePickerSection');
+  });
+});
+
+describe('the Slides language hint follows the choice (AMENDMENTS-LECTURE-V2 section 18.4)', () => {
+  // Read inside each test: the en-XA dictionary is on only once `beforeAll` has stubbed the flag.
+  const pseudo = () => {
+    const o = getMessages(PSEUDO).console.lecture.options;
+    return { o, chosen: aroundSlot(o.languageHintChosen) };
+  };
+  const render = (uiLocale: UiLocale | null): string =>
+    renderToStaticMarkup(<LectureOptionsSection value={{ romanization: 'tap', strokeGuide: true, sound: false, uiLocale }} available={['en', 'es', 'ko']} onChange={noop} />);
+  const hintOf = (html: string): string => /<span data-testid="lecture-slides-language-hint">([\s\S]*?)<\/span><\/p>/.exec(html)?.[1] ?? '';
+
+  it('Same as this device (no language in the deck): a copied link uses the language of the device that opens it', () => {
+    const { o, chosen } = pseudo();
+    const hint = hintOf(render(null));
+    expect(hint).toMatch(/^\[/);
+    expect(hint).toBe(o.languageHint);
+    expect(hint).not.toContain(chosen.before);
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s chosen: the slides show in that language on every device, the endonym marked with its language', (locale) => {
+    const { o, chosen } = pseudo();
+    const meta = LOCALE_META[locale];
+    const hint = hintOf(render(locale));
+    expect(hint).toBe(`${chosen.before}<span lang="${meta.htmlLang}">${meta.endonym}</span>${chosen.after}`);
+    expect(hint).not.toContain(o.languageHint);
+  });
+
+  it('no hint when only one locale has shipped (no select to describe)', () => {
+    const html = renderToStaticMarkup(<LectureOptionsSection value={{ romanization: 'tap', strokeGuide: true, sound: false, uiLocale: null }} available={['en']} onChange={noop} />);
+    expect(html).not.toContain('lecture-slides-language-hint');
+  });
+
+  it('reads as one English sentence in every case', () => {
+    const en = getMessages('en').console.lecture.options;
+    expect(en.languageHint).toBe('A copied link uses the language of the device that opens it.');
+    expect(en.languageHintChosen('한국어')).toBe('Slides show in 한국어 on every device, a copied link too.');
   });
 });
 

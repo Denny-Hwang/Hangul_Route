@@ -835,6 +835,7 @@ export const consoleMsgs = {
       language: 'Idioma de las diapositivas',
       languageSame: 'Igual que este dispositivo',
       languageHint: 'Un enlace copiado usa el idioma del dispositivo que lo abre.',
+      languageHintChosen: (endonym: string) => `Se ven en ${endonym} en cualquier dispositivo, también con un enlace copiado.`,
     },
     titleField: { label: 'Título', placeholder: 'Letras de la semana 3', hint: 'No pongas el nombre de un estudiante en el título.' },
     titleProblem: {

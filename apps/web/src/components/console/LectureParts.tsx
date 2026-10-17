@@ -264,6 +264,25 @@ export function LectureOutlineSection({
 /** The Slides language select's default option: no language in the deck. */
 const SAME_AS_DEVICE = '';
 
+/**
+ * The hint under the Slides language select follows the choice (AMENDMENTS-LECTURE-V2 section
+ * 18.4): with Same as this device the deck carries no language, so a copied link opens in the
+ * language of the device that opens it; with a chosen language the deck carries it, so the slides
+ * show in it on every device. The chosen endonym is marked with its own language.
+ */
+function SlidesLanguageHint({ l, uiLocale }: { l: LectureMessages; uiLocale: UiLocale | null }): JSX.Element {
+  if (uiLocale === null) return <span data-testid="lecture-slides-language-hint">{l.options.languageHint}</span>;
+  const around = aroundSlot(l.options.languageHintChosen);
+  const meta = LOCALE_META[uiLocale];
+  return (
+    <span data-testid="lecture-slides-language-hint">
+      {around.before}
+      <span lang={meta.htmlLang}>{meta.endonym}</span>
+      {around.after}
+    </span>
+  );
+}
+
 export interface LectureOptionValues {
   romanization: RomanizationMode;
   strokeGuide: boolean;
@@ -327,7 +346,9 @@ export function LectureOptionsSection({
               ))}
             </select>
           </label>
-          <Muted>{l.options.languageHint}</Muted>
+          <Muted>
+            <SlidesLanguageHint l={l} uiLocale={value.uiLocale} />
+          </Muted>
         </>
       ) : null}
     </section>

@@ -844,4 +844,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.chooser.lessonsOf': [['Meet the Letters']],
   'console.chooser.found': [[1], [12]],
   'console.chooser.chosen': [[1, 5], [3, 40]],
+  // The Slides language hint with a chosen language (AMENDMENTS-LECTURE-V2 section 18.4).
+  'console.lecture.options.languageHintChosen': [['English'], ['Español']],
 };

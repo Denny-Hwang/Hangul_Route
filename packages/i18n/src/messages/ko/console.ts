@@ -767,6 +767,7 @@ export const consoleMsgs = {
       language: '슬라이드 언어',
       languageSame: '이 기기와 같게',
       languageHint: '복사한 링크는 링크를 여는 기기의 언어로 보여요.',
+      languageHintChosen: (endonym: string) => `슬라이드 언어: ${endonym}. 복사한 링크도 어느 기기에서나 같아요.`,
     },
     titleField: { label: '수업 제목', placeholder: '3주차 글자', hint: '제목에 학생 이름을 넣지 마세요.' },
     titleProblem: {
