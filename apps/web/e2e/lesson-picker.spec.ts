@@ -177,8 +177,14 @@ test.describe('the plan builder\'s picker at 1280 and at 320 with 200 % text (LV
   test('320 with the text at 200 %: chips and rows wrap, nothing scrolls sideways', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await mockClass(page);
-    await page.addInitScript(() => document.addEventListener('DOMContentLoaded', () => (document.documentElement.style.fontSize = '200%')));
     await page.goto(`/teach/space/plan?id=${encodeURIComponent(SPACE.id)}`);
+    // 200 % text is the browser's default font size (CDP `Page.setFontSizes`, as in `site-budgets.spec.ts`), never an
+    // inline `html` font-size: the console's text size provider owns that one (`calc(100% * var(--hr-text-scale))`,
+    // AMENDMENTS-DISPLAY-NAV section 4), so the browser setting and the device's step multiply. Chromium drops the CDP
+    // sizes on a resize, so the viewport is set first.
+    const client = await page.context().newCDPSession(page);
+    await client.send('Page.setFontSizes', { fontSizes: { standard: 32, fixed: 32 } });
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe('32px');
     const picker = page.getByTestId('plan-picker');
     await picker.getByTestId('plan-picker-chip-stage2').check();
     await picker.getByRole('button', { name: w.lessonsOf('Word Builder') }).click();
