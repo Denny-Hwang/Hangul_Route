@@ -18,6 +18,7 @@ Built by:
 | `route-card.md` | the learner route card in every state (A, A2, B, C, E, F, D, J) and the local grown-up card (L1); where Hoya sits; the goal tag on the trail |
 | `stage-list.md` | the grown-up summary views: the goal cases 1 to 3 shared by both views, the one goal line under the report's "Now on Stage" line, and the stage list page (`/parent/space/route`, `/teach/space/route`) at 320 and 1280 with its grown-up card and its states |
 | `tab-bar.md` | the four-tab bar (flag on) next to today's three, the two purpose lines, and large text |
+| `route-tab-collapsed.md` | **2026-10-16 owner report (DN-0, review 2026-10-17):** the quieter learner Route tab of AMENDMENTS-DISPLAY-NAV section 9.6: the current stage open, every other stage one row (name, a state word only when not open, the played count, a chevron), no "Open" word, each tag once (`mock/route-tab-collapsed.html`, row DN-9) |
 | `mock/` | a static HTML mock on one stylesheet, `learning-route.css`: `route-tab.html`, `route-card.html`, `report.html`, `stage-list-family.html`, `stage-list-class.html`, `stage-list-states.html`, `tab-bar.html` |
 | `shots/` | the mock rendered in Chromium at 2x (file names give the page and the viewport width; `-text200` = the browser text size at 200 %, which models the native text size: the text grows and the layout width stays. The app's web build sets text in px, so on web it does not follow this setting; see `tab-bar.md`) |
 

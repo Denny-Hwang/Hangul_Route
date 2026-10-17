@@ -1,0 +1,118 @@
+/*
+ * Owner report 2026-10-16, design pass DN-0 (docs/specs/AMENDMENTS-DISPLAY-NAV.md; AMENDMENTS-LECTURE-V2.md
+ * section 18): the Display (Aa) control and sheet, text size, the learner ScreenHeader, the console PageBack and
+ * Learner app exit, the ConfirmSheet, the console's grouped chooser and sticky footer. Design mock, not shipped
+ * code. Loaded after app-shell.css (whose first :root block holds the tokens). The few tokens app-shell.css does
+ * not carry are copied once below from packages/design-system/src/tokens.ts and named after them; the numbers
+ * that are not tokens are named once in the second block (design/screens/app-shell/display-sheet.md "Constants").
+ */
+:root {
+  --colors-stage-stage1: #E8743B;   /* colors.stage.stage1 */
+  --colors-hoya-nose: #2A1F14;      /* colors.hoya.nose */
+  --size-hero: 3rem;                /* typography.size.hero (48) */
+  --z-sticky: 20;                   /* z.sticky */
+  --z-modal: 40;                    /* z.modal */
+}
+:root {
+  /* TEXT_SIZE_FACTOR (AMENDMENTS-DISPLAY-NAV section 4): standard 1, large 1.15, larger 1.3, largest 1.5.  */
+  /* Body sizes scale by f through the html font-size; headings by 1 + (f - 1) / 2 through --hr-head-ratio. */
+  --hr-text-scale: 1;
+  --hr-head-ratio: 1;
+  --sheet-max: var(--max-width-reading);
+}
+html.ts-large { --hr-text-scale: 1.15; --hr-head-ratio: calc((1 + (1.15 - 1) / 2) / 1.15); }
+html.ts-larger { --hr-text-scale: 1.3; --hr-head-ratio: calc((1 + (1.3 - 1) / 2) / 1.3); }
+html.ts-largest { --hr-text-scale: 1.5; --hr-head-ratio: calc((1 + (1.5 - 1) / 2) / 1.5); }
+html { font-size: calc(100% * var(--hr-text-scale)); }
+.page-title, .rn-heading, .sheet h2, .sh-title { font-size: calc(var(--size-title) * var(--hr-head-ratio)); }
+.rn-display { font-size: calc(var(--size-display) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------- The Display (Aa) control */
+.aa-btn { display: inline-flex; align-items: center; justify-content: center; flex: none; min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); cursor: pointer; }
+.aa-btn:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+
+/* ---------------------------------------------------------------- Learner ScreenHeader */
+.screen-header { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--spacing-sm); min-height: var(--touch-min); }
+.sh-lead { flex: none; display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) var(--spacing-xs); margin-left: calc(-1 * var(--spacing-xs)); border: none; border-radius: var(--radii-pill); background: transparent; color: var(--colors-text-primary); font-size: var(--size-body); font-weight: var(--weight-bold); text-decoration: none; cursor: pointer; }
+.sh-title { flex: 1; min-width: 0; align-self: center; font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.sh-title.small { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); }
+.sh-trail { flex: none; display: flex; align-items: center; gap: var(--spacing-sm); margin-left: auto; }
+.sh-progress { flex: 1; min-width: 0; align-self: center; display: flex; flex-wrap: wrap; gap: var(--spacing-xs); justify-content: center; }
+.sh-progress span { width: var(--spacing-md); height: var(--spacing-md); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-border-shape); }
+.sh-progress span.on { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); }
+
+/* ---------------------------------------------------------------- Sheets: the Display sheet and the ConfirmSheet */
+.sheet-backdrop { position: fixed; inset: 0; z-index: var(--z-modal); background: var(--colors-surface-overlay); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-height: 92vh; overflow: auto; background: var(--colors-surface-paper); border-radius: var(--radii-lg) var(--radii-lg) var(--spacing-none) var(--spacing-none); padding: var(--spacing-xl) var(--gutter-compact) var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-lg); box-shadow: var(--shadow-card); }
+.sheet h2 { font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.sheet .groups { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.sheet fieldset { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.sheet legend { font-weight: var(--weight-bold); margin-bottom: var(--spacing-xs); }
+.opt { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); background: var(--colors-surface-paper); cursor: pointer; }
+.opt.on { border: var(--border-width-thick) solid var(--colors-text-primary); }
+.opt input { width: var(--spacing-xl); height: var(--spacing-xl); flex: none; accent-color: var(--colors-text-primary); }
+/* Each text-size row is drawn at its own size, body x f, whatever size the page is at now (so divided by the current scale). */
+.opt .s-standard { font-size: calc(var(--size-body) / var(--hr-text-scale)); }
+.opt .s-large { font-size: calc(var(--size-body) * 1.15 / var(--hr-text-scale)); }
+.opt .s-larger { font-size: calc(var(--size-body) * 1.3 / var(--hr-text-scale)); }
+.opt .s-largest { font-size: calc(var(--size-body) * 1.5 / var(--hr-text-scale)); }
+.opt span { min-width: 0; overflow-wrap: anywhere; } /* a 300 % root at 320 (Largest x 200 % browser text) wraps, never scrolls */
+.preview-line { padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); }
+.sheet .note { color: var(--colors-text-secondary); }
+.sheet .actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); justify-content: flex-end; }
+.sheet .actions .btn { min-width: calc(var(--touch-hero) * 1.5); }
+.sheet .stack { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.sheet .stack .btn { width: 100%; }
+@media (min-width: 600px) { /* layout.breakpoint.regular: a centred dialog, the two groups side by side */
+  .sheet-backdrop { align-items: center; padding: var(--spacing-xl); }
+  .sheet { max-width: var(--sheet-max); border-radius: var(--radii-lg); padding: var(--spacing-xl); }
+  .sheet .groups.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: var(--spacing-xl); }
+}
+
+/* ConfirmSheet: cancel first and focused (the safe choice), confirm second as the primary; no red. */
+.confirm .actions { justify-content: stretch; }
+.confirm .actions .btn { flex: 1 1 12rem; min-height: var(--touch-min); }
+.confirm .msg { color: var(--colors-text-secondary); }
+
+/* Console content buttons never hold one line wider than the column: at 320 with Largest and 200 % browser    */
+/* text (a 300 % root, AMENDMENTS-DISPLAY-NAV section 4 fit rule) a one-word label such as "Customize" breaks. */
+.frame-main .btn, .board .btn { max-width: 100%; overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------- Console: PageBack and the Learner app exit */
+.page-back { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) var(--spacing-xs); margin-left: calc(-1 * var(--spacing-xs)); border-radius: var(--radii-pill); color: var(--colors-text-primary); font-size: var(--size-body); font-weight: var(--weight-bold); text-decoration: none; overflow-wrap: anywhere; }
+.page-back:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+.frame-bar .tools { margin-left: auto; min-width: 0; max-width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--spacing-sm); }
+.learner-exit { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodySm); font-weight: var(--weight-bold); text-decoration: none; min-width: 0; overflow-wrap: anywhere; } /* wraps its label at 300 % (Largest x 200 % browser text) instead of scrolling the page */
+
+/* ---------------------------------------------------------------- Console: the shared grouped chooser and the sticky footer */
+.chooser { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.tabs { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.tab { min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-body); font-weight: var(--weight-semibold); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--colors-brand-primaryDark); border-color: var(--colors-brand-primaryDark); color: var(--colors-text-onPrimary); font-weight: var(--weight-bold); }
+.picks { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.ep-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--spacing-xs) var(--spacing-sm); }
+.pick { flex: 1 1 14rem; display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); background: var(--colors-surface-paper); cursor: pointer; }
+.pick.on { border: var(--border-width-thick) solid var(--colors-text-primary); }
+.pick input { width: var(--spacing-xl); height: var(--spacing-xl); flex: none; accent-color: var(--colors-text-primary); }
+.pick .p-text { display: flex; flex-direction: column; min-width: 0; }
+.pick .p-text b { overflow-wrap: anywhere; }
+.pick .p-text span { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.inside-btn { min-height: var(--touch-min); }
+.inside { display: flex; flex-direction: column; gap: var(--spacing-xs); padding-left: var(--spacing-lg); margin-left: var(--spacing-md); border-left: var(--border-width-base) solid var(--colors-border-subtle); }
+.sticky-foot { position: sticky; bottom: var(--spacing-none); z-index: var(--z-sticky); display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm) var(--spacing-md); padding: var(--spacing-md) var(--spacing-none); background: var(--colors-surface-canvas); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.sticky-foot .summary { flex: 1 1 8rem; color: var(--colors-text-primary); }
+.sticky-foot .btn-primary { min-height: var(--touch-hero); flex: 1 1 auto; font-size: var(--size-bodyLg); }
+.sticky-foot .btn:not(.btn-primary) { min-height: var(--touch-hero); }
+@media (min-width: 45em) { .sticky-foot .btn-primary { flex: none; padding-left: var(--spacing-xxl); padding-right: var(--spacing-xxl); } }
+.field { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.field .hint { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+
+/* Phone frame (below 45em, the console breakpoint): the brand mark steps out, so persona, Display and the */
+/* Learner app exit share one row with one persona; with the persona switch the tools take a second row.   */
+@media (max-width: 44.99em) {
+  .frame-bar .brand { display: none; }
+  .frame-bar.has-switch .tools { flex: 1 1 100%; }
+  .learner-exit { padding-left: var(--spacing-md); padding-right: var(--spacing-sm); }
+}
+.board .page-title { overflow-wrap: anywhere; } /* design-board headings (not UI) wrap at 200 % text */

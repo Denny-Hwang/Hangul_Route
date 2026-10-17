@@ -1,0 +1,20 @@
+/*
+ * The quieter Route tab (owner report 2026-10-16, design pass DN-0, review 2026-10-17;
+ * docs/specs/AMENDMENTS-DISPLAY-NAV.md section 9.6, row DN-9). Design mock, not shipped code. Loaded after
+ * learning-route.css; every value is a token of that sheet's :root block.
+ */
+/* Root header: the title block, then the Display (Aa) control at the top right (section 3.6). */
+.head-row { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: var(--spacing-sm); }
+.head-row .stack { min-width: 0; }
+.aa-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: var(--touch-min); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); font-family: inherit; cursor: pointer; }
+
+/* A stage row is one button: badge, name, a state word only when it is not open, the absolute played */
+/* count only when above 0, and a chevron. Only the current stage is open (aria-expanded="true").       */
+.row-toggle { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-none); border: none; border-radius: var(--radii-md); background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.row-toggle:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--border-width-base); }
+.row-toggle .chev { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--spacing-xl); min-height: var(--badge-size); }
+.trail-row.current { flex-direction: column; gap: var(--spacing-sm); }
+.trail-open { display: flex; flex-direction: column; gap: var(--spacing-sm); padding-left: calc(var(--badge-size) + var(--spacing-md)); }
+.trail-open .cell-rows { list-style: none; padding: var(--spacing-none); margin: var(--spacing-none); }
+.cell-row b { overflow-wrap: anywhere; }
+.trail-row.collapsed { padding-bottom: var(--spacing-md); }

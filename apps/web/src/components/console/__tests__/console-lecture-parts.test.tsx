@@ -3,10 +3,10 @@ import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { LectureCatalogueSection, LectureOptionsSection, LectureOutlineSection, LecturePickerSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
-import { builderEpisodes, questsOf } from '@/data/catalog';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
 import { expectAllPseudo } from './pseudo-text';
+import { STAGE1_EPISODES, STAGE1_TITLES, questsOfCell } from './stage1-catalog';
 
 /**
  * F-TCH-004 §3.11 with F-I18N-001 §3.11: the loaded states of the lecture setup page's
@@ -28,10 +28,10 @@ afterAll(() => {
   vi.unstubAllEnvs();
 });
 
-const episode = builderEpisodes()[0]!;
-const quest = questsOf(episode.episodeId)[0]!;
+const episode = STAGE1_EPISODES[0]!;
+const quest = questsOfCell(episode)[0]!;
 const contentTitles = [
-  ...builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]),
+  ...STAGE1_TITLES,
   ...LECTURE_STORIES.map((s) => s.titleEn),
   ...LECTURE_VOCAB_TOPICS.map((t) => t.titleEn),
 ];
@@ -82,8 +82,11 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expectAllPseudo(html);
   });
 
-  it('the catalogue, with one item added', () => {
-    const html = renderToStaticMarkup(<LectureCatalogueSection blocks={[{ kind: 'quest', id: quest.id }]} onAdd={noop} />);
+  it('the catalogue (the grouped lesson picker), with one item added', () => {
+    const html = renderToStaticMarkup(<LectureCatalogueSection blocks={[{ kind: 'quest', id: quest.id }]} onChange={noop} />);
+    // It opens on the stage of what is chosen, with the chosen lesson ticked.
+    expect(html).toContain(`data-testid="lecture-picker-lesson-${quest.id}" checked=""`);
+    expect(html).toContain('data-testid="lecture-picker-group-stage1"');
     expectAllPseudo(html, contentTitles);
   });
 
@@ -104,8 +107,12 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     const addRow = html.slice(html.lastIndexOf('<div style="display:flex;gap'));
     expect(addRow.match(/<button[^>]*disabled/g)).toHaveLength(3);
     expectAllPseudo(html, rowWords(full));
-    const catalogue = renderToStaticMarkup(<LectureCatalogueSection blocks={full} onAdd={noop} />);
-    expect(catalogue.match(/<button[^>]*disabled/g)?.length).toBe(catalogue.match(/<button/g)?.length);
+    const catalogue = renderToStaticMarkup(<LectureCatalogueSection blocks={full} onChange={noop} />);
+    // Every box that would add a block is off; the outline's full line says why.
+    const boxes = catalogue.match(/<input type="checkbox"[^>]*>/g) ?? [];
+    expect(boxes.length).toBeGreaterThan(5);
+    for (const box of boxes) expect(box).toContain('disabled');
+    expect(catalogue).toContain(getMessages(PSEUDO).console.lecture.outline.full(LECTURE_MAX_BLOCKS));
   });
 
   it('the empty outline', () => {

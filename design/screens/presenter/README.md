@@ -4,6 +4,8 @@ Spec: `docs/specs/F-TCH-004-lecture-mode.md` (sections 3.1 to 3.13; PR table row
 Wireframe: `design/wireframes/classroom/lecture-presenter.md` (screens A to L). Tokens: `design/tokens/presenter.v1.md` (PR 2, #238). Font: `HR Presenter KR` (PR 3, #466). Layout: F-LAYOUT-001 PR 2a (#174, uncapped `#root`, manifest `any`).
 Section 6 says "a UI PR waits for its mock"; this folder is that mock. It is a design pass, not a row of the PR table.
 
+> **Owner report 2026-10-16 (DN-0; `docs/specs/AMENDMENTS-LECTURE-V2.md` section 18, row LV-M1, LV-3 and LV-4 widened):** the helper picker is removed (D11 struck, the bar's Helper button and the `P` key gone from every mock, `overlay-picker-*.html`, `start-numbers.html` and their shots deleted); a phone sideways shows slides with a floating compact bar and an upright phone a rotate page (`stage-and-bar.md` "Phone", `states.md`); the start screen has a phone version (`start-screen.md` "Phone"); the home loses its language chips for a **Display (Aa)** control and gains a **Back** link, and Customize becomes the grouped chooser (`presets.md`). The rules added for these are in `mock/presenter-or.css`.
+
 > **Lecture mode v2 (LV-0b):** the presets home, the preset preview and the new slide families (sentence, pattern, read along, realia, listen and reply questions, sentence build, write together) are in `lecture-v2.md` and the files it lists; this README's rules, constants and decisions still apply to them.
 
 Built by:
@@ -21,15 +23,15 @@ Built by:
 
 | File | What it fixes |
 |---|---|
-| `home.md` | PR 8: Recent lessons, Quick lesson groups, the language chips, Keys and help, empty and storage-off states, phone and wide layouts |
-| `start-screen.md` | PR 6: deck facts, the device checks, skipped parts and their list, the picker row in each hand-off case, the font wait, Start |
-| `stage-and-bar.md` | PR 6 and PR 9: the stage box and unit, the docked bar band, the nine controls, status chips, auto-hide, the counter, focus and the live region |
+| `home.md` | PR 8: Recent lessons, Quick lesson groups, the language chips, Keys and help, empty and storage-off states, phone and wide layouts (superseded for layout by `presets.md`; the chips and the flat list go in LV-3, 2026-10-16) |
+| `start-screen.md` | PR 6: deck facts, the device checks, skipped parts and their list, ~~the picker row in each hand-off case~~ (removed 2026-10-16), the font wait, Start; the phone version (LV-M1) |
+| `stage-and-bar.md` | PR 6 and PR 9: the stage box and unit, the docked bar band, the eight controls (nine until LV-M1 removes Helper), status chips, auto-hide, the counter, focus and the live region; the phone stage and its compact bar (LV-M1) |
 | `slide-title.md`, `slide-letter.md`, `slide-end.md` | PR 6: the three slides of the shell |
 | `slide-syllable.md`, `slide-vocab.md`, `slide-sequence.md`, `slide-card.md`, `slide-activity.md` | PR 7 |
 | `slide-quiz.md` | PR 9: Match Sound (voice and text), word to meaning, odd one out, story checks; markers and the reveal |
-| `overlays.md` | PR 9 (and PR 6 for Exit): timer corner, full and done; picker ready, drawn, numbers, empty; blank; pause; grid; help; exit |
+| `overlays.md` | PR 9 (and PR 6 for Exit): timer corner, full and done; ~~picker ready, drawn, numbers, empty~~ (removed 2026-10-16); blank; pause; grid; help; exit |
 | `slide-story.md`, `slide-topic.md` | PR 11 and PR 12 |
-| `states.md` | PR 6: invalid link, loading, too small, portrait |
+| `states.md` | PR 6: invalid link, loading, too small, portrait; the phone's rotate page (LV-M1) |
 | `present-this.md` | BR-13 |
 | `mock/presenter.css`, `mock/presenter.js` | one sheet for every page (the tokens block, the constants block, the rules) and a ten-line helper: `#b=<n>` shows builds 0 to n, `#v=<name>` picks a variant, `#bar=hidden` fades the bar, `#gray=1` renders in greyscale |
 | `mock/*.html` | one page per screen or state (50 pages); `builds-board.html` shows every build of each slide kind side by side |
@@ -42,7 +44,7 @@ Built by:
 - **Two kinds of size.** Everything the room reads on the stage is `unit x a presenter token` (the stage unit `--u` is `stageScale`'s unit, computed in CSS on the stage box with container units, so a taller bar band letterboxes the stage exactly as PR 6 will). Controls, overlays' buttons and the teacher screens are real pixels and rem (`touchTarget.hero` 96 in the bar, `touchTarget.min` 64 elsewhere), so the browser text size enlarges them and the 200 % shots are meaningful.
 - **Taught Korean** uses `HR Presenter KR` (the committed subset, loaded from `apps/mobile/public/fonts/`); every Korean string drawn is in its glyph sidecar. UI text and the deck title use the system stack. Every Korean string carries its romanization and, where the content has one, its gloss.
 - **Words.** See "Strings": every UI string drawn is either an existing dictionary value (12 keys) or a new key listed with its English, Spanish and Korean value for the PR that draws it. Content (titles, glosses, facts, Hoya lines) is the bundle's own text.
-- **Names.** The only learner label drawn anywhere is the helper picker's result ("Mina", a fixture first name, and "7" in numbers mode). Recent rows show deck titles; the grid shows kind labels and slide titles; the start screen shows only how many names arrived.
+- **Names.** No learner label is drawn anywhere (2026-10-16: the helper picker and its fixture name "Mina" are gone). Recent rows show deck titles; the grid shows kind labels and slide titles; the start screen shows only how many names arrived.
 
 Open any page in a browser from a local static server at the repo root (the font is loaded by relative path; `file://` blocks it in Chromium). Links are placeholders.
 
@@ -71,13 +73,13 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 | Start button | 1.25 x `touchTarget.hero` tall, `typography.size.display` label | the one primary action of the start screen |
 | stage button (speaker, Start timer) | `max(touchTarget.hero, unit x touchTarget.hero)`; Start timer `max(hero, unit x 112)` | a stage control never drops below the bar's target size on a small window |
 | End slide fit | at most two rows of letters and two of words, then one "+ n more" pill each; the sample holds 11 letters and 6 words (4 syllables, 2 glossed words) | measured at 1280 x 720 with the class code panel (D7); glosses are never dropped to fit, fewer items show instead; PR 6 measures rows instead of counting |
-| Picker label box | at least 480 x 140 units | a 20-character label (the schema maximum) at `presenter.size.title` fits on one line |
+| ~~Picker label box~~ (removed 2026-10-16) | at least 480 x 140 units | a 20-character label (the schema maximum) at `presenter.size.title` fits on one line |
 | Code panel | 400 units wide | "HYRA42" (a valid `JOIN_CODE_RE` code) at `presenter.size.title` in the mono stack plus padding |
 | Grid thumb | at least 13 rem wide, 8 rem tall | five thumbs across at 1280; text grows with the browser text size |
 | Dialog widths | `--dialog-w` Exit 40 rem; `--help-w` Help 56 rem with two key columns from 900 px | |
 | Help key column | `--key-col` 10 rem (one column), `--key-col-2` 9 rem (two columns); `--kbd-min` 2.25 rem per key cap | the widest cap row fits one line at 18 px |
 | Status basis | `--status-min` 12 rem | the chips' flex basis beside the bar controls; below it they wrap above the buttons (D1) |
-| Picker label basis | `--picker-label` 14 rem | the start screen's picker row label beside its stepper |
+| ~~Picker label basis~~ (removed 2026-10-16) | `--picker-label` 14 rem | the start screen's picker row label beside its stepper |
 | Readable line | `--line-max` 32 rem | state pages and the full timer's controls |
 | Grid thumb (named) | `--thumb-w` 13 rem, `--thumb-h` 8 rem | the row above |
 | Media queries | 600 px and 900 px | `layout.breakpoint.regular` / `.wide`; a media query cannot read a custom property, so the sheet says so in a comment |
@@ -103,7 +105,7 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 
 - **D1. The stage box is the window minus a docked band.** The bar sits in its own band under the stage (`--bar-h`), never over a slide. When the bar auto-hides (`presenter.autoHideMs`) its controls fade (no fade under reduced motion) and the band stays, so no slide moves or rescales. PR 6 passes the stage box, not the window, to `stageScale`; with one row of controls a 1280 x 720 window gives unit 1 and a logical height of 600, the minimum the slides are designed for. Status chips that do not fit beside the controls wrap above them; the band grows and the stage letterboxes (`bar-chips-1024x768.png`).
 - **D2. No text below 18 px anywhere.** presenter.v1.md rule 2 ("nothing on screen below `typography.size.body`") covers the bar, chips, grid, help and the teacher screens, so none of them uses `bodySm` or `caption`.
-- **D3. Control bar.** Back, Next, Sound, Timer, Helper, Blank, Slides, Full screen, Exit, each a labelled 96 px button. Glyphs only where `Icon/glyphs.ts` has one (`arrow-left`, `arrow-right`, `speaker` / `speaker-off`, `close`); this pass adds no icon. Next reads **Reveal** while the slide has builds left and **Next** on its last build (one button, two keys). Full screen shows a pressed state. Focus order: the bar, then the stage (section 3.13).
+- **D3. Control bar.** Previous (was Back; renamed 2026-10-16, LV-M1, so "Back" only ever means leaving), Next, Sound, Timer, ~~Helper,~~ Blank, Slides, Full screen, Exit, each a labelled 96 px button (Helper removed 2026-10-16, LV-M1; on a phone the compact bar of `stage-and-bar.md` "Phone" replaces the docked bar). Glyphs only where `Icon/glyphs.ts` has one (`arrow-left`, `arrow-right`, `speaker` / `speaker-off`, `close`); this pass adds no icon. Next reads **Reveal** while the slide has builds left and **Next** on its last build (one button, two keys). Full screen shows a pressed state. Focus order: the bar, then the stage (section 3.13).
 - **D4. Letter slide in three columns** (glyph and romanization | stroke guide | sound, name, hint, example word); see `slide-letter.md`. The stroke guide's start dots carry their numeral in `text.primary` on paper inside a `brand.secondaryDark` ring, so no new colour pair is needed.
 - **D5. Syllable: the parts become the block.** Build 0 shows `ㄱ + ㅏ` at `presenter.size.display`; build 1 replaces them with the block at `presenter.size.glyph` (the taught item of the slide) and keeps the parts small beside it. `presenter.v1.md`'s "Used for" column is updated to say so (wording only; no value changes, and the parity and contrast tests pass). *As built (PR 7):* with motion the join slides a two-part syllable's parts together and fades them over `motion.duration.base` (a syllable with a final consonant only fades); under reduced motion it is an instant swap with no fade (spec sections 3.4 and 3.13).
 - **D6. Quiz.** A 2 x 2 grid of options, each with its shape-and-number marker. The answer build gives the correct option a `spacing.sm`-unit `feedback.success` border, the `feedback.successLight` ground and the `check-circle` glyph; the others drop to `presenter.dimOpacity` with every line in `text.primary`. "Hoya's answer" and a cheering Hoya join the question row at the reveal, so the options never move. A story check's explanation sits under the options. The projected Match Sound prompt is "Which letter makes this sound?" (`learner.presenter.quiz.sound`), not the learner's "Tap the letter you hear" (section 3.4 cites the learner text): on a projector the room points or holds up fingers and nobody taps.
@@ -111,14 +113,14 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 - **D8. Story slide.** The scene (400 x 300 units) and the narration share the first row; the scene's Korean line and gloss run full width under them. The scene caption is the art's accessible name and is not drawn: the narration already says it and the slide has no room for a third text block.
 - **D9. Topic word pictures (PR 12).** The word's WordArt is drawn as an `art` build after the gloss. Today `buildsFor` adds `art` only for a `cardId`; PR 12's adapter passes the word's visual key and adds the build (a `build-steps.ts` change inside PR 12, spec section 3.4 "F-VOC WordArt").
 - **D10. Skipped parts.** The start screen says how many parts are not shown as slides ("6 parts of this lesson are not shown as slides.") rather than "not in this version of the app": in the sample deck all six are listening steps the presenter does not draw, which the old line would misstate. [ See which ] lists each part by the lesson that holds it with one reason line per `SkipReason`.
-- **D11. Picker.** The question at `presenter.size.prompt`, the drawn label at `presenter.size.title` in a bordered box, Draw / Undo / Another / Close, and the mode chips of the modes the presenter actually has (the received mode and numbers). Undo and Another are disabled before the first draw. Another is the reducer's `skip`: the label goes back into the bag and nobody is told why. Empty bag: "Everyone has had a turn" with [ Start again ]. No count, list, history or "skipped" mark ever shows (TD5).
+- ~~**D11. Picker.**~~ **Removed 2026-10-16** (owner report; `AMENDMENTS-LECTURE-V2.md` section 18.5, row LV-M1): the presenter draws no helper picker, so this decision, its overlay mocks and shots are deleted. It read: the question, the drawn label in a bordered box, Draw / Undo / Another / Close and the mode chips.
 - **D12. Timer.** Corner: a real-pixel card at the bottom right of the stage box (ring, Pause, +30 s, Big, Close), over the slide, which still advances. Full: the ring at 420 units with numbers at `presenter.size.display`, presets and controls beside it. At zero the ring is complete, Hoya cheers and the line is "All done!"; there is no alarm word and no red.
 - **D13. Grid and help are teacher tools drawn in real pixels.** Grid: number, kind label and title text per thumbnail (no Korean, no names, no notes); the open slide marked "Now"; a hidden slide dashed with [ Show ]; the End slide has no Hide (section 3.5 amendment 4). Help lists every key of section 3.5, the romanization switch, the language chips and Keep controls visible; it scrolls when taller than the stage box.
-- **D14. Presenter home.** Two columns from 900 px (Recent, Quick lesson), one column below with Recent first; [ Build lesson ] in flow at the end of the list with the chosen count beside it; language chips and Keys and help in the header.
-- **D15. Start screen** is a teacher page in rem on paper (not stage-scaled): deck title, facts, the device checks, skipped parts, the picker row and one big Start. The same page is what a projector shows before Start (`start-projected-*`). *As built (PR 6):* the app draws teacher pages from the px design tokens, as every learner and grown-up screen does (React Native Web has no rem), so the start screen and the state pages grow with browser zoom (Ctrl/Cmd +), which scales every px value, rather than with the browser's default text size setting. The mock's rem values are the same px at the 16 px default.
+- **D14. Presenter home.** (superseded by `presets.md`, LV-3)  Two columns from 900 px (Recent, Quick lesson), one column below with Recent first; [ Build lesson ] in flow at the end of the list with the chosen count beside it; language chips and Keys and help in the header.
+- **D15. Start screen** is a teacher page in rem on paper (not stage-scaled): deck title, facts, the device checks, skipped parts, ~~the picker row~~ (removed 2026-10-16) and one big Start; on a phone, one Ready line with Details and a sticky Back and Start (`start-screen.md` "Phone"). The same page is what a projector shows before Start (`start-projected-*`). *As built (PR 6):* the app draws teacher pages from the px design tokens, as every learner and grown-up screen does (React Native Web has no rem), so the start screen and the state pages grow with browser zoom (Ctrl/Cmd +), which scales every px value, rather than with the browser's default text size setting. The mock's rem values are the same px at the 16 px default.
 - **D16. BR-13.** [ Present this ] is a ghost button under [ Preview this lesson ] in the item page's action bar; its explanation is the button's accessible description.
 - **D18. Pause opens from Blank.** Section 3.5 gives Pause no key and the bar no button; the Blank overlay carries a ghost **Pause** button (`learner.presenter.blank.pause.cta`) that swaps Blank for Pause in the covering slot. The Blank dialog focuses its container, so `Space` / `Enter` still clear it (`overlays.md`).
-- **D19. Chip groups are radiogroups.** The picker's mode chips and the Help overlay's Romanization and language chips: one tab stop, arrows move and select, the selected chip takes focus on entry; the presenter keys keep their meaning (`overlays.md`).
+- **D19. Chip groups are radiogroups.** The Help overlay's Romanization switch, the preset length and stage chips (~~the picker's mode chips and the language chips~~, removed 2026-10-16): one tab stop, arrows move and select, the selected chip takes focus on entry; the presenter keys keep their meaning (`overlays.md`).
 - **D17. The deck title** (teacher text) appears on the start screen and as a small caption line above the first slide's title; never in `document.title` (fixed `learner.presenter.docTitle`).
 
 ## Content observations for other PRs (not changed here)
@@ -128,6 +130,8 @@ Numbers that are not tokens, each named once in the second `:root` block of `moc
 - The first draft drew the class code "HOYA42", which `JOIN_CODE_RE` rejects (the alphabet has no O). The mock and the PR 6 fixtures use "HYRA42".
 
 ## Review log (multi-lens review of this pass)
+
+2026-10-16 (owner-report pass DN-0): measured with the same script on every new and re-shot page: no sideways scroll (320 at 200 % text included), nothing below 18 px, every control at least 64 px, no duplicate id, no console error; every projected page re-shot after the Helper button left the bar was compared with its old shot above the bar band (identical except where the bar now fits one row, the card mock's corrected fact of #589, and the pages whose picker row or chips were removed). The PR's multi-agent review follows.
 
 This environment has no sub-agent tool, so the four lenses ran as separate passes in one session, each against the shots and the measurement script, and every finding was applied. Language lenses (Spanish, Korean) follow F-I18N-001 section 3.10.
 
@@ -201,7 +205,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.bar.label` | Lesson controls | Controles de la lección | 수업 조작 | toolbar accessible name |
 | `learner.presenter.bar.noVoice` | No Korean voice here. You say it! | Aquí no hay voz coreana. ¡Dilo tú! | 여기는 한국어 음성이 없어요. 직접 읽어 주세요! | spec §3.7 |
 | `learner.presenter.bar.offline` | Offline. Everything still works. | Sin internet. Todo sigue funcionando. | 오프라인이에요. 모두 그대로 돼요. |  |
-| `learner.presenter.bar.picker.cta` | Helper | Ayudante | 도우미 |  |
+| ~~`learner.presenter.bar.picker.cta`~~ removed 2026-10-16 | Helper | Ayudante | 도우미 |  |
 | `learner.presenter.bar.reveal.cta` | Reveal | Mostrar | 다음 보기 | Next while the slide has builds left |
 | `learner.presenter.bar.sound.cta` | Sound | Sonido | 소리 |  |
 | `learner.presenter.bar.timer.cta` | Timer | Temporizador | 타이머 |  |
@@ -243,7 +247,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.help.row.grid` | All slides | Diapositivas | 전체 슬라이드 |  |
 | `learner.presenter.help.row.help` | This help | Esta ayuda | 이 도움말 |  |
 | `learner.presenter.help.row.next` | Next | Avanzar | 다음 |  |
-| `learner.presenter.help.row.picker` | Helper picker | Elegir ayudante | 도우미 뽑기 |  |
+| ~~`learner.presenter.help.row.picker`~~ removed 2026-10-16 | Helper picker | Elegir ayudante | 도우미 뽑기 |  |
 | `learner.presenter.help.row.romanization` | Romanization on or off | Mostrar u ocultar la romanización | 로마자 보이기와 숨기기 |  |
 | `learner.presenter.help.row.sound` | Play the sound again | Repetir el sonido | 소리 다시 듣기 |  |
 | `learner.presenter.help.row.strokes` | Replay the stroke guide | Repetir los trazos | 획순 다시 보기 |  |
@@ -271,19 +275,19 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.home.recent.storageOff` (specified, not drawn) | Recent lessons are off on this device. Lessons still work. | Aquí no hay lecciones recientes. Las lecciones funcionan igual. | 이 기기에서는 최근 수업을 쓸 수 없어요. 수업은 그대로 할 수 있어요. |  |
 | `learner.presenter.home.recent.title` | Recent lessons | Lecciones recientes | 최근 수업 |  |
 | `learner.presenter.home.title` | Lecture | Proyección | 강의 | same values as console.lecture.title |
-| `learner.presenter.language.note` | Only for this session. Korean always shows romanization and a meaning. | Solo para esta sesión. El coreano siempre muestra la romanización y el significado. | 이번 수업에만 바뀌어요. 한국어에는 늘 로마자와 뜻이 함께 나와요. |  |
-| `learner.presenter.language.title` | Presenter language | Idioma de la presentación | 발표 언어 | same values as console.lecture.options.language |
+| ~~`learner.presenter.language.note`~~ removed 2026-10-16 | Only for this session. Korean always shows romanization and a meaning. | Solo para esta sesión. El coreano siempre muestra la romanización y el significado. | 이번 수업에만 바뀌어요. 한국어에는 늘 로마자와 뜻이 함께 나와요. |  |
+| ~~`learner.presenter.language.title`~~ removed 2026-10-16 | Presenter language | Idioma de la presentación | 발표 언어 | same values as console.lecture.options.language |
 | `learner.presenter.pause.gloss` | wait a moment | espera un momento | 잠시 기다려 달라는 말 | glossKey of PAUSE_WORD, logic/lecture/content.ts |
-| `learner.presenter.picker.another.cta` | Another | Otro turno | 다시 뽑기 | the reducer's skip: returns the label and draws again, no reason |
-| `learner.presenter.picker.draw.cta` | Draw | Sacar | 뽑기 |  |
-| `learner.presenter.picker.empty` | Everyone has had a turn | Ya participaron todos | 모두 한 번씩 했어요 | spec §3.5 |
-| `learner.presenter.picker.mode.initials` | initials | iniciales | 이니셜 | same values as console.lecture.picker.mode |
-| `learner.presenter.picker.mode.names` | names | nombres | 이름 | same values as console.lecture.picker.mode |
-| `learner.presenter.picker.mode.numbers` | numbers | números | 번호 | same values as console.lecture.picker.mode |
-| `learner.presenter.picker.ready` | Choose Draw. | Elige Sacar. | 뽑기를 고르세요. |  |
-| `learner.presenter.picker.startAgain.cta` | Start again | Empezar otra vez | 다시 시작 |  |
-| `learner.presenter.picker.title` | Who's helping next? | ¿Quién ayuda ahora? | 다음 도우미는 누구일까요? | spec §3.5 |
-| `learner.presenter.picker.undo.cta` | Undo | Deshacer | 되돌리기 |  |
+| ~~`learner.presenter.picker.another.cta`~~ removed 2026-10-16 | Another | Otro turno | 다시 뽑기 | the reducer's skip: returns the label and draws again, no reason |
+| ~~`learner.presenter.picker.draw.cta`~~ removed 2026-10-16 | Draw | Sacar | 뽑기 |  |
+| ~~`learner.presenter.picker.empty`~~ removed 2026-10-16 | Everyone has had a turn | Ya participaron todos | 모두 한 번씩 했어요 | spec §3.5 |
+| ~~`learner.presenter.picker.mode.initials`~~ removed 2026-10-16 | initials | iniciales | 이니셜 | same values as console.lecture.picker.mode |
+| ~~`learner.presenter.picker.mode.names`~~ removed 2026-10-16 | names | nombres | 이름 | same values as console.lecture.picker.mode |
+| ~~`learner.presenter.picker.mode.numbers`~~ removed 2026-10-16 | numbers | números | 번호 | same values as console.lecture.picker.mode |
+| ~~`learner.presenter.picker.ready`~~ removed 2026-10-16 | Choose Draw. | Elige Sacar. | 뽑기를 고르세요. |  |
+| ~~`learner.presenter.picker.startAgain.cta`~~ removed 2026-10-16 | Start again | Empezar otra vez | 다시 시작 |  |
+| ~~`learner.presenter.picker.title`~~ removed 2026-10-16 | Who's helping next? | ¿Quién ayuda ahora? | 다음 도우미는 누구일까요? | spec §3.5 |
+| ~~`learner.presenter.picker.undo.cta`~~ removed 2026-10-16 | Undo | Deshacer | 되돌리기 |  |
 | `learner.presenter.quiz.answer` | Hoya's answer | La respuesta de Hoya | 호야의 답 | spec §3.10 |
 | `learner.presenter.quiz.oddOneOut` | Which one is different? | ¿Cuál es diferente? | 어느 것이 다를까요? | same values as learner.placement shapeOddOneOut |
 | `learner.presenter.quiz.playPrompt` | Play the sound | Escuchar el sonido | 소리 듣기 | speaker button label on the stage |
@@ -318,14 +322,14 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.start.minutes` | about {n} minutes | alrededor de {n} minutos | 약 {n}분 | plural one: "about 1 minute" / "alrededor de 1 minuto" / "약 1분" (one hedge in both forms) |
 | `learner.presenter.start.offlineNotReady` | Open this page once with Wi-Fi to use it offline. | Abre esta página una vez con wifi para usarla sin internet. | 오프라인에서 쓰려면 와이파이로 이 페이지를 한 번 열어요. |  |
 | `learner.presenter.start.offlineReady` | Ready for offline | Funciona sin internet | 오프라인에서도 쓸 수 있어요 |  |
-| `learner.presenter.start.picker.fewer` | Fewer | Menos | 줄이기 | accessible name of the stepper minus |
-| `learner.presenter.start.picker.initials` (specified, not drawn) | {n} initials received | {n} iniciales recibidas | 이니셜 {n}개를 받았어요 | plural one |
-| `learner.presenter.start.picker.more` | More | Más | 늘리기 | accessible name of the stepper plus |
-| `learner.presenter.start.picker.names` | {n} names received | {n} nombres recibidos | 이름 {n}개를 받았어요 | plural one |
-| `learner.presenter.start.picker.noOpener` | Names come from the console page that opened this lesson. Using numbers. | Los nombres llegan desde la página de la consola que abrió esta lección. Se usan números. | 이름은 이 수업을 연 콘솔 페이지에서 와요. 지금은 번호를 써요. | spec §3.2 step 5 |
-| `learner.presenter.start.picker.notKept` | Names are not kept on this device. Using numbers. | Los nombres no se guardan en este dispositivo. Se usan números. | 이름은 이 기기에 남기지 않아요. 지금은 번호를 써요. | spec §3.5 Exit (a resumed lesson) |
-| `learner.presenter.start.picker.numbers` | Numbers 1 to {n} | Números del 1 al {n} | 번호 1부터 {n}까지 |  |
-| `learner.presenter.start.picker.title` | Helper picker | Elegir ayudantes | 도우미 뽑기 | same values as console.lecture.picker.title |
+| ~~`learner.presenter.start.picker.fewer`~~ removed 2026-10-16 | Fewer | Menos | 줄이기 | accessible name of the stepper minus |
+| ~~`learner.presenter.start.picker.initials` (specified, not drawn)~~ removed 2026-10-16 | {n} initials received | {n} iniciales recibidas | 이니셜 {n}개를 받았어요 | plural one |
+| ~~`learner.presenter.start.picker.more`~~ removed 2026-10-16 | More | Más | 늘리기 | accessible name of the stepper plus |
+| ~~`learner.presenter.start.picker.names`~~ removed 2026-10-16 | {n} names received | {n} nombres recibidos | 이름 {n}개를 받았어요 | plural one |
+| ~~`learner.presenter.start.picker.noOpener`~~ removed 2026-10-16 | Names come from the console page that opened this lesson. Using numbers. | Los nombres llegan desde la página de la consola que abrió esta lección. Se usan números. | 이름은 이 수업을 연 콘솔 페이지에서 와요. 지금은 번호를 써요. | spec §3.2 step 5 |
+| ~~`learner.presenter.start.picker.notKept`~~ removed 2026-10-16 | Names are not kept on this device. Using numbers. | Los nombres no se guardan en este dispositivo. Se usan números. | 이름은 이 기기에 남기지 않아요. 지금은 번호를 써요. | spec §3.5 Exit (a resumed lesson) |
+| ~~`learner.presenter.start.picker.numbers`~~ removed 2026-10-16 | Numbers 1 to {n} | Números del 1 al {n} | 번호 1부터 {n}까지 |  |
+| ~~`learner.presenter.start.picker.title`~~ removed 2026-10-16 | Helper picker | Elegir ayudantes | 도우미 뽑기 | same values as console.lecture.picker.title |
 | `learner.presenter.start.reason.no-romanization` (specified, not drawn) | Left out until it has romanization | Se omite hasta que tenga romanización | 로마자 표기가 생길 때까지 빼 두었어요 |  |
 | `learner.presenter.start.reason.not-ready` (specified, not drawn) | Not ready to show yet | Todavía no se puede mostrar | 아직 보여 줄 수 없어요 |  |
 | `learner.presenter.start.reason.scope-too-small` (specified, not drawn) | Too few letters or words for this quiz | Hay pocas letras o palabras para este quiz | 이 퀴즈를 하기에는 글자나 낱말이 적어요 |  |
@@ -355,6 +359,18 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.timer.seconds` | {n} s | {n} s | {n}초 |  |
 | `learner.presenter.timer.small.cta` | Small | Pequeño | 작게 |  |
 | `learner.presenter.timer.title` | Class timer | Temporizador | 수업 타이머 |  |
+
+### Owner report 2026-10-16 (DN-0): keys drawn by the new mocks
+
+All are listed with their en / es / ko values in `docs/specs/AMENDMENTS-LECTURE-V2.md` section 12.6 (and `common.display.*` in `AMENDMENTS-DISPLAY-NAV.md` section 10); no mock draws a string outside those tables or the dictionary.
+
+| Mock | Keys |
+|---|---|
+| `stage-phone.html`, `stage-phone-notch.html` | `common.buttons.back`, `learner.presenter.bar.reveal.cta` / Next, `bar.sound.cta`, **`bar.more.cta`** (new), `bar.label` (the More sheet's title), `common.buttons.close`, `bar.grid.cta`, `bar.timer.cta`, `bar.blank.cta`, `bar.fullscreen.cta`, `home.help.cta`, `bar.exit.cta`, `bar.offline` |
+| `state-rotate.html` | `common.buttons.back`, **`state.rotate.title`**, **`state.rotate.line`** (new) |
+| `start-phone.html`, `-details`, `-check` | `home.title`, `common.display.button` / `.a11y`, `start.slides`, `start.minutes`, **`start.ready`**, **`start.someChecks`**, **`start.details.cta`**, **`start.turnHint`** (new), the existing check lines and `presets.preview.*`, `common.buttons.back`, `start.cta` |
+| `presets*.html` (header), `preset-preview.html` | `common.buttons.back` (home) or `start.back.cta` (preview), `common.display.button` / `.a11y`, `home.help.cta` |
+| `presets-customize*.html` | `presets.customize.cta`, `.customize.lead`, **`presets.chooser.label`**, **`.tab.lessons`**, **`.tab.stories`**, **`.tab.words`**, **`.tab.letters`**, `presets.stage.choose`, `.stage.chip`, `home.quick.minutes`, **`presets.chooser.lessonsIn`**, **`.showMore`**, **`.tray.title`**, **`.tray.empty`**, **`.summary`**, **`a11y.presenter.chooserRemove`**, `home.quick.nothing`, `home.quick.build.cta` |
 
 ### Length budget (`packages/i18n/src/__tests__/length-budget.test.ts`)
 

@@ -65,3 +65,4 @@ export * from './reports';
 export * from './story-card';
 export * from './schemas/class-scope';
 export * from './schemas/display-name';
+export * from './schemas/lesson-chooser';
