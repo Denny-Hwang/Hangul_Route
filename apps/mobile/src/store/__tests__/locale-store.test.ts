@@ -1,15 +1,32 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
-const storage = vi.hoisted(() => ({ failReads: false, failStrictReads: false, failWrites: false, writeFails: [] as string[] }));
+const storage = vi.hoisted(() => ({ failReads: false, failStrictReads: false, strictReadFailures: 0, failWrites: false, writeFails: [] as string[] }));
+/** A strict read that fails: every one while `failStrictReads`, else the next `strictReadFailures`. */
+const strictReadFails = (): boolean => {
+  if (storage.failReads || storage.failStrictReads) return true;
+  if (storage.strictReadFailures === 0) return false;
+  storage.strictReadFailures -= 1;
+  return true;
+};
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => {
     if (storage.failReads) return null;
     return mem.get(k) ?? null;
   }),
   readJsonStrict: vi.fn(async (k: string) => {
-    if (storage.failReads || storage.failStrictReads) throw new Error('closed');
+    if (strictReadFails()) throw new Error('closed');
     return mem.get(k) ?? null;
+  }),
+  // One step, as one IndexedDB transaction: nothing runs between the read and the write.
+  updateJson: vi.fn(async (k: string, next: (current: unknown) => unknown) => {
+    await Promise.resolve();
+    if (strictReadFails()) throw new Error('closed');
+    const value = next(mem.get(k) ?? null);
+    if (value === undefined) return false;
+    if (storage.failWrites || storage.writeFails.includes(k)) throw new Error('quota');
+    mem.set(k, value);
+    return true;
   }),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     if (storage.failWrites || storage.writeFails.includes(k)) throw new Error('quota');
@@ -68,6 +85,7 @@ const reset = (): void => {
   posted.length = 0;
   storage.failReads = false;
   storage.failStrictReads = false;
+  storage.strictReadFailures = 0;
   storage.failWrites = false;
   storage.writeFails = [];
   platform.handoff = null;
@@ -215,6 +233,28 @@ describe('locale-store: hydrate', () => {
     expect(mem.get('device:settings')).toEqual({ textSize: 'largest', uiLocale: 'es', uiLocaleAt: MIGRATED_AT });
   });
 
+  it('a ?lang= on a record the first read could not see changes nothing stored and shows the stored choice', async () => {
+    mem.set('device:settings', { uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    storage.strictReadFailures = 1;
+    platform.handoff = 'es';
+    await useLocaleStore.getState().hydrate([]);
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'ko', deviceAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    expect(posted).toEqual([]);
+  });
+
+  it('a ?lang= on a record that cannot be read at all holds for this page only: nothing is written', async () => {
+    mem.set('device:settings', { uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    storage.failStrictReads = true;
+    platform.handoff = 'es';
+    await useLocaleStore.getState().hydrate([]);
+    await settle();
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'es', deviceAt: MIGRATED_AT });
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    expect(posted).toEqual([]);
+  });
+
   it('a write keeps a key and a value this version does not know', async () => {
     mem.set('device:settings', { uiLocale: 'fr', textSize: 'huge', later: { a: 1 } });
     await useLocaleStore.getState().hydrate([]);
@@ -263,7 +303,8 @@ describe('locale-store: the migration from per-profile languages (AMENDMENTS-DIS
   });
 
   it('a device record that differs from the active override takes the override: it is what that profile saw (the old order put it first)', async () => {
-    mem.set('device:settings', { uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
+    // As an older build stored it: a language with no time.
+    mem.set('device:settings', { uiLocale: 'ko', textSize: 'large' });
     mem.set('settings:profile:a', { uiLocale: 'en', romanizationMode: 'always' });
     await useLocaleStore.getState().hydrate(['profile:a'], { activeProfileId: 'profile:a' });
     await settle();
@@ -333,15 +374,38 @@ describe('locale-store: the migration from per-profile languages (AMENDMENTS-DIS
     expect(posted).toEqual([]);
   });
 
-  it('an older build that writes an override again after the migration has it folded again at the next boot', async () => {
+  it('a choice made with its time is never replaced by a leftover override (it has no time): the override is only stripped', async () => {
+    // Chosen on the Display sheet; then a profile becomes active whose override a cut-short strip
+    // (or a cached older build) left behind.
     mem.set('device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'larger' });
-    // A cached older build (before one language per device) changed this profile's language.
+    mem.set('settings:profile:a', { uiLocale: 'ko', romanizationMode: 'tap' });
+    await useLocaleStore.getState().hydrate(['profile:a'], { activeProfileId: 'profile:a' });
+    await settle();
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'es', deviceAt: '2026-10-16T09:00:00.000Z' });
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'larger' });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap' });
+    expect(posted).toEqual([]);
+  });
+
+  it('an older build that writes the record ({ uiLocale }, no time) and an override again has the override folded at the next boot', async () => {
+    mem.set('device:settings', { uiLocale: 'es', uiLocaleAt: MIGRATED_AT, textSize: 'larger' });
     mem.set('settings:profile:a', { uiLocale: 'ko', romanizationMode: 'tap' });
     await useLocaleStore.getState().hydrate(['profile:a'], { activeProfileId: 'profile:a' });
     await settle();
     expect(useLocaleStore.getState().device).toBe('ko');
     expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: MIGRATED_AT, textSize: 'larger' });
     expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap' });
+  });
+
+  it('a timed choice another tab stores between the read and the fold is kept', async () => {
+    mem.set('settings:profile:a', { uiLocale: 'ko', romanizationMode: 'always' });
+    const hydrating = useLocaleStore.getState().hydrate(['profile:a']);
+    // Another tab chose while this one was still reading the profiles.
+    mem.set('device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-17T09:00:00.000Z' });
+    await hydrating;
+    await settle();
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: '2026-10-17T09:00:00.000Z' });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always' });
   });
 
   it('an older build that wrote the record as { uiLocale } keeps its language (no time: it counts as 1970)', async () => {
@@ -423,16 +487,34 @@ describe('locale-store: device record setters', () => {
     expect(track).not.toHaveBeenCalled();
   });
 
-  it('with the record unreadable, a write falls back to what this tab holds', async () => {
-    useLocaleStore.setState({ device: 'ko', deviceAt: '2026-10-16T09:00:00.000Z', textSize: 'large' });
-    storage.failReads = true;
+  it('a record that cannot be read is never written: the change holds in this tab only', async () => {
+    mem.set('device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+    useLocaleStore.setState({ device: 'ko', deviceAt: '2026-10-16T08:00:00.000Z', textSize: 'large' });
+    storage.failStrictReads = true;
     useLocaleStore.getState().setTextSize('largest');
+    useLocaleStore.getState().setDeviceLocale('en');
     await settle();
-    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
-    useLocaleStore.setState({ textSize: 'standard', device: null });
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'en', textSize: 'largest' });
+    expect(posted).toEqual([]);
+  });
+
+  it('two writes at once (a size tap right after Use) both land: neither overwrites the other', async () => {
+    mem.set('device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+    useLocaleStore.getState().setDeviceLocale('ko');
     useLocaleStore.getState().setTextSize('large');
     await settle();
-    expect(mem.get('device:settings')).toEqual({ textSize: 'large' });
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: useLocaleStore.getState().deviceAt, textSize: 'large' });
+    // The other tabs are told the record as it stood after each write, so the last message holds both.
+    expect(posted.at(-1)).toEqual(mem.get('device:settings'));
+  });
+
+  it('a choice with no source (the presenter and All lessons sheets) is stored and told to the other tabs, but not reported', async () => {
+    useLocaleStore.getState().setDeviceLocale('ko', null);
+    await settle();
+    expect(mem.get('device:settings')).toMatchObject({ uiLocale: 'ko' });
+    expect(posted).toHaveLength(1);
+    expect(track).not.toHaveBeenCalled();
   });
 
   it('seedDeviceLocale applies only to a device that never chose, and only an available locale', async () => {
