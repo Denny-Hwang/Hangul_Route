@@ -57,6 +57,9 @@ class ScriptEngine implements TtsEngine {
   busyFlag = false;
   /** busy() stays true this long after cancelAll(): an engine that drains its queue slowly. */
   busyAfterCancelMs = 0;
+  /** The engine's own silent warm-up is ahead of the prompts (the web unlock); `cancelAll()` clears it unless `warmingSticky`. */
+  warmingFlag = false;
+  warmingSticky = false;
   script: EngineStep[] = [];
   private held = 0;
   private busyUntil = Number.NEGATIVE_INFINITY;
@@ -104,6 +107,7 @@ class ScriptEngine implements TtsEngine {
 
   cancelAll(): void {
     this.cancelAllCount += 1;
+    if (!this.warmingSticky) this.warmingFlag = false;
     this.busyFlag = false;
     this.held = 0;
     this.busyUntil = Date.now() + this.busyAfterCancelMs;
@@ -115,6 +119,10 @@ class ScriptEngine implements TtsEngine {
 
   resume(): void {
     this.resumeCount += 1;
+  }
+
+  warming(): boolean {
+    return this.warmingFlag;
   }
 
   /** The engine holds one more utterance until the returned release runs (once). */
@@ -415,13 +423,85 @@ describe('controller: TTS outcomes', () => {
     expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'blocked', code: 'timeout', source: 'unknown' } }]);
   });
 
-  it('an engine with no resume() still gets the grace', async () => {
+  it('an engine with no resume() (native) gets no grace: a prompt still held at 1.5 s is blocked then', async () => {
     const r = rig();
     r.engine.script = [{ startAfterMs: 2000, endAfterMs: 10 }];
     (r.engine as { resume?: () => void }).resume = undefined;
     const p = r.ctl.playPrompt({ text: '가' });
-    await vi.advanceTimersByTimeAsync(2100);
-    await expect(p).resolves.toBe('played');
+    await vi.advanceTimersByTimeAsync(1500);
+    await expect(p).resolves.toBe('unavailable');
+    expect(r.failures).toEqual(['blocked']);
+    expect(r.engine.cancelled).toHaveLength(1);
+  });
+
+  it('behind the engine\'s silent warm-up the prompt\'s clock waits: a warm-up through at 2 s and a prompt starting at 4 s plays', async () => {
+    const r = rig();
+    r.engine.warmingFlag = true;
+    // The unlock asked in the same tap holds the cold engine for 2 s; the prompt queued behind it starts 2 s later.
+    setTimeout(() => (r.engine.warmingFlag = false), 2000);
+    r.engine.script = [{ startAfterMs: 4000, endAfterMs: 10 }];
+    let result: string | null = null;
+    void r.ctl.playPrompt({ text: '안녕하세요', source: 'presenter-check' }).then((v) => (result = v));
+    // Old rule: blocked at 4 s (1.5 s and the grace). The warm-up's 2 s are not this prompt's.
+    await vi.advanceTimersByTimeAsync(4001);
+    expect(result).toBeNull();
+    expect(r.failures).toEqual([]);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(result).toBe('played');
+    expect(r.engine.cancelled).toEqual([]);
+    expect(r.engine.cancelAllCount).toBe(0);
+    expect(r.failures).toEqual([]);
+  });
+
+  it('a queue stuck behind a warm-up that never answers is cleared once at 3 s and the prompt asked again: played', async () => {
+    const r = rig();
+    r.engine.warmingFlag = true;
+    r.engine.script = ['held', 'ok'];
+    let result: string | null = null;
+    void r.ctl.playPrompt({ text: '안녕하세요' }).then((v) => (result = v));
+    await vi.advanceTimersByTimeAsync(2999);
+    expect(r.engine.cancelAllCount).toBe(0);
+    expect(r.engine.requests).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    // Cleared, then asked again after the 50 ms drain.
+    expect(r.engine.cancelAllCount).toBe(1);
+    await vi.advanceTimersByTimeAsync(50);
+    expect(r.engine.requests).toHaveLength(2);
+    expect(r.engine.spokeAt[1]! - r.engine.spokeAt[0]!).toBe(3050);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(result).toBe('played');
+    expect(r.failures).toEqual([]);
+    expect(r.events).toEqual([]);
+  });
+
+  it('stuck again on the second try: blocked once its own wait and grace run out (asked twice, never more)', async () => {
+    const r = rig();
+    r.engine.warmingFlag = true;
+    r.engine.warmingSticky = true;
+    r.engine.script = ['held', 'held'];
+    const p = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(3050);
+    expect(r.engine.requests).toHaveLength(2);
+    // The second try: 3 s behind the warm-up, then the grace.
+    await vi.advanceTimersByTimeAsync(5500);
+    await expect(p).resolves.toBe('unavailable');
+    expect(r.engine.requests).toHaveLength(2);
+    expect(r.failures).toEqual(['blocked']);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'blocked', code: 'timeout', source: 'unknown' } }]);
+  });
+
+  it('a newer prompt supersedes one waiting behind the warm-up', async () => {
+    const r = rig();
+    r.engine.warmingFlag = true;
+    r.engine.script = ['held', 'ok'];
+    const first = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(2000);
+    const second = r.ctl.playPrompt({ text: '나' });
+    await expect(first).resolves.toBe('played');
+    await vi.advanceTimersByTimeAsync(100);
+    await expect(second).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '나']);
+    expect(r.failures).toEqual([]);
   });
 
   it('not-allowed is unavailable/blocked at once, with no network-voice retry and its code in the payload', async () => {

@@ -411,14 +411,14 @@ describe('platform/audio (native): results', () => {
     audio.dispose();
   });
 
-  it('a prompt that never starts is blocked after the start wait and its grace (the engine still holds it at 1.5 s)', async () => {
+  it('a prompt that never starts is blocked after 1.5 s (the start grace is the web engine\'s only)', async () => {
     vi.useFakeTimers();
     const { speech, audio } = rig();
     speech.mode = 'never';
     const result = audio.playPrompt({ text: '가' });
     let settled = false;
     void result.then(() => (settled = true));
-    await vi.advanceTimersByTimeAsync(3999);
+    await vi.advanceTimersByTimeAsync(1499);
     expect(settled).toBe(false);
     await vi.advanceTimersByTimeAsync(1);
     await expect(result).resolves.toBe('unavailable');

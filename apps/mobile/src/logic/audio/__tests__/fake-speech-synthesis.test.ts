@@ -281,6 +281,54 @@ describe('FakeSpeechSynthesis: the F-AUDIO-004 2026-10-17 engine quirks', () => 
     expect(synth.getVoices()).toEqual([yuna]);
     expect(listener).toHaveBeenCalledTimes(1);
   });
+
+  it("blank 'hang' holds a blank utterance as the current one with no event, and the queue behind it never moves", async () => {
+    const synth = new FakeSpeechSynthesis();
+    synth.blank = 'hang';
+    const blank = utterance(' ');
+    const word = utterance('가');
+    synth.speak(blank.u);
+    synth.speak(word.u);
+    await flush();
+    expect(synth.speaking).toBe(true);
+    expect(synth.pending).toBe(true);
+    expect(blank.events).toEqual([]);
+    expect(word.events).toEqual([]);
+    synth.cancel();
+    await flush();
+    expect(blank.events).toEqual(['error:canceled']);
+    expect(word.events).toEqual(['error:canceled']);
+  });
+
+  it("blank 'ignore' takes a blank utterance and does nothing; the next one speaks", async () => {
+    const synth = new FakeSpeechSynthesis();
+    synth.blank = 'ignore';
+    const blank = utterance(' ');
+    const word = utterance('가');
+    synth.speak(blank.u);
+    expect(synth.speaking).toBe(false);
+    synth.speak(word.u);
+    await flush();
+    expect(blank.events).toEqual([]);
+    expect(word.events).toEqual(['start', 'end']);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '가']);
+  });
+
+  it('cancelErrorDelayMs makes the errors cancel() raises arrive later', async () => {
+    vi.useFakeTimers();
+    const synth = new FakeSpeechSynthesis();
+    synth.autoEnd = false;
+    synth.cancelErrorDelayMs = 150;
+    const word = utterance('가');
+    synth.speak(word.u);
+    await vi.advanceTimersByTimeAsync(0);
+    synth.cancel();
+    expect(synth.speaking).toBe(false);
+    await vi.advanceTimersByTimeAsync(149);
+    expect(word.events).toEqual(['start']);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(word.events).toEqual(['start', 'error:canceled']);
+  });
 });
 
 describe('FakeAudioContext and makeFakeFetch', () => {
