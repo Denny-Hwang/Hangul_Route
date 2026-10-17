@@ -14,7 +14,7 @@ const QR_SIDE = touchTarget.min * 4;
 
 /**
  * The class join link and its QR code under the class code (owner decision 2026-10-17; wireframe
- * `design/wireframes/classroom/join-link.md`, as-built notes `design/screens/teacher/join-link.md`): the link as
+ * `design/wireframes/console/roster.md` Panel J, screen spec `design/screens/app-shell/join-link.md`): the link as
  * text, Copy link, and Show QR code, which draws the link as a QR image in place. The link holds the code alone, in
  * the address fragment, never a learner's name. Dark modules in `text.primary` on `surface.paper` with the quiet zone
  * the QR specification asks for, so a phone camera reads it on a screen, a projector or a printout.

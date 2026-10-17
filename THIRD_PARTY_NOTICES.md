@@ -21,11 +21,11 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | CC-BY-4.0 | 1 |
 | CC0-1.0 | 1 |
 | ISC | 63 |
-| MIT | 740 |
+| MIT | 741 |
 | MPL-2.0 | 1 |
 | Python-2.0 | 1 |
 | Unlicense | 3 |
-| **Total** | **883** |
+| **Total** | **884** |
 
 ## Packages
 
@@ -722,6 +722,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | prop-types | 15.8.1 | MIT | Copyright (c) 2013-present, Facebook, Inc. | app |
 | pump | 3.0.4 | MIT | Copyright (c) 2014 Mathias Buus | app |
 | punycode | 2.3.1 | MIT | Copyright Mathias Bynens <https://mathiasbynens.be/> | app |
+| qrcode-generator | 2.0.4 | MIT | Copyright (c) 2009 Kazuhiko Arase | web |
 | qrcode-terminal | 0.11.0 | Apache-2.0 | Copyright (c) 2009 Kazuhiko Arase | app |
 | query-string | 7.1.3 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (http://sindresorhus.com) | app |
 | queue | 6.0.2 | MIT | Copyright (c) 2014 Jesse Tane <jesse.tane@gmail.com> | app |

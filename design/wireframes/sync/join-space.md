@@ -87,3 +87,11 @@ Exit to:    `home/todays-mission` · `profile/settings` · (teacher side, not le
 - ~~Entry-point conflict~~ → resolved: `profile/settings` "Classes & family" card → **Join a class**, no PIN (app map §7 #21). `profiles/picker` link not added.
 - Family join (co-parent invite via a family `join_code`): the same screen with "family" copy, or an adult-only flow inside `console/account`? A child should probably never type a family code.
 - ~~Should a learner be able to leave a class from the child surface?~~ → shipped: **Leave** on the settings card behind a confirm dialog (cards and stars stay; rejoin with the code). Teachers can also remove a student (`DELETE /spaces/:id/members`).
+
+## Arriving from the class join link (owner decision 2026-10-17, row OR-UX)
+
+Spec: `docs/specs/AMENDMENTS-DISPLAY-NAV.md` section 9.8 · shots `design/screens/learner-shell/shots/join-link-prefilled-360.png`, `join-link-first-run-360.png`
+
+- Given a learner scans the teacher's QR code (or opens the join link) on a device that has a profile, When the learner app opens on `/join#c=<code>`, Then the address goes back to the app root (no path, no fragment: the code never stays in the address or the history entry) and this screen opens over Home with the code already in the field; the learner taps **Join**, and every step after it is unchanged.
+- On a device with no profile yet, the first-run form starts at once (Welcome under it): who is learning, the profile, privacy and consent; then this screen opens with the code filled in, Home under it (the level check waits; Profile offers it later). Welcome's **Got a class code?** takes the same path with an empty field.
+- A link with no valid code opens this screen with an empty field. A reload after that opens the app root, not this screen again.

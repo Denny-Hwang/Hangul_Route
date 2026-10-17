@@ -157,3 +157,39 @@ This week
 - Wrapping: the Hangul and its romanization never break apart; the gloss may wrap after them (real glosses run to 40-plus characters, "hermana mayor, lo dice una mujer o niña"), and each line may break inside one long word rather than overflow a 280 px card.
 - **Shown only when the roster carries `summary.vocab`.** `vocab` stays on `TEACHER_HIDDEN_SUMMARY_KEYS` until a consent item covers it (F-SPACE-002 T-1a), so today no card shows these lines and the week shows no words line. F-VOC-005 P-4b adds that consent item and the Worker's `vocab` projection (known keys only, no `firstTryRate`); the console needs no further change then: it already reads the slice without `firstTryRate` (`RosterVocab`), and drops the rate if one ever arrives.
 - Never shown: the first-try rate (a student's detail view only), a percent, a ranking, a sort by words. Cards keep the roster's order. "Words to revisit", never "weak words", "failed" or "behind".
+
+## Join link and QR code (owner decision 2026-10-17, row OR-UX)
+
+Spec: `docs/specs/AMENDMENTS-DISPLAY-NAV.md` section 9.8 · mock `design/screens/app-shell/join-link.md` · code `apps/web/src/components/console/JoinLinkParts.tsx`, `lib/console/join-link.ts`
+
+Given: a teacher's class has a join code
+When: the roster shows the code panel
+Then: under the code, the class **join link** (`app.hangulroute.com/join#c=<code>`: the code alone, in the fragment, never a name), **Copy link**, and **Show QR code**, which draws the link as a QR image in place; a phone camera opens Join a class with the code filled in
+
+Panel J — 375 wide, a class with a code, the QR shown
+
+```
++-----------------------------------+
+| CLASS CODE                        |
+| A B C 2 3 4                       |
+| expires in 30 days                |
+| ( Copy ) ( Regenerate )           |
+|-----------------------------------|
+| JOIN LINK                         |
+| app.hangulroute.com/join#c=ABC234 |  <- monospace, wraps anywhere
+| It opens Join a class with this   |
+| code filled in. It holds the code |
+| only, never a name.               |
+| ( Copy link ) ( Hide QR code )    |  <- aria-expanded on the toggle
+| +-------------------------------+ |
+| | [QR: 4 x touchTarget.min wide]| |  <- role=img "QR code of the join link"
+| +-------------------------------+ |
+| Scan it with the camera of a      |
+| phone or tablet.                  |
++-----------------------------------+
+```
+
+- An empty class (the enlarged code panel, centred): the link panel is centred too.
+- A family or a school: no join link (a family joins from its own home's "Open the app on this device"; a school has no learners).
+- No code yet (Create a code): no join link until there is one; a new code changes the link (the old code, and so the old link, stops).
+- Interaction: Copy link copies the whole link ("Link copied"); Show / Hide QR code toggles the image in place. Nothing is sent anywhere; the QR is drawn in the page.

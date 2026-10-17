@@ -27,3 +27,16 @@ At 360 x 740 the trail of seven stages is about 1 000 px with Stage 1 open (its 
 ## Strings
 
 No new key. `learner.myRoute.title`, `.purpose`, `.state.*`, `.caption.played`, `.tag.here`, `.tag.goal`, `.cell.playing`, `learner.routeNext.tag.inPlan`, `common.display.button` and `.a11y`; stage, theme and lesson-group titles are shipped content.
+
+---
+
+## Revision 2026-10-17 (as built): where you are now, the next three lessons, the goal
+
+Owner decision 2026-10-17 (row OR-UX; wireframe `design/wireframes/journey/route-tab-collapsed.md` Panel D): the learner's Route tab is **the route card** (where you are, the goal, its pips and the one button), **the weekly plan line**, **Your next lessons** and **See every stage in Journey**. The trail described above (one open stage, the others one row each) is now the trail of the grown-up's read-only Learning Route page only; the whole map of the seven stages is the Journey tab. Shots of the build: `shots/route-tab-simple-360.png` (the first screen of a new learner), `shots/route-tab-simple-360-end.png` (the list and the Journey link), `shots/route-tab-simple-class-plan-320.png` (a class plan at 320 x 568).
+
+- **Route card**: unchanged words, pips and button, except that the drawn "Next: <title>" line is left out while the list shows (the list's first row names that lesson, tagged **Next**; the summary label still reads it). Where Hoya sat beside that line the card is just shorter.
+- **Your next lessons** (`NextLessons.tsx`, h2 `learner.myRoute.nextLessons.title`): up to three rows, `routeNext`'s quest and the quests it would name next (`upcomingLessons`); each row is one button (`touchTarget.min`, `radii.lg`, `borderWidth.base`; the first in `brand.primary`, the others `border.subtle`) with the tag pill when there is one (**Next** `primary`, **In your plan** `info`), the title (`Body` semibold) and its stage and episode (`Caption` muted, "Stage 1 · Meet the Letters"; never "lesson 2 of 3" here, F-ROUTE-001), and a chevron. The row's accessible name is `learner.myRoute.nextLessons.row(tag, title, where)`.
+- **Letter wall**: on Stage 1, the R-7c wall under the list, closed until tapped (unchanged component).
+- **See every stage in Journey** (`learner.myRoute.journey.cta`, the shared `LinkButton` with the `journey` glyph): opens the Journey tab.
+- Not on the tab any more: the trail, the "new quests joined" line, the skills card, the gains, the stories note (all kept on the grown-up page). So no "Open" word and no "Ready when you are" line on the learner's tab at all.
+- Measured (Playwright, release build): no sideways scroll at 320, 360, 375, 844 x 390 and 1180 x 820; every row at least 64 px; Continue above the tab bar at 320 x 568 with the longest Stage 1 title; no digit pair, "of N" or ratio in the page text.
