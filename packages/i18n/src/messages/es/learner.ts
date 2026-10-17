@@ -201,6 +201,12 @@ export const learner = {
     },
     notFound: 'Este perfil ya no está en este dispositivo.',
     save: { cta: 'Guardar' },
+    leave: {
+      title: '¿Salir sin guardar?',
+      message: 'Los cambios de este perfil aún no están guardados.',
+      keep: { cta: 'Seguir editando' },
+      confirm: { cta: 'Salir' },
+    },
   },
 
   home: {

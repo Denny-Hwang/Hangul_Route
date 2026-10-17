@@ -42,10 +42,12 @@ import { createPinHash } from '../../logic/profiles/pin-hash';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
+import { confirm } from '../../platform/dialog';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useMembershipStore } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
+import { useBackGuard } from '../use-back-guard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
 
@@ -102,6 +104,9 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   // `busy` is React state, so two taps before the re-render would both read `false`;
   // this ref closes Save on the first tap (one hash, one consent, one goBack).
   const submitting = useRef(false);
+  /** The person chose to leave (Leave in the question) or the edit was saved: the next back goes through. */
+  const leaving = useRef(false);
+  const asking = useRef(false);
 
   useEffect(() => {
     void hydrateMemberships(profileId);
@@ -131,6 +136,36 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
       live = false;
     };
   }, [profileId, deviceScope]);
+
+  // Changes not saved yet: every back (the header's, the browser's or the phone's) asks first with a ConfirmSheet,
+  // Keep editing first (AMENDMENTS-DISPLAY-NAV sections 7.1 and 8). Saving, or Leave in the question, lets it go.
+  const unsaved =
+    original !== null &&
+    draft !== null &&
+    editPlan({ original, draft, agreed, pin: pinSetup.pin, guardianAcceptedAt, selfAcceptedAt, parentPinHash }).changed.length > 0;
+  useBackGuard(
+    navigation,
+    () => {
+      if (!unsaved || leaving.current) return false;
+      if (!asking.current) {
+        asking.current = true;
+        void confirm({
+          title: e.leave.title,
+          message: e.leave.message,
+          confirmLabel: e.leave.confirm.cta,
+          cancelLabel: e.leave.keep.cta,
+          destructive: true,
+        }).then((yes) => {
+          asking.current = false;
+          if (!yes) return;
+          leaving.current = true;
+          navigation.goBack();
+        });
+      }
+      return true;
+    },
+    unsaved,
+  );
 
   // The way back is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1); the title stays in the screen.
   const back = (
@@ -213,6 +248,8 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
       });
       if (result.ok) {
         done = true;
+        // Saved: the back that closes the screen is not a leave without saving.
+        leaving.current = true;
         navigation.goBack();
       } else if (result.reason === 'pin-failed') setPinError(e.pinFailed);
       else setSaveError(e.saveFailed);
