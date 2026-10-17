@@ -193,16 +193,17 @@ export function ProfileScreen(): React.ReactElement {
       <Heading level="prompt">{t.statsTitle(active?.displayName ?? null)}</Heading>
       <Spacer size="sm" />
       <Card padding="md">
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View>
+        {/* The three figures wrap to a second line, and a long label wraps in its column, at a large text size. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: spacing.md, rowGap: spacing.sm }}>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Caption tone="muted">{t.stats.quests}</Caption>
             <Heading level="prompt">{snap?.quests.filter((q) => q.completedAt).length ?? 0}</Heading>
           </View>
-          <View>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Caption tone="muted">{t.stats.cards}</Caption>
             <Heading level="prompt">{snap?.cards.length ?? 0}</Heading>
           </View>
-          <View>
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Caption tone="muted">{t.stats.threeStar}</Caption>
             <Heading level="prompt">{snap?.quests.filter((q) => q.stars === 3).length ?? 0}</Heading>
           </View>

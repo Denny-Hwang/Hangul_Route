@@ -194,7 +194,9 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
 
   test('the learner app hands off lang=en too: a console that stored Korean opens in English on a device that never chose', async ({ page, context }) => {
     await signedInOnGrownUpPages(context);
-    await page.goto('/');
+    // A learner app in English by detection (no language was ever chosen on this device).
+    await onboardSelf(page, { name: 'Dani', startJourney: false });
+    expect(await readStored(page, 'device:settings')).toBeNull();
     await page.evaluate(() => window.localStorage.setItem('hr:console:uiLocale', 'ko'));
     await page.goto('/parent?lang=en');
     await expect(page.getByTestId('adult-frame')).toBeVisible();
@@ -322,10 +324,14 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     await shot(page, 'or67-display-sheet-largest-320x568');
   });
 
-  test('a quest step: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the quest player\'s first steps: no sideways scroll, no text past the edge', async ({ page }) => {
     await learnerAtLargest(page);
     await openLettersEpisode(page);
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+    await expectNoSidewaysScroll(page, 'the quest intro');
+    await shot(page, 'or67-quest-intro-largest-320x568');
+    await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
     await expectNoSidewaysScroll(page, 'the Discover step');
     await shot(page, 'or67-quest-discover-largest-320x568');
