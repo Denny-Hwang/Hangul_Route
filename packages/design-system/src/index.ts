@@ -21,6 +21,10 @@ export * from './components/StoryScene';
 export * from './components/RealiaSheet';
 export * from './components/SectionTabs';
 export * from './components/SparkMeter';
+// The text size engine (owner items 6 and 7): the pure table and the React layer.
+export * from './text-size';
+export * from './components/TextSize';
+export * from './components/DisplaySheet';
 // WordArt and its key list are in this barrel because Metro (Expo SDK 52, no metro.config.js) does not read
 // package `exports`, so the app cannot import '@hangul-route/design-system/components/WordArt' at runtime
 // (apps/mobile metro-subpaths.test.ts). PictureArt (F-VOC-002 W-7) is the app's one caller; the web contact
@@ -31,8 +35,8 @@ export * from './components/PipRow';
 export * from './components/RouteMarkers';
 // Pure scene-art API (no React): the path Metro can resolve; the web app uses the ./scene-art subpaths.
 export * from './scene-art';
-export { KOREAN_LANGUAGE, KOREAN_TEXT_SIZES, koreanTextLabel, koreanTextView } from './korean-text';
-export type { KoreanTextSize, KoreanTextView, KoreanTextViewInput } from './korean-text';
+export { KOREAN_LANGUAGE, KOREAN_TEXT_SIZES, koreanTextLabel, koreanTextSizes, koreanTextView } from './korean-text';
+export type { KoreanTextSize, KoreanTextSizes, KoreanTextView, KoreanTextViewInput } from './korean-text';
 export * from './labels';
 // Native Korean line breaking for every Text (F-I18N-001 §10 reason (5)).
 export { KOREAN_LINE_BREAK } from './line-break';

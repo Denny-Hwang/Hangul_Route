@@ -19,7 +19,8 @@ export interface SectionTabStyle {
   fontWeight: (typeof typography.weight)[keyof typeof typography.weight];
 }
 
-export function sectionTabStyle(selected: boolean): SectionTabStyle {
+/** `bodySize` is the body size at the chosen text size (`useTypeScale().size.body`); absent = the token. */
+export function sectionTabStyle(selected: boolean, bodySize: number = typography.size.body): SectionTabStyle {
   return {
     backgroundColor: selected ? colors.brand.primary : colors.surface.paper,
     borderColor: selected ? colors.brand.primary : colors.border.strong,
@@ -28,7 +29,7 @@ export function sectionTabStyle(selected: boolean): SectionTabStyle {
     minHeight: touchTarget.min,
     paddingHorizontal: spacing.xl,
     textColor: selected ? colors.text.onPrimary : colors.text.primary,
-    fontSize: typography.size.body,
+    fontSize: bodySize,
     fontWeight: selected ? typography.weight.bold : typography.weight.semibold,
   };
 }

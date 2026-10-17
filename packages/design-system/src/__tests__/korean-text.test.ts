@@ -8,8 +8,10 @@ import {
   KOREAN_LANGUAGE,
   KOREAN_TEXT_SIZES,
   koreanTextLabel,
+  koreanTextSizes,
   koreanTextView,
 } from '../korean-text';
+import { typeScale } from '../text-size';
 import { touchTarget, typography } from '../tokens';
 
 describe('koreanTextLabel (screen reader label)', () => {
@@ -96,6 +98,29 @@ describe('KOREAN_TEXT_SIZES', () => {
 
   it('sizes the pressable target from the touchTarget floor', () => {
     expect(koreanTextView({ ko: '가', romanization: 'ga', pressable: true }).minTarget).toBe(touchTarget.min);
+  });
+});
+
+describe('Korean text at the chosen text size (owner items 6 and 7)', () => {
+  it('the standard scale gives exactly KOREAN_TEXT_SIZES', () => {
+    expect(koreanTextSizes(typography.size)).toEqual(KOREAN_TEXT_SIZES);
+    expect(koreanTextSizes(typeScale(1).size)).toEqual(KOREAN_TEXT_SIZES);
+  });
+
+  it('largest: the Hangul takes the large-type growth, the romanization and gloss the full step', () => {
+    const scale = typeScale(1.5).size;
+    expect(koreanTextSizes(scale)).toEqual({
+      sm: { hangul: 35, romanization: 24 },
+      md: { hangul: 45, romanization: 24 },
+      lg: { hangul: 60, romanization: 30 },
+    });
+    const view = koreanTextView({ ko: '가', romanization: 'ga', gloss: 'go', size: 'md', scale });
+    expect([view.hangulSize, view.romanizationSize, view.glossSize]).toEqual([45, 24, 27]);
+  });
+
+  it('without a scale the view keeps the token sizes, the gloss at the body size', () => {
+    const view = koreanTextView({ ko: '가', romanization: 'ga', size: 'lg' });
+    expect([view.hangulSize, view.romanizationSize, view.glossSize]).toEqual([typography.size.hero, typography.size.bodyLg, typography.size.body]);
   });
 });
 

@@ -1,15 +1,18 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { colors, typography } from '../../tokens';
+import type { TypeSizeName } from '../../text-size';
+import { useTypeScale } from '../TextSize';
 import type { BodyProps, HeadingLevel, HeadingProps, TextTone } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
-const sizeOf: Record<HeadingLevel, number> = {
-  display: typography.size.display,
-  title: typography.size.title,
-  prompt: typography.size.prompt,
-  body: typography.size.body,
-  caption: typography.size.caption,
+/** The type size of each heading level; the size itself comes from the chosen text size (`useTypeScale`). */
+const sizeOf: Record<HeadingLevel, TypeSizeName> = {
+  display: 'display',
+  title: 'title',
+  prompt: 'prompt',
+  body: 'body',
+  caption: 'caption',
 };
 
 const toneOf: Record<TextTone, string> = {
@@ -29,17 +32,18 @@ export function Heading({
   style,
   testID,
 }: HeadingProps): React.ReactElement {
+  const fontSize = useTypeScale().size[sizeOf[level]];
   return (
     <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       accessibilityRole="header"
       style={[
         {
-          fontSize: sizeOf[level],
+          fontSize,
           color: toneOf[tone],
           textAlign: align,
           fontWeight: typography.weight[weight],
-          lineHeight: sizeOf[level] * typography.leading.tight,
+          lineHeight: fontSize * typography.leading.tight,
         },
         style,
       ]}
@@ -58,12 +62,8 @@ export function Body({
   style,
   testID,
 }: BodyProps): React.ReactElement {
-  const fontSize =
-    size === 'sm'
-      ? typography.size.bodySm
-      : size === 'lg'
-        ? typography.size.bodyLg
-        : typography.size.body;
+  const scale = useTypeScale().size;
+  const fontSize = size === 'sm' ? scale.bodySm : size === 'lg' ? scale.bodyLg : scale.body;
 
   return (
     <Text {...KOREAN_LINE_BREAK}
@@ -92,16 +92,17 @@ export function Caption({
   style,
   testID,
 }: Omit<BodyProps, 'size'>): React.ReactElement {
+  const fontSize = useTypeScale().size.caption;
   return (
     <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       style={[
         {
-          fontSize: typography.size.caption,
+          fontSize,
           color: toneOf[tone],
           textAlign: align,
           fontWeight: typography.weight[weight],
-          lineHeight: typography.size.caption * typography.leading.normal,
+          lineHeight: fontSize * typography.leading.normal,
         },
         style,
       ]}

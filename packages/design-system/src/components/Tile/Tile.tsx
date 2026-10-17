@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { colors, radii, shadows, spacing, typography } from '../../tokens';
+import { useTypeScale } from '../TextSize';
 import { tileMetrics } from './metrics';
 import type { TileProps, TileState } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -37,7 +38,8 @@ export function Tile({
   testID,
 }: TileProps): React.ReactElement {
   // The glyph is part of the tile's picture, so it grows with the tile (type tokens themselves are unchanged).
-  const { dim, glyph } = tileMetrics(size, dimension);
+  const scale = useTypeScale().size;
+  const { dim, glyph } = tileMetrics(size, dimension, scale);
 
   const inner = (
     <View
@@ -61,7 +63,7 @@ export function Tile({
         <Text {...KOREAN_LINE_BREAK}
           style={{
             marginTop: spacing.xxs,
-            fontSize: typography.size.bodySm,
+            fontSize: scale.bodySm,
             color: colors.text.muted,
             fontWeight: typography.weight.medium,
           }}

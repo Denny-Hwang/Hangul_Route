@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '../../tokens';
+import { useTypeScale } from '../TextSize';
 import type { PillProps, PillTone } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
@@ -25,7 +26,8 @@ const fg: Record<PillTone, string> = {
 export function Pill({ label, tone = 'neutral', size = 'md', testID }: PillProps): React.ReactElement {
   const padY = size === 'sm' ? spacing.xxs : spacing.xs;
   const padX = size === 'sm' ? spacing.sm : spacing.md;
-  const fontSize = size === 'sm' ? typography.size.caption : typography.size.bodySm;
+  const scale = useTypeScale().size;
+  const fontSize = size === 'sm' ? scale.caption : scale.bodySm;
 
   return (
     <View

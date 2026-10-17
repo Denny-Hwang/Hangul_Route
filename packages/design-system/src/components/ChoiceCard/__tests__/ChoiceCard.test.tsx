@@ -13,6 +13,12 @@ import type { ChoiceCardProps } from '../types';
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable' }));
 vi.mock('../../Icon', () => ({ Icon: 'Icon' }));
 vi.mock('../../KoreanText', () => ({ KoreanText: 'KoreanText' }));
+/** The chosen text size step's factor, read through `useTypeScale` (owner items 6 and 7). */
+const textSize = vi.hoisted(() => ({ factor: 1 }));
+vi.mock('../../TextSize', async () => {
+  const { typeScale } = await import('../../../text-size');
+  return { useTypeScale: () => typeScale(textSize.factor) };
+});
 
 type Props = Record<string, unknown>;
 type El = React.ReactElement<Props>;
@@ -76,5 +82,20 @@ describe('ChoiceCard element tree (F-VOC-004 S-4b additions)', () => {
     const tile = body({ state: 'wrong', art: React.createElement('View'), layout: 'tile', wrongMark: 'dash' });
     expect(icons(tile)[0]?.props).toMatchObject({ name: 'dash', color: colors.text.primary });
     expect((kids(tile).at(-1)?.props.style as Props).backgroundColor).toBe(colors.feedback.nudgeLight);
+  });
+});
+
+describe('ChoiceCard label follows the chosen text size (owner items 6 and 7)', () => {
+  it('draws the body size at the step, with the line height from the scaled size', () => {
+    const labelStyle = (): { fontSize: number; lineHeight: number } => {
+      const text = all(body({ state: 'idle', label: 'apple' })).find((e) => e.type === 'Text') as El;
+      return text.props.style as { fontSize: number; lineHeight: number };
+    };
+    textSize.factor = 1;
+    expect(labelStyle().fontSize).toBe(18);
+    textSize.factor = 1.3;
+    expect(labelStyle().fontSize).toBe(23);
+    expect(labelStyle().lineHeight).toBeCloseTo(23 * 1.35);
+    textSize.factor = 1;
   });
 });
