@@ -307,7 +307,11 @@ export type PlacementStackParamList = {
 };
 
 export type OnboardingStackParamList = {
-  Welcome: undefined;
+  /**
+   * `classLink`: opened by the class join link on a device with no profile (owner decision 2026-10-17; review of
+   * #734): the link's `code` shows on Welcome, Start runs the class-code first run, and Restore stays beside it.
+   */
+  Welcome: { classLink?: true; code?: string } | undefined;
   /**
    * `then: 'join'`: started at Welcome's "Got a class code?" or at the class join link; Join a class opens after the
    * profile is made, with the link's `code` filled in (owner decision 2026-10-17).

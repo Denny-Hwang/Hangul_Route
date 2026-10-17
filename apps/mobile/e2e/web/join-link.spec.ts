@@ -8,9 +8,11 @@ import { shot } from './shots';
  * The class join link (owner decision 2026-10-17): `app.hangulroute.com/join#c=<code>`, the code alone in the
  * fragment, never a name. The learner app reads it once at boot, the address goes back to the app root with no
  * fragment (the code never stays in the address or in the history entry), and Join a class opens with the code in
- * its field; the learner still taps Join. A device with no profile yet starts the class-code first run (the profile
- * and consent steps, then Join a class), as Welcome's "Got a class code?" does. The teacher's roster shows the link
- * and its QR code (`apps/web/e2e/join-link.spec.ts`).
+ * its field; the learner still taps Join. A device with no profile yet opens Welcome with the code on it (review of
+ * #734: on iOS the camera opens the browser, whose storage is not the installed app's): the card says where to type
+ * the code in an app that already holds the learner's progress, "I already have progress" stays, and Start runs the
+ * class-code first run (the profile and consent steps, then Join a class with the code), as Welcome's "Got a class
+ * code?" does. The teacher's roster shows the link and its QR code (`apps/web/e2e/join-link.spec.ts`).
  */
 test.use({ viewport: { width: 360, height: 640 } });
 
@@ -52,10 +54,21 @@ test.describe('the class join link', () => {
     await expectCodeOutOfAddress(page, 'O0O0O0');
   });
 
-  test('a fresh device: the profile and consent steps first, then Join a class with the code filled in', async ({ page }) => {
+  test('a fresh device: Welcome shows the code and keeps Restore; Start runs the profile and consent steps, then Join a class with the code', async ({ page }) => {
+    const welcome = en.learner.welcome;
     await page.goto('/join#c=XYZ789');
     await expectCodeOutOfAddress(page, 'XYZ789');
-    // The first-run form starts at once (Welcome is under it), for someone a grown-up looks after.
+    // Welcome, not the first-run form: the code as text, where to type it in an app that already has the progress,
+    // and "I already have progress" next to Start.
+    const card = page.getByTestId('welcome-class-link');
+    await expect(card).toBeVisible();
+    await expect(card.getByText(welcome.classLink.code('XYZ789'), { exact: true })).toBeVisible();
+    await expect(card.getByText(welcome.classLink.inApp, { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: welcome.restore, exact: true })).toBeVisible();
+    await expect(page.getByTestId('welcome-class-code')).toHaveCount(0);
+    await shot(page, 'join-link-fresh-welcome-360');
+    await page.getByTestId('welcome-start').click();
+    // The first-run form, for someone a grown-up looks after.
     await fillWhoAndProfile(page, 'child', { name: 'Jun' });
     await agreeOnPrivacy(page, 'child');
     await page.getByRole('button', { name: 'Continue' }).click();

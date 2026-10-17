@@ -25,6 +25,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.toFind.stage': [[1], [2]],
   'learner.library.toFind.a11y': [['Meet the Letters']],
   'learner.library.toFind.nextA11y': [['Finish the episode: Meet the Letters']],
+  'learner.welcome.classLink.code': [['ABC234']],
   'learner.home.progress.label': [[1, 24]],
   'learner.home.homework.due': [[2]],
   'learner.home.catchUp.line': [[1], [22]],

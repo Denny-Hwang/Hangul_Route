@@ -24,6 +24,11 @@ export const learner = {
       someoneElse: '다른 사람',
       needsInternet: '인터넷이 필요해요',
     },
+    classLink: {
+      code: (code: string) => `반 코드: ${code}`,
+      next: '먼저 프로필을 만들어요. 그다음 반에 참여하기가 열려요.',
+      inApp: '이미 Hangul Route 앱에서 배우고 있나요? 앱을 열고 프로필에서 반에 참여하기를 눌러요.',
+    },
   },
 
   language: {

@@ -37,6 +37,16 @@ export const learner = {
       someoneElse: 'Someone else',
       needsInternet: 'Needs the internet',
     },
+    /**
+     * The class join link on a device with no profile yet (owner decision 2026-10-17; review of #734): Welcome shows
+     * the link's code and what Start does. On iOS a QR code scanned with the camera opens the browser, which does not
+     * share storage with the installed app, so `inApp` tells a learner who already plays there where to type the code.
+     */
+    classLink: {
+      code: (code: string) => `Class code: ${code}`,
+      next: 'Make your profile first. Then Join a class opens.',
+      inApp: 'Already learning in the Hangul Route app? Open it, go to Profile and tap Join a class.',
+    },
   },
 
   /** The Welcome language chips (the device's one language; the Display sheet's words are `common.display`). */

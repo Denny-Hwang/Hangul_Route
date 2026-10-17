@@ -24,6 +24,11 @@ export const learner = {
       someoneElse: 'Otra persona',
       needsInternet: 'Necesita internet',
     },
+    classLink: {
+      code: (code: string) => `Código de clase: ${code}`,
+      next: 'Primero crea tu perfil. Luego se abre Unirme a una clase.',
+      inApp: '¿Ya aprendes en la app de Hangul Route? Ábrela, ve a Perfil y toca Unirme a una clase.',
+    },
   },
 
   language: {

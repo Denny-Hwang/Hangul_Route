@@ -92,10 +92,13 @@ export function parseBootIntent(search: string): ParsedBootIntent {
 /** The PIN screen params a boot intent opens: the grown-up area's, or All lessons' (BR-12b). */
 export type BootPinParams = ReturnType<typeof grownUpPinParams> | { next: 'BrowseLessons' };
 
-/** Where the join link opens: Join a class on a device with a profile, else the class-code first run. */
+/**
+ * Where the join link opens: Join a class on a device with a profile, else Welcome with the link's code shown, where
+ * Start runs the class-code first run and "I already have progress" (Restore) stays beside it.
+ */
 export type JoinIntentTarget =
   | { screen: 'JoinSpace'; params: { code?: string } }
-  | { screen: 'Onboarding'; params: { screen: 'CreateProfile'; params: { firstRun: true; then: 'join'; code?: string } } };
+  | { screen: 'Onboarding'; params: { screen: 'Welcome'; params: { classLink: true; code?: string } } };
 
 export interface BootIntentNavigator {
   isReady: () => boolean;
@@ -106,11 +109,16 @@ export interface BootIntentNavigator {
   addListener: (event: 'state', listener: () => void) => () => void;
 }
 
-/** The join link's target (pure): Join a class when the device has a profile, else CreateProfile with `then: 'join'`. */
+/**
+ * The join link's target (pure): Join a class when the device has a profile. A device with no profile opens Welcome
+ * with the code on it, not the first-run form: on iOS a QR code scanned with the camera opens Safari, whose storage is
+ * not the installed home-screen app's or the native app's, so a learner who already plays there lands here with "no
+ * profile". Welcome shows the code to type in that app and keeps "I already have progress" next to Start.
+ */
 export function joinIntentTarget(intent: JoinBootIntent, hasProfile: boolean): JoinIntentTarget {
   const code = intent.code === null ? {} : { code: intent.code };
   if (hasProfile) return { screen: 'JoinSpace', params: code };
-  return { screen: 'Onboarding', params: { screen: 'CreateProfile', params: { firstRun: true, then: 'join', ...code } } };
+  return { screen: 'Onboarding', params: { screen: 'Welcome', params: { classLink: true, ...code } } };
 }
 
 export interface BootIntentSource {

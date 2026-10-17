@@ -251,14 +251,14 @@ describe('the join link boot intent', () => {
     for (const pathname of ['/', '/joins', '/teach/join', '/present']) expect(parseJoinBootIntent({ pathname, search: '', hash: '#c=ABC234' }), pathname).toBeNull();
   });
 
-  it('opens Join a class on a device with a profile, else the class-code first run (profile, then Join a class)', () => {
+  it('opens Join a class on a device with a profile, else Welcome with the code (Start, or I already have progress)', () => {
     expect(joinIntentTarget({ kind: 'join', code: 'ABC234' }, true)).toEqual({ screen: 'JoinSpace', params: { code: 'ABC234' } });
     expect(joinIntentTarget({ kind: 'join', code: null }, true)).toEqual({ screen: 'JoinSpace', params: {} });
     expect(joinIntentTarget({ kind: 'join', code: 'ABC234' }, false)).toEqual({
       screen: 'Onboarding',
-      params: { screen: 'CreateProfile', params: { firstRun: true, then: 'join', code: 'ABC234' } },
+      params: { screen: 'Welcome', params: { classLink: true, code: 'ABC234' } },
     });
-    expect(joinIntentTarget({ kind: 'join', code: null }, false)).toEqual({ screen: 'Onboarding', params: { screen: 'CreateProfile', params: { firstRun: true, then: 'join' } } });
+    expect(joinIntentTarget({ kind: 'join', code: null }, false)).toEqual({ screen: 'Onboarding', params: { screen: 'Welcome', params: { classLink: true } } });
   });
 
   function joinSource(code: string | null) {
@@ -283,7 +283,7 @@ describe('the join link boot intent', () => {
 
     const fresh = readyNavigator();
     openBootIntentWhenReady(fresh, joinSource('ABC234'), undefined, { hasProfile: () => false });
-    expect(fresh.navigate).toHaveBeenCalledWith('Onboarding', { screen: 'CreateProfile', params: { firstRun: true, then: 'join', code: 'ABC234' } });
+    expect(fresh.navigate).toHaveBeenCalledWith('Onboarding', { screen: 'Welcome', params: { classLink: true, code: 'ABC234' } });
   });
 
   it('with no join hand-off given, the intent is taken and nothing opens', () => {
