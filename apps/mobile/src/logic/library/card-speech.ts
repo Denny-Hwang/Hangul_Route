@@ -9,7 +9,7 @@ type CardWord = Pick<RuntimeVocabItem, 'ko' | 'visual'> & Partial<Pick<RuntimeVo
 
 /**
  * What the card page's Hear it says (F-AUDIO-004 §3.5): the card's Korean name. When a vocabulary word
- * reuses the card's art and has the same Korean (한복 on `card:hanbok`), the card says that word, with its
+ * reuses the card's art and has the same Korean (hanbok on `card:hanbok`), the card says that word, with its
  * spoken form and its clip path, so the word's recording plays here too once it is bundled. A card has
  * no `audioRef` of its own. `null` for a card with no Korean name.
  */

@@ -20,9 +20,10 @@ export function koSpeech(item: SpeakableKo, kind: PromptKind, source: string): P
   return spec;
 }
 
-const ONE_LETTER_OR_SYLLABLE = /^[ㄱ-ㆎ가-힣]$/u;
+/** One compatibility jamo (U+3131-U+318E) or one Hangul syllable block (U+AC00-U+D7A3). */
+const ONE_LETTER_OR_SYLLABLE = /^[\u3131-\u318E\uAC00-\uD7A3]$/u;
 const SENTENCE_END = /[.?!]$/u;
-/** Two short words read as one unit ("이천 원", 2,000 won); three or more words are a phrase. */
+/** Two short words read as one unit (a price such as "2,000 won"); three or more words are a phrase. */
 const PHRASE_WORDS = 3;
 
 /**
