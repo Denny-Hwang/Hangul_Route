@@ -83,7 +83,7 @@ export function ProfileScreen(): React.ReactElement {
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
-  const { copy, pinSet, opensDirectly } = useAudience();
+  const { copy, pinSet, opensDirectly, audience } = useAudience();
   const canOfferInstall = !installed && installGuideVariant(installEnv()) !== 'none';
 
   // A verified grown-up may add another child without re-entering the PIN
@@ -351,7 +351,8 @@ export function ProfileScreen(): React.ReactElement {
           style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
         >
           <View id="profile-group-grown-ups-title" style={{ flex: 1 }}>
-            <Heading level="prompt">{t.groups.grownUps}</Heading>
+            {/* A self-only device never says "grown-up" (F-LEARN-001 L7). */}
+            <Heading level="prompt">{audience === 'self' ? t.groups.account : t.groups.grownUps}</Heading>
           </View>
           <View style={{ transform: [{ rotate: grownUpsOpen ? '90deg' : '0deg' }] }}>
             <Icon name="arrow-right" size={24} color={colors.text.secondary} />

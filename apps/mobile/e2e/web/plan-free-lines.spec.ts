@@ -3,7 +3,7 @@ import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { FREE_VOCAB_TOPIC_IDS, freeExtrasCount } from '../../src/logic/content-access';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps } from './helpers';
 
 /**
  * F-ENT-003 E3-8 (section 3.9.1, wireframe billing/plan-status-free-lessons): the free-plan lines
@@ -88,6 +88,7 @@ async function openPlanDetails(page: Page, name: string, card = 'Free plan'): Pr
     await guide.getByRole('button', { name: 'Not now' }).click();
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await expect(page.getByText(card, { exact: true })).toBeVisible();
   const details = page.getByRole('button', { name: 'Plan details', exact: true });
   await details.scrollIntoViewIfNeeded();

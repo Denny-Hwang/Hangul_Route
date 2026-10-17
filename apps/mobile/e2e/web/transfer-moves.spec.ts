@@ -1,6 +1,6 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
 import { shot, shotFile, shotsEnabled } from './shots';
 
 /**
@@ -145,6 +145,7 @@ async function openProfile(page: Page, name: string): Promise<void> {
     await guide.getByRole('button', { name: 'Not now' }).click();
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await expect(page.getByRole('heading', { name: 'Classes & family' })).toBeVisible();
   // The memberships come from the mocked inbox; on a busy machine the first sync can take a few seconds.
   await expect(page.getByText('Sunday Class A', { exact: true })).toBeVisible({ timeout: 15_000 });
@@ -165,6 +166,7 @@ test('self device: Move opens directly, Find class, the consent sheet waits for 
   await onboardSelf(page, { name: 'Rio' });
   await seedSynced(page, null);
   await openProfile(page, 'Rio');
+  await openForGrownUps(page);
 
   const move = page.getByRole('button', { name: 'Move from Sunday Class A' });
   await expect(move).toBeVisible();
@@ -200,6 +202,7 @@ test('consent sheet language switch redraws the lines in Korean and Spanish', as
   await onboardSelf(page, { name: 'Rio' });
   await seedSynced(page, null);
   await openProfile(page, 'Rio');
+  await openForGrownUps(page);
   await page.getByRole('button', { name: 'Move from Sunday Class A' }).click();
   await page.getByTestId('move-code').fill('ABC234');
   await page.getByRole('button', { name: 'Find class' }).click();
@@ -225,6 +228,7 @@ test('transfers locked: the card reads as today', async ({ page, context }) => {
   await onboardSelf(page, { name: 'Rio' });
   await seedSynced(page, null);
   await openProfile(page, 'Rio');
+  await openForGrownUps(page);
   await expect(page.getByRole('button', { name: 'Leave Sunday Class A' }).or(page.getByRole('button', { name: 'Leave' }))).toBeVisible();
   await expect(page.getByRole('button', { name: /^Move/ })).toHaveCount(0);
   await expect(page.getByTestId('transfer-line')).toHaveCount(0);
@@ -298,6 +302,7 @@ test('Leave keeps its confirm and says when it did not go through', async ({ pag
   await onboardSelf(page, { name: 'Rio' });
   await seedSynced(page, null);
   await openProfile(page, 'Rio');
+  await openForGrownUps(page);
   await page.getByRole('button', { name: /Leave Sunday Class A/ }).click();
   // The app's own confirm sheet (design/components/ConfirmSheet): Stay first, Leave under it.
   await page.getByTestId('spaces-leave-sheet-confirm').click();
@@ -312,6 +317,7 @@ test.describe('a wide window', () => {
     await onboardSelf(page, { name: 'Rio' });
     await seedSynced(page, null);
     await openProfile(page, 'Rio');
+    await openForGrownUps(page);
     await page.getByRole('button', { name: 'Move from Sunday Class A' }).click();
     await page.getByTestId('move-code').fill('ABC234');
     await page.getByRole('button', { name: 'Find class' }).click();
@@ -327,6 +333,7 @@ test('a waiting Yes stays focusable and says why (aria-disabled, not removed fro
   await onboardSelf(page, { name: 'Rio' });
   await seedSynced(page, null);
   await openProfile(page, 'Rio');
+  await openForGrownUps(page);
   await page.getByRole('button', { name: 'Move from Sunday Class A' }).click();
   await page.getByTestId('move-code').fill('ABC234');
   await page.getByRole('button', { name: 'Find class' }).click();
@@ -343,6 +350,7 @@ test('switching the sheet language after reading asks for the new text to be rea
   await onboardSelf(page, { name: 'Rio' });
   await seedSynced(page, null);
   await openProfile(page, 'Rio');
+  await openForGrownUps(page);
   await page.getByRole('button', { name: 'Move from Sunday Class A' }).click();
   await page.getByTestId('move-code').fill('ABC234');
   await page.getByRole('button', { name: 'Find class' }).click();

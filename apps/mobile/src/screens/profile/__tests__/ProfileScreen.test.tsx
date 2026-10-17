@@ -206,6 +206,7 @@ describe('ProfileScreen groups (owner request 2026-10-16, item 8)', () => {
       expect(screenTexts(mine[0] as ReactTestInstance), locale).toContain(t.sound.label);
       const grown = byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance;
       expect(screenTexts(grown), locale).toContain(t.groups.grownUps);
+      expect(screenTexts(grown), locale).not.toContain(t.groups.account);
       // Collapsed: the classes card, the plan card, backup and the grown-up area are not drawn yet.
       expect(byTestId(grown, 'spaces-card'), locale).toHaveLength(0);
       expect(byTestId(grown, 'profile-grown-up-area'), locale).toHaveLength(0);
@@ -217,6 +218,24 @@ describe('ProfileScreen groups (owner request 2026-10-16, item 8)', () => {
       expect(order.indexOf(getMessages(locale).caregiver.spaces.title), locale).toBeGreaterThan(-1);
       expect(order.indexOf(getMessages(locale).caregiver.spaces.title), locale).toBeLessThan(order.indexOf(t.plan.details.cta));
       expect(order.indexOf(t.plan.details.cta), locale).toBeLessThan(order.indexOf(zone));
+      await unmount(renderer);
+    }
+  });
+});
+
+describe('ProfileScreen groups on a self-only device', () => {
+  afterEach(() => resetPlatform());
+
+  it.each(PLATFORMS)('%s: the second group never says "grown-up" (F-LEARN-001 L7)', async (platform) => {
+    for (const locale of LOCALES) {
+      setPlatform(platform);
+      seed('self', FREE, locale);
+      const t = getMessages(locale).learner.profile;
+      const renderer = await render(<ProfileScreen />);
+      const grown = byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance;
+      expect(screenTexts(grown), locale).toContain(t.groups.account);
+      expect(screenTexts(grown), locale).not.toContain(t.groups.grownUps);
+      if (locale === 'en') for (const text of screenTexts(renderer.root)) expect(text).not.toMatch(/grown-up/i);
       await unmount(renderer);
     }
   });

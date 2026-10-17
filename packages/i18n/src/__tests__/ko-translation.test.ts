@@ -279,6 +279,7 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'learner.story.check.position.pill',
   'learner.story.reader.position.pill',
   'learner.storyShelf.episode.rowLabel',
+  'learner.home.next.a11y',
   'learner.storyShelf.cultureNotes.source',
   'learner.storyShelf.heroLabel',
   'console.space.learner.planReadout',

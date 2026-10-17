@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, E2E_PIN, WHO_CHILD, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
+import { answerForkNew, E2E_PIN, onboardChild, openForGrownUps, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin, WHO_CHILD } from './helpers';
 
 /**
  * F-LEARN-001 §3.3, §3.4, §3.14, §3.15: the "Someone I look after" path. On
@@ -141,7 +141,8 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await expect(page.getByText('Hi, Mina!')).toBeVisible();
       await page.getByRole('button', { name: 'Profile and settings' }).click();
-      await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).click();
+      await openForGrownUps(page);
+      await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).click();
 
       await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
       await expect(page.getByText('Create a grown-up PIN')).toHaveCount(0);

@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, openLettersEpisode, passDiscover, unlockWithPin } from './helpers';
+import { completeChildForm, openForGrownUps, openLettersEpisode, passDiscover, unlockWithPin } from './helpers';
 
 /**
  * F-LAYOUT-001 PR 6 (§3.6 game rows, PIN row, LD4 "media scales, text does not"):
@@ -127,6 +127,7 @@ for (const c of CASES) {
       // PIN pad (verify mode): keys scale up to touchTarget.hero.
       await home(page, name);
       await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await openForGrownUps(page);
       await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
       await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
       // The pad sizes itself from an estimate until the header is measured: poll until the keys settle.

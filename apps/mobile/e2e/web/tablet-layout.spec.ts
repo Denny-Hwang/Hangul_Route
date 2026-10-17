@@ -89,9 +89,13 @@ for (const vp of [
       expect(missions.width / side.width).toBeCloseTo(1.5, 1);
 
       const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
-      const tip = (await page.getByText(/^Tip — finish today/).boundingBox())!;
+      // The tip follows the state (owner request 2026-10-16, item 8): a new learner's is the first-lesson tip.
+      const tip = (await page.getByText(/^Tip: /).boundingBox())!;
       const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
       for (const box of [progress, tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
+      // The Next lesson hero heads the left column, above the three mission cards (owner request 2026-10-16, item 8).
+      const hero = (await page.getByTestId('home-missions-column').getByTestId('home-next-lesson').boundingBox())!;
+      expect(hero.y).toBeLessThan((await page.getByTestId('home-missions').boundingBox())!.y);
       // The three mission cards keep their slot order, one under the other, in the left column.
       const cards = await page.getByTestId('home-missions-column').getByTestId('home-missions').getByRole('button').all();
       expect(cards.length).toBe(3);
@@ -528,6 +532,17 @@ const cardPane = (page: Page) => page.getByRole('region', { name: 'Card details'
 /** Gallery thumbs in content order: the first row is Book, then two locked Letters cards. */
 const thumbs = (scope: Page | ReturnType<Page['locator']>) => scope.getByRole('button', { name: /^(Book|Kimchi|Paper Folding|Locked card\. .+)$/ });
 
+/**
+ * The cards to find sit in one row per episode or stage, closed on arrival (owner request 2026-10-16, item 8):
+ * opens the row of `title` and returns its first card (in content order).
+ */
+async function firstToFind(scope: Page | ReturnType<Page['locator']>, title: string): Promise<ReturnType<Page['locator']>> {
+  const row = scope.getByRole('button', { name: `${title}: cards to find` });
+  if ((await row.getAttribute('aria-expanded')) !== 'true') await row.click();
+  await expect(row).toHaveAttribute('aria-expanded', 'true');
+  return scope.getByRole('button', { name: /^Locked card\. / }).first();
+}
+
 /** How many thumbs share the first row (same top edge). */
 async function firstRowColumns(scope: Page | ReturnType<Page['locator']>): Promise<number> {
   const boxes = await Promise.all((await thumbs(scope).all()).slice(0, 4).map((t) => t.boundingBox()));
@@ -600,7 +615,7 @@ test.describe('Library at 1180x820: two panes', () => {
     await expect(cardPane(page).getByText('tap to flip back')).toBeVisible();
 
     // A locked card names itself, with how it is earned, on press and shows no flip hint.
-    await thumbs(galleryPane(page)).nth(1).click();
+    await (await firstToFind(galleryPane(page), 'Meet the Letters')).click();
     const locked = cardPane(page).getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' });
     await expect(locked).toBeVisible();
     await locked.click({ force: true });
@@ -623,9 +638,10 @@ test.describe('Library at 1180x820: two panes', () => {
 
   test('a locked card shows where it is earned, with no paywall', async ({ page }) => {
     await openLibrary(page);
-    // The second Letters card (Hanji Paper) is the reward of the second Letters quest.
-    await thumbs(galleryPane(page)).nth(1).click();
-    await expect(thumbs(galleryPane(page)).nth(1)).toHaveAttribute('aria-selected', 'true');
+    // The first Letters card to find (Hanji Paper) is the reward of the second Letters quest.
+    const hanji = await firstToFind(galleryPane(page), 'Meet the Letters');
+    await hanji.click();
+    await expect(hanji).toHaveAttribute('aria-selected', 'true');
     await expect(cardPane(page).getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(cardPane(page).getByText('How to earn it')).toBeVisible();
     // Its earn hint (F-STORY-006 §3.7): what to do, never how far along.
@@ -633,7 +649,7 @@ test.describe('Library at 1180x820: two panes', () => {
     await expect(cardPane(page).getByText('Premium')).toHaveCount(0);
     await expect(cardPane(page).getByRole('button', { name: 'Hear it' })).toHaveCount(0);
     // A stage card names its stage.
-    await thumbs(galleryPane(page)).nth(5).click(); // Hangul Day (stage1-complete)
+    await (await firstToFind(galleryPane(page), 'Stage 1')).click(); // Hangul Day (stage1-complete)
     await expect(cardPane(page).getByRole('heading', { name: 'Hangul Day' })).toBeVisible();
     await expect(cardPane(page).getByText('Finish every quest in Stage 1')).toBeVisible();
   });
@@ -668,7 +684,7 @@ test.describe('Library at 768x1024: 3 columns, one pane, a tap navigates', () =>
 
   test('the card screen of a locked card says how to earn it too (F-STORY-006 §3.7, wireframe library/earn-hints F2)', async ({ page }) => {
     await openLibrary(page);
-    await thumbs(page).nth(1).click(); // Hanji Paper, locked
+    await (await firstToFind(page, 'Meet the Letters')).click(); // Hanji Paper, locked
     await expect(page.getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
     await expect(page.getByText('How to earn it')).toBeVisible();

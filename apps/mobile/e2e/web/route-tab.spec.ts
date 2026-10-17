@@ -228,6 +228,27 @@ test.describe('the Route tab (LR-4)', () => {
     await shot(page, 'route-tab-320');
   });
 
+  test('a quiet trail for a new learner: no Open pill, "Ready when you are" once, later stages one line each (owner request 2026-10-16, item 8)', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 640 });
+    await learnerOnHome(page);
+    await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+    const trail = page.getByTestId('my-route-trail');
+    await expect(trail).toBeVisible();
+    // Nothing is closed in this build, so "Open" says nothing: no stage pill and no cell word reads it.
+    await expect(trail.getByText(en.learner.myRoute.state.open, { exact: true })).toHaveCount(0);
+    await expect(trail.getByText(en.learner.myRoute.caption.ready, { exact: true })).toHaveCount(1);
+    // The stage the learner is on keeps its pips; the stages after it are one line, with no pips and no caption.
+    await expect(page.getByTestId('my-route-pips-1')).toBeVisible();
+    const stage2 = page.getByTestId('my-route-stage-2');
+    await expect(stage2).toBeVisible();
+    await expect(page.getByTestId('my-route-pips-2')).toHaveCount(0);
+    // A one-line row still opens in place.
+    await stage2.getByRole('button').first().click();
+    await expect(stage2.getByRole('button').first()).toHaveAttribute('aria-expanded', 'true');
+    expect(await noSideScroll(page)).toBe(true);
+    await shot(page, 'route-tab-quiet-360');
+  });
+
   test("the active learner's entries open the tab: the Journey header link and the Home strip", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await learnerOnHome(page);

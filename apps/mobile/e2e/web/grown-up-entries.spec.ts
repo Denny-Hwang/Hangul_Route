@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, unlockWithPin } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -68,8 +68,10 @@ async function openProfile(page: Page, name: string): Promise<void> {
   await page.waitForTimeout(800);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  // The grown-up controls sit in Profile's "For grown-ups" group, collapsed on arrival (owner request 2026-10-16, item 8).
+  await openForGrownUps(page);
   // A family device's zone button, or a self-only device's (F-LEARN-001 L7).
-  await expect(page.getByRole('button', { name: /^(Grown-up zone|Account & backup)/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^(Grown-up area|Account & backup)/ })).toBeVisible();
 }
 
 /** The focused element's accessible name as a keyboard user meets it: its label, or its text. */
@@ -149,7 +151,7 @@ test.describe('flag off (the kill switch EXPO_PUBLIC_GROWN_UP_HOME=false)', () =
     await onboardChild(page, { name: 'Mina' });
     await openProfile(page, 'Mina');
     await expect(page.getByRole('button', { name: PROFILE_ROW })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).click();
+    await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).click();
     await unlockWithPin(page);
     await expect(page.getByText('Read-only — learners on this device.')).toBeVisible();
     await expect(page.getByTestId('dashboard-grown-up-home')).toHaveCount(0);
@@ -210,22 +212,23 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await expect(page.getByRole('button', { name: 'Parent or caregiver' })).toBeVisible();
     await page.getByRole('button', { name: "Let's start" }).focus();
     const panelA: string[] = [await focusedName(page)];
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < 4; i += 1) {
       await page.keyboard.press('Tab');
       panelA.push(await focusedName(page));
     }
-    expect(panelA).toEqual(["Let's start", 'I already have progress', 'Parent or caregiver', 'Teacher']);
+    // "Got a class code?" sits with the learner's ways in, under the restore link (owner request 2026-10-16, item 8).
+    expect(panelA).toEqual(["Let's start", 'I already have progress', 'Got a class code?', 'Parent or caregiver', 'Teacher']);
 
     await seedLastPersona(page, 'parent');
     await page.goto('/');
     await expect(page.getByRole('button', { name: 'Continue as family' })).toBeVisible();
     await page.getByRole('button', { name: 'I already have progress' }).focus();
     const panelB: string[] = [];
-    for (let i = 0; i < 2; i += 1) {
+    for (let i = 0; i < 3; i += 1) {
       await page.keyboard.press('Tab');
       panelB.push(await focusedName(page));
     }
-    expect(panelB).toEqual(['Continue as family', 'Someone else']);
+    expect(panelB).toEqual(['Got a class code?', 'Continue as family', 'Someone else']);
     // Someone else removes the control that had focus; focus moves to Parent or caregiver.
     await page.keyboard.press('Enter');
     await expect(page.getByRole('button', { name: 'Parent or caregiver' })).toBeFocused();
@@ -279,7 +282,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     const row = page.getByRole('button', { name: 'Grown-up home, Your family, classes and billing (PIN required)' });
     await expect(row).toBeVisible();
     const rowBox = await row.boundingBox();
-    const zoneBox = await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).boundingBox();
+    const zoneBox = await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).boundingBox();
     expect(rowBox?.y ?? 0).toBeLessThan(zoneBox?.y ?? 0);
     expect(rowBox?.height ?? 0).toBeGreaterThanOrEqual(44);
     expect(await noSidewaysScroll(page)).toBe(true);
@@ -305,29 +308,34 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK)).toBeNull();
   });
 
-  test('a self-only device\'s dashboard card says "Account home" too (D9)', async ({ page }) => {
+  test('a self-only device\'s dashboard row says "Sign in to your account", never "family" (D9)', async ({ page }) => {
     await onboardSelf(page, { name: 'Sam' });
     await openProfile(page, 'Sam');
     await page.getByRole('button', { name: /^Account & backup/ }).click();
     const card = page.getByTestId('dashboard-grown-up-home');
     await expect(card).toBeVisible();
-    await expect(card.getByText('Account home')).toBeVisible();
-    await expect(card.getByText('Grown-up home')).toHaveCount(0);
+    await expect(card.getByRole('button', { name: 'Sign in to your account' })).toBeVisible();
+    await expect(card.getByText(/family|grown-up/i)).toHaveCount(0);
   });
 
-  test('dashboard: the card on top, and a PIN entered to open the dashboard is not asked again', async ({ page }) => {
+  test('dashboard: the sign-in row on top, an outline row (owner request 2026-10-16, item 8), and a PIN entered to open the dashboard is not asked again', async ({ page }) => {
     await standInSignIn(page);
     await onboardChild(page, { name: 'Mina' });
     await openProfile(page, 'Mina');
-    await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).click();
+    await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).click();
     await unlockWithPin(page);
+    // One name: the page is the Grown-up area, with the persona under it.
+    await expect(page.getByRole('heading', { name: 'Grown-up area' })).toBeVisible();
+    await expect(page.getByTestId('dashboard-persona')).toHaveText('Parent or caregiver');
     const card = page.getByTestId('dashboard-grown-up-home');
     await expect(card).toBeVisible();
-    await expect(card.getByText('Grown-up home')).toBeVisible();
-    await expect(card.getByText('Your family, classes and billing.')).toBeVisible();
+    const row = card.getByRole('button', { name: 'Sign in for family and class tools' });
+    await expect(row).toBeVisible();
+    // An outline row: See report stays the learner card's one filled button.
+    expect(await row.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
     await shot(page, 'a7-dashboard-card-375');
 
-    await card.getByRole('button', { name: 'Open' }).click();
+    await row.click();
     await expect(page).toHaveURL(/\/signin\?lang=en$/);
     const unlock = await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK);
     expect(JSON.parse(unlock ?? '{}')).toMatchObject({ v: 1, src: 'pin' });
@@ -343,7 +351,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await row.scrollIntoViewIfNeeded();
     await shot(page, 'a7-profile-row-offline-375');
 
-    await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).click();
+    await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).click();
     await unlockWithPin(page);
     const open = page.getByTestId('dashboard-grown-up-home-open');
     await expect(open).toBeDisabled();
@@ -385,12 +393,12 @@ test('Join prefill: a family code handed over in this tab fills the Join screen 
   await page.evaluate(([k, v]) => sessionStorage.setItem(k, v), [JOIN_HANDOFF, JSON.stringify({ v: 1, code: 'ABCD23', at: Date.now() })] as const);
   await openProfile(page, 'Mina');
   await page.getByRole('button', { name: 'Join a class' }).click();
-  await expect(page.getByLabel('Class code')).toHaveValue('ABCD23');
+  await expect(page.getByLabel('Class code', { exact: true })).toHaveValue('ABCD23');
   expect(await page.evaluate((k) => sessionStorage.getItem(k), JOIN_HANDOFF)).toBeNull();
 
   await page.getByRole('button', { name: 'Go back' }).last().click();
   await page.getByRole('button', { name: 'Join a class' }).click();
-  await expect(page.getByLabel('Class code')).toHaveValue('');
+  await expect(page.getByLabel('Class code', { exact: true })).toHaveValue('');
 });
 
 test('Join prefill: a code older than 30 minutes is dropped', async ({ page }) => {
@@ -401,7 +409,7 @@ test('Join prefill: a code older than 30 minutes is dropped', async ({ page }) =
   );
   await openProfile(page, 'Mina');
   await page.getByRole('button', { name: 'Join a class' }).click();
-  await expect(page.getByLabel('Class code')).toHaveValue('');
+  await expect(page.getByLabel('Class code', { exact: true })).toHaveValue('');
   // The reader ran: the stale code is removed, not left for a later screen.
   expect(await page.evaluate((k) => sessionStorage.getItem(k), JOIN_HANDOFF)).toBeNull();
 });

@@ -90,8 +90,8 @@ describe('nameIn', () => {
   it('takes function messages and escapes regex characters', () => {
     const re = nameIn('en', (m) => m.caregiver.audience.gated(m.caregiver.audience.family.zoneLabel, true));
     expect(re.source).toContain('\\(PIN required\\)');
-    expect(re.test('Grown-up zone (PIN required)')).toBe(true);
-    expect(re.test('Grown-up zone PIN required')).toBe(false);
+    expect(re.test('Grown-up area (PIN required)')).toBe(true);
+    expect(re.test('Grown-up area PIN required')).toBe(false);
   });
 });
 

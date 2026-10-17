@@ -123,7 +123,7 @@ export const learner = {
     addProfileName: '프로필 추가',
     statsTitle: (name: string | null) => (name === null ? '내 기록' : `${name}의 기록`),
     stats: { quests: '끝낸 퀘스트', cards: '카드', threeStar: '별 3개 퀘스트' },
-    groups: { mine: '내 설정', grownUps: '어른용 설정' },
+    groups: { mine: '내 설정', grownUps: '어른용 설정', account: '계정 설정' },
     sound: { label: '소리', on: '켜짐', off: '꺼짐' },
     plan: {
       free: '무료 플랜',

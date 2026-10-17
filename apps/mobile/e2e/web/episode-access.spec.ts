@@ -100,7 +100,7 @@ test.describe('free plan switch on (web)', () => {
     await home(page, 'Dami');
     await openCell(page, 2, 'Food & Daily Life');
     await page.getByTestId('episode-preview-ask').click();
-    await expect(page.getByRole('heading', { name: 'Grown-up zone' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Grown-up area' })).toBeVisible();
     await unlockWithPin(page);
     // The Plan screen (F-BILL-002 B-9), attributed to the episode page.
     await expect(page.getByText('Dami is on the free plan.')).toBeVisible();

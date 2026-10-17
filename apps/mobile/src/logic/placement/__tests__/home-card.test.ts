@@ -51,10 +51,14 @@ describe('the Home level-check card (F-PLC-001 section 3.10)', () => {
 
 describe('the level-check card after "I am new to Korean" (owner request 2026-10-16, item 8)', () => {
   const declined = { ...eligible, declinedAt: '2026-10-16T09:00:00Z' };
-  it('stays hidden while the first quests are played, and the three-quest rule keeps it hidden after', () => {
+  it('stays hidden until three quests are done, then is offered until Not now or a result', () => {
     for (let done = 0; done < HOME_CARD_MAX_QUESTS; done += 1) expect(levelCheckCard({ ...declined, questsDone: done }), `${done}`).toBeNull();
-    expect(levelCheckCard({ ...declined, questsDone: HOME_CARD_MAX_QUESTS })).toBeNull();
     expect(levelCheckCard({ ...declined, resumable: true })).toBeNull();
+    expect(levelCheckCard({ ...declined, questsDone: HOME_CARD_MAX_QUESTS })).toBe('take');
+    expect(levelCheckCard({ ...declined, questsDone: 10, resumable: true })).toBe('continue');
+    expect(levelCheckCard({ ...declined, questsDone: 5, dismissedAt: '2026-10-17T00:00:00Z' })).toBeNull();
+    expect(levelCheckCard({ ...declined, questsDone: 5, hasResult: true })).toBeNull();
+    expect(levelCheckCard({ ...declined, questsDone: 5, enabled: false })).toBeNull();
   });
   it('an empty or absent decline changes nothing', () => {
     expect(levelCheckCard({ ...eligible, declinedAt: '' })).toBe('take');

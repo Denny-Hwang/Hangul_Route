@@ -18,7 +18,7 @@ describe('caregiver.grownUpHome (F-APP-001 section 3.9, PIN screen without a PIN
   });
 
   it('holds exactly these keys', () => {
-    expect(leafPaths(grownUpHome).sort()).toEqual(['continue.cta', 'cta', 'line', 'noPin', 'title']);
+    expect(leafPaths(grownUpHome).sort()).toEqual(['continue.cta', 'noPin', 'signIn.family', 'signIn.self']);
   });
 
   it('passes the caregiver ban list, names no age, no price and no way to make a PIN here', () => {

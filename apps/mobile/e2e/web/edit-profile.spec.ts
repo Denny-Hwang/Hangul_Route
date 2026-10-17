@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, readStored, seedStored, typeDigits, unlockWithPin, waitForSaved } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, readStored, seedStored, typeDigits, unlockWithPin, waitForSaved } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -164,6 +164,7 @@ for (const vp of VIEWPORTS) {
     test('self-only device: changing to a child asks for the grown-up consent and a new PIN', async ({ page }) => {
       await onboardSelf(page, { name: 'Leo' });
       await openProfile(page, 'Leo');
+      await openForGrownUps(page);
       await page.getByRole('button', { name: 'Edit Leo', exact: true }).click();
       await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
 
@@ -192,7 +193,7 @@ for (const vp of VIEWPORTS) {
       // Now a family device with a PIN: the Edit button and the zone say so.
       await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Edit Leo (PIN required)', exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Grown-up zone (PIN required)' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Grown-up area (PIN required)' })).toBeVisible();
       await waitForSaved(page, ['account:parentPinHash', 'account:guardianConsentAcceptedAt']);
       await expect.poll(async () => (await storedProfile(page)).learnerType).toBe('child');
     });

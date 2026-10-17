@@ -34,8 +34,8 @@ describe('caregiver.audience (the audience-copy block)', () => {
   it('keeps the family and self variants', () => {
     expect(a.family).toEqual({
       installGuideHelp: 'A grown-up can help.',
-      zoneLabel: 'Grown-up zone',
-      pinVerifyTitle: 'Grown-up zone',
+      zoneLabel: 'Grown-up area',
+      pinVerifyTitle: 'Grown-up area',
       pinCreateTitle: 'Create a grown-up PIN',
       pinCreateSubtitle: 'Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.',
     });
@@ -109,9 +109,11 @@ describe('caregiver.pin (entry, set-up field and reset)', () => {
 });
 
 describe('caregiver dashboard, paywall, spaces and backup', () => {
-  it('keeps the Family Dashboard', () => {
+  it('keeps the dashboard, titled with the one grown-up name (owner request 2026-10-16, item 8)', () => {
     const d = c.dashboard;
-    expect(d.title).toBe('Family Dashboard');
+    expect('title' in d).toBe(false);
+    expect(d.persona).toBe('Parent or caregiver');
+    expect(d.aboutRows.cta).toBe('About these rows');
     expect(d.readOnly).toBe('Read-only — learners on this device.');
     expect(d.noProfiles).toBe('No profiles yet.');
     expect(d.stats).toEqual({ quests: 'Quests', cards: 'Cards', sessions: 'Sessions', minutes: 'Minutes' });

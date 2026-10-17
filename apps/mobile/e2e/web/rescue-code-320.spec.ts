@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, unlockWithPin } from './helpers';
+import { onboardChild, openForGrownUps, unlockWithPin } from './helpers';
 
 /**
  * SEC-5: Rescue Codes grew from two words + four digits to four words + six
@@ -48,6 +48,7 @@ function seedRescueCode(page: Page, code: string): Promise<void> {
 test('sync/restore: the whole longest code is visible in the field, wrapped, with no sideways scroll', async ({ page }) => {
   await onboard(page, 'Dami');
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
   await unlockWithPin(page);
   await page.getByRole('button', { name: 'I have a rescue code' }).click();
@@ -77,6 +78,7 @@ test('sync/save-progress: a code is shown one word per row — no word breaks mi
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await page.getByRole('button', { name: /Save my progress/ }).click();
   await unlockWithPin(page);
 

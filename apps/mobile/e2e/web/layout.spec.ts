@@ -4,6 +4,7 @@ import {
   completeChildForm,
   forgetPin,
   keepSidewaysIfAsked,
+  openForGrownUps,
   openLettersEpisode,
   passDiscover,
   playCheck,
@@ -110,6 +111,8 @@ for (const vp of VIEWPORTS) {
       await expect(profile).toBeVisible();
       await expect(profile.getByText('Profile', { exact: true })).toBeVisible();
       await profile.click();
+      // The backup controls sit in Profile's "For grown-ups" group, collapsed on arrival (owner request 2026-10-16, item 8).
+      await openForGrownUps(page);
 
       const restore = page.getByRole('button', { name: 'Restore from a file (PIN required)' });
       await expectReachable(page, restore);
@@ -191,6 +194,7 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await expect(page.getByText('Hi, Pia!')).toBeVisible();
       await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await openForGrownUps(page);
       await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
 
       // The grown-up PIN was created in the onboarding form, so the gate is already in verify mode
@@ -211,6 +215,7 @@ for (const vp of VIEWPORTS) {
       await page.waitForTimeout(800);
       if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
       await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await openForGrownUps(page);
       await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
       await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
       const key = page.getByRole('button', { name: 'Digit 5' });

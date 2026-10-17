@@ -3,6 +3,7 @@ import {
   answerForkNew,
   E2E_PIN,
   onboardChild,
+  openForGrownUps,
   openGrownUpZone,
   readStored,
   seedRescueCode,
@@ -130,6 +131,7 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await expect(page.getByText('Hi, Soo!')).toBeVisible();
       await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await openForGrownUps(page);
       await page.getByRole('button', { name: /^Account & backup/ }).first().click();
       await expect(page.getByRole('heading', { name: 'Settings PIN' })).toBeVisible();
       await expect(page.getByText(/grown-up/i)).toHaveCount(0);

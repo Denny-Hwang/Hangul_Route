@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
+import { onboardChild, openForGrownUps, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -96,7 +96,8 @@ async function reportFromNotePage(page: Page): Promise<void> {
 /** On Profile, with no reload: the grown-up zone asks for the PIN again (the session is closed). */
 async function expectZoneLocked(page: Page): Promise<void> {
   await expect(page.getByTestId('profile-notes-row')).toBeVisible();
-  await page.getByRole('button', { name: /^Grown-up zone/ }).click();
+  await openForGrownUps(page);
+  await page.getByRole('button', { name: /^Grown-up area/ }).click();
   await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
 }
 

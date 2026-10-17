@@ -1,7 +1,7 @@
 import { devices, type Page, type Playwright } from '@playwright/test';
 import { en } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openGrownUpZone, readStored, typeDigits, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, typeDigits, unlockWithPin } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -219,6 +219,7 @@ test.describe('the in-app report on a self-only device', () => {
     await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
     if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
     await page.getByRole('button', { name: 'Profile and settings' }).click();
+    await openForGrownUps(page);
     await page.getByRole('button', { name: /^Account & backup/ }).click();
     await page.getByTestId(`dashboard-see-report-${id}`).click();
 

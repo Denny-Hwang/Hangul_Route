@@ -161,8 +161,11 @@ export const learner = {
     addProfileName: 'Add a profile',
     statsTitle: (name: string | null) => `${name ?? 'Your'} stats`,
     stats: { quests: 'Quests done', cards: 'Cards', threeStar: '3-star quests' },
-    /** The two groups under the stats (owner request 2026-10-16, item 8): the learner's own, then the grown-ups', collapsed. */
-    groups: { mine: 'My settings', grownUps: 'For grown-ups' },
+    /**
+     * The two groups under the stats (owner request 2026-10-16, item 8): the learner's own, then the grown-ups', collapsed.
+     * A self-only device never says "grown-up" (F-LEARN-001 L7): its second group is `account`.
+     */
+    groups: { mine: 'My settings', grownUps: 'For grown-ups', account: 'Account & more' },
     sound: { label: 'Sound', on: 'On', off: 'Off' },
     plan: {
       free: 'Free plan',

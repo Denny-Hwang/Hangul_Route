@@ -71,7 +71,7 @@ describe('audienceCopy: the two audiences differ only where the spec says', () =
   });
 
   it('the grown-up zone is a family caregiver surface; the self-only device says "Account & backup"', () => {
-    expect(audienceCopy('family').zoneLabel).toBe('Grown-up zone');
+    expect(audienceCopy('family').zoneLabel).toBe('Grown-up area');
     expect(audienceCopy('self').zoneLabel).toBe('Account & backup');
   });
 
@@ -95,7 +95,7 @@ describe('audienceCopy: the two audiences differ only where the spec says', () =
 describe('audienceCopy: PIN screen titles by audience (F-LEARN-001 §3.4)', () => {
   it('family keeps the grown-up wording', () => {
     const c = audienceCopy('family');
-    expect(c.pinVerifyTitle).toBe('Grown-up zone');
+    expect(c.pinVerifyTitle).toBe('Grown-up area');
     expect(c.pinCreateTitle).toBe('Create a grown-up PIN');
     expect(c.pinCreateSubtitle).toBe('Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.');
   });
@@ -151,7 +151,7 @@ describe('audienceCopy: words come from the message subtree it is given (F-I18N-
     expect(audienceCopyFor('self', other).homeworkIntro).toBe('Elegida por Hoya.');
     expect(audienceCopyFor('family', other).homeworkIntro).toBe('Elegida por Hoya.');
     expect(audienceCopyFor('self', other).zoneLabel).toBe('Cuenta y copia');
-    expect(audienceCopyFor('family', other).zoneLabel).toBe('Grown-up zone');
+    expect(audienceCopyFor('family', other).zoneLabel).toBe('Grown-up area');
     expect(audienceCopyFor('family', other).gatedA11y('Add a profile', false)).toBe('Add a profile [PIN]');
     expect(audienceCopyFor('self', other).gatedA11y('Add a profile', false)).toBe('Add a profile');
     expect(audienceCopyFor('self', other).gatedA11y('Add a profile', true)).toBe('Add a profile [PIN]');

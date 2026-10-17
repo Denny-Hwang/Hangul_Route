@@ -127,7 +127,7 @@ export const learner = {
     addProfileName: 'Añadir un perfil',
     statsTitle: (name: string | null) => (name === null ? 'Tus datos' : `Datos de ${name}`),
     stats: { quests: 'Misiones', cards: 'Tarjetas', threeStar: 'Misiones 3★' },
-    groups: { mine: 'Mis ajustes', grownUps: 'Para adultos' },
+    groups: { mine: 'Mis ajustes', grownUps: 'Para adultos', account: 'Cuenta y más' },
     sound: { label: 'Sonido', on: 'Sí', off: 'No' },
     plan: {
       free: 'Plan gratuito',
@@ -253,7 +253,7 @@ export const learner = {
       doneToday: '¡Buen trabajo hoy! Tus tarjetas te esperan en la colección.',
       daily: 'Consejo: un poco cada día te ayuda a aprender.',
     },
-    classCode: { cta: '¿Tienes un código de clase?' },
+    classCode: { cta: '¿Tienes código de clase?' },
     recentStars: 'Estrellas nuevas',
     catchUp: {
       line: (count: number) =>

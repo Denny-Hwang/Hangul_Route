@@ -1,6 +1,6 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, unlockWithPin } from './helpers';
 
 /**
  * F-BILL-002 B-9 (section 4.7, wireframe billing/plan-status, mock
@@ -89,6 +89,7 @@ async function openPlanDetails(page: Page, name: string, card = 'Free plan'): Pr
     await guide.getByRole('button', { name: 'Not now' }).click();
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
   await expect(page.getByText(card, { exact: true })).toBeVisible();
   if (card === 'Full route') await expect(page.getByText('Active', { exact: true })).toBeVisible();

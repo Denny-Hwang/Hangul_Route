@@ -9,7 +9,10 @@ import type { RouteNext } from '../route-next';
  * title.
  */
 
-/** The card disappears once this many quests are complete. */
+/**
+ * Without a decline the card disappears once this many quests are complete; after "I am new to Korean" it waits
+ * for this many and is offered from then on (owner request 2026-10-16, item 8).
+ */
 export const HOME_CARD_MAX_QUESTS = 3;
 
 export interface LevelCheckCardInput {
@@ -32,11 +35,13 @@ export interface LevelCheckCardInput {
 /** `take` ("Take the level check"), `continue` ("Continue the level check"), or null (hidden). */
 export function levelCheckCard(input: LevelCheckCardInput): 'take' | 'continue' | null {
   if (!input.enabled || !input.bankReady || input.hasResult) return null;
-  if (input.questsDone >= HOME_CARD_MAX_QUESTS) return null;
   if (input.dismissedAt !== undefined && input.dismissedAt !== '') return null;
-  // "I am new to Korean" was just said: the card stays away while the learner plays the first quests (and the
-  // rule above hides it for good once they are done), so Home never asks "Already know some Korean?" right after.
-  if (input.declinedAt !== undefined && input.declinedAt !== '' && input.questsDone < HOME_CARD_MAX_QUESTS) return null;
+  const declined = input.declinedAt !== undefined && input.declinedAt !== '';
+  // "I am new to Korean" was just said (owner request 2026-10-16, item 8): Home does not ask "Already know some
+  // Korean?" right after. The card stays hidden until the first three quests are done, and is offered from then on
+  // (a learner who said "new" may find the check useful once they have played), until Not now or a result.
+  if (declined) return input.questsDone < HOME_CARD_MAX_QUESTS ? null : input.resumable ? 'continue' : 'take';
+  if (input.questsDone >= HOME_CARD_MAX_QUESTS) return null;
   return input.resumable ? 'continue' : 'take';
 }
 

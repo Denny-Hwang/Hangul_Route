@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps } from './helpers';
 
 /**
  * F-LEARN-001 §3.7, §3.9, L7: no "Age X" label anywhere, copy that reads the
@@ -38,6 +38,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText('Hi, Rio!')).toBeVisible();
       await expect(page.getByText('Reviews picked for you')).toBeVisible();
       await openProfile(page, 'Rio');
+      await openForGrownUps(page);
 
       // The card shows the name and the level label, never an age.
       await expect(page.getByText('Tap a profile to switch.')).toBeVisible();
@@ -82,6 +83,7 @@ for (const vp of VIEWPORTS) {
 
       // The Plan screen is reached from Profile with no PIN (F-BILL-002 B-9: Plan details on every tier).
       await openProfile(page, 'Rio');
+      await openForGrownUps(page);
       const details = page.getByRole('button', { name: 'Plan details', exact: true });
       await details.scrollIntoViewIfNeeded();
       await details.click();
@@ -92,12 +94,13 @@ for (const vp of VIEWPORTS) {
     test('family device: the gate and its wording are unchanged, still no age', async ({ page }) => {
       await onboardChild(page, { name: 'Mina' });
       await openProfile(page, 'Mina');
+      await openForGrownUps(page);
 
       await expect(page.getByText('Tap a profile to switch.')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Switch to Mina' }).getByText(LEVEL_LABEL)).toBeVisible();
       expect(await screenText(page)).not.toMatch(/\bAges?\b|Tap a Hoya/i);
 
-      await expect(page.getByRole('button', { name: 'Grown-up zone (PIN required)' })).toBeAttached();
+      await expect(page.getByRole('button', { name: 'Grown-up area (PIN required)' })).toBeAttached();
       const add = page.getByRole('button', { name: 'Add a profile (PIN required)' });
       await add.scrollIntoViewIfNeeded();
       await add.click();

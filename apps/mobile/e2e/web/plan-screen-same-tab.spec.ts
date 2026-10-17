@@ -1,6 +1,6 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, unlockWithPin } from './helpers';
 
 /**
  * F-BILL-002 B-9b (section 4.7; wireframe billing/plan-status, mock design/screens/billing/plan-status.md
@@ -48,6 +48,7 @@ async function openProfile(page: Page, name: string): Promise<void> {
     await guide.getByRole('button', { name: 'Not now' }).click();
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await openForGrownUps(page);
   await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
 }
 

@@ -150,13 +150,15 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
       ['colors', 'Colors'],
       ['numbers', 'Numbers'],
     ] as const) {
-      await expect(page.getByTestId(`vocab-topic-tile-${key}`)).toHaveAccessibleName(`${title}. 0 words collected.`);
+      // A topic with no word yet says New, never "0 collected" (owner request 2026-10-16, item 8).
+      await expect(page.getByTestId(`vocab-topic-tile-${key}`)).toHaveAccessibleName(`${title}. New topic.`);
     }
     // Korean title with its romanization; the count in words; the bar is hidden from screen readers.
     const food = page.getByTestId('vocab-topic-tile-food');
     await expect(food).toContainText('음식');
     await expect(food).toContainText('eumsik');
-    await expect(food).toContainText('0 collected');
+    await expect(food).toContainText('New');
+    await expect(food).not.toContainText('0 collected');
     await expect(page.getByRole('progressbar')).toHaveCount(0);
     // 2 columns on a 393 dp phone (§3.3).
     await expect.poll(() => columns(page, 'vocab-topic-tile-')).toBe(2);
@@ -345,7 +347,9 @@ test.describe('the Library Words tab (the release build and the fixture bundle; 
 
     const section = page.getByTestId('library-words');
     await expect(section).toContainText('Pick a topic. Meet a few words at a time.');
-    await expect(page.getByTestId('library-words-count')).toHaveText('0 collected');
+    // The count waits for the first word (owner request 2026-10-16, item 8).
+    await expect(page.getByTestId('library-words-count')).toHaveCount(0);
+    await expect(section).not.toContainText('0 collected');
     expectReadyTopics(
       await page.locator('[data-testid^="vocab-topic-tile-"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid'))),
     );

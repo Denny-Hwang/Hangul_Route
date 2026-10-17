@@ -79,7 +79,7 @@ describe('classesCardView (T-7b)', () => {
   });
 
   it('(d) a managed device with no PIN: the PIN line and Set up PIN; (d\') a PIN younger than a day: its own line, no button', () => {
-    expect(classesCardView(input({ device: managed({ parentPinHash: null }) }), t, date)).toEqual({ move: null, pending: null, line: 'A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.', setUpPin: true });
+    expect(classesCardView(input({ device: managed({ parentPinHash: null }) }), t, date)).toEqual({ move: null, pending: null, line: 'A grown-up needs to set up a PIN first. In Profile, open For grown-ups, then Grown-up area.', setUpPin: true });
     expect(classesCardView(input({ device: managed({ pinCreatedAt: NOW - 2 * HOUR }) }), t, date)).toEqual({ move: null, pending: null, line: 'Moves open one day after the PIN is set.', setUpPin: false });
   });
 
@@ -111,7 +111,7 @@ describe('classesCardView (T-7b)', () => {
   it('a reset learner request the device cannot answer yet keeps the veto and says why (PIN split)', () => {
     const noPin = classesCardView(input({ device: managed({ parentPinHash: null }), transfers: transfers({ requests: [req({ learnerState: 'pending' })] }) }), t, date);
     expect(noPin.pending).toMatchObject({ primary: false, gated: true });
-    expect(noPin.line).toBe('A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.');
+    expect(noPin.line).toBe('A grown-up needs to set up a PIN first. In Profile, open For grown-ups, then Grown-up area.');
     expect(noPin.setUpPin).toBe(true);
     const young = classesCardView(input({ device: managed({ pinCreatedAt: NOW - HOUR }), transfers: transfers({ requests: [req({ learnerState: 'pending' })] }) }), t, date);
     expect(young.line).toBe('Moves open one day after the PIN is set.');
@@ -164,7 +164,7 @@ describe('classesCardView (T-7b)', () => {
     expect(classesCardView(input({ transfers: ended, device: managed({ parentPinHash: null }) }), t, date)).toEqual({
       move: null,
       pending: null,
-      line: 'This request ended. A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.',
+      line: 'This request ended. A grown-up needs to set up a PIN first. In Profile, open For grown-ups, then Grown-up area.',
       setUpPin: true,
     });
     expect(classesCardView(input({ transfers: ended, device: managed({ pinCreatedAt: NOW - 2 * HOUR }) }), t, date).line).toBe('This request ended. Moves open one day after the PIN is set.');
@@ -243,7 +243,7 @@ describe('readOnlySheetView (guard 11: the veto and Back only)', () => {
     expect(view(req({ learnerState: 'pending', learnerRoute: 'caregiver' })).lines).toEqual(['Asked: a move to Saturday Class B. Please check this again.', 'A grown-up with an account answers this in the console.']);
     expect(view(req({ learnerState: 'pending', learnerRoute: 'none' })).lines[1]).toBe("This move can't be answered here.");
     expect(view(req({ learnerState: 'pending' }), managed({ pinCreatedAt: NOW - HOUR })).lines[1]).toBe('Moves open one day after the PIN is set.');
-    expect(view(req({ learnerState: 'pending' }), managed({ parentPinHash: null })).lines[1]).toBe('A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.');
+    expect(view(req({ learnerState: 'pending' }), managed({ parentPinHash: null })).lines[1]).toBe('A grown-up needs to set up a PIN first. In Profile, open For grown-ups, then Grown-up area.');
   });
 
   it('an unknown initiator reads learner-side, with Cancel the request', () => {
