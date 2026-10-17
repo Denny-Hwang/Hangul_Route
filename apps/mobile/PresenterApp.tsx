@@ -28,6 +28,8 @@ import {
   slideLocale,
   runDeck,
   SHELL_SLIDE_KINDS,
+  SOUND_CHECK,
+  soundCheckOutcome,
   startPayload,
   startTally,
   strokeTokenFor,
@@ -38,6 +40,7 @@ import {
   type StartSource,
   type StrokePlay,
   type HomeChoice,
+  type SoundCheckOutcome,
   voiceState,
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
@@ -45,9 +48,9 @@ import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
-import { slideSound } from './src/logic/lecture/slide-view';
+import { slideSound, soundFlashFor, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
-import { getCapability, playPrompt, refreshCapability, stop as stopAudio, subscribeCapability, unlockAudio } from './src/platform/audio';
+import { getCapability, installGestureUnlock, playPrompt, refreshCapability, stop as stopAudio, subscribeCapability, unlockAudio } from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
 import { coarsePointer, deviceScreen } from './src/platform/orientation';
 import { isOnline, subscribeOnline } from './src/platform/online';
@@ -254,7 +257,13 @@ function Presenter(): React.ReactElement {
     void useLocaleStore.getState().hydrate([], { handoff: 'ignore' }).catch(() => undefined);
     // A language or text size chosen in another tab of this origin applies here live.
     const unfollow = followDeviceSettings();
+    // Speech unlocks on the first activation anywhere (F-AUDIO-004 section 3.6), a hidden page stops
+    // every sound, and each tap offers a suspended clip context a restart.
+    const offGesture = installGestureUnlock();
     const offCapability = subscribeCapability(setCapability);
+    // The voice list can land between the first render's read and this subscription (a browser that has
+    // it at once): read it again, or the start screen keeps "unknown" and says there is no Korean voice.
+    setCapability(getCapability());
     void refreshCapability()
       .catch(() => undefined)
       .then(() => {
@@ -278,6 +287,7 @@ function Presenter(): React.ReactElement {
     return () => {
       live = false;
       unfollow();
+      offGesture();
       offCapability();
       offPwa();
       offLink();
@@ -327,6 +337,28 @@ function Presenter(): React.ReactElement {
 
   // ---- the start screen ----
   const [fontReady, setFontReady] = useState(false);
+  // Test the sound (section 3.7): the outcome under the button; a newer tap replaces an older result.
+  const [soundCheck, setSoundCheck] = useState<SoundCheckOutcome | null>(null);
+  const soundCheckRun = useRef(0);
+  const onTestSound = useCallback(() => {
+    // In the tap itself: the unlock, then the word, so the browser lets it play (section 3.5).
+    unlockAudio();
+    const run = ++soundCheckRun.current;
+    setSoundCheck(null);
+    void playPrompt(SOUND_CHECK).then((result) => {
+      if (run === soundCheckRun.current) setSoundCheck(soundCheckOutcome(result));
+    });
+  }, []);
+  const onTestSoundOn = useCallback(() => {
+    useAudioStore.getState().setMuted(false, 'fallback_panel');
+    onTestSound();
+  }, [onTestSound]);
+  // A result belongs to the start screen it was asked on.
+  useEffect(() => {
+    if (phase.kind === 'ready') return;
+    soundCheckRun.current += 1;
+    setSoundCheck(null);
+  }, [phase.kind]);
   useEffect(() => {
     if (phase.kind !== 'ready') return undefined;
     let live = true;
@@ -348,8 +380,9 @@ function Presenter(): React.ReactElement {
   // Next on the End slide: the hint, and focus on the docked bar's Exit or the compact bar's More (which holds Exit).
   const exitRef = useRef<View>(null);
   const [endHint, setEndHint] = useState(false);
-  // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6).
-  const [noVoiceFlash, setNoVoiceFlash] = useState(0);
+  // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6);
+  // on both bars an explicit Sound press that has nothing to play, or does not play, says so there (section 3.7).
+  const [soundFlash, setSoundFlash] = useState<{ key: SoundFlashKey; at: number } | null>(null);
   // The lesson began: its first slide was shown (Recent written, lecture.start sent).
   const begun = useRef(false);
   // After a browser back in the lesson (section 3.5 "History" rule 4) the lesson's entry is pushed
@@ -421,9 +454,24 @@ function Presenter(): React.ReactElement {
   }, [clearBarTimer]);
   useEffect(() => clearBarTimer, [clearBarTimer]);
 
+  /**
+   * The slide's sound (section 3.4 amendment 2026-10-17: the Korean it shows, at its own rate).
+   * `explicit`: the bar's Sound, S or a stage speaker, which always answers (section 3.7): while
+   * muted it turns the device sound on first, and nothing to play or a play that fails flashes.
+   */
   const playSound = useCallback(
-    (slide: Slide | undefined) => {
-      if (!slide || !deck?.options.sound) return;
+    (slide: Slide | undefined, { explicit }: { explicit: boolean }) => {
+      if (!slide || !deck) return;
+      const flash = (key: SoundFlashKey): void => setSoundFlash({ key, at: Date.now() });
+      const sound = slide.kind === 'story' ? undefined : slideSound(slide, stateRef.current?.reveal);
+      const press = soundPress({ hasSound: slide.kind === 'story' || sound !== undefined, explicit, muted: useAudioStore.getState().muted, deckSound: deck.options.sound });
+      if (press === 'skip') return;
+      if (press === 'flash-no-sound') {
+        flash('noSound');
+        return;
+      }
+      // The device-wide mute the learner app shares: the same action as the chip's Turn sound on.
+      if (press === 'unmute-then-play') useAudioStore.getState().setMuted(false, 'fallback_panel');
       if (slide.kind === 'story') {
         // Read-to-me (S or Sound): the narration in its own voice, keyword chips in Korean, with the
         // story reader's voice rules; the text is on the slide either way (D6).
@@ -432,13 +480,14 @@ function Presenter(): React.ReactElement {
         if (plan) void narrator.play(plan.steps, plan.options);
         return;
       }
-      const spoken = slideSound(slide);
-      if (!spoken) return;
-      const { text, audioRef } = spoken;
+      if (!sound) return;
       const at = Date.now();
-      void playPrompt({ text, ...(audioRef !== undefined ? { audioRef } : {}), kind: 'sound', source: 'presenter' }).then((result) => {
+      void playPrompt({ ...soundPrompt(sound), source: 'presenter' }).then((result) => {
         const failure = useAudioStore.getState().lastFailure;
-        setSoundBlocked(result !== 'played' && failure !== null && failure.reason === 'blocked' && failure.at >= at);
+        const reason = failure !== null && failure.at >= at ? failure.reason : null;
+        setSoundBlocked(result !== 'played' && reason === 'blocked');
+        const shown = explicit ? soundFlashFor(result, reason) : null;
+        if (shown !== null) flash(shown === 'no-voice' ? 'noVoice' : 'soundFailed');
       });
     },
     [deck, stories, narrator, canPlay, voiceChecked],
@@ -477,8 +526,12 @@ function Presenter(): React.ReactElement {
       const slideKey = slides[state.slideIdx]!.key;
       setStrokePlay((current) => nextStrokePlay(current, { slideKey, play: playStroke }));
       const sound = revealedBuild === 'sound' || effect?.type === 'play-sound';
-      if (sound) playSound(slides[state.slideIdx]);
-      if (sound && phoneRef.current && !canPlay) setNoVoiceFlash(Date.now());
+      const explicit = effect?.type === 'play-sound';
+      if (sound) playSound(slides[state.slideIdx], { explicit });
+      // A press answers from its own result (on both bars); a forward sound build flashes here, on a phone.
+      if (sound && !explicit && phoneRef.current && !canPlay && slideSound(slides[state.slideIdx], state.reveal) !== undefined) {
+        setSoundFlash({ key: 'noVoice', at: Date.now() });
+      }
     },
     [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator, hideBarNow, showBar, canPlay],
   );
@@ -853,6 +906,9 @@ function Presenter(): React.ReactElement {
           onStart={onStart}
           onBack={backToHome}
           onDisplay={() => setDisplayOpen(true)}
+          onTestSound={onTestSound}
+          soundCheck={soundCheck}
+          onTurnSoundOn={onTestSoundOn}
           phone={phone}
           portrait={upright}
           short={short}
@@ -983,7 +1039,9 @@ function Presenter(): React.ReactElement {
         )}
         {scale.portrait && page === null ? <StageHint text={state.portrait} /> : null}
         {endHint && page === null ? <StageHint text={messages.learner.presenter.slide.end.exitHint} bottom={!phone} /> : null}
-        {phone && page === null && noVoiceFlash > 0 ? <NoVoiceFlash key={noVoiceFlash} text={messages.learner.presenter.bar.noVoice} /> : null}
+        {page === null && soundFlash !== null ? (
+          <SoundFlash key={soundFlash.at} text={messages.learner.presenter.bar[soundFlash.key]} testID={SOUND_FLASH_TEST_IDS[soundFlash.key]} />
+        ) : null}
         {/* Class tools over the stage box (the bar stays): the full timer, a covering tool, then the
             corner timer, which stays on screen over a covering tool (section 3.5 amendment 1). */}
         {page === null ? (
@@ -1077,12 +1135,21 @@ function Presenter(): React.ReactElement {
   );
 }
 
+/** The three sound flashes (section 3.7 amendment 2026-10-17), keyed by their `learner.presenter.bar` message. */
+type SoundFlashKey = 'noVoice' | 'noSound' | 'soundFailed';
+const SOUND_FLASH_TEST_IDS: Readonly<Record<SoundFlashKey, string>> = {
+  noVoice: 'presenter-no-voice-flash',
+  noSound: 'presenter-no-sound-flash',
+  soundFailed: 'presenter-sound-failed-flash',
+};
+
 /**
- * The no-voice chip at the top of a phone stage, for `presenter.autoHideMs`, when a sound build
- * cannot play there (F-TCH-004 section 3.6; the bar, where the chip lives, is hidden). Status only:
- * it takes no touch.
+ * A sound flash at the top of the stage, for `presenter.autoHideMs`: the no-voice chip when a sound
+ * build cannot play on a phone (F-TCH-004 section 3.6; the bar, where the chip lives, is hidden),
+ * and on both bars after a Sound press with nothing to play or a play that failed (section 3.7).
+ * Status only: it takes no touch.
  */
-function NoVoiceFlash({ text }: { text: string }): React.ReactElement | null {
+function SoundFlash({ text, testID }: { text: string; testID: string }): React.ReactElement | null {
   // The bar's no-voice chip, shown over the stage: chrome, so it follows the chosen text size.
   const textScale = useTypeScale();
   const [on, setOn] = useState(true);
@@ -1093,7 +1160,7 @@ function NoVoiceFlash({ text }: { text: string }): React.ReactElement | null {
   if (!on) return null;
   return (
     <View
-      testID="presenter-no-voice-flash"
+      testID={testID}
       role="status"
       pointerEvents="none"
       style={{

@@ -2050,6 +2050,9 @@ export const learner = {
       exit: { cta: 'Exit' },
       /** Status chips (PR 9, spec sections 3.7 and 3.8); nothing about a learner ever shows here. */
       noVoice: 'No Korean voice here. You say it!',
+      /** Flashed at the top of the stage after a Sound press (spec section 3.7 amendment 2026-10-17). */
+      noSound: 'This slide has no sound.',
+      soundFailed: 'The sound did not play. You say it!',
       offline: 'Offline. Everything still works.',
       update: 'Update ready. It applies when you exit.',
     },
@@ -2146,6 +2149,16 @@ export const learner = {
       voiceLocal: (name: string) => `Korean voice: ${name}, on this device`,
       voiceNetwork: (name: string) => `Korean voice: ${name}, uses the internet`,
       voiceNone: 'No Korean voice on this device. You say the sounds; the slides show them.',
+      /**
+       * Test the sound, in the voice row (F-TCH-004 section 3.7): one Korean greeting is said in the tap.
+       * `played` under it when it played, `failed` when it could not (no voice, blocked or an engine error);
+       * sound switched off shows the existing Turn sound on (`learner.audio.action.turn_on`).
+       */
+      testSound: {
+        cta: 'Test the sound',
+        played: 'Did you hear it? If not, turn up the volume.',
+        failed: 'The sound did not play here. You can say each word yourself.',
+      },
       fullscreen: 'Full screen opens when you start',
       fullscreenNone: 'This browser has no full screen. The lesson still works.',
       awake: 'The screen stays on during the lesson',

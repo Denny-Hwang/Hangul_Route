@@ -20,6 +20,12 @@ Code: `screens/presenter/Stage.tsx`, `ControlBar.tsx` (PR 6); `logic/lecture/sta
 - **Auto-hide** after `presenter.autoHideMs` (3000 ms) without pointer, touch or key: the band's content fades to transparent (`motion.duration.base`; instant under reduced motion), the band stays. Any input returns it; a focused button keeps it; "Keep controls visible" (Help) turns hiding off.
 - Focus ring: `borderWidth.thick` `border.focus` with a `borderWidth.base` offset (3.63:1 on sunken).
 
+## Sound flash (amendment 2026-10-17; F-TCH-004 section 3.7)
+
+- **Sound** (or **S**, or a stage speaker) always answers. Muted: the press turns sound on (the chip's **Turn sound on**) and plays, and the bar's glyph goes back to `speaker`. A slide with nothing to play (a title, a story check whose Korean is the answer, a deck with sound off): "This slide has no sound." A play that did not happen: "No Korean voice here. You say it!" when the device has no Korean voice, "The sound did not play. You say it!" when the browser blocked it or the voice failed.
+- Drawn like the phone's no-voice flash: one pill at the top of the stage, centred (`spacing.md` from the top, at most 90 % wide), `surface.paper`, `radii.pill`, `borderWidth.base` `border.strong`, `spacing.xs` x `spacing.lg` padding, `typography.size.body` `text.primary` (chrome, so it follows the chosen text size), `role="status"`, `pointer-events: none`, gone after `presenter.autoHideMs`. The same pill on the phone bar and on the docked bar; it covers the top of the slide only while it shows and never moves the stage.
+- A forward `sound` build never flashes on the docked bar (its chip already shows); on a phone it flashes the no-voice words only on a slide that has a sound.
+
 ## Accessibility
 
 - The stage is `role="main"` with a polite live region: "Slide 5 of 71, Letter, ㄱ, g/k" (`a11y.presenter.slide`; the taught item and the kind label are arguments).

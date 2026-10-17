@@ -11,6 +11,9 @@ import {
   sequenceView,
   shownBuilds,
   slideSound,
+  soundFlashFor,
+  soundPress,
+  soundPrompt,
   syllableView,
   vocabArt,
 } from '../slide-view';
@@ -175,24 +178,127 @@ describe('activityTimerMs', () => {
   });
 });
 
-describe('slideSound', () => {
-  it('a letter and a syllable play their spoken form; other slides have none', () => {
+describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendment 2026-10-17)', () => {
+  const question = ['question', 'answer'] as const;
+  const quiz = (prompt: Extract<Slide, { kind: 'quiz' }>['prompt']): Slide => ({ kind: 'quiz', key: `q/${prompt.ask}`, builds: [...question], prompt, options: [], textPrompt: false });
+  const lunch = slidesOf([{ kind: 'quest', id: 'quest:stage2-life-q1' }]);
+
+  it('the owner report: the gimbap word card plays its word at the word rate', () => {
+    const gimbap = lunch.find((s) => s.kind === 'vocab' && s.word.ko === '김밥');
+    expect(gimbap?.key).toBe('quest:stage2-life-q1/s2/김밥');
+    expect(slideSound(gimbap)).toEqual({ spoken: { text: '김밥', romanization: 'gimbap' }, kind: 'word' });
+    // At every build of the card, the word is on screen.
+    for (let reveal = 0; reveal < gimbap!.builds.length; reveal++) expect(slideSound(gimbap, reveal)?.spoken.text).toBe('김밥');
+  });
+
+  it('a word card plays its spoken form at its own rate: a Discover sentence at the sentence rate', () => {
+    const word = first(lunch, 'vocab');
+    const spoken = { text: '안녕하세요', romanization: 'annyeonghaseyo', audioRef: 'audio/vocab/annyeong.mp3' };
+    expect(slideSound({ ...word, spoken, speech: 'sentence' })).toEqual({ spoken, kind: 'sentence' });
+  });
+
+  it('a letter, a syllable and a Match Sound question play at the sound rate', () => {
     const slides = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
     const letter = first(slides, 'letter');
     const syllable = first(slides, 'syllable');
-    expect(slideSound(letter)).toEqual(letter.spoken);
-    expect(slideSound(syllable)).toEqual({ text: syllable.ko, romanization: syllable.romanization });
-    expect(slideSound(first(slides, 'card'))).toBeUndefined();
-    expect(slideSound(undefined)).toBeUndefined();
+    expect(slideSound(letter)).toEqual({ spoken: letter.spoken, kind: 'sound' });
+    expect(slideSound(syllable)).toEqual({ spoken: { text: syllable.ko, romanization: syllable.romanization }, kind: 'sound' });
+    const spoken = { text: '가', romanization: 'ga' };
+    expect(slideSound(quiz({ ask: 'sound', spoken }))).toEqual({ spoken, kind: 'sound' });
   });
 
-  it('a Match Sound quiz plays its prompt; a meaning or odd-one-out quiz plays nothing', () => {
-    const spoken = { text: 'ga', romanization: 'ga' };
-    const sound: Slide = { kind: 'quiz', key: 'q/sound', builds: ['question', 'answer'], prompt: { ask: 'sound', spoken }, options: [], textPrompt: false };
-    const meaning: Slide = { kind: 'quiz', key: 'q/meaning', builds: ['question', 'answer'], prompt: { ask: 'meaning', ko: 'mul', romanization: 'mul' }, options: [], textPrompt: false };
-    const odd: Slide = { kind: 'quiz', key: 'q/odd', builds: ['question', 'answer'], prompt: { ask: 'odd-one-out' }, options: [], textPrompt: false };
-    expect(slideSound(sound)).toEqual(spoken);
-    expect(slideSound(meaning)).toBeUndefined();
-    expect(slideSound(odd)).toBeUndefined();
+  it('a heritage card plays its Korean chip; a card without Korean plays nothing', () => {
+    const card = first(lunch, 'card');
+    expect(card).toMatchObject({ ko: '도시락', romanization: 'dosirak' });
+    expect(slideSound(card)).toEqual({ spoken: { text: '도시락', romanization: 'dosirak' }, kind: 'word' });
+    expect(slideSound({ kind: 'card', key: 'c/plain', builds: ['art'], cardId: 'card:plain', title: 'Plain' })).toBeUndefined();
+  });
+
+  it('a word-to-meaning question plays its word; a story check its target word, none without one', () => {
+    const meaning = lunch.find((s) => s.kind === 'quiz' && s.prompt.ask === 'meaning');
+    if (meaning?.kind !== 'quiz' || meaning.prompt.ask !== 'meaning') throw new Error('no meaning question');
+    expect(slideSound(meaning)).toEqual({ spoken: { text: meaning.prompt.ko, romanization: meaning.prompt.romanization }, kind: 'word' });
+    const target = { ko: '해', romanization: 'hae', gloss: 'sun' };
+    expect(slideSound(quiz({ ask: 'check', text: 'What is {target}?', target }))).toEqual({ spoken: { text: '해', romanization: 'hae' }, kind: 'word' });
+    expect(slideSound(quiz({ ask: 'check', text: 'What happened first?' }))).toBeUndefined();
+  });
+
+  it('an order slide plays the last Korean step on screen at the reveal, at the sentence rate', () => {
+    const steps = [
+      { id: 'a', gloss: 'Wash hands', ko: '손 씻기', romanization: 'son ssitgi' },
+      { id: 'b', gloss: 'Set the table', ko: '상 차리기', romanization: 'sang charigi' },
+      { id: 'c', gloss: 'Eat together' },
+    ];
+    const body: SlideBody = { kind: 'sequence', steps, shuffled: ['c', 'a', 'b'] };
+    const always: Slide = { ...body, key: 's/1', builds: buildsFor(body, { romanization: 'always', strokeGuide: true }) };
+    const tap: Slide = { ...body, key: 's/2', builds: tapBuilds(body) };
+    expect(always.builds).toEqual(['step', 'step', 'step', 'order']);
+    const said = (slide: Slide, reveal?: number) => slideSound(slide, reveal)?.spoken.text;
+    expect([0, 1, 2, 3].map((r) => said(always, r))).toEqual(['손 씻기', '상 차리기', '상 차리기', '상 차리기']);
+    expect(said(always)).toBe('상 차리기');
+    expect(tap.builds).toEqual(['step', 'step', 'step', 'rom', 'order']);
+    expect([0, 1, 4].map((r) => said(tap, r))).toEqual(['손 씻기', '상 차리기', '상 차리기']);
+    expect(slideSound(always, 0)).toEqual({ spoken: { text: '손 씻기', romanization: 'son ssitgi' }, kind: 'sentence' });
+    // A first step with no Korean: nothing to play until a Korean step is on screen.
+    const glossFirst: SlideBody = { kind: 'sequence', steps: [steps[2]!, steps[0]!], shuffled: ['a', 'c'] };
+    const late: Slide = { ...glossFirst, key: 's/3', builds: buildsFor(glossFirst, { romanization: 'always', strokeGuide: true }) };
+    expect(slideSound(late, 0)).toBeUndefined();
+    expect(said(late, 1)).toBe('손 씻기');
+  });
+
+  it('a title, a story scene, an activity, the End slide and Odd One Out play nothing; no slide plays nothing', () => {
+    const slides = slidesOf([
+      { kind: 'quest', id: 'quest:stage1-letters-q1' },
+      { kind: 'activity', preset: 'air-write', minutes: 3 },
+    ]);
+    expect(slideSound(first(slides, 'title'))).toBeUndefined();
+    expect(slideSound(first(slides, 'activity'))).toBeUndefined();
+    expect(slideSound(first(slides, 'end'))).toBeUndefined();
+    expect(slideSound(quiz({ ask: 'odd-one-out' }))).toBeUndefined();
+    const story: Slide = { kind: 'story', key: 'st/1', builds: ['art', 'narration'], storyId: 'story:x', sceneId: 's1', narration: [{ text: 'Once.' }], korean: { ko: '해', romanization: 'hae', gloss: 'sun' } };
+    expect(slideSound(story)).toBeUndefined();
+    expect(slideSound(undefined)).toBeUndefined();
+  });
+});
+
+describe('soundPress: an explicit press always answers (section 3.7 amendment 2026-10-17)', () => {
+  it.each([
+    // hasSound, explicit, muted, deckSound -> what happens
+    [true, true, false, true, 'play'],
+    [true, false, false, true, 'play'],
+    [true, true, true, true, 'unmute-then-play'],
+    [true, false, true, true, 'skip'],
+    [false, true, false, true, 'flash-no-sound'],
+    [false, true, true, true, 'flash-no-sound'],
+    [false, false, false, true, 'skip'],
+    [false, false, true, true, 'skip'],
+    [true, true, false, false, 'flash-no-sound'],
+    [true, true, true, false, 'flash-no-sound'],
+    [true, false, false, false, 'skip'],
+    [false, true, false, false, 'flash-no-sound'],
+    [false, false, true, false, 'skip'],
+  ] as const)('hasSound %s, explicit %s, muted %s, deck sound %s: %s', (hasSound, explicit, muted, deckSound, expected) => {
+    expect(soundPress({ hasSound, explicit, muted, deckSound })).toBe(expected);
+  });
+});
+
+describe('soundFlashFor: the flash after an explicit press that did not play', () => {
+  it.each([
+    ['played', null, null],
+    ['played', 'blocked', null],
+    ['muted', 'muted', null],
+    ['unavailable', 'no_voice', 'no-voice'],
+    ['unavailable', 'blocked', 'failed'],
+    ['unavailable', 'error', 'failed'],
+    ['unavailable', null, 'failed'],
+  ] as const)('%s with %s: %s', (result, reason, expected) => {
+    expect(soundFlashFor(result, reason)).toBe(expected);
+  });
+});
+
+describe('soundPrompt: the playPrompt spec of a slide sound', () => {
+  it('carries the clip only when there is one, and the rate kind', () => {
+    expect(soundPrompt({ spoken: { text: '김밥', romanization: 'gimbap' }, kind: 'word' })).toEqual({ text: '김밥', kind: 'word' });
+    expect(soundPrompt({ spoken: { text: '가', romanization: 'ga', audioRef: 'audio/jamo/giyeok.mp3' }, kind: 'sound' })).toEqual({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', kind: 'sound' });
   });
 });
