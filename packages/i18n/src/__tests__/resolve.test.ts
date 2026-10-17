@@ -20,12 +20,12 @@ afterEach(() => {
 });
 
 describe('resolveLocale', () => {
-  it('precedence: profile > device > detected > en', () => {
-    expect(resolveLocale({ profile: 'ko', device: 'es', detected: 'en' })).toBe('ko');
-    expect(resolveLocale({ profile: undefined, device: 'es', detected: 'en' })).toBe('es');
-    expect(resolveLocale({ profile: null, device: null, detected: 'ko' })).toBe('ko');
+  it('precedence: device > account seed > detected > en (no per-profile level)', () => {
+    expect(resolveLocale({ device: 'ko', account: 'es', detected: 'en' })).toBe('ko');
+    expect(resolveLocale({ device: undefined, account: 'es', detected: 'en' })).toBe('es');
+    expect(resolveLocale({ device: null, account: null, detected: 'ko' })).toBe('ko');
     expect(resolveLocale({})).toBe('en');
-    expect(resolveLocale({ profile: null, device: undefined, detected: undefined })).toBe('en');
+    expect(resolveLocale({ device: null, account: undefined, detected: undefined })).toBe('en');
   });
 });
 

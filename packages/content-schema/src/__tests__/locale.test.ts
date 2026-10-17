@@ -5,7 +5,15 @@ import {
   DEFAULT_CHALLENGE_MODE,
   DEFAULT_CLOCK_SCALE,
   DEFAULT_UI_LOCALE,
+  AccountLocaleSchema,
+  DEFAULT_TEXT_SIZE,
+  DEVICE_SETTINGS_KEY,
   DeviceSettingsSchema,
+  PREFS_CHANNEL,
+  PrefsMessageSchema,
+  TEXT_SIZES,
+  mergeAccountLocale,
+  prefsMessage,
   ProfileSettingsSchema,
   RomanizationModeSchema,
   UI_LOCALES,
@@ -119,6 +127,25 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     expect(DeviceSettingsSchema.parse({ uiLocale: 'es' })).toEqual({ uiLocale: 'es' });
     expect(DeviceSettingsSchema.safeParse({ uiLocale: 'de' }).success).toBe(false);
   });
+
+  it('DeviceSettings: uiLocaleAt and textSize are optional and additive (a record stored before them parses unchanged)', () => {
+    const full = { uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:30:00.000Z', textSize: 'larger' };
+    expect(DeviceSettingsSchema.parse(full)).toEqual(full);
+    expect(DeviceSettingsSchema.parse({ uiLocale: 'ko' })).toEqual({ uiLocale: 'ko' });
+    expect(DeviceSettingsSchema.parse({ textSize: 'largest' })).toEqual({ textSize: 'largest' });
+    expect(DeviceSettingsSchema.parse({ uiLocaleAt: '2026-10-16T09:30:00+09:00' }).uiLocaleAt).toBe('2026-10-16T09:30:00+09:00');
+    expect(TEXT_SIZES).toEqual(['standard', 'large', 'larger', 'largest']);
+    expect(DEFAULT_TEXT_SIZE).toBe('standard');
+  });
+
+  it('DeviceSettings: an unknown text size or a bad timestamp reads as absent and keeps the language', () => {
+    const read = DeviceSettingsSchema.parse({ uiLocale: 'es', uiLocaleAt: 'yesterday', textSize: 'huge' });
+    expect(read.uiLocale).toBe('es');
+    expect(read.uiLocaleAt).toBeUndefined();
+    expect(read.textSize).toBeUndefined();
+    expect(JSON.parse(JSON.stringify(read))).toEqual({ uiLocale: 'es' });
+    expect(DeviceSettingsSchema.parse({ textSize: 3 }).textSize).toBeUndefined();
+  });
 });
 
 describe('F-I18N-001 telemetry names (§3.12)', () => {
@@ -127,5 +154,85 @@ describe('F-I18N-001 telemetry names (§3.12)', () => {
     expect(isTelemetryEventName('romanization.mode_changed')).toBe(true);
     expect(isTelemetryEventName('locale.change')).toBe(false);
     expect(isTelemetryEventName('romanization.mode_change')).toBe(false);
+  });
+});
+
+describe('the display record across tabs (owner items 6 and 7)', () => {
+  it('one key, one channel, one message shape', () => {
+    expect(DEVICE_SETTINGS_KEY).toBe('device:settings');
+    expect(PREFS_CHANNEL).toBe('hr-prefs');
+    const message = prefsMessage({ uiLocale: 'ko', textSize: 'large' });
+    expect(message).toEqual({ v: 1, kind: 'device-settings', value: { uiLocale: 'ko', textSize: 'large' } });
+    expect(PrefsMessageSchema.safeParse(message).success).toBe(true);
+    expect(PrefsMessageSchema.safeParse({ v: 2, kind: 'device-settings', value: {} }).success).toBe(false);
+    expect(PrefsMessageSchema.safeParse({ v: 1, kind: 'other', value: {} }).success).toBe(false);
+  });
+
+  it('AccountLocale is lenient: a damaged value reads as no language', () => {
+    expect(AccountLocaleSchema.parse({ uiLocale: 'es', uiLocaleAt: '2026-10-16T00:00:00.000Z', adultAffirmedAt: 'x' })).toEqual({
+      uiLocale: 'es',
+      uiLocaleAt: '2026-10-16T00:00:00.000Z',
+    });
+    expect(AccountLocaleSchema.parse({ uiLocale: 'fr', uiLocaleAt: 7 })).toEqual({});
+  });
+});
+
+describe('mergeAccountLocale: newer wins after a sign-in (owner items 6 and 7)', () => {
+  const NOW = '2026-10-16T12:00:00.000Z';
+  const OLD = '2026-10-01T00:00:00.000Z';
+  const NEW = '2026-10-15T00:00:00.000Z';
+
+  it('neither side has a language: nothing to do', () => {
+    expect(mergeAccountLocale({}, null, NOW)).toEqual({ device: null, account: null });
+    expect(mergeAccountLocale({ textSize: 'large' }, {}, NOW)).toEqual({ device: null, account: null });
+  });
+
+  it('only the account: it seeds the device with its timestamp, keeping the text size', () => {
+    expect(mergeAccountLocale({ textSize: 'larger' }, { uiLocale: 'ko', uiLocaleAt: OLD }, NOW)).toEqual({
+      device: { textSize: 'larger', uiLocale: 'ko', uiLocaleAt: OLD },
+      account: null,
+    });
+    // An account language without a timestamp seeds the device without one.
+    expect(mergeAccountLocale({}, { uiLocale: 'es' }, NOW)).toEqual({ device: { uiLocale: 'es' }, account: null });
+  });
+
+  it('only the device: the account takes it, stamped now when the device choice has no timestamp', () => {
+    expect(mergeAccountLocale({ uiLocale: 'es', uiLocaleAt: OLD }, null, NOW)).toEqual({ device: null, account: { uiLocale: 'es', uiLocaleAt: OLD } });
+    expect(mergeAccountLocale({ uiLocale: 'es' }, {}, NOW)).toEqual({ device: null, account: { uiLocale: 'es', uiLocaleAt: NOW } });
+  });
+
+  it('both agree: nothing to write, unless the account lacks a timestamp', () => {
+    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: OLD }, NOW)).toEqual({ device: null, account: null });
+    expect(mergeAccountLocale({ uiLocale: 'ko', uiLocaleAt: NEW }, { uiLocale: 'ko' }, NOW)).toEqual({ device: null, account: { uiLocale: 'ko', uiLocaleAt: NEW } });
+  });
+
+  it('both differ: the newer choice wins on both sides', () => {
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD, textSize: 'large' }, { uiLocale: 'ko', uiLocaleAt: NEW }, NOW)).toEqual({
+      device: { uiLocale: 'ko', uiLocaleAt: NEW, textSize: 'large' },
+      account: null,
+    });
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: OLD }, NOW)).toEqual({
+      device: null,
+      account: { uiLocale: 'en', uiLocaleAt: NEW },
+    });
+    // A tie keeps the device.
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: NEW }, { uiLocale: 'ko', uiLocaleAt: NEW }, NOW).device).toBeNull();
+  });
+
+  it('a missing timestamp means the device wins', () => {
+    // A device choice stored before timestamps existed beats a newer account choice.
+    expect(mergeAccountLocale({ uiLocale: 'en' }, { uiLocale: 'ko', uiLocaleAt: NEW }, NOW)).toEqual({
+      device: null,
+      account: { uiLocale: 'en', uiLocaleAt: NOW },
+    });
+    // An account choice without a timestamp loses to a stamped device choice.
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD }, { uiLocale: 'ko' }, NOW)).toEqual({
+      device: null,
+      account: { uiLocale: 'en', uiLocaleAt: OLD },
+    });
+  });
+
+  it('an account timestamp that does not parse counts as missing', () => {
+    expect(mergeAccountLocale({ uiLocale: 'en', uiLocaleAt: OLD }, { uiLocale: 'ko', uiLocaleAt: 'not a date' }, NOW).device).toBeNull();
   });
 });

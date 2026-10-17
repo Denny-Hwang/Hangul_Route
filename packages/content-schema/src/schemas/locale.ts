@@ -4,8 +4,9 @@ import { z } from 'zod';
  * UI locale and local-first display settings (F-I18N-001 §3.2).
  *
  * Locale is a device preference, not part of the synced `Profile`: it is stored
- * under `device:settings` and `settings:${profileId}` and never leaves the
- * device (only locale ids reach telemetry). `packages/i18n` re-exports these.
+ * under `device:settings` (one language per device since owner items 6 and 7; a
+ * signed-in grown-up's account may carry it too) and never reaches a learner
+ * record (only locale ids reach telemetry). `packages/i18n` re-exports these.
  */
 export const UI_LOCALES = ['en', 'es', 'ko'] as const;
 export const UiLocaleSchema = z.enum(UI_LOCALES);
@@ -30,7 +31,10 @@ export const DEFAULT_CLOCK_SCALE: ClockScale = 1;
 
 /** Per-profile local settings; other specs may add optional fields (additive only). */
 export const ProfileSettingsSchema = z.object({
-  /** Absent = "same as this device". */
+  /**
+   * Retired (owner items 6 and 7: one UI language per device). Still parsed so a stored override
+   * can be promoted to the device once and then stripped; nothing reads it for the UI.
+   */
   uiLocale: UiLocaleSchema.optional(),
   romanizationMode: RomanizationModeSchema.default('always'),
   /**
@@ -54,9 +58,116 @@ export const ProfileSettingsSchema = z.object({
 });
 export type ProfileSettings = z.infer<typeof ProfileSettingsSchema>;
 
-/** Per-device settings. */
+/**
+ * Display text size steps (owner items 6 and 7): one per device, read by every surface (learner
+ * app, All lessons, the presenter's chrome and the grown-up pages). `standard` is the size the
+ * type scale was designed at; the factor of each step lives in `@hangul-route/design-system`
+ * (`TEXT_SIZE_FACTORS`).
+ */
+export const TEXT_SIZES = ['standard', 'large', 'larger', 'largest'] as const;
+export const TextSizeSchema = z.enum(TEXT_SIZES);
+export type TextSize = z.infer<typeof TextSizeSchema>;
+export const DEFAULT_TEXT_SIZE: TextSize = 'standard';
+
+/**
+ * Per-device settings, the one display record of a device (`device:settings`, stored by the
+ * learner app as `hr:device:settings`; the grown-up pages on the same origin read and write the
+ * same record). Additive only: a record stored before a field existed keeps parsing.
+ */
 export const DeviceSettingsSchema = z.object({
-  /** Absent = never chosen: use platform detection. */
+  /** Absent = never chosen: use the account seed, then platform detection. */
   uiLocale: UiLocaleSchema.optional(),
+  /**
+   * When `uiLocale` was chosen (ISO 8601), for the newer-wins merge with a signed-in grown-up's
+   * account. Absent on a choice stored before this field existed and on a `?lang=` seed; such a
+   * device choice wins the merge. A value that is not an ISO date-time reads as absent.
+   */
+  uiLocaleAt: z.string().datetime({ offset: true }).optional().catch(undefined),
+  /** Absent = `DEFAULT_TEXT_SIZE`. A step this version does not know reads as absent, never resetting the record. */
+  textSize: TextSizeSchema.optional().catch(undefined),
 });
 export type DeviceSettings = z.infer<typeof DeviceSettingsSchema>;
+
+/** The device record's storage key (the learner app's wrapper adds the `hr:` prefix). */
+export const DEVICE_SETTINGS_KEY = 'device:settings';
+
+/**
+ * The BroadcastChannel every surface on the app origin posts a display record change on (the
+ * learner app, All lessons, the presenter and the grown-up pages), so an open tab switches its
+ * language and text size live. A tab also re-reads the record on `visibilitychange` and
+ * `pageshow`, for a browser without BroadcastChannel and a page restored from the back cache.
+ */
+export const PREFS_CHANNEL = 'hr-prefs';
+
+export const PrefsMessageSchema = z.object({
+  v: z.literal(1),
+  kind: z.literal('device-settings'),
+  value: DeviceSettingsSchema,
+});
+export type PrefsMessage = z.infer<typeof PrefsMessageSchema>;
+
+/** The message a surface posts after it wrote the device record. */
+export function prefsMessage(value: DeviceSettings): PrefsMessage {
+  return { v: 1, kind: 'device-settings', value };
+}
+
+/**
+ * A signed-in grown-up's language as the account keeps it (Clerk `unsafeMetadata`, owner items
+ * 6 and 7). Lenient: an account written by an older page, or edited by hand, reads as no
+ * language rather than failing the sign-in.
+ */
+export const AccountLocaleSchema = z.object({
+  uiLocale: UiLocaleSchema.optional().catch(undefined),
+  uiLocaleAt: z.string().datetime({ offset: true }).optional().catch(undefined),
+});
+export type AccountLocale = z.infer<typeof AccountLocaleSchema>;
+
+export interface LocaleMergeResult {
+  /** The device record to write (and broadcast), or null when the device keeps what it has. */
+  device: DeviceSettings | null;
+  /** The language to write to the account, or null when the account already agrees or the device has none. */
+  account: { uiLocale: UiLocale; uiLocaleAt: string } | null;
+}
+
+const time = (iso: string | undefined): number | null => {
+  if (iso === undefined) return null;
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) ? ms : null;
+};
+
+/**
+ * The newer-wins merge after a grown-up signs in (owner items 6 and 7). The device record and the
+ * account each may hold a language and when it was chosen:
+ *
+ * - neither has a language: nothing to do;
+ * - only the account has one: it seeds the device (with the account's timestamp);
+ * - only the device has one: the account takes it;
+ * - both, and they agree: nothing to do (a missing account timestamp is filled in);
+ * - both differ: the newer timestamp wins on both sides. A missing timestamp means the device
+ *   wins (a choice stored before timestamps existed, or a `?lang=` seed, is still a choice made
+ *   on this device); an account with no timestamp loses to any device choice.
+ *
+ * `now` stamps a device choice that has no timestamp when it is copied to the account. The text
+ * size is a device setting only and is kept as it is.
+ */
+export function mergeAccountLocale(device: DeviceSettings, account: AccountLocale | null, now: string): LocaleMergeResult {
+  const acc = account?.uiLocale;
+  const dev = device.uiLocale;
+  if (dev === undefined && acc === undefined) return { device: null, account: null };
+  if (dev === undefined) {
+    const seeded: DeviceSettings = { ...device, uiLocale: acc! };
+    if (account?.uiLocaleAt !== undefined) seeded.uiLocaleAt = account.uiLocaleAt;
+    else delete seeded.uiLocaleAt;
+    return { device: seeded, account: null };
+  }
+  const deviceAt = device.uiLocaleAt ?? now;
+  if (acc === undefined) return { device: null, account: { uiLocale: dev, uiLocaleAt: deviceAt } };
+  if (acc === dev) {
+    return { device: null, account: account?.uiLocaleAt === undefined ? { uiLocale: dev, uiLocaleAt: deviceAt } : null };
+  }
+  const devMs = time(device.uiLocaleAt);
+  const accMs = time(account?.uiLocaleAt);
+  const accountWins = devMs !== null && accMs !== null && accMs > devMs;
+  if (accountWins) return { device: { ...device, uiLocale: acc, uiLocaleAt: account!.uiLocaleAt! }, account: null };
+  return { device: null, account: { uiLocale: dev, uiLocaleAt: deviceAt } };
+}
