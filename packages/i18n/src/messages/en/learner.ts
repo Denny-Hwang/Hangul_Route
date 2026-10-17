@@ -2228,6 +2228,10 @@ export const learner = {
         title: 'This link does not work',
         line: 'Open a Quick lesson, or get a new link from the console page.',
         cta: 'Open Quick lesson',
+        /** A link from a newer presenter (`unsupported_version`, AMENDMENTS-LECTURE-V2 section 4.5): update this one and open the link again. */
+        reload: 'Reload',
+        /** The stale page's line (it replaces `line`): Reload updates only when no other tab of the app is open. */
+        staleLine: 'This link is from a newer version. Close other Hangul Route tabs, then reload.',
       },
       loading: 'Loading lesson',
       tooSmall: 'Make the window bigger or turn the screen.',

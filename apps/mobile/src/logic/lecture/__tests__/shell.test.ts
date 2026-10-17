@@ -64,6 +64,26 @@ describe('resolveBoot', () => {
     expect(resolveBoot(link(encodeDeck(quick)), emptyRecent())).toMatchObject({ kind: 'deck', source: 'quick' });
   });
 
+  it('opens a v2 Word review link and builds its slides on the shipped bundle (AMENDMENTS-LECTURE-V2 4.5)', () => {
+    const deck = deckOf([{ kind: 'word-review', questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'], vocabIds: [], rounds: 5 }], {
+      v: 2,
+      source: 'quick',
+      preset: 'word-review',
+    });
+    const raw = encodeDeck(deck);
+    expect(raw.startsWith('2.')).toBe(true);
+    const booted = resolveBoot(link(raw), emptyRecent());
+    expect(booted).toEqual({ kind: 'deck', deck, source: 'quick' });
+    const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
+    expect(expanded.slides.filter((s) => s.kind === 'vocab').length).toBeGreaterThanOrEqual(4);
+    expect(expanded.slides.filter((s) => s.kind === 'quiz')).toHaveLength(5);
+    expect(expanded.skipped).toEqual([]);
+    // A started v2 lesson is in Recent and reopens there after a reload.
+    const list = rememberDeck(emptyRecent(), deck, '2026-10-15T09:00:00Z');
+    expect(list.items).toHaveLength(1);
+    expect(resolveBoot({ raw, reloaded: true }, list)).toEqual({ kind: 'deck', deck, source: 'recent' });
+  });
+
   it('rejects a broken fragment with the codec reason', () => {
     expect(resolveBoot(link(''), emptyRecent())).toEqual({ kind: 'invalid', reason: 'empty' });
     expect(resolveBoot(link('1.!!!'), emptyRecent())).toEqual({ kind: 'invalid', reason: 'bad_encoding' });

@@ -1779,6 +1779,8 @@ export const learner = {
         title: 'Este enlace no funciona',
         line: 'Abre una lección rápida o pide un enlace nuevo en la página de la consola.',
         cta: 'Abrir lección rápida',
+        reload: 'Volver a cargar',
+        staleLine: 'Este enlace es de una versión más nueva. Cierra las otras pestañas de Hangul Route y vuelve a cargar.',
       },
       loading: 'Cargando la lección',
       tooSmall: 'Agranda la ventana o gira la pantalla.',

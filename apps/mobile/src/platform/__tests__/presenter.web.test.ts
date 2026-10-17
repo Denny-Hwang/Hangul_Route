@@ -1,10 +1,11 @@
 import { LECTURE_CONSOLE_ORIGINS, LECTURE_MESSAGE_NS, type LectureDeck } from '@hangul-route/content-schema';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearPickerLabels, heldLabels } from '../../logic/lecture/picker-labels';
 import * as native from '../presenter';
 import {
   PRESENTER_PATH,
   announceReady,
+  checkForUpdate,
   enterFullscreen,
   enterFullscreenLandscape,
   exitFullscreen,
@@ -20,6 +21,9 @@ import {
   playChime,
   presenterConsoleOrigins,
   releaseScreenAwake,
+  otherTabsOpen,
+  reloadForUpdate,
+  UPDATE_WAIT_MS,
   reloadOnDeckLink,
   setPresenterDocTitle,
   subscribeActivity,
@@ -34,6 +38,7 @@ import {
   waitForPresenterFont,
   wakeLockSupported,
   type PresenterEnv,
+  type TabsChannelLike,
 } from '../presenter.web';
 
 /**
@@ -93,6 +98,8 @@ describe('route', () => {
     native.forgetOpenDeck();
     native.holdOpenDeck('1.abc');
     native.reloadOnDeckLink()();
+    await native.checkForUpdate();
+    await native.reloadForUpdate('2.abc');
     expect(native.isFullscreen()).toBe(false);
     expect(await native.waitForPresenterFont(1, 'HR Presenter KR')).toBe(false);
     expect(native.playChime(false)).toBe(false);
@@ -759,5 +766,203 @@ describe('focusablesIn and rememberFocus (every covering overlay keeps Tab insid
     expect(removed.focus).not.toHaveBeenCalled();
     expect(() => rememberFocus(env({ activeElement: () => null }))()).not.toThrow();
     expect(() => rememberFocus(env())()).not.toThrow();
+  });
+});
+
+describe('stale presenter: checkForUpdate and reloadForUpdate (AMENDMENTS-LECTURE-V2 section 4.5)', () => {
+  type Worker = { state?: string; postMessage: ReturnType<typeof vi.fn>; addEventListener?: (type: 'statechange', fn: () => void) => void };
+  function swEnv(reg: { update: () => Promise<unknown>; waiting?: Worker | null; installing?: Worker | null } | undefined | 'throws', tabs?: TabsChannelLike) {
+    const container = fakeTarget();
+    const history = { state: null as unknown, replaceState: vi.fn((next: unknown) => void (history.state = next)) };
+    const reload = vi.fn();
+    const e = env({
+      location: { pathname: '/present', hash: '' },
+      history,
+      reload,
+      serviceWorker: {
+        getRegistration: vi.fn(async () => {
+          if (reg === 'throws') throw new Error('no sw');
+          return reg;
+        }),
+        addEventListener: container.addEventListener,
+      },
+      ...(tabs ? { tabs } : {}),
+    });
+    return { e, reload, history, container };
+  }
+  const worker = (state?: string): Worker => {
+    const w: Worker & { fire?: () => void } = { state, postMessage: vi.fn() };
+    w.addEventListener = (_type, fn) => {
+      w.fire = fn;
+    };
+    return w;
+  };
+
+  // Fake timers throughout: every wait below is the code's own, advanced by hand, never wall clock.
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  /** Runs `reloadForUpdate` and lets `ms` of fake time pass; `settled` says whether it resolved. */
+  async function run(e: ReturnType<typeof swEnv>['e'], wait: number, advance: number = wait) {
+    let settled = false;
+    const done = reloadForUpdate('2.abc', e, wait).then(() => {
+      settled = true;
+    });
+    await vi.advanceTimersByTimeAsync(advance);
+    return { done, settled: () => settled };
+  }
+
+  it('checkForUpdate asks the registration for an update and never throws', async () => {
+    const update = vi.fn(async () => undefined);
+    await checkForUpdate(swEnv({ update }).e, 50);
+    expect(update).toHaveBeenCalledTimes(1);
+    await expect(checkForUpdate(swEnv({ update: async () => Promise.reject(new Error('offline')) }).e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(swEnv({ update: () => { throw new Error('sync'); } }).e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(swEnv('throws').e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(swEnv(undefined).e, 50)).resolves.toBeUndefined();
+    await expect(checkForUpdate(env(), 50)).resolves.toBeUndefined();
+  });
+
+  it('holds the link in the tab again, so the reload opens it', async () => {
+    const { e, reload } = swEnv(undefined);
+    await reloadForUpdate('2.abc', e, 50);
+    expect(takeDeckFragment(e)).toEqual({ raw: '2.abc', reloaded: true });
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('no service worker, no registration, or nothing newer: reloads at once', async () => {
+    for (const reg of [undefined, 'throws' as const, { update: async () => undefined }, { update: async () => Promise.reject(new Error('offline')) }]) {
+      const { e, reload } = swEnv(reg);
+      await reloadForUpdate('2.abc', e, 50);
+      expect(reload).toHaveBeenCalledTimes(1);
+    }
+    const bare = vi.fn();
+    await reloadForUpdate('2.abc', env({ reload: bare }), 50);
+    expect(bare).toHaveBeenCalledTimes(1);
+  });
+
+  it('a waiting presenter takes over (SKIP_WAITING) and the page reloads once on controllerchange', async () => {
+    const waiting = worker('installed');
+    const { e, reload, container } = swEnv({ update: async () => undefined, waiting });
+    const r = await run(e, 1000, 0);
+    expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    expect(reload).not.toHaveBeenCalled();
+    expect(r.settled()).toBe(false);
+    container.fire('controllerchange', {});
+    await r.done;
+    expect(reload).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(2000);
+    container.fire('controllerchange', {});
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('an installing presenter is awaited until installed; a takeover that never comes still reloads at the deadline', async () => {
+    const installing = worker('installing') as Worker & { fire?: () => void };
+    const { e, reload } = swEnv({ update: async () => undefined, installing });
+    const r = await run(e, 1000, 100);
+    installing.state = 'activating';
+    installing.fire?.();
+    installing.state = 'installed';
+    installing.fire?.();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(installing.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    expect(reload).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(899);
+    expect(reload).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    await r.done;
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('one deadline covers every stage: slow registration, update and install still reload once at `ms`', async () => {
+    const slow = (after: number) => new Promise<void>((r) => setTimeout(r, after));
+    const installing = worker('installing');
+    const reg = { update: () => slow(400), installing };
+    const container = fakeTarget();
+    const reload = vi.fn();
+    const e = env({
+      location: { pathname: '/present', hash: '' },
+      history: { state: null, replaceState: vi.fn() },
+      reload,
+      serviceWorker: { getRegistration: () => slow(400).then(() => reg), addEventListener: container.addEventListener },
+      tabs: { postMessage: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined },
+    });
+    const r = await run(e, 1000, 999);
+    expect(reload).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    await r.done;
+    expect(reload).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(installing.postMessage).not.toHaveBeenCalled();
+  });
+
+  /** A `hr-tabs` channel; `answers` other tabs reply to the ping (this tab's own channel never hears itself). */
+  function tabsChannel(answers: number): TabsChannelLike & { posted: unknown[] } {
+    const listeners = new Set<(event: { data?: unknown }) => void>();
+    const posted: unknown[] = [];
+    return {
+      posted,
+      addEventListener: (_type, fn) => void listeners.add(fn),
+      removeEventListener: (_type, fn) => void listeners.delete(fn),
+      postMessage: (message) => {
+        posted.push(message);
+        for (let i = 0; i < answers; i += 1) setTimeout(() => listeners.forEach((fn) => fn({ data: { type: 'hr-tab-here' } })), 5);
+      },
+    };
+  }
+
+  it('otherTabsOpen: true only when another tab answers the ping; no channel or a broken one is false', async () => {
+    const one = tabsChannel(1);
+    const open = otherTabsOpen(env({ tabs: one }), 50);
+    await vi.advanceTimersByTimeAsync(5);
+    expect(await open).toBe(true);
+    expect(one.posted).toEqual([{ type: 'hr-tab-ping' }]);
+    const silent = otherTabsOpen(env({ tabs: tabsChannel(0) }), 30);
+    await vi.advanceTimersByTimeAsync(30);
+    expect(await silent).toBe(false);
+    expect(await otherTabsOpen(env(), 30)).toBe(false);
+    const broken: TabsChannelLike = {
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      postMessage: () => {
+        throw new Error('closed');
+      },
+    };
+    expect(await otherTabsOpen(env({ tabs: broken }), 30)).toBe(false);
+  });
+
+  it('with another tab of the app open, a waiting presenter never takes over: the page only reloads', async () => {
+    const waiting = worker('installed');
+    const { e, reload } = swEnv({ update: async () => undefined, waiting }, tabsChannel(1));
+    const r = await run(e, 1000, 5);
+    await r.done;
+    expect(waiting.postMessage).not.toHaveBeenCalled();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('alone (no tab answers the ping within 300 ms), the waiting presenter takes over as before', async () => {
+    const waiting = worker('installed');
+    const { e, reload, container } = swEnv({ update: async () => undefined, waiting }, tabsChannel(0));
+    await run(e, UPDATE_WAIT_MS, 299);
+    expect(waiting.postMessage).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+    container.fire('controllerchange', {});
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('an install that does not finish in time, or a worker that refuses the message, reloads', async () => {
+    const stuck = swEnv({ update: async () => undefined, installing: worker('installing') });
+    const r = await run(stuck.e, 20);
+    await r.done;
+    expect(stuck.reload).toHaveBeenCalledTimes(1);
+    const refusing = worker('installed');
+    refusing.postMessage.mockImplementation(() => {
+      throw new Error('gone');
+    });
+    const refused = swEnv({ update: async () => undefined, waiting: refusing });
+    await reloadForUpdate('2.abc', refused.e, 50);
+    expect(refused.reload).toHaveBeenCalledTimes(1);
   });
 });

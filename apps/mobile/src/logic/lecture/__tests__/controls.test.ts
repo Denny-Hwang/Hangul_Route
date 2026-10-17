@@ -44,6 +44,24 @@ describe('initialPresenterState', () => {
     expect(initialPresenterState(DECK, 'gone').slideIdx).toBe(0);
   });
 
+  it('a saved key this build no longer makes resumes at its step, else its block (LV-2 drops repeat word cards)', () => {
+    const deck = {
+      slides: [
+        slide('episode:e1/quest:a/s1/가', 1),
+        slide('episode:e1/quest:a/s2/나', 1),
+        slide('episode:e1/quest:a/s2/quiz/0', 2),
+        slide('episode:e1/quest:b/s1/다', 1),
+        slide('end', 1),
+      ],
+    };
+    // A repeat card of step s2 that LV-2 removed: the first slide of that step.
+    expect(initialPresenterState(deck, 'episode:e1/quest:a/s2/가').slideIdx).toBe(1);
+    // A step that is gone altogether: the first slide of its quest.
+    expect(initialPresenterState(deck, 'episode:e1/quest:b/s4/라').slideIdx).toBe(3);
+    // Nothing of its block left: the first slide.
+    expect(initialPresenterState(deck, 'episode:e9/quest:z/s1/마').slideIdx).toBe(0);
+  });
+
   it('resuming on the last slide counts as ended', () => {
     expect(initialPresenterState(DECK, 'e')).toMatchObject({ slideIdx: 4, ended: true });
   });

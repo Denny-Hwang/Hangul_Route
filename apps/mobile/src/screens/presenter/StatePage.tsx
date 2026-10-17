@@ -7,7 +7,8 @@ import { usePresenterView } from './presenter-context';
 /**
  * The presenter's state pages (design/screens/presenter/states.md): the invalid link, loading,
  * too small, and the presenter home of this build. Teacher pages in real pixels on paper: Hoya,
- * a title, one line, and at most one action, focused on arrival.
+ * a title, one line, and at most one action, focused on arrival. A link from a newer presenter
+ * (AMENDMENTS-LECTURE-V2 section 4.5) adds a second, quieter one (`secondary`) under Reload.
  */
 export function StatePage({
   pose,
@@ -17,6 +18,7 @@ export function StatePage({
   onCta,
   status,
   testID,
+  secondary,
 }: {
   pose: HoyaPose;
   title?: string;
@@ -26,6 +28,8 @@ export function StatePage({
   /** A status line ("Loading lesson") instead of a title. */
   status?: string;
   testID?: string;
+  /** A ghost button under the primary one. */
+  secondary?: { label: string; onPress: () => void; testID?: string };
 }): React.ReactElement {
   const { messages } = usePresenterView();
   const action = useRef<View>(null);
@@ -61,7 +65,8 @@ export function StatePage({
           {line}
         </Text>
       ) : null}
-      {cta !== undefined && onCta !== undefined ? <PrimaryButton ref={action} label={cta} onPress={onCta} /> : null}
+      {cta !== undefined && onCta !== undefined ? <PrimaryButton ref={action} label={cta} onPress={onCta} testID={testID ? `${testID}-cta` : undefined} /> : null}
+      {secondary ? <GhostButton label={secondary.label} onPress={secondary.onPress} testID={secondary.testID} /> : null}
     </View>
   );
 }

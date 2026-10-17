@@ -173,6 +173,7 @@ describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
     expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a', 'jamo:eo'] })).toBe(2);
     expect(blockMinutes({ kind: 'cards', cardIds: ['card:book'] })).toBe(1);
     expect(blockMinutes({ kind: 'cards', cardIds: ['card:book', 'card:hanbok', 'card:kimchi'] })).toBe(2);
+    expect(blockMinutes({ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 10 })).toBe(20);
     // v2 (AMENDMENTS-LECTURE-V2 4.4): 10 cards halved plus 5 quiz rounds, as the presets count it.
     expect(blockMinutes({ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 })).toBe(10);
   });

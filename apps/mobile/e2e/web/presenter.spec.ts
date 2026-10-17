@@ -363,6 +363,87 @@ test.describe('presenter at 1280 x 720', () => {
     await expect(page.getByTestId('presenter-home')).toBeVisible();
   });
 
+  test('a link from a newer presenter offers Reload, which opens the same link again (AMENDMENTS-LECTURE-V2 4.5)', async ({ page }) => {
+    // A version this build does not read: the newer presenter's link.
+    await page.goto('/present#d=9.eyJ2Ijo5fQ');
+    await expect(page.getByText('This link does not work')).toBeVisible();
+    await expect(page.getByText('This link is from a newer version. Close other Hangul Route tabs, then reload.')).toBeVisible();
+    expect(new URL(page.url()).hash).toBe('');
+    const reload = page.getByRole('button', { name: 'Reload' });
+    await expect(reload).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open Quick lesson' })).toBeVisible();
+    await shot(page, 'presenter-invalid-stale-1280x720');
+    await page.evaluate(() => ((window as unknown as { __beforeReload?: boolean }).__beforeReload = true));
+    await reload.click();
+    // The page reloads with the link held in the tab: still unreadable here, so the same page, never the home.
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __beforeReload?: boolean }).__beforeReload === true)).toBe(false);
+    await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
+    await page.getByRole('button', { name: 'Open Quick lesson' }).click();
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+  });
+
+  test('a v2 Word review link opens: word cards, then the word-to-meaning quiz (AMENDMENTS-LECTURE-V2 4.5)', async ({ page }) => {
+    const review: LectureDeckInput = {
+      v: 2,
+      id: 'lecture:e2ewr1',
+      title: 'Word review',
+      createdAt: '2026-10-15T09:00:00Z',
+      seed: 7,
+      blocks: [{ kind: 'word-review', questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'], vocabIds: [], rounds: 5 }],
+      source: 'quick',
+      preset: 'word-review',
+    };
+    await page.goto(link(review));
+    await startLesson(page);
+    // The two quests teach 10 different words: 10 cards, 5 quiz slides, the End slide.
+    await expect.poll(() => counter(page)).toBe('1 / 16');
+    // Slide 1 is a word card: the first word the first quest teaches.
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide 1 of 16, Word\b/);
+    await expect(page.getByTestId('presenter-stage').getByText('고추', { exact: true }).first()).toBeVisible();
+    await shot(page, 'presenter-word-review-1280x720');
+    // After the cards, the word-to-meaning quiz.
+    await forwardTo(page, 'Question');
+    await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide 11 of 16, Question\b/);
+    await expect(page.getByTestId('presenter-quiz-options')).toBeVisible();
+    // The v2 deck lands in Recent like any other.
+    await expect.poll(async () => JSON.stringify(await storedValue(page, 'hr:lecture:recent'))).toContain('lecture:e2ewr1');
+  });
+
+  test('another open tab of the app answers the hr-tabs ping, so Reload never takes over under it (AMENDMENTS-LECTURE-V2 4.5)', async ({ page, context }) => {
+    const ping = () =>
+      page.evaluate(
+        () =>
+          new Promise<boolean>((resolve) => {
+            const tabs = (window as unknown as { __hrTabs?: BroadcastChannel | null }).__hrTabs;
+            if (!tabs) return resolve(false);
+            const timer = setTimeout(() => resolve(false), 1000);
+            tabs.addEventListener('message', (e: MessageEvent) => {
+              if ((e.data as { type?: string } | null)?.type === 'hr-tab-here') {
+                clearTimeout(timer);
+                resolve(true);
+              }
+            });
+            tabs.postMessage({ type: 'hr-tab-ping' });
+          }),
+      );
+    await page.goto('/present');
+    await expect(page.getByTestId('presenter-home')).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { __hrTabs?: unknown }).__hrTabs != null)).toBe(true);
+    // Alone, the page never hears its own ping.
+    expect(await ping()).toBe(false);
+    const other = await context.newPage();
+    await other.goto('/');
+    await other.waitForLoadState('load');
+    expect(await ping()).toBe(true);
+    await other.close();
+  });
+
+  test('a broken link (not a newer one) has no Reload', async ({ page }) => {
+    await page.goto('/present#d=1.not-a-deck!!');
+    await expect(page.getByText('This link does not work')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reload' })).toHaveCount(0);
+  });
+
   test('an unknown path under /present shows the presenter home', async ({ page }) => {
     await page.goto('/present/some/old/link');
     await expect(page.getByTestId('presenter-home')).toBeVisible();
