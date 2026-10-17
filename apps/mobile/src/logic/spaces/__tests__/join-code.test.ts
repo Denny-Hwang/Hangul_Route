@@ -1,6 +1,6 @@
 import { LOCALES, findBannedWord, getMessages, type Messages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage, type JoinErrorCode } from '../join-code';
+import { CODE_GLYPH_EM, cleanJoinCode, codeFieldFontSize, isCodeError, isCompleteJoinCode, joinErrorMessage, type JoinErrorCode } from '../join-code';
 
 const ALL: JoinErrorCode[] = ['code_not_found', 'code_expired', 'cap_learner', 'cap_class', 'not_joinable', 'learner_not_found', 'already_bound', 'too_many_attempts', 'network', 'invalid', 'unknown', 'off'];
 const m = getMessages('en').caregiver;
@@ -73,4 +73,27 @@ describe('joinErrorMessage takes its words from the message subtree (F-I18N-001 
       }
     });
   }
+});
+
+describe('codeFieldFontSize: the code field fits a whole code at every text size (AMENDMENTS-DISPLAY-NAV section 4, DN-3b review)', () => {
+  it('keeps the display size while it fits, and never draws larger than the text size asks', () => {
+    // Standard on a 375 phone: 36 px and room to spare.
+    expect(codeFieldFontSize(36, 339, 8)).toBe(36);
+    expect(codeFieldFontSize(45, 1000, 8)).toBe(45);
+  });
+
+  it('at Largest on a 320 phone the widest code still fits its field', () => {
+    const inner = 280;
+    const size = codeFieldFontSize(45, inner, 8);
+    expect(size).toBeLessThan(45);
+    // Six of the widest letter (one em each) and their letter spacing fit inside the field.
+    expect(6 * size * CODE_GLYPH_EM + 6 * 8).toBeLessThanOrEqual(inner);
+    expect(6 * (size + 1) * CODE_GLYPH_EM + 6 * 8).toBeGreaterThan(inner);
+  });
+
+  it('before the field is laid out the display size stands; it never reaches zero', () => {
+    expect(codeFieldFontSize(45, 0, 8)).toBe(45);
+    expect(codeFieldFontSize(45, Number.NaN, 8)).toBe(45);
+    expect(codeFieldFontSize(45, 10, 8)).toBe(1);
+  });
 });

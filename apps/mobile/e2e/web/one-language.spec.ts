@@ -4,7 +4,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardSelf, openLettersEpisode, readStored, seedStored, waitForSaved, headerClose } from './helpers';
 import { shot } from './shots';
-import { closeInstallGuide, expectNoSidewaysScroll } from './text-fit';
+import { closeInstallGuide, expectNoSidewaysScroll, expectTextFits } from './text-fit';
 
 /**
  * Owner items 6 and 7: one UI language per device (and per account), and a text size on every page,
@@ -171,12 +171,21 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
   });
 
   test('a teacher laptop that never ran the learner app keeps the console language it chose before the record existed', async ({ page }) => {
+    // The console's own choice from before the record existed is on the laptop before any grown-up page runs (an init
+    // script, once per tab). Written by `page.evaluate` after a page has loaded, it raced that page's own mirror sync
+    // (which clears a mirror the record does not hold) and the reload, and CI's Chromium read English.
+    await page.addInitScript(() => {
+      if (window.sessionStorage.getItem('e2e:console-choice') !== null) return;
+      window.sessionStorage.setItem('e2e:console-choice', 'set');
+      window.localStorage.setItem('hr:console:uiLocale', 'ko');
+    });
     await page.goto('/signin');
-    await page.evaluate(() => window.localStorage.setItem('hr:console:uiLocale', 'ko'));
-    await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     // Folded into the device record with the 1970 stamp (an account choice still wins over it).
     await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko', uiLocaleAt: '1970-01-01T00:00:00.000Z' });
+    // The record holds it now: a reload keeps Korean.
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
   });
 
   test('a console deck with no explicit slide language opens the home and the start screen in the device language', async ({ page }) => {
@@ -254,9 +263,9 @@ test.describe('text size Largest at 360 x 640', () => {
 test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-NAV section 4)', () => {
   test.use({ viewport: { width: 320, height: 568 } });
 
-  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
-    await expectNoSidewaysScroll(page, 'Home');
+    await expectTextFits(page, 'Home');
     await shot(page, 'or67-home-largest-320x568');
     const tabs = page.getByRole('tablist').getByRole('link');
     await expect(tabs).toHaveCount(4);
@@ -267,29 +276,29 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     ] as const) {
       await tabs.nth(index).click();
       await page.waitForTimeout(400);
-      await expectNoSidewaysScroll(page, name);
+      await expectTextFits(page, name);
       await shot(page, `or67-${name.toLowerCase()}-largest-320x568`);
     }
     await tabs.nth(0).click();
     await page.getByRole('button', { name: 'Profile and settings' }).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'Profile');
+    await expectTextFits(page, 'Profile');
     await page.getByTestId('profile-display-row').click();
     await expect(page.getByTestId('display-sheet')).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Display sheet');
+    await expectTextFits(page, 'the Display sheet');
     await shot(page, 'or67-display-sheet-largest-320x568');
   });
 
-  test('the quest player\'s first steps: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the quest player\'s first steps: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
     await openLettersEpisode(page);
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
     await expect(headerClose(page)).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the quest intro');
+    await expectTextFits(page, 'the quest intro');
     await shot(page, 'or67-quest-intro-largest-320x568');
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Discover step');
+    await expectTextFits(page, 'the Discover step');
     await shot(page, 'or67-quest-discover-largest-320x568');
   });
 });

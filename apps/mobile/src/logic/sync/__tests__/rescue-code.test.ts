@@ -99,4 +99,12 @@ describe('rescueInputRows', () => {
     expect(rescueInputRows('  TIGER   MOON  ')).toBe(2);
     expect(rescueInputRows('A B C D E F G')).toBe(5);
   });
+
+  it('counts a hyphen as a break too: a pasted code plans the same rows as a typed one (DN-3b review)', () => {
+    expect(rescueInputRows('TIGER-MOON-RIVER-APPLE-482139')).toBe(5);
+    expect(rescueInputRows('TIGER-MOON-RIVER-APPLE-482139')).toBe(rescueInputRows('TIGER MOON RIVER APPLE 482139'));
+    expect(rescueInputRows('PADDLE-GLACIER-4992')).toBe(3);
+    expect(rescueInputRows('TIGER-MOON RIVER-')).toBe(3);
+    expect(rescueInputRows('-')).toBe(2);
+  });
 });

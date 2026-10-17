@@ -19,6 +19,18 @@ export function opensStagePrize(outcome: { stageCompleted: StageKey | null } | n
   return outcome?.stageCompleted === PRIZE_STAGE;
 }
 
+/**
+ * The width of each tile of the symbol wall: as many tiles of at least `minTile` (the touch target grown by the
+ * text size, AMENDMENTS-DISPLAY-NAV section 4) as fit a row of `rowWidth` with `gap` between them, widened so the
+ * row is filled edge to edge; every tile of the wall has the same width, the last row included. Before the row is
+ * laid out (`rowWidth` 0) the tile is `minTile`.
+ */
+export function wallTileWidth(rowWidth: number, minTile: number, gap: number): number {
+  if (!(rowWidth > 0) || !(minTile > 0)) return minTile;
+  const columns = Math.max(1, Math.floor((rowWidth + gap) / (minTile + gap)));
+  return Math.max(minTile, Math.floor((rowWidth - gap * (columns - 1)) / columns));
+}
+
 export interface WallTile {
   id: string;
   char: string;
