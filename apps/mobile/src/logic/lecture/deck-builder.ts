@@ -88,6 +88,8 @@ export interface LectureStory {
   coverSceneId: string;
   keywords: ReadonlyArray<StoryKo & { id: string }>;
   tiers: readonly LectureStoryTier[];
+  /** The story's minutes (the catalogue's); its check slides are inside them (rule 12, section 4.4). */
+  minutes: number;
 }
 
 /** A vocabulary topic as the vocab adapter gives it (`sources/vocab.ts`, PR 12). */
@@ -186,6 +188,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const blockKeys = new Map<string, number>();
   let quizFrom = 0;
   let minutes = 0;
+  // Rule 12 (AMENDMENTS-LECTURE-V2 section 4.4, LV-0b O1): a quest's or story's catalogue minutes
+  // already hold its own quiz and check slides, so only quiz slides outside them count 1 each.
+  let ownMinutesDepth = 0;
+  let outsideQuizSlides = 0;
   let blockIndex = 0;
 
   const skip = (ref: string, reason: SkipReason): void => {
@@ -198,6 +204,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
   const push = (key: string, body: SlideBody): void => {
     slides.push({ ...body, key: nthKey(usedKeys, key), builds: buildsFor(body, opts) });
+    if (body.kind === 'quiz' && ownMinutesDepth === 0) outsideQuizSlides += 1;
+  };
+  /** Pushes a quest's or story's own slides: its quiz slides are inside its catalogue minutes. */
+  const insideOwnMinutes = (expand: () => void): void => {
+    ownMinutesDepth += 1;
+    try {
+      expand();
+    } finally {
+      ownMinutesDepth -= 1;
+    }
   };
   const seed = (): number => deck.seed + slides.length;
   /** A word card, once per deck; the word is taught either way (a later gloss still upgrades it). */
@@ -420,6 +436,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
 
   const questBlock = (path: string, quest: Quest): void => {
     minutes += quest.estimatedMinutes;
+    insideOwnMinutes(() => questSlides(path, quest));
+  };
+
+  const questSlides = (path: string, quest: Quest): void => {
     const intro = quest.steps.find((s) => s.kind === 'intro');
     push(`${path}/title`, {
       kind: 'title',
@@ -452,7 +472,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         // story-read / -check / -seq of one story: the story block once per quest (checks and order are in it).
         if (!storiesDone.has(scope.story.storyId)) {
           storiesDone.add(scope.story.storyId);
-          storyBlock(`${path}/${scope.story.storyId}`, scope.story.storyId, scope.story.level, true);
+          storyBlock(`${path}/${scope.story.storyId}`, scope.story.storyId, scope.story.level, true, false);
         }
         continue;
       }
@@ -484,7 +504,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       line: episode.hoyaIntroEn,
     });
     if (episode.format === 'story' && episode.storyIds && episode.storyIds.length > 0) {
-      for (const storyId of episode.storyIds) storyBlock(`${path}/${storyId}`, storyId, undefined, true);
+      for (const storyId of episode.storyIds) storyBlock(`${path}/${storyId}`, storyId, undefined, true, false);
       // Rule 12: the episode's quests still count their estimated minutes.
       for (const questId of episode.questIds) minutes += bundle.questById(questId)?.estimatedMinutes ?? 0;
       return;
@@ -492,7 +512,15 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     for (const questId of episode.questIds) questById(`${path}/`, questId);
   };
 
-  const storyBlock = (key: string, storyId: string, level: StoryLevel | undefined, checks: boolean): void => {
+  /**
+   * A story's slides. `ownMinutes`: a story block counts the story's catalogue minutes, which hold
+   * its check slides (rule 12, section 4.2 m(block)); a story inside a quest or a story episode is
+   * inside their minutes. A skipped story counts none.
+   */
+  const storyBlock = (key: string, storyId: string, level: StoryLevel | undefined, checks: boolean, ownMinutes: boolean): void =>
+    insideOwnMinutes(() => storySlides(key, storyId, level, checks, ownMinutes));
+
+  const storySlides = (key: string, storyId: string, level: StoryLevel | undefined, checks: boolean, ownMinutes: boolean): void => {
     const found = bundle.story ? bundle.story(storyId) : 'not-ready';
     if (found === undefined) {
       skip(storyId, 'unknown-id');
@@ -523,6 +551,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       ...(found.hoyaIntroEn !== undefined ? { line: found.hoyaIntroEn } : {}),
       cover: { storyId, sceneId: found.coverSceneId },
     });
+    if (ownMinutes) minutes += found.minutes;
     tier.scenes.forEach((scene, i) => {
       const ko = sceneKo(scene);
       const korean = ko ? { ko: ko.ko, romanization: ko.romanization, gloss: ko.en } : undefined;
@@ -720,7 +749,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   /**
    * Rule 12 as amended (AMENDMENTS-LECTURE-V2 section 4.4): a block of letters, cards or words
    * counts one minute per two of its non-quiz slides, rounded up; its quiz slides keep 1 each
-   * (counted with every quiz slide at the end).
+   * (counted at the end with every quiz slide outside a quest or story).
    */
   const bySlides = (expandBlock: () => void): void => {
     const from = slides.length;
@@ -754,7 +783,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         vocabBlock(key, block.topicId, block.wordIds);
         return;
       case 'story':
-        storyBlock(key, block.storyId, block.level, block.checks);
+        storyBlock(key, block.storyId, block.level, block.checks, true);
         return;
       case 'cards':
         bySlides(() => {
@@ -786,6 +815,6 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     words: taught.filter((t) => t.kind === 'word').map(kept),
     ...(classCode !== undefined ? { classCode } : {}),
   });
-  minutes += slides.filter((s) => s.kind === 'quiz').length;
+  minutes += outsideQuizSlides;
   return { slides, skipped, taught, minutes };
 }

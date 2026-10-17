@@ -1,17 +1,24 @@
 import {
   CATALOG,
+  LECTURE_PRESETS,
   LectureDeckSchema,
+  PRESET_LENGTHS,
   presetDeck,
+  presetMinutesOf,
   resolvePreset,
+  StageKeySchema,
   type Episode,
   type HeritageCard,
   type LectureDeckInput,
+  type LecturePreset,
+  type PresetContext,
   type Quest,
   type QuestStep,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import type { MinigameScope } from '../../minigame-config';
+import { lectureBundle } from '../content';
 import {
   expandDeck,
   withBuilds,
@@ -177,6 +184,7 @@ const sunMoon: LectureStory = {
   title: { ko: '해와 달', romanization: 'haewa dal', en: 'The Sun and the Moon' },
   hoyaIntroEn: 'A story about the sky.',
   coverSceneId: 's1',
+  minutes: 5,
   keywords: [
     { id: 'sun', ko: '해', romanization: 'hae', en: 'sun' },
     { id: 'moon', ko: '달', romanization: 'dal', en: 'moon' },
@@ -309,7 +317,8 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     expect(slides[11]!.key).toBe('end');
     expect(new Set(keys(slides)).size).toBe(slides.length);
     expect(skipped).toEqual([]);
-    expect(minutes).toBe(4 + 3);
+    // Rule 12 (section 4.4, LV-0b O1): the quest's own 3 quiz slides are inside its 4 catalogue minutes.
+    expect(minutes).toBe(4);
   });
 
   it('a Discover step gives a letter per jamo item and a vocab slide per word item; the Check is a counted skip', () => {
@@ -546,7 +555,9 @@ describe('expandDeck: episodes (rule 1)', () => {
     expect(titles).toEqual(['episode:first/title', 'episode:first/quest:letters/title', 'episode:first/quest:words/title']);
     expect(slides[2]!.key).toBe('episode:first/quest:letters/s2/jamo:giyeok');
     expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:gone', reason: 'unknown-id' });
-    expect(minutes).toBe(4 + 4 + 3 + 2);
+    // Two quests of 4 minutes; their own quiz slides are inside those minutes (section 4.4, O1).
+    expect(only(slides, 'quiz').length).toBeGreaterThan(0);
+    expect(minutes).toBe(4 + 4);
   });
 
   it('a preview episode, an episode with no quests and an unknown episode are skipped', () => {
@@ -566,8 +577,10 @@ describe('expandDeck: episodes (rule 1)', () => {
 
   it('a story episode with storyIds expands its title slide and each story', () => {
     const { slides, minutes } = expand([{ kind: 'episode', id: 'episode:shelf-sun-moon' }]);
-    // Rule 12: the episode's quests count their estimated minutes on the storyIds path too.
-    expect(minutes).toBe(4 + only(slides, 'quiz').length);
+    // Rule 12: the episode's quests count their estimated minutes on the storyIds path too; the
+    // stories' check slides are inside them (section 4.4, O1).
+    expect(only(slides, 'quiz').length).toBeGreaterThan(0);
+    expect(minutes).toBe(4);
     expect(keys(slides).slice(0, 3)).toEqual([
       'episode:shelf-sun-moon/title',
       'episode:shelf-sun-moon/story:sun-moon/title',
@@ -1107,6 +1120,79 @@ describe('expandDeck: rule 12 as amended (AMENDMENTS-LECTURE-V2 section 4.4, LV-
   it('a letter already shown adds no slide and no minute; quests keep their catalogue minutes', () => {
     expect(expand([{ kind: 'jamo-set', jamoIds: [J('giyeok')] }, { kind: 'jamo-set', jamoIds: [J('giyeok')] }]).minutes).toBe(1);
     expect(expand([{ kind: 'jamo-set', jamoIds: [J('nope')] }, { kind: 'quest', id: 'quest:again' }]).minutes).toBe(4);
+  });
+
+  // LV-0b observation O1: the 20-minute Hangul week 1 deck previewed as about 38 minutes because
+  // the Match Sound rounds inside its quests were counted again on top of the quests' minutes.
+  it("a quest's own quiz slides are inside its catalogue minutes; quiz slides outside a quest or story count 1 each", () => {
+    const quest = expand([{ kind: 'quest', id: 'quest:letters' }]);
+    expect(only(quest.slides, 'quiz')).toHaveLength(3);
+    expect(quest.minutes).toBe(4);
+    const withQuiz = expand([{ kind: 'quest', id: 'quest:letters' }, { kind: 'quiz', from: 'previous', rounds: 4 }]);
+    const outside = only(withQuiz.slides, 'quiz').filter((s) => !s.key.startsWith('quest:letters/'));
+    expect(outside).toHaveLength(4);
+    expect(withQuiz.minutes).toBe(4 + 4);
+    const words = expand([{ kind: 'quest', id: 'quest:words' }, { kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㅏ'] }]);
+    expect(only(words.slides, 'quiz').filter((s) => s.key.startsWith('quest:words/')).length).toBeGreaterThan(0);
+    expect(words.minutes).toBe(4 + 2 + 4);
+  });
+
+  it("a story block counts the story's minutes, its check slides inside them; a skipped story counts none", () => {
+    const story = expand([{ kind: 'story', storyId: 'story:sun-moon' }]);
+    expect(only(story.slides, 'quiz')).toHaveLength(3);
+    expect(story.minutes).toBe(5);
+    expect(expand([{ kind: 'story', storyId: 'story:sun-moon', checks: false }]).minutes).toBe(5);
+    const skipped = expand([
+      { kind: 'story', storyId: 'story:draft' },
+      { kind: 'story', storyId: 'story:no-tiers' },
+      { kind: 'activity', preset: 'air-write', minutes: 3 },
+    ]);
+    expect(skipped.skipped.map((s) => s.reason)).toEqual(['not-ready', 'not-ready']);
+    expect(skipped.minutes).toBe(3);
+  });
+
+  it('a story inside a quest or a story episode is inside their minutes', () => {
+    const inQuest = expand([{ kind: 'quest', id: 'quest:story' }]);
+    expect(only(inQuest.slides, 'title').some((t) => t.source === 'story')).toBe(true);
+    expect(inQuest.minutes).toBe(4);
+    expect(expand([{ kind: 'episode', id: 'episode:book' }]).minutes).toBe(4);
+  });
+});
+
+describe('expandDeck: every preset previews within its length on the shipped bundle (AMENDMENTS-LECTURE-V2 4.4, LV-0b O1)', () => {
+  const shipped = lectureBundle('en');
+  const meta = { id: 'lecture:preset01', title: 'Preset', createdAt: '2026-10-17T09:00:00Z', seed: 7, source: 'quick' as const };
+  const previewOf = (preset: LecturePreset, minutes: number, ctx: PresetContext) => {
+    const resolved = resolvePreset(preset, minutes, ctx);
+    const expanded = expandDeck(LectureDeckSchema.parse(presetDeck(resolved, meta)), shipped, VOICE);
+    return { resolved, expanded, console: presetMinutesOf(resolved.blocks, CATALOG) };
+  };
+  const contexts: [string, PresetContext][] = [
+    ['a first visit', { catalog: CATALOG }],
+    ...StageKeySchema.options.map((stage): [string, PresetContext] => [stage, { catalog: CATALOG, stage }]),
+    ['a Stage 3 position', { catalog: CATALOG, position: { questId: 'quest:stage3-life-q2' } }],
+    ['a Stage 1 position', { catalog: CATALOG, position: { questId: 'quest:stage1-life-q3' } }],
+    ['a story shown before', { catalog: CATALOG, shown: { questIds: [], storyIds: ['story:sejong-new-letters'] } }],
+    ['recent words', { catalog: CATALOG, recentWords: { questIds: ['quest:stage2-life-q1', 'quest:stage2-letters-q1'], vocabIds: [] } }],
+    ['two recent letters', { catalog: CATALOG, revisitChars: ['ㅓ', 'ㄹ'] }],
+  ];
+  const cases = contexts.flatMap(([label, ctx]) => LECTURE_PRESETS.flatMap((p) => PRESET_LENGTHS[p].map((m): [string, LecturePreset, number, PresetContext] => [label, p, m, ctx])));
+
+  it.each(cases)('%s: %s at %i min previews within its length, and as the console counts it', (_, preset, minutes, ctx) => {
+    const { resolved, expanded, console: estimate } = previewOf(preset, minutes, ctx);
+    expect(expanded.slides.length).toBeGreaterThan(0);
+    expect(expanded.minutes).toBeLessThanOrEqual(resolved.minutes);
+    // No less than the length minus 5, except Hangul week 1 at 30 minutes: 24, its section 4.2 H row.
+    const floor = resolved.preset === 'hangul-week-1' && resolved.minutes === 30 ? 24 : resolved.minutes - 5;
+    expect(expanded.minutes).toBeGreaterThanOrEqual(floor);
+    // A Word review counts its card cap on the console (an upper bound, section 4.4); every other
+    // preset's blocks expand in full on the shipped bundle, so both sides give the same minutes.
+    if (resolved.blocks.some((b) => b.kind === 'word-review')) expect(expanded.minutes).toBeLessThanOrEqual(estimate);
+    else expect(expanded.minutes).toBe(estimate);
+  });
+
+  it('Hangul week 1 previews as the section 4.2 H rows (10, 19 and 24 minutes), not about 38', () => {
+    expect([10, 20, 30].map((m) => previewOf('hangul-week-1', m, { catalog: CATALOG }).expanded.minutes)).toEqual([10, 19, 24]);
   });
 });
 
