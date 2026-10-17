@@ -88,6 +88,13 @@ const sw = `
       // guide (F-PWA-001) can call prompt() later from a tap.
       window.__hrInstallPrompt = null;
       window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__hrInstallPrompt = e; window.dispatchEvent(new CustomEvent('hr:install-available')); });
+      // Every open tab of the app answers the stale presenter's ping (AMENDMENTS-LECTURE-V2 4.5),
+      // so its Reload never lets a new worker take over while another tab still runs this build.
+      // A channel never hears its own messages: the presenter pings on this same object.
+      try {
+        window.__hrTabs = new BroadcastChannel('hr-tabs');
+        window.__hrTabs.addEventListener('message', function (e) { if (e.data && e.data.type === 'hr-tab-ping') window.__hrTabs.postMessage({ type: 'hr-tab-here' }); });
+      } catch (e) { window.__hrTabs = null; }
       if (!('serviceWorker' in navigator)) return;
       // Reload only when the app explicitly applied an update — never on the
       // first install, where clientsClaim also fires controllerchange and a

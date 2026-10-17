@@ -61,5 +61,6 @@ export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBun
     strokeReviewed: (id) => reviewed.has(id),
     story: stories.story,
     vocabTopic: topics.vocabTopic,
+    vocabWord: topics.vocabWord,
   };
 }

@@ -36,6 +36,12 @@ export function holdOpenDeck(_raw: string, _options: { fresh?: boolean } = {}): 
   // No history on native.
 }
 
+/** The stale-presenter update check (AMENDMENTS-LECTURE-V2 section 4.5); web only. */
+export async function checkForUpdate(): Promise<void> {}
+
+/** The invalid-link Reload; web only. */
+export async function reloadForUpdate(_raw: string): Promise<void> {}
+
 export function reloadOnDeckLink(): () => void {
   return () => undefined;
 }
