@@ -1,19 +1,20 @@
 'use client';
 
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
-import type { CurriculumMeta, PlanItem } from '@hangul-route/content-schema';
+import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { CURRICULUM_MAX_ITEMS, PLAN_MAX_ITEMS, type ChooserSelection, type CurriculumMeta, type PlanItem } from '@hangul-route/content-schema';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
-import { builderEpisodes, questsOf } from '@/data/catalog';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { lectureModeEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
+import { applyToPlan, chooserKeys, consoleChooserGroups, planMinutes, planSelection } from '@/lib/console/lesson-picker';
 import { type RepaceResult, repaceSaveBody, reweek, selectedPlan, swapRouteItems, withTargetDate } from '@/lib/console/curriculum';
 import { builderOnLoad, suggestFrom, suggestionFor, suggestionNoticeShown } from '@/lib/console/placement';
 import { addFrom, draftForAdd, withQuest } from '@/lib/console/plan-add';
@@ -79,6 +80,9 @@ function PlanInner(): JSX.Element {
   const localeRef = useRef(locale);
   localeRef.current = locale;
   const now = new Date();
+  // The grouped lesson picker (AMENDMENTS-LECTURE-V2 row LV-3): every ready stage, titles in the console language.
+  const pickerGroups = useMemo(() => consoleChooserGroups(locale, 'plan'), [locale]);
+  const pickerKeys = useMemo(() => chooserKeys(pickerGroups), [pickerGroups]);
 
   /** Replace the draft with a stored plan (not an edit). */
   const openDraft = (next: Draft): void => {
@@ -160,8 +164,9 @@ function PlanInner(): JSX.Element {
   // Before the roster loads the page says "learners" and "this space", as it always has.
   const kind = roster?.space.kind ?? null;
 
-  const addItem = (item: PlanItem): void => {
-    setDraft((d) => (d.items.some((i) => i.kind === item.kind && i.id === item.id) ? d : { ...d, items: [...d.items, item] }));
+  /** A press in the picker: the items it holds change in place; dates and notes of the others stay. */
+  const pick = (update: (selection: ChooserSelection) => string[]): void => {
+    setDraft((d) => ({ ...d, items: applyToPlan(d.items, pickerKeys, update(planSelection(d.items, pickerKeys))) }));
   };
   const updateItem = (index: number, patch: Partial<PlanItem>): void => {
     setDraft((d) => ({
@@ -310,25 +315,16 @@ function PlanInner(): JSX.Element {
           ) : null}
           <Field name="title" label={p.titleField.label} value={draft.title} onChange={(v) => setDraft((d) => ({ ...d, title: v }))} placeholder={p.titleField.placeholder} maxLength={60} required />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: spacing.lg }}>
-            <div style={panelStyle} aria-label={p.catalog.label}>
-              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{p.catalog.title}</h2>
-              {builderEpisodes().map((e) => (
-                <div key={e.episodeId} style={{ marginBottom: spacing.md }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
-                    <strong>{e.title}</strong>
-                    <Button onClick={() => addItem({ kind: 'episode', id: e.episodeId })}>{p.catalog.addEpisode.cta}</Button>
-                  </div>
-                  {questsOf(e.episodeId).map((q) => {
-                    const added = draft.items.some((i) => i.kind === 'quest' && i.id === q.id);
-                    return (
-                      <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, paddingLeft: spacing.md, color: colors.text.secondary, fontSize: typography.size.bodySm }}>
-                        <span>{p.catalog.questLine(q.title, q.minutes)}</span>
-                        <Button disabled={added} onClick={() => addItem({ kind: 'quest', id: q.id })}>{added ? p.catalog.added.cta : p.catalog.add.cta}</Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
+            <div style={panelStyle}>
+              <GroupedLessonPicker
+                groups={pickerGroups}
+                selection={planSelection(draft.items, pickerKeys)}
+                onChange={pick}
+                room={(draft.meta ? CURRICULUM_MAX_ITEMS : PLAN_MAX_ITEMS) - draft.items.length}
+                title={c.chooser.planTitle}
+                fullNote={c.chooser.full}
+                testId="plan-picker"
+              />
             </div>
             <div style={panelStyle} aria-label={p.yours.label}>
               <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{p.yours.title(draft.items.length)}</h2>
@@ -388,7 +384,29 @@ function PlanInner(): JSX.Element {
           </div>
           {note ? <Notice tone="nudge">{c[note]}</Notice> : null}
           <Muted>{c.draftNeverReaches}</Muted>
-          <div style={{ display: 'flex', gap: spacing.sm, marginTop: spacing.md, flexWrap: 'wrap' }}>
+          {/* The sticky bar (LV-3): what is chosen and Publish plan stay in sight while the picker scrolls, above the home indicator. */}
+          <div
+            role="region"
+            aria-label={c.chooser.bar}
+            data-testid="plan-bar"
+            style={{
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 1,
+              display: 'flex',
+              gap: spacing.sm,
+              marginTop: spacing.md,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              paddingTop: spacing.sm,
+              paddingBottom: `max(${spacing.sm}px, env(safe-area-inset-bottom))`,
+              borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}`,
+              backgroundColor: colors.surface.canvas,
+            }}
+          >
+            <span role="status" style={{ flex: '1 1 100%', color: colors.text.secondary }} data-testid="plan-bar-count">
+              {c.chooser.chosen(draft.items.length, planMinutes(draft.items))}
+            </span>
             <Button tone="primary" disabled={busy || !api || draft.items.length === 0 || draft.title.trim().length === 0 || (draft.targets !== null && draft.targets.length === 0)} onClick={() => void save(true)} testId="publish-plan">
               {busy ? p.saving.cta : c.publishPlan}
             </Button>

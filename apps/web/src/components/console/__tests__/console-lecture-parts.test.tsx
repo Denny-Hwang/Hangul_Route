@@ -82,8 +82,11 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expectAllPseudo(html);
   });
 
-  it('the catalogue, with one item added', () => {
-    const html = renderToStaticMarkup(<LectureCatalogueSection blocks={[{ kind: 'quest', id: quest.id }]} onAdd={noop} />);
+  it('the catalogue (the grouped lesson picker), with one item added', () => {
+    const html = renderToStaticMarkup(<LectureCatalogueSection blocks={[{ kind: 'quest', id: quest.id }]} onChange={noop} />);
+    // It opens on the stage of what is chosen, with the chosen lesson ticked.
+    expect(html).toContain(`data-testid="lecture-picker-lesson-${quest.id}" checked=""`);
+    expect(html).toContain('data-testid="lecture-picker-group-stage1"');
     expectAllPseudo(html, contentTitles);
   });
 
@@ -104,8 +107,12 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     const addRow = html.slice(html.lastIndexOf('<div style="display:flex;gap'));
     expect(addRow.match(/<button[^>]*disabled/g)).toHaveLength(3);
     expectAllPseudo(html, rowWords(full));
-    const catalogue = renderToStaticMarkup(<LectureCatalogueSection blocks={full} onAdd={noop} />);
-    expect(catalogue.match(/<button[^>]*disabled/g)?.length).toBe(catalogue.match(/<button/g)?.length);
+    const catalogue = renderToStaticMarkup(<LectureCatalogueSection blocks={full} onChange={noop} />);
+    // Every box that would add a block is off; the outline's full line says why.
+    const boxes = catalogue.match(/<input type="checkbox"[^>]*>/g) ?? [];
+    expect(boxes.length).toBeGreaterThan(5);
+    for (const box of boxes) expect(box).toContain('disabled');
+    expect(catalogue).toContain(getMessages(PSEUDO).console.lecture.outline.full(LECTURE_MAX_BLOCKS));
   });
 
   it('the empty outline', () => {

@@ -257,7 +257,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.plan.summary.some.school': [[2, 1], [1, 2]],
   'console.plan.readout.progress': [[2, 3]],
   'console.plan.readout.withNotReady': [[0, 2, 1]],
-  'console.plan.catalog.questLine': [['Meet the Vowels', 5], ['quest:x', null]],
   'console.plan.catalog.episodeLabel': [['Meet the Letters', 3], ['New Year & Festivals', 1]],
   'console.plan.yours.title': [[0], [3]],
   'console.plan.yours.dateFor': [[2]],
@@ -317,8 +316,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.titleFor': [['Class A']],
   'console.lecture.back': [['Class A'], [null]],
   'console.lecture.source.plan': [['Week 3', 5], ['Week 1', 1]],
-  'console.lecture.catalogue.line': [['Meet the Vowels', 5], ['quest:x', null]],
-  'console.lecture.catalogue.topicLine': [['Food', 12, 5], ['Colors', 1, null]],
   'console.lecture.outline.about': [[24]],
   'console.lecture.outline.minutes': [[4], [null]],
   'console.lecture.outline.block.quiz': [[5], [1]],
@@ -840,4 +837,15 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.classScope.notice': [['Mina', 'Saturday Class B']],
   'console.reportScope.firstTry': [[0], [76], [100]],
   'learner.classUpdate.moved': [['Mina', 'Saturday Class B']],
+
+  // The grouped lesson picker (AMENDMENTS-LECTURE-V2 row LV-3).
+  'console.chooser.chip.stage': [[1], [7]],
+  'console.chooser.heading.stage': [[1, 15], [2, 1], [2, 18]],
+  'console.chooser.heading.stories': [[1], [24]],
+  'console.chooser.heading.topics': [[1], [12]],
+  'console.chooser.episodeDetail': [[1, 5], [3, 15], [6, 25]],
+  'console.chooser.minutes': [[5], [15]],
+  'console.chooser.lessonsOf': [['Meet the Letters']],
+  'console.chooser.found': [[1], [12]],
+  'console.chooser.chosen': [[1, 5], [3, 40]],
 };
