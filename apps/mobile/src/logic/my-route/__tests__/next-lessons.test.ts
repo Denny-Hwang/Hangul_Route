@@ -97,10 +97,10 @@ describe('nextLessonRows', () => {
 
 describe('nextLessonTapEvent', () => {
   it('the first row is the card\'s one next: route.next_started with its source and surface route', () => {
-    expect(nextLessonTapEvent({ first: true, source: 'plan' }, 'profile:mina', false)).toEqual({
+    expect(nextLessonTapEvent({ first: true, source: 'class' }, 'profile:mina', false)).toEqual({
       name: 'route.next_started',
       profileId: 'profile:mina',
-      payload: { source: 'plan', surface: 'route' },
+      payload: { source: 'class', surface: 'route' },
     });
     expect(nextLessonTapEvent({ first: true, source: 'cursor' }, undefined, false)).toEqual({ name: 'route.next_started', payload: { source: 'cursor', surface: 'route' } });
   });
@@ -108,6 +108,6 @@ describe('nextLessonTapEvent', () => {
   it('a later row sends nothing, and the grown-up\'s read-only page sends nothing', () => {
     expect(nextLessonTapEvent({ first: false, source: 'cursor' }, 'profile:mina', false)).toBeNull();
     expect(nextLessonTapEvent({ first: true, source: 'cursor' }, 'profile:mina', true)).toBeNull();
-    expect(nextLessonTapEvent({ first: false, source: 'plan' }, 'profile:mina', true)).toBeNull();
+    expect(nextLessonTapEvent({ first: false, source: 'class' }, 'profile:mina', true)).toBeNull();
   });
 });
