@@ -1520,6 +1520,7 @@ export const learner = {
     home: {
       title: '강의',
       help: { cta: '키와 도움말' },
+      back: { cta: '뒤로' },
       recent: {
         title: '최근 수업',
         empty: '연 수업이 여기에 나와요. 이름은 저장하지 않아요.',
@@ -1549,6 +1550,7 @@ export const learner = {
       timer: { cta: '타이머' },
       blank: { cta: '화면 가리기' },
       grid: { cta: '슬라이드' },
+      more: '더 보기',
       fullscreen: { cta: '전체 화면' },
       exit: { cta: '나가기' },
       noVoice: '여기는 한국어 음성이 없어요. 직접 읽어 주세요!',
@@ -1613,7 +1615,7 @@ export const learner = {
         practice: '집에서 Hangul Route로 연습해요',
         codeTitle: '우리 반에 들어와요',
         howToJoin: (cta: string) => `Hangul Route에서 ‘${cta}’ 버튼을 누르고 이 코드를 입력해요.`,
-        exitHint: '마치려면 나가기를 고르세요.',
+        finish: { cta: '마치기' },
       },
     },
     start: {
@@ -1622,6 +1624,9 @@ export const learner = {
       slides: (n: number) => `슬라이드 ${n}장`,
       minutes: (n: number) => `약 ${n}분`,
       checks: '시작하기 전에',
+      ready: '시작할 준비가 됐어요',
+      details: '자세히',
+      turnSideways: '시작할 때 휴대폰을 가로로 돌려 주세요.',
       offlineReady: '오프라인에서도 쓸 수 있어요',
       offlineNotReady: '오프라인에서 쓰려면 와이파이로 이 페이지를 한 번 열어요.',
       installHint: '브라우저 메뉴에서 홈 화면에 추가할 수도 있어요.',
@@ -1667,6 +1672,12 @@ export const learner = {
     help: {
       title: '키와 조작',
       clicker: '프레젠테이션 리모컨은 따로 설정하지 않아도 돼요.',
+      touch: {
+        title: '사용 방법',
+        tap: '화면 오른쪽을 누르면 다음으로, 왼쪽을 누르면 이전으로 가요.',
+        swipe: '옆으로 넘기면 슬라이드가 바뀌어요.',
+        bar: '화면을 누르면 조작 버튼이 나와요. 몇 초 뒤에 사라져요.',
+      },
       keepVisible: '조작 버튼 계속 보이기',
       romanization: '로마자',
       romanizationAlways: '항상',
@@ -1696,7 +1707,9 @@ export const learner = {
         staleLine: '새 버전에서 만든 링크예요. 다른 Hangul Route 탭을 닫고 다시 불러와요.',
       },
       loading: '수업을 불러오고 있어요',
-      tooSmall: '창을 키우거나 화면을 돌려 주세요.',
+      tooSmallWindow: '창을 키워 주세요.',
+      rotatePhone: '수업을 보려면 휴대폰을 가로로 돌려 주세요.',
+      rotateLock: '화면이 돌아가지 않으면 휴대폰 설정에서 화면 회전 잠금을 꺼 주세요.',
       portrait: '화면을 돌리면 더 크게 보여요',
     },
     language: {

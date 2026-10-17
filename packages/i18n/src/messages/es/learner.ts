@@ -1581,6 +1581,7 @@ export const learner = {
     home: {
       title: 'Proyección',
       help: { cta: 'Teclas y ayuda' },
+      back: { cta: 'Atrás' },
       recent: {
         title: 'Lecciones recientes',
         empty: 'Aquí aparecen las lecciones que abras. Los nombres nunca se guardan.',
@@ -1610,6 +1611,7 @@ export const learner = {
       timer: { cta: 'Temporizador' },
       blank: { cta: 'En blanco' },
       grid: { cta: 'Diapositivas' },
+      more: 'Más',
       fullscreen: { cta: 'Pantalla completa' },
       exit: { cta: 'Salir' },
       noVoice: 'Aquí no hay voz coreana. ¡Dilo tú!',
@@ -1674,7 +1676,7 @@ export const learner = {
         practice: 'Practica en casa con Hangul Route',
         codeTitle: 'Únete a nuestra clase',
         howToJoin: (cta: string) => `Toca «${cta}» en Hangul Route y escribe este código.`,
-        exitHint: 'Para terminar, elige Salir.',
+        finish: { cta: 'Terminar' },
       },
     },
     start: {
@@ -1683,6 +1685,9 @@ export const learner = {
       slides: (n: number) => plural('es', n, { one: '1 diapositiva', other: `${n} diapositivas` }),
       minutes: (n: number) => plural('es', n, { one: 'alrededor de 1 minuto', other: `alrededor de ${n} minutos` }),
       checks: 'Antes de empezar',
+      ready: 'Listo para empezar',
+      details: 'Detalles',
+      turnSideways: 'Pon el teléfono en horizontal cuando empieces.',
       offlineReady: 'Funciona sin internet',
       offlineNotReady: 'Abre esta página una vez con wifi para usarla sin internet.',
       installHint: 'También puedes agregarla a la pantalla de inicio desde el menú del navegador.',
@@ -1732,6 +1737,12 @@ export const learner = {
     help: {
       title: 'Teclas y controles',
       clicker: 'Un control de presentaciones funciona sin configurarlo.',
+      touch: {
+        title: 'Cómo se usa',
+        tap: 'Toca el lado derecho para avanzar y el izquierdo para volver.',
+        swipe: 'Desliza hacia los lados para cambiar de diapositiva.',
+        bar: 'Toca la pantalla para ver los controles. Se ocultan después de unos segundos.',
+      },
       keepVisible: 'Dejar los controles a la vista',
       romanization: 'Romanización',
       romanizationAlways: 'siempre',
@@ -1761,7 +1772,9 @@ export const learner = {
         staleLine: 'Este enlace es de una versión más nueva. Cierra las otras pestañas de Hangul Route y vuelve a cargar.',
       },
       loading: 'Cargando la lección',
-      tooSmall: 'Agranda la ventana o gira la pantalla.',
+      tooSmallWindow: 'Agranda la ventana.',
+      rotatePhone: 'Pon el teléfono en horizontal para ver la lección.',
+      rotateLock: 'Si la pantalla no gira, desactiva el bloqueo de rotación en los ajustes del teléfono.',
       portrait: 'Gira la pantalla para verlo más grande',
     },
     language: {

@@ -728,7 +728,6 @@ export const caregiver = {
       previewQuestions: { cta: 'Vista previa: preguntas' },
       present: { cta: 'Proyectar' },
       presentNote: 'Abre esto como diapositivas para una pantalla de clase o un televisor. No cambia el progreso de nadie.',
-      presentBlocked: 'La pestaña nueva no se abrió. Permite las ventanas emergentes de este sitio y vuelve a intentarlo.',
       closed: 'Se abre con el Plan Familiar o una Licencia de Grupo',
       openBilling: { cta: 'Abrir facturación' },
       wordCount: (n: number) => plural('es', n, { one: `${n} palabra`, other: `${n} palabras` }),
