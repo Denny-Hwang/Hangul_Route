@@ -7,7 +7,7 @@
 - 규약: `.claude/skills/wireframe-skill/SKILL.md` (필수 8 섹션 · ASCII 박스 · 색/폰트/px 금지 · success/empty/error 상태).
 - 각 파일의 **Open questions** 에 코드 ↔ 스펙 불일치가 기록되어 있다. 스펙을 `ready` 로 올리기 전에 거기서부터 본다.
 
-## 인덱스 (2026-10-12 갱신 · 화면 수 = `design/wireframes/**/*.md` 파일 수, README 제외)
+## 인덱스 (2026-10-16 갱신 · 화면 수 = `design/wireframes/**/*.md` 파일 수, README 제외)
 
 상태: **S** shipped(코드 존재, back-fill) · **D** spec draft · **R** spec ready · **P** proposal
 
@@ -50,6 +50,8 @@
 | `route/proposal.md` · `route/setup.md` · `route/overview.md` | S | F-PLAN-002 §3.9 (P2-7a, P2-7b; promoted in P2-8; behind `flags.routeEnabled`) |
 | `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `classroom/lecture-presets.md` · `classroom/lecture-big-screen-v2.md` · `classroom/lecture-entry-points.md` | R | AMENDMENTS-LECTURE-V2 (LV-0: presets on the presenter home and the setup page, the Stage 2-7 slide families, entry points for teachers and parents; mocks in LV-0b) |
+| `classroom/lecture-phone.md` | R | AMENDMENTS-LECTURE-V2 §18, F-TCH-004 §3.5 / §3.6 (2026-10-16, DN-0: the stage on a phone sideways with a floating bar, the rotate page upright, the phone start screen; row LV-M1; `classroom/lecture-presets.md` Panels C, E, F revised in the same pass: grouped chooser, sticky footer, no picker, no language chips) |
+| `home/next-lesson-hero.md` · `profile/profile-split.md` · `library/cards-collected-first.md` | R | AMENDMENTS-DISPLAY-NAV §9 (2026-10-16, DN-0: the learner UX pass; mocks `design/screens/learner-shell/`; rows DN-8, DN-9) |
 | `layout/wide.md` | S | F-LAYOUT-001 §3.1-3.8 (PR 0; built in PRs 1-7: classes, Home columns, Journey / Library panes, portrait guard also in `pwa/system-banners.md` panel 4; adoption checklist in `.github/pull_request_template.md`) |
 | `console/class-transfer.md` | D | F-SPACE-002 |
 | `journey/grid-plan-and-access.md` · `episode/detail-access-preview.md` · `home/next-and-free-end-card.md` · `results/back-to-plan-and-free-end.md` · `library/access-and-plan-tags.md` | R | F-ENT-003 §3.7-3.8 (E3-0; mock E3-D) |
@@ -85,6 +87,7 @@
 | `shell/adult-frame.md` · `shell/parent-home.md` · `shell/teacher-home.md` | R | F-APP-001 §3.8 (teacher home amends `console/home.md`; parent home replaces the `/parent` demo) |
 | `shell/grown-up-lock.md` | R | F-APP-001 §3.9 |
 | `shell/offline.md` | R | F-APP-001 §3.12 |
+| `shell/display-sheet.md` · `shell/screen-header.md` | R | AMENDMENTS-DISPLAY-NAV §3.6, §4, §7 (2026-10-16, DN-0: one language and text size per device from an Aa button; a top-left Back on every non-root screen, the console PageBack and the Learner app exit on the right; mocks `design/screens/app-shell/display-sheet.md`, `adult-frame.md`, `design/components/ScreenHeader/`; rows DN-3 to DN-7) |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).

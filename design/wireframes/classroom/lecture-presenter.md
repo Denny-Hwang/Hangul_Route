@@ -1,5 +1,7 @@
 # Classroom/Lecture presenter — a teacher's slide-style lesson on a tablet, TV or projector (wireframe v1)
 
+> **Amended 2026-10-16 (owner report; `docs/specs/AMENDMENTS-LECTURE-V2.md` section 18).** The **helper picker** is removed everywhere below (screen I's picker panel, the start screen's picker row, the bar's [Picker] button, the `P` key, the console's Helper picker section; LV-D7: no deck sets a picker), so no learner name or initial reaches the projected screen. A phone sideways shows slides with a floating bar and an upright phone a rotate page (`classroom/lecture-phone.md`); the home's language chips are replaced by the Display (Aa) control and the flat Quick lesson by the grouped chooser (`classroom/lecture-presets.md`). The rest of this v1 wireframe stands.
+
 Spec: `docs/specs/F-TCH-004-lecture-mode.md` (§3.1 surfaces, §3.4 slide kinds, §3.5 controls, §3.6 type, §3.10 names, §3.11 console page)
 Supersedes for teachers: `design/wireframes/classroom/projection-mode.md` (which stays as the deferred "volunteer student" option)
 Audience: a **teacher or grown-up** driving the screen (class teacher, weekend-school teacher, parent with a TV). The room watches; nobody is "the interacting learner". Any age in the room (CLAUDE.md §1). The projected surface never shows scores, progress, rankings or a learner's name outside the picker, and no name or initial is ever in a URL (names reach the presenter by `postMessage` from the console tab, memory only). UI strings: English by default, Korean and Spanish selectable.
