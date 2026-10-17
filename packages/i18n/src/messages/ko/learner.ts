@@ -314,6 +314,7 @@ export const learner = {
       stage: (stage: number) => `${stage}단계`,
       other: '다른 카드',
       a11y: (title: string) => `${title}: 찾을 카드`,
+      nextA11y: (hint: string) => `다음 카드. ${hint}`,
     },
     earnHint: {
       episode: (title: string) => `에피소드 끝내기: ${title}`,

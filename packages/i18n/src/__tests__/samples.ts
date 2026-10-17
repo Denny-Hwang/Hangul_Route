@@ -24,6 +24,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.home.next.where': [[1, 'Meet the Letters', 1, 3], [2, 'Lunch Box Words', 2, 4]],
   'learner.library.toFind.stage': [[1], [2]],
   'learner.library.toFind.a11y': [['Meet the Letters']],
+  'learner.library.toFind.nextA11y': [['Finish the episode: Meet the Letters']],
   'learner.home.progress.label': [[1, 24]],
   'learner.home.homework.due': [[2]],
   'learner.home.catchUp.line': [[1], [22]],

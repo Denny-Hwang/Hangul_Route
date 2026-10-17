@@ -328,6 +328,7 @@ export const learner = {
       stage: (stage: number) => `Etapa ${stage}`,
       other: 'Más tarjetas',
       a11y: (title: string) => `${title}: tarjetas por encontrar`,
+      nextA11y: (hint: string) => `Siguiente tarjeta. ${hint}`,
     },
     earnHint: {
       episode: (title: string) => `Termina el episodio: ${title}`,

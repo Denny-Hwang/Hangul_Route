@@ -21,7 +21,7 @@ export interface ToFindGroup {
 }
 
 export interface LibraryShelves {
-  /** Cards the learner holds, in gallery order. */
+  /** Cards the learner holds, most recently earned first (`cards[].unlockedAt`, spec section 9.3); ties in gallery order. */
   yours: HeritageCard[];
   /** Cards still to find, by what earns them, in gallery order of their first card. */
   toFind: ToFindGroup[];
@@ -56,12 +56,37 @@ function groupOf(card: HeritageCard, world: AwardWorld, m: LibraryMessages): { k
 }
 
 /**
- * `listed` is the gallery (obtainable cards, after the theme filter), `world` the award world with episode titles
- * in the UI language. A locked card with no explainable rule still sits in a group ("More cards"), never a lock.
+ * Newest first by when each card was earned (an ISO time); a card with no time keeps its gallery place after the dated
+ * ones. Stable, so cards earned at the same moment (a catch-up) stay in gallery order.
  */
-export function libraryShelves(listed: readonly HeritageCard[], ownedIds: ReadonlySet<string>, world: AwardWorld, learner: LearnerMessages): LibraryShelves {
+function newestFirst(cards: readonly HeritageCard[], earnedAt: ReadonlyMap<string, string>): HeritageCard[] {
+  return cards
+    .map((card, index) => ({ card, index, at: earnedAt.get(card.id) ?? null }))
+    .sort((a, b) => {
+      if (a.at !== b.at) {
+        if (a.at === null) return 1;
+        if (b.at === null) return -1;
+        return a.at < b.at ? 1 : -1;
+      }
+      return a.index - b.index;
+    })
+    .map((entry) => entry.card);
+}
+
+/**
+ * `listed` is the gallery (obtainable cards, after the theme filter), `world` the award world with episode titles
+ * in the UI language, `earnedAt` each held card's `unlockedAt`. A locked card with no explainable rule still sits in
+ * a group ("More cards"), never a lock.
+ */
+export function libraryShelves(
+  listed: readonly HeritageCard[],
+  ownedIds: ReadonlySet<string>,
+  world: AwardWorld,
+  learner: LearnerMessages,
+  earnedAt: ReadonlyMap<string, string> = new Map(),
+): LibraryShelves {
   const m = learner.library;
-  const yours = listed.filter((c) => ownedIds.has(c.id));
+  const yours = newestFirst(listed.filter((c) => ownedIds.has(c.id)), earnedAt);
   const locked = listed.filter((c) => !ownedIds.has(c.id));
   const groups = new Map<string, ToFindGroup>();
   for (const card of locked) {

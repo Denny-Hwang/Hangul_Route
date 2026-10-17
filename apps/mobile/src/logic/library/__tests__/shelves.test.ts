@@ -62,6 +62,25 @@ describe('libraryShelves on the shipped cards', () => {
     expect(shelves.toFind.every((g) => g.title.trim() !== '')).toBe(true);
   });
 
+  it('Your cards: the most recently earned first (cards[].unlockedAt, section 9.3); ties and undated cards in gallery order', () => {
+    const [a, b, c, d] = listed as [HeritageCard, HeritageCard, HeritageCard, HeritageCard];
+    const owned = new Set([a.id, b.id, c.id, d.id]);
+    const earnedAt = new Map([
+      [a.id, '2026-10-01T09:00:00.000Z'],
+      [b.id, '2026-10-03T09:00:00.000Z'],
+      // c and its neighbour were found by the same catch-up: same time, gallery order kept.
+      [c.id, '2026-10-02T09:00:00.000Z'],
+    ]);
+    expect(libraryShelves(listed, owned, awardWorld, EN, earnedAt).yours.map((x) => x.id)).toEqual([b.id, c.id, a.id, d.id]);
+    const tie = new Map([
+      [a.id, '2026-10-05T09:00:00.000Z'],
+      [b.id, '2026-10-05T09:00:00.000Z'],
+    ]);
+    expect(libraryShelves(listed, new Set([a.id, b.id]), awardWorld, EN, tie).yours.map((x) => x.id)).toEqual([a.id, b.id]);
+    // No times at all: gallery order, as before.
+    expect(libraryShelves(listed, owned, awardWorld, EN).yours.map((x) => x.id)).toEqual([a.id, b.id, c.id, d.id]);
+  });
+
   it('a card with a rule no one can explain sits under More cards, never a lock', () => {
     const odd = { ...firstEpisodeCard, id: 'card:odd', unlockedBy: 'mystery:x' } as HeritageCard;
     const shelves = libraryShelves([odd], new Set(), awardWorld, EN);

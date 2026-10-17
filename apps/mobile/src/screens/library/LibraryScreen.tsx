@@ -131,6 +131,8 @@ export function LibraryScreen(): React.ReactElement {
   ) : null;
 
   const unlockedIds = useMemo(() => new Set((snap?.cards ?? []).map((c) => c.cardId)), [snap]);
+  // When each held card was earned: Your cards lists the newest first (spec section 9.3).
+  const earnedAt = useMemo(() => new Map((snap?.cards ?? []).map((c) => [c.cardId, c.unlockedAt] as const)), [snap]);
   // Earned since the learner last opened them (a catch-up or a Results award): a New pill until opened.
   const newIds = useMemo(() => new Set((snap?.cards ?? []).filter((c) => c.newSinceLastView).map((c) => c.cardId)), [snap]);
 
@@ -149,7 +151,10 @@ export function LibraryScreen(): React.ReactElement {
   }, [filter, listed]);
   // Two shelves (owner request 2026-10-16, item 8): the learner's cards first, then the cards to find by what earns
   // them, one row each, with one Next card hint for the shelf.
-  const shelves = useMemo(() => libraryShelves(visible, unlockedIds, hintWorld, messages.learner), [visible, unlockedIds, hintWorld, messages]);
+  const shelves = useMemo(
+    () => libraryShelves(visible, unlockedIds, hintWorld, messages.learner, earnedAt),
+    [visible, unlockedIds, hintWorld, messages, earnedAt],
+  );
   const cardOf = useMemo(() => new Map(visible.map((c) => [c.id, c])), [visible]);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
@@ -266,7 +271,7 @@ export function LibraryScreen(): React.ReactElement {
               {nextCard && shelves.next ? (
                 <>
                   <Spacer size="sm" />
-                  <NextCardRow label={m.toFind.next} hint={shelves.next.hint} onPress={() => openCard(nextCard)} />
+                  <NextCardRow label={m.toFind.next} hint={shelves.next.hint} a11yLabel={m.toFind.nextA11y(shelves.next.hint)} onPress={() => openCard(nextCard)} />
                 </>
               ) : null}
               <Spacer size="sm" />
@@ -501,13 +506,13 @@ function CardSilhouette({ size }: { size: number }): React.ReactElement {
 }
 
 /** The one Next card hint of the Cards to find shelf: a silhouette, "Next card" and how to earn it. */
-function NextCardRow({ label, hint, onPress }: { label: string; hint: string; onPress: () => void }): React.ReactElement {
+function NextCardRow({ label, hint, a11yLabel, onPress }: { label: string; hint: string; a11yLabel: string; onPress: () => void }): React.ReactElement {
   return (
     <Pressable
       testID="library-next-card"
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${label}. ${hint}`}
+      accessibilityLabel={a11yLabel}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',

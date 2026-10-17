@@ -463,6 +463,8 @@ export const learner = {
       other: 'More cards',
       /** A group row's name: its title and that it holds cards to find. */
       a11y: (title: string) => `${title}: cards to find`,
+      /** The Next card row's name: "Next card" and how to earn it (the earn hint). */
+      nextA11y: (hint: string) => `Next card. ${hint}`,
     },
     /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
     earnHint: {
