@@ -177,10 +177,12 @@ function Step({ icon, label }: { icon: 'arrow-right' | 'plus' | 'home'; label: s
         paddingVertical: spacing.xs,
         borderRadius: radii.pill,
         backgroundColor: colors.surface.sunken,
+        // A long step wraps inside the card at a large text size instead of running out of it.
+        maxWidth: '100%',
       }}
     >
       <Icon name={icon} size={16} color={colors.brand.primary} />
-      <Caption tone="secondary">{label}</Caption>
+      <Caption tone="secondary" style={{ flexShrink: 1 }}>{label}</Caption>
     </View>
   );
 }

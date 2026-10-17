@@ -59,6 +59,12 @@ export interface ConsoleLocale {
 
 const ENGLISH_ONLY: readonly UiLocale[] = [DEFAULT_LOCALE];
 
+/** Keeps the mirrors in step with what the page shows; a mirror that already says so is not written again. */
+function syncMirrors(locale: UiLocale | null, size: TextSize | null): void {
+  if (locale !== null && readStoredLocale() !== locale) writeStoredLocale(locale);
+  if (size !== null && (readStoredTextSize() ?? DEFAULT_TEXT_SIZE) !== size) writeStoredTextSize(size);
+}
+
 const LocaleContext = createContext<ConsoleLocale>({
   locale: DEFAULT_LOCALE,
   messages: getMessages(DEFAULT_LOCALE),
@@ -101,13 +107,10 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
     (value: DeviceSettings) => {
       setRecord(value);
       const next = value.uiLocale !== undefined && offered.includes(value.uiLocale) ? value.uiLocale : null;
-      if (next !== null) {
-        setLocaleState(next);
-        writeStoredLocale(next);
-      }
+      if (next !== null) setLocaleState(next);
       const size = value.textSize ?? DEFAULT_TEXT_SIZE;
       setTextSizeState(size);
-      writeStoredTextSize(size);
+      syncMirrors(next, size);
     },
     [offered],
   );
@@ -131,8 +134,7 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
         const picked = resolveConsoleDisplay({ device, mirror, query, languages, available: offered });
         setLocaleState(picked.locale);
         setTextSizeState(picked.textSize);
-        writeStoredLocale(picked.locale);
-        writeStoredTextSize(picked.textSize);
+        syncMirrors(picked.locale, picked.textSize);
         setRecord(device.readable ? device.value : null);
         setReady(true);
         clearTimeout(wait);
@@ -194,7 +196,7 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
       if (!offered.includes(next)) return;
       const at = io.current.now();
       setLocaleState(next);
-      writeStoredLocale(next);
+      syncMirrors(next, null);
       setLastChoice({ uiLocale: next, uiLocaleAt: at });
       void io.current.writeDevice((stored) => ({ ...stored, uiLocale: next, uiLocaleAt: at })).then((written) => {
         if (written) setRecord(written);
@@ -205,7 +207,7 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
 
   const setTextSize = useCallback((size: TextSize) => {
     setTextSizeState(size);
-    writeStoredTextSize(size);
+    syncMirrors(null, size);
     void io.current.writeDevice((stored) => ({ ...stored, textSize: size })).then((written) => {
       if (written) setRecord(written);
     });

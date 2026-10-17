@@ -29,13 +29,23 @@ const DIALOG_MAX = touchTarget.min * 8;
 
 type Pressed = { pressed: boolean; focused?: boolean };
 
-function segmentStyle(selected: boolean, state: Pressed): Record<string, unknown> {
+/**
+ * How a row lays its segments out: `content` (languages) sizes each to its endonym and wraps when the
+ * row is full; `pairs` (text size on a phone) is two per row, so four steps fit 320 wide at Largest;
+ * `even` (text size in the dialog) is four equal columns.
+ */
+type RowLayout = 'content' | 'pairs' | 'even';
+
+/** The basis of a segment: two per row leave room for the gap between them. */
+const PAIR_BASIS = '45%';
+
+function segmentStyle(selected: boolean, state: Pressed, layout: RowLayout): Record<string, unknown> {
   const focused = state.focused === true;
   return {
     minHeight: touchTarget.min,
     minWidth: touchTarget.min,
     flexGrow: 1,
-    flexBasis: 0,
+    flexBasis: layout === 'pairs' ? PAIR_BASIS : layout === 'even' ? 0 : 'auto',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
@@ -53,6 +63,7 @@ function RadioRow<T extends string>({
   selected,
   onSelect,
   testID,
+  layout,
   renderOption,
 }: {
   label: string;
@@ -60,6 +71,7 @@ function RadioRow<T extends string>({
   selected: T;
   onSelect: (value: T) => void;
   testID: string;
+  layout: RowLayout;
   renderOption: (option: DisplayOption<T>, isSelected: boolean) => React.ReactNode;
 }): React.ReactElement {
   return (
@@ -77,7 +89,7 @@ function RadioRow<T extends string>({
             {...(option.lang ? { accessibilityLanguage: option.lang, lang: option.lang } : {})}
             testID={`${testID}-${option.value}`}
             onPress={() => onSelect(option.value)}
-            style={(state: Pressed) => segmentStyle(isSelected, state)}
+            style={(state: Pressed) => segmentStyle(isSelected, state, layout)}
           >
             {renderOption(option, isSelected)}
           </Pressable>
@@ -190,6 +202,7 @@ export function DisplaySheet({
                   selected={language.selected}
                   onSelect={language.onSelect}
                   testID={`${testID}-language`}
+                  layout="content"
                   renderOption={(option, isSelected) => optionText(option.label, isSelected, option.lang ? { lang: option.lang } : {})}
                 />
                 {language.undo ? (
@@ -209,6 +222,7 @@ export function DisplaySheet({
               selected={textSize.selected}
               onSelect={textSize.onSelect}
               testID={`${testID}-text-size`}
+              layout={dialog ? 'even' : 'pairs'}
               renderOption={(option, isSelected) => {
                 const glyph = segmentGlyphSize(option.value);
                 return (

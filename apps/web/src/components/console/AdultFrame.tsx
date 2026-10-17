@@ -126,7 +126,7 @@ const FRAME_CSS = `
 .hr-frame-list li{flex:1 0 ${touchTarget.min}px;display:flex}
 .hr-frame-item{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;padding:0 ${spacing.xs}px;border:none;border-bottom:${borderWidth.thick}px solid transparent;background:transparent;color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};text-decoration:none;white-space:nowrap;cursor:pointer}
 .hr-frame-item[aria-current="page"]{color:${colors.text.primary};font-weight:${typography.weight.bold};border-bottom-color:${colors.brand.primary}}
-.hr-frame-main{flex:1;padding-top:${spacing.lg}px;padding-bottom:${spacing.xxl}px}
+.hr-frame-main{flex:1;padding-top:${spacing.lg}px;padding-bottom:${spacing.xxl}px;overflow-wrap:anywhere}
 .hr-frame-foot{background:${colors.surface.sunken}}
 .hr-frame-foot-inner{padding-top:${spacing.sm}px;padding-bottom:${spacing.lg}px;display:flex;flex-direction:column;gap:${spacing.xs}px}
 .hr-frame-links{display:flex;flex-wrap:wrap;column-gap:${spacing.lg}px}

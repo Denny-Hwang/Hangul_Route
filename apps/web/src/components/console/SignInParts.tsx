@@ -46,7 +46,8 @@ export function SignInColumn({ children }: { children: ReactNode }): JSX.Element
   return (
     <main className="hr-signin-page" style={{ ...pageStyle, position: 'relative' }}>
       <style>{GUTTER_CSS}</style>
-      <div style={columnStyle}>{children}</div>
+      {/* The column starts below the Aa row, so a long first line never runs under the button. */}
+      <div style={children ? { ...columnStyle, marginTop: touchTarget.min + spacing.sm } : columnStyle}>{children}</div>
       {/* The Aa button (owner items 6 and 7): the device's language and text size, drawn top right outside the
           column; last in the tab order, after the page's own controls. An empty column (a router page still
           deciding) stays an empty canvas. */}

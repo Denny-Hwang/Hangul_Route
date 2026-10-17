@@ -38,6 +38,8 @@ export function Pill({ label, tone = 'neutral', size = 'md', testID }: PillProps
         backgroundColor: bg[tone],
         borderRadius: radii.pill,
         alignSelf: 'flex-start',
+        // A label at a large text size wraps inside its row instead of running out of it.
+        maxWidth: '100%',
       }}
     >
       <Text {...KOREAN_LINE_BREAK}

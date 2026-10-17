@@ -417,7 +417,8 @@ export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToL
   const line = decision.line === 'default' ? lock.line : lock[decision.line];
   return (
     <main style={{ ...pageStyle, position: 'relative' }}>
-      <div style={columnStyle}>
+      {/* The column starts below the Aa row, so Back to learning never runs under the button. */}
+      <div style={{ ...columnStyle, marginTop: touchTarget.min + spacing.sm }}>
         <LockButton tone="quiet" onClick={onBackToLearning} testId="grown-up-lock-back">
           <IconSvg name="arrow-left" size={spacing.xl} color={colors.text.secondary} />
           {lock.backToLearning.cta}

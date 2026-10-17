@@ -32,7 +32,8 @@ const SHEET_CSS = `
 .hr-display-sheet h2{margin:0;font-size:${rem(typography.size.prompt)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};outline:none}
 .hr-display-label{margin:${rem(spacing.md)} 0 ${rem(spacing.xs)};font-size:${rem(typography.size.body)};font-weight:${typography.weight.bold}}
 .hr-display-row{display:flex;flex-wrap:wrap;gap:${rem(spacing.xs)}}
-.hr-display-option{flex:1 1 0;min-width:${touchTarget.min}px;min-height:${touchTarget.min}px;box-sizing:border-box;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:${rem(spacing.xxs)};padding:${rem(spacing.xs)} ${rem(spacing.sm)};border-radius:${radii.lg}px;border:${borderWidth.base}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};line-height:${typography.leading.tight};cursor:pointer;overflow-wrap:anywhere}
+.hr-display-option{flex:1 1 auto;min-width:${touchTarget.min}px;min-height:${touchTarget.min}px;box-sizing:border-box;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:${rem(spacing.xxs)};padding:${rem(spacing.xs)} ${rem(spacing.sm)};border-radius:${radii.lg}px;border:${borderWidth.base}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};line-height:${typography.leading.tight};cursor:pointer;overflow-wrap:break-word}
+.hr-display-steps .hr-display-option{flex-basis:45%}
 .hr-display-option[aria-checked="true"]{background:${colors.brand.primary};border-color:${colors.brand.primary};color:${colors.text.onPrimary}}
 .hr-display-glyph{font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
 .hr-display-sample{margin-top:${rem(spacing.sm)};padding:${rem(spacing.md)};border-radius:${radii.md}px;background:${colors.surface.sunken};font-size:${rem(typography.size.bodyLg)};line-height:${typography.leading.normal}}
@@ -41,7 +42,7 @@ const SHEET_CSS = `
 .hr-display-done{width:100%;margin-top:${rem(spacing.lg)};border:none;background:${colors.brand.primary};color:${colors.text.onPrimary}}
 .hr-display-undo{width:100%;margin-top:${rem(spacing.sm)};border:${borderWidth.base}px solid ${colors.brand.primary};background:transparent;color:${colors.brand.primary}}
 .hr-display-sheet :focus-visible{outline:${borderWidth.thick}px solid ${colors.border.focus};outline-offset:${borderWidth.base}px}
-@media (min-width:45em){.hr-display-sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${rem(touchTarget.min * 8)};border-radius:${radii.xl}px;padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}}`;
+@media (min-width:45em){.hr-display-steps .hr-display-option{flex-basis:0}.hr-display-sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${rem(touchTarget.min * 8)};border-radius:${radii.xl}px;padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}}`;
 
 interface FocusTarget {
   focus?: (options?: { preventScroll?: boolean }) => void;
@@ -55,7 +56,10 @@ function RadioRow<T extends string>({
   onSelect,
   testId,
   render,
+  steps = false,
 }: {
+  /** Text size: two per row on a phone, four equal columns from 45em; languages size to their endonym. */
+  steps?: boolean;
   label: string;
   options: readonly { value: T; label: string; lang?: string }[];
   selected: T;
@@ -75,7 +79,7 @@ function RadioRow<T extends string>({
     refs.current[next]?.focus();
   };
   return (
-    <div className="hr-display-row" role="radiogroup" aria-label={label} data-testid={testId}>
+    <div className={steps ? 'hr-display-row hr-display-steps' : 'hr-display-row'} role="radiogroup" aria-label={label} data-testid={testId}>
       {options.map((option, at) => (
         <button
           key={option.value}
@@ -196,6 +200,7 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
           selected={textSize}
           onSelect={setTextSize}
           testId="console-display-text-size"
+          steps
           render={(o) => (
             <>
               <span className="hr-display-glyph" aria-hidden="true" style={{ fontSize: `${typeScale(TEXT_SIZE_FACTORS[o.value]).size.body}px` }}>

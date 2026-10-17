@@ -169,9 +169,13 @@ describe('DisplaySheet element tree', () => {
     textSize.factor = 1.5;
     const tree = render(props());
     const radio = segments(tree, 'text-size')[0] as El;
-    const style = (radio.props.style as (s: { pressed: boolean }) => { minHeight: number; minWidth: number })({ pressed: false });
+    const style = (radio.props.style as (s: { pressed: boolean }) => { minHeight: number; minWidth: number; flexBasis: unknown })({ pressed: false });
     expect(style.minHeight).toBe(64);
     expect(style.minWidth).toBe(64);
+    // On a phone the four steps sit two per row, so they fit 320 wide at Largest; languages size to their endonym.
+    expect(style.flexBasis).toBe('45%');
+    const lang = segments(tree, 'language')[0] as El;
+    expect((lang.props.style as (s: { pressed: boolean }) => { flexBasis: unknown })({ pressed: true }).flexBasis).toBe('auto');
     const label = tree.find((e) => e.type === 'Text' && textOf(e) === 'Standard') as El;
     expect((label.props.style as { fontSize: number }).fontSize).toBe(24);
     textSize.factor = 1;
@@ -210,6 +214,9 @@ describe('DisplaySheet element tree', () => {
     layout.width = 'regular';
     const wide = render(props());
     expect((byTestId(wide, 'display-sheet')?.props.style as { maxWidth?: number }).maxWidth).toBe(512);
+    // The dialog has room for the four steps in one row of equal columns.
+    const step = segments(wide, 'text-size')[0] as El;
+    expect((step.props.style as (s: { pressed: boolean; focused: boolean }) => { flexBasis: unknown; borderWidth: number })({ pressed: false, focused: true })).toMatchObject({ flexBasis: 0, borderWidth: 3 });
     expect(wide.some((e) => e.props['aria-hidden'] === true && e.type === 'View')).toBe(false);
     layout.width = 'compact';
   });
