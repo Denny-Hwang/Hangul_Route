@@ -287,8 +287,9 @@ export function ProfileScreen(): React.ReactElement {
           onPress={() => setDisplayOpen(true)}
           accessibilityRole="button"
           aria-haspopup="dialog"
-          accessibilityLabel={m.common.display.a11y}
-          accessibilityHint={displayLine}
+          // The current language and size are part of the name: react-native-web drops a hint, and the
+          // label replaces the row's visible text, so on the web a hint would never be read.
+          accessibilityLabel={`${m.common.display.a11y}. ${displayLine}`}
           style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
         >
           <View style={{ flex: 1 }}>

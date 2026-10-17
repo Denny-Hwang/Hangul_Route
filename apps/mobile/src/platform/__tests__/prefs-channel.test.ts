@@ -137,12 +137,23 @@ describe('subscribeDeviceSettings (web)', () => {
     const tabA = { hub: createPrefsHub(open), win: null, doc: null };
     const tabB = { hub: createPrefsHub(open), win: null, doc: null };
     const onA = vi.fn();
-    const onB = vi.fn();
+    let delivered!: () => void;
+    // Waits for the delivery itself (not a fixed time), with a second as the limit.
+    const arrived = new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('no message within 1 s')), 1000);
+      delivered = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+    });
+    const onB = vi.fn(() => delivered());
     const stopA = subscribeDeviceSettings(onA, vi.fn(), tabA);
     const stopB = subscribeDeviceSettings(onB, vi.fn(), tabB);
     postDeviceSettings({ uiLocale: 'ko' }, tabA);
-    await new Promise((r) => setTimeout(r, 30));
+    await arrived;
     expect(onB.mock.calls).toEqual([[{ uiLocale: 'ko' }]]);
+    // One more task after the delivery, and the writing tab still has nothing.
+    await new Promise((r) => setTimeout(r, 0));
     expect(onA).not.toHaveBeenCalled();
     stopA();
     stopB();

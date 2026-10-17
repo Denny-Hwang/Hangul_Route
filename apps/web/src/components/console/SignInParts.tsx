@@ -39,6 +39,9 @@ const columnStyle: CSSProperties = {
   maxWidth: layout.maxWidth.reading,
   margin: '0 auto',
   textAlign: 'center',
+  // A long token (the no-API line's variable name, an email address) breaks instead of pushing the
+  // page past a 320 px window at a large text size, as the adult frame's main does.
+  overflowWrap: 'anywhere',
 };
 
 /** The single centred column of `/signin` and the router pages. */

@@ -960,7 +960,7 @@ function Presenter(): React.ReactElement {
               reveal={reveal}
               deckTitle={phase.deck.title}
               strokeToken={strokeTokenFor(strokePlay, slide?.key)}
-              joinCta={messages.caregiver.spaces.join.cta}
+              joinCta={slideMessages.caregiver.spaces.join.cta}
               onCommand={userDispatch}
               onPlaySound={() => userDispatch('replay-sound')}
               onStartTimer={(ms) => userDispatch({ startTimer: ms })}
@@ -1070,7 +1070,7 @@ function Presenter(): React.ReactElement {
         <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>{body}</View>
       </ErrorBoundary>
       {phase.kind === 'home' || phase.kind === 'ready' ? (
-        <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="presenter-display-sheet" />
+        <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} testID="presenter-display-sheet" reportLocale={false} />
       ) : null}
     </PresenterViewProvider>
     </TextSizeProvider>

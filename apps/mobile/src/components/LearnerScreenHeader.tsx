@@ -19,7 +19,15 @@ import { DeviceDisplaySheet } from './DeviceDisplaySheet';
  * above everything (the level check's item side by side) passes `drawnByScreen` and renders this
  * component with `inLayout` where it belongs.
  */
-export function LearnerScreenHeader({ options, inLayout = false }: ScreenHeaderSlotProps & { inLayout?: boolean }): React.ReactElement | null {
+export function LearnerScreenHeader({
+  options,
+  inLayout = false,
+  reportLocale = true,
+}: ScreenHeaderSlotProps & {
+  inLayout?: boolean;
+  /** Whether a language chosen on the header's Display sheet is reported as `locale.changed`; All lessons passes false (`BrowseScreenHeader`). */
+  reportLocale?: boolean;
+}): React.ReactElement | null {
   const route = useContext(NavigationRouteContext);
   const navigation = useContext(NavigationContext);
   const messages = useMessages();
@@ -77,9 +85,18 @@ export function LearnerScreenHeader({ options, inLayout = false }: ScreenHeaderS
         displayHidden={options?.displayHidden}
         onDisplay={() => setDisplayOpen(true)}
       />
-      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} />
+      <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} reportLocale={reportLocale} />
     </>
   );
+}
+
+/**
+ * All lessons' header slot (`BrowseApp`): the same header, whose Display sheet stores the device's language and tells the
+ * other tabs but reports nothing. All lessons sends only `browse.*` events and none for a display choice
+ * (AMENDMENTS-DISPLAY-NAV section 11), as its own header row's sheet did before the route drew the header.
+ */
+export function BrowseScreenHeader(props: ScreenHeaderSlotProps): React.ReactElement | null {
+  return <LearnerScreenHeader {...props} reportLocale={false} />;
 }
 
 /** A development build's warning (Metro's `__DEV__`; a non-production `NODE_ENV` in tests); silent in a release build. */

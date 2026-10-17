@@ -27,7 +27,7 @@ import { resolveEntry } from './src/logic/browse/target';
 import { BROWSE_REGISTERED_ROUTES, BrowseNavigator, type BrowseStackParamList } from './src/navigation/browse';
 import { PortraitGuard } from './src/components/PortraitGuard';
 import { ConfirmHost } from './src/components/ConfirmHost';
-import { LearnerScreenHeader } from './src/components/LearnerScreenHeader';
+import { BrowseScreenHeader } from './src/components/LearnerScreenHeader';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { BrowseSessionProvider, type BrowseSession } from './src/screens/browse/browse-session';
@@ -285,7 +285,7 @@ export default function BrowseApp(): React.ReactElement {
           {visit.status === 'ready' && session ? (
             <BrowseSessionProvider value={session}>
               <BrowseSettingsProvider>
-                <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
+                <ScreenHeaderSlotContext.Provider value={BrowseScreenHeader}>
                   <NavigationContainer
                     ref={navigation}
                     initialState={routesOf(visit.initial)}
