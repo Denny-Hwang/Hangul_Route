@@ -366,6 +366,9 @@ test.describe('the level check end to end (release build, flag on by default)', 
     await page.getByRole('button', { name: START }).click();
     await completeSelfForm(page, { name: 'Ana', startJourney: false });
     const id = await activeProfileId(page);
+    // The decline keeps the card away (owner request 2026-10-16, item 8): clear it so the card shows (seedStored reloads).
+    await page.goto('/');
+    await expectNoCardThenForgetDecline(page, id, 'Ana');
     await expect
       .poll(
         () =>
