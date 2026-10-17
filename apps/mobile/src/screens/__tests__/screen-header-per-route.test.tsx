@@ -14,7 +14,9 @@ import { buttonsNamed, hostNodes, press, render, resetPlatform, screenTexts, set
 /**
  * AMENDMENTS-DISPLAY-NAV section 7.1 (row DN-4): every route of the route table, drawn as a `Screen`
  * inside its route with the app's header slot, finds its way back by role and name (Back or Close,
- * the first control), and a root and the exception list find none. The visible Back runs
+ * the first control), and a root and the exception list find none. That every registered screen
+ * really draws through `Screen` in every state is `navigation/__tests__/screen-draws-header.test.ts`
+ * (a scan of the real components). The visible Back runs
  * `navigation.goBack()` (so a screen's `beforeRemove` guard answers it, as the browser back does);
  * Back is drawn only when the navigator can go back; the Display (Aa) control opens the Display sheet.
  */
@@ -65,7 +67,10 @@ beforeEach(() => {
   useLocaleStore.setState({ device: 'en', byProfile: {} });
 });
 
-afterEach(() => resetPlatform());
+afterEach(() => {
+  resetPlatform();
+  vi.restoreAllMocks();
+});
 
 describe('the header of every route (AMENDMENTS-DISPLAY-NAV section 7.1)', () => {
   for (const name of ROUTES) {
@@ -107,10 +112,23 @@ describe('the header of every route (AMENDMENTS-DISPLAY-NAV section 7.1)', () =>
     }
   });
 
-  it('Back only where there is somewhere to go', async () => {
-    const renderer = await render(inRoute('Profile', navigationFor(false)));
-    expect(buttonsNamed(renderer.root, BACK)).toEqual([]);
-    expect(buttonsNamed(renderer.root, AA)).toHaveLength(1);
+  it('Back only where there is somewhere to go; a non-root screen with nowhere to go warns in development', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const renderer = await render(inRoute('Profile', navigationFor(false)));
+      expect(buttonsNamed(renderer.root, BACK)).toEqual([]);
+      expect(buttonsNamed(renderer.root, AA)).toHaveLength(1);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]?.[0])).toMatch(/Profile cannot go back/);
+      // A root, the exception list and a screen that can go back are quiet.
+      warn.mockClear();
+      await render(inRoute('Home', navigationFor(false), ROOT_HEADER));
+      await render(inRoute('PlacementInvite', navigationFor(false)));
+      await render(inRoute('Profile', navigationFor(true)));
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it('a root with its own way out (All lessons home) names its Close and runs its own action', async () => {
@@ -172,6 +190,8 @@ describe('the header of every route (AMENDMENTS-DISPLAY-NAV section 7.1)', () =>
   });
 
   it('a stack change under the screen redraws its Back', async () => {
+    // Profile with nowhere to go yet warns in development (the case above); the warning is not this case's subject.
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     let can = false;
     const listeners: (() => void)[] = [];
     const navigation = { canGoBack: () => can, goBack: vi.fn(), addListener: (_t: string, l: () => void) => (listeners.push(l), () => undefined) };

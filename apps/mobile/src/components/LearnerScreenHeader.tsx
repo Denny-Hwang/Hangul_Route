@@ -2,7 +2,7 @@ import { ScreenHeader, type ScreenHeaderSlotProps } from '@hangul-route/design-s
 import { NavigationContext, NavigationRouteContext } from '@react-navigation/native';
 import React, { useContext, useEffect, useState } from 'react';
 import { useMessages } from '../i18n/use-messages';
-import { screenHeaderDecision } from '../logic/navigation/screen-header';
+import { missingWayBack, screenHeaderDecision } from '../logic/navigation/screen-header';
 import { isScreenHeaderException, screenHeaderVariant } from '../navigation/screen-header-variants';
 import { DeviceDisplaySheet } from './DeviceDisplaySheet';
 
@@ -27,6 +27,21 @@ export function LearnerScreenHeader({ options, inLayout = false }: ScreenHeaderS
   // Whether there is somewhere to go back to changes with the stack under the screen.
   const [, setStackSeen] = useState(0);
   useEffect(() => navigation?.addListener('state', () => setStackSeen((n) => n + 1)), [navigation]);
+  // A screen that should have a way back but cannot go back is a root or in the exception list, or a bug (section 7.1).
+  const lost =
+    route !== undefined &&
+    navigation !== undefined &&
+    !(options?.drawnByScreen === true && !inLayout) &&
+    missingWayBack({
+      variant: screenHeaderVariant(route.name),
+      exception: isScreenHeaderException(route.name),
+      hasOwnLeading: options?.leading !== undefined,
+      canGoBack: navigation.canGoBack(),
+    });
+  const routeName = route?.name;
+  useEffect(() => {
+    if (lost && routeName !== undefined) warnInDevelopment(`[ScreenHeader] ${routeName} cannot go back and is neither a root nor in SCREEN_HEADER_EXCEPTIONS, so it draws no way back (AMENDMENTS-DISPLAY-NAV section 7.1).`);
+  }, [lost, routeName]);
 
   if (route === undefined || navigation === undefined) return null;
   // A screen that draws its header inside its own layout renders this component itself (`inLayout`); its `Screen` draws none.
@@ -65,4 +80,11 @@ export function LearnerScreenHeader({ options, inLayout = false }: ScreenHeaderS
       <DeviceDisplaySheet visible={displayOpen} onClose={() => setDisplayOpen(false)} />
     </>
   );
+}
+
+/** A development build's warning (Metro's `__DEV__`; a non-production `NODE_ENV` in tests); silent in a release build. */
+function warnInDevelopment(message: string): void {
+  const dev = (globalThis as { __DEV__?: unknown }).__DEV__;
+  const on = typeof dev === 'boolean' ? dev : process.env.NODE_ENV !== 'production';
+  if (on) console.warn(message);
 }

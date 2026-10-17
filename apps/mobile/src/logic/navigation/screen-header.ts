@@ -42,3 +42,14 @@ export function screenHeaderDecision(input: ScreenHeaderInput): ScreenHeaderDeci
   if (variant === 'none') return { draw: input.declared, leading: 'none' };
   return { draw: true, leading: input.canGoBack ? variant : 'none' };
 }
+
+/**
+ * A screen that should have a way back but cannot go back (section 7.1: "a screen that cannot go
+ * back must be a root or in the exception list"): a Back or Close route, not an exception, with no
+ * leading control of its own, on a navigator with nowhere to go. The header then draws no way back,
+ * which is the owner's original complaint, so a development build warns (`LearnerScreenHeader`).
+ */
+export function missingWayBack(input: { variant: ScreenHeaderVariant | undefined; exception: boolean; hasOwnLeading: boolean; canGoBack: boolean }): boolean {
+  if (input.exception || input.hasOwnLeading || input.canGoBack) return false;
+  return (input.variant ?? 'back') !== 'none';
+}

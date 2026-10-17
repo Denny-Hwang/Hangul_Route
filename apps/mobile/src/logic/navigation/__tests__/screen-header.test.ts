@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { screenHeaderDecision } from '../screen-header';
+import { missingWayBack, screenHeaderDecision } from '../screen-header';
 
 /** Which header a screen draws (AMENDMENTS-DISPLAY-NAV section 7.1, row DN-4). */
 const base = { exception: false, declared: false, canGoBack: true } as const;
@@ -32,5 +32,20 @@ describe('screenHeaderDecision', () => {
     expect(screenHeaderDecision({ ...base, variant: 'none', canGoBack: false, override: { kind: 'close', hasAction: true } })).toEqual({ draw: true, leading: 'close' });
     expect(screenHeaderDecision({ ...base, variant: 'none', canGoBack: false, override: { kind: 'back', hasAction: false } })).toEqual({ draw: true, leading: 'none' });
     expect(screenHeaderDecision({ ...base, variant: 'back', override: { kind: 'none', hasAction: false } })).toEqual({ draw: true, leading: 'none' });
+  });
+});
+
+describe('missingWayBack (the development check of section 7.1)', () => {
+  const at = { exception: false, hasOwnLeading: false, canGoBack: false } as const;
+  it('a Back or Close route with nowhere to go has lost its way back', () => {
+    expect(missingWayBack({ ...at, variant: 'back' })).toBe(true);
+    expect(missingWayBack({ ...at, variant: 'close' })).toBe(true);
+    expect(missingWayBack({ ...at, variant: undefined })).toBe(true);
+  });
+  it('a root, the exception list, a screen with its own way out and a navigator that can go back are fine', () => {
+    expect(missingWayBack({ ...at, variant: 'none' })).toBe(false);
+    expect(missingWayBack({ ...at, variant: 'back', exception: true })).toBe(false);
+    expect(missingWayBack({ ...at, variant: 'back', hasOwnLeading: true })).toBe(false);
+    expect(missingWayBack({ ...at, variant: 'back', canGoBack: true })).toBe(false);
   });
 });
