@@ -17,29 +17,34 @@ export const INTRO_ASSUMES: Readonly<Record<string, StageKey>> = {
 };
 
 /**
- * The learner has done `stage`: a quest of one of its grid episodes is complete, or a later stage's is, or the
- * level check placed them past it.
+ * The learner has done `stage`: the route latched it complete (`stageDoneAt`, F-ROUTE-001 section 3.3, which stays
+ * whatever content ships later), every quest of its playable grid episodes is complete, or the level check placed them
+ * past it. One finished lesson of the stage is not the stage ("You know 30 letters." after the first Stage 1 lesson
+ * would be untrue), and a lesson of a later stage does not stand in for it either: every cell is open, so a learner
+ * can start there first.
  */
 export function stageDone(input: {
   stage: StageKey;
-  snapshot: Pick<ProgressSnapshot, 'quests'> | undefined;
-  episodes: readonly Pick<Episode, 'stage' | 'questIds' | 'placement'>[];
+  snapshot: Pick<ProgressSnapshot, 'quests' | 'stageDoneAt'> | undefined;
+  episodes: readonly Pick<Episode, 'stage' | 'questIds' | 'placement' | 'status'>[];
   placements?: readonly Pick<PlacementResult, 'level'>[];
 }): boolean {
   const n = stageNumber(input.stage);
   const placed = placementStageOf(input.placements);
   if (placed !== undefined && placed > n) return true;
-  const atOrAfter = new Set(
-    input.episodes.filter((e) => (e.placement ?? 'grid') === 'grid' && stageNumber(e.stage) >= n).flatMap((e) => e.questIds),
-  );
-  return (input.snapshot?.quests ?? []).some((q) => q.completedAt !== undefined && atOrAfter.has(q.questId));
+  if (input.snapshot?.stageDoneAt?.[input.stage] !== undefined) return true;
+  const playable = (e: Pick<Episode, 'placement' | 'status'>): boolean => (e.placement ?? 'grid') === 'grid' && (e.status === 'shipped' || e.status === 'ready');
+  const ofStage = new Set(input.episodes.filter((e) => playable(e) && stageNumber(e.stage) === n).flatMap((e) => e.questIds));
+  if (ofStage.size === 0) return false;
+  const done = new Set((input.snapshot?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId));
+  return [...ofStage].every((questId) => done.has(questId));
 }
 
 /** The intro to show: the cell's own, or `fresh` while what it assumes is not done. */
 export function episodeIntro(input: {
   episode: Pick<Episode, 'id' | 'hoyaIntroEn'>;
-  snapshot: Pick<ProgressSnapshot, 'quests' | 'placements'> | undefined;
-  episodes: readonly Pick<Episode, 'stage' | 'questIds' | 'placement'>[];
+  snapshot: Pick<ProgressSnapshot, 'quests' | 'placements' | 'stageDoneAt'> | undefined;
+  episodes: readonly Pick<Episode, 'stage' | 'questIds' | 'placement' | 'status'>[];
   fresh: string;
 }): string {
   const assumes = INTRO_ASSUMES[input.episode.id];

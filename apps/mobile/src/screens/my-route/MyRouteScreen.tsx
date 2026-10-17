@@ -14,7 +14,7 @@ import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-rout
 import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
-import { nextLessonRows, type NextLessonRowView } from '../../logic/my-route/next-lessons';
+import { nextLessonRows, nextLessonTapEvent, type NextLessonRowView } from '../../logic/my-route/next-lessons';
 import { localizedRouteContent, routeLetterWall, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, withGoalReached, writeSeen } from '../../logic/my-route/seen';
 import { continueTappedEvent, goalReachedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
@@ -323,7 +323,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const openLibrary = (): void => navigation.navigate('Main', { screen: 'Library' });
   // A next-lesson row opens its lesson; the first is the card's own one next, so it counts as `route.next_started`.
   const openNextLesson = (row: NextLessonRowView): void => {
-    if (row.first && !readOnly) void track(nextStartedEvent(profileId, row.source, 'route'));
+    const tapped = nextLessonTapEvent(row, profileId, readOnly);
+    if (tapped !== null) void track(tapped);
     navigation.navigate('QuestPlayer', { questId: row.questId, episodeId: row.episodeId });
   };
   const back = (

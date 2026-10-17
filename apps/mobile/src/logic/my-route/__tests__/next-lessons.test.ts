@@ -3,7 +3,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RouteNextQuestResult } from '../../route-next';
 import { episodeOf } from '../../stage1/__tests__/fixtures';
-import { lessonPlace, nextLessonRows, type NextLessonsCopy } from '../next-lessons';
+import { lessonPlace, nextLessonRows, nextLessonTapEvent, type NextLessonsCopy } from '../next-lessons';
 
 const EPISODES: Episode[] = [
   episodeOf('episode:s1-letters', ['quest:q1', 'quest:q2', 'quest:q3']),
@@ -92,5 +92,22 @@ describe('nextLessonRows', () => {
     expect(first?.tag).toBe(m.routeNext.tag.next);
     expect(first?.a11yLabel).toBe(m.myRoute.nextLessons.row(m.routeNext.tag.next, 'Meet g, n', m.myRoute.nextLessons.where(1, 'Meet the Letters')));
     expect(first?.where).not.toBe(getMessages('en').learner.myRoute.nextLessons.where(1, 'Meet the Letters'));
+  });
+});
+
+describe('nextLessonTapEvent', () => {
+  it('the first row is the card\'s one next: route.next_started with its source and surface route', () => {
+    expect(nextLessonTapEvent({ first: true, source: 'plan' }, 'profile:mina', false)).toEqual({
+      name: 'route.next_started',
+      profileId: 'profile:mina',
+      payload: { source: 'plan', surface: 'route' },
+    });
+    expect(nextLessonTapEvent({ first: true, source: 'cursor' }, undefined, false)).toEqual({ name: 'route.next_started', payload: { source: 'cursor', surface: 'route' } });
+  });
+
+  it('a later row sends nothing, and the grown-up\'s read-only page sends nothing', () => {
+    expect(nextLessonTapEvent({ first: false, source: 'cursor' }, 'profile:mina', false)).toBeNull();
+    expect(nextLessonTapEvent({ first: true, source: 'cursor' }, 'profile:mina', true)).toBeNull();
+    expect(nextLessonTapEvent({ first: false, source: 'plan' }, 'profile:mina', true)).toBeNull();
   });
 });

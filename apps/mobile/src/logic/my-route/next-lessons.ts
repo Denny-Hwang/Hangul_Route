@@ -1,5 +1,6 @@
 import type { Episode, StageKey } from '@hangul-route/content-schema';
-import type { NextSource, RouteNextQuestResult } from '../route-next';
+import type { TelemetryEvent } from '../../platform/telemetry';
+import { nextStartedEvent, type NextSource, type RouteNextQuestResult } from '../route-next';
 
 /**
  * Where a lesson sits and the Route tab's next lessons (owner decision 2026-10-17: the Route tab shows where you
@@ -97,4 +98,14 @@ export function nextLessonRows(i: NextLessonRowsInput): NextLessonRowView[] {
     });
   });
   return rows;
+}
+
+/**
+ * What a next-lesson row's tap counts (owner decision 2026-10-17, spec section 9.8 (a)): the first row is the route
+ * card's one next, so it is `route.next_started { source, surface: 'route' }`; a later row, and any row on the
+ * grown-up's read-only page, sends nothing.
+ */
+export function nextLessonTapEvent(row: Pick<NextLessonRowView, 'first' | 'source'>, profileId: string | undefined, readOnly: boolean): TelemetryEvent | null {
+  if (!row.first || readOnly) return null;
+  return nextStartedEvent(profileId, row.source, 'route');
 }

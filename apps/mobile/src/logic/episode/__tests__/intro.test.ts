@@ -18,6 +18,12 @@ const firstQuestOf = (stage: string): string => {
   const episode = episodesAll.find((e) => e.stage === stage && (e.placement ?? 'grid') === 'grid' && e.questIds.length > 0) as Episode;
   return episode.questIds[0] as string;
 };
+/** Every quest of the stage's grid episodes: the stage done. */
+const allQuestsOf = (stage: string): string[] => [
+  ...new Set(
+    episodesAll.filter((e) => e.stage === stage && (e.placement ?? 'grid') === 'grid' && (e.status === 'shipped' || e.status === 'ready')).flatMap((e) => e.questIds),
+  ),
+];
 
 describe('the cells whose intro assumes an earlier stage', () => {
   it('every named cell is a shipped episode of a later stage than the one it assumes', () => {
@@ -43,17 +49,21 @@ describe('episodeIntro', () => {
   const words = episodesAll.find((e) => e.id === 'episode:stage2-letters') as Episode;
   const sentences = episodesAll.find((e) => e.id === 'episode:stage3-letters') as Episode;
 
-  it.each(['en', 'es', 'ko'] as const)('%s: a learner who has not done Stage 1 reads the neutral line; after Stage 1, the cell\'s own', (locale) => {
+  it.each(['en', 'es', 'ko'] as const)('%s: a learner who has not done Stage 1 reads the neutral line; after all of Stage 1, the cell\'s own', (locale) => {
     const fresh = getMessages(locale).learner.episode.introFresh;
     const local = localizeEpisode(words, locale);
     expect(episodeIntro({ episode: local, snapshot: snap([]), episodes: episodesAll, fresh })).toBe(fresh);
     expect(episodeIntro({ episode: local, snapshot: undefined, episodes: episodesAll, fresh })).toBe(fresh);
-    expect(episodeIntro({ episode: local, snapshot: snap([firstQuestOf('stage1')]), episodes: episodesAll, fresh })).toBe(local.hoyaIntroEn);
+    // One Stage 1 lesson is not Stage 1: "You know 30 letters." would be untrue.
+    expect(episodeIntro({ episode: local, snapshot: snap([firstQuestOf('stage1')]), episodes: episodesAll, fresh })).toBe(fresh);
+    expect(episodeIntro({ episode: local, snapshot: snap(allQuestsOf('stage1').slice(1)), episodes: episodesAll, fresh })).toBe(fresh);
+    expect(episodeIntro({ episode: local, snapshot: snap(allQuestsOf('stage1')), episodes: episodesAll, fresh })).toBe(local.hoyaIntroEn);
   });
 
-  it('a later stage done counts; the level check placing the learner past the stage counts', () => {
+  it('a later stage\'s lesson does not stand in for the stage; the level check placing the learner past it counts', () => {
     const fresh = 'fresh';
-    expect(episodeIntro({ episode: words, snapshot: snap([firstQuestOf('stage3')]), episodes: episodesAll, fresh })).toBe(words.hoyaIntroEn);
+    expect(episodeIntro({ episode: words, snapshot: snap([firstQuestOf('stage3')]), episodes: episodesAll, fresh })).toBe(fresh);
+    expect(episodeIntro({ episode: sentences, snapshot: snap(allQuestsOf('stage2')), episodes: episodesAll, fresh })).toBe(sentences.hoyaIntroEn);
     const placed = { quests: [], placements: [{ level: { stage: 'stage3' } }] } as unknown as Pick<ProgressSnapshot, 'quests' | 'placements'>;
     expect(episodeIntro({ episode: sentences, snapshot: placed, episodes: episodesAll, fresh })).toBe(sentences.hoyaIntroEn);
     const placedInStage2 = { quests: [], placements: [{ level: { stage: 'stage2' } }] } as unknown as Pick<ProgressSnapshot, 'quests' | 'placements'>;
@@ -63,6 +73,11 @@ describe('episodeIntro', () => {
   it('a cell whose intro assumes nothing always shows its own', () => {
     const plain = episodesAll.find((e) => INTRO_ASSUMES[e.id] === undefined && e.hoyaIntroEn !== '') as Episode;
     expect(episodeIntro({ episode: plain, snapshot: snap([]), episodes: episodesAll, fresh: 'fresh' })).toBe(plain.hoyaIntroEn);
+  });
+
+  it('the route\'s stage latch counts: a stage once complete stays done when new lessons join it', () => {
+    const latched = { quests: [], placements: [], stageDoneAt: { stage1: '2026-10-10T00:00:00.000Z' } } as unknown as Pick<ProgressSnapshot, 'quests' | 'placements' | 'stageDoneAt'>;
+    expect(episodeIntro({ episode: words, snapshot: latched, episodes: episodesAll, fresh: 'fresh' })).toBe(words.hoyaIntroEn);
   });
 
   it('an unfinished quest does not count as done', () => {
