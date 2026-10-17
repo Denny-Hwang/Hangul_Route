@@ -124,17 +124,17 @@
       "writeFrame.rounds.f1.slots.food.bank.ppang.gloss": "pan",
       "writeFrame.rounds.f1.slots.food.bank.sagwa.gloss": "una manzana",
       "writeFrame.rounds.f1.slots.food.bank.dalgyal.gloss": "un huevo",
-      "writeFrame.rounds.f1.slots.food.bank.gimbap.gloss": "gimbap (rollo de arroz con alga)",
+      "writeFrame.rounds.f1.slots.food.bank.gimbap.gloss": "rollo de arroz con alga",
       "writeFrame.rounds.f2.slots.food.bank.bap.gloss": "arroz",
       "writeFrame.rounds.f2.slots.food.bank.ppang.gloss": "pan",
       "writeFrame.rounds.f2.slots.food.bank.sagwa.gloss": "una manzana",
       "writeFrame.rounds.f2.slots.food.bank.dalgyal.gloss": "un huevo",
-      "writeFrame.rounds.f2.slots.food.bank.gimbap.gloss": "gimbap (rollo de arroz con alga)",
+      "writeFrame.rounds.f2.slots.food.bank.gimbap.gloss": "rollo de arroz con alga",
       "writeFrame.rounds.f3.slots.food.bank.bap.gloss": "arroz",
       "writeFrame.rounds.f3.slots.food.bank.ppang.gloss": "pan",
       "writeFrame.rounds.f3.slots.food.bank.sagwa.gloss": "una manzana",
       "writeFrame.rounds.f3.slots.food.bank.dalgyal.gloss": "un huevo",
-      "writeFrame.rounds.f3.slots.food.bank.gimbap.gloss": "gimbap (rollo de arroz con alga)"
+      "writeFrame.rounds.f3.slots.food.bank.gimbap.gloss": "rollo de arroz con alga"
     },
     "minigame:s7-life-q2-check": {
       "orderIt.rounds.c1.sentence.gloss": "Por la mañana como un huevo.",

@@ -7,7 +7,7 @@ import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { bannedWordIn, checkOverlayTree } = await import(join(resolve(HERE, ".."), "overlay-rules.mjs"));
+const { bannedWordIn, checkOverlayTree, glossRepeatsRomanization } = await import(join(resolve(HERE, ".."), "overlay-rules.mjs"));
 
 // ---- a small base tree --------------------------------------------------------------
 
@@ -28,6 +28,8 @@ const vocab = {
   items: [
     { id: "vocab:sagwa", ko: "사과", romanization: "sagwa", en: "apple" },
     { id: "vocab:bap", ko: "밥", romanization: "bap", en: "cooked rice", senseNote: "Also a meal." },
+    { id: "vocab:gimbap", ko: "김밥", romanization: "gimbap", en: "seaweed rice roll" },
+    { id: "vocab:seoul", ko: "서울", romanization: "Seoul", en: "Seoul (a city)" },
   ],
 };
 const placement = {
@@ -256,6 +258,45 @@ describe("overlay-rules: overlay-circular-gloss", () => {
     );
     assert.deepEqual(rules(base(ko({ "card:gangaji": { title: "강아지" } }))), []);
     assert.deepEqual(rules(base(es({ "vocab:sagwa": { gloss: "sagwa" } }))), []);
+  });
+});
+
+describe("overlay-rules: gloss-repeats-romanization (es)", () => {
+  test("a Spanish gloss that starts with its own romanization and a separator fails", () => {
+    for (const gloss of ["gimbap (rollo de arroz con alga)", "Gimbap, rollo de arroz", "gimbap — rollo de arroz"]) {
+      assert.deepEqual(rules(base(es({ "vocab:gimbap": { gloss } }))), ["gloss-repeats-romanization"], gloss);
+    }
+    const [v] = checkOverlayTree(base(es({ "vocab:gimbap": { gloss: "gimbap (rollo de arroz con alga)" } }))).violations;
+    assert.equal(v.path, "entries.vocab:gimbap.gloss");
+    assert.match(v.rule, /keep only the meaning/);
+  });
+
+  test("the meaning alone, a gloss that only contains the word, a name on the allowlist and Korean pass", () => {
+    assert.deepEqual(rules(base(es({ "vocab:gimbap": { gloss: "rollo de arroz con alga" } }))), []);
+    assert.deepEqual(rules(base(es({ "vocab:gimbap": { gloss: "gimbap" } }))), []);
+    assert.deepEqual(rules(base(es({ "vocab:gimbap": { gloss: "el gimbap (rollo)" } }))), []);
+    assert.deepEqual(rules(base(es({ "vocab:seoul": { gloss: "Seúl (una ciudad)" } }))), []);
+    assert.deepEqual(rules(base(es({ "vocab:seoul": { gloss: "Seoul (una ciudad)" } }))), []);
+    assert.deepEqual(rules(base(ko({ "vocab:gimbap": { gloss: "김 위에 밥을 올려 만 음식" } }))), []);
+  });
+});
+
+describe("overlay-rules: glossRepeatsRomanization", () => {
+  test("NFD, lower case and letters only; the three separators; names and jamo sound hints are allowed", () => {
+    const g = (ko, romanization, gloss) => glossRepeatsRomanization({ ko, romanization, gloss });
+    assert.equal(g("김밥", "gimbap", "gimbap (seaweed rice roll)"), true);
+    assert.equal(g("한복", "hanbok", "hanbok, traditional clothes"), true);
+    assert.equal(g("한복", "hanbok", "Hanbok — traditional clothes"), true);
+    assert.equal(g("한복", "han-bok", "hanbok (traditional clothes)"), true);
+    assert.equal(g("한복", "hanbok", "hanbók (ropa tradicional)"), true);
+    assert.equal(g("한복", "hanbok", "traditional Korean clothes"), false);
+    assert.equal(g("한복", "hanbok", "hanbok"), false);
+    assert.equal(g("바나나", "banana", "banana"), false);
+    assert.equal(g("서울", "Seoul", "Seoul (a city)"), false);
+    assert.equal(g("허준", "Heojun", "Heo Jun, a Joseon court doctor"), false);
+    assert.equal(g("ㅏ", "a", "A — sounds like the 'a' in 'father'"), false);
+    assert.equal(g("김밥", "gimbap", "Gimbap is tasty."), false);
+    assert.equal(g("김밥", "gimbap", undefined), false);
   });
 });
 

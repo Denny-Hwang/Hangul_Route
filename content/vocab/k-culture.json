@@ -22,7 +22,7 @@
       "id": "vocab:hanbok",
       "ko": "한복",
       "romanization": "hanbok",
-      "en": "hanbok (traditional clothes)",
+      "en": "traditional Korean clothes",
       "pos": "noun",
       "topics": [
         "k-culture"
@@ -48,7 +48,7 @@
       "id": "vocab:hanok",
       "ko": "한옥",
       "romanization": "hanok",
-      "en": "hanok (traditional house)",
+      "en": "traditional Korean house",
       "pos": "noun",
       "topics": [
         "k-culture"
@@ -60,7 +60,7 @@
       "id": "vocab:bibimbap",
       "ko": "비빔밥",
       "romanization": "bibimbap",
-      "en": "bibimbap (mixed rice bowl)",
+      "en": "mixed rice bowl",
       "pos": "noun",
       "topics": [
         "k-culture"
@@ -73,7 +73,7 @@
       "id": "vocab:tteokbokki",
       "ko": "떡볶이",
       "romanization": "tteokbokki",
-      "en": "tteokbokki (spicy rice cakes)",
+      "en": "spicy rice cakes",
       "pos": "noun",
       "topics": [
         "k-culture"
@@ -124,7 +124,7 @@
       "id": "vocab:gayageum",
       "ko": "가야금",
       "romanization": "gayageum",
-      "en": "gayageum (Korean zither)",
+      "en": "Korean zither",
       "pos": "noun",
       "topics": [
         "k-culture"

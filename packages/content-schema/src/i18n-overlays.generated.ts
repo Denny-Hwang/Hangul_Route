@@ -771,7 +771,7 @@ export const OVERLAYS: Overlays = {
       "listenPick.rounds.2.prompt": "hola, adiós (entre amistades)",
       "listenPick.rounds.3.prompt": "amor",
       "listenPick.rounds.4.prompt": "Corea",
-      "listenPick.rounds.5.prompt": "hanbok, ropa tradicional"
+      "listenPick.rounds.5.prompt": "ropa tradicional coreana"
     },
     "minigame:s1-letters-q1-check": {
       "listenPick.rounds.1.prompt": "tú",
@@ -875,7 +875,7 @@ export const OVERLAYS: Overlays = {
       "storySteps.d.label": "Recibir dinero de la suerte"
     },
     "minigame:s1-rites-q3-check": {
-      "listenPick.rounds.1.prompt": "hanbok, ropa tradicional",
+      "listenPick.rounds.1.prompt": "ropa tradicional coreana",
       "listenPick.rounds.lp-sym-jamo-yo.prompt": "la letra yo"
     },
     "minigame:s1-rites-q3-play": {
@@ -2770,7 +2770,7 @@ export const OVERLAYS: Overlays = {
       "steps.s1.title": "¡A vestirse!",
       "steps.s2.discover.pages.0.items.0.example.gloss": "respeto a los padres",
       "steps.s2.discover.pages.0.items.1.example.gloss": "leche",
-      "steps.s2.discover.pages.1.items.0.example.gloss": "hanbok, ropa tradicional",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "ropa tradicional coreana",
       "steps.s2.discover.pages.1.items.1.example.gloss": "Corea",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada una.",
       "steps.s2.title": "Cuatro letras nuevas",
@@ -4301,7 +4301,7 @@ export const OVERLAYS: Overlays = {
       "keywords.hyeongje.gloss": "hermanos",
       "keywords.jara.gloss": "tortuga de caparazón blando",
       "keywords.jebi.gloss": "golondrina (ave)",
-      "keywords.pansori.gloss": "pansori (relato musical)",
+      "keywords.pansori.gloss": "relato musical",
       "keywords.tokki.gloss": "conejo",
       "keywords.yonggung.gloss": "el palacio submarino del Rey Dragón",
       "scenes.s1.caption": "Una persona canta y otra toca el tambor",
@@ -5084,7 +5084,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "lluvia"
     },
     "vocab:bibimbap": {
-      "gloss": "bibimbap (tazón de arroz mezclado)",
+      "gloss": "tazón de arroz mezclado",
       "senseNote": "Arroz con verduras encima, que se mezcla antes de comer."
     },
     "vocab:bihaenggi": {
@@ -5196,7 +5196,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "tijeras"
     },
     "vocab:gayageum": {
-      "gloss": "gayageum (cítara coreana)",
+      "gloss": "cítara coreana",
       "senseNote": "Un instrumento largo de cuerdas que se toca con los dedos."
     },
     "vocab:geomeunsaek": {
@@ -5209,7 +5209,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "tren"
     },
     "vocab:gimbap": {
-      "gloss": "gimbap (rollo de arroz con alga)"
+      "gloss": "rollo de arroz con alga"
     },
     "vocab:gimchi": {
       "gloss": "kimchi",
@@ -5250,7 +5250,7 @@ export const OVERLAYS: Overlays = {
       "senseNote": "Delante de un contador, como en han gae (una cosa), se dice han."
     },
     "vocab:hanbok": {
-      "gloss": "hanbok (ropa tradicional)",
+      "gloss": "ropa tradicional coreana",
       "senseNote": "Se suele llevar en fiestas como Seollal y Chuseok."
     },
     "vocab:haneul": {
@@ -5264,7 +5264,7 @@ export const OVERLAYS: Overlays = {
       "senseNote": "El alfabeto que estás aprendiendo aquí."
     },
     "vocab:hanok": {
-      "gloss": "hanok (casa tradicional)"
+      "gloss": "casa tradicional coreana"
     },
     "vocab:harabeoji": {
       "gloss": "abuelo"
@@ -5465,7 +5465,7 @@ export const OVERLAYS: Overlays = {
       "senseNote": "Comida coreana suave y masticable, hecha de arroz."
     },
     "vocab:tteokbokki": {
-      "gloss": "tteokbokki (pasteles de arroz picantes)"
+      "gloss": "pasteles de arroz picantes"
     },
     "vocab:uija": {
       "gloss": "silla"

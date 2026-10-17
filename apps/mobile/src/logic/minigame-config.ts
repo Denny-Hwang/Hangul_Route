@@ -127,7 +127,7 @@ const W = {
   podo: word('포도', 'podo', 'grape', ['po', 'do']),
   yagu: word('야구', 'yagu', 'baseball', ['ya', 'gu']),
   yeou: word('여우', 'yeou', 'fox', ['yeo', 'u']),
-  hanbok: word('한복', 'hanbok', 'hanbok, traditional clothes', ['han', 'bok']),
+  hanbok: word('한복', 'hanbok', 'traditional Korean clothes', ['han', 'bok']),
   hanguk: word('한국', 'hanguk', 'Korea', ['han', 'guk']),
   hyodo: word('효도', 'hyodo', 'respect for parents', ['hyo', 'do']),
   uyu: word('우유', 'uyu', 'milk', ['u', 'yu']),

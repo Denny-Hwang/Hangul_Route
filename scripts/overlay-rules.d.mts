@@ -14,3 +14,8 @@ export function checkOverlayTree(
   tree: Map<string, unknown>,
   options?: { strictLocales?: readonly string[] },
 ): { violations: OverlayFinding[]; warnings: OverlayFinding[]; missing: Record<string, number> };
+/** Proper names (keyed by the taught Korean) whose English may open with the name itself. */
+export const GLOSS_NAME_ALLOWLIST: readonly string[];
+/** True when `gloss` opens with the romanization of `ko` and " (", ", " or " — " (rule gloss-repeats-romanization). */
+export function glossRepeatsRomanization(input: { ko?: unknown; romanization?: unknown; gloss?: unknown }): boolean;
+export function glossRepeatsRule(gloss: string, romanization: string): string;

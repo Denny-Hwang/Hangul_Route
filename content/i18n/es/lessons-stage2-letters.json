@@ -268,7 +268,7 @@
       "picWord.boards.1.pairs.bit.word.gloss": "luz",
       "picWord.boards.1.pairs.byeol.word.gloss": "estrella",
       "picWord.boards.2.pairs.jeotgarak.word.gloss": "palillos",
-      "picWord.boards.2.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
+      "picWord.boards.2.pairs.gimbap.word.gloss": "rollo de arroz con alga",
       "picWord.boards.2.pairs.ramyeon.word.gloss": "fideos instantáneos",
       "picWord.boards.3.pairs.but.word.gloss": "pincel",
       "picWord.boards.3.pairs.chaek.word.gloss": "libro",
@@ -281,8 +281,8 @@
       "picWord.boards.5.pairs.dal.word.gloss": "luna"
     },
     "minigame:s2-letters-q6-practice": {
-      "picWord.boards.0.pairs.tteokbokki.word.gloss": "tteokbokki (pasteles de arroz picantes)",
-      "picWord.boards.0.pairs.gimbap.word.gloss": "gimbap (rollo de arroz con alga)",
+      "picWord.boards.0.pairs.tteokbokki.word.gloss": "pasteles de arroz picantes",
+      "picWord.boards.0.pairs.gimbap.word.gloss": "rollo de arroz con alga",
       "picWord.boards.0.pairs.tteok.word.gloss": "pastel de arroz",
       "picWord.boards.1.pairs.kkot.word.gloss": "flor",
       "picWord.boards.1.pairs.ip.word.gloss": "hoja",
