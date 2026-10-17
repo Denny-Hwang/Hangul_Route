@@ -106,8 +106,7 @@ function DeckHead({ deckTitle, slides, minutes, compact }: { deckTitle: string; 
         {deckTitle}
       </Text>
       <Text {...KOREAN_LINE_BREAK} testID="presenter-start-facts" style={{ fontSize: typography.size.bodyLg, color: colors.text.secondary }}>
-        {/* Never "about 0 minutes": below one minute the line says so (rule 12). */}
-        {`${m.slides(slides)} · ${minutes < 1 ? m.minutesUnder1 : m.minutes(minutes)}`}
+        {`${m.slides(slides)} · ${m.minutes(minutes)}`}
       </Text>
     </>
   );

@@ -126,6 +126,9 @@ export function runDeck(
   const parts: SkipPart[] = expanded.skipped.map((s) => ({ blockIndex: s.blockIndex, reason: s.reason }));
   const slides: Slide[] = [];
   let minutes = expanded.minutes;
+  // Only a quiz slide that counted a minute gives it back (rule 12): a quest's or story's own quiz
+  // and check slides are inside its catalogue minutes.
+  const timed = expanded.timedQuizKeys === undefined ? null : new Set(expanded.timedQuizKeys);
   let last: { blockIndex: number | null; kind: SlideKind } | null = null;
   for (const slide of expanded.slides) {
     if (drawable(slide, kinds)) {
@@ -133,7 +136,7 @@ export function runDeck(
       last = null;
       continue;
     }
-    if (slide.kind === 'quiz') minutes -= 1;
+    if (slide.kind === 'quiz' && (timed === null || timed.has(slide.key))) minutes -= 1;
     if (slide.kind === 'activity') minutes -= slide.minutes;
     const blockIndex = blockIndexOfSlide(deck, slide.key);
     if (last === null || last.blockIndex !== blockIndex || last.kind !== slide.kind) {
@@ -142,7 +145,8 @@ export function runDeck(
     last = { blockIndex, kind: slide.kind };
   }
   const empty = !slides.some((s) => s.kind !== 'end');
-  return { slides: empty ? [] : slides, parts, minutes: Math.max(0, minutes) };
+  // A run that has slides is never "about 0 minutes" (rule 12 as amended, LV-M1).
+  return { slides: empty ? [] : slides, parts, minutes: empty ? 0 : Math.max(1, minutes) };
 }
 
 function withoutUndrawnArt(slide: Slide, drawnCardIds?: readonly string[], drawnWordArtKeys?: readonly string[]): Slide {

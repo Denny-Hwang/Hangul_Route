@@ -261,6 +261,31 @@ describe('runDeck: the slides this build draws', () => {
     expect(run.minutes).toBe(3);
   });
 
+  it('an undrawn quiz gives its minute back only when it counted one: a quiz block, never a story check (rule 12)', () => {
+    const pictures: Slide = {
+      kind: 'quiz',
+      prompt: { ask: 'check', text: 'Which one?' },
+      options: [{ gloss: 'A sun', art: 'art/sun', correct: true }, { gloss: 'A moon', correct: false }],
+      textPrompt: false,
+      key: 'story:x/check-c2',
+      builds: ['question', 'answer'],
+    };
+    const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+    const deck = deckOf([{ kind: 'story', storyId: 'story:x', checks: true }, { kind: 'quiz', from: 'all', rounds: 1 }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    const story = runDeck(deck, { slides: [pictures, ...letter], skipped: [], taught: [], minutes: 5, timedQuizKeys: [] });
+    expect(story.minutes).toBe(5);
+    const quizBlockSlide: Slide = { ...pictures, key: 'quiz/q1' };
+    const quiz = runDeck(deck, { slides: [quizBlockSlide, ...letter], skipped: [], taught: [], minutes: 5, timedQuizKeys: ['quiz/q1'] }, new Set(['letter', 'end']));
+    expect(quiz.minutes).toBe(4);
+  });
+
+  it('a run with slides is at least 1 minute, even after every counted minute is given back', () => {
+    const letter = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+    const activity: Slide = { kind: 'activity', preset: 'air-write', minutes: 3, key: 'activity:air-write', builds: ['prompt'] };
+    const deck = deckOf([{ kind: 'activity', preset: 'air-write', minutes: 3 }, { kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    expect(runDeck(deck, { slides: [activity, ...letter], skipped: [], taught: [], minutes: 3 }, new Set(['letter', 'end'])).minutes).toBe(1);
+  });
+
   it('a story check with picture options stays one not-shown part (no projected option draws art yet)', () => {
     const pictures: Slide = {
       kind: 'quiz',

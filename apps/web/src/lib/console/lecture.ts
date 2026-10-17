@@ -6,6 +6,7 @@ import {
   LECTURE_TITLE_RE,
   LectureBlockSchema,
   LectureDeckSchema,
+  LectureOptionsSchema,
   encodeDeck,
   presetBlockMinutes,
   rosterAlias,
@@ -142,18 +143,29 @@ export function catalogueTitle(block: LectureBlock, stories: readonly LectureCat
 
 const questMinutes = new Map(CATALOG.quests.map((q) => [q.id, q.minutes]));
 const episodeMinutes = new Map(CATALOG.cells.map((c) => [c.episodeId, c.minutes]));
-// The deck names a topic `vocab-topic:<key>`; the shared catalogue names it `topic:<key>`.
-const topicMinutes = new Map(CATALOG.topics.map((t) => [`vocab-topic:${t.key}`, t.minutes]));
+const topicWords = new Map(LECTURE_VOCAB_TOPICS.map((t) => [t.id, t.words]));
+/** The deck default the console writes (`LectureOptionsSchema`): a topic's meaning quiz asks this many words at most. */
+const QUIZ_ROUNDS = LectureOptionsSchema.parse({}).quizRounds;
+/** The presenter asks a topic's meaning quiz only over at least this many shown words. */
+const TOPIC_QUIZ_MIN_WORDS = 4;
 
-/** A vocabulary topic's about-minutes from the shared catalogue (null when it does not know the topic). */
-export function vocabMinutes(topicId: string): number | null {
-  return topicMinutes.get(topicId) ?? null;
+/**
+ * A vocabulary block's about-minutes from its size (rule 12 as amended, AMENDMENTS-LECTURE-V2 4.4,
+ * LV-M1), the count the presenter makes: one minute per two word cards, rounded up, plus one per
+ * meaning-quiz question (at most `QUIZ_ROUNDS`, none under 4 words). `words`: the chosen words,
+ * else the whole topic. Null when the generated catalogue does not know the topic.
+ */
+export function vocabMinutes(topicId: string, words?: number): number | null {
+  const count = words ?? topicWords.get(topicId);
+  if (count === undefined || !topicWords.has(topicId)) return null;
+  return Math.ceil(count / 2) + (count >= TOPIC_QUIZ_MIN_WORDS ? Math.min(QUIZ_ROUNDS, count) : 0);
 }
 
 /**
  * About-minutes for the outline from the shared catalogue (F-PLAN-002) and the lecture
  * mirror (the console has no content bundle; exact slide counts appear on the presenter
- * start screen). Null when the catalogue does not know the item.
+ * start screen). Null when the catalogue does not know the item. Letters, cards and words count
+ * from the block size and a story its catalogue minutes, as the presenter does (rule 12 as amended).
  */
 export function blockMinutes(block: LectureBlock, stories: readonly LectureCatalogueStory[] = LECTURE_STORIES): number | null {
   switch (block.kind) {
@@ -164,7 +176,7 @@ export function blockMinutes(block: LectureBlock, stories: readonly LectureCatal
     case 'story':
       return stories.find((s) => s.id === block.storyId)?.minutes ?? null;
     case 'vocab':
-      return vocabMinutes(block.topicId);
+      return vocabMinutes(block.topicId, block.wordIds?.length);
     case 'quiz':
       return block.rounds;
     case 'activity':
@@ -181,8 +193,10 @@ export function blockMinutes(block: LectureBlock, stories: readonly LectureCatal
   }
 }
 
+/** The outline's about-minutes: never 0 for an outline that has something to show (rule 12 as amended, LV-M1). */
 export function aboutMinutes(blocks: readonly LectureBlock[]): number {
-  return blocks.reduce((sum, b) => sum + (blockMinutes(b) ?? 0), 0);
+  const sum = blocks.reduce((total, b) => total + (blockMinutes(b) ?? 0), 0);
+  return blocks.some((b) => b.kind !== 'class-code') ? Math.max(1, sum) : sum;
 }
 
 // ---- quiz scope (§3.3 rule 7) ------------------------------------------------------

@@ -1,4 +1,5 @@
 import { CATALOG, LECTURE_MAX_BLOCKS, LectureDeckSchema, decodeDeck, rosterAlias, type LectureBlock, type PlanItem, type WeekMeta } from '@hangul-route/content-schema';
+import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
 import { describe, expect, it } from 'vitest';
 import type { PlanView, Roster, RosterLearner, SpaceListItem } from '../api';
 import {
@@ -22,6 +23,7 @@ import {
   revisitBlock,
   titleProblem,
   updateBlock,
+  vocabMinutes,
 } from '../lecture';
 
 const learner = (displayName: string, i = 0): RosterLearner => ({
@@ -146,7 +148,7 @@ describe('outline rows', () => {
 });
 
 describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
-  it('quests and episodes from the shared catalogue (cell minutes), vocabulary topics from its topics, stories from the lecture catalogue, quiz and activity from the block', () => {
+  it('quests and episodes from the shared catalogue (cell minutes), stories from the lecture catalogue, letters, cards and words from the block size, quiz and activity from the block', () => {
     expect(blockMinutes({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(Q1.minutes);
     expect(Q1.minutes).toBeGreaterThan(0);
     expect(blockMinutes({ kind: 'episode', id: 'episode:stage1-letters' })).toBe(LETTERS_CELL.minutes);
@@ -160,8 +162,13 @@ describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
     expect(blockMinutes({ kind: 'quest', id: 'quest:unknown' })).toBeNull();
     expect(blockMinutes({ kind: 'episode', id: 'episode:unknown' })).toBeNull();
     expect(blockMinutes({ kind: 'story', storyId: 'story:unknown', checks: true })).toBeNull();
-    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe(5);
+    // Rule 12 as amended (LV-M1): a topic counts ceil(word cards / 2) plus its meaning quiz (5 rounds, none under 4 words).
+    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe(6 + 5);
+    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:mul', 'vocab:uyu'] })).toBe(2);
+    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:mul', 'vocab:uyu', 'vocab:ppang'] })).toBe(2 + 4);
     expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:unknown' })).toBeNull();
+    expect(vocabMinutes('vocab-topic:food')).toBe(11);
+    expect(vocabMinutes('vocab-topic:unknown', 4)).toBeNull();
     expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a'] })).toBe(1);
     expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a', 'jamo:eo'] })).toBe(2);
     expect(blockMinutes({ kind: 'cards', cardIds: ['card:book'] })).toBe(1);
@@ -183,6 +190,24 @@ describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
         { kind: 'quiz', from: 'all', rounds: 2 },
       ]),
     ).toBe(Q1.minutes + 2);
+  });
+
+  it('is never 0 for an outline with something to show; a class code alone or an empty outline stays 0', () => {
+    expect(aboutMinutes([{ kind: 'quest', id: 'quest:unknown' }])).toBe(1);
+    expect(aboutMinutes([{ kind: 'class-code', code: 'ABC234' }])).toBe(0);
+    expect(aboutMinutes([])).toBe(0);
+  });
+});
+
+describe('aboutMinutes on the shared fixture decks (rule 12 as amended; the presenter suite gives the same numbers)', () => {
+  it.each(LECTURE_MINUTES_DECKS.map((d) => [d.name, d] as const))('%s', (_, fixture) => {
+    expect(aboutMinutes(fixture.blocks)).toBe(fixture.aboutMinutes);
+  });
+
+  it('every consonant and vowel is about 12 minutes, never about 0 (owner report 2026-10-16)', () => {
+    const letters = LECTURE_MINUTES_DECKS.find((d) => d.name === 'consonants and vowels')!;
+    expect(letters.blocks.flatMap((b) => (b.kind === 'jamo-set' ? b.jamoIds : []))).toHaveLength(24);
+    expect(aboutMinutes(letters.blocks)).toBe(12);
   });
 });
 
