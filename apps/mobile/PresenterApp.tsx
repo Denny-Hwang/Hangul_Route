@@ -261,6 +261,9 @@ function Presenter(): React.ReactElement {
     // every sound, and each tap offers a suspended clip context a restart.
     const offGesture = installGestureUnlock();
     const offCapability = subscribeCapability(setCapability);
+    // The voice list can land between the first render's read and this subscription (a browser that has
+    // it at once): read it again, or the start screen keeps "unknown" and says there is no Korean voice.
+    setCapability(getCapability());
     void refreshCapability()
       .catch(() => undefined)
       .then(() => {
