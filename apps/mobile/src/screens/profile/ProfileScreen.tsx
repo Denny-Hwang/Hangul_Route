@@ -213,6 +213,15 @@ export function ProfileScreen(): React.ReactElement {
         </View>
       </Card>
 
+      {active ? (
+        <>
+          {/* Classes and family, moved up out of the grown-ups group (owner decision 2026-10-17): the learner's classes
+              and family, Join a class (not gated, F-SPACE-001) and Leave, right under the stats. */}
+          <Spacer size="lg" />
+          <SpacesCard profile={active} onJoin={() => navigation.navigate('JoinSpace')} />
+        </>
+      ) : null}
+
       {/* Owner request 2026-10-16 (item 8): two groups. My settings, open: what the learner changes alone. */}
       <Spacer size="xxl" />
       <View testID="profile-group-mine" role="group" aria-labelledby="profile-group-mine-title">
@@ -339,7 +348,7 @@ export function ProfileScreen(): React.ReactElement {
         <MyNotesRow onOpen={() => navigation.navigate('Notes')} />
       </View>
 
-      {/* For grown-ups, collapsed: classes and family first, then the plan, backup, install, the grown-up area and the notices. */}
+      {/* For grown-ups, collapsed: the plan, backup, install, the account pages, the grown-up area and the notices. */}
       <Spacer size="xxl" />
       <View testID="profile-group-grown-ups" role="group" aria-labelledby="profile-group-grown-ups-title">
         <Pressable
@@ -361,14 +370,7 @@ export function ProfileScreen(): React.ReactElement {
 
         {grownUpsOpen ? (
           <>
-            {active ? (
-              <>
-                <Spacer size="sm" />
-                <SpacesCard profile={active} onJoin={() => navigation.navigate('JoinSpace')} />
-              </>
-            ) : null}
-
-            <Spacer size="lg" />
+            <Spacer size="sm" />
             {/* The plan card (F-BILL-002 §4.7, §6.3; mock design/screens/billing/plan-status.md): every tier opens the Plan screen, no PIN. */}
             <Card padding="md" tone={card.tone === 'success' ? 'success' : 'sunken'}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>

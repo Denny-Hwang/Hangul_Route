@@ -194,7 +194,7 @@ describe('ProfileScreen open-source notices link (owner decision 2026-10-14)', (
 describe('ProfileScreen groups (owner request 2026-10-16, item 8)', () => {
   afterEach(() => resetPlatform());
 
-  it.each(PLATFORMS)('%s: My settings is open, For grown-ups starts collapsed and opens on a tap; one filled button', async (platform) => {
+  it.each(PLATFORMS)('%s: Classes and family under the stats, My settings open, For grown-ups collapsed until a tap; one filled button', async (platform) => {
     for (const locale of LOCALES) {
       setPlatform(platform);
       seed('family', FREE, locale);
@@ -207,16 +207,22 @@ describe('ProfileScreen groups (owner request 2026-10-16, item 8)', () => {
       const grown = byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance;
       expect(screenTexts(grown), locale).toContain(t.groups.grownUps);
       expect(screenTexts(grown), locale).not.toContain(t.groups.account);
-      // Collapsed: the classes card, the plan card, backup and the grown-up area are not drawn yet.
-      expect(byTestId(grown, 'spaces-card'), locale).toHaveLength(0);
+      // Collapsed: the plan card, backup and the grown-up area are not drawn yet.
       expect(byTestId(grown, 'profile-grown-up-area'), locale).toHaveLength(0);
+      // Classes and family is moved up (owner decision 2026-10-17): drawn under the stats, above both groups,
+      // outside the collapsed group, with its Join a class.
+      const spacesTitle = getMessages(locale).caregiver.spaces.title;
+      expect(screenTexts(grown), locale).not.toContain(spacesTitle);
+      const page = screenTexts(renderer.root);
+      expect(page.indexOf(spacesTitle), locale).toBeGreaterThan(page.indexOf(t.statsTitle('Mina')));
+      expect(page.indexOf(spacesTitle), locale).toBeLessThan(page.indexOf(t.groups.mine));
+      expect(buttonsNamed(renderer.root, getMessages(locale).caregiver.spaces.join.cta), locale).not.toHaveLength(0);
       await openGrownUps(renderer.root);
       expect(byTestId(renderer.root, 'profile-group-grown-ups-toggle')[0]?.props['aria-expanded']).toBe(true);
-      // Classes and family comes first in the group, before the plan card and the grown-up area.
+      // In the group: the plan card before the grown-up area.
       const order = screenTexts(byTestId(renderer.root, 'profile-group-grown-ups')[0] as ReactTestInstance);
       const zone = getMessages(locale).caregiver.audience.family.zoneLabel;
-      expect(order.indexOf(getMessages(locale).caregiver.spaces.title), locale).toBeGreaterThan(-1);
-      expect(order.indexOf(getMessages(locale).caregiver.spaces.title), locale).toBeLessThan(order.indexOf(t.plan.details.cta));
+      expect(order.indexOf(t.plan.details.cta), locale).toBeGreaterThan(-1);
       expect(order.indexOf(t.plan.details.cta), locale).toBeLessThan(order.indexOf(zone));
       await unmount(renderer);
     }
