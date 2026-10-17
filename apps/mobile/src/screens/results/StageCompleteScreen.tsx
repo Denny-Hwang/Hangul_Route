@@ -14,10 +14,11 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -29,6 +30,7 @@ import {
   stagePrizeCards,
   symbolWall,
   wallTileLabel,
+  wallTileWidth,
   type WallTile,
 } from '../../logic/stage1/stage-complete';
 import type { RootStackParamList } from '../../navigation/types';
@@ -63,6 +65,11 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
   const complete = useMemo(() => (snapshot ? completeStages(snapshot, episodesAll).has(stageKey) : false), [snapshot, stageKey]);
   const cards = useMemo(() => stagePrizeCards(stageKey).map((c) => localizeCard(c, locale)), [stageKey, locale]);
   const wall = useMemo(() => symbolWall(), []);
+  // Every tile grows with the text size, as every control does (AMENDMENTS-DISPLAY-NAV section 4), so its longest
+  // sound value (silent/ng) stays inside it at Largest; the tiles of a row share its width edge to edge.
+  const textScale = useTypeScale();
+  const [wallWidth, setWallWidth] = useState(0);
+  const tileWidth = wallTileWidth(wallWidth, Math.round(WALL_TILE * textScale.factor), spacing.sm);
   // The learner holds every prize card: a stage Complete by the old latch alone never shows cards it does not own.
   const owned = useMemo(() => (snapshot ? ownsStagePrize(snapshot.cards, stageKey) : false), [snapshot, stageKey]);
   const ready = complete && owned && cards.length > 0;
@@ -104,9 +111,13 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
       <Spacer size="xl" />
       <Heading level="title">{m.wallTitle}</Heading>
       <Spacer size="sm" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="stage-complete-wall">
+      <View
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}
+        onLayout={(e) => setWallWidth(e.nativeEvent.layout.width)}
+        testID="stage-complete-wall"
+      >
         {wall.map((tile) => (
-          <WallTileView key={tile.id} tile={tile} label={wallTileLabel(tile, messages.a11y)} />
+          <WallTileView key={tile.id} tile={tile} label={wallTileLabel(tile, messages.a11y)} width={tileWidth} />
         ))}
       </View>
 
@@ -172,7 +183,8 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
  * glyph alone). A final sits at the bottom of its block, so its tile has a heavier bottom edge (a
  * shape cue, never colour alone).
  */
-function WallTileView({ tile, label }: { tile: WallTile; label: string }): React.ReactElement {
+function WallTileView({ tile, label, width }: { tile: WallTile; label: string; width: number }): React.ReactElement {
+  const textScale = useTypeScale();
   const final = tile.kind === 'batchim';
   return (
     <View
@@ -181,7 +193,7 @@ function WallTileView({ tile, label }: { tile: WallTile; label: string }): React
       accessibilityLabel={label}
       testID={`stage-complete-tile-${tile.id}`}
       style={{
-        width: WALL_TILE,
+        width,
         minHeight: WALL_TILE,
         paddingVertical: spacing.xs,
         alignItems: 'center',
@@ -196,10 +208,10 @@ function WallTileView({ tile, label }: { tile: WallTile; label: string }): React
       <Text {...KOREAN_LINE_BREAK}
         style={{
           fontFamily: typography.family.sansKr,
-          fontSize: typography.size.title,
+          fontSize: textScale.size.title,
           fontWeight: typography.weight.bold,
           color: colors.text.primary,
-          lineHeight: typography.size.title * typography.leading.normal,
+          lineHeight: textScale.size.title * typography.leading.normal,
         }}
       >
         {tile.char}

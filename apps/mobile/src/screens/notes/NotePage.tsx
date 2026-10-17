@@ -15,6 +15,7 @@ import {
   typography,
   type IconName,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { NOTE_REACTION_IDS, type NoteReactionId } from '@hangul-route/content-schema';
 import React from 'react';
@@ -62,6 +63,7 @@ export interface NotePageProps {
  * Shared by the stack screen and the wide split pane.
  */
 export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway, onReport, reportA11y }: NotePageProps): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const t = m.learner.notes.detail;
   const fromLine = [view.from, view.date].filter((part) => part !== '').join(' · ');
@@ -86,7 +88,7 @@ export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway,
         <>
           <Spacer size="lg" />
           <Card padding="md" testID="note-words">
-            <Text {...KOREAN_LINE_BREAK} {...langProps} style={{ fontSize: typography.size.bodyLg, color: colors.text.primary, lineHeight: typography.size.bodyLg * typography.leading.normal }}>
+            <Text {...KOREAN_LINE_BREAK} {...langProps} style={{ fontSize: textScale.size.bodyLg, color: colors.text.primary, lineHeight: textScale.size.bodyLg * typography.leading.normal }}>
               {view.text}
             </Text>
             <Spacer size="xs" />
@@ -117,7 +119,7 @@ export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway,
                 <Icon name="book" size={GLYPH} color={colors.brand.primaryDark} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text {...KOREAN_LINE_BREAK} nativeID={QUEST_TITLE_ID} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>
+                <Text {...KOREAN_LINE_BREAK} nativeID={QUEST_TITLE_ID} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>
                   {quest.title}
                 </Text>
                 {quest.open ? null : (
@@ -186,14 +188,14 @@ export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway,
                 {selected ? <View style={{ width: spacing.md, height: spacing.md, borderRadius: radii.circle, backgroundColor: colors.brand.primary }} /> : null}
               </View>
               <Icon name={REACTION_GLYPH[id]} size={GLYPH} color={colors.text.primary} />
-              <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>
+              <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: textScale.size.body, color: colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>
                 {label}
               </Text>
               {selected ? <Icon name="check" size={GLYPH} color={colors.brand.primary} /> : null}
             </Pressable>
           );
         })}
-        <Text {...KOREAN_LINE_BREAK} nativeID={SEEN_BY_ID} style={{ fontSize: typography.size.body, color: colors.text.secondary }} testID="note-seen-by">
+        <Text {...KOREAN_LINE_BREAK} nativeID={SEEN_BY_ID} style={{ fontSize: textScale.size.body, color: colors.text.secondary }} testID="note-seen-by">
           {view.seenBy}
         </Text>
         <View style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
@@ -225,6 +227,7 @@ function QuietLink({
   onPress: () => void;
   testID: string;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <Pressable
       onPress={onPress}
@@ -233,7 +236,7 @@ function QuietLink({
       testID={testID}
       style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary, textDecorationLine: 'underline' }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.secondary, textDecorationLine: 'underline' }}>{label}</Text>
     </Pressable>
   );
 }

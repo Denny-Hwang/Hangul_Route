@@ -17,6 +17,7 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { CATALOG, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -97,7 +98,8 @@ const koreanSpeech = { lang: KOREAN_LANGUAGE, accessibilityLanguage: KOREAN_LANG
 const headingLevel = (level: 1 | 2 | 3): Record<string, string | number> => ({ role: 'heading', 'aria-level': level });
 
 function ReportHeading({ level, children, testID }: { level: 1 | 2 | 3; children: React.ReactNode; testID?: string }): React.ReactElement {
-  const size = level === 1 ? typography.size.title : level === 2 ? typography.size.prompt : typography.size.body;
+  const textScale = useTypeScale();
+  const size = level === 1 ? textScale.size.title : level === 2 ? textScale.size.prompt : textScale.size.body;
   return (
     <Text {...KOREAN_LINE_BREAK}
       {...headingLevel(level)}
@@ -223,6 +225,7 @@ type BodyProps = {
 };
 
 function ReportBody({ profileId, name, voice, navigation, locale, messages }: BodyProps): React.ReactElement {
+  const textScale = useTypeScale();
   const stored = useProgressStore((s) => s.byProfile[profileId]);
   const hydrated = useProgressStore((s) => s.hydratedFor.has(profileId));
   const tier = useAccessTier(profileId);
@@ -374,7 +377,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
       {view.headline !== null ? (
         <>
           <Spacer size="md" />
-          <Text {...KOREAN_LINE_BREAK} testID="learner-report-headline" style={{ fontSize: typography.size.prompt, lineHeight: typography.size.prompt * typography.leading.normal, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} testID="learner-report-headline" style={{ fontSize: textScale.size.prompt, lineHeight: textScale.size.prompt * typography.leading.normal, fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {view.headline.text}
           </Text>
           {view.headline.horizon !== null ? <Caption tone="muted">{view.headline.horizon}</Caption> : null}
@@ -405,7 +408,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
                   testID={`learner-report-figure-${figure.key}`}
                   style={{ flexGrow: 1, flexBasis: FIGURE_TILE_MIN, minWidth: FIGURE_TILE_MIN, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surface.paper, borderWidth: borderWidth.thin, borderColor: colors.border.subtle }}
                 >
-                  <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.title, lineHeight: typography.size.title * typography.leading.tight, fontWeight: typography.weight.bold, color: colors.text.primary }}>{figure.count}</Text>
+                  <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.title, lineHeight: textScale.size.title * typography.leading.tight, fontWeight: typography.weight.bold, color: colors.text.primary }}>{figure.count}</Text>
                   <Body size="sm" tone="secondary">
                     {figure.label}
                   </Body>
@@ -716,6 +719,7 @@ function DetailBlock({ block }: { block: ReportDetailBlock }): React.ReactElemen
  * letter and romanization; the expansion under the row shows the letter large with its content romanization and gloss.
  */
 function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLetterTile[]; id: string }): React.ReactElement {
+  const textScale = useTypeScale();
   const [open, setOpen] = useState<string | null>(null);
   const expansionId = `learner-report-letters-${id}-detail`;
   const opened = tiles.find((tile) => tile.letter === open) ?? null;
@@ -748,7 +752,7 @@ function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLet
                 borderColor: expanded ? colors.brand.primary : colors.border.strong,
               }}
             >
-              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.prompt, color: colors.text.primary }}>
+              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, color: colors.text.primary }}>
                 {tile.letter}
               </Text>
               {tile.romanization !== null ? <Caption tone="secondary">{tile.romanization}</Caption> : null}
@@ -759,7 +763,7 @@ function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLet
       <View nativeID={expansionId} {...{ id: expansionId }}>
         {opened !== null ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surface.sunken }} testID={`learner-report-tile-detail-${id}`}>
-            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: typography.size.display, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.display, color: colors.text.primary }}>
               {opened.letter}
             </Text>
             <View style={{ flex: 1 }}>

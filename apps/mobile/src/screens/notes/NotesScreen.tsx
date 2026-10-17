@@ -12,9 +12,9 @@ import {
   radii,
   spacing,
   touchTarget,
-  typography,
   useLayoutClass,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -190,6 +190,7 @@ function Group({
 }
 
 function NoteRow({ row, current, onPress }: { row: NoteRowView; current: boolean; onPress: () => void }): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const name = m.a11y.notes.row(row.sender, row.preset, row.date, row.isNew) + (row.reactionText === null ? '' : ` ${m.a11y.notes.answer(row.reactionText)}`);
   const langProps = row.textLang === undefined ? {} : { lang: row.textLang, accessibilityLanguage: row.textLang };
@@ -213,12 +214,12 @@ function NoteRow({ row, current, onPress }: { row: NoteRowView; current: boolean
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <Icon name="note" size={ROW_GLYPH} color={glyphColor} />
         {row.isNew ? <NewPill /> : null}
-        <Text {...KOREAN_LINE_BREAK} style={{ marginLeft: 'auto', fontSize: typography.size.bodySm, color: colors.text.muted }}>{row.date}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ marginLeft: 'auto', fontSize: textScale.size.bodySm, color: colors.text.muted }}>{row.date}</Text>
       </View>
       <Body weight="bold">{row.sender}</Body>
       <Body tone="secondary">{row.preset}</Body>
       {row.text !== null ? (
-        <Text {...KOREAN_LINE_BREAK} {...langProps} numberOfLines={1} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>
+        <Text {...KOREAN_LINE_BREAK} {...langProps} numberOfLines={1} style={{ fontSize: textScale.size.body, color: colors.text.secondary }}>
           {row.text}
         </Text>
       ) : null}

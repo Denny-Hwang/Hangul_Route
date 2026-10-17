@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
@@ -7,7 +7,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { deviceAttest } from '../../logic/transfers/consent-gate';
 import { deviceConsentRecord, sheetDataFromPreview, sheetLocaleOf, type ConsentSheetData } from '../../logic/transfers/consent-sheet';
 import { MOVE_RELOAD, moveErrorLine } from '../../logic/transfers/transfer-views';
-import { cleanJoinCode, isCompleteJoinCode } from '../../logic/spaces/join-code';
+import { cleanJoinCode, codeFieldFontSize, isCompleteJoinCode } from '../../logic/spaces/join-code';
 import type { RootStackParamList } from '../../navigation/types';
 import { useMembershipStore } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
@@ -25,6 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'MoveClass'>;
  * queued (consent is never sent later). Reachable only while the Classes card offers Move (variant c).
  */
 export function MoveClassScreen({ route, navigation }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const { profileId, fromSpaceId } = route.params;
   const messages = useMessages();
   const t = messages.caregiver.transfer;
@@ -38,6 +39,7 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
   const transfers = useLearnerTransfers(profileId);
   const device = useTransferDevice(profileId);
   const [code, setCode] = useState('');
+  const [codeFieldWidth, setCodeFieldWidth] = useState(0);
   const [sheet, setSheet] = useState<ConsentSheetData | null>(null);
   const [destinationId, setDestinationId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -185,10 +187,12 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
         aria-invalid={error !== null}
         {...{ 'aria-describedby': error || !online ? 'move-code-line' : undefined }}
         testID="move-code"
+        // The code is drawn as large as the text size asks, but never so large that a whole code is cut (section 4).
+        onLayout={(e) => setCodeFieldWidth(e.nativeEvent.layout.width - 2 * borderWidth.base)}
         style={{
           minHeight: touchTarget.hero,
           textAlign: 'center',
-          fontSize: typography.size.display,
+          fontSize: codeFieldFontSize(textScale.size.display, codeFieldWidth, spacing.sm),
           fontWeight: typography.weight.bold,
           letterSpacing: spacing.sm,
           color: colors.text.primary,
