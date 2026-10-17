@@ -256,7 +256,7 @@ export const learner = {
       doneToday: '¡Buen trabajo hoy! Tus tarjetas te esperan en la colección.',
       daily: 'Consejo: un poco cada día te ayuda a aprender.',
     },
-    classCode: { cta: '¿Tienes código de clase?' },
+    classCode: { cta: '¿Tienes un código de clase?' },
     recentStars: 'Estrellas nuevas',
     catchUp: {
       line: (count: number) =>

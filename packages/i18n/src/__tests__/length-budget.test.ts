@@ -69,6 +69,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'common.display.size.larger': '"Más grande" (10) against "Larger" (6): Spanish has no one-word comparative here; a segment label that wraps',
   // AMENDMENTS-LECTURE-V2 section 18.4: a select label, which wraps.
   'console.lecture.options.language': '"Idioma de las diapositivas" (26) against "Slides language" (15); a select label that wraps',
+  // AMENDMENTS-DISPLAY-NAV section 10 (the candidates it names): the "Got a class code?" link on Welcome and Home.
+  'learner.home.classCode.cta': '"¿Tienes un código de clase?" (27) against "Got a class code?" (17): Spanish opens the question with "¿" and needs the article; inside the 28-character cta budget, a link that wraps',
   // Owner decision 2026-10-17: the class join link's caption on the roster.
   'console.space.joinLink.title': '"Enlace para unirse" (18) against "Join link" (9): Spanish names what the link is for with "para"; an upper-case caption that wraps',
 };
