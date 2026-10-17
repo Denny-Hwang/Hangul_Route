@@ -222,8 +222,9 @@ export const consoleMsgs = {
     closed: '이 요청은 이미 닫혔어요 — 학습자가 다시 요청할 수 있어요.',
     failed: '처리되지 않았어요. 다시 해 보세요.',
   },
-  language: {
-    label: '언어',
+  docTitle: {
+    console: '콘솔 — Hangul Route',
+    signIn: '어른 로그인 — Hangul Route',
   },
   codeExpiry: {
     none: '아직 코드 없음',
@@ -776,7 +777,8 @@ export const consoleMsgs = {
       strokeGuide: '획순 안내',
       strokeNote: '간단히 나타낸 거예요: 서예 기준이 아니에요.',
       sound: '소리 재생',
-      language: '발표 언어',
+      slidesLanguage: '슬라이드 언어',
+      sameAsDevice: '이 기기와 같게',
     },
     picker: {
       title: '도우미 뽑기',

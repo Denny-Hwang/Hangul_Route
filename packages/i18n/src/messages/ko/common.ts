@@ -67,6 +67,21 @@ export const common = {
     date: { today: '오늘', yesterday: '어제' },
     new: { pill: '새' },
   },
+  /** 화면(Aa) 시트: 이 기기의 하나뿐인 언어와 글자 크기. */
+  display: {
+    glyph: 'Aa',
+    open: '화면 설정',
+    title: '화면 설정',
+    summary: '언어와 글자 크기',
+    language: '이 기기의 언어',
+    textSize: '글자 크기',
+    sizes: { standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' },
+    sample: '글자가 이렇게 보여요.',
+    note: '이 기기의 모든 화면에 적용돼요.',
+    back: (endonym: string) => `돌아가기: ${endonym}`,
+    done: { cta: '완료' },
+    close: '닫기',
+  },
   /** 읽기 수준 (F-LEARN-001 §3.7): 얼마나 읽는지를 말하고, 나이는 말하지 않아요. */
   levels: {
     pictures: { label: '그림 먼저', description: '큰 타일과 그림으로 배우고, 읽을 글은 아주 적어요.' },

@@ -74,6 +74,30 @@ export const common = {
     new: { pill: 'New' },
   },
   /**
+   * The Display (Aa) sheet (owner items 6 and 7): the device's one UI language and text size, read by
+   * the learner app, All lessons, the presenter and the grown-up pages, so every surface words it the
+   * same way. The Aa button draws a sign, not a word; `open` is its accessible name.
+   */
+  display: {
+    /** The sign the Aa button and each Text size step draw; hidden from assistive tech. */
+    glyph: 'Aa',
+    open: 'Display',
+    title: 'Display',
+    /** The second line of the Display row on Profiles & settings. */
+    summary: 'Language and text size',
+    language: 'Language on this device',
+    textSize: 'Text size',
+    sizes: { standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' },
+    /** The live sample line, drawn at the chosen size. */
+    sample: 'Text looks like this.',
+    note: 'Every screen on this device uses these.',
+    /** After a language change, written in the new language: the one-tap way back. */
+    back: (endonym: string) => `Back to ${endonym}`,
+    done: { cta: 'Done' },
+    /** The scrim's accessible name. */
+    close: 'Close',
+  },
+  /**
    * The learner level's words (F-LEARN-001 §3.7, content-schema `LEARNER_LEVELS`) in level order: how much the learner
    * reads, never an age. `levelWords` (levels.ts) finds them by the stored level id.
    */

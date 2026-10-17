@@ -39,15 +39,9 @@ export const learner = {
     },
   },
 
-  /** The language chips (Welcome) and the Language card (Profile) share these. */
+  /** The Welcome language chips (the device's one language; the Display sheet's words are `common.display`). */
   language: {
     groupLabel: 'Language',
-    sameAsDevice: (endonym: string) => `Same as this device (${endonym})`,
-    /** The sheet is written in the language being chosen, so the person sees at once whether they can read it. */
-    confirmProfile: (endonym: string) => `Use ${endonym} for this profile?`,
-    confirmDevice: (endonym: string) => `Use ${endonym} on this device?`,
-    confirmUse: (endonym: string) => `Use ${endonym}`,
-    confirmBack: (endonym: string) => `Back to ${endonym}`,
   },
 
   /**
@@ -181,12 +175,6 @@ export const learner = {
     install: { label: 'Install on this device', a11yLabel: 'Install Hangul Route on this device' },
     /** The link at the foot of Profiles & settings to the site's /licenses page (owner decision 2026-10-14). */
     licenses: { label: 'Open-source notices', fallback: 'Open hangulroute.com/licenses in a browser.', gateDone: 'Grown-up check done. Tap Open-source notices again to open the page.' },
-    /** Shown when more than one language is offered (hidden while only English ships). */
-    language: {
-      title: 'Language',
-      thisProfile: 'This profile',
-      deviceDefault: 'New profiles and this device start in:',
-    },
     /** Always shown: it does not depend on a second language (F-I18N-001 D2). */
     reading: {
       title: 'Reading practice',
@@ -2232,11 +2220,6 @@ export const learner = {
       loading: 'Loading lesson',
       tooSmall: 'Make the window bigger or turn the screen.',
       portrait: 'Turn the screen for a bigger view',
-    },
-    /** The session language chips (section 3.12): this session only, the device locale is not written. */
-    language: {
-      title: 'Presenter language',
-      note: 'Only for this session. Korean always shows romanization and a meaning.',
     },
   },
   /**

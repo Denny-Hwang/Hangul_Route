@@ -28,11 +28,6 @@ export const learner = {
 
   language: {
     groupLabel: '언어',
-    sameAsDevice: (endonym: string) => `이 기기와 같게 (${endonym})`,
-    confirmProfile: (endonym: string) => `이 프로필의 언어를 바꿀까요? (${endonym})`,
-    confirmDevice: (endonym: string) => `이 기기의 언어를 바꿀까요? (${endonym})`,
-    confirmUse: (endonym: string) => `${endonym} 쓰기`,
-    confirmBack: (endonym: string) => `돌아가기: ${endonym}`,
   },
 
   createProfile: {
@@ -140,11 +135,6 @@ export const learner = {
     },
     install: { label: '이 기기에 설치하기', a11yLabel: '이 기기에 Hangul Route 설치하기' },
     licenses: { label: '오픈소스 라이선스', fallback: '브라우저에서 hangulroute.com/licenses를 열어 주세요.', gateDone: '어른 확인을 마쳤어요. 페이지를 열려면 오픈소스 라이선스를 한 번 더 눌러 주세요.' },
-    language: {
-      title: '언어',
-      thisProfile: '이 프로필',
-      deviceDefault: '새 프로필과 이 기기의 시작 언어:',
-    },
     reading: {
       title: '읽기 연습',
       hideUntilTap: '누를 때까지 로마자 표기 숨기기',
@@ -1718,10 +1708,6 @@ export const learner = {
       loading: '수업을 불러오고 있어요',
       tooSmall: '창을 키우거나 화면을 돌려 주세요.',
       portrait: '화면을 돌리면 더 크게 보여요',
-    },
-    language: {
-      title: '발표 언어',
-      note: '이번 수업에만 바뀌어요. 한국어에는 늘 로마자와 뜻이 함께 나와요.',
     },
   },
   /** [TV] 반에 관한 홈 안내 (TV-D5, TV-D10). */

@@ -62,6 +62,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.createProfile.privacy.under13': '"Tengo menos de 13 años" is the natural statement; a full-width text button that wraps',
   'learner.editProfile.privacy.under13': '"Tengo menos de 13 años" is the natural statement; a full-width text button that wraps',
   'learner.createProfile.privacyLinkName': 'the policy\'s own name "Política de privacidad", one letter over; read aloud as the link name, never drawn',
+  // Owner items 6 and 7: the Display sheet's labels, each over a row that wraps.
+  'common.display.textSize': '"Tamaño del texto" (16) is the usual Spanish setting name against "Text size" (9); a row label that wraps',
+  'common.display.sizes.larger': '"Más grande" (10) against "Larger" (6): Spanish has no one-word comparative here; a segment label that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

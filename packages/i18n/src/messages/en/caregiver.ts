@@ -799,8 +799,7 @@ export const caregiver = {
       romanization: 'Romanization',
       always: 'Always shown',
       tap: 'Hidden until tap',
-      language: 'Language',
-      note: "These choices change only this preview. No learner's settings change.",
+      note: "Romanization changes only this preview, never a learner's settings. Language and text size apply to every screen on this device.",
       done: { cta: 'Done' },
     },
     /** The episode outline (section 4.6). */

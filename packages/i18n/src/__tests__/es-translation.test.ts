@@ -193,4 +193,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'learner.presenter.timer.add.cta',
   'learner.presenter.timer.minutes',
   'learner.presenter.timer.seconds',
+  // Owner items 6 and 7: the Aa sign of the Display sheet, a glyph hidden from assistive tech.
+  'common.display.glyph',
 ];

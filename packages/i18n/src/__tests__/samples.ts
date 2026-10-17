@@ -6,11 +6,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.cardArt': [['Book']],
   'a11y.tabPosition': [['Learning Route', 2, 4]],
   'a11y.koreanItem': [[{ ko: 'x', romanization: 'g', gloss: 'dog' }], [{ ko: 'x', romanization: 'g' }]],
-  'learner.language.sameAsDevice': [['English']],
-  'learner.language.confirmProfile': [['English']],
-  'learner.language.confirmDevice': [['English']],
-  'learner.language.confirmUse': [['English']],
-  'learner.language.confirmBack': [['English']],
   'learner.createProfile.nameHint.tooLong': [[12]],
   'learner.createProfile.step': [[1, 3], [2, 2]],
   'learner.firstQuest.summary': [[1, 1, 1], [3, 12, 2]],
@@ -840,4 +835,5 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.classScope.notice': [['Mina', 'Saturday Class B']],
   'console.reportScope.firstTry': [[0], [76], [100]],
   'learner.classUpdate.moved': [['Mina', 'Saturday Class B']],
+  'common.display.back': [['English'], ['Español']],
 };

@@ -21,14 +21,25 @@ describe('learner.welcome (English wording as shipped)', () => {
   });
 });
 
-describe('learner.language (shared by the Welcome row and the Profile card)', () => {
-  it('names the group and builds the sheet sentences from an endonym', () => {
-    expect(m.learner.language.groupLabel).toBe('Language');
-    expect(m.learner.language.sameAsDevice('English')).toBe('Same as this device (English)');
-    expect(m.learner.language.confirmProfile('Español')).toBe('Use Español for this profile?');
-    expect(m.learner.language.confirmDevice('한국어')).toBe('Use 한국어 on this device?');
-    expect(m.learner.language.confirmUse('English')).toBe('Use English');
-    expect(m.learner.language.confirmBack('English')).toBe('Back to English');
+describe('learner.language (the Welcome row) and common.display (the Display sheet, owner items 6 and 7)', () => {
+  it('names the Welcome group; the per-profile sentences are gone', () => {
+    expect(m.learner.language).toEqual({ groupLabel: 'Language' });
+  });
+
+  it('words the Display sheet once for every surface', () => {
+    const d = m.common.display;
+    expect([d.open, d.title, d.summary, d.language, d.textSize]).toEqual(['Display', 'Display', 'Language and text size', 'Language on this device', 'Text size']);
+    expect(d.sizes).toEqual({ standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' });
+    expect(d.sample).toBe('Text looks like this.');
+    expect(d.note).toBe('Every screen on this device uses these.');
+    expect(d.back('English')).toBe('Back to English');
+    expect([d.done.cta, d.close]).toEqual(['Done', 'Close']);
+  });
+
+  it('Spanish and Korean word the sheet too, with no particle on the endonym', () => {
+    expect(getMessages('es').common.display.back('English')).toBe('Volver a English');
+    expect(getMessages('ko').common.display.back('English')).toBe('돌아가기: English');
+    expect(getMessages('ko').common.display.sizes).toEqual({ standard: '보통', large: '크게', larger: '더 크게', largest: '가장 크게' });
   });
 });
 
@@ -116,10 +127,8 @@ describe('learner.profile (English wording as shipped)', () => {
     expect([p.install.label, p.install.a11yLabel]).toEqual(['Install on this device', 'Install Hangul Route on this device']);
   });
 
-  it('has the Language card and the reading-practice switch', () => {
-    expect(p.language.title).toBe('Language');
-    expect(p.language.thisProfile).toBe('This profile');
-    expect(p.language.deviceDefault).toBe('New profiles and this device start in:');
+  it('has the reading-practice switch; the language lives on the Display sheet', () => {
+    expect('language' in p).toBe(false);
     expect(p.reading.title).toBe('Reading practice');
     expect(p.reading.hideUntilTap).toBe('Hide romanization until I tap');
   });

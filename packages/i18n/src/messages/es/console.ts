@@ -249,8 +249,9 @@ export const consoleMsgs = {
     failed: 'No se realizó. Reintenta.',
   },
 
-  language: {
-    label: 'Idioma',
+  docTitle: {
+    console: 'Consola — Hangul Route',
+    signIn: 'Acceso para adultos — Hangul Route',
   },
   codeExpiry: {
     none: 'aún sin código',
@@ -847,7 +848,8 @@ export const consoleMsgs = {
       strokeGuide: 'Guía de trazos',
       strokeNote: 'Simplificada: no es una referencia de caligrafía.',
       sound: 'Con sonido',
-      language: 'Idioma de la presentación',
+      slidesLanguage: 'Idioma de diapositivas',
+      sameAsDevice: 'Igual que este dispositivo',
     },
     picker: {
       title: 'Elegir ayudantes',

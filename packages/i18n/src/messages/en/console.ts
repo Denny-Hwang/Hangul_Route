@@ -304,9 +304,10 @@ export const consoleMsgs = {
     failed: "Didn't go through. Try again.",
   },
 
-  /** Header language select (`LanguageSelect`); hidden while only English ships. */
-  language: {
-    label: 'Language',
+  /** `document.title` of the grown-up pages, in the console's language (owner items 6 and 7). */
+  docTitle: {
+    console: 'Console — Hangul Route',
+    signIn: 'Grown-ups sign in — Hangul Route',
   },
   /** Join-code expiry (`codeExpiry`). */
   codeExpiry: {
@@ -1017,7 +1018,9 @@ export const consoleMsgs = {
       strokeGuide: 'Stroke guide',
       strokeNote: 'Simplified: not a calligraphy reference.',
       sound: 'Play sounds',
-      language: 'Presenter language',
+      /** The deck's slide language; the default follows the presenting device and puts no language in the link. */
+      slidesLanguage: 'Slides language',
+      sameAsDevice: 'Same as this device',
     },
     picker: {
       title: 'Helper picker',

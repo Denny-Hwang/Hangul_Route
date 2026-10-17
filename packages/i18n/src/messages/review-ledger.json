@@ -1,9 +1,9 @@
 {
   "es": {
     "common": {
-      "enSha": "7cc2ec402ad12367003032ff9294b962f33044626136dd179edfdee9a3509ab3",
+      "enSha": "5d43eb0d18a690785669b03dd4dbdfb5667a16d0ca354b1d388783d30586863d",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "a11y": {
       "enSha": "aec19c93bd3c12839e6771b81bff6d8b7a9f13b85aefbc4a0bf0f6507277477a",
@@ -11,19 +11,19 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "a954d1ec11b5b26cbe31a5d216cebd0e62a7f1765b505fea212bed9a9f71329d",
+      "enSha": "021dcd3da20a0b01420b71d9d5dbb8b5e2b01de98be4164172ea6e3cb7b7ef5d",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "556e1d44d46d4d7b7275e2e11cfc72ea2c4b9b902be9c6ba0331d77b6dd50b18",
+      "enSha": "1777bb8b5b8154a684fca5cbfcace65d511cd2777bc27aeb4c5d4e967c511cfa",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "console": {
-      "enSha": "0641f4303452884c0a5c9d66f5869e7eb7ba144213623ba2fa8b1a01d16bdb06",
+      "enSha": "71b43fdf796087c3cbd54deb114ab0a46e7aec1ac352f11bf313b6dd52a7436b",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "landing": {
       "enSha": "e7194f2897327db11fceb0a362b9d5e9d072fff2e0b6350e71c5ad36d0384451",
@@ -38,9 +38,9 @@
   },
   "ko": {
     "common": {
-      "enSha": "7cc2ec402ad12367003032ff9294b962f33044626136dd179edfdee9a3509ab3",
+      "enSha": "5d43eb0d18a690785669b03dd4dbdfb5667a16d0ca354b1d388783d30586863d",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "a11y": {
       "enSha": "aec19c93bd3c12839e6771b81bff6d8b7a9f13b85aefbc4a0bf0f6507277477a",
@@ -48,19 +48,19 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "a954d1ec11b5b26cbe31a5d216cebd0e62a7f1765b505fea212bed9a9f71329d",
+      "enSha": "021dcd3da20a0b01420b71d9d5dbb8b5e2b01de98be4164172ea6e3cb7b7ef5d",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "556e1d44d46d4d7b7275e2e11cfc72ea2c4b9b902be9c6ba0331d77b6dd50b18",
+      "enSha": "1777bb8b5b8154a684fca5cbfcace65d511cd2777bc27aeb4c5d4e967c511cfa",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "console": {
-      "enSha": "0641f4303452884c0a5c9d66f5869e7eb7ba144213623ba2fa8b1a01d16bdb06",
+      "enSha": "71b43fdf796087c3cbd54deb114ab0a46e7aec1ac352f11bf313b6dd52a7436b",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-14"
+      "reviewedAt": "2026-10-17"
     },
     "landing": {
       "enSha": "e7194f2897327db11fceb0a362b9d5e9d072fff2e0b6350e71c5ad36d0384451",
