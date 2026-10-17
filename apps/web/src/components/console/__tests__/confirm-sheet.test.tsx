@@ -15,7 +15,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useMessages: () => i18n.getMessages('en') };
 });
 
-import { ConfirmSheet, tabTarget, useConfirm, type ConfirmAsk } from '../ConfirmSheet';
+import { ConfirmSheet, inertOthers, tabTarget, useConfirm, type ConfirmAsk } from '../ConfirmSheet';
 
 const en = getMessages('en');
 
@@ -110,6 +110,100 @@ describe('ConfirmSheet (console)', () => {
     const preventDefault = vi.fn();
     act(() => byTestId(r.root, 'confirm-sheet')[0]!.props.onKeyDown({ key: 'Tab', shiftKey: false, preventDefault }));
     expect(preventDefault).not.toHaveBeenCalled();
+  });
+});
+
+describe('ConfirmSheet keeps the keyboard while open, wherever focus went (DN-6 review)', () => {
+  const ask: ConfirmAsk = { title: 'Archive this plan?', confirmLabel: en.console.confirm.archive };
+  type Key = { key: string; shiftKey: boolean; defaultPrevented?: boolean; preventDefault: () => void };
+
+  function withDocument(activeElement: unknown): { keydown: () => ((event: Key) => void) | undefined; removed: string[] } {
+    const listeners = new Map<string, (event: Key) => void>();
+    const removed: string[] = [];
+    vi.stubGlobal('document', {
+      activeElement,
+      body: null,
+      addEventListener: (type: string, fn: (event: Key) => void) => listeners.set(type, fn),
+      removeEventListener: (type: string) => {
+        removed.push(type);
+        listeners.delete(type);
+      },
+    });
+    return { keydown: () => listeners.get('keydown'), removed };
+  }
+
+  it('Escape with focus outside the sheet (a click on its words) still answers no; a key the sheet answered is not answered twice', () => {
+    const doc = withDocument({ id: 'page-text' });
+    const onAnswer = vi.fn();
+    render(ask, onAnswer);
+    const preventDefault = vi.fn();
+    act(() => doc.keydown()!({ key: 'Escape', shiftKey: false, preventDefault }));
+    expect(onAnswer).toHaveBeenCalledWith(false);
+    expect(preventDefault).toHaveBeenCalled();
+    onAnswer.mockClear();
+    act(() => doc.keydown()!({ key: 'Escape', shiftKey: false, defaultPrevented: true, preventDefault }));
+    expect(onAnswer).not.toHaveBeenCalled();
+    act(() => mounted?.unmount());
+    mounted = null;
+    expect(doc.removed).toEqual(['keydown']);
+  });
+
+  it('Tab from outside the sheet comes back into it: Tab to Cancel, Shift+Tab to the verb', () => {
+    const focused: string[] = [];
+    const cancelButton = { focus: () => focused.push('cancel') };
+    const confirmButton = { focus: () => focused.push('confirm') };
+    const doc = withDocument({ id: 'page-text' });
+    act(() => {
+      mounted = create(<ConfirmSheet ask={ask} onAnswer={vi.fn()} />, {
+        createNodeMock: (el) =>
+          (el.props as Record<string, unknown>)['data-testid'] === 'confirm-sheet'
+            ? { querySelectorAll: () => [cancelButton, confirmButton] }
+            : { focus: () => undefined, querySelectorAll: () => [] },
+      });
+    });
+    const preventDefault = vi.fn();
+    act(() => doc.keydown()!({ key: 'Tab', shiftKey: false, preventDefault }));
+    act(() => doc.keydown()!({ key: 'Tab', shiftKey: true, preventDefault }));
+    expect(focused).toEqual(['cancel', 'confirm']);
+    expect(preventDefault).toHaveBeenCalledTimes(2);
+  });
+
+  it('the page behind is inert while it is open (its scrim and the styles are not), and comes back after', () => {
+    const node = (tagName: string, className = ''): Record<string, unknown> & { attrs: Set<string> } => {
+      const attrs = new Set<string>();
+      return {
+        tagName,
+        attrs,
+        classList: { contains: (name: string) => className.split(' ').includes(name) },
+        hasAttribute: (name: string) => attrs.has(name),
+        setAttribute: (name: string) => attrs.add(name),
+        removeAttribute: (name: string) => attrs.delete(name),
+      };
+    };
+    const body = node('BODY');
+    const header = node('HEADER');
+    const main = node('MAIN');
+    const footer = node('FOOTER');
+    const text = node('P');
+    const holder = node('DIV');
+    const style = node('STYLE');
+    const scrim = node('DIV', 'hr-confirm-scrim');
+    const sheet = node('DIV', 'hr-confirm');
+    const already = node('ASIDE');
+    already.attrs.add('inert');
+    Object.assign(body, { children: [header, main, footer, already] });
+    Object.assign(main, { parentElement: body, children: [text, holder] });
+    Object.assign(holder, { parentElement: main, children: [style, scrim, sheet] });
+    for (const n of [header, footer, already]) Object.assign(n, { parentElement: body });
+    Object.assign(text, { parentElement: main });
+    Object.assign(sheet, { parentElement: holder });
+    const undo = inertOthers(sheet as never, body as never);
+    expect([header, footer, text].map((n) => n.attrs.has('inert'))).toEqual([true, true, true]);
+    expect([style, scrim, sheet, main, holder].map((n) => n.attrs.has('inert'))).toEqual([false, false, false, false, false]);
+    undo();
+    expect([header, footer, text].map((n) => n.attrs.has('inert'))).toEqual([false, false, false]);
+    // What was inert before the sheet stays inert after it.
+    expect(already.attrs.has('inert')).toBe(true);
   });
 });
 

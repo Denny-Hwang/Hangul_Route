@@ -12,8 +12,10 @@ import { rem } from '@/lib/console/rem';
  * named by its question and described by its line; a bottom sheet below 600 px and a centred dialog of the reading
  * width from 600 px. The safe choice (Cancel) comes first and takes focus; the confirm is a verb, never "OK"
  * (`console.confirm.*`), and a destructive one says so in its words, never by colour. Escape and the backdrop cancel;
- * Tab stays inside; focus goes back to the control that opened it. The console has no history bridge (the App Router
- * owns the history), so the browser back is not caught here: it leaves the page as it always did, and the sheet with it.
+ * Tab stays inside; focus goes back to the control that opened it. Escape and Tab are caught for the whole document
+ * while it is open, and the page behind is `inert`, so focus that left the sheet (a click on its words puts it on the
+ * page) can neither reach the page nor lose Escape. The console has no history bridge (the App Router owns the
+ * history), so the browser back is not caught here: it leaves the page as it always did, and the sheet with it.
  */
 export interface ConfirmAsk {
   /** The question, the sheet's name (the page's existing question). */
@@ -29,6 +31,8 @@ const alphaHex = Math.round(shadows.modal.shadowOpacity * 255)
   .padStart(2, '0');
 const MODAL_SHADOW = `0 ${shadows.modal.shadowOffset.height}px ${shadows.modal.shadowRadius}px ${shadows.modal.shadowColor}${alphaHex}`;
 
+// `max-height: 90vh` keeps a strip of the page in view above the sheet on a short phone, as the console's Display
+// sheet does (a viewport share, not a size token); the buttons' row basis is the design-system ConfirmSheet's 4 x xxxl.
 const CONFIRM_CSS = `
 .hr-confirm-scrim{position:fixed;inset:0;z-index:${z.modal};background:${colors.surface.overlay}}
 .hr-confirm{position:fixed;left:0;right:0;bottom:0;z-index:${z.modal};max-height:90vh;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:${rem(spacing.md)};background:${colors.surface.paper};color:${colors.text.primary};border-radius:${radii.xl}px ${radii.xl}px 0 0;padding:${rem(spacing.xl)} ${layout.gutter.compact}px;box-shadow:${MODAL_SHADOW};text-align:left}
@@ -39,7 +43,7 @@ const CONFIRM_CSS = `
 .hr-confirm-cancel{border:${borderWidth.base}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary}}
 .hr-confirm-ok{border:${borderWidth.base}px solid ${colors.brand.primary};background:${colors.brand.primary};color:${colors.text.onPrimary}}
 .hr-confirm :focus-visible{outline:${borderWidth.thick}px solid ${colors.border.focus};outline-offset:${borderWidth.base}px}
-@media (min-width:${layout.breakpoint.regular / 16}em){.hr-confirm{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;border-radius:${radii.xl}px;padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}.hr-confirm-actions{flex-direction:row;flex-wrap:wrap}.hr-confirm-button{flex:1 1 12rem}}`;
+@media (min-width:${layout.breakpoint.regular / 16}em){.hr-confirm{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;border-radius:${radii.xl}px;padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}.hr-confirm-actions{flex-direction:row;flex-wrap:wrap}.hr-confirm-button{flex:1 1 ${rem(spacing.xxxl * 4)}}}`;
 
 const TABBABLE = 'button:not([disabled])';
 
@@ -53,6 +57,41 @@ export function tabTarget<T>(items: readonly T[], active: unknown, shiftKey: boo
   return null;
 }
 
+/** The part of a key event the sheet reads. */
+interface SheetKey {
+  key: string;
+  shiftKey: boolean;
+  defaultPrevented?: boolean;
+  preventDefault: () => void;
+}
+
+/** A node of the page, as far as the sheet walks it to make the rest of the page inert. */
+interface PageNode {
+  parentElement?: PageNode | null;
+  children?: ArrayLike<PageNode>;
+  tagName?: string;
+  classList?: { contains: (name: string) => boolean };
+  hasAttribute?: (name: string) => boolean;
+  setAttribute?: (name: string, value: string) => void;
+  removeAttribute?: (name: string) => void;
+}
+
+/** Marks every element of the page that is not the sheet (or its scrim, or a stylesheet) `inert`; returns the undo. */
+export function inertOthers(sheetNode: PageNode | null, body: PageNode | null): () => void {
+  const marked: PageNode[] = [];
+  for (let node = sheetNode; node && node !== body && node.parentElement; node = node.parentElement) {
+    for (const sibling of Array.from(node.parentElement.children ?? [])) {
+      if (sibling === node || sibling.tagName === 'STYLE' || sibling.tagName === 'SCRIPT' || sibling.classList?.contains('hr-confirm-scrim')) continue;
+      if (typeof sibling.setAttribute !== 'function' || sibling.hasAttribute?.('inert')) continue;
+      sibling.setAttribute('inert', '');
+      marked.push(sibling);
+    }
+  }
+  return () => {
+    for (const node of marked) node.removeAttribute?.('inert');
+  };
+}
+
 export function ConfirmSheet({ ask, onAnswer }: { ask: ConfirmAsk; onAnswer: (yes: boolean) => void }): JSX.Element {
   const m = useMessages();
   const id = useId();
@@ -60,28 +99,51 @@ export function ConfirmSheet({ ask, onAnswer }: { ask: ConfirmAsk; onAnswer: (ye
   const messageId = `${id}-message`;
   const sheet = useRef<HTMLDivElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);
+  const latest = useRef(onAnswer);
+  latest.current = onAnswer;
 
-  // The safe choice takes focus; the opener gets it back when the sheet goes.
+  // The safe choice takes focus; the opener gets it back when the sheet goes. The page behind is inert meanwhile.
   useEffect(() => {
-    const opener = typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null);
+    const doc = typeof document === 'undefined' ? null : document;
+    const opener = doc ? (doc.activeElement as HTMLElement | null) : null;
     cancel.current?.focus();
-    return () => opener?.focus?.();
+    const undoInert = inertOthers(sheet.current as PageNode | null, (doc?.body as PageNode | undefined) ?? null);
+    return () => {
+      undoInert();
+      opener?.focus?.();
+    };
   }, []);
 
-  const onKeyDown = (event: { key: string; shiftKey: boolean; preventDefault: () => void }): void => {
+  /** Escape answers no; Tab goes round the two buttons, and from anywhere outside the sheet comes back into it. */
+  const keyAction = (event: SheetKey): void => {
     if (event.key === 'Escape') {
       event.preventDefault();
-      onAnswer(false);
+      latest.current(false);
       return;
     }
     if (event.key !== 'Tab') return;
-    // Tab stays inside the sheet: the two buttons, round and round.
     const items = Array.from(sheet.current?.querySelectorAll<HTMLElement>(TABBABLE) ?? []);
-    const next = tabTarget(items, typeof document === 'undefined' ? null : document.activeElement, event.shiftKey);
+    const active = typeof document === 'undefined' ? null : document.activeElement;
+    const inside = active !== null && items.includes(active as HTMLElement);
+    const next = inside || items.length === 0 ? tabTarget(items, active, event.shiftKey) : event.shiftKey ? items[items.length - 1]! : items[0]!;
     if (next === null) return;
     event.preventDefault();
     next.focus();
   };
+  const onKeyDown = (event: SheetKey): void => keyAction(event);
+
+  // The same keys for the whole document while the sheet is open (focus can leave the sheet on a click on its words);
+  // a key the sheet's own handler already answered is not answered twice.
+  useEffect(() => {
+    if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return undefined;
+    const onDocumentKey = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented) return;
+      keyAction(event);
+    };
+    document.addEventListener('keydown', onDocumentKey);
+    return () => document.removeEventListener('keydown', onDocumentKey);
+    // keyAction reads the sheet and the answer through refs: one listener for the sheet's life.
+  }, []);
 
   return (
     <>
