@@ -10,14 +10,14 @@ import { statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { appRoot, listFiles, readJamo, readVocabTopics } from './content-sources.mjs';
 import { ffmpeg, ffprobe } from './ffmpeg.mjs';
-import { AUDIO_DIR, clipSets, clipStatus, evaluateReport, evaluateSet, parseEbur128, parseProbe, recordingRows, vocabRecordingRows } from './lib.mjs';
+import { AUDIO_DIR, clipSets, clipStatus, evaluateReport, evaluateSet, parseEbur128, parseProbe, recordingRows, vocabClipRefs, vocabRecordingRows } from './lib.mjs';
 
 const args = process.argv.slice(2);
 
 if (args.includes('--status')) {
   const refs = [
     ...readJamo().map((j) => j.audioRef),
-    ...readVocabTopics().flatMap((t) => (t.items ?? []).map((i) => i.audioRef).filter(Boolean)),
+    ...vocabClipRefs(readVocabTopics()),
   ];
   const status = clipStatus(refs, listFiles(join(appRoot, AUDIO_DIR)).filter((f) => f.endsWith('.mp3')));
   process.stdout.write(`${status.missing.length} of ${status.total} clips missing (${status.present} recorded)\n`);

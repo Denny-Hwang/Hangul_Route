@@ -116,6 +116,10 @@ export const TAKE_GAP_S: number;
 export function recordingRows(jamo: readonly RecordingJamo[]): RecordingRow[];
 export function nameRows(jamo: readonly RecordingJamo[]): NameRow[];
 export function vocabRecordingRows(topicFiles: ReadonlyArray<{ items?: readonly object[] }>): VocabRecordingRow[];
+/** `vocab:<slug>` => `audio/vocab/<slug>.mp3`. */
+export function vocabAudioRef(id: string): string;
+/** Every word's clip path (its own `audioRef`, else derived from its id), in file order. */
+export function vocabClipRefs(topicFiles: ReadonlyArray<{ items?: readonly object[] }>): string[];
 export function renderRecordingScript(rows: readonly RecordingRow[], names: readonly NameRow[], vocab: readonly VocabRecordingRow[]): string;
 export function parseJamoSource(source: string): ParsedJamo[];
 export function evaluateReport(kind: ClipKind, report: ClipReport): string[];

@@ -221,6 +221,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:food-apple",
     "senseGroup": "sagwa",
+    "audioRef": "audio/vocab/sagwa-apple.mp3",
     "glosses": {
       "en": "apple",
       "es": "manzana",
@@ -238,6 +239,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:food-banana",
+    "audioRef": "audio/vocab/banana.mp3",
     "glosses": {
       "en": "banana",
       "es": "banana",
@@ -255,6 +257,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:food-milk",
+    "audioRef": "audio/vocab/uyu.mp3",
     "glosses": {
       "en": "milk",
       "es": "leche",
@@ -272,6 +275,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:food-bread",
+    "audioRef": "audio/vocab/ppang.mp3",
     "glosses": {
       "en": "bread",
       "es": "pan",
@@ -290,6 +294,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "card:rice",
     "senseNote": "It also means a meal. Uncooked rice is ssal.",
+    "audioRef": "audio/vocab/bap.mp3",
     "glosses": {
       "en": "cooked rice",
       "es": "arroz cocido",
@@ -308,6 +313,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "card:kimchi",
     "senseNote": "A Korean side dish of fermented vegetables, often spicy.",
+    "audioRef": "audio/vocab/gimchi.mp3",
     "glosses": {
       "en": "kimchi",
       "es": "kimchi",
@@ -325,6 +331,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "card:kimbap",
+    "audioRef": "audio/vocab/gimbap.mp3",
     "glosses": {
       "en": "seaweed rice roll",
       "es": "rollo de arroz con alga",
@@ -342,6 +349,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:food-ramyeon",
+    "audioRef": "audio/vocab/ramyeon.mp3",
     "glosses": {
       "en": "instant noodles",
       "es": "fideos instantáneos",
@@ -359,6 +367,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:food-water",
+    "audioRef": "audio/vocab/mul.mp3",
     "glosses": {
       "en": "water",
       "es": "agua",
@@ -377,6 +386,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:food-egg",
     "senseNote": "Also called gyeran, which is just as common.",
+    "audioRef": "audio/vocab/dalgyal.mp3",
     "glosses": {
       "en": "egg",
       "es": "huevo",
@@ -394,6 +404,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:food-strawberry",
+    "audioRef": "audio/vocab/ttalgi.mp3",
     "glosses": {
       "en": "strawberry",
       "es": "fresa",
@@ -412,6 +423,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:food-tteok",
     "senseNote": "A soft, chewy Korean food made from rice.",
+    "audioRef": "audio/vocab/tteok.mp3",
     "glosses": {
       "en": "rice cake",
       "es": "pastel de arroz",
@@ -429,6 +441,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "card:tiger",
+    "audioRef": "audio/vocab/horangi.mp3",
     "glosses": {
       "en": "tiger",
       "es": "tigre",
@@ -446,6 +459,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:animal-cat",
+    "audioRef": "audio/vocab/goyangi.mp3",
     "glosses": {
       "en": "cat",
       "es": "gato",
@@ -464,6 +478,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:animal-puppy",
     "senseNote": "Also the everyday word for a pet dog. The plain word for dog is gae.",
+    "audioRef": "audio/vocab/gangaji.mp3",
     "glosses": {
       "en": "puppy",
       "es": "perrito",
@@ -481,6 +496,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:animal-rabbit",
+    "audioRef": "audio/vocab/tokki.mp3",
     "glosses": {
       "en": "rabbit",
       "es": "conejo",
@@ -498,6 +514,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:animal-bear",
+    "audioRef": "audio/vocab/gom.mp3",
     "glosses": {
       "en": "bear",
       "es": "oso",
@@ -516,6 +533,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:animal-bird",
     "senseGroup": "sae",
+    "audioRef": "audio/vocab/sae-bird.mp3",
     "glosses": {
       "en": "bird",
       "es": "pájaro",
@@ -533,6 +551,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:animal-fish",
+    "audioRef": "audio/vocab/mulgogi.mp3",
     "glosses": {
       "en": "fish",
       "es": "pez",
@@ -550,6 +569,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:animal-duck",
+    "audioRef": "audio/vocab/ori.mp3",
     "glosses": {
       "en": "duck",
       "es": "pato",
@@ -567,6 +587,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:animal-fox",
+    "audioRef": "audio/vocab/yeou.mp3",
     "glosses": {
       "en": "fox",
       "es": "zorro",
@@ -584,6 +605,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:animal-monkey",
+    "audioRef": "audio/vocab/wonsungi.mp3",
     "glosses": {
       "en": "monkey",
       "es": "mono",
@@ -601,6 +623,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:animal-elephant",
+    "audioRef": "audio/vocab/kokkiri.mp3",
     "glosses": {
       "en": "elephant",
       "es": "elefante",
@@ -618,6 +641,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:animal-butterfly",
+    "audioRef": "audio/vocab/nabi.mp3",
     "glosses": {
       "en": "butterfly",
       "es": "mariposa",
@@ -635,6 +659,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-red",
+    "audioRef": "audio/vocab/ppalgansaek.mp3",
     "glosses": {
       "en": "red",
       "es": "rojo",
@@ -652,6 +677,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-orange",
+    "audioRef": "audio/vocab/juhwangsaek.mp3",
     "glosses": {
       "en": "orange",
       "es": "naranja",
@@ -669,6 +695,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-yellow",
+    "audioRef": "audio/vocab/noransaek.mp3",
     "glosses": {
       "en": "yellow",
       "es": "amarillo",
@@ -686,6 +713,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-green",
+    "audioRef": "audio/vocab/choroksaek.mp3",
     "glosses": {
       "en": "green",
       "es": "verde",
@@ -703,6 +731,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-blue",
+    "audioRef": "audio/vocab/paransaek.mp3",
     "glosses": {
       "en": "blue",
       "es": "azul",
@@ -720,6 +749,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-purple",
+    "audioRef": "audio/vocab/borasaek.mp3",
     "glosses": {
       "en": "purple",
       "es": "morado",
@@ -737,6 +767,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-pink",
+    "audioRef": "audio/vocab/bunhongsaek.mp3",
     "glosses": {
       "en": "pink",
       "es": "rosa",
@@ -754,6 +785,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-skyblue",
+    "audioRef": "audio/vocab/haneulsaek.mp3",
     "glosses": {
       "en": "sky blue",
       "es": "celeste",
@@ -771,6 +803,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:color-brown",
+    "audioRef": "audio/vocab/galsaek.mp3",
     "glosses": {
       "en": "brown",
       "es": "marrón",
@@ -788,6 +821,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:color-gray",
+    "audioRef": "audio/vocab/hoesaek.mp3",
     "glosses": {
       "en": "gray",
       "es": "gris",
@@ -805,6 +839,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-white",
+    "audioRef": "audio/vocab/hayansaek.mp3",
     "glosses": {
       "en": "white",
       "es": "blanco",
@@ -822,6 +857,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:color-black",
+    "audioRef": "audio/vocab/geomeunsaek.mp3",
     "glosses": {
       "en": "black",
       "es": "negro",
@@ -840,6 +876,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:count-1",
     "senseNote": "Before a counter word, as in han gae (one thing), it becomes han.",
+    "audioRef": "audio/vocab/hana.mp3",
     "glosses": {
       "en": "one",
       "es": "uno",
@@ -858,6 +895,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:count-2",
     "senseNote": "Before a counter word, as in du gae (two things), it becomes du.",
+    "audioRef": "audio/vocab/dul.mp3",
     "glosses": {
       "en": "two",
       "es": "dos",
@@ -876,6 +914,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:count-3",
     "senseNote": "Before a counter word, as in se gae (three things), it becomes se.",
+    "audioRef": "audio/vocab/set.mp3",
     "glosses": {
       "en": "three",
       "es": "tres",
@@ -894,6 +933,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:count-4",
     "senseNote": "Before a counter word, as in ne gae (four things), it becomes ne.",
+    "audioRef": "audio/vocab/net.mp3",
     "glosses": {
       "en": "four",
       "es": "cuatro",
@@ -911,6 +951,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-5",
+    "audioRef": "audio/vocab/daseot.mp3",
     "glosses": {
       "en": "five",
       "es": "cinco",
@@ -928,6 +969,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-6",
+    "audioRef": "audio/vocab/yeoseot.mp3",
     "glosses": {
       "en": "six",
       "es": "seis",
@@ -945,6 +987,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-7",
+    "audioRef": "audio/vocab/ilgop.mp3",
     "glosses": {
       "en": "seven",
       "es": "siete",
@@ -962,6 +1005,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-8",
+    "audioRef": "audio/vocab/yeodeol.mp3",
     "glosses": {
       "en": "eight",
       "es": "ocho",
@@ -979,6 +1023,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-9",
+    "audioRef": "audio/vocab/ahop.mp3",
     "glosses": {
       "en": "nine",
       "es": "nueve",
@@ -997,6 +1042,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:count-10",
     "senseGroup": "yeol",
+    "audioRef": "audio/vocab/yeol-ten.mp3",
     "glosses": {
       "en": "ten",
       "es": "diez",
@@ -1015,6 +1061,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:count-20",
     "senseNote": "Before a counter word, as in seumu gae (twenty things), it becomes seumu.",
+    "audioRef": "audio/vocab/seumul.mp3",
     "glosses": {
       "en": "twenty",
       "es": "veinte",
@@ -1034,6 +1081,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:count-0",
     "senseNote": "Native Korean has no zero; this word comes from Chinese. In phone numbers people say gong.",
     "senseGroup": "yeong",
+    "audioRef": "audio/vocab/yeong-zero.mp3",
     "glosses": {
       "en": "zero",
       "es": "cero",
@@ -1052,6 +1100,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:family-mom",
     "senseNote": "The everyday word. The formal word for mother is eomeoni.",
+    "audioRef": "audio/vocab/eomma.mp3",
     "glosses": {
       "en": "mom",
       "es": "mamá",
@@ -1070,6 +1119,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:family-dad",
     "senseNote": "The everyday word. The formal word for father is abeoji.",
+    "audioRef": "audio/vocab/appa.mp3",
     "glosses": {
       "en": "dad",
       "es": "papá",
@@ -1087,6 +1137,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:family-grandma",
+    "audioRef": "audio/vocab/halmeoni.mp3",
     "glosses": {
       "en": "grandmother",
       "es": "abuela",
@@ -1104,6 +1155,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 3,
     "visual": "word:family-grandpa",
+    "audioRef": "audio/vocab/harabeoji.mp3",
     "glosses": {
       "en": "grandfather",
       "es": "abuelo",
@@ -1123,6 +1175,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:family-eonni",
     "senseNote": "A woman or girl calls her older sister this. A man or boy says nuna.",
     "senseGroup": "older-sister",
+    "audioRef": "audio/vocab/eonni.mp3",
     "glosses": {
       "en": "older sister (said by a woman or girl)",
       "es": "hermana mayor (lo dice una mujer o niña)",
@@ -1142,6 +1195,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:family-nuna",
     "senseNote": "A man or boy calls his older sister this. A woman or girl says eonni.",
     "senseGroup": "older-sister",
+    "audioRef": "audio/vocab/nuna.mp3",
     "glosses": {
       "en": "older sister (said by a man or boy)",
       "es": "hermana mayor (lo dice un hombre o niño)",
@@ -1161,6 +1215,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:family-oppa",
     "senseNote": "A woman or girl calls her older brother this. A man or boy says hyeong.",
     "senseGroup": "older-brother",
+    "audioRef": "audio/vocab/oppa.mp3",
     "glosses": {
       "en": "older brother (said by a woman or girl)",
       "es": "hermano mayor (lo dice una mujer o niña)",
@@ -1180,6 +1235,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:family-hyeong",
     "senseNote": "A man or boy calls his older brother this. A woman or girl says oppa.",
     "senseGroup": "older-brother",
+    "audioRef": "audio/vocab/hyeong.mp3",
     "glosses": {
       "en": "older brother (said by a man or boy)",
       "es": "hermano mayor (lo dice un hombre o niño)",
@@ -1198,6 +1254,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:family-dongsaeng",
     "senseNote": "Anyone can say it, for a younger brother or a younger sister.",
+    "audioRef": "audio/vocab/dongsaeng.mp3",
     "glosses": {
       "en": "younger brother or sister",
       "es": "hermano o hermana menor",
@@ -1215,6 +1272,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:family-baby",
+    "audioRef": "audio/vocab/agi.mp3",
     "glosses": {
       "en": "baby",
       "es": "bebé",
@@ -1232,6 +1290,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:family-family",
+    "audioRef": "audio/vocab/gajok.mp3",
     "glosses": {
       "en": "family",
       "es": "familia",
@@ -1250,6 +1309,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:family-me",
     "senseNote": "The casual word. To be polite, say jeo.",
+    "audioRef": "audio/vocab/na.mp3",
     "glosses": {
       "en": "I, me",
       "es": "yo",
@@ -1267,6 +1327,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-school",
+    "audioRef": "audio/vocab/hakgyo.mp3",
     "glosses": {
       "en": "school",
       "es": "escuela",
@@ -1285,6 +1346,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:school-teacher",
     "senseNote": "Also how you address a teacher; the ending nim shows respect.",
+    "audioRef": "audio/vocab/seonsaengnim.mp3",
     "glosses": {
       "en": "teacher",
       "es": "maestro o maestra",
@@ -1302,6 +1364,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-friend",
+    "audioRef": "audio/vocab/chingu.mp3",
     "glosses": {
       "en": "friend",
       "es": "amigo o amiga",
@@ -1319,6 +1382,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "card:book",
+    "audioRef": "audio/vocab/chaek.mp3",
     "glosses": {
       "en": "book",
       "es": "libro",
@@ -1336,6 +1400,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-pencil",
+    "audioRef": "audio/vocab/yeonpil.mp3",
     "glosses": {
       "en": "pencil",
       "es": "lápiz",
@@ -1353,6 +1418,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-bag",
+    "audioRef": "audio/vocab/gabang.mp3",
     "glosses": {
       "en": "bag",
       "es": "bolsa o mochila",
@@ -1370,6 +1436,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-notebook",
+    "audioRef": "audio/vocab/gongchaek.mp3",
     "glosses": {
       "en": "notebook",
       "es": "cuaderno",
@@ -1387,6 +1454,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:school-eraser",
+    "audioRef": "audio/vocab/jiugae.mp3",
     "glosses": {
       "en": "eraser",
       "es": "goma de borrar",
@@ -1404,6 +1472,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-desk",
+    "audioRef": "audio/vocab/chaeksang.mp3",
     "glosses": {
       "en": "desk",
       "es": "escritorio",
@@ -1421,6 +1490,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-chair",
+    "audioRef": "audio/vocab/uija.mp3",
     "glosses": {
       "en": "chair",
       "es": "silla",
@@ -1438,6 +1508,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-scissors",
+    "audioRef": "audio/vocab/gawi.mp3",
     "glosses": {
       "en": "scissors",
       "es": "tijeras",
@@ -1455,6 +1526,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:school-board",
+    "audioRef": "audio/vocab/chilpan.mp3",
     "glosses": {
       "en": "blackboard",
       "es": "pizarrón",
@@ -1473,6 +1545,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:body-eye",
     "senseGroup": "nun",
+    "audioRef": "audio/vocab/nun-eye.mp3",
     "glosses": {
       "en": "eye",
       "es": "ojo",
@@ -1490,6 +1563,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:body-nose",
+    "audioRef": "audio/vocab/ko.mp3",
     "glosses": {
       "en": "nose",
       "es": "nariz",
@@ -1507,6 +1581,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:body-mouth",
+    "audioRef": "audio/vocab/ip.mp3",
     "glosses": {
       "en": "mouth",
       "es": "boca",
@@ -1524,6 +1599,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:body-ear",
+    "audioRef": "audio/vocab/gwi.mp3",
     "glosses": {
       "en": "ear",
       "es": "oreja",
@@ -1542,6 +1618,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:body-head",
     "senseNote": "It also means hair.",
+    "audioRef": "audio/vocab/meori.mp3",
     "glosses": {
       "en": "head",
       "es": "cabeza",
@@ -1559,6 +1636,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:body-face",
+    "audioRef": "audio/vocab/eolgul.mp3",
     "glosses": {
       "en": "face",
       "es": "cara",
@@ -1576,6 +1654,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:body-hand",
+    "audioRef": "audio/vocab/son.mp3",
     "glosses": {
       "en": "hand",
       "es": "mano",
@@ -1594,6 +1673,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:body-arm",
     "senseGroup": "pal",
+    "audioRef": "audio/vocab/pal-arm.mp3",
     "glosses": {
       "en": "arm",
       "es": "brazo",
@@ -1612,6 +1692,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:body-leg",
     "senseGroup": "dari",
+    "audioRef": "audio/vocab/dari-leg.mp3",
     "glosses": {
       "en": "leg",
       "es": "pierna",
@@ -1629,6 +1710,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:body-foot",
+    "audioRef": "audio/vocab/bal.mp3",
     "glosses": {
       "en": "foot",
       "es": "pie",
@@ -1647,6 +1729,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:body-belly",
     "senseGroup": "bae",
+    "audioRef": "audio/vocab/bae-belly.mp3",
     "glosses": {
       "en": "belly",
       "es": "barriga",
@@ -1666,6 +1749,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:body-tooth",
     "senseNote": "Also called chia, a more formal word.",
     "senseGroup": "i",
+    "audioRef": "audio/vocab/i-tooth.mp3",
     "glosses": {
       "en": "tooth",
       "es": "diente",
@@ -1683,6 +1767,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "card:mountain",
+    "audioRef": "audio/vocab/san.mp3",
     "glosses": {
       "en": "mountain",
       "es": "montaña",
@@ -1700,6 +1785,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "card:sea",
+    "audioRef": "audio/vocab/bada.mp3",
     "glosses": {
       "en": "sea",
       "es": "mar",
@@ -1717,6 +1803,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:nature-sky",
+    "audioRef": "audio/vocab/haneul.mp3",
     "glosses": {
       "en": "sky",
       "es": "cielo",
@@ -1735,6 +1822,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:nature-sun",
     "senseGroup": "hae",
+    "audioRef": "audio/vocab/hae-sun.mp3",
     "glosses": {
       "en": "sun",
       "es": "sol",
@@ -1753,6 +1841,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "card:moon",
     "senseGroup": "dal",
+    "audioRef": "audio/vocab/dal-moon.mp3",
     "glosses": {
       "en": "moon",
       "es": "luna",
@@ -1770,6 +1859,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:nature-star",
+    "audioRef": "audio/vocab/byeol.mp3",
     "glosses": {
       "en": "star",
       "es": "estrella",
@@ -1787,6 +1877,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:nature-tree",
+    "audioRef": "audio/vocab/namu.mp3",
     "glosses": {
       "en": "tree",
       "es": "árbol",
@@ -1804,6 +1895,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:nature-flower",
+    "audioRef": "audio/vocab/kkot.mp3",
     "glosses": {
       "en": "flower",
       "es": "flor",
@@ -1822,6 +1914,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:nature-rain",
     "senseGroup": "bi",
+    "audioRef": "audio/vocab/bi-rain.mp3",
     "glosses": {
       "en": "rain",
       "es": "lluvia",
@@ -1840,6 +1933,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:nature-snow",
     "senseGroup": "nun",
+    "audioRef": "audio/vocab/nun-snow.mp3",
     "glosses": {
       "en": "snow",
       "es": "nieve",
@@ -1857,6 +1951,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:nature-river",
+    "audioRef": "audio/vocab/gang.mp3",
     "glosses": {
       "en": "river",
       "es": "río",
@@ -1874,6 +1969,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:nature-cloud",
+    "audioRef": "audio/vocab/gureum.mp3",
     "glosses": {
       "en": "cloud",
       "es": "nube",
@@ -1891,6 +1987,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:travel-airplane",
+    "audioRef": "audio/vocab/bihaenggi.mp3",
     "glosses": {
       "en": "airplane",
       "es": "avión",
@@ -1908,6 +2005,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:travel-train",
+    "audioRef": "audio/vocab/gicha.mp3",
     "glosses": {
       "en": "train",
       "es": "tren",
@@ -1925,6 +2023,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:travel-bus",
+    "audioRef": "audio/vocab/beoseu.mp3",
     "glosses": {
       "en": "bus",
       "es": "autobús",
@@ -1942,6 +2041,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:travel-taxi",
+    "audioRef": "audio/vocab/taeksi.mp3",
     "glosses": {
       "en": "taxi",
       "es": "taxi",
@@ -1959,6 +2059,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:travel-subway",
+    "audioRef": "audio/vocab/jihacheol.mp3",
     "glosses": {
       "en": "subway",
       "es": "metro",
@@ -1977,6 +2078,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:travel-car",
     "senseNote": "In everyday talk, people often just say cha.",
+    "audioRef": "audio/vocab/jadongcha.mp3",
     "glosses": {
       "en": "car",
       "es": "automóvil",
@@ -1995,6 +2097,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:travel-boat",
     "senseGroup": "bae",
+    "audioRef": "audio/vocab/bae-boat.mp3",
     "glosses": {
       "en": "boat",
       "es": "barco",
@@ -2012,6 +2115,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:travel-map",
+    "audioRef": "audio/vocab/jido.mp3",
     "glosses": {
       "en": "map",
       "es": "mapa",
@@ -2029,6 +2133,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:travel-passport",
+    "audioRef": "audio/vocab/yeogwon.mp3",
     "glosses": {
       "en": "passport",
       "es": "pasaporte",
@@ -2048,6 +2153,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:travel-ticket",
     "senseNote": "A ticket for a bus, a train or a show.",
     "senseGroup": "pyo",
+    "audioRef": "audio/vocab/pyo-ticket.mp3",
     "glosses": {
       "en": "ticket",
       "es": "boleto",
@@ -2065,6 +2171,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:travel-airport",
+    "audioRef": "audio/vocab/gonghang.mp3",
     "glosses": {
       "en": "airport",
       "es": "aeropuerto",
@@ -2082,6 +2189,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:travel-hotel",
+    "audioRef": "audio/vocab/hotel.mp3",
     "glosses": {
       "en": "hotel",
       "es": "hotel",
@@ -2099,6 +2207,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:sport-soccer",
+    "audioRef": "audio/vocab/chukgu.mp3",
     "glosses": {
       "en": "soccer (football)",
       "es": "fútbol",
@@ -2116,6 +2225,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:sport-baseball",
+    "audioRef": "audio/vocab/yagu.mp3",
     "glosses": {
       "en": "baseball",
       "es": "béisbol",
@@ -2133,6 +2243,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:sport-basketball",
+    "audioRef": "audio/vocab/nonggu.mp3",
     "glosses": {
       "en": "basketball",
       "es": "baloncesto",
@@ -2150,6 +2261,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:sport-volleyball",
+    "audioRef": "audio/vocab/baegu.mp3",
     "glosses": {
       "en": "volleyball",
       "es": "voleibol",
@@ -2167,6 +2279,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:sport-tabletennis",
+    "audioRef": "audio/vocab/takgu.mp3",
     "glosses": {
       "en": "table tennis",
       "es": "tenis de mesa",
@@ -2184,6 +2297,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:sport-swimming",
+    "audioRef": "audio/vocab/suyeong.mp3",
     "glosses": {
       "en": "swimming",
       "es": "natación",
@@ -2202,6 +2316,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:sport-taekwondo",
     "senseNote": "A Korean martial art, known for its high kicks.",
+    "audioRef": "audio/vocab/taegwondo.mp3",
     "glosses": {
       "en": "taekwondo",
       "es": "taekwondo",
@@ -2219,6 +2334,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:sport-running",
+    "audioRef": "audio/vocab/dalligi.mp3",
     "glosses": {
       "en": "running",
       "es": "carrera",
@@ -2236,6 +2352,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:sport-jumprope",
+    "audioRef": "audio/vocab/julleomgi.mp3",
     "glosses": {
       "en": "jump rope",
       "es": "salto de cuerda",
@@ -2253,6 +2370,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:sport-bicycle",
+    "audioRef": "audio/vocab/jajeongeo.mp3",
     "glosses": {
       "en": "bicycle",
       "es": "bicicleta",
@@ -2270,6 +2388,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:sport-skiing",
+    "audioRef": "audio/vocab/seuki.mp3",
     "glosses": {
       "en": "skiing",
       "es": "esquí",
@@ -2288,6 +2407,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:sport-ball",
     "senseGroup": "gong",
+    "audioRef": "audio/vocab/gong-ball.mp3",
     "glosses": {
       "en": "ball",
       "es": "pelota",
@@ -2306,6 +2426,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "card:hanbok",
     "senseNote": "Often worn on holidays such as Seollal and Chuseok.",
+    "audioRef": "audio/vocab/hanbok.mp3",
     "glosses": {
       "en": "traditional Korean clothes",
       "es": "ropa tradicional coreana",
@@ -2324,6 +2445,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:culture-hangul",
     "senseNote": "The alphabet you are learning here.",
+    "audioRef": "audio/vocab/hangeul.mp3",
     "glosses": {
       "en": "Hangul (the Korean alphabet)",
       "es": "hangul (el alfabeto coreano)",
@@ -2341,6 +2463,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:culture-hanok",
+    "audioRef": "audio/vocab/hanok.mp3",
     "glosses": {
       "en": "traditional Korean house",
       "es": "casa tradicional coreana",
@@ -2359,6 +2482,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "word:culture-bibimbap",
     "senseNote": "Rice topped with vegetables, mixed together before you eat.",
+    "audioRef": "audio/vocab/bibimbap.mp3",
     "glosses": {
       "en": "mixed rice bowl",
       "es": "tazón de arroz mezclado",
@@ -2376,6 +2500,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:culture-tteokbokki",
+    "audioRef": "audio/vocab/tteokbokki.mp3",
     "glosses": {
       "en": "spicy rice cakes",
       "es": "pasteles de arroz picantes",
@@ -2394,6 +2519,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "card:seollal",
     "senseNote": "Many people wear hanbok and bow to their elders.",
+    "audioRef": "audio/vocab/seollal.mp3",
     "glosses": {
       "en": "Lunar New Year",
       "es": "Año Nuevo lunar",
@@ -2412,6 +2538,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "card:chuseok",
     "senseNote": "Families gather and share songpyeon, half-moon rice cakes.",
+    "audioRef": "audio/vocab/chuseok.mp3",
     "glosses": {
       "en": "Chuseok (harvest festival)",
       "es": "Chuseok (fiesta de la cosecha)",
@@ -2430,6 +2557,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "card:yutnori",
     "senseNote": "Players throw four wooden sticks, often at Lunar New Year.",
+    "audioRef": "audio/vocab/yunnori.mp3",
     "glosses": {
       "en": "yut game (board game with sticks)",
       "es": "juego de yut (tablero y palitos)",
@@ -2448,6 +2576,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "card:gayageum",
     "senseNote": "A long string instrument, plucked with the fingers.",
+    "audioRef": "audio/vocab/gayageum.mp3",
     "glosses": {
       "en": "Korean zither",
       "es": "cítara coreana",
@@ -2465,6 +2594,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:culture-song",
+    "audioRef": "audio/vocab/norae.mp3",
     "glosses": {
       "en": "song",
       "es": "canción",
@@ -2482,6 +2612,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:culture-dance",
+    "audioRef": "audio/vocab/chum.mp3",
     "glosses": {
       "en": "dance",
       "es": "baile",
@@ -2499,6 +2630,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:culture-drama",
+    "audioRef": "audio/vocab/deurama.mp3",
     "glosses": {
       "en": "TV drama",
       "es": "serie de televisión",
@@ -2517,6 +2649,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:science-fire",
     "senseNote": "It also means a light that is on, such as a lamp.",
+    "audioRef": "audio/vocab/bul.mp3",
     "glosses": {
       "en": "fire",
       "es": "fuego",
@@ -2534,6 +2667,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:science-ice",
+    "audioRef": "audio/vocab/eoreum.mp3",
     "glosses": {
       "en": "ice",
       "es": "hielo",
@@ -2552,6 +2686,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:science-stone",
     "senseGroup": "dol",
+    "audioRef": "audio/vocab/dol-stone.mp3",
     "glosses": {
       "en": "stone",
       "es": "piedra",
@@ -2569,6 +2704,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:science-magnet",
+    "audioRef": "audio/vocab/jaseok.mp3",
     "glosses": {
       "en": "magnet",
       "es": "imán",
@@ -2586,6 +2722,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:science-earth",
+    "audioRef": "audio/vocab/jigu.mp3",
     "glosses": {
       "en": "Earth",
       "es": "Tierra",
@@ -2604,6 +2741,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:science-space",
     "senseNote": "It also means the whole universe.",
+    "audioRef": "audio/vocab/uju.mp3",
     "glosses": {
       "en": "outer space",
       "es": "espacio exterior",
@@ -2621,6 +2759,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:science-robot",
+    "audioRef": "audio/vocab/robot.mp3",
     "glosses": {
       "en": "robot",
       "es": "robot",
@@ -2638,6 +2777,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:science-seed",
+    "audioRef": "audio/vocab/ssiat.mp3",
     "glosses": {
       "en": "seed",
       "es": "semilla",
@@ -2655,6 +2795,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:science-rainbow",
+    "audioRef": "audio/vocab/mujigae.mp3",
     "glosses": {
       "en": "rainbow",
       "es": "arcoíris",
@@ -2672,6 +2813,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:science-shadow",
+    "audioRef": "audio/vocab/geurimja.mp3",
     "glosses": {
       "en": "shadow",
       "es": "sombra",
@@ -2689,6 +2831,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:science-wind",
+    "audioRef": "audio/vocab/baram.mp3",
     "glosses": {
       "en": "wind",
       "es": "viento",
@@ -2707,6 +2850,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 1,
     "visual": "word:science-light",
     "senseNote": "Light from the sun or a lamp, not light in weight.",
+    "audioRef": "audio/vocab/bit.mp3",
     "glosses": {
       "en": "light",
       "es": "luz",
