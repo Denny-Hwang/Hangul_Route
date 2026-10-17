@@ -252,8 +252,11 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         },
       );
       if (result.ok) {
-        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike).
-        navigation.replace(afterProfileCreated(levelCheckOn), { profileId: result.profile.id });
+        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike). The
+        // onboarding stack is reset to it alone: nothing of setup is left under the end of setup, so no back (the
+        // browser's or the phone's, through the history bridge) can land on Welcome and start a second profile
+        // (AMENDMENTS-DISPLAY-NAV section 7.1, the exception list).
+        navigation.reset({ index: 0, routes: [{ name: afterProfileCreated(levelCheckOn), params: { profileId: result.profile.id } }] });
       } else if (result.reason === 'pin-failed') {
         setPinError(c.pinFailed);
       }
