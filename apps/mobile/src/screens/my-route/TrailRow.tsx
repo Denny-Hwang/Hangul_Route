@@ -224,6 +224,8 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
         aria-expanded={expandable ? open : undefined}
         style={({ pressed, focused }: PressableStateCallbackType & { focused?: boolean }) => ({
           flexDirection: 'row',
+          // A one-line row centres its title on the badge.
+          alignItems: row.compact === true ? 'center' : undefined,
           gap: spacing.md,
           minHeight: touchTarget.min,
           borderRadius: radii.md,
