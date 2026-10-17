@@ -17,7 +17,21 @@ describe('learner.welcome (English wording as shipped)', () => {
       trust: 'Start Korean from zero. Built with kids, parents, and grandparents in mind.',
       // F-APP-001 A-7: the persona row (grown-up-entry-messages.test.ts owns its wording).
       grownUps: m.learner.welcome.grownUps,
+      classLink: m.learner.welcome.classLink,
     });
+  });
+
+  it('the class join link card on a device with no profile: the code, what Start does, where to type it in the app (review of #734)', () => {
+    const c = m.learner.welcome.classLink;
+    expect(c.code('ABC234')).toBe('Class code: ABC234');
+    expect(c.next).toBe('Make your profile first. Then Join a class opens.');
+    expect(c.inApp).toBe('Already learning in the Hangul Route app? Open it, go to Profile and tap Join a class.');
+    // The button names it points at are the shipped ones, in every language.
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const words = getMessages(locale);
+      expect(words.learner.welcome.classLink.inApp, locale).toContain(words.caregiver.spaces.join.cta);
+      expect(words.learner.welcome.classLink.inApp, locale).toContain(words.learner.home.profileLabel);
+    }
   });
 });
 
