@@ -1,4 +1,4 @@
-import { Icon, borderWidth, colors, layout, motion, radii, spacing, touchTarget, typography, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, motion, radii, spacing, touchTarget, typography, type IconName, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import React, { forwardRef, useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import type { StatusChip } from '../../logic/lecture/tools';
@@ -54,6 +54,7 @@ interface CtlProps {
 }
 
 const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pressed, disabled, onPress, onFocusWithin, testID }, ref) {
+  const textScale = useTypeScale();
   const fg = primary ? colors.text.onPrimary : colors.text.primary;
   return (
     <Pressable
@@ -89,7 +90,7 @@ const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pres
       }}
     >
       {icon !== undefined ? <Icon name={icon} size={spacing.xxl} color={fg} /> : null}
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: fg, textAlign: 'center', lineHeight: Math.round(typography.size.body * typography.leading.tight) }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: fg, textAlign: 'center', lineHeight: Math.round(textScale.size.body * typography.leading.tight) }}>
         {label}
       </Text>
     </Pressable>
@@ -167,6 +168,7 @@ export function ControlBar(props: ControlBarProps): React.ReactElement {
  * `text.primary` at 18 px. Sound is off carries a bordered Turn sound on button.
  */
 function Chip({ chip, onTurnSoundOn, onFocusWithin }: { chip: StatusChip; onTurnSoundOn: () => void; onFocusWithin: (focused: boolean) => void }): React.ReactElement {
+  const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
   const text = chip === 'sound-off' ? messages.learner.audio.soundIsOff : chip === 'no-voice' ? m.noVoice : chip === 'offline' ? m.offline : m.update;
@@ -188,7 +190,7 @@ function Chip({ chip, onTurnSoundOn, onFocusWithin }: { chip: StatusChip; onTurn
       }}
     >
       {chip === 'no-voice' || chip === 'sound-off' ? <Icon name="speaker-off" size={spacing.xl} color={colors.text.primary} /> : null}
-      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: textScale.size.body, color: colors.text.primary }}>{text}</Text>
       {chip === 'sound-off' ? (
         <Pressable
           testID="presenter-turn-sound-on"
@@ -210,7 +212,7 @@ function Chip({ chip, onTurnSoundOn, onFocusWithin }: { chip: StatusChip; onTurn
             };
           }}
         >
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.audio.action.turn_on.cta}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{messages.learner.audio.action.turn_on.cta}</Text>
         </Pressable>
       ) : null}
     </View>

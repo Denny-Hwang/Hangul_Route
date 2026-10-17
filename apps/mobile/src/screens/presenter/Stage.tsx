@@ -1,4 +1,4 @@
-import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import type { RomanizationMode } from '@hangul-route/content-schema';
@@ -158,6 +158,7 @@ const visuallyHidden = {
  * bottom, above the bar, for the End slide's "To finish, choose Exit." (slide-end.md).
  */
 export function StageHint({ text, bottom }: { text: string; bottom?: boolean }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View
       testID={bottom ? 'presenter-end-hint' : 'presenter-portrait-hint'}
@@ -173,7 +174,7 @@ export function StageHint({ text, bottom }: { text: string; bottom?: boolean }):
         paddingHorizontal: spacing.lg,
       }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.primary }}>{text}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.primary }}>{text}</Text>
     </View>
   );
 }

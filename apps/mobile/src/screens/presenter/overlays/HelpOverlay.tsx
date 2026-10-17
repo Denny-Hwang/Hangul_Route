@@ -1,5 +1,5 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { HELP_KEYS, type KeyCap } from '../../../logic/lecture/help-keys';
@@ -30,6 +30,7 @@ export function HelpOverlay({
   onKeepVisible: (on: boolean) => void;
   onClose: () => void;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.help;
   const { width } = useWindowDimensions();
@@ -53,10 +54,10 @@ export function HelpOverlay({
       {c.kind === 'arrow' ? (
         // arrow-right turned a quarter clockwise points down; arrow-left turned the same way points up.
         <View style={{ transform: [{ rotate: c.dir === 'up' || c.dir === 'down' ? '90deg' : '0deg' }] }}>
-          <Icon name={c.dir === 'right' || c.dir === 'down' ? 'arrow-right' : 'arrow-left'} size={typography.size.body} color={colors.text.primary} />
+          <Icon name={c.dir === 'right' || c.dir === 'down' ? 'arrow-right' : 'arrow-left'} size={textScale.size.body} color={colors.text.primary} />
         </View>
       ) : (
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{c.kind === 'named' ? m.key[c.name] : c.text}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{c.kind === 'named' ? m.key[c.name] : c.text}</Text>
       )}
     </View>
   );
@@ -65,7 +66,7 @@ export function HelpOverlay({
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: layout.gutter.regular }}>
         <View style={{ width: '100%', maxWidth: HELP_WIDTH, gap: spacing.lg }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.lg }}>
-            <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: textScale.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
               {m.title}
             </Text>
             <ToolButton ref={close} testID="presenter-help-close" label={messages.common.buttons.close} onPress={onClose} />
@@ -74,14 +75,14 @@ export function HelpOverlay({
             {HELP_KEYS.map((row) => (
               <View key={row.row} role="listitem" style={{ width: twoColumns ? '47%' : '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                 <View style={{ width: KEY_COL, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>{row.caps.map(cap)}</View>
-                <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.body, color: colors.text.primary }}>{m.row[row.row]}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: textScale.size.body, color: colors.text.primary }}>{m.row[row.row]}</Text>
               </View>
             ))}
           </View>
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, color: colors.text.secondary }}>{m.clicker}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.secondary }}>{m.clicker}</Text>
           {romanization !== null ? (
             <View style={{ gap: spacing.sm }}>
-              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.romanization}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.romanization}</Text>
               <ChipRadios
                 testID="presenter-help-romanization"
                 label={m.romanization}
@@ -102,6 +103,7 @@ export function HelpOverlay({
 }
 
 function KeepVisibleSwitch({ on, label, onChange }: { on: boolean; label: string; onChange: (on: boolean) => void }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <Pressable
       testID="presenter-help-keep-visible"
@@ -137,7 +139,7 @@ function KeepVisibleSwitch({ on, label, onChange }: { on: boolean; label: string
       >
         {on ? <Icon name="check" size={spacing.xl} color={colors.text.primary} /> : null}
       </View>
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{label}</Text>
     </Pressable>
   );
 }

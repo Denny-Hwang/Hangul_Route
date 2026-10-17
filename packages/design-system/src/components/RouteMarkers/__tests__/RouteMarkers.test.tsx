@@ -16,6 +16,11 @@ vi.mock('react-native', () => ({ View: 'View', Text: 'Text', useWindowDimensions
 vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', G: 'G', Path: 'Path' }));
 // A regular-class window: useMediaSize rounds base x 1.2 (40 -> 48, 3 -> 4).
 vi.mock('../../Layout/LayoutProvider', () => ({ useMediaSize: (base: number) => Math.round(base * 1.2) }));
+// The legend's words follow the chosen text size; standard here (the token sizes).
+vi.mock('../../TextSize', async () => {
+  const { typeScale } = await import('../../../text-size');
+  return { useTypeScale: () => typeScale(1) };
+});
 
 type Props = Record<string, unknown>;
 type El = React.ReactElement<Props>;

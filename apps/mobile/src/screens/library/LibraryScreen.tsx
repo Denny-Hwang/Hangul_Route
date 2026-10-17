@@ -21,6 +21,7 @@ import {
   useLayoutClass,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -344,6 +345,7 @@ function CardThumb({
   selected?: boolean;
   onPress: () => void;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   const card = localizeCard(source, useLocale());
   const messages = useMessages();
   const m = messages.learner.library;
@@ -370,8 +372,8 @@ function CardThumb({
           <Text {...KOREAN_LINE_BREAK}
             numberOfLines={2}
             style={{
-              fontSize: typography.size.caption,
-              lineHeight: typography.size.caption * typography.leading.normal,
+              fontSize: textScale.size.caption,
+              lineHeight: textScale.size.caption * typography.leading.normal,
               fontWeight: typography.weight.medium,
               color: colors.text.muted,
               textAlign: 'center',
@@ -391,7 +393,7 @@ function CardThumb({
             <CardArt card={card} size={artSize} accessibilityLabel={messages.a11y.cardArt(card.titleEn)} style={{ borderRadius: radii.md }} />
           </View>
           <Spacer size="xs" />
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: narrow ? typography.size.prompt : typography.size.title, fontWeight: '700', color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: narrow ? textScale.size.prompt : textScale.size.title, fontWeight: '700', color: colors.text.primary }}>
             {card.subtitleKo ?? card.titleEn}
           </Text>
           {card.romanization ? (

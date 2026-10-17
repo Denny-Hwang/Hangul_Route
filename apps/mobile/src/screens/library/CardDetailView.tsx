@@ -16,6 +16,7 @@ import {
   spacing,
   typography,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -366,10 +367,11 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
  * flip card repeats it in full, where assistive tech reaches it.
  */
 function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 'fact-card' }): React.ReactElement {
+  const textScale = useTypeScale();
   // Caption's style (muted, medium weight); a raw Text so the line can be cut at two lines and its Korean runs nested.
   const line = {
-    fontSize: typography.size.caption,
-    lineHeight: typography.size.caption * typography.leading.normal,
+    fontSize: textScale.size.caption,
+    lineHeight: textScale.size.caption * typography.leading.normal,
     fontWeight: typography.weight.medium,
     color: colors.text.muted,
     textAlign: face === 'back' ? ('center' as const) : ('left' as const),

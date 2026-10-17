@@ -20,6 +20,7 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -427,6 +428,7 @@ function DiscoverItemCard({
 
 /** The example's syllable blocks, the one that holds the symbol lit. Decorative: the word itself is read by KoreanText. */
 function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: boolean }> }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View
       accessibilityElementsHidden
@@ -451,7 +453,7 @@ function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: b
           <Text {...KOREAN_LINE_BREAK}
             style={{
               fontFamily: typography.family.sansKr,
-              fontSize: typography.size.display,
+              fontSize: textScale.size.display,
               fontWeight: block.emphasised ? typography.weight.bold : typography.weight.regular,
               color: colors.text.primary,
             }}

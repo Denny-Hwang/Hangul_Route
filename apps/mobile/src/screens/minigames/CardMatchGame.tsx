@@ -14,6 +14,7 @@ import {
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -37,6 +38,7 @@ interface Props {
  * Child taps matching pairs. Game completes when all pairs are matched.
  */
 export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
   const pairs = useMemo(() => scope.cardPairs ?? [], [scope]);
@@ -154,7 +156,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
                   opacity: isMatched ? 0.5 : 1,
                 }}
               >
-                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: '700', color: colors.text.primary }}>
+                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '700', color: colors.text.primary }}>
                   {p.ko}
                 </Text>
                 {p.romanization ? (
@@ -193,7 +195,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
                   opacity: isMatched ? 0.5 : 1,
                 }}
               >
-                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: '600', color: colors.text.primary }}>
+                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '600', color: colors.text.primary }}>
                   {p.en}
                 </Text>
               </Pressable>

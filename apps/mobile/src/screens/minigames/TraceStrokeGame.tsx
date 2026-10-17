@@ -13,6 +13,7 @@ import {
   spacing,
   typography,
   useLayoutClass,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
@@ -462,7 +463,6 @@ const feedbackBorder: Record<HoyaTone, string> = {
   cheering: colors.feedback.success,
   thinking: colors.feedback.nudge,
 };
-const FEEDBACK_LINE = Math.ceil(typography.size.bodySm * typography.leading.normal);
 
 /**
  * Hoya's feedback as a strip of fixed height (a set number of text lines), so
@@ -480,6 +480,7 @@ function TraceFeedback({
   lines: number;
   showHoya: boolean;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View
       accessibilityLiveRegion="polite"
@@ -487,7 +488,8 @@ function TraceFeedback({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        height: lines * FEEDBACK_LINE + 2 * spacing.sm + 2 * borderWidth.base,
+        // A line of the feedback text at the chosen text size, so a longer message is never clipped.
+        height: lines * Math.ceil(textScale.size.bodySm * typography.leading.normal) + 2 * spacing.sm + 2 * borderWidth.base,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: radii.lg,

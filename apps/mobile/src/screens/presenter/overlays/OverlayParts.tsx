@@ -1,4 +1,4 @@
-import { borderWidth, colors, radii, spacing, touchTarget, typography, z, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { borderWidth, colors, radii, spacing, touchTarget, typography, z, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import React, { forwardRef, useEffect, useRef } from 'react';
 import { Pressable, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -24,6 +24,7 @@ export const ToolButton = forwardRef<
   View,
   { label: string; onPress: () => void; primary?: boolean; selected?: boolean; disabled?: boolean; testID?: string; accessibilityLabel?: string }
 >(function ToolButton({ label, onPress, primary, selected, disabled, testID, accessibilityLabel }, ref) {
+  const textScale = useTypeScale();
   const fg = disabled ? colors.text.secondary : primary ? colors.text.onPrimary : colors.text.primary;
   return (
     <Pressable
@@ -52,7 +53,7 @@ export const ToolButton = forwardRef<
         };
       }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: fg, textAlign: 'center' }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: fg, textAlign: 'center' }}>{label}</Text>
     </Pressable>
   );
 });
@@ -145,6 +146,7 @@ export function ChipRadios<T extends string>({
   onSelect: (value: T) => void;
   testID?: string;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   const refs = useRef(new Map<T, View | null>());
   const values = options.map((o) => o.value);
   const onKey = (event: { key: string; preventDefault: () => void; stopPropagation?: () => void }): void => {
@@ -187,7 +189,7 @@ export function ChipRadios<T extends string>({
               };
             }}
           >
-            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: on ? typography.weight.bold : typography.weight.semibold, color: colors.text.primary }}>{o.label}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: on ? typography.weight.bold : typography.weight.semibold, color: colors.text.primary }}>{o.label}</Text>
           </Pressable>
         );
       })}

@@ -24,6 +24,7 @@ import {
   resolveScene,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
@@ -106,6 +107,7 @@ type Note = 'hint' | 'wrong' | 'look';
  * surface (F-STORY-003 §3.5 amendment). Design: design/wireframes/story/sequence.md (F, G).
  */
 export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const locale = useLocale();
   // Captions and narration in the UI language (F-I18N-001 §3.6, `story:` overlays).
   const cards = useMemo(() => {
@@ -408,7 +410,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
             >
               <Text {...KOREAN_LINE_BREAK}
                 style={{
-                  fontSize: typography.size.bodySm,
+                  fontSize: textScale.size.bodySm,
                   fontWeight: typography.weight.bold,
                   color: colors.text.primary,
                 }}
@@ -418,7 +420,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
               {card ? (
                 <>
                   <Icon name="check" size={spacing.lg} color={colors.feedback.success} />
-                  <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, color: colors.text.primary }}>{card.caption}</Text>
+                  <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.primary }}>{card.caption}</Text>
                 </>
               ) : null}
             </View>

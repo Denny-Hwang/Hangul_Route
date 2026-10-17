@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { colors, radii, shadows, spacing, typography } from '../../tokens';
+import { useTypeScale } from '../TextSize';
 import { hoyaDismissLabel } from '../../labels';
 import { Body, Caption, Heading } from '../Heading/Heading';
 import { Hoya } from '../Hoya/Hoya';
@@ -38,6 +39,7 @@ export function HoyaBubble({
   autoDismissMs,
   testID,
 }: HoyaBubbleProps): React.ReactElement {
+  const textScale = useTypeScale();
   useEffect(() => {
     if (!onDismiss || !autoDismissMs) return;
     const ms = Math.max(MIN_DISMISS_MS, autoDismissMs);
@@ -92,7 +94,7 @@ export function HoyaBubble({
           <Caption
             tone="muted"
             weight="bold"
-            style={{ fontSize: typography.size.body }}
+            style={{ fontSize: textScale.size.body }}
           >
             ×
           </Caption>
