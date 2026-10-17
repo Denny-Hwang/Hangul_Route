@@ -1,9 +1,9 @@
-import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
-import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
+import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
 import { NAME_MAX, validateDisplayName } from '../../logic/profiles/profile-model';
 import { relinkNotice } from '../../logic/sync/restore';
@@ -42,6 +42,7 @@ export const RELINK_POLL_MS = 4000;
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const textScale = useTypeScale();
+  const [codeFieldWidth, setCodeFieldWidth] = useState(0);
   const messages = useMessages();
   const m = messages.caregiver.join;
   const profile = useProfileStore(activeProfileSelector);
@@ -270,15 +271,17 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
             maxLength={6}
             accessibilityLabel={messages.a11y.classCode}
             testID="join-code"
+            // The code is drawn as large as the text size asks, but never so large that a whole code is cut (section 4).
+            onLayout={(e) => setCodeFieldWidth(e.nativeEvent.layout.width - 2 * borderWidth.base)}
             style={{
               minHeight: touchTarget.hero,
               textAlign: 'center',
-              fontSize: textScale.size.display,
+              fontSize: codeFieldFontSize(textScale.size.display, codeFieldWidth, spacing.sm),
               fontWeight: '700',
               letterSpacing: spacing.sm,
               color: colors.text.primary,
               backgroundColor: colors.surface.paper,
-              borderWidth: 2,
+              borderWidth: borderWidth.base,
               borderColor: colors.border.subtle,
               borderRadius: radii.lg,
             }}

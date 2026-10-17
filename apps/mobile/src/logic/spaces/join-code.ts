@@ -16,6 +16,24 @@ export function isCompleteJoinCode(value: string): boolean {
   return normalizeJoinCode(value) !== null;
 }
 
+/**
+ * The widest a code character draws, in ems: a bold W, the alphabet's widest letter, is just under one em in the
+ * system fonts, so one em is the worst case.
+ */
+export const CODE_GLYPH_EM = 1;
+
+/**
+ * The code field's font size (Join a class, Move to another class): the display size at the chosen text size
+ * (AMENDMENTS-DISPLAY-NAV section 4), but never larger than lets a whole code of the widest letter fit the field's
+ * inner width with its letter spacing, so a code is never cut at a large text size on a narrow phone (the fit rule:
+ * no text is clipped). Before the field is laid out (`innerWidth` 0) the display size stands.
+ */
+export function codeFieldFontSize(display: number, innerWidth: number, letterSpacing: number, length: number = JOIN_CODE_LENGTH): number {
+  if (!(innerWidth > 0) || length <= 0) return display;
+  const fits = Math.floor((innerWidth - length * letterSpacing) / (length * CODE_GLYPH_EM));
+  return Math.max(1, Math.min(display, fits));
+}
+
 export type JoinErrorCode =
   | 'code_not_found'
   | 'code_expired'
