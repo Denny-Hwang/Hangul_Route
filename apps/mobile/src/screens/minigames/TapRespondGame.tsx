@@ -20,6 +20,7 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { replyOptionLabel } from '../../logic/korean-labels';
+import { koSpeech } from '../../logic/audio/ko-speech';
 import { afterReply } from '../../logic/audio/reply-advance';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
@@ -64,7 +65,8 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
 
   const hearLine = useCallback((): void => {
     if (!turn || replying.current) return;
-    void play(() => playPrompt({ text: turn.npcKo, kind: 'sentence', source: 'tap-respond' }));
+    const line = { ko: turn.npcKo, spokenKo: turn.npcSpokenKo, audioRef: turn.npcAudioRef };
+    void play(() => playPrompt(koSpeech(line, 'sentence', 'tap-respond')));
   }, [turn, play]);
 
   // Each turn opens with the NPC line, said once. With sound switched off it waits for a tap, as on the
@@ -82,7 +84,8 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
     );
   }
 
-  const handleTap = (ko: string, isCorrect: boolean): void => {
+  const handleTap = (option: { ko: string; spokenKo?: string; audioRef?: string }, isCorrect: boolean): void => {
+    const { ko } = option;
     if (feedback === 'correct') return;
     if (isCorrect) {
       tapLight();
@@ -90,7 +93,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
       answerRound(turnIdx, true);
       setFeedback('correct');
       replying.current = true;
-      const reply = play(() => playPrompt({ text: ko, kind: 'sentence', source: 'tap-respond' }));
+      const reply = play(() => playPrompt(koSpeech(option, 'sentence', 'tap-respond')));
       // The reply is said in full before the next line starts (a newer prompt would cut it off).
       void afterReply(reply).then(() => {
         replying.current = false;
@@ -171,7 +174,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
               size="lg"
               fullWidth
               disabled={isWrongLocked}
-              onPress={() => handleTap(opt.ko, opt.isCorrect)}
+              onPress={() => handleTap(opt, opt.isCorrect)}
             />
           );
         })}

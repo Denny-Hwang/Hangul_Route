@@ -22,10 +22,16 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { shouldAutoReplay } from '../../logic/audio/prompt-view';
 import {
+  LISTEN_PICK_AUDIO_SOURCE,
   headerView,
+  listenPickSpeech,
   optionColumns,
   optionView,
   promptView,
@@ -38,7 +44,7 @@ import {
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
 import { shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { playPrompt, stop } from '../../platform/audio';
+import { hasClip, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { GameColumns } from './GameColumns';
@@ -51,7 +57,11 @@ import { PictureArt } from './PictureArt';
  * `logic/listen-pick-flow.ts` (reducer, effects, view-models); this file only
  * renders it and runs the effects. One component serves the two-question
  * Check, a practice step and, later, the Hangul Check, through `host`.
- * Design: design/wireframes/minigame/listen-pick.md.
+ * The sound goes through the shared prompt slot (F-AUDIO-004 §3.8): sound off,
+ * no Korean voice, a blocked or failed play show the prompt as text with why
+ * and the one action (Turn sound on, Tap to hear, Try again).
+ * Design: design/wireframes/minigame/listen-pick.md,
+ * design/wireframes/minigame/audio-fallback.md (W1-W4).
  */
 
 interface Props {
@@ -99,15 +109,26 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
   roundsRef.current = rounds;
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
 
+  // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot.
+  const slot = usePromptSlot({ source: LISTEN_PICK_AUDIO_SOURCE, hasClip: hasClip(rounds[state.roundIdx]?.prompt.audioRef) });
+  const { play: slotPlay, reset: slotReset } = slot;
+  const viewRef = useRef(slot.view);
+  viewRef.current = slot.view;
+  const [helpOpen, setHelpOpen] = useState(false);
+
   const runEffect = useCallback((effect: FlowEffect): void => {
     switch (effect.type) {
       case 'play': {
         const current = stateRef.current;
         const round = roundsRef.current[current.roundIdx];
         if (!round) return;
+        // The 800 ms replay after a wrong tap waits while the text stands in for a sound that is off or absent.
+        if (effect.why === 'replay' && !shouldAutoReplay(viewRef.current)) return;
+        // The autoplay opens a new round: a new prompt slot, so last round's text does not carry over.
+        if (effect.why === 'autoplay') slotReset();
         const roundIdx = current.roundIdx;
-        void playPrompt({ text: round.prompt.spokenKo ?? round.prompt.ko, audioRef: round.prompt.audioRef }).then(
-          (result) => dispatchRef.current({ type: 'audio', round: roundIdx, result }),
+        void slotPlay(() => playPrompt(listenPickSpeech(round))).then((result) =>
+          dispatchRef.current({ type: 'audio', round: roundIdx, result }),
         );
         return;
       }
@@ -138,7 +159,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
         hostRef.current.complete();
         return;
     }
-  }, []);
+  }, [slotPlay, slotReset]);
 
   const dispatch = useCallback(
     (event: FlowEvent): void => {
@@ -193,7 +214,10 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
   }
 
   const header = headerView(host.mode, state, copy);
-  const prompt = promptView(round, state, host.mode);
+  const prompt = promptView(round, state, host.mode, slot.view.textShown);
+  const hear = (): void => dispatch({ type: 'hear' });
+  // The speaker says the state when the sound is off or needs a tap (F-AUDIO-004 W4).
+  const speakerLabel = slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : m.a11y.minigame.hearAgain;
   const arrangement = pictureTextArrangement(layoutClass);
   // Beside the sound the answers get half the reading column (348 at 1180 x 820 and 844 x 390), so two cards
   // sit side by side only while each still holds its art (or a phone-size text card) next to the status mark;
@@ -235,9 +259,9 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
                     speakerRef.current = node as unknown as Focusable | null;
                   }}
                   testID="listen-pick-speaker"
-                  onPress={() => dispatch({ type: 'hear' })}
+                  onPress={hear}
                   accessibilityRole="button"
-                  accessibilityLabel={m.a11y.minigame.hearAgain}
+                  accessibilityLabel={speakerLabel}
                   hitSlop={spacing.md}
                   style={{
                     width: speakerSize,
@@ -258,25 +282,32 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
                   label={copy.listenPick.hearAgain.cta}
                   tone="secondary"
                   size="md"
-                  onPress={() => dispatch({ type: 'hear' })}
+                  onPress={hear}
                   testID="listen-pick-hear-again"
                 />
               </View>
 
               <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
                 {prompt.content ? (
-                  <>
-                    {prompt.showText ? <Body tone="muted">{m.learner.audio.readHere}</Body> : null}
-                    <KoreanText
-                      ko={prompt.content.ko}
-                      romanization={prompt.content.romanization}
-                      gloss={prompt.content.gloss}
-                      size="md"
-                      testID="listen-pick-prompt-text"
-                    />
-                  </>
+                  <KoreanText
+                    ko={prompt.content.ko}
+                    romanization={prompt.content.romanization}
+                    gloss={prompt.content.gloss}
+                    size="md"
+                    testID="listen-pick-prompt-text"
+                  />
                 ) : null}
               </View>
+              {/* The Korean is drawn just above, so the panel carries the read line, why and the one action. */}
+              <View style={{ alignSelf: 'stretch' }}>
+                <PromptPanel
+                  view={slot.view}
+                  onAction={(action) => slot.act(action, hear)}
+                  onHelp={() => setHelpOpen(true)}
+                  testID="listen-pick-prompt"
+                />
+              </View>
+              <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
             </View>
           </>
         }

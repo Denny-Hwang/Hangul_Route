@@ -2,6 +2,7 @@ import { localize, type DiscoverPage, type Overlays } from '@hangul-route/conten
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
+  DISCOVER_AUDIO_SOURCE,
   buildDiscover as buildDiscoverWith,
   pageRender as pageRenderWith,
   startDiscover,
@@ -473,6 +474,20 @@ describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views'
     expect(one?.title).toBeUndefined();
     expect(two?.items.map((i) => i.glyph)).toEqual(['책이에요', '학교예요', '김밥']);
     expect(two?.items.map((i) => i.key)).toEqual(['word:책이에요', 'word:학교예요', 'word:김밥']);
+    // Each Hear it is read at the rate of what it is (F-AUDIO-004 §3.3): sentences and pattern examples
+    // as sentences, an exchange line as a sentence, a realia key word as a word.
+    expect(one?.items.map((i) => i.hear.kind)).toEqual(['sentence']);
+    expect(one?.exchange?.lines.map((l) => l.hear.kind)).toEqual(['sentence', 'sentence']);
+    expect(two?.items.map((i) => i.hear.kind)).toEqual(['sentence', 'sentence', 'word']);
+  });
+
+  it('a symbol and its name are sounds, its example and a word item are words', () => {
+    const [symbols] = buildDiscover([pageTwo]).pages;
+    const g = symbols!.items[0]!;
+    expect([g.hear.kind, g.letterName?.action.kind, g.example?.hear.kind]).toEqual(['sound', 'sound', 'word']);
+    const [words] = buildDiscover([{ items: [{ type: 'word', word: ko('나무', 'namu', 'tree') }] }]).pages;
+    expect(words!.items[0]!.hear.kind).toBe('word');
+    expect(DISCOVER_AUDIO_SOURCE).toBe('discover');
   });
 });
 

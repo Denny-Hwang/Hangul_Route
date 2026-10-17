@@ -22,11 +22,14 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import Svg, { Path, Rect } from 'react-native-svg';
+import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -47,8 +50,10 @@ import {
 } from '../../logic/trace-word/flow';
 import { buildTraceWordRounds, letterCounts, type TraceWordBlock, type TraceWordPlayRound } from '../../logic/trace-word/rounds';
 import { traceWordCanvases, traceWordMessage, traceWordTone, type TraceWordCoaching, type TraceWordTone } from '../../logic/trace-word/view';
-import { playPrompt } from '../../platform/audio';
+import { playsOnOpen } from '../../logic/audio/opening-play';
+import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
+import { useAudioStore } from '../../store/audio-store';
 import type { MinigameHost } from './host';
 
 interface Props {
@@ -76,6 +81,9 @@ const GUIDE_DASH = '3 5';
 const GUIDE_OPACITY = 0.7;
 /** The traced word drawn small in a done chip. */
 const CHIP_INK_WIDTH = 14;
+
+/** The surface id of Trace a Word for the audio telemetry (F-AUDIO-004 §3.14). */
+const TRACE_WORD_AUDIO_SOURCE = 'trace-word';
 
 type Look = 'live' | 'pass' | 'retry' | 'waiting';
 
@@ -125,6 +133,17 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finishedRef = useRef(false);
   const layoutClass = useLayoutClass();
+  // The block's sound: the syllable is printed in the strip, so the panel only says why it is silent (A-5b).
+  const sound = usePromptSlot({ source: TRACE_WORD_AUDIO_SOURCE, textOnScreen: true });
+  const { play: soundPlay, reset: soundReset } = sound;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const lastSyllable = useRef<string | null>(null);
+  const say = (syllable: string): void => {
+    lastSyllable.current = syllable;
+    void soundPlay(() => playPrompt({ text: syllable, kind: 'sound', source: TRACE_WORD_AUDIO_SOURCE }));
+  };
+  // Leaving the game mid-syllable (Done on the last word, Skip, Back) stops it.
+  useEffect(() => () => stop(), []);
 
   const round = rounds[state.round];
   const block = round?.blocks[state.block];
@@ -187,9 +206,13 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Each new block plays its sound once, as Trace Stroke plays its letter.
+  // Each new block plays its sound once, as Trace Stroke plays its letter: a new prompt slot. With sound
+  // switched off, or nothing that could sound, it waits for a tap, so the learner is not told why it is
+  // silent on every block.
   useEffect(() => {
-    if (block && state.phase === 'drawing' && state.letter === 0) void playPrompt({ text: block.syllable, kind: 'sound', source: 'trace-word' });
+    soundReset();
+    const audio = useAudioStore.getState();
+    if (block && state.phase === 'drawing' && state.letter === 0 && playsOnOpen(audio.muted, audio.tts, false)) say(block.syllable);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.round, state.block]);
 
@@ -402,7 +425,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
           state={i < done ? 'done' : i === state.block ? 'current' : 'waiting'}
           ink={phase === 'wordDone' ? (traced[i] ?? null) : null}
           label={i < done ? a11y.hearBlockDone(a11yRomanization(b.romanization)) : a11y.hear(a11yRomanization(b.romanization))}
-          onPress={() => void playPrompt({ text: b.syllable, kind: 'sound', source: 'trace-word' })}
+          onPress={() => say(b.syllable)}
         />
       ))}
       <Caption tone="muted">{`${round.word.romanization} · ${round.word.en}`}</Caption>
@@ -421,6 +444,19 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     </View>
   );
 
+  // Beside the speakers: why a syllable did not sound, with the one action (it plays that syllable again), in
+  // one row so the canvas and Done / Skip keep their room.
+  const soundStatus = (
+    <PromptPanel
+      variant="status"
+      compact
+      view={sound.view}
+      onAction={(action) => sound.act(action, () => say(lastSyllable.current ?? block.syllable))}
+      onHelp={() => setHelpOpen(true)}
+      testID="trace-word-sound"
+    />
+  );
+
   const helpers = (
     <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md }}>
       <Button
@@ -431,7 +467,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
         onPress={() => {
           setHintToken((t) => t + 1);
           setHintPlaying(true);
-          void playPrompt({ text: block.syllable, kind: 'sound', source: 'trace-word' });
+          say(block.syllable);
         }}
       />
       <Button
@@ -493,20 +529,30 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
           <View style={{ flex: 1, flexDirection: 'row', gap: spacing.lg }}>
             {canvasSlot}
             <View style={{ width: traceSidePanelWidth(box.width), justifyContent: 'center', gap: spacing.sm }}>
-              {heading}
-              {strip}
+              {/* The word scrolls if a status row makes the column too tall: Done and Skip stay on screen. */}
+              <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} contentContainerStyle={{ gap: spacing.sm }}>
+                {heading}
+                <View>
+                  {strip}
+                  {soundStatus}
+                </View>
+              </ScrollView>
               {controls}
             </View>
           </View>
         ) : (
           <View style={{ flex: 1, gap: spacing.md }}>
             {heading}
-            {strip}
+            <View>
+              {strip}
+              {soundStatus}
+            </View>
             {canvasSlot}
             {controls}
           </View>
         )}
       </View>
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );
 }

@@ -26,10 +26,12 @@ import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { cardById } from '../../content';
+import { visibleItems } from '../../content/vocab';
 import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
 import { cardCitationView, type CardCitationView } from '../../logic/library/card-citation';
+import { CARD_DETAIL_AUDIO_SOURCE, cardSpeech } from '../../logic/library/card-speech';
 import { cardDetailDisplay, type CardDetailState } from '../../logic/library/card-detail-state';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
 import { cardKoLine, cardTitleIsKo } from '../../logic/card-art';
@@ -77,7 +79,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   const [shareError, setShareError] = useState<string | null>(null);
   const captureRef = useRef<View>(null);
   // The Korean name is printed on the card; the panel only says why it is silent (F-AUDIO-004 A-5b).
-  const slot = usePromptSlot({ source: 'card-detail', textOnScreen: true });
+  const slot = usePromptSlot({ source: CARD_DETAIL_AUDIO_SOURCE, textOnScreen: true });
   const [helpOpen, setHelpOpen] = useState(false);
   // Closing the card (Back, or another card in the split pane, which remounts it by key) stops a word mid-way.
   useEffect(() => () => stop(), []);
@@ -112,10 +114,11 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   // A story card's fact always comes with its source, on either face (F-STORY-006 §3.8).
   const citation = cardCitationView(card, m.citation);
 
-  // `audioRef` joins the card schema with F-CNT-002 / F-VOC (spec §3.9); until then the device voice says the name.
+  // The card's Korean name; a card that shares its name and art with a vocabulary word plays that word's
+  // recording once it is bundled (cardSpeech), else the device voice says the name.
   const hear = (): void => {
-    const ko = card.subtitleKo;
-    if (ko) void slot.play(() => playPrompt({ text: ko, kind: 'word', source: 'card-detail' }));
+    const spec = cardSpeech(card, visibleItems);
+    if (spec) void slot.play(() => playPrompt(spec));
   };
 
   return (

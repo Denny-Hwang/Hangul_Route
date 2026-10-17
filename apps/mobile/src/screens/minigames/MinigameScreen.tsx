@@ -1,6 +1,6 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -10,6 +10,7 @@ import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { patternNoteOf } from '../../logic/sentence-builder/view';
 import type { RootStackParamList } from '../../navigation/types';
+import { stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -73,6 +74,8 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, inPreview
   // quest's session. Another host (All lessons) passes no navigation and records nothing.
   usePracticeSession(activeProfileId, navigation ? `minigame:${questId}:${stepIndex}` : null);
   const copy = useMessages().learner.minigame;
+  // Leaving a game (Back, finishing it, Skip) stops a sound mid-way, whatever the game left running.
+  useEffect(() => () => stop(), []);
   // Learner default: back to the quest player. A game has no home or link exit of its own.
   const learnerBack = (): void => navigation?.goBack();
   const exits = resolveScreenExits(exitProps, { back: learnerBack, home: learnerBack, openLink: () => undefined });

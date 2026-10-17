@@ -12,8 +12,19 @@ import type { SequenceState } from './sequence-player';
  */
 export type SequenceCopy = Messages['learner']['story']['sequence'];
 
-/** The story replay moves to the next card about this often (ms). */
+/** The story replay moves to the next card no sooner than this after a line starts (ms). */
 export const SEQUENCE_REPLAY_MS = 2500;
+/** After a line has been said, the replay waits this long before the next one (ms). */
+export const SEQUENCE_LINE_GAP_MS = 600;
+
+/**
+ * How long the replay waits once the current line's play has settled (it ended, was off, or failed),
+ * `elapsedMs` after the line started: the short gap, and never sooner than `SEQUENCE_REPLAY_MS` from
+ * the line's start. A sentence longer than the interval is never cut off by the next one.
+ */
+export function replayAdvanceDelay(elapsedMs: number): number {
+  return Math.max(SEQUENCE_LINE_GAP_MS, SEQUENCE_REPLAY_MS - Math.max(0, elapsedMs));
+}
 /** A wrong card keeps its amber look for about this long (ms). */
 export const SEQUENCE_WRONG_FLASH_MS = 600;
 

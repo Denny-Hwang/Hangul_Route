@@ -165,6 +165,9 @@ export interface CardMatchPair {
   ko: string;
   en: string;
   romanization?: string;
+  /** What the voice says and the recording, when the content has them (F-AUDIO-004 §3.5). */
+  spokenKo?: string;
+  audioRef?: string;
 }
 
 export interface CardMatchRound {
@@ -236,6 +239,9 @@ export interface CultureQuizOption {
 export interface CultureQuizRound {
   promptKo: string;
   promptRomanization?: string;
+  /** The prompt word's spoken form and recording, from its card pair when it has them. */
+  promptSpokenKo?: string;
+  promptAudioRef?: string;
   options: CultureQuizOption[];
 }
 
@@ -268,7 +274,13 @@ export function buildCultureQuizRounds(opts: {
       [{ en: prompt.en, isAnswer: true }, ...distractors.map((d) => ({ en: d.en, isAnswer: false }))],
       seed + 1,
     );
-    out.push({ promptKo: prompt.ko, promptRomanization: prompt.romanization, options });
+    out.push({
+      promptKo: prompt.ko,
+      promptRomanization: prompt.romanization,
+      ...(prompt.spokenKo === undefined ? {} : { promptSpokenKo: prompt.spokenKo }),
+      ...(prompt.audioRef === undefined ? {} : { promptAudioRef: prompt.audioRef }),
+      options,
+    });
   }
   return out;
 }

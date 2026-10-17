@@ -24,6 +24,7 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
+import { koSpeech } from '../../logic/audio/ko-speech';
 import { playPrompt } from '../../platform/audio';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -60,7 +61,8 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
   const slot = usePromptSlot({ source: 'voice-echo', textOnScreen: true });
   const [helpOpen, setHelpOpen] = useState(false);
   const hear = (): void => {
-    void slot.play(() => playPrompt({ text: target, kind: 'word', source: 'voice-echo' }));
+    // The pair's spoken form and recording when the content has them; the default word has neither.
+    void slot.play(() => playPrompt(koSpeech(pair ?? { ko: target }, 'word', 'voice-echo')));
   };
 
   const onDone = (): void => {

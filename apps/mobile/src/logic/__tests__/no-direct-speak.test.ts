@@ -26,6 +26,13 @@ const SLOT_SCREENS = [
   'library/CardDetailView.tsx',
   // F-VOC-004 S-4b: the vocabulary question's prompt word (source vocab-speed / vocab-card).
   'vocab/VocabQuestionView.tsx',
+  // The learner audio pass (2026-10-17): every printed word with a speaker says why it is silent.
+  'episode/StoryEpisodeDetail.tsx',
+  'story/CultureNotesScreen.tsx',
+  'quest/DiscoverStep.tsx',
+  'minigames/TraceWordGame.tsx',
+  'minigames/TraceStrokeGame.tsx',
+  'minigames/PicWordMatchGame.tsx',
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -76,13 +83,48 @@ describe('no direct speak from screens', () => {
    * unmount, as Listen & Pick and Story Order do, so Korean never keeps
    * playing over the next screen.
    */
-  it.each(['minigames/TapRespondGame.tsx', 'library/CardDetailView.tsx', 'minigames/ListenPickGame.tsx', 'vocab/VocabQuestionView.tsx'])(
+  it.each([
+    'minigames/TapRespondGame.tsx',
+    'library/CardDetailView.tsx',
+    'minigames/ListenPickGame.tsx',
+    'vocab/VocabQuestionView.tsx',
+    // Leaving a quest step, a game or the word cards stops a word or sentence mid-way (2026-10-17).
+    'quest/QuestPlayerView.tsx',
+    'minigames/MinigameScreen.tsx',
+    'vocab/VocabCardsScreen.tsx',
+    'minigames/TraceWordGame.tsx',
+    'minigames/TraceStrokeGame.tsx',
+  ])(
     '%s stops its speech on unmount',
     (rel) => {
       const file = files.find((f) => f.rel === rel);
       expect(file, rel).toBeDefined();
       expect(audioImports(file!.source)).toContain('stop');
       expect(file!.source).toMatch(/\bstop\(\)/);
+    },
+  );
+
+  it('the quest player stops the speech when its step changes, and Discover when it unmounts', () => {
+    const player = files.find((f) => f.rel === 'quest/QuestPlayerView.tsx')!;
+    expect(player.source).toMatch(/useEffect\(\(\) => \(\) => stop\(\), \[stepIndex\]\)/);
+    const discover = files.find((f) => f.rel === 'quest/DiscoverStep.tsx')!;
+    expect(audioImports(discover.source)).toContain('stop');
+    expect(discover.source).toMatch(/\(\) => \(\) => \{[^}]*stopAudio\(\);/);
+  });
+
+  it('Listen & Pick plays through a prompt slot and shows the text panel (the prompt as text, why, the one action)', () => {
+    const file = files.find((f) => f.rel === 'minigames/ListenPickGame.tsx')!;
+    expect(file.source).toMatch(/usePromptSlot\(\{\s*source: LISTEN_PICK_AUDIO_SOURCE,\s*hasClip: hasClip\(/);
+    expect(file.source).toMatch(/<PromptPanel\b[\s\S]*?testID="listen-pick-prompt"[\s\S]*?\/>/);
+    expect(file.source).not.toMatch(/void playPrompt\(/);
+  });
+
+  /** No play is fire-and-forget on these screens any more: a silent speaker always says why. */
+  it.each(['minigames/TraceWordGame.tsx', 'minigames/TraceStrokeGame.tsx', 'minigames/PicWordMatchGame.tsx', 'quest/DiscoverStep.tsx'])(
+    '%s has no bare void playPrompt / playJamo',
+    (rel) => {
+      const file = files.find((f) => f.rel === rel)!;
+      expect(file.source).not.toMatch(/void play(Prompt|Jamo)\(/);
     },
   );
 

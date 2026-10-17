@@ -112,6 +112,18 @@ function buildLetterSyllables(words, where) {
   });
 }
 
+
+/**
+ * The spoken form and recording of a piece of taught Korean, only the keys the content has
+ * (F-AUDIO-004 §3.5): the card-match pairs and the dialogue lines and replies keep them, so the
+ * games say `spokenKo` and play the clip once it is bundled.
+ */
+function speechOf(text) {
+  return {
+    ...(typeof text.spokenKo === "string" ? { spokenKo: text.spokenKo } : {}),
+    ...(typeof text.audioRef === "string" ? { audioRef: text.audioRef } : {}),
+  };
+}
 /** The runtime scope of one lesson scope; `rounds` is what the §3.1 table counts. */
 export function runtimeScope(scope, where) {
   const { kind } = scope;
@@ -125,17 +137,26 @@ export function runtimeScope(scope, where) {
       return { kind, rounds: syllables.length, syllables };
     }
     case "card-match":
-      return { kind, rounds: scope.pairs.length, cardPairs: scope.pairs.map(({ ko, romanization, en }) => ({ ko, romanization, en })) };
+      return {
+        kind,
+        rounds: scope.pairs.length,
+        cardPairs: scope.pairs.map(({ ko, romanization, en, spokenKo, audioRef }) => ({ ko, romanization, en, ...speechOf({ spokenKo, audioRef }) })),
+      };
     case "tap-respond":
       return {
         kind,
         rounds: scope.turns.length,
-        dialogue: scope.turns.map((turn) => ({
-          npcKo: turn.line.ko,
-          npcRomanization: turn.line.romanization,
-          npcEn: turn.line.en,
-          options: turn.replies.map((r) => ({ ko: r.text.ko, romanization: r.text.romanization, en: r.text.en, isCorrect: r.correct })),
-        })),
+        dialogue: scope.turns.map((turn) => {
+          const line = speechOf(turn.line);
+          return {
+            npcKo: turn.line.ko,
+            npcRomanization: turn.line.romanization,
+            npcEn: turn.line.en,
+            ...(line.spokenKo === undefined ? {} : { npcSpokenKo: line.spokenKo }),
+            ...(line.audioRef === undefined ? {} : { npcAudioRef: line.audioRef }),
+            options: turn.replies.map((r) => ({ ko: r.text.ko, romanization: r.text.romanization, en: r.text.en, isCorrect: r.correct, ...speechOf(r.text) })),
+          };
+        }),
       };
     case "story-sequence":
       return {

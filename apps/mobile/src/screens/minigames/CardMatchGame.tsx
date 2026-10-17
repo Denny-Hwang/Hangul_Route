@@ -24,6 +24,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { pairRoundKey } from '../../logic/round-keys';
+import { koSpeech } from '../../logic/audio/ko-speech';
 import { playPrompt } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -74,7 +75,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
     // A different word is a new prompt slot: what the last one could not play no longer applies.
     if (idx !== heardIdx) slot.reset();
     setHeardIdx(idx);
-    void slot.play(() => playPrompt({ text: pair.ko, kind: 'word', source: 'card-match' }));
+    void slot.play(() => playPrompt(koSpeech(pair, 'word', 'card-match')));
   };
 
   useEffect(() => {

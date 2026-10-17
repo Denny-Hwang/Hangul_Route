@@ -34,6 +34,7 @@ import {
   type QuestPlayerPorts,
 } from '../../logic/quest-flow/quest-player-ports';
 import { questStepLabel } from '../../logic/quest-steps';
+import { stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { useRouteBackGuard } from '../use-back-guard';
@@ -100,6 +101,8 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack,
   );
 
   const step = quest?.steps[stepIndex];
+  // A new step (or leaving the quest) stops what the last one was saying: a Discover sentence, a game's word.
+  useEffect(() => () => stop(), [stepIndex]);
 
   // `quest.check_completed` rides the step change: the Check ends when the player moves past it
   // (F-QUEST-002 §3.3), so leaving the game and coming back to the launcher never fires it twice.

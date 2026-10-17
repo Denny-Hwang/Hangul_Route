@@ -231,7 +231,11 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
     const cases = [
       [{ kind: "listen-pick", rounds: [lp("a")] }, { kind: "listen-pick", rounds: 1, listenPick: { rounds: [lp("a")] } }],
       [{ kind: "pic-word-match", boards: [{ pairs: [] }] }, { kind: "pic-word-match", rounds: 1, picWord: { boards: [{ pairs: [] }] } }],
-      [{ kind: "card-match", pairs: [kt("연", "yeon", "kite", { audioRef: "x" })] }, { kind: "card-match", rounds: 1, cardPairs: [kt("연", "yeon", "kite")] }],
+      // The spoken form and the recording ride along (F-AUDIO-004 §3.5); a teaching-only field does not.
+      [
+        { kind: "card-match", pairs: [kt("연", "yeon", "kite", { audioRef: "audio/vocab/yeon-kite.mp3", spokenKo: "연", syllables: ["yeon"] })] },
+        { kind: "card-match", rounds: 1, cardPairs: [kt("연", "yeon", "kite", { audioRef: "audio/vocab/yeon-kite.mp3", spokenKo: "연" })] },
+      ],
       // A particle round may leave out its distractors (the schema default): the game reads [].
       [
         { kind: "order-it", rounds: [{ id: "r1", distractors: [kt("물을", "mureul", "water")] }, { id: "r2", particle: { tile: 0 } }] },
@@ -256,6 +260,21 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       rounds: 1,
       dialogue: [{ npcKo: "매워요?", npcRomanization: "maewoyo", npcEn: "is it spicy?", options: [{ ko: "아니요, 안 매워요.", romanization: "aniyo an maewoyo", en: "no, it is not", isCorrect: true }] }],
     });
+    const spoken = {
+      speakerEn: "Mina",
+      line: kt("매워요?", "maewoyo", "is it spicy?", { spokenKo: "매워요", audioRef: "audio/dialogue/maewoyo.mp3" }),
+      replies: [{ id: "a", text: kt("네.", "ne", "yes", { audioRef: "audio/dialogue/ne.mp3" }), correct: true }],
+    };
+    assert.deepEqual(runtimeScope({ ref, kind: "tap-respond", turns: [spoken] }, "t").dialogue, [
+      {
+        npcKo: "매워요?",
+        npcRomanization: "maewoyo",
+        npcEn: "is it spicy?",
+        npcSpokenKo: "매워요",
+        npcAudioRef: "audio/dialogue/maewoyo.mp3",
+        options: [{ ko: "네.", romanization: "ne", en: "yes", isCorrect: true, audioRef: "audio/dialogue/ne.mp3" }],
+      },
+    ]);
     assert.deepEqual(runtimeScope({ ref, kind: "story-sequence", lines: [{ id: "l1", line: kt("안녕하세요.", "annyeonghaseyo", "hello") }] }, "t"), {
       kind: "story-sequence",
       rounds: 1,

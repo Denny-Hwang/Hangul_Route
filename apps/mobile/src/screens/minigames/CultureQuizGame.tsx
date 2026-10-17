@@ -21,6 +21,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { gameArrangement } from '../../logic/layout/game-layout';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildCultureQuizRounds, type CultureQuizRound } from '../../logic/round-builder';
+import { koSpeech } from '../../logic/audio/ko-speech';
 import { playPrompt } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -66,7 +67,8 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
   }
 
   const hear = (): void => {
-    void slot.play(() => playPrompt({ text: round.promptKo, kind: 'word', source: 'culture-quiz' }));
+    const word = { ko: round.promptKo, spokenKo: round.promptSpokenKo, audioRef: round.promptAudioRef };
+    void slot.play(() => playPrompt(koSpeech(word, 'word', 'culture-quiz')));
   };
 
   const handleTap = (en: string, isAnswer: boolean): void => {
