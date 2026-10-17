@@ -14,8 +14,8 @@ import type { DisplaySheetProps } from './types';
  * DisplaySheet — the Display (Aa) sheet (owner items 6 and 7): the device's UI language and text
  * size, the one record every surface reads. A bottom sheet on phones and a centred dialog from
  * the regular class. Two segmented controls (radio groups): Language (endonyms, each in its own
- * `lang`; hidden with one language) and Text size (four steps, each segment drawing its "Aa" at
- * that step), then a live sample line at the chosen size. A choice applies at once; Done only
+ * `lang`; hidden with one language) and Text size (four steps, each segment drawing the caller's
+ * glyph, "Aa", at that step), then a live sample line at the chosen size. A choice applies at once; Done only
  * closes. After a language change the caller passes `undo`, a one-tap way back written in the new
  * language. No copy of its own: every label comes from the caller's dictionary. Not behind the
  * grown-up gate (display only, reversible). Spec: design/components/DisplaySheet/spec.md.
@@ -26,8 +26,6 @@ const HANDLE_W = spacing.xxl;
 const HANDLE_H = spacing.xs;
 /** The dialog's width from the regular class: eight touch targets. */
 const DIALOG_MAX = touchTarget.min * 8;
-/** The text both controls draw an option with: the glyph never shrinks below the caption size. */
-const SAMPLE_GLYPH = 'Aa';
 
 type Pressed = { pressed: boolean; focused?: boolean };
 
@@ -222,7 +220,7 @@ export function DisplaySheet({
                       importantForAccessibility="no"
                       style={{ fontSize: glyph, lineHeight: scale.lineHeight(glyph, 'tight'), fontWeight: typography.weight.bold, color: isSelected ? colors.text.onPrimary : colors.text.primary }}
                     >
-                      {SAMPLE_GLYPH}
+                      {textSize.glyph}
                     </Text>
                     {optionText(option.label, isSelected)}
                   </>

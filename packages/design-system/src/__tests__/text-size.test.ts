@@ -5,6 +5,7 @@ import {
   TEXT_SCALE_CSS_VAR,
   TEXT_SIZE_FACTORS,
   TEXT_SIZE_STEPS,
+  cappedFont,
   effectiveFontScale,
   scaledFontCap,
   sizeMultiplier,
@@ -95,5 +96,29 @@ describe('effectiveFontScale and scaledFontCap', () => {
     expect(scaledFontCap(2, 1.5)).toBeCloseTo(4 / 3);
     expect(scaledFontCap(1, 1.5)).toBe(1);
     expect(scaledFontCap(1.3, Number.NaN)).toBe(1.3);
+  });
+});
+
+describe('cappedFont: a capped text at the chosen step', () => {
+  it('standard keeps the token size and the cap as written', () => {
+    expect(cappedFont('body', 1, 1.3)).toEqual({ fontSize: 18, maxFontSizeMultiplier: 1.3 });
+    expect(cappedFont('caption', 1, 1.3)).toEqual({ fontSize: 14, maxFontSizeMultiplier: 1.3 });
+  });
+
+  it('a larger step draws bigger and leaves the OS what is left of the budget (about cap / f)', () => {
+    const large = cappedFont('body', 1.15, 1.3);
+    expect(large.fontSize).toBe(21);
+    expect(large.maxFontSizeMultiplier).toBeCloseTo(23.4 / 21);
+    expect(large.fontSize * large.maxFontSizeMultiplier).toBeCloseTo(18 * 1.3);
+  });
+
+  it('a step past the cap is clamped to base x cap, and the OS adds nothing more', () => {
+    const largest = cappedFont('body', 1.5, 1.3);
+    expect(largest.fontSize).toBe(23);
+    expect(largest.maxFontSizeMultiplier).toBeGreaterThanOrEqual(1);
+    expect(largest.fontSize * largest.maxFontSizeMultiplier).toBeCloseTo(18 * 1.3);
+    // A cap of 1 (fixed art text) never grows, and a cap below 1 counts as 1.
+    expect(cappedFont('caption', 1.5, 1)).toEqual({ fontSize: 14, maxFontSizeMultiplier: 1 });
+    expect(cappedFont('caption', 1.5, 0.5)).toEqual({ fontSize: 14, maxFontSizeMultiplier: 1 });
   });
 });

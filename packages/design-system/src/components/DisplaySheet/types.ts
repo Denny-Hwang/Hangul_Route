@@ -21,6 +21,8 @@ export interface DisplaySheetTextSize {
   onSelect: (step: TextSizeStep) => void;
   /** The live sample line, drawn at the chosen size. */
   sample: string;
+  /** The sign each segment draws at its own step ("Aa"), hidden from assistive tech. */
+  glyph: string;
 }
 
 export interface DisplaySheetProps {

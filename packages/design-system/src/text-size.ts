@@ -97,5 +97,24 @@ export function scaledFontCap(cap: number, f: number): number {
   return Math.max(1, cap / safeFactor(f));
 }
 
+export interface CappedFont {
+  fontSize: number;
+  maxFontSizeMultiplier: number;
+}
+
+/**
+ * A text with a native `maxFontSizeMultiplier` cap, drawn at the chosen step: the cap stays a
+ * budget for the step and the OS text size together (`base x cap` at most). The size is the
+ * step's size, but never above `base x cap`, and the native cap becomes what is left of the
+ * budget (`scaledFontCap` when nothing is clamped). At standard this is the token size and the
+ * cap as written, so nothing changes for a device that never chose.
+ */
+export function cappedFont(name: TypeSizeName, f: number, cap: number): CappedFont {
+  const base = typography.size[name];
+  const ceiling = base * Math.max(1, cap);
+  const fontSize = Math.round(Math.min(typeScale(f).size[name], ceiling));
+  return { fontSize, maxFontSizeMultiplier: Math.max(1, ceiling / fontSize) };
+}
+
 /** The CSS custom property the grown-up pages read on `<html>` (`font-size: calc(100% * var(--hr-text-scale, 1))`). */
 export const TEXT_SCALE_CSS_VAR = '--hr-text-scale';

@@ -78,7 +78,7 @@ function props(over: Partial<DisplaySheetProps> = {}): DisplaySheetProps {
       selected: 'en',
       onSelect: vi.fn(),
     },
-    textSize: { label: 'Text size', options: textSizeOptions(LABELS), selected: 'standard', onSelect: vi.fn(), sample: 'Words look like this.' },
+    textSize: { label: 'Text size', options: textSizeOptions(LABELS), selected: 'standard', onSelect: vi.fn(), sample: 'Words look like this.', glyph: 'Aa' },
     note: 'Every page on this device uses these.',
     doneLabel: 'Done',
     closeLabel: 'Close',

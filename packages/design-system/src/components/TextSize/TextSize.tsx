@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { STANDARD_TYPE_SCALE, effectiveFontScale, scaledFontCap, textSizeFactor, typeScale, type TextSizeStep, type TypeScale } from '../../text-size';
+import { STANDARD_TYPE_SCALE, cappedFont, effectiveFontScale, scaledFontCap, textSizeFactor, typeScale, type CappedFont, type TextSizeStep, type TypeScale, type TypeSizeName } from '../../text-size';
 
 /**
  * The React layer of the text size engine (`../../text-size.ts`, owner items 6 and 7). The root
@@ -44,4 +44,9 @@ export function useEffectiveFontScale(): number {
 /** A native `maxFontSizeMultiplier` cap divided by the chosen step (never below 1), for text drawn at the step. */
 export function useFontCap(cap: number): number {
   return scaledFontCap(cap, useTextSizeFactor());
+}
+
+/** A capped text's size and native cap at the chosen step (`cappedFont`): the cap holds for OS x step together. */
+export function useCappedFont(name: TypeSizeName, cap: number): CappedFont {
+  return cappedFont(name, useTextSizeFactor(), cap);
 }

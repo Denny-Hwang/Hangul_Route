@@ -5,6 +5,7 @@ import { TEXT_SIZE_FACTORS, TEXT_SIZE_STEPS, typeScale, type TextSizeStep } from
  * controls shows. No React, so the DOM sheet of the grown-up pages draws the same steps.
  */
 
+
 /** One option of a segmented control: its value, its visible label and, for a language, its `lang`. */
 export interface DisplayOption<T extends string = string> {
   value: T;
