@@ -1,0 +1,67 @@
+/*
+ * Learner UX pass of the owner report 2026-10-16 (docs/specs/AMENDMENTS-DISPLAY-NAV.md section 9; design pass
+ * DN-0): Home with the next-lesson hero, the Profile split and the Grown-up area, the Library's collected-first
+ * Cards tab. Design mock, not shipped code. Loaded after ../../app-shell/mock/app-shell.css (the tokens block) and
+ * display-nav.css (text size, ScreenHeader, Display control). Learner screens are react-native drawn as HTML in rem,
+ * so the browser text size and the Display sheet's text size both reach them. Tokens only.
+ */
+.ls-screen { gap: var(--spacing-md); background: var(--colors-surface-canvas); }
+.ls-screen > .rn-card { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.who-face { flex: none; display: inline-flex; }
+.profile-btn { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xxs); min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs); border: none; background: transparent; color: var(--colors-text-primary); font-size: var(--size-bodySm); font-weight: var(--weight-bold); cursor: pointer; }
+.pill-on, .pill-off { flex: none; padding: var(--spacing-xxs) var(--spacing-md); border-radius: var(--radii-pill); font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
+.pill-on { background: var(--colors-feedback-successLight); color: var(--colors-text-primary); }
+.pill-off { background: var(--colors-surface-sunken); color: var(--colors-text-primary); }
+.pills { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.pill { padding: var(--spacing-xxs) var(--spacing-md); border-radius: var(--radii-pill); font-size: var(--size-body); font-weight: var(--weight-semibold); }
+.pill.streak { background: var(--colors-brand-primaryLight); }
+.pill.cards { background: var(--colors-brand-secondaryLight); }
+.pill.stars { background: var(--colors-feedback-successLight); }
+.subtitle { color: var(--colors-text-secondary); font-size: var(--size-bodyLg); }
+.h2 { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+
+/* Home: the next-lesson hero */
+.hero { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-xl) var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-surface-paper); border: var(--border-width-thick) solid var(--colors-brand-primary); box-shadow: var(--shadow-card); }
+.hero .eyebrow { font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-brand-primaryDark); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+.hero .h-title { font-size: calc(var(--size-title) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.hero .h-where, .hero .h-goal { color: var(--colors-text-secondary); font-size: var(--size-body); }
+.hero .rn-hero { margin-top: var(--spacing-sm); }
+.hero .rn-link { align-self: flex-start; gap: var(--spacing-xs); padding-left: var(--spacing-none); }
+.mission { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-hero); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); }
+.mission .m-art { flex: none; width: var(--spacing-jumbo); height: var(--spacing-xxxl); border-radius: var(--radii-md); background: var(--colors-surface-sunken); display: inline-flex; align-items: center; justify-content: center; }
+.mission .m-text { display: flex; flex-direction: column; min-width: 0; }
+.mission .m-text b { font-size: var(--size-bodyLg); overflow-wrap: anywhere; }
+.mission .m-text span { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.tabbar { position: sticky; bottom: var(--spacing-none); margin: var(--spacing-md) calc(-1 * var(--gutter-compact)) calc(-1 * var(--spacing-xl)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--colors-surface-paper); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.tabbar a { min-width: 0; padding: var(--spacing-xxs); text-align: center; overflow-wrap: anywhere; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xxs); min-height: var(--touch-min); color: var(--colors-text-secondary); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); text-decoration: none; }
+.tabbar a[aria-current="page"] { color: var(--colors-brand-primaryDark); font-weight: var(--weight-bold); }
+@media (min-width: 600px) { .tabbar { margin-left: calc(-1 * var(--gutter-regular)); margin-right: calc(-1 * var(--gutter-regular)); } }
+
+/* Profile and the Grown-up area */
+.who-row { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.who { display: inline-flex; flex-direction: column; align-items: center; gap: var(--spacing-xxs); min-width: calc(var(--touch-hero) + var(--spacing-xl)); padding: var(--spacing-sm); border-radius: var(--radii-lg); border: var(--border-width-thin) solid var(--colors-border-subtle); background: var(--colors-surface-paper); }
+.who.on { border: var(--border-width-thick) solid var(--colors-brand-primary); background: var(--colors-brand-primaryLight); }
+.who-add { align-self: center; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-sm); }
+.stats div { display: flex; flex-direction: column; }
+.stats span { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.stats b { font-size: var(--size-bodyLg); }
+.zone-row { border: var(--border-width-base) solid var(--colors-border-strong); }
+.section-label { font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-secondary); margin-top: var(--spacing-sm); }
+.btn-col { display: flex; flex-direction: column; gap: var(--spacing-sm); align-items: flex-start; }
+
+/* Library: collected first */
+.lib-tabs, .lib-chips { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.lib-tab { min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-xl); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); font-size: var(--size-body); font-weight: var(--weight-semibold); }
+.lib-tab[aria-selected="true"] { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font-weight: var(--weight-bold); }
+.lib-chip { min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); font-size: var(--size-bodySm); }
+.lib-chip[aria-pressed="true"] { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font-weight: var(--weight-bold); }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-md); }
+@media (min-width: 600px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card-tile { color: inherit; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xs); padding: var(--spacing-md); border-radius: var(--radii-lg); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); text-align: center; min-width: 0; }
+.card-tile .ko b { font-size: var(--size-bodyLg); }
+.card-tile .ko i { font-style: normal; color: var(--colors-text-secondary); margin-left: var(--spacing-xs); }
+.card-tile .new { align-self: flex-start; padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-brand-primaryLight); font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
+.card-tile.locked { box-shadow: none; background: var(--colors-surface-sunken); border: var(--border-width-thin) solid var(--colors-border-subtle); color: var(--colors-text-secondary); font-size: var(--size-bodySm); justify-content: center; min-height: calc(var(--touch-hero) * 1.5); }
+.earn { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.earn .disclosure { align-self: flex-start; min-height: var(--touch-min); display: inline-flex; align-items: center; gap: var(--spacing-sm); }

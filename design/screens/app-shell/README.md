@@ -16,12 +16,13 @@ Built by:
 |---|---|
 | `signin.md` | `/signin` Panels A to D, the adult step, the router, every error line; the Clerk theming rule |
 | `grown-up-lock.md` | the lock as A-4a built it: Panel A and the five sign-in-only lines |
-| `adult-frame.md` | the frame at phone and wide widths: one header row, persona switch, tab row, footer, the way back, the pending and error frames |
+| `adult-frame.md` | the frame at phone and wide widths: one header row, persona switch, tab row, footer, the way back, the pending and error frames; revised 2026-10-16 (DN-5, DN-6): PageBack, the Learner app exit at the right, Display instead of Language (`mock/frame-pageback*.html`) |
 | `parent-home.md` | `/parent`: the learner card and its actions by flag, the family actions, the empty state with the join hand-off, no family yet, loading, one family failing |
 | `teacher-home.md` | `/teach/home`: class rows with Class report and Notes, School, archived rows, Lessons, no class yet, archived only, error, cross-links |
 | `offline.md` | `/grown-ups-offline.html` as A-2 generates it |
 | `lecture-card.md` | LV-0b (rows LV-5): the Lecture mode card on `/teach/home` and `/parent`, the nav item, the space button, the card states (`mock/teacher-home-lecture.html`, `parent-home-lecture.html`, `lecture-card-states.html`, `lecture-card.css`) |
 | `lecture-setup.md` | LV-0b (row LV-4): the console setup page presets first, teacher and family wording, Customize prefilled, loading, failed, family of one, flag off (`mock/lecture-setup.html`, `lecture-setup-family.html`, `lecture-setup-states.html`, `lecture-setup.css`) |
+| `display-sheet.md` | DN-0 (2026-10-16; rows DN-3, DN-5, DN-7, LV-3): the Display (Aa) control and sheet, language with its in-language confirm, the four text sizes, Largest applied (`mock/display-sheet*.html`, `mock/display-nav.css`) |
 | `learner-entry.md` | Welcome A, B, C; Profile row (family device, self-only device, offline); dashboard card (and offline); PIN screen `GrownUpArea` without a PIN |
 | `mock/` | static HTML on one stylesheet, `app-shell.css`: `signin.html`, `signin-states.html`, `lock.html`, `lock-states.html`, `frame-states.html`, `parent-home.html`, `parent-home-states.html`, `teacher-home.html`, `teacher-home-states.html`, `offline.html`, `welcome.html`, `learner-entry.html`, `check.html` |
 | `shots/` | the mock rendered in Chromium at 2x. File names give the page and the viewport width; `-first` is the first screen only; `-text200` is the browser text size at 200 % (method below) |

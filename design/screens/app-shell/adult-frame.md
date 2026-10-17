@@ -1,4 +1,6 @@
-# AdultFrame: header, persona switch, navigation, footer (design mock v1, for A-5a and A-5c)
+# AdultFrame: header, persona switch, navigation, footer (design mock v1, for A-5a and A-5c; revised 2026-10-16 for DN-5 and DN-6)
+
+> **Revision 2026-10-16 (owner report; `docs/specs/AMENDMENTS-DISPLAY-NAV.md` section 7.3, rows DN-5 and DN-6).** See "PageBack, the Learner app exit and Display" at the end. The way to the learner app becomes **Learner app** at the right end of the header, every non-home page gets a **PageBack** at the top left of its content, and the Display (Aa) control replaces the Language select in the header and the phone footer. The panels below are the v1 record.
 
 Wireframe: `design/wireframes/shell/adult-frame.md` (Panels A to C) · spec §3.8, §3.10, §3.16 · mock: `mock/frame-states.html` (and the frame of `parent-home.html`, `teacher-home.html`) · shots: `shots/frame-states-320.png`, `-375.png`, `-768.png`, `-1280.png`, `-375-text200.png`, `parent-home-1280.png`, `teacher-home-1280.png`
 
@@ -74,3 +76,31 @@ Items are drawn exactly as section 3.8 registers them; an item whose predicate i
 - `nav` labelled with the active persona's name; `aria-current="page"` on the current item (the underline and weight are its non-colour cues).
 - Contrast and state checks: README, "Greyscale and protanopia".
 - No sideways scroll at 320 and 375, also at 200 % text (the header wraps to a second row; `frame-states-375-text200.png`).
+
+## PageBack, the Learner app exit and Display (revision 2026-10-16, DN-5 and DN-6)
+
+Wireframe `design/wireframes/shell/screen-header.md` Panel C · mock `mock/frame-pageback.html` (teacher, the plan page), `mock/frame-pageback-space.html` (a space page: back to the persona home), `mock/frame-pageback-family.html` (both personas) · rules `mock/display-nav.css` · shots `frame-pageback-320.png`, `-375.png`, `-768.png`, `-1280.png`, `-375-text200.png`, `frame-pageback-space-375.png`, `frame-pageback-family-375.png`, `-1280.png`
+
+```
+375, one persona (one header row; the brand mark steps out below 45em):
+ 16 | Teacher            ( Aa ) (Learner app >) | 16
+    | Classes | Lessons | Lecture mode | Billing |
+    |---------------------------------------------|
+    | (< Back to Saturday class)                  |   <- PageBack: top left of the content, above the h1
+    | Plan the week                          (h1) |
+
+375, both personas: the switch takes the first row, Display and the exit the second (right aligned)
+
+1280:
+ (HR) Hangul Route  Teacher                    ( Aa )  Sign out  (Learner app >)
+   Classes   Lessons   Lecture mode   Billing
+   (< Back to Saturday class)
+   Plan the week
+```
+
+- **PageBack** (`.page-back`): the `arrow-left` glyph and the page's existing back message without its leading "← " (`console.plan.back`, `.settings.back`, `.lecture.back`, `.relink.back`, `.curriculum.back`, `.learningRoute.back.*`, `.notes.sent.back.*`, `.billing.receipts.back`); on a space's own page "Back to {page}" (`console.pageBack.to`) with the persona home's nav label ("Back to Classes", "Back to Home"). `touchTarget.min` tall, `size.body` bold `text.primary`, no border (it is a link), the same place on every page and width. Persona homes and nav targets have none.
+- **Learner app** (`.learner-exit`, `console.shell.backToLearning`, changed; "Open the learner app" is retired): label first, then the `arrow-right` glyph (it leaves, it is not a Back), pill on paper with `borderWidth.thin` `border.strong`, `size.bodySm` bold, `touchTarget.min` tall; always the **last** control of the header row, at the right. Its action is unchanged (clears the unlock and the console session, `learnerHome()` with `?lang=`).
+- **Display (Aa)** (`.aa-btn`) sits before Sign out (wide) or before the exit (phone); the Language select is removed from the header and the phone footer (the footer keeps Sign out).
+- **Phone header**: below 45em the brand mark steps out (the nav's first item is the persona home), so persona, Display and the exit share one row with one persona (`frame-pageback-375.png`); with the persona switch they need a second row, right aligned (`frame-pageback-family-375.png`). This amends the one-row phone header of D2 for accounts with both personas only.
+- **Measured**: no sideways scroll at 320, 375, 768, 1280 and 375 with 200 % text; every control at least 64 px.
+- **Strings**: `console.pageBack.to` (new), `console.shell.backToLearning` (changed), the five `back(space)` values without "← " (AMENDMENTS-DISPLAY-NAV section 10); `common.display.button` / `.a11y`.
