@@ -1,5 +1,7 @@
 # Presenter home: Recent lessons and Quick lesson (screen spec v1)
 
+> **Superseded.** The layout is `presets.md` (LV-0b, 2026-10-15). From the owner report of 2026-10-16 (`AMENDMENTS-LECTURE-V2.md` section 18) the language chips below are removed (the **Display (Aa)** control replaces them), the home gets a top-left **Back**, and the flat Quick lesson list (144 rows, 11 213 px tall at 360 x 740 on a release build of `426384b45`) becomes the **grouped chooser** under Customize: tabs Lessons, Stories, Word topics, Letters, one at a time, with stage chips, "{n} lessons inside", Show 8 more, Your lesson and a sticky footer. See `presets.md` item 5 and the shots `presets-customize-320.png`, `-768.png`, `-1180.png`. `mock/home.html` and `home-empty.html` stay as the PR 8 record and are not redrawn.
+
 Spec: F-TCH-004 sections 3.1 (without the console), 3.12, 3.13 · wireframe `classroom/lecture-presenter.md` A · PR 8
 Mock: `mock/home.html`, `mock/home-empty.html` · shots `shots/home-375.png`, `-1280.png`, `-320-text200.png`, `home-empty-*`
 Code: `apps/mobile/src/screens/presenter/HomeScreen.tsx` (PR 8), `logic/lecture/recent.ts` (PR 5)

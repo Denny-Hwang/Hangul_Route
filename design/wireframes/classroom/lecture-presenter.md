@@ -1,5 +1,7 @@
 # Classroom/Lecture presenter — a teacher's slide-style lesson on a tablet, TV or projector (wireframe v1)
 
+> **Amended 2026-10-16 (owner report; `docs/specs/AMENDMENTS-LECTURE-V2.md` section 18).** The **helper picker** is removed everywhere below (screen I's picker panel, the start screen's picker row, the bar's [Picker] button, the `P` key, the console's Helper picker section; LV-D7: no deck sets a picker), so no learner name or initial reaches the projected screen. A phone sideways shows slides with a floating bar and an upright phone a rotate page (`classroom/lecture-phone.md`); the home's language chips are replaced by the Display (Aa) control and the flat Quick lesson by the grouped chooser (`classroom/lecture-presets.md`). The rest of this v1 wireframe stands.
+
 Spec: `docs/specs/F-TCH-004-lecture-mode.md` (§3.1 surfaces, §3.4 slide kinds, §3.5 controls, §3.6 type, §3.10 names, §3.11 console page)
 Supersedes for teachers: `design/wireframes/classroom/projection-mode.md` (which stays as the deferred "volunteer student" option)
 Audience: a **teacher or grown-up** driving the screen (class teacher, weekend-school teacher, parent with a TV). The room watches; nobody is "the interacting learner". Any age in the room (CLAUDE.md §1). The projected surface never shows scores, progress, rankings or a learner's name outside the picker, and no name or initial is ever in a URL (names reach the presenter by `postMessage` from the console tab, memory only). UI strings: English by default, Korean and Spanish selectable.
@@ -205,7 +207,7 @@ Blank                            Pause
 Grid (G)                                           Help (H or ?)
 +-----------------------------------------------+  +--------------------------------------+
 | [1 title][2 g][3 g sound][4 n] ... (thumbs)   |  | Next: Right / Space / PageDown       |
-| tap = jump        (hide) toggles a slide      |  | Back: Left / PageUp                  |
+| tap = jump        (hide) toggles a slide      |  | Previous: Left / PageUp              |
 | for this lesson only                          |  | B or . blank   T timer   P picker    |
 +-----------------------------------------------+  | S sound   R strokes   F full screen  |
                                                    | Shift+R romanization   Esc close     |
@@ -280,7 +282,7 @@ portrait               exit
 
 ## Interaction points
 
-- Next / Reveal: Space, Enter, Right, Down, PageDown, tap right two thirds, swipe left, [Reveal >]. Back: Left, Up, PageUp, Backspace, tap left third, swipe right, [<].
+- Next / Reveal: Space, Enter, Right, Down, PageDown, tap right two thirds, swipe left, [Reveal >]. Previous (labelled Back until LV-M1, 2026-10-16): Left, Up, PageUp, Backspace, tap left third, swipe right, [< Previous].
 - Blank: B or `.` (clickers) or [Blank]. Timer T, Picker P, Grid G, Fullscreen F, Help H or ?, Sound S, Strokes R, Romanization Shift+R, Close Esc (Esc with nothing open = Exit confirm).
 - Start: one tap unlocks everything that needs a gesture (sound, fullscreen, wake lock, landscape).
 - Console [[ Open presenter ]] -> new tab at `app.hangulroute.com/present#d=…` (ids and options only); the fragment is read and removed from the address bar before anything is drawn; names follow by message, never by URL.

@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 7.1 and 7.2): the web build gets a history bridge that keeps the tab's history in step with the navigator, so the browser back reaches the `beforeRemove` listener of section 3.15.4 without a linking config; every non-root screen has a top-left Back, except PlacementInvite and FirstQuestPreview, the end of first-run setup (row DN-4).
+
 # F-LEARN-001 — All-ages onboarding and profile: who is learning, reading level, consent, grown-up PIN, avatar variants
 
 **Scope**: `packages/content-schema` (level table, `learnerType`, telemetry names) · `packages/design-system` (Hoya fur variants, tokens) · `apps/mobile` (`CreateProfileScreen`, consent and PIN logic, `PinEntryScreen` + new `PinResetScreen`, profile switcher, grown-up dashboard, copy) · `apps/web` (console roster, parent demo pages, privacy and terms text) · `packages/backend` (types only, no behaviour change) · **no D1 migration**
