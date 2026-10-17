@@ -2246,7 +2246,8 @@ export const learner = {
       /**
        * Test the sound, in the voice row (F-TCH-004 section 3.7): one Korean greeting is said in the tap.
        * `played` under it when it played, `failed` when it could not (no voice, blocked or an engine error);
-       * sound switched off shows the existing Turn sound on (`learner.audio.action.turn_on`).
+       * sound switched off shows the existing "Sound is off." line and Turn sound on (`learner.audio.soundIsOff`,
+       * `learner.audio.action.turn_on`).
        */
       testSound: {
         cta: 'Test the sound',

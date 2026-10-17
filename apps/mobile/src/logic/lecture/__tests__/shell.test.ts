@@ -27,7 +27,6 @@ import {
   tallyStep,
   voiceState,
   voiceCheck,
-  SOUND_CHECK,
   soundCheckOutcome,
   nextStrokePlay,
   strokeTokenFor,
@@ -555,10 +554,6 @@ describe('voiceCheck (the start screen voice line)', () => {
 });
 
 describe('Test the sound (the start screen voice row, F-TCH-004 section 3.7)', () => {
-  it('says one Korean greeting as a word, with its own telemetry source', () => {
-    expect(SOUND_CHECK).toEqual({ text: '안녕하세요', kind: 'word', source: 'presenter-check' });
-  });
-
   it('maps the play result to the line under the button: heard, sound off, or did not play', () => {
     expect(soundCheckOutcome('played')).toBe('played');
     expect(soundCheckOutcome('muted')).toBe('muted');

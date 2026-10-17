@@ -18,7 +18,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { minigameScopes } from '../../logic/minigame-config';
 import { HANGUL_CHECK_WORDS, buildHangulCheck } from '../../logic/stage1/hangul-check';
-import { PAUSE_WORD } from '../../logic/lecture/content';
+import { PAUSE_WORD, SOUND_CHECK_WORD } from '../../logic/lecture/content';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
 import { CHECK as SENTENCE_E2E_CHECK, PRACTICE as SENTENCE_E2E_PRACTICE } from '../../navigation/sentence-builder-e2e-fixtures';
 import { episodesAll } from '../episodes';
@@ -291,6 +291,11 @@ describe('quests, episodes and avatars romanization (B1)', () => {
   it('the lecture presenter Pause word romanizes correctly (잠깐 is jamkkan, F-TCH-004 §3.13)', () => {
     note(F.lecture, PAUSE_WORD.ko, PAUSE_WORD.romanization);
     expect(pair(F.lecture, PAUSE_WORD.ko, PAUSE_WORD.romanization)).toEqual([]);
+  });
+
+  it('the presenter Test the sound greeting romanizes correctly (안녕하세요 is annyeonghaseyo, F-TCH-004 §3.7)', () => {
+    note(F.lecture, SOUND_CHECK_WORD.ko, SOUND_CHECK_WORD.romanization);
+    expect(pair(F.lecture, SOUND_CHECK_WORD.ko, SOUND_CHECK_WORD.romanization)).toEqual([]);
   });
 
   it('English prose spells registered words without syllable hyphens and in Revised Romanization (R6)', () => {

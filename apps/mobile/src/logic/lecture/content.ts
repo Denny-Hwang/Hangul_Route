@@ -1,5 +1,8 @@
 import type { Overlays, UiLocale } from '@hangul-route/content-schema';
-import { cardById, episodeById, jamoKnown, questById } from '../../content';
+import { cardById, episodeById, jamoAll, jamoKnown, questById } from '../../content';
+import type { AudioCapability } from '../audio/capability';
+import type { PlaySpec } from '../audio/controller';
+import { spokenFor } from '../audio/spoken';
 import { reviewedStrokeIds, strokesForJamo } from '../../content/jamo-strokes';
 import { localizeCard, localizeEpisode, localizeJamo, localizeQuest, localizeScope } from '../content-locale';
 import { scopeFor } from '../minigame-config';
@@ -32,6 +35,32 @@ export const PAUSE_WORD = {
   glossKey: 'learner.presenter.pause.gloss',
   en: 'wait a moment',
 } as const;
+
+/**
+ * Test the sound's greeting on the start screen (section 3.7): 안녕하세요, "hello". It is only heard, never written
+ * into a sentence or shown, so it needs no gloss message; it lives here with the taught Korean, so its romanization
+ * is checked like the Pause word's.
+ */
+export const SOUND_CHECK_WORD = { ko: '안녕하세요', romanization: 'annyeonghaseyo', en: 'hello' } as const;
+
+/**
+ * What Test the sound plays (section 3.7). The greeting, in the device's Korean voice; but where the voice row reads
+ * ready only because of the bundled recordings (no Korean voice: `voiceCheck` kind `clips`), the first Stage 1
+ * letter that has a recording, through it, so the test checks what the slides will play there and agrees with the
+ * row. `hasClip` is the platform's (a ref with a bundled recording that will be tried first). `source` keeps the
+ * test's telemetry apart from the slides'.
+ */
+export function soundCheckSpec(capability: AudioCapability, hasClip: (ref: string | undefined) => boolean): PlaySpec {
+  const greeting: PlaySpec = { text: SOUND_CHECK_WORD.ko, kind: 'word', source: 'presenter-check' };
+  if (capability.tts.state === 'ready' || !capability.clips) return greeting;
+  for (const jamo of jamoAll) {
+    const spoken = spokenFor(jamo, 'sound');
+    if (spoken.audioRef !== undefined && hasClip(spoken.audioRef)) {
+      return { text: spoken.text, audioRef: spoken.audioRef, kind: 'sound', source: 'presenter-check' };
+    }
+  }
+  return greeting;
+}
 
 export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBundle {
   const reviewed = new Set(reviewedStrokeIds);

@@ -152,8 +152,9 @@ function FontWait(): React.ReactElement {
 
 /**
  * Test the sound (section 3.7, start-screen.md): the button, then what happened, in a polite live
- * region. Sound switched off offers the shipped Turn sound on; a sound that could not play says the
- * teacher can say each word. The voice line above keeps its wording, and Ready never waits for this.
+ * region. Sound switched off says so ("Sound is off.") and offers the shipped Turn sound on; a sound
+ * that could not play says the teacher can say each word. The voice line above keeps its wording,
+ * and Ready never waits for this.
  */
 function SoundCheck({ onTest, outcome, onTurnSoundOn }: { onTest: () => void; outcome: SoundCheckOutcome | null; onTurnSoundOn?: () => void }): React.ReactElement {
   const { messages } = usePresenterView();
@@ -164,6 +165,8 @@ function SoundCheck({ onTest, outcome, onTurnSoundOn }: { onTest: () => void; ou
       <View testID="presenter-test-sound-result" role="status" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
         {outcome === 'played' ? <Line secondary>{m.played}</Line> : null}
         {outcome === 'failed' ? <Line secondary>{m.failed}</Line> : null}
+        {/* The outcome in words first, so the live region says why the button is there. */}
+        {outcome === 'muted' ? <Line secondary>{messages.learner.audio.soundIsOff}</Line> : null}
         {outcome === 'muted' && onTurnSoundOn ? (
           <GhostButton testID="presenter-test-sound-on" label={messages.learner.audio.action.turn_on.cta} onPress={onTurnSoundOn} />
         ) : null}
