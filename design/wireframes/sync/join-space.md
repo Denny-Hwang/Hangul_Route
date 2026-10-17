@@ -90,8 +90,27 @@ Exit to:    `home/todays-mission` · `profile/settings` · (teacher side, not le
 
 ## Arriving from the class join link (owner decision 2026-10-17, row OR-UX)
 
-Spec: `docs/specs/AMENDMENTS-DISPLAY-NAV.md` section 9.8 · shots `design/screens/learner-shell/shots/join-link-prefilled-360.png`, `join-link-first-run-360.png`
+Spec: `docs/specs/AMENDMENTS-DISPLAY-NAV.md` section 9.8 · shots `design/screens/learner-shell/shots/join-link-prefilled-360.png`, `join-link-fresh-welcome-360.png`, `join-link-first-run-360.png`
 
 - Given a learner scans the teacher's QR code (or opens the join link) on a device that has a profile, When the learner app opens on `/join#c=<code>`, Then the address goes back to the app root (no path, no fragment: the code never stays in the address or the history entry) and this screen opens over Home with the code already in the field; the learner taps **Join**, and every step after it is unchanged.
-- On a device with no profile yet, the first-run form starts at once (Welcome under it): who is learning, the profile, privacy and consent; then this screen opens with the code filled in, Home under it (the level check waits; Profile offers it later). Welcome's **Got a class code?** takes the same path with an empty field.
+- On a device with no profile yet, **Welcome** opens with a card: "Class code: XYZ789", "Make your profile first. Then Join a class opens.", and "Already learning in the Hangul Route app? Open it, go to Profile and tap Join a class." (on iOS the camera opens Safari, whose storage is not the installed home-screen app's or the native app's, so a learner who already plays there must not make a second profile). **I already have progress** stays beside **Let's start**, and the card replaces "Got a class code?". Let's start runs the first run (who is learning, the profile, privacy and consent); then this screen opens with the code filled in, Home under it (the level check waits; Profile offers it later). Welcome's **Got a class code?** takes the same first run with an empty field.
+
+```
+Welcome, opened by the join link on a device with no profile (360 x 640)
++------------------------------------------+
+|                (Hoya)                    |
+|          Hi! I'm Hoya.                   |
+|   Want to learn Korean letters with me?  |
+| +--------------------------------------+ |
+| | Class code: XYZ789                   | |
+| | Make your profile first. Then Join a | |
+| | class opens.                         | |
+| | Already learning in the Hangul Route | |
+| | app? Open it, go to Profile and tap  | |
+| | Join a class.                        | |
+| +--------------------------------------+ |
+| [            Let's start               ] |
+| (       I already have progress        ) |
++------------------------------------------+
+```
 - A link with no valid code opens this screen with an empty field. A reload after that opens the app root, not this screen again.

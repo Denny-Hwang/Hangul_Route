@@ -74,6 +74,26 @@ describe('the quiet trail for a brand-new learner (nothing closed)', () => {
   });
 });
 
+describe("the grown-up's read-only page (the trail's one home after owner decision 2026-10-17 (a))", () => {
+  // Deliberate (spec section 9.8): the grown-up page keeps the quiet rules, which drop only what says nothing (an
+  // "Open" while nothing is closed, a stage not reached with nothing played), and keeps every header with played work.
+  it('draws the same quiet trail: stages not reached are one line, the rest keep their header', () => {
+    const model = freshModel();
+    const self = stageRows(viewOf(model).trail);
+    const grownUp = stageRows(viewOf(model, 'grownup').trail);
+    expect(grownUp.map((r) => [r.stage, r.compact, r.pillShown])).toEqual(self.map((r) => [r.stage, r.compact, r.pillShown]));
+    expect(grownUp.some((r) => r.compact === true)).toBe(true);
+  });
+
+  it('a stage with played work is never a one-line row, before or after the one the learner is on', () => {
+    const model = freshModel();
+    const played = model.stages.map((s) => ({ ...s, done: s.stage === 'stage1' ? 2 : s.done }));
+    for (const row of stageRows(viewOf({ ...model, stages: played }, 'grownup').trail)) {
+      if (played.find((s) => s.stage === row.stage)?.done !== 0) expect(row.compact, row.stage).toBe(false);
+    }
+  });
+});
+
 describe('a closed lesson keeps the words', () => {
   it('with a not-open quest on the route, open stages keep their pill and open cells their word', () => {
     const base = routeModelInput({ snapshot: emptySnapshot('p1'), tier: 'free', localized, now: NOW });
