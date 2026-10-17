@@ -6,7 +6,6 @@ import {
   HELP_W_REM,
   KBD_MIN_REM,
   KEY_COL_REM,
-  PICKER_LABEL_REM,
   READABLE_LINE_REM,
   RING_CORNER_FACTOR,
   STATUS_MIN_REM,
@@ -50,7 +49,6 @@ export const STATE_HOYA = STATE_HOYA_FACTOR * touchTarget.hero;
 export const TEACHER_COLUMN = layout.maxWidth.reading;
 export const READABLE_LINE = READABLE_LINE_REM * typography.size.bodySm;
 export const EXIT_DIALOG_WIDTH = EXIT_DIALOG_REM * typography.size.bodySm;
-export const PICKER_LABEL_BASIS = PICKER_LABEL_REM * typography.size.bodySm;
 
 /** PR 9's class tools in real pixels (README Constants). */
 export const RING_CORNER = RING_CORNER_FACTOR * spacing.lg;

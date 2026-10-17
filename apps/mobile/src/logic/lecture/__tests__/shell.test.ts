@@ -382,16 +382,17 @@ describe('slideDetail', () => {
 });
 
 describe('telemetry payloads', () => {
-  it('lecture.start carries counts and modes, nothing about a person or the title', () => {
+  it('lecture.start carries counts and modes, nothing about a person or the title; picker is always none (LV-H)', () => {
+    // A cached console link may still carry a picker: the presenter has none, so it reports none.
     const deck = deckOf([{ kind: 'episode', id: 'episode:stage1-letters' }], { picker: { mode: 'names', count: 12 }, options: { romanization: 'tap' } });
     const run = runDeck(deck, expandDeck(deck, lectureBundle('en'), { canPlayKorean: true }));
-    const payload = startPayload({ deck, run, source: 'console', pickerMode: 'numbers', capability: ready, offlineReady: true });
+    const payload = startPayload({ deck, run, source: 'console', capability: ready, offlineReady: true });
     expect(payload).toEqual({
       source: 'console',
       blocks: 1,
       slides: run.slides.length,
       skipped: run.parts.length,
-      picker: 'numbers',
+      picker: 'none',
       romanization: 'tap',
       voice: 'ready',
       offlineReady: true,

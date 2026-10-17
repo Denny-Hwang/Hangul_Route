@@ -9,8 +9,7 @@ import { usePresenterView } from './presenter-context';
  * The docked control bar (design/screens/presenter/stage-and-bar.md, README D1, D3): nine labelled
  * 96 px buttons in real pixels, never stage units. Next reads Reveal while the slide has builds
  * left. The band stays when the bar auto-hides (its content fades; no fade under reduced motion),
- * so no slide moves. Timer, Helper, Blank and Slides open the class tools (PR 9); Helper is
- * disabled when the lesson has no helper picker. The status chips on the left are the only place
+ * so no slide moves. Timer, Blank and Slides open the class tools (PR 9). The status chips on the left are the only place
  * voice, sound, offline and update status appear (section 3.8); nothing about a learner ever does.
  */
 export interface ControlBarProps {
@@ -25,8 +24,6 @@ export interface ControlBarProps {
   onFullscreen: () => void;
   onExit: () => void;
   onTimer: () => void;
-  /** Absent when the lesson has no helper picker (the deck's picker is none). */
-  onPicker?: () => void;
   onBlank: () => void;
   onGrid: () => void;
   /** Status chips, in order (`statusChips`). */
@@ -144,7 +141,6 @@ export function ControlBar(props: ControlBarProps): React.ReactElement {
         />
         <Ctl testID="presenter-sound" label={m.sound.cta} icon={props.muted ? 'speaker-off' : 'speaker'} onPress={props.onSound} onFocusWithin={focus} />
         <Ctl testID="presenter-timer" label={m.timer.cta} onPress={props.onTimer} onFocusWithin={focus} />
-        <Ctl testID="presenter-picker-button" label={m.picker.cta} disabled={props.onPicker === undefined} {...(props.onPicker ? { onPress: props.onPicker } : {})} onFocusWithin={focus} />
         <Ctl testID="presenter-blank-button" label={m.blank.cta} onPress={props.onBlank} onFocusWithin={focus} />
         <Ctl testID="presenter-grid-button" label={m.grid.cta} onPress={props.onGrid} onFocusWithin={focus} />
         <Ctl

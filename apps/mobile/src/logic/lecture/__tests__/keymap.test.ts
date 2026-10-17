@@ -26,7 +26,6 @@ describe('commandForKey (F-TCH-004 §3.5 keyboard / clicker map)', () => {
     ['r', 'replay-stroke'],
     ['t', { overlay: 'timer' }],
     ['T', { overlay: 'timer' }],
-    ['p', { overlay: 'picker' }],
     ['g', { overlay: 'grid' }],
     ['f', 'fullscreen'],
     ['h', { overlay: 'help' }],
@@ -35,6 +34,12 @@ describe('commandForKey (F-TCH-004 §3.5 keyboard / clicker map)', () => {
     ['Esc', 'escape'],
   ] as Array<[string, KeyCommand]>)('%j -> %j', (k, command) => {
     expect(key(k)).toEqual(command);
+  });
+
+  it('P maps to nothing: the helper picker is gone (LV-H), so the key keeps its browser meaning', () => {
+    expect(key('p')).toBeNull();
+    expect(key('P')).toBeNull();
+    expect(commandForKey({ key: 'ㅔ', code: 'KeyP' })).toBeNull();
   });
 
   it('Shift+R toggles romanization; plain R replays the stroke guide', () => {
@@ -97,7 +102,6 @@ describe('commandForKey (F-TCH-004 §3.5 keyboard / clicker map)', () => {
     ['ㄴ', 'KeyS', 'replay-sound'],
     ['ㄱ', 'KeyR', 'replay-stroke'],
     ['ㅅ', 'KeyT', { overlay: 'timer' }],
-    ['ㅔ', 'KeyP', { overlay: 'picker' }],
     ['ㅎ', 'KeyG', { overlay: 'grid' }],
     ['ㄹ', 'KeyF', 'fullscreen'],
     ['ㅗ', 'KeyH', { overlay: 'help' }],

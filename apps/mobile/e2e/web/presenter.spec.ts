@@ -26,6 +26,7 @@ const DECK: LectureDeckInput = {
     { kind: 'quest', id: 'quest:stage1-letters-q1' },
     { kind: 'class-code', code: 'HYRA42' },
   ],
+  // A link from an older console still names a helper picker: the presenter opens it and shows none (LV-H).
   picker: { mode: 'numbers', count: 12 },
 };
 
@@ -200,9 +201,9 @@ test.describe('presenter at 1280 x 720', () => {
     await expect(page.getByRole('heading', { name: 'Week 3 letters' })).toBeVisible();
     await expect(page.getByTestId('presenter-start-facts')).toHaveText(/^\d+ slides · about \d+ minutes?$/);
     await expect(page.getByText('Before you start')).toBeVisible();
-    await expect(page.getByText('Numbers 1 to 12')).toBeVisible();
-    // A numbers deck expects no names, so no hand-off line.
-    await expect(page.getByText(/Names come from the console page/)).toHaveCount(0);
+    // No helper picker (LV-H), even for a link that still names one.
+    await expect(page.getByTestId('presenter-picker-row')).toHaveCount(0);
+    await expect(page.getByText(/Helper|Numbers 1 to/)).toHaveCount(0);
     await expect(page.getByTestId('presenter-check-skipped')).toBeVisible();
     await page.getByTestId('presenter-see-which').click();
     await expect(page.getByTestId('presenter-skipped-list')).toBeVisible();
@@ -1170,7 +1171,7 @@ test.describe('presenter story slides at 1920 x 1080 (PR 11)', () => {
   });
 });
 
-/** PR 9: letters, a Match Sound quiz over them, a one-minute activity and the class code; a picker of three. */
+/** PR 9: letters, a Match Sound quiz over them, a one-minute activity and the class code. */
 const TOOLS_DECK: LectureDeckInput = {
   ...DECK,
   id: 'lecture:e2e009',
@@ -1181,7 +1182,7 @@ const TOOLS_DECK: LectureDeckInput = {
     { kind: 'activity', preset: 'air-write', minutes: 1 },
     { kind: 'class-code', code: 'HYRA42' },
   ],
-  picker: { mode: 'numbers', count: 3 },
+  picker: null,
 };
 
 function collectErrors(page: Page): string[] {
@@ -1294,45 +1295,16 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await shot(page, 'presenter-timer-done-1280x720');
   });
 
-  test('the helper picker draws each number once, Another and Undo give no reason, then everyone has had a turn', async ({ page }) => {
+  test('the helper picker is gone (LV-H): P does nothing and the bar has no Helper', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto(link(TOOLS_DECK));
     await startLesson(page);
-    await page.keyboard.press('p');
-    const picker = page.getByTestId('presenter-picker');
-    await expect(picker).toBeVisible();
-    await expect(page.getByRole('heading', { name: "Who's helping next?" })).toBeVisible();
-    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Choose Draw.');
-    await expect(page.getByTestId('presenter-picker-undo')).toBeDisabled();
-    await expect(page.getByTestId('presenter-picker-another')).toBeDisabled();
-    await shot(page, 'presenter-picker-ready-1280x720');
-    // Arrows do not move the slide under the picker.
     const live = await liveText(page);
-    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('p');
+    await expect(page.getByTestId('presenter-picker')).toHaveCount(0);
     expect(await liveText(page)).toBe(live);
-
-    const drawn: string[] = [];
-    await page.getByTestId('presenter-picker-draw').click();
-    const first = (await page.getByTestId('presenter-picker-label').textContent())!;
-    expect(['1', '2', '3']).toContain(first);
-    await page.getByTestId('presenter-picker-undo').click();
-    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Choose Draw.');
-    for (let i = 0; i < 3; i++) {
-      await page.getByTestId('presenter-picker-draw').click();
-      drawn.push((await page.getByTestId('presenter-picker-label').textContent())!);
-    }
-    expect([...drawn].sort()).toEqual(['1', '2', '3']);
-    await shot(page, 'presenter-picker-numbers-1280x720');
-    await page.getByTestId('presenter-picker-draw').click();
-    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Everyone has had a turn');
-    await expect(page.getByTestId('presenter-picker-start-again')).toBeVisible();
-    // Never a count, a list of who has gone, or a skipped mark.
-    await expect(picker.getByText(/skipped|left|\d+ (of|\/) \d+/i)).toHaveCount(0);
-    await shot(page, 'presenter-picker-empty-1280x720');
-    await page.getByTestId('presenter-picker-start-again').click();
-    await expect(page.getByTestId('presenter-picker-label')).toHaveText('Choose Draw.');
-    await page.keyboard.press('Escape');
-    await expect(picker).toHaveCount(0);
+    await expect(page.getByTestId('presenter-picker-button')).toHaveCount(0);
+    await expect(page.getByRole('toolbar').getByText('Helper')).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 
@@ -1406,9 +1378,10 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await page.keyboard.press('h');
     const help = page.getByTestId('presenter-help');
     await expect(help).toBeVisible();
-    for (const row of ['Next', 'Back', 'First and last slide', 'Blank the screen', 'Class timer', 'Helper picker', 'All slides', 'Close or exit']) {
+    for (const row of ['Next', 'Back', 'First and last slide', 'Blank the screen', 'Class timer', 'All slides', 'Close or exit']) {
       await expect(help.getByText(row, { exact: true })).toBeVisible();
     }
+    await expect(help.getByText('Helper picker')).toHaveCount(0);
     await expect(help.getByText('A presentation clicker works with no setup.')).toBeVisible();
     await shot(page, 'presenter-help-1280x720');
     // The romanization chips are one radiogroup: an arrow moves and selects.

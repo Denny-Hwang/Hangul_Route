@@ -1,27 +1,19 @@
-import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Icon, colors, layout, radii, spacing, typography, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { distinctParts, type SkipPart, type VoiceCheck } from '../../logic/lecture/shell';
-import { PICKER_COUNT_MAX, PICKER_COUNT_MIN } from '../../logic/lecture/stage-constants';
-import { PICKER_LABEL_BASIS, START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
+import { START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 import { GhostButton, PrimaryButton } from './StatePage';
 
 /**
  * The start screen (design/screens/presenter/start-screen.md, README D10, D15): a teacher page in
  * real pixels on paper, not stage-scaled. The deck title (teacher text), the facts, the device
- * checks (none blocks Start), the skipped parts with [ See which ], the helper picker row (a count
- * only, never a label), and one big Start, disabled while the presenter font loads (at most
+ * checks (none blocks Start), the skipped parts with [ See which ], and one big Start, disabled while the presenter font loads (at most
  * 1.5 s) and focused when it is ready. Back to lessons, above the title, returns to the home.
  */
 
 export type { VoiceCheck } from '../../logic/lecture/shell';
-
-export type PickerRow =
-  | null
-  | { kind: 'received'; mode: 'names' | 'initials'; count: number }
-  /** `line`: why numbers are used (no opener, or a resumed lesson); none for a numbers deck or while names may still arrive. */
-  | { kind: 'numbers'; count: number; line: 'noOpener' | 'notKept' | null };
 
 export interface StartScreenProps {
   deckTitle: string;
@@ -34,8 +26,6 @@ export interface StartScreenProps {
   voice: VoiceCheck;
   fullscreenSupported: boolean;
   wakeLockSupported: boolean;
-  picker: PickerRow;
-  onPickerCount: (count: number) => void;
   fontReady: boolean;
   onStart: () => void;
   /** Back to lessons: the presenter home, before anything starts (nothing is saved or sent). */
@@ -66,36 +56,6 @@ function Line({ children, secondary, bold }: { children: React.ReactNode; second
     >
       {children}
     </Text>
-  );
-}
-
-type PressState = { pressed: boolean; focused?: boolean };
-
-
-function StepButton({ icon, label, disabled, onPress }: { icon: IconName; label: string; disabled: boolean; onPress: () => void }): React.ReactElement {
-  return (
-    <Pressable
-      role="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={(state) => {
-        const { focused } = state as PressState;
-        return {
-          width: touchTarget.min,
-          height: touchTarget.min,
-          borderRadius: radii.circle,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.surface.paper,
-          borderWidth: focused ? borderWidth.thick : borderWidth.base,
-          borderColor: focused ? colors.border.focus : colors.border.strong,
-        };
-      }}
-    >
-      <Icon name={icon} size={spacing.xxl} color={disabled ? colors.text.muted : colors.text.primary} />
-    </Pressable>
   );
 }
 
@@ -191,8 +151,6 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
           ) : null}
         </View>
 
-        {props.picker !== null ? <PickerRowView row={props.picker} onCount={props.onPickerCount} /> : null}
-
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
           <PrimaryButton
             ref={start}
@@ -212,46 +170,5 @@ export function StartScreen(props: StartScreenProps): React.ReactElement {
         </View>
       </View>
     </ScrollView>
-  );
-}
-
-function PickerRowView({ row, onCount }: { row: NonNullable<PickerRow>; onCount: (count: number) => void }): React.ReactElement {
-  const { messages } = usePresenterView();
-  const m = messages.learner.presenter.start.picker;
-  return (
-    <View
-      testID="presenter-picker-row"
-      style={{
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: spacing.md,
-        padding: spacing.lg,
-        borderWidth: borderWidth.thin,
-        borderColor: colors.border.subtle,
-        borderRadius: radii.lg,
-      }}
-    >
-      <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: PICKER_LABEL_BASIS, gap: spacing.xxs }}>
-        <Line bold>{m.title}</Line>
-        {row.kind === 'received' ? (
-          <Line secondary>{row.mode === 'names' ? m.names(row.count) : m.initials(row.count)}</Line>
-        ) : (
-          <>
-            <Line secondary>{m.numbers(row.count)}</Line>
-            {row.line !== null ? <Line secondary>{row.line === 'noOpener' ? m.noOpener : m.notKept}</Line> : null}
-          </>
-        )}
-      </View>
-      {row.kind === 'numbers' ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <StepButton icon="dash" label={m.fewer} disabled={row.count <= PICKER_COUNT_MIN} onPress={() => onCount(Math.max(PICKER_COUNT_MIN, row.count - 1))} />
-          <Text {...KOREAN_LINE_BREAK} role="status" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary, minWidth: touchTarget.min, textAlign: 'center' }}>
-            {String(row.count)}
-          </Text>
-          <StepButton icon="plus" label={m.more} disabled={row.count >= PICKER_COUNT_MAX} onPress={() => onCount(Math.min(PICKER_COUNT_MAX, row.count + 1))} />
-        </View>
-      ) : null}
-    </View>
   );
 }

@@ -1,10 +1,7 @@
-import { LECTURE_CONSOLE_ORIGINS, LECTURE_MESSAGE_NS, type LectureDeck } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearPickerLabels, heldLabels } from '../../logic/lecture/picker-labels';
 import * as native from '../presenter';
 import {
   PRESENTER_PATH,
-  announceReady,
   checkForUpdate,
   enterFullscreen,
   enterFullscreenLandscape,
@@ -12,14 +9,11 @@ import {
   forgetOpenDeck,
   holdOpenDeck,
   fullscreenSupported,
-  hasOpener,
   isFullscreen,
   isPresenterRoute,
   keepScreenAwake,
-  listenForRoster,
   lockLandscape,
   playChime,
-  presenterConsoleOrigins,
   releaseScreenAwake,
   otherTabsOpen,
   reloadForUpdate,
@@ -43,13 +37,10 @@ import {
 
 /**
  * The presenter's web platform layer (F-TCH-004 sections 3.1, 3.2, 3.5, 3.8; spec section 5
- * `presenter.web.test.ts`): route, fragment read and strip with the fixed `document.title`, the
- * roster hand-off (`announceReady` posts only to `window.opener` and only to allowed origins; a
- * roster is held only from the opener), keys, and the Start-tap device features, each feature
+ * `presenter.web.test.ts`): route, fragment read and strip with the fixed `document.title`, keys,
+ * and the Start-tap device features, each feature
  * detected and failure tolerant. Every browser global is injected.
  */
-
-const deck = (picker: LectureDeck['picker']): Pick<LectureDeck, 'id' | 'picker'> => ({ id: 'lecture:abc123', picker });
 
 type Listener = (event: never) => void;
 
@@ -78,7 +69,6 @@ function env(overrides: Partial<PresenterEnv> = {}): PresenterEnv {
 }
 
 afterEach(() => {
-  clearPickerLabels();
   vi.useRealTimers();
 });
 
@@ -91,9 +81,7 @@ describe('route', () => {
   it('the native stub never presents and does nothing', async () => {
     expect(native.isPresenterRoute({ pathname: '/present' })).toBe(false);
     expect(native.takeDeckFragment()).toBeNull();
-    expect(native.announceReady(deck({ mode: 'names', count: 2 }))).toBe(0);
     expect(native.fullscreenSupported()).toBe(false);
-    expect(native.hasOpener()).toBe(false);
     expect(native.wakeLockSupported()).toBe(false);
     native.forgetOpenDeck();
     native.holdOpenDeck('1.abc');
@@ -104,9 +92,7 @@ describe('route', () => {
     expect(await native.waitForPresenterFont(1, 'HR Presenter KR')).toBe(false);
     expect(native.playChime(false)).toBe(false);
     expect(() => native.unlockChime()).not.toThrow();
-    expect(native.presenterConsoleOrigins()).toEqual([...LECTURE_CONSOLE_ORIGINS]);
     native.setPresenterDocTitle('x');
-    native.listenForRoster(deck(null))();
     native.subscribeKeys(() => undefined)();
     native.subscribeActivity(() => undefined)();
     native.subscribeFullscreen(() => undefined)();
@@ -267,98 +253,6 @@ describe('document title', () => {
     setPresenterDocTitle('Hangul Route lecture', env({ document: doc }));
     expect(doc.title).toBe('Hangul Route lecture');
     expect(() => setPresenterDocTitle('x', env())).not.toThrow();
-  });
-});
-
-describe('console origins', () => {
-  it('adds the build-time preview list to the shared list', () => {
-    expect(presenterConsoleOrigins('https://preview.example.dev, https://*.pages.dev')).toEqual([
-      ...LECTURE_CONSOLE_ORIGINS,
-      'https://preview.example.dev',
-    ]);
-    expect(presenterConsoleOrigins(undefined)).toEqual([...LECTURE_CONSOLE_ORIGINS]);
-  });
-});
-
-describe('announceReady', () => {
-  it('knows whether a console tab opened this one', () => {
-    expect(hasOpener(env({ opener: {} }))).toBe(true);
-    expect(hasOpener(env({ opener: null }))).toBe(false);
-    expect(hasOpener(env())).toBe(false);
-  });
-
-  it('posts one ready message per allowed origin to window.opener only', () => {
-    const post = vi.fn();
-    const n = announceReady(deck({ mode: 'names', count: 2 }), env({ opener: { postMessage: post }, consoleOrigins: ['https://a.example', 'https://b.example'] }));
-    expect(n).toBe(2);
-    expect(post.mock.calls).toEqual([
-      [{ ns: LECTURE_MESSAGE_NS, v: 1, type: 'ready', deckId: 'lecture:abc123' }, 'https://a.example'],
-      [{ ns: LECTURE_MESSAGE_NS, v: 1, type: 'ready', deckId: 'lecture:abc123' }, 'https://b.example'],
-    ]);
-  });
-
-  it('posts nothing without an opener, for a numbers deck or a deck with no picker', () => {
-    const post = vi.fn();
-    expect(announceReady(deck({ mode: 'names', count: 2 }), env({ opener: null }))).toBe(0);
-    expect(announceReady(deck({ mode: 'numbers', count: 12 }), env({ opener: { postMessage: post } }))).toBe(0);
-    expect(announceReady(deck(null), env({ opener: { postMessage: post } }))).toBe(0);
-    expect(post).not.toHaveBeenCalled();
-  });
-
-  it('a post that throws (a closed opener) is skipped and the rest still go', () => {
-    const post = vi
-      .fn()
-      .mockImplementationOnce(() => {
-        throw new Error('closed');
-      })
-      .mockImplementation(() => undefined);
-    expect(announceReady(deck({ mode: 'initials', count: 1 }), env({ opener: { postMessage: post }, consoleOrigins: ['https://a.example', 'https://b.example'] }))).toBe(1);
-  });
-});
-
-describe('listenForRoster', () => {
-  const roster = (labels: string[], extra: Record<string, unknown> = {}) => ({
-    ns: LECTURE_MESSAGE_NS,
-    v: 1,
-    type: 'roster',
-    deckId: 'lecture:abc123',
-    mode: 'names',
-    labels,
-    ...extra,
-  });
-
-  it('holds the labels of a roster from the opener and an allowed origin, and calls back once', () => {
-    const win = fakeTarget();
-    const opener = { postMessage: vi.fn() };
-    const onRoster = vi.fn();
-    const d = deck({ mode: 'names', count: 2 });
-    const stop = listenForRoster(d, onRoster, env({ window: win, opener, consoleOrigins: ['https://app.example'] }));
-    win.fire('message', { origin: 'https://app.example', source: opener, data: roster(['Mina', 'Joon']) });
-    expect(onRoster).toHaveBeenCalledTimes(1);
-    expect(heldLabels({ id: d.id, picker: d.picker })).toEqual(['Mina', 'Joon']);
-    stop();
-    expect(win.count('message')).toBe(0);
-  });
-
-  it('ignores a message from another window, another origin or with the wrong shape, silently', () => {
-    const win = fakeTarget();
-    const opener = { postMessage: vi.fn() };
-    const onRoster = vi.fn();
-    const d = deck({ mode: 'names', count: 2 });
-    listenForRoster(d, onRoster, env({ window: win, opener, consoleOrigins: ['https://app.example'] }));
-    win.fire('message', { origin: 'https://app.example', source: {}, data: roster(['Mina', 'Joon']) });
-    win.fire('message', { origin: 'https://evil.example', source: opener, data: roster(['Mina', 'Joon']) });
-    win.fire('message', { origin: 'https://app.example', source: opener, data: roster(['Mina']) });
-    win.fire('message', { origin: 'https://app.example', source: opener, data: roster(['Mina', 'Joon'], { extra: 1 }) });
-    expect(onRoster).not.toHaveBeenCalled();
-    expect(heldLabels({ id: d.id, picker: d.picker })).toBeNull();
-  });
-
-  it('listens to nothing without an opener or for a numbers deck', () => {
-    const win = fakeTarget();
-    listenForRoster(deck({ mode: 'names', count: 2 }), vi.fn(), env({ window: win, opener: null }))();
-    listenForRoster(deck({ mode: 'numbers', count: 2 }), vi.fn(), env({ window: win, opener: {} }))();
-    expect(win.addEventListener).not.toHaveBeenCalled();
   });
 });
 

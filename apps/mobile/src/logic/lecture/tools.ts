@@ -1,4 +1,4 @@
-import type { PickerMode, RomanizationMode } from '@hangul-route/content-schema';
+import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
 import type { LanguageOption } from '../locale/language-picker';
 import type { QuizOption, SlideKind } from './build-steps';
@@ -15,11 +15,15 @@ import { TIMER_PRESETS_MS, formatRemaining, ringFraction, type TimerState } from
 
 // --- lecture.tool_used --------------------------------------------------------------------------
 
-/** The `tool` values of `lecture.tool_used` (section 3.14). */
-export const TOOL_NAMES = ['timer', 'picker', 'blank', 'pause', 'grid', 'fullscreen'] as const;
+/**
+ * The `tool` values this presenter sends in `lecture.tool_used` (section 3.14). The helper picker
+ * is gone (LV-H): `picker` stays on the Worker's allow-list for presenters a device still has
+ * cached, and this build never sends it.
+ */
+export const TOOL_NAMES = ['timer', 'blank', 'pause', 'grid', 'fullscreen'] as const;
 export type LectureTool = (typeof TOOL_NAMES)[number];
 
-const OVERLAY_TOOLS: ReadonlySet<string> = new Set<LectureTool>(['picker', 'blank', 'pause', 'grid']);
+const OVERLAY_TOOLS: ReadonlySet<string> = new Set<LectureTool>(['blank', 'pause', 'grid']);
 
 type ToolState = Pick<PresenterState, 'overlay' | 'timerOpen'>;
 
@@ -212,7 +216,7 @@ export function presetLabel(ms: number): { unit: 's' | 'min'; n: number } {
   return ms < 60_000 ? { unit: 's', n: Math.round(ms / 1000) } : { unit: 'min', n: Math.round(ms / 60_000) };
 }
 
-// --- chip groups and the picker -------------------------------------------------------------------
+// --- chip groups -----------------------------------------------------------------------------------
 
 /**
  * A radiogroup's arrow keys (README D19): arrows move the selection and wrap, Home and End jump.
@@ -236,9 +240,4 @@ export function radioMove<T>(options: readonly T[], selected: T, key: string): T
     default:
       return null;
   }
-}
-
-/** The picker's mode chips (README D11): the mode the labels came in, and numbers. */
-export function pickerModes(deckMode: PickerMode, labelsReceived: boolean): PickerMode[] {
-  return labelsReceived && deckMode !== 'numbers' ? [deckMode, 'numbers'] : ['numbers'];
 }

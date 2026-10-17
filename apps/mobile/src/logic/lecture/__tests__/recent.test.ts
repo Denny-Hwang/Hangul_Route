@@ -25,7 +25,6 @@ const deck = (n: number, over: Partial<LectureDeck> = {}): LectureDeck =>
     createdAt: '2026-10-11T09:00:00Z',
     seed: n,
     blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
-    picker: { mode: 'names', count: 12 },
     ...over,
   });
 
@@ -101,7 +100,10 @@ describe('Recent lessons (F-TCH-004 §3.12)', () => {
     expect(parseRecent({ v: 1, items: [extraField] })).toEqual(emptyRecent());
     const item = rememberDeck(emptyRecent(), deck(1), at(1)).items[0]!;
     expect(Object.keys(item).sort()).toEqual(['deck', 'savedAt']);
-    expect(Object.keys(item.deck.picker ?? {}).sort()).toEqual(['count', 'mode']);
+    expect(item.deck.picker).toBeNull();
+    // A deck from an older link still carries its picker intent (the presenter shows no picker, LV-H): a mode and a count only.
+    const older = rememberDeck(emptyRecent(), deck(1, { picker: { mode: 'names', count: 12 } }), at(1)).items[0]!;
+    expect(Object.keys(older.deck.picker ?? {}).sort()).toEqual(['count', 'mode']);
   });
 
   it('loads and saves through an injected store, never throwing', async () => {

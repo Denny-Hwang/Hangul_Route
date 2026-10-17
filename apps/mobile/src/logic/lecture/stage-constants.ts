@@ -56,9 +56,6 @@ export const RING_CORNER_FACTOR = 10;
  * their cards; stacked at 64 the question row stays one speaker high (slide-quiz.md).
  */
 export const QUIZ_ANSWER_HOYA = 64;
-/** The picker's label box: at least 480 x 140 units, so a 20-character label fits on one line. */
-export const PICKER_BOX_WIDTH = 480;
-export const PICKER_BOX_HEIGHT = 140;
 /** Grid thumbnails: at least 13 x 8 rem (`--thumb-w`, `--thumb-h`). */
 export const THUMB_W_REM = 13;
 export const THUMB_H_REM = 8;
@@ -84,11 +81,6 @@ export const STATE_HOYA_FACTOR = 1.5;
 /** Rem counts of the teacher pages (README Constants), in multiples of the 16 px root size (`typography.size.bodySm`). */
 export const READABLE_LINE_REM = 32;
 export const EXIT_DIALOG_REM = 40;
-export const PICKER_LABEL_REM = 14;
-
-/** The numbers picker's count stepper: the deck schema's `picker.count` bounds. */
-export const PICKER_COUNT_MIN = 1;
-export const PICKER_COUNT_MAX = 60;
 
 /** The start screen waits this long at most for the presenter font (spec section 3.6). */
 export const FONT_WAIT_MS = 1500;

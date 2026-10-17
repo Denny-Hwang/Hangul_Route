@@ -295,7 +295,8 @@ export interface StartPayload {
   blocks: number;
   slides: number;
   skipped: number;
-  picker: 'none' | 'names' | 'initials' | 'numbers';
+  /** Always `'none'`: the helper picker is gone (LV-H); the field stays for the Worker's payload rule. */
+  picker: 'none';
   romanization: 'always' | 'tap';
   voice: 'ready' | 'none' | 'unknown';
   offlineReady: boolean;
@@ -306,12 +307,11 @@ export function voiceState(capability: AudioCapability): StartPayload['voice'] {
   return capability.tts.state === 'none' ? 'none' : 'unknown';
 }
 
-/** `lecture.start` (section 3.14): counts and modes only. `picker` is the mode the lesson runs with. */
+/** `lecture.start` (section 3.14): counts and modes only. `picker` is always `'none'` (LV-H). */
 export function startPayload(input: {
-  deck: Pick<LectureDeck, 'blocks' | 'options' | 'picker'>;
+  deck: Pick<LectureDeck, 'blocks' | 'options'>;
   run: RunDeck;
   source: StartSource;
-  pickerMode: StartPayload['picker'];
   capability: AudioCapability;
   offlineReady: boolean;
 }): StartPayload {
@@ -320,7 +320,7 @@ export function startPayload(input: {
     blocks: input.deck.blocks.length,
     slides: input.run.slides.length,
     skipped: input.run.parts.length,
-    picker: input.pickerMode,
+    picker: 'none',
     romanization: input.deck.options.romanization,
     voice: voiceState(input.capability),
     offlineReady: input.offlineReady,

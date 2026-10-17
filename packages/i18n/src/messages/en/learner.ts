@@ -2037,7 +2037,6 @@ export const learner = {
       reveal: { cta: 'Reveal' },
       sound: { cta: 'Sound' },
       timer: { cta: 'Timer' },
-      picker: { cta: 'Helper' },
       blank: { cta: 'Blank' },
       grid: { cta: 'Slides' },
       fullscreen: { cta: 'Full screen' },
@@ -2150,16 +2149,6 @@ export const learner = {
         'scope-too-small': 'Too few letters or words for this quiz',
         'unsupported-step': 'A step the slides do not show',
       },
-      picker: {
-        title: 'Helper picker',
-        names: (n: number) => plural('en', n, { one: '1 name received', other: `${n} names received` }),
-        initials: (n: number) => plural('en', n, { one: '1 initial received', other: `${n} initials received` }),
-        numbers: (n: number) => `Numbers 1 to ${n}`,
-        noOpener: 'Names come from the console page that opened this lesson. Using numbers.',
-        notKept: 'Names are not kept on this device. Using numbers.',
-        fewer: 'Fewer',
-        more: 'More',
-      },
       /** The font wait, at most 1.5 s (section 3.6). */
       loading: 'Getting the big letters ready',
       cta: 'Start',
@@ -2171,18 +2160,6 @@ export const learner = {
     },
     /** The Pause overlay: the word is `PAUSE_WORD` in `logic/lecture/content.ts`; this is its gloss. */
     pause: { gloss: 'wait a moment' },
-    /** The helper picker (TD5, README D11): a turn-taking tool, never a count, list or score. */
-    picker: {
-      title: "Who's helping next?",
-      ready: 'Choose Draw.',
-      empty: 'Everyone has had a turn',
-      draw: { cta: 'Draw' },
-      undo: { cta: 'Undo' },
-      /** The reducer's skip: the label goes back into the bag, no reason given. */
-      another: { cta: 'Another' },
-      startAgain: { cta: 'Start again' },
-      mode: { names: 'names', initials: 'initials', numbers: 'numbers' },
-    },
     /** The class timer (TD5, README D12): the ring only fills; at zero no alarm. */
     timer: {
       title: 'Class timer',
@@ -2216,7 +2193,6 @@ export const learner = {
         strokes: 'Replay the stroke guide',
         romanization: 'Romanization on or off',
         timer: 'Class timer',
-        picker: 'Helper picker',
         grid: 'All slides',
         fullscreen: 'Full screen',
         help: 'This help',

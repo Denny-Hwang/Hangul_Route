@@ -1,7 +1,5 @@
-import { isLearnerRoot, type LectureDeck } from '@hangul-route/content-schema';
+import { isLearnerRoot } from '@hangul-route/content-schema';
 import { commandForKey, type KeyCommand } from '../logic/lecture/keymap';
-import { receiveRoster } from '../logic/lecture/picker-labels';
-import { consoleOrigins, readyMessage, readyTargets, wantsRoster } from '../logic/lecture/roster-message';
 
 /**
  * The presenter's web platform layer (F-TCH-004 sections 3.1, 3.2, 3.5, 3.8). Everything that
@@ -11,9 +9,6 @@ import { consoleOrigins, readyMessage, readyTargets, wantsRoster } from '../logi
  * - **Route and fragment**: `takeDeckFragment` reads the `#d=` deck and replaces the address with
  *   `/present` before the first paint, so the deck leaves the address bar and the session history
  *   entry; `setPresenterDocTitle` writes the fixed catalogue title (never the deck title).
- * - **Roster hand-off** (TD3): `announceReady` posts `ready` to `window.opener` once per allowed
- *   console origin; `listenForRoster` holds a roster's labels in memory (`picker-labels.ts`) only
- *   when it comes from the opener, from an allowed origin, and matches the open deck.
  * - **Keys**: `subscribeKeys` turns a `keydown` into a key-map command and prevents the browser
  *   default only for a mapped key.
  * - **Start tap**: fullscreen, the screen wake lock (re-requested when the page is shown again),
@@ -66,10 +61,8 @@ export interface PresenterEnv {
   keyTarget?: EventTargetLike | null;
   /** `document.activeElement`. */
   activeElement?: () => unknown;
-  /** The window `message` events arrive on. */
+  /** The window `hashchange` and activity events arrive on. */
   window?: EventTargetLike | null;
-  opener?: unknown;
-  consoleOrigins?: readonly string[];
   navigator?: { wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> } } | null;
   screen?: { orientation?: { lock?: (o: string) => Promise<void>; unlock?: () => void } } | null;
   /** Makes the Web Audio context the timer chime plays on; null without Web Audio. */
@@ -133,7 +126,6 @@ type Globals = {
   location?: PresenterEnv['location'];
   history?: PresenterEnv['history'];
   document?: DocumentLike & { activeElement?: unknown };
-  opener?: unknown;
   navigator?: PresenterEnv['navigator'] & { serviceWorker?: ServiceWorkerContainerLike };
   screen?: PresenterEnv['screen'];
   addEventListener?: EventTargetLike['addEventListener'];
@@ -152,8 +144,6 @@ function browserEnv(): PresenterEnv {
     keyTarget: doc && typeof doc.addEventListener === 'function' ? (doc as EventTargetLike) : null,
     activeElement: () => doc?.activeElement ?? null,
     window: win,
-    opener: g.opener ?? null,
-    consoleOrigins: presenterConsoleOrigins(process.env.EXPO_PUBLIC_CONSOLE_ORIGINS),
     navigator: g.navigator ?? null,
     screen: g.screen ?? null,
     createAudioContext: browserAudioContext,
@@ -433,51 +423,6 @@ export function reloadForUpdate(raw: string, env: PresenterEnv = browserEnv(), m
 /** The fixed tab title (`learner.presenter.docTitle`); the deck title never goes here (section 3.2). */
 export function setPresenterDocTitle(title: string, env: PresenterEnv = browserEnv()): void {
   if (env.document) env.document.title = title;
-}
-
-// --- roster hand-off --------------------------------------------------------------------------
-
-/** The shared console origins plus the build-time preview list (`EXPO_PUBLIC_CONSOLE_ORIGINS`). */
-export function presenterConsoleOrigins(extraCsv: string | undefined): readonly string[] {
-  return consoleOrigins(extraCsv ?? null);
-}
-
-type DeckPick = Pick<LectureDeck, 'id' | 'picker'>;
-
-/** A console tab opened this one (`window.opener`); a copied, typed or bookmarked link has none. */
-export function hasOpener(env: PresenterEnv = browserEnv()): boolean {
-  return env.opener !== null && env.opener !== undefined;
-}
-
-/** Posts `ready` to the opener, once per allowed origin; returns how many posts went out. */
-export function announceReady(deck: DeckPick, env: PresenterEnv = browserEnv()): number {
-  const opener = env.opener as { postMessage?: (message: unknown, targetOrigin: string) => void } | null | undefined;
-  const targets = readyTargets(deck, opener, env.consoleOrigins ?? consoleOrigins(null));
-  let sent = 0;
-  for (const origin of targets) {
-    try {
-      opener?.postMessage?.(readyMessage(deck.id), origin);
-      sent += 1;
-    } catch {
-      // A closed or cross-origin opener: nothing to deliver to.
-    }
-  }
-  return sent;
-}
-
-/**
- * Listens for the console's `roster` answer. A message that passes every check is held in memory
- * (`picker-labels.ts`) and `onRoster` runs; anything else is ignored without a trace.
- */
-export function listenForRoster(deck: DeckPick, onRoster: () => void, env: PresenterEnv = browserEnv()): () => void {
-  const target = env.window;
-  if (!target || env.opener === null || env.opener === undefined || !wantsRoster(deck)) return () => undefined;
-  const ctx = { opener: env.opener, allowedOrigins: env.consoleOrigins ?? consoleOrigins(null), deck };
-  const onMessage = (event: { origin: string; source: unknown; data: unknown }): void => {
-    if (receiveRoster(event, ctx)) onRoster();
-  };
-  target.addEventListener('message', onMessage as Listener);
-  return () => target.removeEventListener('message', onMessage as Listener);
 }
 
 // --- keys -------------------------------------------------------------------------------------

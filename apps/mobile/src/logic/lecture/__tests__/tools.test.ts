@@ -10,7 +10,6 @@ import {
   narrationStops,
   optionContent,
   optionRomShown,
-  pickerModes,
   presetLabel,
   radioMove,
   sayItShown,
@@ -25,7 +24,6 @@ const state = (over: Partial<PresenterState> = {}): PresenterState => ({ ...init
 
 describe('toolsOpened (lecture.tool_used, section 3.14)', () => {
   it('names a covering class tool when it opens', () => {
-    expect(toolsOpened(state(), state({ overlay: 'picker' }))).toEqual(['picker']);
     expect(toolsOpened(state(), state({ overlay: 'blank' }))).toEqual(['blank']);
     expect(toolsOpened(state({ overlay: 'blank' }), state({ overlay: 'pause' }))).toEqual(['pause']);
     expect(toolsOpened(state(), state({ overlay: 'grid' }))).toEqual(['grid']);
@@ -39,12 +37,12 @@ describe('toolsOpened (lecture.tool_used, section 3.14)', () => {
   it('help, exit and closing an overlay are not tools', () => {
     expect(toolsOpened(state(), state({ overlay: 'help' }))).toEqual([]);
     expect(toolsOpened(state(), state({ overlay: 'exit' }))).toEqual([]);
-    expect(toolsOpened(state({ overlay: 'picker' }), state())).toEqual([]);
-    expect(toolsOpened(state({ overlay: 'picker' }), state({ overlay: 'picker' }))).toEqual([]);
+    expect(toolsOpened(state({ overlay: 'grid' }), state())).toEqual([]);
+    expect(toolsOpened(state({ overlay: 'grid' }), state({ overlay: 'grid' }))).toEqual([]);
   });
 
-  it('a timer brought forward over the picker counts once', () => {
-    expect(toolsOpened(state({ overlay: 'picker' }), state({ timerOpen: true }))).toEqual(['timer']);
+  it('a timer brought forward over the grid counts once', () => {
+    expect(toolsOpened(state({ overlay: 'grid' }), state({ timerOpen: true }))).toEqual(['timer']);
   });
 
   it('follows the reducer: Blank then its Pause button', () => {
@@ -67,8 +65,8 @@ describe('firstUses', () => {
     expect(firstUses(two.used, ['grid']).fresh).toEqual([]);
   });
 
-  it('only knows the six tool names of the telemetry payload', () => {
-    expect([...TOOL_NAMES].sort()).toEqual(['blank', 'fullscreen', 'grid', 'pause', 'picker', 'timer']);
+  it('sends five tool names: picker stays on the Worker allow-list for cached presenters and is never sent (LV-H)', () => {
+    expect([...TOOL_NAMES].sort()).toEqual(['blank', 'fullscreen', 'grid', 'pause', 'timer']);
   });
 });
 
@@ -244,15 +242,6 @@ describe('radioMove (README D19)', () => {
   });
   it('an unknown selection starts from the first', () => {
     expect(radioMove(opts, 'z' as never, 'ArrowRight')).toBe('a');
-  });
-});
-
-describe('pickerModes (README D11)', () => {
-  it('the received mode and numbers; names only when names arrived', () => {
-    expect(pickerModes('names', true)).toEqual(['names', 'numbers']);
-    expect(pickerModes('initials', true)).toEqual(['initials', 'numbers']);
-    expect(pickerModes('names', false)).toEqual(['numbers']);
-    expect(pickerModes('numbers', false)).toEqual(['numbers']);
   });
 });
 

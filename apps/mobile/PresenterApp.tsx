@@ -1,6 +1,6 @@
 import { WORD_ART_KEYS, colors, presenter, supportedCardIds } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
-import { encodeDeck, type LectureDeck, type PickerMode } from '@hangul-route/content-schema';
+import { encodeDeck, type LectureDeck } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -15,8 +15,6 @@ import { createAudioRunner } from './src/logic/story/audio-runner';
 import { initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
-import { createPicker, reducePicker, type PickerEvent, type PickerState } from './src/logic/lecture/picker';
-import { clearPickerLabels, heldLabels } from './src/logic/lecture/picker-labels';
 import { recentView } from './src/logic/lecture/home-view';
 import { quickSource } from './src/logic/lecture/quick-source';
 import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
@@ -43,7 +41,7 @@ import {
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
-import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, narrationStops, pickerModes, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
+import { firstUses, fullscreenToggle, gridItems, helpLanguageChips, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound } from './src/logic/lecture/slide-view';
 import { stageScale } from './src/logic/lecture/stage-scale';
@@ -52,15 +50,12 @@ import { setDocumentLang } from './src/platform/locale';
 import { isOnline, subscribeOnline } from './src/platform/online';
 import { useReducedMotion } from './src/platform/motion';
 import {
-  announceReady,
   checkForUpdate,
   enterFullscreenLandscape,
   exitFullscreen,
   fullscreenSupported,
-  hasOpener,
   isFullscreen,
   keepScreenAwake,
-  listenForRoster,
   forgetOpenDeck,
   holdOpenDeck,
   playChime,
@@ -87,11 +82,10 @@ import { PresenterHomeScreen } from './src/screens/presenter/HomeScreen';
 import { BlankOverlay, PauseOverlay } from './src/screens/presenter/overlays/BlankOverlay';
 import { GridOverlay } from './src/screens/presenter/overlays/GridOverlay';
 import { HelpOverlay } from './src/screens/presenter/overlays/HelpOverlay';
-import { PickerOverlay } from './src/screens/presenter/overlays/PickerOverlay';
 import { TimerOverlay, type TimerControls } from './src/screens/presenter/overlays/TimerOverlay';
 import { PresenterViewProvider, type PresenterView } from './src/screens/presenter/presenter-context';
 import { Stage, StageHint } from './src/screens/presenter/Stage';
-import { StartScreen, type PickerRow } from './src/screens/presenter/StartScreen';
+import { StartScreen } from './src/screens/presenter/StartScreen';
 import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, useLocaleStore } from './src/store/locale-store';
@@ -108,12 +102,11 @@ import { activeLocale, useLocaleStore } from './src/store/locale-store';
  * and the device locale only (section 3.9). The start screen checks the device, waits for the
  * presenter font, and its Start tap unlocks audio and asks for fullscreen, the wake lock and
  * landscape. Writes: `lecture:recent` (a deck has no name field) and the telemetry queue.
- * Picker labels arrive only from the console tab that opened this one and stay in memory.
  *
- * The class tools (PR 9): the timer (corner or full), the helper picker, Blank and its Pause, the
- * slide grid and Keys and controls, each reported once per lecture as `lecture.tool_used` (the
- * tool name only). The picker's bag and the timer live in memory for this lecture and are dropped
- * on Exit; nothing about who was drawn is kept, shown or sent.
+ * The class tools (PR 9): the timer (corner or full), Blank and its Pause, the slide grid and Keys
+ * and controls, each reported once per lecture as `lecture.tool_used` (the tool name only). The
+ * timer lives in memory for this lecture and is dropped on Exit. The helper picker is gone (LV-H):
+ * a deck from an older link may still name one, and the presenter ignores it.
  */
 
 // The strict read throws on a failed or damaged read, so Recent is then never written over (`readRecent`).
@@ -255,17 +248,6 @@ export default function PresenterApp(): React.ReactElement {
     }
   }, [phase, run, address]);
 
-  // Roster hand-off: tell the opener we are ready (again on every load) and hold a valid answer in memory.
-  const [rosterTick, setRosterTick] = useState(0);
-  useEffect(() => {
-    if (!deck) return undefined;
-    const stop = listenForRoster(deck, () => setRosterTick((n) => n + 1));
-    announceReady(deck);
-    return stop;
-  }, [deck]);
-  const labels = useMemo(() => (deck ? heldLabels(deck) : null), [deck, rosterTick]);
-  const [pickerCount, setPickerCount] = useState<number | null>(null);
-
   const view: PresenterView = useMemo(() => ({ messages, locale, unit: 0, reducedMotion, soundBlocked }), [messages, locale, reducedMotion, soundBlocked]);
 
   // ---- the start screen ----
@@ -320,25 +302,6 @@ export default function PresenterApp(): React.ReactElement {
   const [keepVisible, setKeepVisible] = useState(false);
   const keepVisibleRef = useRef(keepVisible);
   keepVisibleRef.current = keepVisible;
-  // The helper picker's bag, for this lecture only: made when the picker first opens.
-  const [picker, setPicker] = useState<PickerState | null>(null);
-  const pickerOpen = pstate?.overlay === 'picker';
-  useEffect(() => {
-    if (!pickerOpen || picker !== null || !deck?.picker) return;
-    const count = pickerCount ?? deck.picker.count;
-    setPicker(createPicker({ mode: labels !== null ? deck.picker.mode : 'numbers', count, labels }, Math.random));
-  }, [pickerOpen, picker, deck, labels, pickerCount]);
-  // Names delivered again (the console re-sends them after a reload) make a new bag.
-  useEffect(() => setPicker(null), [labels]);
-  const onPickerEvent = useCallback((event: PickerEvent) => setPicker((current) => (current ? reducePicker(current, event, Math.random) : current)), []);
-  const onPickerMode = useCallback(
-    (mode: PickerMode) => {
-      if (!deck?.picker) return;
-      setPicker(createPicker({ mode, count: pickerCount ?? deck.picker.count, labels }, Math.random));
-    },
-    [deck, labels, pickerCount],
-  );
-
   const slides: Slide[] = useMemo(() => {
     if (!deck || !run) return [];
     const mode = romanization ?? deck.options.romanization;
@@ -407,8 +370,6 @@ export default function PresenterApp(): React.ReactElement {
 
   useEffect(() => subscribeFullscreen(() => setFullscreen(isFullscreen())), []);
 
-  const pickerMode = deck?.picker == null ? 'none' : labels !== null ? deck.picker.mode : 'numbers';
-
   const onStart = useCallback(() => {
     if (phase.kind !== 'ready' || !run || slides.length === 0) return;
     // Gesture-bound requests first, in the tap itself (section 3.5); each is feature-detected and may be refused.
@@ -435,12 +396,12 @@ export default function PresenterApp(): React.ReactElement {
     }
     void track({
       name: 'lecture.start',
-      payload: { ...startPayload({ deck: phase.deck, run, source: phase.source, pickerMode, capability, offlineReady: isOfflineReady() }) },
+      payload: { ...startPayload({ deck: phase.deck, run, source: phase.source, capability, offlineReady: isOfflineReady() }) },
     });
     setPhase({ kind: 'running', deck: phase.deck, source: phase.source });
     const first = slides[state.slideIdx]!;
     setStrokePlay(first.builds[0] === 'stroke' ? nextStrokePlay(null, { slideKey: first.key, play: true }) : null);
-  }, [phase, run, slides, pickerMode, capability, updateRecent]);
+  }, [phase, run, slides, capability, updateRecent]);
 
   const onExit = useCallback(() => {
     narrator.stop();
@@ -449,12 +410,10 @@ export default function PresenterApp(): React.ReactElement {
     unlockOrientation();
     const payload = tally.current ? completePayload(tally.current, Date.now()) : { slidesShown: 0, minutes: 0, reveals: 0 };
     tally.current = null;
-    clearPickerLabels();
     forgetOpenDeck();
     stateRef.current = null;
     setPstate(null);
-    // The class tools end with the lesson: the bag, the timer and the tool tally are dropped.
-    setPicker(null);
+    // The class tools end with the lesson: the timer and the tool tally are dropped.
     timerRef.current = initialTimer();
     setTimer(timerRef.current);
     setShowNumbers(true);
@@ -489,7 +448,6 @@ export default function PresenterApp(): React.ReactElement {
       }
       if (typeof command === 'object') {
         if (stateRef.current?.overlay === 'exit') return;
-        if (command.overlay === 'picker' && phase.deck.picker === null) return;
         if (command.overlay === 'timer') {
           if (stateRef.current) dispatch(timerOpenEvent(stateRef.current, timerRef.current));
           return;
@@ -545,16 +503,13 @@ export default function PresenterApp(): React.ReactElement {
       // A deck too long for a link still runs; a reload then shows the home.
     }
     rejected.current = false;
-    setPickerCount(null);
     setHomeFocus(false);
     setHomeHelp(false);
     setPhase(next);
   }, []);
   // Back to lessons on the start screen: nothing started, so nothing is saved or sent (design start-screen.md).
   const backToHome = useCallback(() => {
-    clearPickerLabels();
     forgetOpenDeck();
-    setPickerCount(null);
     setHomeFocus(true);
     setPhase({ kind: 'home' });
   }, []);
@@ -640,17 +595,6 @@ export default function PresenterApp(): React.ReactElement {
       </View>
     );
   } else if (phase.kind === 'ready') {
-    const count = pickerCount ?? phase.deck.picker?.count ?? 0;
-    const pickerRow: PickerRow =
-      phase.deck.picker === null
-        ? null
-        : labels !== null && phase.deck.picker.mode !== 'numbers'
-          ? { kind: 'received', mode: phase.deck.picker.mode, count: labels.length }
-          : {
-              kind: 'numbers',
-              count,
-              line: phase.deck.picker.mode === 'numbers' ? null : phase.source === 'recent' ? 'notKept' : hasOpener() ? null : 'noOpener',
-            };
     body =
       run === null || run.slides.length === 0 ? (
         <StatePage testID="presenter-loading" pose="idle" status={messages.learner.presenter.state.loading} />
@@ -665,8 +609,6 @@ export default function PresenterApp(): React.ReactElement {
           voice={voiceCheck(capability, voiceChecked)}
           fullscreenSupported={fullscreenSupported()}
           wakeLockSupported={wakeLockSupported()}
-          picker={pickerRow}
-          onPickerCount={setPickerCount}
           fontReady={fontReady}
           onStart={onStart}
           onBack={backToHome}
@@ -704,7 +646,6 @@ export default function PresenterApp(): React.ReactElement {
         onFullscreen={toggleFullscreen}
         onExit={() => dispatch({ overlay: 'exit' })}
         onTimer={() => dispatch(timerOpenEvent(p, timerRef.current))}
-        {...(deckNow.picker !== null ? { onPicker: () => dispatch({ overlay: 'picker' }) } : {})}
         onBlank={() => dispatch({ overlay: 'blank' })}
         onGrid={() => dispatch({ overlay: 'grid' })}
         chips={chips}
@@ -759,15 +700,6 @@ export default function PresenterApp(): React.ReactElement {
               {p.timerOpen && p.timerMode === 'full' ? <TimerOverlay mode="full" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
               {p.overlay === 'blank' ? <BlankOverlay onPause={() => dispatch({ overlay: 'pause' })} /> : null}
               {p.overlay === 'pause' ? <PauseOverlay /> : null}
-              {p.overlay === 'picker' && picker !== null ? (
-                <PickerOverlay
-                  picker={picker}
-                  modes={deckNow.picker ? pickerModes(deckNow.picker.mode, labels !== null) : ['numbers']}
-                  onEvent={onPickerEvent}
-                  onMode={onPickerMode}
-                  onClose={() => dispatch('close')}
-                />
-              ) : null}
               {p.overlay === 'grid' ? (
                 <GridOverlay
                   items={gridItems(slides, p, { activity: (preset) => messages.learner.presenter.activity[preset] })}

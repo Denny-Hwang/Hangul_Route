@@ -18,7 +18,6 @@ export type HelpRow =
   | 'strokes'
   | 'romanization'
   | 'timer'
-  | 'picker'
   | 'grid'
   | 'fullscreen'
   | 'help'
@@ -47,7 +46,6 @@ export const HELP_KEYS: readonly HelpKeys[] = [
   { row: 'strokes', caps: [plain('R')], keys: ['r'], command: 'replay-stroke' },
   { row: 'romanization', caps: [plain('Shift'), plain('R')], keys: ['R'], shift: true, command: 'toggle-romanization' },
   { row: 'timer', caps: [plain('T')], keys: ['t'], command: { overlay: 'timer' } },
-  { row: 'picker', caps: [plain('P')], keys: ['p'], command: { overlay: 'picker' } },
   { row: 'grid', caps: [plain('G')], keys: ['g'], command: { overlay: 'grid' } },
   { row: 'fullscreen', caps: [plain('F')], keys: ['f'], command: 'fullscreen' },
   { row: 'help', caps: [plain('H'), plain('?')], keys: ['h', '?'], command: { overlay: 'help' } },

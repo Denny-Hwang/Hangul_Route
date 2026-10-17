@@ -1,10 +1,9 @@
-import { LECTURE_CONSOLE_ORIGINS, type LectureDeck } from '@hangul-route/content-schema';
 import type { KeyCommand } from '../logic/lecture/keymap';
 
 /**
  * Native stub of the presenter platform layer (F-TCH-004 section 3.1): the presenter is a root of
- * the learner web build only, so a native build never presents, has no address to read a deck
- * from and no opener to hand names over. Every call is a no-op with the web variant's surface
+ * the learner web build only, so a native build never presents and has no address to read a deck
+ * from. Every call is a no-op with the web variant's surface
  * (`presenter.web.ts`).
  */
 
@@ -43,22 +42,6 @@ export async function checkForUpdate(): Promise<void> {}
 export async function reloadForUpdate(_raw: string): Promise<void> {}
 
 export function reloadOnDeckLink(): () => void {
-  return () => undefined;
-}
-
-export function presenterConsoleOrigins(_extraCsv?: string): readonly string[] {
-  return [...LECTURE_CONSOLE_ORIGINS];
-}
-
-export function hasOpener(): boolean {
-  return false;
-}
-
-export function announceReady(_deck: Pick<LectureDeck, 'id' | 'picker'>): number {
-  return 0;
-}
-
-export function listenForRoster(_deck: Pick<LectureDeck, 'id' | 'picker'>, _onRoster?: () => void): () => void {
   return () => undefined;
 }
 
