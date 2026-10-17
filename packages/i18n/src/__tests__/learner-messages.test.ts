@@ -28,13 +28,25 @@ describe('learner.language (the Welcome row) and common.display (the Display she
 
   it('words the Display sheet once for every surface (AMENDMENTS-DISPLAY-NAV section 10)', () => {
     const d = m.common.display;
-    expect([d.button, d.a11y, d.title, d.language, d.textSize]).toEqual(['Aa', 'Display: language and text size', 'Display', 'Language', 'Text size']);
+    expect([d.button, d.a11y, d.title, d.language, d.textSize]).toEqual(['Aa', 'Aa, Display: language and text size', 'Display', 'Language', 'Text size']);
     expect(d.size).toEqual({ standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' });
     expect(d.preview).toBe('This is how text looks.');
     expect(d.note).toBe('For everyone on this device. Change it any time.');
     expect([d.confirm.question('Español'), d.confirm.use('Español'), d.confirm.back('English')]).toEqual(['Use Español on this device?', 'Use Español', 'Back to English']);
     expect(m.learner.profile.display.row).toBe('Display');
-    expect(m.learner.profile.display.line('English', 'Largest')).toBe('English · Largest text');
+    expect(m.learner.profile.display.line('English', 'Largest')).toBe('English · Text: Largest');
+  });
+
+  it('the Aa name begins with the visible sign in every locale (WCAG 2.5.3 Label in Name)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const d = getMessages(locale).common.display;
+      expect(d.a11y.startsWith(`${d.button}, `)).toBe(true);
+    }
+  });
+
+  it('the Profile display line keeps each size label as the control writes it (a label after its colon)', () => {
+    expect(getMessages('es').learner.profile.display.line('Español', 'Máximo')).toBe('Español · Texto: Máximo');
+    expect(getMessages('ko').learner.profile.display.line('한국어', '가장 크게')).toBe('한국어 · 글자 크기: 가장 크게');
   });
 
   it('Spanish and Korean word the sheet too, with no particle on the endonym', () => {

@@ -1,7 +1,7 @@
 {
   "es": {
     "common": {
-      "enSha": "bb25e0dcee223bc574e5902d233f841c96133516a9e7672cef11c68683233dff",
+      "enSha": "984ca4a3697f2e436779a223def5a7905188835e1b1894b3ed3cc164955ffa13",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
@@ -11,12 +11,12 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "46bbb4e09d81ddac8d1078afa4f2f49380850091f9e5f29376275b7308817b8f",
+      "enSha": "4d34cc83854de3b58c9a47eb8c11e88f8cfa90dc3c421b5df994373a46263f87",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "95b2f7830d5fe5c540a68f8ff5743ab317f3106821493fff8153b58de9f5a49c",
+      "enSha": "ed2e849e19eef51245dbd41e6fe87d36689602cdf364f19be856eb60c4003564",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
@@ -38,7 +38,7 @@
   },
   "ko": {
     "common": {
-      "enSha": "bb25e0dcee223bc574e5902d233f841c96133516a9e7672cef11c68683233dff",
+      "enSha": "984ca4a3697f2e436779a223def5a7905188835e1b1894b3ed3cc164955ffa13",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
@@ -48,12 +48,12 @@
       "reviewedAt": "2026-10-14"
     },
     "learner": {
-      "enSha": "46bbb4e09d81ddac8d1078afa4f2f49380850091f9e5f29376275b7308817b8f",
+      "enSha": "4d34cc83854de3b58c9a47eb8c11e88f8cfa90dc3c421b5df994373a46263f87",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },
     "caregiver": {
-      "enSha": "95b2f7830d5fe5c540a68f8ff5743ab317f3106821493fff8153b58de9f5a49c",
+      "enSha": "ed2e849e19eef51245dbd41e6fe87d36689602cdf364f19be856eb60c4003564",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-17"
     },

@@ -9,7 +9,9 @@ import { focusRing, type FocusState } from './browse-ui';
 import { BROWSE_DIALOG_MAX } from '../../logic/browse/layout';
 
 /**
- * The Lesson display sheet (F-BROWSE-001 section 4.9; wireframe
+ * The Romanization sheet, formerly Lesson display (F-BROWSE-001 section 4.9 as amended by
+ * AMENDMENTS-DISPLAY-NAV section 6; mock `design/screens/browse/lesson-display.md` "Revision
+ * 2026-10-17"; wireframe
  * `browse/show-as.md`; mock `design/screens/browse/lesson-display.md`): how
  * lessons show romanization in this preview. A bottom sheet on phones and a
  * centred dialog from the regular class. A choice applies at once; Done only
@@ -73,8 +75,8 @@ export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onC
               <Heading level="prompt">{m.title}</Heading>
             </View>
             <Spacer size="md" />
-            <Body weight="bold">{m.romanization}</Body>
-            <View role="radiogroup" aria-label={m.romanization}>
+            {/* The sheet holds only this choice, so its title names the group (AMENDMENTS-DISPLAY-NAV section 6). */}
+            <View role="radiogroup" aria-labelledby="browse-display-title">
               {MODES.map((mode) => {
                 const selected = romanization === mode;
                 return (

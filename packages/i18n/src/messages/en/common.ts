@@ -81,7 +81,8 @@ export const common = {
   display: {
     /** The Aa button: the sign it draws (hidden from assistive tech) and its accessible name. */
     button: 'Aa',
-    a11y: 'Display: language and text size',
+    // Begins with the visible label (WCAG 2.5.3 Label in Name), so "tap Aa" works for voice control.
+    a11y: 'Aa, Display: language and text size',
     title: 'Display',
     language: 'Language',
     textSize: 'Text size',

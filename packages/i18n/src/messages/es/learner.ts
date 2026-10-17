@@ -141,7 +141,7 @@ export const learner = {
     licenses: { label: 'Avisos de código abierto', fallback: 'Abre hangulroute.com/licenses en un navegador.', gateDone: 'Revisión de adultos lista. Toca Avisos de código abierto otra vez para abrir la página.' },
     display: {
       row: 'Pantalla',
-      line: (language: string, size: string) => `${language} · texto ${size}`,
+      line: (language: string, size: string) => `${language} · Texto: ${size}`,
     },
     reading: {
       title: 'Práctica de lectura',

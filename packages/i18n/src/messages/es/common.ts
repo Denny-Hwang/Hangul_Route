@@ -65,7 +65,7 @@ export const common = {
   /** Hoja Pantalla (Aa): el único idioma y el tamaño del texto de este dispositivo. */
   display: {
     button: 'Aa',
-    a11y: 'Pantalla: idioma y tamaño del texto',
+    a11y: 'Aa, Pantalla: idioma y tamaño del texto',
     title: 'Pantalla',
     language: 'Idioma',
     textSize: 'Tamaño del texto',

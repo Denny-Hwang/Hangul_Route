@@ -70,7 +70,7 @@ export const common = {
   /** 화면(Aa) 시트: 이 기기의 하나뿐인 언어와 글자 크기. */
   display: {
     button: '가가',
-    a11y: '보기 설정: 언어와 글자 크기',
+    a11y: '가가, 보기 설정: 언어와 글자 크기',
     title: '보기 설정',
     language: '언어',
     textSize: '글자 크기',

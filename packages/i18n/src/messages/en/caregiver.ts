@@ -743,7 +743,7 @@ export const caregiver = {
       close: { cta: 'Close' },
       howTo: 'Tap a lesson to see what it teaches, then play it. Nothing is saved.',
       /** The header chip that opens the Lesson display sheet (home and the item page). */
-      lessonDisplay: { cta: 'Lesson display' },
+      lessonDisplay: { cta: 'Romanization' },
       /** Beside the title while the device is offline. */
       offline: 'Offline',
       /** Only with the content switch on (section 4.5 item 3): a sampler pass, or a fallback pass. */
@@ -793,10 +793,10 @@ export const caregiver = {
       /** Under the switch when turning it on did not keep the lessons (the switch is back off). */
       failed: 'Lessons could not be kept on this device.',
     },
-    /** The Lesson display sheet (section 4.9). It changes only this preview. */
+    /** The Romanization sheet, formerly Lesson display (section 4.9). It changes only this preview. */
     display: {
-      title: 'Lesson display',
-      romanization: 'Romanization',
+      // The sheet holds only the romanization choice (AMENDMENTS-DISPLAY-NAV section 6): its title names the radio group.
+      title: 'Romanization',
       always: 'Always shown',
       tap: 'Hidden until tap',
       note: "These choices change only this preview. No learner's settings change.",

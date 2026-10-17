@@ -178,7 +178,7 @@ export const learner = {
     /** The Display row (AMENDMENTS-DISPLAY-NAV section 10): opens the Display sheet; its line names the device's language and text size. */
     display: {
       row: 'Display',
-      line: (language: string, size: string) => `${language} · ${size} text`,
+      line: (language: string, size: string) => `${language} · Text: ${size}`,
     },
     /** Always shown: it does not depend on a second language (F-I18N-001 D2). */
     reading: {
