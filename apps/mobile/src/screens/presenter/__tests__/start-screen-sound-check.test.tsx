@@ -62,9 +62,12 @@ describe('Test the sound (start screen voice row)', () => {
     expect(byTestId(r.root, 'presenter-test-sound-on')).toHaveLength(0);
   });
 
-  it('muted: the shipped Turn sound on, which turns it on', async () => {
+  it('muted: says the sound is off, then the shipped Turn sound on, which turns it on', async () => {
     const onTurnSoundOn = vi.fn();
     const r = await render(screen({ onTestSound: () => undefined, soundCheck: 'muted', onTurnSoundOn }));
+    // The live region says why the button is there before it names the button.
+    const result = byTestId(r.root, 'presenter-test-sound-result')[0]!;
+    expect(screenTexts(result)[0]).toBe(en.learner.audio.soundIsOff);
     const on = byTestId(r.root, 'presenter-test-sound-on')[0]!;
     expect(on.props['aria-label']).toBe(en.learner.audio.action.turn_on.cta);
     await press(on);
@@ -78,6 +81,19 @@ describe('Test the sound (start screen voice row)', () => {
     const row = byTestId(r.root, 'presenter-check-voice')[0]!;
     expect(textOf(row)).toContain(m.voiceNone);
     expect(textOf(row)).toContain(m.testSound.failed);
+  });
+
+  it('a device ready only from its recordings (voice kind clips) shows the clips line and offers the test', async () => {
+    const r = await render(screen({ voice: { kind: 'clips' }, onTestSound: () => undefined, soundCheck: 'played' }));
+    const row = byTestId(r.root, 'presenter-check-voice')[0]!;
+    expect(textOf(row)).toContain(en.learner.audio.voice.ready);
+    expect(byTestId(row, 'presenter-test-sound')).toHaveLength(1);
+    expect(textOf(byTestId(r.root, 'presenter-test-sound-result')[0]!)).toBe(m.testSound.played);
+  });
+
+  it.each(['es', 'ko'] as const)('%s: the muted line comes from the dictionary', async (locale) => {
+    const r = await render(screen({ onTestSound: () => undefined, soundCheck: 'muted', onTurnSoundOn: () => undefined }, locale));
+    expect(screenTexts(byTestId(r.root, 'presenter-test-sound-result')[0]!)[0]).toBe(getMessages(locale).learner.audio.soundIsOff);
   });
 
   it('is not drawn while the voice is still being checked, nor without a handler', async () => {

@@ -9,7 +9,7 @@ import { Text, View, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { canPlayKorean, type AudioCapability } from './src/logic/audio/capability';
-import { lectureBundle } from './src/logic/lecture/content';
+import { lectureBundle, soundCheckSpec } from './src/logic/lecture/content';
 import { lectureStories } from './src/logic/lecture/sources/story';
 import { readToMePlan } from './src/logic/lecture/story-slides';
 import { createAudioRunner } from './src/logic/story/audio-runner';
@@ -28,8 +28,6 @@ import {
   slideLocale,
   runDeck,
   SHELL_SLIDE_KINDS,
-  SOUND_CHECK,
-  soundCheckOutcome,
   startPayload,
   startTally,
   strokeTokenFor,
@@ -40,7 +38,6 @@ import {
   type StartSource,
   type StrokePlay,
   type HomeChoice,
-  type SoundCheckOutcome,
   voiceState,
 } from './src/logic/lecture/shell';
 import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage-constants';
@@ -50,7 +47,16 @@ import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, sta
 import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { slideSound, soundFlashFor, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
-import { getCapability, installGestureUnlock, playPrompt, refreshCapability, stop as stopAudio, subscribeCapability, unlockAudio } from './src/platform/audio';
+import {
+  getCapability,
+  hasClip,
+  installGestureUnlock,
+  playPrompt,
+  refreshCapability,
+  stop as stopAudio,
+  subscribeCapability,
+  unlockAudio,
+} from './src/platform/audio';
 import { setDocumentLang } from './src/platform/locale';
 import { coarsePointer, deviceScreen } from './src/platform/orientation';
 import { isOnline, subscribeOnline } from './src/platform/online';
@@ -98,6 +104,7 @@ import { TimerOverlay, type TimerControls } from './src/screens/presenter/overla
 import { PresenterViewProvider, type PresenterView } from './src/screens/presenter/presenter-context';
 import { Stage, StageHint } from './src/screens/presenter/Stage';
 import { StartScreen } from './src/screens/presenter/StartScreen';
+import { useSoundCheck } from './src/screens/presenter/use-sound-check';
 import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
@@ -337,28 +344,15 @@ function Presenter(): React.ReactElement {
 
   // ---- the start screen ----
   const [fontReady, setFontReady] = useState(false);
-  // Test the sound (section 3.7): the outcome under the button; a newer tap replaces an older result.
-  const [soundCheck, setSoundCheck] = useState<SoundCheckOutcome | null>(null);
-  const soundCheckRun = useRef(0);
-  const onTestSound = useCallback(() => {
-    // In the tap itself: the unlock, then the word, so the browser lets it play (section 3.5).
-    unlockAudio();
-    const run = ++soundCheckRun.current;
-    setSoundCheck(null);
-    void playPrompt(SOUND_CHECK).then((result) => {
-      if (run === soundCheckRun.current) setSoundCheck(soundCheckOutcome(result));
-    });
-  }, []);
-  const onTestSoundOn = useCallback(() => {
-    useAudioStore.getState().setMuted(false, 'fallback_panel');
-    onTestSound();
-  }, [onTestSound]);
-  // A result belongs to the start screen it was asked on.
-  useEffect(() => {
-    if (phase.kind === 'ready') return;
-    soundCheckRun.current += 1;
-    setSoundCheck(null);
-  }, [phase.kind]);
+  // Test the sound (section 3.7): the outcome under the button; a newer tap replaces an older result, and leaving the
+  // start screen clears it.
+  const { soundCheck, onTestSound, onTurnSoundOn: onTestSoundOn } = useSoundCheck({
+    onStartScreen: phase.kind === 'ready',
+    spec: () => soundCheckSpec(getCapability(), hasClip),
+    unlock: unlockAudio,
+    play: playPrompt,
+    turnSoundOn: () => useAudioStore.getState().setMuted(false, 'fallback_panel'),
+  });
   useEffect(() => {
     if (phase.kind !== 'ready') return undefined;
     let live = true;

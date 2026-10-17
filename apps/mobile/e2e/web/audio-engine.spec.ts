@@ -1,8 +1,9 @@
 import type { Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { onboardChild, passDiscover } from './helpers';
+import { onboardChild, passDiscover, seedStored } from './helpers';
 import { shot } from './shots';
+import { expectTextFits, fontSizeOf } from './text-fit';
 
 /**
  * F-AUDIO-004 2026-10-17 (the web speech engine) and F-TCH-004 section 3.7 (Test the sound): a slow,
@@ -14,6 +15,10 @@ import { shot } from './shots';
  *     holds every utterance (speaking and pending) for 2 s before `onstart`, then ends 400 ms later.
  * (b) iOS Safari in the learner app: outside a gesture (touchend, click, keydown) a `speak` is dropped
  *     without a word until one has been accepted inside one.
+ * (c) An engine that takes the silent unlock and never answers it (it holds it as speaking, so the
+ *     queue behind it never moves), in the presenter: Test the sound still plays, and so does a slide.
+ * (d) The presenter start screen at 320 x 568 on a phone held upright, at the Largest text size, with
+ *     Details open and a Test the sound that did not play (no Korean voice): everything fits.
  *
  * Each engine records every `speak` and `cancel`, so the specs read what the app asked and when.
  */
@@ -371,5 +376,138 @@ test.describe('(b) iOS Safari, a touch screen, the learner app', () => {
       .poll(async () => (await asked(page)).slice(roundAt).filter((a) => a.volume !== 0 && /[가-힣]/.test(a.text)))
       .toContainEqual(expect.objectContaining({ lang: 'ko-KR', accepted: true }));
     await expect(page.getByText('Tap the letter you hear')).toBeVisible();
+  });
+});
+
+/** (c) An engine that takes the blank unlock and never answers it: it stays the current utterance (speaking) and nothing behind it moves until a cancel. */
+async function hangsOnBlank(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    type Heard = { text: string; volume: number; started: boolean; cancelled: boolean };
+    const heard: Heard[] = [];
+    const cancels: number[] = [];
+    (window as unknown as { __heard: Heard[]; __cancels: number[] }).__heard = heard;
+    (window as unknown as { __heard: Heard[]; __cancels: number[] }).__cancels = cancels;
+    const yuna = { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false };
+    interface Job {
+      u: SpeechSynthesisUtterance;
+      entry: Heard;
+    }
+    let current: Job | null = null;
+    const queue: Job[] = [];
+    const begin = (job: Job): void => {
+      current = job;
+      // The blank unlock: taken, and never a word about it.
+      if (job.u.text.trim() === '') return;
+      setTimeout(() => {
+        if (current !== job) return;
+        job.entry.started = true;
+        job.u.onstart?.call(job.u, new Event('start') as SpeechSynthesisEvent);
+        setTimeout(() => {
+          if (current !== job) return;
+          current = null;
+          job.u.onend?.call(job.u, new Event('end') as SpeechSynthesisEvent);
+          const next = queue.shift();
+          if (next) begin(next);
+        }, 300);
+      }, 20);
+    };
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        get speaking() {
+          return current !== null;
+        },
+        get pending() {
+          return queue.length > 0;
+        },
+        paused: false,
+        getVoices: () => [yuna],
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        speak: (u: SpeechSynthesisUtterance) => {
+          const job: Job = { u, entry: { text: u.text, volume: u.volume, started: false, cancelled: false } };
+          heard.push(job.entry);
+          if (current === null) begin(job);
+          else queue.push(job);
+        },
+        cancel: () => {
+          cancels.push(performance.now());
+          const all = current ? [current, ...queue] : [...queue];
+          current = null;
+          queue.length = 0;
+          for (const job of all) {
+            job.entry.cancelled = true;
+            setTimeout(() => job.u.onerror?.call(job.u, Object.assign(new Event('error'), { error: 'canceled' }) as SpeechSynthesisErrorEvent), 0);
+          }
+        },
+        resume: () => undefined,
+      },
+    });
+    Element.prototype.requestFullscreen = function requestFullscreen(): Promise<void> {
+      return Promise.resolve();
+    };
+  });
+}
+
+type Heard = { text: string; volume: number; started: boolean; cancelled: boolean };
+const heardOf = (page: Page): Promise<Heard[]> => page.evaluate(() => (window as unknown as { __heard?: Heard[] }).__heard ?? []);
+
+test.describe('(c) an engine that never answers the silent unlock, the presenter on a phone sideways', () => {
+  test.use({ viewport: { width: 915, height: 412 }, isMobile: true, hasTouch: true });
+
+  test('Test the sound plays (the stuck queue is cleared once), and a slide sound then plays at once', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await hangsOnBlank(page);
+    await page.goto(`/present#d=${encodeDeck(DECK)}`);
+    await expect(page.getByTestId('presenter-start-footer')).toBeVisible();
+    await page.getByTestId('presenter-start-details').tap();
+    await expect(page.getByTestId('presenter-check-voice')).toContainText('Korean voice: Yuna, on this device');
+
+    await page.getByTestId('presenter-test-sound').tap();
+    // The greeting waits behind the unlock the engine never answers; at 3 s the queue is cleared and it is said again.
+    await expect(page.getByTestId('presenter-test-sound-result')).toHaveText('Did you hear it? If not, turn up the volume.', { timeout: 8000 });
+    const greeting = (await heardOf(page)).filter((u) => u.text === '안녕하세요');
+    expect(greeting.some((u) => u.started && !u.cancelled)).toBe(true);
+    await expect(page.getByText('The sound did not play here. You can say each word yourself.')).toHaveCount(0);
+
+    // The engine is free now: Start, the first letter, Sound plays with no wait and never "Tap to hear".
+    await page.getByTestId('presenter-start-button').tap();
+    await expect(page.getByTestId('presenter-stage')).toBeVisible();
+    await page.getByTestId('presenter-next').tap();
+    await expect(page.getByTestId('presenter-glyph')).toBeVisible();
+    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+    await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
+    await expect(page.getByTestId('presenter-bar-compact')).toHaveCSS('opacity', '1');
+    const before = (await heardOf(page)).length;
+    await page.getByTestId('presenter-sound').tap();
+    await expect
+      .poll(async () => (await heardOf(page)).slice(before).some((u) => u.volume !== 0 && /^[가-힣]+$/.test(u.text) && u.started), { timeout: 3000 })
+      .toBe(true);
+    await page.waitForTimeout(500);
+    await expect(page.getByRole('button', { name: 'Tap to hear' })).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('(d) the presenter start screen at 320 x 568, a phone held upright, Largest text', () => {
+  test.use({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true });
+
+  test('Details with Test the sound and its did-not-play line: nothing scrolls sideways and no text is clipped', async ({ page }) => {
+    // The suite's silent engine has no Korean voice, so the test cannot play here.
+    // The device's text size, set before the presenter opens (it reads `device:settings`, section 3.9).
+    await page.goto('/');
+    await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-17T09:00:00.000Z', textSize: 'largest' });
+    await page.goto(`/present#d=${encodeDeck(DECK)}`);
+    await expect(page.getByTestId('presenter-start-footer')).toBeVisible();
+    await page.getByTestId('presenter-start-details').tap();
+    await expect(page.getByTestId('presenter-check-voice')).toContainText('No Korean voice on this device.');
+    await page.getByTestId('presenter-test-sound').tap();
+    await expect(page.getByTestId('presenter-test-sound-result')).toHaveText('The sound did not play here. You can say each word yourself.', { timeout: 8000 });
+    // The line really is at Largest: body (18) x 1.5.
+    expect(await fontSizeOf(page.getByText('The sound did not play here. You can say each word yourself.'))).toBe(27);
+    await page.getByTestId('presenter-test-sound').scrollIntoViewIfNeeded();
+    await expectTextFits(page, 'presenter start, Details, Test the sound at Largest');
+    await shot(page, 'presenter-start-test-sound-failed-largest-320x568');
   });
 });

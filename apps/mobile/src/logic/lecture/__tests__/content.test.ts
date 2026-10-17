@@ -1,11 +1,12 @@
 import { LectureDeckSchema, discoverItemTexts, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodeById, episodesAll, jamoKnown, questById, questsAll } from '../../../content';
+import { episodeById, episodesAll, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';
-import { PAUSE_WORD, lectureBundle } from '../content';
+import { PAUSE_WORD, SOUND_CHECK_WORD, lectureBundle, soundCheckSpec } from '../content';
+import { UNKNOWN_CAPABILITY, type AudioCapability } from '../../audio/capability';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { bookQuests } from '../../../content/books';
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
@@ -26,6 +27,39 @@ const shippedEpisodes = episodesAll.filter((e) => e.status !== 'preview' && e.qu
 describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
   it('the Pause word is taught Korean with romanization and a gloss (no Hangul in a UI message)', () => {
     expect(PAUSE_WORD).toEqual({ ko: '잠깐', romanization: 'jamkkan', glossKey: 'learner.presenter.pause.gloss', en: 'wait a moment' });
+  });
+
+  it('Test the sound\'s greeting is taught Korean with romanization and a gloss, never a UI message (section 3.7)', () => {
+    expect(SOUND_CHECK_WORD).toEqual({ ko: '안녕하세요', romanization: 'annyeonghaseyo', en: 'hello' });
+  });
+
+  describe('what Test the sound plays (section 3.7)', () => {
+    const voice: AudioCapability = { tts: { state: 'ready', voiceId: 'v', voiceName: 'Yuna', local: true, quality: 'standard' }, clips: false, unlocked: false };
+    const clipsOnly: AudioCapability = { tts: { state: 'none', reason: 'no_korean_voice' }, clips: true, unlocked: false };
+    const noClip = (): boolean => false;
+    const greeting = { text: SOUND_CHECK_WORD.ko, kind: 'word', source: 'presenter-check' };
+
+    it('the greeting as a word in the device voice, with its own telemetry source', () => {
+      expect(soundCheckSpec(voice, noClip)).toEqual(greeting);
+      // With a Korean voice the greeting stays the test even when recordings are bundled too.
+      expect(soundCheckSpec({ ...voice, clips: true }, () => true)).toEqual(greeting);
+    });
+
+    it('where the voice row is ready only from the recordings (voice kind clips), the first letter that has one, through its recording', () => {
+      const first = jamoAll.find((j) => j.audioRef !== undefined)!;
+      const bundled = new Set([first.audioRef!]);
+      const spec = soundCheckSpec(clipsOnly, (ref) => ref !== undefined && bundled.has(ref));
+      expect(spec).toEqual({ text: first.spokenKo, audioRef: first.audioRef, kind: 'sound', source: 'presenter-check' });
+      // Still checking the voices, with recordings: the row reads clips too.
+      expect(soundCheckSpec({ ...UNKNOWN_CAPABILITY, clips: true }, (ref) => ref !== undefined && bundled.has(ref))).toEqual(spec);
+    });
+
+    it('a later letter when only its recording is bundled; the greeting when none is (it then reports did not play)', () => {
+      const later = jamoAll.filter((j) => j.audioRef !== undefined)[3]!;
+      expect(soundCheckSpec(clipsOnly, (ref) => ref === later.audioRef)).toMatchObject({ audioRef: later.audioRef, kind: 'sound' });
+      expect(soundCheckSpec(clipsOnly, noClip)).toEqual(greeting);
+      expect(soundCheckSpec({ tts: { state: 'none', reason: 'no_korean_voice' }, clips: false, unlocked: false }, () => true)).toEqual(greeting);
+    });
   });
 
   it('looks up the bundled content', () => {
