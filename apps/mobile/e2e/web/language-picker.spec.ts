@@ -35,10 +35,12 @@ async function onboardAndOpenProfile(page: Page): Promise<string> {
   await answerForkNew(page);
   await expect(page.getByText('Your first card is waiting.')).toBeVisible();
   await waitForSaved(page, ['profiles']);
+  // The install guide shows from the third cached open, whenever it is ready, and covers the Home
+  // tabs: it is closed whenever it appears, never after a fixed wait.
+  await page.addLocatorHandler(page.getByTestId('install-guide'), async (guide) => {
+    await guide.getByRole('button', { name: 'Not now' }).click();
+  });
   await page.goto('/');
-  const guide = page.getByTestId('install-guide');
-  await page.waitForTimeout(800);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
   const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
@@ -116,6 +118,8 @@ test.describe('every build shows English, Spanish and Korean (F-I18N-001 rows 15
 
     const row = page.getByTestId('profile-display-row');
     await expect(row).toContainText('English · Text: Standard');
+    // The name carries the current value too: on the web a hint is never read.
+    await expect(row).toHaveAccessibleName('Aa, Display: language and text size. English · Text: Standard');
     await row.click();
     const sheet = page.getByTestId('display-sheet');
     await expect(sheet.getByRole('heading', { name: 'Display' })).toBeVisible();
