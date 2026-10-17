@@ -26,6 +26,30 @@ export function segmentGlyphSize(step: TextSizeStep): number {
   return typeScale(TEXT_SIZE_FACTORS[step]).size.body;
 }
 
+/**
+ * The radio a key moves to in a radio group (the WAI-ARIA radio group keys: arrows wrap around,
+ * Home and End go to the ends), or null for any other key or a current value not in the list.
+ * Only the selected radio is a Tab stop; the arrows move focus and selection together.
+ */
+export function radioAfter<T>(options: readonly T[], current: T, key: string): T | null {
+  const at = options.indexOf(current);
+  if (at === -1 || options.length === 0) return null;
+  switch (key) {
+    case 'ArrowRight':
+    case 'ArrowDown':
+      return options[(at + 1) % options.length]!;
+    case 'ArrowLeft':
+    case 'ArrowUp':
+      return options[(at - 1 + options.length) % options.length]!;
+    case 'Home':
+      return options[0]!;
+    case 'End':
+      return options[options.length - 1]!;
+    default:
+      return null;
+  }
+}
+
 /** The Language row shows only when there is more than one language to choose from. */
 export function showLanguageRow(options: readonly DisplayOption[] | null | undefined): boolean {
   return options !== null && options !== undefined && options.length > 1;

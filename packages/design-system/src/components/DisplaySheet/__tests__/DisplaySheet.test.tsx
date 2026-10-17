@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { TextSizeStep } from '../../../text-size';
 import { DisplaySheet } from '../DisplaySheet';
-import { segmentGlyphSize, showLanguageRow, textSizeOptions } from '../model';
+import { radioAfter, segmentGlyphSize, showLanguageRow, textSizeOptions } from '../model';
 import type { DisplaySheetProps } from '../types';
 
 /**
@@ -15,6 +15,8 @@ const platform = vi.hoisted(() => ({ OS: 'ios' }));
 const layout = vi.hoisted(() => ({ width: 'compact' as 'compact' | 'regular' }));
 const textSize = vi.hoisted(() => ({ factor: 1 }));
 const effects = vi.hoisted(() => [] as (() => void | (() => void))[]);
+/** Refs by hook call order, kept across renders of one scenario (`render(p, true)`), as React keeps them. */
+const refs = vi.hoisted(() => ({ store: [] as { current: unknown }[], at: 0 }));
 vi.mock('react-native', () => ({ Modal: 'Modal', Platform: platform, Pressable: 'Pressable', ScrollView: 'ScrollView', Text: 'Text', View: 'View' }));
 vi.mock('../../Button', () => ({ Button: 'Button' }));
 vi.mock('../../Heading', () => ({ Body: 'Body', Heading: 'Heading' }));
@@ -30,6 +32,11 @@ vi.mock('react', async (importOriginal) => {
     useId: (): string => ':r1:',
     useEffect: (fn: () => void | (() => void)): void => {
       effects.push(fn);
+    },
+    useRef: (initial: unknown): { current: unknown } => {
+      const at = refs.at++;
+      refs.store[at] ??= { current: initial };
+      return refs.store[at]!;
     },
   };
   return { ...actual, ...hooks, default: { ...actual, ...hooks } };
@@ -87,9 +94,24 @@ function props(over: Partial<DisplaySheetProps> = {}): DisplaySheetProps {
   };
 }
 
-function render(p: DisplaySheetProps): El[] {
+function render(p: DisplaySheetProps, keepRefs = false): El[] {
   effects.length = 0;
+  refs.at = 0;
+  if (!keepRefs) refs.store = [];
   return all(expand(DisplaySheet(p)));
+}
+
+/** A node React Native Web could focus: records that it was focused. */
+function focusable(name: string, log: string[]): { focus: () => void } {
+  return { focus: () => log.push(name) };
+}
+
+/** Hands each element its node, as React would after a commit (the callback refs). */
+function attach(tree: El[], log: string[]): void {
+  for (const e of tree) {
+    const ref = (e as unknown as { ref?: unknown }).ref;
+    if (typeof ref === 'function' && typeof e.props.testID === 'string') (ref as (n: unknown) => void)(focusable(e.props.testID, log));
+  }
 }
 
 /** A radio segment's inner content (its children are a plain node here, not a render function). */
@@ -107,6 +129,19 @@ describe('DisplaySheet model', () => {
 
   it('each segment draws its Aa at its own step', () => {
     expect([segmentGlyphSize('standard'), segmentGlyphSize('large'), segmentGlyphSize('larger'), segmentGlyphSize('largest')]).toEqual([18, 21, 23, 27]);
+  });
+
+  it('radioAfter: arrows wrap, Home and End go to the ends, anything else is no move', () => {
+    const opts = ['en', 'es', 'ko'] as const;
+    expect(radioAfter(opts, 'en', 'ArrowRight')).toBe('es');
+    expect(radioAfter(opts, 'en', 'ArrowDown')).toBe('es');
+    expect(radioAfter(opts, 'ko', 'ArrowRight')).toBe('en');
+    expect(radioAfter(opts, 'en', 'ArrowLeft')).toBe('ko');
+    expect(radioAfter(opts, 'es', 'ArrowUp')).toBe('en');
+    expect(radioAfter(opts, 'es', 'Home')).toBe('en');
+    expect(radioAfter(opts, 'es', 'End')).toBe('ko');
+    expect(radioAfter(opts, 'en', 'Enter')).toBeNull();
+    expect(radioAfter(opts, 'fr' as never, 'ArrowRight')).toBeNull();
   });
 
   it('the Language row shows only with two or more languages', () => {
@@ -215,6 +250,69 @@ describe('DisplaySheet element tree', () => {
     expect(segments(tree, 'text-size')).toHaveLength(4);
   });
 
+  it('roving focus: only the selected radio is a Tab stop; arrows, Home and End move focus and selection', () => {
+    platform.OS = 'web';
+    try {
+      const p = props({ textSize: { ...props().textSize, selected: 'large' } });
+      const tree = render(p);
+      const log: string[] = [];
+      attach(tree, log);
+      const sizes = segments(tree, 'text-size');
+      expect(sizes.map((r) => r.props.tabIndex)).toEqual([-1, 0, -1, -1]);
+      expect(segments(tree, 'language').map((r) => r.props.tabIndex)).toEqual([0, -1, -1]);
+      const prevent = vi.fn();
+      const onKeyDown = sizes[1]!.props.onKeyDown as (e: { key: string; preventDefault: () => void }) => void;
+      onKeyDown({ key: 'ArrowRight', preventDefault: prevent });
+      onKeyDown({ key: 'End', preventDefault: prevent });
+      onKeyDown({ key: 'Home', preventDefault: prevent });
+      onKeyDown({ key: 'a', preventDefault: prevent });
+      expect((p.textSize.onSelect as ReturnType<typeof vi.fn>).mock.calls).toEqual([['larger'], ['largest'], ['standard']]);
+      expect(prevent).toHaveBeenCalledTimes(3);
+      expect(log).toEqual(['display-sheet-text-size-larger', 'display-sheet-text-size-largest', 'display-sheet-text-size-standard']);
+    } finally {
+      platform.OS = 'ios';
+    }
+  });
+
+  it('focus follows the confirm step: its question when it opens, the selected language when Use or Back closes it', () => {
+    platform.OS = 'web';
+    try {
+      const log: string[] = [];
+      const confirm = { question: '¿Usar Español en este dispositivo?', use: 'Usar Español', back: 'Volver a English', lang: 'es', onUse: vi.fn(), onBack: vi.fn() };
+      // The radios first.
+      let tree = render(props(), false);
+      attach(tree, log);
+      effects.forEach((fn) => fn());
+      expect(log).toEqual([]);
+      // Español chosen: the confirm step replaces the radios and takes focus.
+      tree = render(props({ language: { ...props().language!, confirm } }), true);
+      attach(tree, log);
+      effects.forEach((fn) => fn());
+      expect(log).toEqual(['display-sheet-language-question']);
+      // Use (or Back): the radios return and the selected language takes focus.
+      tree = render(props({ language: { ...props().language!, selected: 'es' } }), true);
+      attach(tree, log);
+      effects.forEach((fn) => fn());
+      expect(log).toEqual(['display-sheet-language-question', 'display-sheet-language-es']);
+      // A later render moves nothing.
+      tree = render(props({ language: { ...props().language!, selected: 'es' } }), true);
+      attach(tree, log);
+      effects.forEach((fn) => fn());
+      expect(log).toHaveLength(2);
+    } finally {
+      platform.OS = 'ios';
+    }
+  });
+
+  it('native: no focus calls', () => {
+    const log: string[] = [];
+    const p = props();
+    const tree = render(p);
+    attach(tree, log);
+    (segments(tree, 'text-size')[0]!.props.onKeyDown as (e: { key: string }) => void)({ key: 'ArrowRight' });
+    expect(log).toEqual([]);
+  });
+
   it('extra rows (All lessons romanization) come above Language', () => {
     const tree = render(props({ children: <Body2 /> }));
     const order = tree.map((e) => (e.type === 'Extra' ? 'extra' : e.props.role === 'radiogroup' ? String(e.props['aria-label']) : null)).filter(Boolean);
@@ -231,7 +329,7 @@ describe('DisplaySheet element tree', () => {
     expect(tree.some((e) => e.props['aria-hidden'] === true && e.type === 'View')).toBe(true);
     layout.width = 'regular';
     const wide = render(props());
-    expect((byTestId(wide, 'display-sheet')?.props.style as { maxWidth?: number }).maxWidth).toBe(512);
+    expect((byTestId(wide, 'display-sheet')?.props.style as { maxWidth?: number }).maxWidth).toBe(720);
     // The dialog has room for the four steps in one row of equal columns.
     const step = segments(wide, 'text-size')[0] as El;
     expect((step.props.style as (s: { pressed: boolean; focused: boolean }) => { flexBasis: unknown; borderWidth: number })({ pressed: false, focused: true })).toMatchObject({ flexBasis: 0, borderWidth: 3 });
