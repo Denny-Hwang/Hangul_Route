@@ -186,12 +186,13 @@ test.describe('story shelf (fixture bundle)', () => {
 
     // Day one (§3.14 row 1): a real story first, the first Journey quest, then the explore card. The
     // old "Story time" label on a lesson episode is gone.
-    await expect(missionCards(page)).toHaveCount(3);
+    await expect(missionCards(page)).toHaveCount(2);
     await expect(missionCards(page).first()).toHaveAccessibleName('Hangul Day. A short story.');
-    // Slot 2 is the Journey cursor, which comes from the grid alone: never the shelf quest (§3.14 rows 1, 9).
-    await expect(missionCards(page).nth(1)).toHaveAccessibleName('Meet a, eo, g, n. Something new today.');
+    // Slot 2 is the Journey cursor, which comes from the grid alone: never the shelf quest (§3.14 rows 1, 9). It is
+    // the Next lesson hero's own lesson, so it is the hero's quiet row, not a button (AMENDMENTS-DISPLAY-NAV 9.1).
+    await expect(page.getByTestId('home-mission-same-as-hero-2')).toContainText('Meet a, eo, g, n');
     // Slot 3 is a second story when the shelf has one (§3.14 row 1): the bundle's Culture fixture.
-    await expect(missionCards(page).nth(2)).toHaveAccessibleName('The Hangul Book. A short story.');
+    await expect(missionCards(page).nth(1)).toHaveAccessibleName('The Hangul Book. A short story.');
     await expect(page.getByTestId('home-missions').locator('[data-testid^="home-mission-cover-"]')).toHaveCount(2);
     await expect(page.getByTestId('home-missions')).not.toContainText('Story time');
 
@@ -304,7 +305,8 @@ test.describe('story shelf (fixture bundle)', () => {
     await page.getByTestId('story-results-home').click();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
 
-    await expect(missionCards(page)).toHaveCount(3);
+    // Slot 2 is still the hero's quiet row (the first lesson is not played yet).
+    await expect(missionCards(page)).toHaveCount(2);
     await expect(missionCards(page).first()).toHaveAccessibleName('Hangul Day. A short story. Collected.');
   });
 
@@ -516,7 +518,8 @@ test.describe('story shelf (fixture bundle)', () => {
   // it cannot tell gating off from gating on; the gated build is PR 4.8b.
   test('default build: no lock or "Premium" copy and no emoji on any story surface', async ({ page }) => {
     await onboard(page);
-    await expect(missionCards(page)).toHaveCount(3);
+    // Two cards and card 2 as the hero's quiet row (AMENDMENTS-DISPLAY-NAV 9.1).
+    await expect(missionCards(page)).toHaveCount(2);
     await expect(storyCard(page)).toBeVisible();
     const surfaces: Array<[string, string]> = [['Home', await page.getByTestId('home-missions').innerText()]];
 

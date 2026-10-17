@@ -52,7 +52,8 @@ async function familyDashboard(page: Page, name = 'Mina'): Promise<string> {
   const id = await profileIdOf(page, name);
   await page.clock.setSystemTime(new Date(now));
   await page.goto('/');
-  await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
+  // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+  await page.getByTestId('home-next-lesson-start').click();
   await expect.poll(async () => (await readStored<{ sessions: unknown[] }>(page, `progress:${id}`))?.sessions.length ?? 0).toBe(2);
   await openGrownUpZone(page, name);
   await unlockWithPin(page);

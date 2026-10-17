@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardSelf, openLettersEpisode, passDiscover, readStored, seedStored } from './helpers';
+import { onboardSelf, openForGrownUps, openLettersEpisode, passDiscover, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide, expectNoSidewaysScroll, fontSizeOf } from './text-fit';
 
@@ -50,6 +50,8 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     const id = await profileIdOf(page, 'Dani');
 
     await openProfile(page);
+    // The grown-up rows sit in Profile's second group, closed until tapped (Account & more on a self-only device).
+    await openForGrownUps(page);
     await page.getByRole('button', { name: /^Account & backup/ }).click();
     await expect(page.getByTestId(`dashboard-see-report-${id}`)).toBeVisible();
     await expectNoSidewaysScroll(page, 'the grown-up area');

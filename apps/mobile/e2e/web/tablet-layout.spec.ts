@@ -88,16 +88,18 @@ for (const vp of [
       expect(Math.abs(side.y - missions.y)).toBeLessThan(1);
       expect(missions.width / side.width).toBeCloseTo(1.5, 1);
 
-      const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
-      // The tip follows the state (owner request 2026-10-16, item 8): a new learner's is the first-lesson tip.
+      // The route strip is folded into the hero while a next lesson exists (AMENDMENTS-DISPLAY-NAV 9.1): the right
+      // column holds Homework and the tip. The tip follows the state: a new learner's is the first-lesson tip.
+      await expect(page.getByTestId('home-route-strip')).toHaveCount(0);
       const tip = (await page.getByText(/^Tip: /).boundingBox())!;
       const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
-      for (const box of [progress, tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
+      for (const box of [tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
       // The Next lesson hero heads the left column, above the three mission cards (owner request 2026-10-16, item 8).
       const hero = (await page.getByTestId('home-missions-column').getByTestId('home-next-lesson').boundingBox())!;
       expect(hero.y).toBeLessThan((await page.getByTestId('home-missions').boundingBox())!.y);
-      // The three mission cards keep their slot order, one under the other, in the left column.
-      const cards = await page.getByTestId('home-missions-column').getByTestId('home-missions').getByRole('button').all();
+      // The three mission cards keep their slot order, one under the other, in the left column (card 2 is the hero's
+      // lesson as a quiet row, not a button).
+      const cards = await page.getByTestId('home-missions-column').getByTestId('home-missions').locator(':scope > *').all();
       expect(cards.length).toBe(3);
       const tops = await Promise.all(cards.map(async (c) => (await c.boundingBox())!.y));
       expect([...tops].sort((a, b) => a - b)).toEqual(tops);
@@ -120,9 +122,10 @@ for (const vp of [
     test('one column in today\'s order, Hoya at its phone size, no sideways scrolling', async ({ page }) => {
       await openHomeColumns(page);
       await expect(page.getByTestId('home-side-column')).toHaveCount(0);
-      const lastMission = (await page.getByTestId('home-missions').getByRole('button').last().boundingBox())!;
-      const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
-      expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
+      const lastMission = (await page.getByTestId('home-missions').locator(':scope > *').last().boundingBox())!;
+      // Homework follows the mission cards (the route strip is folded into the hero, AMENDMENTS-DISPLAY-NAV 9.1).
+      const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
+      expect(homework.y).toBeGreaterThan(lastMission.y + lastMission.height);
       expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
       expect(await overflowsSideways(page)).toBe(false);
     });
@@ -135,17 +138,18 @@ test.describe('Home at 1180x820, then 200 % zoom (590x410) live', () => {
   test('two columns reflow to one column in the same order, with no sideways scrolling (§5)', async ({ page }) => {
     await openHomeColumns(page);
     await expect(page.getByTestId('home-side-column')).toBeVisible();
-    const missionNames = page.getByTestId('home-missions').getByRole('button');
-    const before = await missionNames.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
+    // The three slots: two cards and card 2's quiet row under the hero (AMENDMENTS-DISPLAY-NAV 9.1), by their words.
+    const missionNames = page.getByTestId('home-missions').locator(':scope > *');
+    const before = await missionNames.evaluateAll((els) => els.map((el) => (el as HTMLElement).innerText));
     expect(before.length).toBe(3);
 
     await page.setViewportSize({ width: 590, height: 410 });
     await expect(page.getByTestId('home-side-column')).toHaveCount(0);
-    const after = await missionNames.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
+    const after = await missionNames.evaluateAll((els) => els.map((el) => (el as HTMLElement).innerText));
     expect(after).toEqual(before);
     const lastMission = (await missionNames.last().boundingBox())!;
-    const progress = (await page.getByTestId('home-route-strip').boundingBox())!;
-    expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
+    const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
+    expect(homework.y).toBeGreaterThan(lastMission.y + lastMission.height);
     expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
     expect(await overflowsSideways(page)).toBe(false);
   });
@@ -276,7 +280,8 @@ test.describe('Journey at 1180x820: two panes', () => {
     await openJourney(page);
     await cell(page, 'Food', 1).click(); // a different selection first
     await tab(page, 'Today').click();
-    await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
+    // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+    await page.getByTestId('home-next-lesson-start').click();
     await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
     await page.getByRole('button', { name: 'Leave quest' }).click();
     await page.getByTestId('quest-leave-sheet-confirm').click();
@@ -291,7 +296,8 @@ test.describe('Journey at 1180x820: two panes', () => {
     await openJourney(page);
     const leaveFromHome = async (): Promise<void> => {
       await tab(page, 'Today').click();
-      await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
+      // The first lesson, from Home's Next lesson hero (card 2 names the same lesson as a quiet row, AMENDMENTS-DISPLAY-NAV 9.1).
+      await page.getByTestId('home-next-lesson-start').click();
       await page.getByRole('button', { name: 'Leave quest' }).click();
       await page.getByTestId('quest-leave-sheet-confirm').click();
       await expect(mapPane(page)).toBeVisible();

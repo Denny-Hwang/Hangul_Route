@@ -62,6 +62,10 @@ test('an owned card shows one square face on its tile and its card page; a locke
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   await page.getByText('Library', { exact: true }).last().click();
+  // Cards to find sit in one row per episode, closed until tapped (the Library shelves, owner request 2026-10-16).
+  const group = page.getByTestId('library-group-episode:episode:stage1-letters');
+  await group.scrollIntoViewIfNeeded();
+  await group.click();
   await page.getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' }).first().click();
   await expect(page.getByText('How to earn it')).toBeVisible();
   // The card page covers the Library, so no face is on screen at all.

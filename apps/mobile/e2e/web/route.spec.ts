@@ -102,8 +102,6 @@ function pendingFromPlan(snapshot: ProgressSnapshot): HomeworkAssignment[] {
   return snapshot.homework.filter((h) => h.id.startsWith(`${route.id}#`) && h.completedAt === undefined);
 }
 
-const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 async function noBannedWords(page: Page): Promise<void> {
   const text = await page.locator('body').innerText();
   expect(text).not.toMatch(NEVER);
@@ -164,14 +162,14 @@ test.describe('the weekly plan end to end (flag on)', () => {
     await closeInstallGuide(page);
     const today = pendingFromPlan(await stored(page, profileId)).filter((h) => (h.targetDate ?? '') <= dayKey(NOW));
     expect(today.length).toBeGreaterThan(0);
-    const cards = page.getByTestId('home-missions').getByRole('button');
-    await expect(cards).toHaveCount(3);
-    await expect(cards.nth(1)).toHaveAttribute('aria-label', /Picked just for you/);
-    // Card (2) is the plan's lesson for today, not just any assigned item.
+    // Card (2) is the plan's lesson for today, not just any assigned item. It is also the one next, so it is the Next
+    // lesson hero's lesson and card (2) is drawn as the hero's quiet row (AMENDMENTS-DISPLAY-NAV 9.1).
     const first = [...today].sort((a, b) => (a.targetDate ?? '').localeCompare(b.targetDate ?? ''))[0] as HomeworkAssignment;
     const title = questsAll.find((q) => q.id === first.questId)?.titleEn;
     expect(title, `a title for ${first.questId}`).toBeTruthy();
-    await expect(cards.nth(1)).toHaveAttribute('aria-label', new RegExp(escapeRegExp(title as string)));
+    await expect(page.getByTestId('home-missions').getByRole('button')).toHaveCount(2);
+    await expect(page.getByTestId('home-mission-same-as-hero-2')).toContainText(title as string);
+    await expect(page.getByTestId('home-next-lesson')).toContainText(title as string);
     await shot(page, 'route-e2e-home-card-2');
     await expectHomeworkWithinAWeek(page);
     await expect(page.getByRole('button', { name: /, Today$/ }).first()).toContainText('Your plan');
