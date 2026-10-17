@@ -444,6 +444,16 @@ describe('states (section 3.14)', () => {
     expect(v.moreDetail).toBeNull();
   });
 
+  it('names the next quest in the report language (owner report 2026-10-16: English titles in the es and ko console)', () => {
+    const titleIn = (locale: 'en' | 'es' | 'ko'): string | null => {
+      const part = view(EMPTY, { locale }).practiceNext?.lines[0]?.sentence.parts.find((p) => p.kind === 'quest');
+      return part?.kind === 'quest' ? part.title : null;
+    };
+    expect(titleIn('en')).toBe('Meet a, eo, g, n');
+    expect(titleIn('es')).toBe('Conoce a, eo, g y n');
+    expect(titleIn('ko')).toBe('a, eo, g, n 만나기');
+  });
+
   it('no_data: one neutral block, never "has not practiced", no glance, no tabs', () => {
     const v = view(null);
     expect(v.state).toBe('no_data');
