@@ -1,8 +1,8 @@
-import { CATALOG, LECTURE_MAX_BLOCKS, LectureDeckSchema, decodeDeck, type LectureBlock, type PlanItem, type WeekMeta } from '@hangul-route/content-schema';
+import { CATALOG, LECTURE_MAX_BLOCKS, LectureDeckSchema, decodeDeck, rosterAlias, type LectureBlock, type PlanItem, type WeekMeta } from '@hangul-route/content-schema';
+import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
 import { describe, expect, it } from 'vitest';
 import type { PlanView, Roster, RosterLearner, SpaceListItem } from '../api';
 import {
-  NO_ROSTER_COUNT,
   aboutMinutes,
   blockMinutes,
   buildDeck,
@@ -10,7 +10,6 @@ import {
   canComposeIn,
   catalogueTitle,
   classCodeBlock,
-  firstName,
   lecturePlanFrom,
   lectureSourceFrom,
   moveBlock,
@@ -19,16 +18,12 @@ import {
   planOutline,
   presenterLink,
   quizWarnings,
-  pickerChoices,
-  pickerLabels,
   planBlocks,
   presenterUrl,
   revisitBlock,
-  rosterMessage,
-  deckPicker,
   titleProblem,
   updateBlock,
-  type PickerChoice,
+  vocabMinutes,
 } from '../lecture';
 
 const learner = (displayName: string, i = 0): RosterLearner => ({
@@ -153,7 +148,7 @@ describe('outline rows', () => {
 });
 
 describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
-  it('quests and episodes from the shared catalogue (cell minutes), vocabulary topics from its topics, stories from the lecture catalogue, quiz and activity from the block', () => {
+  it('quests and episodes from the shared catalogue (cell minutes), stories from the lecture catalogue, letters, cards and words from the block size, quiz and activity from the block', () => {
     expect(blockMinutes({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(Q1.minutes);
     expect(Q1.minutes).toBeGreaterThan(0);
     expect(blockMinutes({ kind: 'episode', id: 'episode:stage1-letters' })).toBe(LETTERS_CELL.minutes);
@@ -167,8 +162,13 @@ describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
     expect(blockMinutes({ kind: 'quest', id: 'quest:unknown' })).toBeNull();
     expect(blockMinutes({ kind: 'episode', id: 'episode:unknown' })).toBeNull();
     expect(blockMinutes({ kind: 'story', storyId: 'story:unknown', checks: true })).toBeNull();
-    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe(5);
+    // Rule 12 as amended (LV-M1): a topic counts ceil(word cards / 2) plus its meaning quiz (5 rounds, none under 4 words).
+    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe(6 + 5);
+    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:mul', 'vocab:uyu'] })).toBe(2);
+    expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:mul', 'vocab:uyu', 'vocab:ppang'] })).toBe(2 + 4);
     expect(blockMinutes({ kind: 'vocab', topicId: 'vocab-topic:unknown' })).toBeNull();
+    expect(vocabMinutes('vocab-topic:food')).toBe(11);
+    expect(vocabMinutes('vocab-topic:unknown', 4)).toBeNull();
     expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a'] })).toBe(1);
     expect(blockMinutes({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a', 'jamo:eo'] })).toBe(2);
     expect(blockMinutes({ kind: 'cards', cardIds: ['card:book'] })).toBe(1);
@@ -191,74 +191,23 @@ describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
       ]),
     ).toBe(Q1.minutes + 2);
   });
+
+  it('is never 0 for an outline with something to show; a class code alone or an empty outline stays 0', () => {
+    expect(aboutMinutes([{ kind: 'quest', id: 'quest:unknown' }])).toBe(1);
+    expect(aboutMinutes([{ kind: 'class-code', code: 'ABC234' }])).toBe(0);
+    expect(aboutMinutes([])).toBe(0);
+  });
 });
 
-describe('helper picker (F-TCH-004 §3.10, D12)', () => {
-  it('defaults to names, with initials, numbers and none offered', () => {
-    expect(pickerChoices(roster(['Minho Kim', 'Suni']))).toEqual({ offered: ['names', 'initials', 'numbers', 'none'], initial: 'names' });
+describe('aboutMinutes on the shared fixture decks (rule 12 as amended; the presenter suite gives the same numbers)', () => {
+  it.each(LECTURE_MINUTES_DECKS.map((d) => [d.name, d] as const))('%s', (_, fixture) => {
+    expect(aboutMinutes(fixture.blocks)).toBe(fixture.aboutMinutes);
   });
 
-  it('anonymizeRoster forces initials and never offers names', () => {
-    expect(pickerChoices(roster(['M. K.', 'S.'], true))).toEqual({ offered: ['initials', 'numbers', 'none'], initial: 'initials' });
-  });
-
-  it('a class with no learners yet defaults to numbers (12)', () => {
-    expect(pickerChoices(roster([]))).toEqual({ offered: ['numbers', 'none'], initial: 'numbers' });
-    expect(deckPicker('numbers', roster([]))).toEqual({ mode: 'numbers', count: NO_ROSTER_COUNT });
-    expect(NO_ROSTER_COUNT).toBe(12);
-  });
-
-  it('more learners than the picker holds (60) offers numbers only, capped at 60', () => {
-    const big = roster(Array.from({ length: 61 }, (_, i) => `Learner${i}`));
-    expect(pickerChoices(big)).toEqual({ offered: ['numbers', 'none'], initial: 'numbers' });
-    expect(deckPicker('numbers', big)).toEqual({ mode: 'numbers', count: 60 });
-  });
-
-  it('first names: the first token of the display name, kept as typed, at most 20 characters', () => {
-    expect(firstName('Minho Kim')).toBe('Minho');
-    expect(firstName('  José   Ruiz ')).toBe('José');
-    expect(firstName('김민호')).toBe('김민호');
-    expect(firstName("O'Neil")).toBe("O'Neil");
-    expect(firstName('Maximilianalexanderthegreat Smith')).toBe('Maximilianalexandert');
-    expect(firstName('Иван')).toBeNull();
-    expect(firstName('   ')).toBeNull();
-  });
-
-  it('labels follow the chosen mode; a label outside the name class becomes its roster number', () => {
-    const r = roster(['Minho Kim', 'Иван Петров', 'Suni']);
-    expect(pickerLabels(r, 'names')).toEqual(['Minho', '2', 'Suni']);
-    expect(pickerLabels(r, 'initials')).toEqual(['M. K.', '2', 'S.']);
-    expect(pickerLabels(roster(['M. K.', 'S.'], true), 'initials')).toEqual(['M. K.', 'S.']);
-  });
-
-  it('the anonymized roster never sends names, even if asked', () => {
-    expect(pickerLabels(roster(['M. K.'], true), 'names')).toEqual(['M. K.']);
-    expect(rosterMessage('lecture:abc123', 'names', roster(['M. K.'], true))?.mode).toBe('initials');
-  });
-
-  it('the deck carries the mode and count only', () => {
-    const r = roster(['Minho Kim', 'Suni']);
-    expect(deckPicker('names', r)).toEqual({ mode: 'names', count: 2 });
-    expect(deckPicker('initials', r)).toEqual({ mode: 'initials', count: 2 });
-    expect(deckPicker('numbers', r)).toEqual({ mode: 'numbers', count: 2 });
-    expect(deckPicker('none', r)).toBeNull();
-    expect(deckPicker('names', roster(['M. K.'], true))).toEqual({ mode: 'initials', count: 1 });
-  });
-
-  it('the roster message carries only the labels of the chosen mode; numbers and none send none', () => {
-    const r = roster(['Minho Kim', 'Suni']);
-    expect(rosterMessage('lecture:abc123', 'names', r)).toEqual({
-      ns: 'hangul-route.lecture',
-      v: 1,
-      type: 'roster',
-      deckId: 'lecture:abc123',
-      mode: 'names',
-      labels: ['Minho', 'Suni'],
-    });
-    expect(rosterMessage('lecture:abc123', 'initials', r)?.labels).toEqual(['M. K.', 'S.']);
-    expect(rosterMessage('lecture:abc123', 'numbers', r)).toBeNull();
-    expect(rosterMessage('lecture:abc123', 'none', r)).toBeNull();
-    expect(rosterMessage('lecture:abc123', 'names', roster([]))).toBeNull();
+  it('every consonant and vowel is about 12 minutes, never about 0 (owner report 2026-10-16)', () => {
+    const letters = LECTURE_MINUTES_DECKS.find((d) => d.name === 'consonants and vowels')!;
+    expect(letters.blocks.flatMap((b) => (b.kind === 'jamo-set' ? b.jamoIds : []))).toHaveLength(24);
+    expect(aboutMinutes(letters.blocks)).toBe(12);
   });
 });
 
@@ -382,7 +331,7 @@ describe('the plan on screen, this week only, and the 30-block cap (F-TCH-004 §
   });
 
   it('presenterLink never throws: a 31-block outline is refused, a good one gives the deck and the URL', () => {
-    const base = { title: 'Week 3', options: {}, picker: null, source: 'catalogue' as const, now: NOW, rng: rng() };
+    const base = { title: 'Week 3', options: {}, source: 'catalogue' as const, now: NOW, rng: rng() };
     const many: LectureBlock[] = Array.from({ length: LECTURE_MAX_BLOCKS + 1 }, () => ({ kind: 'quiz', from: 'all', rounds: 3 }));
     expect(presenterLink('https://app.hangulroute.com', { ...base, blocks: many })).toEqual({ ok: false });
     expect(presenterLink('https://app.hangulroute.com', { ...base, title: '   ', blocks: many.slice(0, 2) })).toEqual({ ok: false });
@@ -452,12 +401,11 @@ describe('deck and presenter link (F-TCH-004 §3.2)', () => {
     { kind: 'quiz', from: 'previous', rounds: 5 },
   ];
 
-  it('builds a valid deck: fresh id, the clock, a seed, the options and the picker', () => {
+  it('builds a valid deck: fresh id, the clock, a seed, the options, and no helper picker (LV-H)', () => {
     const deck = buildDeck({
       title: ' Week 3 ',
       blocks,
       options: { romanization: 'tap', strokeGuide: false, sound: true, uiLocale: 'es' },
-      picker: { mode: 'names', count: 2 },
       source: 'plan',
       now: NOW,
       rng: rng(),
@@ -469,35 +417,34 @@ describe('deck and presenter link (F-TCH-004 §3.2)', () => {
     expect(deck.seed).toBeGreaterThanOrEqual(0);
     expect(deck.options).toEqual({ romanization: 'tap', strokeGuide: false, sound: true, quizRounds: 5, uiLocale: 'es' });
     expect(deck.source).toBe('plan');
-    expect(buildDeck({ title: 'A', blocks, options: {}, picker: null, source: 'catalogue', now: NOW, rng: rng() }).id).toBe(deck.id);
+    expect(deck.picker).toBeNull();
+    expect(buildDeck({ title: 'A', blocks, options: {}, source: 'catalogue', now: NOW, rng: rng() }).id).toBe(deck.id);
   });
 
   it('the presenter URL is the app origin, /present and the deck in the fragment', () => {
-    const deck = buildDeck({ title: 'Week 3', blocks, options: {}, picker: null, source: 'plan', now: NOW, rng: rng() });
+    const deck = buildDeck({ title: 'Week 3', blocks, options: {}, source: 'plan', now: NOW, rng: rng() });
     const url = presenterUrl('https://app.hangulroute.com', deck);
     expect(url.startsWith('https://app.hangulroute.com/present#d=1.')).toBe(true);
     const decoded = decodeDeck(url.split('#d=')[1]!);
     expect(decoded.ok && decoded.deck).toEqual(deck);
   });
 
-  it('property: for every picker mode, title and seed, no label or roster name is anywhere in the built URL', () => {
+  it('property: for every title and seed, no roster name or alias is anywhere in the built URL', () => {
     const r = roster(AWKWARD);
-    const needles = [...new Set([...AWKWARD.flatMap((n) => n.split(/\s+/)), ...pickerLabels(r, 'initials'), ...pickerLabels(r, 'names')])];
+    const needles = [...new Set([...AWKWARD.flatMap((n) => n.split(/\s+/)), ...AWKWARD.map((n) => rosterAlias(n)).filter((a) => a.length > 0)])];
     // The title is the only free text in the URL: every needle is refused there.
     for (const needle of needles) expect(titleProblem(`Week 3 ${needle}`, r), needle).toBe('name');
     const titles = ['Week 3 letters', '한글 3주차', 'Review: g, n, d (part 1/2)!', 'Stage 1 day'];
-    for (const choice of ['names', 'initials', 'numbers', 'none'] as PickerChoice[]) {
-      for (const [k, title] of titles.entries()) {
-        expect(titleProblem(title, r)).toBeNull();
-        let x = 0.1 + k * 0.17;
-        const seeded = (): number => (x = (x * 9301 + 0.49297) % 1);
-        const deck = buildDeck({ title, blocks, options: {}, picker: deckPicker(choice, r), source: 'plan', now: NOW, rng: seeded });
-        const parsed = new URL(presenterUrl('https://app.hangulroute.com', deck));
-        const decoded = decodeDeck(parsed.hash.replace(/^#d=/, ''));
-        expect(decoded.ok).toBe(true);
-        const haystacks = [decodeURIComponent(parsed.pathname), decodeURIComponent(parsed.search), JSON.stringify(decoded.ok ? decoded.deck : null)].map((h) => h.toLowerCase());
-        for (const needle of needles) for (const hay of haystacks) expect(hay.includes(needle.toLowerCase()), `${choice}: ${needle}`).toBe(false);
-      }
+    for (const [k, title] of titles.entries()) {
+      expect(titleProblem(title, r)).toBeNull();
+      let x = 0.1 + k * 0.17;
+      const seeded = (): number => (x = (x * 9301 + 0.49297) % 1);
+      const deck = buildDeck({ title, blocks, options: {}, source: 'plan', now: NOW, rng: seeded });
+      const parsed = new URL(presenterUrl('https://app.hangulroute.com', deck));
+      const decoded = decodeDeck(parsed.hash.replace(/^#d=/, ''));
+      expect(decoded.ok).toBe(true);
+      const haystacks = [decodeURIComponent(parsed.pathname), decodeURIComponent(parsed.search), JSON.stringify(decoded.ok ? decoded.deck : null)].map((h) => h.toLowerCase());
+      for (const needle of needles) for (const hay of haystacks) expect(hay.includes(needle.toLowerCase()), `${title}: ${needle}`).toBe(false);
     }
   });
 });

@@ -15,6 +15,8 @@ import { ChipRadios, Cover, ToolButton } from './OverlayParts';
  * Close. The language is the device's one language (owner items 6 and 7), set on the Display (Aa)
  * sheet of the home and the start screen, so this overlay has no language chips. Real pixels; it
  * scrolls inside the stage box when taller.
+ * In a phone window (`phone`, F-TCH-004 section 3.6) one line under the title says how to show
+ * the controls: a tap at the bottom of the slide, the bar's strip.
  */
 export function HelpOverlay({
   romanization,
@@ -22,6 +24,7 @@ export function HelpOverlay({
   keepVisible,
   onKeepVisible,
   onClose,
+  phone,
 }: {
   /** The open lesson's romanization; null (Help opened from the home, no lesson open) draws no switch. */
   romanization: RomanizationMode | null;
@@ -29,6 +32,8 @@ export function HelpOverlay({
   keepVisible: boolean;
   onKeepVisible: (on: boolean) => void;
   onClose: () => void;
+  /** A phone window: the bar's strip line under the title (`help.phoneBar`). */
+  phone?: boolean;
 }): React.ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
@@ -71,6 +76,11 @@ export function HelpOverlay({
             </Text>
             <ToolButton ref={close} testID="presenter-help-close" label={messages.common.buttons.close} onPress={onClose} />
           </View>
+          {phone ? (
+            <Text {...KOREAN_LINE_BREAK} testID="presenter-help-phone-bar" style={{ fontSize: textScale.size.body, color: colors.text.secondary, lineHeight: Math.round(textScale.size.body * typography.leading.normal) }}>
+              {m.phoneBar}
+            </Text>
+          ) : null}
           <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.xl }}>
             {HELP_KEYS.map((row) => (
               <View key={row.row} role="listitem" style={{ width: twoColumns ? '47%' : '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>

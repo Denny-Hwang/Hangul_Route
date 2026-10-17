@@ -7,7 +7,7 @@ import { useMemo, type CSSProperties, type ReactNode } from 'react';
 import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import type { PlanView } from '@/lib/console/api';
-import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, type LectureSource, type PickerChoice } from '@/lib/console/lecture';
+import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, type LectureSource } from '@/lib/console/lecture';
 import { applyToOutline, chooserKeys, consoleChooserGroups, outlineSelection } from '@/lib/console/lesson-picker';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
@@ -331,32 +331,5 @@ export function LectureOptionsSection({
         </>
       ) : null}
     </section>
-  );
-}
-
-export function LecturePickerSection({
-  offered,
-  value,
-  anonymized,
-  onChange,
-}: {
-  offered: readonly PickerChoice[];
-  value: PickerChoice;
-  anonymized: boolean;
-  onChange: (next: PickerChoice) => void;
-}): JSX.Element {
-  const l = useMessages().console.lecture;
-  return (
-    <fieldset style={fieldsetStyle}>
-      <legend style={legendStyle}>{l.picker.title}</legend>
-      {offered.map((mode) => (
-        <label key={mode} style={choiceStyle}>
-          <input type="radio" name="picker" checked={value === mode} onChange={() => onChange(mode)} />
-          {l.picker.mode[mode]}
-        </label>
-      ))}
-      {anonymized ? <Muted>{l.picker.hidden}</Muted> : null}
-      {value === 'names' || value === 'initials' ? <Notice>{l.picker.privacy}</Notice> : null}
-    </fieldset>
   );
 }

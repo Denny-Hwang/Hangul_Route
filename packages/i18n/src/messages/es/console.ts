@@ -836,13 +836,6 @@ export const consoleMsgs = {
       languageSame: 'Igual que este dispositivo',
       languageHint: 'Un enlace copiado usa el idioma del dispositivo que lo abre.',
     },
-    picker: {
-      title: 'Elegir ayudantes',
-      mode: { names: 'nombres', initials: 'iniciales', numbers: 'números', none: 'ninguno' },
-      hidden: 'Este espacio oculta los nombres, así que el selector usa iniciales.',
-      privacy:
-        'Los nombres van directo a la pestaña de la presentación y no están en el enlace. No se guardan en el dispositivo del salón. Un enlace copiado no tiene nombres.',
-    },
     titleField: { label: 'Título', placeholder: 'Letras de la semana 3', hint: 'No pongas el nombre de un estudiante en el título.' },
     titleProblem: {
       empty: 'Ponle un título a la lección.',
@@ -863,7 +856,6 @@ export const consoleMsgs = {
     copied: { cta: 'Enlace copiado' },
     copyFailed: 'No se copió el enlace. Reintenta, o usa Abrir presentación.',
     linkFailed: 'Esta lección no cabe en un enlace. Quita unos elementos y reintenta.',
-    copyNoNames: 'Un enlace copiado no tiene nombres: su selector usa números.',
     copyHasCode: 'Este enlace tiene el código de tu clase. Cualquiera con el enlace puede unirse hasta que crees un código nuevo. ¿Copiarlo de todos modos?',
     popupBlocked: 'Permite las ventanas emergentes de este sitio para abrir la presentación, o copia el enlace.',
     nothing: 'Añade al menos un elemento al esquema.',

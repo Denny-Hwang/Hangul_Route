@@ -14,7 +14,8 @@ type EndBody = Extract<Slide, { kind: 'end' }>;
  * End slide (design/screens/presenter/slide-end.md, README D7): "Today we met" with the letters
  * and words of the lesson, each list at most two rows and then one "+ n more" pill (rows are
  * measured, not counted; glosses are never dropped, fewer items show instead), the practice line,
- * and the class code panel when the deck has one.
+ * and the class code panel when the deck has one. When the column still does not fit (a phone's
+ * small stage, where text keeps its 18 px floor), the words drop to one row, then the letters.
  */
 export function EndSlide({ slide, joinCta }: { slide: EndBody; joinCta: string }): React.ReactElement {
   const { unit, messages } = usePresenterView();
@@ -23,17 +24,47 @@ export function EndSlide({ slide, joinCta }: { slide: EndBody; joinCta: string }
   // Memoised: a new array each render would restart the row fit on every bar hide or show (no flashing, section 3.13).
   const letters = useMemo(() => endLetters(slide.letters), [slide.letters]);
   const title = size(presenter.size.title);
+  const gap = units(unit, STAGE_GAP_INNER);
+  // The column's room and what its content needs (the content grows past the room, never shrinks).
+  const [rows, setRows] = useState({ letters: END_MAX_ROWS, words: END_MAX_ROWS });
+  const [room, setRoom] = useState(0);
+  const [content, setContent] = useState(0);
+  // Judged only once each list has fitted its rows (until then it draws every item).
+  const [lettersFit, setLettersFit] = useState(false);
+  const [wordsFit, setWordsFit] = useState(false);
+  const settled = (letters.length === 0 || lettersFit) && (slide.words.length === 0 || wordsFit);
+  useEffect(() => setRows({ letters: END_MAX_ROWS, words: END_MAX_ROWS }), [unit, slide]);
+  useEffect(() => {
+    if (!settled || room <= 0 || content <= room + 1) return;
+    // The list that drops a row fits again from every item: not settled until it reports.
+    if (slide.words.length > 0 && rows.words > 1) {
+      setWordsFit(false);
+      setRows({ ...rows, words: rows.words - 1 });
+    } else if (letters.length > 0 && rows.letters > 1) {
+      setLettersFit(false);
+      setRows({ ...rows, letters: rows.letters - 1 });
+    }
+  }, [settled, room, content, rows, slide.words.length, letters.length]);
   return (
     <View style={{ flex: 1, flexDirection: 'row', gap: units(unit, STAGE_GAP) }}>
-      <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER), justifyContent: 'space-between' }}>
-        <View style={{ gap: units(unit, STAGE_GAP_INNER) }}>
-          <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: title, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(title * typography.leading.tight) }}>
-            {m.title}
+      <View onLayout={(e) => setRoom(e.nativeEvent.layout.height)} style={{ flex: 1 }}>
+        <View onLayout={(e) => setContent(e.nativeEvent.layout.height)} style={{ flexGrow: 1, gap, justifyContent: 'space-between' }}>
+          <View style={{ gap }}>
+            <Text {...KOREAN_LINE_BREAK} role="heading" style={{ fontSize: title, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(title * typography.leading.tight) }}>
+              {m.title}
+            </Text>
+            {/* Keyed by their row limit: a new limit fits the list again from every item. */}
+            {letters.length > 0 ? (
+              <EndList key={`letters-${rows.letters}`} label={m.letters} items={letters} moreLabel={m.more} maxRows={rows.letters} onFit={setLettersFit} testID="presenter-end-letters" />
+            ) : null}
+            {slide.words.length > 0 ? (
+              <EndList key={`words-${rows.words}`} label={m.words} items={slide.words} moreLabel={m.more} maxRows={rows.words} onFit={setWordsFit} testID="presenter-end-words" />
+            ) : null}
+          </View>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.prompt), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            {m.practice}
           </Text>
-          {letters.length > 0 ? <EndList label={m.letters} items={letters} moreLabel={m.more} testID="presenter-end-letters" /> : null}
-          {slide.words.length > 0 ? <EndList label={m.words} items={slide.words} moreLabel={m.more} testID="presenter-end-words" /> : null}
         </View>
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.prompt), fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.practice}</Text>
       </View>
       {slide.classCode !== undefined ? <CodePanel code={slide.classCode} joinCta={joinCta} /> : null}
     </View>
@@ -44,22 +75,29 @@ function EndList({
   label,
   items,
   moreLabel,
+  maxRows,
+  onFit,
   testID,
 }: {
   label: string;
   items: readonly KoLine[];
   moreLabel: (n: number) => string;
+  /** At most this many rows (`END_MAX_ROWS`, fewer when the column does not fit). */
+  maxRows: number;
+  /** Whether the list has fitted its rows (false while it is still dropping items). */
+  onFit: (fit: boolean) => void;
   testID: string;
 }): React.ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const [shown, setShown] = useState(items.length);
   const boxes = useRef(new Map<number, { y: number; height: number }>());
-  // A new window size or list starts again from every item.
+  // A new window size or list starts again from every item (a new row limit remounts the list).
   useEffect(() => {
     boxes.current.clear();
     setShown(items.length);
-  }, [unit, items]);
+    onFit(false);
+  }, [unit, items, onFit]);
   const measured = useCallback(
     (index: number) => (event: LayoutChangeEvent) => {
       const { y, height } = event.nativeEvent.layout;
@@ -68,13 +106,14 @@ function EndList({
       const children = shown + 1 + (shown < items.length ? 1 : 0);
       if (boxes.current.size < children) return;
       const rows = countRows([...boxes.current.values()]);
-      const next = fitShown(shown, rows, END_MAX_ROWS);
+      const next = fitShown(shown, rows, maxRows);
       if (next !== shown) {
         boxes.current.clear();
         setShown(next);
-      }
+        onFit(false);
+      } else onFit(true);
     },
-    [shown, items.length],
+    [shown, items.length, maxRows, onFit],
   );
   const caption = size(presenter.size.caption);
   const body = size(presenter.size.body);
@@ -149,3 +188,4 @@ function CodePanel({ code, joinCta }: { code: string; joinCta: string }): React.
     </View>
   );
 }
+

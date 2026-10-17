@@ -15,10 +15,12 @@ import {
   type Quest,
   type QuestStep,
 } from '@hangul-route/content-schema';
+import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
+import { runDeck } from '../shell';
 import {
   expandDeck,
   withBuilds,
@@ -1156,6 +1158,74 @@ describe('expandDeck: rule 12 as amended (AMENDMENTS-LECTURE-V2 section 4.4, LV-
     expect(only(inQuest.slides, 'title').some((t) => t.source === 'story')).toBe(true);
     expect(inQuest.minutes).toBe(4);
     expect(expand([{ kind: 'episode', id: 'episode:book' }]).minutes).toBe(4);
+  });
+});
+
+describe('expandDeck: honest minutes (AMENDMENTS-LECTURE-V2 section 4.4, LV-M1)', () => {
+  it('a vocab block counts ceil(word cards / 2) plus its quiz slides; its title is not a word slide', () => {
+    const food = expand([{ kind: 'vocab', topicId: 'vocab-topic:food' }]);
+    expect(only(food.slides, 'vocab')).toHaveLength(4);
+    expect(only(food.slides, 'quiz')).toHaveLength(4);
+    expect(food.minutes).toBe(2 + 4);
+    // Three words: no quiz (under 4 shown), two minutes for the cards.
+    const three = expand([{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:mul', 'vocab:gimchi'] }]);
+    expect(only(three.slides, 'quiz')).toHaveLength(0);
+    expect(three.minutes).toBe(2);
+  });
+
+  it('a word card shown earlier in the deck is not counted again', () => {
+    const twice = expand([
+      { kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:mul', 'vocab:gimchi'] },
+      { kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:mul', 'vocab:gimchi'] },
+    ]);
+    expect(only(twice.slides, 'vocab')).toHaveLength(3);
+    expect(twice.minutes).toBe(2);
+  });
+
+  it('a deck that has slides is never 0 minutes: an activity-free title-only deck counts 1', () => {
+    const titleOnly = expand([{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:gone'] }]);
+    expect(kinds(titleOnly.slides)).toEqual(['title', 'end']);
+    expect(titleOnly.minutes).toBe(1);
+  });
+
+  it('records the quiz slides that counted a minute: outside a quest or story only', () => {
+    const { slides, timedQuizKeys } = expand([{ kind: 'quest', id: 'quest:letters' }, { kind: 'quiz', from: 'previous', rounds: 4 }]);
+    const outside = only(slides, 'quiz').filter((sl) => !sl.key.startsWith('quest:letters/'));
+    expect(timedQuizKeys).toEqual(outside.map((sl) => sl.key));
+    expect(expand([{ kind: 'story', storyId: 'story:sun-moon' }]).timedQuizKeys).toEqual([]);
+  });
+
+  it('24 letters give 12 minutes, never 0 (owner report 2026-10-16: 25 slides at about 0 minutes)', () => {
+    const letters = [...jamoAll.filter((j) => j.kind === 'consonant'), ...jamoAll.filter((j) => j.kind === 'vowel')].map((j) => j.id);
+    expect(letters).toHaveLength(24);
+    const { slides, minutes } = expandDeck(
+      deckOf([
+        { kind: 'jamo-set', jamoIds: letters.slice(0, 12) },
+        { kind: 'jamo-set', jamoIds: letters.slice(12) },
+      ]),
+      lectureBundle('en'),
+      VOICE,
+    );
+    expect(slides).toHaveLength(25);
+    expect(minutes).toBe(12);
+  });
+
+  it('a 10-word topic gives more minutes than its quiz rounds (the shipped bundle)', () => {
+    const topic = lectureBundle('en').vocabTopic?.('vocab-topic:food');
+    if (topic === undefined || topic === 'not-ready') throw new Error('the food topic is shipped');
+    const deck = deckOf([{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: topic.words.slice(0, 10).map((w) => w.id) }]);
+    const expanded = expandDeck(deck, lectureBundle('en'), VOICE);
+    expect(only(expanded.slides, 'vocab')).toHaveLength(10);
+    expect(runDeck(deck, expanded).minutes).toBe(5 + deck.options.quizRounds);
+  });
+});
+
+describe('the start screen estimate equals the console (shared fixture decks, rule 12 as amended)', () => {
+  it.each(LECTURE_MINUTES_DECKS.map((d) => [d.name, d] as const))('%s', (_, fixture) => {
+    const deck = deckOf(fixture.blocks);
+    const expanded = expandDeck(deck, lectureBundle('en'), VOICE);
+    expect(expanded.skipped.filter((sk) => sk.reason === 'unknown-id')).toEqual([]);
+    expect(runDeck(deck, expanded).minutes).toBe(fixture.aboutMinutes);
   });
 });
 

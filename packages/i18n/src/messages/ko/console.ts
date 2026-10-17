@@ -768,12 +768,6 @@ export const consoleMsgs = {
       languageSame: '이 기기와 같게',
       languageHint: '복사한 링크는 링크를 여는 기기의 언어로 보여요.',
     },
-    picker: {
-      title: '도우미 뽑기',
-      mode: { names: '이름', initials: '이니셜', numbers: '번호', none: '없음' },
-      hidden: '이 공간은 이름을 숨기기 때문에 이니셜로 뽑아요.',
-      privacy: '이름은 발표 탭으로 바로 전달되고 링크에는 들어가지 않아요. 교실 기기에 저장되지 않아요. 복사한 링크에는 이름이 없어요.',
-    },
     titleField: { label: '수업 제목', placeholder: '3주차 글자', hint: '제목에 학생 이름을 넣지 마세요.' },
     titleProblem: {
       empty: '수업 제목을 정해 주세요.',
@@ -794,7 +788,6 @@ export const consoleMsgs = {
     copied: { cta: '링크 복사됨' },
     copyFailed: '링크를 복사하지 못했어요. 다시 하거나 발표 화면 열기를 써 주세요.',
     linkFailed: '이 수업은 링크에 다 들어가지 않아요. 항목을 몇 개 빼고 다시 해 보세요.',
-    copyNoNames: '복사한 링크에는 이름이 없어서 번호로 뽑아요.',
     copyHasCode: '이 링크에는 반 참여 코드가 들어 있어요. 새 코드를 만들기 전까지는 링크가 있으면 누구나 참여할 수 있어요. 그래도 복사할까요?',
     popupBlocked: '발표 화면을 열려면 이 사이트의 팝업을 허용하거나 링크를 복사해 주세요.',
     nothing: '개요에 항목을 하나 이상 넣어 주세요.',

@@ -5,7 +5,6 @@ import {
   type BrowseKeptPass,
   type LectureBlock,
   type LectureDeck,
-  type LecturePicker,
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { PRESENTER_PATH } from '../../platform/presenter';
@@ -15,9 +14,9 @@ import type { ItemAccess } from './access';
 /**
  * [ Present this ] on the All lessons item page (F-BROWSE-001 section 4.6
  * secondary action, OD-9, BR-13; design `design/screens/presenter/present-this.md`).
- * The item becomes a one-block deck (`source: 'catalogue'`, a numbers picker
- * of 12, no names) that opens in the presenter at `/present#d=…` (F-TCH-004
- * section 3.2). Pure: the clock, the randomness and the bundle are passed in.
+ * The item becomes a one-block deck (`source: 'catalogue'`, no helper picker,
+ * LV-H; no names) that opens in the presenter at `/present#d=…` in the same tab
+ * (F-TCH-004 section 3.2). Pure: the clock, the randomness and the bundle are passed in.
  * Nothing here touches a learner: the presenter keeps the deck in this
  * device's Recent lessons and changes no one's progress.
  */
@@ -25,9 +24,6 @@ import type { ItemAccess } from './access';
 export type PresentItemKind = 'quest' | 'story' | 'vocab-topic';
 
 type PassScope = BrowseKeptPass['scope'];
-
-/** Numbers 1 to 12: All lessons never hands names to the presenter. */
-export const PRESENT_PICKER: LecturePicker = { mode: 'numbers', count: 12 };
 
 const TITLE_MAX = 60;
 const ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -81,7 +77,7 @@ export function presentDeck(item: { kind: PresentItemKind; id: string; title: st
     seed: Math.floor(env.rng() * SEED_MAX),
     blocks: [presentBlock(item.kind, item.id)],
     options: { uiLocale: env.uiLocale },
-    picker: PRESENT_PICKER,
+    picker: null,
     source: 'catalogue',
   });
   return parsed.success ? parsed.data : null;

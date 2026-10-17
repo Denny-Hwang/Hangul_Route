@@ -2,7 +2,8 @@ import { LECTURE_MAX_BLOCKS, type LectureBlock, type UiLocale } from '@hangul-ro
 import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { LectureCatalogueSection, LectureOptionsSection, LectureOutlineSection, LecturePickerSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
+import * as LectureParts from '@/components/console/LectureParts';
+import { LectureCatalogueSection, LectureOptionsSection, LectureOutlineSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
 import { expectAllPseudo } from './pseudo-text';
@@ -125,9 +126,8 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expectAllPseudo(html, (['en', 'es', 'ko'] as const).map((k) => LOCALE_META[k].endonym));
   });
 
-  it('the helper picker: names with the privacy line, and an anonymized space', () => {
-    expectAllPseudo(renderToStaticMarkup(<LecturePickerSection offered={['names', 'initials', 'numbers', 'none']} value="names" anonymized={false} onChange={noop} />));
-    expectAllPseudo(renderToStaticMarkup(<LecturePickerSection offered={['initials', 'numbers', 'none']} value="initials" anonymized onChange={noop} />));
+  it('has no helper picker section (LV-H)', () => {
+    expect(Object.keys(LectureParts)).not.toContain('LecturePickerSection');
   });
 });
 

@@ -1006,12 +1006,6 @@ export const consoleMsgs = {
       languageSame: 'Same as this device',
       languageHint: 'A copied link uses the language of the device that opens it.',
     },
-    picker: {
-      title: 'Helper picker',
-      mode: { names: 'names', initials: 'initials', numbers: 'numbers', none: 'none' },
-      hidden: 'This space hides names, so the picker uses initials.',
-      privacy: 'Names are sent straight to the presenter tab and are not in the link. They are not saved on the classroom device. A copied link has no names.',
-    },
     titleField: { label: 'Lesson title', placeholder: 'Week 3 letters', hint: "Do not put a student's name in the title." },
     titleProblem: {
       empty: 'Give the lesson a title.',
@@ -1032,7 +1026,6 @@ export const consoleMsgs = {
     copied: { cta: 'Link copied' },
     copyFailed: 'The link was not copied. Try again, or use Open presenter.',
     linkFailed: 'This lesson does not fit in a link. Take out a few items and try again.',
-    copyNoNames: 'A copied link has no names: its picker uses numbers.',
     copyHasCode: 'This link holds your class join code. Anyone with the link can join until you make a new code. Copy it anyway?',
     popupBlocked: 'Allow pop-ups for this site to open the presenter, or copy the link.',
     nothing: 'Add at least one item to the outline.',
