@@ -740,6 +740,10 @@ test('an unknown lesson link opens home with the not-in-this-version line, which
 });
 
 test('Romanization (formerly Lesson display): the choices apply at once, Done and Escape close, focus returns to the opener', async ({ page }) => {
+  const logs: string[] = [];
+  page.on('pageerror', (e) => logs.push(`pageerror ${String(e).slice(0, 200)}`));
+  page.on('console', (msg) => logs.push(`${msg.type()} ${msg.text().slice(0, 200)}`));
+  page.on('framenavigated', (f) => logs.push(`nav ${f.url()}`));
   await openBrowse(page, 'account');
   const opener = page.getByRole('button', { name: 'Romanization', exact: true });
   await opener.click();
@@ -757,6 +761,9 @@ test('Romanization (formerly Lesson display): the choices apply at once, Done an
       history: JSON.stringify(history.state),
     }));
     console.log('DIAG', JSON.stringify(state));
+    console.log('LOGS', JSON.stringify(logs.slice(-30)));
+    await opener.click();
+    console.log('SECOND', await page.locator('[role="dialog"]').count());
     throw error;
   }
   await expect(sheet.getByRole('radio', { name: 'Always shown' })).toHaveAttribute('aria-checked', 'true');
