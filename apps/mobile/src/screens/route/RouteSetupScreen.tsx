@@ -100,11 +100,15 @@ export function RouteSetupScreen({ route, navigation }: Props): React.ReactEleme
   };
   // Back steps back through the setup steps, then leaves: the header's Back, the browser and the phone back alike
   // (AMENDMENTS-DISPLAY-NAV section 7.1).
-  useBackGuard(navigation, () => {
-    if (index === 0) return false;
-    setStep(SETUP_STEPS[index - 1] as SetupStep);
-    return true;
-  });
+  useBackGuard(
+    navigation,
+    () => {
+      if (index === 0) return false;
+      setStep(SETUP_STEPS[index - 1] as SetupStep);
+      return true;
+    },
+    index > 0,
+  );
 
   const header = (
     <>

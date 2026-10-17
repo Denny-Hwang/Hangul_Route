@@ -19,8 +19,8 @@ import { endPreview } from './preview-session';
  * session starts, no result is recorded, no card is awarded and no learner
  * event is sent: the run lives in `quest-run-store` (memory only) and is reset
  * on leave and finish. The end goes to `PreviewEnd`, never Results; Leave
- * (the strip's, after its confirm, or the lesson's own close and confirm)
- * returns to the item page. The games open as the browse `Minigame` route in
+ * (the strip's Leave preview or the header's Close, both after the one Leave
+ * this preview question) returns to the item page. The games open as the browse `Minigame` route in
  * the learner's own host modes.
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'PreviewQuest'>;
@@ -67,6 +67,8 @@ export function PreviewQuestScreen({ route, navigation }: Props): React.ReactEle
           ports={ports}
           onOpenGame={(stepIndex) => navigation.navigate('Minigame', { questId, episodeId, stepIndex })}
           onBack={toItem}
+          // The header's Close (and the browser back) asks Leave this preview, as the strip's Leave preview does.
+          onAskLeave={() => setConfirming(true)}
         />
       </ErrorBoundary>
       <LeavePreviewSheet visible={confirming} onKeep={() => setConfirming(false)} onLeave={leave} />

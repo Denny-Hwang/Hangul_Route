@@ -210,7 +210,7 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
     if (stateRef.current.phase !== 'recap') return false;
     void Promise.resolve().then(() => dispatch({ type: 'finishRecap' }));
     return true;
-  });
+  }, state.phase === 'recap');
 
   // Focus follows the resolved item to Next (web: the DOM focus; native: the screen reader's focus),
   // then native hears "Correct" with the explanation (iOS has no live regions).

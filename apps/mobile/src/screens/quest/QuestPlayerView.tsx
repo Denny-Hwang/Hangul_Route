@@ -49,6 +49,12 @@ export interface QuestPlayerViewProps {
   onOpenGame: (stepIndex: number) => void;
   /** The not-found state's Go back. */
   onBack: () => void;
+  /**
+   * A back while a step shows asks this instead of the learner's leave sheet: All lessons' preview
+   * asks its own Leave this preview question, so the header's Close and the strip's Leave preview
+   * ask the same thing (F-BROWSE-001 section 4.8). Absent, the quest's own sheet asks.
+   */
+  onAskLeave?: () => void;
 }
 
 /**
@@ -58,7 +64,7 @@ export interface QuestPlayerViewProps {
  * navigation coupling is `useFocusEffect` (applying a game's pending advance on re-focus), which the
  * browse stack's own navigation container also provides.
  */
-export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack }: QuestPlayerViewProps): React.ReactElement {
+export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave }: QuestPlayerViewProps): React.ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
@@ -148,9 +154,10 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
   // did; Leave in the sheet runs the ports' leave (a replace or a navigate, never held here), Keep playing stays.
   useRouteBackGuard(() => {
     if (!quest || !step) return false;
-    confirmQuit();
+    if (onAskLeave) onAskLeave();
+    else confirmQuit();
     return true;
-  });
+  }, !!quest && !!step);
 
   const advance = (): void => {
     if (!quest) return;

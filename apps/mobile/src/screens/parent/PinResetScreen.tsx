@@ -129,10 +129,14 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
 
   // Back returns to the PIN screen this one replaced (the header's Back, the browser and the phone back alike,
   // AMENDMENTS-DISPLAY-NAV section 7.1); the replace is the screen's own way on, so the guard lets it through.
-  useBackGuard(navigation, () => {
-    void Promise.resolve().then(() => navigation.replace('PinEntry', { next, profileId }));
-    return true;
-  });
+  useBackGuard(
+    navigation,
+    () => {
+      void Promise.resolve().then(() => navigation.replace('PinEntry', { next, profileId }));
+      return true;
+    },
+    true,
+  );
 
   const codeRows = rescueInputRows(codeInput);
   const codeLine = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : message;
