@@ -48,7 +48,7 @@ import {
   type Weekday,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
-import { itemCategory, itemTitle, type ItemCategory } from '@/data/catalog';
+import { catalogTitle, itemCategory, itemTitle, type ItemCategory } from '@/data/catalog';
 import { isActive } from './billing';
 import { currentPlan, type PlanLike, type ReadoutRow } from './plans';
 
@@ -489,7 +489,7 @@ export function planUpdateOffer<T extends UpdatablePlan>(
 
 /** The confirm before **Update the plan**: what leaves and joins the plan, its next lesson, and that the end date stays. */
 export function updateAskText(diff: PlanUpdateOffer['diff'], locale: UiLocale = DEFAULT_LOCALE, source: Catalog = CATALOG): string {
-  const next = diff.newStartQuestId === null ? null : itemTitle('quest', diff.newStartQuestId, source);
+  const next = diff.newStartQuestId === null ? null : itemTitle('quest', diff.newStartQuestId, source, locale);
   return getMessages(locale).console.curriculum.update.ask(diff.itemsRemoved, diff.itemsAdded, next);
 }
 
@@ -672,11 +672,11 @@ export interface WeekRow {
  * `week`, else under the week whose dates hold its `targetDate`; anything else (no date,
  * or outside the route) is `unscheduled`. Items keep plan order inside a week, by date.
  */
-export function weekGroups(weeks: readonly WeekMeta[], items: readonly PlanItem[], source: Catalog = CATALOG): { rows: WeekRow[]; unscheduled: WeekItem[] } {
+export function weekGroups(weeks: readonly WeekMeta[], items: readonly PlanItem[], source: Catalog = CATALOG, locale: UiLocale = DEFAULT_LOCALE): { rows: WeekRow[]; unscheduled: WeekItem[] } {
   const rows: WeekRow[] = weeks.map((week) => ({ week, endDate: addDays(week.startDate, 6), items: [] }));
   const unscheduled: WeekItem[] = [];
   items.forEach((item, index) => {
-    const entry: WeekItem = { kind: item.kind, id: item.id, category: itemCategory(item.kind, item.id, source), title: itemTitle(item.kind, item.id, source), date: item.targetDate ?? null, index };
+    const entry: WeekItem = { kind: item.kind, id: item.id, category: itemCategory(item.kind, item.id, source), title: itemTitle(item.kind, item.id, source, locale), date: item.targetDate ?? null, index };
     const byWeek = item.week === undefined ? undefined : rows.find((row) => row.week.index === item.week);
     const date = item.targetDate;
     const byDate = date === undefined ? undefined : rows.find((row) => row.week.startDate <= date && date <= row.endDate);
@@ -734,9 +734,9 @@ export function weekLabel(row: WeekRow, locale: UiLocale = DEFAULT_LOCALE, sourc
   if (kind === 'break') return label.break;
   if (kind === 'culture') {
     const story = source.stories.find((s) => s.id === focus.storyIds[0]);
-    return story ? label.culture(story.title) : label.cultureNoStory;
+    return story ? label.culture(catalogTitle(story.id, locale, source)) : label.cultureNoStory;
   }
-  if (focus.episodeId !== null) return itemTitle('episode', focus.episodeId, source);
+  if (focus.episodeId !== null) return itemTitle('episode', focus.episodeId, source, locale);
   if (focus.storyIds.length > 0) return label.stories;
   if (row.items.some((item) => item.category === 'coming-soon')) return label.comingSoon;
   return label.freePractice;
@@ -746,7 +746,7 @@ export function weekLabel(row: WeekRow, locale: UiLocale = DEFAULT_LOCALE, sourc
 export function extraText(extra: WeekExtra, locale: UiLocale = DEFAULT_LOCALE, source: Catalog = CATALOG): string {
   const words = getMessages(locale).console.curriculum.preview.extras;
   if (extra.kind === 'hangul-check') return words.hangulCheck;
-  return words.vocab(source.topics.find((t) => t.id === extra.topicId)?.title ?? extra.topicId);
+  return words.vocab(source.topics.some((t) => t.id === extra.topicId) ? catalogTitle(extra.topicId, locale, source) : extra.topicId);
 }
 
 /** A UTC date key as a short day ("Oct 18"). */

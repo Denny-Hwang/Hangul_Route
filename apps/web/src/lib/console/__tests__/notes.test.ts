@@ -1,5 +1,6 @@
 import { CATALOG, NOTE_PRESET_AUDIENCE, NOTE_PRESET_IDS, NoteSendSchema } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
+import { CATALOGUE_TITLES } from '@/data/catalogue-titles.generated';
 import { describe, expect, it, vi } from 'vitest';
 import {
   NOTE_PAIR_DAILY_LIMIT,
@@ -329,6 +330,14 @@ describe('notePreview (wireframe console/note-composer.md)', () => {
     });
     expect(notePreview({ spaceKind: 'family', spaceName: 'Kim family', presetId: 'effort_proud', text: '  ', questId: null, label: null }, 'en').from).toBe('From Your family');
   });
+
+  it('names the quest in the console language (owner report 2026-10-16: English titles in the ko and es console)', () => {
+    for (const locale of ['ko', 'es'] as const) {
+      const title = CATALOGUE_TITLES[locale]![QUEST.id]!;
+      expect(title).not.toBe(QUEST.title);
+      expect(notePreview({ spaceKind: 'class', spaceName: 'A', presetId: 'progress_reading', text: '', questId: QUEST.id, label: null }, locale).quest).toBe(getMessages(locale).console.notes.composer.preview.quest(title));
+    }
+  });
 });
 
 describe('sendResultLines (wireframe B: counts only, never names)', () => {
@@ -442,6 +451,8 @@ describe('sentRowView (wireframe console/notes-sent.md)', () => {
   it('a batch to everyone is one line with its size and no per-learner answers', () => {
     const batch: SentNoteRow = { id: 'note:bbbbbbbb', batchId: 'batch:2', to: 'everyone', size: 18, presetId: 'effort_keep_trying', text: null, suggest: { kind: 'quest', id: QUEST.id }, label: null, createdAt: 't', status: 'sent', mine: true };
     expect(sentRowView(batch, 'class', 'en')).toMatchObject({ key: 'batch:2', batch: true, to: 'To everyone (18 students)', reaction: null, quest: QUEST.title, canTakeBack: true });
+    // The history names the quest in the console language too.
+    expect(sentRowView(batch, 'class', 'ko').quest).toBe(CATALOGUE_TITLES.ko![QUEST.id]);
   });
 
   it('a batch row without a note id cannot be taken back from here (never posts to /notes/undefined)', () => {

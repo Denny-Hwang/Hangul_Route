@@ -27,7 +27,7 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
-import { plannableQuest } from '@/data/catalog';
+import { catalogTitle, plannableQuest } from '@/data/catalog';
 import type { ApiResult, LearnerReportBody } from './api';
 import type { LearningRouteGoal } from './learning-route-view';
 import { startingSpotLine } from './placement';
@@ -308,7 +308,9 @@ function tipOf(strand: PlacementStrand, w: ReportWords): ReportSentence | null {
   return plainSentence(m.report.tip[strand]);
 }
 
-const questTitleOf = (id: string, catalog: Catalog): string | null => catalog.quests.find((quest) => quest.id === id)?.title ?? null;
+/** A quest's title in the report's language (owner report 2026-10-16: English titles in the es and ko console), null when the catalogue does not know it. */
+const questTitleOf = (id: string, catalog: Catalog, locale: UiLocale = DEFAULT_LOCALE): string | null =>
+  catalog.quests.some((quest) => quest.id === id) ? catalogTitle(id, locale, catalog) : null;
 
 /**
  * The sentence of one insight line (section 3.6), in the report's voice; null for a line this build cannot word (a
@@ -363,7 +365,7 @@ export function insightView(line: InsightLine, w: ReportWords): Omit<ReportLineV
     case 'next_in_plan':
     case 'next_on_route': {
       const id = line.params.questId;
-      const title = questTitleOf(id, w.catalog);
+      const title = questTitleOf(id, w.catalog, w.locale);
       if (title === null) return null;
       const message = line.code === 'next_in_plan' ? i.next_in_plan : i.next_on_route;
       return { code: line.code, sentence: sentence(m, (put) => message(put({ kind: 'quest', id, title }))), tip: null };

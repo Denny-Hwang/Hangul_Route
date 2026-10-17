@@ -1,15 +1,15 @@
 'use client';
 
-import { ACTIVITY_PRESETS, LECTURE_MAX_BLOCKS, type LectureBlock, type RomanizationMode, type UiLocale } from '@hangul-route/content-schema';
+import { ACTIVITY_PRESETS, LECTURE_MAX_BLOCKS, type ChooserSelection, type LectureBlock, type RomanizationMode, type UiLocale } from '@hangul-route/content-schema';
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { LOCALE_META, type Messages } from '@hangul-route/i18n';
-import type { CSSProperties, ReactNode } from 'react';
+import { useMemo, type CSSProperties, type ReactNode } from 'react';
+import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
-import { builderEpisodes, questsOf } from '@/data/catalog';
-import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
-import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, vocabMinutes, type LectureSource, type PickerChoice } from '@/lib/console/lecture';
-import { useMessages } from '@/lib/i18n/locale-context';
+import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, type LectureSource, type PickerChoice } from '@/lib/console/lecture';
+import { applyToOutline, chooserKeys, consoleChooserGroups, outlineSelection } from '@/lib/console/lesson-picker';
+import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
 import { rem } from '@/lib/console/rem';
 
@@ -46,7 +46,6 @@ const rowButtonStyle: CSSProperties = {
 };
 const choiceStyle: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: spacing.xs, marginRight: spacing.lg, minHeight: spacing.xxl };
 const blockChoiceStyle: CSSProperties = { ...choiceStyle, display: 'flex' };
-const h3Style: CSSProperties = { fontSize: rem(typography.size.body), margin: `${spacing.sm}px 0` };
 
 /** "Revisit together: ㄱ ㅓ" as one message, the jamo marked Korean. */
 function RevisitLine({ l, chars }: { l: LectureMessages; chars: readonly string[] }): JSX.Element {
@@ -60,9 +59,9 @@ function RevisitLine({ l, chars }: { l: LectureMessages; chars: readonly string[
   );
 }
 
-/** A row's own words: its content title, or the block's name (for the buttons' accessible names). */
-export function blockText(block: LectureBlock, l: LectureMessages): string {
-  const content = catalogueTitle(block);
+/** A row's own words: its content title in the console language, or the block's name (for the buttons' accessible names). */
+export function blockText(block: LectureBlock, l: LectureMessages, locale?: UiLocale): string {
+  const content = catalogueTitle(block, undefined, locale);
   if (content !== null) return content;
   switch (block.kind) {
     case 'revisit':
@@ -126,49 +125,29 @@ export function LectureSourceSection({
   );
 }
 
-export function LectureCatalogueSection({ blocks, onAdd }: { blocks: readonly LectureBlock[]; onAdd: (block: LectureBlock) => void }): JSX.Element {
+/**
+ * The catalogue (owner report 2026-10-16 item 5, AMENDMENTS-LECTURE-V2 row LV-3): the grouped lesson
+ * picker over every ready stage, the stories and the word topics; a press adds or removes outline
+ * blocks in place, so quizzes, activities and the class code keep their place.
+ */
+export function LectureCatalogueSection({ blocks, onChange }: { blocks: readonly LectureBlock[]; onChange: (next: LectureBlock[]) => void }): JSX.Element {
   const l = useMessages().console.lecture;
-  const room = canAdd(blocks);
-  const has = (match: (b: LectureBlock) => boolean): boolean => blocks.some(match);
-  const addButton = (added: boolean, block: LectureBlock): ReactNode => (
-    <Button disabled={added || !room} onClick={() => onAdd(block)}>
-      {added ? l.catalogue.added.cta : l.catalogue.add.cta}
-    </Button>
-  );
+  const locale = useLocale();
+  const groups = useMemo(() => consoleChooserGroups(locale, 'lecture'), [locale]);
+  const keys = useMemo(() => chooserKeys(groups), [groups]);
+  const pick = (update: (selection: ChooserSelection) => string[]): void => onChange(applyToOutline(blocks, groups, keys, update(outlineSelection(blocks, keys))));
   return (
-    <section style={lectureSectionStyle} aria-label={l.catalogue.title}>
-      <h2 style={lectureH2Style}>{l.catalogue.title}</h2>
-      {!room ? <Muted>{l.outline.full(LECTURE_MAX_BLOCKS)}</Muted> : null}
-      <h3 style={h3Style}>{l.catalogue.stage1}</h3>
-      {builderEpisodes().map((e) => (
-        <div key={e.episodeId} style={{ marginBottom: spacing.sm }}>
-          <div style={rowStyle}>
-            <strong>{l.catalogue.line(e.title, e.minutes)}</strong>
-            {addButton(has((b) => b.kind === 'episode' && b.id === e.episodeId), { kind: 'episode', id: e.episodeId })}
-          </div>
-          {questsOf(e.episodeId).map((q) => (
-            <div key={q.id} style={{ ...rowStyle, paddingLeft: spacing.md, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>
-              <span>{l.catalogue.line(q.title, q.minutes)}</span>
-              {addButton(has((b) => b.kind === 'quest' && b.id === q.id), { kind: 'quest', id: q.id })}
-            </div>
-          ))}
-        </div>
-      ))}
-      {LECTURE_STORIES.length > 0 ? <h3 style={h3Style}>{l.catalogue.stories}</h3> : null}
-      {LECTURE_STORIES.map((s) => (
-        <div key={s.id} style={rowStyle}>
-          <span>{l.catalogue.line(s.titleEn, s.minutes)}</span>
-          {addButton(has((b) => b.kind === 'story' && b.storyId === s.id), { kind: 'story', storyId: s.id, checks: true })}
-        </div>
-      ))}
-      {LECTURE_VOCAB_TOPICS.length > 0 ? <h3 style={h3Style}>{l.catalogue.vocab}</h3> : null}
-      {LECTURE_VOCAB_TOPICS.map((t) => (
-        <div key={t.id} style={rowStyle}>
-          <span>{l.catalogue.topicLine(t.titleEn, t.words, vocabMinutes(t.id))}</span>
-          {addButton(has((b) => b.kind === 'vocab' && b.topicId === t.id), { kind: 'vocab', topicId: t.id })}
-        </div>
-      ))}
-    </section>
+    <div style={lectureSectionStyle}>
+      <GroupedLessonPicker
+        groups={groups}
+        selection={outlineSelection(blocks, keys)}
+        onChange={pick}
+        room={LECTURE_MAX_BLOCKS - blocks.length}
+        title={l.catalogue.title}
+        fullNote={l.outline.full(LECTURE_MAX_BLOCKS)}
+        testId="lecture-picker"
+      />
+    </div>
   );
 }
 
@@ -185,6 +164,7 @@ export function LectureOutlineSection({
   onAdd: (block: LectureBlock) => void;
 }): JSX.Element {
   const l = useMessages().console.lecture;
+  const locale = useLocale();
   const room = canAdd(blocks);
   const hasCode = blocks.some((b) => b.kind === 'class-code');
   const warned = new Set(quizWarnings(blocks));
@@ -222,7 +202,7 @@ export function LectureOutlineSection({
       );
     }
     if (block.kind === 'revisit') return <RevisitLine l={l} chars={block.chars} />;
-    return <span>{blockText(block, l)}</span>;
+    return <span>{blockText(block, l, locale)}</span>;
   };
 
   return (
@@ -234,7 +214,7 @@ export function LectureOutlineSection({
       {blocks.length === 0 ? <Muted>{l.outline.empty}</Muted> : null}
       <ol style={{ margin: 0, paddingLeft: spacing.lg }} data-testid="lecture-outline">
         {blocks.map((block, index) => {
-          const text = blockText(block, l);
+          const text = blockText(block, l, locale);
           const first = index === 0;
           const last = index === blocks.length - 1;
           return (
