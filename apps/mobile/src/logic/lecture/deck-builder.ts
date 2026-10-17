@@ -13,7 +13,7 @@ import {
   type Quest,
   type StoryLevel,
 } from '@hangul-route/content-schema';
-import { spokenFor } from '../audio/spoken';
+import { spokenFor, type SpokenForm } from '../audio/spoken';
 import type { MinigameScope } from '../minigame-config';
 import {
   buildCultureQuizRounds,
@@ -96,8 +96,11 @@ export interface LectureStory {
 export interface LectureVocabTopic {
   title: string;
   hoyaLine?: string;
-  /** `cardId`: the word's heritage card picture; `wordArt`: its WordArt key (README D9). */
-  words: ReadonlyArray<{ id: string; ko: string; romanization: string; gloss: string; cardId?: string; wordArt?: string }>;
+  /**
+   * `cardId`: the word's heritage card picture; `wordArt`: its WordArt key (README D9);
+   * `spokenKo` / `audioRef`: what the voice says and its clip (F-VOC-001, F-AUDIO-004), for Sound.
+   */
+  words: ReadonlyArray<{ id: string; ko: string; romanization: string; gloss: string; cardId?: string; wordArt?: string; spokenKo?: string; audioRef?: string }>;
 }
 
 export interface LectureBundle {
@@ -149,6 +152,28 @@ export interface ExpandedDeck {
 }
 
 const listOf = <T>(items: readonly T[] | undefined): readonly T[] => items ?? [];
+
+/** Taught Korean as the content stores it: what the voice says when it differs from `ko`, and its clip (F-AUDIO-004). */
+interface SpeakableKo {
+  ko: string;
+  romanization: string;
+  spokenKo?: string | undefined;
+  audioRef?: string | undefined;
+}
+
+/** A word card's sound (section 3.4 amendment 2026-10-17): its spoken form and the speech rate it plays at. */
+interface WordVoice {
+  spoken: SpokenForm;
+  speech: 'word' | 'sentence';
+}
+
+/** What Sound plays for taught Korean: `spokenKo` when the content has one, else the Korean, with its clip when it has one. */
+function spokenOf(text: SpeakableKo): SpokenForm {
+  const spoken: SpokenForm = { text: text.spokenKo ?? text.ko, romanization: text.romanization };
+  return text.audioRef !== undefined ? { ...spoken, audioRef: text.audioRef } : spoken;
+}
+
+const wordVoice = (text: SpeakableKo, speech: WordVoice['speech'] = 'word'): WordVoice => ({ spoken: spokenOf(text), speech });
 
 /** A scene's Korean: its line, else its keyword (the D14 rule of the schema's `sceneKorean`, on the presenter's narrower view). */
 const sceneKo = (scene: LectureStoryScene): StoryKo | undefined => scene.line ?? scene.keyword;
@@ -225,10 +250,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
   const seed = (): number => deck.seed + slides.length;
   /** A word card, once per deck; the word is taught either way (a later gloss still upgrades it). */
-  const wordCard = (key: string, word: KoLine & { gloss: string }, extra: { wordId?: string; cardId?: string; wordArt?: string } = {}): void => {
+  const wordCard = (key: string, word: KoLine & { gloss: string }, voice: WordVoice, extra: { wordId?: string; cardId?: string; wordArt?: string } = {}): void => {
     if (!seenWords.has(word.ko)) {
       seenWords.add(word.ko);
-      push(key, { kind: 'vocab', word, ...extra });
+      push(key, { kind: 'vocab', word, ...voice, ...extra });
     }
     teachWord(word);
   };
@@ -348,17 +373,19 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'card-match':
       case 'pic-word-match': {
         // Every word on every board, in board order (F-QUEST-002 §3.11): KoText always carries romanization and a gloss.
-        const words: Array<KoLine & { gloss: string }> = [];
-        const pairs =
+        const words: Array<KoLine & { gloss: string; voice: WordVoice }> = [];
+        // A board word is KoText, so its `spokenKo` and `audioRef` give the card its sound when present.
+        const pairs: ReadonlyArray<{ ko: string; en: string; romanization?: string; spokenKo?: string; audioRef?: string }> =
           scope.kind === 'card-match'
             ? listOf(scope.cardPairs)
             : listOf(scope.picWord?.boards).flatMap((board) => board.pairs.map((pair) => pair.word));
         for (const pair of pairs) {
-          if (pair.romanization === undefined) {
+          const { romanization } = pair;
+          if (romanization === undefined) {
             skip(`${path}/${pair.ko}`, 'no-romanization');
             continue;
           }
-          if (!words.some((w) => w.ko === pair.ko)) words.push({ ko: pair.ko, romanization: pair.romanization, gloss: pair.en });
+          if (!words.some((w) => w.ko === pair.ko)) words.push({ ko: pair.ko, romanization, gloss: pair.en, voice: wordVoice({ ...pair, romanization }) });
         }
         // Every word already had its card in this deck: a board of 4 or more becomes a word-to-meaning quiz (section 5.1).
         if (words.length >= QUIZ_MIN_ITEMS && words.every((w) => seenWords.has(w.ko))) {
@@ -366,7 +393,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
           meaningQuiz(path, ref, () => buildCultureQuizRounds({ cardPairs, rounds, seed: seed() }));
           return;
         }
-        for (const word of words) wordCard(`${path}/${word.ko}`, word);
+        for (const { voice, ...word } of words) wordCard(`${path}/${word.ko}`, word, voice);
         return;
       }
       case 'story-sequence': {
@@ -431,14 +458,20 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     if (ko !== undefined && romanization !== undefined) teachWord({ ko, romanization, gloss: found.titleEn });
   };
 
-  /** A Discover step (F-QUEST-002 §3.1): a letter slide per jamo item, a vocab slide per word item. */
+  /**
+   * A Discover step (F-QUEST-002 §3.1): a letter slide per jamo item, a vocab slide per word item.
+   * A sentence, a pattern example or an exchange line plays at the sentence rate.
+   */
   const discoverStep = (path: string, discover: Discover): void => {
     for (const item of discover.pages.flatMap((page) => page.items)) {
       if (item.type === 'jamo') {
         letterById(path, item.jamoId);
         continue;
       }
-      for (const text of discoverItemTexts(item)) wordCard(`${path}/${text.ko}`, { ko: text.ko, romanization: text.romanization, gloss: text.en });
+      const speech = item.type === 'sentence' || item.type === 'pattern' || item.type === 'exchange' ? 'sentence' : 'word';
+      for (const text of discoverItemTexts(item)) {
+        wordCard(`${path}/${text.ko}`, { ko: text.ko, romanization: text.romanization, gloss: text.en }, wordVoice(text, speech));
+      }
     }
   };
 
@@ -638,6 +671,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       wordCard(
         `${path}/${w.id}`,
         { ko: w.ko, romanization: w.romanization, gloss: w.gloss },
+        wordVoice(w),
         { wordId: w.id, ...(w.cardId !== undefined ? { cardId: w.cardId } : {}), ...(w.wordArt !== undefined ? { wordArt: w.wordArt } : {}) },
       );
     }
@@ -654,13 +688,18 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
    * them. Unknown ids are counted skips; under 4 words, the quiz is a counted `scope-too-small`.
    */
   const wordReviewBlock = (path: string, questIds: readonly string[], vocabIds: readonly string[], rounds: number): void => {
-    type ReviewWord = KoLine & { gloss: string; extra?: { wordId: string; cardId?: string; wordArt?: string } };
+    type ReviewWord = KoLine & { gloss: string; voice: WordVoice; extra?: { wordId: string; cardId?: string; wordArt?: string } };
     const words: ReviewWord[] = [];
     const add = (word: ReviewWord): void => {
       const known = words.find((w) => w.ko === word.ko);
-      if (!known) words.push(word);
-      // A word a quest already taught keeps its place; the vocab entry still gives it its picture.
-      else if (known.extra === undefined && word.extra !== undefined) known.extra = word.extra;
+      if (!known) {
+        words.push(word);
+        return;
+      }
+      // A word a quest already taught keeps its place; the vocab entry still gives it its picture,
+      // and its recorded clip when only the vocab entry has one (F-AUDIO-004 D6).
+      if (known.extra === undefined && word.extra !== undefined) known.extra = word.extra;
+      if (known.voice.spoken.audioRef === undefined && word.voice.spoken.audioRef !== undefined) known.voice = { ...known.voice, spoken: word.voice.spoken };
     };
     for (const id of questIds) {
       if (!bundle.questById(id)) {
@@ -668,7 +707,14 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         continue;
       }
       const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice);
-      for (const t of alone.taught) if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss });
+      // A taught word keeps the sound its own card had in the quest (a Discover sentence stays a sentence).
+      const cardVoice = (ko: string): WordVoice | undefined => {
+        const card = alone.slides.find((s): s is Extract<Slide, { kind: 'vocab' }> => s.kind === 'vocab' && s.word.ko === ko);
+        return card ? { spoken: card.spoken, speech: card.speech } : undefined;
+      };
+      for (const t of alone.taught) {
+        if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss, voice: cardVoice(t.ko) ?? wordVoice(t) });
+      }
     }
     for (const id of vocabIds) {
       const found = bundle.vocabWord ? bundle.vocabWord(id) : 'not-ready';
@@ -677,13 +723,13 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         continue;
       }
       const extra = { wordId: found.id, ...(found.cardId !== undefined ? { cardId: found.cardId } : {}), ...(found.wordArt !== undefined ? { wordArt: found.wordArt } : {}) };
-      add({ ko: found.ko, romanization: found.romanization, gloss: found.gloss, extra });
+      add({ ko: found.ko, romanization: found.romanization, gloss: found.gloss, voice: wordVoice(found), extra });
     }
     // Words an earlier block of this deck already showed have no card here (`seenWords`), so
     // unseen words fill the cap first; the quiz still asks the seen ones that made the cut.
     const ordered = [...words.filter((w) => !seenWords.has(w.ko)), ...words.filter((w) => seenWords.has(w.ko))];
     const shown = ordered.slice(0, wordReviewCardCap(rounds));
-    for (const { extra, ...word } of shown) wordCard(`${path}/${word.ko}`, word, extra);
+    for (const { extra, voice: sound, ...word } of shown) wordCard(`${path}/${word.ko}`, word, sound, extra);
     if (shown.length < QUIZ_MIN_ITEMS) {
       skip(`${path}/quiz`, 'scope-too-small');
       return;

@@ -1615,6 +1615,8 @@ export const learner = {
       fullscreen: { cta: 'Pantalla completa' },
       exit: { cta: 'Salir' },
       noVoice: 'Aquí no hay voz coreana. ¡Dilo tú!',
+      noSound: 'Esta diapositiva no tiene sonido.',
+      soundFailed: 'El sonido no se reprodujo. ¡Dilo tú!',
       offline: 'Sin internet. Todo sigue funcionando.',
       update: 'Hay una actualización. Se aplica al salir.',
     },

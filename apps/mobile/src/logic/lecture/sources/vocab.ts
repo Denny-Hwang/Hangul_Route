@@ -39,7 +39,15 @@ const EXPANDABLE: ReadonlySet<VocabTopic['status']> = new Set(['ready', 'shipped
 export type LectureWord = LectureVocabTopic['words'][number];
 
 function wordOf(item: RuntimeVocabItem, locale: UiLocale): LectureWord {
-  const word: LectureWord = { id: item.id, ko: item.ko, romanization: item.romanization, gloss: localizedGloss(item, locale) };
+  const word: LectureWord = {
+    id: item.id,
+    ko: item.ko,
+    romanization: item.romanization,
+    gloss: localizedGloss(item, locale),
+    // What Sound says and its recorded clip (F-VOC-001, F-AUDIO-004), when the item has them.
+    ...(item.spokenKo !== undefined ? { spokenKo: item.spokenKo } : {}),
+    ...(item.audioRef !== undefined ? { audioRef: item.audioRef } : {}),
+  };
   if (item.visual.startsWith('card:')) return { ...word, cardId: item.visual };
   // The slide draws the key only when the WordArt registry has its glyph (`vocabArt`, slide-view.ts).
   return item.visual.startsWith(WORD_REF) ? { ...word, wordArt: item.visual.slice(WORD_REF.length) } : word;

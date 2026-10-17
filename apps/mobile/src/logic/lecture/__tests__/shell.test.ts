@@ -142,12 +142,13 @@ describe('runDeck: the slides this build draws', () => {
   it('a word whose card the art cannot draw loses its art build, so no press reveals nothing', () => {
     const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
     const word = { ko: '책', romanization: 'chaek', gloss: 'book' };
-    const drawn: Slide = { kind: 'vocab', word, cardId: 'card:book', key: 'w/1', builds: ['ko', 'gloss', 'art'] };
-    const undrawn: Slide = { kind: 'vocab', word, cardId: 'card:nope', key: 'w/2', builds: ['ko', 'rom', 'gloss', 'art'] };
+    const sound = { spoken: { text: '책', romanization: 'chaek' }, speech: 'word' } as const;
+    const drawn: Slide = { kind: 'vocab', word, ...sound, cardId: 'card:book', key: 'w/1', builds: ['ko', 'gloss', 'art'] };
+    const undrawn: Slide = { kind: 'vocab', word, ...sound, cardId: 'card:nope', key: 'w/2', builds: ['ko', 'rom', 'gloss', 'art'] };
     const deck = deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
     const run = runDeck(deck, { slides: [drawn, undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']);
     expect(run.slides[0]).toEqual(drawn);
-    expect(run.slides[1]).toEqual({ kind: 'vocab', word, key: 'w/2', builds: ['ko', 'rom', 'gloss'] });
+    expect(run.slides[1]).toEqual({ kind: 'vocab', word, ...sound, key: 'w/2', builds: ['ko', 'rom', 'gloss'] });
     // The live romanization flip recomputes builds from the slide, and the art stays gone.
     expect(withBuilds(run.slides, { romanization: 'always', strokeGuide: true })[1]?.builds).toEqual(['ko', 'gloss']);
     // Without the drawable list the slides pass through unchanged.
@@ -157,12 +158,13 @@ describe('runDeck: the slides this build draws', () => {
   it('a topic word whose WordArt key has no glyph loses its art build too (README D9)', () => {
     const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
     const word = { ko: '사과', romanization: 'sagwa', gloss: 'apple' };
-    const drawn: Slide = { kind: 'vocab', word, wordArt: 'apple', key: 'w/1', builds: ['ko', 'gloss', 'art'] };
-    const undrawn: Slide = { kind: 'vocab', word, wordArt: 'no-such-glyph', key: 'w/2', builds: ['ko', 'gloss', 'art'] };
+    const sound = { spoken: { text: '사과', romanization: 'sagwa' }, speech: 'word' } as const;
+    const drawn: Slide = { kind: 'vocab', word, ...sound, wordArt: 'apple', key: 'w/1', builds: ['ko', 'gloss', 'art'] };
+    const undrawn: Slide = { kind: 'vocab', word, ...sound, wordArt: 'no-such-glyph', key: 'w/2', builds: ['ko', 'gloss', 'art'] };
     const deck = deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
     const run = runDeck(deck, { slides: [drawn, undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book'], ['apple']);
     expect(run.slides[0]).toEqual(drawn);
-    expect(run.slides[1]).toEqual({ kind: 'vocab', word, key: 'w/2', builds: ['ko', 'gloss'] });
+    expect(run.slides[1]).toEqual({ kind: 'vocab', word, ...sound, key: 'w/2', builds: ['ko', 'gloss'] });
     expect(withBuilds(run.slides, { romanization: 'tap', strokeGuide: true })[1]?.builds).toEqual(['ko', 'rom', 'gloss']);
     // Without the WordArt list the key passes through unchanged (the card list alone does not touch it).
     expect(runDeck(deck, { slides: [undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']).slides[0]).toEqual(undrawn);

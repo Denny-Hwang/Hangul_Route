@@ -2050,6 +2050,9 @@ export const learner = {
       exit: { cta: 'Exit' },
       /** Status chips (PR 9, spec sections 3.7 and 3.8); nothing about a learner ever shows here. */
       noVoice: 'No Korean voice here. You say it!',
+      /** Flashed at the top of the stage after a Sound press (spec section 3.7 amendment 2026-10-17). */
+      noSound: 'This slide has no sound.',
+      soundFailed: 'The sound did not play. You say it!',
       offline: 'Offline. Everything still works.',
       update: 'Update ready. It applies when you exit.',
     },
