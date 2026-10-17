@@ -1,4 +1,4 @@
-import { Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { normalizeRescueCode } from '@hangul-route/content-schema';
 import React, { useState } from 'react';
@@ -23,11 +23,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Restore'>;
  * (F-RESTORE-001 §3.4), grown-up sign-in (F-AUTH-002, not yet), a saved
  * file (F-SYNC-002 §3.3). Never overwrites; ends on the merge notice.
  */
-/** The code field's text metrics, fixed so its height can be planned for the worst case. */
-const CODE_LINE_HEIGHT = Math.round(typography.size.bodyLg * 1.3);
+/** The code field's line height at the chosen text size (bodyLg x 1.3), so its height can be planned for the worst case. */
+const codeLineHeight = (fontSize: number): number => Math.round(fontSize * 1.3);
 const CODE_BORDER = 2;
 
 export function RestoreScreen({ navigation, route }: Props): React.ReactElement {
+  const textScale = useTypeScale();
+  const fieldLineHeight = codeLineHeight(textScale.size.bodyLg);
   const { copy } = useAudience();
   const messages = useMessages();
   const m = messages.caregiver.restore;
@@ -144,13 +146,13 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                 accessibilityLabel={messages.a11y.rescueCode}
                 testID="rescue-code-input"
                 style={{
-                  minHeight: Math.max(touchTarget.child, codeRows * CODE_LINE_HEIGHT + 2 * spacing.sm + 2 * CODE_BORDER),
+                  minHeight: Math.max(touchTarget.child, codeRows * fieldLineHeight + 2 * spacing.sm + 2 * CODE_BORDER),
                   paddingHorizontal: spacing.md,
                   paddingVertical: spacing.sm,
                   textAlign: 'center',
                   textAlignVertical: 'center',
-                  fontSize: typography.size.bodyLg,
-                  lineHeight: CODE_LINE_HEIGHT,
+                  fontSize: textScale.size.bodyLg,
+                  lineHeight: fieldLineHeight,
                   fontWeight: '700',
                   color: colors.text.primary,
                   backgroundColor: colors.surface.paper,

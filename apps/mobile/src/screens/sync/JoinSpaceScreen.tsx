@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
@@ -41,6 +41,7 @@ export const RELINK_POLL_MS = 4000;
  * (`membership-store.join`), so a session that ends between this render and the tap renames nothing anywhere.
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.join;
   const profile = useProfileStore(activeProfileSelector);
@@ -223,7 +224,7 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
             style={{
               minHeight: touchTarget.child,
               paddingHorizontal: spacing.md,
-              fontSize: typography.size.title,
+              fontSize: textScale.size.title,
               fontWeight: '700',
               color: nameLocked ? colors.text.secondary : colors.text.primary,
               backgroundColor: nameLocked ? colors.surface.sunken : colors.surface.paper,
@@ -272,7 +273,7 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
             style={{
               minHeight: touchTarget.hero,
               textAlign: 'center',
-              fontSize: typography.size.display,
+              fontSize: textScale.size.display,
               fontWeight: '700',
               letterSpacing: spacing.sm,
               color: colors.text.primary,

@@ -18,6 +18,7 @@ import {
   useLayoutClass,
   KOREAN_LINE_BREAK,
   useCappedFont,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -299,6 +300,7 @@ function LibraryGroup({ group, open }: { group: BrowseLibraryGroup; open: OpenTa
 }
 
 function CardsGroup({ cards, title, open }: { cards: readonly HeritageCard[]; title: string; open: OpenTargets }): React.ReactElement {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse.home;
   const locale = useLocale();
@@ -335,7 +337,7 @@ function CardsGroup({ cards, title, open }: { cards: readonly HeritageCard[]; ti
                 ...focusRing(focused, active ? colors.brand.primary : colors.border.subtle),
               })}
             >
-              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold, color: active ? colors.text.onPrimary : colors.text.primary }}>{f.label}</Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontWeight: typography.weight.semibold, color: active ? colors.text.onPrimary : colors.text.primary }}>{f.label}</Text>
             </Pressable>
           );
         })}
@@ -354,6 +356,7 @@ const RARITY_TONE = { legendary: 'nudge', rare: 'info', uncommon: 'success', com
 
 /** A Library card slot, face up: the rarity pill, the face, the Korean with romanization and the English title. No earn hint, no New pill. */
 function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis: '31%' | '47%'; onPress: () => void }): React.ReactElement {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const card = localizeCard(source, useLocale());
   const rarity = messages.learner.library.rarity[card.rarity];
@@ -385,7 +388,7 @@ function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis:
       </View>
       <View style={{ alignItems: 'center' }}>{face > 0 ? <CardArt card={card} size={face} style={{ borderRadius: radii.md }} /> : null}</View>
       {card.subtitleKo ? (
-        <Text {...KOREAN_LINE_BREAK} {...{ lang: 'ko' }} style={{ fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        <Text {...KOREAN_LINE_BREAK} {...{ lang: 'ko' }} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
           {card.subtitleKo}
         </Text>
       ) : null}

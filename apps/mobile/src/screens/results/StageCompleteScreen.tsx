@@ -14,6 +14,7 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -173,6 +174,7 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
  * shape cue, never colour alone).
  */
 function WallTileView({ tile, label }: { tile: WallTile; label: string }): React.ReactElement {
+  const textScale = useTypeScale();
   const final = tile.kind === 'batchim';
   return (
     <View
@@ -196,10 +198,10 @@ function WallTileView({ tile, label }: { tile: WallTile; label: string }): React
       <Text {...KOREAN_LINE_BREAK}
         style={{
           fontFamily: typography.family.sansKr,
-          fontSize: typography.size.title,
+          fontSize: textScale.size.title,
           fontWeight: typography.weight.bold,
           color: colors.text.primary,
-          lineHeight: typography.size.title * typography.leading.normal,
+          lineHeight: textScale.size.title * typography.leading.normal,
         }}
       >
         {tile.char}

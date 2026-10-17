@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
@@ -25,6 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'MoveClass'>;
  * queued (consent is never sent later). Reachable only while the Classes card offers Move (variant c).
  */
 export function MoveClassScreen({ route, navigation }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const { profileId, fromSpaceId } = route.params;
   const messages = useMessages();
   const t = messages.caregiver.transfer;
@@ -188,7 +189,7 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
         style={{
           minHeight: touchTarget.hero,
           textAlign: 'center',
-          fontSize: typography.size.display,
+          fontSize: textScale.size.display,
           fontWeight: typography.weight.bold,
           letterSpacing: spacing.sm,
           color: colors.text.primary,

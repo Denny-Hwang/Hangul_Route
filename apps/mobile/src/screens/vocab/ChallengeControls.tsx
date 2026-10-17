@@ -11,6 +11,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { ClockScale } from '@hangul-route/content-schema';
 import React, { useEffect, useRef } from 'react';
@@ -153,11 +154,12 @@ export function SwitchRow({
  * heading, so heading navigation never lands on a ticking clock.
  */
 export function ClockDigits({ view }: { view: ClockView }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View accessible accessibilityRole="timer" accessibilityLabel={view.label} testID="vocab-speed-clock">
       <Body
         weight="bold"
-        style={{ fontSize: typography.size.title, lineHeight: typography.size.title * typography.leading.tight }}
+        style={{ fontSize: textScale.size.title, lineHeight: textScale.size.title * typography.leading.tight }}
       >
         {view.digits}
       </Body>

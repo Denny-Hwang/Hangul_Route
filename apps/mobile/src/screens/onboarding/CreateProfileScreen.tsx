@@ -21,7 +21,7 @@ import {
   radii,
   spacing,
   touchTarget,
-  typography,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -65,7 +65,8 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'CreateProfile'>;
 
 const CHECKBOX_SIZE = spacing.xl + spacing.xs;
 
-const fieldStyle = (borderColor: string) =>
+/** A text field: `fontSize` is the chosen text size's bodyLg (`useTypeScale`). */
+const fieldStyle = (borderColor: string, fontSize: number) =>
   ({
     backgroundColor: colors.surface.paper,
     borderRadius: radii.lg,
@@ -73,7 +74,7 @@ const fieldStyle = (borderColor: string) =>
     borderColor,
     paddingHorizontal: spacing.lg,
     minHeight: touchTarget.child,
-    fontSize: typography.size.bodyLg,
+    fontSize,
     color: colors.text.primary,
   }) as const;
 
@@ -91,6 +92,7 @@ const fieldStyle = (borderColor: string) =>
  * Rules live in logic/onboarding (tested); this file paints them.
  */
 export function CreateProfileScreen({ navigation, route }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.learner;
   const c = m.createProfile;
@@ -359,7 +361,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           accessibilityLabel={words.nameLabel}
           maxLength={NAME_MAX}
           autoCapitalize="words"
-          style={fieldStyle(colors.border.subtle)}
+          style={fieldStyle(colors.border.subtle, textScale.size.bodyLg)}
         />
         {hint !== null && (
           <>
@@ -476,7 +478,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
                 autoCapitalize="none"
                 autoCorrect={false}
                 maxLength={254}
-                style={fieldStyle(emailOk ? colors.border.subtle : colors.feedback.nudge)}
+                style={fieldStyle(emailOk ? colors.border.subtle : colors.feedback.nudge, textScale.size.bodyLg)}
               />
               {!emailOk ? (
                 <>

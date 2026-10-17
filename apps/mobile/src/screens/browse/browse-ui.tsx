@@ -14,6 +14,7 @@ import {
   type IconName,
   KOREAN_LINE_BREAK,
   useCappedFont,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType, type ViewStyle } from 'react-native';
@@ -58,6 +59,7 @@ export function KoChip({
   accessibilityLabel?: string;
   testID?: string;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View
       accessible
@@ -79,11 +81,11 @@ export function KoChip({
     >
       <Text {...KOREAN_LINE_BREAK}
         {...{ lang: KOREAN_LANGUAGE }}
-        style={{ flexShrink: 0, maxWidth: '100%', fontFamily: typography.family.sansKr, fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}
+        style={{ flexShrink: 0, maxWidth: '100%', fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}
       >
         {ko}
       </Text>
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.medium, color: colors.text.secondary }}>{romanization}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontWeight: typography.weight.medium, color: colors.text.secondary }}>{romanization}</Text>
     </View>
   );
 }
@@ -102,6 +104,7 @@ const SKILL_ICON: Readonly<Record<Skill, IconName>> = { read: 'book', listen: 'e
 
 /** Read, listen, write as outlined chips with a glyph and the word (speaking is never a skill). Nothing for none. */
 export function SkillChips({ skills }: { skills: readonly Skill[] }): React.ReactElement | null {
+  const textScale = useTypeScale();
   const m = useMessages().learner.myRoute.skill;
   if (skills.length === 0) return null;
   return (
@@ -121,7 +124,7 @@ export function SkillChips({ skills }: { skills: readonly Skill[] }): React.Reac
           }}
         >
           <Icon name={SKILL_ICON[skill]} size={spacing.lg} color={colors.text.primary} />
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{m[skill]}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{m[skill]}</Text>
         </View>
       ))}
     </View>
@@ -208,6 +211,7 @@ export function HeaderBack({
   onPress: () => void;
   testID: string;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <Pressable
       testID={testID}
@@ -229,7 +233,7 @@ export function HeaderBack({
     >
       <Icon name="arrow-left" size={spacing.xl} color={colors.text.primary} />
       {showLabel ? (
-        <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.primary, fontSize: typography.size.body, fontWeight: typography.weight.semibold }}>{label}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.primary, fontSize: textScale.size.body, fontWeight: typography.weight.semibold }}>{label}</Text>
       ) : null}
     </Pressable>
   );

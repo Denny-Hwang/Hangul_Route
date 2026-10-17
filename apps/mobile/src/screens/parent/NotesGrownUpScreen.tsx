@@ -13,6 +13,7 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { NOTES_MODES, type NotesMode } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -53,6 +54,7 @@ const CARD_BUTTON_BASIS = touchTarget.hero + spacing.xxl;
  * setting and its one-time card; the disclosure line; on the web, Send a note on app.hangulroute.com.
  */
 export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const t = m.caregiver.notes;
   const { profileId } = route.params;
@@ -287,7 +289,7 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
                   >
                     {selected ? <View style={{ width: spacing.md, height: spacing.md, borderRadius: radii.circle, backgroundColor: colors.brand.primary }} /> : null}
                   </View>
-                  <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.body, color: disabled ? colors.text.muted : colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>
+                  <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: textScale.size.body, color: disabled ? colors.text.muted : colors.text.primary, fontWeight: selected ? typography.weight.bold : typography.weight.regular }}>
                     {t.mode.options[id]}
                   </Text>
                 </Pressable>
@@ -336,6 +338,7 @@ function GrownUpRow({
   onHide: () => void;
   onReport: () => void;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages();
   const t = m.caregiver.notes;
   const lineId = `notes-row-line-${row.id}`;
@@ -344,12 +347,12 @@ function GrownUpRow({
   return (
     <Card padding="md" tone={row.putAway ? 'sunken' : 'paper'} testID={`notes-grown-up-row-${row.id}`}>
       <View style={{ gap: spacing.xs }}>
-        <Text {...KOREAN_LINE_BREAK} nativeID={lineId} style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>
+        <Text {...KOREAN_LINE_BREAK} nativeID={lineId} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>
           {row.line}
         </Text>
         <Body weight="bold">{row.preset}</Body>
         {row.text !== null ? (
-          <Text {...KOREAN_LINE_BREAK} {...langProps} style={{ fontSize: typography.size.body, color: colors.text.primary }}>
+          <Text {...KOREAN_LINE_BREAK} {...langProps} style={{ fontSize: textScale.size.body, color: colors.text.primary }}>
             {row.text}
           </Text>
         ) : null}

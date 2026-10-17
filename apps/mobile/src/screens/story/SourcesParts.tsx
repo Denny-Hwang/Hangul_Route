@@ -13,6 +13,7 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -42,7 +43,8 @@ export function SourcesHeading({
   children: React.ReactNode;
   testID?: string;
 }): React.ReactElement {
-  const size = level === 1 ? typography.size.title : level === 2 ? typography.size.prompt : typography.size.body;
+  const textScale = useTypeScale();
+  const size = level === 1 ? textScale.size.title : level === 2 ? textScale.size.prompt : textScale.size.body;
   return (
     <Text {...KOREAN_LINE_BREAK}
       {...headingLevel(level)}
@@ -148,7 +150,8 @@ export function CitationText({
   selectable?: boolean;
   testID?: string;
 }): React.ReactElement {
-  const fontSize = size === 'sm' ? typography.size.bodySm : typography.size.body;
+  const textScale = useTypeScale();
+  const fontSize = size === 'sm' ? textScale.size.bodySm : textScale.size.body;
   return (
     <Text {...KOREAN_LINE_BREAK}
       {...korean(text)}
@@ -211,6 +214,7 @@ export function SourceBlock({
   onOpen: (() => void) | null;
   testID: string;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View
       role="group"
@@ -227,11 +231,11 @@ export function SourceBlock({
       <Text {...KOREAN_LINE_BREAK}
         {...korean(source.title)}
         {...(Platform.OS === 'web' ? {} : { accessibilityLabel: source.label })}
-        style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}
+        style={{ fontSize: textScale.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}
       >
         {source.title}
       </Text>
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>
         <Text {...KOREAN_LINE_BREAK} {...korean(source.publisher)}>{source.publisher}</Text>
         {` · ${source.accessedLabel}`}
       </Text>
