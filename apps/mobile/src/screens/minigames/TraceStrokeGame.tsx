@@ -42,9 +42,7 @@ import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
-import { playsOnOpen } from '../../logic/audio/opening-play';
-import { hasClip, playJamo, stop } from '../../platform/audio';
-import { useAudioStore } from '../../store/audio-store';
+import { playJamo, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -145,12 +143,12 @@ export function TraceStrokeGame({
     setDirectionNudge('none');
     setHintToken(0);
     setHintPlaying(false);
-    // A new letter is a new prompt slot. With sound switched off, or nothing that could sound, it waits for
-    // Show me, so the learner is not told why it is silent on every letter.
+    // A new letter starts a new prompt slot and plays its sound once. The opening sound is not the slot's:
+    // its result can come in mid-stroke, and a status row appearing then would move the canvas under the
+    // finger. Show me plays through the slot and says why when it is silent.
     soundReset();
-    const audio = useAudioStore.getState();
-    if (round && playsOnOpen(audio.muted, audio.tts, hasClip(round.jamo.audioRef))) void soundPlay(() => playJamo(round.jamo, 'sound'));
-  }, [roundIdx, round, soundPlay, soundReset]);
+    if (round) void playJamo(round.jamo, 'sound');
+  }, [roundIdx, round, soundReset]);
 
   if (!round) {
     return (
