@@ -17,7 +17,7 @@ import {
 import type { ConfirmSheetProps } from './types';
 
 /**
- * ConfirmSheet — the app's one confirm (design/components/ConfirmSheet/spec.md). It replaces the platform
+ * ConfirmSheet — the app's one confirm (design/components/ConfirmSheet/as-built.md). It replaces the platform
  * dialogs: the browser's `confirm()` showed OK / Cancel in the browser's language and never the app's own
  * words. A bottom sheet over the `surface.overlay` scrim on a phone, a centred dialog from the regular class.
  *

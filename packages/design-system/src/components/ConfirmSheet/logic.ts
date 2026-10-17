@@ -2,7 +2,7 @@ import { touchTarget } from '../../tokens';
 import type { WidthClass } from '../../layout';
 
 /**
- * The pure rules behind `ConfirmSheet` (design/components/ConfirmSheet/spec.md): which action comes first, how
+ * The pure rules behind `ConfirmSheet` (design/components/ConfirmSheet/as-built.md): which action comes first, how
  * each looks, where it sits on a window and what a key does. React-free, so the rules are unit-tested without a
  * renderer.
  *

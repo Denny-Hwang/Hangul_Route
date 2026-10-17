@@ -5,7 +5,7 @@ import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } f
 import { Button } from './ui';
 
 /**
- * The console's confirm (owner request 2026-10-16, item 8; design/components/ConfirmSheet/spec.md "Where it is used"):
+ * The console's confirm (owner request 2026-10-16, item 8; design/components/ConfirmSheet/as-built.md "Where it is used"):
  * a `<dialog>` element in the page instead of the browser's `window.confirm()`, whose OK / Cancel followed the
  * browser's language and not the console's. The question is the same string the page asked before; the two buttons
  * are the console language's Cancel and OK (`common.buttons`). Cancel comes first and has the focus, because

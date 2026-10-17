@@ -1,7 +1,8 @@
-# ConfirmSheet: the app's one confirm (component spec v1)
+# ConfirmSheet: the app's one confirm (as built, owner request 2026-10-16 item 8)
 
 Owner request 2026-10-16 (item 8, learner and grown-up UX): a learner leaving a quest saw the browser's own `confirm()` with OK / Cancel in the browser's language, and the app's words "Leave" / "Keep playing" never showed. `apps/mobile/src/platform/dialog.web.ts` (and the native `Alert` wrapper `dialog.ts`) are gone; every confirm in the learner app is this sheet.
 
+Design pass: `design/components/ConfirmSheet/spec.md` and its mocks (`docs/specs/AMENDMENTS-DISPLAY-NAV.md` section 8, PR #730). This file is what this row built and where it is used.
 Code: `packages/design-system/src/components/ConfirmSheet/` (`ConfirmSheet.tsx`, pure rules in `logic.ts`, `types.ts`) · tests `ConfirmSheet/__tests__/logic.test.ts` (order, tones, layout, keys), `apps/mobile/src/screens/quest/__tests__/ConfirmSheet.test.tsx` (en / es / ko labels, Keep first, one answer, Escape, Tab) · e2e `apps/mobile/e2e/web/confirm-sheet.spec.ts` (360 x 640).
 Precedents it generalizes: the presenter's Exit confirm (`design/screens/presenter/overlays.md` "Exit") and the preview's Leave sheet (`design/screens/browse/preview-player.md` C).
 

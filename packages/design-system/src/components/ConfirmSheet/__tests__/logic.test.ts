@@ -8,7 +8,7 @@ import {
   confirmSheetLayout,
 } from '../logic';
 
-/** design/components/ConfirmSheet/spec.md: order, looks, layout and keys. */
+/** design/components/ConfirmSheet/as-built.md: order, looks, layout and keys. */
 describe('ConfirmSheet rules', () => {
   it('Keep comes first and is the one filled button; Confirm is an outline under it', () => {
     expect(CONFIRM_SHEET_ORDER).toEqual(['keep', 'confirm']);

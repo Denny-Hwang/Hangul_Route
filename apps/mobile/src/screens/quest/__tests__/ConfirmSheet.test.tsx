@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buttonsNamed, hostNodes, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
 
 /**
- * The app's one confirm (design/components/ConfirmSheet/spec.md), as the quest player's leave confirm uses it:
+ * The app's one confirm (design/components/ConfirmSheet/as-built.md), as the quest player's leave confirm uses it:
  * the app's own words in the UI language (the browser's confirm() showed OK / Cancel in the browser's language),
  * Keep playing first and focused, Escape keeps, and Tab stays on the two buttons.
  */
