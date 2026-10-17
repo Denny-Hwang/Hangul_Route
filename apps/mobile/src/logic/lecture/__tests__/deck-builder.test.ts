@@ -613,11 +613,12 @@ describe('expandDeck: stories (rule 5, D14)', () => {
       storyId: 'story:sun-moon',
       sceneId: 's1',
       narration: [{ text: 'Scene s1 with the ' }, { ko: '해', romanization: 'hae', gloss: 'sun' }, { text: '.' }],
-      korean: { ko: '해', romanization: 'hae', gloss: 'sun' },
+      // A keyword is read at the word rate, a line at the sentence rate (Read-to-me, section 3.4 amendment 2026-10-17).
+      korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' },
       caption: 'Caption s1',
       builds: ['art', 'narration', 'korean'],
     });
-    expect(stories[1]).toMatchObject({ narration: [{ text: 'Night came.' }], korean: { ko: '달이 떴다', romanization: 'dari tteotda', gloss: 'The moon rose' } });
+    expect(stories[1]).toMatchObject({ narration: [{ text: 'Night came.' }], korean: { ko: '달이 떴다', romanization: 'dari tteotda', gloss: 'The moon rose', speech: 'sentence' } });
     expect(stories[2]!.korean).toBeUndefined();
   });
 

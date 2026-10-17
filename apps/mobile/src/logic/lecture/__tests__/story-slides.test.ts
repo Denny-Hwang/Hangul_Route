@@ -106,6 +106,44 @@ describe('readToMePlan (Read-to-me on a story scene, D6; the story reader\'s voi
   });
 });
 
+describe("readToMePlan reads the scene's Korean once it shows (section 3.4 amendment 2026-10-17)", () => {
+  const base = { sound: true, canPlayKorean: true, voiceChecked: true, narrationLang: 'en-US' as const };
+  const builds: BuildName[] = ['art', 'narration', 'korean'];
+  const line = { ko: '세종대왕은 조선의 왕이었어요.', romanization: 'Sejongdaewangeun Joseonui wangieosseoyo.', gloss: 'King Sejong was a king of Joseon.', speech: 'sentence' as const };
+  const scene = { kind: 'story' as const, narration: [{ text: 'Here lived King Sejong.' }], korean: line, builds };
+  const texts = (plan: ReturnType<typeof readToMePlan>) => plan?.steps.map((s) => [s.text, s.language, s.kind]);
+
+  it('after the narration, the line in Korean at the sentence rate, from the korean build on', () => {
+    expect(texts(readToMePlan(scene, { ...base, reveal: 2 }))).toEqual([
+      ['Here lived King Sejong.', 'en-US', 'narration'],
+      ['세종대왕은 조선의 왕이었어요.', 'ko-KR', 'sentence'],
+    ]);
+    expect(readToMePlan(scene, { ...base, reveal: 2 })?.steps[1]?.source).toBe(PRESENTER_AUDIO_SOURCE);
+    // Every part when no reveal is given.
+    expect(texts(readToMePlan(scene, base))).toEqual(texts(readToMePlan(scene, { ...base, reveal: 2 })));
+  });
+
+  it('not before the korean build shows', () => {
+    expect(texts(readToMePlan(scene, { ...base, reveal: 1 }))).toEqual([['Here lived King Sejong.', 'en-US', 'narration']]);
+    expect(readToMePlan({ ...scene, narration: [{ text: ', ' }] }, { ...base, reveal: 1 })).toBeNull();
+  });
+
+  it('a keyword is read at the word rate; one the narration already says as a chip is not said twice', () => {
+    const keyword = { ko: '한자', romanization: 'hanja', gloss: 'Chinese characters', speech: 'word' as const };
+    expect(texts(readToMePlan({ ...scene, korean: keyword }, base))?.at(-1)).toEqual(['한자', 'ko-KR', 'word']);
+    const chip = { ...scene, narration: [{ text: 'They wrote ' }, { ko: '한자', romanization: 'hanja', gloss: 'Chinese characters' }], korean: keyword };
+    expect(texts(readToMePlan(chip, base))).toEqual([
+      ['They wrote ', 'en-US', 'narration'],
+      ['한자', 'ko-KR', 'word'],
+    ]);
+  });
+
+  it('with no Korean voice the English plays alone, as the story reader does; a Korean line alone still asks', () => {
+    expect(texts(readToMePlan(scene, { ...base, canPlayKorean: false }))).toEqual([['Here lived King Sejong.', 'en-US', 'narration']]);
+    expect(texts(readToMePlan({ ...scene, narration: [] }, { ...base, canPlayKorean: false }))).toEqual([['세종대왕은 조선의 왕이었어요.', 'ko-KR', 'sentence']]);
+  });
+});
+
 describe('the projected check shares the learner check rules', () => {
   it('hides the gloss of a pick-meaning or fill-word target until the answer', () => {
     expect(GLOSS_HIDDEN_KINDS).toEqual(['pick-meaning', 'fill-word']);

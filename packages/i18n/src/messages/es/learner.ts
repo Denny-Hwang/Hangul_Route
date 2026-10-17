@@ -1659,6 +1659,7 @@ export const learner = {
       noVoice: 'Aquí no hay voz coreana. ¡Dilo tú!',
       noSound: 'Esta diapositiva no tiene sonido.',
       soundFailed: 'El sonido no se reprodujo. ¡Dilo tú!',
+      deckSoundOff: 'El sonido está apagado en esta lección.',
       offline: 'Sin internet. Todo sigue funcionando.',
       update: 'Hay una actualización. Se aplica al salir.',
     },

@@ -223,21 +223,23 @@ describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendm
     expect(slideSound(quiz({ ask: 'check', text: 'What happened first?' }))).toBeUndefined();
   });
 
-  it('an order slide plays the last Korean step on screen at the reveal, at the sentence rate', () => {
+  it('an order slide plays the last Korean step on screen at the reveal, in the order drawn, at the sentence rate', () => {
     const steps = [
       { id: 'a', gloss: 'Wash hands', ko: '손 씻기', romanization: 'son ssitgi' },
       { id: 'b', gloss: 'Set the table', ko: '상 차리기', romanization: 'sang charigi' },
       { id: 'c', gloss: 'Eat together' },
     ];
-    const body: SlideBody = { kind: 'sequence', steps, shuffled: ['c', 'a', 'b'] };
+    // The order question draws b, a, c: its last Korean step on screen is a, not the story's last (b).
+    const body: SlideBody = { kind: 'sequence', steps, shuffled: ['b', 'a', 'c'] };
     const always: Slide = { ...body, key: 's/1', builds: buildsFor(body, { romanization: 'always', strokeGuide: true }) };
     const tap: Slide = { ...body, key: 's/2', builds: tapBuilds(body) };
     expect(always.builds).toEqual(['step', 'step', 'step', 'order']);
     const said = (slide: Slide, reveal?: number) => slideSound(slide, reveal)?.spoken.text;
-    expect([0, 1, 2, 3].map((r) => said(always, r))).toEqual(['손 씻기', '상 차리기', '상 차리기', '상 차리기']);
-    expect(said(always)).toBe('상 차리기');
+    expect([0, 1, 2, 3].map((r) => said(always, r))).toEqual(['손 씻기', '상 차리기', '상 차리기', '손 씻기']);
+    // The full reveal is the order question.
+    expect(said(always)).toBe('손 씻기');
     expect(tap.builds).toEqual(['step', 'step', 'step', 'rom', 'order']);
-    expect([0, 1, 4].map((r) => said(tap, r))).toEqual(['손 씻기', '상 차리기', '상 차리기']);
+    expect([0, 1, 3, 4].map((r) => said(tap, r))).toEqual(['손 씻기', '상 차리기', '상 차리기', '손 씻기']);
     expect(slideSound(always, 0)).toEqual({ spoken: { text: '손 씻기', romanization: 'son ssitgi' }, kind: 'sentence' });
     // A first step with no Korean: nothing to play until a Korean step is on screen.
     const glossFirst: SlideBody = { kind: 'sequence', steps: [steps[2]!, steps[0]!], shuffled: ['a', 'c'] };
@@ -255,7 +257,7 @@ describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendm
     expect(slideSound(first(slides, 'activity'))).toBeUndefined();
     expect(slideSound(first(slides, 'end'))).toBeUndefined();
     expect(slideSound(quiz({ ask: 'odd-one-out' }))).toBeUndefined();
-    const story: Slide = { kind: 'story', key: 'st/1', builds: ['art', 'narration'], storyId: 'story:x', sceneId: 's1', narration: [{ text: 'Once.' }], korean: { ko: '해', romanization: 'hae', gloss: 'sun' } };
+    const story: Slide = { kind: 'story', key: 'st/1', builds: ['art', 'narration'], storyId: 'story:x', sceneId: 's1', narration: [{ text: 'Once.' }], korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' } };
     expect(slideSound(story)).toBeUndefined();
     expect(slideSound(undefined)).toBeUndefined();
   });
@@ -272,10 +274,11 @@ describe('soundPress: an explicit press always answers (section 3.7 amendment 20
     [false, true, true, true, 'flash-no-sound'],
     [false, false, false, true, 'skip'],
     [false, false, true, true, 'skip'],
-    [true, true, false, false, 'flash-no-sound'],
-    [true, true, true, false, 'flash-no-sound'],
+    // A lesson set up with sound off says so, whatever the slide (it is not "this slide has no sound").
+    [true, true, false, false, 'flash-deck-sound-off'],
+    [true, true, true, false, 'flash-deck-sound-off'],
     [true, false, false, false, 'skip'],
-    [false, true, false, false, 'flash-no-sound'],
+    [false, true, false, false, 'flash-deck-sound-off'],
     [false, false, true, false, 'skip'],
   ] as const)('hasSound %s, explicit %s, muted %s, deck sound %s: %s', (hasSound, explicit, muted, deckSound, expected) => {
     expect(soundPress({ hasSound, explicit, muted, deckSound })).toBe(expected);

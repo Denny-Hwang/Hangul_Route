@@ -125,8 +125,9 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
  * the slide draws. A letter's carrier syllable, a syllable and a Match Sound prompt play at the
  * sound rate; a word card its spoken form (`spokenKo` or the word, a Discover sentence at the
  * sentence rate); a heritage card its Korean chip; a word-to-meaning question its word; a story
- * check its target word; an order slide the last Korean step on screen at `reveal` (every step
- * when `reveal` is not given). A title, a story scene (Read-to-me has its own path), an activity,
+ * check its target word; an order slide the last Korean step on screen at `reveal`, in the order
+ * drawn (the shuffled order at the order question; the full reveal when `reveal` is not given).
+ * A title, a story scene (Read-to-me has its own path, `readToMePlan`), an activity,
  * the End slide, Odd One Out (the letters are the answer), a card without Korean and a check
  * without a target play nothing.
  */
@@ -143,9 +144,11 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
     case 'quiz':
       return quizSound(slide.prompt);
     case 'sequence': {
-      // The steps on screen (as `sequenceView` counts them; the order question shows them all).
-      const count = slide.builds.slice(0, (reveal ?? slide.builds.length - 1) + 1).filter((b) => b === 'step').length;
-      const step = slide.steps.slice(0, count).filter(koStep).pop();
+      // The steps on screen, in the order drawn (`sequenceView`): the story order while they build,
+      // the shuffled order at the order question, so the sound never hints at the answer.
+      const view = sequenceView(slide, reveal ?? slide.builds.length - 1);
+      const steps = view.mode === 'order' ? view.steps : slide.steps.slice(0, view.count);
+      const step = steps.filter(koStep).pop();
       return step ? { spoken: { text: step.ko, romanization: step.romanization }, kind: 'sentence' } : undefined;
     }
     case 'title':
@@ -157,16 +160,18 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
 }
 
 /** What a Sound press, a forward `sound` build or a stage speaker does (section 3.7 amendment 2026-10-17). */
-export type SoundPress = 'play' | 'unmute-then-play' | 'flash-no-sound' | 'skip';
+export type SoundPress = 'play' | 'unmute-then-play' | 'flash-no-sound' | 'flash-deck-sound-off' | 'skip';
 
 /**
  * An explicit press (the bar's Sound, S, a stage speaker) always answers: while muted it turns the
- * device sound on and plays (the chip's Turn sound on, then the sound), and with nothing to play
- * (the slide has no sound, or the deck has sound off) it flashes "This slide has no sound.". A
- * forward `sound` build stays silent while muted (the Sound is off chip says why) and never flashes.
+ * device sound on and plays (the chip's Turn sound on, then the sound); in a deck set up with sound
+ * off it flashes "Sound is off for this lesson."; on a slide with nothing to play it flashes "This
+ * slide has no sound.". A forward `sound` build stays silent while muted (the Sound is off chip
+ * says why) and never flashes.
  */
 export function soundPress(input: { hasSound: boolean; explicit: boolean; muted: boolean; deckSound: boolean }): SoundPress {
-  if (!input.deckSound || !input.hasSound) return input.explicit ? 'flash-no-sound' : 'skip';
+  if (!input.deckSound) return input.explicit ? 'flash-deck-sound-off' : 'skip';
+  if (!input.hasSound) return input.explicit ? 'flash-no-sound' : 'skip';
   if (input.muted) return input.explicit ? 'unmute-then-play' : 'skip';
   return 'play';
 }

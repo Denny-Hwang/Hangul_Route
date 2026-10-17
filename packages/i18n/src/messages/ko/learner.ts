@@ -1597,6 +1597,7 @@ export const learner = {
       noVoice: '여기는 한국어 음성이 없어요. 직접 읽어 주세요!',
       noSound: '이 슬라이드에는 소리가 없어요.',
       soundFailed: '소리가 나지 않았어요. 직접 읽어 주세요!',
+      deckSoundOff: '이 수업에서는 소리가 꺼져 있어요.',
       offline: '오프라인이에요. 모두 그대로 돼요.',
       update: '업데이트가 준비됐어요. 나갈 때 적용돼요.',
     },

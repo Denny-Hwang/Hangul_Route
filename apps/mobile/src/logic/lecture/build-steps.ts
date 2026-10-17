@@ -98,7 +98,18 @@ export type SlideBody =
       wordArt?: string;
     }
   | { kind: 'sequence'; steps: SequenceStep[]; shuffled: string[] }
-  | { kind: 'story'; storyId: string; sceneId: string; narration: NarrationPiece[]; korean?: KoLine & { gloss: string }; caption?: string }
+  | {
+      kind: 'story';
+      storyId: string;
+      sceneId: string;
+      narration: NarrationPiece[];
+      /**
+       * The scene's Korean (its line, else its keyword). `speech`: the rate Read-to-me reads it at
+       * once its `korean` build shows (section 3.4 amendment 2026-10-17): a line is a sentence.
+       */
+      korean?: KoLine & { gloss: string; speech: 'word' | 'sentence' };
+      caption?: string;
+    }
   | {
       kind: 'quiz';
       prompt: QuizPrompt;

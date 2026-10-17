@@ -21,7 +21,7 @@ const DECK: LectureDeckInput = {
   blocks: [{ kind: 'quest', id: 'quest:stage2-life-q1' }],
 };
 
-const link = (): string => `/present#d=${encodeDeck(DECK)}`;
+const link = (deck: LectureDeckInput = DECK): string => `/present#d=${encodeDeck(deck)}`;
 
 interface Utterance {
   text: string;
@@ -35,7 +35,19 @@ interface Utterance {
   sinceKey: number;
 }
 
-type SoundWindow = Window & { __utterances?: Utterance[] };
+/** How the stand-in engine behaves in one test: no voice at all, or every utterance failing. */
+interface SpeechConfig {
+  voices?: 'none';
+  error?: string;
+}
+
+type SoundWindow = Window & { __utterances?: Utterance[]; __speechConfig?: SpeechConfig };
+
+/** Sets the engine's behaviour for the page about to load (registered after the engine, read at each call). */
+const speechConfig = (page: Page, config: SpeechConfig): Promise<void> =>
+  page.addInitScript((c) => {
+    (window as SoundWindow).__speechConfig = c;
+  }, config);
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -67,6 +79,7 @@ test.beforeEach(async ({ page }) => {
       constructor(public text: string) {}
     }
     const voices = [{ name: 'Korean South Korea', lang: 'ko-KR', voiceURI: 'Korean South Korea', localService: true, default: false }];
+    const config = (): SpeechConfig => (window as SoundWindow).__speechConfig ?? {};
     const synth = {
       speaking: false,
       pending: false,
@@ -76,6 +89,11 @@ test.beforeEach(async ({ page }) => {
         // Chrome on Android: no speech before the page has had a user activation.
         if (!navigator.userActivation.hasBeenActive) {
           setTimeout(() => u.onerror?.({ error: 'not-allowed' }), 0);
+          return;
+        }
+        const error = config().error;
+        if (error !== undefined) {
+          setTimeout(() => u.onerror?.({ error }), 50);
           return;
         }
         synth.speaking = true;
@@ -88,7 +106,7 @@ test.beforeEach(async ({ page }) => {
       cancel(): void {
         synth.speaking = false;
       },
-      getVoices: () => voices,
+      getVoices: () => (config().voices === 'none' ? [] : voices),
       addEventListener: () => undefined,
       removeEventListener: () => undefined,
     };
@@ -175,12 +193,30 @@ async function nextOnBarUntilWord(page: Page, ko: string): Promise<void> {
   throw new Error(`never reached the word ${ko}`);
 }
 
-async function startOnPhone(page: Page): Promise<void> {
-  await page.goto(link());
+async function startOnPhone(page: Page, deck: LectureDeckInput = DECK): Promise<void> {
+  await page.goto(link(deck));
   const start = page.getByTestId('presenter-start-button');
   await expect(start).toBeEnabled({ timeout: 10_000 });
   await start.tap();
   await expect(page.getByTestId('presenter-stage')).toBeVisible();
+}
+
+/** Start at 1280 x 720 (a click), then ArrowRight until the word card reads `ko`. */
+async function startDocked(page: Page, deck: LectureDeckInput = DECK): Promise<void> {
+  await page.goto(link(deck));
+  const start = page.getByTestId('presenter-start-button');
+  await expect(start).toBeEnabled({ timeout: 10_000 });
+  await start.click();
+  await expect(page.getByTestId('presenter-stage')).toBeVisible();
+}
+
+async function arrowUntilWord(page: Page, ko: string): Promise<void> {
+  for (let i = 0; i < 40; i++) {
+    const word = page.getByTestId('presenter-word');
+    if ((await word.count()) > 0 && (await word.textContent())?.trim() === ko) return;
+    await page.keyboard.press('ArrowRight');
+  }
+  throw new Error(`never reached the word ${ko}`);
 }
 
 test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
@@ -213,15 +249,19 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
       // Every build revealed by stage taps, so all of the slide's Korean is on the stage.
       for (let i = 0; i < 10 && (await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal'; i++) await tapStage(page);
       const before = (await spoken(page)).length;
+      const flash = page.getByTestId('presenter-no-sound-flash');
+      // A flash belongs to its slide: none is left over from the slide before.
+      await expect(flash).toHaveCount(0);
       await showPhoneBar(page);
       await page.getByTestId('presenter-sound').tap();
-      const flash = page.getByTestId('presenter-no-sound-flash');
       await expect.poll(async () => (await spoken(page)).length > before || (await flash.count()) > 0).toBe(true);
       const said = (await spoken(page)).slice(before);
       if (said.length === 0) {
         await expect(flash).toBeVisible();
         await expect(flash).toHaveText('This slide has no sound.');
-        await expect(flash).toHaveAttribute('role', 'status');
+        // One polite live region, there from the start, says it; the pill itself is not read twice.
+        await expect(page.getByTestId('presenter-sound-live')).toHaveText('This slide has no sound.');
+        await expect(flash).toHaveAttribute('aria-hidden', 'true');
         flashed.push(await counter(page));
         if (flashed.length === 1) await shot(page, 'presenter-no-sound-flash-915x412');
       } else {
@@ -233,6 +273,32 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
     }
     // The title and the End slide have nothing of their own to say; every word, question and card does.
     expect(flashed).toEqual([`1 / ${total}`, `${total} / ${total}`]);
+  });
+
+  test('no Korean voice: a forward sound build on a letter flashes the no-voice words', async ({ page }) => {
+    await speechConfig(page, { voices: 'none' });
+    await startOnPhone(page, { ...DECK, id: 'lecture:sound019', blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }] });
+    const flash = page.getByTestId('presenter-no-voice-flash');
+    await tapStage(page);
+    await expect(page.getByTestId('presenter-glyph')).toBeVisible();
+    // ko, then the stroke guide, then the sound build.
+    await tapStage(page);
+    await expect(flash).toHaveCount(0);
+    await tapStage(page);
+    await expect(flash).toHaveText('No Korean voice here. You say it!');
+    await expect(page.getByTestId('presenter-sound-live')).toHaveText('No Korean voice here. You say it!');
+    expect(await spoken(page)).toEqual([]);
+  });
+
+  test('no Korean voice: stepping through word cards (no sound build) flashes nothing', async ({ page }) => {
+    await speechConfig(page, { voices: 'none' });
+    await startOnPhone(page);
+    const flash = page.getByTestId('presenter-no-voice-flash');
+    for (let i = 0; i < 6; i++) {
+      await tapStage(page);
+      await expect(flash).toHaveCount(0);
+    }
+    await expect(page.getByTestId('presenter-word')).toBeVisible();
   });
 
   test('muted on this device: Sound turns sound on and says the word once', async ({ page }) => {
@@ -288,6 +354,72 @@ test.describe('Sound at 1280 x 720 with the S key', () => {
     const [said] = (await spoken(page)).slice(before);
     expect(said).toMatchObject({ text: '김밥', lang: 'ko-KR', active: true });
     expect(said!.sinceKey).toBeLessThan(1000);
+  });
+
+  test('no Korean voice: S on 김밥 flashes the no-voice words and says nothing', async ({ page }) => {
+    await speechConfig(page, { voices: 'none' });
+    await startDocked(page);
+    await arrowUntilWord(page, '김밥');
+    await page.keyboard.press('s');
+    const flash = page.getByTestId('presenter-no-voice-flash');
+    await expect(flash).toHaveText('No Korean voice here. You say it!');
+    await expect(page.getByTestId('presenter-sound-live')).toHaveText('No Korean voice here. You say it!');
+    expect(await spoken(page)).toEqual([]);
+    await shot(page, 'presenter-no-voice-flash-1280x720');
+  });
+
+  test('a voice that fails: S on 김밥 flashes "The sound did not play. You say it!"', async ({ page }) => {
+    await speechConfig(page, { error: 'synthesis-failed' });
+    await startDocked(page);
+    await arrowUntilWord(page, '김밥');
+    await page.keyboard.press('s');
+    const flash = page.getByTestId('presenter-sound-failed-flash');
+    await expect(flash).toHaveText('The sound did not play. You say it!');
+    await expect(page.getByTestId('presenter-sound-live')).toHaveText('The sound did not play. You say it!');
+    // It was asked for once, in Korean, and failed.
+    expect(await spoken(page)).toMatchObject([{ text: '김밥', lang: 'ko-KR' }]);
+    await shot(page, 'presenter-sound-failed-flash-1280x720');
+  });
+
+  test('a lesson set up with sound off: S on 김밥 says so and plays nothing', async ({ page }) => {
+    await startDocked(page, { ...DECK, id: 'lecture:sound018', options: { sound: false } });
+    await arrowUntilWord(page, '김밥');
+    await page.keyboard.press('s');
+    const flash = page.getByTestId('presenter-deck-sound-off-flash');
+    await expect(flash).toHaveText('Sound is off for this lesson.');
+    await expect(page.getByTestId('presenter-no-sound-flash')).toHaveCount(0);
+    expect(await spoken(page)).toEqual([]);
+  });
+
+  test('a flash belongs to its slide: S on the title, then the next slide at once, leaves no flash', async ({ page }) => {
+    await startDocked(page);
+    await expect(page.getByTestId('presenter-counter')).toHaveText(/^1 \//);
+    await page.keyboard.press('s');
+    const flash = page.getByTestId('presenter-no-sound-flash');
+    await expect(flash).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-counter')).toHaveText(/^2 \//);
+    await expect(flash).toHaveCount(0);
+    await expect(page.getByTestId('presenter-sound-live')).toHaveText('');
+  });
+
+  test("a story scene: S reads the narration, then the scene's Korean once it shows", async ({ page }) => {
+    await startDocked(page, { ...DECK, id: 'lecture:sound020', title: 'King Sejong', blocks: [{ kind: 'story', storyId: 'story:sejong-new-letters' }] });
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-story')).toBeVisible();
+    // The narration build: Read-to-me says the narration only.
+    await page.keyboard.press('ArrowRight');
+    let before = (await spoken(page)).length;
+    await page.keyboard.press('s');
+    await expect.poll(async () => (await spoken(page)).slice(before).map((u) => u.lang)).toEqual(['en-US']);
+    // The korean build: the narration, then the Korean drawn on the stage, in Korean.
+    await page.keyboard.press('ArrowRight');
+    // The scene's keyword, with its romanization under it.
+    await expect(page.getByTestId('presenter-story-korean-line')).toContainText('세종대왕');
+    before = (await spoken(page)).length;
+    await page.keyboard.press('s');
+    await expect.poll(async () => (await spoken(page)).slice(before).map((u) => u.lang), { timeout: 5_000 }).toEqual(['en-US', 'ko-KR']);
+    expect((await spoken(page)).at(-1)).toMatchObject({ text: '세종대왕', lang: 'ko-KR' });
   });
 
   test('S on the title slide flashes "This slide has no sound." over the docked stage', async ({ page }) => {

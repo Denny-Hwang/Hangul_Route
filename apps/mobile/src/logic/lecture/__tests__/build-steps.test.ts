@@ -72,7 +72,7 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
       storyId: 'story:x',
       sceneId: 's1',
       narration: [{ text: 'Once.' }],
-      korean: { ko: '해', romanization: 'hae', gloss: 'sun' },
+      korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' },
     };
     expect(buildsFor(body, ALWAYS)).toEqual(['art', 'narration', 'korean']);
     expect(buildsFor(body, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
@@ -130,6 +130,6 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
     };
     expect(buildsFor(body, TAP)).toEqual(['art', 'narration', 'rom']);
     expect(buildsFor(body, ALWAYS)).toEqual(['art', 'narration']);
-    expect(buildsFor({ ...body, korean: { ko: '해', romanization: 'hae', gloss: 'sun' } }, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
+    expect(buildsFor({ ...body, korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' } }, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
   });
 });

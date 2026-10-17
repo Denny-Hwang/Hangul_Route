@@ -595,7 +595,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     if (ownMinutes) minutes += found.minutes;
     tier.scenes.forEach((scene, i) => {
       const ko = sceneKo(scene);
-      const korean = ko ? { ko: ko.ko, romanization: ko.romanization, gloss: ko.en } : undefined;
+      // A scene's line is read at the sentence rate, its keyword at the word rate (Read-to-me).
+      const korean = ko ? { ko: ko.ko, romanization: ko.romanization, gloss: ko.en, speech: scene.line ? ('sentence' as const) : ('word' as const) } : undefined;
       push(`${key}/${scene.id}`, {
         kind: 'story',
         storyId,

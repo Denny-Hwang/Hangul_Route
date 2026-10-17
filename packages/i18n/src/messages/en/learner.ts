@@ -2145,6 +2145,8 @@ export const learner = {
       /** Flashed at the top of the stage after a Sound press (spec section 3.7 amendment 2026-10-17). */
       noSound: 'This slide has no sound.',
       soundFailed: 'The sound did not play. You say it!',
+      /** A Sound press in a lesson set up with sound off (`options.sound: false`). */
+      deckSoundOff: 'Sound is off for this lesson.',
       offline: 'Offline. Everything still works.',
       update: 'Update ready. It applies when you exit.',
     },

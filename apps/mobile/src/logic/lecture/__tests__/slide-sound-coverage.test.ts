@@ -1,12 +1,13 @@
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
-import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
+import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { lectureBundle } from '../content';
 import { expandDeck, type Slide } from '../deck-builder';
 import { slideSound } from '../slide-view';
+import { readToMePlan } from '../story-slides';
 
 /**
  * Sound plays the Korean on every slide that shows it (F-TCH-004 section 3.4 amendment
@@ -36,12 +37,28 @@ const drawsHangul = (slide: Slide): boolean => strings(slide).some((s) => [...s]
 
 /**
  * The slides with nothing of their own to play: a title, a story scene (Read-to-me reads it on its
- * own path), an activity, the End slide (a summary of many words), Odd One Out and a story check
- * with no target word (their only Korean is in the options, so playing it would say the answer).
+ * own path, checked below), an activity, the End slide (a summary of many words), Odd One Out and a
+ * story check with no target word (their only Korean is in the options, so playing it would say
+ * the answer).
  */
 function silentByDesign(slide: Slide): boolean {
   if (slide.kind === 'title' || slide.kind === 'story' || slide.kind === 'activity' || slide.kind === 'end') return true;
   return slide.kind === 'quiz' && (slide.prompt.ask === 'odd-one-out' || (slide.prompt.ask === 'check' && slide.prompt.target === undefined));
+}
+
+/** Every `spokenKo` the shipped content gives a Korean text, by that text (any object with both fields). */
+function spokenKoByKo(...roots: unknown[]): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>();
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) value.forEach(walk);
+    else if (value !== null && typeof value === 'object') {
+      const { ko, spokenKo } = value as { ko?: unknown; spokenKo?: unknown };
+      if (typeof ko === 'string' && typeof spokenKo === 'string') out.set(ko, (out.get(ko) ?? new Set()).add(spokenKo));
+      Object.values(value).forEach(walk);
+    }
+  };
+  roots.forEach(walk);
+  return out;
 }
 
 const deck = (blocks: LectureBlock[]) =>
@@ -77,14 +94,27 @@ describe('Sound plays the Korean on every slide that shows it (F-TCH-004 section
   it('every word card plays Korean it holds: its own word, or the spoken form the content gives it', () => {
     const words = everySlide(true).filter((s): s is Extract<Slide, { kind: 'vocab' }> => s.kind === 'vocab');
     expect(words.length).toBeGreaterThan(100);
+    const spokenKo = spokenKoByKo(questsAll, episodesAll, VOCAB_ITEMS);
     for (const word of words) {
       const sound = slideSound(word);
       expect(sound?.spoken.text, word.key).toBe(word.spoken.text);
       expect(sound?.kind, word.key).toBe(word.speech);
-      // A shipped word card has no `spokenKo` of its own yet, so Sound says the word on the card.
-      expect(word.spoken.text, word.key).toBe(word.word.ko);
+      // The word on the card, or a `spokenKo` its source gives that word (F-AUDIO-004).
+      expect([word.word.ko, ...(spokenKo.get(word.word.ko) ?? [])], word.key).toContain(word.spoken.text);
       expect(word.spoken.romanization, word.key).toBe(word.word.romanization);
     }
+  });
+
+  it("Read-to-me on every story scene says every piece of Korean the scene draws, the scene's line or keyword included", () => {
+    const scenes = everySlide(true).filter((s): s is Extract<Slide, { kind: 'story' }> => s.kind === 'story');
+    expect(scenes.filter((s) => s.korean !== undefined).length).toBeGreaterThan(100);
+    const unsaid = scenes.flatMap((scene) => {
+      const plan = readToMePlan(scene, { sound: true, canPlayKorean: true, voiceChecked: true, narrationLang: 'en-US', reveal: scene.builds.length - 1 });
+      const said = new Set(plan?.steps.filter((step) => step.language === 'ko-KR').map((step) => step.text));
+      const drawn = [...scene.narration.flatMap((piece) => ('ko' in piece ? [piece.ko] : [])), ...(scene.korean ? [scene.korean.ko] : [])];
+      return drawn.filter((ko) => !said.has(ko)).map((ko) => `${scene.key}: ${ko}`);
+    });
+    expect(unsaid).toEqual([]);
   });
 
   it('only a letter, a syllable and a Match Sound question play at the sound rate', () => {

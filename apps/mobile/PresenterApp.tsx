@@ -351,6 +351,12 @@ function Presenter(): React.ReactElement {
   // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6);
   // on both bars an explicit Sound press that has nothing to play, or does not play, says so there (section 3.7).
   const [soundFlash, setSoundFlash] = useState<{ key: SoundFlashKey; at: number } | null>(null);
+  // The flash's own time is kept here, so a remount (a turn upright and back, a new lesson) never shows an old one again.
+  useEffect(() => {
+    if (soundFlash === null) return undefined;
+    const timer = setTimeout(() => setSoundFlash(null), Math.max(0, presenter.autoHideMs - (Date.now() - soundFlash.at)));
+    return () => clearTimeout(timer);
+  }, [soundFlash]);
   // The lesson began: its first slide was shown (Recent written, lecture.start sent).
   const begun = useRef(false);
   // After a browser back in the lesson (section 3.5 "History" rule 4) the lesson's entry is pushed
@@ -431,30 +437,36 @@ function Presenter(): React.ReactElement {
     (slide: Slide | undefined, { explicit }: { explicit: boolean }) => {
       if (!slide || !deck) return;
       const flash = (key: SoundFlashKey): void => setSoundFlash({ key, at: Date.now() });
-      const sound = slide.kind === 'story' ? undefined : slideSound(slide, stateRef.current?.reveal);
-      const press = soundPress({ hasSound: slide.kind === 'story' || sound !== undefined, explicit, muted: useAudioStore.getState().muted, deckSound: deck.options.sound });
+      const reveal = stateRef.current?.reveal;
+      // Read-to-me (S or Sound) on a story scene: the narration in its own voice, keyword chips and,
+      // once shown, the scene's Korean in Korean, with the story reader's voice rules; the text is on
+      // the slide either way (D6).
+      const story =
+        slide.kind === 'story'
+          ? readToMePlan(slide, { sound: true, canPlayKorean: canPlay, voiceChecked, narrationLang: stories.scene(slide.storyId, slide.sceneId)?.narrationLang ?? 'en-US', ...(reveal !== undefined ? { reveal } : {}) })
+          : null;
+      const sound = slide.kind === 'story' ? undefined : slideSound(slide, reveal);
+      const press = soundPress({ hasSound: story !== null || sound !== undefined, explicit, muted: useAudioStore.getState().muted, deckSound: deck.options.sound });
       if (press === 'skip') return;
-      if (press === 'flash-no-sound') {
-        flash('noSound');
+      if (press === 'flash-no-sound' || press === 'flash-deck-sound-off') {
+        flash(press === 'flash-no-sound' ? 'noSound' : 'deckSoundOff');
         return;
       }
       // The device-wide mute the learner app shares: the same action as the chip's Turn sound on.
       if (press === 'unmute-then-play') useAudioStore.getState().setMuted(false, 'fallback_panel');
-      if (slide.kind === 'story') {
-        // Read-to-me (S or Sound): the narration in its own voice, keyword chips in Korean, with the
-        // story reader's voice rules; the text is on the slide either way (D6).
-        const narrationLang = stories.scene(slide.storyId, slide.sceneId)?.narrationLang ?? 'en-US';
-        const plan = readToMePlan(slide, { sound: deck.options.sound, canPlayKorean: canPlay, voiceChecked, narrationLang });
-        if (plan) void narrator.play(plan.steps, plan.options);
+      if (story) {
+        void narrator.play(story.steps, story.options);
         return;
       }
       if (!sound) return;
       const at = Date.now();
+      const slideIdx = stateRef.current?.slideIdx;
       void playPrompt({ ...soundPrompt(sound), source: 'presenter' }).then((result) => {
         const failure = useAudioStore.getState().lastFailure;
         const reason = failure !== null && failure.at >= at ? failure.reason : null;
         setSoundBlocked(result !== 'played' && reason === 'blocked');
-        const shown = explicit ? soundFlashFor(result, reason) : null;
+        // A result that comes back after the slide changed (or the lesson ended) flashes nothing there.
+        const shown = explicit && stateRef.current?.slideIdx === slideIdx ? soundFlashFor(result, reason) : null;
         if (shown !== null) flash(shown === 'no-voice' ? 'noVoice' : 'soundFailed');
       });
     },
@@ -495,6 +507,8 @@ function Presenter(): React.ReactElement {
       setStrokePlay((current) => nextStrokePlay(current, { slideKey, play: playStroke }));
       const sound = revealedBuild === 'sound' || effect?.type === 'play-sound';
       const explicit = effect?.type === 'play-sound';
+      // A flash belongs to its slide: a step to another slide takes it away.
+      if (state.slideIdx !== before.slideIdx) setSoundFlash(null);
       if (sound) playSound(slides[state.slideIdx], { explicit });
       // A press answers from its own result (on both bars); a forward sound build flashes here, on a phone.
       if (sound && !explicit && phoneRef.current && !canPlay && slideSound(slides[state.slideIdx], state.reveal) !== undefined) {
@@ -556,6 +570,7 @@ function Presenter(): React.ReactElement {
     begun.current = false;
     setMoreOpen(false);
     setEndHint(false);
+    setSoundFlash(null);
     setPhase({ kind: 'running', deck: phase.deck, source: phase.source, from: phase });
     const first = slides[state.slideIdx]!;
     setStrokePlay(first.builds[0] === 'stroke' ? nextStrokePlay(null, { slideKey: first.key, play: true }) : null);
@@ -602,6 +617,7 @@ function Presenter(): React.ReactElement {
     setRomanization(null);
     setMoreOpen(false);
     setEndHint(false);
+    setSoundFlash(null);
     repush.current = false;
     void returnToPresenterHome();
     setHomeFocus(true);
@@ -634,6 +650,7 @@ function Presenter(): React.ReactElement {
       stateRef.current = null;
       setPstate(null);
       setMoreOpen(false);
+      setSoundFlash(null);
       releaseDevice();
       if (!fromPop) void stepBackPresenter();
       setPhase(phase.from);
@@ -1004,6 +1021,12 @@ function Presenter(): React.ReactElement {
         )}
         {scale.portrait && page === null ? <StageHint text={state.portrait} /> : null}
         {endHint && page === null ? <StageHint text={messages.learner.presenter.slide.end.exitHint} bottom={!phone} /> : null}
+        {/* One polite live region, mounted with the stage, says the flash: a region that arrives already filled is often not read. */}
+        {page === null ? (
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-sound-live" aria-live="polite" accessibilityLiveRegion="polite" style={VISUALLY_HIDDEN}>
+            {soundFlash !== null ? messages.learner.presenter.bar[soundFlash.key] : ''}
+          </Text>
+        ) : null}
         {page === null && soundFlash !== null ? (
           <SoundFlash key={soundFlash.at} text={messages.learner.presenter.bar[soundFlash.key]} testID={SOUND_FLASH_TEST_IDS[soundFlash.key]} />
         ) : null}
@@ -1100,33 +1123,32 @@ function Presenter(): React.ReactElement {
   );
 }
 
-/** The three sound flashes (section 3.7 amendment 2026-10-17), keyed by their `learner.presenter.bar` message. */
-type SoundFlashKey = 'noVoice' | 'noSound' | 'soundFailed';
+/** The four sound flashes (section 3.7 amendment 2026-10-17), keyed by their `learner.presenter.bar` message. */
+type SoundFlashKey = 'noVoice' | 'noSound' | 'soundFailed' | 'deckSoundOff';
 const SOUND_FLASH_TEST_IDS: Readonly<Record<SoundFlashKey, string>> = {
   noVoice: 'presenter-no-voice-flash',
   noSound: 'presenter-no-sound-flash',
   soundFailed: 'presenter-sound-failed-flash',
+  deckSoundOff: 'presenter-deck-sound-off-flash',
 };
+
+/** Read by assistive tech, not drawn (a 1 px clipped box, as the stage's own live line). */
+const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0 };
 
 /**
  * A sound flash at the top of the stage, for `presenter.autoHideMs`: the no-voice chip when a sound
  * build cannot play on a phone (F-TCH-004 section 3.6; the bar, where the chip lives, is hidden),
- * and on both bars after a Sound press with nothing to play or a play that failed (section 3.7).
- * Status only: it takes no touch.
+ * and on both bars after a Sound press with nothing to play, in a lesson with sound off, or a play
+ * that failed (section 3.7). Drawn only (the `presenter-sound-live` region says it); it takes no touch.
  */
-function SoundFlash({ text, testID }: { text: string; testID: string }): React.ReactElement | null {
+function SoundFlash({ text, testID }: { text: string; testID: string }): React.ReactElement {
   // The bar's no-voice chip, shown over the stage: chrome, so it follows the chosen text size.
   const textScale = useTypeScale();
-  const [on, setOn] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => setOn(false), presenter.autoHideMs);
-    return () => clearTimeout(timer);
-  }, []);
-  if (!on) return null;
+  // The presenter ends it after `presenter.autoHideMs`; the live region beside it says it, so the pill is not read twice.
   return (
     <View
       testID={testID}
-      role="status"
+      aria-hidden
       pointerEvents="none"
       style={{
         position: 'absolute',
