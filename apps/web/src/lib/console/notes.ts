@@ -21,6 +21,7 @@ import {
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { NOTE_TEXT_MAX, checkNoteText, normalizeNoteText, type NoteTextProblem, type NoteTextResult } from '@hangul-route/i18n/note-text';
+import { catalogTitle } from '@/data/catalog';
 import type { ConsoleApiOptions } from './api';
 import type { SpaceCoverage } from './curriculum';
 
@@ -248,9 +249,10 @@ function labelLine(label: FamilyLabelId | null | undefined, locale: UiLocale): s
   return label !== null && label !== undefined && Object.prototype.hasOwnProperty.call(labels, label) ? labels[label] : labels.family;
 }
 
-function questTitle(questId: string | null | undefined, catalog: Catalog): string | null {
-  if (!questId) return null;
-  return catalog.quests.find((q) => q.id === questId)?.title ?? null;
+/** A suggested quest's title in the console language (owner report 2026-10-16), or null for none or an id the catalogue does not hold. */
+function questTitle(questId: string | null | undefined, catalog: Catalog, locale: UiLocale): string | null {
+  if (!questId || !catalog.quests.some((q) => q.id === questId)) return null;
+  return catalogTitle(questId, locale, catalog);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -393,7 +395,7 @@ export function composerCheck(input: ComposerInput, locale: UiLocale = DEFAULT_L
   const text = textProblem(input.text, locale);
   const textError = text.ok ? null : text.message;
   const questNeeded = input.presetId !== null && NOTE_PRESETS_NEED_SUGGEST.has(input.presetId) && input.questId === null;
-  const questOk = input.questId === null || questTitle(input.questId, catalog) !== null;
+  const questOk = input.questId === null || questTitle(input.questId, catalog, locale) !== null;
   const presetOk = input.presetId !== null && allowedFor(input.presetId, side === 'family' ? 'family' : 'teacher');
   const hasTarget = input.to.kind === 'everyone' || input.to.ids.length > 0;
   if (!text.ok || questNeeded || !questOk || !presetOk || !hasTarget || input.presetId === null) {
@@ -432,7 +434,7 @@ export function notePreview(
   const m = getMessages(locale);
   const sender = sideOf(input.spaceKind) === 'family' ? labelLine(input.label, locale) : m.common.notes.teacherLabel(input.spaceName);
   const words = normalizeNoteText(input.text);
-  const title = questTitle(input.questId, catalog);
+  const title = questTitle(input.questId, catalog, locale);
   return {
     preset: input.presetId === null ? null : m.common.notes.presets[input.presetId],
     text: words === '' ? null : words,
@@ -549,7 +551,7 @@ export function sentRowView(row: SentNoteRow, kind: SpaceKind, locale: UiLocale 
     to: row.to === 'everyone' ? notes.sent.to.everyone[side](row.size) : notes.sent.to.learner(row.displayName),
     preset: presetLine(row.presetId, locale),
     text: row.text,
-    quest: questTitle(row.suggest?.id, catalog),
+    quest: questTitle(row.suggest?.id, catalog, locale),
     status: statusText(row.status, side, locale),
     reaction: row.to === 'learner' ? reactionLine(row.reaction, locale) : null,
     signed: side === 'family' && row.label !== null ? notes.sent.signed(labelLine(row.label, locale)) : null,
@@ -596,7 +598,7 @@ export function receivedRowView(row: OversightNote, locale: UiLocale = DEFAULT_L
     sentBy,
     preset: presetLine(row.presetId, locale),
     text: row.text,
-    quest: questTitle(row.suggest?.id, catalog),
+    quest: questTitle(row.suggest?.id, catalog, locale),
     status: receivedStatus(row, locale),
     reaction: reactionLine(row.reaction, locale),
     canHide: live,

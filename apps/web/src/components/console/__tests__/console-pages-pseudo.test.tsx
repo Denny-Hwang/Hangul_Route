@@ -1,8 +1,8 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import { builderEpisodes, questsOf } from '@/data/catalog';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { expectAllPseudo } from './pseudo-text';
+import { STAGE1_TITLES } from './stage1-catalog';
 // The pages are imported here, once, not inside each test: a console page pulls in the dictionaries, the catalog and
 // the console parts, and inside a test body that load counted against the 5 s test timeout on a busy CI runner. The
 // mocks above are hoisted above these imports, and the pages read the env flags when they render, not when they load.
@@ -131,7 +131,7 @@ describe('console pages render only dictionary text (en-XA)', () => {
     const html = render(planPage);
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
     expect(html).toContain('type="date"');
-    expectAllPseudo(html, builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]));
+    expectAllPseudo(html, [...STAGE1_TITLES]);
   });
 
   it('billing, before the summary loads (F-BILL-002 B-8a: the h1 over the busy outlines)', () => {
