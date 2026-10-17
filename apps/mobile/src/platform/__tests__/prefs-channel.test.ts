@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as native from '../prefs-channel';
-import { postDeviceSettings, subscribeDeviceSettings } from '../prefs-channel.web';
+import { createPrefsHub, postDeviceSettings, subscribeDeviceSettings } from '../prefs-channel.web';
 
 /**
  * Cross-tab display record changes (owner items 6 and 7): BroadcastChannel('hr-prefs') carries a
  * record one tab wrote to every other tab of the origin, and a page re-reads the record on
- * visibilitychange (to visible) and pageshow.
+ * visibilitychange (to visible) and pageshow. A tab posts and listens on one channel instance, so
+ * it never receives its own writes.
  */
 class FakeChannel {
   static all: FakeChannel[] = [];
@@ -22,6 +23,8 @@ class FakeChannel {
     this.closed = true;
   }
 }
+
+const message = (settings: Record<string, unknown>) => ({ ns: 'hr-prefs', v: 1, type: 'device-settings', settings });
 
 function target(): { add: ReturnType<typeof vi.fn>; remove: ReturnType<typeof vi.fn>; fire: (type: string) => void; visibilityState?: string } {
   const listeners = new Map<string, () => void>();
@@ -40,7 +43,7 @@ function env(over: { channel?: () => FakeChannel | null; visibility?: string } =
     win,
     doc,
     env: {
-      channel: over.channel ?? (() => new FakeChannel('hr-prefs')),
+      hub: createPrefsHub(over.channel ?? (() => new FakeChannel('hr-prefs'))),
       win: { addEventListener: win.add, removeEventListener: win.remove },
       doc: {
         get visibilityState() {
@@ -54,14 +57,15 @@ function env(over: { channel?: () => FakeChannel | null; visibility?: string } =
 }
 
 describe('postDeviceSettings (web)', () => {
-  it('posts the record as a v1 message on hr-prefs and closes the channel', () => {
+  it('posts the record as a v1 message on hr-prefs, on the tab\'s one channel', () => {
     FakeChannel.all = [];
     const { env: e } = env();
     postDeviceSettings({ uiLocale: 'ko', textSize: 'large' }, e);
+    postDeviceSettings({ textSize: 'larger' }, e);
+    expect(FakeChannel.all).toHaveLength(1);
     const [channel] = FakeChannel.all;
     expect(channel?.name).toBe('hr-prefs');
-    expect(channel?.posted).toEqual([{ v: 1, kind: 'device-settings', value: { uiLocale: 'ko', textSize: 'large' } }]);
-    expect(channel?.closed).toBe(true);
+    expect(channel?.posted).toEqual([message({ uiLocale: 'ko', textSize: 'large' }), message({ textSize: 'larger' })]);
   });
 
   it('no channel (an old browser) or a channel that throws loses only the live update', () => {
@@ -70,13 +74,20 @@ describe('postDeviceSettings (web)', () => {
     broken.postMessage = () => {
       throw new Error('closed');
     };
-    broken.close = () => {
-      throw new Error('gone');
-    };
     expect(() => postDeviceSettings({ uiLocale: 'ko' }, env({ channel: () => broken }).env)).not.toThrow();
+    expect(() =>
+      postDeviceSettings(
+        { uiLocale: 'ko' },
+        env({
+          channel: () => {
+            throw new Error('blocked');
+          },
+        }).env,
+      ),
+    ).not.toThrow();
   });
 
-  it('reads the browser by default, and a constructor that throws counts as no channel', () => {
+  it('reads the browser by default: one channel for the tab, posted and listened on', () => {
     const made: FakeChannel[] = [];
     vi.stubGlobal(
       'BroadcastChannel',
@@ -88,14 +99,11 @@ describe('postDeviceSettings (web)', () => {
       },
     );
     try {
+      const stop = subscribeDeviceSettings(vi.fn(), vi.fn());
       postDeviceSettings({ textSize: 'larger' });
-      expect(made[0]?.posted).toEqual([{ v: 1, kind: 'device-settings', value: { textSize: 'larger' } }]);
-      vi.stubGlobal('BroadcastChannel', function Throwing() {
-        throw new Error('blocked');
-      });
-      expect(() => postDeviceSettings({ textSize: 'larger' })).not.toThrow();
-      vi.stubGlobal('BroadcastChannel', undefined);
-      expect(() => postDeviceSettings({ textSize: 'larger' })).not.toThrow();
+      expect(made).toHaveLength(1);
+      expect(made[0]?.posted).toEqual([message({ textSize: 'larger' })]);
+      stop();
     } finally {
       vi.unstubAllGlobals();
     }
@@ -103,16 +111,42 @@ describe('postDeviceSettings (web)', () => {
 });
 
 describe('subscribeDeviceSettings (web)', () => {
-  it('hands on a valid record another tab posted and drops anything else', () => {
+  it('hands on a valid record another tab posted and drops anything else (the message is strict)', () => {
     FakeChannel.all = [];
     const onRecord = vi.fn();
     const { env: e } = env();
     subscribeDeviceSettings(onRecord, vi.fn(), e);
     const channel = FakeChannel.all[0]!;
-    channel.onmessage?.({ data: { v: 1, kind: 'device-settings', value: { uiLocale: 'es' } } });
-    channel.onmessage?.({ data: { v: 1, kind: 'device-settings', value: { uiLocale: 'fr' } } });
+    channel.onmessage?.({ data: message({ uiLocale: 'es' }) });
+    channel.onmessage?.({ data: message({ uiLocale: 'fr', textSize: 'large' }) });
+    channel.onmessage?.({ data: { ...message({ uiLocale: 'ko' }), from: 'x' } });
+    channel.onmessage?.({ data: { v: 1, kind: 'device-settings', value: { uiLocale: 'ko' } } });
     channel.onmessage?.({ data: 'hello' });
-    expect(onRecord.mock.calls).toEqual([[{ uiLocale: 'es' }]]);
+    expect(onRecord.mock.calls).toEqual([[{ uiLocale: 'es' }], [{ textSize: 'large' }]]);
+  });
+
+  it('with real BroadcastChannels: another tab receives the write, the writing tab does not', async () => {
+    const Native = (globalThis as unknown as { BroadcastChannel?: new (n: string) => FakeChannel }).BroadcastChannel;
+    expect(typeof Native).toBe('function');
+    const opened: FakeChannel[] = [];
+    const open = (): FakeChannel => {
+      const c = new Native!('hr-prefs');
+      opened.push(c);
+      return c;
+    };
+    const tabA = { hub: createPrefsHub(open), win: null, doc: null };
+    const tabB = { hub: createPrefsHub(open), win: null, doc: null };
+    const onA = vi.fn();
+    const onB = vi.fn();
+    const stopA = subscribeDeviceSettings(onA, vi.fn(), tabA);
+    const stopB = subscribeDeviceSettings(onB, vi.fn(), tabB);
+    postDeviceSettings({ uiLocale: 'ko' }, tabA);
+    await new Promise((r) => setTimeout(r, 30));
+    expect(onB.mock.calls).toEqual([[{ uiLocale: 'ko' }]]);
+    expect(onA).not.toHaveBeenCalled();
+    stopA();
+    stopB();
+    for (const c of opened) c.close();
   });
 
   it('re-reads when the page comes back to the front or is restored, not when it goes to the back', () => {
@@ -127,49 +161,32 @@ describe('subscribeDeviceSettings (web)', () => {
     expect(onReturn).toHaveBeenCalledTimes(2);
   });
 
-  it('the unsubscribe closes the channel and removes both listeners', () => {
+  it('the unsubscribe stops the listener and removes both page listeners', () => {
     FakeChannel.all = [];
     const t = env();
-    const stop = subscribeDeviceSettings(vi.fn(), vi.fn(), t.env);
+    const onRecord = vi.fn();
+    const stop = subscribeDeviceSettings(onRecord, vi.fn(), t.env);
     stop();
-    expect(FakeChannel.all[0]?.closed).toBe(true);
-    expect(FakeChannel.all[0]?.onmessage).toBeNull();
+    FakeChannel.all[0]?.onmessage?.({ data: message({ uiLocale: 'es' }) });
+    expect(onRecord).not.toHaveBeenCalled();
     expect(t.doc.remove).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
     expect(t.win.remove).toHaveBeenCalledWith('pageshow', expect.any(Function));
   });
 
   it('without a channel or a document it still listens to what there is and never throws', () => {
     const onReturn = vi.fn();
-    const stop = subscribeDeviceSettings(vi.fn(), onReturn, { channel: () => null, win: null, doc: null });
+    const stop = subscribeDeviceSettings(vi.fn(), onReturn, { hub: createPrefsHub(() => null), win: null, doc: null });
     expect(() => stop()).not.toThrow();
-    const throwing = { addEventListener: () => {
-      throw new Error('no');
-    }, removeEventListener: () => {
-      throw new Error('no');
-    } };
-    const stop2 = subscribeDeviceSettings(vi.fn(), onReturn, { channel: () => null, win: throwing, doc: throwing });
-    expect(() => stop2()).not.toThrow();
-  });
-
-  it('reads the browser by default', () => {
-    const made: FakeChannel[] = [];
-    vi.stubGlobal(
-      'BroadcastChannel',
-      class extends FakeChannel {
-        constructor(name: string) {
-          super(name);
-          made.push(this);
-        }
+    const throwing = {
+      addEventListener: () => {
+        throw new Error('no');
       },
-    );
-    try {
-      const stop = subscribeDeviceSettings(vi.fn(), vi.fn());
-      expect(made).toHaveLength(1);
-      stop();
-      expect(made[0]?.closed).toBe(true);
-    } finally {
-      vi.unstubAllGlobals();
-    }
+      removeEventListener: () => {
+        throw new Error('no');
+      },
+    };
+    const stop2 = subscribeDeviceSettings(vi.fn(), onReturn, { hub: createPrefsHub(() => null), win: throwing, doc: throwing });
+    expect(() => stop2()).not.toThrow();
   });
 });
 
