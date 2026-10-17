@@ -105,6 +105,9 @@ test.describe('Home, Library and Profile for a brand-new learner', () => {
     await expect(start).toBeInViewport();
     const startBox = await start.boundingBox();
     expect(startBox?.width ?? 0).toBeGreaterThan((heroBox?.width ?? 0) * 0.8);
+    // The one big way in: touchTarget.hero (96), in a region named by its eyebrow (section 9.1, home-hero.md).
+    expect(startBox?.height ?? 0).toBeGreaterThanOrEqual(96);
+    await expect(page.getByRole('region', { name: h.next.heading, exact: true })).toBeVisible();
     // No "Streak 0 days", no empty Recent stars, the singular card pill, and the first-lesson tip.
     await expect(page.getByText(/^Streak/)).toHaveCount(0);
     await expect(page.getByTestId('home-recent-stars')).toHaveCount(0);

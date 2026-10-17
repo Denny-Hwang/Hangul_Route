@@ -246,6 +246,9 @@ function MissionTile({
   );
 }
 
+/** The hero's eyebrow, which names its region. */
+const HERO_EYEBROW_ID = 'home-next-lesson-eyebrow';
+
 /**
  * The Next lesson hero (owner request 2026-10-16, item 8): F-ENT-003's one next above the three mission cards,
  * so a new learner's first card is a lesson, with its length and one full-width Start or Continue. The three
@@ -276,11 +279,14 @@ function NextLessonCard({
   const copy = m.learner.home.next;
   const cta = lesson.cta === 'start' ? copy.start.cta : copy.continue.cta;
   return (
-    <View testID="home-next-lesson">
+    // A region named by its eyebrow ("Next lesson"), so a screen reader's landmarks find it (home-hero.md).
+    <View testID="home-next-lesson" role="region" aria-labelledby={HERO_EYEBROW_ID}>
       <Card padding="md" elevation="card">
-        <Caption tone="secondary" weight="semibold">
-          {copy.heading}
-        </Caption>
+        <View id={HERO_EYEBROW_ID}>
+          <Caption tone="secondary" weight="semibold">
+            {copy.heading}
+          </Caption>
+        </View>
         <Spacer size="xxs" />
         <Heading level="prompt">{title}</Heading>
         {where !== null ? (
@@ -300,7 +306,8 @@ function NextLessonCard({
           </Caption>
         ) : null}
         <Spacer size="md" />
-        <Button label={cta} accessibilityLabel={copy.a11y(cta, title)} tone="primary" size="lg" fullWidth onPress={onStart} testID="home-next-lesson-start" />
+        {/* touchTarget.hero (96): the one big way in on Home (section 9.1). */}
+        <Button label={cta} accessibilityLabel={copy.a11y(cta, title)} tone="primary" size="hero" fullWidth onPress={onStart} testID="home-next-lesson-start" />
         {onRoute !== null ? (
           <View style={{ alignSelf: 'flex-start' }}>
             <LinkButton label={copy.route.cta} icon="route" onPress={onRoute} testID="home-next-lesson-route" />
