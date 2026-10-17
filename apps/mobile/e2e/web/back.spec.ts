@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { headerBack, headerClose, onboardSelf, openLettersEpisode, seedStored } from './helpers';
+import { headerBack, headerClose, onboardSelf, openLettersEpisode, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide } from './text-fit';
 
@@ -9,11 +9,12 @@ import { closeInstallGuide } from './text-fit';
  * Row DN-4 (AMENDMENTS-DISPLAY-NAV section 7): a way back on every screen. The visible Back (the
  * route's ScreenHeader, top left) and the browser's back do the same thing, because the web history
  * bridge keeps the tab's history in step with the navigator: the browser back from Profile, an
- * episode, a word topic and the grown-up area lands where the visible Back does; after the visible
- * Back the next browser back is not a dead press; Forward never reopens a screen that was left (the
- * grown-up area); a quest asks before leaving, in the UI language; PlacementInvite and the
- * FirstQuestPreview it opens have no Back; All lessons opened from a page of this origin, two links deep,
- * still closes back to that page.
+ * episode, a word topic, Notes and the grown-up area lands where the visible Back does; after the
+ * visible Back the next browser back is not a dead press; Forward never reopens a screen that was
+ * left (the grown-up area); a quest asks before leaving, in the UI language; PlacementInvite and the
+ * FirstQuestPreview it opens have no Back, and nothing of setup is under them, so the browser back
+ * leaves the app there instead of reopening setup (no second profile); All lessons opened from a page
+ * of this origin, two links deep, still closes back to that page.
  */
 const en = getMessages('en');
 const es = getMessages('es');
@@ -57,12 +58,11 @@ test.describe('the way back (AMENDMENTS-DISPLAY-NAV section 7)', () => {
     await page.goBack();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     expect(await entryDepth(page)).toBe(1);
-    // Forward is never replayed: the grown-up area stays closed.
+    // Forward is never replayed: the grown-up area stays closed (the bridge goes straight back to depth 1).
     await page.goForward();
-    await page.waitForTimeout(400);
+    await expect.poll(() => entryDepth(page)).toBe(1);
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await expect(page.getByText(en.caregiver.dashboard.title, { exact: true }).filter({ visible: true })).toHaveCount(0);
-    expect(await entryDepth(page)).toBe(1);
 
     // The visible Back, then the browser back has nothing dead in between: Home is the app's first entry.
     await headerBack(page).click();
@@ -127,6 +127,59 @@ test.describe('the way back (AMENDMENTS-DISPLAY-NAV section 7)', () => {
     await expect(close).toHaveCount(0);
   });
 
+  test('Notes: the browser back from a note and from My notes lands where the visible Back does', async ({ page }) => {
+    await onboardSelf(page, { name: 'Nia', startJourney: false });
+    await home(page, 'Nia');
+    const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+    const at = new Date().toISOString();
+    const note = (id: string, presetId: string) => ({
+      id,
+      spaceId: 'space:cls',
+      from: { role: 'teacher', label: null },
+      presetId,
+      text: null,
+      textLocale: null,
+      suggest: null,
+      createdAt: at,
+      readAt: null,
+      reaction: null,
+    });
+    await seedStored(page, `memberships:${profileId}`, [{ spaceId: 'space:cls', kind: 'class', name: 'Saturday Class B', role: 'student', joinedAt: at }]);
+    await seedStored(page, `notes:${profileId}`, {
+      notes: [note('note:aaaaaaaa', 'progress_reading'), note('note:bbbbbbbb', 'effort_proud')],
+      prefs: { classes: 'all', acknowledged: true },
+      putAway: [],
+      classNotesCardSeen: true,
+      queue: [],
+    });
+    await home(page, 'Nia');
+    expect(await entryDepth(page)).toBe(0);
+
+    // Home's card opens My notes (depth 1), a row opens the note (depth 2).
+    await page.getByTestId('home-notes-card').click();
+    const myNotes = page.getByRole('heading', { name: en.learner.notes.list.title });
+    await expect(myNotes).toBeVisible();
+    await expect.poll(() => entryDepth(page)).toBe(1);
+    await page.getByTestId('notes-group-new').getByRole('link').first().click();
+    await expect(page.getByTestId('note-preset')).toBeVisible();
+    await expect.poll(() => entryDepth(page)).toBe(2);
+
+    // The visible Back goes to My notes; so does the browser back, from the same note.
+    await headerBack(page).click();
+    await expect(myNotes).toBeVisible();
+    await expect.poll(() => entryDepth(page)).toBe(1);
+    await page.getByTestId('notes-group-new').getByRole('link').first().click();
+    await expect(page.getByTestId('note-preset')).toBeVisible();
+    await expect.poll(() => entryDepth(page)).toBe(2);
+    await page.goBack();
+    await expect(myNotes).toBeVisible();
+    await expect.poll(() => entryDepth(page)).toBe(1);
+    // And the browser back from My notes is Home.
+    await page.goBack();
+    await expect(page.getByText('Hi, Nia!')).toBeVisible();
+    await expect.poll(() => entryDepth(page)).toBe(0);
+  });
+
   test('the way on from PlacementInvite opens FirstQuestPreview, both with no Back (the exception list)', async ({ page }) => {
     await onboardSelf(page, { name: 'Leo', levelCheck: 'stop' });
     await expect(page.getByTestId('placement-invite')).toBeVisible();
@@ -138,6 +191,26 @@ test.describe('the way back (AMENDMENTS-DISPLAY-NAV section 7)', () => {
     await expect(headerBack(page)).toHaveCount(0);
     await expect(headerClose(page)).toHaveCount(0);
   });
+
+  for (const at of ['PlacementInvite', 'FirstQuestPreview'] as const) {
+    test(`the browser back on ${at} leaves the app: setup never opens again, and there is one profile`, async ({ page }) => {
+      await onboardSelf(page, { name: 'Leo', levelCheck: 'stop' });
+      await expect(page.getByTestId('placement-invite')).toBeVisible();
+      if (at === 'FirstQuestPreview') {
+        await page.getByTestId('placement-invite-new').click();
+        await expect(page.getByRole('button', { name: 'Start my journey' })).toBeVisible();
+      }
+      // Nothing of setup is under the end of setup: the app is at its first entry.
+      await expect.poll(() => entryDepth(page)).toBe(0);
+      await page.goBack();
+      await expect.poll(() => page.url()).toBe('about:blank');
+      // Coming back to the app finds no Welcome and no second profile form, and one profile on the device.
+      await page.goForward();
+      await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
+      await expect(page.getByPlaceholder('Type a name')).toHaveCount(0);
+      await expect.poll(async () => (await readStored<unknown[]>(page, 'profiles'))?.length).toBe(1);
+    });
+  }
 
   test('All lessons opened from a page of this origin, two links deep, closes back to that page', async ({ page }) => {
     await onboardSelf(page, { name: 'Mo', startJourney: false });

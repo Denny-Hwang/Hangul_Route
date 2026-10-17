@@ -685,6 +685,12 @@ test('Journey cell, episode outline, item page with Where it sits, See on the Jo
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('browse-card-screen')).toHaveCount(0);
   await page.getByTestId('browse-item-card').click();
+  // Escape that closes the Display (Aa) sheet over the card closes only the sheet: the card page stays.
+  await page.getByTestId('screen-header-display').filter({ visible: true }).click();
+  await expect(page.getByTestId('display-sheet')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('display-sheet')).toHaveCount(0);
+  await expect(page.getByTestId('browse-card-screen')).toBeVisible();
   await headerClose(page).click();
   await expect(page.getByTestId('browse-card-screen')).toHaveCount(0);
   await expect(page.getByTestId('browse-item')).toBeVisible();
@@ -897,7 +903,7 @@ test('a full Stage 1 lesson, its end screen and its card write nothing of a lear
   expect(stored[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
 });
 
-test('Leave preview asks once: Keep going stays, Leave goes back to the lesson page with no end screen', async ({ page }) => {
+test('Leave preview asks once (the strip, the header Close and the browser back alike): Keep going stays, Leave goes back to the lesson page with no end screen', async ({ page }) => {
   await openLessonPage(page, 'quest:stage1-letters-q1');
   await page.getByTestId('browse-preview').click();
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -907,6 +913,17 @@ test('Leave preview asks once: Keep going stays, Leave goes back to the lesson p
   await page.getByTestId('browse-leave-keep').click();
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect(strip(page)).toBeVisible();
+  // The header's Close and the browser back ask the same question as Leave preview (one leave, F-BROWSE-001 §4.8),
+  // never the learner's quest sheet; the browser back while it is open answers Keep going.
+  await headerClose(page).click();
+  await expect(page.getByRole('alertdialog', { name: 'Leave this preview?' })).toBeVisible();
+  await expect(page.getByRole('alertdialog')).toHaveCount(1);
+  await page.goBack();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await expect(strip(page)).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('alertdialog', { name: 'Leave this preview?' })).toBeVisible();
+  await page.getByTestId('browse-leave-keep').click();
   await page.getByTestId('preview-leave').click();
   await page.getByTestId('browse-leave-confirm').click();
   await expect(page.getByRole('heading', { name: 'Meet a, eo, g, n' })).toBeVisible();
