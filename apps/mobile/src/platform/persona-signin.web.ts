@@ -3,6 +3,7 @@ import { personaChosen, personaSignInPath, type PersonaChoice } from '../logic/s
 import { handoffUrl } from '../logic/shell/handoff-rules';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { trackThenLeave } from './grown-up-handoff.web';
+import { markLeaving } from './history-bridge.web';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
 
 /**
@@ -24,7 +25,11 @@ export interface PersonaSignInEnv {
 function browserEnv(): PersonaSignInEnv {
   return {
     track: (event) => sendEvent(event),
-    assign: (url) => (globalThis as { location?: { assign: (to: string) => void } }).location?.assign(url),
+    assign: (url) => {
+      // The history bridge writes nothing from here on: a traversal would cancel this navigation (AMENDMENTS-DISPLAY-NAV 7.2).
+      markLeaving();
+      (globalThis as { location?: { assign: (to: string) => void } }).location?.assign(url);
+    },
     locale: () => activeLocale(useLocaleStore.getState()),
   };
 }

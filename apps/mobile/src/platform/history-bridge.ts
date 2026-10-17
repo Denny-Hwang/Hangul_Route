@@ -14,6 +14,10 @@ export function installHistoryBridge(_navigation: BridgeNavigation): () => void 
   return () => undefined;
 }
 
+export function markLeaving(): void {
+  // No browser history on native: nothing to hold while a page leaves.
+}
+
 export function syncHistory(): void {
   // No browser history on native.
 }

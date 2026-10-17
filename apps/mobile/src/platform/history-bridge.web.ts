@@ -40,6 +40,7 @@ interface HistoryLike {
 
 interface WindowLike {
   history?: HistoryLike;
+  document?: { visibilityState?: string };
   addEventListener?: (type: string, listener: (event?: unknown) => void) => void;
   removeEventListener?: (type: string, listener: (event?: unknown) => void) => void;
 }
@@ -67,12 +68,20 @@ interface Bridge {
    * traversal now would cancel the navigation that is leaving.
    */
   leaving: boolean;
+  /** When it started to leave (`Date.now()`). */
+  leftAt: number;
 }
 
-const bridge: Bridge = { navigation: null, own: 0, browseDepth: 0, expected: 0, sheets: [], popping: false, leaving: false };
+const bridge: Bridge = { navigation: null, own: 0, browseDepth: 0, expected: 0, sheets: [], popping: false, leaving: false, leftAt: 0 };
 
-/** How long a page that started to leave waits before it counts as staying (a navigation that was cancelled). */
-const LEAVING_GRACE_MS = 3000;
+/**
+ * How long after the page started to leave the person's own input (a tap, a key) counts as staying:
+ * the navigation did not happen (stopped, or it was not a page). No timer resumes the bridge by
+ * itself, because a slow page on a phone network is still leaving after any fixed wait, and a
+ * traversal then would cancel it; only the person using the page again, or the page shown again
+ * (`pageshow`), does.
+ */
+const LEAVING_GRACE_MS = 10_000;
 
 function browser(): WindowLike {
   return globalThis as WindowLike;
@@ -188,6 +197,18 @@ function onPopState(event?: unknown): void {
 }
 
 /**
+ * The page is leaving for another document (a hand-off's `location.assign`, All lessons' way back
+ * to the page that opened it): from now on the bridge writes no history, since a traversal now
+ * would cancel the navigation that is leaving. Every hand-off calls it itself right before it
+ * leaves, because iOS Safari and an installed iOS app do not fire `beforeunload` reliably;
+ * `beforeunload` and `pagehide` call it too.
+ */
+export function markLeaving(): void {
+  bridge.leaving = true;
+  bridge.leftAt = Date.now();
+}
+
+/**
  * Starts the bridge for one root (`App`, `BrowseApp`) once its navigation container is ready;
  * returns the stop. The entry the app opens on becomes `hrNav: 0`; a reload deep in the app rewinds
  * first.
@@ -204,25 +225,25 @@ export function installHistoryBridge(navigation: BridgeNavigation): () => void {
   const entry = readEntry(h.state);
   bridge.browseDepth = entry.browseDepth;
   bridge.own = 0;
-  let grace: ReturnType<typeof setTimeout> | null = null;
-  const onLeaving = (): void => {
-    bridge.leaving = true;
-    if (grace !== null) clearTimeout(grace);
-    // Still here after the grace: the navigation did not happen (cancelled), so the bridge resumes.
-    grace = setTimeout(() => {
-      grace = null;
-      resume();
-    }, LEAVING_GRACE_MS);
-  };
-  const onShow = (): void => {
-    if (grace !== null) clearTimeout(grace);
-    grace = null;
-    resume();
+  const onLeaving = (): void => markLeaving();
+  const onShow = (): void => resume();
+  // The person uses the page again long after it started to leave: the navigation did not happen.
+  const onInput = (): void => {
+    if (!bridge.leaving || Date.now() - bridge.leftAt < LEAVING_GRACE_MS) return;
+    let visible = true;
+    try {
+      visible = (w.document?.visibilityState ?? 'visible') === 'visible';
+    } catch {
+      visible = true;
+    }
+    if (visible) resume();
   };
   w.addEventListener('popstate', onPopState);
   w.addEventListener('beforeunload', onLeaving);
   w.addEventListener('pagehide', onLeaving);
   w.addEventListener('pageshow', onShow);
+  w.addEventListener('pointerdown', onInput);
+  w.addEventListener('keydown', onInput);
   const offState = navigation.addListener('state', syncHistory);
   if (entry.nav !== null && entry.nav > 0) {
     // A reload deep in the app: the navigator restarted at its root, so go back to the first entry.
@@ -236,7 +257,8 @@ export function installHistoryBridge(navigation: BridgeNavigation): () => void {
     w.removeEventListener?.('beforeunload', onLeaving);
     w.removeEventListener?.('pagehide', onLeaving);
     w.removeEventListener?.('pageshow', onShow);
-    if (grace !== null) clearTimeout(grace);
+    w.removeEventListener?.('pointerdown', onInput);
+    w.removeEventListener?.('keydown', onInput);
     offState();
     bridge.navigation = null;
     bridge.sheets = [];
@@ -246,9 +268,10 @@ export function installHistoryBridge(navigation: BridgeNavigation): () => void {
 }
 
 /**
- * The page is shown again (restored from the back/forward cache) or did not leave after all: the
- * entry it is on is read again and the history brought in step with the app (a hand-off that
- * stepped the app back under it leaves its entry ahead of the app's depth).
+ * The page is shown again (restored from the back/forward cache) or did not leave after all (the
+ * person uses it again after the grace): the entry it is on is read again and the history brought
+ * in step with the app (a hand-off that stepped the app back under it leaves its entry ahead of the
+ * app's depth).
  */
 function resume(): void {
   if (!bridge.leaving) return;

@@ -1,5 +1,5 @@
 import { closeDistance, linkEntryDepth, mergeEntry, readEntry } from '../logic/navigation/history-sync';
-import { adoptLinkEntry, currentEntry } from './history-bridge.web';
+import { adoptLinkEntry, currentEntry, markLeaving } from './history-bridge.web';
 
 /**
  * The browse root's address and exits on the web (F-BROWSE-001 sections 4.1
@@ -142,6 +142,8 @@ export function canGoBack(): boolean {
 
 /** Leaves All lessons for `url` in this tab. */
 export function leaveTo(url: string): void {
+  // The history bridge writes nothing from here on: a traversal would cancel this navigation (AMENDMENTS-DISPLAY-NAV 7.2).
+  markLeaving();
   try {
     browser().location?.assign?.(url);
   } catch {
@@ -157,6 +159,8 @@ export function leaveTo(url: string): void {
  */
 export function goBack(fallbackUrl: string): void {
   const w = browser();
+  // Leaving for the page that opened All lessons: the history bridge writes nothing from here on (section 7.2).
+  markLeaving();
   let left = false;
   const onHide = (): void => {
     left = true;

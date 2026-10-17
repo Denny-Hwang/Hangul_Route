@@ -17,6 +17,7 @@ import { currentDeviceGateMarker } from '../store/device-gate';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { useUiStore } from '../store/ui-store';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
+import { markLeaving } from './history-bridge.web';
 
 /**
  * The learner app's hand-off into the grown-up area on the same origin (F-APP-001 section 3.9),
@@ -76,6 +77,8 @@ export function sessionArea(): SessionArea | null {
 }
 
 function browserAssign(url: string): void {
+  // The history bridge writes nothing from here on: a traversal would cancel this navigation (AMENDMENTS-DISPLAY-NAV 7.2).
+  markLeaving();
   (globalThis as { location?: { assign: (to: string) => void } }).location?.assign(url);
 }
 

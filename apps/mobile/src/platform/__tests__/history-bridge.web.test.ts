@@ -1,6 +1,8 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as native from '../history-bridge';
-import { adoptLinkEntry, currentEntry, installHistoryBridge, registerHistorySheet, syncHistory, type BridgeNavigation } from '../history-bridge.web';
+import { adoptLinkEntry, currentEntry, installHistoryBridge, markLeaving, registerHistorySheet, syncHistory, type BridgeNavigation } from '../history-bridge.web';
 
 /**
  * The web history bridge (AMENDMENTS-DISPLAY-NAV section 7.2, row DN-4), against a fake tab
@@ -332,7 +334,31 @@ describe('history bridge: a page that leaves for another document', () => {
     expect(tab.navs()).toBe('0* 1');
   });
 
-  it('a navigation that never happened resumes the bridge after the grace', () => {
+  it('a hand-off marks the leave itself (iOS fires no beforeunload): the history is left alone, with no timer to resume it', () => {
+    vi.useFakeTimers();
+    try {
+      const nav = start(['Main']);
+      nav.push('PinEntry');
+      // The PIN's hand-off: location.assign, then the app steps back under it in the same task.
+      markLeaving();
+      nav.goBack();
+      tab.flush();
+      expect(tab.queued).toEqual([]);
+      expect(tab.navs()).toBe('0 1*');
+      // A slow page on a phone network is still leaving after any wait: nothing resumes by itself.
+      vi.advanceTimersByTime(60_000);
+      tab.flush();
+      expect(tab.navs()).toBe('0 1*');
+      // A browser move while leaving is not followed either.
+      tab.listeners.get('popstate')?.({ state: { hrNav: 0 } });
+      tab.flush();
+      expect(tab.queued).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a navigation that never happened resumes when the person uses the page again after the grace', () => {
     vi.useFakeTimers();
     try {
       const nav = start(['Main']);
@@ -341,21 +367,63 @@ describe('history bridge: a page that leaves for another document', () => {
       nav.goBack();
       tab.flush();
       expect(tab.navs()).toBe('0 1*');
-      // A browser move while leaving is not followed either.
-      tab.listeners.get('popstate')?.({ state: { hrNav: 0 } });
-      vi.advanceTimersByTime(3000);
+      // A tap soon after the leave is the person waiting for the page: still leaving.
+      vi.advanceTimersByTime(2_000);
+      tab.listeners.get('pointerdown')?.();
+      tab.flush();
+      expect(tab.navs()).toBe('0 1*');
+      // Long after, the page is still here and in use: the navigation did not happen, so the history follows the app.
+      vi.advanceTimersByTime(10_000);
+      tab.listeners.get('keydown')?.();
       tab.flush();
       expect(tab.navs()).toBe('0* 1');
-      // A second leave clears the first grace; a show before it resumes at once.
-      tab.listeners.get('beforeunload')?.();
-      tab.listeners.get('beforeunload')?.();
-      tab.listeners.get('pageshow')?.();
-      vi.advanceTimersByTime(3000);
       nav.push('Notes');
       expect(tab.navs()).toBe('0 1*');
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('input while the tab is hidden does not count as staying; a show resumes at once', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('document', { visibilityState: 'hidden' });
+    try {
+      const nav = start(['Main']);
+      nav.push('Profile');
+      tab.listeners.get('beforeunload')?.();
+      nav.goBack();
+      vi.advanceTimersByTime(20_000);
+      tab.listeners.get('keydown')?.();
+      tab.flush();
+      expect(tab.navs()).toBe('0 1*');
+      tab.listeners.get('pageshow')?.();
+      tab.flush();
+      expect(tab.navs()).toBe('0* 1');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('every hand-off that loads another page in this tab marks the leave first (source scan)', () => {
+    const dir = join(__dirname, '..');
+    const sites: string[] = [];
+    for (const name of readdirSync(dir).filter((n) => n.endsWith('.web.ts'))) {
+      const lines = readFileSync(join(dir, name), 'utf8').split('\n');
+      lines.forEach((line, i) => {
+        if (!/location\??\.assign\??\.?\(|history\??\.go\??\.\(-closeDistance/.test(line) || /^\s*(\*|\/\/)/.test(line)) return;
+        sites.push(name);
+        const before = lines.slice(Math.max(0, i - 20), i).join('\n');
+        expect(before, `${name}:${i + 1} leaves without markLeaving()`).toMatch(/markLeaving\(\)/);
+      });
+    }
+    expect(new Set(sites)).toEqual(new Set(['browse-env.web.ts', 'browse-handoff.web.ts', 'grown-up-handoff.web.ts', 'persona-signin.web.ts']));
+  });
+
+  it('input that follows no leave changes nothing', () => {
+    const nav = start(['Main']);
+    nav.push('Profile');
+    tab.listeners.get('pointerdown')?.();
+    expect(tab.navs()).toBe('0 1*');
   });
 
   it('a show that follows no leave changes nothing', () => {
