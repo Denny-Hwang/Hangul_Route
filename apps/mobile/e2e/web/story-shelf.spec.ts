@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerBack } from './helpers';
 import { nextPage, position } from './story-reader-helpers';
 
 /**
@@ -272,11 +272,11 @@ test.describe('story shelf (fixture bundle)', () => {
     await shown(page, `culture-note-story-${NOTE}`).click();
     await expect(shown(page, 'story-episode-title')).toHaveText('Hangul Day');
     await expect(shown(page, `story-episode-state-${STORY}`)).toHaveText('Finished');
-    await page.getByLabel('Go back').filter({ visible: true }).first().click();
+    await headerBack(page).first().click();
     await expect(shown(page, 'culture-notes-count')).toHaveText('1 found');
 
     // Story Time: the tile says Finished with its stars; the hero offers Read it again.
-    await shown(page, 'culture-notes-back').click();
+    await headerBack(page).click();
     await openSection(page, 'Story Time');
     await expect(tile(page)).toHaveAccessibleName('Hangul Day. Finished. About 4 minutes. 3 stars.');
     await expect(shown(page, 'library-hero-cta')).toHaveText('Read it again');
@@ -365,7 +365,7 @@ test.describe('story shelf (fixture bundle)', () => {
     // A tile opens the story's episode page; the hero opens the story itself.
     await tile(page).click();
     await expect(shown(page, 'story-episode')).toBeVisible();
-    await page.getByLabel('Go back').filter({ visible: true }).first().click();
+    await headerBack(page).first().click();
     await shown(page, 'library-hero-cta').click();
     await expect(stepHeading(page, 'Story time')).toBeVisible();
     expect(await events(page, 'story.opened')).toEqual([{ storyId: STORY, source: 'library', mode: 'start' }]);
@@ -483,7 +483,7 @@ test.describe('story shelf (fixture bundle)', () => {
     await line.click();
     await expect(shown(page, 'culture-notes-count')).toHaveText('1 found');
     await expect(shown(page, `culture-note-${NOTE}`)).toBeVisible();
-    await shown(page, 'culture-notes-back').click();
+    await headerBack(page).click();
 
     // Read it again: the unscored replay of the story, from the episode page.
     await shown(page, `story-episode-read-again-${STORY}`).click();
@@ -594,7 +594,7 @@ test.describe('story shelf (fixture bundle)', () => {
       expect(await outsideWindow(page, 'story-episode'), 'episode page').toEqual([]);
       const start = await shown(page, `story-episode-start-${STORY}`).boundingBox();
       expect((start?.x ?? -1) >= 0 && (start?.x ?? 0) + (start?.width ?? 0) <= vp.width + 0.5, 'Start').toBe(true);
-      await page.getByLabel('Go back').filter({ visible: true }).first().click();
+      await headerBack(page).first().click();
       await openSection(page, 'Culture');
       await shown(page, 'library-culture-notes').click();
       await expect(shown(page, 'culture-notes-empty')).toBeVisible();

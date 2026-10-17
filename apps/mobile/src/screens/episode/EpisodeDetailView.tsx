@@ -6,7 +6,6 @@ import {
   Heading,
   Hoya,
   HoyaBubble,
-  Icon,
   KoreanText,
   NextMarker,
   Pill,
@@ -65,7 +64,10 @@ export interface EpisodeDetailViewProps {
   /** Opens a quest full screen. `episodeId` is the quest's own episode (the "Start there?" sheet can point at an earlier one). */
   onStartQuest: (questId: string, episodeId: string) => void;
   onOpenCard: (cardId: string) => void;
-  /** Renders the back arrow when given (the stack screen passes it; a split pane does not). */
+  /**
+   * The way out of the not-found state, when the host is a stack screen (a split pane has none). The way back at the
+   * top is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1).
+   */
   onBack?: () => void;
   /** Story episodes (F-STORY-004 §3.6): a story action's route (`QuestPlayer`, optionally resumed, or the replay `StoryReader`). */
   onOpenStory: (target: StoryTarget) => void;
@@ -219,7 +221,6 @@ export function EpisodeDetailView({
         onOpenCellStories={(stage, theme) => onOpenCellStories(stage, theme, 'story-pill')}
         cellStoryCount={cellStoryCount}
         onOpenCellStoriesRow={() => onOpenCellStories(episode.stage, episode.theme, 'lesson-row')}
-        onBack={onBack}
       />
     );
   }
@@ -269,20 +270,6 @@ export function EpisodeDetailView({
   return (
     <View style={{ flex: 1 }}>
       <Screen tone="canvas" scrollable>
-        {onBack ? (
-          <>
-            <Pressable
-              onPress={onBack}
-              hitSlop={spacing.md}
-              accessibilityLabel={messages.a11y.goBack}
-              style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-            >
-              <Icon name="arrow-left" size={28} />
-            </Pressable>
-            <Spacer size="sm" />
-          </>
-        ) : null}
-
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <Pill tone="primary" label={stage?.titleEn ?? ''} size="sm" />
           <Pill tone="secondary" label={theme?.titleEn ?? ''} size="sm" />

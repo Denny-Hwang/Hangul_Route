@@ -8,16 +8,17 @@ import { FamilyStartFlow } from '@/components/console/FamilyTransferParts';
 import { NoteSendersPanel } from '@/components/console/FamilyNotesParts';
 import { TeacherMoveSheet } from '@/components/console/TeacherMoveSheet';
 import { TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
-import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
+import { Button, LoadErrorPanel, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
-import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { useNotesApi } from '@/components/console/use-notes-api';
 import type { MemberView, Roster, TransferOption } from '@/lib/console/api';
 import { archiveConfirmText, archivePlanNote, settleWithin } from '@/lib/console/archive-plan-note';
 import { notesEnabled, schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
-import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
+import { isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import type { BillingSummary } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
@@ -33,6 +34,8 @@ function SettingsInner(): JSX.Element {
   const { ready, session, api, signOut, m, locale } = useConsole();
   const notesApi = useNotesApi();
   const c = m.console;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const s = c.settings;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [members, setMembers] = useState<MemberView[]>([]);
@@ -54,8 +57,6 @@ function SettingsInner(): JSX.Element {
   // F-BILL-002 B-12: the billing summary read, so the archive confirm can name the plan it affects; null = no line.
   const billingRead = useRef<Promise<BillingSummary | null> | null>(null);
   const asking = useRef(false);
-  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
-  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -110,10 +111,8 @@ function SettingsInner(): JSX.Element {
   const archived = !!space?.archivedAt;
 
   return (
-    <AdultFrame onSignOut={signOut} title={space ? s.titleFor(space.name) : s.title}>
-      <Muted>
-        <Link href={ROUTES.space(spaceId, space?.kind)}>{s.back(space?.name ?? null)}</Link>
-      </Muted>
+    <AdultFrame onSignOut={signOut} back={spaceSubPageBack(spaceId, space?.kind, s.back(space?.name ?? null))} title={space ? s.titleFor(space.name) : s.title}>
+      {confirmSheet}
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
@@ -137,19 +136,19 @@ function SettingsInner(): JSX.Element {
             typedName={typedName}
             onRegenerate={() => {
               void (async () => {
-                if (roster.joinCode && !(await confirmDialog.ask(`${s.joinCode.regenerateAsk} ${c.oldCodeStops}`))) return;
-                await run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
+                if (roster.joinCode && !(await confirm({ title: s.joinCode.regenerateAsk, message: c.oldCodeStops, confirmLabel: c.confirm.newCode }))) return;
+                void run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
               })();
             }}
             onConsent={(mode) => void run(() => api.patchSettings(spaceId, { consentMode: mode }), 'saved', 'saveFailed')}
             onAnonymize={(on) => void run(() => api.patchSettings(spaceId, { anonymizeRoster: on }), 'saved', 'saveFailed')}
             onRemoveAdult={(member) => {
-              void confirmDialog.ask(s.grownUps.removeAsk(member.name, space.name)).then((yes) => {
+              void confirm({ title: s.grownUps.removeAsk(member.name, space.name), confirmLabel: c.confirm.remove }).then((yes) => {
                 if (yes) void run(() => api.removeMember(spaceId, 'account', member.memberId), 'removed', 'removeFailed');
               });
             }}
             onRemoveLearner={(member) => {
-              void confirmDialog.ask(s.learners.removeAsk(member.name, space.name)).then((yes) => {
+              void confirm({ title: s.learners.removeAsk(member.name, space.name), confirmLabel: c.confirm.remove }).then((yes) => {
                 if (yes) void run(() => api.removeMember(spaceId, 'learner', member.memberId), 'removed', 'removeFailed');
               });
             }}
@@ -162,7 +161,7 @@ function SettingsInner(): JSX.Element {
               asking.current = true;
               // A click that lands before the billing read settles waits for it briefly, then asks.
               void settleWithin(billingRead.current, ARCHIVE_PLAN_WAIT_MS)
-                .then((summary) => confirmDialog.ask(archiveConfirmText(space.name, archivePlanNote(summary, spaceId, new Date(), locale), locale)))
+                .then((summary) => confirm({ title: archiveConfirmText(space.name, archivePlanNote(summary, spaceId, new Date(), locale), locale), confirmLabel: c.confirm.archive }))
                 .then((yes) => {
                   asking.current = false;
                   if (yes) void run(() => api.archiveSpace(spaceId, true), 'archived', 'saveFailed');
@@ -245,7 +244,6 @@ function SettingsInner(): JSX.Element {
           ) : null}
         </>
       ) : null}
-      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

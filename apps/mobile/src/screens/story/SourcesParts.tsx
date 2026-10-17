@@ -62,26 +62,10 @@ export function SourcesHeading({
   );
 }
 
-/** Back (64) and the screen heading; stays above the scroll. */
-export function SourcesHeader({ copy, onBack }: { copy: SourcesCopy; onBack: () => void }): React.ReactElement {
+/** The screen heading; stays above the scroll. The way back is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1). */
+export function SourcesHeader({ copy }: { copy: SourcesCopy }): React.ReactElement {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}>
-      <Pressable
-        onPress={onBack}
-        accessibilityRole="button"
-        accessibilityLabel={copy.back}
-        testID="story-sources-back"
-        style={({ pressed }) => ({
-          width: touchTarget.min,
-          height: touchTarget.min,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: radii.pill,
-          backgroundColor: pressed ? colors.surface.sunken : 'transparent',
-        })}
-      >
-        <Icon name="arrow-left" size={spacing.xxl} color={colors.text.secondary} />
-      </Pressable>
       <View style={{ flex: 1, minWidth: 0 }}>
         <SourcesHeading level={1} testID="story-sources-title">
           {copy.title}

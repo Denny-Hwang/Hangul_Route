@@ -1,7 +1,7 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, openForGrownUps, seedStored } from './helpers';
+import { headerClose, onboardChild, openForGrownUps, seedStored } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -27,7 +27,7 @@ async function dismissInstallGuide(page: Page): Promise<void> {
 
 test.describe('ConfirmSheet: leaving a quest (design/components/ConfirmSheet)', () => {
   for (const locale of ['en', 'es', 'ko'] as const satisfies readonly UiLocale[]) {
-    test(`${locale}: the quest X opens the app's own sheet in that language; Keep playing and Escape stay in the quest`, async ({ page }) => {
+    test(`${locale}: the quest's Close opens the app's own sheet in that language; Keep playing and Escape stay in the quest`, async ({ page }) => {
       const m = getMessages(locale);
       const leave = m.learner.quest.leave;
       let nativeDialog = false;
@@ -41,23 +41,23 @@ test.describe('ConfirmSheet: leaving a quest (design/components/ConfirmSheet)', 
       if (locale !== 'en') await seedStored(page, 'device:settings', { uiLocale: locale });
       await page.getByTestId('home-next-lesson-start').click();
 
-      const x = page.getByRole('button', { name: m.a11y.leaveQuest, exact: true });
+      // The quest's Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1); it asks through the
+      // ConfirmSheet that platform/dialog draws on the web (section 8).
+      const x = headerClose(page);
       await expect(x).toBeVisible();
       await x.click();
-      const sheet = page.getByTestId('quest-leave-sheet');
+      const sheet = page.getByTestId('confirm-sheet');
       await expect(sheet).toBeVisible();
       await expect(sheet.getByRole('heading', { name: leave.title })).toBeVisible();
       await expect(sheet.getByText(leave.message)).toBeVisible();
       // Keep playing first and focused, Leave under it; never the browser's OK / Cancel.
       await expect(sheet.getByRole('button')).toHaveText([leave.keep.cta, leave.confirm.cta]);
-      await expect(sheet.getByTestId('quest-leave-sheet-keep')).toBeFocused();
+      await expect(sheet.getByTestId('confirm-sheet-cancel')).toBeFocused();
       await page.keyboard.press('Tab');
-      await expect(sheet.getByTestId('quest-leave-sheet-confirm')).toBeFocused();
-      await page.keyboard.press('Tab');
-      await expect(sheet.getByTestId('quest-leave-sheet-keep')).toBeFocused();
+      await expect(sheet.getByTestId('confirm-sheet-confirm')).toBeFocused();
       await shot(page, `ux-confirm-sheet-${locale}-360`);
 
-      await sheet.getByTestId('quest-leave-sheet-keep').click();
+      await sheet.getByTestId('confirm-sheet-cancel').click();
       await expect(sheet).toHaveCount(0);
       await expect(x).toBeVisible();
 
@@ -70,7 +70,7 @@ test.describe('ConfirmSheet: leaving a quest (design/components/ConfirmSheet)', 
 
       // Leave leaves.
       await x.click();
-      await sheet.getByTestId('quest-leave-sheet-confirm').click();
+      await sheet.getByTestId('confirm-sheet-confirm').click();
       await expect(x).toHaveCount(0);
       expect(nativeDialog).toBe(false);
     });

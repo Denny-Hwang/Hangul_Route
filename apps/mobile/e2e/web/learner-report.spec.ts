@@ -1,7 +1,7 @@
 import { devices, type Page, type Playwright } from '@playwright/test';
 import { en } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, typeDigits, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, typeDigits, unlockWithPin, headerBack } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -107,7 +107,7 @@ test.describe('the in-app report on a family device', () => {
     await expectNoHorizontalOverflow(page, 'report at 320 with More detail open');
     await shot(page, 'learner-report-more-detail-320');
 
-    await page.getByTestId('learner-report-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId(`dashboard-see-report-${id}`)).toBeVisible();
   });
 
@@ -198,14 +198,14 @@ test.describe('the in-app report on a family device', () => {
     const screen = page.getByTestId('my-route-screen');
     await expect(screen).toBeVisible();
     await expect(screen.getByText(en.caregiver.journey.viewing('Mina'), { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toBeVisible();
+    await expect(headerBack(page)).toBeVisible();
     await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toHaveCount(0);
     await expect(page.getByTestId('my-route-card-cta')).toHaveCount(0);
     await expect(page.getByTestId('my-route-card').getByRole('button')).toHaveCount(0);
     await expectNoHorizontalOverflow(page, 'grown-up Learning Route from the report');
     await shot(page, 'learner-report-open-route-375');
 
-    await page.getByRole('button', { name: en.a11y.goBack, exact: true }).click();
+    await headerBack(page).click();
     await expect(page.getByTestId('learner-report-title')).toHaveText(r.title.learner('Mina'));
   });
 });

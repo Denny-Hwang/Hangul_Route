@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { isDeviceLandscape, isPhoneDevice } from '../../src/logic/layout/orientation-guard';
 
@@ -453,4 +453,27 @@ export async function openLettersEpisode(page: Page): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(1, 'Letters & Books') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).first().waitFor();
+}
+
+/**
+ * The route's ScreenHeader controls (AMENDMENTS-DISPLAY-NAV section 7.1): Back or Close, top left on every
+ * non-root screen. The screens under the current one stay mounted, hidden, so only the visible one counts.
+ */
+export function headerBack(scope: Page | Locator): Locator {
+  return scope.getByTestId('screen-header-back').filter({ visible: true });
+}
+
+export function headerClose(scope: Page | Locator): Locator {
+  return scope.getByTestId('screen-header-close').filter({ visible: true });
+}
+
+/**
+ * Answers every ConfirmSheet with its confirm button, as `page.on('dialog', accept)` answered the browser's `confirm()`
+ * before the web build drew the sheet (AMENDMENTS-DISPLAY-NAV section 8): the confirm is the sheet's last button
+ * (the safe choice comes first).
+ */
+export async function acceptConfirmSheets(page: Page): Promise<void> {
+  await page.addLocatorHandler(page.getByRole('alertdialog'), async (sheet) => {
+    await sheet.getByRole('button').last().click();
+  });
 }

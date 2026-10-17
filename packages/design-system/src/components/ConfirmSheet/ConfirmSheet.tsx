@@ -1,184 +1,138 @@
 import React, { useContext, useEffect, useId, useRef } from 'react';
-import { Modal, Platform, Pressable, View } from 'react-native';
+import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { colors, radii, shadows, spacing } from '../../tokens';
-import { Button } from '../Button';
+import { KOREAN_LINE_BREAK } from '../../line-break';
 import { Body, Heading } from '../Heading';
 import { useLayoutClass } from '../Layout';
-import { Spacer } from '../Spacer';
-import {
-  CONFIRM_SHEET_DIALOG_MAX,
-  CONFIRM_SHEET_ORDER,
-  CONFIRM_SHEET_TONE,
-  confirmSheetKey,
-  confirmSheetLayout,
-  type ConfirmSheetAction,
-  type ConfirmSheetLayout,
-} from './logic';
+import { useTypeScale } from '../TextSize';
+import { actionStyle, actionTextStyle, actionsStyle, backdropStyle, sheetStyle } from './style';
 import type { ConfirmSheetProps } from './types';
 
-/**
- * ConfirmSheet — the app's one confirm (design/components/ConfirmSheet/as-built.md). It replaces the platform
- * dialogs: the browser's `confirm()` showed OK / Cancel in the browser's language and never the app's own
- * words. A bottom sheet over the `surface.overlay` scrim on a phone, a centred dialog from the regular class.
- *
- * Keep comes first: the filled button, focused on open; Escape, the Android back button and a tap on the scrim
- * keep too. Confirm is an outline button under it, never red. On the web Tab and Shift+Tab stay on the two
- * buttons (react-native-web's modal also brings a stray focus back and returns focus to the opener on close).
- * The labels arrive localised; the design system holds no copy.
- */
+type PressState = { pressed: boolean; focused?: boolean };
+/** Anything React Native Web can move focus to (a host node on the web; absent on native). */
+type Focusable = { focus?: () => void } | null;
 
-type KeyListener = (event: { key: string; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean; preventDefault: () => void }) => void;
-interface KeyTarget {
-  addEventListener: (type: 'keydown', listener: KeyListener) => void;
-  removeEventListener: (type: 'keydown', listener: KeyListener) => void;
+/** The part of a key event the sheet reads. */
+interface KeyEventLike {
+  key?: string;
+  repeat?: boolean;
+  stopPropagation?: () => void;
+}
+
+interface DocumentLike {
   activeElement?: unknown;
+  addEventListener?: (type: string, fn: (event: KeyEventLike) => void) => void;
+  removeEventListener?: (type: string, fn: (event: KeyEventLike) => void) => void;
 }
-type Focusable = { focus?: () => void };
 
-const webDocument = (): KeyTarget | null => {
-  if (Platform.OS !== 'web') return null;
-  const doc = (globalThis as { document?: KeyTarget }).document;
-  return doc && typeof doc.addEventListener === 'function' ? doc : null;
-};
-
-export function ConfirmSheet(props: ConfirmSheetProps): React.ReactElement {
-  const layout = confirmSheetLayout(useLayoutClass().width);
-  // One answer per opening across every way out: the buttons, the scrim, Escape and the modal's own close (Escape's
-  // keydown and then the modal's close, or the Android back button) all go through `once`.
-  const settled = useRef(false);
-  useEffect(() => {
-    if (props.visible) settled.current = false;
-  }, [props.visible]);
-  const once = (answer: () => void) => (): void => {
-    if (settled.current) return;
-    settled.current = true;
-    answer();
-  };
-  const onKeep = once(props.onKeep);
-  const onConfirm = once(props.onConfirm);
-  return (
-    <Modal visible={props.visible} transparent animationType={layout === 'dialog' ? 'fade' : 'slide'} onRequestClose={onKeep}>
-      {props.visible ? <ConfirmSheetBody {...props} onKeep={onKeep} onConfirm={onConfirm} layout={layout} /> : null}
-    </Modal>
-  );
-}
+/** react-native-web's Modal answers Escape on keyup with `onRequestClose`; the sheet answers it once, on keydown. */
+const ignore = (): void => undefined;
 
 const NO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
 
-/** The sheet itself, without the modal: what `ConfirmSheet` shows (exported for render tests). */
-export function ConfirmSheetBody({
-  title,
-  message,
-  keepLabel,
-  confirmLabel,
-  onKeep,
-  onConfirm,
-  testID,
-  layout,
-}: Omit<ConfirmSheetProps, 'visible'> & { layout: ConfirmSheetLayout }): React.ReactElement {
-  const titleId = `confirm-sheet-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`;
-  const messageId = `${titleId}-message`;
-  // The bottom sheet sits above the home indicator of a notched phone or an iOS home-screen app (the nearest
-  // provider's insets, as Screen reads them); the centred dialog needs none.
-  const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
-  const nodes = useRef<Record<ConfirmSheetAction, View | null>>({ keep: null, confirm: null });
-  // One choice per opening: Escape's keydown and the modal's own keyup (or a double tap) never answer twice.
-  const settled = useRef(false);
-  const choose = (action: ConfirmSheetAction): void => {
-    if (settled.current) return;
-    settled.current = true;
-    if (action === 'keep') onKeep();
-    else onConfirm();
-  };
-  const keepRef = useRef(choose);
-  keepRef.current = choose;
+const webDocument = (): DocumentLike | undefined => (Platform.OS === 'web' ? (globalThis as { document?: DocumentLike }).document : undefined);
 
+/**
+ * ConfirmSheet — the one confirm step of the learner web build (design/components/ConfirmSheet/
+ * spec.md; AMENDMENTS-DISPLAY-NAV section 8), in place of the browser's `confirm()`: its title,
+ * message and buttons are in the UI language, the safe choice comes first and takes focus, and it
+ * works in an installed iOS app. `role="alertdialog"`, modal, named by its title and described by
+ * its message; a bottom sheet on a phone and a centred dialog from the regular class. Escape and
+ * the backdrop cancel; focus goes back to the control that opened it. No copy of its own.
+ *
+ * On the web one Escape press is one cancel: the sheet answers its keydown (a held key's repeats
+ * are ignored) and stops it there, so a page's own Escape (an All lessons card page closing) does
+ * not also run under the sheet; react-native-web's Modal would answer the same press again on
+ * keyup, so its `onRequestClose` is the system back of native only. The backdrop is hidden from
+ * assistive tech: the sheet's own Cancel is the one control with that name. The bottom sheet sits above the home
+ * indicator (the nearest provider's safe-area insets, as `Screen` reads them).
+ */
+export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabel, onCancel, onConfirm, testID = 'confirm-sheet' }: ConfirmSheetProps): React.ReactElement {
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const titleId = `${testID}-title-${id}`;
+  const messageId = `${testID}-message-${id}`;
+  const dialog = useLayoutClass().width !== 'compact';
+  const scale = useTypeScale();
+  const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
+  const cancelRef = useRef<Focusable>(null);
+  const openerRef = useRef<Focusable>(null);
+
+  // The safe choice takes focus when the sheet opens; the opener gets it back when it closes.
   useEffect(() => {
     const doc = webDocument();
-    // Keep has the focus when the sheet opens (the modal mounts its content first, so wait a frame).
-    const timer = setTimeout(() => (nodes.current.keep as Focusable | null)?.focus?.(), 0);
-    if (!doc) return () => clearTimeout(timer);
-    const onKey: KeyListener = (event) => {
-      const order = CONFIRM_SHEET_ORDER.map((a) => nodes.current[a] as Focusable | null);
-      const result = confirmSheetKey(event, order.indexOf(doc.activeElement as Focusable | null), order.length);
-      if (result === null) return;
-      event.preventDefault();
-      if (result.kind === 'keep') keepRef.current('keep');
-      else order[result.index]?.focus?.();
+    if (!visible || !doc) return undefined;
+    openerRef.current = (doc.activeElement as Focusable) ?? null;
+    cancelRef.current?.focus?.();
+    const onKey = (event: KeyEventLike): void => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation?.();
+      if (event.repeat !== true) onCancel();
     };
-    doc.addEventListener('keydown', onKey);
+    doc.addEventListener?.('keydown', onKey);
     return () => {
-      clearTimeout(timer);
-      doc.removeEventListener('keydown', onKey);
+      doc.removeEventListener?.('keydown', onKey);
+      openerRef.current?.focus?.();
+      openerRef.current = null;
     };
-  }, []);
+  }, [visible, onCancel]);
 
-  const dialog = layout === 'dialog';
-  const labels: Readonly<Record<ConfirmSheetAction, string>> = { keep: keepLabel, confirm: confirmLabel };
+  const action = (kind: 'cancel' | 'confirm'): React.ReactElement => (
+    <Pressable
+      key={kind}
+      ref={
+        kind === 'cancel'
+          ? (node: unknown) => {
+              cancelRef.current = node as Focusable;
+            }
+          : undefined
+      }
+      testID={`${testID}-${kind}`}
+      accessibilityRole="button"
+      onPress={kind === 'cancel' ? onCancel : onConfirm}
+      style={(state: PressState) => actionStyle(kind, dialog, state)}
+    >
+      <Text {...KOREAN_LINE_BREAK} style={actionTextStyle(kind, scale)}>
+        {kind === 'cancel' ? cancelLabel : confirmLabel}
+      </Text>
+    </Pressable>
+  );
+
   return (
-    <View style={{ flex: 1, justifyContent: dialog ? 'center' : 'flex-end', alignItems: dialog ? 'center' : 'stretch', backgroundColor: colors.surface.overlay, padding: dialog ? spacing.xl : 0 }}>
-      {/* The sheet comes first in the tree, so the modal's focus trap lands on Keep, never on the scrim. */}
-      <View
-        role="alertdialog"
-        aria-modal
-        aria-labelledby={titleId}
-        aria-describedby={message ? messageId : undefined}
-        testID={testID}
-        style={{
-          zIndex: 1,
-          width: '100%',
-          maxWidth: dialog ? CONFIRM_SHEET_DIALOG_MAX : undefined,
-          backgroundColor: colors.surface.paper,
-          borderTopLeftRadius: radii.xl,
-          borderTopRightRadius: radii.xl,
-          borderBottomLeftRadius: dialog ? radii.xl : 0,
-          borderBottomRightRadius: dialog ? radii.xl : 0,
-          paddingTop: spacing.xl,
-          paddingBottom: dialog ? spacing.xl : spacing.xl + insets.bottom,
-          paddingHorizontal: spacing.lg,
-          ...shadows.modal,
-        }}
-      >
-        <View id={titleId}>
-          <Heading level="prompt">{title}</Heading>
-        </View>
-        {message ? (
-          <>
-            <Spacer size="xs" />
-            <View id={messageId}>
+    <Modal visible={visible} transparent animationType={dialog ? 'fade' : 'slide'} onRequestClose={Platform.OS === 'web' ? ignore : onCancel}>
+      <View style={backdropStyle(dialog)}>
+        <Pressable
+          onPress={onCancel}
+          accessible={false}
+          focusable={false}
+          aria-hidden
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+          {...{ tabIndex: -1 }}
+          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
+          testID={`${testID}-backdrop`}
+        />
+        <View
+          role="alertdialog"
+          aria-modal
+          aria-labelledby={titleId}
+          {...(message ? { 'aria-describedby': messageId } : {})}
+          testID={testID}
+          style={sheetStyle(dialog, insets.bottom)}
+        >
+          <View nativeID={titleId} {...{ id: titleId }}>
+            <Heading level="prompt">{title}</Heading>
+          </View>
+          {message ? (
+            <View nativeID={messageId} {...{ id: messageId }}>
               <Body tone="secondary">{message}</Body>
             </View>
-          </>
-        ) : null}
-        <Spacer size="lg" />
-        <View style={{ gap: spacing.sm }}>
-          {CONFIRM_SHEET_ORDER.map((action) => (
-            <Button
-              key={action}
-              label={labels[action]}
-              tone={CONFIRM_SHEET_TONE[action]}
-              size={action === 'keep' ? 'lg' : 'md'}
-              fullWidth
-              onPress={() => choose(action)}
-              pressableRef={(node) => {
-                nodes.current[action] = node;
-              }}
-              testID={testID ? `${testID}-${action}` : undefined}
-            />
-          ))}
+          ) : null}
+          <View style={actionsStyle(dialog)}>
+            {action('cancel')}
+            {action('confirm')}
+          </View>
         </View>
       </View>
-      {/* The scrim keeps; it is not a control of its own (the Keep button is). */}
-      <Pressable
-        onPress={() => choose('keep')}
-        accessible={false}
-        focusable={false}
-        importantForAccessibility="no"
-        aria-hidden
-        testID={testID ? `${testID}-scrim` : undefined}
-        style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 0 }}
-      />
-    </View>
+    </Modal>
   );
 }

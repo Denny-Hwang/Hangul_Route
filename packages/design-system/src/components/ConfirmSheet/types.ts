@@ -1,17 +1,14 @@
 export interface ConfirmSheetProps {
-  /** Shown while true. */
   visible: boolean;
-  /** The question, e.g. "Leave this quest?". */
+  /** The question, the sheet's heading (its accessible name). */
   title: string;
-  /** One calm line under it, e.g. "Stars from this try will not be saved." */
+  /** One line under it (its description). */
   message?: string;
-  /** The safe choice, already localised ("Keep playing"): first, filled and focused. */
-  keepLabel: string;
-  /** The other choice, already localised ("Leave"): an outline button under Keep. */
+  /** The safe choice: first, and focused when the sheet opens ("Keep playing", "Cancel"). */
+  cancelLabel: string;
+  /** A verb, never "OK" ("Leave", "Remove"). */
   confirmLabel: string;
-  /** Keep, Escape, the Android back button and a tap on the scrim. */
-  onKeep: () => void;
+  onCancel: () => void;
   onConfirm: () => void;
-  /** The sheet is `testID`, its buttons `${testID}-keep` and `${testID}-confirm`. */
   testID?: string;
 }

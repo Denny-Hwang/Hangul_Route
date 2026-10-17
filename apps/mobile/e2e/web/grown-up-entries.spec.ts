@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openForGrownUps, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, unlockWithPin, headerBack } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -396,7 +396,7 @@ test('Join prefill: a family code handed over in this tab fills the Join screen 
   await expect(page.getByLabel('Class code', { exact: true })).toHaveValue('ABCD23');
   expect(await page.evaluate((k) => sessionStorage.getItem(k), JOIN_HANDOFF)).toBeNull();
 
-  await page.getByRole('button', { name: 'Go back' }).last().click();
+  await headerBack(page).last().click();
   await page.getByRole('button', { name: 'Join a class' }).click();
   await expect(page.getByLabel('Class code', { exact: true })).toHaveValue('');
 });

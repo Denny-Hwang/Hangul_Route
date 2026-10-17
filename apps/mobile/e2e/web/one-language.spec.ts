@@ -2,9 +2,9 @@ import type { BrowserContext, Page } from '@playwright/test';
 import { CONSOLE_SESSION_KEY, encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardSelf, openLettersEpisode, readStored, seedStored, waitForSaved } from './helpers';
+import { onboardChild, onboardSelf, openLettersEpisode, readStored, seedStored, waitForSaved, headerClose } from './helpers';
 import { shot } from './shots';
-import { closeInstallGuide, expectNoSidewaysScroll } from './text-fit';
+import { closeInstallGuide, expectNoSidewaysScroll, expectTextFits } from './text-fit';
 
 /**
  * Owner items 6 and 7: one UI language per device (and per account), and a text size on every page,
@@ -20,7 +20,9 @@ import { closeInstallGuide, expectNoSidewaysScroll } from './text-fit';
  * - The presenter home has no language chips and an Aa button, portrait and landscape.
  * - Text size Largest at 360 x 640: Profile, Home, /parent and /teach/space never scroll sideways;
  *   at 320 x 568 (the fit rule of AMENDMENTS-DISPLAY-NAV section 4): the four tabs, Profile, the
- *   open Display sheet and a quest step; at 1180 x 820: Home and the grown-up frame header.
+ *   open Display sheet and a quest step; the grown-up pages (/parent, a class page, /signin, the
+ *   grown-up lock and the console's Display sheet); the presenter's phone start screen with its
+ *   Display sheet, upright and sideways; at 1180 x 820: Home and the grown-up frame header.
  * - A `?lang=` hand-off seeds a device that never chose with the 1970 stamp, so a signed-in
  *   account's choice still wins; a teacher laptop that never ran the learner app keeps the console
  *   language it chose before the record existed.
@@ -56,11 +58,24 @@ const DECK: LectureDeckInput = {
 };
 const presentLink = (deck: LectureDeckInput = DECK): string => `/present#d=${encodeDeck(deck)}`;
 
+/** Pages that already close the install guide whenever it opens. */
+const guideHandled = new WeakSet<Page>();
+
+/**
+ * The install guide shows from the third cached open, whenever it is ready, and covers the Home
+ * tabs: it is closed whenever it appears (a locator handler), never after a fixed wait.
+ */
+async function closeInstallGuideWhenShown(page: Page): Promise<void> {
+  if (guideHandled.has(page)) return;
+  guideHandled.add(page);
+  await page.addLocatorHandler(page.getByTestId('install-guide'), async (guide) => {
+    await guide.getByRole('button', { name: 'Not now' }).click();
+  });
+}
+
 async function openProfileDisplay(page: Page): Promise<void> {
+  await closeInstallGuideWhenShown(page);
   await page.goto('/');
-  const guide = page.getByTestId('install-guide');
-  await page.waitForTimeout(500);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByTestId('profile-display-row').click();
   await expect(page.getByTestId('display-sheet')).toBeVisible();
@@ -194,11 +209,37 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
     await page.goto('/present');
     await expect(page.getByRole('heading', { level: 1, name: getMessages('es').learner.presenter.home.title })).toBeVisible();
     await page.goto(presentLink());
-    await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').learner.presenter.start.back.cta);
+    // A phone window (the Pixel 5 default): the phone start screen (LV-M1), Back in its footer, the Aa at the top right.
+    await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').common.buttons.back);
+    await expect(page.getByTestId('presenter-start-display')).toHaveAccessibleName(getMessages('es').common.display.a11y);
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-    // A deck that names its slide language keeps the chrome in the device language all the same.
-    await page.goto(presentLink({ ...DECK, id: 'lecture:or67a2', options: { uiLocale: 'ko' } }));
-    await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').learner.presenter.start.back.cta);
+    // A deck that names its slide language keeps the chrome in the device language all the same (in a tab
+    // of its own, as the console opens every presenter link).
+    const second = await page.context().newPage();
+    await second.goto(presentLink({ ...DECK, id: 'lecture:or67a2', options: { uiLocale: 'ko' } }));
+    await expect(second.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').common.buttons.back);
+    await expect(second.locator('html')).toHaveAttribute('lang', 'es');
+  });
+
+  test.describe('on a wide window', () => {
+    test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+    test('the wide start screen speaks the device language (Back to lessons, the Aa beside it); the stage carries the deck\'s', async ({ page }) => {
+      await page.goto('/');
+      await seedStored(page, 'device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+      await page.goto(presentLink({ ...DECK, id: 'lecture:or67a3', options: { uiLocale: 'ko' } }));
+      await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').learner.presenter.start.back.cta);
+      await expect(page.getByTestId('presenter-start-display')).toHaveAccessibleName(getMessages('es').common.display.a11y);
+      await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+      // The slides speak the deck's language, so the stage carries it: a screen reader reads them in Korean (WCAG 3.1.2).
+      const start = page.getByTestId('presenter-start-button');
+      await expect(start).toBeEnabled({ timeout: 10_000 });
+      await start.click();
+      const stage = page.getByTestId('presenter-stage');
+      await expect(stage).toBeVisible();
+      await expect(stage).toHaveAttribute('lang', 'ko');
+      await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    });
   });
 });
 
@@ -263,9 +304,9 @@ test.describe('text size Largest at 360 x 640', () => {
 test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-NAV section 4)', () => {
   test.use({ viewport: { width: 320, height: 568 } });
 
-  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
-    await expectNoSidewaysScroll(page, 'Home');
+    await expectTextFits(page, 'Home');
     await shot(page, 'or67-home-largest-320x568');
     const tabs = page.getByRole('tablist').getByRole('link');
     await expect(tabs).toHaveCount(4);
@@ -276,32 +317,99 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     ] as const) {
       await tabs.nth(index).click();
       await page.waitForTimeout(400);
-      await expectNoSidewaysScroll(page, name);
+      await expectTextFits(page, name);
       await shot(page, `or67-${name.toLowerCase()}-largest-320x568`);
     }
     await tabs.nth(0).click();
     await page.getByRole('button', { name: 'Profile and settings' }).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'Profile');
+    await expectTextFits(page, 'Profile');
     await page.getByTestId('profile-display-row').click();
     await expect(page.getByTestId('display-sheet')).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Display sheet');
+    await expectTextFits(page, 'the Display sheet');
     await shot(page, 'or67-display-sheet-largest-320x568');
   });
 
-  test('the quest player\'s first steps: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the quest player\'s first steps: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
     await openLettersEpisode(page);
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the quest intro');
+    await expect(headerClose(page)).toBeVisible();
+    await expectTextFits(page, 'the quest intro');
     await shot(page, 'or67-quest-intro-largest-320x568');
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Discover step');
+    await expectTextFits(page, 'the Discover step');
     await shot(page, 'or67-quest-discover-largest-320x568');
   });
 });
+
+test.describe('text size Largest at 320 x 568: the grown-up pages (the fit rule, AMENDMENTS-DISPLAY-NAV section 4)', () => {
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  /** A grown-up page at Largest: the root follows the record (1.5 x the 16 px default), nothing past the edge. */
+  async function expectFits(page: Page, where: string): Promise<void> {
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).fontSize), { message: where }).toBe('24px');
+    await expectNoSidewaysScroll(page, where);
+  }
+
+  test('/parent, a class page and the console Display sheet', async ({ page, context }) => {
+    await signedInOnGrownUpPages(context);
+    await learnerAtLargest(page);
+    for (const path of ['/parent', '/teach/space?id=space_or67']) {
+      await page.goto(path);
+      await expect(page.getByTestId('adult-frame'), path).toBeVisible();
+      await expectFits(page, path);
+      await shot(page, `or67-${path.replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '')}-largest-320x568`);
+    }
+    await page.getByTestId('frame-display').click();
+    await expect(page.getByTestId('console-display-sheet')).toBeVisible();
+    await expectFits(page, 'the console Display sheet');
+    await shot(page, 'or67-console-display-sheet-largest-320x568');
+  });
+
+  test('/signin: the Aa row and the sign-in panel', async ({ page }) => {
+    await learnerAtLargest(page);
+    await page.goto('/signin');
+    await expect(page.getByRole('heading', { level: 1, name: en.console.signIn.title })).toBeVisible();
+    await expectFits(page, '/signin');
+    await shot(page, 'or67-signin-largest-320x568');
+  });
+
+  test('the grown-up lock on a family device', async ({ page, context }) => {
+    await signedInOnGrownUpPages(context);
+    await onboardChild(page, { name: 'Mina' });
+    await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+    await page.goto('/parent');
+    await expect(page.getByTestId('grown-up-lock')).toBeVisible();
+    await expect(page.getByTestId('grown-up-lock-display')).toBeVisible();
+    await expectFits(page, 'the grown-up lock');
+    await shot(page, 'or67-lock-largest-320x568');
+  });
+});
+
+for (const viewport of [
+  { width: 320, height: 568, name: 'upright' },
+  { width: 568, height: 320, name: 'sideways' },
+]) {
+  test.describe(`text size Largest: the presenter's phone start screen at ${viewport.width} x ${viewport.height} (${viewport.name})`, () => {
+    test.use({ viewport: { width: viewport.width, height: viewport.height } });
+
+    test('the start screen and its open Display sheet fit', async ({ page }) => {
+      await page.goto('/');
+      await seedStored(page, 'device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+      await page.goto(presentLink({ ...DECK, id: `lecture:or67p${viewport.width}` }));
+      const aa = page.getByTestId('presenter-start-display');
+      await expect(aa).toBeVisible();
+      await expectNoSidewaysScroll(page, `the start screen ${viewport.name}`);
+      await shot(page, `or67-presenter-start-largest-${viewport.width}x${viewport.height}`);
+      await aa.click();
+      await expect(page.getByTestId('presenter-display-sheet')).toBeVisible();
+      await expectNoSidewaysScroll(page, `the start screen's Display sheet ${viewport.name}`);
+      await shot(page, `or67-presenter-start-sheet-largest-${viewport.width}x${viewport.height}`);
+    });
+  });
+}
 
 test.describe('text size Largest at 1180 x 820', () => {
   test.use({ viewport: { width: 1180, height: 820 } });

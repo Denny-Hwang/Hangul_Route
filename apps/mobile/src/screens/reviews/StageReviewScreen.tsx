@@ -6,7 +6,6 @@ import {
   Heading,
   Hoya,
   HoyaBubble,
-  Icon,
   KoreanText,
   Screen,
   Spacer,
@@ -160,8 +159,9 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   // Leaving the screen any other way forgets the run too: nothing is saved, nothing is lost.
   useEffect(() => () => useReviewRunStore.getState().reset(), []);
 
-  // Hardware back and swipe-back mid-check ask "Stop the check?" first, like the close
-  // button (spec §3.9); before the start and after the result they leave at once.
+  // Every back mid-check asks "Stop the check?" first (spec §3.9): the header's Close, the browser and the phone back
+  // (the history bridge) and a swipe all reach this guard (AMENDMENTS-DISPLAY-NAV section 7.1); before the start and
+  // after the result they leave at once.
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
@@ -173,7 +173,6 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   );
 
   const host = useMemo(() => reviewHost(() => dispatch({ type: 'chunk-done' })), [dispatch]);
-  const close = { label: m.leave.close, onPress: () => dispatch({ type: 'leave' }) };
   const leaveSheet = (
     <LeaveSheet
       visible={flow.leaving}
@@ -188,7 +187,7 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
     return (
       <>
         <RomanizationModeOverride mode={flow.hideRomanization ? 'tap' : 'always'}>
-          <ListenPickGame key={flow.chunk} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} onClose={close} />
+          <ListenPickGame key={flow.chunk} scope={{ kind: 'listen-pick', rounds: rounds.length, listenPick: { rounds } }} host={host} />
         </RomanizationModeOverride>
         {leaveSheet}
       </>
@@ -198,7 +197,6 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
   if (flow.phase === 'pause') {
     return (
       <Screen tone="canvas" scrollable>
-        <CloseRow label={close.label} onPress={close.onPress} />
         <View style={{ alignItems: 'center', paddingTop: spacing.xl }} testID="hangul-check-pause">
           <Hoya pose="cheering" size={120} accessibilityLabel={messages.a11y.hoya('cheering')} />
           <Spacer size="lg" />
@@ -318,7 +316,6 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
 
   return (
     <Screen tone="canvas" scrollable>
-      <CloseRow label={close.label} onPress={close.onPress} />
       <View style={{ alignItems: 'center', paddingTop: spacing.lg }} testID="hangul-check-intro">
         <Hoya pose="waving" size={120} accessibilityLabel={messages.a11y.hoya('waving')} />
         <Spacer size="lg" />
@@ -338,22 +335,6 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
       <Button label={m.intro.later.cta} tone="ghost" size="md" fullWidth onPress={() => dispatch({ type: 'leave' })} />
       <Spacer size="lg" />
     </Screen>
-  );
-}
-
-function CloseRow({ label, onPress }: { label: string; onPress: () => void }): React.ReactElement {
-  return (
-    <View style={{ flexDirection: 'row' }}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        testID="hangul-check-close"
-        style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
-      >
-        <Icon name="close" size={spacing.xl} color={colors.text.secondary} />
-      </Pressable>
-    </View>
   );
 }
 

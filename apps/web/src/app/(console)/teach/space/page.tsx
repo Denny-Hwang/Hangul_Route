@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { RevisitLetterLinks } from '@/components/console/BrowseLink';
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
@@ -19,8 +20,8 @@ import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabW
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
-import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
+import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { appUrl, contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { rosterJoinLink } from '@/lib/console/join-link';
@@ -36,7 +37,8 @@ import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { classGoalLine } from '@/lib/console/class-goal-line';
 import { stageTitle } from '@/lib/console/stage-titles';
 import { dateKey, livePublished, planReaches, planReadout, readoutLine, rosterPlan } from '@/lib/console/plans';
-import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom, spaceKindOfPath } from '@/lib/console/routing';
+import { spacePageBack } from '@/lib/console/page-back';
 import { consoleWords, studentWords } from '@/lib/console/vocab-words';
 import { aroundSlot } from '@/lib/i18n/slot';
 import { headRem, rem } from '@/lib/console/rem';
@@ -48,6 +50,11 @@ function SpaceInner(): JSX.Element {
   // Class moves (F-SPACE-002 T-6d): the family roster's permanent Class moves button, next to Settings (family-page.md).
   const movesShown = useTransfersShown();
   const c = m.console;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
+  // PageBack (AMENDMENTS-DISPLAY-NAV section 7.3): the persona home, by the page's prefix until the roster names the kind.
+  const routed = useGrownUpLocation();
+  const pathKind = spaceKindOfPath(routed?.pathname ?? (typeof window === 'undefined' ? '' : (window.location?.pathname ?? '')));
   const [roster, setRoster] = useState<Roster | null>(null);
   // T-6b: the class roster's button beside Re-link requests, and both buttons' "N class moves waiting" (requests-page.md
   // "Entry points"). Asked only once the roster says class or family: a school has no count of its own here.
@@ -62,8 +69,6 @@ function SpaceInner(): JSX.Element {
   const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
   // A key, not text: the message is looked up at render time, so it follows the header language select.
   const [error, setError] = useState<SpaceError | null>(null);
-  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
-  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const now = new Date();
@@ -124,7 +129,7 @@ function SpaceInner(): JSX.Element {
 
   const regenerate = async (): Promise<void> => {
     if (!api || !roster) return;
-    if (roster.joinCode && !(await confirmDialog.ask(`${c.space.regenerateAsk(roster.space.name)} ${c.oldCodeStops}`))) return;
+    if (roster.joinCode && !(await confirm({ title: c.space.regenerateAsk(roster.space.name), message: c.oldCodeStops, confirmLabel: c.confirm.newCode }))) return;
     setBusy(true);
     const result = await api.regenerateCode(spaceId);
     setBusy(false);
@@ -165,7 +170,12 @@ function SpaceInner(): JSX.Element {
   const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, role: spaces?.find((item) => item.space.id === spaceId)?.role ?? null, spaceId, kind: roster.space.kind }) : null;
 
   return (
-    <AdultFrame onSignOut={signOut} title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}>
+    <AdultFrame
+      onSignOut={signOut}
+      back={spacePageBack(roster?.space.kind ?? pathKind, c)}
+      title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}
+    >
+      {confirmSheet}
       {error ? (
         <div style={panelStyle}>
           <p style={{ margin: 0 }}>{spaceErrorText(error, locale)}</p>
@@ -321,7 +331,6 @@ function SpaceInner(): JSX.Element {
           ) : null}
         </>
       ) : null}
-      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

@@ -73,7 +73,8 @@ export function PlacementInviteScreen({ navigation, route }: Props): React.React
     if (outcome.kind === 'declined') {
       void usePlacementRunStore.getState().markDeclined(profileId, outcome.declinedAt);
       void track(outcome.event);
-      navigation.replace('FirstQuestPreview', { profileId });
+      // The fork is left behind for good: the stack is the preview alone, so a back leaves setup as at any root.
+      navigation.reset({ index: 0, routes: [{ name: 'FirstQuestPreview', params: { profileId } }] });
       return;
     }
     // The fork stays underneath: a system back before the check starts returns here.

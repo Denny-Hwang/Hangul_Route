@@ -57,8 +57,6 @@ interface Props {
   host: MinigameHost;
   /** Leave an empty scope (never a dead end). */
   onBack?: () => void;
-  /** Drawn above the board's header row: a host's own way out (the Words Match screen's Back, F-VOC-003 C-6). */
-  leading?: React.ReactNode;
   /**
    * The header's "n / m" count beside the fill-only bar (default on, the quest step's header). The Words
    * Match screen turns it off: no fraction appears on the Words screens (F-VOC-003 §3.8, D3).
@@ -98,7 +96,7 @@ function TileFrame({ selected, badge, children }: TileFrameProps): React.ReactEl
   );
 }
 
-export function PicWordMatchGame({ scope, host, onBack, leading, showCount = true }: Props): React.ReactElement {
+export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Props): React.ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const boards = useMemo(() => validBoards(scope), [scope]);
   const orders = useMemo(() => boards.map((board, i) => shuffleBoard(board, seed + i)), [boards, seed]);
@@ -200,7 +198,6 @@ export function PicWordMatchGame({ scope, host, onBack, leading, showCount = tru
 
   return (
     <Screen tone="canvas" scrollable>
-      {leading}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
           <Progress value={header.value} max={header.max} tone="primary" />

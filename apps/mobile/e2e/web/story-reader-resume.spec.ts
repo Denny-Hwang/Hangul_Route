@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
 import { nextPage, position } from './story-reader-helpers';
 
 /**
@@ -72,7 +72,7 @@ async function leaveAtSceneThree(page: Page, id: string): Promise<void> {
   await nextPage(page);
   await expect(position(page)).toHaveText('3 / 5');
   await expect.poll(() => bookmarksOf(page, id)).toMatchObject({ v: 1, byStory: { [STORY]: { level: 'listen', sceneIndex: 2 } } });
-  await page.getByTestId('story-reader-close').click();
+  await headerClose(page).click();
   await expect(stepHeading(page, 'Read the story')).toBeVisible();
 }
 

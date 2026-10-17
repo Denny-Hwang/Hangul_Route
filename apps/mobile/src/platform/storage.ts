@@ -49,6 +49,29 @@ export async function writeJson<T>(key: string, value: T): Promise<void> {
   await AsyncStorage.setItem(KEY_PREFIX + key, JSON.stringify(value));
 }
 
+/** The `updateJson` calls in flight, one after another, so no two read the same value and both write. */
+let updates: Promise<unknown> = Promise.resolve();
+
+/**
+ * Read-modify-write of one key, one call at a time (the web variant does it in one IndexedDB
+ * transaction; here the app is the only writer, so the calls only need to queue). `next` gets the
+ * stored value (null when missing or unparsable) and returns the value to store, or `undefined` to
+ * store nothing. A failed read rejects and writes nothing, so a write is never made over data that
+ * could not be read. A key the write fence rejects is left untouched (`next` is not called).
+ * Resolves to whether a value was stored.
+ */
+export function updateJson<T>(key: string, next: (current: T | null) => T | undefined): Promise<boolean> {
+  const run = updates.then(async () => {
+    if (!writePasses(key, 'write')) return false;
+    const value = next(await readJsonStrict<T>(key));
+    if (value === undefined) return false;
+    await AsyncStorage.setItem(KEY_PREFIX + key, JSON.stringify(value));
+    return true;
+  });
+  updates = run.catch(() => undefined);
+  return run;
+}
+
 /** Removes `key`; a key the write fence rejects is left untouched. */
 export async function removeKey(key: string): Promise<void> {
   if (!writePasses(key, 'remove')) return;

@@ -319,24 +319,9 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
     if (announce !== null && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(announce);
   }, [announce]);
 
-  const back = (
-    <View style={{ flexDirection: 'row' }}>
-      <Pressable
-        onPress={() => navigation.goBack()}
-        accessibilityRole="button"
-        accessibilityLabel={messages.common.buttons.back}
-        testID="learner-report-back"
-        style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center', borderRadius: radii.circle }}
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-    </View>
-  );
-
   if (!hydrated) {
     return (
       <Screen tone="canvas" scrollable>
-        {back}
         <View accessibilityRole="progressbar" accessibilityLabel={messages.a11y.report.loading} testID="learner-report-loading" style={{ gap: spacing.md }}>
           {[spacing.xxxl, spacing.jumbo, spacing.jumbo].map((height, k) => (
             <View key={k} style={{ height, borderRadius: radii.md, backgroundColor: colors.surface.sunken }} />
@@ -349,7 +334,6 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
   if (built === null) {
     return (
       <Screen tone="canvas" scrollable>
-        {back}
         <Spacer size="md" />
         <Body testID="learner-report-error">{messages.report.state.error}</Body>
         <Spacer size="md" />
@@ -455,7 +439,6 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
 
   return (
     <Screen tone="canvas" scrollable>
-      {back}
       <ReportHeading level={1} testID="learner-report-title">
         {view.title}
       </ReportHeading>

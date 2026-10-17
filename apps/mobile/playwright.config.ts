@@ -31,6 +31,9 @@ export default defineConfig({
     locale: 'en-US',
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
+  // E2E_WEBKIT=1: the same specs in WebKit on an iPhone (iOS Safari and the installed iOS app, where `beforeunload`
+  // is not reliable; AMENDMENTS-DISPLAY-NAV section 7.2), run locally on demand. CI installs only Chromium.
+  ...(process.env.E2E_WEBKIT === '1' ? { projects: [{ name: 'webkit-iphone', use: { ...devices['iPhone 13'], locale: 'en-US' } }] } : {}),
   webServer: {
     // STORY_FIXTURES=1: the story reader e2e runs on the fixture build (build:web:fixtures writes dist-e2e/).
     // STORY_FIXTURES_GATED=1: the gating fixture build (build:web:fixtures:gated writes dist-e2e-gated/).

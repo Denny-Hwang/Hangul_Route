@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
-import { useConfirmDialog } from '@/components/console/ConfirmDialog';
+import { useConfirm } from './ConfirmSheet';
+import { spacePageBack } from '@/lib/console/page-back';
 import type { ConsoleApi, MemberView, SchoolView } from '@/lib/console/api';
 import { planTitle, statusLine as entitlementStatus } from '@/lib/console/billing';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
@@ -30,11 +31,10 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   const [newClass, setNewClass] = useState('');
   const [assigning, setAssigning] = useState<string | null>(null);
   const now = new Date();
-  const { messages } = useConsoleLocale();
-  const c = messages.console;
+  const c = useConsoleLocale().messages.console;
   const s = c.school;
-  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
-  const confirmDialog = useConfirmDialog({ ok: messages.common.buttons.ok, cancel: messages.common.buttons.cancel });
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
 
   const load = useCallback(async (): Promise<void> => {
     const [v, m] = await Promise.all([api.school(spaceId), api.members(spaceId)]);
@@ -71,7 +71,9 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   };
 
   return (
-    <AdultFrame onSignOut={onSignOut} title={view ? s.titleFor(view.school.name) : s.title}>
+    // A school's own page goes back to Classes (PageBack, AMENDMENTS-DISPLAY-NAV section 7.3).
+    <AdultFrame onSignOut={onSignOut} back={spacePageBack('school', c)} title={view ? s.titleFor(view.school.name) : s.title}>
+      {confirmSheet}
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {view ? (
@@ -87,8 +89,8 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
           onCopy={() => void copy()}
           onRegenerate={() => {
             void (async () => {
-              if (view.invite.joinCode && !(await confirmDialog.ask(`${s.invite.regenerateAsk} ${c.oldCodeStops}`))) return;
-              await run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
+              if (view.invite.joinCode && !(await confirm({ title: s.invite.regenerateAsk, message: c.oldCodeStops, confirmLabel: c.confirm.newCode }))) return;
+              void run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
             })();
           }}
           onAssigning={setAssigning}
@@ -97,7 +99,6 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
           onCreateClass={(name) => void run(() => api.createSpace({ kind: 'class', name, parentSpaceId: spaceId }), 'classCreated', 'createFailed').then(() => setNewClass(''))}
         />
       ) : null}
-      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

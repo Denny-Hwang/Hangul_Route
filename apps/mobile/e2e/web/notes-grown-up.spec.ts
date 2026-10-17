@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, openForGrownUps, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
+import { onboardChild, openForGrownUps, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -193,17 +193,17 @@ test.describe('grown-up notes (flag on)', () => {
     await expect(page.getByRole('heading', { name: 'My notes' })).toBeVisible();
     await expect(page.getByTestId('notes-list').getByRole('link')).toHaveCount(1);
     // One My notes on the stack, and the grown-up session ended with the report.
-    await page.getByTestId('notes-screen').getByTestId('notes-back').click();
+    await headerBack(page.getByTestId('notes-screen')).click();
     await expectZoneLocked(page);
   });
 
   test('Tell a grown-up: closing the sheet without a report ends the grown-up session too', async ({ page }) => {
     await childWithNotes(page);
     await reportFromNotePage(page);
-    await page.getByTestId('note-report-close').click();
+    await headerClose(page).click();
     await expect(page.getByTestId('note-page')).toBeVisible();
-    await page.getByTestId('note-detail-screen').getByTestId('notes-back').click();
-    await page.getByTestId('notes-screen').getByTestId('notes-back').click();
+    await headerBack(page.getByTestId('note-detail-screen')).click();
+    await headerBack(page.getByTestId('notes-screen')).click();
     await expectZoneLocked(page);
   });
 

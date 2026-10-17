@@ -19,7 +19,7 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -44,8 +44,6 @@ const CARD_FACE = 200;
 
 export interface CardDetailViewProps {
   cardId: string;
-  /** Renders the close button when given (the modal screen passes it; a split pane does not). */
-  onClose?: () => void;
   /** A locked card says how it is earned (F-LAYOUT-001 §3.6, F-STORY-006 §3.7): the Library pane and the stack screen pass it. */
   showHowToEarn?: boolean;
   /**
@@ -55,7 +53,7 @@ export interface CardDetailViewProps {
   state?: CardDetailState;
 }
 
-export function CardDetailView({ cardId, onClose, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): React.ReactElement {
+export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();
@@ -122,19 +120,6 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false, state =
 
   return (
     <Screen tone="canvas">
-      {onClose ? (
-        <>
-          <Pressable
-            onPress={onClose}
-            hitSlop={spacing.md}
-            style={{ alignSelf: 'flex-start' }}
-          >
-            <Icon name="close" size={28} />
-          </Pressable>
-          <Spacer size="lg" />
-        </>
-      ) : null}
-
       <View ref={captureRef} collapsable={false}>
         <FlipCard
           face={face}

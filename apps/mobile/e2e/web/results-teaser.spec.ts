@@ -1,13 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import {
-  completeChildForm,
-  jamoOfSpoken,
-  journeyCellName,
-  openLettersEpisode,
-  passDiscover,
-  waitForNextListenPickRound,
-} from './helpers';
+import { completeChildForm, jamoOfSpoken, journeyCellName, openLettersEpisode, passDiscover, waitForNextListenPickRound, headerClose, acceptConfirmSheets } from './helpers';
 
 /**
  * F-QUEST-002 Q-5b: the Results "Next up" teaser and the soft prerequisite on
@@ -139,7 +132,7 @@ test('a played quest teases the real next quest, and the CTA goes there', async 
   await expect(page.getByRole('button', { name: 'Back home' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Episode page' })).toBeVisible();
   await page.getByRole('button', { name: 'Play next quest' }).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
   await expect(page.getByText('Round Two')).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -160,7 +153,7 @@ test.skip('every game skipped: the same quest is offered again, and nothing is l
   await expect(page.getByText('Next up')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Greeting Dialogues' })).toBeVisible();
   await page.getByRole('button', { name: 'Try this one again' }).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -177,14 +170,14 @@ test('soft prerequisite: a note, a one-time sheet, and both answers work', async
   await startButtons.nth(1).click();
   await expect(page.getByText('This one uses letters from Meet a, eo, g, n. Start there?')).toBeVisible();
   await page.getByRole('button', { name: 'Play anyway' }).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
-  await page.getByRole('button', { name: 'Leave quest' }).click();
-  await page.getByTestId('quest-leave-sheet-confirm').click();
+  await expect(headerClose(page)).toBeVisible();
+  await acceptConfirmSheets(page);
+  await headerClose(page).click();
 
   // Back on the episode page (leaving replaces the player with a fresh page) the sheet does not ask a second time.
   await expect(page.getByText('Builds on: Meet a, eo, g, n').last()).toBeVisible();
   await page.getByRole('button', { name: 'Start', exact: true }).nth(1).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -196,7 +189,7 @@ test('soft prerequisite: "Start there" opens the earlier quest', async ({ page }
 
   await page.getByRole('button', { name: 'Start', exact: true }).nth(1).click();
   await page.getByRole('button', { name: 'Start there' }).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
   await expect(page.getByText('Hi from Hoya')).toBeVisible();
   expect(errors).toEqual([]);
 });

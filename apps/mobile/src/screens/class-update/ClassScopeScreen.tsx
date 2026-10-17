@@ -1,8 +1,8 @@
 import { LOCALE_META } from '@hangul-route/i18n';
-import { Body, Button, Icon, Screen, Spacer, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Button, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { classScopeLines } from '../../logic/class-update/class-update';
@@ -57,16 +57,6 @@ export function ClassScopeScreen({ route, navigation }: Props): React.ReactEleme
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable
-        onPress={() => navigation.goBack()}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={messages.a11y.goBack}
-        style={{ alignSelf: 'flex-start', minWidth: touchTarget.min, minHeight: touchTarget.min, justifyContent: 'center' }}
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <FocusTitle text={t.title} />
       <Spacer size="md" />
       <View {...{ lang: LOCALE_META[sheet.locale].htmlLang }} style={{ gap: spacing.md }} testID="class-scope-lines">

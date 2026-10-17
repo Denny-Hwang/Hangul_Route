@@ -47,7 +47,8 @@ describe('CardDetailView extraction (F-LAYOUT-001 PR 4)', () => {
   it('the view exports the component with the spec props', () => {
     expect(view).toContain('export function CardDetailView(');
     expect(view).toMatch(/cardId: string/);
-    expect(view).toMatch(/onClose\?: \(\) => void/);
+    // Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1): the view draws no close of its own.
+    expect(view).not.toMatch(/onClose\?: \(\) => void/);
   });
 
   it('the view owns the flip, hear and share body', () => {
@@ -58,9 +59,9 @@ describe('CardDetailView extraction (F-LAYOUT-001 PR 4)', () => {
     expect(view).not.toContain('navigation');
   });
 
-  it('the screen is a thin wrapper that keeps the navigation call', () => {
+  it('the screen is a thin wrapper; its Close is the route\'s ScreenHeader', () => {
     expect(screen).toContain('<CardDetailView');
-    expect(screen).toContain('navigation.goBack()');
+    expect(screen).not.toContain('navigation.goBack()');
     expect(screen).not.toContain('useSharedValue');
     expect(screen.split('\n').length).toBeLessThan(30);
   });

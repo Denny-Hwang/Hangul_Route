@@ -13,7 +13,6 @@ import {
   type LectureBlock,
   type LectureDeckInput,
   type LectureOptions,
-  type LecturePicker,
   type LecturePreset,
 } from './lecture';
 import { QUEST_ID_RE } from './quest';
@@ -556,7 +555,6 @@ export function presetDeck(
     createdAt: string;
     seed: number;
     options?: Partial<LectureOptions>;
-    picker?: LecturePicker | null;
     source: NonNullable<LectureDeckInput['source']>;
   },
 ): LectureDeckInput {
@@ -569,7 +567,8 @@ export function presetDeck(
     seed: meta.seed,
     blocks: [...resolved.blocks],
     options: { ...meta.options },
-    picker: meta.picker ?? null,
+    // The helper picker is gone (LV-H): a preset deck never names one.
+    picker: null,
     source: meta.source,
     ...(v === 2 ? { preset: resolved.preset } : {}),
   };

@@ -120,8 +120,9 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
     await expect(page.getByTestId('write-frame-my-page-sheet').getByText('저는 떡볶이를 좋아해요.')).toBeVisible();
     await expect(page.getByTestId('write-frame-my-page-sheet').getByText('Today I go to the park.')).toBeVisible();
     await expect(page.getByText('This page is just for now. It is not saved.')).toBeVisible();
-    // No share, save, print, export or copy control: Continue is the only button.
-    await expect(page.getByTestId('write-frame-my-page').getByRole('button')).toHaveCount(1);
+    // No share, save, print, export or copy control: below the screen header (Close and Display), Continue is the only button.
+    await expect(page.getByTestId('write-frame-my-page').getByRole('button')).toHaveCount(3);
+    await expect(page.getByTestId('write-frame-my-page').getByTestId('screen-header').getByRole('button')).toHaveCount(2);
     await expectNoHorizontalOverflow(page);
     await shot(page, 'write-frame-320-my-page');
     await page.getByTestId('write-frame-continue').click();

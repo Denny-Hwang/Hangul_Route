@@ -3,11 +3,11 @@
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/console/ui';
-import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import type { ConsoleApi, PlanView, RosterLearner } from '@/lib/console/api';
 import { planUpdateOffer, reseedSaveBody, updateAskText } from '@/lib/console/curriculum';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
+import { useConfirm } from './ConfirmSheet';
 
 /**
  * **Update the plan** on a family learner card (F-PLAN-002 section 3.8 step 4, FP-B5, PR P2-6b;
@@ -37,11 +37,11 @@ export function PlanUpdateLine({
 }): JSX.Element | null {
   const { messages, locale } = useConsoleLocale();
   const words = messages.console.curriculum.update;
-  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
-  const confirmDialog = useConfirmDialog({ ok: messages.common.buttons.ok, cancel: messages.common.buttons.cancel });
   const offer = useMemo(() => planUpdateOffer(kind, learner, plans, today), [kind, learner, plans, today]);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<'done' | 'failed' | null>(null);
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const doneRef = useRef<HTMLDivElement>(null);
   // Focus follows the save onto its message, so a screen reader hears it and focus never falls to the page.
   useEffect(() => {
@@ -58,7 +58,7 @@ export function PlanUpdateLine({
   const name = learner.displayName.trim();
 
   const apply = async (): Promise<void> => {
-    if (!api || busy || !(await confirmDialog.ask(updateAskText(offer.diff, locale)))) return;
+    if (!api || busy || !(await confirm({ title: updateAskText(offer.diff, locale), confirmLabel: messages.console.confirm.update }))) return;
     setBusy(true);
     setStatus(null);
     let ok = false;
@@ -76,6 +76,7 @@ export function PlanUpdateLine({
 
   return (
     <div data-testid="plan-update" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs, margin: `${spacing.xxs}px 0` }}>
+      {confirmSheet}
       <span style={{ minWidth: 0 }}>{words.line(name)}</span>
       <Button testId="plan-update-cta" ariaLabel={words.label(name)} disabled={!api || busy} onClick={() => void apply()}>
         {words.cta}
@@ -84,7 +85,6 @@ export function PlanUpdateLine({
       <span role="status" aria-live="polite" style={{ display: 'block', width: '100%', color: colors.text.secondary, fontSize: rem(typography.size.caption) }}>
         {status === 'failed' ? words.failed : null}
       </span>
-      {confirmDialog.dialog}
     </div>
   );
 }

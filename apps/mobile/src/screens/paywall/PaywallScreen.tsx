@@ -1,9 +1,9 @@
 import { CATALOG, freeLessonsFacts } from '@hangul-route/content-schema';
-import { Body, Button, Caption, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
+import { Body, Button, Caption, Heading, Hoya, Screen, Spacer, colors, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
@@ -161,15 +161,10 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
     navigation.navigate('PinEntry', { next: 'Billing' });
   };
 
-  const back = (): void => {
-    if (from === 'journey') navigation.navigate('Main', { screen: 'Journey' });
-    else navigation.goBack();
-  };
-
   return (
     <Screen tone="canvas" scrollable>
-      {/* The heading comes first in reading order and carries the summary (§8); the back button sits over its left edge. */}
-      <View style={{ minHeight: touchTarget.min, justifyContent: 'center', paddingHorizontal: touchTarget.min }}>
+      {/* The heading comes first in reading order and carries the summary (§8); the way back is the route's ScreenHeader above it. */}
+      <View style={{ minHeight: touchTarget.min, justifyContent: 'center' }}>
         <Text {...KOREAN_LINE_BREAK}
           accessibilityRole="header"
           accessibilityLabel={view.summary}
@@ -183,15 +178,6 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
         >
           {view.heading}
         </Text>
-        <Pressable
-          onPress={back}
-          hitSlop={spacing.md}
-          accessibilityRole="button"
-          accessibilityLabel={messages.a11y.goBack}
-          style={{ position: 'absolute', left: 0, top: 0, bottom: 0, justifyContent: 'center', padding: spacing.xs }}
-        >
-          <Icon name="arrow-left" size={28} />
-        </Pressable>
       </View>
       <Spacer size="sm" />
       <View style={{ alignItems: 'center' }}>
@@ -256,7 +242,8 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
         tone="primary"
         size="lg"
         fullWidth
-        onPress={() => (view.backTo === 'Back' ? back() : navigation.navigate('Main', { screen: view.backTo }))}
+        // Plain Back (Profile's plan card opened it) goes where the route's ScreenHeader Back goes.
+        onPress={() => (view.backTo === 'Back' ? navigation.goBack() : navigation.navigate('Main', { screen: view.backTo }))}
         testID="plan-back"
       />
       <Spacer size="xl" />

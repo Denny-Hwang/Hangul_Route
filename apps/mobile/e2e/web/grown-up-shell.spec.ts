@@ -112,9 +112,8 @@ function countConsoleApiCalls(page: Page): { readonly count: number } {
 }
 
 const lockTitle = (page: Page) => page.getByRole('heading', { name: lock.title });
-/** The frame's way back: Back to learning, or Open the learner app on a browser with no learner profile. */
-const WAY_BACK = new RegExp(`^(${en.console.shell.backToLearning}|${en.console.shell.openLearnerApp})$`);
-const backToLearning = (page: Page) => page.getByRole('link', { name: WAY_BACK }).or(page.getByRole('button', { name: WAY_BACK }));
+/** The frame's way to the learner app: one "Learner app" exit at the right of the header (AMENDMENTS-DISPLAY-NAV section 7.3). */
+const backToLearning = (page: Page) => page.getByTestId('frame-learner-app').filter({ hasText: en.console.shell.backToLearning });
 
 /** The page behind the lock rendered: the frame's way back is on screen and no lock is. */
 async function expectOpen(page: Page): Promise<void> {

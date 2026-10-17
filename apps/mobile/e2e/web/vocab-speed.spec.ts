@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -342,7 +342,7 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await answer(page, true);
     await expect(page.getByTestId('vocab-question-hoya')).toHaveCount(0, { timeout: 3000 });
 
-    await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
+    await headerClose(page.getByTestId('vocab-speed-round')).click();
     const stop = page.getByTestId('vocab-speed-stop');
     await expect(stop).toBeVisible();
     await expect(stop).toContainText('Stop for now?');
@@ -352,7 +352,7 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await expect(stop).toHaveCount(0);
     await expect(page.getByTestId('vocab-speed-round')).toBeVisible();
 
-    await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
+    await headerClose(page.getByTestId('vocab-speed-round')).click();
     await page.getByTestId('vocab-speed-stop-confirm').click();
     await expect(page.getByTestId('vocab-topic')).toBeVisible();
     await expect(page.getByTestId('vocab-results')).toHaveCount(0);
@@ -544,7 +544,7 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
 
     // "Stop for now?" pauses the round first: the question is hidden under the sheet and the time stands still;
     // Keep playing lands on Resume.
-    await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
+    await headerClose(page.getByTestId('vocab-speed-round')).click();
     await expect(page.getByTestId('vocab-speed-keep')).toBeVisible();
     await expect(page.getByTestId('vocab-question')).toHaveCount(0);
     const atStop = await clock.innerText();
@@ -556,7 +556,7 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-speed-resume')).toBeFocused();
 
     // Stop from the round: no results, the answer given stays written.
-    await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
+    await headerClose(page.getByTestId('vocab-speed-round')).click();
     await page.getByTestId('vocab-speed-stop-confirm').click();
     await expect(page.getByTestId('vocab-topic')).toBeVisible();
     await expect(page.getByTestId('vocab-results')).toHaveCount(0);
@@ -594,7 +594,7 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
     expect(await timeUp.evaluate((el) => el.closest('[aria-live]')?.getAttribute('aria-live') ?? null)).toBe('polite');
     await expect(page.getByTestId('vocab-speed-few-seconds')).toHaveCount(0);
     // The round is over and saved: no Back (nothing to stop) and no Pause during the beat.
-    await expect(page.getByTestId('vocab-speed-round').getByTestId('vocab-back')).toHaveCount(0);
+    await expect(headerClose(page.getByTestId('vocab-speed-round'))).toHaveCount(0);
     await expect(page.getByTestId('vocab-speed-pause')).toHaveCount(0);
     await shot(page, 'vocab-speed-time-up');
     await page.clock.runFor(1200);

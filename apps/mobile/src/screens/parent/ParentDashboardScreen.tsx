@@ -4,7 +4,6 @@ import {
   Caption,
   Card,
   Heading,
-  Icon,
   Pill,
   Screen,
   Spacer,
@@ -16,7 +15,7 @@ import { type StageKey } from '@hangul-route/content-schema';
 import { formatDate, levelWords, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
@@ -90,20 +89,15 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
 
   return (
     <Screen tone="canvas" scrollable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack}>
-          <Icon name="arrow-left" size={28} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          {/* One name for the Profile row, the PIN title and this page (owner request 2026-10-16, item 8), the persona under it. */}
-          <Heading level="title">{copy.zoneLabel}</Heading>
-          {audience === 'family' ? (
-            <Body tone="secondary" weight="semibold" testID="dashboard-persona">
-              {m.persona}
-            </Body>
-          ) : null}
-          <Caption tone="muted">{m.readOnly}</Caption>
-        </View>
+      <View>
+        {/* One name for the Profile row, the PIN title and this page (owner request 2026-10-16, item 8), the persona under it. */}
+        <Heading level="title">{copy.zoneLabel}</Heading>
+        {audience === 'family' ? (
+          <Body tone="secondary" weight="semibold" testID="dashboard-persona">
+            {m.persona}
+          </Body>
+        ) : null}
+        <Caption tone="muted">{m.readOnly}</Caption>
       </View>
 
       <Spacer size="lg" />

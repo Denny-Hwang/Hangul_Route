@@ -3,7 +3,7 @@ import type { HomeworkAssignment, ProgressSnapshot, SelfRoute } from '@hangul-ro
 import { getMessages } from '@hangul-route/i18n';
 import { questsAll } from '../../src/content/quests';
 import { expect, test } from './fixtures';
-import { onboardSelf, readStored, seedStored } from './helpers';
+import { onboardSelf, readStored, seedStored, headerBack } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -156,7 +156,7 @@ test.describe('the weekly plan end to end (flag on)', () => {
     expect(created.meta.params.minutesPerSession).toBe(20);
 
     // Home follows the plan: today's lesson from the plan is card (2), picked for the learner.
-    await page.getByTestId('route-overview-back').click();
+    await headerBack(page).click();
     await page.goto('/');
     await expect(page.getByText('Hi, Rae!')).toBeVisible();
     await closeInstallGuide(page);
@@ -208,9 +208,9 @@ test.describe('the weekly plan end to end (flag on)', () => {
     await expect(page.getByTestId('route-setup-step')).toHaveText('Step 2 of 4');
     await expect(page.getByTestId('route-setup-minutes-20')).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByTestId('route-setup-minutes-15')).toHaveAttribute('aria-checked', 'false');
-    await page.getByTestId('route-setup-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('route-setup-step')).toHaveText('Step 1 of 4');
-    await page.getByTestId('route-setup-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('route-overview-current')).toBeVisible();
     const afterBack = (await stored(page, profileId)).selfRoute as SelfRoute;
     expect(afterBack.id).toBe(created.id);

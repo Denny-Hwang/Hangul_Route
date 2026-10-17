@@ -279,6 +279,16 @@ export const learner = {
     /** The profile was removed while the screen was open. */
     notFound: 'This profile is no longer on this device.',
     save: { cta: 'Save' },
+    /**
+     * Back (the header's, the browser's or the phone's) with changes not saved yet asks first, in a
+     * ConfirmSheet (AMENDMENTS-DISPLAY-NAV sections 7.1 and 8): the safe choice comes first.
+     */
+    leave: {
+      title: 'Leave without saving?',
+      message: 'Your changes to this profile are not saved yet.',
+      keep: { cta: 'Keep editing' },
+      confirm: { cta: 'Leave' },
+    },
   },
 
   home: {
@@ -2119,12 +2129,15 @@ export const learner = {
       label: 'Lesson controls',
       counter: (i: number, n: number) => `${i} / ${n}`,
       /** Next while the slide has builds left (README D3). */
+      /** The slide step back on both bars (LV-M1): "Back" only ever means leaving a screen. */
+      prev: { cta: 'Previous' },
       reveal: { cta: 'Reveal' },
       sound: { cta: 'Sound' },
       timer: { cta: 'Timer' },
-      picker: { cta: 'Helper' },
       blank: { cta: 'Blank' },
       grid: { cta: 'Slides' },
+      /** The phone bar's sheet of the other controls (F-TCH-004 section 3.6). */
+      more: { cta: 'More' },
       fullscreen: { cta: 'Full screen' },
       exit: { cta: 'Exit' },
       /** Status chips (PR 9, spec sections 3.7 and 3.8); nothing about a learner ever shows here. */
@@ -2213,6 +2226,12 @@ export const learner = {
       slides: (n: number) => plural('en', n, { one: '1 slide', other: `${n} slides` }),
       minutes: (n: number) => plural('en', n, { one: 'about 1 minute', other: `about ${n} minutes` }),
       checks: 'Before you start',
+      /** The phone start screen's one line (section 3.5); `someChecks` under it when a check is not ready, Details opens the list. */
+      ready: 'Ready to start',
+      someChecks: 'Some checks need a look: see Details.',
+      details: { cta: 'Details' },
+      /** The phone start screen, held upright: information, never a blocker. */
+      turnHint: 'Turn your phone sideways for the lesson.',
       offlineReady: 'Ready for offline',
       offlineNotReady: 'Open this page once with Wi-Fi to use it offline.',
       installHint: 'You can also add it to the home screen from the browser menu.',
@@ -2235,16 +2254,6 @@ export const learner = {
         'scope-too-small': 'Too few letters or words for this quiz',
         'unsupported-step': 'A step the slides do not show',
       },
-      picker: {
-        title: 'Helper picker',
-        names: (n: number) => plural('en', n, { one: '1 name received', other: `${n} names received` }),
-        initials: (n: number) => plural('en', n, { one: '1 initial received', other: `${n} initials received` }),
-        numbers: (n: number) => `Numbers 1 to ${n}`,
-        noOpener: 'Names come from the console page that opened this lesson. Using numbers.',
-        notKept: 'Names are not kept on this device. Using numbers.',
-        fewer: 'Fewer',
-        more: 'More',
-      },
       /** The font wait, at most 1.5 s (section 3.6). */
       loading: 'Getting the big letters ready',
       cta: 'Start',
@@ -2256,18 +2265,6 @@ export const learner = {
     },
     /** The Pause overlay: the word is `PAUSE_WORD` in `logic/lecture/content.ts`; this is its gloss. */
     pause: { gloss: 'wait a moment' },
-    /** The helper picker (TD5, README D11): a turn-taking tool, never a count, list or score. */
-    picker: {
-      title: "Who's helping next?",
-      ready: 'Choose Draw.',
-      empty: 'Everyone has had a turn',
-      draw: { cta: 'Draw' },
-      undo: { cta: 'Undo' },
-      /** The reducer's skip: the label goes back into the bag, no reason given. */
-      another: { cta: 'Another' },
-      startAgain: { cta: 'Start again' },
-      mode: { names: 'names', initials: 'initials', numbers: 'numbers' },
-    },
     /** The class timer (TD5, README D12): the ring only fills; at zero no alarm. */
     timer: {
       title: 'Class timer',
@@ -2287,6 +2284,8 @@ export const learner = {
     help: {
       title: 'Keys and controls',
       clicker: 'A presentation clicker works with no setup.',
+      /** Under the title in a phone window only (the bar's strip shows it, section 3.6). */
+      phoneBar: 'On a phone, tap the bottom of the slide to show the controls.',
       keepVisible: 'Keep controls visible',
       romanization: 'Romanization',
       romanizationAlways: 'always',
@@ -2294,14 +2293,13 @@ export const learner = {
       key: { space: 'Space', backspace: 'Backspace' },
       row: {
         next: 'Next',
-        back: 'Back',
+        back: 'Previous',
         first: 'First and last slide',
         blank: 'Blank the screen',
         sound: 'Play the sound again',
         strokes: 'Replay the stroke guide',
         romanization: 'Romanization on or off',
         timer: 'Class timer',
-        picker: 'Helper picker',
         grid: 'All slides',
         fullscreen: 'Full screen',
         help: 'This help',
@@ -2320,6 +2318,8 @@ export const learner = {
       },
       loading: 'Loading lesson',
       tooSmall: 'Make the window bigger or turn the screen.',
+      /** The rotate page: a phone held upright during a lesson (section 3.6). */
+      rotate: { title: 'Turn your phone sideways', line: 'The lesson shows when the phone is sideways. Nothing is lost.' },
       portrait: 'Turn the screen for a bigger view',
     },
   },

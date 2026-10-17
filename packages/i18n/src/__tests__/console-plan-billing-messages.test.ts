@@ -14,8 +14,8 @@ describe('plan page (teach/space/plan/page.tsx)', () => {
   it('keeps the title, the back link and the errors', () => {
     expect(p.title).toBe('Plan');
     expect(p.titleFor('Class A')).toBe('Class A · plan');
-    expect(p.back('Class A')).toBe('← Back to Class A');
-    expect(p.back(null)).toBe('← Back to the space');
+    expect(p.back('Class A')).toBe('Back to Class A');
+    expect(p.back(null)).toBe('Back to the space');
     expect(p.saveInvalid).toBe("Some learners are no longer in this space — check who it's for.");
     expect(p.saveFailed).toBe("Didn't save. Try again.");
     expect(p.archiveFailed).toBe("Couldn't archive it right now.");

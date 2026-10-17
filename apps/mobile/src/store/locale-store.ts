@@ -18,7 +18,7 @@ import { availableLocales, detectLocale, resolveLocale, type UiLocale } from '@h
 import { create } from 'zustand';
 import { deviceLanguages, takeLangHandoff } from '../platform/locale';
 import { postDeviceSettings, subscribeDeviceSettings } from '../platform/prefs-channel';
-import { readJson, readJsonStrict, removeKey, writeJson } from '../platform/storage';
+import { readJson, readJsonStrict, removeKey, updateJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
 
@@ -38,8 +38,9 @@ import { onProfileRemoved } from './profile-removal';
  *   promoted to the device (stamped `MIGRATED_AT`) and then stripped (AMENDMENTS-DISPLAY-NAV
  *   section 3.3).
  *
- * Only locale codes reach telemetry (`locale.changed`, scope `device`); the text size is not
- * reported.
+ * Only locale codes reach telemetry (`locale.changed`, scope `device`), and only from the learner
+ * app: the presenter's and All lessons' Display sheets report nothing (AMENDMENTS-DISPLAY-NAV
+ * section 11). The text size is not reported.
  */
 
 const DEVICE_KEY = DEVICE_SETTINGS_KEY;
@@ -77,12 +78,17 @@ interface Actions {
   /**
    * Reads the device record and the profiles' settings. `activeProfileId` names the profile whose
    * old language override is promoted to the device (with no active profile, the only one): it is
-   * what that profile saw, whatever the record held. `handoff: 'ignore'` (the presenter) takes a
-   * `?lang=` out of the address without using it; the default seeds a device that never chose.
+   * what that profile saw, unless the record holds a choice made with its time (section 3.3).
+   * `handoff: 'ignore'` (the presenter) takes a `?lang=` out of the address without using it; the
+   * default seeds a device that never chose.
    */
   hydrate: (profileIds: string[], options?: { handoff?: HandoffUse; activeProfileId?: string | null }) => Promise<void>;
-  /** The person chose a language on this device: stored with its time, told to the other tabs. */
-  setDeviceLocale: (locale: UiLocale, source?: LocaleChangeSource) => void;
+  /**
+   * The person chose a language on this device: stored with its time, told to the other tabs, and
+   * reported as `locale.changed` with `source`. `null` reports nothing: the presenter and All
+   * lessons send no event for a display choice (AMENDMENTS-DISPLAY-NAV section 11).
+   */
+  setDeviceLocale: (locale: UiLocale, source?: LocaleChangeSource | null) => void;
   /**
    * A `?lang=` or All lessons pass language: only for a device that never chose, stamped
    * `MIGRATED_AT` (AMENDMENTS-DISPLAY-NAV section 3.4): it is not a choice made here, so a
@@ -157,41 +163,42 @@ function persist(write: Promise<unknown>): void {
   write.catch(() => undefined);
 }
 
-/** The record as the store holds it: what a write starts from when the stored record cannot be read. */
-function recordOf(state: Pick<State, 'device' | 'deviceAt' | 'textSize'>): DeviceSettings {
-  return {
-    ...(state.device === null ? {} : { uiLocale: state.device }),
-    ...(state.device !== null && state.deviceAt !== null ? { uiLocaleAt: state.deviceAt } : {}),
-    ...(state.textSize === DEFAULT_TEXT_SIZE ? {} : { textSize: state.textSize }),
-  };
+/** A language chosen on a device with its time: not a migrated or seeded one (`MIGRATED_AT`), and not one stored before times. */
+function timedChoice(record: DeviceSettings): boolean {
+  return record.uiLocale !== undefined && record.uiLocaleAt !== undefined && record.uiLocaleAt !== MIGRATED_AT;
+}
+
+/** What a record write found: the record as stored now, and whether this call wrote it. */
+interface RecordWrite {
+  record: DeviceSettings;
+  wrote: boolean;
 }
 
 /**
- * Read-modify-write of the device record (AMENDMENTS-DISPLAY-NAV section 3.1): `decide` sees what
- * is stored now (another tab, the grown-up pages, may have written meanwhile) and returns the
- * fields to change, or null to change nothing. Only those fields change, so a key this build does
- * not know (a newer build's field or value) survives. A read that fails starts from what this tab
- * holds (`fallback`, kept in step by the other tabs' messages). The written record is told to
- * the other tabs.
+ * Read-modify-write of the device record (AMENDMENTS-DISPLAY-NAV section 3.1), in one step
+ * (`updateJson`: one IndexedDB transaction on the web), so a field another tab or another call
+ * writes in between is never lost. `decide` sees what is stored now and returns the fields to
+ * change, or null to change nothing. Only those fields change, so a key this build does not know
+ * (a newer build's field or value) survives. A record that cannot be read is never written: the
+ * write rejects and the change stays in this tab's memory. A written record is told to the other
+ * tabs; resolves to the record as stored now.
  */
-async function writeRecord(decide: (stored: DeviceSettings) => DeviceSettingsPatch | null, fallback: () => DeviceSettings): Promise<DeviceSettings | null> {
-  let raw: unknown;
-  try {
-    raw = await readJsonStrict<unknown>(DEVICE_KEY);
-  } catch {
-    raw = fallback();
-  }
-  const patch = decide(settingsOf(raw));
-  if (patch === null) return null;
-  const next = mergeDeviceSettings(raw, patch);
-  await writeJson(DEVICE_KEY, next);
-  const known = settingsOf(next);
-  postDeviceSettings(known);
-  return known;
+async function writeRecord(decide: (stored: DeviceSettings) => DeviceSettingsPatch | null): Promise<RecordWrite> {
+  let record: DeviceSettings = {};
+  const wrote = await updateJson<unknown>(DEVICE_KEY, (raw) => {
+    record = settingsOf(raw);
+    const patch = decide(record);
+    if (patch === null) return undefined;
+    const next = mergeDeviceSettings(raw, patch);
+    record = settingsOf(next);
+    return next;
+  });
+  if (wrote) postDeviceSettings(record);
+  return { record, wrote };
 }
 
-function reportLocaleChange(from: UiLocale, to: UiLocale, source: LocaleChangeSource): void {
-  if (from === to) return;
+function reportLocaleChange(from: UiLocale, to: UiLocale, source: LocaleChangeSource | null): void {
+  if (from === to || source === null) return;
   void track({ name: 'locale.changed', payload: { from, to, scope: 'device', source } });
 }
 
@@ -239,23 +246,28 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     }
     // Migration (AMENDMENTS-DISPLAY-NAV section 3.3): the active (or only) profile's old override
     // is the language that profile saw (the old resolution put it above the device), so it becomes
-    // the device's whatever the record held, stamped older than any real choice. Only after that
-    // write is stored is every profile's override stripped, so a failed write loses nothing. A
-    // cached older build that writes an override again has it folded again at the next boot.
+    // the device's, stamped older than any real choice, whatever language the record held, unless
+    // the record holds a choice made with its time: that one was made on this build, after the
+    // override (a leftover from a strip cut short, or one written again by a cached older build,
+    // which has no time), so it stays and the override is only stripped. Only after the fold is
+    // stored is every profile's override stripped, so a failed write loses nothing.
     const source = promotionSource(profileIds, options?.activeProfileId);
     const promoted = readable && source !== null ? overrides[source] : undefined;
-    const fold = promoted !== undefined && promoted !== record.uiLocale;
+    const fold = promoted !== undefined && promoted !== record.uiLocale && !timedChoice(record);
     if (fold) record = { ...record, uiLocale: promoted, uiLocaleAt: MIGRATED_AT };
     const strip = readable ? Object.keys(overrides) : [];
     if (fold || strip.length > 0) {
       persist(
         (async () => {
-          if (fold) await writeRecord(() => ({ uiLocale: promoted, uiLocaleAt: MIGRATED_AT }), () => record);
+          // Decided again on what is stored when the write runs: a timed choice another tab stored meanwhile stays.
+          if (fold) await writeRecord((stored) => (timedChoice(stored) ? null : { uiLocale: promoted, uiLocaleAt: MIGRATED_AT }));
           for (const id of strip) await writeJson(profileKey(id), byProfile[id]!);
         })(),
       );
     }
-    // Always taken so the address bar is cleaned; it only counts when the device never chose.
+    // Always taken so the address bar is cleaned; it only counts when the device never chose. On a
+    // record that could not be read it holds for this page only: the seed's write reads the record
+    // again and changes nothing it finds chosen, and writes nothing when it still cannot read it.
     const handoff = takeLangHandoff();
     set({ ...fieldsOf(record), byProfile, hydrated: true });
     if (handoff !== null && options?.handoff !== 'ignore') get().seedDeviceLocale(handoff);
@@ -265,7 +277,7 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     const from = activeLocale(get());
     const at = new Date().toISOString();
     set({ device: locale, deviceAt: at });
-    persist(writeRecord(() => ({ uiLocale: locale, uiLocaleAt: at }), () => recordOf(get())));
+    persist(writeRecord(() => ({ uiLocale: locale, uiLocaleAt: at })));
     reportLocaleChange(from, activeLocale(get()), source);
   },
 
@@ -273,17 +285,20 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     // A stored choice in a currently hidden locale is ignored, so it does not block the seed either.
     if (deviceChose(get()) || visible(locale) === undefined) return;
     const from = activeLocale(get());
-    const before = recordOf(get());
     set({ device: locale, deviceAt: MIGRATED_AT });
-    // A choice another tab stored meanwhile is kept.
-    persist(writeRecord((stored) => (visible(stored.uiLocale) !== undefined ? null : { uiLocale: locale, uiLocaleAt: MIGRATED_AT }), () => before));
+    // A choice stored meanwhile (another tab, or one this tab's first read could not see) is kept and shown.
+    persist(
+      writeRecord((stored) => (visible(stored.uiLocale) !== undefined ? null : { uiLocale: locale, uiLocaleAt: MIGRATED_AT })).then(({ record, wrote }) => {
+        if (!wrote && visible(record.uiLocale) !== undefined) get().applyDeviceRecord(record);
+      }),
+    );
     reportLocaleChange(from, activeLocale(get()), 'handoff');
   },
 
   setTextSize: (size) => {
     if (get().textSize === size) return;
     set({ textSize: size });
-    persist(writeRecord(() => ({ textSize: size }), () => recordOf(get())));
+    persist(writeRecord(() => ({ textSize: size })));
   },
 
   applyDeviceRecord: (record) => {

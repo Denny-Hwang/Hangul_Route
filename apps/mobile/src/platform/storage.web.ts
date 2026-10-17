@@ -1,4 +1,4 @@
-import { clear, del, get, keys, set } from 'idb-keyval';
+import { clear, del, get, keys, set, update } from 'idb-keyval';
 import { writePasses } from './storage-fence';
 
 /**
@@ -48,6 +48,40 @@ export async function readJsonExact<T>(key: string): Promise<T | null> {
 export async function writeJson<T>(key: string, value: T): Promise<void> {
   if (!writePasses(key, 'write')) return;
   await set(KEY_PREFIX + key, JSON.stringify(value));
+}
+
+/** Thrown out of an `update` callback to end the transaction without a write. */
+const UNCHANGED = Symbol('unchanged');
+
+/**
+ * Read-modify-write of one key in one IndexedDB readwrite transaction, so a write another tab or
+ * another call makes in between is never lost (AMENDMENTS-DISPLAY-NAV section 3.1). `next` gets
+ * the stored value (null when missing or unparsable) and returns the value to store, or
+ * `undefined` to store nothing. A failed read rejects and writes nothing, so a write is never made
+ * over data that could not be read. A key the write fence rejects is left untouched (`next` is not
+ * called). Resolves to whether a value was stored.
+ */
+export async function updateJson<T>(key: string, next: (current: T | null) => T | undefined): Promise<boolean> {
+  if (!writePasses(key, 'write')) return false;
+  try {
+    await update<string | undefined>(KEY_PREFIX + key, (raw) => {
+      let current: T | null = null;
+      if (raw) {
+        try {
+          current = JSON.parse(raw) as T;
+        } catch {
+          current = null;
+        }
+      }
+      const value = next(current);
+      if (value === undefined) throw UNCHANGED;
+      return JSON.stringify(value);
+    });
+  } catch (error) {
+    if (error === UNCHANGED) return false;
+    throw error;
+  }
+  return true;
 }
 
 /** Removes `key`; a key the write fence rejects is left untouched. */

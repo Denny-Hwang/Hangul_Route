@@ -6,7 +6,6 @@ import {
   HELP_W_REM,
   KBD_MIN_REM,
   KEY_COL_REM,
-  PICKER_LABEL_REM,
   READABLE_LINE_REM,
   RING_CORNER_FACTOR,
   STATUS_MIN_REM,
@@ -14,9 +13,11 @@ import {
   THUMB_W_REM,
   START_BUTTON_FACTOR,
   STATE_HOYA_FACTOR,
+  PHONE_STAGE_MIN,
   barBand,
+  phoneBarStrip,
 } from '../../logic/lecture/stage-constants';
-import type { StageBounds } from '../../logic/lecture/stage-scale';
+import type { PhoneRule, StageBounds } from '../../logic/lecture/stage-scale';
 
 /**
  * The presenter's layout numbers with the design tokens applied (design/screens/presenter/README.md
@@ -26,6 +27,12 @@ import type { StageBounds } from '../../logic/lecture/stage-scale';
 
 /** `presenter.stage` and the compact breakpoint for `stageScale` (spec section 3.6 amendment). */
 export const STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: layout.breakpoint.regular };
+/** A phone window's stage: the same stage, judged too small only below `PHONE_STAGE_MIN` (README Constants). */
+export const PHONE_STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: PHONE_STAGE_MIN };
+/** The compact bar's strip at the bottom of a phone stage: `touchTarget.min + 2 x spacing.sm` (section 3.6). */
+export const PHONE_BAR_STRIP = phoneBarStrip(touchTarget.min, spacing.sm);
+/** The design system's phone form factor (`layout.phoneShortSide`, `layout.phoneMaxLongSide`). */
+export const PHONE_RULE: PhoneRule = { shortSide: layout.phoneShortSide, maxLongSide: layout.phoneMaxLongSide };
 /** No text below `typography.size.body` anywhere (README D2). */
 export const TEXT_FLOOR = typography.size.body;
 /** 120 px: `touchTarget.hero + 2 x spacing.md` (README D1). */
@@ -44,13 +51,14 @@ export const STAGE_BORDER_MIN = borderWidth.base;
 
 export const CTL_MAX_WIDTH = CTL_MAX_FACTOR * touchTarget.hero;
 export const NEXT_MIN_WIDTH = NEXT_MIN_FACTOR * touchTarget.hero;
+/** The compact (phone) bar's Next / Reveal: 1.5 x `touchTarget.min`. */
+export const NEXT_MIN_WIDTH_COMPACT = NEXT_MIN_FACTOR * touchTarget.min;
 export const START_BUTTON_HEIGHT = START_BUTTON_FACTOR * touchTarget.hero;
 export const STATE_HOYA = STATE_HOYA_FACTOR * touchTarget.hero;
 /** A teacher page's readable column (the start screen). */
 export const TEACHER_COLUMN = layout.maxWidth.reading;
 export const READABLE_LINE = READABLE_LINE_REM * typography.size.bodySm;
 export const EXIT_DIALOG_WIDTH = EXIT_DIALOG_REM * typography.size.bodySm;
-export const PICKER_LABEL_BASIS = PICKER_LABEL_REM * typography.size.bodySm;
 
 /** PR 9's class tools in real pixels (README Constants). */
 export const RING_CORNER = RING_CORNER_FACTOR * spacing.lg;

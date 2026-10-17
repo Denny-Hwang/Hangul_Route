@@ -4,6 +4,7 @@ import type { TextSize } from '@hangul-route/content-schema';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { languageOptions } from '../logic/locale/language-picker';
+import { useHistorySheet } from '../platform/history-bridge';
 import { useLocaleStore } from '../store/locale-store';
 
 /**
@@ -19,9 +20,15 @@ export interface DeviceDisplaySheetProps {
   visible: boolean;
   onClose: () => void;
   testID?: string;
+  /**
+   * Whether a language chosen here is reported as `locale.changed` (`source: 'settings'`). Only the
+   * learner app reports it; the presenter (lecture events only) and All lessons pass `false`
+   * (AMENDMENTS-DISPLAY-NAV section 11, F-TCH-004 section 3.14).
+   */
+  reportLocale?: boolean;
 }
 
-export function DeviceDisplaySheet({ visible, onClose, testID }: DeviceDisplaySheetProps): React.ReactElement {
+export function DeviceDisplaySheet({ visible, onClose, testID, reportLocale = true }: DeviceDisplaySheetProps): React.ReactElement {
   const messages = useMessages();
   const d = messages.common.display;
   const locale = useLocale();
@@ -29,6 +36,8 @@ export function DeviceDisplaySheet({ visible, onClose, testID }: DeviceDisplaySh
   const setDeviceLocale = useLocaleStore((s) => s.setDeviceLocale);
   const setTextSize = useLocaleStore((s) => s.setTextSize);
   const [pending, setPending] = useState<UiLocale | null>(null);
+  // One history level while open: the browser or phone back closes the sheet (AMENDMENTS-DISPLAY-NAV section 7.2).
+  useHistorySheet(visible, onClose);
   // A confirm step belongs to the sheet that asked it; closing the sheet drops it.
   useEffect(() => {
     if (!visible) setPending(null);
@@ -62,7 +71,7 @@ export function DeviceDisplaySheet({ visible, onClose, testID }: DeviceDisplaySh
                 back: confirm.back(LOCALE_META[locale].endonym),
                 lang: LOCALE_META[pending].htmlLang,
                 onUse: () => {
-                  setDeviceLocale(pending, 'settings');
+                  setDeviceLocale(pending, reportLocale ? 'settings' : null);
                   setPending(null);
                 },
                 onBack: () => setPending(null),

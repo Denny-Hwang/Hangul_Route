@@ -12,7 +12,7 @@ const planItems = (items: number): string => `항목 ${items}개`;
 const planTargets = (kind: 'family' | 'class' | 'school', n: number): string =>
   kind === 'family' ? `학습자 ${n}명` : kind === 'class' ? `학생 ${n}명` : `구성원 ${n}명`;
 const leftOut = (n: number, product: string): string => `레슨 ${n}개는 다음으로 열려요: ${product}. 이 계획에서는 뺐어요.`;
-const backTo = (space: string | null): string => (space === null ? '← 공간으로 돌아가기' : `← 돌아가기: ${space}`);
+const backTo = (space: string | null): string => (space === null ? '공간으로 돌아가기' : `돌아가기: ${space}`);
 
 export const consoleMsgs = {
   devSignInHint: '개발용 로그인: Clerk 연결이 준비될 때까지 계정 아이디가 인증된 세션을 대신해요.',
@@ -67,14 +67,26 @@ export const consoleMsgs = {
   shell: {
     home: '콘솔',
     signOut: { cta: '로그아웃' },
-    backToLearning: '학습으로 돌아가기',
-    openLearnerApp: '학습자 앱 열기',
+    backToLearning: '학습자 앱',
     aboutSite: 'Hangul Route 소개',
     privacy: '개인정보',
     terms: '이용약관',
     persona: { parent: '가족', teacher: '선생님' },
     nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트' },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
+  },
+  pageBack: {
+    to: (page: string) => `돌아가기: ${page}`,
+  },
+  confirm: {
+    newCode: '새 코드 만들기',
+    remove: '빼기',
+    archive: '보관하기',
+    copyAnyway: '그래도 복사하기',
+    replace: '개요 바꾸기',
+    discard: '바뀐 내용 버리기',
+    issueCode: '코드 만들기',
+    update: '계획 업데이트하기',
   },
   kind: {
     label: { family: '가족', class: '반', school: '학교' },
@@ -780,12 +792,7 @@ export const consoleMsgs = {
       language: '슬라이드 언어',
       languageSame: '이 기기와 같게',
       languageHint: '복사한 링크는 링크를 여는 기기의 언어로 보여요.',
-    },
-    picker: {
-      title: '도우미 뽑기',
-      mode: { names: '이름', initials: '이니셜', numbers: '번호', none: '없음' },
-      hidden: '이 공간은 이름을 숨기기 때문에 이니셜로 뽑아요.',
-      privacy: '이름은 발표 탭으로 바로 전달되고 링크에는 들어가지 않아요. 교실 기기에 저장되지 않아요. 복사한 링크에는 이름이 없어요.',
+      languageHintChosen: (endonym: string) => `슬라이드 언어: ${endonym}. 복사한 링크도 어느 기기에서나 같아요.`,
     },
     titleField: { label: '수업 제목', placeholder: '3주차 글자', hint: '제목에 학생 이름을 넣지 마세요.' },
     titleProblem: {
@@ -807,7 +814,6 @@ export const consoleMsgs = {
     copied: { cta: '링크 복사됨' },
     copyFailed: '링크를 복사하지 못했어요. 다시 하거나 발표 화면 열기를 써 주세요.',
     linkFailed: '이 수업은 링크에 다 들어가지 않아요. 항목을 몇 개 빼고 다시 해 보세요.',
-    copyNoNames: '복사한 링크에는 이름이 없어서 번호로 뽑아요.',
     copyHasCode: '이 링크에는 반 참여 코드가 들어 있어요. 새 코드를 만들기 전까지는 링크가 있으면 누구나 참여할 수 있어요. 그래도 복사할까요?',
     popupBlocked: '발표 화면을 열려면 이 사이트의 팝업을 허용하거나 링크를 복사해 주세요.',
     nothing: '개요에 항목을 하나 이상 넣어 주세요.',

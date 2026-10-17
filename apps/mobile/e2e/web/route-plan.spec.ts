@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { ProgressSnapshot, SelfRoute } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, readStored, seedStored, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, readStored, seedStored, unlockWithPin, headerBack } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -229,9 +229,9 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await expect.poll(() => readStored<{ checkInFor?: string }>(page, `route-ui:${profileId}`).then((ui) => ui?.checkInFor ?? null)).not.toBeNull();
 
     // Back to Home through the app (no reload): the card is gone, the plan kept its pace.
-    await page.getByTestId('route-overview-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('profile-plan-row')).toBeVisible();
-    await page.getByRole('button', { name: 'Go back' }).first().click();
+    await headerBack(page).first().click();
     await expect(page.getByText('Hi, Ida!')).toBeVisible();
     await expect(page.getByTestId('home-plan-check-in')).toHaveCount(0);
     expect((await storedRoute(page, profileId))?.meta.params.sessionsPerWeek).toBe(3);
@@ -312,7 +312,7 @@ test.describe('Open plan on the Learning Route (flags on)', () => {
     await open.click();
 
     await expect(page.getByText('We found a path for you.')).toBeVisible();
-    await page.getByTestId('route-overview-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('my-route-plan-line')).toBeVisible();
     expect(errors).toEqual([]);
   });

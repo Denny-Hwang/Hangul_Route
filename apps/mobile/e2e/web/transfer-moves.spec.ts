@@ -1,6 +1,6 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack } from './helpers';
 import { shot, shotFile, shotsEnabled } from './shots';
 
 /**
@@ -269,7 +269,7 @@ test('(b) a teacher asked, caregiver route: the console line, Home line, gated r
   await cardShot(page, 'transfer-card-teacher-375');
 
   // Home carries the calm line under the Hoya tip.
-  await page.getByRole('button', { name: 'Go back' }).first().click();
+  await headerBack(page).first().click();
   await expect(page.getByText('Sunday Class A asked about moving Mina to Saturday Class B.')).toBeVisible();
   await cardShot(page, 'transfer-home-line-375', 'transfer-home-line');
   await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
@@ -304,8 +304,8 @@ test('Leave keeps its confirm and says when it did not go through', async ({ pag
   await openProfile(page, 'Rio');
   await openForGrownUps(page);
   await page.getByRole('button', { name: /Leave Sunday Class A/ }).click();
-  // The app's own confirm sheet (design/components/ConfirmSheet): Stay first, Leave under it.
-  await page.getByTestId('spaces-leave-sheet-confirm').click();
+  // The app's own confirm sheet (platform/dialog on the web, AMENDMENTS-DISPLAY-NAV section 8): Stay first, Leave after it.
+  await page.getByTestId('confirm-sheet-confirm').click();
   await expect(page.getByText('This needs internet. Try again when you are online.')).toBeVisible();
 });
 
@@ -375,7 +375,7 @@ test('a grown-up session left open elsewhere never carries the Home line: Review
   // The dashboard's back arrow sits just before its title block.
   await page.getByRole('heading', { name: 'Family Dashboard' }).locator('xpath=../preceding-sibling::*[1]').click();
   await expect(page.getByRole('heading', { name: 'Classes & family' })).toBeVisible();
-  await page.getByRole('button', { name: 'Go back' }).first().click();
+  await headerBack(page).first().click();
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
   await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();

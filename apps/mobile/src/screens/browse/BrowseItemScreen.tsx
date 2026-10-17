@@ -15,7 +15,7 @@ import { BROWSE_REGISTERED_ROUTES, type BrowseStackParamList } from '../../navig
 import { lectureBundle } from '../../logic/lecture/content';
 import { leaveTo } from '../../platform/browse-env';
 import { openPresenter, presenterRootExists } from '../../platform/present-handoff';
-import { CardRow, HeaderBack, HeaderRow, KoChip, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
+import { CardRow, KoChip, LessonDisplayButton, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
 import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN } from '../../logic/browse/layout';
@@ -84,10 +84,6 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   }, [facts, navigation]);
   if (!facts || !pass) return <Screen tone="canvas">{null}</Screen>;
 
-  const back = (): void => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('BrowseHome', {});
-  };
   const seeOnJourney = (stage: StageKey): void =>
     navigation.navigate('BrowseHome', { section: 'journey', stage });
 
@@ -181,9 +177,16 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   const inlineAction = actionBar(placement.inline);
 
   return (
-    <Screen tone="canvas" scrollable width="reading" testID="browse-item" footer={footerAction ?? undefined}>
-      <HeaderRow back={<HeaderBack label={m.item.back} showLabel={false} onPress={back} testID="browse-back" />} onDisplay={() => setDisplayOpen(true)} />
-      <Spacer size="sm" />
+    <Screen
+      tone="canvas"
+      scrollable
+      width="reading"
+      testID="browse-item"
+      footer={footerAction ?? undefined}
+      // Back and the Display (Aa) control come from the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1); the
+      // Romanization chip rides beside them.
+      header={{ trailing: <LessonDisplayButton onPress={() => setDisplayOpen(true)} /> }}
+    >
       {facts.kind === 'quest' && facts.focus ? (
         <>
           <View testID="browse-focus-line" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.surface.sunken, borderRadius: radii.md, padding: spacing.md }}>

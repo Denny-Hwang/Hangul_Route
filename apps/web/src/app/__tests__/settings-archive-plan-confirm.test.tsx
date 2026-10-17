@@ -100,30 +100,25 @@ afterEach(() => {
 
 const textOf = (n: ReactTestInstance): string => n.children.map((child) => (typeof child === 'string' ? child : textOf(child))).join('');
 
-/**
- * The confirm is the page's own `<dialog>` (owner request 2026-10-16, item 8), never `window.confirm`: the questions
- * the open dialogs ask, each then answered with OK (`answer`) or Cancel.
- */
-async function answerAsks(answer: boolean): Promise<string[]> {
+/** Every question the page's ConfirmSheet asked (AMENDMENTS-DISPLAY-NAV section 8), in order. */
+let asked: string[] = [];
+
+/** Answers the ConfirmSheet when one is open: records its question, then presses the verb or Cancel. */
+async function respond(answer: boolean): Promise<void> {
   const root = (renderer as unknown as ReactTestRenderer).root;
-  const dialogs = root.findAll((n) => n.type === 'dialog');
-  const asked = dialogs.map((d) => textOf(d.find((n) => n.type === 'p')));
-  for (const d of dialogs) {
-    const button = d.find((n) => n.type === 'button' && n.props['data-testid'] === (answer ? 'console-confirm-ok' : 'console-confirm-cancel'));
-    await act(async () => {
-      button.props.onClick();
-    });
-  }
+  const sheet = root.findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === 'confirm-sheet')[0];
+  if (!sheet) return;
+  asked.push(textOf(sheet.findByType('h2')));
+  const button = root.findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === (answer ? 'confirm-sheet-confirm' : 'confirm-sheet-cancel'))[0] as ReactTestInstance;
+  await act(async () => {
+    button.props.onClick();
+  });
   await act(async () => undefined);
-  expect(root.findAll((n) => n.type === 'dialog')).toEqual([]);
-  return asked;
 }
 
 async function clickArchive(answer = false): Promise<string[]> {
-  const confirm = vi.fn(() => answer);
-  vi.stubGlobal('window', { confirm, addEventListener: () => undefined, removeEventListener: () => undefined });
-  // A browser that draws a modal <dialog> (Safari 15.4 and later, every current browser).
-  vi.stubGlobal('HTMLDialogElement', class { showModal(): void {} });
+  asked = [];
+  vi.stubGlobal('window', { addEventListener: () => undefined, removeEventListener: () => undefined });
   await act(async () => {
     renderer = create(<SettingsPage />);
   });
@@ -135,9 +130,7 @@ async function clickArchive(answer = false): Promise<string[]> {
     button.props.onClick();
   });
   await act(async () => undefined);
-  const asked = await answerAsks(answer);
-  // The browser's own confirm is never used.
-  expect(confirm).not.toHaveBeenCalled();
+  await respond(answer);
   return asked;
 }
 
@@ -169,13 +162,13 @@ describe('the archive confirm names the plan (F-BILL-002 B-12)', () => {
       release = r;
     };
     state.summary = okSummary([card(own('family_lifetime'))]);
-    const asked = await clickArchive();
-    expect(asked).toEqual([]);
+    expect(await clickArchive()).toEqual([]);
     await act(async () => {
       (release as unknown as () => void)();
     });
     await act(async () => undefined);
-    expect(await answerAsks(false)).toEqual([`${plainAsk('Kim family')}\n\n${words.familyLoses('Kim family')} ${words.familyRenews}`]);
+    await respond(false);
+    expect(asked).toEqual([`${plainAsk('Kim family')}\n\n${words.familyLoses('Kim family')} ${words.familyRenews}`]);
     expect(state.archiveCalls).toEqual([]);
   });
 

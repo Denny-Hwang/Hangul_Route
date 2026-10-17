@@ -1,5 +1,5 @@
 import type { Profile, TierSource } from '@hangul-route/content-schema';
-import { LOCALES, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { LOCALES, LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -288,5 +288,23 @@ describe('ProfileScreen: one grown-up name (AMENDMENTS-DISPLAY-NAV 9.4) and the 
     // No heading role inside the button: a button's content is presentational.
     expect(toggle.findAll((n) => typeof n.type === 'string' && n.props.role === 'heading')).toHaveLength(0);
     await unmount(renderer);
+  });
+});
+
+describe('ProfileScreen Display row (AMENDMENTS-DISPLAY-NAV section 3.6)', () => {
+  afterEach(() => resetPlatform());
+
+  it.each(PLATFORMS)('%s: the row is named with its current language and size, in every locale (on the web a hint is never read)', async (platform) => {
+    for (const locale of LOCALES) {
+      setPlatform(platform);
+      seed('self', FREE, locale);
+      const m = getMessages(locale);
+      const renderer = await render(<ProfileScreen />);
+      const row = byTestId(renderer.root, 'profile-display-row');
+      expect(row, locale).toHaveLength(1);
+      const line = m.learner.profile.display.line(LOCALE_META[locale].endonym, m.common.display.size.standard);
+      expect(row[0]!.props['aria-label'], locale).toBe(`${m.common.display.a11y}. ${line}`);
+      await unmount(renderer);
+    }
   });
 });

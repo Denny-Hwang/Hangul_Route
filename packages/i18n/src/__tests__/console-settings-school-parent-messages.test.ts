@@ -13,8 +13,8 @@ describe('space settings (teach/space/settings/page.tsx)', () => {
   it('keeps the title, the back link, the error and the archived notice', () => {
     expect(s.title).toBe('Settings');
     expect(s.titleFor('Class A')).toBe('Class A · settings');
-    expect(s.back('Class A')).toBe('← Back to Class A');
-    expect(s.back(null)).toBe('← Back to the space');
+    expect(s.back('Class A')).toBe('Back to Class A');
+    expect(s.back(null)).toBe('Back to the space');
     expect(s.forbidden).toBe("This space isn't yours to manage.");
     // One whole sentence per kind (§3.1): the kind is not glued into "This … is archived".
     expect(s.archived).toEqual({

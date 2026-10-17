@@ -14,6 +14,7 @@ import {
   revealTestId,
   takeFragment,
 } from '../browse-env.web';
+import { installHistoryBridge } from '../history-bridge.web';
 
 /**
  * F-BROWSE-001 sections 4.1 and 4.4 (BR-6): the browse root reads the link's
@@ -113,9 +114,36 @@ describe('onFragmentChange', () => {
     w.location.hash = '#t=jamo:nieun&s=report';
     w.listeners.get('hashchange')?.();
     expect(seen).toEqual(['#t=jamo:nieun&s=report']);
-    expect(w.history.replaceState).toHaveBeenLastCalledWith({ hrBrowseDepth: 1 }, '', '/browse');
+    // The link's entry starts at depth 0, on one state object with the history bridge's hrNav.
+    expect(w.history.replaceState).toHaveBeenLastCalledWith({ hrBrowseDepth: 1, hrNav: 0 }, '', '/browse');
     off();
     expect(w.listeners.has('hashchange')).toBe(false);
+  });
+
+  it('a later link counts the history bridge\'s depth entries under it, so Close goes back past both (section 7.2)', () => {
+    const w = stubWindow({ state: { hrNav: 0 }, referrer: 'https://app.hangulroute.com/parent' });
+    takeFragment();
+    expect(w.history.state).toEqual({ hrNav: 0, hrBrowseDepth: 0 });
+    // The bridge runs with two depth entries above the first entry (BrowseHome, BrowseEpisode, BrowseItem).
+    const stack = { getRootState: () => ({ type: 'stack', index: 2, routes: [{}, {}, {}] }), goBack: vi.fn(), addListener: () => () => undefined };
+    const pushState = vi.fn((state: unknown) => {
+      w.history.state = state;
+    });
+    (w.history as unknown as { pushState: typeof pushState }).pushState = pushState;
+    const stop = installHistoryBridge(stack);
+    expect(pushState).toHaveBeenCalledTimes(2);
+    const off = onFragmentChange(() => undefined);
+    w.history.state = null;
+    w.location.hash = '#t=quest:stage1-letters-q2&s=report';
+    w.listeners.get('hashchange')?.();
+    expect(w.history.state).toEqual({ hrBrowseDepth: 3, hrNav: 0 });
+    // Opener, first entry, two depth entries, the link entry: Close from the link goes back 4.
+    w.history.length = 5;
+    expect(canGoBack()).toBe(true);
+    goBack('/');
+    expect(w.history.go).toHaveBeenLastCalledWith(-4);
+    off();
+    stop();
   });
 
   it('the strip itself (an empty hash) is not a new link', () => {
@@ -249,6 +277,15 @@ describe('canGoBack', () => {
     stubWindow({ referrer: '', length: 4 });
     takeFragment();
     expect(canGoBack()).toBe(false);
+  });
+
+  it('counts the depth entries the history bridge pushed above the link entry', () => {
+    stubWindow({ referrer: 'https://app.hangulroute.com/parent', length: 4, state: { hrBrowseDepth: 1, hrNav: 2 } });
+    takeFragment();
+    expect(canGoBack()).toBe(false);
+    stubWindow({ referrer: 'https://app.hangulroute.com/parent', length: 5, state: { hrBrowseDepth: 1, hrNav: 2 } });
+    takeFragment();
+    expect(canGoBack()).toBe(true);
   });
 
   it('no history: false', () => {

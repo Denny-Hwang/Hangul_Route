@@ -1,7 +1,7 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { CONSOLE_SESSION_KEY, FAMILY_LIFETIME_LEARNERS, SHELL_DB, SHELL_KEYS, SHELL_STORE, UNLOCK_SESSION_KEY, type BillingSummary } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openForGrownUps, readStored, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, readStored, unlockWithPin, headerBack } from './helpers';
 
 /**
  * F-BILL-002 B-11 (section 11, `plan-status.spec.ts`): the learner Plan screen and its hand-off to the real billing
@@ -233,7 +233,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true): the same tab opens the 
     await page.getByRole('button', { name: /^Edit Mina/ }).click();
     await unlockWithPin(page);
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
-    await page.getByRole('button', { name: 'Go back' }).click();
+    await headerBack(page).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await page.clock.fastForward('03:00');
     // Three minutes on, the 15-minute session still opens a gate with no PIN (the Plan screen's gate is one of
@@ -241,7 +241,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true): the same tab opens the 
     await page.getByRole('button', { name: /^Edit Mina/ }).click();
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
     await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Go back' }).click();
+    await headerBack(page).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await openPlanDetails(page);
     const tabs = watchTabs(context);

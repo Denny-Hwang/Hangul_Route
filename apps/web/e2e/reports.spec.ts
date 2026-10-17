@@ -432,12 +432,8 @@ test.describe('Add to a plan opens the builder with the quest pre-added (RP-10)'
     // Leaving the unsaved draft asks first; Cancel is not offered, so the quest is never dropped silently.
     await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
     await page.getByTestId('plan-chip').filter({ hasText: 'This week' }).click();
-    // The page's own confirm in the console language (owner request 2026-10-16, item 8), never the browser's.
-    const ask = page.getByRole('alertdialog');
-    await expect(ask).toContainText('Open another plan?');
-    await expect(ask.getByRole('button')).toHaveText(['Cancel', 'OK']);
-    await expect(ask.getByRole('button', { name: 'Cancel' })).toBeFocused();
-    await ask.getByRole('button', { name: 'OK' }).click();
+    // The ConfirmSheet asks first (AMENDMENTS-DISPLAY-NAV section 8); its verb drops the unsaved draft.
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Discard changes', exact: true }).click();
     await expect(page.locator('[data-testid="plan-chip"][aria-current]')).toContainText('This week');
     await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toHaveCount(0);
     expect(writes).toEqual([]);

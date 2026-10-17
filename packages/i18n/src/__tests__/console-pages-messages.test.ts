@@ -166,8 +166,8 @@ describe('relink page (teach/space/relink/page.tsx, relink.ts)', () => {
   it('keeps the title, the back link and the notes', () => {
     expect(r.title).toBe('Re-link requests');
     expect(r.titleFor('Kim family')).toBe('Kim family · re-link requests');
-    expect(r.back('Kim family')).toBe('← Back to Kim family');
-    expect(r.back(null)).toBe('← Back to the space');
+    expect(r.back('Kim family')).toBe('Back to Kim family');
+    expect(r.back(null)).toBe('Back to the space');
     expect(r.approved('Mina')).toBe('Mina can open their new device now.');
     expect(r.denied('Mina')).toBe('Closed. Mina\'s device will say "ask your teacher".');
     expect(r.issueAsk('Mina')).toBe('Issue a new rescue code for Mina?');
@@ -220,6 +220,8 @@ const SLOTTED: readonly [string, (m: Messages) => (value: string) => string][] =
   // Split around the romanization, so the Hangul and its romanization stay on one line (F-VOC-005 P-4).
   ['console.space.wordGloss', (m) => (romanization) => m.console.space.wordGloss(romanization, 'gloss')],
   ['console.lecture.source.revisitWith', (m) => m.console.lecture.source.revisitWith],
+  // Split around the endonym, marked with its own language (AMENDMENTS-LECTURE-V2 section 18.4).
+  ['console.lecture.options.languageHintChosen', (m) => m.console.lecture.options.languageHintChosen],
   ['console.school.footer', (m) => m.console.school.footer],
 ];
 

@@ -58,16 +58,6 @@ export function HomeworkScreen(): React.ReactElement {
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable
-        onPress={() => navigation.goBack()}
-        hitSlop={spacing.md}
-        accessibilityRole="button"
-        accessibilityLabel={messages.a11y.goBack}
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
       <Heading level="title">{m.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{copy.homeworkIntro}</Body>

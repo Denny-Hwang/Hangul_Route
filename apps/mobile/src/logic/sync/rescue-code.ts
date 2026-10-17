@@ -67,11 +67,13 @@ export function claimErrorMessage(code: ClaimErrorCode, m: Pick<Messages['caregi
 
 /**
  * Rows the code field needs. Wide letters can leave one word per row on a
- * narrow phone, and fonts differ per device, so plan for the worst case:
- * one row per word-or-number typed so far (two rows while it is short,
- * five for a full four-word code).
+ * narrow phone, and fonts differ per device (and the text size grows them,
+ * AMENDMENTS-DISPLAY-NAV section 4), so plan for the worst case: one row per
+ * word-or-number typed so far, whether a space or a hyphen joins them (a code
+ * pasted as TIGER-MOON-RIVER-APPLE-482139 wraps at its hyphens the same way):
+ * two rows while it is short, five for a full four-word code.
  */
 export function rescueInputRows(text: string): number {
-  const parts = text.trim().split(/\s+/).filter(Boolean).length;
+  const parts = text.trim().split(/[\s-]+/).filter(Boolean).length;
   return Math.min(5, Math.max(2, parts));
 }

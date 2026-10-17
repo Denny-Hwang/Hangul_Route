@@ -109,14 +109,21 @@ describe('prefixIn', () => {
 
 describe('allowedSmall', () => {
   it("tolerates the ratchet allowlist's small controls of that screen, in the locale's words", () => {
-    expect(allowedSmall('Profile', 'en', keys)).toEqual(new Set(['button | Go back']));
-    expect(allowedSmall('Profile', 'en-XA', keys)).toEqual(new Set(['button | Go back', `button | ${pseudoText('Go back')}`]));
-    expect(allowedSmall('Profile', 'es', keys).has('button | Go back')).toBe(true);
+    const listed = ['Profile | button | Go back'];
+    expect(allowedSmall('Profile', 'en', listed)).toEqual(new Set(['button | Go back']));
+    expect(allowedSmall('Profile', 'en-XA', listed)).toEqual(new Set(['button | Go back', `button | ${pseudoText('Go back')}`]));
+    expect(allowedSmall('Profile', 'es', listed).has('button | Go back')).toBe(true);
   });
 
   it("tolerates the matrix list's controls on screens the ratchet does not walk", () => {
-    expect(allowedSmall('PinEntry', 'en', keys)).toEqual(new Set(['button | Close']));
-    expect(allowedSmall('PinEntry', 'en-XA', keys)).toEqual(new Set(['button | Close', `button | ${pseudoText('Close')}`]));
+    const listed = ['PinEntry | button | Close'];
+    expect(allowedSmall('PinEntry', 'en', listed)).toEqual(new Set(['button | Close']));
+    expect(allowedSmall('PinEntry', 'en-XA', listed)).toEqual(new Set(['button | Close', `button | ${pseudoText('Close')}`]));
+  });
+
+  it("the real lists: Profile's chevron and PinEntry's close are gone, now the ScreenHeader's 64 x 64 controls (DN-4)", () => {
+    expect(allowedSmall('Profile', 'en', keys)).toEqual(new Set());
+    expect(allowedSmall('PinEntry', 'en', keys)).toEqual(new Set());
   });
 
   it('a screen neither list names tolerates nothing', () => {
@@ -129,7 +136,7 @@ describe('allowedSmall', () => {
     expect(allowedSmall('Profile', 'en-XA', ['Profile | button | Go back #2'])).toEqual(
       new Set(['button | Go back #2', `button | ${pseudoText('Go back')} #2`]),
     );
-    expect(allowedSmall('PinEntry', 'en', keys).has('button | Close #2')).toBe(false);
+    expect(allowedSmall('PinEntry', 'en', ['PinEntry | button | Close']).has('button | Close #2')).toBe(false);
   });
 
   it('a label under several keys is tolerated in each of its translations', () => {
@@ -166,7 +173,7 @@ describe('toleratedKeys', () => {
   });
 
   it('the matrix widths each find a ratchet window in the real list', () => {
-    for (const vp of MATRIX_VIEWPORTS) expect(toleratedKeys(allowlist, matrixList, vp)).toContain('Profile | button | Go back');
+    for (const vp of MATRIX_VIEWPORTS) expect(toleratedKeys(allowlist, matrixList, vp)).toContain('Library | button | All');
   });
 });
 
@@ -180,7 +187,7 @@ describe('smallControlKeys', () => {
   it('numbers repeats in document order, so a second small control never hides behind a listed one', () => {
     const small = smallControlKeys([box('Close', 28, 30), box('Close', 40, 40)]);
     expect(small.map((t) => t.key)).toEqual(['button | Close', 'button | Close #2']);
-    const allowed = allowedSmall('PinEntry', 'en', keys);
+    const allowed = allowedSmall('PinEntry', 'en', ['PinEntry | button | Close']);
     expect(small.filter((t) => !allowed.has(t.key)).map((t) => t.key)).toEqual(['button | Close #2']);
   });
 });

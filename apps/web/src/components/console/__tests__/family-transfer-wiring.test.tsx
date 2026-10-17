@@ -20,7 +20,15 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams('id=space%3Af'),
   usePathname: () => '/parent/space/transfers',
 }));
-vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <main>{children}</main> }));
+// The frame draws its PageBack (AMENDMENTS-DISPLAY-NAV section 7.3) as a link first in the page; the stand-in does too.
+vi.mock('@/components/console/AdultFrame', () => ({
+  AdultFrame: ({ children, back }: { children: ReactNode; back?: { href: string; label: string } }) => (
+    <main>
+      {back ? <a href={back.href}>{back.label}</a> : null}
+      {children}
+    </main>
+  ),
+}));
 
 const state = vi.hoisted(() => ({ kind: 'family' as string, rosterError: null as string | null, previewError: null as string | null, signedOutTo: null as string | null, calls: [] as string[] }));
 vi.mock('@/components/console/auth-context', () => ({

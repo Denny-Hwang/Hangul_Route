@@ -31,6 +31,7 @@ import { appRouteCatalog } from '../../logic/placement/route-skip';
 import { planView, routeNext, routeNextInputOf } from '../../logic/route-next';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
+import { ROOT_HEADER } from '../../navigation/screen-header-variants';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { usePlanStore } from '../../store/plan-store';
@@ -140,8 +141,6 @@ export function JourneyScreen(): React.ReactElement {
 
   const grid = (
     <>
-      <Heading level="title">{m.title}</Heading>
-      <Spacer size="xs" />
       <Body tone="secondary">{m.intro}</Body>
       {flags.myRouteEnabled ? (
         // The Journey header link "See Learning Route" (LR-OD-11) opens the Route tab (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.2).
@@ -224,7 +223,9 @@ export function JourneyScreen(): React.ReactElement {
   );
 
   return (
-    <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable={!paneMode}>
+    // A tab root: no Back; its name sits in its header row beside the Display (Aa) control (AMENDMENTS-DISPLAY-NAV
+    // sections 3.6 and 7.1).
+    <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable={!paneMode} header={{ title: m.title, titleInline: true }}>
       <SplitPane master={grid} detail={detail} masterLabel={m.panes.master} detailLabel={m.panes.detail} detailScrolls={false} />
     </Screen>
   );
@@ -235,7 +236,7 @@ function ComingSoonPane(): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode.comingSoon;
   return (
-    <Screen tone="canvas">
+    <Screen tone="canvas" header={ROOT_HEADER}>
       <View style={{ alignItems: 'center' }}>
         <Hoya pose="reading" size={96} accessibilityLabel={messages.a11y.hoya('reading')} />
         <Spacer size="md" />

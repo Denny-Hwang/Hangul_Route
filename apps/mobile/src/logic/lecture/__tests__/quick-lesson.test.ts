@@ -176,13 +176,13 @@ describe('buildQuickDeck', () => {
     expect(deck.title).toBe('Vowels / Meet the Letters');
     expect(deck.blocks[0]!.kind).toBe('jamo-set');
     expect(deck.blocks[1]).toEqual({ kind: 'episode', id: 'episode:stage1-letters' });
-    expect(deck.picker).toEqual({ mode: 'numbers', count: 12 });
+    expect(deck.picker).toBeNull();
     expect(deck.createdAt).toBe('2026-10-13T09:30:00.000Z');
     expect(deck.seed).toBe(now.getTime() % 2 ** 31);
     expect(deck.id).toMatch(/^lecture:[a-z0-9]{10}$/);
   });
 
-  it('carries no name: the picker is numbers and the deck has no label field', () => {
+  it('carries no name: no helper picker (LV-H) and no label field', () => {
     const deck = buildQuickDeck(['letters:vowels'], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson' })!;
     expect(Object.keys(deck).sort()).toEqual(['blocks', 'createdAt', 'id', 'options', 'picker', 'seed', 'source', 'title', 'v']);
   });

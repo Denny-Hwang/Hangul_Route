@@ -41,6 +41,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'report.scope.allDevices': 'the plural "dispositivos" (12) against "devices" (7) needs its article ("Todos los dispositivos"); a caption under a heading that wraps',
   'console.planCounts.items': '"1 elemento" against "1 item": the Spanish noun is longer; the count line wraps',
   'console.billing.promo.formLabel': 'the field label "Código promocional", a form label above its field',
+  // AMENDMENTS-DISPLAY-NAV DN-6 (section 10, MAR 2026-10-17).
+  'console.shell.backToLearning': '"App de estudiantes" (18) against "Learner app" (11): the Spanish names the app by who it is for; the header exit wraps its label (no nowrap), inside the 28-character cta budget',
+  'console.confirm.copyAnyway': '"Copiar de todos modos" (21) against "Copy anyway" (11): the idiom has no shorter form; the ConfirmSheet buttons wrap (flex 1 1 12rem), inside the 28-character cta budget',
   'console.curriculum.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
   'console.curriculum.goals.themeNames.nature': 'the one word "Naturaleza" (10) against "Nature" (6)',
   'console.curriculum.preview.table.items': 'the table header "Elementos" (9) against "Items" (5); the table scrolls',

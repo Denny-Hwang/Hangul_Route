@@ -8,7 +8,7 @@ import {
   type DeviceSettings,
   type DeviceSettingsPatch,
 } from '@hangul-route/content-schema';
-import { createStore, get, set } from 'idb-keyval';
+import { createStore, get, update } from 'idb-keyval';
 import { LEARNER_DB, LEARNER_STORE, PROFILES_STORAGE_KEY, hasProfileList } from '../console/device-marker';
 import { indexedDbAvailable } from './safe-storage';
 
@@ -27,7 +27,11 @@ export const DEVICE_SETTINGS_STORAGE_KEY = `hr:${DEVICE_SETTINGS_KEY}`;
 
 export interface IdbStore {
   get: (key: string) => Promise<unknown>;
-  set: (key: string, value: string) => Promise<void>;
+  /**
+   * Read-modify-write of one key in one readwrite transaction (idb-keyval `update`): `next` gets the
+   * stored value and returns the value to store; a throw from `next` ends it without a write.
+   */
+  update: (key: string, next: (stored: unknown) => string) => Promise<void>;
 }
 
 /** Opens the learner's store: `fresh` asks for a new connection (the retry); null where there is no IndexedDB. */
@@ -35,9 +39,9 @@ export type OpenIdbStore = (fresh: boolean) => IdbStore | null;
 
 const learnerStore: OpenIdbStore = (fresh) => {
   if (!indexedDbAvailable()) return null;
-  if (!fresh) return { get: (key) => get(key), set: (key, value) => set(key, value) };
+  if (!fresh) return { get: (key) => get(key), update: (key, next) => update(key, next) };
   const store = createStore(LEARNER_DB, LEARNER_STORE);
-  return { get: (key) => get(key, store), set: (key, value) => set(key, value, store) };
+  return { get: (key) => get(key, store), update: (key, next) => update(key, next, store) };
 };
 
 /**
@@ -173,25 +177,42 @@ export function postDeviceSettings(value: DeviceSettings, hub: PrefsHub = defaul
   }
 }
 
-async function writeOnce(store: IdbStore, decide: (stored: DeviceSettings) => DeviceSettingsPatch | null): Promise<{ next: DeviceSettings; wrote: boolean } | null> {
+/** Thrown out of an `update` callback when `decide` changes nothing: the transaction ends without a write. */
+const UNCHANGED = Symbol('unchanged');
+
+interface WriteOnce {
+  next: DeviceSettings;
+  wrote: boolean;
+}
+
+async function writeOnce(store: IdbStore, decide: (stored: DeviceSettings) => DeviceSettingsPatch | null): Promise<WriteOnce | null> {
+  // One transaction reads and writes, so a field another tab writes in between is never lost.
+  const found: { result: WriteOnce | null } = { result: null };
   try {
-    const raw = parseStoredObject(await store.get(DEVICE_SETTINGS_STORAGE_KEY));
-    const stored = settingsOf(raw);
-    const patch = decide(stored);
-    if (patch === null) return { next: stored, wrote: false };
-    const merged = mergeDeviceSettings(raw, patch);
-    await store.set(DEVICE_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
-    return { next: settingsOf(merged), wrote: true };
-  } catch {
-    return null;
+    await store.update(DEVICE_SETTINGS_STORAGE_KEY, (value) => {
+      const raw = parseStoredObject(value);
+      const stored = settingsOf(raw);
+      const patch = decide(stored);
+      if (patch === null) {
+        found.result = { next: stored, wrote: false };
+        throw UNCHANGED;
+      }
+      const merged = mergeDeviceSettings(raw, patch);
+      found.result = { next: settingsOf(merged), wrote: true };
+      return JSON.stringify(merged);
+    });
+    return found.result;
+  } catch (error) {
+    return error === UNCHANGED ? found.result : null;
   }
 }
 
 /**
- * Read-modify-write of the record (AMENDMENTS-DISPLAY-NAV section 3.1): `decide` gets what is
- * stored now and returns the fields to change, or null to change nothing (a seed that finds a
- * choice already there, an account value that is no longer newer). Only those fields change, so a
- * key the learner app or a newer build wrote is kept. A failed read or write is retried once on a
+ * Read-modify-write of the record (AMENDMENTS-DISPLAY-NAV section 3.1), in one IndexedDB
+ * transaction: `decide` gets what is stored now and returns the fields to change, or null to change
+ * nothing (a seed that finds a choice already there, an account value that is no longer newer).
+ * Only those fields change, so a key the learner app or a newer build wrote is kept, and a write
+ * another tab makes at the same moment is not lost. A failed read or write is retried once on a
  * fresh connection. A record that was written is posted to the other tabs. Returns the record as
  * it is stored now (written, or as found when `decide` changed nothing), or null when it could not
  * be read or written (no IndexedDB, a refused write); the page keeps the change for this tab then.

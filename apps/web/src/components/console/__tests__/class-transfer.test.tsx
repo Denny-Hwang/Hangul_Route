@@ -16,8 +16,10 @@ vi.mock('@/lib/i18n/locale-context', async () => {
 });
 
 import { ClassMoves, type ClassMovesApi } from '@/components/console/ClassTransferParts';
+import type { ConfirmAsk } from '../ConfirmSheet';
 
 const t = getMessages('en').console.transfer;
+const c = getMessages('en').console;
 const NOW = Date.parse('2026-10-12T12:00:00.000Z');
 
 beforeAll(() => {
@@ -118,7 +120,7 @@ const list = (...requests: TransferView[]): ApiResult<TransferList> => ({ ok: tr
 
 async function renderMoves(
   api: ClassMovesApi,
-  props: Partial<{ readOnly: boolean; direct: ReadonlySet<string>; confirm: (q: string) => boolean; online: boolean }> = {},
+  props: Partial<{ readOnly: boolean; direct: ReadonlySet<string>; confirm: (ask: ConfirmAsk) => Promise<boolean>; online: boolean }> = {},
 ): Promise<{ states: string[] }> {
   const states: string[] = [];
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -133,7 +135,7 @@ async function renderMoves(
         refreshMs={60_000}
         readOnly={props.readOnly ?? false}
         direct={props.direct ?? new Set()}
-        confirm={props.confirm ?? (() => true)}
+        confirm={props.confirm ?? (async () => true)}
         onPageState={(s) => states.push(s)}
       />,
       { createNodeMock: () => ({}) },
@@ -367,11 +369,11 @@ describe('Joining this class', () => {
   });
 
   it('after a move into this class: the history line and New class code, which runs the regenerate flow with its confirm', async () => {
-    const asked: string[] = [];
+    const asked: ConfirmAsk[] = [];
     const { api, calls } = fakeApi([list(destination({ status: 'executed', executedAt: '2026-10-11T12:00:00.000Z', learner: { name: 'Mina Kim', avatar: 'fox', level: 'reading' } }))]);
     await renderMoves(api, {
-      confirm: (q) => {
-        asked.push(q);
+      confirm: async (ask) => {
+        asked.push(ask);
         return true;
       },
     });
@@ -379,7 +381,8 @@ describe('Joining this class', () => {
     expect(text(byTestId('move-history-row'))).not.toContain('Mina');
     expect(text(byTestId('move-new-code'))).toContain(t.lines.newCode);
     await act(async () => byTestId('move-new-code-button').props.onClick());
-    expect(asked).toHaveLength(1);
+    // The ConfirmSheet's question, its line and the verb (AMENDMENTS-DISPLAY-NAV section 8).
+    expect(asked).toEqual([{ title: c.space.regenerateAsk('Sunday Class A'), message: c.oldCodeStops, confirmLabel: c.confirm.newCode }]);
     expect(calls).toContainEqual(['regenerate', 'space:a']);
     expect(allTestId('move-new-code')).toEqual([]);
   });
@@ -394,7 +397,7 @@ describe('Joining this class', () => {
 
   it('New class code asks first; No keeps the code', async () => {
     const { api, calls } = fakeApi([list(destination({ status: 'executed', executedAt: '2026-10-11T12:00:00.000Z' }))]);
-    await renderMoves(api, { confirm: () => false });
+    await renderMoves(api, { confirm: async () => false });
     await act(async () => byTestId('move-new-code-button').props.onClick());
     expect(calls.some((c) => c[0] === 'regenerate')).toBe(false);
   });
@@ -465,7 +468,7 @@ describe('refresh', () => {
     vi.setSystemTime(NOW);
     const { api } = fakeApi([list(source()), list(source({ steps: { learner: 'yes', source: 'yes', destination: 'waiting' } }))]);
     await act(async () => {
-      renderer = create(<ClassMoves spaceId="space:a" spaceName="A" api={api} online refreshMs={30_000} readOnly={false} direct={new Set()} confirm={() => true} onPageState={() => undefined} />, {
+      renderer = create(<ClassMoves spaceId="space:a" spaceName="A" api={api} online refreshMs={30_000} readOnly={false} direct={new Set()} confirm={async () => true} onPageState={() => undefined} />, {
         createNodeMock: () => ({}),
       });
     });
@@ -489,7 +492,7 @@ describe('refresh, continued', () => {
     vi.setSystemTime(NOW);
     await act(async () => {
       renderer = create(
-        <ClassMoves spaceId="space:a" spaceName="A" api={api} online={online} refreshMs={30_000} readOnly={false} direct={new Set()} confirm={() => true} onPageState={() => undefined} />,
+        <ClassMoves spaceId="space:a" spaceName="A" api={api} online={online} refreshMs={30_000} readOnly={false} direct={new Set()} confirm={async () => true} onPageState={() => undefined} />,
         { createNodeMock: () => ({}) },
       );
     });

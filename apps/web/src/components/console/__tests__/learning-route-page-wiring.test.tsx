@@ -24,7 +24,15 @@ vi.mock('@/components/console/DisplaySheet', () => ({ DisplayButton: () => null 
 
 // The adult frame (F-APP-001 A-5a) reads the spaces list and draws its own links; adult-frame.test.tsx covers it.
 // Here it passes the page through, so the calls and the links below are the page's own.
-vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <>{children}</> }));
+// The frame draws its PageBack (AMENDMENTS-DISPLAY-NAV section 7.3) as a link before the page; the stand-in does too.
+vi.mock('@/components/console/AdultFrame', () => ({
+  AdultFrame: ({ children, back }: { children: ReactNode; back?: { href: string; label: string } }) => (
+    <>
+      {back ? <a href={back.href}>{back.label}</a> : null}
+      {children}
+    </>
+  ),
+}));
 
 vi.mock('next/link', () => ({
   default: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a>,

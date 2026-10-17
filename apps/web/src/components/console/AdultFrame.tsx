@@ -7,8 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { ConsoleApi, SpaceListItem } from '@/lib/console/api';
-import { readDeviceGate } from '@/lib/console/device-marker';
-import { learnerHome, type DeviceGateRead } from '@/lib/console/grown-up-lock';
+import { learnerHome } from '@/lib/console/grown-up-lock';
 import { activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeLastPersona } from '@/lib/console/shell-store';
@@ -18,6 +17,7 @@ import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { BrowseNoticeLine, useBrowseOpener } from './BrowseLink';
 import { useGrownUpLocation } from './grown-up-location';
 import { DisplayButton } from './DisplaySheet';
+import { PAGE_BACK_CSS, PageBack, type PageBackLink } from './PageBack';
 import { useConsole } from './use-console';
 import { rem } from '@/lib/console/rem';
 
@@ -26,10 +26,15 @@ import { rem } from '@/lib/console/rem';
  * design/screens/app-shell/adult-frame.md, wireframe design/wireframes/shell/adult-frame.md).
  * Replaces `ConsoleShell`: no "Back to site", no disabled Account button, no "Console" title.
  *
- * - Header: the brand mark (to the active persona's home), the persona switch for an account that
- *   holds both personas (otherwise the persona name), the way back to the learner app, the Aa button
- *   (the Display sheet: the device's one language and text size, owner items 6 and 7) at every
- *   width, and Sign out from 45em (it sits in the footer below it, so the phone header stays short).
+ * - Header: the brand mark (to the active persona's home; from 45em, below it the nav's first item is
+ *   the persona home), the persona switch for an account that holds both personas (otherwise the
+ *   persona name), then at the right the Aa button (the Display sheet: the device's one language and
+ *   text size, owner items 6 and 7), Sign out from 45em (it sits in the footer below it), and last the
+ *   **Learner app** exit (AMENDMENTS-DISPLAY-NAV section 7.3): it leaves the grown-up pages, so it is
+ *   never a Back and never takes the top left, which belongs to PageBack. The row wraps at any text
+ *   size (a 300 % root at 320) instead of scrolling: the right group moves down, still at the right.
+ * - Content: a page that is not a persona home or a nav target passes `back`, drawn as PageBack at
+ *   the top left, above the page's context line and its h1.
  * - The active persona comes from the page: its own on a home, the kind of the page's space on a
  *   space page under either prefix (looked up in the spaces list the frame reads), never the path.
  * - The navigation is `ADULT_NAV` filtered by the active persona and the sibling predicates.
@@ -40,7 +45,6 @@ import { rem } from '@/lib/console/rem';
 /** Everything the frame touches in the browser, injectable for tests. */
 export interface AdultFrameEnvironment {
   location: () => { origin: string; pathname: string; search: string };
-  readDevice: () => Promise<DeviceGateRead>;
   readLastPersona: () => Promise<AdultPersona | null>;
   writeLastPersona: (persona: AdultPersona) => void;
   clearGrownUpTab: () => void;
@@ -54,7 +58,6 @@ export function browserFrameEnvironment(): AdultFrameEnvironment {
   const win = typeof window === 'undefined' ? null : window;
   return {
     location: () => ({ origin: win?.location.origin ?? '', pathname: win?.location.pathname ?? '', search: win?.location.search ?? '' }),
-    readDevice: () => readDeviceGate(),
     readLastPersona: () => readLastPersona(),
     writeLastPersona: (persona) => {
       void writeLastPersona(persona);
@@ -68,17 +71,6 @@ export function browserFrameEnvironment(): AdultFrameEnvironment {
 
 /** The spaces list a page already holds: loading (null), loaded, or failed. Omitted, the frame reads it itself. */
 export type FrameSpaces = readonly SpaceListItem[] | null | 'failed';
-
-/**
- * The way back reads "Open the learner app" on a device that has no learner profile and a marker
- * that is absent or `none` (a teacher's laptop), and on a browser without IndexedDB (which cannot
- * keep learner profiles). Unknown or failed reads keep "Back to learning".
- */
-export function opensLearnerApp(device: DeviceGateRead | null): boolean {
-  if (!device) return false;
-  if (!device.readable) return device.reason === 'unavailable';
-  return !device.hasProfiles && (device.marker === null || device.marker.gate === 'none');
-}
 
 /** The one learner of a one-learner family, read once per tab (memory only) for the Reports item. */
 const soloLearners = new Map<string, Promise<string | null>>();
@@ -103,8 +95,6 @@ export function resetFrameMemory(): void {
 /** The phone / wide switch (45em = `layout.maxWidth.reading`) and the step where the brand name joins (70em = `layout.maxWidth.full`). */
 const WIDE = `${layout.maxWidth.reading / 16}em`;
 const FULL = `${layout.maxWidth.full / 16}em`;
-/** The way back shrinks before the header row wraps: its label may take two lines on a narrow phone (mock README, Constants). */
-const WAY_BACK_BASIS = '7.5rem';
 
 /** Layout rules that change at a breakpoint live here (inline styles would beat them); every value is a token. */
 const FRAME_CSS = `
@@ -115,12 +105,15 @@ const FRAME_CSS = `
 .hr-frame-brand{display:inline-flex;align-items:center;gap:${spacing.sm}px;min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;text-decoration:none;font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};color:${colors.text.primary}}
 .hr-frame-mark{width:${spacing.xxxl}px;height:${spacing.xxxl}px;border-radius:${radii.circle}px;background:${colors.brand.primary};color:${colors.text.inverse};display:inline-flex;align-items:center;justify-content:center;font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};flex:none}
 .hr-frame-name,.hr-frame-hidden{position:absolute;width:${borderWidth.thin}px;height:${borderWidth.thin}px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.hr-frame-bar.hr-has-switch .hr-frame-brand{display:none}
+.hr-frame-brand{display:none}
+.hr-frame-bar.hr-no-nav .hr-frame-brand{display:inline-flex}
 .hr-frame-persona{display:inline-flex;align-items:center;min-height:${touchTarget.min}px;color:${colors.text.secondary};font-weight:${typography.weight.semibold}}
 .hr-frame-switch{display:inline-flex;border:${borderWidth.base}px solid ${colors.brand.secondaryDark};border-radius:${radii.pill}px;background:${colors.surface.paper};overflow:hidden}
 .hr-frame-switch [role="radio"]{min-height:${touchTarget.min}px;min-width:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.sm}px;border:none;background:transparent;color:${colors.brand.secondaryDark};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};cursor:pointer}
 .hr-frame-switch [role="radio"][aria-checked="true"]{background:${colors.brand.secondaryDark};color:${colors.text.onSecondary}}
-.hr-frame-back{margin-left:auto;flex:1 1 ${WAY_BACK_BASIS};max-width:max-content;display:inline-flex;align-items:center;gap:${spacing.xs}px;min-height:${touchTarget.min}px;padding:${spacing.xs}px ${spacing.md}px ${spacing.xs}px ${spacing.sm}px;border-radius:${radii.pill}px;border:${borderWidth.thin}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};text-align:left;cursor:pointer}
+.hr-frame-end{margin-left:auto;display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:${spacing.sm}px;min-width:0;max-width:100%}
+.hr-frame-exit{display:inline-flex;align-items:center;gap:${spacing.xs}px;min-height:${touchTarget.min}px;min-width:0;max-width:100%;box-sizing:border-box;padding:${spacing.xs}px ${spacing.sm}px ${spacing.xs}px ${spacing.md}px;border-radius:${radii.pill}px;border:${borderWidth.thin}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};text-align:left;overflow-wrap:anywhere;cursor:pointer}
+.hr-frame-exit svg{flex:none}
 .hr-frame-wide{display:none}
 .hr-frame-list{display:flex;flex-wrap:wrap;list-style:none;margin:0;padding:0}
 .hr-frame-list li{flex:1 0 ${touchTarget.min}px;display:flex}
@@ -136,15 +129,16 @@ const FRAME_CSS = `
 @media (min-width:${WIDE}){
 .hr-frame-bar,.hr-frame-nav,.hr-frame-main,.hr-frame-foot-inner{padding-left:${layout.gutter.regular}px;padding-right:${layout.gutter.regular}px}
 .hr-frame-bar{column-gap:${spacing.md}px}
-.hr-frame-bar.hr-has-switch .hr-frame-brand{display:inline-flex}
+.hr-frame-brand{display:inline-flex}
 .hr-frame-wide{display:inline-flex}
-.hr-frame-back{flex:none}
+.hr-frame-exit{padding-left:${spacing.lg}px;padding-right:${spacing.md}px}
 .hr-frame-switch [role="radio"]{padding-left:${spacing.md}px;padding-right:${spacing.md}px}
 .hr-frame-list{gap:${spacing.xs}px}
 .hr-frame-list li{flex:none}
 .hr-frame-item{padding:0 ${spacing.md}px}
 .hr-frame-tools{display:none}
 }
+${PAGE_BACK_CSS}
 @media (min-width:${FULL}){
 .hr-frame-bar,.hr-frame-nav,.hr-frame-main,.hr-frame-foot-inner{padding-left:${layout.gutter.wide}px;padding-right:${layout.gutter.wide}px}
 .hr-frame-name{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
@@ -213,6 +207,7 @@ function PersonaSwitch({ checked, label, names, onChoose }: { checked: AdultPers
 export function AdultFrame({
   children,
   title,
+  back,
   onSignOut,
   spaces,
   env,
@@ -220,6 +215,8 @@ export function AdultFrame({
   children: ReactNode;
   /** The page's context line (a space or a page name), shown at the top of the content. */
   title?: string;
+  /** PageBack: the page above, for a page that is not a persona home or a nav target (AMENDMENTS-DISPLAY-NAV 7.3). */
+  back?: PageBackLink;
   onSignOut?: () => void;
   /** The spaces list the page already reads (the teacher home); omitted, the frame reads it. */
   spaces?: FrameSpaces;
@@ -230,7 +227,6 @@ export function AdultFrame({
   const [browser] = useState<AdultFrameEnvironment>(() => env ?? browserFrameEnvironment());
   const [ownSpaces, setOwnSpaces] = useState<FrameSpaces>(null);
   const [last, setLast] = useState<AdultPersona | null>(null);
-  const [device, setDevice] = useState<DeviceGateRead | null>(null);
   const [solo, setSolo] = useState<SoloLearner | null>(null);
   // Lessons (F-BROWSE-001 BR-10, section 4.3): a plain click writes the tab's pass, then opens All lessons here.
   const lessons = useBrowseOpener(undefined, 'nav', {
@@ -261,10 +257,6 @@ export function AdultFrame({
     let live = true;
     browser.readLastPersona().then(
       (persona) => live && setLast(persona),
-      () => undefined,
-    );
-    browser.readDevice().then(
-      (read) => live && setDevice(read),
       () => undefined,
     );
     return () => {
@@ -322,7 +314,9 @@ export function AdultFrame({
     browser.writeLastPersona(persona);
     router.push(personaHome(persona));
   };
-  const goBack = (): void => {
+  // The Learner app exit: clears the grown-up unlock and the console session, then opens the learner app with the
+  // device's language (section 6).
+  const toLearnerApp = (): void => {
     browser.clearGrownUpTab();
     browser.assign(learnerHome(origin, locale));
   };
@@ -331,7 +325,8 @@ export function AdultFrame({
     <div className="hr-frame" data-testid="adult-frame">
       <style>{FRAME_CSS}</style>
       <header className="hr-frame-top">
-        <div className={withSwitch ? 'hr-frame-bar hr-has-switch' : 'hr-frame-bar'}>
+        {/* Below 45em the nav's first item is the persona home and the brand hides; with no nav (a failed spaces read) the brand stays. */}
+        <div className={['hr-frame-bar', withSwitch ? 'hr-has-switch' : null, items.length === 0 ? 'hr-no-nav' : null].filter(Boolean).join(' ')}>
           <Link className="hr-frame-brand" href={brandHref} data-testid="frame-brand">
             <span className="hr-frame-mark" aria-hidden="true">
               {m.landing.brand.mark}
@@ -345,14 +340,16 @@ export function AdultFrame({
               {names[active.persona]}
             </span>
           ) : null}
-          <button type="button" className="hr-frame-back" onClick={goBack} data-testid="frame-way-back">
-            <IconSvg name="arrow-left" size={spacing.lg + spacing.xs} color={colors.text.primary} />
-            <span>{opensLearnerApp(device) ? shell.openLearnerApp : shell.backToLearning}</span>
-          </button>
-          <DisplayButton testId="frame-display" />
-          <button type="button" className="hr-frame-wide" style={quietButton} onClick={doSignOut} data-testid="frame-sign-out">
-            {shell.signOut.cta}
-          </button>
+          <div className="hr-frame-end">
+            <DisplayButton testId="frame-display" />
+            <button type="button" className="hr-frame-wide" style={quietButton} onClick={doSignOut} data-testid="frame-sign-out">
+              {shell.signOut.cta}
+            </button>
+            <button type="button" className="hr-frame-exit" onClick={toLearnerApp} data-testid="frame-learner-app">
+              <span>{shell.backToLearning}</span>
+              <IconSvg name="arrow-right" size={spacing.lg + spacing.xs} color={colors.text.primary} />
+            </button>
+          </div>
         </div>
         {items.length > 0 ? (
           <nav className="hr-frame-nav" aria-label={names[navPersona]} data-testid="frame-nav">
@@ -376,6 +373,7 @@ export function AdultFrame({
         ) : null}
       </header>
       <main className="hr-frame-main">
+        {back ? <PageBack href={back.href} label={back.label} /> : null}
         {title ? (
           <p data-testid="frame-title" style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {title}

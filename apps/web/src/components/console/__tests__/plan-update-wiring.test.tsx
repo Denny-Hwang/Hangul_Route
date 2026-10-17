@@ -114,11 +114,11 @@ vi.mock('@/components/console/use-console', async () => {
 });
 
 const words = getMessages('en').console.curriculum.update;
-const confirm = vi.fn(() => true);
+const confirmWords = getMessages('en').console.confirm;
 
 beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-  vi.stubGlobal('window', { confirm });
+  vi.stubGlobal('window', {});
 });
 afterAll(() => {
   vi.unstubAllGlobals();
@@ -131,8 +131,6 @@ afterEach(() => {
   kind = 'family';
   saveOk = true;
   saved.length = 0;
-  confirm.mockClear();
-  confirm.mockImplementation(() => true);
 });
 
 const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => root.findAll((node) => typeof node.type === 'string' && node.props['data-testid'] === id);
@@ -147,6 +145,19 @@ async function rosterPage(): Promise<ReactTestInstance> {
   });
   if (!mounted) throw new Error('not mounted');
   return mounted.root;
+}
+
+/** The ConfirmSheet (AMENDMENTS-DISPLAY-NAV section 8): answers it and returns its question and its verb. */
+async function answer(root: ReactTestInstance, yes: boolean): Promise<{ ask: string; verb: string }> {
+  const [sheet] = byTestId(root, 'confirm-sheet');
+  if (!sheet) throw new Error('no ConfirmSheet');
+  const ask = textOf(sheet.findByType('h2'));
+  const verb = textOf(byTestId(root, 'confirm-sheet-confirm')[0]!);
+  const [button] = byTestId(root, yes ? 'confirm-sheet-confirm' : 'confirm-sheet-cancel');
+  await act(async () => {
+    (button!.props.onClick as () => void)();
+  });
+  return { ask, verb };
 }
 
 async function press(root: ReactTestInstance): Promise<void> {
@@ -169,9 +180,11 @@ describe('Update the plan on a family learner card', () => {
   it('confirms, then saves the same plan re-seeded from today, still published, with the same end date', async () => {
     const root = await rosterPage();
     await press(root);
-    expect(confirm).toHaveBeenCalledTimes(1);
-    const ask = String((confirm.mock.calls[0] as unknown[] | undefined)?.[0]);
+    expect(saved).toHaveLength(0);
+    const { ask, verb } = await answer(root, true);
     expect(ask.startsWith('Update the plan? It moves ahead from today and keeps the same end date.')).toBe(true);
+    expect(verb).toBe(confirmWords.update);
+    expect(byTestId(root, 'confirm-sheet')).toHaveLength(0);
     expect(saved).toHaveLength(1);
     const body = saved[0]?.body;
     expect(saved[0]?.spaceId).toBe('space:f1');
@@ -186,37 +199,15 @@ describe('Update the plan on a family learner card', () => {
   });
 
   it('saves nothing when the grown-up cancels the confirm, and says so calmly when the save fails', async () => {
-    confirm.mockImplementation(() => false);
     const root = await rosterPage();
     await press(root);
+    await answer(root, false);
     expect(saved).toHaveLength(0);
-    confirm.mockImplementation(() => true);
     saveOk = false;
     await press(root);
+    await answer(root, true);
     expect(saved).toHaveLength(1);
     expect(textOf(root)).toContain(words.failed);
-  });
-
-  it('in a browser that draws a modal dialog, the console dialog asks in the console language; OK saves, never the browser confirm', async () => {
-    vi.stubGlobal('HTMLDialogElement', class { showModal(): void {} });
-    try {
-      const root = await rosterPage();
-      await press(root);
-      const dialog = root.find((n) => n.type === 'dialog');
-      expect(textOf(dialog.find((n) => n.type === 'p')).startsWith('Update the plan? It moves ahead from today and keeps the same end date.')).toBe(true);
-      expect(saved).toHaveLength(0);
-      const okButton = dialog.find((n) => n.type === 'button' && n.props['data-testid'] === 'console-confirm-ok');
-      expect(textOf(okButton)).toBe(getMessages('en').common.buttons.ok);
-      await act(async () => {
-        (okButton.props.onClick as () => void)();
-      });
-      await act(async () => undefined);
-      expect(confirm).not.toHaveBeenCalled();
-      expect(saved).toHaveLength(1);
-      expect(root.findAll((n) => n.type === 'dialog')).toHaveLength(0);
-    } finally {
-      vi.stubGlobal('HTMLDialogElement', undefined);
-    }
   });
 
   it('never shows on a class card', async () => {
@@ -243,6 +234,7 @@ describe('Update the plan on a family learner card', () => {
   it('announces the saved line as a status', async () => {
     const root = await rosterPage();
     await press(root);
+    await answer(root, true);
     const [done] = byTestId(root, 'plan-update-done');
     expect(done?.props.role).toBe('status');
     expect(done?.props.tabIndex).toBe(-1);
@@ -260,7 +252,7 @@ describe('PlanUpdateLine without an api (signed-out or loading)', () => {
     await act(async () => {
       (button?.props.onClick as () => void)();
     });
-    expect(confirm).not.toHaveBeenCalled();
+    expect(byTestId(mounted.root, 'confirm-sheet')).toHaveLength(0);
     expect(saved).toHaveLength(0);
   });
 });

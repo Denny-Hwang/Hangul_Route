@@ -4,12 +4,11 @@ import { type LectureBlock, type RomanizationMode, type UiLocale } from '@hangul
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   LectureCatalogueSection,
   LectureOptionsSection,
   LectureOutlineSection,
-  LecturePickerSection,
   LectureSourceSection,
   lectureH2Style,
   lectureSectionStyle,
@@ -17,41 +16,31 @@ import {
 } from '@/components/console/LectureParts';
 import { Button, Field, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
-import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { appUrl, lectureModeEnabled } from '@/lib/console/config';
 import {
   classCodeBlock,
-  deckPicker,
   lecturePlanFrom,
   lectureSourceFrom,
   outlineProblem,
   pickPlan,
-  pickerChoices,
   planOutline,
   presenterLink,
   revisitBlock,
-  rosterMessage,
   titleProblem,
   type LectureSource,
-  type PickerChoice,
 } from '@/lib/console/lecture';
-import { answerReady, appOriginOf, openPresenter, type OpenedDeck } from '@/lib/console/lecture-link';
+import { openPresenter } from '@/lib/console/lecture-link';
 import { dateKey } from '@/lib/console/plans';
 import { classRollup } from '@/lib/console/rollup';
-import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { headRem, rem } from '@/lib/console/rem';
 
 const TITLE_MAX = 60;
-
-/** A window this page opened is dropped once the teacher closes it (with its roster labels). */
-function pruneClosed(opened: Map<unknown, OpenedDeck>): void {
-  for (const win of opened.keys()) {
-    if (typeof win === 'object' && win !== null && (win as { closed?: unknown }).closed === true) opened.delete(win);
-  }
-}
 
 /** console/lecture-setup — F-TCH-004 §3.11, wireframe `classroom/lecture-presenter.md` screen K. */
 function LectureInner(): JSX.Element {
@@ -62,6 +51,8 @@ function LectureInner(): JSX.Element {
   const { ready, session, api, signOut, m, locale } = useConsole();
   const { available } = useConsoleLocale();
   const c = m.console;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const l = c.lecture;
   const enabled = lectureModeEnabled();
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -78,13 +69,8 @@ function LectureInner(): JSX.Element {
   const [strokeGuide, setStrokeGuide] = useState(true);
   const [sound, setSound] = useState(true);
   const [uiLocale, setUiLocale] = useState<UiLocale | null>(null);
-  const [picker, setPicker] = useState<PickerChoice>('numbers');
   const [notice, setNotice] = useState<'blocked' | 'copyFailed' | 'linkFailed' | null>(null);
   const [copied, setCopied] = useState(false);
-  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
-  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
-  // The presenter tabs this page opened, each with its deck and roster: the only windows a `ready` is answered for.
-  const opened = useRef(new Map<unknown, OpenedDeck>());
   const now = useMemo(() => new Date(), []);
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
@@ -123,7 +109,6 @@ function LectureInner(): JSX.Element {
     setRoster(rosterRes.data);
     setPlan(chosen);
     setPlansFailed(!plansRes.ok);
-    setPicker(pickerChoices(rosterRes.data).initial);
     const start: LectureSource = preselected === 'revisit' && revisitNow ? 'revisit' : chosen && preselected !== 'revisit' ? 'plan' : 'catalogue';
     choose(start, { plan: chosen, revisit: revisitNow });
   }, [api, enabled, spaceId, planParam, preselected, choose]);
@@ -132,33 +117,19 @@ function LectureInner(): JSX.Element {
     void load();
   }, [load]);
 
-  useEffect(() => {
-    const origin = appOriginOf(appUrl());
-    const onMessage = (event: MessageEvent): void => {
-      pruneClosed(opened.current);
-      answerReady({ origin: event.origin, source: event.source, data: event.data }, { appOrigin: origin, opened: opened.current });
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, []);
-
   // "Link copied" describes the deck that was copied: any change to it clears the label.
   useEffect(() => {
     setCopied(false);
-  }, [title, blocks, romanization, strokeGuide, sound, uiLocale, picker]);
+  }, [title, blocks, romanization, strokeGuide, sound, uiLocale]);
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
-  const back = (
-    <Muted>
-      <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{l.back(roster?.space.name ?? null)}</Link>
-    </Muted>
-  );
+  // PageBack (AMENDMENTS-DISPLAY-NAV section 7.3): back to the space, on every state of the page.
+  const back = spaceSubPageBack(spaceId, roster?.space.kind, l.back(roster?.space.name ?? null));
 
   if (!enabled) {
     return (
-      <AdultFrame onSignOut={signOut} title={l.title}>
-        {back}
+      <AdultFrame onSignOut={signOut} back={back} title={l.title}>
         <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
         <Notice>{l.comingSoon}</Notice>
       </AdultFrame>
@@ -166,20 +137,17 @@ function LectureInner(): JSX.Element {
   }
 
   const problem = roster ? titleProblem(title, roster) : 'empty';
-  const choices = roster ? pickerChoices(roster) : null;
   const canPresent = roster !== null && outlineProblem(blocks) === null && problem === null;
   const hasCode = blocks.some((b) => b.kind === 'class-code');
   const codeBlock = roster ? classCodeBlock(roster.joinCode) : null;
-  const namesMode = picker === 'names' || picker === 'initials';
   // "Same as this device" (null, the default) puts no language in the deck (owner items 6 and 7).
   const options: LectureOptionValues = { romanization, strokeGuide, sound, uiLocale };
 
-  const linkFor = (r: Roster) =>
+  const linkFor = () =>
     presenterLink(appUrl(), {
       title,
       blocks,
       options: { romanization, strokeGuide, sound, ...(uiLocale !== null ? { uiLocale } : {}) },
-      picker: deckPicker(picker, r),
       source,
       now: new Date(),
       rng: Math.random,
@@ -187,21 +155,20 @@ function LectureInner(): JSX.Element {
 
   const open = (): void => {
     if (!roster || !canPresent) return;
-    const link = linkFor(roster);
+    const link = linkFor();
     if (!link.ok) {
       setNotice('linkFailed');
       return;
     }
-    pruneClosed(opened.current);
+    // A new tab with no handle back to this page (LV-H: nothing is handed over after the link).
     const result = openPresenter(window, link.url);
     setNotice(result.ok ? null : 'blocked');
-    if (result.ok) opened.current.set(result.win, { deckId: link.deck.id, roster: rosterMessage(link.deck.id, picker, roster) });
   };
 
   const copy = async (): Promise<void> => {
     if (!roster || !canPresent) return;
-    if (hasCode && !(await confirmDialog.ask(l.copyHasCode))) return;
-    const link = linkFor(roster);
+    if (hasCode && !(await confirm({ title: l.copyHasCode, confirmLabel: c.confirm.copyAnyway }))) return;
+    const link = linkFor();
     if (!link.ok) {
       setNotice('linkFailed');
       return;
@@ -223,7 +190,7 @@ function LectureInner(): JSX.Element {
   const add = (block: LectureBlock): void => edit([...blocks, block]);
 
   const pickSource = async (next: LectureSource): Promise<void> => {
-    if (edited && blocks.length > 0 && !(await confirmDialog.ask(l.replaceOutline))) return;
+    if (edited && blocks.length > 0 && !(await confirm({ title: l.replaceOutline, confirmLabel: c.confirm.replace }))) return;
     choose(next, { plan, revisit });
   };
 
@@ -235,8 +202,8 @@ function LectureInner(): JSX.Element {
   };
 
   return (
-    <AdultFrame onSignOut={signOut} title={roster ? l.titleFor(roster.space.name) : l.title}>
-      {back}
+    <AdultFrame onSignOut={signOut} back={back} title={roster ? l.titleFor(roster.space.name) : l.title}>
+      {confirmSheet}
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {loading && !roster ? <Muted>{c.space.loading}</Muted> : null}
       {error ? (
@@ -246,16 +213,15 @@ function LectureInner(): JSX.Element {
         </div>
       ) : null}
 
-      {roster && choices ? (
+      {roster ? (
         <>
           <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
           <Muted>{l.intro}</Muted>
 
-          <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={plansFailed} omitted={omitted} onChoose={(next) => void pickSource(next)} onRetry={() => void load()} />
+          <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={plansFailed} omitted={omitted} onChoose={pickSource} onRetry={() => void load()} />
           {source === 'catalogue' ? <LectureCatalogueSection blocks={blocks} onChange={edit} /> : null}
           <LectureOutlineSection blocks={blocks} codeBlock={codeBlock} onChange={edit} onAdd={add} />
           <LectureOptionsSection value={options} available={available} onChange={setOptions} />
-          <LecturePickerSection offered={choices.offered} value={picker} anonymized={roster.space.settings.anonymizeRoster} onChange={setPicker} />
 
           <section style={lectureSectionStyle} aria-label={l.titleField.label}>
             <Field
@@ -301,10 +267,8 @@ function LectureInner(): JSX.Element {
               {copied ? l.copied.cta : l.copyLink.cta}
             </Button>
           </div>
-          {namesMode ? <Muted>{l.copyNoNames}</Muted> : null}
         </>
       ) : null}
-      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

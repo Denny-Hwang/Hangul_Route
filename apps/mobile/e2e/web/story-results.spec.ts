@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, headerBack } from './helpers';
 import { fullyVisible, nextPage } from './story-reader-helpers';
 
 /**
@@ -230,7 +230,7 @@ test.describe('story Results (fixture bundle)', () => {
     await expect(page.getByTestId(`story-episode-play-again-${STORY}`)).toBeVisible();
     await expect(page.getByTestId(`story-episode-read-again-${STORY}`)).toBeVisible();
     await expect(page.getByTestId('story-results-extras')).toBeHidden();
-    await page.getByLabel('Go back').first().click();
+    await headerBack(page).first().click();
     await expect(page.getByTestId('story-results-extras')).toBeVisible();
     await page.getByTestId('story-results-home').click();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -244,7 +244,7 @@ test.describe('story Results (fixture bundle)', () => {
     await page.getByTestId('story-results-episode').click();
     // Screens under the top one stay in the page (hidden), so every lookup takes the visible one.
     const shown = (testId: string): Locator => page.getByTestId(testId).filter({ visible: true });
-    const goBack = (): Promise<void> => page.getByLabel('Go back').filter({ visible: true }).first().click();
+    const goBack = (): Promise<void> => headerBack(page).first().click();
     const line = shown('story-episode-notes');
     await expect(line).toHaveText('Culture notes: 1 found');
     await line.click();
@@ -257,7 +257,7 @@ test.describe('story Results (fixture bundle)', () => {
     await expect(shown('culture-notes')).toHaveCount(0);
     await goBack();
     await expect(shown('culture-notes')).toBeVisible();
-    await shown('culture-notes-back').click();
+    await headerBack(page).click();
     await expect(shown('story-episode')).toBeVisible();
     await goBack();
     await expect(shown('story-results-extras')).toBeVisible();

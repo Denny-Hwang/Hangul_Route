@@ -1,13 +1,13 @@
-import { Body, Button, Caption, Card, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { deviceAttest } from '../../logic/transfers/consent-gate';
 import { deviceConsentRecord, sheetDataFromPreview, sheetLocaleOf, type ConsentSheetData } from '../../logic/transfers/consent-sheet';
 import { MOVE_RELOAD, moveErrorLine } from '../../logic/transfers/transfer-views';
-import { cleanJoinCode, isCompleteJoinCode } from '../../logic/spaces/join-code';
+import { cleanJoinCode, codeFieldFontSize, isCompleteJoinCode } from '../../logic/spaces/join-code';
 import type { RootStackParamList } from '../../navigation/types';
 import { useMembershipStore } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
@@ -39,6 +39,7 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
   const transfers = useLearnerTransfers(profileId);
   const device = useTransferDevice(profileId);
   const [code, setCode] = useState('');
+  const [codeFieldWidth, setCodeFieldWidth] = useState(0);
   const [sheet, setSheet] = useState<ConsentSheetData | null>(null);
   const [destinationId, setDestinationId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -115,19 +116,10 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
     setError(moveErrorLine(result, name, messages.caregiver));
   };
 
-  const back = (
-    <>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', minWidth: touchTarget.min, minHeight: touchTarget.min, justifyContent: 'center' }}>
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
-    </>
-  );
 
   if (sent) {
     return (
       <Screen tone="canvas" scrollable>
-        {back}
         <FocusTitle text={t.move.title} />
         <Spacer size="lg" />
         <Card padding="lg" tone="success" testID="move-sent">
@@ -152,7 +144,6 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
           notice={notice}
           error={error}
           busy={busy}
-          header={back}
           onYes={(l, introduce) => void send(l, introduce)}
           onNotNow={() => navigation.goBack()}
         />
@@ -162,7 +153,6 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
 
   return (
     <Screen tone="canvas" scrollable>
-      {back}
       <FocusTitle text={t.move.title} />
       <Spacer size="xs" />
       <Body tone="secondary">{t.move.step1}</Body>
@@ -186,10 +176,12 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
         aria-invalid={error !== null}
         {...{ 'aria-describedby': error || !online ? 'move-code-line' : undefined }}
         testID="move-code"
+        // The code is drawn as large as the text size asks, but never so large that a whole code is cut (section 4).
+        onLayout={(e) => setCodeFieldWidth(e.nativeEvent.layout.width - 2 * borderWidth.base)}
         style={{
           minHeight: touchTarget.hero,
           textAlign: 'center',
-          fontSize: textScale.size.display,
+          fontSize: codeFieldFontSize(textScale.size.display, codeFieldWidth, spacing.sm),
           fontWeight: typography.weight.bold,
           letterSpacing: spacing.sm,
           color: colors.text.primary,

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, headerBack } from './helpers';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -68,7 +68,7 @@ async function expectCellStoriesEvents(page: Page, expected: unknown): Promise<v
 
 /** The top screen's back arrow (screens under it stay mounted, hidden). */
 async function goBack(page: Page): Promise<void> {
-  await page.getByLabel('Go back', { exact: true }).filter({ visible: true }).first().click();
+  await headerBack(page).first().click();
 }
 
 test.describe('heritage stories on the Journey (fixture bundle)', () => {

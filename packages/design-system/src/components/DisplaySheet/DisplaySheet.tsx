@@ -157,13 +157,17 @@ export function DisplaySheet({
     wasConfirming.current = confirming;
   }, [confirming]);
 
-  // Escape closes the sheet on the web; react-native-web's Modal does not do it by itself.
+  // Escape closes the sheet on the web, on keydown, and stops there: a page's own Escape under the sheet (an All
+  // lessons card page closing) does not also run (AMENDMENTS-DISPLAY-NAV section 7.1).
   useEffect(() => {
     if (!visible || Platform.OS !== 'web') return undefined;
-    const doc = (globalThis as { document?: { addEventListener: (t: string, f: (e: { key?: string }) => void) => void; removeEventListener: (t: string, f: (e: { key?: string }) => void) => void } }).document;
+    type KeyEvent = { key?: string; stopPropagation?: () => void };
+    const doc = (globalThis as { document?: { addEventListener: (t: string, f: (e: KeyEvent) => void) => void; removeEventListener: (t: string, f: (e: KeyEvent) => void) => void } }).document;
     if (!doc) return undefined;
-    const onKey = (event: { key?: string }): void => {
-      if (event.key === 'Escape') onClose();
+    const onKey = (event: KeyEvent): void => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation?.();
+      onClose();
     };
     doc.addEventListener('keydown', onKey);
     return () => doc.removeEventListener('keydown', onKey);

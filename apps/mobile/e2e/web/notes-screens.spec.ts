@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, readStored, seedStored } from './helpers';
+import { onboardChild, onboardSelf, readStored, seedStored, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -174,7 +174,7 @@ test.describe('notes screens (flag on)', () => {
     await shot(page, 'notes-page-picked');
 
     // Back on Home the card is gone (read); the Profile row has no New pill.
-    await page.getByTestId('notes-back').click();
+    await headerBack(page).click();
     await expect(page.getByText('Hi, Mina!')).toBeVisible();
     await expect(page.getByTestId('home-notes-card')).toHaveCount(0);
     await openProfile(page);
@@ -225,7 +225,7 @@ test.describe('notes screens (flag on)', () => {
     await expect(page.getByTestId('note-quest-closed-caption')).toHaveCount(0);
     await shot(page, 'notes-page-quest');
     await page.getByRole('button', { name: 'Start' }).click();
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
   });
 
   test('Put this note away hides it on this device, says so once, and sends nothing', async ({ page }) => {
@@ -244,7 +244,7 @@ test.describe('notes screens (flag on)', () => {
     expect(stored?.queue.filter((w) => w.kind === 'report')).toEqual([]);
     await shot(page, 'notes-put-away');
     // One My notes on the stack: one Back reaches Profile.
-    await page.getByTestId('notes-back').click();
+    await headerBack(page).click();
     await expect(page.getByTestId('profile-notes-row')).toBeVisible();
   });
 

@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { colors } from '@hangul-route/design-system/tokens';
 import { availableLocales, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
+import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -222,7 +222,7 @@ test.describe('the Route tab (LR-4)', () => {
     await expect(screen).toBeVisible();
     await expect(screen.getByText(en.learner.myRoute.title, { exact: true })).toBeVisible();
     await expect(screen.getByText(en.learner.myRoute.purpose, { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
     // Owner decision 2026-10-17: the card, the next lessons and the Journey link; the stage trail is not on the tab.
     await expect(page.getByTestId('my-route-next-lessons')).toBeVisible();
     await expect(page.getByTestId('my-route-trail')).toHaveCount(0);
@@ -290,14 +290,14 @@ test.describe('the Route tab (LR-4)', () => {
     await expect(page.getByText(en.learner.journey.intro, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: en.learner.myRoute.open.cta, exact: true }).click();
     await expect(purpose).toBeVisible();
-    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
 
     await page.getByRole('tablist').getByRole('link', { name: en.a11y.tabs.home }).click();
     // The route strip is folded into the Next lesson hero (AMENDMENTS-DISPLAY-NAV 9.1): its link opens the tab.
     await expect(page.getByTestId('home-route-strip')).toHaveCount(0);
     await page.getByTestId('home-next-lesson-route').click();
     await expect(purpose).toBeVisible();
-    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
   });
 
   test('the open Stage 1 draws the letter wall (R-7c): lit, outlined and plain letters, each one KoreanText', async ({ page }) => {
@@ -404,7 +404,7 @@ test.describe('the Route tab (LR-4)', () => {
     await expect(screen.getByText(en.caregiver.journey.viewing('Dani'), { exact: true })).toBeVisible();
     // The root-stack page, forced read-only even for the active profile (amendment section 5.1): Go back, no
     // purpose line, no button on the card.
-    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toBeVisible();
+    await expect(headerBack(page)).toBeVisible();
     await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toHaveCount(0);
     await expect(page.getByTestId('my-route-card-cta')).toHaveCount(0);
     await expect(page.getByTestId('my-route-card').getByRole('button')).toHaveCount(0);
@@ -417,7 +417,7 @@ test.describe('the Route tab (LR-4)', () => {
     expect(await noSideScroll(page)).toBe(true);
     await shot(page, 'route-dashboard-read-only-375');
 
-    await page.getByRole('button', { name: en.a11y.goBack, exact: true }).click();
+    await headerBack(page).click();
     await expect(page.getByTestId(`dashboard-route-${id}-open`)).toBeVisible();
   });
 });
@@ -442,7 +442,7 @@ test.describe('the level check entry (LR-10 case b)', () => {
     await page.getByTestId('placement-warmup-speaker').click();
     await page.getByTestId('placement-warmup-option-rice').click();
     await page.locator('[data-testid^="placement-option-"]').first().click();
-    await page.getByTestId('placement-exit').click();
+    await headerClose(page).click();
     await page.getByTestId('placement-enough').click();
     await expect(page.getByTestId('placement-result')).toBeVisible();
 
@@ -452,7 +452,7 @@ test.describe('the level check entry (LR-10 case b)', () => {
     await expect(page.getByTestId('placement-result')).toHaveCount(0);
     // The learner's own tab: the purpose line, no back button, the Route tab selected.
     await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
     await expect(page.getByTestId('my-route-screen')).toBeVisible();
     await expect
       .poll(() => selectedTabs(page, TAB_LABELS), { message: 'the Route tab wears the active tint (see tabTints for every item)' })

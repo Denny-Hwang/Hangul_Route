@@ -3,7 +3,7 @@ import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { lectureBundle } from '../../lecture/content';
-import { PRESENT_PICKER, presentBlock, presentDeck, presentHref, presentItemShown, presentPlacement, presentThisShown, presentTitle } from '../present';
+import { presentBlock, presentDeck, presentHref, presentItemShown, presentPlacement, presentThisShown, presentTitle } from '../present';
 import { PRESENTER_PATH } from '../../../platform/presenter';
 import { TALE_ID } from './browse-fixture';
 
@@ -54,13 +54,12 @@ describe('presentTitle', () => {
 });
 
 describe('presentDeck', () => {
-  it('is a valid one-block catalogue deck with a numbers picker of 12 and no names', () => {
+  it('is a valid one-block catalogue deck with no helper picker (LV-H) and no names', () => {
     const deck = deckOf('quest', QUEST);
     expect(LectureDeckSchema.safeParse(deck).success).toBe(true);
     expect(deck.blocks).toEqual([{ kind: 'quest', id: QUEST }]);
     expect(deck.source).toBe('catalogue');
-    expect(deck.picker).toEqual({ mode: 'numbers', count: 12 });
-    expect(PRESENT_PICKER).toEqual({ mode: 'numbers', count: 12 });
+    expect(deck.picker).toBeNull();
     expect(deck.createdAt).toBe(NOW.toISOString());
     expect(deck.id).toMatch(/^lecture:[a-z0-9]{10}$/);
     expect(deck.options.uiLocale).toBe('en');

@@ -7,8 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
-import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
@@ -33,6 +33,7 @@ import { addFrom, draftForAdd, withQuest } from '@/lib/console/plan-add';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import { headRem, rem } from '@/lib/console/rem';
 
 interface Draft {
@@ -55,6 +56,8 @@ function PlanInner(): JSX.Element {
   const spaceId = spaceIdFrom(params);
   const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const p = c.plan;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[] | null>(null);
@@ -69,8 +72,6 @@ function PlanInner(): JSX.Element {
   // Keys, not text: the messages are looked up at render time, so they follow the header language select.
   const [error, setError] = useState<PlanError | null>(null);
   const [note, setNote] = useState<'onePerDay' | null>(null);
-  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
-  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
   const [busy, setBusy] = useState(false);
   const [start, setStart] = useState(dateKey(new Date()));
   const [perWeek, setPerWeek] = useState(2);
@@ -264,7 +265,7 @@ function PlanInner(): JSX.Element {
 
   const select = async (plan: PlanView): Promise<void> => {
     if (plan.id === openPlanId) return;
-    if (editing && dirty && !(await confirmDialog.ask(c.curriculum.builder.discardEdits))) return;
+    if (editing && dirty && !(await confirm({ title: c.curriculum.builder.discardEdits, confirmLabel: c.confirm.discard }))) return;
     setSelectedId(plan.id);
     setNote(null);
     if (plan.publishedAt) {
@@ -277,7 +278,7 @@ function PlanInner(): JSX.Element {
   };
 
   const archive = async (): Promise<void> => {
-    if (!api || !current || !(await confirmDialog.ask(c.archivePlanConfirm))) return;
+    if (!api || !current || !(await confirm({ title: c.archivePlanConfirm, confirmLabel: c.confirm.archive }))) return;
     setBusy(true);
     const result = await api.archivePlan(spaceId, current.id);
     setBusy(false);
@@ -301,10 +302,8 @@ function PlanInner(): JSX.Element {
   const suggestNotice = suggestionNoticeShown(draft, suggestedFor) ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
 
   return (
-    <AdultFrame onSignOut={signOut} title={roster ? p.titleFor(roster.space.name) : p.title}>
-      <Muted>
-        <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{p.back(roster?.space.name ?? null)}</Link>
-      </Muted>
+    <AdultFrame onSignOut={signOut} back={spaceSubPageBack(spaceId, roster?.space.kind, p.back(roster?.space.name ?? null))} title={roster ? p.titleFor(roster.space.name) : p.title}>
+      {confirmSheet}
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {error ? (
         <div style={{ ...panelStyle, marginBottom: spacing.md }}>
@@ -312,7 +311,7 @@ function PlanInner(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {plans ? <PlanSwitcher plans={plans} selectedId={openPlanId} onSelect={(plan) => void select(plan)} locale={locale} /> : null}
+      {plans ? <PlanSwitcher plans={plans} selectedId={openPlanId} onSelect={select} locale={locale} /> : null}
 
       {readout && current ? (
         <PlanReadout
@@ -406,8 +405,9 @@ function PlanInner(): JSX.Element {
               {draft.meta ? null : (
                 <div style={{ marginTop: spacing.md, display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ color: colors.text.muted, fontSize: rem(typography.size.caption) }}>{p.pace.title}</span>
-                  <input type="date" value={start} onChange={(e) => setStart(e.target.value || dateKey(new Date()))} aria-label={p.pace.start} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }} />
-                  <select value={perWeek} onChange={(e) => setPerWeek(Number(e.target.value))} aria-label={p.pace.perWeekLabel} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }}>
+                  {/* Never wider than the row: at a large text size (a 300 % root at 320) a date field would push the page sideways (AMENDMENTS-DISPLAY-NAV section 4). */}
+                  <input type="date" value={start} onChange={(e) => setStart(e.target.value || dateKey(new Date()))} aria-label={p.pace.start} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }} />
+                  <select value={perWeek} onChange={(e) => setPerWeek(Number(e.target.value))} aria-label={p.pace.perWeekLabel} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                     {[1, 2, 3, 5, 7].map((n) => (
                       <option key={n} value={n}>{p.pace.perWeek(n)}</option>
                     ))}
@@ -483,7 +483,6 @@ function PlanInner(): JSX.Element {
           </div>
         </section>
       )}
-      {confirmDialog.dialog}
     </AdultFrame>
   );
 }
