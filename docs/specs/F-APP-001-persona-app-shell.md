@@ -1,6 +1,6 @@
 Status: ready
 
-> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 3.4, 6 and 7.3): the learner-to-grown-up hand-off always carries `?lang=`, and the console reads the device record (sections 3.7 and 3.9 here; row DN-5); every non-home console page has a top-left PageBack and the way to the learner app becomes a **Learner app** exit at the right of the header (section 3.8; row DN-6).
+> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 3.4, 6 and 7.3): the learner-to-grown-up hand-off always carries `?lang=` (the learner app's links in row DN-3, the console's in DN-5), and the console reads the device record (sections 3.7 and 3.9 here; row DN-5); every non-home console page has a top-left PageBack and the way to the learner app becomes a **Learner app** exit at the right of the header (section 3.8; row DN-6).
 
 # F-APP-001 — One product app: app.hangulroute.com with persona sign-in (learner, family, teacher) and a home per persona
 

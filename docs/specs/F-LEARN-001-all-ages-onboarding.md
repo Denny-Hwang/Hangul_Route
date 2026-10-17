@@ -1,6 +1,6 @@
 Status: ready
 
-> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (section 7.2): the web build gets a history bridge, so the browser back reaches the `beforeRemove` listener of section 3.15.4 without a linking config (row DN-4).
+> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 7.1 and 7.2): the web build gets a history bridge that keeps the tab's history in step with the navigator, so the browser back reaches the `beforeRemove` listener of section 3.15.4 without a linking config; every non-root screen has a top-left Back, except PlacementInvite and FirstQuestPreview, the end of first-run setup (row DN-4).
 
 # F-LEARN-001 — All-ages onboarding and profile: who is learning, reading level, consent, grown-up PIN, avatar variants
 

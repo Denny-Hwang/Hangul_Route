@@ -1,6 +1,6 @@
 Status: ready
 
-> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (section 6): All lessons uses the device language; the Lesson display sheet keeps Romanization only, `setSessionLocale` goes and `device:settings` joins `BROWSE_WRITABLE_KEYS` (sections 4.9 and 4.10 here; row DN-7).
+> **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 6 and 7.2): All lessons uses the device language; the Lesson display sheet keeps Romanization only and is renamed **Romanization** with its header chip, `setSessionLocale` goes and `device:settings` joins `BROWSE_WRITABLE_KEYS` (sections 4.9 and 4.10 here; row DN-7); the learner web build's history bridge keeps its `hrNav` on the same history-state object as `hrBrowseDepth`, and Close goes back past both (BD1; row DN-4).
 
 # F-BROWSE-001 — All lessons: parents and teachers see every lesson the way a learner does
 
