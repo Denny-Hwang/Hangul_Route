@@ -100,12 +100,27 @@ afterEach(() => {
 
 const textOf = (n: ReactTestInstance): string => n.children.map((child) => (typeof child === 'string' ? child : textOf(child))).join('');
 
+/**
+ * The confirm is the page's own `<dialog>` (owner request 2026-10-16, item 8), never `window.confirm`: the questions
+ * the open dialogs ask, each then answered with OK (`answer`) or Cancel.
+ */
+async function answerAsks(answer: boolean): Promise<string[]> {
+  const root = (renderer as unknown as ReactTestRenderer).root;
+  const dialogs = root.findAll((n) => n.type === 'dialog');
+  const asked = dialogs.map((d) => textOf(d.find((n) => n.type === 'p')));
+  for (const d of dialogs) {
+    const button = d.find((n) => n.type === 'button' && n.props['data-testid'] === (answer ? 'console-confirm-ok' : 'console-confirm-cancel'));
+    await act(async () => {
+      button.props.onClick();
+    });
+  }
+  await act(async () => undefined);
+  expect(root.findAll((n) => n.type === 'dialog')).toEqual([]);
+  return asked;
+}
+
 async function clickArchive(answer = false): Promise<string[]> {
-  const asked: string[] = [];
-  const confirm = (text?: string): boolean => {
-    asked.push(text ?? '');
-    return answer;
-  };
+  const confirm = vi.fn(() => answer);
   vi.stubGlobal('window', { confirm, addEventListener: () => undefined, removeEventListener: () => undefined });
   await act(async () => {
     renderer = create(<SettingsPage />);
@@ -118,6 +133,9 @@ async function clickArchive(answer = false): Promise<string[]> {
     button.props.onClick();
   });
   await act(async () => undefined);
+  const asked = await answerAsks(answer);
+  // The browser's own confirm is never used.
+  expect(confirm).not.toHaveBeenCalled();
   return asked;
 }
 
@@ -155,7 +173,7 @@ describe('the archive confirm names the plan (F-BILL-002 B-12)', () => {
       (release as unknown as () => void)();
     });
     await act(async () => undefined);
-    expect(asked).toEqual([`${plainAsk('Kim family')}\n\n${words.familyLoses('Kim family')} ${words.familyRenews}`]);
+    expect(await answerAsks(false)).toEqual([`${plainAsk('Kim family')}\n\n${words.familyLoses('Kim family')} ${words.familyRenews}`]);
     expect(state.archiveCalls).toEqual([]);
   });
 

@@ -19,6 +19,7 @@ import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabW
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
@@ -59,6 +60,8 @@ function SpaceInner(): JSX.Element {
   const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
   // A key, not text: the message is looked up at render time, so it follows the header language select.
   const [error, setError] = useState<SpaceError | null>(null);
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const now = new Date();
@@ -119,7 +122,7 @@ function SpaceInner(): JSX.Element {
 
   const regenerate = async (): Promise<void> => {
     if (!api || !roster) return;
-    if (roster.joinCode && !window.confirm(`${c.space.regenerateAsk(roster.space.name)} ${c.oldCodeStops}`)) return;
+    if (roster.joinCode && !(await confirmDialog.ask(`${c.space.regenerateAsk(roster.space.name)} ${c.oldCodeStops}`))) return;
     setBusy(true);
     const result = await api.regenerateCode(spaceId);
     setBusy(false);
@@ -313,6 +316,7 @@ function SpaceInner(): JSX.Element {
           ) : null}
         </>
       ) : null}
+      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

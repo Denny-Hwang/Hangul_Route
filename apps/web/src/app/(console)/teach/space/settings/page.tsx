@@ -11,6 +11,7 @@ import { TransferSheet, useOnline, useTransfersShown } from '@/components/consol
 import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { useNotesApi } from '@/components/console/use-notes-api';
 import type { MemberView, Roster, TransferOption } from '@/lib/console/api';
 import { archiveConfirmText, archivePlanNote, settleWithin } from '@/lib/console/archive-plan-note';
@@ -53,6 +54,8 @@ function SettingsInner(): JSX.Element {
   // F-BILL-002 B-12: the billing summary read, so the archive confirm can name the plan it affects; null = no line.
   const billingRead = useRef<Promise<BillingSummary | null> | null>(null);
   const asking = useRef(false);
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -133,16 +136,22 @@ function SettingsInner(): JSX.Element {
             deleteTarget={deleteTarget}
             typedName={typedName}
             onRegenerate={() => {
-              if (roster.joinCode && !window.confirm(`${s.joinCode.regenerateAsk} ${c.oldCodeStops}`)) return;
-              void run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
+              void (async () => {
+                if (roster.joinCode && !(await confirmDialog.ask(`${s.joinCode.regenerateAsk} ${c.oldCodeStops}`))) return;
+                await run(() => api.regenerateCode(spaceId), 'codeReady', 'codeFailed');
+              })();
             }}
             onConsent={(mode) => void run(() => api.patchSettings(spaceId, { consentMode: mode }), 'saved', 'saveFailed')}
             onAnonymize={(on) => void run(() => api.patchSettings(spaceId, { anonymizeRoster: on }), 'saved', 'saveFailed')}
             onRemoveAdult={(member) => {
-              if (window.confirm(s.grownUps.removeAsk(member.name, space.name))) void run(() => api.removeMember(spaceId, 'account', member.memberId), 'removed', 'removeFailed');
+              void confirmDialog.ask(s.grownUps.removeAsk(member.name, space.name)).then((yes) => {
+                if (yes) void run(() => api.removeMember(spaceId, 'account', member.memberId), 'removed', 'removeFailed');
+              });
             }}
             onRemoveLearner={(member) => {
-              if (window.confirm(s.learners.removeAsk(member.name, space.name))) void run(() => api.removeMember(spaceId, 'learner', member.memberId), 'removed', 'removeFailed');
+              void confirmDialog.ask(s.learners.removeAsk(member.name, space.name)).then((yes) => {
+                if (yes) void run(() => api.removeMember(spaceId, 'learner', member.memberId), 'removed', 'removeFailed');
+              });
             }}
             onArchive={() => {
               if (archived) {
@@ -152,10 +161,12 @@ function SettingsInner(): JSX.Element {
               if (asking.current) return;
               asking.current = true;
               // A click that lands before the billing read settles waits for it briefly, then asks.
-              void settleWithin(billingRead.current, ARCHIVE_PLAN_WAIT_MS).then((summary) => {
-                asking.current = false;
-                if (window.confirm(archiveConfirmText(space.name, archivePlanNote(summary, spaceId, new Date(), locale), locale))) void run(() => api.archiveSpace(spaceId, true), 'archived', 'saveFailed');
-              });
+              void settleWithin(billingRead.current, ARCHIVE_PLAN_WAIT_MS)
+                .then((summary) => confirmDialog.ask(archiveConfirmText(space.name, archivePlanNote(summary, spaceId, new Date(), locale), locale)))
+                .then((yes) => {
+                  asking.current = false;
+                  if (yes) void run(() => api.archiveSpace(spaceId, true), 'archived', 'saveFailed');
+                });
             }}
             onDeleteTarget={(memberId) => {
               setDeleteTarget(memberId);
@@ -234,6 +245,7 @@ function SettingsInner(): JSX.Element {
           ) : null}
         </>
       ) : null}
+      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

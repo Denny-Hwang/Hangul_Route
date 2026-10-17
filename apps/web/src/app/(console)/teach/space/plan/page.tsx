@@ -8,6 +8,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
 import { builderEpisodes, questsOf } from '@/data/catalog';
@@ -56,6 +57,8 @@ function PlanInner(): JSX.Element {
   // Keys, not text: the messages are looked up at render time, so they follow the header language select.
   const [error, setError] = useState<PlanError | null>(null);
   const [note, setNote] = useState<'onePerDay' | null>(null);
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
   const [busy, setBusy] = useState(false);
   const [start, setStart] = useState(dateKey(new Date()));
   const [perWeek, setPerWeek] = useState(2);
@@ -217,9 +220,9 @@ function PlanInner(): JSX.Element {
   // every plan can be opened from it.
   const openPlanId = suggestedFor || addedNew ? null : (current?.id ?? null);
 
-  const select = (plan: PlanView): void => {
+  const select = async (plan: PlanView): Promise<void> => {
     if (plan.id === openPlanId) return;
-    if (editing && dirty && !window.confirm(c.curriculum.builder.discardEdits)) return;
+    if (editing && dirty && !(await confirmDialog.ask(c.curriculum.builder.discardEdits))) return;
     setSelectedId(plan.id);
     setNote(null);
     if (plan.publishedAt) {
@@ -232,7 +235,7 @@ function PlanInner(): JSX.Element {
   };
 
   const archive = async (): Promise<void> => {
-    if (!api || !current || !window.confirm(c.archivePlanConfirm)) return;
+    if (!api || !current || !(await confirmDialog.ask(c.archivePlanConfirm))) return;
     setBusy(true);
     const result = await api.archivePlan(spaceId, current.id);
     setBusy(false);
@@ -266,7 +269,7 @@ function PlanInner(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {plans ? <PlanSwitcher plans={plans} selectedId={openPlanId} onSelect={select} locale={locale} /> : null}
+      {plans ? <PlanSwitcher plans={plans} selectedId={openPlanId} onSelect={(plan) => void select(plan)} locale={locale} /> : null}
 
       {readout && current ? (
         <PlanReadout
@@ -408,6 +411,7 @@ function PlanInner(): JSX.Element {
           </div>
         </section>
       )}
+      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

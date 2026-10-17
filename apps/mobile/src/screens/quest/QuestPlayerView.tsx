@@ -2,6 +2,7 @@ import {
   Body,
   Button,
   Card,
+  ConfirmSheet,
   Heading,
   Hoya,
   HoyaBubble,
@@ -15,7 +16,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -35,7 +36,6 @@ import {
   type QuestPlayerPorts,
 } from '../../logic/quest-flow/quest-player-ports';
 import { questStepLabel } from '../../logic/quest-steps';
-import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { DiscoverStep } from './DiscoverStep';
 
@@ -120,23 +120,14 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
     runQuestFinish(useQuestRunStore.getState(), ports);
   };
 
-  // Quit control (wireframe quest/player): one-line confirm, then the run is discarded and the ports
-  // take the player back. Progress already saved is untouched.
+  // Quit control (wireframe quest/player): the app's own confirm sheet (design/components/ConfirmSheet), Keep playing
+  // first and focused, then the run is discarded and the ports take the player back. Progress already saved is untouched.
   const leaveQuest = (): void => {
     runQuestLeave(useQuestRunStore.getState().reset, ports);
   };
 
-  const confirmQuit = (): void => {
-    void confirm({
-      title: q.leave.title,
-      message: q.leave.message,
-      confirmLabel: q.leave.confirm.cta,
-      cancelLabel: q.leave.keep.cta,
-      destructive: true,
-    }).then((yes) => {
-      if (yes) leaveQuest();
-    });
-  };
+  const [leaveAsked, setLeaveAsked] = useState(false);
+  const confirmQuit = (): void => setLeaveAsked(true);
 
   const advance = (): void => {
     if (!quest) return;
@@ -212,6 +203,19 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
           isReward={step.kind === 'reward'}
         />
       )}
+      <ConfirmSheet
+        visible={leaveAsked}
+        title={q.leave.title}
+        message={q.leave.message}
+        keepLabel={q.leave.keep.cta}
+        confirmLabel={q.leave.confirm.cta}
+        onKeep={() => setLeaveAsked(false)}
+        onConfirm={() => {
+          setLeaveAsked(false);
+          leaveQuest();
+        }}
+        testID="quest-leave-sheet"
+      />
     </Screen>
   );
 }

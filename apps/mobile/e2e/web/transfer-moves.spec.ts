@@ -298,10 +298,9 @@ test('Leave keeps its confirm and says when it did not go through', async ({ pag
   await onboardSelf(page, { name: 'Rio' });
   await seedSynced(page, null);
   await openProfile(page, 'Rio');
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: /Leave Sunday Class A/ }).click();
-  const confirm = page.getByRole('button', { name: 'Leave' }).last();
-  if (await confirm.isVisible().catch(() => false)) await confirm.click();
+  // The app's own confirm sheet (design/components/ConfirmSheet): Stay first, Leave under it.
+  await page.getByTestId('spaces-leave-sheet-confirm').click();
   await expect(page.getByText('This needs internet. Try again when you are online.')).toBeVisible();
 });
 

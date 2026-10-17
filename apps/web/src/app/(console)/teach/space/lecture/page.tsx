@@ -18,6 +18,7 @@ import {
 import { Button, Field, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { appUrl, lectureModeEnabled } from '@/lib/console/config';
 import {
@@ -80,6 +81,8 @@ function LectureInner(): JSX.Element {
   const [picker, setPicker] = useState<PickerChoice>('numbers');
   const [notice, setNotice] = useState<'blocked' | 'copyFailed' | 'linkFailed' | null>(null);
   const [copied, setCopied] = useState(false);
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
   // The presenter tabs this page opened, each with its deck and roster: the only windows a `ready` is answered for.
   const opened = useRef(new Map<unknown, OpenedDeck>());
   const now = useMemo(() => new Date(), []);
@@ -197,7 +200,7 @@ function LectureInner(): JSX.Element {
 
   const copy = async (): Promise<void> => {
     if (!roster || !canPresent) return;
-    if (hasCode && !window.confirm(l.copyHasCode)) return;
+    if (hasCode && !(await confirmDialog.ask(l.copyHasCode))) return;
     const link = linkFor(roster);
     if (!link.ok) {
       setNotice('linkFailed');
@@ -219,8 +222,8 @@ function LectureInner(): JSX.Element {
   };
   const add = (block: LectureBlock): void => edit([...blocks, block]);
 
-  const pickSource = (next: LectureSource): void => {
-    if (edited && blocks.length > 0 && !window.confirm(l.replaceOutline)) return;
+  const pickSource = async (next: LectureSource): Promise<void> => {
+    if (edited && blocks.length > 0 && !(await confirmDialog.ask(l.replaceOutline))) return;
     choose(next, { plan, revisit });
   };
 
@@ -248,7 +251,7 @@ function LectureInner(): JSX.Element {
           <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
           <Muted>{l.intro}</Muted>
 
-          <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={plansFailed} omitted={omitted} onChoose={pickSource} onRetry={() => void load()} />
+          <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={plansFailed} omitted={omitted} onChoose={(next) => void pickSource(next)} onRetry={() => void load()} />
           {source === 'catalogue' ? <LectureCatalogueSection blocks={blocks} onAdd={add} /> : null}
           <LectureOutlineSection blocks={blocks} codeBlock={codeBlock} onChange={edit} onAdd={add} />
           <LectureOptionsSection value={options} available={available} onChange={setOptions} />
@@ -301,6 +304,7 @@ function LectureInner(): JSX.Element {
           {namesMode ? <Muted>{l.copyNoNames}</Muted> : null}
         </>
       ) : null}
+      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

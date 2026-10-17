@@ -11,6 +11,7 @@ import { FamilyMoves, FamilyPageStateLine, type FamilyPageState } from '@/compon
 import { TeacherMovesSection } from '@/components/console/TeacherMovesSection';
 import { MoveButton, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
+import { useConfirmDialog } from '@/components/console/ConfirmDialog';
 import type { Roster, SpaceListItem } from '@/lib/console/api';
 import { signInAgainUrl } from '@/lib/console/grown-up-lock';
 import { ROUTES, isKnownSpaceKind, spaceIdFrom } from '@/lib/console/routing';
@@ -44,6 +45,8 @@ function TransfersInner(): JSX.Element {
   // read (or its failure, which means plain Agree) so a card's Agree never changes its words under the pointer.
   const [spaces, setSpaces] = useState<SpaceListItem[] | null>(null);
   const [spacesRead, setSpacesRead] = useState(false);
+  // The page's own confirm in the console language (a `<dialog>`, never the browser's confirm()).
+  const confirmDialog = useConfirmDialog({ ok: m.common.buttons.ok, cancel: m.common.buttons.cancel });
 
   const loadRoster = useCallback(async (): Promise<void> => {
     if (!api || !shown) return;
@@ -105,11 +108,12 @@ function TransfersInner(): JSX.Element {
           refreshMs={TRANSFER_REFRESH_MS}
           readOnly={space.archivedAt !== null}
           direct={directClassIds(spaces)}
-          confirm={(question) => typeof window !== 'undefined' && window.confirm(question)}
+          confirm={confirmDialog.ask}
           onPageState={setState}
         />
         </>
       ) : null}
+      {confirmDialog.dialog}
     </AdultFrame>
   );
 }

@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Heading, Icon, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, ConfirmSheet, Heading, Icon, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { LearnerMembership, Profile } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,7 +7,6 @@ import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { classesCardView } from '../logic/transfers/transfer-views';
 import type { RootStackParamList } from '../navigation/types';
-import { confirm } from '../platform/dialog';
 import { useAudience } from '../store/audience';
 import { useMembershipStore } from '../store/membership-store';
 import { RoomBlock } from '../screens/transfer/RoomBlock';
@@ -68,15 +67,9 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
 
   const view = device ? classesCardView({ transfers, memberships: rows, device, online }, t, date) : null;
 
+  // Leave asks first in the app's own sheet (design/components/ConfirmSheet): Stay is first and focused.
+  const [leaveAsk, setLeaveAsk] = useState<LearnerMembership | null>(null);
   const leaveSpace = async (row: LearnerMembership): Promise<void> => {
-    const yes = await confirm({
-      title: m.leave.confirmTitle(row.name),
-      message: m.leave.confirmMessage,
-      confirmLabel: m.leave.cta,
-      cancelLabel: m.leave.stay,
-      destructive: true,
-    });
-    if (!yes) return;
     setLeaveFailed(false);
     const ok = await leave(profile.id, row.spaceId);
     if (!ok) setLeaveFailed(true);
@@ -132,7 +125,7 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
                       testID={`move-${row.spaceId}`}
                     />
                   ) : null}
-                  <Button label={m.leave.cta} tone="ghost" size="sm" accessibilityLabel={messages.a11y.leaveSpace(row.name)} onPress={() => void leaveSpace(row)} />
+                  <Button label={m.leave.cta} tone="ghost" size="sm" accessibilityLabel={messages.a11y.leaveSpace(row.name)} onPress={() => setLeaveAsk(row)} />
                 </View>
               </View>
             );
@@ -192,7 +185,21 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
         </>
       ) : null}
       <Spacer size="md" />
-      <Button label={m.join.cta} tone="secondary" size="md" onPress={onJoin} />
+      <Button label={m.join.cta} tone="ghost" size="md" onPress={onJoin} />
+      <ConfirmSheet
+        visible={leaveAsk !== null}
+        title={leaveAsk ? m.leave.confirmTitle(leaveAsk.name) : ''}
+        message={m.leave.confirmMessage}
+        keepLabel={m.leave.stay}
+        confirmLabel={m.leave.cta}
+        onKeep={() => setLeaveAsk(null)}
+        onConfirm={() => {
+          const row = leaveAsk;
+          setLeaveAsk(null);
+          if (row) void leaveSpace(row);
+        }}
+        testID="spaces-leave-sheet"
+      />
     </Card>
   );
 }

@@ -178,8 +178,8 @@ test('soft prerequisite: a note, a one-time sheet, and both answers work', async
   await expect(page.getByText('This one uses letters from Meet a, eo, g, n. Start there?')).toBeVisible();
   await page.getByRole('button', { name: 'Play anyway' }).click();
   await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
-  page.on('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Leave quest' }).click();
+  await page.getByTestId('quest-leave-sheet-confirm').click();
 
   // Back on the episode page (leaving replaces the player with a fresh page) the sheet does not ask a second time.
   await expect(page.getByText('Builds on: Meet a, eo, g, n').last()).toBeVisible();

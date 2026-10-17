@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, ConfirmSheet, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -6,7 +6,6 @@ import { useMessages } from '../../i18n/use-messages';
 import { rescueCodeHint, rescueCodeLines } from '../../logic/sync/rescue-code';
 import { cloudStatusLine, saveNowNote } from '../../logic/sync/status-line';
 import type { RootStackParamList } from '../../navigation/types';
-import { confirm } from '../../platform/dialog';
 import { copyText } from '../../platform/pwa';
 import { shareText } from '../../platform/share-text';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -44,15 +43,10 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
     setNote(saveNowNote(after, messages.caregiver.sync));
   };
 
+  // A new code asks first in the app's own sheet (design/components/ConfirmSheet): Keep this code is first and focused.
+  const [rotateAsked, setRotateAsked] = useState(false);
   const rotate = async (): Promise<void> => {
-    const yes = await confirm({
-      title: m.rotate.confirmTitle,
-      message: m.rotate.confirmMessage,
-      confirmLabel: m.rotate.cta,
-      cancelLabel: m.rotate.keep.cta,
-      destructive: true,
-    });
-    if (!yes || !learnerId) return;
+    if (!learnerId) return;
     setBusy(true);
     const fresh = await issue(learnerId);
     setBusy(false);
@@ -112,12 +106,25 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
         <>
           <Spacer size="xxl" />
           <View style={{ alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border.subtle, borderRadius: radii.sm, paddingTop: spacing.md }}>
-            <Button label={m.rotate.cta} tone="ghost" size="sm" disabled={busy} onPress={() => void rotate()} />
+            <Button label={m.rotate.cta} tone="ghost" size="sm" disabled={busy} onPress={() => setRotateAsked(true)} />
             <Caption tone="muted">{m.rotate.caption}</Caption>
           </View>
         </>
       ) : null}
       <Spacer size="xl" />
+      <ConfirmSheet
+        visible={rotateAsked}
+        title={m.rotate.confirmTitle}
+        message={m.rotate.confirmMessage}
+        keepLabel={m.rotate.keep.cta}
+        confirmLabel={m.rotate.cta}
+        onKeep={() => setRotateAsked(false)}
+        onConfirm={() => {
+          setRotateAsked(false);
+          void rotate();
+        }}
+        testID="rescue-rotate-sheet"
+      />
     </Screen>
   );
 }

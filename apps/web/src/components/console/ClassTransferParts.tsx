@@ -37,8 +37,8 @@ export interface ClassMovesProps {
   readOnly: boolean;
   /** Classes this account owns or teaches directly (`directClassIds`), for Agree for both classes (T11). */
   direct: ReadonlySet<string>;
-  /** The regenerate flow's confirm (the roster's `window.confirm`). */
-  confirm: (question: string) => boolean;
+  /** The regenerate flow's confirm: the page's own dialog (`useConfirmDialog`), true on OK. */
+  confirm: (question: string) => Promise<boolean> | boolean;
   onPageState: (state: ClassPageState) => void;
 }
 
@@ -504,7 +504,7 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
   };
 
   const newCode = async (): Promise<void> => {
-    if (!confirm(`${c.space.regenerateAsk(spaceName)} ${c.oldCodeStops}`)) return;
+    if (!(await confirm(`${c.space.regenerateAsk(spaceName)} ${c.oldCodeStops}`))) return;
     setBusy(true);
     setCodeFailed(false);
     const result = await api.regenerateCode(spaceId);
