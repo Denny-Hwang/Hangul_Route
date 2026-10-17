@@ -108,21 +108,37 @@ export function titleTextStyle(scale: TypeScale, size: ScreenHeaderTitleSize, in
   };
 }
 
+/** How much a border grows when focus thickens it from `base` to `thick`. */
+const FOCUS_GROW = borderWidth.thick - borderWidth.base;
+
+/**
+ * A border that thickens on focus (`base` to `thick`) and keeps the control's box: the padding gives back what the
+ * border takes, across and down. Every control of the header row draws its ring this way, so focus never moves it.
+ * The row wraps only when its controls cannot share one line; a control that grew on focus at that edge would jump to
+ * the next line between a press and its release, and the tap would do nothing (AMENDMENTS-DISPLAY-NAV section 7.1).
+ */
+export function steadyFocusBorder(focused: boolean, paddingHorizontal: number): { borderWidth: number; paddingHorizontal: number; paddingVertical: number } {
+  return {
+    borderWidth: focused ? borderWidth.thick : borderWidth.base,
+    paddingHorizontal: paddingHorizontal - (focused ? FOCUS_GROW : 0),
+    paddingVertical: focused ? 0 : FOCUS_GROW,
+  };
+}
+
 /**
  * The Display (Aa) control: a paper pill of at least one touch target with the strong border; the
- * focus ring thickens and recolours the border. The sign is bodyLg bold at the chosen size.
+ * focus ring thickens and recolours the border inside the same box. The sign is bodyLg bold at the chosen size.
  */
 export function displayControlStyle(state: PressState): Record<string, unknown> {
   const focused = state.focused === true;
   return {
     minHeight: touchTarget.min,
     minWidth: touchTarget.min,
-    paddingHorizontal: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.pill,
     backgroundColor: state.pressed ? colors.surface.sunken : colors.surface.paper,
-    borderWidth: focused ? borderWidth.thick : borderWidth.base,
+    ...steadyFocusBorder(focused, spacing.md),
     borderColor: focused ? colors.border.focus : colors.border.strong,
   };
 }

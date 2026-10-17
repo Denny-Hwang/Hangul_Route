@@ -37,7 +37,7 @@ The one top row of every learner-app and All lessons screen. It carries the way 
 | Row | flex, wraps only when the minimum widths cannot fit (200 % text, Largest at 320); `spacing.sm` gap; at least `touchTarget.min` tall; the trailing group keeps its size and wraps as a group; `spacing.xs` under the header (none when the title is in the row) |
 | Leading | `arrow-left` (back) or `close` glyph 24 + label, `size.body` bold `text.primary`, transparent, `radii.pill`, `touchTarget.min` both ways; pulled `spacing.xs` into the gutter so the glyph lines up with the content edge |
 | Title | `size.title` (or `size.prompt`) scaled by the heading half rule, bold, `leading.tight`, `overflow-wrap: anywhere` |
-| Aa | `aa-btn`: paper, `borderWidth.base` `border.strong`, `radii.pill`, `size.bodyLg` bold, `touchTarget.min` square at least |
+| Aa | `aa-btn`: paper, `borderWidth.base` `border.strong`, `radii.pill`, `size.bodyLg` bold, `touchTarget.min` square at least; on focus `borderWidth.thick` `border.focus` inside the same box (`steadyFocusBorder`) |
 | Middle (quest) | step dots `spacing.md`, filled `brand.primary`, open `border.shape` |
 
 ## Accessibility
@@ -46,3 +46,4 @@ The one top row of every learner-app and All lessons screen. It carries the way 
 - No screen can forget it: the learner app and All lessons provide their header through `ScreenHeaderSlotContext`, and every `Screen` draws it first in its content, in every state (as built in DN-4, in place of DN-0's required `header` prop; AMENDMENTS-DISPLAY-NAV section 7.1). The route table (`SCREEN_HEADER_VARIANTS`, typed over every route name) picks the leading control; a screen passes only its own options (`Screen`'s `header`: title, middle, trailing, `displayHidden`, `drawnByScreen`).
 - The browser and phone back do what the leading control does (web history bridge, section 7.2).
 - At 320 with 200 % text and at Largest the title wraps and the controls keep 64 px (`screen-header-375-text200.png`).
+- Focus never moves a control. The row wraps only when its controls cannot share one line, and a press focuses a control before it is released, so a control that grew on focus at that edge would jump to the next line under the pointer and the tap would do nothing. The leading ring is a constant transparent `borderWidth.thick` border that only changes colour; Aa and a trailing chip (All lessons' Romanization) draw their ring with `steadyFocusBorder`, which thickens the border to `borderWidth.thick` and gives the width back from the padding, across and down.

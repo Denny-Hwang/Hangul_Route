@@ -762,6 +762,42 @@ test('Romanization (formerly Lesson display): the choices apply at once, Done an
   await expect(opener).toBeFocused();
 });
 
+test('a header that only just fits one row: focus keeps every control in place, and the first tap on Romanization opens it', async ({ page }) => {
+  // The header row wraps only when its controls cannot share one line (AMENDMENTS-DISPLAY-NAV section 7.1). If
+  // focus grew a control, a press at that edge would focus it, move it to the next line before the release, and
+  // the tap would do nothing. The window is set so the row has one pixel to spare, on every machine's fonts.
+  await openBrowse(page, 'account');
+  const close = headerClose(page);
+  const aa = page.getByTestId('screen-header-display').filter({ visible: true }).first();
+  const chip = page.getByRole('button', { name: 'Romanization', exact: true });
+  const box = async (l: typeof chip) => {
+    const b = await l.boundingBox();
+    expect(b).not.toBeNull();
+    return b ?? { x: 0, y: 0, width: 0, height: 0 };
+  };
+  const [closeBox, aaBox] = [await box(close), await box(aa)];
+  expect(aaBox.y, 'Close, Aa and Romanization share one row at the Pixel 5 width').toBe(closeBox.y);
+  // Between Close and Aa: two row gaps (spacing.sm) around the empty middle; what is left is the row's spare width.
+  const spare = aaBox.x - (closeBox.x + closeBox.width) - 2 * 8;
+  const viewport = page.viewportSize() ?? { width: 393, height: 851 };
+  await page.setViewportSize({ width: viewport.width - Math.floor(spare) + 1, height: viewport.height });
+  await expect.poll(async () => (await box(chip)).y).toBe((await box(close)).y);
+  const before = { aa: await box(aa), chip: await box(chip) };
+
+  // A pointer press focuses the chip before it is released: the release must still land on it.
+  await chip.click();
+  const sheet = page.getByRole('dialog', { name: 'Romanization', exact: true });
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button', { name: 'Done' }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(chip).toBeFocused();
+  expect(await box(chip), 'focus leaves Romanization where it was').toEqual(before.chip);
+  await aa.focus();
+  await expect(aa).toBeFocused();
+  expect(await box(aa), 'focus leaves Aa where it was').toEqual(before.aa);
+  expect(await box(chip)).toEqual(before.chip);
+});
+
 test('the Aa button beside Romanization opens the device Display sheet: the language reaches the whole device', async ({ page }) => {
   await openBrowse(page, 'account');
   const aa = page.getByTestId('screen-header-display').filter({ visible: true }).first();

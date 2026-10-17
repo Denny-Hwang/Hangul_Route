@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { typeScale } from '../../../text-size';
 import { borderWidth, colors, radii, spacing, touchTarget } from '../../../tokens';
 import { DisplayControl, ScreenHeader } from '../ScreenHeader';
-import { displayControlStyle, headerStyle, leadingIcon, leadingStyle, leadingTestId, leadingTextStyle, titleInline, titleTextStyle } from '../style';
+import { displayControlStyle, headerStyle, leadingIcon, leadingStyle, leadingTestId, leadingTextStyle, steadyFocusBorder, titleInline, titleTextStyle } from '../style';
 import type { ScreenHeaderProps } from '../types';
 
 /**
@@ -94,6 +94,24 @@ describe('ScreenHeader style (pure)', () => {
   it('the Display control is a paper pill whose border thickens and recolours on focus', () => {
     expect(displayControlStyle({ pressed: false })).toMatchObject({ minHeight: touchTarget.min, minWidth: touchTarget.min, borderRadius: radii.pill, borderWidth: borderWidth.base, borderColor: colors.border.strong, backgroundColor: colors.surface.paper });
     expect(displayControlStyle({ pressed: false, focused: true })).toMatchObject({ borderWidth: borderWidth.thick, borderColor: colors.border.focus });
+  });
+
+  // A control that grew on focus at the row's wrap edge jumps to the next line between a press and its release, and the
+  // tap does nothing (the All lessons header at the Pixel 5 width on CI's fonts; browse.spec.ts pins the real tap).
+  it('focus thickens a border inside the same box: border plus padding is the same across and down', () => {
+    const box = (s: { borderWidth?: unknown; paddingHorizontal?: unknown; paddingVertical?: unknown }) => ({
+      across: 2 * (Number(s.borderWidth) + Number(s.paddingHorizontal)),
+      down: 2 * (Number(s.borderWidth) + Number(s.paddingVertical)),
+    });
+    for (const pad of [spacing.md, spacing.lg]) {
+      expect(steadyFocusBorder(false, pad)).toEqual({ borderWidth: borderWidth.base, paddingHorizontal: pad, paddingVertical: borderWidth.thick - borderWidth.base });
+      expect(steadyFocusBorder(true, pad)).toMatchObject({ borderWidth: borderWidth.thick, paddingVertical: 0 });
+      expect(box(steadyFocusBorder(true, pad))).toEqual(box(steadyFocusBorder(false, pad)));
+    }
+    expect(box(displayControlStyle({ pressed: false, focused: true }))).toEqual(box(displayControlStyle({ pressed: false })));
+    expect(box(displayControlStyle({ pressed: false }))).toEqual({ across: 2 * (borderWidth.base + spacing.md), down: 2 * borderWidth.thick });
+    // The leading control's ring never changes width at all.
+    expect(leadingStyle({ pressed: false, focused: true })).toMatchObject({ borderWidth: leadingStyle({ pressed: false }).borderWidth });
   });
 
   it('text follows the chosen size: Back is body x f, the title takes the heading half rule', () => {

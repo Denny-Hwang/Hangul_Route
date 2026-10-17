@@ -9,6 +9,7 @@ import {
   koreanTextLabel,
   radii,
   spacing,
+  steadyFocusBorder,
   touchTarget,
   typography,
   type IconName,
@@ -196,6 +197,24 @@ export function CardRow({
   );
 }
 
+/**
+ * The Romanization chip's pill: the strong border at rest, the focus ring on keyboard focus. Focus thickens the border
+ * inside the same box (`steadyFocusBorder`): the chip sits in the header row, which wraps only when its controls cannot
+ * share one line, and a chip that grew on focus at that edge would leave the pointer before the release.
+ */
+export function lessonDisplayStyle(focused: boolean | undefined): ViewStyle {
+  return {
+    minHeight: touchTarget.min,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface.paper,
+    ...steadyFocusBorder(focused === true, spacing.lg),
+    borderColor: focused ? colors.border.focus : colors.border.strong,
+  };
+}
+
 /** [ Lesson display ]: the pill chip at the right of the header row. */
 export function LessonDisplayButton({ onPress }: { onPress: () => void }): React.ReactElement {
   const m = useMessages().caregiver.browse.home;
@@ -207,17 +226,7 @@ export function LessonDisplayButton({ onPress }: { onPress: () => void }): React
       onPress={onPress}
       accessibilityRole="button"
       aria-haspopup="dialog"
-      style={({ focused }: FocusState) => ({
-        minHeight: touchTarget.min,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
-        paddingHorizontal: spacing.lg,
-        borderRadius: radii.pill,
-        backgroundColor: colors.surface.paper,
-        ...focusRing(focused, colors.border.strong),
-        borderWidth: focused ? borderWidth.thick : borderWidth.base,
-      })}
+      style={({ focused }: FocusState) => lessonDisplayStyle(focused)}
     >
       <Icon name="settings" size={spacing.lg + spacing.xxs} color={colors.text.primary} />
       <Text {...KOREAN_LINE_BREAK} maxFontSizeMultiplier={capped.maxFontSizeMultiplier} style={{ color: colors.text.primary, fontSize: capped.fontSize, fontWeight: typography.weight.semibold }}>
