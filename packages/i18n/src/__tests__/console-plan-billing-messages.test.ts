@@ -47,23 +47,16 @@ describe('plan page (teach/space/plan/page.tsx)', () => {
     expect(p.readout.withNotReady(0, 2, 1)).toBe('0 / 2 · 1 not ready yet');
   });
 
-  it('keeps the builder: title field, catalog, plan list', () => {
+  it('keeps the builder: title field, plan list (the Stage 1 catalog became the grouped lesson picker, LV-3)', () => {
     expect(p.builderLabel).toBe('Plan builder');
     expect(p.editTitle).toBe('Edit plan');
     expect(p.newTitle).toBe('New plan');
     expect(p.titleField).toEqual({ label: 'Plan title', placeholder: 'Week 3' });
-    expect(p.catalog.label).toBe('Catalog');
-    expect(p.catalog.title).toBe('Catalog (Stage 1)');
-    expect(p.catalog.addEpisode.cta).toBe('+ episode');
-    expect(p.catalog.questLine('Meet the Vowels', 5)).toBe('Meet the Vowels · 5 min');
-    expect(p.catalog.questLine('quest:x', null)).toBe('quest:x · ? min');
-    expect(p.catalog.add.cta).toBe('+ add');
-    expect(p.catalog.added.cta).toBe('added');
     expect(p.catalog.episodeLabel('Meet the Letters', 3)).toBe('Meet the Letters (3 quests)');
     expect(p.catalog.episodeLabel('New Year & Festivals', 1)).toBe('New Year & Festivals (1 quest)');
     expect(p.yours.label).toBe('Your plan');
     expect(p.yours.title(0)).toBe('Your plan (0)');
-    expect(p.yours.empty).toBe('Add quests or whole episodes from the catalog.');
+    expect(p.yours.empty).toBe('Choose lessons or whole episodes under Lessons.');
     expect([p.yours.moveUp.cta, p.yours.moveDown.cta, p.yours.remove.cta]).toEqual(['↑', '↓', '×']);
     expect(p.yours.dateFor(2)).toBe('Target date for item 2');
     expect(p.yours.noteFor(2)).toBe('Note for item 2');

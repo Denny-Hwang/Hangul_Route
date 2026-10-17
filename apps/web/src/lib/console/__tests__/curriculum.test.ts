@@ -386,6 +386,15 @@ describe('weekLabel, extras and dates (codes worded at render time)', () => {
     expect(weekLabel(row(week({})), 'en')).toBe('Free practice');
   });
 
+  it('titles the week, its items and its extras in the console language (owner report 2026-10-16)', () => {
+    const ko = getMessages('ko').console.curriculum.preview;
+    expect(weekLabel(row(week({ focus: { episodeId: 'episode:stage1-nature', storyIds: [], festival: null } })), 'ko')).toBe('호랑이, 산, 달');
+    expect(weekLabel(row(week({ kind: 'culture', focus: { episodeId: null, storyIds: ['story:hangeul-day'], festival: null } })), 'ko')).toBe(ko.label.culture('즐거운 한글날!'));
+    const items = weekGroups([week({})], [{ kind: 'quest', id: 'quest:stage1-letters-q1', week: 1 }], CATALOG, 'es').rows[0]!.items;
+    expect(items.map((i) => i.title)).toEqual(['Conoce a, eo, g y n']);
+    expect(extraText({ kind: 'vocab', topicId: 'topic:food' }, 'ko')).toBe(ko.extras.vocab('음식'));
+  });
+
   it('words the extras and the date range', () => {
     expect(extraText({ kind: 'vocab', topicId: 'topic:food' }, 'en')).toBe('Words: Food (optional)');
     expect(extraText({ kind: 'vocab', topicId: 'topic:nope' }, 'en')).toBe('Words: topic:nope (optional)');
