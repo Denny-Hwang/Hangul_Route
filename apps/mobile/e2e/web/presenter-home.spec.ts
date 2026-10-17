@@ -162,7 +162,7 @@ test.describe('presenter home, wide (two columns)', () => {
     await page.goto('/present');
     await expect(page.getByRole('radiogroup', { name: 'Presenter language' })).toHaveCount(0);
     const aa = page.getByTestId('presenter-home-display');
-    await expect(aa).toHaveAccessibleName('Display: language and text size');
+    await expect(aa).toHaveAccessibleName('Aa, Display: language and text size');
     await aa.click();
     const sheet = page.getByTestId('presenter-display-sheet');
     await sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Español' }).click();

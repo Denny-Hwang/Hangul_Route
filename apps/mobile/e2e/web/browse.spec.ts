@@ -557,7 +557,7 @@ test('home: the layers in order for an account pass, one-row section control, no
   await openBrowse(page, 'account');
   const pointer = page.getByRole('link', { name: 'To see how your learner is doing, open your home page.' });
   await expect(pointer).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Lesson display' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Romanization', exact: true })).toBeVisible();
   const group = page.getByRole('radiogroup', { name: 'Show lessons by' });
   await expect(group.getByRole('radio')).toHaveCount(3);
   expect(await group.getByRole('radio').allInnerTexts()).toEqual(['Route', 'Journey', 'Library']);
@@ -732,11 +732,11 @@ test('an unknown lesson link opens home with the not-in-this-version line, which
   await expect(page.getByText('This lesson is not in this version of the app yet.')).toHaveCount(0);
 });
 
-test('Lesson display: romanization choices apply at once, Done and Escape close, focus returns to the opener', async ({ page }) => {
+test('Romanization (formerly Lesson display): the choices apply at once, Done and Escape close, focus returns to the opener', async ({ page }) => {
   await openBrowse(page, 'account');
-  const opener = page.getByRole('button', { name: 'Lesson display' });
+  const opener = page.getByRole('button', { name: 'Romanization', exact: true });
   await opener.click();
-  const sheet = page.getByRole('dialog', { name: 'Lesson display' });
+  const sheet = page.getByRole('dialog', { name: 'Romanization', exact: true });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole('radio', { name: 'Always shown' })).toHaveAttribute('aria-checked', 'true');
   // Romanization only (AMENDMENTS-DISPLAY-NAV section 6): the language and text size are the device's, on the Aa sheet.
@@ -749,16 +749,16 @@ test('Lesson display: romanization choices apply at once, Done and Escape close,
   await expect(sheet).toHaveCount(0);
 
   await opener.click();
-  await expect(page.getByRole('dialog', { name: 'Lesson display' }).getByRole('radio', { name: 'Hidden until tap' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('dialog', { name: 'Romanization', exact: true }).getByRole('radio', { name: 'Hidden until tap' })).toHaveAttribute('aria-checked', 'true');
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Lesson display' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Romanization', exact: true })).toHaveCount(0);
   await expect(opener).toBeFocused();
 });
 
-test('the Aa button beside Lesson display opens the device Display sheet: the language reaches the whole device', async ({ page }) => {
+test('the Aa button beside Romanization opens the device Display sheet: the language reaches the whole device', async ({ page }) => {
   await openBrowse(page, 'account');
   const aa = page.getByTestId('browse-display-open').first();
-  await expect(aa).toHaveAccessibleName('Display: language and text size');
+  await expect(aa).toHaveAccessibleName('Aa, Display: language and text size');
   await aa.click();
   const sheet = page.getByTestId('browse-device-display');
   await expect(sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio')).toHaveText(['English', 'Español', '한국어']);
@@ -812,7 +812,7 @@ test('the catalogue writes nothing of a learner: home, an outline, an item page 
   await page.getByRole('button', { name: 'Open Meet a, eo, g, n' }).click();
   await page.getByTestId('browse-item-card').click();
   await page.getByTestId('browse-card-back').click();
-  await page.getByRole('button', { name: 'Lesson display' }).click();
+  await page.getByRole('button', { name: 'Romanization', exact: true }).click();
   await page.getByRole('radio', { name: 'Hidden until tap' }).click();
   await page.getByRole('button', { name: 'Done' }).click();
   const deviceAfter = await snapshotDevice(page);

@@ -115,7 +115,7 @@ test.describe('every build shows English, Spanish and Korean (F-I18N-001 rows 15
     const id = await onboardAndOpenProfile(page);
 
     const row = page.getByTestId('profile-display-row');
-    await expect(row).toContainText('English · Standard text');
+    await expect(row).toContainText('English · Text: Standard');
     await row.click();
     const sheet = page.getByTestId('display-sheet');
     await expect(sheet.getByRole('heading', { name: 'Display' })).toBeVisible();
