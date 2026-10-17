@@ -14,6 +14,14 @@ export interface ConfirmOptions {
   destructive?: boolean;
 }
 
+/** What the web's `ConfirmHost` registers: draws the sheet and resolves with the answer. */
+export type ConfirmPresenter = (opts: ConfirmOptions) => Promise<boolean>;
+
+/** Native keeps the platform `Alert`: there is no sheet host to register (the web variant has one). */
+export function setConfirmPresenter(_next: ConfirmPresenter | null): () => void {
+  return () => undefined;
+}
+
 export function confirm(opts: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
     Alert.alert(

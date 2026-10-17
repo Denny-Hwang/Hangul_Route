@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ScreenEdge, ScreenWidth } from '../../layout';
+import type { ScreenHeaderOptions } from '../ScreenHeader/types';
 
 export interface ScreenProps {
   children: ReactNode;
@@ -32,5 +33,12 @@ export interface ScreenProps {
    * the same width cap as the content. Adds no style beyond cap and padding.
    */
   footer?: ReactNode;
+  /**
+   * What this screen adds to its route's header (AMENDMENTS-DISPLAY-NAV section 7.1): the title, a
+   * flow's middle part, one trailing control, the Display control hidden while a clock runs. The
+   * leading control (Back, Close or none) comes from the route; a surface with no header provider
+   * (tests, the presenter) draws nothing.
+   */
+  header?: ScreenHeaderOptions;
   testID?: string;
 }

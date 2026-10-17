@@ -7,8 +7,7 @@
       "Library | button | Holidays",
       "Library | button | Letters",
       "Library | button | Nature",
-      "Library | button | Play",
-      "Profile | button | Go back"
+      "Library | button | Play"
     ],
     "375x667": [
       "Library | button | All",
@@ -16,8 +15,7 @@
       "Library | button | Holidays",
       "Library | button | Letters",
       "Library | button | Nature",
-      "Library | button | Play",
-      "Profile | button | Go back"
+      "Library | button | Play"
     ],
     "768x1024": [
       "Library | button | All",
@@ -25,8 +23,7 @@
       "Library | button | Holidays",
       "Library | button | Letters",
       "Library | button | Nature",
-      "Library | button | Play",
-      "Profile | button | Go back"
+      "Library | button | Play"
     ]
   }
 }

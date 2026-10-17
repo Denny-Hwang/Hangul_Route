@@ -12,6 +12,21 @@ import { useUiStore } from '../../../store/ui-store';
 import { buttonsNamed, byTestId, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
 import { EditProfileScreen } from '../EditProfileScreen';
 
+// The native navigation package has no build that loads in Node: the back guard's route context stands in for it.
+vi.mock('@react-navigation/native', async () => {
+  const { createContext } = await import('react');
+  return { NavigationContext: createContext(undefined) };
+});
+
+// The confirm step (a ConfirmSheet on the web, the platform Alert on native) answers as each case sets it.
+const confirmAnswer: { next: Promise<boolean>; asked: unknown[] } = vi.hoisted(() => ({ next: Promise.resolve(false), asked: [] }));
+vi.mock('../../../platform/dialog', () => ({
+  confirm: (opts: unknown) => {
+    confirmAnswer.asked.push(opts);
+    return confirmAnswer.next;
+  },
+}));
+
 /**
  * F-LEARN-001 section 3.11: Edit profile on a class device (a class re-link, `device-scope` 'class'), where the
  * server refuses name, level and cub edits. The three rows are disabled, the class-device line shows, the "teacher's
@@ -121,6 +136,78 @@ describe('EditProfileScreen on a class device (F-LEARN-001 section 3.11)', () =>
       nameField(renderer.root).props.onChangeText('Sungjoo');
     });
     expect(saveDisabled(renderer.root)).toBe(false);
+    await unmount(renderer);
+  });
+});
+
+describe('EditProfileScreen: a back with changes not saved yet asks first (AMENDMENTS-DISPLAY-NAV sections 7.1 and 8)', () => {
+  type Listener = (event: { data: { action: { type: string } }; preventDefault: () => void }) => void;
+  interface GuardedNavigation {
+    navigate: ReturnType<typeof vi.fn>;
+    goBack: ReturnType<typeof vi.fn>;
+    setOptions: ReturnType<typeof vi.fn>;
+    addListener: (type: string, listener: Listener) => () => void;
+    back: () => boolean;
+  }
+  function guardedNavigation(): GuardedNavigation {
+    const listeners: Listener[] = [];
+    return {
+      navigate: vi.fn(),
+      goBack: vi.fn(),
+      setOptions: vi.fn(),
+      addListener: (_type: string, listener: Listener) => {
+        listeners.push(listener);
+        return () => listeners.splice(listeners.indexOf(listener), 1);
+      },
+      /** A back reaching `beforeRemove`; true when the screen held it. */
+      back: () => {
+        let held = false;
+        for (const listener of listeners) listener({ data: { action: { type: 'GO_BACK' } }, preventDefault: () => (held = true) });
+        return held;
+      },
+    };
+  }
+  const guarded = (nav: GuardedNavigation): React.ReactElement => (
+    <EditProfileScreen navigation={nav as never} route={{ key: 'EditProfile', name: 'EditProfile', params: { profileId: LEARNER_ID } } as never} />
+  );
+
+  beforeEach(() => {
+    confirmAnswer.asked = [];
+  });
+
+  it('nothing changed: Back leaves at once, with no question', async () => {
+    seed(async () => 'full');
+    const nav = guardedNavigation();
+    const renderer = await render(guarded(nav));
+    expect(nav.back()).toBe(false);
+    expect(confirmAnswer.asked).toEqual([]);
+    await unmount(renderer);
+  });
+
+  it('a changed name: Back asks with Keep editing first; Keep editing stays, Leave goes back once', async () => {
+    seed(async () => 'full');
+    const nav = guardedNavigation();
+    const renderer = await render(guarded(nav));
+    await act(async () => {
+      nameField(renderer.root).props.onChangeText('Sungjoo');
+    });
+
+    let answer!: (yes: boolean) => void;
+    confirmAnswer.next = new Promise((resolve) => (answer = resolve));
+    expect(nav.back()).toBe(true);
+    // A second back while the question is open asks nothing more.
+    expect(nav.back()).toBe(true);
+    expect(confirmAnswer.asked).toEqual([{ title: e.leave.title, message: e.leave.message, confirmLabel: e.leave.confirm.cta, cancelLabel: e.leave.keep.cta, destructive: true }]);
+    await act(async () => answer(false));
+    expect(nav.goBack).not.toHaveBeenCalled();
+    expect(nameField(renderer.root).props.value).toBe('Sungjoo');
+
+    confirmAnswer.next = Promise.resolve(true);
+    expect(nav.back()).toBe(true);
+    await act(async () => undefined);
+    expect(nav.goBack).toHaveBeenCalledTimes(1);
+    // The back Leave sends goes through.
+    expect(nav.back()).toBe(false);
     await unmount(renderer);
   });
 });

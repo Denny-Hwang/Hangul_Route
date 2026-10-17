@@ -75,12 +75,22 @@ describe('the Display sheet reports a language only from the learner app (AMENDM
 
   it('every sheet of the presenter and All lessons passes reportLocale false; the learner app\'s pass nothing', () => {
     const SRC = join(__dirname, '..', '..', '..');
-    const sheets = (file: string): string[] => readFileSync(file, 'utf8').match(/<DeviceDisplaySheet\b[\s\S]*?\/>/g) ?? [];
-    const silent = [join(SRC, '..', 'PresenterApp.tsx'), join(SRC, 'screens', 'browse', 'browse-ui.tsx')].flatMap(sheets);
+    const read = (file: string): string => readFileSync(file, 'utf8');
+    const tags = (file: string, name: string): string[] => read(file).match(new RegExp(`<${name}\\b[\\s\\S]*?\\/>`, 'g')) ?? [];
+    const sheets = (file: string): string[] => tags(file, 'DeviceDisplaySheet');
+    const silent = [join(SRC, '..', 'PresenterApp.tsx')].flatMap(sheets);
     const reporting = [join(SRC, 'screens', 'home', 'HomeScreen.tsx'), join(SRC, 'screens', 'profile', 'ProfileScreen.tsx')].flatMap(sheets);
-    expect(silent.length).toBeGreaterThan(1);
+    expect(silent.length).toBeGreaterThan(0);
     for (const tag of silent) expect(tag).toContain('reportLocale={false}');
     expect(reporting.length).toBeGreaterThan(1);
     for (const tag of reporting) expect(tag).not.toContain('reportLocale');
+    // All lessons' Display sheet is its header's (AMENDMENTS-DISPLAY-NAV section 7.1): BrowseApp provides BrowseScreenHeader, which
+    // draws the header with reportLocale false, and the header hands that to its sheet. The learner app's slot reports.
+    const header = join(SRC, 'components', 'LearnerScreenHeader.tsx');
+    expect(read(join(SRC, '..', 'BrowseApp.tsx'))).toContain('<ScreenHeaderSlotContext.Provider value={BrowseScreenHeader}>');
+    expect(read(join(SRC, '..', 'App.tsx'))).toContain('<ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>');
+    expect(tags(header, 'LearnerScreenHeader')).toEqual(['<LearnerScreenHeader {...props} reportLocale={false} />']);
+    expect(sheets(header)).toEqual([expect.stringContaining('reportLocale={reportLocale}')]);
+    expect(read(join(SRC, 'screens', 'browse', 'browse-ui.tsx'))).not.toContain('<DeviceDisplaySheet');
   });
 });

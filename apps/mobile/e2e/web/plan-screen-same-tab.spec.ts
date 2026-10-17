@@ -1,6 +1,6 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, unlockWithPin, headerBack } from './helpers';
 
 /**
  * F-BILL-002 B-9b (section 4.7; wireframe billing/plan-status, mock design/screens/billing/plan-status.md
@@ -103,7 +103,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await page.getByRole('button', { name: /^Edit Mina/ }).click();
     await unlockWithPin(page);
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
-    await page.getByRole('button', { name: 'Go back' }).click();
+    await headerBack(page).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await page.clock.fastForward('03:00');
     await openPlanDetails(page);

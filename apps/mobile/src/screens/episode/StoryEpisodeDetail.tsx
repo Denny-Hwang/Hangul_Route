@@ -72,8 +72,6 @@ export interface StoryEpisodeNavigation {
   onOpenSources: (storyId: string) => void;
   /** "Culture notes: N found" opens `CultureNotes { storyId }` (§3.6). */
   onOpenCultureNotes: (storyId: string) => void;
-  /** The back arrow, when the host is a stack screen (a split pane has none). */
-  onBack?: () => void;
   /** A shelf story's home-cell pill opens its cell page (F-STORY-005 §3.6); informational, never a lock. */
   onOpenCellStories: (stage: StageKey, theme: ThemeKey) => void;
   /** A book page's "Heritage stories for this cell" row opens the book's cell page (F-STORY-005 PR 5.6). */
@@ -111,7 +109,6 @@ export function StoryEpisodeDetail({
   onOpenCard,
   onOpenSources,
   onOpenCultureNotes,
-  onBack,
   onOpenCellStories,
   cellStoryCount,
   onOpenCellStoriesRow,
@@ -189,21 +186,6 @@ export function StoryEpisodeDetail({
   return (
     <Screen tone="canvas" scrollable>
       <View testID="story-episode">
-        {onBack ? (
-          <>
-            <Pressable
-              onPress={onBack}
-              hitSlop={spacing.md}
-              accessibilityRole="button"
-              accessibilityLabel={messages.a11y.goBack}
-              style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-            >
-              <Icon name="arrow-left" size={spacing.xxl} />
-            </Pressable>
-            <Spacer size="sm" />
-          </>
-        ) : null}
-
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="story-episode-pills">
           <Pill tone="primary" label={view.pills[0]} size="sm" />
           <Pill tone="secondary" label={view.pills[1]} size="sm" />

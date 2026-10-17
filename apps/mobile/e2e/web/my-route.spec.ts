@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { CATALOG, generateCurriculum, toMeta } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, seedStored } from './helpers';
+import { onboardChild, readStored, seedStored, headerBack, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -145,7 +145,7 @@ async function seedClassPlan(page: Page, profileId: string, questId: string): Pr
 
 /** The quest player's first step: its heading and its words (the player names no quest title). */
 async function firstStep(page: Page): Promise<{ heading: string; text: string }> {
-  const leave = page.getByRole('button', { name: en.a11y.leaveQuest, exact: true });
+  const leave = headerClose(page);
   await expect(leave).toBeVisible();
   const heading = (await page.getByRole('heading', { level: 1 }).first().innerText()).trim();
   const text = await page.evaluate(() => document.body.innerText);
@@ -396,7 +396,7 @@ test.describe('the Home strip entry (R-10)', () => {
     const screen = page.getByTestId('my-route-screen');
     await expect(screen).toBeVisible();
     await expect(screen.getByText(m.purpose, { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
     await expect(page.getByRole('tablist').getByRole('link')).toHaveCount(4);
     await expect(page.getByTestId('home-route-strip')).toBeHidden();
     await shot(page, 'home-route-strip-opens-route-320');

@@ -40,7 +40,6 @@ import { PIN_SETUP_START, type PinSetupState } from '../../logic/onboarding/pin-
 import {
   canChooseWho,
   nextStep,
-  previousStep,
   profileVoice,
   stepMissing,
   stepPosition,
@@ -154,6 +153,8 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const hint = nameHint(name, c.nameHint);
   const words = learnerType === null ? null : whoCopy(c, profileVoice(learnerType, switched));
 
+  // Every back steps back through the steps, then leaves to Welcome (F-LEARN-001 §3.15.4): the route's ScreenHeader Back,
+  // the browser and the phone back through the history bridge, a swipe (AMENDMENTS-DISPLAY-NAV section 7.1).
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
@@ -233,12 +234,6 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     }
   };
 
-  const goBack = (): void => {
-    const back = previousStep(step);
-    if (back === 'leave') navigation.goBack();
-    else goTo(back);
-  };
-
   const onSubmit = async (): Promise<void> => {
     if (busy) return;
     setBusy(true);
@@ -257,8 +252,11 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         },
       );
       if (result.ok) {
-        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike).
-        navigation.replace(afterProfileCreated(levelCheckOn), { profileId: result.profile.id });
+        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike). The
+        // onboarding stack is reset to it alone: nothing of setup is left under the end of setup, so no back (the
+        // browser's or the phone's, through the history bridge) can land on Welcome and start a second profile
+        // (AMENDMENTS-DISPLAY-NAV section 7.1, the exception list).
+        navigation.reset({ index: 0, routes: [{ name: afterProfileCreated(levelCheckOn), params: { profileId: result.profile.id } }] });
       } else if (result.reason === 'pin-failed') {
         setPinError(c.pinFailed);
       }
@@ -279,26 +277,6 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
 
   const header = (
     <>
-      {step !== 'who' || !firstRun ? (
-        <>
-          <Pressable
-            onPress={goBack}
-            accessibilityRole="button"
-            accessibilityLabel={messages.a11y.goBack}
-            // A full touch target (the layout matrix checks every control on this screen, F-I18N-001 §3.11).
-            style={{
-              alignSelf: 'flex-start',
-              minWidth: touchTarget.min,
-              minHeight: touchTarget.min,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Icon name="arrow-left" size={28} />
-          </Pressable>
-          <Spacer size="xs" />
-        </>
-      ) : null}
       <View
         ref={(node) => {
           headingRef.current = node;

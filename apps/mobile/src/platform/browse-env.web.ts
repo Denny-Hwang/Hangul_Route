@@ -1,3 +1,6 @@
+import { closeDistance, linkEntryDepth, mergeEntry, readEntry } from '../logic/navigation/history-sync';
+import { adoptLinkEntry, currentEntry, markLeaving } from './history-bridge.web';
+
 /**
  * The browse root's address and exits on the web (F-BROWSE-001 sections 4.1
  * and 4.4). A deep link carries content ids only, in the fragment; the root
@@ -36,23 +39,30 @@ function browser(): BrowserLike {
 }
 
 /**
- * The history entries this page added after the one it opened on: each later
- * link (`hashchange`) pushes one. Kept on the entry's own state
- * (`{ hrBrowseDepth }`), so a reload and a back or forward inside the page read
- * it again; [ Close ] goes back past all of them.
+ * The history entries this page added under the link entry the tab is on (`hrBrowseDepth`): each
+ * later link (`hashchange`) is a new entry on top of the one the tab was on, so its depth counts the
+ * earlier link entries and the depth entries the history bridge pushed above them
+ * (AMENDMENTS-DISPLAY-NAV section 7.2). Kept on the entry's own state object, beside the bridge's
+ * `hrNav` (one object for both keys), so a reload and a back or forward inside the page read it
+ * again; [ Close ] goes back past all of them (`1 + hrBrowseDepth + hrNav`).
  */
 let depth = 0;
 
-function depthOf(state: unknown): number {
-  const value = (state as { hrBrowseDepth?: unknown } | null | undefined)?.hrBrowseDepth;
-  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : 0;
-}
-
 function stripAddress(): void {
   try {
-    browser().history?.replaceState?.({ hrBrowseDepth: depth }, '', BROWSE_PATH);
+    const h = browser().history;
+    h?.replaceState?.(mergeEntry(h.state, { hrBrowseDepth: depth }), '', BROWSE_PATH);
   } catch {
     // A sandboxed frame may refuse; the fragment is still read once.
+  }
+}
+
+/** The entry the tab is on: its depth (`hrNav`, written by the history bridge) and its link depth. */
+function entryNow(): { nav: number | null; browseDepth: number } {
+  try {
+    return readEntry(browser().history?.state);
+  } catch {
+    return { nav: null, browseDepth: depth };
   }
 }
 
@@ -67,11 +77,7 @@ function currentHash(): string {
 /** The fragment the page was opened with (`''` when none); the address becomes `/browse`. */
 export function takeFragment(): string {
   const raw = currentHash();
-  try {
-    depth = depthOf(browser().history?.state);
-  } catch {
-    depth = 0;
-  }
+  depth = entryNow().browseDepth;
   stripAddress();
   return raw;
 }
@@ -84,16 +90,20 @@ export function onFragmentChange(handler: (raw: string) => void): () => void {
     const raw = currentHash();
     // Taking the fragment out of the address is not a new link.
     if (raw === '' || raw === '#') return;
-    depth += 1;
-    stripAddress();
+    // A new entry on top of the one the tab was on (as the history bridge knows it; before the bridge
+    // runs, nothing was pushed above the link entry): it starts at depth 0.
+    depth = linkEntryDepth(currentEntry() ?? { nav: 0, browseDepth: depth });
+    try {
+      const h = w.history;
+      h?.replaceState?.(mergeEntry(h.state, { hrBrowseDepth: depth, hrNav: 0 }), '', BROWSE_PATH);
+    } catch {
+      // A sandboxed frame may refuse; the link is still read.
+    }
+    adoptLinkEntry(depth);
     handler(raw);
   };
   const onPop = (): void => {
-    try {
-      depth = depthOf(w.history?.state);
-    } catch {
-      depth = 0;
-    }
+    depth = entryNow().browseDepth;
   };
   w.addEventListener('hashchange', listener);
   w.addEventListener('popstate', onPop);
@@ -124,7 +134,7 @@ export function cameFromSameOrigin(): boolean {
 export function canGoBack(): boolean {
   try {
     const length = browser().history?.length;
-    return cameFromSameOrigin() && typeof length === 'number' && length > 1 + depth;
+    return cameFromSameOrigin() && typeof length === 'number' && length > closeDistance({ ...entryNow(), browseDepth: depth });
   } catch {
     return false;
   }
@@ -132,6 +142,8 @@ export function canGoBack(): boolean {
 
 /** Leaves All lessons for `url` in this tab. */
 export function leaveTo(url: string): void {
+  // The history bridge writes nothing from here on: a traversal would cancel this navigation (AMENDMENTS-DISPLAY-NAV 7.2).
+  markLeaving();
   try {
     browser().location?.assign?.(url);
   } catch {
@@ -140,12 +152,15 @@ export function leaveTo(url: string): void {
 }
 
 /**
- * Back to the page the tab came from, past the entries later links added. When
+ * Back to the page the tab came from, past the entries later links added and the history bridge's
+ * depth entries (`1 + hrBrowseDepth + hrNav`). When
  * the page has not started to leave shortly after (a history that goes
  * nowhere), it leaves for `fallbackUrl` instead, so Close is never a dead button.
  */
 export function goBack(fallbackUrl: string): void {
   const w = browser();
+  // Leaving for the page that opened All lessons: the history bridge writes nothing from here on (section 7.2).
+  markLeaving();
   let left = false;
   const onHide = (): void => {
     left = true;
@@ -158,7 +173,7 @@ export function goBack(fallbackUrl: string): void {
       w.removeEventListener?.('pagehide', onHide);
       if (!left) leaveTo(fallbackUrl);
     }, BACK_FALLBACK_MS);
-    w.history?.go?.(-(1 + depth));
+    w.history?.go?.(-closeDistance({ ...entryNow(), browseDepth: depth }));
   } catch {
     // The timer, when it was set, still leaves by address.
   }

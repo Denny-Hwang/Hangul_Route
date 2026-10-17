@@ -5,7 +5,6 @@ import {
   Heading,
   Hoya,
   HoyaBubble,
-  Icon,
   Pill,
   Progress,
   Screen,
@@ -16,7 +15,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
@@ -37,6 +36,7 @@ import {
 import { questStepLabel } from '../../logic/quest-steps';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 
 type QuestMessages = Messages['learner']['quest'];
@@ -49,6 +49,12 @@ export interface QuestPlayerViewProps {
   onOpenGame: (stepIndex: number) => void;
   /** The not-found state's Go back. */
   onBack: () => void;
+  /**
+   * A back while a step shows asks this instead of the learner's leave sheet: All lessons' preview
+   * asks its own Leave this preview question, so the header's Close and the strip's Leave preview
+   * ask the same thing (F-BROWSE-001 section 4.8). Absent, the quest's own sheet asks.
+   */
+  onAskLeave?: () => void;
 }
 
 /**
@@ -58,7 +64,7 @@ export interface QuestPlayerViewProps {
  * navigation coupling is `useFocusEffect` (applying a game's pending advance on re-focus), which the
  * browse stack's own navigation container also provides.
  */
-export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack }: QuestPlayerViewProps): React.ReactElement {
+export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave }: QuestPlayerViewProps): React.ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
@@ -68,6 +74,8 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
   }, [questId, locale]);
 
   const begin = useQuestRunStore((s) => s.beginQuest);
+  // One leave question at a time (a second back while the sheet is open is the same question).
+  const asking = useRef(false);
   const consumePending = useQuestRunStore((s) => s.consumePendingAdvance);
   const stepIndex = useQuestRunStore((s) => s.stepIndex);
 
@@ -127,6 +135,8 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
   };
 
   const confirmQuit = (): void => {
+    if (asking.current) return;
+    asking.current = true;
     void confirm({
       title: q.leave.title,
       message: q.leave.message,
@@ -134,9 +144,20 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
       cancelLabel: q.leave.keep.cta,
       destructive: true,
     }).then((yes) => {
+      asking.current = false;
       if (yes) leaveQuest();
     });
   };
+
+  // Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1): every back while a step shows (the
+  // header's Close, the browser and the phone back through the history bridge, a swipe) asks first, as Close always
+  // did; Leave in the sheet runs the ports' leave (a replace or a navigate, never held here), Keep playing stays.
+  useRouteBackGuard(() => {
+    if (!quest || !step) return false;
+    if (onAskLeave) onAskLeave();
+    else confirmQuit();
+    return true;
+  }, !!quest && !!step);
 
   const advance = (): void => {
     if (!quest) return;
@@ -169,15 +190,6 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
   return (
     <Screen tone="canvas" scrollable={step.kind !== 'discover'}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Pressable
-          onPress={confirmQuit}
-          hitSlop={spacing.md}
-          accessibilityRole="button"
-          accessibilityLabel={m.a11y.leaveQuest}
-          style={{ padding: spacing.xs }}
-        >
-          <Icon name="close" size={24} />
-        </Pressable>
         <View style={{ flex: 1 }}>
           <Progress value={stepIndex + 1} max={quest.steps.length} tone="primary" variant="dots" />
         </View>

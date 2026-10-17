@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck, headerClose } from './helpers';
 
 /**
  * F-QUEST-002 Q-6b: the Food & Life quests 4-6 teach before they ask (Discover),
@@ -27,7 +27,7 @@ async function openLifeEpisode(page: Page): Promise<void> {
 async function startQuest(page: Page, nth: number): Promise<void> {
   await page.getByRole('button', { name: 'Start', exact: true }).nth(nth).click();
   await page.getByRole('button', { name: 'Play anyway' }).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
 }
 

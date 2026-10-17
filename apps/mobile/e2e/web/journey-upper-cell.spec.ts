@@ -4,7 +4,7 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -299,7 +299,7 @@ async function startFirstQuest(page: Page): Promise<void> {
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await anyway.isVisible()) await anyway.click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
 }
 

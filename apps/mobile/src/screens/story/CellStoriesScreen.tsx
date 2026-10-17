@@ -1,7 +1,7 @@
-import { Body, Button, Card, Heading, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { episodeById, episodesAll, stageByKey, themeByKey } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeEpisode, localizeStage, localizeTheme } from '../../logic/content-locale';
@@ -77,16 +77,6 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
   return (
     <Screen tone="canvas" scrollable>
       <View testID="cell-stories">
-        <Pressable
-          onPress={back}
-          hitSlop={spacing.md}
-          accessibilityRole="button"
-          accessibilityLabel={messages.a11y.goBack}
-          style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-        >
-          <Icon name="arrow-left" size={spacing.xxl} />
-        </Pressable>
-        <Spacer size="sm" />
 
         {header !== null ? (
           <>

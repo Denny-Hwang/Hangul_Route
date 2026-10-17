@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
 import { fullyVisible } from './story-reader-helpers';
 
 /**
@@ -283,7 +283,7 @@ test.describe('story check step (fixture bundle)', () => {
     await expect(page.getByTestId('story-check-position-group')).toHaveAccessibleName('Question 2 of 3');
 
     // Close: back to the quest step without finishing it (wireframe check.md A).
-    const close = page.getByTestId('story-check-close');
+    const close = headerClose(page);
     await expect(close).toHaveAccessibleName('Close');
     await close.click();
     await expect(stepHeading(page, 'A few questions')).toBeVisible();
@@ -465,7 +465,7 @@ test.describe('story check step (fixture bundle)', () => {
     await answer(page, C2);
     await answer(page, C3);
     await expect(page.getByTestId('story-recap-title')).toBeVisible();
-    await page.getByTestId('story-check-close').click();
+    await headerClose(page).click();
     await expect(stepHeading(page, 'Put the story in order')).toBeVisible();
     const events = await storyEvents(page);
     expect(events.filter((e) => e.name === 'story.check.finished')).toHaveLength(1);

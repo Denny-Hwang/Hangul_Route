@@ -3,7 +3,7 @@ import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { themes } from '../../src/content/stages';
 import { expect, test } from './fixtures';
-import { answerCheckRounds, journeyCellName, onboardChild, onboardSelf, passDiscover, readStored, seedStored, unlockWithPin } from './helpers';
+import { answerCheckRounds, journeyCellName, onboardChild, onboardSelf, passDiscover, readStored, seedStored, unlockWithPin, headerClose } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -211,7 +211,7 @@ test.describe('free plan switch on (web)', () => {
     await expect(page.getByTestId('episode-preview-card')).toHaveCount(0);
     await page.getByRole('button', { name: 'Play again', exact: true }).first().click();
     // The player keeps the kept quest: its Leave quest button shows only in the player.
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Lunch Box Words' })).toHaveCount(0);
     await playToResults(page);
     await expect(page.getByRole('button', { name: 'Back home' }).first()).toBeVisible();

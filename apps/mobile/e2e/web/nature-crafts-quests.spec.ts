@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, playCheckByIds } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, playCheckByIds, headerClose } from './helpers';
 
 /**
  * F-QUEST-002 Q-8: the Nature and Crafts quests 10-15 on the web PWA. Quest 10 brings
@@ -30,7 +30,7 @@ async function openEpisode(page: Page, episode: Episode): Promise<void> {
 async function startQuest(page: Page, nth: number): Promise<void> {
   await page.getByRole('button', { name: 'Start', exact: true }).nth(nth).click();
   await page.getByRole('button', { name: 'Play anyway' }).click();
-  await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+  await expect(headerClose(page)).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
 }

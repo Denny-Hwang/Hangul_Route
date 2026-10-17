@@ -11,7 +11,7 @@ import { homeLines, initialSection, journeyStageLine, pointerUrl } from '../../l
 import type { BrowseStackParamList } from '../../navigation/browse';
 import { canGoBack, goBack, leaveTo, revealTestId } from '../../platform/browse-env';
 import { useBrowseSettings } from './BrowseSettings';
-import { HeaderBack, HeaderRow, focusRing, type FocusState } from './browse-ui';
+import { LessonDisplayButton, focusRing, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 import { JourneySection, LibrarySection, RouteSection, SectionControl, type OpenTargets } from './HomeSections';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
@@ -94,9 +94,15 @@ export function BrowseHomeScreen({ route, navigation }: Props): React.ReactEleme
   const note = params.note && noteShown ? (params.note === 'letter-across-stage1' ? m.home.note.letterAcrossStage1 : m.home.note.notInVersion) : null;
 
   return (
-    <Screen tone="canvas" scrollable width={paneMode && section === 'journey' ? 'full' : 'reading'} testID="browse-home">
-      <HeaderRow back={<HeaderBack label={m.home.close.cta} showLabel onPress={onClose} testID="browse-close" />} onDisplay={() => setDisplayOpen(true)} />
-      <Spacer size="sm" />
+    <Screen
+      tone="canvas"
+      scrollable
+      width={paneMode && section === 'journey' ? 'full' : 'reading'}
+      testID="browse-home"
+      // A root with its own way out (AMENDMENTS-DISPLAY-NAV section 7.1): Close leaves All lessons for the page that opened
+      // it; the header also carries the Display (Aa) control and the Romanization chip.
+      header={{ leading: { kind: 'close', label: m.home.close.cta, onPress: onClose }, trailing: <LessonDisplayButton onPress={() => setDisplayOpen(true)} /> }}
+    >
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
         <Heading level="title">{m.home.title}</Heading>
         {online ? null : (

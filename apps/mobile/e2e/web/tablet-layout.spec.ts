@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { journeyCellName, keepSidewaysIfAsked, onboardChild, openGrownUpZone, playCheck, readStored, seedStored, waitForSaved } from './helpers';
+import { journeyCellName, keepSidewaysIfAsked, onboardChild, openGrownUpZone, playCheck, readStored, seedStored, waitForSaved, headerBack, headerClose, acceptConfirmSheets } from './helpers';
 import { shot, shotsEnabled } from './shots';
 
 /**
@@ -245,11 +245,11 @@ test.describe('Journey at 1180x820: two panes', () => {
     // A stage header is never a lock or a door to the unlock page, for sighted and screen-reader users alike.
     await expect(mapPane(page).getByRole('button', { name: /locked|unlock/i })).toHaveCount(0);
     await expect(page.getByText('A taste', { exact: true }).first()).toBeVisible();
-    await expect(page.getByLabel('Go back', { exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
   });
 
   test('Start opens the quest full screen; leaving returns to the Journey pane with the same selection', async ({ page }) => {
-    page.on('dialog', (d) => void d.accept());
+    await acceptConfirmSheets(page);
     await openJourney(page);
     await cell(page, 'Food', 1).click();
     await expect(detailPane(page).getByRole('heading', { name: 'Around the Korean Table' })).toBeVisible();
@@ -257,25 +257,25 @@ test.describe('Journey at 1180x820: two panes', () => {
     // Its first quest builds on an earlier one: the "Start there?" sheet asks once, in the pane.
     await detailPane(page).getByRole('button', { name: 'Play anyway' }).click();
 
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+    await expect(headerClose(page)).toBeVisible();
     await expect(mapPane(page)).toHaveCount(0);
-    await page.getByRole('button', { name: 'Leave quest' }).click();
+    await headerClose(page).click();
 
     // Two panes: straight back to the Journey (no full-screen episode page), the selection kept.
     await expect(mapPane(page)).toBeVisible();
     await expect(cell(page, 'Food', 1)).toHaveAttribute('aria-selected', 'true');
     await expect(detailPane(page).getByRole('heading', { name: 'Around the Korean Table' })).toBeVisible();
-    await expect(page.getByLabel('Go back', { exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
   });
 
   test('leaving a quest started from Home selects its episode in the Journey pane', async ({ page }) => {
-    page.on('dialog', (d) => void d.accept());
+    await acceptConfirmSheets(page);
     await openJourney(page);
     await cell(page, 'Food', 1).click(); // a different selection first
     await tab(page, 'Today').click();
     await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
-    await page.getByRole('button', { name: 'Leave quest' }).click();
+    await expect(headerClose(page)).toBeVisible();
+    await headerClose(page).click();
 
     await expect(mapPane(page)).toBeVisible();
     await expect(cell(page, 'Letters', 1)).toHaveAttribute('aria-selected', 'true');
@@ -284,12 +284,12 @@ test.describe('Journey at 1180x820: two panes', () => {
   });
 
   test('the same episode can be asked for again after the learner selected another one', async ({ page }) => {
-    page.on('dialog', (d) => void d.accept());
+    await acceptConfirmSheets(page);
     await openJourney(page);
     const leaveFromHome = async (): Promise<void> => {
       await tab(page, 'Today').click();
       await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
-      await page.getByRole('button', { name: 'Leave quest' }).click();
+      await headerClose(page).click();
       await expect(mapPane(page)).toBeVisible();
     };
     await leaveFromHome();
@@ -317,7 +317,7 @@ test.describe('Journey at 1180x820: two panes', () => {
     await expect(mapPane(page)).toBeVisible();
     await expect(cell(page, 'Food', 1)).toHaveAttribute('aria-selected', 'true');
     await expect(detailPane(page).getByRole('heading', { name: 'Around the Korean Table' })).toBeVisible();
-    await expect(page.getByLabel('Go back', { exact: true })).toHaveCount(0);
+    await expect(headerBack(page)).toHaveCount(0);
   });
 });
 
@@ -325,15 +325,15 @@ test.describe('Quest exits at 390x844: one pane, as before', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('leaving a quest opens its full-screen episode page', async ({ page }) => {
-    page.on('dialog', (d) => void d.accept());
+    await acceptConfirmSheets(page);
     await openJourney(page);
     await cell(page, 'Letters', 1).click();
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
-    await page.getByRole('button', { name: 'Leave quest' }).click();
+    await headerClose(page).click();
     // The player replaces itself with the episode page (the one it was started from stays under it).
     await expect(page.getByRole('heading', { name: 'Meet the Letters' }).last()).toBeVisible();
-    await expect(page.getByLabel('Go back', { exact: true }).last()).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Leave quest' })).toHaveCount(0);
+    await expect(headerBack(page).last()).toBeVisible();
+    await expect(headerClose(page)).toHaveCount(0);
     await expect(mapPane(page)).toHaveCount(0);
   });
 });
@@ -349,7 +349,7 @@ test.describe('Journey at 768x1024: one pane, a tap navigates', () => {
     await expect(cell(page, 'Letters', 1)).not.toHaveAttribute('aria-selected', /.*/);
     await cell(page, 'Food', 1).click();
     await expect(page.getByRole('heading', { name: 'Around the Korean Table' })).toBeVisible();
-    await expect(page.getByLabel('Go back', { exact: true })).toBeVisible();
+    await expect(headerBack(page)).toBeVisible();
   });
 
   test('rotating between 768x1024 and 1024x768 keeps the selection and never navigates', async ({ page }) => {
@@ -852,7 +852,7 @@ for (const vp of [
   test(`on a quest the banners never cover "Leave quest" and the update bar waits at ${vp.width}x${vp.height}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await onboardChild(page, { name: 'Mina' });
-    const leave = page.getByRole('button', { name: 'Leave quest' });
+    const leave = headerClose(page);
     await expect(leave).toBeVisible();
     await page.evaluate(() => {
       window.dispatchEvent(new Event('hr:update-ready'));
@@ -862,7 +862,7 @@ for (const vp of [
     await expect(page.getByText('New lessons are ready.')).toHaveCount(0);
     expect(apart(await box(page, 'pwa-banners'), (await leave.boundingBox())!), 'toast clear of Leave quest').toBe(true);
     // The toast only informs: the control under the slot still takes the tap.
-    page.on('dialog', (d) => void d.accept());
+    await acceptConfirmSheets(page);
     await leave.click();
     await expect(leave).toHaveCount(0);
   });

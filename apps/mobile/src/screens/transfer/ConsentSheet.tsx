@@ -20,8 +20,6 @@ export interface ConsentSheetProps {
   /** One line under the buttons (`role="alert"`). */
   error?: string | null;
   busy: boolean;
-  /** Back, drawn above the title by the screen. */
-  header: React.ReactNode;
   onYes: (locale: TransferConsentLocale, introduce: boolean) => void;
   onNotNow: () => void;
   /** Not now's description (visible and as its hint) when Not now ends the request ("Not now ends this request."). */
@@ -34,7 +32,7 @@ export interface ConsentSheetProps {
  * block, the introduce option (off by default), then the buttons as the last element. The primary waits
  * until the end marker after `cannot_undo` has been in view once (D2), a scroll rule only.
  */
-export function ConsentSheet({ data, initialLocale, self, notice, error, busy, header, onYes, onNotNow, notNowNote = null }: ConsentSheetProps): React.ReactElement {
+export function ConsentSheet({ data, initialLocale, self, notice, error, busy, onYes, onNotNow, notNowNote = null }: ConsentSheetProps): React.ReactElement {
   const [locale, setLocale] = useState<TransferConsentLocale>(initialLocale);
   const [introduce, setIntroduce] = useState(false);
   const [markerY, setMarkerY] = useState<number | null>(null);
@@ -81,7 +79,6 @@ export function ConsentSheet({ data, initialLocale, self, notice, error, busy, h
       onScroll={(e) => onScrollY(e.nativeEvent.contentOffset.y)}
       keyboardShouldPersistTaps="handled"
     >
-      {header}
       {notice ? (
         <>
           <Card padding="md" tone="sunken">

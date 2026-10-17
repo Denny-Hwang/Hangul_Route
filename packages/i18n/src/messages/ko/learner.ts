@@ -194,6 +194,12 @@ export const learner = {
     },
     notFound: '이 프로필은 이제 이 기기에 없어요.',
     save: { cta: '저장' },
+    leave: {
+      title: '저장하지 않고 나갈까요?',
+      message: '이 프로필에서 바꾼 내용은 아직 저장되지 않았어요.',
+      keep: { cta: '계속 편집하기' },
+      confirm: { cta: '나가기' },
+    },
   },
 
   home: {

@@ -1,8 +1,6 @@
 import {
   Body,
   Button,
-  Heading,
-  Icon,
   Screen,
   Spacer,
   colors,
@@ -14,7 +12,7 @@ import {
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -69,8 +67,10 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  */
 
 const DOT_SIZE = 20;
-/** First-frame guess for the title block until it is measured. */
-const HEADER_ESTIMATE = 120;
+/** First-frame guess for the block under the header (the subtitle or the hint, about two lines) until it is measured. */
+const HEADER_ESTIMATE = touchTarget.min + spacing.sm;
+/** First-frame guess for the route's ScreenHeader (Close and Aa: one touch target) until it is measured. */
+const SCREEN_HEADER_ESTIMATE = touchTarget.min + spacing.sm;
 /**
  * Everything but the header and the keys that must stay on screen: screen
  * padding (top + bottom), the gaps around the dots and above the CTA, the dots
@@ -101,6 +101,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [headerHeight, setHeaderHeight] = useState(HEADER_ESTIMATE);
+  // The route's ScreenHeader (Close, AMENDMENTS-DISPLAY-NAV section 7.1) sits above the title block: the pad leaves room for both.
+  const [screenHeaderHeight, setScreenHeaderHeight] = useState<number>(SCREEN_HEADER_ESTIMATE);
   const { windowWidth, windowHeight, gutter, mediaScale } = useLayoutClass();
   const insets = useSafeAreaInsets();
   // First-frame guess until the pad's box is measured: the `Screen` reading column less its gutter.
@@ -113,7 +115,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       windowHeight,
       insetTop: insets.top,
       insetBottom: insets.bottom,
-      header: headerHeight,
+      header: headerHeight + screenHeaderHeight + spacing.sm,
       chrome: PAD_CHROME,
     }),
     minKey: touchTarget.min,
@@ -287,29 +289,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   const hintText = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : hint;
 
-  const closeButton = (
-    <Pressable
-      onPress={leave}
-      accessibilityRole="button"
-      accessibilityLabel={messages.common.buttons.close}
-      hitSlop={spacing.md}
-      style={{ paddingTop: spacing.xxs }}
-    >
-      <Icon name="close" size={28} />
-    </Pressable>
-  );
-
   if (noPin) {
     // F-APP-001 section 3.9: the grown-up area never creates a PIN here; the grown-up signs in instead.
     const g = messages.caregiver.grownUpHome;
     return (
-      <Screen tone="canvas">
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
-          {closeButton}
-          <View style={{ flex: 1 }}>
-            <Heading level="title">{copy.pinVerifyTitle}</Heading>
-          </View>
-        </View>
+      <Screen tone="canvas" header={{ title: copy.pinVerifyTitle, titleInline: true }}>
         <Spacer size="xs" />
         <Body tone="secondary">{g.noPin}</Body>
         <Spacer size="lg" />
@@ -327,16 +311,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   }
 
   return (
-    <Screen tone="canvas">
+    // The title sits in the header row beside Close and the Display control, so the pad keeps the height it had.
+    <Screen tone="canvas" header={{ title, titleInline: true, onHeight: setScreenHeaderHeight }}>
       {/* Measured: the keypad gets whatever height this block leaves (p1-L1). */}
       <View onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
-          {closeButton}
-          <View style={{ flex: 1 }}>
-            <Heading level="title">{title}</Heading>
-          </View>
-        </View>
-        <Spacer size="xs" />
         {/*
           Feedback takes the subtitle's place instead of growing the header: it
           is never taller than the subtitle it covers (2 lines of 16sp vs 2-3 of

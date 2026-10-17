@@ -16,7 +16,6 @@ import { useAccessTier } from '../../store/tier-store';
 import { useVocabRunStore, vocabHost } from '../../store/vocab-run-store';
 import type { MinigameHost } from '../minigames/host';
 import { PicWordMatchGame } from '../minigames/PicWordMatchGame';
-import { BackButton } from './BackButton';
 import { canRenderPicture, pickerTopic, topicWords } from './topic-data';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VocabMatch'>;
@@ -113,5 +112,6 @@ function MatchSession({ source, navigation }: { source: VocabTopic; navigation: 
   );
 
   if (scope === null) return <Screen tone="canvas" testID="vocab-match-redirect">{null}</Screen>;
-  return <PicWordMatchGame scope={scope} host={host} onBack={back} leading={<BackButton onPress={back} />} showCount={false} />;
+  // The way back is the route's ScreenHeader Close (AMENDMENTS-DISPLAY-NAV section 7.1); left early, nothing is written.
+  return <PicWordMatchGame scope={scope} host={host} onBack={back} showCount={false} />;
 }

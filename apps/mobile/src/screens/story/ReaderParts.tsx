@@ -42,7 +42,8 @@ type EndCopy = Messages['learner']['story']['end'];
 type KoreanItemLabel = Messages['a11y']['koreanItem'];
 
 // ---------------------------------------------------------------------------
-// Top bar: Close · fill-only dots · page number · (Sources, PR 2.7)
+// Top bar: fill-only dots · page number · (Sources, PR 2.7). Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV
+// section 7.1), above this bar.
 // ---------------------------------------------------------------------------
 
 export function ReaderTopBar({
@@ -51,7 +52,6 @@ export function ReaderTopBar({
   total,
   position,
   positionLabel,
-  onClose,
   onSources,
 }: {
   copy: ReaderCopy;
@@ -62,27 +62,10 @@ export function ReaderTopBar({
   position: string | null;
   /** What a screen reader says for the page number ("Scene 3 of 8"), not "three slash eight". */
   positionLabel: string;
-  onClose: () => void;
   onSources?: () => void;
 }): React.ReactElement {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}>
-      <Pressable
-        onPress={onClose}
-        accessibilityRole="button"
-        accessibilityLabel={copy.close}
-        testID="story-reader-close"
-        style={({ pressed }) => ({
-          width: touchTarget.min,
-          height: touchTarget.min,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: radii.pill,
-          backgroundColor: pressed ? colors.surface.sunken : 'transparent',
-        })}
-      >
-        <Icon name="close" size={spacing.xxl} color={colors.text.secondary} />
-      </Pressable>
       {/* The dots carry no value a screen reader can say; the labelled page number does (§3.10). */}
       <View
         style={{ flex: 1, alignItems: 'center', minWidth: 0 }}

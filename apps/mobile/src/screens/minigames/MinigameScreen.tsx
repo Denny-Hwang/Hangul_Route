@@ -141,7 +141,7 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, inPreview
     case 'story-read':
       return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} onOpenCultureNote={openCultureNote} />;
     case 'story-check':
-      return <StoryCheckGame scope={scope} onFinish={close} onBack={exits.back} />;
+      return <StoryCheckGame scope={scope} onFinish={close} />;
     case 'order-it':
       return <SentenceBuilderGame scope={scope} host={host} patternNote={patternNote} onBack={exits.back} />;
     case 'realia-read':

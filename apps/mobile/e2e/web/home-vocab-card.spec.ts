@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, openGrownUpZone, readStored, seedStored, unlockWithPin, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -122,7 +122,7 @@ test.describe('Home "Words are ready" card and the dashboard Words row (release 
     // Play again puts the start sheet in the results' place, right above Home, and its Go back pops it.
     await page.getByTestId('vocab-results-play-again').click();
     await expect(page.getByTestId('vocab-speed-sheet')).toBeVisible();
-    await page.getByRole('button', { name: 'Go back' }).first().click();
+    await headerClose(page).click();
     const card = page.getByTestId('home-vocab-card');
     await expect(card).toBeVisible();
     await expect(page.getByTestId('home-missions').locator(':scope > *').last()).toContainText('Words are ready');

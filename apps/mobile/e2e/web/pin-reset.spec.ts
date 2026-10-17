@@ -1,15 +1,5 @@
 import { expect, test } from './fixtures';
-import {
-  answerForkNew,
-  E2E_PIN,
-  onboardChild,
-  openGrownUpZone,
-  readStored,
-  seedRescueCode,
-  seedStored,
-  typeDigits,
-  unlockWithPin,
-} from './helpers';
+import { answerForkNew, E2E_PIN, onboardChild, openGrownUpZone, readStored, seedRescueCode, seedStored, typeDigits, unlockWithPin, headerBack } from './helpers';
 
 /**
  * F-LEARN-001 §3.5, §3.14: Forgot PIN. The Rescue Code path is covered in
@@ -48,7 +38,7 @@ for (const vp of VIEWPORTS) {
       expect(Math.abs(Date.parse(stamp!) - Date.now())).toBeLessThan(60_000);
 
       // The old PIN keeps working meanwhile, and using it settles the request.
-      await page.getByRole('button', { name: 'Go back' }).click();
+      await headerBack(page).click();
       await unlockWithPin(page, E2E_PIN);
       await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
       await expect.poll(() => readStored(page, 'account:pinResetRequestedAt')).toBeNull();

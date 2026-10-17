@@ -269,7 +269,10 @@ describe('the Route tab (LR-4)', () => {
   it('the tab variant has no back button, shows the title and the purpose line, and sends route_map.viewed with source tab once per focus', () => {
     expect(screen).toContain('export function MyRouteTabScreen(');
     expect(screen).toContain("variant=\"tab\"");
-    expect(screen).toMatch(/variant === 'stack' \? back : null/);
+    // The way back is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1): the Route tab is a root (no Back,
+    // its header row holds the Display control); the grown-up stack route draws Back from SCREEN_HEADER_VARIANTS.
+    expect(screen).toContain("const rootHeader = variant === 'tab' ? { title: m.title, titleInline: true } : undefined;");
+    expect(screen).not.toContain('a11y.goBack');
     expect(screen).toContain('{m.purpose}');
     expect(screen).toContain('useFocusEffect(');
     expect(screen).toContain("source: 'tab'");

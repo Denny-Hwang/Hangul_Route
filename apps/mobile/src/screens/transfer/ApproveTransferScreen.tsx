@@ -1,8 +1,8 @@
-import { Body, Button, Icon, Screen, Spacer, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Button, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { TRANSFER_CONSENT_TEXT } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { isOpenRequest, requestAction } from '../../logic/transfers/consent-gate';
@@ -80,14 +80,6 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
     setError(moveErrorLine(result, name, messages.caregiver));
   };
 
-  const back = (
-    <>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', minWidth: touchTarget.min, minHeight: touchTarget.min, justifyContent: 'center' }}>
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
-    </>
-  );
 
   const errorLine = error ? (
     <View accessibilityRole="alert" style={{ paddingTop: spacing.md }}>
@@ -102,7 +94,6 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
   if (!request || !action || !device) {
     return (
       <Screen tone="canvas" scrollable>
-        {back}
         <FocusTitle text={t.readOnly.title} />
         <Spacer size="md" />
         <Body tone="secondary">{t.lines.ended}</Body>
@@ -124,7 +115,6 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
           notice={notice ?? t.lines.checkAgain}
           error={error}
           busy={busy}
-          header={back}
           onYes={(l) => void answer(() => approveMove(profileId, transferId, deviceConsentRecord(l, attest, request.termsDigest)))}
           onNotNow={() => void answer(() => declineMove(profileId, transferId))}
           notNowNote={t.lines.notNowEnds}
@@ -136,7 +126,6 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
   if (action.sheet === 'planned') {
     return (
       <Screen tone="canvas" scrollable>
-        {back}
         <FocusTitle text={t.lines.planned(date(request.executeAfter ?? request.expiresAt))} />
         <Spacer size="md" />
         <Body>{TRANSFER_CONSENT_TEXT[sheetLocaleOf(locale)].lines.cooling_off}</Body>
@@ -152,7 +141,6 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
   const view = readOnlySheetView(request, device, name, t);
   return (
     <Screen tone="canvas" scrollable>
-      {back}
       <FocusTitle text={t.readOnly.title} />
       <Spacer size="md" />
       <View style={{ gap: spacing.sm }}>

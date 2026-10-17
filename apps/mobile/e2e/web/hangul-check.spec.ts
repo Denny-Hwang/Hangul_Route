@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken, keepSidewaysIfAsked, readStored, seedStored, waitForNextListenPickRound } from './helpers';
+import { completeChildForm, jamoOfSpoken, keepSidewaysIfAsked, readStored, seedStored, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -214,14 +214,14 @@ test('stopping the Hangul Check asks first and saves nothing; Maybe later goes s
   await openFromJourney(page);
   await page.getByRole('button', { name: "Let's go" }).click();
   await expect(page.locator(OPTIONS).first()).toBeVisible();
-  await page.getByTestId('listen-pick-close').click();
+  await headerClose(page).click();
   await expect(page.getByText('Stop the check?')).toBeVisible();
   await expect(page.getByText('You can take it again any time.')).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('hangul-check-leave.png'), fullPage: true });
   // Keep going returns to the item.
   await page.getByTestId('hangul-check-leave').getByRole('button', { name: 'Keep going' }).click();
   await expect(page.getByText('Stop the check?')).toHaveCount(0);
-  await page.getByTestId('listen-pick-close').click();
+  await headerClose(page).click();
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await expect(page.getByTestId('journey-hangul-check')).toBeVisible();
   const saved = await readStored<ProgressSnapshot>(page, `progress:${profileId}`);

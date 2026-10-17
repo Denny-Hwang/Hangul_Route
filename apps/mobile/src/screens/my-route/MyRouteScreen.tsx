@@ -4,7 +4,7 @@ import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { vocabTopics } from '../../content/vocab';
@@ -284,29 +284,15 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const look = stageRowLook(windowWidth);
 
   const openLibrary = (): void => navigation.navigate('Main', { screen: 'Library' });
-  const back = (
-    <Pressable
-      onPress={() => navigation.goBack()}
-      hitSlop={spacing.md}
-      accessibilityRole="button"
-      accessibilityLabel={messages.a11y.goBack}
-      style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-    >
-      <Icon name="arrow-left" size={28} />
-    </Pressable>
-  );
-  // The tab is a root: no back button, and the purpose line under the title (LR-OD-3). The grown-up screen keeps Back.
+  // The tab is a root: no Back, and the purpose line under the title (LR-OD-3). The grown-up screen's Back is its
+  // ScreenHeader's (AMENDMENTS-DISPLAY-NAV section 7.1). The tab's name sits in its header row beside the Display
+  // control, and the gaps under it are the header's own, so the route card's Continue stays above the tab bar at
+  // 320 x 568 (G2).
+  const rootHeader = variant === 'tab' ? { title: m.title, titleInline: true } : undefined;
   const header = (
     <>
-      {variant === 'stack' ? back : null}
-      {variant === 'stack' ? <Spacer size="sm" /> : null}
-      <Heading level="title">{m.title}</Heading>
-      {variant === 'tab' ? (
-        <>
-          <Spacer size="xs" />
-          <Body tone="secondary">{m.purpose}</Body>
-        </>
-      ) : null}
+      {variant === 'stack' ? <Heading level="title">{m.title}</Heading> : null}
+      {variant === 'tab' ? <Body tone="secondary">{m.purpose}</Body> : null}
     </>
   );
 
@@ -314,7 +300,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
     // State J (LR-D `route-card.md`): Hoya, one calm line and Try again.
     const line = readOnly ? messages.caregiver.journey.error(profile?.displayName ?? '') : m.hero.error;
     return (
-      <Screen tone="canvas">
+      <Screen tone="canvas" header={rootHeader}>
         {header}
         <Spacer size="lg" />
         <Card padding="lg" elevation="card" testID="my-route-error">
@@ -360,7 +346,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   };
 
   return (
-    <Screen tone="canvas" testID="my-route-screen">
+    <Screen tone="canvas" testID="my-route-screen" header={rootHeader}>
       {header}
       {view.viewing !== null ? (
         <>
@@ -368,7 +354,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
           <Body tone="secondary">{view.viewing}</Body>
         </>
       ) : null}
-      <Spacer size="md" />
+      <Spacer size={variant === 'tab' ? 'sm' : 'md'} />
 
       <RouteCard
         copy={view.routeCard}

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Modal, Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { onEscape } from '../../platform/browse-env';
+import { useHistorySheet } from '../../platform/history-bridge';
 import { BROWSE_DIALOG_MAX } from '../../logic/browse/layout';
 
 /**
@@ -10,8 +11,8 @@ import { BROWSE_DIALOG_MAX } from '../../logic/browse/layout';
  * `design/screens/browse/preview-player.md` C): "Leave this preview?" with
  * [ Keep going ] and [ Leave ] on one row (they wrap at large text). A bottom
  * sheet over the `surface.overlay` scrim on phones, a centred dialog from the
- * regular class. No warning tone: nothing is lost. Escape and the scrim keep
- * going.
+ * regular class. No warning tone: nothing is lost. Escape, the scrim and the
+ * browser back keep going. The header's Close of a previewed lesson asks it too.
  */
 
 const DIALOG_MAX = BROWSE_DIALOG_MAX;
@@ -21,6 +22,8 @@ export function LeavePreviewSheet({ visible, onKeep, onLeave }: { visible: boole
   const m = messages.caregiver.browse.preview.leaveConfirm;
   const dialog = useLayoutClass().width !== 'compact';
   useEffect(() => (visible ? onEscape(onKeep) : undefined), [visible, onKeep]);
+  // One history level while it is open: the browser or phone back answers Keep going (AMENDMENTS-DISPLAY-NAV section 7.2).
+  useHistorySheet(visible, onKeep);
 
   return (
     <Modal visible={visible} transparent animationType={dialog ? 'fade' : 'slide'} onRequestClose={onKeep}>

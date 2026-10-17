@@ -5,7 +5,6 @@ import { useMessages } from '../../i18n/use-messages';
 import { backOrHome } from '../../logic/navigation/screen-exits';
 import { vocabCopyOf } from '../../logic/vocab/copy';
 import type { RootStackParamList } from '../../navigation/types';
-import { BackButton } from './BackButton';
 import { pickerTopics } from './topic-data';
 import { TopicGrid } from './TopicGrid';
 
@@ -25,8 +24,6 @@ export function VocabTopicsScreen({ navigation }: Props): React.ReactElement {
 
   return (
     <Screen tone="canvas" scrollable testID="vocab-topics">
-      <BackButton onPress={back} />
-      <Spacer size="sm" />
       <Heading level="title">{copy.topics.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{copy.topics.line}</Body>

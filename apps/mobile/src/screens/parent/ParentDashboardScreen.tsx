@@ -4,7 +4,6 @@ import {
   Caption,
   Card,
   Heading,
-  Icon,
   Pill,
   Screen,
   Spacer,
@@ -16,7 +15,7 @@ import { type StageKey } from '@hangul-route/content-schema';
 import { formatDate, levelWords, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
@@ -90,14 +89,9 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
 
   return (
     <Screen tone="canvas" scrollable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md}>
-          <Icon name="arrow-left" size={28} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Heading level="title">{m.title}</Heading>
-          <Caption tone="muted">{m.readOnly}</Caption>
-        </View>
+      <View>
+        <Heading level="title">{m.title}</Heading>
+        <Caption tone="muted">{m.readOnly}</Caption>
       </View>
 
       <Spacer size="lg" />

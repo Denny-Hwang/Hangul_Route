@@ -7,7 +7,7 @@ import { CardDetailView } from './CardDetailView';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CardDetail'>;
 
-export function CardDetailScreen({ route, navigation }: Props): React.ReactElement {
+export function CardDetailScreen({ route }: Props): React.ReactElement {
   const { cardId } = route.params;
   const profileId = useProfileStore(activeProfileSelector)?.id;
   const markCardsSeen = useProgressStore((s) => s.markCardsSeen);
@@ -16,5 +16,6 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
     if (profileId) markCardsSeen(profileId, [cardId]);
   }, [profileId, cardId, markCardsSeen]);
   // A locked card says how it is earned here too (wireframe library/earn-hints F2).
-  return <CardDetailView cardId={cardId} onClose={() => navigation.goBack()} showHowToEarn />;
+  // Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1).
+  return <CardDetailView cardId={cardId} showHowToEarn />;
 }
