@@ -101,6 +101,10 @@ export function subscribeActivity(_handler: () => void): () => void {
   return () => undefined;
 }
 
+export function subscribeInputKind(_handler: (kind: 'pointer' | 'key') => void): () => void {
+  return () => undefined;
+}
+
 export function fullscreenSupported(): boolean {
   return false;
 }

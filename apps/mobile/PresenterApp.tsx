@@ -71,6 +71,7 @@ import {
   stepBackPresenter,
   subscribeActivity,
   subscribeFullscreen,
+  subscribeInputKind,
   subscribeKeys,
   subscribePresenterPop,
   takeDeckFragment,
@@ -382,6 +383,9 @@ function Presenter(): React.ReactElement {
   const [barHidden, setBarHidden] = useState(false);
   // A keyboard, switch or screen-reader focus inside the bar holds it on screen (a press's own focus does not, on a phone).
   const barHeld = useRef(false);
+  // The last input on the page: a focus given back after a tap (More's sheet closing) is the pointer's too.
+  const lastInput = useRef<'pointer' | 'key' | null>(null);
+  useEffect(() => subscribeInputKind((kind) => (lastInput.current = kind)), []);
   const barTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearBarTimer = useCallback(() => {
     if (barTimer.current) clearTimeout(barTimer.current);
@@ -912,7 +916,7 @@ function Presenter(): React.ReactElement {
           onFocusWithin={(focused, pointer) => {
             // A keyboard, switch or screen-reader focus holds the bar on every device; on a phone a
             // press's own focus does not (the step it made hides the bar), on the docked bar it does.
-            barHeld.current = focused && (!phone || !pointer);
+            barHeld.current = focused && (!phone || !(pointer || lastInput.current === 'pointer'));
             if (!focused) {
               if (!barHidden) showBar();
               return;

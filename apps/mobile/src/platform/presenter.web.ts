@@ -775,6 +775,26 @@ export function subscribeActivity(handler: () => void, env: PresenterEnv = brows
   };
 }
 
+/**
+ * The kind of the last input on the page: a pointer (mouse, touch, pen) or a key. A focus that
+ * follows a pointer press, or that a dialog gives back after one, is the pointer's; one that follows
+ * a key is a keyboard or switch user's (the phone bar stays on screen for those, section 3.6).
+ */
+export function subscribeInputKind(handler: (kind: 'pointer' | 'key') => void, env: PresenterEnv = browserEnv()): () => void {
+  const target = env.window;
+  if (!target) return () => undefined;
+  const onPointer = (): void => handler('pointer');
+  const onKey = (): void => handler('key');
+  target.addEventListener('pointerdown', onPointer);
+  target.addEventListener('touchstart', onPointer);
+  target.addEventListener('keydown', onKey);
+  return () => {
+    target.removeEventListener('pointerdown', onPointer);
+    target.removeEventListener('touchstart', onPointer);
+    target.removeEventListener('keydown', onKey);
+  };
+}
+
 // --- fullscreen -------------------------------------------------------------------------------
 
 export function fullscreenSupported(env: PresenterEnv = browserEnv()): boolean {

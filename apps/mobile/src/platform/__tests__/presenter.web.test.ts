@@ -32,6 +32,7 @@ import {
   setPresenterDocTitle,
   subscribeActivity,
   subscribeFullscreen,
+  subscribeInputKind,
   subscribeKeys,
   takeDeckFragment,
   trapFocus,
@@ -113,6 +114,7 @@ describe('route', () => {
     native.setPresenterDocTitle('x');
     native.subscribeKeys(() => undefined)();
     native.subscribeActivity(() => undefined)();
+    native.subscribeInputKind(() => undefined)();
     native.subscribeFullscreen(() => undefined)();
     await native.enterFullscreen();
     await native.exitFullscreen();
@@ -610,6 +612,23 @@ describe('subscribeActivity', () => {
     win.fire('pointermove', {});
     expect(handler).toHaveBeenCalledTimes(5);
     expect(() => subscribeActivity(handler, env())()).not.toThrow();
+  });
+});
+
+describe('subscribeInputKind', () => {
+  it('reports a pointer or touch press as the pointer and a key as the key, until unsubscribed', () => {
+    const win = fakeTarget();
+    const kinds: string[] = [];
+    const stop = subscribeInputKind((kind) => kinds.push(kind), env({ window: win }));
+    win.fire('pointerdown', {});
+    win.fire('touchstart', {});
+    win.fire('keydown', {});
+    expect(kinds).toEqual(['pointer', 'pointer', 'key']);
+    stop();
+    win.fire('keydown', {});
+    expect(kinds).toHaveLength(3);
+    expect(win.count('pointerdown') + win.count('touchstart') + win.count('keydown')).toBe(0);
+    expect(() => subscribeInputKind(() => undefined, env())()).not.toThrow();
   });
 });
 
