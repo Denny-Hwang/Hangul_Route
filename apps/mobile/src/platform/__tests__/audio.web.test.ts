@@ -144,6 +144,11 @@ function rig(
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
+/** A pointer event with its `pointerType` (Node has no PointerEvent). */
+function pointer(type: string, pointerType: 'mouse' | 'touch' | 'pen'): Event {
+  return Object.assign(new Event(type), { pointerType });
+}
+
 beforeEach(() => {
   mem.clear();
   tracked.length = 0;
@@ -371,21 +376,38 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
     audio.dispose();
   });
 
-  it('the first pointerdown unlocks speech silently, marks the store, and removes the listeners', async () => {
+  it('a touch pointerdown speaks nothing and keeps listening (it carries no activation on a touch screen)', async () => {
+    const { synth, doc, audio } = rig();
+    audio.installGestureUnlock();
+    doc.dispatchEvent(pointer('pointerdown', 'touch'));
+    await flush();
+    expect(synth.spoken).toHaveLength(0);
+    expect(useAudioStore.getState().unlocked).toBe(false);
+    // Still listening: the tap's touchend unlocks.
+    doc.dispatchEvent(new Event('touchend'));
+    expect(synth.spoken).toHaveLength(1);
+    audio.dispose();
+  });
+
+  it('the tap\'s touchend speaks one silent Korean utterance; unlocked only after its onstart; then the listeners go', async () => {
     const { synth, doc, audio } = rig({ requireGesture: true });
+    await flush();
     const uninstall = audio.installGestureUnlock();
     expect(useAudioStore.getState().unlocked).toBe(false);
 
     synth.markUserGesture();
-    doc.dispatchEvent(new Event('pointerdown'));
+    doc.dispatchEvent(new Event('touchend'));
     expect(synth.spoken).toHaveLength(1);
-    expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0 });
+    // The unlock also warms the Korean engine: Korean language, the ranked Korean voice.
+    expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0, lang: 'ko-KR' });
+    expect(synth.spoken[0]?.voice?.name).toBe('Yuna');
+    expect(useAudioStore.getState().unlocked).toBe(false);
+    await flush();
     expect(useAudioStore.getState().unlocked).toBe(true);
 
     // listeners are gone: a second gesture speaks nothing more
-    doc.dispatchEvent(new Event('pointerdown'));
-    doc.dispatchEvent(new Event('touchend'));
-    doc.dispatchEvent(new Event('keydown'));
+    for (const type of ['pointerup', 'touchend', 'click', 'keydown']) doc.dispatchEvent(new Event(type));
+    doc.dispatchEvent(pointer('pointerdown', 'mouse'));
     expect(synth.spoken).toHaveLength(1);
 
     // and a later prompt plays
@@ -394,19 +416,116 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
     audio.dispose();
   });
 
-  it.each(['touchend', 'keydown'])('%s also unlocks', (type) => {
+  it.each(['pointerup', 'touchend', 'click', 'keydown'])('%s unlocks', (type) => {
     const { synth, doc, audio } = rig();
     audio.installGestureUnlock();
     doc.dispatchEvent(new Event(type));
+    expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0, lang: 'ko-KR' });
+    audio.dispose();
+  });
+
+  it('a mouse pointerdown unlocks (a mouse press is an activation)', () => {
+    const { synth, doc, audio } = rig();
+    audio.installGestureUnlock();
+    doc.dispatchEvent(pointer('pointerdown', 'mouse'));
     expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0 });
+    audio.dispose();
+  });
+
+  it('one tap speaks one unlock: the tap\'s later events wait for the answer of the one the engine holds', async () => {
+    const { synth, doc, audio } = rig();
+    synth.autoEnd = false;
+    audio.installGestureUnlock();
+    for (const type of ['pointerup', 'touchend', 'click']) doc.dispatchEvent(new Event(type));
+    audio.unlockAudio();
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ']);
+    audio.dispose();
+  });
+
+  it('an unlock the engine dropped without a word (iOS outside the gesture) is tried again on the next activation', async () => {
+    const { synth, doc, audio } = rig({ requireGesture: true });
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('pointerup'));
+    expect(synth.dropped).toHaveLength(1);
+    synth.markUserGesture();
+    doc.dispatchEvent(new Event('touchend'));
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ']);
+    await flush();
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    audio.dispose();
+  });
+
+  it('a not-allowed unlock keeps the listeners, and the next activation unlocks', async () => {
+    const { synth, doc, audio } = rig();
+    synth.requireActivation = true;
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    await flush();
+    expect(synth.refused).toHaveLength(1);
+    expect(useAudioStore.getState().unlocked).toBe(false);
+    synth.activate();
+    doc.dispatchEvent(new Event('touchend'));
+    await flush();
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ']);
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    audio.dispose();
+  });
+
+  it('an unlock that ends with an engine error other than not-allowed counts (the engine took it)', async () => {
+    const { synth, doc, audio } = rig();
+    synth.failNext('synthesis-failed');
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    await flush();
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    doc.dispatchEvent(new Event('touchend'));
+    expect(synth.spoken).toHaveLength(1);
+    audio.dispose();
+  });
+
+  it('unlockAudio() from a click (the presenter Start) unlocks on its own, and installs nothing', async () => {
+    const { synth, doc, audio } = rig();
+    audio.unlockAudio();
+    expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0, lang: 'ko-KR' });
+    await flush();
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    // Unlocked already: installing later adds no speech listener, and a second call speaks nothing.
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    audio.unlockAudio();
+    expect(synth.spoken).toHaveLength(1);
+    audio.dispose();
+  });
+
+  it('a prompt asked in the unlocking tap queues behind the silent unlock: no cancel, and it plays', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.startDelayMs = 2000;
+    synth.endDelayMs = 400;
+    audio.installGestureUnlock();
+    await vi.advanceTimersByTimeAsync(0);
+    doc.dispatchEvent(new Event('touchend'));
+    const result = audio.playPrompt({ text: '안녕하세요', kind: 'word', source: 'presenter-check' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '안녕하세요']);
+    // The unlock wakes the cold engine at 2 s; warm now, it starts the prompt soon after the unlock ends.
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    synth.startDelayMs = 100;
+    await vi.advanceTimersByTimeAsync(3000);
+    await expect(result).resolves.toBe('played');
+    expect(synth.cancelCount).toBe(0);
+    expect(useAudioStore.getState().unlocked).toBe(true);
     audio.dispose();
   });
 
   it('installing twice registers once', () => {
     const { synth, doc, audio } = rig();
+    synth.autoEnd = false;
+    synth.neverStart = true;
     audio.installGestureUnlock();
     audio.installGestureUnlock();
-    doc.dispatchEvent(new Event('pointerdown'));
+    doc.dispatchEvent(new Event('touchend'));
     expect(synth.spoken).toHaveLength(1);
     audio.dispose();
   });
@@ -415,22 +534,97 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
     const { synth, doc, audio } = rig();
     const uninstall = audio.installGestureUnlock();
     uninstall();
-    doc.dispatchEvent(new Event('pointerdown'));
+    doc.dispatchEvent(new Event('touchend'));
+    doc.dispatchEvent(pointer('pointerdown', 'mouse'));
     expect(synth.spoken).toHaveLength(0);
     audio.dispose();
   });
 
-  it('a page that goes to the background stops speech; coming back does not', () => {
+  it('a page that goes to the background stops speech; coming back to an idle engine does not', () => {
     const { synth, doc, audio } = rig();
     audio.installGestureUnlock();
     const before = synth.cancelCount;
     doc.visibilityState = 'visible';
     doc.dispatchEvent(new Event('visibilitychange'));
     expect(synth.cancelCount).toBe(before);
+    expect(synth.resumeCount).toBe(0);
     doc.visibilityState = 'hidden';
     doc.dispatchEvent(new Event('visibilitychange'));
     expect(synth.cancelCount).toBe(before + 1);
     audio.dispose();
+  });
+
+  it('coming back to a stuck pending queue cancels it, and a paused engine is resumed', () => {
+    const { synth, doc, audio } = rig();
+    audio.installGestureUnlock();
+    // What the hidden page left in the engine: a queue that never started, paused.
+    synth.neverStart = true;
+    synth.speak(new FakeUtterance('stale'));
+    synth.speak(new FakeUtterance('stale too'));
+    synth.pause();
+    expect(synth.pending).toBe(true);
+    const before = synth.cancelCount;
+    doc.visibilityState = 'visible';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    expect(synth.cancelCount).toBe(before + 1);
+    expect(synth.pending).toBe(false);
+    expect(synth.paused).toBe(false);
+    audio.dispose();
+  });
+});
+
+describe('platform/audio.web: the engine (F-AUDIO-004 section 3.5, 2026-10-17)', () => {
+  it('a paused engine gets resume() before the speak, and the prompt plays', async () => {
+    const { synth, audio } = rig();
+    await flush();
+    synth.pause();
+    const result = audio.playPrompt({ text: '가' });
+    await flush();
+    expect(synth.resumeCount).toBe(1);
+    await expect(result).resolves.toBe('played');
+    expect(synth.spoken.map((u) => u.text)).toEqual(['가']);
+    audio.dispose();
+  });
+
+  it('a cold engine that holds the prompt for 2 s is not cancelled: played', async () => {
+    vi.useFakeTimers();
+    const { synth, audio } = rig();
+    await vi.advanceTimersByTimeAsync(0);
+    synth.startDelayMs = 2000;
+    synth.endDelayMs = 400;
+    const result = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(2400);
+    await expect(result).resolves.toBe('played');
+    expect(synth.cancelCount).toBe(0);
+    expect(synth.resumeCount).toBe(1);
+    audio.dispose();
+  });
+
+  it('Chrome\'s not-allowed is blocked (not error), and its code goes to telemetry with the source', async () => {
+    const { synth, audio } = rig();
+    await flush();
+    synth.requireActivation = true;
+    await expect(audio.playPrompt({ text: '가', source: 'discover' })).resolves.toBe('unavailable');
+    expect(useAudioStore.getState().lastFailure?.reason).toBe('blocked');
+    expect(tracked.filter((e) => e.name === 'audio.playback_failed')).toEqual([
+      { name: 'audio.playback_failed', payload: { kind: 'tts', reason: 'blocked', code: 'not-allowed', source: 'discover' } },
+    ]);
+    audio.dispose();
+  });
+
+  it('an engine error keeps its Web Speech code, and an unknown code is other', async () => {
+    const a = rig({ voices: [YUNA] });
+    a.synth.failNext('audio-busy');
+    await expect(a.audio.playPrompt({ text: '가', source: 'trace' })).resolves.toBe('unavailable');
+    a.audio.dispose();
+    const b = rig({ voices: [YUNA] });
+    b.synth.failNext('something-new');
+    await expect(b.audio.playPrompt({ text: '가' })).resolves.toBe('unavailable');
+    b.audio.dispose();
+    expect(tracked.filter((e) => e.name === 'audio.playback_failed').map((e) => e.payload)).toEqual([
+      { kind: 'tts', reason: 'engine', code: 'audio-busy', source: 'trace' },
+      { kind: 'tts', reason: 'engine', code: 'other', source: 'unknown' },
+    ]);
   });
 });
 
@@ -571,6 +765,44 @@ describe('platform/audio.web: capability', () => {
     audio.dispose();
   });
 
+  it('refreshCapability on Chrome\'s empty first list waits for voiceschanged: unknown to ready, never none, one capability_checked', async () => {
+    vi.useFakeTimers();
+    const { synth, audio } = rig({ voices: [] });
+    const seen: string[] = [];
+    const off = audio.subscribeCapability((c) => seen.push(c.tts.state));
+    synth.voicesLoadDelayMs = 800;
+    synth.setVoices([YUNA]);
+    let done = false;
+    void audio.refreshCapability().then(() => (done = true));
+    await vi.advanceTimersByTimeAsync(799);
+    expect(done).toBe(false);
+    expect(audio.getCapability().tts.state).toBe('unknown');
+    expect(useAudioStore.getState().tts.state).toBe('unknown');
+    await vi.advanceTimersByTimeAsync(1);
+    expect(done).toBe(true);
+    expect(audio.getCapability().tts).toMatchObject({ state: 'ready', voiceName: 'Yuna' });
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(seen).toEqual(['ready']);
+    expect(tracked.filter((e) => e.name === 'audio.capability_checked')).toEqual([
+      { name: 'audio.capability_checked', payload: { platform: 'web', engine: 'tts', koVoice: 'local' } },
+    ]);
+    off();
+    audio.dispose();
+  });
+
+  it('refreshCapability with no voices at all ends none after the 1.5 s wait', async () => {
+    vi.useFakeTimers();
+    const { audio } = rig({ voices: [] });
+    let done = false;
+    void audio.refreshCapability().then(() => (done = true));
+    await vi.advanceTimersByTimeAsync(1499);
+    expect(done).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(done).toBe(true);
+    expect(audio.getCapability().tts).toEqual({ state: 'none', reason: 'no_korean_voice' });
+    audio.dispose();
+  });
+
   it('refreshCapability with no engine stays none/no_engine', async () => {
     const { audio } = rig({ noSynth: true });
     await audio.refreshCapability();
@@ -630,7 +862,7 @@ describe('platform/audio.web: bundled clips (A-6, AD4: clip > voice > text)', ()
     await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
     expect(synth.spoken.map((u) => u.text)).toEqual(['가']);
     expect(tracked.filter((e) => e.name === 'audio.playback_failed')).toEqual([
-      { name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode' } },
+      { name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode', code: 'none', source: 'unknown' } },
     ]);
     audio.dispose();
   });
@@ -705,7 +937,7 @@ describe('platform/audio.web: bundled clips (A-6, AD4: clip > voice > text)', ()
     const player = new FakeClipPlayer();
     const { doc, audio } = rig({ clips: { player } });
     audio.installGestureUnlock();
-    doc.dispatchEvent(new Event('pointerdown'));
+    doc.dispatchEvent(new Event('touchend'));
     expect(player.unlocks).toBe(1);
     audio.unlockAudio();
     expect(player.unlocks).toBe(2);
@@ -770,7 +1002,7 @@ describe('platform/audio.web: the clip context is touched only when clips can pl
     audio.dispose();
   });
 
-  it('a clip player that throws on unlock never stops the speech unlock', () => {
+  it('a clip player that throws on unlock never stops the speech unlock', async () => {
     const player = new FakeClipPlayer();
     player.unlock = () => {
       throw new Error('NotAllowedError');
@@ -778,6 +1010,7 @@ describe('platform/audio.web: the clip context is touched only when clips can pl
     const { synth, audio } = rig({ clips: { player } });
     expect(() => audio.unlockAudio()).not.toThrow();
     expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0 });
+    await flush();
     expect(useAudioStore.getState().unlocked).toBe(true);
   });
 
@@ -785,7 +1018,7 @@ describe('platform/audio.web: the clip context is touched only when clips can pl
     const player = new FakeClipPlayer();
     const { doc, audio } = rig({ clips: { player } });
     const uninstall = audio.installGestureUnlock();
-    doc.dispatchEvent(new Event('pointerdown'));
+    doc.dispatchEvent(new Event('pointerup'));
     expect(player.unlocks).toBe(1);
     doc.visibilityState = 'hidden';
     doc.dispatchEvent(new Event('visibilitychange'));
