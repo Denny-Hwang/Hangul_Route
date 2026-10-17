@@ -5,7 +5,7 @@ Code: `packages/design-system/src/components/DisplaySheet/` (`DisplaySheet.tsx` 
 
 ## What it is
 
-The Display (Aa) sheet: the device's one UI language and its text size. Every surface on the device opens it and writes the same record (`device:settings`, stored as `hr:device:settings`): the learner app (Home's Aa beside Profile, Profile's Display row), All lessons (the Aa beside Lesson display in its header), the presenter (the Aa button on the home and the start screen) and the grown-up pages (the Aa button in the adult frame header at every width, on `/signin` and on the grown-up lock). Not behind the grown-up gate: display only, reversible, no learner data.
+The Display (Aa) sheet: the device's one UI language and its text size. Every surface on the device opens it and writes the same record (`device:settings`, stored as `hr:device:settings`): the learner app (Home's Aa beside Profile, Profile's Display row), All lessons (the Aa beside Romanization in its header), the presenter (the Aa button on the home and the start screen) and the grown-up pages (the Aa button in the adult frame header at every width, on `/signin` and on the grown-up lock). Not behind the grown-up gate: display only, reversible, no learner data.
 
 The design system has no copy: every label, the preview line and the Aa glyph come from the caller's dictionary (`common.display`; Korean draws "가가").
 
@@ -30,7 +30,7 @@ The design system has no copy: every label, the preview line and the Aa glyph co
  [            Done             ]
 ```
 
-A bottom sheet on phones (`compact`), a centred dialog from the regular class (max width `touchTarget.min * 8` = 512). A text size applies at once; another language first asks in that language (Use writes it, Back changes nothing; the F-I18N-001 §3.3 safety rule). Done only closes. The scrim and Escape (web) close it.
+A bottom sheet below `layout.breakpoint.regular` (600), a centred dialog from it, at most `layout.maxWidth.reading` (720) wide (AMENDMENTS-DISPLAY-NAV section 3.6; the grown-up pages' DOM twin uses the same 600 px breakpoint and width). A text size applies at once; another language first asks in that language (Use writes it, Back changes nothing; the F-I18N-001 §3.3 safety rule). Done only closes. The scrim and Escape (web) close it.
 
 ## Text size steps
 
@@ -59,7 +59,9 @@ Reading sizes (caption to prompt) take `f`; large type (title, display, hero) ta
 
 - The sheet is `role="dialog"` with `aria-modal`, named by its title.
 - Each control is a `radiogroup` named by its row label; each option is a `radio` with its checked state; a language option is named by its endonym and carries its `lang` (`accessibilityLanguage` on iOS).
+- Roving focus on the web (WAI-ARIA radio group, `radioAfter` in `model.ts`): only the selected radio is a Tab stop; the arrows (wrapping), Home and End move focus and the selection together.
+- When the confirm step opens, focus moves to its question; when Use or Back closes it, focus returns to the selected language radio (the control that had focus has unmounted). The grown-up pages' sheet moves focus to Use, then back to the selected language, and its Tab trap counts only Tab stops.
 - Every option is at least 64 x 64; rows wrap instead of scrolling sideways (360 wide at Largest fits all four steps).
-- The Aa glyphs are hidden from assistive tech; the Aa button is named "Display" (`common.display.open`) with `aria-haspopup="dialog"`.
+- The Aa glyphs are hidden from assistive tech; the Aa button is named `common.display.a11y` ("Aa, Display: language and text size": the name begins with the visible sign, WCAG 2.5.3 Label in Name) with `aria-haspopup="dialog"`.
 - Another language first shows the confirm step in that language (`lang`-tagged, a polite live region); Use writes the record and the sheet re-renders in the new language; Back changes nothing (the mis-tap rule of F-I18N-001 §3.3).
 - No motion beyond the platform's modal slide or fade.
