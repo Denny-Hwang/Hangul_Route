@@ -78,7 +78,7 @@ test.describe('ConfirmSheet: leaving a quest (design/components/ConfirmSheet)', 
 });
 
 test.describe('Home, Library and Profile for a brand-new learner', () => {
-  test("Home: the first card is the next lesson, with its length and a full-width Start; no empty streak or stars", async ({ page }) => {
+  test("Home: the first card is the next lesson, where it sits, its length, a full-width Start and the way to the route; card 2 is compact; no empty streak or stars", async ({ page }) => {
     const h = getMessages('en').learner.home;
     await newLearnerHome(page);
     await dismissInstallGuide(page);
@@ -86,6 +86,16 @@ test.describe('Home, Library and Profile for a brand-new learner', () => {
     await expect(hero).toBeVisible();
     await expect(hero.getByText(h.next.heading)).toBeVisible();
     await expect(hero.getByText(/^About \d+ minutes?$/)).toBeVisible();
+    // Where it sits (AMENDMENTS-DISPLAY-NAV 9.1) and the one way to the whole route; the route strip is folded in.
+    await expect(page.getByTestId('home-next-lesson-where')).toHaveText(/^Stage 1 · .+ · lesson 1 of \d+$/);
+    await expect(page.getByTestId('home-next-lesson-route')).toHaveAccessibleName(h.next.route.cta);
+    await expect(page.getByTestId('home-route-strip')).toHaveCount(0);
+    // Card 2 names the same lesson: one quiet row that is not a button, so Home never offers it twice.
+    const same = page.getByTestId('home-mission-same-as-hero-2');
+    await expect(same).toBeVisible();
+    await expect(same.getByText(h.mission.sameAsHero, { exact: true })).toBeVisible();
+    await expect(same).not.toHaveAttribute('role', 'button');
+    await expect(page.getByTestId('home-missions').getByRole('button')).toHaveCount(2);
     const start = page.getByTestId('home-next-lesson-start');
     await expect(start).toHaveText(h.next.start.cta);
     // Above the three slots ("Today with Hoya") and the first card on the screen.
@@ -132,7 +142,7 @@ test.describe('Home, Library and Profile for a brand-new learner', () => {
     await shot(page, 'ux-library-to-find-360');
   });
 
-  test('Profile: My settings open, For grown-ups collapsed until tapped', async ({ page }) => {
+  test('Profile: Classes and family under the stats, My settings open, For grown-ups collapsed until tapped', async ({ page }) => {
     const p = getMessages('en').learner.profile;
     await newLearnerHome(page);
     await dismissInstallGuide(page);
@@ -142,10 +152,14 @@ test.describe('Home, Library and Profile for a brand-new learner', () => {
     const toggle = page.getByTestId('profile-group-grown-ups-toggle');
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(page.getByRole('button', { name: 'Grown-up area (PIN required)' })).toHaveCount(0);
-    await expect(page.getByTestId('spaces-card')).toHaveCount(0);
+    // Classes and family is moved up (owner decision 2026-10-17): drawn above My settings, with its Join a class.
+    const spaces = page.getByTestId('spaces-card');
+    await expect(spaces).toBeVisible();
+    const [spacesBox, mineBox] = await Promise.all([spaces.boundingBox(), page.getByTestId('profile-group-mine').boundingBox()]);
+    expect(spacesBox?.y ?? Infinity).toBeLessThan(mineBox?.y ?? 0);
+    await expect(spaces.getByRole('button', { name: getMessages('en').caregiver.spaces.join.cta })).toBeVisible();
     await shot(page, 'ux-profile-groups-360');
     await openForGrownUps(page);
-    await expect(page.getByTestId('spaces-card')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Grown-up area (PIN required)' })).toBeVisible();
     await expect(page.getByText('Everything is open right now.')).toBeVisible();
     await page.getByTestId('profile-group-grown-ups-toggle').scrollIntoViewIfNeeded();

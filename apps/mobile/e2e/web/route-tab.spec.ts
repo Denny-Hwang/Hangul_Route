@@ -223,33 +223,65 @@ test.describe('the Route tab (LR-4)', () => {
     await expect(screen.getByText(en.learner.myRoute.title, { exact: true })).toBeVisible();
     await expect(screen.getByText(en.learner.myRoute.purpose, { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
-    await expect(page.getByTestId('my-route-trail')).toBeVisible();
+    // Owner decision 2026-10-17: the card, the next lessons and the Journey link; the stage trail is not on the tab.
+    await expect(page.getByTestId('my-route-next-lessons')).toBeVisible();
+    await expect(page.getByTestId('my-route-trail')).toHaveCount(0);
     expect(await noSideScroll(page)).toBe(true);
     await shot(page, 'route-tab-320');
   });
 
-  test('a quiet trail for a new learner: no Open pill, "Ready when you are" once, later stages one line each (owner request 2026-10-16, item 8)', async ({ page }) => {
+  test('where you are now, your next three lessons and the goal; the seven stages are in Journey (owner decision 2026-10-17)', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 640 });
     await learnerOnHome(page);
     await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
-    const trail = page.getByTestId('my-route-trail');
-    await expect(trail).toBeVisible();
-    // Nothing is closed in this build, so "Open" says nothing: no stage pill and no cell word reads it.
-    await expect(trail.getByText(en.learner.myRoute.state.open, { exact: true })).toHaveCount(0);
-    await expect(trail.getByText(en.learner.myRoute.caption.ready, { exact: true })).toHaveCount(1);
-    // The stage the learner is on keeps its pips; the stages after it are one line, with no pips and no caption.
-    await expect(page.getByTestId('my-route-pips-1')).toBeVisible();
-    const stage2 = page.getByTestId('my-route-stage-2');
-    await expect(stage2).toBeVisible();
-    await expect(page.getByTestId('my-route-pips-2')).toHaveCount(0);
-    // A one-line row still opens in place.
-    await stage2.getByRole('button').first().click();
-    await expect(stage2.getByRole('button').first()).toHaveAttribute('aria-expanded', 'true');
+    const screen = page.getByTestId('my-route-screen');
+    // Where you are and the goal: the route card with its one button.
+    await expect(page.getByTestId('my-route-card')).toBeVisible();
+    await expect(page.getByTestId('my-route-card-cta')).toBeVisible();
+    // The next three lessons: the first is the card's own lesson, tagged Next; each row says its stage and episode.
+    const list = page.getByTestId('my-route-next-lessons');
+    await expect(list.getByText(en.learner.myRoute.nextLessons.title, { exact: true })).toBeVisible();
+    const rows = list.getByRole('button');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.first()).toHaveAccessibleName(new RegExp(`^${en.learner.routeNext.tag.next}: `));
+    for (const row of await rows.all()) await expect(row).toHaveAccessibleName(/Stage 1 · /);
+    // The route card does not repeat the first lesson's title above the list.
+    await expect(page.getByTestId('my-route-card-next')).toHaveCount(0);
+    // No stage trail, no "Open", no "Ready when you are", no skills or gains on the tab: one way to the whole map.
+    await expect(page.getByTestId('my-route-trail')).toHaveCount(0);
+    await expect(screen.getByText(en.learner.myRoute.state.open, { exact: true })).toHaveCount(0);
+    await expect(screen.getByText(en.learner.myRoute.caption.ready, { exact: true })).toHaveCount(0);
+    await expect(screen.getByText(en.learner.myRoute.skills.title, { exact: true })).toHaveCount(0);
+    // Never an "n of N" on the page (F-ROUTE-001).
+    expect(await screen.innerText()).not.toMatch(/\d\s*\/\s*\d|\bof \d/);
     expect(await noSideScroll(page)).toBe(true);
-    await shot(page, 'route-tab-quiet-360');
+    await shot(page, 'route-tab-simple-360');
+    const journey = page.getByTestId('my-route-journey');
+    await journey.scrollIntoViewIfNeeded();
+    await expect(journey).toHaveAccessibleName(en.learner.myRoute.journey.cta);
+    await shot(page, 'route-tab-simple-360-end');
+    await journey.click();
+    await expect(page.getByText(en.learner.journey.intro, { exact: true })).toBeVisible();
+    await expect(page.getByTestId('journey-stage-stage7')).toBeAttached();
   });
 
-  test("the active learner's entries open the tab: the Journey header link and the Home strip", async ({ page }) => {
+  test('a next-lesson row opens its lesson: the second row starts the lesson after the card\'s', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await learnerOnHome(page);
+    await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+    const rows = page.getByTestId('my-route-next-lessons').getByRole('button');
+    await expect(rows).toHaveCount(3);
+    const second = await rows.nth(1).getAttribute('data-testid');
+    expect(second).toMatch(/^my-route-next-lesson-quest:/);
+    const title = (await rows.nth(1).getAttribute('aria-label'))?.split('. ')[0] ?? '';
+    await rows.nth(1).click();
+    await expect(page.getByTestId('my-route-screen')).toBeHidden();
+    // The quest player: its Leave control, and the lesson's own title on its first step.
+    await expect(page.getByRole('button', { name: en.a11y.leaveQuest, exact: true })).toBeVisible();
+    expect(title.length).toBeGreaterThan(0);
+  });
+
+  test("the active learner's entries open the tab: the Journey header link and Home's See your Learning Route", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await learnerOnHome(page);
     const purpose = page.getByText(en.learner.myRoute.purpose, { exact: true });
@@ -261,7 +293,9 @@ test.describe('the Route tab (LR-4)', () => {
     await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
 
     await page.getByRole('tablist').getByRole('link', { name: en.a11y.tabs.home }).click();
-    await page.getByTestId('home-route-strip').click();
+    // The route strip is folded into the Next lesson hero (AMENDMENTS-DISPLAY-NAV 9.1): its link opens the tab.
+    await expect(page.getByTestId('home-route-strip')).toHaveCount(0);
+    await page.getByTestId('home-next-lesson-route').click();
     await expect(purpose).toBeVisible();
     await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
   });
