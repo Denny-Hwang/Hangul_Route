@@ -85,6 +85,13 @@ export type SlideBody =
   | {
       kind: 'vocab';
       word: KoLine & { gloss: string };
+      /**
+       * What Sound / S plays (`slideSound`, section 3.4 amendment 2026-10-17): the content's
+       * `spokenKo` when it has one, else the word, with its `audioRef` clip when there is one.
+       */
+      spoken: SpokenForm;
+      /** The speech rate (F-AUDIO-004 `RATE_BASE`): a Discover sentence, pattern or exchange line is a sentence. */
+      speech: 'word' | 'sentence';
       cardId?: string;
       wordId?: string;
       /** A topic word's WordArt key (F-VOC-002), drawn at the `art` build after the gloss (README D9). */
