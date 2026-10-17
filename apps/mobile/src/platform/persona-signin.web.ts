@@ -12,8 +12,8 @@ import { track as sendEvent, type TelemetryEvent } from './telemetry';
  * (the router sends a signed-in grown-up home), both **in the same tab**, after
  * `shell.persona_chosen { persona, from }` is sent (or a short wait). Sign-in only: creating an
  * account is behind the adult step on that page. No unlock is written (Welcome shows only on a
- * device without a learner profile, where the console has no lock). `?lang=` follows a UI locale
- * that is not the default (F-I18N-001 hand-off).
+ * device without a learner profile, where the console has no lock). `?lang=` always carries the UI
+ * locale, English included (F-I18N-001 hand-off).
  */
 export interface PersonaSignInEnv {
   track: (event: TelemetryEvent) => Promise<boolean>;

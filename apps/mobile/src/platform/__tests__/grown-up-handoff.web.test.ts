@@ -32,7 +32,7 @@ import { useUiStore } from '../../store/ui-store';
 /**
  * F-APP-001 section 3.9 (A-6): `openGrownUpArea` writes the PIN unlock with the marker epoch
  * into this tab's `sessionStorage` before it leaves, emits `shell.grown_up_handoff` and opens the
- * grown-up page in the same tab, with `?lang=` for a UI locale that is not the default.
+ * grown-up page in the same tab, always with `?lang=`, English included.
  */
 const NOW = 1_760_100_000_000;
 
@@ -94,7 +94,7 @@ describe('openGrownUpArea (web)', () => {
     const stored = JSON.parse(h.area.data.get(UNLOCK_SESSION_KEY) ?? 'null');
     expect(stored).toEqual({ v: 1, at: NOW, seen: NOW, src: 'pin', pinEpoch: PIN.pinEpoch });
     expect(GrownUpUnlockSchema.safeParse(stored).success).toBe(true);
-    expect(h.log).toEqual(['track shell.grown_up_handoff', 'assign /parent', `unlock at leave: ${h.area.data.get(UNLOCK_SESSION_KEY)}`]);
+    expect(h.log).toEqual(['track shell.grown_up_handoff', 'assign /parent?lang=en', `unlock at leave: ${h.area.data.get(UNLOCK_SESSION_KEY)}`]);
     expect(h.events).toEqual([{ name: 'shell.grown_up_handoff', payload: { via: 'lock', target: 'next' } }]);
   });
 
@@ -118,7 +118,7 @@ describe('openGrownUpArea (web)', () => {
     const h = harness({ marker: { v: 1, gate: 'none' }, lastPinVerifiedAt: null });
     expect(await openGrownUpArea({ via: 'profile' }, h.env)).toBe('opened');
     expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
-    expect(h.log.slice(0, 2)).toEqual(['track shell.grown_up_handoff', 'assign /signin']);
+    expect(h.log.slice(0, 2)).toEqual(['track shell.grown_up_handoff', 'assign /signin?lang=en']);
     expect(h.events[0]?.payload).toEqual({ via: 'profile', target: 'router' });
   });
 
@@ -126,17 +126,17 @@ describe('openGrownUpArea (web)', () => {
     const h = harness({ marker: { v: 1, gate: 'nopin' }, lastPinVerifiedAt: NOW });
     expect(await openGrownUpArea({ via: 'lock', target: '/teach/home' }, h.env)).toBe('opened');
     expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
-    expect(h.log[1]).toBe('assign /teach/home');
+    expect(h.log[1]).toBe('assign /teach/home?lang=en');
   });
 
   it('an unknown device state (stores not loaded) writes no unlock and lets the console decide', async () => {
     const h = harness({ marker: null, lastPinVerifiedAt: NOW });
     expect(await openGrownUpArea({ via: 'lock', target: '/parent' }, h.env)).toBe('opened');
     expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
-    expect(h.log[1]).toBe('assign /parent');
+    expect(h.log[1]).toBe('assign /parent?lang=en');
   });
 
-  it('appends lang for a UI locale that is not the default', async () => {
+  it('appends lang for every UI locale', async () => {
     const h = harness({ marker: PIN, lastPinVerifiedAt: NOW, locale: 'es' });
     await openGrownUpArea({ via: 'lock', target: '/teach/space?id=sp_1' }, h.env);
     expect(h.log[1]).toBe('assign /teach/space?id=sp_1&lang=es');
@@ -149,7 +149,7 @@ describe('openGrownUpArea (web)', () => {
     for (const target of ['https://evil.example/', '//evil.example', '/', '/browse', 'javascript:alert(1)']) {
       const h = harness({ marker: PIN, lastPinVerifiedAt: NOW });
       await openGrownUpArea({ via: 'lock', target }, h.env);
-      expect(h.log[1], target).toBe('assign /signin');
+      expect(h.log[1], target).toBe('assign /signin?lang=en');
       expect(h.events[0]?.payload, target).toEqual({ via: 'lock', target: 'router' });
     }
   });
@@ -158,7 +158,7 @@ describe('openGrownUpArea (web)', () => {
     const h = harness({ marker: PIN, lastPinVerifiedAt: NOW });
     h.env.area = () => blockedArea();
     expect(await openGrownUpArea({ via: 'lock', target: '/parent' }, h.env)).toBe('opened');
-    expect(h.log[1]).toBe('assign /parent');
+    expect(h.log[1]).toBe('assign /parent?lang=en');
   });
 
   it('a storage getter that throws counts as blocked storage', async () => {
@@ -167,7 +167,7 @@ describe('openGrownUpArea (web)', () => {
       throw new Error('SecurityError');
     };
     expect(await openGrownUpArea({ via: 'lock', target: '/parent' }, h.env)).toBe('opened');
-    expect(h.log[1]).toBe('assign /parent');
+    expect(h.log[1]).toBe('assign /parent?lang=en');
   });
 });
 
@@ -255,7 +255,7 @@ describe('continueToGrownUpPage (the PIN screen with no PIN stored)', () => {
     } finally {
       vi.unstubAllGlobals();
     }
-    expect(assign).toHaveBeenCalledWith('/parent');
+    expect(assign).toHaveBeenCalledWith('/parent?lang=en');
     expect(area.data.size).toBe(0);
   });
 
@@ -263,7 +263,7 @@ describe('continueToGrownUpPage (the PIN screen with no PIN stored)', () => {
     for (const target of [undefined, null, '', 'https://evil.example', '/']) {
       const assign = vi.fn();
       continueToGrownUpPage(target, 'en', assign);
-      expect(assign, String(target)).toHaveBeenCalledWith('/signin');
+      expect(assign, String(target)).toHaveBeenCalledWith('/signin?lang=en');
     }
   });
 
@@ -283,7 +283,7 @@ describe('continueToGrownUpPage (the PIN screen with no PIN stored)', () => {
     } finally {
       vi.unstubAllGlobals();
     }
-    expect(assign).toHaveBeenCalledWith('/parent');
+    expect(assign).toHaveBeenCalledWith('/parent?lang=en');
   });
 });
 
@@ -327,6 +327,6 @@ describe('openGrownUpArea with the default env (the learner stores and the brows
       unbind();
     }
     expect(JSON.parse(area.data.get(UNLOCK_SESSION_KEY) ?? 'null')).toMatchObject({ v: 1, src: 'pin', pinEpoch: 1_759_000_000_000 });
-    expect(assign).toHaveBeenCalledWith('/parent');
+    expect(assign).toHaveBeenCalledWith('/parent?lang=en');
   });
 });

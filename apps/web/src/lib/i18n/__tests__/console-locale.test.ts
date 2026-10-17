@@ -60,6 +60,8 @@ describe('pickConsoleLocale: stored choice > navigator > en (F-I18N-001 §3.2)',
 describe('pickConsoleLocale: ?lang= first (F-APP-001 section 3.7)', () => {
   it('a valid, available ?lang= wins over the stored choice and the browser', () => {
     expect(pickConsoleLocale({ query: 'es', stored: 'ko', languages: ['ko'], available: ALL })).toBe('es');
+    // The learner app now hands off English too (lang=en), so a console that once stored Korean opens in English.
+    expect(pickConsoleLocale({ query: queryLocale('?lang=en'), stored: 'ko', languages: ['ko-KR'], available: ALL })).toBe('en');
   });
 
   it('a hidden or missing ?lang= falls through to the stored choice, then the browser', () => {

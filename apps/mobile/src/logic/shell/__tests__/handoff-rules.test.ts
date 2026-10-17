@@ -73,25 +73,26 @@ describe('handoffTargetCode', () => {
 });
 
 describe('handoffUrl', () => {
-  it('no target opens the sign-in router; English adds no lang', () => {
-    expect(handoffUrl(null, 'en')).toBe('/signin');
-    expect(handoffUrl('/parent', 'en')).toBe('/parent');
+  it('no target opens the sign-in router; English hands off lang=en too', () => {
+    expect(handoffUrl(null, 'en')).toBe('/signin?lang=en');
+    expect(handoffUrl('/parent', 'en')).toBe('/parent?lang=en');
   });
 
-  it('appends lang for a UI locale that is not the default (F-I18N-001 hand-off)', () => {
+  it('appends lang for every UI locale (F-I18N-001 hand-off)', () => {
     expect(handoffUrl(null, 'ko')).toBe('/signin?lang=ko');
     expect(handoffUrl('/teach/space?id=sp_1', 'es')).toBe('/teach/space?id=sp_1&lang=es');
     expect(handoffUrl(APP_ROUTES.billing, 'es')).toBe('/account/billing?lang=es');
+    expect(handoffUrl(APP_ROUTES.billing, 'en')).toBe('/account/billing?lang=en');
   });
 
   it('replaces a lang the target already carries, keeping the rest of its query as written', () => {
     expect(handoffUrl('/parent?lang=ko&x=a%3Ab', 'es')).toBe('/parent?x=a%3Ab&lang=es');
   });
 
-  it('drops a lang the target carries for the default locale (the learner app speaks English now)', () => {
-    expect(handoffUrl('/parent?lang=ko', 'en')).toBe('/parent');
-    expect(handoffUrl('/teach/space?lang=ko&id=sp_1', 'en')).toBe('/teach/space?id=sp_1');
-    expect(handoffUrl('/teach/space?id=sp_1&', 'en')).toBe('/teach/space?id=sp_1');
+  it('replaces a lang the target carries with English when the learner app speaks English now', () => {
+    expect(handoffUrl('/parent?lang=ko', 'en')).toBe('/parent?lang=en');
+    expect(handoffUrl('/teach/space?lang=ko&id=sp_1', 'en')).toBe('/teach/space?id=sp_1&lang=en');
+    expect(handoffUrl('/teach/space?id=sp_1&', 'en')).toBe('/teach/space?id=sp_1&lang=en');
   });
 });
 
