@@ -7,7 +7,7 @@ import { useMemo, type CSSProperties, type ReactNode } from 'react';
 import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import type { PlanView } from '@/lib/console/api';
-import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, type LectureSource, type PickerChoice } from '@/lib/console/lecture';
+import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, type LectureSource } from '@/lib/console/lecture';
 import { applyToOutline, chooserKeys, consoleChooserGroups, outlineSelection } from '@/lib/console/lesson-picker';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
@@ -264,6 +264,25 @@ export function LectureOutlineSection({
 /** The Slides language select's default option: no language in the deck. */
 const SAME_AS_DEVICE = '';
 
+/**
+ * The hint under the Slides language select follows the choice (AMENDMENTS-LECTURE-V2 section
+ * 18.4): with Same as this device the deck carries no language, so a copied link opens in the
+ * language of the device that opens it; with a chosen language the deck carries it, so the slides
+ * show in it on every device. The chosen endonym is marked with its own language.
+ */
+function SlidesLanguageHint({ l, uiLocale }: { l: LectureMessages; uiLocale: UiLocale | null }): JSX.Element {
+  if (uiLocale === null) return <span data-testid="lecture-slides-language-hint">{l.options.languageHint}</span>;
+  const around = aroundSlot(l.options.languageHintChosen);
+  const meta = LOCALE_META[uiLocale];
+  return (
+    <span data-testid="lecture-slides-language-hint">
+      {around.before}
+      <span lang={meta.htmlLang}>{meta.endonym}</span>
+      {around.after}
+    </span>
+  );
+}
+
 export interface LectureOptionValues {
   romanization: RomanizationMode;
   strokeGuide: boolean;
@@ -327,36 +346,11 @@ export function LectureOptionsSection({
               ))}
             </select>
           </label>
-          <Muted>{l.options.languageHint}</Muted>
+          <Muted>
+            <SlidesLanguageHint l={l} uiLocale={value.uiLocale} />
+          </Muted>
         </>
       ) : null}
     </section>
-  );
-}
-
-export function LecturePickerSection({
-  offered,
-  value,
-  anonymized,
-  onChange,
-}: {
-  offered: readonly PickerChoice[];
-  value: PickerChoice;
-  anonymized: boolean;
-  onChange: (next: PickerChoice) => void;
-}): JSX.Element {
-  const l = useMessages().console.lecture;
-  return (
-    <fieldset style={fieldsetStyle}>
-      <legend style={legendStyle}>{l.picker.title}</legend>
-      {offered.map((mode) => (
-        <label key={mode} style={choiceStyle}>
-          <input type="radio" name="picker" checked={value === mode} onChange={() => onChange(mode)} />
-          {l.picker.mode[mode]}
-        </label>
-      ))}
-      {anonymized ? <Muted>{l.picker.hidden}</Muted> : null}
-      {value === 'names' || value === 'initials' ? <Notice>{l.picker.privacy}</Notice> : null}
-    </fieldset>
   );
 }

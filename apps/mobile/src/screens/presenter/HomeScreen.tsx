@@ -13,7 +13,8 @@ import { DisplayButton } from '../../components/DisplayButton';
  * mocks `home.html` and `home-empty.html`, README D2, D14, D19): Recent lessons
  * and Quick lesson on a teacher page in real pixels (not stage-scaled).
  *
- * Header: Hoya, the h1, the Aa button (the Display sheet: the device's one language and text size,
+ * Header: Back (top left, `common.buttons.back`; F-TCH-004 section 3.5 "History" rule 5: every screen has a way
+ * back), Hoya, the h1, the Aa button (the Display sheet: the device's one language and text size,
  * owner items 6 and 7; the presenter has no language of its own) and Keys and help. The page's
  * type follows the chosen text size (`useTypeScale`); slides keep their stage units. Below 900 px one column with Recent
  * first; from 900 px Recent left and Quick lesson right. Recent rows show the
@@ -33,6 +34,8 @@ export interface PresenterHomeProps {
   onDisplay?: () => void;
   /** Opens the Help overlay (PR 9); without it the Keys and help button is not drawn, so it never leads nowhere. */
   onHelp?: () => void;
+  /** Leaves the presenter for the page before it (`leavePresenter`); without it Back is not drawn. */
+  onBack?: () => void;
   recent: RecentState;
   onResume: (item: RecentItem) => void;
   onStartOver: (item: RecentItem) => void;
@@ -172,6 +175,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
       >
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
+            {props.onBack ? <HomeButton label={messages.common.buttons.back} onPress={props.onBack} compact testID="presenter-home-back" /> : null}
             <Hoya pose="waving" size={touchTarget.min} />
             <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(ts.title, 'bold', colors.text.primary), flexShrink: 1 }}>
               {m.home.title}

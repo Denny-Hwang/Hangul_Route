@@ -1,10 +1,10 @@
-import { LECTURE_CONSOLE_ORIGINS, type LectureDeck } from '@hangul-route/content-schema';
+import type { HistoryEntry } from '../logic/lecture/history';
 import type { KeyCommand } from '../logic/lecture/keymap';
 
 /**
  * Native stub of the presenter platform layer (F-TCH-004 section 3.1): the presenter is a root of
- * the learner web build only, so a native build never presents, has no address to read a deck
- * from and no opener to hand names over. Every call is a no-op with the web variant's surface
+ * the learner web build only, so a native build never presents and has no address to read a deck
+ * from. Every call is a no-op with the web variant's surface
  * (`presenter.web.ts`).
  */
 
@@ -20,7 +20,9 @@ export interface DeckAddress {
   fresh?: true;
 }
 
-export function takeDeckFragment(): DeckAddress | null {
+export type { HistoryEntry } from '../logic/lecture/history';
+
+export function takeDeckFragment(_env?: unknown, _accepts?: (raw: string) => boolean): DeckAddress | null {
   return null;
 }
 
@@ -36,6 +38,39 @@ export function holdOpenDeck(_raw: string, _options: { fresh?: boolean } = {}): 
   // No history on native.
 }
 
+/** The presenter's history entries (F-TCH-004 section 3.5 "History"); web only. */
+export function currentPresenterEntry(): HistoryEntry | null {
+  return null;
+}
+
+export function presenterHomeBack(): boolean {
+  return false;
+}
+
+export async function pushPresenterEntry(_step: 'ready' | 'running', _raw: string | null, _options: { fresh?: boolean } = {}): Promise<void> {
+  // No history on native.
+}
+
+export async function returnToPresenterHome(): Promise<void> {
+  // No history on native.
+}
+
+export async function clearPresenterForward(): Promise<void> {
+  // No history on native.
+}
+
+export async function stepBackPresenter(): Promise<void> {
+  // No history on native.
+}
+
+export function subscribePresenterPop(_handler: (landed: HistoryEntry | null) => void): () => void {
+  return () => undefined;
+}
+
+export function leavePresenter(): void {
+  // A native build never presents.
+}
+
 /** The stale-presenter update check (AMENDMENTS-LECTURE-V2 section 4.5); web only. */
 export async function checkForUpdate(): Promise<void> {}
 
@@ -43,22 +78,6 @@ export async function checkForUpdate(): Promise<void> {}
 export async function reloadForUpdate(_raw: string): Promise<void> {}
 
 export function reloadOnDeckLink(): () => void {
-  return () => undefined;
-}
-
-export function presenterConsoleOrigins(_extraCsv?: string): readonly string[] {
-  return [...LECTURE_CONSOLE_ORIGINS];
-}
-
-export function hasOpener(): boolean {
-  return false;
-}
-
-export function announceReady(_deck: Pick<LectureDeck, 'id' | 'picker'>): number {
-  return 0;
-}
-
-export function listenForRoster(_deck: Pick<LectureDeck, 'id' | 'picker'>, _onRoster?: () => void): () => void {
   return () => undefined;
 }
 
@@ -79,6 +98,10 @@ export function rememberFocus(): () => void {
 }
 
 export function subscribeActivity(_handler: () => void): () => void {
+  return () => undefined;
+}
+
+export function subscribeInputKind(_handler: (kind: 'pointer' | 'key') => void): () => void {
   return () => undefined;
 }
 

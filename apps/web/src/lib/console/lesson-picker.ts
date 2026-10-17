@@ -29,6 +29,7 @@ import { catalogTitle } from '@/data/catalog';
 import { CATALOGUE_TITLES } from '@/data/catalogue-titles.generated';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { SpaceCoverage } from './curriculum';
+import { vocabMinutes } from './lecture';
 import { ROUTES } from './routing';
 
 /**
@@ -49,7 +50,7 @@ const koTitle = (id: string): string | null => CATALOGUE_TITLES.ko?.[id] ?? null
 
 /** The groups the console draws for a use, in `locale`; `stages` narrows the stage groups (default every stage). */
 export function consoleChooserGroups(locale: UiLocale, use: PickerUse, stages?: readonly StageKey[]): ChooserGroup[] {
-  return chooserGroups({
+  const groups = chooserGroups({
     catalog: CATALOG,
     title: (id) => catalogTitle(id, locale),
     koTitle,
@@ -57,6 +58,18 @@ export function consoleChooserGroups(locale: UiLocale, use: PickerUse, stages?: 
     stories: use === 'lecture' ? LECTURE_STORIES.map((s) => s.id) : null,
     topics: use === 'lecture' ? LECTURE_VOCAB_TOPICS.map((t) => t.id) : null,
   });
+  return use === 'lecture' ? groups.map(withLectureTopicMinutes) : groups;
+}
+
+/**
+ * The lecture catalogue's word topic rows say the minutes the outline counts for the added block
+ * (rule 12 as amended, AMENDMENTS-LECTURE-V2 4.4, LV-M1: `vocabMinutes`, word cards by two plus the
+ * meaning quiz), not the catalogue's flat topic minutes; a topic the lecture mirror does not know
+ * keeps its catalogue minutes. Other groups and rows are unchanged.
+ */
+export function withLectureTopicMinutes(group: ChooserGroup): ChooserGroup {
+  if (group.id !== 'topics') return group;
+  return { ...group, rows: group.rows.map((row) => (row.kind === 'topic' ? { ...row, minutes: vocabMinutes(row.key) ?? row.minutes } : row)) };
 }
 
 /**

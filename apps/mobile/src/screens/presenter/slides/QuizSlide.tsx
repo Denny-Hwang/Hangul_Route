@@ -1,6 +1,6 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Hoya, Icon, colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -42,20 +42,25 @@ export function QuizSlide({
 }): React.ReactElement {
   const { unit } = usePresenterView();
   const revealed = shown.has('answer');
+  // Options whose meanings still spill out of their cards at body size (a long gloss on a phone's
+  // small stage) take room from the asked word: it drops from display to prompt size.
+  const [crowded, setCrowded] = useState(false);
+  useEffect(() => setCrowded(false), [unit]);
+  const crowd = useCallback(() => setCrowded(true), []);
   return (
     <View testID="presenter-quiz" style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER), minHeight: units(unit, QUIZ_ANSWER_HOYA) }}>
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Question slide={slide} sayIt={sayIt} onPlaySound={onPlaySound} />
+          <Question slide={slide} sayIt={sayIt} onPlaySound={onPlaySound} crowded={crowded} />
         </View>
         <AnswerLine shown={revealed} />
       </View>
-      <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} />
+      <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} onCrowded={crowd} />
     </View>
   );
 }
 
-function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boolean; onPlaySound: () => void }): React.ReactElement | null {
+function Question({ slide, sayIt, onPlaySound, crowded }: { slide: QuizBody; sayIt: boolean; onPlaySound: () => void; crowded: boolean }): React.ReactElement | null {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.quiz;
@@ -77,7 +82,7 @@ function Question({ slide, sayIt, onPlaySound }: { slide: QuizBody; sayIt: boole
     );
   }
   if (prompt.ask === 'meaning') {
-    const display = size(presenter.size.display);
+    const display = size(crowded ? presenter.size.prompt : presenter.size.display);
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: units(unit, spacing.xl) }}>
         {heading(messages.learner.minigame.cultureQuiz.heading)}

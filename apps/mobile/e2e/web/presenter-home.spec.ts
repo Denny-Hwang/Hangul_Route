@@ -24,7 +24,6 @@ const deck = (id: string, title: string) => ({
   seed: 7,
   blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
   options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: true },
-  picker: { mode: 'numbers', count: 12 },
 });
 
 const today = new Date().toISOString();

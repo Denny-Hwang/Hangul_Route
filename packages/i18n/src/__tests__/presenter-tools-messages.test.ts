@@ -30,7 +30,7 @@ function rendered(locale: UiLocale, root: 'learner.presenter' | 'a11y.presenter'
 }
 
 const en = getMessages('en');
-const OWN = ['blank.', 'pause.', 'picker.', 'timer.', 'help.', 'grid.title', 'grid.hint', 'grid.now', 'grid.hidden', 'grid.hide.', 'grid.show.'];
+const OWN = ['blank.', 'pause.', 'timer.', 'help.', 'grid.title', 'grid.hint', 'grid.now', 'grid.hidden', 'grid.hide.', 'grid.show.'];
 const OWN_EXACT = ['bar.noVoice', 'bar.offline', 'bar.update', 'quiz.answer', 'quiz.sound', 'quiz.oddOneOut', 'slide.sayIt'];
 const learnerPaths = leafPaths(en.learner.presenter).filter((p) => OWN_EXACT.includes(p) || OWN.some((prefix) => p.startsWith(prefix)));
 const a11yPaths = ['answerMark', 'timerLeft'];
@@ -38,12 +38,9 @@ const a11yPaths = ['answerMark', 'timerLeft'];
 describe('learner.presenter class tools (F-TCH-004 PR 9)', () => {
   it('has the README keys with their English values', () => {
     const p = en.learner.presenter;
-    expect(learnerPaths).toHaveLength(59);
+    expect(learnerPaths).toHaveLength(49);
     expect(p.quiz.sound).toBe('Which letter makes this sound?');
     expect(p.quiz.answer).toBe("Hoya's answer");
-    expect(p.picker.title).toBe("Who's helping next?");
-    expect(p.picker.empty).toBe('Everyone has had a turn');
-    expect(p.picker.another.cta).toBe('Another');
     expect(p.timer.done).toBe('All done!');
     expect(p.timer.minutes(3)).toBe('3 min');
     expect(p.timer.seconds(30)).toBe('30 s');
@@ -60,10 +57,22 @@ describe('learner.presenter class tools (F-TCH-004 PR 9)', () => {
   it('has the Spanish values of the README table', () => {
     const es = getMessages('es');
     expect(es.learner.presenter.quiz.sound).toBe('¿Qué letra hace este sonido?');
-    expect(es.learner.presenter.picker.empty).toBe('Ya participaron todos');
     expect(es.learner.presenter.blank.line).toBe('¡Miren aquí!');
     expect(es.learner.presenter.timer.reset.cta).toBe('Reiniciar');
     expect(es.a11y.presenter.timerLeft('2:45')).toBe('Tiempo que queda: 2:45');
+  });
+
+  it('has no helper picker keys in any locale (LV-H)', () => {
+    for (const locale of LOCALES) {
+      const p = getMessages(locale).learner.presenter as Record<string, unknown>;
+      expect(p.picker, locale).toBeUndefined();
+      expect((p.bar as Record<string, unknown>).picker, locale).toBeUndefined();
+      expect((p.start as Record<string, unknown>).picker, locale).toBeUndefined();
+      expect(((p.help as Record<string, unknown>).row as Record<string, unknown>).picker, locale).toBeUndefined();
+      const lecture = getMessages(locale).console.lecture as Record<string, unknown>;
+      expect(lecture.picker, locale).toBeUndefined();
+      expect(lecture.copyNoNames, locale).toBeUndefined();
+    }
   });
 
   it('gives every key its own es and ko value, never the English', () => {
