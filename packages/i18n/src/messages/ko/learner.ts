@@ -1636,6 +1636,11 @@ export const learner = {
       voiceLocal: (name: string) => `한국어 음성: ${name} (이 기기)`,
       voiceNetwork: (name: string) => `한국어 음성: ${name} (인터넷 사용)`,
       voiceNone: '이 기기에는 한국어 음성이 없어요. 소리는 직접 읽어 주세요. 슬라이드에 소리가 글자로 나와요.',
+      testSound: {
+        cta: '소리 확인',
+        played: '들렸나요? 안 들리면 볼륨을 올려 주세요.',
+        failed: '여기서는 소리가 나지 않았어요. 낱말을 직접 읽어 주세요.',
+      },
       fullscreen: '시작하면 전체 화면이 돼요',
       fullscreenNone: '이 브라우저는 전체 화면이 안 돼요. 수업은 그대로 할 수 있어요.',
       awake: '수업 중에는 화면이 꺼지지 않아요',
