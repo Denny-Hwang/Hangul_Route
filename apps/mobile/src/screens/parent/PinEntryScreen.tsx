@@ -67,8 +67,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  */
 
 const DOT_SIZE = 20;
-/** First-frame guess for the block under the header (the subtitle or the hint) until it is measured. */
-const HEADER_ESTIMATE = 72;
+/** First-frame guess for the block under the header (the subtitle or the hint, about two lines) until it is measured. */
+const HEADER_ESTIMATE = touchTarget.min + spacing.sm;
 /** First-frame guess for the route's ScreenHeader (Close and Aa: one touch target) until it is measured. */
 const SCREEN_HEADER_ESTIMATE = touchTarget.min + spacing.sm;
 /**
