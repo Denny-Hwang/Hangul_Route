@@ -171,6 +171,7 @@ export const consoleMsgs = {
       note: '반에 참여하기 화면이 이 코드가 채워진 채로 열려요. 링크에는 코드만 있고 이름은 없어요.',
       copy: { cta: '링크 복사' },
       copied: { cta: '링크 복사됨' },
+      copyFailed: '복사하지 못했어요. 위의 링크를 선택해서 복사해요.',
       qr: {
         show: { cta: 'QR 코드 보기' },
         hide: { cta: 'QR 코드 숨기기' },

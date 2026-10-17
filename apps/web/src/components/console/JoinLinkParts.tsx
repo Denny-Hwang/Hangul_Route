@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { Messages } from '@hangul-route/i18n';
 import { useId, useMemo, useState } from 'react';
 import { buttonBase } from '@/components/console/ui';
@@ -20,19 +20,21 @@ const QR_SIDE = touchTarget.min * 4;
  * the QR specification asks for, so a phone camera reads it on a screen, a projector or a printout.
  */
 export function JoinLinkPanel({ url, copy, centered = false }: { url: string; copy: JoinLinkCopy; centered?: boolean }): JSX.Element {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [qrOpen, setQrOpen] = useState(false);
   const qrId = useId();
   const doCopy = async (): Promise<void> => {
     try {
+      // No clipboard (an old browser, a page not in a secure context) throws here too.
       await navigator.clipboard.writeText(url);
-      setCopied(true);
+      setCopyState('copied');
     } catch {
-      setCopied(false);
+      setCopyState('failed');
     }
   };
+  const border = `${borderWidth.thin}px solid ${colors.border.subtle}`;
   return (
-    <div data-testid="join-link" style={{ marginTop: spacing.md, paddingTop: spacing.md, borderTop: `1px solid ${colors.border.subtle}` }}>
+    <div data-testid="join-link" style={{ marginTop: spacing.md, paddingTop: spacing.md, borderTop: border }}>
       <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted, textTransform: 'uppercase' }}>{copy.title}</div>
       <p data-testid="join-link-url" style={{ margin: `${spacing.xs}px 0`, fontFamily: typography.family.mono, fontSize: rem(typography.size.body), overflowWrap: 'anywhere', color: colors.text.primary }}>
         {joinLinkText(url)}
@@ -40,7 +42,7 @@ export function JoinLinkPanel({ url, copy, centered = false }: { url: string; co
       <p style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm), margin: `0 0 ${spacing.sm}px` }}>{copy.note}</p>
       <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap', justifyContent: centered ? 'center' : 'flex-start' }}>
         <button type="button" data-testid="join-link-copy" onClick={() => void doCopy()} style={{ ...buttonBase, minHeight: touchTarget.min }}>
-          {copied ? copy.copied.cta : copy.copy.cta}
+          {copyState === 'copied' ? copy.copied.cta : copy.copy.cta}
         </button>
         <button
           type="button"
@@ -53,6 +55,11 @@ export function JoinLinkPanel({ url, copy, centered = false }: { url: string; co
           {qrOpen ? copy.qr.hide.cta : copy.qr.show.cta}
         </button>
       </div>
+      {/* Always in the page, so a screen reader hears the copy's outcome when its text arrives (the button's own label
+          change is not reliably announced); a failed copy says to copy the link printed above. */}
+      <p role="status" aria-live="polite" data-testid="join-link-status" style={{ margin: `${spacing.xs}px 0 0`, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>
+        {copyState === 'copied' ? copy.copied.cta : copyState === 'failed' ? copy.copyFailed : null}
+      </p>
       <div id={qrId} hidden={!qrOpen}>
         {qrOpen ? <JoinLinkQr url={url} label={copy.qr.label} caption={copy.qr.caption} centered={centered} /> : null}
       </div>
@@ -74,7 +81,7 @@ export function JoinLinkQr({ url, label, caption, centered = false }: { url: str
         width={QR_SIDE}
         height={QR_SIDE}
         shapeRendering="crispEdges"
-        style={{ maxWidth: '100%', height: 'auto', borderRadius: radii.md, border: `1px solid ${colors.border.subtle}` }}
+        style={{ maxWidth: '100%', height: 'auto', borderRadius: radii.md, border: `${borderWidth.thin}px solid ${colors.border.subtle}` }}
       >
         <rect width={view} height={view} fill={colors.surface.paper} />
         <path d={qrPath(modules)} fill={colors.text.primary} />

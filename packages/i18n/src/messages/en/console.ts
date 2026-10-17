@@ -236,6 +236,8 @@ export const consoleMsgs = {
       note: 'It opens Join a class with this code filled in. It holds the code only, never a name.',
       copy: { cta: 'Copy link' },
       copied: { cta: 'Link copied' },
+      /** The clipboard refused (an old browser, or no permission): the link is printed above the buttons. */
+      copyFailed: "Couldn't copy. Select the link above and copy it.",
       qr: {
         show: { cta: 'Show QR code' },
         hide: { cta: 'Hide QR code' },

@@ -76,6 +76,11 @@ describe('JoinLinkPanel', () => {
     });
     expect(writeText).toHaveBeenCalledWith(URL_);
     expect(textOf(byTestId(root, 'join-link-copy')[0] as ReactTestInstance)).toBe(copyOf('en').copied.cta);
+    // A polite live line says it too (a button's own label change is not reliably announced).
+    const status = byTestId(root, 'join-link-status')[0] as ReactTestInstance;
+    expect(status.props.role).toBe('status');
+    expect(status.props['aria-live']).toBe('polite');
+    expect(textOf(status)).toBe(copyOf('en').copied.cta);
 
     vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn(async () => Promise.reject(new Error('denied'))) } });
     act(() => renderer?.unmount());
@@ -84,6 +89,18 @@ describe('JoinLinkPanel', () => {
       await (byTestId(again, 'join-link-copy')[0] as ReactTestInstance).props.onClick();
     });
     expect(textOf(byTestId(again, 'join-link-copy')[0] as ReactTestInstance)).toBe(copyOf('en').copy.cta);
+    // The refusal is said, with what to do instead: the link is printed above the buttons.
+    expect(textOf(byTestId(again, 'join-link-status')[0] as ReactTestInstance)).toBe(copyOf('en').copyFailed);
+  });
+
+  it.each(['es', 'ko'] as const)('%s: the refused copy is said in that language', async (locale) => {
+    vi.stubGlobal('navigator', {});
+    const root = mount(locale);
+    expect(textOf(byTestId(root, 'join-link-status')[0] as ReactTestInstance)).toBe('');
+    await act(async () => {
+      await (byTestId(root, 'join-link-copy')[0] as ReactTestInstance).props.onClick();
+    });
+    expect(textOf(byTestId(root, 'join-link-status')[0] as ReactTestInstance)).toBe(copyOf(locale).copyFailed);
   });
 
   it('centered on an empty class, where the code is written on the board', () => {

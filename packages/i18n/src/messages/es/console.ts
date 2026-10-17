@@ -195,6 +195,7 @@ export const consoleMsgs = {
       note: 'Abre Unirme a una clase con este código ya escrito. Solo lleva el código, nunca un nombre.',
       copy: { cta: 'Copiar enlace' },
       copied: { cta: 'Enlace copiado' },
+      copyFailed: 'No se pudo copiar. Selecciona el enlace de arriba y cópialo.',
       qr: {
         show: { cta: 'Mostrar código QR' },
         hide: { cta: 'Ocultar código QR' },
