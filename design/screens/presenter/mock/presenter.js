@@ -17,6 +17,6 @@
   var v = h.get('v');
   if (v) document.querySelectorAll('[data-v]').forEach(function (el) { el.hidden = el.getAttribute('data-v') !== v; });
   else document.querySelectorAll('[data-v]').forEach(function (el, i) { el.hidden = el.hasAttribute('data-v-default') ? false : true; });
-  if (h.get('bar') === 'hidden') document.querySelectorAll('.bar').forEach(function (el) { el.classList.add('hidden'); });
+  if (h.get('bar') === 'hidden') document.querySelectorAll('.bar, .cbar').forEach(function (el) { el.classList.add('hidden'); }); // .cbar: the phone's compact bar (2026-10-16)
   if (h.get('gray') === '1') document.documentElement.style.filter = 'grayscale(1)';
 })();

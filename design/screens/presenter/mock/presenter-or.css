@@ -1,0 +1,100 @@
+/*
+ * Owner report 2026-10-16 (docs/specs/AMENDMENTS-LECTURE-V2.md section 18, F-TCH-004 sections 3.5 and 3.6 as
+ * amended; design pass DN-0 of docs/specs/AMENDMENTS-DISPLAY-NAV.md): the phone stage with its floating
+ * compact bar, the rotate page, the phone start screen, the home's Back and Display (Aa) controls and the
+ * grouped Customize chooser with its sticky footer. Design mock, not shipped code. Loaded after presenter.css
+ * and presenter-v2.css; every value is a token of presenter.css's first :root block, or a constant named once
+ * below and listed in ../stage-and-bar.md "Phone" and ../presets.md "Constants (2026-10-16)".
+ */
+:root {
+  --phone-stage-min: 560px;        /* PHONE_STAGE_MIN: the phone gate (F-TCH-004 section 3.6), so 568 x 320 shows slides */
+  --next-min-phone: calc(var(--touch-min) * 1.5); /* the compact bar's Next / Reveal: 1.5 x touchTarget.min, as the docked bar's 1.5 x hero */
+  --mock-inset-side: 47px;         /* mock only: a notched phone's landscape safe-area inset (left and right) */
+  --mock-inset-bottom: 21px;       /* mock only: the home indicator's landscape safe-area inset */
+  --sheet-max: var(--max-width-reading); /* the More sheet and the chooser never grow past the reading width */
+}
+
+/* ---------------------------------------------------------------- Phone stage (F-TCH-004 section 3.6) */
+/* Band 0: the stage box is the window minus the safe-area insets (padding on the size container, so the */
+/* container units, and with them --u, measure the box inside the insets).                              */
+.presenter.phone { --inset-l: var(--spacing-none); --inset-r: var(--spacing-none); --inset-b: var(--spacing-none); }
+.presenter.phone.notch { --inset-l: var(--mock-inset-side); --inset-r: var(--mock-inset-side); --inset-b: var(--mock-inset-bottom); }
+.presenter.phone .stage-box { padding: var(--spacing-none) var(--inset-r) var(--inset-b) var(--inset-l); }
+.presenter.phone .stage-btn { min-width: max(var(--touch-min), calc(var(--u) * var(--touch-n-hero))); min-height: max(var(--touch-min), calc(var(--u) * var(--touch-n-hero))); }
+.presenter.phone .stage-btn svg { width: max(calc(var(--touch-min) / 2), calc(var(--u) * var(--spacing-n-xxxl))); height: max(calc(var(--touch-min) / 2), calc(var(--u) * var(--spacing-n-xxxl))); }
+
+/* The compact bar floats over the stage bottom (real pixels); it fades out after presenter.autoHideMs.    */
+.cbar { position: absolute; left: var(--spacing-sm); right: var(--spacing-sm); width: max-content; margin-inline: auto; bottom: calc(var(--inset-b, var(--spacing-none)) + var(--spacing-sm)); z-index: var(--z-raised); display: flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-sm); background: var(--colors-surface-sunken); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); }
+.cbar.hidden { opacity: 0; } /* the slide under it is drawn in full: nothing moves when it hides or shows */
+.cbar .ctl { flex-direction: row; min-width: var(--touch-min); min-height: var(--touch-min); max-width: none; padding: var(--spacing-xs) var(--spacing-md); gap: var(--spacing-xs); }
+.cbar .ctl.primary { min-width: var(--next-min-phone); }
+.cbar .ctl .icon { width: var(--spacing-xl); height: var(--spacing-xl); }
+
+/* More: a sheet over the stage; the slide stays underneath (overlay-style, real pixels).                 */
+.more-sheet { position: absolute; left: var(--spacing-sm); right: var(--spacing-sm); margin-inline: auto; bottom: calc(var(--inset-b, var(--spacing-none)) + var(--spacing-sm)); z-index: var(--z-modal); max-width: var(--sheet-max); max-height: calc(100% - 2 * var(--spacing-sm)); overflow: auto; display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-md); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-strong); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); }
+.more-sheet .more-head { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.more-sheet h2 { font-size: var(--size-bodyLg); line-height: var(--leading-tight); }
+.more-sheet .more-grid { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.more-sheet .btn { min-height: var(--touch-min); min-width: var(--touch-min); font-size: var(--size-body); padding: var(--spacing-xs) var(--spacing-lg); }
+.more-sheet .chip { align-self: flex-start; }
+
+/* ---------------------------------------------------------------- Rotate page (an upright phone in a lesson) */
+.state .state-back { position: absolute; top: var(--spacing-md); left: var(--gutter-compact); }
+.state.rotate { position: relative; }
+.state.rotate .hoya-stage { width: calc(var(--touch-hero) * 1.5); height: calc(var(--touch-hero) * 1.5); } /* STATE_HOYA: 1.5 x touchTarget.hero, as every state page */
+
+/* ---------------------------------------------------------------- Teacher pages: Back and Display (Aa) */
+.top-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+.top-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); margin-left: auto; }
+.back-link { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) var(--spacing-xs); border-radius: var(--radii-pill); color: var(--colors-text-primary); font-size: var(--size-body); font-weight: var(--weight-bold); text-decoration: none; }
+.back-link:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--border-width-base); }
+.aa-btn { display: inline-flex; align-items: center; justify-content: center; min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); cursor: pointer; }
+.top-tools .btn { min-height: var(--touch-min); font-size: var(--size-body); padding: var(--spacing-xs) var(--spacing-lg); }
+
+/* ---------------------------------------------------------------- Phone start screen (F-TCH-004 section 3.5) */
+.start-phone { padding-bottom: var(--spacing-none); min-height: 100vh; }
+.start-phone .sticky-foot { margin-top: auto; } /* pinned to the window bottom when the page is short */
+.ready-line { display: flex; align-items: center; gap: var(--spacing-sm); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.ready-sub { color: var(--colors-text-secondary); font-size: var(--size-body); }
+.turn-hint { display: none; color: var(--colors-text-secondary); font-size: var(--size-body); padding: var(--spacing-sm) var(--spacing-md); background: var(--colors-surface-sunken); border-radius: var(--radii-md); }
+@media (orientation: portrait) { .turn-hint { display: block; } }
+.sticky-foot { position: sticky; bottom: var(--spacing-none); z-index: var(--z-sticky); display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm) var(--spacing-md); padding: var(--spacing-md) var(--spacing-none); background: var(--colors-surface-paper); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.sticky-foot .btn { min-height: var(--touch-min); font-size: var(--size-body); }
+.sticky-foot .btn.primary.grow { flex: 1 1 auto; min-height: var(--touch-hero); font-size: var(--size-title); }
+.sticky-foot .summary { flex: 1 1 auto; font-size: var(--size-body); color: var(--colors-text-primary); }
+
+/* ---------------------------------------------------------------- Grouped chooser (section 18.3) */
+.chooser { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.chooser h3.lead { font-size: var(--size-body); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.tabs { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.tab { min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-body); font-weight: var(--weight-semibold); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--colors-brand-primaryDark); border-color: var(--colors-brand-primaryDark); color: var(--colors-text-onPrimary); font-weight: var(--weight-bold); }
+.tabpanel { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.ep { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.ep-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--spacing-xs) var(--spacing-sm); }
+.ep-row .pick { flex: 1 1 14rem; }
+.ep-row .inside-btn { min-height: var(--touch-min); font-size: var(--size-body); padding: var(--spacing-xs) var(--spacing-md); }
+.inside { display: flex; flex-direction: column; gap: var(--spacing-xs); padding-left: var(--spacing-xl); border-left: var(--border-width-base) solid var(--colors-border-subtle); margin-left: var(--spacing-md); }
+.show-more { align-self: flex-start; min-height: var(--touch-min); font-size: var(--size-body); }
+.tray { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.tray h3 { font-size: var(--size-body); font-weight: var(--weight-bold); }
+.tray-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.tray-row .n { font-weight: var(--weight-bold); min-width: var(--spacing-xl); }
+.tray-row .t { flex: 1 1 8rem; min-width: 0; overflow-wrap: anywhere; }
+.tray-row .m { color: var(--colors-text-primary); font-size: var(--size-body); }
+.tray-row .icon-btn { margin-left: auto; }
+.tray-row .icon-btn { flex: none; }
+.tray-empty { color: var(--colors-text-secondary); font-size: var(--size-body); padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-base) dashed var(--colors-border-strong); border-radius: var(--radii-md); }
+
+/* The hidden attribute wins over the display rules above (mock states toggle it). */
+.more-sheet[hidden], .col[hidden], .tabpanel[hidden], .inside[hidden] { display: none; }
+
+/* The phone start screen: the Ready line and Details share a row; on a short window (layout.shortHeight, 480 */
+/* px: a phone sideways) the title steps down to size.title, gaps to spacing.md and Start to touchTarget.child, */
+/* so the Ready line stays above the sticky footer at 640 x 360. A media query cannot read a custom property.   */
+.ready-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm) var(--spacing-md); }
+@media (max-height: 480px) {
+  .start-phone { gap: var(--spacing-md); padding-top: var(--spacing-sm); }
+  .start-phone h1 { font-size: var(--size-title); }
+  .start-phone .sticky-foot .btn.primary.grow { min-height: var(--touch-child); }
+}
