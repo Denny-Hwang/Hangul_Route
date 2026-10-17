@@ -4,6 +4,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardChild, onboardSelf, openLettersEpisode, readStored, seedStored, waitForSaved } from './helpers';
 import { shot } from './shots';
+import { closeInstallGuide, expectNoSidewaysScroll, expectTextFits } from './text-fit';
 
 /**
  * Owner items 6 and 7: one UI language per device (and per account), and a text size on every page,
@@ -78,51 +79,6 @@ async function openProfileDisplay(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByTestId('profile-display-row').click();
   await expect(page.getByTestId('display-sheet')).toBeVisible();
-}
-
-/**
- * No sideways scroll and no text past the window's edge. The page is never wider than the window
- * (measured against the emulated viewport's width, not `innerWidth`, which a mobile browser widens
- * to fit a page that overflows). And because react-native-web's vertical ScrollView clips its
- * content sideways (`overflow-x: hidden`), so a line laid out too wide never reaches the document's
- * scroll width, every line of text on the page is measured too: each one must sit inside the
- * window, unless it is inside a row that scrolls sideways by design.
- */
-async function expectNoSidewaysScroll(page: Page, where: string): Promise<void> {
-  const viewport = page.viewportSize()!.width;
-  const widths = await page.evaluate(() => ({ html: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
-  expect(Math.max(widths.html, widths.body), `${where}: ${JSON.stringify(widths)} > ${viewport}`).toBeLessThanOrEqual(viewport);
-  const outside = await page.evaluate((vw) => {
-    const scrollsSideways = (el: Element | null): boolean => {
-      for (let p = el; p; p = p.parentElement) {
-        const cs = getComputedStyle(p);
-        if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && p.scrollWidth > p.clientWidth + 1) return true;
-      }
-      return false;
-    };
-    const out: string[] = [];
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const text = (node.textContent ?? '').trim();
-      const el = node.parentElement;
-      if (text === '' || !el || getComputedStyle(el).visibility === 'hidden') continue;
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      for (const r of Array.from(range.getClientRects())) {
-        if (r.width <= 1 || r.height <= 1) continue;
-        if ((r.right > vw + 1 || r.left < -1) && !scrollsSideways(el)) out.push(`"${text.slice(0, 40)}" at ${Math.round(r.left)}..${Math.round(r.right)}`);
-      }
-    }
-    return out;
-  }, viewport);
-  expect(outside, `${where}: text past the ${viewport} px window`).toEqual([]);
-}
-
-/** The install guide's Not now, if it opens. */
-async function closeInstallGuide(page: Page): Promise<void> {
-  const guide = page.getByTestId('install-guide');
-  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
 }
 
 /** A learner on Home with the device's text size at Largest (the record, as the Display sheet writes it). */
@@ -348,9 +304,9 @@ test.describe('text size Largest at 360 x 640', () => {
 test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-NAV section 4)', () => {
   test.use({ viewport: { width: 320, height: 568 } });
 
-  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the four tabs, Profile and the open Display sheet: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
-    await expectNoSidewaysScroll(page, 'Home');
+    await expectTextFits(page, 'Home');
     await shot(page, 'or67-home-largest-320x568');
     const tabs = page.getByRole('tablist').getByRole('link');
     await expect(tabs).toHaveCount(4);
@@ -361,29 +317,29 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     ] as const) {
       await tabs.nth(index).click();
       await page.waitForTimeout(400);
-      await expectNoSidewaysScroll(page, name);
+      await expectTextFits(page, name);
       await shot(page, `or67-${name.toLowerCase()}-largest-320x568`);
     }
     await tabs.nth(0).click();
     await page.getByRole('button', { name: 'Profile and settings' }).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'Profile');
+    await expectTextFits(page, 'Profile');
     await page.getByTestId('profile-display-row').click();
     await expect(page.getByTestId('display-sheet')).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Display sheet');
+    await expectTextFits(page, 'the Display sheet');
     await shot(page, 'or67-display-sheet-largest-320x568');
   });
 
-  test('the quest player\'s first steps: no sideways scroll, no text past the edge', async ({ page }) => {
+  test('the quest player\'s first steps: no sideways scroll, no text past the edge or clipped', async ({ page }) => {
     await learnerAtLargest(page);
     await openLettersEpisode(page);
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
     await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the quest intro');
+    await expectTextFits(page, 'the quest intro');
     await shot(page, 'or67-quest-intro-largest-320x568');
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-    await expectNoSidewaysScroll(page, 'the Discover step');
+    await expectTextFits(page, 'the Discover step');
     await shot(page, 'or67-quest-discover-largest-320x568');
   });
 });

@@ -1,5 +1,5 @@
 import { CATALOG, freeLessonsFacts } from '@hangul-route/content-schema';
-import { Body, Button, Caption, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Body, Button, Caption, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -54,6 +54,7 @@ function freeBundleFacts(): { facts: FreePlanContext['facts']; stories: number; 
  * grown-up area's own PIN screen first, which hands off after a correct PIN.
  */
 export function PaywallScreen({ navigation, route }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const { audience } = useAudience();
   const messages = useMessages();
   const profile = useProfileStore(activeProfileSelector);
@@ -173,9 +174,9 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
           accessibilityRole="header"
           accessibilityLabel={view.summary}
           style={{
-            fontSize: typography.size.prompt,
+            fontSize: textScale.size.prompt,
             fontWeight: typography.weight.bold,
-            lineHeight: typography.size.prompt * typography.leading.tight,
+            lineHeight: textScale.size.prompt * typography.leading.tight,
             color: colors.text.primary,
             textAlign: 'center',
           }}

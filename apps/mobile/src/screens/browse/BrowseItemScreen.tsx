@@ -1,5 +1,5 @@
 import { APP_ROUTES, type StageKey, type StoryLevel } from '@hangul-route/content-schema';
-import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -272,11 +272,12 @@ function ItemHeader({ facts }: { facts: ItemFacts }): React.ReactElement {
 
 /** One row of "What this teaches": the label above its value on phones, an 8rem label column from the regular class. */
 function FactRow({ label, children, testID }: { label: string; children: React.ReactNode; testID?: string }): React.ReactElement {
+  const textScale = useTypeScale();
   const compact = useLayoutClass().width === 'compact';
   return (
     <View testID={testID} style={{ flexDirection: compact ? 'column' : 'row', gap: compact ? spacing.xs : spacing.md, paddingVertical: spacing.sm }}>
       <View style={compact ? undefined : { width: LABEL_COLUMN }}>
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{label}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{label}</Text>
       </View>
       <View style={{ flex: compact ? undefined : 1 }}>{children}</View>
     </View>
@@ -355,6 +356,7 @@ function StoryRows({
   /** [ See the sources ]: the sources page, copy-only links (section 4.7). */
   onSources: () => void;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   const m = useMessages().caregiver.browse;
   const scenes = facts.levels.find((l) => l.level === level)?.scenes ?? 0;
   return (
@@ -381,7 +383,7 @@ function StoryRows({
                   borderWidth: focused ? borderWidth.thick : borderWidth.base,
                 })}
               >
-                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: selected ? colors.text.onPrimary : colors.text.primary }}>{m.facts.level[LEVEL_KEY[l.level]]}</Text>
+                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.semibold, color: selected ? colors.text.onPrimary : colors.text.primary }}>{m.facts.level[LEVEL_KEY[l.level]]}</Text>
               </Pressable>
             );
           })}

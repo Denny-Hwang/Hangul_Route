@@ -11,6 +11,7 @@ import {
   stagePrizeCards,
   symbolWall,
   wallTileLabel,
+  wallTileWidth,
 } from '../stage-complete';
 
 const m = getMessages('en');
@@ -171,5 +172,25 @@ describe('ceremony copy (D3, D5)', () => {
     expect(cta).not.toMatch(/[0-9]|%/u);
     expect(cta.toLowerCase()).not.toMatch(/premium|price|buy|upgrade|plan\b/u);
     expect(findBannedWord(cta, 'en', 'learner')).toBeNull();
+  });
+});
+
+describe('wallTileWidth: the wall grows with the text size and fills its rows (AMENDMENTS-DISPLAY-NAV section 4, DN-3b review)', () => {
+  it('Standard on a 320 phone: four tiles a row, about the touch target each', () => {
+    expect(wallTileWidth(288, 64, 8)).toBe(66);
+  });
+
+  it('Largest on a 320 phone: fewer, wider tiles that fill the row edge to edge', () => {
+    const width = wallTileWidth(288, 96, 8);
+    expect(width).toBeGreaterThanOrEqual(96);
+    const columns = Math.floor((288 + 8) / (96 + 8));
+    expect(columns * width + (columns - 1) * 8).toBeLessThanOrEqual(288);
+    expect(columns * (width + 1) + (columns - 1) * 8).toBeGreaterThan(288);
+  });
+
+  it('never narrower than the smallest tile, even in a row narrower than one tile; unlaid-out rows keep it', () => {
+    expect(wallTileWidth(40, 64, 8)).toBe(64);
+    expect(wallTileWidth(0, 64, 8)).toBe(64);
+    expect(wallTileWidth(Number.NaN, 64, 8)).toBe(64);
   });
 });

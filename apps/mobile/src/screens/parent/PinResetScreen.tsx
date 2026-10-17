@@ -11,7 +11,7 @@ import {
   radii,
   spacing,
   touchTarget,
-  typography,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
@@ -37,8 +37,8 @@ import { useSyncStore } from '../../store/sync-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinReset'>;
 
-/** The code field's text metrics, fixed so its height can be planned for the worst case (same as Restore). */
-const CODE_LINE_HEIGHT = Math.round(typography.size.bodyLg * 1.3);
+/** The code field's line height at the chosen text size (bodyLg x 1.3), so its height can be planned for the worst case. */
+const codeLineHeight = (fontSize: number): number => Math.round(fontSize * 1.3);
 const CODE_BORDER = 2;
 
 /**
@@ -48,6 +48,8 @@ const CODE_BORDER = 2;
  * stores, or wait 24 hours. Adult tone, nothing here teaches a child to try.
  */
 export function PinResetScreen({ route, navigation }: Props): React.ReactElement {
+  const textScale = useTypeScale();
+  const fieldLineHeight = codeLineHeight(textScale.size.bodyLg);
   const { next, profileId } = route.params;
   const locale = useLocale();
   const messages = useMessages();
@@ -176,14 +178,14 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
                 style={{
                   minHeight: Math.max(
                     touchTarget.child,
-                    codeRows * CODE_LINE_HEIGHT + 2 * spacing.sm + 2 * CODE_BORDER,
+                    codeRows * fieldLineHeight + 2 * spacing.sm + 2 * CODE_BORDER,
                   ),
                   paddingHorizontal: spacing.md,
                   paddingVertical: spacing.sm,
                   textAlign: 'center',
                   textAlignVertical: 'center',
-                  fontSize: typography.size.bodyLg,
-                  lineHeight: CODE_LINE_HEIGHT,
+                  fontSize: textScale.size.bodyLg,
+                  lineHeight: fieldLineHeight,
                   fontWeight: '700',
                   color: colors.text.primary,
                   backgroundColor: colors.surface.sunken,

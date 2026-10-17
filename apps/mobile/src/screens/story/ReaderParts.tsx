@@ -21,6 +21,7 @@ import {
   useLayoutClass,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { KoText, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
@@ -147,12 +148,13 @@ export function NarrationText({
   chipState: (keywordId: string) => TermChipState;
   onTerm: (keywordId: string) => void;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <Text {...KOREAN_LINE_BREAK}
       testID="story-reader-narration-text"
       style={{
-        fontSize: typography.size.bodyLg,
-        lineHeight: typography.size.bodyLg * typography.leading.relaxed,
+        fontSize: textScale.size.bodyLg,
+        lineHeight: textScale.size.bodyLg * typography.leading.relaxed,
         color: colors.text.primary,
       }}
     >
@@ -495,6 +497,7 @@ export function AdvisoryRow({
    */
   compact?: boolean;
 }): React.ReactElement {
+  const textScale = useTypeScale();
   return (
     <View testID="story-reader-advisory" style={{ marginTop: spacing.xs }}>
       <Card tone="sunken" padding="sm" elevation="flat">
@@ -504,8 +507,8 @@ export function AdvisoryRow({
             <Text {...KOREAN_LINE_BREAK}
               numberOfLines={compact ? ADVISORY_COMPACT_LINES : undefined}
               style={{
-                fontSize: typography.size.body,
-                lineHeight: typography.size.body * typography.leading.normal,
+                fontSize: textScale.size.body,
+                lineHeight: textScale.size.body * typography.leading.normal,
                 color: colors.text.secondary,
               }}
               testID="story-reader-advisory-text"

@@ -13,6 +13,7 @@ import {
   typography,
   useLayoutClass,
   KOREAN_LINE_BREAK,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -47,6 +48,7 @@ export interface EpisodeOutlineViewProps {
 }
 
 export function EpisodeOutlineView({ episodeId, onOpenItem, onOpenCard, asPane = false }: EpisodeOutlineViewProps): React.ReactElement | null {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse;
   const locale = useLocale();
@@ -72,7 +74,7 @@ export function EpisodeOutlineView({ episodeId, onOpenItem, onOpenCard, asPane =
   );
   const title = (
     <View accessibilityRole="header" aria-level={asPane ? 2 : 1}>
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>{episode.titleEn}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>{episode.titleEn}</Text>
     </View>
   );
 
@@ -194,13 +196,14 @@ export function EpisodeOutlineView({ episodeId, onOpenItem, onOpenCard, asPane =
 }
 
 function LessonRow({ row, number, closed, onOpen }: { row: OutlineQuestRow; number: number; closed: boolean; onOpen: () => void }): React.ReactElement {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse;
   return (
     <Card padding="md" testID={`browse-outline-${row.id}`}>
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
         <View style={{ width: DISC, height: DISC, borderRadius: radii.circle, backgroundColor: colors.surface.sunken, alignItems: 'center', justifyContent: 'center' }}>
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{number}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{number}</Text>
         </View>
         <View style={{ flex: 1, gap: spacing.xs }}>
           <Body weight="bold">{row.title}</Body>

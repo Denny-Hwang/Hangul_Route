@@ -1,5 +1,5 @@
 import type { StageKey } from '@hangul-route/content-schema';
-import { Body, Heading, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Body, Heading, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -36,6 +36,7 @@ const TRACK_H = spacing.xl;
 const THUMB = spacing.lg;
 
 export function BrowseHomeScreen({ route, navigation }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse;
   const { pass, lastPersona, online, gatingEnabled } = useBrowseSession();
@@ -100,7 +101,7 @@ export function BrowseHomeScreen({ route, navigation }: Props): React.ReactEleme
         <Heading level="title">{m.home.title}</Heading>
         {online ? null : (
           <View testID="browse-offline" style={{ paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs, borderRadius: radii.pill, backgroundColor: colors.surface.sunken }}>
-            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: typography.size.caption, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{m.home.offline}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.caption, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{m.home.offline}</Text>
           </View>
         )}
       </View>
@@ -144,7 +145,7 @@ export function BrowseHomeScreen({ route, navigation }: Props): React.ReactEleme
             testID="browse-pointer"
             style={({ focused }: FocusState) => ({ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radii.md, ...focusRing(focused) })}
           >
-            <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.brand.primary, textDecorationLine: 'underline' }}>{m.home.pointer}</Text>
+            <Text {...KOREAN_LINE_BREAK} style={{ flex: 1, fontSize: textScale.size.body, fontWeight: typography.weight.semibold, color: colors.brand.primary, textDecorationLine: 'underline' }}>{m.home.pointer}</Text>
             <Icon name="arrow-right" size={spacing.xl} color={colors.brand.primary} />
           </Pressable>
         </>

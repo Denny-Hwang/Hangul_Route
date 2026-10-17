@@ -1,4 +1,4 @@
-import { Body, Card, Icon, Pill, borderWidth, colors, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Body, Card, Icon, Pill, borderWidth, colors, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
@@ -28,6 +28,7 @@ export function NotesHomeCard({ gap }: { gap: 'after' | 'top' }): React.ReactEle
 
 /** `gap`: after the mission cards the space goes above the card; at the top of the right column, below it. */
 function NotesHomeCardInner({ gap }: { gap: 'after' | 'top' }): React.ReactElement | null {
+  const textScale = useTypeScale();
   const m = useMessages();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profileId, data, ctx } = useActiveNotes();
@@ -70,7 +71,7 @@ function NotesHomeCardInner({ gap }: { gap: 'after' | 'top' }): React.ReactEleme
             backgroundColor: colors.brand.primary,
           }}
         >
-          <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.inverse, fontSize: typography.size.body, fontWeight: typography.weight.bold }}>{home.read.cta}</Text>
+          <Text {...KOREAN_LINE_BREAK} style={{ color: colors.text.inverse, fontSize: textScale.size.body, fontWeight: typography.weight.bold }}>{home.read.cta}</Text>
         </View>
       </View>
     </Card>

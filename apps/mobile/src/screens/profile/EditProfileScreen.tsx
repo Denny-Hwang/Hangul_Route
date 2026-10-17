@@ -14,7 +14,7 @@ import {
   radii,
   spacing,
   touchTarget,
-  typography,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
@@ -64,6 +64,7 @@ const CHECKBOX_SIZE = spacing.xl + spacing.xs;
  * Rules live in logic/profiles/edit-profile (tested); this file paints them.
  */
 export function EditProfileScreen({ navigation, route }: Props): React.ReactElement {
+  const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.learner;
   const e = m.editProfile;
@@ -267,7 +268,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
           borderColor: colors.border.subtle,
           paddingHorizontal: spacing.lg,
           minHeight: touchTarget.child,
-          fontSize: typography.size.bodyLg,
+          fontSize: textScale.size.bodyLg,
           color: classDevice ? colors.text.secondary : colors.text.primary,
         }}
       />
