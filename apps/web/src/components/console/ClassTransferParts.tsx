@@ -12,6 +12,7 @@ import { canCancel, daysLeft, daysSince, isOpenTransfer, slotLabel, statusLine, 
 import { actionOutcome, canAgreeBoth, classMoveGroups, historyDate, ownAnswerWaits, retryShown, type ClassView } from '@/lib/console/transfer-requests';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
+import type { ConfirmAsk } from './ConfirmSheet';
 
 /**
  * The class requests page's body (F-SPACE-002 section 4.8 "Requests page", PR T-6b): *Leaving this class* (source)
@@ -37,8 +38,8 @@ export interface ClassMovesProps {
   readOnly: boolean;
   /** Classes this account owns or teaches directly (`directClassIds`), for Agree for both classes (T11). */
   direct: ReadonlySet<string>;
-  /** The regenerate flow's confirm (the roster's `window.confirm`). */
-  confirm: (question: string) => boolean;
+  /** The regenerate flow's confirm step (the page's `useConfirm`, the ConfirmSheet of AMENDMENTS-DISPLAY-NAV section 8). */
+  confirm: (ask: ConfirmAsk) => Promise<boolean>;
   onPageState: (state: ClassPageState) => void;
 }
 
@@ -504,7 +505,7 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
   };
 
   const newCode = async (): Promise<void> => {
-    if (!confirm(`${c.space.regenerateAsk(spaceName)} ${c.oldCodeStops}`)) return;
+    if (!(await confirm({ title: c.space.regenerateAsk(spaceName), message: c.oldCodeStops, confirmLabel: c.confirm.newCode }))) return;
     setBusy(true);
     setCodeFailed(false);
     const result = await api.regenerateCode(spaceId);

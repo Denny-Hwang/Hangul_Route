@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
@@ -20,6 +21,7 @@ import { addFrom, draftForAdd, withQuest } from '@/lib/console/plan-add';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import { headRem, rem } from '@/lib/console/rem';
 
 interface Draft {
@@ -42,6 +44,8 @@ function PlanInner(): JSX.Element {
   const spaceId = spaceIdFrom(params);
   const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const p = c.plan;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[] | null>(null);
@@ -217,9 +221,9 @@ function PlanInner(): JSX.Element {
   // every plan can be opened from it.
   const openPlanId = suggestedFor || addedNew ? null : (current?.id ?? null);
 
-  const select = (plan: PlanView): void => {
+  const select = async (plan: PlanView): Promise<void> => {
     if (plan.id === openPlanId) return;
-    if (editing && dirty && !window.confirm(c.curriculum.builder.discardEdits)) return;
+    if (editing && dirty && !(await confirm({ title: c.curriculum.builder.discardEdits, confirmLabel: c.confirm.discard }))) return;
     setSelectedId(plan.id);
     setNote(null);
     if (plan.publishedAt) {
@@ -232,7 +236,7 @@ function PlanInner(): JSX.Element {
   };
 
   const archive = async (): Promise<void> => {
-    if (!api || !current || !window.confirm(c.archivePlanConfirm)) return;
+    if (!api || !current || !(await confirm({ title: c.archivePlanConfirm, confirmLabel: c.confirm.archive }))) return;
     setBusy(true);
     const result = await api.archivePlan(spaceId, current.id);
     setBusy(false);
@@ -255,10 +259,8 @@ function PlanInner(): JSX.Element {
   const suggestNotice = suggestionNoticeShown(draft, suggestedFor) ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
 
   return (
-    <AdultFrame onSignOut={signOut} title={roster ? p.titleFor(roster.space.name) : p.title}>
-      <Muted>
-        <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{p.back(roster?.space.name ?? null)}</Link>
-      </Muted>
+    <AdultFrame onSignOut={signOut} back={spaceSubPageBack(spaceId, roster?.space.kind, p.back(roster?.space.name ?? null))} title={roster ? p.titleFor(roster.space.name) : p.title}>
+      {confirmSheet}
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {error ? (
         <div style={{ ...panelStyle, marginBottom: spacing.md }}>

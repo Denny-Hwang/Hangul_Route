@@ -122,8 +122,8 @@ describe('the stage list page, family case 1 (mock stage-list-family.html)', () 
   const html = render(v);
   const text = textOf(html);
 
-  it('reads top to bottom: back link, heading, updated date, the card, then "Stages" and the list', () => {
-    const order = [lr.back.family, lr.title('Sam'), lr.updated('Oct 11'), lr.now('Sam', 1, 'Hangul'), lr.stagesTitle, '1. Hangul'];
+  it('reads top to bottom: heading, updated date, the card, then "Stages" and the list (the way back is the frame\'s PageBack)', () => {
+    const order = [lr.title('Sam'), lr.updated('Oct 11'), lr.now('Sam', 1, 'Hangul'), lr.stagesTitle, '1. Hangul'];
     const at = order.map((s) => text.indexOf(s));
     for (const i of at) expect(i).toBeGreaterThanOrEqual(0);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
@@ -132,9 +132,9 @@ describe('the stage list page, family case 1 (mock stage-list-family.html)', () 
     expect(html).toMatch(/<h2[^>]*>Stages<\/h2>/);
   });
 
-  it('goes back to the space until the report exists, as a link at least touchTarget.min tall', () => {
+  it('goes back to the space until the report exists (the page hands view.back to the frame\'s PageBack)', () => {
     expect(v.back).toEqual({ href: ROUTES.space('space:fam', 'family'), text: lr.back.family });
-    expect(html).toMatch(/<a href="\/parent\/space\?id=space%3Afam" style="[^"]*min-height:64px/);
+    expect(html).not.toContain('href="/parent/space?id=space%3Afam"');
   });
 
   it('draws the card as a section labelled "Learning Route" with every line of case 1', () => {
@@ -168,7 +168,8 @@ describe('the stage list page, family case 1 (mock stage-list-family.html)', () 
     expect(text).not.toMatch(/\d+ ?\/ ?\d+|\bof \d|\b0 quests?\b|%/);
     expect(text).not.toContain('Preview lessons');
     expect(html).not.toMatch(/billing|\$\d/i);
-    expect(html.match(/<a /g)).toHaveLength(1);
+    // No link of its own: the way back is the frame's PageBack.
+    expect(html.match(/<a /g)).toBeNull();
   });
 });
 
@@ -182,12 +183,12 @@ describe('the stage list page, class case 2 (mock stage-list-class.html)', () =>
     expect(card).not.toContain('<hr');
   });
 
-  it('tags the plan goal and the start stage with their glyphs, and the back link reads "Back to the class"', () => {
+  it('tags the plan goal and the start stage with their glyphs, and the way back reads "Back to the class"', () => {
     const list = between(html, '<ol', '</ol>');
     const rows = list.split('<li').slice(1).map((r) => `<li${r}`);
     expect(textOf(rows[0] ?? '')).toBe(`1. Hangul · Known from the level check ${canDo[1]} 11 known from the level check ${lr.planGoalTag}`);
     expect(textOf(rows[1] ?? '')).toBe(`2. Words · A taste ${canDo[2]} 1 quest done ${lr.hereTag('Mina')} ${lr.startTag('Mina')}`);
-    expect(textOf(html)).toContain(lr.back.class);
+    expect(classCase2().back.text).toBe(lr.back.class);
   });
 });
 
@@ -244,30 +245,30 @@ describe('the grown-up route card, other cases (mock stage-list-states.html)', (
 });
 
 describe('page states (section 6.1, mock stage-list-states.html)', () => {
-  it('not synced yet: back link, heading and the notice, no card and no list, never "no progress"', () => {
+  it('not synced yet: heading and the notice, no card and no list, never "no progress"', () => {
     const v = build({ learners: [learner({ summary: null })] });
     const html = render(v);
-    expect(textOf(html)).toBe([lr.back.family, lr.title('Sam'), lr.updated('Oct 11'), lr.notSynced('Sam')].join(' '));
+    expect(textOf(html)).toBe([lr.title('Sam'), lr.updated('Oct 11'), lr.notSynced('Sam')].join(' '));
     expect(html).toContain('role="status"');
     expect(html).not.toContain('<ol');
     expect(html).not.toContain('<section');
     expect(textOf(html)).not.toMatch(/no progress/i);
   });
 
-  it('a learner not in this space: the message, then the back link, no heading and no other learner', () => {
+  it('a learner not in this space: the message, no heading and no other learner (the frame\'s PageBack is the way back)', () => {
     const v = build({ learnerId: 'learner:nobody', learners: [learner(), learner({ id: 'learner:mina', displayName: 'Mina' })] });
     const html = render(v);
-    expect(textOf(html)).toBe([lr.notFound, lr.back.family].join(' '));
+    expect(textOf(html)).toBe(lr.notFound);
+    expect(v.back.text).toBe(lr.back.family);
     expect(html).not.toContain('<h1');
     expect(html).not.toMatch(/Sam|Mina/);
   });
 
-  it('loading: the back link, then three placeholder rows, busy, with no other text', () => {
-    const html = renderToStaticMarkup(<LearningRouteLoading back={{ href: ROUTES.space('space:fam'), text: lr.back.space }} />);
+  it('loading: three placeholder rows, busy, with no text', () => {
+    const html = renderToStaticMarkup(<LearningRouteLoading />);
     expect(html).toContain('aria-busy="true"');
     expect(html.match(/data-testid="route-placeholder"/g)).toHaveLength(3);
-    expect(textOf(html)).toBe(lr.back.space);
-    expect(html).toContain(`href="${ROUTES.space('space:fam')}"`);
+    expect(textOf(html)).toBe('');
   });
 });
 
@@ -287,6 +288,6 @@ describe('every word from the dictionary (en-XA)', () => {
     );
     expectAllPseudo(render(family), data, 10);
     expectAllPseudo(render(build({ learners: [learner({ summary: null })] }, PSEUDO)), data, 3);
-    expectAllPseudo(render(build({ learnerId: 'learner:nobody' }, PSEUDO)), data, 2);
+    expectAllPseudo(render(build({ learnerId: 'learner:nobody' }, PSEUDO)), data, 1);
   });
 });

@@ -9,9 +9,10 @@ import { getMessages } from '../resolve';
 const c = en.console;
 
 describe('console.shell (the adult frame)', () => {
-  it('names the way back, the site links and the personas', () => {
-    expect(c.shell.backToLearning).toBe('Back to learning');
-    expect(c.shell.openLearnerApp).toBe('Open the learner app');
+  it('names the way to the learner app, the site links and the personas', () => {
+    // AMENDMENTS-DISPLAY-NAV section 7.3: one "Learner app" exit at the right; "Open the learner app" is retired.
+    expect(c.shell.backToLearning).toBe('Learner app');
+    expect((c.shell as Record<string, unknown>).openLearnerApp).toBeUndefined();
     expect(c.shell.aboutSite).toBe('About Hangul Route');
     expect(c.shell.privacy).toBe('Privacy');
     expect(c.shell.terms).toBe('Terms');

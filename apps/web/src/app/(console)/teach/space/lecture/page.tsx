@@ -17,6 +17,7 @@ import {
 } from '@/components/console/LectureParts';
 import { Button, Field, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { appUrl, lectureModeEnabled } from '@/lib/console/config';
@@ -39,7 +40,8 @@ import {
 import { answerReady, appOriginOf, openPresenter, type OpenedDeck } from '@/lib/console/lecture-link';
 import { dateKey } from '@/lib/console/plans';
 import { classRollup } from '@/lib/console/rollup';
-import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { headRem, rem } from '@/lib/console/rem';
 
@@ -61,6 +63,8 @@ function LectureInner(): JSX.Element {
   const { ready, session, api, signOut, m, locale } = useConsole();
   const { available } = useConsoleLocale();
   const c = m.console;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const l = c.lecture;
   const enabled = lectureModeEnabled();
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -146,16 +150,12 @@ function LectureInner(): JSX.Element {
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
-  const back = (
-    <Muted>
-      <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{l.back(roster?.space.name ?? null)}</Link>
-    </Muted>
-  );
+  // PageBack (AMENDMENTS-DISPLAY-NAV section 7.3): back to the space, on every state of the page.
+  const back = spaceSubPageBack(spaceId, roster?.space.kind, l.back(roster?.space.name ?? null));
 
   if (!enabled) {
     return (
-      <AdultFrame onSignOut={signOut} title={l.title}>
-        {back}
+      <AdultFrame onSignOut={signOut} back={back} title={l.title}>
         <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
         <Notice>{l.comingSoon}</Notice>
       </AdultFrame>
@@ -197,7 +197,7 @@ function LectureInner(): JSX.Element {
 
   const copy = async (): Promise<void> => {
     if (!roster || !canPresent) return;
-    if (hasCode && !window.confirm(l.copyHasCode)) return;
+    if (hasCode && !(await confirm({ title: l.copyHasCode, confirmLabel: c.confirm.copyAnyway }))) return;
     const link = linkFor(roster);
     if (!link.ok) {
       setNotice('linkFailed');
@@ -219,8 +219,8 @@ function LectureInner(): JSX.Element {
   };
   const add = (block: LectureBlock): void => edit([...blocks, block]);
 
-  const pickSource = (next: LectureSource): void => {
-    if (edited && blocks.length > 0 && !window.confirm(l.replaceOutline)) return;
+  const pickSource = async (next: LectureSource): Promise<void> => {
+    if (edited && blocks.length > 0 && !(await confirm({ title: l.replaceOutline, confirmLabel: c.confirm.replace }))) return;
     choose(next, { plan, revisit });
   };
 
@@ -232,8 +232,8 @@ function LectureInner(): JSX.Element {
   };
 
   return (
-    <AdultFrame onSignOut={signOut} title={roster ? l.titleFor(roster.space.name) : l.title}>
-      {back}
+    <AdultFrame onSignOut={signOut} back={back} title={roster ? l.titleFor(roster.space.name) : l.title}>
+      {confirmSheet}
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {loading && !roster ? <Muted>{c.space.loading}</Muted> : null}
       {error ? (

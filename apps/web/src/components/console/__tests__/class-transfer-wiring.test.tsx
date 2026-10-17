@@ -28,7 +28,15 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/teach/space/transfers',
 }));
 vi.mock('@/lib/console/shell-store', () => ({ writeLastPersona: async () => true }));
-vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <main>{children}</main> }));
+// The frame draws its PageBack (AMENDMENTS-DISPLAY-NAV section 7.3) as a link first in the page; the stand-in does too.
+vi.mock('@/components/console/AdultFrame', () => ({
+  AdultFrame: ({ children, back }: { children: ReactNode; back?: { href: string; label: string } }) => (
+    <main>
+      {back ? <a href={back.href}>{back.label}</a> : null}
+      {children}
+    </main>
+  ),
+}));
 
 const state = vi.hoisted(() => ({
   kind: 'class' as string,

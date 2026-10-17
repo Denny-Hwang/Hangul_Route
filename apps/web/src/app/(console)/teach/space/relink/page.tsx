@@ -6,10 +6,12 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
 import type { RelinkView, Roster } from '@/lib/console/api';
 import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
-import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { spaceIdFrom } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import { aroundSlot } from '@/lib/i18n/slot';
 import { headRem, rem } from '@/lib/console/rem';
 
@@ -18,6 +20,8 @@ function RelinkInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
   const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [requests, setRequests] = useState<RelinkView[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -65,7 +69,7 @@ function RelinkInner(): JSX.Element {
 
   const issue = async (): Promise<void> => {
     const learner = roster?.learners.find((l) => l.id === pick);
-    if (!api || !learner || !window.confirm(`${c.relink.issueAsk(learner.displayName)} ${c.oldCodeStops}`)) return;
+    if (!api || !learner || !(await confirm({ title: c.relink.issueAsk(learner.displayName), message: c.oldCodeStops, confirmLabel: c.confirm.issueCode }))) return;
     setBusy(true);
     const result = await api.issueRescueCode(learner.id);
     setBusy(false);
@@ -79,10 +83,8 @@ function RelinkInner(): JSX.Element {
   const asking = aroundSlot(c.relink.askingToBe);
 
   return (
-    <AdultFrame onSignOut={signOut} title={roster ? c.relink.titleFor(roster.space.name) : c.relink.title}>
-      <Muted>
-        <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{c.relink.back(roster?.space.name ?? null)}</Link>
-      </Muted>
+    <AdultFrame onSignOut={signOut} back={spaceSubPageBack(spaceId, roster?.space.kind, c.relink.back(roster?.space.name ?? null))} title={roster ? c.relink.titleFor(roster.space.name) : c.relink.title}>
+      {confirmSheet}
       {failed ? (
         <div style={panelStyle}>
           <p style={{ margin: 0 }}>{c.cantReach}</p>

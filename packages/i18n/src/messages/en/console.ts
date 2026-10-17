@@ -102,9 +102,11 @@ export const consoleMsgs = {
   shell: {
     home: 'Console',
     signOut: { cta: 'Sign out' },
-    /** The way back to the learner app; "Open the learner app" on a device with no learner profile (a teacher's laptop). */
-    backToLearning: 'Back to learning',
-    openLearnerApp: 'Open the learner app',
+    /**
+     * The way to the learner app, at the right end of the header (AMENDMENTS-DISPLAY-NAV section 7.3): it leaves the
+     * grown-up pages, so it is never a Back and never sits where PageBack does.
+     */
+    backToLearning: 'Learner app',
     /** Footer links to the site (hangulroute.com). */
     aboutSite: 'About Hangul Route',
     privacy: 'Privacy',
@@ -114,6 +116,27 @@ export const consoleMsgs = {
     /** Adult nav labels (F-APP-001 `ADULT_NAV`); an item whose sibling flag is off is not drawn. */
     nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing', classReports: 'Class reports' },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
+  },
+  /**
+   * PageBack (AMENDMENTS-DISPLAY-NAV section 7.3): the top-left way back of a space's own page, to the persona home,
+   * named by its nav label ("Back to Classes", "Back to Home"). The sub-pages use their own `back` messages.
+   */
+  pageBack: {
+    to: (page: string) => `Back to ${page}`,
+  },
+  /**
+   * ConfirmSheet's confirm labels (AMENDMENTS-DISPLAY-NAV section 8): a verb that says what happens, never "OK";
+   * the safe choice is `common.buttons.cancel`.
+   */
+  confirm: {
+    newCode: 'Make a new code',
+    remove: 'Remove',
+    archive: 'Archive',
+    copyAnyway: 'Copy anyway',
+    replace: 'Replace the outline',
+    discard: 'Discard changes',
+    issueCode: 'Make a code',
+    update: 'Update the plan',
   },
   /** Space kinds: a label ("Class code") and the home-page group heading. */
   kind: {
@@ -278,7 +301,7 @@ export const consoleMsgs = {
   relink: {
     title: 'Re-link requests',
     titleFor: (space: string) => `${space} · re-link requests`,
-    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    back: (space: string | null) => `Back to ${space ?? 'the space'}`,
     approved: (name: string) => `${name} can open their new device now.`,
     denied: (name: string) => `Closed. ${name}'s device will say "ask your teacher".`,
     /** Followed by `oldCodeStops` in the confirm dialog. */
@@ -365,7 +388,7 @@ export const consoleMsgs = {
   plan: {
     title: 'Plan',
     titleFor: (space: string) => `${space} · plan`,
-    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    back: (space: string | null) => `Back to ${space ?? 'the space'}`,
     saveInvalid: "Some learners are no longer in this space — check who it's for.",
     saveFailed: "Didn't save. Try again.",
     archiveFailed: "Couldn't archive it right now.",
@@ -622,7 +645,7 @@ export const consoleMsgs = {
   curriculum: {
     title: 'Plan a term',
     pageTitle: (space: string) => `${space} · plan a term`,
-    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    back: (space: string | null) => `Back to ${space ?? 'the space'}`,
     step: (step: number, total: number) => `Step ${step} of ${total}`,
     next: { cta: 'Next' },
     previous: { cta: 'Back' },
@@ -938,7 +961,7 @@ export const consoleMsgs = {
   lecture: {
     title: 'Lecture',
     titleFor: (space: string) => `${space} · lecture`,
-    back: (space: string | null) => (space ? `← Back to ${space}` : '← Back to the space'),
+    back: (space: string | null) => (space ? `Back to ${space}` : 'Back to the space'),
     intro: 'Build a slide lesson from your content and show it on a classroom screen.',
     /** The page while `NEXT_PUBLIC_LECTURE_MODE` is off (the presenter is not in the learner app yet). */
     comingSoon: 'Lecture mode is coming soon: slide lessons you can show on a classroom screen.',
@@ -1064,7 +1087,7 @@ export const consoleMsgs = {
   settings: {
     title: 'Settings',
     titleFor: (space: string) => `${space} · settings`,
-    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    back: (space: string | null) => `Back to ${space ?? 'the space'}`,
     forbidden: "This space isn't yours to manage.",
     archived: {
       family: 'This family is archived — read-only until you unarchive it.',

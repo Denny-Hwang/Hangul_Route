@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { BackLink, LearningRouteContent, LearningRouteLoading, readingColumn } from '@/components/console/LearningRouteParts';
+import { LearningRouteContent, LearningRouteLoading, readingColumn } from '@/components/console/LearningRouteParts';
 import { Button, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
@@ -91,11 +91,12 @@ function LearningRouteInner(): JSX.Element {
   // Before the roster names the space's kind (loading, or a read that failed): the kind-neutral "Back" to the space,
   // or the console home when the address names no space.
   const back = spaceId ? { href: ROUTES.space(spaceId, kind), text: lr.back.space } : { href: home, text: m.console.shell.home };
+  // PageBack (AMENDMENTS-DISPLAY-NAV section 7.3): the report, the class or the family once the view says which.
+  const pageBack = view ? view.back : back;
   return (
-    <AdultFrame onSignOut={signOut} title={lr.section}>
+    <AdultFrame onSignOut={signOut} title={lr.section} back={{ href: pageBack.href, label: pageBack.text }}>
       {error ? (
         <div style={readingColumn}>
-          <BackLink link={back} />
           <div style={panelStyle}>
             <p style={{ margin: 0 }}>{spaceErrorText(error, locale)}</p>
             {/* Only a read that did not arrive can succeed on a retry; a 403 or a 404 will answer the same. */}
@@ -105,7 +106,7 @@ function LearningRouteInner(): JSX.Element {
       ) : view ? (
         <LearningRouteContent view={view} />
       ) : (
-        <LearningRouteLoading back={back} />
+        <LearningRouteLoading />
       )}
     </AdultFrame>
   );

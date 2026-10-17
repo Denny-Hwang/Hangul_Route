@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsoleAuth } from '@/components/console/auth-context';
 import { ClassMoves } from '@/components/console/ClassTransferParts';
 import { FamilyMoves, FamilyPageStateLine, type FamilyPageState } from '@/components/console/FamilyTransferParts';
@@ -13,7 +14,8 @@ import { MoveButton, useOnline, useTransfersShown } from '@/components/console/T
 import { useConsole } from '@/components/console/use-console';
 import type { Roster, SpaceListItem } from '@/lib/console/api';
 import { signInAgainUrl } from '@/lib/console/grown-up-lock';
-import { ROUTES, isKnownSpaceKind, spaceIdFrom } from '@/lib/console/routing';
+import { isKnownSpaceKind, spaceIdFrom } from '@/lib/console/routing';
+import { spaceSubPageBack } from '@/lib/console/page-back';
 import { TRANSFER_REFRESH_MS } from '@/lib/console/transfer';
 import { directClassIds } from '@/lib/console/transfer-requests';
 import { rem } from '@/lib/console/rem';
@@ -36,6 +38,8 @@ function TransfersInner(): JSX.Element {
   const { ready, session, api, signOut, m } = useConsole();
   const c = m.console;
   const t = c.transfer;
+  // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
+  const { confirm, sheet: confirmSheet } = useConfirm();
   const shown = useTransfersShown();
   const online = useOnline();
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -76,10 +80,8 @@ function TransfersInner(): JSX.Element {
     pageState === 'locked' ? t.states.locked : pageState === 'signIn' ? c.start.signInAgain : pageState === 'forbidden' ? t.states.forbidden : pageState === 'failed' ? c.cantReach : null;
 
   return (
-    <AdultFrame onSignOut={signOut}>
-      <p style={{ margin: `0 0 ${spacing.sm}px` }}>
-        <Link href={ROUTES.space(spaceId, space?.kind)}>{space ? t.back(space.name) : t.actions.backToRoster.cta}</Link>
-      </p>
+    <AdultFrame onSignOut={signOut} back={spaceSubPageBack(spaceId, space?.kind, space ? t.back(space.name) : t.actions.backToRoster.cta)}>
+      {confirmSheet}
       <h1 style={{ fontSize: rem(typography.size.prompt), margin: 0 }}>{t.title}</h1>
       {space ? <p style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>{space.name}</p> : null}
       {stateText ? (
@@ -105,7 +107,7 @@ function TransfersInner(): JSX.Element {
           refreshMs={TRANSFER_REFRESH_MS}
           readOnly={space.archivedAt !== null}
           direct={directClassIds(spaces)}
-          confirm={(question) => typeof window !== 'undefined' && window.confirm(question)}
+          confirm={confirm}
           onPageState={setState}
         />
         </>

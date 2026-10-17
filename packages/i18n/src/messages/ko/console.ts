@@ -12,7 +12,7 @@ const planItems = (items: number): string => `항목 ${items}개`;
 const planTargets = (kind: 'family' | 'class' | 'school', n: number): string =>
   kind === 'family' ? `학습자 ${n}명` : kind === 'class' ? `학생 ${n}명` : `구성원 ${n}명`;
 const leftOut = (n: number, product: string): string => `레슨 ${n}개는 다음으로 열려요: ${product}. 이 계획에서는 뺐어요.`;
-const backTo = (space: string | null): string => (space === null ? '← 공간으로 돌아가기' : `← 돌아가기: ${space}`);
+const backTo = (space: string | null): string => (space === null ? '공간으로 돌아가기' : `돌아가기: ${space}`);
 
 export const consoleMsgs = {
   devSignInHint: '개발용 로그인: Clerk 연결이 준비될 때까지 계정 아이디가 인증된 세션을 대신해요.',
@@ -67,14 +67,26 @@ export const consoleMsgs = {
   shell: {
     home: '콘솔',
     signOut: { cta: '로그아웃' },
-    backToLearning: '학습으로 돌아가기',
-    openLearnerApp: '학습자 앱 열기',
+    backToLearning: '학습자 앱',
     aboutSite: 'Hangul Route 소개',
     privacy: '개인정보',
     terms: '이용약관',
     persona: { parent: '가족', teacher: '선생님' },
     nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트' },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
+  },
+  pageBack: {
+    to: (page: string) => `돌아가기: ${page}`,
+  },
+  confirm: {
+    newCode: '새 코드 만들기',
+    remove: '빼기',
+    archive: '보관하기',
+    copyAnyway: '그래도 복사하기',
+    replace: '개요 바꾸기',
+    discard: '바뀐 내용 버리기',
+    issueCode: '코드 만들기',
+    update: '계획 업데이트하기',
   },
   kind: {
     label: { family: '가족', class: '반', school: '학교' },

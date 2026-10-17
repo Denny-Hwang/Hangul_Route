@@ -1,13 +1,12 @@
 'use client';
 
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
-import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, layout, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import type {
   LearningRouteCard,
   LearningRouteGoal,
-  LearningRouteLink,
   LearningRouteRow,
   LearningRouteStageRow,
   LearningRouteTag,
@@ -48,29 +47,6 @@ const lineRow: CSSProperties = { ...reset, display: 'flex', gap: spacing.sm, ali
 const glyphBox: CSSProperties = { flex: 'none', display: 'inline-flex', marginTop: spacing.xxs, lineHeight: 0 };
 const strongLine: CSSProperties = { fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight };
 const secondaryLine: CSSProperties = { ...reset, fontSize: rem(typography.size.bodySm), color: colors.text.secondary, lineHeight: typography.leading.normal };
-
-/** "Back to the class" with the arrow glyph: `touchTarget.min` tall, underlined `brand.secondaryDark` (stage-list.md, Layout 2). */
-export function BackLink({ link }: { link: LearningRouteLink }): JSX.Element {
-  return (
-    <Link
-      href={link.href}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-        gap: spacing.xs,
-        minHeight: touchTarget.min,
-        paddingRight: spacing.md,
-        color: colors.brand.secondaryDark,
-        fontWeight: typography.weight.semibold,
-        textDecoration: 'underline',
-      }}
-    >
-      <IconSvg name="arrow-left" size={GLYPH} color={colors.brand.secondaryDark} />
-      {link.text}
-    </Link>
-  );
-}
 
 /**
  * One goal line: the flag only when the line names a goal or a plan's destination (cases 1 and 2);
@@ -243,9 +219,9 @@ const headingStyle: CSSProperties = { fontSize: headRem(typography.size.title), 
 const updatedStyle: CSSProperties = { ...reset, fontSize: rem(typography.size.bodySm), color: colors.text.muted };
 
 /**
- * The stage list page body for one learner (section 6.1, Layout): back link, `h1`, "Updated {date}",
- * the card, "Stages" and the `ol`. The not-synced and not-found states keep the back link, so no
- * state is a dead end; not-found lists no other learner.
+ * The stage list page body for one learner (section 6.1, Layout): `h1`, "Updated {date}", the card,
+ * "Stages" and the `ol`. The way back is the frame's PageBack above it (`view.back`, AMENDMENTS-DISPLAY-NAV
+ * section 7.3), on every state, so no state is a dead end; not-found lists no other learner.
  */
 export function LearningRouteContent({ view, preview }: { view: LearningRouteView; /** [ Preview lessons ] per stage row (F-BROWSE-001 BR-11); omitted, `browseLinksShown()` decides. */ preview?: boolean }): JSX.Element {
   const shown = useBrowseLinksShown();
@@ -254,13 +230,11 @@ export function LearningRouteContent({ view, preview }: { view: LearningRouteVie
     return (
       <div style={readingColumn}>
         <Notice>{view.message}</Notice>
-        <BackLink link={view.back} />
       </div>
     );
   }
   const head = (
     <>
-      <BackLink link={view.back} />
       <header>
         <h1 style={headingStyle}>{view.title}</h1>
         {view.updated ? <p style={updatedStyle}>{view.updated}</p> : null}
@@ -290,11 +264,10 @@ export function LearningRouteContent({ view, preview }: { view: LearningRouteVie
   );
 }
 
-/** Loading: the back link, then three sunken placeholder rows, busy, with no text (stage-list.md, States). */
-export function LearningRouteLoading({ back }: { back: LearningRouteLink }): JSX.Element {
+/** Loading: three sunken placeholder rows, busy, with no text (stage-list.md, States); the frame's PageBack sits above. */
+export function LearningRouteLoading(): JSX.Element {
   return (
     <div style={readingColumn}>
-      <BackLink link={back} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }} aria-busy="true">
         {[0, 1, 2].map((i) => (
           <div key={i} data-testid="route-placeholder" style={{ height: spacing.xxxl, borderRadius: radii.md, backgroundColor: colors.surface.sunken }} />

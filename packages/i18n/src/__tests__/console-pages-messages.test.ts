@@ -166,8 +166,8 @@ describe('relink page (teach/space/relink/page.tsx, relink.ts)', () => {
   it('keeps the title, the back link and the notes', () => {
     expect(r.title).toBe('Re-link requests');
     expect(r.titleFor('Kim family')).toBe('Kim family · re-link requests');
-    expect(r.back('Kim family')).toBe('← Back to Kim family');
-    expect(r.back(null)).toBe('← Back to the space');
+    expect(r.back('Kim family')).toBe('Back to Kim family');
+    expect(r.back(null)).toBe('Back to the space');
     expect(r.approved('Mina')).toBe('Mina can open their new device now.');
     expect(r.denied('Mina')).toBe('Closed. Mina\'s device will say "ask your teacher".');
     expect(r.issueAsk('Mina')).toBe('Issue a new rescue code for Mina?');

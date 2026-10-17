@@ -83,8 +83,7 @@ export const consoleMsgs = {
   shell: {
     home: 'Consola',
     signOut: { cta: 'Salir' },
-    backToLearning: 'Volver a aprender',
-    openLearnerApp: 'Abrir la app de estudiantes',
+    backToLearning: 'App de estudiantes',
     aboutSite: 'Sobre Hangul Route',
     privacy: 'Privacidad',
     terms: 'Términos',
@@ -99,6 +98,19 @@ export const consoleMsgs = {
       classReports: 'Informes de clase',
     },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
+  },
+  pageBack: {
+    to: (page: string) => `Volver a ${page}`,
+  },
+  confirm: {
+    newCode: 'Crear un código nuevo',
+    remove: 'Quitar',
+    archive: 'Archivar',
+    copyAnyway: 'Copiar de todos modos',
+    replace: 'Reemplazar el esquema',
+    discard: 'Descartar cambios',
+    issueCode: 'Crear un código',
+    update: 'Actualizar el plan',
   },
   kind: {
     label: { family: 'Familia', class: 'Clase', school: 'Escuela' },
@@ -226,7 +238,7 @@ export const consoleMsgs = {
   relink: {
     title: 'Reconexiones',
     titleFor: (space: string) => `${space} · reconexiones`,
-    back: (space: string | null) => `← Volver a ${space ?? 'el espacio'}`,
+    back: (space: string | null) => (space ? `Volver a ${space}` : 'Volver al espacio'),
     approved: (name: string) => `${name} ya puede abrir su dispositivo nuevo.`,
     denied: (name: string) => `Cerrada. El dispositivo de ${name} dirá "pregúntale a tu docente".`,
     issueAsk: (name: string) => `¿Crear un código de rescate nuevo para ${name}?`,
@@ -295,7 +307,7 @@ export const consoleMsgs = {
   plan: {
     title: 'Plan',
     titleFor: (space: string) => `${space} · plan`,
-    back: (space: string | null) => `← Volver a ${space ?? 'el espacio'}`,
+    back: (space: string | null) => (space ? `Volver a ${space}` : 'Volver al espacio'),
     saveInvalid: 'Algunos estudiantes ya no están en este espacio: revisa para quién es.',
     saveFailed: 'No se guardó. Reintenta.',
     archiveFailed: 'Ahora no se pudo archivar.',
@@ -494,7 +506,7 @@ export const consoleMsgs = {
   curriculum: {
     title: 'Plan del periodo',
     pageTitle: (space: string) => `${space} · plan del periodo`,
-    back: (space: string | null) => `← Volver a ${space ?? 'el espacio'}`,
+    back: (space: string | null) => (space ? `Volver a ${space}` : 'Volver al espacio'),
     step: (step: number, total: number) => `Paso ${step} de ${total}`,
     next: { cta: 'Siguiente' },
     previous: { cta: 'Atrás' },
@@ -770,7 +782,7 @@ export const consoleMsgs = {
   lecture: {
     title: 'Proyección',
     titleFor: (space: string) => `${space} · proyección`,
-    back: (space: string | null) => (space ? `← Volver a ${space}` : '← Volver al espacio'),
+    back: (space: string | null) => (space ? `Volver a ${space}` : 'Volver al espacio'),
     intro: 'Arma una lección con diapositivas a partir de tu contenido y muéstrala en una pantalla del salón.',
     comingSoon: 'La proyección llega muy pronto: lecciones con diapositivas para mostrar en una pantalla del salón.',
     plansFailed: 'No se cargaron los planes de este espacio, así que no se ofrece el plan de esta semana. Reintenta para cargarlos.',
@@ -888,7 +900,7 @@ export const consoleMsgs = {
   settings: {
     title: 'Ajustes',
     titleFor: (space: string) => `${space} · ajustes`,
-    back: (space: string | null) => `← Volver a ${space ?? 'el espacio'}`,
+    back: (space: string | null) => (space ? `Volver a ${space}` : 'Volver al espacio'),
     forbidden: 'No tienes acceso para gestionar este espacio.',
     archived: {
       family: 'Esta familia está archivada: solo lectura hasta que la desarchives.',

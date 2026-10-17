@@ -54,12 +54,11 @@ export const NOTES_CSS = `
 .hr-notes{display:flex;flex-direction:column;gap:${rem(spacing.lg)};max-width:${px(layout.maxWidth.reading)};color:${colors.text.primary};font-size:${rem(typography.size.body)};line-height:${typography.leading.normal}}
 .hr-notes p,.hr-notes h1,.hr-notes h2,.hr-notes h3,.hr-notes ul{margin:0;padding:0}
 .hr-notes ul{list-style:none}
-.hr-notes-back{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};align-self:flex-start;color:${colors.brand.secondaryDark};font-weight:${typography.weight.semibold};text-decoration:underline}
 .hr-notes-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:${rem(spacing.md)}}
 .hr-notes-head h1{font-size:${rem(typography.size.prompt)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};overflow-wrap:anywhere;min-width:0}
 .hr-notes-btn{display:inline-flex;align-items:center;justify-content:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};min-width:${px(touchTarget.min)};padding:${rem(spacing.sm)} ${rem(spacing.xl)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none;cursor:pointer}
 .hr-notes-primary{background:${colors.brand.primary};border-color:${colors.brand.primary};color:${colors.text.onPrimary}}
-.hr-notes-btn:focus-visible,.hr-notes-back:focus-visible,.hr-notes-tab:focus-visible,.hr-notes-select:focus-visible,.hr-notes-input:focus-visible{${focusRing}}
+.hr-notes-btn:focus-visible,.hr-notes-tab:focus-visible,.hr-notes-select:focus-visible,.hr-notes-input:focus-visible{${focusRing}}
 .hr-notes-quiet{color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)};line-height:${typography.leading.relaxed}}
 .hr-notes-field-inline{display:flex;flex-wrap:wrap;align-items:center;gap:${rem(spacing.sm)};font-weight:${typography.weight.semibold}}
 .hr-notes-select{min-height:${px(touchTarget.min)};max-width:100%;padding:0 ${rem(spacing.lg)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold}}

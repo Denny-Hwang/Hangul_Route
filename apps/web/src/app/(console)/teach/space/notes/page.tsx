@@ -1,11 +1,10 @@
 'use client';
-
-import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
-import { colors, spacing } from '@hangul-route/design-system/tokens';
+import { spacing } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { PageBack } from '@/components/console/PageBack';
 import { MoveButton, TransferSheet } from '@/components/console/TransferParts';
 import { NOTES_CSS, NoteComposer, NotesTabs, SentList, type SentListState } from '@/components/console/NotesParts';
 import { ReceivedPanel } from '@/components/console/FamilyNotesParts';
@@ -19,8 +18,6 @@ import { questClosedLine, withdrawProblem, type SentNoteRow, type SentRowView } 
 import { FAMILY_TABS, notesPageHref, notesPageQuery, notesSender, questPrefill, type FamilyTab } from '@/lib/console/notes-page';
 import { ROUTES, isKnownSpaceKind, spaceErrorText, spaceKindOfPath, type SpaceError } from '@/lib/console/routing';
 
-/** The arrow-left glyph of the back link (design/screens/notes/README.md, Constants: 20 px on rows and lines). */
-const BACK_GLYPH = 20;
 
 /**
  * The notes page of a space (F-FEEDBACK-001 FB-11a, section 6.13; wireframes console/notes-sent.md,
@@ -250,10 +247,8 @@ function NotesInner(): JSX.Element {
     <AdultFrame onSignOut={signOut}>
       <style>{NOTES_CSS}</style>
       <div className="hr-notes">
-        <Link className="hr-notes-back" href={ROUTES.space(q.spaceId, kind)}>
-          <IconSvg name="arrow-left" size={BACK_GLYPH} color={colors.brand.secondaryDark} />
-          {n.sent.back[side]}
-        </Link>
+        {/* PageBack (AMENDMENTS-DISPLAY-NAV section 7.3): back to the space, first in the page. */}
+        <PageBack href={ROUTES.space(q.spaceId, kind)} label={n.sent.back[side]} />
         <div className="hr-notes-head">
           <h1>{title}</h1>
           {sendable && !rosterError && !noLearners ? (
