@@ -1740,6 +1740,11 @@ export const learner = {
       voiceLocal: (name: string) => `Voz coreana: ${name}, en este dispositivo`,
       voiceNetwork: (name: string) => `Voz coreana: ${name}, usa internet`,
       voiceNone: 'No hay voz coreana en este dispositivo. Tú dices los sonidos; las diapositivas los muestran.',
+      testSound: {
+        cta: 'Probar el sonido',
+        played: '¿Lo oíste? Si no, sube el volumen.',
+        failed: 'El sonido no se reprodujo aquí. Tú puedes decir cada palabra.',
+      },
       fullscreen: 'La pantalla completa se abre al empezar',
       fullscreenNone: 'Este navegador no tiene pantalla completa. La lección funciona igual.',
       awake: 'La pantalla queda encendida durante la lección',
