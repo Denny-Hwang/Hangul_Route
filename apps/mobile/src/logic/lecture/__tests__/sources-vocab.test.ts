@@ -14,10 +14,9 @@ import { lectureVocabTopics, lectureVocabTopicsFrom } from '../sources/vocab';
 const food = VOCAB_TOPICS.find((t) => t.key === 'food')!;
 
 const topic = (over: Partial<VocabTopic>): VocabTopic => ({ ...food, ...over });
-const item = (over: Partial<RuntimeVocabItem> & { id: string }): RuntimeVocabItem => ({
-  ...VOCAB_ITEMS.find((i) => i.id === 'vocab:sagwa-apple')!,
-  ...over,
-});
+/** A word shaped like 사과, without the shipped word's clip path (each case gives the one it needs). */
+const { audioRef: _sagwaClip, ...SAGWA } = VOCAB_ITEMS.find((i) => i.id === 'vocab:sagwa-apple')!;
+const item = (over: Partial<RuntimeVocabItem> & { id: string }): RuntimeVocabItem => ({ ...SAGWA, ...over });
 
 describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
   it('gives every shipped ready topic with all of its words, in the catalogue order', () => {
@@ -43,12 +42,14 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
     if (got === undefined || got === 'not-ready') throw new Error('food did not expand');
     expect(got.title).toBe('Food');
     expect(got.hoyaLine).toBe(food.hoyaIntroEn);
+    // Every shipped word carries its clip path (F-VOC-001 §3.9), so a recording that lands plays on its slide.
     expect(got.words.find((w) => w.id === 'vocab:sagwa-apple')).toEqual({
       id: 'vocab:sagwa-apple',
       ko: '사과',
       romanization: 'sagwa',
       gloss: 'apple',
       wordArt: 'food-apple',
+      audioRef: 'audio/vocab/sagwa-apple.mp3',
     });
     expect(got.words.find((w) => w.id === 'vocab:gimchi')).toEqual({
       id: 'vocab:gimchi',
@@ -56,6 +57,7 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
       romanization: 'gimchi',
       gloss: 'kimchi',
       cardId: 'card:kimchi',
+      audioRef: 'audio/vocab/gimchi.mp3',
     });
   });
 
@@ -120,7 +122,14 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
 
 describe('vocabWord: one word for a Word review (AMENDMENTS-LECTURE-V2 section 4.5, LV-2)', () => {
   it('gives a bundled word by id in the presenter language, with its picture', () => {
-    expect(lectureVocabTopics('en').vocabWord('vocab:sagwa-apple')).toEqual({ id: 'vocab:sagwa-apple', ko: '사과', romanization: 'sagwa', gloss: 'apple', wordArt: 'food-apple' });
+    expect(lectureVocabTopics('en').vocabWord('vocab:sagwa-apple')).toEqual({
+      id: 'vocab:sagwa-apple',
+      ko: '사과',
+      romanization: 'sagwa',
+      gloss: 'apple',
+      wordArt: 'food-apple',
+      audioRef: 'audio/vocab/sagwa-apple.mp3',
+    });
     expect(lectureVocabTopics('es').vocabWord('vocab:sagwa-apple')).toMatchObject({ ko: '사과', romanization: 'sagwa', gloss: 'manzana' });
     expect(lectureVocabTopics('en').vocabWord('vocab:nope')).toBeUndefined();
   });
