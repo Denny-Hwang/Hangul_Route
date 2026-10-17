@@ -238,11 +238,29 @@ test.describe('one UI language per device (owner items 6 and 7)', () => {
     await page.goto('/present');
     await expect(page.getByRole('heading', { level: 1, name: getMessages('es').learner.presenter.home.title })).toBeVisible();
     await page.goto(presentLink());
-    await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').learner.presenter.start.back.cta);
+    // A phone window (the Pixel 5 default): the phone start screen (LV-M1), Back in its footer, the Aa at the top right.
+    await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').common.buttons.back);
+    await expect(page.getByTestId('presenter-start-display')).toHaveAccessibleName(getMessages('es').common.display.a11y);
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-    // A deck that names its slide language keeps the chrome in the device language all the same.
-    await page.goto(presentLink({ ...DECK, id: 'lecture:or67a2', options: { uiLocale: 'ko' } }));
-    await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').learner.presenter.start.back.cta);
+    // A deck that names its slide language keeps the chrome in the device language all the same (in a tab
+    // of its own, as the console opens every presenter link).
+    const second = await page.context().newPage();
+    await second.goto(presentLink({ ...DECK, id: 'lecture:or67a2', options: { uiLocale: 'ko' } }));
+    await expect(second.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').common.buttons.back);
+    await expect(second.locator('html')).toHaveAttribute('lang', 'es');
+  });
+
+  test.describe('on a wide window', () => {
+    test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+    test('the wide start screen speaks the device language: Back to lessons and the Aa beside it', async ({ page }) => {
+      await page.goto('/');
+      await seedStored(page, 'device:settings', { uiLocale: 'es', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+      await page.goto(presentLink({ ...DECK, id: 'lecture:or67a3', options: { uiLocale: 'ko' } }));
+      await expect(page.getByTestId('presenter-start-back')).toHaveAccessibleName(getMessages('es').learner.presenter.start.back.cta);
+      await expect(page.getByTestId('presenter-start-display')).toHaveAccessibleName(getMessages('es').common.display.a11y);
+      await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    });
   });
 });
 

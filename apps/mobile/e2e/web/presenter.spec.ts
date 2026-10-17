@@ -381,7 +381,10 @@ test.describe('presenter at 1280 x 720', () => {
     await page.evaluate(() => ((window as unknown as { __beforeReload?: boolean }).__beforeReload = true));
     await reload.click();
     // The page reloads with the link held in the tab: still unreadable here, so the same page, never the home.
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __beforeReload?: boolean }).__beforeReload === true)).toBe(false);
+    // A read that lands while the page is unloading counts as not reloaded yet (its context goes with the old page).
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { __beforeReload?: boolean }).__beforeReload === true).catch(() => true))
+      .toBe(false);
     await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
     await page.getByRole('button', { name: 'Open Quick lesson' }).click();
     await expect(page.getByTestId('presenter-home')).toBeVisible();
