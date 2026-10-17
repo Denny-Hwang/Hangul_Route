@@ -516,7 +516,7 @@ describe('GrownUpLockScreen (wireframe Panels A and B)', () => {
     expect(text(html)).toBe(`${lock.backToLearning.cta} ${lock.title} ${lock.line} ${lock.usePin.cta} ${lock.signInAgain.cta} ${en.common.display.button}`);
     const buttons = [...html.matchAll(/<button[^>]*data-testid="([^"]+)"/g)].map((m) => m[1]);
     expect(buttons).toEqual(['grown-up-lock-back', 'grown-up-lock-pin', 'grown-up-lock-signin', 'grown-up-lock-display']);
-    expect(html).toMatch(/<button[^>]*aria-label="Display: language and text size"[^>]*aria-haspopup="dialog"[^>]*data-testid="grown-up-lock-display"/);
+    expect(html).toMatch(/<button[^>]*aria-label="Aa, Display: language and text size"[^>]*aria-haspopup="dialog"[^>]*data-testid="grown-up-lock-display"/);
     expect(html).toMatch(/<button[^>]*data-tone="primary"[^>]*data-testid="grown-up-lock-pin"/);
     expect(html).toMatch(/<button[^>]*data-tone="secondary"[^>]*data-testid="grown-up-lock-signin"/);
   });
@@ -640,19 +640,19 @@ describe('browserLockEnvironment: the default wiring', () => {
 describe('lockActions: the three buttons (A-4a review, 2026-10-12)', () => {
   it('Use the grown-up PIN opens the learner gate with this page and its query as next', () => {
     const h = harness();
-    lockActions(h.env, '/teach/space?id=sp_1', () => undefined).onUsePin();
+    lockActions(h.env, '/teach/space?id=sp_1', () => undefined, 'en').onUsePin();
     expect(h.assigned).toEqual(['/?gate=grown-up&next=%2Fteach%2Fspace%3Fid%3Dsp_1']);
   });
 
   it('Sign in again hands /signin with this page as next to the sign-out', () => {
     const h = harness();
     const urls: string[] = [];
-    lockActions(h.env, '/parent', (url) => urls.push(url)).onSignInAgain();
+    lockActions(h.env, '/parent', (url) => urls.push(url), 'en').onSignInAgain();
     expect(urls).toEqual(['/signin?next=%2Fparent']);
     expect(h.assigned).toEqual([]);
   });
 
-  it('Back to learning clears this tab first, then leaves for the learner home of this origin', () => {
+  it('Back to learning clears this tab first, then leaves for the learner home of this origin, with the console language', () => {
     const order: string[] = [];
     const h = harness();
     h.env.clearGrownUpTab = () => {
@@ -661,12 +661,12 @@ describe('lockActions: the three buttons (A-4a review, 2026-10-12)', () => {
     h.env.assign = (url) => {
       order.push(`assign ${url}`);
     };
-    lockActions(h.env, '/parent', () => undefined).onBackToLearning();
-    expect(order).toEqual(['clear', 'assign /']);
+    lockActions(h.env, '/parent', () => undefined, 'en').onBackToLearning();
+    expect(order).toEqual(['clear', 'assign /?lang=en']);
     h.env.origin = () => 'https://hangulroute.com';
     order.length = 0;
-    lockActions(h.env, '/parent', () => undefined).onBackToLearning();
-    expect(order).toEqual(['clear', 'assign https://app.hangulroute.com/']);
+    lockActions(h.env, '/parent', () => undefined, 'ko').onBackToLearning();
+    expect(order).toEqual(['clear', 'assign https://app.hangulroute.com/?lang=ko']);
   });
 });
 

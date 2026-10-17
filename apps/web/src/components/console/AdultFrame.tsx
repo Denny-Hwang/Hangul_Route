@@ -324,7 +324,7 @@ export function AdultFrame({
   };
   const goBack = (): void => {
     browser.clearGrownUpTab();
-    browser.assign(learnerHome(origin));
+    browser.assign(learnerHome(origin, locale));
   };
 
   return (

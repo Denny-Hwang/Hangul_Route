@@ -1,6 +1,15 @@
-import { DEVICE_SETTINGS_KEY, DeviceSettingsSchema, PREFS_CHANNEL, PrefsMessageSchema, prefsMessage, type DeviceSettings } from '@hangul-route/content-schema';
+import {
+  DEVICE_SETTINGS_KEY,
+  DeviceSettingsSchema,
+  PREFS_CHANNEL,
+  PrefsMessageSchema,
+  mergeDeviceSettings,
+  prefsMessage,
+  type DeviceSettings,
+  type DeviceSettingsPatch,
+} from '@hangul-route/content-schema';
 import { createStore, get, set } from 'idb-keyval';
-import { LEARNER_DB, LEARNER_STORE } from '../console/device-marker';
+import { LEARNER_DB, LEARNER_STORE, PROFILES_STORAGE_KEY, hasProfileList } from '../console/device-marker';
 import { indexedDbAvailable } from './safe-storage';
 
 /**
@@ -8,9 +17,11 @@ import { indexedDbAvailable } from './safe-storage';
  * keeps its language and text size in its default idb-keyval store as a JSON string under
  * `hr:device:settings` (`apps/mobile/src/platform/storage.web.ts`). The grown-up pages are on the
  * same origin, so they read and write that same record (the reader pattern of
- * `lib/console/device-marker.ts`: a read that fails is retried once on a fresh connection), and
- * every write is told to the other tabs on `BroadcastChannel('hr-prefs')`. Every access is
- * guarded: no IndexedDB, a failed read or a refused write never throws.
+ * `lib/console/device-marker.ts`: a read or a write that fails is retried once on a fresh
+ * connection), and every write is told to the other tabs on `BroadcastChannel('hr-prefs')`.
+ * Besides the record, the console reads only whether `hr:profiles` holds a non-empty list (the
+ * presence check `device-marker.ts` already makes); it never reads or writes `hr:settings:*`.
+ * Every access is guarded: no IndexedDB, a failed read or a refused write never throws.
  */
 export const DEVICE_SETTINGS_STORAGE_KEY = `hr:${DEVICE_SETTINGS_KEY}`;
 
@@ -29,39 +40,59 @@ const learnerStore: OpenIdbStore = (fresh) => {
   return { get: (key) => get(key, store), set: (key, value) => set(key, value, store) };
 };
 
-/** What a read found: the record (`{}` when the device never chose anything), or that it cannot be read. */
-export type DeviceSettingsRead = { readable: true; value: DeviceSettings } | { readable: false };
+/**
+ * What a read found: the record (`{}` when the device never chose anything) and whether the
+ * device holds learner profiles (the presence check only), or that it cannot be read.
+ */
+export type DeviceSettingsRead = { readable: true; value: DeviceSettings; hasProfiles: boolean } | { readable: false };
 
-/** A stored JSON string as a record; a missing, empty or damaged value is `{}` (never chosen). */
-export function parseStoredSettings(raw: unknown): DeviceSettings {
+/** A stored JSON string as the plain object it holds (every key kept); missing, empty, damaged or not an object is `{}`. */
+export function parseStoredObject(raw: unknown): Record<string, unknown> {
   if (typeof raw !== 'string' || raw === '') return {};
   try {
-    const parsed = DeviceSettingsSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : {};
+    const parsed: unknown = JSON.parse(raw);
+    return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
   } catch {
     return {};
   }
 }
 
+/** A stored object as a record: a field this version does not know reads as absent. */
+function settingsOf(stored: Record<string, unknown>): DeviceSettings {
+  const parsed = DeviceSettingsSchema.safeParse(stored);
+  return parsed.success ? parsed.data : {};
+}
+
+/** A stored JSON string as a record; a missing, empty or damaged value is `{}` (never chosen), a field this version does not know is absent. */
+export function parseStoredSettings(raw: unknown): DeviceSettings {
+  return settingsOf(parseStoredObject(raw));
+}
+
 async function readOnce(store: IdbStore): Promise<DeviceSettingsRead | null> {
   try {
-    return { readable: true, value: parseStoredSettings(await store.get(DEVICE_SETTINGS_STORAGE_KEY)) };
+    const [settings, profiles] = await Promise.all([store.get(DEVICE_SETTINGS_STORAGE_KEY), store.get(PROFILES_STORAGE_KEY)]);
+    return { readable: true, value: parseStoredSettings(settings), hasProfiles: hasProfileList(profiles) };
+  } catch {
+    return null;
+  }
+}
+
+/** Runs `attempt` on the learner's store, and once more on a fresh connection when it fails; null when both fail. */
+async function withRetry<T>(open: OpenIdbStore, attempt: (store: IdbStore) => Promise<T | null>): Promise<T | null> {
+  const first = open(false);
+  if (!first) return null;
+  const result = await attempt(first);
+  if (result !== null) return result;
+  try {
+    const retry = open(true);
+    return retry ? await attempt(retry) : null;
   } catch {
     return null;
   }
 }
 
 export async function readDeviceSettings(open: OpenIdbStore = learnerStore): Promise<DeviceSettingsRead> {
-  const first = open(false);
-  if (!first) return { readable: false };
-  const read = await readOnce(first);
-  if (read) return read;
-  try {
-    const retry = open(true);
-    return (retry && (await readOnce(retry))) ?? { readable: false };
-  } catch {
-    return { readable: false };
-  }
+  return (await withRetry(open, readOnce)) ?? { readable: false };
 }
 
 interface ChannelLike {
@@ -82,45 +113,97 @@ const browserChannel: OpenChannel = () => {
   }
 };
 
-/** Tells the other tabs of the origin (the learner app, All lessons, the presenter, other grown-up pages). */
-export function postDeviceSettings(value: DeviceSettings, open: OpenChannel = browserChannel): void {
-  const channel = open();
-  if (!channel) return;
-  try {
-    channel.postMessage(prefsMessage(value));
-  } catch {
-    // Only the live update is lost; the other tab re-reads when it comes back to the front.
-  } finally {
-    try {
-      channel.close();
-    } catch {
-      // Nothing to release.
+/**
+ * One `hr-prefs` channel per tab, used both to post and to listen. A BroadcastChannel never
+ * delivers a message to the instance that posted it, so a tab never receives its own writes (an
+ * older write echoing back would briefly undo a newer one). Opened on first use and kept for the
+ * life of the page.
+ */
+export interface PrefsHub {
+  post: (message: unknown) => void;
+  listen: (onData: (data: unknown) => void) => () => void;
+}
+
+export function createPrefsHub(open: OpenChannel = browserChannel): PrefsHub {
+  let channel: ChannelLike | null | undefined;
+  const listeners = new Set<(data: unknown) => void>();
+  const ensure = (): ChannelLike | null => {
+    if (channel !== undefined) return channel;
+    channel = open();
+    if (channel) {
+      channel.onmessage = (event) => {
+        for (const onData of [...listeners]) onData(event.data);
+      };
     }
+    return channel;
+  };
+  return {
+    post: (message) => {
+      const c = ensure();
+      if (!c) return;
+      try {
+        c.postMessage(message);
+      } catch {
+        // Only the live update is lost; the other tab re-reads when it comes back to the front.
+      }
+    },
+    listen: (onData) => {
+      ensure();
+      listeners.add(onData);
+      return () => {
+        listeners.delete(onData);
+      };
+    },
+  };
+}
+
+let tabHub: PrefsHub | null = null;
+/** This tab's hub (created on first use). */
+function defaultHub(): PrefsHub {
+  tabHub ??= createPrefsHub();
+  return tabHub;
+}
+
+/** Tells the other tabs of the origin (the learner app, All lessons, the presenter, other grown-up pages). */
+export function postDeviceSettings(value: DeviceSettings, hub: PrefsHub = defaultHub()): void {
+  try {
+    hub.post(prefsMessage(value));
+  } catch {
+    // Nothing to tell.
+  }
+}
+
+async function writeOnce(store: IdbStore, decide: (stored: DeviceSettings) => DeviceSettingsPatch | null): Promise<{ next: DeviceSettings; wrote: boolean } | null> {
+  try {
+    const raw = parseStoredObject(await store.get(DEVICE_SETTINGS_STORAGE_KEY));
+    const stored = settingsOf(raw);
+    const patch = decide(stored);
+    if (patch === null) return { next: stored, wrote: false };
+    const merged = mergeDeviceSettings(raw, patch);
+    await store.set(DEVICE_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+    return { next: settingsOf(merged), wrote: true };
+  } catch {
+    return null;
   }
 }
 
 /**
- * Read-modify-write of the record: `patch` gets what is stored now (so a field the learner app
- * wrote meanwhile is kept), the result is written and posted. Returns the record written, or null
- * when nothing could be written (no IndexedDB, a refused write); the page keeps the change for
- * this tab then.
+ * Read-modify-write of the record (AMENDMENTS-DISPLAY-NAV section 3.1): `decide` gets what is
+ * stored now and returns the fields to change, or null to change nothing (a seed that finds a
+ * choice already there, an account value that is no longer newer). Only those fields change, so a
+ * key the learner app or a newer build wrote is kept. A failed read or write is retried once on a
+ * fresh connection. A record that was written is posted to the other tabs. Returns the record as
+ * it is stored now (written, or as found when `decide` changed nothing), or null when it could not
+ * be read or written (no IndexedDB, a refused write); the page keeps the change for this tab then.
  */
 export async function writeDeviceSettings(
-  patch: (stored: DeviceSettings) => DeviceSettings,
-  deps: { open?: OpenIdbStore; channel?: OpenChannel } = {},
+  decide: (stored: DeviceSettings) => DeviceSettingsPatch | null,
+  deps: { open?: OpenIdbStore; hub?: PrefsHub } = {},
 ): Promise<DeviceSettings | null> {
-  const open = deps.open ?? learnerStore;
-  const store = open(false);
-  if (!store) return null;
-  try {
-    const stored = parseStoredSettings(await store.get(DEVICE_SETTINGS_STORAGE_KEY));
-    const next = patch(stored);
-    await store.set(DEVICE_SETTINGS_STORAGE_KEY, JSON.stringify(next));
-    postDeviceSettings(next, deps.channel);
-    return next;
-  } catch {
-    return null;
-  }
+  const result = await withRetry(deps.open ?? learnerStore, (store) => writeOnce(store, decide));
+  if (result === null) return null;
+  if (result.wrote) postDeviceSettings(result.next, deps.hub);
+  return result.next;
 }
 
 interface EventTargetLike {
@@ -129,7 +212,7 @@ interface EventTargetLike {
 }
 
 export interface FollowDeps {
-  channel?: OpenChannel;
+  hub?: PrefsHub;
   win?: EventTargetLike | null;
   doc?: (EventTargetLike & { visibilityState?: string }) | null;
 }
@@ -140,13 +223,10 @@ export interface FollowDeps {
  * back/forward cache (`pageshow`). Returns the unsubscribe.
  */
 export function followDeviceSettings(onRecord: (value: DeviceSettings) => void, onReturn: () => void, deps: FollowDeps = {}): () => void {
-  const channel = (deps.channel ?? browserChannel)();
-  if (channel) {
-    channel.onmessage = (event) => {
-      const parsed = PrefsMessageSchema.safeParse(event.data);
-      if (parsed.success) onRecord(parsed.data.value);
-    };
-  }
+  const stopListening = (deps.hub ?? defaultHub()).listen((data) => {
+    const parsed = PrefsMessageSchema.safeParse(data);
+    if (parsed.success) onRecord(parsed.data.settings);
+  });
   const g = globalThis as { addEventListener?: unknown; document?: FollowDeps['doc'] };
   const win = deps.win !== undefined ? deps.win : typeof g.addEventListener === 'function' ? (globalThis as unknown as EventTargetLike) : null;
   const doc = deps.doc !== undefined ? deps.doc : (g.document ?? null);
@@ -161,11 +241,8 @@ export function followDeviceSettings(onRecord: (value: DeviceSettings) => void, 
     // No events: the channel still works.
   }
   return () => {
+    stopListening();
     try {
-      if (channel) {
-        channel.onmessage = null;
-        channel.close();
-      }
       doc?.removeEventListener('visibilitychange', onVisibility);
       win?.removeEventListener('pageshow', onShow);
     } catch {

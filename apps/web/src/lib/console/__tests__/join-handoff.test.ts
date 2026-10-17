@@ -49,23 +49,23 @@ describe('openAppWithJoinCode', () => {
     store.data.set(UNLOCK_SESSION_KEY, '{}');
     store.data.set(CONSOLE_SESSION_KEY, '{}');
     const opened: string[] = [];
-    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://app.hangulroute.com', storage: store, assign: (url) => opened.push(url) });
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, locale: 'ko', origin: 'https://app.hangulroute.com', storage: store, assign: (url) => opened.push(url) });
     expect(JSON.parse(store.data.get(JOIN_HANDOFF_KEY) ?? 'null')).toEqual({ v: 1, code: 'K7MPQ4', at: 5 });
     expect(store.data.has(UNLOCK_SESSION_KEY)).toBe(false);
     expect(store.data.has(CONSOLE_SESSION_KEY)).toBe(false);
-    expect(opened).toEqual(['/']);
+    expect(opened).toEqual(['/?lang=ko']);
   });
 
   it('from the site origin (before F-SITE-002 S-10) writes no hand-off (sessionStorage is per origin, the app host could not read it) and opens the app host', () => {
     const opened: string[] = [];
     const store = memory();
     store.data.set(UNLOCK_SESSION_KEY, '{}');
-    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://hangulroute.com', storage: store, assign: (url) => opened.push(url) });
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, locale: 'en', origin: 'https://hangulroute.com', storage: store, assign: (url) => opened.push(url) });
     expect(store.data.has(JOIN_HANDOFF_KEY)).toBe(false);
     expect(store.data.has(UNLOCK_SESSION_KEY)).toBe(false);
-    expect(opened).toEqual(['https://app.hangulroute.com/']);
+    expect(opened).toEqual(['https://app.hangulroute.com/?lang=en']);
     const www = memory();
-    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://www.hangulroute.com', storage: www, assign: () => undefined });
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, locale: 'en', origin: 'https://www.hangulroute.com', storage: www, assign: () => undefined });
     expect(www.data.has(JOIN_HANDOFF_KEY)).toBe(false);
   });
 
@@ -77,8 +77,8 @@ describe('openAppWithJoinCode', () => {
     const opened: string[] = [];
     const store = memory();
     vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com', assign: (url: string) => opened.push(url) }, sessionStorage: store });
-    openAppWithJoinCode({ code: 'K7MPQ4', now: 9 });
-    expect(opened).toEqual(['/']);
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 9, locale: 'en' });
+    expect(opened).toEqual(['/?lang=en']);
     expect(JSON.parse(store.data.get(JOIN_HANDOFF_KEY) ?? 'null')).toEqual({ v: 1, code: 'K7MPQ4', at: 9 });
   });
 });

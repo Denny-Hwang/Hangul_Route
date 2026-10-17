@@ -18,6 +18,7 @@ vi.mock('next/navigation', () => ({
 const auth = vi.hoisted(() => ({ ready: true, session: null as { accountId: string } | null, signOuts: [] as Array<string | undefined> }));
 vi.mock('../auth-context', () => ({
   ConsoleAuthProvider: ({ children }: { children: ReactNode }) => children,
+  AccountLocaleSlot: () => null,
   useConsoleAuth: () => ({
     ready: auth.ready,
     session: auth.session,

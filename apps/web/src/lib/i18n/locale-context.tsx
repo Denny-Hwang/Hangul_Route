@@ -1,6 +1,6 @@
 'use client';
 
-import { DEFAULT_TEXT_SIZE, type DeviceSettings, type TextSize } from '@hangul-route/content-schema';
+import { DEFAULT_TEXT_SIZE, MIGRATED_AT, mergeAccountLocale, type AccountLocale, type DeviceSettings, type TextSize } from '@hangul-route/content-schema';
 import { TEXT_SCALE_CSS_VAR, textSizeFactor } from '@hangul-route/design-system/text-size';
 import {
   DEFAULT_LOCALE,
@@ -13,6 +13,7 @@ import {
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   browserLanguages,
+  clearStoredLocale,
   firstPaintLocale,
   queryLocale,
   readStoredLocale,
@@ -28,8 +29,10 @@ import { followDeviceSettings, readDeviceSettings, writeDeviceSettings, type Dev
  * Console locale and text size provider — F-I18N-001 §3.2; owner items 6 and 7 (one UI language
  * per device and per account). The static HTML is always English (the locale of the route). After
  * mount the provider reads the device's one display record (`hr:device:settings`, shared with
- * the learner app on this origin) and resolves the language (the record > a `?lang=` that seeds a
- * device that never chose > the browser languages) and the text size; until then `ready` is
+ * the learner app on this origin) and resolves the language (`resolveConsoleDisplay`: the record >
+ * on a device with no learner profiles, the console choice stored before the record existed > a
+ * `?lang=` > the browser languages; the first two that the record lacks seed it, stamped
+ * `MIGRATED_AT` so any account choice beats them) and the text size; until then `ready` is
  * false, and the grown-up gate shows its empty canvas, so no frame paints in the wrong language
  * or size. `hr:console:uiLocale` / `hr:console:textSize` are read-through mirrors for that first
  * paint and for a browser whose IndexedDB cannot be read. A choice here writes the record, the
@@ -49,19 +52,36 @@ export interface ConsoleLocale {
   setTextSize: (size: TextSize) => void;
   /** False until the record is read (or the wait ran out): the grown-up gate holds its empty canvas. */
   ready: boolean;
+  /**
+   * True once the record read has finished (readable or not) and any seed it called for is
+   * stored; never because the paint wait ran out. The account merge waits for it, so it never
+   * merges against a record that is still being read.
+   */
+  recordSettled: boolean;
   /** The record as read (null until read, or where it cannot be read): the account merge reads it. */
   record: DeviceSettings | null;
   /** The last language chosen in this tab, with its time: the account sync writes it to the account. */
   lastChoice: { uiLocale: UiLocale; uiLocaleAt: string } | null;
-  /** A record another source decided (the account merge after a sign-in): written, mirrored, applied. */
-  applyRecord: (record: DeviceSettings) => void;
+  /**
+   * The signed-in account's language won the merge: it is written into the record, but only if it
+   * is still newer than what the record holds when the write runs (another tab may have chosen
+   * meanwhile), then mirrored and applied. Where the record cannot be written it applies to this
+   * tab only.
+   */
+  applyAccount: (account: AccountLocale) => void;
 }
 
 const ENGLISH_ONLY: readonly UiLocale[] = [DEFAULT_LOCALE];
 
-/** Keeps the mirrors in step with what the page shows; a mirror that already says so is not written again. */
-function syncMirrors(locale: UiLocale | null, size: TextSize | null): void {
-  if (locale !== null && readStoredLocale() !== locale) writeStoredLocale(locale);
+/**
+ * Keeps the mirrors in step with the record: the language mirror says the record's language, and
+ * nothing when the record holds none (`clear`); `keep` (or null) leaves it. A mirror that already
+ * says so is not written again.
+ */
+function syncMirrors(locale: UiLocale | 'clear' | 'keep' | null, size: TextSize | null): void {
+  if (locale === 'clear') {
+    if (readStoredLocale() !== null) clearStoredLocale();
+  } else if (locale !== null && locale !== 'keep' && readStoredLocale() !== locale) writeStoredLocale(locale);
   if (size !== null && (readStoredTextSize() ?? DEFAULT_TEXT_SIZE) !== size) writeStoredTextSize(size);
 }
 
@@ -73,9 +93,10 @@ const LocaleContext = createContext<ConsoleLocale>({
   textSize: DEFAULT_TEXT_SIZE,
   setTextSize: () => undefined,
   ready: true,
+  recordSettled: false,
   record: null,
   lastChoice: null,
-  applyRecord: () => undefined,
+  applyAccount: () => undefined,
 });
 
 /** How long the gate waits for the record before it paints with the first-paint guess (a stuck IndexedDB). */
@@ -117,20 +138,26 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
   const [locale, setLocaleState] = useState<UiLocale>(DEFAULT_LOCALE);
   const [textSize, setTextSizeState] = useState<TextSize>(DEFAULT_TEXT_SIZE);
   const [ready, setReady] = useState(false);
+  const [recordSettled, setRecordSettled] = useState(false);
   const [record, setRecord] = useState<DeviceSettings | null>(null);
+  const recordRef = useRef<DeviceSettings | null>(null);
+  const keepRecord = useCallback((value: DeviceSettings | null) => {
+    recordRef.current = value;
+    setRecord(value);
+  }, []);
   const [lastChoice, setLastChoice] = useState<{ uiLocale: UiLocale; uiLocaleAt: string } | null>(null);
 
-  /** Shows a record (from a read, another tab or the account merge) and mirrors it. */
+  /** Shows a record (from a read, a write, another tab or the account merge) and mirrors it. */
   const show = useCallback(
     (value: DeviceSettings) => {
-      setRecord(value);
+      keepRecord(value);
       const next = value.uiLocale !== undefined && offered.includes(value.uiLocale) ? value.uiLocale : null;
       if (next !== null) setLocaleState(next);
       const size = value.textSize ?? DEFAULT_TEXT_SIZE;
       setTextSizeState(size);
-      syncMirrors(next, size);
+      syncMirrors(next ?? 'clear', size);
     },
-    [offered],
+    [offered, keepRecord],
   );
 
   useEffect(() => {
@@ -154,20 +181,26 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
         const picked = resolveConsoleDisplay({ device, mirror, query, languages, available: offered });
         setLocaleState(picked.locale);
         setTextSizeState(picked.textSize);
-        syncMirrors(picked.locale, picked.textSize);
-        setRecord(device.readable ? device.value : null);
+        syncMirrors(picked.mirror, picked.textSize);
+        keepRecord(device.readable ? device.value : null);
         setReady(true);
         clearTimeout(wait);
-        if (picked.seed !== null) {
-          const seed = picked.seed;
-          const at = io.current.now();
-          // A `?lang=` seeds a device that never chose, stamped now (AMENDMENTS-DISPLAY-NAV section 3.4).
-          void io.current
-            .writeDevice((stored) => (stored.uiLocale !== undefined ? stored : { ...stored, uiLocale: seed, uiLocaleAt: at }))
-            .then((written) => {
-              if (live && written) setRecord(written);
-            });
+        if (picked.seed === null) {
+          setRecordSettled(true);
+          return;
         }
+        const seed = picked.seed;
+        // A seed (a `?lang=`, or the console's own choice from before the record) is stamped
+        // MIGRATED_AT: it was not chosen here just now, so any account choice beats it
+        // (AMENDMENTS-DISPLAY-NAV sections 3.3 and 3.4). A choice another tab stored meanwhile wins.
+        void io.current
+          .writeDevice((stored) => (stored.uiLocale !== undefined ? null : { uiLocale: seed, uiLocaleAt: MIGRATED_AT }))
+          .then((now) => {
+            if (!live) return;
+            if (now) show(now);
+            else keepRecord({ ...(device.readable ? device.value : {}), uiLocale: seed, uiLocaleAt: MIGRATED_AT });
+            setRecordSettled(true);
+          });
       });
     const stop = io.current.follow(
       (value) => {
@@ -187,7 +220,7 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
       clearTimeout(wait);
       stop();
     };
-  }, [offered, show]);
+  }, [offered, show, keepRecord]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -219,39 +252,49 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
       setLocaleState(next);
       syncMirrors(next, null);
       setLastChoice({ uiLocale: next, uiLocaleAt: at });
-      void io.current.writeDevice((stored) => ({ ...stored, uiLocale: next, uiLocaleAt: at })).then((written) => {
-        if (written) setRecord(written);
+      void io.current.writeDevice(() => ({ uiLocale: next, uiLocaleAt: at })).then((written) => {
+        if (written) keepRecord(written);
       });
     },
-    [offered],
+    [offered, keepRecord],
   );
 
-  const setTextSize = useCallback((size: TextSize) => {
-    setTextSizeState(size);
-    syncMirrors(null, size);
-    void io.current.writeDevice((stored) => ({ ...stored, textSize: size })).then((written) => {
-      if (written) setRecord(written);
-    });
-  }, []);
+  const setTextSize = useCallback(
+    (size: TextSize) => {
+      setTextSizeState(size);
+      syncMirrors(null, size);
+      void io.current.writeDevice(() => ({ textSize: size })).then((written) => {
+        if (written) keepRecord(written);
+      });
+    },
+    [keepRecord],
+  );
 
-  const applyRecord = useCallback(
-    (value: DeviceSettings) => {
-      show(value);
+  const applyAccount = useCallback(
+    (account: AccountLocale) => {
+      // Merged again against what is stored when the write runs: a newer choice another tab made
+      // meanwhile is kept, never overwritten by the older account value.
       void io.current
-        .writeDevice((stored) => {
-          const { uiLocale: _u, uiLocaleAt: _t, ...rest } = stored;
-          return { ...rest, ...(value.uiLocale !== undefined ? { uiLocale: value.uiLocale } : {}), ...(value.uiLocaleAt !== undefined ? { uiLocaleAt: value.uiLocaleAt } : {}) };
-        })
-        .then((written) => {
-          if (written) setRecord(written);
+        .writeDevice((stored) => mergeAccountLocale(stored, account).device)
+        .then((now) => {
+          if (now) {
+            show(now);
+            return;
+          }
+          // The record cannot be written: the account's language applies to this tab only.
+          const inTab = mergeAccountLocale(recordRef.current ?? {}, account).device;
+          if (inTab && offered.includes(inTab.uiLocale)) {
+            setLocaleState(inTab.uiLocale);
+            syncMirrors(inTab.uiLocale, null);
+          }
         });
     },
-    [show],
+    [show, offered],
   );
 
   const value = useMemo<ConsoleLocale>(
-    () => ({ locale, messages: getMessages(locale), available: offered, setLocale, textSize, setTextSize, ready, record, lastChoice, applyRecord }),
-    [locale, offered, setLocale, textSize, setTextSize, ready, record, lastChoice, applyRecord],
+    () => ({ locale, messages: getMessages(locale), available: offered, setLocale, textSize, setTextSize, ready, recordSettled, record, lastChoice, applyAccount }),
+    [locale, offered, setLocale, textSize, setTextSize, ready, recordSettled, record, lastChoice, applyAccount],
   );
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }

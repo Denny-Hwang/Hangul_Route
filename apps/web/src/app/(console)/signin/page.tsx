@@ -1,6 +1,6 @@
 'use client';
 
-import { APP_ROUTES, personaHint, type AdultPersona } from '@hangul-route/content-schema';
+import { APP_ROUTES, personaHint, type AdultPersona, type UiLocale } from '@hangul-route/content-schema';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { ClerkReverify, ClerkWidget } from '@/components/console/ClerkSignIn';
@@ -14,7 +14,7 @@ import { learnerHome } from '@/lib/console/grown-up-lock';
 import { createModeUrl, isStandaloneDisplay, showStandaloneFinish, signInReturnUrl } from '@/lib/console/signin-flow';
 import { readAffirmation, readSignInRecord, writeAffirmation, writeSignInProof } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
-import { useMessages } from '@/lib/i18n/locale-context';
+import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 
 /**
  * `/signin` — grown-up sign-in on the app host and the router into the grown-up area (F-APP-001
@@ -44,9 +44,9 @@ function useStandalone(): boolean {
   return standalone;
 }
 
-function backToLearning(origin: string): void {
+function backToLearning(origin: string, locale: UiLocale): void {
   clearGrownUpTab();
-  window.location.assign(learnerHome(origin));
+  window.location.assign(learnerHome(origin, locale));
 }
 
 /** The dev sign-in form (F-AUTH-001 fallback; never on a production build with Clerk, `devAuthEnabled`). */
@@ -141,12 +141,13 @@ function SignInView({ params, hint }: { params: URLSearchParams; hint: AdultPers
   const m = useMessages();
   const s = m.console.signIn;
   const origin = useOrigin();
+  const locale = useLocale();
   return (
     <SignInColumn>
-      <QuietBack label={m.console.lock.backToLearning.cta} onClick={() => backToLearning(origin)} testId="signin-back" />
+      <QuietBack label={m.console.lock.backToLearning.cta} onClick={() => backToLearning(origin, locale)} testId="signin-back" />
       <SignInHead mark={m.landing.brand.mark} title={s.title} intro={hint ? s.persona[hint].intro : s.neutralIntro} />
       <SignInWidget kind="signIn" params={params} hint={hint} />
-      <BelowWidget createHref={createModeUrl(params, true)} createLabel={s.create.link} learnersLine={s.learnersNoAccount} learnHref={learnerHome(origin)} learnLabel={s.imLearning} />
+      <BelowWidget createHref={createModeUrl(params, true)} createLabel={s.create.link} learnersLine={s.learnersNoAccount} learnHref={learnerHome(origin, locale)} learnLabel={s.imLearning} />
     </SignInColumn>
   );
 }

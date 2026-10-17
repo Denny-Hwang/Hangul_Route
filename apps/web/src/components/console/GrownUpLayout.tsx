@@ -1,10 +1,12 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { typography } from '@hangul-route/design-system/tokens';
 import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
+import { rem } from '@/lib/console/rem';
 import { CLERK_LOAD_TIMEOUT_MS, signedOutTarget } from '@/lib/console/signin-flow';
 import { LocaleProvider, useConsoleLocale } from '@/lib/i18n/locale-context';
-import { ConsoleAuthProvider, useConsoleAuth } from './auth-context';
+import { AccountLocaleSlot, ConsoleAuthProvider, useConsoleAuth } from './auth-context';
 import { GrownUpLocationContext } from './grown-up-location';
 import { GrownUpLock } from './GrownUpLock';
 
@@ -85,15 +87,27 @@ export function GrownUpGate({ children, title = 'console' }: { children: ReactNo
     <GrownUpLocationContext.Provider value={location}>
       <DocumentTitle kind={title} />
       <GrownUpLock pathname={pathname} search={search} onSignInAgain={(url) => void auth.signOut(url)}>
+        {/* The account's language is read and written only once a grown-up has opened the page. */}
+        <AccountLocaleSlot />
         {children}
       </GrownUpLock>
     </GrownUpLocationContext.Provider>
   );
 }
 
+/**
+ * A form control the browser draws at its own fixed font size (13.33 px) whatever the root says,
+ * so a button, field or select without a size of its own would ignore the chosen text size. This
+ * puts every such control in rem at the caption token (the closest token to that default, so
+ * nothing moves at Standard). `:where` keeps it at zero specificity: any size a component sets
+ * still wins.
+ */
+export const CONTROL_FONT_CSS = `:where(button,input,select,textarea){font-size:${rem(typography.size.caption)}}`;
+
 export function GrownUpLayout({ children, title }: { children: ReactNode; title?: GrownUpTitle }): JSX.Element {
   return (
     <LocaleProvider>
+      <style>{CONTROL_FONT_CSS}</style>
       <ConsoleAuthProvider>
         {/* useSearchParams in a static export needs a Suspense boundary; its fallback is the same empty canvas. */}
         <Suspense fallback={<Pending />}>

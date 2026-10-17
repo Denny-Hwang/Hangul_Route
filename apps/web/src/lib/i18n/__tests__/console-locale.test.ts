@@ -4,6 +4,7 @@ import {
   CONSOLE_LOCALE_KEY,
   CONSOLE_TEXT_SIZE_KEY,
   browserLanguages,
+  clearStoredLocale,
   firstPaintLocale,
   queryLocale,
   readStoredLocale,
@@ -46,19 +47,41 @@ afterEach(() => {
 });
 
 const NO_MIRROR = { locale: null, textSize: null } as const;
-const readable = (value: Record<string, unknown> = {}) => ({ readable: true as const, value });
+/** A readable record on a device with learner profiles (the learner app is in use), unless said otherwise. */
+const readable = (value: Record<string, unknown> = {}, hasProfiles = true) => ({ readable: true as const, value, hasProfiles });
 const UNREADABLE = { readable: false as const };
 
 describe('resolveConsoleDisplay: the device record wins (owner items 6 and 7)', () => {
   it('the device language wins over ?lang=, the mirror (an old console choice) and the browser', () => {
     const picked = resolveConsoleDisplay({ device: readable({ uiLocale: 'en' }), mirror: { locale: 'ko', textSize: 'largest' }, query: 'es', languages: ['ko-KR'], available: ALL });
-    expect(picked).toEqual({ locale: 'en', textSize: 'standard', seed: null });
+    expect(picked).toEqual({ locale: 'en', textSize: 'standard', seed: null, mirror: 'en' });
+    // Also on a device with no learner profiles: a choice in the record is never folded over.
+    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'en' }, false), mirror: { locale: 'ko', textSize: null }, query: null, languages: [], available: ALL }).locale).toBe('en');
   });
 
   it('an English learner app with a console that stored ko opens the console in English', () => {
-    // The learner app chose English (or handed off lang=en); the console's old stored ko is only a mirror.
+    // The learner app chose English, or handed off lang=en: the console's old stored ko is only a mirror.
     expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'en', uiLocaleAt: '2026-10-16T00:00:00.000Z' }), mirror: { locale: 'ko', textSize: null }, query: null, languages: ['ko-KR'], available: ALL }).locale).toBe('en');
-    expect(resolveConsoleDisplay({ device: readable({}), mirror: { locale: 'ko', textSize: null }, query: queryLocale('?lang=en'), languages: ['ko-KR'], available: ALL }).locale).toBe('en');
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: { locale: 'ko', textSize: null }, query: queryLocale('?lang=en'), languages: ['ko-KR'], available: ALL })).toEqual({
+      locale: 'en',
+      textSize: 'standard',
+      seed: 'en',
+      mirror: 'en',
+    });
+  });
+
+  it('a device with no learner profiles keeps the console choice stored before the record existed: folded into the record', () => {
+    // A teacher laptop that never ran the learner app, where 한국어 was picked in the old Language select.
+    expect(resolveConsoleDisplay({ device: readable({}, false), mirror: { locale: 'ko', textSize: null }, query: null, languages: ['en-US'], available: ALL })).toEqual({
+      locale: 'ko',
+      textSize: 'standard',
+      seed: 'ko',
+      mirror: 'ko',
+    });
+    // It comes before a ?lang= hand-off (Welcome's "I'm a teacher" on a browser in English carries the detected lang=en).
+    expect(resolveConsoleDisplay({ device: readable({}, false), mirror: { locale: 'ko', textSize: null }, query: 'en', languages: ['en-US'], available: ALL }).seed).toBe('ko');
+    // A hidden one is not folded.
+    expect(resolveConsoleDisplay({ device: readable({}, false), mirror: { locale: 'ko', textSize: null }, query: null, languages: [], available: ['en'] }).seed).toBeNull();
   });
 
   it('the record\'s text size applies; standard when it has none', () => {
@@ -67,23 +90,29 @@ describe('resolveConsoleDisplay: the device record wins (owner items 6 and 7)', 
   });
 
   it('?lang= seeds only a device that never chose', () => {
-    expect(resolveConsoleDisplay({ device: readable({}), mirror: NO_MIRROR, query: 'ko', languages: ['en'], available: ALL })).toEqual({ locale: 'ko', textSize: 'standard', seed: 'ko' });
-    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'es' }), mirror: NO_MIRROR, query: 'ko', languages: [], available: ALL })).toEqual({ locale: 'es', textSize: 'standard', seed: null });
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: NO_MIRROR, query: 'ko', languages: ['en'], available: ALL })).toEqual({ locale: 'ko', textSize: 'standard', seed: 'ko', mirror: 'ko' });
+    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'es' }), mirror: NO_MIRROR, query: 'ko', languages: [], available: ALL })).toEqual({ locale: 'es', textSize: 'standard', seed: null, mirror: 'es' });
   });
 
-  it('a device that never chose and no ?lang=: the browser languages, then English (the mirror does not count)', () => {
-    expect(resolveConsoleDisplay({ device: readable({}), mirror: { locale: 'ko', textSize: null }, query: null, languages: ['fr', 'es-MX'], available: ALL }).locale).toBe('es');
+  it('a device with learner profiles that never chose, and no ?lang=: the browser languages, then English; the mirror is cleared', () => {
+    expect(resolveConsoleDisplay({ device: readable({}), mirror: { locale: 'ko', textSize: null }, query: null, languages: ['fr', 'es-MX'], available: ALL })).toEqual({
+      locale: 'es',
+      textSize: 'standard',
+      seed: null,
+      mirror: 'clear',
+    });
     expect(resolveConsoleDisplay({ device: readable({}), mirror: NO_MIRROR, query: null, languages: ['fr'], available: ALL }).locale).toBe('en');
+    expect(resolveConsoleDisplay({ device: readable({}, false), mirror: NO_MIRROR, query: null, languages: ['fr'], available: ALL }).mirror).toBe('clear');
   });
 
-  it('a record that cannot be read: ?lang= > the mirror > the browser, the mirrored size, and nothing is seeded', () => {
-    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: 'large' }, query: 'es', languages: [], available: ALL })).toEqual({ locale: 'es', textSize: 'large', seed: null });
-    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: null }, query: null, languages: ['es'], available: ALL })).toEqual({ locale: 'ko', textSize: 'standard', seed: null });
+  it('a record that cannot be read: ?lang= > the mirror > the browser, the mirrored size; nothing is seeded and the mirror is kept', () => {
+    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: 'large' }, query: 'es', languages: [], available: ALL })).toEqual({ locale: 'es', textSize: 'large', seed: null, mirror: 'keep' });
+    expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: null }, query: null, languages: ['es'], available: ALL })).toEqual({ locale: 'ko', textSize: 'standard', seed: null, mirror: 'keep' });
     expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: NO_MIRROR, query: null, languages: ['es'], available: ALL }).locale).toBe('es');
   });
 
   it('never picks a hidden locale at any step', () => {
-    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'ko' }), mirror: NO_MIRROR, query: 'es', languages: ['ko'], available: ['en'] })).toEqual({ locale: 'en', textSize: 'standard', seed: null });
+    expect(resolveConsoleDisplay({ device: readable({ uiLocale: 'ko' }), mirror: NO_MIRROR, query: 'es', languages: ['ko'], available: ['en'] })).toEqual({ locale: 'en', textSize: 'standard', seed: null, mirror: 'clear' });
     expect(resolveConsoleDisplay({ device: UNREADABLE, mirror: { locale: 'ko', textSize: null }, query: 'es', languages: [], available: ['en'] }).locale).toBe('en');
   });
 });
@@ -135,6 +164,10 @@ describe('the mirrors (hr:console:uiLocale, hr:console:textSize)', () => {
     expect(writeStoredLocale('es', storage)).toBe(true);
     expect(storage.map.get(CONSOLE_LOCALE_KEY)).toBe('es');
     expect(readStoredLocale(storage)).toBe('es');
+    clearStoredLocale(storage);
+    expect(storage.map.has(CONSOLE_LOCALE_KEY)).toBe(false);
+    expect(() => clearStoredLocale(blocked)).not.toThrow();
+    expect(() => clearStoredLocale()).not.toThrow();
   });
 
   it('ignores a value that is not a UI locale (corrupt or a removed locale)', () => {

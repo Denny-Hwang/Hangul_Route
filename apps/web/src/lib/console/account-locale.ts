@@ -21,7 +21,7 @@ export function withAccountLocale(metadata: UnsafeMetadata | null | undefined, c
   return { ...(metadata ?? {}), uiLocale: choice.uiLocale, uiLocaleAt: choice.uiLocaleAt };
 }
 
-/** The newer-wins merge of the device record and the account right after a sign-in. */
-export function signInMerge(device: DeviceSettings | null, metadata: UnsafeMetadata | null | undefined, now: string): LocaleMergeResult {
-  return mergeAccountLocale(device ?? {}, accountLocaleOf(metadata), now);
+/** The newer-wins merge of the device record (null: it cannot be read) and the account right after a sign-in. */
+export function signInMerge(device: DeviceSettings | null, metadata: UnsafeMetadata | null | undefined): LocaleMergeResult {
+  return mergeAccountLocale(device ?? {}, accountLocaleOf(metadata));
 }

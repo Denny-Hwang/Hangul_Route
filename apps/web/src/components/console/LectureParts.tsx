@@ -30,7 +30,8 @@ export const lectureSectionStyle: CSSProperties = { ...panelStyle, marginBottom:
 const fieldsetStyle: CSSProperties = { ...lectureSectionStyle, minWidth: 0 };
 const legendStyle: CSSProperties = { fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, padding: `0 ${spacing.xs}px` };
 const rowStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', padding: `${spacing.xs}px 0` };
-const selectStyle: CSSProperties = { minHeight: spacing.xxxl, padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, backgroundColor: colors.surface.paper, color: colors.text.primary };
+// A select draws at the browser's own fixed size unless told: in rem, it follows the chosen text size.
+const selectStyle: CSSProperties = { minHeight: spacing.xxxl, padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}`, backgroundColor: colors.surface.paper, color: colors.text.primary, fontSize: rem(typography.size.body) };
 const rowButtonStyle: CSSProperties = {
   minWidth: spacing.xxxl,
   minHeight: spacing.xxxl,

@@ -1,6 +1,6 @@
 'use client';
 
-import { unlockActive, type GrownUpUnlock } from '@hangul-route/content-schema';
+import { unlockActive, type GrownUpUnlock, type UiLocale } from '@hangul-route/content-schema';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
@@ -10,7 +10,7 @@ import { decideGrownUpLock, learnerHome, pinPathUrl, signInAgainUrl, type Device
 import { clearSession } from '@/lib/console/session';
 import { readTrustedEpoch } from '@/lib/console/shell-store';
 import { clearGrownUpTab, readUnlock, touchUnlock } from '@/lib/console/unlock';
-import { useMessages } from '@/lib/i18n/locale-context';
+import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { DisplayButton } from './DisplaySheet';
 import { headRem, rem } from '@/lib/console/rem';
 
@@ -254,14 +254,14 @@ interface LockHandlers {
   onBackToLearning: () => void;
 }
 
-/** The three lock buttons for the page at `path` (pathname and query). */
-export function lockActions(env: GrownUpLockEnvironment, path: string, onSignInAgain: (signInUrl: string) => void): LockHandlers {
+/** The three lock buttons for the page at `path` (pathname and query); Back to learning carries the console's language. */
+export function lockActions(env: GrownUpLockEnvironment, path: string, onSignInAgain: (signInUrl: string) => void, locale: UiLocale): LockHandlers {
   return {
     onUsePin: () => env.assign(pinPathUrl(path)),
     onSignInAgain: () => onSignInAgain(signInAgainUrl(path)),
     onBackToLearning: () => {
       env.clearGrownUpTab();
-      env.assign(learnerHome(env.origin()));
+      env.assign(learnerHome(env.origin(), locale));
     },
   };
 }
@@ -306,6 +306,7 @@ export interface GrownUpLockProps {
 }
 
 export function GrownUpLock({ children, pathname, search = '', exempt = false, onSignInAgain, environment }: GrownUpLockProps): JSX.Element {
+  const locale = useLocale();
   const [state, setState] = useState<LockState | null>(null);
   const pathRef = useRef(pathname);
   const decidedPathRef = useRef<string | null>(null);
@@ -344,7 +345,7 @@ export function GrownUpLock({ children, pathname, search = '', exempt = false, o
 
   if (exempt) return <>{children}</>;
   return (
-    <GrownUpLockGate view={lockView(state, pathname)} {...lockActions(envOf(), returnPath(pathname, search), onSignInAgain)}>
+    <GrownUpLockGate view={lockView(state, pathname)} {...lockActions(envOf(), returnPath(pathname, search), onSignInAgain, locale)}>
       {children}
     </GrownUpLockGate>
   );

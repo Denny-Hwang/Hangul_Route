@@ -2,7 +2,7 @@
 
 import { ClerkProvider, useAuth, useClerk, useReverification, useUser } from '@clerk/clerk-react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { signInMerge, withAccountLocale, type UnsafeMetadata } from '@/lib/console/account-locale';
+import { accountLocaleOf, signInMerge, withAccountLocale, type UnsafeMetadata } from '@/lib/console/account-locale';
 import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkLocalization } from '@/lib/console/clerk-localization';
 import { clerkPublishableKey } from '@/lib/console/config';
@@ -50,6 +50,12 @@ export interface ConsoleAuth {
    * section 4.4), so it simply runs `fetcher` once more.
    */
   reverify: <T>(fetcher: () => Promise<T>, first: T) => Promise<ReverifyOutcome<T>>;
+  /**
+   * The signed-in Clerk user whose account carries the UI language (owner items 6 and 7); null
+   * signed out and in a dev-auth build (the device record alone). `AccountLocaleSlot` reads it
+   * inside the grown-up lock.
+   */
+  localeUser: LocaleUser | null;
 }
 
 const SIGNED_OUT: ConsoleAuth = {
@@ -61,6 +67,7 @@ const SIGNED_OUT: ConsoleAuth = {
   signOut: async () => undefined,
   devSignIn: () => undefined,
   reverify: async () => ({ kind: 'unavailable' }),
+  localeUser: null,
 };
 
 const ConsoleAuthContext = createContext<ConsoleAuth>(SIGNED_OUT);
@@ -70,32 +77,40 @@ export function useConsoleAuth(): ConsoleAuth {
 }
 
 /** The Clerk user methods the language sync uses (`user.update` replaces `unsafeMetadata` whole). */
-interface LocaleUser {
+export interface LocaleUser {
   id: string;
   unsafeMetadata?: UnsafeMetadata;
   update: (params: { unsafeMetadata: Record<string, unknown> }) => Promise<unknown>;
 }
 
 /**
- * One UI language per account (owner items 6 and 7), Clerk builds only (a dev-auth build keeps the
- * device record alone). Right after a sign-in, once the device record is read: the newer-wins merge
- * of the record and the account (`signInMerge`; a missing timestamp means the device wins). An
- * account that wins is written into the device record, which tells every open tab; a device that
- * wins is copied to the account. Then every language chosen in this tab while signed in goes to
+ * One UI language per account (owner items 6 and 7; AMENDMENTS-DISPLAY-NAV section 5), Clerk
+ * builds only (a dev-auth build keeps the device record alone). Mounted inside the grown-up lock
+ * (`AccountLocaleSlot`), so nothing reaches the account until a grown-up has opened the page: a
+ * language changed at the lock screen or in the learner app is copied to the account only once
+ * the lock is passed. Once the device record read has settled (never on the paint timeout, which
+ * would merge against a record still being read): the newer-wins merge of the record and the
+ * account (`signInMerge`; a missing time counts as 1970, so a migrated or seeded language never
+ * beats an account choice). An account that wins is written into the device record, merged again
+ * against the record as stored when the write runs, which tells every open tab; a device that
+ * wins is copied to the account with its own time. Then every language chosen in this tab goes to
  * the account. Every write merges into the existing `unsafeMetadata` (the adult step's
  * `adultAffirmedAt`). A failed write only loses the account copy; the device keeps the choice.
  */
-export function AccountLocaleSync({ user, now = () => new Date().toISOString() }: { user: LocaleUser | null; now?: () => string }): null {
-  const { ready, record, lastChoice, applyRecord } = useConsoleLocale();
+export function AccountLocaleSync({ user }: { user: LocaleUser | null }): null {
+  const { recordSettled, record, lastChoice, applyAccount } = useConsoleLocale();
   const merged = useRef<string | null>(null);
   const sent = useRef<string | null>(null);
   useEffect(() => {
-    if (!user || !ready || merged.current === user.id) return;
+    if (!user || !recordSettled || merged.current === user.id) return;
     merged.current = user.id;
-    const result = signInMerge(record, user.unsafeMetadata, now());
-    if (result.device) applyRecord(result.device);
+    // A choice already in the record is the merge's to send, not the choice effect's.
+    if (lastChoice) sent.current = `${lastChoice.uiLocale}|${lastChoice.uiLocaleAt}`;
+    const result = signInMerge(record, user.unsafeMetadata);
+    const account = accountLocaleOf(user.unsafeMetadata);
+    if (result.device && account) applyAccount(account);
     if (result.account) void user.update({ unsafeMetadata: withAccountLocale(user.unsafeMetadata, result.account) }).catch(() => undefined);
-  }, [user, ready, record, applyRecord, now]);
+  }, [user, recordSettled, record, lastChoice, applyAccount]);
   useEffect(() => {
     if (!user || !lastChoice || merged.current !== user.id) return;
     const key = `${lastChoice.uiLocale}|${lastChoice.uiLocaleAt}`;
@@ -104,6 +119,12 @@ export function AccountLocaleSync({ user, now = () => new Date().toISOString() }
     void user.update({ unsafeMetadata: withAccountLocale(user.unsafeMetadata, lastChoice) }).catch(() => undefined);
   }, [user, lastChoice]);
   return null;
+}
+
+/** The account language sync for the signed-in user, if any; rendered inside the grown-up lock's open page. */
+export function AccountLocaleSlot(): JSX.Element | null {
+  const { localeUser } = useConsoleAuth();
+  return localeUser ? <AccountLocaleSync user={localeUser} /> : null;
 }
 
 function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
@@ -137,15 +158,11 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
       },
       devSignIn: () => undefined,
       reverify,
+      localeUser: isLoaded && user ? (user as unknown as LocaleUser) : null,
     }),
     [isLoaded, user, sessionId, getToken, clerk, reverify],
   );
-  return (
-    <ConsoleAuthContext.Provider value={value}>
-      <AccountLocaleSync user={isLoaded && user ? (user as unknown as LocaleUser) : null} />
-      {children}
-    </ConsoleAuthContext.Provider>
-  );
+  return <ConsoleAuthContext.Provider value={value}>{children}</ConsoleAuthContext.Provider>;
 }
 
 function DevBridge({ children }: { children: ReactNode }): JSX.Element {
@@ -174,6 +191,7 @@ function DevBridge({ children }: { children: ReactNode }): JSX.Element {
       },
       devSignIn,
       reverify: (fetcher) => settleReverify(fetcher),
+      localeUser: null,
     }),
     [ready, session, devSignIn],
   );

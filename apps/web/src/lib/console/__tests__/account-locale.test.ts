@@ -29,17 +29,21 @@ describe('withAccountLocale', () => {
   });
 });
 
-describe('signInMerge (newer wins; a missing timestamp means the device wins)', () => {
+describe('signInMerge (newer wins; a missing time counts as 1970)', () => {
   it('an account language seeds a device that never chose (or could not be read)', () => {
-    expect(signInMerge({ textSize: 'large' }, { uiLocale: 'ko', uiLocaleAt: NOW }, NOW).device).toEqual({ textSize: 'large', uiLocale: 'ko', uiLocaleAt: NOW });
-    expect(signInMerge(null, { uiLocale: 'ko', uiLocaleAt: NOW }, NOW).device).toEqual({ uiLocale: 'ko', uiLocaleAt: NOW });
+    expect(signInMerge({ textSize: 'large' }, { uiLocale: 'ko', uiLocaleAt: NOW }).device).toEqual({ uiLocale: 'ko', uiLocaleAt: NOW });
+    expect(signInMerge(null, { uiLocale: 'ko', uiLocaleAt: NOW }).device).toEqual({ uiLocale: 'ko', uiLocaleAt: NOW });
   });
 
-  it('a device choice without a time wins and is copied to the account', () => {
-    expect(signInMerge({ uiLocale: 'en' }, { uiLocale: 'ko', uiLocaleAt: NOW }, NOW)).toEqual({ device: null, account: { uiLocale: 'en', uiLocaleAt: NOW } });
+  it('a device language without a time loses to a stamped account choice', () => {
+    expect(signInMerge({ uiLocale: 'en' }, { uiLocale: 'ko', uiLocaleAt: NOW })).toEqual({ device: { uiLocale: 'ko', uiLocaleAt: NOW }, account: null });
+  });
+
+  it('a device language without a time goes to an account with none, stamped 1970 (never now)', () => {
+    expect(signInMerge({ uiLocale: 'en' }, { adultAffirmedAt: NOW })).toEqual({ device: null, account: { uiLocale: 'en', uiLocaleAt: '1970-01-01T00:00:00.000Z' } });
   });
 
   it('the newer of two stamped choices wins', () => {
-    expect(signInMerge({ uiLocale: 'en', uiLocaleAt: '2026-10-01T00:00:00.000Z' }, { uiLocale: 'es', uiLocaleAt: NOW }, NOW).device).toEqual({ uiLocale: 'es', uiLocaleAt: NOW });
+    expect(signInMerge({ uiLocale: 'en', uiLocaleAt: '2026-10-01T00:00:00.000Z' }, { uiLocale: 'es', uiLocaleAt: NOW }).device).toEqual({ uiLocale: 'es', uiLocaleAt: NOW });
   });
 });

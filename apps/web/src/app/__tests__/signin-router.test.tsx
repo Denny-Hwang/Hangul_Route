@@ -239,7 +239,7 @@ describe('/signin signed out: Panel A (section 3.7)', () => {
     expect(words).toContain("Learners don't need an account. They start learning right away, or join a class with a code.");
     expect(words).not.toMatch(/Kids|Keep progress safe|Sign in with your email or Google/);
     expect(byTestId(page, 'signin-create')[0]?.props.href).toBe(`/signin?mode=create&persona=parent&next=${encodeURIComponent('/teach/home')}`);
-    expect(byTestId(page, 'signin-learn')[0]?.props.href).toBe('/');
+    expect(byTestId(page, 'signin-learn')[0]?.props.href).toBe('/?lang=en');
     expect(byTestId(page, 'signin-back')[0]?.props.children).toContain('Back to learning');
   });
 
@@ -583,7 +583,7 @@ describe('the router after sign-in (sections 3.5, 3.7, 3.9)', () => {
     const env = routerEnv();
     const page = (await render(<GrownUpRouter next={null} hint={null} environment={env} reverify={() => null} />)).root;
     await act(async () => byTestId(page, 'signin-reverify-back')[0]?.props.onClick());
-    expect(env.log.slice(-2)).toEqual(['clearGrownUpTab', 'assign:/']);
+    expect(env.log.slice(-2)).toEqual(['clearGrownUpTab', 'assign:/?lang=en']);
   });
 
   it('without a reverification slot (no Clerk) the reverification counts as cancelled', async () => {

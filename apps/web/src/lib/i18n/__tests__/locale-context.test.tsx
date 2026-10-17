@@ -1,4 +1,4 @@
-import type { DeviceSettings } from '@hangul-route/content-schema';
+import { mergeDeviceSettings, type DeviceSettings } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
@@ -61,7 +61,7 @@ describe('console LocaleProvider: the static HTML (F-I18N-001 §3.2)', () => {
 });
 
 /** A browser with a learner store, a mirror and a channel, all in memory. */
-function browser(opts: { record?: DeviceSettings | 'unreadable'; mirror?: Record<string, string>; search?: string; languages?: string[] } = {}) {
+function browser(opts: { record?: DeviceSettings | 'unreadable'; hasProfiles?: boolean; mirror?: Record<string, string>; search?: string; languages?: string[] } = {}) {
   let record: DeviceSettings | 'unreadable' = opts.record ?? {};
   const writes: DeviceSettings[] = [];
   const local = new Map<string, string>(Object.entries(opts.mirror ?? {}));
@@ -86,10 +86,12 @@ function browser(opts: { record?: DeviceSettings | 'unreadable'; mirror?: Record
   let dropped = 0;
   let onReturn: (() => void) | null = null;
   const deps: Required<LocaleProviderDeps> = {
-    readDevice: async (): Promise<DeviceSettingsRead> => (record === 'unreadable' ? { readable: false } : { readable: true, value: record }),
-    writeDevice: async (patch) => {
+    readDevice: async (): Promise<DeviceSettingsRead> => (record === 'unreadable' ? { readable: false } : { readable: true, value: record, hasProfiles: opts.hasProfiles ?? true }),
+    writeDevice: async (decide) => {
       if (record === 'unreadable') return null;
-      record = patch(record);
+      const patch = decide(record);
+      if (patch === null) return record;
+      record = mergeDeviceSettings(record, patch) as DeviceSettings;
       writes.push(record);
       return record;
     },
@@ -172,11 +174,13 @@ describe('console LocaleProvider: the device record (owner items 6 and 7)', () =
     expect(b.local.get('hr:console:uiLocale')).toBe('en');
   });
 
-  it('?lang= seeds a device that never chose (stamped now), never one that chose, and leaves the address either way', async () => {
+  it('?lang= seeds a device that never chose (stamped 1970, so an account choice beats it), never one that chose, and leaves the address either way', async () => {
     const b = browser({ record: { textSize: 'large' }, search: '?lang=es' });
     await mount(b.deps);
     expect(ctx?.locale).toBe('es');
-    expect(b.writes).toEqual([{ textSize: 'large', uiLocale: 'es', uiLocaleAt: '2026-10-16T12:00:00.000Z' }]);
+    expect(b.writes).toEqual([{ textSize: 'large', uiLocale: 'es', uiLocaleAt: '1970-01-01T00:00:00.000Z' }]);
+    expect(ctx?.recordSettled).toBe(true);
+    expect(ctx?.record).toEqual({ textSize: 'large', uiLocale: 'es', uiLocaleAt: '1970-01-01T00:00:00.000Z' });
     expect(b.dropped()).toBe(1);
     act(() => mounted?.unmount());
     const c = browser({ record: { uiLocale: 'en', uiLocaleAt: '2026-10-01T00:00:00.000Z' }, search: '?lang=ko' });
@@ -199,6 +203,59 @@ describe('console LocaleProvider: the device record (owner items 6 and 7)', () =
     expect(withoutLang({ pathname: '/parent', search: '?lang=en', hash: '' })).toBe('/parent');
     expect(withoutLang({ pathname: '/signin', search: '?persona=teacher&lang=en', hash: '#x' })).toBe('/signin?persona=teacher#x');
     expect(withoutLang({ pathname: '/teach/space', search: '?lang=ko&id=sp_1&next=%2Fa', hash: '' })).toBe('/teach/space?id=sp_1&next=%2Fa');
+  });
+
+  it('a device with no learner profiles keeps the console choice stored before the record: folded into it, stamped 1970', async () => {
+    const b = browser({ record: {}, hasProfiles: false, mirror: { 'hr:console:uiLocale': 'ko' }, search: '?lang=en', languages: ['en-US'] });
+    await mount(b.deps);
+    expect(ctx?.locale).toBe('ko');
+    expect(b.writes).toEqual([{ uiLocale: 'ko', uiLocaleAt: '1970-01-01T00:00:00.000Z' }]);
+  });
+
+  it('a device with learner profiles that never chose: detection, and a stale console mirror is cleared', async () => {
+    const b = browser({ record: {}, mirror: { 'hr:console:uiLocale': 'ko' }, languages: ['es-MX'] });
+    await mount(b.deps);
+    expect(ctx?.locale).toBe('es');
+    expect(b.writes).toEqual([]);
+    expect(b.local.has('hr:console:uiLocale')).toBe(false);
+  });
+
+  it('a seed that finds a choice another tab stored meanwhile shows that choice', async () => {
+    const b = browser({ record: {}, search: '?lang=es' });
+    let first = true;
+    await mount({
+      ...b.deps,
+      readDevice: async () => ({ readable: true, value: {}, hasProfiles: true }),
+      writeDevice: (decide) => {
+        if (first) {
+          first = false;
+          b.setRecord({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T12:00:00.000Z' });
+        }
+        return b.deps.writeDevice(decide);
+      },
+    });
+    expect(ctx?.locale).toBe('ko');
+    expect(b.writes).toEqual([]);
+  });
+
+  it('recordSettled waits for the read, never for the paint timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const b = browser();
+      let resolve: (r: DeviceSettingsRead) => void = () => undefined;
+      await mount({ ...b.deps, readDevice: () => new Promise<DeviceSettingsRead>((r) => (resolve = r)) });
+      act(() => {
+        vi.advanceTimersByTime(RECORD_WAIT_MS);
+      });
+      expect(ctx?.ready).toBe(true);
+      expect(ctx?.recordSettled).toBe(false);
+      expect(ctx?.record).toBeNull();
+      await act(async () => resolve({ readable: true, value: { uiLocale: 'ko', uiLocaleAt: '2026-10-16T12:00:00.000Z' }, hasProfiles: true }));
+      expect(ctx?.recordSettled).toBe(true);
+      expect(ctx?.record).toEqual({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T12:00:00.000Z' });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('a choice here writes the record with its time, the mirror, and offers it to the account sync', async () => {
@@ -239,12 +296,31 @@ describe('console LocaleProvider: the device record (owner items 6 and 7)', () =
     expect(ctx?.locale).toBe('ko');
   });
 
-  it('the account merge applies a record: written, mirrored and shown', async () => {
+  it('the account language that won the merge: written, mirrored and shown', async () => {
     const b = browser({ record: { textSize: 'large' } });
     await mount(b.deps);
-    await act(async () => ctx?.applyRecord({ uiLocale: 'ko', uiLocaleAt: '2026-10-15T00:00:00.000Z' }));
+    await act(async () => ctx?.applyAccount({ uiLocale: 'ko', uiLocaleAt: '2026-10-15T00:00:00.000Z' }));
     expect(ctx?.locale).toBe('ko');
     expect(b.record()).toEqual({ textSize: 'large', uiLocale: 'ko', uiLocaleAt: '2026-10-15T00:00:00.000Z' });
+    expect(b.local.get('hr:console:uiLocale')).toBe('ko');
+  });
+
+  it('the account language is merged again when the write runs: a newer choice stored meanwhile is kept', async () => {
+    const b = browser({ record: {} });
+    await mount(b.deps);
+    // Another tab chose Spanish after the merge decided.
+    b.setRecord({ uiLocale: 'es', uiLocaleAt: '2026-10-16T13:00:00.000Z' });
+    await act(async () => ctx?.applyAccount({ uiLocale: 'ko', uiLocaleAt: '2026-10-15T00:00:00.000Z' }));
+    expect(b.record()).toEqual({ uiLocale: 'es', uiLocaleAt: '2026-10-16T13:00:00.000Z' });
+    expect(ctx?.locale).toBe('es');
+    expect(b.writes).toEqual([]);
+  });
+
+  it('a record that cannot be written: the account language applies to this tab only', async () => {
+    const b = browser({ record: 'unreadable' });
+    await mount(b.deps);
+    await act(async () => ctx?.applyAccount({ uiLocale: 'ko', uiLocaleAt: '2026-10-15T00:00:00.000Z' }));
+    expect(ctx?.locale).toBe('ko');
   });
 
   it('a record that cannot be read: the mirror decides and nothing is written', async () => {

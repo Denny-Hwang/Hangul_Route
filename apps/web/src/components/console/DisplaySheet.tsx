@@ -1,6 +1,7 @@
 'use client';
 
 import { TEXT_SIZES, type TextSize } from '@hangul-route/content-schema';
+import { radioAfter } from '@hangul-route/design-system/display-sheet-model';
 import { TEXT_SIZE_FACTORS, typeScale } from '@hangul-route/design-system/text-size';
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
 import { LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
@@ -12,8 +13,8 @@ import { rem } from '@/lib/console/rem';
  * The Display (Aa) sheet of the grown-up pages (owner items 6 and 7; the DOM twin of the design
  * system's `DisplaySheet`): the device's one UI language and text size, the same record the
  * learner app, All lessons and the presenter read. The Aa button opens it from the adult frame
- * header (every width), `/signin` and the grown-up lock. A modal sheet (a bottom sheet on phones,
- * a centred dialog from 45em): Language (endonyms, each in its own `lang`; hidden with one
+ * header (every width), `/signin` and the grown-up lock. A modal sheet (a bottom sheet below 600 px,
+ * a centred dialog of the reading width from 600 px, AMENDMENTS-DISPLAY-NAV section 3.6): Language (endonyms, each in its own `lang`; hidden with one
  * language; another language first shows the confirm step written in that language, Use / Back,
  * AMENDMENTS-DISPLAY-NAV section 3.6), Text size (four steps, each drawing its Aa, applied at
  * once), the live preview line, the note and Done. Escape, the scrim and Done close it; focus returns to
@@ -21,7 +22,8 @@ import { rem } from '@/lib/console/rem';
  * the sheet itself live; each segment's Aa is drawn in px at its own step, a fixed preview. Not behind the grown-up gate (display only, reversible).
  */
 
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+/** What Tab can reach: a radio that is not the selected one (`tabindex=-1`, roving focus) is not a Tab stop. */
+const TABBABLE = 'button:not([disabled]):not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
 const alphaHex = Math.round(shadows.modal.shadowOpacity * 255)
   .toString(16)
   .padStart(2, '0');
@@ -45,7 +47,7 @@ const SHEET_CSS = `
 .hr-display-done{width:100%;margin-top:${rem(spacing.lg)};border:none;background:${colors.brand.primary};color:${colors.text.onPrimary}}
 .hr-display-undo{width:100%;margin-top:${rem(spacing.sm)};border:${borderWidth.base}px solid ${colors.brand.primary};background:transparent;color:${colors.brand.primary}}
 .hr-display-sheet :focus-visible{outline:${borderWidth.thick}px solid ${colors.border.focus};outline-offset:${borderWidth.base}px}
-@media (min-width:45em){.hr-display-steps .hr-display-option{flex-basis:0}.hr-display-sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${rem(touchTarget.min * 8)};border-radius:${radii.xl}px;padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}}`;
+@media (min-width:${layout.breakpoint.regular / 16}em){.hr-display-steps .hr-display-option{flex-basis:0}.hr-display-sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;border-radius:${radii.xl}px;padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}}`;
 
 interface FocusTarget {
   focus?: (options?: { preventScroll?: boolean }) => void;
@@ -72,14 +74,14 @@ function RadioRow<T extends string>({
 }): JSX.Element {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const index = Math.max(0, options.findIndex((o) => o.value === selected));
+  // Roving focus (WAI-ARIA radio group): arrows wrap, Home and End go to the ends; focus and the selection move together.
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, at: number): void => {
-    const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
-    if (step === 0) return;
+    const values = options.map((o) => o.value);
+    const next = radioAfter(values, values[at] as T, event.key);
+    if (next === null) return;
     event.preventDefault();
-    const next = (at + step + options.length) % options.length;
-    const option = options[next];
-    if (option) onSelect(option.value);
-    refs.current[next]?.focus();
+    if (next !== selected) onSelect(next);
+    refs.current[values.indexOf(next)]?.focus();
   };
   return (
     <div className={steps ? 'hr-display-row hr-display-steps' : 'hr-display-row'} role="radiogroup" aria-label={label} data-testid={testId}>
@@ -113,8 +115,21 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
   const headingId = useId();
   const sheetRef = useRef<FocusTarget | null>(null);
   const headingRef = useRef<FocusTarget | null>(null);
+  const confirmUseButton = useRef<FocusTarget | null>(null);
   // Another language waits on its confirm step, written in that language (F-I18N-001 §3.3 safety rule).
   const [pending, setPending] = useState<UiLocale | null>(null);
+  /** The confirm step just opened or closed: where focus goes once it has rendered (the focused control unmounts). */
+  const focusNext = useRef<'confirm' | 'language' | null>(null);
+
+  useEffect(() => {
+    const target = focusNext.current;
+    focusNext.current = null;
+    if (target === 'confirm') confirmUseButton.current?.focus?.();
+    if (target === 'language') {
+      const checked = sheetRef.current?.querySelectorAll?.('[data-testid="console-display-language"] [aria-checked="true"]');
+      checked?.[0]?.focus?.();
+    }
+  }, [pending, locale]);
 
   useEffect(() => {
     const opener = typeof document === 'undefined' ? null : (document.activeElement as FocusTarget | null);
@@ -131,7 +146,7 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
       return;
     }
     if (event.key !== 'Tab') return;
-    const items = sheetRef.current?.querySelectorAll?.(FOCUSABLE);
+    const items = sheetRef.current?.querySelectorAll?.(TABBABLE);
     if (!items || items.length === 0 || typeof document === 'undefined') return;
     const first = items[0];
     const last = items[items.length - 1];
@@ -146,7 +161,13 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
   };
 
   const chooseLanguage = (next: UiLocale): void => {
-    setPending(next === locale ? null : next);
+    if (next === locale) return;
+    focusNext.current = 'confirm';
+    setPending(next);
+  };
+  const closeConfirm = (): void => {
+    focusNext.current = 'language';
+    setPending(null);
   };
 
   const languages = available.map((l) => ({ value: l, label: LOCALE_META[l].endonym, lang: LOCALE_META[l].htmlLang }));
@@ -186,15 +207,18 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
                 <button
                   type="button"
                   className="hr-display-button hr-display-done"
+                  ref={(el) => {
+                    confirmUseButton.current = el as FocusTarget | null;
+                  }}
                   onClick={() => {
                     setLocale(pending);
-                    setPending(null);
+                    closeConfirm();
                   }}
                   data-testid="console-display-language-use"
                 >
                   {confirm.use(LOCALE_META[pending].endonym)}
                 </button>
-                <button type="button" className="hr-display-button hr-display-undo" onClick={() => setPending(null)} data-testid="console-display-language-back">
+                <button type="button" className="hr-display-button hr-display-undo" onClick={closeConfirm} data-testid="console-display-language-back">
                   {confirm.back(LOCALE_META[locale].endonym)}
                 </button>
               </div>

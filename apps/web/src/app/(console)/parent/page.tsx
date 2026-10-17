@@ -421,7 +421,7 @@ export default function ParentHomePage(): JSX.Element {
                   type="button"
                   style={{ ...primary, width: '100%', maxWidth: layout.pane.master, alignSelf: 'center' }}
                   data-testid="open-app"
-                  onClick={() => openAppWithJoinCode({ code: entry.roster.joinCode as string, now: Date.now() })}
+                  onClick={() => openAppWithJoinCode({ code: entry.roster.joinCode as string, now: Date.now(), locale })}
                 >
                   {p.empty.openApp}
                 </button>

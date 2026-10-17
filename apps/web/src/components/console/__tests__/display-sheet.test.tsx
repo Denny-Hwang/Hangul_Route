@@ -72,7 +72,7 @@ describe('the Aa button', () => {
     });
     const r = mounted as unknown as ReactTestRenderer;
     const button = byTestId(r, 'frame-display')[0]!;
-    expect(button.props['aria-label']).toBe('Display: language and text size');
+    expect(button.props['aria-label']).toBe('Aa, Display: language and text size');
     expect(button.props['aria-haspopup']).toBe('dialog');
     expect(textOf(button)).toBe('Aa');
     expect(button.props.style.minHeight).toBe(64);
@@ -181,5 +181,115 @@ describe('the sheet', () => {
     // Tab with no DOM (the test renderer) does nothing and never throws.
     expect(() => dialog.props.onKeyDown({ key: 'Tab', shiftKey: false, preventDefault: vi.fn() })).not.toThrow();
     expect(() => dialog.props.onKeyDown({ key: 'a' })).not.toThrow();
+  });
+});
+
+/** A test DOM: every element gets a node that records focus; the sheet answers the two queries the sheet makes. */
+function renderWithNodes() {
+  let focused: string | null = null;
+  let tabbableIds: string[] = [];
+  const selectors: string[] = [];
+  const nodes = new Map<string, { focus: () => void }>();
+  const checked = new Map<string, boolean>();
+  /** A node for an element the renderer made none for (only elements with a ref get one). */
+  const nodeOf = (id: string): { focus: () => void } => {
+    if (!nodes.has(id))
+      nodes.set(id, {
+        focus: () => {
+          focused = id;
+        },
+      });
+    return nodes.get(id)!;
+  };
+  act(() => {
+    mounted = create(<ConsoleDisplaySheet onClose={vi.fn()} />, {
+      createNodeMock: (el) => {
+        const props = el.props as Record<string, unknown>;
+        const id = String(props['data-testid'] ?? (el.type === 'h2' ? 'heading' : el.type));
+        checked.set(id, props['aria-checked'] === true);
+        const node = {
+          focus: () => {
+            focused = id;
+          },
+          querySelectorAll: (selector: string) => {
+            selectors.push(selector);
+            if (selector.includes('aria-checked')) {
+              return [...checked.entries()].filter(([k, on]) => on && k.startsWith('console-display-language-') && nodes.has(k)).map(([k]) => nodes.get(k)!);
+            }
+            return tabbableIds.map(nodeOf);
+          },
+        };
+        nodes.set(id, node);
+        return node;
+      },
+    });
+  });
+  // The heading takes focus on open; the cases below start from there.
+  focused = null;
+  return {
+    r: mounted as unknown as ReactTestRenderer,
+    focused: () => focused,
+    node: nodeOf,
+    selectors,
+    tabbable: (list: string[]) => {
+      tabbableIds = list;
+    },
+  };
+}
+
+describe('the sheet: focus', () => {
+  it('the confirm step takes focus on its Use button; Use and Back give it back to the selected language', () => {
+    const t = renderWithNodes();
+    act(() => byTestId(t.r, 'console-display-language-ko')[0]!.props.onClick());
+    expect(t.focused()).toBe('console-display-language-use');
+    act(() => byTestId(t.r, 'console-display-language-back')[0]!.props.onClick());
+    expect(t.focused()).toBe('console-display-language-en');
+    act(() => byTestId(t.r, 'console-display-language-es')[0]!.props.onClick());
+    expect(t.focused()).toBe('console-display-language-use');
+    act(() => byTestId(t.r, 'console-display-language-use')[0]!.props.onClick());
+    expect(view.locales).toEqual(['es']);
+    // The page re-renders the sheet in Spanish with Español selected: focus is on it.
+    act(() => mounted?.update(<ConsoleDisplaySheet onClose={vi.fn()} />));
+    expect(t.focused()).toBe('console-display-language-es');
+  });
+
+  it('arrow keys, Home and End move focus with the selection', () => {
+    const t = renderWithNodes();
+    const radios = byTestId(t.r, 'console-display-text-size')[0]!.findAll((n) => n.type === 'button');
+    act(() => radios[0]!.props.onKeyDown({ key: 'End', preventDefault: vi.fn() }));
+    expect(view.sizes).toEqual(['largest']);
+    expect(t.focused()).toBe('console-display-text-size-largest');
+    act(() => radios[0]!.props.onKeyDown({ key: 'Home', preventDefault: vi.fn() }));
+    // Home from the selected first step: focus stays, nothing new is chosen.
+    expect(view.sizes).toEqual(['largest']);
+    expect(t.focused()).toBe('console-display-text-size-standard');
+  });
+
+  it('the Tab trap counts only Tab stops (a radio that is not selected is none): Shift+Tab from the first wraps to the last', () => {
+    view.locale = 'ko';
+    const t = renderWithNodes();
+    const dialog = byTestId(t.r, 'console-display-sheet')[0]!;
+    // With 한국어 selected, the first Tab stop is its radio: English and Español are not Tab stops.
+    t.tabbable(['console-display-language-ko', 'console-display-text-size-standard', 'console-display-done']);
+    let active: unknown = t.node('console-display-language-ko');
+    vi.stubGlobal('document', {
+      get activeElement() {
+        return active;
+      },
+    });
+    try {
+      const prevent = vi.fn();
+      act(() => dialog.props.onKeyDown({ key: 'Tab', shiftKey: true, preventDefault: prevent }));
+      expect(prevent).toHaveBeenCalledTimes(1);
+      expect(t.focused()).toBe('console-display-done');
+      active = t.node('console-display-done');
+      act(() => dialog.props.onKeyDown({ key: 'Tab', shiftKey: false, preventDefault: prevent }));
+      expect(t.focused()).toBe('console-display-language-ko');
+      // The query asks for Tab stops only.
+      const trap = t.selectors.find((sel) => !sel.includes('aria-checked'))!;
+      expect(trap).toContain('button:not([disabled]):not([tabindex="-1"])');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

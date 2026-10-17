@@ -324,7 +324,7 @@ describe('GrownUpLock: the lock screen', () => {
     h.calls.length = 0;
     press(r, 'grown-up-lock-back');
     expect(h.calls).toEqual(['clearGrownUpTab']);
-    expect(h.assigned).toEqual(['/']);
+    expect(h.assigned).toEqual(['/?lang=en']);
   });
 
   it('unmounting stops the controller: later tab switches read nothing', async () => {
