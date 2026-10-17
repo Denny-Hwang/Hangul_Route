@@ -686,7 +686,9 @@ function HoyaStrip({ tone, message, lines, showHoya }: { tone: TraceWordTone; me
         alignItems: 'center',
         gap: spacing.sm,
         // A line of the strip's text at the chosen text size, so a longer message is never clipped.
-        height: lines * Math.ceil(textScale.size.bodySm * typography.leading.normal) + 2 * spacing.sm + 2 * borderWidth.base,
+        // The planned lines keep the canvas steady as the message changes; a message that wraps to more lines (a large
+        // text size in a narrow window, a wider font) grows the box instead of being cut (AMENDMENTS-DISPLAY-NAV section 4).
+        minHeight: lines * Math.ceil(textScale.size.bodySm * typography.leading.normal) + 2 * spacing.sm + 2 * borderWidth.base,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: radii.lg,
