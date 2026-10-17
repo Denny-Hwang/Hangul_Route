@@ -6,6 +6,7 @@ import {
   LECTURE_MAX_BLOCKS,
   LETTER_SET_KEYS,
   StageKeySchema,
+  applyChooserSelection,
   chooserGroups,
   groupOfKey,
   jamoSetBlocks,
@@ -19,6 +20,7 @@ import {
   selectionEntries,
   selectionFits,
   selectionMinutes,
+  selectionOf,
   toggleLesson,
   toggleRow,
   type Catalog,
@@ -364,5 +366,49 @@ describe('jamoSetBlocks', () => {
     expect(jamoSetBlocks(VOWELS)).toEqual([{ kind: 'jamo-set', jamoIds: VOWELS }]);
     const thirteen = [...VOWELS, 'jamo:x1', 'jamo:x2', 'jamo:x3'];
     expect(jamoSetBlocks(thirteen).map((b) => (b.kind === 'jamo-set' ? b.jamoIds.length : 0))).toEqual([7, 6]);
+  });
+});
+
+describe('applyChooserSelection: a selection inside a plan or an outline', () => {
+  type Item = { key: string | null; note?: string };
+  const keyOf = (i: Item): string | null => i.key;
+  const make = (key: string): Item[] => (key === 'unknown' ? [] : [{ key }]);
+  const groups = groupsIn('en');
+  const letters = episode(groups, 'episode:stage1-letters');
+  const [q1, q2, q3] = letters.lessons.map((l) => l.key) as [string, string, string];
+  const quiz: Item = { key: null, note: 'quiz' };
+
+  it('selectionOf: the chooser keys in order, first occurrence kept', () => {
+    expect(selectionOf<Item>([{ key: q2 }, quiz, { key: q1 }, { key: q2 }], keyOf)).toEqual([q2, q1]);
+  });
+
+  it('keeps other items and kept things in place (with their own fields); a new thing goes at the end', () => {
+    const items: Item[] = [{ key: q1, note: 'Monday' }, quiz, { key: 'story:a' }];
+    const next = toggleLesson(selectionOf(items, keyOf), letters, q2);
+    expect(applyChooserSelection(items, keyOf, next, make)).toEqual([{ key: q1, note: 'Monday' }, quiz, { key: 'story:a' }, { key: q2 }]);
+  });
+
+  it('a whole episode takes the place of the first of its lessons', () => {
+    const items: Item[] = [{ key: 'story:a' }, { key: q2 }, quiz, { key: q1 }];
+    const next = toggleRow(selectionOf(items, keyOf), letters);
+    expect(applyChooserSelection(items, keyOf, next, make)).toEqual([{ key: 'story:a' }, { key: letters.key }, quiz]);
+  });
+
+  it('unticking a lesson of a whole episode puts the other lessons at its place', () => {
+    const items: Item[] = [quiz, { key: letters.key, note: 'Tue' }, { key: 'story:a' }];
+    const next = toggleLesson(selectionOf(items, keyOf), letters, q2);
+    expect(applyChooserSelection(items, keyOf, next, make)).toEqual([quiz, { key: q1 }, { key: q3 }, { key: 'story:a' }]);
+  });
+
+  it('removes what is no longer chosen, a second copy too; a second copy of a kept thing stays', () => {
+    const items: Item[] = [{ key: q1 }, quiz, { key: q1 }, { key: q2 }, { key: q2, note: 'again' }];
+    expect(applyChooserSelection(items, keyOf, [q2], make)).toEqual([quiz, { key: q2 }, { key: q2, note: 'again' }]);
+  });
+
+  it('a key with nothing to make adds nothing; a reordered selection rebuilds the out-of-order keys at the end', () => {
+    expect(applyChooserSelection<Item>([quiz], keyOf, ['unknown', q1], make)).toEqual([quiz, { key: q1 }]);
+    const items: Item[] = [{ key: q1, note: 'a' }, { key: q2, note: 'b' }];
+    expect(applyChooserSelection(items, keyOf, [q2, q1, 'unknown'], make)).toEqual([{ key: q2, note: 'b' }, { key: q1 }]);
+    expect(applyChooserSelection(items, keyOf, [q2, q1, q1], make)).toEqual([{ key: q2, note: 'b' }, { key: q1 }]);
   });
 });

@@ -361,3 +361,65 @@ export function groupOfKey(groups: readonly ChooserGroup[], key: string): Choose
   }
   return null;
 }
+
+// ---- a selection inside a longer list ------------------------------------------------------------
+
+/** The chooser keys of a list (a plan's items, a deck outline), first occurrence kept; items the chooser does not hold give none. */
+export function selectionOf<T>(items: readonly T[], keyOf: (item: T) => string | null): string[] {
+  const keys: string[] = [];
+  for (const item of items) {
+    const key = keyOf(item);
+    if (key !== null && !keys.includes(key)) keys.push(key);
+  }
+  return keys;
+}
+
+/**
+ * A list that holds more than chosen things (a plan with its dates and notes, a deck
+ * outline with quizzes and activities) with a new selection applied in place: what the
+ * chooser does not hold stays where it is, a kept thing keeps its item and its place,
+ * a thing chosen in place of others (a whole episode for its lessons, or the reverse)
+ * takes the place of the first of them, and a new thing goes at the end. `make` builds
+ * the items of a new key (none for a key it does not know).
+ */
+export function applyChooserSelection<T>(items: readonly T[], keyOf: (item: T) => string | null, next: ChooserSelection, make: (key: string) => readonly T[]): T[] {
+  const before = new Set(selectionOf(items, keyOf));
+  const chosen = new Set(next);
+  const emitted = new Set<string>();
+  const out: T[] = [];
+  let j = 0;
+  const addNew = (): void => {
+    while (j < next.length && !before.has(next[j]!)) {
+      const key = next[j]!;
+      if (!emitted.has(key)) out.push(...make(key));
+      emitted.add(key);
+      j += 1;
+    }
+  };
+  for (const item of items) {
+    const key = keyOf(item);
+    if (key === null) {
+      out.push(item);
+      continue;
+    }
+    // A second copy of a chosen thing stays while it is chosen.
+    if (emitted.has(key)) {
+      if (chosen.has(key)) out.push(item);
+      continue;
+    }
+    addNew();
+    if (next[j] === key) {
+      out.push(item);
+      emitted.add(key);
+      j += 1;
+    }
+  }
+  addNew();
+  // Kept keys the walk could not place in order (a reordered selection): rebuilt at the end.
+  for (; j < next.length; j += 1) {
+    const key = next[j]!;
+    if (!emitted.has(key)) out.push(...make(key));
+    emitted.add(key);
+  }
+  return out;
+}
