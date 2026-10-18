@@ -1,5 +1,5 @@
 import { colors, koreanTextLabel, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { NarrationPiece, SpokenLine } from '../../../logic/lecture/build-steps';
 import { nextFitLevel } from '../../../logic/lecture/slide-view';
@@ -28,15 +28,32 @@ export function useChipStyle(): { borderRadius: number; borderWidth: number; bor
 }
 
 /**
+ * How long a step waits for the layout of its new level (react-native-web reports a layout a task
+ * after the browser lays it out) before it takes "no new layout" to mean "the same height".
+ */
+const FIT_SETTLE_MS = 150;
+
+/**
  * A slide that fits itself (`nextFitLevel`): `onRoom` goes on the box that takes the stage's room
  * (`flex: 1`), `onContent` on the content inside it, which keeps its own height. The stage remounts
- * on every slide, so each slide starts at level 0.
+ * on every slide, so each slide starts at level 0. A level that leaves the content as tall as it
+ * was (on a small phone every text may already sit at the 18 px floor) brings no new layout event,
+ * so when none comes within `FIT_SETTLE_MS` of a step, the slide checks again with the height it has.
  */
 export function useFitLevel(max: number): { level: number; onRoom: (e: LayoutChangeEvent) => void; onContent: (e: LayoutChangeEvent) => void } {
   const [level, setLevel] = useState(0);
   const room = useRef(0);
   const content = useRef(0);
+  const contentEvents = useRef(0);
   const check = useCallback(() => setLevel((now) => nextFitLevel({ room: room.current, content: content.current, level: now, max })), [max]);
+  useEffect(() => {
+    if (level === 0) return undefined;
+    const seen = contentEvents.current;
+    const timer = setTimeout(() => {
+      if (contentEvents.current === seen) check();
+    }, FIT_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [level, check]);
   const onRoom = useCallback(
     (e: LayoutChangeEvent) => {
       room.current = e.nativeEvent.layout.height;
@@ -47,6 +64,7 @@ export function useFitLevel(max: number): { level: number; onRoom: (e: LayoutCha
   const onContent = useCallback(
     (e: LayoutChangeEvent) => {
       content.current = e.nativeEvent.layout.height;
+      contentEvents.current += 1;
       check();
     },
     [check],
