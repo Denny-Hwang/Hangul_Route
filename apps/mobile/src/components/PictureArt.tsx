@@ -11,7 +11,7 @@ import {
 } from '@hangul-route/design-system';
 import React from 'react';
 import { View } from 'react-native';
-import { useMessages } from '../../i18n/use-messages';
+import { useMessages } from '../i18n/use-messages';
 import {
   pictureName,
   pictureTile,
@@ -21,7 +21,7 @@ import {
   swatchColors,
   type PictureContext,
   type PictureTileMetrics,
-} from '../../logic/picture-ref';
+} from '../logic/picture-ref';
 
 /**
  * PictureArt — the one place that turns a `PictureRef` into art for every game
@@ -43,8 +43,11 @@ import {
  * give the word away). It is always hidden from assistive technology: the
  * wall tile carries the name ("Not collected yet").
  * All art is SVG from the design system (D7); this adds none.
+ * Shared (moved here from `screens/minigames/` for the lecture presenter's reading slides,
+ * AMENDMENTS-LECTURE-V2 section 5.1, as `StrokeHint` was): `tile` draws the same neutral tile in
+ * another scale, the presenter's stage units, so its border and corner read on a projector.
  * Design: design/wireframes/quest/discover.md (S5 picture options, S6 Pic-Word Match),
- * design/components/WordArt/spec.md (the caller's tile).
+ * design/components/WordArt/spec.md (the caller's tile), design/screens/presenter/slide-sentence.md.
  */
 
 /** What the art can draw: shared by every screen that asks whether a ref has a picture. */
@@ -54,8 +57,18 @@ export const PICTURE_CONTEXT: PictureContext = {
   wordArtKeys: WORD_ART_KEYS,
 };
 
+/** The neutral tile's padding, border and corner radius, each in the caller's scale. */
+export interface PictureArtTile {
+  padding: number;
+  border: number;
+  radius: number;
+}
+
+/** The learner screens' tile, in dp. */
+const LEARNER_TILE: PictureArtTile = { padding: spacing.xs, border: borderWidth.thin, radius: radii.lg };
+
 /** Padding and border of the neutral art tile, per side, and the smallest art (the tested minimum). */
-const TILE: PictureTileMetrics = { inset: spacing.xs + borderWidth.thin, minArt: spacing.xxxl };
+const metricsOf = (tile: PictureArtTile): PictureTileMetrics => ({ inset: tile.padding + tile.border, minArt: spacing.xxxl });
 
 export interface PictureArtProps {
   /** `card:<id>`, `word:<key>` or `swatch:<token>`; absent shows the gloss. */
@@ -68,6 +81,8 @@ export interface PictureArtProps {
   decorative?: boolean;
   /** A word not collected yet: the silhouette (or a plain tile), hidden from assistive technology. */
   mono?: boolean;
+  /** The tile in another scale (the presenter's stage units); the learner screens' dp tile when absent. */
+  tile?: PictureArtTile;
   testID?: string;
 }
 
@@ -82,12 +97,14 @@ function hiddenProps(decorative: boolean): {
 
 function ArtTile({
   size,
+  tile,
   decorative,
   sunken = false,
   testID,
   children,
 }: {
   size: number;
+  tile: PictureArtTile;
   decorative: boolean;
   /** The silhouette's tile (`mono`). */
   sunken?: boolean;
@@ -101,11 +118,11 @@ function ArtTile({
       style={{
         width: size,
         height: size,
-        padding: spacing.xs,
+        padding: tile.padding,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: radii.lg,
-        borderWidth: borderWidth.thin,
+        borderRadius: tile.radius,
+        borderWidth: tile.border,
         borderColor: colors.border.subtle,
         backgroundColor: sunken ? colors.surface.sunken : colors.surface.paper,
       }}
@@ -115,17 +132,17 @@ function ArtTile({
   );
 }
 
-export function PictureArt({ pictureRef, gloss, size, decorative = false, mono = false, testID }: PictureArtProps): React.ReactElement {
+export function PictureArt({ pictureRef, gloss, size, decorative = false, mono = false, tile: tileStyle = LEARNER_TILE, testID }: PictureArtProps): React.ReactElement {
   const m = useMessages();
   const picture = resolvePictureArt(pictureRef, gloss, PICTURE_CONTEXT);
   const name = pictureName(gloss, m.a11y.minigame.picture);
-  const tile = pictureTile(size, TILE);
+  const tile = pictureTile(size, metricsOf(tileStyle));
 
   if (mono) {
     // Resolved without the gloss: a silhouette never shows or needs the word's meaning.
     const silhouette = silhouetteOf(resolvePicture(pictureRef, PICTURE_CONTEXT));
     return (
-      <ArtTile size={tile.tile} decorative sunken testID={testID}>
+      <ArtTile size={tile.tile} tile={tileStyle} decorative sunken testID={testID}>
         {silhouette.kind === 'word' ? <WordArt artKey={silhouette.key} size={tile.art} mono decorative /> : null}
       </ArtTile>
     );
@@ -133,7 +150,7 @@ export function PictureArt({ pictureRef, gloss, size, decorative = false, mono =
 
   if (picture.kind === 'card') {
     return (
-      <ArtTile size={tile.tile} decorative={decorative}>
+      <ArtTile size={tile.tile} tile={tileStyle} decorative={decorative}>
         <HeritageCardArt cardId={picture.cardId} size={tile.art} testID={testID} accessibilityLabel={name} />
       </ArtTile>
     );
@@ -141,7 +158,7 @@ export function PictureArt({ pictureRef, gloss, size, decorative = false, mono =
 
   if (picture.kind === 'word') {
     return (
-      <ArtTile size={tile.tile} decorative={decorative}>
+      <ArtTile size={tile.tile} tile={tileStyle} decorative={decorative}>
         {decorative ? (
           <WordArt artKey={picture.key} size={tile.art} testID={testID} decorative />
         ) : (
@@ -162,7 +179,7 @@ export function PictureArt({ pictureRef, gloss, size, decorative = false, mono =
         style={{
           width: size,
           height: size,
-          borderRadius: radii.lg,
+          borderRadius: tileStyle.radius,
           borderWidth: borderWidth.base,
           borderColor: colors.surface.sunken,
           backgroundColor: picture.color,
@@ -183,7 +200,7 @@ export function PictureArt({ pictureRef, gloss, size, decorative = false, mono =
         padding: spacing.sm,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: radii.lg,
+        borderRadius: tileStyle.radius,
         backgroundColor: colors.surface.sunken,
       }}
     >

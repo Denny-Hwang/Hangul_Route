@@ -57,7 +57,7 @@ import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
-import { slideSound, soundFlashFor, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
+import { readAlongView, slideSound, soundFlashFor, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
 import {
   getCapability,
@@ -454,6 +454,8 @@ function Presenter(): React.ReactElement {
   // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6);
   // on both bars an explicit Sound press that has nothing to play, or does not play, says so there (section 3.7).
   const [soundFlash, setSoundFlash] = useState<{ key: SoundFlashKey; at: number } | null>(null);
+  /** The read-along line Sound is playing (design V6): lit on its slide until that play ends. */
+  const [playingLine, setPlayingLine] = useState<{ key: string; line: number } | null>(null);
   // The flash's own time is kept here, so a remount (a turn upright and back, a new lesson) never shows an old one again.
   useEffect(() => {
     if (soundFlash === null) return undefined;
@@ -564,7 +566,11 @@ function Presenter(): React.ReactElement {
       if (!sound) return;
       const at = Date.now();
       const slideIdx = stateRef.current?.slideIdx;
+      // Read along: the line that plays (the current one) is lit while it plays; a later press lights its own.
+      const lit = slide.kind === 'read-along' ? { key: slide.key, line: readAlongView(slide, reveal ?? slide.builds.length - 1).current } : null;
+      if (lit) setPlayingLine(lit);
       void playPrompt({ ...soundPrompt(sound), source: 'presenter' }).then((result) => {
+        if (lit) setPlayingLine((now) => (now === lit ? null : now));
         const failure = useAudioStore.getState().lastFailure;
         const reason = failure !== null && failure.at >= at ? failure.reason : null;
         setSoundBlocked(result !== 'played' && reason === 'blocked');
@@ -1239,6 +1245,7 @@ function Presenter(): React.ReactElement {
               romanization={romanizationNow}
               sayIt={sayIt}
               storyScene={stories.scene}
+              playingLine={playingLine !== null && playingLine.key === slide?.key ? playingLine.line : null}
               {...(phone
                 ? {
                     barStrip: PHONE_BAR_STRIP,
