@@ -5,10 +5,12 @@ import { shot } from './shots';
 
 /**
  * F-TCH-004 PR 8 (section 3.12; design/screens/presenter/home.md, README D2,
- * D14, D19): the presenter home at `/present` with no deck link. Recent lessons
- * from `lecture:recent` (titles and days only), remove, Quick lesson groups and
- * Build lesson, the session language chips as a radiogroup, and the page with
- * storage off. Phone and wide layouts; screenshots with `HR_SHOTS=1`.
+ * D14, D19) as amended by AMENDMENTS-LECTURE-V2 row LV-3 (design presets.md):
+ * the presenter home at `/present` with no deck link. Recent lessons from
+ * `lecture:recent` (titles and days only) beside or under the ready-made lessons,
+ * remove, Customize's chooser and Build lesson, the Display (Aa) control instead of
+ * language chips, and the page with storage off. Phone and wide layouts;
+ * screenshots with `HR_SHOTS=1`. The presets themselves: `presenter-presets.spec.ts`.
  */
 
 const RECENT_KEY = 'hr:lecture:recent';
@@ -65,15 +67,15 @@ test.describe('presenter home, wide (two columns)', () => {
   test('shows Recent lessons by title and day, newest first, and removes one', async ({ page }) => {
     await seedRecent(page, RECENT);
     const home = page.getByTestId('presenter-home');
-    await expect(home.getByRole('heading', { level: 1, name: 'Lecture' })).toBeVisible();
+    await expect(home.getByRole('heading', { level: 1, name: 'Lecture mode', exact: true })).toBeVisible();
     const recent = page.getByTestId('presenter-home-recent');
     await expect(recent.getByText('Week 3 letters')).toBeVisible();
     await expect(recent.getByText('Today')).toBeVisible();
     await expect(recent.getByText('Oct 9')).toBeVisible();
-    // Two columns from 900 px: Recent sits left of Quick lesson.
+    // Two columns from 900 px: the ready-made lessons left, Recent beside them on the right.
     const r = await recent.boundingBox();
-    const q = await page.getByTestId('presenter-home-quick').boundingBox();
-    expect(r && q && r.x + r.width <= q.x).toBe(true);
+    const p = await page.getByTestId('presenter-home-presets').boundingBox();
+    expect(r && p && p.x + p.width <= r.x).toBe(true);
     await shot(page, 'presenter-home-1280');
 
     await page.getByRole('button', { name: 'Remove: Food' }).click();
@@ -85,25 +87,27 @@ test.describe('presenter home, wide (two columns)', () => {
       .toEqual(['lecture:week3abcde']);
   });
 
-  test('Quick lesson: choose items, the count is a status, Build lesson leaves the home', async ({ page }) => {
+  test('Customize: choose items, the count is a status, Build lesson leaves the home', async ({ page }) => {
     await page.goto('/present');
+    // Folded under Customize (AMENDMENTS-LECTURE-V2 section 18.3).
+    await expect(page.getByTestId('presenter-home-quick')).toHaveCount(0);
+    await page.getByTestId('presenter-home-customize-toggle').click();
     const quick = page.getByTestId('presenter-home-quick');
-    await expect(quick.getByRole('heading', { level: 3, name: 'Episodes' })).toBeVisible();
-    await expect(quick.getByRole('heading', { level: 3, name: 'Single lessons' })).toBeVisible();
-    await expect(quick.getByRole('heading', { level: 3, name: 'Letter sets' })).toBeVisible();
+    await expect(quick.getByRole('tab', { name: 'Lessons' })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByTestId('presenter-home-recent-empty')).toBeVisible();
     const build = page.getByTestId('presenter-home-build');
-    await expect(page.getByRole('status')).toHaveText('Choose at least one item to build a lesson.');
+    await expect(page.getByTestId('presenter-home-chosen')).toHaveText('Choose at least one item to build a lesson.');
     await expect(build).toBeDisabled();
     await shot(page, 'presenter-home-empty-1280');
 
+    await quick.getByRole('checkbox', { name: /^Meet the Letters/ }).click();
+    await quick.getByRole('tab', { name: 'Letters' }).click();
     const consonants = quick.getByRole('checkbox', { name: /^Consonants/ });
     await consonants.click();
     await expect(consonants).toHaveAttribute('aria-checked', 'true');
-    await quick.getByRole('checkbox', { name: /^Meet the Letters/ }).click();
-    await expect(page.getByRole('status')).toHaveText('2 chosen');
+    await expect(page.getByTestId('presenter-home-chosen')).toHaveText('2 parts · about 23 min');
     await consonants.click();
-    await expect(page.getByRole('status')).toHaveText('1 chosen');
+    await expect(page.getByTestId('presenter-home-chosen')).toHaveText('1 part · about 15 min');
     await build.click();
     await expect(page.getByTestId('presenter-home')).toHaveCount(0);
     await expect(page.getByTestId('presenter-start')).toBeVisible();
@@ -167,11 +171,11 @@ test.describe('presenter home, wide (two columns)', () => {
     await sheet.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Español' }).click();
     await sheet.getByRole('button', { name: 'Usar Español' }).click();
     // The home speaks the device's language at once, and the choice is the device's (stored with its time).
-    await expect(page.getByRole('heading', { level: 1, name: 'Proyección' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Modo proyección', exact: true })).toBeVisible();
     await expect.poll(() => readStored(page, 'device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/) });
     await sheet.getByRole('button', { name: 'Listo' }).click();
     await page.reload();
-    await expect(page.getByRole('heading', { level: 1, name: 'Proyección' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Modo proyección', exact: true })).toBeVisible();
   });
 
 });
@@ -204,7 +208,7 @@ test.describe('presenter home, Keys and help', () => {
     await expect(page.getByTestId('presenter-help')).toHaveCount(0);
     await expect(help).toBeFocused();
     // The home still works after: its h1 is there and nothing was saved.
-    await expect(page.getByRole('heading', { level: 1, name: 'Lecture' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Lecture mode', exact: true })).toBeVisible();
     expect(errors).toEqual([]);
   });
 });
@@ -240,11 +244,13 @@ test.describe('presenter home, Keys and help on a narrow phone', () => {
 test.describe('presenter home, phone (one column, Recent first)', () => {
   test.use({ viewport: { width: 375, height: 800 }, isMobile: false, hasTouch: true });
 
-  test('stacks Recent above Quick lesson with no sideways scroll', async ({ page }) => {
+  test('stacks the ready-made lessons, then Recent, then Customize, with no sideways scroll', async ({ page }) => {
     await seedRecent(page, RECENT);
+    const p = await page.getByTestId('presenter-home-presets').boundingBox();
     const r = await page.getByTestId('presenter-home-recent').boundingBox();
-    const q = await page.getByTestId('presenter-home-quick').boundingBox();
-    expect(r && q && r.y + r.height <= q.y).toBe(true);
+    const c = await page.getByTestId('presenter-home-customize').boundingBox();
+    expect(p && r && p.y + p.height <= r.y).toBe(true);
+    expect(r && c && r.y + r.height <= c.y).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await shot(page, 'presenter-home-375');
   });
@@ -255,8 +261,9 @@ test.describe('presenter home, phone (one column, Recent first)', () => {
     await page.setViewportSize({ width: 160, height: 800 });
     await seedRecent(page, RECENT);
     await expect(page.getByTestId('presenter-home-title')).toBeVisible();
+    await page.getByTestId('presenter-home-customize-toggle').click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    for (const id of ['presenter-home-title', 'presenter-home-build', 'presenter-home-chosen', 'presenter-recent-resume-lecture:week3abcde', 'presenter-recent-startover-lecture:week3abcde']) {
+    for (const id of ['presenter-home-title', 'presenter-preset-hangul-week-1', 'presenter-home-build', 'presenter-home-chosen', 'presenter-recent-resume-lecture:week3abcde', 'presenter-recent-startover-lecture:week3abcde']) {
       const box = await page.getByTestId(id).boundingBox();
       expect(box && box.x >= 0 && box.x + box.width <= 160, id).toBe(true);
     }
@@ -267,7 +274,7 @@ test.describe('presenter home, phone (one column, Recent first)', () => {
 test.describe('presenter home with storage off', () => {
   test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false });
 
-  test('replaces Recent with one line and Quick lesson still builds', async ({ page }) => {
+  test('replaces Recent with one line; Customize still builds and the presets still work', async ({ page }) => {
     await page.addInitScript(() => {
       const failing = () => {
         throw new Error('storage is off');
@@ -276,7 +283,12 @@ test.describe('presenter home with storage off', () => {
     });
     await page.goto('/present');
     await expect(page.getByTestId('presenter-home-recent-off')).toHaveText('Recent lessons are off on this device. Lessons still work.');
+    await page.getByTestId('presenter-home-customize-toggle').click();
+    await page.getByTestId('presenter-chooser-tab-letters').click();
     await page.getByTestId('presenter-home-quick').getByRole('checkbox', { name: /^Vowels/ }).click();
     await expect(page.getByTestId('presenter-home-build')).toBeEnabled();
+    // Nothing to follow without Recent: Next lesson is last and falls back to Hangul week 1.
+    await page.getByTestId('presenter-preset-next-lesson').click();
+    await expect(page.getByTestId('presenter-preset-fallback-next-lesson')).toHaveText('Nothing to follow yet, so this starts with Hangul week 1.');
   });
 });
