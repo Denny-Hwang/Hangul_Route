@@ -1,18 +1,20 @@
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
+import { View } from 'react-native';
+import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { buildsFor } from '../../../logic/lecture/build-steps';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
-import { byTestId, hostNodes, render, screenTexts, textOf } from '../../../test-support/render';
+import { byTestId, hostNodes, render, screenTexts, textOf, unmount } from '../../../test-support/render';
 import { PresenterViewProvider } from '../presenter-context';
 import { Stage } from '../Stage';
 import { PatternSlide } from '../slides/PatternSlide';
 import { ReadAlongSlide } from '../slides/ReadAlongSlide';
 import { RealiaSlide } from '../slides/RealiaSlide';
 import { SentenceSlide } from '../slides/SentenceSlide';
-import { WordChip } from '../slides/ReadingParts';
+import { WordChip, useFitLevel } from '../slides/ReadingParts';
 
 /**
  * The reading slides on the stage (AMENDMENTS-LECTURE-V2 section 5.2, LV-S1; design/screens/presenter/
@@ -206,5 +208,52 @@ describe('Stage: the live region names each reading slide by its kind (section 1
     const live = textOf(byTestId(r.root, 'presenter-live')[0]!);
     expect(live.startsWith(`Slide ${idx + 1} of ${slides.length}, ${label}, `)).toBe(true);
     if (kind === 'pattern') expect(live).toContain(`${en.a11y.presenter.slot} `);
+  });
+});
+
+describe('useFitLevel: a reading slide that fits itself', () => {
+  it('checks again after a step that leaves the content as tall as it was (every text already at the floor)', async () => {
+    vi.useFakeTimers();
+    try {
+      let level = -1;
+      function Probe(): React.ReactElement {
+        const fit = useFitLevel(3);
+        level = fit.level;
+        return (
+          <View testID="room" onLayout={fit.onRoom}>
+            <View testID="content" onLayout={fit.onContent} />
+          </View>
+        );
+      }
+      const r = await render(<Probe />);
+      const layout = (id: string, height: number): void => {
+        const node = r.root.findAll((n) => typeof n.type !== 'string' && n.props.testID === id)[0]!;
+        (node.props.onLayout as (e: { nativeEvent: { layout: { height: number } } }) => void)({ nativeEvent: { layout: { height } } });
+      };
+      await act(async () => {
+        layout('room', 278);
+        layout('content', 330);
+      });
+      expect(level).toBe(1);
+      // No new layout event follows (the height did not change), yet the slide checks again and steps.
+      await act(async () => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(level).toBe(2);
+      // Level 2 made the content fit, and its layout came: no further step.
+      await act(async () => {
+        layout('content', 260);
+        vi.advanceTimersByTime(400);
+      });
+      expect(level).toBe(2);
+      // A layout that still overflows steps at once, as before.
+      await act(async () => {
+        layout('content', 300);
+      });
+      expect(level).toBe(3);
+      await unmount(r);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
