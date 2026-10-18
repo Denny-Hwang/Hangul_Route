@@ -173,6 +173,12 @@ describe('buildsFor: the reading slides (AMENDMENTS-LECTURE-V2 section 5.2, LV-S
     expect(buildsFor(readAlong, TAP)).toEqual(['line', 'rom', 'line', 'rom']);
   });
 
+  it("read along with no Korean voice (together): one build shows every line; 'tap' adds one build for their romanization", () => {
+    const together: SlideBody = { ...(readAlong as Extract<SlideBody, { kind: 'read-along' }>), together: true };
+    expect(buildsFor(together, ALWAYS)).toEqual(['line']);
+    expect(buildsFor(together, TAP)).toEqual(['line', 'rom']);
+  });
+
   it("realia: the sheet, then the key words; 'tap' shows each part's romanization one build after it", () => {
     expect(buildsFor(realia, ALWAYS)).toEqual(['sheet', 'words']);
     expect(buildsFor(realia, TAP)).toEqual(['sheet', 'rom', 'words', 'rom']);

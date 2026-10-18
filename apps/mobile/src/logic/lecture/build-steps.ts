@@ -154,8 +154,12 @@ export type SlideBody =
    * romanization, rule 11), and the two examples.
    */
   | { kind: 'pattern'; frame: { pieces: string[]; romanization: string; gloss: string }; note?: NarrationPiece[]; examples: SpokenLine[] }
-  /** A Discover exchange (LV-S1): two lines between named speakers; Sound plays the current line and lights it. */
-  | { kind: 'read-along'; lines: Array<SpokenLine & { speaker: string }> }
+  /**
+   * A Discover exchange (LV-S1): two lines between named speakers; Sound plays the current line and
+   * lights it. `together`: no Korean voice or the deck's sound is off (section 5.1 "Text without a
+   * Korean voice"), so every line shows at once and none is lit.
+   */
+  | { kind: 'read-along'; lines: Array<SpokenLine & { speaker: string }>; together?: true }
   /** A Discover realia page (LV-S1): the drawn sheet, its caption (`{ko:}` tokens as chips) and its key words. */
   | { kind: 'realia'; sheet: RealiaSheetView; caption?: NarrationPiece[]; keyWords: SpokenLine[] }
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
@@ -249,7 +253,8 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
       ];
     }
     case 'read-along':
-      return body.lines.flatMap((): BuildName[] => ['line', ...rom]);
+      // `together` (no Korean voice): one build shows every line, and with `tap` one more their romanization.
+      return body.together === true ? ['line', ...rom] : body.lines.flatMap((): BuildName[] => ['line', ...rom]);
     case 'realia':
       return ['sheet', ...rom, 'words', ...rom];
   }

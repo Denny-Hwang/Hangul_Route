@@ -5,8 +5,8 @@ import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab'
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { lectureBundle } from '../content';
-import { expandDeck, type Slide } from '../deck-builder';
-import { slideSound } from '../slide-view';
+import { expandDeck, withBuilds, type Slide } from '../deck-builder';
+import { sequenceView, slideSound } from '../slide-view';
 import { readToMePlan } from '../story-slides';
 
 /**
@@ -14,7 +14,8 @@ import { readToMePlan } from '../story-slides';
  * 2026-10-17; owner report: a word card, 김밥 / gimbap, played nothing). Every shipped episode,
  * quest, story and vocabulary topic is expanded as `presenter-glyphs.test.ts` does, with a Korean
  * voice and without one, and every slide that draws Hangul must have a `slideSound` at its full
- * reveal, unless its kind is one of the few that have nothing of their own to play.
+ * reveal and at every build that shows Korean (romanization always and tap; the reading slides of
+ * LV-S1 among them), unless its kind is one of the few that have nothing of their own to play.
  */
 
 /** Hangul syllables, Hangul jamo and compatibility jamo. */
@@ -44,6 +45,18 @@ const drawsHangul = (slide: Slide): boolean => strings(slide).some((s) => [...s]
 function silentByDesign(slide: Slide): boolean {
   if (slide.kind === 'title' || slide.kind === 'story' || slide.kind === 'activity' || slide.kind === 'end') return true;
   return slide.kind === 'quiz' && (slide.prompt.ask === 'odd-one-out' || (slide.prompt.ask === 'check' && slide.prompt.target === undefined));
+}
+
+/**
+ * Whether the slide shows Korean at `reveal`. Every slide kind shows its Korean from build 0, but an
+ * order slide, whose steps appear one per build and may be in the UI language only: until a Korean
+ * step shows, it has nothing of its own to play.
+ */
+function koreanShownAt(slide: Slide, reveal: number): boolean {
+  if (slide.kind !== 'sequence') return true;
+  const view = sequenceView(slide, reveal);
+  const steps = view.mode === 'order' ? view.steps : slide.steps.slice(0, view.count);
+  return steps.some((step) => step.ko !== undefined);
 }
 
 /** Every `spokenKo` the shipped content gives a Korean text, by that text (any object with both fields). */
@@ -88,6 +101,19 @@ describe('Sound plays the Korean on every slide that shows it (F-TCH-004 section
     const slides = everySlide(canPlayKorean);
     expect(slides.length).toBeGreaterThan(500);
     const silent = slides.filter((s) => drawsHangul(s) && !silentByDesign(s) && slideSound(s, s.builds.length - 1) === undefined).map((s) => `${s.kind}: ${s.key}`);
+    expect(silent).toEqual([]);
+  });
+
+  it.each([true, false])('at every build, with romanization always and tap, a slide that shows Korean has a sound (Korean voice: %s)', (canPlayKorean) => {
+    const silent: string[] = [];
+    for (const romanization of ['always', 'tap'] as const) {
+      for (const slide of withBuilds(everySlide(canPlayKorean), { romanization, strokeGuide: true })) {
+        if (!drawsHangul(slide) || silentByDesign(slide)) continue;
+        slide.builds.forEach((_, reveal) => {
+          if (koreanShownAt(slide, reveal) && slideSound(slide, reveal) === undefined) silent.push(`${romanization} ${slide.kind}: ${slide.key} @${reveal}`);
+        });
+      }
+    }
     expect(silent).toEqual([]);
   });
 
