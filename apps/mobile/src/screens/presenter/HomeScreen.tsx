@@ -1,5 +1,5 @@
 import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import { PRESET_DEFAULT_MINUTES, resolvePreset, type ChooserGroup, type LectureDeck, type LecturePreset, type PresetContext, type PresetMinutes, type StageKey } from '@hangul-route/content-schema';
+import { PRESET_DEFAULT_MINUTES, type ChooserGroup, type LectureDeck, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type StageKey } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type TextStyle } from 'react-native';
@@ -51,6 +51,8 @@ export interface PresenterHomeProps {
   onRemove: (deckId: string) => void;
   /** The ready-made lessons' context (`presenterPresetContext`). */
   presetCtx: PresetContext;
+  /** A preset resolved on this presenter (`resolveOnPresenter`: the resolver and Word review's word count). */
+  resolve: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => ResolvedPreset;
   onPreset: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => void;
   /** Customize's chooser groups in the presenter language (`presenterChooserGroups`). */
   groups: readonly ChooserGroup[];
@@ -73,8 +75,14 @@ const REM = 16;
 /** Recent's column beside the presets from 900 px (`presets.md` item 4, `--side-col`). */
 const SIDE_COLUMN_REM = 18;
 const CUSTOMIZE_PANEL = 'presenter-customize-panel';
-/** How long the home waits for its content to grow tall enough to restore the kept scroll position. */
-const RESTORE_WAIT_MS = 2000;
+/**
+ * Restoring the kept scroll position waits for the page to grow tall enough (Recent loads, Customize
+ * lays out). It stops waiting once Recent has loaded and the page has not grown for this long, at the
+ * teacher's own first touch or wheel, or at the cap, so a page that never grows that tall (a text
+ * size changed meanwhile) keeps its own scroll again.
+ */
+const RESTORE_SETTLE_MS = 800;
+const RESTORE_CAP_MS = 15_000;
 
 function BackControl({ label, onBack, href }: { label: string; onBack?: () => void; href?: string }): React.ReactElement | null {
   const ts = useTypeScale().size;
@@ -139,22 +147,38 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
   const restoreTo = useRef(props.focusCustomize ? 0 : state.scrollY);
   const viewHeight = useRef(0);
   const contentHeight = useRef(0);
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const giveUp = (): void => {
+    restoreTo.current = 0;
+    if (settle.current) clearTimeout(settle.current);
+    settle.current = null;
+  };
+  // Scrolled there again at each change of the page's height until it settles: the cards take their
+  // columns, Recent comes in, and the browser's scroll anchoring would otherwise move the page off it.
   const restore = (): void => {
     const y = restoreTo.current;
     if (y <= 0 || viewHeight.current <= 0 || contentHeight.current - viewHeight.current < y) return;
     scrollRef.current?.scrollTo({ y, animated: false });
-    restoreTo.current = 0;
+  };
+  const recentLoading = props.recent.status === 'loading';
+  // The page has settled: Recent is in, and nothing has grown for a while.
+  const waitForSettle = (): void => {
+    if (restoreTo.current <= 0 || recentLoading) return;
+    if (settle.current) clearTimeout(settle.current);
+    settle.current = setTimeout(giveUp, RESTORE_SETTLE_MS);
   };
   const onContentSize = (_w: number, h: number): void => {
     contentHeight.current = h;
     restore();
+    waitForSettle();
   };
-  // A page that never grows that tall (a text size changed meanwhile) stops waiting, so its own scroll is kept again.
+  useEffect(waitForSettle, [recentLoading]);
   useEffect(() => {
-    const timer = setTimeout(() => {
-      restoreTo.current = 0;
-    }, RESTORE_WAIT_MS);
-    return () => clearTimeout(timer);
+    const cap = setTimeout(giveUp, RESTORE_CAP_MS);
+    return () => {
+      clearTimeout(cap);
+      if (settle.current) clearTimeout(settle.current);
+    };
   }, []);
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>): void => {
     if (restoreTo.current > 0) return;
@@ -171,11 +195,13 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
   };
 
   const stages = useMemo(() => props.groups.flatMap((g) => (g.stage !== null && g.rows.some((r) => r.kind === 'episode') ? [g.id as StageKey] : [])), [props.groups]);
+  const { open, lengths, stage: presetStage } = state;
+  const { resolve } = props;
   const defaultStage = useMemo((): StageKey => {
-    if (state.open === null) return 'stage1';
-    const resolved = resolvePreset(state.open, lengthOf(state, state.open, PRESET_DEFAULT_MINUTES[state.open]), { ...props.presetCtx, stage: state.stage });
+    if (open === null) return 'stage1';
+    const resolved = resolve(open, lengthOf({ lengths }, open, PRESET_DEFAULT_MINUTES[open]), presetStage);
     return firstStageOf(resolved.blocks) ?? 'stage1';
-  }, [state, props.presetCtx]);
+  }, [open, lengths, presetStage, resolve]);
 
   const build = leaving((): void => {
     const deck = buildQuickDeck(state.chosen, props.groups, {
@@ -186,9 +212,24 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
     if (deck) props.onBuild(deck);
   });
 
-  const presets = <PresetCards messages={messages} ctx={props.presetCtx} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} />;
-  const recent = <RecentPanel {...props} onResume={leaving(props.onResume)} onStartOver={leaving(props.onStartOver)} />;
+  // The sticky footer's height is the page's bottom scroll padding, so a row that takes keyboard focus is
+  // scrolled into view above the footer, never under it (WCAG 2.4.11).
+  const [footer, setFooter] = useState(0);
+  const padBottom = state.customize ? footer : 0;
+  useEffect(() => {
+    const node = (scrollRef.current as unknown as { getScrollableNode?: () => { style?: { scrollPaddingBottom?: string } } | null } | null)?.getScrollableNode?.();
+    if (node?.style) node.style.scrollPaddingBottom = `${padBottom}px`;
+  }, [padBottom]);
+
   const sideWidth = SIDE_COLUMN_REM * REM * scale.factor;
+  // The presets' width before they measure it (the page's width less its gutters, and Recent's column
+  // from 900 px), so they open in their columns and a kept scroll position lands on the final layout.
+  const pageWidth = Math.min(width, layout.maxWidth.full) - 2 * gutter;
+  const presetsWidth = Math.max(0, wide ? pageWidth - Math.min(sideWidth, pageWidth * 0.4) - spacing.xl : pageWidth);
+  const presets = (
+    <PresetCards messages={messages} ctx={props.presetCtx} resolve={props.resolve} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} initialWidth={presetsWidth} />
+  );
+  const recent = <RecentPanel {...props} onResume={leaving(props.onResume)} onStartOver={leaving(props.onStartOver)} />;
 
   return (
     <ScrollView
@@ -196,6 +237,9 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
       style={{ flex: 1, backgroundColor: colors.surface.paper }}
       contentContainerStyle={{ flexGrow: 1 }}
       onContentSizeChange={onContentSize}
+      // The teacher's own scroll stops the wait for the kept position: the page is theirs again.
+      onTouchStart={giveUp}
+      {...{ onWheel: giveUp }}
       onLayout={(e) => {
         viewHeight.current = e.nativeEvent.layout.height;
         restore();
@@ -219,14 +263,24 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
         <View style={{ gap: spacing.md }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
             <BackControl label={messages.common.buttons.back} {...(props.backHref !== undefined ? { href: props.backHref } : {})} {...(props.onBack ? { onBack: props.onBack } : {})} />
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginLeft: 'auto' }}>
+            {/* Bounded by the row, so at 320 px with 200 % text Display and Keys and help wrap inside the page. */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm, marginLeft: 'auto', flexShrink: 1, maxWidth: '100%' }}>
               {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-home-display" /> : null}
               {props.onHelp ? <HomeButton label={m.home.help.cta} onPress={props.onHelp} compact testID="presenter-home-help" /> : null}
             </View>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
             <Hoya pose="waving" size={touchTarget.min} />
-            <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(ts.title, 'bold', colors.text.primary), flexShrink: 1 }}>
+            <Text
+              {...KOREAN_LINE_BREAK}
+              ref={titleRef}
+              role="heading"
+              aria-level={1}
+              {...{ tabIndex: -1 }}
+              testID="presenter-home-title"
+              // A word longer than a 160 px line (es "proyección" at the title size) breaks rather than runs past the page.
+              style={{ ...text(ts.title, 'bold', colors.text.primary), flexShrink: 1, overflowWrap: 'anywhere' } as TextStyle}
+            >
               {m.home.title}
             </Text>
           </View>
@@ -243,7 +297,8 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
           </View>
         )}
         <View role="region" aria-label={m.presets.customize.cta} testID="presenter-home-customize" style={{ gap: spacing.md, borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle, paddingTop: spacing.xl }}>
-          <View style={{ alignItems: 'flex-start' }}>
+          {/* Customize is the region's h2 (the disclosure inside it), so Your lesson (h3) sits under it. */}
+          <View role="heading" aria-level={2} style={{ alignItems: 'flex-start' }}>
             <HomeButton
               buttonRef={customizeRef}
               label={m.presets.customize.cta}
@@ -257,7 +312,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
           </View>
           <Line>{m.presets.customize.lead}</Line>
           <View nativeID={CUSTOMIZE_PANEL} {...{ id: CUSTOMIZE_PANEL }} style={state.customize ? undefined : { display: 'none' }}>
-            {state.customize ? <LessonChooser messages={messages} groups={props.groups} state={state} onState={onState} defaultStage={defaultStage} onBuild={build} /> : null}
+            {state.customize ? <LessonChooser messages={messages} groups={props.groups} state={state} onState={onState} defaultStage={defaultStage} onBuild={build} onFooterHeight={setFooter} /> : null}
           </View>
         </View>
       </View>

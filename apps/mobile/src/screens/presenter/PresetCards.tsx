@@ -1,8 +1,8 @@
-import { Icon, borderWidth, colors, radii, shadows, spacing, touchTarget, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import { PRESET_DEFAULT_MINUTES, PRESET_LENGTHS, resolvePreset, type LecturePreset, type PresetContext, type PresetMinutes, type StageKey } from '@hangul-route/content-schema';
+import { Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { PRESET_DEFAULT_MINUTES, PRESET_LENGTHS, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type StageKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import React, { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { lengthOf, type HomeSnapshot } from '../../logic/lecture/home-state';
 import { presenterPresetOrder } from '../../logic/lecture/preset-source';
 import { ChipGroup, H, HomeButton, Line, ring, text, type Focusable } from './home-parts';
@@ -58,21 +58,31 @@ const stageNumber = (stage: StageKey): number => Number(stage.slice('stage'.leng
 export interface PresetCardsProps {
   messages: Messages;
   ctx: PresetContext;
+  /** A preset resolved on this presenter (`resolveOnPresenter`), so the fallback line says what Start builds. */
+  resolve: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => ResolvedPreset;
   /** The stages Stage by stage offers (only stages with a ready cell). */
   stages: readonly StageKey[];
   state: HomeSnapshot;
   onState: (patch: Partial<HomeSnapshot>) => void;
   onStart: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => void;
+  /** The section's width until it is measured (the page's estimate), so the first frame has its columns. */
+  initialWidth?: number;
 }
 
-export function PresetCards({ messages, ctx, stages, state, onState, onStart }: PresetCardsProps): React.ReactElement {
+export function PresetCards({ messages, ctx, resolve, stages, state, onState, onStart, initialWidth = 0 }: PresetCardsProps): React.ReactElement {
   const scale = useTypeScale();
   const ts = scale.size;
   const w = messages.learner.presenter.presets;
-  const [width, setWidth] = useState(0);
+  const [width, setWidth] = useState(initialWidth);
   const columns = presetColumns(width, scale.factor);
   const order = useMemo(() => presenterPresetOrder(ctx), [ctx]);
   const stage = stages.includes(state.stage) ? state.stage : (stages[0] ?? 'stage1');
+  // What each card builds now: its minutes on the card, its fallback line in the panel (one result, as Start uses).
+  const { lengths } = state;
+  const resolved = useMemo(
+    () => new Map(order.map((preset) => [preset, resolve(preset, lengthOf({ lengths }, preset, PRESET_DEFAULT_MINUTES[preset]), stage)] as const)),
+    [order, resolve, lengths, stage],
+  );
   const gap = spacing.md;
   const cardWidth = columns === 1 || width === 0 ? width : Math.floor((width - gap * (columns - 1)) / columns);
 
@@ -86,6 +96,7 @@ export function PresetCards({ messages, ctx, stages, state, onState, onStart }: 
         {order.map((preset) => {
           const open = state.open === preset;
           const minutes = lengthOf(state, preset, PRESET_DEFAULT_MINUTES[preset]);
+          const built = resolved.get(preset)!;
           const words = cardWords(preset, w);
           const panelId = `presenter-preset-panel-${preset}`;
           return (
@@ -107,7 +118,7 @@ export function PresetCards({ messages, ctx, stages, state, onState, onStart }: 
                 aria-expanded={open}
                 {...{ 'aria-controls': panelId }}
                 accessibilityState={{ expanded: open }}
-                accessibilityLabel={messages.a11y.presenter.presetCard(words.title, minutes)}
+                accessibilityLabel={messages.a11y.presenter.presetCard(words.title, built.minutes)}
                 onPress={() => onState({ open: open ? null : preset })}
                 testID={`presenter-preset-${preset}`}
                 style={({ focused }: Focusable) => ({
@@ -126,7 +137,7 @@ export function PresetCards({ messages, ctx, stages, state, onState, onStart }: 
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, paddingTop: spacing.xs }}>
                   <Text {...KOREAN_LINE_BREAK} style={{ ...text(ts.body, 'bold', colors.text.secondary), flexShrink: 1 }}>
-                    {messages.learner.presenter.home.quick.minutes(minutes)}
+                    {messages.learner.presenter.home.quick.minutes(built.minutes)}
                   </Text>
                   <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
                 </View>
@@ -139,7 +150,7 @@ export function PresetCards({ messages, ctx, stages, state, onState, onStart }: 
                     minutes={minutes}
                     stage={stage}
                     stages={stages}
-                    ctx={ctx}
+                    resolved={built}
                     onMinutes={(m) => onState({ lengths: { ...state.lengths, [preset]: m } })}
                     onStage={(s) => onState({ stage: s })}
                     onStart={() => onStart(preset, minutes, stage)}
@@ -160,7 +171,7 @@ function PresetPanel({
   minutes,
   stage,
   stages,
-  ctx,
+  resolved,
   onMinutes,
   onStage,
   onStart,
@@ -170,16 +181,18 @@ function PresetPanel({
   minutes: PresetMinutes;
   stage: StageKey;
   stages: readonly StageKey[];
-  ctx: PresetContext;
+  resolved: ResolvedPreset;
   onMinutes: (m: PresetMinutes) => void;
   onStage: (s: StageKey) => void;
   onStart: () => void;
 }): React.ReactElement {
   const ts = useTypeScale().size;
   const w = messages.learner.presenter.presets;
-  const resolved = useMemo(() => resolvePreset(preset, minutes, { ...ctx, stage }), [preset, minutes, ctx, stage]);
   const fallback = resolved.fallback === 'zero' ? w.fallback.zero : resolved.fallback === 'warm-up' ? w.fallback.warmUp : resolved.fallback === 'restart' ? w.fallback.restart : null;
   const lengths = PRESET_LENGTHS[preset];
+  // Start is at least 2 x hero wide (presets.md item 3) from the regular width; in a narrower window it
+  // is the panel's width up to 2 x hero, so at 320 px with 200 % text it never runs past the page (section 10).
+  const regular = useWindowDimensions().width >= layout.breakpoint.regular;
   return (
     <>
       {fallback !== null ? (
@@ -207,7 +220,7 @@ function PresetPanel({
         </View>
       ) : null}
       <View style={{ alignItems: 'flex-end' }}>
-        <HomeButton label={w.start.cta} onPress={onStart} primary minWidth={touchTarget.hero * 2} testID={`presenter-preset-start-${preset}`} />
+        <HomeButton label={w.start.cta} onPress={onStart} primary {...(regular ? { minWidth: touchTarget.hero * 2 } : { upTo: touchTarget.hero * 2 })} testID={`presenter-preset-start-${preset}`} />
       </View>
     </>
   );

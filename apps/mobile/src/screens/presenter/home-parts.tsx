@@ -62,7 +62,10 @@ export function HomeButton({
   expanded,
   controls,
   accessibilityLabel,
+  labelledBy,
+  labelId,
   minWidth,
+  upTo,
   buttonRef,
   testID,
 }: {
@@ -75,7 +78,13 @@ export function HomeButton({
   expanded?: boolean;
   controls?: string;
   accessibilityLabel?: string;
+  /** Ids of the elements that name the button (`aria-labelledby`), in place of its label alone. */
+  labelledBy?: string;
+  /** An id for the label's text, so `labelledBy` can name it. */
+  labelId?: string;
   minWidth?: number;
+  /** The width of its row up to this many pixels, in place of `minWidth` (a narrow window: never wider than the row). */
+  upTo?: number;
   buttonRef?: React.Ref<View>;
   testID?: string;
 }): React.ReactElement {
@@ -88,7 +97,7 @@ export function HomeButton({
     <Pressable
       ref={buttonRef}
       role="button"
-      accessibilityLabel={accessibilityLabel ?? label}
+      {...(labelledBy !== undefined ? { 'aria-labelledby': labelledBy } : { accessibilityLabel: accessibilityLabel ?? label })}
       accessibilityState={{ disabled: disabled === true, ...(expanded !== undefined ? { expanded } : {}) }}
       aria-disabled={disabled === true}
       {...disclosure}
@@ -97,9 +106,9 @@ export function HomeButton({
       testID={testID}
       style={({ focused }: Focusable) => ({
         minHeight: compact ? touchTarget.min : touchTarget.hero,
-        minWidth: minWidth ?? (compact ? touchTarget.min : touchTarget.hero),
+        minWidth: upTo !== undefined ? undefined : (minWidth ?? (compact ? touchTarget.min : touchTarget.hero)),
         // At 320 px with 200 % text (a 160 px layout) the label wraps inside the page, never past it.
-        maxWidth: '100%',
+        ...(upTo !== undefined ? { width: '100%', maxWidth: upTo } : { maxWidth: '100%' }),
         flexShrink: 1,
         flexDirection: 'row',
         gap: spacing.sm,
@@ -115,7 +124,7 @@ export function HomeButton({
       })}
     >
       {icon ? <Icon name={icon} size={spacing.xl} color={ink} /> : null}
-      <Text {...KOREAN_LINE_BREAK} style={{ ...text(compact ? ts.body : ts.bodyLg, 'bold', ink), textAlign: 'center', flexShrink: 1 }}>
+      <Text {...KOREAN_LINE_BREAK} {...(labelId !== undefined ? { nativeID: labelId, id: labelId } : {})} style={{ ...text(compact ? ts.body : ts.bodyLg, 'bold', ink), textAlign: 'center', flexShrink: 1 }}>
         {label}
       </Text>
     </Pressable>
@@ -197,7 +206,8 @@ export function ChipGroup<T extends string | number>({
  * A checkbox row (the v1 `.pick` row): a `spacing.xxl` box with the `check` glyph, or the `dash`
  * glyph while mixed (`aria-checked="mixed"`), the title and a second line. A chosen row gets the
  * `borderWidth.thick` `text.primary` outline. A row that is off stays in the tab order, marked
- * disabled, so the reason in the status line can be found.
+ * disabled, so the reason in the status line can be found. Space toggles it, as a checkbox does
+ * (react-native-web answers Space only on a `button`), and never scrolls the page.
  */
 export function CheckRow({
   title,
@@ -207,6 +217,7 @@ export function CheckRow({
   onToggle,
   testID,
   rowRef,
+  titleId,
   basis = 0,
 }: {
   title: string;
@@ -216,6 +227,8 @@ export function CheckRow({
   onToggle: () => void;
   testID?: string;
   rowRef?: React.Ref<View>;
+  /** An id for the title's text (an episode's "lessons inside" button is named by it). */
+  titleId?: string;
   /** The width the row asks for before it shares a line (a row beside its disclosure wraps under 2 x this). */
   basis?: number;
 }): React.ReactElement {
@@ -223,6 +236,11 @@ export function CheckRow({
   const on = checked === 'true';
   const glyph: IconName | null = checked === 'true' ? 'check' : checked === 'mixed' ? 'dash' : null;
   const ariaChecked = checked === 'mixed' ? 'mixed' : on;
+  const onKey = (e: { key: string; preventDefault?: () => void }): void => {
+    if (e.key !== ' ' && e.key !== 'Spacebar') return;
+    e.preventDefault?.();
+    if (!disabled) onToggle();
+  };
   return (
     <Pressable
       ref={rowRef}
@@ -235,6 +253,7 @@ export function CheckRow({
       onPress={() => {
         if (!disabled) onToggle();
       }}
+      {...{ onKeyDown: onKey }}
       testID={testID}
       style={({ focused }: Focusable) => ({
         flexGrow: 1,
@@ -268,7 +287,7 @@ export function CheckRow({
         {glyph ? <Icon name={glyph} size={spacing.xl} color={colors.text.primary} /> : null}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'bold', colors.text.primary)}>
+        <Text {...KOREAN_LINE_BREAK} {...(titleId !== undefined ? { nativeID: titleId, id: titleId } : {})} style={text(ts.body, 'bold', colors.text.primary)}>
           {title}
         </Text>
         <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>

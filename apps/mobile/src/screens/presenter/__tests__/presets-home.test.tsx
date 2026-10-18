@@ -1,11 +1,13 @@
-import { CATALOG, type LectureDeck, type LecturePreset, type PresetMinutes, type StageKey } from '@hangul-route/content-schema';
+import { CATALOG, type LectureDeck, type LecturePreset, type PresetContext, type PresetMinutes, type StageKey } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import React, { useState } from 'react';
+import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { HOME_DEFAULT, type HomeSnapshot } from '../../../logic/lecture/home-state';
-import { presenterPresetContext } from '../../../logic/lecture/preset-source';
-import { presenterChooserGroups } from '../../../logic/lecture/quick-source';
+import { lectureBundle } from '../../../logic/lecture/content';
+import { presenterPresetContext, resolveOnPresenter } from '../../../logic/lecture/preset-source';
+import { presenterChooserGroups, wordReviewWordsOn } from '../../../logic/lecture/quick-source';
 import { emptyRecent, rememberDeck } from '../../../logic/lecture/recent';
 import { byTestId, hostNodes, press, render, screenTexts, textOf } from '../../../test-support/render';
 import { PresenterHomeScreen, type PresenterHomeProps } from '../HomeScreen';
@@ -24,6 +26,12 @@ const en = getMessages('en');
 const p = en.learner.presenter;
 const NOW = new Date('2026-10-17T12:00:00.000Z');
 const groups = presenterChooserGroups('en', { consonants: p.home.quick.consonants, vowels: p.home.quick.vowels });
+const bundle = lectureBundle('en');
+/** The presenter's resolver over a context (`PresenterApp`'s `resolveHere`). */
+const resolverOf =
+  (ctx: PresetContext): PresenterHomeProps['resolve'] =>
+  (preset, minutes, stage) =>
+    resolveOnPresenter(preset, minutes, { ...ctx, stage }, (block) => wordReviewWordsOn(bundle, block));
 
 interface HarnessProps extends Partial<PresenterHomeProps> {
   initial?: HomeSnapshot;
@@ -32,6 +40,7 @@ interface HarnessProps extends Partial<PresenterHomeProps> {
 
 function Harness({ initial = HOME_DEFAULT, onPresetSpy, ...over }: HarnessProps): React.ReactElement {
   const [state, setState] = useState<HomeSnapshot>(initial);
+  const ctx = over.presetCtx ?? presenterPresetContext(null, NOW);
   return (
     <PresenterHomeScreen
       messages={en}
@@ -40,7 +49,8 @@ function Harness({ initial = HOME_DEFAULT, onPresetSpy, ...over }: HarnessProps)
       onResume={() => undefined}
       onStartOver={() => undefined}
       onRemove={() => undefined}
-      presetCtx={presenterPresetContext(null, NOW)}
+      presetCtx={ctx}
+      resolve={resolverOf(ctx)}
       onPreset={onPresetSpy ?? (() => undefined)}
       groups={groups}
       onBuild={() => undefined}
@@ -52,6 +62,29 @@ function Harness({ initial = HOME_DEFAULT, onPresetSpy, ...over }: HarnessProps)
       {...over}
     />
   );
+}
+
+/** A host node's accessible name: the texts its `aria-labelledby` ids name, else its `aria-label`. */
+const nameOf = (root: ReactTestInstance, node: ReactTestInstance): string | undefined => {
+  const by = node.props['aria-labelledby'] as string | undefined;
+  if (by === undefined) return node.props['aria-label'] as string | undefined;
+  return by
+    .split(' ')
+    .map((id) => textOf(hostNodes(root, (n) => n.props.id === id)[0]!))
+    .join(' ');
+};
+
+/** A key pressed on a host node, as react-native-web's press responder and the node's own handler receive it. */
+async function key(node: ReactTestInstance, name: string): Promise<{ prevented: boolean }> {
+  const onKeyDown = node.props.onKeyDown as ((event: unknown) => void) | undefined;
+  if (onKeyDown === undefined) throw new Error('no key handler');
+  const target = { getAttribute: (attr: string): unknown => node.props[attr] ?? null, tagName: String(node.type) };
+  const out = { prevented: false };
+  const event = { key: name, target, currentTarget: target, nativeEvent: {}, preventDefault: () => (out.prevented = true), stopPropagation: () => undefined };
+  await act(async () => {
+    onKeyDown(event);
+  });
+  return out;
 }
 
 const one = (root: ReactTestInstance, id: string): ReactTestInstance => {
@@ -117,6 +150,40 @@ describe('Ready-made lessons (sections 4.1 and 10)', () => {
     expect(one(r.root, 'presenter-preset-hangul-week-1').props['aria-label']).toBe('Start from zero: Hangul week 1, about 30 minutes');
     await press(one(r.root, 'presenter-preset-start-hangul-week-1'));
     expect(onPresetSpy).toHaveBeenCalledWith('hangul-week-1', 30, 'stage1');
+  });
+
+  it('the length chips are one radiogroup for the keyboard: the arrows, Home and End move and select', async () => {
+    const r = await render(<Harness />);
+    await press(one(r.root, 'presenter-preset-hangul-week-1'));
+    const radios = () => hostNodes(one(r.root, 'presenter-preset-length-hangul-week-1'), (n) => n.props.role === 'radio');
+    const checked = () => radios().map((n) => n.props['aria-checked']);
+    const stops = () => radios().map((n) => n.props.tabIndex);
+    expect(await key(one(r.root, 'presenter-preset-length-hangul-week-1-20'), 'ArrowRight')).toEqual({ prevented: true });
+    expect([checked(), stops()]).toEqual([
+      [false, false, true],
+      [-1, -1, 0],
+    ]);
+    await key(one(r.root, 'presenter-preset-length-hangul-week-1-30'), 'Home');
+    expect(checked()).toEqual([true, false, false]);
+    await key(one(r.root, 'presenter-preset-length-hangul-week-1-10'), 'ArrowLeft');
+    expect(checked()).toEqual([false, false, true]);
+    await key(one(r.root, 'presenter-preset-length-hangul-week-1-30'), 'End');
+    expect(stops()).toEqual([-1, -1, 0]);
+    // Another key keeps its browser meaning.
+    expect(await key(one(r.root, 'presenter-preset-length-hangul-week-1-30'), 'Tab')).toEqual({ prevented: false });
+    expect(one(r.root, 'presenter-preset-hangul-week-1').props['aria-label']).toBe('Start from zero: Hangul week 1, about 30 minutes');
+  });
+
+  it('Word review after Hangul week 1 (3 words) says it is the warm-up instead, and is named for what it builds', async () => {
+    const deck = { v: 1, id: 'lecture:recent0002', title: 'Hangul week 1', createdAt: '2026-10-01T09:00:00.000Z', seed: 1, blocks: [{ kind: 'episode', id: 'episode:stage1-letters' }], options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: true }, picker: null } as LectureDeck;
+    const list = rememberDeck(emptyRecent(), deck, '2026-10-16T09:00:00.000Z');
+    const onPresetSpy = vi.fn();
+    const r = await render(<Harness presetCtx={presenterPresetContext(list, NOW)} recent={{ status: 'ready', list }} onPresetSpy={onPresetSpy} />);
+    await press(one(r.root, 'presenter-preset-word-review'));
+    expect(textOf(one(r.root, 'presenter-preset-fallback-word-review'))).toBe(p.presets.fallback.warmUp);
+    await press(one(r.root, 'presenter-preset-length-word-review-20'));
+    // The 20-minute chip still builds the 10-minute warm-up, and the card says so.
+    expect(one(r.root, 'presenter-preset-word-review').props['aria-label']).toBe('Word review, about 10 minutes');
   });
 
   it('Stage by stage has the stage chips of the ready stages; Word review offers 10 and 20; the warm-up no chips', async () => {
@@ -198,11 +265,71 @@ describe('Customize: the grouped chooser (section 18.3)', () => {
     expect(textOf(one(r.root, 'presenter-chooser-panel-letters'))).toContain('Consonants');
   });
 
+  it('the tablist for the keyboard: the arrows, Home and End move and select, one tab stop, one panel', async () => {
+    const r = await opened();
+    const tabs = () => hostNodes(one(r.root, 'presenter-chooser-tabs'), (n) => n.props.role === 'tab');
+    const selected = () => tabs().map((t) => t.props['aria-selected']);
+    const panels = () => hostNodes(r.root, (n) => n.props.role === 'tabpanel');
+    expect(await key(one(r.root, 'presenter-chooser-tab-lessons'), 'ArrowRight')).toEqual({ prevented: true });
+    expect(selected()).toEqual([false, true, false, false]);
+    expect(tabs().map((t) => t.props.tabIndex)).toEqual([-1, 0, -1, -1]);
+    expect(panels()).toHaveLength(1);
+    expect(panels()[0]!.props['aria-labelledby']).toBe('presenter-chooser-tab-stories');
+    await key(one(r.root, 'presenter-chooser-tab-stories'), 'End');
+    expect(selected()).toEqual([false, false, false, true]);
+    await key(one(r.root, 'presenter-chooser-tab-letters'), 'ArrowRight');
+    expect(selected()).toEqual([true, false, false, false]);
+    await key(one(r.root, 'presenter-chooser-tab-lessons'), 'ArrowLeft');
+    expect(selected()).toEqual([false, false, false, true]);
+    await key(one(r.root, 'presenter-chooser-tab-letters'), 'Home');
+    expect(selected()).toEqual([true, false, false, false]);
+    expect(byTestId(r.root, 'presenter-chooser-panel-lessons')).toHaveLength(1);
+  });
+
+  it('Space toggles a row as a checkbox does (and never scrolls the page); Enter is the press', async () => {
+    const r = await opened();
+    await press(one(r.root, 'presenter-chooser-tab-stories'));
+    const row = () => hostNodes(one(r.root, 'presenter-chooser-panel-stories'), (n) => n.props.role === 'checkbox')[0]!;
+    expect(row().props['aria-checked']).toBe(false);
+    expect(await key(row(), ' ')).toEqual({ prevented: true });
+    expect(row().props['aria-checked']).toBe(true);
+    await key(row(), 'Spacebar');
+    expect(row().props['aria-checked']).toBe(false);
+    expect(await key(row(), 'ArrowDown')).toEqual({ prevented: false });
+    expect(row().props['aria-checked']).toBe(false);
+  });
+
+  it('a full lesson: the count and the full line are two lines of the one status, and a box that would add is off', async () => {
+    const stories = groups.find((g) => g.id === 'stories')!.rows.map((row) => row.key);
+    const topics = groups.find((g) => g.id === 'topics')!.rows.map((row) => row.key);
+    const chosen = [...stories, ...topics].slice(0, 30);
+    expect(chosen).toHaveLength(30);
+    const r = await opened({ initial: { ...HOME_DEFAULT, tab: 'stories', chosen } });
+    const status = one(r.root, 'presenter-home-chosen');
+    const lines = hostNodes(status, (n) => n.type === 'div' && n.children.some((c) => typeof c === 'string'));
+    expect(lines.map((n) => textOf(n))).toEqual([expect.stringMatching(/^30 parts · about \d+ min$/), p.home.quick.full]);
+    expect(textOf(one(r.root, 'presenter-home-chosen-full'))).toBe(p.home.quick.full);
+    await press(one(r.root, 'presenter-chooser-tab-letters'));
+    expect(one(r.root, 'presenter-chooser-row-letters:vowels').props['aria-disabled']).toBe(true);
+  });
+
+  it('Customize is the h2 of its region, so Your lesson (h3) sits under it', async () => {
+    const r = await opened();
+    const region = one(r.root, 'presenter-home-customize');
+    const heading = hostNodes(region, (n) => n.type === 'h2')[0]!;
+    expect(byTestId(heading, 'presenter-home-customize-toggle')).toHaveLength(1);
+    expect(hostNodes(one(r.root, 'presenter-chooser-tray'), (n) => n.props['aria-level'] === 3).map((n) => textOf(n))).toEqual([p.presets.chooser.tray.title]);
+  });
+
   it('the Lessons tab: a stage\'s episodes, "{n} lessons inside", and the tri-state episode', async () => {
     const r = await opened();
     await press(one(r.root, 'presenter-chooser-stage-stage2'));
     const inside = one(r.root, 'presenter-chooser-inside-episode:stage2-letters');
-    expect(inside.props['aria-label']).toBe('6 lessons inside');
+    // Named by its episode and its count, so no two disclosures read the same.
+    expect(inside.props['aria-label']).toBeUndefined();
+    expect(nameOf(r.root, inside)).toBe(`${groups.flatMap((g) => g.rows).find((row) => row.key === 'episode:stage2-letters')!.title} 6 lessons inside`);
+    const names = hostNodes(one(r.root, 'presenter-chooser-panel-lessons'), (n) => typeof n.props['data-testid'] === 'string' && n.props['data-testid'].startsWith('presenter-chooser-inside-')).map((n) => nameOf(r.root, n));
+    expect(new Set(names).size).toBe(names.length);
     expect(inside.props['aria-expanded']).toBe(false);
     await press(inside);
     const lessons = byTestId(r.root, 'presenter-chooser-lesson-quest:stage2-letters-q2');

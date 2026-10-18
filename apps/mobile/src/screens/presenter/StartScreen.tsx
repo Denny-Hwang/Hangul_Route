@@ -90,7 +90,8 @@ function Preview({ rows }: { rows: readonly PreviewRow[] }): React.ReactElement 
             style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, paddingHorizontal: spacing.sm, borderBottomWidth: borderWidth.thin, borderBottomColor: colors.border.subtle }}
           >
             <Line bold>{String(i + 1)}</Line>
-            <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: TEACHER_COLUMN / 4 }}>
+            {/* A quarter of the column before it shares a line; in a narrower row it takes the row (320 px at 200 % text). */}
+            <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: TEACHER_COLUMN / 4, minWidth: 0 }}>
               <Line bold>{row.title}</Line>
             </View>
             <Line secondary>{messages.learner.presenter.home.quick.minutes(row.minutes)}</Line>

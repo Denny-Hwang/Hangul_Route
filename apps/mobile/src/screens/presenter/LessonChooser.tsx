@@ -37,6 +37,8 @@ export interface LessonChooserProps {
   /** The Lessons tab's stage before the teacher picks one: the open preset's first lesson's, else Stage 1. */
   defaultStage: StageKey;
   onBuild: () => void;
+  /** The sticky footer's height, so the page keeps a focused row out from under it (WCAG 2.4.11). */
+  onFooterHeight?: (height: number) => void;
 }
 
 const REM = 16;
@@ -78,6 +80,9 @@ function ChooserTabs({ tabs, value, label, names, onChange }: { tabs: readonly C
             style={({ focused }: Focusable) => ({
               minHeight: touchTarget.min,
               minWidth: touchTarget.min,
+              // At 320 px with 200 % text a long name ("Temas de palabras") wraps inside the page.
+              maxWidth: '100%',
+              flexShrink: 1,
               justifyContent: 'center',
               alignItems: 'center',
               paddingHorizontal: spacing.lg,
@@ -88,7 +93,7 @@ function ChooserTabs({ tabs, value, label, names, onChange }: { tabs: readonly C
               ...ring(focused),
             })}
           >
-            <Text {...KOREAN_LINE_BREAK} style={text(ts.body, on ? 'bold' : 'regular', on ? colors.text.onPrimary : colors.text.primary)}>
+            <Text {...KOREAN_LINE_BREAK} style={{ ...text(ts.body, on ? 'bold' : 'regular', on ? colors.text.onPrimary : colors.text.primary), textAlign: 'center', flexShrink: 1 }}>
               {names[tab]}
             </Text>
           </Pressable>
@@ -98,7 +103,7 @@ function ChooserTabs({ tabs, value, label, names, onChange }: { tabs: readonly C
   );
 }
 
-export function LessonChooser({ messages, groups, state, onState, defaultStage, onBuild }: LessonChooserProps): React.ReactElement {
+export function LessonChooser({ messages, groups, state, onState, defaultStage, onBuild, onFooterHeight }: LessonChooserProps): React.ReactElement {
   const scale = useTypeScale();
   const ts = scale.size;
   const insets = useSafeAreaInsets();
@@ -121,8 +126,9 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
   const wanted = state.chooserStage ?? defaultStage;
   const stage = stageIds.includes(wanted) ? wanted : (stageIds[0] ?? 'stage1');
   const chosen = state.chosen;
-  const full = chooserFull(chosen, groups);
-  const tray = chooserTray(chosen, groups);
+  // Once per choice, not per row or per tab and chip press.
+  const full = useMemo(() => chooserFull(chosen, groups), [chosen, groups]);
+  const tray = useMemo(() => chooserTray(chosen, groups), [chosen, groups]);
   const minutes = tray.reduce((sum, t) => sum + t.minutes, 0);
   const basis = ROW_BASIS_REM * REM * scale.factor;
 
@@ -197,10 +203,14 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
     const open = state.expanded.includes(row.key);
     const listId = `presenter-chooser-lessons-${row.key.replace(/[^a-z0-9-]/g, '-')}`;
     const locked = lessonLocked(chosen, row);
+    // The disclosure is named by its episode and its count ("{title} {n} lessons inside"), so no two read the same.
+    const titleId = `${listId}-title`;
+    const countId = `${listId}-count`;
     return (
       <View key={row.key} style={{ gap: spacing.xs }}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: spacing.xs }}>
           <CheckRow
+            titleId={titleId}
             title={row.title}
             detail={quick.minutes(row.minutes)}
             checked={rowCheck(chosen, row)}
@@ -211,6 +221,8 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
           />
           <HomeButton
             label={m.lessonsIn(row.lessons.length)}
+            labelledBy={`${titleId} ${countId}`}
+            labelId={countId}
             compact
             icon={open ? 'dash' : 'plus'}
             expanded={open}
@@ -266,7 +278,9 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
   else panel = <View style={{ gap: spacing.xs }}>{letters.map((row) => flatRow(row))}</View>;
 
   const names: Record<ChooserTab, string> = { lessons: m.tab.lessons, stories: m.tab.stories, topics: m.tab.words, letters: m.tab.letters };
-  const status = chosen.length === 0 || tray.length === 0 ? quick.nothing : full ? `${m.summary(tray.length, minutes)} ${quick.full}` : m.summary(tray.length, minutes);
+  // The count and, when a box is off, the full line: two sentences on two lines, never joined into one.
+  const status = chosen.length === 0 || tray.length === 0 ? quick.nothing : m.summary(tray.length, minutes);
+  const fullLine = tray.length > 0 && full ? quick.full : null;
   const sticky = { position: 'sticky', bottom: 0 } as unknown as ViewStyle;
 
   return (
@@ -342,6 +356,7 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
       {/* The sticky footer: it stays at the bottom of the window while Customize scrolls (`presets-customize-footer-*`). */}
       <View
         testID="presenter-chooser-footer"
+        onLayout={(e) => onFooterHeight?.(e.nativeEvent.layout.height)}
         style={{
           ...sticky,
           zIndex: z.sticky,
@@ -357,9 +372,16 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
           backgroundColor: colors.surface.paper,
         }}
       >
-        <Text {...KOREAN_LINE_BREAK} role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(ts.body, 'regular', colors.text.primary), flexShrink: 1 }}>
-          {status}
-        </Text>
+        <View role="status" aria-live="polite" testID="presenter-home-chosen" style={{ flexShrink: 1, gap: spacing.xs }}>
+          <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.primary)}>
+            {status}
+          </Text>
+          {fullLine !== null ? (
+            <Text {...KOREAN_LINE_BREAK} testID="presenter-home-chosen-full" style={text(ts.body, 'regular', colors.text.primary)}>
+              {fullLine}
+            </Text>
+          ) : null}
+        </View>
         <HomeButton label={quick.build.cta} onPress={onBuild} primary disabled={tray.length === 0} testID="presenter-home-build" />
       </View>
     </View>
