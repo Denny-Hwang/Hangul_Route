@@ -75,6 +75,27 @@ describe('promptReducer', () => {
     expect(s).toMatchObject({ phase: 'text', reason: 'no_voice' });
   });
 
+  it('a proactive no_voice text clears when the voices load late (ready): back to the start of the round', () => {
+    const shown = run([{ capability: noneCap }]);
+    expect(run([{ capability: readyCap }], shown)).toEqual(INITIAL_PROMPT_STATE);
+    expect(showText(run([{ capability: readyCap }], shown), readyCap, false, false)).toBe(false);
+  });
+
+  it('a no_voice text after a play clears to ok on ready (or on clips), keeping the attempts', () => {
+    const failed = run(['play', { result: 'unavailable', failure: 'no_voice' }]);
+    expect(run([{ capability: readyCap }], failed)).toEqual({ phase: 'ok', reason: null, attempts: 1 });
+    expect(run([{ capability: { ...noneCap, clips: true } }], failed)).toEqual({ phase: 'ok', reason: null, attempts: 1 });
+  });
+
+  it('a muted, blocked or error text stays when the voices load', () => {
+    const muted = run([{ muted: true }]);
+    expect(run([{ capability: readyCap }], muted)).toEqual(muted);
+    const blocked = run(['play', { result: 'unavailable', failure: 'blocked' }]);
+    expect(run([{ capability: readyCap }], blocked)).toEqual(blocked);
+    const error = run(['play', { result: 'unavailable', failure: 'error' }]);
+    expect(run([{ capability: readyCap }], error)).toEqual(error);
+  });
+
   it('unknown, ready or clips-only capabilities change nothing', () => {
     expect(run([{ capability: unknownCap }])).toEqual(INITIAL_PROMPT_STATE);
     expect(run([{ capability: readyCap }])).toEqual(INITIAL_PROMPT_STATE);

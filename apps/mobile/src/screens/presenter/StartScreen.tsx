@@ -2,7 +2,7 @@ import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typogra
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { distinctParts, type SkipPart, type VoiceCheck } from '../../logic/lecture/shell';
+import { distinctParts, type SkipPart, type SoundCheckOutcome, type VoiceCheck } from '../../logic/lecture/shell';
 import { START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 import { GhostButton, PrimaryButton } from './StatePage';
@@ -51,6 +51,12 @@ export interface StartScreenProps {
   portrait?: boolean;
   /** A short window (under `layout.shortHeight`, a phone sideways): the title and Start step down. */
   short?: boolean;
+  /** Test the sound in the voice row (section 3.7): runs the unlock and one Korean word in the tap. Without it the button is not drawn. */
+  onTestSound?: () => void;
+  /** The last test's outcome for the line under the button; null before a test, or while it plays. */
+  soundCheck?: SoundCheckOutcome | null;
+  /** Turn sound on, shown when the test found the sound switched off. */
+  onTurnSoundOn?: () => void;
 }
 
 function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNode; testID?: string }): React.ReactElement {
@@ -144,6 +150,31 @@ function FontWait(): React.ReactElement {
   );
 }
 
+/**
+ * Test the sound (section 3.7, start-screen.md): the button, then what happened, in a polite live
+ * region. Sound switched off says so ("Sound is off.") and offers the shipped Turn sound on; a sound
+ * that could not play says the teacher can say each word. The voice line above keeps its wording,
+ * and Ready never waits for this.
+ */
+function SoundCheck({ onTest, outcome, onTurnSoundOn }: { onTest: () => void; outcome: SoundCheckOutcome | null; onTurnSoundOn?: () => void }): React.ReactElement {
+  const { messages } = usePresenterView();
+  const m = messages.learner.presenter.start.testSound;
+  return (
+    <View style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
+      <GhostButton testID="presenter-test-sound" label={m.cta} onPress={onTest} />
+      <View testID="presenter-test-sound-result" role="status" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
+        {outcome === 'played' ? <Line secondary>{m.played}</Line> : null}
+        {outcome === 'failed' ? <Line secondary>{m.failed}</Line> : null}
+        {/* The outcome in words first, so the live region says why the button is there. */}
+        {outcome === 'muted' ? <Line secondary>{messages.learner.audio.soundIsOff}</Line> : null}
+        {outcome === 'muted' && onTurnSoundOn ? (
+          <GhostButton testID="presenter-test-sound-on" label={messages.learner.audio.action.turn_on.cta} onPress={onTurnSoundOn} />
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 /** Before you start: the device checks and the skipped parts with [ See which ] (the same list on the wide page and in the phone's Details). */
 function Checks(props: StartScreenProps): React.ReactElement {
   const ts = useTypeScale().size;
@@ -163,6 +194,7 @@ function Checks(props: StartScreenProps): React.ReactElement {
       {voiceLine !== null ? (
         <Check ok={voiceLine.ok} testID="presenter-check-voice">
           <Line>{voiceLine.text}</Line>
+          {props.onTestSound ? <SoundCheck onTest={props.onTestSound} outcome={props.soundCheck ?? null} onTurnSoundOn={props.onTurnSoundOn} /> : null}
         </Check>
       ) : null}
       <Check ok={props.fullscreenSupported} testID="presenter-check-fullscreen">

@@ -44,11 +44,42 @@ export interface TtsRequest {
   voice: VoiceCandidate | null;
 }
 
+/** The `SpeechSynthesisErrorEvent.error` values of the Web Speech API (a closed list). */
+export const SPEECH_ERROR_CODES = [
+  'canceled',
+  'interrupted',
+  'audio-busy',
+  'audio-hardware',
+  'network',
+  'synthesis-unavailable',
+  'synthesis-failed',
+  'language-unavailable',
+  'voice-unavailable',
+  'text-too-long',
+  'invalid-argument',
+  'not-allowed',
+] as const;
+export type SpeechErrorCode = (typeof SPEECH_ERROR_CODES)[number];
+
+/**
+ * `'interrupted'` = canceled/interrupted/stopped (not a failure); `'blocked'` = the browser refused
+ * to speak (Chrome's `not-allowed` before any user activation); `'error'` = a real engine error.
+ */
+export type TtsErrorKind = 'interrupted' | 'blocked' | 'error';
+
+/** A Web Speech error code as the controller reads it: one of the list, else `'other'`. */
+export function classifySpeechError(raw: unknown): { kind: TtsErrorKind; code: SpeechErrorCode | 'other' } {
+  const code = typeof raw === 'string' && (SPEECH_ERROR_CODES as readonly string[]).includes(raw) ? (raw as SpeechErrorCode) : 'other';
+  if (code === 'canceled' || code === 'interrupted') return { kind: 'interrupted', code };
+  if (code === 'not-allowed') return { kind: 'blocked', code };
+  return { kind: 'error', code };
+}
+
 export interface TtsHandlers {
   onStart(): void;
   onEnd(): void;
-  /** `'interrupted'` = canceled/interrupted/stopped (not a failure); `'error'` = a real engine error. */
-  onError(kind: 'interrupted' | 'error'): void;
+  /** `code`: the engine's error code when it gives one (the web does; the native adapter does not). */
+  onError(kind: TtsErrorKind, code?: SpeechErrorCode | 'other'): void;
 }
 
 export interface TtsEngine {
@@ -57,6 +88,16 @@ export interface TtsEngine {
   cancelAll(): void;
   /** `speaking || pending`. */
   busy(): boolean;
+  /**
+   * Nudge an engine that holds its queue (a paused or stalled Chrome engine); absent where there is nothing to resume.
+   * Only an engine that has it gets the start grace (`START_GRACE_MS`): the web's. Native prompts keep the 1.5 s wait.
+   */
+  resume?(): void;
+  /**
+   * The engine's own silent utterance (the page's speech unlock, which also warms the Korean voice) is still ahead of
+   * the prompts it holds. A prompt asked in the unlocking tap waits behind it, so its start clock does not run then.
+   */
+  warming?(): boolean;
 }
 
 export type ClipFailure = 'missing' | 'fetch' | 'decode' | 'blocked';
@@ -94,13 +135,25 @@ export const systemClock: Clock = {
 
 // --- Telemetry (§3.14); `audio.mute_changed` belongs to the store ------------
 
+export type PlaybackFailReason = 'missing' | 'fetch' | 'decode' | 'blocked' | 'timeout' | 'engine';
+/**
+ * Why a playback failed, as a code: a Web Speech error code, `'timeout'` (no answer from the engine in
+ * time), `'none'` (no code: a clip, or an engine that gives none) or `'other'` (a code not on the list).
+ */
+export type PlaybackFailCode = SpeechErrorCode | 'timeout' | 'none' | 'other';
+
+export interface PlaybackFailedPayload {
+  kind: 'clip' | 'tts';
+  reason: PlaybackFailReason;
+  code: PlaybackFailCode;
+  /** `PlaySpec.source`, else `'unknown'`. */
+  source: string;
+}
+
 export type AudioTelemetryEvent =
   | { name: 'audio.capability_checked'; payload: CapabilityCheckedPayload }
   | { name: 'audio.fallback_shown'; payload: { source: string; reason: FallbackReason } }
-  | {
-      name: 'audio.playback_failed';
-      payload: { kind: 'clip' | 'tts'; reason: 'missing' | 'fetch' | 'decode' | 'blocked' | 'timeout' | 'engine' };
-    };
+  | { name: 'audio.playback_failed'; payload: PlaybackFailedPayload };
 
 export interface ControllerDeps {
   /** `null` = the platform has no speech engine. */
@@ -134,10 +187,22 @@ export interface AudioController {
 
 const CAPABILITY_WAIT_MS = 1500;
 const START_TIMEOUT_MS = 1500;
+/** More time for an engine still holding the utterance at 1.5 s (a cold Korean voice on Android Chrome). */
+const START_GRACE_MS = 2500;
+/** While the engine's silent warm-up is ahead of a prompt, the prompt's clock is checked this often... */
+const WARMUP_POLL_MS = 100;
+/** ...for at most this long past the first 1.5 s; then the queue is stuck behind it and is cleared once. */
+const WARMUP_MAX_MS = 1500;
+/** After a cancel: at least this long before the next utterance... */
 const DEFER_MS = 50;
+/** ...then the engine is polled this often until it reports idle (Chromium drops a speak made too soon)... */
+const DRAIN_POLL_MS = 25;
+/** ...for at most this long in all. */
+const DRAIN_MAX_MS = 300;
 const SAFETY_BASE_MS = 2000;
 const SAFETY_PER_CHAR_MS = 400;
-const MAX_FAILURE_EVENTS = 3;
+const MAX_FAILURE_EVENTS_PER_KEY = 3;
+const MAX_FAILURE_EVENTS_PER_PAGE = 12;
 
 const SUPERSEDED = Symbol('superseded');
 type Superseded = typeof SUPERSEDED;
@@ -147,21 +212,34 @@ interface Ticket {
   hooks: Set<() => void>;
 }
 
-type UtteranceOutcome = 'ended' | 'timeout' | 'blocked' | 'error' | 'interrupted';
+type UtteranceOutcome =
+  | { outcome: 'ended' }
+  | { outcome: 'interrupted' }
+  /** Never started because the engine never got past its own silent warm-up ahead of it. */
+  | { outcome: 'stuck' }
+  | { outcome: 'timeout'; code: PlaybackFailCode }
+  | { outcome: 'blocked'; code: PlaybackFailCode }
+  | { outcome: 'error'; code: PlaybackFailCode };
 
 export function createAudioController(deps: ControllerDeps): AudioController {
   const clock = deps.clock ?? systemClock;
   let current: Ticket | null = null;
   let failureEvents = 0;
+  const failureEventsByKey = new Map<string, number>();
   let lastCapabilityKey: string | null = null;
   const shown = new Set<string>();
 
   // --- telemetry -------------------------------------------------------------
 
-  const noteFailure = (kind: 'clip' | 'tts', reason: 'missing' | 'fetch' | 'decode' | 'blocked' | 'timeout' | 'engine'): void => {
-    if (failureEvents >= MAX_FAILURE_EVENTS) return;
+  /** At most 3 events per (kind, reason, code) and 12 per page, so a broken engine cannot flood. */
+  const noteFailure = (payload: PlaybackFailedPayload): void => {
+    if (failureEvents >= MAX_FAILURE_EVENTS_PER_PAGE) return;
+    const key = `${payload.kind}\u0000${payload.reason}\u0000${payload.code}`;
+    const sent = failureEventsByKey.get(key) ?? 0;
+    if (sent >= MAX_FAILURE_EVENTS_PER_KEY) return;
+    failureEventsByKey.set(key, sent + 1);
     failureEvents += 1;
-    deps.emit({ name: 'audio.playback_failed', payload: { kind, reason } });
+    deps.emit({ name: 'audio.playback_failed', payload });
   };
 
   const observe = (cap: AudioCapability): void => {
@@ -209,6 +287,8 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     });
   };
 
+  const sourceOf = (spec: PlaySpec): string => spec.source ?? 'unknown';
+
   const fail = (result: 'muted' | 'unavailable', reason: FallbackReason): PlayResult => {
     deps.reportFailure(reason);
     return result;
@@ -230,15 +310,19 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     });
     if (outcome === SUPERSEDED) return SUPERSEDED;
     if (outcome === 'ok') return 'played';
-    noteFailure('clip', outcome);
+    noteFailure({ kind: 'clip', reason: outcome, code: 'none', source: sourceOf(spec) });
     return 'skipped';
   };
 
   // --- tts -------------------------------------------------------------------
 
-  const runUtterance = (t: Ticket, engine: TtsEngine, req: TtsRequest): Promise<UtteranceOutcome | Superseded> =>
+  /** `mayRestart`: a queue stuck behind the engine's warm-up settles `stuck` (the caller clears it and asks again). */
+  const runUtterance = (t: Ticket, engine: TtsEngine, req: TtsRequest, mayRestart: boolean): Promise<UtteranceOutcome | Superseded> =>
     waitFor<UtteranceOutcome>(t, (resolve) => {
       let started = false;
+      let graced = false;
+      let warmedMs = 0;
+      let behindWarmup = false;
       let startTimer: unknown;
       let safetyTimer: unknown;
       let handle: { cancel(): void } | undefined;
@@ -250,10 +334,38 @@ export function createAudioController(deps: ControllerDeps): AudioController {
         clear();
         resolve(outcome);
       };
-      startTimer = clock.setTimeout(() => {
-        settle('blocked');
+      // No start yet. Behind the engine's silent warm-up (a prompt asked in the unlocking tap), the warm-up's cold
+      // start is not this prompt's: its clock waits while the warm-up is ahead and starts again once it is through,
+      // and a queue that never gets past it is stuck. An idle engine dropped the utterance (iOS outside a gesture):
+      // blocked now. A busy web engine still holds it (a cold Korean voice on Android Chrome can take longer than
+      // 1.5 s): it is nudged and given the grace, never cancelled before then.
+      const noStart = (): void => {
+        if (engine.warming?.() === true) {
+          if (warmedMs < WARMUP_MAX_MS) {
+            warmedMs += WARMUP_POLL_MS;
+            behindWarmup = true;
+            startTimer = clock.setTimeout(noStart, WARMUP_POLL_MS);
+            return;
+          }
+          if (mayRestart) {
+            settle({ outcome: 'stuck' });
+            return;
+          }
+        } else if (behindWarmup) {
+          behindWarmup = false;
+          startTimer = clock.setTimeout(noStart, START_TIMEOUT_MS);
+          return;
+        }
+        if (!graced && engine.resume !== undefined && engine.busy()) {
+          graced = true;
+          engine.resume();
+          startTimer = clock.setTimeout(noStart, START_GRACE_MS);
+          return;
+        }
+        settle({ outcome: 'blocked', code: 'timeout' });
         handle?.cancel();
-      }, START_TIMEOUT_MS);
+      };
+      startTimer = clock.setTimeout(noStart, START_TIMEOUT_MS);
       handle = engine.speak(req, {
         onStart: () => {
           if (started) return;
@@ -261,10 +373,13 @@ export function createAudioController(deps: ControllerDeps): AudioController {
           clock.clearTimeout(startTimer);
           const limit = SAFETY_BASE_MS + (SAFETY_PER_CHAR_MS * req.text.length) / req.rate;
           // Do not cut the audio: this only keeps an awaiting caller from hanging.
-          safetyTimer = clock.setTimeout(() => settle('timeout'), limit);
+          safetyTimer = clock.setTimeout(() => settle({ outcome: 'timeout', code: 'timeout' }), limit);
         },
-        onEnd: () => settle('ended'),
-        onError: (kind) => settle(kind),
+        onEnd: () => settle({ outcome: 'ended' }),
+        onError: (kind, code) => {
+          if (kind === 'interrupted') settle({ outcome: 'interrupted' });
+          else settle({ outcome: kind, code: code ?? 'none' });
+        },
       });
       return () => {
         clear();
@@ -291,41 +406,69 @@ export function createAudioController(deps: ControllerDeps): AudioController {
 
     const params = speechParams(spec.kind ?? 'word', deps.levelOrder(), { slow: spec.slow });
 
-    if (wasBusy) {
-      const waited = await waitFor<'done'>(t, (resolve) => {
-        const handle = clock.setTimeout(() => resolve('done'), DEFER_MS);
-        return () => clock.clearTimeout(handle);
-      });
-      if (waited === SUPERSEDED) return SUPERSEDED;
-    }
+    if (wasBusy && (await drain(t, engine)) === SUPERSEDED) return SUPERSEDED;
 
-    return attemptSpeak(t, engine, { text: spec.text, lang, rate: params.rate, pitch: params.pitch, voice }, true);
+    return attemptSpeak(t, engine, { text: spec.text, lang, rate: params.rate, pitch: params.pitch, voice }, true, sourceOf(spec), true);
   };
 
-  /** One utterance; a network voice that errors is marked failed and the next candidate gets one try. */
+  /**
+   * After a cancel: at least 50 ms, then until the engine says it is idle (at most 300 ms in all), so the next speak()
+   * is not dropped by an engine still stopping (the web engine stays busy until a cancelled utterance that was
+   * speaking reports its own `interrupted`). A newer call supersedes the wait.
+   */
+  const drain = (t: Ticket, engine: TtsEngine): Promise<'done' | Superseded> =>
+    waitFor<'done'>(t, (resolve) => {
+      let elapsed = DEFER_MS;
+      const poll = (): void => {
+        if (!engine.busy() || elapsed >= DRAIN_MAX_MS) {
+          resolve('done');
+          return;
+        }
+        elapsed += DRAIN_POLL_MS;
+        handle = clock.setTimeout(poll, DRAIN_POLL_MS);
+      };
+      let handle = clock.setTimeout(poll, DEFER_MS);
+      return () => clock.clearTimeout(handle);
+    });
+
+  /**
+   * One utterance; a network voice that errors is marked failed and the next candidate gets one try, and a queue stuck
+   * behind the engine's warm-up is cleared and the utterance asked once more (`restartLeft`).
+   */
   const attemptSpeak = async (
     t: Ticket,
     engine: TtsEngine,
     req: TtsRequest,
     retryLeft: boolean,
+    source: string,
+    restartLeft: boolean,
   ): Promise<PlayResult | Superseded> => {
-    const outcome = await runUtterance(t, engine, req);
-    if (outcome === SUPERSEDED) return SUPERSEDED;
-    if (outcome === 'ended' || outcome === 'interrupted') return 'played';
-    if (outcome === 'timeout') {
-      noteFailure('tts', 'timeout');
+    const settled = await runUtterance(t, engine, req, restartLeft);
+    if (settled === SUPERSEDED) return SUPERSEDED;
+    if (settled.outcome === 'stuck') {
+      // The engine never got past its own silent warm-up (it holds it and gives no event): clear the queue, let it
+      // stop, and say this once more. The old code cancelled a busy engine before every prompt, which played here.
+      engine.cancelAll();
+      if ((await drain(t, engine)) === SUPERSEDED) return SUPERSEDED;
+      return attemptSpeak(t, engine, req, retryLeft, source, false);
+    }
+    if (settled.outcome === 'ended' || settled.outcome === 'interrupted') return 'played';
+    const { code } = settled;
+    if (settled.outcome === 'timeout') {
+      noteFailure({ kind: 'tts', reason: 'timeout', code, source });
       return 'played';
     }
-    if (outcome === 'blocked') {
-      noteFailure('tts', 'blocked');
+    // Refused by the browser (no start, or `not-allowed`): another voice would be refused too, so no retry.
+    if (settled.outcome === 'blocked') {
+      noteFailure({ kind: 'tts', reason: 'blocked', code, source });
       return fail('unavailable', 'blocked');
     }
     if (retryLeft && req.voice !== null && req.voice.local !== true) {
       deps.voices.markFailed(req.voice.id);
       const next = deps.voices.ranked(req.lang)[0];
-      if (next !== undefined) return attemptSpeak(t, engine, { ...req, voice: next }, false);
+      if (next !== undefined) return attemptSpeak(t, engine, { ...req, voice: next }, false, source, restartLeft);
     }
-    noteFailure('tts', 'engine');
+    noteFailure({ kind: 'tts', reason: 'engine', code, source });
     return fail('unavailable', 'error');
   };
 

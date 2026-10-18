@@ -1,6 +1,7 @@
 import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
+import type { PlayResult } from '../audio/controller';
 import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
@@ -295,6 +296,14 @@ export function voiceCheck(capability: AudioCapability, checked: boolean): Voice
   if (capability.clips) return { kind: 'clips' };
   if (tts.state === 'none') return tts.reason === 'offline_network_only' ? { kind: 'needs-internet' } : { kind: 'none' };
   return checked ? { kind: 'none' } : { kind: 'checking' };
+}
+
+/** The line under Test the sound (what it plays: `soundCheckSpec` in `content.ts`, with the taught Korean). The voice line above it keeps its own wording, and Ready never waits for this. */
+export type SoundCheckOutcome = 'played' | 'muted' | 'failed';
+
+export function soundCheckOutcome(result: PlayResult): SoundCheckOutcome {
+  if (result === 'played') return 'played';
+  return result === 'muted' ? 'muted' : 'failed';
 }
 
 /**

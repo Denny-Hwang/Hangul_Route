@@ -178,6 +178,159 @@ describe('FakeSpeechSynthesis', () => {
   });
 });
 
+describe('FakeSpeechSynthesis: the F-AUDIO-004 2026-10-17 engine quirks', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('startDelayMs holds the utterance (speaking and pending true) until it starts (a cold engine)', async () => {
+    vi.useFakeTimers();
+    const synth = new FakeSpeechSynthesis();
+    synth.startDelayMs = 2000;
+    synth.endDelayMs = 400;
+    const a = utterance('a');
+    synth.speak(a.u);
+    expect(synth.speaking).toBe(true);
+    expect(synth.pending).toBe(true);
+    await vi.advanceTimersByTimeAsync(1999);
+    expect(a.events).toEqual([]);
+    expect(synth.pending).toBe(true);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(a.events).toEqual(['start']);
+    expect(synth.pending).toBe(false);
+    expect(synth.speaking).toBe(true);
+    await vi.advanceTimersByTimeAsync(400);
+    expect(a.events).toEqual(['start', 'end']);
+    expect(synth.speaking).toBe(false);
+  });
+
+  it('a cancel during the start delay drops the held utterance with the cancel error', async () => {
+    vi.useFakeTimers();
+    const synth = new FakeSpeechSynthesis();
+    synth.startDelayMs = 2000;
+    const a = utterance('a');
+    synth.speak(a.u);
+    synth.cancel();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(a.events).toEqual(['error:canceled']);
+  });
+
+  it('a paused engine starts nothing until resume()', async () => {
+    const synth = new FakeSpeechSynthesis();
+    synth.pause();
+    expect(synth.paused).toBe(true);
+    const a = utterance('a');
+    synth.speak(a.u);
+    await flush();
+    expect(a.events).toEqual([]);
+    expect(synth.speaking).toBe(true);
+    synth.resume();
+    expect(synth.paused).toBe(false);
+    expect(synth.resumeCount).toBe(1);
+    await flush();
+    expect(a.events).toEqual(['start', 'end']);
+    // resume() on a running engine only counts.
+    synth.resume();
+    expect(synth.resumeCount).toBe(2);
+  });
+
+  it('requireActivation refuses with onerror(not-allowed) and queues nothing until activate()', async () => {
+    const synth = new FakeSpeechSynthesis();
+    synth.requireActivation = true;
+    const refused = utterance('x');
+    synth.speak(refused.u);
+    expect(synth.speaking).toBe(false);
+    await flush();
+    expect(refused.events).toEqual(['error:not-allowed']);
+    expect(synth.refused).toEqual([refused.u]);
+    expect(synth.spoken).toEqual([]);
+    synth.activate();
+    const ok = utterance('y');
+    synth.speak(ok.u);
+    await flush();
+    expect(ok.events).toEqual(['start', 'end']);
+  });
+
+  it('dropSpeakWithinMsOfCancel drops a speak made too soon after cancel(), silently', async () => {
+    vi.useFakeTimers();
+    const synth = new FakeSpeechSynthesis();
+    synth.dropSpeakWithinMsOfCancel = 100;
+    synth.cancel();
+    const early = utterance('early');
+    synth.speak(early.u);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(early.events).toEqual([]);
+    expect(synth.dropped).toEqual([early.u]);
+    expect(synth.speaking).toBe(false);
+    await vi.advanceTimersByTimeAsync(100);
+    const late = utterance('late');
+    synth.speak(late.u);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(late.events).toEqual(['start', 'end']);
+  });
+
+  it('voicesLoadDelayMs makes setVoices land later, with voiceschanged', async () => {
+    vi.useFakeTimers();
+    const synth = new FakeSpeechSynthesis();
+    const listener = vi.fn();
+    synth.addEventListener('voiceschanged', listener);
+    synth.voicesLoadDelayMs = 800;
+    synth.setVoices([yuna]);
+    expect(synth.getVoices()).toEqual([]);
+    await vi.advanceTimersByTimeAsync(799);
+    expect(listener).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(synth.getVoices()).toEqual([yuna]);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("blank 'hang' holds a blank utterance as the current one with no event, and the queue behind it never moves", async () => {
+    const synth = new FakeSpeechSynthesis();
+    synth.blank = 'hang';
+    const blank = utterance(' ');
+    const word = utterance('가');
+    synth.speak(blank.u);
+    synth.speak(word.u);
+    await flush();
+    expect(synth.speaking).toBe(true);
+    expect(synth.pending).toBe(true);
+    expect(blank.events).toEqual([]);
+    expect(word.events).toEqual([]);
+    synth.cancel();
+    await flush();
+    expect(blank.events).toEqual(['error:canceled']);
+    expect(word.events).toEqual(['error:canceled']);
+  });
+
+  it("blank 'ignore' takes a blank utterance and does nothing; the next one speaks", async () => {
+    const synth = new FakeSpeechSynthesis();
+    synth.blank = 'ignore';
+    const blank = utterance(' ');
+    const word = utterance('가');
+    synth.speak(blank.u);
+    expect(synth.speaking).toBe(false);
+    synth.speak(word.u);
+    await flush();
+    expect(blank.events).toEqual([]);
+    expect(word.events).toEqual(['start', 'end']);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ', '가']);
+  });
+
+  it('cancelErrorDelayMs makes the errors cancel() raises arrive later', async () => {
+    vi.useFakeTimers();
+    const synth = new FakeSpeechSynthesis();
+    synth.autoEnd = false;
+    synth.cancelErrorDelayMs = 150;
+    const word = utterance('가');
+    synth.speak(word.u);
+    await vi.advanceTimersByTimeAsync(0);
+    synth.cancel();
+    expect(synth.speaking).toBe(false);
+    await vi.advanceTimersByTimeAsync(149);
+    expect(word.events).toEqual(['start']);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(word.events).toEqual(['start', 'error:canceled']);
+  });
+});
+
 describe('FakeAudioContext and makeFakeFetch', () => {
   it('resume() flips suspended to running and counts', async () => {
     const ctx = new FakeAudioContext();

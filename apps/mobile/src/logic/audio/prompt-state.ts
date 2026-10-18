@@ -6,7 +6,8 @@ import type { AudioCapability } from './capability';
  * One state per prompt slot (a Match Sound round, a Discover item, a
  * Listen & Pick question). Text is shown proactively when sound is off or no
  * Korean voice exists, and reactively after a failed play. Once shown in a
- * round it stays (no flicker) and resets with the next round.
+ * round it stays (no flicker) and resets with the next round; the one
+ * exception is a "no Korean voice" text when the voices then load (2026-10-17).
  */
 export type PlayResult = 'played' | 'muted' | 'unavailable';
 export type PromptPhase = 'idle' | 'playing' | 'ok' | 'text';
@@ -42,7 +43,13 @@ export function promptReducer(s: PromptState, e: PromptEvent): PromptState {
   }
   if ('capability' in e) {
     const cap = e.capability;
-    if (cap.tts.state !== 'none' || cap.clips) return s;
+    if (cap.tts.state === 'ready' || cap.clips) {
+      // Voices that load late (Chrome's empty first list) clear a "no Korean voice" text: it was never true.
+      // Any other text (muted, blocked, error) stays for the round.
+      if (s.phase !== 'text' || s.reason !== 'no_voice') return s;
+      return s.attempts === 0 ? { ...s, phase: INITIAL_PROMPT_STATE.phase, reason: null } : { ...s, phase: 'ok', reason: null };
+    }
+    if (cap.tts.state !== 'none') return s;
     return { ...s, phase: 'text', reason: s.phase === 'text' ? (s.reason ?? 'no_voice') : 'no_voice' };
   }
   if (e.muted) return { ...s, phase: 'text', reason: 'muted' };

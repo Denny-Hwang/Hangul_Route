@@ -27,6 +27,7 @@ import {
   tallyStep,
   voiceState,
   voiceCheck,
+  soundCheckOutcome,
   nextStrokePlay,
   strokeTokenFor,
 } from '../shell';
@@ -549,6 +550,14 @@ describe('voiceCheck (the start screen voice line)', () => {
   it('is checking until the first check finished, then none', () => {
     expect(voiceCheck(UNKNOWN_CAPABILITY, false)).toEqual({ kind: 'checking' });
     expect(voiceCheck(UNKNOWN_CAPABILITY, true)).toEqual({ kind: 'none' });
+  });
+});
+
+describe('Test the sound (the start screen voice row, F-TCH-004 section 3.7)', () => {
+  it('maps the play result to the line under the button: heard, sound off, or did not play', () => {
+    expect(soundCheckOutcome('played')).toBe('played');
+    expect(soundCheckOutcome('muted')).toBe('muted');
+    expect(soundCheckOutcome('unavailable')).toBe('failed');
   });
 });
 

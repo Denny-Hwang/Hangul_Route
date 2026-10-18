@@ -7,12 +7,14 @@ import {
   createCapabilityTracker,
   voiceAvailable,
   webVoiceToCandidate,
+  whenVoicesReady,
   type AudioCapability,
   type NetworkLike,
   type WebSpeechEngineLike,
   type WebVoiceLike,
 } from '../logic/audio/capability';
 import {
+  classifySpeechError,
   createAudioController,
   type AudioController,
   type ClipPlayer,
@@ -36,8 +38,11 @@ import { track } from './telemetry';
  * gap) lives in `logic/audio/controller`. Metro picks this file for the web
  * build instead of `audio.ts`; the surface is identical.
  *
- * The first gesture anywhere unlocks speech and the shared Web Audio context
- * for the page lifetime (`installGestureUnlock`, AD8). Bundled recordings
+ * The first user activation anywhere unlocks speech and the shared Web Audio
+ * context for the page lifetime (`installGestureUnlock`, AD8): the unlock counts
+ * only once the engine answers it, and it also warms the Korean voice. A paused
+ * or slow engine is resumed rather than given up on, and every utterance is held
+ * until it settles (F-AUDIO-004 2026-10-17). Bundled recordings
  * (`__generated__/audio-assets.ts`) play first through the clip player
  * (`audio-player.web.ts`, A-6); a clip that fails falls through to the voice.
  */
@@ -64,6 +69,9 @@ interface WebSynth {
   cancel(): void;
   readonly speaking: boolean;
   readonly pending: boolean;
+  /** Missing on a few old engines; a paused engine starts nothing until `resume()`. */
+  readonly paused?: boolean;
+  resume?(): void;
   /** Missing on old Safari (before 14.1), where only `onvoiceschanged` exists. */
   addEventListener?: (type: 'voiceschanged', listener: () => void) => void;
   removeEventListener?: (type: 'voiceschanged', listener: () => void) => void;
@@ -80,6 +88,10 @@ export interface WebAudioEnv {
   isOnline(): boolean;
   /** Bundled recordings (A-6). Absent = a build with no clip path: every prompt uses the voice. */
   clips?: WebClipSetup;
+  /** Milliseconds, for the unlock's age and a stopping utterance's wait; default `Date.now` (fake timers move it). */
+  now?: () => number;
+  /** `navigator.userActivation.isActive`: the page is inside a user activation; null where the browser has no such API. */
+  userActive?: () => boolean | null;
 }
 
 export interface WebClipSetup {
@@ -120,7 +132,7 @@ function defaultEnv(): WebAudioEnv {
     SpeechSynthesisUtterance?: new (text: string) => WebUtterance;
     document?: EventTarget & { visibilityState: string };
     addEventListener?: unknown;
-    navigator?: { onLine?: boolean };
+    navigator?: { onLine?: boolean; userActivation?: { isActive?: unknown } };
   };
   const usable = g.speechSynthesis !== undefined && g.SpeechSynthesisUtterance !== undefined;
   return {
@@ -130,19 +142,42 @@ function defaultEnv(): WebAudioEnv {
     win: typeof g.addEventListener === 'function' ? (globalThis as unknown as EventTarget) : null,
     isOnline: () => g.navigator?.onLine !== false,
     clips: bundledClips(),
+    userActive: () => {
+      const active = g.navigator?.userActivation?.isActive;
+      return typeof active === 'boolean' ? active : null;
+    },
   };
 }
 
 // --- The adapter -------------------------------------------------------------
 
-const GESTURE_EVENTS = ['pointerdown', 'touchend', 'keydown'] as const;
 /**
- * Events that carry user activation on touch screens too (`pointerdown` does not there). The clip
- * context is offered every one of them for the page lifetime, so a context that iOS suspended
- * (background, a call, Siri) starts again on the next tap; a running context ignores them.
+ * Events that carry user activation on touch screens too (a touch `pointerdown` does not: the
+ * activation comes with `pointerup` and `touchend`). The speech unlock listens to these, plus a
+ * mouse `pointerdown`. The clip context is offered every one of them for the page lifetime, so a
+ * context that iOS suspended (background, a call, Siri) starts again on the next tap; a running
+ * context ignores them.
  */
-const CLIP_GESTURE_EVENTS = ['pointerup', 'touchend', 'click', 'keydown'] as const;
+const ACTIVATION_EVENTS = ['pointerup', 'touchend', 'click', 'keydown'] as const;
+const CLIP_GESTURE_EVENTS = ACTIVATION_EVENTS;
 const CAPTURE = { capture: true } as const;
+
+/**
+ * Every utterance handed to the engine and not yet settled. Chromium can garbage-collect an utterance
+ * nothing else references and then never fire its `end` or `error`, so each one is held here until it
+ * ends, errors or is cancelled.
+ */
+const LIVE_UTTERANCES = new Set<WebUtterance>();
+
+/**
+ * The silent unlock, sent this recently, is hidden from `busy()`: a prompt asked in the same tap queues behind it
+ * instead of cancelling it. One the engine still holds after this is cold or stuck, and the next prompt cancels it.
+ */
+const UNLOCK_FRESH_MS = 500;
+/** An unlock with no answer this long after its send is judged on what the engine and the browser say (see below). */
+const UNLOCK_ANSWER_MS = 1000;
+/** A prompt cancelled while speaking keeps the engine busy until its own `interrupted` arrives, at most this long. */
+const STOP_WAIT_MS = 300;
 
 function voiceKey(v: WebVoiceLike): string {
   return v.voiceURI === '' ? v.name : v.voiceURI;
@@ -205,38 +240,151 @@ export function createWebAudio(env: WebAudioEnv) {
           },
         };
 
+  const now = env.now ?? ((): number => Date.now());
+
+  // This instance's prompt utterances the engine still holds (sent, not yet ended, failed or cancelled).
+  const heldPrompts = new Set<WebUtterance>();
+  const startedPrompts = new WeakSet<WebUtterance>();
+  /**
+   * Prompts cancelled while they were speaking, by cancel time, until their own `interrupted` / `canceled` arrives:
+   * the browser clears `speaking` and `pending` inside `cancel()`, but the platform voice stops a moment later, and a
+   * speak made before then can be dropped (Chromium). `busy()` counts them, so the controller's drain waits for them.
+   */
+  const stopping = new Map<WebUtterance, number>();
+  /**
+   * The silent unlock while the engine holds it ahead of the prompts: sent at `sentAt`, not ended, failed or cancelled;
+   * `started` once its `onstart` came (a blank utterance then ends in a moment).
+   */
+  let unlockAhead: { u: WebUtterance; sentAt: number; started: boolean } | null = null;
+
+  const settleUtterance = (u: WebUtterance): void => {
+    LIVE_UTTERANCES.delete(u);
+    heldPrompts.delete(u);
+    stopping.delete(u);
+    if (unlockAhead?.u === u) unlockAhead = null;
+  };
+  /** Clears the engine's queue. A prompt that was speaking waits in `stopping` for its own end; the rest are dropped. */
+  const cancelEngine = (): void => {
+    if (synth === null) return;
+    synth.cancel();
+    for (const u of heldPrompts) {
+      if (startedPrompts.has(u)) stopping.set(u, now());
+      else LIVE_UTTERANCES.delete(u);
+    }
+    heldPrompts.clear();
+    // The unlock stays live until it answers: a `canceled` still says the engine took it.
+    unlockAhead = null;
+  };
+  const stillStopping = (): boolean => {
+    const at = now();
+    for (const [u, cancelledAt] of stopping) {
+      if (at - cancelledAt < STOP_WAIT_MS) continue;
+      stopping.delete(u);
+      LIVE_UTTERANCES.delete(u);
+    }
+    return stopping.size > 0;
+  };
+
+  /** The ranked voice object for an id, from a list read now. */
+  const voiceFor = (id: string): WebVoiceLike | undefined => (voiceEvents?.getVoices() ?? []).find((v) => voiceKey(v) === id);
+  const setVoice = (u: WebUtterance, id: string | undefined): void => {
+    if (id === undefined) return;
+    const match = voiceFor(id);
+    try {
+      if (match !== undefined) u.voice = match;
+    } catch {
+      // A voice the engine will not take: speak with the language alone.
+    }
+  };
+
+  /** A paused engine starts nothing new, so it is resumed before every speak. */
+  const resumeIfPaused = (): void => {
+    if (synth === null || synth.paused !== true) return;
+    try {
+      synth.resume?.();
+    } catch {
+      // an engine that refuses resume() reports the prompt through the start wait
+    }
+  };
+
+  // --- the speech unlock state (§3.6; the unlock itself is below) -----------------------------------
+
+  let unlockDone = false;
+  /** Removes the speech unlock listeners while they are installed. */
+  let removeUnlockListeners: (() => void) | null = null;
+
+  const finishUnlock = (): void => {
+    if (unlockDone) return;
+    unlockDone = true;
+    removeUnlockListeners?.();
+    tracker.setUnlocked(true);
+  };
+
   const engine: TtsEngine | null =
     synth === null || Utterance === null
       ? null
       : {
           speak: (req: TtsRequest, h: TtsHandlers) => {
+            let spoken: WebUtterance | null = null;
             try {
+              resumeIfPaused();
               const u = new Utterance(req.text);
               u.lang = req.lang;
               u.rate = req.rate;
               u.pitch = req.pitch;
-              if (req.voice !== null) {
-                const wanted = req.voice.id;
-                const match = (voiceEvents?.getVoices() ?? []).find((v) => voiceKey(v) === wanted);
-                try {
-                  if (match !== undefined) u.voice = match;
-                } catch {
-                  // A voice the engine will not take: speak with the language alone.
-                }
-              }
-              u.onstart = () => h.onStart();
-              u.onend = () => h.onEnd();
-              // cancel() raises onerror in Chromium and WebKit: a normal stop, not a failure.
-              u.onerror = (ev) => h.onError(ev?.error === 'canceled' || ev?.error === 'interrupted' ? 'interrupted' : 'error');
+              if (req.voice !== null) setVoice(u, req.voice.id);
+              // A prompt that starts proves speech plays on this page, whatever the silent unlock got as an answer:
+              // an engine that gives no event for a blank utterance must not keep the page locked (autoplay off).
+              u.onstart = () => {
+                startedPrompts.add(u);
+                // The engine is past the silent unlock (it played it, or gave it nothing): nothing is ahead any more.
+                unlockAhead = null;
+                finishUnlock();
+                h.onStart();
+              };
+              u.onend = () => {
+                settleUtterance(u);
+                finishUnlock();
+                h.onEnd();
+              };
+              // cancel() raises canceled/interrupted in Chromium and WebKit (a normal stop); not-allowed is the
+              // browser refusing (blocked); any other code is a real engine error, kept for telemetry.
+              u.onerror = (ev) => {
+                settleUtterance(u);
+                const { kind, code } = classifySpeechError(ev?.error);
+                h.onError(kind, code);
+              };
+              LIVE_UTTERANCES.add(u);
+              heldPrompts.add(u);
+              spoken = u;
               synth.speak(u);
             } catch {
               // A refused voice or utterance is a failed prompt, never a thrown exception.
+              if (spoken !== null) settleUtterance(spoken);
               queueMicrotask(() => h.onError('error'));
             }
-            return { cancel: () => synth.cancel() };
+            return { cancel: cancelEngine };
           },
-          cancelAll: () => synth.cancel(),
-          busy: () => synth.speaking || synth.pending,
+          cancelAll: cancelEngine,
+          busy: () => {
+            if (stillStopping()) return true;
+            if (!(synth.speaking || synth.pending)) return false;
+            // Only the silent unlock, sent moments ago (this tap) or already started (it ends in a moment): a prompt
+            // asked now queues behind it, since a speak right after a cancel can be dropped (Chromium). An older one
+            // that has not started is cold or stuck, and counts, so the next prompt cancels it and waits for the
+            // engine to stop, as before the unlock.
+            if (heldPrompts.size > 0 || unlockAhead === null) return true;
+            return !(unlockAhead.started || now() - unlockAhead.sentAt < UNLOCK_FRESH_MS);
+          },
+          warming: () => unlockAhead !== null && (synth.speaking || synth.pending),
+          // A stalled Chrome engine can hold its queue with `paused` false, so this is not gated on `paused`.
+          resume: () => {
+            try {
+              synth.resume?.();
+            } catch {
+              // nothing to resume
+            }
+          },
         };
 
   const store = useAudioStore;
@@ -278,18 +426,90 @@ export function createWebAudio(env: WebAudioEnv) {
     }
   };
 
+  // --- the speech unlock (§3.6) ----------------------------------------------
+  //
+  // The page counts as unlocked once the engine answers the silent utterance (it started, ended, or failed for a
+  // reason other than `not-allowed`), or once any prompt starts: iOS drops a speak outside its gesture without a
+  // word, and Chrome refuses one before any activation with `not-allowed`; either way the next activation tries
+  // again. An unlock with no answer after a second is judged on what is known: an engine that still holds it took
+  // it (a refusal answers at once), and so did a browser that said the send was inside a user activation; an idle
+  // engine with no word dropped it, and the next activation sends another. The utterance is Korean, in the ranked
+  // Korean voice, so the tap also wakes the Korean engine before the first prompt.
+
+  /** The unlock utterance waiting for its answer, and the timer that judges it when none comes. */
+  let unlockInFlight: WebUtterance | null = null;
+  let unlockTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const unlockUnanswered = (u: WebUtterance, sentActive: boolean | null): void => {
+    unlockTimer = null;
+    if (unlockInFlight !== u || synth === null) return;
+    unlockInFlight = null;
+    // Still ahead in a busy engine: taken (a refusal answers at once). Otherwise it is gone: dropped without a word
+    // (iOS, a touchend that ended a scroll) or passed over, and nothing waits behind it.
+    const held = unlockAhead?.u === u && (synth.speaking || synth.pending);
+    if (!held) {
+      if (unlockAhead?.u === u) unlockAhead = null;
+      LIVE_UTTERANCES.delete(u);
+    }
+    // Unless taken or sent inside a user activation the browser reported, the next activation sends another.
+    if (held || sentActive === true) finishUnlock();
+  };
+
+  const unlockSpeech = (): void => {
+    if (unlockDone) return;
+    if (synth === null || Utterance === null) {
+      finishUnlock();
+      return;
+    }
+    // The engine holds the one already sent (this tap's earlier event): its answer is on the way.
+    if (unlockInFlight !== null && (synth.speaking || synth.pending)) return;
+    // Otherwise an earlier one was dropped without a word (iOS outside the gesture): send a new one.
+    if (unlockInFlight !== null) settleUtterance(unlockInFlight);
+    if (unlockTimer !== null) clearTimeout(unlockTimer);
+    unlockTimer = null;
+    unlockInFlight = null;
+    try {
+      resumeIfPaused();
+      const u = new Utterance(' ');
+      u.volume = 0;
+      u.lang = 'ko-KR';
+      setVoice(u, tracker.ranked('ko-KR')[0]?.id);
+      const answer = (counts: boolean): void => {
+        if (unlockInFlight !== u) return;
+        unlockInFlight = null;
+        if (unlockTimer !== null) clearTimeout(unlockTimer);
+        unlockTimer = null;
+        if (counts) finishUnlock();
+      };
+      u.onstart = () => {
+        if (unlockAhead?.u === u) unlockAhead.started = true;
+        answer(true);
+      };
+      u.onend = () => {
+        settleUtterance(u);
+        answer(true);
+      };
+      u.onerror = (ev) => {
+        settleUtterance(u);
+        answer(ev?.error !== 'not-allowed');
+      };
+      const sentActive = env.userActive?.() ?? null;
+      unlockInFlight = u;
+      LIVE_UTTERANCES.add(u);
+      unlockAhead = { u, sentAt: now(), started: false };
+      synth.speak(u);
+      unlockTimer = setTimeout(() => unlockUnanswered(u, sentActive), UNLOCK_ANSWER_MS);
+    } catch {
+      // An engine that throws on the utterance itself: no later tap changes that, so stop asking.
+      unlockInFlight = null;
+      unlockAhead = null;
+      finishUnlock();
+    }
+  };
+
   const unlockAudio = (): void => {
     unlockClips();
-    if (synth !== null && Utterance !== null) {
-      try {
-        const u = new Utterance(' ');
-        u.volume = 0;
-        synth.speak(u);
-      } catch {
-        // an engine that refuses the unlock utterance is handled when a prompt fails
-      }
-    }
-    tracker.setUnlocked(true);
+    unlockSpeech();
   };
 
   let uninstallGesture: (() => void) | null = null;
@@ -298,22 +518,36 @@ export function createWebAudio(env: WebAudioEnv) {
     if (uninstallGesture !== null) return uninstallGesture;
     const doc = env.doc;
     if (doc === null) return () => undefined;
-    const onGesture = (): void => {
-      removeGesture();
-      unlockAudio();
+    const onActivation = (ev: Event): void => {
+      // A touch or pen pointerdown carries no activation; a mouse press does.
+      if (ev.type === 'pointerdown' && (ev as { pointerType?: string }).pointerType !== 'mouse') return;
+      unlockSpeech();
     };
-    // A page that goes to the background must not keep talking.
+    const SPEECH_EVENTS = [...ACTIVATION_EVENTS, 'pointerdown'] as const;
+    const removeSpeechListeners = (): void => {
+      for (const type of SPEECH_EVENTS) doc.removeEventListener(type, onActivation, CAPTURE);
+      removeUnlockListeners = null;
+    };
     const onVisibility = (): void => {
-      if (doc.visibilityState === 'hidden') controller.stop();
+      // A page that goes to the background must not keep talking.
+      if (doc.visibilityState === 'hidden') {
+        controller.stop();
+        return;
+      }
+      // Back in front: the hidden page already stopped every prompt, so whatever the engine still holds is
+      // stale (Chrome can keep a queue behind a hidden tab); a paused engine would hold the next prompt too.
+      if (doc.visibilityState !== 'visible' || synth === null) return;
+      if (synth.speaking || synth.pending) cancelEngine();
+      resumeIfPaused();
     };
-    const removeGesture = (): void => {
-      for (const type of GESTURE_EVENTS) doc.removeEventListener(type, onGesture, CAPTURE);
-    };
-    for (const type of GESTURE_EVENTS) doc.addEventListener(type, onGesture, CAPTURE);
+    if (!unlockDone) {
+      for (const type of SPEECH_EVENTS) doc.addEventListener(type, onActivation, CAPTURE);
+      removeUnlockListeners = removeSpeechListeners;
+    }
     for (const type of CLIP_GESTURE_EVENTS) doc.addEventListener(type, unlockClips, CAPTURE);
     doc.addEventListener('visibilitychange', onVisibility);
     const uninstall = (): void => {
-      removeGesture();
+      removeSpeechListeners();
       for (const type of CLIP_GESTURE_EVENTS) doc.removeEventListener(type, unlockClips, CAPTURE);
       doc.removeEventListener('visibilitychange', onVisibility);
       uninstallGesture = null;
@@ -332,10 +566,16 @@ export function createWebAudio(env: WebAudioEnv) {
     getCapability: (): AudioCapability => tracker.get(),
     /** A voice for `lang` (the level check's instruction voice); an unknown voice list counts as available. */
     hasVoiceFor: (lang: SpeechLang): boolean => voiceAvailable(tracker.get(), tracker.ranked(lang)),
-    refreshCapability: (): Promise<void> => {
-      if (voiceEvents === null) tracker.setVoices('no_engine');
-      else tracker.setVoices(voiceEvents.getVoices().map(webVoiceToCandidate));
-      return Promise.resolve();
+    refreshCapability: async (): Promise<void> => {
+      if (voiceEvents === null) {
+        tracker.setVoices('no_engine');
+        return;
+      }
+      let list = voiceEvents.getVoices();
+      // Chrome answers [] until its list loads: an empty list written now would read "no Korean voice"
+      // (the start screen's no-voice line, a false audio.capability_checked), so wait for voiceschanged.
+      if (list.length === 0 && tracker.get().tts.state === 'unknown') list = await whenVoicesReady(voiceEvents, { timeoutMs: 1500 });
+      tracker.setVoices(list.map(webVoiceToCandidate));
     },
     subscribeCapability: (fn: (c: AudioCapability) => void): (() => void) => tracker.subscribe(fn),
     unlockAudio,
@@ -350,6 +590,8 @@ export function createWebAudio(env: WebAudioEnv) {
     hasClip,
     noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
     dispose: (): void => {
+      if (unlockTimer !== null) clearTimeout(unlockTimer);
+      unlockTimer = null;
       uninstallGesture?.();
       detachVoices();
       offCapability();
