@@ -33,6 +33,9 @@ const SLOT_SCREENS = [
   'minigames/TraceWordGame.tsx',
   'minigames/TraceStrokeGame.tsx',
   'minigames/PicWordMatchGame.tsx',
+  // The menu, ticket and sign lines and options, and the Story Order replay line (review of #740).
+  'minigames/RealiaReadGame.tsx',
+  'minigames/StorySequenceGame.tsx',
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -132,7 +135,7 @@ describe('no direct speak from screens', () => {
    * games keep one: a round's opening sound, whose late result must not move the canvas mid-stroke; their
    * speakers and Show me play through the slot, which the slot-screen test above checks.)
    */
-  it.each(['minigames/PicWordMatchGame.tsx', 'quest/DiscoverStep.tsx'])(
+  it.each(['minigames/PicWordMatchGame.tsx', 'quest/DiscoverStep.tsx', 'minigames/RealiaReadGame.tsx', 'minigames/StorySequenceGame.tsx'])(
     '%s has no bare void playPrompt / playJamo',
     (rel) => {
       const file = files.find((f) => f.rel === rel)!;

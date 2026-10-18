@@ -18,6 +18,9 @@ import {
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { screenScrollsWithColumns } from '../../logic/layout/game-layout';
@@ -43,7 +46,7 @@ import {
   type RealiaReadState,
 } from '../../logic/realia-read-flow';
 import { koSpeech } from '../../logic/audio/ko-speech';
-import { playPrompt, stop } from '../../platform/audio';
+import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { GameColumns } from './GameColumns';
 import type { MinigameHost } from './host';
@@ -90,6 +93,24 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
   playRef.current = play;
   const dispatchRef = useRef<(event: RealiaReadEvent) => void>(() => undefined);
 
+  // The lines and options are printed on screen, so a speaker that cannot sound shows only the status
+  // panel (F-AUDIO-004 A-5b): why, with the one action, under the sheet for a line and under the options
+  // for an option. A different line or option is a new prompt slot.
+  const slot = usePromptSlot({ source: REALIA_AUDIO_SOURCE, textOnScreen: true });
+  const { play: slotPlay, reset: slotReset } = slot;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [soundAt, setSoundAt] = useState<SoundAt | null>(null);
+  const lastSaid = useRef<{ key: string; spec: PlaySpec } | null>(null);
+  const say = useCallback(
+    (key: string, at: SoundAt, spec: PlaySpec): void => {
+      if (lastSaid.current?.key !== key) slotReset();
+      lastSaid.current = { key, spec };
+      setSoundAt(at);
+      void slotPlay(() => playPrompt(spec));
+    },
+    [slotPlay, slotReset],
+  );
+
   const runEffect = useCallback((effect: RealiaReadEffect): void => {
     const current = playRef.current;
     switch (effect.type) {
@@ -110,13 +131,13 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
         return;
       case 'play-line': {
         const entry = current?.realia.entries.find((e) => e.id === effect.entryId);
-        // No voice: the line still shows its romanization (the reducer revealed it); nothing blocks.
-        if (entry) void playPrompt({ ...lineSpeech(entry), kind: 'sentence', source: REALIA_AUDIO_SOURCE });
+        // The line also shows its romanization (the reducer revealed it); a silent line says why, nothing blocks.
+        if (entry) say(`line:${entry.id}`, 'sheet', { ...lineSpeech(entry), kind: 'sentence', source: REALIA_AUDIO_SOURCE });
         return;
       }
       case 'play-option': {
         const option = current?.rounds[stateRef.current.roundIdx]?.options.find((o) => o.id === effect.optionId);
-        if (option?.text) void playPrompt(koSpeech(option.text, 'sentence', REALIA_AUDIO_SOURCE));
+        if (option?.text) say(`option:${option.id}`, 'options', koSpeech(option.text, 'sentence', REALIA_AUDIO_SOURCE));
         return;
       }
       case 'schedule-advance':
@@ -126,7 +147,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
         hostRef.current.complete();
         return;
     }
-  }, []);
+  }, [say]);
 
   const dispatch = useCallback(
     (event: RealiaReadEvent): void => {
@@ -148,6 +169,28 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
   );
 
   const round = play?.rounds[state.roundIdx];
+  // A new question starts a new prompt slot: the last question's "Tap to hear" does not carry over.
+  const roundId = round?.id;
+  useEffect(() => {
+    slotReset();
+    lastSaid.current = null;
+    setSoundAt(null);
+  }, [roundId, slotReset]);
+  /** The slot's status panel at one place: quiet (the live region kept) unless the last tap was there. */
+  const soundPanel = (at: SoundAt, testID: string): React.ReactElement => (
+    <PromptPanel
+      variant="status"
+      view={soundAt === at ? slot.view : { ...slot.view, statusShown: false }}
+      onAction={(action) =>
+        slot.act(action, () => {
+          const last = lastSaid.current;
+          if (last) void slotPlay(() => playPrompt(last.spec));
+        })
+      }
+      onHelp={() => setHelpOpen(true)}
+      testID={testID}
+    />
+  );
   if (!play || state.status === 'empty' || !round) {
     return (
       <Screen>
@@ -205,6 +248,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
               lineHint={a11y.realia.lineHint}
               onPressLine={(entryId) => dispatch({ type: 'line', entryId })}
             />
+            {soundPanel('sheet', 'realia-read-line-sound')}
             <Body tone="muted">{copy.realia.lineHint}</Body>
           </View>
         }
@@ -244,6 +288,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
                 );
               })}
             </View>
+            {soundPanel('options', 'realia-read-option-sound')}
           </View>
         }
         feedback={
@@ -263,9 +308,13 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
         }
       />
       <Spacer size="xl" />
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );
 }
+
+/** Where the status panel shows: under the sheet (a line was tapped) or under the options (an option). */
+type SoundAt = 'sheet' | 'options';
 
 /** The surface id of Realia Read for the audio telemetry (F-AUDIO-004 §3.14). */
 const REALIA_AUDIO_SOURCE = 'realia-read';

@@ -150,6 +150,8 @@ function CultureNotesContent({
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const hear = (n: FoundNote): void => {
     const spec = noteTermSpeech(n);
+    // Another term is a new prompt: the last term's "Tap to hear" or "Try again" never shows under this one.
+    if (soundAt !== n.note.id) slot.reset();
     lastSpec.current = spec;
     setSoundAt(n.note.id);
     void slot.play(() => playPrompt(spec));

@@ -41,6 +41,7 @@ import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../
 import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { useHeldWhile } from '../../components/use-held-while';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { playJamo, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
@@ -93,6 +94,10 @@ export function TraceStrokeGame({
   const sound = usePromptSlot({ source: TRACE_STROKE_AUDIO_SOURCE, textOnScreen: true });
   const { play: soundPlay, reset: soundReset } = sound;
   const [helpOpen, setHelpOpen] = useState(false);
+  // A finger is on the canvas: the status row keeps what it showed when the stroke began, so a late result
+  // never adds or removes the row (and moves the canvas) mid-stroke; it catches up when the stroke ends.
+  const [stroking, setStroking] = useState(false);
+  const soundView = useHeldWhile(sound.view, stroking);
   // Leaving the game mid-sound (Done on the last letter, Skip, Back) stops it.
   useEffect(() => () => stop(), []);
   // Done and the idle timer share one gate; its idle timer calls the latest
@@ -240,6 +245,8 @@ export function TraceStrokeGame({
   const endStroke = (): void => {
     gateRef.current?.strokeEnded();
   };
+  const fingerDown = (): void => setStroking(true);
+  const fingerUp = (): void => setStroking(false);
 
   const toViewBoxPoint = (x: number, y: number): JamoStrokePoint => {
     const scale = VIEWBOX / canvasSize;
@@ -249,6 +256,7 @@ export function TraceStrokeGame({
   const panGesture = Gesture.Pan()
     .onBegin((e) => {
       const pt = toViewBoxPoint(e.x, e.y);
+      runOnJS(fingerDown)();
       runOnJS(beginStroke)(pt);
     })
     .onUpdate((e) => {
@@ -257,6 +265,10 @@ export function TraceStrokeGame({
     })
     .onEnd(() => {
       runOnJS(endStroke)();
+    })
+    // After onEnd, and also when the touch is cancelled or never became a pan.
+    .onFinalize(() => {
+      runOnJS(fingerUp)();
     });
 
   const handleClear = (): void => {
@@ -304,7 +316,7 @@ export function TraceStrokeGame({
       <PromptPanel
         variant="status"
         compact
-        view={sound.view}
+        view={soundView}
         onAction={(action) => sound.act(action, () => void soundPlay(() => playJamo(round.jamo, 'sound')))}
         onHelp={() => setHelpOpen(true)}
         testID="trace-stroke-sound"

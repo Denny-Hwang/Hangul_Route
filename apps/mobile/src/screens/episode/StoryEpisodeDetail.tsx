@@ -154,22 +154,26 @@ export function StoryEpisodeDetail({
   // The status panel sits under what was tapped (the word chips, the page title, a tale row's title) and its
   // action plays that same Korean again.
   const slot = usePromptSlot({ source: STORY_EPISODE_AUDIO_SOURCE, textOnScreen: true });
-  const { play: slotPlay } = slot;
+  const { play: slotPlay, reset: slotReset } = slot;
   useEffect(() => () => stop(), []);
   const [helpOpen, setHelpOpen] = useState(false);
   const [soundAt, setSoundAt] = useState<string | null>(null);
-  const lastSpec = useRef<PlaySpec | null>(null);
+  const lastSpec = useRef<{ spec: PlaySpec; at: string } | null>(null);
   const say = useCallback(
     (spec: PlaySpec, at: string): void => {
-      lastSpec.current = spec;
+      // Another word or title is a new prompt: what the last one could not play no longer applies, so
+      // its "Tap to hear" or "Try again" never shows under the word now being said.
+      const last = lastSpec.current;
+      if (last === null || last.at !== at || last.spec.text !== spec.text) slotReset();
+      lastSpec.current = { spec, at };
       setSoundAt(at);
       void slotPlay(() => playPrompt(spec));
     },
-    [slotPlay],
+    [slotPlay, slotReset],
   );
   const replayLast = (): void => {
-    const spec = lastSpec.current;
-    if (spec) void slotPlay(() => playPrompt(spec));
+    const last = lastSpec.current;
+    if (last) void slotPlay(() => playPrompt(last.spec));
   };
   /** The panel at one place: quiet (nothing shown, the live region kept) unless the last tap was there. */
   const soundPanel = (at: string, testID: string): React.ReactElement => (

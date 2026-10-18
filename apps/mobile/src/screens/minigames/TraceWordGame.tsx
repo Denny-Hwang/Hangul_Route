@@ -29,6 +29,7 @@ import Svg, { Path, Rect } from 'react-native-svg';
 import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { useHeldWhile } from '../../components/use-held-while';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
@@ -137,8 +138,14 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
   const sound = usePromptSlot({ source: TRACE_WORD_AUDIO_SOURCE, textOnScreen: true });
   const { play: soundPlay, reset: soundReset } = sound;
   const [helpOpen, setHelpOpen] = useState(false);
+  // A finger is on the canvas: the status row keeps what it showed when the stroke began, so a late result
+  // never adds or removes the row (and moves the canvas) mid-stroke; it catches up when the stroke ends.
+  const [stroking, setStroking] = useState(false);
+  const soundView = useHeldWhile(sound.view, stroking);
   const lastSyllable = useRef<string | null>(null);
   const say = (syllable: string): void => {
+    // Another syllable is a new prompt: the last one's "Tap to hear" or "Try again" does not carry over.
+    if (lastSyllable.current !== null && lastSyllable.current !== syllable) soundReset();
     lastSyllable.current = syllable;
     void soundPlay(() => playPrompt(blockSpeech(syllable)));
   };
@@ -212,6 +219,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
   // A tap on a block speaker or Show me plays through the slot and says why when it is silent.
   useEffect(() => {
     soundReset();
+    lastSyllable.current = null;
     if (block && state.phase === 'drawing' && state.letter === 0) void playPrompt(blockSpeech(block.syllable));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.round, state.block]);
@@ -283,6 +291,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     if (stateRef.current.phase !== 'drawing') return;
     gateRef.current?.strokeEnded();
   };
+  const fingerDown = (): void => setStroking(true);
+  const fingerUp = (): void => setStroking(false);
 
   const mode = box ? traceLayoutMode(box) : 'compact';
   const stacked = mode === 'roomy';
@@ -301,6 +311,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
 
   const pan = Gesture.Pan()
     .onBegin((e) => {
+      runOnJS(fingerDown)();
       runOnJS(beginStroke)(toViewBox(e.x, e.y));
     })
     .onUpdate((e) => {
@@ -308,6 +319,10 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     })
     .onEnd(() => {
       runOnJS(endStroke)();
+    })
+    // After onEnd, and also when the touch is cancelled or never became a pan.
+    .onFinalize(() => {
+      runOnJS(fingerUp)();
     });
 
   const phase = state.phase;
@@ -450,7 +465,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     <PromptPanel
       variant="status"
       compact
-      view={sound.view}
+      view={soundView}
       onAction={(action) => sound.act(action, () => say(lastSyllable.current ?? block.syllable))}
       onHelp={() => setHelpOpen(true)}
       testID="trace-word-sound"
