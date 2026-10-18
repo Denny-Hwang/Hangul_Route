@@ -12,6 +12,7 @@ import { PatternSlide } from '../slides/PatternSlide';
 import { ReadAlongSlide } from '../slides/ReadAlongSlide';
 import { RealiaSlide } from '../slides/RealiaSlide';
 import { SentenceSlide } from '../slides/SentenceSlide';
+import { WordChip } from '../slides/ReadingParts';
 
 /**
  * The reading slides on the stage (AMENDMENTS-LECTURE-V2 section 5.2, LV-S1; design/screens/presenter/
@@ -153,6 +154,19 @@ describe('RealiaSlide', () => {
     const full = await render(inView(<RealiaSlide slide={menu} reveal={1} />));
     expect(byTestId(full.root, 'presenter-realia-word').map(hiddenNow).some(Boolean)).toBe(false);
     expect(byTestId(full.root, 'presenter-realia-word')).toHaveLength(menu.keyWords.length);
+  });
+
+  it('a compact key word (a crowded column) runs its Korean, romanization and meaning as one line, named the same', async () => {
+    const word = menu.keyWords[0]!;
+    const roomy = await render(inView(<WordChip word={word} rom testID="w" />));
+    const compact = await render(inView(<WordChip word={word} rom compact testID="w" />));
+    const [a, b] = [byTestId(roomy.root, 'w')[0]!, byTestId(compact.root, 'w')[0]!];
+    expect(b.props['aria-label']).toBe(a.props['aria-label']);
+    expect(b.props['aria-label']).toContain(word.gloss);
+    for (const part of [word.ko, word.romanization, word.gloss]) expect(textOf(b)).toContain(part);
+    // One text run (a single block inside the chip), not a row of separate boxes.
+    expect(hostNodes(b, (n) => n.type === 'div' && n !== b)).toHaveLength(1);
+    expect(hostNodes(a, (n) => n.type === 'div' && n !== a).length).toBeGreaterThan(1);
   });
 
   it('a trail sign draws every board, the arrows hidden from assistive tech, nothing to press', async () => {

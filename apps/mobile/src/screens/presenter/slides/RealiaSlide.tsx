@@ -12,8 +12,15 @@ import { revealProps } from './reveal';
 
 type RealiaBody = Extract<Slide, { kind: 'realia' }>;
 
-/** A long caption beside the sheet (`useFitLevel`): level 1 draws it at `presenter.size.caption`. */
-const MAX_LEVEL = 1;
+/**
+ * Compact levels of a crowded right column (`useFitLevel`; a long caption, or long meanings on a
+ * small phone, where every text already sits at the 18 px floor): 1 draws the caption at
+ * `presenter.size.caption`; 2 also runs each key word's Korean, romanization and meaning as one
+ * wrapping line (`WordChip` `compact`) with smaller gaps, and narrows the gap beside the sheet; 3, on
+ * a stage too small for both, shows the caption at the sheet build and the key words in its place
+ * at their build.
+ */
+const MAX_LEVEL = 3;
 
 /**
  * Realia slide (design/screens/presenter/slide-realia.md; AMENDMENTS-LECTURE-V2 section 5.2,
@@ -22,8 +29,8 @@ const MAX_LEVEL = 1;
  * its questions keep beside them in LV-S2, so the room keeps its place); on the right the caption in
  * the slide language (its Korean as chips) and, at the next build, the key words as chips (Korean,
  * romanization, meaning). Builds `sheet`, `words`; with `romanization: 'tap'` the sheet's and the
- * caption's romanization one build after the sheet, the key words' one build after them. A long
- * caption fits itself.
+ * caption's romanization one build after the sheet, the key words' one build after them. A crowded
+ * column (a long caption, long meanings on a small phone) fits itself, one compact level at a time.
  */
 export function RealiaSlide({ slide, reveal }: { slide: RealiaBody; reveal: number }): React.ReactElement {
   const { unit } = usePresenterView();
@@ -33,16 +40,26 @@ export function RealiaSlide({ slide, reveal }: { slide: RealiaBody; reveal: numb
   const textScale = size(presenter.size.caption) / (unit * presenter.size.caption);
   const view = realiaView(slide, reveal);
   const words = revealProps(view.words);
+  const compact = fit.level >= 2;
+  // Level 3: the key words take the caption's place at their build (the caption was read with the sheet).
+  const swap = fit.level >= 3;
+  const caption = slide.caption !== undefined && !(swap && view.words) ? slide.caption : undefined;
   return (
-    <View testID="presenter-realia" onLayout={fit.onRoom} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP), minHeight: 0 }}>
+    <View
+      testID="presenter-realia"
+      onLayout={fit.onRoom}
+      style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, compact ? STAGE_GAP_INNER : STAGE_GAP), minHeight: 0 }}
+    >
       <RealiaSheetStage sheet={slide.sheet} rom={view.sheetRom} width={units(unit, sheetUnits(slide.sheet, textScale))} />
-      <View onLayout={fit.onContent} {...{ dataSet: { fit: String(fit.level) } }} style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
-        {slide.caption !== undefined ? <ChipText pieces={slide.caption} rom={view.sheetRom} small={fit.level >= 1} testID="presenter-realia-caption" /> : null}
-        <View aria-hidden={words['aria-hidden']} style={[words.style, { flexDirection: 'row', flexWrap: 'wrap', gap: units(unit, spacing.md) }]}>
-          {slide.keyWords.map((word, i) => (
-            <WordChip key={i} word={word} rom={view.wordsRom} testID="presenter-realia-word" />
-          ))}
-        </View>
+      <View onLayout={fit.onContent} {...{ dataSet: { fit: String(fit.level) } }} style={{ flex: 1, gap: units(unit, compact ? spacing.md : STAGE_GAP_INNER) }}>
+        {caption !== undefined ? <ChipText pieces={caption} rom={view.sheetRom} small={fit.level >= 1} testID="presenter-realia-caption" /> : null}
+        {swap && !view.words ? null : (
+          <View aria-hidden={words['aria-hidden']} style={[words.style, { flexDirection: 'row', flexWrap: 'wrap', gap: units(unit, compact ? spacing.sm : spacing.md) }]}>
+            {slide.keyWords.map((word, i) => (
+              <WordChip key={i} word={word} rom={view.wordsRom} compact={compact} testID="presenter-realia-word" />
+            ))}
+          </View>
+        )}
       </View>
     </View>
   );
