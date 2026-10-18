@@ -20,6 +20,8 @@ import { shot } from './shots';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+/** The controller gives up on a speak that never starts after this long (`START_TIMEOUT_MS`, logic/audio/controller.ts). */
+const START_TIMEOUT_MS = 1_500;
 
 /** `korean`: a ko-KR voice that ends each line at once. `hold`: it never ends (a long sentence still playing). */
 type SpeechMode = 'korean' | 'hold' | 'blocked' | 'none';
@@ -28,6 +30,11 @@ interface Said {
   lang: string;
   /** `navigator.userActivation.isActive` when speak() was called: still inside the tap's activation. */
   active: boolean | null;
+  /**
+   * speak() ran in the same task as the click (a capture-phase click listener sets the flag, a `setTimeout(0)`
+   * clears it): what iOS Safari needs, where Chromium's activation window (about 5 s) is far looser.
+   */
+  inTask: boolean;
 }
 type SpeechWindow = Window & { __said?: Said[]; __dropped?: string[]; __cancels?: number };
 
@@ -39,6 +46,17 @@ type SpeechWindow = Window & { __said?: Said[]; __dropped?: string[]; __cancels?
 async function fakeSpeech(page: Page, mode: SpeechMode): Promise<void> {
   await page.addInitScript((m: SpeechMode) => {
     const w = window as SpeechWindow;
+    let inClickTask = false;
+    window.addEventListener(
+      'click',
+      () => {
+        inClickTask = true;
+        setTimeout(() => {
+          inClickTask = false;
+        }, 0);
+      },
+      true,
+    );
     const said: Said[] = [];
     const dropped: string[] = [];
     w.__said = said;
@@ -74,7 +92,7 @@ async function fakeSpeech(page: Page, mode: SpeechMode): Promise<void> {
           return;
         }
         const activation = (navigator as Navigator & { userActivation?: { isActive: boolean } }).userActivation;
-        said.push({ text: u.text, lang: u.lang, active: activation ? activation.isActive : null });
+        said.push({ text: u.text, lang: u.lang, active: activation ? activation.isActive : null, inTask: inClickTask });
         current = u;
         synth.speaking = true;
         setTimeout(() => {
@@ -248,7 +266,7 @@ test.describe('Discover and Listen & Pick never fail silently (release build)', 
     const line = page.locator('[data-testid^="discover-hear-exchange:"]').filter({ visible: true }).first();
     await line.click();
     await expect.poll(async () => (await said(page)).length).toBe(1);
-    expect((await said(page))[0]).toMatchObject({ lang: 'ko-KR', active: true });
+    expect((await said(page))[0]).toMatchObject({ lang: 'ko-KR', active: true, inTask: true });
     expect((await said(page))[0]!.text).toMatch(/[.?!]$/);
     // The sentence is still being said; the learner leaves the quest from the header.
     const before = await cancels(page);
@@ -377,8 +395,15 @@ test.describe('learner audio surfaces (fixture bundle)', () => {
       if (c.muted) await soundOff(page);
       await openTraceWord(page);
       // The block's opening sound never shows the row (its late result must not move the canvas mid-stroke);
-      // a tap on the block's speaker does.
-      await page.waitForTimeout(1_700);
+      // a tap on the block's speaker does. Wait for the opening sound to settle first: a dropped speak is given
+      // up once the controller's start timeout has passed from it (the fake engine is idle then, so no busy
+      // grace); sound off and no Korean voice settle at once.
+      if (c.mode === 'blocked') {
+        await expect.poll(async () => (await dropped(page)).length).toBe(1);
+        await page.waitForTimeout(START_TIMEOUT_MS + 1_000);
+      } else {
+        await page.waitForTimeout(500);
+      }
       await expect(shown(page, 'trace-word-sound-action')).toHaveCount(0);
       await expect(shown(page, 'trace-word-sound-help')).toHaveCount(0);
       await shown(page, 'trace-word-strip').getByRole('button').first().click();
@@ -395,13 +420,13 @@ test.describe('learner audio surfaces (fixture bundle)', () => {
     const chip = await firstChip(page);
     await chip.speaker.click();
     await expect.poll(async () => (await said(page)).length).toBe(1);
-    expect((await said(page))[0]).toEqual({ text: chip.ko, lang: 'ko-KR', active: true });
+    expect((await said(page))[0]).toEqual({ text: chip.ko, lang: 'ko-KR', active: true, inTask: true });
 
     await openCultureNotes(page, id);
     const term = (await shown(page, `culture-note-${NOTE}`).locator('[lang="ko"]').first().innerText()).trim();
     await shown(page, `culture-note-hear-${NOTE}`).click();
     await expect.poll(async () => (await said(page)).length).toBe(1);
-    expect((await said(page))[0]).toEqual({ text: term, lang: 'ko-KR', active: true });
+    expect((await said(page))[0]).toEqual({ text: term, lang: 'ko-KR', active: true, inTask: true });
     await expect(shown(page, `culture-note-sound-${NOTE}-detail`)).toHaveCount(0);
   });
 
