@@ -304,10 +304,14 @@ interface CardAudio {
 
 /**
  * One card's prompt slot (F-AUDIO-004 A-5b: the Korean is printed on the card, so the panel only says
- * why there is no sound). The step plays the card's buttons through it.
+ * why there is no sound). The step plays the card's buttons through it. The slot counts as having a
+ * clip only when every button on the card has one (the sound, its name, the example; each exchange
+ * line), so a button without a clip still says "No Korean voice" on a device without one.
  */
-function useCardSlot(key: string, audioRef: string | undefined, audio: CardAudio): PromptSlot {
-  const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: hasClip(audioRef), textOnScreen: true });
+function useCardSlot(key: string, actions: readonly (HearAction | undefined)[], audio: CardAudio): PromptSlot {
+  const playable = actions.filter((a): a is HearAction => a !== undefined);
+  const clip = playable.length > 0 && playable.every((a) => hasClip(a.spec.audioRef));
+  const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: clip, textOnScreen: true });
   const { play } = slot;
   const { register } = audio;
   useEffect(() => register(key, { play }), [register, key, play]);
@@ -371,7 +375,7 @@ function DiscoverItemCard({
   audio: CardAudio;
 }): React.ReactElement {
   const { item } = render;
-  const slot = useCardSlot(item.key, item.hear.spec.audioRef, audio);
+  const slot = useCardSlot(item.key, [item.hear, item.letterName?.action, item.example?.hear], audio);
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
@@ -577,7 +581,7 @@ function ExchangeCard({
   const first = render.item.lines[0];
   // One slot for the exchange: Read along and each line's own speaker. When a line cannot play, its panel
   // says why (sound off, no Korean voice, a tap needed, a failure) with the one action; nothing stays lit.
-  const slot = useCardSlot(render.item.key, first?.hear.spec.audioRef, audio);
+  const slot = useCardSlot(render.item.key, render.item.lines.map((l) => l.hear), audio);
   return (
     <View style={{ gap: spacing.md }} testID={`discover-exchange-${render.item.key}`}>
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md }}>

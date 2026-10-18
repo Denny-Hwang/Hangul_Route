@@ -669,25 +669,21 @@ describe('Read along (D-1 S3b): the audio-synced line highlight', () => {
     expect(out.state.readAlong).toBeNull();
   });
 
-  it('no highlight without sound: muted or no voice shows the status once and lights nothing', () => {
+  it('no highlight without sound: muted or no voice lights nothing and stops Read along', () => {
     for (const result of ['muted', 'unavailable'] as const) {
       let out = stepDiscover(startDiscover(model), { type: 'readAlong', item: key });
       out = stepDiscover(out.state, { type: 'audio', id: line(0), result, run: 1 });
       expect(out.effects).toEqual([]);
       expect(lit(out.state)).toEqual([false, false]);
+      expect(out.state.readAlong).toBeNull();
       const r = pageRender(model, out.state, 'always').exchange!;
-      expect(r.status).toBe(result);
       expect(r.reading).toBe(false);
-      // Starting again clears the status line.
+      // Why it is silent is the card's status panel (the prompt slot), not the page render.
+      expect(r).not.toHaveProperty('status');
+      // Starting again lights the first line once more.
       out = stepDiscover(out.state, { type: 'readAlong', item: key });
-      expect(pageRender(model, out.state, 'always').exchange!.status).toBeUndefined();
+      expect(lit(out.state)).toEqual([true, false]);
     }
-  });
-
-  it("a muted line's own speaker shows no Read along status", () => {
-    let out = stepDiscover(startDiscover(model), { type: 'hear', id: line(0) });
-    out = stepDiscover(out.state, { type: 'audio', id: line(0), result: 'muted', run: 1 });
-    expect(pageRender(model, out.state, 'always').exchange!.status).toBeUndefined();
   });
 
   it('Continue stops Read along and moves on; the next page starts at rest', () => {

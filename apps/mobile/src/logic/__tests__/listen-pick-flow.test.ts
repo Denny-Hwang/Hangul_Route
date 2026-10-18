@@ -379,6 +379,12 @@ describe('listenPickSpeech: source and speech rate (F-AUDIO-004 §3.3)', () => {
     expect(listenPickSpeech(round('c1', '어디 가요?')).kind).toBe('sentence');
   });
 
+  it('a one-syllable word or picture round is a word, read at the word rate (not the slow sound rate)', () => {
+    expect(listenPickSpeech(round('lp:word:집', '집')).kind).toBe('word');
+    expect(listenPickSpeech(round('lp:pic:달', '달')).kind).toBe('word');
+    expect(listenPickSpeech(round('read-ppang', '빵')).kind).toBe('word');
+  });
+
   it('says the spoken form, keeps the recording and names the surface', () => {
     expect(listenPickSpeech(round('lp:word:x', '숫자', { spokenKo: '숟짜', audioRef: 'audio/vocab/sutja.mp3' }))).toEqual({
       text: '숟짜',

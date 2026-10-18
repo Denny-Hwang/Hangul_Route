@@ -340,8 +340,6 @@ export interface DiscoverState {
   revealed: readonly string[];
   /** The Read along in progress, if any. */
   readAlong: ReadAlongState | null;
-  /** Read along could not play (sound off, no Korean voice): the status line shows once, nothing lights. */
-  readAlongStatus: { item: string; result: Exclude<PlayResult, 'played'> } | null;
   /** Counts Read along runs, so a result of a stopped run never moves the highlight. */
   runs: number;
 }
@@ -382,7 +380,6 @@ export function startDiscover(model: DiscoverModel): DiscoverState {
     text: [],
     revealed: [],
     readAlong: null,
-    readAlongStatus: null,
     runs: 0,
   };
 }
@@ -423,7 +420,7 @@ export function stepDiscover(
       if (line) {
         // A line's own speaker stops any Read along and plays just that line, lit.
         const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
-        const out = lightLine({ ...state, runs: state.runs + 1, readAlongStatus: null }, line.item, line.index, state.runs + 1, true);
+        const out = lightLine({ ...state, runs: state.runs + 1 }, line.item, line.index, state.runs + 1, true);
         return { state: out.state, effects: [...stopping, { type: 'play', id: event.id, run: state.runs + 1 }] };
       }
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
@@ -443,11 +440,9 @@ export function stepDiscover(
       // resolves (often 'played'), and that result only records the heard mark.
       if (!ra || !line || event.run !== ra.run || line.item !== ra.item || line.index !== ra.line) return { state: base, effects: [] };
       if (event.result !== 'played') {
-        // No timed highlight without sound: the status line shows once and nothing stays lit.
-        return {
-          state: { ...base, readAlong: null, readAlongStatus: ra.single ? null : { item: ra.item, result: event.result } },
-          effects: [],
-        };
+        // No timed highlight without sound: nothing stays lit, and Read along stops. Why it is silent is the
+        // exchange card's prompt slot (its status panel, F-AUDIO-004 A-5b), not this reducer.
+        return { state: { ...base, readAlong: null }, effects: [] };
       }
       if (ra.single || line.index >= lineCount(ra.item) - 1) return { state: { ...base, readAlong: null }, effects: [] };
       return { state: { ...base, readAlong: { ...ra, line: null, last: line.index } }, effects: [{ type: 'pause', run: ra.run }] };
@@ -462,14 +457,14 @@ export function stepDiscover(
         return { state: { ...state, readAlong: null }, effects: [{ type: 'stopAudio' }] };
       }
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
-      const out = lightLine({ ...state, runs: state.runs + 1, readAlongStatus: null }, event.item, 0, state.runs + 1, false);
+      const out = lightLine({ ...state, runs: state.runs + 1 }, event.item, 0, state.runs + 1, false);
       return { state: out.state, effects: [...stopping, ...out.effects] };
     }
     case 'reveal':
       return { state: { ...state, revealed: add(state.revealed, event.key) }, effects: [] };
     case 'next': {
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
-      const quiet = { ...state, readAlong: null, readAlongStatus: null };
+      const quiet = { ...state, readAlong: null };
       if (state.page < state.pageCount - 1) return { state: { ...quiet, page: state.page + 1 }, effects: stopping };
       return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length }] };
     }
@@ -510,8 +505,6 @@ export interface DiscoverExchangeRender {
   heard: boolean;
   /** "Line 1 of 2, Hoya" for the polite live region while a line is lit (not the line card itself). */
   liveLine?: string;
-  /** Read along could not play: the status line (sound off, or no Korean voice) shows once, nothing lights. */
-  status?: Exclude<PlayResult, 'played'>;
 }
 
 export interface DiscoverPageRender {
@@ -580,7 +573,6 @@ function exchangeRender(
     return { line, lit: litIndex === i, romanizationShown: shown, showReveal: !shown };
   });
   const lit = litIndex === null ? undefined : item.lines[litIndex];
-  const status = state.readAlongStatus?.item === item.key ? state.readAlongStatus.result : undefined;
   return {
     item,
     lines,
@@ -589,6 +581,5 @@ function exchangeRender(
     ...(lit === undefined || litIndex === null
       ? {}
       : { liveLine: copy.exchange.lineLabel(litIndex + 1, item.lines.length, lit.speaker) }),
-    ...(status === undefined ? {} : { status }),
   };
 }

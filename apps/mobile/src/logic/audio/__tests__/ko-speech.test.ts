@@ -22,12 +22,11 @@ describe('koSpeech: what the voice says for taught Korean (F-AUDIO-004 §3.5)', 
   });
 });
 
-describe('promptKindOf: the speech rate of a Listen & Pick or Discover prompt', () => {
-  it('a letter or one syllable is a sound', () => {
-    expect(promptKindOf('ㄱ')).toBe('sound');
-    expect(promptKindOf('ㅏ')).toBe('sound');
-    expect(promptKindOf('달')).toBe('sound');
-    expect(promptKindOf(' 가 ')).toBe('sound');
+describe('promptKindOf: the speech rate of a Listen & Pick prompt', () => {
+  it('a one-syllable word is a word, never a sound (only a letter or syllable round is)', () => {
+    expect(promptKindOf('집')).toBe('word');
+    expect(promptKindOf('달')).toBe('word');
+    expect(promptKindOf(' 빵 ')).toBe('word');
   });
 
   it('a sentence (closing punctuation) or a phrase of several words is a sentence', () => {
