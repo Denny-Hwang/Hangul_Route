@@ -30,8 +30,9 @@
 //   gloss-repeats-romanization  an es gloss that opens with the romanization of the Korean it
 //                            glosses, then ' (', ', ' or ' — ' ('gimbap (rollo de arroz con
 //                            alga)'): the romanization is already on screen, so the gloss keeps
-//                            only the meaning (F-CNT-002). validate-content.mjs applies the same
-//                            rule (glossRepeatsRomanization) to the English base content
+//                            only the meaning (F-CNT-001 §3; the romanization is F-CNT-002's).
+//                            validate-content.mjs applies the same rule (glossRepeatsRomanization)
+//                            to the English base content
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-shadowed         warning: an entry gives both the untiered and the tier-qualified
 //                            field for one primary-tier scene; the tier-qualified one wins
@@ -168,7 +169,7 @@ export function koParticleSlip(text) {
 }
 const isKoLessonOverlay = (rel) => /^content\/i18n\/ko\/lessons-[^/]+\.json$/.test(rel);
 
-// ---- gloss-repeats-romanization (F-CNT-002) --------------------------------------------
+// ---- gloss-repeats-romanization (F-CNT-001 §3) ------------------------------------------
 
 /**
  * Proper names whose English is the name itself, then what it is ("Seoul (a city)", "Heo Jun,

@@ -20,7 +20,7 @@
 //     English field is taught Korean, not a Korean UI string.
 //   - A gloss never opens with the romanization of the Korean it glosses ("gimbap (seaweed
 //     rice roll)" is "seaweed rice roll"): rule gloss-repeats-romanization, the one
-//     implementation in scripts/overlay-rules.mjs (glossRepeatsRomanization, F-CNT-002), with
+//     implementation in scripts/overlay-rules.mjs (glossRepeatsRomanization, F-CNT-001 §3), with
 //     its proper-name allowlist; the overlay rules apply it to the Spanish glosses.
 //   - content/i18n/<locale>/*.json are locale overlays, not base content: they
 //     follow the overlay rules in scripts/overlay-rules.mjs (F-I18N-001 §3.7),

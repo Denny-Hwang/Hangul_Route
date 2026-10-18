@@ -5,7 +5,7 @@ Extends: `design/wireframes/minigame/shell.md` (round shell), `quest/discover.md
 Audience: **any learner, any age** (CLAUDE.md §1); the same screens for everyone. Wireframe level: structure, flow, interaction points. No colours, fonts, art or final copy; text in (parentheses) is a placeholder.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean shown with romanization + gloss (`KoreanText`), `{ x }` content-driven, `(*)` fill-only marker, `<state>` a runtime state.
 
-Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine · W9 Screens that already print the Korean (A-5b)
+Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine · W9 Screens that already print the Korean (A-5b) · W10 The learner audio pass: the panel under what was tapped, and the trace games' one-row form (A-12)
 
 ---
 
@@ -253,6 +253,57 @@ starts a new slot).
 - Tap & Respond with sound off: the NPC line does not play on turn open (the learner taps Hear it to ask), so "Sound is off" is not announced again on every turn. While a right reply is being said, Hear it is disabled and the panel action does nothing, so the reply is never cut off.
 - Speaker and Hear it labels name the word ("Hear annyeong"); the sound state is announced by the status panel after the first tap (spec §3.9 revision note).
 - The round still scores normally in every state; the panel is never red.
+
+## W10 — The learner audio pass: the panel under what was tapped, and the trace games' one row (A-12, 2026-10-17)
+
+Story episode page, Culture notes, Discover, Realia Read, the Story Order replay, Pic-Word Match, Trace a Word, Trace Stroke. Each screen has one prompt slot (Discover: one per card); its status panel shows only under the thing tapped last, and a tap on a different word, title, term, line or pair starts the slot again, so the last one's "Tap to hear" or "Try again" never shows under a word that is being said.
+
+```
+Story episode page (one slot for the page)            Culture notes (one slot for the screen)
++----------------------------------------+            +----------------------------------------+
+|  (The Day of Hangul)                   |            |  (Clothes for a holiday)               |
+|  ~~ 한글날 ~~   <- tap (hide-until-tap) |            |  ~~ 한복 ~~  (hanbok)  [ (speaker) ]   |  <- tap
+|  +----------------------------------+  |            |  +----------------------------------+  |
+|  | (No Korean voice on this device.)|  |  <- under  |  | (Sound is off.)                  |  |  <- under this
+|  | [ How to add a voice ]           |  |     the    |  | [ Turn sound on ]                |  |     note's term
+|  +----------------------------------+  |     title  |  +----------------------------------+  |     only
+|  ( Hoya: Let's read! )                 |            |  ( Families wear them on holidays. )   |
+|  +- tale row ----------------------+   |            |  [ From the story ]                    |
+|  | (cover) (The Day of Hangul)     |   |            +----------------------------------------+
+|  |         ~~ 한글날 ~~  <- tap    |   |
+|  |         (panel moves here)      |   |            Realia Read (one slot)
+|  +---------------------------------+   |            +----------------------------------------+
+|  (Words)                               |            |  +- menu sheet --------------------+   |
+|  [~~ 한글 ~~ (spk)] [~~ 세종 ~~ (spk)] |  <- chips   |  | ~~ 김밥 ~~  ~~ 2,000원 ~~  <- tap |   |
+|  ( panel under the chips, for the      |            |  +---------------------------------+   |
+|    chip tapped last )                  |            |  ( panel under the sheet: a line )     |
++----------------------------------------+            |  (How much is this?)  ~~ 라면 ~~       |
+                                                      |  [ 삼천 원 ] [ 이천 원 ] ...            |
+                                                      |  ( panel under the options: the right  |
+                                                      |    option, said when picked )          |
+                                                      +----------------------------------------+
+
+Trace a Word, stacked (phone)                         Trace Stroke, side by side (tablet landscape)
++----------------------------------------+            +----------------------+-----------------+
+|  (Trace the word) ~~ 호야 ~~           |            |                      | (Trace ㄱ)      |
+|  [ 호 (spk) ] [ 야 (spk) ]  (hoya)     |  <- strip   |                      | (Sound is off.) |  <- one row, no
+|  (Sound is off.) [ Turn sound on ]     |  <- one row |      ( canvas )      | [Turn sound on] |     card; the
+|  +----------------------------------+  |     no card |                      | (scrolls if     |     column scrolls
+|  |                                  |  |            |                      |  too tall)      |     if needed
+|  |            ( canvas )            |  |            |                      | [Show me][Clear]|
+|  |                                  |  |            |                      | ( Hoya line )   |
+|  +----------------------------------+  |            |                      | [[ Done ]][Skip]|
+|  [ Show me ]  [ Clear ]                |            +----------------------+-----------------+
+|  ( Hoya line )                         |
+|  [[ Done ]]   [ Skip ]                 |
++----------------------------------------+
+```
+
+- The row appears only after the learner asked to hear (a block speaker, Show me), never from a round's opening sound.
+- **Held while drawing**: while a finger is on the canvas the row keeps what it showed when the stroke began. A late result (a speak the browser dropped, given up after the start timeout; a voice list still loading) waits for the finger to lift, so the canvas never resizes or moves under the finger mid-stroke. It may resize between strokes, which only rescales the ink already drawn.
+- Discover: each item card and the exchange card has its own panel under its buttons; the exchange's panel replaces the old Read along status line (nothing stays lit without sound).
+- Story Order replay: the panel sits under the replay line; each line starts the slot again; its action says that line.
+- Every panel is neutral (never red), a polite live region, and its action plays the same Korean again.
 
 ---
 

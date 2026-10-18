@@ -31,7 +31,7 @@ import { stages, themes } from '../stages';
  * the validator's business. The validator's base-aware rules are repeated here for
  * the TypeScript base: a Korean gloss never echoes the Korean it explains
  * (`overlay-circular-gloss`), a Spanish gloss never opens with the romanization of the
- * Korean it glosses (`gloss-repeats-romanization`, F-CNT-002; the English TypeScript base is
+ * Korean it glosses (`gloss-repeats-romanization`, F-CNT-001 §3; the English TypeScript base is
  * held to the same rule below), and the glosses of one minigame stay distinct per locale
  * (Culture Quiz keys and locks its options by their text).
  */
