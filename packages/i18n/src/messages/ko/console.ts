@@ -723,14 +723,14 @@ export const consoleMsgs = {
   },
 
   lecture: {
-    title: '강의',
-    titleFor: (space: string) => `${space} · 강의`,
+    title: '강의 모드',
+    titleFor: (space: string) => `${space} · 강의 모드`,
     back: backTo,
-    intro: '내 콘텐츠로 슬라이드 수업을 만들어 교실 화면에 보여 줘요.',
-    comingSoon: '강의 모드는 곧 열려요: 교실 화면에 보여 줄 수 있는 슬라이드 수업이에요.',
+    intro: '프로젝터나 TV에 슬라이드 수업을 띄워요. 교실에서도, 집에서도 돼요.',
+    comingSoon: '강의 모드는 곧 열려요: 프로젝터나 TV에 보여 줄 수 있는 슬라이드 수업이에요.',
     plansFailed: '이 공간의 계획을 불러오지 못해서 이번 주 계획은 보이지 않아요. 다시 불러와 보세요.',
     replaceOutline: '이 자료로 새 개요를 시작할까요? 여기서 바꾼 내용은 새 개요로 바뀌어요.',
-    entry: { cta: '강의' },
+    entry: { cta: '강의 모드' },
     presentPlan: { cta: '이 계획 발표하기' },
     revisitChip: { cta: '함께 다시 보기' },
     source: {
@@ -742,9 +742,6 @@ export const consoleMsgs = {
       noRevisit: '아직 다시 볼 것이 없어요.',
       revisitWith: (jamo: string) => `함께 다시 보기: ${jamo}`,
       trimmed: (count: number, max: number) => `항목 ${count}개가 더 들어가지 않았어요: 수업 하나에는 최대 ${max}개까지 들어가요.`,
-    },
-    catalogue: {
-      title: '카탈로그',
     },
     outline: {
       title: '개요',
@@ -767,12 +764,15 @@ export const consoleMsgs = {
       block: {
         quiz: (rounds: number) => `빠른 퀴즈: ${rounds}문제`,
         classCode: '마지막 슬라이드에 반 코드',
+        familyCode: '마지막 슬라이드에 가족 코드',
         letters: (count: number) => `글자 ${count}개`,
         cards: (count: number) => `문화 카드 ${count}장`,
+        words: (count: number) => `낱말 ${count}개`,
       },
       addQuiz: { cta: '+ 퀴즈' },
       addActivity: { cta: '+ 활동' },
       addClassCode: { cta: '+ 반 코드' },
+      addFamilyCode: { cta: '+ 가족 코드' },
     },
     activity: {
       'air-write': '허공에 써 보기',
@@ -794,7 +794,7 @@ export const consoleMsgs = {
       languageHint: '복사한 링크는 링크를 여는 기기의 언어로 보여요.',
       languageHintChosen: (endonym: string) => `슬라이드 언어: ${endonym}. 복사한 링크도 어느 기기에서나 같아요.`,
     },
-    titleField: { label: '수업 제목', placeholder: '3주차 글자', hint: '제목에 학생 이름을 넣지 마세요.' },
+    titleField: { label: '수업 제목', placeholder: '3주차 글자', hint: '제목에 이름은 넣지 마세요.' },
     titleProblem: {
       empty: '수업 제목을 정해 주세요.',
       chars: '글자, 숫자, 띄어쓰기, 간단한 문장 부호로 60자까지 써 주세요.',
@@ -803,6 +803,7 @@ export const consoleMsgs = {
     },
     check: {
       title: '교실 기기 확인하기',
+      titleFamily: 'TV나 화면을 확인해요',
       offline: '오프라인에서도 되도록 와이파이에서 발표 화면을 한 번 열어 주세요.',
       voice: '한국어 음성이 있는지 확인해 주세요 (발표 화면이 알려 줘요).',
       screen: '프로젝터나 TV에 슬라이드 전체가 보이는지 확인해 주세요.',
@@ -815,8 +816,43 @@ export const consoleMsgs = {
     copyFailed: '링크를 복사하지 못했어요. 다시 하거나 발표 화면 열기를 써 주세요.',
     linkFailed: '이 수업은 링크에 다 들어가지 않아요. 항목을 몇 개 빼고 다시 해 보세요.',
     copyHasCode: '이 링크에는 반 참여 코드가 들어 있어요. 새 코드를 만들기 전까지는 링크가 있으면 누구나 참여할 수 있어요. 그래도 복사할까요?',
+    copyHasFamilyCode: '이 링크에는 가족 참여 코드가 들어 있어요. 새 코드를 만들 때까지 링크가 있으면 누구나 참여할 수 있어요. 그래도 복사할까요?',
     popupBlocked: '발표 화면을 열려면 이 사이트의 팝업을 허용하거나 링크를 복사해 주세요.',
     nothing: '개요에 항목을 하나 이상 넣어 주세요.',
+    presets: {
+      title: '준비된 수업',
+      lead: '준비된 수업을 골라요. 시작하기 전에 미리 볼 수 있어요.',
+      next: {
+        title: '다음 수업',
+        class: '우리 반이 배우고 있는 곳부터 이어 가요.',
+        family: '우리 가족이 배우고 있는 곳부터 이어 가요.',
+        plan: (plan: string) => `이번 주 계획: ${plan}`,
+      },
+      zero: { title: '처음부터: 한글 1주차', short: '한글 1주차', body: '첫 글자와 소리, 쉬운 음절을 배워요.' },
+      stage: {
+        title: '단계별로',
+        body: '단계를 고르면 수업이 만들어져요.',
+        choose: '단계를 골라요',
+        chip: (n: number) => `${n}단계`,
+      },
+      story: { title: '이야기 시간', body: '그림과 함께 한국 이야기를 읽고 질문 몇 개를 풀어요.' },
+      words: { title: '낱말 복습', body: '최근 수업의 낱말을 보고 짧은 퀴즈를 풀어요.' },
+      warmup: { title: '10분 가볍게 시작하기', short: '가볍게 시작하기', body: '다시 볼 글자, 질문 몇 개, 허공에 글자 쓰기를 해요.' },
+      length: { title: '얼마나 할까요?', option: (n: number) => `${n}분` },
+      preview: { title: '이 수업에 들어 있는 것' },
+      customize: { cta: '직접 고르기', lead: '하나씩 직접 골라요. 꼭 하지 않아도 돼요.' },
+      fallback: {
+        zero: '아직 따라갈 기록이 없어서 한글 1주차부터 시작해요.',
+        warmUp: '이번 주 낱말이 아직 없어서 가볍게 시작하기로 해요.',
+        restart: '모든 이야기를 이미 봤어요. 첫 이야기부터 다시 해요.',
+      },
+      chooser: {
+        label: '넣을 것',
+        tab: { lessons: '수업', stories: '이야기', words: '낱말 주제' },
+        lessonsIn: (n: number) => `안에 든 수업 ${n}개`,
+        showMore: (n: number) => `${n}개 더 보기`,
+      },
+    },
   },
 
   settings: {

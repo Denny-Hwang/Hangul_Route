@@ -66,6 +66,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   // AMENDMENTS-LECTURE-V2 section 12.2 (LV-3): the presenter's ready-made lessons, one letter over each.
   'learner.presenter.presets.words.title': '"Repaso de palabras" (18) against "Word review" (11): Spanish needs "de" between the two nouns; a card title that wraps',
   'learner.presenter.presets.length.title': 'Spanish questions open with "¿": "¿Cuánto tiempo?" (15) against "How long?" (9) is one letter over; a chip group label that wraps',
+  // The same two values on the console setup page (LV-4).
+  'console.lecture.presets.words.title': '"Repaso de palabras" (18) against "Word review" (11): Spanish needs "de" between the two nouns; a card title that wraps',
+  'console.lecture.presets.length.title': 'Spanish questions open with "¿": "¿Cuánto tiempo?" (15) against "How long?" (9) is one letter over; a chip group label that wraps',
   // F-CURR-001 G-1: the Sentence Builder meaning card's label.
   'learner.minigame.sentenceBuilder.meaning': 'the one word "Significado" (11) against "Meaning" (7), the same word as a11y.minigame.meaning; a card label that wraps',
   // F-LEARN-001 §3.15: the Privacy step's text button and the policy link's accessible name.
