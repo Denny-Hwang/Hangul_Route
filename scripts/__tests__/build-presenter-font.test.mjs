@@ -274,6 +274,32 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     ]);
   });
 
+  test("lists the Korean chips of the es / ko overlay notes and realia captions too: the note, the item's caption, else its page's", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const pages = [
+      { items: [{ type: "pattern", frame: kt("___에 가요."), noteEn: "Put {ko:에} after a place.", examples: [kt("학교에 가요.")] }] },
+      { items: [{ type: "realia", realiaRef: "realia:menu", keyWords: [kt("김밥")], captionEn: "Read it." }], captionEn: "A page." },
+      { items: [{ type: "realia", realiaRef: "realia:slip", keyWords: [kt("라면")] }], captionEn: "A slip." },
+      { items: [{ type: "word", word: kt("물") }], captionEn: "Not a realia page." },
+    ];
+    const quests = [{ id: "quest:q1", steps: [{ id: "s2", kind: "discover", discover: { pages } }] }];
+    const overlays = {
+      es: { "quest:q1": { "steps.s2.discover.pages.0.items.0.note": "Pon {ko:에} y {ko:가요}.", "steps.s2.discover.pages.1.caption": "No: {ko:쪽}." } },
+      ko: {
+        "quest:q1": {
+          "steps.s2.discover.pages.1.items.0.caption": "{ko:메뉴}를 읽어요.",
+          "steps.s2.discover.pages.2.caption": "{ko:주문} 쪽지예요.",
+          "steps.s2.discover.pages.3.caption": "{ko:아니}",
+        },
+      },
+    };
+    const strings = presenterStrings({ quests, overlays });
+    for (const ko of ["가요", "메뉴", "주문"]) assert.ok(strings.includes(ko), ko);
+    // A page caption under an item with its own caption, and a caption of a page with no realia, are not drawn.
+    for (const ko of ["쪽", "아니"]) assert.ok(!strings.includes(ko), ko);
+    assert.deepEqual(presenterStrings({ quests }), presenterStrings({ quests, overlays: {} }));
+  });
+
   test("lists the Korean of the upper-stage lesson scopes (F-CURR-001 §3.12)", () => {
     const kt = (ko) => ({ ko, romanization: "x", en: "y" });
     const scopes = {

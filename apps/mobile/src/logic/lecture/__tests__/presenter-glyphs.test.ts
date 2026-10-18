@@ -92,6 +92,31 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
     expect([...missing.entries()]).toEqual([]);
   });
 
+  it.each(['es', 'ko'] as const)(
+    'every Korean chip of the pattern notes and realia captions of a deck in %s (the content overlays) is in the font',
+    (locale) => {
+      // The rest of an overlay deck is the same taught Korean as the English walk above, or UI-language text in the system stack.
+      const missing = new Map<string, string>();
+      let chips = 0;
+      for (let i = 0; i < blocks.length; i += 30) {
+        const { slides } = expandDeck(deck(blocks.slice(i, i + 30)), lectureBundle(locale), { canPlayKorean: true });
+        for (const slide of slides) {
+          const pieces = slide.kind === 'pattern' ? (slide.note ?? []) : slide.kind === 'realia' ? (slide.caption ?? []) : [];
+          for (const piece of pieces) {
+            if (!('ko' in piece)) continue;
+            chips += 1;
+            for (const ch of piece.ko) {
+              const cp = ch.codePointAt(0)!;
+              if (isHangul(cp) && !font.has(cp) && !missing.has(ch)) missing.set(ch, `${slide.key}: ${piece.ko}`);
+            }
+          }
+        }
+      }
+      expect(chips).toBeGreaterThan(0);
+      expect([...missing.entries()]).toEqual([]);
+    },
+  );
+
   it('the walk reaches every reading slide (LV-S1): sentences, patterns with their frames and notes, read alongs, realia sheets and captions', () => {
     const { slides } = expandDeck(deck(blocks.filter((b) => b.kind === 'episode').slice(0, 30)), lectureBundle('en'), { canPlayKorean: true });
     const all = [...slides, ...expandDeck(deck(blocks.filter((b) => b.kind === 'episode').slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
