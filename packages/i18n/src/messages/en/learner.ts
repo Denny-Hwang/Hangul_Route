@@ -2099,10 +2099,10 @@ export const learner = {
    * a message. Taught Korean on the slides is content, never here (rule 5).
    */
   presenter: {
-    /** The fixed tab title; the deck title never goes in `document.title` (section 3.2). */
-    docTitle: 'Hangul Route lecture',
+    /** The fixed tab title; the deck title never goes in `document.title` (section 3.2). One name everywhere (AMENDMENTS-LECTURE-V2 LV-D2). */
+    docTitle: 'Hangul Route lecture mode',
     home: {
-      title: 'Lecture',
+      title: 'Lecture mode',
       help: { cta: 'Keys and help' },
       recent: {
         title: 'Recent lessons',
@@ -2111,18 +2111,57 @@ export const learner = {
         resume: { cta: 'Resume' },
         startOver: { cta: 'Start over' },
       },
+      /** The parts of Customize's chooser that stay from Quick lesson (AMENDMENTS-LECTURE-V2 section 18.3). */
       quick: {
-        title: 'Quick lesson',
-        line: 'Choose what to teach. No sign-in, no names.',
-        group: { episodes: 'Episodes', lessons: 'Single lessons', letterSets: 'Letter sets', topics: 'Word topics', stories: 'Stories' },
         consonants: 'Consonants',
         vowels: 'Vowels',
         minutes: (n: number) => `about ${n} min`,
         letters: (n: number) => plural('en', n, { one: '1 letter', other: `${n} letters` }),
-        chosen: (n: number) => plural('en', n, { one: '1 chosen', other: `${n} chosen` }),
         nothing: 'Choose at least one item to build a lesson.',
         full: 'This lesson is full. Remove one to add another.',
         build: { cta: 'Build lesson' },
+      },
+    },
+    /**
+     * Ready-made lessons on the presenter home (AMENDMENTS-LECTURE-V2 sections 4 and 12.2, row LV-3): the six presets,
+     * their length and stage chips, the preview on the start screen and Customize with its grouped chooser (section
+     * 18.3). `zero.short`, `stage.chip`, `story.title`, `words.title`, `warmup.short` and `next.title` are deck titles.
+     */
+    presets: {
+      title: 'Ready-made lessons',
+      lead: 'Pick a ready lesson. You can look at it before you start.',
+      next: { title: 'Next lesson', device: 'Picks up after the last lesson shown on this screen.' },
+      zero: { title: 'Start from zero: Hangul week 1', short: 'Hangul week 1', body: 'The first letters, their sounds and simple syllables.' },
+      stage: {
+        title: 'Stage by stage',
+        body: 'Pick a stage. The lesson is built for you.',
+        choose: 'Choose a stage',
+        chip: (n: number) => `Stage ${n}`,
+      },
+      story: { title: 'Story time', body: 'A Korean story with pictures, then a few questions.' },
+      words: { title: 'Word review', body: 'Words from recent lessons, then a short quiz.' },
+      warmup: { title: 'Quick 10-minute warm-up', short: 'Quick warm-up', body: 'Letters to revisit, a few questions and writing in the air.' },
+      length: { title: 'How long?', option: (n: number) => `${n} min` },
+      start: { cta: 'Start' },
+      preview: {
+        title: "What's in this lesson",
+        quiz: (n: number) => plural('en', n, { one: `Quick quiz: ${n} question`, other: `Quick quiz: ${n} questions` }),
+        words: (n: number) => plural('en', n, { one: `${n} word`, other: `${n} words` }),
+      },
+      customize: { cta: 'Customize', lead: 'Choose each part yourself. You never have to.' },
+      fallback: {
+        zero: 'Nothing to follow yet, so this starts with Hangul week 1.',
+        warmUp: 'No words this week yet, so this is the warm-up instead.',
+        restart: 'Every story was shown here, so this starts again from the first.',
+      },
+      /** Customize's grouped chooser (section 18.3): one tab at a time, the tray and the sticky footer. */
+      chooser: {
+        label: 'What to add',
+        tab: { lessons: 'Lessons', stories: 'Stories', words: 'Word topics', letters: 'Letters' },
+        lessonsIn: (n: number) => plural('en', n, { one: `${n} lesson inside`, other: `${n} lessons inside` }),
+        showMore: (n: number) => `Show ${n} more`,
+        tray: { title: 'Your lesson', empty: 'Nothing chosen yet. Choose from the tabs above.' },
+        summary: (n: number, m: number) => plural('en', n, { one: `1 part · about ${m} min`, other: `${n} parts · about ${m} min` }),
       },
     },
     bar: {
@@ -2219,7 +2258,8 @@ export const learner = {
         words: 'Words',
         more: (n: number) => `+ ${n} more`,
         practice: 'Practice at home in Hangul Route',
-        codeTitle: 'Join our class',
+        /** Neutral for a class and a family (the presenter does not know the space kind, AMENDMENTS-LECTURE-V2 section 6). */
+        codeTitle: 'Join with this code',
         /** `cta` is the shipped Join label (`caregiver.spaces.join.cta`). */
         howToJoin: (cta: string) => `Tap “${cta}” in Hangul Route and type this code.`,
         exitHint: 'To finish, choose Exit.',
@@ -2325,8 +2365,9 @@ export const learner = {
     state: {
       invalid: {
         title: 'This link does not work',
-        line: 'Open a Quick lesson, or get a new link from the console page.',
-        cta: 'Open Quick lesson',
+        line: 'Choose a lesson here, or get a new link from the setup page.',
+        /** Opens the home with Customize open (AMENDMENTS-LECTURE-V2 section 12.6). */
+        cta: 'Choose a lesson',
         /** A link from a newer presenter (`unsupported_version`, AMENDMENTS-LECTURE-V2 section 4.5): update this one and open the link again. */
         reload: 'Reload',
         /** The stale page's line (it replaces `line`): Reload updates only when no other tab of the app is open. */

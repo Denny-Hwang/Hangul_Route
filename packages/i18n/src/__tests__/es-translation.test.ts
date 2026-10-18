@@ -195,4 +195,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'learner.presenter.timer.seconds',
   // Owner items 6 and 7: the Aa sign of the Display sheet, a glyph hidden from assistive tech.
   'common.display.button',
+  // AMENDMENTS-LECTURE-V2 section 12.2 (LV-3): a length chip "{n} min", the SI unit symbol, the same in Spanish.
+  'learner.presenter.presets.length.option',
 ];

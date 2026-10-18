@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HISTORY_KEYS, bootPlan, entryState, popPlan, pushPlan, readEntry, stepsToHome, type HistoryEntry, type PopContext } from '../history';
+import { HOME_DEFAULT, type HomeSnapshot } from '../home-state';
 
 /** F-TCH-004 section 3.5 "History and the way back" (rows LV-M1, LV-3): the pure plan. */
 
@@ -164,6 +165,48 @@ describe('popPlan (rules 3, 4 and 7)', () => {
   it('the boot, invalid and loading pages take no pop', () => {
     expect(popPlan(ready, ctx({ phase: 'invalid' }))).toEqual({ kind: 'none' });
     expect(popPlan(home, ctx({ phase: 'boot' }))).toEqual({ kind: 'none' });
+  });
+});
+
+describe('rule 9: the home keeps its state, a ready-made lesson keeps its preset (AMENDMENTS-LECTURE-V2 sections 11 and 18.2, LV-3)', () => {
+  const snapshot: HomeSnapshot = { ...HOME_DEFAULT, open: 'story-time', lengths: { 'story-time': 30 }, customize: true, tab: 'stories', chosen: ['story:hangeul-day'], scrollY: 840 };
+
+  it('reads and writes the home state on the home entry only, and the preset on the ready entry only', () => {
+    const home: HistoryEntry = { step: 'home', index: 0, homeBack: true, home: snapshot };
+    expect(readEntry(entryState(home))).toEqual(home);
+    const ready: HistoryEntry = { step: 'ready', index: 1, fragment: '1.x', preset: 'hangul-week-1' };
+    expect(readEntry(entryState(ready))).toEqual(ready);
+    expect(entryState({ step: 'running', index: 2, fragment: '1.x', preset: 'hangul-week-1', home: snapshot })).toEqual({
+      [HISTORY_KEYS.step]: 'running',
+      [HISTORY_KEYS.index]: 2,
+      [HISTORY_KEYS.fragment]: '1.x',
+    });
+    expect(readEntry({ hrPresenter: 'ready', hrIndex: 1, hrLecturePreset: 'not-a-preset' })).toEqual({ step: 'ready', index: 1 });
+    expect(readEntry({ hrPresenter: 'ready', hrIndex: 1, hrHome: snapshot })).toEqual({ step: 'ready', index: 1 });
+  });
+
+  it('a damaged home state reads field by field: a name or a bad value never comes back', () => {
+    const read = readEntry({ hrPresenter: 'home', hrIndex: 0, hrHome: { open: 'Minho', chosen: ['Minho', 'quest:stage1-letters-q1'], scrollY: -4, tab: 'names' } });
+    expect(read?.home).toEqual({ ...HOME_DEFAULT, chosen: ['quest:stage1-letters-q1'] });
+    expect(readEntry({ hrPresenter: 'home', hrIndex: 0, hrHome: 'garbage' })).toEqual({ step: 'home', index: 0 });
+  });
+
+  it('a reload on the home keeps its state; a link replaces the home entry with none', () => {
+    const entry: HistoryEntry = { step: 'home', index: 0, homeBack: false, home: snapshot };
+    expect(bootPlan({ link: null, entry, accepts: yes, homeBack: true }).replace).toEqual(entry);
+    expect(bootPlan({ link: '1.abc', entry, accepts: yes, homeBack: true }).replace).toEqual({ step: 'home', index: 0, homeBack: false });
+  });
+
+  it('a reload on the start screen of a ready-made lesson keeps its preset for boot', () => {
+    const plan = bootPlan({ link: null, entry: { step: 'ready', index: 1, fragment: '1.abc', preset: 'warm-up' }, accepts: yes, homeBack: false });
+    expect(plan.deck).toEqual({ raw: '1.abc', reloaded: true, preset: 'warm-up' });
+    // A link never carries a preset from the address.
+    expect(bootPlan({ link: '1.abc', entry: { step: 'ready', index: 1, fragment: '1.x', preset: 'warm-up' }, accepts: yes, homeBack: false }).deck).toEqual({ raw: '1.abc', reloaded: false });
+  });
+
+  it('pushes the preset with the start screen, never with the lesson, and never the home state', () => {
+    expect(pushPlan({ step: 'home', index: 0, home: snapshot }, 'ready', { fragment: '1.x', preset: 'by-stage' }).entry).toEqual({ step: 'ready', index: 1, fragment: '1.x', preset: 'by-stage' });
+    expect(pushPlan({ step: 'ready', index: 1, fragment: '1.x', preset: 'by-stage' }, 'running', { fragment: '1.x', preset: 'by-stage' }).entry).toEqual({ step: 'running', index: 2, fragment: '1.x' });
   });
 });
 

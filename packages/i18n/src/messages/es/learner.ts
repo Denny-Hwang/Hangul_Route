@@ -1619,9 +1619,9 @@ export const learner = {
   },
   /** El presentador de clase en /present (F-TCH-004 PR 6); nunca nombra a nadie. */
   presenter: {
-    docTitle: 'Clase de Hangul Route',
+    docTitle: 'Modo proyección de Hangul Route',
     home: {
-      title: 'Proyección',
+      title: 'Modo proyección',
       help: { cta: 'Teclas y ayuda' },
       recent: {
         title: 'Lecciones recientes',
@@ -1631,17 +1631,49 @@ export const learner = {
         startOver: { cta: 'Desde el inicio' },
       },
       quick: {
-        title: 'Lección rápida',
-        line: 'Elige qué enseñar. Sin iniciar sesión y sin nombres.',
-        group: { episodes: 'Episodios', lessons: 'Lecciones sueltas', letterSets: 'Grupos de letras', topics: 'Temas de palabras', stories: 'Historias' },
         consonants: 'Consonantes',
         vowels: 'Vocales',
         minutes: (n: number) => `aprox. ${n} min`,
         letters: (n: number) => plural('es', n, { one: '1 letra', other: `${n} letras` }),
-        chosen: (n: number) => `Elegiste ${n}`,
         nothing: 'Elige al menos un elemento para armar la lección.',
         full: 'Esta lección está llena. Quita uno para añadir otro.',
         build: { cta: 'Armar la lección' },
+      },
+    },
+    presets: {
+      title: 'Lecciones listas',
+      lead: 'Elige una lección lista. Puedes verla antes de empezar.',
+      next: { title: 'Siguiente lección', device: 'Sigue después de la última lección que se mostró en esta pantalla.' },
+      zero: { title: 'Desde cero: semana 1 de hangul', short: 'Semana 1 de hangul', body: 'Las primeras letras, sus sonidos y sílabas sencillas.' },
+      stage: {
+        title: 'Etapa por etapa',
+        body: 'Elige una etapa. La lección se arma sola.',
+        choose: 'Elige una etapa',
+        chip: (n: number) => `Etapa ${n}`,
+      },
+      story: { title: 'Hora del cuento', body: 'Un cuento coreano con dibujos y luego algunas preguntas.' },
+      words: { title: 'Repaso de palabras', body: 'Palabras de las lecciones recientes y luego un quiz corto.' },
+      warmup: { title: 'Calentamiento rápido de 10 minutos', short: 'Calentamiento rápido', body: 'Letras para repasar, algunas preguntas y escribir en el aire.' },
+      length: { title: '¿Cuánto tiempo?', option: (n: number) => `${n} min` },
+      start: { cta: 'Empezar' },
+      preview: {
+        title: 'Qué hay en esta lección',
+        quiz: (n: number) => plural('es', n, { one: `Quiz rápido: ${n} pregunta`, other: `Quiz rápido: ${n} preguntas` }),
+        words: (n: number) => plural('es', n, { one: `${n} palabra`, other: `${n} palabras` }),
+      },
+      customize: { cta: 'Personalizar', lead: 'Elige cada parte a tu gusto. Nunca es obligatorio.' },
+      fallback: {
+        zero: 'Todavía no hay nada que seguir, así que empieza con la semana 1 de hangul.',
+        warmUp: 'Todavía no hay palabras de esta semana, así que se hace el calentamiento.',
+        restart: 'Ya se mostraron todos los cuentos aquí, así que se empieza otra vez por el primero.',
+      },
+      chooser: {
+        label: 'Qué agregar',
+        tab: { lessons: 'Lecciones', stories: 'Cuentos', words: 'Temas de palabras', letters: 'Letras' },
+        lessonsIn: (n: number) => plural('es', n, { one: `${n} lección adentro`, other: `${n} lecciones adentro` }),
+        showMore: (n: number) => `Mostrar ${n} más`,
+        tray: { title: 'Tu lección', empty: 'Todavía no elegiste nada. Elige en las pestañas de arriba.' },
+        summary: (n: number, m: number) => plural('es', n, { one: `1 parte · unos ${m} min`, other: `${n} partes · unos ${m} min` }),
       },
     },
     bar: {
@@ -1719,7 +1751,7 @@ export const learner = {
         words: 'Palabras',
         more: (n: number) => `+ ${n} más`,
         practice: 'Practica en casa con Hangul Route',
-        codeTitle: 'Únete a nuestra clase',
+        codeTitle: 'Únete con este código',
         howToJoin: (cta: string) => `Toca «${cta}» en Hangul Route y escribe este código.`,
         exitHint: 'Para terminar, elige Salir.',
       },
@@ -1812,8 +1844,8 @@ export const learner = {
     state: {
       invalid: {
         title: 'Este enlace no funciona',
-        line: 'Abre una lección rápida o pide un enlace nuevo en la página de la consola.',
-        cta: 'Abrir lección rápida',
+        line: 'Elige una lección aquí o pide un enlace nuevo en la página de preparación.',
+        cta: 'Elegir una lección',
         reload: 'Volver a cargar',
         staleLine: 'Este enlace es de una versión más nueva. Cierra las otras pestañas de Hangul Route y vuelve a cargar.',
       },

@@ -1,30 +1,37 @@
-import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import type { LectureDeck } from '@hangul-route/content-schema';
+import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { PRESET_DEFAULT_MINUTES, resolvePreset, type ChooserGroup, type LectureDeck, type LecturePreset, type PresetContext, type PresetMinutes, type StageKey } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View, useWindowDimensions, type PressableStateCallbackType, type TextStyle, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type TextStyle } from 'react-native';
+import { lengthOf, type HomeSnapshot } from '../../logic/lecture/home-state';
 import { recentDayLabel, type RecentState } from '../../logic/lecture/home-view';
-import { buildQuickDeck, canChoose, quickFull, quickGroups, toggleChoice, type QuickGroupId, type QuickItem, type QuickSource } from '../../logic/lecture/quick-lesson';
+import { firstStageOf } from '../../logic/lecture/preset-source';
+import { buildQuickDeck } from '../../logic/lecture/quick-lesson';
 import type { RecentItem } from '../../logic/lecture/recent';
 import { DisplayButton } from '../../components/DisplayButton';
+import { HomeButton, Line, ring, text, type Focusable } from './home-parts';
+import { LessonChooser } from './LessonChooser';
+import { PresetCards } from './PresetCards';
 
 /**
- * The presenter home (F-TCH-004 §3.12; design `design/screens/presenter/home.md`,
- * mocks `home.html` and `home-empty.html`, README D2, D14, D19): Recent lessons
- * and Quick lesson on a teacher page in real pixels (not stage-scaled).
+ * The presenter home (F-TCH-004 §3.12; AMENDMENTS-LECTURE-V2 sections 4, 7 item 3 and 18, row
+ * LV-3; design `design/screens/presenter/presets.md`, mocks `presets*.html`): a teacher page in
+ * real pixels (not stage-scaled) whose type follows the chosen text size (`useTypeScale`).
  *
- * Header: Back (top left, `common.buttons.back`; F-TCH-004 section 3.5 "History" rule 5: every screen has a way
- * back), Hoya, the h1, the Aa button (the Display sheet: the device's one language and text size,
- * owner items 6 and 7; the presenter has no language of its own) and Keys and help. The page's
- * type follows the chosen text size (`useTypeScale`); slides keep their stage units. Below 900 px one column with Recent
- * first; from 900 px Recent left and Quick lesson right. Recent rows show the
- * deck title and the day only: a deck has no name field, so no row can hold a
- * learner's name. With storage off the Recent list is replaced by one line and
- * Quick lesson still works. No text is below `typography.size.body` (D2).
+ * - **Top row**: the one **Back** at the top left (section 7 item 3): with an app page before
+ *   `/present` in this tab it goes back (`onBack`, `history.back()` with its fallback), otherwise it
+ *   is a plain link to the app root `/` (`backHref`; every new tab the console, All lessons and E5
+ *   open); at the right the Display (Aa) control (the device's one language and text size; the
+ *   presenter has no language chips) and Keys and help. Then Hoya and the h1, **Lecture mode**.
+ * - **Ready-made lessons** first (`PresetCards`); **Recent lessons** beside them from 900 px, below
+ *   them on narrower screens; **Customize** under both, folded, holding the grouped chooser
+ *   (`LessonChooser`), which replaces the flat Quick lesson list.
+ * - The open card, its chips, Customize, the chooser and the scroll position live in the home's
+ *   kept state (`state`, section 18.2), owned by the presenter root, so Back from the start screen
+ *   shows the page exactly as it was.
  *
- * Everything outside comes in as props (the presenter's own dictionary and
- * locale, the Recent state, the bundle's Quick lesson source), so the screen
- * reads no learner store (§3.9).
+ * Recent rows show the deck title and the day only: a deck has no name field, so no row can hold a
+ * learner's name. Everything outside comes in as props, so the screen reads no learner store (§3.9).
  */
 export interface PresenterHomeProps {
   /** The dictionary of the presenter's language (the device's). */
@@ -34,133 +41,169 @@ export interface PresenterHomeProps {
   onDisplay?: () => void;
   /** Opens the Help overlay (PR 9); without it the Keys and help button is not drawn, so it never leads nowhere. */
   onHelp?: () => void;
-  /** Leaves the presenter for the page before it (`leavePresenter`); without it Back is not drawn. */
+  /** Back to the page before `/present` in this tab (`leavePresenter`); used when `backHref` is absent. */
   onBack?: () => void;
+  /** Back as a plain link (to the app root) when this tab has no app page before `/present`. */
+  backHref?: string;
   recent: RecentState;
   onResume: (item: RecentItem) => void;
   onStartOver: (item: RecentItem) => void;
   onRemove: (deckId: string) => void;
-  quick: QuickSource;
+  /** The ready-made lessons' context (`presenterPresetContext`). */
+  presetCtx: PresetContext;
+  onPreset: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => void;
+  /** Customize's chooser groups in the presenter language (`presenterChooserGroups`). */
+  groups: readonly ChooserGroup[];
   onBuild: (deck: LectureDeck) => void;
+  /** The home's kept state and its changes (section 18.2). */
+  state: HomeSnapshot;
+  onState: (patch: Partial<HomeSnapshot>) => void;
+  /** Where the page was scrolled to when it was left; reported back while it scrolls. */
+  onScroll?: (y: number) => void;
   /** Landing after Exit or an invalid link: focus goes to the h1. */
   focusTitle?: boolean;
+  /** Landing from the preview's Customize: focus goes to the Customize button (scrolled into view). */
+  focusCustomize?: boolean;
   /** Injected for tests and screenshots. */
   now?: () => Date;
   rng?: () => number;
 }
 
-type Focusable = PressableStateCallbackType & { focused?: boolean };
+const REM = 16;
+/** Recent's column beside the presets from 900 px (`presets.md` item 4, `--side-col`). */
+const SIDE_COLUMN_REM = 18;
+const CUSTOMIZE_PANEL = 'presenter-customize-panel';
+/** How long the home waits for its content to grow tall enough to restore the kept scroll position. */
+const RESTORE_WAIT_MS = 2000;
 
-/** The `border.focus` ring outside the control on keyboard focus (README D19); nothing moves at rest. */
-function ring(focused: boolean | undefined): ViewStyle {
-  if (!focused) return {};
-  // react-native-web draws CSS outlines; the native style type does not list them.
-  const outline = { outlineStyle: 'solid', outlineWidth: borderWidth.thick, outlineColor: colors.border.focus, outlineOffset: borderWidth.base };
-  return outline as ViewStyle;
-}
-
-const text = (size: number, weight: keyof typeof typography.weight, color: string): TextStyle => ({
-  fontSize: size,
-  fontWeight: typography.weight[weight],
-  color,
-  lineHeight: Math.round(size * typography.leading.normal),
-});
-
-function H({ level, children, style }: { level: 1 | 2 | 3; children: string; style: TextStyle }): React.ReactElement {
-  return (
-    <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={level} style={style}>
-      {children}
-    </Text>
-  );
-}
-
-/**
- * The page's pill buttons as the mock draws them (`mock/presenter.css` `.btn`): paper with a
- * `border.strong` outline, or `brand.primaryDark` when primary; disabled is `surface.sunken`
- * (shape and fill, not colour of the text alone). `compact` is the 64 px row and header size.
- */
-function HomeButton({
-  label,
-  onPress,
-  primary,
-  compact,
-  disabled,
-  testID,
-}: {
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-  compact?: boolean;
-  disabled?: boolean;
-  testID?: string;
-}): React.ReactElement {
+function BackControl({ label, onBack, href }: { label: string; onBack?: () => void; href?: string }): React.ReactElement | null {
   const ts = useTypeScale().size;
-  const fill = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.surface.paper;
-  const edge = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.border.strong;
-  return (
-    <Pressable
-      role="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: disabled === true }}
-      aria-disabled={disabled === true}
-      disabled={disabled}
-      onPress={onPress}
-      testID={testID}
-      style={({ focused }: Focusable) => ({
-        minHeight: compact ? touchTarget.min : touchTarget.hero,
-        minWidth: compact ? touchTarget.min : touchTarget.hero,
-        // At 320 px with 200 % text (a 160 px layout) the label wraps inside the page, never past it.
-        maxWidth: '100%',
-        flexShrink: 1,
-        paddingVertical: compact ? spacing.xs : spacing.sm,
-        paddingHorizontal: compact ? spacing.lg : spacing.xl,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: radii.pill,
-        borderWidth: borderWidth.base,
-        borderColor: edge,
-        backgroundColor: fill,
-        ...ring(focused),
-      })}
-    >
-      <Text {...KOREAN_LINE_BREAK}
-        style={{
-          ...text(compact ? ts.body : ts.bodyLg, 'bold', primary && !disabled ? colors.text.onPrimary : colors.text.primary),
-          textAlign: 'center',
-        }}
-      >
+  if (href === undefined && onBack === undefined) return null;
+  const look = ({ focused }: Focusable) => ({
+    minHeight: touchTarget.min,
+    minWidth: touchTarget.min,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.pill,
+    ...ring(focused),
+  });
+  const body = (
+    <>
+      <Icon name="arrow-left" size={spacing.xl} color={colors.text.primary} />
+      <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'bold', colors.text.primary)}>
         {label}
       </Text>
+    </>
+  );
+  // A plain link to the app root: the anchor navigates by itself, so nothing is handed over.
+  if (href !== undefined) {
+    return (
+      <Pressable role="link" {...{ href }} accessibilityLabel={label} testID="presenter-home-back" style={look}>
+        {body}
+      </Pressable>
+    );
+  }
+  return (
+    <Pressable role="button" accessibilityLabel={label} onPress={onBack} testID="presenter-home-back" style={look}>
+      {body}
     </Pressable>
   );
 }
 
-const GROUP_KEY: Record<QuickGroupId, keyof Messages['learner']['presenter']['home']['quick']['group']> = {
-  episodes: 'episodes',
-  lessons: 'lessons',
-  letterSets: 'letterSets',
-  topics: 'topics',
-  stories: 'stories',
-};
-
 export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactElement {
-  const ts = useTypeScale().size;
-  const { messages } = props;
+  const scale = useTypeScale();
+  const ts = scale.size;
+  const { messages, state, onState } = props;
   const m = messages.learner.presenter;
   const { width } = useWindowDimensions();
   const wide = width >= layout.breakpoint.wide;
   const gutter = wide ? layout.gutter.wide : width >= layout.breakpoint.regular ? layout.gutter.regular : layout.gutter.compact;
   const titleRef = useRef<Text>(null);
+  const customizeRef = useRef<View>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    if (props.focusTitle) (titleRef.current as unknown as { focus?: () => void } | null)?.focus?.();
+    // Back to a page that was scrolled: the h1 takes focus without moving the page (section 18.2).
+    if (props.focusTitle) (titleRef.current as unknown as { focus?: (options?: { preventScroll?: boolean }) => void } | null)?.focus?.({ preventScroll: state.scrollY > 0 });
+    // Only on arrival (`state.scrollY` is read, not watched): a later scroll does not move focus again.
   }, [props.focusTitle]);
+  useEffect(() => {
+    if (props.focusCustomize) customizeRef.current?.focus?.();
+  }, [props.focusCustomize]);
 
-  const recent = <RecentPanel {...props} />;
-  const quick = <QuickPanel {...props} />;
+  // The scroll position kept on Back (section 18.2): restored once the page is tall enough to scroll that far
+  // (the content grows as Recent loads and Customize lays out). Until then no scroll is reported back, so a
+  // position clamped on the way is never kept in its place.
+  const restoreTo = useRef(props.focusCustomize ? 0 : state.scrollY);
+  const viewHeight = useRef(0);
+  const contentHeight = useRef(0);
+  const restore = (): void => {
+    const y = restoreTo.current;
+    if (y <= 0 || viewHeight.current <= 0 || contentHeight.current - viewHeight.current < y) return;
+    scrollRef.current?.scrollTo({ y, animated: false });
+    restoreTo.current = 0;
+  };
+  const onContentSize = (_w: number, h: number): void => {
+    contentHeight.current = h;
+    restore();
+  };
+  // A page that never grows that tall (a text size changed meanwhile) stops waiting, so its own scroll is kept again.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      restoreTo.current = 0;
+    }, RESTORE_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>): void => {
+    if (restoreTo.current > 0) return;
+    props.onScroll?.(e.nativeEvent.contentOffset.y);
+  };
+  /**
+   * Leaving the home: the position is read from the page itself first, since the last scroll event can
+   * still be on its way (react-native-web reports the end of a scroll 100 ms after it).
+   */
+  const leaving = <A extends unknown[]>(go: (...args: A) => void) => (...args: A): void => {
+    const node = (scrollRef.current as unknown as { getScrollableNode?: () => { scrollTop?: unknown } | null } | null)?.getScrollableNode?.();
+    if (restoreTo.current <= 0 && typeof node?.scrollTop === 'number') props.onScroll?.(node.scrollTop);
+    go(...args);
+  };
+
+  const stages = useMemo(() => props.groups.flatMap((g) => (g.stage !== null && g.rows.some((r) => r.kind === 'episode') ? [g.id as StageKey] : [])), [props.groups]);
+  const defaultStage = useMemo((): StageKey => {
+    if (state.open === null) return 'stage1';
+    const resolved = resolvePreset(state.open, lengthOf(state, state.open, PRESET_DEFAULT_MINUTES[state.open]), { ...props.presetCtx, stage: state.stage });
+    return firstStageOf(resolved.blocks) ?? 'stage1';
+  }, [state, props.presetCtx]);
+
+  const build = leaving((): void => {
+    const deck = buildQuickDeck(state.chosen, props.groups, {
+      now: (props.now ?? (() => new Date()))(),
+      rng: props.rng ?? Math.random,
+      fallbackTitle: m.presets.chooser.tray.title,
+    });
+    if (deck) props.onBuild(deck);
+  });
+
+  const presets = <PresetCards messages={messages} ctx={props.presetCtx} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} />;
+  const recent = <RecentPanel {...props} onResume={leaving(props.onResume)} onStartOver={leaving(props.onStartOver)} />;
+  const sideWidth = SIDE_COLUMN_REM * REM * scale.factor;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.surface.paper }} contentContainerStyle={{ flexGrow: 1 }} testID="presenter-home">
+    <ScrollView
+      ref={scrollRef}
+      style={{ flex: 1, backgroundColor: colors.surface.paper }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      onContentSizeChange={onContentSize}
+      onLayout={(e) => {
+        viewHeight.current = e.nativeEvent.layout.height;
+        restore();
+      }}
+      onScroll={onScroll}
+      scrollEventThrottle={100}
+      testID="presenter-home"
+    >
       <View
         role="main"
         style={{
@@ -173,30 +216,50 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
           gap: spacing.xl,
         }}
       >
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
+        <View style={{ gap: spacing.md }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+            <BackControl label={messages.common.buttons.back} {...(props.backHref !== undefined ? { href: props.backHref } : {})} {...(props.onBack ? { onBack: props.onBack } : {})} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginLeft: 'auto' }}>
+              {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-home-display" /> : null}
+              {props.onHelp ? <HomeButton label={m.home.help.cta} onPress={props.onHelp} compact testID="presenter-home-help" /> : null}
+            </View>
+          </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: '100%' }}>
-            {props.onBack ? <HomeButton label={messages.common.buttons.back} onPress={props.onBack} compact testID="presenter-home-back" /> : null}
             <Hoya pose="waving" size={touchTarget.min} />
             <Text {...KOREAN_LINE_BREAK} ref={titleRef} role="heading" aria-level={1} {...{ tabIndex: -1 }} testID="presenter-home-title" style={{ ...text(ts.title, 'bold', colors.text.primary), flexShrink: 1 }}>
               {m.home.title}
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-            {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-home-display" /> : null}
-            {props.onHelp ? <HomeButton label={m.home.help.cta} onPress={props.onHelp} compact testID="presenter-home-help" /> : null}
-          </View>
         </View>
         {wide ? (
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xl }}>
-            <View style={{ flex: 1, minWidth: 0 }}>{recent}</View>
-            <View style={{ flex: 1, minWidth: 0 }}>{quick}</View>
+            <View style={{ flex: 1, minWidth: 0 }}>{presets}</View>
+            <View style={{ width: sideWidth, maxWidth: '40%' }}>{recent}</View>
           </View>
         ) : (
           <View style={{ gap: spacing.xl }}>
+            {presets}
             {recent}
-            {quick}
           </View>
         )}
+        <View role="region" aria-label={m.presets.customize.cta} testID="presenter-home-customize" style={{ gap: spacing.md, borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle, paddingTop: spacing.xl }}>
+          <View style={{ alignItems: 'flex-start' }}>
+            <HomeButton
+              buttonRef={customizeRef}
+              label={m.presets.customize.cta}
+              compact
+              icon={state.customize ? 'dash' : 'plus'}
+              expanded={state.customize}
+              controls={CUSTOMIZE_PANEL}
+              onPress={() => onState({ customize: !state.customize })}
+              testID="presenter-home-customize-toggle"
+            />
+          </View>
+          <Line>{m.presets.customize.lead}</Line>
+          <View nativeID={CUSTOMIZE_PANEL} {...{ id: CUSTOMIZE_PANEL }} style={state.customize ? undefined : { display: 'none' }}>
+            {state.customize ? <LessonChooser messages={messages} groups={props.groups} state={state} onState={onState} defaultStage={defaultStage} onBuild={build} /> : null}
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -306,132 +369,5 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
       </Text>
       {body}
     </View>
-  );
-}
-
-function QuickPanel({ messages, quick, onBuild, now, rng }: PresenterHomeProps): React.ReactElement {
-  const ts = useTypeScale().size;
-  const m = messages.learner.presenter.home.quick;
-  const groups = useMemo(() => quickGroups(quick, { consonants: m.consonants, vowels: m.vowels }), [quick, m.consonants, m.vowels]);
-  const items = useMemo(() => groups.flatMap((g) => g.items), [groups]);
-  const [chosen, setChosen] = useState<readonly string[]>([]);
-  // A new bundle (a language switch) keeps the choices that still exist.
-  useEffect(() => {
-    setChosen((c) => c.filter((key) => items.some((i) => i.key === key)));
-  }, [items]);
-  const full = quickFull(chosen, items);
-  const build = (): void => {
-    const deck = buildQuickDeck(chosen, items, {
-      now: (now ?? (() => new Date()))(),
-      rng: rng ?? Math.random,
-      fallbackTitle: m.title,
-      // No language in the deck: it opens in the language of the device that presents it.
-    });
-    if (deck) onBuild(deck);
-  };
-  return (
-    <View role="region" aria-label={m.title} style={{ gap: spacing.md }} testID="presenter-home-quick">
-      <H level={2} style={text(ts.prompt, 'bold', colors.text.primary)}>
-        {m.title}
-      </H>
-      <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>{m.line}</Text>
-      {groups.map((group) => (
-        <View key={group.id} style={{ gap: spacing.xs }}>
-          <H level={3} style={{ ...text(ts.body, 'bold', colors.text.secondary), paddingTop: spacing.sm }}>
-            {m.group[GROUP_KEY[group.id]]}
-          </H>
-          <View style={{ gap: spacing.xs }}>
-            {group.items.map((item) => (
-              <QuickRow
-                key={item.key}
-                item={item}
-                detail={item.detail.kind === 'minutes' ? m.minutes(item.detail.n) : m.letters(item.detail.n)}
-                on={chosen.includes(item.key)}
-                disabled={!canChoose(chosen, item.key, items)}
-                onToggle={() => setChosen((c) => toggleChoice(c, item.key, items))}
-              />
-            ))}
-          </View>
-        </View>
-      ))}
-      <View
-        style={{
-          borderTopWidth: borderWidth.thin,
-          borderTopColor: colors.border.subtle,
-          paddingVertical: spacing.md,
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
-        }}
-      >
-        <Text {...KOREAN_LINE_BREAK} role="status" aria-live="polite" testID="presenter-home-chosen" style={{ ...text(ts.body, 'regular', colors.text.primary), flexShrink: 1 }}>
-          {chosen.length === 0 ? m.nothing : full ? `${m.chosen(chosen.length)} ${m.full}` : m.chosen(chosen.length)}
-        </Text>
-        <HomeButton label={m.build.cta} onPress={build} primary disabled={chosen.length === 0} testID="presenter-home-build" />
-      </View>
-    </View>
-  );
-}
-
-function QuickRow({
-  item,
-  detail,
-  on,
-  disabled,
-  onToggle,
-}: {
-  item: QuickItem;
-  detail: string;
-  on: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-}): React.ReactElement {
-  const ts = useTypeScale().size;
-  return (
-    <Pressable
-      role="checkbox"
-      aria-checked={on}
-      aria-disabled={disabled}
-      accessibilityState={{ checked: on, disabled }}
-      // Named by its title and detail texts (no label is put together in code); a row that does not
-      // fit stays in the tab order, marked disabled, so the reason in the status line can be found.
-      onPress={() => {
-        if (!disabled) onToggle();
-      }}
-      testID={`presenter-quick-${item.key}`}
-      style={({ focused }: Focusable) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-        minHeight: touchTarget.min,
-        paddingVertical: spacing.sm - (on ? borderWidth.thick - borderWidth.thin : 0),
-        paddingHorizontal: spacing.md - (on ? borderWidth.thick - borderWidth.thin : 0),
-        borderWidth: on ? borderWidth.thick : borderWidth.thin,
-        borderColor: on ? colors.text.primary : colors.border.subtle,
-        borderRadius: radii.md,
-        backgroundColor: disabled ? colors.surface.sunken : colors.surface.paper,
-        ...ring(focused),
-      })}
-    >
-      <View
-        style={{
-          width: spacing.xxl,
-          height: spacing.xxl,
-          borderWidth: borderWidth.thick,
-          borderColor: colors.text.primary,
-          borderRadius: radii.sm,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {on ? <Icon name="check" size={spacing.xl} color={colors.text.primary} /> : null}
-      </View>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'bold', colors.text.primary)}>{item.title}</Text>
-        <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>{detail}</Text>
-      </View>
-    </Pressable>
   );
 }

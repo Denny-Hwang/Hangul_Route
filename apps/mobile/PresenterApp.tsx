@@ -1,7 +1,18 @@
 import { TextSizeProvider, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { DeviceDisplaySheet } from './src/components/DeviceDisplaySheet';
-import { decodeDeck, encodeDeck, type LectureDeck } from '@hangul-route/content-schema';
+import {
+  CATALOG,
+  decodeDeck,
+  encodeDeck,
+  presetBlockMinutes,
+  resolvePreset,
+  type LectureBlock,
+  type LectureDeck,
+  type LecturePreset,
+  type PresetMinutes,
+  type StageKey,
+} from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -17,7 +28,9 @@ import { initialPresenterState, reduce, type PresenterEvent, type PresenterState
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
 import { recentView } from './src/logic/lecture/home-view';
-import { quickSource } from './src/logic/lecture/quick-source';
+import { blockMinutesOn, blockTitleIn, presenterChooserGroups } from './src/logic/lecture/quick-source';
+import { HOME_DEFAULT, type HomeSnapshot } from './src/logic/lecture/home-state';
+import { presenterPresetContext, presetLectureDeck, presetPreview, presetTitle } from './src/logic/lecture/preset-source';
 import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
 import {
   completePayload,
@@ -72,7 +85,10 @@ import {
   forgetOpenDeck,
   leavePresenter,
   playChime,
+  presenterHomeBack,
+  presenterHomeSnapshot,
   pushPresenterEntry,
+  saveHomeSnapshot,
   releaseScreenAwake,
   reloadForUpdate,
   reloadOnDeckLink,
@@ -146,6 +162,9 @@ import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/
  * a deck from an older link may still name one, and the presenter ignores it.
  */
 
+/** How long the home's scroll rests before its position is written to the home entry (section 18.2). */
+const HOME_SCROLL_SAVE_MS = 300;
+
 // The strict read throws on a failed or damaged read, so Recent is then never written over (`readRecent`).
 const recentStore: RecentStore = { readJson: (key) => readJsonExact<unknown>(key), writeJson: (key, value) => writeJson(key, value) };
 
@@ -158,8 +177,12 @@ function readAddress(): DeckAddress | null {
   return bootRead.address;
 }
 
-/** `fresh`: Start over held the deck to open at its first slide on a reload before Start. */
-type ReadyPhase = { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string; fresh?: true };
+/**
+ * `fresh`: Start over held the deck to open at its first slide on a reload before Start. `preset`:
+ * the ready-made lesson the presenter resolved (its in-session state, AMENDMENTS-LECTURE-V2 section
+ * 11), which also draws the preview.
+ */
+type ReadyPhase = { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string; fresh?: true; preset?: LecturePreset };
 
 type Phase =
   | { kind: 'boot' }
@@ -177,6 +200,7 @@ function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
       source: result.source,
       ...(result.resumeKey !== undefined ? { resumeKey: result.resumeKey } : {}),
       ...(address?.fresh === true ? { fresh: true as const } : {}),
+      ...(result.preset !== undefined ? { preset: result.preset } : {}),
     };
   }
   // A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5): the page offers Reload.
@@ -619,7 +643,16 @@ function Presenter(): React.ReactElement {
     updateRecent((list) => setLastSlide(rememberDeck(list, started, savedAt), started.id, key));
     void track({
       name: 'lecture.start',
-      payload: { ...startPayload({ deck: started, run, source: phase.source, capability, offlineReady: isOfflineReady() }) },
+      payload: {
+        ...startPayload({
+          deck: started,
+          run,
+          source: phase.source,
+          ...(phase.from.preset !== undefined ? { preset: phase.from.preset } : {}),
+          capability,
+          offlineReady: isOfflineReady(),
+        }),
+      },
     });
   }, [phase, run, slides, capability, updateRecent]);
 
@@ -748,24 +781,82 @@ function Presenter(): React.ReactElement {
     return subscribeActivity(showBar);
   }, [phase.kind, phone, covering, showBar]);
 
-  // ---- the presenter home (section 3.12) ----
-  const quick = useMemo(() => quickSource(locale), [locale]);
+  // ---- the presenter home (section 3.12; AMENDMENTS-LECTURE-V2 sections 4 and 18) ----
+  // Customize's chooser in the presenter language, and the ready-made lessons' context from Recent.
+  const quickWords = messages.learner.presenter.home.quick;
+  const groups = useMemo(() => presenterChooserGroups(locale, { consonants: quickWords.consonants, vowels: quickWords.vowels }), [locale, quickWords]);
+  const presetCtx = useMemo(() => presenterPresetContext(recentLoaded?.list ?? null, new Date()), [recentLoaded]);
+  // The home's state that Back keeps (section 18.2): in this tab's memory, and in the home entry for a reload.
+  const [homeState, setHomeState] = useState<HomeSnapshot>(() => presenterHomeSnapshot() ?? HOME_DEFAULT);
+  const homeScroll = useRef(homeState.scrollY);
+  const homeStateRef = useRef(homeState);
+  homeStateRef.current = homeState;
+  const [customizeFocus, setCustomizeFocus] = useState(false);
+  const onHomeState = useCallback((patch: Partial<HomeSnapshot>) => setHomeState((s) => ({ ...s, ...patch })), []);
+  useEffect(() => {
+    if (phase.kind === 'home') void saveHomeSnapshot({ ...homeState, scrollY: homeScroll.current });
+  }, [homeState, phase.kind]);
+  // The scroll position reaches the home entry once the page rests, so a reload there finds it too.
+  const scrollSave = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onHome = useRef(phase.kind === 'home');
+  onHome.current = phase.kind === 'home';
+  const onHomeScroll = useCallback((y: number) => {
+    // A scroll end reported after the home was left (react-native-web reports it 100 ms late, from a page
+    // no longer drawn) is not where the home was: the position kept on leaving stands.
+    if (!onHome.current) return;
+    homeScroll.current = y;
+    if (scrollSave.current) clearTimeout(scrollSave.current);
+    scrollSave.current = setTimeout(() => {
+      scrollSave.current = null;
+      void saveHomeSnapshot({ ...homeStateRef.current, scrollY: homeScroll.current });
+    }, HOME_SCROLL_SAVE_MS);
+  }, []);
+  useEffect(
+    () => () => {
+      if (scrollSave.current) clearTimeout(scrollSave.current);
+    },
+    [],
+  );
+  // The home's Back (section 7 item 3): back in this tab's history when it has an app page before /present, else a link to /.
+  const homeBack = useMemo(() => presenterHomeBack(), []);
   const openFromHome = useCallback(
     (choice: HomeChoice) => {
       const next = homeStart(choice);
+      // The home as it is now (scroll included) goes into its own entry before the start screen's is pushed.
+      const kept = { ...homeState, scrollY: homeScroll.current };
+      setHomeState(kept);
+      void saveHomeSnapshot(kept);
       // The start screen's history entry holds the deck, as a link does, so a reload reopens it (rule 2, section 3.2).
-      void pushPresenterEntry('ready', rawOf(next.deck), { fresh: choice.kind === 'start-over' });
+      void pushPresenterEntry('ready', rawOf(next.deck), { fresh: choice.kind === 'start-over', ...(next.preset !== undefined ? { preset: next.preset } : {}) });
       rejected.current = false;
       setHomeFocus(false);
+      setCustomizeFocus(false);
       setHomeHelp(false);
       setPhase(choice.kind === 'start-over' ? { ...next, fresh: true } : next);
     },
-    [rawOf],
+    [rawOf, homeState],
+  );
+  /** A ready-made lesson's Start: resolved here, from Recent and the bundle, into an ordinary deck (LV-D6). */
+  const onPreset = useCallback(
+    (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => {
+      const resolved = resolvePreset(preset, minutes, { ...presetCtx, stage });
+      const built = presetLectureDeck(resolved, { title: presetTitle(resolved, messages.learner.presenter.presets), now: new Date(), rng: Math.random });
+      if (built) openFromHome({ kind: 'preset', deck: built, preset: resolved.preset });
+    },
+    [presetCtx, messages, openFromHome],
   );
   // Back to lessons and the phone footer's Back: nothing started, so nothing is saved or sent (rule 3).
   const backToHome = useCallback(() => {
     void returnToPresenterHome();
     setHomeFocus(true);
+    setPhase({ kind: 'home' });
+  }, []);
+  // The preview's Customize: the home with Customize open and nothing chosen (section 4.6).
+  const customizeFromPreview = useCallback(() => {
+    void returnToPresenterHome();
+    setHomeState((s) => ({ ...s, customize: true, chosen: [], expanded: [], tab: 'lessons', chooserStage: null }));
+    setHomeFocus(false);
+    setCustomizeFocus(true);
     setPhase({ kind: 'home' });
   }, []);
 
@@ -839,13 +930,33 @@ function Presenter(): React.ReactElement {
     [deck, bundle],
   );
 
+  // What's in this lesson, on the start screen of a ready-made lesson (design presets.md V4).
+  const preview = useMemo(() => {
+    if (phase.kind !== 'ready' || phase.preset === undefined || !run) return null;
+    const words = slideMessages.learner.presenter;
+    const minutesOf = (block: LectureBlock): number =>
+      block.kind === 'word-review' || block.kind === 'revisit' || block.kind === 'jamo-set' || block.kind === 'vocab' || block.kind === 'cards'
+        ? blockMinutesOn(bundle, block)
+        : presetBlockMinutes(block, CATALOG);
+    return presetPreview(
+      phase.deck,
+      run.slides,
+      { quiz: words.presets.preview.quiz, words: words.presets.preview.words, letters: words.home.quick.letters, activity: (p) => words.activity[p] },
+      blockTitleIn(slidesIn),
+      minutesOf,
+    );
+  }, [phase, run, slideMessages, bundle, slidesIn]);
+
   let body: React.ReactElement;
   if (phase.kind === 'boot') {
     body = <StatePage testID="presenter-loading" pose="idle" status={messages.learner.presenter.state.loading} />;
   } else if (phase.kind === 'invalid') {
     const m = messages.learner.presenter.state.invalid;
+    // Choose a lesson: the home with Customize open (AMENDMENTS-LECTURE-V2 section 12.6), its button focused.
     const openHome = (): void => {
-      setHomeFocus(true);
+      setHomeState((st) => ({ ...st, customize: true }));
+      setHomeFocus(false);
+      setCustomizeFocus(true);
       setPhase({ kind: 'home' });
     };
     const raw = address?.raw;
@@ -880,11 +991,17 @@ function Presenter(): React.ReactElement {
           onResume={(item) => openFromHome({ kind: 'resume', item })}
           onStartOver={(item) => openFromHome({ kind: 'start-over', item })}
           onRemove={(deckId) => updateRecent((list) => forgetDeck(list, deckId))}
-          quick={quick}
+          presetCtx={presetCtx}
+          onPreset={onPreset}
+          groups={groups}
           onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
+          state={homeState}
+          onState={onHomeState}
+          onScroll={onHomeScroll}
           onHelp={() => setHomeHelp(true)}
-          onBack={() => leavePresenter()}
+          {...(homeBack ? { onBack: () => leavePresenter() } : { backHref: '/' })}
           focusTitle={homeFocus}
+          focusCustomize={customizeFocus}
         />
         {homeHelp ? (
           <HelpOverlay
@@ -920,6 +1037,7 @@ function Presenter(): React.ReactElement {
           onTestSound={onTestSound}
           soundCheck={soundCheck}
           onTurnSoundOn={onTestSoundOn}
+          {...(preview !== null ? { preview: { rows: preview, onCustomize: customizeFromPreview } } : {})}
           phone={phone}
           portrait={upright}
           short={short}

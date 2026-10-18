@@ -76,8 +76,9 @@ describe('resolveBoot', () => {
     });
     const raw = encodeDeck(deck);
     expect(raw.startsWith('2.')).toBe(true);
+    // A v2 deck that names its preset is a `preset` start (AMENDMENTS-LECTURE-V2 section 11, LV-3), not `quick` or `console`.
     const booted = resolveBoot(link(raw), emptyRecent());
-    expect(booted).toEqual({ kind: 'deck', deck, source: 'quick' });
+    expect(booted).toEqual({ kind: 'deck', deck, source: 'preset', preset: 'word-review' });
     const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
     expect(expanded.slides.filter((s) => s.kind === 'vocab').length).toBeGreaterThanOrEqual(4);
     expect(expanded.slides.filter((s) => s.kind === 'quiz')).toHaveLength(5);
@@ -118,6 +119,25 @@ describe('resolveBoot', () => {
 
   it('shows the home without a deck', () => {
     expect(resolveBoot(null, emptyRecent())).toEqual({ kind: 'home' });
+  });
+
+  it('a reloaded start screen of a ready-made lesson stays a preset start; a link never takes a preset from the address (section 11)', () => {
+    const deck = deckOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }], { source: 'quick' });
+    const raw = encodeDeck(deck);
+    expect(resolveBoot({ raw, reloaded: true, preset: 'hangul-week-1' }, emptyRecent())).toEqual({ kind: 'deck', deck, source: 'preset', preset: 'hangul-week-1' });
+    // An E5-style v1 link with source quick (a learner-app deck) is a quick start: no preset id rides in a v1 link (LV-D6).
+    expect(resolveBoot({ raw, reloaded: false, preset: 'hangul-week-1' }, emptyRecent())).toEqual({ kind: 'deck', deck, source: 'quick' });
+    // Once it was started it is in Recent, and a reload is a Recent start.
+    const list = rememberDeck(emptyRecent(), deck, '2026-10-13T09:00:00Z');
+    expect(resolveBoot({ raw, reloaded: true, preset: 'hangul-week-1' }, list)).toEqual({ kind: 'deck', deck, source: 'recent' });
+  });
+});
+
+describe('homeStart', () => {
+  it('a ready-made lesson opens its start screen as a preset start with its id; Build lesson as quick', () => {
+    const deck = deckOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }], { source: 'quick' });
+    expect(homeStart({ kind: 'preset', deck, preset: 'story-time' })).toEqual({ kind: 'ready', deck, source: 'preset', preset: 'story-time' });
+    expect(homeStart({ kind: 'quick', deck })).toEqual({ kind: 'ready', deck, source: 'quick' });
   });
 });
 
@@ -429,6 +449,21 @@ describe('telemetry payloads', () => {
       offlineReady: true,
     });
     expect(JSON.stringify(payload)).not.toContain('Week 3');
+  });
+
+  it('lecture.start names the preset only for a preset start: the presenter\'s own, else the v2 deck\'s (section 11)', () => {
+    const deck = deckOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }], { source: 'quick' });
+    const run = runDeck(deck, expandDeck(deck, lectureBundle('en'), { canPlayKorean: true }));
+    const base = { deck, run, capability: ready, offlineReady: true };
+    expect(startPayload({ ...base, source: 'preset', preset: 'hangul-week-1' })).toMatchObject({ source: 'preset', preset: 'hangul-week-1' });
+    // An E5-style v1 deck with source quick, started from its link: quick, and no preset key at all.
+    const quick = startPayload({ ...base, source: 'quick', preset: 'hangul-week-1' });
+    expect(quick.source).toBe('quick');
+    expect('preset' in quick).toBe(false);
+    expect('preset' in startPayload({ ...base, source: 'recent' })).toBe(false);
+    const v2 = deckOf([{ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 }], { v: 2, source: 'quick', preset: 'word-review' });
+    const v2Run = runDeck(v2, expandDeck(v2, lectureBundle('en'), { canPlayKorean: true }));
+    expect(startPayload({ deck: v2, run: v2Run, source: 'preset', capability: ready, offlineReady: false })).toMatchObject({ source: 'preset', preset: 'word-review' });
   });
 
   it('voice: ready with a voice or a clip, none without, unknown before the check', () => {

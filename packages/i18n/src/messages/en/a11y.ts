@@ -418,6 +418,10 @@ export const a11y = {
     option: (n: number, shape: string) => `Option ${n}, ${shape}`,
     shape: { circle: 'circle', triangle: 'triangle', square: 'square', star: 'star' },
     removeRecent: (t: string) => `Remove: ${t}`,
+    /** A ready-made lesson's card (AMENDMENTS-LECTURE-V2 section 10): its title and the minutes of its chosen length. */
+    presetCard: (title: string, n: number) => `${title}, about ${n} minutes`,
+    /** The remove button of a row in Customize's "Your lesson" (section 18.3). */
+    chooserRemove: (title: string) => `Remove ${title}`,
     /** The check mark on the revealed option of a quiz (section 3.10, PR 9). */
     answerMark: "Hoya's answer",
     /** The class timer's ring (PR 9). */
