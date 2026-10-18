@@ -3,7 +3,8 @@ import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import * as LectureParts from '@/components/console/LectureParts';
-import { LectureCatalogueSection, LectureOptionsSection, LectureOutlineSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
+import { LectureChooserSection, LectureOptionsSection, LectureOutlineSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
+import { LectureCustomize, LecturePresetsLoading, LecturePresetsSection } from '@/components/console/LecturePresetParts';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
 import { aroundSlot } from '@/lib/i18n/slot';
@@ -86,11 +87,12 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expectAllPseudo(html);
   });
 
-  it('the catalogue (the grouped lesson picker), with one item added', () => {
-    const html = renderToStaticMarkup(<LectureCatalogueSection blocks={[{ kind: 'quest', id: quest.id }]} onChange={noop} />);
-    // It opens on the stage of what is chosen, with the chosen lesson ticked.
+  it('what to add (the grouped chooser as tabs), with one item added', () => {
+    const html = renderToStaticMarkup(<LectureChooserSection blocks={[{ kind: 'quest', id: quest.id }]} onChange={noop} />);
+    // It opens on the tab and stage of what is chosen, with the chosen lesson ticked.
     expect(html).toContain(`data-testid="lecture-picker-lesson-${quest.id}" checked=""`);
     expect(html).toContain('data-testid="lecture-picker-group-stage1"');
+    expect(html).toContain('role="tablist"');
     expectAllPseudo(html, contentTitles);
   });
 
@@ -111,7 +113,7 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     const addRow = html.slice(html.lastIndexOf('<div style="display:flex;gap'));
     expect(addRow.match(/<button[^>]*disabled/g)).toHaveLength(3);
     expectAllPseudo(html, rowWords(full));
-    const catalogue = renderToStaticMarkup(<LectureCatalogueSection blocks={full} onChange={noop} />);
+    const catalogue = renderToStaticMarkup(<LectureChooserSection blocks={full} onChange={noop} />);
     // Every box that would add a block is off; the outline's full line says why.
     const boxes = catalogue.match(/<input type="checkbox"[^>]*>/g) ?? [];
     expect(boxes.length).toBeGreaterThan(5);
@@ -121,6 +123,66 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
 
   it('the empty outline', () => {
     expectAllPseudo(renderToStaticMarkup(<LectureOutlineSection blocks={[]} codeBlock={null} onChange={noop} onAdd={noop} />));
+  });
+
+  it('the outline on a family space: the family code row and + Family code (AMENDMENTS-LECTURE-V2 section 6)', () => {
+    const p = getMessages(PSEUDO).console.lecture.outline;
+    const code: LectureBlock = { kind: 'class-code', code: 'ABC234' };
+    const family = renderToStaticMarkup(<LectureOutlineSection blocks={[code]} codeBlock={code} family onChange={noop} onAdd={noop} />);
+    expect(family).toContain(p.block.familyCode);
+    expect(family).toContain(p.addFamilyCode.cta);
+    expect(family).not.toContain(p.block.classCode);
+    expect(family).not.toContain(p.addClassCode.cta);
+    expectAllPseudo(family, [blockText(code, getMessages(PSEUDO).console.lecture, PSEUDO, true), 'ABC234']);
+    const klass = renderToStaticMarkup(<LectureOutlineSection blocks={[code]} codeBlock={code} onChange={noop} onAdd={noop} />);
+    expect(klass).toContain(p.addClassCode.cta);
+    expect(klass).not.toContain(p.addFamilyCode.cta);
+  });
+
+  it('the ready-made lessons, one card open with its chips and what it holds', () => {
+    const outline: LectureBlock[] = [{ kind: 'episode', id: episode.episodeId }, { kind: 'quiz', from: 'previous', rounds: 4 }, revisit];
+    const html = renderToStaticMarkup(
+      <LecturePresetsSection
+        order={['next-lesson', 'hangul-week-1', 'by-stage', 'story-time', 'word-review', 'warm-up']}
+        open="by-stage"
+        minutesOf={() => 20}
+        stage="stage2"
+        stages={['stage1', 'stage2', 'stage3']}
+        fallback={getMessages(PSEUDO).console.lecture.presets.fallback.zero}
+        planTitle="Week three"
+        family={false}
+        outline={outline}
+        onToggle={noop}
+        onMinutes={noop}
+        onStage={noop}
+      />,
+    );
+    expect(html.match(/aria-expanded="true"/g)).toHaveLength(1);
+    expect(html.match(/aria-expanded="false"/g)).toHaveLength(5);
+    expect(html).toContain('aria-controls="lecture-preset-panel-by-stage"');
+    expect(html).not.toContain('aria-pressed');
+    expectAllPseudo(joined(html), ['Week three', episode.title, jamo, ...rowWords(outline)]);
+  });
+
+  it('the cards while loading, and Customize closed and open', () => {
+    // The heading, the lead and the loading line.
+    expectAllPseudo(renderToStaticMarkup(<LecturePresetsLoading loadingLine={getMessages(PSEUDO).console.space.loading} />), [], 3);
+    const closed = renderToStaticMarkup(
+      <LectureCustomize open={false} onToggle={noop}>
+        <p>inside</p>
+      </LectureCustomize>,
+    );
+    expect(closed).toContain('aria-expanded="false"');
+    expect(closed).not.toContain('inside');
+    // Customize and its lead.
+    expectAllPseudo(closed, [], 2);
+    const open = renderToStaticMarkup(
+      <LectureCustomize open onToggle={noop}>
+        <p>inside</p>
+      </LectureCustomize>,
+    );
+    expect(open).toContain('aria-expanded="true"');
+    expectAllPseudo(open, ['inside'], 2);
   });
 
   it('options, with the presenter language when more than one locale has shipped', () => {
@@ -134,8 +196,9 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expectAllPseudo(html, (['en', 'es', 'ko'] as const).map((k) => LOCALE_META[k].endonym));
   });
 
-  it('has no helper picker section (LV-H)', () => {
+  it('has no helper picker section and no Catalogue section (LV-D7, section 18.3)', () => {
     expect(Object.keys(LectureParts)).not.toContain('LecturePickerSection');
+    expect(Object.keys(LectureParts)).not.toContain('LectureCatalogueSection');
   });
 });
 
@@ -178,6 +241,12 @@ describe('the Slides language hint follows the choice (AMENDMENTS-LECTURE-V2 sec
 });
 
 describe('row words', () => {
+  it('names a Word review by its card cap and the join code by the space kind', () => {
+    expect(blockText({ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 }, l)).toBe('10 words');
+    expect(blockText({ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 10 }, l)).toBe('20 words');
+    expect(blockText({ kind: 'class-code', code: 'ABC234' }, l, 'en', true)).toBe('Family code on the last slide');
+  });
+
   it('names every block kind in English', () => {
     expect(everyKind.map((b) => blockText(b, l))).toEqual([
       'Quick quiz: 5 questions',

@@ -1,10 +1,10 @@
 'use client';
 
-import { ACTIVITY_PRESETS, LECTURE_MAX_BLOCKS, type ChooserSelection, type LectureBlock, type RomanizationMode, type UiLocale } from '@hangul-route/content-schema';
+import { ACTIVITY_PRESETS, LECTURE_MAX_BLOCKS, wordReviewCardCap, type ChooserSelection, type LectureBlock, type RomanizationMode, type UiLocale } from '@hangul-route/content-schema';
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { LOCALE_META, type Messages } from '@hangul-route/i18n';
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
-import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
+import { GroupedLessonPicker, type ChooserTabWords } from '@/components/console/GroupedLessonPicker';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import type { PlanView } from '@/lib/console/api';
 import { aboutMinutes, blockMinutes, canAdd, catalogueTitle, moveBlock, quizWarnings, updateBlock, type LectureSource } from '@/lib/console/lecture';
@@ -50,7 +50,7 @@ const choiceStyle: CSSProperties = { display: 'inline-flex', alignItems: 'center
 const blockChoiceStyle: CSSProperties = { ...choiceStyle, display: 'flex' };
 
 /** "Revisit together: ㄱ ㅓ" as one message, the jamo marked Korean. */
-function RevisitLine({ l, chars }: { l: LectureMessages; chars: readonly string[] }): JSX.Element {
+export function RevisitLine({ l, chars }: { l: LectureMessages; chars: readonly string[] }): JSX.Element {
   const around = aroundSlot(l.source.revisitWith);
   return (
     <span>
@@ -61,8 +61,12 @@ function RevisitLine({ l, chars }: { l: LectureMessages; chars: readonly string[
   );
 }
 
-/** A row's own words: its content title in the console language, or the block's name (for the buttons' accessible names). */
-export function blockText(block: LectureBlock, l: LectureMessages, locale?: UiLocale): string {
+/**
+ * A row's own words: its content title in the console language, or the block's name (for the buttons' accessible
+ * names). The join code's row names the family's code on a family space (AMENDMENTS-LECTURE-V2 section 6); a Word
+ * review names the most word cards it shows.
+ */
+export function blockText(block: LectureBlock, l: LectureMessages, locale?: UiLocale, family = false): string {
   const content = catalogueTitle(block, undefined, locale);
   if (content !== null) return content;
   switch (block.kind) {
@@ -76,8 +80,10 @@ export function blockText(block: LectureBlock, l: LectureMessages, locale?: UiLo
       return l.outline.block.quiz(block.rounds);
     case 'activity':
       return l.activity[block.preset];
+    case 'word-review':
+      return l.outline.block.words(wordReviewCardCap(block.rounds));
     default:
-      return l.outline.block.classCode;
+      return family ? l.outline.block.familyCode : l.outline.block.classCode;
   }
 }
 
@@ -128,16 +134,20 @@ export function LectureSourceSection({
 }
 
 /**
- * The catalogue (owner report 2026-10-16 item 5, AMENDMENTS-LECTURE-V2 row LV-3): the grouped lesson
- * picker over every ready stage, the stories and the word topics; a press adds or removes outline
- * blocks in place, so quizzes, activities and the class code keep their place.
+ * What to add, under Customize (AMENDMENTS-LECTURE-V2 section 18.3, row LV-4; it replaces the Catalogue section): the
+ * shared grouped chooser as tabs (Lessons with its stage chips, Stories, Word topics) over every ready stage, the
+ * stories and the word topics; a press adds or removes outline blocks in place, so quizzes, activities and the class
+ * code keep their place. `resetKey` changes when the page replaces the outline (a preset, a source), so the chooser
+ * opens again on the tab and stage of the outline's first lesson.
  */
-export function LectureCatalogueSection({ blocks, onChange }: { blocks: readonly LectureBlock[]; onChange: (next: LectureBlock[]) => void }): JSX.Element {
+export function LectureChooserSection({ blocks, onChange, resetKey }: { blocks: readonly LectureBlock[]; onChange: (next: LectureBlock[]) => void; resetKey?: string | number }): JSX.Element {
   const l = useMessages().console.lecture;
   const locale = useLocale();
   const groups = useMemo(() => consoleChooserGroups(locale, 'lecture'), [locale]);
   const keys = useMemo(() => chooserKeys(groups), [groups]);
   const pick = (update: (selection: ChooserSelection) => string[]): void => onChange(applyToOutline(blocks, groups, keys, update(outlineSelection(blocks, keys))));
+  const c = l.presets.chooser;
+  const tabs: ChooserTabWords = { tab: c.tab, lessonsIn: c.lessonsIn, showMore: c.showMore, stageChoose: l.presets.stage.choose, stageChip: l.presets.stage.chip };
   return (
     <div style={lectureSectionStyle}>
       <GroupedLessonPicker
@@ -145,8 +155,10 @@ export function LectureCatalogueSection({ blocks, onChange }: { blocks: readonly
         selection={outlineSelection(blocks, keys)}
         onChange={pick}
         room={LECTURE_MAX_BLOCKS - blocks.length}
-        title={l.catalogue.title}
+        title={c.label}
         fullNote={l.outline.full(LECTURE_MAX_BLOCKS)}
+        resetKey={resetKey}
+        tabs={tabs}
         testId="lecture-picker"
       />
     </div>
@@ -156,12 +168,15 @@ export function LectureCatalogueSection({ blocks, onChange }: { blocks: readonly
 export function LectureOutlineSection({
   blocks,
   codeBlock,
+  family = false,
   onChange,
   onAdd,
 }: {
   blocks: readonly LectureBlock[];
   /** The class-code block for this space's join code, or null when it has none. */
   codeBlock: LectureBlock | null;
+  /** A family space: the join code is the family's ("+ Family code", AMENDMENTS-LECTURE-V2 section 6). */
+  family?: boolean;
   onChange: (next: LectureBlock[]) => void;
   onAdd: (block: LectureBlock) => void;
 }): JSX.Element {
@@ -204,7 +219,7 @@ export function LectureOutlineSection({
       );
     }
     if (block.kind === 'revisit') return <RevisitLine l={l} chars={block.chars} />;
-    return <span>{blockText(block, l, locale)}</span>;
+    return <span>{blockText(block, l, locale, family)}</span>;
   };
 
   return (
@@ -216,7 +231,7 @@ export function LectureOutlineSection({
       {blocks.length === 0 ? <Muted>{l.outline.empty}</Muted> : null}
       <ol style={{ margin: 0, paddingLeft: spacing.lg }} data-testid="lecture-outline">
         {blocks.map((block, index) => {
-          const text = blockText(block, l, locale);
+          const text = blockText(block, l, locale, family);
           const first = index === 0;
           const last = index === blocks.length - 1;
           return (
@@ -255,7 +270,7 @@ export function LectureOutlineSection({
         </Button>
         {codeBlock ? (
           <Button disabled={hasCode || !room} onClick={() => onAdd(codeBlock)}>
-            {l.outline.addClassCode.cta}
+            {family ? l.outline.addFamilyCode.cta : l.outline.addClassCode.cta}
           </Button>
         ) : null}
       </div>

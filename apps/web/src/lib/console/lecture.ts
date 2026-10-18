@@ -7,12 +7,15 @@ import {
   LectureBlockSchema,
   LectureDeckSchema,
   LectureOptionsSchema,
+  dateKey,
+  deckVersion,
   encodeDeck,
   presetBlockMinutes,
   rosterAlias,
   type LectureBlock,
   type LectureDeck,
   type LectureOptions,
+  type LecturePreset,
   type PlanItem,
   type UiLocale,
   type WeekMeta,
@@ -28,9 +31,10 @@ import { type PlanLike, latestPublished } from './plans';
 /**
  * Lecture setup, the pure half (F-TCH-004 §3.10, §3.11). The console composes a
  * deck (ids, a seed and options) that travels in the presenter link. The helper
- * picker is gone (LV-H): a deck names none, and no learner name, summary, age,
+ * picker is gone (LV-D7): a deck names none, and no learner name, summary, age,
  * level, avatar or id ever leaves this page; the roster is read only to keep
- * names out of the deck title (`titleProblem`).
+ * names out of the deck title (`titleProblem`) and, for the ready-made lessons,
+ * for two counts per learner (`lecture-presets.ts`).
  */
 
 export type LectureSource = 'plan' | 'catalogue' | 'revisit';
@@ -316,6 +320,20 @@ export function titleProblem(title: string, roster: RosterPick): TitleProblem | 
 
 // ---- deck and link -----------------------------------------------------------------
 
+/**
+ * The rollout rule for v2 links (AMENDMENTS-LECTURE-V2 section 4.5 and row LV-4): no console link holds a v2 deck
+ * until the presenter that reads v2 (LV-2, #726, in production from 2026-10-17) has been live for 14 days, so a
+ * presenter cached on a classroom PC has turned over to a build with Reload and the Recent pass-through. Only a deck
+ * holding a `word-review` block is v2 (LV-D6), so before this UTC day the page offers no Word review and no link it
+ * builds is v2; the presenter's own presets resolve in its own session and are not affected.
+ */
+export const LECTURE_V2_LINKS_FROM = '2026-10-31';
+
+/** Whether a console link may hold a v2 deck at `now` (the UTC day, as `dateKey`). */
+export function v2LinksAllowed(now: Date): boolean {
+  return dateKey(now) >= LECTURE_V2_LINKS_FROM;
+}
+
 export interface DeckInput {
   title: string;
   blocks: readonly LectureBlock[];
@@ -324,13 +342,17 @@ export interface DeckInput {
   now: Date;
   /** Uniform in [0, 1): the deck id and the quiz seed. */
   rng: () => number;
+  /** The ready-made lesson the outline came from; written only into a v2 deck (LV-D6, telemetry only). */
+  preset?: LecturePreset | null;
 }
 
+/** The deck the link carries: the lowest version its blocks need (`deckVersion`), no picker (LV-D7), `preset` only in a v2 deck. */
 export function buildDeck(input: DeckInput): LectureDeck {
   let id = 'lecture:';
   for (let i = 0; i < DECK_ID_LENGTH; i += 1) id += ID_CHARS[Math.floor(input.rng() * ID_CHARS.length)];
+  const v = deckVersion({ blocks: input.blocks });
   return LectureDeckSchema.parse({
-    v: 1,
+    v,
     id,
     title: input.title.trim(),
     createdAt: input.now.toISOString(),
@@ -339,6 +361,7 @@ export function buildDeck(input: DeckInput): LectureDeck {
     options: input.options,
     picker: null,
     source: input.source,
+    ...(v === 2 && input.preset ? { preset: input.preset } : {}),
   });
 }
 
@@ -349,8 +372,12 @@ export function presenterUrl(appUrl: string, deck: LectureDeck): string {
 
 export type PresenterLink = { ok: true; deck: LectureDeck; url: string } | { ok: false };
 
-/** The deck and its link, or `ok: false` when the deck grammar or the codec refuses it: a click handler never throws. */
+/**
+ * The deck and its link, or `ok: false` when the deck grammar or the codec refuses it, or when the deck would be v2
+ * before `LECTURE_V2_LINKS_FROM` (the rollout rule): a click handler never throws.
+ */
 export function presenterLink(appUrl: string, input: DeckInput): PresenterLink {
+  if (deckVersion({ blocks: input.blocks }) === 2 && !v2LinksAllowed(input.now)) return { ok: false };
   try {
     const deck = buildDeck(input);
     return { ok: true, deck, url: presenterUrl(appUrl, deck) };
