@@ -236,8 +236,8 @@ describe('formats (§3.2)', () => {
     const boxes: Record<string, number> = { 'vocab:sagwa-apple': 0, 'vocab:uyu': 2, 'vocab:ppang': 3 };
     const pool = [apple, byId('vocab:uyu'), byId('vocab:ppang')];
     const [word, audio, image] = buildQuestions(input({ pool, universe: FOOD, count: 3, boxOf: (id) => boxes[id] ?? 0 }));
-    expect(word!.prompt).toEqual({ kind: 'word', ko: '사과', romanization: 'sagwa' });
-    expect(audio!.prompt).toEqual({ kind: 'audio', ko: '우유', romanization: 'uyu' });
+    expect(word!.prompt).toEqual({ kind: 'word', ko: '사과', romanization: 'sagwa', audioRef: 'audio/vocab/sagwa-apple.mp3' });
+    expect(audio!.prompt).toEqual({ kind: 'audio', ko: '우유', romanization: 'uyu', audioRef: 'audio/vocab/uyu.mp3' });
     expect(image!.prompt).toEqual({ kind: 'image', pictureRef: 'word:food-bread' });
     const answerOption = word!.options.find((o) => o.id === apple.id);
     expect(answerOption).toEqual({ id: apple.id, pictureRef: 'word:food-apple', labelEn: 'apple' });

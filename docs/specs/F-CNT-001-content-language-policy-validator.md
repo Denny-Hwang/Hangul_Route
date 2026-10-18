@@ -71,6 +71,24 @@ behind the schema's own parsing.
   **then** it prints `::error::… korean-in-ui-field at .label` and exits
   `1`.
 
+- **Given** a Korean item whose English gloss opens with its own
+  romanization and then ` (`, `, ` or ` — `, such as
+  `{ "ko": "김밥", "romanization": "gimbap", "en": "gimbap (seaweed rice roll)" }`
+  (compared in NFD, lower case, letters only),
+  **when** the validator runs,
+  **then** it prints `::error::… gloss-repeats-romanization: … at .en` and
+  exits `1`: the romanization is already printed above the gloss, so the
+  gloss keeps only the meaning (`seaweed rice roll`). The same rule runs on
+  the Spanish overlays (`scripts/overlay-rules.mjs`, one implementation,
+  `glossRepeatsRomanization`) and on the TypeScript-resident content
+  (`apps/mobile/src/content/__tests__/overlays.test.ts`). Proper names whose
+  English is the name itself stay on an explicit allowlist inside the rule
+  (서울, 부산, 대전, 대구, 추석, 한가위, 단오, 아리랑, 동의보감, 허준, 장영실,
+  장경판전, 조선, 고려, 직지, 호야), a single jamo's sound hint
+  (`A — sounds like …`) is not a gloss, and a loanword equal to its English
+  (`banana`) has no separator, so it passes. Added 2026-10-17 from the owner
+  note on the 김밥 slide ("gimbap" over "gimbap (seaweed rice roll)").
+
 - **Given** `content/` exists but contains no `.json` files,
   **when** the validator runs,
   **then** it prints `::notice::no .json files under content/; skipping`

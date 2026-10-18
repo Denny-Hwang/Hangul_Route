@@ -2,6 +2,7 @@ import { discoverItemTexts, type DiscoverItem, type DiscoverPage, type Jamo, typ
 import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
+import type { PromptKind } from '../audio/rate';
 import { spokenFor } from '../audio/spoken';
 import { blockShape } from '../build-letter-view';
 import { localizeJamo } from '../content-locale';
@@ -26,11 +27,19 @@ export type DiscoverCopy = Messages['learner']['quest']['discover'];
 /** The screen-reader labels of a symbol (`a11y.discoverLetter`, `a11y.discoverFinal`). */
 export type DiscoverA11y = Pick<Messages['a11y'], 'discoverLetter' | 'discoverFinal'>;
 
+/** The surface id of Discover for the audio telemetry (`audio.fallback_shown`, F-AUDIO-004 §3.14). */
+export const DISCOVER_AUDIO_SOURCE = 'discover';
+
 /** What a Hear it button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
 export interface HearAction {
   /** Stable per button: `<item key>|sound`, `|name` or `|example`. */
   id: string;
   spec: { text: string; audioRef?: string };
+  /**
+   * The speech rate (F-AUDIO-004 §3.3): `sound` for a symbol and its name, `sentence` for a
+   * sentence, a pattern example and an exchange line, `word` for everything else.
+   */
+  kind: PromptKind;
 }
 
 export interface DiscoverExampleView {
@@ -120,12 +129,12 @@ const SYLLABLE_SEPARATOR = '·';
 const teachingRomanization = (text: KoText): string =>
   text.syllables ? text.syllables.join(SYLLABLE_SEPARATOR) : text.romanization;
 
-function hear(id: string, text: string, audioRef: string | undefined): HearAction {
-  return { id, spec: audioRef === undefined ? { text } : { text, audioRef } };
+function hear(id: string, text: string, audioRef: string | undefined, kind: PromptKind): HearAction {
+  return { id, spec: audioRef === undefined ? { text } : { text, audioRef }, kind };
 }
 
-function wordSpec(key: string, suffix: string, word: KoText): HearAction {
-  return hear(`${key}|${suffix}`, word.spokenKo ?? word.ko, word.audioRef);
+function wordSpec(key: string, suffix: string, word: KoText, kind: PromptKind = 'word'): HearAction {
+  return hear(`${key}|${suffix}`, word.spokenKo ?? word.ko, word.audioRef, kind);
 }
 
 /** The example word with the first block that holds `jamoId` emphasised. */
@@ -199,16 +208,16 @@ function symbolItem(
     romanization,
     accessibilityLabel: symbolLabel(jamo, romanization, a11y),
     ...(jamo.soundHint ? { soundHint: jamo.soundHint } : {}),
-    hear: hear(`${key}|sound`, sound.text, sound.audioRef),
+    hear: hear(`${key}|sound`, sound.text, sound.audioRef, 'sound'),
     spokenRomanization: sound.romanization,
-    ...(name ? { letterName: { action: hear(`${key}|name`, name.text, name.audioRef), ko: name.text, romanization: name.romanization } } : {}),
+    ...(name ? { letterName: { action: hear(`${key}|name`, name.text, name.audioRef, 'sound'), ko: name.text, romanization: name.romanization } } : {}),
     ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, example), batchimLine: copy.batchimLine } : {}),
     example: exampleView(key, jamo.id, example),
     ...(item.picture ? { picture: item.picture } : {}),
   };
 }
 
-function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): DiscoverItemView {
+function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>, kind: PromptKind = 'word'): DiscoverItemView {
   const { word } = item;
   return {
     key,
@@ -217,7 +226,7 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): D
     romanization: teachingRomanization(word),
     gloss: word.en,
     accessibilityLabel: `${word.ko}, ${word.romanization}, ${word.en}`,
-    hear: wordSpec(key, 'sound', word),
+    hear: wordSpec(key, 'sound', word, kind),
     spokenRomanization: word.romanization,
     ...(item.noteEn ? { note: item.noteEn } : {}),
     ...(item.picture ? { picture: item.picture } : {}),
@@ -239,7 +248,7 @@ function exchangeItem(key: string, item: Extract<DiscoverItem, { type: 'exchange
         spokenRomanization: l.line.romanization,
         gloss: l.line.en,
         accessibilityLabel: `${l.speakerEn}: ${l.line.ko}, ${l.line.romanization}, ${l.line.en}`,
-        hear: hear(lineKey, l.line.spokenKo ?? l.line.ko, l.line.audioRef),
+        hear: hear(lineKey, l.line.spokenKo ?? l.line.ko, l.line.audioRef, 'sentence'),
       };
     }),
   };
@@ -282,8 +291,10 @@ export function buildDiscover(
         // F-CURR-001 upper-stage items (sentence, pattern, realia): until their own Discover
         // views land (S3-1, G-2 / S6-1), each taught text shows as a word card with Hear it.
         const picture = item.type === 'sentence' ? item.picture : undefined;
+        // A sentence and a pattern's examples are read as sentences; a realia key word is a word.
+        const kind: PromptKind = item.type === 'realia' ? 'word' : 'sentence';
         for (const word of discoverItemTexts(item)) {
-          items.push(wordItem(uniqueKey(`word:${word.ko}`), picture ? { type: 'word', word, picture } : { type: 'word', word }));
+          items.push(wordItem(uniqueKey(`word:${word.ko}`), picture ? { type: 'word', word, picture } : { type: 'word', word }, kind));
         }
         continue;
       }
@@ -329,8 +340,6 @@ export interface DiscoverState {
   revealed: readonly string[];
   /** The Read along in progress, if any. */
   readAlong: ReadAlongState | null;
-  /** Read along could not play (sound off, no Korean voice): the status line shows once, nothing lights. */
-  readAlongStatus: { item: string; result: Exclude<PlayResult, 'played'> } | null;
   /** Counts Read along runs, so a result of a stopped run never moves the highlight. */
   runs: number;
 }
@@ -371,7 +380,6 @@ export function startDiscover(model: DiscoverModel): DiscoverState {
     text: [],
     revealed: [],
     readAlong: null,
-    readAlongStatus: null,
     runs: 0,
   };
 }
@@ -412,7 +420,7 @@ export function stepDiscover(
       if (line) {
         // A line's own speaker stops any Read along and plays just that line, lit.
         const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
-        const out = lightLine({ ...state, runs: state.runs + 1, readAlongStatus: null }, line.item, line.index, state.runs + 1, true);
+        const out = lightLine({ ...state, runs: state.runs + 1 }, line.item, line.index, state.runs + 1, true);
         return { state: out.state, effects: [...stopping, { type: 'play', id: event.id, run: state.runs + 1 }] };
       }
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
@@ -432,11 +440,9 @@ export function stepDiscover(
       // resolves (often 'played'), and that result only records the heard mark.
       if (!ra || !line || event.run !== ra.run || line.item !== ra.item || line.index !== ra.line) return { state: base, effects: [] };
       if (event.result !== 'played') {
-        // No timed highlight without sound: the status line shows once and nothing stays lit.
-        return {
-          state: { ...base, readAlong: null, readAlongStatus: ra.single ? null : { item: ra.item, result: event.result } },
-          effects: [],
-        };
+        // No timed highlight without sound: nothing stays lit, and Read along stops. Why it is silent is the
+        // exchange card's prompt slot (its status panel, F-AUDIO-004 A-5b), not this reducer.
+        return { state: { ...base, readAlong: null }, effects: [] };
       }
       if (ra.single || line.index >= lineCount(ra.item) - 1) return { state: { ...base, readAlong: null }, effects: [] };
       return { state: { ...base, readAlong: { ...ra, line: null, last: line.index } }, effects: [{ type: 'pause', run: ra.run }] };
@@ -451,14 +457,14 @@ export function stepDiscover(
         return { state: { ...state, readAlong: null }, effects: [{ type: 'stopAudio' }] };
       }
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
-      const out = lightLine({ ...state, runs: state.runs + 1, readAlongStatus: null }, event.item, 0, state.runs + 1, false);
+      const out = lightLine({ ...state, runs: state.runs + 1 }, event.item, 0, state.runs + 1, false);
       return { state: out.state, effects: [...stopping, ...out.effects] };
     }
     case 'reveal':
       return { state: { ...state, revealed: add(state.revealed, event.key) }, effects: [] };
     case 'next': {
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
-      const quiet = { ...state, readAlong: null, readAlongStatus: null };
+      const quiet = { ...state, readAlong: null };
       if (state.page < state.pageCount - 1) return { state: { ...quiet, page: state.page + 1 }, effects: stopping };
       return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length }] };
     }
@@ -499,8 +505,6 @@ export interface DiscoverExchangeRender {
   heard: boolean;
   /** "Line 1 of 2, Hoya" for the polite live region while a line is lit (not the line card itself). */
   liveLine?: string;
-  /** Read along could not play: the status line (sound off, or no Korean voice) shows once, nothing lights. */
-  status?: Exclude<PlayResult, 'played'>;
 }
 
 export interface DiscoverPageRender {
@@ -569,7 +573,6 @@ function exchangeRender(
     return { line, lit: litIndex === i, romanizationShown: shown, showReveal: !shown };
   });
   const lit = litIndex === null ? undefined : item.lines[litIndex];
-  const status = state.readAlongStatus?.item === item.key ? state.readAlongStatus.result : undefined;
   return {
     item,
     lines,
@@ -578,6 +581,5 @@ function exchangeRender(
     ...(lit === undefined || litIndex === null
       ? {}
       : { liveLine: copy.exchange.lineLabel(litIndex + 1, item.lines.length, lit.speaker) }),
-    ...(status === undefined ? {} : { status }),
   };
 }

@@ -23,7 +23,11 @@ describe('matchBoard (F-VOC-003 section 3.9: a board from the collected words)',
     const board = matchBoard(food, progress([state('uyu'), state('ppang'), state('bap')]), { ...base, glossOf: () => 'leche' });
     const milk = board!.pairs.find((p) => p.id === 'vocab:uyu')!;
     const item = food.find((i) => i.id === 'vocab:uyu')!;
-    expect(milk).toEqual({ id: 'vocab:uyu', pictureRef: item.visual, word: { ko: item.ko, romanization: item.romanization, en: 'leche' } });
+    expect(milk).toEqual({
+      id: 'vocab:uyu',
+      pictureRef: item.visual,
+      word: { ko: item.ko, romanization: item.romanization, en: 'leche', audioRef: 'audio/vocab/uyu.mp3' },
+    });
   });
 
   it('keeps the spoken form and the clip when the word has them', () => {

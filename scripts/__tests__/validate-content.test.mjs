@@ -671,6 +671,43 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
     }
   });
 
+  test("gloss-repeats-romanization: a gloss that starts with its own romanization fails, names and loanwords pass", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "vocab/food.json", {
+        topic: { id: "vocab-topic:food", key: "food", titleEn: "Food" },
+        items: [
+          { id: "vocab:gimbap", ko: "김밥", romanization: "gimbap", en: "gimbap (seaweed rice roll)" },
+          { id: "vocab:banana", ko: "바나나", romanization: "banana", en: "banana" },
+        ],
+      });
+      writeContent(root, "episodes/x.json", {
+        words: [
+          { ko: "한복", romanization: "hanbok", en: "hanbok, traditional clothes" },
+          { ko: "서울", romanization: "Seoul", en: "Seoul (a city)" },
+          { ko: "ㅏ", romanization: "a", en: "A — sounds like the 'a' in 'father'" },
+          { ko: "한옥", romanization: "hanok", gloss_en: "hanok (traditional house)" },
+        ],
+      });
+      writeContent(root, "i18n/es/vocab-food.json", {
+        locale: "es",
+        domain: "vocab-food",
+        entries: { "vocab:gimbap": { gloss: "gimbap (rollo de arroz con alga)" }, "vocab:banana": { gloss: "plátano" } },
+      });
+      const r = run(root);
+      assert.equal(r.status, 1);
+      const hits = r.stdout.split("\n").filter((line) => line.includes("gloss-repeats-romanization"));
+      assert.equal(hits.length, 4, r.stdout);
+      assert.match(r.stdout, /file=content\/vocab\/food\.json::gloss-repeats-romanization: .* at \.items\.0\.en/);
+      assert.match(r.stdout, /file=content\/episodes\/x\.json::gloss-repeats-romanization: .* at \.words\.0\.en/);
+      assert.match(r.stdout, /file=content\/episodes\/x\.json::gloss-repeats-romanization: .* at \.words\.3\.gloss_en/);
+      assert.match(r.stdout, /file=content\/i18n\/es\/vocab-food\.json::gloss-repeats-romanization: .* at \.entries\.vocab:gimbap\.gloss/);
+      assert.doesNotMatch(r.stdout, /gloss-repeats-romanization[^\n]*(Seoul|banana|father)/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("a source accessed today in Korea is not in the future (UTC+14 grace)", () => {
     const root = makeRoot();
     try {

@@ -7,7 +7,8 @@
 //
 //   apps/mobile/src/content/__generated__/vocab.ts
 //       VOCAB_TOPICS  VocabTopic[]         ordered by `order`
-//       VOCAB_ITEMS   RuntimeVocabItem[]   topic order, then file order, `glosses` assembled
+//       VOCAB_ITEMS   RuntimeVocabItem[]   topic order, then file order, `glosses` assembled,
+//                                          `audioRef` derived from the id when the file has none
 //       VOCAB_SENSES  sense groups of content/vocab/_senses.json
 //   apps/web/src/data/vocab-catalog.ts
 //       VOCAB_CATALOG id, ko, romanization, en, primary topic, visual, glosses
@@ -95,6 +96,17 @@ function glossesOf(id, en, overlays) {
   return glosses;
 }
 
+/**
+ * The clip path of a vocabulary item: `audio/vocab/<id without vocab:>.mp3`, the only value
+ * `VocabItemSchema` allows (F-AUDIO-004 §3.10). Every item carries it, so the recording list
+ * (apps/mobile/scripts/audio) and the clip map cover every word, and a recording that lands
+ * later plays on the learner cards and the presenter's word slides with no content edit; until
+ * then the controller finds no bundled clip and the device voice says the word.
+ */
+export function vocabAudioRef(id) {
+  return `audio/vocab/${id.slice("vocab:".length)}.mp3`;
+}
+
 function shapeItem(item, overlays, where) {
   if (!isObject(item)) throw new ContentError(`${where}: an item must be an object`);
   const at = `${where} ${typeof item.id === "string" ? item.id : "(item without id)"}`;
@@ -109,10 +121,11 @@ function shapeItem(item, overlays, where) {
   out.topics = item.topics;
   out.level = num(item, "level", at);
   out.visual = str(item, "visual", at);
-  for (const field of ["senseNote", "senseGroup", "spokenKo", "audioRef"]) {
+  for (const field of ["senseNote", "senseGroup", "spokenKo"]) {
     const value = optStr(item, field, at);
     if (value !== undefined) out[field] = value;
   }
+  out.audioRef = optStr(item, "audioRef", at) ?? vocabAudioRef(out.id);
   if (item.example !== undefined) out.example = item.example;
   out.glosses = glossesOf(out.id, out.en, overlays);
   return out;

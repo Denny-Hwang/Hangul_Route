@@ -19,9 +19,11 @@ import {
   touchTarget,
   useMediaSize,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { cardById, stageByKey, themeByKey } from '../../content';
 import { storiesAll } from '../../content/stories';
@@ -47,7 +49,7 @@ import {
 } from '../../logic/story/story-episode';
 import { defaultStoryIndex, type StoryIndexEntry } from '../../logic/story/story-index';
 import { storyCoverVariant } from '../../logic/story/story-tile';
-import { playPrompt, stop } from '../../platform/audio';
+import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -149,23 +151,55 @@ export function StoryEpisodeDetail({
   const cards = useMemo(() => episodeRewardCards(episode.rewardCardIds, unlocked, cardById), [episode.rewardCardIds, unlocked]);
 
   // The words' speakers: the card-detail pattern (the word is printed, so the panel only explains a silence).
+  // The status panel sits under what was tapped (the word chips, the page title, a tale row's title) and its
+  // action plays that same Korean again.
   const slot = usePromptSlot({ source: STORY_EPISODE_AUDIO_SOURCE, textOnScreen: true });
+  const { play: slotPlay, reset: slotReset } = slot;
   useEffect(() => () => stop(), []);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [soundAt, setSoundAt] = useState<string | null>(null);
+  const lastSpec = useRef<{ spec: PlaySpec; at: string } | null>(null);
+  const say = useCallback(
+    (spec: PlaySpec, at: string): void => {
+      // Another word or title is a new prompt: what the last one could not play no longer applies, so
+      // its "Tap to hear" or "Try again" never shows under the word now being said.
+      const last = lastSpec.current;
+      if (last === null || last.at !== at || last.spec.text !== spec.text) slotReset();
+      lastSpec.current = { spec, at };
+      setSoundAt(at);
+      void slotPlay(() => playPrompt(spec));
+    },
+    [slotPlay, slotReset],
+  );
+  const replayLast = (): void => {
+    const last = lastSpec.current;
+    if (last) void slotPlay(() => playPrompt(last.spec));
+  };
+  /** The panel at one place: quiet (nothing shown, the live region kept) unless the last tap was there. */
+  const soundPanel = (at: string, testID: string): React.ReactElement => (
+    <PromptPanel
+      variant="status"
+      view={soundAt === at ? slot.view : { ...slot.view, statusShown: false }}
+      onAction={(action) => slot.act(action, replayLast)}
+      onHelp={() => setHelpOpen(true)}
+      testID={testID}
+    />
+  );
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const hear = useCallback(
     (wordId: string): void => {
       const word = view.words.find((w) => w.id === wordId);
       if (!word) return;
-      void slot.play(() => playPrompt(episodeWordSpeech(word)));
+      say(episodeWordSpeech(word), SOUND_AT_WORDS);
       // Hearing a word shows how to say it (hide-until-tap, D2), as in the reader.
       setRevealed((r) => (r.has(wordId) ? r : new Set([...r, wordId])));
     },
-    [view.words, slot],
+    [view.words, say],
   );
   // D2: a Korean title hidden until tapped plays the title and shows how to say it, like a word chip.
   const titleKorean = (storyId: string, ko: string): EpisodeTitleKorean => episodeTitleKorean(storyId, ko, { romanizationMode, revealed });
-  const hearTitle = (title: EpisodeTitleKorean): void => {
-    void slot.play(() => playPrompt(title.speech));
+  const hearTitle = (title: EpisodeTitleKorean, at: string): void => {
+    say(title.speech, at);
     setRevealed((r) => (r.has(title.key) ? r : new Set([...r, title.key])));
   };
   const pageTitle = view.storyId && view.title.ko ? titleKorean(view.storyId, view.title.ko) : null;
@@ -220,11 +254,12 @@ export function StoryEpisodeDetail({
                 romanization={view.title.romanization ?? ''}
                 romanizationShown={pageTitle.romanizationShown}
                 size="sm"
-                onPress={pageTitle.tappable ? () => hearTitle(pageTitle) : undefined}
+                onPress={pageTitle.tappable ? () => hearTitle(pageTitle, SOUND_AT_TITLE) : undefined}
                 accessibilityLabel={messages.a11y.koreanItem({ ko: view.title.ko, romanization: view.title.romanization ?? '', gloss: view.title.en })}
                 testID="story-episode-title-ko"
               />
             </View>
+            {soundPanel(SOUND_AT_TITLE, 'story-episode-title-sound')}
           </>
         ) : null}
 
@@ -239,7 +274,8 @@ export function StoryEpisodeDetail({
               row={row}
               thumb={thumb}
               titleKo={titleKorean(row.entry.storyId, row.ko)}
-              onHearTitle={hearTitle}
+              onHearTitle={(title) => hearTitle(title, soundAtRow(row.entry.storyId))}
+              soundPanel={soundPanel(soundAtRow(row.entry.storyId), `story-episode-row-sound-${row.entry.storyId}`)}
               onAction={(action) => runAction(row, action)}
             />
           ))}
@@ -298,6 +334,8 @@ export function StoryEpisodeDetail({
                 );
               })}
             </View>
+            <Spacer size="sm" />
+            {soundPanel(SOUND_AT_WORDS, 'story-episode-words-sound')}
           </>
         ) : null}
 
@@ -359,9 +397,15 @@ export function StoryEpisodeDetail({
         ) : null}
         <Spacer size="xxl" />
       </View>
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );
 }
+
+/** Where the status panel of the page's one prompt slot shows: under what was tapped last. */
+const SOUND_AT_WORDS = 'words';
+const SOUND_AT_TITLE = 'title';
+const soundAtRow = (storyId: string): string => `row:${storyId}`;
 
 /** One story of the page: cover, titles, the state in words (stars only when earned) and its buttons. */
 function TaleRow({
@@ -369,12 +413,15 @@ function TaleRow({
   thumb,
   titleKo,
   onHearTitle,
+  soundPanel,
   onAction,
 }: {
   row: TaleRowView;
   thumb: number;
   titleKo: EpisodeTitleKorean;
   onHearTitle: (title: EpisodeTitleKorean) => void;
+  /** The page's status panel, drawn under this row's Korean title (shown when that title was tapped last). */
+  soundPanel: React.ReactElement;
   onAction: (action: TaleRowAction) => void;
 }): React.ReactElement {
   const messages = useMessages();
@@ -404,6 +451,7 @@ function TaleRow({
                 testID={`story-episode-row-ko-${id}`}
               />
             </View>
+            {soundPanel}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
               <Body size="sm" weight="semibold" tone="secondary" testID={`story-episode-state-${id}`}>
                 {row.stateLine}

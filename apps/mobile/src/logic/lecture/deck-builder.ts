@@ -697,10 +697,13 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         words.push(word);
         return;
       }
-      // A word a quest already taught keeps its place; the vocab entry still gives it its picture,
-      // and its recorded clip when only the vocab entry has one (F-AUDIO-004 D6).
+      // A word a quest already taught keeps its place and its sound (what the voice says, its romanization,
+      // its rate); the vocab entry still gives it its picture, and its clip path when only the vocab entry
+      // has one (F-AUDIO-004 D6). Only the clip is taken: every vocab word carries a derived path
+      // (F-VOC-001 §3.4), so taking its whole spoken form would drop a quest's spokenKo.
       if (known.extra === undefined && word.extra !== undefined) known.extra = word.extra;
-      if (known.voice.spoken.audioRef === undefined && word.voice.spoken.audioRef !== undefined) known.voice = { ...known.voice, spoken: word.voice.spoken };
+      const clip = word.voice.spoken.audioRef;
+      if (known.voice.spoken.audioRef === undefined && clip !== undefined) known.voice = { ...known.voice, spoken: { ...known.voice.spoken, audioRef: clip } };
     };
     for (const id of questIds) {
       if (!bundle.questById(id)) {

@@ -28,6 +28,9 @@ import {
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -54,9 +57,9 @@ import {
   type SequenceState,
 } from '../../logic/story/sequence-player';
 import {
-  SEQUENCE_REPLAY_MS,
   SEQUENCE_WRONG_FLASH_MS,
   autoAdvanceDue,
+  replayAdvanceDelay,
   longestKoreanGlyphs,
   sequenceCardLabel,
   sequenceCardRomanization,
@@ -66,7 +69,7 @@ import {
   sequenceSummary,
   slotViews,
 } from '../../logic/story/sequence-view';
-import { playPrompt, stop } from '../../platform/audio';
+import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
@@ -219,24 +222,50 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
     [],
   );
 
-  // Replay: speak the line of each card as it comes up (the text is always visible, so a silent browser loses nothing).
+  // Replay: speak the line of each card as it comes up, at the sentence rate. The line is printed on the card,
+  // so a line that cannot sound shows only the status panel under it (F-AUDIO-004 A-5b): why, and the one
+  // action, which says the line again. Each line is a new prompt slot. The line's play is kept so the
+  // replay waits for it to end.
   const replayCard = state.phase === 'replay' ? cardById.get(state.solution[state.replayIndex] ?? '') : undefined;
+  const lineSlot = usePromptSlot({ source: SEQUENCE_AUDIO_SOURCE, textOnScreen: true });
+  const { play: linePlayIn, reset: lineReset } = lineSlot;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const linePlay = useRef<{ index: number; startedAt: number; settled: Promise<void> } | null>(null);
+  const replayIndex = state.replayIndex;
   useEffect(() => {
-    if (!replayCard?.ko) return;
-    void playPrompt({
-      text: replayCard.ko.spokenKo ?? replayCard.ko.ko,
-      audioRef: replayCard.ko.audioRef,
-      source: 'story-sequence',
-    });
+    lineReset();
+    if (!replayCard?.ko) {
+      linePlay.current = null;
+      return;
+    }
+    const spec = lineSpeech(replayCard);
+    const settled = linePlayIn(() => playPrompt(spec)).then(
+      () => undefined,
+      () => undefined,
+    );
+    linePlay.current = { index: replayIndex, startedAt: Date.now(), settled };
+    // The index changes with the card; the card is what starts a line.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayCard]);
 
-  // Replay: move on by itself about every 2.5 s unless paused (never with reduced motion).
+  // Replay: move on by itself once the line has been said and a short gap has passed, never sooner than the
+  // replay interval from the line's start, unless paused (never with reduced motion).
   const advance = autoAdvanceDue(state, reducedMotion);
   useEffect(() => {
     if (!advance) return undefined;
-    const timer = setTimeout(() => dispatch({ type: 'replayNext' }), SEQUENCE_REPLAY_MS);
-    return () => clearTimeout(timer);
-  }, [advance, state.replayIndex, dispatch]);
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const line = linePlay.current?.index === replayIndex ? linePlay.current : null;
+    const startedAt = line?.startedAt ?? Date.now();
+    void (line?.settled ?? Promise.resolve()).then(() => {
+      if (!live) return;
+      timer = setTimeout(() => dispatch({ type: 'replayNext' }), replayAdvanceDelay(Date.now() - startedAt));
+    });
+    return () => {
+      live = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [advance, replayIndex, dispatch]);
 
   const total = state.solution.length;
   const placedCount = state.placed.length;
@@ -294,13 +323,16 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
                 romanization={sequenceCardRomanization(replayCard, romanizationMode, true)}
                 size="md"
                 testID="story-sequence-replay-ko"
-                onPress={() =>
-                  void playPrompt({
-                    text: replayCard.ko?.spokenKo ?? replayCard.ko?.ko ?? '',
-                    audioRef: replayCard.ko?.audioRef,
-                    source: 'story-sequence',
-                  })
-                }
+                onPress={() => void linePlayIn(() => playPrompt(lineSpeech(replayCard)))}
+              />
+            ) : null}
+            {replayCard?.ko ? (
+              <PromptPanel
+                variant="status"
+                view={lineSlot.view}
+                onAction={(action) => lineSlot.act(action, () => void linePlayIn(() => playPrompt(lineSpeech(replayCard))))}
+                onHelp={() => setHelpOpen(true)}
+                testID="story-sequence-replay-sound"
               />
             ) : null}
             <Body weight="semibold" testID="story-sequence-replay-caption">
@@ -363,6 +395,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
           onPress={() => dispatch({ type: 'skipReplay' })}
           testID="story-sequence-skip-replay"
         />
+        <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
       </Screen>
     );
   }
@@ -477,4 +510,14 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
       <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
     </Screen>
   );
+}
+
+/** The surface id of the Story Order replay for the audio telemetry (F-AUDIO-004 §3.14). */
+const SEQUENCE_AUDIO_SOURCE = 'story-sequence';
+
+/** What the replay says for a card: its line (`spokenKo ?? ko`, its clip when it has one) at the sentence rate. */
+function lineSpeech(card: SequenceCard): PlaySpec {
+  const spec: PlaySpec = { text: card.ko?.spokenKo ?? card.ko?.ko ?? '', kind: 'sentence', source: SEQUENCE_AUDIO_SOURCE };
+  if (card.ko?.audioRef !== undefined) spec.audioRef = card.ko.audioRef;
+  return spec;
 }

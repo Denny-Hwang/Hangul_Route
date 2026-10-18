@@ -59,6 +59,21 @@ For a screen that already prints the Korean and its romanization next to its spe
 - `audio.fallback_shown` fires when this panel appears (`usePromptSlot({ textOnScreen: true })`), not when the slot first learns sound is off.
 - The detail line is `Body` (not `Caption`), since it is the panel's only line.
 
+## Compact status (`variant="status" compact`, 2026-10-17)
+
+For a screen that must keep its own controls on screen and must not shrink its drawing surface by a whole card: Trace Stroke and Trace a Word (their canvas is sized from the height the controls leave, and Done and Skip always stay in view, UX-09). Same reasons, actions, timing and telemetry as the status variant; only the paint differs:
+
+```
+ Sound is off.  [ Turn sound on ]          one wrapping row, no card
+ No Korean voice on this device.  [ How to add a voice ]
+```
+
+- No `Card`: the detail is a `Caption` (muted), the action a `Button` secondary size `sm`, the help link a `Button` ghost size `sm` (both `touchTarget.min` 64 high), in one row that wraps under 200 % text.
+- The row carries its own top space (`spacing.sm`), so the always-mounted live region takes no height while nothing is shown.
+- In the side-by-side layout the prompt column above the controls scrolls if the row makes it too tall, so Done and Skip stay on screen.
+- The row appears after the learner asked to hear (Show me, a block speaker), never from a round's opening sound.
+- While a finger is on the canvas the screen passes the view it had when the stroke began (`useHeldWhile`, `components/use-held-while.ts`): a late result waits for the finger to lift, so the row never appears or goes mid-stroke and the canvas never moves under the finger. Wireframe: `design/wireframes/minigame/audio-fallback.md` W10.
+
 ## Tokens (no literals)
 
 | Part | Token |

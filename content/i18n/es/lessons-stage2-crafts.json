@@ -43,7 +43,7 @@
       "steps.s1.hoyaLine": "El jegi y el trompo son juguetes tradicionales coreanos. ¡Leamos sus nombres!",
       "steps.s2.title": "Palabras de juegos",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
-      "steps.s2.discover.pages.0.items.0.word.gloss": "jegi, un volante que se patea",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "un volante que se patea",
       "steps.s2.discover.pages.0.items.0.note": "Patea el jegi hacia arriba y mantenlo en el aire.",
       "steps.s2.discover.pages.0.items.1.word.gloss": "peonza, trompo",
       "steps.s2.discover.pages.0.items.1.note": "Golpéalo con un pequeño látigo para que siga girando.",
@@ -56,7 +56,7 @@
       "steps.s6.hoyaLine": "Leíste cuatro palabras de juegos. ¡Bien jugado!"
     },
     "minigame:s2-crafts-q2-apply": {
-      "cardPairs.jegi.gloss": "jegi, un volante que se patea",
+      "cardPairs.jegi.gloss": "un volante que se patea",
       "cardPairs.paengi.gloss": "peonza, trompo",
       "cardPairs.yut.gloss": "palitos de yut",
       "cardPairs.yeon.gloss": "cometa"
@@ -113,7 +113,7 @@
       "picWord.boards.5.pairs.yeon.word.gloss": "cometa"
     },
     "minigame:s2-crafts-q2-practice": {
-      "picWord.boards.0.pairs.jegi.word.gloss": "jegi, un volante que se patea",
+      "picWord.boards.0.pairs.jegi.word.gloss": "un volante que se patea",
       "picWord.boards.0.pairs.paengi.word.gloss": "peonza, trompo",
       "picWord.boards.0.pairs.yeon.word.gloss": "cometa",
       "picWord.boards.1.pairs.yut.word.gloss": "palitos de yut",
@@ -121,14 +121,14 @@
       "picWord.boards.1.pairs.gong.word.gloss": "pelota",
       "picWord.boards.2.pairs.paengi.word.gloss": "peonza, trompo",
       "picWord.boards.2.pairs.yut.word.gloss": "palitos de yut",
-      "picWord.boards.2.pairs.jegi.word.gloss": "jegi, un volante que se patea",
+      "picWord.boards.2.pairs.jegi.word.gloss": "un volante que se patea",
       "picWord.boards.3.pairs.yeon.word.gloss": "cometa",
-      "picWord.boards.3.pairs.jegi.word.gloss": "jegi, un volante que se patea",
+      "picWord.boards.3.pairs.jegi.word.gloss": "un volante que se patea",
       "picWord.boards.3.pairs.gong.word.gloss": "pelota",
       "picWord.boards.4.pairs.yut.word.gloss": "palitos de yut",
       "picWord.boards.4.pairs.paengi.word.gloss": "peonza, trompo",
       "picWord.boards.4.pairs.gong.word.gloss": "pelota",
-      "picWord.boards.5.pairs.jegi.word.gloss": "jegi, un volante que se patea",
+      "picWord.boards.5.pairs.jegi.word.gloss": "un volante que se patea",
       "picWord.boards.5.pairs.yut.word.gloss": "palitos de yut",
       "picWord.boards.5.pairs.paengi.word.gloss": "peonza, trompo"
     },
@@ -150,7 +150,7 @@
       "picWord.boards.4.pairs.chingu.word.gloss": "amigo, amiga",
       "picWord.boards.5.pairs.dalligi.word.gloss": "carrera",
       "picWord.boards.5.pairs.julleomgi.word.gloss": "saltar la cuerda",
-      "picWord.boards.5.pairs.jegi.word.gloss": "jegi, un volante que se patea"
+      "picWord.boards.5.pairs.jegi.word.gloss": "un volante que se patea"
     }
   }
 }

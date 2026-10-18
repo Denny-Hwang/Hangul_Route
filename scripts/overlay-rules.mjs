@@ -27,6 +27,12 @@
 //                            ('달라는'), and so are place names in 라 ('신라는')
 //   overlay-ko-particle      a ko lesson overlay with 를 / 와 after a final consonant, or 가 after
 //                            a gloss head noun with one ('물건가' for '물건이')
+//   gloss-repeats-romanization  an es gloss that opens with the romanization of the Korean it
+//                            glosses, then ' (', ', ' or ' — ' ('gimbap (rollo de arroz con
+//                            alga)'): the romanization is already on screen, so the gloss keeps
+//                            only the meaning (F-CNT-001 §3; the romanization is F-CNT-002's).
+//                            validate-content.mjs applies the same rule (glossRepeatsRomanization)
+//                            to the English base content
 //   banned-on-learner-surface  a learner-banned word of the locale (banned-words.json)
 //   overlay-shadowed         warning: an entry gives both the untiered and the tier-qualified
 //                            field for one primary-tier scene; the tier-qualified one wins
@@ -163,6 +169,59 @@ export function koParticleSlip(text) {
 }
 const isKoLessonOverlay = (rel) => /^content\/i18n\/ko\/lessons-[^/]+\.json$/.test(rel);
 
+// ---- gloss-repeats-romanization (F-CNT-001 §3) ------------------------------------------
+
+/**
+ * Proper names whose English is the name itself, then what it is ("Seoul (a city)", "Heo Jun,
+ * a Joseon court doctor"): a name has no meaning to give instead, so the gloss may open with it.
+ * Keyed by the taught Korean. A common noun is never listed: its gloss is the meaning alone
+ * ("seaweed rice roll" for 김밥), and a loanword equal to its English ("banana") has no separator.
+ */
+export const GLOSS_NAME_ALLOWLIST = Object.freeze([
+  "서울",
+  "부산",
+  "대전",
+  "대구",
+  "추석",
+  "한가위",
+  "단오",
+  "아리랑",
+  "동의보감",
+  "허준",
+  "장영실",
+  "장경판전",
+  "조선",
+  "고려",
+  "직지",
+  "호야",
+]);
+const GLOSS_NAMES = new Set(GLOSS_NAME_ALLOWLIST);
+const GLOSS_SEPARATORS = [" (", ", ", " — "];
+/** One compatibility jamo: a letter's sound hint ("A — sounds like ...") names its own sound. */
+const SINGLE_JAMO = /^[ㄱ-ㆎ]$/;
+/** NFD, lower case, letters only: "Heo Jun" and "Heojun", "hanbók" and "hanbok" compare equal. */
+const lettersOf = (text) => text.normalize("NFD").toLowerCase().replace(/[^a-z]/g, "");
+
+/**
+ * True when `gloss` opens with the romanization of `ko` followed by " (", ", " or " — ", outside
+ * the name allowlist and the jamo sound hints. Pure; shared by the base and overlay checks.
+ */
+export function glossRepeatsRomanization({ ko, romanization, gloss }) {
+  if (typeof ko !== "string" || typeof romanization !== "string" || typeof gloss !== "string") return false;
+  const word = ko.trim();
+  if (GLOSS_NAMES.has(word) || SINGLE_JAMO.test(word)) return false;
+  const rom = lettersOf(romanization);
+  if (rom === "") return false;
+  return GLOSS_SEPARATORS.some((sep) => {
+    const at = gloss.indexOf(sep);
+    return at > 0 && lettersOf(gloss.slice(0, at)) === rom;
+  });
+}
+
+/** The violation text of the rule (one wording for the base content and the overlays). */
+export const glossRepeatsRule = (gloss, romanization) =>
+  `gloss-repeats-romanization: "${gloss}" opens with its romanization ${romanization}, which is already shown; keep only the meaning`;
+
 // ---- one overlay file ------------------------------------------------------------------
 
 function checkFile(rel, body, ctx) {
@@ -242,6 +301,13 @@ function checkField(locale, id, field, value, base, add, ctx) {
   for (const path of overlayTargets(base, field)) {
     const key = path[path.length - 1];
     const holder = getIn(base, path.slice(0, -1));
+    if (
+      locale === "es" &&
+      (key === "en" || key === "gloss_en") &&
+      glossRepeatsRomanization({ ko: holder?.ko, romanization: holder?.romanization, gloss: value })
+    ) {
+      add(glossRepeatsRule(value, holder.romanization));
+    }
     if (locale === "ko" && (key === "en" || key === "gloss_en") && typeof holder?.ko === "string") {
       if (value.trim() === holder.ko.trim()) add(`overlay-circular-gloss: the Korean gloss repeats the taught ${holder.ko}`);
       else if (bare(value) === bare(holder.ko)) {

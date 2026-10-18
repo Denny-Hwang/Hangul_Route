@@ -484,8 +484,16 @@ describe('itemFacts: word topic', () => {
     const withClip = { ...bundle, topicItems: (key: string) => (key === 'food' ? [recorded] : bundle.topicItems(key)) };
     const word = (itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, withClip) as TopicFacts).words[0];
     expect(word?.speech).toEqual({ text: 'sagwa-spoken', audioRef: 'audio/vocab/food-apple.mp3' });
-    // no recording and no spoken form: the device voice says the Korean itself (playPrompt's fallback)
-    expect((itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle) as TopicFacts).words[0]?.speech).toEqual({ text: first.ko });
+    // A shipped word carries the one clip path its id allows (build-vocab); playPrompt uses it once a file is
+    // bundled and the device voice says the Korean until then.
+    expect((itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle) as TopicFacts).words[0]?.speech).toEqual({
+      text: first.ko,
+      audioRef: `audio/vocab/${first.id.slice('vocab:'.length)}.mp3`,
+    });
+    // no clip path and no spoken form: just the Korean (playPrompt's fallback)
+    const { audioRef: _none, ...unplanned } = first;
+    const withoutClip = { ...bundle, topicItems: (key: string) => (key === 'food' ? [unplanned] : bundle.topicItems(key)) };
+    expect((itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, withoutClip) as TopicFacts).words[0]?.speech).toEqual({ text: first.ko });
   });
 });
 

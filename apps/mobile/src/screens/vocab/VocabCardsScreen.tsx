@@ -64,7 +64,7 @@ import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
 import type { VocabQuestion } from '../../logic/vocab/question-builder';
 import { optionCountFor } from '../../logic/vocab/topic-view';
 import type { RootStackParamList } from '../../navigation/types';
-import { hasClip, playPrompt } from '../../platform/audio';
+import { hasClip, playPrompt, stop } from '../../platform/audio';
 import { focusForScreenReader, isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAudioStore } from '../../store/audio-store';
@@ -119,6 +119,8 @@ export function VocabCardsScreen({ route, navigation }: Props): React.ReactEleme
   useEffect(() => {
     if (!usable) navigation.replace('VocabTopic', { topicKey });
   }, [usable, navigation, topicKey]);
+  // Leaving the cards (Back, Stop, the done sheet) stops a word mid-way.
+  useEffect(() => () => stop(), []);
 
   if (!usable) return <Screen tone="canvas" testID="vocab-cards-redirect">{null}</Screen>;
   return <LearnerCards key={topic.key} source={topic} params={route.params} navigation={navigation} />;

@@ -37,8 +37,11 @@ import {
   renderRecordingScript,
   takeSegments,
   topUpOutcome,
+  vocabAudioRef,
+  vocabClipRefs,
   vocabRecordingRows,
 } from '../../../../scripts/audio/lib.mjs';
+import { VOCAB_ITEMS } from '../../../content/__generated__/vocab';
 
 /** The pure cores of apps/mobile/scripts/audio (F-AUDIO-004 §3.10, §5 audio-scripts.test.ts). */
 
@@ -267,7 +270,7 @@ describe('scripts/audio/lib: batch 2, the consonant names', () => {
 describe('scripts/audio/lib: vocabulary rows', () => {
   const topic = (key: string, items: object[]) => ({ schemaVersion: 1, topic: { key }, items });
 
-  it('lists only words with an audioRef, ordered by topic then id', () => {
+  it('lists every word, its ref derived from the id when the file has none, ordered by topic then id', () => {
     const rows = vocabRecordingRows([
       topic('food', [
         { id: 'vocab:sagwa', ko: '사과', romanization: 'sagwa', en: 'apple', topics: ['food'], audioRef: 'audio/vocab/sagwa.mp3' },
@@ -289,8 +292,28 @@ describe('scripts/audio/lib: vocabulary rows', () => {
     expect(rows).toEqual([
       { fileId: 'gae', say: '개', spokenKo: '', romanization: 'gae', gloss: 'dog', topic: 'animals', note: '' },
       { fileId: 'horangi', say: '호랑이', spokenKo: '', romanization: 'horangi', gloss: 'tiger', topic: 'animals', note: 'the animal' },
+      { fileId: 'bap', say: '밥', spokenKo: '', romanization: 'bap', gloss: 'rice', topic: 'food', note: '' },
       { fileId: 'sagwa', say: '사과', spokenKo: '', romanization: 'sagwa', gloss: 'apple', topic: 'food', note: '' },
     ]);
+  });
+
+  it('vocabClipRefs: every word of every topic file, the same refs the generated loader carries', () => {
+    const files = [
+      topic('food', [
+        { id: 'vocab:sagwa-apple', ko: '사과', romanization: 'sagwa', en: 'apple', topics: ['food'] },
+        { id: 'vocab:bae-pear', ko: '배', romanization: 'bae', en: 'pear', topics: ['food'], audioRef: 'audio/vocab/bae-pear.mp3' },
+      ]),
+      topic('animals', [{ id: 'vocab:gom', ko: '곰', romanization: 'gom', en: 'bear', topics: ['animals'] }]),
+    ];
+    expect(vocabClipRefs(files)).toEqual(['audio/vocab/sagwa-apple.mp3', 'audio/vocab/bae-pear.mp3', 'audio/vocab/gom.mp3']);
+    expect(vocabAudioRef('vocab:sagwa-apple')).toBe('audio/vocab/sagwa-apple.mp3');
+  });
+
+  it('the generated loader gives every word its own ref, the one the schema allows', () => {
+    const refs = VOCAB_ITEMS.map((item) => item.audioRef);
+    expect(refs).toEqual(VOCAB_ITEMS.map((item) => vocabAudioRef(item.id)));
+    expect(new Set(refs).size).toBe(VOCAB_ITEMS.length);
+    for (const ref of refs) expect(ref).toMatch(AUDIO_REF_PATTERN);
   });
 
   it('shows spokenKo only when it differs from the written word', () => {
@@ -322,8 +345,10 @@ describe('scripts/audio/lib: vocabulary rows', () => {
     ).toThrow(/flat/);
   });
 
-  it('is empty when no word has a clip planned', () => {
-    expect(vocabRecordingRows([topic('food', [{ id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'rice', topics: ['food'] }])])).toEqual([]);
+  it('is empty only when there is no word, and skips a record with no vocab id', () => {
+    expect(vocabRecordingRows([topic('food', [])])).toEqual([]);
+    expect(vocabRecordingRows([topic('food', [{ ko: '밥', romanization: 'bap', en: 'rice', topics: ['food'] }])])).toEqual([]);
+    expect(vocabClipRefs([topic('food', [{ id: 'bap', ko: '밥', romanization: 'bap', en: 'rice', topics: ['food'] }])])).toEqual([]);
   });
 });
 

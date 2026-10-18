@@ -217,8 +217,28 @@ export function nameRows(jamo) {
 }
 
 /**
- * Vocabulary words with a planned clip (`audioRef`), ordered by topic then id so
- * a speaker records one topic per sitting.
+ * `vocab:sagwa-apple` => `audio/vocab/sagwa-apple.mp3`: the one clip path `VocabItemSchema`
+ * allows for a word. scripts/build-vocab.mjs writes the same path into the generated loader
+ * (its own `vocabAudioRef`; src/content/__tests__/audio-recording-script.test.ts keeps the two equal).
+ */
+export function vocabAudioRef(id) {
+  return `audio/vocab/${id.slice('vocab:'.length)}.mp3`;
+}
+
+/** A word's clip path: its own `audioRef`, else the derived one. Every word has one, recorded or not. */
+function vocabRefOf(item) {
+  if (typeof item.audioRef === 'string' && item.audioRef !== '') return item.audioRef;
+  return typeof item.id === 'string' && item.id.startsWith('vocab:') ? vocabAudioRef(item.id) : undefined;
+}
+
+/** Every word's clip path, in file order (what `audio:status` counts). */
+export function vocabClipRefs(topicFiles) {
+  return topicFiles.flatMap((file) => (file.items ?? []).map(vocabRefOf).filter((ref) => ref !== undefined));
+}
+
+/**
+ * Every vocabulary word (each has a clip path, derived from its id when the file has
+ * none), ordered by topic then id so a speaker records one topic per sitting.
  *
  * @param {readonly { items: readonly object[] }[]} topicFiles parsed content/vocab/*.json
  */
@@ -226,9 +246,10 @@ export function vocabRecordingRows(topicFiles) {
   const rows = [];
   for (const file of topicFiles) {
     for (const item of file.items ?? []) {
-      if (!item.audioRef) continue;
+      const ref = vocabRefOf(item);
+      if (ref === undefined) continue;
       rows.push({
-        fileId: fileIdOf(item.audioRef),
+        fileId: fileIdOf(ref),
         say: item.ko,
         spokenKo: item.spokenKo && item.spokenKo !== item.ko ? item.spokenKo : '',
         romanization: item.romanization,

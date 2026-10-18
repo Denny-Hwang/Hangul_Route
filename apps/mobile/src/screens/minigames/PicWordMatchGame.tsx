@@ -19,7 +19,11 @@ import {
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
+import { koSpeech } from '../../logic/audio/ko-speech';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import {
   announcement,
@@ -120,6 +124,24 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
   boardsRef.current = boards;
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
 
+  // The matched word's sound: the word is printed on its card, so the panel only says why it is silent (A-5b).
+  const slot = usePromptSlot({ source: PIC_WORD_AUDIO_SOURCE, textOnScreen: true });
+  const { play: slotPlay, reset: slotReset } = slot;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const lastPair = useRef<{ boardIdx: number; pairId: string } | null>(null);
+  const sayPair = useCallback(
+    (boardIdx: number, pairId: string): void => {
+      const pair = boardsRef.current[boardIdx]?.pairs.find((p) => p.id === pairId);
+      if (!pair) return;
+      // A different word is a new prompt slot: what the last one could not play no longer applies.
+      const last = lastPair.current;
+      if (last === null || last.boardIdx !== boardIdx || last.pairId !== pairId) slotReset();
+      lastPair.current = { boardIdx, pairId };
+      void slotPlay(() => playPrompt(koSpeech(pair.word, 'word', PIC_WORD_AUDIO_SOURCE)));
+    },
+    [slotPlay, slotReset],
+  );
+
   const runEffect = useCallback((effect: FlowEffect): void => {
     switch (effect.type) {
       case 'answer':
@@ -133,12 +155,9 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
           nudge();
         }
         return;
-      case 'play': {
-        const board = boardsRef.current[stateRef.current.boardIdx];
-        const pair = board?.pairs.find((p) => p.id === effect.pairId);
-        if (pair) void playPrompt({ text: pair.word.spokenKo ?? pair.word.ko, audioRef: pair.word.audioRef });
+      case 'play':
+        sayPair(stateRef.current.boardIdx, effect.pairId);
         return;
-      }
       case 'cancel-clear':
         if (clearTimer.current) clearTimeout(clearTimer.current);
         clearTimer.current = null;
@@ -153,7 +172,7 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
         hostRef.current.complete();
         return;
     }
-  }, []);
+  }, [sayPair]);
 
   const dispatch = useCallback(
     (event: FlowEvent): void => {
@@ -256,6 +275,19 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
         </View>
       </View>
 
+      <Spacer size="md" />
+      <PromptPanel
+        variant="status"
+        view={slot.view}
+        onAction={(action) =>
+          slot.act(action, () => {
+            const last = lastPair.current;
+            if (last) sayPair(last.boardIdx, last.pairId);
+          })
+        }
+        onHelp={() => setHelpOpen(true)}
+        testID="pic-word-sound"
+      />
       <View accessibilityLiveRegion="polite">
         {showMissHoya ? (
           <>
@@ -265,6 +297,10 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
         ) : null}
       </View>
       <Spacer size="xl" />
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );
 }
+
+/** The surface id of Pic-Word Match for the audio telemetry (F-AUDIO-004 §3.14). */
+const PIC_WORD_AUDIO_SOURCE = 'pic-word';

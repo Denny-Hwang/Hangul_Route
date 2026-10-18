@@ -20,7 +20,6 @@ import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { localizedGloss, vocabItem } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
-import { canPlayKorean } from '../../logic/audio/capability';
 import { isContentLocked } from '../../logic/content-access';
 import { backOrHome } from '../../logic/navigation/screen-exits';
 import { ACTIVITY_ROUTES, VOCAB_SCREENS } from '../../logic/vocab/caps';
@@ -49,6 +48,7 @@ import {
   roundStartEvent,
   sheetState,
   sparkLabel,
+  speedRoundCanPlay,
   type RoundPlan,
 } from '../../logic/vocab/speed-round';
 import { initSession, reduce, type SessionConfig, type SpeedEvent, type SpeedState } from '../../logic/vocab/speed-session';
@@ -179,12 +179,13 @@ function StartSheet({
   const plan = useMemo(() => roundPlan(level, mode), [level, mode]);
   const state = sheetState(collected.length, plan.optionCount);
 
-  // A Korean voice or a bundled clip, and sound on (S7); the round keeps what it was built with.
+  // A Korean voice (or a voice list not known yet) or a bundled clip, and sound on (S7); the round keeps
+  // what it was built with.
   const tts = useAudioStore((s) => s.tts);
   const clips = useAudioStore((s) => s.clips);
   const unlocked = useAudioStore((s) => s.unlocked);
   const muted = useAudioStore((s) => s.muted);
-  const canPlay = canPlayKorean({ tts, clips, unlocked }) && !muted;
+  const canPlay = speedRoundCanPlay({ tts, clips, unlocked }, muted);
 
   // Hints are off while a screen reader is on (§3.6); `null` (not known yet) counts as on, the safe side.
   const [screenReader, setScreenReader] = useState<boolean | null>(null);

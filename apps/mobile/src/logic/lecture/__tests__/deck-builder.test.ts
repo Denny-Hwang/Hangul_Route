@@ -1491,6 +1491,35 @@ describe('expandDeck: every word card carries its sound (section 3.4 amendment 2
     expect(byKo(slides, '물')?.spoken).toEqual({ text: '물', romanization: 'mul', audioRef: 'audio/vocab/mul.mp3' });
   });
 
+  it('a quest word with its own spokenKo keeps it in a Word review; the vocab entry gives only its clip path', () => {
+    // The quest board says 물 as "물이요" (no clip); the vocab entry for 물 has a different spoken form and a clip path.
+    const boardScope: MinigameScope = {
+      kind: 'pic-word-match',
+      picWord: {
+        boards: [
+          {
+            pairs: [
+              { id: 'mul', word: { ko: '물', romanization: 'mul', en: 'water', spokenKo: '물이요' } },
+              { id: 'san', word: { ko: '산', romanization: 'san', en: 'mountain' } },
+              { id: 'bam', word: { ko: '밤', romanization: 'bam', en: 'night' } },
+            ],
+          },
+        ],
+      },
+    };
+    const boardQuest: Quest = { ...quest('mulboard', [['intro'], ['practice', 'mg:mul-board']], { rewardCardId: undefined }) };
+    const vocabMul: LectureVocabTopic['words'][number] = { id: 'vocab:mul', ko: '물', romanization: 'mul', gloss: 'water', spokenKo: '무울', audioRef: 'audio/vocab/mul.mp3' };
+    const b = bundle({
+      ...spoken,
+      scopeFor: (ref) => (ref === 'mg:mul-board' ? boardScope : spokenScopes[ref] ?? scopes[ref]),
+      questById: (id) => (id === boardQuest.id ? boardQuest : quests.find((q) => q.id === id)),
+      vocabWord: (id) => (id === vocabMul.id ? vocabMul : undefined),
+    });
+    const slides = only(expandDeck(deckOf([{ kind: 'word-review', questIds: [boardQuest.id], vocabIds: ['vocab:mul'], rounds: 5 }], { v: 2 }), b, VOICE).slides, 'vocab');
+    expect(byKo(slides, '물')?.spoken).toEqual({ text: '물이요', romanization: 'mul', audioRef: 'audio/vocab/mul.mp3' });
+    expect(byKo(slides, '물')?.speech).toBe('word');
+  });
+
   it('a syllable slide plays the syllable itself (the scope syllable has no clip in the schema)', () => {
     const syllable = only(expand([{ kind: 'quest', id: 'quest:letters' }]).slides, 'syllable')[0];
     expect(syllable?.spoken).toEqual({ text: '가', romanization: 'ga' });

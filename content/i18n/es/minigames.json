@@ -65,7 +65,7 @@
     },
     "minigame:s1-rites-q3-check": {
       "listenPick.rounds.lp-sym-jamo-yo.prompt": "la letra yo",
-      "listenPick.rounds.1.prompt": "hanbok, ropa tradicional"
+      "listenPick.rounds.1.prompt": "ropa tradicional coreana"
     },
     "minigame:s1-nature-q1-play": {
       "listenPick.rounds.0.prompt": "oso",
@@ -125,7 +125,7 @@
       "listenPick.rounds.2.prompt": "hola, adiós (entre amistades)",
       "listenPick.rounds.3.prompt": "amor",
       "listenPick.rounds.4.prompt": "Corea",
-      "listenPick.rounds.5.prompt": "hanbok, ropa tradicional"
+      "listenPick.rounds.5.prompt": "ropa tradicional coreana"
     },
     "minigame:s1-crafts-q3-check": {
       "listenPick.rounds.0.prompt": "el alfabeto coreano",

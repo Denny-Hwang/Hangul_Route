@@ -62,4 +62,151 @@ Name each file by the **file id** column plus the recorder's extension (`giyeok.
 
 ## Vocabulary words
 
-No vocabulary clips are planned yet. A word gets a row here when its record in `content/vocab/` has an `audioRef`.
+Say each word at natural speed, not syllable by syllable. Record one topic per sitting.
+
+| file id | Say (ko) | spokenKo if different | Romanization | Gloss | Topic | Note |
+|---|---|---|---|---|---|---|
+| gangaji | 강아지 |  | gangaji | puppy | animals | Also the everyday word for a pet dog. The plain word for dog is gae. |
+| gom | 곰 |  | gom | bear | animals |  |
+| goyangi | 고양이 |  | goyangi | cat | animals |  |
+| horangi | 호랑이 |  | horangi | tiger | animals |  |
+| kokkiri | 코끼리 |  | kokkiri | elephant | animals |  |
+| mulgogi | 물고기 |  | mulgogi | fish | animals |  |
+| nabi | 나비 |  | nabi | butterfly | animals |  |
+| ori | 오리 |  | ori | duck | animals |  |
+| sae-bird | 새 |  | sae | bird | animals |  |
+| tokki | 토끼 |  | tokki | rabbit | animals |  |
+| wonsungi | 원숭이 |  | wonsungi | monkey | animals |  |
+| yeou | 여우 |  | yeou | fox | animals |  |
+| bae-belly | 배 |  | bae | belly | body |  |
+| bal | 발 |  | bal | foot | body |  |
+| dari-leg | 다리 |  | dari | leg | body |  |
+| eolgul | 얼굴 |  | eolgul | face | body |  |
+| gwi | 귀 |  | gwi | ear | body |  |
+| i-tooth | 이 |  | i | tooth | body | Also called chia, a more formal word. |
+| ip | 입 |  | ip | mouth | body |  |
+| ko | 코 |  | ko | nose | body |  |
+| meori | 머리 |  | meori | head | body | It also means hair. |
+| nun-eye | 눈 |  | nun | eye | body |  |
+| pal-arm | 팔 |  | pal | arm | body |  |
+| son | 손 |  | son | hand | body |  |
+| borasaek | 보라색 |  | borasaek | purple | colors |  |
+| bunhongsaek | 분홍색 |  | bunhongsaek | pink | colors |  |
+| choroksaek | 초록색 |  | choroksaek | green | colors |  |
+| galsaek | 갈색 |  | galsaek | brown | colors |  |
+| geomeunsaek | 검은색 |  | geomeunsaek | black | colors |  |
+| haneulsaek | 하늘색 |  | haneulsaek | sky blue | colors |  |
+| hayansaek | 하얀색 |  | hayansaek | white | colors |  |
+| hoesaek | 회색 |  | hoesaek | gray | colors |  |
+| juhwangsaek | 주황색 |  | juhwangsaek | orange | colors |  |
+| noransaek | 노란색 |  | noransaek | yellow | colors |  |
+| paransaek | 파란색 |  | paransaek | blue | colors |  |
+| ppalgansaek | 빨간색 |  | ppalgansaek | red | colors |  |
+| agi | 아기 |  | agi | baby | family |  |
+| appa | 아빠 |  | appa | dad | family | The everyday word. The formal word for father is abeoji. |
+| dongsaeng | 동생 |  | dongsaeng | younger brother or sister | family | Anyone can say it, for a younger brother or a younger sister. |
+| eomma | 엄마 |  | eomma | mom | family | The everyday word. The formal word for mother is eomeoni. |
+| eonni | 언니 |  | eonni | older sister (said by a woman or girl) | family | A woman or girl calls her older sister this. A man or boy says nuna. |
+| gajok | 가족 |  | gajok | family | family |  |
+| halmeoni | 할머니 |  | halmeoni | grandmother | family |  |
+| harabeoji | 할아버지 |  | harabeoji | grandfather | family |  |
+| hyeong | 형 |  | hyeong | older brother (said by a man or boy) | family | A man or boy calls his older brother this. A woman or girl says oppa. |
+| na | 나 |  | na | I, me | family | The casual word. To be polite, say jeo. |
+| nuna | 누나 |  | nuna | older sister (said by a man or boy) | family | A man or boy calls his older sister this. A woman or girl says eonni. |
+| oppa | 오빠 |  | oppa | older brother (said by a woman or girl) | family | A woman or girl calls her older brother this. A man or boy says hyeong. |
+| banana | 바나나 |  | banana | banana | food |  |
+| bap | 밥 |  | bap | cooked rice | food | It also means a meal. Uncooked rice is ssal. |
+| dalgyal | 달걀 |  | dalgyal | egg | food | Also called gyeran, which is just as common. |
+| gimbap | 김밥 |  | gimbap | seaweed rice roll | food |  |
+| gimchi | 김치 |  | gimchi | kimchi | food | A Korean side dish of fermented vegetables, often spicy. |
+| mul | 물 |  | mul | water | food |  |
+| ppang | 빵 |  | ppang | bread | food |  |
+| ramyeon | 라면 |  | ramyeon | instant noodles | food |  |
+| sagwa-apple | 사과 |  | sagwa | apple | food |  |
+| ttalgi | 딸기 |  | ttalgi | strawberry | food |  |
+| tteok | 떡 |  | tteok | rice cake | food | A soft, chewy Korean food made from rice. |
+| uyu | 우유 |  | uyu | milk | food |  |
+| bibimbap | 비빔밥 |  | bibimbap | mixed rice bowl | k-culture | Rice topped with vegetables, mixed together before you eat. |
+| chum | 춤 |  | chum | dance | k-culture |  |
+| chuseok | 추석 |  | chuseok | Chuseok (harvest festival) | k-culture | Families gather and share songpyeon, half-moon rice cakes. |
+| deurama | 드라마 |  | deurama | TV drama | k-culture |  |
+| gayageum | 가야금 |  | gayageum | Korean zither | k-culture | A long string instrument, plucked with the fingers. |
+| hanbok | 한복 |  | hanbok | traditional Korean clothes | k-culture | Often worn on holidays such as Seollal and Chuseok. |
+| hangeul | 한글 |  | hangeul | Hangul (the Korean alphabet) | k-culture | The alphabet you are learning here. |
+| hanok | 한옥 |  | hanok | traditional Korean house | k-culture |  |
+| norae | 노래 |  | norae | song | k-culture |  |
+| seollal | 설날 |  | seollal | Lunar New Year | k-culture | Many people wear hanbok and bow to their elders. |
+| tteokbokki | 떡볶이 |  | tteokbokki | spicy rice cakes | k-culture |  |
+| yunnori | 윷놀이 |  | yunnori | yut game (board game with sticks) | k-culture | Players throw four wooden sticks, often at Lunar New Year. |
+| bada | 바다 |  | bada | sea | nature |  |
+| bi-rain | 비 |  | bi | rain | nature |  |
+| byeol | 별 |  | byeol | star | nature |  |
+| dal-moon | 달 |  | dal | moon | nature |  |
+| gang | 강 |  | gang | river | nature |  |
+| gureum | 구름 |  | gureum | cloud | nature |  |
+| hae-sun | 해 |  | hae | sun | nature |  |
+| haneul | 하늘 |  | haneul | sky | nature |  |
+| kkot | 꽃 |  | kkot | flower | nature |  |
+| namu | 나무 |  | namu | tree | nature |  |
+| nun-snow | 눈 |  | nun | snow | nature |  |
+| san | 산 |  | san | mountain | nature |  |
+| ahop | 아홉 |  | ahop | nine | numbers |  |
+| daseot | 다섯 |  | daseot | five | numbers |  |
+| dul | 둘 |  | dul | two | numbers | Before a counter word, as in du gae (two things), it becomes du. |
+| hana | 하나 |  | hana | one | numbers | Before a counter word, as in han gae (one thing), it becomes han. |
+| ilgop | 일곱 |  | ilgop | seven | numbers |  |
+| net | 넷 |  | net | four | numbers | Before a counter word, as in ne gae (four things), it becomes ne. |
+| set | 셋 |  | set | three | numbers | Before a counter word, as in se gae (three things), it becomes se. |
+| seumul | 스물 |  | seumul | twenty | numbers | Before a counter word, as in seumu gae (twenty things), it becomes seumu. |
+| yeodeol | 여덟 |  | yeodeol | eight | numbers |  |
+| yeol-ten | 열 |  | yeol | ten | numbers |  |
+| yeong-zero | 영 |  | yeong | zero | numbers | Native Korean has no zero; this word comes from Chinese. In phone numbers people say gong. |
+| yeoseot | 여섯 |  | yeoseot | six | numbers |  |
+| chaek | 책 |  | chaek | book | school |  |
+| chaeksang | 책상 |  | chaeksang | desk | school |  |
+| chilpan | 칠판 |  | chilpan | blackboard | school |  |
+| chingu | 친구 |  | chingu | friend | school |  |
+| gabang | 가방 |  | gabang | bag | school |  |
+| gawi | 가위 |  | gawi | scissors | school |  |
+| gongchaek | 공책 |  | gongchaek | notebook | school |  |
+| hakgyo | 학교 |  | hakgyo | school | school |  |
+| jiugae | 지우개 |  | jiugae | eraser | school |  |
+| seonsaengnim | 선생님 |  | seonsaengnim | teacher | school | Also how you address a teacher; the ending nim shows respect. |
+| uija | 의자 |  | uija | chair | school |  |
+| yeonpil | 연필 |  | yeonpil | pencil | school |  |
+| baram | 바람 |  | baram | wind | science |  |
+| bit | 빛 |  | bit | light | science | Light from the sun or a lamp, not light in weight. |
+| bul | 불 |  | bul | fire | science | It also means a light that is on, such as a lamp. |
+| dol-stone | 돌 |  | dol | stone | science |  |
+| eoreum | 얼음 |  | eoreum | ice | science |  |
+| geurimja | 그림자 |  | geurimja | shadow | science |  |
+| jaseok | 자석 |  | jaseok | magnet | science |  |
+| jigu | 지구 |  | jigu | Earth | science |  |
+| mujigae | 무지개 |  | mujigae | rainbow | science |  |
+| robot | 로봇 |  | robot | robot | science |  |
+| ssiat | 씨앗 |  | ssiat | seed | science |  |
+| uju | 우주 |  | uju | outer space | science | It also means the whole universe. |
+| baegu | 배구 |  | baegu | volleyball | sports |  |
+| chukgu | 축구 |  | chukgu | soccer (football) | sports |  |
+| dalligi | 달리기 |  | dalligi | running | sports |  |
+| gong-ball | 공 |  | gong | ball | sports |  |
+| jajeongeo | 자전거 |  | jajeongeo | bicycle | sports |  |
+| julleomgi | 줄넘기 |  | julleomgi | jump rope | sports |  |
+| nonggu | 농구 |  | nonggu | basketball | sports |  |
+| seuki | 스키 |  | seuki | skiing | sports |  |
+| suyeong | 수영 |  | suyeong | swimming | sports |  |
+| taegwondo | 태권도 |  | taegwondo | taekwondo | sports | A Korean martial art, known for its high kicks. |
+| takgu | 탁구 |  | takgu | table tennis | sports |  |
+| yagu | 야구 |  | yagu | baseball | sports |  |
+| bae-boat | 배 |  | bae | boat | travel |  |
+| beoseu | 버스 |  | beoseu | bus | travel |  |
+| bihaenggi | 비행기 |  | bihaenggi | airplane | travel |  |
+| gicha | 기차 |  | gicha | train | travel |  |
+| gonghang | 공항 |  | gonghang | airport | travel |  |
+| hotel | 호텔 |  | hotel | hotel | travel |  |
+| jadongcha | 자동차 |  | jadongcha | car | travel | In everyday talk, people often just say cha. |
+| jido | 지도 |  | jido | map | travel |  |
+| jihacheol | 지하철 |  | jihacheol | subway | travel |  |
+| pyo-ticket | 표 |  | pyo | ticket | travel | A ticket for a bus, a train or a show. |
+| taeksi | 택시 |  | taeksi | taxi | travel |  |
+| yeogwon | 여권 |  | yeogwon | passport | travel |  |

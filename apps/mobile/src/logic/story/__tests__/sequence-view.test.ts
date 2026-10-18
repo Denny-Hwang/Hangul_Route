@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { SequenceCard } from '../sequence-cards';
 import { initSequenceState, reduceSequence, type SequenceAction, type SequenceState } from '../sequence-player';
 import {
+  SEQUENCE_LINE_GAP_MS,
   SEQUENCE_REPLAY_MS,
   SEQUENCE_WRONG_FLASH_MS,
   autoAdvanceDue,
+  replayAdvanceDelay,
   longestKoreanGlyphs,
   sequenceCardLabel as sequenceCardLabelWith,
   sequenceCardRomanization,
@@ -134,6 +136,23 @@ describe('sequenceCardLabel', () => {
     const pseudo = pseudoLocalize(getMessages('en')).learner.story.sequence;
     expect(sequenceCardLabelWith(plainCard, '', 'wrong', pseudo)).toBe(`Eat. ${pseudo.tryAnother}`);
     expect(sequenceCardLabelWith(plainCard, '', 'hint', pseudo)).toBe(`Eat. ${pseudo.lookHere}`);
+  });
+});
+
+describe('replayAdvanceDelay: the replay waits for the line, then a short gap (F-AUDIO-004 §3.5)', () => {
+  it('a line that ends after the replay interval is followed by the gap only', () => {
+    expect(replayAdvanceDelay(4000)).toBe(SEQUENCE_LINE_GAP_MS);
+    expect(SEQUENCE_LINE_GAP_MS).toBe(600);
+  });
+
+  it('a short or silent line never moves on sooner than the replay interval from its start', () => {
+    expect(replayAdvanceDelay(0)).toBe(SEQUENCE_REPLAY_MS);
+    expect(replayAdvanceDelay(1000)).toBe(SEQUENCE_REPLAY_MS - 1000);
+    expect(replayAdvanceDelay(SEQUENCE_REPLAY_MS - SEQUENCE_LINE_GAP_MS)).toBe(SEQUENCE_LINE_GAP_MS);
+  });
+
+  it('a clock that went backwards counts as no time elapsed', () => {
+    expect(replayAdvanceDelay(-50)).toBe(SEQUENCE_REPLAY_MS);
   });
 });
 
