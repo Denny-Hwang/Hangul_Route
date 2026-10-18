@@ -34,6 +34,7 @@ import {
   presetCardWords,
   presetFallbackLine,
   presetFrom,
+  presetPlan,
   presetMinutes,
   presetSource,
   presetStages,
@@ -50,8 +51,11 @@ import { applyToOutline, chooserKeys, consoleChooserGroups, lessonLocked, outlin
  * the words of a card, `?from=`, and the chooser's tri-state on the outline.
  */
 
-const BEFORE = new Date('2026-10-30T23:59:59.999Z');
-const ON = new Date('2026-10-31T00:00:00.000Z');
+const BEFORE = new Date('2026-10-31T23:59:59.999Z');
+const ON = new Date('2026-11-01T00:00:00.000Z');
+/** LV-2 (#726) merged at 2026-10-17T16:51:42Z; Workers Builds had it live by 17:05Z (the web-app.yml run on its merge commit). */
+const LV2_LIVE = Date.parse('2026-10-17T17:05:00Z');
+const DAY = 86_400_000;
 const TODAY = '2026-10-15';
 const NOW = new Date('2026-10-15T12:00:00.000Z');
 const APP = 'https://app.hangulroute.com';
@@ -119,9 +123,12 @@ const words = (locale: UiLocale = 'en') => getMessages(locale).console.lecture.p
 const empty = (): PresetContext => consolePresetContext({ roster: roster([]), plan: null, today: TODAY, now: NOW });
 
 describe('the rollout rule for v2 links (section 4.5): no v2 link before LECTURE_V2_LINKS_FROM', () => {
-  it('is 14 days after LV-2 reached production (2026-10-17)', () => {
-    expect(LECTURE_V2_LINKS_FROM).toBe('2026-10-31');
-    expect((Date.parse(`${LECTURE_V2_LINKS_FROM}T00:00:00Z`) - Date.parse('2026-10-17T00:00:00Z')) / 86_400_000).toBe(14);
+  it('is the first whole UTC day at least 14 x 24 h after LV-2 went live (2026-10-17T17:05Z)', () => {
+    expect(LECTURE_V2_LINKS_FROM).toBe('2026-11-01');
+    const from = Date.parse(`${LECTURE_V2_LINKS_FROM}T00:00:00Z`);
+    expect((from - LV2_LIVE) / DAY).toBeGreaterThanOrEqual(14);
+    // The day before is short of 14 days, so the constant is not later than it needs to be either.
+    expect((from - DAY - LV2_LIVE) / DAY).toBeLessThan(14);
   });
 
   it('pins both sides of the day, in UTC', () => {
@@ -337,6 +344,19 @@ function textsOf(block: LectureBlock): string[] {
       return [];
   }
 }
+
+describe('the plan the ready-made lessons read (sections 4.2 and 7)', () => {
+  const everyone = { id: 'plan:all', targetLearnerIds: null };
+  const one = { id: 'plan:one', targetLearnerIds: ['profile:mina'] };
+  it('a plan for everyone, or the very plan the page was opened for; never a plan for one learner on its own', () => {
+    expect(presetPlan(everyone, null)).toBe(everyone);
+    expect(presetPlan(everyone, 'plan:other')).toBe(everyone);
+    expect(presetPlan(one, null)).toBeNull();
+    expect(presetPlan(one, 'plan:other')).toBeNull();
+    expect(presetPlan(one, 'plan:one')).toBe(one);
+    expect(presetPlan(null, 'plan:one')).toBeNull();
+  });
+});
 
 describe('no learner name reaches a link or a title (sections 8 and 14)', () => {
   // Accents, Hangul, apostrophes, a hyphen, one- and two-letter names and a very long one. (Names are chosen so that

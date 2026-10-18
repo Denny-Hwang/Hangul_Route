@@ -2,7 +2,7 @@
 
 import { PRESET_LENGTHS, type LectureBlock, type LecturePreset, type PresetMinutes, type StageKey } from '@hangul-route/content-schema';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
-import { borderWidth, colors, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { Messages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { RevisitLine, blockText } from '@/components/console/LectureParts';
@@ -10,6 +10,7 @@ import { aboutMinutes, blockMinutes } from '@/lib/console/lecture';
 import { presetCardWords } from '@/lib/console/lecture-presets';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
+import { useFittingStickyBar } from './use-sticky-clearance';
 
 /**
  * The lecture setup page's ready-made lessons and its Customize disclosure (AMENDMENTS-LECTURE-V2 sections 4.1, 4.6,
@@ -17,9 +18,14 @@ import { rem } from '@/lib/console/rem';
  *
  * - **Ready-made lessons**: the presets as cards in the order the page passes (section 4.1), one column below 45em
  *   and two from 45em. Each card is one disclosure button (`aria-expanded`, `aria-controls` naming its panel, no
- *   `aria-pressed`), named "{title}, about {n} minutes"; one card is open at a time and spans its row with a
- *   `borderWidth.thick` outline. Its panel holds the fallback line, the stage chips (Stage by stage), the length chips
- *   (none for the warm-up) and **What's in this lesson**: the outline, read-only, with its about-minutes.
+ *   `aria-pressed`), named "{title}, about {n} minutes" and described by its line; one card is open at a time and
+ *   spans its row with a `borderWidth.thick` outline. A card that cannot build what it names says so in its line, open
+ *   or closed (its fallback line, section 4.1 and the states mock). The open card's panel holds the page's note (a plan
+ *   cut to the block cap), the stage chips (Stage by stage), the length chips (none for the warm-up) and **What's in
+ *   this lesson**: the outline, read-only, with its about-minutes.
+ * - **The footer** (`LectureFooter`): the outline's minutes, Open presenter and Copy link, with the answer to a press
+ *   (pop-up blocked, copy failed, link too long) and the title problem in two live lines above them, so the answer is
+ *   in sight wherever the page is scrolled. Sticky while it takes at most a third of the window; else at the end.
  * - **Customize**: a disclosure (`plus` / `dash`) with its lead; the page's own sections go inside.
  *
  * The page mounts `PRESETS_CSS` once. Every word comes from `console.lecture` (the card's accessible name is the presenter's `a11y.presenter.presetCard`,
@@ -73,12 +79,17 @@ export const PRESETS_CSS = `
 .hr-lp-customize-body{display:flex;flex-direction:column;min-width:0}
 .hr-lp-customize-body[hidden]{display:none}
 .hr-lp-foot{position:sticky;bottom:0;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:${rem(spacing.sm)};margin-top:${rem(spacing.md)};padding-top:${rem(spacing.sm)};padding-bottom:max(${rem(spacing.sm)}, env(safe-area-inset-bottom));border-top:${px(borderWidth.thin)} solid ${colors.border.subtle};background:${colors.surface.canvas}}
-.hr-lp-foot-sum{flex:1 1 100%;color:${colors.text.secondary};font-size:${rem(typography.size.body)}}
+.hr-lp-foot[data-stuck="false"]{position:static}
+.hr-lp-foot-note{flex:1 1 100%;margin:0;padding:${rem(spacing.sm)} ${rem(spacing.md)};border-radius:${px(radii.md)};background:${colors.feedback.nudgeLight};color:${colors.text.primary};overflow-wrap:anywhere}
+.hr-lp-foot-note:empty{position:absolute;width:${px(borderWidth.thin)};height:${px(borderWidth.thin)};padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.hr-lp-foot-sum{flex:1 1 auto;color:${colors.text.secondary};font-size:${rem(typography.size.body)}}
 .hr-lp-foot-btn{flex:0 1 auto;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:${px(touchTarget.hero)};padding:${rem(spacing.sm)} ${rem(spacing.md)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.body)};font-weight:${typography.weight.bold};text-align:center;overflow-wrap:anywhere;cursor:pointer}
 .hr-lp-foot-btn:focus-visible{${focusRing}}
 .hr-lp-foot-btn:disabled{opacity:0.5;cursor:default}
 .hr-lp-foot-btn[data-tone="primary"]{flex:1 1 auto;background:${colors.brand.primary};border-color:${colors.brand.primary};color:${colors.text.onPrimary}}
-@media (min-width:45em){.hr-lp-foot-sum{flex:1 1 auto}.hr-lp-foot-btn{flex:none;padding:${rem(spacing.sm)} ${rem(spacing.xl)}}.hr-lp-foot-btn[data-tone="primary"]{flex:none;padding:${rem(spacing.sm)} ${rem(spacing.xxl)};font-size:${rem(typography.size.bodyLg)}}}
+@media (max-width:44.99em) and (orientation:portrait){.hr-lp-foot-sum{flex:1 1 100%}}
+@media (min-width:45em){.hr-lp-foot-btn{flex:none;padding:${rem(spacing.sm)} ${rem(spacing.xl)}}.hr-lp-foot-btn[data-tone="primary"]{flex:none;padding:${rem(spacing.sm)} ${rem(spacing.xxl)};font-size:${rem(typography.size.bodyLg)}}}
+@media (max-height:${px(layout.compactHeight - 1)}){.hr-lp-foot-btn{min-height:${px(touchTarget.min)}}}
 `;
 
 type LectureWords = Messages['console']['lecture'];
@@ -117,8 +128,10 @@ export interface LecturePresetsProps {
   /** Stage by stage's chip and the stages it offers. */
   stage: StageKey;
   stages: readonly StageKey[];
-  /** The open card's fallback line, or null. */
-  fallback: string | null;
+  /** A card's fallback line (section 4.1: it cannot build what it names), drawn as its line open or closed; null for none. */
+  fallbackOf: (preset: LecturePreset) => string | null;
+  /** A line for the open card's panel (the plan was cut to the block cap), or null. */
+  note: string | null;
   /** This week's plan title, for Next lesson's line; null with no plan this week. */
   planTitle: string | null;
   family: boolean;
@@ -131,7 +144,7 @@ export interface LecturePresetsProps {
 
 const stageNumber = (stage: StageKey): number => Number(stage.slice('stage'.length));
 
-export function LecturePresetsSection({ order, open, minutesOf, stage, stages, fallback, planTitle, family, outline, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
+export function LecturePresetsSection({ order, open, minutesOf, stage, stages, fallbackOf, note, planTitle, family, outline, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
   const m = useMessages();
   const l = m.console.lecture;
   const p = l.presets;
@@ -144,7 +157,9 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
           const isOpen = open === preset;
           const minutes = minutesOf(preset);
           const words = presetCardWords(preset, p, { planTitle, family });
+          const fallback = fallbackOf(preset);
           const panelId = `lecture-preset-panel-${preset}`;
+          const lineId = `lecture-preset-line-${preset}`;
           const lengths = PRESET_LENGTHS[preset];
           return (
             <li key={preset} className="hr-lp-card" data-open={isOpen} data-testid={`lecture-preset-card-${preset}`}>
@@ -154,11 +169,14 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 aria-label={m.a11y.presenter.presetCard(words.title, minutes)}
+                aria-describedby={lineId}
                 onClick={() => onToggle(preset)}
                 data-testid={`lecture-preset-${preset}`}
               >
                 <span className="hr-lp-title">{words.title}</span>
-                <span className="hr-lp-line">{words.line}</span>
+                <span id={lineId} className="hr-lp-line" data-testid={fallback !== null ? `lecture-preset-fallback-${preset}` : `lecture-preset-line-${preset}`}>
+                  {fallback ?? words.line}
+                </span>
                 <span className="hr-lp-meta">
                   <span>{l.outline.about(minutes)}</span>
                   <IconSvg name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
@@ -167,9 +185,9 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
               <div id={panelId} className="hr-lp-panel" hidden={!isOpen} data-testid={panelId}>
                 {isOpen ? (
                   <>
-                    {fallback !== null ? (
-                      <p className="hr-lp-fallback" data-testid={`lecture-preset-fallback-${preset}`}>
-                        {fallback}
+                    {note !== null ? (
+                      <p className="hr-lp-fallback" data-testid="lecture-preset-note">
+                        {note}
                       </p>
                     ) : null}
                     {preset === 'by-stage' ? (
@@ -241,5 +259,51 @@ export function LectureCustomize({ open, onToggle, children }: { open: boolean; 
         {open ? children : null}
       </div>
     </section>
+  );
+}
+
+/** The share of the window the sticky footer may cover; a taller footer (a landscape phone, 200 % text) sits at the end of the page. */
+export const FOOTER_MAX_SHARE = 1 / 3;
+
+export interface LectureFooterProps {
+  /** The outline's about-minutes. */
+  minutes: number;
+  /** The answer to the last press (pop-up blocked, copy failed, link too long) or why there is nothing to present; '' for none. */
+  status: string;
+  /** Why Open presenter and Copy link are off while the title field is out of sight (Customize closed); '' for none. */
+  alert: string;
+  canPresent: boolean;
+  copied: boolean;
+  onPresent: () => void;
+  onCopy: () => void;
+}
+
+/**
+ * The sticky footer (section 18.3): the outline's minutes, **Open presenter** and **Copy link**, with two live lines
+ * above them that are always on the page and change only their text (a status for the answer to a press, an alert for
+ * the title problem), so the answer shows next to the button that was pressed, wherever the page is scrolled. An empty
+ * line takes no room.
+ */
+export function LectureFooter({ minutes, status, alert, canPresent, copied, onPresent, onCopy }: LectureFooterProps): JSX.Element {
+  const l = useMessages().console.lecture;
+  const { ref, stuck } = useFittingStickyBar<HTMLDivElement>(FOOTER_MAX_SHARE);
+  return (
+    <div ref={ref} className="hr-lp-foot" data-stuck={stuck} data-testid="lecture-footer">
+      <p className="hr-lp-foot-note" role="status" data-sticky-extra="" data-testid="lecture-footer-status">
+        {status}
+      </p>
+      <p className="hr-lp-foot-note" role="alert" data-sticky-extra="" data-testid="lecture-footer-alert">
+        {alert}
+      </p>
+      <span className="hr-lp-foot-sum" role="status" data-testid="lecture-footer-minutes">
+        {l.outline.about(minutes)}
+      </span>
+      <button type="button" className="hr-lp-foot-btn" data-tone="primary" disabled={!canPresent} onClick={onPresent} data-testid="open-presenter">
+        {l.open.cta}
+      </button>
+      <button type="button" className="hr-lp-foot-btn" disabled={!canPresent} onClick={onCopy} data-testid="copy-presenter-link">
+        {copied ? l.copied.cta : l.copyLink.cta}
+      </button>
+    </div>
   );
 }

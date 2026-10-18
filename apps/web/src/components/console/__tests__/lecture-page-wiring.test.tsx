@@ -337,3 +337,127 @@ describe('the family words (section 6) and the link', () => {
     expect(deck.title).toBe(l.presets.words.title);
   });
 });
+
+describe('review fixes (LV-4 review)', () => {
+  const tryAgain = (root: ReactTestInstance): ReactTestInstance => root.find((n) => n.type === 'button' && textOf(n) === en.console.tryAgain);
+  const titleInput = (root: ReactTestInstance): ReactTestInstance => root.find((n) => n.type === 'input' && n.props.name === 'title');
+
+  it('nothing to follow: the closed Next lesson card says so in its line, not "Picks up where your class is."', async () => {
+    const root = await render();
+    expect(openCards(root)).toEqual(['hangul-week-1']);
+    const next = one(root, 'lecture-preset-next-lesson');
+    expect(textOf(next)).toContain(l.presets.fallback.zero);
+    expect(textOf(next)).not.toContain(l.presets.next.class);
+    expect(next.props['aria-describedby']).toBe('lecture-preset-line-next-lesson');
+    // The cards that can build what they name keep their own lines.
+    expect(textOf(one(root, 'lecture-preset-hangul-week-1'))).toContain(l.presets.zero.body);
+    expect(all(root, 'lecture-preset-fallback-hangul-week-1')).toHaveLength(0);
+  });
+
+  it('after LECTURE_V2_LINKS_FROM with no words: the closed Word review card reads the warm-up fallback', async () => {
+    vi.setSystemTime(AFTER);
+    const root = await render();
+    expect(openCards(root)).toEqual(['hangul-week-1']);
+    const words = one(root, 'lecture-preset-word-review');
+    expect(textOf(words)).toContain(l.presets.fallback.warmUp);
+    expect(textOf(words)).not.toContain(l.presets.words.body);
+  });
+
+  it('plans that did not load, an edit, then Try again: the edited outline and the typed title stay', async () => {
+    state.plans = { ok: false, error: 'network' };
+    const root = await render();
+    await openCustomize(root);
+    await act(async () => one(root, 'lecture-picker-lesson-quest:stage1-letters-q1').props.onChange());
+    await act(async () => titleInput(root).props.onChange({ target: { value: 'Our letters' } }));
+    const edited = one(root, 'lecture-outline').findAll((n) => n.type === 'li').length;
+    state.plans = { ok: true, data: [plan([{ kind: 'quest', id: 'quest:stage1-life-q1' }])] };
+    await act(async () => tryAgain(root).props.onClick());
+    expect(textOf(root)).not.toContain(l.plansFailed);
+    expect(one(root, 'lecture-outline').findAll((n) => n.type === 'li')).toHaveLength(edited);
+    expect(titleInput(root).props.value).toBe('Our letters');
+    expect(openCards(root)).toEqual(['hangul-week-1']);
+    // The cards' words follow the plan that loaded; nothing asked, nothing replaced.
+    expect(textOf(one(root, 'lecture-preset-next-lesson'))).toContain(l.presets.next.plan('Week three'));
+    expect(textOf(root)).not.toContain(l.replaceOutline);
+  });
+
+  it('plans that did not load, nothing changed, then Try again: the page opens as a first load would', async () => {
+    state.plans = { ok: false, error: 'network' };
+    const root = await render();
+    expect(openCards(root)).toEqual(['hangul-week-1']);
+    state.plans = { ok: true, data: [plan([{ kind: 'quest', id: 'quest:stage1-life-q1' }])] };
+    await act(async () => tryAgain(root).props.onClick());
+    expect(cards(root)[0]).toBe('next-lesson');
+    expect(openCards(root)).toEqual(['next-lesson']);
+    // A failed retry keeps the notice and the page as it is.
+    act(() => mounted?.unmount());
+    state.plans = { ok: false, error: 'network' };
+    const again = await render();
+    await act(async () => tryAgain(again).props.onClick());
+    expect(textOf(again)).toContain(l.plansFailed);
+  });
+
+  it('a newer plan sent to one learner never becomes the room\'s Next lesson; the plan for everyone does', async () => {
+    const everyone = plan([{ kind: 'quest', id: 'quest:stage1-life-q1' }], 'Week three');
+    const targeted = { ...plan([{ kind: 'quest', id: 'quest:stage1-nature-q1' }], 'A suggested next step'), id: 'plan:2', targetLearnerIds: ['profile:Mina'], publishedAt: '2026-10-14T09:00:00.000Z' };
+    state.plans = { ok: true, data: [everyone, targeted] };
+    const root = await render();
+    expect(openCards(root)).toEqual(['next-lesson']);
+    expect(textOf(one(root, 'lecture-preset-next-lesson'))).toContain(l.presets.next.plan('Week three'));
+    expect(textOf(root)).not.toContain('A suggested next step');
+    // Only a plan for one learner: Next lesson has nothing to follow.
+    act(() => mounted?.unmount());
+    state.plans = { ok: true, data: [targeted] };
+    const alone = await render();
+    expect(cards(alone).at(-1)).toBe('next-lesson');
+    expect(textOf(one(alone, 'lecture-preset-next-lesson'))).toContain(l.presets.fallback.zero);
+  });
+
+  it('?from=plan for a plan sent to one learner presents that plan, as the plan page asked', async () => {
+    nav.params = new URLSearchParams('id=space%3Ac1&from=plan&plan=plan%3A2');
+    const targeted = { ...plan([{ kind: 'quest', id: 'quest:stage1-nature-q1' }], 'Extra letters'), id: 'plan:2', targetLearnerIds: ['profile:Mina'] };
+    state.plans = { ok: true, data: [targeted] };
+    const root = await render();
+    expect(openCards(root)).toEqual(['next-lesson']);
+    expect(previewRows(root)).toHaveLength(1);
+  });
+
+  it('?from=plan with more items than a link holds: the open card says how many were left out', async () => {
+    nav.params = new URLSearchParams('id=space%3Ac1&from=plan&plan=plan%3A1');
+    const items: PlanItem[] = Array.from({ length: 31 }, () => ({ kind: 'quest' as const, id: 'quest:stage1-life-q1' }));
+    state.plans = { ok: true, data: [plan(items)] };
+    const root = await render();
+    expect(openCards(root)).toEqual(['next-lesson']);
+    expect(textOf(one(root, 'lecture-preset-note'))).toBe(l.source.trimmed(1, 30));
+    // Another card replaces the plan's outline, and the note goes with it.
+    await act(async () => one(root, 'lecture-preset-warm-up').props.onClick());
+    expect(all(root, 'lecture-preset-note')).toHaveLength(0);
+  });
+
+  it('a blocked pop-up and a failed copy answer in the footer, next to the buttons', async () => {
+    vi.stubGlobal('window', { open: () => null });
+    const root = await render();
+    expect(textOf(one(root, 'lecture-footer-status'))).toBe('');
+    await act(async () => one(root, 'open-presenter').props.onClick());
+    expect(textOf(one(root, 'lecture-footer-status'))).toBe(l.popupBlocked);
+    expect(one(root, 'lecture-footer-status').props.role).toBe('status');
+    vi.stubGlobal('navigator', { clipboard: { writeText: async () => Promise.reject(new Error('denied')) } });
+    await act(async () => one(root, 'copy-presenter-link').props.onClick());
+    expect(textOf(one(root, 'lecture-footer-status'))).toBe(l.copyFailed);
+    // Only the footer says it: no second notice in the page flow.
+    expect(root.findAll((n) => typeof n.type === 'string' && textOf(n) === l.copyFailed)).toHaveLength(1);
+  });
+
+  it('a name in the title: under the field while Customize is open, in the footer alert once it is closed', async () => {
+    state.learners = [learner('Mina')];
+    const root = await render();
+    await openCustomize(root);
+    await act(async () => titleInput(root).props.onChange({ target: { value: 'Mina and friends' } }));
+    expect(one(root, 'open-presenter').props.disabled).toBe(true);
+    expect(textOf(one(root, 'lecture-footer-alert'))).toBe('');
+    expect(root.findAll((n) => n.type === 'p' && n.props.role === 'alert' && textOf(n) === l.titleProblem.name)).toHaveLength(1);
+    await openCustomize(root);
+    expect(textOf(one(root, 'lecture-footer-alert'))).toBe(l.titleProblem.name);
+    expect(one(root, 'lecture-footer-alert').props.role).toBe('alert');
+  });
+});

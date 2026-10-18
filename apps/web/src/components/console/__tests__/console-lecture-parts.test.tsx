@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import * as LectureParts from '@/components/console/LectureParts';
 import { LectureChooserSection, LectureOptionsSection, LectureOutlineSection, LectureSourceSection, blockText } from '@/components/console/LectureParts';
-import { LectureCustomize, LecturePresetsLoading, LecturePresetsSection } from '@/components/console/LecturePresetParts';
+import { LectureCustomize, LectureFooter, LecturePresetsLoading, LecturePresetsSection } from '@/components/console/LecturePresetParts';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
 import { aroundSlot } from '@/lib/i18n/slot';
@@ -53,6 +53,7 @@ const plan: PlanView = {
 const jamo = 'ㄱ ㅓ ㅎ';
 const revisit: LectureBlock = { kind: 'revisit', chars: ['ㄱ', 'ㅓ', 'ㅎ'] };
 const noop = (): void => undefined;
+const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const l = getMessages('en').console.lecture;
 /** The page splits "Revisit together: …" around the jamo (`aroundSlot`); join it back so the message reads as one text node. */
 const joined = (html: string): string => html.split(`<span lang="ko">${jamo}</span>`).join(jamo);
@@ -148,7 +149,8 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
         minutesOf={() => 20}
         stage="stage2"
         stages={['stage1', 'stage2', 'stage3']}
-        fallback={getMessages(PSEUDO).console.lecture.presets.fallback.zero}
+        fallbackOf={() => null}
+        note={null}
         planTitle="Week three"
         family={false}
         outline={outline}
@@ -161,7 +163,60 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expect(html.match(/aria-expanded="false"/g)).toHaveLength(5);
     expect(html).toContain('aria-controls="lecture-preset-panel-by-stage"');
     expect(html).not.toContain('aria-pressed');
+    // Each card's button is described by its line (its accessible name is "{title}, about {n} minutes").
+    expect(html).toContain('aria-describedby="lecture-preset-line-word-review"');
+    expect(html).toContain('id="lecture-preset-line-word-review"');
     expectAllPseudo(joined(html), ['Week three', episode.title, jamo, ...rowWords(outline)]);
+  });
+
+  it('a card that cannot build what it names says so in its line, open or closed; the open card holds the note (section 4.1)', () => {
+    const w = getMessages(PSEUDO).console.lecture;
+    const fallbacks: Partial<Record<string, string>> = { 'next-lesson': w.presets.fallback.zero, 'word-review': w.presets.fallback.warmUp };
+    const html = renderToStaticMarkup(
+      <LecturePresetsSection
+        order={['hangul-week-1', 'by-stage', 'story-time', 'word-review', 'warm-up', 'next-lesson']}
+        open="next-lesson"
+        minutesOf={() => 20}
+        stage="stage1"
+        stages={['stage1']}
+        fallbackOf={(preset) => fallbacks[preset] ?? null}
+        note={w.source.trimmed(2, LECTURE_MAX_BLOCKS)}
+        planTitle={null}
+        family={false}
+        outline={[revisit]}
+        onToggle={noop}
+        onMinutes={noop}
+        onStage={noop}
+      />,
+    );
+    // Closed Word review and open Next lesson both read their fallback line in place of their usual line.
+    expect(html).toMatch(/data-testid="lecture-preset-fallback-word-review"[^>]*>[^<]*/);
+    expect(html).toContain(w.presets.fallback.warmUp);
+    expect(html).toContain(w.presets.fallback.zero);
+    expect(html).not.toContain(w.presets.words.body);
+    expect(html).not.toContain(w.presets.next.class);
+    expect(html.match(new RegExp(escape(w.presets.fallback.zero), 'g'))).toHaveLength(1);
+    // The others keep their lines.
+    expect(html).toContain(w.presets.zero.body);
+    expect(html).toContain('data-testid="lecture-preset-line-hangul-week-1"');
+    expect(html).toContain('data-testid="lecture-preset-note"');
+    expect(html).toContain(w.source.trimmed(2, LECTURE_MAX_BLOCKS));
+    expectAllPseudo(joined(html), [jamo, ...rowWords([revisit])]);
+  });
+
+  it('the footer: the answer to a press and the title problem in two live lines that are always there', () => {
+    const w = getMessages(PSEUDO).console.lecture;
+    const quiet = renderToStaticMarkup(<LectureFooter minutes={19} status="" alert="" canPresent copied={false} onPresent={noop} onCopy={noop} />);
+    expect(quiet).toContain('<p class="hr-lp-foot-note" role="status" data-sticky-extra="" data-testid="lecture-footer-status"></p>');
+    expect(quiet).toContain('<p class="hr-lp-foot-note" role="alert" data-sticky-extra="" data-testid="lecture-footer-alert"></p>');
+    expect(quiet).toContain('data-stuck="true"');
+    expectAllPseudo(quiet, [], 3);
+    const loud = renderToStaticMarkup(<LectureFooter minutes={19} status={w.popupBlocked} alert={w.titleProblem.name} canPresent={false} copied onPresent={noop} onCopy={noop} />);
+    expect(loud).toContain(w.popupBlocked);
+    expect(loud).toContain(w.titleProblem.name);
+    expect(loud).toContain(w.copied.cta);
+    expect(loud.match(/disabled=""/g)).toHaveLength(2);
+    expectAllPseudo(loud, [], 5);
   });
 
   it('the cards while loading, and Customize closed and open', () => {

@@ -1,9 +1,9 @@
 'use client';
 
-import { type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
+import { LECTURE_MAX_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LectureChooserSection,
   LectureOptionsSection,
@@ -13,12 +13,11 @@ import {
   lectureSectionStyle,
   type LectureOptionValues,
 } from '@/components/console/LectureParts';
-import { LectureCustomize, LecturePresetsLoading, LecturePresetsSection, PRESETS_CSS } from '@/components/console/LecturePresetParts';
+import { LectureCustomize, LectureFooter, LecturePresetsLoading, LecturePresetsSection, PRESETS_CSS } from '@/components/console/LecturePresetParts';
 import { Button, Field, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
-import { useStickyClearance } from '@/components/console/use-sticky-clearance';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { appUrl, lectureModeEnabled } from '@/lib/console/config';
 import {
@@ -43,6 +42,7 @@ import {
   presetFallbackLine,
   presetFrom,
   presetMinutes,
+  presetPlan,
   presetSource,
   presetStages,
   presetTitle,
@@ -107,13 +107,20 @@ function LectureInner(): JSX.Element {
   const [copied, setCopied] = useState(false);
   const now = useMemo(() => new Date(), []);
   const today = dateKey(now);
-  const footRef = useStickyClearance<HTMLDivElement>();
+  /** Whether the grown-up has changed what the page opened on (a card, a chip, a source, an edit, a title). */
+  const touched = useRef(false);
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
   const revisit = rollup ? revisitBlock(rollup.revisit) : null;
-  const ctx = useMemo(() => consolePresetContext({ roster, plan, today, now }), [roster, plan, today, now]);
+  const ctx = useMemo(() => consolePresetContext({ roster, plan: presetPlan(plan, planParam), today, now }), [roster, plan, planParam, today, now]);
   const stages = useMemo(() => presetStages(), []);
   const stageShown = stage ?? defaultPresetStage(ctx, stages);
+  const order = useMemo(() => consolePresetOrder(ctx, now), [ctx, now]);
+  // Each card's fallback line, open or closed (section 4.1): what it builds at its length now.
+  const fallbacks = useMemo(
+    () => new Map(order.map((preset) => [preset, presetFallbackLine(resolveConsolePreset(preset, presetMinutes(preset, lengths), stageShown, ctx).fallback, l.presets)] as const)),
+    [order, lengths, stageShown, ctx, l.presets],
+  );
 
   /** A preset's resolved blocks become the outline; the deck takes the preset's name until a title is typed. */
   const applyPreset = useCallback((preset: LecturePreset, minutes: PresetMinutes, chip: StageKey, context: PresetContext): void => {
@@ -150,6 +157,35 @@ function LectureInner(): JSX.Element {
     }
   }, []);
 
+  /** What the page opens on (sections 4.1 and 4.6): the card `?from=` names, else the first card, with its outline. */
+  const select = useCallback(
+    (rosterData: Roster, chosen: PlanView | null): void => {
+      const context = consolePresetContext({ roster: rosterData, plan: presetPlan(chosen, planParam), today, now });
+      const chip = defaultPresetStage(context);
+      setStage(chip);
+      setLengths({});
+      touched.current = false;
+      const revisitNow = revisitBlock(classRollup(rosterData.learners, now).revisit);
+      if (preselected === 'plan' && chosen && context.plan) {
+        // "Present this plan": Next lesson open, the plan's own blocks as the outline (section 4.6).
+        const outline = planOutline(chosen, today);
+        applyPreset('next-lesson', presetMinutes('next-lesson', {}), chip, context);
+        setBlocks(outline.blocks);
+        setOmitted(outline.omitted);
+        setSource('plan');
+      } else if (preselected === 'revisit' && revisitNow) {
+        // "Revisit together": the warm-up open, the space's letters to revisit as the outline.
+        applyPreset('warm-up', presetMinutes('warm-up', {}), chip, context);
+        setBlocks([revisitNow]);
+        setSource('revisit');
+      } else {
+        const first = presetFrom(preselected) ?? consolePresetOrder(context, now)[0] ?? 'hangul-week-1';
+        applyPreset(first, presetMinutes(first, {}), chip, context);
+      }
+    },
+    [planParam, preselected, today, now, applyPreset],
+  );
+
   const load = useCallback(async (): Promise<void> => {
     if (!api || !enabled) return;
     setError(null);
@@ -164,32 +200,27 @@ function LectureInner(): JSX.Element {
     setRoster(rosterRes.data);
     setPlan(chosen);
     setPlansFailed(!plansRes.ok);
-    const context = consolePresetContext({ roster: rosterRes.data, plan: chosen, today, now });
-    const chip = defaultPresetStage(context);
-    setStage(chip);
-    setLengths({});
-    const revisitNow = revisitBlock(classRollup(rosterRes.data.learners, now).revisit);
-    if (preselected === 'plan' && chosen && context.plan) {
-      // "Present this plan": Next lesson open, the plan's own blocks as the outline (section 4.6).
-      const outline = planOutline(chosen, today);
-      applyPreset('next-lesson', presetMinutes('next-lesson', {}), chip, context);
-      setBlocks(outline.blocks);
-      setOmitted(outline.omitted);
-      setSource('plan');
-    } else if (preselected === 'revisit' && revisitNow) {
-      // "Revisit together": the warm-up open, the space's letters to revisit as the outline.
-      applyPreset('warm-up', presetMinutes('warm-up', {}), chip, context);
-      setBlocks([revisitNow]);
-      setSource('revisit');
-    } else {
-      const first = presetFrom(preselected) ?? consolePresetOrder(context, now)[0] ?? 'hangul-week-1';
-      applyPreset(first, presetMinutes(first, {}), chip, context);
-    }
-  }, [api, enabled, spaceId, planParam, preselected, today, now, applyPreset]);
+    select(rosterRes.data, chosen);
+  }, [api, enabled, spaceId, planParam, select]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  /**
+   * Try again after the plans did not load: only the plans are read again. While the page is still what it opened on,
+   * it opens again as a first load would (a plan to follow can now come first); once the grown-up has changed anything,
+   * the outline, the title, the open card and the chips stay, and only the cards' words and the Source follow the plan.
+   */
+  const retryPlans = useCallback(async (): Promise<void> => {
+    if (!api || !roster) return;
+    const res = await api.listPlans(spaceId);
+    if (!res.ok) return;
+    const chosen = pickPlan(res.data, planParam);
+    setPlan(chosen);
+    setPlansFailed(false);
+    if (!touched.current) select(roster, chosen);
+  }, [api, roster, spaceId, planParam, select]);
 
   const deckTitle = title ?? (resolved ? presetTitle(resolved, l.presets) : '');
 
@@ -222,8 +253,6 @@ function LectureInner(): JSX.Element {
   const codeBlock = roster ? classCodeBlock(roster.joinCode) : null;
   // "Same as this device" (null, the default) puts no language in the deck (owner items 6 and 7).
   const options: LectureOptionValues = { romanization, strokeGuide, sound, uiLocale };
-  const order = consolePresetOrder(ctx, now);
-  const openResolved = open ? resolveConsolePreset(open, presetMinutes(open, lengths), stageShown, ctx) : null;
 
   const linkFor = () =>
     presenterLink(appUrl(), {
@@ -267,6 +296,7 @@ function LectureInner(): JSX.Element {
   };
 
   const edit = (next: LectureBlock[]): void => {
+    touched.current = true;
     setBlocks(next);
     setEdited(true);
   };
@@ -277,27 +307,32 @@ function LectureInner(): JSX.Element {
 
   const pickSource = async (next: LectureSource): Promise<void> => {
     if (!(await mayReplace())) return;
+    touched.current = true;
     choose(next, { plan, revisit });
   };
 
   const togglePreset = async (preset: LecturePreset): Promise<void> => {
     // A second press on the open card closes it; the outline stays what it is.
     if (open === preset) {
+      touched.current = true;
       setOpen(null);
       return;
     }
     if (!(await mayReplace())) return;
+    touched.current = true;
     applyPreset(preset, presetMinutes(preset, lengths), stageShown, ctx);
   };
 
   const chooseLength = async (preset: LecturePreset, minutes: PresetMinutes): Promise<void> => {
     if (!(await mayReplace())) return;
+    touched.current = true;
     setLengths((current) => ({ ...current, [preset]: minutes }));
     applyPreset(preset, minutes, stageShown, ctx);
   };
 
   const chooseStage = async (next: StageKey): Promise<void> => {
     if (!(await mayReplace())) return;
+    touched.current = true;
     setStage(next);
     applyPreset('by-stage', presetMinutes('by-stage', lengths), next, ctx);
   };
@@ -309,10 +344,12 @@ function LectureInner(): JSX.Element {
     setUiLocale(next.uiLocale);
   };
 
+  // Under the title field while Customize is open; in the footer's alert line while it is closed.
+  const titleText = deckTitle.trim().length > 0 && problem !== null ? l.titleProblem[problem] : null;
   const titleAlert =
-    deckTitle.trim().length > 0 && problem !== null ? (
+    titleText !== null ? (
       <p role="alert" style={{ color: colors.text.primary, backgroundColor: colors.feedback.nudgeLight, borderRadius: radii.md, padding: spacing.sm, margin: 0 }}>
-        {l.titleProblem[problem]}
+        {titleText}
       </p>
     ) : null;
 
@@ -342,7 +379,7 @@ function LectureInner(): JSX.Element {
           {plansFailed ? (
             <Notice tone="nudge">
               <p style={{ margin: `0 0 ${spacing.sm}px` }}>{l.plansFailed}</p>
-              <Button onClick={() => void load()}>{c.tryAgain}</Button>
+              <Button onClick={() => void retryPlans()}>{c.tryAgain}</Button>
             </Notice>
           ) : null}
 
@@ -352,7 +389,8 @@ function LectureInner(): JSX.Element {
             minutesOf={(preset) => presetMinutes(preset, lengths)}
             stage={stageShown}
             stages={stages}
-            fallback={openResolved ? presetFallbackLine(openResolved.fallback, l.presets) : null}
+            fallbackOf={(preset) => fallbacks.get(preset) ?? null}
+            note={open === 'next-lesson' && source === 'plan' && omitted > 0 ? l.source.trimmed(omitted, LECTURE_MAX_BLOCKS) : null}
             planTitle={ctx.plan?.title ?? null}
             family={family}
             outline={blocks}
@@ -362,7 +400,7 @@ function LectureInner(): JSX.Element {
           />
 
           <LectureCustomize open={customize} onToggle={() => setCustomize((v) => !v)}>
-            <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={false} omitted={omitted} onChoose={pickSource} onRetry={() => void load()} />
+            <LectureSourceSection source={source} plan={plan} revisit={revisit} plansFailed={false} omitted={omitted} onChoose={pickSource} onRetry={() => void retryPlans()} />
             <LectureChooserSection blocks={blocks} onChange={edit} resetKey={outlineKey} />
             <LectureOutlineSection blocks={blocks} codeBlock={codeBlock} family={family} onChange={edit} onAdd={add} />
             <LectureOptionsSection value={options} available={available} onChange={setOptions} />
@@ -373,6 +411,7 @@ function LectureInner(): JSX.Element {
                 label={l.titleField.label}
                 value={deckTitle}
                 onChange={(v) => {
+                  touched.current = true;
                   setTitle(v);
                   setEdited(true);
                 }}
@@ -396,23 +435,16 @@ function LectureInner(): JSX.Element {
             </section>
           </LectureCustomize>
 
-          {!customize ? titleAlert : null}
-          {notice === 'blocked' ? <Notice tone="nudge">{l.popupBlocked}</Notice> : null}
-          {notice === 'copyFailed' ? <Notice tone="nudge">{l.copyFailed}</Notice> : null}
-          {notice === 'linkFailed' ? <Notice tone="nudge">{l.linkFailed}</Notice> : null}
-          {blocks.length === 0 ? <Muted>{l.nothing}</Muted> : null}
-          {/* The sticky footer (section 18.3): the outline's minutes, Open presenter and Copy link stay in sight. */}
-          <div ref={footRef} className="hr-lp-foot" data-testid="lecture-footer">
-            <span className="hr-lp-foot-sum" role="status" data-testid="lecture-footer-minutes">
-              {l.outline.about(aboutMinutes(blocks))}
-            </span>
-            <button type="button" className="hr-lp-foot-btn" data-tone="primary" disabled={!canPresent} onClick={present} data-testid="open-presenter">
-              {l.open.cta}
-            </button>
-            <button type="button" className="hr-lp-foot-btn" disabled={!canPresent} onClick={() => void copy()} data-testid="copy-presenter-link">
-              {copied ? l.copied.cta : l.copyLink.cta}
-            </button>
-          </div>
+          {/* The sticky footer (section 18.3): the outline's minutes, Open presenter and Copy link, and the answer to a press beside them. */}
+          <LectureFooter
+            minutes={aboutMinutes(blocks)}
+            status={notice === 'blocked' ? l.popupBlocked : notice === 'copyFailed' ? l.copyFailed : notice === 'linkFailed' ? l.linkFailed : blocks.length === 0 ? l.nothing : ''}
+            alert={!customize && titleText !== null ? titleText : ''}
+            canPresent={canPresent}
+            copied={copied}
+            onPresent={present}
+            onCopy={() => void copy()}
+          />
         </>
       ) : null}
     </AdultFrame>

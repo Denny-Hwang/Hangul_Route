@@ -102,10 +102,20 @@ export function consoleRevisitChars(rollupRevisit: readonly string[], planOutlin
   return [...new Set(plain)].slice(0, 6);
 }
 
+/**
+ * The plan the ready-made lessons read (N1, W1, U): the page's plan when it is for everyone, or when the page was
+ * opened for that very plan (`?plan=`, "Present this plan"). A plan sent to one or a few learners (such as the
+ * suggested next step of one placement) never becomes the whole room's Next lesson, word review or warm-up on its own.
+ */
+export function presetPlan<T extends { id: string; targetLearnerIds: readonly string[] | null }>(plan: T | null, planId: string | null): T | null {
+  if (!plan) return null;
+  return plan.targetLearnerIds === null || plan.id === planId ? plan : null;
+}
+
 export interface ConsolePresetInput {
   /** The space's roster (null while it has not loaded or did not load: every preset still resolves, section 9). */
   roster: RosterPick | null;
-  /** The plan the page presents (`pickPlan`), or null. */
+  /** The plan the presets read (`presetPlan` of the page's `pickPlan`), or null. */
   plan: PlanView | null;
   /** Today, as `dateKey`. */
   today: string;

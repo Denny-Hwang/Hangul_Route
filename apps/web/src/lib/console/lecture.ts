@@ -26,7 +26,7 @@ import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS, type LectureCatalogueStory } fro
 import type { PlanView, Roster, SpaceListItem } from './api';
 import { findBannedWord } from './banned-text';
 import { thisWeekOf, weekGroups } from './curriculum';
-import { type PlanLike, latestPublished } from './plans';
+import { type PlanLike, rosterPlan } from './plans';
 
 /**
  * Lecture setup, the pure half (F-TCH-004 §3.10, §3.11). The console composes a
@@ -60,10 +60,14 @@ export function lecturePlanFrom(params: { get(name: string): string | null } | n
   return id ? id : null;
 }
 
-/** The plan to present: the one on the plan page when it is still published and live, else the newest published plan. */
-export function pickPlan<T extends PlanLike & { id: string }>(plans: readonly T[], planId: string | null): T | null {
+/**
+ * The plan to present: the one on the plan page when it is still published and live, else the plan the roster shows
+ * (`rosterPlan`: the newest published plan for everyone, so a plan sent to one or a few learners never buries the
+ * class plan; the newest published plan of any kind when there is no plan for everyone).
+ */
+export function pickPlan<T extends PlanLike & { id: string; targetLearnerIds: readonly string[] | null }>(plans: readonly T[], planId: string | null): T | null {
   const chosen = plans.find((p) => p.id === planId && p.publishedAt !== null && p.archivedAt === null);
-  return chosen ?? latestPublished(plans);
+  return chosen ?? rosterPlan(plans);
 }
 
 /** One block per plan item, in order; an id the deck grammar refuses is left out. */
@@ -322,12 +326,14 @@ export function titleProblem(title: string, roster: RosterPick): TitleProblem | 
 
 /**
  * The rollout rule for v2 links (AMENDMENTS-LECTURE-V2 section 4.5 and row LV-4): no console link holds a v2 deck
- * until the presenter that reads v2 (LV-2, #726, in production from 2026-10-17) has been live for 14 days, so a
- * presenter cached on a classroom PC has turned over to a build with Reload and the Recent pass-through. Only a deck
- * holding a `word-review` block is v2 (LV-D6), so before this UTC day the page offers no Word review and no link it
- * builds is v2; the presenter's own presets resolve in its own session and are not affected.
+ * until the presenter that reads v2 (LV-2, #726, merged 2026-10-17T16:51Z and live by 17:05Z) has been live for at
+ * least 14 days, so a presenter cached on a classroom PC has turned over to a build with Reload and the Recent
+ * pass-through. 2026-11-01 is the first whole UTC day at least 14 x 24 h after that. Only a deck holding a
+ * `word-review` block is v2 (LV-D6), so before this UTC day the page offers no Word review and no link it builds is
+ * v2; the presenter's own presets resolve in its own session and are not affected. The day is read from this
+ * device's clock: a clock days ahead is the one way to an early v2 link, and a stale presenter then shows Reload.
  */
-export const LECTURE_V2_LINKS_FROM = '2026-10-31';
+export const LECTURE_V2_LINKS_FROM = '2026-11-01';
 
 /** Whether a console link may hold a v2 deck at `now` (the UTC day, as `dateKey`). */
 export function v2LinksAllowed(now: Date): boolean {
