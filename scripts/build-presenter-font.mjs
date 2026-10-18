@@ -17,7 +17,8 @@
 // vocabulary topics, and the title, keywords, scene Korean and check Korean of the
 // stories the Library lists (the same production gate as build-lecture-catalogue.mjs); the reading
 // slides (AMENDMENTS-LECTURE-V2 LV-S1) add a pattern's frame between its gaps, the Korean chips of
-// its note and of a realia page's caption.
+// its note and of a realia page's caption, in English and in the es / ko content overlays
+// (content/i18n/<locale>/*.json), which give a Spanish or Korean deck its own note and caption.
 // Only taught Korean uses the subset: UI-language text (titles, card facts, glosses) and
 // the teacher-typed deck title use the system Korean stack, so they are not in the list.
 // apps/mobile/src/logic/lecture/__tests__/presenter-glyphs.test.ts expands every shipped
@@ -87,17 +88,24 @@ const koTokens = (text) => (typeof text === "string" ? [...text.matchAll(/\{ko:(
 
 // ---- glyph list (pure) -------------------------------------------------------------
 
+/** An element's overlay key (content-schema `overlayElementKey`): its id or key, else its index. */
+const elementKey = (element, index) => (isObject(element) && typeof element.id === "string" ? element.id : isObject(element) && typeof element.key === "string" ? element.key : String(index));
+
 /**
  * Every Korean string the presenter can draw from this content. Inputs are plain data:
  * `jamo` (jamoKnown), `scopes` (minigameScopes), `quests` (questsAll), `cards`
  * (heritageCardsAll), `extra` (presenter words such as the Pause word), `topicFiles`
- * and `stories` ({ name, json } per content file).
+ * and `stories` ({ name, json } per content file), and `overlays` (the es / ko content
+ * overlays, `{ [locale]: { [entityId]: { [field]: text } } }`).
  */
-export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFiles, stories } = {}) {
+export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFiles, stories, overlays } = {}) {
   const out = [];
   const add = (value) => {
     if (typeof value === "string" && value.length > 0) out.push(value);
   };
+  /** The `{ko:}` Korean of one overlay field of an entity, in every overlay locale. */
+  const overlayTokens = (entityId, field) =>
+    Object.values(isObject(overlays) ? overlays : {}).flatMap((byEntity) => koTokens(isObject(byEntity) && isObject(byEntity[entityId]) ? byEntity[entityId][field] : undefined));
 
   for (const j of list(jamo)) {
     add(j.char);
@@ -134,9 +142,11 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
     }
   }
   for (const quest of list(quests)) {
-    for (const step of list(quest.steps)) {
-      for (const page of list(step.discover?.pages)) {
-        for (const item of list(page.items)) {
+    list(quest.steps).forEach((step, s) => {
+      list(step.discover?.pages).forEach((page, p) => {
+        const pageField = `steps.${elementKey(step, s)}.discover.pages.${elementKey(page, p)}`;
+        list(page.items).forEach((item, i) => {
+          const itemField = `${pageField}.items.${elementKey(item, i)}`;
           if (item.type === "word") add(item.word?.ko);
           // F-CURR-001 §3.10: the upper-stage Discover items the lecture deck shows (discoverItemTexts).
           if (item.type === "sentence") add(item.sentence?.ko);
@@ -144,6 +154,7 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
             // AMENDMENTS-LECTURE-V2 LV-S1: the pattern slide draws the frame between its gap boxes and the note's Korean chips.
             if (typeof item.frame?.ko === "string") item.frame.ko.split(SLOT_MARKER).forEach(add);
             koTokens(item.noteEn).forEach(add);
+            overlayTokens(quest.id, `${itemField}.note`).forEach(add);
             list(item.examples).forEach((e) => add(e?.ko));
           }
           if (item.type === "exchange") list(item.lines).forEach((l) => add(l?.line?.ko));
@@ -151,10 +162,11 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
             list(item.keyWords).forEach((w) => add(w?.ko));
             // The realia slide's caption: its own, else its page's, with its Korean chips (its sheet comes with the scopes above).
             koTokens(item.captionEn ?? page.captionEn).forEach(add);
+            overlayTokens(quest.id, item.captionEn !== undefined ? `${itemField}.caption` : `${pageField}.caption`).forEach(add);
           }
-        }
-      }
-    }
+        });
+      });
+    });
   }
   for (const card of list(cards)) add(card.subtitleKo);
   list(extra).forEach(add);
@@ -380,7 +392,22 @@ export async function loadRepoContent(root) {
     extra: [lecture.PAUSE_WORD.ko],
     topicFiles: readJsonDir(root, ["content", "vocab"], (name) => !name.startsWith("_")),
     stories: readJsonDir(root, ["content", "stories"], () => true),
+    overlays: Object.fromEntries(OVERLAY_LOCALES.map((locale) => [locale, overlayEntries(readJsonDir(root, ["content", "i18n", locale], () => true))])),
   };
+}
+
+/** The content overlay locales (content/i18n/<locale>/). */
+const OVERLAY_LOCALES = ["es", "ko"];
+
+/** One locale's overlay files merged by entity id (a file's `entries`). */
+function overlayEntries(files) {
+  const out = {};
+  for (const { json } of files) {
+    for (const [entityId, fields] of Object.entries(isObject(json?.entries) ? json.entries : {})) {
+      if (isObject(fields)) out[entityId] = { ...out[entityId], ...fields };
+    }
+  }
+  return out;
 }
 
 function defaultRunSubset(args) {

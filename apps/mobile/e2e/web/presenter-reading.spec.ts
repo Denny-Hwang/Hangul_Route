@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
-import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
+import { encodeDeck, type LectureDeckInput, type UiLocale } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { shot } from './shots';
 
@@ -11,8 +12,9 @@ import { shot } from './shots';
  * region names its kind, the kind label is drawn (the realia page has none, V5), its Korean is not empty,
  * nothing leaves the content area (the stage on a phone), no text spills out of the box that holds it, and
  * no text is below the stage caption size or 18 px. Every realia layout is among them (menu, ticket, trail sign, price cards, the plain sheet), and
- * a two-slot frame. Sound on a read along plays the current line and lights it while it plays; on a realia
- * page it reads the sheet. Screenshots with `HR_SHOTS=1`.
+ * a two-slot frame. The same deck with Spanish and with Korean slides (`options.uiLocale`: longer notes,
+ * captions and glosses) is walked at 1280 x 720 and 568 x 320. Sound on a read along plays the current line
+ * and lights it while it plays; on a realia page it reads the sheet. Screenshots with `HR_SHOTS=1`.
  */
 
 const DECK: LectureDeckInput = {
@@ -35,13 +37,33 @@ const DECK: LectureDeckInput = {
   picker: null,
 };
 
-/** The four kinds as the live region and the grid name them, and the label each draws (V5). */
-const KINDS = [
-  { kind: 'Sentence', label: 'Sentence' },
-  { kind: 'Sentence pattern', label: 'Sentence pattern' },
-  { kind: 'Read along', label: 'Read along' },
-  { kind: 'Look and read', label: null },
-] as const;
+/** The four kinds as the grid names them (the device language, English here). */
+const KINDS = [{ kind: 'Sentence' }, { kind: 'Sentence pattern' }, { kind: 'Read along' }, { kind: 'Look and read' }] as const;
+type GridKind = (typeof KINDS)[number]['kind'];
+
+/** A kind as the stage names it in the slide language: in the live region, and the label it draws (V5; the realia page has none). */
+function kindIn(locale: UiLocale, kind: GridKind): { name: string; label: string | null } {
+  const m = getMessages(locale).learner.presenter;
+  switch (kind) {
+    case 'Sentence':
+      return { name: m.grid.kind.sentence, label: m.slide.sentence.label };
+    case 'Sentence pattern':
+      return { name: m.grid.kind.pattern, label: m.slide.pattern.label };
+    case 'Read along':
+      return { name: m.grid.kind.readAlong, label: m.slide.readAlong.label };
+    case 'Look and read':
+      return { name: m.grid.kind.realia, label: null };
+  }
+}
+
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** The live region's opening for slide `n` in the slide language ("Slide 3 of 40, " and its es / ko forms), then `what`. */
+function liveOpening(locale: UiLocale, n: number, what = ''): RegExp {
+  const ANY = 98765;
+  const text = getMessages(locale).a11y.presenter.slide(n, ANY, what);
+  return new RegExp(`^${escapeRegExp(text).replace(String(ANY), '\\d+')}`);
+}
 
 /** Stage numbers (presenter tokens and README constants). */
 const STAGE_WIDTH = 1280;
@@ -51,6 +73,20 @@ const TEXT_FLOOR = 18;
 
 function link(deck: LectureDeckInput = DECK): string {
   return `/present#d=${encodeDeck(deck)}`;
+}
+
+/** The walk's deck with its slides in `locale` (the chrome stays in the device language). */
+function deckIn(locale: UiLocale): LectureDeckInput {
+  return { ...DECK, id: locale === 'es' ? 'lecture:e2es03' : 'lecture:e2es04', options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: true, uiLocale: locale } };
+}
+
+/** What Sound has asked the voice to say since entry `from` (the silent unlock utterance left out). */
+async function spokenSince(page: Page, from: number): Promise<string[]> {
+  return page.evaluate((at) => ((window as Window & { __spoken?: string[] }).__spoken ?? []).slice(at).filter((t) => t.trim() !== ''), from);
+}
+
+async function spokenCount(page: Page): Promise<number> {
+  return page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken?.length ?? 0);
 }
 
 /**
@@ -138,11 +174,11 @@ async function readingSlides(page: Page): Promise<Array<{ n: number; kind: strin
   });
 }
 
-async function goto(page: Page, n: number): Promise<void> {
+async function goto(page: Page, n: number, locale: UiLocale = 'en'): Promise<void> {
   await page.keyboard.press('g');
   await page.getByTestId(`presenter-grid-goto-${n}`).click();
   await expect(page.getByTestId('presenter-grid')).toHaveCount(0);
-  await expect.poll(() => liveText(page)).toMatch(new RegExp(`^Slide ${n} of \\d+, `));
+  await expect.poll(() => liveText(page)).toMatch(liveOpening(locale, n));
 }
 
 /**
@@ -178,14 +214,15 @@ async function fitProblems(page: Page, phone: boolean): Promise<string[]> {
 }
 
 /** Every reading slide, every build revealed: its kind, its label, its Korean, its fit; returns the kinds seen. */
-async function walkReading(page: Page, label: string, phone: boolean): Promise<Map<string, number>> {
+async function walkReading(page: Page, label: string, phone: boolean, locale: UiLocale = 'en'): Promise<Map<string, number>> {
   const seen = new Map<string, number>();
   for (const { n, kind } of await readingSlides(page)) {
-    await goto(page, n);
+    await goto(page, n, locale);
     await revealAll(page);
     seen.set(kind, (seen.get(kind) ?? 0) + 1);
-    expect(await liveText(page), `${label} slide ${n}`).toMatch(new RegExp(`^Slide ${n} of \\d+, ${kind}, .+`));
-    const want = KINDS.find((k) => k.kind === kind)!.label;
+    const named = kindIn(locale, kind as GridKind);
+    expect(await liveText(page), `${label} slide ${n}`).toMatch(new RegExp(`${liveOpening(locale, n, `${named.name}, `).source}.+`));
+    const want = named.label;
     const kindLabel = page.getByTestId('presenter-stage').getByTestId('presenter-kind-label');
     if (want === null) await expect(kindLabel).toHaveCount(0);
     else await expect(kindLabel).toHaveText(want);
@@ -251,6 +288,44 @@ test.describe('the reading slides on a phone sideways (LV-M1)', () => {
   }
 });
 
+test.describe('the reading slides in Spanish and Korean (longer notes, captions and glosses)', () => {
+  for (const locale of ['es', 'ko'] as const) {
+    test.describe(`slides in ${locale} at 1280 x 720`, () => {
+      test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
+
+      test('every reading slide fits, with its kind and label in the slide language and its Korean', async ({ page }) => {
+        test.setTimeout(120_000);
+        const errors: string[] = [];
+        page.on('pageerror', (e) => errors.push(String(e)));
+        await page.goto(link(deckIn(locale)));
+        await startLesson(page);
+        const seen = await walkReading(page, `${locale}-1280x720`, false, locale);
+        for (const { kind } of KINDS) expect(seen.get(kind) ?? 0, kind).toBeGreaterThan(0);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        expect(errors).toEqual([]);
+      });
+    });
+
+    test.describe(`slides in ${locale} on a phone sideways at 568 x 320`, () => {
+      test.use({ viewport: { width: 568, height: 320 }, isMobile: true, hasTouch: true });
+
+      test('every reading slide stays inside the stage, no text below 18 px', async ({ page }) => {
+        test.setTimeout(120_000);
+        await page.addInitScript(() => {
+          Element.prototype.requestFullscreen = () => Promise.resolve();
+        });
+        await page.goto(link(deckIn(locale)));
+        await expect(page.getByTestId('presenter-start-footer')).toBeVisible();
+        await startLesson(page, true);
+        await expect(page.getByTestId('presenter-too-small')).toHaveCount(0);
+        const seen = await walkReading(page, `${locale}-phone-568x320`, true, locale);
+        for (const { kind } of KINDS) expect(seen.get(kind) ?? 0, kind).toBeGreaterThan(0);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      });
+    });
+  }
+});
+
 test.describe('Sound on the reading slides (section 3.4 amendment 2026-10-17, V6)', () => {
   test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
 
@@ -264,27 +339,30 @@ test.describe('Sound on the reading slides (section 3.4 amendment 2026-10-17, V6
     // Line A only: Sound plays it and lights it.
     const lines = page.getByTestId('presenter-read-along-line');
     const lineA = (await lines.nth(0).getAttribute('aria-label'))!;
+    const beforeA = await spokenCount(page);
     await page.keyboard.press('s');
     await expect(lines.nth(0).getByTestId('presenter-read-along-playing')).toBeVisible();
     await shot(page, 'presenter-reading-read-along-lit-a-1280x720');
-    const spokenA = await page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken?.at(-1) ?? '');
-    expect(lineA).toContain(spokenA);
+    // The voice was asked to say line A (waiting for the speak, which comes after the clip try).
+    await expect.poll(async () => (await spokenSince(page, beforeA)).some((t) => lineA.includes(t))).toBe(true);
     // The light goes when the line ends.
     await expect(page.getByTestId('presenter-read-along-playing')).toHaveCount(0, { timeout: 3000 });
     // Line B: now the current line.
     await revealAll(page);
+    const lineB = (await lines.nth(1).getAttribute('aria-label')) ?? '';
+    const beforeB = await spokenCount(page);
     await page.keyboard.press('s');
     await expect(lines.nth(1).getByTestId('presenter-read-along-playing')).toBeVisible();
     await expect(lines.nth(0).getByTestId('presenter-read-along-playing')).toHaveCount(0);
     await shot(page, 'presenter-reading-read-along-lit-b-1280x720');
-    const spokenB = await page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken?.at(-1) ?? '');
-    expect((await lines.nth(1).getAttribute('aria-label')) ?? '').toContain(spokenB);
+    await expect.poll(async () => (await spokenSince(page, beforeB)).some((t) => lineB.includes(t) && !lineA.includes(t))).toBe(true);
     await expect(page.getByTestId('presenter-read-along-playing')).toHaveCount(0, { timeout: 3000 });
 
     const realia = slides.find((s) => s.kind === 'Look and read')!;
     await goto(page, realia.n);
+    const beforeSheet = await spokenCount(page);
     await page.keyboard.press('s');
     // The sheet, line by line: its title first.
-    await expect.poll(() => page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken?.at(-1) ?? '')).toMatch(/^메뉴, /);
+    await expect.poll(async () => (await spokenSince(page, beforeSheet)).some((t) => t.startsWith('메뉴, '))).toBe(true);
   });
 });
