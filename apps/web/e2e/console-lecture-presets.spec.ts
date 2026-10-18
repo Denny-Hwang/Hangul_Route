@@ -11,7 +11,9 @@ import { API, NOW, SESSION_KEY } from './report-fixtures';
  * Helper picker anywhere, the grouped chooser shows one tab at a time at 320 / 768 / 1180 without sideways scroll,
  * the Slides language hint follows the choice, `?from=plan` opens Next lesson with the plan's own blocks, a family
  * space reads the family words, Word review is offered only from `LECTURE_V2_LINKS_FROM`, and Open presenter opens a
- * tab whose `window.opener` is null.
+ * tab whose `window.opener` is null. A closed card that cannot build what it names reads its fallback line; a blocked
+ * pop-up answers in the footer, in sight with the page at its top; the footer takes at most a third of the window
+ * (landscape phones, 1280 x 720, 1920 x 1080, 150 % and 200 % text) or sits at the end of the page.
  *
  * Runs on the console e2e export made with lecture mode on (the one `lesson-picker.spec.ts` uses):
  *
@@ -56,7 +58,29 @@ const PLAN = {
 const json = (route: Route, status: number, data: unknown) =>
   route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(status < 300 ? { data } : { error: 'mocked' }) });
 
-async function mock(page: Page, { kind = 'class', plans = [] as unknown[], now = NOW }: { kind?: 'class' | 'family'; plans?: unknown[]; now?: string } = {}): Promise<{ unexpected: string[] }> {
+/** A learner two lessons into Stage 1 (`summary.journey`), so Next lesson has a place to follow (N2). */
+const ON_THE_ROUTE = {
+  id: 'profile:mina',
+  displayName: 'Mina',
+  ageGroup: '8-9',
+  avatar: 'hoya-orange',
+  joinedAt: '2026-09-01T00:00:00.000Z',
+  lastActiveAt: '2026-10-14T00:00:00.000Z',
+  lastSyncedAt: null,
+  summary: {
+    lastActiveAt: '2026-10-14T00:00:00.000Z',
+    streakDays: 1,
+    stage1: { questsDone: 2, questsTotal: 15, anchorAccuracy: null },
+    cardsUnlocked: 1,
+    minutesLast7d: 10,
+    jamoRecognized: [],
+    needsPractice: [],
+    planProgress: {},
+    journey: { v: 1, here: 'stage1', stages: [{ stage: 'stage1', state: 'open', done: 2, known: 0, total: 15 }] },
+  },
+};
+
+async function mock(page: Page, { kind = 'class', plans = [] as unknown[], now = NOW, learners = [] as unknown[] }: { kind?: 'class' | 'family'; plans?: unknown[]; now?: string; learners?: unknown[] } = {}): Promise<{ unexpected: string[] }> {
   await page.clock.setFixedTime(new Date(now));
   await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
   const unexpected: string[] = [];
@@ -65,7 +89,7 @@ async function mock(page: Page, { kind = 'class', plans = [] as unknown[], now =
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
     const url = new URL(request.url());
-    if (/\/roster$/.test(url.pathname)) return json(route, 200, { space: s, learners: [], joinCode: 'SUN234', joinCodeExpiresAt: '2099-01-01T00:00:00.000Z' });
+    if (/\/roster$/.test(url.pathname)) return json(route, 200, { space: s, learners, joinCode: 'SUN234', joinCodeExpiresAt: '2099-01-01T00:00:00.000Z' });
     if (/\/plans$/.test(url.pathname)) return json(route, 200, { plans });
     if (url.pathname === '/api/spaces') return json(route, 200, { spaces: [{ space: s, role: kind === 'family' ? 'owner' : 'teacher', counts: { learners: 0, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }] });
     if (url.pathname === '/api/entitlements') return json(route, 200, { entitlements: [] });
@@ -110,7 +134,7 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
       await expect(page.getByText(l.intro)).toBeVisible();
       const presets = page.getByTestId('lecture-presets');
       await expect(presets.getByRole('heading', { level: 2, name: p.title })).toBeVisible();
-      // Nothing to follow: Hangul week 1 first and open, Next lesson last; no Word review before 2026-10-31.
+      // Nothing to follow: Hangul week 1 first and open, Next lesson last; no Word review before 2026-11-01.
       const cards = presets.locator('li[data-testid^="lecture-preset-card-"]');
       await expect(cards).toHaveCount(5);
       const names = await presets.locator('button[aria-controls^="lecture-preset-panel-"]').evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
@@ -121,6 +145,9 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
         en.a11y.presenter.presetCard(p.warmup.title, 10),
         en.a11y.presenter.presetCard(p.next.title, 20),
       ]);
+      // The closed Next lesson card says it has nothing to follow (section 4.1), not "Picks up where your class is."
+      await expect(page.getByTestId('lecture-preset-fallback-next-lesson')).toHaveText(p.fallback.zero);
+      await expect(page.getByTestId('lecture-preset-card-next-lesson')).not.toContainText(p.next.class);
       const open = presets.getByRole('button', { name: en.a11y.presenter.presetCard(p.zero.title, 20) });
       await expect(open).toHaveAttribute('aria-expanded', 'true');
       await expect(presets.locator('button[aria-expanded="true"]')).toHaveCount(1);
@@ -243,9 +270,11 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
 
   test('a family space reads the family words; 320 with 200 % text has no sideways scroll', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
-    const { unexpected } = await mock(page, { kind: 'family' });
+    const { unexpected } = await mock(page, { kind: 'family', learners: [ON_THE_ROUTE] });
     await page.goto(lecturePath('family'));
+    // Next lesson follows the family's place on the Learning Route, so it is first and reads the family line.
     await expect(page.getByTestId('lecture-preset-card-next-lesson')).toContainText(p.next.family);
+    await expect(page.locator('li[data-testid^="lecture-preset-card-"]').first()).toHaveAttribute('data-testid', 'lecture-preset-card-next-lesson');
     await page.getByTestId('lecture-customize-toggle').click();
     await expect(page.getByRole('heading', { level: 2, name: l.check.titleFamily })).toBeVisible();
     await expect(page.getByRole('button', { name: l.outline.addFamilyCode.cta })).toBeVisible();
@@ -261,18 +290,88 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
     expect(unexpected).toEqual([]);
   });
 
-  test('Word review is offered only from 2026-10-31 (the rollout rule, section 4.5)', async ({ page }) => {
+  for (const [width, height] of [
+    [1180, 820],
+    [320, 640],
+  ] as const) {
+    test(`at ${width} x ${height} a blocked pop-up answers next to Open presenter, with the page at its top`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.addInitScript(() => {
+        window.open = () => null;
+      });
+      const { unexpected } = await mock(page);
+      await page.goto(lecturePath());
+      await expect(page.getByTestId('open-presenter')).toBeEnabled();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      // A press where the button is drawn (a locator click would first scroll the button's place in the page into view).
+      const box = await page.getByTestId('open-presenter').boundingBox();
+      if (!box) throw new Error('no Open presenter');
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      const status = page.getByTestId('lecture-footer-status');
+      await expect(status).toHaveText(l.popupBlocked);
+      await expect(status).toHaveAttribute('role', 'status');
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await expect(status).toBeInViewport();
+      await expect(page.getByTestId('open-presenter')).toBeInViewport();
+      await noSidewaysScroll(page);
+      if (width === 320) await shot(page, 'lv4-lecture-popup-blocked-320', false);
+      expect(unexpected).toEqual([]);
+    });
+  }
+
+  for (const c of [
+    { width: 568, height: 320, text: 100, sticky: true },
+    { width: 844, height: 390, text: 100, sticky: true },
+    { width: 1280, height: 720, text: 100, sticky: true },
+    { width: 1920, height: 1080, text: 100, sticky: true },
+    { width: 320, height: 640, text: 150, sticky: null },
+    { width: 320, height: 640, text: 200, sticky: false },
+  ]) {
+    test(`the footer at ${c.width} x ${c.height} with ${c.text} % text covers at most a third of the window or sits at the end; Open presenter in reach`, async ({ page }) => {
+      await page.setViewportSize({ width: c.width, height: c.height });
+      const { unexpected } = await mock(page);
+      await page.goto(lecturePath());
+      await expect(page.getByTestId('open-presenter')).toBeEnabled();
+      if (c.text !== 100) {
+        await page.evaluate((pct) => {
+          document.documentElement.style.fontSize = `${pct}%`;
+        }, c.text);
+      }
+      const foot = page.getByTestId('lecture-footer');
+      const state = () =>
+        foot.evaluate((el) => ({ sticky: getComputedStyle(el).position === 'sticky', share: el.getBoundingClientRect().height / window.innerHeight }));
+      await expect.poll(async () => {
+        const now = await state();
+        return !now.sticky || now.share <= 1 / 3;
+      }).toBe(true);
+      if (c.sticky !== null) await expect.poll(async () => (await state()).sticky).toBe(c.sticky);
+      await noSidewaysScroll(page);
+      // Open Customize: the page grows long; the footer keeps the rule, and Open presenter is still in reach.
+      await page.getByTestId('lecture-customize-toggle').click();
+      await expect(page.getByTestId('lecture-outline')).toBeVisible();
+      const after = await state();
+      expect(!after.sticky || after.share <= 1 / 3).toBe(true);
+      await page.getByTestId('open-presenter').scrollIntoViewIfNeeded();
+      await expect(page.getByTestId('open-presenter')).toBeInViewport();
+      await noSidewaysScroll(page);
+      if (c.width === 568) await shot(page, 'lv4-lecture-footer-568x320', false);
+      if (c.text === 200) await shot(page, 'lv4-lecture-footer-320-text200', false);
+      expect(unexpected).toEqual([]);
+    });
+  }
+
+  test('Word review is offered only from 2026-11-01 (the rollout rule, section 4.5)', async ({ page }) => {
     await page.setViewportSize({ width: 1180, height: 820 });
-    const { unexpected } = await mock(page, { now: '2026-10-31T00:00:01.000Z' });
+    const { unexpected } = await mock(page, { now: '2026-11-01T00:00:01.000Z' });
     await page.goto(lecturePath());
     await expect(page.getByTestId('lecture-preset-card-word-review')).toBeVisible();
     await expect(page.locator('li[data-testid^="lecture-preset-card-"]')).toHaveCount(6);
     expect(unexpected).toEqual([]);
   });
 
-  test('before 2026-10-31 there is no Word review card', async ({ page }) => {
+  test('before 2026-11-01 there is no Word review card', async ({ page }) => {
     await page.setViewportSize({ width: 1180, height: 820 });
-    const { unexpected } = await mock(page, { now: '2026-10-30T23:59:00.000Z' });
+    const { unexpected } = await mock(page, { now: '2026-10-31T23:59:00.000Z' });
     await page.goto(lecturePath());
     await expect(page.getByTestId('lecture-preset-card-hangul-week-1')).toBeVisible();
     await expect(page.getByTestId('lecture-preset-card-word-review')).toHaveCount(0);
