@@ -38,6 +38,44 @@ const noSidewaysScroll = (page: Page): Promise<boolean> =>
     return doc.scrollWidth <= doc.clientWidth && (!home || home.scrollWidth <= home.clientWidth);
   });
 const homeScroll = (page: Page): Promise<number> => page.evaluate(() => document.querySelector('[data-testid="presenter-home"]')?.scrollTop ?? 0);
+/**
+ * Section 10 reflow: every drawn box sits inside the window's width, and no scroller
+ * (the document, react-native-web's ScrollViews) scrolls sideways. Returns what does not.
+ */
+const outside = (page: Page): Promise<string[]> =>
+  page.evaluate(() => {
+    const width = document.documentElement.clientWidth;
+    const out: string[] = [];
+    for (const el of document.querySelectorAll<HTMLElement>('body *')) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) continue;
+      if (r.left < -1 || r.right > width + 1) out.push(`${el.closest<HTMLElement>('[data-testid]')?.dataset.testid ?? '?'} <${el.tagName.toLowerCase()}> ${Math.round(r.left)}..${Math.round(r.right)}`);
+    }
+    for (const el of [document.scrollingElement as HTMLElement, ...document.querySelectorAll<HTMLElement>('div')]) {
+      const style = getComputedStyle(el);
+      const scrolls = el === document.scrollingElement || style.overflowX === 'auto' || style.overflowX === 'scroll';
+      if (scrolls && el.scrollWidth > el.clientWidth + 1) out.push(`scroller ${el.dataset.testid ?? el.tagName} ${el.scrollWidth}>${el.clientWidth}`);
+    }
+    return out;
+  });
+/** A seeded Recent of one Hangul week 1 lesson started today (it teaches 3 words). */
+const WEEK1_RECENT = {
+  v: 1,
+  items: [
+    {
+      deck: {
+        v: 1,
+        id: 'lecture:week1abcde',
+        title: 'Hangul week 1',
+        createdAt: '2026-10-11T09:00:00.000Z',
+        seed: 7,
+        blocks: [{ kind: 'episode', id: 'episode:stage1-letters' }],
+        options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: true },
+      },
+      savedAt: new Date().toISOString(),
+    },
+  ],
+};
 
 function storedKeys(page: Page): Promise<string[]> {
   return page.evaluate(
@@ -109,6 +147,10 @@ for (const [width, height] of [
         await expect(panel.getByRole('button', { name: w.start.cta, exact: true })).toBeVisible();
         expect(await noSidewaysScroll(page), preset).toBe(true);
       }
+      // Nothing to follow on a fresh device: Next lesson is last, and open it says what it starts instead.
+      await page.getByTestId('presenter-preset-next-lesson').click();
+      await expect(page.getByTestId('presenter-preset-fallback-next-lesson')).toHaveText(w.fallback.zero);
+      await shot(page, `lv3-presets-nothing-to-follow-${width}`);
       await page.getByTestId('presenter-preset-by-stage').click();
       await page.getByTestId('presenter-preset-stage-stage3').click();
       await shot(page, `lv3-presets-stage-${width}`);
@@ -138,6 +180,38 @@ for (const [width, height] of [
       await expect(page.getByTestId('presenter-chooser-panel-stories').getByRole('checkbox')).toHaveCount(8);
       await page.getByTestId('presenter-chooser-more-stories').click();
       await expect(page.getByTestId('presenter-chooser-panel-stories').getByRole('checkbox').nth(8)).toBeFocused();
+    });
+
+    test('the keyboard: the arrows move and select the tabs; Space checks a row and does not scroll the page', async ({ page }) => {
+      await page.goto('/present');
+      await page.getByTestId('presenter-home-customize-toggle').click();
+      const tabs = page.getByRole('tablist', { name: w.chooser.label });
+      await tabs.getByRole('tab', { name: 'Lessons' }).focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(tabs.getByRole('tab', { name: 'Stories' })).toHaveAttribute('aria-selected', 'true');
+      await expect(tabs.getByRole('tab', { name: 'Stories' })).toBeFocused();
+      await expect(page.getByRole('tabpanel')).toHaveCount(1);
+      await page.keyboard.press('End');
+      await expect(tabs.getByRole('tab', { name: 'Letters' })).toBeFocused();
+      await page.keyboard.press('Home');
+      await expect(tabs.getByRole('tab', { name: 'Lessons' })).toHaveAttribute('aria-selected', 'true');
+      await page.keyboard.press('ArrowLeft');
+      await expect(tabs.getByRole('tab', { name: 'Letters' })).toHaveAttribute('aria-selected', 'true');
+      const row = page.getByTestId('presenter-chooser-panel-letters').getByRole('checkbox').first();
+      await row.focus();
+      const before = await homeScroll(page);
+      await page.keyboard.press(' ');
+      await expect(row).toHaveAttribute('aria-checked', 'true');
+      expect(await homeScroll(page)).toBe(before);
+      await page.keyboard.press(' ');
+      await expect(row).toHaveAttribute('aria-checked', 'false');
+      // The length chips: one tab stop, the arrows move and select.
+      await page.getByTestId('presenter-preset-hangul-week-1').click();
+      await page.getByTestId('presenter-preset-length-hangul-week-1-20').focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(page.getByTestId('presenter-preset-length-hangul-week-1-30')).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByTestId('presenter-preset-length-hangul-week-1-30')).toBeFocused();
+      await expect(page.getByTestId('presenter-preset-hangul-week-1')).toHaveAccessibleName(`${TITLES['hangul-week-1']}, about 30 minutes`);
     });
   });
 }
@@ -181,6 +255,27 @@ test.describe('one tap, then Start (1280 x 720)', () => {
     await expect(page.getByTestId('presenter-chooser-stage-stage2')).toHaveAttribute('aria-checked', 'true');
   });
 
+  test('Stage 5 (its lessons read as stories): the preview\'s Customize opens on Stage 5', async ({ page }) => {
+    await page.goto('/present');
+    await page.getByTestId('presenter-preset-by-stage').click();
+    await page.getByTestId('presenter-preset-stage-stage5').click();
+    await page.getByTestId('presenter-preset-start-by-stage').click();
+    await expect(page.getByTestId('presenter-preview')).toBeVisible();
+    await page.getByTestId('presenter-preview-customize').click();
+    await expect(page.getByTestId('presenter-chooser-stage-stage5')).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('Word review after Hangul week 1 (3 words): the warm-up instead, with its line, and the start screen is the warm-up', async ({ page }) => {
+    await seed(page, 'lecture:recent', WEEK1_RECENT);
+    await page.getByTestId('presenter-preset-word-review').click();
+    await expect(page.getByTestId('presenter-preset-fallback-word-review')).toHaveText(w.fallback.warmUp);
+    await page.getByTestId('presenter-preset-length-word-review-20').click();
+    await expect(page.getByTestId('presenter-preset-word-review')).toHaveAccessibleName(`${TITLES['word-review']}, about 10 minutes`);
+    await shot(page, 'lv3-presets-words-fallback-1280');
+    await page.getByTestId('presenter-preset-start-word-review').click();
+    await expect(page.getByTestId('presenter-start').getByRole('heading', { level: 1, name: w.warmup.short })).toBeVisible();
+  });
+
   test('Customize builds a lesson of a story and a word topic', async ({ page }) => {
     await page.goto('/present');
     await page.getByTestId('presenter-home-customize-toggle').click();
@@ -200,56 +295,117 @@ test.describe('one tap, then Start (1280 x 720)', () => {
   });
 });
 
-test.describe('the home kept on Back (section 18.2), 360 x 740', () => {
+/** The home arranged (a card, its chips, Customize, a tab, a choice and a scroll), then Start: where the page was. */
+async function arrange(page: Page, touch: boolean): Promise<number> {
+  const hit = (target: ReturnType<Page['getByTestId']>) => (touch ? target.tap() : target.click());
+  await page.goto('/present');
+  await hit(page.getByTestId('presenter-home-customize-toggle'));
+  await hit(page.getByTestId('presenter-chooser-tab-stories'));
+  await hit(page.getByTestId('presenter-chooser-panel-stories').getByRole('checkbox').nth(1));
+  await hit(page.getByTestId('presenter-preset-warm-up'));
+  await hit(page.getByTestId('presenter-preset-by-stage'));
+  await hit(page.getByTestId('presenter-preset-stage-stage3'));
+  await hit(page.getByTestId('presenter-preset-length-by-stage-30'));
+  // The page scrolled so that Start sits near the top of the window: the kept position is not 0.
+  const startButton = page.getByTestId('presenter-preset-start-by-stage');
+  await page.evaluate(() => {
+    const home = document.querySelector('[data-testid="presenter-home"]')!;
+    const start = document.querySelector('[data-testid="presenter-preset-start-by-stage"]')!;
+    const top = start.getBoundingClientRect().top - home.getBoundingClientRect().top + home.scrollTop;
+    home.scrollTop = Math.max(40, top - 40);
+  });
+  await expect(startButton).toBeInViewport();
+  await expect.poll(() => homeScroll(page)).toBeGreaterThan(0);
+  // The scroll end is reported to the page before Start (react-native-web reports it 100 ms late).
+  await page.waitForTimeout(400);
+  const y = await homeScroll(page);
+  await hit(startButton);
+  await expect(page.getByTestId('presenter-start')).toBeVisible();
+  return y;
+}
+
+async function expectKept(page: Page, y: number): Promise<void> {
+  await expect(page.getByTestId('presenter-home')).toBeVisible();
+  await expect(page.getByTestId('presenter-preset-by-stage')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByTestId('presenter-preset-stage-stage3')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('presenter-preset-length-by-stage-30')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('presenter-home-customize-toggle')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByRole('tab', { name: 'Stories' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByTestId('presenter-chooser-panel-stories').getByRole('checkbox').nth(1)).toHaveAttribute('aria-checked', 'true');
+  // The page lands where it was once its layout settles, and stays there.
+  await expect.poll(async () => Math.abs((await homeScroll(page)) - y)).toBeLessThanOrEqual(2);
+  await page.waitForTimeout(1000);
+  expect(Math.abs((await homeScroll(page)) - y)).toBeLessThanOrEqual(2);
+  // The home entry holds the same state (nothing wrote the default over it).
+  await expect
+    .poll(() => page.evaluate(() => (history.state as { hrHome?: { open?: string; customize?: boolean } } | null)?.hrHome ?? null))
+    .toMatchObject({ open: 'by-stage', customize: true });
+}
+
+for (const [width, height] of [
+  [320, 740],
+  [768, 900],
+  [1180, 820],
+] as const) {
+  const touch = width < 900;
+  test.describe(`the home kept on Back (section 18.2), ${width} x ${height}`, () => {
+    test.use({ viewport: { width, height }, isMobile: touch, hasTouch: touch });
+
+    test("the start screen's Back returns to the home as it was", async ({ page }) => {
+      const y = await arrange(page, touch);
+      const back = page.getByTestId('presenter-start-back');
+      await (touch ? back.tap() : back.click());
+      await expectKept(page, y);
+    });
+
+    test('the browser back returns to the home as it was, and so does a reload there', async ({ page }) => {
+      const y = await arrange(page, touch);
+      await page.goBack();
+      await expectKept(page, y);
+      // The home entry keeps the same position for a reload (a late scroll report of the page left behind never replaces it).
+      const kept = () => page.evaluate(() => (history.state as { hrHome?: { scrollY?: number } } | null)?.hrHome?.scrollY ?? -1);
+      await expect.poll(async () => Math.abs((await kept()) - y)).toBeLessThanOrEqual(2);
+      await page.reload();
+      await expectKept(page, y);
+    });
+
+    test('a reload on the start screen, then its Back or the browser back: the home as it was', async ({ page }) => {
+      const y = await arrange(page, touch);
+      await page.reload();
+      await expect(page.getByTestId('presenter-start')).toBeVisible();
+      const back = page.getByTestId('presenter-start-back');
+      await (touch ? back.tap() : back.click());
+      await expectKept(page, y);
+      // Again, by the browser back this time.
+      const start = page.getByTestId('presenter-preset-start-by-stage');
+      await (touch ? start.tap() : start.click());
+      await expect(page.getByTestId('presenter-start')).toBeVisible();
+      await page.reload();
+      await expect(page.getByTestId('presenter-start')).toBeVisible();
+      await page.goBack();
+      await expectKept(page, y);
+    });
+  });
+}
+
+test.describe('the home kept on Back after a reload in the lesson (section 18.2), 360 x 740', () => {
   test.use({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
 
-  async function arrange(page: Page): Promise<number> {
-    await page.goto('/present');
-    await page.getByTestId('presenter-home-customize-toggle').tap();
-    await page.getByRole('tab', { name: 'Stories' }).tap();
-    await page.getByTestId('presenter-chooser-panel-stories').getByRole('checkbox').nth(1).tap();
-    await page.getByTestId('presenter-preset-warm-up').tap();
-    await page.getByTestId('presenter-preset-by-stage').tap();
-    await page.getByTestId('presenter-preset-stage-stage3').tap();
-    await page.getByTestId('presenter-preset-length-by-stage-30').tap();
-    // Start sits below the first screen: tapping it scrolls the page.
-    const startButton = page.getByTestId('presenter-preset-start-by-stage');
-    await startButton.scrollIntoViewIfNeeded();
-    const y = await homeScroll(page);
-    expect(y).toBeGreaterThan(0);
-    await startButton.tap();
+  test('a reload in the lesson steps back to its start screen; its Back shows the home as it was', async ({ page }) => {
+    test.setTimeout(90_000);
+    const y = await arrange(page, true);
+    const go = page.getByTestId('presenter-start-button');
+    await expect(go).toBeEnabled({ timeout: 10_000 });
+    await go.tap();
+    await page.reload();
     await expect(page.getByTestId('presenter-start')).toBeVisible();
-    return y;
-  }
-
-  async function expectKept(page: Page, y: number): Promise<void> {
-    await expect(page.getByTestId('presenter-home')).toBeVisible();
-    await expect(page.getByTestId('presenter-preset-by-stage')).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.getByTestId('presenter-preset-stage-stage3')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('presenter-preset-length-by-stage-30')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('presenter-home-customize-toggle')).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.getByRole('tab', { name: 'Stories' })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByTestId('presenter-chooser-panel-stories').getByRole('checkbox').nth(1)).toHaveAttribute('aria-checked', 'true');
-    await expect.poll(() => homeScroll(page)).toBeGreaterThan(y - 3);
-    expect(Math.abs((await homeScroll(page)) - y)).toBeLessThanOrEqual(2);
-  }
-
-  test('the start screen\'s Back returns to the home as it was', async ({ page }) => {
-    const y = await arrange(page);
     await page.getByTestId('presenter-start-back').tap();
     await expectKept(page, y);
   });
+});
 
-  test('the browser back returns to the home as it was, and so does a reload there', async ({ page }) => {
-    const y = await arrange(page);
-    await page.goBack();
-    await expectKept(page, y);
-    // The home entry keeps the same position for a reload (a late scroll report of the page left behind never replaces it).
-    const kept = () => page.evaluate(() => (history.state as { hrHome?: { scrollY?: number } } | null)?.hrHome?.scrollY ?? -1);
-    await expect.poll(async () => Math.abs((await kept()) - y)).toBeLessThanOrEqual(2);
-    await page.reload();
-    await expectKept(page, y);
-  });
+test.describe('the home and its chooser, 360 x 740', () => {
+  test.use({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
 
   test('a reload on the home keeps where it was scrolled to', async ({ page }) => {
     await page.goto('/present');
@@ -277,13 +433,18 @@ test.describe('the home kept on Back (section 18.2), 360 x 740', () => {
     const footer = await page.getByTestId('presenter-chooser-footer').boundingBox();
     expect(toggle && footer).toBeTruthy();
     expect(footer!.y - toggle!.y).toBeLessThan(3 * 740);
-    // While the page scrolls the footer stays at the bottom of the window.
+    // While the page scrolls through the chooser the footer stays at the bottom of the window.
     await page.evaluate(() => {
       const home = document.querySelector('[data-testid="presenter-home"]')!;
-      home.scrollTop = Math.max(0, home.scrollHeight / 2);
+      const quick = document.querySelector('[data-testid="presenter-home-quick"]')!;
+      const r = quick.getBoundingClientRect();
+      home.scrollTop += r.top - home.getBoundingClientRect().top + r.height / 2 - window.innerHeight / 2;
     });
     const stuck = await page.getByTestId('presenter-chooser-footer').boundingBox();
-    if (stuck && stuck.y < 740) expect(stuck.y + stuck.height).toBeLessThanOrEqual(741);
+    expect(stuck).toBeTruthy();
+    expect(stuck!.y).toBeGreaterThan(0);
+    expect(stuck!.y + stuck!.height).toBeLessThanOrEqual(741);
+    expect(stuck!.y + stuck!.height).toBeGreaterThan(740 - 4);
     await shot(page, 'lv3-presets-customize-footer-360');
   });
 });
@@ -314,9 +475,82 @@ test.describe('titles in the device language (F-I18N-001 section 3.6)', () => {
       await shot(page, `lv3-presets-customize-${locale}-1180`);
       // No language chips in Help either.
       await page.getByTestId('presenter-home-help').click();
+      await expect(page.getByRole('dialog')).toBeVisible();
       await expect(page.getByRole('dialog').getByRole('radiogroup')).toHaveCount(0);
     });
   }
+});
+
+test.describe('320 px at 200 % text: a 160 px layout (section 10, WCAG 1.4.10)', () => {
+  test.use({ viewport: { width: 160, height: 800 }, isMobile: true, hasTouch: true });
+
+  for (const locale of ['en', 'es'] as const) {
+    test(`${locale}: every card, every chooser tab and the preview stay inside the page`, async ({ page }) => {
+      test.setTimeout(90_000);
+      const m = getMessages(locale).learner.presenter;
+      if (locale === 'es') await seed(page, 'device:settings', { uiLocale: locale, uiLocaleAt: '2026-10-17T00:00:00.000Z' });
+      else await page.goto('/present');
+      await expect(page.getByRole('heading', { level: 1, name: m.home.title, exact: true })).toBeVisible();
+      expect(await outside(page)).toEqual([]);
+      if (locale === 'en') await shot(page, 'lv3-presets-320-text200');
+      for (const preset of PRESETS) {
+        await page.getByTestId(`presenter-preset-${preset}`).tap();
+        expect(await outside(page), preset).toEqual([]);
+      }
+      await page.getByTestId('presenter-preset-by-stage').tap();
+      if (locale === 'en') await shot(page, 'lv3-presets-stage-320-text200');
+      await page.getByTestId('presenter-home-customize-toggle').tap();
+      for (const tab of ['stories', 'topics', 'letters', 'lessons'] as const) {
+        await page.getByTestId(`presenter-chooser-tab-${tab}`).tap();
+        await expect(page.getByTestId(`presenter-chooser-panel-${tab}`)).toBeVisible();
+        expect(await outside(page), tab).toEqual([]);
+      }
+      await page.getByTestId('presenter-chooser-inside-episode:stage1-letters').tap();
+      expect(await outside(page)).toEqual([]);
+      const start = page.getByTestId('presenter-preset-start-by-stage');
+      await start.scrollIntoViewIfNeeded();
+      await start.tap();
+      await expect(page.getByTestId('presenter-preview')).toBeVisible();
+      expect(await outside(page)).toEqual([]);
+      await page.getByTestId('presenter-preview').scrollIntoViewIfNeeded();
+      if (locale === 'en') await shot(page, 'lv3-preset-preview-320-text200');
+    });
+  }
+});
+
+test.describe('320 px with the largest text size (Display, section 10)', () => {
+  test.use({ viewport: { width: 320, height: 740 }, isMobile: true, hasTouch: true });
+
+  test('a card open and Customize open stay inside the page', async ({ page }) => {
+    await seed(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-17T00:00:00.000Z', textSize: 'largest' });
+    await page.getByTestId('presenter-preset-by-stage').tap();
+    await page.getByTestId('presenter-home-customize-toggle').tap();
+    await page.getByTestId('presenter-chooser-inside-episode:stage1-letters').tap();
+    expect(await outside(page)).toEqual([]);
+  });
+});
+
+test.describe('a phone held sideways (568 x 320): the sticky footer never covers the focused row (WCAG 2.4.11)', () => {
+  test.use({ viewport: { width: 568, height: 320 }, isMobile: true, hasTouch: true });
+
+  test('Tab through the chooser: each focused row is clear of the footer', async ({ page }) => {
+    await page.goto('/present');
+    await page.getByTestId('presenter-home-customize-toggle').tap();
+    await page.getByTestId('presenter-chooser-tab-stories').tap();
+    await page.getByTestId('presenter-chooser-tab-stories').focus();
+    for (let i = 0; i < 8; i += 1) {
+      await page.keyboard.press('Tab');
+      const clear = await page.evaluate(() => {
+        const focused = document.activeElement as HTMLElement | null;
+        const footer = document.querySelector('[data-testid="presenter-chooser-footer"]');
+        if (!focused || !footer || footer.contains(focused)) return true;
+        const a = focused.getBoundingClientRect();
+        const b = footer.getBoundingClientRect();
+        return a.bottom <= b.top + 1 || a.top >= b.bottom - 1;
+      });
+      expect(clear, `Tab ${i + 1}`).toBe(true);
+    }
+  });
 });
 
 test.describe("the home's one Back (section 7 item 3)", () => {

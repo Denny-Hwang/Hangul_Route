@@ -262,7 +262,13 @@ test.describe('presenter home, phone (one column, Recent first)', () => {
     await seedRecent(page, RECENT);
     await expect(page.getByTestId('presenter-home-title')).toBeVisible();
     await page.getByTestId('presenter-home-customize-toggle').click();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    // The document and the home's own scroller (react-native-web's ScrollView) both: the page body never scrolls sideways.
+    expect(
+      await page.evaluate(() => {
+        const home = document.querySelector('[data-testid="presenter-home"]');
+        return document.documentElement.scrollWidth <= window.innerWidth && !!home && home.scrollWidth <= home.clientWidth;
+      }),
+    ).toBe(true);
     for (const id of ['presenter-home-title', 'presenter-preset-hangul-week-1', 'presenter-home-build', 'presenter-home-chosen', 'presenter-recent-resume-lecture:week3abcde', 'presenter-recent-startover-lecture:week3abcde']) {
       const box = await page.getByTestId(id).boundingBox();
       expect(box && box.x >= 0 && box.x + box.width <= 160, id).toBe(true);
