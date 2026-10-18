@@ -6,6 +6,7 @@ import { expandDeck, type Slide } from '../deck-builder';
 import {
   activityTimerMs,
   cardView,
+  frameSpoken,
   markerFor,
   nextFitLevel,
   patternView,
@@ -37,8 +38,8 @@ function deckOf(blocks: LectureBlock[]) {
   return LectureDeckSchema.parse({ v: 1, id: 'lecture:view001', title: 'Week 3', createdAt: '2026-10-13T09:00:00Z', seed: 7, blocks });
 }
 
-function slidesOf(blocks: LectureBlock[]): Slide[] {
-  return expandDeck(deckOf(blocks), lectureBundle('en'), { canPlayKorean: true }).slides;
+function slidesOf(blocks: LectureBlock[], canPlayKorean = true): Slide[] {
+  return expandDeck(deckOf(blocks), lectureBundle('en'), { canPlayKorean }).slides;
 }
 
 function first<K extends Slide['kind']>(slides: Slide[], kind: K): Extract<Slide, { kind: K }> {
@@ -349,6 +350,17 @@ describe('the reading slides at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
     expect(readAlongView(tapped(slide), 2)).toEqual({ lines: [{ shown: true, rom: true }, { shown: true, rom: false }], current: 1 });
   });
 
+  it('read along with no Korean voice: every line shows at once and none is lit (section 5.1); tap: their romanization one build later', () => {
+    const slide = first(slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }], false), 'read-along');
+    expect(slide.together).toBe(true);
+    expect(slide.builds).toEqual(['line']);
+    expect(readAlongView(slide, 0)).toEqual({ lines: [{ shown: true, rom: true }, { shown: true, rom: true }], current: null });
+    const tap = tapped(slide);
+    expect(tap.builds).toEqual(['line', 'rom']);
+    expect(readAlongView(tap, 0)).toEqual({ lines: [{ shown: true, rom: false }, { shown: true, rom: false }], current: null });
+    expect(readAlongView(tap, 1)).toEqual({ lines: [{ shown: true, rom: true }, { shown: true, rom: true }], current: null });
+  });
+
   it('realia: the sheet, then the key words; tap: the sheet romanization, then the key words, then theirs', () => {
     const slide = first(stage6, 'realia');
     expect(realiaView(slide, 0)).toEqual({ sheetRom: true, words: false, wordsRom: false });
@@ -384,22 +396,54 @@ describe('the reading slides at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
     expect(sheetUnits({ kind: 'menu' }, 0.5)).toBe(420);
   });
 
-  it('Sound: a sentence its sentence; a pattern its last example on screen (nothing while only the frame shows)', () => {
+  it('Sound: a sentence its sentence; a pattern the last Korean part on screen: the frame, the note chips, then each example', () => {
     const sentence = first(stage3, 'sentence');
     expect(slideSound(sentence, 0)).toEqual({ spoken: sentence.sentence.spoken, kind: 'sentence' });
     const pattern = first(stage3, 'pattern');
-    expect(slideSound(pattern, 0)).toBeUndefined();
-    expect(slideSound(pattern, 1)).toBeUndefined();
+    // The frame's own Korean, a pause at the gap and between the two particles.
+    expect(slideSound(pattern, 0)).toEqual({ spoken: { text: '을, 를 먹어요.', romanization: 'eul, reul meogeoyo' }, kind: 'sentence' });
+    // The note's Korean chips, each once, at the word rate.
+    expect(slideSound(pattern, 1)).toEqual({ spoken: { text: '을, 를', romanization: 'eul, reul' }, kind: 'word' });
     expect(slideSound(pattern, 2)).toEqual({ spoken: pattern.examples[0]!.spoken, kind: 'sentence' });
     expect(slideSound(pattern)).toEqual({ spoken: pattern.examples[1]!.spoken, kind: 'sentence' });
+    // tap: the romanization builds keep the part before them.
+    const tap = tapped(pattern);
+    expect(tap.builds).toEqual(['frame', 'rom', 'note', 'rom', 'example', 'rom', 'example', 'rom']);
+    expect(slideSound(tap, 1)?.spoken.text).toBe('을, 를 먹어요.');
+    expect(slideSound(tap, 3)?.spoken.text).toBe('을, 를');
+    expect(slideSound(tap, 5)).toEqual({ spoken: pattern.examples[0]!.spoken, kind: 'sentence' });
   });
 
-  it('Sound: read along its current line; a realia page its sheet, then its key words once they show', () => {
+  it('frameSpoken: a gap at the start, the middle or the end is a pause; a piece of only punctuation is dropped', () => {
+    expect(frameSpoken({ pieces: ['', '이/가 있어요.'], romanization: '___i/ga isseoyo', gloss: 'There is ___.' })).toEqual({ text: '이, 가 있어요.', romanization: 'i, ga isseoyo' });
+    expect(frameSpoken({ pieces: ['먼저 ', '.'], romanization: 'meonjeo ___', gloss: 'First, ___.' })).toEqual({ text: '먼저', romanization: 'meonjeo' });
+    expect(frameSpoken({ pieces: ['', '에 ', '을/를 먹었어요.'], romanization: '___e ___eul/reul meogeosseoyo', gloss: 'I ate ___ on ___.' })).toEqual({
+      text: '에, 을, 를 먹었어요.',
+      romanization: 'e, eul, reul meogeosseoyo',
+    });
+  });
+
+  it('Sound: read along its current line, or every line in order when they show together (no Korean voice)', () => {
     const readAlong = first(stage4, 'read-along');
     expect(slideSound(readAlong, 0)).toEqual({ spoken: readAlong.lines[0]!.spoken, kind: 'sentence' });
     expect(slideSound(readAlong)).toEqual({ spoken: readAlong.lines[1]!.spoken, kind: 'sentence' });
+    const together = first(slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }], false), 'read-along');
+    expect(slideSound(together, 0)).toEqual({
+      spoken: { text: together.lines.map((l) => l.spoken.text).join(', '), romanization: together.lines.map((l) => l.spoken.romanization).join(', ') },
+      kind: 'sentence',
+    });
+  });
+
+  it('Sound: a realia page its sheet and its caption chips, then its key words once they show', () => {
     const realia = first(stage6, 'realia');
     expect(slideSound(realia, 0)).toEqual({ spoken: realia.sheet.spoken, kind: 'word' });
+    // A caption with Korean chips: the sheet, then each chip once, in order.
+    const priced = slidesOf([{ kind: 'quest', id: 'quest:stage6-crafts-q1' }]).find(
+      (s): s is Extract<Slide, { kind: 'realia' }> => s.kind === 'realia' && s.caption?.some((p) => 'ko' in p) === true,
+    );
+    expect(priced).toBeDefined();
+    const chips = [...new Set(priced!.caption!.flatMap((p) => ('ko' in p ? [p.ko] : [])))];
+    expect(slideSound(priced!, 0)?.spoken.text).toBe([priced!.sheet.spoken.text, ...chips].join(', '));
     expect(slideSound(realia)).toEqual({
       spoken: { text: realia.keyWords.map((w) => w.spoken.text).join(', '), romanization: realia.keyWords.map((w) => w.spoken.romanization).join(', ') },
       kind: 'word',

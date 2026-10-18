@@ -1,7 +1,8 @@
+import { SLOT_MARKER } from '@hangul-route/content-schema';
 import type { FallbackReason, PlayResult } from '../audio/prompt-state';
 import type { PromptKind } from '../audio/rate';
 import type { SpokenForm } from '../audio/spoken';
-import { joinSpoken, partsShown, type BuildName, type QuizPrompt, type RealiaSheetView, type SequenceStep } from './build-steps';
+import { joinSpoken, partsShown, type BuildName, type NarrationPiece, type QuizPrompt, type RealiaSheetView, type SequenceStep } from './build-steps';
 import type { Slide } from './deck-builder';
 import { SHEET_CARDS_W, SHEET_MAX_W, SHEET_ROOMY_LINES, SHEET_W } from './stage-constants';
 
@@ -136,12 +137,19 @@ export function patternView(slide: Of<'pattern'>, reveal: number): PatternView {
 
 export interface ReadAlongView {
   lines: PartView[];
-  /** The line Sound plays and lights: the last one on screen (V6). */
-  current: number;
+  /**
+   * The line Sound plays and lights: the last one on screen (V6). `null` when every line shows
+   * together (no Korean voice, section 5.1): no line is lit, and Sound reads them all in order.
+   */
+  current: number | null;
 }
 
-/** Read along slide (slide-read-along.md): one line per build; the current line is the last shown. */
+/**
+ * Read along slide (slide-read-along.md): one line per build; the current line is the last shown.
+ * With no Korean voice (`together`) every line shows at the one `line` build.
+ */
 export function readAlongView(slide: Of<'read-along'>, reveal: number): ReadAlongView {
+  if (slide.together === true) return { lines: slide.lines.map(() => nthPart(slide.builds, reveal, 'line')), current: null };
   const lines = slide.lines.map((_, i) => nthPart(slide.builds, reveal, 'line', i));
   return { lines, current: Math.max(0, lines.filter((l) => l.shown).length - 1) };
 }
@@ -220,6 +228,37 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
   }
 }
 
+/** The Korean chips of a note or caption, in order, each once. */
+function chipsSpoken(pieces: readonly NarrationPiece[]): SpokenForm[] {
+  const seen = new Set<string>();
+  const out: SpokenForm[] = [];
+  for (const piece of pieces) {
+    if (!('ko' in piece) || seen.has(piece.ko)) continue;
+    seen.add(piece.ko);
+    out.push({ text: piece.ko, romanization: piece.romanization });
+  }
+  return out;
+}
+
+/** A frame's text read aloud: its gaps and the `/` between two particles become pauses; a piece of only punctuation is dropped. */
+function frameRead(text: string): string {
+  return text
+    .split(SLOT_MARKER)
+    .flatMap((piece) => piece.split('/'))
+    .map((piece) => piece.trim())
+    .filter((piece) => /[^\s.,!?]/.test(piece))
+    .join(', ');
+}
+
+/**
+ * A pattern's frame as Sound reads it before any example shows: its own Korean, with a pause at each
+ * gap and between two particles (a frame `___eul/reul meogeoyo` says eul, reul meogeoyo), and the same
+ * for its romanization.
+ */
+export function frameSpoken(frame: Of<'pattern'>['frame']): SpokenForm {
+  return { text: frameRead(frame.pieces.join(SLOT_MARKER)), romanization: frameRead(frame.romanization) };
+}
+
 /**
  * What Sound, S or a stage speaker plays on a slide (section 3.4 amendment 2026-10-17): the Korean
  * the slide draws. A letter's carrier syllable, a syllable and a Match Sound prompt play at the
@@ -229,10 +268,11 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
  * drawn (the shuffled order at the order question; the full reveal when `reveal` is not given).
  * A title, a story scene (Read-to-me has its own path, `readToMePlan`), an activity,
  * the End slide, Odd One Out (the letters are the answer), a card without Korean and a check
- * without a target play nothing. The reading slides (LV-S1): a sentence its sentence, a pattern
- * the last example on screen (nothing while only the frame and note show), a read along its
- * current line (each at the sentence rate), a realia page its sheet line by line and, once they
- * show, its key words (at the word rate).
+ * without a target play nothing. The reading slides (LV-S1): a sentence its sentence; a pattern
+ * the last Korean part on screen (the last example, else the note's Korean chips at the word rate,
+ * else the frame's own Korean with a pause at each gap); a read along its current line, or every
+ * line in order when they show together (each at the sentence rate); a realia page its sheet line
+ * by line and its caption's Korean chips and, once they show, its key words (at the word rate).
  */
 export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
   if (slide === undefined) return undefined;
@@ -257,18 +297,23 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
     case 'sentence':
       return { spoken: slide.sentence.spoken, kind: 'sentence' };
     case 'pattern': {
-      // The last example on screen; the frame holds a gap and is not read (the learner's Discover reads the examples only).
-      const shown = patternView(slide, reveal ?? slide.builds.length - 1).examples.filter((e) => e.shown).length;
-      const example = slide.examples[shown - 1];
-      return example ? { spoken: example.spoken, kind: 'sentence' } : undefined;
+      // The last Korean part on screen: an example, else the note's Korean chips, else the frame's own Korean.
+      const view = patternView(slide, reveal ?? slide.builds.length - 1);
+      const example = slide.examples[view.examples.filter((e) => e.shown).length - 1];
+      if (example) return { spoken: example.spoken, kind: 'sentence' };
+      const chips = view.note.shown ? chipsSpoken(slide.note ?? []) : [];
+      if (chips.length > 0) return { spoken: joinSpoken(chips), kind: 'word' };
+      return { spoken: frameSpoken(slide.frame), kind: 'sentence' };
     }
-    case 'read-along':
-      return { spoken: slide.lines[readAlongView(slide, reveal ?? slide.builds.length - 1).current]!.spoken, kind: 'sentence' };
+    case 'read-along': {
+      const { current } = readAlongView(slide, reveal ?? slide.builds.length - 1);
+      return { spoken: current === null ? joinSpoken(slide.lines.map((l) => l.spoken)) : slide.lines[current]!.spoken, kind: 'sentence' };
+    }
     case 'realia':
-      // The sheet read line by line, then, once they show, the key words in order.
+      // The sheet read line by line and then its caption's Korean chips; once they show, the key words in order.
       return realiaView(slide, reveal ?? slide.builds.length - 1).words
         ? { spoken: joinSpoken(slide.keyWords.map((w) => w.spoken)), kind: 'word' }
-        : { spoken: slide.sheet.spoken, kind: 'word' };
+        : { spoken: joinSpoken([slide.sheet.spoken, ...chipsSpoken(slide.caption ?? [])]), kind: 'word' };
     case 'title':
     case 'story':
     case 'activity':

@@ -567,7 +567,9 @@ function Presenter(): React.ReactElement {
       const at = Date.now();
       const slideIdx = stateRef.current?.slideIdx;
       // Read along: the line that plays (the current one) is lit while it plays; a later press lights its own.
-      const lit = slide.kind === 'read-along' ? { key: slide.key, line: readAlongView(slide, reveal ?? slide.builds.length - 1).current } : null;
+      // Lines shown together (no Korean voice) light none.
+      const line = slide.kind === 'read-along' ? readAlongView(slide, reveal ?? slide.builds.length - 1).current : null;
+      const lit = slide.kind === 'read-along' && line !== null ? { key: slide.key, line } : null;
       if (lit) setPlayingLine(lit);
       void playPrompt({ ...soundPrompt(sound), source: 'presenter' }).then((result) => {
         if (lit) setPlayingLine((now) => (now === lit ? null : now));

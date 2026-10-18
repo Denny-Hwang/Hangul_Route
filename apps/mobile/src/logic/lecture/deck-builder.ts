@@ -571,7 +571,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
             break;
           }
           case 'exchange':
-            push(key, { kind: 'read-along', lines: item.lines.map((l) => ({ speaker: l.speakerEn, ...spokenLine(l.line) })) });
+            // No Korean voice (or the deck's sound off): read along shows every line at once (section 5.1).
+            push(key, { kind: 'read-along', lines: item.lines.map((l) => ({ speaker: l.speakerEn, ...spokenLine(l.line) })), ...(textPrompt ? { together: true as const } : {}) });
             break;
           case 'realia': {
             const realia = realiaOf(item.realiaRef);

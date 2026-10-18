@@ -1663,6 +1663,20 @@ describe('expandDeck: the reading slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-
       ['Hoya', '네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.', '네, 먹었어요.'],
     ]);
     expect(readAlong.builds).toEqual(['line', 'line']);
+    expect(readAlong).not.toHaveProperty('together');
+  });
+
+  it('read along with no Korean voice, or with the deck sound off: every line shows together at one build (section 5.1)', () => {
+    const noVoice = only(expandDeck(deckOf([{ kind: 'quest', id: reading.id }]), b, { canPlayKorean: false }).slides, 'read-along')[0]!;
+    expect(noVoice.together).toBe(true);
+    expect(noVoice.lines).toHaveLength(2);
+    expect(noVoice.builds).toEqual(['line']);
+    const tap = only(expandDeck(deckOf([{ kind: 'quest', id: reading.id }], { options: { romanization: 'tap', strokeGuide: true, quizRounds: 5, sound: true } }), b, { canPlayKorean: false }).slides, 'read-along')[0]!;
+    expect(tap.builds).toEqual(['line', 'rom']);
+    const soundOff = only(run(reading.id, { options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: false } }).slides, 'read-along')[0]!;
+    expect(soundOff.together).toBe(true);
+    // The other reading slides keep their builds with no voice.
+    expect(only(expandDeck(deckOf([{ kind: 'quest', id: reading.id }]), b, { canPlayKorean: false }).slides, 'pattern')[0]!.builds).toEqual(['frame', 'note', 'example', 'example']);
   });
 
   it('realia: the sheet the quest plays, its caption and its key words; Sound reads the sheet line by line', () => {

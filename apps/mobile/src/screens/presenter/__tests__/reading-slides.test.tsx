@@ -27,9 +27,9 @@ vi.mock('../../../components/StrokeHint', () => ({ StrokeHint: () => null }));
 
 const en = getMessages('en');
 
-function slidesOf(blocks: LectureBlock[]): Slide[] {
+function slidesOf(blocks: LectureBlock[], canPlayKorean = true): Slide[] {
   const deck = LectureDeckSchema.parse({ v: 1, id: 'lecture:read01', title: 'Reading', createdAt: '2026-10-17T09:00:00Z', seed: 3, blocks });
-  return expandDeck(deck, lectureBundle('en'), { canPlayKorean: true }).slides;
+  return expandDeck(deck, lectureBundle('en'), { canPlayKorean }).slides;
 }
 
 function first<K extends Slide['kind']>(slides: Slide[], kind: K): Extract<Slide, { kind: K }> {
@@ -128,6 +128,15 @@ describe('ReadAlongSlide', () => {
     expect(byTestId(lines[0]!, 'presenter-read-along-playing')).toHaveLength(0);
     const early = await render(inView(<ReadAlongSlide slide={slide} reveal={0} playing={1} />));
     expect(byTestId(early.root, 'presenter-read-along-playing')).toHaveLength(0);
+  });
+
+  it('with no Korean voice every line shows at build 0 and none is lit (section 5.1)', async () => {
+    const together = first(slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }], false), 'read-along');
+    const r = await render(inView(<ReadAlongSlide slide={together} reveal={0} />));
+    const lines = byTestId(r.root, 'presenter-read-along-line');
+    expect(lines.map(hiddenNow)).toEqual([false, false]);
+    expect(textOf(lines[1]!)).toContain(together.lines[1]!.ko);
+    expect(byTestId(r.root, 'presenter-read-along-playing')).toHaveLength(0);
   });
 });
 
