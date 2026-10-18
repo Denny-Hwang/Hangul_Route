@@ -260,6 +260,13 @@ preset: z.enum(LECTURE_PRESETS).optional()   // v2 only (a deck that already hol
 
 Reduced motion: every tile move and highlight is an instant swap. Keyboard and clicker: unchanged (`next` is the next build).
 
+**As built in LV-S1 (the reading slides):**
+- **Builds with `romanization: 'tap'`**: every Korean part has its romanization one build after it, so a pattern note that holds Korean chips gets its own `rom` build after `note`, and a realia slide is `[sheet, rom, key words, rom]` (the sheet's and its caption's romanization, then the key words').
+- **Sound** (F-TCH-004 section 3.4 amendment 2026-10-17, `slideSound`): a sentence plays its sentence; a pattern the last example on screen (nothing while only the frame and the note show: the frame holds a gap); a read along its current line, the last one shown, lit while it plays (V6); all three at the sentence rate. A realia page reads its sheet line by line (title, then each line with its value) and, once they show, its key words in order, at the word rate.
+- **Caption**: a realia slide shows the item's `captionEn`, else its Discover page's; `{ko:}` tokens in it, and in a pattern note, are Korean chips with their romanization (`logic/ko-tokens.ts`, which reads a token of several words word by word). A token with no romanization drops that line and is a counted `no-romanization` skip (rule 11).
+- **A realia page's sheet** is the realia of a Realia Read scope of the same quest (`realiaRef`); a ref the quest does not hold is a counted `unknown-id` skip and its key words become word cards. Each item's texts are taught and seen as when they were word cards (`seenWords`), so no later card repeats them and a Word review keeps the sound the reading slide gave them.
+- **Fit**: a long pattern (a Stage 7 frame), a long exchange and a long realia caption step to compact levels until they fit the content area (smaller examples, lines and notes, never below the 18 px floor; `nextFitLevel`). A price-card sheet is `SHEET_CARDS_W` (600) units wide; on a small phone, where the 18 px floor draws the sheet's romanization bigger than its units, the sheet grows with it up to `SHEET_MAX_W` (700); a sheet of more than four lines draws each romanization beside its Korean. The read-along speaker glyph is one caption line tall (`spacing.xxl` units), so lighting a line moves nothing.
+
 ### 5.3 Write together (LV-D8)
 
 - The slide always carries the line "Write on paper or on your own device. Nothing is typed here." and a variant line (type, trace, frame, own name; section 12).
