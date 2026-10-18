@@ -112,16 +112,36 @@ export function ChipText({ pieces, rom, small = false, testID }: { pieces: reado
 /**
  * A key word as a chip (slide-realia.md): the Korean in the presenter font, then its romanization
  * (`rom`) and its gloss at the caption size, all `text.primary` on `brand.secondaryLight`.
+ * `compact` (a compact level of the realia slide): the three run as one line of text that wraps,
+ * at the tight line height, with less padding, so a long meaning takes no row of its own.
  */
-export function WordChip({ word, rom, testID }: { word: SpokenLine; rom: boolean; testID?: string }): React.ReactElement {
+export function WordChip({ word, rom, compact = false, testID }: { word: SpokenLine; rom: boolean; compact?: boolean; testID?: string }): React.ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const chip = useChipStyle();
   const captionSize = size(presenter.size.caption);
+  const label = rom ? `${koreanTextLabel(word.ko, word.romanization)}, ${word.gloss}` : `${word.ko}, ${word.gloss}`;
+  if (compact) {
+    return (
+      <View
+        testID={testID}
+        accessibilityLabel={label}
+        style={{ ...chip, flexShrink: 1, maxWidth: '100%', paddingVertical: units(unit, spacing.xxs), paddingHorizontal: units(unit, spacing.md) }}
+      >
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: captionSize, lineHeight: Math.round(captionSize * typography.leading.tight), color: colors.text.primary }}>
+          <TaughtKo size={size(presenter.size.body)}>{word.ko}</TaughtKo>
+          <Text {...KOREAN_LINE_BREAK} aria-hidden={!rom} style={[{ fontWeight: typography.weight.bold }, reveal(rom)]}>
+            {`  ${word.romanization}`}
+          </Text>
+          {`  ${word.gloss}`}
+        </Text>
+      </View>
+    );
+  }
   return (
     <View
       testID={testID}
-      accessibilityLabel={rom ? `${koreanTextLabel(word.ko, word.romanization)}, ${word.gloss}` : `${word.ko}, ${word.gloss}`}
+      accessibilityLabel={label}
       style={{
         ...chip,
         // A chip never runs past its column: on a narrow stage its meaning wraps under its Korean.
