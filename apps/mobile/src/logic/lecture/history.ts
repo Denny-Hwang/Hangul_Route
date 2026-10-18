@@ -30,8 +30,8 @@ import { parseHomeSnapshot, type HomeSnapshot } from './home-state';
  * 8. Only the presenter's own entries are touched: no step crosses the `home` entry.
  * 9. The home entry keeps the home's state (`home`, section 18.2: the open card, chips, Customize,
  *    the chooser and the scroll position; ids and chip values only) through every rewrite, and a
- *    start screen opened from a ready-made lesson keeps which one (`preset`), so a reload still
- *    reports the start as `preset` (section 11).
+ *    start screen opened from a ready-made lesson keeps which one (`preset`), as does its lesson's
+ *    entry, so a reload on either still reports the start as `preset` (section 11).
  */
 
 export type HistoryStep = 'home' | 'ready' | 'running';
@@ -46,7 +46,7 @@ export interface HistoryEntry {
   fresh?: true;
   /** The home's Back may go back to the page before `/present` (rule 5). */
   homeBack?: boolean;
-  /** The ready-made lesson the deck was resolved from on this presenter (`ready` only, rule 9). */
+  /** The ready-made lesson the deck was resolved from on this presenter (`ready` and `running`, rule 9). */
   preset?: LecturePreset;
   /** The home's state (the `home` entry only, rule 9). */
   home?: HomeSnapshot;
@@ -100,7 +100,7 @@ export function readEntry(state: unknown): HistoryEntry | null {
   if (step === 'ready' && record[HISTORY_KEYS.fresh] === true) out.fresh = true;
   if (homeBack !== undefined) out.homeBack = homeBack;
   const preset = record[HISTORY_KEYS.preset];
-  if (step === 'ready' && typeof preset === 'string' && (LECTURE_PRESETS as readonly string[]).includes(preset)) out.preset = preset as LecturePreset;
+  if (step !== 'home' && typeof preset === 'string' && (LECTURE_PRESETS as readonly string[]).includes(preset)) out.preset = preset as LecturePreset;
   const snapshot = step === 'home' ? parseHomeSnapshot(record[HISTORY_KEYS.home]) : null;
   if (snapshot !== null) out.home = snapshot;
   return out;
@@ -112,7 +112,7 @@ export function entryState(entry: HistoryEntry): Record<string, unknown> {
   if (entry.step !== 'home' && entry.fragment !== undefined) out[HISTORY_KEYS.fragment] = entry.fragment;
   if (entry.step === 'ready' && entry.fresh === true) out[HISTORY_KEYS.fresh] = true;
   if (entry.homeBack !== undefined) out[HISTORY_KEYS.homeBack] = entry.homeBack;
-  if (entry.step === 'ready' && entry.preset !== undefined) out[HISTORY_KEYS.preset] = entry.preset;
+  if (entry.step !== 'home' && entry.preset !== undefined) out[HISTORY_KEYS.preset] = entry.preset;
   if (entry.step === 'home' && entry.home !== undefined) out[HISTORY_KEYS.home] = entry.home;
   return out;
 }
@@ -168,8 +168,8 @@ export function bootPlan(input: { link: string | null; entry: HistoryEntry | nul
       deck: { raw, reloaded: true, ...(entry.fresh ? { fresh: entry.fresh } : {}), ...(entry.preset !== undefined ? { preset: entry.preset } : {}) },
     };
   }
-  // A reload on the lesson: back to its start screen's entry, which holds the same deck.
-  return { replace: null, push: null, back: true, deck: { raw, reloaded: true } };
+  // A reload on the lesson: back to its start screen's entry, which holds the same deck (and its preset, rule 9).
+  return { replace: null, push: null, back: true, deck: { raw, reloaded: true, ...(entry.preset !== undefined ? { preset: entry.preset } : {}) } };
 }
 
 /** Where a push for `step` goes from the entry the tab is on: pushed above it, or written over it when the tab is already there. */
@@ -177,12 +177,11 @@ export function pushPlan(current: HistoryEntry | null, step: 'ready' | 'running'
   const here = current ?? { step: 'home', index: 0 };
   const homeBack = entry.homeBack ?? here.homeBack;
   const index = step === 'ready' ? 1 : here.step === 'ready' ? here.index + 1 : DEFAULT_INDEX.running;
-  const next: HistoryEntry = { ...entry, step, index, ...(homeBack !== undefined ? { homeBack } : {}) };
+  // The lesson's entry keeps the ready-made lesson its start screen was resolved from (rule 9).
+  const preset = entry.preset ?? (step === 'running' && here.step !== 'home' ? here.preset : undefined);
+  const next: HistoryEntry = { ...entry, step, index, ...(homeBack !== undefined ? { homeBack } : {}), ...(preset !== undefined ? { preset } : {}) };
   delete next.home;
-  if (step === 'running') {
-    delete next.fresh;
-    delete next.preset;
-  }
+  if (step === 'running') delete next.fresh;
   const mode = here.step === step || here.index >= index ? 'replace' : 'push';
   return { mode, entry: next };
 }

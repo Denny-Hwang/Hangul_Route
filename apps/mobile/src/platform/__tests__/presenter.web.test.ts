@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as native from '../presenter';
 import {
   LEAVE_WAIT_MS,
+  afterPresenterHistory,
   PRESENTER_PATH,
   RETURN_WAIT_MS,
   checkForUpdate,
@@ -477,6 +478,10 @@ describe('the way back: one history entry per phase (section 3.5 "History", owne
     const snapshot = { ...HOME_DEFAULT, open: 'story-time' as const, customize: true, chosen: ['story:hangeul-day'], scrollY: 600 };
     await saveHomeSnapshot(snapshot, e);
     expect(presenterHomeSnapshot(e)).toEqual(snapshot);
+    // The same state again is not written (browsers throttle replaceState).
+    const writes = history.replaceState.mock.calls.length;
+    await saveHomeSnapshot({ ...snapshot }, e);
+    expect(history.replaceState.mock.calls.length).toBe(writes);
     await pushPresenterEntry('ready', '1.abc', { preset: 'story-time' }, e);
     expect(history.state).toEqual({ hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc', hrHomeBack: false, hrLecturePreset: 'story-time' });
     // Not on the home: nothing is written over the start screen's entry.
@@ -502,9 +507,31 @@ describe('the way back: one history entry per phase (section 3.5 "History", owne
     expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, preset: 'warm-up' });
   });
 
+  it('a reload on the start screen or in the lesson: the home entry behind still holds its state, readable once the step back has run', async () => {
+    const snapshot = { ...HOME_DEFAULT, open: 'by-stage' as const, stage: 'stage3' as const, customize: true, tab: 'stories' as const, scrollY: 420 };
+    for (const reloadedOn of [
+      { hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc', hrLecturePreset: 'by-stage' },
+      { hrPresenter: 'running', hrIndex: 2, hrLectureFragment: '1.abc', hrLecturePreset: 'by-stage' },
+    ]) {
+      const { history, e } = boot({ hrPresenter: 'home', hrIndex: 0, hrHome: snapshot });
+      history.pushState({ hrPresenter: 'ready', hrIndex: 1, hrLectureFragment: '1.abc', hrLecturePreset: 'by-stage' });
+      if (reloadedOn.hrPresenter === 'running') history.pushState(reloadedOn);
+      // The reload: boot reads the deck step, so the home's state is not on the entry the tab is on.
+      expect(takeDeckFragment(e)).toEqual({ raw: '1.abc', reloaded: true, preset: 'by-stage' });
+      await afterPresenterHistory();
+      expect(presenterHomeSnapshot(e)).toBeNull();
+      // Back to lessons: once the return has run, the home entry's state is there to adopt.
+      const back = returnToPresenterHome(e);
+      await back;
+      await afterPresenterHistory();
+      expect(presenterHomeSnapshot(e)).toEqual(snapshot);
+    }
+  });
+
   it('the native stub keeps no home state', async () => {
     expect(native.presenterHomeSnapshot()).toBeNull();
     await expect(native.saveHomeSnapshot(HOME_DEFAULT)).resolves.toBeUndefined();
+    await expect(native.afterPresenterHistory()).resolves.toBeUndefined();
   });
 });
 

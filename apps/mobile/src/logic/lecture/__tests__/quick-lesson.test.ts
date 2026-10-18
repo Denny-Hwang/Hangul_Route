@@ -14,6 +14,7 @@ import {
   removeChoice,
   rowCheck,
 } from '../quick-lesson';
+import { titleIn } from '../quick-source';
 
 /**
  * Customize on the presenter home (AMENDMENTS-LECTURE-V2 sections 4.6 and 18.3, row LV-3): the
@@ -156,6 +157,19 @@ describe('the deck title', () => {
     const title = quickDeckTitle([`${'word '.repeat(15)}end`], 'Your lesson');
     expect(title.length).toBeLessThanOrEqual(60);
     expect(title.endsWith('word')).toBe(true);
+  });
+
+  it('leaves out a title that would lose a letter, a bracket or an opening mark, and takes the next one', () => {
+    const ko = titleIn('ko');
+    // "모음 짝 ㅐ와 ㅔ" and "[ㄱ]과 [ㅂ]으로 ..." hold compatibility jamo and brackets the title class cannot hold.
+    expect(quickDeckTitle([ko('quest:stage2-letters-q1'), ko('quest:stage2-letters-q2')], '내 수업')).toBe(ko('quest:stage2-letters-q2'));
+    expect(quickDeckTitle([ko('quest:stage2-letters-q6')], '내 수업')).toBe('내 수업');
+    const es = titleIn('es');
+    expect(quickDeckTitle([es('quest:stage3-nature-q1')], 'Tu lección')).toBe('Tu lección');
+    expect(quickDeckTitle([es('quest:stage4-letters-q1'), es('episode:stage1-letters')], 'Tu lección')).toBe(es('episode:stage1-letters'));
+    // A dash or quotation mark is dropped as before; the title still says the same.
+    expect(quickDeckTitle(['Sun — and “Moon”'], 'Your lesson')).toBe('Sun and Moon');
+    for (const t of [quickDeckTitle([ko('quest:stage2-letters-q2')], 'x'), quickDeckTitle([es('episode:stage1-letters')], 'x')]) expect(LECTURE_TITLE_RE.test(t)).toBe(true);
   });
 
   it('falls back when nothing usable is left', () => {

@@ -171,7 +171,7 @@ describe('popPlan (rules 3, 4 and 7)', () => {
 describe('rule 9: the home keeps its state, a ready-made lesson keeps its preset (AMENDMENTS-LECTURE-V2 sections 11 and 18.2, LV-3)', () => {
   const snapshot: HomeSnapshot = { ...HOME_DEFAULT, open: 'story-time', lengths: { 'story-time': 30 }, customize: true, tab: 'stories', chosen: ['story:hangeul-day'], scrollY: 840 };
 
-  it('reads and writes the home state on the home entry only, and the preset on the ready entry only', () => {
+  it('reads and writes the home state on the home entry only, and the preset on the ready and lesson entries only', () => {
     const home: HistoryEntry = { step: 'home', index: 0, homeBack: true, home: snapshot };
     expect(readEntry(entryState(home))).toEqual(home);
     const ready: HistoryEntry = { step: 'ready', index: 1, fragment: '1.x', preset: 'hangul-week-1' };
@@ -180,7 +180,10 @@ describe('rule 9: the home keeps its state, a ready-made lesson keeps its preset
       [HISTORY_KEYS.step]: 'running',
       [HISTORY_KEYS.index]: 2,
       [HISTORY_KEYS.fragment]: '1.x',
+      [HISTORY_KEYS.preset]: 'hangul-week-1',
     });
+    expect(readEntry({ hrPresenter: 'running', hrIndex: 2, hrLectureFragment: '1.x', hrLecturePreset: 'warm-up' })).toEqual({ step: 'running', index: 2, fragment: '1.x', preset: 'warm-up' });
+    expect(entryState({ step: 'home', index: 0, preset: 'warm-up' })).toEqual({ [HISTORY_KEYS.step]: 'home', [HISTORY_KEYS.index]: 0 });
     expect(readEntry({ hrPresenter: 'ready', hrIndex: 1, hrLecturePreset: 'not-a-preset' })).toEqual({ step: 'ready', index: 1 });
     expect(readEntry({ hrPresenter: 'ready', hrIndex: 1, hrHome: snapshot })).toEqual({ step: 'ready', index: 1 });
   });
@@ -204,9 +207,19 @@ describe('rule 9: the home keeps its state, a ready-made lesson keeps its preset
     expect(bootPlan({ link: '1.abc', entry: { step: 'ready', index: 1, fragment: '1.x', preset: 'warm-up' }, accepts: yes, homeBack: false }).deck).toEqual({ raw: '1.abc', reloaded: false });
   });
 
-  it('pushes the preset with the start screen, never with the lesson, and never the home state', () => {
+  it('pushes the preset with the start screen and keeps it on the lesson, never the home state', () => {
     expect(pushPlan({ step: 'home', index: 0, home: snapshot }, 'ready', { fragment: '1.x', preset: 'by-stage' }).entry).toEqual({ step: 'ready', index: 1, fragment: '1.x', preset: 'by-stage' });
-    expect(pushPlan({ step: 'ready', index: 1, fragment: '1.x', preset: 'by-stage' }, 'running', { fragment: '1.x', preset: 'by-stage' }).entry).toEqual({ step: 'running', index: 2, fragment: '1.x' });
+    // The lesson's entry takes it from its start screen's.
+    expect(pushPlan({ step: 'ready', index: 1, fragment: '1.x', preset: 'by-stage' }, 'running', { fragment: '1.x' }).entry).toEqual({ step: 'running', index: 2, fragment: '1.x', preset: 'by-stage' });
+    // A start screen never takes one from an earlier entry, and a lesson of a deck that is no preset has none.
+    expect(pushPlan({ step: 'ready', index: 1, fragment: '1.y', preset: 'warm-up' }, 'ready', { fragment: '1.x' }).entry).toEqual({ step: 'ready', index: 1, fragment: '1.x' });
+    expect(pushPlan({ step: 'ready', index: 1, fragment: '1.x' }, 'running', { fragment: '1.x' }).entry).toEqual({ step: 'running', index: 2, fragment: '1.x' });
+  });
+
+  it('a reload in the lesson before its first slide keeps the preset: boot steps back to the start screen with it', () => {
+    const plan = bootPlan({ link: null, entry: { step: 'running', index: 2, fragment: '1.abc', preset: 'by-stage' }, accepts: yes, homeBack: false });
+    expect(plan).toMatchObject({ back: true, deck: { raw: '1.abc', reloaded: true, preset: 'by-stage' } });
+    expect(bootPlan({ link: null, entry: { step: 'running', index: 2, fragment: '1.abc' }, accepts: yes, homeBack: false }).deck).toEqual({ raw: '1.abc', reloaded: true });
   });
 });
 

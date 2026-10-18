@@ -63,6 +63,11 @@ export async function saveHomeSnapshot(_snapshot: HomeSnapshot): Promise<void> {
   // No history on native.
 }
 
+/** Resolves once the presenter's history steps asked for so far have run; web only. */
+export async function afterPresenterHistory(): Promise<void> {
+  // No history on native.
+}
+
 export async function returnToPresenterHome(): Promise<void> {
   // No history on native.
 }

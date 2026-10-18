@@ -1,5 +1,5 @@
 import { isLearnerRoot, type LecturePreset } from '@hangul-route/content-schema';
-import type { HomeSnapshot } from '../logic/lecture/home-state';
+import { parseHomeSnapshot, type HomeSnapshot } from '../logic/lecture/home-state';
 import { bootPlan, entryState, pushPlan, readEntry, stepsToHome, type HistoryEntry } from '../logic/lecture/history';
 import { commandForKey, type KeyCommand } from '../logic/lecture/keymap';
 
@@ -295,8 +295,19 @@ export function saveHomeSnapshot(snapshot: HomeSnapshot, env: PresenterEnv = bro
   return queue(() => {
     const here = readEntry(env.history?.state);
     if (here === null || here.step !== 'home') return;
+    // The same state already there: no write (browsers throttle `replaceState`).
+    if (here.home !== undefined && JSON.stringify(here.home) === JSON.stringify(parseHomeSnapshot(snapshot))) return;
     replaceEntry(env, { ...here, home: snapshot });
   });
+}
+
+/**
+ * Resolves once every history step the presenter asked for so far (boot's step back, a return to
+ * the home) has run, so the entry the tab is on can be read: the home's kept state after a boot
+ * on a deck step (section 18.2).
+ */
+export function afterPresenterHistory(): Promise<void> {
+  return queue(() => undefined);
 }
 
 /** Whether the home's Back goes back to the page before `/present` (rule 5): a same-origin page before it at boot. */

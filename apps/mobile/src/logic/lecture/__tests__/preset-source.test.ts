@@ -4,10 +4,21 @@ import { describe, expect, it } from 'vitest';
 import { UNKNOWN_CAPABILITY } from '../../audio/capability';
 import { lectureBundle } from '../content';
 import { expandDeck } from '../deck-builder';
-import { REVISIT_MAX_LETTERS, firstStageOf, presetPreview, presenterPresetContext, presenterPresetOrder, presetLectureDeck, presetTitle, somethingToFollow } from '../preset-source';
+import {
+  REVISIT_MAX_LETTERS,
+  WORD_REVIEW_MIN_WORDS,
+  firstStageOf,
+  presetPreview,
+  presenterPresetContext,
+  presenterPresetOrder,
+  presetLectureDeck,
+  presetTitle,
+  resolveOnPresenter,
+  somethingToFollow,
+} from '../preset-source';
 import { emptyRecent, parseRecent, rememberDeck, type RecentList } from '../recent';
 import { homeStart, resolveBoot, runDeck, startPayload } from '../shell';
-import { blockMinutesOn, blockTitleIn } from '../quick-source';
+import { blockMinutesOn, blockTitleIn, wordReviewWordsOn } from '../quick-source';
 import { presetBlockMinutes } from '@hangul-route/content-schema';
 
 /**
@@ -199,8 +210,62 @@ describe('the presenter home order and its decks', () => {
     expect(firstStageOf([{ kind: 'episode', id: 'episode:stage9-none' }])).toBeNull();
   });
 
+  it('names Stage 5 for a Stage by stage deck at Stage 5 (its lessons are stories read at the read level)', () => {
+    const stage5 = resolvePreset('by-stage', 20, { ...presenterPresetContext(null, NOW), stage: 'stage5' });
+    expect(stage5.blocks[0]).toMatchObject({ kind: 'story', level: 'read' });
+    expect(firstStageOf(stage5.blocks)).toBe('stage5');
+    // A story at another level is not a lesson of the catalogue.
+    expect(firstStageOf([{ kind: 'story', storyId: 'story:sun-and-moon', checks: true }])).toBeNull();
+  });
+
   it('returns null for blocks the schema refuses', () => {
     expect(presetLectureDeck({ blocks: [], preset: 'warm-up' }, { title: 'Quick warm-up', now: NOW, rng: () => 0.1 })).toBeNull();
+  });
+});
+
+describe('Stage 5 in Recent (section 4.3): a story read at the read level is its book quest', () => {
+  it('Stage by stage at Stage 5 moves past the stories a Recent Stage 5 deck read, and Next lesson follows them', () => {
+    const first = resolvePreset('by-stage', 10, { ...presenterPresetContext(null, NOW), stage: 'stage5' });
+    const recent = recentOf([{ blocks: first.blocks, savedAt: daysAgo(1) }]);
+    const ctx = presenterPresetContext(recent, NOW);
+    expect(ctx.shown?.questIds).toEqual(['quest:story-sejong-new-letters-read', 'quest:story-shapes-of-hangeul-read']);
+    const again = resolvePreset('by-stage', 10, { ...ctx, stage: 'stage5' });
+    expect(again.blocks[0]).toEqual({ kind: 'story', storyId: 'story:hangeul-day', level: 'read', checks: true });
+    expect(somethingToFollow(ctx)).toBe(true);
+    expect(resolvePreset('next-lesson', 10, ctx).blocks[0]).toEqual({ kind: 'quest', id: 'quest:story-hangeul-day-read' });
+  });
+});
+
+describe('Word review with fewer than 4 words once expanded (section 4.2 W)', () => {
+  const bundle = lectureBundle('en');
+  const wordsOf = (block: Parameters<typeof wordReviewWordsOn>[1]): number => wordReviewWordsOn(bundle, block);
+  const ctxOf = (questIds: string[]) => presenterPresetContext(recentOf([{ blocks: questIds.map(q), savedAt: daysAgo(1) }]), NOW);
+
+  it('Hangul week 1 in Recent this week teaches 3 words: the warm-up, with its fallback line, at 10 and 20 minutes', () => {
+    for (const recent of [['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3'], ['quest:stage1-letters-q1'], ['quest:stage1-rites-q1']]) {
+      const ctx = ctxOf(recent);
+      // The resolver alone (catalogue only) still builds the word review ...
+      expect(resolvePreset('word-review', 10, ctx).preset).toBe('word-review');
+      for (const minutes of [10, 20]) {
+        const r = resolveOnPresenter('word-review', minutes, ctx, wordsOf);
+        expect([r.preset, r.fallback, r.titleKey, r.minutes], recent.join()).toEqual(['warm-up', 'warm-up', 'warmup.short', 10]);
+        // ... and the presenter gives the same warm-up the no-ids fallback gives.
+        expect(r.blocks).toEqual(resolvePreset('warm-up', 10, ctx).blocks);
+      }
+    }
+  });
+
+  it('4 or more words stays a Word review; no ids still gives the warm-up; other presets pass through', () => {
+    const ctx = ctxOf(['quest:stage1-life-q1']);
+    expect(wordsOf({ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 })).toBeGreaterThanOrEqual(WORD_REVIEW_MIN_WORDS);
+    const r = resolveOnPresenter('word-review', 20, ctx, wordsOf);
+    expect([r.preset, r.fallback, r.minutes]).toEqual(['word-review', null, 20]);
+    const none = resolveOnPresenter('word-review', 10, presenterPresetContext(null, NOW), wordsOf);
+    expect([none.preset, none.fallback]).toEqual(['warm-up', 'warm-up']);
+    let counted = 0;
+    const counting = (): number => (counted += 1);
+    expect(resolveOnPresenter('hangul-week-1', 20, ctx, counting)).toEqual(resolvePreset('hangul-week-1', 20, ctx));
+    expect(counted).toBe(0);
   });
 });
 

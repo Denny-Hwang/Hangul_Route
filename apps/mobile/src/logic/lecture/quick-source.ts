@@ -57,6 +57,14 @@ export function blockMinutesOn(bundle: LectureBundle, block: LectureBlock): numb
   return expandDeck({ ...MINUTES_DECK, blocks: [block] }, bundle, { canPlayKorean: true }).minutes;
 }
 
+/**
+ * How many word cards a `word-review` block shows once expanded on its own (AMENDMENTS-LECTURE-V2
+ * section 4.2 W: fewer than 4 gives the warm-up instead, `resolveOnPresenter`).
+ */
+export function wordReviewWordsOn(bundle: LectureBundle, block: Extract<LectureBlock, { kind: 'word-review' }>): number {
+  return expandDeck({ ...MINUTES_DECK, blocks: [block] }, bundle, { canPlayKorean: true }).slides.filter((s) => s.kind === 'vocab').length;
+}
+
 /** A content title in the presenter language: the overlay's, else the English; null for an id the bundle and catalogue do not know. */
 function lookupTitle(locale: UiLocale, catalog: Catalog): (id: string) => string | null {
   const english = new Map<string, string>([

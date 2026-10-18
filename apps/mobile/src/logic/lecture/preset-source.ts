@@ -93,18 +93,37 @@ export function presenterPresetOrder(ctx: PresetContext): LecturePreset[] {
 }
 
 /**
- * The stage of a deck's first lesson (a quest, an episode, or a story read as a Stage 5 lesson),
- * for the chooser's stage chip when Customize opens from a preset (section 18.3); null when the
- * deck holds no lesson of the catalogue (a warm-up, a word review, a story).
+ * Section 4.2 W on the presenter: a Word review whose lessons teach fewer than 4 words once
+ * expanded falls back to the warm-up, as one with no ids does. Only the presenter's bundle knows
+ * how many words a quest teaches (the resolver reads the catalogue only), so this sits on top of
+ * `resolvePreset`.
+ */
+export const WORD_REVIEW_MIN_WORDS = 4;
+
+export type WordReviewBlock = Extract<LectureBlock, { kind: 'word-review' }>;
+
+/**
+ * A preset resolved on the presenter: `resolvePreset`, then section 4.2 W's second fallback.
+ * `wordsOf` counts the word cards a `word-review` block shows once expanded with the presenter's
+ * bundle (`wordReviewWordsOn`). The home's cards, the preview and Start all read this one result.
+ */
+export function resolveOnPresenter(preset: LecturePreset, minutes: number, ctx: PresetContext, wordsOf: (block: WordReviewBlock) => number): ResolvedPreset {
+  const resolved = resolvePreset(preset, minutes, ctx);
+  const review = resolved.blocks.find((b): b is WordReviewBlock => b.kind === 'word-review');
+  if (resolved.preset !== 'word-review' || review === undefined || wordsOf(review) >= WORD_REVIEW_MIN_WORDS) return resolved;
+  return { ...resolvePreset('warm-up', minutes, ctx), fallback: 'warm-up' };
+}
+
+/**
+ * The stage of a deck's first lesson (a quest, an episode, or a story read as a Stage 5 lesson,
+ * through `questIdsOfBlocks`), for the chooser's stage chip when Customize opens from a preset
+ * (section 18.3); null when the deck holds no lesson of the catalogue (a warm-up, a word review, a
+ * story at another level).
  */
 export function firstStageOf(blocks: readonly LectureBlock[], catalog: Catalog = CATALOG): StageKey | null {
   for (const block of blocks) {
-    if (block.kind === 'quest') {
-      const stage = catalog.quests.find((q) => q.id === block.id)?.stage;
-      if (stage) return stage;
-    }
-    if (block.kind === 'episode') {
-      const stage = catalog.cells.find((c) => c.episodeId === block.id)?.stage;
+    for (const id of questIdsOfBlocks([block], catalog)) {
+      const stage = catalog.quests.find((q) => q.id === id)?.stage;
       if (stage) return stage;
     }
   }

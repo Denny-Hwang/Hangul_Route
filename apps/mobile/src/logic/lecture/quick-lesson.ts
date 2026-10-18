@@ -6,7 +6,6 @@ import {
   jamoSetBlocks,
   presetMinutesOf,
   rowState,
-  selectionBlocks,
   selectionEntries,
   toggleLesson,
   toggleRow,
@@ -49,7 +48,27 @@ export function deckIdFrom(rng: () => number): string {
   return id;
 }
 
-const blockCount = (selection: ChooserSelection, groups: readonly ChooserGroup[]): number => selectionBlocks(selection, groups).length;
+/**
+ * How many deck blocks each key of the groups gives (a row, a lesson; a letter set over 12 letters
+ * gives more than one), built once per groups: every box's "would it fit" on every render reads it,
+ * so the chooser does not rebuild the groups' index for each of its rows.
+ */
+const blockCounts = new WeakMap<readonly ChooserGroup[], Map<string, number>>();
+
+function countsOf(groups: readonly ChooserGroup[]): Map<string, number> {
+  const known = blockCounts.get(groups);
+  if (known) return known;
+  const keys = groups.flatMap((g) => g.rows.flatMap((row) => [row.key, ...(row.kind === 'episode' ? row.lessons.map((l) => l.key) : [])]));
+  const counts = new Map(selectionEntries(keys, groups).map((e) => [e.key, e.blocks.length] as const));
+  blockCounts.set(groups, counts);
+  return counts;
+}
+
+/** The deck blocks a selection gives (`selectionBlocks(...).length`; a key the groups do not hold gives none). */
+const blockCount = (selection: ChooserSelection, groups: readonly ChooserGroup[]): number => {
+  const counts = countsOf(groups);
+  return selection.reduce((n, key) => n + (counts.get(key) ?? 0), 0);
+};
 
 /** A press is allowed when the result still fits, or when it does not add (a press that removes is never off). */
 function allowed(before: ChooserSelection, after: ChooserSelection, groups: readonly ChooserGroup[]): boolean {
@@ -120,8 +139,22 @@ export function chooserTray(selection: ChooserSelection, groups: readonly Choose
   return selectionEntries(selection, groups).map((e) => ({ key: e.key, title: e.title, minutes: choiceMinutes(e.key, groups) }));
 }
 
-/** A content title reduced to the deck title class (TD8): other characters dropped, spaces collapsed. */
-function cleanTitle(title: string): string {
+/**
+ * A character the deck title class (TD8) cannot hold whose loss would change what the title says:
+ * a letter or digit (a compatibility jamo such as ㅐ), a bracket, or the opening ¿ and ¡ of Spanish.
+ */
+const MEANINGFUL_RE = /[\p{L}\p{N}[\]{}<>¿¡]/u;
+
+/**
+ * A content title in the deck title class (TD8): spaces collapsed, and other characters dropped
+ * only when that loses nothing the title says (a dash, a quotation mark). A title that would lose
+ * a letter, a bracket or ¿ / ¡ is not used at all (null): a Korean lesson title naming a vowel in
+ * compatibility jamo (Stage 2 letters, lesson 1) would lose the vowel, and es "¿Dónde está el
+ * pájaro?" would lose its opening mark.
+ */
+function cleanTitle(title: string): string | null {
+  const dropped = [...title].filter((ch) => !LECTURE_TITLE_RE.test(ch) && !/\s/.test(ch));
+  if (dropped.some((ch) => MEANINGFUL_RE.test(ch))) return null;
   return [...title]
     .filter((ch) => LECTURE_TITLE_RE.test(ch))
     .join('')
@@ -138,11 +171,11 @@ function cutAtWord(text: string, max: number): string {
 
 /**
  * The chosen titles joined by " / " while they fit in 60 characters (the titles are bundle
- * content, so the deck needs no typing); `fallback` (the localised "Your lesson") when nothing
- * usable is left.
+ * content, so the deck needs no typing), leaving out a title the deck title class cannot hold
+ * whole (`cleanTitle`); `fallback` (the localised "Your lesson") when nothing usable is left.
  */
 export function quickDeckTitle(titles: readonly string[], fallback: string): string {
-  const parts = titles.map(cleanTitle).filter((t) => t.length > 0);
+  const parts = titles.map(cleanTitle).filter((t): t is string => t !== null && t.length > 0);
   let title = '';
   for (const part of parts) {
     const next = title === '' ? part : `${title} / ${part}`;
