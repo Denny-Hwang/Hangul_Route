@@ -203,21 +203,37 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     }
   });
 
-  it('every quest with a Discover step shows a letter slide for each jamo and a word slide for each word it discovers, before any quiz', () => {
+  it('every quest with a Discover step shows a letter slide for each jamo and a word or reading slide for each text it discovers, before any quiz', () => {
     const discovering = questsAll.filter((q) => q.steps.some((s) => s.kind === 'discover'));
     expect(discovering.length).toBeGreaterThan(0);
     for (const q of discovering) {
       const items = q.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items) ?? []);
       const jamoIds = items.flatMap((it) => (it.type === 'jamo' ? [it.jamoId] : []));
       // The reading quests of F-QUEST-002 rule R5 (Q-8) discover words only; an upper-stage item
-      // (F-CURR-001: an exchange, sentence, pattern or realia) shows a vocab slide per taught text.
+      // (F-CURR-001: an exchange, sentence, pattern or realia) shows its texts on its own reading slide (LV-S1).
       const words = items.flatMap((it) => (it.type === 'jamo' ? [] : discoverItemTexts(it).map((t) => t.ko)));
       expect(jamoIds.length + words.length, q.id).toBeGreaterThan(0);
       const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
       const letterAt = new Map(slides.flatMap((s, i) => (s.kind === 'letter' ? [[s.jamoId, i] as const] : [])));
       const wordAt = new Map<string, number>();
+      const held = (s: (typeof slides)[number]): string[] => {
+        switch (s.kind) {
+          case 'vocab':
+            return [s.word.ko];
+          case 'sentence':
+            return [s.sentence.ko];
+          case 'pattern':
+            return s.examples.map((e) => e.ko);
+          case 'read-along':
+            return s.lines.map((l) => l.ko);
+          case 'realia':
+            return s.keyWords.map((w) => w.ko);
+          default:
+            return [];
+        }
+      };
       slides.forEach((s, i) => {
-        if (s.kind === 'vocab' && !wordAt.has(s.word.ko)) wordAt.set(s.word.ko, i);
+        for (const ko of held(s)) if (!wordAt.has(ko)) wordAt.set(ko, i);
       });
       const firstQuiz = slides.findIndex((s) => s.kind === 'quiz');
       for (const id of jamoIds) {

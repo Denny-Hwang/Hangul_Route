@@ -19,4 +19,17 @@ describe('koTokenParts (F-CURR-001 §3.4)', () => {
     expect(koTokenParts('{ko:A1}')).toEqual([{ ko: 'A1', romanization: '' }]);
     expect(koTokenParts('')).toEqual([]);
   });
+
+  it('romanizes a token of several words word by word (a pattern note such as {ko:접고 잘라요})', () => {
+    expect(koTokenParts('Add {ko:고}: {ko:접고 잘라요}.')).toEqual([
+      { text: 'Add ' },
+      { ko: '고', romanization: 'go' },
+      { text: ': ' },
+      { ko: '접고 잘라요', romanization: 'jeopgo jallayo' },
+      { text: '.' },
+    ]);
+    expect(koTokenParts('{ko:제가 좋아하는 동물}')).toEqual([{ ko: '제가 좋아하는 동물', romanization: 'jega joahaneun dongmul' }]);
+    // A word that cannot be read leaves the whole token without a romanization.
+    expect(koTokenParts('{ko:접고 A1}')).toEqual([{ ko: '접고 A1', romanization: '' }]);
+  });
 });

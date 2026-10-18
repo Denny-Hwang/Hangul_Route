@@ -1,19 +1,24 @@
 import {
   discoverItemTexts,
   parseNarration,
+  SLOT_MARKER,
   syllableSplit,
   wordReviewCardCap,
   type CheckKind,
   type Discover,
+  type DiscoverItem,
   type Episode,
   type HeritageCard,
   type Jamo,
+  type KoText,
   type LectureBlock,
   type LectureDeck,
   type Quest,
+  type Realia,
   type StoryLevel,
 } from '@hangul-route/content-schema';
 import { spokenFor, type SpokenForm } from '../audio/spoken';
+import { koTokenParts } from '../ko-tokens';
 import type { MinigameScope } from '../minigame-config';
 import {
   buildCultureQuizRounds,
@@ -28,13 +33,16 @@ import { GLOSS_HIDDEN_KINDS } from '../story/check-view';
 import { derangeSeeded, shuffleSeeded } from '../story/seeded-order';
 import {
   buildsFor,
+  joinSpoken,
   type BuildName,
   type BuildOptions,
   type KoLine,
   type NarrationPiece,
   type QuizOption,
+  type RealiaSheetView,
   type SequenceStep,
   type SlideBody,
+  type SpokenLine,
 } from './build-steps';
 
 /**
@@ -174,6 +182,58 @@ function spokenOf(text: SpeakableKo): SpokenForm {
 }
 
 const wordVoice = (text: SpeakableKo, speech: WordVoice['speech'] = 'word'): WordVoice => ({ spoken: spokenOf(text), speech });
+
+/** Taught Korean on a reading slide: the Korean, its romanization, its gloss and what Sound says. */
+const spokenLine = (text: KoText): SpokenLine => ({ ko: text.ko, romanization: text.romanization, gloss: text.en, spoken: spokenOf(text) });
+
+/**
+ * A realia as the stage draws it (F-CURR-001 §3.6): its layout, title, lines and accessible text;
+ * Sound reads the title, then each line with its value, in order.
+ */
+function sheetView(realia: Realia): RealiaSheetView {
+  const text = (t: KoText) => ({ ko: t.ko, romanization: t.romanization });
+  const line = (e: Realia['entries'][number]): SpokenForm => {
+    const own = spokenOf(e.text);
+    if (e.value === undefined) return own;
+    const value = spokenOf(e.value);
+    return { text: `${own.text} ${value.text}`, romanization: `${own.romanization} ${value.romanization}` };
+  };
+  return {
+    kind: realia.kind ?? 'plain',
+    ...(realia.title !== undefined ? { heading: text(realia.title) } : {}),
+    entries: realia.entries.map((e) => ({
+      id: e.id,
+      text: text(e.text),
+      ...(e.value !== undefined ? { value: text(e.value) } : {}),
+      ...(e.dir !== undefined ? { dir: e.dir } : {}),
+      ...(e.goods !== undefined ? { goods: e.goods } : {}),
+    })),
+    alt: realia.altEn,
+    spoken: joinSpoken([...(realia.title !== undefined ? [spokenOf(realia.title)] : []), ...realia.entries.map(line)]),
+  };
+}
+
+/**
+ * Each piece of taught Korean a slide draws with the sound its card would have (a Word review
+ * keeps it): a word card's own, a Discover sentence, pattern example or exchange line at the
+ * sentence rate, a realia key word at the word rate.
+ */
+function slideVoices(slide: Slide): Array<[string, WordVoice]> {
+  switch (slide.kind) {
+    case 'vocab':
+      return [[slide.word.ko, { spoken: slide.spoken, speech: slide.speech }]];
+    case 'sentence':
+      return [[slide.sentence.ko, { spoken: slide.sentence.spoken, speech: 'sentence' }]];
+    case 'pattern':
+      return slide.examples.map((e): [string, WordVoice] => [e.ko, { spoken: e.spoken, speech: 'sentence' }]);
+    case 'read-along':
+      return slide.lines.map((l): [string, WordVoice] => [l.ko, { spoken: l.spoken, speech: 'sentence' }]);
+    case 'realia':
+      return slide.keyWords.map((w): [string, WordVoice] => [w.ko, { spoken: w.spoken, speech: 'word' }]);
+    default:
+      return [];
+  }
+}
 
 /** A scene's Korean: its line, else its keyword (the D14 rule of the schema's `sceneKorean`, on the presenter's narrower view). */
 const sceneKo = (scene: LectureStoryScene): StoryKo | undefined => scene.line ?? scene.keyword;
@@ -459,21 +519,88 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
 
   /**
-   * A Discover step (F-QUEST-002 §3.1): a letter slide per jamo item, a vocab slide per word item.
-   * A sentence, a pattern example or an exchange line plays at the sentence rate.
+   * UI-language text with `{ko:}` tokens (a pattern note, a realia caption) as pieces, each token
+   * a Korean chip with its romanization. A token with no romanization drops the whole text and is
+   * a counted `no-romanization` skip (rule 11); the slide keeps everything else.
    */
-  const discoverStep = (path: string, discover: Discover): void => {
-    for (const item of discover.pages.flatMap((page) => page.items)) {
-      if (item.type === 'jamo') {
-        letterById(path, item.jamoId);
-        continue;
-      }
-      const speech = item.type === 'sentence' || item.type === 'pattern' || item.type === 'exchange' ? 'sentence' : 'word';
-      for (const text of discoverItemTexts(item)) {
-        wordCard(`${path}/${text.ko}`, { ko: text.ko, romanization: text.romanization, gloss: text.en }, wordVoice(text, speech));
-      }
+  const tokenPieces = (ref: string, text: string): NarrationPiece[] | undefined => {
+    const pieces = koTokenParts(text);
+    if (pieces.some((piece) => 'ko' in piece && piece.romanization === '')) {
+      skip(ref, 'no-romanization');
+      return undefined;
+    }
+    return pieces;
+  };
+
+  /** What a reading slide shows was taught and seen, as when its texts were word cards: no later card repeats them. */
+  const shownOnSlide = (item: DiscoverItem): void => {
+    for (const text of discoverItemTexts(item)) {
+      seenWords.add(text.ko);
+      teachWord({ ko: text.ko, romanization: text.romanization, gloss: text.en });
     }
   };
+
+  /**
+   * A Discover step (F-QUEST-002 §3.1; AMENDMENTS-LECTURE-V2 section 5.1, LV-S1): a letter slide
+   * per jamo item, a vocab slide per word item, and a reading slide per upper-stage item: a
+   * sentence, a sentence pattern, a read along (an exchange) and a realia page. A realia whose
+   * sheet the quest does not hold is a counted `unknown-id` skip; its key words become word cards.
+   */
+  const discoverStep = (path: string, discover: Discover, realiaOf: (ref: string) => Realia | undefined): void => {
+    discover.pages.forEach((page, p) => {
+      page.items.forEach((item, i) => {
+        const key = `${path}/${item.type}-${p + 1}-${i + 1}`;
+        switch (item.type) {
+          case 'jamo':
+            letterById(path, item.jamoId);
+            return;
+          case 'word':
+            wordCard(`${path}/${item.word.ko}`, { ko: item.word.ko, romanization: item.word.romanization, gloss: item.word.en }, wordVoice(item.word));
+            return;
+          case 'sentence':
+            push(key, { kind: 'sentence', sentence: spokenLine(item.sentence), ...(item.picture !== undefined ? { picture: item.picture } : {}) });
+            break;
+          case 'pattern': {
+            const note = tokenPieces(`${key}/note`, item.noteEn);
+            push(key, {
+              kind: 'pattern',
+              frame: { pieces: item.frame.ko.split(SLOT_MARKER), romanization: item.frame.romanization, gloss: item.frame.en },
+              ...(note !== undefined ? { note } : {}),
+              examples: item.examples.map(spokenLine),
+            });
+            break;
+          }
+          case 'exchange':
+            push(key, { kind: 'read-along', lines: item.lines.map((l) => ({ speaker: l.speakerEn, ...spokenLine(l.line) })) });
+            break;
+          case 'realia': {
+            const realia = realiaOf(item.realiaRef);
+            if (realia === undefined) {
+              skip(item.realiaRef, 'unknown-id');
+              for (const w of item.keyWords) wordCard(`${path}/${w.ko}`, { ko: w.ko, romanization: w.romanization, gloss: w.en }, wordVoice(w));
+              return;
+            }
+            const text = item.captionEn ?? page.captionEn;
+            const caption = text === undefined ? undefined : tokenPieces(`${key}/caption`, text);
+            push(key, { kind: 'realia', sheet: sheetView(realia), ...(caption !== undefined ? { caption } : {}), keyWords: item.keyWords.map(spokenLine) });
+            break;
+          }
+        }
+        shownOnSlide(item);
+      });
+    });
+  };
+
+  /** The realia a quest's Realia Read scopes hold, by ref: a Discover realia page shows the sheet the quest plays. */
+  const realiaOfQuest =
+    (quest: Quest) =>
+    (ref: string): Realia | undefined => {
+      for (const step of quest.steps) {
+        const realia = step.minigameRef === undefined ? undefined : bundle.scopeFor(step.minigameRef)?.realiaRead?.realia;
+        if (realia?.ref === ref) return realia;
+      }
+      return undefined;
+    };
 
   const questBlock = (path: string, quest: Quest): void => {
     minutes += quest.estimatedMinutes;
@@ -496,7 +623,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         continue;
       }
       if (step.kind === 'discover' && step.discover) {
-        discoverStep(stepPath, step.discover);
+        discoverStep(stepPath, step.discover, realiaOfQuest(quest));
         continue;
       }
       if (step.minigameRef === undefined) {
@@ -711,13 +838,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         continue;
       }
       const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice);
-      // A taught word keeps the sound its own card had in the quest (a Discover sentence stays a sentence).
-      const cardVoice = (ko: string): WordVoice | undefined => {
-        const card = alone.slides.find((s): s is Extract<Slide, { kind: 'vocab' }> => s.kind === 'vocab' && s.word.ko === ko);
-        return card ? { spoken: card.spoken, speech: card.speech } : undefined;
-      };
+      // A taught word keeps the sound the quest gave it, on its card or its reading slide (a Discover sentence stays a sentence).
+      const voices = new Map<string, WordVoice>();
+      for (const [ko, v] of alone.slides.flatMap(slideVoices)) if (!voices.has(ko)) voices.set(ko, v);
       for (const t of alone.taught) {
-        if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss, voice: cardVoice(t.ko) ?? wordVoice(t) });
+        if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss, voice: voices.get(t.ko) ?? wordVoice(t) });
       }
     }
     for (const id of vocabIds) {

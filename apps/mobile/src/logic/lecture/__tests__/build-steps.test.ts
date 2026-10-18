@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildsFor, type BuildOptions, type SlideBody } from '../build-steps';
+import { buildsFor, joinSpoken, partsShown, type BuildOptions, type SlideBody } from '../build-steps';
 
 const ALWAYS: BuildOptions = { romanization: 'always', strokeGuide: true };
 const TAP: BuildOptions = { romanization: 'tap', strokeGuide: true };
@@ -131,5 +131,81 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
     expect(buildsFor(body, TAP)).toEqual(['art', 'narration', 'rom']);
     expect(buildsFor(body, ALWAYS)).toEqual(['art', 'narration']);
     expect(buildsFor({ ...body, korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' } }, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
+  });
+});
+
+describe('buildsFor: the reading slides (AMENDMENTS-LECTURE-V2 section 5.2, LV-S1)', () => {
+  const line = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const sentence = (picture?: string): SlideBody => ({ kind: 'sentence', sentence: line('물을 마셔요.', 'mureul masyeoyo', 'I drink water.'), ...(picture ? { picture } : {}) });
+  const pattern = (note = true): SlideBody => ({
+    kind: 'pattern',
+    frame: { pieces: ['', '을/를 먹어요.'], romanization: '___eul/reul meogeoyo', gloss: 'I eat ___.' },
+    ...(note ? { note: [{ text: 'Put ' }, { ko: '을', romanization: 'eul' }, { text: ' after a final consonant.' }] } : {}),
+    examples: [line('밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.'), line('사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple.')],
+  });
+  const readAlong: SlideBody = {
+    kind: 'read-along',
+    lines: [
+      { speaker: 'Grandma', ...line('밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?') },
+      { speaker: 'Hoya', ...line('네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.') },
+    ],
+  };
+  const realia: SlideBody = {
+    kind: 'realia',
+    sheet: { kind: 'menu', entries: [{ id: 'gimbap', text: { ko: '김밥', romanization: 'gimbap' } }], alt: 'A menu.', spoken: { text: '김밥', romanization: 'gimbap' } },
+    keyWords: [line('김밥', 'gimbap', 'seaweed rice roll')],
+  };
+
+  it("sentence: Korean with its romanization, the meaning, the picture; 'tap' puts the romanization one build after the Korean", () => {
+    expect(buildsFor(sentence('word:food-water'), ALWAYS)).toEqual(['ko', 'gloss', 'art']);
+    expect(buildsFor(sentence('word:food-water'), TAP)).toEqual(['ko', 'rom', 'gloss', 'art']);
+    expect(buildsFor(sentence(), ALWAYS)).toEqual(['ko', 'gloss']);
+  });
+
+  it("pattern: frame, note, example 1, example 2; 'tap' gives each its romanization one build later", () => {
+    expect(buildsFor(pattern(), ALWAYS)).toEqual(['frame', 'note', 'example', 'example']);
+    expect(buildsFor(pattern(), TAP)).toEqual(['frame', 'rom', 'note', 'rom', 'example', 'rom', 'example', 'rom']);
+    expect(buildsFor(pattern(false), ALWAYS)).toEqual(['frame', 'example', 'example']);
+  });
+
+  it("read along: one build per line; 'tap' puts each line's romanization one build after it", () => {
+    expect(buildsFor(readAlong, ALWAYS)).toEqual(['line', 'line']);
+    expect(buildsFor(readAlong, TAP)).toEqual(['line', 'rom', 'line', 'rom']);
+  });
+
+  it("realia: the sheet, then the key words; 'tap' shows each part's romanization one build after it", () => {
+    expect(buildsFor(realia, ALWAYS)).toEqual(['sheet', 'words']);
+    expect(buildsFor(realia, TAP)).toEqual(['sheet', 'rom', 'words', 'rom']);
+  });
+});
+
+describe('partsShown: what a reading slide shows at a build', () => {
+  it('each build but rom shows its part; with no rom builds the romanization comes with the part', () => {
+    expect(partsShown(['frame', 'note', 'example', 'example'], 0)).toEqual([{ name: 'frame', rom: true }]);
+    expect(partsShown(['frame', 'note', 'example', 'example'], 2)).toEqual([
+      { name: 'frame', rom: true },
+      { name: 'note', rom: true },
+      { name: 'example', rom: true },
+    ]);
+  });
+
+  it("with 'tap', a rom build shows the romanization of the part before it", () => {
+    const builds = ['line', 'rom', 'line', 'rom'] as const;
+    expect(partsShown(builds, 0)).toEqual([{ name: 'line', rom: false }]);
+    expect(partsShown(builds, 1)).toEqual([{ name: 'line', rom: true }]);
+    expect(partsShown(builds, 2)).toEqual([{ name: 'line', rom: true }, { name: 'line', rom: false }]);
+    expect(partsShown(builds, 3)).toEqual([{ name: 'line', rom: true }, { name: 'line', rom: true }]);
+  });
+
+  it('a reveal past the end shows every part; a negative one shows nothing', () => {
+    expect(partsShown(['sheet', 'words'], 9)).toHaveLength(2);
+    expect(partsShown(['sheet', 'words'], -1)).toEqual([]);
+  });
+});
+
+describe('joinSpoken: several pieces of Korean read in one go', () => {
+  it('joins the text and the romanization with a pause; one piece keeps its clip', () => {
+    expect(joinSpoken([{ text: '메뉴', romanization: 'menyu' }, { text: '김밥', romanization: 'gimbap', audioRef: 'a.mp3' }])).toEqual({ text: '메뉴, 김밥', romanization: 'menyu, gimbap' });
+    expect(joinSpoken([{ text: '김밥', romanization: 'gimbap', audioRef: 'a.mp3' }])).toEqual({ text: '김밥', romanization: 'gimbap', audioRef: 'a.mp3' });
   });
 });

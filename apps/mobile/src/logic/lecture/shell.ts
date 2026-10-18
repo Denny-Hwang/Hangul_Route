@@ -1,4 +1,4 @@
-import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
+import { decodeDeck, SLOT_MARKER, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
 import type { PlayResult } from '../audio/controller';
@@ -77,8 +77,26 @@ export function slideLocale(input: { deck: LectureDeck | null; device: UiLocale;
 
 // --- the slides this build draws ------------------------------------------------------------------
 
-/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9) and the story slides (PR 11). */
-export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'quiz', 'activity', 'story', 'end']);
+/**
+ * Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9),
+ * the story slides (PR 11) and the reading slides (AMENDMENTS-LECTURE-V2 LV-S1).
+ */
+export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
+  'title',
+  'letter',
+  'syllable',
+  'vocab',
+  'sequence',
+  'card',
+  'quiz',
+  'activity',
+  'story',
+  'end',
+  'sentence',
+  'pattern',
+  'read-along',
+  'realia',
+]);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
 export interface SkipPart {
@@ -158,7 +176,24 @@ export function runDeck(
   return { slides: empty ? [] : slides, parts, minutes: empty ? 0 : Math.max(1, minutes) };
 }
 
+/**
+ * A sentence's picture this build can draw: a `card:` ref the art draws or a `word:` key with a
+ * WordArt glyph (README D9); any other ref (a swatch beside a sentence teaches nothing) is dropped.
+ */
+function sentencePictureDrawn(ref: string, drawnCardIds: readonly string[], drawnWordArtKeys: readonly string[]): boolean {
+  if (ref.startsWith('card:')) return drawnCardIds.includes(ref);
+  if (ref.startsWith('word:')) return drawnWordArtKeys.includes(ref.slice('word:'.length));
+  return false;
+}
+
 function withoutUndrawnArt(slide: Slide, drawnCardIds?: readonly string[], drawnWordArtKeys?: readonly string[]): Slide {
+  if (slide.kind === 'sentence') {
+    // Only a run that knows what the art draws judges a sentence's picture (as a word card's, below).
+    const { picture, ...rest } = slide;
+    if (picture === undefined || drawnCardIds === undefined || drawnWordArtKeys === undefined) return slide;
+    if (sentencePictureDrawn(picture, drawnCardIds, drawnWordArtKeys)) return slide;
+    return { ...rest, builds: slide.builds.filter((b) => b !== 'art') };
+  }
   if (slide.kind !== 'vocab') return slide;
   const cardUndrawn = drawnCardIds !== undefined && slide.cardId !== undefined && !drawnCardIds.includes(slide.cardId);
   const wordUndrawn = drawnWordArtKeys !== undefined && slide.wordArt !== undefined && !drawnWordArtKeys.includes(slide.wordArt);
@@ -257,8 +292,20 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
  * It names the whole slide on arrival, builds not yet revealed included: the live region speaks to
  * the presenter at the device, who holds the deck, not to the room, which sees only the stage.
  */
-export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string }): string {
+export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string; slot?: string }): string {
   switch (slide.kind) {
+    case 'sentence':
+      return `${slide.sentence.ko}, ${slide.sentence.romanization}`;
+    case 'pattern': {
+      // Each gap says its name ("gap", `a11y.presenter.slot`), never "underscore".
+      const gap = (text: string): string => text.split(SLOT_MARKER).join(` ${names?.slot ?? SLOT_MARKER} `).replace(/\s+/g, ' ').trim();
+      return `${gap(slide.frame.pieces.join(SLOT_MARKER))}, ${gap(slide.frame.romanization)}`;
+    }
+    case 'read-along':
+      return slide.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}`).join(', ');
+    case 'realia':
+      // The sheet's own accessible text (F-CURR-001 §3.14).
+      return slide.sheet.alt;
     case 'title':
       return slide.title;
     case 'letter':

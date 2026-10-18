@@ -1680,6 +1680,10 @@ export const learner = {
         card: 'Tarjeta',
         activity: 'Actividad',
         end: 'Final',
+        sentence: 'Oración',
+        pattern: 'Patrón de oración',
+        readAlong: 'Leer juntos',
+        realia: 'Mira y lee',
       },
       title: 'Diapositivas',
       hint: 'Elige una diapositiva para ir a ella. Oculta una solo para esta lección.',
@@ -1723,6 +1727,9 @@ export const learner = {
         howToJoin: (cta: string) => `Toca «${cta}» en Hangul Route y escribe este código.`,
         exitHint: 'Para terminar, elige Salir.',
       },
+      sentence: { label: 'Oración' },
+      pattern: { label: 'Patrón de oración' },
+      readAlong: { label: 'Leer juntos' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

@@ -1,8 +1,9 @@
 import type { FallbackReason, PlayResult } from '../audio/prompt-state';
 import type { PromptKind } from '../audio/rate';
 import type { SpokenForm } from '../audio/spoken';
-import type { BuildName, QuizPrompt, SequenceStep } from './build-steps';
+import { joinSpoken, partsShown, type BuildName, type QuizPrompt, type RealiaSheetView, type SequenceStep } from './build-steps';
 import type { Slide } from './deck-builder';
+import { SHEET_CARDS_W, SHEET_MAX_W, SHEET_ROOMY_LINES, SHEET_W } from './stage-constants';
 
 /**
  * What the slides of F-TCH-004 PR 7 show at each build (section 3.4; design/screens/presenter/
@@ -90,6 +91,105 @@ export function markerFor<S extends string>(index: number, shapes: readonly S[])
   return { shape: shapes[index % shapes.length]!, n: index + 1 };
 }
 
+// --- the reading slides (AMENDMENTS-LECTURE-V2 section 5.2, LV-S1) ------------------------------
+
+/** A part of a reading slide: on screen, and its romanization with it (`tap`: one build later). */
+export interface PartView {
+  shown: boolean;
+  rom: boolean;
+}
+
+const HIDDEN: PartView = { shown: false, rom: false };
+
+/** The `n`th shown part built by `name` (0-based), or hidden. */
+function nthPart(builds: readonly BuildName[], reveal: number, name: BuildName, n = 0): PartView {
+  const part = partsShown(builds, reveal).filter((p) => p.name === name)[n];
+  return part ? { shown: true, rom: part.rom } : HIDDEN;
+}
+
+export interface SentenceView {
+  /** The romanization under the Korean (its own build with `tap`). */
+  rom: boolean;
+  gloss: boolean;
+  art: boolean;
+}
+
+/** Sentence slide (slide-sentence.md): the Korean at build 0, then the meaning, then the picture. */
+export function sentenceView(slide: Of<'sentence'>, reveal: number): SentenceView {
+  return { rom: nthPart(slide.builds, reveal, 'ko').rom, gloss: nthPart(slide.builds, reveal, 'gloss').shown, art: nthPart(slide.builds, reveal, 'art').shown };
+}
+
+export interface PatternView {
+  frame: PartView;
+  note: PartView;
+  examples: PartView[];
+}
+
+/** Sentence pattern slide (slide-pattern.md): the frame, the note, then one example per build. */
+export function patternView(slide: Of<'pattern'>, reveal: number): PatternView {
+  return {
+    frame: nthPart(slide.builds, reveal, 'frame'),
+    note: nthPart(slide.builds, reveal, 'note'),
+    examples: slide.examples.map((_, i) => nthPart(slide.builds, reveal, 'example', i)),
+  };
+}
+
+export interface ReadAlongView {
+  lines: PartView[];
+  /** The line Sound plays and lights: the last one on screen (V6). */
+  current: number;
+}
+
+/** Read along slide (slide-read-along.md): one line per build; the current line is the last shown. */
+export function readAlongView(slide: Of<'read-along'>, reveal: number): ReadAlongView {
+  const lines = slide.lines.map((_, i) => nthPart(slide.builds, reveal, 'line', i));
+  return { lines, current: Math.max(0, lines.filter((l) => l.shown).length - 1) };
+}
+
+export interface RealiaView {
+  /** The sheet's and the caption's romanization (one build after the sheet with `tap`). */
+  sheetRom: boolean;
+  words: boolean;
+  wordsRom: boolean;
+}
+
+/** Realia slide (slide-realia.md): the sheet with its caption, then the key words as chips. */
+export function realiaView(slide: Of<'realia'>, reveal: number): RealiaView {
+  const words = nthPart(slide.builds, reveal, 'words');
+  return { sheetRom: nthPart(slide.builds, reveal, 'sheet').rom, words: words.shown, wordsRom: words.rom };
+}
+
+/**
+ * A realia sheet's lines on the stage: each line's romanization under its Korean (roomy), or, on a
+ * sheet of more than `SHEET_ROOMY_LINES` lines, beside it, so the sheet fits the content area.
+ */
+export function sheetRoomy(sheet: Pick<RealiaSheetView, 'entries'>): boolean {
+  return sheet.entries.length <= SHEET_ROOMY_LINES;
+}
+
+/**
+ * A reading slide that fits itself (as the End slide measures its rows, README D7): drawn at level
+ * 0, it steps one level more compact while its content is taller than the room the stage gives it
+ * (a pixel of rounding allowed), up to `max`; it never steps back, so it cannot flicker. A level
+ * makes long examples, lines and notes smaller, never below the stage text floor.
+ */
+export function nextFitLevel(input: { room: number; content: number; level: number; max: number }): number {
+  const { room, content, level, max } = input;
+  if (!(room > 0) || !(content > 0)) return level;
+  return content > room + 1 && level < max ? level + 1 : level;
+}
+
+/**
+ * The sheet's width on the stage, in units: price cards side by side take more room than a menu,
+ * ticket or sign. `textScale` is how much bigger than its units the stage draws the sheet's small
+ * text (the 18 px floor on a small phone, `presenter.size.caption` there): the sheet grows with it,
+ * so its lines keep their layout, up to `SHEET_MAX_W`.
+ */
+export function sheetUnits(sheet: Pick<RealiaSheetView, 'kind'>, textScale = 1): number {
+  const base = sheet.kind === 'price-card' ? SHEET_CARDS_W : SHEET_W;
+  return Math.min(Math.max(base, SHEET_MAX_W), Math.round(base * Math.max(1, textScale)));
+}
+
 /** [ Start timer ] opens the class timer with the slide's minutes; it never starts by itself (TD5). */
 export function activityTimerMs(slide: Of<'activity'>): number {
   return slide.minutes * 60_000;
@@ -129,7 +229,10 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
  * drawn (the shuffled order at the order question; the full reveal when `reveal` is not given).
  * A title, a story scene (Read-to-me has its own path, `readToMePlan`), an activity,
  * the End slide, Odd One Out (the letters are the answer), a card without Korean and a check
- * without a target play nothing.
+ * without a target play nothing. The reading slides (LV-S1): a sentence its sentence, a pattern
+ * the last example on screen (nothing while only the frame and note show), a read along its
+ * current line (each at the sentence rate), a realia page its sheet line by line and, once they
+ * show, its key words (at the word rate).
  */
 export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
   if (slide === undefined) return undefined;
@@ -151,6 +254,21 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
       const step = steps.filter(koStep).pop();
       return step ? { spoken: { text: step.ko, romanization: step.romanization }, kind: 'sentence' } : undefined;
     }
+    case 'sentence':
+      return { spoken: slide.sentence.spoken, kind: 'sentence' };
+    case 'pattern': {
+      // The last example on screen; the frame holds a gap and is not read (the learner's Discover reads the examples only).
+      const shown = patternView(slide, reveal ?? slide.builds.length - 1).examples.filter((e) => e.shown).length;
+      const example = slide.examples[shown - 1];
+      return example ? { spoken: example.spoken, kind: 'sentence' } : undefined;
+    }
+    case 'read-along':
+      return { spoken: slide.lines[readAlongView(slide, reveal ?? slide.builds.length - 1).current]!.spoken, kind: 'sentence' };
+    case 'realia':
+      // The sheet read line by line, then, once they show, the key words in order.
+      return realiaView(slide, reveal ?? slide.builds.length - 1).words
+        ? { spoken: joinSpoken(slide.keyWords.map((w) => w.spoken)), kind: 'word' }
+        : { spoken: slide.sheet.spoken, kind: 'word' };
     case 'title':
     case 'story':
     case 'activity':

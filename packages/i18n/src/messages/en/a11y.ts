@@ -422,5 +422,7 @@ export const a11y = {
     answerMark: "Hoya's answer",
     /** The class timer's ring (PR 9). */
     timerLeft: (t: string) => `Time left: ${t}`,
+    /** The accessible name of a gap box in a sentence pattern's frame (AMENDMENTS-LECTURE-V2 section 10, LV-S1). */
+    slot: 'gap',
   },
 } as const;

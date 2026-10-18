@@ -1618,6 +1618,10 @@ export const learner = {
         card: '카드',
         activity: '활동',
         end: '마무리',
+        sentence: '문장',
+        pattern: '문장 틀',
+        readAlong: '함께 읽기',
+        realia: '보고 읽기',
       },
       title: '전체 슬라이드',
       hint: '슬라이드를 고르면 그리로 가요. 숨기기는 이번 수업에만 적용돼요.',
@@ -1661,6 +1665,9 @@ export const learner = {
         howToJoin: (cta: string) => `Hangul Route에서 ‘${cta}’ 버튼을 누르고 이 코드를 입력해요.`,
         exitHint: '마치려면 나가기를 고르세요.',
       },
+      sentence: { label: '문장' },
+      pattern: { label: '문장 틀' },
+      readAlong: { label: '함께 읽기' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */
