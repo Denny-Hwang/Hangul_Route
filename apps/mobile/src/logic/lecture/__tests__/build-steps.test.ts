@@ -41,16 +41,16 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
   });
 
   it('vocab: a topic word with a WordArt key has the art build after the gloss (README D9)', () => {
-    const body: SlideBody = { kind: 'vocab', word: { ko: '사과', romanization: 'sagwa', gloss: 'apple' }, wordId: 'vocab:sagwa-apple', wordArt: 'food-apple' };
+    const body: SlideBody = { kind: 'vocab', word: { ko: '사과', romanization: 'sagwa', gloss: 'apple' }, spoken: { text: '사과', romanization: 'sagwa' }, speech: 'word', wordId: 'vocab:sagwa-apple', wordArt: 'food-apple' };
     expect(buildsFor(body, ALWAYS)).toEqual(['ko', 'gloss', 'art']);
     expect(buildsFor(body, { ...ALWAYS, romanization: 'tap' })).toEqual(['ko', 'rom', 'gloss', 'art']);
   });
 
   it('vocab: word, gloss, art; tap adds romanization; no art = text only', () => {
-    const body: SlideBody = { kind: 'vocab', word: { ko: '김치', romanization: 'gimchi', gloss: 'kimchi' }, cardId: 'card:kimchi' };
+    const body: SlideBody = { kind: 'vocab', word: { ko: '김치', romanization: 'gimchi', gloss: 'kimchi' }, spoken: { text: '김치', romanization: 'gimchi' }, speech: 'word', cardId: 'card:kimchi' };
     expect(buildsFor(body, ALWAYS)).toEqual(['ko', 'gloss', 'art']);
     expect(buildsFor(body, TAP)).toEqual(['ko', 'rom', 'gloss', 'art']);
-    expect(buildsFor({ kind: 'vocab', word: { ko: '물', romanization: 'mul', gloss: 'water' } }, ALWAYS)).toEqual(['ko', 'gloss']);
+    expect(buildsFor({ kind: 'vocab', word: { ko: '물', romanization: 'mul', gloss: 'water' }, spoken: { text: '물', romanization: 'mul' }, speech: 'word' }, ALWAYS)).toEqual(['ko', 'gloss']);
   });
 
   it('sequence: one build per step, then the order question', () => {
@@ -72,7 +72,7 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
       storyId: 'story:x',
       sceneId: 's1',
       narration: [{ text: 'Once.' }],
-      korean: { ko: '해', romanization: 'hae', gloss: 'sun' },
+      korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' },
     };
     expect(buildsFor(body, ALWAYS)).toEqual(['art', 'narration', 'korean']);
     expect(buildsFor(body, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
@@ -130,6 +130,6 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
     };
     expect(buildsFor(body, TAP)).toEqual(['art', 'narration', 'rom']);
     expect(buildsFor(body, ALWAYS)).toEqual(['art', 'narration']);
-    expect(buildsFor({ ...body, korean: { ko: '해', romanization: 'hae', gloss: 'sun' } }, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
+    expect(buildsFor({ ...body, korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' } }, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
   });
 });

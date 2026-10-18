@@ -106,6 +106,16 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
       ['vocab:three', undefined, undefined],
     ]);
   });
+  it("a word's spokenKo and audioRef reach the presenter, so Sound plays them (section 3.4 amendment 2026-10-17)", () => {
+    const items = [item({ id: 'vocab:one', spokenKo: '사과요', audioRef: 'audio/vocab/one.mp3' }), item({ id: 'vocab:two' })];
+    const source = lectureVocabTopicsFrom([food], items, 'en');
+    const got = source.vocabTopic('vocab-topic:food');
+    if (got === undefined || got === 'not-ready') throw new Error('food did not expand');
+    expect(got.words.find((w) => w.id === 'vocab:one')).toMatchObject({ spokenKo: '사과요', audioRef: 'audio/vocab/one.mp3' });
+    expect(got.words.find((w) => w.id === 'vocab:two')).not.toHaveProperty('spokenKo');
+    expect(got.words.find((w) => w.id === 'vocab:two')).not.toHaveProperty('audioRef');
+    expect(source.vocabWord('vocab:one')).toMatchObject({ spokenKo: '사과요', audioRef: 'audio/vocab/one.mp3' });
+  });
 });
 
 describe('vocabWord: one word for a Word review (AMENDMENTS-LECTURE-V2 section 4.5, LV-2)', () => {
