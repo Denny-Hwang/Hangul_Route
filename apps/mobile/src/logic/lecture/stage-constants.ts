@@ -84,7 +84,8 @@ export const EXAMPLE_NUMBER = 64;
 export const SHEET_W = 420;
 /**
  * Price cards stand side by side (RealiaSheet's market stall), so their sheet is wider: three cards
- * each hold a price such as 오천 원 and its romanization on one line at the stage sizes.
+ * each hold a price (5,000 won, ocheon won) in Hangul and its romanization on one line at the stage
+ * sizes.
  */
 export const SHEET_CARDS_W = 600;
 /**

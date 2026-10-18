@@ -14,7 +14,7 @@ const KO_TOKEN = /\{ko:([^}]*)\}/g;
 
 /**
  * A token's romanization: one word as `romanizeWord` reads it; a token of several words (a note's
- * `{ko:접고 잘라요}`) word by word, so long as every word can be read. Otherwise empty.
+ * two-word token, jeopgo jallayo) word by word, so long as every word can be read. Otherwise empty.
  */
 function tokenRomanization(ko: string): string {
   const word = romanizeWord(ko);
