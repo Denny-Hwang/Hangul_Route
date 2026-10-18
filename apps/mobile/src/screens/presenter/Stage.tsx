@@ -7,6 +7,7 @@ import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
 import { barOverlap, gestureCommand, inBarStrip, slideDetail } from '../../logic/lecture/shell';
+import { gridKindKey } from '../../logic/lecture/tools';
 import type { LectureSceneView } from '../../logic/lecture/sources/story';
 import { units } from '../../logic/lecture/stage-constants';
 import { STAGE_PADDING } from './stage-metrics';
@@ -17,6 +18,10 @@ import { CardSlide } from './slides/CardSlide';
 import { QuizSlide } from './slides/QuizSlide';
 import { EndSlide } from './slides/EndSlide';
 import { LetterSlide } from './slides/LetterSlide';
+import { PatternSlide } from './slides/PatternSlide';
+import { ReadAlongSlide } from './slides/ReadAlongSlide';
+import { RealiaSlide } from './slides/RealiaSlide';
+import { SentenceSlide } from './slides/SentenceSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
 import { SyllableSlide } from './slides/SyllableSlide';
 import { StoryCheckSlide, isStoryCheck } from './slides/StoryCheckSlide';
@@ -58,6 +63,8 @@ export interface StageProps {
   barStrip?: number;
   /** A tap in the strip: show or hide the bar. */
   onStripTap?: () => void;
+  /** The read-along line Sound is playing on this slide, lit while it plays (V6); null when none. */
+  playingLine?: number | null;
 }
 
 export function Stage(props: StageProps): React.ReactElement {
@@ -74,8 +81,8 @@ export function Stage(props: StageProps): React.ReactElement {
   const stageTop = insets.top + scale.offsetY;
   const strip = props.barStrip === undefined ? 0 : barOverlap(props.barStrip, 0, scale.offsetY);
 
-  const kind = messages.learner.presenter.grid.kind[slide.kind];
-  const detail = slideDetail(slide, { activity: (preset) => messages.learner.presenter.activity[preset] });
+  const kind = messages.learner.presenter.grid.kind[gridKindKey(slide.kind)];
+  const detail = slideDetail(slide, { activity: (preset) => messages.learner.presenter.activity[preset], slot: messages.a11y.presenter.slot });
   const live = messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
 
   const onGrant = (event: GestureResponderEvent): void => {
@@ -160,6 +167,14 @@ export function Stage(props: StageProps): React.ReactElement {
           <StorySlide slide={slide} shown={shown} scene={props.storyScene(slide.storyId, slide.sceneId)} />
         ) : slide.kind === 'end' ? (
           <EndSlide slide={slide} joinCta={props.joinCta} />
+        ) : slide.kind === 'sentence' ? (
+          <SentenceSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'pattern' ? (
+          <PatternSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'read-along' ? (
+          <ReadAlongSlide slide={slide} reveal={reveal} playing={props.playingLine ?? null} />
+        ) : slide.kind === 'realia' ? (
+          <RealiaSlide slide={slide} reveal={reveal} />
         ) : null}
       </View>
       {props.barStrip !== undefined ? <Grabber pad={units(unit, STAGE_PADDING)} /> : null}

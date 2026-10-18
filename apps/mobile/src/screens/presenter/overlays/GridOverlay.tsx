@@ -1,7 +1,7 @@
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Pressable, ScrollView, Text, View, type ViewStyle } from 'react-native';
-import type { GridItem } from '../../../logic/lecture/tools';
+import { gridKindKey, type GridItem } from '../../../logic/lecture/tools';
 import { THUMB_HEIGHT, THUMB_WIDTH } from '../stage-metrics';
 import { usePresenterView } from '../presenter-context';
 import { Cover, ToolButton } from './OverlayParts';
@@ -42,7 +42,7 @@ function Thumb({ item, innerRef, onGoto, onToggle }: { item: GridItem; innerRef?
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.grid;
-  const kind = m.kind[item.kind];
+  const kind = m.kind[gridKindKey(item.kind)];
   const label = [String(item.n), kind, item.title, item.now ? m.now : '', item.hidden ? m.hidden : ''].filter((part) => part !== '').join(', ');
   const pill = (text: string): React.ReactElement => (
     <View style={{ borderRadius: radii.pill, borderWidth: borderWidth.base, borderColor: colors.border.strong, backgroundColor: colors.surface.paper, paddingHorizontal: spacing.sm }}>
