@@ -67,6 +67,12 @@ The presenter adds **no colours**: it projects existing `colors.*` tokens on whi
 | non-text | `brand.primary` | `surface.sunken` | the timer ring fill against its unfilled track (the track is `surface.sunken`, a decorative ground; the m:ss numbers carry the time) |
 | non-text | `brand.secondary` | `surface.paper` | `KoreanText` target chip border on a slide |
 | non-text | `brand.secondaryDark` | `surface.paper` | `KoreanText` speaker icon on a slide |
+| text | `text.primary` | `feedback.nudgeLight` | a trail sign's boards on the realia slide (LV-S1): the Korean of each board and of the sign's title |
+| text | `text.secondary` | `feedback.nudgeLight` | a trail sign's boards on the realia slide: the romanization |
+| non-text | `text.primary` | `feedback.nudgeLight` | a trail sign board's arrow |
+| non-text | `brand.secondary` | `brand.secondaryLight` | the lit read-along line's border against its own ground (LV-S1, V6) |
+| non-text | `brand.secondaryDark` | `brand.secondaryLight` | the speaker glyph of the lit read-along line |
+| non-text | `text.primary` | `surface.sunken` | a sentence pattern's gap box border against its own ground (LV-S1) |
 
 Not projected, because they miss 7:1: `text.muted` on paper (6.0:1), a white label on `brand.primary` (5.4:1; use `brand.primaryDark`), `text.secondary` on `feedback.successLight` (6.9:1; the revealed option uses `text.primary` for every line), and `text.secondary` at `presenter.dimOpacity` on paper (4.9:1; a dimmed option uses `text.primary` for every line).
 
