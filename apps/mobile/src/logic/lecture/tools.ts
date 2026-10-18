@@ -119,8 +119,23 @@ export interface GridItem {
   canHide: boolean;
 }
 
+/** The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong`. */
+export type GridKindKey = Exclude<SlideKind, 'read-along'> | 'readAlong';
+
+export function gridKindKey(kind: SlideKind): GridKindKey {
+  return kind === 'read-along' ? 'readAlong' : kind;
+}
+
 function gridTitle(slide: Slide, names: { activity: (preset: Extract<Slide, { kind: 'activity' }>['preset']) => string }): string {
   switch (slide.kind) {
+    case 'sentence':
+      return slide.sentence.gloss;
+    case 'pattern':
+      return slide.frame.gloss;
+    case 'read-along':
+      return slide.lines[0]?.gloss ?? '';
+    case 'realia':
+      return slide.sheet.alt;
     case 'title':
     case 'card':
       return slide.title;

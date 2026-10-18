@@ -15,7 +15,9 @@
 // §3.7 / §3.3), the scope fields the slides draw (syllables, card pairs, Pic-Word words, sequence
 // labels), Discover words, heritage card subtitles, the Pause word, the words of ready
 // vocabulary topics, and the title, keywords, scene Korean and check Korean of the
-// stories the Library lists (the same production gate as build-lecture-catalogue.mjs).
+// stories the Library lists (the same production gate as build-lecture-catalogue.mjs); the reading
+// slides (AMENDMENTS-LECTURE-V2 LV-S1) add a pattern's frame between its gaps, the Korean chips of
+// its note and of a realia page's caption.
 // Only taught Korean uses the subset: UI-language text (titles, card facts, glosses) and
 // the teacher-typed deck title use the system Korean stack, so they are not in the list.
 // apps/mobile/src/logic/lecture/__tests__/presenter-glyphs.test.ts expands every shipped
@@ -78,6 +80,11 @@ class ContentError extends Error {}
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const list = (value) => (Array.isArray(value) ? value : []);
 
+/** The slot marker of a pattern frame (`SLOT_MARKER`, content-schema `quest.ts`): drawn as a gap box, never as text. */
+const SLOT_MARKER = "___";
+/** The Korean of each `{ko:}` token in UI-language content text (`logic/ko-tokens.ts`), trimmed; empty tokens dropped. */
+const koTokens = (text) => (typeof text === "string" ? [...text.matchAll(/\{ko:([^}]*)\}/g)].map((m) => m[1].trim()).filter((ko) => ko !== "") : []);
+
 // ---- glyph list (pure) -------------------------------------------------------------
 
 /**
@@ -133,9 +140,18 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
           if (item.type === "word") add(item.word?.ko);
           // F-CURR-001 §3.10: the upper-stage Discover items the lecture deck shows (discoverItemTexts).
           if (item.type === "sentence") add(item.sentence?.ko);
-          if (item.type === "pattern") list(item.examples).forEach((e) => add(e?.ko));
+          if (item.type === "pattern") {
+            // AMENDMENTS-LECTURE-V2 LV-S1: the pattern slide draws the frame between its gap boxes and the note's Korean chips.
+            if (typeof item.frame?.ko === "string") item.frame.ko.split(SLOT_MARKER).forEach(add);
+            koTokens(item.noteEn).forEach(add);
+            list(item.examples).forEach((e) => add(e?.ko));
+          }
           if (item.type === "exchange") list(item.lines).forEach((l) => add(l?.line?.ko));
-          if (item.type === "realia") list(item.keyWords).forEach((w) => add(w?.ko));
+          if (item.type === "realia") {
+            list(item.keyWords).forEach((w) => add(w?.ko));
+            // The realia slide's caption: its own, else its page's, with its Korean chips (its sheet comes with the scopes above).
+            koTokens(item.captionEn ?? page.captionEn).forEach(add);
+          }
         }
       }
     }

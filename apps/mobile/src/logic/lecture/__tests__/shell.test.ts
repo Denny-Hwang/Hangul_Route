@@ -1,3 +1,5 @@
+import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
+import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { encodeDeck, LectureDeckSchema, type LectureBlock, type LectureDeckInput } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { UNKNOWN_CAPABILITY, type AudioCapability } from '../../audio/capability';
@@ -142,8 +144,8 @@ describe('homeStart', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check and End slides (PR 6, PR 7, PR 9 and PR 11)', () => {
-    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'quiz', 'sequence', 'story', 'syllable', 'title', 'vocab']);
+  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End and the reading slides (PR 6, PR 7, PR 9, PR 11 and LV-S1)', () => {
+    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'pattern', 'quiz', 'read-along', 'realia', 'sentence', 'sequence', 'story', 'syllable', 'title', 'vocab']);
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quest', id: 'quest:stage1-life-q1' },
@@ -189,6 +191,42 @@ describe('runDeck: the slides this build draws', () => {
     expect(withBuilds(run.slides, { romanization: 'tap', strokeGuide: true })[1]?.builds).toEqual(['ko', 'rom', 'gloss']);
     // Without the WordArt list the key passes through unchanged (the card list alone does not touch it).
     expect(runDeck(deck, { slides: [undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']).slides[0]).toEqual(undrawn);
+  });
+
+  it('the reading slides of shipped Stage 3, 4 and 6 lessons are drawn, none of them a skipped part (LV-S1)', () => {
+    const deck = deckOf([
+      { kind: 'quest', id: 'quest:stage3-life-q1' },
+      { kind: 'quest', id: 'quest:stage4-life-q1' },
+      { kind: 'quest', id: 'quest:stage6-life-q1' },
+    ]);
+    const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
+    const run = runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds, WORD_ART_KEYS);
+    for (const kind of ['sentence', 'pattern', 'read-along', 'realia'] as const) expect(run.slides.some((s) => s.kind === kind), kind).toBe(true);
+    expect(expanded.slides.filter((s) => s.kind === 'sentence' || s.kind === 'pattern' || s.kind === 'read-along' || s.kind === 'realia')).toEqual(
+      run.slides.filter((s) => s.kind === 'sentence' || s.kind === 'pattern' || s.kind === 'read-along' || s.kind === 'realia'),
+    );
+  });
+
+  it('a sentence picture the art cannot draw loses its art build; a drawn card or WordArt picture keeps it', () => {
+    const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
+    const sentence = { ko: '물을 마셔요.', romanization: 'mureul masyeoyo', gloss: 'I drink water.', spoken: { text: '물을 마셔요.', romanization: 'mureul masyeoyo' } };
+    const of = (key: string, picture?: string): Slide => ({ kind: 'sentence', sentence, ...(picture ? { picture } : {}), key, builds: picture ? ['ko', 'gloss', 'art'] : ['ko', 'gloss'] });
+    const deck = deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    const slides = [of('s/1', 'card:book'), of('s/2', 'word:apple'), of('s/3', 'card:nope'), of('s/4', 'word:no-glyph'), of('s/5', 'swatch:brand-primary'), of('s/6'), end];
+    const run = runDeck(deck, { slides, skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book'], ['apple']);
+    expect(run.slides.map((s) => [s.key, s.kind === 'sentence' ? s.picture ?? null : null, s.builds])).toEqual([
+      ['s/1', 'card:book', ['ko', 'gloss', 'art']],
+      ['s/2', 'word:apple', ['ko', 'gloss', 'art']],
+      ['s/3', null, ['ko', 'gloss']],
+      ['s/4', null, ['ko', 'gloss']],
+      ['s/5', null, ['ko', 'gloss']],
+      ['s/6', null, ['ko', 'gloss']],
+      ['end', null, ['summary']],
+    ]);
+    // The live romanization flip recomputes builds from the slide, and the art stays gone.
+    expect(withBuilds(run.slides, { romanization: 'tap', strokeGuide: true })[2]?.builds).toEqual(['ko', 'rom', 'gloss']);
+    // Without both drawable lists the slides pass through unchanged.
+    expect(runDeck(deck, { slides, skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']).slides[2]).toEqual(slides[2]);
   });
 
   it('regression pin: a card slide keeps its art build even when the heritage art cannot draw it (CardSlide shows the CardArt face; covered in presenter.spec.ts)', () => {
@@ -421,6 +459,30 @@ describe('slideDetail', () => {
     expect(slideDetail(of('activity'), names)).toBe('name of air-write');
     expect(slideDetail(of('activity'))).toBe('');
     expect(slideDetail(of('sequence'), names)).toBe('');
+  });
+
+  it('names the reading slides: the sentence, the frame with each gap by name, every line with its speaker, the sheet text (LV-S1)', () => {
+    const slides = expandDeck(
+      deckOf([
+        { kind: 'quest', id: 'quest:stage3-life-q1' },
+        { kind: 'quest', id: 'quest:stage4-life-q1' },
+        { kind: 'quest', id: 'quest:stage6-life-q1' },
+        { kind: 'quest', id: 'quest:stage7-rites-q2' },
+      ]),
+      lectureBundle('en'),
+      { canPlayKorean: true },
+    ).slides;
+    const of = <K extends Slide['kind']>(kind: K) => slides.find((s) => s.kind === kind) as Extract<Slide, { kind: K }>;
+    const names = { activity: (preset: string) => preset, slot: 'gap' };
+    expect(slideDetail(of('sentence'), names)).toBe('물을 마셔요., mureul masyeoyo');
+    expect(slideDetail(of('pattern'), names)).toBe('gap 을/를 먹어요., gap eul/reul meogeoyo');
+    const twoSlots = slides.find((s): s is Extract<Slide, { kind: 'pattern' }> => s.kind === 'pattern' && s.frame.pieces.length === 3)!;
+    expect(slideDetail(twoSlots, names)).toBe('gap 에 gap 을/를 먹었어요., gap e gap eul/reul meogeosseoyo');
+    const readAlong = of('read-along');
+    expect(slideDetail(readAlong, names)).toBe(readAlong.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}`).join(', '));
+    expect(slideDetail(of('realia'), names)).toBe(of('realia').sheet.alt);
+    // With no slot name the gap stays as written.
+    expect(slideDetail(of('pattern'))).toBe('___ 을/를 먹어요., ___ eul/reul meogeoyo');
   });
 
   it('says a story scene by its caption (README D8), and nothing for a check', () => {

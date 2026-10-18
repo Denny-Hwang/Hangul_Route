@@ -41,8 +41,11 @@ function sidecarCodePoints(): Set<number> {
 const isHangul = (cp: number): boolean =>
   (cp >= 0xac00 && cp <= 0xd7a3) || (cp >= 0x1100 && cp <= 0x11ff) || (cp >= 0x3130 && cp <= 0x318f);
 
-/** Slide fields that are not taught Korean: UI-language text and the slide key. */
-const NOT_TAUGHT_KOREAN = new Set(['key', 'title', 'fact', 'gloss']);
+/**
+ * Slide fields that are not taught Korean: UI-language text (a read-along speaker's name and a
+ * realia sheet's accessible text among them, LV-S1) and the slide key.
+ */
+const NOT_TAUGHT_KOREAN = new Set(['key', 'title', 'fact', 'gloss', 'speaker', 'alt']);
 
 /** Every string in a slide except the fields above, at any depth. */
 function strings(value: unknown, out: string[] = []): string[] {
@@ -87,6 +90,17 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
       }
     }
     expect([...missing.entries()]).toEqual([]);
+  });
+
+  it('the walk reaches every reading slide (LV-S1): sentences, patterns with their frames and notes, read alongs, realia sheets and captions', () => {
+    const { slides } = expandDeck(deck(blocks.filter((b) => b.kind === 'episode').slice(0, 30)), lectureBundle('en'), { canPlayKorean: true });
+    const all = [...slides, ...expandDeck(deck(blocks.filter((b) => b.kind === 'episode').slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
+    for (const kind of ['sentence', 'pattern', 'read-along', 'realia'] as const) expect(all.some((s) => s.kind === kind), kind).toBe(true);
+    // The Korean only these slides draw is in the walk: a frame between its gaps, a note's chips, a sheet's heading and lines.
+    const drawn = new Set(all.flatMap((s) => strings(s)));
+    expect([...drawn].some((t) => t.includes('을/를'))).toBe(true);
+    expect(all.some((s) => s.kind === 'pattern' && s.note?.some((p) => 'ko' in p) === true)).toBe(true);
+    expect(all.some((s) => s.kind === 'realia' && s.sheet.heading !== undefined && drawn.has(s.sheet.heading.ko))).toBe(true);
   });
 
   it('the deck covers every listed story', () => {

@@ -286,5 +286,6 @@ export const a11y = {
     chooserRemove: (title: string) => `빼기: ${title}`,
     answerMark: '호야의 답',
     timerLeft: (t: string) => `남은 시간: ${t}`,
+    slot: '빈칸',
   },
 } satisfies DeepPartial<Messages['a11y']>;

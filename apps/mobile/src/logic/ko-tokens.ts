@@ -1,4 +1,4 @@
-import { romanizeWord } from '@hangul-route/content-schema';
+import { romanize, romanizeWord } from '@hangul-route/content-schema';
 
 /**
  * `{ko:}` tokens in UI-language content text (F-CURR-001 §3.4): a Discover pattern note, and the
@@ -12,6 +12,17 @@ export type KoTokenPart = { text: string } | { ko: string; romanization: string 
 
 const KO_TOKEN = /\{ko:([^}]*)\}/g;
 
+/**
+ * A token's romanization: one word as `romanizeWord` reads it; a token of several words (a note's
+ * `{ko:접고 잘라요}`) word by word, so long as every word can be read. Otherwise empty.
+ */
+function tokenRomanization(ko: string): string {
+  const word = romanizeWord(ko);
+  if (word !== null) return word;
+  const words = romanize(ko);
+  return /\s/.test(ko) && words.unknown.length === 0 ? words.text : '';
+}
+
 /** Splits `note` around its `{ko:}` tokens; never throws. An empty token is dropped; a token that cannot be romanized keeps an empty romanization. */
 export function koTokenParts(note: string): KoTokenPart[] {
   const parts: KoTokenPart[] = [];
@@ -20,7 +31,7 @@ export function koTokenParts(note: string): KoTokenPart[] {
     const start = match.index as number;
     if (start > at) parts.push({ text: note.slice(at, start) });
     const ko = (match[1] as string).trim();
-    if (ko !== '') parts.push({ ko, romanization: romanizeWord(ko) ?? '' });
+    if (ko !== '') parts.push({ ko, romanization: tokenRomanization(ko) });
     at = start + match[0].length;
   }
   if (at < note.length) parts.push({ text: note.slice(at) });

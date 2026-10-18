@@ -240,6 +240,8 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     ];
     assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items }] } }] }] }), [
       "책이 있어요",
+      // The pattern slide draws its frame around the gap (LV-S1).
+      "이에요/예요",
       "책이에요",
       "학교예요",
       "이게 뭐예요?",
@@ -247,6 +249,29 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
       "김밥",
     ]);
     assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items: [{ type: "pattern" }, { type: "exchange" }, { type: "realia" }, { type: "sentence" }] }] } }] }] }), []);
+  });
+
+  test("lists what the reading slides draw too (AMENDMENTS-LECTURE-V2 LV-S1): a frame between its gaps, the Korean chips of a note and of a realia caption", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const pages = [
+      { items: [{ type: "pattern", frame: kt("___에 ___을/를 먹었어요."), noteEn: "Put {ko:에} after a day, {ko: 설날에 } is on Seollal.", examples: [kt("떡국을 먹었어요.")] }] },
+      { items: [{ type: "realia", realiaRef: "realia:menu", keyWords: [kt("김밥")], captionEn: "Read {ko:메뉴} first." }], captionEn: "A page {ko:캡션}." },
+      { items: [{ type: "realia", realiaRef: "realia:slip", keyWords: [kt("라면")] }], captionEn: "Count with {ko:한}, {ko:두}{ko:}." },
+      { items: [{ type: "word", word: kt("물") }], captionEn: "Not a realia page: {ko:아니}." },
+    ];
+    assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages } }] }] }), [
+      "에 ",
+      "을/를 먹었어요.",
+      "에",
+      "설날에",
+      "떡국을 먹었어요.",
+      "김밥",
+      "메뉴",
+      "라면",
+      "한",
+      "두",
+      "물",
+    ]);
   });
 
   test("lists the Korean of the upper-stage lesson scopes (F-CURR-001 §3.12)", () => {

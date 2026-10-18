@@ -47,6 +47,31 @@ export interface QuizOption {
   correct: boolean;
 }
 
+/** Taught Korean on a reading slide (AMENDMENTS-LECTURE-V2 section 5.1): its gloss and what Sound says (`spokenKo ?? ko`, its clip). */
+export type SpokenLine = KoLine & { gloss: string; spoken: SpokenForm };
+
+/** A piece of a drawn real-world text on the stage (F-CURR-001 G-2): Hangul and its romanization. */
+export interface SheetText {
+  ko: string;
+  romanization: string;
+}
+
+/**
+ * A realia sheet as the stage draws it (F-CURR-001 §3.6, RealiaSheet's anatomy in stage units):
+ * its layout, title and lines, its accessible text in the slide language, and what Sound reads
+ * before the key words show (the title, then each line and its value, in order).
+ */
+export interface RealiaSheetView {
+  /** The layout and dressing; `plain` for a realia with no kind. */
+  kind: 'menu' | 'ticket' | 'sign' | 'price-card' | 'plain';
+  /** The sheet's own title (taught Korean, so not `title`, which names UI-language text on a slide). */
+  heading?: SheetText;
+  entries: ReadonlyArray<{ id: string; text: SheetText; value?: SheetText; dir?: 'left' | 'right'; goods?: 'apples' | 'fan' | 'hanji' }>;
+  /** `altEn` in the slide language (overlays): the sheet's accessible text (F-CURR-001 §3.14). */
+  alt: string;
+  spoken: SpokenForm;
+}
+
 export interface SequenceStep {
   id: string;
   gloss: string;
@@ -120,6 +145,19 @@ export type SlideBody =
       explain?: string;
     }
   | { kind: 'card'; cardId: string; title: string; ko?: string; romanization?: string; fact?: string }
+  /** A Discover sentence (LV-S1, section 5.1): the Korean, its meaning and, when it has one, its picture (`card:` / `word:`). */
+  | { kind: 'sentence'; sentence: SpokenLine; picture?: string }
+  /**
+   * A Discover sentence pattern (LV-S1): the frame's Korean around its slots (`pieces` has one more
+   * entry than the frame has `___` slots, each slot drawn as a gap box, never as text), the note in
+   * the slide language with its `{ko:}` tokens as Korean chips (absent when a token has no
+   * romanization, rule 11), and the two examples.
+   */
+  | { kind: 'pattern'; frame: { pieces: string[]; romanization: string; gloss: string }; note?: NarrationPiece[]; examples: SpokenLine[] }
+  /** A Discover exchange (LV-S1): two lines between named speakers; Sound plays the current line and lights it. */
+  | { kind: 'read-along'; lines: Array<SpokenLine & { speaker: string }> }
+  /** A Discover realia page (LV-S1): the drawn sheet, its caption (`{ko:}` tokens as chips) and its key words. */
+  | { kind: 'realia'; sheet: RealiaSheetView; caption?: NarrationPiece[]; keyWords: SpokenLine[] }
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
 
@@ -145,7 +183,13 @@ export type BuildName =
   | 'answer'
   | 'fact'
   | 'prompt'
-  | 'summary';
+  | 'summary'
+  // The reading slides (LV-S1): a pattern's frame, note and examples, a read-along line, a realia sheet and its key words.
+  | 'frame'
+  | 'note'
+  | 'line'
+  | 'sheet'
+  | 'words';
 
 export interface BuildOptions {
   romanization: RomanizationMode;
@@ -192,5 +236,55 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
       return ['summary'];
     case 'title':
       return ['title'];
+    case 'sentence':
+      return ['ko', ...rom, 'gloss', ...(body.picture !== undefined ? (['art'] as const) : [])];
+    case 'pattern': {
+      // `tap`: each Korean part (the frame, a note with a Korean chip, each example) has its romanization one build later.
+      const chips = body.note?.some((piece) => 'ko' in piece) === true;
+      return [
+        'frame',
+        ...rom,
+        ...(body.note !== undefined ? (['note', ...(chips ? rom : [])] as BuildName[]) : []),
+        ...body.examples.flatMap((): BuildName[] => ['example', ...rom]),
+      ];
+    }
+    case 'read-along':
+      return body.lines.flatMap((): BuildName[] => ['line', ...rom]);
+    case 'realia':
+      return ['sheet', ...rom, 'words', ...rom];
   }
+}
+
+/** One part of a slide on screen: the build that showed it and whether its romanization shows. */
+export interface ShownPart {
+  name: BuildName;
+  rom: boolean;
+}
+
+/**
+ * The parts on screen at `reveal`, in build order (the reading slides, section 5.2): every build
+ * but `rom` shows one part; a `rom` build (`romanization: 'tap'`) shows the romanization of the
+ * part before it. A slide with no `rom` build shows each part's romanization with it (D2).
+ */
+export function partsShown(builds: readonly BuildName[], reveal: number): ShownPart[] {
+  const tap = builds.includes('rom');
+  const parts: ShownPart[] = [];
+  for (const name of builds.slice(0, Math.max(0, reveal + 1))) {
+    const last = parts[parts.length - 1];
+    if (name === 'rom') {
+      if (last) last.rom = true;
+      continue;
+    }
+    parts.push({ name, rom: !tap });
+  }
+  return parts;
+}
+
+/**
+ * Several pieces of Korean read in one go (a realia sheet, its key words): the texts and their
+ * romanizations joined with a pause. A single piece keeps its clip; joined text has none.
+ */
+export function joinSpoken(pieces: readonly SpokenForm[]): SpokenForm {
+  if (pieces.length === 1) return pieces[0]!;
+  return { text: pieces.map((p) => p.text).join(', '), romanization: pieces.map((p) => p.romanization).join(', ') };
 }

@@ -6,6 +6,7 @@ import {
   firstUses,
   fullscreenToggle,
   gridItems,
+  gridKindKey,
   narrationStops,
   optionContent,
   optionRomShown,
@@ -170,6 +171,31 @@ describe('gridItems (README D13)', () => {
       [9, 'end', ''],
     ]);
     expect(items.map((i) => i.title).join(' ')).not.toMatch(/[ᄀ-ᇿ㄰-㆏가-힯]/);
+  });
+
+  it('the reading slides: their meaning, the frame meaning, the first line meaning and the sheet text, never Korean (LV-S1)', () => {
+    const line = (ko: string, gloss: string) => ({ ko, romanization: 'x', gloss, spoken: { text: ko, romanization: 'x' } });
+    const reading = [
+      { kind: 'sentence', key: 'r/s', builds: ['ko'], sentence: line('물을 마셔요.', 'I drink water.') },
+      { kind: 'pattern', key: 'r/p', builds: ['frame'], frame: { pieces: ['', '을/를 먹어요.'], romanization: '___eul/reul meogeoyo', gloss: 'I eat ___.' }, examples: [] },
+      { kind: 'read-along', key: 'r/r', builds: ['line'], lines: [{ speaker: 'Grandma', ...line('밥 먹었어요?', 'Have you eaten?') }] },
+      { kind: 'realia', key: 'r/m', builds: ['sheet'], sheet: { kind: 'menu', entries: [], alt: 'A small menu.', spoken: { text: '메뉴', romanization: 'menyu' } }, keyWords: [] },
+      { kind: 'read-along', key: 'r/e', builds: [], lines: [] },
+    ] as unknown as Slide[];
+    const items = gridItems(reading, state({ slideIdx: 0 }), names);
+    expect(items.map((i) => [i.kind, i.title])).toEqual([
+      ['sentence', 'I drink water.'],
+      ['pattern', 'I eat ___.'],
+      ['read-along', 'Have you eaten?'],
+      ['realia', 'A small menu.'],
+      ['read-along', ''],
+    ]);
+  });
+
+  it('gridKindKey: the dictionary key of each kind (read-along is readAlong)', () => {
+    expect(gridKindKey('read-along')).toBe('readAlong');
+    expect(gridKindKey('sentence')).toBe('sentence');
+    expect(gridKindKey('vocab')).toBe('vocab');
   });
 
   it('marks the open slide, the hidden ones, and never offers Hide on the End slide', () => {

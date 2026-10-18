@@ -68,6 +68,39 @@ export const STATUS_MIN_REM = 12;
 /** The timer ticks this often while it runs (m:ss changes once a second; the ring moves smoothly enough). */
 export const TIMER_TICK_MS = 250;
 
+/**
+ * The reading slides (AMENDMENTS-LECTURE-V2 LV-S1; design/screens/presenter/lecture-v2.md "Constants"),
+ * in stage units unless named as a share.
+ */
+/** The picture beside a sentence (`--pic-md`). */
+export const PIC_MD = 300;
+/** A pattern's gap box (`--slot-w`): two Hangul blocks at `presenter.size.title`. */
+export const SLOT_W = 160;
+/** The gap box's height as a share of the frame's text size (`.slot`: 0.9 em). */
+export const SLOT_H_EM = 0.9;
+/** A pattern example's number circle (`.example .seq-num`). */
+export const EXAMPLE_NUMBER = 64;
+/** The realia sheet on the stage (`--sheet-w`): leaves 716 units for its caption and key words. */
+export const SHEET_W = 420;
+/**
+ * Price cards stand side by side (RealiaSheet's market stall), so their sheet is wider: three cards
+ * each hold a price such as 오천 원 and its romanization on one line at the stage sizes.
+ */
+export const SHEET_CARDS_W = 600;
+/**
+ * The widest a sheet grows when the text floor (18 px) makes its romanization bigger than its stage
+ * units on a small phone: it keeps at least 436 units of the 1184-unit content area for the caption
+ * and the key words.
+ */
+export const SHEET_MAX_W = 700;
+/**
+ * A sheet with more lines than this draws each line's romanization beside its Korean, not under
+ * it, so a five-board trail sign still fits the 504-unit content area at 1280 x 720.
+ */
+export const SHEET_ROOMY_LINES = 4;
+/** A read-along turn is at most this share of the content width (slide-read-along.md). */
+export const TURN_MAX_SHARE = '78%';
+
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;
 

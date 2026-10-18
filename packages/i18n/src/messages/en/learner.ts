@@ -2207,6 +2207,11 @@ export const learner = {
         card: 'Card',
         activity: 'Activity',
         end: 'End',
+        /** The reading slides (AMENDMENTS-LECTURE-V2 LV-S1, section 12.3). The realia page's question slide (LV-S2) is `quiz`. */
+        sentence: 'Sentence',
+        pattern: 'Sentence pattern',
+        readAlong: 'Read along',
+        realia: 'Look and read',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2264,6 +2269,10 @@ export const learner = {
         howToJoin: (cta: string) => `Tap “${cta}” in Hangul Route and type this code.`,
         exitHint: 'To finish, choose Exit.',
       },
+      /** The kind label at the top left of a reading slide (LV-S1, design V5): the same values as `grid.kind`. */
+      sentence: { label: 'Sentence' },
+      pattern: { label: 'Sentence pattern' },
+      readAlong: { label: 'Read along' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

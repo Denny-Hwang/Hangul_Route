@@ -1463,10 +1463,12 @@ describe('expandDeck: every word card carries its sound (section 3.4 amendment 2
     expect(byKo(slides, '밥')?.spoken).toEqual({ text: '밥', romanization: 'bap' });
   });
 
-  it('a Discover KoText carries its spokenKo and audioRef; a sentence plays at the sentence rate', () => {
+  it('a Discover KoText carries its spokenKo and audioRef; a sentence is its own slide with its clip (LV-S1)', () => {
     const slides = vocabSlides([{ kind: 'quest', id: 'quest:spoken' }]);
     expect(byKo(slides, '사과')).toMatchObject({ spoken: { text: '사과요', romanization: 'sagwa', audioRef: sagwaClip }, speech: 'word' });
-    expect(byKo(slides, '안녕하세요')).toMatchObject({ spoken: { text: '안녕하세요', romanization: 'annyeonghaseyo', audioRef: helloClip }, speech: 'sentence' });
+    expect(byKo(slides, '안녕하세요')).toBeUndefined();
+    const sentence = only(expandDeck(deckOf([{ kind: 'quest', id: 'quest:spoken' }]), spoken, VOICE).slides, 'sentence')[0];
+    expect(sentence?.sentence.spoken).toEqual({ text: '안녕하세요', romanization: 'annyeonghaseyo', audioRef: helloClip });
   });
 
   it('a pic-word board word carries its KoText sound; a card pair without one plays its word', () => {
@@ -1528,5 +1530,196 @@ describe('expandDeck: every word card carries its sound (section 3.4 amendment 2
   it('what a deck teaches is unchanged: taught words carry no sound', () => {
     const { taught } = expandDeck(deckOf([{ kind: 'quest', id: 'quest:spoken' }]), spoken, VOICE);
     expect(taught.find((t) => t.ko === '사과')).toEqual({ kind: 'word', ko: '사과', romanization: 'sagwa', gloss: 'apple' });
+  });
+});
+
+describe('expandDeck: the reading slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-S1)', () => {
+  const realiaScope: MinigameScope = {
+    kind: 'realia-read',
+    realiaRead: {
+      realia: {
+        ref: 'realia:menu',
+        kind: 'menu',
+        title: { ko: '메뉴', romanization: 'menyu', en: 'menu' },
+        entries: [
+          { id: 'gimbap', text: { ko: '김밥', romanization: 'gimbap', en: 'gimbap' }, value: { ko: '이천 원', romanization: 'icheon won', en: '2,000 won' } },
+          { id: 'mul', text: { ko: '물', romanization: 'mul', en: 'water', spokenKo: '무울' } },
+        ],
+        altEn: 'A small menu: gimbap and water.',
+      },
+      rounds: [],
+    },
+  };
+  const plainScope: MinigameScope = {
+    kind: 'realia-read',
+    realiaRead: { realia: { ref: 'realia:slip', entries: [{ id: 'a', text: { ko: '라면', romanization: 'ramyeon', en: 'ramyeon' } }], altEn: 'An order slip.' }, rounds: [] },
+  };
+  const readingScopes: Record<string, MinigameScope> = { 'mg:realia': realiaScope, 'mg:slip': plainScope, 'mg:pairs': { kind: 'card-match', cardPairs: [{ ko: '김밥', en: 'gimbap', romanization: 'gimbap' }, { ko: '사과', en: 'apple', romanization: 'sagwa' }] } };
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const withPages = (slug: string, steps: StepSpec[], pages: NonNullable<QuestStep['discover']>['pages']): Quest => {
+    const q = quest(slug, steps, { rewardCardId: undefined });
+    return { ...q, steps: q.steps.map((step) => (step.kind === 'discover' ? { ...step, discover: { pages } } : step)) };
+  };
+  const reading = withPages('reading', [['intro'], ['discover'], ['practice', 'mg:realia'], ['apply', 'mg:pairs']], [
+    {
+      items: [
+        { type: 'sentence', sentence: kt('물을 마셔요.', 'mureul masyeoyo', 'I drink water.'), picture: 'word:food-water' },
+        { type: 'sentence', sentence: kt('집에 와요.', 'jibe wayo', 'I come home.') },
+      ],
+    },
+    {
+      items: [
+        {
+          type: 'pattern',
+          frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'),
+          noteEn: 'Put {ko:을} after a final consonant or {ko:를} after a vowel.',
+          examples: [kt('밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.'), { ...kt('사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple.'), audioRef: 'audio/x.mp3' }],
+        },
+      ],
+    },
+    {
+      items: [
+        {
+          type: 'exchange',
+          lines: [
+            { speaker: 'a', speakerEn: 'Grandma', line: kt('밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?') },
+            { speaker: 'b', speakerEn: 'Hoya', line: kt('네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.') },
+          ],
+        },
+      ],
+    },
+    { items: [{ type: 'realia', realiaRef: 'realia:menu', keyWords: [kt('메뉴', 'menyu', 'menu'), kt('김밥', 'gimbap', 'gimbap')], captionEn: 'A menu on the table.' }], captionEn: 'Read the menu first.' },
+    { items: [{ type: 'realia', realiaRef: 'realia:gone', keyWords: [kt('라면', 'ramyeon', 'instant noodles')] }] },
+    { items: [{ type: 'word', word: kt('김밥', 'gimbap', 'gimbap') }] },
+  ]);
+  const slip = withPages('slip', [['discover'], ['practice', 'mg:slip']], [
+    { items: [{ type: 'realia', realiaRef: 'realia:slip', keyWords: [kt('라면', 'ramyeon', 'instant noodles')] }], captionEn: 'Read {ko:천} on the slip.' },
+    { items: [{ type: 'pattern', frame: kt('___에 ___을/를 먹었어요.', '___e ___eul/reul meogeosseoyo', 'On ___, I ate ___.'), noteEn: 'Odd {ko:A1} here.', examples: [kt('설날에 떡국을 먹었어요.', 'seollare tteokgugeul meogeosseoyo', 'On Seollal, I ate rice cake soup.'), kt('추석에 송편을 먹었어요.', 'chuseoge songpyeoneul meogeosseoyo', 'On Chuseok, I ate songpyeon.')] }] },
+    { items: [{ type: 'realia', realiaRef: 'realia:slip', keyWords: [kt('라면', 'ramyeon', 'instant noodles')], captionEn: 'A {ko:B2} slip.' }] },
+  ]);
+  const b = bundle({
+    scopeFor: (ref) => readingScopes[ref] ?? scopes[ref],
+    questById: (id) => [reading, slip].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+  });
+  const run = (id: string, over: Partial<LectureDeckInput> = {}) => expandDeck(deckOf([{ kind: 'quest', id }], over), b, VOICE);
+
+  it('a sentence, a pattern, an exchange and a realia page each get their own slide, in page order', () => {
+    const { slides } = run(reading.id);
+    // Then the fallback card of the realia with no sheet (라면) and the card pair's unseen word (사과); the realia read step is not shown yet.
+    expect(kinds(slides)).toEqual(['title', 'sentence', 'sentence', 'pattern', 'read-along', 'realia', 'vocab', 'vocab', 'end']);
+    expect(keys(slides).slice(1, 6)).toEqual([
+      'quest:reading/s2/sentence-1-1',
+      'quest:reading/s2/sentence-1-2',
+      'quest:reading/s2/pattern-2-1',
+      'quest:reading/s2/exchange-3-1',
+      'quest:reading/s2/realia-4-1',
+    ]);
+    expect(new Set(keys(slides)).size).toBe(slides.length);
+  });
+
+  it('sentence: the Korean, its romanization, the meaning and its sound; the picture only when the item has one', () => {
+    const [withPic, plain] = only(run(reading.id).slides, 'sentence');
+    expect(withPic).toMatchObject({
+      sentence: { ko: '물을 마셔요.', romanization: 'mureul masyeoyo', gloss: 'I drink water.', spoken: { text: '물을 마셔요.', romanization: 'mureul masyeoyo' } },
+      picture: 'word:food-water',
+      builds: ['ko', 'gloss', 'art'],
+    });
+    expect(plain).not.toHaveProperty('picture');
+    expect(plain!.builds).toEqual(['ko', 'gloss']);
+    expect(only(run(reading.id, { options: { romanization: 'tap', strokeGuide: true, quizRounds: 5, sound: true } }).slides, 'sentence')[0]!.builds).toEqual(['ko', 'rom', 'gloss', 'art']);
+  });
+
+  it('pattern: the frame around its gaps, the note with its Korean chips, the two examples with their sounds', () => {
+    const pattern = only(run(reading.id).slides, 'pattern')[0]!;
+    expect(pattern.frame).toEqual({ pieces: ['', '을/를 먹어요.'], romanization: '___eul/reul meogeoyo', gloss: 'I eat ___.' });
+    expect(pattern.note).toEqual([
+      { text: 'Put ' },
+      { ko: '을', romanization: 'eul' },
+      { text: ' after a final consonant or ' },
+      { ko: '를', romanization: 'reul' },
+      { text: ' after a vowel.' },
+    ]);
+    expect(pattern.examples.map((e) => [e.ko, e.romanization, e.gloss])).toEqual([
+      ['밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.'],
+      ['사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple.'],
+    ]);
+    expect(pattern.examples[1]!.spoken).toEqual({ text: '사과를 먹어요.', romanization: 'sagwareul meogeoyo', audioRef: 'audio/x.mp3' });
+    expect(pattern.builds).toEqual(['frame', 'note', 'example', 'example']);
+  });
+
+  it('a two-slot frame keeps three pieces; a note token with no romanization drops the note and is counted', () => {
+    const { slides, skipped } = run(slip.id);
+    const pattern = only(slides, 'pattern')[0]!;
+    expect(pattern.frame.pieces).toEqual(['', '에 ', '을/를 먹었어요.']);
+    expect(pattern).not.toHaveProperty('note');
+    expect(pattern.builds).toEqual(['frame', 'example', 'example']);
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/pattern-2-1/note', reason: 'no-romanization' });
+  });
+
+  it('read along: the two lines with their speakers, each with its sound', () => {
+    const readAlong = only(run(reading.id).slides, 'read-along')[0]!;
+    expect(readAlong.lines.map((l) => [l.speaker, l.ko, l.romanization, l.gloss, l.spoken.text])).toEqual([
+      ['Grandma', '밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?', '밥 먹었어요?'],
+      ['Hoya', '네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.', '네, 먹었어요.'],
+    ]);
+    expect(readAlong.builds).toEqual(['line', 'line']);
+  });
+
+  it('realia: the sheet the quest plays, its caption and its key words; Sound reads the sheet line by line', () => {
+    const realia = only(run(reading.id).slides, 'realia')[0]!;
+    expect(realia.sheet).toEqual({
+      kind: 'menu',
+      heading: { ko: '메뉴', romanization: 'menyu' },
+      entries: [
+        { id: 'gimbap', text: { ko: '김밥', romanization: 'gimbap' }, value: { ko: '이천 원', romanization: 'icheon won' } },
+        { id: 'mul', text: { ko: '물', romanization: 'mul' } },
+      ],
+      alt: 'A small menu: gimbap and water.',
+      spoken: { text: '메뉴, 김밥 이천 원, 무울', romanization: 'menyu, gimbap icheon won, mul' },
+    });
+    expect(realia.caption).toEqual([{ text: 'A menu on the table.' }]);
+    expect(realia.keyWords.map((w) => [w.ko, w.gloss])).toEqual([
+      ['메뉴', 'menu'],
+      ['김밥', 'gimbap'],
+    ]);
+    expect(realia.builds).toEqual(['sheet', 'words']);
+  });
+
+  it("a realia with no kind is the plain sheet; with no caption of its own it shows its page's, Korean tokens as chips", () => {
+    const { slides, skipped } = run(slip.id);
+    const [first, second] = only(slides, 'realia');
+    expect(first!.sheet.kind).toBe('plain');
+    expect(first!.sheet).not.toHaveProperty('heading');
+    expect(first!.caption).toEqual([{ text: 'Read ' }, { ko: '천', romanization: 'cheon' }, { text: ' on the slip.' }]);
+    // A caption token with no romanization drops the caption, counted (rule 11).
+    expect(second).not.toHaveProperty('caption');
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/realia-3-1/caption', reason: 'no-romanization' });
+  });
+
+  it('a realia whose sheet the quest does not hold is a counted skip; its key words become word cards', () => {
+    const { slides, skipped } = run(reading.id);
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'realia:gone', reason: 'unknown-id' });
+    expect(only(slides, 'vocab').map((v) => v.word.ko)).toEqual(['라면', '사과']);
+  });
+
+  it('what a reading slide shows is taught, in order, and seen: no later word card repeats it', () => {
+    const { slides, taught } = run(reading.id);
+    expect(taught.map((t) => t.ko)).toEqual(['물을 마셔요.', '집에 와요.', '밥을 먹어요.', '사과를 먹어요.', '밥 먹었어요?', '네, 먹었어요.', '메뉴', '김밥', '라면', '사과']);
+    // 김밥 was a key word on the realia page: the later word item and the card pair have no card of it.
+    expect(only(slides, 'vocab').some((v) => v.word.ko === '김밥')).toBe(false);
+    expect(only(slides, 'end')[0]!.words.map((w) => w.ko)).toContain('네, 먹었어요.');
+  });
+
+  it('the Discover pages count no skip of their own, and the same deck gives the same slides', () => {
+    const { skipped } = run(reading.id);
+    expect(skipped.filter((s) => s.ref.startsWith('quest:reading/s2'))).toEqual([]);
+    expect(run(reading.id).slides).toEqual(run(reading.id).slides);
+  });
+
+  it('a Word review of the quest keeps each sound its reading slide gave it', () => {
+    const review = expandDeck(deckOf([{ kind: 'word-review', questIds: [reading.id], vocabIds: [], rounds: 5 }], { v: 2 }), b, VOICE);
+    const card = (ko: string) => only(review.slides, 'vocab').find((v) => v.word.ko === ko);
+    expect(card('사과를 먹어요.')).toMatchObject({ spoken: { audioRef: 'audio/x.mp3' }, speech: 'sentence' });
+    expect(card('메뉴')?.speech).toBe('word');
   });
 });
