@@ -50,6 +50,10 @@ Every slide page uses `presenter.js` as before: `#b=<n>` shows builds 0 to n (de
 | `--tile-gap` | `spacing.md` units (12) | gaps inside the dense slides (`.tight`): pattern, read along, the question slides, the name round |
 | `--trace-stroke` | 6 units | the trace ghost outline (V11): at `presenter.size.glyph` it reads from the back of a room and keeps the counters of ㅁ, ㅇ and ㅎ open |
 | tile height | 108 units | a `presenter.size.title` (80) Hangul tile plus `spacing.sm` units above and below and the stage border |
+| `SHEET_CARDS_W` (LV-S1) | 600 units | price cards stand side by side: three cards each hold a price such as 오천 원 and its romanization on one line |
+| `SHEET_MAX_W` (LV-S1) | 700 units | on a small phone the 18 px floor draws the sheet's romanization bigger than its units, so the sheet grows with it; 436 units stay for the caption and key words |
+| `SHEET_ROOMY_LINES` (LV-S1) | 4 lines | a longer sheet (the five-board trail sign) draws each romanization beside its Korean |
+| read-along glyph (LV-S1) | `spacing.xxl` units | the speaker glyph of the playing line is one caption line tall, so lighting a line moves nothing (the mock drew 48 units) |
 
 ## Measured on the mocks (Chromium, the script in this pass)
 
