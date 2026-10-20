@@ -495,14 +495,21 @@ export function learnerPosition(nextQuestId: string | null, doneQuestIds: readon
 
 /**
  * The one reading of a stored deck's quests (section 4.3): a `quest` block gives
- * its id, an `episode` block its cell's quests in cell order, every other kind
- * none; de-duplicated, first occurrence kept.
+ * its id, an `episode` block its cell's quests in cell order, a `story` block at
+ * the `read` level its Stage 5 book quest `quest:story-<slug>-read` when the
+ * catalogue has that quest (the block `by-stage` builds for Stage 5,
+ * `questBlock`), every other kind none; de-duplicated, first occurrence kept.
  */
 export function questIdsOfBlocks(blocks: readonly LectureBlock[], catalog: Catalog): string[] {
   const ids: string[] = [];
   for (const block of blocks) {
     if (block.kind === 'quest') ids.push(block.id);
     else if (block.kind === 'episode') ids.push(...(catalog.cells.find((c) => c.episodeId === block.id)?.questIds ?? []));
+    else if (block.kind === 'story' && block.level === 'read') {
+      // `storyId` is `story:<slug>` (the deck schema), so this is the id `questBlock` read it from.
+      const id = `quest:story-${block.storyId.slice('story:'.length)}-read`;
+      if (catalog.quests.some((q) => q.id === id)) ids.push(id);
+    }
   }
   return unique(ids);
 }

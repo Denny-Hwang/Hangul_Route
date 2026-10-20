@@ -569,6 +569,9 @@ test.describe('honest minutes on the phone start screen, 640 x 360 (section 4.4)
 
   test('Consonants and Vowels from Quick lesson: 25 slides, about 13 minutes, never about 0', async ({ page }) => {
     await page.goto('/present');
+    // Quick lesson lives under Customize, letters on their own tab (AMENDMENTS-LECTURE-V2 section 18.3).
+    await page.getByTestId('presenter-home-customize-toggle').tap();
+    await page.getByTestId('presenter-chooser-tab-letters').tap();
     const quick = page.getByTestId('presenter-home-quick');
     await quick.getByRole('checkbox', { name: /^Consonants/ }).tap();
     await quick.getByRole('checkbox', { name: /^Vowels/ }).tap();

@@ -1,4 +1,6 @@
+import type { LecturePreset } from '@hangul-route/content-schema';
 import type { HistoryEntry } from '../logic/lecture/history';
+import type { HomeSnapshot } from '../logic/lecture/home-state';
 import type { KeyCommand } from '../logic/lecture/keymap';
 
 /**
@@ -18,6 +20,7 @@ export interface DeckAddress {
   raw: string;
   reloaded: boolean;
   fresh?: true;
+  preset?: LecturePreset;
 }
 
 export type { HistoryEntry } from '../logic/lecture/history';
@@ -47,7 +50,21 @@ export function presenterHomeBack(): boolean {
   return false;
 }
 
-export async function pushPresenterEntry(_step: 'ready' | 'running', _raw: string | null, _options: { fresh?: boolean } = {}): Promise<void> {
+export async function pushPresenterEntry(_step: 'ready' | 'running', _raw: string | null, _options: { fresh?: boolean; preset?: LecturePreset } = {}): Promise<void> {
+  // No history on native.
+}
+
+/** The home's kept state (AMENDMENTS-LECTURE-V2 section 18.2); web only. */
+export function presenterHomeSnapshot(): HomeSnapshot | null {
+  return null;
+}
+
+export async function saveHomeSnapshot(_snapshot: HomeSnapshot): Promise<void> {
+  // No history on native.
+}
+
+/** Resolves once the presenter's history steps asked for so far have run; web only. */
+export async function afterPresenterHistory(): Promise<void> {
   // No history on native.
 }
 

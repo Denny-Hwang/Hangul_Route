@@ -1557,9 +1557,9 @@ export const learner = {
   },
   /** /present의 수업 발표 화면 (F-TCH-004 PR 6). 학습자 이름은 어디에도 나오지 않아요. */
   presenter: {
-    docTitle: 'Hangul Route 수업',
+    docTitle: 'Hangul Route 강의 모드',
     home: {
-      title: '강의',
+      title: '강의 모드',
       help: { cta: '키와 도움말' },
       recent: {
         title: '최근 수업',
@@ -1569,17 +1569,49 @@ export const learner = {
         startOver: { cta: '처음부터' },
       },
       quick: {
-        title: '빠른 수업',
-        line: '가르칠 것을 골라요. 로그인도 이름도 필요 없어요.',
-        group: { episodes: '에피소드', lessons: '레슨 하나씩', letterSets: '글자 묶음', topics: '낱말 주제', stories: '이야기' },
         consonants: '자음',
         vowels: '모음',
         minutes: (n: number) => `약 ${n}분`,
         letters: (n: number) => `글자 ${n}개`,
-        chosen: (n: number) => `${n}개 골랐어요`,
         nothing: '수업을 만들려면 하나 이상 골라요.',
         full: '수업이 가득 찼어요. 하나를 빼면 다른 것을 넣을 수 있어요.',
         build: { cta: '수업 만들기' },
+      },
+    },
+    presets: {
+      title: '준비된 수업',
+      lead: '준비된 수업을 골라요. 시작하기 전에 미리 볼 수 있어요.',
+      next: { title: '다음 수업', device: '이 화면에서 마지막으로 한 수업 다음부터 해요.' },
+      zero: { title: '처음부터: 한글 1주차', short: '한글 1주차', body: '첫 글자와 소리, 쉬운 음절을 배워요.' },
+      stage: {
+        title: '단계별로',
+        body: '단계를 고르면 수업이 만들어져요.',
+        choose: '단계를 골라요',
+        chip: (n: number) => `${n}단계`,
+      },
+      story: { title: '이야기 시간', body: '그림과 함께 한국 이야기를 읽고 질문 몇 개를 풀어요.' },
+      words: { title: '낱말 복습', body: '최근 수업의 낱말을 보고 짧은 퀴즈를 풀어요.' },
+      warmup: { title: '10분 가볍게 시작하기', short: '가볍게 시작하기', body: '다시 볼 글자, 질문 몇 개, 허공에 글자 쓰기를 해요.' },
+      length: { title: '얼마나 할까요?', option: (n: number) => `${n}분` },
+      start: { cta: '시작' },
+      preview: {
+        title: '이 수업에 들어 있는 것',
+        quiz: (n: number) => `빠른 퀴즈: ${n}문제`,
+        words: (n: number) => `낱말 ${n}개`,
+      },
+      customize: { cta: '직접 고르기', lead: '하나씩 직접 골라요. 꼭 하지 않아도 돼요.' },
+      fallback: {
+        zero: '아직 따라갈 기록이 없어서 한글 1주차부터 시작해요.',
+        warmUp: '이번 주 낱말이 아직 없어서 가볍게 시작하기로 해요.',
+        restart: '모든 이야기를 이미 봤어요. 첫 이야기부터 다시 해요.',
+      },
+      chooser: {
+        label: '넣을 것',
+        tab: { lessons: '수업', stories: '이야기', words: '낱말 주제', letters: '글자' },
+        lessonsIn: (n: number) => `안에 든 수업 ${n}개`,
+        showMore: (n: number) => `${n}개 더 보기`,
+        tray: { title: '내 수업', empty: '아직 고른 것이 없어요. 위 탭에서 골라요.' },
+        summary: (n: number, m: number) => `${n}개 · 약 ${m}분`,
       },
     },
     bar: {
@@ -1657,7 +1689,7 @@ export const learner = {
         words: '낱말',
         more: (n: number) => `외 ${n}개`,
         practice: '집에서 Hangul Route로 연습해요',
-        codeTitle: '우리 반에 들어와요',
+        codeTitle: '이 코드로 들어와요',
         howToJoin: (cta: string) => `Hangul Route에서 ‘${cta}’ 버튼을 누르고 이 코드를 입력해요.`,
         exitHint: '마치려면 나가기를 고르세요.',
       },
@@ -1746,8 +1778,8 @@ export const learner = {
     state: {
       invalid: {
         title: '이 링크는 열리지 않아요',
-        line: '빠른 수업을 열거나 콘솔 페이지에서 새 링크를 받아요.',
-        cta: '빠른 수업 열기',
+        line: '여기에서 수업을 고르거나 준비 페이지에서 새 링크를 받아요.',
+        cta: '수업 고르기',
         reload: '다시 불러오기',
         staleLine: '새 버전에서 만든 링크예요. 다른 Hangul Route 탭을 닫고 다시 불러와요.',
       },

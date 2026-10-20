@@ -1,204 +1,226 @@
-import { LECTURE_TITLE_RE, LectureDeckSchema } from '@hangul-route/content-schema';
+import { CATALOG, LECTURE_TITLE_RE, LectureDeckSchema, chooserGroups, storyIsReady, type ChooserEpisodeRow, type ChooserGroup, type ChooserRow } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
   QUICK_MAX_BLOCKS,
   buildQuickDeck,
-  canChoose,
-  chosenBlockCount,
+  choiceMinutes,
+  chooserFull,
+  chooserTray,
+  deckIdFrom,
+  lessonLocked,
+  pressLesson,
+  pressRow,
   quickDeckTitle,
-  quickFull,
-  quickGroups,
-  toggleChoice,
-  type QuickItem,
-  type QuickSource,
+  removeChoice,
+  rowCheck,
 } from '../quick-lesson';
+import { titleIn } from '../quick-source';
 
-const source: QuickSource = {
-  episodes: [
-    { id: 'episode:stage1-letters', title: 'Meet the Letters', minutes: 15, questIds: ['quest:stage1-letters-q1', 'quest:stage1-letters-q2'] },
-    { id: 'episode:stage1-life', title: 'Around the Korean Table', minutes: 12, questIds: ['quest:stage1-life-q1'] },
-  ],
-  quests: [
-    { id: 'quest:stage1-letters-q1', title: 'Meet a, eo, g, n', minutes: 5 },
-    { id: 'quest:stage1-letters-q2', title: 'Meet d, r, m', minutes: 5 },
-    { id: 'quest:stage1-life-q1', title: 'Hello Kimchi & Rice', minutes: 6 },
-  ],
-  consonants: Array.from({ length: 14 }, (_, i) => `jamo:c${i}`),
-  vowels: Array.from({ length: 10 }, (_, i) => `jamo:v${i}`),
-};
+/**
+ * Customize on the presenter home (AMENDMENTS-LECTURE-V2 sections 4.6 and 18.3, row LV-3): the
+ * presenter's presses over content-schema's grouped chooser model, the 30-block room, the tray and
+ * its minutes, and the deck Build lesson makes.
+ */
 
-const labels = { consonants: 'Consonants', vowels: 'Vowels' };
+const consonants = Array.from({ length: 14 }, (_, i) => `jamo:c${i}`);
+const vowels = Array.from({ length: 10 }, (_, i) => `jamo:v${i}`);
 
-const itemsOf = (src: QuickSource = source): QuickItem[] => quickGroups(src, labels).flatMap((g) => g.items);
+const groups: ChooserGroup[] = chooserGroups({
+  catalog: CATALOG,
+  title: (id) => CATALOG.cells.find((c) => c.episodeId === id)?.title ?? CATALOG.quests.find((q) => q.id === id)?.title ?? CATALOG.stories.find((s) => s.id === id)?.title ?? id,
+  letters: { consonants, vowels, titles: { consonants: 'Consonants', vowels: 'Vowels' } },
+  stories: CATALOG.stories.filter(storyIsReady).map((s) => s.id),
+  topics: CATALOG.topics.map((t) => `vocab-topic:${t.key}`),
+});
 
-describe('Quick lesson groups (F-TCH-004 §3.12)', () => {
-  it('lists episodes, single lessons and letter sets in content order', () => {
-    const groups = quickGroups(source, labels);
-    expect(groups.map((g) => g.id)).toEqual(['episodes', 'lessons', 'letterSets']);
-    expect(groups[0]!.items.map((i) => i.title)).toEqual(['Meet the Letters', 'Around the Korean Table']);
-    expect(groups[1]!.items.map((i) => i.key)).toEqual(['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-life-q1']);
-    expect(groups[2]!.items.map((i) => i.title)).toEqual(['Consonants', 'Vowels']);
+const rowOf = (key: string): ChooserRow => groups.flatMap((g) => g.rows).find((r) => r.key === key)!;
+const episode = (key: string): ChooserEpisodeRow => rowOf(key) as ChooserEpisodeRow;
+const letters = episode('episode:stage1-letters');
+const wordBuilder = episode('episode:stage2-letters');
+
+describe('the tri-state episode (section 18.3)', () => {
+  it('checking an episode chooses it whole as one block and locks its lessons', () => {
+    const chosen = pressRow([], letters, groups)!;
+    expect(chosen).toEqual(['episode:stage1-letters']);
+    expect(rowCheck(chosen, letters)).toBe('true');
+    expect(lessonLocked(chosen, letters)).toBe(true);
+    for (const lesson of letters.lessons) expect(pressLesson(chosen, letters, lesson.key, groups)).toBeNull();
+    expect(buildQuickDeck(chosen, groups, { now: new Date(), rng: () => 0.2, fallbackTitle: 'Your lesson' })!.blocks).toEqual([{ kind: 'episode', id: 'episode:stage1-letters' }]);
+    // Unchecking it clears it.
+    expect(pressRow(chosen, letters, groups)).toEqual([]);
   });
 
-  it('describes episodes and lessons by minutes and letter sets by letters', () => {
-    const [episode] = quickGroups(source, labels)[0]!.items;
-    expect(episode!.detail).toEqual({ kind: 'minutes', n: 15 });
-    const [consonants, vowels] = quickGroups(source, labels)[2]!.items;
-    expect(consonants!.detail).toEqual({ kind: 'letters', n: 14 });
-    expect(vowels!.detail).toEqual({ kind: 'letters', n: 10 });
+  it('some lessons make the episode mixed; checking the mixed episode puts the whole episode in the first one\'s place', () => {
+    let chosen = pressRow([], rowOf('vocab-topic:food'), groups)!;
+    chosen = pressLesson(chosen, wordBuilder, wordBuilder.lessons[2]!.key, groups)!;
+    chosen = pressRow(chosen, rowOf('letters:vowels'), groups)!;
+    chosen = pressLesson(chosen, wordBuilder, wordBuilder.lessons[0]!.key, groups)!;
+    expect(rowCheck(chosen, wordBuilder)).toBe('mixed');
+    expect(lessonLocked(chosen, wordBuilder)).toBe(false);
+    chosen = pressRow(chosen, wordBuilder, groups)!;
+    expect(chosen).toEqual(['vocab-topic:food', 'episode:stage2-letters', 'letters:vowels']);
+    expect(rowCheck(chosen, wordBuilder)).toBe('true');
   });
 
-  it('maps each item to deck blocks; a letter set over 12 letters splits into even blocks', () => {
-    const byKey = new Map(itemsOf().map((i) => [i.key, i]));
-    expect(byKey.get('episode:stage1-letters')!.blocks).toEqual([{ kind: 'episode', id: 'episode:stage1-letters' }]);
-    expect(byKey.get('quest:stage1-life-q1')!.blocks).toEqual([{ kind: 'quest', id: 'quest:stage1-life-q1' }]);
-    const consonants = byKey.get('letters:consonants')!.blocks;
-    expect(consonants).toHaveLength(2);
-    expect(consonants.map((b) => (b.kind === 'jamo-set' ? b.jamoIds.length : 0))).toEqual([7, 7]);
-    expect(consonants.flatMap((b) => (b.kind === 'jamo-set' ? b.jamoIds : []))).toEqual(source.consonants);
-    expect(byKey.get('letters:vowels')!.blocks).toHaveLength(1);
+  it('every lesson chosen one by one reads as checked, and the row then clears them all', () => {
+    let chosen: string[] = [];
+    for (const lesson of letters.lessons) chosen = pressLesson(chosen, letters, lesson.key, groups)!;
+    expect(rowCheck(chosen, letters)).toBe('true');
+    expect(pressRow(chosen, letters, groups)).toEqual([]);
   });
 
-  it('leaves out a group with nothing in it and a lesson no episode lists', () => {
-    const groups = quickGroups({ episodes: [], quests: [{ id: 'quest:x', title: 'X', minutes: 1 }], consonants: [], vowels: [] }, labels);
-    expect(groups).toEqual([]);
-  });
-
-  it('adds stories and word topics only when the bundle has them', () => {
-    const groups = quickGroups(
-      {
-        ...source,
-        topics: [{ id: 'vocab-topic:food', title: 'Food', minutes: 4 }],
-        stories: [{ id: 'story:king-sejong', title: "King Sejong's New Letters", minutes: 4 }],
-      },
-      labels,
-    );
-    expect(groups.map((g) => g.id)).toEqual(['episodes', 'lessons', 'letterSets', 'topics', 'stories']);
-    expect(groups[3]!.items[0]!.blocks).toEqual([{ kind: 'vocab', topicId: 'vocab-topic:food' }]);
-    expect(groups[4]!.items[0]!.blocks).toEqual([{ kind: 'story', storyId: 'story:king-sejong', checks: true }]);
+  it('no quest appears twice in the built deck from any sequence of presses', () => {
+    // A seeded walk over the Stage 1 and Stage 2 rows and their lessons.
+    const rows = groups.filter((g) => g.id === 'stage1' || g.id === 'stage2').flatMap((g) => g.rows);
+    let seed = 7;
+    const next = (): number => {
+      seed = (seed * 1103515245 + 12345) % 2 ** 31;
+      return seed / 2 ** 31;
+    };
+    for (let walk = 0; walk < 60; walk += 1) {
+      let chosen: string[] = [];
+      for (let step = 0; step < 25; step += 1) {
+        const row = rows[Math.floor(next() * rows.length)]!;
+        const lesson = row.kind === 'episode' && next() < 0.6 ? row.lessons[Math.floor(next() * row.lessons.length)] : undefined;
+        const after = lesson && row.kind === 'episode' ? pressLesson(chosen, row, lesson.key, groups) : pressRow(chosen, row, groups);
+        if (after !== null) chosen = after;
+        const deck = buildQuickDeck(chosen, groups, { now: new Date('2026-10-17T00:00:00Z'), rng: next, fallbackTitle: 'Your lesson' });
+        if (deck === null) {
+          expect(chosen).toEqual([]);
+          continue;
+        }
+        const quests = deck.blocks.flatMap((b) => (b.kind === 'quest' ? [b.id] : b.kind === 'episode' ? (CATALOG.cells.find((c) => c.episodeId === b.id)?.questIds ?? []) : []));
+        expect(new Set(quests).size, `walk ${walk} step ${step}: ${chosen.join(', ')}`).toBe(quests.length);
+        expect(deck.blocks.length).toBeLessThanOrEqual(QUICK_MAX_BLOCKS);
+      }
+    }
   });
 });
 
-describe('choosing (multi-select up to 30 blocks)', () => {
-  const items = itemsOf();
+describe('the 30-block room', () => {
+  const episodes = groups.flatMap((g) => g.rows).filter((r): r is ChooserEpisodeRow => r.kind === 'episode');
 
-  it('toggles an item on and off, keeping the order chosen', () => {
-    let chosen = toggleChoice([], 'letters:vowels', items);
-    chosen = toggleChoice(chosen, 'episode:stage1-letters', items);
-    expect(chosen).toEqual(['letters:vowels', 'episode:stage1-letters']);
-    expect(toggleChoice(chosen, 'letters:vowels', items)).toEqual(['episode:stage1-letters']);
+  it('a press that would pass 30 blocks does nothing; a press that removes always works', () => {
+    expect(episodes.length).toBeGreaterThanOrEqual(30);
+    let chosen: string[] = [];
+    for (const row of episodes.slice(0, 29)) chosen = pressRow(chosen, row, groups)!;
+    expect(chosen).toHaveLength(29);
+    // The consonants are two blocks (7 + 7): they no longer fit, though one more episode does.
+    expect(pressRow(chosen, rowOf('letters:consonants'), groups)).toBeNull();
+    expect(chooserFull(chosen, groups)).toBe(true);
+    const thirty = pressRow(chosen, episodes[29]!, groups)!;
+    expect(thirty).toHaveLength(30);
+    expect(pressRow(thirty, rowOf('story:hangeul-day'), groups)).toBeNull();
+    expect(pressRow(thirty, episodes[0]!, groups)).toHaveLength(29);
+    expect(removeChoice(thirty, episodes[3]!.key)).toHaveLength(29);
   });
 
-  it('ignores an unknown key', () => {
-    expect(toggleChoice(['letters:vowels'], 'quest:nope', items)).toEqual(['letters:vowels']);
-    expect(canChoose([], 'quest:nope', items)).toBe(false);
+  it('is not full while every box still fits, and full as soon as one that would add does not', () => {
+    expect(chooserFull([], groups)).toBe(false);
+    let chosen: string[] = [];
+    for (const row of episodes.slice(0, 28)) chosen = pressRow(chosen, row, groups)!;
+    // 28 blocks: the 2-block consonants still fit.
+    expect(chooserFull(chosen, groups)).toBe(false);
+    chosen = pressRow(chosen, episodes[28]!, groups)!;
+    expect(chooserFull(chosen, groups)).toBe(true);
   });
+});
 
-  it('counts blocks, not rows', () => {
-    expect(chosenBlockCount(['letters:consonants', 'letters:vowels'], items)).toBe(3);
-  });
-
-  it('refuses an item that would take the deck past 30 blocks, and always allows unticking', () => {
-    const many: QuickItem[] = Array.from({ length: 31 }, (_, i) => ({
-      key: `quest:q${i}`,
-      group: 'lessons',
-      title: `Q${i}`,
-      detail: { kind: 'minutes', n: 1 },
-      blocks: [{ kind: 'quest', id: `quest:q${i}` }],
-    }));
-    const pair: QuickItem = { ...many[0]!, key: 'letters:big', blocks: [many[0]!.blocks[0]!, many[1]!.blocks[0]!] };
-    const all = [...many, pair];
-    let chosen: readonly string[] = [];
-    for (let i = 0; i < 31; i += 1) chosen = toggleChoice(chosen, `quest:q${i}`, all);
-    expect(chosen).toHaveLength(QUICK_MAX_BLOCKS);
-    expect(canChoose(chosen, 'quest:q30', all)).toBe(false);
-    expect(canChoose(chosen, 'quest:q0', all)).toBe(true);
-    const twentyNine = chosen.slice(0, 29);
-    expect(canChoose(twentyNine, 'letters:big', all)).toBe(false);
-    expect(canChoose(twentyNine, 'quest:q29', all)).toBe(true);
-  });
-
-  it('is full as soon as any unchosen item no longer fits, not only at exactly 30 blocks', () => {
-    const many: QuickItem[] = Array.from({ length: 30 }, (_, i) => ({
-      key: `quest:q${i}`,
-      group: 'lessons',
-      title: `Q${i}`,
-      detail: { kind: 'minutes', n: 1 },
-      blocks: [{ kind: 'quest', id: `quest:q${i}` }],
-    }));
-    const pair: QuickItem = { ...many[0]!, key: 'letters:big', blocks: [many[0]!.blocks[0]!, many[1]!.blocks[0]!] };
-    const all = [...many, pair];
-    expect(quickFull([], all)).toBe(false);
-    const twentyEight = many.slice(0, 28).map((i) => i.key);
-    expect(quickFull(twentyEight, all)).toBe(false);
-    // 29 blocks: the 2-block set no longer fits, though one more lesson does.
-    expect(quickFull([...twentyEight, 'quest:q28'], all)).toBe(true);
-    expect(quickFull(many.map((i) => i.key), all)).toBe(true);
+describe('the tray and its minutes', () => {
+  it('lists the chosen things in order with their titles and minutes; a letter set counts one minute per two letters per set', () => {
+    const chosen = ['episode:stage1-letters', 'letters:consonants', 'quest:stage2-life-q1', 'story:hangeul-day'];
+    const tray = chooserTray(chosen, groups);
+    expect(tray.map((t) => t.key)).toEqual(chosen);
+    expect(tray[0]).toEqual({ key: 'episode:stage1-letters', title: 'Meet the Letters', minutes: 15 });
+    // 14 consonants in two sets of 7: 4 + 4.
+    expect(tray[1]!.minutes).toBe(8);
+    expect(choiceMinutes('letters:vowels', groups)).toBe(5);
+    expect(tray[2]!.minutes).toBe(CATALOG.quests.find((q) => q.id === 'quest:stage2-life-q1')!.minutes);
+    expect(choiceMinutes('quest:nope', groups)).toBe(0);
+    // A key the groups no longer hold drops out of the tray.
+    expect(chooserTray(['quest:nope', 'letters:vowels'], groups).map((t) => t.key)).toEqual(['letters:vowels']);
   });
 });
 
 describe('the deck title', () => {
   it('joins the chosen titles with a slash', () => {
-    expect(quickDeckTitle(['Meet the Letters', 'Consonants'], 'Quick lesson')).toBe('Meet the Letters / Consonants');
+    expect(quickDeckTitle(['Meet the Letters', 'Consonants'], 'Your lesson')).toBe('Meet the Letters / Consonants');
   });
 
   it('drops characters outside the title class and stops before 60 characters', () => {
-    const title = quickDeckTitle(['Hello Kimchi & Rice', 'A'.repeat(50), 'Vowels'], 'Quick lesson');
+    const title = quickDeckTitle(['Hello Kimchi & Rice', 'A'.repeat(50), 'Vowels'], 'Your lesson');
     expect(title).toBe('Hello Kimchi Rice');
     expect(LECTURE_TITLE_RE.test(title)).toBe(true);
   });
 
   it('cuts a single long title at a word', () => {
-    const title = quickDeckTitle([`${'word '.repeat(15)}end`], 'Quick lesson');
+    const title = quickDeckTitle([`${'word '.repeat(15)}end`], 'Your lesson');
     expect(title.length).toBeLessThanOrEqual(60);
     expect(title.endsWith('word')).toBe(true);
   });
 
+  it('leaves out a title that would lose a letter, a bracket or an opening mark, and takes the next one', () => {
+    const ko = titleIn('ko');
+    // "모음 짝 ㅐ와 ㅔ" and "[ㄱ]과 [ㅂ]으로 ..." hold compatibility jamo and brackets the title class cannot hold.
+    expect(quickDeckTitle([ko('quest:stage2-letters-q1'), ko('quest:stage2-letters-q2')], '내 수업')).toBe(ko('quest:stage2-letters-q2'));
+    expect(quickDeckTitle([ko('quest:stage2-letters-q6')], '내 수업')).toBe('내 수업');
+    const es = titleIn('es');
+    expect(quickDeckTitle([es('quest:stage3-nature-q1')], 'Tu lección')).toBe('Tu lección');
+    expect(quickDeckTitle([es('quest:stage4-letters-q1'), es('episode:stage1-letters')], 'Tu lección')).toBe(es('episode:stage1-letters'));
+    // A dash or quotation mark is dropped as before; the title still says the same.
+    expect(quickDeckTitle(['Sun — and “Moon”'], 'Your lesson')).toBe('Sun and Moon');
+    for (const t of [quickDeckTitle([ko('quest:stage2-letters-q2')], 'x'), quickDeckTitle([es('episode:stage1-letters')], 'x')]) expect(LECTURE_TITLE_RE.test(t)).toBe(true);
+  });
+
   it('falls back when nothing usable is left', () => {
-    expect(quickDeckTitle([], 'Quick lesson')).toBe('Quick lesson');
-    expect(quickDeckTitle(['&&&'], 'Lección rápida')).toBe('Lección rápida');
-    expect(quickDeckTitle(['x'.repeat(70)], 'Quick lesson')).toBe('Quick lesson');
+    expect(quickDeckTitle([], 'Your lesson')).toBe('Your lesson');
+    expect(quickDeckTitle(['&&&'], 'Tu lección')).toBe('Tu lección');
+    expect(quickDeckTitle(['x'.repeat(70)], 'Your lesson')).toBe('Your lesson');
   });
 });
 
 describe('buildQuickDeck', () => {
-  const items = itemsOf();
   const now = new Date('2026-10-13T09:30:00.000Z');
 
-  it('builds a valid quick deck from the chosen items in the order chosen', () => {
-    const deck = buildQuickDeck(['letters:vowels', 'episode:stage1-letters'], items, {
+  it('builds a valid quick deck from the chosen things in the order chosen', () => {
+    const deck = buildQuickDeck(['letters:vowels', 'episode:stage1-letters', 'vocab-topic:food', 'story:hangeul-day'], groups, {
       now,
       rng: () => 0.5,
-      fallbackTitle: 'Quick lesson',
+      fallbackTitle: 'Your lesson',
     })!;
     expect(LectureDeckSchema.safeParse(deck).success).toBe(true);
+    expect(deck.v).toBe(1);
     expect(deck.source).toBe('quick');
-    expect(deck.title).toBe('Vowels / Meet the Letters');
-    expect(deck.blocks[0]!.kind).toBe('jamo-set');
-    expect(deck.blocks[1]).toEqual({ kind: 'episode', id: 'episode:stage1-letters' });
+    expect(deck.title.startsWith('Vowels / Meet the Letters')).toBe(true);
+    expect(deck.blocks).toEqual([
+      { kind: 'jamo-set', jamoIds: vowels },
+      { kind: 'episode', id: 'episode:stage1-letters' },
+      { kind: 'vocab', topicId: 'vocab-topic:food' },
+      { kind: 'story', storyId: 'story:hangeul-day', checks: true },
+    ]);
     expect(deck.picker).toBeNull();
     expect(deck.createdAt).toBe('2026-10-13T09:30:00.000Z');
     expect(deck.seed).toBe(now.getTime() % 2 ** 31);
     expect(deck.id).toMatch(/^lecture:[a-z0-9]{10}$/);
   });
 
-  it('carries no name: no helper picker (LV-H) and no label field', () => {
-    const deck = buildQuickDeck(['letters:vowels'], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson' })!;
+  it('carries no name and no language: no helper picker, no label field, no uiLocale (slides follow the presenting device)', () => {
+    const deck = buildQuickDeck(['letters:vowels'], groups, { now, rng: () => 0.1, fallbackTitle: 'Your lesson' })!;
     expect(Object.keys(deck).sort()).toEqual(['blocks', 'createdAt', 'id', 'options', 'picker', 'seed', 'source', 'title', 'v']);
-  });
-
-  it('keeps no language with the deck when no chip was chosen', () => {
-    const deck = buildQuickDeck(['letters:vowels'], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson' })!;
     expect(deck.options.uiLocale).toBeUndefined();
   });
 
-  it('passes the session language to the deck when given', () => {
-    const deck = buildQuickDeck(['letters:vowels'], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson', uiLocale: 'es' })!;
-    expect(deck.options.uiLocale).toBe('es');
+  it('returns null with nothing chosen, only unknown keys, or past the cap', () => {
+    expect(buildQuickDeck([], groups, { now, rng: () => 0.1, fallbackTitle: 'Your lesson' })).toBeNull();
+    expect(buildQuickDeck(['quest:unknown'], groups, { now, rng: () => 0.1, fallbackTitle: 'Your lesson' })).toBeNull();
+    const all = groups.flatMap((g) => g.rows).filter((r) => r.kind === 'episode').map((r) => r.key);
+    expect(all.length).toBeGreaterThan(30);
+    expect(buildQuickDeck(all, groups, { now, rng: () => 0.1, fallbackTitle: 'Your lesson' })).toBeNull();
   });
 
-  it('returns null with nothing chosen or past the cap', () => {
-    expect(buildQuickDeck([], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson' })).toBeNull();
-    expect(buildQuickDeck(['quest:unknown'], items, { now, rng: () => 0.1, fallbackTitle: 'Quick lesson' })).toBeNull();
+  it('makes deck ids of lecture: and 10 characters, even at the top of the random range', () => {
+    expect(deckIdFrom(() => 0)).toBe('lecture:aaaaaaaaaa');
+    expect(deckIdFrom(() => 0.9999999)).toBe('lecture:9999999999');
+    expect(deckIdFrom(() => 1)).toBe('lecture:9999999999');
   });
 });

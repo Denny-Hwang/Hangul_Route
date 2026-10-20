@@ -141,6 +141,9 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
         const { focused } = state as PressState;
         return {
           minHeight: touchTarget.min,
+          // At 320 px with 200 % text the label wraps inside the page, never past it (section 10).
+          maxWidth: '100%',
+          flexShrink: 1,
           paddingHorizontal: spacing.xxl,
           alignItems: 'center',
           justifyContent: 'center',
@@ -151,7 +154,9 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
         };
       }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>{label}</Text>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary, textAlign: 'center', flexShrink: 1 }}>
+        {label}
+      </Text>
     </Pressable>
   );
 });

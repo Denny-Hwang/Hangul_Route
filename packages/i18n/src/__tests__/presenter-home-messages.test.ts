@@ -34,11 +34,13 @@ const a11yPaths = leafPaths(en.a11y.presenter).filter((p) => p === 'removeRecent
 describe('learner.presenter home strings (F-TCH-004 PR 8)', () => {
   it('has the README keys with their English values', () => {
     const p = en.learner.presenter;
-    expect(p.home.title).toBe('Lecture');
+    // One name everywhere (AMENDMENTS-LECTURE-V2 LV-D2, row LV-3).
+    expect(p.home.title).toBe('Lecture mode');
+    expect(p.docTitle).toBe('Hangul Route lecture mode');
     expect(p.home.help.cta).toBe('Keys and help');
     expect(p.home.recent.empty).toBe('Lessons you open appear here. Names are never saved.');
-    expect(p.home.quick.chosen(1)).toBe('1 chosen');
-    expect(p.home.quick.chosen(3)).toBe('3 chosen');
+    // Quick lesson is folded under Customize (section 18.3): its title, line, groups and count go.
+    for (const gone of ['title', 'line', 'group', 'chosen']) expect(gone in p.home.quick, gone).toBe(false);
     expect(p.home.quick.letters(1)).toBe('1 letter');
     expect(p.home.quick.letters(14)).toBe('14 letters');
     expect(p.home.quick.minutes(15)).toBe('about 15 min');
@@ -52,13 +54,13 @@ describe('learner.presenter home strings (F-TCH-004 PR 8)', () => {
   it('has the Spanish and Korean values of the README table', () => {
     const es = getMessages('es').learner.presenter;
     const ko = getMessages('ko').learner.presenter;
-    expect(es.home.title).toBe('Proyección');
-    expect(es.home.quick.chosen(1)).toBe('Elegiste 1');
+    expect(es.home.title).toBe('Modo proyección');
+    expect(es.docTitle).toBe('Modo proyección de Hangul Route');
     expect(es.home.quick.letters(1)).toBe('1 letra');
     expect(es.home.recent.startOver.cta).toBe('Desde el inicio');
     expect(es.start.back.cta).toBe('Volver a las lecciones');
-    expect(ko.home.title).toBe('강의');
-    expect(ko.home.quick.chosen(3)).toBe('3개 골랐어요');
+    expect(ko.home.title).toBe('강의 모드');
+    expect(ko.docTitle).toBe('Hangul Route 강의 모드');
     expect(ko.home.quick.letters(14)).toBe('글자 14개');
     expect(ko.start.back.cta).toBe('수업 목록으로');
     expect(getMessages('ko').a11y.presenter.removeRecent('Food')).toBe('지우기: Food');

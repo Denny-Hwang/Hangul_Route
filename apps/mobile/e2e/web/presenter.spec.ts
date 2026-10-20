@@ -196,7 +196,7 @@ test.describe('presenter at 1280 x 720', () => {
     expect(new URL(page.url()).hash).toBe('');
     expect(await page.evaluate(() => Object.keys((history.state ?? {}) as object).sort())).toEqual(['hrHomeBack', 'hrIndex', 'hrLectureFragment', 'hrPresenter']);
     expect(await page.evaluate(() => history.state as { hrPresenter?: string; hrIndex?: number })).toMatchObject({ hrPresenter: 'ready', hrIndex: 1 });
-    await expect(page).toHaveTitle('Hangul Route lecture');
+    await expect(page).toHaveTitle('Hangul Route lecture mode');
     // `#root` is not capped (F-LAYOUT-001).
     expect(await page.evaluate(() => document.getElementById('root')?.getBoundingClientRect().width)).toBe(1280);
 
@@ -364,8 +364,11 @@ test.describe('presenter at 1280 x 720', () => {
     await expect(page.getByText('This link does not work')).toBeVisible();
     expect(new URL(page.url()).hash).toBe('');
     await shot(page, 'presenter-invalid-1280x720');
-    await page.getByRole('button', { name: 'Open Quick lesson' }).click();
+    // Choose a lesson: the home with Customize open (AMENDMENTS-LECTURE-V2 section 12.6).
+    await page.getByRole('button', { name: 'Choose a lesson' }).click();
     await expect(page.getByTestId('presenter-home')).toBeVisible();
+    await expect(page.getByTestId('presenter-home-customize-toggle')).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByTestId('presenter-home-customize-toggle')).toBeFocused();
   });
 
   test('a link from a newer presenter offers Reload, which opens the same link again (AMENDMENTS-LECTURE-V2 4.5)', async ({ page }) => {
@@ -376,7 +379,7 @@ test.describe('presenter at 1280 x 720', () => {
     expect(new URL(page.url()).hash).toBe('');
     const reload = page.getByRole('button', { name: 'Reload' });
     await expect(reload).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Open Quick lesson' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Choose a lesson' })).toBeVisible();
     await shot(page, 'presenter-invalid-stale-1280x720');
     await page.evaluate(() => ((window as unknown as { __beforeReload?: boolean }).__beforeReload = true));
     await reload.click();
@@ -386,7 +389,7 @@ test.describe('presenter at 1280 x 720', () => {
       .poll(() => page.evaluate(() => (window as unknown as { __beforeReload?: boolean }).__beforeReload === true).catch(() => true))
       .toBe(false);
     await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
-    await page.getByRole('button', { name: 'Open Quick lesson' }).click();
+    await page.getByRole('button', { name: 'Choose a lesson' }).click();
     await expect(page.getByTestId('presenter-home')).toBeVisible();
   });
 

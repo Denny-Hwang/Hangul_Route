@@ -1,3 +1,6 @@
+import { LECTURE_PRESETS, type LecturePreset } from '@hangul-route/content-schema';
+import { parseHomeSnapshot, type HomeSnapshot } from './home-state';
+
 /**
  * The presenter's browser history plan (F-TCH-004 section 3.5 "History and the way back", rows
  * LV-M1 and LV-3), pure: `platform/presenter.web.ts` reads and writes `history.state` with it and
@@ -25,6 +28,10 @@
  *    pushed and stepped back from), so no entry behind or ahead keeps a deck; a Forward onto the
  *    placeholder shows the home and steps back again.
  * 8. Only the presenter's own entries are touched: no step crosses the `home` entry.
+ * 9. The home entry keeps the home's state (`home`, section 18.2: the open card, chips, Customize,
+ *    the chooser and the scroll position; ids and chip values only) through every rewrite, and a
+ *    start screen opened from a ready-made lesson keeps which one (`preset`), as does its lesson's
+ *    entry, so a reload on either still reports the start as `preset` (section 11).
  */
 
 export type HistoryStep = 'home' | 'ready' | 'running';
@@ -39,6 +46,10 @@ export interface HistoryEntry {
   fresh?: true;
   /** The home's Back may go back to the page before `/present` (rule 5). */
   homeBack?: boolean;
+  /** The ready-made lesson the deck was resolved from on this presenter (`ready` and `running`, rule 9). */
+  preset?: LecturePreset;
+  /** The home's state (the `home` entry only, rule 9). */
+  home?: HomeSnapshot;
 }
 
 /** The `history.state` keys (section 3.5): `hrPresenter`, `hrIndex`, `hrLectureFragment`, plus the fresh mark and the home's Back. */
@@ -48,6 +59,8 @@ export const HISTORY_KEYS = {
   fragment: 'hrLectureFragment',
   fresh: 'hrLectureFresh',
   homeBack: 'hrHomeBack',
+  preset: 'hrLecturePreset',
+  home: 'hrHome',
 } as const;
 
 const STEPS: readonly HistoryStep[] = ['home', 'ready', 'running'];
@@ -86,6 +99,10 @@ export function readEntry(state: unknown): HistoryEntry | null {
   if (step !== 'home' && fragment !== undefined) out.fragment = fragment;
   if (step === 'ready' && record[HISTORY_KEYS.fresh] === true) out.fresh = true;
   if (homeBack !== undefined) out.homeBack = homeBack;
+  const preset = record[HISTORY_KEYS.preset];
+  if (step !== 'home' && typeof preset === 'string' && (LECTURE_PRESETS as readonly string[]).includes(preset)) out.preset = preset as LecturePreset;
+  const snapshot = step === 'home' ? parseHomeSnapshot(record[HISTORY_KEYS.home]) : null;
+  if (snapshot !== null) out.home = snapshot;
   return out;
 }
 
@@ -95,6 +112,8 @@ export function entryState(entry: HistoryEntry): Record<string, unknown> {
   if (entry.step !== 'home' && entry.fragment !== undefined) out[HISTORY_KEYS.fragment] = entry.fragment;
   if (entry.step === 'ready' && entry.fresh === true) out[HISTORY_KEYS.fresh] = true;
   if (entry.homeBack !== undefined) out[HISTORY_KEYS.homeBack] = entry.homeBack;
+  if (entry.step !== 'home' && entry.preset !== undefined) out[HISTORY_KEYS.preset] = entry.preset;
+  if (entry.step === 'home' && entry.home !== undefined) out[HISTORY_KEYS.home] = entry.home;
   return out;
 }
 
@@ -103,6 +122,8 @@ export interface BootDeck {
   raw: string;
   reloaded: boolean;
   fresh?: true;
+  /** A start screen of a ready-made lesson reopened by a reload (rule 9). */
+  preset?: LecturePreset;
 }
 
 export interface BootPlan {
@@ -133,15 +154,22 @@ export function bootPlan(input: { link: string | null; entry: HistoryEntry | nul
   };
   if (link !== null) return asLink(link, false);
   if (entry === null) return { replace: home(back), push: null, back: false, deck: null };
-  // The home, its placeholder (rule 7), or a deck step that holds no deck: the home, stepping back to it.
-  if (entry.step === 'home' || entry.fragment === undefined) return { replace: { ...home(back), index: entry.index }, push: null, back: entry.index > 0, deck: null };
+  // The home, its placeholder (rule 7), or a deck step that holds no deck: the home, stepping back to it (its state kept, rule 9).
+  if (entry.step === 'home' || entry.fragment === undefined) {
+    return { replace: { ...home(back), index: entry.index, ...(entry.home !== undefined ? { home: entry.home } : {}) }, push: null, back: entry.index > 0, deck: null };
+  }
   const raw = entry.fragment;
   if (entry.step === 'ready' && entry.index === 0) return asLink(raw, true, entry.fresh);
   if (entry.step === 'ready') {
-    return { replace: { ...entry, homeBack: back }, push: null, back: false, deck: { raw, reloaded: true, ...(entry.fresh ? { fresh: entry.fresh } : {}) } };
+    return {
+      replace: { ...entry, homeBack: back },
+      push: null,
+      back: false,
+      deck: { raw, reloaded: true, ...(entry.fresh ? { fresh: entry.fresh } : {}), ...(entry.preset !== undefined ? { preset: entry.preset } : {}) },
+    };
   }
-  // A reload on the lesson: back to its start screen's entry, which holds the same deck.
-  return { replace: null, push: null, back: true, deck: { raw, reloaded: true } };
+  // A reload on the lesson: back to its start screen's entry, which holds the same deck (and its preset, rule 9).
+  return { replace: null, push: null, back: true, deck: { raw, reloaded: true, ...(entry.preset !== undefined ? { preset: entry.preset } : {}) } };
 }
 
 /** Where a push for `step` goes from the entry the tab is on: pushed above it, or written over it when the tab is already there. */
@@ -149,7 +177,10 @@ export function pushPlan(current: HistoryEntry | null, step: 'ready' | 'running'
   const here = current ?? { step: 'home', index: 0 };
   const homeBack = entry.homeBack ?? here.homeBack;
   const index = step === 'ready' ? 1 : here.step === 'ready' ? here.index + 1 : DEFAULT_INDEX.running;
-  const next: HistoryEntry = { ...entry, step, index, ...(homeBack !== undefined ? { homeBack } : {}) };
+  // The lesson's entry keeps the ready-made lesson its start screen was resolved from (rule 9).
+  const preset = entry.preset ?? (step === 'running' && here.step !== 'home' ? here.preset : undefined);
+  const next: HistoryEntry = { ...entry, step, index, ...(homeBack !== undefined ? { homeBack } : {}), ...(preset !== undefined ? { preset } : {}) };
+  delete next.home;
   if (step === 'running') delete next.fresh;
   const mode = here.step === step || here.index >= index ? 'replace' : 'push';
   return { mode, entry: next };

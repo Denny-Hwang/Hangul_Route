@@ -598,6 +598,28 @@ describe('questIdsOfBlocks (section 4.3)', () => {
     const shown = { questIds: questIdsOfBlocks([{ kind: 'episode', id: 'episode:stage1-letters' }], CATALOG), storyIds: [] };
     expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, shown }))).toBe('stage1-life-q1 · stage1-life-q2 · air-write 2');
   });
+
+  it('a story at the read level gives its Stage 5 book quest; another level, or a story with no book quest, gives none', () => {
+    const blocks: LectureBlock[] = [
+      { kind: 'story', storyId: 'story:sun-and-moon', level: 'read', checks: true },
+      { kind: 'story', storyId: 'story:shapes-of-hangeul', checks: true },
+      { kind: 'story', storyId: 'story:no-such-book', level: 'read', checks: true },
+      { kind: 'quest', id: 'quest:story-sun-and-moon-read' },
+    ];
+    expect(questIdsOfBlocks(blocks, CATALOG)).toEqual(['quest:story-sun-and-moon-read']);
+    expect(storyIdsOfBlocks(blocks)).toEqual(['story:sun-and-moon', 'story:shapes-of-hangeul', 'story:no-such-book']);
+  });
+
+  it('Stage by stage at Stage 5 moves past the stories a stored Stage 5 deck read (S, as every other stage)', () => {
+    const first = resolvePreset('by-stage', 10, { catalog: CATALOG, stage: 'stage5' });
+    expect(outline(first)).toBe('story:sejong-new-letters@read+checks · story:shapes-of-hangeul@read+checks');
+    const shown = { questIds: questIdsOfBlocks(first.blocks, CATALOG), storyIds: storyIdsOfBlocks(first.blocks) };
+    expect(shown.questIds).toEqual(['quest:story-sejong-new-letters-read', 'quest:story-shapes-of-hangeul-read']);
+    const next = resolvePreset('by-stage', 10, { catalog: CATALOG, stage: 'stage5', shown });
+    expect(outline(next).split(' · ')[0]).toBe('story:hangeul-day@read+checks');
+    // N4 continues after them too.
+    expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, shown })).split(' · ')[0]).toBe('story-hangeul-day-read');
+  });
 });
 
 describe('learnerPosition (N3)', () => {

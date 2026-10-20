@@ -57,6 +57,49 @@ export interface StartScreenProps {
   soundCheck?: SoundCheckOutcome | null;
   /** Turn sound on, shown when the test found the sound switched off. */
   onTurnSoundOn?: () => void;
+  /**
+   * The preview of a ready-made lesson (AMENDMENTS-LECTURE-V2 section 4.6, design `presets.md` V4):
+   * What's in this lesson (the resolved parts in order with their minutes) above Before you start,
+   * and a ghost Customize under Start, which goes back to the home with Customize open. Absent for
+   * any other deck.
+   */
+  preview?: { rows: readonly PreviewRow[]; onCustomize: () => void };
+}
+
+/** One part of a ready-made lesson on its preview: the content title or the part's own label, and its minutes. */
+export interface PreviewRow {
+  title: string;
+  minutes: number;
+}
+
+/** What's in this lesson: numbered rows, the title and "about {n} min" (`presets.md` "Start -> preview"). */
+function Preview({ rows }: { rows: readonly PreviewRow[] }): React.ReactElement {
+  const ts = useTypeScale().size;
+  const { messages } = usePresenterView();
+  return (
+    <View testID="presenter-preview" style={{ gap: spacing.sm }}>
+      <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={2} style={{ fontSize: ts.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+        {messages.learner.presenter.presets.preview.title}
+      </Text>
+      <View role="list">
+        {rows.map((row, i) => (
+          <View
+            key={`${i}-${row.title}`}
+            role="listitem"
+            testID={`presenter-preview-row-${i}`}
+            style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, paddingHorizontal: spacing.sm, borderBottomWidth: borderWidth.thin, borderBottomColor: colors.border.subtle }}
+          >
+            <Line bold>{String(i + 1)}</Line>
+            {/* A quarter of the column before it shares a line; in a narrower row it takes the row (320 px at 200 % text). */}
+            <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: TEACHER_COLUMN / 4, minWidth: 0 }}>
+              <Line bold>{row.title}</Line>
+            </View>
+            <Line secondary>{messages.learner.presenter.home.quick.minutes(row.minutes)}</Line>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNode; testID?: string }): React.ReactElement {
@@ -284,6 +327,14 @@ function PhoneStart(props: StartScreenProps): React.ReactElement {
               <Line secondary>{m.turnHint}</Line>
             </View>
           ) : null}
+          {props.preview ? (
+            <>
+              <Preview rows={props.preview.rows} />
+              <View style={{ alignItems: 'flex-start' }}>
+                <GhostButton testID="presenter-preview-customize" label={messages.learner.presenter.presets.customize.cta} onPress={props.preview.onCustomize} />
+              </View>
+            </>
+          ) : null}
           {!props.fontReady ? <FontWait /> : null}
         </View>
       </ScrollView>
@@ -341,6 +392,8 @@ function WideStart(props: StartScreenProps): React.ReactElement {
           <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} />
         </View>
 
+        {props.preview ? <Preview rows={props.preview.rows} /> : null}
+
         <Checks {...props} />
 
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
@@ -354,6 +407,7 @@ function WideStart(props: StartScreenProps): React.ReactElement {
             onPress={props.onStart}
           />
           {!props.fontReady ? <FontWait /> : null}
+          {props.preview ? <GhostButton testID="presenter-preview-customize" label={messages.learner.presenter.presets.customize.cta} onPress={props.preview.onCustomize} /> : null}
         </View>
       </View>
     </ScrollView>

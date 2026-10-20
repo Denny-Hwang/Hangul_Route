@@ -1,4 +1,4 @@
-import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type UiLocale } from '@hangul-route/content-schema';
+import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type LecturePreset, type UiLocale } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
 import type { PlayResult } from '../audio/controller';
@@ -17,10 +17,16 @@ import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 // --- boot ---------------------------------------------------------------------------------------
 
-export type StartSource = 'console' | 'quick' | 'recent';
+/**
+ * Where a start came from (`lecture.start` `source`, AMENDMENTS-LECTURE-V2 section 11): a link
+ * (`console`, or `quick` for a deck built outside the console with `source: 'quick'`), the
+ * presenter's own Customize (`quick`), Recent (`recent`), or a ready-made lesson (`preset`): one
+ * the presenter resolved itself (its in-session state) or a v2 deck that names its `preset`.
+ */
+export type StartSource = 'console' | 'quick' | 'recent' | 'preset';
 
 export type BootResult =
-  | { kind: 'deck'; deck: LectureDeck; source: StartSource; resumeKey?: string }
+  | { kind: 'deck'; deck: LectureDeck; source: StartSource; resumeKey?: string; preset?: LecturePreset }
   | { kind: 'invalid'; reason: LectureDecodeFailure }
   | { kind: 'home' };
 
@@ -28,28 +34,42 @@ export type BootResult =
  * What `/present` opens. `address` is the deck the tab holds: from a link (`#d=`), or kept in the
  * tab's history entry across a reload (`reloaded`). A reloaded deck that is in Recent is a Recent
  * start and resumes at its open slide, unless the teacher chose Start over (`fresh`); otherwise
- * the deck starts fresh. No deck: the presenter home.
+ * the deck starts fresh. A deck that names its preset (v2), or a reloaded start screen of a
+ * ready-made lesson this presenter resolved (`preset`, kept in its history entry), is a `preset`
+ * start; any other link counts by the deck's `source` (`quick` stays `quick`, everything else is
+ * `console`). No deck: the presenter home.
  */
-export function resolveBoot(address: { raw: string; reloaded: boolean; fresh?: true } | null, recent: RecentList): BootResult {
+export function resolveBoot(address: { raw: string; reloaded: boolean; fresh?: true; preset?: LecturePreset } | null, recent: RecentList): BootResult {
   if (address === null) return { kind: 'home' };
   const decoded = decodeDeck(address.raw);
   if (!decoded.ok) return { kind: 'invalid', reason: decoded.reason };
   const deck = decoded.deck;
-  const linked: StartSource = deck.source === 'quick' ? 'quick' : 'console';
+  const preset = deck.preset ?? (address.reloaded ? address.preset : undefined);
   const known = address.reloaded ? recent.items.find((item) => item.deck.id === deck.id) : undefined;
-  if (!known) return { kind: 'deck', deck, source: linked };
+  if (!known) {
+    if (preset !== undefined) return { kind: 'deck', deck, source: 'preset', preset };
+    return { kind: 'deck', deck, source: deck.source === 'quick' ? 'quick' : 'console' };
+  }
   if (address.fresh || known.lastSlideKey === undefined) return { kind: 'deck', deck, source: 'recent' };
   return { kind: 'deck', deck, source: 'recent', resumeKey: known.lastSlideKey };
 }
 
 // --- the presenter home (PR 8) ---------------------------------------------------------------------
 
-/** A start from the presenter home: a Recent row's Resume or Start over, or Build lesson (section 3.12). */
-export type HomeChoice = { kind: 'resume'; item: RecentItem } | { kind: 'start-over'; item: RecentItem } | { kind: 'quick'; deck: LectureDeck };
+/**
+ * A start from the presenter home: a Recent row's Resume or Start over, Build lesson under
+ * Customize (section 3.12), or a ready-made lesson's Start (AMENDMENTS-LECTURE-V2 section 4).
+ */
+export type HomeChoice =
+  | { kind: 'resume'; item: RecentItem }
+  | { kind: 'start-over'; item: RecentItem }
+  | { kind: 'quick'; deck: LectureDeck }
+  | { kind: 'preset'; deck: LectureDeck; preset: LecturePreset };
 
-/** The start screen a home choice opens; Resume carries the row's saved slide, Start over drops it. */
-export function homeStart(choice: HomeChoice): { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string } {
+/** The start screen a home choice opens; Resume carries the row's saved slide, Start over drops it; a preset keeps its id. */
+export function homeStart(choice: HomeChoice): { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string; preset?: LecturePreset } {
   if (choice.kind === 'quick') return { kind: 'ready', deck: choice.deck, source: 'quick' };
+  if (choice.kind === 'preset') return { kind: 'ready', deck: choice.deck, source: 'preset', preset: choice.preset };
   const { deck, lastSlideKey } = choice.item;
   if (choice.kind === 'resume' && lastSlideKey !== undefined) return { kind: 'ready', deck, source: 'recent', resumeKey: lastSlideKey };
   return { kind: 'ready', deck, source: 'recent' };
@@ -330,6 +350,8 @@ export function strokeTokenFor(play: StrokePlay | null, slideKey: string | undef
 
 export interface StartPayload {
   source: StartSource;
+  /** Only with `source: 'preset'` (the Worker keeps it only then, section 11). */
+  preset?: LecturePreset;
   blocks: number;
   slides: number;
   skipped: number;
@@ -345,16 +367,23 @@ export function voiceState(capability: AudioCapability): StartPayload['voice'] {
   return capability.tts.state === 'none' ? 'none' : 'unknown';
 }
 
-/** `lecture.start` (section 3.14): counts and modes only. `picker` is always `'none'` (LV-H). */
+/**
+ * `lecture.start` (section 3.14): counts and modes only. `picker` is always `'none'` (LV-H). A
+ * `preset` start names its preset (the presenter's in-session one, else the v2 deck's own); no
+ * other start carries one (AMENDMENTS-LECTURE-V2 section 11).
+ */
 export function startPayload(input: {
-  deck: Pick<LectureDeck, 'blocks' | 'options'>;
+  deck: Pick<LectureDeck, 'blocks' | 'options'> & { preset?: LecturePreset };
   run: RunDeck;
   source: StartSource;
+  preset?: LecturePreset;
   capability: AudioCapability;
   offlineReady: boolean;
 }): StartPayload {
+  const preset = input.source === 'preset' ? (input.preset ?? input.deck.preset) : undefined;
   return {
     source: input.source,
+    ...(preset !== undefined ? { preset } : {}),
     blocks: input.deck.blocks.length,
     slides: input.run.slides.length,
     skipped: input.run.parts.length,

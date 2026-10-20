@@ -1,4 +1,5 @@
-import { isLearnerRoot } from '@hangul-route/content-schema';
+import { isLearnerRoot, type LecturePreset } from '@hangul-route/content-schema';
+import { parseHomeSnapshot, type HomeSnapshot } from '../logic/lecture/home-state';
 import { bootPlan, entryState, pushPlan, readEntry, stepsToHome, type HistoryEntry } from '../logic/lecture/history';
 import { commandForKey, type KeyCommand } from '../logic/lecture/keymap';
 
@@ -200,6 +201,8 @@ export interface DeckAddress {
   reloaded: boolean;
   /** A held deck the teacher chose to start over: it does not resume at its saved slide. */
   fresh?: true;
+  /** The ready-made lesson a reloaded start screen was resolved from on this presenter (history rule 9). */
+  preset?: LecturePreset;
 }
 
 export type { HistoryEntry } from '../logic/lecture/history';
@@ -273,8 +276,38 @@ export function takeDeckFragment(env: PresenterEnv = browserEnv(), accepts: (raw
   if (plan.push !== null) pushEntry(env, plan.push);
   if (plan.back) void queue(() => goIgnored(env, -1));
   if (plan.deck === null) return null;
-  const { raw, reloaded, fresh } = plan.deck;
-  return fresh ? { raw, reloaded, fresh } : { raw, reloaded };
+  const { raw, reloaded, fresh, preset } = plan.deck;
+  return { raw, reloaded, ...(fresh ? { fresh } : {}), ...(preset !== undefined ? { preset } : {}) };
+}
+
+/** The home's kept state in this tab's entry (section 18.2), or null when the entry holds none. */
+export function presenterHomeSnapshot(env: PresenterEnv = browserEnv()): HomeSnapshot | null {
+  const here = readEntry(env.history?.state);
+  return here?.step === 'home' ? (here.home ?? null) : null;
+}
+
+/**
+ * Keeps the home's state in the home entry (section 18.2; ids and chip values only), so a back
+ * onto the home or a reload there shows it as it was. Only while the tab is on the home entry; it
+ * goes through the presenter's own queue, so it lands before a push that leaves the home.
+ */
+export function saveHomeSnapshot(snapshot: HomeSnapshot, env: PresenterEnv = browserEnv()): Promise<void> {
+  return queue(() => {
+    const here = readEntry(env.history?.state);
+    if (here === null || here.step !== 'home') return;
+    // The same state already there: no write (browsers throttle `replaceState`).
+    if (here.home !== undefined && JSON.stringify(here.home) === JSON.stringify(parseHomeSnapshot(snapshot))) return;
+    replaceEntry(env, { ...here, home: snapshot });
+  });
+}
+
+/**
+ * Resolves once every history step the presenter asked for so far (boot's step back, a return to
+ * the home) has run, so the entry the tab is on can be read: the home's kept state after a boot
+ * on a deck step (section 18.2).
+ */
+export function afterPresenterHistory(): Promise<void> {
+  return queue(() => undefined);
 }
 
 /** Whether the home's Back goes back to the page before `/present` (rule 5): a same-origin page before it at boot. */
@@ -391,11 +424,17 @@ function goIgnored(env: PresenterEnv, delta: number): Promise<void> {
  * lesson's (both inside the tap). An entry already on that step is written over. `raw`: the deck's
  * fragment (null: a deck too long for a link, which still runs; a reload then shows the home).
  */
-export function pushPresenterEntry(step: 'ready' | 'running', raw: string | null, options: { fresh?: boolean } = {}, env: PresenterEnv = browserEnv()): Promise<void> {
+export function pushPresenterEntry(
+  step: 'ready' | 'running',
+  raw: string | null,
+  options: { fresh?: boolean; preset?: LecturePreset } = {},
+  env: PresenterEnv = browserEnv(),
+): Promise<void> {
   return queue(() => {
     const { mode, entry } = pushPlan(readEntry(env.history?.state), step, {
       ...(raw !== null ? { fragment: raw } : {}),
       ...(options.fresh === true ? { fresh: true as const } : {}),
+      ...(options.preset !== undefined ? { preset: options.preset } : {}),
     });
     if (mode === 'push') pushEntry(env, entry);
     else replaceEntry(env, entry);
@@ -405,7 +444,13 @@ export function pushPresenterEntry(step: 'ready' | 'running', raw: string | null
 /** Rule 7: on the home, a placeholder entry is pushed and stepped back from, so the entries ahead (and their deck) are gone. */
 async function clearForward(env: PresenterEnv): Promise<void> {
   const here = readEntry(env.history?.state);
-  replaceEntry(env, { step: 'home', index: 0, ...(here?.homeBack !== undefined ? { homeBack: here.homeBack } : {}) });
+  // The home's kept state stays with it (history rule 9).
+  replaceEntry(env, {
+    step: 'home',
+    index: 0,
+    ...(here?.homeBack !== undefined ? { homeBack: here.homeBack } : {}),
+    ...(here?.step === 'home' && here.home !== undefined ? { home: here.home } : {}),
+  });
   if (typeof env.history?.pushState !== 'function') return;
   try {
     env.history.pushState(entryState({ step: 'home', index: 1, ...(here?.homeBack !== undefined ? { homeBack: here.homeBack } : {}) }), '', cleanAddress(env));
