@@ -307,6 +307,12 @@ describe('the console context (sections 4.2 and 4.3)', () => {
     const warm = resolveConsolePreset('warm-up', 10, 'stage1', ctx);
     expect(warm.blocks[0]).toEqual({ kind: 'revisit', chars: ['ㅎ', 'ㄱ', 'ㄴ', 'ㄷ'] });
     expect(presetSource(warm, ctx)).toBe('revisit');
+    // Only this week's taught letters (the roll-up has none): a warm-up of the plan's letters, not a revisit deck.
+    const taughtOnly = consolePresetContext({ roster: roster([learner('a', 0)]), plan: plan(), today: TODAY, now: NOW });
+    expect(taughtOnly.revisitChars?.length ?? 0).toBeGreaterThan(0);
+    expect(taughtOnly.rollupRevisit).toBe(false);
+    expect(presetSource(resolveConsolePreset('warm-up', 10, 'stage1', taughtOnly), taughtOnly)).toBe('catalogue');
+    expect(ctx.rollupRevisit).toBe(true);
     expect(presetSource(resolveConsolePreset('warm-up', 10, 'stage1', empty()), empty())).toBe('catalogue');
   });
 

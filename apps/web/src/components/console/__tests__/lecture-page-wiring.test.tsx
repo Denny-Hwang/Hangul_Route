@@ -461,3 +461,51 @@ describe('review fixes (LV-4 review)', () => {
     expect(one(root, 'lecture-footer-alert').props.role).toBe('alert');
   });
 });
+
+describe('review fixes (LV-4 second review)', () => {
+  const tryAgain = (root: ReactTestInstance): ReactTestInstance => root.find((n) => n.type === 'button' && textOf(n) === en.console.tryAgain);
+
+  it('a Source that starts with no title, a lesson added, Customize closed: the footer names the missing title', async () => {
+    const root = await render();
+    await openCustomize(root);
+    const [, catalogue] = root.findAll((n) => n.type === 'input' && n.props.name === 'source');
+    await act(async () => catalogue!.props.onChange());
+    // An empty outline says "nothing" in the status, and no title alert yet.
+    expect(textOf(one(root, 'lecture-footer-status'))).toBe(l.nothing);
+    await act(async () => one(root, 'lecture-picker-lesson-quest:stage1-letters-q1').props.onChange());
+    await openCustomize(root);
+    expect(one(root, 'open-presenter').props.disabled).toBe(true);
+    expect(textOf(one(root, 'lecture-footer-alert'))).toBe(l.titleProblem.empty);
+  });
+
+  it('plans that did not load, a card and a chip, then Try again: the open card resolves again with the plan', async () => {
+    state.plans = { ok: false, error: 'network' };
+    const root = await render();
+    await act(async () => one(root, 'lecture-preset-next-lesson').props.onClick());
+    expect(openCards(root)).toEqual(['next-lesson']);
+    expect(textOf(one(root, 'lecture-preset-next-lesson'))).toContain(l.presets.fallback.zero);
+    await act(async () => one(root, 'lecture-preset-length-next-lesson-10').props.onChange());
+    state.plans = { ok: true, data: [plan([{ kind: 'quest', id: 'quest:stage1-life-q1' }])] };
+    await act(async () => tryAgain(root).props.onClick());
+    expect(openCards(root)).toEqual(['next-lesson']);
+    expect(one(root, 'lecture-preset-length-next-lesson-10').props.checked).toBe(true);
+    // Its line, its preview and the deck all follow the plan now.
+    expect(textOf(one(root, 'lecture-preset-next-lesson'))).toContain(l.presets.next.plan('Week three'));
+    const ctx = consolePresetContext({ roster: { space: space('class'), learners: [] }, plan: plan([{ kind: 'quest', id: 'quest:stage1-life-q1' }]), today: '2026-10-15', now: BEFORE });
+    expect(textOf(one(root, 'lecture-footer-minutes'))).toBe(l.outline.about(aboutMinutes(resolveConsolePreset('next-lesson', 10, 'stage1', ctx).blocks)));
+    await act(async () => one(root, 'open-presenter').props.onClick());
+    expect(lastDeck().source).toBe('plan');
+    expect(lastDeck().title).toBe('Week three');
+  });
+
+  it('the open card is named by what it holds once that is not its own outline (?from=revisit)', async () => {
+    nav.params = new URLSearchParams('id=space%3Ac1&from=revisit');
+    state.learners = [learner('Mina', { needsPractice: ['ㅂ', 'ㅅ'] }), learner('Jun', { needsPractice: ['ㅂ'] })];
+    const root = await render();
+    expect(openCards(root)).toEqual(['warm-up']);
+    const minutes = aboutMinutes([{ kind: 'revisit', chars: ['ㅂ', 'ㅅ'] }]);
+    expect(minutes).not.toBe(10);
+    expect(textOf(one(root, 'lecture-footer-minutes'))).toBe(l.outline.about(minutes));
+    expect(one(root, 'lecture-preset-warm-up').props['aria-label']).toBe(en.a11y.presenter.presetCard(l.presets.warmup.title, minutes));
+  });
+});

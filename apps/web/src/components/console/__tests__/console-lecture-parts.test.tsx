@@ -7,6 +7,7 @@ import { LectureChooserSection, LectureOptionsSection, LectureOutlineSection, Le
 import { LectureCustomize, LectureFooter, LecturePresetsLoading, LecturePresetsSection } from '@/components/console/LecturePresetParts';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
+import { presetCardWords } from '@/lib/console/lecture-presets';
 import { aroundSlot } from '@/lib/i18n/slot';
 import { expectAllPseudo } from './pseudo-text';
 import { STAGE1_EPISODES, STAGE1_TITLES, questsOfCell } from './stage1-catalog';
@@ -154,6 +155,7 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
         planTitle="Week three"
         family={false}
         outline={outline}
+        outlineMinutes={null}
         onToggle={noop}
         onMinutes={noop}
         onStage={noop}
@@ -167,6 +169,33 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expect(html).toContain('aria-describedby="lecture-preset-line-word-review"');
     expect(html).toContain('id="lecture-preset-line-word-review"');
     expectAllPseudo(joined(html), ['Week three', episode.title, jamo, ...rowWords(outline)]);
+  });
+
+  it('the open card is named by what it holds once that is not its own outline; the closed cards keep their length', () => {
+    const m = getMessages(PSEUDO);
+    const html = renderToStaticMarkup(
+      <LecturePresetsSection
+        order={['hangul-week-1', 'by-stage', 'warm-up', 'next-lesson']}
+        open="next-lesson"
+        minutesOf={() => 20}
+        stage="stage1"
+        stages={['stage1']}
+        fallbackOf={() => null}
+        note={null}
+        planTitle="Week three"
+        family={false}
+        outline={[revisit]}
+        outlineMinutes={7}
+        onToggle={noop}
+        onMinutes={noop}
+        onStage={noop}
+      />,
+    );
+    const label = (preset: 'next-lesson' | 'by-stage'): string | undefined => new RegExp(`aria-label="([^"]*)"[^>]*data-testid="lecture-preset-${preset}"`).exec(html)?.[1];
+    const html$ = (text: string): string => renderToStaticMarkup(<i title={text} />).slice('<i title="'.length, -'"></i>'.length);
+    const p = m.console.lecture.presets;
+    expect(label('next-lesson')).toBe(html$(m.a11y.presenter.presetCard(presetCardWords('next-lesson', p, { planTitle: 'Week three', family: false }).title, 7)));
+    expect(label('by-stage')).toBe(html$(m.a11y.presenter.presetCard(presetCardWords('by-stage', p, { planTitle: 'Week three', family: false }).title, 20)));
   });
 
   it('a card that cannot build what it names says so in its line, open or closed; the open card holds the note (section 4.1)', () => {
@@ -184,6 +213,7 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
         planTitle={null}
         family={false}
         outline={[revisit]}
+        outlineMinutes={null}
         onToggle={noop}
         onMinutes={noop}
         onStage={noop}

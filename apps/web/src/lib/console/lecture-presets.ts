@@ -122,8 +122,14 @@ export interface ConsolePresetInput {
   now: Date;
 }
 
+/** The console's preset context: the resolver's, plus whether the roll-up itself had letters to revisit (the deck's `source`). */
+export interface ConsolePresetContext extends PresetContext {
+  /** True when the space's roll-up had letters to revisit; false when U's letters are only the plan's taught letters. */
+  rollupRevisit: boolean;
+}
+
 /** The console's preset context (sections 4.2 and 4.3): the roster and the plan read as the resolver needs them, nothing more. */
-export function consolePresetContext(input: ConsolePresetInput): PresetContext {
+export function consolePresetContext(input: ConsolePresetInput): ConsolePresetContext {
   const learners = input.roster?.learners ?? [];
   const outline = input.plan ? planOutline(input.plan, input.today).blocks : [];
   const rollup = classRollup(learners, input.now);
@@ -144,6 +150,7 @@ export function consolePresetContext(input: ConsolePresetInput): PresetContext {
       vocabSummaries: learners.filter((l) => parseVocabSummary(l.summary?.vocab) !== null).length,
     }),
     revisitChars: consoleRevisitChars(rollup.revisit, outline),
+    rollupRevisit: rollup.revisit.some((c) => LECTURE_REVISIT_CHAR_RE.test(c)),
   };
 }
 
@@ -186,11 +193,12 @@ export function presetTitle(resolved: Pick<ResolvedPreset, 'titleKey' | 'stageNu
 
 /**
  * The deck's `source` (LV-D6): `plan` for Next lesson from this week's plan (N1), `revisit` for a warm-up of the
- * space's letters to revisit, `catalogue` for every other console preset.
+ * space's letters to revisit (the roll-up had some), `catalogue` for every other console preset, a warm-up of only the
+ * plan's taught letters included.
  */
-export function presetSource(resolved: Pick<ResolvedPreset, 'preset'>, ctx: PresetContext): LectureSource {
+export function presetSource(resolved: Pick<ResolvedPreset, 'preset'>, ctx: Pick<PresetContext, 'plan' | 'revisitChars'> & { rollupRevisit?: boolean }): LectureSource {
   if (resolved.preset === 'next-lesson' && (ctx.plan?.blocks.length ?? 0) > 0) return 'plan';
-  if (resolved.preset === 'warm-up' && (ctx.revisitChars?.length ?? 0) > 0) return 'revisit';
+  if (resolved.preset === 'warm-up' && ctx.rollupRevisit === true && (ctx.revisitChars?.length ?? 0) > 0) return 'revisit';
   return 'catalogue';
 }
 

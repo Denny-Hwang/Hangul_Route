@@ -219,14 +219,24 @@ function LectureInner(): JSX.Element {
     const chosen = pickPlan(res.data, planParam);
     setPlan(chosen);
     setPlansFailed(false);
-    if (!touched.current) select(roster, chosen);
-  }, [api, roster, spaceId, planParam, select]);
+    if (!touched.current) {
+      select(roster, chosen);
+      return;
+    }
+    // A chip or a card press is not an edit: the open card's outline is resolved again with the plan, so its line, its
+    // preview and the deck agree. An edited outline or a typed title stays as it is.
+    if (!edited && title === null && open !== null) {
+      const context = consolePresetContext({ roster, plan: presetPlan(chosen, planParam), today, now });
+      applyPreset(open, presetMinutes(open, lengths), stage ?? defaultPresetStage(context), context);
+    }
+  }, [api, roster, spaceId, planParam, select, edited, title, open, lengths, stage, today, now, applyPreset]);
 
   const deckTitle = title ?? (resolved ? presetTitle(resolved, l.presets) : '');
 
-  // "Link copied" describes the deck that was copied: any change to it clears the label.
+  // "Link copied" and the answer to a press describe the deck that was pressed for: any change to it clears them.
   useEffect(() => {
     setCopied(false);
+    setNotice(null);
   }, [deckTitle, blocks, romanization, strokeGuide, sound, uiLocale]);
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
@@ -344,8 +354,9 @@ function LectureInner(): JSX.Element {
     setUiLocale(next.uiLocale);
   };
 
-  // Under the title field while Customize is open; in the footer's alert line while it is closed.
-  const titleText = deckTitle.trim().length > 0 && problem !== null ? l.titleProblem[problem] : null;
+  // Under the title field while Customize is open; in the footer's alert line while it is closed. An empty title is
+  // named once the outline holds something (a Source that starts with no title), so the buttons are never off unexplained.
+  const titleText = problem !== null && (deckTitle.trim().length > 0 || blocks.length > 0) ? l.titleProblem[problem] : null;
   const titleAlert =
     titleText !== null ? (
       <p role="alert" style={{ color: colors.text.primary, backgroundColor: colors.feedback.nudgeLight, borderRadius: radii.md, padding: spacing.sm, margin: 0 }}>
@@ -394,6 +405,7 @@ function LectureInner(): JSX.Element {
             planTitle={ctx.plan?.title ?? null}
             family={family}
             outline={blocks}
+            outlineMinutes={resolved !== null && blocks === resolved.blocks ? null : aboutMinutes(blocks)}
             onToggle={(preset) => void togglePreset(preset)}
             onMinutes={(preset, minutes) => void chooseLength(preset, minutes)}
             onStage={(next) => void chooseStage(next)}

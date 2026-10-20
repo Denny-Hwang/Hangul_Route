@@ -137,6 +137,11 @@ export interface LecturePresetsProps {
   family: boolean;
   /** What the open card holds: the page's outline. */
   outline: readonly LectureBlock[];
+  /**
+   * The outline's about-minutes once it is no longer the card's own resolved outline (a `?from=` outline, an edit in
+   * Customize), so the open card's name and meta say what it holds; null while it is the card's outline (its length).
+   */
+  outlineMinutes: number | null;
   onToggle: (preset: LecturePreset) => void;
   onMinutes: (preset: LecturePreset, minutes: PresetMinutes) => void;
   onStage: (stage: StageKey) => void;
@@ -144,7 +149,7 @@ export interface LecturePresetsProps {
 
 const stageNumber = (stage: StageKey): number => Number(stage.slice('stage'.length));
 
-export function LecturePresetsSection({ order, open, minutesOf, stage, stages, fallbackOf, note, planTitle, family, outline, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
+export function LecturePresetsSection({ order, open, minutesOf, stage, stages, fallbackOf, note, planTitle, family, outline, outlineMinutes, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
   const m = useMessages();
   const l = m.console.lecture;
   const p = l.presets;
@@ -156,6 +161,8 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
         {order.map((preset) => {
           const isOpen = open === preset;
           const minutes = minutesOf(preset);
+          // The open card is named by what it holds; the length chips keep the length it was built for.
+          const shown = isOpen && outlineMinutes !== null ? outlineMinutes : minutes;
           const words = presetCardWords(preset, p, { planTitle, family });
           const fallback = fallbackOf(preset);
           const panelId = `lecture-preset-panel-${preset}`;
@@ -168,7 +175,7 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                 className="hr-lp-btn"
                 aria-expanded={isOpen}
                 aria-controls={panelId}
-                aria-label={m.a11y.presenter.presetCard(words.title, minutes)}
+                aria-label={m.a11y.presenter.presetCard(words.title, shown)}
                 aria-describedby={lineId}
                 onClick={() => onToggle(preset)}
                 data-testid={`lecture-preset-${preset}`}
@@ -178,7 +185,7 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                   {fallback ?? words.line}
                 </span>
                 <span className="hr-lp-meta">
-                  <span>{l.outline.about(minutes)}</span>
+                  <span>{l.outline.about(shown)}</span>
                   <IconSvg name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
                 </span>
               </button>
