@@ -18,7 +18,7 @@ import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
-import { expandDeck, type LectureBundle } from '../deck-builder';
+import { expandDeck, readingSlideKey, type LectureBundle } from '../deck-builder';
 
 /**
  * Deck coverage ratchet (AMENDMENTS-LECTURE-V2 sections 1 and 14, row LV-2): the section 1 walk
@@ -299,13 +299,16 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
                 if (!(item.type in want)) return;
                 const type = item.type as keyof typeof want;
                 counts[type] += 1;
-                const slide = expanded.slides.find((s) => s.key.endsWith(`/${questId}/${step.id}/${type}-${p + 1}-${i + 1}`));
+                const own = `/${questId}/${step.id}/${readingSlideKey(item, p, i)}`;
+                const slide = expanded.slides.find((s) => s.key.replace(/#\d+$/, '').endsWith(own) && s.kind === want[type]);
                 expect(slide?.kind, `${questId} ${step.id} ${type} ${p + 1}-${i + 1}`).toBe(want[type]);
               }),
             );
           }
         }
         expect(expanded.skipped.filter((s) => s.reason === 'no-romanization'), episode.id).toEqual([]);
+        // Every key is a saveable resume key (recent.ts: at most 256 characters).
+        for (const s of expanded.slides) expect(s.key.length, s.key).toBeLessThanOrEqual(256);
       }
     }
     // Section 1 counted 141 flattened items; Discover pages hold these and more (a sentence a card already showed was never counted).

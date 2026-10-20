@@ -20,6 +20,7 @@ import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
+import { resumeIndex } from '../controls';
 import { runDeck } from '../shell';
 import {
   expandDeck,
@@ -1608,13 +1609,32 @@ describe('expandDeck: the reading slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-
     // Then the fallback card of the realia with no sheet (라면) and the card pair's unseen word (사과); the realia read step is not shown yet.
     expect(kinds(slides)).toEqual(['title', 'sentence', 'sentence', 'pattern', 'read-along', 'realia', 'vocab', 'vocab', 'end']);
     expect(keys(slides).slice(1, 6)).toEqual([
-      'quest:reading/s2/sentence-1-1',
-      'quest:reading/s2/sentence-1-2',
-      'quest:reading/s2/pattern-2-1',
-      'quest:reading/s2/exchange-3-1',
-      'quest:reading/s2/realia-4-1',
+      // Each key names its item (the sentence, the frame, the first line, the realia ref), never its place; a `/` becomes `-`.
+      'quest:reading/s2/sentence-물을 마셔요.',
+      'quest:reading/s2/sentence-집에 와요.',
+      'quest:reading/s2/pattern-___을-를 먹어요.',
+      'quest:reading/s2/exchange-밥 먹었어요?',
+      'quest:reading/s2/realia-realia:menu',
     ]);
     expect(new Set(keys(slides)).size).toBe(slides.length);
+  });
+
+  it('a saved resume key stays on its reading slide when a content update adds an item before it', () => {
+    const saved = run(reading.id).slides.find((s) => s.kind === 'pattern')!.key;
+    const discover = reading.steps.find((st) => st.kind === 'discover')!.discover!;
+    const added = {
+      ...reading,
+      steps: reading.steps.map((st) =>
+        st.kind !== 'discover' ? st : { ...st, discover: { ...discover, pages: [{ items: [{ type: 'sentence' as const, sentence: kt('책을 읽어요.', 'chaegeul ilgeoyo', 'I read a book.') }] }, ...discover.pages] } },
+      ),
+    };
+    const moved = bundle({
+      scopeFor: (ref) => readingScopes[ref] ?? scopes[ref],
+      questById: (id) => (id === reading.id ? added : quests.find((q) => q.id === id)),
+    });
+    const slides = expandDeck(deckOf([{ kind: 'quest', id: reading.id }]), moved, VOICE).slides;
+    const at = resumeIndex(slides, saved);
+    expect(slides[at]).toMatchObject({ kind: 'pattern', key: saved });
   });
 
   it('sentence: the Korean, its romanization, the meaning and its sound; the picture only when the item has one', () => {
@@ -1653,7 +1673,7 @@ describe('expandDeck: the reading slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-
     expect(pattern.frame.pieces).toEqual(['', '에 ', '을/를 먹었어요.']);
     expect(pattern).not.toHaveProperty('note');
     expect(pattern.builds).toEqual(['frame', 'example', 'example']);
-    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/pattern-2-1/note', reason: 'no-romanization' });
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/pattern-___에 ___을-를 먹었어요./note', reason: 'no-romanization' });
   });
 
   it('read along: the two lines with their speakers, each with its sound', () => {
@@ -1707,7 +1727,7 @@ describe('expandDeck: the reading slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-
     expect(first!.caption).toEqual([{ text: 'Read ' }, { ko: '천', romanization: 'cheon' }, { text: ' on the slip.' }]);
     // A caption token with no romanization drops the caption, counted (rule 11).
     expect(second).not.toHaveProperty('caption');
-    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/realia-3-1/caption', reason: 'no-romanization' });
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/realia-realia:slip/caption', reason: 'no-romanization' });
   });
 
   it('a realia whose sheet the quest does not hold is a counted skip; its key words become word cards', () => {

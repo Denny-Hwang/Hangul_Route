@@ -461,7 +461,7 @@ describe('slideDetail', () => {
     expect(slideDetail(of('sequence'), names)).toBe('');
   });
 
-  it('names the reading slides: the sentence, the frame with each gap by name, every line with its speaker, the sheet text (LV-S1)', () => {
+  it('names the reading slides with their meanings: the sentence, the frame with each gap by name, every line with its speaker, the sheet text and its key words (LV-S1)', () => {
     const slides = expandDeck(
       deckOf([
         { kind: 'quest', id: 'quest:stage3-life-q1' },
@@ -474,15 +474,17 @@ describe('slideDetail', () => {
     ).slides;
     const of = <K extends Slide['kind']>(kind: K) => slides.find((s) => s.kind === kind) as Extract<Slide, { kind: K }>;
     const names = { activity: (preset: string) => preset, slot: 'gap' };
-    expect(slideDetail(of('sentence'), names)).toBe('물을 마셔요., mureul masyeoyo');
-    expect(slideDetail(of('pattern'), names)).toBe('gap 을/를 먹어요., gap eul/reul meogeoyo');
+    expect(slideDetail(of('sentence'), names)).toBe('물을 마셔요., mureul masyeoyo, I drink water.');
+    expect(slideDetail(of('pattern'), names)).toBe('gap 을/를 먹어요., gap eul/reul meogeoyo, I eat gap.');
     const twoSlots = slides.find((s): s is Extract<Slide, { kind: 'pattern' }> => s.kind === 'pattern' && s.frame.pieces.length === 3)!;
-    expect(slideDetail(twoSlots, names)).toBe('gap 에 gap 을/를 먹었어요., gap e gap eul/reul meogeosseoyo');
+    expect(slideDetail(twoSlots, names)).toBe('gap 에 gap 을/를 먹었어요., gap e gap eul/reul meogeosseoyo, On gap, I ate gap.');
     const readAlong = of('read-along');
-    expect(slideDetail(readAlong, names)).toBe(readAlong.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}`).join(', '));
-    expect(slideDetail(of('realia'), names)).toBe(of('realia').sheet.alt);
+    expect(slideDetail(readAlong, names)).toBe(readAlong.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}, ${l.gloss}`).join(', '));
+    const realia = of('realia');
+    expect(realia.keyWords.length).toBeGreaterThan(0);
+    expect(slideDetail(realia, names)).toBe([realia.sheet.alt, ...realia.keyWords.map((w) => `${w.ko}, ${w.romanization}, ${w.gloss}`)].join(', '));
     // With no slot name the gap stays as written.
-    expect(slideDetail(of('pattern'))).toBe('___ 을/를 먹어요., ___ eul/reul meogeoyo');
+    expect(slideDetail(of('pattern'))).toBe('___ 을/를 먹어요., ___ eul/reul meogeoyo, I eat ___.');
   });
 
   it('says a story scene by its caption (README D8), and nothing for a check', () => {

@@ -33,7 +33,7 @@ const MAX_LEVEL = 3;
 export function PatternSlide({ slide, reveal }: { slide: PatternBody; reveal: number }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
-  const fit = useFitLevel(MAX_LEVEL);
+  const fit = useFitLevel(MAX_LEVEL, unit);
   const view = patternView(slide, reveal);
   const frameSize = size(fit.level >= 3 ? presenter.size.prompt : presenter.size.title);
   const lineSize = size(fit.level >= 2 ? presenter.size.caption : presenter.size.body);
@@ -43,7 +43,7 @@ export function PatternSlide({ slide, reveal }: { slide: PatternBody; reveal: nu
     <View testID="presenter-pattern" style={{ flex: 1, gap }}>
       <KindLabel text={messages.learner.presenter.slide.pattern.label} testID="presenter-kind-label" />
       <View onLayout={fit.onRoom} style={{ flex: 1, minHeight: 0 }}>
-        <View onLayout={fit.onContent} testID="presenter-pattern-content" {...{ dataSet: { fit: String(fit.level) } }} style={{ gap }}>
+        <View ref={fit.contentRef} onLayout={fit.onContent} testID="presenter-pattern-content" {...{ dataSet: { fit: String(fit.level) } }} style={{ gap }}>
           <View testID="presenter-pattern-frame" style={{ gap: units(unit, spacing.xs) }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
               {slide.frame.pieces.map((piece, i) => (

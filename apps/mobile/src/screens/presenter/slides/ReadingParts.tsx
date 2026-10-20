@@ -33,27 +33,64 @@ export function useChipStyle(): { borderRadius: number; borderWidth: number; bor
  */
 const FIT_SETTLE_MS = 150;
 
+/** The content box's own height now: `offsetHeight` on the web (what react-native-web's layout event reports), `measure` on a device. */
+type MeasuredNode = { offsetHeight?: unknown; measure?: (cb: (x: number, y: number, width: number, height: number) => void) => void };
+
+function measureHeight(node: MeasuredNode | null, done: (height: number | null) => void): void {
+  if (node !== null && typeof node.offsetHeight === 'number') {
+    done(node.offsetHeight);
+    return;
+  }
+  if (node !== null && typeof node.measure === 'function') {
+    node.measure((_x, _y, _w, height) => done(typeof height === 'number' ? height : null));
+    return;
+  }
+  done(null);
+}
+
 /**
  * A slide that fits itself (`nextFitLevel`): `onRoom` goes on the box that takes the stage's room
- * (`flex: 1`), `onContent` on the content inside it, which keeps its own height. The stage remounts
- * on every slide, so each slide starts at level 0. A level that leaves the content as tall as it
- * was (on a small phone every text may already sit at the 18 px floor) brings no new layout event,
- * so when none comes within `FIT_SETTLE_MS` of a step, the slide checks again with the height it has.
+ * (`flex: 1`), `onContent` and `contentRef` on the content inside it, which keeps its own height.
+ * The stage remounts on every slide, so each slide starts at level 0, and a new stage `unit` (the
+ * stage grows into fullscreen or onto the projector) starts the fit again at level 0. A level that
+ * leaves the content as tall as it was (on a small phone every text may already sit at the 18 px
+ * floor) brings no new layout event, so when none comes within `FIT_SETTLE_MS` of a step, the slide
+ * measures its content again (never the height from before the step, whose new layout may simply
+ * be late on a slow device) and checks with that.
  */
-export function useFitLevel(max: number): { level: number; onRoom: (e: LayoutChangeEvent) => void; onContent: (e: LayoutChangeEvent) => void } {
-  const [level, setLevel] = useState(0);
+export function useFitLevel(
+  max: number,
+  unit?: number,
+): { level: number; onRoom: (e: LayoutChangeEvent) => void; onContent: (e: LayoutChangeEvent) => void; contentRef: React.RefObject<View> } {
+  const [fit, setFit] = useState({ level: 0, unit, resets: 0 });
   const room = useRef(0);
   const content = useRef(0);
   const contentEvents = useRef(0);
-  const check = useCallback(() => setLevel((now) => nextFitLevel({ room: room.current, content: content.current, level: now, max })), [max]);
+  const contentRef = useRef<View>(null);
+  // A new stage scale: fit again from level 0, set during render so no frame draws the old level at
+  // the new scale. The old content height no longer holds: the new layout (or the measure below) sets it.
+  if (fit.unit !== unit) {
+    content.current = 0;
+    setFit((now) => ({ level: 0, unit, resets: now.resets + 1 }));
+  }
+  const level = fit.unit === unit ? fit.level : 0;
+  const check = useCallback(
+    () => setFit((now) => ({ ...now, level: nextFitLevel({ room: room.current, content: content.current, level: now.level, max }) })),
+    [max],
+  );
   useEffect(() => {
-    if (level === 0) return undefined;
+    if (level === 0 && fit.resets === 0) return undefined;
     const seen = contentEvents.current;
     const timer = setTimeout(() => {
-      if (contentEvents.current === seen) check();
+      if (contentEvents.current !== seen) return;
+      measureHeight(contentRef.current as unknown as MeasuredNode | null, (height) => {
+        if (contentEvents.current !== seen) return;
+        if (height !== null && height > 0) content.current = height;
+        check();
+      });
     }, FIT_SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [level, check]);
+  }, [level, fit.resets, check]);
   const onRoom = useCallback(
     (e: LayoutChangeEvent) => {
       room.current = e.nativeEvent.layout.height;
@@ -69,7 +106,7 @@ export function useFitLevel(max: number): { level: number; onRoom: (e: LayoutCha
     },
     [check],
   );
-  return { level, onRoom, onContent };
+  return { level, onRoom, onContent, contentRef };
 }
 
 /**

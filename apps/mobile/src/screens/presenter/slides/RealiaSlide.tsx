@@ -35,7 +35,7 @@ const MAX_LEVEL = 3;
 export function RealiaSlide({ slide, reveal }: { slide: RealiaBody; reveal: number }): React.ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
-  const fit = useFitLevel(MAX_LEVEL);
+  const fit = useFitLevel(MAX_LEVEL, unit);
   // On a small phone the 18 px floor draws the sheet's romanization bigger than its units: the sheet grows with it.
   const textScale = size(presenter.size.caption) / (unit * presenter.size.caption);
   const view = realiaView(slide, reveal);
@@ -51,7 +51,7 @@ export function RealiaSlide({ slide, reveal }: { slide: RealiaBody; reveal: numb
       style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, compact ? STAGE_GAP_INNER : STAGE_GAP), minHeight: 0 }}
     >
       <RealiaSheetStage sheet={slide.sheet} rom={view.sheetRom} width={units(unit, sheetUnits(slide.sheet, textScale))} />
-      <View onLayout={fit.onContent} {...{ dataSet: { fit: String(fit.level) } }} style={{ flex: 1, gap: units(unit, compact ? spacing.md : STAGE_GAP_INNER) }}>
+      <View ref={fit.contentRef} onLayout={fit.onContent} {...{ dataSet: { fit: String(fit.level) } }} style={{ flex: 1, gap: units(unit, compact ? spacing.md : STAGE_GAP_INNER) }}>
         {caption !== undefined ? <ChipText pieces={caption} rom={view.sheetRom} small={fit.level >= 1} testID="presenter-realia-caption" /> : null}
         {swap && !view.words ? null : (
           <View aria-hidden={words['aria-hidden']} style={[words.style, { flexDirection: 'row', flexWrap: 'wrap', gap: units(unit, compact ? spacing.sm : spacing.md) }]}>

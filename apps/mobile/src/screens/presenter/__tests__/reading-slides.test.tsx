@@ -2,7 +2,7 @@ import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-sche
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
 import { View } from 'react-native';
-import { act } from 'react-test-renderer';
+import TestRenderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { buildsFor } from '../../../logic/lecture/build-steps';
 import { lectureBundle } from '../../../logic/lecture/content';
@@ -252,6 +252,104 @@ describe('useFitLevel: a reading slide that fits itself', () => {
       });
       expect(level).toBe(3);
       await unmount(r);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  /** A probe whose content box reports `measured.height` when the hook measures it again (react-native-web's `offsetHeight`). */
+  async function probe(measured: { height: number }, unitOf: () => number): Promise<{ r: ReactTestRenderer; level: () => number; layout: (id: string, height: number) => void; rerender: () => Promise<void> }> {
+    let level = -1;
+    function Probe(): React.ReactElement {
+      const fit = useFitLevel(3, unitOf());
+      level = fit.level;
+      return (
+        <View testID="room" onLayout={fit.onRoom}>
+          <View testID="content" ref={fit.contentRef} onLayout={fit.onContent} />
+        </View>
+      );
+    }
+    let r!: ReactTestRenderer;
+    await act(async () => {
+      r = TestRenderer.create(<Probe />, {
+        createNodeMock: (el) => (el.props as { 'data-testid'?: string })['data-testid'] === 'content' ? { get offsetHeight() { return measured.height; } } : {},
+      });
+    });
+    const layout = (id: string, height: number): void => {
+      const node = r.root.findAll((n) => typeof n.type !== 'string' && n.props.testID === id)[0]!;
+      (node.props.onLayout as (e: { nativeEvent: { layout: { height: number } } }) => void)({ nativeEvent: { layout: { height } } });
+    };
+    const rerender = async (): Promise<void> => {
+      await act(async () => {
+        r.update(<Probe />);
+      });
+    };
+    return { r, level: () => level, layout, rerender };
+  }
+
+  it('measures its content again when the layout of a step comes late, so it never steps a level too far', async () => {
+    vi.useFakeTimers();
+    try {
+      const measured = { height: 330 };
+      const p = await probe(measured, () => 1);
+      await act(async () => {
+        p.layout('room', 278);
+        p.layout('content', 330);
+      });
+      expect(p.level()).toBe(1);
+      // Level 1 fits (the content is 270 tall now), but its layout event is late on a slow device.
+      measured.height = 270;
+      await act(async () => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(p.level()).toBe(1);
+      // The late event changes nothing.
+      await act(async () => {
+        p.layout('content', 270);
+        vi.advanceTimersByTime(400);
+      });
+      expect(p.level()).toBe(1);
+      await act(async () => {
+        p.r.unmount();
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('fits again from level 0 when the stage grows (fullscreen, the projector)', async () => {
+    vi.useFakeTimers();
+    try {
+      const measured = { height: 330 };
+      let unit = 0.5;
+      const p = await probe(measured, () => unit);
+      await act(async () => {
+        p.layout('room', 278);
+        p.layout('content', 330);
+      });
+      expect(p.level()).toBe(1);
+      // The stage grows: level 0 again, and its own layout decides.
+      unit = 1;
+      measured.height = 500;
+      await p.rerender();
+      expect(p.level()).toBe(0);
+      await act(async () => {
+        p.layout('room', 560);
+        p.layout('content', 500);
+        vi.advanceTimersByTime(400);
+      });
+      expect(p.level()).toBe(0);
+      // A stage that shrinks again steps as before, once: the room's layout alone does not step on the old content height.
+      unit = 0.5;
+      measured.height = 330;
+      await p.rerender();
+      await act(async () => {
+        p.layout('room', 278);
+        p.layout('content', 330);
+      });
+      expect(p.level()).toBe(1);
+      await act(async () => {
+        p.r.unmount();
+      });
     } finally {
       vi.useRealTimers();
     }

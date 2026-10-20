@@ -309,23 +309,24 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
 /**
  * The slide's own words for the live region ("g/k" of a letter), after its kind label; '' when none.
  * An activity is named by its preset, a catalogue string the caller passes (`names.activity`).
- * It names the whole slide on arrival, builds not yet revealed included: the live region speaks to
+ * It names the whole slide on arrival, builds not yet revealed included (a reading slide's meanings and
+ * key words too, as a vocab slide names its gloss): the live region speaks to
  * the presenter at the device, who holds the deck, not to the room, which sees only the stage.
  */
 export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string; slot?: string }): string {
   switch (slide.kind) {
     case 'sentence':
-      return `${slide.sentence.ko}, ${slide.sentence.romanization}`;
+      return `${slide.sentence.ko}, ${slide.sentence.romanization}, ${slide.sentence.gloss}`;
     case 'pattern': {
       // Each gap says its name ("gap", `a11y.presenter.slot`), never "underscore".
-      const gap = (text: string): string => text.split(SLOT_MARKER).join(` ${names?.slot ?? SLOT_MARKER} `).replace(/\s+/g, ' ').trim();
-      return `${gap(slide.frame.pieces.join(SLOT_MARKER))}, ${gap(slide.frame.romanization)}`;
+      const gap = (text: string): string => text.split(SLOT_MARKER).join(` ${names?.slot ?? SLOT_MARKER} `).replace(/\s+/g, ' ').replace(/ ([.,!?])/g, '$1').trim();
+      return `${gap(slide.frame.pieces.join(SLOT_MARKER))}, ${gap(slide.frame.romanization)}, ${gap(slide.frame.gloss)}`;
     }
     case 'read-along':
-      return slide.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}`).join(', ');
+      return slide.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}, ${l.gloss}`).join(', ');
     case 'realia':
-      // The sheet's own accessible text (F-CURR-001 §3.14).
-      return slide.sheet.alt;
+      // The sheet's own accessible text (F-CURR-001 §3.14), then each key word as a vocab slide names it.
+      return [slide.sheet.alt, ...slide.keyWords.map((w) => `${w.ko}, ${w.romanization}, ${w.gloss}`)].join(', ');
     case 'title':
       return slide.title;
     case 'letter':

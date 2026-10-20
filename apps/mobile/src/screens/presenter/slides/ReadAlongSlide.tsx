@@ -31,13 +31,13 @@ const MAX_LEVEL = 2;
  */
 export function ReadAlongSlide({ slide, reveal, playing }: { slide: ReadAlongBody; reveal: number; playing?: number | null }): React.ReactElement {
   const { unit, messages } = usePresenterView();
-  const fit = useFitLevel(MAX_LEVEL);
+  const fit = useFitLevel(MAX_LEVEL, unit);
   const view = readAlongView(slide, reveal);
   return (
     <View testID="presenter-read-along" style={{ flex: 1, gap: units(unit, spacing.md) }}>
       <KindLabel text={messages.learner.presenter.slide.readAlong.label} testID="presenter-kind-label" />
       <View onLayout={fit.onRoom} style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>
-        <View onLayout={fit.onContent} role="list" {...{ dataSet: { fit: String(fit.level) } }} style={{ gap: units(unit, spacing.md) }}>
+        <View ref={fit.contentRef} onLayout={fit.onContent} role="list" {...{ dataSet: { fit: String(fit.level) } }} style={{ gap: units(unit, spacing.md) }}>
           {slide.lines.map((line, i) => (
             <Turn key={i} line={line} side={i % 2 === 0 ? 'a' : 'b'} view={view.lines[i]!} lit={playing === i && view.lines[i]!.shown} level={fit.level} />
           ))}

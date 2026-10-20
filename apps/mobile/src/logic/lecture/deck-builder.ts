@@ -240,6 +240,27 @@ const sceneKo = (scene: LectureStoryScene): StoryKo | undefined => scene.line ??
 
 const STORY_LEVEL_ORDER: readonly StoryLevel[] = ['listen', 'read-along', 'read'];
 const QUIZ_MIN_ITEMS = 4;
+/** The longest anchor a reading slide's key names (`readingSlideKey`), so the key fits a saved resume key (256). */
+const READING_ANCHOR_MAX = 48;
+
+/**
+ * A reading slide's key inside its step: the item's type and what it names (the sentence, the
+ * frame, the first line, the realia ref), so a saved resume point stays on its item when a content
+ * update adds or moves another Discover item in the step. `/` would read as a key segment
+ * (resumeIndex), so it becomes `-`; the anchor is cut to `READING_ANCHOR_MAX` so the key stays a
+ * saveable resume key. Two items with one anchor get `#2` (nthKey); an item with no anchor keeps
+ * its place (`<page>-<item>`, 1-based).
+ */
+export function readingSlideKey(item: DiscoverItem, page: number, index: number): string {
+  const text =
+    item.type === 'sentence' ? item.sentence.ko
+    : item.type === 'pattern' ? item.frame.ko
+    : item.type === 'exchange' ? item.lines[0]?.line.ko
+    : item.type === 'realia' ? item.realiaRef
+    : undefined;
+  const anchor = text?.replace(/\//g, '-').trim().slice(0, READING_ANCHOR_MAX);
+  return `${item.type}-${anchor === undefined || anchor === '' ? `${page + 1}-${index + 1}` : anchor}`;
+}
 const REVISIT_MAX_ROUNDS = 4;
 
 /**
@@ -549,7 +570,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const discoverStep = (path: string, discover: Discover, realiaOf: (ref: string) => Realia | undefined): void => {
     discover.pages.forEach((page, p) => {
       page.items.forEach((item, i) => {
-        const key = `${path}/${item.type}-${p + 1}-${i + 1}`;
+        const key = `${path}/${readingSlideKey(item, p, i)}`;
         switch (item.type) {
           case 'jamo':
             letterById(path, item.jamoId);
