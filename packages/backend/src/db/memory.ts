@@ -22,6 +22,7 @@ import {
 } from './feedback-types';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import type { RemoteConfigRow } from './remote-config-types';
+import { rollupCellKey, uniqueRollupKeys, type RollupKey, type RollupRow } from './rollup-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
@@ -113,6 +114,8 @@ export class MemoryDb implements Db {
   /** [SA] migration 0012: the invites, and the membership keys whose row holds `promoted_from = 'teacher'`. */
   private adminInvites = new Map<string, StoredAdminInvite>();
   private promotedFromTeacher = new Set<string>();
+  /** F-CURR-002 row CM-70a: `day` then `rollupCellKey`, as `learning_rollups` keys its rows. */
+  private rollups = new Map<string, Map<string, RollupRow>>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -1179,11 +1182,41 @@ export class MemoryDb implements Db {
   async putRemoteConfig(row: RemoteConfigRow): Promise<void> {
     this.remoteConfigRows.set(row.flag, clone(row));
   }
+  async addRollups(day: string, keys: readonly RollupKey[]): Promise<void> {
+    const unique = uniqueRollupKeys(keys);
+    if (unique.length === 0) return;
+    const cells = this.rollups.get(day) ?? new Map<string, RollupRow>();
+    for (const k of unique) {
+      const cell = rollupCellKey(k);
+      const row = cells.get(cell);
+      cells.set(cell, { day, ...k, events: (row?.events ?? 0) + 1 });
+    }
+    this.rollups.set(day, cells);
+  }
+  async reserveRollupCells(day: string, metric: string, cells: number): Promise<number> {
+    const dayCells = this.rollups.get(day) ?? new Map<string, RollupRow>();
+    const key = { metric, dim: '', bucket: '' };
+    const events = (dayCells.get(rollupCellKey(key))?.events ?? 0) + cells;
+    dayCells.set(rollupCellKey(key), { day, ...key, events });
+    this.rollups.set(day, dayCells);
+    return events;
+  }
+  async rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]> {
+    const rows: RollupRow[] = [];
+    for (const [day, cells] of this.rollups) {
+      if (day < fromDay || day > toDay) continue;
+      for (const row of cells.values()) if (metric === undefined || row.metric === metric) rows.push({ ...row });
+    }
+    // '\n' sorts below every character a code holds, so this is the (day, metric, dim, bucket) order D1 answers in.
+    const order = (r: RollupRow): string => `${r.day}\n${rollupCellKey(r)}`;
+    return rows.sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0)).slice(0, limit);
+  }
 
   async reset(): Promise<void> {
     this.remoteConfigRows.clear();
     for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents, this.adminInvites]) m.clear();
     this.promotedFromTeacher.clear();
+    this.rollups.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }

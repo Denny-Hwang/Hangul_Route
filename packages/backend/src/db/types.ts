@@ -33,6 +33,7 @@ import type { ClassMoveDecider, ClassMoveEndStatus, ExecuteClassMoveInput, Execu
 import type { ClassMoveEndReason } from '@hangul-route/content-schema';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import type { RemoteConfigRow } from './remote-config-types';
+import type { RollupKey, RollupRow } from './rollup-types';
 
 export * from './transfer-types';
 export * from './class-move-types';
@@ -494,6 +495,13 @@ export interface Db {
   remoteConfig(): Promise<RemoteConfigRow[]>;
   /** Upsert one row by flag. Tests and tooling only: the owner edits rows in the D1 console; no route writes them. */
   putRemoteConfig(row: RemoteConfigRow): Promise<void>;
+  // learning rollups (F-CURR-002 section 11.2, row CM-70a; migration 0014). Codes and counts only.
+  /** Adds 1 to each cell of `day` (UTC `YYYY-MM-DD`), in one write; a key named twice still adds 1 once. */
+  addRollups(day: string, keys: readonly RollupKey[]): Promise<void>;
+  /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Only lib/learning-rollups reads it, and it applies the suppression. */
+  rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]>;
+  /** Adds `cells` to the budget counter row (`metric`, dim '', bucket '') of `day` in one write and answers its new total. */
+  reserveRollupCells(day: string, metric: string, cells: number): Promise<number>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

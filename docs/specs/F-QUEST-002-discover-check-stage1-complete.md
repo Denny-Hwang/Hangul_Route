@@ -129,6 +129,7 @@ A `check` step is a `listen-pick` scope with **exactly 2 rounds**, launched thro
 - **Scoring.** Both rounds go through the host as `answer(roundIdx, correct)` and are scored **first-try** exactly like any round (`quest-run-store.ts:55-68`; F-001 §3.2 revised): a wrong tap is amber + Hoya `thinking`, the round stays open, the right tap ends it, and only the first answer counts. They add 2 to `total` and so to the quest's stars (a 12-round quest with one slip is 11/12 = 2 stars and a card; with two slips 10/12 = 2 stars).
 - **Leaving mid-check.** Back to the launcher keeps the keys already scored (`${stepIndex}:${roundIdx}`, `quest-run-store.ts:59`); re-entering re-presents the two rounds and the earlier answers count as retries. No double counting.
 - **Feedback Review.** A quest with a Check step does **not** also show F-RVW-001 §3.3's one-question Feedback Review (the Check is that recall; decision L13). F-RVW-001 §3.3 gets a one-line amendment in PR Q-11.
+  - **Amended 2026-10-21 by F-CURR-002 section 4.5 (owner decisions of 2026-10-21; row CM-0b; built by row CM-15):** the reward step **may offer "Try these again"**, a short review of the misses of the session just played (review kind `feedback`, about 30-60 s, recorded by `review.start` / `review.complete`). It is the default suggestion only when the quest had misses, it is never required, a full replay stays available, and its result is stars only (F-RVW-001 §3.1, 1-star floor) under the anti-shame rules of F-RVW-001 §3.7. It sits after the six steps, on the reward step, so the Check still replaces the one-question Feedback Review **inside** the quest and the quest's own stars do not change.
 - **Given** the Check finishes, **then** `quest.check_completed` fires `{ questId, firstTryCorrect, retries }` and the player advances to `reward`.
 
 ### 3.4 Quest scoring, rewards, duplicates
@@ -517,7 +518,7 @@ Decisions made in this spec:
 | L10 | Pictures are `PictureRef`s that fall back to the gloss; Stage 1 uses card art only | D7, no new art |
 | L11 | New games take a `MinigameHost`; existing games are not refactored here | Smallest change that unblocks vocab / story / placement |
 | L12 | Tap-tap pairing in Pic-Word Match, drag deferred | Accessibility, no gesture dependency |
-| L13 | A Check replaces F-RVW-001 §3.3's Feedback Review for that quest | One recall per quest, not two |
+| L13 | A Check replaces F-RVW-001 §3.3's Feedback Review for that quest. *Amended 2026-10-21 by F-CURR-002 section 4.5 (owner decisions of 2026-10-21, row CM-0b):* the reward step may also offer "Try these again" (review kind `feedback`, the quest's misses, stars only, never required), while the Check still replaces the one-question Feedback Review inside the quest (§3.3) | One recall per quest, not two; misses get one short, optional second look after the quest |
 | L14 | Follow-up game spec ids and order (Sentence Builder, Hidden Heritage, Role Play, My Story) | §4 |
 
 ## 9. Unverified assumptions and open items
