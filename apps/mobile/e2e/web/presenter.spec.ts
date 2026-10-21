@@ -1307,16 +1307,26 @@ test.describe('PR 9 quiz and class tools at 1280 x 720, with a Korean voice', ()
     await shot(page, 'presenter-timer-done-1280x720');
   });
 
-  test('the helper picker is gone (LV-H): P does nothing and the bar has no Helper', async ({ page }) => {
+  test('the helper picker is gone (LV-H): a legacy deck naming 12 helpers opens with no Helper, P does nothing, no picker overlay', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto(link(TOOLS_DECK));
+    // A link from an older console that still asks for a names picker of 12 (AMENDMENTS-LECTURE-V2 section 13, LV-M1).
+    await page.goto(link({ ...TOOLS_DECK, id: 'lecture:e2e093', picker: { mode: 'names', count: 12 } }));
+    await expect(page.getByTestId('presenter-picker-row')).toHaveCount(0);
+    await expect(page.getByText(/Helper/)).toHaveCount(0);
     await startLesson(page);
     const live = await liveText(page);
-    await page.keyboard.press('p');
+    const at = await counter(page);
+    for (const key of ['p', 'P']) await page.keyboard.press(key);
     await expect(page.getByTestId('presenter-picker')).toHaveCount(0);
     expect(await liveText(page)).toBe(live);
+    expect(await counter(page)).toBe(at);
+    // No covering overlay opened in its place.
+    for (const id of ['presenter-blank', 'presenter-pause', 'presenter-grid', 'presenter-help', 'presenter-timer-full', 'presenter-timer-corner']) {
+      await expect(page.getByTestId(id)).toHaveCount(0);
+    }
     await expect(page.getByTestId('presenter-picker-button')).toHaveCount(0);
     await expect(page.getByRole('toolbar').getByText('Helper')).toHaveCount(0);
+    await expect(page.getByText(/Helper/)).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 

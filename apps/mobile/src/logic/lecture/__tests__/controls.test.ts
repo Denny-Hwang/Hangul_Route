@@ -200,6 +200,17 @@ describe('opening and closing overlays', () => {
     expect(run(open, { overlay: 'blank' }).overlay).toBeNull();
   });
 
+  // The helper picker is gone (LV-H, AMENDMENTS-LECTURE-V2 section 13): an { overlay: 'picker' } from an older caller opens nothing.
+  it("{ overlay: 'picker' } leaves the overlay as it was, closed or open, and the slide unchanged", () => {
+    const picker = { overlay: 'picker' } as unknown as PresenterEvent;
+    for (const overlay of [null, 'blank', 'pause', 'grid', 'help', 'exit'] as const) {
+      const before = at(1, 2, { overlay, timerOpen: true, timerMode: 'corner' });
+      const out = reduce(before, picker, DECK);
+      expect(out.state).toEqual(before);
+      expect(out.effect).toBeUndefined();
+    }
+  });
+
   it('a new overlay replaces the open one; { overlay: null } closes', () => {
     expect(run(at(1, 0, { overlay: 'grid' }), { overlay: 'help' }).overlay).toBe('help');
     expect(run(at(1, 0, { overlay: 'grid' }), { overlay: null }).overlay).toBeNull();
