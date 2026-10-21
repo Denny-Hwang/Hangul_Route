@@ -37,7 +37,7 @@ const TABLE: Record<string, Record<UiLocale, string>> = {
   title: { en: 'Lecture mode', es: 'Modo proyección', ko: '강의 모드' },
   body: {
     en: "Show a lesson on a TV or big screen and learn together. Nobody's progress changes.",
-    es: 'Muestra una lección en una TV o una pantalla grande y aprende en familia. El progreso de nadie cambia.',
+    es: 'Muestra una lección en una TV o una pantalla grande y aprende en familia. No cambia el progreso de nadie.',
     ko: 'TV나 큰 화면에 수업을 띄우고 함께 배워요. 누구의 진도도 바뀌지 않아요.',
   },
   'open.cta': { en: 'Open lecture mode', es: 'Abrir modo proyección', ko: '강의 모드 열기' },

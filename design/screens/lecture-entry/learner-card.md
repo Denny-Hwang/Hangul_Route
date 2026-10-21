@@ -7,8 +7,11 @@ Mock: `mock/learner-card.html` (two learners), `mock/learner-card-states.html` (
 
 In `ParentDashboardScreen`, after `GrownUpHomeCard`, the same `rn-card` look: h2 **Lecture mode** (`caregiver.lecture.title`, `size.prompt`), the line (`caregiver.lecture.body`, `text.secondary`), then one row per learner on this device, **Next lesson for {name}** (`caregiver.lecture.next`) with the `arrow-right` glyph (a full-width row button, at least `touchTarget.min`, `border.subtle` rules between rows), then **Open lecture mode** (`caregiver.lecture.open.cta`, the ghost button, end-aligned like the card above).
 
-- A row opens `/present#d=<deck>` in the same tab: the deck from that learner's `routeNext` (N3), quest ids only; the name stays on this screen and never reaches the deck, the link or telemetry.
-- **Open lecture mode** opens `/present` (the presets home), same tab, nothing handed over.
+- A row opens `/present#d=<deck>` in a new tab with no opener (section 7 item 3): the deck from that learner's `routeNext` (N3), quest ids only; the name stays on this screen and never reaches the deck, the link or telemetry.
+- **Open lecture mode** opens `/present` (the presets home) in a new tab with no opener, nothing handed over.
+- Every button's hint says it opens a new tab (`caregiver.lecture.opensTab`). When the browser gives no tab (a pop-up blocker, an in-app browser), a polite status line under the card says so (`caregiver.lecture.blocked`, `size.sm`, `text.secondary`); each blocked press announces it again, and a press that goes to the PIN screen clears it.
+- A row draws the `border.focus` ring (`borderWidth.thick` outline) on keyboard focus.
+- A link that cannot be built opens `/present` instead, never a dead button.
 - After the grown-up session lapses, a press asks for the PIN again (`gateOpensDirectlyNow`), as See report does.
 - No learner on the device: only the line and Open lecture mode.
 - Drawn only on the web build and only while `flags.lectureModeEnabled` is on (launch default off until LV-7); native builds draw nothing.
@@ -19,4 +22,4 @@ In `ParentDashboardScreen`, after `GrownUpHomeCard`, the same `rn-card` look: h2
 
 ## Strings
 
-Section 12.4 only: `caregiver.lecture.title`, `body`, `open.cta`, `next`. Korean `next` is "다음 수업: {name}" (no particle on the name). No gap found.
+Section 12.4: `caregiver.lecture.title`, `body`, `open.cta`, `next`, and `opensTab` and `blocked` (added in LV-6, section 12.4 as amended). Korean `next` is "다음 수업: {name}" (no particle on the name). No other gap found.

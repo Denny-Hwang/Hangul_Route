@@ -802,7 +802,7 @@ export const caregiver = {
   /** La tarjeta Modo proyección en la zona de adultos de la app (AMENDMENTS-LECTURE-V2 sección 3 E5, sección 12.4). */
   lecture: {
     title: 'Modo proyección',
-    body: 'Muestra una lección en una TV o una pantalla grande y aprende en familia. El progreso de nadie cambia.',
+    body: 'Muestra una lección en una TV o una pantalla grande y aprende en familia. No cambia el progreso de nadie.',
     open: { cta: 'Abrir modo proyección' },
     next: (name: string) => `Siguiente lección para ${name}`,
     opensTab: 'Se abre en una pestaña nueva',
