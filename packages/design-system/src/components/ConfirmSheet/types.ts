@@ -17,6 +17,11 @@ export interface ConfirmSheetProps {
    */
   detail?: string;
   /**
+   * [OA] A code shown on its own line under the message, part of the description (section 10.4: the
+   * learner's Rescue Code on the saved Remove step, so it is seen before the only copy on the device goes).
+   */
+  code?: string;
+  /**
    * [OA] `danger` fills the confirm with `feedback.danger` (OA-0b addendum): only for a grown-up's destructive
    * confirmation (the Remove anyway step), never on a learner screen or for a learner's miss. Default `primary`.
    */

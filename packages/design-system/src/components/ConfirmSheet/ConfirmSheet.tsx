@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useId, useRef } from 'react';
-import { Modal, Platform, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 import { Body, Heading } from '../Heading';
@@ -62,6 +62,7 @@ export function ConfirmSheet({
   onConfirm,
   testID = 'confirm-sheet',
   detail,
+  code,
   confirmTone = 'primary',
   confirmFirst = false,
   quietLabel,
@@ -72,7 +73,8 @@ export function ConfirmSheet({
   const titleId = `${testID}-title-${id}`;
   const messageId = `${testID}-message-${id}`;
   const detailId = `${testID}-detail-${id}`;
-  const describedBy = [message ? messageId : null, detail ? detailId : null].filter((d): d is string => d !== null).join(' ');
+  const codeId = `${testID}-code-${id}`;
+  const describedBy = [message ? messageId : null, code ? codeId : null, detail ? detailId : null].filter((d): d is string => d !== null).join(' ');
   const dialog = useLayoutClass().width !== 'compact';
   const scale = useTypeScale();
   const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
@@ -103,6 +105,22 @@ export function ConfirmSheet({
   useEffect(() => {
     if (!visible || !webDocument()) return;
     cancelRef.current?.focus?.();
+  }, [visible, busy, title, confirmFirst]);
+
+  // [OA] On iOS and Android a step change while open is announced (VoiceOver, TalkBack): the new question and line.
+  const opened = useRef(false);
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    if (!visible) {
+      opened.current = false;
+      return;
+    }
+    if (!opened.current) {
+      opened.current = true;
+      return;
+    }
+    AccessibilityInfo?.announceForAccessibility?.([title, message].filter(Boolean).join(' '));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- announced when the step changes, not on every message edit
   }, [visible, busy, title, confirmFirst]);
 
   const action = (kind: 'cancel' | 'confirm'): React.ReactElement => (
@@ -154,6 +172,13 @@ export function ConfirmSheet({
           {message ? (
             <View nativeID={messageId} {...{ id: messageId }} {...(busy ? { 'aria-busy': true } : {})}>
               <Body tone="secondary">{message}</Body>
+            </View>
+          ) : null}
+          {code ? (
+            <View nativeID={codeId} {...{ id: codeId }}>
+              <Body weight="semibold" testID={`${testID}-code`}>
+                {code}
+              </Body>
             </View>
           ) : null}
           {detail ? (

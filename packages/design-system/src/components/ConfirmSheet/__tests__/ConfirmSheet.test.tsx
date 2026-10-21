@@ -15,7 +15,8 @@ const layout = vi.hoisted(() => ({ width: 'compact' as 'compact' | 'regular' }))
 const effects = vi.hoisted(() => [] as (() => void | (() => void))[]);
 const refs = vi.hoisted(() => ({ store: [] as { current: unknown }[], at: 0 }));
 const safeArea = vi.hoisted(() => ({ insets: null as { top: number; right: number; bottom: number; left: number } | null }));
-vi.mock('react-native', () => ({ Modal: 'Modal', Platform: platform, Pressable: 'Pressable', Text: 'Text', View: 'View' }));
+const announce = vi.hoisted(() => vi.fn());
+vi.mock('react-native', () => ({ AccessibilityInfo: { announceForAccessibility: announce }, Modal: 'Modal', Platform: platform, Pressable: 'Pressable', Text: 'Text', View: 'View' }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaInsetsContext: { name: 'insets' } }));
 vi.mock('../../Heading', () => ({ Body: 'Body', Heading: 'Heading' }));
 vi.mock('../../Layout', () => ({ useLayoutClass: () => ({ width: layout.width }) }));
@@ -282,5 +283,30 @@ describe('[OA] ConfirmSheet for Remove from this device (OA-0b addendum; AMENDME
     platform.OS = 'web';
     vi.unstubAllGlobals();
   });
-});
 
+  it('a code line (the Rescue Code on the saved step) sits under the message, before the detail, and is described too', () => {
+    const tree = render(props({ title: 'Remove Jun?', message: 'Their progress is saved.', code: 'TIGER-MOON 1234', detail: 'Their place stays.' }));
+    expect(textOf(byTestId(tree, 'confirm-sheet-code')!)).toBe('TIGER-MOON 1234');
+    const sheet = byTestId(tree, 'confirm-sheet')!;
+    const ids = String(sheet.props['aria-describedby']).split(' ');
+    expect(ids.map((d) => textOf(tree.find((e) => e.props.nativeID === d)!))).toEqual(['Their progress is saved.', 'TIGER-MOON 1234', 'Their place stays.']);
+    expect(byTestId(render(props()), 'confirm-sheet-code')).toBeUndefined();
+  });
+
+  it('on iOS and Android a step change while open is announced; the opening and the web announce nothing', () => {
+    announce.mockClear();
+    platform.OS = 'android';
+    render(props({ title: 'Remove Jun?', message: 'Only on this device.' }));
+    const step = effects[2]!;
+    step();
+    expect(announce).not.toHaveBeenCalled();
+    step();
+    expect(announce).toHaveBeenCalledWith('Remove Jun? Only on this device.');
+    platform.OS = 'web';
+    announce.mockClear();
+    render(props());
+    effects[2]!();
+    effects[2]!();
+    expect(announce).not.toHaveBeenCalled();
+  });
+});
