@@ -1,3 +1,4 @@
+import { closeOnChooser } from '../logic/profiles/session';
 import { endGrownUpTab } from '../platform/grown-up-tab';
 import { useUiStore } from './ui-store';
 
@@ -12,4 +13,15 @@ import { useUiStore } from './ui-store';
 export function closeGrownUpSession(): void {
   useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
   endGrownUpTab();
+}
+
+/**
+ * [OA] Section 6.3, OA-D5, CS-2 (row OA-4a): arriving at "Who is using this?" closes the grown-up session whatever
+ * it was (`closeOnChooser`), clears this tab's unlock and console session and posts the `hr-grownup` lock to the other
+ * tabs. It writes nothing else. A grown-up row picked right after asks the PIN again.
+ */
+export function arriveAtChooser(): void {
+  const arrival = closeOnChooser(useUiStore.getState());
+  useUiStore.setState(arrival.times);
+  if (arrival.clearTab || arrival.postLock) endGrownUpTab();
 }

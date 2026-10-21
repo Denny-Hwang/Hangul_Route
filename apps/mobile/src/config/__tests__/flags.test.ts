@@ -490,4 +490,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS');
   });
+
+  it('[OA] whoChooserEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-4a) is OFF when the row lands; the switch values turn it on', async () => {
+    delete process.env.EXPO_PUBLIC_WHO_CHOOSER;
+    let mod = await reload();
+    expect(mod.flags.whoChooserEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.whoChooserEnabled).toBe(false);
+    for (const on of ['true', '1', 'on', ' YES ']) {
+      process.env.EXPO_PUBLIC_WHO_CHOOSER = on;
+      mod = await reload();
+      expect(mod.flags.whoChooserEnabled, JSON.stringify(on)).toBe(true);
+    }
+    process.env.EXPO_PUBLIC_WHO_CHOOSER = 'maybe';
+    mod = await reload();
+    expect(mod.flags.whoChooserEnabled).toBe(false);
+    delete process.env.EXPO_PUBLIC_WHO_CHOOSER;
+  }, RELOADS_MS);
+
+  it('[OA] whoChooserEnabled is read by its literal name', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_WHO_CHOOSER');
+  });
 });

@@ -54,7 +54,7 @@ function nav() {
   return { goBack: vi.fn(), replace: vi.fn(), navigate: vi.fn(), addListener: vi.fn(() => () => undefined), setOptions: vi.fn() };
 }
 
-type Next = 'ParentDashboard' | 'AddProfile' | 'Paywall' | 'EditProfile';
+type Next = 'ParentDashboard' | 'AddProfile' | 'Paywall' | 'EditProfile' | 'CancelReset';
 
 async function show(next: Next, navigation = nav()) {
   const route = { key: 'pin', name: 'PinEntry' as const, params: { next } };
@@ -168,5 +168,50 @@ describe('PinEntry during a pause', () => {
     const opened = tracked.find((e) => e.name === 'parent.gate.opened');
     expect(opened?.payload).toEqual({ dest: 'area', via: 'pin', marker: 'pin' });
     expect(opened && 'profileId' in opened).toBe(false);
+  });
+});
+
+// ---- [OA] row OA-4a: Cancel the wait (OA-D21, CS-4, CS-21) ----
+
+describe('PinEntry CancelReset (the chooser\'s Cancel the wait)', () => {
+  const who = getMessages('en').learner.who;
+
+  it('verifies only and offers no Forgot PIN? (its header title is Cancel the wait)', async () => {
+    useAccountStore.setState({ pinResetRequestedAt: new Date(Date.now() - 60_000).toISOString() });
+    const { r } = await show('CancelReset');
+    expect(who.resetCancel).toBe('Cancel the wait');
+    expect(buttonsNamed(r.root, m.entry.forgot.cta)).toHaveLength(0);
+    expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(1);
+  });
+
+  it('a correct PIN stops the wait, opens nothing and returns to the chooser', async () => {
+    useAccountStore.setState({ pinResetRequestedAt: new Date(Date.now() - 60_000).toISOString() });
+    const { r, navigation } = await show('CancelReset');
+    await typePin(r.root, '1234');
+    expect(useAccountStore.getState().pinResetRequestedAt).toBeNull();
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(navigation.replace).not.toHaveBeenCalled();
+    // No grown-up session and no fresh PIN (CS-4).
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    expect(tracked.find((e) => e.name === 'pin.reset_requested')?.payload).toEqual({ method: 'wait_cancelled' });
+    expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toMatchObject({ dest: 'cancel_reset', via: 'pin' });
+  });
+
+  it('a wrong PIN leaves the wait running', async () => {
+    const requested = new Date(Date.now() - 60_000).toISOString();
+    useAccountStore.setState({ pinResetRequestedAt: requested });
+    const { r, navigation } = await show('CancelReset');
+    await typePin(r.root, '9999');
+    expect(useAccountStore.getState().pinResetRequestedAt).toBe(requested);
+    expect(navigation.goBack).not.toHaveBeenCalled();
+    expect(tracked.find((e) => e.name === 'pin.reset_requested')).toBeUndefined();
+  });
+
+  it('never creates a PIN, even with none stored (CS-4)', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const { r } = await show('CancelReset');
+    expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(1);
+    expect(screenTexts(r.root)).not.toContain(getMessages('en').caregiver.audience.family.pinCreateTitle);
   });
 });

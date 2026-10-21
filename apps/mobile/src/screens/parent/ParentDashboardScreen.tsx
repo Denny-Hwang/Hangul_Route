@@ -105,6 +105,20 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
         <Caption tone="muted">{m.readOnly}</Caption>
       </View>
 
+      {flags.whoChooserEnabled ? (
+        <>
+          {/* [OA] Switch user (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): hands the device back through "Who is using this?", which ends the session. */}
+          <Spacer size="sm" />
+          <Button
+            label={messages.learner.who.switchUser}
+            tone="ghost"
+            size="md"
+            fullWidth
+            onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })}
+            testID="dashboard-switch-user"
+          />
+        </>
+      ) : null}
       <Spacer size="lg" />
       <ResetByWaitNotice onChange={() => navigation.navigate('PinEntry', { next: 'ParentDashboard', mode: 'setup' })} />
       {grownUpHome ? (

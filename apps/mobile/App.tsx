@@ -18,6 +18,8 @@ import { OopsScreen } from './src/screens/system/OopsScreen';
 import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { watchGrownUpAreaExit } from './src/navigation/grown-up-area-exit';
+import { followProfileChanges } from './src/store/profile-store';
+import { bindChooserResume } from './src/store/who-chooser';
 import { bindGrownUpBackgroundRule } from './src/screens/parent/use-gate-lapse';
 import { subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
@@ -58,9 +60,12 @@ export default function App(): React.ReactElement {
     const stopHistory = installHistoryBridge(navigation);
     // [OA] OA-D5b (2): leaving the Grown-up area for a learner screen closes the grown-up session (always on).
     const stopAreaExit = watchGrownUpAreaExit(navigation);
+    // [OA] Row OA-4a: back after 30 minutes on a shared device, the chooser opens over the screen (flag on only).
+    const stopResume = bindChooserResume(navigation);
     stopBridge.current = () => {
       stopHistory();
       stopAreaExit();
+      stopResume();
     };
   }, []);
   useEffect(
@@ -86,6 +91,8 @@ export default function App(): React.ReactElement {
     const unfollow = followDeviceSettings();
     // [OA] OA-D16: 5 minutes in the background end the grown-up session (always on).
     const unbindBackground = bindGrownUpBackgroundRule();
+    // [OA] OA-D19: a profile list another tab changed is read again here (always on).
+    const unfollowProfiles = followProfileChanges();
     void countVisit();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
@@ -120,6 +127,7 @@ export default function App(): React.ReactElement {
       unbindGate();
       unfollow();
       unbindBackground();
+      unfollowProfiles();
       off();
       offInbox();
       foreground.remove();

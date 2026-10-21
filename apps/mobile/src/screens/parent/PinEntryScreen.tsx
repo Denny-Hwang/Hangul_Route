@@ -18,8 +18,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { afterGateHandoff } from '../../logic/browse/gate-entry';
-import { pinCreated, pinResetCompleted } from '../../logic/onboarding/onboarding-events';
+import { pinCreated, pinResetCompleted, pinResetRequested } from '../../logic/onboarding/onboarding-events';
 import {
+  forCancelReset,
   forGrownUpArea as opensGrownUpArea,
   grownUpAreaNoPin,
   initialPinMode,
@@ -73,6 +74,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * `design/screens/profiles/pin-entry-v2.md` boards 2 and 3): longer pauses (30 s, 1 min, 5 min, 15 min, 60 min),
  * minutes from a minute on, the Forgot PIN? help line from the 3rd pause on the Grown-up area only, a polite live
  * region updated once a minute, one attempt count shared by every tab, `pin.paused` and `parent.gate.opened`.
+ *
+ * [OA] Destination `CancelReset` (row OA-4a, OA-D21; mock `design/screens/profiles/pin-entry-v2.md` D8): the chooser's
+ * **Cancel the wait**, titled with those words. Verify only, no Forgot PIN?: a correct PIN clears the pending 24-hour
+ * wait, sends `pin.reset_requested { method: 'wait_cancelled' }` and returns to the chooser. It opens no grown-up
+ * session and counts as no fresh PIN (CS-4).
  */
 
 const DOT_SIZE = 20;
@@ -105,6 +111,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const markPinVerified = useUiStore((s) => s.markPinVerified);
   const locale = useLocale();
   const forGrownUpArea = opensGrownUpArea(route.params);
+  const cancelReset = forCancelReset(route.params);
   const noPin = grownUpAreaNoPin(route.params, storedHash);
 
   const [mode, setMode] = useState<PinMode>(() => initialPinMode(route.params, storedHash));
@@ -288,6 +295,14 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const result = await verifyPinAttempt(entry, { hasher: pinHasher, schedule: flags.pinPauseStepsEnabled ? 'steps' : 'flat' });
       setEntry('');
       if (result.paused) trackPinPaused(result.paused.step);
+      if (result.ok && cancelReset) {
+        // [OA] OA-D21: the PIN stops the wait and opens nothing (no gate session, no fresh PIN).
+        trackGateOpened(route.params.next, 'pin');
+        clearPinResetRequest();
+        void track(pinResetRequested('wait_cancelled'));
+        leave();
+        return;
+      }
       if (result.ok) {
         trackGateOpened(route.params.next, 'pin');
         // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
@@ -310,8 +325,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     }
   };
 
-  const title =
-    mode === 'verify' ? copy.pinVerifyTitle : mode === 'setup-1' ? copy.pinCreateTitle : m.entry.createAgain;
+  const title = cancelReset
+    ? messages.learner.who.resetCancel
+    : mode === 'verify'
+      ? copy.pinVerifyTitle
+      : mode === 'setup-1'
+        ? copy.pinCreateTitle
+        : m.entry.createAgain;
   const subtitle =
     mode === 'verify'
       ? m.entry.verifySubtitle

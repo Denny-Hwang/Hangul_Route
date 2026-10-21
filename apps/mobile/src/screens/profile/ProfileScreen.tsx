@@ -36,6 +36,7 @@ import { installEnv } from '../../platform/pwa';
 import { useAudioStore } from '../../store/audio-store';
 import { useTierStore } from '../../store/tier-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { learnerProfiles, switchOffered } from '../../store/who-chooser';
 import { useProgressStore } from '../../store/progress-store';
 import { useLocaleStore } from '../../store/locale-store';
 import { usePwaStore } from '../../store/pwa-store';
@@ -186,6 +187,27 @@ export function ProfileScreen(): React.ReactElement {
           );
         })}
       </View>
+
+      {switchOffered(learnerProfiles(profiles).length) ? (
+        <>
+          {/* [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): the chooser; the tiles above stay a second way to switch. */}
+          <Spacer size="lg" />
+          <Card padding="md">
+            <Pressable
+              testID="profile-who-row"
+              onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })}
+              accessibilityRole="button"
+              accessibilityLabel={m.learner.who.profileRow}
+              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+            >
+              <Body weight="semibold" style={{ flex: 1 }}>
+                {m.learner.who.profileRow}
+              </Body>
+              <Icon name="arrow-right" size={24} color={colors.text.muted} />
+            </Pressable>
+          </Card>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <Button
