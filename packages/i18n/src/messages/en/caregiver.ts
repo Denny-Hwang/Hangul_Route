@@ -1081,5 +1081,27 @@ export const caregiver = {
   people: {
     lock: 'Lock with the grown-up PIN',
     lockHint: "Good for a grown-up's own profile, so nobody else plays on it.",
+    /** [OA] Row OA-7a: the Grown-up area card listing every learner on the device, each row opening the person page. */
+    title: 'People on this device',
+    /** The person page's button; it asks a fresh PIN, then the ConfirmSheet below. Local only: no server call. */
+    remove: 'Remove from this device',
+    /** The ConfirmSheet's title, with the learner's name. */
+    removeAsk: (name: string) => `Remove ${name} from this device?`,
+    /** Saved: registered and nothing waiting to be pushed. */
+    removeSaved: 'Their progress is saved. Their Rescue Code brings it back on any device.',
+    /** Not saved after the sync attempt (offline, or the sync failed). */
+    removeUnsaved: 'Their progress is only on this device. Save it first to keep it.',
+    /** The unsaved sheet's main action: opens Save my progress for that learner. */
+    saveFirst: 'Save progress first',
+    /** The unsaved sheet's quiet third action; it opens the second step. */
+    removeAnyway: 'Remove anyway',
+    /** The second step's title (its Remove is the one danger-tone button, for grown-ups only). */
+    removeAnywayAsk: 'Remove anyway? Their cards and stars on this device will be gone.',
+    /** The second step's safe choice, first and focused. */
+    keep: 'Keep',
+    /** While the app tries to sync the learner before the sheet decides. */
+    checking: 'Checking that their progress is saved…',
+    /** On the saved and unsaved sheets when the learner has memberships: nothing changes on the server. */
+    spacesStay: 'Their place in a family or class stays. A grown-up can change it in the account pages.',
   },
 } as const;

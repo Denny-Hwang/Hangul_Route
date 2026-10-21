@@ -29,4 +29,18 @@ describe('sync scheduler (F-SYNC-002 §3.2)', () => {
     expect(run).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
   });
+
+  it('[OA] cancel drops one learner\'s queued run (removed from this device, OA-7a); an unknown id is a no-op', () => {
+    vi.useFakeTimers();
+    const run = vi.fn();
+    const s = createSyncScheduler(run, { setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (h) => clearTimeout(h as ReturnType<typeof setTimeout>) }, 10);
+    s.request('a');
+    s.request('b');
+    s.cancel('a');
+    s.cancel('nobody');
+    expect(s.pendingCount()).toBe(1);
+    vi.advanceTimersByTime(20);
+    expect(run.mock.calls.map((c) => c[0])).toEqual(['b']);
+    vi.useRealTimers();
+  });
 });

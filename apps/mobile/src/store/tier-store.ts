@@ -5,8 +5,9 @@ import { bundleOs, flags, gatingActive } from '../config/flags';
 import { questOpenPredicate } from '../logic/content-access';
 import { entitlementTier } from '../logic/entitlement';
 import { legacyCovers } from '../logic/legacy-subscription-covers';
-import { readJson, writeJson } from '../platform/storage';
+import { readJson, removeKey, writeJson } from '../platform/storage';
 import { useAccountStore } from './account-store';
+import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
@@ -38,7 +39,15 @@ interface Actions {
   noteSpaces: (learnerId: string, count: number) => void;
 }
 
-const key = (learnerId: string): string => `tier:${learnerId}`;
+/** The learner's tier cache (`hr:tier:<id>`); exported for the removal sweep (row OA-7a). */
+export const TIER_KEY = (learnerId: string): string => `tier:${learnerId}`;
+const key = TIER_KEY;
+
+function dropKey<T>(record: Record<string, T>, id: string): Record<string, T> {
+  const { [id]: _gone, ...rest } = record;
+  return rest;
+}
+
 
 export const useTierStore = create<State & Actions>((set, get) => ({
   byLearner: {},
@@ -68,6 +77,12 @@ export const useTierStore = create<State & Actions>((set, get) => ({
     set((s) => ({ spaceMembers: { ...s.spaceMembers, [learnerId]: member } }));
   },
 }));
+
+// [OA] Row OA-7a (section 10.4, CS-20): a learner removed from this device leaves no tier cache behind.
+onProfileRemoved((learnerId) => {
+  useTierStore.setState((s) => ({ byLearner: dropKey(s.byLearner, learnerId), spaceMembers: dropKey(s.spaceMembers, learnerId) }));
+  removeKey(key(learnerId)).catch(() => undefined);
+});
 
 /** Pure: is a cached tier still good at `now`? */
 export function cachedTierIsPremium(cached: LearnerTier | null | undefined, now: Date): boolean {

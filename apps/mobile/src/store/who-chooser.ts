@@ -8,7 +8,7 @@ import { subscribeAppVisibility } from '../platform/app-visibility';
 import { takeJoinHandoff } from '../platform/join-handoff';
 import { useAccountStore } from './account-store';
 import { hydrateProfileLocks, lockedIds } from './profile-locks';
-import { useProfileStore } from './profile-store';
+import { onActiveRemovedElsewhere, useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
 /**
@@ -217,6 +217,20 @@ export function bindChooserResume(nav: ChooserNavigation, deps: ResumeDeps = res
     if (!areaLeavePin(route) || routes.length < 2) return;
     const kept = [...routes.slice(0, -1), { name: 'WhoIsUsing', params: { trigger } }];
     nav.dispatch({ type: 'RESET', payload: { index: kept.length - 1, routes: kept } });
+  });
+}
+
+/**
+ * [OA] Row OA-7a (section 10.4, CS-16, CS-19): another tab removed the learner active in this tab. The stack is
+ * replaced by the chooser alone (`trigger: 'manual'`; no learner's screen under it, so nobody keeps playing as the
+ * learner who took over, a locked one included), or by Welcome when no learner is left. Inert while
+ * `flags.whoChooserEnabled` is off. Bound once for the learner app (App.tsx). Returns the unsubscribe.
+ */
+export function bindRemovedElsewhere(nav: Pick<ChooserNavigation, 'isReady' | 'dispatch'>, flag: () => boolean = () => flags.whoChooserEnabled): () => void {
+  return onActiveRemovedElsewhere(({ learnersLeft }) => {
+    if (!flag() || !nav.isReady()) return;
+    const route: ChooserStackRoute = learnersLeft > 0 ? { name: 'WhoIsUsing', params: { trigger: 'manual' } } : { name: 'Onboarding', params: { screen: 'Welcome' } };
+    nav.dispatch({ type: 'RESET', payload: { index: 0, routes: [route] } });
   });
 }
 

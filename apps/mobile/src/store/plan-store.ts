@@ -4,8 +4,9 @@ import { episodesAll, questsAll, stages } from '../content';
 import { isStageEntitled } from '../logic/entitlement';
 import { dayKey } from '../logic/homework/mission-builder';
 import { deriveAssignments, planIdOf, sourcesOf, type DeriveResult } from '../logic/homework/plan-derivation';
-import { readJson, writeJson } from '../platform/storage';
+import { readJson, removeKey, writeJson } from '../platform/storage';
 import { accessTier, questOpenFor } from './tier-store';
+import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
@@ -41,7 +42,15 @@ interface Actions {
   reconcile: (learnerId: string, snapshot: ProgressSnapshot) => ProgressSnapshot;
 }
 
-const key = (learnerId: string): string => `plans:${learnerId}`;
+/** The learner's cached plans (`hr:plans:<id>`); exported for the removal sweep (row OA-7a). */
+export const PLANS_KEY = (learnerId: string): string => `plans:${learnerId}`;
+const key = PLANS_KEY;
+
+function dropKey<T>(record: Record<string, T>, id: string): Record<string, T> {
+  const { [id]: _gone, ...rest } = record;
+  return rest;
+}
+
 
 /** The stages a plan may derive from, by the access tier, so stage and quest access agree (F-ENT-003 section 3.4). */
 export function unlockedStagesFor(now: Date, learnerId: string): string[] {
@@ -123,4 +132,10 @@ export const usePlanStore = create<State & Actions>((set, get) => {
       return result.changed ? { ...snapshot, homework: result.homework } : snapshot;
     },
   };
+});
+
+// [OA] Row OA-7a (section 10.4, CS-20): a learner removed from this device leaves no cached plans behind.
+onProfileRemoved((learnerId) => {
+  usePlanStore.setState((s) => ({ byLearner: dropKey(s.byLearner, learnerId), notReady: dropKey(s.notReady, learnerId) }));
+  removeKey(key(learnerId)).catch(() => undefined);
 });

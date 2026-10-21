@@ -818,5 +818,16 @@ export const caregiver = {
   people: {
     lock: 'Bloquear con el PIN de adultos',
     lockHint: 'Útil para el perfil propio de un adulto, para que nadie más juegue en él.',
+    title: 'Personas en este dispositivo',
+    remove: 'Quitar de este dispositivo',
+    removeAsk: (name: string) => `¿Quitar a ${name} de este dispositivo?`,
+    removeSaved: 'Su progreso está guardado. Su código de rescate lo trae de vuelta en cualquier dispositivo.',
+    removeUnsaved: 'Su progreso solo está en este dispositivo. Guárdalo primero para conservarlo.',
+    saveFirst: 'Guardar el progreso primero',
+    removeAnyway: 'Quitar de todos modos',
+    removeAnywayAsk: '¿Quitar de todos modos? Sus tarjetas y estrellas de este dispositivo se perderán.',
+    keep: 'Mantener',
+    checking: 'Comprobando que su progreso esté guardado…',
+    spacesStay: 'Su lugar en una familia o clase se mantiene. Un adulto puede cambiarlo en las páginas de la cuenta.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

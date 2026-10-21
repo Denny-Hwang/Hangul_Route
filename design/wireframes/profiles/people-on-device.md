@@ -81,9 +81,9 @@ Panel C2 — Remove anyway, second step
 +--------------------------------+
 ```
 
-"Saved" means registered and nothing waiting to be pushed; before showing the sheet the app tries to sync ("Checking that their progress is saved...").
+"Saved" means registered and nothing waiting to be pushed; before showing the sheet the app tries to sync ("Checking that their progress is saved…").
 
-Saved variant: "Their progress is saved. Their Rescue Code brings it back on any device." and, when the learner is in a family or class, "Their place in a family or class stays. A grown-up can change it in the account pages." Buttons: [[ Remove ]] [ Cancel ].
+Saved variant: "Their progress is saved. Their Rescue Code brings it back on any device.", then the learner's Rescue Code itself on its own line (row OA-7a review: Remove deletes the only copy on this device, and the sync check may just have issued it), and, when the learner is in a family or class, "Their place in a family or class stays. A grown-up can change it in the account pages." Buttons: [[ Remove ]] [ Cancel ]. A learner saved on the server with no Rescue Code on this device gets the unsaved variant (two steps).
 
 Panel D — Join with a family code, device with 3 learner profiles: Who is joining?
 

@@ -28,6 +28,7 @@ import { PROFILES_LOCK, withTabLock } from '../platform/tab-lock';
 import { closeGrownUpSession } from './grown-up-session';
 import { notifyProfileEdited } from './profile-edits';
 import { dropProfileLock, hydrateProfileLocks, lockedIds } from './profile-locks';
+import { sweepProfileKeys } from './profile-key-sweep';
 import { notifyProfileRemoved } from './profile-removal';
 
 /**
@@ -194,7 +195,7 @@ function flushStep(): Promise<void> {
     // [OA] Row OA-5, section 13.2: a removed learner leaves the locks in the same write sequence.
     for (const c of changes) if (c.removedId !== undefined) await dropProfileLock(c.removedId);
     remember(merged);
-    followMerged(withPending(merged));
+    followMerged(withPending(merged), tombstones.ids);
     postProfilesChanged();
   });
 }
@@ -216,23 +217,54 @@ function unlockedFallback(profiles: readonly Profile[], fallback: string | null)
   return profiles.find((p) => !locked.has(p.id))?.id ?? fallback;
 }
 
+/** [OA] Row OA-7a: told when another tab removed the learner active here (`bindRemovedElsewhere`, App.tsx). */
+type ActiveRemovedListener = (input: { learnersLeft: number }) => void;
+const activeRemovedListeners = new Set<ActiveRemovedListener>();
+
+/**
+ * [OA] Row OA-7a (CS-16, CS-19): another tab removed the learner active in this tab. The listener (bound once by the
+ * learner app) opens the chooser, or Welcome when no learner is left, so nobody keeps playing as the learner who took
+ * over. Returns the unsubscribe.
+ */
+export function onActiveRemovedElsewhere(listener: ActiveRemovedListener): () => void {
+  activeRemovedListeners.add(listener);
+  return () => {
+    activeRemovedListeners.delete(listener);
+  };
+}
+
 /**
  * The list in memory after a merge or a refresh. The active profile stays unless it is gone; when another tab removed
  * it, the change of learner takes the same path as a pick (OA-D5b (1), CS-15): the session clock restarts, the
  * active key is written and the grown-up session ends. [OA] Row OA-5: the learner who takes over is never a locked one
- * while an unlocked one is left.
+ * while an unlocked one is left. [OA] Row OA-7a (CS-20): a learner this tab held that another tab removed (its id in
+ * the tombstones `removed`) is announced here too (`notifyProfileRemoved`), so this tab's stores drop it and write
+ * nothing back for it; when it was the active one, the chooser opens (`onActiveRemovedElsewhere`).
  */
-function followMerged(merged: Profile[]): void {
+function followMerged(merged: Profile[], removed: readonly string[] = []): void {
   const { profiles, activeId } = useProfileStore.getState();
+  const tombstoned = new Set(removed);
+  const gone = profiles.filter((p) => tombstoned.has(p.id) && !merged.some((m) => m.id === p.id)).map((p) => p.id);
   const keep = activeId !== null && merged.some((p) => p.id === activeId);
   const nextActive = keep ? activeId : unlockedFallback(merged, merged[0]?.id ?? null);
   if (nextActive === activeId) {
     if (!sameProfileList(profiles, merged)) useProfileStore.setState({ profiles: merged });
-    return;
+  } else {
+    useProfileStore.setState({ profiles: merged, activeId: nextActive, activeSince: Date.now() });
+    persistActive(nextActive);
+    if (closesSession(activeId, nextActive)) closeGrownUpSession('switch');
   }
-  useProfileStore.setState({ profiles: merged, activeId: nextActive, activeSince: Date.now() });
-  persistActive(nextActive);
-  if (closesSession(activeId, nextActive)) closeGrownUpSession('switch');
+  for (const id of gone) notifyProfileRemoved(id);
+  if (activeId !== null && gone.includes(activeId)) {
+    const learnersLeft = merged.filter((p) => p.role === 'learner').length;
+    for (const listener of activeRemovedListeners) {
+      try {
+        listener({ learnersLeft });
+      } catch {
+        // The next listener still hears it.
+      }
+    }
+  }
 }
 
 function persist(set: ProfileSet, before: ProfileSet, change?: ListChange, ids?: ListIds): void {
@@ -288,6 +320,9 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     const removed = new Set(parseTombstones(await readJson<unknown>(PROFILE_TOMBSTONES_KEY)).ids);
     const profiles = removed.size === 0 ? stored : stored.filter((p) => !removed.has(p.id));
     remember(profiles);
+    // [OA] Row OA-7a (CS-20): what a removed learner left behind (a delete that failed, a key an older bundle wrote
+    // back) goes at launch. A learner restored since is no longer tombstoned, so its keys stay.
+    if (removed.size > 0) quietly(() => sweepProfileKeys([...removed].filter((id) => !profiles.some((p) => p.id === id))));
     // An active id that is no longer in the list (removed in another tab) falls back as `followMerged` does.
     const active = activeId === null || activeId === undefined ? null : profiles.some((p) => p.id === activeId) ? activeId : (profiles[0]?.id ?? null);
     set({ profiles, activeId: active, hydrated: true, activeSince: Date.now() });
@@ -309,7 +344,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
       forget(removed);
       remember(merged);
       // A change made here while the read ran stays over it (its own write is queued after this step).
-      followMerged(withPending(merged));
+      followMerged(withPending(merged), removed);
     });
   },
 

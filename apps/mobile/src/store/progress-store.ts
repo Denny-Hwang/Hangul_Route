@@ -13,12 +13,22 @@ import { elapsedSeconds, lastStreakDay, newSessionId } from '../logic/sessions/s
 import { mergePlacements, mergeReview, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { applyVocabEvents, emptyVocab, vocabOf, type VocabEvent } from '../logic/vocab/progress';
-import { readJson, writeJson } from '../platform/storage';
+import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 
-const key = (profileId: string): string => `progress:${profileId}`;
+/** The learner's progress snapshot (`hr:progress:<id>`); exported for the removal sweep (row OA-7a). */
+export const PROGRESS_KEY = (profileId: string): string => `progress:${profileId}`;
+const key = PROGRESS_KEY;
+
+/**
+ * [OA] Learners removed from this device in this session (row OA-7a, CS-20): a read or a derive still in flight
+ * writes nothing back for them while they are not a profile here. A restore adds the profile first, so its
+ * snapshot saves again.
+ */
+const removedHere = new Set<string>();
+const removedNow = (profileId: string): boolean => removedHere.has(profileId) && !useProfileStore.getState().profiles.some((p) => p.id === profileId);
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -244,6 +254,7 @@ function blankSnapshot(profileId: string): ProgressSnapshot {
 }
 
 function save(profileId: string, snap: ProgressSnapshot): void {
+  if (removedNow(profileId)) return;
   void writeJson(key(profileId), snap);
   notifyProgressPersisted(profileId);
 }
@@ -655,6 +666,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   },
 
   replaceSnapshot: (profileId, snapshot) => {
+    // [OA] A plan derivation or sync that lands after the learner was removed changes nothing (row OA-7a).
+    if (removedNow(profileId)) return;
     // Every sync, restore and plan derivation lands here. A completion that
     // arrived by sync or restore is latched now, not at the next cold start,
     // and the cards it earned are reconciled after the merge (F-STORY-006
@@ -696,5 +709,16 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   },
 }));
 
-// A removed profile's catch-up list goes with it (F-STORY-006 §3.5).
-onProfileRemoved((profileId) => useProgressStore.setState((s) => withoutCatchUp(s, profileId)));
+// A removed profile's catch-up list goes with it (F-STORY-006 §3.5); [OA] row OA-7a: and its snapshot, in memory and
+// stored (section 10.4, CS-20).
+onProfileRemoved((profileId) => {
+  removedHere.add(profileId);
+  useProgressStore.setState((s) => ({
+    ...withoutCatchUp(s, profileId),
+    byProfile: withoutKey(s.byProfile, profileId),
+    hydratedFor: without(s.hydratedFor, profileId),
+    pendingFor: without(s.pendingFor, profileId),
+    pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
+  }));
+  removeKey(key(profileId)).catch(() => undefined);
+});

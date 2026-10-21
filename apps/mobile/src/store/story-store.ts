@@ -20,6 +20,9 @@ import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
+/** The learner's story bookmarks (`hr:story:bookmarks:<id>`); exported for the removal sweep (row OA-7a). */
+export const STORY_BOOKMARKS_KEY = bookmarksKey;
+
 /**
  * Story bookmarks per profile (F-STORY-004 §3.2, §3.8). Device-local under
  * `story:bookmarks:<profileId>`: not synced, not in backup files, not in a

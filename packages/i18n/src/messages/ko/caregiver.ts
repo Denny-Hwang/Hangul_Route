@@ -784,5 +784,16 @@ export const caregiver = {
   people: {
     lock: '어른용 PIN으로 잠그기',
     lockHint: '어른 본인 프로필에 좋아요. 다른 사람이 이 프로필로 하지 못해요.',
+    title: '이 기기를 쓰는 사람',
+    remove: '이 기기에서 빼기',
+    removeAsk: (name: string) => `${name}: 이 기기에서 뺄까요?`,
+    removeSaved: '진도는 저장돼 있어요. 복구 코드로 어느 기기에서나 다시 불러올 수 있어요.',
+    removeUnsaved: '진도가 이 기기에만 있어요. 남기려면 먼저 저장해요.',
+    saveFirst: '먼저 진도 저장하기',
+    removeAnyway: '그래도 빼기',
+    removeAnywayAsk: '그래도 뺄까요? 이 기기에 있는 카드와 별이 사라져요.',
+    keep: '그대로 두기',
+    checking: '진도가 저장됐는지 확인하고 있어요…',
+    spacesStay: '가족이나 반 자리는 그대로예요. 어른이 계정 페이지에서 바꿀 수 있어요.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

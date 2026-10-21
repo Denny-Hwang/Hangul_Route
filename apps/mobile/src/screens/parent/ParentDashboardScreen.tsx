@@ -28,6 +28,7 @@ import { FreeLessonsRow } from './FreeLessonsRow';
 import { GateLessonsButton } from './GateLessonsButton';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { LectureCard } from './LectureCard';
+import { PeopleOnDeviceCard } from './PeopleOnDeviceCard';
 import { ResetByWaitNotice } from './ResetByWaitNotice';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
@@ -131,6 +132,9 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
             onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })}
             testID="dashboard-switch-user"
           />
+          {/* [OA] People on this device (row OA-7a, section 10.1): every learner on the device, each opening its person page. */}
+          <Spacer size="lg" />
+          <PeopleOnDeviceCard profiles={profiles} onOpen={(profileId) => navigation.navigate('PersonOnDevice', { profileId })} />
         </>
       ) : null}
       <Spacer size="lg" />

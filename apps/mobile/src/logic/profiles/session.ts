@@ -138,6 +138,8 @@ const AREA_ROUTES: ReadonlySet<string> = new Set([
   'RouteProposal',
   'RouteSetup',
   'RoutePreview',
+  // [OA] Row OA-7a: People on this device, one person's page.
+  'PersonOnDevice',
 ]);
 // The onboarding stack's own screens are the focused routes while it shows (`getCurrentRoute` names the leaf).
 const GATE_ROUTES: ReadonlySet<string> = new Set(['PinEntry', 'PinReset', 'Onboarding', 'Welcome', 'CreateProfile', 'FirstQuestPreview', 'PlacementInvite']);
