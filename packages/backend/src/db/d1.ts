@@ -1694,7 +1694,7 @@ export class D1Db implements Db {
     if (statements.length > 0) await this.d1.batch(statements);
   }
   purgeTelemetryDaily(beforeDay: string, limit: number): Promise<number> {
-    return this.changes('DELETE FROM telemetry_daily WHERE rowid IN (SELECT rowid FROM telemetry_daily WHERE day < ? LIMIT ?)', [beforeDay, limit]);
+    return this.changes('DELETE FROM telemetry_daily WHERE (day, name, dims) IN (SELECT day, name, dims FROM telemetry_daily WHERE day < ? LIMIT ?)', [beforeDay, limit]);
   }
   telemetryDailyOf(day: string): Promise<TelemetryDailyRow[]> {
     return this.many('SELECT day, name, dims, n FROM telemetry_daily WHERE day = ? ORDER BY name, dims', [day], (r): TelemetryDailyRow => ({ day: str(r.day), name: str(r.name), dims: str(r.dims), n: Number(r.n) }));

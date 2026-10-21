@@ -29,7 +29,7 @@ describe('migration 0015_telemetry_daily.sql · production safety', () => {
 
   it('creates exactly the section 15.1 table and nothing else', () => {
     expect(statements).toEqual([
-      "CREATE TABLE IF NOT EXISTS telemetry_daily ( day TEXT NOT NULL, name TEXT NOT NULL, dims TEXT NOT NULL DEFAULT '', n INTEGER NOT NULL DEFAULT 0 CHECK (n >= 0), PRIMARY KEY (day, name, dims) )",
+      "CREATE TABLE IF NOT EXISTS telemetry_daily ( day TEXT NOT NULL, name TEXT NOT NULL, dims TEXT NOT NULL DEFAULT '', n INTEGER NOT NULL DEFAULT 0 CHECK (n >= 0), PRIMARY KEY (day, name, dims) ) WITHOUT ROWID",
     ]);
     expect(statements.join(' ')).not.toMatch(/\bALTER\b|\bDROP\b|\bUPDATE\b|\bDELETE FROM\b|\bINSERT\b/i);
     // No column can hold a person, a device or a fine time.
@@ -50,6 +50,8 @@ describe('migration 0015_telemetry_daily.sql · production safety', () => {
       { day: '2026-10-21', name: 'who.shown', dims: '{"trigger":"launch"}', n: 2 },
     ]);
     await expect(d1.prepare("INSERT INTO telemetry_daily (day, name, dims, n) VALUES ('2026-10-21', 'x', '', -1)").run()).rejects.toThrow(/CHECK/);
+    // WITHOUT ROWID: no separate key index, so a new row is one row written in D1, not two.
+    expect((await d1.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'telemetry_daily'").all()).results).toEqual([]);
     expect(await d1.prepare("SELECT dims, n FROM telemetry_daily WHERE name = 'session.start'").first()).toEqual({ dims: '', n: 1 });
     d1.close();
   });

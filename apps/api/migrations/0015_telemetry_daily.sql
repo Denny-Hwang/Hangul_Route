@@ -6,6 +6,8 @@
 -- counts; '' for none). Never a profile, device or account id, an IP address or a time finer than a day.
 -- Apply before deploying the Worker that writes it (server first); the Worker's counter write is best effort,
 -- so an isolate that runs before this table exists only skips the count, and its daily purge skips the table.
+-- WITHOUT ROWID: the primary key is the table's own order, so an upsert writes one row in D1 (a rowid table
+-- would also write a separate key index row for every new row).
 -- Retention: rows older than 400 days (TELEMETRY_DAILY_KEEP_DAYS) are purged by the daily job, in bounded rounds.
 -- Kill switch: the Worker variable TELEMETRY_DAILY (on unless set to another value than "enabled").
 -- Rollback: an older Worker never reads this table; leave it in place.
@@ -15,4 +17,4 @@ CREATE TABLE IF NOT EXISTS telemetry_daily (
   dims  TEXT NOT NULL DEFAULT '',   -- the kept payload as canonical JSON (sorted keys), codes only
   n     INTEGER NOT NULL DEFAULT 0 CHECK (n >= 0),
   PRIMARY KEY (day, name, dims)
-);
+) WITHOUT ROWID;
