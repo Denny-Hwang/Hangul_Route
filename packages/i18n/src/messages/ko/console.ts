@@ -769,6 +769,7 @@ export const consoleMsgs = {
     comingSoon: '강의 모드는 곧 열려요: 프로젝터나 TV에 보여 줄 수 있는 슬라이드 수업이에요.',
     plansFailed: '이 공간의 계획을 불러오지 못해서 이번 주 계획은 보이지 않아요. 다시 불러와 보세요.',
     replaceOutline: '이 자료로 새 개요를 시작할까요? 여기서 바꾼 내용은 새 개요로 바뀌어요.',
+    cannotCompose: '이 공간에서 맡은 역할로는 수업을 만들 수 없어요. 그래도 준비된 수업은 띄울 수 있어요.',
     entry: { cta: '강의 모드' },
     card: {
       title: '강의 모드',
@@ -1697,6 +1698,7 @@ export const consoleMsgs = {
     revoked: '취소된 초대예요. 필요하면 새 초대를 요청해 주세요.',
     full: (max: number) => `이 학교에는 이미 관리자가 ${max}명 있어요.`,
     owner: '이 학교를 만든 분이라서 이미 관리하고 있어요.',
+    ineligible: '이 계정은 이 학교에서 이미 다른 역할을 맡고 있어서 관리자가 될 수 없어요.',
     alreadyAdmin: (school: string) => `이미 관리자예요: ${school}`,
     notFound: '이 링크로는 초대를 열 수 없어요. 링크가 모두 복사됐는지 확인해 주세요.',
     emailUnverified: '수락하려면 계정 이메일 인증이 필요해요. 계정 설정에서 이메일을 인증한 뒤 링크를 다시 열어 주세요.',

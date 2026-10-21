@@ -1,7 +1,7 @@
 'use client';
 
 import { LECTURE_MAX_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -14,14 +14,15 @@ import {
   type LectureOptionValues,
 } from '@/components/console/LectureParts';
 import { LectureCustomize, LectureFooter, LecturePresetsLoading, LecturePresetsSection, PRESETS_CSS } from '@/components/console/LecturePresetParts';
-import { Button, Field, Muted, Notice } from '@/components/console/ui';
+import { Button, Field, Muted, Notice, buttonBase } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
-import type { PlanView, Roster } from '@/lib/console/api';
+import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { appUrl, lectureModeEnabled } from '@/lib/console/config';
 import {
   aboutMinutes,
+  canComposeIn,
   classCodeBlock,
   lecturePlanFrom,
   lectureSourceFrom,
@@ -48,6 +49,7 @@ import {
   presetTitle,
   resolveConsolePreset,
 } from '@/lib/console/lecture-presets';
+import { presentHref } from '@/lib/console/lecture-entry';
 import { openPresenter } from '@/lib/console/lecture-link';
 import { dateKey } from '@/lib/console/plans';
 import { classRollup } from '@/lib/console/rollup';
@@ -57,6 +59,21 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { headRem } from '@/lib/console/rem';
 
 const TITLE_MAX = 60;
+const OPENS_TAB_ID = 'lecture-present-alone-tab';
+
+/** Start on the no-compose page: a link styled as the console's primary button, at the touch-target floor. */
+const presentAloneStyle = {
+  ...buttonBase,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxSizing: 'border-box',
+  minHeight: touchTarget.min,
+  backgroundColor: colors.brand.primary,
+  borderColor: colors.brand.primary,
+  color: colors.text.onPrimary,
+  textDecoration: 'none',
+} as const;
 
 /**
  * console/lecture-setup, presets first (AMENDMENTS-LECTURE-V2 sections 4.6, 6 and 18, row LV-4; F-TCH-004 §3.11;
@@ -68,6 +85,11 @@ const TITLE_MAX = 60;
  * checks; a sticky footer holds the outline's minutes, **Open presenter** and **Copy link**. The outline is the one
  * lesson the link carries, whichever way it was made. No helper picker (LV-D7); family spaces read family words
  * (section 6); before `LECTURE_V2_LINKS_FROM` no Word review and no v2 link (section 4.5).
+ *
+ * Only a role that composes plans in the space (`canComposeIn`, the check behind every entry point, section 3) gets the
+ * builder: anyone else whom the roster read admits (a school admin reaching a child class through the school) reads the
+ * no-space line and a Start that opens `/present` in a new tab, and no deck is built (section 16). The spaces list is
+ * read with the roster; when it fails the page says it could not load, as when the roster fails.
  */
 function LectureInner(): JSX.Element {
   const params = useSearchParams();
@@ -82,6 +104,8 @@ function LectureInner(): JSX.Element {
   const l = c.lecture;
   const enabled = lectureModeEnabled();
   const [roster, setRoster] = useState<Roster | null>(null);
+  /** Whether this account composes in the space (`canComposeIn`); null until the spaces list has answered. */
+  const [composes, setComposes] = useState<boolean | null>(null);
   const [plan, setPlan] = useState<PlanView | null>(null);
   const [plansFailed, setPlansFailed] = useState(false);
   const [error, setError] = useState<SpaceError | null>(null);
@@ -109,6 +133,8 @@ function LectureInner(): JSX.Element {
   const today = dateKey(now);
   /** Whether the grown-up has changed what the page opened on (a card, a chip, a source, an edit, a title). */
   const touched = useRef(false);
+  /** The space whose answer the page draws; another `?id=` on the same mounted page clears it before reading. */
+  const drawnFor = useRef<string | null>(null);
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
   const revisit = rollup ? revisitBlock(rollup.revisit) : null;
@@ -190,12 +216,38 @@ function LectureInner(): JSX.Element {
     if (!api || !enabled) return;
     setError(null);
     setLoading(true);
-    const [rosterRes, plansRes] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId)]);
+    if (drawnFor.current !== spaceId) {
+      // Another space on the same mounted page: nothing of the last space's answer stays drawn while this one loads.
+      drawnFor.current = null;
+      setRoster(null);
+      setComposes(null);
+      setPlan(null);
+    }
+    const [rosterRes, plansRes, spacesRes] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId), api.listSpaces()]);
     setLoading(false);
+    // A failed read after a cannot-compose answer: the could-not-load line and Try again show, not the old panel (and
+    // never the builder, which needs `composes === true`).
+    const failed = (next: SpaceError): void => {
+      setError(next);
+      setComposes((was) => (was === false ? null : was));
+    };
     if (!rosterRes.ok) {
-      setError(rosterRes.error === 'forbidden' ? 'forbidden' : rosterRes.error === 'not_found' ? 'gone' : 'cantReach');
+      failed(rosterRes.error === 'forbidden' ? 'forbidden' : rosterRes.error === 'not_found' ? 'gone' : 'cantReach');
       return;
     }
+    if (!spacesRes.ok) {
+      failed('cantReach');
+      return;
+    }
+    drawnFor.current = spaceId;
+    const spaces: readonly SpaceListItem[] = spacesRes.data;
+    if (!canComposeIn(spaces, spaceId)) {
+      // A role that cannot compose here: the space's name for the frame, and no outline, no plan, no deck.
+      setRoster(rosterRes.data);
+      setComposes(false);
+      return;
+    }
+    setComposes(true);
     const chosen = plansRes.ok ? pickPlan(plansRes.data, planParam) : null;
     setRoster(rosterRes.data);
     setPlan(chosen);
@@ -250,6 +302,24 @@ function LectureInner(): JSX.Element {
       <AdultFrame onSignOut={signOut} back={back} title={l.title}>
         {heading}
         <Notice>{l.comingSoon}</Notice>
+      </AdultFrame>
+    );
+  }
+
+  if (roster && composes === false) {
+    // A role that cannot compose here (section 16): the no-space line and the presenter on its own, in a new tab with
+    // no opener, as the Lecture mode card opens it when there is no space to teach in.
+    return (
+      <AdultFrame onSignOut={signOut} back={back} title={l.titleFor(roster.space.name)}>
+        {heading}
+        <Muted>{l.intro}</Muted>
+        <section style={lectureSectionStyle} data-testid="lecture-cannot-compose">
+          <p style={{ margin: `0 0 ${spacing.md}px` }}>{l.cannotCompose}</p>
+          <a href={presentHref(appUrl())} target="_blank" rel="noopener noreferrer" aria-describedby={OPENS_TAB_ID} style={presentAloneStyle} data-testid="lecture-present-alone">
+            {l.card.cta}
+          </a>
+          <Muted id={OPENS_TAB_ID}>{l.card.opensTab}</Muted>
+        </section>
       </AdultFrame>
     );
   }
@@ -375,7 +445,7 @@ function LectureInner(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {loading && !roster ? (
+      {loading && (!roster || composes === null) ? (
         <>
           {heading}
           <Muted>{l.intro}</Muted>
@@ -383,7 +453,7 @@ function LectureInner(): JSX.Element {
         </>
       ) : null}
 
-      {roster ? (
+      {roster && composes === true ? (
         <>
           {heading}
           <Muted>{l.intro}</Muted>

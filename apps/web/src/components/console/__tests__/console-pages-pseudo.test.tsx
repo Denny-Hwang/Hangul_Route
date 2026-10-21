@@ -1,6 +1,6 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { expectAllPseudo } from './pseudo-text';
 import { STAGE1_TITLES } from './stage1-catalog';
 // The pages are imported here, once, not inside each test: a console page pulls in the dictionaries, the catalog and
@@ -55,6 +55,15 @@ beforeAll(() => {
 });
 afterAll(() => {
   vi.unstubAllEnvs();
+});
+
+/** A fixed "today", as in `curriculum-free-days-wiring.test.tsx` (#761): the curriculum wizard's week follows the clock. */
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-14T12:00:00Z'));
+});
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 function render(page: { default: () => JSX.Element }): string {

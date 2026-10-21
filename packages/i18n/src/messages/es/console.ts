@@ -848,6 +848,7 @@ export const consoleMsgs = {
     comingSoon: 'El modo proyección llega muy pronto: lecciones con diapositivas para mostrar en un proyector o una TV.',
     plansFailed: 'No se cargaron los planes de este espacio, así que no se ofrece el plan de esta semana. Reintenta para cargarlos.',
     replaceOutline: '¿Empezar un esquema nuevo desde esta fuente? Se reemplazarán los cambios que hiciste aquí.',
+    cannotCompose: 'Con tu rol no puedes preparar lecciones para este espacio. Aun así puedes mostrar una lección lista.',
     entry: { cta: 'Modo proyección' },
     card: {
       title: 'Modo proyección',
@@ -1796,6 +1797,7 @@ export const consoleMsgs = {
     revoked: 'Esta invitación se anuló. Pide una nueva si la necesitas.',
     full: (max: number) => `Esta escuela ya tiene ${max} admins.`,
     owner: 'Ya diriges esta escuela porque la creaste.',
+    ineligible: 'Esta cuenta ya tiene otro rol en esta escuela, así que no puede ser admin aquí.',
     alreadyAdmin: (school: string) => `Ya eres admin de ${school}.`,
     notFound: 'Este enlace no abre ninguna invitación. Revisa que se haya copiado completo.',
     emailUnverified: 'Para aceptar, tu cuenta necesita un correo verificado. Verifícalo en los ajustes de tu cuenta y vuelve a abrir el enlace.',
