@@ -1,5 +1,5 @@
 import { Body, Button, Caption, Card, colors, layout, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
@@ -22,9 +22,9 @@ import { useUiStore } from '../store/ui-store';
  * chip only inform, so they never take a tap: a control under them still
  * works. The update bar waits for a tab screen (wireframe: queued during a
  * quest, a game, results or the PIN pad), so a refresh never lands mid-quest.
- * On a first visit the offline-ready toast waits too: it arrives while the
- * learner reads Welcome and Steps 1 to 3, so it is held until the first Home
- * and shown there once, for four seconds (`logic/pwa/banners`).
+ * On a first visit the offline-ready toast waits too: it can arrive any time
+ * between Welcome and the first quest, so it is held until the first Home of
+ * the visit and shown there once, for four seconds (`logic/pwa/banners`).
  */
 type Banner = PwaBanner | null;
 
@@ -40,13 +40,19 @@ export function PwaBanners(): React.ReactElement | null {
   const frame = bannerFrame({ insets, tabBarHeight, gap: spacing.md, bottomGap: spacing.xl, headerClearance });
   const onTabScreen = tabBarHeight > 0;
   const hasProfile = useProfileStore((s) => s.profiles.length > 0);
+  // A tab screen has shown since the app opened. The precache can finish after Step 3 on a slow phone, so the fork,
+  // the first-quest preview and the first quest (a profile exists, no tab screen yet) hold the toast too.
+  const seenTabScreen = useRef(false);
+  useEffect(() => {
+    if (onTabScreen) seenTabScreen.current = true;
+  }, [onTabScreen]);
 
   useEffect(() => {
     const off = subscribePwa((event: PwaEvent) => {
       if (event === 'offline-ready' || event === 'update-ready') {
-        // Read when the event arrives: a toast that comes before any profile waits for the first Home.
+        // Read when the event arrives: a toast that comes before the first Home of this visit waits for it.
         const profileNow = useProfileStore.getState().profiles.length > 0;
-        setState((prev) => onPwaBanner(prev, event, { hasProfile: profileNow }));
+        setState((prev) => onPwaBanner(prev, event, { hasProfile: profileNow, seenTabScreen: seenTabScreen.current }));
       } else if (event === 'went-offline') setOffline(true);
       else if (event === 'back-online') setOffline(false);
     });

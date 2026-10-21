@@ -207,7 +207,7 @@ export const consoleMsgs = {
     roleTitle: '¿Quién eres?',
     roleLabel: 'Rol',
     roles: {
-      family: { title: 'Familia', line: 'En casa: los estudiantes de mi familia' },
+      family: { title: 'Familia', line: 'En casa: quienes aprenden en mi familia' },
       class: { title: 'Docente', line: 'Mi clase' },
       school: { title: 'Dirección escolar', line: 'Docentes y clases' },
     },
@@ -328,7 +328,7 @@ export const consoleMsgs = {
   },
 
   docTitle: {
-    console: 'Zona de adultos — Hangul Route',
+    console: 'Páginas de la cuenta — Hangul Route',
     signIn: 'Acceso para adultos — Hangul Route',
   },
   codeExpiry: {

@@ -29,7 +29,9 @@ const MOBILE = /Mobi|Android|iPhone|iPad|iPod/i;
 const FIREFOX = /Firefox\//i;
 /** Safari names itself `Version/… Safari/`; Chrome, Edge, Opera and Firefox on a Mac add their own token. */
 const NOT_SAFARI = /Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Firefox/i;
-const SAFARI = /Version\/[\d.]+.*Safari\//i;
+const SAFARI = /Version\/(\d+)[\d.]*.*Safari\//i;
+/** Add to Dock arrived in Safari 17 (macOS Sonoma). */
+const MAC_SAFARI_MIN_MAJOR = 17;
 
 export function installGuideVariant(env: InstallEnv): InstallGuideVariant {
   if (!env.isWeb || env.standalone || !env.userAgent) return 'none';
@@ -41,8 +43,10 @@ export function installGuideVariant(env: InstallEnv): InstallGuideVariant {
   if (MOBILE.test(ua)) return 'none';
   // Desktop Firefox has no way to install a web app: a hint would point at a menu item that is not there.
   if (FIREFOX.test(ua)) return 'none';
-  // Safari 17 on macOS Sonoma and later: File menu, then Add to Dock.
-  if (MAC.test(ua) && SAFARI.test(ua) && !NOT_SAFARI.test(ua)) return 'mac-safari';
+  // Safari 17 on macOS Sonoma and later: File menu, then Add to Dock. An older Safari for Mac has no such menu item
+  // and no other way to install a web app, so it gets nothing, as desktop Firefox does.
+  const safari = MAC.test(ua) && !NOT_SAFARI.test(ua) ? SAFARI.exec(ua) : null;
+  if (safari) return Number(safari[1]) >= MAC_SAFARI_MIN_MAJOR ? 'mac-safari' : 'none';
   return 'desktop-hint';
 }
 

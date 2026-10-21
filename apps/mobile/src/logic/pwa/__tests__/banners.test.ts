@@ -5,14 +5,18 @@ const idle: BannerState = { banner: null, waitForHome: false };
 
 describe('onPwaBanner: what an event leaves queued', () => {
   it('offline-ready before any learner profile waits for the first Home', () => {
-    expect(onPwaBanner(idle, 'offline-ready', { hasProfile: false })).toEqual({ banner: 'offline-ready', waitForHome: true });
+    expect(onPwaBanner(idle, 'offline-ready', { hasProfile: false, seenTabScreen: false })).toEqual({ banner: 'offline-ready', waitForHome: true });
   });
-  it('offline-ready with a profile shows where the learner is, as before', () => {
-    expect(onPwaBanner(idle, 'offline-ready', { hasProfile: true })).toEqual({ banner: 'offline-ready', waitForHome: false });
+  it('offline-ready with a profile but no tab screen yet (the fork, the preview, the first quest) still waits', () => {
+    // The precache can finish after Step 3 on a slow phone: the event then arrives with a profile, before Home.
+    expect(onPwaBanner(idle, 'offline-ready', { hasProfile: true, seenTabScreen: false })).toEqual({ banner: 'offline-ready', waitForHome: true });
+  });
+  it('offline-ready after a tab screen has shown appears where the learner is, as before', () => {
+    expect(onPwaBanner(idle, 'offline-ready', { hasProfile: true, seenTabScreen: true })).toEqual({ banner: 'offline-ready', waitForHome: false });
   });
   it('update-ready replaces the toast and never waits for a profile (the tab screen rule holds it)', () => {
-    const waiting = onPwaBanner(idle, 'offline-ready', { hasProfile: false });
-    expect(onPwaBanner(waiting, 'update-ready', { hasProfile: false })).toEqual({ banner: 'update-ready', waitForHome: false });
+    const waiting = onPwaBanner(idle, 'offline-ready', { hasProfile: false, seenTabScreen: false });
+    expect(onPwaBanner(waiting, 'update-ready', { hasProfile: false, seenTabScreen: false })).toEqual({ banner: 'update-ready', waitForHome: false });
   });
 });
 

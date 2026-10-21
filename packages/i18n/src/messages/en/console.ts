@@ -425,9 +425,13 @@ export const consoleMsgs = {
     failed: "Didn't go through. Try again.",
   },
 
-  /** `document.title` of the grown-up pages, in the console's language (owner items 6 and 7). */
+  /**
+   * `document.title` of the grown-up pages, in the console's language (owner items 6 and 7). The tab carries the name
+   * of the device row that opens these pages, "Account pages" (AMENDMENTS-DISPLAY-NAV section 9.4 keeps "Grown-up
+   * area" for the device's PIN-gated area only).
+   */
   docTitle: {
-    console: 'Grown-up area — Hangul Route',
+    console: 'Account pages — Hangul Route',
     signIn: 'Grown-ups sign in — Hangul Route',
   },
   /** Join-code expiry (`codeExpiry`). */

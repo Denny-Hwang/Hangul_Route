@@ -38,12 +38,15 @@ describe('placement copy scan (F-PLC-001 section 3.12)', () => {
       'learner.placement.options.mode.deep.duration',
     ]);
     expect(en.learner.placement.invite.duration).not.toMatch(/\d/);
-    // The fork's two sublabels (app-first-run, 2026-10-21): no digit and never the word test, in every locale.
+    // The fork's two sublabels (app-first-run, 2026-10-21): no digit and never the word test, in every locale, each
+    // in its own words. es "prueba de nivel" is the glossary name of the level check (F-I18N-001 section 3.10), so it
+    // is not banned here; "examen" is.
+    const neverTest = { en: /\btests?\b/i, es: /\bex[aá]men(es)?\b/i, ko: /시험|테스트/ } as const;
     for (const locale of ['en', 'es', 'ko'] as const) {
       const invite = getMessages(locale).learner.placement.invite;
       for (const line of [invite.duration, invite.newToKoreanHint]) {
         expect(line, locale).not.toMatch(/\d/);
-        expect(line, locale).not.toMatch(/\btests?\b/i);
+        expect(line, locale).not.toMatch(neverTest[locale]);
       }
     }
     expect(en.learner.placement.invite.duration).toBe('A short level check. You can stop at any time.');

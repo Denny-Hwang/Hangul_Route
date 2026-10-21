@@ -60,7 +60,7 @@ describe('start page (teach/start/page.tsx, routing.ts ROLE_CARDS and prefillNam
       const s = getMessages(locale).console.start;
       for (const line of [s.roles.family.line, s.classJoinHint]) expect(line, locale).not.toMatch(/\bkids?\b|child|niñ|아이|어린이/i);
     }
-    expect(getMessages('es').console.start.roles.family.line).toBe('En casa: los estudiantes de mi familia');
+    expect(getMessages('es').console.start.roles.family.line).toBe('En casa: quienes aprenden en mi familia');
     expect(getMessages('es').console.start.classJoinHint).toBe('Los estudiantes se unen con un código. No necesitan una cuenta.');
     expect(getMessages('ko').console.start.roles.family.line).toBe('집에서 — 우리 가족 학습자');
     expect(getMessages('ko').console.start.classJoinHint).toBe('학생은 코드로 참여해요. 계정은 필요 없어요.');

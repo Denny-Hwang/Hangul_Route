@@ -865,7 +865,7 @@ for (const vp of [
   { width: 844, height: 390 },
   { width: 1180, height: 820 },
 ] as const) {
-  test(`on a quest the banners never cover "Leave quest" and the update bar waits at ${vp.width}x${vp.height}`, async ({ page }) => {
+  test(`on the first quest the banners wait and never cover "Leave quest" at ${vp.width}x${vp.height}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await onboardChild(page, { name: 'Mina' });
     const leave = headerClose(page);
@@ -874,10 +874,12 @@ for (const vp of [
       window.dispatchEvent(new Event('hr:update-ready'));
       window.dispatchEvent(new Event('hr:offline-ready'));
     });
-    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toBeVisible();
+    // A first visit, before its first Home: the toast is queued for Home (first-run-toast.spec.ts) and the update bar
+    // waits for a tab screen. The top slot on a screen with no tab bar is checked on the PIN pad below.
+    await page.waitForTimeout(300);
+    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toHaveCount(0);
     await expect(page.getByText('New lessons are ready.')).toHaveCount(0);
-    expect(apart(await box(page, 'pwa-banners'), (await leave.boundingBox())!), 'toast clear of Leave quest').toBe(true);
-    // The toast only informs: the control under the slot still takes the tap.
+    // Leave quest still takes the tap.
     await acceptConfirmSheets(page);
     await leave.click();
     await expect(leave).toHaveCount(0);

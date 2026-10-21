@@ -16,6 +16,9 @@ const DESKTOP_CHROME = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/53
 const INSTAGRAM = `${IOS_SAFARI} Instagram 300.0`;
 /** iPadOS 13+ Safari asks for the desktop site: the user agent reads as a Mac; only the touch points tell them apart. */
 const MAC_SAFARI = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15';
+/** Safari 16 (macOS Ventura and older) has no Add to Dock. */
+const MAC_SAFARI_16 = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15';
+const MAC_SAFARI_18 = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15';
 const MAC_CHROME = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 const MAC_EDGE = `${MAC_CHROME} Edg/126.0`;
 const MAC_FIREFOX = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:127.0) Gecko/20100101 Firefox/127.0';
@@ -67,8 +70,14 @@ describe('installGuideVariant', () => {
   });
   it('shows File menu, then Add to Dock, on Safari for Mac', () => {
     expect(installGuideVariant(env(MAC_SAFARI))).toBe('mac-safari');
+    expect(installGuideVariant(env(MAC_SAFARI_18))).toBe('mac-safari');
     // Chrome and Edge on a Mac name Safari in their user agent too: they keep the browser-menu hint.
     expect(installGuideVariant(env(MAC_CHROME))).not.toBe('mac-safari');
+  });
+  it('offers nothing on Safari 16 for Mac, which has no Add to Dock', () => {
+    expect(installGuideVariant(env(MAC_SAFARI_16))).toBe('none');
+    // An iPad on iPadOS 16 still gets the iOS steps: Share, then Add to Home Screen.
+    expect(installGuideVariant(env(MAC_SAFARI_16, { maxTouchPoints: 5 }))).toBe('ios-safari');
   });
   it('offers nothing on desktop Firefox, which cannot install a web app', () => {
     expect(installGuideVariant(env(MAC_FIREFOX))).toBe('none');

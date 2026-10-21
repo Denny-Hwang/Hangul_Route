@@ -286,7 +286,7 @@ export const consoleMsgs = {
     failed: '처리되지 않았어요. 다시 해 보세요.',
   },
   docTitle: {
-    console: '어른 공간 — Hangul Route',
+    console: '계정 페이지 — Hangul Route',
     signIn: '어른 로그인 — Hangul Route',
   },
   codeExpiry: {
@@ -468,7 +468,7 @@ export const consoleMsgs = {
         notes: '학생에게 쪽지 보내기',
       },
     },
-    freeForEveryone: '누구나 무료: 리포트와 쪽지.',
+    freeForEveryone: '리포트와 쪽지는 누구나 무료예요.',
     noSpaces: {
       title: '플랜은 가족이나 반에 속해요.',
       family: { cta: '나 또는 우리 가족용으로 시작' },

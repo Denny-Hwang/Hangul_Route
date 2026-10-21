@@ -4,9 +4,10 @@ import { acceptConfirmSheets, agreeOnPrivacy, answerForkNew, headerBack, headerC
 
 /**
  * The offline-ready toast on a first visit (PwaBanners, `logic/pwa/banners`). It used to show for six seconds at the
- * top of Welcome and Steps 1 to 3, over the screen title and the step label, while a new learner read them. Now,
- * while no learner profile exists, it is queued and shown once on the first Home, above the tab bar, for four
- * seconds. Checked at the smallest phone the app supports (320x568).
+ * top of Welcome and Steps 1 to 3, over the screen title and the step label, while a new learner read them. Now a
+ * toast that arrives before the first Home of the visit is queued and shown once there, above the tab bar, for four
+ * seconds. The event fires once the whole precache is down, so on a slow phone it can come after Step 3; the second
+ * test fires it on the placement fork. Checked at the smallest phone the app supports (320x568).
  */
 
 const TOAST = 'All set! You can play without Wi-Fi now.';
@@ -100,3 +101,39 @@ test('a first visit: the offline toast never covers Welcome or Steps 1 to 3 and 
   await expect(page.getByText(TOAST)).toHaveCount(0);
 });
 
+
+test('a slow first visit: the toast that arrives on the fork waits for the first Home', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await page.getByRole('radio', { name: WHO_CHILD }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByPlaceholder('Type a name').fill('Mina');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await agreeOnPrivacy(page, 'child');
+  await page.getByRole('button', { name: 'Continue' }).click();
+
+  // The profile exists now, and only then is the app cached: the toast still waits.
+  await expect(page.getByTestId('placement-invite')).toBeVisible();
+  await offlineReady(page);
+  await expect(page.getByText(TOAST)).toHaveCount(0);
+  await answerForkNew(page);
+  await expect(page.getByText('Your first card is waiting.')).toBeVisible();
+  await expect(page.getByText(TOAST)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Start my journey' }).click();
+  const leave = headerClose(page);
+  await expect(leave).toBeVisible();
+  await expect(page.getByText(TOAST)).toHaveCount(0);
+  await acceptConfirmSheets(page);
+  await leave.click();
+  await expect(headerBack(page)).toBeVisible();
+  await expect(page.getByText(TOAST)).toHaveCount(0);
+
+  // The first Home: the toast shows there, above the tab bar.
+  await headerBack(page).click();
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await expect(page.getByText(TOAST)).toBeVisible();
+  await toastClearOf(page, { text: 'Hi, Mina!' });
+  const toast = (await page.getByTestId('pwa-banners').boundingBox())!;
+  const tabBar = (await page.getByRole('tablist').boundingBox())!;
+  expect(toast.y + toast.height, 'toast clears the tab bar').toBeLessThanOrEqual(tabBar.y);
+});

@@ -45,7 +45,7 @@ describe('console: the former COPY, keys and wording unchanged', () => {
 
 describe('console: formatter words', () => {
   it('titles the grown-up pages in the console language (owner items 6 and 7)', () => {
-    expect(c.docTitle.console).toBe('Grown-up area — Hangul Route');
+    expect(c.docTitle.console).toBe('Account pages — Hangul Route');
     expect(c.docTitle.signIn).toBe('Grown-ups sign in — Hangul Route');
     expect('language' in c).toBe(false);
   });

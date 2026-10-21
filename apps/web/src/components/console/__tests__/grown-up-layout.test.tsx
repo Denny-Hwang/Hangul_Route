@@ -180,7 +180,7 @@ describe('the shared grown-up layout (F-APP-001 A-4b)', () => {
       auth.session = { accountId: 'user_1' };
       locale.locale = 'ko';
       render();
-      expect(doc.title).toBe('어른 공간 — Hangul Route');
+      expect(doc.title).toBe('계정 페이지 — Hangul Route');
       act(() => mounted?.unmount());
       mounted = null;
       nav.pathname = '/signin';
