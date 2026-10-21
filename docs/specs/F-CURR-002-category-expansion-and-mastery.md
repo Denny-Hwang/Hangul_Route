@@ -217,7 +217,7 @@ Each grid cell and each pack level shows a level from 0 to 3. It is drawn as a t
 
 ### 4.5 Review sessions
 
-All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine is pure, deterministic for a seed, and works offline.
+All sessions share one engine (`logic/reviews/engine.ts`, in the existing `apps/mobile/src/logic/reviews/` directory, row CM-13). The engine is pure, deterministic for a seed, and works offline.
 
 | Session | Length | Where it lives | Selection | Learner sees |
 |---|---|---|---|---|
@@ -235,7 +235,7 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 
 **Listening rounds never depend on telling homophones apart.**
 - **`dictation-unambiguous` lint and engine rule.** An item may be asked in Dictation (Type Hangul `hear`), or in any heard round whose options are spellings, only if its standard pronunciation has exactly one spelling among the taught items (낫 / 낮 / 낯 all sound [낟]; 같이 sounds [가치]), or the prompt shows a picture or gloss that settles it. Items with a `soundChange` flag stay out of hear mode until recordings A-9 and A-10 exist. The review engine applies the same rule when it picks a produce-rung format.
-- **The spelling round of Letters S2** (section 5.2) is a read-plus-meaning round: picture or gloss with audio, then "Which spelling matches this word?". Its two options may sound the same (책이 and 채기 are both [채기]), and the picture or gloss is what settles it. CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss on it.
+- **The spelling round of Letters S2** (section 5.2) is a read-plus-meaning round: picture or gloss with audio, then "Which spelling matches this word?". Its two options may sound the same (책이 and 채기 are both [채기]), and the picture or gloss is what settles it. CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss on it. With a screen reader on, each option's label spells the option block by block with the letter names (책이: 치읓 애 기역, 이응 이; 채기: 치읓 애, 기역 이), never the word or its romanization alone, so the two options can be told apart by ear.
 
 **Never on a review screen:** a percentage, an "n of m" score, or a per-question timer. A lint enforces this (section 9.3).
 
