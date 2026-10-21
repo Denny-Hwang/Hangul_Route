@@ -596,6 +596,28 @@ export function soundFlashFor(result: PlayResult, failureReason: FallbackReason 
   return failureReason === 'no_voice' ? 'no-voice' : 'failed';
 }
 
+/**
+ * What a finished slide sound does (section 3.7), the prompt path and a story's Read-to-me alike:
+ * `blocked` is whether the browser blocked the voice (the failure the store recorded at or after
+ * `startedAt`), and `flash` the chip an explicit press shows, only while the slide it was pressed on
+ * (`slideIdx`) is still the one shown (`slideIdxNow`). A superseded Read-to-me chain (stopped, or a
+ * newer press) does nothing: `null`.
+ */
+export function soundOutcome(input: {
+  result: PlayResult | 'superseded';
+  lastFailure: { reason: FallbackReason; at: number } | null;
+  startedAt: number;
+  explicit: boolean;
+  slideIdx: number | undefined;
+  slideIdxNow: number | undefined;
+}): { blocked: boolean; flash: 'no-voice' | 'failed' | null } | null {
+  const { result, lastFailure } = input;
+  if (result === 'superseded') return null;
+  const reason = lastFailure !== null && lastFailure.at >= input.startedAt ? lastFailure.reason : null;
+  const shown = input.explicit && input.slideIdxNow !== undefined && input.slideIdxNow === input.slideIdx;
+  return { blocked: result !== 'played' && reason === 'blocked', flash: shown ? soundFlashFor(result, reason) : null };
+}
+
 /** The `playPrompt` spec of a slide's sound (the presenter adds `source`). */
 export function soundPrompt(sound: SlideSound): { text: string; audioRef?: string; kind: PromptKind } {
   const { text, audioRef } = sound.spoken;

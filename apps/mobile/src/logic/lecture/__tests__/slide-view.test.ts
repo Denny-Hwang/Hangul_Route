@@ -24,6 +24,7 @@ import {
   shownBuilds,
   slideSound,
   soundFlashFor,
+  soundOutcome,
   soundPress,
   soundPrompt,
   syllableView,
@@ -310,6 +311,34 @@ describe('soundFlashFor: the flash after an explicit press that did not play', (
     ['unavailable', null, 'failed'],
   ] as const)('%s with %s: %s', (result, reason, expected) => {
     expect(soundFlashFor(result, reason)).toBe(expected);
+  });
+});
+
+describe('soundOutcome: what a finished slide sound or Read-to-me does (section 3.7)', () => {
+  const base = { startedAt: 1000, explicit: true, slideIdx: 3, slideIdxNow: 3 } as const;
+  it('a blocked Read-to-me press flashes soundFailed and marks the voice blocked', () => {
+    expect(soundOutcome({ ...base, result: 'unavailable', lastFailure: { reason: 'blocked', at: 1001 } })).toEqual({ blocked: true, flash: 'failed' });
+  });
+  it('no Korean voice flashes noVoice; a failure from before the press is not this one', () => {
+    expect(soundOutcome({ ...base, result: 'unavailable', lastFailure: { reason: 'no_voice', at: 1000 } })).toEqual({ blocked: false, flash: 'no-voice' });
+    expect(soundOutcome({ ...base, result: 'unavailable', lastFailure: { reason: 'blocked', at: 999 } })).toEqual({ blocked: false, flash: 'failed' });
+  });
+  it('a failed play flashes soundFailed', () => {
+    expect(soundOutcome({ ...base, result: 'unavailable', lastFailure: { reason: 'error', at: 1200 } })).toEqual({ blocked: false, flash: 'failed' });
+    expect(soundOutcome({ ...base, result: 'unavailable', lastFailure: null })).toEqual({ blocked: false, flash: 'failed' });
+  });
+  it('a played sound flashes nothing and clears blocked', () => {
+    expect(soundOutcome({ ...base, result: 'played', lastFailure: { reason: 'blocked', at: 1001 } })).toEqual({ blocked: false, flash: null });
+  });
+  it('a superseded chain (stopped, or a newer press) does nothing at all', () => {
+    expect(soundOutcome({ ...base, result: 'superseded', lastFailure: { reason: 'blocked', at: 1001 } })).toBeNull();
+  });
+  it('a result after the slide changed flashes nothing there, and still records blocked', () => {
+    expect(soundOutcome({ ...base, slideIdxNow: 4, result: 'unavailable', lastFailure: { reason: 'blocked', at: 1001 } })).toEqual({ blocked: true, flash: null });
+    expect(soundOutcome({ ...base, slideIdxNow: undefined, result: 'unavailable', lastFailure: { reason: 'no_voice', at: 1001 } })).toEqual({ blocked: false, flash: null });
+  });
+  it('a forward sound build (not explicit) never flashes', () => {
+    expect(soundOutcome({ ...base, explicit: false, result: 'unavailable', lastFailure: { reason: 'error', at: 1001 } })).toEqual({ blocked: false, flash: null });
   });
 });
 
