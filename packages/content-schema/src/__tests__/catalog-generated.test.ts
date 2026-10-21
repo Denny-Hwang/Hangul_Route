@@ -56,12 +56,23 @@ describe('catalogue parity with the last hand-kept catalogue (version 32)', () =
     }
   });
 
-  it('keeps every story at its shelf order with its quest and anchor, and every topic with its order and free flag', () => {
+  it('keeps every story at its shelf order with its quest, anchor, free sampler flag, status, stage, theme and minutes', () => {
+    const keys = ['id', 'questId', 'order', 'anchor', 'sampler', 'status', 'recommendedStage', 'theme', 'minutes'] as const;
     for (const story of V32.stories) {
-      expect(pick(CATALOG.stories[story.order - 1], ['id', 'questId', 'order', 'anchor']), story.id).toEqual(pick(story, ['id', 'questId', 'order', 'anchor']));
+      const live = CATALOG.stories[story.order - 1];
+      expect(live, story.id).toBeDefined();
+      expect(pick(live as typeof story, keys), story.id).toEqual(pick(story, keys));
     }
+    const samplers = (stories: readonly { id: string; sampler: boolean }[]) => stories.filter((s) => s.sampler).map((s) => s.id).sort();
+    expect(samplers(CATALOG.stories)).toEqual(samplers(V32.stories));
+    expect(samplers(V32.stories)).toHaveLength(6);
+  });
+
+  it('keeps every topic with its order and free flag', () => {
     for (const topic of V32.topics) {
-      expect(pick(CATALOG.topics.find((t) => t.key === topic.key) ?? topic, ['id', 'order', 'free']), topic.key).toEqual(pick(topic, ['id', 'order', 'free']));
+      const live = CATALOG.topics.find((t) => t.key === topic.key);
+      expect(live, topic.key).toBeDefined();
+      expect(pick(live as typeof topic, ['id', 'order', 'free']), topic.key).toEqual(pick(topic, ['id', 'order', 'free']));
     }
   });
 
@@ -132,7 +143,16 @@ const lessonQuest = (id: string, cell: CatalogCell): CatalogQuest => ({
   teaches: [],
   kind: 'lesson',
 });
-const story = (slug: string, stage = 1): GeneratedStoryRow => ({ slug, title: slug, recommendedStage: stage, theme: 'letters', minutes: 4, sampler: false, status: 'ready' });
+const story = (slug: string, stage = 1, addedIn?: number): GeneratedStoryRow => ({
+  slug,
+  title: slug,
+  recommendedStage: stage,
+  theme: 'letters',
+  minutes: 4,
+  sampler: false,
+  status: 'ready',
+  ...(addedIn === undefined ? {} : { addedIn }),
+});
 const crafts = lessonCell('stage2', 'crafts', ['quest:c1']);
 const letters = lessonCell('stage2', 'letters', ['quest:l1', 'quest:l2']);
 const sources = (over: Partial<CatalogSources> = {}): CatalogSources => ({
@@ -179,6 +199,24 @@ describe('assembleCatalog', () => {
       ['quest:story-alpha-listen', 'episode:shelf-alpha', 'stage2'],
       ['quest:story-beta-listen', 'episode:shelf-beta', 'stage1'],
     ]);
+  });
+
+  it('puts a story added later after the earlier ones whatever its slug, so a shipped story never moves', () => {
+    const before = assembleCatalog(sources({ stories: [story('zeta'), story('hangeul-day'), story('x-ray', 1, 20261105)] }));
+    expect(before.stories.map((s) => [s.order, s.id])).toEqual([
+      [1, 'story:hangeul-day'],
+      [2, 'story:zeta'],
+      [3, 'story:x-ray'],
+    ]);
+    const after = assembleCatalog(sources({ stories: [story('zeta'), story('hangeul-day'), story('x-ray', 1, 20261105), story('apple', 1, 20261110)] }));
+    expect(after.stories.map((s) => [s.order, s.id])).toEqual([
+      [1, 'story:hangeul-day'],
+      [2, 'story:zeta'],
+      [3, 'story:x-ray'],
+      [4, 'story:apple'],
+    ]);
+    const sameDay = assembleCatalog(sources({ stories: [story('hangeul-day'), story('zeta'), story('owl', 1, 20261110), story('fox', 1, 20261110)] }));
+    expect(sameDay.stories.map((s) => s.id).slice(2)).toEqual(['story:fox', 'story:owl']);
   });
 
   it('orders the topics by their order and frees the first ones', () => {
