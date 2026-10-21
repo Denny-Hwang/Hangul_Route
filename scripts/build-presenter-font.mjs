@@ -23,7 +23,10 @@
 // lines and replies (the realia questions' sheets, keys and options were already in the list);
 // the sentence builds (LV-S3) draw the order-it sentences' tiles, a particle tile's stem and its two
 // endings, and the distractors, which the list held already (F-CURR-001 §3.12): a tile and a stem
-// are pieces of the sentence, so their code points are its own.
+// are pieces of the sentence, so their code points are its own; the write-together slides (LV-S4)
+// draw the type-hangul targets, the trace-word words, the write-frame frames and banks (all in the
+// list already; a frame's "For example" is its frame and a bank word, so its code points are theirs)
+// and the name round's sound table, whose syllable blocks this row adds.
 // Only taught Korean uses the subset: UI-language text (titles, card facts, glosses) and
 // the teacher-typed deck title use the system Korean stack, so they are not in the list.
 // apps/mobile/src/logic/lecture/__tests__/presenter-glyphs.test.ts expands every shipped
@@ -153,6 +156,8 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
     for (const round of list(scope.writeFrame?.rounds)) {
       add(round.frame?.ko);
       for (const slot of list(round.slots)) list(slot.bank).forEach((w) => add(w?.ko));
+      // The name round's slide draws its sound table (LV-S4): every block of every group.
+      for (const group of list(round.soundTable?.groups)) list(group).forEach((t) => add(t?.ko));
     }
   }
   for (const quest of list(quests)) {

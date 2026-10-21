@@ -334,6 +334,29 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     ]);
   });
 
+  test("lists the name round's sound table too (AMENDMENTS-LECTURE-V2 LV-S4): every block of every group, never its finals", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const block = (ko) => ({ ko, romanization: "x" });
+    const scopes = {
+      a: {
+        kind: "write-frame",
+        writeFrame: {
+          rounds: [
+            {
+              frame: kt("제 이름은 ___이에요/예요."),
+              slots: [{ bank: [] }],
+              freeEntry: true,
+              soundTable: { groups: [[block("캐"), block("패")], [block("츠")], {}], finals: [block("ㄴ")] },
+            },
+            { frame: kt("이건 ___이에요/예요."), slots: [{ bank: [kt("한글")] }], soundTable: {} },
+          ],
+        },
+      },
+    };
+    // The finals are a learner-game tab only: the slide draws the blocks, so a final adds nothing.
+    assert.deepEqual(presenterStrings({ scopes }), ["제 이름은 ___이에요/예요.", "캐", "패", "츠", "이건 ___이에요/예요.", "한글"]);
+  });
+
   test("lists what the question slides draw too (AMENDMENTS-LECTURE-V2 LV-S2): Listen & Pick prompts and options, Tap to Respond lines and replies", () => {
     const kt = (ko) => ({ ko, romanization: "x", en: "y" });
     const scopes = {
