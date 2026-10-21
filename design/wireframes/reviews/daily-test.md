@@ -1,6 +1,7 @@
 # Reviews/Daily-Test — spaced-retrieval daily test (wireframe v1)
 
 Spec: `docs/specs/F-RVW-001-review-tests.md` §3.1 (stars-only surface) · §3.2 (daily pool)
+Superseded: the layout is replaced by `reviews/daily-review.md` (F-CURR-002 §4.5, row CM-D1): the Daily Test is rebuilt on the F-CURR-002 memory model (10 items, about 2-3 minutes, Keep going in `reviews/keep-going.md`). This file stays as the record of the F-RVW-001 §3.2 design.
 Audience: **learner (P4/P5 child, 5–11)** — a pre-reader must be able to finish without an adult
 
 ## Scenario (Given-When-Then)
