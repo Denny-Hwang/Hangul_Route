@@ -18,7 +18,15 @@ import { stages } from '../stages';
 
 const PERCENT_OR_FRACTION = /%|\b\d+\s*(of|\/)\s*\d+\b/i;
 const AGE_WORDING =
-  /\b(ages?\s+\d+|\d+\s*(-|–|to)\s*\d+\s*(years?|yrs?)|\d+\s*(years?|yrs?)\s*(old|\+)|kids?|child(ren)?|toddlers?|little ones?)\b/i;
+  /\b(ages\b|age\s+\d+|\d+\s*(-|–|to)\s*\d+\s*(years?|yrs?)|\d+\s*(years?|yrs?)\s*(old|\+)|kids?|child(ren)?|toddlers?|little ones?|teens?|teenagers?|grown-?ups?|adults?|preschool(ers?)?)\b/i;
+/**
+ * A bare number range ("For 6-10", "6–10") also reads as an age range, unless a unit follows it
+ * ("2-3 sentences"). The lookahead keeps lesson sizes out of the rule.
+ */
+const BARE_RANGE = /\b\d+\s*(-|–|to)\s*\d+\b(?!\s*(sentences?|words?|turns?|minutes?|letters?|lines?|questions?))/i;
+/** Age wording in the es and ko overlays: niños, años, edad, adultos, infantil; -세, 어린이, 아이들, 청소년, 성인, 유아, 아동. */
+const AGE_WORDING_ES = /\b(niñ[oa]s?|años|edad(es)?|adult[oa]s?|adolescentes?|infantil(es)?)(?![\p{L}])/iu;
+const AGE_WORDING_KO = /\d+\s*세|어린이|아이들|청소년|성인|유아|아동/u;
 const SPEAKING_WORDS =
   /\b(record(s|ed|ing)?|speak(s|ing)?|spoke|say(s|ing)?|said|call(s|ed|ing)?|pronounc(e|es|ed|ing))\b/i;
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -26,6 +34,7 @@ const EMOJI = /\p{Extended_Pictographic}/u;
 const RULES: Array<[string, RegExp]> = [
   ['percent or fraction', PERCENT_OR_FRACTION],
   ['age wording', AGE_WORDING],
+  ['age range', BARE_RANGE],
   ['speaking word', SPEAKING_WORDS],
 ];
 
@@ -95,6 +104,25 @@ describe('stage copy (F-CURR-002 OD-12)', () => {
     expect(AGE_WORDING.test('7 years old')).toBe(true);
     expect(AGE_WORDING.test('Korean for kids')).toBe(true);
     expect(AGE_WORDING.test('Read 60 core words')).toBe(false);
+    expect(AGE_WORDING.test('For ages six and up')).toBe(true);
+    expect(AGE_WORDING.test('Great for teens')).toBe(true);
+    expect(AGE_WORDING.test('Grown-ups welcome')).toBe(true);
+    expect(AGE_WORDING.test('Made for adults')).toBe(true);
+    expect(AGE_WORDING.test('Preschoolers love it')).toBe(true);
+    expect(AGE_WORDING.test('Read short messages')).toBe(false);
+    expect(BARE_RANGE.test('For 6-10')).toBe(true);
+    expect(BARE_RANGE.test('6–10')).toBe(true);
+    expect(BARE_RANGE.test('Read 2-3 sentences')).toBe(false);
+    expect(BARE_RANGE.test('Hold a 4-turn greeting')).toBe(false);
+    expect(AGE_WORDING_ES.test('Coreano para niños')).toBe(true);
+    expect(AGE_WORDING_ES.test('De 6 a 10 años')).toBe(true);
+    expect(AGE_WORDING_ES.test('Para todas las edades')).toBe(true);
+    expect(AGE_WORDING_ES.test('Lee y responde diálogos cortos de todos los días.')).toBe(false);
+    expect(AGE_WORDING_ES.test('Evita los daños')).toBe(false);
+    expect(AGE_WORDING_KO.test('6세 이상')).toBe(true);
+    expect(AGE_WORDING_KO.test('어린이 한국어')).toBe(true);
+    expect(AGE_WORDING_KO.test('아이들과 함께')).toBe(true);
+    expect(AGE_WORDING_KO.test('짧은 일상 대화를 읽고 답해요.')).toBe(false);
     expect(SPEAKING_WORDS.test('Record a 1-minute introduction')).toBe(true);
     expect(SPEAKING_WORDS.test('Speak with Hoya')).toBe(true);
     expect(SPEAKING_WORDS.test('Say what you think')).toBe(true);
@@ -125,6 +153,15 @@ describe('stage copy (F-CURR-002 OD-12)', () => {
         ['emoji', EMOJI],
       ]),
     ).toEqual(KNOWN_OVERLAY_EXCEPTIONS);
+  });
+
+  it('no es or ko stage overlay carries age wording', () => {
+    const rule = { es: AGE_WORDING_ES, ko: AGE_WORDING_KO } as const;
+    for (const [where, text] of overlayFields) {
+      const locale = where.slice(0, 2) as keyof typeof rule;
+      expect(rule[locale].test(text), where).toBe(false);
+      expect(BARE_RANGE.test(text), where).toBe(false);
+    }
   });
 
   it('carries the reviewed es and ko values of the OD-12 strings', () => {
