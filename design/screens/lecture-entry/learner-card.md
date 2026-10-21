@@ -14,7 +14,7 @@ In `ParentDashboardScreen`, after `GrownUpHomeCard`, the same `rn-card` look: h2
 - A link that cannot be built opens `/present` instead, never a dead button.
 - After the grown-up session lapses, a press asks for the PIN again (`gateOpensDirectlyNow`), as See report does.
 - No learner on the device: only the line and Open lecture mode.
-- Drawn only on the web build and only while `flags.lectureModeEnabled` is on (launch default off until LV-7); native builds draw nothing.
+- Drawn only on the web build and only while `flags.lectureModeEnabled` is on (launch default on since LV-7; `EXPO_PUBLIC_LECTURE_MODE` is the kill switch); native builds draw nothing.
 
 ## Measured
 
