@@ -171,7 +171,7 @@ const FIXTURE = {
       cardPairs: [{ ko: "나무", en: "tree", romanization: "namu" }],
       storySteps: [{ id: "st1", labelEn: "Wake up", labelKo: "일어나요", romanization: "ireonayo" }, { id: "st2", labelEn: "Eat" }],
       picWord: { boards: [{ pairs: [{ word: { ko: "곰", romanization: "gom", en: "bear" } }] }] },
-      dialogue: [{ npcKo: "대화는안나옴", npcEn: "dialogue is not presented", options: [] }],
+      dialogue: [{ npcKo: "대화예요", npcEn: "it is a dialogue", options: [{ ko: "네", en: "yes" }] }],
     },
   },
   quests: [
@@ -226,8 +226,8 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     assert.ok(!all.has("실"), "fact text is never presented");
   });
 
-  test("leaves out what the presenter never draws (dialogue)", () => {
-    assert.ok(!all.has("대"));
+  test("takes a Tap to Respond line and its replies, which the reply question draws (LV-S2; left out before it)", () => {
+    for (const s of ["대화예요", "네"]) assert.ok(strings.includes(s), s);
   });
 
   test("lists the Korean of the upper-stage Discover items (F-CURR-001 §3.10)", () => {
@@ -332,6 +332,25 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
       "사과",
       "떡",
     ]);
+  });
+
+  test("lists what the question slides draw too (AMENDMENTS-LECTURE-V2 LV-S2): Listen & Pick prompts and options, Tap to Respond lines and replies", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const scopes = {
+      a: {
+        kind: "listen-pick",
+        listenPick: {
+          rounds: [
+            { prompt: kt("빵을 먹어요."), options: [{ id: "a", text: kt("빵을 먹어요.") }, { id: "b", text: kt("물을 마셔요.") }, { id: "c", pictureRef: "word:food-milk" }] },
+            { prompt: kt("어"), options: [{ id: "eo", text: kt("ㅓ") }, {}] },
+          ],
+        },
+      },
+      b: { kind: "tap-respond", dialogue: [{ npcKo: "밥 먹었어요?", options: [{ ko: "네, 먹었어요." }, { ko: "잘 가요." }] }, { options: [] }] },
+      c: { kind: "listen-pick", listenPick: {} },
+      d: { kind: "tap-respond" },
+    };
+    assert.deepEqual(presenterStrings({ scopes }), ["빵을 먹어요.", "빵을 먹어요.", "물을 마셔요.", "어", "ㅓ", "밥 먹었어요?", "네, 먹었어요.", "잘 가요."]);
   });
 
   test("tolerates missing optional fields", () => {
