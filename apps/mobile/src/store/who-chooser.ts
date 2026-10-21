@@ -1,10 +1,11 @@
-import { JOIN_HANDOFF_MS, PROFILE_LOCKS_KEY, ProfileLocksSchema, type Profile } from '@hangul-route/content-schema';
+import { JOIN_HANDOFF_MS, PROFILE_LOCKS_KEY, ProfileLocksSchema, type GrownUpUse, type Profile } from '@hangul-route/content-schema';
 import { flags } from '../config/flags';
 import { gateRequired } from '../logic/profiles/learner-type';
 import { routeZone } from '../logic/profiles/session';
 import { chooserTrigger, isSharedDevice, type ChooserEvent, type WhoMarker, type WhoTrigger } from '../logic/profiles/who';
 import { consumeBootIntent, peekBootIntent } from '../platform/app-root';
 import { subscribeAppVisibility } from '../platform/app-visibility';
+import { readDeviceUses } from '../platform/device-uses';
 import { takeJoinHandoff } from '../platform/join-handoff';
 import { readJsonExact } from '../platform/storage';
 import { useAccountStore } from './account-store';
@@ -58,10 +59,26 @@ function effectiveLocks(profiles: readonly Profile[]): string[] {
   return locksAtLaunch === 'unread' ? profiles.map((p) => p.id) : [...locksAtLaunch];
 }
 
-/** Section 6.2: whether the device is shared now. The known uses (`deviceUses`, web) arrive with row OA-4b. */
+let usesKnown: readonly GrownUpUse[] = [];
+
+/**
+ * [OA] Row OA-4b, section 7.1: the grown-up uses of the signed-in account known on this browser (`deviceUses`, web;
+ * none on native), as last read: at launch and whenever the chooser opens. Codes only, never a name.
+ */
+export function knownUses(): readonly GrownUpUse[] {
+  return usesKnown;
+}
+
+/** [OA] Reads `deviceUses` again (never throws; unreadable, stale or not parsing is none) and keeps it for the rules here. */
+export async function refreshKnownUses(): Promise<readonly GrownUpUse[]> {
+  usesKnown = await readDeviceUses();
+  return usesKnown;
+}
+
+/** Section 6.2: whether the device is shared now, the known grown-up uses included (row OA-4b). */
 export function deviceShared(): boolean {
   const profiles = learnerProfiles();
-  return isSharedDevice({ profiles, locks: effectiveLocks(profiles), uses: [], marker: whoMarker() });
+  return isSharedDevice({ profiles, locks: effectiveLocks(profiles), uses: usesKnown, marker: whoMarker() });
 }
 
 /** Whether the active profile is locked now (CS-19). */
@@ -115,7 +132,7 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
   if (!flags.whoChooserEnabled) return null;
   const profiles = learnerProfiles();
   if (profiles.length === 0) return null;
-  locksAtLaunch = await readProfileLocks();
+  [locksAtLaunch] = await Promise.all([readProfileLocks(), refreshKnownUses()]);
   const shared = deviceShared();
   const intent = peekBootIntent();
   let joinHeld = false;
@@ -152,7 +169,7 @@ export function whoReturnTrigger(): WhoTrigger | null {
 
 /** Whether the Home Switch and the Profile row show (section 6.2): the flag on, 2 or more learners or a known use. */
 export function switchOffered(profileCount: number = learnerProfiles().length): boolean {
-  return flags.whoChooserEnabled && profileCount >= 2;
+  return flags.whoChooserEnabled && (profileCount >= 2 || usesKnown.length > 0);
 }
 
 // ---- Resume (section 6.2) ----
@@ -220,8 +237,9 @@ export function persistLeaving(): void {
   }
 }
 
-/** Test seam: forget the launch locks and the held join. */
+/** Test seam: forget the launch locks, the known uses and the held join. */
 export function resetChooserState(): void {
   locksAtLaunch = [];
+  usesKnown = [];
   held = null;
 }

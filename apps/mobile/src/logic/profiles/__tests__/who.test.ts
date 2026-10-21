@@ -1,14 +1,17 @@
-import { CHOOSER_RESUME_MS, GROWN_UP_BACKGROUND_MS, OA_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema';
+import { CHOOSER_RESUME_MS, GROWN_UP_BACKGROUND_MS, OA_TELEMETRY_PAYLOADS, safeNextPath } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
   TILE_TINTS,
+  chooserHandoff,
   chooserTrigger,
   grownUpRows,
+  grownUpTarget,
   isSharedDevice,
   learnersBucket,
   pickLanding,
   tileOrder,
   tileTints,
+  rowLabelKey,
   whoPickedEvent,
   whoShownEvent,
   type ChooserEvent,
@@ -148,28 +151,86 @@ describe('tileTints (section 6.1)', () => {
   });
 });
 
-describe('grownUpRows (sections 6.1, 12, OA-D21; row OA-4a: the Grown-up area only)', () => {
+describe('grownUpRows (sections 6.1, 12, OA-D21; rows OA-4a and OA-4b)', () => {
   const input = { os: 'web' as const, uses: ['family', 'teacher'] as const, online: true, marker: 'pin' as const, resetPending: null };
+  const row = (use: string, extra: Record<string, unknown> = {}) => ({ use, locked: true, disabled: false, caption: null, ...extra });
 
-  it('emits only the Grown-up area, locked behind the PIN', () => {
-    expect(grownUpRows(input)).toEqual({ pending: null, rows: [{ use: 'area', locked: true, disabled: false, caption: null }] });
-    expect(grownUpRows({ ...input, os: 'ios', uses: [] }).rows).toHaveLength(1);
+  it('web: the known uses, then the Grown-up area, all behind the PIN', () => {
+    expect(grownUpRows(input)).toEqual({ pending: null, rows: [row('family'), row('teacher'), row('area')] });
   });
 
-  it('nopin: the caption A grown-up sets a PIN here.', () => {
-    expect(grownUpRows({ ...input, marker: 'nopin' }).rows[0]).toEqual({ use: 'area', locked: true, disabled: false, caption: 'nopin' });
+  it('the uses always come in the order family, teacher, school, whatever order the record holds', () => {
+    expect(grownUpRows({ ...input, uses: ['school', 'family', 'teacher'] }).rows.map((r) => r.use)).toEqual(['family', 'teacher', 'school', 'area']);
+    expect(grownUpRows({ ...input, uses: ['school'] }).rows.map((r) => r.use)).toEqual(['school', 'area']);
   });
 
-  it('none: no lock glyph (the row opens directly)', () => {
-    expect(grownUpRows({ ...input, marker: 'none' }).rows[0]!.locked).toBe(false);
+  it('web with no known use: Sign in as a grown-up replaces the use rows', () => {
+    expect(grownUpRows({ ...input, uses: [] }).rows).toEqual([row('signin'), row('area')]);
   });
 
-  it('offline: the Grown-up area stays enabled', () => {
-    expect(grownUpRows({ ...input, online: false }).rows[0]!.disabled).toBe(false);
+  it('native shows only the Grown-up area, whatever uses are passed (F-AUTH-004)', () => {
+    for (const os of ['ios', 'android'] as const) {
+      expect(grownUpRows({ ...input, os }).rows).toEqual([row('area')]);
+      expect(grownUpRows({ ...input, os, uses: [] }).rows).toEqual([row('area')]);
+    }
+  });
+
+  it('nopin: the caption A grown-up sets a PIN here. on the Grown-up area only', () => {
+    const rows = grownUpRows({ ...input, marker: 'nopin' }).rows;
+    expect(rows.at(-1)).toEqual(row('area', { caption: 'nopin' }));
+    expect(rows.filter((r) => r.use !== 'area').every((r) => r.caption === null && r.locked)).toBe(true);
+  });
+
+  it('none: no lock glyph on any row (they open directly)', () => {
+    expect(grownUpRows({ ...input, marker: 'none' }).rows.every((r) => !r.locked)).toBe(true);
+    expect(grownUpRows({ ...input, marker: 'none', uses: [] }).rows.every((r) => !r.locked)).toBe(true);
+  });
+
+  it('offline (web): Family, Teacher, School and Sign in are disabled with Needs the internet; the Grown-up area stays enabled', () => {
+    const rows = grownUpRows({ ...input, uses: ['family', 'teacher', 'school'], online: false }).rows;
+    expect(rows.map((r) => [r.use, r.disabled, r.caption])).toEqual([
+      ['family', true, 'offline'],
+      ['teacher', true, 'offline'],
+      ['school', true, 'offline'],
+      ['area', false, null],
+    ]);
+    expect(grownUpRows({ ...input, uses: [], online: false }).rows.map((r) => [r.use, r.disabled, r.caption])).toEqual([
+      ['signin', true, 'offline'],
+      ['area', false, null],
+    ]);
+    // nopin offline: the Grown-up area keeps its own caption.
+    expect(grownUpRows({ ...input, online: false, marker: 'nopin' }).rows.at(-1)).toEqual(row('area', { caption: 'nopin' }));
   });
 
   it('a running Forgot PIN wait puts the pending line first, with its end time', () => {
     expect(grownUpRows({ ...input, resetPending: 1_800_000_000_000 }).pending).toEqual({ readyAt: 1_800_000_000_000 });
+  });
+});
+
+describe('grownUpTarget (section 5.3): the page each grown-up row opens after the PIN', () => {
+  it('family, teacher and school open their persona home; Sign in opens the router (no target)', () => {
+    expect(grownUpTarget('family')).toBe('/parent');
+    expect(grownUpTarget('teacher')).toBe('/teach?persona=teacher');
+    expect(grownUpTarget('school')).toBe('/teach?focus=school');
+    expect(grownUpTarget('signin')).toBeUndefined();
+  });
+
+  it('rowLabelKey: the learner.who.use key of each row', () => {
+    expect((['family', 'teacher', 'school', 'signin'] as const).map(rowLabelKey)).toEqual(['family', 'teacher', 'school', 'signIn']);
+  });
+
+  it('chooserHandoff: via chooser, with the target, or the router for Sign in', () => {
+    expect(chooserHandoff('family')).toEqual({ via: 'chooser', target: '/parent' });
+    expect(chooserHandoff('school')).toEqual({ via: 'chooser', target: '/teach?focus=school' });
+    expect(chooserHandoff('signin')).toEqual({ via: 'chooser' });
+  });
+
+  it('every target passes safeNextPath unchanged and carries no id, name or email (no PII in URLs)', () => {
+    for (const use of ['family', 'teacher', 'school'] as const) {
+      const target = grownUpTarget(use)!;
+      expect(safeNextPath(target), use).toBe(target);
+      expect(target, use).not.toMatch(/sp_|acct|profile|@|id=/i);
+    }
   });
 });
 
@@ -186,6 +247,11 @@ describe('who.shown and who.picked (section 15)', () => {
     expect(whoPickedEvent('learner')).toEqual({ name: 'who.picked', payload: { kind: 'learner' } });
     expect(whoPickedEvent('learner', 'area').payload).toEqual({ kind: 'learner' });
     expect(whoPickedEvent('grown_up', 'area').payload).toEqual({ kind: 'grown_up', use: 'area' });
+    // Row OA-4b: each use row names its use.
+    for (const use of ['family', 'teacher', 'school', 'signin'] as const) {
+      expect(whoPickedEvent('grown_up', use).payload).toEqual({ kind: 'grown_up', use });
+      expect(OA_TELEMETRY_PAYLOADS['who.picked'].safeParse(whoPickedEvent('grown_up', use).payload).success).toBe(true);
+    }
     for (const event of [whoPickedEvent('add'), whoPickedEvent('cancel_reset'), whoPickedEvent('grown_up', 'area')]) {
       expect(OA_TELEMETRY_PAYLOADS['who.picked'].safeParse(event.payload).success).toBe(true);
     }

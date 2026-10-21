@@ -1,12 +1,15 @@
 import {
+  APP_ROUTES,
   CHOOSER_NAME_ORDER_FROM,
   CHOOSER_RESUME_MS,
   GROWN_UP_BACKGROUND_MS,
+  SCHOOL_FOCUS_QUERY,
   type GrownUpUse,
   type ThemeKey,
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { compareNames } from '@hangul-route/i18n';
+import type { GrownUpHandoffRequest } from '../shell/handoff-rules';
 
 /**
  * [OA] "Who is using this?", the device's one chooser (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6.1 to 6.4,
@@ -134,15 +137,24 @@ export function tileTints(profiles: readonly { id: string; avatar: string }[]): 
   return tints;
 }
 
-/** One grown-up row (GrownUpRow spec). Row OA-4a emits only the Grown-up area; the use rows come in OA-4b. */
+/**
+ * A grown-up row on the chooser (GrownUpRow spec): a use of the signed-in account known on this device (web), the
+ * **Sign in as a grown-up** row (web, no use known), or the device's own Grown-up area.
+ */
+export type GrownUpRowUse = GrownUpUse | 'signin' | 'area';
+
+/** One grown-up row (GrownUpRow spec, rows OA-4a and OA-4b). */
 export interface GrownUpRowView {
-  use: 'area';
+  use: GrownUpRowUse;
   /** The lock glyph and the PIN in the accessible name: false only on a self-only device without a PIN (`none`). */
   locked: boolean;
   /** Offline (web) disables every use row but the Grown-up area, which works offline (section 12). */
   disabled: boolean;
-  /** `nopin`: **A grown-up sets a PIN here.** under the label (section 6.1). */
-  caption: 'nopin' | null;
+  /**
+   * The line under the label: `nopin` (**A grown-up sets a PIN here.**, the Grown-up area on a `nopin` device) or
+   * `offline` (**Needs the internet**, a disabled use row).
+   */
+  caption: 'nopin' | 'offline' | null;
 }
 
 /** The Grown-ups section of the chooser: the pending 24-hour wait (OA-D21), then the rows. */
@@ -152,11 +164,16 @@ export interface GrownUpsView {
   rows: GrownUpRowView[];
 }
 
+/** The fixed order of the use rows (section 5.2): family, teacher, school. */
+const USE_ORDER: readonly GrownUpUse[] = ['family', 'teacher', 'school'];
+
 /**
- * The Grown-ups section (sections 6.1, 12, OA-D21). This row emits the Grown-up area only (unlocked on `none`, with
- * the `nopin` caption on `nopin`) and the pending-reset line; `os`, `uses` and `online` decide the Family, Teacher,
- * School and Sign in rows of OA-4b and change nothing here yet. `resetPending` is the end of a running Forgot PIN
- * wait (epoch ms), or `null`.
+ * The Grown-ups section (sections 6.1, 12, OA-D11, OA-D21). On the web: the known uses (`deviceUses`, section 7.1) in
+ * the order family, teacher, school, or **Sign in as a grown-up** in their place when none is known; then the Grown-up
+ * area. Native shows only the Grown-up area (no sign-in in the native app until F-AUTH-004). Offline, every row but
+ * the Grown-up area is disabled with **Needs the internet** (grown-up pages are online-only); the Grown-up area works
+ * offline. A self-only device without a PIN (`none`) shows no lock glyph. `resetPending` is the end of a running
+ * Forgot PIN wait (epoch ms), or `null`. The rows carry codes only: never an account name or email (CS-7).
  */
 export function grownUpRows(input: {
   os: 'ios' | 'android' | 'web';
@@ -165,11 +182,51 @@ export function grownUpRows(input: {
   marker: WhoMarker;
   resetPending: number | null;
 }): GrownUpsView {
-  const { marker, resetPending } = input;
+  const { os, uses, online, marker, resetPending } = input;
+  const locked = marker !== 'none';
+  const known = USE_ORDER.filter((use) => uses.includes(use));
+  const accountRows: (GrownUpUse | 'signin')[] = os !== 'web' ? [] : known.length > 0 ? known : ['signin'];
   return {
     pending: resetPending === null ? null : { readyAt: resetPending },
-    rows: [{ use: 'area', locked: marker !== 'none', disabled: false, caption: marker === 'nopin' ? 'nopin' : null }],
+    rows: [
+      ...accountRows.map((use): GrownUpRowView => ({ use, locked, disabled: !online, caption: online ? null : 'offline' })),
+      { use: 'area', locked, disabled: false, caption: marker === 'nopin' ? 'nopin' : null },
+    ],
   };
+}
+
+/**
+ * Section 5.3: the grown-up page a use row opens once the PIN is through (`openGrownUpArea({ via: 'chooser', target
+ * })`). Family opens the family home; Teacher the teacher home through the `/teach` router with the teacher hint (the
+ * router alone follows the last persona, which could be Family on an account that holds both); School the teacher
+ * home at its School group (`focus=school`). Sign in as a grown-up has no target: the hand-off opens the sign-in
+ * router. No target carries an id (no PII in URLs); each passes `safeNextPath`.
+ */
+export function grownUpTarget(use: GrownUpUse | 'signin'): string | undefined {
+  switch (use) {
+    case 'family':
+      return APP_ROUTES.parentHome;
+    case 'teacher':
+      return `${APP_ROUTES.teacherIndex}?persona=teacher`;
+    case 'school':
+      return `${APP_ROUTES.teacherIndex}?${SCHOOL_FOCUS_QUERY}`;
+    case 'signin':
+      return undefined;
+  }
+}
+
+/** The `learner.who.use` key of a use row's label (and of its PIN screen's title). */
+export function rowLabelKey(use: GrownUpUse | 'signin'): GrownUpUse | 'signIn' {
+  return use === 'signin' ? 'signIn' : use;
+}
+
+/**
+ * Section 5.3: the hand-off a use row asks for after its PIN (or directly on a `none` device):
+ * `openGrownUpArea({ via: 'chooser', target })`, the target from `grownUpTarget` (none for Sign in: the router).
+ */
+export function chooserHandoff(use: GrownUpUse | 'signin'): GrownUpHandoffRequest {
+  const target = grownUpTarget(use);
+  return target === undefined ? { via: 'chooser' } : { via: 'chooser', target };
 }
 
 /** `who.shown`'s `learners` bucket (section 15). */

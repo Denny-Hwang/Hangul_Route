@@ -22,6 +22,7 @@ import { pinCreated, pinResetCompleted, pinResetRequested } from '../../logic/on
 import {
   forCancelReset,
   forGrownUpArea as opensGrownUpArea,
+  forGrownUpUse,
   grownUpAreaNoPin,
   initialPinMode,
   pinCreatedWhere,
@@ -36,6 +37,7 @@ import {
 } from '../../logic/profiles/pin-hash';
 import { pauseAnnounceKey, pauseText, showsPauseHelp } from '../../logic/profiles/pin-pause';
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
+import { chooserHandoff, rowLabelKey } from '../../logic/profiles/who';
 import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { flags } from '../../config/flags';
@@ -75,6 +77,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * minutes from a minute on, the Forgot PIN? help line from the 3rd pause on the Grown-up area only, a polite live
  * region updated once a minute, one attempt count shared by every tab, `pin.paused` and `parent.gate.opened`.
  *
+ * [OA] Destination `GrownUpUse` (row OA-4b, section 5.3, CS-4): the chooser's Family, Teacher, School and Sign in as a
+ * grown-up rows. Verify only, no Forgot PIN?, never a new PIN; a correct PIN hands off with `via: 'chooser'` to that
+ * use's page (`grownUpTarget`); with no PIN stored, the no-PIN line and Continue to `/signin`. Cancel returns to the
+ * chooser.
+ *
  * [OA] Destination `CancelReset` (row OA-4a, OA-D21; mock `design/screens/profiles/pin-entry-v2.md` D8): the chooser's
  * **Cancel the wait**, titled with those words. Verify only, no Forgot PIN?: a correct PIN clears the pending 24-hour
  * wait, sends `pin.reset_requested { method: 'wait_cancelled' }` and returns to the chooser. It opens no grown-up
@@ -111,6 +118,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const markPinVerified = useUiStore((s) => s.markPinVerified);
   const locale = useLocale();
   const forGrownUpArea = opensGrownUpArea(route.params);
+  const forUse = forGrownUpUse(route.params);
   const cancelReset = forCancelReset(route.params);
   const noPin = grownUpAreaNoPin(route.params, storedHash);
 
@@ -173,10 +181,15 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const leave = (): void => navigation.goBack();
 
   const handOff = async (): Promise<void> => {
-    const { url, grownUpVia } = route.params;
-    const result = await openGrownUpArea({ via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) });
-    // The tab is leaving; a return through the back/forward cache lands on the start screen.
-    if (result === 'opened') navigation.goBack();
+    const { url, grownUpVia, use } = route.params;
+    // [OA] A chooser row (row OA-4b): its own page, `via: 'chooser'`; the target is derived here, never read from the route.
+    const request = forUse ? chooserHandoff(use ?? 'signin') : { via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) };
+    const result = await openGrownUpArea(request);
+    // The tab is leaving; a return through the back/forward cache lands on the start screen. [OA] From the chooser the
+    // screen stays until the page goes: going back there would close the grown-up session and clear the unlock this
+    // hand-off just wrote, before the grown-up page reads it (CS-2). A return from the cache finds this PIN screen,
+    // which asks again (the fresh PIN is forgotten on a restore).
+    if (result === 'opened' && !forUse) navigation.goBack();
   };
 
   const proceed = (): void => {
@@ -309,7 +322,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         if (pinResetRequestedAt !== null) clearPinResetRequest();
         // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
         markPinVerified();
-        if (forGrownUpArea) await handOff();
+        if (forGrownUpArea || forUse) await handOff();
         else proceed();
         return;
       }
@@ -325,9 +338,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     }
   };
 
+  // [OA] A chooser row's PIN screen is titled with that row's label (mock pin-entry-v2.md, "Title per destination").
+  const useTitle = forUse ? messages.learner.who.use[rowLabelKey(route.params.use ?? 'signin')] : null;
   const title = cancelReset
     ? messages.learner.who.resetCancel
-    : mode === 'verify'
+    : useTitle !== null
+      ? useTitle
+      : mode === 'verify'
       ? copy.pinVerifyTitle
       : mode === 'setup-1'
         ? copy.pinCreateTitle
@@ -351,7 +368,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     // F-APP-001 section 3.9: the grown-up area never creates a PIN here; the grown-up signs in instead.
     const g = messages.caregiver.grownUpHome;
     return (
-      <Screen tone="canvas" header={{ title: copy.pinVerifyTitle, titleInline: true }}>
+      <Screen tone="canvas" header={{ title: useTitle ?? copy.pinVerifyTitle, titleInline: true }}>
         <Spacer size="xs" />
         <Body tone="secondary">{g.noPin}</Body>
         <Spacer size="lg" />
@@ -360,7 +377,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           tone="primary"
           size="lg"
           fullWidth
-          onPress={() => continueToGrownUpPage(route.params.url, locale)}
+          // [OA] A chooser row has no URL in its route: Continue opens the sign-in page (CS-4).
+          onPress={() => continueToGrownUpPage(forUse ? undefined : route.params.url, locale)}
         />
         <Spacer size="sm" />
         <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={leave} />

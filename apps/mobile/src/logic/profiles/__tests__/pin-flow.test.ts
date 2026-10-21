@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CANCEL_RESET, GROWN_UP_AREA, forCancelReset, forGrownUpArea, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin } from '../pin-flow';
+import { CANCEL_RESET, GROWN_UP_AREA, GROWN_UP_USE, forCancelReset, forGrownUpArea, forGrownUpUse, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin } from '../pin-flow';
 
 describe('initialPinMode: which step the PIN screen opens on', () => {
   it('verifies when a PIN is stored', () => {
@@ -93,5 +93,36 @@ describe('[OA] destination CancelReset (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21
     expect(showForgotPin('verify', { next: CANCEL_RESET })).toBe(false);
     expect(forGrownUpArea({ next: CANCEL_RESET })).toBe(false);
     expect(grownUpAreaNoPin({ next: CANCEL_RESET }, null)).toBe(false);
+  });
+});
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4b, CS-4: the chooser's Family, Teacher, School and Sign in rows
+ * (destination `GrownUpUse`) only check the PIN: never a new or reset PIN, no Forgot PIN, and with no PIN stored the
+ * no-PIN line with Continue to the sign-in page.
+ */
+describe('destination GrownUpUse (row OA-4b, CS-4)', () => {
+  it('is the GrownUpUse destination name, and it hands off like the Grown-up area pages', () => {
+    expect(GROWN_UP_USE).toBe('GrownUpUse');
+    expect(forGrownUpUse({ next: GROWN_UP_USE })).toBe(true);
+    expect(forGrownUpUse({ next: GROWN_UP_AREA })).toBe(false);
+    expect(forGrownUpUse({})).toBe(false);
+    expect(forGrownUpArea({ next: GROWN_UP_USE })).toBe(false);
+  });
+
+  it('always opens in verify, whatever mode says and with no PIN stored (never creates or resets a PIN)', () => {
+    expect(initialPinMode({ next: GROWN_UP_USE }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE }, null)).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'setup' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'setup', via: 'rescue_code' }, null)).toBe('verify');
+  });
+
+  it('hides Forgot PIN', () => {
+    expect(showForgotPin('verify', { next: GROWN_UP_USE })).toBe(false);
+  });
+
+  it('with no PIN stored it shows the no-PIN line (Continue opens the sign-in page)', () => {
+    expect(grownUpAreaNoPin({ next: GROWN_UP_USE }, null)).toBe(true);
+    expect(grownUpAreaNoPin({ next: GROWN_UP_USE }, 'hash')).toBe(false);
   });
 });

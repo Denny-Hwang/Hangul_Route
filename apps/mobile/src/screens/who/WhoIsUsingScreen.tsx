@@ -21,10 +21,22 @@ import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { resetWaitState } from '../../logic/profiles/pin-reset';
 import { planProfileSwitch, routeZone } from '../../logic/profiles/session';
-import { grownUpRows, pickLanding, tileOrder, tileTints, whoPickedEvent, whoShownEvent, type WhoMarker } from '../../logic/profiles/who';
+import {
+  chooserHandoff,
+  grownUpRows,
+  pickLanding,
+  rowLabelKey,
+  tileOrder,
+  tileTints,
+  whoPickedEvent,
+  whoShownEvent,
+  type GrownUpRowUse,
+  type WhoMarker,
+} from '../../logic/profiles/who';
 import { gateRequired } from '../../logic/profiles/learner-type';
 import { ROOT_HEADER } from '../../navigation/screen-header-variants';
 import type { RootStackParamList } from '../../navigation/types';
+import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
@@ -32,7 +44,7 @@ import { trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry'
 import { arriveAtChooser } from '../../store/grown-up-session';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { heldJoin, learnerProfiles, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
+import { heldJoin, knownUses, learnerProfiles, persistLeaving, refreshKnownUses, takeHeldJoin } from '../../store/who-chooser';
 import { useBackGuard } from '../use-back-guard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WhoIsUsing'>;
@@ -41,6 +53,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'WhoIsUsing'>;
 const REM = 16;
 const TILE_MIN_REM = 8;
 const TILE_MIN_WIDE_REM = 10;
+/** The grown-up rows from `layout.breakpoint.wide` (GrownUpRow spec); one column below it. */
+const ROWS_ACROSS = 3;
 
 /** The end of the wait as a local time in the UI language ("6:40 PM", "18:40", "오후 6:40"); never throws. */
 export function waitEndsAt(locale: UiLocale, readyAt: number): string {
@@ -56,7 +70,10 @@ export function waitEndsAt(locale: UiLocale, readyAt: number): string {
  * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6.1 to 6.3 and 14, row OA-4a; wireframe
  * `design/wireframes/profiles/who-is-using.md`, mock `design/screens/profiles/who-is-using.md`). The device's one
  * chooser: a large tile per learner (one tap, no PIN), Add a learner, and the Grown-ups section, visibly secondary:
- * the pending 24-hour wait with Cancel the wait (OA-D21) and the Grown-up area row (the use rows come with OA-4b).
+ * the pending 24-hour wait with Cancel the wait (OA-D21), then on the web the account's uses known on this browser
+ * (Family, Teacher, School; `deviceUses`, row OA-4b) or Sign in as a grown-up, and the Grown-up area row. A use row
+ * asks the PIN (`PinEntry { next: 'GrownUpUse', use }`, verify only) and hands off with `via: 'chooser'`; offline it
+ * is disabled with Needs the internet. Rows carry generic labels only, never an account name or email (CS-7).
  * No tile shows progress, stars, a level, a streak, a space or a time (CS-6). No Back; the browser, phone and
  * Android back are swallowed (CS-5). Arriving here closes the grown-up session (CS-2).
  */
@@ -79,9 +96,11 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
   const tints = useMemo(() => tileTints(learnerProfiles(allProfiles)), [allProfiles]);
   const marker: WhoMarker = !gateRequired({ profiles: allProfiles, parentPinHash }) ? 'none' : parentPinHash !== null ? 'pin' : 'nopin';
   const wait = resetWaitState(pinResetRequestedAt, Date.now());
+  // [OA] Row OA-4b: the uses known on this browser, as read at launch, then read again on every opening.
+  const [uses, setUses] = useState(() => knownUses());
   const grownUps = grownUpRows({
     os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
-    uses: [],
+    uses,
     online,
     marker,
     // A wait only exists beside a PIN (Forgot PIN starts from one); none is shown without a PIN to cancel it.
@@ -91,6 +110,17 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
 
   // Arriving here, and coming back here from a PIN screen or the Grown-up area, ends any grown-up session (CS-2).
   useFocusEffect(useCallback(() => arriveAtChooser(), []));
+
+  // The console may have written `deviceUses` since launch (a grown-up signed in in another tab).
+  useEffect(() => {
+    let live = true;
+    void refreshKnownUses().then((read) => {
+      if (live) setUses(read);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   // One `who.shown` per opening (section 15, G6), never one per focus.
   useEffect(() => {
@@ -161,6 +191,20 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
     } else navigation.navigate('PinEntry', { next: 'ParentDashboard' });
   };
 
+  /**
+   * Row OA-4b, section 5.3: Family, Teacher, School or Sign in as a grown-up. The chooser closed every session, so the
+   * PIN is asked whatever came before (CS-1); only a self-only device without a PIN (marker `none`) hands off at once.
+   */
+  const pickUse = (use: Exclude<GrownUpRowUse, 'area'>): void => {
+    void track(whoPickedEvent('grown_up', use));
+    clearUnder();
+    if (opensDirectly(false)) {
+      trackGateOpened('GrownUpUse', 'open');
+      leaving.current = true;
+      void openGrownUpArea(chooserHandoff(use));
+    } else navigation.navigate('PinEntry', { next: 'GrownUpUse', use });
+  };
+
   const pickAdd = (): void => {
     void track(whoPickedEvent('add'));
     clearUnder();
@@ -183,6 +227,9 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
   const tileMin = (layoutClass.width === 'wide' ? TILE_MIN_WIDE_REM : TILE_MIN_REM) * REM * fontScale;
   const columns = Math.max(1, Math.floor((measured + gap) / (tileMin + gap)));
   const tileWidth = Math.floor((measured - gap * (columns - 1)) / columns);
+  const rowsAcross = layoutClass.width === 'wide' && grownUps.rows.length > 1;
+  const rowGap = spacing.sm;
+  const rowWidth = Math.floor((measured - rowGap * (ROWS_ACROSS - 1)) / ROWS_ACROSS);
 
   // Web keyboard (section 14): the grid is one tab stop; arrow keys, Home and End move it; Enter or Space picks.
   const tileCount = learners.length + 1;
@@ -280,23 +327,29 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
             <Button label={w.resetCancel} tone="secondary" size="md" onPress={pickCancelWait} testID="who-reset-cancel" />
           </View>
         ) : null}
-        {grownUps.rows.map((row) => {
-          const caption = row.caption === 'nopin' ? w.nopinCaption : null;
-          // A row no PIN guards is named by its label alone (marker `none`, and `nopin`, where no PIN exists yet).
-          const named = marker === 'pin' ? messages.a11y.who.grownUpRow(copy.zoneLabel) : copy.zoneLabel;
-          return (
-            <GrownUpRow
-              key={row.use}
-              label={copy.zoneLabel}
-              locked={row.locked}
-              disabled={row.disabled}
-              caption={caption}
-              accessibilityLabel={named}
-              onPress={pickArea}
-              testID={`who-row-${row.use}`}
-            />
-          );
-        })}
+        {/* One column on a phone, three across from the wide breakpoint (GrownUpRow spec). */}
+        <View testID="who-rows" style={{ flexDirection: rowsAcross ? 'row' : 'column', flexWrap: 'wrap', gap: rowGap }}>
+          {grownUps.rows.map((row) => {
+            const { use } = row;
+            const label = use === 'area' ? copy.zoneLabel : w.use[rowLabelKey(use)];
+            const caption = row.caption === 'nopin' ? w.nopinCaption : row.caption === 'offline' ? messages.learner.welcome.grownUps.needsInternet : null;
+            // A row no PIN guards is named by its label alone (marker `none`, and `nopin`, where no PIN exists yet).
+            const named = marker === 'pin' ? messages.a11y.who.grownUpRow(label) : label;
+            return (
+              <View key={use} style={rowsAcross ? { width: rowWidth } : undefined}>
+                <GrownUpRow
+                  label={label}
+                  locked={row.locked}
+                  disabled={row.disabled}
+                  caption={caption}
+                  accessibilityLabel={named}
+                  onPress={use === 'area' ? pickArea : () => pickUse(use)}
+                  testID={`who-row-${use}`}
+                />
+              </View>
+            );
+          })}
+        </View>
       </View>
       <View style={{ height: spacing.xl }} />
     </Screen>

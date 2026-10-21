@@ -1,4 +1,4 @@
-import type { BrowseTarget, PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
+import type { BrowseTarget, GrownUpUse, PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { AskFrom } from '../logic/access-copy';
 import type { PreviewFrom } from '../logic/episode-access';
@@ -65,6 +65,8 @@ export type GrownUpDestination =
   | 'LectureMode'
   /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21 (row OA-4a): the chooser's Cancel the wait; verify only, never creates or resets a PIN; a correct PIN clears the pending 24-hour wait and returns to the chooser. */
   | 'CancelReset'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3, CS-4 (row OA-4b, web only): a Family, Teacher, School or Sign in row on the chooser (`PinEntry.use`); verify only, never creates or resets a PIN; a correct PIN hands off to that use's page; with no PIN stored, the no-PIN line and Continue to `/signin`. */
+  | 'GrownUpUse'
   // add new members above this line
 ;
 
@@ -174,6 +176,8 @@ export type RootStackParamList = {
     transferId?: string;
     /** `next: 'BrowseLessons'`: where All lessons opens (a content target, never a learner id); absent opens its home. */
     browseTarget?: BrowseTarget;
+    /** [OA] `next: 'GrownUpUse'`: the chooser row that asked for the PIN (a code, never an id); its page is `grownUpTarget(use)`. */
+    use?: GrownUpUse | 'signin';
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };
