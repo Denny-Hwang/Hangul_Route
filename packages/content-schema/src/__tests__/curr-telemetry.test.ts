@@ -5,6 +5,8 @@ import {
   LAG_BUCKETS,
   SESSION_END_QUEST_FIELDS,
   CURR_TELEMETRY_NO_PROFILE,
+  CURR_TELEMETRY_SERVER_ONLY,
+  isServerOnlyTelemetryName,
   SessionEndPayloadSchema,
   TELEMETRY_EVENT_NAMES,
   isCurrTelemetryName,
@@ -73,8 +75,8 @@ const VALID: Record<(typeof SECTION_R)[number], Record<string, unknown>> = {
   'pack.opened': { packId: 'pack:numbers-time' },
   'pack.level_complete': { packId: 'pack:numbers-time', stage: 'stage6' },
   'family.goal_met': { weekTarget: 60 },
-  'space.goal.set': {},
-  'space.goal.met': {},
+  'space.goal.set': { metric: 'stories', target: 40 },
+  'space.goal.met': { metric: 'quests', target: 12 },
   'lecture.game.finished': { preset: 'team-relay', rounds: 12, teams: 3 },
   'exp.exposure': { experimentId: 'E3', arm: 'b' },
 };
@@ -128,9 +130,17 @@ describe('F-CURR-002 section 11.3 telemetry names (TELEMETRY-NAMES-2 section R, 
     expect([...CURR_TELEMETRY_NO_PROFILE].sort()).toEqual(['family.goal_met', 'lecture.game.finished', 'space.goal.met', 'space.goal.set']);
   });
 
-  it('space.goal.set and space.goal.met (Worker side) carry no payload keys yet', () => {
-    expect(S['space.goal.set'].safeParse({}).success).toBe(true);
-    expect(S['space.goal.met'].safeParse({ target: 20 }).success).toBe(false);
+  it('space.goal.set and space.goal.met are server-only and carry a metric code and a target, never an id', () => {
+    expect([...CURR_TELEMETRY_SERVER_ONLY].sort()).toEqual(['space.goal.met', 'space.goal.set']);
+    for (const name of CURR_TELEMETRY_SERVER_ONLY) expect(isServerOnlyTelemetryName(name), name).toBe(true);
+    for (const name of ['space.goal.set', 'space.goal.met'] as const) {
+      for (const metric of ['stories', 'refreshed', 'quests']) expect(S[name].safeParse({ metric, target: 1 }).success, metric).toBe(true);
+      expect(S[name].safeParse({ metric: 'stories', target: 10_000 }).success).toBe(true);
+      for (const target of [0, 10_001, 2.5, '20']) expect(S[name].safeParse({ metric: 'stories', target }).success, String(target)).toBe(false);
+      expect(S[name].safeParse({ metric: 'minutes', target: 20 }).success).toBe(false);
+      expect(S[name].safeParse({ metric: 'stories', target: 20, spaceId: 'space:class-a' }).success).toBe(false);
+      expect(S[name].safeParse({}).success).toBe(false);
+    }
   });
 });
 
@@ -171,8 +181,10 @@ describe('memory.daily (F-CURR-002 sections 3.1, 11.2 and 11.3)', () => {
     }
   });
 
-  it('takes arms as experiment ids to arm codes, and an empty object before any experiment runs', () => {
+  it('takes arms as experiment ids to arm codes, and an empty object or no arms before any experiment runs', () => {
     expect(M.safeParse({ ...daily, arms: {} }).success).toBe(true);
+    const { arms: _arms, ...noArms } = daily;
+    expect(M.safeParse(noArms).success).toBe(true);
     expect(M.safeParse({ ...daily, arms: { E5: 'a' } }).success).toBe(false);
     expect(M.safeParse({ ...daily, arms: { E1: 'treatment' } }).success).toBe(false);
     expect(M.safeParse({ ...daily, arms: { E1: 37 } }).success).toBe(false);
@@ -218,6 +230,8 @@ describe('id, code and count fields of the other section R payloads', () => {
     expect(S['quest.adapt'].safeParse({ questId: 'quest:pack-numbers-time-s1-q2', dir: 'scaffold' }).success).toBe(true);
     expect(S['quest.adapt'].safeParse({ questId: 'quest:x', dir: 'faster' }).success).toBe(false);
     expect(S['quest.adapt'].safeParse({ questId: 'Suni', dir: 'compact' }).success).toBe(false);
+    expect(S['quest.adapt'].safeParse({ questId: `quest:${'a'.repeat(58)}`, dir: 'compact' }).success).toBe(true);
+    expect(S['quest.adapt'].safeParse({ questId: `quest:${'a'.repeat(59)}`, dir: 'compact' }).success).toBe(false);
     expect(S['pack.opened'].safeParse({ packId: 'numbers-time' }).success).toBe(false);
     expect(S['pack.level_complete'].safeParse({ packId: 'pack:numbers-time', stage: 'stage9' }).success).toBe(false);
     expect(S['stamp.earned'].safeParse({ stampId: 'Great job, Suni!' }).success).toBe(false);
