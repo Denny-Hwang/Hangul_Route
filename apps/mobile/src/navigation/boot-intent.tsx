@@ -5,6 +5,7 @@ import { consumeBootIntent, peekBootIntent } from '../platform/app-root';
 import { openBrowseFromGate } from '../platform/browse-handoff';
 import { gateOpensDirectlyNow } from '../store/gate-now';
 import { useProfileStore } from '../store/profile-store';
+import { passGate } from '../store/gate-telemetry';
 
 /**
  * Acts on the boot intent the app root read (F-APP-001 section 3.9): `gate=grown-up&next=` is the
@@ -28,7 +29,7 @@ export function BootIntentHook(): null {
       },
       { peek: peekBootIntent, consume: consumeBootIntent },
       {
-        opensDirectly: () => gateOpensDirectlyNow(),
+        opensDirectly: () => passGate('BrowseLessons', gateOpensDirectlyNow()),
         open: () => openBrowseFromGate(),
       },
       // Read when the intent is acted on: the profile store has hydrated before the root stack mounts.

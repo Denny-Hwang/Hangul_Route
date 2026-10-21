@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GROWN_UP_AREA, forGrownUpArea, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin } from '../pin-flow';
+import { GROWN_UP_AREA, forGrownUpArea, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin, verifiedGoesToSetup } from '../pin-flow';
 
 describe('initialPinMode: which step the PIN screen opens on', () => {
   it('verifies when a PIN is stored', () => {
@@ -76,5 +76,17 @@ describe('destination GrownUpArea (F-APP-001 section 3.9)', () => {
     expect(grownUpAreaNoPin({}, null)).toBe(false);
     expect(initialPinMode({ next: 'ParentDashboard' }, null)).toBe('setup-1');
     expect(initialPinMode({ next: 'Paywall' }, 'hash')).toBe('verify');
+  });
+});
+
+describe("[OA] mode 'change': the current PIN first, then a new one (OA-D21)", () => {
+  it('verifies first when a PIN is stored, creates at once when none is, and never on the grown-up area', () => {
+    expect(initialPinMode({ next: 'ParentDashboard', mode: 'change' }, 'h:1')).toBe('verify');
+    expect(initialPinMode({ next: 'ParentDashboard', mode: 'change' }, null)).toBe('setup-1');
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard', mode: 'change' })).toBe(true);
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard', mode: 'setup' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: GROWN_UP_AREA, mode: 'change' })).toBe(false);
+    expect(pinCreatedWhere({ next: 'ParentDashboard', mode: 'change' })).toBe('optional');
   });
 });

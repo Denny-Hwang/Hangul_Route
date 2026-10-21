@@ -9,6 +9,7 @@ import {
   type FlatThrottle,
 } from './pin-hash';
 import { pauseText } from './pin-pause';
+import { needsFreshPin } from './session';
 
 /**
  * Forgot PIN, offline — F-LEARN-001 §3.5, L9. Pure: no storage, no React, no
@@ -163,4 +164,13 @@ export function waitCardView(
  */
 export function resetByWaitNoticeDue(record: { at: number } | null, lastPinVerifiedAt: number | null): boolean {
   return record !== null && lastPinVerifiedAt !== null && lastPinVerifiedAt > record.at;
+}
+
+/**
+ * [OA] OA-D21: Change PIN on the reset-by-wait notice sets a new PIN, so it needs a PIN entered within
+ * `GROWN_UP_FRESH_PIN_MS` (`needsFreshPin`): fresh, it opens creation (`setup`); otherwise the current PIN is asked
+ * first (`change`), so whoever holds a device left on the Grown-up area cannot take the PIN over.
+ */
+export function changePinMode(lastPinVerifiedAt: number | null, now: number): 'setup' | 'change' {
+  return needsFreshPin('change_pin', lastPinVerifiedAt, now) ? 'change' : 'setup';
 }

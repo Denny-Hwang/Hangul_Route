@@ -29,7 +29,6 @@ import { profileRowOpens } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
 import { planCardView } from '../../logic/paywall';
 import { effectiveTier } from '../../store/tier-store';
-import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { installGuideVariant } from '../../logic/pwa/install-guide';
 import { installEnv } from '../../platform/pwa';
@@ -40,8 +39,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useLocaleStore } from '../../store/locale-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useAudience } from '../../store/audience';
-import { trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry';
-import { useUiStore } from '../../store/ui-store';
+import { passGate, trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
 import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
@@ -84,7 +82,6 @@ export function ProfileScreen(): React.ReactElement {
   const displayLine = t.display.line(LOCALE_META[locale].endonym, m.common.display.size[textSize]);
   // For grown-ups starts collapsed (owner request 2026-10-16, item 8).
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
-  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
   const { copy, pinSet, opensDirectly, audience } = useAudience();
@@ -93,21 +90,18 @@ export function ProfileScreen(): React.ReactElement {
   const textScale = useTypeScale();
   const canOfferInstall = !installed && installGuideVariant(installEnv()) !== 'none';
 
-  // A verified grown-up may add another child without re-entering the PIN
-  // inside the 15-minute session window (F-PROF-001 §3.2). A self-only device
-  // that never set a PIN has no gate to pass (F-LEARN-001 L7), so a learner
-  // is not made to invent a PIN just to reach their own settings.
-  const parentSessionOpen = isParentSessionValid(
-    parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
-    Date.now(),
-  );
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-1, OA-D5b: Profile is a learner screen, so an open grown-up session is
+  // never honoured here (before OA-2 the 15-minute session let a grown-up add another learner without the PIN,
+  // F-PROF-001 section 3.2). Only a self-only device that never set a PIN has no gate to pass (F-LEARN-001 L7), so a
+  // learner is not made to invent a PIN just to reach their own settings.
+  const opensHere = opensDirectly(false);
   const openGrownUps = (
     next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'EditProfile',
     profileId?: string,
   ): void => {
-    if (opensDirectly(parentSessionOpen)) {
-      // [OA] Section 15: a gate the open session (or a device without a gate) opened directly.
-      trackGateOpened(next, parentSessionOpen ? 'session' : 'open');
+    if (opensHere) {
+      // [OA] Section 15: a gate that a device without a gate opened directly.
+      trackGateOpened(next, 'open');
       if (next === 'EditProfile') {
         if (profileId !== undefined) navigation.navigate('EditProfile', { profileId });
       } else if (next === 'AddProfile') {
@@ -330,7 +324,10 @@ export function ProfileScreen(): React.ReactElement {
               <Pressable
                 testID="profile-plan-row"
                 onPress={() => {
-                  if (profileRowOpens({ learnerType: effectiveLearnerType(active), opensDirectly: opensDirectly(parentSessionOpen) }) === 'proposal') {
+                  const learnerType = effectiveLearnerType(active);
+                  if (profileRowOpens({ learnerType, opensDirectly: opensHere }) === 'proposal') {
+                    // A self profile's own plan is no gate; a child's plan on a device without a gate is one.
+                    if (learnerType !== 'self') passGate('RouteProposal', true);
                     navigation.navigate('RouteProposal', { source: 'profile', profileId: active.id });
                   } else {
                     navigation.navigate('PinEntry', { next: 'RouteProposal', profileId: active.id });

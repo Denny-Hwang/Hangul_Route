@@ -75,6 +75,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
+import { passGate } from '../../store/gate-telemetry';
 import { CardArtThumb } from './CardArtThumb';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { ResultsFreeEndCelebration, ResultsOpenForYou } from './ResultsFreeEnd';
@@ -270,7 +271,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const ask = askFor(audience, isClassOnly(memberships ?? []), messages.learner.access);
   const onAsk = (): void => {
     void track(helpAskedEvent(profileId, 'results', ask.audience));
-    const gate = askGate(gateOpensDirectlyNow(), 'results');
+    const gate = askGate(passGate('Paywall', gateOpensDirectlyNow()), 'results');
     if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
     else navigation.navigate('PinEntry', gate.params);
   };

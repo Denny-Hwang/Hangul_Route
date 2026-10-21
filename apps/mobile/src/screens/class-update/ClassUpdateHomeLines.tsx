@@ -10,6 +10,7 @@ import type { LearnerType } from '@hangul-route/content-schema';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
 import { useClassUpdateStore } from '../../store/class-update-store';
+import { passGate } from '../../store/gate-telemetry';
 import { useGateOpen } from '../transfer/use-transfer';
 
 /**
@@ -40,7 +41,7 @@ export function ClassUpdateHomeLines({ profileId, learnerName, learnerType }: { 
   if (lines.moves.length === 0 && lines.scope === null) return null;
 
   const open = (): void => {
-    const direct = lines.scope === 'self' && moveEntry({ gateOpen, gated: !opensDirectly(false) }) === 'direct';
+    const direct = passGate('ClassScope', lines.scope === 'self' && moveEntry({ gateOpen, gated: !opensDirectly(false) }) === 'direct');
     if (direct) navigation.navigate('ClassScope', { profileId });
     else navigation.navigate('PinEntry', { next: 'ClassScope', profileId });
   };
