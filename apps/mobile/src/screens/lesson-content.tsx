@@ -5,6 +5,8 @@ import { View } from 'react-native';
 import { lessonContent } from '../content/lessons';
 import { useMessages } from '../i18n/use-messages';
 import { isNewBuildError, type LessonStore } from '../logic/lessons/lesson-store';
+import { isStoryNewBuildError, type StoryStore } from '../logic/story/story-chunk-store';
+import { storyContent } from '../content/stories';
 import { isNewBuildAnswer, reloadForNewBuild } from '../platform/new-build-reload';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { OopsScreen } from './system/OopsScreen';
@@ -21,7 +23,8 @@ import { OopsScreen } from './system/OopsScreen';
  * - `useLessonContentVersion`: the screens that count over every quest (the skills of My Route and
  *   the grown-up reports) load every chunk and recompute as each arrives (a count only fills);
  * - `withLessonContent`: the grown-up roots (All lessons, the presenter), which read the whole
- *   catalogue, mount once every chunk is in, with the crash screen's Try again if one fails.
+ *   catalogue, mount once every chunk is in, the story chunks of row CM-8 included, with the crash
+ *   screen's Try again if one fails.
  * `lessonContentBindings` takes the store and the page's reload, so the render tests drive them
  * with a store of their own (the global test setup preloads the app's).
  */
@@ -34,7 +37,11 @@ export interface LessonContentDeps {
   reloadForNewBuild: () => boolean;
   /** Asks a failed chunk's URL again: true when the host answers for a newer build (404, or its HTML page refused as a script). */
   isNewBuildAnswer: (error: unknown) => Promise<boolean>;
+  /** The story chunks (row CM-8), which the grown-up roots also read in full; none when omitted (a lesson-only test). */
+  stories?: Pick<StoryStore, 'isAllReady' | 'ensureAll'>;
 }
+
+const NO_STORIES: Pick<StoryStore, 'isAllReady' | 'ensureAll'> = { isAllReady: () => true, ensureAll: () => Promise.resolve() };
 
 /** Shown after this long without the chunk, so a load from the precache never flashes a line. */
 export const LESSON_WAITING_LINE_MS = 500;
@@ -60,7 +67,7 @@ export function LessonWaiting(): React.ReactElement {
   );
 }
 
-export function lessonContentBindings({ store, locale, reloadForNewBuild: reload, isNewBuildAnswer: newBuildAnswer }: LessonContentDeps) {
+export function lessonContentBindings({ store, locale, reloadForNewBuild: reload, isNewBuildAnswer: newBuildAnswer, stories = NO_STORIES }: LessonContentDeps) {
   const subscribe = store.subscribe;
   /** True when a failed load means a newer build on the host: what the chunk said, else what its URL answers now. */
   const isNewer = async (error: unknown): Promise<boolean> => isNewBuildError(error) || (await newBuildAnswer(error).catch(() => false));
@@ -100,21 +107,23 @@ export function lessonContentBindings({ store, locale, reloadForNewBuild: reload
     return version;
   }
 
-  /** Mounts `Root` once every lesson chunk and the device locale's titles are in; the crash screen if a chunk fails. */
+  /** Mounts `Root` once every lesson chunk, every story chunk and the device locale's titles are in; the crash screen if a chunk fails. */
   function withLessonContent<P extends object>(Root: React.ComponentType<P>): React.ComponentType<P> {
     function LessonContentRoot(props: P): React.ReactElement {
-      const [state, setState] = useState<'loading' | 'ready' | 'failed'>(() => (store.isAllReady() ? 'ready' : 'loading'));
+      const [state, setState] = useState<'loading' | 'ready' | 'failed'>(() => (store.isAllReady() && stories.isAllReady() ? 'ready' : 'loading'));
       useEffect(() => {
         if (state !== 'loading') return undefined;
         let live = true;
-        // Titles that fail keep their English; a body chunk that fails would leave its quests empty.
-        void Promise.allSettled([store.ensureAll(), store.ensureTitles(locale())]).then(async ([cells]) => {
+        // Titles that fail keep their English; a body chunk that fails would leave its quests (or its story's
+        // tiers, and so its quests and episode) out of the catalogue.
+        void Promise.allSettled([store.ensureAll(), stories.ensureAll(), store.ensureTitles(locale())]).then(async ([cells, storyBodies]) => {
           if (!live) return;
-          if (cells.status === 'fulfilled') {
+          const failure = [cells, storyBodies].find((r): r is PromiseRejectedResult => r.status === 'rejected');
+          if (failure === undefined) {
             setState('ready');
             return;
           }
-          const newer = await isNewer(cells.reason);
+          const newer = isStoryNewBuildError(failure.reason) || (await isNewer(failure.reason));
           if (live && !(newer && reload())) setState('failed');
         });
         return () => {
@@ -137,4 +146,5 @@ export const { useLessonQuestReady, useLessonContentVersion, withLessonContent }
   locale: () => activeLocale(useLocaleStore.getState()),
   reloadForNewBuild: () => reloadForNewBuild(),
   isNewBuildAnswer: (error) => isNewBuildAnswer(error),
+  stories: storyContent,
 });

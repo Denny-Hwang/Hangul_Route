@@ -110,7 +110,8 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.
-  { path: 'apps/mobile/src/content/stories.generated.ts', reason: 'generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs' },
+  { path: 'apps/mobile/src/content/__generated__/stories-index.ts', reason: 'the story shelf, generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs (F-CURR-002 CM-8)' },
+  { path: 'apps/mobile/src/content/__generated__/story-chunks/', reason: 'one body chunk per story, generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs (F-CURR-002 CM-8)' },
   { path: 'apps/mobile/src/content/__generated__/vocab.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/web/src/data/vocab-catalog.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/web/src/data/third-party-notices.json', reason: 'generated open-source notices (scripts/third-party-notices.mjs): a package author\'s name as the package states it, not taught Korean' },

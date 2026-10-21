@@ -1,5 +1,6 @@
 import type { Quest, StoryLevel } from '@hangul-route/content-schema';
 import { storyById } from '../../content/stories';
+import { storyTierLevels } from './story-chunk-store';
 import type { MinigameScope } from '../minigame-config';
 
 /**
@@ -64,7 +65,13 @@ export type StoryLookup = (id: string) => { tiers: ReadonlyArray<{ level: StoryL
  * names a story / level that does not exist (the shell then shows its
  * "Minigame not found." fallback).
  */
-export function storyScopeFor(ref: string, find: StoryLookup = storyById): MinigameScope | undefined {
+/** The shelf's view of a bundled story: its levels are known before its chunk loads (F-CURR-002 §10). */
+const shelfLookup: StoryLookup = (id) => {
+  const story = storyById(id);
+  return story === undefined ? undefined : { tiers: storyTierLevels(story).map((level) => ({ level })) };
+};
+
+export function storyScopeFor(ref: string, find: StoryLookup = shelfLookup): MinigameScope | undefined {
   const parsed = parseStoryMinigameRef(ref);
   if (!parsed) return undefined;
   const story = find(parsed.storyId);

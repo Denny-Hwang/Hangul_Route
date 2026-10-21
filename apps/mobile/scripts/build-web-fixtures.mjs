@@ -4,7 +4,7 @@
 // reader e2e needs the `window.__hrStoryE2E` entry plus fixture-specific
 // content (`story:hangul-day`), so it runs against a bundle that holds the
 // test fixtures. This script:
-//   1. regenerates apps/mobile/src/content/stories.generated.ts with
+//   1. regenerates the story modules (apps/mobile/src/content/__generated__/stories-index.ts, the fixtures inline) with
 //      `build-stories.mjs --include-fixtures`, and the clip map with the
 //      fixture tones of e2e/fixtures/audio (`gen-audio-map.mjs
 //      --with-e2e-fixtures`, F-AUDIO-004 A-6: the offline clip e2e),

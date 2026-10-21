@@ -1,7 +1,7 @@
 import type { StoryLevel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect } from 'react';
-import { storiesAll, storyFixtureIds } from '../content/stories';
+import { storiesAll, storyContent, storyFixtureIds, storyLevels } from '../content/stories';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
 import { useQuestRunStore } from '../store/quest-run-store';
@@ -50,7 +50,7 @@ export function StoryE2eHook(): null {
     const stopListening = addTelemetryListener((e) => {
       if (['story.', 'culture.', 'journey.', 'paywall.'].some((prefix) => e.name.startsWith(prefix))) events.push(e);
     });
-    g.__hrStoryE2E = {
+    const handle: StoryE2eHandle = {
       events: () => events.map((e) => ({ ...e })),
       run: () => {
         const r = useQuestRunStore.getState();
@@ -65,12 +65,22 @@ export function StoryE2eHook(): null {
       stories: () =>
         storiesAll.map((s) => ({
           id: s.id,
-          levels: s.tiers.map((t) => t.level),
+          levels: storyLevels(s),
           fixture: storyFixtureIds.includes(s.id),
           traditional: s.origin.type === 'traditional' || s.origin.type === 'adapted',
         })),
     };
+    // The handle reads every story's body (its levels, its origin), so it is installed once every story chunk is in
+    // (F-CURR-002 §10, row CM-8); the specs wait for it.
+    let live = true;
+    void storyContent
+      .ensureAll()
+      .catch(() => undefined)
+      .then(() => {
+        if (live) g.__hrStoryE2E = handle;
+      });
     return () => {
+      live = false;
       stopListening();
       delete g.__hrStoryE2E;
     };

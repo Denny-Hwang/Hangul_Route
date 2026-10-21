@@ -40,6 +40,9 @@ import { playPrompt, stop } from '../../platform/audio';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useStoriesLoaded } from '../story-content';
+
+const NO_STORIES: readonly string[] = [];
 
 /** Side of the card face on the front of the card page. */
 const CARD_FACE = 200;
@@ -62,6 +65,8 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
   const titles = useLessonTitlesVersion();
   const source = cardById(cardId);
+  // A story card's blurb, fact and citation come from its story's chunk (F-CURR-002 §10, row CM-8): drawn once it arrives.
+  useStoriesLoaded(source?.storyId === undefined ? NO_STORIES : [source.storyId]);
   const card = source && localizeCard(source, locale);
   const profile = useProfileStore(activeProfileSelector);
   // A preview reads no learner's cards: it shows every card as an earned one.

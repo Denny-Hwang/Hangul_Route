@@ -38,6 +38,7 @@ import { stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
+import { useStoryQuestReady } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 
@@ -67,9 +68,12 @@ export interface QuestPlayerViewProps {
  * browse stack's own navigation container also provides.
  */
 export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement {
-  // A lesson quest's steps come from its cell's chunk (F-CURR-002 §10): until it is in (a frame or two from
-  // the precache), the screen draws only its header (and a calm status line if it takes longer), so the way back is always there.
-  return useLessonQuestReady(props.questId) ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
+  // A lesson quest's steps come from its cell's chunk, and a story quest's story from the story's chunk
+  // (F-CURR-002 §10): until it is in (a frame or two from the precache), the screen draws only its header (and a
+  // calm status line if it takes longer), so the way back is always there.
+  const lessonReady = useLessonQuestReady(props.questId);
+  const storyReady = useStoryQuestReady(questById(props.questId));
+  return lessonReady && storyReady ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
 }
 
 function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave }: QuestPlayerViewProps): React.ReactElement {
