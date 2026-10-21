@@ -327,9 +327,9 @@ export const landing = {
       plainEnglish: '메뉴와 안내는 쉽고 짧은 말로 써요 (CEFR Pre-A1 수준).',
       koreanTaught: '한국어 학습 내용은 언제나 로마자 표기와 뜻이 함께 나와요.',
       noRed: '답이 달라도 빨간 X 표시는 없어요 — 호야가 주황색으로 살짝 알려 줘요.',
-      noAds: '광고는 절대 없어요. 아이를 노린 광고도 없어요. 그게 다예요.',
+      noAds: '광고는 절대 없어요.',
       localFirst: BACKUP_FIRST,
-      gate: '결제나 되돌릴 수 없는 일은 곱셈 문제로 된 부모 확인 장치를 거쳐요.',
+      gate: '돈이 드는 일이나 데이터를 지우는 일은 어른 확인 장치가 지켜요.',
     },
     feedback: {
       title: '의견이 있나요?',

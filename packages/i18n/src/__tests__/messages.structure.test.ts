@@ -105,7 +105,7 @@ describe('content rules for every locale', () => {
   });
 
   it('the landing exemption is narrow: only the English spatial "behind" on the listed paths (self-check)', () => {
-    const gate = 'landing.about.promises.gate';
+    const gate = 'landing.legal.terms.sections.accounts.paragraphs.p1';
     expect(landingBannedWord('Purchases sit behind a parent-gate.', 'en', gate)).toBeNull();
     expect(landingBannedWord('Hoya never calls you lazy.', 'en', gate)).toBe('lazy');
     expect(landingBannedWord('Never fall behind.', 'en', 'landing.home.hero.lead')).toBe('behind');

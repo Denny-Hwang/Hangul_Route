@@ -454,10 +454,12 @@ export const landing = {
       koreanTaught: 'Korean is only used for the content being taught.',
       /** Said in words: the page shows no cross-mark glyph (no emoji, CLAUDE.md). */
       noRed: 'No red X marks for wrong answers — Hoya nudges with amber.',
-      noAds: 'No ads, ever. No ads designed at children. Period.',
+      /** SN-2: no age framing (CLAUDE.md audience); the first sentence of the former line. */
+      noAds: 'No ads, ever.',
       /** The first sentence of `persona.parents.safe.bullets.backup`, word for word (F-SITE-002 §3.12; privacy-statements.test.ts). */
       localFirst: "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
-      gate: 'Parent-gate behind multiplication for any commerce or destructive action.',
+      /** SN-2: the gate is a grown-up PIN now, not a multiplication question; the words of `persona.parents.safe.bullets.gate`. */
+      gate: 'A grown-up gate guards anything that costs money or deletes data.',
     },
     feedback: {
       title: 'Have feedback?',
@@ -500,10 +502,11 @@ export const landing = {
           bullets: {
             /**
              * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level, and each of its
-             * answers goes up as a `placement.item_answered` usage event (question id, outcome, sound guide, time).
+             * answers goes up as a `placement.item_answered` usage event (question id, outcome, sound guide, time); the
+             * suggested level goes up in `placement.complete`.
              */
             profile: ({ levels }: LegalValues) =>
-              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, whether it was right, and how long it took. A real name is optional and only stored if a parent enters it.`,
+              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, how it was answered (right, wrong or not sure), whether the sound guide was used, and how long it took. When the check ends, the level it suggests is sent too. A real name is optional and only stored if a parent enters it.`,
             progress:
               "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
             /**
@@ -674,7 +677,7 @@ export const landing = {
              * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, the numbers from the
              * content-schema constants. Must ship before Stripe Live is ever enabled.
              */
-            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Free spaces hold up to ${FAMILY_LIFETIME_LEARNERS} learners in a family, ${FREE_CLASS_STUDENT_CAP} students in a class and ${SCHOOL_LEARNER_CAP} students in a school. A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`,
+            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Without a paid plan, a family holds up to ${FAMILY_LIFETIME_LEARNERS} learners, a class up to ${FREE_CLASS_STUDENT_CAP} students and a school up to ${SCHOOL_LEARNER_CAP} students. A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`,
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {

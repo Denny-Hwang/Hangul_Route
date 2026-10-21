@@ -79,7 +79,7 @@ describe('landing: sentences that take a value render the former text', () => {
     const values = { email: 'hello@example.com', levels: 'A / B' };
     expect(l.legal.privacy.sections.collect.bullets.profile(values)).toBe(
       // AMENDMENTS-SITE-NEWUSER SN-2: the level check can suggest the level, and its answers go up as usage events.
-      'Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, whether it was right, and how long it took. A real name is optional and only stored if a parent enters it.',
+      'Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, how it was answered (right, wrong or not sure), whether the sound guide was used, and how long it took. When the check ends, the level it suggests is sent too. A real name is optional and only stored if a parent enters it.',
     );
     expect(l.legal.privacy.sections.emailList.paragraphs.removal(values)).toBe(
       'Removal and erasure: to be taken off the list, or to have your address erased, email hello@example.com from the address you signed up with and we will remove it.',
@@ -137,7 +137,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   // [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, before Stripe Live.
   // SN-2: then what a free space holds and the school administrators an owner can invite.
   const SIZES =
-    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school. A school owner can also invite up to 2 administrators.';
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Without a paid plan, a family holds up to 4 learners, a class up to 20 students and a school up to 50 students. A school owner can also invite up to 2 administrators.';
   const privacy = l.legal.privacy.sections;
   const billing = l.legal.terms.sections.billing;
 

@@ -67,6 +67,10 @@ describe('privacy policy', () => {
     // AMENDMENTS-SITE-NEWUSER SN-2: or the short level check suggests it, and its answers go up as usage events.
     expect(privacy).toContain(`starting level the learner picks or a short level check suggests (${labels.join(' / ')})`);
     expect(privacy).toContain('If the learner takes the level check, each answer is sent to us as a usage event');
+    // placement.item_answered carries the outcome (with skipped as "not sure"), `assisted` (the sound guide) and `ms`;
+    // placement.complete carries the suggested level.
+    expect(privacy).toContain('how it was answered (right, wrong or not sure), whether the sound guide was used, and how long it took.');
+    expect(privacy).toContain('When the check ends, the level it suggests is sent too.');
     expect(privacy).toMatch(/It describes how much the learner reads, not how old they are/);
     expect(privacy).not.toMatch(/age group/i);
     expect(privacy).not.toMatch(/\b5\s*[–-]\s*7\b|\b8\s*[–-]\s*9\b|\b10\s*[–-]\s*11\b/);

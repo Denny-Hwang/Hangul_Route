@@ -326,10 +326,10 @@ export const landing = {
       plainEnglish: 'Los menús y las instrucciones usan un español sencillo y claro (CEFR Pre-A1).',
       koreanTaught: 'El coreano se usa solo para lo que se enseña.',
       noRed: 'Sin marcas rojas cuando te equivocas: Hoya avisa con ámbar.',
-      noAds: 'Sin anuncios, nunca. Sin anuncios dirigidos a niños. Punto.',
+      noAds: 'Sin anuncios, nunca.',
       localFirst:
         'El apodo y el progreso de cada estudiante se guardan en el dispositivo y se respaldan en nuestros servidores, para recuperarlos con un código de rescate.',
-      gate: 'Control para adultos con una multiplicación ante cualquier compra o acción que borre datos.',
+      gate: 'Un control para adultos protege todo lo que cuesta dinero o borra datos.',
     },
     feedback: {
       title: '¿Tienes comentarios?',
