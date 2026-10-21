@@ -25,10 +25,12 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  * one-line change with the measured numbers in its PR.
  */
 export const PRECACHE_BUDGET = Object.freeze({
-  // The start bundle must not grow: its size before CM-5 moved the lessons out (8,321,783 B raw, measured on main at a384759ca).
-  startBundleRaw: 8_321_783,
-  // The learner precache measured after CM-5 (8,780,718 B, 35 files, the release build) + 2.5 MB; crossing it triggers CM-5B (Save for offline).
-  learnerPrecacheRaw: 11_280_718,
+  // The start bundle must not grow: its size after CM-5 (7,335,066 B raw, the release build on a384759ca; 8,321,783 B
+  // before the lessons left it) plus a 4,934 B rounding margin. A row that adds to it raises this line with its measurement.
+  startBundleRaw: 7_340_000,
+  // The learner precache measured after CM-5 (8,784,580 B, 35 files, the release build, no recorded clips) + 2.5 MB;
+  // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
+  learnerPrecacheRaw: 11_284_580,
 });
 
 export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
@@ -95,12 +97,23 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   return lines;
 }
 
+/**
+ * True on the deploy's own build (Cloudflare Workers Builds sets `WORKERS_CI`, Pages `CF_PAGES`):
+ * there `--budget` only warns. A budget line is a review gate on the pull request (web-app.yml runs
+ * the same `build:web` before a merge); it must never stop a deploy, a hotfix least of all. The chunk
+ * checks above always fail the build, deploy or not: a broken chunk would break the app.
+ */
+export const budgetIsAdvisory = (env) => Boolean(env.WORKERS_CI || env.CF_PAGES);
+
 /** Budget problems of the report (empty = within budget). */
 export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
   const problems = [];
   if (report.start === null) problems.push('no start bundle to measure');
   else if (report.start.raw > budget.startBundleRaw) {
-    problems.push(`the start bundle is ${report.start.raw} B raw, over its ceiling of ${budget.startBundleRaw} B: it must not grow`);
+    problems.push(
+      `the start bundle is ${report.start.raw} B raw, over its ceiling of ${budget.startBundleRaw} B: it must not grow ` +
+        '(move the code out of the start bundle, or raise PRECACHE_BUDGET.startBundleRaw in apps/mobile/scripts/pwa/lesson-chunks.mjs as a reviewed one-line change with the measured numbers in the PR)',
+    );
   }
   if (report.precache.raw > budget.learnerPrecacheRaw) {
     problems.push(

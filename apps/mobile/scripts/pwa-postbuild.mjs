@@ -14,7 +14,8 @@
 // Lesson chunks (F-CURR-002 §10, CM-5): every chunk of the lesson manifest is its own precached
 // web bundle carrying the manifest's hash, and none is in the start bundle; the precache report
 // prints the start bundle, the chunks and the learner precache, and `--budget` (the release build,
-// build:web) fails over their budget lines (pwa/lesson-chunks.mjs).
+// build:web) fails over their budget lines (pwa/lesson-chunks.mjs); on the deploy's own build
+// (Cloudflare Workers Builds) it only warns, so a budget line never stops a deploy.
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import * as nodeModule from 'node:module';
@@ -31,7 +32,7 @@ import {
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
-import { WEB_JS_DIR, lessonChunkProblems, precacheBudgetProblems, precacheReport, reportLines } from './pwa/lesson-chunks.mjs';
+import { WEB_JS_DIR, budgetIsAdvisory, lessonChunkProblems, precacheBudgetProblems, precacheReport, reportLines } from './pwa/lesson-chunks.mjs';
 
 const args = process.argv.slice(2);
 const budget = args.includes('--budget');
@@ -213,7 +214,9 @@ const report = precacheReport({ manifest: lessonManifest, bundles, precache: { c
 for (const line of reportLines(report)) process.stdout.write(`${line}\n`);
 if (budget) {
   const over = precacheBudgetProblems(report);
-  if (over.length > 0) throw new Error(`pwa-postbuild: over budget:\n  ${over.join('\n  ')}`);
+  if (over.length > 0 && budgetIsAdvisory(process.env)) {
+    process.stdout.write(`pwa-postbuild: WARNING over budget (the deploy build warns only; the pull request's check fails):\n  ${over.join('\n  ')}\n`);
+  } else if (over.length > 0) throw new Error(`pwa-postbuild: over budget:\n  ${over.join('\n  ')}`);
 }
 
 process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);

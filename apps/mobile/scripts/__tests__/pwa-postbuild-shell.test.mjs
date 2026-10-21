@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LESSON_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
+import { PRECACHE_BUDGET } from '../pwa/lesson-chunks.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GROWN_UP_PREFIXES, LEARNER_ROOTS, isGrownUpPath } from '@hangul-route/content-schema';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
@@ -505,13 +506,14 @@ describe('pwa-postbuild.mjs refuses an export that lacks a lesson chunk (F-CURR-
 describe('pwa-postbuild.mjs --budget fails a start bundle that grew', () => {
   let dist;
   let run;
+  let deploy;
 
   beforeAll(() => {
     dist = mkdtempSync(join(tmpdir(), 'hr-pwa-budget-'));
     const bundles = lessonBundles();
     // A start bundle one byte over its line: the same hashes, padded.
     const start = bundles['_expo/static/js/web/index-abc.js'];
-    bundles['_expo/static/js/web/index-abc.js'] = start + ' '.repeat(Math.max(0, 8_321_784 - start.length));
+    bundles['_expo/static/js/web/index-abc.js'] = start + ' '.repeat(Math.max(0, PRECACHE_BUDGET.startBundleRaw + 1 - start.length));
     const files = {
       'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
       'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
@@ -521,7 +523,10 @@ describe('pwa-postbuild.mjs --budget fails a start bundle that grew', () => {
       mkdirSync(dirname(join(dist, path)), { recursive: true });
       writeFileSync(join(dist, path), body);
     }
-    run = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8' });
+    const { WORKERS_CI: _w, CF_PAGES: _p, ...env } = process.env;
+    run = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8', env });
+    // The deploy's own build (Cloudflare Workers Builds sets WORKERS_CI): the same overrun only warns.
+    deploy = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8', env: { ...env, WORKERS_CI: '1' } });
   }, 120_000);
 
   afterAll(() => {
@@ -530,7 +535,14 @@ describe('pwa-postbuild.mjs --budget fails a start bundle that grew', () => {
 
   it('fails over the start bundle line and says it must not grow', () => {
     expect(run.status).not.toBe(0);
-    expect(run.stderr).toMatch(/the start bundle is 8321784 B raw, over its ceiling of 8321783 B: it must not grow/);
+    expect(run.stderr).toContain(`the start bundle is ${PRECACHE_BUDGET.startBundleRaw + 1} B raw, over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B: it must not grow`);
+  });
+
+  it('on the deploy build, warns and still finishes, so a budget line never stops a deploy', () => {
+    expect(deploy.status).toBe(0);
+    expect(deploy.stdout).toContain('pwa-postbuild: WARNING over budget');
+    expect(deploy.stdout).toContain(`over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B`);
+    expect(deploy.stdout).toMatch(/pwa-postbuild: precached/);
   });
 });
 
