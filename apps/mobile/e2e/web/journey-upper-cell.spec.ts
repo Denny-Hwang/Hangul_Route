@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { keysFor } from '@hangul-route/content-schema';
+import { keysFor, type ThemeKey } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
@@ -8,26 +8,41 @@ import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZon
 import { shot } from './shots';
 
 /**
- * F-CURR-001 section 5 (row C-2 lands the skeleton; each cell row adds its cell):
- * on the release bundle, offline-capable, a shipped upper-stage lesson cell opens
- * from the Journey grid, one of its quests plays to the reward step, and the
- * Learning Route gains the cell's day. Every cell in the generated lesson index
- * must have an entry here, so a cell cannot ship without its e2e path. The stage trail is on the grown-up's
+ * F-CURR-001 section 5 (row C-2 lands the skeleton): on the release bundle, offline-capable, a shipped
+ * upper-stage lesson cell opens from the Journey grid, its first quest plays, and the Learning Route
+ * gains the cell's day. Since F-CURR-002 row CM-6 the cell list is the generated lesson manifest
+ * (`LESSON_EPISODES`; the Topic Pack levels join it with row CM-50a), so a cell gets its e2e path from
+ * its own content file and a content PR never edits this spec. A cell with a deep play below plays its
+ * first quest through its real games to the reward step; any other cell opens its first quest and
+ * finds its day on the Learning Route. The stage trail is on the grown-up's
  * read-only Learning Route page since the owner decision of 2026-10-17 (the learner's Route tab lists the next
  * lessons), so the day is read there (`openRouteMap`), where a lesson group is a labelled row rather than a button.
  */
 
-interface UpperCell {
-  episodeId: string;
-  /** The grid cell's accessible name, e.g. "Stage 2 Words, Holidays & Traditions: ..." (or `journeyCellName`). */
-  cellButton: string | RegExp;
-  /** The episode page title. */
-  title: string;
+/** A deep play of one cell, by hand: its first quest through its real games, and where its day shows. */
+interface CellPlay {
   /** Plays the first quest from its launcher to the reward step (the cell's games, in order). */
   playFirstQuest: (page: Page) => Promise<void>;
   /** Checks the Learning Route shows the cell's day. */
   expectRouteDay: (page: Page) => Promise<void>;
 }
+
+interface UpperCell extends CellPlay {
+  episodeId: string;
+  /** The grid cell's accessible name, e.g. "Stage 2 Words, Holidays & Traditions: ..." (`journeyCellName`). */
+  cellButton: RegExp;
+  /** The episode page title. */
+  title: string;
+}
+
+/** The grid's theme column names (en), by theme key. */
+const THEME_LABEL: Readonly<Record<ThemeKey, string>> = {
+  letters: 'Letters & Books',
+  life: 'Food & Daily Life',
+  rites: 'Holidays & Traditions',
+  nature: 'Nature & Animals',
+  crafts: 'Play & Crafts',
+};
 
 /** Shifted letters on the in-app keyboard and the joined vowels it types with two keys (KS X 5002). */
 const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
@@ -386,13 +401,10 @@ const WORD_BUILDER_Q1_BOARDS = [
   ['sebae', 'dongsaeng', 'galsaek'],
 ] as const;
 
-/** Each cell row appends its cell here (S2-1 onward). */
-const CELLS: readonly UpperCell[] = [
+/** The deep plays, by episode id (rows S2-1 to S7-5 wrote them); a later cell may add one, never must. */
+const PLAYS: Readonly<Record<string, CellPlay>> = {
   // F-CURR-001 S2-3: Playground Words q1, At the Playground, played through its real games.
-  {
-    episodeId: 'episode:stage2-crafts',
-    cellButton: journeyCellName(2, 'Play & Crafts'),
-    title: 'Playground Words',
+  'episode:stage2-crafts': {
     playFirstQuest: async (page) => {
       await startFirstQuest(page);
       await passDiscover(page);
@@ -423,10 +435,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S3-1: First Sentences, q1 "It Is a Book" played through its real games.
-  {
-    episodeId: 'episode:stage3-letters',
-    cellButton: journeyCellName(3, 'Letters & Books'),
-    title: 'First Sentences',
+  'episode:stage3-letters': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
@@ -455,10 +464,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S4-1: Read Along, q1 "What Is This?" played through its real games.
-  {
-    episodeId: 'episode:stage4-letters',
-    cellButton: journeyCellName(4, 'Letters & Books'),
-    title: 'Read Along',
+  'episode:stage4-letters': {
     playFirstQuest: async (page) => {
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
       await page.getByRole('button', { name: 'Continue' }).click();
@@ -482,10 +488,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S3-3: Festival Sentences, q1 "Grandma and Grandpa" at 320 px: Discover (three pages),
   // Sentence Builder (five rounds), Listen & Pick (four rounds), the two-round Check, the reward.
-  {
-    episodeId: 'episode:stage3-rites',
-    cellButton: journeyCellName(3, 'Holidays & Traditions'),
-    title: 'Festival Sentences',
+  'episode:stage3-rites': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 640 });
       await page.getByTestId('episode-quest-quest:stage3-rites-q1').getByRole('button', { name: 'Start' }).click();
@@ -523,10 +526,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S3-5: Game Sentences, q1 "I Want to Play" played through its real games.
-  {
-    episodeId: 'episode:stage3-crafts',
-    cellButton: journeyCellName(3, 'Play & Crafts'),
-    title: 'Game Sentences',
+  'episode:stage3-crafts': {
     playFirstQuest: async (page) => {
       await startFirstQuest(page);
       await passDiscover(page);
@@ -554,10 +554,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S3-2: Daily Mini-Sentences, q1 "I Eat, I Drink" played through its real games.
-  {
-    episodeId: 'episode:stage3-life',
-    cellButton: journeyCellName(3, 'Food & Daily Life'),
-    title: 'Daily Mini-Sentences',
+  'episode:stage3-life': {
     playFirstQuest: async (page) => {
       await startFirstQuest(page);
       // Discover: the pattern page (its examples) and the drink page; captions are plain UI text.
@@ -584,10 +581,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 T-2: Greeting Dialogues, q1 "Nice to Meet You" (the taste quest's id, now a six-step lesson).
-  {
-    episodeId: 'episode:stage4-rites',
-    cellButton: journeyCellName(4, 'Holidays & Traditions'),
-    title: 'Greeting Dialogues',
+  'episode:stage4-rites': {
     playFirstQuest: async (page) => {
       await startFirstQuest(page);
       await passDiscover(page);
@@ -608,10 +602,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its six Pic-Word boards are played, its Card Match is
   // skipped (the shipped game), and the Check is answered by id: the sun picture, then the written 노래.
-  {
-    episodeId: 'episode:stage2-letters',
-    cellButton: journeyCellName(2, 'Letters & Books'),
-    title: 'Word Builder',
+  'episode:stage2-letters': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -645,10 +636,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S2-2: Holiday Words, q1 "Seollal Words": Discover, all six Pic-Word boards, Build a Letter
   // (the shipped game, skipped here), and the Check by id: the 세배 picture, then the written 설날.
-  {
-    episodeId: 'episode:stage2-rites',
-    cellButton: journeyCellName(2, 'Holidays & Traditions'),
-    title: 'Holiday Words',
+  'episode:stage2-rites': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -676,10 +664,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S4-2: Kitchen Talk, q1 "Have You Eaten?": Discover, three Tap to Respond turns, the four-line
   // Story Sequence and the Check, at 320 px.
-  {
-    episodeId: 'episode:stage4-life',
-    cellButton: journeyCellName(4, 'Food & Daily Life'),
-    title: 'Kitchen Talk',
+  'episode:stage4-life': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -702,10 +687,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S4-3: Park Conversations, q1 "Sky Watching": Discover, three Tap to Respond turns, the four-line
   // Story Sequence and the Check, at 320 px.
-  {
-    episodeId: 'episode:stage4-nature',
-    cellButton: journeyCellName(4, 'Nature & Animals'),
-    title: 'Park Conversations',
+  'episode:stage4-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -728,10 +710,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S4-4: Playdate Talk, q1 "What Shall We Play?" at 320 px: Discover (two exchange pages),
   // Tap to Respond (three turns), Story Sequence (three lines), the two-round Check, the reward.
-  {
-    episodeId: 'episode:stage4-crafts',
-    cellButton: journeyCellName(4, 'Play & Crafts'),
-    title: 'Playdate Talk',
+  'episode:stage4-crafts': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 640 });
       await startFirstQuest(page);
@@ -763,10 +742,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S6-1: Read the Menu, q1 "Dishes on the Menu" played through its real games.
-  {
-    episodeId: 'episode:stage6-letters',
-    cellButton: journeyCellName(6, 'Letters & Books'),
-    title: 'Read the Menu',
+  'episode:stage6-letters': {
     playFirstQuest: async (page) => {
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
       await page.getByRole('button', { name: 'Continue' }).click();
@@ -800,10 +776,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S6-2: Order Food, q1 "Excuse Me!": Realia Read on the table menu, Type Hangul, Listen & Pick.
-  {
-    episodeId: 'episode:stage6-life',
-    cellButton: journeyCellName(6, 'Food & Daily Life'),
-    title: 'Order Food',
+  'episode:stage6-life': {
     playFirstQuest: async (page) => {
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
       await page.getByRole('button', { name: 'Continue' }).click();
@@ -824,10 +797,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S6-3: Travel for Chuseok, q1 "The Train Ticket" played through its real games.
-  {
-    episodeId: 'episode:stage6-rites',
-    cellButton: journeyCellName(6, 'Holidays & Traditions'),
-    title: 'Travel for Chuseok',
+  'episode:stage6-rites': {
     playFirstQuest: async (page) => {
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
       await page.getByRole('button', { name: 'Continue' }).click();
@@ -853,10 +823,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S6-4: Hike & Ask, q1 "Trail Signs" at 320 px: Discover, Realia Read on the trail sign
   // (four boards), Type Hangul (산길, 정상, 입구, 출구) and the Check by id (정상, then 출구).
-  {
-    episodeId: 'episode:stage6-nature',
-    cellButton: journeyCellName(6, 'Nature & Animals'),
-    title: 'Hike & Ask',
+  'episode:stage6-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -877,10 +844,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S6-5: Buy at Market, q1 "At the Stall" at 320 px: Discover, Realia Read on the three price
   // cards (a drawn stall, round practice amounts, OD-11), Type Hangul (한지, 부채, 오일장) and the Check by id.
-  {
-    episodeId: 'episode:stage6-crafts',
-    cellButton: journeyCellName(6, 'Play & Crafts'),
-    title: 'Buy at Market',
+  'episode:stage6-crafts': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -900,10 +864,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S3-4: Animal Sentences, q1 "Where Is the Bird?" played through its real games.
-  {
-    episodeId: 'episode:stage3-nature',
-    cellButton: journeyCellName(3, 'Nature & Animals'),
-    title: 'Animal Sentences',
+  'episode:stage3-nature': {
     playFirstQuest: async (page) => {
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
       await page.getByRole('button', { name: 'Continue' }).click();
@@ -932,10 +893,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is the
   // gimbap picture, then the written 도시락.
-  {
-    episodeId: 'episode:stage2-life',
-    cellButton: journeyCellName(2, 'Food & Daily Life'),
-    title: 'Lunch Box Words',
+  'episode:stage2-life': {
     playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, ['gimbap', 'dosirak']),
     expectRouteDay: async (page) => {
       await page.context().setOffline(false);
@@ -944,10 +902,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is the star picture, then the written 나무.
-  {
-    episodeId: 'episode:stage2-nature',
-    cellButton: journeyCellName(2, 'Nature & Animals'),
-    title: 'Outdoor Words',
+  'episode:stage2-nature': {
     playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, ['byeol', 'namu']),
     expectRouteDay: async (page) => {
       await page.context().setOffline(false);
@@ -957,10 +912,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S7-1: Write Your Name, q1 "Hoya's Name": Trace a Word (left with Skip, a first-class way
   // on), Type Hangul with the cast name 호야, and the Stage 7 Sentence Builder Check.
-  {
-    episodeId: 'episode:stage7-letters',
-    cellButton: journeyCellName(7, 'Letters & Books'),
-    title: 'Write Your Name',
+  'episode:stage7-letters': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -988,10 +940,7 @@ const CELLS: readonly UpperCell[] = [
   },
   // F-CURR-001 S7-2: My Day in Korean, q1 "Morning to Evening": Trace a Word (Skip is the
   // learner's own way past it), Type Hangul on the in-app keyboard, the Sentence Builder Check.
-  {
-    episodeId: 'episode:stage7-life',
-    cellButton: journeyCellName(7, 'Food & Daily Life'),
-    title: 'My Day in Korean',
+  'episode:stage7-life': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
@@ -1032,10 +981,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S7-3: My Holiday Memory, q1 "I Ate Tteokguk" played through its real games at 320 px.
-  {
-    episodeId: 'episode:stage7-rites',
-    cellButton: journeyCellName(7, 'Holidays & Traditions'),
-    title: 'My Holiday Memory',
+  'episode:stage7-rites': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -1069,10 +1015,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, the order-it Check.
-  {
-    episodeId: 'episode:stage7-nature',
-    cellButton: journeyCellName(7, 'Nature & Animals'),
-    title: 'My Favorite Animal',
+  'episode:stage7-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
@@ -1104,10 +1047,7 @@ const CELLS: readonly UpperCell[] = [
     },
   },
   // F-CURR-001 S7-5: Make & Share, q1 "Fold, Cut, Draw" played through its real games at 320 px.
-  {
-    episodeId: 'episode:stage7-crafts',
-    cellButton: journeyCellName(7, 'Play & Crafts'),
-    title: 'Make & Share',
+  'episode:stage7-crafts': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await page.getByRole('button', { name: 'Start', exact: true }).first().click();
@@ -1140,7 +1080,26 @@ const CELLS: readonly UpperCell[] = [
       await expect(page.getByLabel(/^Play & Crafts: Make & Share\./)).toBeVisible();
     },
   },
-];
+};
+
+/** A cell with no deep play: its first quest opens from the launcher and its intro moves on. */
+async function openFirstQuest(page: Page): Promise<void> {
+  await startFirstQuest(page);
+  await expect(headerClose(page)).toBeVisible();
+}
+
+/** One test per cell of the lesson manifest, with its deep play when it has one. */
+const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+  const stage = Number(episode.stage.replace('stage', ''));
+  const play = PLAYS[episode.id];
+  return {
+    episodeId: episode.id,
+    cellButton: journeyCellName(stage, THEME_LABEL[episode.theme]),
+    title: episode.titleEn,
+    playFirstQuest: play?.playFirstQuest ?? openFirstQuest,
+    expectRouteDay: play?.expectRouteDay ?? ((page) => expectCellOnRoute(page, stage, episode.titleEn)),
+  };
+});
 
 async function openJourney(page: Page): Promise<void> {
   await page.goto('/');
@@ -1156,12 +1115,14 @@ async function openJourney(page: Page): Promise<void> {
 }
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
-  test('every shipped lesson cell has an e2e entry', () => {
-    expect(CELLS.map((c) => c.episodeId).sort()).toEqual(LESSON_EPISODES.map((e) => e.id).sort());
+  test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
+    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
+    const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
+    for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
   });
 
   for (const cell of CELLS) {
-    test(`${cell.episodeId}: opens from the grid, a quest plays to its reward, the Learning Route day appears`, async ({ page }) => {
+    test(`${cell.episodeId}: opens from the grid, its first quest plays (to the reward with a deep play), the Learning Route day appears`, async ({ page }) => {
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(String(e)));
       await openJourney(page);
