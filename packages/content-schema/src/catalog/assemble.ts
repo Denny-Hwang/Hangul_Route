@@ -1,4 +1,4 @@
-import { StageKeySchema, ThemeKeySchema, type StageKey } from '../schemas/heritage-card';
+import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from '../schemas/heritage-card';
 import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } from './schema';
 
 /**
@@ -15,6 +15,38 @@ export type GeneratedStoryRow = Pick<CatalogStory, 'title' | 'recommendedStage' 
   slug: string;
   addedIn?: number;
 };
+
+/**
+ * A generated lesson quest, compact: its title, minutes and what it teaches. Its id
+ * (`quest:<stage>-<theme>-q<n>`, by position), cell, stage, theme and kind follow from its cell, so
+ * the start bundle does not carry them once per quest.
+ */
+export type GeneratedQuestRow = readonly [title: string, minutes: number, teaches: readonly string[]];
+
+/** A generated upper-stage cell, compact: its quests in order (none for a "Coming soon" cell). */
+export type GeneratedCellRow = readonly [
+  stage: StageKey,
+  theme: ThemeKey,
+  title: string,
+  status: CatalogCell['status'],
+  minutes: number,
+  quests: readonly GeneratedQuestRow[],
+];
+
+/** Pure: compact generated cell rows -> the catalogue cells and their lesson quests. */
+export function expandCellRows(rows: readonly GeneratedCellRow[]): { cells: CatalogCell[]; quests: CatalogQuest[] } {
+  const cells: CatalogCell[] = [];
+  const quests: CatalogQuest[] = [];
+  for (const [stage, theme, title, status, minutes, rowQuests] of rows) {
+    const episodeId = `episode:${stage}-${theme}`;
+    const questIds = rowQuests.map((_, i) => `quest:${stage}-${theme}-q${i + 1}`);
+    cells.push({ stage, theme, episodeId, title, status, minutes, questIds });
+    rowQuests.forEach(([questTitle, questMinutes, teaches], i) => {
+      quests.push({ id: questIds[i] as string, episodeId, stage, theme, title: questTitle, minutes: questMinutes, teaches: [...teaches], kind: 'lesson' });
+    });
+  }
+  return { cells, quests };
+}
 
 /** A vocabulary topic file as the generator reads it: everything but the free rule and the minutes. */
 export type GeneratedTopicRow = Pick<CatalogTopic, 'id' | 'key' | 'title' | 'order'>;

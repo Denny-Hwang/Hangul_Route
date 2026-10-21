@@ -1,12 +1,6 @@
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
-import { assembleCatalog, type StoryShelfEntry } from './assemble';
-import {
-  GENERATED_CATALOG_VERSION,
-  GENERATED_LESSON_CELLS,
-  GENERATED_LESSON_QUESTS,
-  GENERATED_STORIES,
-  GENERATED_TOPICS,
-} from './catalog.generated';
+import { assembleCatalog, expandCellRows, type StoryShelfEntry } from './assemble';
+import { GENERATED_CATALOG_VERSION, GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from './catalog.generated';
 import type { Catalog, CatalogCell, CatalogQuest } from './schema';
 
 /**
@@ -181,10 +175,12 @@ const STORY_SHELF: readonly StoryShelfEntry[] = [
   ['joseon-records-today'],
 ];
 
+const generated = expandCellRows(GENERATED_LESSON_CELL_ROWS);
+
 export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
-  cells: [...handCells, ...GENERATED_LESSON_CELLS],
-  lessonQuests: [...handLessonQuests, ...GENERATED_LESSON_QUESTS],
+  cells: [...handCells, ...generated.cells],
+  lessonQuests: [...handLessonQuests, ...generated.quests],
   stories: GENERATED_STORIES,
   storyShelf: STORY_SHELF,
   topics: GENERATED_TOPICS,

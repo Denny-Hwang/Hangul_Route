@@ -28,8 +28,9 @@
 //       GENERATED_CATALOG_VERSION   the largest `addedIn` stamp of a shipped quest, else 32 (the last
 //                                   hand-kept version; every stamp is a YYYYMMDD date, so larger)
 //       GENERATED_QUEST_ADDITIONS   the shipped quest ids by their `addedIn` stamp
-//       GENERATED_LESSON_CELLS      one catalogue cell per upper-stage cell file (a draft is "Coming soon")
-//       GENERATED_LESSON_QUESTS     the quests of the ready cells: titles, minutes, `teaches` (Discover symbols)
+//       GENERATED_LESSON_CELL_ROWS  one compact row per upper-stage cell file (a draft is "Coming soon"),
+//                                   with its quests' titles, minutes and `teaches` (Discover symbols);
+//                                   expandCellRows (catalog/assemble.ts) gives the ids, cells and kinds
 //       GENERATED_STORIES           one row per content/stories/*.json (the offer status rule of the catalogue)
 //       GENERATED_TOPICS            one row per content/vocab/<topic>.json
 //   catalog/data.ts adds the hand-written Stage 1 and Stage 5 rows and the frozen shelf order of the
@@ -608,14 +609,37 @@ export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new
   };
 }
 
+/**
+ * Pure: the model's cells and quests -> the compact cell rows of catalog.generated.ts. Throws when a
+ * row would not expand back to the model (a quest id off its position, a quest of another cell).
+ */
+export function cellRowsOf(model) {
+  const byCell = new Map(model.cells.map((cell) => [cell.episodeId, []]));
+  for (const quest of model.quests) {
+    const list = byCell.get(quest.episodeId);
+    if (list === undefined) throw new Error(`catalogue quest ${quest.id} names no generated cell (${quest.episodeId})`);
+    list.push(quest);
+  }
+  return model.cells.map((cell) => {
+    const quests = byCell.get(cell.episodeId);
+    const ids = quests.map((_, i) => `quest:${cell.stage}-${cell.theme}-q${i + 1}`);
+    const fits =
+      cell.episodeId === `episode:${cell.stage}-${cell.theme}` &&
+      cell.questIds.length === ids.length &&
+      cell.questIds.every((id, i) => id === ids[i]) &&
+      quests.every((q, i) => q.id === ids[i] && q.stage === cell.stage && q.theme === cell.theme && q.kind === "lesson");
+    if (!fits) throw new Error(`catalogue cell ${cell.episodeId} does not fit a compact row (ids by position, one cell)`);
+    return [cell.stage, cell.theme, cell.title, cell.status, cell.minutes, quests.map((q) => [q.title, q.minutes, q.teaches])];
+  });
+}
+
 /** Pure: the catalogue model -> the source of catalog.generated.ts. */
 export function renderCatalogue(model) {
   const rows = (items) => (items.length === 0 ? "[]" : `[\n${items.map((item) => `  ${literal(item)},`).join("\n")}\n]`);
   const additions = Object.entries(model.additions);
   return (
     CATALOG_HEADER +
-    "import type { GeneratedStoryRow, GeneratedTopicRow } from './assemble';\n" +
-    "import type { CatalogCell, CatalogQuest } from './schema';\n\n" +
+    "import type { GeneratedCellRow, GeneratedStoryRow, GeneratedTopicRow } from './assemble';\n\n" +
     "/**\n" +
     " * The catalogue rows content/ defines (F-CURR-002 §9.1, row CM-6), assembled with the hand-written\n" +
     " * Stage 1 and Stage 5 rows by ./data.ts. Gitignored: `pnpm generate` writes it.\n" +
@@ -626,10 +650,12 @@ export function renderCatalogue(model) {
     "export const GENERATED_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = " +
     (additions.length === 0 ? "{}" : `{\n${additions.map(([stamp, ids]) => `  ${stamp}: ${literal(ids)},`).join("\n")}\n}`) +
     ";\n\n" +
-    "/** One cell per upper-stage cell file (stages 2, 3, 4, 6 and 7), in grid order. */\n" +
-    `export const GENERATED_LESSON_CELLS: CatalogCell[] = ${rows(model.cells)};\n\n` +
-    "/** The quests of the ready cells, in cell order. */\n" +
-    `export const GENERATED_LESSON_QUESTS: CatalogQuest[] = ${rows(model.quests)};\n\n` +
+    "/**\n" +
+    " * One row per upper-stage cell file (stages 2, 3, 4, 6 and 7), in grid order:\n" +
+    " * [stage, theme, title, status, minutes, quests], a quest being [title, minutes, teaches].\n" +
+    " * Compact for the start bundle; expandCellRows (./assemble.ts) gives the ids, cells and kinds.\n" +
+    " */\n" +
+    `export const GENERATED_LESSON_CELL_ROWS: GeneratedCellRow[] = ${rows(cellRowsOf(model))};\n\n` +
     "/** One row per story file, by slug; ./data.ts gives each its shelf order and festival anchor. */\n" +
     `export const GENERATED_STORIES: GeneratedStoryRow[] = ${rows(model.stories)};\n\n` +
     "/** One row per vocabulary topic file, in topic order. */\n" +

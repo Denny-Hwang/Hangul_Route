@@ -15,7 +15,7 @@ import {
   type CatalogCell,
   type CatalogQuest,
 } from '..';
-import { assembleCatalog, type CatalogSources, type GeneratedStoryRow } from '../catalog/assemble';
+import { assembleCatalog, expandCellRows, type CatalogSources, type GeneratedStoryRow } from '../catalog/assemble';
 import { GENERATED_CATALOG_VERSION, GENERATED_QUEST_ADDITIONS } from '../catalog/catalog.generated';
 import CATALOG_V32_JSON from './fixtures/catalog-v32.json';
 
@@ -169,6 +169,23 @@ const sources = (over: Partial<CatalogSources> = {}): CatalogSources => ({
   freeTopics: 2,
   topicMinutes: 5,
   ...over,
+});
+
+describe('expandCellRows', () => {
+  it('gives each compact row its cell and its quests, ids by position, kind lesson', () => {
+    const { cells, quests } = expandCellRows([
+      ['stage2', 'life', 'Lunch Box Words', 'preview', 10, []],
+      ['stage3', 'rites', 'Holiday Words', 'shipped', 9, [['First', 4, ['ㅐ']], ['Second', 5, []]]],
+    ]);
+    expect(cells).toEqual([
+      { stage: 'stage2', theme: 'life', episodeId: 'episode:stage2-life', title: 'Lunch Box Words', status: 'preview', minutes: 10, questIds: [] },
+      { stage: 'stage3', theme: 'rites', episodeId: 'episode:stage3-rites', title: 'Holiday Words', status: 'shipped', minutes: 9, questIds: ['quest:stage3-rites-q1', 'quest:stage3-rites-q2'] },
+    ]);
+    expect(quests).toEqual([
+      { id: 'quest:stage3-rites-q1', episodeId: 'episode:stage3-rites', stage: 'stage3', theme: 'rites', title: 'First', minutes: 4, teaches: ['ㅐ'], kind: 'lesson' },
+      { id: 'quest:stage3-rites-q2', episodeId: 'episode:stage3-rites', stage: 'stage3', theme: 'rites', title: 'Second', minutes: 5, teaches: [], kind: 'lesson' },
+    ]);
+  });
 });
 
 describe('assembleCatalog', () => {

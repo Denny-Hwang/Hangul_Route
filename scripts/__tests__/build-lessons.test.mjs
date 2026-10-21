@@ -452,7 +452,7 @@ describe("build-lessons.mjs: --check and --report", () => {
 
 // ---- F-CURR-002 §9.1 (row CM-6): the generated catalogue rows and the addedIn stamps ----------
 
-const { CATALOG_OUT, HISTORY_LAST_VERSION, addedInStamp, catalogueOf, loadSymbolKeys, renderCatalogue, shapeStoryRow, shapeTopicRow, symbolKeyOf } = await import(SCRIPT);
+const { CATALOG_OUT, HISTORY_LAST_VERSION, addedInStamp, catalogueOf, cellRowsOf, loadSymbolKeys, renderCatalogue, shapeStoryRow, shapeTopicRow, symbolKeyOf } = await import(SCRIPT);
 
 const story = (slug, extra = {}) => ({
   id: `story:${slug}`,
@@ -469,6 +469,24 @@ const topicFile = (key, order) => ({ topic: { id: `vocab-topic:${key}`, key, ord
 const discoverStepOf = (ids) => ({ id: "s2", kind: "discover", titleEn: "Meet", discover: { pages: [{ items: ids.map((jamoId) => ({ type: "jamo", jamoId })) }] } });
 
 describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
+  test("the cells and their quests are written as compact rows (ids by position), and a model that would not expand back fails", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-3/rites.json", cell("stage3", "rites"));
+    put(root, "content/episodes/stage-2/life.json", cell("stage2", "life", "draft", { titleEn: "Lunch Box Words" }));
+    const model = catalogueOf({ cells: readCellsOf(root) });
+    assert.deepEqual(cellRowsOf(model), [
+      ["stage2", "life", "Lunch Box Words", "preview", 10, []],
+      ["stage3", "rites", "Holiday Words", "shipped", 13, [["Quest 1", 4, []], ["Quest 2", 4, []], ["Quest 3", 4, []]]],
+    ]);
+    const source = renderCatalogue(model);
+    assert.match(source, /export const GENERATED_LESSON_CELL_ROWS: GeneratedCellRow\[\] = \[\n  \["stage2","life","Lunch Box Words","preview",10,\[\]\],\n/);
+    assert.doesNotMatch(source, /"episodeId"|"kind"/);
+    const moved = { ...model, quests: model.quests.map((q, i) => (i === 0 ? { ...q, id: "quest:stage3-rites-q9" } : q)) };
+    assert.throws(() => cellRowsOf(moved), /catalogue cell episode:stage3-rites does not fit a compact row/);
+    const stray = { ...model, quests: [...model.quests, { ...model.quests[0], episodeId: "episode:stage9-none" }] };
+    assert.throws(() => cellRowsOf(stray), /names no generated cell \(episode:stage9-none\)/);
+  });
+
   test("a ready cell gives a shipped catalogue cell and its quests, a draft cell a 'Coming soon' one with no quests", () => {
     const root = makeRoot();
     put(root, "content/episodes/stage-3/rites.json", cell("stage3", "rites"));
