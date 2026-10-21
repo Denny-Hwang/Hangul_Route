@@ -150,5 +150,6 @@ Images per page (the page's captures, one locale): `/` 15.6 KB, `/learners` 36.2
 
 ## Review
 
-See the spec's review log (section 12): the multi-agent review of these mocks (UX, accessibility at 320 px, 200 % text and
-64 px targets, any-age copy, es and ko length) and the changes it asked for.
+Multi-agent review, 2026-10-21 (spec section 12): round 1 asked for 15 changes across UX, accessibility, English, Spanish
+and Korean (all made, or recorded as owner decisions OD-SN-1, -9, -10, -11, -12 with defaults); round 2 passed in every
+lens. The mocks, shots and `measurements.json` in this folder are the round-2 versions.

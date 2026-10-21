@@ -1,4 +1,4 @@
-Status: draft (becomes ready when the multi-agent review of section 12 signs off)
+Status: ready (multi-agent review signed off 2026-10-21, section 12; rows SN-1 and SN-2 implement it)
 
 Design: row SN-0 (this PR, agent design pass, CLAUDE.md section 5 and the 2026-10-12 owner decision). Wireframes
 `design/wireframes/site/newuser-home.md`, `newuser-header-language.md`, `newuser-grown-up-pages.md`,
@@ -296,6 +296,7 @@ taken offline. The share image holds no personal data.
 | OD-SN-8 | The app shows the Learning Route on Home while `learningRoute` is `false` on the site. Flip the claim (F-ROUTE-001 R-10 rule)? | No change here; the claim stays as it is | — |
 | OD-SN-9 | The class-moves line says "The family is told": exact for a learner in a family; a learner in no family has nobody else to tell. Keep the owner's wording? | Keep | SN-1 |
 | OD-SN-11 | The school cap appears twice on `/teachers`: in the schools section (owner's sentence, with the School Contract path) and in #806's Plans line (`plans.freeSizes`, "…a school up to 50"). Keep both, or drop the school figure from the Plans line on `/teachers`? | Keep both (the schools sentence is the owner's; the Plans line lists every free limit in one place) | SN-1 |
+| OD-SN-12 | The hero capture's own heading is "Four New Letters" while the bubble (#806) says "Let's meet ㅏ (a)". Keep the pairing (ㅏ is the first of the four and the largest thing on the screen), or word the bubble in the plural (a #806 copy change)? | Keep | — |
 | OD-SN-10 | "No email or password" appears in the hero facts line (#806) and again in the closing band. Keep the reprise? | Keep: the band is read by someone who scrolled past the hero | SN-1 |
 
 ## 7. PR table
@@ -384,5 +385,37 @@ English uses US spelling ("practiced"), as #806 sets for the site.
 
 ## 12. Review log
 
-*(to be filled by the multi-agent review of the mocks: UX, accessibility at 320 px / 200 % text / 64 px targets,
-any-age copy, es and ko length)*
+Multi-agent review of the mocks, 2026-10-21 (CLAUDE.md section 5; the 2026-10-12 owner decision). Four independent
+reviewers, each read-only over this spec, the wireframes, `mock/strings.js`, `mock/patch.js`, `measurements.json` and the
+shots: (1) UX for a new visitor, (2) accessibility (320 px, 200 % text, 64 px targets, focus order, the language
+control), (3) English copy (any age, truthful, no price or billing), (4) Spanish and Korean (glossary, the F-I18N-001
+section 3.10 particle rule, length in the es and ko shots). No reviewer is a native speaker or a human expert; this is
+the project's multi-agent review.
+
+**Round 1: CHANGES (all four).** What changed:
+
+| # | Lens | Finding | Change |
+|---|---|---|---|
+| R1-1 | UX | `/learners` captures sat under steps 1-2-3 and read as pictures of them | captures moved after Hoya's line, each with a visible caption (`captures.caption.*`, §3.4) |
+| R1-2 | UX | `/teachers` states the school cap twice (schools section and #806's Plans line) | OD-SN-11 (default keep both) |
+| R1-3 | UX | the class-list frame cut a row of cards | recaptured as the first row of whole cards, all corners rounded (§3.6) |
+| R1-4 | UX | the hero capture says "Four New Letters", the bubble one letter | alt text names the new letters starting with ㅏ; the pairing is OD-SN-12 |
+| R1-5 | UX | "No email or password" right above the email form | the news section is set apart by `spacing.xl` (§3.3 item 6); the reprise stays OD-SN-10 |
+| R1-6 | UX | Start twice on the home's first screen | OD-SN-1 (default keep one header everywhere) |
+| R1-7 | a11y | the open language menu overflowed at 320 px with 200 % text | menu positioned against the header row, width capped at the viewport minus the gutters, min width `min(12rem, …)` (§3.2) |
+| R1-8 | a11y | no shot or measurement of the open menu at 320 px with 200 % text | `header-<locale>-320-text200-lang-open.png`, `langOpen320text200` in `measurements.json`; the check also fails a visible control off the left edge |
+| R1-9 | a11y | no visual cue on the phone language control | a small chevron beside the globe on phones (§3.2) |
+| R1-10 | copy | class moves: no family to tell; moves to another teacher's class wait for acceptance | scoped to "another class in the school"; "Their family is told"; OD-SN-9 |
+| R1-11 | copy | "Billing stays with the owner." (billing word, register) | "The owner manages the plan." (as `console.billing.readOnly.schoolAdmin`) |
+| R1-12 | copy | hero alt named one letter, the screen shows four | "new letters, starting with {letter} ({romanization}), each with a button to hear it" |
+| R1-13 | ko | `{email}로`: particle on a value, and wrong after "com" | `{email} 주소로` |
+| R1-14 | ko | `{romanization})와`: particle on a value | the letter ends its own sentence: "첫 글자는 {letter}({romanization})." |
+| R1-15 | es | "crea sus clases": unclear referent | "crea tú las clases de cada docente" |
+
+**Round 2: PASS (both re-reviewers: UX and accessibility; copy, Spanish and Korean).** Every round-1 item is resolved or
+recorded as an owner decision with a default (OD-SN-1, -9, -10, -11, -12). No new blocking problem. Re-measured after the
+changes: one header row (81 px) at 320 and 375 px in en, es and ko; no sideways scroll at 320 px, at 320 px with 200 %
+text (menu open or closed) or at 720 px with 200 % text, on any page or locale; only the two consent inline links under
+64 x 64; heights and words within the section 3.11 budgets in every locale.
+
+Spec marked `ready`.
