@@ -1,5 +1,7 @@
 # Billing home: one billing page for every grown-up persona (screen spec v1)
 
+> **Amended 2026-10-20 [SA]** (`docs/specs/AMENDMENTS-SEATS-ADMINS.md`): a family holds up to **4** learners (was 5); the Group License covers up to **50** students in a class or a school (was no cap for a class and 300 for a school). Only the numbers on this page changed; the new rename and administrator surfaces get their own wireframes and mocks in row SA-0b.
+
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` sections 4.2, 4.3, 4.6, 4.9, 4.12, 6.1, 8 · wireframe `design/wireframes/billing/billing-home.md`
 Mocks: `mock/billing-home.html` (parent), `mock/billing-home-teacher.html` (teacher), `mock/billing-home-states.html` (board) · shots `shots/billing-home-*.png`, `billing-home-teacher-*.png`, `billing-home-states-*.png`
 Code (B-8a): `apps/web/src/app/(console)/account/billing/page.tsx` (replaces F-APP-001 A-5c's re-export), rendering `billingHomeView(parseBillingSummary(raw), { now, locale, promo })` and `summaryFailureNotice(offline)` from `apps/web/src/lib/console/billing-summary.ts` (B-7). The page renders what the view model gives and nothing else.
@@ -25,7 +27,7 @@ Inside F-APP-001's grown-up layout and `AdultFrame` (Billing current in the tab 
 | h3 | `heading`: "Family · Kim family", "Class · Spring Class (archived)" | `size.bodyLg`, bold, wraps anywhere |
 | plan line | `plan`: "Free plan", "Family Plan", "Group License", "School Contract", "Covered by Maple School's license until Aug 31, 2029" | semibold |
 | status line | `status`: "Renews on …", "Ends on …", "payment needs attention · full route kept for a week", or none | `text.secondary`, `size.bodySm` |
-| usage line | `usage`: "2 of 5 learners", "14 of 20 students", "23 students", "212 of 300 students · 7 of 10 teachers" | same |
+| usage line | `usage`: "2 of 4 learners", "14 of 20 students", "23 students", "42 of 50 students · 7 of 10 teachers" | same |
 | read-only line | `readOnly` (viewer cards only) | same, above a `border.subtle` rule |
 | offer | `offer` (the one buyable card only) | see "The offer" |
 | next step | `connectLearner`: "Next: connect a learner to this family." + **Connect a learner** (secondary, link to `/parent/space?id=…`) | above a rule, the line semibold |
@@ -35,14 +37,14 @@ Inside F-APP-001's grown-up layout and `AdultFrame` (Billing current in the tab 
 
 **Viewer cards** (co-parent, co-teacher, a class its school pays for, a school seen by a teacher member) show the heading, plan, status and usage lines the summary gives and the read-only line. Never an amount, a promo field, a button or a receipt (section 4.2; the view model enforces it whatever the summary says).
 
-Variants on the board: Family Plan with 4 of 5 learners (4), no learner yet (5), cancelled "Ends on" (6), past due (7), school owner or admin with Contact us (8), a school on the free plan with the Group License offer, the school line and Contact us (9), archived with a live license, payers only (10), a legacy one-time sandbox Family Plan with no date and no Manage (11), the legacy "Your account" card (12).
+Variants on the board: Family Plan with 3 of 4 learners (4), no learner yet (5), cancelled "Ends on" (6), past due (7), school owner or admin with Contact us (8), a school on the free plan with the Group License offer, the school line and Contact us (9), archived with a live license, payers only (10), a legacy one-time sandbox Family Plan with no date and no Manage (11), the legacy "Your account" card (12).
 
 ## The offer
 
 Inside the one buyable card, under a `border.subtle` rule, or as an **Add a plan** row (`surface.paper` box, `radii.lg`).
 
 1. Title: `offer.title`, an h4 in the card ("Family Plan"), an h3 in Add a plan ("Group License for Room 4"). The offer is a `role="group"` labelled by it.
-2. Includes lines (`offer.includes`), one `li` each with the `check` glyph (20, `feedback.success`, decoration). Today, with `SITE_CLAIMS` all off: Family Plan "Every lesson of every Stage, new ones included", "Up to 5 learners in one family", "Cloud save on every device"; Group License "Every lesson for every student while they are enrolled", "No 20-student cap", and for a school "A school holds up to 10 teachers and 300 students". Feature lines (browse, reports, notes) render only once their claim flips (board 21); a line for an unbuilt feature never renders.
+2. Includes lines (`offer.includes`), one `li` each with the `check` glyph (20, `feedback.success`, decoration). Today, with `SITE_CLAIMS` all off: Family Plan "Every lesson of every Stage, new ones included", "Up to 4 learners in one family", "Cloud save on every device"; Group License "Every lesson for every student while they are enrolled", "Up to 50 students in the class", and for a school "A school holds up to 10 teachers and 50 students". Feature lines (browse, reports, notes) render only once their claim flips (board 21); a line for an unbuilt feature never renders.
 3. Price line (`offer.price`): "$15.30 / year", "$153 / year"; `size.prompt`, bold. With a code applied: "$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year" at `size.body` (board 20).
 4. Renew line (`offer.renew`): "Renews yearly. Cancel from Manage subscription any time." (D1), `text.secondary`.
 5. **Have a code?** (the first offer on the page only, directly under the price it rewrites): the F-ENT-002 form (D4, board 19).

@@ -125,7 +125,7 @@ Roles come from `SpaceRoleSchema` (`packages/content-schema/src/schemas/space.ts
 | Co-teacher (role `teacher` on a class) | Billing | Class card read-only: plan and status, students `n` | Nothing; "The class owner manages this plan." |
 | Teacher, class inside a school (owner of the class, school pays) | Billing | Class card: "Covered by *School*'s license until *date*", students `n` | Nothing; "Your school manages this plan." (the server already refuses a license for a class inside a school, `entitlements.ts:66-68`). |
 | Teacher member of a school (role `teacher` on the school) | Billing | School card read-only: "Covered by *School*'s license until *date*", no seat counts | Nothing; "Your school manages this plan." |
-| School owner or school admin | Billing | School card: license or contract, status, students `n of 300`, teachers `n of 10` (`SCHOOL_LICENSE_*`; contract seats when `school_seat`) | Free: **Get Group License**. License: **Manage subscription**, receipts. Always: **Contact us** for a contract. |
+| School owner or school admin | Billing | School card: license or contract, status, students `n of 50` [SA], teachers `n of 10` (`SCHOOL_LICENSE_*`; contract seats when `school_seat`) | Free: **Get Group License**. License: **Manage subscription**, receipts. Always: **Contact us** for a contract. |
 | Learner, family device | learner app, Profile > **Plan details** (no PIN) | Plan screen: free / full route / covered by *space* (wireframe `billing/plan-status`) | Web: **Open billing** (through the PIN gate, then the same tab). Native: nothing. |
 | Learner, self-only device (adult learning alone) | same; the gate opens directly when no PIN is set (`logic/profiles/gate-route.ts`) | same, worded for "you" (audience `self`) | same. To buy: the adult self-learner story of section 2. |
 | Grown-up with no space yet | Billing | Empty state: "Plans belong to a family or a class." | **Set up for me or my family** (`/start?persona=parent`) / **Set up a class** (`/start?persona=teacher`), F-APP-001's `/start`. |
@@ -655,7 +655,7 @@ B-1 and B-6 can run in parallel right after B-0 (B-1 also needs F-APP-001 A-1, a
 Assumptions this spec relies on (and what happens if they change):
 
 - **AS1.** F-APP-001 serves grown-up pages on app.hangulroute.com with Clerk on that origin. If it slips, B-0 to B-7 and B-9 still ship; only B-8a onward waits, and the old page keeps working at `/teach/billing` on hangulroute.com.
-- **AS2.** The family cap of 5 learners stays on every family space, paid or not (`spaces.ts:300`). This spec does not change it.
+- **AS2.** The family cap of **4** learners [SA] (was 5, AMENDMENTS-SEATS-ADMINS SA-D1) stays on every family space, paid or not (`spaces.ts:300`). This spec does not change it.
 - **AS3.** F-ENT-003 decides what is free; the Plan screen renders its slots. Until E3-8, the free slot says "Stage 1 is always free."
 - **AS4.** Production Clerk session tokens carry `fva` (checked once, section 4.4).
 
