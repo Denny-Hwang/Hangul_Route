@@ -132,8 +132,8 @@ Exit to: `quest/player` · the review session's next item. No other exit: the so
 ## Accessibility
 
 - The origin picture is an image with a description that is the fact itself ("A head from the side. The tongue touches the upper gum."), not decorative, because it is the prompt.
-- Tiles are buttons named by the letter and, in origin rounds, its sound value read as words ("ㄴ, n"; "ㄱ, g or k"). In pair rounds a tile is named by its letter only, and a found tile adds "found" and its sound ("ㅂ, b or p, found"), so the screen-reader user does the same task: read the letter shape (the screen reader names the jamo, which the learner then compares with the target).
-- The pair heading reads "Tap every ㅂ, b or p".
+- Tiles are buttons named by the letter and, in origin rounds, its sound value read as words ("ㄴ, n"; "ㄱ, g or k"). In pair rounds a tile is named by its jamo, tagged `lang="ko"` / `accessibilityLanguage="ko"`, plus the letter's name in romanization from the jamo id (`jamo:bieup` -> "ㅂ, letter bieup", `jamo:pieup` -> "ㅍ, letter pieup"; the RR names of `content/episodes/stage-1/jamo.json`), never its sound value; a found tile adds its sound and "found" ("ㅂ, letter bieup, b or p, found"). The name is needed because an isolated jamo under an English or Spanish system voice is often read as nothing, as a generic "Hangul letter", or the same for both letters, which would leave a blind learner two identical names. For a screen-reader user the round becomes "find the tiles whose name is the target's"; that is the nearest parity speech allows, and it never gives the sound away. A vowel's name is its sound (아 `a`, 어 `eo`), so a vowel pair round's tiles are named by the letter name the Stage 1 lessons teach, which is also the target's name in the heading. CM-33 test: a unit test that, for every pair round, the target's tile names and the look-alike's tile names differ, and that no unfound tile name carries the `JAMO_SOUND_VALUES` value as a word of its own (the name part "letter bieup" is allowed; ", b or p" is not).
+- The pair heading reads "Tap every ㅂ, letter bieup, b or p" (`a11y.minigame.matchShape.pairHeading`).
 - Origin rounds: [ Where this comes from ] is a button with its expanded state (`aria-expanded`); the expanded lines are plain text read in order. [[ Continue ]] follows the card in the focus order; nothing advances on a timer. Hoya's line and the status panel are polite live regions.
 - No colour-only state: found tiles have a check, missed tiles a mark and a thicker border.
 
@@ -162,7 +162,9 @@ Reused: `progress.pill`, `learner.minigame.listenPick.empty`, `learner.storyShel
 | `matchShape.found` | Found it! |
 | `matchShape.continue` | Continue |
 | `readPick.heading` | Which sound does this letter make? |
-| `a11y.minigame.matchShape.found(letter, sound)` | {letter}, {sound}, found |
+| `a11y.minigame.matchShape.tile(letter, name)` | {letter}, letter {name} |
+| `a11y.minigame.matchShape.found(letter, name, sound)` | {letter}, letter {name}, {sound}, found |
+| `a11y.minigame.matchShape.pairHeading(letter, name, sound)` | Tap every {letter}, letter {name}, {sound} |
 
 ## Open questions
 

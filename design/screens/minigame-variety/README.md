@@ -21,7 +21,7 @@ Built by:
 |---|---|
 | `mock/variety.css` | one stylesheet on top of the writing mocks' (`../minigame-writing/mock/writing.css`, imported unchanged: the token block, the device frame, the keyboard, the Write Frame parts, the buttons); adds the option tiles, the prompt card, the sound notice, the Hoya line, the block and tile rows, the order cards and slots, the chat layout, My story so far, the Yut board band |
 | `mock/*.html` (8 pages) | each format's main state; each page fills the window, so the same file is the 320 and the 768 shot |
-| `mock/states.html` | boards C, D, S, M, O, R, Y, B: the miss (amber) and found states, each format's fallback round when its `game.<kind>` is off, the no-voice notice, the spelling round, the Role Play end card, My page (not kept), the Yut "throw again" state |
+| `mock/states.html` | boards C, D, S, M, O, R, Y, B: the miss (amber) and found states, each format's fallback round when its `game.<kind>` is off (C3, D1 for Dictation's `see` round, D3, S2, M3, O3, R3, Y2, B2), the no-voice notice, the spelling round, the Role Play end card, My page (not kept), the Yut "throw again" state |
 | `shots/` | the mocks rendered in Chromium: `<format>-320.png` (320 x 568 at 2x) and `<format>-768.png` (768 x 1024 at 1x), and `states.png` (the boards at 1x, full page) |
 
 Open any file in a browser. Nothing is interactive (the Role Play page sizes its reply area by the layout B rule and scrolls its chat log to the newest line on load, as the app does).
@@ -36,7 +36,7 @@ Open any file in a browser. Nothing is interactive (the Role Play page sizes its
 
 **D4. Dictation hides the romanization before Done.** The Korean is the answer and is not drawn, so the romanization (which, for the unambiguous words Dictation admits, maps straight to the spelling) is held too; "Show how it sounds" reveals it as a hint. Below 640 tall it is the link line of the meaning button in the one prompt row (speaker, meaning button, Skip), so it is never half-shown. After Done the word is shown with its romanization and meaning. With no device voice the round opens as a `see` round with the sound notice (board D1), decided before the round opens.
 
-**D5. Syllable Build at 320 fits on one screen** by putting the speaker beside the block (measured: top row 64, speaker and block 140, three rows of caption and 64, the Hoya slot). The final row never offers two letters with the same final sound (밥 offers ㅂ, ㄴ, ㅇ and No final, never ㅍ).
+**D5. Syllable Build at 320 fits on one screen** by putting the speaker and Dictation's meaning button beside the block (measured: top row 64, speaker, meaning button and block 140, three rows of caption and 64, the Hoya slot). **Its tiles show the jamo only and its prompt holds the romanization back** ("Show how it sounds" reveals it as a hint), the D4 rule: with `bap` on screen and a sound value on each tile the block could be built by matching b-a-p without decoding (review round 3). With no device voice the romanization is shown from the start, because reading is then the only way to the sound. The final row never offers two letters with the same final sound (밥 offers ㅂ, ㄴ, ㅇ and No final, never ㅍ).
 
 **D6. Match Shape's origin picture faces left**, so the tongue drawn heavier reads as the letter (ㄴ: the tongue touching the upper gum, in the wording of the shipped, sourced fact f3 of `content/stories/shapes-of-hangeul.json`). The picture is an original, simple side view in tokens; CM-33 draws the five consonant pictures and the vowel bases as registry props with a `sourceRef`, to the scene-art style guide. The mock's picture is a proposal for the ㄴ prop's shape budget (5 shapes, 5 colours).
 
@@ -46,7 +46,7 @@ Open any file in a browser. Nothing is interactive (the Role Play page sizes its
 
 **D9. The Yut board is play only.** The board band (128 on a phone from 600 tall, 96 below 600 tall with the throw on one line and no sticks art, 320 from regular) shows the 29 stations of the board (20 on the edge, 6 to a side with shared corners, and 9 on the two crossing lines), the learner's piece, the last throw's name in Korean with romanization and how far it went, the sticks as drawn art, and the home tray, which draws only the pieces that went home (no empty slots, so it never reads as a count out of four). The stations are not tap targets. Stars and everything else come from the review answers; the result screen is the plain one. No other player, no capture, no backward move.
 
-**D10. Fallbacks are shipped games.** Each board's last device is the format's fallback round, rendered as the shipped game would render it (C3 Listen & Pick with a text prompt, S2 Listen & Pick on the block, M3 Read Pick, R3 Tap to Respond). The dashed note under each is a board note, not UI: the learner sees no notice.
+**D10. Fallbacks are shipped games.** Each board's last device is the format's fallback round, rendered as the shipped game would render it (C3 Listen & Pick with a text prompt, D3 Listen & Pick on the same word with the look-alike spelling left out, S2 Listen & Pick on the block, M3 Read Pick, O3 Story Sequence with text cards, R3 Tap to Respond, Y2 Write Frame on frame 1, B2 the plain review screen; Dictation's fallback is its own `see` round, drawn in D1). The dashed note under each is a board note, not UI: the learner sees no notice.
 
 ## Drawn parts (scene-art budget)
 
@@ -61,7 +61,7 @@ No `brand.primary` in a prop other than the learner's piece, and no `feedback.da
 
 ## Tokens
 
-Every value in `mock/variety.css` is a custom property of the writing mocks' token block (a token of `packages/design-system/src/tokens.ts`, copied once under its own name; checked value by value against `tokens.ts` in the writing pass and unchanged since) or one of the constants below. No colour literal anywhere in the CSS or the HTML; every `var(--...)` used is defined (checked with a script on this commit). **No new token is needed.**
+Every value in `mock/variety.css` is a custom property of the writing mocks' token block (a token of `packages/design-system/src/tokens.ts`, copied once under its own name; checked value by value against `tokens.ts` in the writing pass and unchanged since) or one of the constants below. No colour literal anywhere in the CSS or the HTML; every `var(--...)` used is defined, in this file or in the imported `writing.css` (checked with a script over both files and every page on this commit; `--tracking-tight`, which the imported key hint used without a definition, is now defined in `writing.css` from `typography.tracking.tight`, and the writing mocks' keyboard shots were re-rendered with it). **No new token is needed.**
 
 ## Constants
 
@@ -69,8 +69,9 @@ Values that are not tokens. The build rows write them as named constants, never 
 
 | Where | Value | Derived from |
 |---|---|---|
-| Yut board drawing, phone | 128 from 600 tall; 96 below | 2 x `touchTarget.min`; `touchTarget.hero` |
-| Yut board drawing, from regular | 320 | 5 x `touchTarget.min` |
+| Yut board drawing, phone | 128 from 600 tall; 96 below | written `calc(2 * var(--touch-min))`; `var(--touch-hero)` |
+| Yut board drawing, from regular | 320 | written `calc(5 * var(--touch-min))` |
+| Role Play scroll cue | the fade's stop at 35 % of the cue | a layout ratio: the chevron and the text sit on the solid part |
 | Match Shape origin picture, phone height | `var(--trace-canvas-min)` (160) | `TRACE_CANVAS_MIN`, referenced, not copied |
 | Chat bubble width cap | 85 % phone, 80 % from regular | keeps the side of a bubble (who said it) visible at every width |
 | Layout B pinned area cap | half the window, less when the newest partner bubble needs the room, never less than the instruction row and one reply | `role-play.md`, States: the newest line and one reply always visible |
@@ -83,13 +84,13 @@ Values that are not tokens. The build rows write them as named constants, never 
 |---|---|---|
 | `shots/cloze-pick-320.png`, `-768.png` | 320 x 568 2x, 768 x 1024 | asking: the sentence with the gap, three tiles (one column at 320, two from regular) |
 | `shots/dictation-320.png`, `-768.png` | same | hear mode: below 640 tall one row (speaker, meaning button with its "Show how it sounds" link line, Skip); the hero speaker with Hear it again from 640 tall; the keyboard of Type Hangul |
-| `shots/syllable-build-320.png`, `-768.png` | same | building: the first letter placed, three labelled rows, No final |
+| `shots/syllable-build-320.png`, `-768.png` | same | building: the first letter placed, the meaning button with its "Show how it sounds" link line, three labelled rows of jamo-only tiles, No final |
 | `shots/match-shape-320.png`, `-768.png` | same | origin round: the ㄴ picture and line, three letter tiles |
 | `shots/story-order-320.png`, `-768.png` | same | captions only: two slots filled with their first words, two cards left, Show meanings, Skip this one |
-| `shots/role-play-320.png`, `-768.png` | same | turn 2 of 4: the log, the partner line with Hear it, three replies pinned (two natural, one less natural); at 320 the reply area stops short of the newest partner bubble and scrolls |
+| `shots/role-play-320.png`, `-768.png` | same | turn 2 of 4: the log, the partner line with Hear it, three replies pinned (two natural, one less natural); at 320 the reply area stops short of the newest partner bubble and scrolls, with the scroll cue (a fade over the partly shown next reply, a chevron and "More replies below") while replies are below its edge; at 768 everything fits and there is no cue |
 | `shots/my-story-320.png`, `-768.png` | same | frame 2 of 3, pick: My story so far, the frame, the bank with the neutral option 호야 |
 | `shots/yut-review-320.png`, `-768.png` | same | after a throw (개, 2 stations) with the next review item; below 600 tall the 96 band with the throw on one line; the board beside the item from regular |
-| `shots/states.png` | 1180 wide, 1x, full page | boards C, D, S, M, O, R, Y, B |
+| `shots/states.png` | 1180 wide, 1x, full page | boards C, D, S, M, O, R, Y, B, with every fallback round |
 
 ## Checked by eye
 
