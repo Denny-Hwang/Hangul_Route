@@ -88,9 +88,23 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.lecture.card.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the link\'s accessible description, read aloud and never drawn',
   // AMENDMENTS-LECTURE-V2 LV-6 (section 12.4): the learner app's Lecture mode card buttons, which open the presenter in a new tab.
   'caregiver.lecture.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the buttons\' accessible description, read aloud and never drawn (the same words as console.lecture.card.opensTab)',
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.5 (OA-3; design/screens/profiles/README.md "es and ko lengths").
+  'console.lock.passkey.cta': '"Usar una llave de acceso" (24) against "Use a passkey" (13): "llave de acceso" is the usual Spanish name of a passkey; the lock\'s full-width secondary button (400 px column), on one line at 320',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
+
+/**
+ * Drawn strings with a wider budget than their key word gives, each with the budget and the reason. They are drawn
+ * where the design pass measured the longest locale (no sideways scroll at 320, the button wraps its words).
+ */
+const WIDER_BUDGET: Readonly<Record<string, { max: number; reason: string }>> = {
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.5 (OA-3; design/screens/profiles/console-pin.md boards 10 to 12).
+  'console.pinOwner.cta': {
+    max: 48,
+    reason: 'the one action of the persona-home PIN-owner card, a full-width button (400 px column) that wraps its words; en 35, es 48, ko 29 as measured in the OA-0b lengths board',
+  },
+};
 
 /**
  * Screen-reader labels whose key name happens to match a budget word: they are read aloud, never
@@ -120,7 +134,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       const value = lookup(messages, path);
       const last = path.split('.').pop() ?? '';
       // Tab labels live under `a11y.tabs.*` (F-I18N-001 §3.4 rule 2) and share the `tab` budget.
-      const budget = NOT_DRAWN[path] !== undefined ? undefined : (BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined));
+      const budget = NOT_DRAWN[path] !== undefined ? undefined : (WIDER_BUDGET[path]?.max ?? BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined));
       if (budget !== undefined) {
         it(`${locale}:${path} fits ${budget} characters`, () => {
           const outputs = renderings(value, path);
@@ -143,7 +157,8 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
 
   it('the allow-list names only real paths and gives a reason', () => {
     const en = getMessages('en');
-    for (const [path, reason] of Object.entries({ ...ES_LENGTH_ALLOW_LIST, ...NOT_DRAWN })) {
+    const wider = Object.fromEntries(Object.entries(WIDER_BUDGET).map(([path, entry]) => [path, entry.reason]));
+    for (const [path, reason] of Object.entries({ ...ES_LENGTH_ALLOW_LIST, ...NOT_DRAWN, ...wider })) {
       expect(lookup(en, path)).toBeDefined();
       expect(reason.length).toBeGreaterThan(0);
     }
