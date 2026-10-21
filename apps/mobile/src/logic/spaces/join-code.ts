@@ -80,8 +80,9 @@ export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregive
     case 'cap_class':
       return m.join.errors.classFull;
     // [SA] AMENDMENTS-SEATS-ADMINS section 3.4: the cap the Worker sent (`seat.cap`, `details.cap`), else the family cap.
+    // A cap below 2 is not a family cap (the line counts learners in the plural), so it reads as absent.
     case 'cap_family':
-      return m.join.errors.familyFull(cap ?? FAMILY_LIFETIME_LEARNERS);
+      return m.join.errors.familyFull(typeof cap === 'number' && cap >= 2 ? cap : FAMILY_LIFETIME_LEARNERS);
     case 'cap_school':
       return m.join.errors.schoolFull;
     case 'not_joinable':

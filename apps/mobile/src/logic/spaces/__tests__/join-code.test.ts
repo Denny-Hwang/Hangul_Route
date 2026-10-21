@@ -62,6 +62,8 @@ describe('[SA] learner caps at the join (AMENDMENTS-SEATS-ADMINS section 3.4)', 
     expect(FAMILY_LIFETIME_LEARNERS).toBe(4);
     expect(joinErrorMessage('cap_family', m)).toBe(m.join.errors.familyFull(FAMILY_LIFETIME_LEARNERS));
     expect(joinErrorMessage('cap_family', m, null)).toBe(m.join.errors.familyFull(FAMILY_LIFETIME_LEARNERS));
+    // A cap below 2 is not a family cap (the line counts learners in the plural): it reads as absent.
+    for (const cap of [0, 1, -1]) expect(joinErrorMessage('cap_family', m, cap)).toBe(m.join.errors.familyFull(FAMILY_LIFETIME_LEARNERS));
   });
 
   it('a full school reads schoolFull and a full class classFull; neither is a code error', () => {

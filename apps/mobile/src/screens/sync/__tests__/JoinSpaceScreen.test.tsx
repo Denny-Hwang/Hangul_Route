@@ -232,6 +232,47 @@ describe('[SA] JoinSpaceScreen at a learner cap (AMENDMENTS-SEATS-ADMINS section
     await unmount(renderer);
   });
 
+  it('going from "I\'m new" back to "I\'m already in this class", the at-cap line is still said once', async () => {
+    seed(learner());
+    withLookup({ ok: true, space: classSpace, full: false, seat: { full: true, reason: 'cap_class', cap: 20 }, roster });
+    const renderer = await find();
+    await press(buttonsNamed(renderer.root, m.pick.newHere.cta)[0]!);
+    expect(byTestId(renderer.root, 'join-confirm')).toHaveLength(1);
+    expect(screenTexts(renderer.root).filter((t) => t === m.errors.classFull)).toHaveLength(1);
+    await press(buttonsNamed(renderer.root, m.confirm.alreadyIn.cta)[0]!);
+    expect(byTestId(renderer.root, 'join-pick')).toHaveLength(1);
+    expect(screenTexts(renderer.root).filter((t) => t === m.errors.classFull)).toHaveLength(1);
+    expect(byTestId(renderer.root, 'join-seat-line')).toHaveLength(1);
+    await unmount(renderer);
+  });
+
+  it('a returning family member at a full family (seat not full for them) reaches /join', async () => {
+    seed(learner());
+    join.mockClear();
+    withLookup({ ok: true, space: familySpace, full: false, seat: { full: false, reason: null, cap: 4 }, roster: [] });
+    const renderer = await find();
+    await press(meButton(renderer.root));
+    expect(join).toHaveBeenCalledTimes(1);
+    expect(join.mock.calls[0]!.slice(0, 3)).toEqual([LEARNER_ID, 'space:f', 'K7M2X9']);
+    expect(byTestId(renderer.root, 'join-done')).toHaveLength(1);
+    await unmount(renderer);
+  });
+
+  it('a sibling-class learner at a full school (seat not full for them) gets the normal confirm with a roster and reaches /join', async () => {
+    seed(learner());
+    join.mockClear();
+    withLookup({ ok: true, space: classSpace, full: false, seat: { full: false, reason: null, cap: 50 }, roster });
+    const renderer = await find();
+    expect(byTestId(renderer.root, 'join-seat-line')).toHaveLength(0);
+    expect(byTestId(renderer.root, 'join-pick')).toHaveLength(0);
+    expect(byTestId(renderer.root, 'join-confirm')).toHaveLength(1);
+    expect(screenTexts(renderer.root)).not.toContain(m.errors.schoolFull);
+    await press(meButton(renderer.root));
+    expect(join).toHaveBeenCalledTimes(1);
+    expect(join.mock.calls[0]!.slice(0, 3)).toEqual([LEARNER_ID, 'space:c', 'K7M2X9']);
+    await unmount(renderer);
+  });
+
   it('a new learner at a full school reads schoolFull in the pick, then again on the name step', async () => {
     seed(learner());
     withLookup({ ok: true, space: classSpace, full: false, seat: { full: true, reason: 'cap_school', cap: 50 }, roster });

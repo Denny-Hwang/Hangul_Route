@@ -286,7 +286,19 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
           <Spacer size="md" />
           <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
           <Spacer size="sm" />
-          {roster.length > 0 ? <Button label={m.confirm.alreadyIn.cta} tone="ghost" size="sm" fullWidth onPress={() => setPicking(true)} /> : null}
+          {roster.length > 0 ? (
+            <Button
+              label={m.confirm.alreadyIn.cta}
+              tone="ghost"
+              size="sm"
+              fullWidth
+              onPress={() => {
+                // The pick card shows the at-cap line itself, so the slot below lets it go: the line is said once.
+                if (seatLine !== null && message === seatLine) setMessage(null);
+                setPicking(true);
+              }}
+            />
+          ) : null}
           <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); if (message === seatLine) setMessage(null); setSeatLine(null); }} />
         </Card>
       ) : (

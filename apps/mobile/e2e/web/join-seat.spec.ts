@@ -64,12 +64,15 @@ async function joinWithCode(page: Page): Promise<string> {
   const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
   const id = profiles?.[0]?.id;
   if (!id) throw new Error('no profile');
+  let secret: string | null | undefined;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     await seedStored(page, `sync:${id}`, { secret: 'secret-e2e', rev: 1, lastSyncedAt: new Date().toISOString(), rescueCode: null });
     await page.goto('/');
-    const stored = await readStored<{ secret: string | null }>(page, `sync:${id}`);
-    if (stored?.secret === 'secret-e2e') break;
+    secret = (await readStored<{ secret: string | null }>(page, `sync:${id}`))?.secret;
+    if (secret === 'secret-e2e') break;
   }
+  // Every test below relies on the device header: a seeding that did not hold would test the unauthenticated lookup.
+  expect(secret).toBe('secret-e2e');
   await page.goto('/join#c=ABC234');
   await expect(page.getByTestId('join-code')).toHaveValue('ABC234');
   await page.getByRole('button', { name: join.code.join.cta, exact: true }).click();
