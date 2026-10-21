@@ -658,6 +658,76 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
     unknown.audio.dispose();
   });
 
+  it('an unlock the engine never answers (no event, not even on cancel) leaves the live set at the unlock deadline', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.blank = 'hang';
+    synth.cancelError = null;
+    const before = audio.liveUtteranceCountForTests();
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    expect(audio.liveUtteranceCountForTests()).toBe(before + 1);
+    await vi.advanceTimersByTimeAsync(1000);
+    // Held by the engine: it counts as taken, and still nothing answers it.
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    expect(synth.speaking).toBe(true);
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+    // A later cancel with no event leaves nothing behind either.
+    audio.stop();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+    audio.dispose();
+  });
+
+  it('an unanswered unlock cleared by a cancel before its deadline leaves the live set at the cancel', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.blank = 'hang';
+    synth.cancelError = null;
+    const before = audio.liveUtteranceCountForTests();
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    expect(audio.liveUtteranceCountForTests()).toBe(before + 1);
+    await vi.advanceTimersByTimeAsync(200);
+    audio.stop();
+    expect(synth.cancelCount).toBe(1);
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+    audio.dispose();
+  });
+
+  it('an unanswered unlock still in flight when its instance is disposed leaves the live set', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.blank = 'hang';
+    synth.cancelError = null;
+    const before = audio.liveUtteranceCountForTests();
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    expect(audio.liveUtteranceCountForTests()).toBe(before + 1);
+    await vi.advanceTimersByTimeAsync(200);
+    audio.dispose();
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+  });
+
+  it('a cancelled unlock whose canceled arrives still answers it: unlocked', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.blank = 'hang';
+    const before = audio.liveUtteranceCountForTests();
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    await vi.advanceTimersByTimeAsync(200);
+    audio.stop();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+    audio.dispose();
+  });
+
   it('installing twice registers once', () => {
     const { synth, doc, audio } = rig();
     synth.autoEnd = false;
