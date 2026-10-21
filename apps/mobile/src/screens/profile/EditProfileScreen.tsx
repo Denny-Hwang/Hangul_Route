@@ -18,9 +18,10 @@ import {
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
-import { Linking, Pressable, TextInput, View } from 'react-native';
+import { Linking, Pressable, Switch, TextInput, View } from 'react-native';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
+import { flags } from '../../config/flags';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useMessages } from '../../i18n/use-messages';
 import { privacyUrl } from '../../logic/links';
@@ -39,6 +40,7 @@ import {
   type EditState,
 } from '../../logic/profiles/edit-profile';
 import { createPinHash } from '../../logic/profiles/pin-hash';
+import { needsFreshPin } from '../../logic/profiles/session';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
@@ -46,7 +48,9 @@ import { confirm } from '../../platform/dialog';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useMembershipStore } from '../../store/membership-store';
+import { setProfileLocked, useLocks } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
+import { useUiStore } from '../../store/ui-store';
 import { useBackGuard } from '../use-back-guard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
@@ -64,6 +68,12 @@ const CHECKBOX_SIZE = spacing.xl + spacing.xs;
  * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, I, and
  * onboarding/setup-steps.md, G (the Privacy block and "I'm under 13", F-LEARN-001 §3.15.6).
  * Rules live in logic/profiles/edit-profile (tested); this file paints them.
+ *
+ * [OA] Row OA-5 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D9, sections 8.2, 8.4; wireframe `profiles/people-on-device.md`
+ * Panel B): **Lock with the grown-up PIN**, a switch that acts at once (not on Save). It needs a PIN entered in the
+ * last 2 minutes (`needsFreshPin`), else it asks the PIN again (`PinEntry { next: 'FreshPin' }`) and applies the change
+ * when that PIN is right; without a PIN it is disabled with **Set a grown-up PIN first.** Shown only while
+ * `EXPO_PUBLIC_WHO_CHOOSER` is on; the locks themselves are enforced either way. Nothing here is synced.
  */
 export function EditProfileScreen({ navigation, route }: Props): React.ReactElement {
   const textScale = useTypeScale();
@@ -79,6 +89,17 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const acceptGuardianConsent = useAccountStore((s) => s.acceptGuardianConsent);
   const acceptSelfConsent = useAccountStore((s) => s.acceptSelfConsent);
   const setParentPinHash = useAccountStore((s) => s.setParentPinHash);
+  // [OA] Row OA-5: the lock of this learner (every learner while the locks cannot be read; void without a PIN).
+  const allProfiles = useProfileStore((s) => s.profiles);
+  const locks = useLocks(allProfiles);
+  const lastPinVerifiedAt = useUiStore((s) => s.lastPinVerifiedAt);
+  const lockShown = flags.whoChooserEnabled && original?.role === 'learner';
+  const pinSet = parentPinHash !== null;
+  const isLocked = locks.locked.has(profileId);
+  /** The lock change waiting for the fresh PIN it asked for (`FreshPin`), applied once that PIN is right. */
+  const pendingLock = useRef<boolean | null>(null);
+  const [lockBusy, setLockBusy] = useState(false);
+  const [lockFailed, setLockFailed] = useState(false);
   const inClass = useMembershipStore((s) => (s.byLearner[profileId] ?? []).some((r) => r.kind === 'class'));
   const hydrateMemberships = useMembershipStore((s) => s.hydrate);
   const deviceScope = useMembershipStore((s) => s.deviceScope);
@@ -111,6 +132,34 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   useEffect(() => {
     void hydrateMemberships(profileId);
   }, [profileId, hydrateMemberships]);
+
+  const applyLock = async (on: boolean): Promise<void> => {
+    setLockBusy(true);
+    const ok = await setProfileLocked(profileId, on, useProfileStore.getState().profiles);
+    setLockFailed(!ok);
+    setLockBusy(false);
+  };
+
+  // [OA] OA-D5b (3): the fresh PIN came back right; the change it was asked for applies now.
+  useEffect(() => {
+    const pending = pendingLock.current;
+    if (pending === null || needsFreshPin(pending ? 'lock' : 'unlock', lastPinVerifiedAt, Date.now())) return;
+    pendingLock.current = null;
+    void applyLock(pending);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a PIN was entered
+  }, [lastPinVerifiedAt]);
+
+  const toggleLock = (on: boolean): void => {
+    if (!pinSet || lockBusy) return;
+    setLockFailed(false);
+    if (needsFreshPin(on ? 'lock' : 'unlock', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
+      pendingLock.current = on;
+      navigation.navigate('PinEntry', { next: 'FreshPin' });
+      return;
+    }
+    pendingLock.current = null;
+    void applyLock(on);
+  };
 
   useEffect(() => {
     let live = true;
@@ -276,6 +325,40 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
           </Caption>
         </>
       ) : null}
+      {lockShown ? (
+        <>
+          <Spacer size="lg" />
+          <Card padding="md">
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
+              <View style={{ flex: 1 }}>
+                <Body weight="semibold">{messages.caregiver.people.lock}</Body>
+                <Caption tone="secondary" testID="edit-lock-hint">
+                  {pinSet ? messages.caregiver.people.lockHint : messages.caregiver.pin.needsPinFirst}
+                </Caption>
+              </View>
+              <Switch
+                testID="edit-lock-switch"
+                value={pinSet && isLocked}
+                onValueChange={toggleLock}
+                disabled={!pinSet || lockBusy}
+                accessibilityLabel={messages.caregiver.people.lock}
+                accessibilityHint={pinSet ? messages.caregiver.people.lockHint : messages.caregiver.pin.needsPinFirst}
+                trackColor={{ true: colors.brand.primary, false: colors.border.strong }}
+                thumbColor={colors.surface.paper}
+              />
+            </View>
+            {lockFailed ? (
+              <>
+                <Spacer size="xs" />
+                <Caption tone="secondary" testID="edit-lock-failed">
+                  {e.saveFailed}
+                </Caption>
+              </>
+            ) : null}
+          </Card>
+        </>
+      ) : null}
+
       <Spacer size="lg" />
       <Body weight="semibold">{e.nameLabel}</Body>
       <Spacer size="xs" />

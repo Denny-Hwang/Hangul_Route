@@ -10,6 +10,8 @@ const disk = vi.hoisted(() => new Map<string, string>());
 const fail = vi.hoisted(() => ({ exact: 0, fresh: 0, update: false }));
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (key: string) => (disk.has(key) ? JSON.parse(disk.get(key)!) : null)),
+  // The profile list is read strictly (OA-D19): a failed read writes nothing over it.
+  readJsonStrict: vi.fn(async (key: string) => (disk.has(key) ? JSON.parse(disk.get(key)!) : null)),
   readJsonExact: vi.fn(async (key: string) => {
     if (fail.exact > 0) {
       fail.exact -= 1;

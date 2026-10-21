@@ -21,6 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { LockBadge } from '../../components/LockBadge';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
@@ -34,6 +35,7 @@ import { installGuideVariant } from '../../logic/pwa/install-guide';
 import { installEnv } from '../../platform/pwa';
 import { useAudioStore } from '../../store/audio-store';
 import { useTierStore } from '../../store/tier-store';
+import { useLocks } from '../../store/profile-locks';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { learnerProfiles, switchOffered } from '../../store/who-chooser';
 import { useProgressStore } from '../../store/progress-store';
@@ -65,6 +67,8 @@ export function ProfileScreen(): React.ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const active = useProfileStore(activeProfileSelector);
   const setActive = useProfileStore((s) => s.setActive);
+  // [OA] Row OA-5: locks are enforced on these tiles whatever the chooser flag says (fail safe, section 16).
+  const locks = useLocks(profiles);
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
   const cachedTier = useTierStore((s) => (active ? s.byLearner[active.id] : undefined));
   const entitled = effectiveTier(active?.id ?? '', new Date());
@@ -132,11 +136,21 @@ export function ProfileScreen(): React.ReactElement {
       <Heading level="title">{t.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{copy.profileSwitchHint}</Body>
+      {locks.unread ? (
+        // [OA] Section 13.2: the locks could not be read, so every tile is locked; one line says it for all of them.
+        <>
+          <Spacer size="xs" />
+          <Body tone="secondary" testID="profile-locks-unread">
+            {m.learner.who.locksUnread}
+          </Body>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
         {profiles.map((p) => {
           const isActive = p.id === active?.id;
+          const locked = locks.locked.has(p.id);
           const level = levelWords(m, p.ageGroup)?.label ?? null;
           return (
             <View
@@ -150,19 +164,36 @@ export function ProfileScreen(): React.ReactElement {
               }}
             >
               <Pressable
+                testID={`profile-tile-${p.id}`}
                 onPress={() => {
+                  // [OA] Row OA-5, section 6.3: a locked learner opens only with the grown-up PIN, and the unlock opens
+                  // that learner only, never a grown-up session (CS-3). The active learner's own tile switches nothing.
+                  if (locked && !isActive) {
+                    navigation.navigate('PinEntry', { next: 'LockedProfile', profileId: p.id, lockedFrom: { via: 'profile' } });
+                    return;
+                  }
                   // [OA] G1 baseline (section 15): a switch from the Profile tiles; the same tile again is no switch.
                   if (p.id !== active?.id) trackProfileSwitch('profile', false);
                   // setActive closes any grown-up session on a change of learner (OA-D5b, CS-15).
                   setActive(p.id);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={t.switchTo(p.displayName)}
+                accessibilityLabel={locked ? m.a11y.who.lockedTile(p.displayName) : t.switchTo(p.displayName)}
                 style={{ padding: spacing.md, alignItems: 'center', minHeight: touchTarget.hero, borderRadius: radii.lg }}
               >
                 <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />
+                {locked ? (
+                  <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }}>
+                    <LockBadge testID={`profile-tile-lock-${p.id}`} />
+                  </View>
+                ) : null}
                 <Spacer size="xs" />
                 <Body weight="semibold">{p.displayName}</Body>
+                {locked && !locks.unread ? (
+                  <Caption tone="secondary" align="center">
+                    {m.learner.who.lockedCaption}
+                  </Caption>
+                ) : null}
                 {level ? <Caption tone="muted">{level}</Caption> : null}
                 {isActive ? <Pill label={t.playingNow} tone="primary" size="sm" /> : null}
               </Pressable>

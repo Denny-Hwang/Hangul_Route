@@ -24,6 +24,7 @@ vi.mock('../../../platform/grown-up-tab', () => ({ endGrownUpTab: () => void (ta
 
 import { useAccountStore } from '../../../store/account-store';
 import { useLocaleStore } from '../../../store/locale-store';
+import { resetProfileLocks, useProfileLocks } from '../../../store/profile-locks';
 import { useProfileStore } from '../../../store/profile-store';
 import { useProgressStore } from '../../../store/progress-store';
 import { useUiStore } from '../../../store/ui-store';
@@ -94,6 +95,7 @@ beforeEach(() => {
   tracked.length = 0;
   tab.ended = 0;
   resetChooserState();
+  resetProfileLocks();
   useLocaleStore.setState({ device: 'en', byProfile: {} });
   useProfileStore.setState({
     profiles: [learner('profile:mina', 'Mina'), learner('profile:jun', 'Jun'), learner('profile:sora', 'Sora', 'hoya-blue')],
@@ -330,5 +332,58 @@ describe('Who is using this? (row OA-4a)', () => {
     const stored = (await readJson<Profile[]>('profiles')) ?? [];
     expect(stored.map((p) => p.id)).toContain('profile:leo-tab');
     expect(await readJson('profiles:active')).toBe('profile:jun');
+  });
+});
+
+/**
+ * [OA] Row OA-5 (section 6.1, 6.3, 13.2; CS-3, CS-4): a locked tile carries the lock glyph and a caption, never colour
+ * alone, and asks the grown-up PIN; while the locks cannot be read every tile is locked with one line; without a PIN a
+ * lock is void.
+ */
+describe('Who is using this? locked tiles (row OA-5)', () => {
+  it('a locked tile: the badge and the caption, its own accessible name, and the PIN on a tap (the active learner too)', async () => {
+    useProfileLocks.setState({ read: ['profile:sora', 'profile:mina'] });
+    const { r, navigation } = await renderChooser();
+    expect(byTestId(r.root, 'who-tile-2-lock')).toHaveLength(1);
+    expect(screenTexts(byTestId(r.root, 'who-tile-2-caption')[0]!)).toEqual([w.lockedCaption]);
+    expect(byTestId(r.root, 'who-tile-1-lock')).toHaveLength(0);
+    expect(byTestId(r.root, 'who-tile-1-caption')).toHaveLength(0);
+    expect(buttonsNamed(r.root, en.a11y.who.lockedTile('Sora'))).toHaveLength(1);
+    expect(buttonsNamed(r.root, en.a11y.who.tile('Sora'))).toHaveLength(0);
+    expect(tracked.find((e) => e.name === 'who.shown')?.payload).toMatchObject({ anyLocked: true });
+
+    await press(buttonsNamed(r.root, en.a11y.who.lockedTile('Sora'))[0] as ReactTestInstance);
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'LockedProfile', profileId: 'profile:sora', lockedFrom: { via: 'chooser', trigger: 'manual' } });
+    expect(useProfileStore.getState().activeId).toBe('profile:mina');
+    expect(tracked.filter((e) => e.name === 'who.picked').map((e) => e.payload)).toEqual([{ kind: 'locked_learner' }]);
+    // The active learner's own locked tile asks too (CS-19: it locks again at launch).
+    await press(buttonsNamed(r.root, en.a11y.who.lockedTile('Mina'))[0] as ReactTestInstance);
+    expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'LockedProfile', profileId: 'profile:mina', lockedFrom: { via: 'chooser', trigger: 'manual' } });
+    expect(navigation.reset).not.toHaveBeenCalled();
+    // An unlocked tile stays one tap with no PIN.
+    await press(buttonsNamed(r.root, en.a11y.who.tile('Jun'))[0] as ReactTestInstance);
+    expect(useProfileStore.getState().activeId).toBe('profile:jun');
+  });
+
+  it('locks that cannot be read: every tile badged without a caption, and one line under the title', async () => {
+    useProfileLocks.setState({ read: 'unread' });
+    const { r } = await renderChooser();
+    expect(screenTexts(byTestId(r.root, 'who-locks-unread')[0]!)).toEqual([w.locksUnread]);
+    for (const i of [0, 1, 2]) {
+      expect(byTestId(r.root, `who-tile-${i}-lock`), String(i)).toHaveLength(1);
+      expect(byTestId(r.root, `who-tile-${i}-caption`), String(i)).toHaveLength(0);
+    }
+    expect(buttonsNamed(r.root, en.a11y.who.lockedTile('Jun'))).toHaveLength(1);
+  });
+
+  it('a lock without a PIN is void: no badge, no line, and the tile opens with one tap (CS-4)', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    useProfileLocks.setState({ read: ['profile:sora'] });
+    const { r, navigation } = await renderChooser();
+    expect(byTestId(r.root, 'who-tile-2-lock')).toHaveLength(0);
+    expect(byTestId(r.root, 'who-locks-unread')).toHaveLength(0);
+    await press(buttonsNamed(r.root, en.a11y.who.tile('Sora'))[0] as ReactTestInstance);
+    expect(useProfileStore.getState().activeId).toBe('profile:sora');
+    expect(navigation.navigate).not.toHaveBeenCalledWith('PinEntry', expect.anything());
   });
 });

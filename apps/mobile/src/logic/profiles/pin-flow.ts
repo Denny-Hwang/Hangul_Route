@@ -43,22 +43,58 @@ export function forCancelReset(params: PinRouteParams): boolean {
 }
 
 /**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.3 (row OA-5): a locked learner tile. Verify only, through
+ * `verifyForLockedProfile`: a correct PIN opens that learner (`setActive`, then Home) and never a grown-up session
+ * (CS-3). It never creates a PIN; Forgot PIN? stays and leads to the reset paths, whose new PIN then opens the learner.
+ */
+export const LOCKED_PROFILE = 'LockedProfile';
+
+/** [OA] Whether the screen was opened by a locked tile. */
+export function forLockedProfile(params: PinRouteParams): boolean {
+  return params.next === LOCKED_PROFILE;
+}
+
+/**
+ * [OA] OA-D5b (3), section 8.4 (row OA-5): a grown-up control that changes who is on the device (the Edit profile
+ * lock switch) asks the PIN again when the last one is older than `GROWN_UP_FRESH_PIN_MS`. Verify only, no Forgot
+ * PIN?: a correct PIN marks a fresh PIN and goes back to the control, which then applies the change. It never creates
+ * or resets a PIN.
+ */
+export const FRESH_PIN = 'FreshPin';
+
+/** [OA] Whether the screen was opened for a fresh PIN. */
+export function forFreshPin(params: PinRouteParams): boolean {
+  return params.next === FRESH_PIN;
+}
+
+/**
  * The step the screen opens on. `GrownUpArea` never creates or resets a PIN (F-APP-001 section
  * 3.9): it always verifies, whatever `mode` says, so a child cannot make a PIN that opens the
  * grown-up area. With no PIN stored it shows `grownUpAreaNoPin` instead of the pad.
  */
 export function initialPinMode(params: PinRouteParams, storedHash: string | null): PinMode {
-  if (forGrownUpArea(params) || forCancelReset(params)) return 'verify';
+  if (forGrownUpArea(params) || forCancelReset(params) || forFreshPin(params)) return 'verify';
+  // [OA] A locked tile never opens setup by itself (no Forgot PIN shortcut to setup): only the reset paths' new PIN.
+  if (forLockedProfile(params)) return params.mode === 'setup' && params.via !== undefined ? 'setup-1' : 'verify';
   if (params.mode === 'change') return storedHash === null ? 'setup-1' : 'verify';
   return params.mode === 'setup' || storedHash === null ? 'setup-1' : 'verify';
 }
 
 /**
- * "Forgot PIN?" exists only where a PIN is being checked, and never for the grown-up area (no reset from there) or
- * for Cancel the wait ([OA]: a reset is already waiting; this screen only stops it).
+ * "Forgot PIN?" exists only where a PIN is being checked, and never for the grown-up area (no reset from there), for
+ * Cancel the wait ([OA]: a reset is already waiting; this screen only stops it) or for a fresh PIN ([OA] row OA-5: a
+ * grown-up inside the Grown-up area changes the PIN there).
  */
 export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boolean {
-  return mode === 'verify' && !forGrownUpArea(params) && !forCancelReset(params);
+  return mode === 'verify' && !forGrownUpArea(params) && !forCancelReset(params) && !forFreshPin(params);
+}
+
+/**
+ * [OA] A destination that checks a PIN but has none to check (CS-4): a locked tile (a lock without a PIN is void, so
+ * the learner opens) and a fresh PIN (the control is disabled without a PIN, so there is nothing to confirm).
+ */
+export function voidWithoutPin(params: PinRouteParams, storedHash: string | null): boolean {
+  return storedHash === null && (forFreshPin(params) || (forLockedProfile(params) && params.mode !== 'setup'));
 }
 
 /** The grown-up area on a device with no PIN stored: one line and Continue to the grown-up page, no pad. */
@@ -72,7 +108,12 @@ export function pinCreatedWhere(params: PinRouteParams): 'gate' | 'reset' | 'opt
   return params.mode === 'setup' || params.mode === 'change' ? 'optional' : 'gate';
 }
 
-/** [OA] After a correct PIN, `'change'` goes on to create the new PIN instead of to the destination (never for Cancel the wait). */
+/**
+ * [OA] After a correct PIN, `'change'` goes on to create the new PIN instead of to the destination (never for Cancel
+ * the wait, a fresh PIN or a locked tile: those only check the PIN, row OA-5).
+ */
 export function verifiedGoesToSetup(params: PinRouteParams): boolean {
-  return params.mode === 'change' && !forGrownUpArea(params) && !forCancelReset(params);
+  return (
+    params.mode === 'change' && !forGrownUpArea(params) && !forCancelReset(params) && !forFreshPin(params) && !forLockedProfile(params)
+  );
 }

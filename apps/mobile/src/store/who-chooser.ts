@@ -40,7 +40,7 @@ export function deviceShared(): boolean {
 
 /** Whether any learner profile is locked now (`who.shown` `anyLocked`, section 15); every one while unreadable. */
 export function anyProfileLocked(): boolean {
-  return effectiveLocks(learnerProfiles()).length > 0;
+  return lockedIds(learnerProfiles()).length > 0;
 }
 
 /** Whether the active profile is locked now (CS-19). */

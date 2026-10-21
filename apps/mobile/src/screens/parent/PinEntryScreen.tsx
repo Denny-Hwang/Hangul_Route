@@ -21,12 +21,15 @@ import { afterGateHandoff } from '../../logic/browse/gate-entry';
 import { pinCreated, pinResetCompleted, pinResetRequested } from '../../logic/onboarding/onboarding-events';
 import {
   forCancelReset,
+  forFreshPin,
   forGrownUpArea as opensGrownUpArea,
+  forLockedProfile,
   grownUpAreaNoPin,
   initialPinMode,
   pinCreatedWhere,
   showForgotPin,
   verifiedGoesToSetup,
+  voidWithoutPin,
   type PinMode,
 } from '../../logic/profiles/pin-flow';
 import {
@@ -48,8 +51,11 @@ import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
-import { trackGateOpened, trackPinPaused } from '../../store/gate-telemetry';
+import { trackGateOpened, trackPinPaused, trackProfileSwitch } from '../../store/gate-telemetry';
+import { verifyForLockedProfile } from '../../store/profile-locks';
+import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
+import { heldJoin, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
 
@@ -81,6 +87,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * **Cancel the wait**, titled with those words. Verify only, no Forgot PIN?: a correct PIN clears the pending 24-hour
  * wait, sends `pin.reset_requested { method: 'wait_cancelled' }` and returns to the chooser. It opens no grown-up
  * session and counts as no fresh PIN (CS-4).
+ *
+ * [OA] Destination `LockedProfile` (row OA-5, section 6.3; mock `design/screens/profiles/pin-entry-v2.md` board 4): a
+ * locked learner tile, titled with the learner's name. Verify only, through `verifyForLockedProfile` (strikes reset and
+ * a pending wait cleared, but no gate session and no fresh PIN, CS-3); a correct PIN opens that learner's Home. Cancel
+ * goes back to the chooser (or the Profile tiles). With no PIN stored the lock is void and the learner opens (CS-4).
+ *
+ * [OA] Destination `FreshPin` (row OA-5, OA-D5b (3)): the PIN again for the Edit profile lock switch. Verify only, no
+ * Forgot PIN?: a correct PIN marks a fresh PIN (`markPinVerified`) and goes back, where the switch applies the change.
  */
 
 const DOT_SIZE = 20;
@@ -115,7 +129,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const locale = useLocale();
   const forGrownUpArea = opensGrownUpArea(route.params);
   const cancelReset = forCancelReset(route.params);
+  const lockedProfile = forLockedProfile(route.params);
+  const freshPin = forFreshPin(route.params);
   const noPin = grownUpAreaNoPin(route.params, storedHash);
+  const lockedName = useProfileStore((s) => (lockedProfile ? (s.profiles.find((p) => p.id === route.params.profileId)?.displayName ?? null) : null));
 
   const [mode, setMode] = useState<PinMode>(() => initialPinMode(route.params, storedHash));
   const [entry, setEntry] = useState('');
@@ -185,6 +202,40 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   }, [locked]);
 
   const leave = (): void => navigation.goBack();
+
+  /**
+   * [OA] Section 6.3: a locked tile's learner opens after the PIN (or at once when the lock is void): what ran under is
+   * saved, the learner becomes active (which closes any grown-up session on a change, OA-D5b), and Home opens, or Join
+   * prefilled when a join code is held (OA-D20). Nothing here opens the gate or marks a fresh PIN (CS-3).
+   */
+  const openLocked = (): void => {
+    const { profileId, lockedFrom } = route.params;
+    const store = useProfileStore.getState();
+    if (profileId === undefined || !store.profiles.some((p) => p.id === profileId)) {
+      leave();
+      return;
+    }
+    persistLeaving();
+    if (profileId !== store.activeId && lockedFrom !== undefined) {
+      if (lockedFrom.via === 'chooser') trackProfileSwitch('chooser', true, Date.now(), lockedFrom.trigger);
+      else trackProfileSwitch('profile', true);
+    }
+    store.setActive(profileId);
+    const join = lockedFrom?.via === 'chooser' ? heldJoin() : null;
+    if (join !== null) {
+      takeHeldJoin();
+      navigation.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'JoinSpace', params: join.code === null ? undefined : { code: join.code } }] });
+    } else navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+  };
+
+  // [OA] CS-4: with no PIN stored a lock is void (the learner opens) and a fresh PIN has nothing to confirm (back).
+  const voided = voidWithoutPin(route.params, storedHash);
+  useEffect(() => {
+    if (!voided) return;
+    if (lockedProfile) openLocked();
+    else leave();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
+  }, [voided]);
 
   // [OA] CS-1: back to the screen whose action asked for the PIN, gate open; that landing keeps the session for the
   // waiting action only (the Grown-up area exit watcher closes it on the next learner screen).
@@ -285,6 +336,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     }
   };
 
+  /** The calm "tries left" line after a miss, or none once no try is left (the pause line takes over). */
+  const triesHint = (state: Parameters<typeof attemptsRemaining>[0]): string | null => {
+    const left = attemptsRemaining(state, Date.now(), schedule);
+    return left > 0 ? m.entry.triesLeft(left) : null;
+  };
+
   const submit = async (): Promise<void> => {
     if (entry.length !== PIN_LENGTH || busy) return;
     setBusy(true);
@@ -311,6 +368,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         if (route.params.via) void track(pinResetCompleted(route.params.via));
         if (!gateSent.current) trackGateOpened(route.params.next, 'pin');
         gateSent.current = true;
+        // [OA] A new PIN reached from a locked tile's Forgot PIN? opens that learner only, never a grown-up session.
+        if (lockedProfile) {
+          openLocked();
+          return;
+        }
         if (route.params.returnAfterSet === true) {
           // [OA] OA-D21: Change PIN on the notice goes back to the Grown-up area that asked, with the gate open.
           openParentGate();
@@ -318,6 +380,21 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           return;
         }
         proceed();
+        return;
+      }
+      if (lockedProfile) {
+        // [OA] Section 6.3, CS-3: the locked-profile verify path: no gate session, no fresh PIN.
+        const result = await verifyForLockedProfile(entry, { hasher: pinHasher, schedule });
+        setEntry('');
+        if (result.paused) trackPinPaused(result.paused.step);
+        if (result.ok) {
+          trackGateOpened(route.params.next, 'pin');
+          gateSent.current = true;
+          openLocked();
+          return;
+        }
+        setNow(Date.now());
+        setHint(result.reason === 'cooldown' ? null : triesHint(result.state));
         return;
       }
       // [OA] OA-D19: read, checked and written inside the shared attempt lock, so every tab counts the same misses.
@@ -345,7 +422,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           setMode('setup-1');
           return;
         }
-        if (forGrownUpArea) await handOff();
+        // [OA] Row OA-5: the fresh PIN a control asked for; the control applies the change on the way back.
+        if (freshPin) leave();
+        else if (forGrownUpArea) await handOff();
         else proceed();
         return;
       }
@@ -366,11 +445,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   const title = cancelReset
     ? messages.learner.who.resetCancel
-    : mode === 'verify'
-      ? copy.pinVerifyTitle
-      : mode === 'setup-1'
-        ? copy.pinCreateTitle
-        : m.entry.createAgain;
+    : lockedProfile && mode === 'verify' && lockedName !== null
+      ? lockedName
+      : mode === 'verify'
+        ? copy.pinVerifyTitle
+        : mode === 'setup-1'
+          ? copy.pinCreateTitle
+          : m.entry.createAgain;
   const subtitle =
     mode === 'verify'
       ? m.entry.verifySubtitle
@@ -385,6 +466,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const announceKey = pauseAnnounceKey(cooldownMs);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed only when the minute changes, on purpose
   const announced = useMemo(() => (announceKey === null ? '' : pauseText(cooldownMs, m)), [announceKey, m]);
+
+  // [OA] The void lock opens the learner and the empty fresh PIN goes back (the effect above); nothing to draw meanwhile.
+  if (voided) return <Screen tone="canvas" header={{ title, titleInline: true }}>{null}</Screen>;
 
   if (noPin) {
     // F-APP-001 section 3.9: the grown-up area never creates a PIN here; the grown-up signs in instead.

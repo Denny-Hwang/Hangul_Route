@@ -61,7 +61,7 @@ const learner: Profile = {
 };
 
 function nav() {
-  return { goBack: vi.fn(), replace: vi.fn(), navigate: vi.fn(), addListener: vi.fn(() => () => undefined), setOptions: vi.fn() };
+  return { goBack: vi.fn(), replace: vi.fn(), navigate: vi.fn(), reset: vi.fn(), addListener: vi.fn(() => () => undefined), setOptions: vi.fn() };
 }
 
 type Next = 'ParentDashboard' | 'AddProfile' | 'Paywall' | 'EditProfile' | 'CancelReset';
@@ -337,5 +337,129 @@ describe('PinEntry CancelReset (the chooser\'s Cancel the wait)', () => {
     const { r } = await show('CancelReset');
     expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(1);
     expect(screenTexts(r.root)).not.toContain(getMessages('en').caregiver.audience.family.pinCreateTitle);
+  });
+});
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-5 (section 6.3, CS-3, CS-4, CS-21): a locked tile asks the PIN through
+ * `verifyForLockedProfile` and opens that learner only, never a grown-up session; the fresh PIN of the Edit profile
+ * lock switch marks a fresh PIN and goes back.
+ */
+describe('[OA] PinEntry LockedProfile (a locked tile)', () => {
+  const sora: Profile = { ...learner, id: 'profile:sora', displayName: 'Sora', learnerType: 'self' };
+  type LockedParams = { next: 'LockedProfile'; profileId: string; lockedFrom?: { via: 'chooser'; trigger: 'launch' } | { via: 'profile' } };
+
+  async function showLocked(params: LockedParams = { next: 'LockedProfile', profileId: sora.id, lockedFrom: { via: 'chooser', trigger: 'launch' } }) {
+    const navigation = nav();
+    const route = { key: 'pin', name: 'PinEntry' as const, params };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+    const r = await render(<PinEntryScreen route={route} navigation={navigation as any} />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    return { r, navigation };
+  }
+
+  beforeEach(() => {
+    useProfileStore.setState({ profiles: [learner, sora], activeId: learner.id, hydrated: true });
+  });
+
+  it('is titled with the learner\'s name and keeps Forgot PIN? (it leads to the reset paths)', async () => {
+    const { r } = await showLocked();
+    // The route header (drawn by the app's header slot) gets the learner's name as its title.
+    const titled = r.root.findAll((n) => typeof (n.props as { header?: { title?: unknown } }).header?.title === 'string');
+    expect((titled[0]?.props as { header: { title: string } }).header.title).toBe('Sora');
+    expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(1);
+    expect(buttonsNamed(r.root, m.entry.forgot.cta)).toHaveLength(1);
+  });
+
+  it('a correct PIN opens that learner\'s Home and no grown-up session: no gate, no fresh PIN (CS-3)', async () => {
+    useAccountStore.setState({
+      pinResetRequestedAt: new Date(Date.now() - 60_000).toISOString(),
+      pinAttempts: { failures: [], lockedUntil: null, strikes: 2, lastMissAt: Date.now() - 1_000 },
+    });
+    const { r, navigation } = await showLocked();
+    await typePin(r.root, '1234');
+    expect(useProfileStore.getState().activeId).toBe(sora.id);
+    expect(navigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Main' }] });
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    // Like any correct PIN: the strikes reset and a pending wait is cleared.
+    expect(useAccountStore.getState().pinAttempts.strikes).toBe(0);
+    expect(useAccountStore.getState().pinResetRequestedAt).toBeNull();
+    expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toMatchObject({ dest: 'locked_profile', via: 'pin' });
+    expect(tracked.find((e) => e.name === 'profile.switch')?.payload).toMatchObject({ via: 'chooser', trigger: 'launch', locked: true });
+    expect(tracked.every((e) => e.profileId === undefined && !JSON.stringify(e.payload ?? {}).includes('profile:'))).toBe(true);
+  });
+
+  it('an open grown-up session does not survive the unlock: the change of learner closes it (CS-3, CS-15)', async () => {
+    useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now() });
+    const { r } = await showLocked({ next: 'LockedProfile', profileId: sora.id, lockedFrom: { via: 'profile' } });
+    await typePin(r.root, '1234');
+    expect(useProfileStore.getState().activeId).toBe(sora.id);
+    expect(useUiStore.getState()).toMatchObject({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
+    expect(tracked.find((e) => e.name === 'profile.switch')?.payload).toMatchObject({ via: 'profile', trigger: 'none', locked: true });
+  });
+
+  it('a wrong PIN opens nothing and says how many tries are left', async () => {
+    const { r, navigation } = await showLocked();
+    await typePin(r.root, '9999');
+    expect(useProfileStore.getState().activeId).toBe(learner.id);
+    expect(navigation.reset).not.toHaveBeenCalled();
+    expect(screenTexts(r.root)).toContain(m.entry.triesLeft(4));
+  });
+
+  it('Cancel goes back (to the chooser), opening nothing', async () => {
+    const { r, navigation } = await showLocked();
+    await press(buttonsNamed(r.root, getMessages('en').common.buttons.cancel)[0] as ReactTestInstance);
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useProfileStore.getState().activeId).toBe(learner.id);
+  });
+
+  it('the help line never shows here, even at the 5th pause (CS-21)', async () => {
+    const late = pauseFor(60 * 60_000, 5);
+    useAccountStore.setState({ pinAttempts: late });
+    disk.set('account:pinAttempts', late);
+    const { r } = await showLocked();
+    expect(screenTexts(r.root)).toContain("Let's take a short break. Try again in 60 min.");
+    expect(byTestId(r.root, 'pin-pause-help')).toHaveLength(0);
+  });
+
+  it('with no PIN stored the lock is void: the learner opens at once and no PIN is made (CS-4)', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const { r, navigation } = await showLocked();
+    expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(0);
+    expect(useProfileStore.getState().activeId).toBe(sora.id);
+    expect(navigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Main' }] });
+    expect(useAccountStore.getState().parentPinHash).toBeNull();
+  });
+});
+
+describe('[OA] PinEntry FreshPin (the lock switch asks the PIN again)', () => {
+  async function showFresh() {
+    const navigation = nav();
+    const route = { key: 'pin', name: 'PinEntry' as const, params: { next: 'FreshPin' as const } };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+    const r = await render(<PinEntryScreen route={route} navigation={navigation as any} />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    return { r, navigation };
+  }
+
+  it('verifies only, no Forgot PIN?; a correct PIN marks a fresh PIN and goes back without opening the gate', async () => {
+    const { r, navigation } = await showFresh();
+    expect(buttonsNamed(r.root, m.entry.forgot.cta)).toHaveLength(0);
+    await typePin(r.root, '1234');
+    expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toMatchObject({ dest: 'action', via: 'pin' });
+  });
+
+  it('with no PIN stored there is nothing to confirm: back at once, no PIN made (CS-4)', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const { r, navigation } = await showFresh();
+    expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(0);
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
   });
 });
