@@ -20,7 +20,7 @@ Built by: CM-50b (topic pages, pack page), CM-36 and CM-37 (Hidden Heritage engi
 
 **The mock is a design reference, not shipped code.**
 
-- **Tokens.** Every value in `topic-pages.css` is a token of `packages/design-system/src/tokens.ts`, copied once into a custom property named after it (generated from the tokens module): `--spacing-xl` is `spacing.xl`, `--colors-theme-life` is `colors.theme.life`. No new token is needed.
+- **Tokens.** Every colour in `topic-pages.css` is a token of `packages/design-system/src/tokens.ts`, and so is every size and spacing value except the projector-slide geometry listed under Constants (the presenter stage is drawn in stage units). Each token is copied once into a custom property named after it (generated from the tokens module): `--spacing-xl` is `spacing.xl`, `--colors-theme-life` is `colors.theme.life`. No new token is needed.
 - **Drawn parts.** Glyphs come from `Icon/glyphs.ts` (theme glyphs, `arrow-left`, `arrow-right`, `speaker`, `check`, `star`, `book`, `leaf`, `card`, `check-circle`, `flag`, tab glyphs); the Next triangle and the Not open yet dotted ring follow `RouteMarkers/geometry.ts` (8 dashes, 55 / 45); Hoya is the static port of `Hoya.tsx`. The Hidden Heritage scene is drawn by hand in token colours on the 400 x 300 scene-art canvas, as a stand-in for the kit's renderer.
 - **Units.** Text is in rem, so the 200 % shots enlarge every line. The Journey cell word, the pack word, page 1's theme labels and the tab labels stay in dp, as the app's web build draws them (the cell and pack words have `maxFontSizeMultiplier` 1; the tab label is capped, LR-4; the web build sets text in px).
 - **Annotations.** The monospace line in the detail pane of a page without a selection is a board note, not UI.
@@ -41,7 +41,8 @@ Values that are not tokens. Each one derives from code or a token; CM-50b, CM-36
 | Pack ring | five segments at 56, stroke 4 (`ROUTE_RING_STROKE` at the regular scale) | one segment per level (§6.4) |
 | Hidden Heritage canvas | 400 x 300 (4:3) | the scene-art canvas (F-STORY-002 §3.9) |
 | Hidden Heritage spot | at least 75 x 75 canvas units, 11 apart | 54 dp at 320 px (288 dp scene), 64 dp (`touchTarget.min`) at 375 px (343 dp scene); style guide H-1, H-2 |
-| Projector slide | scene 720 x 540 stage units; word at `presenter.size.display` | the 1280-unit presenter stage (`presenter.stage`) |
+| Projector slide | scene 720 x 540 stage units; word at `presenter.size.display` (140), romanization at `presenter.size.prompt` (56), meaning at `presenter.size.title` (80), kind label at `presenter.size.caption` (28) | the 1280-unit presenter stage (`presenter.stage`) |
+| Projector slide spacing (mock only) | control bar 112 high (2 x `presenter.size.prompt`); slide padding 56 top (`presenter.size.prompt`), 40 sides (`presenter.size.body`), 14 bottom (`presenter.size.caption` / 2); column gap 40 (`presenter.size.body`); kind label top 7 (`presenter.size.caption` / 4); rule margin 28 (`presenter.size.caption`); control gap 14 | presenter sizes reused as stage-unit spacing in the mock; the built slide (CM-36) takes the presenter layout's own named constants (`lecture-presenter.md` C), never these literals |
 | Font stack | the system stack | `typography.family.sans` is `'System'` |
 
 ## Screens
@@ -49,7 +50,7 @@ Values that are not tokens. Each one derives from code or a token; CM-50b, CM-36
 | Shot | Viewport | Shows |
 |---|---|---|
 | `topic-page1-320-first.png`, `topic-page1-320.png` | 320 x 568 | page 1: today's grid with the Next triangle on Stage 1 Food and the legend; the page bar (no left arrow, "Five themes", three dots, the right arrow) above the theme labels |
-| `topic-page2-320.png` | 320, full page | page 2: five pack headers (54 x 64), the stage headers without pills, rows 1 and 5 empty, L1-L5 in rows 2, 3, 4, 6, 7; Numbers & Time L1 completed |
+| `topic-page2-320.png` | 320, full page | page 2: five pack headers (54 x 64), the stage headers without pills, rows 1 and 5 empty under muted headers with no one-liner (hidden from assistive technology), L1-L5 in rows 2, 3, 4, 6, 7; Numbers & Time L1 completed |
 | `topic-page3-320.png` | 320, full page | page 3: three packs at the same width, the rest of each row empty; no right arrow |
 | `topic-swipe-320-first.png` | 320 x 568 | the middle of a swipe from page 1 to page 2: every stage row lines up across the two pages |
 | `topic-wave1-page2-320.png` | 320, full page | the first wave: two pages, page 2 with three packs |
@@ -57,11 +58,11 @@ Values that are not tokens. Each one derives from code or a token; CM-50b, CM-36
 | `topic-page1-320-text200.png`, `topic-page2-320-text200.png` | 320, 200 % text | the stage headers grow alike on both pages; the bar and the headers keep their targets; no sideways scroll |
 | `topic-page1-768.png`, `topic-page2-768.png` | 768 x 1024 | one pane, 112 dp cells, the bar as wide as the grid |
 | `topic-page2-pack-1280.png` | 1280 x 800 | two panes: page 2 in the 400 dp master pane with Numbers & Time's header selected, the pack page in the detail pane |
-| `pack-page-320.png`, `pack-page-768.png`, `pack-page-320-text200.png` | 320, 768, 320 at 200 % | the pack page, open: badge, title, Topic pill, Hoya's intro, the pack ring, five levels (Done, Next), Pack Check, the topic album, Open level 2 |
+| `pack-page-320.png`, `pack-page-768.png`, `pack-page-320-text200.png` | 320, 768, 320 at 200 % | the pack page, open: badge, title, Topic pill, Hoya's intro, the pack ring, five levels (Done, and the pack's own outlined Up next tag), Pack Check, the topic album, Open level 2 |
 | `pack-page-preview-320.png` | 320 | the free-learner preview: the dotted ring and "Not open yet" on each level, the album shown, the preview card with See a preview, Ask a grown-up, Back to open lessons; no primary button |
 | `hidden-heritage-ask-320.png` | 320 | the prompt 국 (guk) with the Hear button, the market stall, three empty found slots |
 | `hidden-heritage-spots-320.png` | 320 | every spot outlined (board view): six spots, each at least 54 dp |
-| `hidden-heritage-miss-320.png`, `-hint-320.png` | 320 | 국 found; the prompt 밥 (bap); a miss (the amber ring with its casing on the side dishes, Hoya "Look again"), then the look-here ring on the rice bowl |
+| `hidden-heritage-miss-320.png`, `-hint-320.png` | 320 | 국 found; the prompt 밥 (bap); a miss (the amber ring with its casing on the side dishes, Hoya "Look again"), then the look-here ring (`feedback.info`, dashed, inside the spot) on the rice bowl |
 | `hidden-heritage-end-320.png` | 320 | You found them all: each word with romanization and its meaning |
 | `hidden-heritage-found-768.png` | 768 | the prompt on one row, the scene at 720 |
 | `hidden-heritage-slide-1280.png` | 1280 x 720 | the projector slide, build b2 (밥, bap, rice, the ring on the rice bowl) |
@@ -78,7 +79,7 @@ Values that are not tokens. Each one derives from code or a token; CM-50b, CM-36
 | Rows line up across pages | same seven rows at the same heights (§6.1) | the swipe frame and the full-page shots: every stage header and cell row starts at the same height on page 1 and the pack pages, also at 200 % text |
 | Hidden Heritage spots | 48 dp (§7.1, §14) | the smallest spot (the 75-unit box rule) is 54 dp at 320; the drawn spots are 56-62 dp at 320, 154 dp and more at 768 |
 | Reduced motion | a page change jumps with no slide (§6.1) | the shots run with `prefers-reduced-motion: reduce`; the pager uses `scroll-behavior: auto` and the buttons scroll with `behavior: 'instant'` |
-| Keyboard paging (web) | Left and Right page while focus is in the bar or the header row; focus moves to the new page's first header (§6.1, §14) | in `topic-pages.html`: Tab to the right arrow, Enter, focus lands on "Numbers & Time. Opens the topic page."; Right arrow from there goes to page 3 and focus lands on "Arts & Music"; Left from page 2's header row goes to page 1 and focus lands on the "Five themes" region |
+| Keyboard paging (web) | Left and Right page while focus is in the bar or the header row; focus moves to the new page's first header (§6.1, §14) | in `topic-pages.html`: Tab to the right arrow, Enter, focus lands on "Numbers & Time. Opens its levels."; Right arrow from there goes to page 3 and focus lands on "Arts & Music"; Left from page 2's header row goes to page 1 and focus lands on the "Five themes" region |
 | Announcements | page name and number (§6.1) | the live region reads "Topics, page 2 of 3" after the focus move |
 
 These are the mock's numbers. CM-50b measures the real screens (target-size e2e at 320 and the topic-pages e2e of §14).
@@ -87,13 +88,13 @@ These are the mock's numbers. CM-50b measures the real screens (target-size e2e 
 
 - **D1. The arrows sit at the ends of a page bar directly above the column headers**, with the page name and dots between them. At 320 px the five columns fill the whole column-header row (5 x 54.4 + 4 x 4 = 288 dp), so there is no room for a 48 dp arrow inside it. The spec's §6.1 row "Visible affordance" is written back to say so.
 - **D2. Arrows and pack headers are `touchTarget.min` (64) tall**, above the §6.1 48 dp. The pack header's width is the column's, so at 320 px it shares the Journey cell's recorded 54 dp exception (F-LAYOUT-001 audit UX-25); from 375 px it is 65 dp.
-- **D3. One header band height on every page while the bar shows.** The pack header needs 64 dp, today's theme labels are about 41, so the band is 64 + `spacing.sm` on every page and page 1's labels sit at its bottom. Page 1's cells, sizes, glyphs, words, states and rings are unchanged; only the space above the labels grows, with the bar. With no packs the band is today's.
+- **D3. One header band height on every page while the bar shows.** The pack header needs 64 dp, today's theme labels are about 41, so the band is max(64, page 1's measured label height) + `spacing.sm` on every page and page 1's labels sit at its bottom. The measured term matters on iOS and Android, where page 1's `Caption` labels grow with the system text size; the mock sets those labels in px, as the web build does, so its 200 % shots show the web build only. **Owner to confirm:** this adds space above page 1's labels, and §6.1 says page 1 is "exactly as today"; the §6.1 write-back is marked pending. Page 1's cells, sizes, glyphs, words, states and rings are unchanged; only the space above the labels grows, with the bar. With no packs the band is today's.
 - **D4. Pack pages repeat each stage header without its pill and Stage 1 buttons,** keeping page 1's text width and measured row height, so a swipe never moves a row.
-- **D5. A short pack word under each pack glyph** (`learner.journey.packWord.<key>`, like `themeWord`): "Numbers" does not fit the 50 dp line (56.8 dp estimated), so the words are Count, Family, Moods, Town, Day, Arts, Science, Body. The full title is in the header's accessible name and on the pack page. No schema field.
+- **D5. A short pack word under each pack glyph, taken from the pack's title** (`learner.journey.packWord.<key>`, like `themeWord`): the full title does not fit the 50 dp line ("Numbers" alone estimates 56.8 dp), so the header shows one title word: Time, Family, Feeling, Town, Day, Arts, Science, Body. "Feeling" is the one word that is not a title word as written ("Feelings", 52.9 dp, does not fit; "Me" alone does not name the topic). The full title is in the header's accessible name and on the pack page. No schema field. **Owner to confirm, beside D3:** spec §6.1 "Column header" said "the pack's name"; the row is written back as a CM-D3 proposal pending the owner's confirmation (`journey/topic-pages.md` "The pack word rule").
 - **D6. The page bar is not sticky** (open question in the wireframe).
 - **D7. Empty column slots are spacers of the column width** (`journeyCellSize`), not flex items that share space, so a page of three packs keeps five-column geometry (in Yoga as in CSS, a bordered `flex: 1` item and an unbordered one do not get the same width).
 - **D8. Hidden Heritage spots are at least 75 canvas units**, not 67 (the 48 dp minimum at 320): 75 is 54 dp at 320 and meets `touchTarget.min` from 375 px.
-- **D9. The pack page has its own Next** (the first level not Done), which never moves the Journey's Next marker (§6.1: packs never move the cursor).
+- **D9. The pack page has its own "Up next"** (the first level not Done), a word of its own (`learner.pack.state.upNext`) in an outlined tag, unlike the route's Next triangle and filled chip, so it never reads as the Journey's Next marker, which stays on page 1 (§6.1: packs never move the cursor).
 - **D10. Waiting album tiles and the waiting badge are solid outlines**, never dashed or dotted, so they never read as the Not open yet ring.
 - **D11. A stamp to collect is a sunken disc with a muted glyph; a collected one is the glyph in its theme ring.** Neither uses the dotted ring.
 

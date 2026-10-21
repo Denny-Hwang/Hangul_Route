@@ -92,7 +92,7 @@
   paint(start, false);
   if (params.get('peek')) { pager.style.scrollSnapType = 'none'; pager.scrollTo({ left: Number(params.get('peek')) * pager.clientWidth, behavior: 'instant' }); pages.forEach((pg) => { pg.inert = false; pg.removeAttribute('aria-hidden'); }); }
   const sel = params.get('select');
-  if (sel) { const h = root.querySelector('[data-head="' + sel + '"]'); if (h) { h.classList.add('sel'); h.setAttribute('aria-selected', 'true'); } }
+  if (sel) { const h = root.querySelector('[data-head="' + sel + '"]'); if (h) { h.classList.add('sel'); h.setAttribute('aria-current', 'true'); } }
 })();
 </script>
 </body>

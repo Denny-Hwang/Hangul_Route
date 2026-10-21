@@ -34,7 +34,7 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 | |        (Count to ten)   Done | |  <- the level's episode title; state word
 | +------------------------------+ |
 | | (ring) Level 2 . Stage 3     | |
-| |        (What time is it?) [Next]| <- Next tag: the first level not Done (the pack's own next, not routeNext)
+| |        (What time is it?) [Up next]| <- Up next tag: the first level not Done (the pack's own, never the route's Next)
 | +------------------------------+ |
 | | (ring) Level 3 . Stage 4     | |
 | |        (How much is it?)     | |
@@ -49,14 +49,14 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 | [card 1] [card 2] [badge]        |  <- two pack cards and the badge, shown in advance (§7.2)
 |  (Finish level 3 to earn it)     |     each waiting tile names what earns it; never greyed out, no lock
 |                                  |
-| [[ Open level 2 ]]               |  <- the one primary action: the Next level's episode page
+| [[ Open level 2 ]]               |  <- the one primary action: the Up next level's episode page
 +----------------------------------+
 ```
 
-- **Level rows** are buttons (at least `touchTarget.min` tall): a tap opens that level's episode page (`episode/detail`), whatever its state. Every level is open (§6.3 with the switch off), so the learner may start any level; Next only suggests the first one not Done.
-- **State word** per row: `Done` (level 1 or higher, §4.4), `Next` (the first level not Done), nothing otherwise. Mastery words ("Practiced", "Mastered", "Ready to refresh") are the ring's own (rows CM-D1 and CM-20) and its label carries them.
+- **Level rows** are buttons (at least `touchTarget.min` tall): a tap opens that level's episode page (`episode/detail`), whatever its state. Every level is open (§6.3 with the switch off), so the learner may start any level; Up next only suggests the first one not Done.
+- **State word** per row: `Done` (level 1 or higher, §4.4), `Up next` (the first level not Done), nothing otherwise. **Up next** is the pack's own suggestion, a word of its own (`learner.pack.state.upNext`) in an outlined tag (`borderWidth.base`, `border.strong`, on `surface.paper`, no triangle), so it never looks or reads like the route's **Next** (the triangle and its filled chip, F-ENT-003 §3.7), which stays on Journey page 1 only (§6.1: packs never move the cursor). Mastery words ("Practiced", "Mastered", "Ready to refresh") are the ring's own (rows CM-D1 and CM-20) and its label carries them.
 - **The pack ring**: five segments in the pack's `homeTheme` token (`colors.theme[homeTheme]`) on a `border.subtle` track; a segment fills when its level reaches Done. It reads only `cellBest` latches, so it never drops (§4.4). Its label: "Numbers & Time: 2 levels done". No percentage, no "2 of 5".
-- **[[ Open level n ]]**: opens the Next level's episode page. When every level is Done and the Pack Check is not taken, it becomes **[[ Start the Pack Check ]]**; when the badge is earned, there is no primary button (the rows stay buttons).
+- **[[ Open level n ]]**: opens the Up next level's episode page. When every level is Done and the Pack Check is not taken, it becomes **[[ Start the Pack Check ]]**; when the badge is earned, there is no primary button (the rows stay buttons).
 - **Pack Check** (§4.5): 10 items from the pack's items, through the review engine; after level 5 is Done its row shows **[ Start the Pack Check ]** (or, as above, the primary). Stars, then the badge. Retake freely; the best result latches.
 - **Topic album**: card 1 (earned with level 3, §6.4), card 2 (level 5), the badge (the Pack Check). An earned card shows its face and opens `library/card-detail`; the badge shows its full art and its date. A waiting tile shows the outline and its earn line, as the Library's earn hints do (`library/earn-hints.md`). Cards are never random and never bought (§7.2).
 
@@ -99,7 +99,7 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 ```
 +---------------------------------------+-------------------------------------------+
 | Journey, page 2 (master, 400 dp)      | [<-]                                      |
-| [Count]<sel> header selected          | (badge) Numbers & Time   [ Topic ]        |
+| [Time]<sel> header selected           | (badge) Numbers & Time   [ Topic ]        |
 |                                       | ( Hoya bubble )                           |
 |                                       | (pack ring) (2 levels done)               |
 |                                       | Levels: five rows                         |
@@ -116,9 +116,18 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 
 - [<- back] → the Journey topic page that holds the pack (from any entry: Journey, Explore slot, planner hand-off) · on two panes the detail pane's own Back clears the selection.
 - Level row → `episode/detail` (level `episodeId`).
-- [[ Open level n ]] → `episode/detail` of the Next level · [[ Start the Pack Check ]] / [ Start the Pack Check ] → the review player (`reviews/stage-review.md` shape, kind `pack-check`, 10 items).
+- [[ Open level n ]] → `episode/detail` of the Up next level · [[ Start the Pack Check ]] / [ Start the Pack Check ] → the review player (`reviews/stage-review.md` shape, kind `pack-check`, 10 items).
 - Album card (earned) → `library/card-detail` · waiting tile: no action (its earn line is on the tile).
-- Preview: [ See a preview ] → the quest player's read-only Discover page · [ {ask} ] → `access.help_asked { from: 'pack', audience }`, then the gate or the Plan screen (F-ENT-003 §3.7) · Back to open lessons → the `routeNext` episode page.
+- Preview: [ See a preview ] → the quest player's read-only Discover page · [ {ask} ] → the F-ENT-003 §3.7 ask, with `from: 'pack'` (table below) · Back to open lessons → the `routeNext` episode page.
+- **The ask** (`askFor(audience, classOnly)` and `askGate(opensDirectly, from)`, `logic/access-copy.ts`; `access.help_asked { from: 'pack', audience }` is sent first, as on the episode page and the Library):
+
+  | Device and learner | Label | Goes to |
+  |---|---|---|
+  | family device (`audience === 'family'`), learner with any family membership or none | **Ask a grown-up** | `PinEntry { next: 'Paywall', from: 'pack' }` |
+  | family device, learner whose only space membership is a class or school | **Ask your teacher or a grown-up** | `PinEntry { next: 'Paywall', from: 'pack' }` (the Plan screen adds the class line, F-ENT-003 §3.9.1) |
+  | self-only device (`audience === 'self'`) | **See how to open it** | the Plan screen: directly only when `gateOpensDirectly`, else through the settings PIN |
+
+  Row CM-50b extends `AskFrom` (today `'episode' | 'home' | 'results' | 'library'`) with `'pack'`, and with it the `PinEntry` and `Paywall` `from` values. Per F-ENT-003 E3-6 the Plan screen's Back follows `from` (`planBack` in `logic/paywall.ts`, today Library, Home or Journey): for `'pack'` it returns to this pack page, never "Back to journey", labelled "Back to the topic" (a new key, `caregiver.plan.backToPack.cta`, beside `backToLibrary`, with es and ko in CM-50b). CM-50b adds an access-screens source test asserting that `PackScreen` asks through `askFor` / `askGate` with `help_asked` sent first, as the episode and Library tests do.
 - Opening the page sends `pack.opened { packId }` once per open (§11.3). Finishing a level sends `pack.level_complete { packId, stage }` (from the quest flow, not this page).
 
 ## Navigation graph
@@ -126,21 +135,23 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 Enter from: `journey/topic-pages` (pack header) · `home/todays-mission` (Explore slot) · the planner's pack hand-off (F-PLAN-002) · `library/card-detail` (a pack card's "from" line)
 Exit to: `episode/detail` · the review player (Pack Check) · `library/card-detail` · `profiles/pin-entry` → `billing/plan-status-free-lessons` (preview ask) · `journey/topic-pages`
 
+- **Planner hand-off leaves the grown-up zone.** The pack page is never pushed above the PIN-gated planner. A hand-off resets the navigation to the learner tabs (Journey, on the page that holds the pack) and then pushes the pack page, the same way today's plan hand-offs reach an episode page. So Back, Android's hardware Back and any stack pop from the pack page land on the Journey topic page, never on a grown-up screen. Row CM-50b adds an e2e: from a pack page reached by a planner hand-off, hardware Back never reaches a grown-up screen.
+
 ## States
 
-- **A. open**: as drawn; a learner with nothing done sees an empty ring, no count line, and Level 1 as Next.
+- **A. open**: as drawn; a learner with nothing done sees an empty ring, no count line, and Level 1 as Up next.
 - **A'. every level Done**: the primary is Start the Pack Check; after the badge, no primary.
 - **B. preview**: as drawn.
 - **Hidden pack** (`topicPacks` or `pack.<key>` off, or the pack not `ready`): the page is not reachable from the Journey or Explore; a stale link (the planner, a restored deep link) shows "This topic is not here right now." and [ Back to Journey ]. Progress, cards and the badge stay (§12.2) and show again when it is back on.
 - **Loading**: the pack and its levels are in the bundled catalogue; level bodies load as precached chunks (§10) when a level opens, not here.
-- **Error** (progress unreadable): the page draws from content with no Done, no ring fill and Level 1 as Next, plus the Journey's muted "progress will show up in a moment" line.
+- **Error** (progress unreadable): the page draws from content with no Done, no ring fill and Level 1 as Up next, plus the Journey's muted "progress will show up in a moment" line.
 - **Offline**: everything on this page is bundled.
 - **Large text (200 %)**: rows grow, the stage tag wraps under the level number, the album wraps to two rows.
 
 ## Accessibility
 
 - Reading order: Back, title, Hoya intro, the pack ring, the level rows in order, Pack Check, album tiles, the primary button; in the preview, the preview card's line, See a preview, the ask button, Back to open lessons. **Tab stops** are only the controls: Back, the level rows, Start the Pack Check (when shown), earned album cards, the primary button, See a preview, the ask button and Back to open lessons. Text, the Hoya intro, the ring and waiting tiles are read in flow and never focusable.
-- Each level row is one button named "Level 2, Stage 3: What time is it? Next." (the state and the ring's mastery word in the name, as the cell label carries its marks).
+- Each level row is one button named "Level 2, Stage 3: What time is it? Up next." or "Level 1, Stage 2: Count to ten. Done." (the state and the ring's mastery word in the name, as the cell label carries its marks). The title is followed by a period only when it has no closing punctuation of its own (`.`, `?`, `!`), so a question title never reads "?."; the marks follow, each ending in a period. CM-50b's label unit test covers a title ending in "?".
 - The pack ring is an image named "Numbers & Time: 2 levels done". With no level done there is no count line and the empty ring is decorative (hidden from assistive technology), so nothing reads as "0".
 - Waiting album tiles are text, not disabled buttons.
 - Targets at least `touchTarget.min`; body text 18 or larger; the Hoya bubble as `HoyaBubble`.
@@ -159,6 +170,7 @@ Exit to: `episode/detail` · the review player (Pack Check) · `library/card-det
 | `learner.pack.levelsTitle` | Levels |
 | `learner.pack.level(n, stage)` | Level {n} · Stage {stage} |
 | `learner.pack.state.done` | Done |
+| `learner.pack.state.upNext` | Up next |
 | `learner.pack.ringDone(count)` | {count} levels done (plural: 1 level done) |
 | `learner.pack.open.cta(n)` | Open level {n} |
 | `learner.pack.check.title` | Pack Check |
@@ -171,11 +183,13 @@ Exit to: `episode/detail` · the review player (Pack Check) · `library/card-det
 | `learner.pack.preview.cta` | See a preview |
 | `learner.pack.hidden` | This topic is not here right now. |
 | `learner.pack.hiddenBack` | Back to Journey |
-| `a11y.pack.levelRow(n, stage, title, marks)` | Level {n}, Stage {stage}: {title}.{marks} |
+| `a11y.pack.levelRow(n, stage, title, marks)` | Level {n}, Stage {stage}: {title}{end} {marks} (`{end}` is "." unless the title already ends in `.`, `?` or `!`; `marks` is the list of state words, each ending in ".", joined by a space; no trailing space when there are none) |
 | `a11y.pack.ring(title, count)` | {title}: {count} levels done (plural: "{title}: 1 level done"; `plural()` per locale) |
 
-- Reused, no new key: `learner.access.notOpen` ("Not open yet"), the `askFor` labels and "Back to open lessons" (F-ENT-003), `learner.routeNext.tag.next` ("Next").
-- About 18 new strings with the topic-page strings of `journey/topic-pages.md`, as the CM-50b row counts.
+- Reused, no new key: `learner.access.notOpen` ("Not open yet"), the `askFor` labels and "Back to open lessons" (F-ENT-003). The route's `learner.routeNext.tag.next` ("Next") is **not** used here (Up next, above).
+- New with the ask: `caregiver.plan.backToPack.cta` ("Back to the topic"), the Plan screen's Back for `from: 'pack'`.
+- Count: 20 new strings here (19 above plus `caregiver.plan.backToPack.cta`) and 18 on the topic pages (`journey/topic-pages.md`), so the CM-50b row lands **about 38** strings, each in en, es and ko (spec §17 updated from "about 18").
+- Terms: the pill "Topic", "Topic album" and "Back to the topic" use the topic word of the terminology table in `journey/topic-pages.md` (es "Unidad", ko 꾸러미), never es "tema" or ko 주제.
 
 ## Open questions
 
