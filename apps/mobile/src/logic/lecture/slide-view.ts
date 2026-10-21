@@ -310,6 +310,39 @@ export function writeView(slide: Of<'write-together'>, reveal: number, romanizat
   return { frame: tables === 0, bank: shown.includes('bank'), answer, rom, page: tables === 0 ? null : tables - 1 };
 }
 
+/**
+ * A type round's prompt and the cue under it (the target's meaning), as the live region and the slide
+ * grid name it: "Type the price, 1,000 won"; after a prompt that ends its sentence, "Ask for water. Water, please."
+ */
+export function typeCue(slide: Extract<Of<'write-together'>, { variant: 'type' }>): string {
+  const prompt = slide.prompt.trim();
+  return /[.!?:]$/.test(prompt) ? `${prompt} ${slide.answer.gloss}` : `${prompt}, ${slide.answer.gloss}`;
+}
+
+/**
+ * What one step forward on a write-together slide showed, for the live region (section 10, LV-S4): a
+ * type answer its Korean and romanization (its meaning was the cue), a trace answer the word with its
+ * romanization and meaning, a frame's banks their words, its example `example` ("For example") with
+ * the filled line and its romanization, a sound-table page its blocks. `null` at the first build.
+ */
+export function writeMove(slide: Of<'write-together'>, reveal: number, example: string): string | null {
+  const name = slide.builds[reveal];
+  if (reveal === 0 || name === undefined) return null;
+  switch (slide.variant) {
+    case 'type':
+      return `${slide.answer.ko}, ${slide.answer.romanization}`;
+    case 'trace':
+      return `${slide.word.ko}, ${slide.word.romanization}, ${slide.word.gloss}`;
+    case 'frame':
+      if (name === 'bank') return slide.banks.flat().map((w) => w.ko).join(', ');
+      return `${example}, ${slide.example.ko}, ${slide.example.romanization}`;
+    case 'own-name': {
+      const page = writeView(slide, reveal, 'always').page;
+      return page === null ? null : soundTablePage(slide.groups, page).flat().map((b) => b.ko).join(', ');
+    }
+  }
+}
+
 /** The name round's sound table page as the stage draws it: its groups, each a row of blocks. */
 export function soundTablePage(groups: readonly (readonly SheetText[])[], page: number): ReadonlyArray<readonly SheetText[]> {
   return soundTablePages(groups)[page] ?? [];

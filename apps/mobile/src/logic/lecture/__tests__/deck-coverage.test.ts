@@ -420,6 +420,41 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
   });
 
   /**
+   * Every preset, length and stage more than 50 % over the room pace, as section 16 records them. Next
+   * lesson and Hangul week 1 do not read the stage, so each stage repeats their first visit. A content
+   * change that moves a row across 1.5 times updates this list and section 16 together.
+   */
+  const OVER_HALF: string[] = [
+    'next-lesson 10 first visit: 31 slides',
+    'next-lesson 10 stage1: 31 slides',
+    'next-lesson 10 stage2: 31 slides',
+    'next-lesson 10 stage3: 31 slides',
+    'next-lesson 10 stage4: 31 slides',
+    'next-lesson 10 stage5: 31 slides',
+    'next-lesson 10 stage6: 31 slides',
+    'next-lesson 10 stage7: 31 slides',
+    'hangul-week-1 10 first visit: 31 slides',
+    'hangul-week-1 10 stage1: 31 slides',
+    'hangul-week-1 10 stage2: 31 slides',
+    'hangul-week-1 10 stage3: 31 slides',
+    'hangul-week-1 10 stage4: 31 slides',
+    'hangul-week-1 10 stage5: 31 slides',
+    'hangul-week-1 10 stage6: 31 slides',
+    'hangul-week-1 10 stage7: 31 slides',
+    'by-stage 10 first visit: 31 slides',
+    'by-stage 10 stage1: 31 slides',
+    'by-stage 10 stage2: 51 slides',
+    'by-stage 10 stage3: 31 slides',
+    'by-stage 20 first visit: 65 slides',
+    'by-stage 20 stage1: 65 slides',
+    'by-stage 20 stage2: 108 slides',
+    'by-stage 30 first visit: 102 slides',
+    'by-stage 30 stage1: 102 slides',
+    'by-stage 30 stage2: 137 slides',
+    'by-stage 30 stage3: 97 slides',
+  ];
+
+  /**
    * Section 16 "Upper-stage pace", measured after LV-S4: every preset at every length, on a first visit and
    * at each stage, against a room's pace of `ROOM_PACE` slides a minute (rule 12's own count for blocks that
    * are not quests: `ceil(slides / 2)` minutes, section 4.4). Section 16: when a preset runs more than 50 %
@@ -427,7 +462,7 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
    * body): By stage runs over at Stage 2 at every length (51, 108 and 137 slides for 10, 20 and 30 minutes:
    * 2.55, 2.70 and 2.28 times) and, by a little, at Stage 1 (1.55 to 1.70 times) and Stage 3 at 10 and 30
    * minutes (1.55, 1.62); so does Next lesson at 10 minutes (with no plan or position it starts at Stage 1:
-   * 31 slides, 1.55 times); every other preset is within. This test keeps the measurement running and fails only past `PACE_CEILING`, three times
+   * 31 slides, 1.55 times), and so does Hangul week 1 at 10 minutes (31 slides, 1.55 times); every other preset is within (`OVER_HALF` pins the set). This test keeps the measurement running and fails only past `PACE_CEILING`, three times
    * the pace, which no preset is near; the cap itself is the follow-up's.
    */
   it('section 16 upper-stage pace: every preset and length measured against a room pace, none past the ceiling', () => {
@@ -436,6 +471,7 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     const meta = { id: 'lecture:pace0001', title: 'Pace', createdAt: '2026-10-20T09:00:00Z', seed: 7, source: 'quick' as const };
     const contexts: PresetContext[] = [{ catalog: CATALOG }, ...StageKeySchema.options.map((stage): PresetContext => ({ catalog: CATALOG, stage }))];
     const over: string[] = [];
+    const overHalf: string[] = [];
     let measuredDecks = 0;
     for (const preset of LECTURE_PRESETS) {
       for (const length of PRESET_LENGTHS[preset]) {
@@ -445,12 +481,16 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
           measuredDecks += 1;
           expect(slides, `${preset} ${length}`).toBeGreaterThan(0);
           const pace = slides / (ROOM_PACE * resolved.minutes);
-          if (pace > PACE_CEILING) over.push(`${preset} ${length} ${ctx.stage ?? 'first visit'}: ${slides} slides`);
+          const row = `${preset} ${length} ${ctx.stage ?? 'first visit'}: ${slides} slides`;
+          if (pace > PACE_CEILING) over.push(row);
+          if (pace > 1.5) overHalf.push(row);
         }
       }
     }
     expect(measuredDecks).toBe(Object.values(PRESET_LENGTHS).reduce((n, lengths) => n + lengths.length, 0) * contexts.length);
     expect(over).toEqual([]);
+    // The section 16 note's figures: every preset, length and stage more than 50 % over the room pace.
+    expect(overHalf).toEqual(OVER_HALF);
   });
 
   it('the BASELINE constant matches the section 1 totals, less what the LV-S rows lowered (pins the table text, not the builder)', () => {

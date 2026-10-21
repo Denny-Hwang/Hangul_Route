@@ -128,6 +128,12 @@ export const WRITE_ICON = 40;
 export const TRACE_STROKE = 6;
 /** One block of the name round's sound table (`--cell-w`): 13 across the 1184-unit content area. */
 export const SOUND_CELL_W = 84;
+/** A sound-table block's outline (`--cell-border`), never below `STAGE_BORDER_MIN`. */
+export const SOUND_CELL_BORDER = 2;
+/** A sound-table block's least width in caption sizes at level 0, so a block such as 쭈 with `jju` under it never wraps where 84 units are narrower than the text floor. */
+export const SOUND_CELL_EM = 2.6;
+/** The narrowest the column beside the trace ghost (the line and the answer) gets before it wraps under the ghost. */
+export const TRACE_SIDE_MIN = 360;
 
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;

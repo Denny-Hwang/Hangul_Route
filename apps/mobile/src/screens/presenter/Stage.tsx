@@ -96,9 +96,9 @@ export function Stage(props: StageProps): React.ReactElement {
     frame: messages.learner.presenter.slide.write.frame,
     ownName: messages.learner.presenter.slide.write.ownName,
   }, reveal);
-  // A sentence-build move says what it placed (section 10, LV-S3); anything else announces the slide.
+  // A sentence-build move says what it placed (section 10, LV-S3), a write-together build what it showed (LV-S4); anything else announces the slide.
   const lastLive = useRef<BuildLive | null>(null);
-  const liveNow = buildLive(slide, reveal, lastLive.current, messages.a11y.presenter.tilePlaced);
+  const liveNow = buildLive(slide, reveal, lastLive.current, messages.a11y.presenter.tilePlaced, messages.learner.presenter.slide.write.example);
   useEffect(() => {
     lastLive.current = liveNow;
   });

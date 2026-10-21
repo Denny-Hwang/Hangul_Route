@@ -6,7 +6,7 @@ import { PictureArt } from '../../../components/PictureArt';
 import type { FrameText, SheetText } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { soundTablePage, writeView, type WriteView } from '../../../logic/lecture/slide-view';
-import { PIC_MD, SOUND_CELL_W, TRACE_STROKE, WRITE_ICON, units } from '../../../logic/lecture/stage-constants';
+import { PIC_MD, SOUND_CELL_BORDER, SOUND_CELL_EM, SOUND_CELL_W, TRACE_SIDE_MIN, TRACE_STROKE, WRITE_ICON, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 import { GapBox, KindLabel, useChipStyle, useFitLevel } from './ReadingParts';
@@ -27,8 +27,8 @@ const MAX_LEVEL = 2;
  * Write together slide (design/screens/presenter/slide-write-together.md, V10-V12; AMENDMENTS-LECTURE-V2
  * sections 5.1 to 5.3, LV-D8, LV-S4). One row at the top: the kind label and, with the pencil, "Write on
  * paper or on your own device. Nothing is typed here." Then the variant's own line and its parts:
- * - type: the prompt in the slide language and its picture; at the answer build the target in Korean,
- *   its romanization and its meaning.
+ * - type: the prompt in the slide language, the target's meaning under it (the cue) and its picture; at
+ *   the answer build the target in Korean and its romanization.
  * - trace: the word as a large outline ghost (V11), the line beside it; at the answer build its
  *   romanization and meaning.
  * - frame: the frame with its gap box ("gap"), its romanization and meaning; the word banks as chips;
@@ -116,7 +116,7 @@ function GlossLine({ text, size, testID }: { text: string; size: number; testID?
   );
 }
 
-/** Type Hangul: the line, the prompt and its picture; the target, its romanization and meaning at the answer build. */
+/** Type Hangul: the line, the prompt, the target's meaning (the cue) and its picture; the target in Korean and its romanization at the answer build. */
 function TypeParts({ slide, view, line, level }: { slide: Variant<'type'>; view: WriteView; line: string; level: number }): React.ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
@@ -130,12 +130,13 @@ function TypeParts({ slide, view, line, level }: { slide: Variant<'type'>; view:
           <Text {...KOREAN_LINE_BREAK} testID="presenter-write-prompt" style={{ fontSize: prompt, lineHeight: lineOf(prompt), fontWeight: typography.weight.bold, color: colors.text.primary }}>
             {slide.prompt}
           </Text>
+          {/* The cue the room writes from, from the first build (the learner's Type Hangul always shows one). */}
+          <GlossLine text={slide.answer.gloss} size={prompt} testID="presenter-write-gloss" />
           <View testID="presenter-write-answer" aria-hidden={answer['aria-hidden']} style={[answer.style, { gap: units(unit, spacing.xs) }]}>
             <TaughtKo size={size(level >= 1 ? presenter.size.prompt : presenter.size.title)} testID="presenter-write-answer-ko">
               {slide.answer.ko}
             </TaughtKo>
             <RomLine text={slide.answer.romanization} size={size(presenter.size.body)} shown={view.rom} testID="presenter-write-rom" />
-            <GlossLine text={slide.answer.gloss} size={prompt} testID="presenter-write-gloss" />
           </View>
         </View>
         {slide.picture !== undefined ? (
@@ -177,7 +178,7 @@ function TraceParts({ slide, view, line, level }: { slide: Variant<'trace'>; vie
           {slide.word.ko}
         </TaughtKo>
       </View>
-      <View style={{ flex: 1, minWidth: units(unit, 360), gap: units(unit, STAGE_GAP_INNER) }}>
+      <View style={{ flex: 1, minWidth: units(unit, TRACE_SIDE_MIN), gap: units(unit, STAGE_GAP_INNER) }}>
         <VariantLine text={line} />
         <View testID="presenter-write-answer" aria-hidden={answer['aria-hidden']} style={[answer.style, { gap: units(unit, spacing.xs) }]}>
           <RomLine text={slide.word.romanization} size={size(presenter.size.body)} shown testID="presenter-write-rom" />
@@ -299,7 +300,7 @@ function OwnNameParts({ slide, view, line, level }: { slide: Variant<'own-name'>
 function SoundTable({ groups, level, unit }: { groups: ReadonlyArray<readonly SheetText[]>; level: number; unit: number }): React.ReactElement {
   const size = useStageText();
   const caption = size(presenter.size.caption);
-  const border = Math.max(STAGE_BORDER_MIN, units(unit, 2));
+  const border = Math.max(STAGE_BORDER_MIN, units(unit, SOUND_CELL_BORDER));
   const leading = level >= 2 ? 1 : typography.leading.tight;
   const tight = units(unit, level >= 2 ? spacing.xxs : spacing.xs);
   return (
@@ -312,7 +313,7 @@ function SoundTable({ groups, level, unit }: { groups: ReadonlyArray<readonly Sh
               testID="presenter-write-cell"
               role="listitem"
               style={{
-                ...(level >= 1 ? { minWidth: caption + 2 * border, paddingHorizontal: units(unit, spacing.xs) } : { width: Math.max(units(unit, SOUND_CELL_W), caption * 2.6) }),
+                ...(level >= 1 ? { minWidth: caption + 2 * border, paddingHorizontal: units(unit, spacing.xs) } : { width: Math.max(units(unit, SOUND_CELL_W), caption * SOUND_CELL_EM) }),
                 alignItems: 'center',
                 paddingVertical: level >= 2 ? 0 : units(unit, spacing.xxs),
                 borderWidth: border,

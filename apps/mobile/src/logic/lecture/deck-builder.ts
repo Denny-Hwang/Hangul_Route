@@ -564,13 +564,13 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return;
       // Write together (section 5.1, LV-S4): one slide per round; the room writes on paper or on its own devices.
       case 'type-hangul':
-        writeStep(path, ref, listOf(scope.typeHangul?.rounds).map((round) => [round.id, typeWrite(round)]));
+        writeStep(path, ref, listOf(scope.typeHangul?.rounds).map((round) => [round.id, () => typeWrite(round)]));
         return;
       case 'trace-word':
-        writeStep(path, ref, listOf(scope.traceWord?.rounds).map((round) => [round.id, traceWrite(round)]));
+        writeStep(path, ref, listOf(scope.traceWord?.rounds).map((round) => [round.id, () => traceWrite(round)]));
         return;
       case 'write-frame':
-        writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, frameWrite(round)]));
+        writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, () => frameWrite(round)]));
         return;
       default:
         skip(ref, 'unsupported-step');
@@ -767,14 +767,18 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
    * the teacher's click. The name round (`freeEntry`) shows its frame and its sound table and never a
    * name. Like a question, a round practises and does not teach: it joins neither `taught` nor the End
    * slide, and it sits inside the quest's catalogue minutes. A step with no round is a counted
-   * `scope-too-small` skip.
+   * `scope-too-small` skip, and so is a round its builder cannot draw (a frame whose banks do not match
+   * its gaps, an empty bank): that round is left out and the rest of the step stays.
    */
-  const writeStep = (path: string, ref: string, rounds: ReadonlyArray<readonly [id: string, body: WriteTogether]>): void => {
+  const writeStep = (path: string, ref: string, rounds: ReadonlyArray<readonly [id: string, build: () => WriteTogether]>): void => {
     if (rounds.length === 0) {
       skip(ref, 'scope-too-small');
       return;
     }
-    for (const [id, body] of rounds) push(`${path}/${id.replace(/\//g, '-')}`, { kind: 'write-together', ...body });
+    for (const [id, build] of rounds) {
+      const body = attempt(ref, build);
+      if (body !== null) push(`${path}/${id.replace(/\//g, '-')}`, { kind: 'write-together', ...body });
+    }
   };
 
   const sheetText = (t: { ko: string; romanization: string }) => ({ ko: t.ko, romanization: t.romanization });
@@ -782,7 +786,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   /** A frame's Korean around its gaps, its romanization and its meaning (as a Discover pattern's). */
   const frameOf = (frame: KoText): FrameText => ({ pieces: frame.ko.split(SLOT_MARKER), romanization: frame.romanization, gloss: frame.en });
 
-  /** Type Hangul: the prompt (`promptEn` in the slide language) and its picture, then the target with its romanization and meaning. */
+  /**
+   * Type Hangul: the prompt (`promptEn` in the slide language), its picture and the target's meaning as
+   * the cue the room writes from (the learner's game always shows one; "Type the price" alone does not
+   * say which), then the target in Korean with its romanization.
+   */
   const typeWrite = (round: TypeHangulRound): WriteTogether => ({
     variant: 'type',
     prompt: round.promptEn,
@@ -802,7 +810,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const frameWrite = (round: WriteFrameRound): WriteTogether => {
     const frame = frameOf(round.frame);
     if (round.freeEntry) return { variant: 'own-name', frame, groups: listOf(round.soundTable?.groups).map((group) => group.map(sheetText)) };
-    const ko = fillFrame(round.frame.ko, round.slots.map((slot) => slot.bank[0]!.ko));
+    const picks = round.slots.map((slot) => slot.bank[0]?.ko);
+    if (picks.some((pick) => pick === undefined)) throw new Error(`write-frame round ${round.id}: a slot has an empty bank`);
+    // fillFrame throws when the frame's gaps and the slots differ; `attempt` makes that a counted skip.
+    const ko = fillFrame(round.frame.ko, picks as string[]);
     const romanization = romanize(ko).text;
     return { variant: 'frame', frame, banks: round.slots.map((slot) => slot.bank.map(sheetText)), example: { ko, romanization, spoken: { text: ko, romanization } } };
   };

@@ -3,6 +3,7 @@ import type { QuizOption, QuizPrompt, SlideKind } from './build-steps';
 import type { PresenterEvent, PresenterState } from './controls';
 import type { Slide } from './deck-builder';
 import { TIMER_PRESETS_MS, formatRemaining, ringFraction, type TimerState } from './timer';
+import { typeCue } from './slide-view';
 
 /**
  * The class tools of F-TCH-004 PR 9 (spec sections 3.5, 3.7, 3.8, 3.14; design/screens/presenter/
@@ -162,7 +163,7 @@ function gridTitle(slide: Slide, names: { activity: (preset: Extract<Slide, { ki
       return '';
     case 'write-together':
       // What its first build shows in the slide language; a trace word's meaning is its answer, so nothing.
-      return slide.variant === 'type' ? slide.prompt : slide.variant === 'trace' ? '' : slide.frame.gloss;
+      return slide.variant === 'type' ? typeCue(slide) : slide.variant === 'trace' ? '' : slide.frame.gloss;
     case 'title':
     case 'card':
       return slide.title;

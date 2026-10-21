@@ -864,11 +864,37 @@ describe('slideDetail: the write-together slides (LV-S4)', () => {
   const of = (body: Record<string, unknown>) => ({ kind: 'write-together', key: 'w/1', builds: ['prompt', 'answer'], ...body }) as unknown as Slide;
 
   it('names each by what its first build shows, never by its answer', () => {
-    expect(slideDetail(of({ variant: 'type', prompt: 'Ask for water.', answer: spoken('물 주세요', 'mul juseyo', 'Water, please.') }), names)).toBe('Ask for water.');
-    expect(slideDetail(of({ variant: 'trace', word: spoken('아침', 'achim', 'morning') }), names)).toBe('아침, achim');
+    // A type round by its prompt and its cue, the target's meaning (the Korean and romanization are the answer).
+    expect(slideDetail(of({ variant: 'type', prompt: 'Ask for water.', answer: spoken('물 주세요', 'mul juseyo', 'Water, please.') }), names)).toBe('Ask for water. Water, please.');
+    expect(slideDetail(of({ variant: 'type', prompt: 'Type the price', answer: spoken('천 원', 'cheon won', '1,000 won') }), names)).toBe('Type the price, 1,000 won');
+    // A trace round by its Korean only: its romanization waits for the answer build in both modes.
+    expect(slideDetail(of({ variant: 'trace', word: spoken('아침', 'achim', 'morning') }), names)).toBe('아침');
     expect(slideDetail(of({ variant: 'frame', frame, banks: [], example: { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '', romanization: '' } } }), names)).toBe(names.frame);
     expect(slideDetail(of({ variant: 'own-name', frame, groups: [] }), names)).toBe(names.ownName);
     // Without names a frame and the name round say nothing more than their kind.
     expect(slideDetail(of({ variant: 'own-name', frame, groups: [] }))).toBe('');
+  });
+
+  it('each step forward says what that build showed; arriving or stepping back names the slide again (buildLive, section 10)', () => {
+    const placed = (w: string) => `${w} placed`;
+    const walk = (slide: Slide): (string | undefined)[] => {
+      const said: (string | undefined)[] = [];
+      let live = buildLive(slide, 0, null, placed, 'For example');
+      said.push(live.words);
+      for (let reveal = 1; reveal < slide.builds.length; reveal++) {
+        live = buildLive(slide, reveal, live, placed, 'For example');
+        said.push(live.words);
+      }
+      // Back one build: the slide's own announcement again.
+      expect(buildLive(slide, slide.builds.length - 2, live, placed, 'For example').words).toBeUndefined();
+      return said;
+    };
+    expect(walk(of({ variant: 'type', prompt: 'Type the price', answer: spoken('천 원', 'cheon won', '1,000 won') }))).toEqual([undefined, '천 원, cheon won']);
+    expect(walk(of({ variant: 'trace', word: spoken('아침', 'achim', 'morning') }))).toEqual([undefined, '아침, achim, morning']);
+    const banks = [[{ ko: '밥', romanization: 'bap' }, { ko: '빵', romanization: 'ppang' }]];
+    const example = { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } };
+    expect(walk(of({ variant: 'frame', builds: ['frame', 'bank', 'example'], frame, banks, example }))).toEqual([undefined, '밥, 빵', 'For example, 아침에 밥을 먹어요., achime babeul meogeoyo']);
+    const groups = Array.from({ length: 6 }, (_, g) => [{ ko: ['가', '나', '다', '라', '마', '바'][g]!, romanization: 'x' }]);
+    expect(walk(of({ variant: 'own-name', builds: ['frame', 'table', 'table'], frame, groups }))).toEqual([undefined, '가, 나, 다, 라, 마', '바']);
   });
 });

@@ -18,6 +18,7 @@ import {
 import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
+import { questsAll } from '../../../content/quests';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
 import { resumeIndex } from '../controls';
@@ -2299,16 +2300,29 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         ],
       },
     },
+    'mg:frame-bad': {
+      kind: 'write-frame',
+      writeFrame: {
+        rounds: [
+          // One gap, two slots: fillFrame cannot draw it.
+          { id: 'x1', frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'), slots: [{ id: 'a', bank: [kt('밥', 'bap', 'rice')] }, { id: 'b', bank: [kt('빵', 'ppang', 'bread')] }], entry: 'type', freeEntry: false },
+          // An empty bank: no example to fill.
+          { id: 'x2', frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'), slots: [{ id: 'a', bank: [] }], entry: 'type', freeEntry: false },
+          { id: 'x3', frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'), slots: [{ id: 'a', bank: [kt('빵', 'ppang', 'bread')] }], entry: 'type', freeEntry: false },
+        ],
+      },
+    } as unknown as MinigameScope,
     'mg:type-none': { kind: 'type-hangul', typeHangul: { rounds: [] } },
     'mg:trace-bare': { kind: 'trace-word' },
     'mg:frame-bare': { kind: 'write-frame' },
   };
   const written = quest('written', [['intro'], ['practice', 'mg:type'], ['practice', 'mg:trace'], ['apply', 'mg:frame']], { rewardCardId: undefined });
   const empty = quest('written-empty', [['practice', 'mg:type-none'], ['practice', 'mg:trace-bare'], ['apply', 'mg:frame-bare']], { rewardCardId: undefined });
+  const malformed = quest('written-bad', [['apply', 'mg:frame-bad'], ['practice', 'mg:trace']], { rewardCardId: undefined });
   const b = (over: Partial<LectureBundle> = {}) =>
     bundle({
       scopeFor: (ref) => writeScopes[ref] ?? scopes[ref],
-      questById: (id) => [written, empty].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+      questById: (id) => [written, empty, malformed].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
       ...over,
     });
   const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
@@ -2332,6 +2346,34 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
       { blockIndex: 0, ref: 'mg:trace-bare', reason: 'scope-too-small' },
       { blockIndex: 0, ref: 'mg:frame-bare', reason: 'scope-too-small' },
     ]);
+  });
+
+  it('a round its builder cannot draw is a counted skip and the rest of the step stays (a frame whose banks do not match its gaps, an empty bank)', () => {
+    const { slides, skipped } = run(malformed.id);
+    expect(writes(slides).map((s) => s.key)).toEqual(['quest:written-bad/s1/x3', 'quest:written-bad/s2/w1']);
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:frame-bad', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:frame-bad', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('no two shipped type slides of one step share their prompt and cue, in any slide language: the room can tell them apart', () => {
+    let typeSlides = 0;
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const shipped = lectureBundle(locale);
+      for (const q of questsAll) {
+        const byStep = new Map<string, string[]>();
+        for (const s of writes(expandDeck(deckOf([{ kind: 'quest', id: q.id }]), shipped, VOICE).slides)) {
+          if (s.variant !== 'type') continue;
+          typeSlides += 1;
+          expect(s.answer.gloss.trim(), `${locale} ${s.key}`).not.toBe('');
+          const step = s.key.slice(0, s.key.lastIndexOf('/'));
+          byStep.set(step, [...(byStep.get(step) ?? []), `${s.prompt} | ${s.answer.gloss}`]);
+        }
+        for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
+      }
+    }
+    expect(typeSlides).toBe(73 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {

@@ -2,6 +2,7 @@ import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-sche
 import { colors } from '@hangul-route/design-system';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
+import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
@@ -74,16 +75,38 @@ describe('WriteTogetherSlide (LV-S4)', () => {
     }
   });
 
-  it('type: the line, the prompt and its picture; the answer keeps its place, unread, until the next click', async () => {
+  it('type: the line, the prompt, its cue and its picture; the Korean keeps its place, unread, until the next click', async () => {
     const r = await render(inView(<WriteTogetherSlide slide={water} reveal={0} romanization="always" />));
     expect(textOf(byTestId(r.root, 'presenter-write-variant')[0]!)).toBe(en.learner.presenter.slide.write.type);
     expect(textOf(byTestId(r.root, 'presenter-write-prompt')[0]!)).toBe('Ask for water.');
+    // The cue the room writes from: the target's meaning, from the first build (the learner's Type Hangul always shows one).
+    const cue = byTestId(r.root, 'presenter-write-gloss')[0]!;
+    expect(textOf(cue)).toBe('Water, please.');
+    expect(hiddenNow(cue)).toBe(false);
     expect(byTestId(r.root, 'presenter-write-art').length).toBeGreaterThan(0);
     expect(hiddenNow(byTestId(r.root, 'presenter-write-answer')[0]!)).toBe(true);
     const shown = await render(inView(<WriteTogetherSlide slide={water} reveal={1} romanization="tap" />));
     const answer = byTestId(shown.root, 'presenter-write-answer')[0]!;
     expect(hiddenNow(answer)).toBe(false);
-    expect(screenTexts(answer)).toEqual(['물 주세요', 'mul juseyo', 'Water, please.']);
+    expect(screenTexts(answer)).toEqual(['물 주세요', 'mul juseyo']);
+  });
+
+  it('type with no picture and a prompt that does not name the word: the cue tells the three prices apart (Stage 6 letters q2)', async () => {
+    const prices = writes(slidesOf([{ kind: 'quest', id: 'quest:stage6-letters-q2' }])).filter((s): s is Extract<WriteTogetherBody, { variant: 'type' }> => s.variant === 'type');
+    expect(prices.map((s) => [s.prompt, s.picture])).toEqual([
+      ['Type the price', undefined],
+      ['Type the price', undefined],
+      ['Type the price', undefined],
+    ]);
+    const cues: string[] = [];
+    for (const slide of prices) {
+      const r = await render(inView(<WriteTogetherSlide slide={slide} reveal={0} romanization="always" />));
+      const cue = byTestId(r.root, 'presenter-write-gloss')[0]!;
+      expect(hiddenNow(cue)).toBe(false);
+      expect(hiddenNow(byTestId(r.root, 'presenter-write-answer')[0]!)).toBe(true);
+      cues.push(textOf(cue));
+    }
+    expect(cues).toEqual(['1,000 won', '5,000 won', '3,000 won']);
   });
 
   it('trace: the word as an outline ghost from the start; its romanization and meaning at the answer', async () => {
@@ -149,7 +172,8 @@ describe('WriteTogetherSlide (LV-S4)', () => {
     expect(textOf(byTestId(r.root, 'presenter-kind-label')[0]!)).toBe(m.learner.presenter.slide.write.title);
     expect(textOf(byTestId(r.root, 'presenter-write-where')[0]!)).toBe(m.learner.presenter.slide.write.where);
     expect(textOf(byTestId(r.root, 'presenter-write-variant')[0]!)).toBe(m.learner.presenter.slide.write.type);
-    expect(slide.variant === 'type' && screenTexts(byTestId(r.root, 'presenter-write-answer')[0]!)).toContain(slide.variant === 'type' ? slide.answer.gloss : '');
+    expect(textOf(byTestId(r.root, 'presenter-write-gloss')[0]!)).toBe(slide.variant === 'type' ? slide.answer.gloss : '');
+    expect(slide.variant === 'type' && slide.answer.gloss).not.toBe('Water, please.');
   });
 });
 
@@ -174,13 +198,38 @@ describe('Stage: the live region names a write slide by what its first build sho
     );
   const kind = en.learner.presenter.grid.kind.write;
 
-  it('a type round by its prompt, the name round by its line; never by an answer or a name', async () => {
+  it('a type round by its prompt and cue, the name round by its line; never by an answer or a name', async () => {
     const at = stage6.indexOf(water);
-    const r = await render(stage(stage6, at, 1));
-    expect(textOf(byTestId(r.root, 'presenter-live')[0]!)).toBe(`Slide ${at + 1} of ${stage6.length}, ${kind}, Ask for water.`);
+    const r = await render(stage(stage6, at, 0));
+    expect(textOf(byTestId(r.root, 'presenter-live')[0]!)).toBe(`Slide ${at + 1} of ${stage6.length}, ${kind}, Ask for water. Water, please.`);
     const own = letters.indexOf(name);
     const n = await render(stage(letters, own, 2));
     expect(textOf(byTestId(n.root, 'presenter-live')[0]!)).toBe(`Slide ${own + 1} of ${letters.length}, ${kind}, ${en.learner.presenter.slide.write.ownName}`);
     expect(hostNodes(byTestId(n.root, 'presenter-stage')[0]!, (x) => x.props.role === 'button')).toHaveLength(0);
+  });
+
+  it('each click forward says what its build showed; stepping back names the slide again', async () => {
+    const live = (r: Awaited<ReturnType<typeof render>>) => textOf(byTestId(r.root, 'presenter-live')[0]!);
+    const at = stage6.indexOf(water);
+    const r = await render(stage(stage6, at, 0));
+    await act(async () => r.update(stage(stage6, at, 1)));
+    expect(live(r)).toBe('물 주세요, mul juseyo');
+    await act(async () => r.update(stage(stage6, at, 0)));
+    expect(live(r)).toBe(`Slide ${at + 1} of ${stage6.length}, ${kind}, Ask for water. Water, please.`);
+
+    const mealSlides = slidesOf([{ kind: 'quest', id: 'quest:stage7-life-q2' }]);
+    const f = mealSlides.findIndex((s) => s.kind === 'write-together' && s.variant === 'frame');
+    const m = await render(stage(mealSlides, f, 0));
+    const said: string[] = [];
+    for (const reveal of [1, 2]) {
+      await act(async () => m.update(stage(mealSlides, f, reveal)));
+      said.push(live(m));
+    }
+    expect(said).toEqual(['밥, 빵, 사과, 달걀, 김밥', `${en.learner.presenter.slide.write.example}, 아침에 밥을 먹어요., achime babeul meogeoyo`]);
+
+    const own = letters.indexOf(name);
+    const n = await render(stage(letters, own, 0));
+    await act(async () => n.update(stage(letters, own, 1)));
+    expect(live(n)).toBe(name.groups.slice(0, 5).flat().map((b) => b.ko).join(', '));
   });
 });

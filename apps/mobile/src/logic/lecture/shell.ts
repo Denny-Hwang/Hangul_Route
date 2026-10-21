@@ -6,7 +6,7 @@ import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
 import type { RecentItem, RecentList } from './recent';
-import { buildLineWords, buildMove, buildWholeWords, sentenceBuildView } from './slide-view';
+import { buildLineWords, buildMove, buildWholeWords, sentenceBuildView, typeCue, writeMove } from './slide-view';
 import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
@@ -324,8 +324,9 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
  * sentence with its romanization and meaning, as that build's move said it. Never by a tile still
  * in the bank: each move says its tile and the whole build the sentence (`buildLive`). With no
  * `reveal`, a build is named by its first question. A write-together slide (LV-S4) is named by what its
- * first build shows: a type round by its prompt, a trace round by its word, a frame by its line
- * (`names.frame`), the name round by its own (`names.ownName`); never by an answer.
+ * first build shows: a type round by its prompt and cue (`typeCue`), a trace round by its Korean word, a
+ * frame by its line (`names.frame`), the name round by its own (`names.ownName`); never by an answer.
+ * Each step forward on it then says what that build showed (`writeMove`).
  */
 export function slideDetail(
   slide: Slide,
@@ -343,9 +344,10 @@ export function slideDetail(
     case 'write-together':
       switch (slide.variant) {
         case 'type':
-          return slide.prompt;
+          return typeCue(slide);
         case 'trace':
-          return `${slide.word.ko}, ${slide.word.romanization}`;
+          // The Korean only: its romanization waits for the answer build in both modes.
+          return slide.word.ko;
         case 'frame':
           return names?.frame ?? '';
         case 'own-name':
@@ -399,21 +401,27 @@ export function slideDetail(
 export interface BuildLive {
   key: string;
   reveal: number;
-  /** A sentence-build move's words; absent: the slide's own announcement. */
+  /** A sentence-build move's or a write-together build's words; absent: the slide's own announcement. */
   words?: string;
 }
 
 /**
- * The live region on a sentence-build slide (section 10): one step forward on the same slide
- * announces what it moved ("{word} placed", `placed`; the sentence with its romanization and
- * meaning at the whole build); arriving on a slide or stepping back says the slide again. A redraw
- * at the same build keeps what was said, so nothing is announced twice. Every other slide always
- * has its own announcement.
+ * The live region on a sentence-build or write-together slide (section 10): one step forward on the
+ * same slide announces what it moved or showed (a sentence build: "{word} placed", `placed`, and the
+ * sentence with its romanization and meaning at the whole build; a write-together slide: `writeMove`,
+ * with `example` its "For example" label); arriving on a slide or stepping back says the slide again.
+ * A redraw at the same build keeps what was said, so nothing is announced twice. Every other slide
+ * always has its own announcement.
  */
-export function buildLive(slide: Slide, reveal: number, previous: BuildLive | null, placed: (word: string) => string): BuildLive {
+export function buildLive(slide: Slide, reveal: number, previous: BuildLive | null, placed: (word: string) => string, example = ''): BuildLive {
   const now = { key: slide.key, reveal };
   if (previous !== null && previous.key === slide.key && previous.reveal === reveal) return previous;
-  if (slide.kind !== 'sentence-build' || previous === null || previous.key !== slide.key || reveal !== previous.reveal + 1) return now;
+  if (previous === null || previous.key !== slide.key || reveal !== previous.reveal + 1) return now;
+  if (slide.kind === 'write-together') {
+    const words = writeMove(slide, reveal, example);
+    return words === null ? now : { ...now, words };
+  }
+  if (slide.kind !== 'sentence-build') return now;
   const move = buildMove(slide, reveal);
   if (move === null) return now;
   return { ...now, words: 'placed' in move ? placed(move.placed) : move.whole };
