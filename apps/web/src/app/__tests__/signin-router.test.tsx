@@ -48,6 +48,8 @@ const clerk = vi.hoisted(() => ({
   signUp: [] as Array<Record<string, unknown>>,
   reverify: 'verify' as 'verify' | 'cancel',
   reverifyAsked: 0,
+  /** [OA] The signed-in user's passkeys, as `useUser()` returns them (section 7.4 passkey check). */
+  user: null as null | { passkeys: Array<{ lastUsedAt: Date | null }>; reload: () => Promise<{ passkeys: Array<{ lastUsedAt: Date | null }> }> },
 }));
 vi.mock('@clerk/clerk-react', () => ({
   SignIn: (props: Record<string, unknown>) => {
@@ -68,6 +70,7 @@ vi.mock('@clerk/clerk-react', () => ({
       };
     },
   }),
+  useUser: () => ({ user: clerk.user, isLoaded: true }),
   // Clerk's handler: a reverification hint opens the dialog; success retries the fetcher, a cancel rejects.
   useReverification: (fetcher: () => Promise<unknown>) => async () => {
     const first = (await fetcher()) as { clerk_error?: unknown };
@@ -176,6 +179,7 @@ beforeEach(() => {
   clerk.signIn = [];
   clerk.signUp = [];
   clerk.reverify = 'verify';
+  clerk.user = null;
   clerk.reverifyAsked = 0;
   api.spaces = { ok: true, data: [] };
   api.calls = 0;
@@ -566,6 +570,35 @@ describe('the router after sign-in (sections 3.5, 3.7, 3.9)', () => {
     expect(clerk.reverifyAsked).toBe(1);
     expect(JSON.parse(browser.session.getItem('hr:grownup:unlock') ?? 'null')).toMatchObject({ src: 'signin' });
     expect(browser.replaced).toEqual(['/teach/home']);
+  });
+
+  it('[OA] on a pin browser a reverification that used one of the account’s passkeys writes no unlock (CS-17)', async () => {
+    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
+    stores.device = PIN_DEVICE;
+    api.spaces = { ok: true, data: [CLASS] };
+    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => ({ passkeys: [{ lastUsedAt: new Date(Date.now() + 1_000) }] }) };
+    await render(<SignInPage />);
+    expect(clerk.reverifyAsked).toBe(1);
+    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
+    expect(browser.replaced).toEqual(['/teach/home']);
+  });
+
+  it('[OA] a passkey holder whose passkey was not used since unlocks; an account that cannot be read fails closed', async () => {
+    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
+    stores.device = PIN_DEVICE;
+    api.spaces = { ok: true, data: [CLASS] };
+    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => ({ passkeys: [{ lastUsedAt: null }] }) };
+    await render(<SignInPage />);
+    expect(JSON.parse(browser.session.getItem('hr:grownup:unlock') ?? 'null')).toMatchObject({ src: 'signin' });
+  });
+
+  it('[OA] a reverification whose account cannot be read again, on a pin browser, writes no unlock', async () => {
+    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
+    stores.device = PIN_DEVICE;
+    api.spaces = { ok: true, data: [CLASS] };
+    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => Promise.reject(new Error('offline')) };
+    await render(<SignInPage />);
+    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
   });
 
   it('OAuth on a device without a lock asks nothing more', async () => {
