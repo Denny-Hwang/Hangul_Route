@@ -32,6 +32,7 @@ import type {
 import type { ClassMoveDecider, ClassMoveEndStatus, ExecuteClassMoveInput, ExecuteClassMoveResult, StoredClassMove, StoredClassScopeAck } from './class-move-types';
 import type { ClassMoveEndReason } from '@hangul-route/content-schema';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
+import type { RollupKey, RollupRow } from './rollup-types';
 
 export * from './transfer-types';
 export * from './class-move-types';
@@ -487,6 +488,12 @@ export interface Db {
   executeClassMove(input: ExecuteClassMoveInput): Promise<ExecuteClassMoveResult>;
   /** Bounded purge: ended rows before `endedBefore`, executed rows before `executedBefore`, still-requested rows whose `expiresAt` is before `endedBefore` (an ask nobody settled). */
   purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number>;
+
+  // learning rollups (F-CURR-002 section 11.2, row CM-70a; migration 0014). Codes and counts only.
+  /** Adds 1 to each cell of `day` (UTC `YYYY-MM-DD`), in one write; a key named twice still adds 1 once. */
+  addRollups(day: string, keys: readonly RollupKey[]): Promise<void>;
+  /** Every stored cell from `fromDay` to `toDay` inclusive, optionally of one metric, unsuppressed. Only lib/learning-rollups reads it, and it applies the suppression. */
+  rollupRows(fromDay: string, toDay: string, metric?: string): Promise<RollupRow[]>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;
