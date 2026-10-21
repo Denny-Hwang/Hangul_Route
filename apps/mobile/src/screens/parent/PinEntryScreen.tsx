@@ -35,6 +35,7 @@ import {
   createPinHash,
 } from '../../logic/profiles/pin-hash';
 import { pauseAnnounceKey, pauseText, showsPauseHelp } from '../../logic/profiles/pin-pause';
+import { shortcutOffered } from '../../logic/profiles/biometric-shortcut';
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
@@ -49,6 +50,7 @@ import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
 import { trackGateOpened, trackPinPaused } from '../../store/gate-telemetry';
 import { useUiStore } from '../../store/ui-store';
+import { useBiometricAvailable } from './use-biometric-available';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
 
@@ -75,6 +77,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * `design/screens/profiles/pin-entry-v2.md` boards 2 and 3): longer pauses (30 s, 1 min, 5 min, 15 min, 60 min),
  * minutes from a minute on, the Forgot PIN? help line from the 3rd pause on the Grown-up area only, a polite live
  * region updated once a minute, one attempt count shared by every tab, `pin.paused` and `parent.gate.opened`.
+ *
+ * [OA] Face or fingerprint (row OA-9, section 8.6; mock board 1, 3 and 6, decision D9): on a native build where a
+ * grown-up turned it on for this PIN, every verify screen shows **Use face or fingerprint** above the dots (the pad
+ * stays). A success counts as a correct PIN for every destination, also during a pause, and resets the strikes; a
+ * cancel or failed match leaves the screen as it was and is not a miss; an enrolment change turns it off and puts
+ * `biometric.changed` in the subtitle's place. It never opens setup or reset. Destination `BiometricShortcut`: the
+ * Grown-up area's switch asked for a fresh PIN; a correct PIN turns the shortcut on and goes back.
  */
 
 const DOT_SIZE = 20;
@@ -100,6 +109,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const markPinResetByWait = useAccountStore((s) => s.markPinResetByWait);
   const clearPinResetRequest = useAccountStore((s) => s.clearPinResetRequest);
   const pinResetRequestedAt = useAccountStore((s) => s.pinResetRequestedAt);
+  const biometricShortcut = useAccountStore((s) => s.biometricShortcut);
+  const pinSetAt = useAccountStore((s) => s.pinSetAt);
+  const verifyBiometricShortcut = useAccountStore((s) => s.verifyBiometricShortcut);
+  const enableBiometricShortcut = useAccountStore((s) => s.enableBiometricShortcut);
+  const biometricAvailable = useBiometricAvailable();
   const { copy } = useAudience();
   const messages = useMessages();
   const m = messages.caregiver.pin;
@@ -115,6 +129,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const [firstPin, setFirstPin] = useState('');
   const [hint, setHint] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // [OA] A face or fingerprint read is running (the system prompt is up), and whether it found the shortcut voided.
+  const [biometricBusy, setBiometricBusy] = useState(false);
+  const [biometricChanged, setBiometricChanged] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   // [OA] `parent.gate.opened` once per gate: Change PIN checks the PIN first, then sets a new one.
   const gateSent = useRef(false);
@@ -270,11 +287,54 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       // The Lecture mode card (AMENDMENTS-LECTURE-V2 E5): back to the dashboard with the gate open. A browser opens a new
       // tab only inside a tap, so the grown-up taps the row again there (as Open billing and Sources do on the web).
       back();
+    } else if (route.params.next === 'BiometricShortcut') {
+      // [OA] The Grown-up area's face or fingerprint switch (section 8.6): turned on by `afterVerified`; back to it.
+      back();
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       back();
     } else {
       navigation.replace('ParentDashboard');
+    }
+  };
+
+  /** A correct PIN, or face or fingerprint standing in for it (section 8.6): the same path for every destination. */
+  const afterVerified = async (via: 'pin' | 'biometric'): Promise<void> => {
+    trackGateOpened(route.params.next, via);
+    gateSent.current = true;
+    // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
+    if (pinResetRequestedAt !== null) clearPinResetRequest();
+    // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
+    markPinVerified();
+    if (verifiedGoesToSetup(route.params)) {
+      // [OA] OA-D21: Change PIN after the current one was checked (only the PIN does this: no face or fingerprint here).
+      setHint(null);
+      setMode('setup-1');
+      return;
+    }
+    // [OA] The switch's fresh PIN: the system prompt may ask for face or fingerprint now (Android); a cancel turns nothing on.
+    if (route.params.next === 'BiometricShortcut') await enableBiometricShortcut(m.biometric.cta);
+    if (forGrownUpArea) await handOff();
+    else proceed();
+  };
+
+  /** [OA] Use face or fingerprint: reads the shortcut; only a returned token opens (CS-8, CS-13, CS-18). */
+  const tryFaceOrFingerprint = async (): Promise<void> => {
+    if (biometricBusy || busy) return;
+    setBiometricBusy(true);
+    try {
+      const result = await verifyBiometricShortcut(m.biometric.cta);
+      if (result === 'ok') {
+        setEntry('');
+        setHint(null);
+        await afterVerified('biometric');
+      } else if (result === 'invalidated') {
+        setHint(null);
+        setBiometricChanged(true);
+      }
+      // A cancel or a failed match: the pad as it was, no miss, the pause unchanged.
+    } finally {
+      setBiometricBusy(false);
     }
   };
 
@@ -318,20 +378,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       setEntry('');
       if (result.paused) trackPinPaused(result.paused.step);
       if (result.ok) {
-        trackGateOpened(route.params.next, 'pin');
-        gateSent.current = true;
-        // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
-        if (pinResetRequestedAt !== null) clearPinResetRequest();
-        // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
-        markPinVerified();
-        if (verifiedGoesToSetup(route.params)) {
-          // [OA] OA-D21: Change PIN after the current one was checked.
-          setHint(null);
-          setMode('setup-1');
-          return;
-        }
-        if (forGrownUpArea) await handOff();
-        else proceed();
+        await afterVerified('pin');
         return;
       }
       setNow(Date.now());
@@ -359,8 +406,25 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         : m.entry.createAgainSubtitle;
 
   // [OA] Section 8.3: seconds under a minute, minutes above; the help line from the 3rd pause, Grown-up area only.
-  const hintText = locked ? pauseText(cooldownMs, m) : hint;
+  // [OA] After an enrolment change the changed line takes the subtitle's place; a pause line or a hint goes first.
+  const changedLine = biometricChanged ? m.biometric.changed : null;
+  const hintText = locked ? pauseText(cooldownMs, m) : (hint ?? changedLine);
   const pauseHelp = mode === 'verify' && showsPauseHelp(attempts, clock, route.params.next, schedule);
+  // [OA] A line longer than the subtitle takes its place in the flow instead of covering it (no overlap at 320 px):
+  // the pause line with the help line under it, and the enrolment-changed line.
+  const lineInFlow = pauseHelp || (!locked && hint === null && changedLine !== null);
+  // [OA] Section 8.6: above the pad in verify mode only, where this device turned it on for the current PIN.
+  // Not on the Change PIN check (OA-D21): face or fingerprint never sets, changes or resets the PIN.
+  const offersBiometric =
+    mode === 'verify' &&
+    !verifiedGoesToSetup(route.params) &&
+    shortcutOffered({
+      flagOn: flags.biometricShortcutEnabled,
+      available: biometricAvailable,
+      record: biometricShortcut,
+      pinSetAt,
+      hasPin: storedHash !== null,
+    });
   // The screen reader hears the pause once a minute (section 14), not at every second the line changes.
   const announceKey = pauseAnnounceKey(cooldownMs);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed only when the minute changes, on purpose
@@ -407,7 +471,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
             [OA] With the help line (3rd pause on, the pad paused anyway) the pause line takes the subtitle's place in
             the flow, so the two lines never overlap at 320 px; the measured header gives the pad what is left.
           */}
-          {pauseHelp ? null : (
+          {lineInFlow ? null : (
             <View
               style={{ opacity: hintText ? 0 : 1 }}
               accessibilityElementsHidden={Boolean(hintText)}
@@ -422,8 +486,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
               {...(locked
                 ? { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true }
                 : { accessibilityLiveRegion: 'polite' as const })}
-              testID={locked ? 'pin-pause-line' : 'pin-hint-line'}
-              style={pauseHelp ? undefined : { position: 'absolute', top: 0, left: 0, right: 0 }}
+              testID={locked ? 'pin-pause-line' : hint === null ? 'pin-biometric-changed' : 'pin-hint-line'}
+              style={lineInFlow ? undefined : { position: 'absolute', top: 0, left: 0, right: 0 }}
             >
               <Body tone="secondary" size="sm" weight="semibold">
                 {hintText}
@@ -440,6 +504,31 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
             <Body tone="secondary" size="sm">
               {m.cooldownHelp}
             </Body>
+          </View>
+        ) : null}
+        {/* [OA] During a pause the pause line keeps the subtitle's place, so the changed line goes under it. */}
+        {locked && changedLine !== null ? (
+          <View testID="pin-biometric-changed" accessibilityLiveRegion="polite" style={{ paddingTop: spacing.xs }}>
+            <Body tone="secondary" size="sm" weight="semibold">
+              {changedLine}
+            </Body>
+          </View>
+        ) : null}
+        {/*
+          [OA] Use face or fingerprint (mock D9): a full-width secondary button between the lines and the dots, inside
+          the measured block so the pad gets what is left. Enabled during a pause (no hard lock, OA-D7).
+        */}
+        {offersBiometric ? (
+          <View style={{ paddingTop: spacing.sm }}>
+            <Button
+              label={m.biometric.cta}
+              tone="secondary"
+              size="md"
+              fullWidth
+              disabled={biometricBusy || busy}
+              onPress={() => void tryFaceOrFingerprint()}
+              testID="pin-biometric"
+            />
           </View>
         ) : null}
       </View>
@@ -472,7 +561,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
             if (next.length >= entry.length) setHint(null);
             setEntry(next);
           }}
-          disabled={locked || busy}
+          disabled={locked || busy || biometricBusy}
           layout={pad}
         />
       </View>

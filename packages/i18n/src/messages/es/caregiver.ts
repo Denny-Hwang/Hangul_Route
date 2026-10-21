@@ -54,6 +54,13 @@ export const caregiver = {
     cooldownHelp: 'También puedes crear un PIN nuevo con Olvidé el PIN.',
     resetByWaitNotice: 'El PIN de adultos se cambió después de la espera de 24 horas. Si no fuiste tú, cámbialo ahora.',
     resetByWaitChange: 'Cambiar el PIN',
+    needsPinFirst: 'Primero crea un PIN de adultos.',
+    biometric: {
+      cta: 'Usar rostro o huella',
+      toggle: 'Rostro o huella para adultos',
+      warning: 'Cualquier persona con su rostro o huella guardados en este dispositivo podrá usarlo.',
+      changed: 'El rostro o la huella cambió en este dispositivo. Escribe el PIN.',
+    },
     entry: {
       createAgain: 'Escríbelo otra vez',
       verifySubtitle: 'Escribe tu PIN de 4 dígitos para continuar.',

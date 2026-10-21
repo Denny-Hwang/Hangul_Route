@@ -54,6 +54,13 @@ export const caregiver = {
     cooldownHelp: "'PIN을 잊었나요?'에서 새 PIN을 만들 수도 있어요.",
     resetByWaitNotice: '24시간 기다린 뒤 어른용 PIN이 바뀌었어요. 직접 바꾼 게 아니면 지금 바꿔 주세요.',
     resetByWaitChange: 'PIN 바꾸기',
+    needsPinFirst: '먼저 어른용 PIN을 만들어요.',
+    biometric: {
+      cta: '얼굴이나 지문 쓰기',
+      toggle: '어른용 얼굴·지문 열기',
+      warning: '이 기기에 얼굴이나 지문이 저장된 사람은 누구나 쓸 수 있어요.',
+      changed: '이 기기의 얼굴이나 지문이 바뀌었어요. PIN을 입력해요.',
+    },
     entry: {
       createAgain: '한 번 더 입력하기',
       verifySubtitle: '계속하려면 숫자 4자리 PIN을 입력해 주세요.',

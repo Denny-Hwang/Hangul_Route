@@ -29,6 +29,7 @@ import { GateLessonsButton } from './GateLessonsButton';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { LectureCard } from './LectureCard';
 import { ResetByWaitNotice } from './ResetByWaitNotice';
+import { BiometricShortcutCard } from './BiometricShortcutCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
@@ -129,6 +130,8 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
           })
         }
       />
+      {/* [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-9: native with strong face or fingerprint only; draws nothing otherwise. */}
+      <BiometricShortcutCard onNeedPin={() => navigation.navigate('PinEntry', { next: 'BiometricShortcut' })} />
       {grownUpHome ? (
         <>
           <GrownUpHomeCard onOpen={openGrownUpHome} />
