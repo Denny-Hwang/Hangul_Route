@@ -98,6 +98,13 @@ keep_vars = true
 #                                    value) is the kill switch: every class and school reader sees the
 #                                    base scope at once; families are unaffected and acknowledgements
 #                                    still record. GET /health shows features.classScopeFull.
+# LEARNING_ROLLUPS                   F-CURR-002 section 11.2 (row CM-70a): leave UNSET (on). Unset,
+#                                    empty or "enabled" lets POST /api/telemetry add counts to the
+#                                    D1 table learning_rollups (codes and counts only, under a write
+#                                    budget of 40,000 rows a day). "disabled" (or any other value) is
+#                                    the kill switch: no rollup row is written; events are still
+#                                    accepted. Keep it out of [vars] (a [vars] value returns on every
+#                                    deploy).
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db
