@@ -73,8 +73,8 @@ import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access-copy';
 import { favoriteReplay, freeEndPrimary, practiceTarget } from '../../logic/free-end';
 import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
-import { lastStreakDay, streakSessionDates } from '../../logic/sessions/session-log';
-import { computeStreak } from '../../logic/streak';
+import { lastStreakDay } from '../../logic/sessions/session-log';
+import { shownStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
@@ -399,10 +399,9 @@ export function HomeScreen(): React.ReactElement {
   // Recent stars waits for a first star (owner request 2026-10-16, item 8): an empty row of stars is never shown.
   const recentStars = recentStarsOf(snap?.quests ?? []);
 
-  const streak = useMemo(() => {
-    // Quest sessions only: story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
-    return computeStreak(streakSessionDates(snap?.sessions ?? []));
-  }, [snap]);
+  // The local-day run (F-CURR-002 row CM-4): kept by any learning activity, with 2 rest days a local week, and never
+  // lowered by a sync. Once a run ends the pill waits for the next learning day; nothing says it was lost.
+  const streak = useMemo(() => (snap ? shownStreak(snap, localToday) : 0), [snap, localToday]);
 
   // The end of the free lessons (F-ENT-003 section 3.7): whether this device already celebrated it for
   // the learner, read each time Home comes into focus (Results may have just shown it). Null while read.

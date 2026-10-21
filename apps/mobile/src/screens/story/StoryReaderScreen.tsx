@@ -40,8 +40,8 @@ const NOTHING = (): void => undefined;
  * writing nothing — no rounds, no step completion, no bookmark, no progress.
  * Entered from "Read it again" (F-STORY-003 Results, F-STORY-004 shelf and
  * episode page). Done, Close and the back gesture return to where it came from.
- * On the learner stack it records practice time only (F-REPORT-001 section
- * 3.3.2: a time-only session that never moves the streak).
+ * On the learner stack it records practice time (F-REPORT-001 section 3.3.2)
+ * in a learning session that keeps the local-day run (F-CURR-002 OD-14).
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
 export function StoryReaderScreen({ route, navigation, onOpenSources, onOpenCultureNote, onDone, ...exitProps }: Props): React.ReactElement {
@@ -52,7 +52,8 @@ export function StoryReaderScreen({ route, navigation, onOpenSources, onOpenCult
   const { story, narrationLangs } = useMemo(() => readerStory(source, level, locale), [source, level, locale]);
   // Another host (All lessons) passes no navigation and records nothing (F-REPORT-001 section 3.3.2).
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id);
-  usePracticeSession(profileId, navigation ? `story:${storyId}` : null);
+  // A story is a learning activity: it keeps the local-day run (F-CURR-002 OD-14).
+  usePracticeSession(profileId, navigation ? `story:${storyId}` : null, true);
 
   // Learner defaults: back where it came from, else Home; Sources is the `StorySources` route.
   const { onBack, onHome } = exitProps;
