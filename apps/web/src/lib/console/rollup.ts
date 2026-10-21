@@ -1,6 +1,6 @@
-import { CATALOG, FREE_CLASS_STUDENT_CAP, teachingOrder } from '@hangul-route/content-schema';
+import { CATALOG, FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, teachingOrder } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, describeRelativeDay, getMessages, type UiLocale } from '@hangul-route/i18n';
-import type { RosterLearner } from './api';
+import type { RosterLearner, RosterSeats } from './api';
 import { parseVocabSummary } from './vocab-summary';
 
 /**
@@ -69,12 +69,48 @@ export interface CapState {
   total: number;
   warning: boolean;
   reached: boolean;
+  /** [SA] More learners than the cap, kept from before the limit (SA-D7): nobody is removed. */
+  over: boolean;
+  /** The free class cap (the upgrade nudge applies); false for a licensed class (50) and for a family. */
+  free: boolean;
 }
 
-export function capState(kind: string, students: number): CapState | null {
-  if (kind !== 'class') return null;
-  const total = FREE_CLASS_STUDENT_CAP;
-  return { used: students, total, warning: students >= Math.ceil(total * CAP_WARNING_RATIO), reached: students >= total };
+/**
+ * The learner count of a family or class against its cap ([SA] AMENDMENTS-SEATS-ADMINS section 3.4). The roster's
+ * `seats` (SA-1) decide: a family's 4, a class's 20 (free) or 50 (its own Group License), none for a class its school
+ * covers (null: the school page shows the school count). A Worker older than SA-1 sends no `seats`: a class then
+ * counts against the free cap as before, and a family against `FAMILY_LIFETIME_LEARNERS`.
+ */
+export function capState(kind: string, students: number, seats?: RosterSeats | null): CapState | null {
+  if (kind !== 'class' && kind !== 'family') return null;
+  const used = seats ? seats.learners : students;
+  const total = seats ? seats.cap : kind === 'family' ? FAMILY_LIFETIME_LEARNERS : FREE_CLASS_STUDENT_CAP;
+  if (total === null) return null;
+  const free = kind === 'class' && total === FREE_CLASS_STUDENT_CAP;
+  return { used, total, warning: used >= Math.ceil(total * CAP_WARNING_RATIO), reached: used >= total, over: used > total, free };
+}
+
+/**
+ * The one line under a space's count (section 3.4): a free class keeps its nudge (`capWarning` near the cap,
+ * `capReached` at it) with the billing link; a licensed class and a family say they are full (`seats.*.at`) or over
+ * (`seats.*.over`) calmly, with no link. Null below the cap.
+ */
+export function seatLine(kind: string, cap: CapState | null, locale: UiLocale = DEFAULT_LOCALE): { text: string; upgrade: boolean } | null {
+  if (!cap) return null;
+  const c = getMessages(locale).console;
+  if (kind === 'class' && cap.free) {
+    if (cap.reached) return { text: c.capReached, upgrade: true };
+    return cap.warning ? { text: c.capWarning(cap.used, cap.total), upgrade: true } : null;
+  }
+  const words = kind === 'family' ? c.seats.family : kind === 'class' ? c.seats.class : null;
+  if (!words) return null;
+  if (cap.over) return { text: words.over(cap.used, cap.total), upgrade: false };
+  return cap.reached ? { text: words.at(cap.total), upgrade: false } : null;
+}
+
+/** A family's count, "3 of 4 learners" (`console.billing.usage.learners`, reused), on the family home and Settings. */
+export function familyCountLine(cap: CapState, locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.billing.usage.learners(cap.used, cap.total);
 }
 
 /**

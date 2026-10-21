@@ -114,7 +114,9 @@ function StartInner(): JSX.Element {
             }}
           >
             <h1 style={{ fontSize: headRem(typography.size.title), margin: `0 0 ${spacing.md}px` }}>{c.start.nameTitle[step.kind]}</h1>
-            <Field name="name" label={c.start.nameLabel} value={name} onChange={setName} required maxLength={40} />
+            <Field name="name" label={c.start.nameLabel} value={name} onChange={setName} required maxLength={40} describedBy="start-name-later" />
+            {/* [SA] AMENDMENTS-SEATS-ADMINS section 5.3: the prefilled name can be changed later, in place. */}
+            <Muted id="start-name-later">{c.start.nameLater}</Muted>
             {step.kind === 'class' ? <Muted>{c.start.classJoinHint}</Muted> : null}
             {!api ? <Muted>{c.shell.noApi}</Muted> : null}
             <div style={{ display: 'flex', gap: spacing.sm }}>

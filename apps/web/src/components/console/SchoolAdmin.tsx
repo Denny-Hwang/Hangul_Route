@@ -2,8 +2,9 @@
 
 import type { Messages } from '@hangul-route/i18n';
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
+import type { SchoolClassRow } from '@/lib/console/api';
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConfirm } from './ConfirmSheet';
@@ -13,6 +14,8 @@ import { planTitle, statusLine as entitlementStatus } from '@/lib/console/billin
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES, loadErrorKey, type LoadError } from '@/lib/console/routing';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '@/lib/console/school';
+import { renameShown } from '@/lib/console/rename';
+import { RenameButton, RenameForm, RenameStyles, RenameTitle, useAnnouncer, useSpaceRename } from './RenameParts';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
 import { headRem, rem } from '@/lib/console/rem';
@@ -36,8 +39,12 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
   const { confirm, sheet: confirmSheet } = useConfirm();
 
+  // A rename takes a new read number, so a read still under way never puts an old name back ([SA] section 5.3).
+  const loadSeq = useRef(0);
   const load = useCallback(async (): Promise<void> => {
+    const call = ++loadSeq.current;
     const [v, m] = await Promise.all([api.school(spaceId), api.members(spaceId)]);
+    if (call !== loadSeq.current) return;
     if (!v.ok) {
       setError(loadErrorKey(v.error));
       return;
@@ -60,6 +67,18 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
     if (result.ok) await load();
   };
 
+  // [SA] The school's own name and each class row's (AMENDMENTS-SEATS-ADMINS section 5.3): one live region for the page.
+  const { announce, region: renameLive } = useAnnouncer();
+  const setSchoolName = useCallback((name: string) => {
+    loadSeq.current += 1;
+    setView((prev) => (prev ? { ...prev, school: { ...prev.school, name } } : prev));
+  }, []);
+  const setClassName = useCallback((classId: string, name: string) => {
+    loadSeq.current += 1;
+    setView((prev) => (prev ? { ...prev, classes: prev.classes.map((row) => (row.space.id === classId ? { ...row, space: { ...row.space, name } } : row)) } : prev));
+  }, []);
+  const rename = useSpaceRename({ api, spaceId, name: view?.school.name ?? '', onName: setSchoolName, announce });
+
   const copy = async (): Promise<void> => {
     if (!view?.invite.joinCode) return;
     try {
@@ -72,8 +91,24 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
 
   return (
     // A school's own page goes back to Classes (PageBack, AMENDMENTS-DISPLAY-NAV section 7.3).
-    <AdultFrame onSignOut={onSignOut} back={spacePageBack('school', c)} title={view ? s.titleFor(view.school.name) : s.title}>
+    <AdultFrame onSignOut={onSignOut} back={spacePageBack('school', c)} title={view ? undefined : s.title}>
       {confirmSheet}
+      <RenameStyles />
+      {renameLive}
+      {view ? (
+        <div style={{ marginBottom: spacing.md }} data-testid="school-head">
+          <RenameTitle
+            rename={rename}
+            name={view.school.name}
+            title={s.titleFor(view.school.name)}
+            kind="school"
+            canRename={renameShown(view.school, view.canRename)}
+            openMoves={false}
+            heading="h1"
+            headingStyle={{ fontSize: headRem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold }}
+          />
+        </div>
+      ) : null}
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {view ? (
@@ -96,6 +131,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
           onAssigning={setAssigning}
           onAssign={(classId, accountId) => void run(() => api.addMember(classId, accountId), 'assigned', 'assignFailed').then(() => setAssigning(null))}
           onNewClass={setNewClass}
+          rename={{ api, announce, onClassName: setClassName }}
           onCreateClass={(name) => void run(() => api.createSpace({ kind: 'class', name, parentSpaceId: spaceId }), 'classCreated', 'createFailed').then(() => setNewClass(''))}
         />
       ) : null}
@@ -124,6 +160,7 @@ export function SchoolAdminView({
   onAssign,
   onNewClass,
   onCreateClass,
+  rename,
 }: {
   view: SchoolView;
   members: readonly MemberView[];
@@ -140,12 +177,14 @@ export function SchoolAdminView({
   onAssign: (classId: string, accountId: string) => void;
   onNewClass: (value: string) => void;
   onCreateClass: (name: string) => void;
+  /** [SA] section 5.3: renaming a class from its row (shown with the row's `canRename`); absent, rows show no Rename. */
+  rename?: { api: ConsoleApi | null; announce: (text: string) => void; onClassName: (classId: string, name: string) => void };
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
   const s = c.school;
   const state = limitState(view.usage, view.limits);
-  const note = limitNote(state, locale);
+  const note = limitNote(state, locale, { students: view.usage.students, cap: view.limits.students });
   const teachers = assignableTeachers(members);
   const empty = view.classes.length === 0 && members.filter((m) => m.memberKind === 'account').length <= 1;
   // The settings link sits inside the footer sentence; a translation may move it (aroundSlot).
@@ -199,33 +238,17 @@ export function SchoolAdminView({
         <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{s.classes.title}</h2>
         <div style={{ display: 'grid', gap: spacing.sm }}>
           {view.classes.map((row) => (
-            <article key={row.space.id} style={{ ...panelStyle, display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'center', opacity: row.space.archivedAt ? 0.6 : 1 }} data-testid="class-row">
-              <div style={{ flex: 1, minWidth: 220 }}>
-                <strong>
-                  {row.space.name}
-                  {row.space.archivedAt ? <span style={{ color: colors.text.muted }}> {c.home.archived}</span> : null}
-                </strong>
-                <Muted>{s.classes.line(row.teacher ? row.teacher.name : null, row.students, relativeDay(row.lastActiveAt, now, locale), row.hasPublishedPlan)}</Muted>
-              </div>
-              <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
-                {assigning === row.space.id ? (
-                  <>
-                    <select aria-label={s.classes.teacherFor(row.space.name)} defaultValue="" onChange={(e) => { const id = e.target.value; if (id) onAssign(row.space.id, id); }} style={{ padding: spacing.xs }}>
-                      <option value="">{s.classes.chooseTeacher}</option>
-                      {teachers.map((t) => (
-                        <option key={t.accountId} value={t.accountId}>{t.name}</option>
-                      ))}
-                    </select>
-                    <Button onClick={() => onAssigning(null)}>{s.classes.cancel.cta}</Button>
-                  </>
-                ) : (
-                  <Button disabled={busy || !!row.space.archivedAt} onClick={() => onAssigning(row.space.id)}>{row.teacher ? s.classes.change.cta : s.classes.assign.cta}</Button>
-                )}
-                <Link href={ROUTES.space(row.space.id)}>
-                  <Button>{s.classes.open.cta}</Button>
-                </Link>
-              </div>
-            </article>
+            <ClassRowView
+              key={row.space.id}
+              row={row}
+              now={now}
+              busy={busy}
+              teachers={teachers}
+              assigning={assigning === row.space.id}
+              onAssigning={onAssigning}
+              onAssign={onAssign}
+              rename={rename}
+            />
           ))}
         </div>
         <form
@@ -250,3 +273,81 @@ export function SchoolAdminView({
     </>
   );
 }
+
+/**
+ * One class row of the school page: name and line, then Change or Assign teacher, Rename ([SA] section 5.3, between
+ * the teacher button and Open roster) and Open roster. Open, the row's name and line become the field and its other
+ * buttons step aside until Save or Cancel (D6: one task per row); focus then returns to the row's Rename.
+ */
+function ClassRowView({
+  row,
+  now,
+  busy,
+  teachers,
+  assigning,
+  onAssigning,
+  onAssign,
+  rename,
+}: {
+  row: SchoolClassRow;
+  now: Date;
+  busy: boolean;
+  teachers: ReadonlyArray<{ accountId: string; name: string }>;
+  assigning: boolean;
+  onAssigning: (classId: string | null) => void;
+  onAssign: (classId: string, accountId: string) => void;
+  rename?: { api: ConsoleApi | null; announce: (text: string) => void; onClassName: (classId: string, name: string) => void };
+}): JSX.Element {
+  const { messages, locale } = useConsoleLocale();
+  const c = messages.console;
+  const s = c.school;
+  const classId = row.space.id;
+  const onClassName = rename?.onClassName;
+  const setName = useCallback((name: string) => onClassName?.(classId, name), [onClassName, classId]);
+  const field = useSpaceRename({ api: rename?.api ?? null, spaceId: classId, name: row.space.name, onName: setName, announce: rename?.announce ?? noAnnounce });
+  const canRename = !!rename && renameShown(row.space, row.canRename);
+  const open = canRename && field.state.open;
+  return (
+    <article style={{ ...panelStyle, display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'center', opacity: row.space.archivedAt ? 0.6 : 1 }} data-testid="class-row">
+      <div style={{ flex: 1, minWidth: 220 }}>
+        {open ? (
+          <>
+            <p className="hr-rn-hidden">{field.state.stored}</p>
+            <RenameForm rename={field} kind="class" openMoves={row.openMoves === true} testId="class-rename-form" />
+          </>
+        ) : (
+          <>
+            <strong style={{ overflowWrap: 'anywhere' }}>
+              {row.space.name}
+              {row.space.archivedAt ? <span style={{ color: colors.text.muted }}> {c.home.archived}</span> : null}
+            </strong>
+            <Muted>{s.classes.line(row.teacher ? row.teacher.name : null, row.students, relativeDay(row.lastActiveAt, now, locale), row.hasPublishedPlan)}</Muted>
+          </>
+        )}
+      </div>
+      {open ? null : (
+        <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
+          {assigning ? (
+            <>
+              <select aria-label={s.classes.teacherFor(row.space.name)} defaultValue="" onChange={(e) => { const id = e.target.value; if (id) onAssign(classId, id); }} style={{ padding: spacing.xs }}>
+                <option value="">{s.classes.chooseTeacher}</option>
+                {teachers.map((t) => (
+                  <option key={t.accountId} value={t.accountId}>{t.name}</option>
+                ))}
+              </select>
+              <Button onClick={() => onAssigning(null)}>{s.classes.cancel.cta}</Button>
+            </>
+          ) : (
+            <Button disabled={busy || !!row.space.archivedAt} onClick={() => onAssigning(classId)}>{row.teacher ? s.classes.change.cta : s.classes.assign.cta}</Button>
+          )}
+          {canRename ? <RenameButton rename={field} name={row.space.name} testId="class-rename" /> : null}
+          <Link href={ROUTES.space(classId)}>
+            <Button>{s.classes.open.cta}</Button>
+          </Link>
+        </div>
+      )}
+    </article>
+  );
+}
+
+const noAnnounce = (): void => undefined;

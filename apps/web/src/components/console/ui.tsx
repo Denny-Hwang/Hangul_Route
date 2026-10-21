@@ -40,7 +40,7 @@ export function Button({ children, tone = 'secondary', disabled, onClick, type =
   );
 }
 
-export function Field({ label, value, onChange, placeholder, type = 'text', maxLength, required, name }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: 'text' | 'email'; maxLength?: number; required?: boolean; name: string }): JSX.Element {
+export function Field({ label, value, onChange, placeholder, type = 'text', maxLength, required, name, describedBy }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: 'text' | 'email'; maxLength?: number; required?: boolean; name: string; describedBy?: string }): JSX.Element {
   return (
     <label style={{ display: 'block', marginBottom: spacing.md }}>
       <span style={{ display: 'block', fontSize: rem(typography.size.caption), color: colors.text.muted, marginBottom: spacing.xxs }}>{label}</span>
@@ -51,6 +51,7 @@ export function Field({ label, value, onChange, placeholder, type = 'text', maxL
         placeholder={placeholder}
         maxLength={maxLength}
         required={required}
+        aria-describedby={describedBy}
         onChange={(e) => onChange(e.target.value)}
         style={{
           width: '100%',
@@ -67,8 +68,8 @@ export function Field({ label, value, onChange, placeholder, type = 'text', maxL
   );
 }
 
-export function Muted({ children }: { children: ReactNode }): JSX.Element {
-  return <p style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm), margin: `${spacing.xs}px 0` }}>{children}</p>;
+export function Muted({ children, id }: { children: ReactNode; id?: string }): JSX.Element {
+  return <p id={id} style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm), margin: `${spacing.xs}px 0` }}>{children}</p>;
 }
 
 export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'nudge' | 'success' }): JSX.Element {

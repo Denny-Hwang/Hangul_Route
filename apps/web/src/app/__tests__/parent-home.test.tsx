@@ -59,6 +59,8 @@ const data = vi.hoisted(() => ({
   /** [TV] The family's class-scope read: the default lists nobody, so no card shows. */
   scope: null as unknown,
   scopeThrows: false,
+  /** [SA] The family renames the page sent (AMENDMENTS-SEATS-ADMINS section 5.3). */
+  renames: [] as Array<{ id: string; name: string }>,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -82,6 +84,10 @@ vi.mock('@/components/console/use-console', async () => {
     acknowledgeClassScope: async () => ({ ok: true, data: { version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' } }),
     moveNotices: async () => ({ ok: true, data: [] }),
     markMoveSeen: async () => ({ ok: true, data: { seen: true } }),
+    renameSpace: async (id: string, name: string) => {
+      data.renames.push({ id, name });
+      return { ok: true, data: { space: { id, kind: 'family', name, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: '2026-10-01T00:00:00Z' }, changed: true } };
+    },
   };
   const session = { accountId: 'acc_1', displayName: 'Ms Kim' };
   const signOut = (): undefined => undefined;
@@ -145,6 +151,7 @@ beforeEach(() => {
   data.listPending = false;
   data.scope = null;
   data.scopeThrows = false;
+  data.renames = [];
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
@@ -466,5 +473,50 @@ describe('the family home (F-APP-001 A-5b)', () => {
       expect(href).not.toMatch(/Sam|Mina|Kim/);
       expect(href.startsWith('/parent') || href.startsWith('/teach/space/learner') || href.startsWith('/start') || href === '/browse').toBe(true);
     }
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS row SA-3: Rename beside each family's heading (owner only), and the seat lines. */
+describe('the family home: rename and seats (SA-3)', () => {
+  const r9 = en.console.rename;
+  const seated = (space: SpaceListItem, learners: RosterLearner[], over: Partial<Roster> = {}) => ({ ok: true as const, data: { ...roster(space, learners).data, seats: { learners: learners.length, cap: 4, schoolLearners: null, schoolCap: null }, ...over } });
+  const four = [sam, mina, learner('profile:a', 'Ari', '2026-09-06T00:00:00Z', 1), learner('profile:b', 'Bo', '2026-09-07T00:00:00Z', 1)];
+
+  it('the owner sees Rename right of the h2 and renames in place; a caregiver sees the name alone', async () => {
+    data.rosters = { sp_f: seated(family, [sam], { canRename: true }), sp_g: seated(grandma, [mina], { canRename: false }) };
+    const r = await render([family, grandma]);
+    const button = byTestId(r, 'family-rename-sp_f')[0] as ReactTestInstance;
+    expect(button.props['aria-label']).toBe('Rename Kim family');
+    expect(byTestId(r, 'family-rename-sp_g')).toHaveLength(0);
+    await act(async () => button.props.onClick());
+    const input = byTestId(r, 'family-rename-sp_f-form-input')[0] as ReactTestInstance;
+    expect(input.props.value).toBe('Kim family');
+    expect(textOf(byTestId(r, 'family-rename-sp_f-form')[0] as ReactTestInstance)).toContain(r9.hint.family);
+    await act(async () => input.props.onChange({ target: { value: 'Kim and Park family' } }));
+    await act(async () => (byTestId(r, 'family-rename-sp_f-form')[0] as ReactTestInstance).props.onSubmit({ preventDefault: () => undefined }));
+    expect(data.renames).toEqual([{ id: 'sp_f', name: 'Kim and Park family' }]);
+    expect(r.root.findAll((n) => n.type === 'h2').map(textOf)).toEqual(['Kim and Park family', "Grandma's house"]);
+    expect(r.root.findAll((n) => n.type === 'aside').map((n) => n.props['aria-label'])).toContain(p.actionsFor('Kim and Park family'));
+  });
+
+  it('the join panel counts n of 4 learners and, at 4, says so under the code (the code stays)', async () => {
+    data.rosters = { sp_f: seated(family, four) };
+    const r = await render([family]);
+    await act(async () => (byTestId(r, 'family-add-learner')[0] as ReactTestInstance).props.onClick());
+    expect(textOf(byTestId(r, 'family-seats')[0] as ReactTestInstance)).toBe('4 of 4 learners');
+    expect(textOf(byTestId(r, 'family-seats-line')[0] as ReactTestInstance)).toBe(en.console.seats.family.at(4));
+    expect(byTestId(r, 'join-code')).toHaveLength(1);
+  });
+
+  it('a family above 4 (kept from before the limit): the calm over line; below the cap, the count alone', async () => {
+    data.rosters = { sp_f: seated(family, [...four, learner('profile:c', 'Cy', '2026-09-08T00:00:00Z', 1)]) };
+    let r = await render([family]);
+    await act(async () => (byTestId(r, 'family-add-learner')[0] as ReactTestInstance).props.onClick());
+    expect(textOf(byTestId(r, 'family-seats-line')[0] as ReactTestInstance)).toBe(en.console.seats.family.over(5, 4));
+    act(() => mounted?.unmount());
+    data.rosters = { sp_f: seated(family, []) };
+    r = await render([family]);
+    expect(textOf(byTestId(r, 'family-seats')[0] as ReactTestInstance)).toBe('0 of 4 learners');
+    expect(byTestId(r, 'family-seats-line')).toHaveLength(0);
   });
 });

@@ -1,4 +1,4 @@
-import { APP_ROUTES, BILLING_RECEIPTS_PATH, FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type BillingAccountCard, type BillingSpaceCard, type BillingSummary, type Promo, type ReceiptView } from '@hangul-route/content-schema';
+import { APP_ROUTES, BILLING_RECEIPTS_PATH, FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type BillingAccountCard, type BillingSpaceCard, type BillingSummary, type Promo, type ReceiptView } from '@hangul-route/content-schema';
 import { formatDate, formatMinorAmount, getMessages, UI_LOCALES } from '@hangul-route/i18n';
 import { describe, expect, it, vi } from 'vitest';
 import { CONTACT_EMAIL } from '../../../data/contact';
@@ -113,7 +113,7 @@ describe('billingHomeView: one card per persona row of section 4.2', () => {
   it('teacher, free stand-alone class: cap usage and the Group License offer', () => {
     const c = view(summary([card({ spaceId: 'space:cls', kind: 'class', name: 'Room 4', usage: { learners: 14, learnerCap: FREE_CLASS_STUDENT_CAP, teachers: null, teacherCap: null }, actions: { buy: 'group_license', manage: false, contact: false } })])).cards[0];
     expect(c).toMatchObject({ heading: `${b.kind.class} · Room 4`, plan: b.coverage.free, usage: b.usage.students(14, FREE_CLASS_STUDENT_CAP) });
-    expect(c?.offer).toMatchObject({ planKey: 'group_license', title: b.planTitle.group_license, includes: [b.includesLines.license.everyStudent, b.includesLines.license.noCap(FREE_CLASS_STUDENT_CAP)], renew: w.groupLine, cta: b.buy.group_license.cta, primary: true });
+    expect(c?.offer).toMatchObject({ planKey: 'group_license', title: b.planTitle.group_license, includes: [b.includesLines.license.everyStudent, b.includesLines.license.classLearners(GROUP_LICENSE_LEARNERS)], renew: w.groupLine, cta: b.buy.group_license.cta, primary: true });
   });
 
   it('teacher with a license: no cap in the usage line; cancelled reads Ends on, never renews', () => {
@@ -140,10 +140,25 @@ describe('billingHomeView: one card per persona row of section 4.2', () => {
     expect(m).toMatchObject({ heading: `${b.kind.school} · Maple School`, plan: b.coverage.school('Maple School'), usage: null, readOnly: b.readOnly.school });
   });
 
-  it('school owner or admin: seats for students and teachers, manage, Contact us', () => {
-    const c = view(summary([card({ spaceId: 'space:sch', kind: 'school', name: 'Maple School', role: 'admin', coverage: own({ planKey: 'group_license' }), usage: { learners: 212, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 7, teacherCap: SCHOOL_LICENSE_TEACHERS }, actions: { buy: null, manage: true, contact: true } })])).cards[0];
+  it('school owner: seats for students and teachers, manage, Contact us', () => {
+    const c = view(summary([card({ spaceId: 'space:sch', kind: 'school', name: 'Maple School', role: 'owner', coverage: own({ planKey: 'group_license' }), usage: { learners: 212, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 7, teacherCap: SCHOOL_LICENSE_TEACHERS }, actions: { buy: null, manage: true, contact: true } })])).cards[0];
     expect(c).toMatchObject({ usage: `${b.usage.students(212, SCHOOL_LICENSE_STUDENTS)} · ${b.usage.teachers(7, SCHOOL_LICENSE_TEACHERS)}`, manage: true, contact: true });
     expect(contactHref()).toBe(`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(b.contact.mailSubject)}`);
+  });
+
+  it('[SA] school administrator (SA-D11): the read-only school card with the owner\'s seat counts, no amount, button, Contact us or receipts', () => {
+    const covered = { state: 'school' as const, schoolName: 'Maple School', planKey: 'group_license' as const, expiresAt: '2029-08-31T00:00:00.000Z' };
+    const admin = card({ spaceId: 'space:sch', kind: 'school', name: 'Maple School', role: 'admin', payer: false, readOnlyReason: 'school', coverage: covered, usage: { learners: 42, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 7, teacherCap: SCHOOL_LICENSE_TEACHERS }, actions: { buy: null, manage: false, contact: false } });
+    const c = view(summary([admin])).cards[0];
+    expect(c).toMatchObject({ heading: `${b.kind.school} · Maple School`, readOnly: b.readOnly.schoolAdmin, usage: '42 of 50 students · 7 of 10 teachers', manage: false, contact: false, offer: null, receipts: [], allReceiptsHref: null });
+    expect(c?.readOnly).toBe("The school's owner manages this plan.");
+    // A free school: the same card, never the Group License offer, even if a summary says so.
+    const free = view(summary([{ ...admin, coverage: { state: 'free' }, usage: { learners: 18, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 2, teacherCap: null }, actions: { buy: 'group_license', manage: true, contact: true }, receipts: [receipt()], hasReceipts: true }]));
+    expect(free.cards[0]).toMatchObject({ plan: b.coverage.free, usage: '18 of 50 students · 2 teachers', readOnly: b.readOnly.schoolAdmin, offer: null, manage: false, contact: false, receipts: [] });
+    expect(free.addPlan).toBeNull();
+    // A teacher member of the school keeps "Your school manages this plan."
+    expect(view(summary([{ ...admin, role: 'teacher', usage: null }])).cards[0]?.readOnly).toBe(b.readOnly.school);
+    for (const locale of ['es', 'ko'] as const) expect(billingHomeView(summary([admin]), { now, locale, claims: OFF }).cards[0]?.readOnly).toBe(getMessages(locale).console.billing.readOnly.schoolAdmin);
   });
 
   it('a school contract reads School Contract and ends on its date', () => {
@@ -250,10 +265,12 @@ describe('includesLines: feature lines only while SITE_CLAIMS says the feature i
     expect(includesLines('family_lifetime', 'family', 'en', { ...OFF, teacherReports: true })).toEqual(base);
   });
 
-  it('license: the school line only for a school; feature lines per claim', () => {
-    const base = [b.includesLines.license.everyStudent, b.includesLines.license.noCap(FREE_CLASS_STUDENT_CAP)];
+  it('license: the class line for a class, the school line for a school ([SA] section 4); feature lines per claim', () => {
+    const base = [b.includesLines.license.everyStudent, b.includesLines.license.classLearners(GROUP_LICENSE_LEARNERS)];
     expect(includesLines('group_license', 'class', 'en', OFF)).toEqual(base);
-    expect(includesLines('group_license', 'school', 'en', OFF)).toEqual([...base, b.includesLines.license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)]);
+    expect(base[1]).toBe('Up to 50 students in the class');
+    expect(includesLines('group_license', 'school', 'en', OFF)).toEqual([b.includesLines.license.everyStudent, b.includesLines.license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)]);
+    expect(includesLines('group_license', 'school', 'en', OFF)[1]).toBe('A school holds up to 10 teachers and 50 students');
     expect(includesLines('group_license', 'class', 'en', ALL_ON)).toEqual([...base, b.includesLines.license.browse, b.includesLines.license.reports, b.includesLines.license.notes]);
     expect(includesLines('group_license', 'class', 'en', { ...OFF, parentReports: true })).toEqual(base);
   });

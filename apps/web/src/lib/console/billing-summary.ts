@@ -2,7 +2,7 @@ import {
   APP_ROUTES,
   BILLING_RECEIPTS_PATH,
   FAMILY_LIFETIME_LEARNERS,
-  FREE_CLASS_STUDENT_CAP,
+  GROUP_LICENSE_LEARNERS,
   PAST_DUE_GRACE_MS,
   RECEIPTS_CARD_LIMIT,
   SCHOOL_LICENSE_STUDENTS,
@@ -182,8 +182,8 @@ export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, loca
   const license = lines.license;
   return [
     license.everyStudent,
-    license.noCap(FREE_CLASS_STUDENT_CAP),
-    ...(kind === 'school' ? [license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)] : []),
+    // [SA] AMENDMENTS-SEATS-ADMINS section 4: a class holds up to 50 students; a school up to 10 teachers and 50 students.
+    kind === 'school' ? license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS) : license.classLearners(GROUP_LICENSE_LEARNERS),
     ...(browse ? [license.browse] : []),
     ...(claimLiveIn(claims, 'teacherReports', locale) ? [license.reports] : []),
     ...(claimLiveIn(claims, 'feedbackNotes', locale) ? [license.notes] : []),
@@ -268,6 +268,17 @@ function usageLine(kind: SpaceKind, usage: Usage | null, locale: UiLocale): stri
   return `${students} · ${words.teachers(usage.teachers, usage.teacherCap)}`;
 }
 
+/**
+ * Who manages the plan, on a viewer card. [SA] SA-D11: a school's administrator runs the school but its owner is the
+ * only payer, so the admin's read-only school card names the owner (`readOnly.schoolAdmin`).
+ */
+function readOnlyLine(card: BillingSpaceCard, locale: UiLocale): string | null {
+  const readOnly = getMessages(locale).console.billing.readOnly;
+  if (!card.readOnlyReason) return null;
+  if (card.kind === 'school' && card.role === 'admin') return readOnly.schoolAdmin;
+  return readOnly[card.readOnlyReason];
+}
+
 function offerFor(card: BillingSpaceCard, planKey: PurchasablePlanKey, inCard: boolean, locale: UiLocale, claims: Readonly<SiteClaims>, promo: Promo | null): BillingOfferView {
   const messages = getMessages(locale).console;
   const title = planTitle(planKey, locale);
@@ -308,7 +319,7 @@ function cardView(card: BillingSpaceCard, offer: BillingOfferView | null, now: D
     plan: lines.plan,
     status: lines.status,
     usage: usageLine(card.kind, card.usage, locale),
-    readOnly: card.readOnlyReason ? billing.readOnly[card.readOnlyReason] : null,
+    readOnly: card.readOnlyReason ? readOnlyLine(card, locale) : null,
     pastDue: lines.pastDue,
     manage: payer && card.actions.manage,
     contact: payer && card.actions.contact,
