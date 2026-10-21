@@ -30,7 +30,7 @@ C. Keep going result
 |        [hoya - cheering]       |
 |          Wonderful!            |  <- one word per star tier (3 stars: Wonderful!)
 |            * * *               |
-|   [up] 4 got stronger          |
+|   [check] 4 got stronger       |
 |   (ring) Daily goal done       |  <- goal line, with `goals` on
 |   [[        BACK HOME        ]]|
 |   Want a few more?             |  <- A again, only while due items remain
@@ -41,7 +41,7 @@ D. No offer left (a Keep going result), by cause
 |        [hoya - cheering]       |
 |          Wonderful!            |
 |            * * *               |
-|   [up] 5 got stronger          |
+|   [check] 5 got stronger       |
 |   -- D1, the 3rd Keep going of |  <- the 3-a-day cap, items still due:
 |   today, items still due:      |     one calm line instead of the offer
 |   That is plenty for today.    |
@@ -99,6 +99,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` B
 - **stopped**: the stop sheet of `reviews/daily-review.md` E; nothing is lost; the next offer still shows on E.
 - **offline**: as the Daily Review (local engine, precached items).
 - **`dailyReview` off**: no Daily Review, so no Keep going; a deep link shows the Daily Review's D page.
+- **`memoryRecord` off, `dailyReview` on**: as `reviews/daily-review.md`: the effective flag is `dailyReview && memoryRecord`, so the offer row is not drawn and a deep link shows the Daily Review's D page; nothing would be recorded, so the same items would come back each time.
 - **reduced motion**: as the Daily Review.
 - **320 and 768**: as the Daily Review (including its 200 % display-headline rule); the offer row stays under the primary at every width.
 
@@ -129,7 +130,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` B
 ## Data needs
 
 - reads: the engine's due pool after the session (`hasMoreDue`), today's Keep going count, `dayLog`
-- **today's Keep going count, derived with no new field**: every `daily` entry (the Daily Review and each Keep going) writes the local day it was played as its required `scope` (`YYYY-MM-DD`, the same local day as `SessionLog.localDay`). Today's count is the number of `daily` entries whose `scope` is today's local day, minus 1 for the Daily Review itself (never below 0). It never depends on the UTC `generatedAt` or on today's time zone. An assigned Daily Review (`homework/list`) is the same session as card 3, not a second entry.
+- **today's Keep going count, derived with no new field**: every `daily` entry (the Daily Review and each Keep going) writes the local day it was played as its required `scope` (`YYYY-MM-DD`, the same local day as `SessionLog.localDay`). Today's count is the number of `daily` entries whose `scope` is today's local day, minus 1 for the Daily Review itself (never below 0). It never depends on the UTC `generatedAt` or on today's time zone. An assigned Daily Review (`homework/list`) is the same session as card 3, not a second entry. Today's entries are always inside the 14-day retention window of `reviews/daily-review.md` Data needs, so the prune never changes the count.
 - writes: answers to the memory store; one plain `daily` `reviews[]` entry `{ kind: 'daily', scope: localDay, resultStars, itemIds }` per finished Keep going (no `keepGoing` field: `ReviewEntrySchema` strips unknown keys on every parse, sync and backup); 2 points in `dayLog[today][installKey]`
 - telemetry: `review.start` / `review.complete` (`kind: 'daily'`); nothing new
 

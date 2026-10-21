@@ -322,11 +322,12 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 | `streakBest` | the best run ever | max |
 | `stamps` | `Record<stampId, ISO>` | earliest |
 | `memSeededAt` | ISO | earliest |
-| `steadyWeeks` | `Record<localWeekStart, ISO>`: the local weeks whose learned days reached the weekly goal in force that week, keyed by the local date the week starts, written once when it is reached (7.4; `design/wireframes/home/goal-ring-weekly-dots.md`). The steady-weeks headline reads only its key count, so it never drops when `dayLog` passes 70 days or the goal changes | union of keys; earliest per key |
-| `stageRetroShownAt` | ISO: when the one retroactive stage summary (step 7 below) was shown | earliest |
+| `steadyWeeks` | `Record<weekMonday, ISO>`: the weeks whose learned days reached the weekly days in force that week (an active F-PLAN-002 plan's days, else `goals.weeklyDays`). The week is the ISO week on local days, Monday to Sunday in every locale, keyed by its Monday (`YYYY-MM-DD`), so a UI-language switch or two devices on different locales give one key. A pure, idempotent latch check writes it after each finished activity, each snapshot merge, on Home open and when goals are saved, over the weeks still in `dayLog` (7.4; `design/wireframes/home/goal-ring-weekly-dots.md`). The steady-weeks headline reads only its key count, so it never drops when `dayLog` passes 70 days or the goal changes | union of keys; earliest per key |
+| `stageCeremonyAt` | `Record<stageKey, ISO>`: stages 2-7 whose ceremony was offered (7.3) or which the retroactive summary (step 7 below) listed. The summary lists only finished stages with no key, so no stage is summed up twice | union of keys; earliest per key |
 
 - `SessionLog` gains an optional `localDay`, written when the session is logged, so a later local-day count never depends on today's time zone.
 - `reviews[]` starts to receive `daily`, `feedback` and `stage-certificate` entries; the schema already exists. `ReviewKindSchema` gains `cell-check` and `warmup`. Because `ReviewKindSchema` is a strict enum inside `SnapshotPutSchema` and `BackupFileSchema`, row CM-3b first makes the `reviews` array lenient per entry on every read path (unknown kinds are dropped per entry, as `lenientArray` does in `sync.ts`) and deploys that to the Worker. Every row that writes a new kind is marked W→A.
+- **`daily` retention.** `daily` entries (the Daily Review and each Keep going) are kept for 14 local days: after every merge, on the client and in the Worker's merge and preserve path, the list keeps only the `daily` entries whose `scope` (the local day) is within 14 days of the newest `daily` entry's `scope`. The prune gives the same result on every side, so the union never brings a pruned entry back. No other kind is pruned (`cell-check` and `stage-certificate` carry best results). A snapshot-size test covers a year of daily use (rows CM-3b and CM-14; `design/wireframes/reviews/daily-review.md`).
 - `ProgressSummarySchema` gains an optional, lenient `memory` block, computed on the device and carried by the existing snapshot PUT: `{ wordsKnown, readyToRefresh, cellBestCounts: [l1, l2, l3], stageChecks, weekPoints, topDue: up to 8 item ids }`. It feeds reports, the console, the family lantern and `class-review` (sections 7.6, 8).
 
 **One-time seeding on first launch of the new build.** It runs per profile, is idempotent, and is guarded by `memSeededAt`.
@@ -336,7 +337,7 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 4. Topic words already in `vocab` are not copied; the engine reads them where they are.
 5. Placement `priorityTokens` symbols are seeded at box 1, due on day 1.
 6. `cellBest` starts at 1 for every cell done.
-7. **Upper-cell cards and stage ceremonies are awarded retroactively.** Each card row (CM-23) awards its own cards from `questDoneAt` when it ships. The Stage Check row (CM-22) shows one summary screen, "You finished Stages 2-3 earlier", which lists whatever cards exist at that time. The summary is shown once, not one modal per stage.
+7. **Upper-cell cards and stage ceremonies are awarded retroactively.** Each card row (CM-23) awards its own cards from `questDoneAt` when it ships. The Stage Check row (CM-22) shows one summary screen, "You finished Stages 2-3 earlier", which lists whatever cards exist at that time. The summary is shown once, not one modal per stage, and each stage it lists is latched in `stageCeremonyAt`.
 8. **Streak switch-over.** `streakLocal.run` starts at `max(old streakDays, the run recomputed on local days)`, and `streakBest` at the larger of that and any earlier best. The old `streakDays` is still written for older builds, but the new build displays only `streakLocal` and `streakBest`, so a sync from an older device can never make the number drop.
 
 Fixture tests run against snapshots from five historical schema points: before `vocab`, before `questDoneAt`, before `placements`, a current snapshot, and an empty one. Backup-file restore is tested too. A fixture with all 107 quests done asserts that every item has a due day, no day has more than 15 seeded items due, and the spread length is reported.
@@ -1051,7 +1052,8 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 - the 60-day simulation scenarios S-a to S-e (4.3)
 
 **Merge** (Worker and client):
-- commutative and idempotent for memory item fields (with the tie-break), `cellBest`, `dayLog` (summed per install key), `streakLocal`, `streakBest`, `stamps`, `testedOut`, `cellCheckAt` and `stageCheckAt`
+- commutative and idempotent for memory item fields (with the tie-break), `cellBest`, `dayLog` (summed per install key), `streakLocal`, `streakBest`, `stamps`, `testedOut`, `cellCheckAt`, `stageCheckAt`, `steadyWeeks` and `stageCeremonyAt`
+- the `daily` retention prune of `reviews[]`: the same result whichever side merges first, and an entry pruned on one side never returns from the other
 - a produce miss on device A merged with an older state on device B
 - the Worker preserve rule when keys are absent
 - older-client snapshots round-trip; a snapshot or backup with an unknown review kind drops that entry and keeps the rest
@@ -1194,8 +1196,8 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
 | CM-20 | `feat(mobile): mastery levels on best box, started-volume denominator, cellBest latch, grid ring, words known milestones (F-CURR-002)` | M | CM-12, CM-D1 | about 8 | derivation reads only monotonic fields, latch never drops, New volume marker, 320 px visual, a11y labels |
-| CM-21 | `feat(mobile): Cell Check and test-out (F-CURR-002)` (W→A for `cell-check`) | L | CM-13, CM-20, CM-3b | about 10 | seeding by result, untested at box 1, entitlement, `routeNext` skip, e2e |
-| CM-22 | `feat(mobile): Stage Checks for Stages 2-7, PRIZE_STAGES, ceremony, retroactive summary listing existing cards (F-CURR-002)` | L | CM-21, OD-1 | about 12 | prize table, summary once, never blocks, `stage.card_opened`, e2e |
+| CM-21 | `feat(mobile): Cell Check and test-out (F-CURR-002)` (W→A for `cell-check`) | L | CM-13, CM-20, CM-3b, CM-D1 | about 10 | seeding by result, untested at box 1, entitlement, `routeNext` skip, e2e |
+| CM-22 | `feat(mobile): Stage Checks for Stages 2-7, PRIZE_STAGES, ceremony, retroactive summary listing existing cards (F-CURR-002)` (W→A for `stageCeremonyAt`) | L | CM-21, CM-3b, CM-D1, OD-1 | about 12 | prize table, summary once, never blocks, `stage.card_opened`, e2e |
 | CM-23 ×3 | `feat(cards): upper-cell cards, category albums and their retroactive award, Stages 2-3 / 4 / 6-7 (F-CARD-S2..S7, F-CURR-002)` | L each | CM-22 | about 60 each (card names and backs) | card-award tests including retroactive, album legendary, art budget |
 | CM-24 | `feat(mobile): adaptive pacing in quests, compact Discover and scaffold (F-CURR-002)` | M | CM-12 | about 2 | compact and scaffold rules, standard-path U-5, adapted-path U-11 |
 | CM-25 | `feat(mobile): Stage Jump Ahead; amend F-PLC-001 ceiling (F-CURR-002)` | M | CM-21 | about 6 | placement fixtures |

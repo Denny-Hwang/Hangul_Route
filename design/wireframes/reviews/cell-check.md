@@ -50,7 +50,8 @@ B. An unstarted cell the learner may open (episode/detail.md, quest list)
 | (3) ...                        |
 | Already know this?             |  <- one quiet line under the list, never above
 | [ Test out ]                   |     Start; hidden in E3's hidden arm, on a
-|                                |     not-open-yet cell and with `cellCheck` off
+|                                |     not-open-yet cell, on Stage 1 cells and
+|                                |     with `cellCheck` off
 
 C. Intro (route CellCheck { cellId, mode: 'check' | 'testout' })
 +--------------------------------+
@@ -147,8 +148,11 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 - **check, passed** (3 stars): E; `cellCheckAt` latches (earliest pass); the level rises if §4.4's other parts hold; A2 from then on.
 - **check, not 3 stars**: E2; nothing latches; items follow the spacing rule like any surface.
 - **test out, passed**: F; level 1 (Done) latches; every quest of the cell's first volume shows "Tested out" with 2 stars (H); asked items go to box 2 (right) or box 1 (miss); unasked items to box 1, spread over 3 days (§4.5).
-- **test out, not passed**: G; asked items are set by their result (right box 2, miss box 1), unasked stay unmet; the cell stays unstarted, so its first quest still teaches everything. This narrows §4.5 "Test-out details", which places unasked items without a passed/not-passed condition: see Open questions.
+- **tested out (the cell's page afterwards)**: A shows, as on any level 1 cell: the ring with "Done", the hint "Keep reviewing to reach Practiced." and the Cell Check block, whose [ Take the Cell Check ] is a secondary button (the cell's quests keep their [ Play ] buttons of H, and `routeNext` has moved on). A passed test-out does **not** write `cellCheckAt`: the test-out is a way in (Done), and Mastered needs a Cell Check taken once the cell's items have been reviewed, so "Cell Check done" keeps one meaning. A2's line appears only after a real 3-star Cell Check.
+- **test out, not passed**: G; asked items answered right on the first try go to box 2 (the learner showed them), and **missed asked items stay unmet, like the unasked ones**: the cell stays unstarted and its first quest teaches every item, so no untaught item is put up for review. This narrows §4.5 "Test-out details", which places items without a passed/not-passed condition: see Open questions.
 - **test out and the stage**: a passed test-out writes `testedOut[cellId]` only, never `questDoneAt` or a quest's best stars (the "Tested out" pill and its 2 stars in H are drawn from `testedOut`). The stage latch keeps coming from `applyQuestResult` on a real quest run (`QuestResultOutcome.stageCompleted`, which needs every quest of the stage in `questDoneAt`), so a test-out never fires the stage ceremony, the stage card or the Stage Check. Testing out of a whole stage is CM-25 (Stage Jump Ahead, which amends F-PLC-001), not this row. The e2e "Cell Check and test-out" case asserts it: testing out of the last unfinished cell of a stage shows F, and no "See your Stage N prize".
+- **a stage whose every cell is done or tested out, with quests still unplayed**: the stage pill keeps its state (it never reads Complete), and the Journey stage header shows one calm caption under its subtitle: "Play the quests you tested out of to finish this stage." (`learner.testOut.stageHint`, caption size, `text.secondary`, no icon, not a target). The caption goes away when the stage latches. Nothing reads as missing or late.
+- **Stage 1 cells**: no Test out line. Placement (F-PLC-001) already places a learner inside Stage 1, and Stage 1's prize, Hangul Check and certificate need its quests done (pill `complete`), so a Stage 1 test-out would leave them out of reach. The Cell Check itself is offered on Stage 1 cells as on any cell.
 - **stopped**: I -> [ Stop ]. A stopped Cell Check keeps the answers given (they count by the spacing rule, as on every surface, §4.3 and §4.5) and writes no `reviews[]` entry and no `cellCheckAt`. A stopped test-out writes nothing: the cell has not been taught, so no item is entered.
 - **loading**: the round frame ([x] and the empty dots row) until the engine returns the cell's session; one frame, no spinner.
 - **store unreadable** (the memory store or IndexedDB read fails through the safe storage wrapper): the Daily Review's D page ("Nothing is waiting right now", [[ Back home ]]) with [[ Back to this place ]] in place of Back home; nothing is written and nothing latches.
@@ -158,6 +162,8 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 - **no sound** (F-AUDIO-004): the sound notice; recognize rounds become read rounds; the check still counts.
 - **offline**: plays fully offline (local engine, precached chunks).
 - **`cellCheck` off** (§12.2): no Cell Check block button, no Test out line; latched results ("Cell Check done", "Tested out", levels) stay and show again when it is back on.
+- **`memoryRecord` off, `cellCheck` on**: the effective flag is `cellCheck && memoryRecord`, so this is the same as `cellCheck` off (no Cell Check button, no Test out line). Answers would not be recorded, so a Cell Check could otherwise latch Mastered while no memory state moved. Latched results stay. CM-21 has a test that turns `memoryRecord` off remotely while `cellCheck` stays on.
+- **access changed** (a plan lapses, a Family Plan ends, the learner leaves a class): on a cell with finished quests, A, A2 and the Cell Check stay playable, because learned content stays reviewable, as "Play again on quests already finished" in `episode/detail-access-preview.md`. Test out follows F-ENT-003 like playing the cell: on a `closed` cell there is no Test out line (the state above). No Premium pill, price, plan word or ask-a-grown-up door is added to any panel. CM-21's e2e covers a lapsed-plan profile.
 - **`mastery` off, `cellCheck` on** (independent flags, §12.2): A's block keeps only "Cell Check", its body line and the button (no ring, no level word, no hint); A2 keeps "Cell Check done" and [ Take it again ]; E shows the star headline ("Wonderful!") and the stars with no ring and no level word; F shows "You tested out!" and the stars with no ring. B, C, D, E2, G, H and I are unchanged.
 - **reduced motion**: the ring segment is drawn filled at once; no star pop.
 - **320 x 568 and 200 % text**: the page scrolls; the mastery block's ring keeps 48 dp and the words wrap beside it; buttons are full width; display headlines follow the native rule of `reviews/daily-review.md` (`DISPLAY_HEADLINE_MAX_SCALE`).
@@ -216,6 +222,7 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 | `learner.testOut.result.startBody` | Start with the first quest. Hoya will help with the rest. |
 | `learner.testOut.result.next.cta` / `.first.cta` | Go to your next lesson / Start the first quest |
 | `learner.testOut.pill` | Tested out |
+| `learner.testOut.stageHint` | Play the quests you tested out of to finish this stage. |
 
 Star headlines reuse `learner.dailyReview.result.headline.*`; the level words are `learner.mastery.level.*` (`journey/mastery-ring.md`). The stop sheet I reuses the live `learner.stageReview.leave.*` ("Stop the check?", "You can take it again any time.", "Keep going", "Stop"), the same sheet as `reviews/stage-check.md` H.
 
@@ -223,7 +230,9 @@ Star headlines reuse `learner.dailyReview.result.headline.*`; the level words ar
 
 - None blocking CM-21. Decisions recorded for the row, for CM-0b or CM-21 to write into §4.5 so the engine's tests assert one number each:
   - A stopped test-out writes no item state (the spec defines only the finished case).
-  - Unasked items stay unmet on a test-out without 3 stars: the cell stays unstarted and is taught by its first quest, so placing untaught items in box 1 would review words the learner has not met. §4.5 "Test-out details" (unasked items to box 1, spread over 3 days) then applies to a passed test-out only.
+  - Unasked items and missed asked items stay unmet on a test-out without 3 stars: the cell stays unstarted and is taught by its first quest, so placing untaught items in box 1 would review words the learner has not met. Only asked items right on the first try are entered (box 2). §4.5 "Test-out details" (unasked items to box 1, spread over 3 days) then applies to a passed test-out only.
+  - A passed test-out writes `testedOut` and `cellBest` = 1 but never `cellCheckAt`; the Cell Check part of Mastered needs a real Cell Check.
+  - Test out is not offered on Stage 1 cells (placement covers Stage 1, and its prize and Hangul Check need its quests). For CM-21 and CM-22: a stage whose cells are all done or tested out, with tested-out quests unplayed, keeps its pill and shows `learner.testOut.stageHint` under the stage header until it latches.
   - The produce share is ceil(0.3 x rounds) (§4.5 "at least 30 %"): 3 rounds of 8, 9 or 10, and 2 of 5.
   - `CELL_CHECK_MIN_ROUNDS` = 5: a cell with 5 to 7 playable items still offers a shorter check; with fewer than 5 there is none.
   - A test-out never completes a stage (see States); a whole-stage skip stays CM-25.

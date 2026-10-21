@@ -21,21 +21,31 @@ Then: each started cell shows how well it is known as one, two or three filled s
 A. One cell at 320 px (54 x about 76 dp, unchanged), levels 0 to 3. The track IS the cell's outline.
 
  level 0 (none)     level 1 (Done)      level 2 (Practiced)  level 3 (Mastered)
- +----------+       +-- ==== --+        +-- ==== --+         #==========#
- |pin    [5]|       |pin    [5]|        |pin    [5]|         #pin    [5]#
+ +----------+       +---- =====#        +---- =====#         #==========#
+ |pin    [5]|       |pin    [5]#        |pin    [5]#         #pin    [5]#
  |          |       |          #        |          #         #          #
  |   (gl)   |       |   (gl)   #        |   (gl)   #         #   (gl)   #
- |          |       |          #        #          #         #          #
- |  Letters |       |  Letters |        #  Letters |         #  Letters #
- +----------+       +----------+        #===== ====+         #==========#
+ |          |       |          #        |          #         #          #
+ |  Letters |       |  Letters          |  Letters           #  Letters #
+ |          |       |          |        |          #         #          #
+ +----------+       +----------+        #==========#         #==========#
  today's border     segment 1 filled    segments 1-2 filled  all three, gaps closed
+                    (a blank = a gap)
 
    +-- = empty segment: the 1 dp keyline (border.shape) alone
    ==, # = filled segment: 3 dp (borderWidth.thick): 2 dp of colors.theme.<column> outside a 1 dp
            border.shape keyline on the inner side
-   gaps: 3 gaps of spacing.xs (4 dp) along the outline; the first is centred on the top edge, where the
-         Next triangle sits; segments fill clockwise from it (1: top right and right side; 2: bottom;
-         3: left side and top left); at level 3 the gaps close into one ring
+   gaps and segments, one rule: 3 gaps of spacing.xs (4 dp) and 3 segments of EQUAL arc length (the
+         outline's perimeter minus the 3 gaps, divided by 3), starting at the gap centred on the top edge,
+         where the Next triangle sits, and running clockwise. On the 54 x 76 cell at 320 the outline
+         (inset to the 3 dp track's centre, corner radius 9.5) is 223.7 dp, so each segment is 70.56 dp:
+           1: the right half of the top edge, the top-right corner and most of the right side;
+           2: the foot of the right side, the bottom-right corner, the whole bottom edge and the
+              bottom-left corner;
+           3: most of the left side, the top-left corner and the left half of the top edge.
+         The other two gaps sit low on the right side and low on the left side. This is the mock's
+         `stroke-dasharray` (70.563 x 3 with 4 dp gaps). At level 3 the gaps close into one ring.
+         CM-20 tests that the three arc lengths are equal within 0.5 dp at 320, 768 and wide
 
 B. Ready to refresh (a level 3 cell with items due today)
        (*)                <- sparkle sticker (Icon `sparkle` on a paper circle, spacing.lg) centred on the
@@ -104,7 +114,7 @@ G. Words known (Home pill and the Learning Route card)
 ```
 
 - **Contrast.** The theme tokens are accents: on `surface.paper` letters is 3.0:1, nature 2.45:1, crafts 2.96:1 and life 1.86:1 (rites 4.58:1). So a filled segment never relies on its colour: every segment, filled or empty, has the `border.shape` keyline (4.55:1 on paper, 4.29:1 on canvas, 3.84:1 on sunken), filled segments are three times as thick, and Mastered closes the gaps. CM-20's contrast test asserts the keyline token, not the theme token, carries the 3:1 non-text contrast, and the 320 visual test is checked in greyscale.
-- **No extra width.** The track is drawn in the border box the cell already reserves (`maxEdge` = `borderWidth.thick`), so `journeyCellLayout` returns the same numbers with the ring on: 54 x about 76 dp at 320, 112 x 112 at 768, 76 x about 88 in the wide master pane. The halo, the sparkle and the marker sit in space the grid already has (the `spacing.xs` gap, half outside the top and bottom edges, as the Next triangle does).
+- **No extra width.** The track is drawn in the border box the cell already reserves (`maxEdge` = `borderWidth.thick`), so `journeyCellLayout` returns the same numbers with the ring on: 54 x about 76 dp at 320, 112 x 112 at 768, 76 x about 88 in the wide master pane. The halo, the sparkle and the marker sit in space the grid already has (the `spacing.xs` gap, half outside the top and bottom edges, as the Next triangle does). **No overlap with the rows around the grid:** the sparkle reaches 8 dp above a cell and the marker 6 dp below it, while `JourneyGrid.tsx` puts `spacing.sm` (8 dp) under the stage header and `spacing.xs` (4 dp) above the taste and stories notes. So while `mastery` is on, the stage header's marginBottom rises to `spacing.md` and the notes' marginTop to `spacing.sm`, as a fixed rule (never per cell, so rows never jump when a glow comes or goes). This adds height, never width. CM-20 adds `journeyCellLayout` and JourneyGrid render tests that the sticker and the marker never overlap the stage header or a note, at 320, 768 and 200 % text.
 - **Never down.** The ring reads `cellBest` only (merged by max). Boxes can fall; the ring cannot. No screen draws a segment emptying, a crack, a wilt or a faded ring.
 
 ## Interaction points
@@ -125,7 +135,8 @@ Exit to: unchanged: the cell opens `episode/detail`
 - **level up** (`mastery.level_up { cellId, level }`): on the Results of the activity that raised it, the G banner fills the new segment once (`motion.duration.slow`); on the Journey the ring is simply drawn at the new level (no animation on the map).
 - **ready to refresh**: B, only on level 3 cells with items due today; gone when nothing is due.
 - **new volume**: C, only with `volumes` on.
-- **tested out** (`reviews/cell-check.md` F): level 1 like any Done cell.
+- **tested out** (`reviews/cell-check.md` F and its "tested out" state): level 1 like any Done cell; E shows with "Done" and the level 1 hint.
+- **Words known zero**: the Home pill and the route card line are not drawn until the count is at least 1 (the pills row shows the others in their order); there is never a "0 words known".
 - **`mastery` off** (§12.2): no track, no glow, no marker, no E block, no G banners; today's cells exactly. `cellBest` stays and shows again when it is back on. Words known (G) is part of `mastery` too: Home's pills row drops the pill and shows the others (`home/goal-ring-weekly-dots.md` States). With `cellCheck` still on, the Cell Check keeps its own block without the ring (`reviews/cell-check.md` States).
 - **memory not ready** (shadow mode, seeding not finished): rings show `cellBest`, which starts at 1 for every cell done (§4.8 step 6); nothing waits.
 - **reduced motion**: the level-up fill and the glow have no animation: they are drawn in their end state at once. The glow never pulses in any mode.

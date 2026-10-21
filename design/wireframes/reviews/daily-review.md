@@ -24,7 +24,8 @@ A. Home: Today with Hoya, card 3 (F-HW-001 slots, `home/todays-mission.md`)
 | [ card 1 ...                 ] |
 | [ card 2 ...                 ] |
 | +----------------------------+ |
-| | (3) [refresh] Daily Review | |  <- card min height touchTarget.hero (96)
+| | (3) [replay] Daily Review  | |  <- card min height touchTarget.hero (96); the shipped
+|                                |     `replay` glyph
 | |      About 3 minutes       | |     subtitle: plain time, never a count owed
 | +----------------------------+ |
 +--------------------------------+
@@ -33,7 +34,7 @@ A2. Review first (the due pool is more than 3 x the Daily Review size, §4.3: ov
     over 18 in E2's 6 arm)
 | Today with Hoya           (h2) |
 | 34 items are ready to refresh  |  <- one positive line above the cards
-| [ (1) [refresh] Daily Review ] |  <- the day's plan puts it in slot 1; the slots
+| [ (1) [replay] Daily Review ]  |  <- the day's plan puts it in slot 1; the slots
 | [ (2) normal day's card 1    ] |     then keep their order all day (F-HW-001 §3.2)
 | [ (3) normal day's card 2    ] |  <- new lessons stay right here: never blocked
 
@@ -69,7 +70,8 @@ C. Result
 |        [hoya - cheering]       |
 |          Wonderful!            |  <- one word per star tier, never a number
 |            * * *               |  <- 1 to 3 stars (F-RVW-001 §3.1), never 0
-|   [up] 6 got stronger          |  <- count of items whose best box rose today
+|   [check] 6 got stronger       |  <- count of items whose best box rose today (the
+|                                |     shipped `check` glyph)
 |                                |     (0: "Every answer helps them stick.")
 |   (ring) Daily goal done       |  <- goal line from home/goal-ring-weekly-dots.md
 |                                |     (only with `goals` on)
@@ -128,6 +130,8 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 - **offline**: the engine and the review-item chunk are local and precached (§10); the review plays fully offline. An item whose lesson chunk is not cached is skipped silently, as an unplayable item.
 - **an item cannot play** (missing art or audio for its rung): skipped silently; if fewer than 3 rounds can play -> D.
 - **`dailyReview` off** (build or remote, §12.2): the card is not emitted, slot 3 falls back to today's chain, a deep link shows D's "Nothing is waiting right now" page with [[ Back home ]]. Memory states stay.
+- **`memoryRecord` off, `dailyReview` on** (remote config can only switch things off, so this is the likely emergency lever): the effective flag is `dailyReview && memoryRecord`. With answers not recorded, "N got stronger" would always be 0 and Keep going would serve the same items again, so the screen behaves exactly as `dailyReview` off: no card, no Keep going, a deep link shows D. Memory states, `reviews[]` entries and points already earned stay. CM-14 has a test that turns `memoryRecord` off remotely while `dailyReview` stays on.
+- **access changed** (a plan lapses, a Family Plan ends, the learner leaves a class): the Daily Review draws only items the learner has already met, and learned content stays reviewable, as "Play again on quests already finished" in `episode/detail-access-preview.md`. Nothing is removed from the pool, and no Premium pill, price, plan word or ask-a-grown-up door is added to any panel. CM-14's e2e covers a lapsed-plan profile.
 - **reduced motion**: no slide between rounds and no star pop; the next round replaces the last at once; the check mark appears without a scale.
 - **320 x 568 and 200 % text**: B scrolls inside the round area; the [x] and dots row stays at the top; options keep `touchTarget.min`; no sideways scroll. **Display headlines** ("Wonderful!", "All refreshed today", and on the other review screens "Mastered!", "You tested out!", "Stage 2 complete!") use `useCappedFont('display', DISPLAY_HEADLINE_MAX_SCALE)` with the named constant `DISPLAY_HEADLINE_MAX_SCALE = 1.5` (the existing `cappedFont` budget for OS size x the chosen step), so one word never breaks mid-word in the 288 dp column; Korean keeps `KOREAN_LINE_BREAK`; web adds `hyphens: auto` as the mock does. The CM-14, CM-20, CM-21 and CM-22 visual tests cover 320 at 200 % on native as well as web. This rule is shared by `reviews/keep-going.md`, `reviews/cell-check.md` and `reviews/stage-check.md`.
 - **768 and wide**: the round sits in the reading column (`layout.maxWidth.reading`), centred; options in a 2 x 2 grid up to 4 across on wide; the dots row stays above the round.
@@ -161,6 +165,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 
 - reads: active profile; the memory store (`logic/review/engine.ts` selection for `kind: 'daily'`, size 10 or the E2 arm), the review-item chunk, `dayLog` (goal line), the `dailyReview` flag, the device-voice check
 - writes: one answer per round to the memory store (CM-12, spacing rule); on finish one `reviews[]` entry `{ kind: 'daily', scope: localDay, resultStars, itemIds }` (`scope` is the required field, holding the local day the review was played, `YYYY-MM-DD`; `reviews/keep-going.md` counts today's Keep goings from it), 3 points in `dayLog[today][installKey]`
+- **retention** (§4.8, built by CM-3b with CM-14): `daily` entries (the Daily Review and every Keep going) are kept for 14 local days. After every merge, on the client and in the Worker, the list keeps only the `daily` entries whose `scope` is within 14 days of the newest `daily` entry's `scope`, so the prune gives the same result on every side and the union never brings a pruned entry back. `cell-check`, `stage-certificate` and every other kind are never pruned (they carry best results). A snapshot-size test asserts that a year of daily use (a Daily Review and 3 Keep goings every day) keeps `reviews[]` under 64 entries of `daily` kind
 - telemetry: `review.start` / `review.complete` with `kind: 'daily'` (existing names, §11.3); no item text, no id beyond the content ids already allowed
 
 ## Proposed copy (English; keys for CM-14, which adds es and ko)
