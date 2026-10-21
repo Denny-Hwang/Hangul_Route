@@ -36,7 +36,7 @@ const person = (n: number, role: Profile['role'] = 'learner'): Profile => ({
   createdAt: `2026-10-${String(n).padStart(2, '0')}T00:00:00.000Z`,
 });
 const ids = (...ns: number[]): string[] => ns.map((n) => `profile:p${n}`);
-const covers = (...ns: number[]) => ({ v: 1 as const, ids: ids(...ns), at: '2026-10-21T00:00:00.000Z' });
+const covers = (...ns: number[]) => ({ v: 1 as const, ids: ids(...ns), added: [] as string[], at: '2026-10-21T00:00:00.000Z' });
 const tierOf = (n: number): string => effectiveTier(`profile:p${n}`, now).tier;
 
 function device(profiles: Profile[], subscription: SubscriptionState | null, record: ReturnType<typeof covers> | null): void {
@@ -98,14 +98,17 @@ describe('effectiveTier and the capped legacy subscription (AMENDMENTS-ONE-ACCOU
     expect([1, 2].map(tierOf)).toEqual(['free', 'free']);
   });
 
-  it('useAccessTier re-reads when the profile list changes: removing a newer learner hands its cover on', () => {
-    device([1, 2, 3, 4, 5].map((n) => person(n)), ACTIVE, covers(1, 2, 3));
+  it('useAccessTier re-reads when the profile list changes; a remembered newer learner keeps its place when removed', () => {
+    device([1, 2, 3, 4, 5].map((n) => person(n)), ACTIVE, { ...covers(1, 2, 3), added: ids(4) });
     expect(useAccessTier('profile:p5')).toBe('free');
     const onChange = vi.fn();
     const off = hook.subscribe?.(onChange);
     useProfileStore.setState({ profiles: [1, 2, 3, 5].map((n) => person(n)) });
     expect(onChange).toHaveBeenCalled();
-    expect(useAccessTier('profile:p5')).toBe('premium');
+    expect(useAccessTier('profile:p5')).toBe('free');
+    // Restored at the end of the list, p4 is premium again.
+    useProfileStore.setState({ profiles: [1, 2, 3, 5, 4].map((n) => person(n)) });
+    expect(useAccessTier('profile:p4')).toBe('premium');
     off?.();
   });
 });

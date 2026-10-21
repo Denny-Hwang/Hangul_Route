@@ -1,7 +1,14 @@
-import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
+import { PIN_SET_AT_KEY, type Profile } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { entitlementTier, type SubscriptionState } from '../logic/entitlement';
-import { isLearnerProfile, subscriptionCoversFor, subscriptionCoversOf, type SubscriptionCovers } from '../logic/legacy-subscription-covers';
+import {
+  isLearnerProfile,
+  mergeCovers,
+  subscriptionCoversFor,
+  subscriptionCoversOf,
+  withNewerCovered,
+  type SubscriptionCovers,
+} from '../logic/legacy-subscription-covers';
 import { INITIAL_ATTEMPT_STATE, type AttemptState } from '../logic/profiles/pin-hash';
 import { startResetWait } from '../logic/profiles/pin-reset';
 import {
@@ -12,7 +19,7 @@ import {
   pinSetAtOf,
   reconcilePinEpoch as nextPinEpoch,
 } from '../logic/shell/device-gate';
-import { readJson, readJsonExact, readJsonStrict, writeJson } from '../platform/storage';
+import { readJson, readJsonExact, readJsonStrict, updateJson, writeJson } from '../platform/storage';
 import { PROFILES_KEY, useProfileStore } from './profile-store';
 
 /**
@@ -120,6 +127,11 @@ interface Actions {
    * the store holds at least one learner; otherwise nothing is recorded and the next start tries again.
    */
   recordSubscriptionCovers: (now: Date) => Promise<void>;
+  /**
+   * With a premium legacy subscription and a record, adds every newer learner it now covers to the record's `added`
+   * (in memory at once, then stored), so a covered learner stays covered through a remove and a restore (section 10.5).
+   */
+  rememberCoveredLearners: (now: Date) => Promise<void>;
   /** Stores the PIN hash; every new PIN (first set, change, Forgot PIN reset) moves the epoch to now. */
   setParentPinHash: (hash: string | null) => void;
   setPinAttempts: (state: AttemptState) => void;
@@ -231,18 +243,62 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const profiles = useProfileStore.getState();
     // Nothing loaded yet, or a read that came back empty: try again on the next start (as `repairProfilePushes` does).
     if (!profiles.hydrated || !profiles.profiles.some(isLearnerProfile)) return;
+    let storedProfiles: unknown;
     try {
       // The profile list must read back strictly: a failed or damaged read is not "these are all the learners".
-      if (!Array.isArray(await readJsonStrict<unknown>(PROFILES_KEY))) return;
-      // A record this start could not read is not "no record": it is never written over.
-      if ((await readJsonExact<unknown>(SUBSCRIPTION_COVERS_KEY)) !== null) return;
+      storedProfiles = await readJsonStrict<unknown>(PROFILES_KEY);
+      if (!Array.isArray(storedProfiles)) return;
+      // A record this start could not read is not "no record": it is never written over. One it reads now is kept.
+      const stored = await readJsonExact<unknown>(SUBSCRIPTION_COVERS_KEY);
+      if (stored !== null) {
+        const parsed = subscriptionCoversOf(stored);
+        if (parsed && get().subscriptionCovers === null) set({ subscriptionCovers: parsed });
+        return;
+      }
     } catch {
       return;
     }
     if (get().subscriptionCovers !== null) return;
-    const record = subscriptionCoversFor(useProfileStore.getState().profiles, now);
-    await writeJson(SUBSCRIPTION_COVERS_KEY, record);
-    set({ subscriptionCovers: record });
+    // Every learner in memory and every one stored (another web tab may have added one since this start read the list).
+    const fromStorage = (storedProfiles as unknown[]).filter(
+      (p): p is Pick<Profile, 'id' | 'role'> => typeof p === 'object' && p !== null && typeof (p as { id?: unknown }).id === 'string',
+    );
+    const record = subscriptionCoversFor([...useProfileStore.getState().profiles, ...fromStorage], now);
+    // One read-modify-write, so two tabs starting together still make the record once.
+    let kept = null as SubscriptionCovers | null;
+    await updateJson<unknown>(SUBSCRIPTION_COVERS_KEY, (current) => {
+      if (current === null) return record;
+      kept = subscriptionCoversOf(current);
+      return undefined;
+    });
+    if (get().subscriptionCovers === null) set({ subscriptionCovers: kept ?? record });
+  },
+
+  rememberCoveredLearners: async (now) => {
+    const account = get();
+    const record = account.subscriptionCovers;
+    if (!account.hydrated || record === null) return;
+    if (entitlementTier(account.subscription, now) !== 'premium') return;
+    const profiles = useProfileStore.getState();
+    if (!profiles.hydrated) return;
+    const next = withNewerCovered(record, profiles.profiles);
+    if (next === record) return;
+    // In memory first: no later change to the profile list in this session can take the cover back.
+    set({ subscriptionCovers: next });
+    let stored = null as SubscriptionCovers | null;
+    await updateJson<unknown>(SUBSCRIPTION_COVERS_KEY, (current) => {
+      const parsed = subscriptionCoversOf(current);
+      // A stored value that is not a record is never written over (a failed read already rejected).
+      if (parsed === null) return undefined;
+      stored = mergeCovers(parsed, next);
+      return stored === parsed ? undefined : stored;
+    });
+    // What another tab covered meanwhile is kept too.
+    const current = get().subscriptionCovers;
+    if (stored !== null && current !== null) {
+      const both = mergeCovers(stored, current);
+      if (JSON.stringify(both) !== JSON.stringify(current)) set({ subscriptionCovers: both });
+    }
   },
 
   setParentPinHash: (hash) => {
@@ -290,3 +346,21 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     void writeJson(PIN_HASH_SEEN_KEY, next.pinHashSeen);
   },
 }));
+
+let watchingCovers = false;
+
+/**
+ * From the start-up pass on, every change to the profile list (a learner made, restored or removed) remembers the newer
+ * learners the legacy subscription now covers, at once (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5). Once per app run.
+ */
+export function watchCoveredLearners(): void {
+  if (watchingCovers) return;
+  watchingCovers = true;
+  useProfileStore.subscribe((state, prev) => {
+    if (state.profiles === prev.profiles) return;
+    void useAccountStore
+      .getState()
+      .rememberCoveredLearners(new Date())
+      .catch(() => undefined);
+  });
+}
