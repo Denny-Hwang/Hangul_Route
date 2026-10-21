@@ -2,6 +2,8 @@ Status: ready
 
 # F-SITE-002 — hangulroute.com becomes a short, layered intro site (one-screen hero, three persona pages, every account action on app.hangulroute.com)
 
+> **Amendment 2026-10-21 (`AMENDMENTS-SITE-NEWUSER.md`, marked [SN] there).** The new-visitor pass amends §3.2 (a language control and the Start pill in the header at every width, the locale banner on every English page), §3.3 (hero links to `/parents` and `/teachers`, a product capture as hero art, a closing call-to-action band, the launch news as a plain section, no cost block on `/`), §3.4 to §3.6 (product captures; create-first actions on the grown-up pages; a schools section on `/teachers`), §3.7 (About's action, the branded 404 per locale), §3.8 (`createAccount`) and §3.11 (new height, word and image budgets), and adds §3.13 (product captures) and §3.14 (head assets). Rows SN-1 and SN-2; where the two specs differ, the amendment wins.
+>
 > **Amendment 2026-10-15 (`AMENDMENTS-LECTURE-V2.md`).** `/parents` gains a `lectureMode` claim line in Follow along, `/teachers` rewords its `lectureMode` line to name Lecture mode, and row LV-7 is the claim's flip PR (section 3.9 table). OD-16 default (a) applies; LV-7 runs `site-budgets.spec.ts` with the claim on and records the outcome in section 3.9.
 >
 > **Status note.** `ready` means the spec can be built PR by PR in the order of section 9. Owner decisions do **not** gate the whole spec: each one gates only the PRs named in section 11, and each has a default that applies until the owner answers. Basis: `origin/main` `ea9049e4` (2026-10-11). Every `file:line` below is at that commit. Live measurements are from hangulroute.com on 2026-10-11 (headless Chromium). Revised the same day after two reviews (review log at the end).
