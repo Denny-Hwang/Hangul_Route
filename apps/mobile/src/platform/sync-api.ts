@@ -4,6 +4,7 @@ import {
   InboxVisibleSpaceSchema,
   SyncInboxSchema,
   lenientArray,
+  withKnownReviews,
   type DeviceTransferApproveBody,
   type DeviceTransferCreateBody,
   type DeviceTransferPreviewBody,
@@ -24,6 +25,18 @@ import {
 import { z } from 'zod';
 import type { PutResult } from '../logic/sync/engine';
 import { notifyInboxRead } from './inbox-events';
+
+/**
+ * A snapshot the server sent (GET, a 409, a Rescue Code claim, a relink) is
+ * not parsed, so its reviews go through the per-entry read first: an entry of
+ * a kind this build does not know is dropped and the rest kept (F-CURR-002
+ * section 4.8).
+ */
+function readServerCopy<T extends { snapshot: ProgressSnapshot } | null | undefined>(copy: T): T {
+  if (!copy || typeof copy !== 'object' || !copy.snapshot) return copy;
+  const snapshot = withKnownReviews(copy.snapshot);
+  return snapshot === copy.snapshot ? copy : { ...copy, snapshot };
+}
 
 /**
  * Transport for /api/sync (F-SYNC-001 §3.2). Typed results, never throws;
@@ -315,7 +328,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 200) return { status: 'ok', rev: (r.body.data as { rev: number }).rev };
       if (r.status === 409) {
         const data = r.body.data as { rev: number; snapshot: ProgressSnapshot | null };
-        return { status: 'conflict', rev: data.rev, snapshot: data.snapshot };
+        return { status: 'conflict', rev: data.rev, snapshot: data.snapshot && withKnownReviews(data.snapshot) };
       }
       return { status: 'error', code: `http_${r.status}` };
     },
@@ -339,7 +352,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 422) return { status: 'error', code: 'invalid' };
       if (r.status !== 200) return { status: 'error', code: 'unknown' };
       const data = r.body.data as ClaimResult extends { status: 'ok' } ? never : { learner: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string }; device: { secret: string }; snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
-      return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot };
+      return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: readServerCopy(data.snapshot) };
     },
 
     /**
@@ -404,7 +417,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status !== 200) return { status: 'error', code: 'unknown' };
       const data = r.body.data as { status: 'pending' | 'approved' | 'denied' | 'expired'; expiresAt: string; learner?: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string }; device?: { secret: string }; snapshot?: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
       if (data.status === 'approved' && data.learner && data.device) {
-        return { status: 'ok', state: 'approved', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot ?? null };
+        return { status: 'ok', state: 'approved', learner: data.learner, secret: data.device.secret, snapshot: readServerCopy(data.snapshot ?? null) };
       }
       if (data.status === 'approved') return { status: 'ok', state: 'pending', expiresAt: data.expiresAt }; // credentials already picked up elsewhere
       return { status: 'ok', state: data.status, expiresAt: data.expiresAt };
@@ -560,7 +573,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 404) return { status: 'none' };
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const data = r.body.data as { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null };
-      return { status: 'ok', rev: data.rev, snapshot: data.snapshot, summary: data.summary ?? null };
+      return { status: 'ok', rev: data.rev, snapshot: withKnownReviews(data.snapshot), summary: data.summary ?? null };
     },
   };
 }
