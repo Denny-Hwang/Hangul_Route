@@ -221,6 +221,11 @@ interface Actions {
    * changed by an older bundle, so the epoch moves to `now` before the marker is written.
    */
   reconcilePinEpoch: (now: number) => void;
+  /**
+   * [OA] Row OA-5: reads the PIN hash again after a failed read at hydrate (`pinHashReadFailed`), so a locked tile can
+   * check the PIN. A hash, or a read that now says "no PIN", replaces the unknown; another failure keeps it. Never throws.
+   */
+  retryPinHashRead: () => Promise<void>;
 }
 
 export const useAccountStore = create<State & Actions>((set, get) => ({
@@ -398,6 +403,14 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   clearPinResetByWait: () => {
     set({ pinResetByWait: null });
     void writeJson(PIN_RESET_BY_WAIT_KEY, null);
+  },
+
+  retryPinHashRead: async () => {
+    if (!get().pinHashReadFailed) return;
+    const pinHash = await readPinHash().catch(() => ({ hash: null, failed: true }));
+    // A PIN set meanwhile in this tab wins over what the read found.
+    if (pinHash.failed || !get().pinHashReadFailed) return;
+    set({ parentPinHash: pinHash.hash, pinHashReadFailed: false });
   },
 
   reconcilePinEpoch: (now) => {

@@ -52,7 +52,18 @@ vi.mock('../../../store/profile-locks', async (importOriginal) => {
 
 const e = getMessages('en').learner.editProfile;
 const LEARNER_ID = 'profile:test';
-const navigation = { navigate: vi.fn(), goBack: vi.fn() };
+const focusListeners: (() => void)[] = [];
+const navigation = {
+  navigate: vi.fn(),
+  goBack: vi.fn(),
+  addListener: (type: string, listener: () => void) => {
+    if (type === 'focus') focusListeners.push(listener);
+    return () => {
+      const at = focusListeners.indexOf(listener);
+      if (at >= 0) focusListeners.splice(at, 1);
+    };
+  },
+};
 const realDeviceScope = useMembershipStore.getState().deviceScope;
 const realHydrate = useMembershipStore.getState().hydrate;
 
@@ -306,6 +317,11 @@ describe('[OA] EditProfileScreen lock switch (row OA-5)', () => {
     const renderer = await render(screen());
     await act(async () => lockSwitch(renderer.root)!.props.onValueChange(true));
     expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin' });
+    expect(lockWrites.calls).toEqual([]);
+    expect(lockSwitch(renderer.root)!.props.value).toBe(false);
+    // Back on this screen without a right PIN: the change is dropped, so a later PIN for something else applies nothing.
+    await act(async () => focusListeners.forEach((l) => l()));
+    await act(async () => useUiStore.getState().markPinVerified());
     expect(lockWrites.calls).toEqual([]);
     expect(lockSwitch(renderer.root)!.props.value).toBe(false);
     await unmount(renderer);

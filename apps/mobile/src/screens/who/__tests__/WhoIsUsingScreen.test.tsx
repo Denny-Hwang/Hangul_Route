@@ -103,7 +103,7 @@ beforeEach(() => {
     hydrated: true,
     activeSince: Date.now() - 30_000,
   });
-  useAccountStore.setState({ parentPinHash: 'pin-hash', pinResetRequestedAt: null });
+  useAccountStore.setState({ parentPinHash: 'pin-hash', pinHashReadFailed: false, pinResetRequestedAt: null });
   useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, gateReturnPending: false });
 });
 
@@ -374,6 +374,24 @@ describe('Who is using this? locked tiles (row OA-5)', () => {
       expect(byTestId(r.root, `who-tile-${i}-caption`), String(i)).toHaveLength(0);
     }
     expect(buttonsNamed(r.root, en.a11y.who.lockedTile('Jun'))).toHaveLength(1);
+  });
+
+  it('a held join code with locks that cannot be read: the join caption and the locks line both show', async () => {
+    holdJoin('ABC234');
+    useProfileLocks.setState({ read: 'unread' });
+    const { r } = await renderChooser([CHOOSER], 'join');
+    expect(screenTexts(byTestId(r.root, 'who-join-caption')[0]!)).toEqual([w.joinCaption]);
+    expect(screenTexts(byTestId(r.root, 'who-locks-unread')[0]!)).toEqual([w.locksUnread]);
+  });
+
+  it('a PIN hash that could not be read never voids a lock (fail closed)', async () => {
+    useAccountStore.setState({ parentPinHash: null, pinHashReadFailed: true });
+    useProfileLocks.setState({ read: ['profile:sora'] });
+    const { r, navigation } = await renderChooser();
+    expect(byTestId(r.root, 'who-tile-2-lock')).toHaveLength(1);
+    await press(buttonsNamed(r.root, en.a11y.who.lockedTile('Sora'))[0] as ReactTestInstance);
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', expect.objectContaining({ next: 'LockedProfile', profileId: 'profile:sora' }));
+    expect(useProfileStore.getState().activeId).not.toBe('profile:sora');
   });
 
   it('a lock without a PIN is void: no badge, no line, and the tile opens with one tap (CS-4)', async () => {

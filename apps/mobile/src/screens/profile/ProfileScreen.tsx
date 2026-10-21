@@ -178,7 +178,8 @@ export function ProfileScreen(): React.ReactElement {
                   setActive(p.id);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={locked ? m.a11y.who.lockedTile(p.displayName) : t.switchTo(p.displayName)}
+                // The active learner's own tile asks nothing, so only another locked tile is named as one the PIN opens.
+                accessibilityLabel={locked && !isActive ? m.a11y.who.lockedTile(p.displayName) : t.switchTo(p.displayName)}
                 style={{ padding: spacing.md, alignItems: 'center', minHeight: touchTarget.hero, borderRadius: radii.lg }}
               >
                 <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />

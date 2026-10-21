@@ -70,7 +70,10 @@ describe('[OA] locked Profile tiles (row OA-5)', () => {
   it('the active learner\'s own locked tile switches nothing and asks nothing', async () => {
     useProfileLocks.setState({ read: ['profile:mina'] });
     const r = await render(<ProfileScreen />);
-    await press(buttonsNamed(r.root, en.a11y.who.lockedTile('Mina'))[0] as ReactTestInstance);
+    // It asks nothing, so it is not announced as a tile the PIN opens; the badge and caption still show the lock.
+    expect(buttonsNamed(r.root, en.a11y.who.lockedTile('Mina'))).toHaveLength(0);
+    expect(byTestId(r.root, 'profile-tile-lock-profile:mina')).toHaveLength(1);
+    await press(buttonsNamed(r.root, en.learner.profile.switchTo('Mina'))[0] as ReactTestInstance);
     expect(navigation.navigate).not.toHaveBeenCalled();
     expect(useProfileStore.getState().activeId).toBe('profile:mina');
   });

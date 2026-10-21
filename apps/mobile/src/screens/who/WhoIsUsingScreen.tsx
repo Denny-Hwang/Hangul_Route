@@ -239,8 +239,10 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
             {w.joinCaption}
           </Body>
         </View>
-      ) : locks.unread ? (
-        // [OA] Section 13.2: the locks could not be read, so every tile is locked; one line says it for all of them.
+      ) : null}
+      {locks.unread ? (
+        // [OA] Section 13.2: the locks could not be read, so every tile is locked; one line says it for all of them,
+        // under the join caption too (the tiles then carry no caption of their own).
         <View style={{ paddingTop: spacing.xs }}>
           <Body tone="secondary" testID="who-locks-unread">
             {w.locksUnread}

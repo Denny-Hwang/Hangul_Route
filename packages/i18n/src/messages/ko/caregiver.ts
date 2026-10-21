@@ -783,6 +783,6 @@ export const caregiver = {
   },
   people: {
     lock: '어른용 PIN으로 잠그기',
-    lockHint: '어른의 자기 프로필에 좋아요. 다른 사람이 대신 하지 않아요.',
+    lockHint: '어른 본인 프로필에 좋아요. 다른 사람이 이 프로필로 하지 못해요.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

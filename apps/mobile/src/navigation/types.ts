@@ -194,7 +194,12 @@ export type RootStackParamList = {
     lockedFrom?: { via: 'chooser'; trigger: WhoTrigger } | { via: 'profile' };
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
-  PinReset: { next: GrownUpDestination; profileId?: string };
+  PinReset: {
+    next: GrownUpDestination;
+    profileId?: string;
+    /** [OA] Row OA-5: carried back to the PIN screen, so a locked tile's reset still sends `profile.switch` and keeps a held join. */
+    lockedFrom?: RootStackParamList['PinEntry']['lockedFrom'];
+  };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */

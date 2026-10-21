@@ -149,6 +149,19 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a PIN was entered
   }, [lastPinVerifiedAt]);
 
+  // [OA] A fresh PIN screen left without a right PIN (Cancel, Close, a back) drops the change it was asked for, so a
+  // later PIN entered for something else never applies a lock or unlock the grown-up abandoned.
+  useEffect(
+    () =>
+      navigation.addListener('focus', () => {
+        const pending = pendingLock.current;
+        if (pending !== null && needsFreshPin(pending ? 'lock' : 'unlock', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
+          pendingLock.current = null;
+        }
+      }),
+    [navigation],
+  );
+
   const toggleLock = (on: boolean): void => {
     if (!pinSet || lockBusy) return;
     setLockFailed(false);
@@ -338,7 +351,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
               </View>
               <Switch
                 testID="edit-lock-switch"
-                value={pinSet && isLocked}
+                value={isLocked}
                 onValueChange={toggleLock}
                 disabled={!pinSet || lockBusy}
                 accessibilityLabel={messages.caregiver.people.lock}

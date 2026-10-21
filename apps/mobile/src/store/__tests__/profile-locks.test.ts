@@ -56,6 +56,7 @@ import {
   hydrateProfileLocks,
   lockedIds,
   locksUnread,
+  pinMayExist,
   readProfileLocks,
   resetProfileLocks,
   setProfileLocked,
@@ -87,7 +88,7 @@ beforeEach(() => {
   sent.length = 0;
   posted.n = 0;
   resetProfileLocks();
-  useAccountStore.setState({ parentPinHash: 'h:1234', pinAttempts: INITIAL_ATTEMPT_STATE, pinResetRequestedAt: null });
+  useAccountStore.setState({ parentPinHash: 'h:1234', pinHashReadFailed: false, pinAttempts: INITIAL_ATTEMPT_STATE, pinResetRequestedAt: null });
   useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
   useProfileStore.setState({ profiles: three, activeId: 'profile:mina', hydrated: true });
 });
@@ -173,6 +174,19 @@ describe('[OA] a lock without a PIN is void (CS-4)', () => {
     expect(locksUnread()).toBe(false);
   });
 
+  it('a PIN hash that could not be read is not "no PIN": the stored locks hold, and an unread record locks everyone', async () => {
+    disk.set(KEY, JSON.stringify({ v: 1, ids: ['profile:sora'] }));
+    await hydrateProfileLocks();
+    useAccountStore.setState({ parentPinHash: null, pinHashReadFailed: true });
+    expect(pinMayExist()).toBe(true);
+    expect(lockedIds(three)).toEqual(['profile:sora']);
+    fail.exact = 1;
+    fail.fresh = 1;
+    await hydrateProfileLocks();
+    expect(lockedIds(three)).toHaveLength(3);
+    expect(locksUnread()).toBe(true);
+  });
+
   it('grown-up device roles are never locked; a stray id names no one', async () => {
     disk.set(KEY, JSON.stringify({ v: 1, ids: ['profile:mom', 'profile:gone'] }));
     await hydrateProfileLocks();
@@ -196,6 +210,29 @@ describe('[OA] removal leaves the locks in the same write sequence (13.2)', () =
     useProfileStore.getState().remove('profile:sora');
     await vi.waitFor(() => expect(stored()).toEqual({ v: 1, ids: [] }));
     expect(JSON.parse(disk.get('profiles')!).map((p: Profile) => p.id)).toEqual(['profile:mina', 'profile:jun']);
+  });
+});
+
+describe('[OA] the active learner never falls back to a locked one', () => {
+  it('removing the active learner makes the first unlocked one active, never a locked one', async () => {
+    disk.set(KEY, JSON.stringify({ v: 1, ids: ['profile:jun'] }));
+    await hydrateProfileLocks();
+    useProfileStore.getState().remove('profile:mina');
+    expect(useProfileStore.getState().activeId).toBe('profile:sora');
+  });
+
+  it('with every learner left locked, the first one stays the fallback (the relock asks the PIN, CS-19)', async () => {
+    disk.set(KEY, JSON.stringify({ v: 1, ids: ['profile:jun', 'profile:sora'] }));
+    await hydrateProfileLocks();
+    useProfileStore.getState().remove('profile:mina');
+    expect(useProfileStore.getState().activeId).toBe('profile:jun');
+  });
+
+  it('removing a learner who is not active keeps the active one', async () => {
+    disk.set(KEY, JSON.stringify({ v: 1, ids: ['profile:mina'] }));
+    await hydrateProfileLocks();
+    useProfileStore.getState().remove('profile:jun');
+    expect(useProfileStore.getState().activeId).toBe('profile:mina');
   });
 });
 

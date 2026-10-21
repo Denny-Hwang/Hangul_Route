@@ -169,5 +169,8 @@ describe('[OA] destinations LockedProfile and FreshPin (CS-4)', () => {
     expect(voidWithoutPin({ next: 'LockedProfile' }, 'hash')).toBe(false);
     expect(voidWithoutPin({ next: 'LockedProfile', mode: 'setup', via: 'wait' }, null)).toBe(false);
     expect(voidWithoutPin({ next: 'ParentDashboard' }, null)).toBe(false);
+    // A hash that could not be read is not "no PIN": nothing is void (fail closed, 13.2).
+    expect(voidWithoutPin({ next: 'LockedProfile' }, null, true)).toBe(false);
+    expect(voidWithoutPin({ next: 'FreshPin' }, null, true)).toBe(false);
   });
 });

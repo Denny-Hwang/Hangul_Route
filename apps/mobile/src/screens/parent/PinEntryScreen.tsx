@@ -55,6 +55,8 @@ import { trackGateOpened, trackPinPaused, trackProfileSwitch } from '../../store
 import { verifyForLockedProfile } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
+import { pickLanding } from '../../logic/profiles/who';
+import { routeZone } from '../../logic/profiles/session';
 import { heldJoin, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
@@ -113,6 +115,9 @@ const SR_ONLY = { position: 'absolute', width: 1, height: 1, margin: -1, overflo
 
 export function PinEntryScreen({ route, navigation }: Props): React.ReactElement {
   const storedHash = useAccountStore((s) => s.parentPinHash);
+  // [OA] Row OA-5: a hash that could not be read is not "no PIN": a lock stays (fail closed, 13.2).
+  const hashReadFailed = useAccountStore((s) => s.pinHashReadFailed);
+  const retryPinHashRead = useAccountStore((s) => s.retryPinHashRead);
   const attempts = useAccountStore((s) => s.pinAttempts);
   const setParentPinHash = useAccountStore((s) => s.setParentPinHash);
   const verifyPinAttempt = useAccountStore((s) => s.verifyPinAttempt);
@@ -204,9 +209,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const leave = (): void => navigation.goBack();
 
   /**
-   * [OA] Section 6.3: a locked tile's learner opens after the PIN (or at once when the lock is void): what ran under is
-   * saved, the learner becomes active (which closes any grown-up session on a change, OA-D5b), and Home opens, or Join
-   * prefilled when a join code is held (OA-D20). Nothing here opens the gate or marks a fresh PIN (CS-3).
+   * [OA] Section 6.3: a locked tile's learner opens after the PIN (or at once when the lock is void), landing as a pick
+   * on the chooser does (section 6.2, `pickLanding`): the learner who was already active, over a learner screen (the
+   * CS-19 relock over a quest or a story), closes this screen and the chooser, and that screen continues where it was.
+   * Otherwise what ran under is saved, the learner becomes active (which closes any grown-up session on a change,
+   * OA-D5b), and Home opens, or Join prefilled when a join code is held (OA-D20). Nothing here opens the gate or marks a
+   * fresh PIN (CS-3).
    */
   const openLocked = (): void => {
     const { profileId, lockedFrom } = route.params;
@@ -215,21 +223,39 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       leave();
       return;
     }
-    persistLeaving();
-    if (profileId !== store.activeId && lockedFrom !== undefined) {
-      if (lockedFrom.via === 'chooser') trackProfileSwitch('chooser', true, Date.now(), lockedFrom.trigger);
-      else trackProfileSwitch('profile', true);
+    const same = profileId === store.activeId;
+    const state = navigation.getState();
+    // This screen sits on the chooser; the route under the chooser is the one the learner may come back to.
+    const chooserBelow = state.index >= 1 && state.routes[state.index - 1]!.name === 'WhoIsUsing';
+    const underRoute = chooserBelow && state.index >= 2 ? state.routes[state.index - 2]! : null;
+    const under = underRoute === null ? null : routeZone(underRoute.name, underRoute.params);
+    const join = lockedFrom?.via === 'chooser' ? heldJoin() : null;
+    const landing = pickLanding({ same, under, join });
+    if (!same) {
+      persistLeaving();
+      if (lockedFrom !== undefined) {
+        if (lockedFrom.via === 'chooser') trackProfileSwitch('chooser', true, Date.now(), lockedFrom.trigger);
+        else trackProfileSwitch('profile', true);
+      }
     }
     store.setActive(profileId);
-    const join = lockedFrom?.via === 'chooser' ? heldJoin() : null;
-    if (join !== null) {
+    if (landing.kind === 'back') {
+      // A reset (the screen's own way on, never a back the chooser swallows) to the routes under the chooser: the
+      // screen under it keeps its key, so it stays mounted and continues.
+      navigation.reset({ ...state, index: state.index - 2, routes: state.routes.slice(0, state.index - 1) });
+    } else if (landing.kind === 'join') {
       takeHeldJoin();
-      navigation.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'JoinSpace', params: join.code === null ? undefined : { code: join.code } }] });
+      navigation.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'JoinSpace', params: landing.code === null ? undefined : { code: landing.code } }] });
     } else navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
   };
 
   // [OA] CS-4: with no PIN stored a lock is void (the learner opens) and a fresh PIN has nothing to confirm (back).
-  const voided = voidWithoutPin(route.params, storedHash);
+  const voided = voidWithoutPin(route.params, storedHash, hashReadFailed);
+  // [OA] A hash that could not be read at hydrate is read again on arrival, so the lock can be checked (or found void).
+  useEffect(() => {
+    if ((lockedProfile || freshPin) && hashReadFailed) void retryPinHashRead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
+  }, []);
   useEffect(() => {
     if (!voided) return;
     if (lockedProfile) openLocked();
@@ -381,6 +407,21 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         }
         proceed();
         return;
+      }
+      if ((lockedProfile || freshPin) && useAccountStore.getState().pinHashReadFailed) {
+        // [OA] Fail closed (13.2): the PIN hash is unknown, so it is read again before any check; while it stays
+        // unknown nothing opens, no attempt is counted and the pad stays usable.
+        await retryPinHashRead();
+        if (useAccountStore.getState().pinHashReadFailed) {
+          setEntry('');
+          setHint(messages.common.errors.generic);
+          return;
+        }
+        // A read that now says "no PIN" makes the lock void (the effect above opens the learner).
+        if (useAccountStore.getState().parentPinHash === null) {
+          setEntry('');
+          return;
+        }
       }
       if (lockedProfile) {
         // [OA] Section 6.3, CS-3: the locked-profile verify path: no gate session, no fresh PIN.
@@ -599,7 +640,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           tone="ghost"
           size="md"
           fullWidth
-          onPress={() => navigation.replace('PinReset', { next: route.params.next, profileId: route.params.profileId })}
+          onPress={() =>
+            navigation.replace('PinReset', {
+              next: route.params.next,
+              profileId: route.params.profileId,
+              ...(route.params.lockedFrom === undefined ? {} : { lockedFrom: route.params.lockedFrom }),
+            })
+          }
         />
       ) : null}
     </Screen>

@@ -91,10 +91,11 @@ export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boole
 
 /**
  * [OA] A destination that checks a PIN but has none to check (CS-4): a locked tile (a lock without a PIN is void, so
- * the learner opens) and a fresh PIN (the control is disabled without a PIN, so there is nothing to confirm).
+ * the learner opens) and a fresh PIN (the control is disabled without a PIN, so there is nothing to confirm). A hash
+ * that could not be read (`hashReadFailed`) is not "no PIN": nothing is void then (fail closed, section 13.2).
  */
-export function voidWithoutPin(params: PinRouteParams, storedHash: string | null): boolean {
-  return storedHash === null && (forFreshPin(params) || (forLockedProfile(params) && params.mode !== 'setup'));
+export function voidWithoutPin(params: PinRouteParams, storedHash: string | null, hashReadFailed = false): boolean {
+  return storedHash === null && !hashReadFailed && (forFreshPin(params) || (forLockedProfile(params) && params.mode !== 'setup'));
 }
 
 /** The grown-up area on a device with no PIN stored: one line and Continue to the grown-up page, no pad. */

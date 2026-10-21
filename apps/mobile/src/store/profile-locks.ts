@@ -54,22 +54,30 @@ export async function hydrateProfileLocks(): Promise<void> {
 /** Stands in for a stored value that did not parse. */
 const BROKEN = { broken: true } as const;
 
+/**
+ * Whether a grown-up PIN may exist, for the locks: a stored hash, or a hash that could not be read
+ * (`pinHashReadFailed`). An unreadable hash is never "no PIN", so it never voids a lock (fail closed, 13.2).
+ */
+export function pinMayExist(account: { parentPinHash: string | null; pinHashReadFailed: boolean } = useAccountStore.getState()): boolean {
+  return account.parentPinHash !== null || account.pinHashReadFailed;
+}
+
 const learnerIds = (profiles: readonly Profile[]): string[] => profiles.filter((p) => p.role === 'learner').map((p) => p.id);
 
 /** The learner ids locked now (void without a PIN; every learner while the record is unread). */
-export function lockedIds(profiles: readonly Profile[], read: LocksRead = useProfileLocks.getState().read, pinSet: boolean = useAccountStore.getState().parentPinHash !== null): string[] {
+export function lockedIds(profiles: readonly Profile[], read: LocksRead = useProfileLocks.getState().read, pinSet: boolean = pinMayExist()): string[] {
   return effectiveLocks({ profileIds: learnerIds(profiles), read, pinSet });
 }
 
 /** Whether the screens show `learner.who.locksUnread` (unread, with a PIN) in place of the per-tile captions. */
-export function locksUnread(read: LocksRead = useProfileLocks.getState().read, pinSet: boolean = useAccountStore.getState().parentPinHash !== null): boolean {
+export function locksUnread(read: LocksRead = useProfileLocks.getState().read, pinSet: boolean = pinMayExist()): boolean {
   return locksUnreadShown({ read, pinSet });
 }
 
 /** The hook the chooser, the Profile tiles and Edit profile read: the locked ids and the unread line, kept current. */
 export function useLocks(profiles: readonly Profile[]): { locked: ReadonlySet<string>; unread: boolean } {
   const read = useProfileLocks((s) => s.read);
-  const pinSet = useAccountStore((s) => s.parentPinHash !== null);
+  const pinSet = useAccountStore(pinMayExist);
   return { locked: new Set(lockedIds(profiles, read, pinSet)), unread: locksUnread(read, pinSet) };
 }
 
