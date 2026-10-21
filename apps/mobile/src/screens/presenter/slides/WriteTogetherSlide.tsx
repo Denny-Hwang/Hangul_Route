@@ -48,7 +48,7 @@ export function WriteTogetherSlide({ slide, reveal, romanization }: { slide: Wri
   return (
     <View testID="presenter-write" {...{ dataSet: { variant: slide.variant } }} style={{ flex: 1, gap }}>
       <WriteHead title={m.title} where={m.where} />
-      <View onLayout={fit.onRoom} style={{ flex: 1, minHeight: 0 }}>
+      <View testID="presenter-write-room" onLayout={fit.onRoom} style={{ flex: 1, minHeight: 0 }}>
         <View ref={fit.contentRef} onLayout={fit.onContent} testID="presenter-write-content" {...{ dataSet: { fit: String(fit.level) } }} style={{ gap }}>
           {slide.variant === 'type' ? (
             <TypeParts slide={slide} view={view} line={m.type} level={fit.level} />

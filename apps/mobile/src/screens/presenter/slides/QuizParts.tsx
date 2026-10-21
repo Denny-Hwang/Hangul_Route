@@ -83,6 +83,17 @@ export function QuizOptions({
 }
 
 /**
+ * Whether a picture card's row is too short for it (design/screens/presenter/slide-quiz.md "Notes"): a picture card
+ * never draws below its marker, so a row shorter than the marker and the card's padding and border on both sides (a
+ * key row that wraps above the grid, a wider fallback font) asks the slide for room, as a crowded gloss does. A pixel
+ * of rounding is allowed. A row not measured yet (`Infinity` before the grid lays out) and a card with no picture are
+ * never crowded by it. Lengths in pixels, as the card draws them.
+ */
+export function pictureCrowded({ picture, rowHeight, marker, padV, line }: { picture: boolean; rowHeight: number; marker: number; padV: number; line: number }): boolean {
+  return picture && Number.isFinite(rowHeight) && rowHeight + 1 < marker + 2 * (padV + line);
+}
+
+/**
  * One option card: marker, content (`optionContent`: a letter or word at `presenter.size.display`
  * with its romanization, a gloss at `presenter.size.prompt`, or a story check's word with its gloss
  * under it) and, at the reveal, the check mark.
@@ -127,10 +138,9 @@ function OptionCard({
   const glossRoom = rowHeight - 2 * (padV + line) - (content.ko !== null ? koHeight + units(unit, spacing.xs) : 0);
   // Checked whenever either side changes: the grid's row height arrives after the gloss is laid out.
   const overflows = !glossSmall && glossSize > bodySize && glossHeight > glossRoom;
-  // A picture card never draws below its marker: a row shorter than that (a key row that wraps above the grid)
-  // asks the slide for room, as a crowded gloss does.
-  const pictureCrowded = picture !== undefined && Number.isFinite(rowHeight) && rowHeight + 1 < units(unit, MARKER_BODY_FACTOR * presenter.size.body) + 2 * (padV + line);
-  const crowded = (glossSize === bodySize && glossHeight > glossRoom) || pictureCrowded;
+  const crowded =
+    (glossSize === bodySize && glossHeight > glossRoom) ||
+    pictureCrowded({ picture: picture !== undefined, rowHeight, marker: units(unit, MARKER_BODY_FACTOR * presenter.size.body), padV, line });
   useEffect(() => {
     if (overflows) onGlossOverflow();
   }, [overflows, onGlossOverflow]);
