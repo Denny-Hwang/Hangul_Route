@@ -831,8 +831,8 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 
 **Row CM-5 (lessons) and row CM-8 (stories):**
 1. **Split the manifest from the bodies.**
-   - `lessons-index` keeps only ids, English titles, minutes, stage, theme, pack and volume, at 60 KB raw or less (372 KB today).
-   - es and ko titles move to one small title chunk per locale, loaded for the active locale only.
+   - `lessons-index` (the start-loaded manifest) keeps only what a screen draws before any chunk loads: ids, English titles, minutes, stage, theme, pack and volume, each episode's quest list and the letters each quest teaches, at 60,000 B raw or less (372 KB before CM-5). Until row CM-40 it also carries the display lines the grid, Home and the lesson page draw (an episode's subtitle, Hoya intro and reward cards, a quest's blurb); CM-40 moves them out, as the decision record below sets out.
+   - es and ko titles move to one small title chunk per locale (30,000 B or less), loaded for the active locale only.
    - Story shelf metadata and ids join the manifest. Story tiers, scenes and art move out.
 2. **Move bodies out of the JS bundle.** Quest bodies, story bodies, the review-item index, Volume 2 and packs move to static JSON chunks.
    - The PWA build emits them, Workbox precaches them, and they are fetched on demand.
@@ -851,18 +851,29 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 - **The PWA on WebKit (the open iOS 14 offline issue).** That issue is the iOS 14.8.1 home-screen PWA, which is WebKit with a service worker that does not always take control, so the web path is the one that matters:
   - With a worker in control, every chunk is in the precache and loads from it offline. Evidence: the offline e2e passes in Chromium, and the same Stage 2 lesson plays in WebKit (Playwright's iPhone 13 project, `E2E_WEBKIT=1`) with the server stopped after one online visit, all 25 cell chunks loading from the precache. (Playwright's WebKit cannot reload a page after `context.setOffline(true)`, "WebKit encountered an internal error", which fails every spec of `offline.spec.ts` that does so, including the ones this row did not touch; the stopped-server run is the WebKit evidence.)
   - Once the first screen is up, the web app loads every cell chunk in the background (`platform/lesson-prefetch.web.ts`; `requestIdleCallback`, or a short timer where Safari has none). The bytes were in the start bundle before, so this adds nothing to memory; it means a session that started online keeps every lesson when the network goes, even with no worker in control, which is the iOS 14 case. A session that starts offline with no worker in control could not open the app before this row either.
-  - A chunk that answers with the app's HTML page, or with another build's chunk, means the page runs an older build than the server (another tab applied an update and its worker dropped this build's chunks, or a deploy landed while no worker was in control). The page reloads once, online only and at most once a minute (`platform/new-build-reload.web.ts`), onto the new build. A chunk that cannot load at all (offline with no worker, a request that hangs past 15 s) shows the crash screen's Try again, never a reload, and Try again loads it again. Both paths are in the offline e2e, with the worker blocked.
-  - The iOS 14 issue is therefore not made worse: a lesson that opened offline before this row still opens.
-- **Native builds.** Metro splits bundles only on the web. `npx expo export --platform ios` gives one Hermes bundle (`index-<md5>.hbc`, 10.8 MB) and no `lessons-cell-*` file; the step text of the Stage 2 Letters & Books chunk and the Spanish title chunk are inside it. With no split, Metro's `import()` resolves from the bundle with no request, so the native `buildUrlForBundle` (which throws in production without `location`) is never reached. The loader stays installed on native too, because the dev server's lazy bundles need it. A Stage 2 lesson in the iOS simulator in airplane mode was not run in this row.
+  - The window this leaves: with no worker in control, Safari starts the background load 1.5 s after the first screen (`PREFETCH_FALLBACK_MS`; it has no `requestIdleCallback`) and then asks for 27 chunks. A session that loses the network inside that window, before they are in, loses the lessons not yet loaded, which it would have kept before this row, when they were in the start bundle. On a working network the window is a few seconds after the first screen; with a worker in control there is none.
+  - A chunk that answers with the app's HTML page, or with another build's chunk, means the page runs an older build than the server (another tab applied an update and its worker dropped this build's chunks, or a deploy landed while no worker was in control). The page reloads once, online only and at most once a minute (`platform/new-build-reload.web.ts`), onto the new build.
+  - The host's single-page fallback answers a missing chunk with `index.html` (200). Without `X-Content-Type-Options: nosniff` the browser runs it, Metro finds no module in it, and that is the newer-build case above. If a host rule ever sends nosniff there, the browser refuses the page as a script and fires the same `error` as a network failure. So a script error, when online, asks the chunk URL once more (`cache: 'no-store'`): a 404 or an HTML answer is a newer build and reloads the same way, anything else (the script, a server error, no answer) is a network failure. `pwa-postbuild.mjs` also fails a build whose `_headers` would send nosniff on a lesson chunk, so the plain path stays the one in use.
+  - A chunk that cannot load at all (offline with no worker, a request that hangs past 15 s) shows the crash screen, never a reload. Its Try again returns to Home, and opening the lesson loads the chunk again. A load that hangs past 15 s also gives up its pending script (`platform/lesson-chunk-abandon.web.ts`), because Metro's loader keeps a pending load by its path and would hand the same hung request to every later try. The newer-build paths (HTML that runs, HTML refused under nosniff) and the network failure are in the offline e2e, with the worker blocked.
+  - The crash screen is the app's own Oops screen, whose copy is calm and blames no one, reused here so this row adds no strings. An in-place retry on the waiting screen (a line that the lesson needs the internet once, and a retry button) needs new strings, so it is row CM-5C in section 17.
+  - The iOS 14 issue is therefore not made worse: a lesson that opened offline before this row still opens, apart from the background-load window above.
+- **Native builds.** Metro splits bundles only on the web. `npx expo export --platform ios` gives one Hermes bundle (`index-<md5>.hbc`, 10.8 MB) and no `lessons-cell-*` file; the step text of the Stage 2 Letters & Books chunk and the Spanish title chunk are inside it. With no split, Metro's `import()` resolves from the bundle with no request, so the native `buildUrlForBundle` (which throws in production without `location`) is never reached. The loader stays installed on native too, because the dev server's lazy bundles need it.
+  - Run evidence: the same production export as plain JS (`--no-bytecode`, 8.99 MB) was evaluated in a JavaScript VM without its entry calls, with a bundle loader that throws if called. The manifest module's own `loadLessonCell` and `loadLessonTitles` loaded all 25 cell chunks and both title chunks, each with the hash the manifest names; the Stage 2 Letters & Books first quest came back with its six steps (intro, discover, practice, apply, check, reward), and the loader was never called. The compiled call is `asyncRequire(id, d.paths)`, and a native dependency map carries no `paths`, so `import()` goes straight to `require.importAll`.
+  - Not run: a Release build in the iOS simulator. No simulator UI driver is installed in this environment (no Maestro, idb or Detox) and the app has no deep link into a lesson, so a simulator run cannot open one unattended. The VM run executes the same production module code; Hermes only compiles it to bytecode. A device or simulator check of a Stage 2 lesson stays on the release checklist of the next native build.
 - **Layout.** `scripts/build-lessons.mjs` writes `__generated__/lessons-index.ts` (the start-loaded manifest) and `__generated__/lesson-chunks/`:
   - one chunk per ready cell, `lessons-cell-stage<n>-<theme>.ts`, with the steps of its quests, its game scopes and the es / ko glosses of both;
   - one title chunk per locale, `lessons-titles-<locale>.ts`.
-- **Deviation from item 1 (needs owner or spec sign-off).** Item 1 lists the manifest's fields as ids, English titles, minutes, stage, theme, pack and volume. The manifest built here holds more:
-  - each episode as before, with its subtitle, Hoya intro and reward cards;
-  - each quest's blurb, teaser and reward card;
-  - `LESSON_TEACHES`, the jamo each quest's Discover step teaches.
+- **Manifest fields, and how they stay under their lines.** The manifest built here holds what item 1 lists, the quest list of each episode, `LESSON_TEACHES` (the jamo each quest's Discover step teaches) and, until CM-40, the display lines: each episode's subtitle, Hoya intro and reward cards, and each quest's blurb. The title chunks hold the es / ko text of the same fields. These are what the grid, the Home cards, the lesson page, a closed quest's letters, the results teaser and the placement catalogue draw before any chunk loads, so moving them into the cell chunks would make those screens wait on a fetch.
+  - Projected sizes, from the per-entity averages of the measured Volume 1 manifest (an episode 422 B, a quest 174 B, 144 B of loader and hash per cell; without the display lines an episode is 253 B and a quest 81 B) and of the title chunks (es 165 B, ko 176 B per entity; titles only 55 B and 57 B):
 
-  These are what the grid, the Home cards, a closed quest's letters on the lesson page, the results teaser and the placement catalogue draw before any chunk loads. Moving them into the cell chunks would make those screens wait on a fetch. The manifest measures 30,364 B, under its 60,000 B line. If Volume 2 and the packs bring it near the line, the display lines (subtitle, Hoya intro, blurb, teaser) move into the cell chunks first. Until the owner signs this off, item 1 stands as written and this is the recorded difference.
+    | Content | Manifest (60,000 B line) as built now | Manifest without the display lines | es / ko title chunk (30,000 B line) as built now | es / ko titles only |
+    |---|---|---|---|---|
+    | Volume 1 (25 cells, 78 quests; measured) | 30,364 B | about 18,900 B | 17,517 / 18,659 B | about 6,100 / 6,300 B |
+    | Volume 1 + 2 (50 episodes, 153 quests) | about 58,100 B | about 35,400 B | about 34,000 / 36,300 B | about 11,600 / 12,000 B |
+    | Volume 1 + 2 + the 8 packs in the same manifest (90, 273) | about 102,500 B | about 61,900 B | about 60,500 / 64,500 B | about 20,300 / 21,000 B |
+
+  - As built now, the title chunks would pass 80% of their line with the second Volume 2 content row and the manifest with the fourth. So **row CM-40** (before any Volume 2 content row) moves the display lines out of the manifest and the title chunks into one precached "lesson headers" chunk per locale, English included, loaded before the first screen the way the title chunk is (the same 2.5 s wait at most), and gives each Volume 2 episode a body chunk of its own. The manifest then holds what item 1 lists, the quest lists and `LESSON_TEACHES`.
+  - Even without the display lines, the packs in the same manifest would pass its line. So **row CM-50a** keeps the pack levels out of the start-loaded manifest: their headers go in a pack manifest chunk, and their titles in a pack title chunk per locale, loaded when the topic pages open (packs sit off the route, OD-2). The 60,000 B line then covers Volume 1, Volume 2 and the story shelf (CM-8), at about 35 KB before the shelf.
 - **Content hashes.** Each chunk exports `CHUNK_HASH`, the first 16 hex characters of the sha256 of its data, and the manifest names the same hash. The app refuses a chunk whose hash differs. `apps/mobile/scripts/pwa/lesson-chunks.mjs`, run by `pwa-postbuild.mjs`, fails the build in each of these cases:
   - a manifest entry has no bundle, or more than one;
   - a bundle does not carry the manifest's hash;
@@ -871,36 +882,37 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
   - the start bundle does not name every hash;
   - the start bundle carries a chunk.
 - **On demand.**
-  - The learner app loads the active locale's title chunk before its first screen, and a newly chosen locale applies once its titles are in. A title chunk that failed offline is asked for again when the network is back.
-  - The quest player and the game screen load their cell's chunk. They draw only the screen header (the way back) for the frame or two this takes, and a calm "Loading lesson" line if it takes longer than 500 ms. A chunk that cannot load goes to the crash screen, whose Try again loads it again.
+  - The learner app loads the active locale's title chunk before its first screen, and a newly chosen locale applies once its titles are in. Either waits 2.5 s at most (`TITLES_GRACE_MS`): past that, the screens show in the chosen locale with the lesson titles in English, and draw them again when the chunk arrives (the localized memos key on `useLessonTitlesVersion`). A title chunk that failed offline is asked for again when the network is back.
+  - The quest player and the game screen load their cell's chunk. They draw only the screen header (the way back) for the frame or two this takes, and a calm "Loading lesson" line if it takes longer than 500 ms. A chunk that cannot load goes to the crash screen, whose Try again returns to Home; opening the lesson again loads the chunk.
   - My Route and the grown-up reports count skills over every quest, so they load every chunk and recompute as each one arrives. Counts only fill.
   - All lessons and the presenter read the whole catalogue, so they mount once every chunk is in. If a chunk fails, they show the crash screen with Try again, never a catalogue with empty lessons.
 - **Budget lines on the deploy.** `build:web` passes `--budget`, and `build:web` is also the Cloudflare Workers Builds deploy command. On the deploy's own build (`WORKERS_CI` or `CF_PAGES` set) a budget line only warns, so it never stops a deploy, a hotfix least of all. The pull request's `build:web` in CI fails on it. The chunk checks above fail every build, deploy or not.
-- **Measured (release build `pnpm build:web` on a384759ca, no recorded clips).**
+- **Measured (release build `pnpm build:web` on 619f4ae2b, the main this row merges onto, no recorded clips).** The start bundle before CM-5 was measured on a384759ca; main has changed only docs since.
 
   | Measure | Size |
   |---|---|
-  | Start bundle | 8,321,783 B raw / 1,921,695 B gzip before CM-5; 7,335,066 B raw / 1,792,320 B gzip after (-986,717 B raw) |
-  | Lesson chunks (27 bundles) | 1,014,012 B raw / 151,302 B gzip |
+  | Start bundle | 8,321,783 B raw / 1,921,695 B gzip before CM-5; 7,337,815 B raw / 1,793,420 B gzip after (-983,968 B raw) |
+  | Lesson chunks (27 bundles) | 1,014,012 B raw / 151,300 B gzip |
   | Generated lesson modules (`build-lessons.mjs --report`) | 940,591 B raw / 142,270 B gzip |
   | Manifest (`lessons-index.ts`) | 30,364 B raw |
   | Title chunks | es 17,517 B, ko 18,659 B |
   | Largest cell chunk module | Stage 2 Letters & Books, 61,381 B raw / 11,070 B gzip (six quests) |
   | Stage game content | largest is Stage 6, 129,982 B raw / 16,806 B gzip |
-  | Learner precache | 35 files, 8,784,580 B |
+  | Learner precache | 35 files, 8,787,329 B |
 
-  - The start bundle line is its size after CM-5 plus a 4,934 B rounding margin: 7,340,000 B. The bundle cannot grow back by more than that margin, and lesson content that slips back into it is also caught by the chunk check above. A row that adds to the start bundle raises the line as a reviewed one-line change with its measurement. CM-8 lowers it with its own measurement.
-  - The learner precache line is 11,284,580 B (measured + 2.5 MB), so CM-5B stays untriggered.
+  - The start bundle line is its size after CM-5 plus a 2,185 B rounding margin: 7,340,000 B. The bundle cannot grow back by more than that margin, and lesson content that slips back into it is also caught by the chunk check above. A row that adds to the start bundle raises the line as a reviewed one-line change with its measurement. CM-8 lowers it with its own measurement.
+  - The learner precache line is 11,287,329 B (measured + 2.5 MB), so CM-5B stays untriggered.
+  - Lines are absolute, so a row that merged after this measurement and grew the start bundle can turn the next build red with no change of its own. The fix is to re-measure in the row that grew the bundle, not in the row that happens to build next; this row re-measures on its merge-time main before it merges.
   - Audio: the measurement holds no recorded clips (none are bundled yet). The clips are precached, so they count toward the same line. The row that lands the jamo recordings re-measures the precache and moves the line by the clips' measured bytes, as a reviewed one-line change, so recordings never trigger CM-5B on their own.
 
 **Ceilings.** Each ceiling is a reviewed one-line change with measured numbers in its PR. These are lazy and precached, so they put no weight on start-up (OD-5).
 
 | Budget line | Today | New ceiling |
 |---|---|---|
-| Start bundle | 8,321,783 B raw before CM-5; 7,335,066 B raw after CM-5 | must not grow at any row: 7,340,000 B raw, the CM-5 measurement plus a 4,934 B rounding margin (`PRECACHE_BUDGET.startBundleRaw`); after CM-5 and CM-8 it shrinks by about 1.5 MB raw (the lesson index and the story module leave it) |
+| Start bundle | 8,321,783 B raw before CM-5; 7,337,815 B raw after CM-5 | must not grow at any row: 7,340,000 B raw, the CM-5 measurement plus a 2,185 B rounding margin (`PRECACHE_BUDGET.startBundleRaw`); after CM-5 and CM-8 it shrinks by about 1.5 MB raw (the lesson index and the story module leave it) |
 | `manifestRaw` (English, lessons and story shelf) | 372 KB (whole lesson index) | 60,000 B |
 | Title chunk per locale | — | 30,000 B |
-| Per cell chunk (one cell's emitted body chunk module: steps, scopes and their glosses), raw / gzip | — (largest at CM-5: 61,381 / 11,070, Stage 2 Letters & Books) | 90,000 / 16,000 (`cellChunkRaw`, `cellChunkGzip`) |
+| Per cell chunk (one cell's emitted body chunk module: steps, scopes and their glosses), raw / gzip | — (largest at CM-5: 61,381 / 11,070, Stage 2 Letters & Books) | 90,000 / 16,000 (`cellChunkRaw`, `cellChunkGzip`); Volume 2 gets a chunk of its own per cell and volume (CM-40), because both volumes in one chunk would pass the line (about 120 KB for Letters & Books), and CM-40 re-measures the line |
 | Core lessons total (Volume 1 + 2), raw / gzip | 950,000 / 140,000 | 1,400,000 / 210,000 |
 | Per stage chunk (a stage's game scopes and their glosses, as F-CURR-001 measured its stage module), raw / gzip | 150,000 / 32,000 | 220,000 / 40,000 |
 | Per pack chunk, raw / gzip | — | 90,000 / 14,000 |
@@ -909,13 +921,14 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 | Per story chunk, raw | — | 70,000 |
 | Stories total, raw | 1,255,855 (1,300,000 ceiling), in the start bundle | 2,000,000, precached; the gzip ceiling is set from the CM-8 measurement |
 | Hidden Heritage scene | — | 25,000 B each |
-| Learner precache total | 8,784,580 B (CM-5, 35 files, no recorded clips) | measured + 2.5 MB = 11,284,580 B (`PRECACHE_BUDGET.learnerPrecacheRaw`); re-measured when the jamo recordings land |
+| Learner precache total | 8,787,329 B (CM-5, 35 files, no recorded clips) | measured + 2.5 MB = 11,287,329 B (`PRECACHE_BUDGET.learnerPrecacheRaw`); re-measured when the jamo recordings land |
 | Per-quest average, raw | 9,000 | 9,000 (unchanged) |
 
 **Sizing basis.**
 - A quest is about 5 KB raw on the compact literal. Volume 2 is 75 quests, about 400 KB raw. The packs are 120 quests, about 650 KB raw.
 - Stories: 11 new tales (after the de-duplication of section 5) at about 52 KB each is about 570 KB raw, and read tiers for 10 listen-only stories at about 12 KB each is about 120 KB raw. 1,256 KB + 690 KB is about 1.95 MB, under the 2,000,000 B ceiling.
 - About 1.9 MB raw is added over the whole plan, all of it outside the start bundle.
+- The 60,000 B manifest line covers Volume 1, Volume 2 and the story shelf once CM-40 has moved the lesson display lines out; the packs keep a manifest chunk of their own (CM-50a), because at the plan's scale they alone would pass it (decision record above).
 - CM-46a and CM-46 depend on CM-8, so no story row can grow the start bundle.
 
 **Offline.** The memory store, review engine, goals and "This week in Korea" all work offline. Remote config fails safe (12.2). Nothing in Phases 1-2 adds a network dependency, so the open iOS 14 offline issue is not made worse.
@@ -1214,6 +1227,7 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-4 | `fix(mobile): streak on the local day, streakLocal and streakBest, no-drop switch-over (F-CURR-002 OD-14)` (W→A) | M | CM-3b | 0 | TZ fixed-clock tests, switch-over, an older-build sync never lowers the display |
 | CM-5 | `perf(content): lesson manifest split, per-locale title chunks, content-hashed precached bodies, budget lines, precache report (F-CURR-002)` | L | — | 0 | start-bundle and manifest budgets, precache gaps, chunk hash check, lazy-load test, offline e2e |
 | CM-5B | `feat(mobile): Save for offline for packs` (only if the precache ceiling is crossed) | M | CM-5 report | 4 | offline e2e |
+| CM-5C | `feat(mobile): in-place retry on the lesson waiting screen when a chunk needs the internet (F-CURR-002 §10)` | S | CM-5 | about 2 | render test from a cold store, offline e2e with the worker blocked |
 | CM-6 | `build(content): generated modules no longer committed, turbo generate task, generated catalogue, addedIn date stamps for CATALOG_VERSION, derived route-day pins, presenter font and e2e cell list (F-CURR-002)` | L | CM-5 | 0 | generator determinism, catalogue parity, stamp check, route-day snapshot, font coverage |
 | CM-7 | `feat(content-schema): lint rules (errors for Volume 2, packs and new stories; warnings for Volume 1) and coverage reports (F-CURR-002)` | M | — | 0 | rule unit tests with fixtures |
 | CM-8 | `perf(content): stories out of the start bundle, shelf metadata in the manifest, per-story precached chunks (F-CURR-002)` | L | CM-5 | 0 | start bundle shrinks, per-story budget, offline story e2e |
@@ -1267,11 +1281,13 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 
 ### Phase 4: depth (Volume 2)
 
+CM-40 also carries two items of section 10 (decision record, "Manifest fields"): it moves the lesson display lines (an episode's subtitle, Hoya intro and reward cards, a quest's blurb) out of the start-loaded manifest and the title chunks into one precached lesson headers chunk per locale, English included, loaded before the first screen like the title chunk; and it gives each Volume 2 episode a body chunk of its own. Both land before the first Volume 2 content row, with the measured numbers in its PR.
+
 Formats used decide extra dependencies: S2 rows need CM-36/37 (Hidden Heritage) and CM-32 (Syllable Build) where their table uses them; S4 rows need CM-35 (Role Play); S6 rows need CM-47 (realia kinds); S7 rows need CM-38 (My Story); Play S2 needs CM-39 (Yut Review). CM-3B is not a dependency, because the lint is an error for Volume 2 files from day one.
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-40 | `feat(mobile,content-schema,web): two volumes per cell: id regexes, build-lessons v2 input, CatalogCell.episodeIds, placement and route days, lecture chooser, Vol 1 and Vol 2 on the cell sheet (F-STORY-005 PR 5.8, F-CURR-002)` | L | CM-5, CM-6 | about 3 | capacity, `episodesFor` order, placement of v2 quests, chooser accepts v2, e2e |
+| CM-40 | `feat(mobile,content-schema,web): two volumes per cell: id regexes, build-lessons v2 input, CatalogCell.episodeIds, placement and route days, lecture chooser, Vol 1 and Vol 2 on the cell sheet (F-STORY-005 PR 5.8, F-CURR-002)` | L | CM-5, CM-6 | about 3 | capacity, `episodesFor` order, placement of v2 quests, chooser accepts v2, e2e; the lesson headers chunk and a body chunk per volume (below) with their manifest, title chunk and cell chunk lines |
 | CM-41 ×5 | `content(stage<n>): Nature Volume 2, S2 / S3 / S4 / S6 / S7 (F-CURR-002)` | M each | CM-40, CM-30, CM-31, plus the format rows above | overlays | U-rules, recycle, sources, MAR |
 | CM-42 ×5 | `content(stage<n>): Play Volume 2 (F-CURR-002)` | M each | same | overlays | same |
 | CM-43 ×5 | `content(stage<n>): Food Volume 2 (F-CURR-002)` | M each | same | overlays | same |
@@ -1288,7 +1304,7 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, pack order list, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, every pack directory in `order.json`, scaffold |
+| CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, pack order list, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, every pack directory in `order.json`, scaffold, pack levels outside the start-loaded manifest (section 10: a pack manifest chunk and a pack title chunk per locale, loaded with the topic pages) |
 | CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 18 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
 | CM-50c | `feat(mobile,web): lecture and console chooser accept pack levels (F-CURR-002)` | S-M | CM-50a | about 2 | chooser regex, deck schema, old-presenter decode failure |
 | CM-51 ×5 | `content(packs): Numbers & Time, levels 1-5 with the Pack Check in L5 (F-CURR-002)` | M each | CM-50a, CM-50b, plus the level rows above | overlays | U-rules, sources, MAR |
@@ -1317,14 +1333,14 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | Group | PRs |
 |---|---|
-| Phase 0 | 16 (plus the conditional CM-5B) |
+| Phase 0 | 17 (plus the conditional CM-5B) |
 | Phase 1 | 8 |
 | Phase 2 | 8 (CM-23 counts as 3) |
 | Phase 3 | 20 (CM-37 ×4, CM-3A ×5) |
 | Phase 4 | 34 (5 themes ×5, book 2 ×5, plus CM-40, CM-46a, CM-47, CM-48) |
 | Phase 5 | 44 (8 packs ×5, plus CM-50a, CM-50b, CM-50c, CM-59) |
 | Phase 6 | 7 |
-| **Total** | **137** |
+| **Total** | **138** |
 
 CM-5B is conditional and is counted only if the CM-5 report triggers it. Each content row's PR description lists the MAR pass findings with outcomes, the `--report` bytes for the chunk, test counts and one 320 px screenshot.
 
