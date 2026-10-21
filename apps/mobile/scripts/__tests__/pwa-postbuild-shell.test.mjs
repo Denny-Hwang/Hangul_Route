@@ -8,7 +8,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LESSON_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
+import { PRECACHE_BUDGET } from '../pwa/lesson-chunks.mjs';
+import { LESSON_MANIFEST, STORY_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GROWN_UP_PREFIXES, LEARNER_ROOTS, isGrownUpPath } from '@hangul-route/content-schema';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
@@ -409,9 +410,13 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
 
   it('precaches every lesson chunk and prints the precache report (F-CURR-002 §10)', () => {
     for (const { name } of LESSON_MANIFEST) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
+    // Row CM-8: every story chunk too.
+    expect(STORY_MANIFEST.length).toBeGreaterThan(0);
+    for (const { name } of STORY_MANIFEST) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
     expect(run.stdout).toContain('pwa-postbuild: precache report (F-CURR-002 §10)');
     expect(run.stdout).toMatch(/ {2}start bundle {2}_expo\/static\/js\/web\/index-abc\.js {2}\d+ B raw {2}\d+ B gzip {2}\(ceiling \d+ B raw\)/);
     expect(run.stdout).toContain(`  lesson chunks  ${LESSON_MANIFEST.length} bundles  `);
+    expect(run.stdout).toContain(`  story chunks  ${STORY_MANIFEST.length} bundles  `);
     expect(run.stdout).toMatch(/ {2}learner precache {2}\d+ files {2}\d+ B {2}\(ceiling \d+ B\)/);
   });
 
@@ -511,7 +516,7 @@ describe('pwa-postbuild.mjs --budget fails a start bundle that grew', () => {
     const bundles = lessonBundles();
     // A start bundle one byte over its line: the same hashes, padded.
     const start = bundles['_expo/static/js/web/index-abc.js'];
-    bundles['_expo/static/js/web/index-abc.js'] = start + ' '.repeat(Math.max(0, 8_321_784 - start.length));
+    bundles['_expo/static/js/web/index-abc.js'] = start + ' '.repeat(Math.max(0, PRECACHE_BUDGET.startBundleRaw + 1 - start.length));
     const files = {
       'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
       'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
@@ -530,7 +535,8 @@ describe('pwa-postbuild.mjs --budget fails a start bundle that grew', () => {
 
   it('fails over the start bundle line and says it must not grow', () => {
     expect(run.status).not.toBe(0);
-    expect(run.stderr).toMatch(/the start bundle is 8321784 B raw, over its ceiling of 8321783 B: it must not grow/);
+    // The line CM-8 lowered (F-CURR-002 §10): 7,331,204 B, the start bundle before the stories left it.
+    expect(run.stderr).toContain(`the start bundle is ${PRECACHE_BUDGET.startBundleRaw + 1} B raw, over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B: it must not grow`);
   });
 });
 

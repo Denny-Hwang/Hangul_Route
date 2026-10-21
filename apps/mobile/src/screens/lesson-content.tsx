@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { lessonContent } from '../content/lessons';
+import { storyContent } from '../content/stories';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 
 /**
@@ -12,7 +13,7 @@ import { activeLocale, useLocaleStore } from '../store/locale-store';
  * - `useLessonContentVersion`: the screens that count over every quest (the skills of My Route and
  *   the grown-up reports) load every chunk and recompute as each arrives (a count only fills);
  * - `withLessonContent`: the grown-up roots (All lessons, the presenter), which read the whole
- *   catalogue, mount once every chunk has settled.
+ *   catalogue, mount once every chunk has settled, the story chunks of row CM-8 included.
  */
 
 const subscribe = lessonContent.subscribe;
@@ -48,14 +49,18 @@ export function useLessonContentVersion(): number {
   return version;
 }
 
-/** Mounts `Root` once every lesson chunk and the device locale's titles have loaded or failed. */
+/** Mounts `Root` once every lesson chunk, every story chunk and the device locale's titles have loaded or failed. */
 export function withLessonContent<P extends object>(Root: React.ComponentType<P>): React.ComponentType<P> {
   function LessonContentRoot(props: P): React.ReactElement | null {
-    const [settled, setSettled] = useState(() => lessonContent.isAllReady());
+    const [settled, setSettled] = useState(() => lessonContent.isAllReady() && storyContent.isAllReady());
     useEffect(() => {
       if (settled) return undefined;
       let live = true;
-      void Promise.allSettled([lessonContent.ensureAll(), lessonContent.ensureTitles(activeLocale(useLocaleStore.getState()))]).then(() => {
+      void Promise.allSettled([
+        lessonContent.ensureAll(),
+        lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())),
+        storyContent.ensureAll(),
+      ]).then(() => {
         if (live) setSettled(true);
       });
       return () => {

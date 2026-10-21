@@ -10,6 +10,8 @@
 //   - the start bundle names every hash (it was built from the same manifest) and carries no
 //     chunk (a static import would pull one back in: Metro then leaves an empty bundle behind);
 // and reports the start bundle, the chunks and the learner precache against their budget lines.
+// Row CM-8 puts the story chunks of scripts/build-stories.mjs (one per story, the same hashing) through
+// the same checks: pwa-postbuild.mjs passes both manifests, and the report counts each apart.
 // Pure, apart from `md5`/`gzipSize` helpers; pwa-postbuild.mjs feeds it the built files.
 
 import { createHash } from 'node:crypto';
@@ -25,8 +27,9 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  * one-line change with the measured numbers in its PR.
  */
 export const PRECACHE_BUDGET = Object.freeze({
-  // The start bundle must not grow: its size before CM-5 moved the lessons out (8,321,783 B raw, measured on main at a384759ca).
-  startBundleRaw: 8_321_783,
+  // The start bundle must not grow: its size before CM-8 moved the stories out (7,331,204 B raw, after CM-5; it was
+  // 8,321,783 B before CM-5). CM-8 measured 6,336,255 B raw / 1,570,349 B gzip (release build, no recorded clips).
+  startBundleRaw: 7_331_204,
   // The learner precache measured after CM-5 (8,780,718 B, 35 files, the release build) + 2.5 MB; crossing it triggers CM-5B (Save for offline).
   learnerPrecacheRaw: 11_280_718,
 });
@@ -68,18 +71,25 @@ export function lessonChunkProblems({ manifest, bundles, precached }) {
   return problems;
 }
 
-/**
- * The precache report: the start bundle, the lesson chunks and the whole learner precache.
- * @param {{ manifest: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
- */
-export function precacheReport({ manifest, bundles, precache }) {
+const bytes = (text) => Buffer.byteLength(text, 'utf8');
+
+/** Count, raw and gzip bytes of the bundles of these manifest entries. */
+function chunkTotals(manifest, bundles) {
   const names = new Set(manifest.map((m) => m.name));
+  const chunks = bundles.filter((b) => !isStartBundle(b.url) && names.has(NAMED.exec(b.url)?.[1] ?? ''));
+  return { count: chunks.length, raw: chunks.reduce((s, b) => s + bytes(b.text), 0), gzip: chunks.reduce((s, b) => s + gzipSize(b.text), 0) };
+}
+
+/**
+ * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8) and the whole learner precache.
+ * @param {{ manifest: { name: string }[], stories?: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
+ */
+export function precacheReport({ manifest, stories = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
-  const chunks = bundles.filter((b) => names.has(NAMED.exec(b.url)?.[1] ?? ''));
-  const bytes = (text) => Buffer.byteLength(text, 'utf8');
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
-    lessonChunks: { count: chunks.length, raw: chunks.reduce((s, b) => s + bytes(b.text), 0), gzip: chunks.reduce((s, b) => s + gzipSize(b.text), 0) },
+    lessonChunks: chunkTotals(manifest, bundles),
+    storyChunks: chunkTotals(stories, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -91,6 +101,9 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
     lines.push(`  start bundle  ${report.start.url}  ${report.start.raw} B raw  ${report.start.gzip} B gzip  (ceiling ${budget.startBundleRaw} B raw)`);
   }
   lines.push(`  lesson chunks  ${report.lessonChunks.count} bundles  ${report.lessonChunks.raw} B raw  ${report.lessonChunks.gzip} B gzip`);
+  if (report.storyChunks !== undefined) {
+    lines.push(`  story chunks  ${report.storyChunks.count} bundles  ${report.storyChunks.raw} B raw  ${report.storyChunks.gzip} B gzip`);
+  }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
   return lines;
 }

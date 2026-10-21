@@ -1,8 +1,10 @@
 import type { Page } from '@playwright/test';
 import { GROWN_UP_PREFIXES, isGrownUpPath } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
+import { STORY_SHELF } from '../../src/content/__generated__/stories-index';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, seedStored } from './helpers';
+import { position } from './story-reader-helpers';
 
 /**
  * Resolves once the worker is active (precache complete) and controls the page. Polled through
@@ -247,4 +249,112 @@ test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale
     await expect.poll(() => loadedLessonChunks(page)).toEqual([expect.stringMatching(/^\/_expo\/static\/js\/web\/lessons-titles-es-[0-9a-f]{32}\.js$/)]);
     expect(errors).toEqual([]);
   });
+});
+
+/** The story chunk bundles this page has loaded (F-CURR-002 §10, row CM-8): resource entries of the current document only. */
+async function loadedStoryChunks(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    performance
+      .getEntriesByType('resource')
+      .map((e) => new URL(e.name).pathname)
+      .filter((p) => /\/_expo\/static\/js\/web\/story-/.test(p)),
+  );
+}
+
+const STORY_BUNDLE = /^\/_expo\/static\/js\/web\/story-[a-z0-9-]+-[0-9a-f]{32}\.js$/;
+const TALE = 'story:sun-and-moon';
+const TALE_BUNDLE = /^\/_expo\/static\/js\/web\/story-sun-and-moon-[0-9a-f]{32}\.js$/;
+/** The shelf (start bundle) knows the tale's levels and scene counts before its chunk loads. */
+const TALE_SCENES = STORY_SHELF.find((e) => e.id === TALE)?.levels.find((t) => t.level === 'listen')?.scenes ?? 0;
+/** A shelf story's tiles cover the stories on the screen: Home's story cards load their chunks, never all of them. */
+const HOME_STORY_CARDS_MAX = 2;
+
+/** One online visit, then the network goes: the learner home opens from the precache. */
+async function onboardThenOffline(page: Page, context: import('@playwright/test').BrowserContext, name: string): Promise<void> {
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name });
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await controlledBySw(page);
+  const cached = await cachedPaths(page);
+  expect(cached.filter((p) => STORY_BUNDLE.test(p))).toHaveLength(STORY_SHELF.length);
+  await page.reload();
+  await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
+}
+
+async function closeInstallGuide(page: Page, notNow: string): Promise<void> {
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: notNow }).click();
+}
+
+/**
+ * F-CURR-002 §10 (row CM-8): the story bodies left the start bundle. Every story's chunk is precached after
+ * one online visit; at start only the stories Home shows load (their covers); offline, a story opens from
+ * the Library shelf and its reader plays from its own chunk, loaded on demand from the precache.
+ */
+test('story chunks are precached, load on demand, and a story opens and reads offline (F-CURR-002 CM-8)', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  expect(TALE_SCENES).toBeGreaterThan(0);
+
+  await onboardThenOffline(page, context, 'Suni');
+  const atStart = await loadedStoryChunks(page);
+  expect(atStart.length).toBeLessThanOrEqual(HOME_STORY_CARDS_MAX);
+  for (const url of atStart) expect(url).toMatch(STORY_BUNDLE);
+
+  // Library > Story Time: the tiles come from the shelf; the tale's page and its quest load its chunk only.
+  await closeInstallGuide(page, 'Not now');
+  await page.getByText('Library', { exact: true }).last().click();
+  await page.getByRole('tab', { name: 'Story Time', exact: true }).click();
+  await page.getByTestId(`story-tile-${TALE}`).filter({ visible: true }).click();
+  await page.getByTestId(`story-episode-start-${TALE}`).filter({ visible: true }).click();
+  await expect(page.getByRole('heading', { name: 'Story time' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByRole('heading', { name: 'Read the story' })).toBeVisible();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  // The reader's first scene, from the chunk: its narration and the scene count the shelf named.
+  await expect(position(page)).toHaveText(`1 / ${TALE_SCENES}`);
+  await expect(page.getByText(/Story time with Hoya!/).first()).toBeVisible();
+  const loaded = await loadedStoryChunks(page);
+  expect(loaded.filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
+  expect(loaded.length).toBeLessThan(STORY_SHELF.length);
+  expect(errors).toEqual([]);
+});
+
+test('in Spanish, offline: the story overlays apply to a story read from its chunk (F-CURR-002 CM-8)', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  // English onboarding online, then the device language set to Spanish (as the Display sheet stores it) before the network goes.
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Suni' });
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await controlledBySw(page);
+  await seedStored(page, 'device:settings', { uiLocale: 'es', uiLocaleAt: new Date().toISOString() });
+  await context.setOffline(true);
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+  await expect(page.getByText('¡Hola, Suni!')).toBeVisible();
+  await closeInstallGuide(page, 'Ahora no');
+  await page.getByText('Colección', { exact: true }).last().click();
+  await page.getByRole('tab', { name: 'Cuentos', exact: true }).click();
+  const tile = page.getByTestId(`story-tile-${TALE}`).filter({ visible: true });
+  // The title overlay is in the start bundle; the shelf draws it before any chunk.
+  await expect(tile).toContainText('El sol y la luna (cuento tradicional)');
+  await tile.click();
+  await page.getByTestId(`story-episode-start-${TALE}`).filter({ visible: true }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('button', { name: 'Jugar minijuego' }).click();
+  // The narration overlay applies to the scenes of the chunk.
+  await expect(position(page)).toHaveText(`1 / ${TALE_SCENES}`);
+  await expect(page.getByText(/¡Hora del cuento con Hoya!/).first()).toBeVisible();
+  expect((await loadedStoryChunks(page)).filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
+  expect(errors).toEqual([]);
 });
