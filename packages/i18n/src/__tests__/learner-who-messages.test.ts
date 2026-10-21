@@ -54,6 +54,19 @@ describe('learner.who (OA-4a)', () => {
     }
   });
 
+  it('Spanish keeps the gender-neutral spec word for Switch user (section 17)', () => {
+    expect(getMessages('es').learner.who.switchUser).toBe('Cambiar de persona');
+  });
+
+  it('the end of the wait is a date and time; a Spanish time ending in "p.m." never takes a second period', () => {
+    expect(getMessages('es').learner.who.resetPending('22 oct 2026, 6:40 p.m.')).toBe(
+      'Se podrá crear un PIN de adultos nuevo a partir del 22 oct 2026, 6:40 p.m. Escribe el PIN para cancelar la espera.',
+    );
+    expect(getMessages('es').learner.who.resetPending('22 oct 2026, 18:40')).toBe(
+      'Se podrá crear un PIN de adultos nuevo a partir del 22 oct 2026, 18:40. Escribe el PIN para cancelar la espera.',
+    );
+  });
+
   it('Korean puts no particle on the time', () => {
     expect(getMessages('ko').learner.who.resetPending('오후 6:40')).toMatch(/^오후 6:40 이후에 /);
   });
