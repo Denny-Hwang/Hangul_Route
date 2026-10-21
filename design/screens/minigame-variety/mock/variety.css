@@ -1,0 +1,208 @@
+/*
+ * CM-D2: static design mock of the F-CURR-002 formats (not shipped code): Cloze Pick, Dictation (Type Hangul hear),
+ * Syllable Build, Match Shape, Story Order, Role Play, My Story, Yut Review. Spec:
+ * docs/specs/F-CURR-002-category-expansion-and-mastery.md (sections 4.5, 7.1, 7.7). Wireframes:
+ * design/wireframes/minigame/{cloze-pick,syllable-build,match-shape,story-order,role-play,my-story,yut-review}.md,
+ * the hear mode of type-hangul.md, the F-CURR-002 section of shell.md and W11 of audio-fallback.md.
+ * The token block, the base, the device frame, the keyboard, the Write Frame parts and Hoya's poses come unchanged
+ * from the writing mocks (imported below; every value there is a token of packages/design-system/src/tokens.ts,
+ * copied once as a custom property named after it). This file adds no colour, size or radius of its own: every
+ * value is one of those custom properties. The few numbers that are not tokens are in ../README.md, "Constants".
+ */
+@import url("../../minigame-writing/mock/writing.css");
+
+:root {
+  /* Constants (../README.md, "Constants") */
+  --board-band: 128px;          /* the Yut board drawing on a phone: 2 x touchTarget.min */
+  --board-pane: 320px;          /* the Yut board drawing from window class regular: 5 x touchTarget.min */
+  --origin-art: 160px;          /* the Match Shape origin picture height on a phone: TRACE_CANVAS_MIN */
+  --bubble-max: 85%;            /* a chat bubble's width cap in the chat column on a phone */
+  --bubble-max-regular: 80%;    /* the same cap from window class regular (the reading column is wider) */
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Layout A of the shell: one scrolling reading column                                              */
+/* ---------------------------------------------------------------------------------------------- */
+.vscreen { height: 100%; overflow: auto; display: flex; flex-direction: column; }
+.vcol { width: 100%; max-width: calc(var(--max-width-reading) + 2 * var(--gutter-compact)); margin: 0 auto; padding: var(--spacing-xs) var(--gutter-compact) var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-md); }
+.lead { font-size: var(--size-bodySm); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); line-height: var(--leading-normal); }
+.caption { font-size: var(--size-caption); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
+.row.between { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+
+/* The prompt card (the Write Frame frame card) and the gap slot */
+.pcard { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-md) var(--spacing-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.pcard .ko-line { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-normal); word-break: keep-all; }
+.pcard.done { border: var(--border-width-base) solid var(--colors-feedback-success); }
+.slot.filled { color: var(--colors-feedback-successDark); border-bottom-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); border-radius: var(--radii-xs) var(--radii-xs) var(--radii-none) var(--radii-none); }
+
+/* Option tiles (ChoiceCard as the app draws it) */
+.opts { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-sm); }
+.opts.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.opts.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opt { position: relative; min-height: var(--touch-min); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-none); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); text-align: center; }
+.opt.inline { flex-direction: row; gap: var(--spacing-sm); }
+.opt .ko { font-size: var(--size-prompt); line-height: var(--leading-tight); }
+.opt .g { font-size: var(--size-display); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.opt.big { min-height: var(--touch-hero); }
+.opt.right { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.opt.miss { background: var(--colors-feedback-nudgeLight); border: var(--border-width-thick) solid var(--colors-feedback-nudge); }
+.opt.ring { outline: var(--border-width-thick) dashed var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+.opt.quiet { color: var(--colors-text-muted); }
+.opt .state { position: absolute; top: var(--spacing-xs); right: var(--spacing-xs); }
+.opt.right .state { color: var(--colors-feedback-successDark); }
+.opt.miss .state { color: var(--colors-text-primary); }
+.mark-dot { display: inline-block; width: var(--spacing-md); height: var(--spacing-md); border-radius: var(--radii-circle); background: var(--colors-feedback-nudge); border: var(--border-width-base) solid var(--colors-surface-paper); }
+
+/* The speaker, hero size, and the text buttons under it */
+.speaker { flex: none; width: var(--touch-hero); height: var(--touch-hero); border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+.speaker .icon { width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
+.reg-only, .hear.reg-only { display: none; }
+.speaker.sm { width: var(--touch-min); height: var(--touch-min); }
+.speaker.sm .icon { width: var(--spacing-xl); height: var(--spacing-xl); }
+.speaker.off { background: var(--colors-surface-sunken); color: var(--colors-text-muted); }
+.hear { align-self: flex-start; display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); padding: 0 var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-brand-secondary); color: var(--colors-brand-secondaryDark); font-size: var(--size-bodySm); font-weight: var(--weight-bold); background: var(--colors-surface-paper); }
+.prompt-row { display: flex; align-items: center; gap: var(--spacing-md); }
+
+/* PromptPanel: the visible sound notice (Card tone paper, flat, padding lg) */
+.notice { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.notice .read { font-size: var(--size-body); color: var(--colors-text-primary); }
+.notice .why { font-size: var(--size-body); color: var(--colors-text-muted); }
+.notice .btn { align-self: flex-start; }
+
+/* Hoya bubble: the thinking (amber) and cheering strips of the writing mocks, as a block */
+.hoya-line { display: flex; align-items: flex-start; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-normal); }
+.hoya-line.cheer { border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
+.hoya-line .hoya { flex: none; }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Syllable Build                                                                                   */
+/* ---------------------------------------------------------------------------------------------- */
+.block { align-self: center; display: grid; grid-template-columns: repeat(2, var(--spacing-jumbo)); grid-template-rows: var(--spacing-jumbo) var(--spacing-jumbo); gap: var(--spacing-xxs); padding: var(--spacing-xs); border-radius: var(--radii-md); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle); }
+.zone { display: flex; align-items: center; justify-content: center; border-radius: var(--radii-sm); border: var(--border-width-base) dashed var(--colors-border-shape); font-size: var(--size-display); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.zone.final { grid-column: 1 / span 2; }
+.zone.filled { border-style: solid; border-color: var(--colors-brand-secondaryDark); background: var(--colors-brand-secondaryLight); }
+.zone.miss { border: var(--border-width-thick) solid var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
+.zone.right { border-style: solid; border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
+.sb-top { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.sb-top .block { align-self: auto; }
+.trow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-sm); }
+.jt { min-height: var(--touch-min); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); }
+.jt.v { background: var(--colors-surface-sunken); }
+.jt.f { border-bottom: var(--border-width-thick) solid var(--colors-border-strong); }
+.jt .g { font-size: var(--size-title); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.jt .h { font-size: var(--size-caption); color: var(--colors-text-secondary); line-height: var(--leading-tight); }
+.jt.sel { border: var(--border-width-thick) solid var(--colors-brand-secondaryDark); background: var(--colors-brand-secondaryLight); }
+.jt.miss { border: var(--border-width-thick) solid var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); }
+.jt.word { font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
+.ctop { display: flex; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); }
+.ctop .heading { flex: 1; min-width: 0; font-size: var(--size-bodyLg); }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Match Shape                                                                                      */
+/* ---------------------------------------------------------------------------------------------- */
+.origin { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); }
+.origin svg { height: var(--origin-art); width: auto; max-width: 100%; }
+.origin-row { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.grid6 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-sm); }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Story Order                                                                                      */
+/* ---------------------------------------------------------------------------------------------- */
+.slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-xs); }
+.oslot { min-height: var(--touch-min); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--spacing-xxs); border-radius: var(--radii-md); border: var(--border-width-base) dashed var(--colors-border-shape); font-size: var(--size-caption); color: var(--colors-text-secondary); text-align: center; line-height: var(--leading-tight); word-break: keep-all; }
+.oslot b { font-size: var(--size-bodySm); color: var(--colors-text-primary); }
+.oslot.filled { border-style: solid; border-color: var(--colors-brand-secondaryDark); background: var(--colors-brand-secondaryLight); }
+.ocard { min-height: var(--touch-child); display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-xxs); padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); }
+.ocard .ko { font-size: var(--size-bodyLg); word-break: keep-all; }
+.ocard.miss { background: var(--colors-feedback-nudgeLight); border: var(--border-width-thick) solid var(--colors-feedback-nudge); }
+.ocard.ring { outline: var(--border-width-thick) dashed var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+.ocard .state { position: absolute; top: var(--spacing-sm); right: var(--spacing-sm); }
+.ocards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-sm); }
+.replay-line { display: flex; gap: var(--spacing-sm); padding: var(--spacing-xs) var(--spacing-sm); border-left: var(--spacing-xs) solid transparent; }
+.replay-line.now { border-left-color: var(--colors-brand-secondary); }
+.replay-line.now .ko { font-weight: var(--weight-bold); }
+.replay-line .n { font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Role Play: layout B (the log scrolls, the reply area is pinned)                                  */
+/* ---------------------------------------------------------------------------------------------- */
+.bscreen { height: 100%; display: flex; flex-direction: column; }
+.bhead { flex: none; width: 100%; max-width: calc(var(--max-width-reading) + 2 * var(--gutter-compact)); margin: 0 auto; padding: var(--spacing-xs) var(--gutter-compact) var(--spacing-xxs); }
+.log { flex: 1 1 auto; min-height: 0; overflow: auto; width: 100%; max-width: calc(var(--max-width-reading) + 2 * var(--gutter-compact)); margin: 0 auto; padding: var(--spacing-xs) var(--gutter-compact); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.log > :first-child { margin-top: auto; } /* newest at the bottom, and the log still scrolls up */
+.bubble { max-width: var(--bubble-max); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-xl); display: flex; flex-direction: column; gap: var(--spacing-none); line-height: var(--leading-normal); }
+.bubble .who { font-size: var(--size-caption); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.bubble .ko { font-size: var(--size-bodyLg); word-break: keep-all; }
+.bubble.partner { align-self: flex-start; background: var(--colors-surface-sunken); border-bottom-left-radius: var(--radii-xs); }
+.bubble.me { align-self: flex-end; background: var(--colors-brand-secondaryLight); border-bottom-right-radius: var(--radii-xs); }
+.bubble .hear { align-self: flex-start; margin-top: var(--spacing-xs); }
+.pinned { flex: none; width: 100%; max-width: calc(var(--max-width-reading) + 2 * var(--gutter-compact)); margin: 0 auto; padding: var(--spacing-sm) var(--gutter-compact) calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px)); border-top: var(--border-width-thin) solid var(--colors-border-subtle); background: var(--colors-surface-canvas); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.reply { min-height: var(--touch-child); display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-none); padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); position: relative; }
+.reply .ko { font-size: var(--size-bodyLg); }
+.reply.miss { background: var(--colors-feedback-nudgeLight); border: var(--border-width-thick) solid var(--colors-feedback-nudge); }
+.reply .state { position: absolute; top: var(--spacing-sm); right: var(--spacing-sm); }
+.ghost-sm { display: inline-flex; align-items: center; min-height: var(--touch-min); padding: 0 var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-brand-primary); color: var(--colors-brand-primary); font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* My Story                                                                                         */
+/* ---------------------------------------------------------------------------------------------- */
+.sofar { background: var(--colors-surface-sunken); border-radius: var(--radii-lg); padding: var(--spacing-md) var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.sofar .ko { font-size: var(--size-body); word-break: keep-all; }
+.sentence { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.sentence .ko { font-size: var(--size-prompt); word-break: keep-all; }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Yut Review: layout C (a board band above the item; two panes from regular)                       */
+/* ---------------------------------------------------------------------------------------------- */
+.rhead { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); }
+.xbtn { flex: none; width: var(--touch-min); height: var(--touch-min); border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); }
+.dots { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.dots i { display: block; width: var(--spacing-md); height: var(--spacing-md); border-radius: var(--radii-circle); background: var(--colors-surface-sunken); border: var(--border-width-thin) solid var(--colors-border-strong); }
+.dots i.on { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); }
+.yut { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.band { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-sm); border-radius: var(--radii-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+.band .board { flex: none; width: var(--board-band); height: var(--board-band); }
+.throw { display: flex; flex-direction: column; gap: var(--spacing-xxs); min-width: 0; }
+.throw .ko { font-size: var(--size-title); line-height: var(--leading-tight); }
+.tray { display: flex; align-items: center; gap: var(--spacing-xs); font-size: var(--size-caption); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.tray-box { display: inline-flex; gap: var(--spacing-xxs); padding: var(--spacing-xxs) var(--spacing-xs); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); }
+.tray-box i { display: block; width: var(--spacing-md); height: var(--spacing-md); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-border-shape); }
+.tray-box i.on { background: var(--colors-brand-primary); border-color: var(--colors-surface-paper); }
+.item { display: flex; flex-direction: column; gap: var(--spacing-md); }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Window classes (container queries stand in for layout.breakpoint)                                */
+/* ---------------------------------------------------------------------------------------------- */
+@container device (min-width: 600px) {
+  .vcol, .bhead, .log, .pinned { max-width: calc(var(--max-width-reading) + 2 * var(--gutter-regular)); padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); }
+  .vcol { padding-top: var(--spacing-lg); gap: var(--spacing-lg); }
+  .pcard .ko-line { font-size: var(--size-title); }
+  .opts.wide2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .opt.big { min-height: calc(var(--touch-hero) * var(--media-scale-regular)); }
+  .trow { grid-template-columns: repeat(4, minmax(0, var(--touch-hero))); justify-content: start; }
+  .sb-top { justify-content: flex-start; gap: var(--spacing-xxl); }
+  .reg-only, .hear.reg-only { display: inline-flex; }
+  .speaker.sm { width: var(--touch-hero); height: var(--touch-hero); }
+  .speaker.sm .icon { width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
+  .jt { min-height: calc(var(--touch-min) * var(--media-scale-regular)); }
+  .block { grid-template-columns: repeat(2, var(--touch-hero)); grid-template-rows: var(--touch-hero) var(--touch-min); }
+  .origin-row { flex-direction: row; align-items: center; }
+  .origin-row .pcard { flex: 1; }
+  .origin-row .opts { flex: none; width: calc(3 * var(--touch-hero) + 2 * var(--spacing-sm)); }
+  .grid6 { max-width: calc(3 * var(--touch-hero) * var(--media-scale-regular) + 2 * var(--spacing-sm)); margin: 0 auto; width: 100%; }
+  .grid6 .opt { min-height: calc(var(--touch-hero) * var(--media-scale-regular)); }
+  .ocards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bubble { max-width: var(--bubble-max-regular); }
+  .yut { flex-direction: row; align-items: flex-start; gap: var(--spacing-xl); }
+  .band { flex-direction: column; align-items: stretch; flex: none; width: calc(var(--board-pane) + 2 * var(--spacing-md)); padding: var(--spacing-md); }
+  .band .board { width: var(--board-pane); height: var(--board-pane); }
+  .item { flex: 1; min-width: 0; }
+  .sofar-pane { display: flex; gap: var(--spacing-lg); align-items: flex-start; }
+  .sofar-pane > * { flex: 1; }
+}
+@container device (min-width: 900px) {
+  .vcol, .bhead, .log, .pinned { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
