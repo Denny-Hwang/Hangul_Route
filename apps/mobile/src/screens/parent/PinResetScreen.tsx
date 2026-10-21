@@ -19,8 +19,8 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { pinResetRequested } from '../../logic/onboarding/onboarding-events';
 import { cooldownRemainingMs } from '../../logic/profiles/pin-hash';
 import type { PinResetMethod } from '../../logic/profiles/pin-flow';
+import { pauseText } from '../../logic/profiles/pin-pause';
 import {
-  attemptRescueCode,
   collectRescueCodes,
   formatReadyAt,
   rescueFailureMessage,
@@ -57,8 +57,10 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   const profiles = useProfileStore((s) => s.profiles);
   const hydrateSync = useSyncStore((s) => s.hydrate);
   const byLearner = useSyncStore((s) => s.byLearner);
-  const attempts = useAccountStore((s) => s.pinAttempts);
-  const setPinAttempts = useAccountStore((s) => s.setPinAttempts);
+  // [OA] The Rescue Code's own counter (section 8.3): a PIN pause never blocks it.
+  const attempts = useAccountStore((s) => s.rescueAttempts);
+  const attemptRescue = useAccountStore((s) => s.attemptRescue);
+  const [busy, setBusy] = useState(false);
   const requestedAt = useAccountStore((s) => s.pinResetRequestedAt);
   const requestPinReset = useAccountStore((s) => s.requestPinReset);
 
@@ -102,16 +104,20 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   };
 
   const submitCode = (): void => {
-    const at = Date.now();
-    setNow(at);
-    const result = attemptRescueCode({ entry: codeInput, storedCodes: codes, state: attempts, now: at });
-    if (result.state !== attempts) setPinAttempts(result.state);
-    if (!result.ok) {
-      setMessage(rescueFailureMessage(result, m));
-      return;
-    }
-    void track(pinResetRequested('rescue_code'));
-    goToSetup('rescue_code');
+    if (busy) return;
+    setBusy(true);
+    void attemptRescue(codeInput, codes)
+      .then((result) => {
+        setNow(Date.now());
+        if (!result.ok) {
+          setMessage(rescueFailureMessage(result, m));
+          return;
+        }
+        void track(pinResetRequested('rescue_code'));
+        goToSetup('rescue_code');
+      })
+      .catch(() => undefined)
+      .finally(() => setBusy(false));
   };
 
   const view = waitCardView(wait, (readyAt) => formatReadyAt(locale, readyAt), m);
@@ -139,7 +145,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   );
 
   const codeRows = rescueInputRows(codeInput);
-  const codeLine = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : message;
+  const codeLine = locked ? pauseText(cooldownMs, m) : message;
   const showWait = !hasCode || waitOpen || wait.status !== 'idle';
 
   return (
@@ -205,7 +211,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
                 tone="primary"
                 size="lg"
                 fullWidth
-                disabled={locked || codeInput.trim().length === 0}
+                disabled={locked || busy || codeInput.trim().length === 0}
                 onPress={submitCode}
               />
               {codeLine ? (

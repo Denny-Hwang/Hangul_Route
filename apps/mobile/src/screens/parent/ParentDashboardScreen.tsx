@@ -28,6 +28,7 @@ import { FreeLessonsRow } from './FreeLessonsRow';
 import { GateLessonsButton } from './GateLessonsButton';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { LectureCard } from './LectureCard';
+import { ResetByWaitNotice } from './ResetByWaitNotice';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
@@ -105,6 +106,7 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
       </View>
 
       <Spacer size="lg" />
+      <ResetByWaitNotice onChange={() => navigation.navigate('PinEntry', { next: 'ParentDashboard', mode: 'setup' })} />
       {grownUpHome ? (
         <>
           <GrownUpHomeCard onOpen={openGrownUpHome} />
