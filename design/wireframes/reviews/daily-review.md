@@ -58,9 +58,10 @@ B2. A miss (first try wrong)
 |   +-----------+ +-----------+  |
 |   | 배  (amber)| | 사과  (v) |  |  <- the tapped option: feedback.nudgeLight fill,
 |   +-----------+ +-----------+  |     feedback.nudge thick border and a dot; the
-|  [hoya thinking] It is 사과,   |     round stays open until the right option is
-|   sagwa, apple. Tap it!        |     tapped; then the check mark (success) and on
-|                                |     to the next round. Never red, never a cross
+|  [hoya thinking] It is 사과,   |     right option is outlined in success with the
+|   sagwa, apple. Tap it!        |     check mark, and the round stays open until it
+|                                |     is tapped, then on to the next round. Never
+|                                |     red, never a cross
 
 C. Result
 +--------------------------------+
