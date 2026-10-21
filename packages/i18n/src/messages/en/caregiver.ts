@@ -1048,4 +1048,19 @@ export const caregiver = {
     failed: "That didn't save. Try again.",
     stale: 'Update the app to read the newest version.',
   },
+  /**
+   * The Lecture mode card in the grown-up area of the learner app (AMENDMENTS-LECTURE-V2 section 3 E5, section 12.4;
+   * design/screens/lecture-entry/learner-card.md): web only, behind the grown-up gate. `next` names a learner on this
+   * screen only: the deck and the link it opens hold quest ids, never the name (section 8).
+   */
+  lecture: {
+    title: 'Lecture mode',
+    body: "Show a lesson on a TV or big screen and learn together. Nobody's progress changes.",
+    open: { cta: 'Open lecture mode' },
+    next: (name: string) => `Next lesson for ${name}`,
+    /** Read with each button: every one opens the presenter in a new tab (section 7 item 3). */
+    opensTab: 'Opens in a new tab',
+    /** Under the card when the browser gave no new tab (a pop-up blocker, an in-app browser); the tap is kept, nothing else changes. */
+    blocked: 'The new tab did not open. Allow pop-ups for this site, then try again.',
+  },
 } as const;

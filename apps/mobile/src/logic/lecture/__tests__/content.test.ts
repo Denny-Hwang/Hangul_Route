@@ -203,21 +203,37 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     }
   });
 
-  it('every quest with a Discover step shows a letter slide for each jamo and a word slide for each word it discovers, before any quiz', () => {
+  it('every quest with a Discover step shows a letter slide for each jamo and a word or reading slide for each text it discovers, before any quiz', () => {
     const discovering = questsAll.filter((q) => q.steps.some((s) => s.kind === 'discover'));
     expect(discovering.length).toBeGreaterThan(0);
     for (const q of discovering) {
       const items = q.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items) ?? []);
       const jamoIds = items.flatMap((it) => (it.type === 'jamo' ? [it.jamoId] : []));
       // The reading quests of F-QUEST-002 rule R5 (Q-8) discover words only; an upper-stage item
-      // (F-CURR-001: an exchange, sentence, pattern or realia) shows a vocab slide per taught text.
+      // (F-CURR-001: an exchange, sentence, pattern or realia) shows its texts on its own reading slide (LV-S1).
       const words = items.flatMap((it) => (it.type === 'jamo' ? [] : discoverItemTexts(it).map((t) => t.ko)));
       expect(jamoIds.length + words.length, q.id).toBeGreaterThan(0);
       const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
       const letterAt = new Map(slides.flatMap((s, i) => (s.kind === 'letter' ? [[s.jamoId, i] as const] : [])));
       const wordAt = new Map<string, number>();
+      const held = (s: (typeof slides)[number]): string[] => {
+        switch (s.kind) {
+          case 'vocab':
+            return [s.word.ko];
+          case 'sentence':
+            return [s.sentence.ko];
+          case 'pattern':
+            return s.examples.map((e) => e.ko);
+          case 'read-along':
+            return s.lines.map((l) => l.ko);
+          case 'realia':
+            return s.keyWords.map((w) => w.ko);
+          default:
+            return [];
+        }
+      };
       slides.forEach((s, i) => {
-        if (s.kind === 'vocab' && !wordAt.has(s.word.ko)) wordAt.set(s.word.ko, i);
+        for (const ko of held(s)) if (!wordAt.has(ko)) wordAt.set(ko, i);
       });
       const firstQuiz = slides.findIndex((s) => s.kind === 'quiz');
       for (const id of jamoIds) {
@@ -242,9 +258,12 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
       const before = slides.slice(1, firstQuiz);
       expect(before.map((s) => (s.kind === 'letter' ? s.jamoId : s.kind))).toEqual(taughtIds);
       expect(before.every((s) => s.key.startsWith(`${id}/${discover.id}/`))).toBe(true);
-      // The Check (Listen & Pick) is not a presenter slide yet (§3.3 rule 2): a counted skip, nothing else.
+      // The Check (Listen & Pick) is a listen question per round (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2): nothing is skipped.
       const check = quest.steps.find((s) => s.kind === 'check')!;
-      expect(skipped).toEqual([{ blockIndex: 0, ref: check.minigameRef, reason: 'unsupported-step' }]);
+      expect(skipped).toEqual([]);
+      const asked = slides.filter((s) => s.key.startsWith(`${id}/${check.id}/`));
+      expect(asked.length).toBeGreaterThan(0);
+      expect(asked.every((s) => s.kind === 'quiz' && s.prompt.ask === 'listen')).toBe(true);
     }
   });
 
@@ -263,6 +282,64 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(taught.filter((t) => t.kind === 'word').map((t) => t.ko)).toEqual(expect.arrayContaining(['김치', '밥', '김밥', '젓가락']));
     expect(skipped.filter((s) => s.ref === 'minigame:s1-life-q1-apply')).toEqual([]);
   });
+
+  it('the bundle carries its language, which the deck builder reads to keep English off a Spanish or Korean slide', () => {
+    expect(lectureBundle('en').locale).toBe('en');
+    expect(lectureBundle('es').locale).toBe('es');
+    expect(lectureBundle('ko').locale).toBe('ko');
+  });
+
+  it.each(['es', 'ko'] as const)(
+    'no Listen & Pick option on a shipped %s deck shows or is named by the English meaning (AMENDMENTS-LECTURE-V2 5.2)',
+    (locale) => {
+      let named = 0;
+      for (const q of questsAll) {
+        const en = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+        const byKey = new Map(en.map((s) => [s.key, s]));
+        for (const s of expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle(locale), { canPlayKorean: true }).slides) {
+          if (s.kind !== 'quiz' || s.prompt.ask !== 'listen') continue;
+          const english = byKey.get(s.key);
+          expect(english?.kind).toBe('quiz');
+          if (english?.kind !== 'quiz') continue;
+          for (const o of s.options) {
+            if (o.gloss === undefined) continue;
+            named += 1;
+            const same = english.options.find((e) => (e.ko ?? e.picture) === (o.ko ?? o.picture));
+            expect({ key: s.key, option: o.ko ?? o.picture, gloss: o.gloss }).not.toEqual({ key: s.key, option: o.ko ?? o.picture, gloss: same?.gloss });
+          }
+        }
+      }
+      // The deck's own meanings still show where it taught every option's Korean.
+      expect(named).toBeGreaterThan(0);
+    },
+  );
+
+  it.each(['es', 'ko'] as const)(
+    'no sentence build on a shipped %s deck shows the English meaning at its whole build (AMENDMENTS-LECTURE-V2 5.2, LV-S3)',
+    (locale) => {
+      let english = 0;
+      let localized = 0;
+      for (const q of questsAll) {
+        const en = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+        const byKey = new Map(en.map((s) => [s.key, s]));
+        english += en.filter((s) => s.kind === 'sentence-build').length;
+        for (const s of expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle(locale), { canPlayKorean: true }).slides) {
+          if (s.kind !== 'sentence-build') continue;
+          const same = byKey.get(s.key);
+          expect(same?.kind, s.key).toBe('sentence-build');
+          if (same?.kind !== 'sentence-build') continue;
+          localized += 1;
+          // The Korean and its romanization are the deck's; only the meaning follows the device language.
+          expect(s.sentence.ko).toBe(same.sentence.ko);
+          expect(s.sentence.gloss.trim(), s.key).not.toBe('');
+          expect({ key: s.key, gloss: s.sentence.gloss }).not.toEqual({ key: s.key, gloss: same.sentence.gloss });
+        }
+      }
+      // Every order-it round, the Stage 7 Checks included, is a slide in every language.
+      expect(localized).toBe(english);
+      expect(localized).toBeGreaterThanOrEqual(135);
+    },
+  );
 
   it('localizes content text through the overlays, never the Korean or its romanization', () => {
     const overlays: Overlays = {

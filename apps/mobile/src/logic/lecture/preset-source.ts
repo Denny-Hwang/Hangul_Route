@@ -156,6 +156,12 @@ export function presetTitle(resolved: Pick<ResolvedPreset, 'titleKey' | 'stageNu
 export interface PresetDeckInput {
   /** The localized title (`presetTitle`). */
   title: string;
+  /**
+   * The English title (`presetTitle` over the en words), used when the deck schema refuses the
+   * localized one (a later locale whose title the deck title class cannot hold), so Start never
+   * does nothing. The English titles always pass (preset-source.test.ts).
+   */
+  fallbackTitle?: string;
   now: Date;
   /** Uniform in [0, 1): the deck id. */
   rng: () => number;
@@ -164,20 +170,26 @@ export interface PresetDeckInput {
 /**
  * The deck a preset resolved on the presenter becomes (LV-D6): `source: 'quick'`, a time seed,
  * the default options with no `uiLocale` (the slides follow the presenting device's language), no
- * picker, and v1 unless it holds a Word review (then v2 with its `preset` id). Null when it does
+ * picker, and v1 unless it holds a Word review (then v2 with its `preset` id). A localized title
+ * the schema refuses gives way to the English one (`fallbackTitle`). Null when the deck still does
  * not pass the deck schema (it always does with the shipped catalogue).
  */
 export function presetLectureDeck(resolved: Pick<ResolvedPreset, 'blocks' | 'preset'>, input: PresetDeckInput): LectureDeck | null {
-  const parsed = LectureDeckSchema.safeParse(
-    presetDeck(resolved, {
-      id: deckIdFrom(input.rng),
-      title: input.title,
-      createdAt: input.now.toISOString(),
-      seed: input.now.getTime() % 2 ** 31,
-      source: 'quick',
-    }),
-  );
-  return parsed.success ? parsed.data : null;
+  const id = deckIdFrom(input.rng);
+  const titles = input.fallbackTitle !== undefined && input.fallbackTitle !== input.title ? [input.title, input.fallbackTitle] : [input.title];
+  for (const title of titles) {
+    const parsed = LectureDeckSchema.safeParse(
+      presetDeck(resolved, {
+        id,
+        title,
+        createdAt: input.now.toISOString(),
+        seed: input.now.getTime() % 2 ** 31,
+        source: 'quick',
+      }),
+    );
+    if (parsed.success) return parsed.data;
+  }
+  return null;
 }
 
 /** What the preview of a ready-made lesson calls each part that is not content (section 12.2, `presets.preview.*`). */

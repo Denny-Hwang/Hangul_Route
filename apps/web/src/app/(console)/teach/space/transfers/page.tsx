@@ -35,7 +35,7 @@ function TransfersInner(): JSX.Element {
   const pathname = usePathname();
   const spaceId = spaceIdFrom(params);
   const auth = useConsoleAuth();
-  const { ready, session, api, signOut, m } = useConsole();
+  const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
   const t = c.transfer;
   // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
@@ -89,7 +89,7 @@ function TransfersInner(): JSX.Element {
       ) : null}
       {pageState === 'signIn' ? (
         // A rejected session: sign out, then the sign-in page brings the guardian back here (spec 4.8).
-        <MoveButton primary onClick={() => void auth.signOut(signInAgainUrl(`${pathname}?${params.toString()}`))} testId="transfers-sign-in">
+        <MoveButton primary onClick={() => void auth.signOut(signInAgainUrl(`${pathname}?${params.toString()}`, locale))} testId="transfers-sign-in">
           {c.lock.signInAgain.cta}
         </MoveButton>
       ) : null}

@@ -801,4 +801,13 @@ export const caregiver = {
     failed: 'No se guardó. Inténtalo de nuevo.',
     stale: 'Actualiza la app para leer la versión más nueva.',
   },
+  /** La tarjeta Modo proyección en la zona de adultos de la app (AMENDMENTS-LECTURE-V2 sección 3 E5, sección 12.4). */
+  lecture: {
+    title: 'Modo proyección',
+    body: 'Muestra una lección en una TV o una pantalla grande y aprende en familia. No cambia el progreso de nadie.',
+    open: { cta: 'Abrir modo proyección' },
+    next: (name: string) => `Siguiente lección para ${name}`,
+    opensTab: 'Se abre en una pestaña nueva',
+    blocked: 'La pestaña nueva no se abrió. Permite las ventanas emergentes de este sitio y vuelve a intentarlo.',
+  },
 } satisfies DeepPartial<Messages['caregiver']>;

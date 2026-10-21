@@ -35,17 +35,119 @@ export type QuizPrompt =
    * A story check: its own prompt (`{target}` stands for the target word). `glossAtAnswer`: a
    * pick-meaning or fill-word check, whose target gloss would give the answer away before the reveal.
    */
-  | { ask: 'check'; text: string; target?: KoLine; glossAtAnswer?: true };
+  | { ask: 'check'; text: string; target?: KoLine; glossAtAnswer?: true }
+  /**
+   * Listen & Pick (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2; practice, apply and the Check): the room
+   * hears `line` and picks how it is written or what it shows. At the answer build `line` (its
+   * Korean, romanization and meaning) joins the question, so the room sees what it heard; without a
+   * Korean voice the teacher reads its romanization and its Hangul waits for the answer (section 3.7).
+   * `speech`: the rate Sound plays it at, as the learner's game (a letter or syllable round is a `sound`).
+   * `reply`: the room heard a line and picks the reply that fits it (a word or sentence round whose answer
+   * is not the line itself, as the Stage 4 Checks): the question is "Which answer fits?", not "Which one did you hear?".
+   */
+  | { ask: 'listen'; line: SpokenLine; speech: 'sound' | 'word' | 'sentence'; reply?: true }
+  /** Tap to Respond (LV-S2): the other speaker's line, drawn from the start; the room picks the reply that fits. */
+  | { ask: 'reply'; line: SpokenLine }
+  /**
+   * Realia Read (LV-S2): a question about the sheet that stays beside it (`text`, in the slide
+   * language), the word it is about (`key`: its Korean and romanization; its meaning would give some
+   * answers away) and the sheet line that holds the answer (`answerEntryId`), marked found at the
+   * answer build.
+   */
+  | { ask: 'realia'; text: string; sheet: RealiaSheetView; key?: SheetText & { spoken: SpokenForm }; answerEntryId?: string };
 
 /** A quiz option; the screen adds the shape + number marker by position (§3.4). */
 export interface QuizOption {
   ko?: string;
   romanization?: string;
+  /**
+   * Its meaning in the slide language. A story check's word option shows it under the word; a
+   * Listen & Pick or Tap to Respond row shows it at the answer build (V8); a picture's is its name.
+   */
   gloss?: string;
   /** A story check picture (`prop:` / `card:` ...). */
   art?: string;
+  /** A Listen & Pick or Realia Read picture (`card:` / `word:`, drawn by `PictureArt`); `gloss` names it (LV-S2). */
+  picture?: string;
+  /** A Realia Read figure: plain text with no Hangul, such as a price ("5,000 won"), drawn with the question (LV-S2). */
+  figure?: string;
   correct: boolean;
 }
+
+/** Taught Korean on a reading slide (AMENDMENTS-LECTURE-V2 section 5.1): its gloss and what Sound says (`spokenKo ?? ko`, its clip). */
+export type SpokenLine = KoLine & { gloss: string; spoken: SpokenForm };
+
+/** A piece of a drawn real-world text on the stage (F-CURR-001 G-2): Hangul and its romanization. */
+export interface SheetText {
+  ko: string;
+  romanization: string;
+}
+
+/**
+ * A realia sheet as the stage draws it (F-CURR-001 §3.6, RealiaSheet's anatomy in stage units):
+ * its layout, title and lines, its accessible text in the slide language, and what Sound reads
+ * before the key words show (the title, then each line and its value, in order).
+ */
+export interface RealiaSheetView {
+  /** The layout and dressing; `plain` for a realia with no kind. */
+  kind: 'menu' | 'ticket' | 'sign' | 'price-card' | 'plain';
+  /** The sheet's own title (taught Korean, so not `title`, which names UI-language text on a slide). */
+  heading?: SheetText;
+  entries: ReadonlyArray<{ id: string; text: SheetText; value?: SheetText; dir?: 'left' | 'right'; goods?: 'apples' | 'fan' | 'hanji' }>;
+  /** `altEn` in the slide language (overlays): the sheet's accessible text (F-CURR-001 §3.14). */
+  alt: string;
+  spoken: SpokenForm;
+}
+
+/**
+ * A word tile of a sentence-build slide (LV-S3): one spaced word of the sentence without the sentence
+ * mark, as the learner's Sentence Builder draws it (so a distractor never stands out by a missing
+ * mark), and its romanized word ('' when the sentence's romanization does not split one per word).
+ * A particle round's word (`particle`) sits in the bank as its stem; on the line it shows both
+ * endings until the one that fits stays (`answer`, the index into `choices`).
+ */
+export interface BuildTile {
+  ko: string;
+  romanization: string;
+  particle?: { stem: string; choices: readonly [SheetText, SheetText]; answer: 0 | 1 };
+}
+
+/** A place in a sentence-build bank: a tile of the sentence (its index in `tiles`), or a distractor. */
+export type BankPlace = { tile: number } | { distractor: SheetText };
+
+/**
+ * A frame with its gaps (a Discover pattern's, a Write Frame's): the Korean around each `___` slot
+ * (`pieces` has one more entry than the frame has slots, each slot drawn as a gap box, never as
+ * text), its romanization (with the `___` kept) and its meaning in the slide language.
+ */
+export interface FrameText {
+  pieces: string[];
+  romanization: string;
+  gloss: string;
+}
+
+/**
+ * How many groups of the name round's sound table one build shows (AMENDMENTS-LECTURE-V2 section 5.2,
+ * LV-0b decision V12): five groups of blocks, each with its romanization, fill the content area.
+ */
+export const SOUND_TABLE_GROUPS_PER_BUILD = 5;
+
+/**
+ * A write-together slide's own part (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3, LV-D8, LV-S4): the
+ * room writes on paper or on its own devices and the stage only shows; nothing on it takes input,
+ * and no name is ever typed, shown or stored.
+ * - `type` (Type Hangul): the prompt in the slide language and its picture, then the answer.
+ * - `trace` (Trace a Word): the word as a large outline ghost, then its romanization and meaning.
+ * - `frame` (Write Frame): the frame with its gap, each slot's word bank, then "For example" with
+ *   each gap filled by its bank's first word, the ending that fits it chosen (observation O2).
+ * - `own-name` (the free-entry name round): the frame and the round's sound table, groups of
+ *   syllable blocks, five groups a build (V12); never a name.
+ */
+export type WriteTogether =
+  | { variant: 'type'; prompt: string; picture?: string; answer: SpokenLine }
+  | { variant: 'trace'; word: SpokenLine }
+  | { variant: 'frame'; frame: FrameText; banks: SheetText[][]; example: SheetText & { spoken: SpokenForm } }
+  | { variant: 'own-name'; frame: FrameText; groups: SheetText[][] };
 
 export interface SequenceStep {
   id: string;
@@ -120,6 +222,36 @@ export type SlideBody =
       explain?: string;
     }
   | { kind: 'card'; cardId: string; title: string; ko?: string; romanization?: string; fact?: string }
+  /** A Discover sentence (LV-S1, section 5.1): the Korean, its meaning and, when it has one, its picture (`card:` / `word:`). */
+  | { kind: 'sentence'; sentence: SpokenLine; picture?: string }
+  /**
+   * A Discover sentence pattern (LV-S1): the frame's Korean around its slots (`pieces` has one more
+   * entry than the frame has `___` slots, each slot drawn as a gap box, never as text), the note in
+   * the slide language with its `{ko:}` tokens as Korean chips (absent when a token has no
+   * romanization, rule 11), and the two examples.
+   */
+  | { kind: 'pattern'; frame: FrameText; note?: NarrationPiece[]; examples: SpokenLine[] }
+  /**
+   * A Discover exchange (LV-S1): two lines between named speakers; Sound plays the current line and
+   * lights it. `together`: no Korean voice or the deck's sound is off (section 5.1 "Text without a
+   * Korean voice"), so every line shows at once and none is lit.
+   */
+  | { kind: 'read-along'; lines: Array<SpokenLine & { speaker: string }>; together?: true }
+  /**
+   * A Discover realia page (LV-S1): the drawn sheet, its caption (`{ko:}` tokens as chips) and its key
+   * words; or a Realia Read sheet no page of this deck showed yet (LV-S2): the sheet alone, before its questions.
+   */
+  | { kind: 'realia'; sheet: RealiaSheetView; caption?: NarrationPiece[]; keyWords: SpokenLine[] }
+  /**
+   * A Sentence Builder round (`order-it`, practice, apply and the Stage 7 Check; AMENDMENTS-LECTURE-V2
+   * section 5.2, LV-S3): the sentence the room builds together (its meaning and romanization at the
+   * `whole` build; Sound plays it at every build, as the learner's Hear it), its word tiles in sentence
+   * order, and the bank: the tiles shuffled with the slide's seed (never already in order) and the
+   * distractors, which are only set back at the end, never marked wrong.
+   */
+  | { kind: 'sentence-build'; sentence: SpokenLine; tiles: BuildTile[]; bank: BankPlace[] }
+  /** A Type Hangul, Trace a Word or Write Frame round the room writes together (LV-S4): see `WriteTogether`. */
+  | ({ kind: 'write-together' } & WriteTogether)
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
 
@@ -145,7 +277,20 @@ export type BuildName =
   | 'answer'
   | 'fact'
   | 'prompt'
-  | 'summary';
+  | 'summary'
+  // The reading slides (LV-S1): a pattern's frame, note and examples, a read-along line, a realia sheet and its key words.
+  | 'frame'
+  | 'note'
+  | 'line'
+  | 'sheet'
+  | 'words'
+  // A sentence build (LV-S3): the bank, each tile moved to the line, the ending that fits, the whole sentence.
+  | 'bank'
+  | 'tile'
+  | 'particle'
+  | 'whole'
+  // Write together (LV-S4): `prompt` / `answer` (type, trace), `frame` / `bank` / `example` (frame), `frame` / `table` (own name).
+  | 'table';
 
 export interface BuildOptions {
   romanization: RomanizationMode;
@@ -192,5 +337,79 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
       return ['summary'];
     case 'title':
       return ['title'];
+    case 'sentence':
+      return ['ko', ...rom, 'gloss', ...(body.picture !== undefined ? (['art'] as const) : [])];
+    case 'pattern': {
+      // `tap`: each Korean part (the frame, a note with a Korean chip, each example) has its romanization one build later.
+      const chips = body.note?.some((piece) => 'ko' in piece) === true;
+      return [
+        'frame',
+        ...rom,
+        ...(body.note !== undefined ? (['note', ...(chips ? rom : [])] as BuildName[]) : []),
+        ...body.examples.flatMap((): BuildName[] => ['example', ...rom]),
+      ];
+    }
+    case 'read-along':
+      // `together` (no Korean voice): one build shows every line, and with `tap` one more their romanization.
+      return body.together === true ? ['line', ...rom] : body.lines.flatMap((): BuildName[] => ['line', ...rom]);
+    case 'realia':
+      // A Realia Read sheet the deck has not shown yet has no key words (LV-S2): the sheet alone.
+      return ['sheet', ...rom, ...(body.keyWords.length > 0 ? (['words', ...rom] as BuildName[]) : [])];
+    case 'sentence-build':
+      // A particle tile's ending is chosen at the build right after the tile reaches the line; romanization only at `whole`, in both modes.
+      return ['bank', ...body.tiles.flatMap((t): BuildName[] => (t.particle !== undefined ? ['tile', 'particle'] : ['tile'])), 'whole'];
+    case 'write-together':
+      // The answer comes only on the teacher's click (section 5.3). With `tap` the romanization waits for the
+      // answer build (`writeView`), so the builds are the same in both modes; the name round's table always has it.
+      switch (body.variant) {
+        case 'type':
+        case 'trace':
+          return ['prompt', 'answer'];
+        case 'frame':
+          return ['frame', 'bank', 'example'];
+        case 'own-name':
+          return ['frame', ...soundTablePages(body.groups).map((): BuildName => 'table')];
+      }
   }
+}
+
+/** The name round's sound table as its builds show it: `SOUND_TABLE_GROUPS_PER_BUILD` groups a build, in order. */
+export function soundTablePages<T>(groups: readonly T[]): T[][] {
+  const pages: T[][] = [];
+  for (let i = 0; i < groups.length; i += SOUND_TABLE_GROUPS_PER_BUILD) pages.push(groups.slice(i, i + SOUND_TABLE_GROUPS_PER_BUILD));
+  return pages;
+}
+
+/** One part of a slide on screen: the build that showed it and whether its romanization shows. */
+export interface ShownPart {
+  name: BuildName;
+  rom: boolean;
+}
+
+/**
+ * The parts on screen at `reveal`, in build order (the reading slides, section 5.2): every build
+ * but `rom` shows one part; a `rom` build (`romanization: 'tap'`) shows the romanization of the
+ * part before it. A slide with no `rom` build shows each part's romanization with it (D2).
+ */
+export function partsShown(builds: readonly BuildName[], reveal: number): ShownPart[] {
+  const tap = builds.includes('rom');
+  const parts: ShownPart[] = [];
+  for (const name of builds.slice(0, Math.max(0, reveal + 1))) {
+    const last = parts[parts.length - 1];
+    if (name === 'rom') {
+      if (last) last.rom = true;
+      continue;
+    }
+    parts.push({ name, rom: !tap });
+  }
+  return parts;
+}
+
+/**
+ * Several pieces of Korean read in one go (a realia sheet, its key words): the texts and their
+ * romanizations joined with a pause. A single piece keeps its clip; joined text has none.
+ */
+export function joinSpoken(pieces: readonly SpokenForm[]): SpokenForm {
+  if (pieces.length === 1) return pieces[0]!;
+  return { text: pieces.map((p) => p.text).join(', '), romanization: pieces.map((p) => p.romanization).join(', ') };
 }

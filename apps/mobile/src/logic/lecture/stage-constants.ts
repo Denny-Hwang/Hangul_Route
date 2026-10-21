@@ -68,6 +68,73 @@ export const STATUS_MIN_REM = 12;
 /** The timer ticks this often while it runs (m:ss changes once a second; the ring moves smoothly enough). */
 export const TIMER_TICK_MS = 250;
 
+/**
+ * The reading slides (AMENDMENTS-LECTURE-V2 LV-S1; design/screens/presenter/lecture-v2.md "Constants"),
+ * in stage units unless named as a share.
+ */
+/** The picture beside a sentence (`--pic-md`). */
+export const PIC_MD = 300;
+/** A pattern's gap box (`--slot-w`): two Hangul blocks at `presenter.size.title`. */
+export const SLOT_W = 160;
+/** The gap box's height as a share of the frame's text size (`.slot`: 0.9 em). */
+export const SLOT_H_EM = 0.9;
+/** A pattern example's number circle (`.example .seq-num`). */
+export const EXAMPLE_NUMBER = 64;
+/** The realia sheet on the stage (`--sheet-w`): leaves 716 units for its caption and key words. */
+export const SHEET_W = 420;
+/**
+ * Price cards stand side by side (RealiaSheet's market stall), so their sheet is wider: three cards
+ * each hold a price (5,000 won, ocheon won) in Hangul and its romanization on one line at the stage
+ * sizes.
+ */
+export const SHEET_CARDS_W = 600;
+/**
+ * The widest a sheet grows when the text floor (18 px) makes its romanization bigger than its stage
+ * units on a small phone: it keeps at least 436 units of the 1184-unit content area for the caption
+ * and the key words.
+ */
+export const SHEET_MAX_W = 700;
+/**
+ * A sheet with more lines than this draws each line's romanization beside its Korean, not under
+ * it, so a five-board trail sign still fits the 504-unit content area at 1280 x 720.
+ */
+export const SHEET_ROOMY_LINES = 4;
+/** A read-along turn is at most this share of the content width (slide-read-along.md). */
+export const TURN_MAX_SHARE = '78%';
+/**
+ * The question slides (LV-S2; design/screens/presenter/lecture-v2.md "Constants"): a picture option
+ * of a listen or realia question (`--pic-opt`), so two rows of options and the prompt line fit the
+ * 504-unit content area; it shrinks with its row, never grows.
+ */
+export const PIC_OPT = 112;
+/**
+ * A realia question's lead line ("Look closely and find the answer.", then "Hoya's answer" in its place)
+ * is at least this wide beside the key word; in a narrower column it goes under the key word, so the
+ * answer line never has less room than the lead line and nothing moves at the reveal (V7).
+ */
+export const REALIA_ASK_MIN = 240;
+/**
+ * The narrowest column beside a realia sheet that holds picture options in the 2 x 2 grid (two cards of a
+ * marker and a picture); a narrower one (a price-card sheet grown for a phone's text floor) lists them as rows.
+ */
+export const REALIA_GRID_MIN = 480;
+
+/**
+ * The write-together slides (LV-S4; design/screens/presenter/lecture-v2.md "Constants", V10-V12), in stage units.
+ * `WRITE_ICON`: the pencil beside "Write on paper or on your own device" (`.write-head .where svg`).
+ */
+export const WRITE_ICON = 40;
+/** The trace ghost's outline (`--trace-stroke`, V11): reads from the back of a room at `presenter.size.glyph` and keeps the counters of ㅁ, ㅇ and ㅎ open. */
+export const TRACE_STROKE = 6;
+/** One block of the name round's sound table (`--cell-w`): 13 across the 1184-unit content area. */
+export const SOUND_CELL_W = 84;
+/** A sound-table block's outline (`--cell-border`), never below `STAGE_BORDER_MIN`. */
+export const SOUND_CELL_BORDER = 2;
+/** A sound-table block's least width in caption sizes at level 0, so a block such as 쭈 with `jju` under it never wraps where 84 units are narrower than the text floor. */
+export const SOUND_CELL_EM = 2.6;
+/** The narrowest the column beside the trace ghost (the line and the answer) gets before it wraps under the ghost. */
+export const TRACE_SIDE_MIN = 360;
+
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;
 

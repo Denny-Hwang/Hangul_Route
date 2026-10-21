@@ -294,6 +294,14 @@ describe('the plan on screen, this week only, and the 30-block cap (F-TCH-004 §
     expect(pickPlan([draft], null)).toBeNull();
   });
 
+  it('with no plan asked for, the plan for everyone comes before a newer plan sent to one learner (the roster\'s plan)', () => {
+    const everyone = plan({ id: 'plan:all', publishedAt: '2026-10-01T00:00:00.000Z' });
+    const one = plan({ id: 'plan:one', publishedAt: '2026-10-09T00:00:00.000Z', targetLearnerIds: ['profile:mina'] });
+    expect(pickPlan([everyone, one], null)?.id).toBe('plan:all');
+    expect(pickPlan([everyone, one], 'plan:one')?.id).toBe('plan:one');
+    expect(pickPlan([one], null)?.id).toBe('plan:one');
+  });
+
   it('a classic plan keeps every item, in order', () => {
     expect(planOutline(plan({ items: quests(3) }), '2026-10-11')).toEqual({ blocks: planBlocks({ items: quests(3) }), omitted: 0 });
   });

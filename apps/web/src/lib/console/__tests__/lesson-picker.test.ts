@@ -19,6 +19,12 @@ import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import {
+  CHOOSER_PAGE,
+  chooserTabs,
+  initialView,
+  lessonLocked,
+  stageGroupsOf,
+  tabOf,
   addsItems,
   applyToOutline,
   applyToPlan,
@@ -357,5 +363,48 @@ describe('the lecture outline', () => {
       { kind: 'episode', id: 'episode:nope' },
       { kind: 'quest', id: 'quest:stage4-life-q1' },
     ]);
+  });
+});
+
+describe('the lecture page\'s tabs (AMENDMENTS-LECTURE-V2 section 18.3, row LV-4)', () => {
+  const lecture = consoleChooserGroups('en', 'lecture');
+  const plan = consoleChooserGroups('en', 'plan', ['stage1']);
+
+  it('Lessons, Stories and Word topics where they have rows; no Letters tab (the console has no letter sets)', () => {
+    expect(chooserTabs(lecture)).toEqual(['lessons', 'stories', 'topics']);
+    expect(chooserTabs(plan)).toEqual(['lessons']);
+    expect(chooserTabs([])).toEqual([]);
+    expect(lecture.flatMap((g) => g.rows).some((r) => r.kind === 'letters')).toBe(false);
+  });
+
+  it('a group sits under its tab; the stage chips are the stages with an episode row', () => {
+    expect(tabOf('stage3')).toBe('lessons');
+    expect(tabOf('stories')).toBe('stories');
+    expect(tabOf('topics')).toBe('topics');
+    expect(stageGroupsOf(lecture).map((g) => g.id)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
+  });
+
+  it('opens on the tab and stage of the first chosen thing, else Lessons on Stage 1', () => {
+    expect(initialView(lecture, [])).toEqual({ tab: 'lessons', stage: 'stage1' });
+    expect(initialView(lecture, ['quest:stage4-life-q1', 'story:hangeul-day'])).toEqual({ tab: 'lessons', stage: 'stage4' });
+    expect(initialView(lecture, ['story:hangeul-day'])).toEqual({ tab: 'stories', stage: 'stage1' });
+    expect(initialView(lecture, ['vocab-topic:food'])).toEqual({ tab: 'topics', stage: 'stage1' });
+    expect(initialView(lecture, ['quest:not-here'])).toEqual({ tab: 'lessons', stage: 'stage1' });
+    expect(initialView([], [])).toEqual({ tab: 'lessons', stage: null });
+    // A topic group the tabs cannot show (no rows) falls back to the first tab.
+    const empty = lecture.map((g) => (g.id === 'topics' ? { ...g, rows: [] } : g));
+    expect(initialView(empty, ['vocab-topic:food'])).toEqual({ tab: 'lessons', stage: 'stage1' });
+  });
+
+  it('the whole episode locks its lessons; lessons chosen one by one do not', () => {
+    const row = lecture.flatMap((g) => g.rows).find((r): r is ChooserEpisodeRow => r.key === 'episode:stage2-letters')!;
+    expect(lessonLocked(['episode:stage2-letters'], row)).toBe(true);
+    expect(lessonLocked(row.lessons.map((x) => x.key), row)).toBe(false);
+    expect(lessonLocked([], row)).toBe(false);
+  });
+
+  it('pages stories and topics 8 at a time', () => {
+    expect(CHOOSER_PAGE).toBe(8);
+    expect(lecture.find((g) => g.id === 'stories')!.rows.length).toBeGreaterThan(CHOOSER_PAGE);
   });
 });

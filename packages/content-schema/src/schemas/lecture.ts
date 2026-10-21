@@ -13,11 +13,13 @@ import { VocabIdSchema } from './vocab';
  * presenter expands it against its own content bundle, so a deck can travel
  * in the `#d=` URL fragment (`lecture-codec.ts`).
  *
- * A deck never carries a person: no learner name, initial or id. Picker
- * labels travel separately, console tab -> presenter tab by `postMessage`
- * (the two message schemas below), and live in presenter memory only (D12,
- * TD3). Every object here is `.strict()`, so a hand-built link cannot smuggle
- * a `labels` key into the fragment: an unknown key is an error, not dropped.
+ * A deck never carries a person: no learner name, initial or id. The helper
+ * picker and its console -> presenter roster hand-off are gone
+ * (AMENDMENTS-LECTURE-V2 LV-D7, section 18.5): no learner name reaches the
+ * presenter by any channel; `picker` stays in the grammar for legacy links
+ * only, and every new deck writes `picker: null`. Every object here is
+ * `.strict()`, so a hand-built link cannot smuggle a `labels` key into the
+ * fragment: an unknown key is an error, not dropped.
  * The remaining string fields are closed grammars (ids, compatibility jamo,
  * an ISO timestamp); only the teacher-typed title is free text (TD8, §8).
  *
@@ -126,7 +128,7 @@ export const LectureBlockSchema = z.discriminatedUnion('kind', [
 export type LectureBlock = z.infer<typeof LectureBlockSchema>;
 export type LectureBlockKind = LectureBlock['kind'];
 
-/** What the teacher intends for the helper picker; the labels themselves never ride in the deck. */
+/** The helper picker a legacy link names (read and ignored by the presenter; no emitter sets one, LV-D7). */
 export const PickerModeSchema = z.enum(['names', 'initials', 'numbers']);
 export type PickerMode = z.infer<typeof PickerModeSchema>;
 
@@ -194,53 +196,3 @@ export const LectureDeckSchema = z
 export type LectureDeck = z.infer<typeof LectureDeckSchema>;
 /** A deck as written by its author (defaults optional). */
 export type LectureDeckInput = z.input<typeof LectureDeckSchema>;
-
-// ---------------------------------------------------------------------------
-// Console -> presenter hand-off (never a URL; §3.2 roster hand-off protocol)
-// ---------------------------------------------------------------------------
-
-export const LECTURE_MESSAGE_NS = 'hangul-route.lecture' as const;
-
-/** The learner-name class of `profile-model.ts` plus "." and "?" for roster aliases ("M. K.", "?"). */
-export const PICKER_LABEL_RE = /^[A-Za-zÀ-ɏ가-힣0-9 .'’?-]+$/;
-
-/** Presenter -> console (its `window.opener`); carries no person data. */
-export const LectureReadyMessageSchema = z
-  .object({
-    ns: z.literal(LECTURE_MESSAGE_NS),
-    v: z.literal(1),
-    type: z.literal('ready'),
-    deckId: z.string().regex(DECK_ID_RE),
-  })
-  .strict();
-export type LectureReadyMessage = z.infer<typeof LectureReadyMessageSchema>;
-
-/** Console -> presenter; held in presenter memory only on arrival, never stored, logged or sent on. */
-export const LectureRosterMessageSchema = z
-  .object({
-    ns: z.literal(LECTURE_MESSAGE_NS),
-    v: z.literal(1),
-    type: z.literal('roster'),
-    deckId: z.string().regex(DECK_ID_RE),
-    mode: z.enum(['names', 'initials']),
-    labels: z.array(z.string().trim().min(1).max(20).regex(PICKER_LABEL_RE)).min(1).max(60),
-  })
-  .strict();
-export type LectureRosterMessage = z.infer<typeof LectureRosterMessageSchema>;
-
-/**
- * Origins the presenter announces `ready` to and accepts a roster from. Lives
- * here so the console and the presenter cannot drift; the presenter adds the
- * build-time `EXPO_PUBLIC_CONSOLE_ORIGINS` list for preview deployments.
- * `http://localhost:3000` is safe in production: only the opener window can
- * deliver a message and the payload is limited to labels.
- * `https://app.hangulroute.com` is the console's home from F-APP-001 (the
- * same origin as the presenter); the site entries stay for consoles still
- * open on hangulroute.com during the move.
- */
-export const LECTURE_CONSOLE_ORIGINS = [
-  'https://hangulroute.com',
-  'https://www.hangulroute.com',
-  'http://localhost:3000',
-  'https://app.hangulroute.com',
-] as const;

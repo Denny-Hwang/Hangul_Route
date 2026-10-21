@@ -6,16 +6,18 @@
 <title>Sentence build, build 0 (LV-S3) - design mock</title>
 <link rel="stylesheet" href="presenter.css">
 <link rel="stylesheet" href="presenter-v2.css">
+<style>/* As built (LV-S3): one place width on the line; empty places in border.shape */ .build-line > .tile { box-sizing: border-box; width: calc(3em + 2 * var(--u) * var(--spacing-n-xl) + 2 * var(--stage-line)); justify-content: center; } .build-line > .tile.empty { min-width: 0; border-color: var(--colors-border-shape); }</style>
 </head>
 <body>
+<!-- As built (LV-S3, 2026-10-20): tiles drop the sentence mark (가요, never 가요.); every place on the line takes the one widest-tile width (buildPlaceWidth); an empty place is dashed in border.shape (3:1 on paper); a build is never named by its sentence: arriving says "Build a sentence" (grid.kind.build) and the question its stage shows, after the words already on the line; a forward move says "{word} placed"; the whole build says the sentence with its romanization and meaning. See ../slide-sentence-build.md "As built (LV-S3)". -->
 <!-- Revised 2026-10-16 (owner report, DN-0): no helper picker, no language chips; Back and Display (Aa) in the header; the grouped Customize chooser (AMENDMENTS-LECTURE-V2.md section 18). -->
 <!-- Design mock (LV-0b, docs/specs/AMENDMENTS-LECTURE-V2.md), not shipped code. Every UI string is a dictionary value or a key of the amendment's section 12 (or a key proposed in ../presets.md / ../slide-families.md "Strings"); Korean, romanization, glosses and titles are shipped content. -->
 <div class="presenter">
 <div class="stage-box">
-<section class="stage" role="main" tabindex="-1" aria-label="Slide 8 of 31, Build the sentence together">
-<p class="visually-hidden" aria-live="polite">Slide 8 of 31, Build the sentence together</p>
+<section class="stage" role="main" tabindex="-1" aria-label="Slide 8 of 31, Build a sentence">
+<p class="visually-hidden" aria-live="polite">Slide 8 of 31, Build a sentence, Which word comes next?</p>
 <span class="counter" aria-hidden="true">8 / 31</span>
-<div class="slide slide-v2"><div class="kind-row"><p class="kind-label">Build the sentence together</p></div><p class="s-prompt">Which word comes next?</p><div class="build-line" aria-label="친구가 학교에 가요."><span class="tile empty" aria-hidden="true"></span><span class="tile empty" aria-hidden="true"></span><span class="tile empty" aria-hidden="true"></span></div><div class="bank"><span class="tile"><span class="ko " lang="ko">가요.</span></span><span class="tile"><span class="ko " lang="ko">와요</span></span><span class="tile"><span class="ko " lang="ko">친구가</span></span><span class="tile"><span class="ko " lang="ko">학교에</span></span></div></div>
+<div class="slide slide-v2"><div class="kind-row"><p class="kind-label">Build the sentence together</p></div><p class="s-prompt">Which word comes next?</p><div class="build-line"><span class="tile empty" aria-hidden="true"></span><span class="tile empty" aria-hidden="true"></span><span class="tile empty" aria-hidden="true"></span></div><div class="bank"><span class="tile"><span class="ko " lang="ko">가요</span></span><span class="tile"><span class="ko " lang="ko">와요</span></span><span class="tile"><span class="ko " lang="ko">친구가</span></span><span class="tile"><span class="ko " lang="ko">학교에</span></span></div></div>
 </section>
 
 </div>

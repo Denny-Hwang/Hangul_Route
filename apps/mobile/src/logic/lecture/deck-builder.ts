@@ -1,20 +1,37 @@
 import {
+  ALLOMORPH_PAIRS,
   discoverItemTexts,
+  fillFrame,
   parseNarration,
+  romanize,
+  SLOT_MARKER,
   syllableSplit,
   wordReviewCardCap,
   type CheckKind,
   type Discover,
+  type DiscoverItem,
   type Episode,
   type HeritageCard,
   type Jamo,
+  type KoText,
   type LectureBlock,
   type LectureDeck,
+  type ListenPickRound,
+  type OrderItRound,
   type Quest,
+  type Realia,
   type StoryLevel,
+  type TraceWordRound,
+  type TypeHangulRound,
+  type UiLocale,
+  type WriteFrameRound,
 } from '@hangul-route/content-schema';
 import { spokenFor, type SpokenForm } from '../audio/spoken';
+import { koTokenParts } from '../ko-tokens';
+import { validRounds } from '../listen-pick';
+import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
+import { buildRound, withoutMark, type SbParticle } from '../sentence-builder/progression';
 import {
   buildCultureQuizRounds,
   buildMatchSoundRounds,
@@ -28,13 +45,20 @@ import { GLOSS_HIDDEN_KINDS } from '../story/check-view';
 import { derangeSeeded, shuffleSeeded } from '../story/seeded-order';
 import {
   buildsFor,
+  joinSpoken,
+  type BankPlace,
   type BuildName,
+  type BuildTile,
   type BuildOptions,
+  type FrameText,
   type KoLine,
   type NarrationPiece,
   type QuizOption,
+  type RealiaSheetView,
   type SequenceStep,
   type SlideBody,
+  type SpokenLine,
+  type WriteTogether,
 } from './build-steps';
 
 /**
@@ -117,6 +141,8 @@ export interface LectureBundle {
   vocabTopic?(id: string): LectureVocabTopic | 'not-ready' | undefined;
   /** One word by id (a Word review's `vocabIds`); `'not-ready'` when no topic of it is ready. Absent: none yet. */
   vocabWord?(id: string): LectureVocabTopic['words'][number] | 'not-ready' | undefined;
+  /** The language of the content text (the overlays it applies); absent: English. */
+  locale?: UiLocale;
 }
 
 export interface VoiceInfo {
@@ -175,12 +201,104 @@ function spokenOf(text: SpeakableKo): SpokenForm {
 
 const wordVoice = (text: SpeakableKo, speech: WordVoice['speech'] = 'word'): WordVoice => ({ spoken: spokenOf(text), speech });
 
+/** Taught Korean on a reading slide: the Korean, its romanization, its gloss and what Sound says. */
+const spokenLine = (text: KoText): SpokenLine => ({ ko: text.ko, romanization: text.romanization, gloss: text.en, spoken: spokenOf(text) });
+
+/**
+ * A realia as the stage draws it (F-CURR-001 §3.6): its layout, title, lines and accessible text;
+ * Sound reads the title, then each line with its value, in order.
+ */
+function sheetView(realia: Realia): RealiaSheetView {
+  const text = (t: KoText) => ({ ko: t.ko, romanization: t.romanization });
+  const line = (e: Realia['entries'][number]): SpokenForm => {
+    const own = spokenOf(e.text);
+    if (e.value === undefined) return own;
+    const value = spokenOf(e.value);
+    return { text: `${own.text} ${value.text}`, romanization: `${own.romanization} ${value.romanization}` };
+  };
+  return {
+    kind: realia.kind ?? 'plain',
+    ...(realia.title !== undefined ? { heading: text(realia.title) } : {}),
+    entries: realia.entries.map((e) => ({
+      id: e.id,
+      text: text(e.text),
+      ...(e.value !== undefined ? { value: text(e.value) } : {}),
+      ...(e.dir !== undefined ? { dir: e.dir } : {}),
+      ...(e.goods !== undefined ? { goods: e.goods } : {}),
+    })),
+    alt: realia.altEn,
+    spoken: joinSpoken([...(realia.title !== undefined ? [spokenOf(realia.title)] : []), ...realia.entries.map(line)]),
+  };
+}
+
+/**
+ * Each piece of taught Korean a slide draws with the sound its card would have (a Word review
+ * keeps it): a word card's own, a Discover sentence, pattern example or exchange line at the
+ * sentence rate, a realia key word at the word rate.
+ */
+function slideVoices(slide: Slide): Array<[string, WordVoice]> {
+  switch (slide.kind) {
+    case 'vocab':
+      return [[slide.word.ko, { spoken: slide.spoken, speech: slide.speech }]];
+    case 'sentence':
+      return [[slide.sentence.ko, { spoken: slide.sentence.spoken, speech: 'sentence' }]];
+    case 'pattern':
+      return slide.examples.map((e): [string, WordVoice] => [e.ko, { spoken: e.spoken, speech: 'sentence' }]);
+    case 'read-along':
+      return slide.lines.map((l): [string, WordVoice] => [l.ko, { spoken: l.spoken, speech: 'sentence' }]);
+    case 'realia':
+      return slide.keyWords.map((w): [string, WordVoice] => [w.ko, { spoken: w.spoken, speech: 'word' }]);
+    default:
+      return [];
+  }
+}
+
 /** A scene's Korean: its line, else its keyword (the D14 rule of the schema's `sceneKorean`, on the presenter's narrower view). */
 const sceneKo = (scene: LectureStoryScene): StoryKo | undefined => scene.line ?? scene.keyword;
 
 const STORY_LEVEL_ORDER: readonly StoryLevel[] = ['listen', 'read-along', 'read'];
 const QUIZ_MIN_ITEMS = 4;
+/** The longest anchor a reading slide's key names (`readingSlideKey`), so the key fits a saved resume key (256). */
+const READING_ANCHOR_MAX = 48;
+
+/**
+ * A reading slide's key inside its step: the item's type and what it names (the sentence, the
+ * frame, the first line, the realia ref), so a saved resume point stays on its item when a content
+ * update adds or moves another Discover item in the step. `/` would read as a key segment
+ * (resumeIndex), so it becomes `-`; the anchor is cut to `READING_ANCHOR_MAX` so the key stays a
+ * saveable resume key. Two items with one anchor get `#2` (nthKey); an item with no anchor keeps
+ * its place (`<page>-<item>`, 1-based).
+ */
+export function readingSlideKey(item: DiscoverItem, page: number, index: number): string {
+  const text =
+    item.type === 'sentence' ? item.sentence.ko
+    : item.type === 'pattern' ? item.frame.ko
+    : item.type === 'exchange' ? item.lines[0]?.line.ko
+    : item.type === 'realia' ? item.realiaRef
+    : undefined;
+  const anchor = text?.replace(/\//g, '-').trim().slice(0, READING_ANCHOR_MAX);
+  return `${item.type}-${anchor === undefined || anchor === '' ? `${page + 1}-${index + 1}` : anchor}`;
+}
 const REVISIT_MAX_ROUNDS = 4;
+
+/** A Sentence Builder round as the learner game reads it without its particle choice: every word is a tile to place. */
+function withoutParticle(round: OrderItRound): OrderItRound {
+  const copy = { ...round };
+  delete copy.particle;
+  return copy;
+}
+
+/**
+ * A particle tile's endings (LV-S3): in their pair's own order (i/ga, eul/reul, eun/neun, ieyo/yeyo ...,
+ * `ALLOMORPH_PAIRS`), never in the content's, which often lists the answer first; `answer` is the
+ * one that ends the word.
+ */
+function particleOf(particle: NonNullable<OrderItRound['particle']>, built: SbParticle): NonNullable<BuildTile['particle']> {
+  const [a, b] = particle.choices;
+  const ending = (c: KoText) => ({ ko: c.ko, romanization: withoutMark(c.romanization) });
+  const choices = ALLOMORPH_PAIRS.includes(`${b.ko}/${a.ko}`) ? ([ending(b), ending(a)] as const) : ([ending(a), ending(b)] as const);
+  return { stem: built.stem, choices, answer: choices[0].ko === built.answer ? 0 : 1 };
+}
 
 /**
  * The key a block's slides start with (`<blockKey>/<path>`, section 3.3); a repeated block gets
@@ -216,6 +334,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const seenJamo = new Set<string>();
   // One card per word per deck (AMENDMENTS-LECTURE-V2 section 5.1), by Korean text: a repeat is not a skip.
   const seenWords = new Set<string>();
+  // One page per realia sheet (LV-S2): a Realia Read whose sheet a realia page already showed goes straight to its questions.
+  const seenRealia = new Set<string>();
   const usedKeys = new Map<string, number>();
   const blockKeys = new Map<string, number>();
   let quizFrom = 0;
@@ -428,6 +548,30 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         );
         return;
       }
+      // The question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2): one slide per round of the content.
+      case 'listen-pick':
+        listenStep(path, ref, validRounds(scope));
+        return;
+      case 'tap-respond':
+        replyStep(path, ref, listOf(scope.dialogue));
+        return;
+      case 'realia-read':
+        realiaReadStep(path, ref, scope.realiaRead);
+        return;
+      // Sentence building (section 5.1, LV-S3): one slide per round, the Stage 7 Check's included.
+      case 'order-it':
+        buildStep(path, ref, listOf(scope.orderIt?.rounds));
+        return;
+      // Write together (section 5.1, LV-S4): one slide per round; the room writes on paper or on its own devices.
+      case 'type-hangul':
+        writeStep(path, ref, listOf(scope.typeHangul?.rounds).map((round) => [round.id, () => typeWrite(round)]));
+        return;
+      case 'trace-word':
+        writeStep(path, ref, listOf(scope.traceWord?.rounds).map((round) => [round.id, () => traceWrite(round)]));
+        return;
+      case 'write-frame':
+        writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, () => frameWrite(round)]));
+        return;
       default:
         skip(ref, 'unsupported-step');
     }
@@ -435,6 +579,243 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
 
   const sequence = (key: string, steps: SequenceStep[]): void => {
     push(key, { kind: 'sequence', steps, shuffled: derangeSeeded(steps.map((s) => s.id), seed()) });
+  };
+
+  // ---- the question slides (AMENDMENTS-LECTURE-V2 sections 5.1 and 5.2, LV-S2) -----------------
+  // The room answers by pointing ("triangle, 2"), on paper or on its own devices; nothing asks it
+  // to speak, and nothing is collected or tallied (LV-D9, TD6). The content lists an answer first,
+  // so each question shuffles its options with the slide's seed, as the learner games do per round.
+
+  /**
+   * The meanings of a Listen & Pick round's text options in the slide language (V8: a row shows its
+   * meaning at the answer build). English: the content's own. Another language: the overlays have
+   * no field for these options, so each takes the meaning this deck already gave the same Korean,
+   * and none shows unless every option has one, so the rows stay alike and nothing is in English.
+   */
+  const english = (bundle.locale ?? 'en') === 'en';
+  const taughtGloss = (ko: string): string | undefined =>
+    taught.find((k): k is Extract<TaughtItem, { kind: 'word' }> => k.kind === 'word' && k.ko === ko)?.gloss;
+  const optionGlosses = (texts: readonly KoText[]): Array<string | undefined> => {
+    if (english) return texts.map((t) => t.en);
+    const met = texts.map((t) => taughtGloss(t.ko));
+    return met.every((g) => g !== undefined) ? met : texts.map(() => undefined);
+  };
+
+  /**
+   * A picture option's name (its accessible name and the art's text fallback). English: the
+   * content's label. Another language: the meaning this deck already gave the picture's word, else
+   * none, so the stage names it "Picture" as the game does; never the English label.
+   */
+  const pictureName = (labelEn: string | undefined, text: KoText | undefined): string | undefined => {
+    if (english) return labelEn ?? text?.en;
+    return text === undefined ? undefined : taughtGloss(text.ko);
+  };
+
+  /** Korean with its spaces and punctuation taken out, to tell a heard answer ("icheon won") from a reply. */
+  const bare = (ko: string): string => ko.replace(/[\s.,!?~]/g, '');
+
+  /**
+   * Listen & Pick (practice, apply and the Check): a `listen` question per round. A letter or
+   * syllable round keeps its options in the 2 x 2 grid without meanings (Match Sound's look); a
+   * word or sentence round's options are rows whose meanings join at the answer build; a picture
+   * round's options are pictures named by their labels. The prompt is played (Sound, the stage
+   * speaker) or, with no Korean voice or sound off, read by the teacher (`textPrompt`, section 3.7).
+   */
+  const listenStep = (path: string, ref: string, rounds: readonly ListenPickRound[]): void => {
+    if (rounds.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    rounds.forEach((round, i) => {
+      const kind = listenPickSpeech(round).kind;
+      const speech = kind === 'sound' || kind === 'sentence' ? kind : 'word';
+      const texts = round.options.flatMap((o) => (o.pictureRef === undefined && o.text !== undefined ? [o.text] : []));
+      const glosses = speech === 'sound' ? texts.map(() => undefined) : optionGlosses(texts);
+      let t = 0;
+      const options = round.options.map((o): QuizOption => {
+        const correct = o.id === round.answerId;
+        if (o.pictureRef !== undefined) {
+          // Named by its label (the game's rule); a picture with none is named "Picture" on the stage, as in the game.
+          const name = pictureName(o.labelEn, o.text);
+          return { picture: o.pictureRef, ...(name !== undefined ? { gloss: name } : {}), correct };
+        }
+        const text = o.text!;
+        const gloss = glosses[t++];
+        return { ko: text.ko, romanization: text.romanization, ...(gloss !== undefined ? { gloss } : {}), correct };
+      });
+      // A word or sentence round whose answer is not in the line heard asks for the reply that fits it (the Stage 4
+      // Checks); an answer the line holds ("icheon won" in "icheon wonieyo.") was heard, so the round asks which one.
+      const answer = round.options.find((o) => o.id === round.answerId);
+      const reply =
+        speech !== 'sound' && answer?.pictureRef === undefined && answer?.text !== undefined && !bare(round.prompt.ko).includes(bare(answer.text.ko));
+      push(`${path}/q${i + 1}`, {
+        kind: 'quiz',
+        prompt: { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },
+        options: shuffleSeeded(options, seed()),
+        textPrompt,
+      });
+    });
+  };
+
+  /**
+   * Tap to Respond: a `reply` question per turn: the other speaker's line (Korean, romanization,
+   * meaning and what Sound says, at the sentence rate as in the game) and the replies with their
+   * meanings. A turn with Korean but no romanization is left out and counted (rule 11).
+   */
+  const replyStep = (path: string, ref: string, turns: Readonly<NonNullable<MinigameScope['dialogue']>>): void => {
+    if (turns.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    turns.forEach((turn, i) => {
+      const romanization = turn.npcRomanization;
+      if (romanization === undefined || turn.options.some((o) => o.romanization === undefined)) {
+        skip(ref, 'no-romanization');
+        return;
+      }
+      const line: SpokenLine = {
+        ko: turn.npcKo,
+        romanization,
+        gloss: turn.npcEn,
+        spoken: spokenOf({ ko: turn.npcKo, romanization, spokenKo: turn.npcSpokenKo, audioRef: turn.npcAudioRef }),
+      };
+      const options = turn.options.map((o): QuizOption => ({ ko: o.ko, romanization: o.romanization!, gloss: o.en, correct: o.isCorrect }));
+      push(`${path}/q${i + 1}`, { kind: 'quiz', prompt: { ask: 'reply', line }, options: shuffleSeeded(options, seed()), textPrompt: false });
+    });
+  };
+
+  /**
+   * Realia Read: the sheet, then a `realia` question per round with the same sheet beside it. A
+   * sheet a realia page of this deck already showed (its quest's Discover, LV-S1) is not shown
+   * again on its own: its questions follow at once, so the room keeps its place. Options are the
+   * content's Korean answers (romanization, no meaning: the key word's meaning would give some
+   * away), plain figures or pictures named by their labels.
+   */
+  const realiaReadStep = (path: string, ref: string, read: MinigameScope['realiaRead']): void => {
+    if (read === undefined || read.rounds.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    const sheet = sheetView(read.realia);
+    if (!seenRealia.has(read.realia.ref)) {
+      seenRealia.add(read.realia.ref);
+      push(`${path}/sheet`, { kind: 'realia', sheet, keyWords: [] });
+    }
+    read.rounds.forEach((round, i) => {
+      const options = round.options.map((o): QuizOption => {
+        const correct = o.id === round.answerId;
+        if (o.text !== undefined) return { ko: o.text.ko, romanization: o.text.romanization, correct };
+        if (o.figure !== undefined) return { figure: o.figure, correct };
+        return { picture: o.pictureRef ?? '', ...(o.labelEn !== undefined ? { gloss: o.labelEn } : {}), correct };
+      });
+      const key = round.key === undefined ? undefined : { ko: round.key.ko, romanization: round.key.romanization, spoken: spokenOf(round.key) };
+      push(`${path}/q${i + 1}`, {
+        kind: 'quiz',
+        prompt: {
+          ask: 'realia',
+          text: round.questionEn,
+          sheet,
+          ...(key !== undefined ? { key } : {}),
+          ...(round.answerEntryId !== undefined ? { answerEntryId: round.answerEntryId } : {}),
+        },
+        options: shuffleSeeded(options, seed()),
+        textPrompt: false,
+      });
+    });
+  };
+
+  /**
+   * Sentence Builder (`order-it`: practice, apply and the Stage 7 Check; AMENDMENTS-LECTURE-V2
+   * section 5.2, LV-S3): a sentence-build slide per round, in content order. The tiles and the bank
+   * are the learner game's own round model (`buildRound`): the words split at their spaces without
+   * the sentence mark, a distractor that would read like a word dropped, and the bank deranged with
+   * the slide's seed, so it is never already the sentence. A particle round builds every word too
+   * (the game places the other words for the learner), with its particle word in the bank as its
+   * stem and both endings on the line until the one that fits stays. A round the game could not
+   * play is a counted `scope-too-small` skip. Like a question, a build tests and does not teach: it
+   * joins neither `taught` nor the End slide, and it sits inside the quest's catalogue minutes.
+   */
+  const buildStep = (path: string, ref: string, rounds: readonly OrderItRound[]): void => {
+    if (rounds.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    for (const round of rounds) {
+      const slideSeed = seed();
+      const order = buildRound(withoutParticle(round), slideSeed);
+      const chosen = round.particle === undefined ? undefined : buildRound(round, slideSeed)?.particle;
+      if (order === null || (round.particle !== undefined && chosen === undefined)) {
+        skip(ref, 'scope-too-small');
+        continue;
+      }
+      const tiles = order.words.map((w, i): BuildTile => (chosen !== undefined && chosen.word === i ? { ...w, particle: particleOf(round.particle!, chosen) } : { ...w }));
+      // The particle word sits in the bank as its stem, so a distractor that reads as that stem is
+      // dropped too (the game drops one that reads as a word): two same tiles, one set back, would read as a wrong answer.
+      const stem = chosen === undefined ? undefined : tiles[chosen.word]?.particle?.stem;
+      const bank = order.tray.flatMap((t): BankPlace[] =>
+        t.id.startsWith('w') ? [{ tile: Number(t.id.slice(1)) }] : t.ko === stem ? [] : [{ distractor: { ko: t.ko, romanization: t.romanization } }],
+      );
+      // Keyed by the round's id, so a saved resume point stays on its round when a content update adds one.
+      push(`${path}/${round.id.replace(/\//g, '-')}`, { kind: 'sentence-build', sentence: spokenLine(round.sentence), tiles, bank });
+    }
+  };
+
+  /**
+   * Write together (Type Hangul, Trace a Word, Write Frame; AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
+   * LV-D8, LV-S4): a write-together slide per round, in content order, keyed by the round's id. The
+   * room writes on paper or on its own devices; the stage takes no input and the answer comes only on
+   * the teacher's click. The name round (`freeEntry`) shows its frame and its sound table and never a
+   * name. Like a question, a round practises and does not teach: it joins neither `taught` nor the End
+   * slide, and it sits inside the quest's catalogue minutes. A step with no round is a counted
+   * `scope-too-small` skip, and so is a round its builder cannot draw (a frame whose banks do not match
+   * its gaps, an empty bank): that round is left out and the rest of the step stays.
+   */
+  const writeStep = (path: string, ref: string, rounds: ReadonlyArray<readonly [id: string, build: () => WriteTogether]>): void => {
+    if (rounds.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    for (const [id, build] of rounds) {
+      const body = attempt(ref, build);
+      if (body !== null) push(`${path}/${id.replace(/\//g, '-')}`, { kind: 'write-together', ...body });
+    }
+  };
+
+  const sheetText = (t: { ko: string; romanization: string }) => ({ ko: t.ko, romanization: t.romanization });
+
+  /** A frame's Korean around its gaps, its romanization and its meaning (as a Discover pattern's). */
+  const frameOf = (frame: KoText): FrameText => ({ pieces: frame.ko.split(SLOT_MARKER), romanization: frame.romanization, gloss: frame.en });
+
+  /**
+   * Type Hangul: the prompt (`promptEn` in the slide language), its picture and the target's meaning as
+   * the cue the room writes from (the learner's game always shows one; "Type the price" alone does not
+   * say which), then the target in Korean with its romanization.
+   */
+  const typeWrite = (round: TypeHangulRound): WriteTogether => ({
+    variant: 'type',
+    prompt: round.promptEn,
+    ...(round.pictureRef !== undefined ? { picture: round.pictureRef } : {}),
+    answer: spokenLine(round.target),
+  });
+
+  /** Trace a Word: the word drawn as a ghost from the start; its romanization and meaning at the answer. */
+  const traceWrite = (round: TraceWordRound): WriteTogether => ({ variant: 'trace', word: spokenLine(round.word) });
+
+  /**
+   * Write Frame: the frame, each slot's bank, and "For example": every gap filled with its bank's first
+   * word and the ending that fits that word (`fillFrame`, observation O2: 밥 ends in a consonant, so
+   * 아침에 ___을/를 먹어요. gives 아침에 밥을 먹어요.), romanized by the converter as the learner's Write
+   * Frame does. The name round (`freeEntry`): its frame and its sound table, never a name (LV-D8).
+   */
+  const frameWrite = (round: WriteFrameRound): WriteTogether => {
+    const frame = frameOf(round.frame);
+    if (round.freeEntry) return { variant: 'own-name', frame, groups: listOf(round.soundTable?.groups).map((group) => group.map(sheetText)) };
+    const picks = round.slots.map((slot) => slot.bank[0]?.ko);
+    if (picks.some((pick) => pick === undefined)) throw new Error(`write-frame round ${round.id}: a slot has an empty bank`);
+    // fillFrame throws when the frame's gaps and the slots differ; `attempt` makes that a counted skip.
+    const ko = fillFrame(round.frame.ko, picks as string[]);
+    const romanization = romanize(ko).text;
+    return { variant: 'frame', frame, banks: round.slots.map((slot) => slot.bank.map(sheetText)), example: { ko, romanization, spoken: { text: ko, romanization } } };
   };
 
   const card = (path: string, id: string): void => {
@@ -459,21 +840,90 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
 
   /**
-   * A Discover step (F-QUEST-002 §3.1): a letter slide per jamo item, a vocab slide per word item.
-   * A sentence, a pattern example or an exchange line plays at the sentence rate.
+   * UI-language text with `{ko:}` tokens (a pattern note, a realia caption) as pieces, each token
+   * a Korean chip with its romanization. A token with no romanization drops the whole text and is
+   * a counted `no-romanization` skip (rule 11); the slide keeps everything else.
    */
-  const discoverStep = (path: string, discover: Discover): void => {
-    for (const item of discover.pages.flatMap((page) => page.items)) {
-      if (item.type === 'jamo') {
-        letterById(path, item.jamoId);
-        continue;
-      }
-      const speech = item.type === 'sentence' || item.type === 'pattern' || item.type === 'exchange' ? 'sentence' : 'word';
-      for (const text of discoverItemTexts(item)) {
-        wordCard(`${path}/${text.ko}`, { ko: text.ko, romanization: text.romanization, gloss: text.en }, wordVoice(text, speech));
-      }
+  const tokenPieces = (ref: string, text: string): NarrationPiece[] | undefined => {
+    const pieces = koTokenParts(text);
+    if (pieces.some((piece) => 'ko' in piece && piece.romanization === '')) {
+      skip(ref, 'no-romanization');
+      return undefined;
+    }
+    return pieces;
+  };
+
+  /** What a reading slide shows was taught and seen, as when its texts were word cards: no later card repeats them. */
+  const shownOnSlide = (item: DiscoverItem): void => {
+    for (const text of discoverItemTexts(item)) {
+      seenWords.add(text.ko);
+      teachWord({ ko: text.ko, romanization: text.romanization, gloss: text.en });
     }
   };
+
+  /**
+   * A Discover step (F-QUEST-002 §3.1; AMENDMENTS-LECTURE-V2 section 5.1, LV-S1): a letter slide
+   * per jamo item, a vocab slide per word item, and a reading slide per upper-stage item: a
+   * sentence, a sentence pattern, a read along (an exchange) and a realia page. A realia whose
+   * sheet the quest does not hold is a counted `unknown-id` skip; its key words become word cards.
+   */
+  const discoverStep = (path: string, discover: Discover, realiaOf: (ref: string) => Realia | undefined): void => {
+    discover.pages.forEach((page, p) => {
+      page.items.forEach((item, i) => {
+        const key = `${path}/${readingSlideKey(item, p, i)}`;
+        switch (item.type) {
+          case 'jamo':
+            letterById(path, item.jamoId);
+            return;
+          case 'word':
+            wordCard(`${path}/${item.word.ko}`, { ko: item.word.ko, romanization: item.word.romanization, gloss: item.word.en }, wordVoice(item.word));
+            return;
+          case 'sentence':
+            push(key, { kind: 'sentence', sentence: spokenLine(item.sentence), ...(item.picture !== undefined ? { picture: item.picture } : {}) });
+            break;
+          case 'pattern': {
+            const note = tokenPieces(`${key}/note`, item.noteEn);
+            push(key, {
+              kind: 'pattern',
+              frame: { pieces: item.frame.ko.split(SLOT_MARKER), romanization: item.frame.romanization, gloss: item.frame.en },
+              ...(note !== undefined ? { note } : {}),
+              examples: item.examples.map(spokenLine),
+            });
+            break;
+          }
+          case 'exchange':
+            // No Korean voice (or the deck's sound off): read along shows every line at once (section 5.1).
+            push(key, { kind: 'read-along', lines: item.lines.map((l) => ({ speaker: l.speakerEn, ...spokenLine(l.line) })), ...(textPrompt ? { together: true as const } : {}) });
+            break;
+          case 'realia': {
+            const realia = realiaOf(item.realiaRef);
+            if (realia === undefined) {
+              skip(item.realiaRef, 'unknown-id');
+              for (const w of item.keyWords) wordCard(`${path}/${w.ko}`, { ko: w.ko, romanization: w.romanization, gloss: w.en }, wordVoice(w));
+              return;
+            }
+            const text = item.captionEn ?? page.captionEn;
+            const caption = text === undefined ? undefined : tokenPieces(`${key}/caption`, text);
+            push(key, { kind: 'realia', sheet: sheetView(realia), ...(caption !== undefined ? { caption } : {}), keyWords: item.keyWords.map(spokenLine) });
+            seenRealia.add(realia.ref);
+            break;
+          }
+        }
+        shownOnSlide(item);
+      });
+    });
+  };
+
+  /** The realia a quest's Realia Read scopes hold, by ref: a Discover realia page shows the sheet the quest plays. */
+  const realiaOfQuest =
+    (quest: Quest) =>
+    (ref: string): Realia | undefined => {
+      for (const step of quest.steps) {
+        const realia = step.minigameRef === undefined ? undefined : bundle.scopeFor(step.minigameRef)?.realiaRead?.realia;
+        if (realia?.ref === ref) return realia;
+      }
+      return undefined;
+    };
 
   const questBlock = (path: string, quest: Quest): void => {
     minutes += quest.estimatedMinutes;
@@ -496,7 +946,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         continue;
       }
       if (step.kind === 'discover' && step.discover) {
-        discoverStep(stepPath, step.discover);
+        discoverStep(stepPath, step.discover, realiaOfQuest(quest));
         continue;
       }
       if (step.minigameRef === undefined) {
@@ -711,13 +1161,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         continue;
       }
       const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice);
-      // A taught word keeps the sound its own card had in the quest (a Discover sentence stays a sentence).
-      const cardVoice = (ko: string): WordVoice | undefined => {
-        const card = alone.slides.find((s): s is Extract<Slide, { kind: 'vocab' }> => s.kind === 'vocab' && s.word.ko === ko);
-        return card ? { spoken: card.spoken, speech: card.speech } : undefined;
-      };
+      // A taught word keeps the sound the quest gave it, on its card or its reading slide (a Discover sentence stays a sentence).
+      const voices = new Map<string, WordVoice>();
+      for (const [ko, v] of alone.slides.flatMap(slideVoices)) if (!voices.has(ko)) voices.set(ko, v);
       for (const t of alone.taught) {
-        if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss, voice: cardVoice(t.ko) ?? wordVoice(t) });
+        if (t.kind === 'word' && t.gloss !== undefined) add({ ko: t.ko, romanization: t.romanization, gloss: t.gloss, voice: voices.get(t.ko) ?? wordVoice(t) });
       }
     }
     for (const id of vocabIds) {

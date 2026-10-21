@@ -1,4 +1,6 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
 const storage = vi.hoisted(() => ({ failReads: false, failStrictReads: false, strictReadFailures: 0, failWrites: false, writeFails: [] as string[] }));
@@ -72,6 +74,7 @@ vi.mock('@hangul-route/i18n', async (importOriginal) => {
 });
 
 import { MIGRATED_AT, activeLocale, deviceChose, detectInitialLocale, followDeviceSettings, useLocaleStore } from '../locale-store';
+import * as storageModule from '../../platform/storage';
 import { useProfileStore } from '../profile-store';
 
 // The fixture's hidden locales (es, ko) are only available when the QA flag is set.
@@ -791,5 +794,127 @@ describe('locale-store: a stored locale that is currently hidden is ignored', ()
     useLocaleStore.setState({ detected: 'en', device: 'ko' });
     useLocaleStore.getState().setDeviceLocale('en', 'settings');
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * AMENDMENTS-DISPLAY-NAV sections 3.3 and 12: the learner app never reads or writes the console's old key
+ * `hr:console:uiLocale` (the console folds it on a device with no learner profiles and keeps it as a mirror).
+ * Its language comes from the device record, a `?lang=` seed or a choice, never from that key.
+ */
+describe('locale-store: the learner app never touches hr:console:uiLocale', () => {
+  const CONSOLE_KEY = 'hr:console:uiLocale';
+  // The literal key, the web constant that holds it, a module named console-locale (the web one or a
+  // future shared export) and the key built from parts ('…console:' + 'uiLocale') all count.
+  const NAMES_CONSOLE_KEY = [
+    /console:uiLocale/,
+    /\bCONSOLE_LOCALE_KEY\b/,
+    /(?:from|import\s*\(|require\s*\(|vi\.mock\s*\()\s*['"`][^'"`]*console-locale(?:\.tsx?)?['"`]/,
+    /['"`][^'"`\n]*console:?['"`]\s*\+\s*['"`]:?uiLocale['"`]/,
+  ];
+  const local = new Map<string, string>();
+  const spy = {
+    getItem: vi.fn((k: string) => local.get(k) ?? null),
+    setItem: vi.fn((k: string, v: string) => {
+      local.set(k, v);
+    }),
+    removeItem: vi.fn((k: string) => {
+      local.delete(k);
+    }),
+    key: vi.fn((i: number) => [...local.keys()][i] ?? null),
+    clear: vi.fn(() => local.clear()),
+    get length(): number {
+      return local.size;
+    },
+  };
+  const touchedConsoleKey = (calls: unknown[][]): boolean => calls.some((args) => typeof args[0] === 'string' && args[0].includes('console:uiLocale'));
+  const storageCalls = (): unknown[][] =>
+    (['readJson', 'readJsonStrict', 'updateJson', 'writeJson', 'removeKey'] as const).flatMap((name) => vi.mocked(storageModule[name]).mock.calls as unknown[][]);
+
+  beforeEach(() => {
+    reset();
+    local.clear();
+    for (const fn of [spy.getItem, spy.setItem, spy.removeItem, spy.key, spy.clear]) fn.mockClear();
+    for (const name of ['readJson', 'readJsonStrict', 'updateJson', 'writeJson', 'removeKey'] as const) vi.mocked(storageModule[name]).mockClear();
+    // The console's old choice, in both stores the learner app could reach.
+    local.set(CONSOLE_KEY, 'ko');
+    mem.set('console:uiLocale', 'ko');
+    vi.stubGlobal('localStorage', spy);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const noConsoleKey = (): void => {
+    expect(touchedConsoleKey(spy.getItem.mock.calls)).toBe(false);
+    expect(touchedConsoleKey(spy.setItem.mock.calls)).toBe(false);
+    expect(touchedConsoleKey(spy.removeItem.mock.calls)).toBe(false);
+    expect(spy.key).not.toHaveBeenCalled();
+    expect(spy.clear).not.toHaveBeenCalled();
+    expect(touchedConsoleKey(storageCalls())).toBe(false);
+    expect(local.get(CONSOLE_KEY)).toBe('ko');
+    expect(mem.get('console:uiLocale')).toBe('ko');
+  };
+
+  it('hydrate on a fresh device: the console key is not read, folded or removed', async () => {
+    await useLocaleStore.getState().hydrate(['profile:a'], { activeProfileId: 'profile:a' });
+    await settle();
+    expect(useLocaleStore.getState().device).toBeNull();
+    expect(mem.has('device:settings')).toBe(false);
+    noConsoleKey();
+  });
+
+  it('a ?lang= seed writes the device record only, never the console key', async () => {
+    platform.handoff = 'es';
+    await useLocaleStore.getState().hydrate([]);
+    await settle();
+    expect(useLocaleStore.getState()).toMatchObject({ device: 'es', deviceAt: MIGRATED_AT });
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'es', uiLocaleAt: MIGRATED_AT });
+    noConsoleKey();
+  });
+
+  it('setDeviceLocale writes the device record only, never the console key', async () => {
+    await useLocaleStore.getState().hydrate([]);
+    useLocaleStore.getState().setDeviceLocale('en', 'settings');
+    await settle();
+    expect(mem.get('device:settings')).toMatchObject({ uiLocale: 'en' });
+    noConsoleKey();
+  });
+
+  it('no learner app source outside tests names the console key', () => {
+    const root = join(__dirname, '..', '..');
+    const files: string[] = [];
+    const walk = (dir: string): void => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) {
+          if (name !== '__tests__' && name !== 'node_modules') walk(path);
+        } else if (/\.(ts|tsx)$/.test(name) && !/\.test\.tsx?$/.test(name)) files.push(path);
+      }
+    };
+    walk(root);
+    expect(files.length).toBeGreaterThan(100);
+    const offenders = files.filter((file) => {
+      const text = readFileSync(file, 'utf8');
+      return NAMES_CONSOLE_KEY.some((pattern) => pattern.test(text));
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it('the source scan catches each way of naming the console key', () => {
+    const caught = (text: string): boolean => NAMES_CONSOLE_KEY.some((pattern) => pattern.test(text));
+    for (const bad of [
+      "const k = 'hr:console:uiLocale';",
+      "import { CONSOLE_LOCALE_KEY } from '@hangul-route/shared';",
+      "import { readConsoleLocale } from '../../../web/src/lib/i18n/console-locale';",
+      "const m = await import('@/lib/i18n/console-locale.ts');",
+      "const k = 'hr:console:' + 'uiLocale';",
+      "const k = 'hr:console' + ':uiLocale';",
+    ]) {
+      expect(caught(bad), bad).toBe(true);
+    }
+    for (const fine of ["const k = 'device:settings';", "set({ uiLocale: 'ko' });", "import { localeLabel } from './locale';"]) {
+      expect(caught(fine), fine).toBe(false);
+    }
   });
 });

@@ -171,7 +171,7 @@ const FIXTURE = {
       cardPairs: [{ ko: "나무", en: "tree", romanization: "namu" }],
       storySteps: [{ id: "st1", labelEn: "Wake up", labelKo: "일어나요", romanization: "ireonayo" }, { id: "st2", labelEn: "Eat" }],
       picWord: { boards: [{ pairs: [{ word: { ko: "곰", romanization: "gom", en: "bear" } }] }] },
-      dialogue: [{ npcKo: "대화는안나옴", npcEn: "dialogue is not presented", options: [] }],
+      dialogue: [{ npcKo: "대화예요", npcEn: "it is a dialogue", options: [{ ko: "네", en: "yes" }] }],
     },
   },
   quests: [
@@ -226,8 +226,8 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     assert.ok(!all.has("실"), "fact text is never presented");
   });
 
-  test("leaves out what the presenter never draws (dialogue)", () => {
-    assert.ok(!all.has("대"));
+  test("takes a Tap to Respond line and its replies, which the reply question draws (LV-S2; left out before it)", () => {
+    for (const s of ["대화예요", "네"]) assert.ok(strings.includes(s), s);
   });
 
   test("lists the Korean of the upper-stage Discover items (F-CURR-001 §3.10)", () => {
@@ -240,6 +240,8 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
     ];
     assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items }] } }] }] }), [
       "책이 있어요",
+      // The pattern slide draws its frame around the gap (LV-S1).
+      "이에요/예요",
       "책이에요",
       "학교예요",
       "이게 뭐예요?",
@@ -247,6 +249,55 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
       "김밥",
     ]);
     assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages: [{ items: [{ type: "pattern" }, { type: "exchange" }, { type: "realia" }, { type: "sentence" }] }] } }] }] }), []);
+  });
+
+  test("lists what the reading slides draw too (AMENDMENTS-LECTURE-V2 LV-S1): a frame between its gaps, the Korean chips of a note and of a realia caption", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const pages = [
+      { items: [{ type: "pattern", frame: kt("___에 ___을/를 먹었어요."), noteEn: "Put {ko:에} after a day, {ko: 설날에 } is on Seollal.", examples: [kt("떡국을 먹었어요.")] }] },
+      { items: [{ type: "realia", realiaRef: "realia:menu", keyWords: [kt("김밥")], captionEn: "Read {ko:메뉴} first." }], captionEn: "A page {ko:캡션}." },
+      { items: [{ type: "realia", realiaRef: "realia:slip", keyWords: [kt("라면")] }], captionEn: "Count with {ko:한}, {ko:두}{ko:}." },
+      { items: [{ type: "word", word: kt("물") }], captionEn: "Not a realia page: {ko:아니}." },
+    ];
+    assert.deepEqual(presenterStrings({ quests: [{ steps: [{ kind: "discover", discover: { pages } }] }] }), [
+      "에 ",
+      "을/를 먹었어요.",
+      "에",
+      "설날에",
+      "떡국을 먹었어요.",
+      "김밥",
+      "메뉴",
+      "라면",
+      "한",
+      "두",
+      "물",
+    ]);
+  });
+
+  test("lists the Korean chips of the es / ko overlay notes and realia captions too: the note, the item's caption, else its page's", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const pages = [
+      { items: [{ type: "pattern", frame: kt("___에 가요."), noteEn: "Put {ko:에} after a place.", examples: [kt("학교에 가요.")] }] },
+      { items: [{ type: "realia", realiaRef: "realia:menu", keyWords: [kt("김밥")], captionEn: "Read it." }], captionEn: "A page." },
+      { items: [{ type: "realia", realiaRef: "realia:slip", keyWords: [kt("라면")] }], captionEn: "A slip." },
+      { items: [{ type: "word", word: kt("물") }], captionEn: "Not a realia page." },
+    ];
+    const quests = [{ id: "quest:q1", steps: [{ id: "s2", kind: "discover", discover: { pages } }] }];
+    const overlays = {
+      es: { "quest:q1": { "steps.s2.discover.pages.0.items.0.note": "Pon {ko:에} y {ko:가요}.", "steps.s2.discover.pages.1.caption": "No: {ko:쪽}." } },
+      ko: {
+        "quest:q1": {
+          "steps.s2.discover.pages.1.items.0.caption": "{ko:메뉴}를 읽어요.",
+          "steps.s2.discover.pages.2.caption": "{ko:주문} 쪽지예요.",
+          "steps.s2.discover.pages.3.caption": "{ko:아니}",
+        },
+      },
+    };
+    const strings = presenterStrings({ quests, overlays });
+    for (const ko of ["가요", "메뉴", "주문"]) assert.ok(strings.includes(ko), ko);
+    // A page caption under an item with its own caption, and a caption of a page with no realia, are not drawn.
+    for (const ko of ["쪽", "아니"]) assert.ok(!strings.includes(ko), ko);
+    assert.deepEqual(presenterStrings({ quests }), presenterStrings({ quests, overlays: {} }));
   });
 
   test("lists the Korean of the upper-stage lesson scopes (F-CURR-001 §3.12)", () => {
@@ -281,6 +332,48 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
       "사과",
       "떡",
     ]);
+  });
+
+  test("lists the name round's sound table too (AMENDMENTS-LECTURE-V2 LV-S4): every block of every group, never its finals", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const block = (ko) => ({ ko, romanization: "x" });
+    const scopes = {
+      a: {
+        kind: "write-frame",
+        writeFrame: {
+          rounds: [
+            {
+              frame: kt("제 이름은 ___이에요/예요."),
+              slots: [{ bank: [] }],
+              freeEntry: true,
+              soundTable: { groups: [[block("캐"), block("패")], [block("츠")], {}], finals: [block("ㄴ")] },
+            },
+            { frame: kt("이건 ___이에요/예요."), slots: [{ bank: [kt("한글")] }], soundTable: {} },
+          ],
+        },
+      },
+    };
+    // The finals are a learner-game tab only: the slide draws the blocks, so a final adds nothing.
+    assert.deepEqual(presenterStrings({ scopes }), ["제 이름은 ___이에요/예요.", "캐", "패", "츠", "이건 ___이에요/예요.", "한글"]);
+  });
+
+  test("lists what the question slides draw too (AMENDMENTS-LECTURE-V2 LV-S2): Listen & Pick prompts and options, Tap to Respond lines and replies", () => {
+    const kt = (ko) => ({ ko, romanization: "x", en: "y" });
+    const scopes = {
+      a: {
+        kind: "listen-pick",
+        listenPick: {
+          rounds: [
+            { prompt: kt("빵을 먹어요."), options: [{ id: "a", text: kt("빵을 먹어요.") }, { id: "b", text: kt("물을 마셔요.") }, { id: "c", pictureRef: "word:food-milk" }] },
+            { prompt: kt("어"), options: [{ id: "eo", text: kt("ㅓ") }, {}] },
+          ],
+        },
+      },
+      b: { kind: "tap-respond", dialogue: [{ npcKo: "밥 먹었어요?", options: [{ ko: "네, 먹었어요." }, { ko: "잘 가요." }] }, { options: [] }] },
+      c: { kind: "listen-pick", listenPick: {} },
+      d: { kind: "tap-respond" },
+    };
+    assert.deepEqual(presenterStrings({ scopes }), ["빵을 먹어요.", "빵을 먹어요.", "물을 마셔요.", "어", "ㅓ", "밥 먹었어요?", "네, 먹었어요.", "잘 가요."]);
   });
 
   test("tolerates missing optional fields", () => {

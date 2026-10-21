@@ -18,8 +18,10 @@ import {
 import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
+import { questsAll } from '../../../content/quests';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
+import { resumeIndex } from '../controls';
 import { runDeck } from '../shell';
 import {
   expandDeck,
@@ -65,12 +67,14 @@ const scopes: Record<string, MinigameScope> = {
   'mg:quiz-norom': { kind: 'culture-quiz', cardPairs: [...pairs4.slice(0, 3), { ko: '달', en: 'Moon' }], rounds: 4 },
   'mg:quiz-small': { kind: 'culture-quiz', cardPairs: pairs4.slice(0, 2), rounds: 2 },
   'mg:odd': { kind: 'odd-one-out', jamoIds: [J('giyeok'), J('nieun'), J('digeut'), J('a')], rounds: 2 },
-  'mg:respond': { kind: 'tap-respond' },
+  // Speaking is never a slide (LV-D9): Voice Echo stays a counted skip.
+  'mg:echo': { kind: 'voice-echo' },
   'mg:small': { kind: 'match-sound', jamoIds: [J('giyeok'), J('nieun')], rounds: 2 },
   'mg:bare': { kind: 'card-match' },
   'mg:block': { kind: 'build-letter', syllables: [{ ko: 'ㄱㅏ', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] }] },
   'mg:story-read': { kind: 'story-read', story: { storyId: 'story:sun-moon', level: 'listen' } },
   'mg:story-check': { kind: 'story-check', story: { storyId: 'story:sun-moon', level: 'listen' } },
+  // A Check with no rounds to ask (the LV-S2 question slides cover the rest, in their own describe).
   'mg:listen': { kind: 'listen-pick', listenPick: { rounds: [] } },
   'mg:build-na': { kind: 'build-letter', syllables: [{ ko: '나', romanization: 'na', jamoChars: ['ㄴ', 'ㅏ'] }] },
 };
@@ -120,7 +124,7 @@ const quests: Quest[] = [
   quest('words', [['intro'], ['present', 'mg:cards'], ['practice', 'mg:quiz'], ['apply', 'mg:sequence'], ['reward']], {
     rewardCardId: 'card:nope',
   }),
-  quest('odd', [['present', 'mg:odd'], ['practice', 'mg:respond'], ['apply', 'mg:missing']]),
+  quest('odd', [['present', 'mg:odd'], ['practice', 'mg:echo'], ['apply', 'mg:missing']]),
   quest('small', [['present', 'mg:small'], ['practice', 'mg:small'], ['apply', 'mg:quiz-small']]),
   quest('norom', [['practice', 'mg:quiz-norom'], ['apply', 'mg:sequence-norom']]),
   quest('bare', [['present', 'mg:bare'], ['apply', 'mg:block'], ['reward']], { rewardCardId: 'card:plain' }),
@@ -323,14 +327,14 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     expect(minutes).toBe(4);
   });
 
-  it('a Discover step gives a letter per jamo item and a vocab slide per word item; the Check is a counted skip', () => {
+  it('a Discover step gives a letter per jamo item and a vocab slide per word item; a Check with nothing to ask is a counted skip', () => {
     const { slides, skipped, taught } = expand([{ kind: 'quest', id: 'quest:discover' }]);
     expect(kinds(slides)).toEqual(['title', 'letter', 'vocab', 'quiz', 'quiz', 'quiz', 'card', 'end']);
     expect(keys(slides).slice(1, 3)).toEqual(['quest:discover/s2/jamo:a', 'quest:discover/s2/나무']);
     expect(only(slides, 'vocab')[0]!.word).toEqual({ ko: '나무', romanization: 'namu', gloss: 'tree' });
     expect(skipped).toEqual([
       { blockIndex: 0, ref: 'jamo:nope', reason: 'unknown-id' },
-      { blockIndex: 0, ref: 'mg:listen', reason: 'unsupported-step' },
+      { blockIndex: 0, ref: 'mg:listen', reason: 'scope-too-small' },
     ]);
     expect(taught).toEqual(
       expect.arrayContaining([
@@ -452,7 +456,7 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     expect(quiz[0]!.prompt).toEqual({ ask: 'odd-one-out' });
     expect(quiz[0]!.options.filter((o) => o.correct)).toEqual([expect.objectContaining({ ko: 'ㅏ', romanization: 'a' })]);
     expect(skipped).toEqual([
-      { blockIndex: 0, ref: 'mg:respond', reason: 'unsupported-step' },
+      { blockIndex: 0, ref: 'mg:echo', reason: 'unsupported-step' },
       { blockIndex: 0, ref: 'mg:missing', reason: 'unknown-id' },
     ]);
   });
@@ -516,9 +520,9 @@ describe('expandDeck: F-QUEST-002 quests (Discover, Check; post-merge #256)', ()
     expect(skipped).toContainEqual({ blockIndex: 0, ref: J('nope'), reason: 'unknown-id' });
   });
 
-  it('the check step (listen-pick) is a counted unsupported-step skip; End lists the discovered letters', () => {
+  it('a check step (listen-pick) with no rounds is a counted scope-too-small skip; End lists the discovered letters', () => {
     const { slides, skipped } = expand([{ kind: 'quest', id: 'quest:discover-q1' }]);
-    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'mg:listen', reason: 'unsupported-step' });
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'mg:listen', reason: 'scope-too-small' });
     const end = only(slides, 'end')[0]!;
     expect(end.letters.map((l) => l.ko)).toEqual(['ㄱ', 'ㅏ']);
   });
@@ -1463,10 +1467,12 @@ describe('expandDeck: every word card carries its sound (section 3.4 amendment 2
     expect(byKo(slides, '밥')?.spoken).toEqual({ text: '밥', romanization: 'bap' });
   });
 
-  it('a Discover KoText carries its spokenKo and audioRef; a sentence plays at the sentence rate', () => {
+  it('a Discover KoText carries its spokenKo and audioRef; a sentence is its own slide with its clip (LV-S1)', () => {
     const slides = vocabSlides([{ kind: 'quest', id: 'quest:spoken' }]);
     expect(byKo(slides, '사과')).toMatchObject({ spoken: { text: '사과요', romanization: 'sagwa', audioRef: sagwaClip }, speech: 'word' });
-    expect(byKo(slides, '안녕하세요')).toMatchObject({ spoken: { text: '안녕하세요', romanization: 'annyeonghaseyo', audioRef: helloClip }, speech: 'sentence' });
+    expect(byKo(slides, '안녕하세요')).toBeUndefined();
+    const sentence = only(expandDeck(deckOf([{ kind: 'quest', id: 'quest:spoken' }]), spoken, VOICE).slides, 'sentence')[0];
+    expect(sentence?.sentence.spoken).toEqual({ text: '안녕하세요', romanization: 'annyeonghaseyo', audioRef: helloClip });
   });
 
   it('a pic-word board word carries its KoText sound; a card pair without one plays its word', () => {
@@ -1528,5 +1534,933 @@ describe('expandDeck: every word card carries its sound (section 3.4 amendment 2
   it('what a deck teaches is unchanged: taught words carry no sound', () => {
     const { taught } = expandDeck(deckOf([{ kind: 'quest', id: 'quest:spoken' }]), spoken, VOICE);
     expect(taught.find((t) => t.ko === '사과')).toEqual({ kind: 'word', ko: '사과', romanization: 'sagwa', gloss: 'apple' });
+  });
+});
+
+describe('expandDeck: the reading slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-S1)', () => {
+  const realiaScope: MinigameScope = {
+    kind: 'realia-read',
+    realiaRead: {
+      realia: {
+        ref: 'realia:menu',
+        kind: 'menu',
+        title: { ko: '메뉴', romanization: 'menyu', en: 'menu' },
+        entries: [
+          { id: 'gimbap', text: { ko: '김밥', romanization: 'gimbap', en: 'gimbap' }, value: { ko: '이천 원', romanization: 'icheon won', en: '2,000 won' } },
+          { id: 'mul', text: { ko: '물', romanization: 'mul', en: 'water', spokenKo: '무울' } },
+        ],
+        altEn: 'A small menu: gimbap and water.',
+      },
+      rounds: [],
+    },
+  };
+  const plainScope: MinigameScope = {
+    kind: 'realia-read',
+    realiaRead: { realia: { ref: 'realia:slip', entries: [{ id: 'a', text: { ko: '라면', romanization: 'ramyeon', en: 'ramyeon' } }], altEn: 'An order slip.' }, rounds: [] },
+  };
+  const readingScopes: Record<string, MinigameScope> = { 'mg:realia': realiaScope, 'mg:slip': plainScope, 'mg:pairs': { kind: 'card-match', cardPairs: [{ ko: '김밥', en: 'gimbap', romanization: 'gimbap' }, { ko: '사과', en: 'apple', romanization: 'sagwa' }] } };
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const withPages = (slug: string, steps: StepSpec[], pages: NonNullable<QuestStep['discover']>['pages']): Quest => {
+    const q = quest(slug, steps, { rewardCardId: undefined });
+    return { ...q, steps: q.steps.map((step) => (step.kind === 'discover' ? { ...step, discover: { pages } } : step)) };
+  };
+  const reading = withPages('reading', [['intro'], ['discover'], ['practice', 'mg:realia'], ['apply', 'mg:pairs']], [
+    {
+      items: [
+        { type: 'sentence', sentence: kt('물을 마셔요.', 'mureul masyeoyo', 'I drink water.'), picture: 'word:food-water' },
+        { type: 'sentence', sentence: kt('집에 와요.', 'jibe wayo', 'I come home.') },
+      ],
+    },
+    {
+      items: [
+        {
+          type: 'pattern',
+          frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'),
+          noteEn: 'Put {ko:을} after a final consonant or {ko:를} after a vowel.',
+          examples: [kt('밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.'), { ...kt('사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple.'), audioRef: 'audio/x.mp3' }],
+        },
+      ],
+    },
+    {
+      items: [
+        {
+          type: 'exchange',
+          lines: [
+            { speaker: 'a', speakerEn: 'Grandma', line: kt('밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?') },
+            { speaker: 'b', speakerEn: 'Hoya', line: kt('네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.') },
+          ],
+        },
+      ],
+    },
+    { items: [{ type: 'realia', realiaRef: 'realia:menu', keyWords: [kt('메뉴', 'menyu', 'menu'), kt('김밥', 'gimbap', 'gimbap')], captionEn: 'A menu on the table.' }], captionEn: 'Read the menu first.' },
+    { items: [{ type: 'realia', realiaRef: 'realia:gone', keyWords: [kt('라면', 'ramyeon', 'instant noodles')] }] },
+    { items: [{ type: 'word', word: kt('김밥', 'gimbap', 'gimbap') }] },
+  ]);
+  const slip = withPages('slip', [['discover'], ['practice', 'mg:slip']], [
+    { items: [{ type: 'realia', realiaRef: 'realia:slip', keyWords: [kt('라면', 'ramyeon', 'instant noodles')] }], captionEn: 'Read {ko:천} on the slip.' },
+    { items: [{ type: 'pattern', frame: kt('___에 ___을/를 먹었어요.', '___e ___eul/reul meogeosseoyo', 'On ___, I ate ___.'), noteEn: 'Odd {ko:A1} here.', examples: [kt('설날에 떡국을 먹었어요.', 'seollare tteokgugeul meogeosseoyo', 'On Seollal, I ate rice cake soup.'), kt('추석에 송편을 먹었어요.', 'chuseoge songpyeoneul meogeosseoyo', 'On Chuseok, I ate songpyeon.')] }] },
+    { items: [{ type: 'realia', realiaRef: 'realia:slip', keyWords: [kt('라면', 'ramyeon', 'instant noodles')], captionEn: 'A {ko:B2} slip.' }] },
+  ]);
+  const b = bundle({
+    scopeFor: (ref) => readingScopes[ref] ?? scopes[ref],
+    questById: (id) => [reading, slip].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+  });
+  const run = (id: string, over: Partial<LectureDeckInput> = {}) => expandDeck(deckOf([{ kind: 'quest', id }], over), b, VOICE);
+
+  it('a sentence, a pattern, an exchange and a realia page each get their own slide, in page order', () => {
+    const { slides } = run(reading.id);
+    // Then the fallback card of the realia with no sheet (라면) and the card pair's unseen word (사과); the realia read step has no round to ask (LV-S2 has its own tests).
+    expect(kinds(slides)).toEqual(['title', 'sentence', 'sentence', 'pattern', 'read-along', 'realia', 'vocab', 'vocab', 'end']);
+    expect(keys(slides).slice(1, 6)).toEqual([
+      // Each key names its item (the sentence, the frame, the first line, the realia ref), never its place; a `/` becomes `-`.
+      'quest:reading/s2/sentence-물을 마셔요.',
+      'quest:reading/s2/sentence-집에 와요.',
+      'quest:reading/s2/pattern-___을-를 먹어요.',
+      'quest:reading/s2/exchange-밥 먹었어요?',
+      'quest:reading/s2/realia-realia:menu',
+    ]);
+    expect(new Set(keys(slides)).size).toBe(slides.length);
+  });
+
+  it('a saved resume key stays on its reading slide when a content update adds an item before it', () => {
+    const saved = run(reading.id).slides.find((s) => s.kind === 'pattern')!.key;
+    const discover = reading.steps.find((st) => st.kind === 'discover')!.discover!;
+    const added = {
+      ...reading,
+      steps: reading.steps.map((st) =>
+        st.kind !== 'discover' ? st : { ...st, discover: { ...discover, pages: [{ items: [{ type: 'sentence' as const, sentence: kt('책을 읽어요.', 'chaegeul ilgeoyo', 'I read a book.') }] }, ...discover.pages] } },
+      ),
+    };
+    const moved = bundle({
+      scopeFor: (ref) => readingScopes[ref] ?? scopes[ref],
+      questById: (id) => (id === reading.id ? added : quests.find((q) => q.id === id)),
+    });
+    const slides = expandDeck(deckOf([{ kind: 'quest', id: reading.id }]), moved, VOICE).slides;
+    const at = resumeIndex(slides, saved);
+    expect(slides[at]).toMatchObject({ kind: 'pattern', key: saved });
+  });
+
+  it('sentence: the Korean, its romanization, the meaning and its sound; the picture only when the item has one', () => {
+    const [withPic, plain] = only(run(reading.id).slides, 'sentence');
+    expect(withPic).toMatchObject({
+      sentence: { ko: '물을 마셔요.', romanization: 'mureul masyeoyo', gloss: 'I drink water.', spoken: { text: '물을 마셔요.', romanization: 'mureul masyeoyo' } },
+      picture: 'word:food-water',
+      builds: ['ko', 'gloss', 'art'],
+    });
+    expect(plain).not.toHaveProperty('picture');
+    expect(plain!.builds).toEqual(['ko', 'gloss']);
+    expect(only(run(reading.id, { options: { romanization: 'tap', strokeGuide: true, quizRounds: 5, sound: true } }).slides, 'sentence')[0]!.builds).toEqual(['ko', 'rom', 'gloss', 'art']);
+  });
+
+  it('pattern: the frame around its gaps, the note with its Korean chips, the two examples with their sounds', () => {
+    const pattern = only(run(reading.id).slides, 'pattern')[0]!;
+    expect(pattern.frame).toEqual({ pieces: ['', '을/를 먹어요.'], romanization: '___eul/reul meogeoyo', gloss: 'I eat ___.' });
+    expect(pattern.note).toEqual([
+      { text: 'Put ' },
+      { ko: '을', romanization: 'eul' },
+      { text: ' after a final consonant or ' },
+      { ko: '를', romanization: 'reul' },
+      { text: ' after a vowel.' },
+    ]);
+    expect(pattern.examples.map((e) => [e.ko, e.romanization, e.gloss])).toEqual([
+      ['밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.'],
+      ['사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple.'],
+    ]);
+    expect(pattern.examples[1]!.spoken).toEqual({ text: '사과를 먹어요.', romanization: 'sagwareul meogeoyo', audioRef: 'audio/x.mp3' });
+    expect(pattern.builds).toEqual(['frame', 'note', 'example', 'example']);
+  });
+
+  it('a two-slot frame keeps three pieces; a note token with no romanization drops the note and is counted', () => {
+    const { slides, skipped } = run(slip.id);
+    const pattern = only(slides, 'pattern')[0]!;
+    expect(pattern.frame.pieces).toEqual(['', '에 ', '을/를 먹었어요.']);
+    expect(pattern).not.toHaveProperty('note');
+    expect(pattern.builds).toEqual(['frame', 'example', 'example']);
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/pattern-___에 ___을-를 먹었어요./note', reason: 'no-romanization' });
+  });
+
+  it('read along: the two lines with their speakers, each with its sound', () => {
+    const readAlong = only(run(reading.id).slides, 'read-along')[0]!;
+    expect(readAlong.lines.map((l) => [l.speaker, l.ko, l.romanization, l.gloss, l.spoken.text])).toEqual([
+      ['Grandma', '밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?', '밥 먹었어요?'],
+      ['Hoya', '네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.', '네, 먹었어요.'],
+    ]);
+    expect(readAlong.builds).toEqual(['line', 'line']);
+    expect(readAlong).not.toHaveProperty('together');
+  });
+
+  it('read along with no Korean voice, or with the deck sound off: every line shows together at one build (section 5.1)', () => {
+    const noVoice = only(expandDeck(deckOf([{ kind: 'quest', id: reading.id }]), b, { canPlayKorean: false }).slides, 'read-along')[0]!;
+    expect(noVoice.together).toBe(true);
+    expect(noVoice.lines).toHaveLength(2);
+    expect(noVoice.builds).toEqual(['line']);
+    const tap = only(expandDeck(deckOf([{ kind: 'quest', id: reading.id }], { options: { romanization: 'tap', strokeGuide: true, quizRounds: 5, sound: true } }), b, { canPlayKorean: false }).slides, 'read-along')[0]!;
+    expect(tap.builds).toEqual(['line', 'rom']);
+    const soundOff = only(run(reading.id, { options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: false } }).slides, 'read-along')[0]!;
+    expect(soundOff.together).toBe(true);
+    // The other reading slides keep their builds with no voice.
+    expect(only(expandDeck(deckOf([{ kind: 'quest', id: reading.id }]), b, { canPlayKorean: false }).slides, 'pattern')[0]!.builds).toEqual(['frame', 'note', 'example', 'example']);
+  });
+
+  it('realia: the sheet the quest plays, its caption and its key words; Sound reads the sheet line by line', () => {
+    const realia = only(run(reading.id).slides, 'realia')[0]!;
+    expect(realia.sheet).toEqual({
+      kind: 'menu',
+      heading: { ko: '메뉴', romanization: 'menyu' },
+      entries: [
+        { id: 'gimbap', text: { ko: '김밥', romanization: 'gimbap' }, value: { ko: '이천 원', romanization: 'icheon won' } },
+        { id: 'mul', text: { ko: '물', romanization: 'mul' } },
+      ],
+      alt: 'A small menu: gimbap and water.',
+      spoken: { text: '메뉴, 김밥 이천 원, 무울', romanization: 'menyu, gimbap icheon won, mul' },
+    });
+    expect(realia.caption).toEqual([{ text: 'A menu on the table.' }]);
+    expect(realia.keyWords.map((w) => [w.ko, w.gloss])).toEqual([
+      ['메뉴', 'menu'],
+      ['김밥', 'gimbap'],
+    ]);
+    expect(realia.builds).toEqual(['sheet', 'words']);
+  });
+
+  it("a realia with no kind is the plain sheet; with no caption of its own it shows its page's, Korean tokens as chips", () => {
+    const { slides, skipped } = run(slip.id);
+    const [first, second] = only(slides, 'realia');
+    expect(first!.sheet.kind).toBe('plain');
+    expect(first!.sheet).not.toHaveProperty('heading');
+    expect(first!.caption).toEqual([{ text: 'Read ' }, { ko: '천', romanization: 'cheon' }, { text: ' on the slip.' }]);
+    // A caption token with no romanization drops the caption, counted (rule 11).
+    expect(second).not.toHaveProperty('caption');
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'quest:slip/s1/realia-realia:slip/caption', reason: 'no-romanization' });
+  });
+
+  it('a realia whose sheet the quest does not hold is a counted skip; its key words become word cards', () => {
+    const { slides, skipped } = run(reading.id);
+    expect(skipped).toContainEqual({ blockIndex: 0, ref: 'realia:gone', reason: 'unknown-id' });
+    expect(only(slides, 'vocab').map((v) => v.word.ko)).toEqual(['라면', '사과']);
+  });
+
+  it('what a reading slide shows is taught, in order, and seen: no later word card repeats it', () => {
+    const { slides, taught } = run(reading.id);
+    expect(taught.map((t) => t.ko)).toEqual(['물을 마셔요.', '집에 와요.', '밥을 먹어요.', '사과를 먹어요.', '밥 먹었어요?', '네, 먹었어요.', '메뉴', '김밥', '라면', '사과']);
+    // 김밥 was a key word on the realia page: the later word item and the card pair have no card of it.
+    expect(only(slides, 'vocab').some((v) => v.word.ko === '김밥')).toBe(false);
+    expect(only(slides, 'end')[0]!.words.map((w) => w.ko)).toContain('네, 먹었어요.');
+  });
+
+  it('the Discover pages count no skip of their own, and the same deck gives the same slides', () => {
+    const { skipped } = run(reading.id);
+    expect(skipped.filter((s) => s.ref.startsWith('quest:reading/s2'))).toEqual([]);
+    expect(run(reading.id).slides).toEqual(run(reading.id).slides);
+  });
+
+  it('a Word review of the quest keeps each sound its reading slide gave it', () => {
+    const review = expandDeck(deckOf([{ kind: 'word-review', questIds: [reading.id], vocabIds: [], rounds: 5 }], { v: 2 }), b, VOICE);
+    const card = (ko: string) => only(review.slides, 'vocab').find((v) => v.word.ko === ko);
+    expect(card('사과를 먹어요.')).toMatchObject({ spoken: { audioRef: 'audio/x.mp3' }, speech: 'sentence' });
+    expect(card('메뉴')?.speech).toBe('word');
+  });
+});
+
+describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const menu = {
+    ref: 'realia:menu',
+    kind: 'menu' as const,
+    title: kt('메뉴', 'menyu', 'menu'),
+    entries: [
+      { id: 'gimbap', text: kt('김밥', 'gimbap', 'gimbap'), value: kt('이천 원', 'icheon won', '2,000 won') },
+      { id: 'uyu', text: kt('우유', 'uyu', 'milk'), value: kt('천 원', 'cheon won', '1,000 won') },
+    ],
+    altEn: 'A small menu: gimbap and milk.',
+  };
+  const questionScopes: Record<string, MinigameScope> = {
+    // A sentence round with text options, then a word round with pictures (the content lists the answer first).
+    'mg:lp': {
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          {
+            id: 'r1',
+            prompt: { ...kt('빵을 먹어요.', 'ppangeul meogeoyo', 'I eat bread.'), audioRef: 'audio/bread.mp3' },
+            options: [
+              { id: 'bread', text: kt('빵을 먹어요.', 'ppangeul meogeoyo', 'I eat bread.') },
+              { id: 'water', text: kt('물을 마셔요.', 'mureul masyeoyo', 'I drink water.') },
+              { id: 'rice', text: kt('밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.') },
+            ],
+            answerId: 'bread',
+          },
+          {
+            id: 'r2',
+            prompt: kt('우유', 'uyu', 'milk'),
+            options: [
+              { id: 'milk', pictureRef: 'word:food-milk', labelEn: 'milk' },
+              { id: 'water', pictureRef: 'word:food-water', labelEn: 'water' },
+              { id: 'bread', pictureRef: 'word:food-bread', labelEn: 'bread' },
+            ],
+            answerId: 'milk',
+          },
+        ],
+      },
+    },
+    // A Stage 1 symbol round (`lp.sym`): the carrier syllable is heard, the letters are the options.
+    'mg:lp-sym': {
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          {
+            id: 'lp:sym:jamo:eo',
+            prompt: kt('어', 'eo', 'the letter eo'),
+            options: [
+              { id: 'jamo:eo', text: kt('ㅓ', 'eo', 'the letter eo') },
+              { id: 'jamo:a', text: kt('ㅏ', 'a', 'the letter a') },
+              { id: 'jamo:giyeok', text: kt('ㄱ', 'g/k', 'the letter giyeok') },
+              { id: 'jamo:nieun', text: kt('ㄴ', 'n', 'the letter nieun') },
+            ],
+            answerId: 'jamo:eo',
+          },
+        ],
+      },
+    },
+    'mg:reply': {
+      kind: 'tap-respond',
+      rounds: 2,
+      dialogue: [
+        {
+          npcKo: '밥 먹었어요?',
+          npcRomanization: 'bap meogeosseoyo',
+          npcEn: 'Have you eaten?',
+          npcSpokenKo: '밥 머거써요?',
+          npcAudioRef: 'audio/eaten.mp3',
+          options: [
+            { ko: '잘 가요.', romanization: 'jal gayo', en: 'Goodbye.', isCorrect: false },
+            { ko: '네, 먹었어요.', romanization: 'ne meogeosseoyo', en: 'Yes, I ate.', isCorrect: true },
+            { ko: '저는 호야예요.', romanization: 'jeoneun hoyayeyo', en: 'I am Hoya.', isCorrect: false },
+          ],
+        },
+        { npcKo: '같이 놀자!', npcEn: "Let's play!", options: [{ ko: '좋아!', romanization: 'joa', en: 'Okay!', isCorrect: true }, { ko: '잘 가요.', romanization: 'jal gayo', en: 'Goodbye.', isCorrect: false }] },
+      ],
+    },
+    'mg:rr': {
+      kind: 'realia-read',
+      realiaRead: {
+        realia: menu,
+        rounds: [
+          {
+            id: 'r1',
+            questionEn: 'How much is this?',
+            key: kt('김밥', 'gimbap', 'gimbap'),
+            options: [{ id: 'a', text: kt('천 원', 'cheon won', '1,000 won') }, { id: 'b', text: kt('이천 원', 'icheon won', '2,000 won') }, { id: 'c', text: kt('삼천 원', 'samcheon won', '3,000 won') }],
+            answerId: 'b',
+            answerEntryId: 'gimbap',
+          },
+          { id: 'r2', questionEn: 'How much is the milk?', options: [{ id: 'w1', figure: '1,000 won' }, { id: 'w2', figure: '2,000 won' }], answerId: 'w1', answerEntryId: 'uyu' },
+          {
+            id: 'r3',
+            questionEn: 'Which picture shows this word?',
+            key: kt('우유', 'uyu', 'milk'),
+            options: [{ id: 'milk', pictureRef: 'word:food-milk', labelEn: 'milk' }, { id: 'bread', pictureRef: 'word:food-bread', labelEn: 'bread' }],
+            answerId: 'milk',
+          },
+        ],
+      },
+    },
+    // A Stage 4 Check round: the room hears a question and picks the reply that fits (the answer is not the line heard).
+    'mg:lp-reply': {
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          {
+            id: 'c1',
+            prompt: kt('밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?'),
+            options: [
+              { id: 'a', text: kt('네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.') },
+              { id: 'b', text: kt('잘 가요.', 'jal gayo', 'Goodbye.') },
+            ],
+            answerId: 'a',
+          },
+          // The answer is in the line heard (s6-life-q3's Check c2): a heard round, not a reply.
+          {
+            id: 'c2',
+            prompt: kt('이천 원이에요.', 'icheon wonieyo', 'It is 2,000 won.'),
+            options: [
+              { id: 'a', text: kt('이천 원', 'icheon won', '2,000 won') },
+              { id: 'b', text: kt('삼천 원', 'samcheon won', '3,000 won') },
+            ],
+            answerId: 'a',
+          },
+        ],
+      },
+    },
+    'mg:lp-none': { kind: 'listen-pick', listenPick: { rounds: [] } },
+    'mg:reply-none': { kind: 'tap-respond' },
+    'mg:rr-none': { kind: 'realia-read', realiaRead: { realia: menu, rounds: [] } },
+  };
+  const withMenuPage = (q: Quest): Quest => ({
+    ...q,
+    steps: q.steps.map((step) =>
+      step.kind === 'discover' ? { ...step, discover: { pages: [{ items: [{ type: 'realia', realiaRef: 'realia:menu', keyWords: [kt('김밥', 'gimbap', 'gimbap')] }] }] } } : step,
+    ),
+  });
+  const asked = withMenuPage(quest('asked', [['intro'], ['discover'], ['practice', 'mg:rr'], ['apply', 'mg:reply'], ['check', 'mg:lp']], { rewardCardId: undefined }));
+  const sheetFirst = quest('sheet-first', [['practice', 'mg:rr'], ['check', 'mg:lp-sym']], { rewardCardId: undefined });
+  const empty = quest('empty', [['practice', 'mg:lp-none'], ['apply', 'mg:reply-none'], ['check', 'mg:rr-none']], { rewardCardId: undefined });
+  const replyCheck = quest('reply-check', [['check', 'mg:lp-reply']], { rewardCardId: undefined });
+  const words = (q: Quest): Quest => ({
+    ...q,
+    steps: q.steps.map((step) =>
+      step.kind === 'discover'
+        ? {
+            ...step,
+            discover: {
+              pages: [
+                {
+                  items: [
+                    { type: 'sentence', sentence: kt('빵을 먹어요.', 'ppangeul meogeoyo', 'Como pan.') },
+                    { type: 'sentence', sentence: kt('물을 마셔요.', 'mureul masyeoyo', 'Bebo agua.') },
+                  ],
+                },
+              ],
+            },
+          }
+        : step,
+    ),
+  });
+  const twoTaught = words(quest('two-taught', [['discover'], ['check', 'mg:lp']], { rewardCardId: undefined }));
+  const allQuests = [asked, sheetFirst, empty, twoTaught, replyCheck];
+  const b = (over: Partial<LectureBundle> = {}) =>
+    bundle({
+      scopeFor: (ref) => questionScopes[ref] ?? scopes[ref],
+      questById: (id) => allQuests.find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+      ...over,
+    });
+  const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
+  type Quiz = Extract<Slide, { kind: 'quiz' }>;
+  const quizzes = (slides: readonly Slide[], ask: Quiz['prompt']['ask']): Quiz[] => only(slides, 'quiz').filter((q) => q.prompt.ask === ask);
+
+  it('every shipped kind of question step becomes slides, in step order, with no skip', () => {
+    const { slides, skipped } = run(asked.id);
+    // The realia page (Discover) already showed the menu, so its questions follow at once.
+    expect(kinds(slides)).toEqual(['title', 'realia', 'quiz', 'quiz', 'quiz', 'quiz', 'quiz', 'quiz', 'end']);
+    expect(keys(slides).slice(2, 8)).toEqual([
+      'quest:asked/s3/q1',
+      'quest:asked/s3/q2',
+      'quest:asked/s3/q3',
+      'quest:asked/s4/q1',
+      'quest:asked/s5/q1',
+      'quest:asked/s5/q2',
+    ]);
+    expect(only(slides, 'quiz').map((q) => q.prompt.ask)).toEqual(['realia', 'realia', 'realia', 'reply', 'listen', 'listen']);
+    // The second turn has no romanization for its line: left out and counted (rule 11).
+    expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:reply', reason: 'no-romanization' }]);
+    expect(only(slides, 'quiz').every((q) => q.builds.join() === 'question,answer')).toBe(true);
+  });
+
+  it('listen: the prompt line (Korean, romanization, meaning and what Sound says) and its rate; text options with their meanings', () => {
+    const [sentence] = quizzes(run(asked.id).slides, 'listen');
+    expect(sentence!.prompt).toEqual({
+      ask: 'listen',
+      line: { ko: '빵을 먹어요.', romanization: 'ppangeul meogeoyo', gloss: 'I eat bread.', spoken: { text: '빵을 먹어요.', romanization: 'ppangeul meogeoyo', audioRef: 'audio/bread.mp3' } },
+      speech: 'sentence',
+    });
+    expect(sentence!.textPrompt).toBe(false);
+    expect([...sentence!.options].sort((x, y) => x.ko!.localeCompare(y.ko!))).toEqual([
+      { ko: '물을 마셔요.', romanization: 'mureul masyeoyo', gloss: 'I drink water.', correct: false },
+      { ko: '밥을 먹어요.', romanization: 'babeul meogeoyo', gloss: 'I eat rice.', correct: false },
+      { ko: '빵을 먹어요.', romanization: 'ppangeul meogeoyo', gloss: 'I eat bread.', correct: true },
+    ]);
+  });
+
+  it('listen: a round whose answer is not the line heard asks for the reply that fits it (a Stage 4 Check); a heard round does not', () => {
+    const [check, heard] = quizzes(run(replyCheck.id).slides, 'listen');
+    expect(check!.prompt).toMatchObject({ ask: 'listen', line: { ko: '밥 먹었어요?' }, speech: 'sentence', reply: true });
+    // An answer the line holds, spaces and punctuation aside, was heard: "Which one did you hear?".
+    expect(heard!.prompt).toMatchObject({ ask: 'listen', line: { ko: '이천 원이에요.' } });
+    expect(heard!.prompt).not.toHaveProperty('reply');
+    for (const q of [...quizzes(run(asked.id).slides, 'listen'), ...quizzes(run(sheetFirst.id).slides, 'listen')]) expect(q.prompt).not.toHaveProperty('reply');
+  });
+
+  it('listen: a picture round names each picture by its label and plays at the word rate', () => {
+    const [, pictures] = quizzes(run(asked.id).slides, 'listen');
+    expect(pictures!.prompt).toMatchObject({ ask: 'listen', line: { ko: '우유', gloss: 'milk' }, speech: 'word' });
+    expect([...pictures!.options].sort((x, y) => x.gloss!.localeCompare(y.gloss!))).toEqual([
+      { picture: 'word:food-bread', gloss: 'bread', correct: false },
+      { picture: 'word:food-milk', gloss: 'milk', correct: true },
+      { picture: 'word:food-water', gloss: 'water', correct: false },
+    ]);
+  });
+
+  it('in another language a listen picture is named by the meaning the deck gave its word, else not at all (never its English label)', () => {
+    const es = b({ locale: 'es' });
+    const [, pictures] = quizzes(run(asked.id, {}, VOICE, es).slides, 'listen');
+    expect(pictures!.options.map((o) => o.picture).sort()).toEqual(['word:food-bread', 'word:food-milk', 'word:food-water']);
+    expect(pictures!.options.some((o) => o.gloss !== undefined)).toBe(false);
+    // A realia picture keeps its label: the overlays carry it in the slide language (realiaRead options' label).
+    const [, , realiaPicture] = quizzes(run(asked.id, {}, VOICE, es).slides, 'realia');
+    expect(realiaPicture!.options.find((o) => o.correct)).toEqual({ picture: 'word:food-milk', gloss: 'milk', correct: true });
+  });
+
+  it('listen: a letter round plays at the sound rate and its options are the letters with no meaning (the grid)', () => {
+    const [sym] = quizzes(run(sheetFirst.id).slides, 'listen');
+    expect(sym!.prompt).toMatchObject({ ask: 'listen', line: { ko: '어', romanization: 'eo' }, speech: 'sound' });
+    expect(sym!.options.map((o) => o.ko).sort()).toEqual(['ㄱ', 'ㄴ', 'ㅏ', 'ㅓ']);
+    expect(sym!.options.some((o) => o.gloss !== undefined)).toBe(false);
+    expect(sym!.options.filter((o) => o.correct)).toEqual([{ ko: 'ㅓ', romanization: 'eo', correct: true }]);
+  });
+
+  it('listen: with no Korean voice or the deck sound off the prompt is the teacher-says text (section 3.7)', () => {
+    expect(quizzes(run(asked.id, {}, { canPlayKorean: false }).slides, 'listen').every((q) => q.textPrompt)).toBe(true);
+    const soundOff = run(asked.id, { options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: false } });
+    expect(quizzes(soundOff.slides, 'listen').every((q) => q.textPrompt)).toBe(true);
+    // A reply or realia question is text from the start: never a teacher-says prompt.
+    expect(only(run(asked.id, {}, { canPlayKorean: false }).slides, 'quiz').filter((q) => q.prompt.ask !== 'listen').every((q) => !q.textPrompt)).toBe(true);
+  });
+
+  it('the options are shuffled with the slide seed: the same deck gives the same order, the answer is not always first', () => {
+    expect(run(asked.id).slides).toEqual(run(asked.id).slides);
+    const firsts = [1, 2, 3, 4, 5, 6, 7, 8].map((seed) => quizzes(run(asked.id, { seed }).slides, 'listen')[0]!.options[0]!.correct);
+    expect(firsts).toContain(false);
+    for (const q of only(run(asked.id).slides, 'quiz')) expect(q.options.filter((o) => o.correct)).toHaveLength(1);
+  });
+
+  it("reply: the other speaker's line with its spoken form and clip, the replies with their meanings", () => {
+    const [reply] = quizzes(run(asked.id).slides, 'reply');
+    expect(reply!.prompt).toEqual({
+      ask: 'reply',
+      line: { ko: '밥 먹었어요?', romanization: 'bap meogeosseoyo', gloss: 'Have you eaten?', spoken: { text: '밥 머거써요?', romanization: 'bap meogeosseoyo', audioRef: 'audio/eaten.mp3' } },
+    });
+    expect(reply!.options.find((o) => o.correct)).toEqual({ ko: '네, 먹었어요.', romanization: 'ne meogeosseoyo', gloss: 'Yes, I ate.', correct: true });
+    expect(reply!.options).toHaveLength(3);
+  });
+
+  it('realia: the question beside the sheet its page showed, its key word, the answer line, and Korean, figure or picture options', () => {
+    const slides = run(asked.id).slides;
+    const page = only(slides, 'realia')[0]!;
+    const [text, figure, picture] = quizzes(slides, 'realia');
+    expect(text!.prompt).toEqual({
+      ask: 'realia',
+      text: 'How much is this?',
+      sheet: page.sheet,
+      key: { ko: '김밥', romanization: 'gimbap', spoken: { text: '김밥', romanization: 'gimbap' } },
+      answerEntryId: 'gimbap',
+    });
+    // No meaning on a realia option (the mock, V7): a price's meaning would read the sheet for the room.
+    expect(text!.options.find((o) => o.correct)).toEqual({ ko: '이천 원', romanization: 'icheon won', correct: true });
+    expect(figure!.prompt).not.toHaveProperty('key');
+    expect([...figure!.options].sort((x, y) => x.figure!.localeCompare(y.figure!))).toEqual([
+      { figure: '1,000 won', correct: true },
+      { figure: '2,000 won', correct: false },
+    ]);
+    expect(picture!.prompt).not.toHaveProperty('answerEntryId');
+    expect(picture!.options.find((o) => o.correct)).toEqual({ picture: 'word:food-milk', gloss: 'milk', correct: true });
+  });
+
+  it('realia: a sheet no page of the deck showed gets one realia slide of its own first, the sheet alone', () => {
+    const { slides, skipped } = run(sheetFirst.id);
+    expect(kinds(slides)).toEqual(['title', 'realia', 'quiz', 'quiz', 'quiz', 'quiz', 'end']);
+    const sheet = only(slides, 'realia')[0]!;
+    expect(sheet).toMatchObject({ key: 'quest:sheet-first/s1/sheet', keyWords: [], builds: ['sheet'] });
+    expect(sheet).not.toHaveProperty('caption');
+    expect(only(withBuilds(slides, { romanization: 'tap', strokeGuide: true }), 'realia')[0]!.builds).toEqual(['sheet', 'rom']);
+    expect(skipped).toEqual([]);
+    // A second Realia Read of the same sheet in the deck goes straight to its questions.
+    const twice = expandDeck(deckOf([{ kind: 'quest', id: sheetFirst.id }, { kind: 'quest', id: sheetFirst.id }]), b(), VOICE);
+    expect(only(twice.slides, 'realia')).toHaveLength(1);
+  });
+
+  it('a question step with nothing to ask is a counted scope-too-small skip, never a crash', () => {
+    const { slides, skipped } = run(empty.id);
+    expect(kinds(slides)).toEqual(['title', 'end']);
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:lp-none', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:reply-none', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:rr-none', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('questions test, they do not teach: nothing they show joins the End slide, and they sit inside the quest minutes', () => {
+    const { slides, taught, minutes, timedQuizKeys } = run(asked.id);
+    expect(taught.map((t) => t.ko)).toEqual(['김밥']);
+    expect(only(slides, 'end')[0]!.words.map((w) => w.ko)).toEqual(['김밥']);
+    expect(minutes).toBe(4);
+    expect(timedQuizKeys).toEqual([]);
+  });
+
+  it('in another language a listen option shows the meaning the deck already gave the same Korean, and none unless every option has one', () => {
+    const es = b({ locale: 'es' });
+    // Two of the three sentences were taught (in Spanish) on the Discover page: no row shows a meaning.
+    const [partial] = quizzes(run(twoTaught.id, {}, VOICE, es).slides, 'listen');
+    expect(partial!.options.some((o) => o.gloss !== undefined)).toBe(false);
+    // With all three taught, each row shows the deck's own meaning, never the English one.
+    const third = words(quest('three-taught', [['discover'], ['check', 'mg:lp']], { rewardCardId: undefined }));
+    const all: Quest = { ...third, steps: third.steps.map((s) => (s.kind === 'discover' ? { ...s, discover: { pages: [...s.discover!.pages, { items: [{ type: 'sentence', sentence: kt('밥을 먹어요.', 'babeul meogeoyo', 'Como arroz.') }] }] } } : s)) };
+    const esAll = b({ locale: 'es', questById: (id) => (id === all.id ? all : allQuests.find((q) => q.id === id)) });
+    const [full] = quizzes(run(all.id, {}, VOICE, esAll).slides, 'listen');
+    expect(full!.options.map((o) => o.gloss).sort()).toEqual(['Bebo agua.', 'Como arroz.', 'Como pan.']);
+    // English keeps the content's own meanings.
+    expect(quizzes(run(twoTaught.id).slides, 'listen')[0]!.options.every((o) => o.gloss !== undefined)).toBe(true);
+  });
+});
+
+describe('expandDeck: the sentence builds (AMENDMENTS-LECTURE-V2 sections 5.1 and 5.2, LV-S3)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const buildScopes: Record<string, MinigameScope> = {
+    // An order round with one distractor and one that reads like a word of the sentence (dropped, as in the game).
+    'mg:order': {
+      kind: 'order-it',
+      orderIt: {
+        rounds: [
+          {
+            id: 'r1',
+            sentence: { ...kt('친구가 학교에 가요.', 'chinguga hakgyoe gayo', 'My friend goes to school.'), audioRef: 'audio/friend.mp3' },
+            pictureRef: 'word:school-friend',
+            distractors: [kt('와요', 'wayo', 'comes'), kt('가요.', 'gayo', 'goes')],
+          },
+          // A particle round with a distractor (the content lists the answer second here, 을 then 를).
+          {
+            id: 'r2',
+            sentence: kt('저녁에 달걀을 먹어요.', 'jeonyeoge dalgyareul meogeoyo', 'In the evening, I eat an egg.'),
+            distractors: [kt('아침에', 'achime', 'in the morning')],
+            particle: { tile: 1, choices: [kt('를', 'reul', 'object marker'), kt('을', 'eul', 'object marker')] },
+          },
+        ],
+      },
+    },
+    // A particle round whose distractor reads as the particle word's stem (달걀 beside 달걀을).
+    'mg:order-stem': {
+      kind: 'order-it',
+      orderIt: {
+        rounds: [
+          {
+            id: 'r1',
+            sentence: kt('저녁에 달걀을 먹어요.', 'jeonyeoge dalgyareul meogeoyo', 'In the evening, I eat an egg.'),
+            distractors: [kt('달걀', 'dalgyal', 'egg'), kt('아침에', 'achime', 'in the morning')],
+            particle: { tile: 1, choices: [kt('을', 'eul', 'object marker'), kt('를', 'reul', 'object marker')] },
+          },
+        ],
+      },
+    },
+    // A round the game cannot play (one word only): left out and counted.
+    'mg:order-one': { kind: 'order-it', orderIt: { rounds: [{ id: 'r1', sentence: kt('가요.', 'gayo', 'I go.'), distractors: [] }] } },
+    'mg:order-none': { kind: 'order-it', orderIt: { rounds: [] } },
+    'mg:order-bare': { kind: 'order-it' },
+  };
+  const built = quest('built', [['intro'], ['practice', 'mg:order'], ['check', 'mg:order-one']], { rewardCardId: undefined });
+  const empty = quest('built-empty', [['practice', 'mg:order-none'], ['apply', 'mg:order-bare']], { rewardCardId: undefined });
+  const b = (over: Partial<LectureBundle> = {}) =>
+    bundle({
+      scopeFor: (ref) => buildScopes[ref] ?? scopes[ref],
+      questById: (id) => [built, empty].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+      ...over,
+    });
+  const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
+  type Build = Extract<Slide, { kind: 'sentence-build' }>;
+
+  it('one sentence-build slide per round, keyed by the round, and a round the game cannot play is a counted skip', () => {
+    const { slides, skipped } = run(built.id);
+    expect(kinds(slides)).toEqual(['title', 'sentence-build', 'sentence-build', 'end']);
+    expect(keys(slides).slice(1, 3)).toEqual(['quest:built/s2/r1', 'quest:built/s2/r2']);
+    expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:order-one', reason: 'scope-too-small' }]);
+    expect(run(empty.id).skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:order-none', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:order-bare', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('the sentence (meaning and what Sound says), its tiles without the sentence mark, and a bank of the tiles and the distractors', () => {
+    const [order] = only(run(built.id).slides, 'sentence-build');
+    expect(order!.sentence).toEqual({
+      ko: '친구가 학교에 가요.',
+      romanization: 'chinguga hakgyoe gayo',
+      gloss: 'My friend goes to school.',
+      spoken: { text: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo', audioRef: 'audio/friend.mp3' },
+    });
+    expect(order!.tiles).toEqual([
+      { ko: '친구가', romanization: 'chinguga' },
+      { ko: '학교에', romanization: 'hakgyoe' },
+      { ko: '가요', romanization: 'gayo' },
+    ]);
+    // 가요. reads as the tile 가요 once its mark is off: dropped, so two tiles that look alike never stand in the bank.
+    const bankText = order!.bank.map((p) => ('tile' in p ? order!.tiles[p.tile]!.ko : p.distractor.ko));
+    expect([...bankText].sort()).toEqual(['가요', '와요', '친구가', '학교에']);
+    expect(order!.bank.filter((p) => 'distractor' in p)).toEqual([{ distractor: { ko: '와요', romanization: 'wayo' } }]);
+    expect(order!.builds).toEqual(['bank', 'tile', 'tile', 'tile', 'whole']);
+  });
+
+  it('the bank is never already in sentence order, for any seed, and the same seed gives the same bank', () => {
+    for (let seed = 0; seed < 60; seed += 1) {
+      for (const slide of only(run(built.id, { seed }).slides, 'sentence-build')) {
+        const order = slide.bank.flatMap((p) => ('tile' in p ? [p.tile] : []));
+        expect(order, `seed ${seed} ${slide.key}`).not.toEqual([...order].sort((x, y) => x - y));
+        expect(new Set(order).size).toBe(slide.tiles.length);
+      }
+    }
+    expect(run(built.id, { seed: 7 }).slides).toEqual(run(built.id, { seed: 7 }).slides);
+  });
+
+  it('a particle round builds every word; its word sits in the bank as its stem, with both endings in their pair order', () => {
+    const [, particle] = only(run(built.id).slides, 'sentence-build') as Build[];
+    expect(particle!.tiles).toEqual([
+      { ko: '저녁에', romanization: 'jeonyeoge' },
+      {
+        ko: '달걀을',
+        romanization: 'dalgyareul',
+        // 을/를 as the pair is written (ALLOMORPH_PAIRS), not the content's 를, 을; the answer is 을.
+        particle: { stem: '달걀', choices: [{ ko: '을', romanization: 'eul' }, { ko: '를', romanization: 'reul' }], answer: 0 },
+      },
+      { ko: '먹어요', romanization: 'meogeoyo' },
+    ]);
+    expect(particle!.bank.some((p) => 'distractor' in p && p.distractor.ko === '아침에')).toBe(true);
+    expect(particle!.builds).toEqual(['bank', 'tile', 'tile', 'particle', 'tile', 'whole']);
+  });
+
+  it("a distractor that reads as the particle word's stem is dropped, so the bank never holds two same tiles", () => {
+    const stemQuest = quest('built-stem', [['practice', 'mg:order-stem']], { rewardCardId: undefined });
+    const bun = b({ questById: (id) => (id === stemQuest.id ? stemQuest : undefined) });
+    const { slides, skipped } = run(stemQuest.id, {}, VOICE, bun);
+    expect(skipped).toEqual([]);
+    const [slide] = only(slides, 'sentence-build') as Build[];
+    const bankText = slide!.bank.map((p) => ('tile' in p ? (slide!.tiles[p.tile]!.particle?.stem ?? slide!.tiles[p.tile]!.ko) : p.distractor.ko));
+    expect(bankText.filter((t) => t === '달걀')).toHaveLength(1);
+    expect(new Set(bankText).size).toBe(bankText.length);
+    expect(slide!.bank.filter((p) => 'distractor' in p)).toEqual([{ distractor: { ko: '아침에', romanization: 'achime' } }]);
+  });
+
+  it('a build tests and does not teach: nothing joins the End slide, the slides sit inside the quest minutes, the builds are the same with tap', () => {
+    const { slides, taught, minutes } = run(built.id);
+    expect(taught).toEqual([]);
+    expect(minutes).toBe(built.estimatedMinutes);
+    const tap = run(built.id, { options: { romanization: 'tap', quizRounds: 5, sound: true, strokeGuide: true } }).slides;
+    expect(only(tap, 'sentence-build').map((s) => s.builds)).toEqual(only(slides, 'sentence-build').map((s) => s.builds));
+    expect(withBuilds(slides, { romanization: 'tap', strokeGuide: true })).toEqual(slides);
+  });
+
+  it('with no Korean voice the slide is the same: the meaning and romanization still wait for the whole build', () => {
+    expect(only(run(built.id, {}, { canPlayKorean: false }).slides, 'sentence-build')).toEqual(only(run(built.id).slides, 'sentence-build'));
+  });
+
+  it('every shipped order-it round, the Stage 7 Checks included, becomes a sentence-build slide with no skip', () => {
+    const shipped = lectureBundle('en');
+    const ids = ['quest:stage3-life-q3', 'quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-letters-q2'];
+    for (const id of ids) {
+      const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id }]), shipped, VOICE);
+      const quest = shipped.questById(id)!;
+      const rounds = quest.steps.reduce((n, step) => n + (step.minigameRef === undefined ? 0 : (shipped.scopeFor(step.minigameRef)?.orderIt?.rounds.length ?? 0)), 0);
+      expect(rounds, id).toBeGreaterThan(0);
+      expect(only(slides, 'sentence-build'), id).toHaveLength(rounds);
+      expect(skipped.filter((s) => shipped.scopeFor(s.ref)?.kind === 'order-it'), id).toEqual([]);
+    }
+  });
+});
+
+describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3, LV-D8, LV-S4)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const writeScopes: Record<string, MinigameScope> = {
+    'mg:type': {
+      kind: 'type-hangul',
+      typeHangul: {
+        rounds: [
+          { id: 't1', promptEn: 'Ask for water.', pictureRef: 'word:food-water', target: { ...kt('물 주세요', 'mul juseyo', 'Water, please.'), audioRef: 'audio/water.mp3' } },
+          { id: 't/2', promptEn: 'Type the word for tea', target: kt('차', 'cha', 'tea') },
+        ],
+      },
+    },
+    'mg:trace': { kind: 'trace-word', traceWord: { rounds: [{ id: 'w1', word: kt('아침', 'achim', 'morning') }] } },
+    'mg:frame': {
+      kind: 'write-frame',
+      writeFrame: {
+        rounds: [
+          {
+            id: 'f1',
+            frame: kt('아침에 ___을/를 먹어요.', 'achime ___eul/reul meogeoyo', 'In the morning, I eat ___.'),
+            slots: [{ id: 's1', bank: [kt('밥', 'bap', 'rice'), kt('빵', 'ppang', 'bread'), kt('사과', 'sagwa', 'apple')] }],
+            entry: 'type',
+            freeEntry: false,
+          },
+          {
+            id: 'f2',
+            frame: kt('___에 ___을/를 먹었어요.', '___e ___eul/reul meogeosseoyo', 'On ___, I ate ___.'),
+            slots: [
+              { id: 'when', bank: [kt('설날', 'seollal', "Lunar New Year's Day"), kt('추석', 'chuseok', 'Chuseok')] },
+              { id: 'what', bank: [kt('떡국', 'tteokguk', 'rice-cake soup'), kt('사과', 'sagwa', 'apple')] },
+            ],
+            entry: 'type',
+            freeEntry: false,
+          },
+          {
+            id: 'w3',
+            frame: kt('제 이름은 ___이에요/예요.', 'je ireumeun ___ieyo/yeyo', 'My name is ___.'),
+            slots: [{ id: 'name', bank: [] }],
+            entry: 'type',
+            freeEntry: true,
+            soundTable: {
+              groups: [[{ ko: '아', romanization: 'a' }], [{ ko: '가', romanization: 'ga' }, { ko: '나', romanization: 'na' }], [{ ko: '고', romanization: 'go' }], [{ ko: '구', romanization: 'gu' }], [{ ko: '그', romanization: 'geu' }], [{ ko: '기', romanization: 'gi' }]],
+              finals: [{ ko: 'ㄴ', romanization: 'n' }],
+            },
+          },
+        ],
+      },
+    },
+    'mg:frame-bad': {
+      kind: 'write-frame',
+      writeFrame: {
+        rounds: [
+          // One gap, two slots: fillFrame cannot draw it.
+          { id: 'x1', frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'), slots: [{ id: 'a', bank: [kt('밥', 'bap', 'rice')] }, { id: 'b', bank: [kt('빵', 'ppang', 'bread')] }], entry: 'type', freeEntry: false },
+          // An empty bank: no example to fill.
+          { id: 'x2', frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'), slots: [{ id: 'a', bank: [] }], entry: 'type', freeEntry: false },
+          { id: 'x3', frame: kt('___을/를 먹어요.', '___eul/reul meogeoyo', 'I eat ___.'), slots: [{ id: 'a', bank: [kt('빵', 'ppang', 'bread')] }], entry: 'type', freeEntry: false },
+        ],
+      },
+    } as unknown as MinigameScope,
+    'mg:type-none': { kind: 'type-hangul', typeHangul: { rounds: [] } },
+    'mg:trace-bare': { kind: 'trace-word' },
+    'mg:frame-bare': { kind: 'write-frame' },
+  };
+  const written = quest('written', [['intro'], ['practice', 'mg:type'], ['practice', 'mg:trace'], ['apply', 'mg:frame']], { rewardCardId: undefined });
+  const empty = quest('written-empty', [['practice', 'mg:type-none'], ['practice', 'mg:trace-bare'], ['apply', 'mg:frame-bare']], { rewardCardId: undefined });
+  const malformed = quest('written-bad', [['apply', 'mg:frame-bad'], ['practice', 'mg:trace']], { rewardCardId: undefined });
+  const b = (over: Partial<LectureBundle> = {}) =>
+    bundle({
+      scopeFor: (ref) => writeScopes[ref] ?? scopes[ref],
+      questById: (id) => [written, empty, malformed].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+      ...over,
+    });
+  const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
+  type Write = Extract<Slide, { kind: 'write-together' }>;
+  const writes = (slides: readonly Slide[]) => only(slides, 'write-together') as Write[];
+
+  it('one write-together slide per round, keyed by the round, in content order; a step with no round is a counted skip', () => {
+    const { slides, skipped } = run(written.id);
+    expect(kinds(slides)).toEqual(['title', ...Array<string>(6).fill('write-together'), 'end']);
+    expect(writes(slides).map((s) => [s.key, s.variant])).toEqual([
+      ['quest:written/s2/t1', 'type'],
+      ['quest:written/s2/t-2', 'type'],
+      ['quest:written/s3/w1', 'trace'],
+      ['quest:written/s4/f1', 'frame'],
+      ['quest:written/s4/f2', 'frame'],
+      ['quest:written/s4/w3', 'own-name'],
+    ]);
+    expect(skipped).toEqual([]);
+    expect(run(empty.id).skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:type-none', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:trace-bare', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:frame-bare', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('a round its builder cannot draw is a counted skip and the rest of the step stays (a frame whose banks do not match its gaps, an empty bank)', () => {
+    const { slides, skipped } = run(malformed.id);
+    expect(writes(slides).map((s) => s.key)).toEqual(['quest:written-bad/s1/x3', 'quest:written-bad/s2/w1']);
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:frame-bad', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:frame-bad', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('no two shipped type slides of one step share their prompt and cue, in any slide language: the room can tell them apart', () => {
+    let typeSlides = 0;
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const shipped = lectureBundle(locale);
+      for (const q of questsAll) {
+        const byStep = new Map<string, string[]>();
+        for (const s of writes(expandDeck(deckOf([{ kind: 'quest', id: q.id }]), shipped, VOICE).slides)) {
+          if (s.variant !== 'type') continue;
+          typeSlides += 1;
+          expect(s.answer.gloss.trim(), `${locale} ${s.key}`).not.toBe('');
+          const step = s.key.slice(0, s.key.lastIndexOf('/'));
+          byStep.set(step, [...(byStep.get(step) ?? []), `${s.prompt} | ${s.answer.gloss}`]);
+        }
+        for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
+      }
+    }
+    expect(typeSlides).toBe(73 * 3);
+  });
+
+  it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {
+    const [water, tea] = writes(run(written.id).slides);
+    expect(water).toMatchObject({
+      variant: 'type',
+      prompt: 'Ask for water.',
+      picture: 'word:food-water',
+      answer: { ko: '물 주세요', romanization: 'mul juseyo', gloss: 'Water, please.', spoken: { text: '물 주세요', romanization: 'mul juseyo', audioRef: 'audio/water.mp3' } },
+      builds: ['prompt', 'answer'],
+    });
+    expect(tea).not.toHaveProperty('picture');
+  });
+
+  it('trace: the word, its romanization and meaning; frame: the frame around its gap, the banks and the example', () => {
+    const [, , trace, frame] = writes(run(written.id).slides);
+    expect(trace).toMatchObject({ variant: 'trace', word: { ko: '아침', romanization: 'achim', gloss: 'morning' }, builds: ['prompt', 'answer'] });
+    expect(frame).toMatchObject({
+      variant: 'frame',
+      frame: { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' },
+      banks: [[{ ko: '밥', romanization: 'bap' }, { ko: '빵', romanization: 'ppang' }, { ko: '사과', romanization: 'sagwa' }]],
+      builds: ['frame', 'bank', 'example'],
+    });
+  });
+
+  it('the example fills each gap with its bank\'s first word and the ending that fits it (observation O2)', () => {
+    const [, , , one, two] = writes(run(written.id).slides);
+    // 밥 ends in a consonant: 을, never 를 and never both.
+    expect(one!.variant === 'frame' && one!.example).toEqual({ ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } });
+    // Two slots, each with its own bank: one chip row per bank, and both filled in the example.
+    expect(two!.variant === 'frame' && two!.banks.map((bank) => bank.map((w) => w.ko))).toEqual([['설날', '추석'], ['떡국', '사과']]);
+    expect(two!.variant === 'frame' && two!.example.ko).toBe('설날에 떡국을 먹었어요.');
+    expect(two!.variant === 'frame' && two!.example.romanization).toBe('seollare tteokgugeul meogeosseoyo');
+  });
+
+  it('the name round: its frame and its sound table, five groups a build, and never a name (LV-D8)', () => {
+    const name = writes(run(written.id).slides)[5]!;
+    expect(name.variant).toBe('own-name');
+    if (name.variant !== 'own-name') return;
+    expect(name.frame).toEqual({ pieces: ['제 이름은 ', '이에요/예요.'], romanization: 'je ireumeun ___ieyo/yeyo', gloss: 'My name is ___.' });
+    expect(name.groups.map((g) => g.map((t) => t.ko).join(''))).toEqual(['아', '가나', '고', '구', '그', '기']);
+    // Six groups: the frame, groups 1-5, group 6 (V12; the shipped table of ten groups gives two table builds).
+    expect(name.builds).toEqual(['frame', 'table', 'table']);
+    // The slide holds no example, bank or entry: nothing that could be a name.
+    expect(Object.keys(name).sort()).toEqual(['builds', 'frame', 'groups', 'key', 'kind', 'variant']);
+  });
+
+  it('a round practises and does not teach: nothing joins the End slide, the minutes are the quest\'s, the builds are the same with tap and without a voice', () => {
+    const { slides, taught, minutes } = run(written.id);
+    expect(taught).toEqual([]);
+    expect(minutes).toBe(written.estimatedMinutes);
+    expect(withBuilds(slides, { romanization: 'tap', strokeGuide: true })).toEqual(slides);
+    expect(writes(run(written.id, {}, { canPlayKorean: false }).slides)).toEqual(writes(slides));
+  });
+
+  it('every shipped type-hangul, trace-word and write-frame round becomes a write-together slide with no skip', () => {
+    const shipped = lectureBundle('en');
+    const ids = ['quest:stage6-life-q1', 'quest:stage7-letters-q1', 'quest:stage7-letters-q3', 'quest:stage7-life-q2', 'quest:stage7-rites-q2'];
+    for (const id of ids) {
+      const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id }]), shipped, VOICE);
+      const quest = shipped.questById(id)!;
+      const rounds = quest.steps.reduce((n, step) => {
+        const scope = step.minigameRef === undefined ? undefined : shipped.scopeFor(step.minigameRef);
+        return n + (scope?.typeHangul?.rounds.length ?? 0) + (scope?.traceWord?.rounds.length ?? 0) + (scope?.writeFrame?.rounds.length ?? 0);
+      }, 0);
+      expect(rounds, id).toBeGreaterThan(0);
+      expect(writes(slides), id).toHaveLength(rounds);
+      expect(skipped, id).toEqual([]);
+    }
+    // Stage 7 letters q3: the free-entry name round is the own-name slide, with the shipped ten groups in two table builds.
+    const name = writes(expandDeck(deckOf([{ kind: 'quest', id: 'quest:stage7-letters-q3' }]), shipped, VOICE).slides).find((s) => s.variant === 'own-name')!;
+    expect(name.variant === 'own-name' && name.groups).toHaveLength(10);
+    expect(name.builds).toEqual(['frame', 'table', 'table']);
+  });
+
+  it('a Spanish or Korean deck takes the prompts and meanings of the overlays; the Korean never changes', () => {
+    const id = 'quest:stage6-life-q1';
+    const en = writes(expandDeck(deckOf([{ kind: 'quest', id }]), lectureBundle('en'), VOICE).slides);
+    for (const locale of ['es', 'ko'] as const) {
+      const other = writes(expandDeck(deckOf([{ kind: 'quest', id }]), lectureBundle(locale), VOICE).slides);
+      expect(other.map((s) => s.variant === 'type' && s.answer.ko)).toEqual(en.map((s) => s.variant === 'type' && s.answer.ko));
+      other.forEach((s, i) => {
+        const was = en[i]!;
+        if (s.variant !== 'type' || was.variant !== 'type') throw new Error('type rounds only');
+        expect(s.prompt, `${locale} ${s.key}`).not.toBe(was.prompt);
+        expect(s.answer.gloss, `${locale} ${s.key}`).not.toBe(was.answer.gloss);
+      });
+    }
   });
 });

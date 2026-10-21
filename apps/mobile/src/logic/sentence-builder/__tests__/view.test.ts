@@ -202,6 +202,16 @@ describe('noteParts', () => {
     expect(noteParts('{ko:을}')).toEqual([{ ko: '을', romanization: 'eul' }]);
     expect(noteParts('{ko:A1}')).toEqual([{ ko: 'A1', romanization: '' }]);
   });
+
+  it('romanizes a token of several words word by word, so the learner sees a two-word chip with its romanization (LV-S1)', () => {
+    expect(noteParts('Add {ko:고}: {ko:접고 잘라요}.')).toEqual([
+      { text: 'Add ' },
+      { ko: '고', romanization: 'go' },
+      { text: ': ' },
+      { ko: '접고 잘라요', romanization: 'jeopgo jallayo' },
+      { text: '.' },
+    ]);
+  });
 });
 
 describe('doneView', () => {

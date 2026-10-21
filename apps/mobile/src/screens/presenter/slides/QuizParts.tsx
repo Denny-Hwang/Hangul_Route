@@ -1,11 +1,12 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { Hoya, Icon, colors, presenter, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { Hoya, Icon, borderWidth, colors, presenter, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import type { QuizOption } from '../../../logic/lecture/build-steps';
 import { markerFor } from '../../../logic/lecture/slide-view';
-import { units } from '../../../logic/lecture/stage-constants';
+import { MARKER_BODY_FACTOR, PIC_OPT, units } from '../../../logic/lecture/stage-constants';
 import { optionContent, optionRomShown } from '../../../logic/lecture/tools';
+import { PictureArt } from '../../../components/PictureArt';
 import { ShapeMarker } from '../ShapeMarker';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
@@ -34,7 +35,10 @@ export function QuizOptions({
   options: readonly QuizOption[];
   revealed: boolean;
   romanization: RomanizationMode;
-  /** A gloss spills out of its card even at body size: the slide gives the grid more room. */
+  /**
+   * A gloss spills out of its card even at body size, or a row of picture cards is shorter than its
+   * shape marker: the slide gives the grid more room.
+   */
   onCrowded?: () => void;
 }): React.ReactElement {
   const { unit } = usePresenterView();
@@ -110,6 +114,7 @@ function OptionCard({
   const border = correct ? rule : line;
   const marker = markerFor(index, presenter.marker.shapes);
   const content = optionContent(option);
+  const picture = option.picture;
   const padV = units(unit, spacing.md);
   const bodySize = size(presenter.size.body);
   // A lone letter fills its card up to display size; a word with its gloss under it stays at prompt size.
@@ -122,7 +127,10 @@ function OptionCard({
   const glossRoom = rowHeight - 2 * (padV + line) - (content.ko !== null ? koHeight + units(unit, spacing.xs) : 0);
   // Checked whenever either side changes: the grid's row height arrives after the gloss is laid out.
   const overflows = !glossSmall && glossSize > bodySize && glossHeight > glossRoom;
-  const crowded = glossSize === bodySize && glossHeight > glossRoom;
+  // A picture card never draws below its marker: a row shorter than that (a key row that wraps above the grid)
+  // asks the slide for room, as a crowded gloss does.
+  const pictureCrowded = picture !== undefined && Number.isFinite(rowHeight) && rowHeight + 1 < units(unit, MARKER_BODY_FACTOR * presenter.size.body) + 2 * (padV + line);
+  const crowded = (glossSize === bodySize && glossHeight > glossRoom) || pictureCrowded;
   useEffect(() => {
     if (overflows) onGlossOverflow();
   }, [overflows, onGlossOverflow]);
@@ -150,6 +158,17 @@ function OptionCard({
       }}
     >
       <ShapeMarker shape={marker.shape} n={marker.n} />
+      {picture !== undefined ? (
+        // A listen or realia question's picture (LV-S2): `PIC_OPT` units in the neutral tile, smaller when its row is; named by its label.
+        <View testID="presenter-quiz-picture" style={{ flex: 1, minWidth: 0 }}>
+          <PictureArt
+            pictureRef={picture}
+            gloss={option.gloss ?? messages.a11y.minigame.picture}
+            size={Math.max(bodySize, Math.min(units(unit, PIC_OPT), Math.floor(rowHeight - 2 * (padV + line))))}
+            tile={pictureTile(unit)}
+          />
+        </View>
+      ) : (
       <View style={{ flex: 1, minWidth: 0, gap: units(unit, spacing.xs) }}>
         {content.ko !== null ? (
           <View
@@ -186,6 +205,7 @@ function OptionCard({
           </Text>
         ) : null}
       </View>
+      )}
       {correct ? (
         <View role="img" accessibilityLabel={messages.a11y.presenter.answerMark} testID="presenter-quiz-mark">
           <Icon name="check-circle" size={units(unit, spacing.jumbo)} color={colors.feedback.success} />
@@ -195,8 +215,12 @@ function OptionCard({
   );
 }
 
-/** "Hoya's answer" with a cheering Hoya; it joins the story check's question row at the reveal. */
-export function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
+/**
+ * "Hoya's answer" with a cheering Hoya; it joins the story check's question row at the reveal. `compact`
+ * (a realia question's key row, narrower than a question row): Hoya at `touchTarget.min` units and the
+ * words at `presenter.size.caption`, taking the width of the slot it sits in.
+ */
+export function AnswerLine({ shown, compact = false }: { shown: boolean; compact?: boolean }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   return (
@@ -204,12 +228,135 @@ export function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
       testID="presenter-quiz-answer"
       accessibilityElementsHidden={!shown}
       aria-hidden={!shown}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER), flexShrink: 0, maxWidth: '40%', opacity: shown ? 1 : 0 }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, compact ? spacing.md : STAGE_GAP_INNER), flexShrink: compact ? 1 : 0, minWidth: 0, maxWidth: compact ? '100%' : '40%', opacity: shown ? 1 : 0 }}
     >
-      <Hoya pose="cheering" size={units(unit, touchTarget.hero)} accessibilityLabel={messages.a11y.hoya('cheering')} />
-      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, fontSize: size(presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
+      <Hoya pose="cheering" size={units(unit, compact ? touchTarget.min : touchTarget.hero)} accessibilityLabel={messages.a11y.hoya('cheering')} />
+      <Text {...KOREAN_LINE_BREAK} style={{ flexShrink: 1, minWidth: 0, fontSize: size(compact ? presenter.size.caption : presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
         {messages.learner.presenter.quiz.answer}
       </Text>
+    </View>
+  );
+}
+
+/**
+ * A question's options one row each (lecture-v2.md V8, LV-S2: the words and sentences of a listen,
+ * reply or realia question, a realia figure, and a realia question's pictures in a column too narrow
+ * for the grid, each as tall as its marker): the shape-and-number marker, the Korean at
+ * `presenter.size.prompt` with its romanization (D2: visible by default, at the answer build with
+ * `tap`) and, at the answer build, its meaning on the same row; a figure at `presenter.size.prompt`.
+ * The reveal is the grid's (D3): the correct row gets the `spacing.sm`-unit `feedback.success`
+ * border, the `feedback.successLight` ground and the check mark, the others drop to
+ * `presenter.dimOpacity`; no red, no cross. The thicker border grows outward into the row gap, so
+ * nothing below moves. `compact` (a slide that fits itself, V8's measured fallback): the Korean at
+ * `presenter.size.body` beside a marker of `presenter.size.prompt`; `small` also draws the
+ * romanization and the meaning at `presenter.size.caption`.
+ */
+export function OptionRows({
+  options,
+  revealed,
+  romanization,
+  compact = false,
+  small = false,
+}: {
+  options: readonly QuizOption[];
+  revealed: boolean;
+  romanization: RomanizationMode;
+  compact?: boolean;
+  small?: boolean;
+}): React.ReactElement {
+  const { unit } = usePresenterView();
+  const romOn = optionRomShown(romanization, revealed);
+  // The answer's row draws its thicker border outward (a negative margin, so no row moves); the list keeps that
+  // room at its top and bottom from the first build, so the answer in the first or last row stays inside the fit.
+  const grow = Math.max(STAGE_BORDER_MIN, units(unit, spacing.sm)) - Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER));
+  return (
+    <View role="list" testID="presenter-quiz-options" style={{ gap: units(unit, compact ? spacing.sm : spacing.md), paddingVertical: Math.max(0, grow) }}>
+      {options.map((option, i) => (
+        <OptionRow key={i} option={option} index={i} revealed={revealed} romOn={romOn} compact={compact} small={small} />
+      ))}
+    </View>
+  );
+}
+
+/** A picture option's neutral tile in stage units (`PictureArt`), its art never below 48 units (not 48 dp: a phone's stage is small). */
+function pictureTile(unit: number): { padding: number; border: number; radius: number; minArt: number } {
+  return { padding: units(unit, spacing.xs), border: Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base)), radius: units(unit, radii.md), minArt: units(unit, spacing.xxxl) };
+}
+
+function OptionRow({ option, index, revealed, romOn, compact, small }: { option: QuizOption; index: number; revealed: boolean; romOn: boolean; compact: boolean; small: boolean }): React.ReactElement {
+  const { unit, messages } = usePresenterView();
+  const size = useStageText();
+  const correct = revealed && option.correct;
+  const line = Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER));
+  const rule = Math.max(STAGE_BORDER_MIN, units(unit, spacing.sm));
+  const grow = correct ? rule - line : 0;
+  const marker = markerFor(index, presenter.marker.shapes);
+  const koSize = size(compact ? presenter.size.body : presenter.size.prompt);
+  const bodySize = size(small ? presenter.size.caption : presenter.size.body);
+  // A dimmed or revealed row sets every line in text.primary (presenter.v1.md).
+  const romColor = revealed ? colors.text.primary : colors.text.secondary;
+  // A picture's gloss is its name (PictureArt's), never drawn as text.
+  const glossShown = revealed && option.gloss !== undefined;
+  const markSide = units(unit, compact ? spacing.xxxl : spacing.jumbo);
+  return (
+    <View
+      role="listitem"
+      testID={`presenter-quiz-option-${index + 1}`}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: units(unit, STAGE_GAP_INNER),
+        paddingHorizontal: units(unit, spacing.xl) + line - (correct ? rule : line),
+        borderWidth: correct ? rule : line,
+        marginVertical: -grow,
+        borderColor: correct ? colors.feedback.success : colors.border.strong,
+        borderRadius: units(unit, STAGE_RADIUS),
+        backgroundColor: correct ? colors.feedback.successLight : colors.surface.paper,
+        opacity: revealed && !option.correct ? presenter.dimOpacity : 1,
+      }}
+    >
+      <ShapeMarker shape={marker.shape} n={marker.n} {...(compact ? { side: presenter.size.prompt } : {})} />
+      {option.picture !== undefined ? (
+        // A picture option in a column too narrow for the grid (a realia question beside a wide sheet): the picture as tall as the marker.
+        <View testID="presenter-quiz-picture" style={{ flex: 1, minWidth: 0, paddingVertical: units(unit, spacing.xs) }}>
+          <PictureArt
+            pictureRef={option.picture}
+            gloss={option.gloss ?? messages.a11y.minigame.picture}
+            size={units(unit, compact ? presenter.size.prompt : MARKER_BODY_FACTOR * presenter.size.body)}
+            tile={pictureTile(unit)}
+          />
+        </View>
+      ) : null}
+      <View style={{ flex: option.picture !== undefined ? 0 : 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: units(unit, spacing.lg), paddingVertical: units(unit, spacing.xs) }}>
+        {option.ko !== undefined ? (
+          <TaughtKo size={koSize} testID="presenter-quiz-option-ko">
+            {option.ko}
+          </TaughtKo>
+        ) : null}
+        {option.ko !== undefined && option.romanization !== undefined ? (
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-quiz-option-rom" aria-hidden={!romOn} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: romColor, opacity: romOn ? 1 : 0 }}>
+            {option.romanization}
+          </Text>
+        ) : null}
+        {option.figure !== undefined ? (
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-quiz-option-figure" style={{ fontSize: koSize, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+            {option.figure}
+          </Text>
+        ) : null}
+        {option.gloss !== undefined && option.picture === undefined ? (
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-quiz-option-gloss" aria-hidden={!glossShown} style={{ fontSize: bodySize, color: colors.text.primary, opacity: glossShown ? 1 : 0 }}>
+            {option.gloss}
+          </Text>
+        ) : null}
+      </View>
+      {/* Every row keeps the mark's room from the first build, so the answer's mark never narrows its row and wraps its meaning (the rows would grow past the stage). */}
+      {correct ? (
+        <View role="img" accessibilityLabel={messages.a11y.presenter.answerMark} testID="presenter-quiz-mark">
+          <Icon name="check-circle" size={markSide} color={colors.feedback.success} />
+        </View>
+      ) : (
+        <View aria-hidden testID="presenter-quiz-mark-room" style={{ width: markSide, height: markSide }} />
+      )}
     </View>
   );
 }

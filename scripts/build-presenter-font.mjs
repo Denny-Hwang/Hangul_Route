@@ -15,7 +15,18 @@
 // §3.7 / §3.3), the scope fields the slides draw (syllables, card pairs, Pic-Word words, sequence
 // labels), Discover words, heritage card subtitles, the Pause word, the words of ready
 // vocabulary topics, and the title, keywords, scene Korean and check Korean of the
-// stories the Library lists (the same production gate as build-lecture-catalogue.mjs).
+// stories the Library lists (the same production gate as build-lecture-catalogue.mjs); the reading
+// slides (AMENDMENTS-LECTURE-V2 LV-S1) add a pattern's frame between its gaps, the Korean chips of
+// its note and of a realia page's caption, in English and in the es / ko content overlays
+// (content/i18n/<locale>/*.json), which give a Spanish or Korean deck its own note and caption;
+// the question slides (LV-S2) add the Listen & Pick prompts and options and the Tap to Respond
+// lines and replies (the realia questions' sheets, keys and options were already in the list);
+// the sentence builds (LV-S3) draw the order-it sentences' tiles, a particle tile's stem and its two
+// endings, and the distractors, which the list held already (F-CURR-001 §3.12): a tile and a stem
+// are pieces of the sentence, so their code points are its own; the write-together slides (LV-S4)
+// draw the type-hangul targets, the trace-word words, the write-frame frames and banks (all in the
+// list already; a frame's "For example" is its frame and a bank word, so its code points are theirs)
+// and the name round's sound table, whose syllable blocks this row adds.
 // Only taught Korean uses the subset: UI-language text (titles, card facts, glosses) and
 // the teacher-typed deck title use the system Korean stack, so they are not in the list.
 // apps/mobile/src/logic/lecture/__tests__/presenter-glyphs.test.ts expands every shipped
@@ -78,19 +89,31 @@ class ContentError extends Error {}
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const list = (value) => (Array.isArray(value) ? value : []);
 
+/** The slot marker of a pattern frame (`SLOT_MARKER`, content-schema `quest.ts`): drawn as a gap box, never as text. */
+const SLOT_MARKER = "___";
+/** The Korean of each `{ko:}` token in UI-language content text (`logic/ko-tokens.ts`), trimmed; empty tokens dropped. */
+const koTokens = (text) => (typeof text === "string" ? [...text.matchAll(/\{ko:([^}]*)\}/g)].map((m) => m[1].trim()).filter((ko) => ko !== "") : []);
+
 // ---- glyph list (pure) -------------------------------------------------------------
+
+/** An element's overlay key (content-schema `overlayElementKey`): its id or key, else its index. */
+const elementKey = (element, index) => (isObject(element) && typeof element.id === "string" ? element.id : isObject(element) && typeof element.key === "string" ? element.key : String(index));
 
 /**
  * Every Korean string the presenter can draw from this content. Inputs are plain data:
  * `jamo` (jamoKnown), `scopes` (minigameScopes), `quests` (questsAll), `cards`
  * (heritageCardsAll), `extra` (presenter words such as the Pause word), `topicFiles`
- * and `stories` ({ name, json } per content file).
+ * and `stories` ({ name, json } per content file), and `overlays` (the es / ko content
+ * overlays, `{ [locale]: { [entityId]: { [field]: text } } }`).
  */
-export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFiles, stories } = {}) {
+export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFiles, stories, overlays } = {}) {
   const out = [];
   const add = (value) => {
     if (typeof value === "string" && value.length > 0) out.push(value);
   };
+  /** The `{ko:}` Korean of one overlay field of an entity, in every overlay locale. */
+  const overlayTokens = (entityId, field) =>
+    Object.values(isObject(overlays) ? overlays : {}).flatMap((byEntity) => koTokens(isObject(byEntity) && isObject(byEntity[entityId]) ? byEntity[entityId][field] : undefined));
 
   for (const j of list(jamo)) {
     add(j.char);
@@ -105,6 +128,15 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
     for (const pair of list(scope.cardPairs)) add(pair.ko);
     for (const board of list(scope.picWord?.boards)) for (const pair of list(board.pairs)) add(pair.word?.ko);
     for (const step of list(scope.storySteps)) add(step.labelKo);
+    // AMENDMENTS-LECTURE-V2 LV-S2: a listen question's prompt (the answer line, the Say it box) and its options; a reply question's line and replies.
+    for (const round of list(scope.listenPick?.rounds)) {
+      add(round.prompt?.ko);
+      list(round.options).forEach((o) => add(o?.text?.ko));
+    }
+    for (const turn of list(scope.dialogue)) {
+      add(turn.npcKo);
+      list(turn.options).forEach((o) => add(o?.ko));
+    }
     // F-CURR-001 §3.12: the Korean of the upper-stage lesson scopes (build-lessons.mjs runtime shape).
     for (const round of list(scope.orderIt?.rounds)) {
       add(round.sentence?.ko);
@@ -124,21 +156,36 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
     for (const round of list(scope.writeFrame?.rounds)) {
       add(round.frame?.ko);
       for (const slot of list(round.slots)) list(slot.bank).forEach((w) => add(w?.ko));
+      // The name round's slide draws its sound table (LV-S4): every block of every group.
+      for (const group of list(round.soundTable?.groups)) list(group).forEach((t) => add(t?.ko));
     }
   }
   for (const quest of list(quests)) {
-    for (const step of list(quest.steps)) {
-      for (const page of list(step.discover?.pages)) {
-        for (const item of list(page.items)) {
+    list(quest.steps).forEach((step, s) => {
+      list(step.discover?.pages).forEach((page, p) => {
+        const pageField = `steps.${elementKey(step, s)}.discover.pages.${elementKey(page, p)}`;
+        list(page.items).forEach((item, i) => {
+          const itemField = `${pageField}.items.${elementKey(item, i)}`;
           if (item.type === "word") add(item.word?.ko);
           // F-CURR-001 §3.10: the upper-stage Discover items the lecture deck shows (discoverItemTexts).
           if (item.type === "sentence") add(item.sentence?.ko);
-          if (item.type === "pattern") list(item.examples).forEach((e) => add(e?.ko));
+          if (item.type === "pattern") {
+            // AMENDMENTS-LECTURE-V2 LV-S1: the pattern slide draws the frame between its gap boxes and the note's Korean chips.
+            if (typeof item.frame?.ko === "string") item.frame.ko.split(SLOT_MARKER).forEach(add);
+            koTokens(item.noteEn).forEach(add);
+            overlayTokens(quest.id, `${itemField}.note`).forEach(add);
+            list(item.examples).forEach((e) => add(e?.ko));
+          }
           if (item.type === "exchange") list(item.lines).forEach((l) => add(l?.line?.ko));
-          if (item.type === "realia") list(item.keyWords).forEach((w) => add(w?.ko));
-        }
-      }
-    }
+          if (item.type === "realia") {
+            list(item.keyWords).forEach((w) => add(w?.ko));
+            // The realia slide's caption: its own, else its page's, with its Korean chips (its sheet comes with the scopes above).
+            koTokens(item.captionEn ?? page.captionEn).forEach(add);
+            overlayTokens(quest.id, item.captionEn !== undefined ? `${itemField}.caption` : `${pageField}.caption`).forEach(add);
+          }
+        });
+      });
+    });
   }
   for (const card of list(cards)) add(card.subtitleKo);
   list(extra).forEach(add);
@@ -364,7 +411,22 @@ export async function loadRepoContent(root) {
     extra: [lecture.PAUSE_WORD.ko],
     topicFiles: readJsonDir(root, ["content", "vocab"], (name) => !name.startsWith("_")),
     stories: readJsonDir(root, ["content", "stories"], () => true),
+    overlays: Object.fromEntries(OVERLAY_LOCALES.map((locale) => [locale, overlayEntries(readJsonDir(root, ["content", "i18n", locale], () => true))])),
   };
+}
+
+/** The content overlay locales (content/i18n/<locale>/). */
+const OVERLAY_LOCALES = ["es", "ko"];
+
+/** One locale's overlay files merged by entity id (a file's `entries`). */
+function overlayEntries(files) {
+  const out = {};
+  for (const { json } of files) {
+    for (const [entityId, fields] of Object.entries(isObject(json?.entries) ? json.entries : {})) {
+      if (isObject(fields)) out[entityId] = { ...out[entityId], ...fields };
+    }
+  }
+  return out;
 }
 
 function defaultRunSubset(args) {

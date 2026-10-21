@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView } from '../teacher-home';
+import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView, teacherLectureCard } from '../teacher-home';
 
 /** F-APP-001 A-5a, section 3.8: the teacher home's rows, its no-class state and its cross-links. */
 function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'], over: { archivedAt?: string | null; createdAt?: string } = {}): SpaceListItem {
@@ -79,5 +79,52 @@ describe('start links', () => {
   it('preselect the role card of the persona', () => {
     expect(START_CLASS).toBe('/start?persona=teacher');
     expect(START_FAMILY).toBe('/start?persona=parent');
+  });
+});
+
+describe('teacherLectureCard (AMENDMENTS-LECTURE-V2 E1, LV-5)', () => {
+  const on = { enabled: true, appUrl: 'https://app.hangulroute.com' };
+
+  it('one class: Start opens that class\'s lecture setup page', () => {
+    expect(teacherLectureCard([classA, family], on)).toEqual({ state: 'one', href: '/teach/space/lecture?id=sp_a' });
+    expect(teacherLectureCard([classB], on)).toEqual({ state: 'one', href: '/teach/space/lecture?id=sp_b' });
+  });
+
+  it('several classes: the choice by class name, most recent first, each opening its own setup page', () => {
+    expect(teacherLectureCard([classA, classB, family, school], on)).toEqual({
+      state: 'several',
+      choices: [
+        { id: 'sp_b', name: 'sp_b', href: '/teach/space/lecture?id=sp_b' },
+        { id: 'sp_a', name: 'sp_a', href: '/teach/space/lecture?id=sp_a' },
+      ],
+    });
+  });
+
+  it('no class: Start opens the presenter with no class (presets work with none)', () => {
+    expect(teacherLectureCard([], on)).toEqual({ state: 'none', href: 'https://app.hangulroute.com/present' });
+    expect(teacherLectureCard([family], on)).toEqual({ state: 'none', href: 'https://app.hangulroute.com/present' });
+    expect(teacherLectureCard([], { enabled: true, appUrl: 'http://localhost:4173' })).toEqual({ state: 'none', href: 'http://localhost:4173/present' });
+  });
+
+  it('counts only canComposeIn classes: a school admin without a teacher or owner role in any class gets the no-space path', () => {
+    const childClass = item('sp_child', 'class', 'admin');
+    expect(teacherLectureCard([school, childClass], on)).toEqual({ state: 'none', href: 'https://app.hangulroute.com/present' });
+    expect(teacherLectureCard([school, childClass, classA], on)).toEqual({ state: 'one', href: '/teach/space/lecture?id=sp_a' });
+    expect(teacherLectureCard([item('sp_st', 'class', 'student')], on)).toMatchObject({ state: 'none' });
+  });
+
+  it('an archived class is not offered (its own page keeps the button)', () => {
+    expect(teacherLectureCard([archived], on)).toMatchObject({ state: 'none' });
+    expect(teacherLectureCard([archived, classA], on)).toEqual({ state: 'one', href: '/teach/space/lecture?id=sp_a' });
+  });
+
+  it('loading while the list has not answered; the no-space path when it failed', () => {
+    expect(teacherLectureCard(null, on)).toEqual({ state: 'loading' });
+    expect(teacherLectureCard('failed', on)).toEqual({ state: 'none', href: 'https://app.hangulroute.com/present' });
+  });
+
+  it('nothing is drawn while lectureModeEnabled() is off', () => {
+    const off = { ...on, enabled: false };
+    for (const items of [[classA], [classA, classB], [], null, 'failed' as const]) expect(teacherLectureCard(items, off)).toBeNull();
   });
 });

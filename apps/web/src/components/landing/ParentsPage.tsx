@@ -28,6 +28,7 @@ export function ParentsPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: P
     ...(showsClaim(claims, 'learningRoute', locale) ? [P.follow.route] : []),
     ...(showsClaim(claims, 'feedbackNotes', locale) ? [P.follow.notes] : []),
     ...(showsClaim(claims, 'browseAsLearner', locale) ? [P.follow.browse] : []),
+    ...(showsClaim(claims, 'lectureMode', locale) ? [P.follow.lecture] : []),
   ];
   const whatSee = showsClaim(claims, 'parentReports', locale) ? P.faq.whatSee.reports : P.faq.whatSee.a;
   return (

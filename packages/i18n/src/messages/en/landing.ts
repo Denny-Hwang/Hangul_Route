@@ -272,6 +272,7 @@ export const landing = {
         notes: 'Send a short note of encouragement that your learner sees in the app.',
         /** Names the product as the app's billing page does (`console.billing.planTitle.family_lifetime`). */
         browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
+        lecture: 'Lecture mode puts a lesson on your TV so you can learn together.',
       },
       /** "What can I see?" answers with `whatSee.a`, or `whatSee.reports` while the `parentReports` claim is on. */
       faq: {
@@ -312,7 +313,7 @@ export const landing = {
         route: "Open each student's Learning Route to see where they are and what comes next.",
         notes: 'Send students a short note of encouragement.',
         browse: 'With a class or school plan, preview every lesson exactly as students see it.',
-        lecture: 'Teach from the front on a projector or TV.',
+        lecture: 'Lecture mode: teach from the front on a projector or TV, with ready-made lessons.',
       },
       privacy: {
         title: 'Privacy for classes',

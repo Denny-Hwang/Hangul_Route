@@ -44,6 +44,18 @@ function parseKillSwitch(raw: string | undefined, fallback: boolean): boolean {
 }
 
 /**
+ * The lecture mode switch (AMENDMENTS-LECTURE-V2 LV-D1): the kill switch's values (`parseKillSwitch`) plus the
+ * console's own pair, `disabled` off and `enabled` on (`NEXT_PUBLIC_LECTURE_MODE` uses them), trimmed and in any case.
+ * Anything else, or unset, is the launch default.
+ */
+function parseLectureSwitch(raw: string | undefined, fallback: boolean): boolean {
+  const v = raw?.trim().toLowerCase();
+  if (v === 'disabled') return false;
+  if (v === 'enabled') return true;
+  return parseKillSwitch(raw, fallback);
+}
+
+/**
  * True in a development build only: React Native and Metro set the global
  * `__DEV__`; elsewhere (tests, scripts) a non-production `NODE_ENV` counts.
  */
@@ -175,6 +187,15 @@ export interface Flags {
    * `learner.weeklyPlan` words have no signed review yet.
    */
   routeEnabled: boolean;
+
+  /**
+   * Lecture mode in the learner app (AMENDMENTS-LECTURE-V2 section 3 E5, LV-D1): the Lecture mode card in the grown-up
+   * area (`ParentDashboardScreen`, web only, behind the grown-up gate). ON at launch since LV-7, which turned the web
+   * and app defaults on together; `EXPO_PUBLIC_LECTURE_MODE` is only a kill switch (`false`, `0`, `off`, `no` or
+   * `disabled`, any case, trimmed). It hides the entry only: `/present` stays served (F-TCH-004 TD2). Build time:
+   * switching it off needs a rebuild and redeploy of the learner app.
+   */
+  lectureModeEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -194,6 +215,8 @@ const launchDefaults: Flags = {
   notesEnabled: true,
   reportsEnabled: true,
   routeEnabled: true,
+  // LV-7 turned this on with the web default and the site claim (AMENDMENTS-LECTURE-V2 LV-D1).
+  lectureModeEnabled: true,
 };
 
 export const flags: Flags = {
@@ -219,6 +242,7 @@ export const flags: Flags = {
   notesEnabled: parseBool(process.env.EXPO_PUBLIC_NOTES_ENABLED, launchDefaults.notesEnabled),
   reportsEnabled: parseBool(process.env.EXPO_PUBLIC_REPORTS_ENABLED, launchDefaults.reportsEnabled),
   routeEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_ENABLED, launchDefaults.routeEnabled),
+  lectureModeEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_LECTURE_MODE, launchDefaults.lectureModeEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

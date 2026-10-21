@@ -11,7 +11,7 @@ import type { RecentItem } from '../../logic/lecture/recent';
 import { DisplayButton } from '../../components/DisplayButton';
 import { HomeButton, Line, ring, text, type Focusable } from './home-parts';
 import { LessonChooser } from './LessonChooser';
-import { PresetCards } from './PresetCards';
+import { PresetCards, presetStageOf } from './PresetCards';
 
 /**
  * The presenter home (F-TCH-004 §3.12; AMENDMENTS-LECTURE-V2 sections 4, 7 item 3 and 18, row
@@ -197,11 +197,13 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
   const stages = useMemo(() => props.groups.flatMap((g) => (g.stage !== null && g.rows.some((r) => r.kind === 'episode') ? [g.id as StageKey] : [])), [props.groups]);
   const { open, lengths, stage: presetStage } = state;
   const { resolve } = props;
+  // The stage the cards and their Start resolve with (the kept one only while it is offered), so Customize opens on the deck Start builds.
+  const stageOk = presetStageOf(stages, presetStage);
   const defaultStage = useMemo((): StageKey => {
     if (open === null) return 'stage1';
-    const resolved = resolve(open, lengthOf({ lengths }, open, PRESET_DEFAULT_MINUTES[open]), presetStage);
+    const resolved = resolve(open, lengthOf({ lengths }, open, PRESET_DEFAULT_MINUTES[open]), stageOk);
     return firstStageOf(resolved.blocks) ?? 'stage1';
-  }, [open, lengths, presetStage, resolve]);
+  }, [open, lengths, stageOk, resolve]);
 
   const build = leaving((): void => {
     const deck = buildQuickDeck(state.chosen, props.groups, {
@@ -227,7 +229,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
   const pageWidth = Math.min(width, layout.maxWidth.full) - 2 * gutter;
   const presetsWidth = Math.max(0, wide ? pageWidth - Math.min(sideWidth, pageWidth * 0.4) - spacing.xl : pageWidth);
   const presets = (
-    <PresetCards messages={messages} ctx={props.presetCtx} resolve={props.resolve} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} initialWidth={presetsWidth} />
+    <PresetCards messages={messages} ctx={props.presetCtx} resolve={props.resolve} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} ready={props.recent.status !== 'loading'} initialWidth={presetsWidth} />
   );
   const recent = <RecentPanel {...props} onResume={leaving(props.onResume)} onStartOver={leaving(props.onStartOver)} />;
 

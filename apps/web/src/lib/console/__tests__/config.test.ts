@@ -47,11 +47,26 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
     expect(typeof schoolConsentModeEnabled()).toBe('boolean');
   });
 
-  it('lecture mode stays hidden until the presenter ships (F-TCH-004 PR 6), then is switched on', () => {
-    expect(lectureModeEnabled({})).toBe(false);
-    expect(lectureModeEnabled({ NEXT_PUBLIC_LECTURE_MODE: 'true' })).toBe(false);
-    expect(lectureModeEnabled({ NEXT_PUBLIC_LECTURE_MODE: 'enabled' })).toBe(true);
+  it('lecture mode is on by default since LV-7 (AMENDMENTS-LECTURE-V2 LV-D1): unset, enabled or any other value is on', () => {
+    expect(lectureModeEnabled({})).toBe(true);
+    for (const raw of ['enabled', 'Enabled', 'true', '1', 'on', 'yes', '', ' ', 'maybe', 'disable']) {
+      expect(lectureModeEnabled({ NEXT_PUBLIC_LECTURE_MODE: raw }), JSON.stringify(raw)).toBe(true);
+    }
     expect(typeof lectureModeEnabled()).toBe('boolean');
+  });
+
+  it('lecture mode kill switch: false, 0, off, no or disabled switch it off, in any case and with surrounding spaces', () => {
+    for (const raw of ['false', '0', 'off', 'no', 'disabled', 'FALSE', 'False ', ' 0', 'OFF', ' No', 'Disabled', 'DISABLED\n', '\tfalse']) {
+      expect(lectureModeEnabled({ NEXT_PUBLIC_LECTURE_MODE: raw }), JSON.stringify(raw)).toBe(false);
+    }
+  });
+
+  it('lecture mode reads the build value through buildEnv(): unset is on, off is off', () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', undefined);
+    expect(lectureModeEnabled()).toBe(true);
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
+    expect(lectureModeEnabled()).toBe(false);
+    vi.unstubAllEnvs();
   });
 
   it('the free-plan switch is off unless the build sets it, parsed like the learner app (F-ENT-003 section 3.4)', () => {

@@ -909,4 +909,15 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.adminInvite.alreadyAdmin': [['Maple School']],
   // [SA] The learner app's full-family line with the family cap (AMENDMENTS-SEATS-ADMINS section 9.1).
   'caregiver.join.errors.familyFull': [[4], [6]],
+  // A sentence-build move (AMENDMENTS-LECTURE-V2 row LV-S3): the slide passes the tile's Korean and its romanization; samples stay Latin (no Hangul in a message).
+  'a11y.presenter.tilePlaced': [['hakgyoe'], ['dalgyareul'], ['ne']],
+  // The console lecture setup page, presets first (AMENDMENTS-LECTURE-V2 row LV-4).
+  'console.lecture.outline.block.words': [[1], [10], [20]],
+  'console.lecture.presets.next.plan': [['Week 3 letters']],
+  'console.lecture.presets.stage.chip': [[1], [7]],
+  'console.lecture.presets.length.option': [[10], [20], [30]],
+  'console.lecture.presets.chooser.lessonsIn': [[1], [3], [6]],
+  'console.lecture.presets.chooser.showMore': [[8], [4]],
+  // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
+  'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
 };

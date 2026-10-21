@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildsFor, type BuildOptions, type SlideBody } from '../build-steps';
+import { buildsFor, joinSpoken, partsShown, soundTablePages, SOUND_TABLE_GROUPS_PER_BUILD, type BuildOptions, type SlideBody } from '../build-steps';
 
 const ALWAYS: BuildOptions = { romanization: 'always', strokeGuide: true };
 const TAP: BuildOptions = { romanization: 'tap', strokeGuide: true };
@@ -131,5 +131,163 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
     expect(buildsFor(body, TAP)).toEqual(['art', 'narration', 'rom']);
     expect(buildsFor(body, ALWAYS)).toEqual(['art', 'narration']);
     expect(buildsFor({ ...body, korean: { ko: '해', romanization: 'hae', gloss: 'sun', speech: 'word' } }, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
+  });
+});
+
+describe('buildsFor: the reading slides (AMENDMENTS-LECTURE-V2 section 5.2, LV-S1)', () => {
+  const line = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const sentence = (picture?: string): SlideBody => ({ kind: 'sentence', sentence: line('물을 마셔요.', 'mureul masyeoyo', 'I drink water.'), ...(picture ? { picture } : {}) });
+  const pattern = (note = true): SlideBody => ({
+    kind: 'pattern',
+    frame: { pieces: ['', '을/를 먹어요.'], romanization: '___eul/reul meogeoyo', gloss: 'I eat ___.' },
+    ...(note ? { note: [{ text: 'Put ' }, { ko: '을', romanization: 'eul' }, { text: ' after a final consonant.' }] } : {}),
+    examples: [line('밥을 먹어요.', 'babeul meogeoyo', 'I eat rice.'), line('사과를 먹어요.', 'sagwareul meogeoyo', 'I eat an apple.')],
+  });
+  const readAlong: SlideBody = {
+    kind: 'read-along',
+    lines: [
+      { speaker: 'Grandma', ...line('밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?') },
+      { speaker: 'Hoya', ...line('네, 먹었어요.', 'ne meogeosseoyo', 'Yes, I ate.') },
+    ],
+  };
+  const realia: SlideBody = {
+    kind: 'realia',
+    sheet: { kind: 'menu', entries: [{ id: 'gimbap', text: { ko: '김밥', romanization: 'gimbap' } }], alt: 'A menu.', spoken: { text: '김밥', romanization: 'gimbap' } },
+    keyWords: [line('김밥', 'gimbap', 'seaweed rice roll')],
+  };
+
+  it("sentence: Korean with its romanization, the meaning, the picture; 'tap' puts the romanization one build after the Korean", () => {
+    expect(buildsFor(sentence('word:food-water'), ALWAYS)).toEqual(['ko', 'gloss', 'art']);
+    expect(buildsFor(sentence('word:food-water'), TAP)).toEqual(['ko', 'rom', 'gloss', 'art']);
+    expect(buildsFor(sentence(), ALWAYS)).toEqual(['ko', 'gloss']);
+  });
+
+  it("pattern: frame, note, example 1, example 2; 'tap' gives each its romanization one build later", () => {
+    expect(buildsFor(pattern(), ALWAYS)).toEqual(['frame', 'note', 'example', 'example']);
+    expect(buildsFor(pattern(), TAP)).toEqual(['frame', 'rom', 'note', 'rom', 'example', 'rom', 'example', 'rom']);
+    expect(buildsFor(pattern(false), ALWAYS)).toEqual(['frame', 'example', 'example']);
+  });
+
+  it("read along: one build per line; 'tap' puts each line's romanization one build after it", () => {
+    expect(buildsFor(readAlong, ALWAYS)).toEqual(['line', 'line']);
+    expect(buildsFor(readAlong, TAP)).toEqual(['line', 'rom', 'line', 'rom']);
+  });
+
+  it("read along with no Korean voice (together): one build shows every line; 'tap' adds one build for their romanization", () => {
+    const together: SlideBody = { ...(readAlong as Extract<SlideBody, { kind: 'read-along' }>), together: true };
+    expect(buildsFor(together, ALWAYS)).toEqual(['line']);
+    expect(buildsFor(together, TAP)).toEqual(['line', 'rom']);
+  });
+
+  it("realia: the sheet, then the key words; 'tap' shows each part's romanization one build after it", () => {
+    expect(buildsFor(realia, ALWAYS)).toEqual(['sheet', 'words']);
+    expect(buildsFor(realia, TAP)).toEqual(['sheet', 'rom', 'words', 'rom']);
+  });
+
+  it('realia with no key words (a Realia Read sheet before its questions, LV-S2): the sheet alone', () => {
+    const sheetOnly: SlideBody = { ...(realia as Extract<SlideBody, { kind: 'realia' }>), keyWords: [] };
+    expect(buildsFor(sheetOnly, ALWAYS)).toEqual(['sheet']);
+    expect(buildsFor(sheetOnly, TAP)).toEqual(['sheet', 'rom']);
+  });
+
+  it("the question slides (LV-S2): question, then answer, with 'tap' too (the options' romanization waits for the answer, D2)", () => {
+    const listen: SlideBody = { kind: 'quiz', prompt: { ask: 'listen', line: line('빵', 'ppang', 'bread'), speech: 'word' }, options: [{ ko: '빵', romanization: 'ppang', correct: true }], textPrompt: false };
+    const reply: SlideBody = { kind: 'quiz', prompt: { ask: 'reply', line: line('밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?') }, options: [], textPrompt: false };
+    const sheet = (realia as Extract<SlideBody, { kind: 'realia' }>).sheet;
+    const asked: SlideBody = { kind: 'quiz', prompt: { ask: 'realia', text: 'How much is this?', sheet }, options: [{ figure: '1,000 won', correct: true }], textPrompt: false };
+    for (const body of [listen, reply, asked]) {
+      expect(buildsFor(body, ALWAYS)).toEqual(['question', 'answer']);
+      expect(buildsFor(body, TAP)).toEqual(['question', 'answer']);
+    }
+  });
+});
+
+describe('buildsFor: the sentence build (AMENDMENTS-LECTURE-V2 section 5.2, LV-S3)', () => {
+  const sentence = { ko: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo', gloss: 'My friend goes to school.', spoken: { text: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo' } };
+  const tiles = [
+    { ko: '친구가', romanization: 'chinguga' },
+    { ko: '학교에', romanization: 'hakgyoe' },
+    { ko: '가요', romanization: 'gayo' },
+  ];
+  const bank = [{ tile: 2 }, { distractor: { ko: '와요', romanization: 'wayo' } }, { tile: 0 }, { tile: 1 }];
+
+  it('the bank, one build per tile, then the whole sentence; romanization only at the whole build, with tap too', () => {
+    const body: SlideBody = { kind: 'sentence-build', sentence, tiles, bank };
+    expect(buildsFor(body, ALWAYS)).toEqual(['bank', 'tile', 'tile', 'tile', 'whole']);
+    expect(buildsFor(body, TAP)).toEqual(['bank', 'tile', 'tile', 'tile', 'whole']);
+  });
+
+  it('a particle tile: its ending is chosen at the build right after the tile reaches the line', () => {
+    const particle = { stem: '친구', choices: [{ ko: '이', romanization: 'i' }, { ko: '가', romanization: 'ga' }] as const, answer: 1 as const };
+    const body: SlideBody = { kind: 'sentence-build', sentence, tiles: [{ ...tiles[0]!, particle }, tiles[1]!, tiles[2]!], bank };
+    expect(buildsFor(body, ALWAYS)).toEqual(['bank', 'tile', 'particle', 'tile', 'tile', 'whole']);
+    expect(buildsFor(body, TAP)).toEqual(['bank', 'tile', 'particle', 'tile', 'tile', 'whole']);
+  });
+});
+
+describe('buildsFor: write together (AMENDMENTS-LECTURE-V2 section 5.2, LV-S4)', () => {
+  const line = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const frame = { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' };
+  const block = (ko: string) => ({ ko, romanization: 'x' });
+
+  it('type and trace: the prompt, then the answer; frame: the frame, its banks, the example; the same with tap', () => {
+    const type: SlideBody = { kind: 'write-together', variant: 'type', prompt: 'Ask for water.', answer: line('물 주세요', 'mul juseyo', 'Water, please.') };
+    const trace: SlideBody = { kind: 'write-together', variant: 'trace', word: line('아침', 'achim', 'morning') };
+    const filled: SlideBody = {
+      kind: 'write-together',
+      variant: 'frame',
+      frame,
+      banks: [[block('밥'), block('빵')]],
+      example: { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } },
+    };
+    for (const opts of [ALWAYS, TAP]) {
+      expect(buildsFor(type, opts)).toEqual(['prompt', 'answer']);
+      expect(buildsFor(trace, opts)).toEqual(['prompt', 'answer']);
+      expect(buildsFor(filled, opts)).toEqual(['frame', 'bank', 'example']);
+    }
+  });
+
+  it('the name round: the frame, then a table build per five groups (V12: ten groups, two table builds)', () => {
+    const groups = (n: number) => Array.from({ length: n }, (_, i) => [block(String.fromCharCode(0xac00 + i))]);
+    const own = (n: number): SlideBody => ({ kind: 'write-together', variant: 'own-name', frame, groups: groups(n) });
+    expect(SOUND_TABLE_GROUPS_PER_BUILD).toBe(5);
+    expect(buildsFor(own(10), ALWAYS)).toEqual(['frame', 'table', 'table']);
+    expect(buildsFor(own(10), TAP)).toEqual(['frame', 'table', 'table']);
+    expect(buildsFor(own(6), ALWAYS)).toEqual(['frame', 'table', 'table']);
+    expect(buildsFor(own(5), ALWAYS)).toEqual(['frame', 'table']);
+    expect(buildsFor(own(0), ALWAYS)).toEqual(['frame']);
+    expect(soundTablePages([1, 2, 3, 4, 5, 6, 7])).toEqual([[1, 2, 3, 4, 5], [6, 7]]);
+    expect(soundTablePages([])).toEqual([]);
+  });
+});
+
+describe('partsShown: what a reading slide shows at a build', () => {
+  it('each build but rom shows its part; with no rom builds the romanization comes with the part', () => {
+    expect(partsShown(['frame', 'note', 'example', 'example'], 0)).toEqual([{ name: 'frame', rom: true }]);
+    expect(partsShown(['frame', 'note', 'example', 'example'], 2)).toEqual([
+      { name: 'frame', rom: true },
+      { name: 'note', rom: true },
+      { name: 'example', rom: true },
+    ]);
+  });
+
+  it("with 'tap', a rom build shows the romanization of the part before it", () => {
+    const builds = ['line', 'rom', 'line', 'rom'] as const;
+    expect(partsShown(builds, 0)).toEqual([{ name: 'line', rom: false }]);
+    expect(partsShown(builds, 1)).toEqual([{ name: 'line', rom: true }]);
+    expect(partsShown(builds, 2)).toEqual([{ name: 'line', rom: true }, { name: 'line', rom: false }]);
+    expect(partsShown(builds, 3)).toEqual([{ name: 'line', rom: true }, { name: 'line', rom: true }]);
+  });
+
+  it('a reveal past the end shows every part; a negative one shows nothing', () => {
+    expect(partsShown(['sheet', 'words'], 9)).toHaveLength(2);
+    expect(partsShown(['sheet', 'words'], -1)).toEqual([]);
+  });
+});
+
+describe('joinSpoken: several pieces of Korean read in one go', () => {
+  it('joins the text and the romanization with a pause; one piece keeps its clip', () => {
+    expect(joinSpoken([{ text: '메뉴', romanization: 'menyu' }, { text: '김밥', romanization: 'gimbap', audioRef: 'a.mp3' }])).toEqual({ text: '메뉴, 김밥', romanization: 'menyu, gimbap' });
+    expect(joinSpoken([{ text: '김밥', romanization: 'gimbap', audioRef: 'a.mp3' }])).toEqual({ text: '김밥', romanization: 'gimbap', audioRef: 'a.mp3' });
   });
 });

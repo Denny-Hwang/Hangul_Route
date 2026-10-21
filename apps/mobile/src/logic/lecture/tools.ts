@@ -1,8 +1,9 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import type { QuizOption, SlideKind } from './build-steps';
+import type { QuizOption, QuizPrompt, SlideKind } from './build-steps';
 import type { PresenterEvent, PresenterState } from './controls';
 import type { Slide } from './deck-builder';
 import { TIMER_PRESETS_MS, formatRemaining, ringFraction, type TimerState } from './timer';
+import { typeCue } from './slide-view';
 
 /**
  * The class tools of F-TCH-004 PR 9 (spec sections 3.5, 3.7, 3.8, 3.14; design/screens/presenter/
@@ -82,6 +83,25 @@ export function optionContent(option: QuizOption): OptionContent {
 }
 
 /**
+ * How a question's options sit (V8, LV-S2): one row each (marker, Korean, romanization; the
+ * meaning joins the row at the answer build) for the words and sentences of a listen, reply or
+ * realia question and a realia figure; the 2 x 2 grid for pictures, for a listen question's
+ * letters and syllables (Match Sound's look) and for every earlier quiz.
+ */
+export function optionLayout(slide: { prompt: QuizPrompt; options: readonly QuizOption[] }): 'grid' | 'rows' {
+  if (slide.options.some((o) => o.picture !== undefined)) return 'grid';
+  switch (slide.prompt.ask) {
+    case 'listen':
+      return slide.prompt.speech === 'sound' ? 'grid' : 'rows';
+    case 'reply':
+    case 'realia':
+      return 'rows';
+    default:
+      return 'grid';
+  }
+}
+
+/**
  * Full screen (F or the bar's button): enter when not in it, leave when in it. Both directions are
  * a use of the tool; Start already entered full screen, so a first press usually leaves it.
  */
@@ -119,8 +139,31 @@ export interface GridItem {
   canHide: boolean;
 }
 
+/** The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong`, `sentence-build` as `build` and `write-together` as `write`. */
+export type GridKindKey = Exclude<SlideKind, 'read-along' | 'sentence-build' | 'write-together'> | 'readAlong' | 'build' | 'write';
+
+export function gridKindKey(kind: SlideKind): GridKindKey {
+  if (kind === 'read-along') return 'readAlong';
+  if (kind === 'write-together') return 'write';
+  return kind === 'sentence-build' ? 'build' : kind;
+}
+
 function gridTitle(slide: Slide, names: { activity: (preset: Extract<Slide, { kind: 'activity' }>['preset']) => string }): string {
   switch (slide.kind) {
+    case 'sentence':
+      return slide.sentence.gloss;
+    case 'pattern':
+      return slide.frame.gloss;
+    case 'read-along':
+      return slide.lines[0]?.gloss ?? '';
+    case 'realia':
+      return slide.sheet.alt;
+    case 'sentence-build':
+      // Like a question, nothing: its meaning shows only once the room has built the sentence.
+      return '';
+    case 'write-together':
+      // What its first build shows in the slide language; a trace word's meaning is its answer, so nothing.
+      return slide.variant === 'type' ? typeCue(slide) : slide.variant === 'trace' ? '' : slide.frame.gloss;
     case 'title':
     case 'card':
       return slide.title;

@@ -45,6 +45,7 @@ Phone:
 |  + open each learner's Learning Route      (claim learningRoute)
 |  + encouragement notes                     (claim feedbackNotes)
 |  + with the Family Plan, browse lessons    (claim browseAsLearner AND paidPlans = inApp)
+|  + lecture-mode-on-your-TV                 (claim lectureMode)
 +--------------------------------------+
 | H2 Plans                             |
 | free line (+ "more stages are coming" while plans are coming)

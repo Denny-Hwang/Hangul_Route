@@ -18,7 +18,7 @@ import { ChipGroup, H, HomeButton, Line, ring, text, type Focusable } from './ho
  * naming its panel; no `aria-pressed`), named "{title}, about {n} minutes". One card is open at a
  * time; the open card spans its row with a `borderWidth.thick` outline, and its panel holds the
  * fallback line when the preset cannot build what it names, the stage chips (Stage by stage), the
- * length chips (none for the warm-up) and **Start**. Changing a chip re-resolves the deck; nothing
+ * length chips (none for the warm-up, nor for a preset that fell back to it) and **Start**. Changing a chip re-resolves the deck; nothing
  * else moves. What the cards hold lives in the home's kept state (`HomeSnapshot`), so Back from
  * the start screen finds them as they were.
  */
@@ -55,6 +55,15 @@ function cardWords(preset: LecturePreset, w: Words): { title: string; line: stri
 
 const stageNumber = (stage: StageKey): number => Number(stage.slice('stage'.length));
 
+/**
+ * The stage Stage by stage builds: the kept one when it is still offered, else the first offered
+ * stage. The cards, their Start and Customize's opening stage all read this one value, so they
+ * resolve the same deck even when a kept home names a stage this bundle no longer offers.
+ */
+export function presetStageOf(stages: readonly StageKey[], kept: StageKey): StageKey {
+  return stages.includes(kept) ? kept : (stages[0] ?? 'stage1');
+}
+
 export interface PresetCardsProps {
   messages: Messages;
   ctx: PresetContext;
@@ -65,18 +74,23 @@ export interface PresetCardsProps {
   state: HomeSnapshot;
   onState: (patch: Partial<HomeSnapshot>) => void;
   onStart: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => void;
+  /**
+   * Recent has been read (a finished read with storage off counts, as empty). Until then every Start is
+   * disabled, so a ready-made lesson is never built from no history (Next lesson, Word review, the warm-up).
+   */
+  ready?: boolean;
   /** The section's width until it is measured (the page's estimate), so the first frame has its columns. */
   initialWidth?: number;
 }
 
-export function PresetCards({ messages, ctx, resolve, stages, state, onState, onStart, initialWidth = 0 }: PresetCardsProps): React.ReactElement {
+export function PresetCards({ messages, ctx, resolve, stages, state, onState, onStart, ready = true, initialWidth = 0 }: PresetCardsProps): React.ReactElement {
   const scale = useTypeScale();
   const ts = scale.size;
   const w = messages.learner.presenter.presets;
   const [width, setWidth] = useState(initialWidth);
   const columns = presetColumns(width, scale.factor);
   const order = useMemo(() => presenterPresetOrder(ctx), [ctx]);
-  const stage = stages.includes(state.stage) ? state.stage : (stages[0] ?? 'stage1');
+  const stage = presetStageOf(stages, state.stage);
   // What each card builds now: its minutes on the card, its fallback line in the panel (one result, as Start uses).
   const { lengths } = state;
   const resolved = useMemo(
@@ -99,6 +113,7 @@ export function PresetCards({ messages, ctx, resolve, stages, state, onState, on
           const built = resolved.get(preset)!;
           const words = cardWords(preset, w);
           const panelId = `presenter-preset-panel-${preset}`;
+          const lineId = `presenter-preset-line-${preset}`;
           return (
             <View
               key={preset}
@@ -116,7 +131,8 @@ export function PresetCards({ messages, ctx, resolve, stages, state, onState, on
               <Pressable
                 role="button"
                 aria-expanded={open}
-                {...{ 'aria-controls': panelId }}
+                // The name is "{title}, about {n} minutes"; the card's line is its description.
+                {...{ 'aria-controls': panelId, 'aria-describedby': lineId }}
                 accessibilityState={{ expanded: open }}
                 accessibilityLabel={messages.a11y.presenter.presetCard(words.title, built.minutes)}
                 onPress={() => onState({ open: open ? null : preset })}
@@ -132,7 +148,7 @@ export function PresetCards({ messages, ctx, resolve, stages, state, onState, on
                 <Text {...KOREAN_LINE_BREAK} style={text(ts.bodyLg, 'bold', colors.text.primary)}>
                   {words.title}
                 </Text>
-                <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>
+                <Text {...KOREAN_LINE_BREAK} nativeID={lineId} {...{ id: lineId }} style={text(ts.body, 'regular', colors.text.secondary)}>
                   {words.line}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, paddingTop: spacing.xs }}>
@@ -154,6 +170,7 @@ export function PresetCards({ messages, ctx, resolve, stages, state, onState, on
                     onMinutes={(m) => onState({ lengths: { ...state.lengths, [preset]: m } })}
                     onStage={(s) => onState({ stage: s })}
                     onStart={() => onStart(preset, minutes, stage)}
+                    ready={ready}
                   />
                 ) : null}
               </View>
@@ -175,6 +192,7 @@ function PresetPanel({
   onMinutes,
   onStage,
   onStart,
+  ready,
 }: {
   messages: Messages;
   preset: LecturePreset;
@@ -185,11 +203,15 @@ function PresetPanel({
   onMinutes: (m: PresetMinutes) => void;
   onStage: (s: StageKey) => void;
   onStart: () => void;
+  ready: boolean;
 }): React.ReactElement {
   const ts = useTypeScale().size;
   const w = messages.learner.presenter.presets;
   const fallback = resolved.fallback === 'zero' ? w.fallback.zero : resolved.fallback === 'warm-up' ? w.fallback.warmUp : resolved.fallback === 'restart' ? w.fallback.restart : null;
-  const lengths = PRESET_LENGTHS[preset];
+  // The chips of the preset that builds the deck: a Word review that fell back to the warm-up has
+  // the warm-up's one fixed length, so no chips (section 4.1), and the card's minutes stay true.
+  const lengths = PRESET_LENGTHS[resolved.preset];
+  const fallbackId = `presenter-preset-fallback-${preset}`;
   // Start is at least 2 x hero wide (presets.md item 3) from the regular width; in a narrower window it
   // is the panel's width up to 2 x hero, so at 320 px with 200 % text it never runs past the page (section 10).
   const regular = useWindowDimensions().width >= layout.breakpoint.regular;
@@ -197,7 +219,7 @@ function PresetPanel({
     <>
       {fallback !== null ? (
         // Information, never a warning colour (V3): `text.primary` on `surface.sunken`.
-        <View testID={`presenter-preset-fallback-${preset}`} style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
+        <View testID={fallbackId} nativeID={fallbackId} {...{ id: fallbackId }} style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}>
           <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.primary)}>
             {fallback}
           </Text>
@@ -220,7 +242,8 @@ function PresetPanel({
         </View>
       ) : null}
       <View style={{ alignItems: 'flex-end' }}>
-        <HomeButton label={w.start.cta} onPress={onStart} primary {...(regular ? { minWidth: touchTarget.hero * 2 } : { upTo: touchTarget.hero * 2 })} testID={`presenter-preset-start-${preset}`} />
+        {/* Start builds what the fallback line says, so a keyboard or screen-reader user hears it on Start too. */}
+        <HomeButton label={w.start.cta} onPress={onStart} primary disabled={!ready} describedBy={fallback !== null ? fallbackId : undefined} {...(regular ? { minWidth: touchTarget.hero * 2 } : { upTo: touchTarget.hero * 2 })} testID={`presenter-preset-start-${preset}`} />
       </View>
     </>
   );

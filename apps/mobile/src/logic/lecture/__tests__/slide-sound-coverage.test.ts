@@ -5,8 +5,8 @@ import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab'
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { lectureBundle } from '../content';
-import { expandDeck, type Slide } from '../deck-builder';
-import { slideSound } from '../slide-view';
+import { expandDeck, withBuilds, type Slide } from '../deck-builder';
+import { sequenceView, slideSound } from '../slide-view';
 import { readToMePlan } from '../story-slides';
 
 /**
@@ -14,7 +14,8 @@ import { readToMePlan } from '../story-slides';
  * 2026-10-17; owner report: a word card, 김밥 / gimbap, played nothing). Every shipped episode,
  * quest, story and vocabulary topic is expanded as `presenter-glyphs.test.ts` does, with a Korean
  * voice and without one, and every slide that draws Hangul must have a `slideSound` at its full
- * reveal, unless its kind is one of the few that have nothing of their own to play.
+ * reveal and at every build that shows Korean (romanization always and tap; the reading slides of
+ * LV-S1 among them), unless its kind is one of the few that have nothing of their own to play.
  */
 
 /** Hangul syllables, Hangul jamo and compatibility jamo. */
@@ -44,6 +45,20 @@ const drawsHangul = (slide: Slide): boolean => strings(slide).some((s) => [...s]
 function silentByDesign(slide: Slide): boolean {
   if (slide.kind === 'title' || slide.kind === 'story' || slide.kind === 'activity' || slide.kind === 'end') return true;
   return slide.kind === 'quiz' && (slide.prompt.ask === 'odd-one-out' || (slide.prompt.ask === 'check' && slide.prompt.target === undefined));
+}
+
+/**
+ * Whether the slide shows Korean at `reveal`. Every slide kind shows its Korean from build 0, but an
+ * order slide, whose steps appear one per build and may be in the UI language only: until a Korean
+ * step shows, it has nothing of its own to play; and a Type Hangul write-together slide (LV-S4), whose
+ * prompt is in the UI language and whose Korean is the answer, shown only at its answer build.
+ */
+function koreanShownAt(slide: Slide, reveal: number): boolean {
+  if (slide.kind === 'write-together') return slide.variant !== 'type' || slide.builds[reveal] === 'answer';
+  if (slide.kind !== 'sequence') return true;
+  const view = sequenceView(slide, reveal);
+  const steps = view.mode === 'order' ? view.steps : slide.steps.slice(0, view.count);
+  return steps.some((step) => step.ko !== undefined);
 }
 
 /** Every `spokenKo` the shipped content gives a Korean text, by that text (any object with both fields). */
@@ -91,6 +106,19 @@ describe('Sound plays the Korean on every slide that shows it (F-TCH-004 section
     expect(silent).toEqual([]);
   });
 
+  it.each([true, false])('at every build, with romanization always and tap, a slide that shows Korean has a sound (Korean voice: %s)', (canPlayKorean) => {
+    const silent: string[] = [];
+    for (const romanization of ['always', 'tap'] as const) {
+      for (const slide of withBuilds(everySlide(canPlayKorean), { romanization, strokeGuide: true })) {
+        if (!drawsHangul(slide) || silentByDesign(slide)) continue;
+        slide.builds.forEach((_, reveal) => {
+          if (koreanShownAt(slide, reveal) && slideSound(slide, reveal) === undefined) silent.push(`${romanization} ${slide.kind}: ${slide.key} @${reveal}`);
+        });
+      }
+    }
+    expect(silent).toEqual([]);
+  });
+
   it('every word card plays Korean it holds: its own word, or the spoken form the content gives it', () => {
     const words = everySlide(true).filter((s): s is Extract<Slide, { kind: 'vocab' }> => s.kind === 'vocab');
     expect(words.length).toBeGreaterThan(100);
@@ -117,12 +145,28 @@ describe('Sound plays the Korean on every slide that shows it (F-TCH-004 section
     expect(unsaid).toEqual([]);
   });
 
-  it('only a letter, a syllable and a Match Sound question play at the sound rate', () => {
+  it('only a letter, a syllable, a Match Sound question and a letter or syllable listen round play at the sound rate', () => {
+    let listenSounds = 0;
     for (const slide of everySlide(true)) {
       const sound = slideSound(slide);
       if (sound?.kind !== 'sound') continue;
-      const soundRate = slide.kind === 'letter' || slide.kind === 'syllable' || (slide.kind === 'quiz' && slide.prompt.ask === 'sound');
+      // A Listen & Pick letter or syllable round (`lp:sym:`, `lp:syl:`) plays at the sound rate, as the learner's game does (LV-S2).
+      const listen = slide.kind === 'quiz' && slide.prompt.ask === 'listen' && slide.prompt.speech === 'sound';
+      if (listen) listenSounds += 1;
+      const soundRate = slide.kind === 'letter' || slide.kind === 'syllable' || (slide.kind === 'quiz' && slide.prompt.ask === 'sound') || listen;
       expect(soundRate, slide.key).toBe(true);
+    }
+    expect(listenSounds).toBeGreaterThan(0);
+  });
+
+  it('every question slide (LV-S2) plays what it asks about: the heard prompt, the other speaker\'s line, the key word or the sheet', () => {
+    const asked = everySlide(true).filter((s): s is Extract<Slide, { kind: 'quiz' }> => s.kind === 'quiz' && ['listen', 'reply', 'realia'].includes(s.prompt.ask));
+    for (const ask of ['listen', 'reply', 'realia'] as const) expect(asked.some((s) => s.prompt.ask === ask), ask).toBe(true);
+    for (const slide of asked) {
+      const sound = slideSound(slide);
+      if (slide.prompt.ask === 'listen') expect(sound, slide.key).toEqual({ spoken: slide.prompt.line.spoken, kind: slide.prompt.speech });
+      else if (slide.prompt.ask === 'reply') expect(sound, slide.key).toEqual({ spoken: slide.prompt.line.spoken, kind: 'sentence' });
+      else if (slide.prompt.ask === 'realia') expect(sound, slide.key).toEqual({ spoken: slide.prompt.key?.spoken ?? slide.prompt.sheet.spoken, kind: 'word' });
     }
   });
 });

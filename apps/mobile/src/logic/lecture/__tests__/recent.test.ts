@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   RECENT_KEY,
   RECENT_MAX,
+  RECENT_READ_TIMEOUT_MS,
+  boundedRecent,
   emptyRecent,
   forgetDeck,
   loadRecent,
@@ -16,6 +18,7 @@ import {
   type RecentList,
   type RecentStore,
 } from '../recent';
+import { recentView } from '../home-view';
 
 const deck = (n: number, over: Partial<LectureDeck> = {}): LectureDeck =>
   LectureDeckSchema.parse({
@@ -290,6 +293,43 @@ describe('Recent keeps items a newer build saved (AMENDMENTS-LECTURE-V2 section 
       { deck: { v: 9, id: 'lecture:x', pad: 'x'.repeat(13_000) } },
     ]) {
       expect(parseRecent({ v: 1, items: [bad] }), JSON.stringify(bad).slice(0, 60)).toEqual(emptyRecent());
+    }
+  });
+});
+
+describe('boundedRecent: a boot read that never settles does not hold the home (FU-1 review of #742)', () => {
+  it('a read that never resolves answers storage off, not writable, once the bound passes; the home then counts it ready', async () => {
+    vi.useFakeTimers();
+    try {
+      const store: RecentStore = { readJson: () => new Promise<unknown>(() => undefined), writeJson: vi.fn(async () => undefined) };
+      const read = readRecent(store);
+      let seen: Awaited<ReturnType<typeof readRecent>> | null = null;
+      void boundedRecent(read).then((loaded) => {
+        seen = loaded;
+      });
+      await vi.advanceTimersByTimeAsync(RECENT_READ_TIMEOUT_MS - 1);
+      expect(seen).toBeNull();
+      expect(recentView(seen).status).toBe('loading');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(seen).toEqual({ list: emptyRecent(), writable: false, off: true });
+      expect(recentView(seen).status).toBe('off');
+      expect(store.writeJson).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a read that settles in time answers what it read, and the timer is cleared', async () => {
+    vi.useFakeTimers();
+    try {
+      const raw = { v: 1, items: [{ deck: deck(1), savedAt: at(1) }] };
+      const store: RecentStore = { readJson: async () => raw, writeJson: async () => undefined };
+      const loaded = boundedRecent(readRecent(store));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(await loaded).toEqual({ list: parseRecent(raw), writable: true });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
     }
   });
 });

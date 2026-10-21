@@ -286,5 +286,7 @@ export const a11y = {
     chooserRemove: (title: string) => `빼기: ${title}`,
     answerMark: '호야의 답',
     timerLeft: (t: string) => `남은 시간: ${t}`,
+    slot: '빈칸',
+    tilePlaced: (word: string) => `놓은 낱말: ${word}`,
   },
 } satisfies DeepPartial<Messages['a11y']>;

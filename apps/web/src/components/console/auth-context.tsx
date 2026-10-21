@@ -6,6 +6,7 @@ import { accountLocaleOf, signInMerge, withAccountLocale, type UnsafeMetadata } 
 import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkLocalization } from '@/lib/console/clerk-localization';
 import { clerkPublishableKey } from '@/lib/console/config';
+import { signInHome } from '@/lib/console/grown-up-lock';
 import { ROUTES } from '@/lib/console/routing';
 import { readSession, writeSession, type ConsoleSession } from '@/lib/console/session';
 import { browserOnline, clerkUiOpen, guardReverify, settleReverify, type ReverifyOutcome } from '@/lib/console/step-up';
@@ -36,9 +37,10 @@ export interface ConsoleAuth {
   /**
    * Signs out, removing the grown-up unlock, the console session, the sign-in record and the
    * adult-step tick from this tab first
-   * (F-APP-001 section 3.9), then goes to `redirectUrl` (`/signin` by default; the lock's Sign in
-   * again passes `/signin?next=…`). [SA] A waiting administrator invite goes too, except with `keepInvite` (the
-   * invite page's Use another account and the lock's Sign in again, AMENDMENTS-SEATS-ADMINS section 6.6 step 1).
+   * (F-APP-001 section 3.9), then goes to `redirectUrl` (under Clerk `/signin?lang=<the console's language>` by
+   * default, AMENDMENTS-DISPLAY-NAV section 6; the lock's Sign in again passes `/signin?next=…&lang=…`). [SA] A waiting
+   * administrator invite goes too, except with `keepInvite` (the invite page's Use another account and the lock's Sign in
+   * again, AMENDMENTS-SEATS-ADMINS section 6.6 step 1).
    */
   signOut: (redirectUrl?: string, options?: { keepInvite?: boolean }) => Promise<void>;
   /** Dev mode only: store a dev session. No-op under Clerk. */
@@ -135,6 +137,8 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
   // One enhanced fetcher for the whole tab; each step-up passes it the call to make (Clerk hands its arguments to
   // both the first call and the retry), so an attempt that never settled cannot retry a later request.
   const enhanced = useReverification((call: () => Promise<unknown>) => call());
+  // Sign out lands on `/signin` in this page's language (AMENDMENTS-DISPLAY-NAV section 6).
+  const { locale } = useConsoleLocale();
   const reverify = useCallback(<T,>(fetcher: () => Promise<T>, first: T): Promise<ReverifyOutcome<T>> => {
     // Clerk's first call answers with the hint already in hand; only the retry reaches the Worker.
     let replay = true;
@@ -152,7 +156,7 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
       session: sessionFromClerkUser(user),
       sessionId: user ? (sessionId ?? null) : null,
       getToken: () => getToken().catch(() => null),
-      signOut: (redirectUrl = ROUTES.signIn, options = {}) => {
+      signOut: (redirectUrl = signInHome(locale), options = {}) => {
         clearGrownUpTab(undefined, options);
         clearSignInTab();
         return clerk.signOut({ redirectUrl });
@@ -161,7 +165,7 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
       reverify,
       localeUser: isLoaded && user ? (user as unknown as LocaleUser) : null,
     }),
-    [isLoaded, user, sessionId, getToken, clerk, reverify],
+    [isLoaded, user, sessionId, getToken, clerk, reverify, locale],
   );
   return <ConsoleAuthContext.Provider value={value}>{children}</ConsoleAuthContext.Provider>;
 }
@@ -207,11 +211,13 @@ export function ConsoleAuthProvider({ children }: { children: ReactNode }): JSX.
   // The Clerk widget speaks the console's language (owner items 6 and 7); a change re-localizes it in place.
   const { locale } = useConsoleLocale();
   const localization = useMemo(() => clerkLocalization(locale), [locale]);
+  // A sign-out Clerk starts by itself (a session ended in another tab, its own widget) lands with lang too (DN-6 section 6).
+  const afterSignOutUrl = signInHome(locale);
   if (publishableKey) {
     return (
       <ClerkProvider
         publishableKey={publishableKey}
-        afterSignOutUrl={ROUTES.signIn}
+        afterSignOutUrl={afterSignOutUrl}
         signInUrl={ROUTES.signIn}
         signUpUrl={CREATE_ACCOUNT_URL}
         localization={localization}

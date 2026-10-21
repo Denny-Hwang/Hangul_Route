@@ -142,7 +142,7 @@ describe('the class-moves page: a 401 (review of #504)', () => {
     const button = root.find((n) => n.type === 'button' && n.props['data-testid'] === 'transfers-sign-in');
     expect(textOf(button)).toBe(getMessages('en').console.lock.signInAgain.cta);
     await act(async () => button.props.onClick());
-    expect(state.signedOutTo).toBe(`/signin?next=${encodeURIComponent('/parent/space/transfers?id=space%3Af')}`);
+    expect(state.signedOutTo).toBe(`/signin?next=${encodeURIComponent('/parent/space/transfers?id=space%3Af')}&lang=en`);
   });
 });
 

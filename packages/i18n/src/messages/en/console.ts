@@ -181,7 +181,17 @@ export const consoleMsgs = {
     /** The persona switch and the persona name; the parent persona is labelled Family (OD-14). */
     persona: { parent: 'Family', teacher: 'Teacher' },
     /** Adult nav labels (F-APP-001 `ADULT_NAV`); an item whose sibling flag is off is not drawn. */
-    nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing', classReports: 'Class reports' },
+    nav: {
+      home: 'Home',
+      reports: 'Reports',
+      notes: 'Notes',
+      classes: 'Classes',
+      lessons: 'Lessons',
+      billing: 'Billing',
+      classReports: 'Class reports',
+      /** Lecture mode for both personas, after Lessons (AMENDMENTS-LECTURE-V2 E3, LV-5); the one name of LV-D2. */
+      lecture: 'Lecture mode',
+    },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /**
@@ -1043,15 +1053,34 @@ export const consoleMsgs = {
    * (the page renders them marked `lang="ko"`, §3.4 rule 5). No learner name is ever an argument.
    */
   lecture: {
-    title: 'Lecture',
-    titleFor: (space: string) => `${space} · lecture`,
+    /** One name everywhere (AMENDMENTS-LECTURE-V2 LV-D2): the same value as `learner.presenter.home.title` (`lecture-name.test.ts`). */
+    title: 'Lecture mode',
+    titleFor: (space: string) => `${space} · lecture mode`,
     back: (space: string | null) => (space ? `Back to ${space}` : 'Back to the space'),
-    intro: 'Build a slide lesson from your content and show it on a classroom screen.',
+    /** Neutral for a class and a family (AMENDMENTS-LECTURE-V2 section 6). */
+    intro: 'Show a slide lesson on a projector or TV, in class or at home.',
     /** The page while `NEXT_PUBLIC_LECTURE_MODE` is off (the presenter is not in the learner app yet). */
-    comingSoon: 'Lecture mode is coming soon: slide lessons you can show on a classroom screen.',
+    comingSoon: 'Lecture mode is coming soon: slide lessons you can show on a projector or TV.',
     plansFailed: "This space's plans did not load, so this week's plan is not offered. Try again to load them.",
     replaceOutline: 'Start a new outline from this source? The changes you made here will be replaced.',
-    entry: { cta: 'Lecture' },
+    entry: { cta: 'Lecture mode' },
+    /**
+     * The Lecture mode card at the top of the teacher home and on the family home (AMENDMENTS-LECTURE-V2 E1, E2, LV-5;
+     * design/screens/app-shell/lecture-card.md). `title` is the one name (LV-D2). `noSpace` / `noSpaceFamily` show when
+     * the account has no space to teach in, and Start then opens the presenter in a new tab (`opensTab` describes it).
+     */
+    card: {
+      title: 'Lecture mode',
+      tagline: 'Teach on a big screen',
+      bodyClass: "Show a ready lesson on a projector or TV: big letters, sounds and a few questions. Nobody's progress changes.",
+      bodyFamily: "Put a lesson on your TV and learn together at home. No setup needed, and nobody's progress changes.",
+      cta: 'Start lecture mode',
+      chooseClass: 'Which class?',
+      chooseFamily: 'Which family?',
+      noSpace: 'No class needed: you can still show a lesson.',
+      noSpaceFamily: 'You can show a lesson without a family space.',
+      opensTab: 'Opens in a new tab',
+    },
     presentPlan: { cta: 'Present this plan' },
     revisitChip: { cta: 'Revisit together' },
     source: {
@@ -1065,9 +1094,6 @@ export const consoleMsgs = {
       revisitWith: (jamo: string) => `Revisit together: ${jamo}`,
       trimmed: (count: number, max: number) =>
         plural('en', count, { one: `${count} more item did not fit: a lesson holds ${max} at most.`, other: `${count} more items did not fit: a lesson holds ${max} at most.` }),
-    },
-    catalogue: {
-      title: 'Catalogue',
     },
     outline: {
       title: 'Outline',
@@ -1092,12 +1118,17 @@ export const consoleMsgs = {
       block: {
         quiz: (rounds: number) => plural('en', rounds, { one: `Quick quiz: ${rounds} question`, other: `Quick quiz: ${rounds} questions` }),
         classCode: 'Class code on the last slide',
+        /** The same row on a family space (AMENDMENTS-LECTURE-V2 section 6). */
+        familyCode: 'Family code on the last slide',
         letters: (count: number) => plural('en', count, { one: `${count} letter`, other: `${count} letters` }),
         cards: (count: number) => plural('en', count, { one: `${count} heritage card`, other: `${count} heritage cards` }),
+        /** A Word review block: the most word cards it shows (10 or 20; the presenter shows fewer when fewer words were taught). */
+        words: (count: number) => plural('en', count, { one: `${count} word`, other: `${count} words` }),
       },
       addQuiz: { cta: '+ Quiz' },
       addActivity: { cta: '+ Activity' },
       addClassCode: { cta: '+ Class code' },
+      addFamilyCode: { cta: '+ Family code' },
     },
     /** `ACTIVITY_PRESETS` (content-schema), the same names the presenter shows. */
     activity: {
@@ -1122,7 +1153,7 @@ export const consoleMsgs = {
       /** Under the select while a language is chosen: the language then travels in the deck (AMENDMENTS-LECTURE-V2 section 18.4). */
       languageHintChosen: (endonym: string) => `Slides show in ${endonym} on every device, a copied link too.`,
     },
-    titleField: { label: 'Lesson title', placeholder: 'Week 3 letters', hint: "Do not put a student's name in the title." },
+    titleField: { label: 'Lesson title', placeholder: 'Week 3 letters', hint: "Do not put anyone's name in the title." },
     titleProblem: {
       empty: 'Give the lesson a title.',
       chars: 'Use letters, numbers, spaces and simple punctuation, 60 at most.',
@@ -1131,6 +1162,8 @@ export const consoleMsgs = {
     },
     check: {
       title: 'Check the classroom device',
+      /** The same list's title on a family space (AMENDMENTS-LECTURE-V2 section 6). */
+      titleFamily: 'Check the TV or screen',
       offline: 'Open the presenter once with Wi-Fi so it works offline.',
       voice: 'Check there is a Korean voice (the presenter tells you).',
       screen: 'Check the projector or TV shows the whole slide.',
@@ -1143,8 +1176,50 @@ export const consoleMsgs = {
     copyFailed: 'The link was not copied. Try again, or use Open presenter.',
     linkFailed: 'This lesson does not fit in a link. Take out a few items and try again.',
     copyHasCode: 'This link holds your class join code. Anyone with the link can join until you make a new code. Copy it anyway?',
+    copyHasFamilyCode: 'This link holds your family join code. Anyone with the link can join until you make a new code. Copy it anyway?',
     popupBlocked: 'Allow pop-ups for this site to open the presenter, or copy the link.',
     nothing: 'Add at least one item to the outline.',
+    /**
+     * Ready-made lessons first (AMENDMENTS-LECTURE-V2 sections 4, 4.6 and 12.2, row LV-4): the six presets with their
+     * length and stage chips, what the chosen one holds, and Customize with the grouped chooser (section 18.3). The
+     * same values as `learner.presenter.presets.*`; `zero.short`, `stage.chip`, `story.title`, `words.title`,
+     * `warmup.short` and `next.title` are deck titles. The plan title is data.
+     */
+    presets: {
+      title: 'Ready-made lessons',
+      lead: 'Pick a ready lesson. You can look at it before you start.',
+      next: {
+        title: 'Next lesson',
+        class: 'Picks up where your class is.',
+        family: 'Picks up where your family is.',
+        plan: (plan: string) => `From this week's plan: ${plan}`,
+      },
+      zero: { title: 'Start from zero: Hangul week 1', short: 'Hangul week 1', body: 'The first letters, their sounds and simple syllables.' },
+      stage: {
+        title: 'Stage by stage',
+        body: 'Pick a stage. The lesson is built for you.',
+        choose: 'Choose a stage',
+        chip: (n: number) => `Stage ${n}`,
+      },
+      story: { title: 'Story time', body: 'A Korean story with pictures, then a few questions.' },
+      words: { title: 'Word review', body: 'Words from recent lessons, then a short quiz.' },
+      warmup: { title: 'Quick 10-minute warm-up', short: 'Quick warm-up', body: 'Letters to revisit, a few questions and writing in the air.' },
+      length: { title: 'How long?', option: (n: number) => `${n} min` },
+      preview: { title: "What's in this lesson" },
+      customize: { cta: 'Customize', lead: 'Choose each part yourself. You never have to.' },
+      fallback: {
+        zero: 'Nothing to follow yet, so this starts with Hangul week 1.',
+        warmUp: 'No words this week yet, so this is the warm-up instead.',
+        restart: 'Every story was shown here, so this starts again from the first.',
+      },
+      /** Customize's grouped chooser (section 18.3): one tab at a time; its rows add and remove Outline blocks. */
+      chooser: {
+        label: 'What to add',
+        tab: { lessons: 'Lessons', stories: 'Stories', words: 'Word topics' },
+        lessonsIn: (n: number) => plural('en', n, { one: `${n} lesson inside`, other: `${n} lessons inside` }),
+        showMore: (n: number) => `Show ${n} more`,
+      },
+    },
   },
 
   /**

@@ -86,10 +86,13 @@ describe('presenter presets strings (LV-3)', () => {
     expect(es.learner.presenter.presets.stage.chip(2)).toBe('Etapa 2');
     expect(es.learner.presenter.presets.warmup.title).toBe('Calentamiento rápido de 10 minutos');
     expect(es.learner.presenter.presets.chooser.tab.words).toBe('Temas de palabras');
-    expect(es.learner.presenter.presets.chooser.summary(1, 4)).toBe('1 parte · unos 4 min');
-    expect(es.learner.presenter.presets.chooser.summary(3, 33)).toBe('3 partes · unos 33 min');
+    expect(es.learner.presenter.presets.chooser.summary(1, 4)).toBe('1 parte · aprox. 4 min');
+    expect(es.learner.presenter.presets.chooser.summary(3, 33)).toBe('3 partes · aprox. 33 min');
+    // The footer's minutes read like the rows' and the cards' (`home.quick.minutes`, "aprox. {n} min").
+    expect(es.learner.presenter.presets.chooser.summary(3, 33).endsWith(es.learner.presenter.home.quick.minutes(33))).toBe(true);
     expect(es.learner.presenter.presets.preview.quiz(4)).toBe('Quiz rápido: 4 preguntas');
-    expect(es.a11y.presenter.presetCard('Hora del cuento', 20)).toBe('Hora del cuento, unos 20 minutos');
+    // The card's name spells out the "aprox." its visible minutes show.
+    expect(es.a11y.presenter.presetCard('Hora del cuento', 20)).toBe('Hora del cuento, aproximadamente 20 minutos');
     expect(es.a11y.presenter.chooserRemove('Lecciones')).toBe('Quitar Lecciones');
     expect(es.learner.presenter.slide.end.codeTitle).toBe('Únete con este código');
     expect(es.learner.presenter.state.invalid.cta).toBe('Elegir una lección');

@@ -220,6 +220,21 @@ describe('the presenter home order and its decks', () => {
 
   it('returns null for blocks the schema refuses', () => {
     expect(presetLectureDeck({ blocks: [], preset: 'warm-up' }, { title: 'Quick warm-up', now: NOW, rng: () => 0.1 })).toBeNull();
+    expect(presetLectureDeck({ blocks: [], preset: 'warm-up' }, { title: 'Quick warm-up', fallbackTitle: 'Quick warm-up', now: NOW, rng: () => 0.1 })).toBeNull();
+  });
+
+  it('a localized title the deck schema refuses gives way to the English one, so Start still opens a start screen', () => {
+    const en = getMessages('en').learner.presenter.presets;
+    for (const preset of LECTURE_PRESETS) {
+      const resolved = resolvePreset(preset, PRESET_LENGTHS[preset][0]!, presenterPresetContext(null, NOW));
+      // A title of a later locale the deck title class cannot hold (TD8).
+      expect(presetLectureDeck(resolved, { title: 'Урок недели', now: NOW, rng: () => 0.3 }), preset).toBeNull();
+      const built = presetLectureDeck(resolved, { title: 'Урок недели', fallbackTitle: presetTitle(resolved, en), now: NOW, rng: () => 0.3 });
+      expect(built?.title, preset).toBe(presetTitle(resolved, en));
+    }
+    // A title the schema takes is kept.
+    const zero = resolvePreset('hangul-week-1', 20, presenterPresetContext(null, NOW));
+    expect(presetLectureDeck(zero, { title: '한글 1주차', fallbackTitle: 'Hangul week 1', now: NOW, rng: () => 0.3 })?.title).toBe('한글 1주차');
   });
 });
 

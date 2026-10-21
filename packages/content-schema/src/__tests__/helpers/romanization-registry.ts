@@ -78,6 +78,8 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'apps/mobile/src/logic/write-frame/e2e-rounds.ts', reason: 'test-only Write Frame rounds played by the fixture-build e2e and the component tests (F-CURR-001 G-5), never shipped; their romanization is still checked by apps/mobile/src/logic/write-frame/__tests__/e2e-rounds.test.ts' },
   { path: 'apps/mobile/src/logic/write-frame/flow.ts', reason: 'Hangul character-class regex and a comment naming the cast name (F-CURR-001 G-5)' },
   { path: 'apps/mobile/src/logic/write-frame/view.ts', reason: 'Hangul character-class regex and doc examples of the fitted ending (F-CURR-001 G-5)' },
+  { path: 'apps/mobile/src/logic/lecture/deck-builder.ts', reason: 'a doc comment on the write-frame slide: the fitted-ending example (observation O2: 밥 with 을/를), no shipped text; the slides read their Korean from the bundle (AMENDMENTS-LECTURE-V2 LV-S2, LV-S4)' },
+  { path: 'apps/mobile/src/logic/lecture/stage-constants.ts', reason: 'doc comments on the stage sizes naming the jamo (ㅁ, ㅇ, ㅎ) and a sound-table block (쭈), no shipped text (AMENDMENTS-LECTURE-V2 LV-S4)' },
   { path: 'apps/mobile/src/screens/minigames/WriteFrameGame.tsx', reason: 'the cast name 호야 prefilled in the grown-up preview of the name round (F-CURR-001 §3.7), drawn with the romanization the converter gives' },
   { path: 'apps/mobile/src/logic/profiles/profile-model.ts', reason: 'character-class regex and a comment for the allowed name characters' },
   { path: 'packages/content-schema/src/romanization/', reason: 'the converter: golden-vector comments and doc examples, no shipped content' },
