@@ -18,7 +18,7 @@ export type WriteTogetherBody = Extract<Slide, { kind: 'write-together' }>;
  * Compact levels (`useFitLevel`), for a long frame, two word banks or the name round's sound table on
  * a small stage: 1 draws the Korean of a frame, a target and an example one size down (`title` to
  * `prompt`, `prompt` to `body`), the trace ghost at `presenter.size.display`, and lets each block of the
- * sound table take only its own width; 2 draws the table's blocks and every part's gaps tight. Never
+ * sound table take only its own width; 2 draws the table's blocks (no side padding) and every part's gaps tight. Never
  * below the stage text floor (18 px).
  */
 const MAX_LEVEL = 2;
@@ -294,8 +294,8 @@ function OwnNameParts({ slide, view, line, level }: { slide: Variant<'own-name'>
 
 /**
  * One page of the sound table: a row per group, `SOUND_CELL_W` units a block (13 across the content
- * area); at a compact level each block takes only the width of its own text, so a phone's text floor
- * still fits a group of 13 on a row.
+ * area); at a compact level each block takes only the width of its own text (at level 2 with no side
+ * padding), so a phone's text floor still fits a group of 13 on a row.
  */
 function SoundTable({ groups, level, unit }: { groups: ReadonlyArray<readonly SheetText[]>; level: number; unit: number }): React.ReactElement {
   const size = useStageText();
@@ -313,7 +313,8 @@ function SoundTable({ groups, level, unit }: { groups: ReadonlyArray<readonly Sh
               testID="presenter-write-cell"
               role="listitem"
               style={{
-                ...(level >= 1 ? { minWidth: caption + 2 * border, paddingHorizontal: units(unit, spacing.xs) } : { width: Math.max(units(unit, SOUND_CELL_W), caption * SOUND_CELL_EM) }),
+                // Level 2 drops the block's side padding too: a row of 13 at a phone's text floor (`cheo`, `chae`) then fits a wider fallback font for the romanization.
+                ...(level >= 1 ? { minWidth: caption + 2 * border, paddingHorizontal: level >= 2 ? 0 : units(unit, spacing.xs) } : { width: Math.max(units(unit, SOUND_CELL_W), caption * SOUND_CELL_EM) }),
                 alignItems: 'center',
                 paddingVertical: level >= 2 ? 0 : units(unit, spacing.xxs),
                 borderWidth: border,
