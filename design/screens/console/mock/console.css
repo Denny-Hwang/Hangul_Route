@@ -1,0 +1,189 @@
+/*
+ * AMENDMENTS-SEATS-ADMINS design row SA-0b: static design mock of the inline rename, the school's Administrators
+ * panel and the administrator invite page on app.hangulroute.com (not shipped code). Wireframes:
+ * design/wireframes/console/rename-inline.md, admins-panel.md, admin-invite-accept.md, school-admin.md.
+ *
+ * The pages link three sheets, in this order: ../../app-shell/mock/app-shell.css (the token custom properties,
+ * every value a token of packages/design-system/src/tokens.ts named after it: --spacing-xl is spacing.xl; the
+ * adult frame, buttons, panels, /signin and the design board), then ../../app-shell/mock/display-nav.css (the
+ * current frame: Aa, Learner app exit, PageBack; the Display sheet and the ConfirmSheet), then this sheet. The
+ * block below copies the three tokens those sheets do not carry; nothing else redefines a token.
+ *
+ * Units: text in rem (token / 16), so the browser text size enlarges every line; the console switch in em (45em,
+ * F-APP-001 section 3.8), mobile first. Numbers that are not tokens are named once in the second block and listed
+ * in ../README.md, "Constants".
+ */
+:root {
+  --colors-feedback-successDark: #2C5E3F; /* colors.feedback.successDark: the check glyph of a done line */
+  --shadow-modal: 0 12px 32px rgba(42, 31, 20, 0.18); /* shadows.modal (shadowColor text.primary, opacity 0.18, radius 32, y 12) */
+  --radii-xl: 24px;                        /* radii.xl: the ConfirmSheet's top corners (ConfirmSheet.tsx) */
+}
+
+/* Constants: values that are not tokens (README "Constants"). */
+:root {
+  --name-field-max: 28rem; /* the rename input's widest column from 45em: 40 characters of size.bodyLg bold measure about 27rem, so a full-length name shows whole and Save and Cancel stay beside it */
+  --dialog-max: 28rem;     /* the step-up dialog's width (design/screens/billing/README.md, the same dialog) */
+  --demo-min: 24rem;       /* design board only: the height of a drawn sheet's backdrop, not UI */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Page head: PageBack, the title row (title + Rename), the line under it                      */
+/* ------------------------------------------------------------------------------------------ */
+.page { display: flex; flex-direction: column; gap: var(--spacing-xl); max-width: var(--max-width-reading); }
+.page.wide { max-width: var(--max-width-full); }
+.page-headblock { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.title-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-md); row-gap: var(--spacing-xs); }
+.title-row .page-title, .title-row .family-head { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.title-row .btn { flex: none; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The inline rename field (SA-3): label, input, hints, the one error line, Save and Cancel     */
+/* ------------------------------------------------------------------------------------------ */
+.rename { display: flex; flex-direction: column; gap: var(--spacing-xs); width: 100%; max-width: var(--max-width-reading); container: rename / inline-size; }
+.rename-label { font-weight: var(--weight-semibold); }
+/* Narrow: input, then the hint lines, then Save and Cancel. In a column of 36rem or more (a container query, so a     */
+/* narrow class row or board column keeps the narrow order) the buttons sit right of the input.                      */
+.rename-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-sm); }
+.rename-notes { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.rename-notes:empty { display: none; }
+.rename-input { width: 100%; min-width: 0; min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); border: var(--border-width-base) solid var(--colors-border-shape); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.rename-input[aria-invalid="true"] { border-color: var(--colors-text-primary); border-width: var(--border-width-thick); }
+.rename-input[readonly] { background: var(--colors-surface-sunken); }
+.rename-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.rename-hint { color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); }
+.rename-moves { display: flex; align-items: flex-start; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); }
+.rename-moves .icon { margin-top: var(--spacing-xxs); }
+/* The error line: text first, never colour alone (no feedback.danger): bold primary text and the thick input border. */
+.rename-error { color: var(--colors-text-primary); font-weight: var(--weight-semibold); line-height: var(--leading-relaxed); }
+.count-line { color: var(--colors-text-secondary); }
+@container rename (min-width: 36rem) {
+  .rename-grid { grid-template-columns: minmax(0, var(--name-field-max)) auto; grid-template-areas: "input actions" "notes notes"; align-items: start; }
+  .rename-input { grid-area: input; }
+  .rename-actions { grid-area: actions; flex-wrap: nowrap; }
+  .rename-notes { grid-area: notes; }
+}
+
+/* A polite live region drawn visibly on the board (it is visually hidden on the page). */
+.live-shown { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* School page blocks (SchoolAdmin), drawn as F-SCHOOL-001 ships them                          */
+/* ------------------------------------------------------------------------------------------ */
+.block { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.block > h2 { overflow-wrap: anywhere; font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; column-gap: var(--spacing-md); row-gap: var(--spacing-xxs); }
+.block-head h2 { min-width: 0; font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.licence-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.licence-row > div { display: flex; flex-direction: column; gap: var(--spacing-xxs); min-width: 0; }
+.invite-code { font-family: var(--family-mono); font-size: var(--size-display); font-weight: var(--weight-bold); letter-spacing: var(--spacing-sm); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.class-row { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-md) var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.class-row.archived { background: var(--colors-surface-sunken); }
+.class-row .class-name { font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.class-row .class-line { color: var(--colors-text-muted); font-size: var(--size-bodySm); }
+.class-row .row-wrap .btn { flex: 1 1 auto; }
+@media (min-width: 45em) {
+  .class-row { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .class-row .class-main { flex: 1 1 14rem; min-width: 0; }
+  .class-row .row-wrap .btn { flex: none; }
+  .class-row.editing { flex-direction: column; align-items: stretch; }
+}
+.new-class { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--spacing-sm); }
+.new-class label { flex: 1 1 14rem; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xxs); font-size: var(--size-caption); color: var(--colors-text-muted); }
+.new-class input { width: 100%; min-width: 0; min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); font-size: var(--size-body); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Administrators panel (SA-4)                                                                  */
+/* ------------------------------------------------------------------------------------------ */
+.people { display: flex; flex-direction: column; border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); }
+.person { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--spacing-md); row-gap: var(--spacing-xs); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); }
+.person + .person { border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.person-name { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+.person-name b { font-weight: var(--weight-semibold); }
+.person.you { background: var(--colors-surface-canvas); }
+.invite-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--spacing-md); row-gap: var(--spacing-xs); padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-md); }
+.invite-row p { flex: 1 1 12rem; min-width: 0; color: var(--colors-text-secondary); }
+.about { color: var(--colors-text-secondary); line-height: var(--leading-relaxed); }
+.full-line { color: var(--colors-text-primary); line-height: var(--leading-relaxed); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.panel-line { color: var(--colors-text-primary); font-weight: var(--weight-semibold); line-height: var(--leading-relaxed); }
+
+/* The one-time invite box: a raised paper box with a strong border; the link in monospace, selectable, wrapping. */
+.invite-box { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); border: var(--border-width-base) solid var(--colors-brand-secondaryDark); border-radius: var(--radii-lg); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); }
+.invite-url { font-family: var(--family-mono); font-size: var(--size-bodySm); line-height: var(--leading-normal); overflow-wrap: anywhere; user-select: all; padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); }
+.invite-warning { display: flex; align-items: flex-start; gap: var(--spacing-sm); color: var(--colors-text-primary); line-height: var(--leading-relaxed); }
+.invite-warning .icon { margin-top: var(--spacing-xxs); }
+.invite-once { color: var(--colors-text-secondary); line-height: var(--leading-relaxed); }
+.status-line { color: var(--colors-text-secondary); font-size: var(--size-bodySm); min-height: var(--spacing-lg); }
+
+/* History: a disclosure, closed by default; one quiet line per event, newest first. */
+.disclosure { border-top: var(--border-width-thin) solid var(--colors-border-subtle); padding-top: var(--spacing-xs); }
+.disclosure > summary { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); padding-inline: var(--spacing-xs) var(--spacing-sm); color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); cursor: pointer; list-style: none; }
+.disclosure > summary::-webkit-details-marker { display: none; }
+.disclosure[open] > summary .icon { transform: rotate(90deg); }
+.history { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-xs) var(--spacing-md) var(--spacing-sm); }
+.history li { color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); overflow-wrap: anywhere; }
+
+/* Notices: neutral (sunken), info (infoLight), done (successLight with a check glyph). Never feedback.danger. */
+.note { padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); line-height: var(--leading-relaxed); }
+.note.info { background: var(--colors-feedback-infoLight); }
+.note.done { display: flex; align-items: flex-start; gap: var(--spacing-sm); background: var(--colors-feedback-successLight); }
+.note.done .icon { margin-top: var(--spacing-xxs); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Sheets drawn on a board: the ConfirmSheet and the step-up dialog over the page's scrim.      */
+/* On the page they are fixed over the viewport (ConfirmSheet.tsx, StepUpDialog.tsx).           */
+/* ------------------------------------------------------------------------------------------ */
+.demo-scrim { position: relative; min-height: var(--demo-min); display: flex; align-items: flex-end; justify-content: center; background: var(--colors-surface-overlay); }
+.demo-scrim.center { align-items: center; padding: var(--spacing-lg) var(--gutter-compact); }
+.confirm-sheet { width: 100%; display: flex; flex-direction: column; gap: var(--spacing-md); background: var(--colors-surface-paper); border-radius: var(--radii-xl) var(--radii-xl) var(--spacing-none) var(--spacing-none); padding: var(--spacing-xl) var(--gutter-compact); box-shadow: var(--shadow-modal); }
+.confirm-sheet h2 { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.confirm-sheet p { color: var(--colors-text-secondary); line-height: var(--leading-normal); overflow-wrap: anywhere; }
+.confirm-sheet .actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.confirm-sheet .actions .btn { flex: 1 1 12rem; }
+.dialog { width: 100%; max-width: var(--dialog-max); display: flex; flex-direction: column; gap: var(--spacing-md); padding: var(--spacing-xl); background: var(--colors-surface-paper); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); }
+.dialog h2 { font-size: var(--size-prompt); line-height: var(--leading-tight); }
+.dialog .reason { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.dialog .dialog-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm); }
+.dialog .dialog-actions .btn { width: 100%; }
+.clerk-slot { min-height: var(--touch-hero); display: flex; align-items: center; justify-content: center; padding: var(--spacing-md); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-md); color: var(--colors-text-muted); font-family: var(--family-mono); font-size: var(--size-caption); text-align: center; overflow-wrap: anywhere; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Invite page (/account/invite): the /start column                                            */
+/* ------------------------------------------------------------------------------------------ */
+.invite-page { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.invite-page .brand-mark { align-self: center; }
+.invite-page h1 { font-size: var(--size-title); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.invited-by { color: var(--colors-text-secondary); font-size: var(--size-bodyLg); overflow-wrap: anywhere; }
+.consent-box { display: flex; flex-direction: column; gap: var(--spacing-md); padding: var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+.consent-box p { line-height: var(--leading-relaxed); }
+.consent-box p + p { padding-top: var(--spacing-md); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.invite-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.invite-actions .btn { width: 100%; }
+.refusal { line-height: var(--leading-relaxed); color: var(--colors-text-primary); }
+@media (min-width: 45em) {
+  .invite-actions { flex-direction: row; }
+  .invite-actions .btn { width: auto; }
+  .invite-actions .btn-primary { flex: 0 1 auto; padding-left: var(--spacing-xxl); padding-right: var(--spacing-xxl); }
+}
+
+/* Settings blocks (the school Settings page as an administrator sees it). */
+.settings { display: flex; flex-direction: column; gap: var(--spacing-xl); max-width: var(--max-width-reading); }
+.settings section { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.settings h2 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.name-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--spacing-md); row-gap: var(--spacing-xs); padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); background: var(--colors-surface-paper); }
+.name-row .name-text { flex: 1 1 12rem; min-width: 0; font-size: var(--size-bodyLg); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.read-value { color: var(--colors-text-primary); }
+.read-value + .read-value { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+
+/* Board extras */
+.board-wide .sample { max-width: 100%; }
+.sample .frame-main { padding-bottom: var(--spacing-xl); }
+.sample .solo { min-height: 0; }
+
+/* Owner only: the admin's verified sign-in email under the name; the new-admin notice above the panel. */
+.person-email { display: block; color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }
+.new-admin { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.new-admin p { overflow-wrap: anywhere; }
+
+/* Invite page: whose account would become an administrator, and the way to switch. */
+.signed-as { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--spacing-md); row-gap: var(--spacing-xs); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.signed-as p { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; color: var(--colors-text-primary); }
