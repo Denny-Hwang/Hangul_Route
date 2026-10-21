@@ -676,9 +676,10 @@ OA-0b: a row's caption is its accessibility hint (description), never joined int
 | `people.spacesStay` | Their place in a family or class stays. A grown-up can change it in the account pages. | Su lugar en una familia o clase se mantiene. Un adulto puede cambiarlo en las páginas de la cuenta. | 가족이나 반 자리는 그대로예요. 어른이 계정 페이지에서 바꿀 수 있어요. |
 | `join.who.title` | Who is joining? | ¿Quién se une? | 누가 들어가나요? |
 | `join.who.hint` | Pick each learner on this device who should join. | Elige a cada estudiante de este dispositivo que se unirá. | 이 기기에서 함께 들어갈 학습자를 모두 골라요. |
-| `join.who.result(joined, total)` | {joined} of {total} joined. | Se unieron {joined} de {total}. | {total}명 중 {joined}명이 들어갔어요. |
+| `join.who.result(joined, total)` | {joined} of {total} joined. | Se unieron {joined} de {total}. (OA-7b: "Se unió 1 de {total}." for one) | {total}명 중 {joined}명이 들어갔어요. |
 | `join.who.already(name)` | {name} is already in this family. | {name} ya está en esta familia. | {name}: 이미 이 가족에 있어요. |
 | `join.who.joined(name)` (OA-0b: the per-learner "joined" result line had no row) | {name} joined. | {name} se unió. | {name}: 들어갔어요. |
+| `join.who.refused(name, line)` (OA-7b: the colon form of the per-learner cap line, below) | {name}: {line} | {name}: {line} | {name}: {line} |
 | `join.who.takesPlace` | Takes a family place. | Ocupa un lugar en la familia. | 가족 자리를 하나 써요. |
 | `join.who.classOnly` | Linked for a class on this device. | En este dispositivo, solo es para su clase. | 이 기기에서는 반에만 연결돼 있어요. |
 | `join.who.retry` | Try again | Reintentar | 다시 해 보기 |

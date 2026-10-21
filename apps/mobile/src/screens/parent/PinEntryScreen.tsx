@@ -81,6 +81,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * **Cancel the wait**, titled with those words. Verify only, no Forgot PIN?: a correct PIN clears the pending 24-hour
  * wait, sends `pin.reset_requested { method: 'wait_cancelled' }` and returns to the chooser. It opens no grown-up
  * session and counts as no fresh PIN (CS-4).
+ *
+ * [OA] Destination `JoinSpace` (row OA-7b, CS-11): Who is joining? asks the PIN before a learner other than the
+ * active one joins. A correct PIN (a fresh PIN, `markPinVerified`) or a PIN set here returns to Join, which goes on.
  */
 
 const DOT_SIZE = 20;
@@ -280,6 +283,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       back();
+    } else if (route.params.next === 'JoinSpace') {
+      // [OA] CS-11 (row OA-7b): back to Who is joining?, which sees the fresh PIN and goes on to the name steps.
+      back();
     } else {
       navigation.replace('ParentDashboard');
     }
@@ -317,6 +323,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           navigation.goBack();
           return;
         }
+        // [OA] CS-11 (row OA-7b): a PIN set just now for Who is joining? was entered twice this minute, so it is fresh.
+        if (route.params.next === 'JoinSpace') markPinVerified();
         proceed();
         return;
       }

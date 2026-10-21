@@ -511,4 +511,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_WHO_CHOOSER');
   });
+
+  it('[OA] multiJoinEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-7b) is OFF when the row lands; the switch values turn it on', async () => {
+    delete process.env.EXPO_PUBLIC_MULTI_JOIN;
+    let mod = await reload();
+    expect(mod.flags.multiJoinEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.multiJoinEnabled).toBe(false);
+    for (const on of ['true', '1', 'on', ' YES ']) {
+      process.env.EXPO_PUBLIC_MULTI_JOIN = on;
+      mod = await reload();
+      expect(mod.flags.multiJoinEnabled, JSON.stringify(on)).toBe(true);
+    }
+    process.env.EXPO_PUBLIC_MULTI_JOIN = 'maybe';
+    mod = await reload();
+    expect(mod.flags.multiJoinEnabled).toBe(false);
+    delete process.env.EXPO_PUBLIC_MULTI_JOIN;
+  }, RELOADS_MS);
+
+  it('[OA] multiJoinEnabled is read by its literal name', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_MULTI_JOIN');
+  });
 });

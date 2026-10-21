@@ -213,6 +213,14 @@ export interface Flags {
    * row as before. The session close on every change of learner and the cross-tab profile list have no switch.
    */
   whoChooserEnabled: boolean;
+
+  /**
+   * [OA] "Who is joining?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, sections 10.3 and 16, row OA-7b): a family code
+   * on a device with 2 or more learner profiles lists them with check boxes and joins each picked learner in turn,
+   * and a family hand-off code on a shared device opens that checklist. OFF when row OA-7b lands; OA-10 turns it on.
+   * `EXPO_PUBLIC_MULTI_JOIN` (`parseKillSwitch`). Off: the one-learner join of today.
+   */
+  multiJoinEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -236,6 +244,7 @@ const launchDefaults: Flags = {
   lectureModeEnabled: true,
   pinPauseStepsEnabled: true,
   whoChooserEnabled: false,
+  multiJoinEnabled: false,
 };
 
 export const flags: Flags = {
@@ -264,6 +273,7 @@ export const flags: Flags = {
   lectureModeEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_LECTURE_MODE, launchDefaults.lectureModeEnabled),
   pinPauseStepsEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS, launchDefaults.pinPauseStepsEnabled),
   whoChooserEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_WHO_CHOOSER, launchDefaults.whoChooserEnabled),
+  multiJoinEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_MULTI_JOIN, launchDefaults.multiJoinEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

@@ -65,6 +65,8 @@ export type GrownUpDestination =
   | 'LectureMode'
   /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21 (row OA-4a): the chooser's Cancel the wait; verify only, never creates or resets a PIN; a correct PIN clears the pending 24-hour wait and returns to the chooser. */
   | 'CancelReset'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-11 (row OA-7b): Who is joining? asks a fresh PIN before a learner other than the active one joins; a correct PIN (or a new one) returns to Join, which goes on. */
+  | 'JoinSpace'
   // add new members above this line
 ;
 

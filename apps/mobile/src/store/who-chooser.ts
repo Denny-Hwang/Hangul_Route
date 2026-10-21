@@ -131,6 +131,12 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
       joinHeld = true;
     } else {
       const handed = takeJoinHandoff();
+      if (handed !== null && batchOpensAtLaunch(profiles.length)) {
+        // [OA] OA-D20, OA-D14 (row OA-7b): the family home's code opens Who is joining? instead of the chooser.
+        batchHandoff = handed;
+        if (intent?.kind === 'who') consumeBootIntent();
+        return null;
+      }
       if (handed !== null) {
         holdJoin(handed, now);
         joinHeld = true;
@@ -140,6 +146,32 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
   const event: ChooserEvent = intent?.kind === 'who' ? 'return' : 'launch';
   if (intent?.kind === 'who') consumeBootIntent();
   return chooserTrigger({ event, shared, activeLocked: activeProfileLocked(), profiles: profiles.length, backgroundMs: 0, joinHeld, flag: true });
+}
+
+// ---- [OA] Who is joining? at launch (OA-D14, OA-D20; row OA-7b) ----
+
+/** The family home's hand-off code taken at launch for Who is joining?, in memory only (never in the address). */
+let batchHandoff: string | null = null;
+
+/**
+ * [OA] Whether a family hand-off code at launch opens Who is joining? instead of the chooser (OA-D20): the flag on
+ * (`EXPO_PUBLIC_MULTI_JOIN`), 2 or more learner profiles, and the active profile not locked. A locked active profile
+ * keeps the chooser (CS-19): the hand-off is then held for the learner picked there, as before.
+ */
+export function batchOpensAtLaunch(learnerCount: number = learnerProfiles().length): boolean {
+  return flags.multiJoinEnabled && learnerCount >= 2 && !activeProfileLocked();
+}
+
+/** Whether the launch took a hand-off code for Who is joining? (the root stack then opens Join over Home). */
+export function batchHandoffPending(): boolean {
+  return batchHandoff !== null;
+}
+
+/** Join takes the launch's hand-off code once; the lookup then runs at once and the checklist follows. */
+export function takeBatchHandoff(): string | null {
+  const code = batchHandoff;
+  batchHandoff = null;
+  return code;
 }
 
 /** The `who=1` hand-off for `BootIntentHook`: opens the chooser when the flag is on and a profile exists. */
@@ -262,4 +294,5 @@ export function persistLeaving(): void {
 export function resetChooserState(): void {
   locksAtLaunch = [];
   held = null;
+  batchHandoff = null;
 }

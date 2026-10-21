@@ -3,8 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
-import { chooserLaunchTrigger } from '../store/who-chooser';
-import { BootIntentHook } from './boot-intent';
+import { batchHandoffPending, chooserLaunchTrigger } from '../store/who-chooser';
+import { BootIntentHook, LaunchBatchJoinHook } from './boot-intent';
 import { MainTabs } from './tabs';
 import type { RootStackParamList } from './types';
 import { CardDetailScreen } from '../screens/library/CardDetailScreen';
@@ -80,14 +80,15 @@ export function RootNavigator(): React.ReactElement {
   const hasProfile = profiles.length > 0;
   // [OA] "Who is using this?" at launch (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.2, row OA-4a): decided once,
   // after the profiles and the profile locks are read; with the flag off it is decided at once (no chooser).
-  const [launch, setLaunch] = useState<{ decided: boolean; trigger: WhoTrigger | null }>(() => ({ decided: !flags.whoChooserEnabled, trigger: null }));
+  // [OA] Row OA-7b: or the family home's hand-off code took the launch for Who is joining? (`batch`, OA-D20).
+  const [launch, setLaunch] = useState<{ decided: boolean; trigger: WhoTrigger | null; batch: boolean }>(() => ({ decided: !flags.whoChooserEnabled, trigger: null, batch: false }));
   useEffect(() => {
     if (launch.decided || !hydrated) return undefined;
     let live = true;
     void chooserLaunchTrigger()
       .catch(() => null)
       .then((trigger) => {
-        if (live) setLaunch({ decided: true, trigger });
+        if (live) setLaunch({ decided: true, trigger, batch: batchHandoffPending() });
       });
     return () => {
       live = false;
@@ -186,6 +187,7 @@ export function RootNavigator(): React.ReactElement {
       </Stack.Navigator>
       {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}
       <BootIntentHook />
+      {launch.batch ? <LaunchBatchJoinHook /> : null}
     </>
   );
 }
