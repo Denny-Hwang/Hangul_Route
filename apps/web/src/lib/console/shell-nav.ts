@@ -1,7 +1,8 @@
 import { APP_ROUTES, type AdultPersona } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
-import { browseEntryShown, buildEnv, notesEnabled, reportsEnabled, type ConsoleEnv } from './config';
+import { browseEntryShown, buildEnv, lectureModeEnabled, notesEnabled, reportsEnabled, type ConsoleEnv } from './config';
+import { lectureNavHref } from './lecture-entry';
 import { personaHome } from './personas';
 import { ROUTES } from './routing';
 
@@ -11,7 +12,7 @@ import { ROUTES } from './routing';
  * whose predicate is off is not drawn (never a disabled "coming soon" button).
  */
 
-export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'classReports' | 'teacherNotes' | 'lessons' | 'billing';
+export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'classReports' | 'teacherNotes' | 'lessons' | 'lecture' | 'billing';
 
 /**
  * A link. `document` marks a learner root of this origin (Lessons opens All lessons at `/browse`, F-BROWSE-001), a
@@ -23,11 +24,16 @@ export type NavTarget = { href: string; document?: true };
 /** All lessons, a learner root of the app origin (F-APP-001 section 3.2, `LEARNER_ROOTS`). */
 export const BROWSE_PATH = '/browse';
 
-/** The sibling predicates the registry reads (section 3.8): Reports and Lessons are on by default (RP-11, BR-14); Notes is off by default. */
+/**
+ * The sibling predicates the registry reads (section 3.8): Reports, Lessons and Notes are on by default (RP-11, BR-14,
+ * FB-14); Lecture mode follows `lectureModeEnabled()` (AMENDMENTS-LECTURE-V2 LV-D1: off until LV-7 turns its launch
+ * default on).
+ */
 export interface NavFlags {
   reports: boolean;
   notes: boolean;
   browse: boolean;
+  lecture: boolean;
 }
 
 /** One family learner whose report the Reports item opens (one family with one learner). */
@@ -90,6 +96,9 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
   { id: 'classReports', persona: 'teacher', labelKey: 'classReports', target: () => ({ href: ROUTES.classReportChooser }), enabled: (ctx) => ctx.flags.reports },
   { id: 'teacherNotes', persona: 'teacher', labelKey: 'notes', target: () => ({ href: ROUTES.notesHub('teacher') }), enabled: (ctx) => ctx.flags.notes },
   { id: 'lessons', persona: 'both', labelKey: 'lessons', target: () => ({ href: BROWSE_PATH, document: true }), enabled: (ctx) => ctx.flags.browse },
+  // Lecture mode (AMENDMENTS-LECTURE-V2 E3, LV-5): the persona's one space's setup page; with zero or several, the
+  // persona home at its Lecture mode card (`#lecture-mode`). Only spaces the account composes in count.
+  { id: 'lecture', persona: 'both', labelKey: 'lecture', target: (ctx) => ({ href: lectureNavHref(ctx.spaces, ctx.persona) }), enabled: (ctx) => ctx.flags.lecture },
   { id: 'billing', persona: 'both', labelKey: 'billing', target: () => ({ href: ROUTES.billing }), enabled: () => true },
 ];
 
@@ -98,7 +107,7 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
  * section 3.1; Lessons the app origin, F-BROWSE-001 section 4.3).
  */
 export function navFlags(locale: UiLocale, env: ConsoleEnv = buildEnv(), origin = ''): NavFlags {
-  return { reports: reportsEnabled(locale, env), notes: notesEnabled(env), browse: browseEntryShown(origin, env) };
+  return { reports: reportsEnabled(locale, env), notes: notesEnabled(env), browse: browseEntryShown(origin, env), lecture: lectureModeEnabled(env) };
 }
 
 export interface NavEntry {
@@ -121,11 +130,13 @@ const SPACE_PAGE = /^\/(?:teach|parent)\/space(?:[/.]|$)/;
 const REPORT_PAGE = /^\/(?:(?:teach|parent)\/space\/(?:learner|report)|parent\/learner)(?:[/.]|$)/;
 const CLASS_REPORT_PAGE = /^\/teach\/space\/report(?:[/.]|$)/;
 const NOTES_PAGE = /^\/(?:teach|parent)\/(?:space\/)?notes(?:[/.]|$)/;
+const LECTURE_PAGE = /^\/(?:teach|parent)\/space\/lecture(?:[/.]|$)/;
 const PARENT_HOME_PAGE = /^\/parent(?:\/|\.html)?$/;
 const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
 
 /**
- * The item to highlight (`aria-current="page"`, section 3.8): Billing on the billing pages; on the
+ * The item to highlight (`aria-current="page"`, section 3.8): Billing on the billing pages; Lecture mode on any
+ * lecture setup page (AMENDMENTS-LECTURE-V2 E3; both personas draw it, so like Billing it needs no resolved persona); on the
  * active persona's pages, Reports on theirs (Family rows only), Class reports on the class report
  * and its chooser (Teacher row, F-REPORT-001 RP-7c), Notes on the notes pages and hubs (each
  * persona's own Notes item, F-FEEDBACK-001 FB-11b), else the persona's home
@@ -135,6 +146,7 @@ const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
  */
 export function currentNavItem(pathname: string, persona: AdultPersona, resolved: boolean): NavId | null {
   if (BILLING_PAGE.test(pathname)) return 'billing';
+  if (LECTURE_PAGE.test(pathname)) return 'lecture';
   if (!resolved) return null;
   if (persona === 'parent' && REPORT_PAGE.test(pathname)) return 'reports';
   if (persona === 'teacher' && CLASS_REPORT_PAGE.test(pathname)) return 'classReports';
@@ -144,4 +156,36 @@ export function currentNavItem(pathname: string, persona: AdultPersona, resolved
   if (pageHome) return personaHome(persona) === pageHome ? homeItem : null;
   if (SPACE_PAGE.test(pathname)) return homeItem;
   return null;
+}
+
+/** A path without its query, hash, trailing slash or `.html` (the static export serves `/parent`, `/parent/` and `/parent.html`). */
+function pagePath(path: string): string {
+  return path
+    .replace(/[?#].*$/, '')
+    .replace(/\.html$/, '')
+    .replace(/(.)\/$/, '$1');
+}
+
+/**
+ * The fragment of a nav target that points into the page already open (`/parent#lecture-mode` on `/parent`), else
+ * null. The frame then moves to that part of this page itself (focus on the card heading, AMENDMENTS-LECTURE-V2 E3)
+ * instead of a client navigation that would only scroll.
+ */
+export function samePageFragment(href: string, pathname: string): string | null {
+  const hash = href.indexOf('#');
+  if (hash < 0 || hash === href.length - 1) return null;
+  return pagePath(href.slice(0, hash)) === pagePath(pathname) ? href.slice(hash + 1) : null;
+}
+
+/**
+ * The tab row's `scrollLeft` that shows its current item whole with the least movement (`scrollIntoView` with
+ * `inline: 'nearest'`, AMENDMENTS-LECTURE-V2 E3, LV-5), or null when it already shows. `item.left` is measured from the
+ * start of the row's content. Only the row moves: the page's own scroll is never touched. An item wider than the
+ * row starts at its start edge.
+ */
+export function revealScrollLeft(row: { scrollLeft: number; width: number }, item: { left: number; width: number }): number | null {
+  const end = item.left + item.width;
+  if (item.left >= row.scrollLeft && end <= row.scrollLeft + row.width) return null;
+  if (item.left < row.scrollLeft || item.width > row.width) return item.left;
+  return end - row.width;
 }

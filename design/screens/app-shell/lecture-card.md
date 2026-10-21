@@ -37,3 +37,20 @@ Gaps found against section 12 (add in LV-5, es and ko to F-I18N-001 §3.10; now 
 ## Review (lenses as in `design/screens/presenter/lecture-v2.md`)
 
 Design: first-screen budget on the family home → placement rule above. Accessibility: radio rows and Start at least `touchTarget.min` / hero, no sideways scroll at 320 with 200 % text, focus target for the nav item. Privacy: no learner name in the card, the URL or the nav. Anti-pressure: no badge or count. Copy: no age words, no emoji; "Teach on a big screen" on both homes as section 12 sets it.
+
+## Built (LV-5, 2026-10-17)
+
+Shots of the built homes (console e2e export with `NEXT_PUBLIC_LECTURE_MODE=enabled`, mocked API, `apps/web/e2e/console-lecture-presets.spec.ts` with `HR_SHOTS=1`; this localhost export has no Lessons item, which needs the app origin):
+
+- `shots/lv5-teacher-home-320.png`, `-1280.png`: one class. The card first in the content column, above Classes; Start opens `/teach/space/lecture?id=` (presets first). The nav row reads Classes · Class reports · Notes · **Lecture mode** · Billing.
+- `shots/lv5-teacher-home-several-375.png`: two classes and a school the account administers: **Which class?** with the two classes, most recent first; the school is not offered. Reached from a class page through the nav item, which opens `/teach/home#lecture-mode` and puts focus on the card heading.
+- `shots/lv5-parent-home-375-first.png` (the first screen at 375 x 667) and `-375.png`: the card directly after the first learner card; the whole first learner card and the top of the card are on the first screen.
+- `shots/lv5-parent-home-768.png`: the card takes the row after the first row of learner cards.
+- `shots/lv5-parent-home-1280.png`: two families. The card first in the first family's side column, above its actions (outside their landmark), with **Which family?**, most recent first.
+- `shots/lv5-parent-home-320-text200.png`, `shots/lv5-teacher-home-320-text200.png`: 320 with 200 % text, no sideways scroll.
+
+Notes for the reviewers (`AMENDMENTS-LECTURE-V2.md` review log 2026-10-17, LV-5):
+
+- An **archived** class or family is not offered by the card or the nav item (it is read-only and its home row is labelled so); its own page keeps the Lecture mode button. A teacher whose only class is archived gets the no-space path.
+- The shipped tab row **wraps** on a phone (`AdultFrame`, since A-5a) instead of scrolling sideways as the mock's row does, so no item starts off-screen (the family row at 375 takes two lines). The frame still shows its current item whenever the row scrolls (`revealScrollLeft`: the row moves, the page never does). A tab label wider than the whole row (Lecture mode, current and bold, at a 300 % root at 320) now wraps inside its tab instead of pushing the page 8 px sideways; at every other size the row is unchanged (the boxes of every item were compared at 320, 375, 375 with 200 % text, 768 and 1280).
+- The family body line (`card.bodyFamily`, section 12.1) does not repeat "Nobody's progress changes", which the section 3 rule asks every card body to say once; the value is drawn as the table gives it, and the wording is left to the owner (open item).

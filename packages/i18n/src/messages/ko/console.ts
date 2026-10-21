@@ -72,7 +72,7 @@ export const consoleMsgs = {
     privacy: '개인정보',
     terms: '이용약관',
     persona: { parent: '가족', teacher: '선생님' },
-    nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트' },
+    nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트', lecture: '강의 모드' },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
   },
   pageBack: {
@@ -731,6 +731,18 @@ export const consoleMsgs = {
     plansFailed: '이 공간의 계획을 불러오지 못해서 이번 주 계획은 보이지 않아요. 다시 불러와 보세요.',
     replaceOutline: '이 자료로 새 개요를 시작할까요? 여기서 바꾼 내용은 새 개요로 바뀌어요.',
     entry: { cta: '강의 모드' },
+    card: {
+      title: '강의 모드',
+      tagline: '큰 화면으로 가르쳐요',
+      bodyClass: '준비된 수업을 프로젝터나 TV에 띄워요. 큰 글자와 소리, 질문 몇 개가 나와요. 누구의 진도도 바뀌지 않아요.',
+      bodyFamily: 'TV에 수업을 띄우고 집에서 함께 배워요. 따로 준비할 것이 없어요.',
+      cta: '강의 모드 시작',
+      chooseClass: '어느 반인가요?',
+      chooseFamily: '어느 가족인가요?',
+      noSpace: '반이 없어도 수업을 띄울 수 있어요.',
+      noSpaceFamily: '가족 공간이 없어도 수업을 띄울 수 있어요.',
+      opensTab: '새 탭에서 열려요',
+    },
     presentPlan: { cta: '이 계획 발표하기' },
     revisitChip: { cta: '함께 다시 보기' },
     source: {

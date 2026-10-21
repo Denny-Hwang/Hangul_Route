@@ -114,7 +114,17 @@ export const consoleMsgs = {
     /** The persona switch and the persona name; the parent persona is labelled Family (OD-14). */
     persona: { parent: 'Family', teacher: 'Teacher' },
     /** Adult nav labels (F-APP-001 `ADULT_NAV`); an item whose sibling flag is off is not drawn. */
-    nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing', classReports: 'Class reports' },
+    nav: {
+      home: 'Home',
+      reports: 'Reports',
+      notes: 'Notes',
+      classes: 'Classes',
+      lessons: 'Lessons',
+      billing: 'Billing',
+      classReports: 'Class reports',
+      /** Lecture mode for both personas, after Lessons (AMENDMENTS-LECTURE-V2 E3, LV-5); the one name of LV-D2. */
+      lecture: 'Lecture mode',
+    },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /**
@@ -982,6 +992,23 @@ export const consoleMsgs = {
     plansFailed: "This space's plans did not load, so this week's plan is not offered. Try again to load them.",
     replaceOutline: 'Start a new outline from this source? The changes you made here will be replaced.',
     entry: { cta: 'Lecture mode' },
+    /**
+     * The Lecture mode card at the top of the teacher home and on the family home (AMENDMENTS-LECTURE-V2 E1, E2, LV-5;
+     * design/screens/app-shell/lecture-card.md). `title` is the one name (LV-D2). `noSpace` / `noSpaceFamily` show when
+     * the account has no space to teach in, and Start then opens the presenter in a new tab (`opensTab` describes it).
+     */
+    card: {
+      title: 'Lecture mode',
+      tagline: 'Teach on a big screen',
+      bodyClass: "Show a ready lesson on a projector or TV: big letters, sounds and a few questions. Nobody's progress changes.",
+      bodyFamily: 'Put a lesson on your TV and learn together at home. No setup needed.',
+      cta: 'Start lecture mode',
+      chooseClass: 'Which class?',
+      chooseFamily: 'Which family?',
+      noSpace: 'No class needed: you can still show a lesson.',
+      noSpaceFamily: 'You can show a lesson without a family space.',
+      opensTab: 'Opens in a new tab',
+    },
     presentPlan: { cta: 'Present this plan' },
     revisitChip: { cta: 'Revisit together' },
     source: {

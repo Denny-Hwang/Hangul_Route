@@ -12,7 +12,14 @@ import { lookup } from '../tree';
  * page title and its entry button with the presenter home's title (renamed in LV-3); LV-5 appends
  * `console.shell.nav.lecture` and `console.lecture.card.title`, LV-6 `caregiver.lecture.title`.
  */
-const LECTURE_NAME_KEYS = ['console.lecture.title', 'console.lecture.entry.cta', 'learner.presenter.home.title'] as const;
+const LECTURE_NAME_KEYS = [
+  'console.lecture.title',
+  'console.lecture.entry.cta',
+  'learner.presenter.home.title',
+  // LV-5: the nav item and the home card (section 3, E1 to E3).
+  'console.shell.nav.lecture',
+  'console.lecture.card.title',
+] as const;
 
 /** The name itself, per locale (section 12, LV-D2). */
 const NAME = { en: 'Lecture mode', es: 'Modo proyección', ko: '강의 모드' } as const;

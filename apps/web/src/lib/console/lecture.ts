@@ -25,6 +25,7 @@ import { catalogTitleEntry, itemTitle } from '@/data/catalog';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS, type LectureCatalogueStory } from '@/data/lecture-catalogue.generated';
 import type { PlanView, Roster, SpaceListItem } from './api';
 import { findBannedWord } from './banned-text';
+import { composesIn } from './lecture-entry';
 import { thisWeekOf, weekGroups } from './curriculum';
 import { type PlanLike, rosterPlan } from './plans';
 
@@ -272,10 +273,7 @@ export function quizWarnings(blocks: readonly LectureBlock[]): number[] {
  */
 export function canComposeIn(spaces: readonly SpaceListItem[] | null, spaceId: string): boolean {
   const entry = spaces?.find((s) => s.space.id === spaceId);
-  if (!entry) return false;
-  if (entry.space.kind === 'class') return entry.role === 'teacher' || entry.role === 'owner';
-  if (entry.space.kind === 'family') return entry.role === 'caregiver' || entry.role === 'owner';
-  return false;
+  return !!entry && composesIn(entry);
 }
 
 // ---- title guard -----------------------------------------------------------------

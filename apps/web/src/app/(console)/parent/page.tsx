@@ -3,23 +3,24 @@
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AvatarChip } from '@/components/AvatarChip';
 import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { FamilyClassCards } from '@/components/console/FamilyClassCards';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
+import { LectureModeCard, useMinWidth } from '@/components/console/LectureModeCard';
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
-import { browseEntryShown, contentGatingEnabled, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { spaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { openAppWithJoinCode } from '@/lib/console/join-handoff';
-import { familyActionLinks, isArchivedFamily, joinOrder, learnerCardActions, managesJoinCode, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
+import { familyActionLinks, familyLectureCard, isArchivedFamily, joinOrder, learnerCardActions, lectureCardSlot, managesJoinCode, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
 import { personaHome } from '@/lib/console/personas';
 import { dateKey, livePublished } from '@/lib/console/plans';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
@@ -43,6 +44,12 @@ import { headRem, rem } from '@/lib/console/rem';
  *
  * Class moves (F-SPACE-002 T-6b, requests-page.md "Entry points"):
  * the family actions gain "N class moves waiting" to the family's page, only while a move waits for the family.
+ *
+ * Lecture mode (AMENDMENTS-LECTURE-V2 E2, LV-5; design/screens/app-shell/lecture-card.md "Placement"): one card, in
+ * the first family's section. From 70em first in its side column, above the family actions (outside their
+ * landmark); below 70em directly after its first learner card, so the first screen at 375 x 667 keeps that whole
+ * card (from 45em it takes the row after the first row of cards); with no learner card, at the end of the family's
+ * main column. With no family, after the "no family yet" panel. Nothing while `lectureModeEnabled()` is off.
  */
 
 /** Background reads of the family list that may fail in a row before they stop (a signed-out answer stops them at once). */
@@ -68,7 +75,8 @@ const HOME_CSS = `
 .hr-ph-actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(${ACTION_TRACK},1fr));gap:${spacing.sm}px}
 .hr-ph-row{display:flex;flex-wrap:wrap;gap:${spacing.sm}px}
 .hr-ph-row>*{flex:1 1 ${ACTION_TRACK}}
-@media (min-width:${WIDE}){.hr-ph-cards{grid-template-columns:repeat(auto-fill,minmax(${CARD_TRACK},1fr))}}
+.hr-ph-cards>.hr-lm{grid-column:1/-1}
+@media (min-width:${WIDE}){.hr-ph-cards{grid-template-columns:repeat(auto-fill,minmax(${CARD_TRACK},1fr))}.hr-ph-cards>.hr-lm{grid-row:2}}
 @media (min-width:${FULL}){.hr-ph-family{grid-template-columns:minmax(0,1fr) ${layout.pane.master}px;column-gap:${spacing.xxl}px;align-items:start}}
 `;
 
@@ -139,6 +147,8 @@ export default function ParentHomePage(): JSX.Element {
   const moves = useMovesWaiting(api, homeView?.state === 'families' ? homeView.families.map((family) => family.space.id) : []);
   // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10).
   const movesShown = useTransfersShown();
+  // The Lecture mode card's slot follows the 70em switch of the page's own CSS (lecture-card.md "Placement").
+  const wideHome = useMinWidth(FULL);
 
   // Which read may still draw, for the family list and for each family's roster. A read the user started (open, Try
   // again) takes a new number, so an older read that ends later never puts back what it replaced. A quiet read takes
@@ -225,6 +235,11 @@ export default function ParentHomePage(): JSX.Element {
   const lessons = browseEntryShown(typeof window === 'undefined' ? '' : window.location.origin);
   const view = homeView;
   const joinLine = p.empty.line(m.learner.home.profileLabel, m.caregiver.spaces.title, m.caregiver.spaces.join.cta);
+  const lectureView = familyLectureCard(frameSpaces, { enabled: lectureModeEnabled(), appUrl: appUrl() });
+  // The card's place moves only until the first family's roster answers; the `#lecture-mode` reveal waits for that.
+  const firstFamily = view?.state === 'families' ? view.families[0] : undefined;
+  const lectureReady = !firstFamily || (rosters[firstFamily.space.id]?.state ?? 'loading') !== 'loading';
+  const lectureCard = <LectureModeCard view={lectureView} persona="parent" revealReady={lectureReady} />;
 
   const toTeacher = (): void => {
     void writeLastPersona('teacher');
@@ -352,6 +367,9 @@ export default function ParentHomePage(): JSX.Element {
     const archived = isArchivedFamily(family);
     const expanded = openPanel === id && !archived;
     const canAdd = entry.state === 'ready' && !empty && !archived;
+    // The one Lecture mode card goes in the first family's section (lecture-card.md "Placement").
+    const lectureSlot = lectureView && family === firstFamily ? lectureCardSlot(wideHome, entry.state === 'loading' ? 2 : learners.length) : null;
+    const after = (slot: 'afterFirstCard' | 'afterMain'): JSX.Element | null => (lectureSlot === slot ? lectureCard : null);
     const actions = (
       <div className="hr-ph-actions">
         {lessons ? (
@@ -389,6 +407,17 @@ export default function ParentHomePage(): JSX.Element {
         ) : null}
       </div>
     );
+    const side = (
+      <aside aria-label={p.actionsFor(family.space.name)} className="hr-ph-side">
+        {actions}
+        {canAdd ? (
+          <div id={panelId} hidden={expanded ? undefined : true}>
+            {expanded && entry.state === 'ready' ? joinPanel(family, entry.roster) : null}
+          </div>
+        ) : null}
+        {isLast ? cross : null}
+      </aside>
+    );
     return (
       <section key={id} aria-labelledby={headingId} className="hr-ph-family">
         <div className="hr-ph-main" aria-busy={entry.state === 'loading' ? true : undefined}>
@@ -400,6 +429,7 @@ export default function ParentHomePage(): JSX.Element {
           {entry.state === 'loading' ? (
             <div className="hr-ph-cards">
               <div style={skeleton} />
+              {after('afterFirstCard')}
               <div style={skeleton} />
             </div>
           ) : null}
@@ -428,17 +458,25 @@ export default function ParentHomePage(): JSX.Element {
               ) : null}
             </>
           ) : null}
-          {learners.length > 0 ? <div className="hr-ph-cards">{learners.map((learner) => card(family, learner))}</div> : null}
-        </div>
-        <aside aria-label={p.actionsFor(family.space.name)} className="hr-ph-side">
-          {actions}
-          {canAdd ? (
-            <div id={panelId} hidden={expanded ? undefined : true}>
-              {expanded && entry.state === 'ready' ? joinPanel(family, entry.roster) : null}
+          {learners.length > 0 ? (
+            <div className="hr-ph-cards">
+              {learners.flatMap((learner, index) => {
+                const drawn = card(family, learner);
+                const lecture = index === 0 ? after('afterFirstCard') : null;
+                return lecture ? [drawn, <Fragment key="lecture-mode">{lecture}</Fragment>] : [drawn];
+              })}
             </div>
           ) : null}
-          {isLast ? cross : null}
-        </aside>
+          {after('afterMain')}
+        </div>
+        {lectureSlot === 'side' ? (
+          <div className="hr-ph-side">
+            {lectureCard}
+            {side}
+          </div>
+        ) : (
+          side
+        )}
       </section>
     );
   };
@@ -468,7 +506,7 @@ export default function ParentHomePage(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {!view && !failed && api ? (
+      {!view && !failed && api && !lectureView ? (
         <div className="hr-ph" aria-busy={true}>
           <div className="hr-ph-cards">
             <div style={skeleton} />
@@ -476,6 +514,20 @@ export default function ParentHomePage(): JSX.Element {
           </div>
         </div>
       ) : null}
+      {!view && !failed && api && lectureView ? (
+        // Loading with the card: the family layout already, so the card does not jump when the families arrive.
+        <div className="hr-ph-family">
+          <div className="hr-ph-main" aria-busy={true}>
+            <div className="hr-ph-cards">
+              <div style={skeleton} />
+              {wideHome ? null : lectureCard}
+              <div style={skeleton} />
+            </div>
+          </div>
+          {wideHome ? <div className="hr-ph-side">{lectureCard}</div> : null}
+        </div>
+      ) : null}
+      {!view && (failed || !api) && lectureView ? <div style={{ maxWidth: layout.maxWidth.reading }}>{lectureCard}</div> : null}
       {view?.state === 'noFamily' ? (
         <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.md, padding: `${spacing.xl}px ${spacing.lg}px`, maxWidth: layout.maxWidth.reading }}>
           <h1 style={{ margin: 0, fontSize: rem(typography.size.prompt), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold }}>{p.noFamily.title}</h1>
@@ -489,6 +541,7 @@ export default function ParentHomePage(): JSX.Element {
           ) : null}
         </div>
       ) : null}
+      {view?.state === 'noFamily' && lectureView ? <div style={{ maxWidth: layout.maxWidth.reading, marginTop: spacing.xl }}>{lectureCard}</div> : null}
       {view?.state === 'families' ? (
         <div className="hr-ph">
           <h1 className="hr-ph-hidden">{p.title}</h1>

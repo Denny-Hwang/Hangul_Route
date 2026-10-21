@@ -1,4 +1,5 @@
 import type { RosterLearner, SpaceListItem } from './api';
+import { lectureCardView, type LectureCardView } from './lecture-entry';
 import { heldPersonas } from './personas';
 import { ROUTES } from './routing';
 
@@ -76,4 +77,28 @@ export function familyActionLinks(familyId: string): { planWeek: string; planTer
     planTerm: ROUTES.spaceCurriculum(familyId, 'family'),
     settings: ROUTES.spaceSettings(familyId, 'family'),
   };
+}
+
+/**
+ * The Lecture mode card on the family home (AMENDMENTS-LECTURE-V2 E2, LV-5): the families the account composes in
+ * (owner or caregiver, live, most recent first) give one, several or no space. Null while `lectureModeEnabled()` is
+ * off: the card is not drawn at all.
+ */
+export function familyLectureCard(items: readonly SpaceListItem[] | 'failed' | null, opts: { enabled: boolean; appUrl: string }): LectureCardView | null {
+  return opts.enabled ? lectureCardView(items, 'parent', opts.appUrl) : null;
+}
+
+/**
+ * Where the family home draws its one card (design/screens/app-shell/lecture-card.md "Placement", measured at
+ * 375 x 667): from 70em (`wide`) first in the first family's side column, level with the learner cards and above the
+ * family actions; below it directly after the first family's first learner card (or loading card), so the first
+ * screen keeps that whole card and shows the top of this one (from 45em the CSS lets it take the row after the first
+ * row of cards); with no card to follow (a family with no learner yet, a roster that did not load), at the end of the
+ * family's main column.
+ */
+export type LectureSlot = 'side' | 'afterFirstCard' | 'afterMain';
+
+export function lectureCardSlot(wide: boolean, cards: number): LectureSlot {
+  if (wide) return 'side';
+  return cards > 0 ? 'afterFirstCard' : 'afterMain';
 }

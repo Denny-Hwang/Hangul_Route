@@ -378,3 +378,229 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
     expect(unexpected).toEqual([]);
   });
 });
+
+/**
+ * Row LV-5 (AMENDMENTS-LECTURE-V2 section 3, E1 to E4; mock `design/screens/app-shell/lecture-card.md`): the Lecture
+ * mode card on the teacher home and the family home, the nav item of both personas, and the space page's button. The
+ * same lecture-on export; `HR_SHOTS=1` writes the `lv5-*` shots.
+ */
+interface HomeSpace {
+  space: { id: string; kind: 'class' | 'family' | 'school'; name: string; parentSpaceId: null; settings: { consentMode: string; anonymizeRoster: boolean }; archivedAt: null; createdAt: string };
+  role: string;
+}
+
+const homeSpace = (id: string, kind: HomeSpace['space']['kind'], name: string, createdAt: string, role: string): HomeSpace => ({
+  space: { id, kind, name, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt },
+  role,
+});
+
+const learner = (id: string, displayName: string, joinedAt: string) => ({
+  id,
+  displayName,
+  avatar: 'hoya-orange',
+  ageGroup: 'starter',
+  joinedAt,
+  lastActiveAt: NOW,
+  lastSyncedAt: NOW,
+  summary: null,
+});
+
+const SUNFLOWER = homeSpace('space:sunflower', 'class', 'Sunflower', '2026-09-01T00:00:00.000Z', 'teacher');
+const SATURDAY = homeSpace('space:saturday', 'class', 'Saturday class', '2026-10-05T00:00:00.000Z', 'owner');
+const PARKS = homeSpace('space:parks', 'family', 'The Parks', '2026-09-01T00:00:00.000Z', 'owner');
+const GRANDMA = homeSpace('space:grandma', 'family', "Grandma's house", '2026-10-02T00:00:00.000Z', 'caregiver');
+
+/** The homes' reads on a mocked API: the spaces list, each family's roster (two learners) and empty plans; anything else answers 404. */
+async function mockHome(page: Page, spaces: HomeSpace[]): Promise<void> {
+  await page.clock.setFixedTime(new Date(NOW));
+  await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
+  await page.route(`${API}/**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
+    const url = new URL(request.url());
+    if (url.pathname === '/api/spaces') {
+      return json(route, 200, { spaces: spaces.map((s) => ({ ...s, counts: { learners: 2, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null })) });
+    }
+    const rosterOf = spaces.find((s) => url.pathname === `/api/spaces/${encodeURIComponent(s.space.id)}/roster`);
+    if (rosterOf) {
+      return json(route, 200, {
+        space: rosterOf.space,
+        learners: [learner('profile:mina', 'Mina', '2026-09-02T00:00:00.000Z'), learner('profile:jun', 'Jun', '2026-09-03T00:00:00.000Z')],
+        joinCode: null,
+        joinCodeExpiresAt: null,
+      });
+    }
+    if (/\/plans$/.test(url.pathname)) return json(route, 200, { plans: [] });
+    if (url.pathname === '/api/entitlements') return json(route, 200, { entitlements: [] });
+    return json(route, 404, null);
+  });
+}
+
+test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
+  test.skip(!LECTURE, 'needs the console e2e export with lecture mode on (LECTURE_E2E=1)');
+  const card = l.card;
+
+  for (const width of [320, 1280]) {
+    test(`teacher home at ${width}: the card first, above Classes; one class opens its setup page; the nav item after Lessons`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await mockHome(page, [SUNFLOWER]);
+      await page.goto('/teach/home');
+      const lecture = page.getByTestId('lecture-card');
+      await expect(lecture.getByRole('heading', { level: 2, name: card.title })).toBeVisible();
+      await expect(lecture).toContainText(card.tagline);
+      await expect(lecture).toContainText(card.bodyClass);
+      const classes = page.getByRole('heading', { level: 1, name: en.console.kind.group.class });
+      expect((await lecture.boundingBox())?.y ?? Infinity).toBeLessThan((await classes.boundingBox())?.y ?? 0);
+      const start = lecture.getByRole('link', { name: card.cta });
+      await expect(start).toHaveAttribute('href', `/teach/space/lecture?id=${encodeURIComponent(SUNFLOWER.space.id)}`);
+      const startBox = await start.boundingBox();
+      expect(startBox?.height ?? 0).toBeGreaterThanOrEqual(96);
+      const nav = page.getByTestId('frame-nav');
+      // Lessons needs the app origin (F-BROWSE-001 section 4.3), so this localhost export draws the row without it.
+      await expect(nav.getByRole('link')).toHaveText([en.console.shell.nav.classes, en.console.shell.nav.classReports, en.console.shell.nav.notes, en.console.shell.nav.lecture, en.console.shell.nav.billing]);
+      await expect(nav.getByTestId('nav-lecture')).toHaveAttribute('href', `/teach/space/lecture?id=${encodeURIComponent(SUNFLOWER.space.id)}`);
+      await noSidewaysScroll(page);
+      await shot(page, `lv5-teacher-home-${width}`);
+      await start.click();
+      await expect(page).toHaveURL(/\/teach\/space\/lecture\?id=space%3Asunflower/);
+      await expect(page.getByTestId('lecture-presets')).toBeVisible();
+      await expect(page.getByTestId('nav-lecture')).toHaveAttribute('aria-current', 'page');
+      // The tab row shows its current item whole.
+      const item = await page.getByTestId('nav-lecture').boundingBox();
+      expect((item?.x ?? -1) >= 0 && (item?.x ?? 0) + (item?.width ?? Infinity) <= width).toBe(true);
+    });
+  }
+
+  test('teacher home, several classes: "Which class?" most recent first; Start follows the choice; the nav item lands on the card with focus', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await mockHome(page, [SUNFLOWER, SATURDAY, homeSpace('space:riverside', 'school', 'Riverside', '2026-10-09T00:00:00.000Z', 'admin')]);
+    await page.goto(`/teach/space/plan?id=${encodeURIComponent(SUNFLOWER.space.id)}`);
+    await expect(page.getByTestId('nav-lecture')).toHaveAttribute('href', '/teach/home#lecture-mode');
+    await page.getByTestId('nav-lecture').click();
+    await expect(page).toHaveURL(/\/teach\/home#lecture-mode$/);
+    const lecture = page.getByTestId('lecture-card');
+    await expect(lecture.getByRole('heading', { level: 2, name: card.title })).toBeFocused();
+    await expect(lecture).toBeInViewport();
+    const group = lecture.getByRole('group', { name: card.chooseClass });
+    await expect(group.getByRole('radio')).toHaveCount(2);
+    await expect(group.getByRole('radio', { name: 'Saturday class' })).toBeChecked();
+    await expect(lecture.locator('label')).toHaveText(['Saturday class', 'Sunflower']);
+    await expect(lecture.getByRole('link', { name: card.cta })).toHaveAttribute('href', `/teach/space/lecture?id=${encodeURIComponent(SATURDAY.space.id)}`);
+    await group.getByRole('radio', { name: 'Sunflower' }).check();
+    await expect(lecture.getByRole('link', { name: card.cta })).toHaveAttribute('href', `/teach/space/lecture?id=${encodeURIComponent(SUNFLOWER.space.id)}`);
+    await noSidewaysScroll(page);
+    await shot(page, 'lv5-teacher-home-several-375');
+    // On the home itself the nav item moves to the card again.
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.getByTestId('nav-lecture').click();
+    await expect(lecture.getByRole('heading', { level: 2, name: card.title })).toBeFocused();
+    await expect(lecture).toBeInViewport();
+  });
+
+  test('a school admin with no class role: the no-space line, and Start opens the presenter in a tab with no opener', async ({ page, context }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockHome(page, [homeSpace('space:riverside', 'school', 'Riverside', '2026-10-09T00:00:00.000Z', 'admin'), homeSpace('space:child', 'class', 'Child class', '2026-10-01T00:00:00.000Z', 'admin')]);
+    await context.route(`${APP_URL}/**`, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>presenter</title>' }));
+    await page.goto('/teach/home');
+    const lecture = page.getByTestId('lecture-card');
+    await expect(lecture).toContainText(card.noSpace);
+    const start = lecture.getByRole('link', { name: card.cta });
+    await expect(start).toHaveAccessibleDescription(card.opensTab);
+    await expect(start).toHaveAttribute('target', '_blank');
+    await expect(page.getByTestId('nav-lecture')).toHaveAttribute('href', '/teach/home#lecture-mode');
+    const [popup] = await Promise.all([page.waitForEvent('popup'), start.click()]);
+    await popup.waitForLoadState();
+    expect(popup.url()).toBe(`${APP_URL}/present`);
+    expect(await popup.evaluate(() => window.opener === null)).toBe(true);
+    await popup.close();
+  });
+
+  test('family home at 375 x 667: the card after the first learner card, both in the first screen; the family words', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await mockHome(page, [PARKS]);
+    await page.goto('/parent');
+    const lecture = page.getByTestId('lecture-card');
+    await expect(lecture).toContainText(card.bodyFamily);
+    await expect(lecture).not.toContainText(card.bodyClass);
+    await expect(lecture.getByRole('link', { name: card.cta })).toHaveAttribute('href', `/parent/space/lecture?id=${encodeURIComponent(PARKS.space.id)}`);
+    const cards = page.getByTestId('learner-card');
+    await expect(cards).toHaveCount(2);
+    const first = await cards.nth(0).boundingBox();
+    const second = await cards.nth(1).boundingBox();
+    const box = await lecture.boundingBox();
+    // The whole first learner card and the top of the Lecture mode card are on the first screen.
+    expect((first?.y ?? Infinity) + (first?.height ?? 0)).toBeLessThanOrEqual(667);
+    expect(box?.y ?? Infinity).toBeLessThan(667);
+    expect(box?.y ?? 0).toBeGreaterThan((first?.y ?? 0) + (first?.height ?? 0) - 1);
+    expect(second?.y ?? 0).toBeGreaterThan((box?.y ?? 0) + (box?.height ?? 0) - 1);
+    const nav = page.getByTestId('frame-nav');
+    // Lessons needs the app origin (F-BROWSE-001 section 4.3), so this localhost export draws the row without it.
+    await expect(nav.getByRole('link')).toHaveText([en.console.shell.nav.home, en.console.shell.nav.reports, en.console.shell.nav.notes, en.console.shell.nav.lecture, en.console.shell.nav.billing]);
+    // Every item of the row is on the screen (the row wraps instead of hiding its last items).
+    for (const box of await nav.getByRole('link').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().right))) expect(box).toBeLessThanOrEqual(375);
+    await noSidewaysScroll(page);
+    await shot(page, 'lv5-parent-home-375-first', false);
+    await shot(page, 'lv5-parent-home-375');
+  });
+
+  test('family home at 768: the card takes the row after the first row of learner cards', async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 900 });
+    await mockHome(page, [PARKS]);
+    await page.goto('/parent');
+    const lecture = page.getByTestId('lecture-card');
+    await expect(lecture).toBeVisible();
+    const cards = page.getByTestId('learner-card');
+    const first = await cards.nth(0).boundingBox();
+    const second = await cards.nth(1).boundingBox();
+    const box = await lecture.boundingBox();
+    expect(Math.abs((first?.y ?? 0) - (second?.y ?? 1))).toBeLessThan(1);
+    expect(box?.y ?? 0).toBeGreaterThan((first?.y ?? 0) + (first?.height ?? 0) - 1);
+    await noSidewaysScroll(page);
+    await shot(page, 'lv5-parent-home-768');
+  });
+
+  test('family home at 1280, several families: the card first in the side column, "Which family?" most recent first', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await mockHome(page, [PARKS, GRANDMA]);
+    await page.goto('/parent');
+    const lecture = page.getByTestId('lecture-card');
+    await expect(lecture.getByRole('group', { name: card.chooseFamily }).getByRole('radio')).toHaveCount(2);
+    await expect(lecture.locator('label')).toHaveText(["Grandma's house", 'The Parks']);
+    await expect(page.getByTestId('lecture-card')).toHaveCount(1);
+    const box = await lecture.boundingBox();
+    const learnerBox = await page.getByTestId('learner-card').first().boundingBox();
+    const actions = await page.getByTestId('family-plan-week').first().boundingBox();
+    expect(box?.x ?? 0).toBeGreaterThan((learnerBox?.x ?? 0) + (learnerBox?.width ?? 0));
+    expect(box?.y ?? Infinity).toBeLessThan(actions?.y ?? 0);
+    // The card sits outside the family actions' landmark.
+    expect(await lecture.evaluate((el) => el.closest('aside') === null)).toBe(true);
+    await expect(page.getByTestId('nav-lecture')).toHaveAttribute('href', '/parent#lecture-mode');
+    await noSidewaysScroll(page);
+    await shot(page, 'lv5-parent-home-1280');
+  });
+
+  test('320 with 200 % text: the homes and the card do not scroll sideways', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await mockHome(page, [PARKS, GRANDMA, SUNFLOWER, SATURDAY]);
+    for (const path of ['/parent', '/teach/home']) {
+      await page.goto(path);
+      await expect(page.getByTestId('lecture-card').getByRole('group')).toBeVisible();
+      await page.evaluate(() => {
+        document.documentElement.style.fontSize = '200%';
+      });
+      await noSidewaysScroll(page);
+      await shot(page, `lv5-${path === '/parent' ? 'parent' : 'teacher'}-home-320-text200`);
+    }
+  });
+
+  test('the space page: the button keeps its place and secondary weight and reads Lecture mode (E4)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mock(page);
+    await page.goto(`/teach/space?id=${encodeURIComponent(space('class').id)}`);
+    const button = page.getByTestId('open-lecture');
+    await expect(button).toHaveText(l.entry.cta);
+    const look = await button.evaluate((el) => getComputedStyle(el).backgroundColor);
+    const primary = await page.getByRole('button', { name: en.console.planThisWeek }).evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(look).not.toBe(primary);
+  });
+});
