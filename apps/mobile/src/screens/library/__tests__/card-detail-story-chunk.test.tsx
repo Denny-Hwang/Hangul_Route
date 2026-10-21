@@ -77,12 +77,16 @@ async function mount(): Promise<ReactTestRenderer> {
 }
 
 describe('CardDetailView: an earned story card before its story chunk is in', () => {
-  it('cannot flip or share until the chunk is in, and is not called locked meanwhile', async () => {
+  it('cannot flip or share until the chunk is in, and is not called locked meanwhile: it is busy', async () => {
     const r = await mount();
     expect(loaded.asked).toContain(storyCard.storyId);
     const flip = flipCard(r.root);
     expect(flip.props.disabled).toBe(true);
+    expect(flip.props.busy).toBe(true);
     expect(flip.props.accessibilityLabelFront).toBe(getMessages('en').a11y.flipToBack);
+    // Assistive tech hears that the card is loading, not only that its action is unavailable.
+    const pressable = r.root.find((n) => n.props.accessibilityRole === 'button' && n.props.accessibilityLabel === getMessages('en').a11y.flipToBack && n.props.accessibilityState !== undefined);
+    expect(pressable.props.accessibilityState).toEqual({ disabled: true, busy: true });
     const share = shareButtons(r.root);
     expect(share.length).toBeGreaterThan(0);
     expect(share.every((b) => b.props.disabled === true)).toBe(true);
@@ -92,6 +96,7 @@ describe('CardDetailView: an earned story card before its story chunk is in', ()
     loaded.value = true;
     const r = await mount();
     expect(flipCard(r.root).props.disabled).toBe(false);
+    expect(flipCard(r.root).props.busy).toBe(false);
     const share = shareButtons(r.root);
     expect(share.length).toBeGreaterThan(0);
     expect(share.every((b) => b.props.disabled === false)).toBe(true);

@@ -3,7 +3,7 @@ import type { Quest } from '@hangul-route/content-schema';
 import { storiesAll, storyContent } from '../content/stories';
 import { isStoryNewBuildError, type StoryStore } from '../logic/story/story-chunk-store';
 import { storyIdOfQuest } from '../logic/story/story-ref';
-import { reloadForNewBuild } from '../platform/new-build-reload';
+import { isNewBuildAnswer, reloadForNewBuild } from '../platform/new-build-reload';
 
 /**
  * The screens' side of the on-demand story chunks (F-CURR-002 §10, row CM-8;
@@ -13,7 +13,7 @@ import { reloadForNewBuild } from '../platform/new-build-reload';
  *   only their waiting state (`LessonWaiting`: the way back, then a calm status line) until its chunk
  *   is in (the service worker answers from its precache, so this is a frame or two). A chunk that
  *   cannot load goes to the app's crash screen, whose Try again loads it again; a chunk of a newer
- *   build reloads the page once instead;
+ *   build (what it held, or what its URL answers when asked again) reloads the page once instead;
  * - `useStoryLoaded`: one story's cover or card back (a card face, a card page) loads its chunk and
  *   redraws when that story's chunk arrives, not when any other does;
  * - `useStoriesLoaded`: the screens that show many covers (the shelf, Home, the episode page) load
@@ -22,7 +22,8 @@ import { reloadForNewBuild } from '../platform/new-build-reload';
  * - `useStoryContentVersion`: the screens that read every story load every chunk and recompute as
  *   each arrives (a list only fills);
  * - `useNoteStoriesLoaded` / `useNoteStoriesReady`: Culture notes, whose notes cite the facts of the
- *   stories that carry them.
+ *   stories that carry them. The screen waits for every story with notes the way the reader waits for
+ *   its story, failure included: a found note is never left out because its chunk did not load.
  * `storyContentBindings` takes the store and the page's reload, so the render tests drive them with
  * a store of their own (the global test setup preloads the app's).
  */
@@ -33,10 +34,14 @@ export interface StoryContentDeps {
   noteStoryIds: readonly string[];
   /** Reloads the page for a newer build (online, at most once a minute); false when it did not. */
   reloadForNewBuild: () => boolean;
+  /** Asks a failed chunk's URL again: true when the host answers for a newer build (404, or its HTML page refused as a script). */
+  isNewBuildAnswer: (error: unknown) => Promise<boolean>;
 }
 
-export function storyContentBindings({ store, noteStoryIds, reloadForNewBuild: reload }: StoryContentDeps) {
+export function storyContentBindings({ store, noteStoryIds, reloadForNewBuild: reload, isNewBuildAnswer: newBuildAnswer }: StoryContentDeps) {
   const subscribe = store.subscribe;
+  /** True when a failed load means a newer build on the host: what the chunk said, else what its URL answers now. */
+  const isNewer = async (error: unknown): Promise<boolean> => isStoryNewBuildError(error) || (await newBuildAnswer(error).catch(() => false));
 
   /** True once the story's chunk is in (at once for an id that is not a bundled story); throws a failed load. */
   function useStoryReady(storyId: string | null | undefined): boolean {
@@ -46,9 +51,10 @@ export function storyContentBindings({ store, noteStoryIds, reloadForNewBuild: r
     useEffect(() => {
       if (ready || storyId == null) return undefined;
       let live = true;
-      store.ensureStories([storyId]).catch((error: unknown) => {
+      store.ensureStories([storyId]).catch(async (error: unknown) => {
         if (!live) return;
-        if (isStoryNewBuildError(error) && reload()) return;
+        const newer = await isNewer(error);
+        if (!live || (newer && reload())) return;
         setFailed({ storyId, error });
       });
       return () => {
@@ -103,21 +109,30 @@ export function storyContentBindings({ store, noteStoryIds, reloadForNewBuild: r
     return useStoriesLoaded(noteStoryIds);
   }
 
-  /** True once every story with culture notes has its chunk in, or has failed to load (its notes then stay out). */
+  /**
+   * True once every story with culture notes has its chunk in; throws a failed load (the crash screen, whose
+   * Try again loads it again), as `useStoryReady` does, so a found note never goes missing from the list or a
+   * deep link. A chunk of a newer build reloads the page once instead.
+   */
   function useNoteStoriesReady(): boolean {
     const allIn = useSyncExternalStore(subscribe, () => noteStoryIds.every((id) => store.isStoryReady(id)));
-    const [settled, setSettled] = useState(allIn);
+    const [failed, setFailed] = useState<{ error: unknown } | null>(null);
     useEffect(() => {
       if (allIn) return undefined;
       let live = true;
-      void Promise.allSettled(noteStoryIds.map((id) => store.ensureStories([id]))).then(() => {
-        if (live) setSettled(true);
+      void Promise.allSettled(noteStoryIds.map((id) => store.ensureStories([id]))).then(async (results) => {
+        const failure = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+        if (!live || failure === undefined) return;
+        const newer = await isNewer(failure.reason);
+        if (!live || (newer && reload())) return;
+        setFailed({ error: failure.reason });
       });
       return () => {
         live = false;
       };
     }, [allIn]);
-    return allIn || settled;
+    if (!allIn && failed !== null) throw failed.error;
+    return allIn;
   }
 
   return { useStoryReady, useStoryQuestReady, useStoryLoaded, useStoriesLoaded, useStoryContentVersion, useNoteStoriesLoaded, useNoteStoriesReady };
@@ -138,4 +153,5 @@ export const {
   store: storyContent,
   noteStoryIds: NOTE_STORY_IDS,
   reloadForNewBuild: () => reloadForNewBuild(),
+  isNewBuildAnswer: (error) => isNewBuildAnswer(error),
 });

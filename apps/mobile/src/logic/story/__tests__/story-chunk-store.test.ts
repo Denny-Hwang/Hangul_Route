@@ -10,6 +10,7 @@ import {
   shelfLevelOf,
   splitStory,
   storiesOverStore,
+  storyChunkBundleName,
   storyTierLevels,
   type StoryBodyChunk,
   type StoryShelfEntry,
@@ -245,6 +246,45 @@ describe('a hung load, and which failures only a fresh page mends', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('a timed-out load gives up its pending script (Metro keeps it by its path), so the retry asks the network again', async () => {
+    vi.useFakeTimers();
+    try {
+      // Metro's web loader hands a pending load back to every later try until its script tag settles.
+      const pendingByBundle = new Map<string, { promise: Promise<StoryBodyChunk>; fail: () => void }>();
+      let network: 'hung' | 'back' = 'hung';
+      const requests: string[] = [];
+      const metroLoad = (bundle: string): Promise<StoryBodyChunk> => {
+        const pending = pendingByBundle.get(bundle);
+        if (pending !== undefined) return pending.promise;
+        requests.push(bundle);
+        let fail = (): void => undefined;
+        const promise = new Promise<StoryBodyChunk>((resolve, reject) => {
+          fail = () => reject(new Error(`Loading module ${bundle} failed.`));
+          if (network === 'back') resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body });
+        });
+        promise.catch(() => pendingByBundle.delete(bundle));
+        if (network === 'hung') pendingByBundle.set(bundle, { promise, fail });
+        return promise;
+      };
+      const abandon = vi.fn((bundle: string) => pendingByBundle.get(bundle)?.fail());
+      const store = createStoryStore({ entries }, (id) => metroLoad(storyChunkBundleName(id)), { timeoutMs: 15_000, abandon });
+      const first = expect(store.ensureStories([story.id])).rejects.toBeInstanceOf(StoryChunkTimeout);
+      await vi.advanceTimersByTimeAsync(15_000);
+      await first;
+      expect(abandon).toHaveBeenCalledWith(storyChunkBundleName(story.id));
+      network = 'back';
+      await store.ensureStories([story.id]);
+      expect(store.isStoryReady(story.id)).toBe(true);
+      expect(requests).toEqual([storyChunkBundleName(story.id), storyChunkBundleName(story.id)]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('maps a story to the web bundle name of its chunk', () => {
+    expect(storyChunkBundleName('story:sejong-new-letters')).toBe('story-sejong-new-letters');
   });
 
   it('a load in time is not cut off by the timer', async () => {

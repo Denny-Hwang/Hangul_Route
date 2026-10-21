@@ -134,8 +134,9 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
           face={face}
           onFlip={flip}
           disabled={!canFlip}
+          // While the story's chunk loads (a frame or two) an earned card is not called locked: it is busy.
+          busy={unlocked && !storyReady}
           onFlippingChange={setIsFlipping}
-          // While the story's chunk loads (a frame or two) an earned card is not called locked.
           accessibilityLabelFront={unlocked ? messages.a11y.flipToBack : lockedLabel}
           accessibilityLabelBack={unlocked ? messages.a11y.flipToFront : lockedLabel}
           front={

@@ -60,8 +60,8 @@ export function reloadForNewBuild(env: ReloadEnv = webEnv()): boolean {
   return true;
 }
 
-/** A lesson chunk bundle of this host (`/_expo/static/js/web/lessons-<name>-<md5>.js`). */
-const CHUNK_PATH = /^\/_expo\/static\/js\/web\/lessons-[a-z0-9-]+-[0-9a-f]{32}\.js$/;
+/** A lesson or story chunk bundle of this host (`/_expo/static/js/web/lessons-<name>-<md5>.js`, `story-<slug>-<md5>.js`, row CM-8). */
+const CHUNK_PATH = /^\/_expo\/static\/js\/web\/(?:lessons|story)-[a-z0-9-]+-[0-9a-f]{32}\.js$/;
 
 interface ProbeAnswer {
   status: number;
@@ -87,7 +87,7 @@ function webProbeEnv(): ProbeEnv {
   };
 }
 
-/** The chunk URL a failed script load names (Metro's `AsyncRequireError.request`), when it is a lesson chunk of this host. */
+/** The chunk URL a failed script load names (Metro's `AsyncRequireError.request`), when it is a lesson or story chunk of this host. */
 export function failedChunkUrl(error: unknown, origin: string | undefined): string | undefined {
   if (!(error instanceof Error) || error.name !== 'AsyncRequireError') return undefined;
   const request = (error as Error & { request?: unknown }).request;
@@ -101,7 +101,7 @@ export function failedChunkUrl(error: unknown, origin: string | undefined): stri
 }
 
 /**
- * True when a lesson chunk's script failed to load because the host has a newer build (F-CURR-002 §10):
+ * True when a lesson (or story) chunk's script failed to load because the host has a newer build (F-CURR-002 §10):
  * asked again, its URL answers 404 or with an HTML page (the single-page fallback). The script tag cannot
  * tell this from a network failure when the HTML is refused as a script (an `X-Content-Type-Options:
  * nosniff` rule, a platform default), so the URL is asked once, online only, past every cache. A failed or

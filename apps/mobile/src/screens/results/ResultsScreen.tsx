@@ -35,7 +35,7 @@ import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
-import { storyById } from '../../content/stories';
+import { storyById, storyLevels } from '../../content/stories';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
 import { cardKoLine } from '../../logic/card-art';
@@ -294,14 +294,22 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   // generic buttons. Next story (F-STORY-004 `nextStoryAfter`) walks the same book or shelf category
   // and never offers a locked story; the culture-note link waits for the Culture notes route
   // (F-STORY-004 PR 4.7), so none is supplied yet.
-  // The story's tiers come from its chunk (F-CURR-002 §10, row CM-8): in already when the quest played it, loaded again after a reload.
+  // The story's tiers come from its chunk (F-CURR-002 §10, row CM-8): in already when the quest played it, loaded again
+  // after a reload. Which extras show is known from the shelf (the title and the levels), so they never shift in late.
   const questStoryId = quest === undefined ? null : storyIdOfQuest(quest);
   const storyChunks = useStoriesLoaded(questStoryId === null ? [] : [questStoryId]);
   const storyResults = useMemo(() => {
-    const story = resultsStoryOf(quest, (id) => {
-      const found = storyById(id);
-      return found && localizeStory(found, locale);
-    });
+    const story = resultsStoryOf(
+      quest,
+      (id) => {
+        const found = storyById(id);
+        return found && localizeStory(found, locale);
+      },
+      (id) => {
+        const found = storyById(id);
+        return found === undefined ? [] : storyLevels(found);
+      },
+    );
     if (!story) return null;
     const next = nextStoryAfter(questId, {
       entries: defaultStoryIndex(),

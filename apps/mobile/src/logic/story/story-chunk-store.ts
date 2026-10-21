@@ -107,9 +107,20 @@ export class StoryChunkTimeout extends Error {
   }
 }
 
+/** The web bundle name of a story's chunk: `story-sejong-new-letters` for `story:sejong-new-letters`. */
+export function storyChunkBundleName(storyId: string): string {
+  return `story-${storyId.replace(/^story:/, '')}`;
+}
+
 export interface StoryStoreOptions {
   /** A load that has not settled after this many ms fails with `StoryChunkTimeout`; none when omitted. */
   timeoutMs?: number;
+  /**
+   * Called with a chunk's bundle name (`storyChunkBundleName`) when its load times out, as the lesson
+   * store does: Metro keeps a pending load by its path until it settles, so the web build fails the
+   * pending script and the next ensure asks again (`platform/lesson-chunk-abandon`).
+   */
+  abandon?: (bundleName: string) => void;
 }
 
 /**
@@ -141,7 +152,7 @@ export interface StoryStore {
 }
 
 export function createStoryStore(manifest: StoryManifest, load: StoryLoader, options: StoryStoreOptions = {}): StoryStore {
-  const { timeoutMs } = options;
+  const { timeoutMs, abandon } = options;
   const entries = new Map(manifest.entries.map((e) => [e.id, e]));
   const bodies = new Map<string, StoryBody>(Object.entries(manifest.inline ?? {}));
   const loads = new Map<string, Promise<void>>();
@@ -156,7 +167,10 @@ export function createStoryStore(manifest: StoryManifest, load: StoryLoader, opt
   const withinTime = <T>(storyId: string, started: Promise<T>): Promise<T> => {
     if (timeoutMs === undefined) return started;
     return new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new StoryChunkTimeout(storyId, timeoutMs)), timeoutMs);
+      const timer = setTimeout(() => {
+        reject(new StoryChunkTimeout(storyId, timeoutMs));
+        abandon?.(storyChunkBundleName(storyId));
+      }, timeoutMs);
       started.then(
         (value) => {
           clearTimeout(timer);

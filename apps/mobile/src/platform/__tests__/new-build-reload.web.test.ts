@@ -147,6 +147,14 @@ describe('isNewBuildAnswer (F-CURR-002 §10: a chunk script error is asked again
     );
   });
 
+  it('asks a story chunk (row CM-8) again the same way', async () => {
+    const story = `${ORIGIN}/_expo/static/js/web/story-sejong-new-letters-0123456789abcdef0123456789abcdef.js`;
+    const p = probe();
+    expect(await isNewBuildAnswer(scriptError(story), p.env)).toBe(true);
+    expect(p.asked).toEqual([story]);
+    expect(failedChunkUrl(scriptError(`${ORIGIN}/_expo/static/js/web/storybook-0123456789abcdef0123456789abcdef.js`), ORIGIN)).toBeUndefined();
+  });
+
   it('is never a newer build on native, where the chunks are in the one bundle', async () => {
     expect(await nativeAnswer()).toBe(false);
   });

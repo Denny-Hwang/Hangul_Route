@@ -58,11 +58,12 @@ const settle = async (): Promise<void> => {
   });
 };
 
-function bindings(over: { reload?: () => boolean; noteStoryIds?: readonly string[] } = {}) {
+function bindings(over: { reload?: () => boolean; noteStoryIds?: readonly string[]; answer?: (error: unknown) => Promise<boolean> } = {}) {
   const cold = coldStore();
   const reload = vi.fn(over.reload ?? (() => false));
-  const b = storyContentBindings({ store: cold.store, noteStoryIds: over.noteStoryIds ?? [moon.id], reloadForNewBuild: reload });
-  return { ...cold, ...b, reload };
+  const answer = vi.fn(over.answer ?? (async () => false));
+  const b = storyContentBindings({ store: cold.store, noteStoryIds: over.noteStoryIds ?? [moon.id], reloadForNewBuild: reload, isNewBuildAnswer: answer });
+  return { ...cold, ...b, reload, answer };
 }
 
 function Reader({ hook, storyId }: { hook: (id: string | null) => boolean; storyId: string | null }): React.ReactElement {
@@ -115,6 +116,17 @@ describe('useStoryReady (the reader, its games, Sources)', () => {
     const r = await render(<Reader hook={t.useStoryReady} storyId={sun.id} />);
     await act(async () => t.pending[sun.id]?.resolve(chunkOf(sun.id, 'another-build')));
     await settle();
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+  });
+
+  it('a script error whose URL now answers for a newer build (its HTML page refused as a script) reloads the page', async () => {
+    const t = bindings({ reload: () => true, answer: async () => true });
+    const r = await render(<Reader hook={t.useStoryReady} storyId={sun.id} />);
+    const refused = Object.assign(new Error('Loading module failed.'), { name: 'AsyncRequireError' });
+    await act(async () => t.pending[sun.id]?.reject(refused));
+    await settle();
+    expect(t.answer).toHaveBeenCalledWith(refused);
     expect(t.reload).toHaveBeenCalledTimes(1);
     expect(byTestId(r.root, 'waiting')).toHaveLength(1);
   });
@@ -230,20 +242,50 @@ describe('useStoriesLoaded and useStoryContentVersion (the shelf, Home, every st
 });
 
 describe('useNoteStoriesReady (Culture notes)', () => {
-  it('waits for the stories that carry notes, and settles when one fails (its notes then stay out)', async () => {
+  function Notes({ hook }: { hook: () => boolean }): React.ReactElement {
+    return hook() ? <Text testID="notes">notes</Text> : <Text testID="waiting">waiting</Text>;
+  }
+
+  it('waits for every story that carries notes, then shows the notes', async () => {
     const t = bindings({ noteStoryIds: [sun.id, moon.id] });
-    const seen: boolean[] = [];
-    function Notes(): null {
-      seen.push(t.useNoteStoriesReady());
-      return null;
-    }
-    await render(<Notes />);
-    expect(seen.at(-1)).toBe(false);
+    const r = await render(<Notes hook={t.useNoteStoriesReady} />);
+    expect(byTestId(r.root, 'waiting')).toHaveLength(1);
     await act(async () => t.pending[sun.id]?.resolve(chunkOf(sun.id)));
-    expect(seen.at(-1)).toBe(false);
+    expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+    await act(async () => t.pending[moon.id]?.resolve(chunkOf(moon.id)));
+    expect(byTestId(r.root, 'notes')).toHaveLength(1);
+  });
+
+  it('a note story that fails reaches the crash screen (a found note never goes missing), and Try again loads it', async () => {
+    const t = bindings({ noteStoryIds: [sun.id, moon.id] });
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const r = await render(
+      <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
+        <Notes hook={t.useNoteStoriesReady} />
+      </ErrorBoundary>,
+    );
+    await act(async () => t.pending[sun.id]?.resolve(chunkOf(sun.id)));
     await act(async () => t.pending[moon.id]?.reject(new Error('offline')));
     await settle();
-    expect(seen.at(-1)).toBe(true);
+    expect(byTestId(r.root, 'notes')).toHaveLength(0);
+    const retry = buttonsNamed(r.root, TRY_AGAIN);
+    expect(retry).toHaveLength(1);
+    expect(t.reload).not.toHaveBeenCalled();
+    await press(retry[0]!);
+    expect(t.asked.filter((id) => id === moon.id)).toHaveLength(2);
+    expect(t.asked.filter((id) => id === sun.id)).toHaveLength(1);
+    await act(async () => t.pending[moon.id]?.resolve(chunkOf(moon.id)));
+    expect(byTestId(r.root, 'notes')).toHaveLength(1);
+    errors.mockRestore();
+  });
+
+  it('a note story of a newer build reloads the page instead', async () => {
+    const t = bindings({ noteStoryIds: [sun.id], reload: () => true });
+    const r = await render(<Notes hook={t.useNoteStoriesReady} />);
+    await act(async () => t.pending[sun.id]?.resolve(chunkOf(sun.id, 'another-build')));
+    await settle();
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'waiting')).toHaveLength(1);
   });
 
   it('is ready at once when every note story is in', async () => {
@@ -270,7 +312,7 @@ describe('withLessonContent with the story chunks (All lessons and the presenter
     const stories = coldStore();
     const lessons = createLessonStore({ episodes: [], cells: {}, titles: { es: 'h-es', ko: 'h-ko' } }, { cell: () => undefined, titles: () => new Promise(() => undefined) });
     const reload = vi.fn(over.reload ?? (() => false));
-    const b = lessonContentBindings({ store: lessons, locale: () => 'en', reloadForNewBuild: reload, stories: stories.store });
+    const b = lessonContentBindings({ store: lessons, locale: () => 'en', reloadForNewBuild: reload, isNewBuildAnswer: async () => false, stories: stories.store });
     return { ...stories, ...b, reload };
   }
 
