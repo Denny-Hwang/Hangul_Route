@@ -502,14 +502,21 @@ export interface Db {
    * the counter row (`counter`, dim '', bucket '') and the counter's new total is answered; else 0.
    */
   addRollups(day: string, keys: readonly RollupKey[], counter?: string): Promise<number>;
-  /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Only lib/learning-rollups reads it, and it applies the suppression. */
+  /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Read through lib/learning-rollups (`readRollups`), which applies the suppression. */
   rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]>;
   /**
-   * The guardrail evaluator's only write (F-CURR-002 section 12.3, row CM-70b): sets `pct` to `toPct` with the reason and
-   * time, only while the row still holds `fromPct` and only when `toPct` is lower, and never touches `on`. Answers
-   * whether a row changed, so a row the owner edited since it was read is left as the owner set it.
+   * The guardrail evaluator's read (F-CURR-002 section 12.3, row CM-70b): the stored cells of `metrics` only, from
+   * `fromDay` to `toDay` inclusive, at most `limit`, unsuppressed. The evaluator applies its own per-(day, metric, dim)
+   * suppression and never shows a cell.
    */
-  lowerRemoteConfigPct(flag: string, fromPct: number, toPct: number, updatedAt: string, reason: string): Promise<boolean>;
+  rollupRowsOf(fromDay: string, toDay: string, metrics: readonly string[], limit: number): Promise<RollupRow[]>;
+  /**
+   * The guardrail evaluator's only write (F-CURR-002 section 12.3, row CM-70b): sets `pct` to `toPct` with the reason and
+   * time, only while the row is still exactly as read (on, the whole-number `fromPct`, the `fromUpdatedAt`) and only
+   * when `toPct` is lower, and never touches `on`. Answers whether a row changed, so a row the owner edited in any way
+   * since it was read is left as the owner set it.
+   */
+  lowerRemoteConfigPct(flag: string, fromPct: number, fromUpdatedAt: string, toPct: number, updatedAt: string, reason: string): Promise<boolean>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

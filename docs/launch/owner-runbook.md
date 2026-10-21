@@ -592,9 +592,13 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 5. 끄는 것은 화면만이다: 진도, 카드, 기억 상태는 지워지지 않고, 다시 켜면 그대로 보인다 (사양 section 12.2 "What off does").
 
 **K-3. 자동 가드레일 (CM-70b, 할 일 없음, 확인만)**
-1. 매일 11:17 UTC 의 Cron Trigger (보존 기간 정리와 같은 실행) 가 램프 중인 줄 (`"on"` 1, `pct` 1-99) 마다 `updated_at` 을 그 단계의 시작으로 보고, 그 뒤의 하루 단위 날 (최대 7일) 과 그 전 7일을 `learning_rollups` 로 비교한다 (사양 section 3.3 의 가드레일). 하루에 20건이 안 되는 묶음은 보지 않는다.
-2. 넘으면 그 줄의 `pct` 만 한 단계 내린다 (50 → 10 → 0, 사이 값은 아래 단계로). `reason` 에 `guardrail <날짜> pct 50->10: quitRate:match-shape 10.0%->15.0%` 처럼 이유가, `updated_at` 에 시각이 남는다. 올리거나 `"on"` 을 바꾸는 일은 없다. 확인: D1 Console 에서 `SELECT flag, "on", pct, updated_at, reason FROM remote_config;`.
-3. 다시 올리는 것은 오너만 한다 (K-1). K-1 의 INSERT 는 `updated_at` 을 지금으로 바꾸므로 그 시각이 새 단계의 시작이 되고, 같은 날에는 자동 가드레일이 그 줄을 건드리지 않는다.
+1. 매일 11:17 UTC 의 Cron Trigger 가 보존 기간 정리를 먼저 하고, 그다음 램프 중인 줄 (`"on"` 1, `pct` 1-99) 마다 `updated_at` 을 그 단계의 시작으로 보고, 그 뒤의 하루 단위 날 (최대 7일) 과 그 전 7일을 `learning_rollups` 로 비교한다 (사양 section 3.3 과 12.3). 단계 뒤로 하루 단위 날이 3일 지나야 비교를 시작하고, 14일이 넘은 단계는 더 보지 않는다 (`stale-step`). 하루에 20건이 안 되는 묶음은 보지 않고, 한쪽이 100 세션이 안 되는 비교도 하지 않는다. 기준선을 넘어도 통계로 분명할 때만 (우연이 아닐 때만) 위반으로 본다.
+2. 넘으면 그 줄의 `pct` 만 한 단계 내린다 (50 → 10 → 0, 사이 값은 아래 단계로). `reason` 에 `guardrail <날짜> base <단계 날짜> pct 50->10: quitRate:match-shape 10.0%->15.0%` 처럼 이유가, `updated_at` 에 시각이 남는다. 올리거나 `"on"` 을 바꾸는 일은 없다. 확인: D1 Console 에서 `SELECT flag, "on", pct, updated_at, reason FROM remote_config;`.
+3. 자동으로 내린 뒤에도 비교 기준은 `base` 의 단계 전 7일로 그대로 남는다. 그래서 내린 단계가 여전히 램프 전보다 나쁘면 다음에 한 단계 더 내린다 (10 → 0).
+4. 줄을 고치면 (K-1 의 INSERT, 또는 `reason` 만 고쳐도 `updated_at` 이 바뀌면) 그 `updated_at` 이 새 기준이 된다. 그러니 `updated_at` 은 단계를 올릴 때만 바꾼다. 다시 올리는 것은 오너만 한다 (K-1). 같은 날에는 자동 가드레일이 그 줄을 건드리지 않고, 실행 중에 오너가 고친 줄도 건드리지 않는다.
+5. 한 번에 한 플래그만 램프한다. 지금의 지표는 플래그별 그룹이 없어서 (사양 12.3, CM-70c 전까지) 위반이 나면 그 기간에 램프 중인 플래그가 모두 한 단계씩 내려간다.
+6. 실행 결과: Cloudflare → Workers & Pages → `hangul-route-api` → Logs 에서 하루 한 줄 `guardrail.run` (내린 플래그, 건너뛴 플래그와 이유 코드 `changed-today` · `future-updated-at` · `too-few-days` · `stale-step` · `bad-updated-at`) 을 본다. 저장된 로그를 보려면 같은 화면의 Settings → Observability 에서 Workers Logs 를 켠다. `future-updated-at` 이 보이면 그 줄의 `updated_at` 이 미래 시각이라 가드레일이 꺼진 상태이니 지금 시각으로 고친다.
+7. D1 쓰기 줄 (무료 한도의 50%) 은 롤업이 스스로 쓴 양만 센다 (롤업은 40% 에서 멈춘다). 동기화를 포함한 전체 양은 D1 대시보드의 Metrics 에서 램프 중에 한 번씩 본다.
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
