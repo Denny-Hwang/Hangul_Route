@@ -1,0 +1,966 @@
+{
+  "en/home": {
+    "phone": {
+      "height": 3008,
+      "sideways": false,
+      "words": 268,
+      "header": 81,
+      "primaryBottom": 360,
+      "small": [
+        "a mailto:hello@hangulroute.com 80x18",
+        "a /privacy 105x18"
+      ]
+    },
+    "wide": {
+      "height": 2164,
+      "sideways": false,
+      "words": 273,
+      "header": 81,
+      "primaryBottom": 417,
+      "small": [
+        "a mailto:hello@hangulroute.com 80x18",
+        "a /privacy 515x43"
+      ]
+    },
+    "first320": {
+      "height": 3327,
+      "sideways": false,
+      "words": 268,
+      "header": 81,
+      "primaryBottom": 429,
+      "small": [
+        "a mailto:hello@hangulroute.com 80x18",
+        "a /privacy 105x18"
+      ]
+    },
+    "text200at320": {
+      "height": 7382,
+      "sideways": false,
+      "words": 268,
+      "header": 177,
+      "primaryBottom": 1049,
+      "small": [
+        "a mailto:hello@hangulroute.com 152x38"
+      ]
+    },
+    "text200at720": {
+      "height": 4426,
+      "sideways": false,
+      "words": 268,
+      "header": 113,
+      "primaryBottom": 530,
+      "small": [
+        "a mailto:hello@hangulroute.com 152x38",
+        "a /privacy 201x38"
+      ]
+    },
+    "langOpen320text200": {
+      "height": 7382,
+      "sideways": false,
+      "words": 271,
+      "header": 177,
+      "primaryBottom": 1049,
+      "small": [
+        "a mailto:hello@hangulroute.com 152x38"
+      ]
+    },
+    "imageKB": 15.6
+  },
+  "en/learners": {
+    "phone": {
+      "height": 3015,
+      "sideways": false,
+      "words": 254,
+      "header": 81,
+      "primaryBottom": 318,
+      "small": []
+    },
+    "wide": {
+      "height": 2962,
+      "sideways": false,
+      "words": 259,
+      "header": 81,
+      "primaryBottom": 331,
+      "small": []
+    },
+    "first320": {
+      "height": 3289,
+      "sideways": false,
+      "words": 254,
+      "header": 81,
+      "primaryBottom": 346,
+      "small": []
+    },
+    "text200at320": {
+      "height": 7635,
+      "sideways": false,
+      "words": 254,
+      "header": 177,
+      "primaryBottom": 745,
+      "small": []
+    },
+    "text200at720": {
+      "height": 4205,
+      "sideways": false,
+      "words": 254,
+      "header": 113,
+      "primaryBottom": 447,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 7635,
+      "sideways": false,
+      "words": 257,
+      "header": 177,
+      "primaryBottom": 745,
+      "small": []
+    },
+    "imageKB": 36.2
+  },
+  "en/parents": {
+    "phone": {
+      "height": 3506,
+      "sideways": false,
+      "words": 352,
+      "header": 81,
+      "primaryBottom": 387,
+      "small": []
+    },
+    "wide": {
+      "height": 2649,
+      "sideways": false,
+      "words": 357,
+      "header": 81,
+      "primaryBottom": 362,
+      "small": []
+    },
+    "first320": {
+      "height": 3824,
+      "sideways": false,
+      "words": 352,
+      "header": 81,
+      "primaryBottom": 415,
+      "small": []
+    },
+    "text200at320": {
+      "height": 9395,
+      "sideways": false,
+      "words": 352,
+      "header": 177,
+      "primaryBottom": 1220,
+      "small": []
+    },
+    "text200at720": {
+      "height": 5177,
+      "sideways": false,
+      "words": 352,
+      "header": 113,
+      "primaryBottom": 586,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 9395,
+      "sideways": false,
+      "words": 355,
+      "header": 177,
+      "primaryBottom": 1220,
+      "small": []
+    },
+    "imageKB": 33.3
+  },
+  "en/teachers": {
+    "phone": {
+      "height": 3935,
+      "sideways": false,
+      "words": 419,
+      "header": 81,
+      "primaryBottom": 346,
+      "small": []
+    },
+    "wide": {
+      "height": 3274,
+      "sideways": false,
+      "words": 424,
+      "header": 81,
+      "primaryBottom": 362,
+      "small": []
+    },
+    "first320": {
+      "height": 4260,
+      "sideways": false,
+      "words": 419,
+      "header": 81,
+      "primaryBottom": 346,
+      "small": []
+    },
+    "text200at320": {
+      "height": 10357,
+      "sideways": false,
+      "words": 419,
+      "header": 177,
+      "primaryBottom": 883,
+      "small": []
+    },
+    "text200at720": {
+      "height": 5983,
+      "sideways": false,
+      "words": 419,
+      "header": 113,
+      "primaryBottom": 447,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 10357,
+      "sideways": false,
+      "words": 422,
+      "header": 177,
+      "primaryBottom": 883,
+      "small": []
+    },
+    "imageKB": 36.4
+  },
+  "en/about": {
+    "phone": {
+      "height": 1856,
+      "sideways": false,
+      "words": 184,
+      "header": 81,
+      "primaryBottom": 1057,
+      "small": []
+    },
+    "wide": {
+      "height": 1331,
+      "sideways": false,
+      "words": 189,
+      "header": 81,
+      "primaryBottom": 754,
+      "small": []
+    },
+    "first320": {
+      "height": 2148,
+      "sideways": false,
+      "words": 184,
+      "header": 81,
+      "primaryBottom": 1243,
+      "small": []
+    },
+    "text200at320": {
+      "height": 5696,
+      "sideways": false,
+      "words": 184,
+      "header": 177,
+      "primaryBottom": 3989,
+      "small": []
+    },
+    "text200at720": {
+      "height": 2755,
+      "sideways": false,
+      "words": 184,
+      "header": 113,
+      "primaryBottom": 1756,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 5696,
+      "sideways": false,
+      "words": 187,
+      "header": 177,
+      "primaryBottom": 3989,
+      "small": []
+    },
+    "imageKB": 0
+  },
+  "en/404": {
+    "phone": {
+      "height": 1179,
+      "sideways": false,
+      "words": 66,
+      "header": 81,
+      "primaryBottom": 526,
+      "small": []
+    },
+    "wide": {
+      "height": 954,
+      "sideways": false,
+      "words": 71,
+      "header": 81,
+      "primaryBottom": 498,
+      "small": []
+    },
+    "first320": {
+      "height": 1285,
+      "sideways": false,
+      "words": 66,
+      "header": 81,
+      "primaryBottom": 526,
+      "small": []
+    },
+    "text200at320": {
+      "height": 2395,
+      "sideways": false,
+      "words": 66,
+      "header": 177,
+      "primaryBottom": 1087,
+      "small": []
+    },
+    "text200at720": {
+      "height": 1522,
+      "sideways": false,
+      "words": 66,
+      "header": 113,
+      "primaryBottom": 767,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 2395,
+      "sideways": false,
+      "words": 69,
+      "header": 177,
+      "primaryBottom": 1087,
+      "small": []
+    },
+    "imageKB": 0
+  },
+  "es/home": {
+    "phone": {
+      "height": 3241,
+      "sideways": false,
+      "words": 277,
+      "header": 81,
+      "primaryBottom": 401,
+      "small": [
+        "a mailto:hello@hangulroute.com 84x18",
+        "a /es/privacy 162x18"
+      ]
+    },
+    "wide": {
+      "height": 2254,
+      "sideways": false,
+      "words": 282,
+      "header": 81,
+      "primaryBottom": 417,
+      "small": [
+        "a mailto:hello@hangulroute.com 84x18",
+        "a /es/privacy 162x18"
+      ]
+    },
+    "first320": {
+      "height": 3549,
+      "sideways": false,
+      "words": 277,
+      "header": 81,
+      "primaryBottom": 429,
+      "small": [
+        "a mailto:hello@hangulroute.com 84x18",
+        "a /es/privacy 162x18"
+      ]
+    },
+    "text200at320": {
+      "height": 8520,
+      "sideways": false,
+      "words": 277,
+      "header": 177,
+      "primaryBottom": 1187,
+      "small": [
+        "a mailto:hello@hangulroute.com 160x38"
+      ]
+    },
+    "text200at720": {
+      "height": 4672,
+      "sideways": false,
+      "words": 277,
+      "header": 113,
+      "primaryBottom": 613,
+      "small": [
+        "a mailto:hello@hangulroute.com 160x38"
+      ]
+    },
+    "langOpen320text200": {
+      "height": 8520,
+      "sideways": false,
+      "words": 280,
+      "header": 177,
+      "primaryBottom": 1187,
+      "small": [
+        "a mailto:hello@hangulroute.com 160x38"
+      ]
+    },
+    "imageKB": 16.6
+  },
+  "es/learners": {
+    "phone": {
+      "height": 3077,
+      "sideways": false,
+      "words": 257,
+      "header": 81,
+      "primaryBottom": 318,
+      "small": []
+    },
+    "wide": {
+      "height": 2974,
+      "sideways": false,
+      "words": 262,
+      "header": 81,
+      "primaryBottom": 362,
+      "small": []
+    },
+    "first320": {
+      "height": 3343,
+      "sideways": false,
+      "words": 257,
+      "header": 81,
+      "primaryBottom": 346,
+      "small": []
+    },
+    "text200at320": {
+      "height": 8375,
+      "sideways": false,
+      "words": 257,
+      "header": 177,
+      "primaryBottom": 939,
+      "small": []
+    },
+    "text200at720": {
+      "height": 4274,
+      "sideways": false,
+      "words": 257,
+      "header": 113,
+      "primaryBottom": 447,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 8375,
+      "sideways": false,
+      "words": 260,
+      "header": 177,
+      "primaryBottom": 939,
+      "small": []
+    },
+    "imageKB": 40.7
+  },
+  "es/parents": {
+    "phone": {
+      "height": 3582,
+      "sideways": false,
+      "words": 378,
+      "header": 81,
+      "primaryBottom": 415,
+      "small": []
+    },
+    "wide": {
+      "height": 2622,
+      "sideways": false,
+      "words": 383,
+      "header": 81,
+      "primaryBottom": 362,
+      "small": []
+    },
+    "first320": {
+      "height": 4044,
+      "sideways": false,
+      "words": 378,
+      "header": 81,
+      "primaryBottom": 457,
+      "small": []
+    },
+    "text200at320": {
+      "height": 10681,
+      "sideways": false,
+      "words": 378,
+      "header": 177,
+      "primaryBottom": 1335,
+      "small": []
+    },
+    "text200at720": {
+      "height": 5480,
+      "sideways": false,
+      "words": 378,
+      "header": 113,
+      "primaryBottom": 642,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 10681,
+      "sideways": false,
+      "words": 381,
+      "header": 177,
+      "primaryBottom": 1335,
+      "small": []
+    },
+    "imageKB": 36.6
+  },
+  "es/teachers": {
+    "phone": {
+      "height": 4188,
+      "sideways": false,
+      "words": 448,
+      "header": 81,
+      "primaryBottom": 346,
+      "small": []
+    },
+    "wide": {
+      "height": 3378,
+      "sideways": false,
+      "words": 453,
+      "header": 81,
+      "primaryBottom": 362,
+      "small": []
+    },
+    "first320": {
+      "height": 4441,
+      "sideways": false,
+      "words": 448,
+      "header": 81,
+      "primaryBottom": 346,
+      "small": []
+    },
+    "text200at320": {
+      "height": 11587,
+      "sideways": false,
+      "words": 448,
+      "header": 177,
+      "primaryBottom": 1054,
+      "small": []
+    },
+    "text200at720": {
+      "height": 6255,
+      "sideways": false,
+      "words": 448,
+      "header": 113,
+      "primaryBottom": 503,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 11587,
+      "sideways": false,
+      "words": 451,
+      "header": 177,
+      "primaryBottom": 1054,
+      "small": []
+    },
+    "imageKB": 40.1
+  },
+  "es/about": {
+    "phone": {
+      "height": 2043,
+      "sideways": false,
+      "words": 202,
+      "header": 81,
+      "primaryBottom": 1243,
+      "small": []
+    },
+    "wide": {
+      "height": 1386,
+      "sideways": false,
+      "words": 207,
+      "header": 81,
+      "primaryBottom": 809,
+      "small": []
+    },
+    "first320": {
+      "height": 2283,
+      "sideways": false,
+      "words": 202,
+      "header": 81,
+      "primaryBottom": 1354,
+      "small": []
+    },
+    "text200at320": {
+      "height": 6106,
+      "sideways": false,
+      "words": 202,
+      "header": 177,
+      "primaryBottom": 4302,
+      "small": []
+    },
+    "text200at720": {
+      "height": 3016,
+      "sideways": false,
+      "words": 202,
+      "header": 113,
+      "primaryBottom": 2017,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 6106,
+      "sideways": false,
+      "words": 205,
+      "header": 177,
+      "primaryBottom": 4302,
+      "small": []
+    },
+    "imageKB": 0
+  },
+  "es/404": {
+    "phone": {
+      "height": 1221,
+      "sideways": false,
+      "words": 73,
+      "header": 81,
+      "primaryBottom": 568,
+      "small": []
+    },
+    "wide": {
+      "height": 982,
+      "sideways": false,
+      "words": 78,
+      "header": 81,
+      "primaryBottom": 526,
+      "small": []
+    },
+    "first320": {
+      "height": 1354,
+      "sideways": false,
+      "words": 73,
+      "header": 81,
+      "primaryBottom": 595,
+      "small": []
+    },
+    "text200at320": {
+      "height": 2796,
+      "sideways": false,
+      "words": 73,
+      "header": 177,
+      "primaryBottom": 1447,
+      "small": []
+    },
+    "text200at720": {
+      "height": 1605,
+      "sideways": false,
+      "words": 73,
+      "header": 113,
+      "primaryBottom": 850,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 2796,
+      "sideways": false,
+      "words": 76,
+      "header": 177,
+      "primaryBottom": 1447,
+      "small": []
+    },
+    "imageKB": 0
+  },
+  "ko/home": {
+    "phone": {
+      "height": 3004,
+      "sideways": false,
+      "words": 222,
+      "header": 81,
+      "primaryBottom": 360,
+      "small": [
+        "a mailto:hello@hangulroute.com 146x18",
+        "a /ko/privacy 115x18"
+      ]
+    },
+    "wide": {
+      "height": 2183,
+      "sideways": false,
+      "words": 227,
+      "header": 81,
+      "primaryBottom": 417,
+      "small": [
+        "a mailto:hello@hangulroute.com 146x18",
+        "a /ko/privacy 517x43"
+      ]
+    },
+    "first320": {
+      "height": 3153,
+      "sideways": false,
+      "words": 222,
+      "header": 81,
+      "primaryBottom": 429,
+      "small": [
+        "a mailto:hello@hangulroute.com 146x18",
+        "a /ko/privacy 115x18"
+      ]
+    },
+    "text200at320": {
+      "height": 7412,
+      "sideways": false,
+      "words": 222,
+      "header": 177,
+      "primaryBottom": 1049,
+      "small": [
+        "a /ko/privacy 228x38"
+      ]
+    },
+    "text200at720": {
+      "height": 4313,
+      "sideways": false,
+      "words": 222,
+      "header": 113,
+      "primaryBottom": 530,
+      "small": [
+        "a mailto:hello@hangulroute.com 290x38"
+      ]
+    },
+    "langOpen320text200": {
+      "height": 7412,
+      "sideways": false,
+      "words": 225,
+      "header": 177,
+      "primaryBottom": 1049,
+      "small": [
+        "a /ko/privacy 228x38"
+      ]
+    },
+    "imageKB": 14.9
+  },
+  "ko/learners": {
+    "phone": {
+      "height": 2954,
+      "sideways": false,
+      "words": 201,
+      "header": 81,
+      "primaryBottom": 318,
+      "small": []
+    },
+    "wide": {
+      "height": 2923,
+      "sideways": false,
+      "words": 206,
+      "header": 81,
+      "primaryBottom": 331,
+      "small": []
+    },
+    "first320": {
+      "height": 2987,
+      "sideways": false,
+      "words": 201,
+      "header": 81,
+      "primaryBottom": 318,
+      "small": []
+    },
+    "text200at320": {
+      "height": 6960,
+      "sideways": false,
+      "words": 201,
+      "header": 177,
+      "primaryBottom": 689,
+      "small": []
+    },
+    "text200at720": {
+      "height": 3998,
+      "sideways": false,
+      "words": 201,
+      "header": 113,
+      "primaryBottom": 447,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 6960,
+      "sideways": false,
+      "words": 204,
+      "header": 177,
+      "primaryBottom": 689,
+      "small": []
+    },
+    "imageKB": 34.4
+  },
+  "ko/parents": {
+    "phone": {
+      "height": 3250,
+      "sideways": false,
+      "words": 265,
+      "header": 81,
+      "primaryBottom": 346,
+      "small": []
+    },
+    "wide": {
+      "height": 2538,
+      "sideways": false,
+      "words": 270,
+      "header": 81,
+      "primaryBottom": 362,
+      "small": []
+    },
+    "first320": {
+      "height": 3450,
+      "sideways": false,
+      "words": 265,
+      "header": 81,
+      "primaryBottom": 387,
+      "small": []
+    },
+    "text200at320": {
+      "height": 8156,
+      "sideways": false,
+      "words": 265,
+      "header": 177,
+      "primaryBottom": 939,
+      "small": []
+    },
+    "text200at720": {
+      "height": 4723,
+      "sideways": false,
+      "words": 265,
+      "header": 113,
+      "primaryBottom": 503,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 8156,
+      "sideways": false,
+      "words": 268,
+      "header": 177,
+      "primaryBottom": 939,
+      "small": []
+    },
+    "imageKB": 31.5
+  },
+  "ko/teachers": {
+    "phone": {
+      "height": 3731,
+      "sideways": false,
+      "words": 326,
+      "header": 81,
+      "primaryBottom": 318,
+      "small": []
+    },
+    "wide": {
+      "height": 3198,
+      "sideways": false,
+      "words": 331,
+      "header": 81,
+      "primaryBottom": 331,
+      "small": []
+    },
+    "first320": {
+      "height": 3852,
+      "sideways": false,
+      "words": 326,
+      "header": 81,
+      "primaryBottom": 318,
+      "small": []
+    },
+    "text200at320": {
+      "height": 9437,
+      "sideways": false,
+      "words": 326,
+      "header": 177,
+      "primaryBottom": 800,
+      "small": []
+    },
+    "text200at720": {
+      "height": 5478,
+      "sideways": false,
+      "words": 326,
+      "header": 113,
+      "primaryBottom": 447,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 9437,
+      "sideways": false,
+      "words": 329,
+      "header": 177,
+      "primaryBottom": 800,
+      "small": []
+    },
+    "imageKB": 32.6
+  },
+  "ko/about": {
+    "phone": {
+      "height": 1801,
+      "sideways": false,
+      "words": 155,
+      "header": 81,
+      "primaryBottom": 1001,
+      "small": []
+    },
+    "wide": {
+      "height": 1303,
+      "sideways": false,
+      "words": 160,
+      "header": 81,
+      "primaryBottom": 726,
+      "small": []
+    },
+    "first320": {
+      "height": 1984,
+      "sideways": false,
+      "words": 155,
+      "header": 81,
+      "primaryBottom": 1161,
+      "small": []
+    },
+    "text200at320": {
+      "height": 5276,
+      "sideways": false,
+      "words": 155,
+      "header": 177,
+      "primaryBottom": 3582,
+      "small": []
+    },
+    "text200at720": {
+      "height": 2699,
+      "sideways": false,
+      "words": 155,
+      "header": 113,
+      "primaryBottom": 1701,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 5276,
+      "sideways": false,
+      "words": 158,
+      "header": 177,
+      "primaryBottom": 3582,
+      "small": []
+    },
+    "imageKB": 0
+  },
+  "ko/404": {
+    "phone": {
+      "height": 1179,
+      "sideways": false,
+      "words": 56,
+      "header": 81,
+      "primaryBottom": 526,
+      "small": []
+    },
+    "wide": {
+      "height": 954,
+      "sideways": false,
+      "words": 61,
+      "header": 81,
+      "primaryBottom": 498,
+      "small": []
+    },
+    "first320": {
+      "height": 1221,
+      "sideways": false,
+      "words": 56,
+      "header": 81,
+      "primaryBottom": 568,
+      "small": []
+    },
+    "text200at320": {
+      "height": 2441,
+      "sideways": false,
+      "words": 56,
+      "header": 177,
+      "primaryBottom": 1137,
+      "small": []
+    },
+    "text200at720": {
+      "height": 1522,
+      "sideways": false,
+      "words": 56,
+      "header": 113,
+      "primaryBottom": 767,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 2441,
+      "sideways": false,
+      "words": 59,
+      "header": 177,
+      "primaryBottom": 1137,
+      "small": []
+    },
+    "imageKB": 0
+  }
+}

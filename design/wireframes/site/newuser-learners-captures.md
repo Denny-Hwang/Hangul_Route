@@ -18,10 +18,12 @@ Audience: a learner of any age deciding whether the app looks like something the
 ```
 │ H2: How most quests work                                      │
 │ 1 Discover · 2 Play · 3 Check (unchanged steps)               │
+│ (small Hoya) Hoya never says "wrong."   (unchanged)           │
 │ ┌home┐ ┌game┐ ┌card┐   ← three phone frames in one row, always three across (each a third of the column,    │
 │ │    │ │    │ │    │      max row width 34rem); each image has its own alt text                              │
 │ └────┘ └────┘ └────┘                                          │
-│ (small Hoya) Hoya never says "wrong." · [See the mini-games v] │  ← unchanged
+│ caption  caption  caption  ← short visible labels: a sampler of real screens, not pictures of steps 1-3       │
+│ [See the mini-games v]  (unchanged)                           │
 ```
 
 States:
