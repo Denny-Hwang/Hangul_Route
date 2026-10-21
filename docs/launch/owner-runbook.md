@@ -591,6 +591,11 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
    이 빌드 변수는 웹 앱 (`hangul-route-app`, PWA) 에만 Retry deployment 로 닿는다. iOS 앱은 빌드할 때 변수가 들어가므로, 새 Xcode 빌드를 만들어 제출해야 바뀐다. 그래서 iOS 기기에는 위 1-3 (원격 `"on"` 0 과 엣지 캐시 비우기) 이 바로 끄는 방법이고, `GET /api/config` 로 결과를 확인한다.
 5. 끄는 것은 화면만이다: 진도, 카드, 기억 상태는 지워지지 않고, 다시 켜면 그대로 보인다 (사양 section 12.2 "What off does").
 
+**K-3. 자동 가드레일 (CM-70b, 할 일 없음, 확인만)**
+1. 매일 11:17 UTC 의 Cron Trigger (보존 기간 정리와 같은 실행) 가 램프 중인 줄 (`"on"` 1, `pct` 1-99) 마다 `updated_at` 을 그 단계의 시작으로 보고, 그 뒤의 하루 단위 날 (최대 7일) 과 그 전 7일을 `learning_rollups` 로 비교한다 (사양 section 3.3 의 가드레일). 하루에 20건이 안 되는 묶음은 보지 않는다.
+2. 넘으면 그 줄의 `pct` 만 한 단계 내린다 (50 → 10 → 0, 사이 값은 아래 단계로). `reason` 에 `guardrail <날짜> pct 50->10: quitRate:match-shape 10.0%->15.0%` 처럼 이유가, `updated_at` 에 시각이 남는다. 올리거나 `"on"` 을 바꾸는 일은 없다. 확인: D1 Console 에서 `SELECT flag, "on", pct, updated_at, reason FROM remote_config;`.
+3. 다시 올리는 것은 오너만 한다 (K-1). K-1 의 INSERT 는 `updated_at` 을 지금으로 바꾸므로 그 시각이 새 단계의 시작이 되고, 같은 날에는 자동 가드레일이 그 줄을 건드리지 않는다.
+
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
 
