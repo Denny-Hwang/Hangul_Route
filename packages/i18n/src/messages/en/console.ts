@@ -94,11 +94,73 @@ export const consoleMsgs = {
   promoNotConfigured: 'Codes are not set up on this deployment yet.',
   schoolInviteHint: 'Teachers sign in, enter this code, then create their class — or you create it and assign them.',
   schoolEmpty: 'Invite a teacher with the code, or create a class and assign one.',
-  /** `cap` is content-schema `FREE_CLASS_STUDENT_CAP`, so no locale types the free cap into its copy. */
-  schoolNoLicence: (cap: number) => `No licence yet — each class keeps the free cap of ${cap} students.`,
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 9.2 (replaces `schoolNoLicence`): a school with no licence or contract.
+   * `classCap` is `FREE_CLASS_STUDENT_CAP`, `schoolCap` is `SCHOOL_LEARNER_CAP`, so no locale types a limit.
+   */
+  schoolNoLicenceCaps: (classCap: number, schoolCap: number) =>
+    `No licence yet. Each class holds up to ${plural('en', classCap, { one: `${classCap} student`, other: `${classCap} students` })}, and the school up to ${schoolCap}.`,
   schoolNearLimit: 'Close to the licence limit — see billing before the next class fills up.',
   schoolAtLimit: 'At the licence limit — new students will be asked to check with their teacher.',
   schoolLicenceLapsed: 'The licence needs attention. Classes stay readable; students keep Stage 1 either way.',
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS sections 3.4 and 9.2: the line under a space's count when it holds the most learners
+   * its plan holds (`at`), or more, kept from before the limit (`over`, SA-D7). Calm: nobody is removed, the line says
+   * what to do. The caps arrive from content-schema (`FAMILY_LIFETIME_LEARNERS`, `GROUP_LICENSE_LEARNERS`,
+   * `SCHOOL_LEARNER_CAP`); a covered school at its cap keeps `schoolAtLimit`.
+   */
+  seats: {
+    family: {
+      at: (cap: number) =>
+        plural('en', cap, {
+          one: `This family has ${cap} learner, the most it can hold. To add someone new, remove a learner in Settings first. Their progress stays on their device.`,
+          other: `This family has ${cap} learners, the most it can hold. To add someone new, remove a learner in Settings first. Their progress stays on their device.`,
+        }),
+      over: (n: number, cap: number) =>
+        `This family has ${n} learners. Everyone keeps their place. New learners can join when there are fewer than ${cap}.`,
+    },
+    class: {
+      at: (cap: number) =>
+        plural('en', cap, {
+          one: `This class has ${cap} student, the most the Group License holds. New students can join when a place opens.`,
+          other: `This class has ${cap} students, the most the Group License holds. New students can join when a place opens.`,
+        }),
+      over: (n: number, cap: number) => `This class has ${n} students. Everyone keeps their place. New students can join when there are fewer than ${cap}.`,
+    },
+    school: {
+      at: (cap: number) =>
+        plural('en', cap, {
+          one: `This school has ${cap} student, the most it holds without a contract. New students can join when a place opens.`,
+          other: `This school has ${cap} students, the most it holds without a contract. New students can join when a place opens.`,
+        }),
+      over: (n: number, cap: number) =>
+        `This school has ${n} students. Everyone keeps their place and everything they learned. New students can join when there are fewer than ${cap}, or write to us for a contract.`,
+    },
+  },
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS sections 5.3 and 9.3: the one-tap rename of a family, class or school where its name
+   * is shown (design/screens/console/rename-inline.md). The name arrives as an argument; `tooLong` gets
+   * `SPACE_NAME_MAX`. The offline and wait lines are `caregiver.retry`.
+   */
+  rename: {
+    cta: 'Rename',
+    a11y: (name: string) => `Rename ${name}`,
+    label: 'Name',
+    save: { cta: 'Save' },
+    cancel: { cta: 'Cancel' },
+    hint: {
+      family: 'Everyone in the family sees this name.',
+      class: 'Students see this name in the app.',
+      school: 'Teachers and administrators see this name.',
+    },
+    empty: 'Type a name.',
+    tooLong: (max: number) => `Names can be up to ${max} characters.`,
+    invalid: 'Use letters or numbers in the name.',
+    saved: 'Name saved.',
+    failed: "Couldn't save the name. Try again.",
+    openMoves: 'Some moves into or out of this space are waiting. A new name asks their grown-ups to look at the move again.',
+    archived: 'Unarchive it first to change the name.',
+  },
 
   /**
    * The adult frame of every grown-up page (`AdultFrame`, F-APP-001 A-5a, section 3.8;
@@ -208,6 +270,8 @@ export const consoleMsgs = {
     nameTitle: { family: 'Name your family', class: 'Name your class', school: 'Name your school' },
     nameLabel: 'Space name',
     classJoinHint: 'Students join with a code — no accounts for kids.',
+    /** [SA] AMENDMENTS-SEATS-ADMINS section 5.3: under the prefilled name field. */
+    nameLater: 'You can change this name later.',
     create: { cta: 'Create' },
     creating: { cta: 'Creating…' },
     signInAgain: 'Please sign in again.',
@@ -549,6 +613,8 @@ export const consoleMsgs = {
       family: 'The person who set up this family manages this plan.',
       class: 'The class owner manages this plan.',
       school: 'Your school manages this plan.',
+      /** [SA] AMENDMENTS-SEATS-ADMINS SA-D11: a school administrator's read-only school card (the owner is the only payer). */
+      schoolAdmin: "The school's owner manages this plan.",
     },
     /** The usage line; a null cap means no cap (`Usage.learnerCap` / `teacherCap`). */
     usage: {
@@ -579,7 +645,8 @@ export const consoleMsgs = {
       },
       license: {
         everyStudent: 'Every lesson for every student while they are enrolled',
-        noCap: (cap: number) => `No ${cap}-student cap`,
+        /** [SA] AMENDMENTS-SEATS-ADMINS section 4 (replaces `noCap`): `GROUP_LICENSE_LEARNERS`. */
+        classLearners: (n: number) => plural('en', n, { one: `Up to ${n} student in the class`, other: `Up to ${n} students in the class` }),
         school: (teachers: number, students: number) =>
           `A school holds up to ${plural('en', teachers, { one: `${teachers} teacher`, other: `${teachers} teachers` })} and ${plural('en', students, { one: `${students} student`, other: `${students} students` })}`,
         browse: 'Browse every lesson as your students see it',
