@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ADMIN_INVITE_PATH,
+  ADMIN_INVITE_TOKEN_KEY,
   APP_ORIGIN,
   APP_ROUTES,
+  AdminInviteBodySchema,
+  adminInviteUrl,
+  parseAdminInvite,
   AdultPersonaSchema,
   CONSOLE_SESSION_KEY,
   DEVICE_GATE_KEY,
@@ -509,5 +514,40 @@ describe('the class join link (owner decision 2026-10-17)', () => {
     expect(parseJoinLink({ pathname: url.pathname, hash: url.hash })).toEqual({ code: 'XYZ789' });
     // The code is in the fragment only: nothing of it in the path or the query a server would see.
     expect(url.pathname + url.search).toBe('/join');
+  });
+});
+
+describe('[SA] the school administrator invite link (AMENDMENTS-SEATS-ADMINS section 6.3)', () => {
+  const TOKEN = 'A'.repeat(20) + 'b_-9' + 'z'.repeat(19); // 43 base64url characters
+
+  it('puts the token in the fragment only, on the /account/invite path', () => {
+    expect(TOKEN).toHaveLength(43);
+    expect([ADMIN_INVITE_PATH, ADMIN_INVITE_TOKEN_KEY]).toEqual(['/account/invite', 't']);
+    const link = adminInviteUrl(APP_ORIGIN, TOKEN) ?? '';
+    expect(link).toBe(`https://app.hangulroute.com/account/invite#t=${TOKEN}`);
+    const url = new URL(link);
+    expect(url.pathname + url.search).toBe('/account/invite');
+    expect(url.hash).toBe(`#t=${TOKEN}`);
+    expect(adminInviteUrl('http://localhost:3000/', TOKEN)).toBe(`http://localhost:3000/account/invite#t=${TOKEN}`);
+    expect(isGrownUpPath(url.pathname)).toBe(true);
+    expect(safeNextPath(link.replace(APP_ORIGIN, ''))).toBe('/account/invite');
+  });
+
+  it('builds no link for anything that is not a 43-character base64url token', () => {
+    for (const bad of ['', TOKEN.slice(1), `${TOKEN}A`, `${TOKEN.slice(1)}=`, `${TOKEN.slice(1)}+`, `${TOKEN.slice(1)}/`, `${TOKEN.slice(1)} `]) expect(adminInviteUrl(APP_ORIGIN, bad), bad).toBeNull();
+  });
+
+  it('parseAdminInvite accepts only a 43-character base64url token, with or without the #', () => {
+    expect(parseAdminInvite(`#t=${TOKEN}`)).toBe(TOKEN);
+    expect(parseAdminInvite(`t=${TOKEN}`)).toBe(TOKEN);
+    expect(parseAdminInvite(`#x=1&t=${TOKEN}`)).toBe(TOKEN);
+    for (const hash of ['', '#', '#t=', `#t=${TOKEN.slice(1)}`, `#t=${TOKEN}A`, `#t=${TOKEN.slice(1)}%`, `#token=${TOKEN}`, `#c=${TOKEN}`, '#t=%E0%A4%A']) expect(parseAdminInvite(hash), hash).toBeNull();
+  });
+
+  it('round-trips, and the request body takes the same token only', () => {
+    const url = new URL(adminInviteUrl(APP_ORIGIN, TOKEN) ?? '');
+    expect(parseAdminInvite(url.hash)).toBe(TOKEN);
+    expect(AdminInviteBodySchema.safeParse({ token: TOKEN }).success).toBe(true);
+    for (const token of [TOKEN.slice(1), `${TOKEN}=`, 42, null]) expect(AdminInviteBodySchema.safeParse({ token }).success).toBe(false);
   });
 });

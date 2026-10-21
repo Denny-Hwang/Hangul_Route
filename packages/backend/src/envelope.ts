@@ -15,7 +15,7 @@ export function fail(
   c: Context,
   code: string,
   message: string,
-  status: 400 | 401 | 403 | 404 | 409 | 413 | 422 | 429 | 500 | 501 | 502 | 503 = 400,
+  status: 400 | 401 | 403 | 404 | 409 | 410 | 413 | 422 | 429 | 500 | 501 | 502 | 503 = 400,
   details?: Record<string, unknown>,
 ): Response {
   return c.json({ ok: false, error: { code, message, details }, meta: meta() }, status);

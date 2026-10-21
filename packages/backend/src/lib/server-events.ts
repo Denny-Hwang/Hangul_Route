@@ -242,6 +242,13 @@ const SPACE_SERVER_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
     path: oneOf(['join', 'transfer', 'move']),
   },
   'space.renamed': { kind: oneOf(['family', 'class', 'school']), role: oneOf(['owner', 'teacher', 'admin']) },
+  // [SA] section 6.8: school administrators. Only the refusal reason; never a token, a name, an email or an id.
+  'space.admin.invite_created': {},
+  'space.admin.invite_revoked': {},
+  'space.admin.joined': {},
+  'space.admin.accept_refused': { reason: oneOf(['used', 'expired', 'revoked', 'full', 'owner', 'not_found', 'email_unverified']) },
+  'space.admin.removed': {},
+  'space.admin.left': {},
 };
 
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
