@@ -46,6 +46,13 @@ export type CurrTelemetryEventName = (typeof CURR_TELEMETRY_EVENT_NAMES)[number]
  */
 export const CURR_TELEMETRY_NO_PROFILE: readonly CurrTelemetryEventName[] = ['family.goal_met', 'space.goal.set', 'space.goal.met', 'lecture.game.finished'];
 
+/**
+ * Section R names only the Worker records (row CM-62, through `recordServerEvent`): `POST
+ * /api/telemetry` refuses them with 422, as it refuses `billing.*`, so no client can forge a class
+ * goal (`isServerOnlyTelemetryName`).
+ */
+export const CURR_TELEMETRY_SERVER_ONLY: readonly CurrTelemetryEventName[] = ['space.goal.set', 'space.goal.met'];
+
 /** A whole-number count. The bound keeps a count from carrying a timestamp or an id. */
 const count = z.number().int().min(0).max(100_000);
 const wholeUpTo = (max: number) => z.number().int().min(0).max(max);
@@ -83,6 +90,10 @@ const PACK_LEVEL_ID_RE = /^episode:pack-[a-z0-9]+(?:-[a-z0-9]+)*-s[1-7]$/;
 const GridCellIdSchema = z.string().regex(GRID_CELL_ID_RE);
 const CellOrPackLevelIdSchema = z.string().refine((id) => GRID_CELL_ID_RE.test(id) || PACK_LEVEL_ID_RE.test(id));
 const PackIdSchema = z.string().regex(/^pack:[a-z0-9]+(?:-[a-z0-9]+)*$/);
+/** The class goal metrics of section 7.6 (`space_goals.metric`). */
+export const SPACE_GOAL_METRICS = ['stories', 'refreshed', 'quests'] as const;
+const SpaceGoalSchema = z.object({ metric: z.enum(SPACE_GOAL_METRICS), target: z.number().int().min(1).max(10_000) }).strict();
+
 /** A short code from a fixed table (a stamp id slug, a weekly quest kind): lowercase words joined by hyphens. */
 const codeSlug = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/).max(40);
 
@@ -98,7 +109,8 @@ const ArmsSchema = z.object(Object.fromEntries(EXPERIMENT_IDS.map((id) => [id, E
 /**
  * `memory.daily`, sent once a local day (row CM-12): answer counts by item kind x rung x lag
  * bucket, each cell at most once, so per-item data stays on the device. `calib` (10 calibration
- * bins) is sent by row CM-72 only.
+ * bins) is sent by row CM-72 only, and `arms` (experiment id to arm code) only once row CM-71
+ * runs an experiment, so a build before then may leave either out.
  */
 const MemoryDailySchema = z
   .object({
@@ -113,7 +125,7 @@ const MemoryDailySchema = z
     minutes: wholeUpTo(1440),
     durableWeekBucket: TelemetryBucketSchema,
     dueVolumeBucket: TelemetryBucketSchema,
-    arms: ArmsSchema,
+    arms: ArmsSchema.optional(),
   })
   .strict();
 
@@ -126,7 +138,7 @@ export const CURR_TELEMETRY_PAYLOADS = {
     .object({ cellId: GridCellIdSchema, passed: z.boolean(), items: wholeUpTo(50), firstTryCorrect: wholeUpTo(50) })
     .strict()
     .refine((p) => p.firstTryCorrect <= p.items, 'firstTryCorrect cannot exceed items'),
-  'quest.adapt': z.object({ questId: z.string().regex(QUEST_ID_RE), dir: z.enum(['compact', 'scaffold']) }).strict(),
+  'quest.adapt': z.object({ questId: z.string().regex(QUEST_ID_RE).max(64), dir: z.enum(['compact', 'scaffold']) }).strict(),
   'goal.set': z.object({ daily: DailyGoalSchema, weeklyDays: WeeklyDaysSchema }).strict(),
   'goal.met': z.object({ points: wholeUpTo(1000), target: DailyGoalSchema }).strict(),
   'week.goal_met': z.object({ days: wholeUpTo(7), target: WeeklyDaysSchema }).strict(),
@@ -138,9 +150,9 @@ export const CURR_TELEMETRY_PAYLOADS = {
   'pack.opened': z.object({ packId: PackIdSchema }).strict(),
   'pack.level_complete': z.object({ packId: PackIdSchema, stage: StageKeySchema }).strict(),
   'family.goal_met': z.object({ weekTarget: z.number().int().min(1).max(10_000) }).strict(),
-  // Worker side (row CM-62): no payload keys until that row defines them.
-  'space.goal.set': z.object({}).strict(),
-  'space.goal.met': z.object({}).strict(),
+  // Server-only (row CM-62): metric and target codes, never a space, class, account or learner id.
+  'space.goal.set': SpaceGoalSchema,
+  'space.goal.met': SpaceGoalSchema,
   'lecture.game.finished': z.object({ preset: z.enum(LECTURE_GAME_PRESETS), rounds: wholeUpTo(200), teams: wholeUpTo(4) }).strict(),
   'exp.exposure': z.object({ experimentId: ExperimentIdSchema, arm: ExperimentArmSchema }).strict(),
 } as const satisfies Record<CurrTelemetryEventName, z.ZodTypeAny>;
@@ -164,7 +176,12 @@ export const SESSION_END_QUEST_FIELDS = {
   afterWrongStreak: z.union([z.literal(0), z.literal(1), z.literal(2)]),
 } as const;
 
-/** `session.end` (TELEMETRY-NAMES-2 section A): `{ durationSeconds, streakDays }` plus the three optional fields. */
+/**
+ * `session.end` (TELEMETRY-NAMES-2 section A): `{ durationSeconds, streakDays }` plus the three
+ * optional fields. This is the shape an app sends; it is strict for the app's own tests. The Worker
+ * is lenient on purpose so older clients keep working: it stores other `session.end` keys as given,
+ * as before CM-3, and drops only a CM-3 field whose value is off its codes.
+ */
 export const SessionEndPayloadSchema = z
   .object({
     durationSeconds: z.number().int().nonnegative(),

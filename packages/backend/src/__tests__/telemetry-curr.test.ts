@@ -9,7 +9,8 @@ import { store } from '../store';
  * CM-3; Worker first, so this ships before any app sends them). A payload is stored only when it
  * parses against its strict schema (ids, codes, counts and buckets only); otherwise the event is
  * still accepted and stored without it, as a non-object payload is today. `profileId` stays in
- * the envelope, except for the account-level, Worker-side and lecture names.
+ * the envelope, except for the account-level, Worker-side and lecture names. `space.goal.*` is
+ * server-only: a client POST is refused with 422 and only `recordServerEvent` stores it.
  */
 type Stored = { name: string; profileId?: string; payload?: Record<string, unknown> };
 const NOW = new Date('2026-10-21T12:00:00.000Z');
@@ -40,6 +41,10 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
       arms: {},
     },
   ],
+  [
+    'memory.daily',
+    { hist: [], lapses: 0, items: 0, newHeld: 0, minutes: 0, durableWeekBucket: '0', dueVolumeBucket: '0' },
+  ],
   ['items.seeded', { countBucket: '500-999', spreadDaysBucket: '31+' }],
   ['mastery.level_up', { cellId: 'episode:stage2-nature', level: 1 }],
   ['stage.card_opened', { stage: 'stage2' }],
@@ -55,6 +60,7 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
   ['pack.level_complete', { packId: 'pack:numbers-time', stage: 'stage2' }],
   ['exp.exposure', { experimentId: 'E2', arm: 'a' }],
 ];
+const SERVER_ONLY = ['space.goal.set', 'space.goal.met'] as const;
 const NO_PROFILE: Array<[string, Record<string, unknown>]> = [
   ['family.goal_met', { weekTarget: 60 }],
   ['lecture.game.finished', { preset: 'yut-race', rounds: 10, teams: 2 }],
@@ -63,7 +69,7 @@ const NO_PROFILE: Array<[string, Record<string, unknown>]> = [
 describe('POST /api/telemetry, F-CURR-002 section 11.3 names (CM-3, Worker first)', () => {
   it('lists all nineteen names on the shared list the Worker accepts', () => {
     for (const name of CURR_TELEMETRY_EVENT_NAMES) expect(TELEMETRY_EVENT_NAMES, name).toContain(name);
-    expect(new Set([...PER_PROFILE, ...NO_PROFILE].map(([n]) => n)).size + 2).toBe(CURR_TELEMETRY_EVENT_NAMES.length);
+    expect(new Set([...PER_PROFILE, ...NO_PROFILE].map(([n]) => n)).size + SERVER_ONLY.length).toBe(CURR_TELEMETRY_EVENT_NAMES.length);
   });
 
   it('accepts each per-profile name and stores its payload as sent, with the profile id in the envelope', async () => {
@@ -74,14 +80,18 @@ describe('POST /api/telemetry, F-CURR-002 section 11.3 names (CM-3, Worker first
     expect(store.events.map((e) => [e.name, e.profileId, e.payload])).toEqual(PER_PROFILE.map(([n, p]) => [n, 'profile:suni', p]));
   });
 
-  it('never stores a profile id on family.goal_met, lecture.game.finished or space.goal.*', async () => {
+  it('never stores a profile id on family.goal_met or lecture.game.finished', async () => {
     for (const [name, payload] of NO_PROFILE) expect((await post({ name, profileId: 'profile:suni', payload })).status, name).toBe(201);
-    for (const name of ['space.goal.set', 'space.goal.met']) expect((await post({ name, profileId: 'profile:suni', payload: { target: 20 } })).status, name).toBe(201);
-    expect(store.events.map((e) => [e.name, e.profileId, e.payload])).toEqual([
-      ...NO_PROFILE.map(([n, p]) => [n, undefined, p]),
-      ['space.goal.set', undefined, undefined],
-      ['space.goal.met', undefined, undefined],
-    ]);
+    expect(store.events.map((e) => [e.name, e.profileId, e.payload])).toEqual(NO_PROFILE.map(([n, p]) => [n, undefined, p]));
+  });
+
+  it('refuses a client-sent space.goal.set or space.goal.met with 422 and stores nothing', async () => {
+    for (const name of SERVER_ONLY) {
+      const r = await post({ name, profileId: 'profile:suni', payload: { metric: 'stories', target: 20 } });
+      expect(r.status, name).toBe(422);
+      expect(r.body.ok).toBe(false);
+    }
+    expect(store.events).toHaveLength(0);
   });
 
   it('drops a payload that carries an extra key, a profile id or free text, and keeps the event', async () => {
@@ -107,9 +117,11 @@ describe('POST /api/telemetry, F-CURR-002 section 11.3 names (CM-3, Worker first
     expect(r.body.data?.event.payload).toBeUndefined();
   });
 
-  it('records space.goal.* on the Worker side with the same filter and no profile id', () => {
-    expect(recordServerEvent('space.goal.set', { target: 20, spaceId: 'space:class-a' })).toMatchObject({ name: 'space.goal.set', payload: undefined });
-    expect(store.events.at(-1)?.profileId).toBeUndefined();
+  it('records space.goal.* on the Worker side with its metric and target, no profile id, and the same strict filter', () => {
+    expect(recordServerEvent('space.goal.set', { metric: 'stories', target: 20 })).toMatchObject({ name: 'space.goal.set', payload: { metric: 'stories', target: 20 } });
+    expect(recordServerEvent('space.goal.met', { metric: 'quests', target: 12 })).toMatchObject({ name: 'space.goal.met', payload: { metric: 'quests', target: 12 } });
+    expect(recordServerEvent('space.goal.met', { metric: 'stories', target: 20, spaceId: 'space:class-a' })).toMatchObject({ name: 'space.goal.met', payload: undefined });
+    expect(store.events.every((e) => e.profileId === undefined)).toBe(true);
   });
 });
 

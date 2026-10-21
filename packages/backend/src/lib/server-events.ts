@@ -272,7 +272,8 @@ function ruledPayload(
  * F-CURR-002 section 11.3 names (TELEMETRY-NAMES-2 section R, row CM-3): a payload is stored only
  * when it parses against its strict schema (ids, codes, counts and buckets only), else the event is
  * kept without it. The profile id stays in the envelope, except on `family.goal_met` (account
- * level), `space.goal.*` (Worker side) and `lecture.game.finished`.
+ * level), `space.goal.*` (server-only: refused on POST /api/telemetry, recorded by the Worker) and
+ * `lecture.game.finished`.
  */
 const CURR_NO_PROFILE: ReadonlySet<string> = new Set(CURR_TELEMETRY_NO_PROFILE);
 
@@ -305,7 +306,8 @@ export function keptEventFields(
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
   if (isCurrTelemetryName(name)) {
     const parsed = CURR_TELEMETRY_PAYLOADS[name].safeParse(payload);
-    return { profileId: !CURR_NO_PROFILE.has(name) && typeof profileId === 'string' ? profileId : undefined, payload: parsed.success ? parsed.data : undefined };
+    const kept = parsed.success && Object.keys(parsed.data).length > 0 ? parsed.data : undefined;
+    return { profileId: !CURR_NO_PROFILE.has(name) && typeof profileId === 'string' ? profileId : undefined, payload: kept };
   }
   if (name === 'session.end') return { profileId: typeof profileId === 'string' ? profileId : undefined, payload: sessionEndPayload(payload) };
   if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(BROWSE_PAYLOAD_RULES[name], payload) };
