@@ -95,6 +95,7 @@ Rendered by the shipped Listen & Pick renderer in its **text prompt** mode, deri
 
 - Same options, same answer, same scoring; the gap does not animate (the option card takes the success look, as in Listen & Pick), and the completed sentence is said once on the right answer.
 - CM-30 adds the text prompt mode to Listen & Pick (`promptMode: 'text'`: no speaker before the answer, the prompt drawn as text with an optional heading override). The mode is additive; existing Listen & Pick rounds are unchanged.
+- **The fallback runs on new code, so it is tested as a rescue, not only as a screen** (this fallback and Match Shape's Read Pick both render through `promptMode: 'text'`). CM-30 (or CM-33, whichever adds the mode) gives the mode its own unit tests (the view with and without a heading override, the answer flow, the no-speaker rule) and keeps every existing Listen & Pick snapshot and test unchanged when the mode is added (no snapshot update in that PR). The switch-off content test (spec §14) renders **and answers** at least one fallback round per quest in Playwright with `game.cloze-pick` off (and with `game.match-shape` off in CM-33): it takes the right tap and reaches the next round, so turning the switch off is known to rescue the quest.
 
 ## No device voice
 

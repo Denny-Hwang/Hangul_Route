@@ -67,8 +67,14 @@ Compact (320 x 568, layout B: the chat log scrolls, the reply area is pinned to 
 |  | ~~ 한글 책을 찾아요. ~~     |  |
 |  | (hangeul chaegeul chajayo)| |
 |  +--------------------------+  |
+|  +--------------------------+  |
+|  | ~~ 괜찮아요. ~~            |  |  <- the turn's less natural reply (role-play-turn-options),
+|  | (gwaenchanayo)           |  |     drawn like the others; the order is seeded per turn
+|  +--------------------------+  |
 +--------------------------------+
 ```
+
+The pinned reply area grows up to half the window, but never so far that the newest partner bubble is cut, and it always keeps its instruction row and one reply; past that it scrolls inside itself. Turn 2 is the worst case of the example: the instruction row (`touchTarget.min`) and three reply bubbles of `touchTarget.child` with their gaps and padding come to 348. Measured in the mock at 320 x 568: the header takes 100, the newest partner bubble with its [ Hear it ] is 195 tall, so the log keeps 203 and the reply area stops at 265 (under half, 284) and scrolls; the partner bubble, the instruction row and the first two replies are fully visible, and the third reply is reached by scrolling the area (`shots/role-play-320.png`). At 768 x 1024 all three replies fit (348) without scrolling.
 
 Less natural reply (the turn stays; nothing is sent):
 
@@ -79,7 +85,10 @@ Less natural reply (the turn stays; nothing is sent):
 |  +--------------------------+  |
 |  | (Hoya thinking)          |  |  <- Hoya's amber bubble takes the top of the reply area
 |  | (You are the one leaving,|  |     the why line (content); the tapped reply stays in view
-|  |  so 안녕히 계세요 fits.)  |  |     with the nudge look and the mark glyph, locked
+|  |  so ~~ 안녕히 계세요 ~~     |  |     with the nudge look and the mark glyph, locked; quoted
+|  |  (annyeonghi gyeseyo)    |  |     Korean is drawn as taught Korean with its romanization
+|  |  fits: it is said to the |  |
+|  |  one who stays.)         |  |
 |  +--------------------------+  |
 |  [ ~~ 안녕히 가세요! ~~  (mark)]  |  <- locked, nudge look
 |  [ ~~ 안녕히 계세요! ~~        ]  |  <- still open: the retry
@@ -128,7 +137,7 @@ Exit to: `quest/player` (Continue on the end card) · the quest player's leave s
 
 - **partner speaking** (reply bubbles shown, the line playing), **awaiting a reply**, **nudge** (less natural, locked bubble, Hoya), **second miss ring**, **reply sending** (the reply said), **end card**.
 - **empty / bad data**: a scene that fails `role-play-good-endings` or `role-play-even-branches` never builds; a scope that resolves to no scene shows the shell's empty state with [ Back to quest ].
-- **long chat at 320 or 200 % text**: the log scrolls; the newest partner bubble is scrolled into view above the reply area when a turn opens; the reply area grows up to half the window and then scrolls itself, so the newest line and at least one reply are always visible.
+- **long chat at 320 or 200 % text**: the log scrolls; the newest partner bubble is scrolled into view above the reply area when a turn opens; the reply area grows up to half the window (less when the newest partner bubble needs the room, never less than its instruction row and one reply) and then scrolls itself, so the newest line and at least one reply are always visible (three replies at 320 x 568: the area stops at 265 and scrolls, drawn in the mock). CM-35's Playwright check opens turn 2 of the fixture at 320 x 568 and at 200 % text and asserts that the newest partner bubble and its Hear it are inside the log's visible part and the first reply is inside the pinned area's visible part.
 - **reduced motion**: no bubble rise; the log jumps to the newest line.
 - **no Korean voice / sound off**: as above.
 

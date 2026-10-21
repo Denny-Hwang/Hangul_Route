@@ -24,7 +24,7 @@ Built by:
 | `mock/states.html` | boards C, D, S, M, O, R, Y, B: the miss (amber) and found states, each format's fallback round when its `game.<kind>` is off, the no-voice notice, the spelling round, the Role Play end card, My page (not kept), the Yut "throw again" state |
 | `shots/` | the mocks rendered in Chromium: `<format>-320.png` (320 x 568 at 2x) and `<format>-768.png` (768 x 1024 at 1x), and `states.png` (the boards at 1x, full page) |
 
-Open any file in a browser. Nothing is interactive (the Role Play page scrolls its chat log to the newest line on load, as the app does).
+Open any file in a browser. Nothing is interactive (the Role Play page sizes its reply area by the layout B rule and scrolls its chat log to the newest line on load, as the app does).
 
 ## Design decisions
 
@@ -44,7 +44,7 @@ Open any file in a browser. Nothing is interactive (the Role Play page scrolls i
 
 **D8. My page is shown and not kept.** The not-kept line sits above the text (board Y1), and there is no save, share, copy, download or print control. Every bank has one neutral option (호야 for a person, 괜찮아요 for a feeling, 공원 for a place), drawn like the others.
 
-**D9. The Yut board is play only.** The board band (128 on a phone from 600 tall, 96 below 600 tall with the throw on one line and no sticks art, 320 from regular) shows the 29 stations of the board (20 on the edge, 6 to a side with shared corners, and 9 on the two crossing lines), the learner's piece, the last throw's name in Korean with romanization and how far it went, the sticks as drawn art, and the home tray of four pieces. The stations are not tap targets. Stars and everything else come from the review answers; the result screen is the plain one. No other player, no capture, no backward move.
+**D9. The Yut board is play only.** The board band (128 on a phone from 600 tall, 96 below 600 tall with the throw on one line and no sticks art, 320 from regular) shows the 29 stations of the board (20 on the edge, 6 to a side with shared corners, and 9 on the two crossing lines), the learner's piece, the last throw's name in Korean with romanization and how far it went, the sticks as drawn art, and the home tray, which draws only the pieces that went home (no empty slots, so it never reads as a count out of four). The stations are not tap targets. Stars and everything else come from the review answers; the result screen is the plain one. No other player, no capture, no backward move.
 
 **D10. Fallbacks are shipped games.** Each board's last device is the format's fallback round, rendered as the shipped game would render it (C3 Listen & Pick with a text prompt, S2 Listen & Pick on the block, M3 Read Pick, R3 Tap to Respond). The dashed note under each is a board note, not UI: the learner sees no notice.
 
@@ -73,6 +73,7 @@ Values that are not tokens. The build rows write them as named constants, never 
 | Yut board drawing, from regular | 320 | 5 x `touchTarget.min` |
 | Match Shape origin picture, phone height | `var(--trace-canvas-min)` (160) | `TRACE_CANVAS_MIN`, referenced, not copied |
 | Chat bubble width cap | 85 % phone, 80 % from regular | keeps the side of a bubble (who said it) visible at every width |
+| Layout B pinned area cap | half the window, less when the newest partner bubble needs the room, never less than the instruction row and one reply | `role-play.md`, States: the newest line and one reply always visible |
 | Syllable Build block zones | 64 x 64 each, the final zone 64 tall across both columns (phone); 96 and a 64-tall final zone from regular | `spacing.jumbo` (= `touchTarget.min`, because a filled zone is a tap target that empties it); `touchTarget.hero` / `touchTarget.min` |
 | Story Order slots | 2 x 2 on a phone, 4 across from regular | a filled slot shows its line's first word with romanization (`그다음에` `geudaeume` needs half the column); each slot at least `touchTarget.min` tall |
 
@@ -85,13 +86,13 @@ Values that are not tokens. The build rows write them as named constants, never 
 | `shots/syllable-build-320.png`, `-768.png` | same | building: the first letter placed, three labelled rows, No final |
 | `shots/match-shape-320.png`, `-768.png` | same | origin round: the ㄴ picture and line, three letter tiles |
 | `shots/story-order-320.png`, `-768.png` | same | captions only: two slots filled with their first words, two cards left, Show meanings, Skip this one |
-| `shots/role-play-320.png`, `-768.png` | same | turn 2 of 4: the log, the partner line with Hear it, two replies pinned |
+| `shots/role-play-320.png`, `-768.png` | same | turn 2 of 4: the log, the partner line with Hear it, three replies pinned (two natural, one less natural); at 320 the reply area stops short of the newest partner bubble and scrolls |
 | `shots/my-story-320.png`, `-768.png` | same | frame 2 of 3, pick: My story so far, the frame, the bank with the neutral option 호야 |
 | `shots/yut-review-320.png`, `-768.png` | same | after a throw (개, 2 stations) with the next review item; below 600 tall the 96 band with the throw on one line; the board beside the item from regular |
 | `shots/states.png` | 1180 wide, 1x, full page | boards C, D, S, M, O, R, Y, B |
 
 ## Checked by eye
 
-- 320 x 568: every target at least 64 tall (48 dp floor of §14 met), no text cut, no horizontal scroll; Syllable Build, Cloze Pick, Match Shape, Dictation and Yut Review fit the first screen; Story Order, Role Play and My Story scroll as their wireframes say (Role Play's reply area stays pinned).
+- 320 x 568: every target at least 64 tall (48 dp floor of §14 met), no text cut, no horizontal scroll; Syllable Build, Cloze Pick, Match Shape, Dictation and Yut Review fit the first screen; Story Order, Role Play and My Story scroll as their wireframes say (Role Play's reply area stays pinned). Role Play turn 2 with three replies (measured in Chromium): header 100, log 203 holding the whole newest partner bubble (195, Hear it included), reply area 265 of its 348 content (under half the window, 284) with the instruction row and two replies fully visible and the third reached by scrolling the area; at 768 x 1024 all three replies fit.
 - 768 x 1024: one reading column (or two panes for Yut Review and My Story), nothing stretched past the reading width.
 - No red, no emoji, no percentage, no timer, no age wording, no microphone or speaking control on any board.
