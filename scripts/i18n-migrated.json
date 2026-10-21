@@ -120,7 +120,8 @@
     "apps/mobile/src/screens/class-update/**",
     "apps/web/src/components/console/GroupedLessonPicker.tsx",
     "apps/web/src/components/console/LecturePresetParts.tsx",
-    "apps/web/src/components/console/LectureModeCard.tsx"
+    "apps/web/src/components/console/LectureModeCard.tsx",
+    "apps/mobile/src/screens/parent/LectureCard.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

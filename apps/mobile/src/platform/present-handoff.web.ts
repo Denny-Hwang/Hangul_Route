@@ -19,15 +19,16 @@ export function presenterRootExists(): boolean {
 type TabHandle = { opener: unknown } | null;
 
 /**
- * Opens `href` (a `/present#d=…` link) in a new tab, synchronously inside
- * the tap so no pop-up blocker stops it. Not with the `noopener` feature,
+ * Opens `href` (a `/present#d=…` link, or `/present` itself for the presenter
+ * home: the grown-up card's Open lecture mode, AMENDMENTS-LECTURE-V2 E5) in a
+ * new tab, synchronously inside the tap so no pop-up blocker stops it. Not with the `noopener` feature,
  * which makes `window.open` return null even when the tab opens; the handle
  * is checked instead (null: blocked) and its `opener` cleared at once, so
  * the presenter has no handle back to All lessons and no roster hand-off
  * can reach it (no names, D12). False when nothing opened.
  */
 export function openPresenter(href: string): boolean {
-  if (!href.startsWith(`${PRESENTER_PATH}#`)) return false;
+  if (href !== PRESENTER_PATH && !href.startsWith(`${PRESENTER_PATH}#`)) return false;
   const g = globalThis as { open?: (url: string, target: string) => TabHandle };
   if (typeof g.open !== 'function') return false;
   let tab: TabHandle;
