@@ -1,6 +1,6 @@
 'use client';
 
-import { SignIn, SignUp, useClerk, useReverification } from '@clerk/clerk-react';
+import { SignIn, SignUp, useClerk, useReverification, useUser } from '@clerk/clerk-react';
 import { colors, radii } from '@hangul-route/design-system/tokens';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -10,12 +10,13 @@ import {
   oauthSignUpStarted,
   proofAtSignIn,
   reverifyOnce,
-  secretVerifiedHere,
+  secretFactorVerifiedHere,
   signedInHere,
   type ClerkSignInLike,
   type ClerkSignUpLike,
 } from '@/lib/console/signin-flow';
 import { clearAffirmation, readSignInRecord, writeOAuthStarted, writeSecretVerified, writeSignInProof } from '@/lib/console/signin-record';
+import { passkeyUsedSince } from '@/lib/console/one-account';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { RetryPanel, WidgetBox } from './SignInParts';
 
@@ -79,8 +80,9 @@ function useSignInRecorder(enabled: boolean): void {
       if (signedInHere(previous, current)) {
         writeSignInProof(proofAtSignIn({ sessionId: current, signIn, signUp, record: readSignInRecord(), now }), now);
         clearAffirmation();
-      } else if (!current && secretVerifiedHere(signIn, signUp)) {
-        writeSecretVerified(now);
+      } else if (!current && secretFactorVerifiedHere(signIn, signUp) !== null) {
+        // [OA] The factor is kept, so a passkey stays a passkey for the unlock rule (section 7.4).
+        writeSecretVerified(now, undefined, secretFactorVerifiedHere(signIn, signUp));
       } else if (!current && (oauthRedirectStarted(signIn) || oauthSignUpStarted(signUp))) {
         writeOAuthStarted(now);
       }
@@ -137,17 +139,32 @@ export function ClerkWidget({ kind, record, returnUrl, startUrl, standalone, aff
  * email code to the account's address, the password or a passkey) and reports the outcome.
  * Closing the dialog is a cancel: the visitor stays signed in and the lock decides.
  */
-export function ClerkReverify({ onDone }: { onDone: (verified: boolean) => void }): null {
+export function ClerkReverify({ onDone, refusePasskey = false }: { onDone: (verified: boolean) => void; refusePasskey?: boolean }): null {
   const fetcher = useRef(reverifyOnce());
   const confirm = useReverification(() => fetcher.current());
+  const { user } = useUser();
   const started = useRef(false);
   useEffect(() => {
     if (started.current) return;
     started.current = true;
+    const startedAt = Date.now();
+    const holdsPasskey = (user?.passkeys?.length ?? 0) > 0;
     confirm().then(
-      (result) => onDone('verified' in result && result.verified === true),
+      async (result) => {
+        const verified = 'verified' in result && result.verified === true;
+        // [OA] Section 7.4, CS-17: on a `pin` browser (or the reset leg) a reverification that used a passkey is no
+        // unlock. Clerk does not name the factor, so a passkey of the account used since the dialog opened counts as it.
+        if (!verified || !refusePasskey || !holdsPasskey) return onDone(verified);
+        let passkeys: readonly { lastUsedAt?: Date | null }[] | null = null;
+        try {
+          passkeys = (await user?.reload())?.passkeys ?? null;
+        } catch {
+          passkeys = null;
+        }
+        onDone(!passkeyUsedSince(passkeys, startedAt, holdsPasskey));
+      },
       () => onDone(false),
     );
-  }, [confirm, onDone]);
+  }, [confirm, onDone, refusePasskey, user]);
   return null;
 }

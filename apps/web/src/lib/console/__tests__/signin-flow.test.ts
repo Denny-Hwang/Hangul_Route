@@ -61,8 +61,8 @@ describe('secret-proving first factors (section 3.9)', () => {
 
 describe('proofFromSignIn: the completed sign-in of this tab', () => {
   it('a complete password or email-code sign-in proves a secret for the session it created', () => {
-    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'password' } })).toEqual({ sessionId: 'sess_1', secret: true });
-    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'email_code' } })).toEqual({ sessionId: 'sess_1', secret: true });
+    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'password' } })).toEqual({ sessionId: 'sess_1', secret: true, factor: 'password' });
+    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'email_code' } })).toEqual({ sessionId: 'sess_1', secret: true, factor: 'email_code' });
   });
 
   it('a complete Google sign-in is a proof without a secret', () => {
@@ -81,9 +81,9 @@ describe('proofFromSignIn: the completed sign-in of this tab', () => {
 describe('proofFromSignUp: the account the adult step created', () => {
   it('an email sign-up (verified by a code) proves a secret', () => {
     const code = { strategy: 'email_code', status: 'verified' };
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { externalAccount: { status: 'unverified' }, emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true });
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true });
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { phoneNumber: { strategy: 'phone_code', status: 'verified' } } })).toEqual({ sessionId: 'sess_3', secret: true });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { externalAccount: { status: 'unverified' }, emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true, factor: 'email_code' });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true, factor: 'email_code' });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { phoneNumber: { strategy: 'phone_code', status: 'verified' } } })).toEqual({ sessionId: 'sess_3', secret: true, factor: 'phone_code' });
   });
 
   it('an email-link sign-up, or one that names no verified code, does not (section 3.9)', () => {
@@ -194,7 +194,7 @@ describe('proofAtSignIn: what the sign-in this page saw complete proved', () => 
   const now = 50_000;
   it("uses Clerk's completed sign-in or sign-up when it names this session", () => {
     expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'oauth_google' } }, record: null, now })).toEqual({ sessionId: 's1', secret: false });
-    expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'password' } }, record: { v: 1, kind: 'oauth', at: now }, now })).toEqual({ sessionId: 's1', secret: true });
+    expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'password' } }, record: { v: 1, kind: 'oauth', at: now }, now })).toEqual({ sessionId: 's1', secret: true, factor: 'password' });
     expect(proofAtSignIn({ sessionId: 's2', signUp: { status: 'complete', createdSessionId: 's2', verifications: { externalAccount: { status: 'verified' } } }, record: null, now })).toEqual({ sessionId: 's2', secret: false });
     expect(proofAtSignIn({ sessionId: 's3', signIn: { status: 'complete', createdSessionId: 's3', firstFactorVerification: { strategy: 'email_link' } }, record: { v: 1, kind: 'secret', at: now - 1 }, now })).toEqual({ sessionId: 's3', secret: false });
   });

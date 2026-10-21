@@ -7,6 +7,9 @@ import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkLocalization } from '@/lib/console/clerk-localization';
 import { clerkPublishableKey } from '@/lib/console/config';
 import { signInHome } from '@/lib/console/grown-up-lock';
+import { passkeyUsedSince } from '@/lib/console/one-account';
+import { deleteDeviceUses } from '@/lib/console/shell-store';
+import { reverifyOnce, withTimeout } from '@/lib/console/signin-flow';
 import { ROUTES } from '@/lib/console/routing';
 import { readSession, writeSession, type ConsoleSession } from '@/lib/console/session';
 import { browserOnline, clerkUiOpen, guardReverify, settleReverify, type ReverifyOutcome } from '@/lib/console/step-up';
@@ -59,6 +62,30 @@ export interface ConsoleAuth {
    * inside the grown-up lock.
    */
   localeUser: LocaleUser | null;
+  /**
+   * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4: the lock's Use a passkey, Clerk's session verification with
+   * the passkey first factor (the platform prompt, nothing else). True when it completed; false on a refusal, a
+   * cancel, no session, or outside Clerk.
+   */
+  verifyPasskey: () => Promise<boolean>;
+  /**
+   * [OA] Section 7.2 moment 3: Clerk reverification that must be a password, an email code or a phone code. Clerk does
+   * not name the factor its dialog used, so a passkey of the account used since the dialog opened refuses it
+   * (`refused`; an account that could not be read again fails closed when it holds a passkey). Dev mode (no Clerk,
+   * never on a production build with Clerk) counts the dev bearer as a password, as the dev sign-in does.
+   */
+  reverifySecret: () => Promise<SecretReverify>;
+}
+
+/** [OA] How a moment-3 reverification ended. */
+export type SecretReverify = 'done' | 'cancelled' | 'unavailable' | 'refused';
+
+/** [OA] How long Sign out waits for the `deviceUses` delete before it leaves anyway (WebKit can hang an IndexedDB open). */
+export const SIGN_OUT_DELETE_MS = 1_000;
+
+/** [OA] Section 7.1: Sign out deletes the account's grown-up uses from this browser. Never throws, never blocks long. */
+export function forgetDeviceUses(): Promise<boolean> {
+  return withTimeout(() => deleteDeviceUses(), false, SIGN_OUT_DELETE_MS);
 }
 
 const SIGNED_OUT: ConsoleAuth = {
@@ -71,6 +98,8 @@ const SIGNED_OUT: ConsoleAuth = {
   devSignIn: () => undefined,
   reverify: async () => ({ kind: 'unavailable' }),
   localeUser: null,
+  verifyPasskey: async () => false,
+  reverifySecret: async () => 'unavailable',
 };
 
 const ConsoleAuthContext = createContext<ConsoleAuth>(SIGNED_OUT);
@@ -82,6 +111,10 @@ export function useConsoleAuth(): ConsoleAuth {
 /** The Clerk user methods the language sync uses (`user.update` replaces `unsafeMetadata` whole). */
 export interface LocaleUser {
   id: string;
+  /** [OA] The account's passkeys (`lastUsedAt` only is read), for the moment-3 passkey check. */
+  passkeys?: readonly { lastUsedAt?: Date | null }[];
+  /** [OA] Reads the account again (Clerk's `user.reload`). */
+  reload?: () => Promise<{ passkeys?: readonly { lastUsedAt?: Date | null }[] }>;
   unsafeMetadata?: UnsafeMetadata;
   update: (params: { unsafeMetadata: Record<string, unknown> }) => Promise<unknown>;
 }
@@ -149,6 +182,32 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
     };
     return guardReverify(() => settleReverify(() => enhanced(call) as Promise<T>), { online: browserOnline, uiOpen: clerkUiOpen });
   }, [enhanced]);
+  const verifyPasskey = useCallback(async (): Promise<boolean> => {
+    const session = clerk.session;
+    if (!session) return false;
+    try {
+      await session.startVerification({ level: 'first_factor' });
+      return (await session.verifyWithPasskey()).status === 'complete';
+    } catch {
+      return false;
+    }
+  }, [clerk]);
+  const reverifySecret = useCallback(async (): Promise<SecretReverify> => {
+    const account = user as unknown as LocaleUser | null | undefined;
+    if (!account) return 'unavailable';
+    const startedAt = Date.now();
+    const holdsPasskey = (account.passkeys?.length ?? 0) > 0;
+    const hint = await reverifyOnce()();
+    const outcome = await reverify(async () => ({ verified: true }), hint as unknown);
+    if (outcome.kind !== 'result') return outcome.kind;
+    let passkeys: readonly { lastUsedAt?: Date | null }[] | null = null;
+    try {
+      passkeys = account.reload ? ((await account.reload()).passkeys ?? []) : null;
+    } catch {
+      passkeys = null;
+    }
+    return passkeyUsedSince(passkeys, startedAt, holdsPasskey) ? 'refused' : 'done';
+  }, [user, reverify]);
   const value = useMemo<ConsoleAuth>(
     () => ({
       mode: 'clerk',
@@ -156,16 +215,19 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
       session: sessionFromClerkUser(user),
       sessionId: user ? (sessionId ?? null) : null,
       getToken: () => getToken().catch(() => null),
-      signOut: (redirectUrl = signInHome(locale), options = {}) => {
+      signOut: async (redirectUrl = signInHome(locale), options = {}) => {
         clearGrownUpTab(undefined, options);
         clearSignInTab();
+        await forgetDeviceUses();
         return clerk.signOut({ redirectUrl });
       },
       devSignIn: () => undefined,
       reverify,
       localeUser: isLoaded && user ? (user as unknown as LocaleUser) : null,
+      verifyPasskey,
+      reverifySecret,
     }),
-    [isLoaded, user, sessionId, getToken, clerk, reverify, locale],
+    [isLoaded, user, sessionId, getToken, clerk, reverify, locale, verifyPasskey, reverifySecret],
   );
   return <ConsoleAuthContext.Provider value={value}>{children}</ConsoleAuthContext.Provider>;
 }
@@ -191,12 +253,15 @@ function DevBridge({ children }: { children: ReactNode }): JSX.Element {
       signOut: async (redirectUrl?: string, options: { keepInvite?: boolean } = {}) => {
         clearGrownUpTab(undefined, options);
         clearSignInTab();
+        await forgetDeviceUses();
         setSession(null);
         if (redirectUrl) window.location.assign(redirectUrl);
       },
       devSignIn,
       reverify: (fetcher) => settleReverify(fetcher),
       localeUser: null,
+      verifyPasskey: async () => false,
+      reverifySecret: async () => 'done',
     }),
     [ready, session, devSignIn],
   );
