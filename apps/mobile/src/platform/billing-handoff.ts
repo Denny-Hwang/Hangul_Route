@@ -49,7 +49,8 @@ export async function openBilling(
   sameTab: boolean = billingOpensSameTab(),
   request: GrownUpHandoffRequest = BILLING_HANDOFF,
 ): Promise<BillingOpenResult> {
-  if (sameTab) return { kind: 'same-tab', outcome: await openGrownUpArea(request) };
+  // [OA] The Billing gate on the Plan screen already sent `parent.gate.opened` (section 15).
+  if (sameTab) return { kind: 'same-tab', outcome: await openGrownUpArea(request, undefined, { gateSent: true }) };
   const url = consoleBillingUrl();
   const outcome = await openExternalUrl(url);
   return { kind: 'browser', outcome, url };

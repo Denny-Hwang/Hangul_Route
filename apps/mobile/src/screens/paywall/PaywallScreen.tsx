@@ -28,6 +28,7 @@ import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { effectiveTier, useAccessTier, useQuestAccess, useTierStore } from '../../store/tier-store';
+import { passGate } from '../../store/gate-telemetry';
 import { FreePlanLines, PlanGuidanceLine } from './PlanSlots';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Paywall'>;
@@ -152,7 +153,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const onOpenBilling = (): void => {
     if (offline) return;
     setNote(null);
-    if (billingPressStep(gateOpensDirectlyNow()) === 'open') {
+    if (billingPressStep(passGate('Billing', gateOpensDirectlyNow())) === 'open') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff();
       return;

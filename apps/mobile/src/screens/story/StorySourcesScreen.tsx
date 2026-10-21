@@ -23,7 +23,9 @@ import { HAND_OFF_NEEDS_TAP, openExternalUrl } from '../../platform/external-lin
 import { copyText } from '../../platform/pwa';
 import { track } from '../../platform/telemetry';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { endGrownUpSessionAfterUse } from '../../store/grown-up-session';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { passGate } from '../../store/gate-telemetry';
 import { CitationText, CorrectionsList, Disclosure, FactCard, SeeFactRow, SourcesHeader, SourcesHeading } from './SourcesParts';
 
 /**
@@ -134,6 +136,8 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
   const handOff = useCallback(
     async (link: SourceLink, key: string): Promise<void> => {
       const outcome = await openExternalUrl(link.url);
+      // [OA] CS-1: the PIN served this one link; the next link asks it again.
+      endGrownUpSessionAfterUse();
       setNote(key, openLinkNote(outcome, link.url, copy));
       if (outcome === 'opened' && story) {
         void track({
@@ -167,7 +171,7 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
       setNote(key, copy.openFailed(source.url));
       return;
     }
-    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(gateOpensDirectlyNow()) === 'open');
+    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(passGate('ExternalLink', gateOpensDirectlyNow())) === 'open');
     if (route === 'hand-off') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff(link, key);

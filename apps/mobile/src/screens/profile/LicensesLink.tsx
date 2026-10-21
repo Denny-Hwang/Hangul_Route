@@ -7,6 +7,8 @@ import { licensesUrl } from '../../logic/links';
 import { openLinkStep, pendingLinkStep, type OpenLinkOutcome } from '../../logic/story/source-link';
 import { HAND_OFF_NEEDS_TAP, openExternalUrl } from '../../platform/external-link';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { passGate } from '../../store/gate-telemetry';
+import { endGrownUpSessionAfterUse } from '../../store/grown-up-session';
 
 export interface LicensesLinkProps {
   url?: string;
@@ -44,6 +46,8 @@ export function LicensesLink({
 
   const handOff = useCallback(async (): Promise<void> => {
     const outcome = await open(url);
+    // [OA] CS-1: the PIN served this one link; the next gated control asks it again.
+    endGrownUpSessionAfterUse();
     setNote(outcome === 'opened' ? null : t.fallback);
   }, [open, url, t.fallback]);
 
@@ -57,7 +61,7 @@ export function LicensesLink({
   );
 
   const onPress = (): void => {
-    if (openLinkStep(opensDirectly()) === 'open') {
+    if (openLinkStep(passGate('ExternalLink', opensDirectly())) === 'open') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff();
       return;

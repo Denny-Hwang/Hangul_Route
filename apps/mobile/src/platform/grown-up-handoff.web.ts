@@ -1,11 +1,4 @@
-import {
-  APP_ROUTES,
-  BROWSE_PASS_SESSION_KEY,
-  CONSOLE_SESSION_KEY,
-  UNLOCK_SESSION_KEY,
-  safeNextPath,
-  type DeviceGateMarker,
-} from '@hangul-route/content-schema';
+import { APP_ROUTES, UNLOCK_SESSION_KEY, safeNextPath, type DeviceGateMarker } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
 import {
   decideHandoff,
@@ -13,11 +6,18 @@ import {
   handoffUrl,
   type GrownUpHandoffRequest,
 } from '../logic/shell/handoff-rules';
+import { gateDestOf, gateOpenedEvent, markerCode } from '../logic/profiles/gate-events';
+import { useAccountStore } from '../store/account-store';
 import { currentDeviceGateMarker } from '../store/device-gate';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { useUiStore } from '../store/ui-store';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
 import { markLeaving } from './history-bridge.web';
+import { sessionArea, type SessionArea } from './grown-up-tab.web';
+
+// [OA] The tab's session area and its clear moved to `grown-up-tab.web.ts` (no store imports), so the profile
+// store can end a grown-up session without loading this module; re-exported for every existing caller.
+export { clearGrownUpTab, sessionArea, type SessionArea } from './grown-up-tab.web';
 
 /**
  * The learner app's hand-off into the grown-up area on the same origin (F-APP-001 section 3.9),
@@ -31,17 +31,14 @@ import { markLeaving } from './history-bridge.web';
  * Profile row, the dashboard card and the Plan screen. Native builds use the stub
  * (`grown-up-handoff.ts`), which no native screen calls (OD-6).
  */
-export interface SessionArea {
-  getItem: (key: string) => string | null;
-  setItem: (key: string, value: string) => void;
-  removeItem: (key: string) => void;
-}
 
 export interface HandoffState {
   /** The device gate marker as the learner app sees it (`null` before the stores load). */
   marker: DeviceGateMarker | null;
   lastPinVerifiedAt: number | null;
   locale: UiLocale;
+  /** [OA] Whether a PIN is stored, for the `parent.gate.opened` marker code before the marker is known. */
+  pinSet?: boolean;
 }
 
 export interface HandoffEnv {
@@ -66,16 +63,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** This tab's `sessionStorage`, or null where it is missing or the browser refuses it. */
-export function sessionArea(): SessionArea | null {
-  try {
-    return (globalThis as { sessionStorage?: SessionArea }).sessionStorage ?? null;
-  } catch {
-    // Blocked site data: the getter itself throws.
-    return null;
-  }
-}
-
 function browserAssign(url: string): void {
   // The history bridge writes nothing from here on: a traversal would cancel this navigation (AMENDMENTS-DISPLAY-NAV 7.2).
   markLeaving();
@@ -90,6 +77,7 @@ function browserEnv(): HandoffEnv {
       marker: currentDeviceGateMarker(),
       lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt,
       locale: activeLocale(useLocaleStore.getState()),
+      pinSet: useAccountStore.getState().parentPinHash !== null,
     }),
     track: (event) => sendEvent(event),
     assign: browserAssign,
@@ -133,36 +121,38 @@ function writeUnlock(env: HandoffEnv, value: string): void {
  * marker epoch, emits `shell.grown_up_handoff { via, target }` and opens the target (a grown-up
  * path, `safeNextPath`) or the sign-in router, always with `?lang=` (English included).
  */
-export async function openGrownUpArea(request: GrownUpHandoffRequest, env: HandoffEnv = browserEnv()): Promise<HandoffResult> {
-  const { marker, lastPinVerifiedAt, locale } = env.state();
+export async function openGrownUpArea(
+  request: GrownUpHandoffRequest,
+  env: HandoffEnv = browserEnv(),
+  options: { gateSent?: boolean } = {},
+): Promise<HandoffResult> {
+  const { marker, lastPinVerifiedAt, locale, pinSet } = env.state();
   const decision = decideHandoff({ marker, lastPinVerifiedAt, now: env.now() });
   if (decision.step === 'pin') return 'pin';
   const target = safeNextPath(request.target);
   if (decision.unlock) writeUnlock(env, JSON.stringify(decision.unlock));
+  // [OA] Section 15 (`parent.gate.opened` from every gate): a hand-off with no PIN screen is a gate that opened by
+  // itself, `session` on a fresh PIN (marker `pin`), else `open`. The PIN screen sends its own (`gateSent`).
+  const gate = options.gateSent
+    ? Promise.resolve()
+    : sendQuietly(env, gateOpenedEvent({ dest: gateDestOf('GrownUpArea'), via: marker?.gate === 'pin' ? 'session' : 'open', marker: markerCode(marker, pinSet ?? false) }));
   await trackThenLeave(
     { name: 'shell.grown_up_handoff', payload: { via: request.via, target: handoffTargetCode(request.via, target) } },
     () => env.assign(handoffUrl(target, locale)),
-    env,
+    { ...env, track: (event) => Promise.all([env.track(event), gate]).then(([sent]) => sent) },
   );
   return 'opened';
 }
 
-/**
- * Removes the grown-up unlock, the console session and the All lessons pass of this tab
- * (section 3.9; the pass is F-BROWSE-001 section 4.3's `hr:browse:pass`): every boot of a learner
- * root and a learner page restored from the back/forward cache. A device handed back to a child
- * after [ Close ] or Back therefore cannot reopen All lessons from this tab by typing `/browse` or
- * pressing Forward (BR-6 review). The gate hand-off writes its pass after this boot, just before it
- * leaves, so it is unaffected. Nothing else in `sessionStorage` is touched; blocked or missing
- * storage is a no-op.
- */
-export function clearGrownUpTab(area: SessionArea | null = sessionArea()): void {
-  for (const key of [UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY, BROWSE_PASS_SESSION_KEY]) {
-    try {
-      area?.removeItem(key);
-    } catch {
-      // A storage that refuses keeps nothing we could remove.
-    }
+/** Sends `event` and never throws or rejects (telemetry is best effort). */
+function sendQuietly(env: HandoffEnv, event: TelemetryEvent): Promise<void> {
+  try {
+    return env.track(event).then(
+      () => undefined,
+      () => undefined,
+    );
+  } catch {
+    return Promise.resolve();
   }
 }
 
