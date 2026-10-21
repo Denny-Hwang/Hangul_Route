@@ -201,7 +201,7 @@ describe('/parents (S-4b)', () => {
   const html = render(ParentsPage, ALL_CLAIMS_OFF);
   const main = mainOf(html);
   const text = textOf(main);
-  const follow = [P.follow.reports, P.follow.route, P.follow.notes, P.follow.browse];
+  const follow = [P.follow.reports, P.follow.route, P.follow.notes, P.follow.browse, P.follow.lecture];
 
   it('renders exactly one h1, "For parents and caregivers", then the lead', () => {
     expect(html.match(/<h1\b/g)).toHaveLength(1);
@@ -250,6 +250,7 @@ describe('/parents (S-4b)', () => {
     ['parentReports', P.follow.reports],
     ['learningRoute', P.follow.route],
     ['feedbackNotes', P.follow.notes],
+    ['lectureMode', P.follow.lecture],
   ] as const)('%s alone adds its one line', (claim, line) => {
     const on = render(ParentsPage, { ...ALL_CLAIMS_OFF, [claim]: true });
     expect(linesOf(on, P.follow.title)).toEqual([P.follow.body, line]);
@@ -396,11 +397,11 @@ describe('/teachers (S-4b)', () => {
  * both notes flags are on in production, so the pages as served (`SITE_CLAIMS`) carry the reports lines and the
  * notes line, word for word, and no other feature line.
  */
-describe('today\'s claims: the reports lines (F-REPORT-001 RP-11) and the notes line (F-FEEDBACK-001 FB-14) are live', () => {
+describe('today\'s claims: the reports lines (F-REPORT-001 RP-11), the notes line (F-FEEDBACK-001 FB-14) and the lecture mode lines (AMENDMENTS-LECTURE-V2 LV-7) are live', () => {
   it('/parents: the reports line under Follow along and the reports answer to "What can I see?"', () => {
     const html = render(ParentsPage);
     expect(SITE_CLAIMS.parentReports).toBe(true);
-    expect(linesOf(html, P.follow.title)).toEqual([P.follow.body, P.follow.reports, P.follow.notes]);
+    expect(linesOf(html, P.follow.title)).toEqual([P.follow.body, P.follow.reports, P.follow.notes, P.follow.lecture]);
     expect(P.follow.reports).toBe('Reports for today, this week, this month and all time show what went well and what to practise next.');
     const text = textOf(mainOf(html));
     expect(text).toContain(P.faq.whatSee.reports);
@@ -411,7 +412,7 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11) and the notes 
   it('/teachers: the reports line under See how the class is doing, never a ranking', () => {
     const html = render(TeachersPage);
     expect(SITE_CLAIMS.teacherReports).toBe(true);
-    expect(linesOf(html, T.class.title)).toEqual([T.class.body, T.class.reports, T.class.notes]);
+    expect(linesOf(html, T.class.title)).toEqual([T.class.body, T.class.reports, T.class.notes, T.class.lecture]);
     expect(T.class.notes).toBe('Send students a short note of encouragement.');
     expect(T.class.reports).toBe('Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.');
   });
@@ -424,11 +425,47 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11) and the notes 
     const persona = getMessages(locale).landing.persona;
     const parents = renderToStaticMarkup(<ParentsPage locale={locale} />);
     const teachers = renderToStaticMarkup(<TeachersPage locale={locale} />);
-    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body, persona.parents.follow.reports, persona.parents.follow.notes]);
+    expect(linesOf(parents, persona.parents.follow.title)).toEqual([persona.parents.follow.body, persona.parents.follow.reports, persona.parents.follow.notes, persona.parents.follow.lecture]);
     const parentsText = textOf(mainOf(parents));
     expect(parentsText).toContain(persona.parents.faq.whatSee.reports);
     expect(parentsText).not.toContain(persona.parents.faq.whatSee.a);
-    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body, persona.teachers.class.reports, persona.teachers.class.notes]);
+    expect(linesOf(teachers, persona.teachers.class.title)).toEqual([persona.teachers.class.body, persona.teachers.class.reports, persona.teachers.class.notes, persona.teachers.class.lecture]);
+  });
+
+  it('/parents: the lecture mode line under Follow along, word for word, as plain text with no link (F-SITE-002 section 3.8)', () => {
+    const html = render(ParentsPage);
+    expect(SITE_CLAIMS.lectureMode).toBe(true);
+    expect(P.follow.lecture).toBe('Lecture mode puts a lesson on your TV so you can learn together.');
+    expect(count(textOf(mainOf(html)), P.follow.lecture)).toBe(1);
+    expect(linksOf(mainOf(html)).map((link) => link.text)).not.toContain(P.follow.lecture);
+    expect(html).not.toMatch(/href="[^"]*\/(present|teach|parent)\b/);
+  });
+
+  it('/teachers: the reworded lecture mode line names the feature, as plain text with no link', () => {
+    const html = render(TeachersPage);
+    expect(T.class.lecture).toBe('Lecture mode: teach from the front on a projector or TV, with ready-made lessons.');
+    expect(T.class.lecture.startsWith('Lecture mode')).toBe(true);
+    expect(count(textOf(mainOf(html)), T.class.lecture)).toBe(1);
+    expect(linksOf(mainOf(html)).map((link) => link.text)).not.toContain(T.class.lecture);
+    expect(html).not.toMatch(/href="[^"]*\/(present|teach|parent)\b/);
+  });
+
+  it('a PR that sets the lecture mode claim back to false takes both lines off (the LV-D1 rollback)', () => {
+    const off: Readonly<SiteClaims> = { ...SITE_CLAIMS, lectureMode: false };
+    expect(textOf(render(ParentsPage, off))).not.toContain(P.follow.lecture);
+    expect(textOf(render(TeachersPage, off))).not.toContain(T.class.lecture);
+    expect(linesOf(render(ParentsPage, off), P.follow.title)).toEqual([P.follow.body, P.follow.reports, P.follow.notes]);
+    expect(linesOf(render(TeachersPage, off), T.class.title)).toEqual([T.class.body, T.class.reports, T.class.notes]);
+  });
+
+  it('the lecture mode lines name no speaking, no price and no age, in every locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const persona = getMessages(locale).landing.persona;
+      for (const line of [persona.parents.follow.lecture, persona.teachers.class.lecture]) {
+        expect(line.length, `${locale}: ${line}`).toBeGreaterThan(0);
+        expect(line).not.toMatch(/speak|pronounc|habla|pronunci|[$€£]\s?\d|lifetime|\bkids?\b|\bchild(ren)?\b|\bages?\b/i);
+      }
+    }
   });
 
   it('the reports lines name no speaking and no price, in every locale', () => {

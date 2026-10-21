@@ -13,8 +13,10 @@
  * | `parentReports`, `teacherReports`  | F-REPORT-001 RP-11 (flipped on)                                          |
  * | `feedbackNotes`                    | F-FEEDBACK-001 FB-14 (flipped on)                                        |
  * | `browseAsLearner`                  | F-BROWSE-001 BR-14 (flipped on; paid line: needs `paidPlans: 'inApp'`)   |
- * | `lectureMode`                      | the PR after the owner sets `NEXT_PUBLIC_LECTURE_MODE=enabled` on the    |
- * |                                    | production console build (F-TCH-004 names no flip PR yet)                |
+ * | `lectureMode`                      | AMENDMENTS-LECTURE-V2 LV-7 (flipped on, with both launch defaults on).   |
+ * |                                    | Rollback (LV-D1): withdrawn for more than an incident (off for more than |
+ * |                                    | a day, or `/present` taken down) means a PR setting it back to `false`   |
+ * |                                    | and a site redeploy; a console or app kill switch alone never moves it   |
  * | `paidPlans: 'inApp'`               | a PR after the owner turns on Stripe Live (sandbox never counts)         |
  *
  * Page components take `claims` as a prop that defaults to `SITE_CLAIMS`. F-BILL-002 B-7 reads the boolean
@@ -44,7 +46,7 @@ export interface SiteClaims {
   feedbackNotes: boolean;
   /** F-BROWSE-001 lesson browser is live for paying grown-ups. */
   browseAsLearner: boolean;
-  /** F-TCH-004 presenter is on in production. */
+  /** F-TCH-004 presenter is on in production with its entry points (AMENDMENTS-LECTURE-V2 LV-7). */
   lectureMode: boolean;
 }
 
@@ -65,7 +67,8 @@ export const SITE_CLAIMS: Readonly<SiteClaims> = Object.freeze({
   feedbackNotes: true,
   // F-BROWSE-001 BR-14: the console Lessons entry is on by default (a paid line: the site shows it with paidPlans 'inApp').
   browseAsLearner: true,
-  lectureMode: false,
+  // AMENDMENTS-LECTURE-V2 LV-7: lecture mode is on by default in the console and the learner app (kill switches kept).
+  lectureMode: true,
 });
 
 /** A line about a paid feature shows only when its claim is on AND `paidPlans === 'inApp'`. */
