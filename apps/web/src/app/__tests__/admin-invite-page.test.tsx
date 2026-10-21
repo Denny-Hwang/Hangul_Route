@@ -337,13 +337,13 @@ describe('the invite page', () => {
     expect(nav.replaced.join()).not.toContain('Maple');
   });
 
-  it('Use another account signs out keeping the stash, back through /signin?next=/account/invite', async () => {
+  it('Use another account signs out keeping the stash, back through /signin?next=/account/invite with lang', async () => {
     signIn();
     stash();
     answers.preview.push(OPEN);
     const root = await render(<AdminInvitePage />);
     await press(root, 'invite-switch');
-    expect(auth.signOuts).toEqual([{ url: `/signin?next=${encodeURIComponent('/account/invite')}`, options: { keepInvite: true } }]);
+    expect(auth.signOuts).toEqual([{ url: `/signin?next=${encodeURIComponent('/account/invite')}&lang=en`, options: { keepInvite: true } }]);
     expect(stashed()).not.toBeNull();
   });
 

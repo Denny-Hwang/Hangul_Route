@@ -7,9 +7,10 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 import type { ConsoleApi } from '@/lib/console/api';
 import { acceptAnswer, clearAdminInvite, previewAnswer, readAdminInvite, type InviteAnswer, type InviteRefusal } from '@/lib/console/admin-invite';
 import { writeConsoleFlash } from '@/lib/console/console-flash';
+import { signInAgainUrl } from '@/lib/console/grown-up-lock';
 import { headRem, rem } from '@/lib/console/rem';
 import { ROUTES } from '@/lib/console/routing';
-import { signedOutTarget } from '@/lib/console/signin-flow';
+import { useLocale } from '@/lib/i18n/locale-context';
 import { SignInColumn } from './SignInParts';
 import { buttonBase } from './ui';
 
@@ -117,13 +118,17 @@ export interface AdminInviteViewProps {
   m: Messages;
   /** Same-tab navigation (the router's `replace`). */
   go: (href: string) => void;
-  /** Signs out and keeps the stash, then `/signin?next=/account/invite` (Use another account). */
+  /**
+   * Signs out and keeps the stash, then `/signin?next=/account/invite&lang=<the console's language>` (Use another
+   * account; every sign-out to `/signin` carries `lang`, AMENDMENTS-DISPLAY-NAV section 6).
+   */
   switchAccount: (signInUrl: string) => void;
 }
 
 export function AdminInviteView({ api, who, m, go, switchAccount }: AdminInviteViewProps): JSX.Element {
   const c = m.console;
   const t = c.adminInvite;
+  const locale = useLocale();
   // The token, read once from this tab's stash: an expired or missing stash reads as none.
   const [token] = useState<string | null>(() => readAdminInvite());
   const [phase, setPhase] = useState<Phase>(() => (token ? { at: 'loading' } : { at: 'reopen' }));
@@ -232,7 +237,7 @@ export function AdminInviteView({ api, who, m, go, switchAccount }: AdminInviteV
         </p>
         <div className="hr-inv-as" data-testid="invite-signed-in">
           <p>{t.signedInAs(who)}</p>
-          <Act onClick={() => switchAccount(signedOutTarget(APP_ROUTES.adminInvite, ''))} unavailable={accepting} testId="invite-switch">
+          <Act onClick={() => switchAccount(signInAgainUrl(APP_ROUTES.adminInvite, locale))} unavailable={accepting} testId="invite-switch">
             {t.switchAccount.cta}
           </Act>
         </div>
