@@ -1,7 +1,7 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { colors, koreanTextLabel, presenter, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
-import { Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { sheetUnits } from '../../../logic/lecture/slide-view';
@@ -51,6 +51,13 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
   const size = useStageText();
   // The stage scale goes in, so a new scale fits again from level 0; `contentRef` lets a step with no layout event re-measure.
   const fit = useFitLevel(MAX_LEVEL, unit);
+  // The sheet fits on its own (one level: `tight`), against the same room: at the answer build the found line's
+  // glyph can wrap that line's value onto one more row, and nothing on the right column can make the sheet shorter.
+  const sheetFit = useFitLevel(1, unit);
+  const onRoom = (e: LayoutChangeEvent): void => {
+    fit.onRoom(e);
+    sheetFit.onRoom(e);
+  };
   const revealed = shown.has('answer');
   const rom = optionRomShown(romanization, revealed);
   const { prompt } = slide;
@@ -59,11 +66,18 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
   const sheetW = sheetUnits(prompt.sheet, textScale);
   // Pictures keep the 2 x 2 grid unless the column beside the sheet is too narrow for it (`REALIA_GRID_MIN`).
   const rows = optionLayout(slide) === 'rows' || STAGE_CONTENT_W - sheetW - STAGE_GAP < REALIA_GRID_MIN;
-  const promptSize = size(fit.level >= 2 ? presenter.size.body : presenter.size.prompt);
+  // A picture grid is not measured with the rows: a row of cards shorter than its marker (a key row that wraps above
+  // the grid, a wider fallback font for the key word) asks for room, and the question drops to body size as at level 2.
+  const [crowded, setCrowded] = useState(false);
+  useEffect(() => setCrowded(false), [unit]);
+  const crowd = useCallback(() => setCrowded(true), []);
+  const promptSize = size(fit.level >= 2 || crowded ? presenter.size.body : presenter.size.prompt);
   return (
-    <View testID="presenter-realia-question" onLayout={fit.onRoom} style={{ flex: 1, flexDirection: 'row', alignItems: rows ? 'center' : 'stretch', gap: units(unit, STAGE_GAP), minHeight: 0 }}>
+    <View testID="presenter-realia-question" onLayout={onRoom} style={{ flex: 1, flexDirection: 'row', alignItems: rows ? 'center' : 'stretch', gap: units(unit, STAGE_GAP), minHeight: 0 }}>
       <View style={{ justifyContent: 'center' }}>
-        <RealiaSheetStage sheet={prompt.sheet} rom={rom} width={units(unit, sheetW)} answer={{ entryId: prompt.answerEntryId, shown: revealed }} />
+        <View ref={sheetFit.contentRef} onLayout={sheetFit.onContent} testID="presenter-realia-question-sheet" {...{ dataSet: { fit: String(sheetFit.level) } }}>
+          <RealiaSheetStage sheet={prompt.sheet} rom={rom} width={units(unit, sheetW)} answer={{ entryId: prompt.answerEntryId, shown: revealed }} tight={sheetFit.level >= 1} />
+        </View>
       </View>
       <View
         ref={rows ? fit.contentRef : undefined}
@@ -102,7 +116,7 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
         {rows ? (
           <OptionRows options={slide.options} revealed={revealed} romanization={romanization} compact={fit.level >= 1} small={fit.level >= 3} />
         ) : (
-          <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} />
+          <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} onCrowded={crowd} />
         )}
       </View>
     </View>

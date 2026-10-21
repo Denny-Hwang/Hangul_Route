@@ -44,6 +44,12 @@ import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
  * `feedback.successLight` ground, a thick `feedback.success` border and the `check` glyph in
  * `feedback.successDark`), named "Hoya's answer". Every line keeps a transparent border of that
  * width from the start, so marking one moves nothing but that line's own text.
+ *
+ * `tight` (a realia question whose sheet is taller than the stage's content area, measured by the
+ * slide: the found line's glyph can wrap its value onto one more row, and a wider fallback font for
+ * the romanization can wrap a line before that) draws the same lines at the same width with less
+ * room around them: the dressing strip at `spacing.sm` units, the paper's top and bottom padding and
+ * the gaps between lines at `spacing.xxs` or none. Nothing gets narrower, so no line wraps anew.
  */
 
 /** A realia question's answer line (`entryId`) and whether its answer build is reached. */
@@ -55,7 +61,7 @@ export interface SheetAnswer {
 const TAGS = { rect: Rect, circle: Circle, ellipse: Ellipse, line: Line, path: Path, polygon: Polygon } as const;
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true };
 
-export function RealiaSheetStage({ sheet, rom, width, answer }: { sheet: RealiaSheetView; rom: boolean; width: number; answer?: SheetAnswer }): React.ReactElement {
+export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: { sheet: RealiaSheetView; rom: boolean; width: number; answer?: SheetAnswer; tight?: boolean }): React.ReactElement {
   const { unit } = usePresenterView();
   const mark = (id: string): Mark | undefined => (answer === undefined ? undefined : answer.shown && answer.entryId === id ? 'found' : 'none');
   const roomy = sheetRoomy(sheet);
@@ -63,9 +69,13 @@ export function RealiaSheetStage({ sheet, rom, width, answer }: { sheet: RealiaS
   const dressing = REALIA_DRESSINGS[sheet.kind];
   const line = Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base));
   const box: ViewStyle = { backgroundColor: paper.backgroundColor, borderColor: paper.borderColor, borderWidth: line, borderRadius: units(unit, paper.borderRadius) };
-  const strip = units(unit, spacing.xl);
+  const strip = units(unit, tight ? spacing.sm : spacing.xl);
+  // Tight: the same widths, less height (the paper's top and bottom padding, the gaps between lines).
+  const padTB = units(unit, tight ? spacing.xxs : spacing.md);
+  const rowGap = tight ? 0 : units(unit, spacing.xs);
+  const innerGap = units(unit, tight ? spacing.xxs : spacing.sm);
   const rows = (
-    <View role="list" style={{ gap: units(unit, spacing.xs) }}>
+    <View role="list" style={{ gap: rowGap }}>
       {sheet.entries.map((entry) => (
         <View role="listitem" key={entry.id}>
           <Marked mark={mark(entry.id)}>
@@ -86,7 +96,7 @@ export function RealiaSheetStage({ sheet, rom, width, answer }: { sheet: RealiaS
             <View style={{ backgroundColor: colors.brand.secondaryLight, borderBottomWidth: line, borderColor: paper.borderColor }}>
               {dressing.top ? <Dressing refId={dressing.top} height={strip} stretch={false} /> : null}
             </View>
-            <View style={{ padding: units(unit, spacing.md), gap: units(unit, spacing.sm) }}>
+            <View style={{ paddingHorizontal: units(unit, spacing.md), paddingVertical: padTB, gap: innerGap }}>
               {title}
               {rows}
             </View>
@@ -101,11 +111,11 @@ export function RealiaSheetStage({ sheet, rom, width, answer }: { sheet: RealiaS
       body = (
         <View>
           {dressing.top ? <Dressing refId={dressing.top} height={strip} stretch /> : null}
-          <View style={{ gap: units(unit, spacing.sm) }}>
+          <View style={{ gap: innerGap }}>
             {/* The post runs behind the boards. */}
             <View {...hidden} style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: units(unit, spacing.md), marginLeft: -units(unit, spacing.md) / 2, backgroundColor: colors.text.secondary }} />
             {title ? <View style={{ ...box, alignSelf: 'center', paddingVertical: units(unit, spacing.xs), paddingHorizontal: units(unit, spacing.md) }}>{title}</View> : null}
-            <View role="list" style={{ gap: units(unit, spacing.sm) }}>
+            <View role="list" style={{ gap: innerGap }}>
               {sheet.entries.map((entry) => (
                 <Board key={entry.id} dir={entry.dir} box={box} line={line}>
                   <Marked mark={mark(entry.id)}>
@@ -120,7 +130,7 @@ export function RealiaSheetStage({ sheet, rom, width, answer }: { sheet: RealiaS
       break;
     case 'price-card':
       body = (
-        <View style={{ backgroundColor: colors.surface.sunken, borderColor: colors.border.strong, borderWidth: line, borderRadius: units(unit, radii.md), padding: units(unit, spacing.md), gap: units(unit, spacing.sm) }}>
+        <View style={{ backgroundColor: colors.surface.sunken, borderColor: colors.border.strong, borderWidth: line, borderRadius: units(unit, radii.md), paddingHorizontal: units(unit, spacing.md), paddingVertical: padTB, gap: innerGap }}>
           {title}
           <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: units(unit, spacing.md) }}>
             {sheet.entries.map((entry) => (
@@ -142,7 +152,7 @@ export function RealiaSheetStage({ sheet, rom, width, answer }: { sheet: RealiaS
       body = (
         <View>
           {dressing.top ? <Dressing refId={dressing.top} height={strip} stretch /> : null}
-          <View style={{ ...box, padding: units(unit, spacing.md), gap: units(unit, spacing.xs) }}>
+          <View style={{ ...box, paddingHorizontal: units(unit, spacing.md), paddingVertical: padTB, gap: tight ? 0 : units(unit, spacing.xs) }}>
             {title}
             {rows}
           </View>

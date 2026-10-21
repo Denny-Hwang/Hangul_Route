@@ -35,7 +35,10 @@ export function QuizOptions({
   options: readonly QuizOption[];
   revealed: boolean;
   romanization: RomanizationMode;
-  /** A gloss spills out of its card even at body size: the slide gives the grid more room. */
+  /**
+   * A gloss spills out of its card even at body size, or a row of picture cards is shorter than its
+   * shape marker: the slide gives the grid more room.
+   */
   onCrowded?: () => void;
 }): React.ReactElement {
   const { unit } = usePresenterView();
@@ -124,7 +127,10 @@ function OptionCard({
   const glossRoom = rowHeight - 2 * (padV + line) - (content.ko !== null ? koHeight + units(unit, spacing.xs) : 0);
   // Checked whenever either side changes: the grid's row height arrives after the gloss is laid out.
   const overflows = !glossSmall && glossSize > bodySize && glossHeight > glossRoom;
-  const crowded = glossSize === bodySize && glossHeight > glossRoom;
+  // A picture card never draws below its marker: a row shorter than that (a key row that wraps above the grid)
+  // asks the slide for room, as a crowded gloss does.
+  const pictureCrowded = picture !== undefined && Number.isFinite(rowHeight) && rowHeight + 1 < units(unit, MARKER_BODY_FACTOR * presenter.size.body) + 2 * (padV + line);
+  const crowded = (glossSize === bodySize && glossHeight > glossRoom) || pictureCrowded;
   useEffect(() => {
     if (overflows) onGlossOverflow();
   }, [overflows, onGlossOverflow]);
