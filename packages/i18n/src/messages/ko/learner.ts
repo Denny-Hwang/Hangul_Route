@@ -1655,7 +1655,7 @@ export const learner = {
         readAlong: '함께 읽기',
         realia: '보고 읽기',
         build: '문장 만들기',
-        write: '함께 써요',
+        write: '함께 쓰기',
       },
       title: '전체 슬라이드',
       hint: '슬라이드를 고르면 그리로 가요. 숨기기는 이번 수업에만 적용돼요.',

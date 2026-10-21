@@ -1770,12 +1770,12 @@ export const learner = {
       build: { title: 'Armar la oración en grupo', next: '¿Qué palabra va después?', particle: '¿Qué terminación va?' },
       write: {
         title: 'Escribir en grupo',
-        where: 'Escribe en papel o en tu propio dispositivo. Aquí no se escribe nada.',
-        type: 'Escríbelo en tu propio dispositivo y luego mira.',
+        where: 'Escribe en papel o en tu propio dispositivo. Aquí no se teclea nada.',
+        type: 'Tecléalo en tu propio dispositivo y luego mira.',
         trace: 'Trázalo en el aire y luego en papel.',
         frame: 'Completa el espacio con una palabra de la lista.',
         example: 'Por ejemplo',
-        ownName: 'Escribe tu propio nombre en hangul en papel.',
+        ownName: 'Escribe tu propio nombre en hangul, en papel.',
       },
     },
     start: {

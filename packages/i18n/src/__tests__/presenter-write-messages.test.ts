@@ -19,12 +19,12 @@ const VALUES = {
   },
   es: {
     title: 'Escribir en grupo',
-    where: 'Escribe en papel o en tu propio dispositivo. Aquí no se escribe nada.',
-    type: 'Escríbelo en tu propio dispositivo y luego mira.',
+    where: 'Escribe en papel o en tu propio dispositivo. Aquí no se teclea nada.',
+    type: 'Tecléalo en tu propio dispositivo y luego mira.',
     trace: 'Trázalo en el aire y luego en papel.',
     frame: 'Completa el espacio con una palabra de la lista.',
     example: 'Por ejemplo',
-    ownName: 'Escribe tu propio nombre en hangul en papel.',
+    ownName: 'Escribe tu propio nombre en hangul, en papel.',
   },
   ko: {
     title: '함께 써요',
@@ -37,12 +37,15 @@ const VALUES = {
   },
 } as const;
 
+const GRID_KIND = { en: 'Write together', es: 'Escribir en grupo', ko: '함께 쓰기' } as const;
+
 describe('learner.presenter write together (LV-S4)', () => {
   it.each(['en', 'es', 'ko'] as const)('%s: the kind label, the lines and the grid kind', (locale) => {
     const m = getMessages(locale);
     expect(m.learner.presenter.slide.write).toEqual(VALUES[locale]);
-    // The grid and the live region name the slide by its kind label.
-    expect(m.learner.presenter.grid.kind.write).toBe(VALUES[locale].title);
+    // The grid and the live region name the slide by its kind: the kind label in English and Spanish; in Korean
+    // the noun form its sibling kinds use (문장 만들기 beside the title 함께 문장을 만들어요), the title being 해요체.
+    expect(m.learner.presenter.grid.kind.write).toBe(GRID_KIND[locale]);
   });
 
   it('no line asks the room to speak (LV-D9) or names a learner (LV-D8): the room writes', () => {

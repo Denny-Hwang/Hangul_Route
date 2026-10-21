@@ -58,6 +58,7 @@ Every slide page uses `presenter.js` as before: `#b=<n>` shows builds 0 to n (de
 | `REALIA_ASK_MIN` (LV-S2) | 240 units | a realia question's lead line, then "Hoya's answer" in its place: under the key word when the column leaves less |
 | `REALIA_GRID_MIN` (LV-S2) | 480 units | the narrowest column beside a realia sheet that holds picture options in the 2 x 2 grid; a narrower one lists them as rows |
 | `WRITE_ICON`, `TRACE_STROKE`, `SOUND_CELL_W` (LV-S4) | 40, 6 and 84 units | the pencil beside the write line, the trace ghost's outline (`--trace-stroke`) and a sound-table block (`--cell-w`) as built; on a phone's text floor a block takes its own width at the slide's compact levels |
+| `SOUND_CELL_BORDER`, `SOUND_CELL_EM`, `TRACE_SIDE_MIN` (LV-S4) | 2 units, 2.6 captions, 360 units | a sound-table block's outline (never below `STAGE_BORDER_MIN`); its least width at level 0 in caption sizes, so a block and its romanization never wrap where 84 units are narrower than the text floor; the narrowest the line and answer column beside the trace ghost gets before it wraps under the ghost |
 | sentence line places (LV-S3) | the widest tile | every place on a sentence line, empty or placed, is as wide as the slide's widest tile (or its particle tile with both endings) and as tall as a tile (`buildPlaceWidth`): the line never reflows, the fit holds from the bank build and no empty box gives its tile away; the mock's 200-unit box is its empty place |
 
 ## Measured on the mocks (Chromium, the script in this pass)
@@ -115,7 +116,7 @@ Specified by section 12 and not drawn on a mock page: `next.class`, `next.family
 | `learner.presenter.grid.kind.readAlong` | Read along | Leer juntos | 함께 읽기 | LV-S1 | same values as `slide.readAlong.label` |
 | `learner.presenter.grid.kind.realia` | Look and read | Mira y lee | 보고 읽기 | LV-S1 | the realia page; its question slide is `grid.kind.quiz` ("Question") |
 | `learner.presenter.grid.kind.build` | Build a sentence | Arma una oración | 문장 만들기 | LV-S3 | the same values as `learner.minigame.*.sentenceBuilder` |
-| `learner.presenter.grid.kind.write` | Write together | Escribir en grupo | 함께 써요 | LV-S4 | same values as `slide.write.title` |
+| `learner.presenter.grid.kind.write` | Write together | Escribir en grupo | 함께 쓰기 | LV-S4 | same values as `slide.write.title` in en and es; ko the noun form of its sibling kinds (the title is 함께 써요) |
 
 Length budget: none is a `cta`; Spanish stays within 1.5x English. Banned-word lint: no hit in any locale (learner list).
 
