@@ -46,7 +46,8 @@ export function landingCopy(locale: UiLocale = DEFAULT_LOCALE): LandingCopy {
         locale: LOCALE_META[locale].ogLocale,
       },
       twitter: {
-        card: 'summary_large_image',
+        // `summary` until the site has a share image (AMENDMENTS-SITE-NEWUSER SN-2): a large card with no image is empty.
+        card: 'summary',
         title: meta.title,
         description: meta.twitterDescription,
       },

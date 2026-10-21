@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { SITE_PAGES, SITE_URL, shownSiteLocales, siteAlternates } from './site-metadata';
+import { SITE_PAGES, shownSiteLocales, siteAlternates, siteUrl } from './site-metadata';
 import { siteShowAllLocales } from './site-locales';
 import { sitePath } from './site-path';
 
@@ -9,10 +9,8 @@ import { sitePath } from './site-path';
  * own pages (`SITE_PAGES`) in every shown locale and nothing of the app (no grown-up path, no `/design-preview`).
  */
 
-/** The absolute URL of a site path on `SITE_URL`; the English home is `https://hangulroute.com/`. */
-function absolute(path: string): string {
-  return `${SITE_URL}${path}`;
-}
+/** The absolute URL of a site path (`siteUrl`); the English home is `https://hangulroute.com/`, as in its canonical. */
+const absolute = siteUrl;
 
 /**
  * Everyone may crawl the site except the design contact sheets; the sitemap is named on `SITE_URL`. The rule is the

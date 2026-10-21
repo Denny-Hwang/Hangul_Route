@@ -18,6 +18,11 @@
 // 302, not 301 (A-10 kept it): a browser never caches a temporary redirect for good, so the kill switch reaches
 // everyone. The console role (`build:console`, the app host) never runs this script.
 //
+// The same file sends the design contact sheets (`/design-preview` and everything under it) to the site's home with
+// a 301 (AMENDMENTS-SITE-NEWUSER SN-2): they are review tools, not site pages. They stay in `out/` (CI checks them
+// there and attaches the export for art review, and `e2e/serve-out.mjs` serves them), and a build with the kill
+// switch, such as a test deploy, writes no `_redirects`, so it keeps them reachable.
+//
 //   node scripts/site-redirects.mjs [out]
 import { existsSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import * as nodeModule from 'node:module';
@@ -68,8 +73,20 @@ export function redirectOrigin(raw) {
   return url.origin;
 }
 
+/** The design contact sheets' prefix (SN-2), and its permanent redirect to the home page. */
+export const PREVIEW_PREFIX = '/design-preview';
+export const PREVIEW_STATUS = 301;
+
 /**
- * The `_redirects` text: two rules per prefix, `P` and `P/*`, each to the same path on `origin`.
+ * The contact sheets' rules: `/design-preview` and `/design-preview/*` to `/` on the same host (SN-2).
+ * @returns {string[]}
+ */
+export function previewRules() {
+  return [`${PREVIEW_PREFIX} / ${PREVIEW_STATUS}`, `${PREVIEW_PREFIX}/* / ${PREVIEW_STATUS}`];
+}
+
+/**
+ * The grown-up forwarding: two rules per prefix, `P` and `P/*`, each to the same path on `origin`.
  * @param {string} origin
  * @param {readonly string[]} prefixes
  * @returns {string}
@@ -89,11 +106,21 @@ export function redirectRules(origin, prefixes) {
 }
 
 /**
+ * The whole `_redirects` text: the grown-up forwarding (`redirectRules`), then the contact sheets (`previewRules`).
+ * @param {string} origin
+ * @param {readonly string[]} prefixes
+ * @returns {string}
+ */
+export function siteRedirectsText(origin, prefixes) {
+  return `${redirectRules(origin, prefixes)}# The design contact sheets are review tools, not site pages (SN-2).\n${previewRules().join('\n')}\n`;
+}
+
+/**
  * Writes `<outDir>/_redirects` for `origin`, or removes it when `origin` is `''`.
  * @param {string} outDir the `next build` export
  * @param {string} origin from `redirectOrigin`
  * @param {readonly string[]} prefixes `GROWN_UP_PREFIXES`
- * @returns {number} the number of rules written (0 when none)
+ * @returns {number} the number of rules written (0 when none), the contact sheets' two included
  */
 export function writeSiteRedirects(outDir, origin, prefixes) {
   const out = resolve(outDir);
@@ -103,8 +130,8 @@ export function writeSiteRedirects(outDir, origin, prefixes) {
     rmSync(file, { force: true });
     return 0;
   }
-  writeFileSync(file, redirectRules(origin, prefixes));
-  return prefixes.length * 2;
+  writeFileSync(file, siteRedirectsText(origin, prefixes));
+  return prefixes.length * 2 + previewRules().length;
 }
 
 // Real paths on both sides (see console-split.mjs): a symlinked checkout must still run the CLI.
