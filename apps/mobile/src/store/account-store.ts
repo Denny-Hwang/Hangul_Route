@@ -33,6 +33,7 @@ import {
   pinSetAtOf,
   reconcilePinEpoch as nextPinEpoch,
 } from '../logic/shell/device-gate';
+import { flags } from '../config/flags';
 import { biometric } from '../platform/biometric';
 import { readJson, readJsonExact, writeJson } from '../platform/storage';
 import { announcePinAttempts } from '../platform/pin-attempts-channel';
@@ -391,8 +392,9 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     // [OA] OA-D19: the setup path writes the attempt state inside the same lock as every verify.
     void withTabLock(PIN_ATTEMPTS_LOCK, () => saveAttempts(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE)).catch(() => undefined);
     if (hadReset) void writeJson(PIN_RESET_KEY, null);
-    // [OA] Section 8.2: every new PIN (set, change, reset) turns face or fingerprint off and deletes its item.
-    if (get().biometricShortcut !== null) get().disableBiometricShortcut('pin_changed');
+    // [OA] Section 8.2: every new PIN (set, change, reset) turns face or fingerprint off and deletes its item, also an
+    // item left without a record (the app stopped between the token and the record write).
+    get().disableBiometricShortcut('pin_changed');
   },
 
   setPinAttempts: (state) => {
@@ -468,8 +470,11 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
 
   disableBiometricShortcut: (reason) => {
     const had = get().biometricShortcut !== null;
-    set({ biometricShortcut: null });
-    void writeJson(BIOMETRIC_SHORTCUT_KEY, null);
+    // The item is deleted every time; the record and the event only when it was on.
+    if (had) {
+      set({ biometricShortcut: null });
+      void writeJson(BIOMETRIC_SHORTCUT_KEY, null);
+    }
     // Kept, so a quick off-then-on writes the new token only after this delete (native calls may finish out of order).
     pendingRemove = biometric.remove().catch(() => undefined);
     if (had) void track(biometricChangedEvent(false, reason));
@@ -477,6 +482,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
 
   verifyBiometricShortcut: async (prompt) => {
     const { biometricShortcut, pinSetAt, parentPinHash } = get();
+    // The kill switch holds here too, not only in what the screens draw.
+    if (!flags.biometricShortcutEnabled) return 'off';
     if (!shortcutValid(biometricShortcut, pinSetAt, parentPinHash !== null)) return 'off';
     const read = await biometric.read(prompt);
     if (read === 'invalidated') {
@@ -486,7 +493,11 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       // Set before any await, so a refresh still reading the paused state cannot bring it back (`refreshAttempts`);
       // the write is best effort, as for a correct PIN.
       set({ pinAttempts: registerSuccess() });
-      await withTabLock(PIN_ATTEMPTS_LOCK, () => saveAttempts(PIN_ATTEMPTS_KEY, registerSuccess())).catch(() => undefined);
+      // Tried twice: a reset that never reached storage would let the next refresh merge the old pause back in.
+      const save = (): Promise<void> =>
+        withTabLock(PIN_ATTEMPTS_LOCK, () => saveAttempts(PIN_ATTEMPTS_KEY, registerSuccess())).catch(() => undefined);
+      await save();
+      if (unsavedAttempts.has(PIN_ATTEMPTS_KEY)) await save();
     }
     return read;
   },
@@ -504,6 +515,6 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     if (moved) void writeJson(PIN_CREATED_AT_KEY, next.pinSetAt);
     void writeJson(PIN_HASH_SEEN_KEY, next.pinHashSeen);
     // [OA] A PIN an older bundle changed is a new PIN for face or fingerprint too (section 8.6).
-    if (moved && get().biometricShortcut !== null) get().disableBiometricShortcut('pin_changed');
+    if (moved) get().disableBiometricShortcut('pin_changed');
   },
 }));

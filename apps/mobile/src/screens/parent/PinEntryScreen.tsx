@@ -13,7 +13,7 @@ import {
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -51,7 +51,7 @@ import { useAudience } from '../../store/audience';
 import { gateDestOf } from '../../logic/profiles/gate-events';
 import { trackGateOpened, trackPinPaused } from '../../store/gate-telemetry';
 import { useUiStore } from '../../store/ui-store';
-import { useBiometricAvailable } from './use-biometric-available';
+import { useBiometricAvailability } from './use-biometric-available';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
 
@@ -114,7 +114,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const pinSetAt = useAccountStore((s) => s.pinSetAt);
   const verifyBiometricShortcut = useAccountStore((s) => s.verifyBiometricShortcut);
   const enableBiometricShortcut = useAccountStore((s) => s.enableBiometricShortcut);
-  const biometricAvailable = useBiometricAvailable();
+  const biometricAvailability = useBiometricAvailability();
   const { copy } = useAudience();
   const messages = useMessages();
   const m = messages.caregiver.pin;
@@ -136,6 +136,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   // [OA] CS-8: the Face ID sheet sends the app to inactive and back; no attempt refresh while a read is out, so a
   // stale paused read cannot land after the success that reset the strikes.
   const biometricReading = useRef(false);
+  // [OA] A PIN check is running: read before the next render, so a face or fingerprint tap in the same frame waits.
+  const submitting = useRef(false);
   const [now, setNow] = useState(() => Date.now());
   // [OA] `parent.gate.opened` once per gate: Change PIN checks the PIN first, then sets a new one.
   const gateSent = useRef(false);
@@ -311,12 +313,18 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       leave();
       return;
     }
+    // [OA] Section 8.6: face or fingerprint never sets, changes or resets the PIN, whatever the screen offered.
+    if (via === 'biometric' && verifiedGoesToSetup(route.params)) {
+      leave();
+      return;
+    }
     trackGateOpened(route.params.next, via);
     gateSent.current = true;
     // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
     if (pinResetRequestedAt !== null) clearPinResetRequest();
-    // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
-    markPinVerified();
+    // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9). Face or fingerprint
+    // counts there too, but never as a typed PIN (`lastPinTypedAt`), so it never leads to a new PIN (section 8.6).
+    markPinVerified(via);
     if (verifiedGoesToSetup(route.params)) {
       // [OA] OA-D21: Change PIN after the current one was checked (only the PIN does this: no face or fingerprint here).
       setHint(null);
@@ -324,16 +332,17 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       return;
     }
     // [OA] The switch's fresh PIN: the system prompt may ask for face or fingerprint now (Android); a cancel turns nothing on.
-    if (route.params.next === 'BiometricShortcut') await enableBiometricShortcut(m.biometric.cta);
+    if (route.params.next === 'BiometricShortcut' && via === 'pin') await enableBiometricShortcut(m.biometric.cta);
     if (forGrownUpArea) await handOff();
     else proceed();
   };
 
   /** [OA] Use face or fingerprint: reads the shortcut; only a returned token opens (CS-8, CS-13, CS-18). */
   const tryFaceOrFingerprint = async (): Promise<void> => {
-    if (biometricBusy || busy) return;
-    setBiometricBusy(true);
+    // Refs, not render state: two taps in one frame start one read and navigate once.
+    if (biometricReading.current || submitting.current) return;
     biometricReading.current = true;
+    setBiometricBusy(true);
     try {
       const result = await verifyBiometricShortcut(m.biometric.cta);
       if (result === 'ok') {
@@ -343,6 +352,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       } else if (result === 'invalidated') {
         setHint(null);
         setBiometricChanged(true);
+        // The focused button goes away: VoiceOver (iOS) hears why; Android reads the live region.
+        AccessibilityInfo.announceForAccessibility(m.biometric.changed);
       }
       // A cancel or a failed match: the pad as it was, no miss, the pause unchanged.
     } finally {
@@ -352,7 +363,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   };
 
   const submit = async (): Promise<void> => {
-    if (entry.length !== PIN_LENGTH || busy) return;
+    if (entry.length !== PIN_LENGTH || busy || submitting.current || biometricReading.current) return;
+    submitting.current = true;
     setBusy(true);
     try {
       if (mode === 'setup-1') {
@@ -405,6 +417,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       // A check that could not finish (the hasher or the lock failed) is not a miss: the pad clears and stays usable.
       setEntry('');
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   };
@@ -428,16 +441,20 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const lineInFlow = pauseHelp || (!locked && hint === null && changedLine !== null);
   // [OA] Section 8.6: above the pad in verify mode only, where this device turned it on for the current PIN.
   // Not on the Change PIN check (OA-D21): face or fingerprint never sets, changes or resets the PIN.
-  const offersBiometric =
+  // While the platform has not answered yet (first PIN screen of this run), a valid opt-in keeps the button's place
+  // with an invisible copy, so the dots and keys do not move down under a finger when the button shows.
+  const biometricSlot = (available: boolean): boolean =>
     mode === 'verify' &&
     !verifiedGoesToSetup(route.params) &&
     shortcutOffered({
       flagOn: flags.biometricShortcutEnabled,
-      available: biometricAvailable,
+      available,
       record: biometricShortcut,
       pinSetAt,
       hasPin: storedHash !== null,
     });
+  const offersBiometric = biometricAvailability === true && biometricSlot(true);
+  const biometricPending = biometricAvailability === null && biometricSlot(true);
   // The screen reader hears the pause once a minute (section 14), not at every second the line changes.
   const announceKey = pauseAnnounceKey(cooldownMs);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed only when the minute changes, on purpose
@@ -543,6 +560,17 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
               testID="pin-biometric"
             />
           </View>
+        ) : biometricPending ? (
+          <View
+            testID="pin-biometric-pending"
+            style={{ paddingTop: spacing.sm, opacity: 0 }}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            pointerEvents="none"
+            {...{ 'aria-hidden': true }}
+          >
+            <Button label={m.biometric.cta} tone="secondary" size="md" fullWidth disabled onPress={() => undefined} />
+          </View>
         ) : null}
       </View>
 
@@ -585,7 +613,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         tone="primary"
         size="lg"
         fullWidth
-        disabled={entry.length !== PIN_LENGTH || locked || busy}
+        disabled={entry.length !== PIN_LENGTH || locked || busy || biometricBusy}
         onPress={() => void submit()}
       />
       <Spacer size="sm" />

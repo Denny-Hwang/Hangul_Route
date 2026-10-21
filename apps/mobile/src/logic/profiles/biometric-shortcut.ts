@@ -98,14 +98,35 @@ export function shortcutSwitch(c: ShortcutContext): ShortcutSwitch {
  * passed); `invalidated` when the item is gone or unreadable without asking (an enrolment change voids it, on iOS
  * and on Android alike SecureStore then returns null), or holds something that is not a token; `cancelled` for a
  * cancel, a failed match or a locked-out sensor, which the platform reports by throwing. A thrown error that names
- * an invalidated key (older Android builds) counts as `invalidated`.
+ * an invalidated key (older Android builds), or one that says the stored item itself can never be read again
+ * (`PERMANENT_READ_ERRORS`: the expo-secure-store 14 texts), counts as `invalidated`, so the shortcut turns off and
+ * the PIN is asked (CS-18) instead of failing on every tap. Any other error (a cancel, a failed match, a lockout, the
+ * app not in front, a prompt already up) is passing: `cancelled`, and the shortcut stays.
  */
 export type ShortcutReadResult = 'ok' | 'invalidated' | 'cancelled';
 
 export type ShortcutRead = { value: string | null } | { error: unknown };
 
+/**
+ * Errors that say the item can never be read again. Android: `DecryptException` ("Could not decrypt the value ...",
+ * also a damaged or unknown item) and `KeyStoreException` ("An error occurred when accessing the keystore ...").
+ * iOS: `errSecDecode` ("Unable to decode the provided data.") and `InvalidKeyException` ("Invalid key").
+ * Android's `AuthenticationException` ("Could not authenticate the user ...") and iOS `errSecUserCanceled`,
+ * `errSecAuthFailed` and `errSecInteractionNotAllowed` are passing and not listed.
+ */
+const PERMANENT_READ_ERRORS: readonly RegExp[] = [
+  /invalidat/i,
+  /could not decrypt/i,
+  /error occurred when accessing the keystore/i,
+  /unable to decode the provided data/i,
+  /\binvalid key\b/i,
+];
+
 export function classifyShortcutRead(read: ShortcutRead): ShortcutReadResult {
-  if ('error' in read) return /invalidat/i.test(errorText(read.error)) ? 'invalidated' : 'cancelled';
+  if ('error' in read) {
+    const text = errorText(read.error);
+    return PERMANENT_READ_ERRORS.some((re) => re.test(text)) ? 'invalidated' : 'cancelled';
+  }
   if (read.value === null) return 'invalidated';
   return TOKEN_RE.test(read.value) ? 'ok' : 'invalidated';
 }

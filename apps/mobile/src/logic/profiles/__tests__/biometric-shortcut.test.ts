@@ -129,6 +129,29 @@ describe('[OA] what a read means (CS-13, CS-18)', () => {
     expect(classifyShortcutRead({ error: 'key invalidated' })).toBe('invalidated');
   });
 
+  it('expo-secure-store 14 texts: passing errors stay cancelled, an item that can never be read again is invalidated (review round 2)', () => {
+    const passing = [
+      // Android AuthenticationException (CodedException text): cancel, lockout, timeout, prompt already up, app not in front.
+      'Could not Authenticate the user: User canceled the authentication',
+      'Could not Authenticate the user: Could not authenticate the user',
+      'Could not Authenticate the user: Authentication is already in progress',
+      'Could not Authenticate the user: Cannot display biometric prompt when the app is not in the foreground',
+      // iOS KeyChainException: errSecUserCanceled, errSecAuthFailed, errSecInteractionNotAllowed.
+      'User canceled the operation.',
+      'Authentication failed. Provided passphrase/PIN is incorrect or there is no user authentication method configured for this device.',
+      'User interaction is not allowed.',
+    ];
+    for (const text of passing) expect(classifyShortcutRead({ error: new Error(text) }), text).toBe('cancelled');
+    const permanent = [
+      "Could not decrypt the value for key 'hr.biometricShortcut' under keychain 'hr.biometric'. Caused by: unknown",
+      "Could not decrypt the value for key 'hr.biometricShortcut' under keychain 'hr.biometric'. Caused by: Could not parse the encrypted JSON item in SecureStore: x",
+      'An error occurred when accessing the keystore: The entry for the keystore alias "x" is not a SecretKeyEntry',
+      'Unable to decode the provided data.',
+      'Invalid key',
+    ];
+    for (const text of permanent) expect(classifyShortcutRead({ error: new Error(text) }), text).toBe('invalidated');
+  });
+
   it('the token is lower-case hex of every byte', () => {
     expect(tokenOf(new Uint8Array([0, 1, 15, 16, 255]))).toBe('00010f10ff');
   });

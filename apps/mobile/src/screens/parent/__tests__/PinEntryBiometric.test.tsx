@@ -1,7 +1,9 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import React from 'react';
+import { AccessibilityInfo } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
+import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -44,6 +46,7 @@ import { useProfileStore } from '../../../store/profile-store';
 import { useUiStore } from '../../../store/ui-store';
 import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
 import { PinEntryScreen } from '../PinEntryScreen';
+import { resetBiometricAvailabilityForTests } from '../use-biometric-available';
 
 const m = getMessages('en').caregiver.pin;
 const a11y = getMessages('en').a11y;
@@ -103,7 +106,8 @@ beforeEach(() => {
     pinAttempts: { failures: [], lockedUntil: null, strikes: 0 },
     rescueAttempts: { failures: [], lockedUntil: null, strikes: 0 },
   });
-  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
+  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, lastPinTypedAt: null });
+  resetBiometricAvailabilityForTests();
 });
 
 afterEach(async () => {
@@ -232,6 +236,78 @@ describe('[OA] Use face or fingerprint on the PIN screen', () => {
     const texts = screenTexts(r.root);
     expect(texts).toContain(m.biometric.changed);
     expect(byTestId(r.root, 'pin-pause-line')).toHaveLength(1);
+  });
+});
+
+describe('[OA] Use face or fingerprint, review round 2', () => {
+  it('two taps in one frame start one read and navigate once', async () => {
+    const { r, navigation } = await show({ next: 'ParentDashboard' });
+    const node = cta(r.root)[0] as ReactTestInstance;
+    const onClick = node.props.onClick as (event: unknown) => void;
+    const currentTarget = { getAttribute: (name: string): unknown => node.props[name] ?? null, tagName: String(node.type) };
+    const event = { altKey: false, currentTarget, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined };
+    await act(async () => {
+      onClick(event);
+      onClick(event);
+    });
+    await settle();
+    expect(port.read).toHaveBeenCalledTimes(1);
+    expect(navigation.replace).toHaveBeenCalledTimes(1);
+  });
+
+  it('a success counts for the hand-off but never as a typed PIN (section 8.6)', async () => {
+    const { r } = await show({ next: 'ParentDashboard' });
+    await tapCta(r.root);
+    expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
+    expect(useUiStore.getState().lastPinTypedAt).toBeNull();
+  });
+
+  it('a typed PIN sets both times', async () => {
+    const { r } = await show({ next: 'ParentDashboard' });
+    for (const digit of '1234') await press(buttonsNamed(r.root, a11y.pinDigit(Number(digit)))[0] as ReactTestInstance);
+    await press(buttonsNamed(r.root, m.entry.unlock.cta)[0] as ReactTestInstance);
+    await settle();
+    expect(useUiStore.getState().lastPinTypedAt).not.toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBe(useUiStore.getState().lastPinTypedAt);
+  });
+
+  it('an enrolment change is announced for VoiceOver', async () => {
+    const announce = vi.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => undefined);
+    port.read.mockResolvedValueOnce('invalidated');
+    const { r } = await show({ next: 'ParentDashboard' });
+    await tapCta(r.root);
+    expect(announce).toHaveBeenCalledWith(m.biometric.changed);
+    announce.mockRestore();
+  });
+
+  it('keeps the button place, hidden, while availability is not known yet, so the pad does not move', async () => {
+    let answer: (v: boolean) => void = () => undefined;
+    port.available.mockImplementationOnce(() => new Promise<boolean>((resolve) => (answer = resolve)));
+    const { r } = await show({ next: 'ParentDashboard' });
+    expect(byTestId(r.root, 'pin-biometric')).toHaveLength(0);
+    const slot = byTestId(r.root, 'pin-biometric-pending');
+    expect(slot).toHaveLength(1);
+    expect(slot[0]?.props.style).toMatchObject({ opacity: 0 });
+    // Hidden from screen readers, and a tap on it reads nothing.
+    expect(slot[0]?.props['aria-hidden']).toBe(true);
+    await press(cta(r.root)[0] as ReactTestInstance).catch(() => undefined);
+    expect(port.read).not.toHaveBeenCalled();
+    await act(async () => answer(true));
+    await settle();
+    expect(byTestId(r.root, 'pin-biometric-pending')).toHaveLength(0);
+    expect(byTestId(r.root, 'pin-biometric')).toHaveLength(1);
+    // The next PIN screen on this run starts from the last answer: the button is there in the first frame.
+    await cleanup();
+    port.available.mockImplementationOnce(() => new Promise<boolean>(() => undefined));
+    const again = await show({ next: 'ParentDashboard' });
+    expect(byTestId(again.r.root, 'pin-biometric')).toHaveLength(1);
+  });
+
+  it('no place is kept without a valid opt-in', async () => {
+    useAccountStore.setState({ biometricShortcut: null });
+    port.available.mockImplementationOnce(() => new Promise<boolean>(() => undefined));
+    const { r } = await show({ next: 'ParentDashboard' });
+    expect(byTestId(r.root, 'pin-biometric-pending')).toHaveLength(0);
   });
 });
 

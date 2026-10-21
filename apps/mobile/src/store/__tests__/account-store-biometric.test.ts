@@ -32,7 +32,8 @@ vi.mock('../../platform/telemetry', () => ({
 }));
 
 import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
-import { readJson } from '../../platform/storage';
+import { flags } from '../../config/flags';
+import { readJson, writeJson } from '../../platform/storage';
 import { INITIAL_ATTEMPT_STATE, type AttemptState } from '../../logic/profiles/pin-hash';
 import { useAccountStore } from '../account-store';
 
@@ -95,6 +96,20 @@ describe('[OA] opt-in validity by epoch (section 8.6)', () => {
 
   it('a new PIN without the shortcut on emits nothing', () => {
     useAccountStore.getState().setParentPinHash('h:9999');
+    expect(changes()).toEqual([]);
+  });
+
+  it('a new PIN deletes an item left without a record (the app stopped before the record write)', () => {
+    useAccountStore.getState().setParentPinHash('h:9999');
+    expect(port.remove).toHaveBeenCalled();
+    expect(disk.has(RECORD_KEY)).toBe(false);
+    expect(changes()).toEqual([]);
+  });
+
+  it('an epoch an older bundle moved deletes the item even with no record, emitting nothing', () => {
+    useAccountStore.setState({ pinHashSeen: 'fp:other' });
+    useAccountStore.getState().reconcilePinEpoch(EPOCH + 60_000);
+    expect(port.remove).toHaveBeenCalled();
     expect(changes()).toEqual([]);
   });
 
@@ -220,6 +235,31 @@ describe('[OA] using it (CS-8, CS-18)', () => {
     expect(disk.has('account:pinAttempts')).toBe(false);
     expect(useAccountStore.getState().biometricShortcut).not.toBeNull();
     expect(changes()).toEqual([]);
+  });
+
+  it('with EXPO_PUBLIC_BIOMETRIC_SHORTCUT off a stored opt-in opens nothing and reads nothing', async () => {
+    await useAccountStore.getState().enableBiometricShortcut(PROMPT);
+    flags.biometricShortcutEnabled = false;
+    try {
+      expect(await useAccountStore.getState().verifyBiometricShortcut(PROMPT)).toBe('off');
+      expect(port.read).not.toHaveBeenCalled();
+    } finally {
+      flags.biometricShortcutEnabled = true;
+    }
+  });
+
+  it('a strike reset that did not reach storage is written once more (CS-8)', async () => {
+    await useAccountStore.getState().enableBiometricShortcut(PROMPT);
+    const state = paused();
+    disk.set('account:pinAttempts', state);
+    useAccountStore.setState({ pinAttempts: state });
+    vi.mocked(writeJson).mockImplementationOnce(async () => {
+      throw new Error('disk full');
+    });
+    expect(await useAccountStore.getState().verifyBiometricShortcut(PROMPT)).toBe('ok');
+    expect(disk.get('account:pinAttempts')).toEqual(INITIAL_ATTEMPT_STATE);
+    await useAccountStore.getState().refreshAttempts();
+    expect(useAccountStore.getState().pinAttempts).toEqual(INITIAL_ATTEMPT_STATE);
   });
 
   it('a cancel before any pause adds no miss either', async () => {

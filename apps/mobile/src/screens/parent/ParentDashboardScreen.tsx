@@ -125,7 +125,8 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
         onChange={() =>
           navigation.navigate('PinEntry', {
             next: 'ParentDashboard',
-            mode: changePinMode(useUiStore.getState().lastPinVerifiedAt, Date.now()),
+            // [OA] Section 8.6: only a typed PIN counts here; face or fingerprint never leads to a new PIN.
+            mode: changePinMode(useUiStore.getState().lastPinTypedAt, Date.now()),
             returnAfterSet: true,
           })
         }

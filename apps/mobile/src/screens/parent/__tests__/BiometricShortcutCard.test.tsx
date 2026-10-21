@@ -75,7 +75,7 @@ beforeEach(() => {
   port.write.mockResolvedValue('written');
   flags.biometricShortcutEnabled = true;
   useAccountStore.setState({ parentPinHash: 'h:1234', pinSetAt: EPOCH, biometricShortcut: null });
-  useUiStore.setState({ lastPinVerifiedAt: null });
+  useUiStore.setState({ lastPinVerifiedAt: null, lastPinTypedAt: null });
 });
 
 afterEach(async () => {
@@ -102,7 +102,8 @@ describe('[OA] the Grown-up area switch', () => {
   });
 
   it('with a PIN entered in the last 2 minutes it turns on at once', async () => {
-    useUiStore.setState({ lastPinVerifiedAt: Date.now() - 30_000 });
+    const at = Date.now() - 30_000;
+    useUiStore.setState({ lastPinVerifiedAt: at, lastPinTypedAt: at });
     const { r, onNeedPin } = await show();
     await flip(r.root, true);
     expect(onNeedPin).not.toHaveBeenCalled();
@@ -112,10 +113,19 @@ describe('[OA] the Grown-up area switch', () => {
   });
 
   it('a PIN older than 2 minutes is not fresh', async () => {
-    useUiStore.setState({ lastPinVerifiedAt: Date.now() - 3 * 60_000 });
+    const at = Date.now() - 3 * 60_000;
+    useUiStore.setState({ lastPinVerifiedAt: at, lastPinTypedAt: at });
     const { r, onNeedPin } = await show();
     await flip(r.root, true);
     expect(onNeedPin).toHaveBeenCalled();
+  });
+
+  it('a face or fingerprint success is not a typed PIN: turning it on asks for the PIN (review round 2)', async () => {
+    useUiStore.setState({ lastPinVerifiedAt: Date.now() - 30_000, lastPinTypedAt: null });
+    const { r, onNeedPin } = await show();
+    await flip(r.root, true);
+    expect(onNeedPin).toHaveBeenCalledTimes(1);
+    expect(port.write).not.toHaveBeenCalled();
   });
 
   it('turning it off needs no PIN and deletes the item', async () => {

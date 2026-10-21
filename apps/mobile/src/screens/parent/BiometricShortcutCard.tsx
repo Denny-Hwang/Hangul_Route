@@ -44,7 +44,8 @@ export function BiometricShortcutCard({ onNeedPin }: { onNeedPin: () => void }):
       disable('user');
       return;
     }
-    if (needsFreshPin('biometric_on', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
+    // A typed PIN only: face or fingerprint itself never turns face or fingerprint on.
+    if (needsFreshPin('biometric_on', useUiStore.getState().lastPinTypedAt, Date.now())) {
       onNeedPin();
       return;
     }
