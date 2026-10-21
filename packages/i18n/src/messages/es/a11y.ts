@@ -286,5 +286,7 @@ export const a11y = {
     chooserRemove: (title: string) => `Quitar ${title}`,
     answerMark: 'La respuesta de Hoya',
     timerLeft: (t: string) => `Tiempo que queda: ${t}`,
+    slot: 'espacio',
+    tilePlaced: (word: string) => `Se colocó: ${word}`,
   },
 } satisfies DeepPartial<Messages['a11y']>;

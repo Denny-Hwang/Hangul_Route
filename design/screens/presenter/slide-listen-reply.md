@@ -8,7 +8,7 @@ Mock: `mock/slide-quiz-listen.html` (Stage 3 life q1 Check c1, pictures), `slide
 - Question row: the stage speaker button (`quiz.playPrompt`), **Which one did you hear?** (`quiz.listen`), and at the reveal "Hoya's answer" (README D6).
 - At the answer build the prompt's Korean, romanization and gloss appear as one line under the question, so the room sees what it heard.
 - Picture options: the 2 x 2 grid with the shape markers, each picture 112 units (`--pic-opt`), named by its gloss. Text options: one row each (V8).
-- **No Korean voice / sound off**: the bar's teacher chip ("No Korean voice here. You say it!"), and a "Say it:" box with the prompt's romanization only; its Hangul joins the box at the answer build (showing it first would give the answer away).
+- **No Korean voice / sound off**: the bar's teacher chip ("No Korean voice here. You say it!"), and a "Say it:" box with the prompt's romanization only; its Hangul joins the box at the answer build (showing it first would give the answer away). The options' romanization joins at the answer build too (as with `romanization: 'tap'`), so the room cannot answer by matching the box's letters to a row's (LV-S2 review).
 
 ## Reply (`ask: 'reply'`)
 
@@ -16,3 +16,12 @@ Mock: `mock/slide-quiz-listen.html` (Stage 3 life q1 Check c1, pictures), `slide
 - Options: replies (Korean and romanization) one row each; each reply's gloss joins its row at the answer build.
 
 Builds `[question, answer]` for both; the dimmed options and the mark are README D6's.
+
+## As built (LV-S2)
+
+Spec: AMENDMENTS-LECTURE-V2 section 5.2 "As built in LV-S2". Shots: `apps/mobile/e2e/web/presenter-questions.spec.ts` with `HR_SHOTS=1` (1280 x 720, 1920 x 1080, 568 x 320, 844 x 390, es and ko).
+
+- **Listen**: as the mock. A letter or syllable round (`lp:sym:`, `lp:syl:`, Stage 1) keeps the 2 x 2 grid with the letters at display size and no meanings; its answer line reads the carrier syllable heard ("어 eo the letter eo"). A word or sentence round whose answer is not the line heard (the Stage 4 Checks: hear a question, pick its reply) asks **Which answer fits?** (`quiz.reply`); the line heard still joins at the answer build. An answer the line holds, spaces and punctuation aside ("이천 원" in "이천 원이에요."), was heard: that round asks **Which one did you hear?**.
+- **Pictures** sit in the neutral `PictureArt` tile (F-VOC-002: card art and WordArt look alike, so a style never gives the answer away), `PIC_OPT` units, smaller with a shorter row.
+- **Reply**: the box holds the other speaker's line without the speaker's name: the lesson scope keeps no speaker for a turn (the learner's Tap to Respond shows none), and a name needs an overlay field of its own to follow the slide language. A later content row can add it.
+- **Fit**: the rows step to compact levels on a long text (Korean and Spanish meanings, a phone's 18 px floor): compact rows, then the line's Korean at body size, then romanizations and meanings at caption size; a new stage scale (fullscreen, the projector) fits again from level 0, and a step with no layout event measures the rows again (as the reading slides do).

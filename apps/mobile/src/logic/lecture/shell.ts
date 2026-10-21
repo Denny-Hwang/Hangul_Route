@@ -1,4 +1,4 @@
-import { decodeDeck, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type LecturePreset, type UiLocale } from '@hangul-route/content-schema';
+import { decodeDeck, SLOT_MARKER, type ActivityPreset, type LectureDeck, type LectureDecodeFailure, type LecturePreset, type UiLocale } from '@hangul-route/content-schema';
 import type { AudioCapability } from '../audio/capability';
 import { canPlayKorean } from '../audio/capability';
 import type { PlayResult } from '../audio/controller';
@@ -6,6 +6,7 @@ import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
 import type { RecentItem, RecentList } from './recent';
+import { buildLineWords, buildMove, buildWholeWords, sentenceBuildView, typeCue, writeMove } from './slide-view';
 import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
@@ -97,8 +98,29 @@ export function slideLocale(input: { deck: LectureDeck | null; device: UiLocale;
 
 // --- the slides this build draws ------------------------------------------------------------------
 
-/** Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9) and the story slides (PR 11). */
-export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>(['title', 'letter', 'syllable', 'vocab', 'sequence', 'card', 'quiz', 'activity', 'story', 'end']);
+/**
+ * Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9),
+ * the story slides (PR 11), the reading slides (AMENDMENTS-LECTURE-V2 LV-S1), the sentence builds (LV-S3) and
+ * the write-together slides (LV-S4).
+ */
+export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
+  'title',
+  'letter',
+  'syllable',
+  'vocab',
+  'sequence',
+  'card',
+  'quiz',
+  'activity',
+  'story',
+  'end',
+  'sentence',
+  'pattern',
+  'read-along',
+  'realia',
+  'sentence-build',
+  'write-together',
+]);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
 export interface SkipPart {
@@ -178,7 +200,24 @@ export function runDeck(
   return { slides: empty ? [] : slides, parts, minutes: empty ? 0 : Math.max(1, minutes) };
 }
 
+/**
+ * A sentence's picture this build can draw: a `card:` ref the art draws or a `word:` key with a
+ * WordArt glyph (README D9); any other ref (a swatch beside a sentence teaches nothing) is dropped.
+ */
+function sentencePictureDrawn(ref: string, drawnCardIds: readonly string[], drawnWordArtKeys: readonly string[]): boolean {
+  if (ref.startsWith('card:')) return drawnCardIds.includes(ref);
+  if (ref.startsWith('word:')) return drawnWordArtKeys.includes(ref.slice('word:'.length));
+  return false;
+}
+
 function withoutUndrawnArt(slide: Slide, drawnCardIds?: readonly string[], drawnWordArtKeys?: readonly string[]): Slide {
+  if (slide.kind === 'sentence') {
+    // Only a run that knows what the art draws judges a sentence's picture (as a word card's, below).
+    const { picture, ...rest } = slide;
+    if (picture === undefined || drawnCardIds === undefined || drawnWordArtKeys === undefined) return slide;
+    if (sentencePictureDrawn(picture, drawnCardIds, drawnWordArtKeys)) return slide;
+    return { ...rest, builds: slide.builds.filter((b) => b !== 'art') };
+  }
   if (slide.kind !== 'vocab') return slide;
   const cardUndrawn = drawnCardIds !== undefined && slide.cardId !== undefined && !drawnCardIds.includes(slide.cardId);
   const wordUndrawn = drawnWordArtKeys !== undefined && slide.wordArt !== undefined && !drawnWordArtKeys.includes(slide.wordArt);
@@ -274,11 +313,70 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
 /**
  * The slide's own words for the live region ("g/k" of a letter), after its kind label; '' when none.
  * An activity is named by its preset, a catalogue string the caller passes (`names.activity`).
- * It names the whole slide on arrival, builds not yet revealed included: the live region speaks to
+ * It names the whole slide on arrival, builds not yet revealed included (a reading slide's meanings and
+ * key words too, as a vocab slide names its gloss): the live region speaks to
  * the presenter at the device, who holds the deck, not to the room, which sees only the stage.
+ * A listen or reply question is named by its question (`names.listen`, `names.reply`), a realia
+ * question by its own (LV-S2); never by an option, which would be the answer. A sentence build is
+ * named by the question its stage shows at `reveal` (LV-S3): the next word (`names.build`) or the
+ * ending that fits (`names.particle`), after the words already on the line, so a step back is heard
+ * even when the question stays the same; at the whole build, where no question shows, by the
+ * sentence with its romanization and meaning, as that build's move said it. Never by a tile still
+ * in the bank: each move says its tile and the whole build the sentence (`buildLive`). With no
+ * `reveal`, a build is named by its first question. A write-together slide (LV-S4) is named by what its
+ * first build shows: a type round by its prompt and cue (`typeCue`), a trace round by its Korean word, a
+ * frame by its line (`names.frame`), the name round by its own (`names.ownName`); never by an answer.
+ * Each step forward on it then says what that build showed (`writeMove`).
  */
-export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string }): string {
+export function slideDetail(
+  slide: Slide,
+  names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string; build?: string; particle?: string; frame?: string; ownName?: string },
+  reveal?: number,
+): string {
   switch (slide.kind) {
+    case 'sentence-build': {
+      if (reveal === undefined) return names?.build ?? '';
+      const { ask } = sentenceBuildView(slide, reveal);
+      if (ask === null) return buildWholeWords(slide);
+      const question = (ask === 'particle' ? (names?.particle ?? names?.build) : names?.build) ?? '';
+      return [...buildLineWords(slide, reveal), question].filter((w) => w !== '').join(', ');
+    }
+    case 'write-together':
+      switch (slide.variant) {
+        case 'type':
+          return typeCue(slide);
+        case 'trace':
+          // The Korean only: its romanization waits for the answer build in both modes.
+          return slide.word.ko;
+        case 'frame':
+          return names?.frame ?? '';
+        case 'own-name':
+          return names?.ownName ?? '';
+      }
+      return '';
+    case 'quiz':
+      switch (slide.prompt.ask) {
+        case 'listen':
+          return (slide.prompt.reply === true ? names?.reply : names?.listen) ?? '';
+        case 'reply':
+          return names?.reply ?? '';
+        case 'realia':
+          return slide.prompt.text;
+        default:
+          return '';
+      }
+    case 'sentence':
+      return `${slide.sentence.ko}, ${slide.sentence.romanization}, ${slide.sentence.gloss}`;
+    case 'pattern': {
+      // Each gap says its name ("gap", `a11y.presenter.slot`), never "underscore".
+      const gap = (text: string): string => text.split(SLOT_MARKER).join(` ${names?.slot ?? SLOT_MARKER} `).replace(/\s+/g, ' ').replace(/ ([.,!?])/g, '$1').trim();
+      return `${gap(slide.frame.pieces.join(SLOT_MARKER))}, ${gap(slide.frame.romanization)}, ${gap(slide.frame.gloss)}`;
+    }
+    case 'read-along':
+      return slide.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}, ${l.gloss}`).join(', ');
+    case 'realia':
+      // The sheet's own accessible text (F-CURR-001 §3.14), then each key word as a vocab slide names it.
+      return [slide.sheet.alt, ...slide.keyWords.map((w) => `${w.ko}, ${w.romanization}, ${w.gloss}`)].join(', ');
     case 'title':
       return slide.title;
     case 'letter':
@@ -297,6 +395,36 @@ export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityP
     default:
       return '';
   }
+}
+
+/** What the live region says now: the slide and build it was worked out for, and a build's own words. */
+export interface BuildLive {
+  key: string;
+  reveal: number;
+  /** A sentence-build move's or a write-together build's words; absent: the slide's own announcement. */
+  words?: string;
+}
+
+/**
+ * The live region on a sentence-build or write-together slide (section 10): one step forward on the
+ * same slide announces what it moved or showed (a sentence build: "{word} placed", `placed`, and the
+ * sentence with its romanization and meaning at the whole build; a write-together slide: `writeMove`,
+ * with `example` its "For example" label); arriving on a slide or stepping back says the slide again.
+ * A redraw at the same build keeps what was said, so nothing is announced twice. Every other slide
+ * always has its own announcement.
+ */
+export function buildLive(slide: Slide, reveal: number, previous: BuildLive | null, placed: (word: string) => string, example = ''): BuildLive {
+  const now = { key: slide.key, reveal };
+  if (previous !== null && previous.key === slide.key && previous.reveal === reveal) return previous;
+  if (previous === null || previous.key !== slide.key || reveal !== previous.reveal + 1) return now;
+  if (slide.kind === 'write-together') {
+    const words = writeMove(slide, reveal, example);
+    return words === null ? now : { ...now, words };
+  }
+  if (slide.kind !== 'sentence-build') return now;
+  const move = buildMove(slide, reveal);
+  if (move === null) return now;
+  return { ...now, words: 'placed' in move ? placed(move.placed) : move.whole };
 }
 
 // --- start screen and stage ---------------------------------------------------------------------

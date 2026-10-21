@@ -7,7 +7,7 @@ import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { PAUSE_WORD, lectureBundle } from '../content';
-import { expandDeck } from '../deck-builder';
+import { expandDeck, type Slide } from '../deck-builder';
 
 /**
  * The presenter font holds every Hangul glyph the deck builder projects (F-TCH-004 §3.6, TD4).
@@ -41,8 +41,11 @@ function sidecarCodePoints(): Set<number> {
 const isHangul = (cp: number): boolean =>
   (cp >= 0xac00 && cp <= 0xd7a3) || (cp >= 0x1100 && cp <= 0x11ff) || (cp >= 0x3130 && cp <= 0x318f);
 
-/** Slide fields that are not taught Korean: UI-language text and the slide key. */
-const NOT_TAUGHT_KOREAN = new Set(['key', 'title', 'fact', 'gloss']);
+/**
+ * Slide fields that are not taught Korean: UI-language text (a read-along speaker's name and a
+ * realia sheet's accessible text among them, LV-S1) and the slide key.
+ */
+const NOT_TAUGHT_KOREAN = new Set(['key', 'title', 'fact', 'gloss', 'speaker', 'alt']);
 
 /** Every string in a slide except the fields above, at any depth. */
 function strings(value: unknown, out: string[] = []): string[] {
@@ -87,6 +90,97 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
       }
     }
     expect([...missing.entries()]).toEqual([]);
+  });
+
+  it.each(['es', 'ko'] as const)(
+    'every Korean chip of the pattern notes and realia captions of a deck in %s (the content overlays) is in the font',
+    (locale) => {
+      // The rest of an overlay deck is the same taught Korean as the English walk above, or UI-language text in the system stack.
+      const missing = new Map<string, string>();
+      let chips = 0;
+      for (let i = 0; i < blocks.length; i += 30) {
+        const { slides } = expandDeck(deck(blocks.slice(i, i + 30)), lectureBundle(locale), { canPlayKorean: true });
+        for (const slide of slides) {
+          const pieces = slide.kind === 'pattern' ? (slide.note ?? []) : slide.kind === 'realia' ? (slide.caption ?? []) : [];
+          for (const piece of pieces) {
+            if (!('ko' in piece)) continue;
+            chips += 1;
+            for (const ch of piece.ko) {
+              const cp = ch.codePointAt(0)!;
+              if (isHangul(cp) && !font.has(cp) && !missing.has(ch)) missing.set(ch, `${slide.key}: ${piece.ko}`);
+            }
+          }
+        }
+      }
+      expect(chips).toBeGreaterThan(0);
+      expect([...missing.entries()]).toEqual([]);
+    },
+  );
+
+  it('the walk reaches every reading slide (LV-S1): sentences, patterns with their frames and notes, read alongs, realia sheets and captions', () => {
+    const { slides } = expandDeck(deck(blocks.filter((b) => b.kind === 'episode').slice(0, 30)), lectureBundle('en'), { canPlayKorean: true });
+    const all = [...slides, ...expandDeck(deck(blocks.filter((b) => b.kind === 'episode').slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
+    for (const kind of ['sentence', 'pattern', 'read-along', 'realia'] as const) expect(all.some((s) => s.kind === kind), kind).toBe(true);
+    // The Korean only these slides draw is in the walk: a frame between its gaps, a note's chips, a sheet's heading and lines.
+    const drawn = new Set(all.flatMap((s) => strings(s)));
+    expect([...drawn].some((t) => t.includes('을/를'))).toBe(true);
+    expect(all.some((s) => s.kind === 'pattern' && s.note?.some((p) => 'ko' in p) === true)).toBe(true);
+    expect(all.some((s) => s.kind === 'realia' && s.sheet.heading !== undefined && drawn.has(s.sheet.heading.ko))).toBe(true);
+  });
+
+  it("the walk reaches every sentence build (LV-S3): its tiles, a particle tile's stem and endings, and the distractors", () => {
+    const episodes = blocks.filter((b) => b.kind === 'episode');
+    const all = [...expandDeck(deck(episodes.slice(0, 30)), lectureBundle('en'), { canPlayKorean: true }).slides, ...expandDeck(deck(episodes.slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
+    const builds = all.filter((s): s is Extract<Slide, { kind: 'sentence-build' }> => s.kind === 'sentence-build');
+    expect(builds.length).toBeGreaterThan(100);
+    // Each field the slide draws, checked against the font itself (not against the walk's own strings,
+    // which would pass whatever the walk leaves out).
+    const missing = new Map<string, string>();
+    const check = (key: string, text: string): void => {
+      for (const ch of text) {
+        const cp = ch.codePointAt(0)!;
+        if (isHangul(cp) && !font.has(cp) && !missing.has(ch)) missing.set(ch, `${key}: ${text}`);
+      }
+    };
+    let pieces = 0;
+    for (const slide of builds) {
+      const drawn = [
+        slide.sentence.ko,
+        ...slide.tiles.flatMap((t) => [t.ko, ...(t.particle ? [t.particle.stem, ...t.particle.choices.map((c) => c.ko)] : [])]),
+        ...slide.bank.flatMap((p) => ('distractor' in p ? [p.distractor.ko] : [])),
+      ];
+      pieces += drawn.length;
+      for (const text of drawn) check(slide.key, text);
+      // The main walk reads these fields too: none is left out as not taught Korean.
+      const walked = new Set(strings(slide));
+      for (const text of drawn) expect(walked.has(text), `${slide.key}: ${text}`).toBe(true);
+    }
+    expect(pieces).toBeGreaterThan(builds.length * 3);
+    expect([...missing.entries()]).toEqual([]);
+    expect(builds.some((s) => s.tiles.some((t) => t.particle !== undefined))).toBe(true);
+    expect(builds.some((s) => s.bank.some((p) => 'distractor' in p))).toBe(true);
+  });
+
+  it('the walk reaches every write-together slide (LV-S4): type targets, trace words, frames, banks, examples and the sound table', () => {
+    const episodes = blocks.filter((b) => b.kind === 'episode');
+    const all = [...expandDeck(deck(episodes.slice(0, 30)), lectureBundle('en'), { canPlayKorean: true }).slides, ...expandDeck(deck(episodes.slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
+    const writes = all.filter((s): s is Extract<Slide, { kind: 'write-together' }> => s.kind === 'write-together');
+    expect(new Set(writes.map((s) => s.variant))).toEqual(new Set(['type', 'trace', 'frame', 'own-name']));
+    const drawn = new Set(writes.flatMap((s) => strings(s)));
+    for (const slide of writes) {
+      const pieces =
+        slide.variant === 'type'
+          ? [slide.answer.ko]
+          : slide.variant === 'trace'
+            ? [slide.word.ko]
+            : slide.variant === 'frame'
+              ? [...slide.frame.pieces, ...slide.banks.flat().map((w) => w.ko), slide.example.ko]
+              : [...slide.frame.pieces, ...slide.groups.flat().map((b) => b.ko)];
+      for (const piece of pieces.filter((p) => p !== '')) expect(drawn.has(piece), `${slide.key} ${piece}`).toBe(true);
+    }
+    // The name round's table: 119 blocks in ten groups, every one drawn.
+    const name = writes.find((s) => s.variant === 'own-name');
+    expect(name?.variant === 'own-name' && name.groups.flat()).toHaveLength(119);
   });
 
   it('the deck covers every listed story', () => {

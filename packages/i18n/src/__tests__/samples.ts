@@ -868,4 +868,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.chooser.chosen': [[1, 5], [3, 40]],
   // The Slides language hint with a chosen language (AMENDMENTS-LECTURE-V2 section 18.4).
   'console.lecture.options.languageHintChosen': [['English'], ['Español']],
+  // A sentence-build move (AMENDMENTS-LECTURE-V2 row LV-S3): the slide passes the tile's Korean and its romanization; samples stay Latin (no Hangul in a message).
+  'a11y.presenter.tilePlaced': [['hakgyoe'], ['dalgyareul'], ['ne']],
 };

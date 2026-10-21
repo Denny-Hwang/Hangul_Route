@@ -2,7 +2,6 @@ import type { ListenPickRound, RomanizationMode } from '@hangul-route/content-sc
 import type { Messages } from '@hangul-route/i18n';
 import type { PlayResult, PlaySpec } from '../platform/audio';
 import type { HostMode } from '../screens/minigames/host';
-import { koSpeech, promptKindOf } from './audio/ko-speech';
 
 /**
  * Listen & Pick flow (F-QUEST-002 §3.10): the reducer and view-models behind
@@ -20,20 +19,8 @@ import { koSpeech, promptKindOf } from './audio/ko-speech';
  * only the first touch in a 50 ms window counts (F-001 §3.4).
  */
 
-/** The surface id of Listen & Pick for the audio telemetry (`audio.fallback_shown`, F-AUDIO-004 §3.14). */
-export const LISTEN_PICK_AUDIO_SOURCE = 'listen-pick';
-
-/**
- * What the round says (F-AUDIO-004 §3.5): `spokenKo ?? ko`, the recording when there is one, and
- * the speech rate of what it is. Only a letter or syllable round (`lp:sym:`, `lp:syl:`) is a `sound`;
- * any other round is read by its text (`promptKindOf`): a sentence is a `sentence`, else a `word`
- * (a one-syllable word or picture round, jip or dal, included: the word rate).
- */
-export function listenPickSpeech(round: ListenPickRound): PlaySpec {
-  const sound = round.id.startsWith('lp:sym:') || round.id.startsWith('lp:syl:');
-  const kind = sound ? 'sound' : promptKindOf(round.prompt.spokenKo ?? round.prompt.ko);
-  return koSpeech(round.prompt, kind, LISTEN_PICK_AUDIO_SOURCE);
-}
+// The round's speech and its audio surface id live in a pure module (the lecture deck builder uses them too).
+export { LISTEN_PICK_AUDIO_SOURCE, listenPickSpeech } from './audio/listen-pick-speech';
 
 export const LISTEN_PICK_TIMING = {
   /** Wrong tap -> the prompt plays again. */

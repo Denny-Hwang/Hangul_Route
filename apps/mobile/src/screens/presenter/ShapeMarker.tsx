@@ -8,11 +8,12 @@ import { usePresenterView } from './presenter-context';
  * The shape and number marker (spec section 3.4; README Constants `--marker`): circle 1, triangle
  * 2, square 3, star 4, in `text.primary` on paper, so the room answers "triangle, 2" and colour is
  * never the only cue. 80 units square on a 100 viewBox. Named "Option 2, triangle" for assistive
- * tech. The order slide draws it (PR 7); the quiz options reuse it (PR 9).
+ * tech. The order slide draws it (PR 7); the quiz options reuse it (PR 9); a compact option row of a
+ * question slide draws it smaller (`side`, LV-S2).
  */
-export function ShapeMarker({ shape, n }: { shape: MarkerShape; n: number }): React.ReactElement {
+export function ShapeMarker({ shape, n, side }: { shape: MarkerShape; n: number; /** Its side in units (a compact option row, LV-S2); 80 when absent. */ side?: number }): React.ReactElement {
   const { unit, messages } = usePresenterView();
-  const size = units(unit, MARKER_BODY_FACTOR * presenter.size.body);
+  const size = units(unit, side ?? MARKER_BODY_FACTOR * presenter.size.body);
   const g = MARKER_GEOMETRY[shape];
   const line = { fill: 'none', stroke: colors.text.primary, strokeWidth: MARKER_STROKE, strokeLinejoin: 'round' as const };
   return (

@@ -5,9 +5,21 @@ import { lectureBundle } from '../content';
 import { expandDeck, type Slide } from '../deck-builder';
 import {
   activityTimerMs,
+  buildMove,
+  buildPlaceWidth,
+  linePlaceSize,
   cardView,
+  frameSpoken,
   markerFor,
+  nextFitLevel,
+  patternView,
+  readAlongView,
+  realiaView,
   romShown,
+  sentenceBuildView,
+  sentenceView,
+  sheetRoomy,
+  sheetUnits,
   sequenceView,
   shownBuilds,
   slideSound,
@@ -15,7 +27,9 @@ import {
   soundPress,
   soundPrompt,
   syllableView,
+  soundTablePage,
   vocabArt,
+  writeView,
 } from '../slide-view';
 
 /**
@@ -30,8 +44,8 @@ function deckOf(blocks: LectureBlock[]) {
   return LectureDeckSchema.parse({ v: 1, id: 'lecture:view001', title: 'Week 3', createdAt: '2026-10-13T09:00:00Z', seed: 7, blocks });
 }
 
-function slidesOf(blocks: LectureBlock[]): Slide[] {
-  return expandDeck(deckOf(blocks), lectureBundle('en'), { canPlayKorean: true }).slides;
+function slidesOf(blocks: LectureBlock[], canPlayKorean = true): Slide[] {
+  return expandDeck(deckOf(blocks), lectureBundle('en'), { canPlayKorean }).slides;
 }
 
 function first<K extends Slide['kind']>(slides: Slide[], kind: K): Extract<Slide, { kind: K }> {
@@ -303,5 +317,339 @@ describe('soundPrompt: the playPrompt spec of a slide sound', () => {
   it('carries the clip only when there is one, and the rate kind', () => {
     expect(soundPrompt({ spoken: { text: '김밥', romanization: 'gimbap' }, kind: 'word' })).toEqual({ text: '김밥', kind: 'word' });
     expect(soundPrompt({ spoken: { text: '가', romanization: 'ga', audioRef: 'audio/jamo/giyeok.mp3' }, kind: 'sound' })).toEqual({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', kind: 'sound' });
+  });
+});
+
+describe('the reading slides at each build (AMENDMENTS-LECTURE-V2 section 5.2, LV-S1; shipped content)', () => {
+  const TAP = { romanization: 'tap', strokeGuide: true } as const;
+  const tapped = <S extends Slide>(slide: S): S => ({ ...slide, builds: buildsFor(slide, TAP) });
+  const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
+  const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
+  const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q1' }]);
+
+  it('sentence: the Korean with its romanization, then the meaning, then the picture; tap: the romanization at its own build', () => {
+    const slide = first(stage3, 'sentence');
+    expect(slide.sentence.ko).toBe('물을 마셔요.');
+    expect(sentenceView(slide, 0)).toEqual({ rom: true, gloss: false, art: false });
+    expect(sentenceView(slide, 2)).toEqual({ rom: true, gloss: true, art: true });
+    expect(sentenceView(tapped(slide), 0)).toEqual({ rom: false, gloss: false, art: false });
+    expect(sentenceView(tapped(slide), 1)).toEqual({ rom: true, gloss: false, art: false });
+  });
+
+  it('pattern: frame, note, one example per build; tap: each romanization one build later', () => {
+    const slide = first(stage3, 'pattern');
+    expect(slide.frame.pieces).toEqual(['', '을/를 먹어요.']);
+    expect(patternView(slide, 0)).toEqual({ frame: { shown: true, rom: true }, note: { shown: false, rom: false }, examples: [{ shown: false, rom: false }, { shown: false, rom: false }] });
+    expect(patternView(slide, 3).examples).toEqual([{ shown: true, rom: true }, { shown: true, rom: true }]);
+    const tap = tapped(slide);
+    expect(patternView(tap, 0).frame).toEqual({ shown: true, rom: false });
+    expect(patternView(tap, 1).frame).toEqual({ shown: true, rom: true });
+    expect(patternView(tap, 4).examples[0]).toEqual({ shown: true, rom: false });
+    expect(patternView(tap, 5).examples[0]).toEqual({ shown: true, rom: true });
+  });
+
+  it('read along: one line per build, the current line is the last one shown; tap: each romanization one build later', () => {
+    const slide = first(stage4, 'read-along');
+    expect(slide.lines.map((l) => l.speaker)).toHaveLength(2);
+    expect(readAlongView(slide, 0)).toEqual({ lines: [{ shown: true, rom: true }, { shown: false, rom: false }], current: 0 });
+    expect(readAlongView(slide, 1)).toEqual({ lines: [{ shown: true, rom: true }, { shown: true, rom: true }], current: 1 });
+    expect(readAlongView(tapped(slide), 2)).toEqual({ lines: [{ shown: true, rom: true }, { shown: true, rom: false }], current: 1 });
+  });
+
+  it('read along with no Korean voice: every line shows at once and none is lit (section 5.1); tap: their romanization one build later', () => {
+    const slide = first(slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }], false), 'read-along');
+    expect(slide.together).toBe(true);
+    expect(slide.builds).toEqual(['line']);
+    expect(readAlongView(slide, 0)).toEqual({ lines: [{ shown: true, rom: true }, { shown: true, rom: true }], current: null });
+    const tap = tapped(slide);
+    expect(tap.builds).toEqual(['line', 'rom']);
+    expect(readAlongView(tap, 0)).toEqual({ lines: [{ shown: true, rom: false }, { shown: true, rom: false }], current: null });
+    expect(readAlongView(tap, 1)).toEqual({ lines: [{ shown: true, rom: true }, { shown: true, rom: true }], current: null });
+  });
+
+  it('realia: the sheet, then the key words; tap: the sheet romanization, then the key words, then theirs', () => {
+    const slide = first(stage6, 'realia');
+    expect(realiaView(slide, 0)).toEqual({ sheetRom: true, words: false, wordsRom: false });
+    expect(realiaView(slide, 1)).toEqual({ sheetRom: true, words: true, wordsRom: true });
+    const tap = tapped(slide);
+    expect(realiaView(tap, 0)).toEqual({ sheetRom: false, words: false, wordsRom: false });
+    expect(realiaView(tap, 1)).toEqual({ sheetRom: true, words: false, wordsRom: false });
+    expect(realiaView(tap, 2)).toEqual({ sheetRom: true, words: true, wordsRom: false });
+    expect(realiaView(tap, 3)).toEqual({ sheetRom: true, words: true, wordsRom: true });
+  });
+
+  it('a sheet of up to four lines puts each romanization under its Korean; a longer one (a five-board trail sign) beside it', () => {
+    const entries = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `e${i}`, text: { ko: '강', romanization: 'gang' } }));
+    expect(sheetRoomy({ entries: entries(4) })).toBe(true);
+    expect(sheetRoomy({ entries: entries(5) })).toBe(false);
+    const sign = slidesOf([{ kind: 'quest', id: 'quest:stage6-nature-q1' }]).find((s): s is Extract<Slide, { kind: 'realia' }> => s.kind === 'realia');
+    expect(sign?.sheet.kind).toBe('sign');
+    expect(sheetRoomy(sign!.sheet)).toBe(false);
+    expect(sheetRoomy(first(stage6, 'realia').sheet)).toBe(true);
+  });
+
+  it('a sheet is 420 units wide on the stage; price cards side by side take 600', () => {
+    expect(sheetUnits({ kind: 'menu' })).toBe(420);
+    expect(sheetUnits({ kind: 'sign' })).toBe(420);
+    expect(sheetUnits({ kind: 'plain' })).toBe(420);
+    expect(sheetUnits({ kind: 'price-card' })).toBe(600);
+  });
+
+  it('a sheet grows with its floored text on a small phone, up to 700 units', () => {
+    // 568 x 320: a unit of 0.44 px draws the 28-unit caption at the 18 px floor, 1.45 times its units.
+    expect(sheetUnits({ kind: 'menu' }, 18 / (0.44375 * 28))).toBe(608);
+    expect(sheetUnits({ kind: 'price-card' }, 18 / (0.44375 * 28))).toBe(700);
+    expect(sheetUnits({ kind: 'menu' }, 0.5)).toBe(420);
+  });
+
+  it('Sound: a sentence its sentence; a pattern the last Korean part on screen: the frame, the note chips, then each example', () => {
+    const sentence = first(stage3, 'sentence');
+    expect(slideSound(sentence, 0)).toEqual({ spoken: sentence.sentence.spoken, kind: 'sentence' });
+    const pattern = first(stage3, 'pattern');
+    // The frame's own Korean, a pause at the gap and between the two particles.
+    expect(slideSound(pattern, 0)).toEqual({ spoken: { text: '을, 를 먹어요.', romanization: 'eul, reul meogeoyo' }, kind: 'sentence' });
+    // The note's Korean chips, each once, at the word rate.
+    expect(slideSound(pattern, 1)).toEqual({ spoken: { text: '을, 를', romanization: 'eul, reul' }, kind: 'word' });
+    expect(slideSound(pattern, 2)).toEqual({ spoken: pattern.examples[0]!.spoken, kind: 'sentence' });
+    expect(slideSound(pattern)).toEqual({ spoken: pattern.examples[1]!.spoken, kind: 'sentence' });
+    // tap: the romanization builds keep the part before them.
+    const tap = tapped(pattern);
+    expect(tap.builds).toEqual(['frame', 'rom', 'note', 'rom', 'example', 'rom', 'example', 'rom']);
+    expect(slideSound(tap, 1)?.spoken.text).toBe('을, 를 먹어요.');
+    expect(slideSound(tap, 3)?.spoken.text).toBe('을, 를');
+    expect(slideSound(tap, 5)).toEqual({ spoken: pattern.examples[0]!.spoken, kind: 'sentence' });
+  });
+
+  it('frameSpoken: a gap at the start, the middle or the end is a pause; a piece of only punctuation is dropped', () => {
+    expect(frameSpoken({ pieces: ['', '이/가 있어요.'], romanization: '___i/ga isseoyo', gloss: 'There is ___.' })).toEqual({ text: '이, 가 있어요.', romanization: 'i, ga isseoyo' });
+    expect(frameSpoken({ pieces: ['먼저 ', '.'], romanization: 'meonjeo ___', gloss: 'First, ___.' })).toEqual({ text: '먼저', romanization: 'meonjeo' });
+    expect(frameSpoken({ pieces: ['', '에 ', '을/를 먹었어요.'], romanization: '___e ___eul/reul meogeosseoyo', gloss: 'I ate ___ on ___.' })).toEqual({
+      text: '에, 을, 를 먹었어요.',
+      romanization: 'e, eul, reul meogeosseoyo',
+    });
+  });
+
+  it('Sound: read along its current line, or every line in order when they show together (no Korean voice)', () => {
+    const readAlong = first(stage4, 'read-along');
+    expect(slideSound(readAlong, 0)).toEqual({ spoken: readAlong.lines[0]!.spoken, kind: 'sentence' });
+    expect(slideSound(readAlong)).toEqual({ spoken: readAlong.lines[1]!.spoken, kind: 'sentence' });
+    const together = first(slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }], false), 'read-along');
+    expect(slideSound(together, 0)).toEqual({
+      spoken: { text: together.lines.map((l) => l.spoken.text).join(', '), romanization: together.lines.map((l) => l.spoken.romanization).join(', ') },
+      kind: 'sentence',
+    });
+  });
+
+  it('Sound: a realia page its sheet and its caption chips, then its key words once they show', () => {
+    const realia = first(stage6, 'realia');
+    expect(slideSound(realia, 0)).toEqual({ spoken: realia.sheet.spoken, kind: 'word' });
+    // A caption with Korean chips: the sheet, then each chip once, in order.
+    const priced = slidesOf([{ kind: 'quest', id: 'quest:stage6-crafts-q1' }]).find(
+      (s): s is Extract<Slide, { kind: 'realia' }> => s.kind === 'realia' && s.caption?.some((p) => 'ko' in p) === true,
+    );
+    expect(priced).toBeDefined();
+    const chips = [...new Set(priced!.caption!.flatMap((p) => ('ko' in p ? [p.ko] : [])))];
+    expect(slideSound(priced!, 0)?.spoken.text).toBe([priced!.sheet.spoken.text, ...chips].join(', '));
+    expect(slideSound(realia)).toEqual({
+      spoken: { text: realia.keyWords.map((w) => w.spoken.text).join(', '), romanization: realia.keyWords.map((w) => w.spoken.romanization).join(', ') },
+      kind: 'word',
+    });
+  });
+});
+
+describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections 5.1 and 5.2, LV-S2)', () => {
+  const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
+  const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
+  const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
+  const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }]);
+  type Quiz = Extract<Slide, { kind: 'quiz' }>;
+  const asked = (slides: Slide[], ask: Quiz['prompt']['ask']): Quiz[] => slides.filter((s): s is Quiz => s.kind === 'quiz' && s.prompt.ask === ask);
+
+  it('a Stage 1 Check: a letter round plays its carrier syllable at the sound rate, a word round its word', () => {
+    const [sym, word] = asked(stage1, 'listen');
+    expect(slideSound(sym)).toEqual({ spoken: { text: '어', romanization: 'eo' }, kind: 'sound' });
+    expect(slideSound(word)?.kind).toBe('word');
+    expect(slideSound(word)?.spoken.text).toBe((word!.prompt as Extract<Quiz['prompt'], { ask: 'listen' }>).line.ko);
+  });
+
+  it('a listen question plays its prompt (a sentence at the sentence rate) at every build: the room hears it before it answers', () => {
+    const listen = asked(stage3, 'listen');
+    expect(listen.length).toBeGreaterThan(0);
+    for (const slide of listen) {
+      const prompt = slide.prompt as Extract<Quiz['prompt'], { ask: 'listen' }>;
+      expect(slideSound(slide, 0)).toEqual({ spoken: prompt.line.spoken, kind: prompt.speech });
+      expect(slideSound(slide, 0)).toEqual(slideSound(slide, 1));
+    }
+  });
+
+  it("a reply question plays the other speaker's line at the sentence rate", () => {
+    const [reply] = asked(stage4, 'reply');
+    const prompt = reply!.prompt as Extract<Quiz['prompt'], { ask: 'reply' }>;
+    expect(prompt.line.ko).toBe('밥 먹었어요?');
+    expect(slideSound(reply)).toEqual({ spoken: prompt.line.spoken, kind: 'sentence' });
+  });
+
+  it('a realia question plays its key word, else its sheet line by line, at the word rate', () => {
+    const realia = asked(stage6, 'realia');
+    expect(realia.length).toBeGreaterThan(0);
+    for (const slide of realia) {
+      const prompt = slide.prompt as Extract<Quiz['prompt'], { ask: 'realia' }>;
+      expect(slideSound(slide)).toEqual({ spoken: prompt.key?.spoken ?? prompt.sheet.spoken, kind: 'word' });
+    }
+  });
+});
+
+describe('the sentence build at each build (AMENDMENTS-LECTURE-V2 section 5.2, LV-S3; V9)', () => {
+  type Build = Extract<Slide, { kind: 'sentence-build' }>;
+  const builds = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q3' }, { kind: 'quest', id: 'quest:stage7-life-q2' }]).filter((s): s is Build => s.kind === 'sentence-build');
+  const plain = builds.find((s) => s.sentence.ko === '친구가 학교에 가요.')!;
+  const particle = builds.find((s) => s.sentence.ko === '저녁에 달걀을 먹어요.')!;
+  const bankOf = (slide: Build, reveal: number) => {
+    const view = sentenceBuildView(slide, reveal);
+    return slide.bank.map((place, i) => [('tile' in place ? slide.tiles[place.tile]!.ko : place.distractor.ko), view.bank[i]]);
+  };
+
+  it('the bank: every line place empty, every tile in the bank, the next-word question, no meaning yet', () => {
+    expect(sentenceBuildView(plain, 0)).toEqual({ line: ['empty', 'empty', 'empty'], bank: ['tile', 'tile', 'tile', 'tile'], ask: 'next', whole: false });
+  });
+
+  it('each tile build moves the next tile to the line and leaves its ghost; the distractor stays in the bank', () => {
+    const two = sentenceBuildView(plain, 2);
+    expect(two.line).toEqual(['placed', 'placed', 'empty']);
+    expect(Object.fromEntries(bankOf(plain, 2))).toEqual({ 친구가: 'ghost', 학교에: 'ghost', 가요: 'tile', 와요: 'tile' });
+    expect(two.ask).toBe('next');
+  });
+
+  it('the whole build: every tile placed, the meaning shows, no question, and the distractor is set back (never marked)', () => {
+    const whole = sentenceBuildView(plain, plain.builds.length - 1);
+    expect(whole).toEqual({ line: ['placed', 'placed', 'placed'], bank: expect.any(Array), ask: null, whole: true });
+    expect(Object.fromEntries(bankOf(plain, plain.builds.length - 1))).toEqual({ 친구가: 'ghost', 학교에: 'ghost', 가요: 'ghost', 와요: 'set-back' });
+    // A reveal past the end is the whole build.
+    expect(sentenceBuildView(plain, 99)).toEqual(whole);
+  });
+
+  it('a particle tile shows both endings and asks which fits, until its particle build keeps the one that fits', () => {
+    expect(particle.builds).toEqual(['bank', 'tile', 'tile', 'particle', 'tile', 'whole']);
+    expect(sentenceBuildView(particle, 2)).toMatchObject({ line: ['placed', 'choosing', 'empty'], ask: 'particle', whole: false });
+    expect(sentenceBuildView(particle, 3)).toMatchObject({ line: ['placed', 'placed', 'empty'], ask: 'next', whole: false });
+    expect(particle.tiles[1]!.particle).toEqual({ stem: '달걀', choices: [{ ko: '을', romanization: 'eul' }, { ko: '를', romanization: 'reul' }], answer: 0 });
+  });
+
+  it('what each build moved: nothing at the bank, the tile (a particle tile by its stem, then its word), then the sentence', () => {
+    expect(particle.builds.map((_, reveal) => buildMove(particle, reveal))).toEqual([
+      null,
+      { placed: '저녁에, jeonyeoge' },
+      { placed: '달걀' },
+      { placed: '달걀을, dalgyareul' },
+      { placed: '먹어요, meogeoyo' },
+      { whole: '저녁에 달걀을 먹어요., jeonyeoge dalgyareul meogeoyo, In the evening, I eat an egg.' },
+    ]);
+    expect(buildMove(particle, 99)).toBeNull();
+  });
+
+  it('every place on the line is as wide as the widest tile, or the particle tile while both endings show (V9 as built)', () => {
+    const sizes = { tile: 80, choice: 56, padX: 24, border: 3, gap: 8, choicePadX: 12 };
+    // 친구가 / 학교에 / 가요: three blocks at 80, plus the padding and the border on both sides.
+    expect(buildPlaceWidth(plain, sizes)).toBe(3 * 80 + 2 * (24 + 3));
+    // 달걀 + 을 / 를 is wider than 저녁에 or 먹어요: the stem, three gaps, the slash and two ending boxes.
+    expect(buildPlaceWidth(particle, sizes)).toBe(2 * 80 + 3 * 8 + 56 + 2 * (56 + 2 * (12 + 3)) + 2 * (24 + 3));
+    // Smaller text, a smaller place; no tiles, the padding alone.
+    expect(buildPlaceWidth(plain, { ...sizes, tile: 40 })).toBe(3 * 40 + 54);
+    expect(buildPlaceWidth({ tiles: [] }, sizes)).toBe(54);
+  });
+
+  it('a place never leaves the line sideways: wider than the line holds, it takes the line\'s inner width and may grow taller', () => {
+    // Fits (or the line not measured yet): the one place size.
+    expect(linePlaceSize(294, 120, 1200, 16)).toEqual({ width: 294, height: 120 });
+    expect(linePlaceSize(294, 120, 0, 16)).toEqual({ width: 294, height: 120 });
+    expect(linePlaceSize(1168, 120, 1200, 16)).toEqual({ width: 1168, height: 120 });
+    // An artificially long tile on a phone-sized line: clamped to the inner width, at least a tile tall.
+    const long = { tiles: [{ ko: '가나다라마바사아자차카타파하가나다라', romanization: 'ganadara' }] };
+    const width = buildPlaceWidth(long, { tile: 80, choice: 56, padX: 24, border: 3, gap: 8, choicePadX: 12 });
+    expect(width).toBeGreaterThan(536);
+    expect(linePlaceSize(width, 120, 568, 16)).toEqual({ width: 536, minHeight: 120 });
+  });
+
+  it('Sound plays the whole sentence at every build (the Hear it of the learner game), at the sentence rate', () => {
+    for (const slide of [plain, particle]) {
+      for (let reveal = 0; reveal < slide.builds.length; reveal += 1) expect(slideSound(slide, reveal)).toEqual({ spoken: slide.sentence.spoken, kind: 'sentence' });
+    }
+  });
+});
+
+describe('nextFitLevel: a reading slide that fits itself', () => {
+  it('steps one level more compact while the content is taller than its room, up to the last level', () => {
+    expect(nextFitLevel({ room: 504, content: 560, level: 0, max: 3 })).toBe(1);
+    expect(nextFitLevel({ room: 504, content: 560, level: 3, max: 3 })).toBe(3);
+    expect(nextFitLevel({ room: 504, content: 505, level: 1, max: 3 })).toBe(1);
+    expect(nextFitLevel({ room: 504, content: 400, level: 2, max: 3 })).toBe(2);
+  });
+
+  it('waits for both measures', () => {
+    expect(nextFitLevel({ room: 0, content: 560, level: 0, max: 3 })).toBe(0);
+    expect(nextFitLevel({ room: 504, content: 0, level: 0, max: 3 })).toBe(0);
+  });
+});
+
+describe('writeView and its sound: the write-together slides (AMENDMENTS-LECTURE-V2 sections 5.2 and 5.3, LV-S4)', () => {
+  const line = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const frame = { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' };
+  const withBuildsOf = (body: SlideBody): Extract<Slide, { kind: 'write-together' }> =>
+    ({ ...body, key: 'w/1', builds: buildsFor(body, { romanization: 'always', strokeGuide: true }) }) as Extract<Slide, { kind: 'write-together' }>;
+  const type = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Ask for water.', answer: line('물 주세요', 'mul juseyo', 'Water, please.') });
+  const tea = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Type the word for tea', answer: line('차', 'cha', 'tea') });
+  const trace = withBuildsOf({ kind: 'write-together', variant: 'trace', word: line('아침', 'achim', 'morning') });
+  const filled = withBuildsOf({
+    kind: 'write-together',
+    variant: 'frame',
+    frame,
+    banks: [[{ ko: '밥', romanization: 'bap' }, { ko: '빵', romanization: 'ppang' }]],
+    example: { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } },
+  });
+  const groups = Array.from({ length: 7 }, (_, i) => [{ ko: String.fromCharCode(0xac00 + i * 28), romanization: `b${i}` }]);
+  const own = withBuildsOf({ kind: 'write-together', variant: 'own-name', frame: { ...frame, pieces: ['제 이름은 ', '이에요/예요.'] }, groups });
+
+  it('type and trace: the answer only at the answer build; its romanization with it, in both modes', () => {
+    for (const mode of ['always', 'tap'] as const) {
+      expect(writeView(type, 0, mode)).toEqual({ frame: true, bank: false, answer: false, rom: false, page: null });
+      expect(writeView(type, 1, mode)).toEqual({ frame: true, bank: false, answer: true, rom: true, page: null });
+      expect(writeView(trace, 0, mode).answer).toBe(false);
+      expect(writeView(trace, 1, mode)).toMatchObject({ answer: true, rom: true });
+    }
+  });
+
+  it('frame: the banks, then the example; with tap every romanization waits for the example', () => {
+    expect(writeView(filled, 0, 'always')).toEqual({ frame: true, bank: false, answer: false, rom: true, page: null });
+    expect(writeView(filled, 1, 'always')).toMatchObject({ bank: true, answer: false, rom: true });
+    expect(writeView(filled, 1, 'tap')).toMatchObject({ bank: true, answer: false, rom: false });
+    expect(writeView(filled, 2, 'tap')).toMatchObject({ bank: true, answer: true, rom: true });
+  });
+
+  it('soundTablePage: five groups a page, and nothing past the last page', () => {
+    expect(soundTablePage(groups, 0)).toHaveLength(5);
+    expect(soundTablePage(groups, 1)).toEqual(groups.slice(5));
+    expect(soundTablePage(groups, 2)).toEqual([]);
+  });
+
+  it('the name round: its frame, then each table page in its place; the table always has its romanization', () => {
+    expect(writeView(own, 0, 'tap')).toEqual({ frame: true, bank: false, answer: false, rom: true, page: null });
+    expect(writeView(own, 1, 'tap')).toEqual({ frame: false, bank: false, answer: false, rom: true, page: 0 });
+    expect(writeView(own, 2, 'always')).toMatchObject({ frame: false, page: 1 });
+  });
+
+  it('Sound: the Korean on screen and never ahead of it', () => {
+    // A type prompt has nothing to play until its answer shows (playing the target would answer it).
+    expect(slideSound(type, 0)).toBeUndefined();
+    expect(slideSound(type, 1)).toEqual({ spoken: { text: '물 주세요', romanization: 'mul juseyo' }, kind: 'sentence' });
+    expect(slideSound(tea, 1)).toEqual({ spoken: { text: '차', romanization: 'cha' }, kind: 'word' });
+    expect(slideSound(tea)).toEqual(slideSound(tea, 1));
+    expect(slideSound(trace, 0)).toEqual({ spoken: { text: '아침', romanization: 'achim' }, kind: 'word' });
+    // A frame says its own Korean with a pause at each gap, then its banks, then the example.
+    expect(slideSound(filled, 0)).toEqual({ spoken: { text: '아침에, 을, 를 먹어요.', romanization: 'achime, eul, reul meogeoyo' }, kind: 'sentence' });
+    expect(slideSound(filled, 1)).toEqual({ spoken: { text: '밥, 빵', romanization: 'bap, ppang' }, kind: 'word' });
+    expect(slideSound(filled, 2)).toEqual({ spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' }, kind: 'sentence' });
+    expect(slideSound(own, 0)?.kind).toBe('sentence');
+    expect(slideSound(own, 1)).toEqual({ spoken: { text: groups.slice(0, 5).map((g) => g[0]!.ko).join(', '), romanization: 'b0, b1, b2, b3, b4' }, kind: 'word' });
+    expect(slideSound(own, 2)).toEqual({ spoken: { text: groups.slice(5).map((g) => g[0]!.ko).join(', '), romanization: 'b5, b6' }, kind: 'word' });
   });
 });
