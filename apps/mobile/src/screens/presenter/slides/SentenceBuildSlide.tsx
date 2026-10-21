@@ -193,7 +193,7 @@ function ParticleTile({ tile, metrics, place }: { tile: BuildTile; metrics: Tile
       {particle.choices.map((choice, i) => (
         <React.Fragment key={choice.ko}>
           {i > 0 ? (
-            <Text aria-hidden style={{ fontSize: metrics.choiceSize, color: colors.text.secondary }}>
+            <Text {...KOREAN_LINE_BREAK} aria-hidden style={{ fontSize: metrics.choiceSize, color: colors.text.secondary }}>
               /
             </Text>
           ) : null}
