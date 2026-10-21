@@ -149,7 +149,7 @@ describe('the pages say what the app does, in the backup sentence', () => {
   it('Privacy Policy: stays a draft for counsel, with the new effective date', () => {
     const privacy = render(enPrivacyPage);
     expect(privacy).toContain('pending review by qualified legal counsel');
-    expect(privacy).toContain('Effective October 14, 2026');
+    expect(privacy).toContain('Effective October 20, 2026');
   });
 
   it('old home: the trust strip says "Child safety first" (OD-4) and makes no claim about which personal data we hold', () => {
@@ -215,4 +215,30 @@ describe('public store-facing text makes no retired data promise', () => {
       expect(retiredDataPromises(paragraphs)).toEqual([]);
     });
   }
+});
+
+/**
+ * [SA] AMENDMENTS-SEATS-ADMINS section 6.7 (row SA-4): the Privacy Policy says what a school's administrators can see
+ * and do, that accepting needs a verified email, that the owner sees that email, and how long the school history stays.
+ * English in every locale (L10): the `/es` and `/ko` pages carry the same English paragraph.
+ */
+describe('Privacy Policy: school administrators (section 6.7)', () => {
+  const PARAGRAPH = getMessages('en').landing.legal.privacy.sections.collect.bullets.schoolAdmins;
+
+  it('names the powers, the verified email, what the owner sees and the 400 days', () => {
+    const privacy = render(enPrivacyPage);
+    expect(privacy).toContain("A school's owner can add up to two administrators with an invite link.");
+    expect(privacy).toContain("except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device.");
+    expect(privacy).toContain('To accept, an administrator needs an account with a verified email.');
+    expect(privacy).toContain('The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes.');
+    expect(privacy).toContain('We keep this history for 400 days.');
+  });
+
+  it.each(siteLocaleParams().map(({ locale }) => locale))('/%s/privacy keeps the English paragraph', (locale) => {
+    expect(textOf(html(locPrivacyPage, { locale }))).toContain(PARAGRAPH);
+  });
+
+  it('says nothing of family or stand-alone class renames being kept', () => {
+    expect(PARAGRAPH).not.toMatch(/famil/i);
+  });
 });

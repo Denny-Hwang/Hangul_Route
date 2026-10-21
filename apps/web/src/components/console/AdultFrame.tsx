@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { ConsoleApi, SpaceListItem } from '@/lib/console/api';
+import { consoleFlashText, takeConsoleFlash, type ConsoleFlash } from '@/lib/console/console-flash';
 import { learnerHome } from '@/lib/console/grown-up-lock';
 import { activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
@@ -204,6 +205,29 @@ function PersonaSwitch({ checked, label, names, onChoose }: { checked: AdultPers
   );
 }
 
+/**
+ * [SA] AMENDMENTS-SEATS-ADMINS section 6.6 step 7: the one-shot done note above the page's title (mock board 19): "You're
+ * an administrator of …" after an accept, "You're no longer an administrator of …" after Stop. Taken from this tab's
+ * flash on the page's first render; the check glyph is decoration.
+ */
+function FlashNote({ here }: { here: string }): JSX.Element | null {
+  const { locale } = useConsole();
+  const [flash] = useState<ConsoleFlash | null>(() => takeConsoleFlash(here));
+  if (!flash) return null;
+  return (
+    <p
+      role="status"
+      data-testid="console-flash"
+      style={{ display: 'flex', alignItems: 'flex-start', gap: spacing.sm, margin: `0 0 ${spacing.md}px`, padding: `${spacing.md}px ${spacing.lg}px`, borderRadius: radii.md, backgroundColor: colors.feedback.successLight, color: colors.text.primary, overflowWrap: 'anywhere' }}
+    >
+      <span aria-hidden="true" style={{ flex: 'none', display: 'inline-flex', marginTop: spacing.xxs }}>
+        <IconSvg name="check" size={spacing.lg + spacing.xs} color={colors.feedback.successDark} />
+      </span>
+      <span>{consoleFlashText(flash, locale)}</span>
+    </p>
+  );
+}
+
 export function AdultFrame({
   children,
   title,
@@ -374,6 +398,7 @@ export function AdultFrame({
       </header>
       <main className="hr-frame-main">
         {back ? <PageBack href={back.href} label={back.label} /> : null}
+        <FlashNote here={`${pathname}${search ? (search.startsWith('?') ? search : `?${search}`) : ''}`} />
         {title ? (
           <p data-testid="frame-title" style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {title}

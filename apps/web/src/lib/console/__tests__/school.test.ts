@@ -51,6 +51,19 @@ describe('school view models (F-SCHOOL-001 §3.3)', () => {
       { memberKind: 'learner', memberId: 'profile:a', role: 'student', name: 'A', isOwner: false },
     ])).toEqual([{ accountId: 'principal', name: 'Principal' }, { accountId: 'ms-park', name: 'Ms Park' }]);
   });
+
+  it('[SA] keeps the school administrators assignable to a class (AMENDMENTS-SEATS-ADMINS section 6.1)', () => {
+    expect(assignableTeachers([
+      { memberKind: 'account', memberId: 'principal', role: 'owner', name: 'Ms Park', isOwner: true },
+      { memberKind: 'account', memberId: 'mr-lee', role: 'admin', name: 'Mr Lee', isOwner: false },
+      { memberKind: 'account', memberId: 'ms-han', role: 'teacher', name: 'Ms Han', isOwner: false },
+      { memberKind: 'account', memberId: 'aunt', role: 'caregiver', name: 'Aunt', isOwner: false },
+    ])).toEqual([
+      { accountId: 'principal', name: 'Ms Park' },
+      { accountId: 'mr-lee', name: 'Mr Lee' },
+      { accountId: 'ms-han', name: 'Ms Han' },
+    ]);
+  });
 });
 
 describe('school words per locale (F-I18N-001 PR 10c)', () => {

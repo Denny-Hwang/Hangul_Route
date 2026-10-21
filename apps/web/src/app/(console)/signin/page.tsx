@@ -9,6 +9,7 @@ import { AdultStep, BelowWidget, InfoLine, QuietBack, SignInColumn, SignInHead, 
 import { useConsoleAuth } from '@/components/console/auth-context';
 import { Button, Field, Muted, Notice } from '@/components/console/ui';
 import { createConsoleApi } from '@/lib/console/api';
+import { adminInviteLive, signUpLanding } from '@/lib/console/admin-invite';
 import { apiBaseUrl, devAuthEnabled } from '@/lib/console/config';
 import { learnerHome } from '@/lib/console/grown-up-lock';
 import { createModeUrl, isStandaloneDisplay, showStandaloneFinish, signInReturnUrl } from '@/lib/console/signin-flow';
@@ -42,6 +43,16 @@ function useStandalone(): boolean {
   const [standalone, setStandalone] = useState(false);
   useEffect(() => setStandalone(isStandaloneDisplay(window)), []);
   return standalone;
+}
+
+/**
+ * [SA] AMENDMENTS-SEATS-ADMINS section 6.6 steps 2 and 3: an administrator invite waits in this tab (read after mount,
+ * so the static HTML never differs). `/signin` then says so, and a sign-up lands on the invite, not on `/start`.
+ */
+function useInviteWaiting(): boolean {
+  const [waiting, setWaiting] = useState(false);
+  useEffect(() => setWaiting(adminInviteLive()), []);
+  return waiting;
 }
 
 function backToLearning(origin: string, locale: UiLocale): void {
@@ -102,6 +113,7 @@ function SignInWidget({ kind, params, hint, affirmedAt }: { kind: 'signIn' | 'si
   const auth = useConsoleAuth();
   const c = useMessages().console;
   const standalone = useStandalone();
+  const inviteWaiting = useInviteWaiting();
   const [finishHere, setFinishHere] = useState(false);
 
   // "Finish signing in here with an email code": an installed PWA whose Google sign-in left the window (section 3.19).
@@ -127,7 +139,7 @@ function SignInWidget({ kind, params, hint, affirmedAt }: { kind: 'signIn' | 'si
           kind={kind}
           record={auth.ready && !auth.session}
           returnUrl={signInReturnUrl(params)}
-          startUrl={hint ? `${APP_ROUTES.start}?persona=${hint}` : APP_ROUTES.start}
+          startUrl={signUpLanding(hint ? `${APP_ROUTES.start}?persona=${hint}` : APP_ROUTES.start, inviteWaiting)}
           standalone={standalone}
           affirmedAt={affirmedAt}
         />
@@ -142,10 +154,12 @@ function SignInView({ params, hint }: { params: URLSearchParams; hint: AdultPers
   const s = m.console.signIn;
   const origin = useOrigin();
   const locale = useLocale();
+  const inviteWaiting = useInviteWaiting();
   return (
     <SignInColumn>
       <QuietBack label={m.console.lock.backToLearning.cta} onClick={() => backToLearning(origin, locale)} testId="signin-back" />
       <SignInHead mark={m.landing.brand.mark} title={s.title} intro={hint ? s.persona[hint].intro : s.neutralIntro} />
+      {inviteWaiting ? <InfoLine testId="signin-invite-line">{m.console.adminInvite.signIn}</InfoLine> : null}
       <SignInWidget kind="signIn" params={params} hint={hint} />
       <BelowWidget createHref={createModeUrl(params, true)} createLabel={s.create.link} learnersLine={s.learnersNoAccount} learnHref={learnerHome(origin, locale)} learnLabel={s.imLearning} />
     </SignInColumn>

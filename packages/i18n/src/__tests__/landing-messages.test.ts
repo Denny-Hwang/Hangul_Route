@@ -171,7 +171,8 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
 
   it('keeps the legal effective dates and the draft notice (#149)', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
-    expect(l.legal.privacy.effective).toBe('Effective October 14, 2026');
+    // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
+    expect(l.legal.privacy.effective).toBe('Effective October 20, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     expect(l.legal.terms.effective).toBe('Effective October 14, 2026');
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.

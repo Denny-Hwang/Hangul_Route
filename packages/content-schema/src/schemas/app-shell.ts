@@ -37,6 +37,8 @@ export const APP_ROUTES = {
   teacherIndex: '/teach',
   teacherHome: '/teach/home',
   billing: '/account/billing',
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 6.6: the administrator invite page (`ADMIN_INVITE_PATH`). */
+  adminInvite: '/account/invite',
   learn: '/',
 } as const;
 

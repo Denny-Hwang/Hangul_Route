@@ -681,3 +681,44 @@ describe('/teach/billing: a client redirect to /account/billing with the query k
     expect(byTestId(page, 'signin-go-now')[0]?.props.href).toBe(target);
   });
 });
+
+describe('[SA] an administrator invite waiting in this tab (AMENDMENTS-SEATS-ADMINS section 6.6 steps 2 and 3)', () => {
+  const TOKEN = 'A'.repeat(20) + 'b_-9' + 'z'.repeat(19);
+  const stash = (): void => browser.session.setItem('hr:admin-invite', JSON.stringify({ token: TOKEN, savedAt: Date.now() }));
+
+  it('/signin?next=/account/invite says "Sign in to see this invite." and sends a sign-up to the invite, not /start', async () => {
+    stash();
+    nav.params = new URLSearchParams(`next=${encodeURIComponent('/account/invite')}`);
+    const page = (await render(<SignInPage />)).root;
+    expect(text(page)).toContain('Sign in to see this invite.');
+    const props = lastSignIn();
+    expect(props.signUpFallbackRedirectUrl).toBe('/account/invite');
+    expect(props.fallbackRedirectUrl).toBe(`/signin?next=${encodeURIComponent('/account/invite')}`);
+    // The token is in no address Clerk is handed.
+    expect(JSON.stringify(props)).not.toContain(TOKEN);
+  });
+
+  it('a sign-up from the adult step returns through the router to the invite page', async () => {
+    stash();
+    browser.session.setItem(AFFIRMATION_KEY, JSON.stringify({ v: 1, at: new Date().toISOString() }));
+    nav.params = new URLSearchParams(`mode=create&next=${encodeURIComponent('/account/invite')}`);
+    await render(<SignInPage />);
+    const signUp = clerk.signUp[clerk.signUp.length - 1] ?? {};
+    expect(signUp.fallbackRedirectUrl).toBe(`/signin?next=${encodeURIComponent('/account/invite')}`);
+    expect(JSON.stringify(signUp)).not.toContain(TOKEN);
+  });
+
+  it('without a stash (or an expired one) nothing changes', async () => {
+    browser.session.setItem('hr:admin-invite', JSON.stringify({ token: TOKEN, savedAt: Date.now() - 31 * 60_000 }));
+    const page = (await render(<SignInPage />)).root;
+    expect(text(page)).not.toContain('Sign in to see this invite.');
+    expect(lastSignIn().signUpFallbackRedirectUrl).toBe('/start');
+  });
+
+  it('Back to learning drops the stash with the rest of the grown-up tab', async () => {
+    stash();
+    const page = (await render(<SignInPage />)).root;
+    await act(async () => byTestId(page, 'signin-back')[0]?.props.onClick());
+    expect(browser.session.getItem('hr:admin-invite')).toBeNull();
+  });
+});

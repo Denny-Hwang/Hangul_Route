@@ -37,9 +37,10 @@ export interface ConsoleAuth {
    * Signs out, removing the grown-up unlock, the console session, the sign-in record and the
    * adult-step tick from this tab first
    * (F-APP-001 section 3.9), then goes to `redirectUrl` (`/signin` by default; the lock's Sign in
-   * again passes `/signin?next=…`).
+   * again passes `/signin?next=…`). [SA] A waiting administrator invite goes too, except with `keepInvite` (the
+   * invite page's Use another account and the lock's Sign in again, AMENDMENTS-SEATS-ADMINS section 6.6 step 1).
    */
-  signOut: (redirectUrl?: string) => Promise<void>;
+  signOut: (redirectUrl?: string, options?: { keepInvite?: boolean }) => Promise<void>;
   /** Dev mode only: store a dev session. No-op under Clerk. */
   devSignIn: (session: ConsoleSession) => void;
   /**
@@ -151,8 +152,8 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
       session: sessionFromClerkUser(user),
       sessionId: user ? (sessionId ?? null) : null,
       getToken: () => getToken().catch(() => null),
-      signOut: (redirectUrl = ROUTES.signIn) => {
-        clearGrownUpTab();
+      signOut: (redirectUrl = ROUTES.signIn, options = {}) => {
+        clearGrownUpTab(undefined, options);
         clearSignInTab();
         return clerk.signOut({ redirectUrl });
       },
@@ -183,8 +184,8 @@ function DevBridge({ children }: { children: ReactNode }): JSX.Element {
       session: session ? { accountId: session.accountId, displayName: session.displayName, ...(session.email ? { email: session.email } : {}) } : null,
       sessionId: session?.accountId ?? null,
       getToken: async () => session?.token ?? null,
-      signOut: async (redirectUrl?: string) => {
-        clearGrownUpTab();
+      signOut: async (redirectUrl?: string, options: { keepInvite?: boolean } = {}) => {
+        clearGrownUpTab(undefined, options);
         clearSignInTab();
         setSession(null);
         if (redirectUrl) window.location.assign(redirectUrl);

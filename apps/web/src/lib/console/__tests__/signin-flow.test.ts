@@ -366,6 +366,26 @@ describe('signedOutTarget: a signed-out visitor on a grown-up page (sections 3.7
   });
 });
 
+describe('[SA] the administrator invite through sign-in (AMENDMENTS-SEATS-ADMINS section 6.6 steps 2 and 3)', () => {
+  const TOKEN = 'A'.repeat(20) + 'b_-9' + 'z'.repeat(19);
+
+  it('a signed-out visit to /account/invite goes to /signin with next=/account/invite and no token', () => {
+    const target = signedOutTarget('/account/invite', '');
+    expect(target).toBe(`/signin?next=${encodeURIComponent('/account/invite')}`);
+    expect(target).not.toContain(TOKEN);
+    expect(target).not.toContain('#');
+    // The router follows it after Clerk's return: the invite page, never a token.
+    expect(routerDestination({ next: new URLSearchParams(target.split('?')[1]).get('next'), personas: [], last: null, hint: null })).toBe('/account/invite');
+  });
+
+  it("Clerk's return URL keeps next=/account/invite and nothing of the token", () => {
+    const back = signInReturnUrl(params(`next=${encodeURIComponent('/account/invite')}`));
+    expect(back).toBe(`/signin?next=${encodeURIComponent('/account/invite')}`);
+    expect(back).not.toContain(TOKEN);
+    expect(createModeUrl(params(`next=${encodeURIComponent('/account/invite')}`), true)).toBe(`/signin?mode=create&next=${encodeURIComponent('/account/invite')}`);
+  });
+});
+
 describe('signInReturnUrl and createModeUrl: the /signin links keep the hint, next and lang', () => {
   it('Clerk returns to the router with persona, as, next and lang, never mode', () => {
     expect(signInReturnUrl(params('persona=parent&mode=create&next=%2Fteach%2Fhome&lang=es&utm=x'))).toBe(`/signin?persona=parent&next=${encodeURIComponent('/teach/home')}&lang=es`);

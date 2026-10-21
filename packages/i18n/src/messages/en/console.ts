@@ -1191,6 +1191,9 @@ export const consoleMsgs = {
     privacy: {
       title: 'Privacy',
       anonymize: 'Anonymize roster',
+      /** [SA] AMENDMENTS-SEATS-ADMINS section 6.6: the read-only value a school administrator sees (SA-0b D16). */
+      anonymizeOn: 'Rosters show initials.',
+      anonymizeOff: 'Rosters show names.',
     },
     grownUps: {
       label: 'Members',
@@ -1236,6 +1239,8 @@ export const consoleMsgs = {
       deleteData: (name: string) => `Delete ${name}'s data`,
     },
     backToConsole: { cta: 'Back to console' },
+    /** [SA] section 6.6: under the read-only consent mode and privacy values a school administrator sees. */
+    ownerOnly: "Only the school's owner can change these settings.",
   },
   /**
    * The school admin view (`SchoolAdmin`, `school.ts`, F-SCHOOL-001 §3.3, F-I18N-001 PR 10c),
@@ -2039,5 +2044,106 @@ export const consoleMsgs = {
     full: 'This is full. Remove something to add more.',
     /** The sticky bar under the plan builder (its count and Publish plan). */
     bar: 'Your choices',
+  },
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 9.4 (row SA-4): the Administrators panel on the school page (section 6.6,
+   * design/screens/console/admins-panel.md). The cap arrives as an argument (`SCHOOL_ADMIN_CAP`), never typed here;
+   * `{day}` and `{date}` arrive formatted (`formatDate`); names arrive as data and never reach a URL or telemetry.
+   */
+  admins: {
+    title: 'Administrators',
+    count: (n: number, max: number) => `${n} of ${max} added`,
+    ownerRow: (name: string) => `${name} · owner`,
+    adminRow: (name: string, day: string) => `${name} · admin · joined ${day}`,
+    /** Owner only, for 7 days after an admin joined (section 6.3 item 3); `email` is the verified sign-in email. */
+    newAdmin: (name: string, email: string) => `New administrator: ${name} (${email}). If this is not the person you invited, remove them.`,
+    newAdminDismiss: { cta: 'Got it' },
+    about: (max: number) => `A school can have ${max} administrators besides its owner.`,
+    full: (max: number) => `All ${max} places are taken. Remove an administrator or revoke an invite to add someone else.`,
+    invite: {
+      cta: 'Invite an administrator',
+      warning: 'Anyone with this link can become an administrator after signing in. Send it only to the person you mean.',
+      once: (date: string) => `It works once and ends on ${date}. It is shown only now: copy it before you close this.`,
+      copy: { cta: 'Copy link' },
+      copied: 'Link copied.',
+      copyFailed: "Couldn't copy. Select the link and copy it.",
+      failed: "Couldn't make the invite. Try again.",
+      /** The billing step-up dialog with these two lines in place of its body and reason (SA-0b D10). */
+      stepUp: {
+        body: 'Before you make an invite link, sign in again.',
+        reason: "This keeps the school's rosters safe on a shared device.",
+      },
+    },
+    openInvite: (day: string, date: string) => `Invite made ${day} · ends ${date}`,
+    revoke: { cta: 'Revoke' },
+    revokeAsk: 'Revoke this invite? The link stops working.',
+    /** The revoke sheet's dismiss button, so the sheet never shows two cancel buttons. */
+    revokeKeep: { cta: 'Keep it' },
+    /** `a11y` is the accessible name of each row's Remove and of the new-admin notice's Remove. */
+    remove: { cta: 'Remove', a11y: (name: string) => `Remove ${name}` },
+    removeAsk: (name: string, school: string) => `Remove ${name} as an administrator of ${school}?`,
+    removeNote: {
+      staysTeacher: 'They stay a teacher of the school, with their classes. You can invite them again.',
+      leaves: 'They leave the school. You can invite them again.',
+    },
+    leave: { cta: 'Stop being an administrator' },
+    leaveAsk: (school: string) => `Stop being an administrator of ${school}?`,
+    leaveNote: {
+      staysTeacher: 'You stay a teacher of the school, with your classes.',
+      leaves: 'You leave the school.',
+    },
+    revoked: 'Invite revoked. The link no longer works.',
+    removed: (name: string) => `${name} is no longer an administrator.`,
+    /** On the next home after Stop being an administrator (a one-shot flash, never a query parameter). */
+    left: (school: string) => `You're no longer an administrator of ${school}.`,
+    /** Revoke, Remove or Stop failed on the network or with a 5xx (a 404, 403 or 409 reloads the panel instead). */
+    actionFailed: "Couldn't save that change. Try again.",
+    /** Owner only: the last 20 school events, newest first; `name` is read at request time. */
+    history: {
+      title: 'History',
+      inviteCreated: (name: string, day: string) => `${name} made an invite · ${day}`,
+      inviteRevoked: (name: string, day: string) => `${name} revoked an invite · ${day}`,
+      joined: (name: string, day: string) => `${name} joined as an administrator · ${day}`,
+      removed: (name: string, day: string) => `${name} was removed as an administrator · ${day}`,
+      left: (name: string, day: string) => `${name} stopped being an administrator · ${day}`,
+      renamed: (name: string, day: string) => `${name} renamed the school · ${day}`,
+      renamedClass: (name: string, day: string) => `${name} renamed a class · ${day}`,
+      /** The `name` of a line whose account no longer exists: never an id. */
+      someone: 'A former member',
+    },
+  },
+  /**
+   * [SA] section 9.4: the administrator invite page `/account/invite` (section 6.6 steps 1 to 8,
+   * design/screens/console/admin-invite-accept.md). The tab title is `pageTitle` in every state, never the school's name.
+   */
+  adminInvite: {
+    pageTitle: 'Administrator invite',
+    /** On `/signin` while a live invite waits in this tab. */
+    signIn: 'Sign in to see this invite.',
+    title: (school: string) => `Join ${school} as an administrator?`,
+    invitedBy: (name: string) => `Invited by ${name}`,
+    /** The owner has no display name: the preview never carries the owner's email. */
+    invitedByOwner: "Invited by the school's owner",
+    /** `who` is the signed-in account's own email (or display name), shown only to that person. */
+    signedInAs: (who: string) => `Signed in as ${who}`,
+    switchAccount: { cta: 'Use another account' },
+    reopen: 'Open your invite link again to see it.',
+    can: "As an administrator you can rename the school and its classes, make classes, invite, assign and remove teachers, open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device.",
+    cannot: "Billing and the list of administrators stay with the school's owner.",
+    leave: 'The owner sees that you joined and the email you sign in with. You can leave at any time, and the owner can remove you.',
+    accept: { cta: 'Accept' },
+    notNow: { cta: 'Not now' },
+    done: (school: string) => `You're an administrator of ${school}.`,
+    used: 'This invite was already used. Ask for a new one.',
+    expired: 'This invite has ended. Ask for a new one.',
+    revoked: 'This invite was cancelled. Ask for a new one if you need it.',
+    full: (max: number) => `This school already has ${max} administrators.`,
+    owner: 'You already run this school as its owner.',
+    alreadyAdmin: (school: string) => `You're already an administrator of ${school}.`,
+    notFound: "This link doesn't open an invite. Check that it was copied whole.",
+    emailUnverified: 'To accept, your account needs a verified email. Verify it in your account settings, then open the link again.',
+    /** Accept answered `503 identity_unavailable`: the sign-in service could not be asked (section 6.3 item 1); Try again. */
+    tryAgain: "Couldn't check your invite right now. Try again in a moment.",
+    home: { cta: 'Go to my home' },
   },
 } as const;

@@ -60,7 +60,10 @@ export function weekLine(week: SchoolView['thisWeek'], locale: UiLocale = DEFAUL
   return getMessages(locale).console.school.week.line(week.practiced, week.students, week.classesWithPlan, week.classes);
 }
 
-/** Teachers who joined the school and can be assigned to a class. */
+/**
+ * Grown-ups of the school who can be assigned to a class: its teachers, its owner and ([SA] AMENDMENTS-SEATS-ADMINS
+ * section 6.1) its administrators, whom the Worker's `POST /:id/members` accepts as a class's teacher too.
+ */
 export function assignableTeachers(members: ReadonlyArray<{ memberKind: string; memberId: string; role: string; name: string; isOwner: boolean }>): Array<{ accountId: string; name: string }> {
-  return members.filter((m) => m.memberKind === 'account' && (m.role === 'teacher' || m.isOwner)).map((m) => ({ accountId: m.memberId, name: m.name }));
+  return members.filter((m) => m.memberKind === 'account' && (m.role === 'teacher' || m.role === 'admin' || m.isOwner)).map((m) => ({ accountId: m.memberId, name: m.name }));
 }

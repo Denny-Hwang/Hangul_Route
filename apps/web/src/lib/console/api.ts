@@ -171,6 +171,78 @@ export interface MemberView {
   joinedAt: string;
   name: string;
   isOwner: boolean;
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 6.4: whether this caller may remove the member, computed by the Worker (a school
+   * administrator: teachers only, never the owner or another administrator). Absent from a Worker older than SA-2.
+   */
+  canRemove?: boolean;
+}
+
+/** [SA] section 6.4 `GET /:id/admins`: one administrator of the school. `email` (the verified sign-in email) for the owner only. */
+export interface AdminRow {
+  accountId: string;
+  name: string | null;
+  email?: string | null;
+  joinedAt: string;
+  staysTeacher: boolean;
+}
+
+/** [SA] One school event of the owner's history (the last 20, names read at request time; null for a missing account). */
+export interface AdminEventRow {
+  kind: string;
+  at: string;
+  actorName: string | null;
+  subjectName: string | null;
+}
+
+/** [SA] An open invite: no token, no link (the link is shown once, in the create answer). */
+export interface AdminInviteRow {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+/** [SA] `GET /:id/admins`; `invites` and `events` come to the owner only. */
+export interface AdminsView {
+  owner: { accountId: string; name: string | null };
+  admins: AdminRow[];
+  limit: number;
+  invites?: AdminInviteRow[];
+  events?: AdminEventRow[];
+}
+
+/** [SA] `POST /admin-invites/preview`: an open invite, or the account is already an administrator of the school. */
+export interface AdminInvitePreview {
+  state: 'open' | 'already_admin';
+  school: { name: string };
+  invitedBy?: string | null;
+  expiresAt?: string;
+}
+
+/** [SA] `POST /admin-invites/accept`: the school the account now runs, or `already_admin`. */
+export interface AdminInviteAccepted {
+  state?: 'already_admin';
+  school?: { name: string };
+  space: { id: string; kind: SpaceKind; name: string };
+  role: 'admin';
+}
+
+/** [SA] `GET /:id/admins` as this build can show it: the owner and the admin rows checked, unknown rows dropped. */
+export function readAdminsView(raw: unknown): { ok: true; data: AdminsView } | null {
+  if (!isPlainRecord(raw) || !isPlainRecord(raw.owner) || typeof raw.owner.accountId !== 'string' || !Array.isArray(raw.admins) || typeof raw.limit !== 'number') return null;
+  const text = (v: unknown): string | null => (typeof v === 'string' ? v : null);
+  const admins: AdminRow[] = raw.admins.flatMap((a: unknown) =>
+    isPlainRecord(a) && typeof a.accountId === 'string' && typeof a.joinedAt === 'string'
+      ? [{ accountId: a.accountId, name: text(a.name), ...('email' in a ? { email: text(a.email) } : {}), joinedAt: a.joinedAt, staysTeacher: a.staysTeacher === true }]
+      : [],
+  );
+  const invites = Array.isArray(raw.invites)
+    ? raw.invites.flatMap((i: unknown) => (isPlainRecord(i) && typeof i.id === 'string' && typeof i.createdAt === 'string' && typeof i.expiresAt === 'string' ? [{ id: i.id, createdAt: i.createdAt, expiresAt: i.expiresAt }] : []))
+    : undefined;
+  const events = Array.isArray(raw.events)
+    ? raw.events.flatMap((e: unknown) => (isPlainRecord(e) && typeof e.kind === 'string' && typeof e.at === 'string' ? [{ kind: e.kind, at: e.at, actorName: text(e.actorName), subjectName: text(e.subjectName) }] : []))
+    : undefined;
+  return { ok: true, data: { owner: { accountId: raw.owner.accountId, name: text(raw.owner.name) }, admins, limit: raw.limit, ...(invites ? { invites } : {}), ...(events ? { events } : {}) } };
 }
 
 export interface RelinkView {
@@ -287,6 +359,7 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
   const recovery = `${opts.endpoint}/api/recovery`;
   const entitlements = `${opts.endpoint}/api/entitlements`;
   const billing = `${opts.endpoint}/api/billing`;
+  const adminInvites = `${opts.endpoint}/api/admin-invites`;
   const resolveToken = async (): Promise<string | null> => (typeof opts.token === 'string' ? opts.token : opts.token().catch(() => null));
 
   async function call<T>(url: string, init: RequestInit, okStatus: number[], callOpts: { details?: boolean } = {}): Promise<ApiResult<T>> {
@@ -341,6 +414,24 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
     issueRescueCode: (learnerId: string) =>
       call<{ code: string; issuedAt: string }>(`${recovery}/issue`, { method: 'POST', body: JSON.stringify({ learnerId }) }, [201]),
     school: (spaceId: string) => call<SchoolView>(`${base}/${encodeURIComponent(spaceId)}/school`, { method: 'GET' }, [200]),
+    /** [SA] AMENDMENTS-SEATS-ADMINS section 6.4: the school's owner and administrators (owner: also invites and history). */
+    admins: (spaceId: string): Promise<ApiResult<AdminsView>> =>
+      call<unknown>(`${base}/${encodeURIComponent(spaceId)}/admins`, { method: 'GET' }, [200]).then((r) => {
+        if (!r.ok) return r;
+        // Read leniently: an answer this build cannot read is a failed read, never a crashed school page.
+        return readAdminsView(r.data) ?? { ok: false as const, error: 'unknown' as const, status: 200 };
+      }),
+    /** [SA] A one-time invite link (step-up: a `403` carries Clerk's reverification hint as is). The link is never kept. */
+    createAdminInvite: (spaceId: string) =>
+      call<{ invite: AdminInviteRow; url: string | null }>(`${base}/${encodeURIComponent(spaceId)}/admin-invites`, { method: 'POST' }, [201]),
+    revokeAdminInvite: (spaceId: string, inviteId: string) =>
+      call<{ revoked: boolean }>(`${base}/${encodeURIComponent(spaceId)}/admin-invites/${encodeURIComponent(inviteId)}`, { method: 'DELETE' }, [200]),
+    removeAdmin: (spaceId: string, accountId: string) =>
+      call<{ removed: boolean; stays: 'teacher' | 'none' }>(`${base}/${encodeURIComponent(spaceId)}/admins/${encodeURIComponent(accountId)}`, { method: 'DELETE' }, [200]),
+    leaveAdmin: (spaceId: string) => call<{ left: boolean; stays: 'teacher' | 'none' }>(`${base}/${encodeURIComponent(spaceId)}/admins/leave`, { method: 'POST' }, [200]),
+    /** [SA] The token travels only in the JSON body, never in a path or a query (section 6.4). */
+    previewAdminInvite: (token: string) => call<AdminInvitePreview>(`${adminInvites}/preview`, { method: 'POST', body: JSON.stringify({ token }) }, [200]),
+    acceptAdminInvite: (token: string) => call<AdminInviteAccepted>(`${adminInvites}/accept`, { method: 'POST', body: JSON.stringify({ token }) }, [200]),
     addMember: (spaceId: string, accountId: string) =>
       call<{ alreadyMember: boolean }>(`${base}/${encodeURIComponent(spaceId)}/members`, { method: 'POST', body: JSON.stringify({ accountId, role: 'teacher' }) }, [200, 201]),
     entitlements: () =>

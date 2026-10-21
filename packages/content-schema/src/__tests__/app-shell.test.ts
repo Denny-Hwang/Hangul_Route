@@ -68,6 +68,7 @@ describe('origins, prefixes and routes (F-APP-001 section 3.14)', () => {
       teacherIndex: '/teach',
       teacherHome: '/teach/home',
       billing: '/account/billing',
+      adminInvite: '/account/invite',
       learn: '/',
     });
     expect(GROWN_UP_PREFIXES).not.toContain('/billing');
@@ -523,6 +524,10 @@ describe('[SA] the school administrator invite link (AMENDMENTS-SEATS-ADMINS sec
   it('puts the token in the fragment only, on the /account/invite path', () => {
     expect(TOKEN).toHaveLength(43);
     expect([ADMIN_INVITE_PATH, ADMIN_INVITE_TOKEN_KEY]).toEqual(['/account/invite', 't']);
+    // [SA] SA-4: the console route is the same path, and `next` may carry it through sign-in (no token in it).
+    expect(APP_ROUTES.adminInvite).toBe(ADMIN_INVITE_PATH);
+    expect(safeNextPath(ADMIN_INVITE_PATH)).toBe(ADMIN_INVITE_PATH);
+    expect(safeNextPath(`${ADMIN_INVITE_PATH}#t=${TOKEN}`)).toBe(ADMIN_INVITE_PATH);
     const link = adminInviteUrl(APP_ORIGIN, TOKEN) ?? '';
     expect(link).toBe(`https://app.hangulroute.com/account/invite#t=${TOKEN}`);
     const url = new URL(link);

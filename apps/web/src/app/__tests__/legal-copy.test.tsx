@@ -71,8 +71,8 @@ describe('privacy policy', () => {
     expect(terms).not.toMatch(/age group/i);
   });
 
-  it('says the privacy page was last updated 2026-10-12 (the backup sentences, privacy-statements.test.tsx)', () => {
-    expect(privacy).toContain('Effective October 14, 2026');
+  it('says the privacy page was last updated 2026-10-20 (the school administrators bullet, [SA] section 6.7)', () => {
+    expect(privacy).toContain('Effective October 20, 2026');
   });
 
   describe('launch-news email list', () => {
@@ -384,7 +384,7 @@ describe('payment facts (F-SITE-002 S-7)', () => {
     it('Terms of Service: the effective date moves to 2026-10-12 with the payment facts; the Privacy Policy keeps 2026-10-12', () => {
       expect(terms).toContain('Effective October 14, 2026');
       expect(terms).not.toContain('Effective May 22, 2026');
-      expect(privacy).toContain('Effective October 14, 2026');
+      expect(privacy).toContain('Effective October 20, 2026');
     });
 
     it.each(['es', 'ko'] as const)('%s: shows the same English payment facts under the English-authoritative notice (L10)', (locale) => {

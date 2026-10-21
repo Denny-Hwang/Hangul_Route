@@ -421,7 +421,8 @@ export const landing = {
     draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      effective: 'Effective October 14, 2026',
+      /** [SA] October 20, 2026: the school administrators bullet (AMENDMENTS-SEATS-ADMINS section 6.7). */
+      effective: 'Effective October 20, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -462,6 +463,14 @@ export const landing = {
             /** [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D7 to TV-D11, the owner's decision of 2026-10-14. */
             classMoves:
               "Class moves: a teacher may move a learner from one class to another without asking the family first. When the teacher runs both classes, or is an admin of their school, the move happens at once; otherwise the receiving class has to accept it. Until it accepts, the receiving class sees only the learner's initials, picture and level. The family then sees a one-time notice in the app and in the console. Cards, stars and finished lessons always stay with the learner. A family can also start a move itself, and a learner can leave a class from Profile at any time. We keep a record of each move (which classes, which teacher account moved the learner and when, never a name) for 90 days after it happens.",
+            /**
+             * [SA] AMENDMENTS-SEATS-ADMINS section 6.7 (SA-4; SA-D10 to SA-D12, the owner's request of 2026-10-20, not
+             * reviewed by counsel; the draft banner stays): what a school's administrators see, the verified email an
+             * accept needs, and the school history the owner sees (400 days). Family and stand-alone class renames keep
+             * no such history.
+             */
+            schoolAdmins:
+              "A school's owner can add up to two administrators with an invite link. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
             contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },

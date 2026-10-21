@@ -4,9 +4,11 @@ import type { Messages } from '@hangul-route/i18n';
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { SchoolClassRow } from '@/lib/console/api';
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { AdminsPanel } from './AdminsPanel';
 import { useConfirm } from './ConfirmSheet';
 import { spacePageBack } from '@/lib/console/page-back';
 import type { ConsoleApi, MemberView, SchoolView } from '@/lib/console/api';
@@ -23,7 +25,8 @@ import { headRem, rem } from '@/lib/console/rem';
 type SchoolNote = keyof Messages['console']['school']['notes'];
 
 /** console/school-admin — F-SCHOOL-001 §3.3. Rendered by /teach/space?id= for school spaces. */
-export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spaceId: string; onSignOut: () => void }): JSX.Element {
+export function SchoolAdmin({ api, spaceId, onSignOut, accountId }: { api: ConsoleApi; spaceId: string; onSignOut: () => void; accountId?: string }): JSX.Element {
+  const router = useRouter();
   const [view, setView] = useState<SchoolView | null>(null);
   const [members, setMembers] = useState<MemberView[]>([]);
   // Keys, not text: the messages are looked up at render time, so they follow the header language select.
@@ -142,6 +145,11 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
           onAssign={(classId, accountId) => void run(() => api.addMember(classId, accountId), 'assigned', 'assignFailed').then(() => setAssigning(null))}
           onNewClass={setNewClass}
           rename={{ api, announce, onClassName: setClassName }}
+          viewerIsAdmin={!!accountId && members.some((m) => m.memberKind === 'account' && m.memberId === accountId && m.role === 'admin' && !m.isOwner)}
+          adminsPanel={
+            // [SA] AMENDMENTS-SEATS-ADMINS section 6.6: the owner and the administrators, under Invite a teacher.
+            accountId ? <AdminsPanel api={api} school={view.school} accountId={accountId} confirm={confirm} onLeave={(href) => router.replace(href)} /> : undefined
+          }
           onCreateClass={(name) => void run(() => api.createSpace({ kind: 'class', name, parentSpaceId: spaceId }), 'classCreated', 'createFailed').then(() => setNewClass(''))}
         />
       ) : null}
@@ -171,6 +179,8 @@ export function SchoolAdminView({
   onNewClass,
   onCreateClass,
   rename,
+  viewerIsAdmin = false,
+  adminsPanel,
 }: {
   view: SchoolView;
   members: readonly MemberView[];
@@ -189,6 +199,10 @@ export function SchoolAdminView({
   onCreateClass: (name: string) => void;
   /** [SA] section 5.3: renaming a class from its row (shown with the row's `canRename`); absent, rows show no Rename. */
   rename?: { api: ConsoleApi | null; announce: (text: string) => void; onClassName: (classId: string, name: string, settled: boolean) => void };
+  /** [SA] The viewer is one of the school's administrators: no Manage billing (SA-0b D9, billing is the owner's). */
+  viewerIsAdmin?: boolean;
+  /** [SA] The Administrators panel, drawn under Invite a teacher. */
+  adminsPanel?: ReactNode;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -213,9 +227,11 @@ export function SchoolAdminView({
             <strong>{s.licence.seats}</strong>
             <Muted>{usageLine(view.usage, view.limits, locale)}</Muted>
           </div>
-          <Link href={ROUTES.billing}>
-            <Button>{s.licence.manage.cta}</Button>
-          </Link>
+          {viewerIsAdmin ? null : (
+            <Link href={ROUTES.billing}>
+              <Button>{s.licence.manage.cta}</Button>
+            </Link>
+          )}
         </div>
         {note ? <Muted>{note}</Muted> : null}
       </section>
@@ -234,6 +250,8 @@ export function SchoolAdminView({
         </div>
         <Muted>{c.schoolInviteHint}</Muted>
       </section>
+
+      {adminsPanel}
 
       {empty ? (
         <Notice>{c.schoolEmpty}</Notice>
