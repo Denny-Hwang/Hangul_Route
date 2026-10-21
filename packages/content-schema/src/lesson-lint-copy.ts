@@ -12,11 +12,14 @@ export type ReviewCopyProblem = 'percent' | 'n-of-m' | 'age-word' | 'speaking-ui
 
 /** A score shown as a share, in any UI locale (the en, es and ko messages). */
 const SCORE_PATTERNS: ReadonlyArray<readonly [ReviewCopyProblem, RegExp]> = [
-  ['percent', /[%％]|퍼센트|\bpercent\b|\bpor ?ciento\b/i],
+  ['percent', /[%％]|퍼센트|\bpercent\b|\bpor ?ciento\b|\bporcentaje\b/i],
+  // 80프로, the spoken form of 80%, but not 프로그램 (a programme).
+  ['percent', /\d\s*프로(?![가-힣])/],
   ['n-of-m', /\d+\s*\/\s*\d+/],
   ['n-of-m', /\b\d+\s+(?:out\s+)?of\s+\d+\b/i],
-  ['n-of-m', /\b\d+\s+de\s+\d+\b/i],
-  ['n-of-m', /\d+\s*\S{0,3}\s*중\s*\d+/],
+  ['n-of-m', /\b\d+\s+(?:de|sobre)\s+\d+\b/i],
+  // 5개 중 3개, 5개 중에 3개, 5문제 중에서 3문제.
+  ['n-of-m', /\d+\s*\S{0,3}\s*중(?:에서|에)?\s*\d+/],
 ];
 
 /**
@@ -41,7 +44,8 @@ export const REVIEW_COPY_AGE_PATTERNS: readonly RegExp[] = [
  * A note on usage ("Say this to call a server") explains a phrase and is not here.
  */
 export const REVIEW_COPY_SPEAKING_PATTERNS: readonly RegExp[] = [
-  /\b(?:say|speak|repeat|read)(?:\s+(?:it|this|that|them|the word|the line))?\s+(?:out loud|aloud)\b/i,
+  // The learner is asked to read aloud; "Tap to hear it read aloud" (the device voice reads) is not.
+  /(?<!\bhear(?:\s+[a-z]+)?\s+)\b(?:say|speak|repeat|read)(?:\s+(?:it|this|that|them|the word|the line))?\s+(?:out loud|aloud)\b/i,
   /\b(?:say|repeat)(?:\s+(?:it|this|that|them))?\s+(?:with|after)\s+(?:me|hoya|the voice)\b/i,
   /\bspeak (?:now|into|up)\b/i,
   /\bmicrophones?\b/i,
@@ -60,11 +64,35 @@ export function reviewScoreProblems(text: string): ReviewCopyProblem[] {
   return [...new Set(found)];
 }
 
+/**
+ * Audience age framing in the Spanish and Korean UI locales, after the per-locale entries of
+ * `packages/i18n/src/audience.ts` (F-I18N-001 §3.8), widened to any age range. Words a story
+ * needs ("los niños", 아이들) describe characters and are not here.
+ */
+export const REVIEW_COPY_AGE_PATTERNS_BY_LOCALE: Readonly<Record<'es' | 'ko', readonly RegExp[]>> = {
+  es: [/\bpara niñ[oa]s\b/i, /\bpara los más pequeños\b/i, /\bde\s*\d+\s*a\s*\d+\s*años\b/i, /\bedad(?:es)?\s+de\s+\d/i],
+  ko: [/어린이용/, /유아용/, /\d+\s*[~～–-]\s*\d+\s*세/, /\d+\s*세\s*(?:이상|이하|미만)/],
+};
+
 /** Problems of new English learner copy: age framing, speaking UI, emoji. */
 export function newCopyProblems(text: string): ReviewCopyProblem[] {
   const out: ReviewCopyProblem[] = [];
   if (REVIEW_COPY_AGE_PATTERNS.some((re) => re.test(text))) out.push('age-word');
   if (REVIEW_COPY_SPEAKING_PATTERNS.some((re) => re.test(text))) out.push('speaking-ui');
+  if (hasEmoji(text)) out.push('emoji');
+  return out;
+}
+
+/**
+ * Problems of new learner copy in a UI locale: English gets every check of newCopyProblems;
+ * Spanish and Korean get their age patterns and the emoji check (the speaking patterns are
+ * English; a Spanish or Korean string translates an English one that is checked).
+ */
+export function localeCopyProblems(text: string, locale: string): ReviewCopyProblem[] {
+  if (locale === 'en') return newCopyProblems(text);
+  const out: ReviewCopyProblem[] = [];
+  const age = locale === 'es' || locale === 'ko' ? REVIEW_COPY_AGE_PATTERNS_BY_LOCALE[locale] : [];
+  if (age.some((re) => re.test(text))) out.push('age-word');
   if (hasEmoji(text)) out.push('emoji');
   return out;
 }
@@ -106,15 +134,19 @@ export interface ReviewStringFinding {
 const SAMPLE_ARGS = [3, 5, 7, 9];
 
 /**
- * Every score problem in the review sub-objects of one locale's `learner` messages. A
- * message function is called with numbers so its template is read; one that throws on
- * them is read as its source text instead.
+ * Every problem in the review sub-objects of one locale's `learner` messages: a score, and the
+ * new-copy problems of that locale (localeCopyProblems). A message function is called with
+ * numbers so its template is read; one that throws on them is read as its source text instead.
  */
-export function lintReviewMessages(learner: unknown, namespaces: readonly string[] = REVIEW_COPY_NAMESPACES): ReviewStringFinding[] {
+export function lintReviewMessages(
+  learner: unknown,
+  namespaces: readonly string[] = REVIEW_COPY_NAMESPACES,
+  locale = 'en',
+): ReviewStringFinding[] {
   const out: ReviewStringFinding[] = [];
   const visit = (value: unknown, path: string): void => {
     if (typeof value === 'string') {
-      for (const problem of reviewScoreProblems(value)) out.push({ path, problem });
+      for (const problem of new Set([...reviewScoreProblems(value), ...localeCopyProblems(value, locale)])) out.push({ path, problem });
     } else if (typeof value === 'function') {
       let text: string;
       try {

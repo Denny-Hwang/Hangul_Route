@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): age wording, speaking UI and an emoji: warnings in Volume 1 and a shipped story, errors in Volume 2 and a new story. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): age wording, speaking UI and an emoji: warnings in Volume 1 and a shipped story, errors in Volume 2 and a new story; scores, age wording and speaking UI in the English and Spanish learner review strings (the Korean ones are unit tests: Hangul stays out of fixture text fields) (`learner`, read by lintReviewStrings, always errors; a key outside the review namespaces is not read); age wording or an emoji in the Spanish and Korean overlays of Volume 2 entries (a Volume 1 entry is not new copy). Not real content.",
   "rule": "review-copy",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -934,6 +934,30 @@
         }
       ],
       "facts": []
+    },
+    "content/i18n/es/lessons-stage2-nature-v2.json": {
+      "locale": "es",
+      "domain": "lessons-stage2-nature-v2",
+      "entries": {
+        "episode:stage2-nature-v2": {
+          "title": "Palabras para niños"
+        },
+        "quest:stage2-nature-v2-q1": {
+          "title": "El cielo ⭐"
+        },
+        "episode:stage2-nature": {
+          "title": "Volume 1 ⭐ is not new copy"
+        }
+      }
+    },
+    "content/i18n/ko/lessons-stage2-nature-v2.json": {
+      "locale": "ko",
+      "domain": "lessons-stage2-nature-v2",
+      "entries": {
+        "quest:stage2-nature-v2-q2": {
+          "title": "Haneul ⭐"
+        }
+      }
     }
   },
   "expect": [
@@ -966,6 +990,76 @@
       "warning",
       "content/stories/sun-and-moon.json",
       "tiers[0].scenes[0].narrationEn"
+    ],
+    [
+      "review-copy",
+      "error",
+      "packages/i18n/src/messages/en/learner.ts",
+      "learner.stageReview.summary"
+    ],
+    [
+      "review-copy",
+      "error",
+      "packages/i18n/src/messages/en/learner.ts",
+      "learner.stageReview.next"
+    ],
+    [
+      "review-copy",
+      "error",
+      "packages/i18n/src/messages/en/learner.ts",
+      "learner.dailyReview.done"
+    ],
+    [
+      "review-copy",
+      "error",
+      "packages/i18n/src/messages/es/learner.ts",
+      "learner.stageReview.summary"
+    ],
+    [
+      "review-copy",
+      "error",
+      "packages/i18n/src/messages/es/learner.ts",
+      "learner.dailyReview.done"
+    ],
+    [
+      "review-copy",
+      "error",
+      "content/i18n/es/lessons-stage2-nature-v2.json",
+      "entries.episode:stage2-nature-v2.title"
+    ],
+    [
+      "review-copy",
+      "error",
+      "content/i18n/es/lessons-stage2-nature-v2.json",
+      "entries.quest:stage2-nature-v2-q1.title"
+    ],
+    [
+      "review-copy",
+      "error",
+      "content/i18n/ko/lessons-stage2-nature-v2.json",
+      "entries.quest:stage2-nature-v2-q2.title"
     ]
-  ]
+  ],
+  "learner": {
+    "packages/i18n/src/messages/en/learner.ts": {
+      "stageReview": {
+        "summary": "You got 3 of 5.",
+        "next": "Read it aloud with Hoya."
+      },
+      "dailyReview": {
+        "done": "Great work for kids!"
+      },
+      "home": {
+        "title": "3 of 5 is not a review screen"
+      }
+    },
+    "packages/i18n/src/messages/es/learner.ts": {
+      "stageReview": {
+        "summary": "3 sobre 5"
+      },
+      "dailyReview": {
+        "done": "Un repaso para niños"
+      }
+    }
+  }
 }

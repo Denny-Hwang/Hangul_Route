@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): plain copy: a usage note, a story's characters, and the gloss of a word that means child. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): plain copy: a usage note, a story's characters, and the gloss of a word that means child. English and Spanish learner review strings with no score (the device voice reading aloud), and a plain Spanish overlay. Not real content.",
   "rule": "review-copy",
   "files": {
     "content/episodes/stage-2/nature.v2.json": {
@@ -477,7 +477,29 @@
         }
       ],
       "facts": []
+    },
+    "content/i18n/es/lessons-stage2-nature-v2.json": {
+      "locale": "es",
+      "domain": "lessons-stage2-nature-v2",
+      "entries": {
+        "episode:stage2-nature-v2": {
+          "title": "Palabras del cielo"
+        }
+      }
     }
   },
-  "expect": []
+  "expect": [],
+  "learner": {
+    "packages/i18n/src/messages/en/learner.ts": {
+      "stageReview": {
+        "listen": "Tap to hear it read aloud.",
+        "done": "You looked at every letter."
+      }
+    },
+    "packages/i18n/src/messages/es/learner.ts": {
+      "stageReview": {
+        "done": "Miraste todas las letras."
+      }
+    }
+  }
 }

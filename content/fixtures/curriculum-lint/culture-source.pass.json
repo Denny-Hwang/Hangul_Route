@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): allowlisted publishers, the Cultural Heritage Administration before its 2024 rename, and a factRef to a story fact with an allowlisted source. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): allowlisted publishers, the Cultural Heritage Administration before its 2024 rename, and a factRef to a story fact with an allowlisted source. Names are matched with what follows them (a museum with its city, a programme after UNESCO), on the institution's own host. Not real content.",
   "rule": "culture-source",
   "files": {
     "content/episodes/stage-2/nature.v2.json": {
@@ -498,6 +498,46 @@
           "kind": "culture",
           "textEn": "A fact from a story.",
           "factRef": "story:fixture-heritage#f1",
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n4",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "Cheongju Early Printing Museum, Cheongju City",
+              "url": "https://www.cheongju.go.kr/jikjiworld/index.do",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n5",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "UNESCO — Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
           "verification": {
             "passes": 3,
             "checkedAt": "2026-10-13",

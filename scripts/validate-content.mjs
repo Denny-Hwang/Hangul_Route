@@ -24,8 +24,10 @@
 //     error for a Volume 2 cell (`volume` >= 2 or `<theme>.v<k>.json`), a pack file or a story
 //     that is not in SHIPPED_STORY_IDS, and a warning for Volume 1 cells and shipped stories
 //     (row CM-3B makes those errors). Each rule that reports prints its description once, for
-//     MAR. The report-only rules print one line each (`--reports` for details); freq-coverage
-//     reads the NIKL grade-A list from HANGUL_ROUTE_NIKL_GRADE_A, a local file outside the repo.
+//     MAR, and culture-source always does (its description asks MAR to check institution names
+//     as of the access date). The report-only rules print one line each (`--reports` for
+//     details); freq-coverage reads the NIKL grade-A list from HANGUL_ROUTE_NIKL_GRADE_A, a local
+//     file that must lie outside the repo (its licence is not yet checked).
 //   - A gloss never opens with the romanization of the Korean it glosses ("gimbap (seaweed
 //     rice roll)" is "seaweed rice roll"): rule gloss-repeats-romanization, the one
 //     implementation in scripts/overlay-rules.mjs (glossRepeatsRomanization, F-CNT-001 §3), with
@@ -42,7 +44,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import nodeModule from "node:module";
-import { dirname, extname, join, relative, resolve, sep } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkPlacementTree } from "./placement-rules.mjs";
 import { bannedWordIn, checkOverlayTree, glossRepeatsRomanization, glossRepeatsRule } from "./overlay-rules.mjs";
@@ -128,8 +130,9 @@ function isStoryFile(file) {
 // `culture[]` note. The same key anywhere else is checked like any other field.
 const LESSON_FILE = /^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/;
 const isLessonFile = (file) => LESSON_FILE.test(file.split(sep).join("/"));
-// F-CURR-002 §9.3: Volume 2 cells (`<theme>.v<k>.json`), pack directories and stories, linted by lintCurriculum.
-const CURRICULUM_FILE = /^content\/(?:episodes\/stage-[2-467]\/[a-z]+\.v[0-9]+\.json|packs\/.+|stories\/[^/]+\.json)$/;
+// F-CURR-002 §9.3: Volume 2 cells (`<theme>.v<k>.json`) and any other file of an upper-stage directory,
+// everything under content/packs/ and the stories, linted by lintCurriculum.
+const CURRICULUM_FILE = /^content\/(?:episodes\/stage-[2-467]\/.+\.json|packs\/.+|stories\/[^/]+\.json)$/;
 // F-CURR-002 §9.3 review-copy: the learner review strings of each UI locale, when the repo has them.
 const REVIEW_LOCALES = ["en", "es", "ko"];
 const isLessonZone = (path, k) =>
@@ -282,7 +285,7 @@ if (lessonFiles.length > 0 || curriculumFiles.length > 0 || reviewMessageFiles.l
       violations.push({ file: rel, path: f.path, rule: `${f.rule}: ${f.message}` });
     }
   }
-  const findings = lint.lintCurriculum(parsedByRel);
+  const findings = lint.lintCurriculum(parsedByRel, { today: ctx.today });
   for (const rel of reviewMessageFiles) {
     const { learner } = await import(pathToFileURL(join(ROOT, rel)).href);
     findings.push(...lint.lintReviewStrings(learner, rel));
@@ -293,6 +296,9 @@ if (lessonFiles.length > 0 || curriculumFiles.length > 0 || reviewMessageFiles.l
     curriculumRules.add(f.rule);
   }
   for (const line of curriculumReports(lint)) console.log(line);
+  // The culture-source description is MAR's instruction to check institution names as of the
+  // access date (F-CURR-002 §5.1, §9.3), so it prints whenever a lesson, pack or story file is linted.
+  if (lessonFiles.length > 0 || curriculumFiles.length > 0) curriculumRules.add("culture-source");
   for (const rule of [...curriculumRules].sort()) {
     if (lint.CURRICULUM_RULES[rule] !== undefined) console.log(`::notice::${rule}: ${lint.CURRICULUM_RULES[rule]}`);
   }
@@ -307,8 +313,18 @@ function curriculumReports(lint) {
   const lines = [];
   const detail = process.argv.includes("--reports");
   const listPath = process.env.HANGUL_ROUTE_NIKL_GRADE_A;
+  const fromRoot = listPath ? relative(ROOT, resolve(listPath)) : "";
+  const inRepo = Boolean(listPath) && !fromRoot.startsWith("..") && !isAbsolute(fromRoot);
   if (!listPath) {
     lines.push("freq-coverage (report only): skipped; set HANGUL_ROUTE_NIKL_GRADE_A to a local copy of the NIKL grade-A list");
+  } else if (inRepo) {
+    // §19 assumption 4: the list's licence is not checked yet, so it never sits in the repo.
+    violations.push({
+      file: fromRoot.split(sep).join("/"),
+      path: "",
+      rule: "freq-coverage: the NIKL grade-A list stays outside the repo until its licence is checked (F-CURR-002 §19 assumption 4); move it and point HANGUL_ROUTE_NIKL_GRADE_A there",
+    });
+    lines.push("freq-coverage (report only): skipped; HANGUL_ROUTE_NIKL_GRADE_A points inside the repo");
   } else if (!existsSync(listPath)) {
     lines.push(`freq-coverage (report only): skipped; ${listPath} does not exist`);
   } else {
