@@ -926,4 +926,5 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.who.resetPending': [['Oct 22, 2026, 6:40 PM'], ['22 oct 2026, 18:40'], ['22 oct 2026, 6:40 p.m.']],
   'a11y.who.tile': [['Mina'], ['Jo Ann']],
   'a11y.who.grownUpRow': [['Grown-up area'], ['Family']],
+  'a11y.who.lockedTile': [['Sora'], ['Jo Ann']],
 };

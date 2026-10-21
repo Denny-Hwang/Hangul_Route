@@ -54,6 +54,7 @@ export const caregiver = {
     cooldownHelp: "'PIN을 잊었나요?'에서 새 PIN을 만들 수도 있어요.",
     resetByWaitNotice: '24시간 기다린 뒤 어른용 PIN이 바뀌었어요. 직접 바꾼 게 아니면 지금 바꿔 주세요.',
     resetByWaitChange: 'PIN 바꾸기',
+    needsPinFirst: '먼저 어른용 PIN을 만들어요.',
     entry: {
       createAgain: '한 번 더 입력하기',
       verifySubtitle: '계속하려면 숫자 4자리 PIN을 입력해 주세요.',
@@ -779,5 +780,9 @@ export const caregiver = {
     next: (name: string) => `다음 수업: ${name}`,
     opensTab: '새 탭에서 열려요',
     blocked: '새 탭이 열리지 않았어요. 이 사이트의 팝업을 허용한 뒤 다시 눌러 주세요.',
+  },
+  people: {
+    lock: '어른용 PIN으로 잠그기',
+    lockHint: '어른의 자기 프로필에 좋아요. 다른 사람이 대신 하지 않아요.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

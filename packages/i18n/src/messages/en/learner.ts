@@ -2455,5 +2455,9 @@ export const learner = {
     resetPending: (time: string) => `A new grown-up PIN can be set after ${time}. Enter the PIN to cancel.`,
     /** Opens the PIN screen in verify mode; a correct PIN stops the wait. Also the title of that PIN screen. */
     resetCancel: 'Cancel the wait',
+    /** [OA] Row OA-5: the caption under a locked tile's name, beside the lock glyph (on the chooser and the Profile tiles). */
+    lockedCaption: 'A grown-up opens this one.',
+    /** [OA] Row OA-5, section 13.2: under the title when the locks cannot be read, so every tile is locked (no per-tile caption). */
+    locksUnread: 'Tap a name, then a grown-up enters the PIN.',
   },
 } as const;

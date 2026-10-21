@@ -1899,5 +1899,7 @@ export const learner = {
     // `time` is the end of the wait as a date and time ("22 oct 2026, 6:40 p.m."): a time that ends in "p.m." takes no second period.
     resetPending: (time: string) => `Se podrá crear un PIN de adultos nuevo a partir del ${time}${time.endsWith('.') ? '' : '.'} Escribe el PIN para cancelar la espera.`,
     resetCancel: 'Cancelar la espera',
+    lockedCaption: 'Lo abre un adulto.',
+    locksUnread: 'Toca un nombre y un adulto escribe el PIN.',
   },
 } satisfies DeepPartial<Messages['learner']>;
