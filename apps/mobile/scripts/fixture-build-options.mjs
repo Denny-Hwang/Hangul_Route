@@ -39,7 +39,7 @@ export function fixtureBuildOptions(argv) {
 /**
  * The environment of the `expo export` child. Both bundles carry HANGUL_ROUTE_GENERATE=off: the build
  * has already run scripts/generate.mjs and written the fixture stories, and metro.config.js would
- * otherwise regenerate stories.generated.ts without them (F-CURR-002 CM-6). The variable is read only
+ * otherwise regenerate the story modules without them (F-CURR-002 CM-6, CM-8). The variable is read only
  * by metro.config.js, at config time, so no transform and no cache entry depends on it. For the gating
  * bundle, also gating on and TMPDIR pointed at `ownTmp`, an empty directory, so Metro's cache
  * (os.tmpdir()/metro-cache) is one of its own.

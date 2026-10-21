@@ -10,7 +10,7 @@
 // message.
 //
 // One caller writes the modules itself: the e2e fixture build (scripts/build-web-fixtures.mjs) runs
-// generate.mjs, then writes the fixture stories over stories.generated.ts, and exports with
+// generate.mjs, then writes the fixture stories over the story modules (__generated__/stories-index.ts), and exports with
 // HANGUL_ROUTE_GENERATE=off so this step does not put the release stories back. Nothing else sets it.
 //
 // Apart from that step this is Expo's default config, the one Metro used before this file existed.

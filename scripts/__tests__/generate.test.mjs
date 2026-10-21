@@ -64,7 +64,7 @@ describe("generate.mjs: determinism", () => {
     assert.equal(run(root).status, 0);
     const touched = files.filter((file) => statSync(file).mtimeMs !== past.getTime());
     assert.deepEqual(touched, [], "an unchanged module was rewritten");
-    const stories = join(root, "apps", "mobile", "src", "content", "stories.generated.ts");
+    const stories = join(root, "apps", "mobile", "src", "content", "__generated__", "stories-index.ts");
     writeFileSync(stories, "// stale\n");
     utimesSync(stories, past, past);
     assert.equal(run(root).status, 0);
@@ -77,7 +77,7 @@ describe("generate.mjs: determinism", () => {
     assert.equal(run(root).status, 0);
     const ok = run(root, ["--check"]);
     assert.equal(ok.status, 0, ok.stdout + ok.stderr);
-    const file = join(root, "apps", "mobile", "src", "content", "stories.generated.ts");
+    const file = join(root, "apps", "mobile", "src", "content", "__generated__", "stories-index.ts");
     writeFileSync(file, readFileSync(file, "utf8") + "// edited\n");
     const drift = run(root, ["--check"]);
     assert.equal(drift.status, 1);
