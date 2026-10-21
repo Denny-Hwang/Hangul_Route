@@ -1,5 +1,6 @@
 import { CLASS_MOVE_PURGE_AFTER_MS } from '@hangul-route/content-schema';
 import { NOTE_HOLD_RETENTION_DAYS, NOTE_REPORT_RETENTION_DAYS, NOTE_RETENTION_DAYS, type Db } from '../db';
+import { TELEMETRY_DAILY_PURGE_LIMIT, purgeTelemetryDailyStep } from './telemetry-daily';
 
 /**
  * The bounded notes purge — F-FEEDBACK-001 section 8.7 (PR FB-3b). It runs in
@@ -10,6 +11,7 @@ import { NOTE_HOLD_RETENTION_DAYS, NOTE_REPORT_RETENTION_DAYS, NOTE_RETENTION_DA
  * 2. daily, from the Worker's Cron Trigger (`runScheduledPurge`): the note
  *    purge, the existing `purgeRateHits` and ([TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
  *    4.1) the class-move records 90 days after they ended, executed or expired,
+ *    ([OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS 15.1) the daily counters past 400 days,
  *    at most five rounds of 200 rows.
  *
  * Every list already filters by the same cut-offs, so purge lag is never
@@ -40,6 +42,8 @@ export interface ScheduledPurgeResult {
   spaceEvents: number;
   /** [SA] `admin_invites` rows 30 days after they expired, were accepted or were revoked. */
   adminInvites: number;
+  /** [OA] `telemetry_daily` rows past 400 days (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1). */
+  telemetryDaily: number;
 }
 
 /** [SA] How long a school's audit rows are kept (AMENDMENTS-SEATS-ADMINS section 6.2, OQ-10). */
@@ -92,7 +96,7 @@ export async function purgeClassMovesStep(db: Db, now: Date): Promise<number> {
  * full step of each (nothing left) or after `SCHEDULED_PURGE_ROUNDS` rounds; tomorrow's run continues.
  */
 export async function runScheduledPurge(db: Db, now: Date): Promise<ScheduledPurgeResult> {
-  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0, classMoves: 0, spaceEvents: 0, adminInvites: 0 };
+  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0, classMoves: 0, spaceEvents: 0, adminInvites: 0, telemetryDaily: 0 };
   const hitsBefore = new Date(now.getTime() - RATE_HIT_WINDOW_MS);
   while (out.rounds < SCHEDULED_PURGE_ROUNDS) {
     out.rounds += 1;
@@ -100,15 +104,18 @@ export async function runScheduledPurge(db: Db, now: Date): Promise<ScheduledPur
     const rateHits = await db.purgeRateHits(hitsBefore, NOTE_PURGE_LIMIT);
     const classMoves = await purgeClassMovesStep(db, now);
     const spaceEvents = await purgeSpaceEventsStep(db, now);
+    const telemetryDaily = await purgeTelemetryDailyStep(db, now);
     out.notes += notes;
     out.rateHits += rateHits;
     out.classMoves += classMoves;
     out.spaceEvents += spaceEvents;
+    out.telemetryDaily += telemetryDaily;
     // The note step's four statements each remove at most a full step, so a total under one step means all four are done.
-    if (notes < NOTE_PURGE_LIMIT && rateHits < NOTE_PURGE_LIMIT && classMoves < NOTE_PURGE_LIMIT && spaceEvents < NOTE_PURGE_LIMIT) break;
+    if (notes < NOTE_PURGE_LIMIT && rateHits < NOTE_PURGE_LIMIT && classMoves < NOTE_PURGE_LIMIT && spaceEvents < NOTE_PURGE_LIMIT && telemetryDaily < TELEMETRY_DAILY_PURGE_LIMIT) break;
   }
   // [SA] One step per run, not per round: a school makes a few invites a week, so 200 a day keeps the table small,
-  // and the run stays at 36 statements, well under the 50 a Free-plan invocation allows.
+  // and the run stays at 41 statements ([OA] five rounds of eight, plus this one), under the 50 a Free-plan
+  // invocation allows.
   out.adminInvites = await purgeAdminInvitesStep(db, now);
   return out;
 }
