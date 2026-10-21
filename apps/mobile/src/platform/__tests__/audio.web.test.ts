@@ -697,6 +697,22 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
     audio.dispose();
   });
 
+  it('an unanswered unlock still in flight when its instance is disposed leaves the live set', async () => {
+    vi.useFakeTimers();
+    const { synth, doc, audio } = rig();
+    synth.blank = 'hang';
+    synth.cancelError = null;
+    const before = audio.liveUtteranceCountForTests();
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('touchend'));
+    expect(audio.liveUtteranceCountForTests()).toBe(before + 1);
+    await vi.advanceTimersByTimeAsync(200);
+    audio.dispose();
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(audio.liveUtteranceCountForTests()).toBe(before);
+  });
+
   it('a cancelled unlock whose canceled arrives still answers it: unlocked', async () => {
     vi.useFakeTimers();
     const { synth, doc, audio } = rig();

@@ -165,7 +165,9 @@ const CAPTURE = { capture: true } as const;
 /**
  * Every utterance handed to the engine and not yet settled. Chromium can garbage-collect an utterance
  * nothing else references and then never fire its `end` or `error`, so each one is held here until it
- * ends, errors or is cancelled.
+ * ends, errors or is cancelled. The silent unlock also leaves at its one-second answer deadline
+ * (`unlockUnanswered`) or when its instance is disposed; one the engine still holds after that stays
+ * reachable through `unlockAhead`.
  */
 const LIVE_UTTERANCES = new Set<WebUtterance>();
 
@@ -594,6 +596,11 @@ export function createWebAudio(env: WebAudioEnv) {
     /** Test only: how many utterances the page-wide live set holds (shared by every instance: compare to a baseline). */
     liveUtteranceCountForTests: (): number => LIVE_UTTERANCES.size,
     dispose: (): void => {
+      // An unlock still in flight leaves the page-wide set with its instance: its deadline will not run now.
+      if (unlockInFlight !== null) LIVE_UTTERANCES.delete(unlockInFlight);
+      if (unlockAhead !== null) LIVE_UTTERANCES.delete(unlockAhead.u);
+      unlockInFlight = null;
+      unlockAhead = null;
       if (unlockTimer !== null) clearTimeout(unlockTimer);
       unlockTimer = null;
       uninstallGesture?.();

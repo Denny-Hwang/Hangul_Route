@@ -1,10 +1,26 @@
 import { ListenPickRoundSchema, PicWordRoundSchema } from '@hangul-route/content-schema';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AUDIO_ASSETS } from '../../content/__generated__/audio-assets';
 import { findJamo, jamoAll } from '../../content/jamo';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import { lp, pw } from '../scope-builders';
 import * as config from '../minigame-config';
+
+// A lookup seam: an id listed here comes back as a copy of its record without `audioRef`, so a test can build a
+// letter with no recording without touching the shared content record. Empty by default (the real lookup).
+const withoutAudioRef = vi.hoisted(() => new Set<string>());
+vi.mock('../../content/jamo', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../content/jamo')>();
+  return {
+    ...actual,
+    findJamo: (id: string) => {
+      const record = actual.findJamo(id);
+      if (!record || !withoutAudioRef.has(id)) return record;
+      const { audioRef: _dropped, ...bare } = record;
+      return bare;
+    },
+  };
+});
 
 const word = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
 const TAUGHT_L1 = ['jamo:a', 'jamo:eo', 'jamo:giyeok', 'jamo:nieun'];
@@ -54,16 +70,34 @@ describe('lp.sym (sound -> written symbol)', () => {
     // The options are the written symbols: no recording rides on them.
     expect(r.options.every((o) => o.text?.audioRef === undefined)).toBe(true);
 
-    const eo = findJamo('jamo:eo')!;
-    const ref = eo.audioRef;
-    delete eo.audioRef;
+    withoutAudioRef.add('jamo:eo');
     try {
+      expect(findJamo('jamo:eo')).not.toHaveProperty('audioRef');
       const bare = lp.sym('jamo:eo', TAUGHT_L1);
       expect(bare.prompt).toEqual({ ko: '어', romanization: 'eo', en: 'the letter eo' });
       expect('audioRef' in bare.prompt).toBe(false);
     } finally {
-      if (ref !== undefined) eo.audioRef = ref;
+      withoutAudioRef.delete('jamo:eo');
     }
+    // The shared record is untouched.
+    expect(findJamo('jamo:eo')!.audioRef).toBe('audio/jamo/eo.mp3');
+  });
+
+  it('pins two letter prompts as written: a configured vowel round and the ㅇ initial, which is spoken by its name', () => {
+    const rounds = Object.values(config.minigameScopes).flatMap((scope) => scope.listenPick?.rounds ?? []);
+    expect(rounds.find((r) => r.id === 'lp:sym:jamo:eo')?.prompt).toEqual({
+      ko: '어',
+      romanization: 'eo',
+      en: 'the letter eo',
+      audioRef: 'audio/jamo/eo.mp3',
+    });
+    const taught = jamoAll.filter((j) => j.kind !== 'batchim').map((j) => j.id);
+    expect(lp.sym('jamo:ieung', taught).prompt).toEqual({
+      ko: '이응',
+      romanization: 'ieung',
+      en: 'the letter ieung',
+      audioRef: 'audio/jamo/ieung.mp3',
+    });
   });
 
   it('every Stage 1 letter round is the same round with only the letter audioRef added, and no clip is bundled yet', () => {
