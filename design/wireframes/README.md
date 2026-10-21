@@ -60,6 +60,7 @@
 | `home/notes-card.md` · `notes/list.md` · `notes/detail.md` | R | F-FEEDBACK-001 §6.5-6.7 (FB-0; built in FB-8) |
 | `minigame/sentence-builder.md` · `quest/discover-sentences.md` | R | F-CURR-001 §3.4-3.7, §3.10 (D-1: Sentence Builder `order-it` and the sentence, pattern, exchange with Read along, and realia Discover pages; mock `design/screens/minigame-sentence-builder/v1/`; built in G-1, S3-1, S4-1, G-2) |
 | `minigame/realia-read.md` | R | F-CURR-001 §3.6, §3.14 (row D-2; mock `design/screens/minigame-realia-read/`; built in G-2) |
+| `minigame/cloze-pick.md` · `minigame/syllable-build.md` · `minigame/match-shape.md` · `minigame/story-order.md` · `minigame/role-play.md` · `minigame/my-story.md` · `minigame/yut-review.md` (and the `hear` mode of `minigame/type-hangul.md`, `shell.md` F-CURR-002 section, `audio-fallback.md` W11) | R | F-CURR-002 §7.1, §4.5, §7.7 (row CM-D2; mocks `design/screens/minigame-variety/`; built in CM-30 to CM-35, CM-38, CM-39) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |
