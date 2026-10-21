@@ -15,6 +15,7 @@ import {
   SessionLogSchema,
   SnapshotPutSchema,
   capRecord,
+  readSnapshotCopy,
   trimDayLog,
   withKnownReviews,
   type ProgressSnapshot,
@@ -103,11 +104,15 @@ describe('the reviews array is lenient per entry on every read path', () => {
     expect(file.profile.displayName).toBe('Suni');
   });
 
-  it('reads a missing or non-array list as empty instead of failing', () => {
+  it('is lenient per entry only: a missing or non-array list still fails, so it can never clear stored reviews', () => {
     const { reviews: _drop, ...noReviews } = legacy;
-    expect(ProgressSnapshotSchema.parse(noReviews).reviews).toEqual([]);
-    expect(ProgressSnapshotSchema.parse({ ...legacy, reviews: 'x' }).reviews).toEqual([]);
-    expect(ReviewListSchema.parse(null)).toEqual([]);
+    expect(ProgressSnapshotSchema.safeParse(noReviews).success).toBe(false);
+    for (const reviews of [null, 'x', {}]) {
+      expect(ProgressSnapshotSchema.safeParse({ ...legacy, reviews }).success).toBe(false);
+      expect(() => put({ ...legacy, reviews })).toThrow();
+    }
+    expect(ReviewListSchema.safeParse(null).success).toBe(false);
+    expect(ReviewListSchema.parse([])).toEqual([]);
   });
 
   it('withKnownReviews drops unknown kinds from an unparsed copy (snapshot GET, Rescue Code restore)', () => {
@@ -116,6 +121,25 @@ describe('the reviews array is lenient per entry on every read path', () => {
     expect(read.reviews.map((r) => r.id)).toEqual(keptIds);
     expect(read).not.toBe(fromServer);
     expect(fromServer.reviews).toHaveLength(mixedReviews.length);
+  });
+
+  it('readSnapshotCopy reads reviews per entry and each new field through its lenient schema', () => {
+    const fromServer = {
+      ...legacy,
+      reviews: mixedReviews,
+      cellBest: { a: 4, b: 2 },
+      goals: { daily: 12, weeklyDays: 7, setAt: '2026-10-21T09:00:00.000Z' },
+      streakBest: 9,
+      stamps: { s1: '2026-10-21T09:00:00' },
+    } as unknown as ProgressSnapshot;
+    const read = readSnapshotCopy(fromServer);
+    expect(read.reviews.map((r) => r.id)).toEqual(keptIds);
+    expect(read.cellBest).toEqual({ b: 2 });
+    expect(read).not.toHaveProperty('goals');
+    expect(read.streakBest).toBe(9);
+    expect(read.stamps).toEqual({});
+    const fine = { ...legacy, cellBest: { b: 2 }, streakBest: 3 } as unknown as ProgressSnapshot;
+    expect(readSnapshotCopy(fine)).toBe(fine);
   });
 
   it('withKnownReviews returns the same object when every entry is readable', () => {
@@ -175,9 +199,9 @@ describe('the F-CURR-002 snapshot fields are optional, additive and lenient on r
       });
       for (const key of NEW_KEYS) expect(parsed[key as keyof typeof parsed]).toBeUndefined();
     }
-    // A text where a record belongs reads as absent; memSeededAt is a text, as the other latch values are.
+    // A text where a record belongs reads as absent; memSeededAt must be a strict ISO instant.
     const text = ProgressSnapshotSchema.parse({ ...legacy, cellBest: 'x', dayLog: 'x', goals: 'x', streakLocal: 'x', streakBest: 'x', memSeededAt: 'x' });
-    expect([text.cellBest, text.dayLog, text.goals, text.streakLocal, text.streakBest, text.memSeededAt]).toEqual([undefined, undefined, undefined, undefined, undefined, 'x']);
+    expect([text.cellBest, text.dayLog, text.goals, text.streakLocal, text.streakBest, text.memSeededAt]).toEqual([undefined, undefined, undefined, undefined, undefined, undefined]);
     const odd = ProgressSnapshotSchema.parse({
       ...legacy,
       goals: { daily: 5, weeklyDays: 5, setAt: 't' },
@@ -187,7 +211,26 @@ describe('the F-CURR-002 snapshot fields are optional, additive and lenient on r
     });
     expect([odd.goals, odd.streakLocal, odd.streakBest, odd.memSeededAt]).toEqual([undefined, undefined, undefined, undefined]);
     expect(ProgressSnapshotSchema.parse({ ...legacy, streakLocal: { run: 2, lastDay: '2026-13-01' } }).streakLocal).toBeUndefined();
-    expect(ProgressSnapshotSchema.parse({ ...legacy, goals: { daily: 10, weeklyDays: 7, setAt: 't' } }).goals).toEqual({ daily: 10, weeklyDays: 7, setAt: 't' });
+    const setAt = '2026-10-21T09:00:00.000Z';
+    expect(ProgressSnapshotSchema.parse({ ...legacy, goals: { daily: 10, weeklyDays: 7, setAt } }).goals).toEqual({ daily: 10, weeklyDays: 7, setAt });
+  });
+
+  it('reads only strict ISO instants with Z or an offset, so every engine orders them the same', () => {
+    for (const at of ['2026-10-21T09:00:00Z', '2026-10-21T18:00:00+09:00', '2026-10-21T09:00:00.123Z']) {
+      const parsed = ProgressSnapshotSchema.parse({ ...legacy, memSeededAt: at, stamps: { s1: at }, goals: { daily: 3, weeklyDays: 3, setAt: at } });
+      expect([parsed.memSeededAt, parsed.stamps, parsed.goals?.setAt]).toEqual([at, { s1: at }, at]);
+    }
+    // No offset (local time on a device, UTC on the Worker), a space, RFC 2822: dropped on read.
+    for (const at of ['2026-10-21T09:00:00', '2026-10-21 09:00:00Z', 'Wed, 21 Oct 2026 09:00:00 GMT', '2026-10-21']) {
+      const parsed = ProgressSnapshotSchema.parse({ ...legacy, memSeededAt: at, stamps: { s1: at, s2: '2026-10-21T09:00:00Z' }, goals: { daily: 3, weeklyDays: 3, setAt: at } });
+      expect([parsed.memSeededAt, parsed.stamps, parsed.goals]).toEqual([undefined, { s2: '2026-10-21T09:00:00Z' }, undefined]);
+    }
+  });
+
+  it('reads a session localDay that does not exist on the calendar as absent', () => {
+    const session = { id: 's1', profileId: 'p1', startedAt: '2026-02-28T09:00:00.000Z', episodesTouched: [] };
+    const parsed = ProgressSnapshotSchema.parse({ ...legacy, sessions: [{ ...session, localDay: '2026-02-30' }, { ...session, id: 's2', localDay: '2026-02-28' }] });
+    expect(parsed.sessions.map((x) => x.localDay)).toEqual([undefined, '2026-02-28']);
   });
 
   it('keeps at most PROGRESS_RECORD_MAX entries, in key order', () => {
@@ -208,14 +251,25 @@ describe('the F-CURR-002 snapshot fields are optional, additive and lenient on r
 describe('dayLog keeps the last 70 days and the install keys inside the snapshot', () => {
   const day = (n: number) => new Date(Date.UTC(2026, 0, 1) + n * 86_400_000).toISOString().slice(0, 10);
 
-  it('trims to the newest DAY_LOG_DAYS calendar days, counted from the newest day present', () => {
+  it('keeps the newest DAY_LOG_DAYS days that hold points, by count', () => {
     const log = Object.fromEntries(Array.from({ length: 100 }, (_, i) => [day(i), { k: 1 }]));
     const parsed = DayLogSchema.parse(log) ?? {};
     expect(Object.keys(parsed)).toHaveLength(DAY_LOG_DAYS);
     expect(Object.keys(parsed)[0]).toBe(day(100 - DAY_LOG_DAYS));
-    // Gaps count as days: a day 70 days before the newest is out even when few days are logged.
-    expect(trimDayLog({ [day(70)]: { k: 2 }, [day(0)]: { k: 1 }, [day(69)]: { k: 1 } })).toEqual({ [day(69)]: { k: 1 }, [day(70)]: { k: 2 } });
+    // Gaps do not count: days far apart are all kept while there are at most DAY_LOG_DAYS of them.
+    expect(trimDayLog({ [day(200)]: { k: 2 }, [day(0)]: { k: 1 }, [day(69)]: { k: 1 } })).toEqual({ [day(0)]: { k: 1 }, [day(69)]: { k: 1 }, [day(200)]: { k: 2 } });
     expect(trimDayLog({})).toEqual({});
+  });
+
+  it('a far-future day evicts at most one real day, and an empty day is never kept', () => {
+    const real = Object.fromEntries(Array.from({ length: DAY_LOG_DAYS }, (_, i) => [day(i), { k: i + 1 }]));
+    const trimmed = trimDayLog({ ...real, '2099-01-01': { b: 1 } });
+    expect(Object.keys(trimmed)).toHaveLength(DAY_LOG_DAYS);
+    expect(trimmed).not.toHaveProperty(day(0));
+    expect(trimmed[day(1)]).toEqual({ k: 2 });
+    expect(trimmed['2099-01-01']).toEqual({ b: 1 });
+    // An empty day cannot become the newest day or take a place.
+    expect(trimDayLog({ [day(1)]: { k: 1 }, '2099-01-01': {} })).toEqual({ [day(1)]: { k: 1 } });
   });
 
   it('keeps at most DAY_LOG_INSTALL_KEYS_MAX install keys a day, in key order', () => {
@@ -305,10 +359,20 @@ describe('the backup memory key (F-CURR-002 section 4.8, F-SYNC-002, F-RESTORE-0
   });
 
   it('drops an unreadable key without failing the file', () => {
-    for (const memory of [null, 'x', [], { stage2: { 'lex:sagwa': { ...state, b: 8 } } }, { stage2: 'x' }]) {
+    for (const memory of [null, 'x', []]) {
       const file = BackupFileSchema.parse(backup({ ...legacy, reviews: mixedReviews }, { memory }));
       expect(file.memory).toBeUndefined();
       expect(file.snapshot.reviews.map((r) => r.id)).toEqual(keptIds);
     }
+  });
+
+  it('reads per entry: a bad item drops only itself and a bad shard only that shard', () => {
+    const memory = {
+      stage2: { 'lex:sagwa': state, 'lex:bad': { ...state, b: 8 }, 'lex:feb': { ...state, d: '2026-02-30' }, 'lex:first': { ...state, f: '2026-13-01' } },
+      'pack:numbers-time': { 'rea:price-won': { ...state, d: null } },
+      week: 'x',
+    };
+    const file = BackupFileSchema.parse(backup(legacy, { memory }));
+    expect(file.memory).toEqual({ 'pack:numbers-time': { 'rea:price-won': { ...state, d: null } }, stage2: { 'lex:sagwa': state } });
   });
 });
