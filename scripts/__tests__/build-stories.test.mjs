@@ -233,7 +233,7 @@ describe("build-stories.mjs: empty and fixture trees", () => {
     const tagged = ready({ id: "story:t", topicTags: ["tiger-tale"] });
     const bundle = buildBundle([tagged]);
     assert.equal("topicTags" in bundle.stories[0], false);
-    assert.equal(renderBundle({ ...bundle, held: [] }).includes("topicTags"), false);
+    assert.equal(Object.values(buildModules({ ...bundle, held: [] })).join("").includes("topicTags"), false);
     assert.deepEqual(tagged.topicTags, ["tiger-tale"]);
   });
 
@@ -579,7 +579,7 @@ describe("build-stories.mjs: --check", () => {
     writeFileSync(chunk, readFileSync(chunk, "utf8") + "// hand edit\n");
     const r = run(root, ["--check"]);
     assert.equal(r.status, 1);
-    assert.match(r.stdout, /story-hangul-day\.ts::generated story module is missing or out of date/);
+    assert.match(r.stdout, /story-hangul-day\.ts::generated story module is missing or differs from a fresh run/);
   });
 
   test("fails when the bundle file is missing", () => {
