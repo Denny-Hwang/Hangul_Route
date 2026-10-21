@@ -33,6 +33,9 @@ async function dashboard(page: Page, opts: { largest?: boolean } = {}): Promise<
   if (opts.largest) await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
   await openGrownUpZone(page, NAME);
   await unlockWithPin(page);
+  // The PIN screen's own title is also "Grown-up area": wait until it has gone ([OA] OA-2 checks the PIN under a
+  // shared lock, so the hand-over can take a moment longer).
+  await expect(page.getByRole('button', { name: 'Unlock' })).toHaveCount(0);
   await expect(dashboardHeading(page)).toBeVisible();
 }
 
