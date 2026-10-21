@@ -1,6 +1,7 @@
 import { addDays, dateKey } from '../curriculum/dates';
 import {
   DAY_LOG_INSTALL_KEYS_MAX,
+  GoalsSchema,
   PROGRESS_RECORD_MAX,
   capRecord,
   trimDayLog,
@@ -27,9 +28,9 @@ const codePointOrder = (a: string, b: string): number => (a < b ? -1 : a > b ? 1
 
 /**
  * Orders two ISO instants by the moment they name (an offset form and a `Z`
- * form compare as equal instants). The schemas only admit strict ISO 8601
- * with `Z` or an offset (`IsoInstantSchema`), which every engine parses the
- * same way. A value that does not parse sorts first; equal instants and two
+ * form compare as equal instants). The schemas only admit the ECMAScript
+ * Date Time String Format on a calendar day (`IsoInstantSchema`), which every
+ * engine parses the same way. A value that does not parse sorts first; equal instants and two
  * unparseable values fall back to code-point order, so the order is total.
  */
 export function compareIsoInstant(a: string, b: string): number {
@@ -159,6 +160,9 @@ export function latestLocalDay(now: Date): string {
   return addDays(dateKey(now), 1);
 }
 
+/** How far ahead of the Worker's clock a sent `goals.setAt` may be and still count as a real change made now (a fast clock). */
+export const GOALS_CLOCK_SKEW_MS = 10 * 60_000;
+
 type TimedFields = Pick<ProgressSnapshot, 'cellCheckAt' | 'stageCheckAt' | 'testedOut' | 'stamps' | 'goals' | 'dayLog' | 'streakLocal' | 'memSeededAt'>;
 const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps'] as const;
 
@@ -170,14 +174,22 @@ const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps'] as con
  * - a `dayLog` day later than `latestLocalDay(now)` is dropped;
  * - a `streakLocal` whose `lastDay` is later than that reads as absent, so the
  *   stored run is kept;
- * - a `goals.setAt`, a latch time or `memSeededAt` later than `now` is read as
- *   `now` (the `PATCH /learners` rule for `at`), so a later real change still
- *   wins.
+ * - a latch time or `memSeededAt` later than `now` is read as `now` (the
+ *   `PATCH /learners` rule for `at`); the earliest wins, so a stored earlier
+ *   time still wins;
+ * - a `goals.setAt` later than `now` but within `GOALS_CLOCK_SKEW_MS` (a
+ *   clock a little fast) is read as `now`;
+ * - a `goals.setAt` later than that reads as absent when the server already
+ *   holds goals, so the stored goals are kept; the wrong-clock device keeps
+ *   its far-future `setAt` and sends it again on every sync, and it must
+ *   never beat a later real change made on another device. With no stored
+ *   goals it is read as `now`.
  *
  * Kept out of the merge rules themselves, which stay pure, commutative and
- * free of a clock. Returns the snapshot itself when nothing is out of bounds.
+ * free of a clock. `stored` is the server's stored payload (only its `goals`
+ * is read, leniently). Returns the snapshot itself when nothing is out of bounds.
  */
-export function boundToNow<T extends Partial<TimedFields>>(snapshot: T, now: Date): T {
+export function boundToNow<T extends Partial<TimedFields>>(snapshot: T, now: Date, stored?: unknown): T {
   const nowMs = now.getTime();
   const nowIso = now.toISOString();
   const lastDay = latestLocalDay(now);
@@ -189,14 +201,18 @@ export function boundToNow<T extends Partial<TimedFields>>(snapshot: T, now: Dat
       next[key] = Object.fromEntries(Object.entries(latch).map(([id, at]) => [id, future(at) ? nowIso : at]));
     }
   }
-  if (snapshot.goals && future(snapshot.goals.setAt)) next.goals = { ...snapshot.goals, setAt: nowIso };
+  const farGoals = snapshot.goals !== undefined && Date.parse(snapshot.goals.setAt) > nowMs + GOALS_CLOCK_SKEW_MS;
+  const storedGoals = typeof stored === 'object' && stored !== null ? (stored as { goals?: unknown }).goals : undefined;
+  const dropGoals = farGoals && GoalsSchema.parse(storedGoals) !== undefined;
+  if (snapshot.goals && !dropGoals && future(snapshot.goals.setAt)) next.goals = { ...snapshot.goals, setAt: nowIso };
   if (snapshot.memSeededAt !== undefined && future(snapshot.memSeededAt)) next.memSeededAt = nowIso;
   if (snapshot.dayLog && Object.keys(snapshot.dayLog).some((day) => day > lastDay)) {
     next.dayLog = Object.fromEntries(Object.entries(snapshot.dayLog).filter(([day]) => day <= lastDay));
   }
   const dropStreak = snapshot.streakLocal !== undefined && snapshot.streakLocal.lastDay > lastDay;
-  if (!dropStreak && Object.keys(next).length === 0) return snapshot;
+  if (!dropStreak && !dropGoals && Object.keys(next).length === 0) return snapshot;
   const out: Record<string, unknown> = { ...snapshot, ...next };
   if (dropStreak) delete out.streakLocal;
+  if (dropGoals) delete out.goals;
   return out as T;
 }

@@ -77,7 +77,7 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
   if (body.baseRev !== currentRev) return conflict(current);
 
   // A wrong device clock never writes a day or a time that would win every later merge (F-CURR-002 section 4.8).
-  const sent = boundToNow(body.snapshot, new Date());
+  const sent = boundToNow(body.snapshot, new Date(), current?.payload);
   // An older app build re-uploads without the newer additive fields: keep what is stored (lib/additive-fields.ts).
   const kept = preserveAdditiveFields({ payload: sent, summary: body.summary }, current && { payload: current.payload, summary: current.summary });
   const record: SnapshotRecord = {

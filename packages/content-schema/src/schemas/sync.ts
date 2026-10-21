@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ProfileSchema } from './profile';
-import { LocalDaySchema, ProgressSnapshotSchema, lenientRecord, type ProgressSnapshot } from './progress';
+import { IsoInstantSchema, LocalDaySchema, ProgressSnapshotSchema, lenientRecord, type ProgressSnapshot } from './progress';
 import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema, type InboxPlan } from './plan';
 import { LearnerMembershipSchema } from './space';
@@ -305,7 +305,8 @@ export const BACKUP_VERSION = 1 as const;
 /**
  * One review item's state in the memory store (F-CURR-002 section 4.8, the
  * per-item fields of a shard): box, due local day, next rung, rungs passed as
- * a bitmask, reps, first day, best box and the time of the last write.
+ * a bitmask, reps, first day, best box and the time of the last write. An
+ * item that does not parse (a local-time `at` included) drops on its own.
  */
 export const MemoryItemStateSchema = z.object({
   b: z.number().int().min(0).max(7),
@@ -315,7 +316,8 @@ export const MemoryItemStateSchema = z.object({
   n: z.number().int().nonnegative(),
   f: LocalDaySchema,
   s: z.number().int().min(0).max(7),
-  at: z.string().min(1).max(40),
+  /** The last-writer-wins clock for `b`, `d` and `c`: a strict instant, so every engine orders it alike. */
+  at: IsoInstantSchema,
 });
 export type MemoryItemState = z.infer<typeof MemoryItemStateSchema>;
 
