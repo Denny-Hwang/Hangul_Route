@@ -3,7 +3,7 @@ import { D1Db, type Db, type RemoteConfigRow } from '../db';
 import type { D1Like, D1PreparedLike } from '../db/d1';
 import { scheduled } from '../index';
 import { GUARDRAIL_METRICS, MAX_GUARDRAIL_LOWERS } from '../lib/guardrail-evaluator';
-import { ROLLUP_BUDGET_METRIC } from '../lib/learning-rollups';
+import { ROLLUP_BUDGET_METRIC, rollupKeysFor } from '../lib/learning-rollups';
 import { NOTE_PURGE_LIMIT, SCHEDULED_PURGE_ROUNDS } from '../lib/note-retention';
 import { testDb as db } from './helpers/db';
 import { openSqliteD1 } from './helpers/sqlite';
@@ -17,32 +17,28 @@ const NOW = Date.parse('2026-10-21T11:17:00.000Z');
 const KIND = 'match-shape';
 const ramp = (over: Partial<RemoteConfigRow> = {}): RemoteConfigRow => ({ flag: 'dailyReview', on: true, pct: 50, updatedAt: '2026-10-10T09:00:00.000Z', reason: 'owner ramp 50', ...over });
 
-/** `n` quest sessions on KIND on `day`, `quits` of them left mid-quest, as POST /api/telemetry rolls them up. */
+/** `n` quest sessions on `day`, `quits` of them left mid-quest on KIND, rolled up as POST /api/telemetry does. */
 async function sessions(target: Db, day: string, n: number, quits: number): Promise<void> {
   for (let i = 0; i < n; i += 1) {
-    const left = i < quits ? '1' : '0';
-    await target.addRollups(day, [
-      { metric: 'session.end.questLeft', dim: '', bucket: left },
-      { metric: 'session.end.questLeft', dim: KIND, bucket: left },
-    ]);
+    await target.addRollups(day, rollupKeysFor('session.end', i < quits ? { questLeft: 1, leftAtKind: KIND } : { questLeft: 0 }));
   }
 }
 
 const BEFORE_DAYS = ['2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07'];
 const AFTER_DAYS = ['2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20'];
 
-/** A before cohort at 10% quits and an after cohort at `afterQuits` of 40 a day, 200 quest sessions each. */
+/** A before cohort at 20% quits and an after cohort at `afterQuits` of 100 a day, 500 quest sessions each. */
 async function cohorts(target: Db, afterQuits: number): Promise<void> {
-  for (const day of BEFORE_DAYS) await sessions(target, day, 40, 4);
-  for (const day of AFTER_DAYS) await sessions(target, day, 40, afterQuits);
+  for (const day of BEFORE_DAYS) await sessions(target, day, 100, 20);
+  for (const day of AFTER_DAYS) await sessions(target, day, 100, afterQuits);
 }
 
 async function breach(target: Db, flags: readonly RemoteConfigRow[] = [ramp()]): Promise<void> {
   for (const flag of flags) await target.putRemoteConfig(flag);
-  await cohorts(target, 16);
+  await cohorts(target, 40);
 }
 
-const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate:${KIND} 10.0%->40.0%`;
+const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate 20.0%->40.0%; quitRate:${KIND} 20.0%->40.0%`;
 
 /** A D1 binding over the real migrations that counts every statement prepared. */
 function countingD1(): { raw: ReturnType<typeof openSqliteD1>; own: D1Db; binding: D1Like; prepared: () => number } {
@@ -79,7 +75,7 @@ describe('scheduled · guardrail evaluator (CM-70b)', () => {
 
   it('leaves a healthy ramp as it is', async () => {
     await db.putRemoteConfig(ramp());
-    await cohorts(db, 4);
+    await cohorts(db, 20);
     await scheduled({ scheduledTime: NOW }, {});
     expect(await db.remoteConfig()).toEqual([ramp()]);
   });
@@ -97,7 +93,30 @@ describe('scheduled · guardrail evaluator (CM-70b)', () => {
       kept: [],
       skipped: [{ flag: 'goals', why: 'stale-step' }],
       deferred: [],
+      unguarded: 1,
     });
+  });
+
+  it('GUARDRAIL_EVALUATOR=disabled stops the evaluator only: the purge runs, nothing is read or lowered, and the run logs disabled', async () => {
+    await breach(db);
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    const purge = vi.spyOn(db, 'purgeRateHits');
+    const read = vi.spyOn(db, 'remoteConfig');
+    await scheduled({ scheduledTime: NOW }, { GUARDRAIL_EVALUATOR: 'disabled' });
+    expect(purge).toHaveBeenCalled();
+    expect(read).not.toHaveBeenCalled();
+    expect(await db.remoteConfig()).toEqual([ramp()]);
+    expect(info.mock.calls.map((c) => JSON.parse(String(c[0])))).toEqual([{ event: 'guardrail.run', day: '2026-10-21', disabled: true }]);
+  });
+
+  it('GUARDRAIL_EVALUATOR unset, empty or enabled runs the evaluator', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    for (const value of ['', 'enabled']) {
+      await db.reset();
+      await breach(db);
+      await scheduled({ scheduledTime: NOW }, { GUARDRAIL_EVALUATOR: value });
+      expect((await db.remoteConfig())[0]?.pct).toBe(10);
+    }
   });
 
   it('runs the retention purge first, so the evaluator never holds it up', async () => {
@@ -164,11 +183,14 @@ describe('scheduled · guardrail evaluator on D1', () => {
 
   it('reads only the guardrail metrics', async () => {
     const { raw, own } = countingD1();
-    await own.addRollups('2026-10-15', [
-      { metric: 'session.end.minutes', dim: '', bucket: '5' },
-      { metric: 'mastery.level_up', dim: 'cell:letters-1', bucket: '2' },
-    ]);
-    await own.reserveRollupCells('2026-10-15', ROLLUP_BUDGET_METRIC, 500);
+    await own.addRollups(
+      '2026-10-15',
+      [
+        { metric: 'session.end.minutes', dim: '', bucket: '5' },
+        { metric: 'mastery.level_up', dim: 'cell:letters-1', bucket: '2' },
+      ],
+      ROLLUP_BUDGET_METRIC,
+    );
     expect((await own.rollupRowsOf('2026-10-01', '2026-10-20', GUARDRAIL_METRICS, 10)).map((r) => r.metric).sort()).toEqual([ROLLUP_BUDGET_METRIC, 'session.end.minutes']);
     expect(await own.rollupRowsOf('2026-10-01', '2026-10-20', [], 10)).toEqual([]);
     expect(await own.rollupRowsOf('2026-10-01', '2026-10-20', GUARDRAIL_METRICS, 1)).toHaveLength(1);
