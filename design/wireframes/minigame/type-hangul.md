@@ -1,6 +1,6 @@
 # Minigame/Type Hangul: the in-app two-set keyboard (wireframe v1)
 
-Spec: `docs/specs/F-CURR-001-upper-stage-content.md` §3.7 item 2 (Type), §3.14 (accessibility, layout), §5 test P-1, OD-10 (in-app keyboard only), row **D-3** (this file), built in row **G-3** · extends `design/wireframes/minigame/shell.md` and `families.md` (Family 2, construction) · reused by `design/wireframes/minigame/write-frame.md` (the "type" part of a frame round)
+Spec: `docs/specs/F-CURR-001-upper-stage-content.md` §3.7 item 2 (Type), §3.14 (accessibility, layout), §5 test P-1, OD-10 (in-app keyboard only), row **D-3** (this file), built in row **G-3** · extends `design/wireframes/minigame/shell.md` and `families.md` (Family 2, construction) · reused by `design/wireframes/minigame/write-frame.md` (the "type" part of a frame round) and `my-story.md` · extended in row **CM-D2** (F-CURR-002) with the `hear` mode, Dictation, built in row **CM-31**
 Audience: **any learner, any age** (CLAUDE.md §1); the same screen for everyone. Wireframe level: structure, flow, interaction points. No colours, fonts or final copy; text in (parentheses) is a placeholder.
 Mock: `design/screens/minigame-writing/` (`type-hangul.md`, `keyboard.md`, `mock/type-hangul.html`, `mock/keyboard.html`)
 Code (planned, G-3): renderer `apps/mobile/src/screens/minigames/TypeHangulGame.tsx`; the keyboard `HangulKeyboard` in `packages/design-system` (layout only: it reports key presses and draws what it is given); its pure arrangement `keyboardLayout(...)` next to it (like `SyllableBlock/layout.ts`); round logic in `apps/mobile/src/logic/type-hangul/` (reducer, scoring); the composition `composeTyped` in `packages/content-schema` (row C-1)
@@ -169,12 +169,120 @@ The round says what the learner types from (round schema, C-1); every mode shows
 | Mode | Prompt line | Used for |
 |---|---|---|
 | `see` | (Type) `~~ 호야 ~~` (hoya) · (Hoya) | copying a word or sentence: Stage 7 q1 and q2 |
-| `hear` | [speaker, hero size] (Type the word you hear) (hoya) · (Hoya) | hear and spell; the Korean is hidden until the result panel |
+| `hear` | [speaker, hero size] (Type the word you hear) · (Hoya) {picture when the round has one} | Dictation (F-CURR-002 F2): hear and spell; the Korean and its romanization are hidden until the result panel (see "Hear mode: Dictation" below) |
 | `picture` | [WordArt picture] (Type the word for the picture) (gimbap) · (gimbap) | Stage 6 apply ("type the dish you want to order") |
 
-- `hear` shows the romanization on purpose (CLAUDE.md §1: taught Korean always carries it, and the no-voice fallback needs it), so a `hear` round is answerable from the romanization by design; the audio adds the sound, it is not the only route. Whether `hear` should hide the romanization until a replay is open question 4, decided in G-3.
-- `hear` without a Korean voice (F-AUDIO-004): the speaker is replaced by the existing no-sound line of `audio-fallback.md` and the romanization and gloss stay; the round is still answerable from the romanization.
+- `hear` hides the romanization before Done (decided in row CM-D2, superseding the earlier "keep it visible" draft and open question 4): the Korean is the answer and is not on screen, so CLAUDE.md §1 (taught Korean always carries romanization) is kept wherever the Korean is drawn, and for the unambiguous words Dictation admits the romanization maps straight to the spelling, so showing it would give the answer away and turn Dictation into transliteration. [ Show how it sounds ] reveals it as a hint (below).
+- `hear` without a Korean voice (F-AUDIO-004): the round opens as a `see` round with the visible sound notice (below); it never stays a hear round that cannot be heard.
 - In every mode the Korean target is shown in the result panel after Done; before Done only `see` shows it.
+
+## Hear mode: Dictation (F-CURR-002 F2, row CM-D2, built in row CM-31)
+
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §7.1 row F2 (Type Hangul `hear` mode, S2-S7 and review; fallback Type Hangul `see`), §4.3 (produce rung; typing tolerance: one jamo away counts as hinted), §4.5 (`dictation-unambiguous`; the read-plus-meaning spelling round), §12.2 (`game.type-hangul-hear`, the one switch of this format). Mock: `design/screens/minigame-variety/mock/dictation.html` (shots at 320 and 768) and `mock/states.html` board D.
+
+### Round shape
+
+- **Hear, then type.** The prompt is the speaker at hero size (`touchTarget.hero`), [ Hear it again ] under it, the word's meaning in the UI language, and the round's picture when it has one. The Korean target and its romanization are not shown before Done.
+- **Only items that pass `dictation-unambiguous`** reach this mode: the item's standard pronunciation has exactly one spelling among the taught items, or the meaning or picture on the prompt settles it (§4.5). Items with a `soundChange` flag stay out until recordings A-9 and A-10 exist. The lint checks authored rounds; the review engine applies the same rule when it picks Dictation at the produce rung. The prompt therefore **always** shows the meaning (and the picture when there is one), because that is what settles a homophone the rule admits.
+- **First sound.** The word is said once when the round opens (after the learner's first tap anywhere in the app, `audio-fallback.md` W8); round 1 of a step waits for a tap on the speaker, which pulses once (static under reduced motion).
+- **Checking** is the Type Hangul rule: by syllable after Done. With the F-CURR-002 §4.3 tolerance: NFC, spaces ignored, and an answer one jamo away (a missing 받침, a wrong vowel stroke) is a **near miss** that counts as hinted (no promotion, no demotion); the near-miss panel already shows the word under what was typed with Hoya's amber nudge. Two or more jamo away is the far panel. Neither is red.
+- **[ Show how it sounds ]** under the speaker reveals the romanization for this round (the placement wording, `learner.placement.item.showSound`, reused). The round is then recorded as hinted for the memory model (§4.3); its stars count as usual (the first Done scores). It is a help, never a penalty line.
+- After Done, the result panel shows the word with its romanization and meaning (`~~ 사과 ~~ (sagwa) · (apple)`), so the Korean is never drawn without its romanization.
+
+```
+Compact (320 x 568)                         after Done, near miss (사과 typed as 사가)
++--------------------------------+          +--------------------------------+
+| [(spk)] (apple)      [ Skip ]  |          | [(spk)] (apple)      [ Skip ]  |
+|         (Show how it sounds)   |  <- hint | +--------------------------+   |
+| +----------------------+ +----+|          | |  사가                    |   |
+| | 사ㄱ|                | |Done||          | +--------------------------+   |
+| +----------------------+ +----+|          | (Hoya thinking)                |
+|+------------------------------+|          | (Almost! Check the marked      |
+||  split keyboard (6 x 64)     ||          |  block.)                       |
+||                              ||          | (You typed)  [사][가 *]        |
+|+------------------------------+|          | (The word)   [사][과 *]        |
+|                                |          |   ~~ 사과 ~~ (sagwa) (apple)  |
++--------------------------------+          | [[ Fix it ]]                   |
+                                            +--------------------------------+
+```
+
+- **Below `layout.compactHeight` (a 320 x 568 phone in portrait, or any window under 640 tall)** the prompt part above the answer row has 103 of height (Type Hangul budget: 568 - 72 - 393), room for one row of `touchTarget.min`. That row holds the speaker at `touchTarget.min` (it replays on every tap, so there is no separate Hear it again), the **meaning button** and Skip; the heading is the empty field's placeholder ("Type the word you hear", the Type Hangul rule). The meaning button is one hit area at least 64 tall showing the meaning on its first line and "Show how it sounds" as a link line under it; a tap reveals the romanization in place of the link line. So every control is fully on the first screen, nothing is cut, and the answer row and the keyboard never move (review of row CM-D2: a hint row that only half showed read as broken). The count pill is left out of this row in hear mode, because the row has no room for it (the round bar is already left out below 640 tall); it comes back from 640 tall. With text at 200 % the row grows and the prompt part scrolls, as Type Hangul's does. A round's picture is left out below 640 tall (the meaning settles the item on its own; the lint requires a meaning that settles it for every round that also has a picture).
+- **From 640 tall** (375 x 667 and up): the shell's top row with the round bar, then the heading, then the prompt row: the speaker at `touchTarget.hero`, [ Hear it again ], the meaning and the picture, then [ Show how it sounds ].
+- **Regular (768 x 1024)**: the same in the reading column, the speaker at `touchTarget.hero` (it does not scale past the hero size), the standard keyboard, Done and Skip under it.
+
+### Fallback when `game.type-hangul-hear` is off
+
+The round renders as a **Type Hangul `see` round** of the same target: "(Type this word)", `~~ 사과 ~~ (sagwa) · (apple)`, the keyboard, Done. Same scoring; the memory model records the answer at the produce rung (`see` is a produce format, §4.3). No notice: the learner meets an ordinary shipped round.
+
+### No device voice
+
+```
++--------------------------------+
+| (2/4) (Type this word) [ Skip ]|  <- the round opened as see
+|  ~~ 사과 ~~ (sagwa) · (apple)  |
+| +----------------------------+ |
+| | (No sound? Read it here.)  | |  <- the visible sound notice (PromptPanel, text variant,
+| | (No Korean voice on this   | |     Korean already on screen): read line, reason, action
+| |  device.)                  | |
+| | [ How to add a voice ]     | |
+| +----------------------------+ |
+|  answer row, keyboard          |
++--------------------------------+
+```
+
+- **Decided at round open.** When the capability is `none` and the round has no playable clip, or sound is muted, the round opens as `see` with the notice shown at once (proactive, like `audio-fallback.md` W3; the reader variant of `PromptPanel` that shows with the text). Reason lines: `no_voice` "No Korean voice on this device." with [ How to add a voice ]; `muted` "Sound is off." with [ Turn sound on ]. Turning sound on keeps this round as `see` (no flicker) and the next round is `hear` again.
+- **While the capability is still `unknown`** (the first 1.5 s after the app starts), a hear round **holds its opening**: the prompt row is drawn with the speaker disabled (no pulse, its name "Hear the word" with the disabled state), the field is not focused and the keys do nothing, and nothing is said. When the capability resolves (at most 1.5 s), the round opens once, as `hear` (`available`, `blocked`) or as `see` with the notice (`none`, muted), so the screen never changes after the learner has started. If it is still `unknown` at 1.5 s the round opens as `hear`, and a play that then fails follows the `error` rule below (a change the learner's own tap starts, never a silent switch). The hold shows no spinner and no line (it is at most 1.5 s and happens only when a hear round is the first thing played after the app starts). CM-31's Playwright list covers it: a hear round opened while the capability is `unknown` that resolves to `none` opens as `see` with the notice and no key press is lost; one that resolves to `available` opens as `hear`; one still `unknown` at 1.5 s opens as `hear`.
+- **`blocked`** (the browser refused a sound before any tap): the speaker reads "Tap to hear"; that tap plays it; the round stays `hear`.
+- **`error`** (the engine failed after its one retry): the status panel under the speaker offers [ Try again ]; a second failure in the same round turns it into `see` with the notice "The sound did not play." The typed text, if any, is kept.
+- Every state scores as usual. The notice is neutral (never amber, never red), a polite live region, source `type-hangul-hear`. `audio.fallback_shown { source: 'type-hangul-hear', reason }` fires once per session and reason.
+
+### The spelling round: read plus meaning (Letters S2, F-CURR-002 §4.5 and §5.2)
+
+A pick round, not a typing round; it belongs here because it is the one heard round whose options may sound the same. It renders with the Listen & Pick option cards (`listen-pick.md`) and its own prompt.
+
+```
++--------------------------------+
+| [=====-----]          (3 / 5)  |
+|  (Which spelling matches this  |  <- heading
+|   word?)                       |
+| +----------------------------+ |
+| |  [picture: a book]         | |  <- picture or gloss: what settles it (required by the lint)
+| |  (book)                    | |  <- meaning in the UI language, plain (no grammar terms)
+| |  [ (speaker) Hear it ]     | |  <- says [채기]; plays on round open like Listen & Pick
+| +----------------------------+ |
+|  [ ~~ 책이 ~~ (chaegi) ]        |  <- two options; they may sound the same and their
+|  [ ~~ 채기 ~~ (chaegi) ]        |     romanization may be identical: only the meaning
+|  ( Hoya bubble slot )           |     and the spelling decide
++--------------------------------+
+```
+
+- **What it trains**: liaison and other sound changes (책이 is said [채기]); the picture and the plain meaning ("book") show which spelling holds the word 책. The meaning never uses grammar terms ("subject", "particle"): the copy stays at CEFR Pre-A1. A miss nudges with "Look at the meaning again." and, after the right pick, Hoya adds the sound-change line from the quest's Discover note (content, CM-0b and the S2 Volume 2 rows).
+- **Identical romanization is expected**: both options show `chaegi`, because romanization follows pronunciation (Revised Romanization). The options are still told apart by their Hangul.
+- **No device voice**: the prompt still has the picture and the meaning, so the round is answerable; the status panel (W9) appears under Hear it after a tap or after the opening sound fails; source `spelling-pick`.
+- **Its own switch: `game.spelling-pick`** (shell rule 2, registered by row CM-2). It is a new round kind on the Listen & Pick renderer (`listen-pick` with `promptKind: 'spelling'`): a new prompt, heading and miss line, and the one heard round whose options may sound alike, so a render or content fault could leave it unanswerable. F-CURR-002 §12.2 gives every new round kind a `game.<kind>` switch, and this one is no exception.
+- **Fallback when `game.spelling-pick` is off: Listen & Pick on the same word**, derived by `spellingPickToListenPick(round)` (pure, next to the round schema): the shipped Listen & Pick round in its shipped audio prompt (no new mode), the target is the round's right spelling (책이 `chaegi`), and the other options are taught words that pass `dictation-unambiguous` against it (they sound different, e.g. 학교 `hakgyo`, 우유 `uyu`), so every option left has one right answer by sound alone; the look-alike spelling (채기) is left out. The picture and meaning are not shown (Listen & Pick's shipped look). Same scoring; the memory model records the round at the recognize rung of the word, as Listen & Pick does. With no device voice the fallback is Listen & Pick's shipped no-voice state. The learner sees no notice. The switch-off content test (spec §14) renders and answers the fallback of every S2 spelling round.
+- CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss.
+- Accessibility: the prompt reads "Picture: a book. Book." then "Hear it"; each option reads its Hangul letter by letter and its romanization ("책이, chaegi"), because the two options would otherwise sound the same to a screen-reader user.
+
+### Accessibility (hear mode)
+
+- The speaker is the first focus target after the heading: "Hear the word" (`a11y.minigame.dictation.speaker`); its state follows the `audio-fallback.md` rule. The meaning and the picture are read after it ("Meaning: apple").
+- [ Show how it sounds ] is a button; after it the romanization is a polite live region ("sagwa").
+- The field and the result panel keep the Type Hangul rules above.
+
+### Draft strings (CM-31 adds them with their es and ko values)
+
+Reused as they are: `typeHangul.heading.see` (the fallback), `typeHangul.near` / `far` / `pass`, `typeHangul.fixIt`, `listenPick.hearAgain`, `audio.*`, `learner.placement.item.showSound` ("Show how it sounds"; CM-31 confirms the key path when it moves the string to a shared place, keeping the reviewed es and ko).
+
+| Key (proposed) | en draft |
+|---|---|
+| `typeHangul.heading.hear` | Type the word you hear |
+| `typeHangul.hear.showSound` | Show how it sounds (the meaning button's link line; the same en, es and ko as `learner.placement.item.showSound`) |
+| `typeHangul.hear.meaning(gloss)` | Meaning: {gloss} |
+| `spellingPick.heading` | Which spelling matches this word? |
+| `spellingPick.miss` | Look at the meaning again. |
+| `a11y.minigame.dictation.speaker` | Hear the word |
+| `a11y.minigame.dictation.speakerAgain` | Hear the word again |
 
 ## Interaction points
 
@@ -199,7 +307,7 @@ Exit to: `quest/player` (always, via goBack).
 - **pass** / **near miss** / **far miss**: as drawn.
 - **no rounds** (scope resolves to zero rounds): the shell's empty state.
 - **error** (unknown ref): the shell's error state with its way back to the quest.
-- **no Korean voice** (`hear`): the audio-fallback line; never a silent dead end.
+- **no Korean voice** (`hear`): the round renders as `see` with the sound notice ("Hear mode: Dictation" below); never a silent dead end.
 - **large text (200 %)**: the prompt and the field text grow; key faces are media and keep the cell size; the part above the keyboard scrolls; the keyboard never shrinks under the floor.
 - **reduced motion**: the result panel appears without a slide; the caret does not blink.
 
@@ -227,6 +335,7 @@ No `packages/i18n` key is added by this design row. G-3 adds these under `learne
 |---|---|
 | `typeHangul.heading.see` | Type this word |
 | `typeHangul.heading.hear` | Type the word you hear |
+| `typeHangul.hear.showSound` | Show how it sounds (the meaning button's link line; the same en, es and ko as `learner.placement.item.showSound`) |
 | `typeHangul.heading.picture` | Type the word for the picture |
 | `typeHangul.pass` | You typed it! |
 | `typeHangul.near` | Almost! Check the marked block. |
@@ -248,4 +357,4 @@ No `packages/i18n` key is added by this design row. G-3 adds these under `learne
 3. **The `silent/ng` face.** At 320 the visible key is 60 wide; "silent/ng" at caption size is the longest face and fits in the mock (checked in `shots/keyboard-board.png`, board K1). If a locale ever needs a longer face, the face shows the letter only and the sound stays in the accessible name.
 4. **Hear a key.** Long-press to hear a letter's sound is not in G-3 (no key sounds). Revisit after the first Stage 7 lessons ship.
 5. **Assumption to test in G-3**: split rows are learnable at the speed Stage 7 needs (two to five blocks per answer). The Playwright spec times a scripted entry only for regressions; real speed comes from the first lessons.
-4. **Romanization in `hear` mode.** (Open: G-3 shipped `see` and `picture` only, because the C-1 `TypeHangulRoundSchema` has no `mode` or `audioRef`. The first S6 or S7 row that authors a `hear` round adds both fields additively, `heading.hear` in en / es / ko and this choice; F-CURR-001 section 6 notes it.) This design keeps it visible (see the input modes). G-3 may instead show it only after the first replay, or only in the no-voice fallback state, if playtests show learners skip the audio; the choice and its reason go in the G-3 PR, with the e2e updated to match.
+6. **Romanization in `hear` mode.** Decided in row CM-D2 (F-CURR-002): hidden before Done, with [ Show how it sounds ] as a hint; see "Hear mode: Dictation". The G-3 note that the first S6 or S7 row adds `mode` and `audioRef` additively is now row CM-31.
