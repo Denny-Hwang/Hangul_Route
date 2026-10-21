@@ -85,3 +85,23 @@ export function clearGrownUpTab(storage: KeyValueStorage | null = defaultStorage
   if (options.keepInvite) keepAdminInviteThroughSignOut();
   else clearAdminInvite(storage);
 }
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2 moment 3: the spec's `pinOwnerOfferClosed`, the PIN-owner card
+ * closed for one `pin` unlock in this tab (Not now, or the first navigation away from the persona home). It holds
+ * only that unlock's `at` (a number), so a later unlock offers the card again.
+ */
+export const PIN_OWNER_OFFER_CLOSED_SESSION_KEY = 'hr:grownup:pinOwnerOfferClosed';
+
+/** [OA] The unlock time the PIN-owner card was closed for, or null (absent, corrupt, storage refused). */
+export function readPinOwnerOfferClosed(storage: KeyValueStorage | null = defaultStorage()): number | null {
+  const raw = readItem(storage, PIN_OWNER_OFFER_CLOSED_SESSION_KEY);
+  if (raw === null) return null;
+  const at = Number(raw);
+  return raw.trim() !== '' && Number.isFinite(at) ? at : null;
+}
+
+/** [OA] Closes the PIN-owner card for the unlock made at `at`. */
+export function writePinOwnerOfferClosed(at: number, storage: KeyValueStorage | null = defaultStorage()): void {
+  writeItem(storage, PIN_OWNER_OFFER_CLOSED_SESSION_KEY, String(at));
+}

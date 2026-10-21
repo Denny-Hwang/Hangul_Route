@@ -88,8 +88,6 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.lecture.card.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the link\'s accessible description, read aloud and never drawn',
   // AMENDMENTS-LECTURE-V2 LV-6 (section 12.4): the learner app's Lecture mode card buttons, which open the presenter in a new tab.
   'caregiver.lecture.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the buttons\' accessible description, read aloud and never drawn (the same words as console.lecture.card.opensTab)',
-  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.5 (OA-3; design/screens/profiles/README.md "es and ko lengths").
-  'console.lock.passkey.cta': '"Usar una llave de acceso" (24) against "Use a passkey" (13): "llave de acceso" is the usual Spanish name of a passkey; the lock\'s full-width secondary button (400 px column), on one line at 320',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

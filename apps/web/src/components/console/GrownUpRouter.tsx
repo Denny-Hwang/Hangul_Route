@@ -10,7 +10,7 @@ import { createConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl } from '@/lib/console/config';
 import { readDeviceGate } from '@/lib/console/device-marker';
 import { readLastPersona } from '@/lib/console/shell-store';
-import { finishReverify, grantSignInUnlock, resolveDestination, settleSignIn, type RouteIo, type SignInIo } from '@/lib/console/signin-flow';
+import { finishReverify, grantSignInUnlock, mayBePinBrowser, resolveDestination, settleSignIn, type RouteIo, type SignInIo } from '@/lib/console/signin-flow';
 import { clearSignInRecord, readSignInRecord } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
@@ -129,7 +129,7 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
     const done = (verified: boolean): void => {
       void finishReverify(env, device, verified, { next, accountId }).then(() => setPhase({ at: 'route' }));
     };
-    const refusePasskey = isResetLeg(next) || (device.readable ? device.marker?.gate === 'pin' : device.reason === 'failed');
+    const refusePasskey = isResetLeg(next) || mayBePinBrowser(device);
     return (
       <ReverifyPanel
         title={s.reverify.title}

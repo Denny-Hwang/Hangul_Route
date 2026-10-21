@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { expect, test, type BrowserContext, type Page, type Route } from '@playwright/test';
+import { touchTarget } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import { API, NOW, SESSION_KEY } from './report-fixtures';
 
@@ -155,12 +156,26 @@ test.describe('one account, many users: the console side (row OA-3)', () => {
     await expect(page.getByTestId('adult-frame')).toBeVisible();
     await page.evaluate(() => {
       const channel = new BroadcastChannel('hr-grownup');
-      channel.postMessage({ v: 1, kind: 'lock', profileId: 'p1' });
+      channel.postMessage({ v: 1, kind: 'open' });
+      channel.postMessage({ kind: 'lock' });
       channel.postMessage('lock');
       channel.close();
     });
     await page.waitForTimeout(300);
     await expect(page.getByTestId('grown-up-lock')).toHaveCount(0);
+  });
+
+  test('a lock message with an extra field still locks (the safe direction)', async ({ page, context }) => {
+    await mockConsole(context, signInUnlock);
+    await seedDevice(page, { marker: { v: 1, gate: 'nopin' }, shell: { pinPromptSeen: true } });
+    await page.goto('/parent');
+    await expect(page.getByTestId('adult-frame')).toBeVisible();
+    await page.evaluate(() => {
+      const channel = new BroadcastChannel('hr-grownup');
+      channel.postMessage({ v: 1, kind: 'lock', at: 1 });
+      channel.close();
+    });
+    await expect(page.getByTestId('grown-up-lock')).toBeVisible();
   });
 
   test('the set-a-PIN card shows once on a nopin browser', async ({ page, context }) => {
@@ -209,6 +224,20 @@ test.describe('one account, many users: the console side (row OA-3)', () => {
     expect(JSON.stringify(await readShell(page, 'pinOwner'))).not.toContain(ACCOUNT);
   });
 
+  test('Not now closes the PIN-owner card for this unlock in this tab, and a reload keeps it closed', async ({ page, context }) => {
+    await mockConsole(context, { v: 1, at: AT - 10_000, seen: AT - 10_000, src: 'pin', pinEpoch: EPOCH });
+    await seedDevice(page, { marker: { v: 1, gate: 'pin', pinEpoch: EPOCH }, shell: { pinEpoch: EPOCH } });
+    await page.goto('/parent');
+    await expect(page.getByTestId('pin-owner-card')).toBeVisible();
+    await page.getByTestId('pin-owner-not-now').click();
+    await expect(page.getByTestId('pin-owner-card')).toHaveCount(0);
+    expect(await page.evaluate(() => window.sessionStorage.getItem('hr:grownup:pinOwnerOfferClosed'))).toBe(String(AT - 10_000));
+    expect(await readShell(page, 'pinOwner')).toBeUndefined();
+    await page.reload();
+    await expect(page.getByTestId('adult-frame')).toBeVisible();
+    await expect(page.getByTestId('pin-owner-card')).toHaveCount(0);
+  });
+
   for (const width of [320, 1280]) {
     test(`the cards fit at ${width} with no sideways scroll`, async ({ page, context }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -218,8 +247,8 @@ test.describe('one account, many users: the console side (row OA-3)', () => {
       await expect(page.getByTestId('pin-owner-card')).toBeVisible();
       const { scroll, inner } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, inner: window.innerWidth }));
       expect(scroll).toBeLessThanOrEqual(inner);
-      const box = await page.getByTestId('pin-owner-cta').boundingBox();
-      expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);
+      // The touch floor of every button (CLAUDE.md, `touchTarget.min`).
+      for (const id of ['pin-owner-cta', 'pin-owner-not-now']) expect((await page.getByTestId(id).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(touchTarget.min);
       if (process.env.ONE_ACCOUNT_SHOTS) await page.screenshot({ path: `${process.env.ONE_ACCOUNT_SHOTS}/pin-owner-${width}.png`, fullPage: true });
       await page.getByTestId('pin-owner-cta').click();
       await expect(page.getByTestId('pin-owner-done')).toBeVisible();
@@ -234,6 +263,7 @@ test.describe('one account, many users: the console side (row OA-3)', () => {
       await expect(page.getByTestId('pin-prompt-card')).toBeVisible();
       const { scroll, inner } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, inner: window.innerWidth }));
       expect(scroll).toBeLessThanOrEqual(inner);
+      expect((await page.getByTestId('pin-prompt-open').boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(touchTarget.min);
       if (process.env.ONE_ACCOUNT_SHOTS) await page.screenshot({ path: `${process.env.ONE_ACCOUNT_SHOTS}/pin-prompt-${width}.png` });
     });
   }

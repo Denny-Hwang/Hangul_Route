@@ -121,6 +121,8 @@ const ORIGIN = 'https://app.hangulroute.com';
 const NOW = 1_800_000_000_000;
 const PIN_DEVICE: DeviceGateRead = { readable: true, marker: { v: 1, gate: 'pin', pinEpoch: 1_790_000_000_000 }, hasProfiles: true };
 const NONE_DEVICE: DeviceGateRead = { readable: true, marker: { v: 1, gate: 'none' }, hasProfiles: false };
+/** [OA] A learner app older than A-6: profiles and no marker (it may hold a PIN). */
+const LEGACY_DEVICE: DeviceGateRead = { readable: true, marker: null, hasProfiles: true };
 const CLASS = { space: { kind: 'class' }, role: 'owner' };
 const FAMILY = { space: { kind: 'family' }, role: 'owner' };
 
@@ -577,39 +579,45 @@ describe('the router after sign-in (sections 3.5, 3.7, 3.9)', () => {
     expect(browser.replaced).toEqual(['/teach/home']);
   });
 
-  it('[OA] on a pin browser a reverification that used one of the account’s passkeys writes no unlock (CS-17)', async () => {
-    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
-    stores.device = PIN_DEVICE;
-    api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => ({ passkeys: [{ lastUsedAt: new Date(Date.now() + 1_000) }] }) };
-    await render(<SignInPage />);
-    expect(clerk.reverifyAsked).toBe(1);
-    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
-    expect(browser.replaced).toEqual(['/teach/home']);
+  it('[OA] on a pin browser an account that holds a passkey gets no reverification and no unlock (CS-17, fail closed)', async () => {
+    for (const reload of [async () => ({ passkeys: [{ lastUsedAt: null }] }), async () => ({ passkeys: [{ lastUsedAt: new Date(Date.now() + 1_000) }] })]) {
+      browser.session.map.clear();
+      browser.replaced = [];
+      clerk.reverifyAsked = 0;
+      browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
+      stores.device = PIN_DEVICE;
+      api.spaces = { ok: true, data: [CLASS] };
+      clerk.user = { passkeys: [{ lastUsedAt: null }], reload };
+      const page = await render(<SignInPage />);
+      expect(clerk.reverifyAsked).toBe(0);
+      expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
+      expect(browser.replaced).toEqual(['/teach/home']);
+      act(() => page.unmount());
+    }
   });
 
-  it('[OA] a passkey holder whose passkey was not used since unlocks; an account that cannot be read fails closed', async () => {
+  it('[OA] on a pin browser an account without a passkey unlocks after the reverification', async () => {
     browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
     stores.device = PIN_DEVICE;
     api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => ({ passkeys: [{ lastUsedAt: null }] }) };
     await render(<SignInPage />);
+    expect(clerk.reverifyAsked).toBe(1);
     expect(JSON.parse(browser.session.getItem('hr:grownup:unlock') ?? 'null')).toMatchObject({ src: 'signin' });
   });
 
-  it('[OA] the passkey check compares Clerk stamps only: a stamp that moved refuses even with this clock 5 minutes fast', async () => {
+  it('[OA] a passkey that shows up during the dialog refuses it, comparing Clerk stamps only (this clock 5 minutes fast)', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(NOW + 5 * 60_000);
     browser.session.setItem(SIGNIN_RECORD_KEY, JSON.stringify({ v: 1, kind: 'proof', sessionId: 'sess_1', secret: false, at: NOW + 5 * 60_000 - 1_000 }));
     stores.device = PIN_DEVICE;
     api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ id: 'pk_1', lastUsedAt: new Date(NOW - 86_400_000) }], reload: async () => ({ passkeys: [{ id: 'pk_1', lastUsedAt: new Date(NOW - 60_000) }] }) };
+    clerk.user = { passkeys: [], reload: async () => ({ passkeys: [{ id: 'pk_1', lastUsedAt: new Date(NOW - 60_000) }] }) };
     await render(<SignInPage />);
     expect(clerk.reverifyAsked).toBe(1);
     expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
     vi.restoreAllMocks();
   });
 
-  it('[OA] with a passkey to refuse, the reverification waits for Clerk’s user; a user that loads as none fails closed', async () => {
+  it('[OA] with a passkey to refuse, the reverification waits for Clerk’s user; a user that loads as none fails closed with no dialog', async () => {
     browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
     stores.device = PIN_DEVICE;
     api.spaces = { ok: true, data: [CLASS] };
@@ -623,7 +631,7 @@ describe('the router after sign-in (sections 3.5, 3.7, 3.9)', () => {
       page.update(<SignInPage />);
       for (let i = 0; i < 20; i += 1) await Promise.resolve();
     });
-    expect(clerk.reverifyAsked).toBe(1);
+    expect(clerk.reverifyAsked).toBe(0);
     expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
   });
 
@@ -631,8 +639,19 @@ describe('the router after sign-in (sections 3.5, 3.7, 3.9)', () => {
     browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
     stores.device = PIN_DEVICE;
     api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => Promise.reject(new Error('offline')) };
+    clerk.user = { passkeys: [], reload: async () => Promise.reject(new Error('offline')) };
     await render(<SignInPage />);
+    expect(clerk.reverifyAsked).toBe(1);
+    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
+  });
+
+  it('[OA] profiles with no marker (a learner app older than A-6) refuse a passkey holder like a pin browser', async () => {
+    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
+    stores.device = LEGACY_DEVICE;
+    api.spaces = { ok: true, data: [CLASS] };
+    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => ({ passkeys: [{ lastUsedAt: null }] }) };
+    await render(<SignInPage />);
+    expect(clerk.reverifyAsked).toBe(0);
     expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
   });
 

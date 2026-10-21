@@ -5,9 +5,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 /**
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-3 (sections 7.1, 7.2 and 7.4): the auth bridge's part. Sign out deletes
  * `deviceUses` before it leaves; Use a passkey is Clerk's session verification with the passkey factor; the moment-3
- * reverification refuses when one of the account's passkeys was used during the dialog: its `lastUsedAt` moved between
- * the snapshot taken before and the account read again after (Clerk does not name the factor its dialog used; server
- * stamps only, never this device's clock). The dev bridge offers no passkey and counts the dev bearer as a password.
+ * reverification (whose factor Clerk does not name) opens only for an account that holds no passkey, so it fails
+ * closed without resting on how Clerk stamps `lastUsedAt`, and a passkey that shows up during the dialog refuses it too
+ * (server stamps only, never this device's clock). The dev bridge offers no passkey and counts the dev bearer as a
+ * password.
  */
 const shell = vi.hoisted(() => ({ deleted: 0, order: [] as string[] }));
 vi.mock('@/lib/console/shell-store', async (original) => ({
@@ -22,7 +23,7 @@ vi.mock('@/lib/console/shell-store', async (original) => ({
 type Passkey = { lastUsedAt: Date | null };
 const clerk = vi.hoisted(() => ({
   dialog: 'verify' as 'verify' | 'cancel',
-  passkeys: [] as Passkey[],
+  passkeys: [] as Passkey[] | undefined,
   reloaded: [] as Passkey[] | 'fail',
   session: null as null | { startVerification: (p: unknown) => Promise<unknown>; verifyWithPasskey: () => Promise<{ status: string }> },
   calls: [] as string[],
@@ -55,6 +56,7 @@ vi.mock('@clerk/clerk-react', () => ({
     async (...args: unknown[]) => {
       const first = (await fetcher(...args)) as { clerk_error?: unknown };
       if (!first || !('clerk_error' in first)) return first;
+      clerk.calls.push('dialog');
       if (clerk.dialog === 'cancel') throw Object.assign(new Error('cancelled'), { code: 'reverification_cancelled' });
       return fetcher(...args);
     },
@@ -162,25 +164,36 @@ describe('verifyPasskey: Clerk session verification with the passkey factor (sec
 });
 
 describe('reverifySecret: moment 3 takes a password or a code, never a passkey (section 7.2)', () => {
-  it('an account without passkeys is done after the dialog', async () => {
-    expect(await (await mount(true)).reverifySecret()).toBe('done');
+  it('an account without passkeys is done after the dialog, and the card may be offered', async () => {
+    const auth = await mount(true);
+    expect(auth.secretReverifyReady).toBe(true);
+    expect(await auth.reverifySecret()).toBe('done');
+    expect(clerk.calls).toEqual(['dialog']);
   });
 
-  it('a passkey of the account used since the dialog opened refuses it', async () => {
-    clerk.passkeys = [{ lastUsedAt: null }];
-    clerk.reloaded = [{ lastUsedAt: new Date(Date.now() + 1_000) }];
-    expect(await (await mount(true)).reverifySecret()).toBe('refused');
+  it('an account that holds a passkey is refused before any dialog, whatever its stamps say (fail closed)', async () => {
+    for (const reloaded of [[{ lastUsedAt: null }], [{ lastUsedAt: new Date(Date.now() - 24 * 60 * 60_000) }], 'fail' as const]) {
+      clerk.passkeys = [{ lastUsedAt: new Date(Date.now() - 24 * 60 * 60_000) }];
+      clerk.reloaded = reloaded;
+      clerk.calls = [];
+      const auth = await mount(true);
+      expect(auth.secretReverifyReady).toBe(false);
+      expect(await auth.reverifySecret()).toBe('refused');
+      expect(clerk.calls).toEqual([]);
+      act(() => mounted?.unmount());
+    }
   });
 
-  it('a passkey not used since is done', async () => {
-    clerk.passkeys = [{ lastUsedAt: new Date(Date.now() - 24 * 60 * 60_000) }];
-    clerk.reloaded = [{ lastUsedAt: new Date(Date.now() - 24 * 60 * 60_000) }];
-    expect(await (await mount(true)).reverifySecret()).toBe('done');
+  it('an account whose passkeys could not be read is refused before any dialog', async () => {
+    clerk.passkeys = undefined;
+    const auth = await mount(true);
+    expect(auth.secretReverifyReady).toBe(false);
+    expect(await auth.reverifySecret()).toBe('refused');
+    expect(clerk.calls).toEqual([]);
   });
 
-  it('compares Clerk stamps only: a stamp that moved refuses even when this device’s clock runs 5 minutes fast', async () => {
+  it('a passkey that shows up during the dialog refuses it (Clerk stamps only, even with this clock 5 minutes fast)', async () => {
     const base = Date.now();
-    clerk.passkeys = [{ lastUsedAt: new Date(base - 24 * 60 * 60_000) }];
     clerk.reloaded = [{ lastUsedAt: new Date(base - 60_000) }];
     const spy = vi.spyOn(Date, 'now').mockReturnValue(base + 5 * 60_000);
     try {
@@ -190,8 +203,7 @@ describe('reverifySecret: moment 3 takes a password or a code, never a passkey (
     }
   });
 
-  it('an account that cannot be read again, holding a passkey, fails closed', async () => {
-    clerk.passkeys = [{ lastUsedAt: null }];
+  it('an account that cannot be read again after the dialog fails closed', async () => {
     clerk.reloaded = 'fail';
     expect(await (await mount(true)).reverifySecret()).toBe('refused');
   });
@@ -202,6 +214,8 @@ describe('reverifySecret: moment 3 takes a password or a code, never a passkey (
   });
 
   it('the dev bridge counts the dev bearer as a password', async () => {
-    expect(await (await mount(false)).reverifySecret()).toBe('done');
+    const auth = await mount(false);
+    expect(auth.secretReverifyReady).toBe(true);
+    expect(await auth.reverifySecret()).toBe('done');
   });
 });

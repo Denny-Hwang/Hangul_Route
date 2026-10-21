@@ -309,11 +309,15 @@ describe('hiddenTooLong: the 5-minute hidden rule (OA-D16, CS-14)', () => {
 });
 
 describe('isGrownUpLockMessage: the hr-grownup message (section 7.6)', () => {
-  it('accepts exactly { v: 1, kind: "lock" }', () => {
+  it('accepts { v: 1, kind: "lock" }, the message the learner app posts', () => {
     expect(isGrownUpLockMessage({ v: 1, kind: 'lock' })).toBe(true);
   });
 
-  it.each([{ v: 2, kind: 'lock' }, { v: 1, kind: 'open' }, { v: 1, kind: 'lock', profileId: 'p1' }, { kind: 'lock' }, 'lock', null, undefined, 1])('rejects %j', (data) => {
+  it.each([{ v: 1, kind: 'lock', at: 1 }, { v: 1, kind: 'lock', reason: 'chooser' }, { v: 2, kind: 'lock' }])('locks in the safe direction on a later shape %j (CS-2)', (data) => {
+    expect(isGrownUpLockMessage(data)).toBe(true);
+  });
+
+  it.each([{ v: 1, kind: 'open' }, { kind: 'lock' }, { v: 0, kind: 'lock' }, { v: 1.5, kind: 'lock' }, { v: '1', kind: 'lock' }, ['lock'], 'lock', null, undefined, 1])('ignores %j', (data) => {
     expect(isGrownUpLockMessage(data)).toBe(false);
   });
 });

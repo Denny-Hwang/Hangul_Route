@@ -16,7 +16,7 @@ vi.mock('idb-keyval', () => ({
 
 import type { DeviceGateRead } from '../grown-up-lock';
 import { PIN_RESET_PATH } from '../one-account';
-import { finishReverify, grantSignInUnlock, isSecretProvingSignIn, planAfterSignIn, proofAtSignIn, proofFromSignUp, recordPinOwner, secretFactorVerifiedHere, settleSignIn, type SignInIo, type UnlockWriters } from '../signin-flow';
+import { finishReverify, grantSignInUnlock, isSecretProvingSignIn, mayBePinBrowser, planAfterSignIn, proofAtSignIn, proofFromSignUp, recordPinOwner, secretFactorVerifiedHere, settleSignIn, type SignInIo, type UnlockWriters } from '../signin-flow';
 import type { SignInRecord } from '../signin-record';
 
 /**
@@ -32,6 +32,9 @@ const NOPIN: DeviceGateRead = { readable: true, marker: { v: 1, gate: 'nopin' },
 const NONE: DeviceGateRead = { readable: true, marker: { v: 1, gate: 'none' }, hasProfiles: true };
 const FAILED: DeviceGateRead = { readable: false, reason: 'failed' };
 const NO_IDB: DeviceGateRead = { readable: false, reason: 'unavailable' };
+/** A learner app older than A-6: profiles and no marker, which may hold a PIN (fail closed, as the passkey button). */
+const LEGACY: DeviceGateRead = { readable: true, marker: null, hasProfiles: true };
+const EMPTY: DeviceGateRead = { readable: true, marker: null, hasProfiles: false };
 
 const pinUnlock = (at: number): GrownUpUnlock => ({ v: 1, at, seen: at, src: 'pin', pinEpoch: EPOCH });
 
@@ -61,13 +64,19 @@ function writers(earlier: GrownUpUnlock | null): UnlockWriters & { log: string[]
 }
 
 describe('isSecretProvingSignIn: the passkey rule (section 7.4, CS-17)', () => {
-  it('a passkey does not count on a pin browser, nor where the read failed', () => {
+  it('a passkey does not count on a pin browser, where the read failed, nor on profiles with no marker', () => {
     expect(isSecretProvingSignIn({ factor: 'passkey', device: PIN, resetLeg: false })).toBe(false);
     expect(isSecretProvingSignIn({ factor: 'passkey', device: FAILED, resetLeg: false })).toBe(false);
+    expect(isSecretProvingSignIn({ factor: 'passkey', device: LEGACY, resetLeg: false })).toBe(false);
   });
 
   it('a passkey counts on every other browser', () => {
-    for (const device of [NOPIN, NONE, NO_IDB, { readable: true, marker: null, hasProfiles: true } as DeviceGateRead]) expect(isSecretProvingSignIn({ factor: 'passkey', device, resetLeg: false })).toBe(true);
+    for (const device of [NOPIN, NONE, NO_IDB, EMPTY]) expect(isSecretProvingSignIn({ factor: 'passkey', device, resetLeg: false })).toBe(true);
+  });
+
+  it('mayBePinBrowser is the passkey button rule: a pin marker, a failed read, profiles with no marker', () => {
+    for (const device of [PIN, FAILED, LEGACY]) expect(mayBePinBrowser(device)).toBe(true);
+    for (const device of [NOPIN, NONE, NO_IDB, EMPTY]) expect(mayBePinBrowser(device)).toBe(false);
   });
 
   it('a password or a code counts everywhere off the reset leg', () => {
@@ -82,6 +91,7 @@ describe('isSecretProvingSignIn: the passkey rule (section 7.4, CS-17)', () => {
     for (const factor of [undefined, null, '', 'oauth_google', 'ticket', 'totp']) {
       expect(isSecretProvingSignIn({ factor, device: PIN, resetLeg: false })).toBe(false);
       expect(isSecretProvingSignIn({ factor, device: FAILED, resetLeg: false })).toBe(false);
+      expect(isSecretProvingSignIn({ factor, device: LEGACY, resetLeg: false })).toBe(false);
     }
   });
 
@@ -109,6 +119,10 @@ describe('planAfterSignIn with the factor and the reset leg', () => {
   it('a secret proof with no factor on a pin browser asks for the reverification (which refuses a passkey) instead of opening', () => {
     expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: PIN, now: NOW })).toBe('reverify');
     expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: FAILED, now: NOW })).toBe('reverify');
+    // Profiles with no marker (a learner app older than A-6): a passkey unlocks nothing, an absent factor reverifies.
+    expect(planAfterSignIn({ record: proof('passkey'), sessionId: 's1', device: LEGACY, now: NOW })).toBe('none');
+    expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: LEGACY, now: NOW })).toBe('reverify');
+    expect(planAfterSignIn({ record: proof('password'), sessionId: 's1', device: LEGACY, now: NOW })).toBe('unlock');
     expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: NOPIN, now: NOW })).toBe('unlock');
     expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: PIN, now: NOW, next: PIN_RESET_PATH })).toBe('none');
   });

@@ -7,7 +7,7 @@ import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkLocalization } from '@/lib/console/clerk-localization';
 import { clerkPublishableKey } from '@/lib/console/config';
 import { signInHome } from '@/lib/console/grown-up-lock';
-import { passkeySnapshot, passkeyUsedDuring, type PasskeyLike } from '@/lib/console/one-account';
+import { passkeySnapshot, passkeyUsedDuring, secretReverifyAllowed, type PasskeyLike } from '@/lib/console/one-account';
 import { deleteDeviceUses } from '@/lib/console/shell-store';
 import { reverifyOnce, withTimeout } from '@/lib/console/signin-flow';
 import { ROUTES } from '@/lib/console/routing';
@@ -70,12 +70,14 @@ export interface ConsoleAuth {
   verifyPasskey: () => Promise<boolean>;
   /**
    * [OA] Section 7.2 moment 3: Clerk reverification that must be a password, an email code or a phone code. Clerk does
-   * not name the factor its dialog used, so a passkey whose `lastUsedAt` moved between the snapshot taken before the
-   * dialog and the account read again after it refuses it (`refused`; server stamps only, never this device's clock;
-   * an account without a passkey list, or one that holds a passkey and could not be read again, fails closed). Dev mode (no Clerk,
-   * never on a production build with Clerk) counts the dev bearer as a password, as the dev sign-in does.
+   * not name the factor its dialog used, so the dialog opens only for an account that holds no passkey
+   * (`secretReverifyAllowed`): an account with a passkey, or one not loaded, is `refused` before any dialog. A passkey
+   * that shows up during the dialog (its `lastUsedAt` moved, or a new one; server stamps only) refuses it too. Dev mode
+   * (no Clerk, never on a production build with Clerk) counts the dev bearer as a password, as the dev sign-in does.
    */
   reverifySecret: () => Promise<SecretReverify>;
+  /** [OA] Whether `reverifySecret` can complete for this account (no passkey on it); the PIN-owner card shows only then. */
+  secretReverifyReady: boolean;
 }
 
 /** [OA] How a moment-3 reverification ended. */
@@ -101,6 +103,7 @@ const SIGNED_OUT: ConsoleAuth = {
   localeUser: null,
   verifyPasskey: async () => false,
   reverifySecret: async () => 'unavailable',
+  secretReverifyReady: false,
 };
 
 const ConsoleAuthContext = createContext<ConsoleAuth>(SIGNED_OUT);
@@ -196,6 +199,8 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
   const reverifySecret = useCallback(async (): Promise<SecretReverify> => {
     const account = user as unknown as LocaleUser | null | undefined;
     if (!account) return 'unavailable';
+    // Fail closed: a dialog that could offer a passkey never opens (sections 7.2 and 7.4).
+    if (!secretReverifyAllowed(account.passkeys)) return 'refused';
     const before = passkeySnapshot(account.passkeys);
     const hint = await reverifyOnce()();
     const outcome = await reverify(async () => ({ verified: true }), hint as unknown);
@@ -206,7 +211,8 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
     } catch {
       after = null;
     }
-    return passkeyUsedDuring(before, after) ? 'refused' : 'done';
+    // An account that could not be read again fails closed too.
+    return after === null || passkeyUsedDuring(before, after) ? 'refused' : 'done';
   }, [user, reverify]);
   const value = useMemo<ConsoleAuth>(
     () => ({
@@ -226,6 +232,7 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
       localeUser: isLoaded && user ? (user as unknown as LocaleUser) : null,
       verifyPasskey,
       reverifySecret,
+      secretReverifyReady: isLoaded && !!user && secretReverifyAllowed((user as unknown as LocaleUser).passkeys),
     }),
     [isLoaded, user, sessionId, getToken, clerk, reverify, locale, verifyPasskey, reverifySecret],
   );
@@ -262,6 +269,7 @@ function DevBridge({ children }: { children: ReactNode }): JSX.Element {
       localeUser: null,
       verifyPasskey: async () => false,
       reverifySecret: async () => 'done',
+      secretReverifyReady: true,
     }),
     [ready, session, devSignIn],
   );

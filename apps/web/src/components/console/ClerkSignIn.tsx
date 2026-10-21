@@ -16,7 +16,7 @@ import {
   type ClerkSignUpLike,
 } from '@/lib/console/signin-flow';
 import { clearAffirmation, readSignInRecord, writeOAuthStarted, writeSecretVerified, writeSignInProof } from '@/lib/console/signin-record';
-import { passkeySnapshot, passkeyUsedDuring, type PasskeyLike } from '@/lib/console/one-account';
+import { passkeySnapshot, passkeyUsedDuring, secretReverifyAllowed, type PasskeyLike } from '@/lib/console/one-account';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { RetryPanel, WidgetBox } from './SignInParts';
 
@@ -149,13 +149,20 @@ export function ClerkReverify({ onDone, refusePasskey = false }: { onDone: (veri
     // [OA] With a passkey to refuse, the account's passkeys are read before the dialog opens: wait for Clerk's user.
     if (refusePasskey && !isLoaded) return;
     started.current = true;
-    const before = refusePasskey ? passkeySnapshot((user as { passkeys?: readonly PasskeyLike[] } | null | undefined)?.passkeys) : null;
+    const passkeys = (user as { passkeys?: readonly PasskeyLike[] } | null | undefined)?.passkeys;
+    // [OA] Section 7.4, CS-17: Clerk does not name the factor its dialog used, so where a passkey must be refused the
+    // dialog opens only for an account that holds none. An account with a passkey (or not loaded) ends here unverified:
+    // the visitor stays signed in and the lock asks for the PIN or a sign-in with a password or a code.
+    if (refusePasskey && !secretReverifyAllowed(passkeys)) {
+      onDone(false);
+      return;
+    }
+    const before = refusePasskey ? passkeySnapshot(passkeys) : null;
     confirm().then(
       async (result) => {
         const verified = 'verified' in result && result.verified === true;
-        // [OA] Section 7.4, CS-17: on a `pin` browser (or the reset leg) a reverification that used a passkey is no
-        // unlock. Clerk does not name the factor, so a passkey whose `lastUsedAt` moved during the dialog counts as it
-        // (server stamps against server stamps); no account to read before or after fails closed.
+        // [OA] A passkey that showed up during the dialog (a new one, or a `lastUsedAt` that moved; server stamps only)
+        // is no unlock either.
         if (!verified || !refusePasskey) return onDone(verified);
         let after: readonly PasskeyLike[] | null = null;
         try {
@@ -163,7 +170,8 @@ export function ClerkReverify({ onDone, refusePasskey = false }: { onDone: (veri
         } catch {
           after = null;
         }
-        onDone(!passkeyUsedDuring(before, after));
+        // An account that could not be read again fails closed too.
+        onDone(after !== null && !passkeyUsedDuring(before, after));
       },
       () => onDone(false),
     );
