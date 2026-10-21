@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
-import { colors } from '@hangul-route/design-system';
+import { colors } from '@hangul-route/design-system/tokens';
 import { expect, test } from './fixtures';
 import { shot } from './shots';
 
@@ -173,14 +173,15 @@ async function fitProblems(page: Page, phone: boolean): Promise<string[]> {
  * Every write-together slide, every build revealed: the live region, the line that nothing is typed here, the fit at
  * each build and the answer only at its build. Returns how many slides of each variant it walked.
  */
-async function walkWrites(page: Page, label: string, phone: boolean, kind: string, where: string): Promise<Record<string, number>> {
+/** `kind`: the slide's kind label; `gridKind`: the live region's kind name (`grid.kind.write`), the same but in Korean (함께 쓰기). */
+async function walkWrites(page: Page, label: string, phone: boolean, kind: string, where: string, gridKind = kind): Promise<Record<string, number>> {
   const seen: Record<string, number> = { type: 0, trace: 0, frame: 0, 'own-name': 0 };
   const stage = page.getByTestId('presenter-stage');
   for (const n of await writeSlides(page)) {
     await goto(page, n);
     const variant = (await stage.getByTestId('presenter-write').getAttribute('data-variant')) ?? '';
     seen[variant] = (seen[variant] ?? 0) + 1;
-    expect(await liveText(page), `${label} slide ${n}`).toContain(kind);
+    expect(await liveText(page), `${label} slide ${n}`).toContain(gridKind);
     await expect(stage.getByTestId('presenter-kind-label')).toHaveText(kind);
     await expect(stage.getByTestId('presenter-write-where')).toHaveText(where);
     expect(await stage.locator('[role="button"], input, textarea').count(), `${label} slide ${n}: nothing to press or type in`).toBe(0);
@@ -268,9 +269,9 @@ test.describe('the write-together slides on a phone sideways (LV-M1)', () => {
 });
 
 test.describe('the write-together slides in Spanish and Korean (longer lines and prompts)', () => {
-  for (const [locale, kind, where] of [
-    ['es', 'Escribir en grupo', 'Escribe en papel o en tu propio dispositivo. Aquí no se teclea nada.'],
-    ['ko', '함께 써요', '종이나 각자 기기에 써요. 이 화면에는 아무것도 입력하지 않아요.'],
+  for (const [locale, kind, where, gridKind] of [
+    ['es', 'Escribir en grupo', 'Escribe en papel o en tu propio dispositivo. Aquí no se teclea nada.', 'Escribir en grupo'],
+    ['ko', '함께 써요', '종이나 각자 기기에 써요. 이 화면에는 아무것도 입력하지 않아요.', '함께 쓰기'],
   ] as const) {
     for (const size of [
       { width: 1280, height: 720, phone: false },
@@ -289,7 +290,7 @@ test.describe('the write-together slides in Spanish and Korean (longer lines and
           await koreanVoice(page);
           await page.goto(link({ ...DECK, id: `lecture:e2ew${locale}1`, options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: true, uiLocale: locale } }));
           await startLesson(page, size.phone);
-          const seen = await walkWrites(page, `${locale}-${size.width}x${size.height}`, size.phone, kind, where);
+          const seen = await walkWrites(page, `${locale}-${size.width}x${size.height}`, size.phone, kind, where, gridKind);
           expect(seen['own-name']).toBe(1);
         });
       });
