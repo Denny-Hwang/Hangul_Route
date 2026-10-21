@@ -36,6 +36,16 @@ const PAGES = [
 ];
 const PRIMARY = { home: '.hr-site-hero .hr-site-primary', learners: 'main .hr-site-primary', parents: 'main .hr-site-primary', teachers: 'main .hr-site-primary', about: 'main .hr-site-primary', '404': 'main .hr-site-primary' };
 const strings = readFileSync(join(NEWUSER, 'mock/strings.js'), 'utf8');
+const sharpLib = require(require.resolve('sharp', { paths: [join(REPO, 'node_modules/.pnpm/node_modules')] }));
+/** Width and height of every capture per locale, so each <img> carries its real size. */
+const DIMS = {};
+for (const loc of LOCALES) {
+  DIMS[loc] = {};
+  for (const f of readdirSync(join(NEWUSER, 'captures', loc)).filter((n) => n.endsWith('.webp'))) {
+    const m = await sharpLib(join(NEWUSER, 'captures', loc, f)).metadata();
+    DIMS[loc][f.replace(/\.webp$/, '')] = [m.width, m.height];
+  }
+}
 const patch = readFileSync(join(NEWUSER, 'mock/patch.js'), 'utf8');
 
 /** Unchanged strings the patch reads from the dictionary (passed in, never retyped). */
@@ -64,8 +74,9 @@ async function build(browser, locale, pg, variant = {}) {
     ([pageId, loc, v, extra]) => {
       window.SN_PAGE = { page: pageId, locale: loc, captures: `/sn-captures/${loc}`, ...v };
       window.SN_404_HOME = extra.home404;
+      window.SN_DIMS = extra.dims;
     },
-    [pg.path, locale, { ...variant, bannerOffer: UNCHANGED.en.banner }, UNCHANGED[locale]],
+    [pg.path, locale, { ...variant, bannerOffer: UNCHANGED.en.banner }, { ...UNCHANGED[locale], dims: DIMS }],
   );
   await page.addScriptTag({ content: patch });
   await page.waitForLoadState('networkidle');

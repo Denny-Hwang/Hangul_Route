@@ -47,7 +47,7 @@ Open any mock from disk, for example `mock/es/teachers.html`. Links are the expo
 
 - **DOM order = visual order:** skip link, brand, Start, nav (wide only), Language, Sign in. Phones: `[HR] … [Start][Language][Sign in]`,
   Start pushed right with `margin-left: auto`; wide: Start beside the brand, nav pushed right.
-- **Start pill at every width.** Visible label `landing.nav.startShort` ("Start" / "Empezar" / "시작"), accessible name
+- **Start pill at every width** on every page but `/` (below). Visible label `landing.nav.startShort` ("Start" / "Empezar" / "시작"), accessible name
   `landing.nav.start` ("Start learning"), which contains the visible label (WCAG 2.5.3). Phone padding `spacing.sm`, text
   `typography.size.bodySm`; wide padding `spacing.xl`, text `body`. Min 64 x 64.
 - **Language control.** A native `<details>` whose `<summary>` holds a globe glyph (decorative, `currentColor`), the
@@ -59,6 +59,9 @@ Open any mock from disk, for example `mock/es/teachers.html`. Links are the expo
   check glyph (not colour alone). Menu: `surface.paper`, `border.subtle` hairline, `radii.lg`, `cardShadow()`, anchored
   right under the control, min width 12rem. Closed by default; with JavaScript, Escape and an outside tap close it and focus
   returns to the summary.
+- **On `/` (review round 3, OD-SN-1 and OD-SN-2):** no phone Start pill (the hero's Start learning is on the first
+  screen; the header Start stays wide-only there, as today), and the brand name shows from 22.5em (360 px), so a phone
+  visitor reads "Hangul Route" on the first screen.
 - **Brand on phones.** The mark shows at every width (its box in rem, 3rem = `spacing.xxxl` / 16, so 200 % text cannot
   break "HR" over two lines); the name shows from 30em to 45em and from 60em. Below 30em the four controls need
   64 + 82 + 64 + 66 px with Spanish labels, which leaves no room for the name; the column gap is 0 below 45em (each hit
@@ -94,13 +97,18 @@ Open any mock from disk, for example `mock/es/teachers.html`. Links are the expo
   (`surface.paper`, `border.subtle`, `radii.lg`, `cardShadow()`) and the Lecture mode slide in a dark screen frame
   (`text.primary`, `spacing.sm`); two equal columns from 45em, stacked below.
 - `/teachers` **Use it across a whole school**: four plain lines (not bullets, they are sentences), in this order: school
-  space, administrators, class moves, size and School Contract. The email address is plain text in the sentence.
+  space, administrators, class moves, size ("Need more? Write to {email}."; the School Contract wording waits for
+  OD-SN-13, and "The owner manages the plan." for `paidPlans: 'inApp'`). The email address is plain text in the sentence.
+- Every capture follows its claim (spec §3.13): the report under `parentReports`, the class page under
+  `teacherReports`, the slide under `lectureMode`; the class page and the hero use a phone crop below 45em (`<picture>`).
 
 ### `/learners`
 
 - Three phone captures (Home, a mini-game, the tiger card) in one row after the quest steps and Hoya's line, before the
   mini-games fold, always three across (each a third of a row of at most 34rem), 3 px bezel, `radii.lg`, each with a
   short visible caption (`captures.caption.*`), so they read as a sampler of real screens, not as pictures of steps 1-3.
+  Round 3: each is cropped to its subject (Home down to the Start button, the game's question, the card face), so the
+  three sit top-aligned at their own heights.
 
 ### About, 404, head
 
@@ -115,29 +123,33 @@ Real screens of the release learner bundle (`apps/mobile` `build:web`, no API) a
 reports e2e fixtures (API mocked, made-up names), per UI locale, because they hold UI text. Made by
 `tools/capture-app.mjs` and `tools/capture-console.spec.ts`; SN-1 turns them into `apps/web/scripts/site-captures.mjs`.
 
-| File (`captures/<locale>/`) | Source | Size (en / es / ko) | Used on |
-|---|---|---|---|
-| `discover.webp` 520 x 1125 | quest 1, Discover page 1 (ㅏ), 390 x 844 at 2x | 15.6 / 16.6 / 14.9 KB | `/` hero |
-| `home.webp` 400 x 866 | learner Home after setup | 19.3 / 22.0 / 18.2 KB | `/learners` |
-| `game.webp` 400 x 866 | quest 1's first mini-game (listen and pick) | 5.2 / 5.5 / 5.0 KB | `/learners` |
-| `card.webp` 400 x 866 | the tiger card (horangi), Library | 11.6 / 13.1 / 11.2 KB | `/learners` |
-| `report.webp` 600 x 1298 | a parent's weekly report of one learner | 33.3 / 36.6 / 31.5 KB | `/parents` |
-| `class-list.webp` 720 x 456 (ko 432) | a teacher's class page: the first row of student cards, whole | 22.2 / 23.7 / 18.4 KB | `/teachers` |
-| `lecture-slide.webp` 1080 x 608 | Lecture mode, quest 1's first letter fully revealed | 14.1 / 16.4 / 14.2 KB | `/teachers` |
+| File (`captures/<locale>/`) | Source and crop (review round 3) | Size (en / es / ko) | Used on | Shown under |
+|---|---|---|---|---|
+| `discover.webp` 520 x 1125 | quest 1, Discover page 1 (ㅏ), 390 x 844 at 2x | 15.6 / 16.6 / 14.9 KB | `/` hero from 45em | — |
+| `discover-narrow.webp` 400 wide | the same, from the title to under Hear it | 7.9 / 8.7 / 7.9 KB | `/` hero below 45em | — |
+| `home.webp` 400 wide | learner Home at 430 x 844, 2x, top to under the Start button (no Learning Route link, no tab bar) | 9.8 / 10.9 / 9.4 KB | `/learners` | — |
+| `game.webp` 400 wide | quest 1's first mini-game (listen and pick), under the Close row to the last tile | 4.2 / 4.6 / 3.8 KB | `/learners` | — |
+| `card.webp` 400 wide | the tiger card's face (horangi), Library | 5.6 / 5.7 / 4.8 KB | `/learners` | — |
+| `report.webp` 600 wide | a parent's weekly report of one learner, 390 at 2x, period tabs to "What to practice next" | 30.2 / 33.3 / 25.5 KB | `/parents` | `parentReports` |
+| `class-list.webp` 720 wide | a teacher's class page: class code, join link, "This week" (no student cards) | 18.4 / 20.4 / 16.9 KB | `/teachers` from 45em | `teacherReports` |
+| `class-list-narrow.webp` 600 wide | the "This week" card at 390 px, 2x | 10.9 / 12.2 / 9.2 KB | `/teachers` below 45em | `teacherReports` |
+| `lecture-slide.webp` 1080 x 608 | Lecture mode, quest 1's first letter fully revealed | 14.1 / 16.4 / 14.2 KB | `/teachers` | `lectureMode` |
 
-Images per page (the page's captures, one locale): `/` 15.6 KB, `/learners` 36.2 KB, `/parents` 33.3 KB, `/teachers`
-36.4 KB (en; es is the largest: 16.6, 40.7, 36.6 and 40.1 KB). Spec §3.11 sets the budgets with headroom.
+No capture shows a feature whose site claim is off: the Learning Route (Home's link and tab, the class page's student
+cards) and the level check's starting spot (the student cards) are outside every crop. Images per page (every file
+the page references, one locale, both `<picture>` sources counted): `/` 23.5 KB, `/learners` 19.5 KB, `/parents`
+30.2 KB, `/teachers` 43.4 KB (en; es is the largest: 25.4, 21.2, 33.3 and 49.0 KB). Spec §3.11 sets the budgets.
 
 ## Measured on the mocks (Chromium, claims as in `SITE_CLAIMS`, base export above)
 
-| Page | 375 x 812 (en / es / ko) | 1280 x 800 (en / es / ko) | Words en (375 / 1280) | Primary action ends at (320 x 568) |
+| Page | 375 x 812 (en / es / ko) | 1280 x 800 (en / es / ko) | Words en (375 / 1280) | Primary action ends at (320 x 568, en / es / ko) |
 |---|---|---|---|---|
-| `/` | 3,008 / 3,241 / 3,004 | 2,164 / 2,254 / 2,183 | 268 / 273 | 429 px |
-| `/learners` | 3,015 / 3,077 / 2,954 | 2,962 / 2,974 / 2,923 | 254 / 259 | 346 px |
-| `/parents` | 3,506 / 3,582 / 3,250 | 2,649 / 2,622 / 2,538 | 352 / 357 | 415 px |
-| `/teachers` | 3,935 / 4,188 / 3,731 | 3,274 / 3,378 / 3,198 | 419 / 424 | 346 px |
-| `/about` | 1,856 / 2,043 / 1,801 | 1,331 / 1,386 / 1,303 | 184 / 189 | (after the promises) |
-| 404 | 1,179 / 1,221 / 1,179 | 954 / 982 / 954 | 66 / 71 | 526 px |
+| `/` | 2,965 / 3,227 / 2,960 | 2,192 / 2,282 / 2,164 | 274 / 278 | 429 / 429 / 429 px |
+| `/learners` | 2,926 / 2,989 / 2,860 | 2,816 / 2,828 / 2,768 | 254 / 259 | 346 / 346 / 318 px |
+| `/parents` | 3,471 / 3,586 / 3,149 | 2,615 / 2,626 / 2,465 | 352 / 357 | 415 / 457 / 387 px |
+| `/teachers` | 3,954 / 4,187 / 3,737 | 3,453 / 3,577 / 3,396 | 412 / 417 | 346 / 346 / 318 px |
+| `/about` | 1,856 / 2,070 / 1,801 | 1,331 / 1,386 / 1,303 | 186 / 191 | (after the promises) |
+| 404 | 1,099 / 1,141 / 1,099 | 954 / 982 / 954 | 66 / 71 | 446 / 515 / 488 px |
 
 - Header: one row, 81 px, at 320 and 375 in every locale; with 200 % text, two rows at 320 px (177 px) and one row at
   720 px (113 px); nothing scrolls sideways at 320 px, at 320 px with 200 % text, or at 720 px with 200 % text, on any page.
@@ -152,4 +164,6 @@ Images per page (the page's captures, one locale): `/` 15.6 KB, `/learners` 36.2
 
 Multi-agent review, 2026-10-21 (spec section 12): round 1 asked for 15 changes across UX, accessibility, English, Spanish
 and Korean (all made, or recorded as owner decisions OD-SN-1, -9, -10, -11, -12 with defaults); round 2 passed in every
-lens. The mocks, shots and `measurements.json` in this folder are the round-2 versions.
+lens; round 3 (two reviews on the PR) asked for 15 more (captures that follow claims, plans wording, the home header,
+the 404 first screen, phone crops, copy), all made (R3-1 to R3-15, OD-SN-13). The mocks, captures, shots and
+`measurements.json` in this folder are the round-3 versions.

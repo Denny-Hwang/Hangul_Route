@@ -1,9 +1,9 @@
 {
   "en/home": {
     "phone": {
-      "height": 3008,
+      "height": 2965,
       "sideways": false,
-      "words": 268,
+      "words": 274,
       "header": 81,
       "primaryBottom": 360,
       "small": [
@@ -12,9 +12,9 @@
       ]
     },
     "wide": {
-      "height": 2164,
+      "height": 2192,
       "sideways": false,
-      "words": 273,
+      "words": 278,
       "header": 81,
       "primaryBottom": 417,
       "small": [
@@ -23,9 +23,9 @@
       ]
     },
     "first320": {
-      "height": 3327,
+      "height": 3298,
       "sideways": false,
-      "words": 268,
+      "words": 272,
       "header": 81,
       "primaryBottom": 429,
       "small": [
@@ -34,9 +34,9 @@
       ]
     },
     "text200at320": {
-      "height": 7382,
+      "height": 7363,
       "sideways": false,
-      "words": 268,
+      "words": 272,
       "header": 177,
       "primaryBottom": 1049,
       "small": [
@@ -44,9 +44,9 @@
       ]
     },
     "text200at720": {
-      "height": 4426,
+      "height": 4705,
       "sideways": false,
-      "words": 268,
+      "words": 274,
       "header": 113,
       "primaryBottom": 530,
       "small": [
@@ -55,20 +55,20 @@
       ]
     },
     "langOpen320text200": {
-      "height": 7382,
+      "height": 7363,
       "sideways": false,
-      "words": 271,
+      "words": 275,
       "header": 177,
       "primaryBottom": 1049,
       "small": [
         "a mailto:hello@hangulroute.com 152x38"
       ]
     },
-    "imageKB": 15.6
+    "imageKB": 23.5
   },
   "en/learners": {
     "phone": {
-      "height": 3015,
+      "height": 2926,
       "sideways": false,
       "words": 254,
       "header": 81,
@@ -76,7 +76,7 @@
       "small": []
     },
     "wide": {
-      "height": 2962,
+      "height": 2816,
       "sideways": false,
       "words": 259,
       "header": 81,
@@ -84,7 +84,7 @@
       "small": []
     },
     "first320": {
-      "height": 3289,
+      "height": 3236,
       "sideways": false,
       "words": 254,
       "header": 81,
@@ -92,7 +92,7 @@
       "small": []
     },
     "text200at320": {
-      "height": 7635,
+      "height": 7562,
       "sideways": false,
       "words": 254,
       "header": 177,
@@ -100,7 +100,7 @@
       "small": []
     },
     "text200at720": {
-      "height": 4205,
+      "height": 4018,
       "sideways": false,
       "words": 254,
       "header": 113,
@@ -108,18 +108,18 @@
       "small": []
     },
     "langOpen320text200": {
-      "height": 7635,
+      "height": 7562,
       "sideways": false,
       "words": 257,
       "header": 177,
       "primaryBottom": 745,
       "small": []
     },
-    "imageKB": 36.2
+    "imageKB": 19.5
   },
   "en/parents": {
     "phone": {
-      "height": 3506,
+      "height": 3471,
       "sideways": false,
       "words": 352,
       "header": 81,
@@ -127,7 +127,7 @@
       "small": []
     },
     "wide": {
-      "height": 2649,
+      "height": 2615,
       "sideways": false,
       "words": 357,
       "header": 81,
@@ -135,7 +135,7 @@
       "small": []
     },
     "first320": {
-      "height": 3824,
+      "height": 3790,
       "sideways": false,
       "words": 352,
       "header": 81,
@@ -143,7 +143,7 @@
       "small": []
     },
     "text200at320": {
-      "height": 9395,
+      "height": 9343,
       "sideways": false,
       "words": 352,
       "header": 177,
@@ -151,7 +151,7 @@
       "small": []
     },
     "text200at720": {
-      "height": 5177,
+      "height": 5051,
       "sideways": false,
       "words": 352,
       "header": 113,
@@ -159,71 +159,71 @@
       "small": []
     },
     "langOpen320text200": {
-      "height": 9395,
+      "height": 9343,
       "sideways": false,
       "words": 355,
       "header": 177,
       "primaryBottom": 1220,
       "small": []
     },
-    "imageKB": 33.3
+    "imageKB": 30.2
   },
   "en/teachers": {
     "phone": {
-      "height": 3935,
+      "height": 3954,
       "sideways": false,
-      "words": 419,
+      "words": 412,
       "header": 81,
       "primaryBottom": 346,
       "small": []
     },
     "wide": {
-      "height": 3274,
+      "height": 3453,
       "sideways": false,
-      "words": 424,
+      "words": 417,
       "header": 81,
       "primaryBottom": 362,
       "small": []
     },
     "first320": {
-      "height": 4260,
+      "height": 4271,
       "sideways": false,
-      "words": 419,
+      "words": 412,
       "header": 81,
       "primaryBottom": 346,
       "small": []
     },
     "text200at320": {
-      "height": 10357,
+      "height": 10280,
       "sideways": false,
-      "words": 419,
+      "words": 412,
       "header": 177,
       "primaryBottom": 883,
       "small": []
     },
     "text200at720": {
-      "height": 5983,
+      "height": 6058,
       "sideways": false,
-      "words": 419,
+      "words": 412,
       "header": 113,
       "primaryBottom": 447,
       "small": []
     },
     "langOpen320text200": {
-      "height": 10357,
+      "height": 10280,
       "sideways": false,
-      "words": 422,
+      "words": 415,
       "header": 177,
       "primaryBottom": 883,
       "small": []
     },
-    "imageKB": 36.4
+    "imageKB": 43.4
   },
   "en/about": {
     "phone": {
       "height": 1856,
       "sideways": false,
-      "words": 184,
+      "words": 186,
       "header": 81,
       "primaryBottom": 1057,
       "small": []
@@ -231,52 +231,52 @@
     "wide": {
       "height": 1331,
       "sideways": false,
-      "words": 189,
+      "words": 191,
       "header": 81,
       "primaryBottom": 754,
       "small": []
     },
     "first320": {
-      "height": 2148,
+      "height": 2176,
       "sideways": false,
-      "words": 184,
+      "words": 186,
       "header": 81,
-      "primaryBottom": 1243,
+      "primaryBottom": 1271,
       "small": []
     },
     "text200at320": {
-      "height": 5696,
+      "height": 5751,
       "sideways": false,
-      "words": 184,
+      "words": 186,
       "header": 177,
-      "primaryBottom": 3989,
+      "primaryBottom": 4045,
       "small": []
     },
     "text200at720": {
       "height": 2755,
       "sideways": false,
-      "words": 184,
+      "words": 186,
       "header": 113,
       "primaryBottom": 1756,
       "small": []
     },
     "langOpen320text200": {
-      "height": 5696,
+      "height": 5751,
       "sideways": false,
-      "words": 187,
+      "words": 189,
       "header": 177,
-      "primaryBottom": 3989,
+      "primaryBottom": 4045,
       "small": []
     },
     "imageKB": 0
   },
   "en/404": {
     "phone": {
-      "height": 1179,
+      "height": 1099,
       "sideways": false,
       "words": 66,
       "header": 81,
-      "primaryBottom": 526,
+      "primaryBottom": 446,
       "small": []
     },
     "wide": {
@@ -288,44 +288,44 @@
       "small": []
     },
     "first320": {
-      "height": 1285,
+      "height": 1205,
       "sideways": false,
       "words": 66,
       "header": 81,
-      "primaryBottom": 526,
+      "primaryBottom": 446,
       "small": []
     },
     "text200at320": {
-      "height": 2395,
+      "height": 2275,
       "sideways": false,
       "words": 66,
       "header": 177,
-      "primaryBottom": 1087,
+      "primaryBottom": 967,
       "small": []
     },
     "text200at720": {
-      "height": 1522,
+      "height": 1402,
       "sideways": false,
       "words": 66,
       "header": 113,
-      "primaryBottom": 767,
+      "primaryBottom": 647,
       "small": []
     },
     "langOpen320text200": {
-      "height": 2395,
+      "height": 2275,
       "sideways": false,
       "words": 69,
       "header": 177,
-      "primaryBottom": 1087,
+      "primaryBottom": 967,
       "small": []
     },
     "imageKB": 0
   },
   "es/home": {
     "phone": {
-      "height": 3241,
+      "height": 3227,
       "sideways": false,
-      "words": 277,
+      "words": 288,
       "header": 81,
       "primaryBottom": 401,
       "small": [
@@ -334,9 +334,9 @@
       ]
     },
     "wide": {
-      "height": 2254,
+      "height": 2282,
       "sideways": false,
-      "words": 282,
+      "words": 292,
       "header": 81,
       "primaryBottom": 417,
       "small": [
@@ -345,9 +345,9 @@
       ]
     },
     "first320": {
-      "height": 3549,
+      "height": 3561,
       "sideways": false,
-      "words": 277,
+      "words": 286,
       "header": 81,
       "primaryBottom": 429,
       "small": [
@@ -356,9 +356,9 @@
       ]
     },
     "text200at320": {
-      "height": 8520,
+      "height": 8646,
       "sideways": false,
-      "words": 277,
+      "words": 286,
       "header": 177,
       "primaryBottom": 1187,
       "small": [
@@ -366,9 +366,9 @@
       ]
     },
     "text200at720": {
-      "height": 4672,
+      "height": 5007,
       "sideways": false,
-      "words": 277,
+      "words": 288,
       "header": 113,
       "primaryBottom": 613,
       "small": [
@@ -376,20 +376,20 @@
       ]
     },
     "langOpen320text200": {
-      "height": 8520,
+      "height": 8646,
       "sideways": false,
-      "words": 280,
+      "words": 289,
       "header": 177,
       "primaryBottom": 1187,
       "small": [
         "a mailto:hello@hangulroute.com 160x38"
       ]
     },
-    "imageKB": 16.6
+    "imageKB": 25.4
   },
   "es/learners": {
     "phone": {
-      "height": 3077,
+      "height": 2989,
       "sideways": false,
       "words": 257,
       "header": 81,
@@ -397,7 +397,7 @@
       "small": []
     },
     "wide": {
-      "height": 2974,
+      "height": 2828,
       "sideways": false,
       "words": 262,
       "header": 81,
@@ -405,7 +405,7 @@
       "small": []
     },
     "first320": {
-      "height": 3343,
+      "height": 3270,
       "sideways": false,
       "words": 257,
       "header": 81,
@@ -413,7 +413,7 @@
       "small": []
     },
     "text200at320": {
-      "height": 8375,
+      "height": 8302,
       "sideways": false,
       "words": 257,
       "header": 177,
@@ -421,7 +421,7 @@
       "small": []
     },
     "text200at720": {
-      "height": 4274,
+      "height": 4087,
       "sideways": false,
       "words": 257,
       "header": 113,
@@ -429,175 +429,175 @@
       "small": []
     },
     "langOpen320text200": {
-      "height": 8375,
+      "height": 8302,
       "sideways": false,
       "words": 260,
       "header": 177,
       "primaryBottom": 939,
       "small": []
     },
-    "imageKB": 40.7
+    "imageKB": 21.2
   },
   "es/parents": {
     "phone": {
-      "height": 3582,
+      "height": 3586,
       "sideways": false,
-      "words": 378,
+      "words": 381,
       "header": 81,
       "primaryBottom": 415,
       "small": []
     },
     "wide": {
-      "height": 2622,
+      "height": 2626,
       "sideways": false,
-      "words": 383,
+      "words": 386,
       "header": 81,
       "primaryBottom": 362,
       "small": []
     },
     "first320": {
-      "height": 4044,
+      "height": 4048,
       "sideways": false,
-      "words": 378,
+      "words": 381,
       "header": 81,
       "primaryBottom": 457,
       "small": []
     },
     "text200at320": {
-      "height": 10681,
-      "sideways": false,
-      "words": 378,
-      "header": 177,
-      "primaryBottom": 1335,
-      "small": []
-    },
-    "text200at720": {
-      "height": 5480,
-      "sideways": false,
-      "words": 378,
-      "header": 113,
-      "primaryBottom": 642,
-      "small": []
-    },
-    "langOpen320text200": {
-      "height": 10681,
+      "height": 10700,
       "sideways": false,
       "words": 381,
       "header": 177,
       "primaryBottom": 1335,
       "small": []
     },
-    "imageKB": 36.6
+    "text200at720": {
+      "height": 5527,
+      "sideways": false,
+      "words": 381,
+      "header": 113,
+      "primaryBottom": 681,
+      "small": []
+    },
+    "langOpen320text200": {
+      "height": 10700,
+      "sideways": false,
+      "words": 384,
+      "header": 177,
+      "primaryBottom": 1335,
+      "small": []
+    },
+    "imageKB": 33.3
   },
   "es/teachers": {
     "phone": {
-      "height": 4188,
+      "height": 4187,
       "sideways": false,
-      "words": 448,
+      "words": 437,
       "header": 81,
       "primaryBottom": 346,
       "small": []
     },
     "wide": {
-      "height": 3378,
+      "height": 3577,
       "sideways": false,
-      "words": 453,
+      "words": 442,
       "header": 81,
       "primaryBottom": 362,
       "small": []
     },
     "first320": {
-      "height": 4441,
+      "height": 4480,
       "sideways": false,
-      "words": 448,
+      "words": 437,
       "header": 81,
       "primaryBottom": 346,
       "small": []
     },
     "text200at320": {
-      "height": 11587,
+      "height": 11510,
       "sideways": false,
-      "words": 448,
+      "words": 437,
       "header": 177,
       "primaryBottom": 1054,
       "small": []
     },
     "text200at720": {
-      "height": 6255,
+      "height": 6511,
       "sideways": false,
-      "words": 448,
+      "words": 437,
       "header": 113,
       "primaryBottom": 503,
       "small": []
     },
     "langOpen320text200": {
-      "height": 11587,
+      "height": 11510,
       "sideways": false,
-      "words": 451,
+      "words": 440,
       "header": 177,
       "primaryBottom": 1054,
       "small": []
     },
-    "imageKB": 40.1
+    "imageKB": 49
   },
   "es/about": {
     "phone": {
-      "height": 2043,
+      "height": 2070,
       "sideways": false,
-      "words": 202,
+      "words": 204,
       "header": 81,
-      "primaryBottom": 1243,
+      "primaryBottom": 1271,
       "small": []
     },
     "wide": {
       "height": 1386,
       "sideways": false,
-      "words": 207,
+      "words": 209,
       "header": 81,
       "primaryBottom": 809,
       "small": []
     },
     "first320": {
-      "height": 2283,
+      "height": 2311,
       "sideways": false,
-      "words": 202,
+      "words": 204,
       "header": 81,
-      "primaryBottom": 1354,
+      "primaryBottom": 1382,
       "small": []
     },
     "text200at320": {
-      "height": 6106,
+      "height": 6274,
       "sideways": false,
-      "words": 202,
+      "words": 204,
       "header": 177,
-      "primaryBottom": 4302,
+      "primaryBottom": 4470,
       "small": []
     },
     "text200at720": {
       "height": 3016,
       "sideways": false,
-      "words": 202,
+      "words": 204,
       "header": 113,
       "primaryBottom": 2017,
       "small": []
     },
     "langOpen320text200": {
-      "height": 6106,
+      "height": 6274,
       "sideways": false,
-      "words": 205,
+      "words": 207,
       "header": 177,
-      "primaryBottom": 4302,
+      "primaryBottom": 4470,
       "small": []
     },
     "imageKB": 0
   },
   "es/404": {
     "phone": {
-      "height": 1221,
+      "height": 1141,
       "sideways": false,
       "words": 73,
       "header": 81,
-      "primaryBottom": 568,
+      "primaryBottom": 488,
       "small": []
     },
     "wide": {
@@ -609,44 +609,44 @@
       "small": []
     },
     "first320": {
-      "height": 1354,
+      "height": 1274,
       "sideways": false,
       "words": 73,
       "header": 81,
-      "primaryBottom": 595,
+      "primaryBottom": 515,
       "small": []
     },
     "text200at320": {
-      "height": 2796,
+      "height": 2676,
       "sideways": false,
       "words": 73,
       "header": 177,
-      "primaryBottom": 1447,
+      "primaryBottom": 1327,
       "small": []
     },
     "text200at720": {
-      "height": 1605,
+      "height": 1485,
       "sideways": false,
       "words": 73,
       "header": 113,
-      "primaryBottom": 850,
+      "primaryBottom": 730,
       "small": []
     },
     "langOpen320text200": {
-      "height": 2796,
+      "height": 2676,
       "sideways": false,
       "words": 76,
       "header": 177,
-      "primaryBottom": 1447,
+      "primaryBottom": 1327,
       "small": []
     },
     "imageKB": 0
   },
   "ko/home": {
     "phone": {
-      "height": 3004,
+      "height": 2960,
       "sideways": false,
-      "words": 222,
+      "words": 224,
       "header": 81,
       "primaryBottom": 360,
       "small": [
@@ -655,9 +655,9 @@
       ]
     },
     "wide": {
-      "height": 2183,
+      "height": 2164,
       "sideways": false,
-      "words": 227,
+      "words": 228,
       "header": 81,
       "primaryBottom": 417,
       "small": [
@@ -666,7 +666,7 @@
       ]
     },
     "first320": {
-      "height": 3153,
+      "height": 3146,
       "sideways": false,
       "words": 222,
       "header": 81,
@@ -677,19 +677,19 @@
       ]
     },
     "text200at320": {
-      "height": 7412,
+      "height": 7331,
       "sideways": false,
       "words": 222,
-      "header": 177,
-      "primaryBottom": 1049,
+      "header": 113,
+      "primaryBottom": 985,
       "small": [
         "a /ko/privacy 228x38"
       ]
     },
     "text200at720": {
-      "height": 4313,
+      "height": 4592,
       "sideways": false,
-      "words": 222,
+      "words": 224,
       "header": 113,
       "primaryBottom": 530,
       "small": [
@@ -697,20 +697,20 @@
       ]
     },
     "langOpen320text200": {
-      "height": 7412,
+      "height": 7331,
       "sideways": false,
       "words": 225,
-      "header": 177,
-      "primaryBottom": 1049,
+      "header": 113,
+      "primaryBottom": 985,
       "small": [
         "a /ko/privacy 228x38"
       ]
     },
-    "imageKB": 14.9
+    "imageKB": 22.7
   },
   "ko/learners": {
     "phone": {
-      "height": 2954,
+      "height": 2860,
       "sideways": false,
       "words": 201,
       "header": 81,
@@ -718,7 +718,7 @@
       "small": []
     },
     "wide": {
-      "height": 2923,
+      "height": 2768,
       "sideways": false,
       "words": 206,
       "header": 81,
@@ -726,7 +726,7 @@
       "small": []
     },
     "first320": {
-      "height": 2987,
+      "height": 2910,
       "sideways": false,
       "words": 201,
       "header": 81,
@@ -734,7 +734,7 @@
       "small": []
     },
     "text200at320": {
-      "height": 6960,
+      "height": 6883,
       "sideways": false,
       "words": 201,
       "header": 177,
@@ -742,7 +742,7 @@
       "small": []
     },
     "text200at720": {
-      "height": 3998,
+      "height": 3800,
       "sideways": false,
       "words": 201,
       "header": 113,
@@ -750,116 +750,116 @@
       "small": []
     },
     "langOpen320text200": {
-      "height": 6960,
+      "height": 6883,
       "sideways": false,
       "words": 204,
       "header": 177,
       "primaryBottom": 689,
       "small": []
     },
-    "imageKB": 34.4
+    "imageKB": 18
   },
   "ko/parents": {
     "phone": {
-      "height": 3250,
+      "height": 3149,
       "sideways": false,
-      "words": 265,
+      "words": 267,
       "header": 81,
       "primaryBottom": 346,
       "small": []
     },
     "wide": {
-      "height": 2538,
+      "height": 2465,
       "sideways": false,
-      "words": 270,
+      "words": 272,
       "header": 81,
       "primaryBottom": 362,
       "small": []
     },
     "first320": {
-      "height": 3450,
+      "height": 3377,
       "sideways": false,
-      "words": 265,
+      "words": 267,
       "header": 81,
       "primaryBottom": 387,
       "small": []
     },
     "text200at320": {
-      "height": 8156,
+      "height": 8100,
       "sideways": false,
-      "words": 265,
+      "words": 267,
       "header": 177,
       "primaryBottom": 939,
       "small": []
     },
     "text200at720": {
-      "height": 4723,
+      "height": 4573,
       "sideways": false,
-      "words": 265,
+      "words": 267,
       "header": 113,
       "primaryBottom": 503,
       "small": []
     },
     "langOpen320text200": {
-      "height": 8156,
+      "height": 8100,
       "sideways": false,
-      "words": 268,
+      "words": 270,
       "header": 177,
       "primaryBottom": 939,
       "small": []
     },
-    "imageKB": 31.5
+    "imageKB": 25.5
   },
   "ko/teachers": {
     "phone": {
-      "height": 3731,
+      "height": 3737,
       "sideways": false,
-      "words": 326,
+      "words": 322,
       "header": 81,
       "primaryBottom": 318,
       "small": []
     },
     "wide": {
-      "height": 3198,
+      "height": 3396,
       "sideways": false,
-      "words": 331,
+      "words": 327,
       "header": 81,
       "primaryBottom": 331,
       "small": []
     },
     "first320": {
-      "height": 3852,
+      "height": 3856,
       "sideways": false,
-      "words": 326,
+      "words": 322,
       "header": 81,
       "primaryBottom": 318,
       "small": []
     },
     "text200at320": {
-      "height": 9437,
+      "height": 9406,
       "sideways": false,
-      "words": 326,
+      "words": 322,
       "header": 177,
       "primaryBottom": 800,
       "small": []
     },
     "text200at720": {
-      "height": 5478,
+      "height": 5689,
       "sideways": false,
-      "words": 326,
+      "words": 322,
       "header": 113,
       "primaryBottom": 447,
       "small": []
     },
     "langOpen320text200": {
-      "height": 9437,
+      "height": 9406,
       "sideways": false,
-      "words": 329,
+      "words": 325,
       "header": 177,
       "primaryBottom": 800,
       "small": []
     },
-    "imageKB": 32.6
+    "imageKB": 40.3
   },
   "ko/about": {
     "phone": {
@@ -914,11 +914,11 @@
   },
   "ko/404": {
     "phone": {
-      "height": 1179,
+      "height": 1099,
       "sideways": false,
       "words": 56,
       "header": 81,
-      "primaryBottom": 526,
+      "primaryBottom": 446,
       "small": []
     },
     "wide": {
@@ -930,35 +930,35 @@
       "small": []
     },
     "first320": {
-      "height": 1221,
+      "height": 1141,
       "sideways": false,
       "words": 56,
       "header": 81,
-      "primaryBottom": 568,
+      "primaryBottom": 488,
       "small": []
     },
     "text200at320": {
-      "height": 2441,
+      "height": 2321,
       "sideways": false,
       "words": 56,
       "header": 177,
-      "primaryBottom": 1137,
+      "primaryBottom": 1017,
       "small": []
     },
     "text200at720": {
-      "height": 1522,
+      "height": 1402,
       "sideways": false,
       "words": 56,
       "header": 113,
-      "primaryBottom": 767,
+      "primaryBottom": 647,
       "small": []
     },
     "langOpen320text200": {
-      "height": 2441,
+      "height": 2321,
       "sideways": false,
       "words": 59,
       "header": 177,
-      "primaryBottom": 1137,
+      "primaryBottom": 1017,
       "small": []
     },
     "imageKB": 0

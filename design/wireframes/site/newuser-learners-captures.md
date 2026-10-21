@@ -7,7 +7,7 @@ Audience: a learner of any age deciding whether the app looks like something the
 
 - Given a teenager or an adult beginner reads "How most quests work",
 - When they reach the three steps,
-- Then three real screens (home, a mini-game, a culture card) show what the words mean, without opening the app.
+- Then three real screens (home, a mini-game, a heritage card) show what the words mean, without opening the app.
 
 ## Screen goal
 

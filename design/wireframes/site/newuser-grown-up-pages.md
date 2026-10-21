@@ -49,7 +49,7 @@ Page head, both pages (phone stacks, wide puts the two buttons on one row):
 │  - create a school space, invite teachers or create classes          │
 │  - up to {admins} more administrators, invite link, what they can do │
 │  - move a student to another class, family told, no new code         │
-│  - up to {students} students, School Contract by email               │
+│  - up to {students} students; more: write to {email} (OD-SN-13)      │
 │ Privacy for classes · Plans · questions · closing (create + sign in) │
 ```
 
@@ -59,6 +59,11 @@ States:
 - **Error**: a capture that fails keeps its frame size and shows its alt text.
 - **Claims**: lines behind claims behave as in F-SITE-002 §3.9; the schools section is not behind a claim (school
   administrators, the school cap and teacher moves are live: SA-1 to SA-6 #762, TV-B to TV-D #696 #700 #701).
+  **Captures follow claims** (review round 3): the report capture shows only under `parentReports` in the page's locale,
+  the class page capture only under `teacherReports`, the Lecture mode slide only under `lectureMode`; a capture whose
+  claim is off is not rendered (the media row keeps the other one, full width; with both off the row is gone). No
+  capture shows a feature whose claim is off: the class page capture is the class code, join link and "This week" (no
+  student cards, which carry the Learning Route row and the level check's starting spot).
 
 ## Interaction points
 

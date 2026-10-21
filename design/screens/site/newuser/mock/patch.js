@@ -11,6 +11,8 @@
   const { page, locale, captures } = window.SN_PAGE;
   const S = window.SN_STRINGS[locale];
   const V = window.SN_VALUES;
+  /** Pixel size of a capture in this locale (read from the files by tools/build-mocks.mjs). */
+  const D = (name) => window.SN_DIMS[locale][name];
   const prefix = locale === 'en' ? '' : `/${locale}`;
   const path = (p) => (p === '/' ? prefix || '/' : `${prefix}${p}`);
   const el = (tag, attrs = {}, ...kids) => {
@@ -50,6 +52,11 @@
   @media (min-width: 30em) { .hr-site .hr-site-brand-name { display: inline !important; } }
   @media (min-width: 45em) { .hr-site .hr-site-brand-name { display: none !important; } }
   @media (min-width: 60em) { .hr-site .hr-site-brand-name { display: inline !important; } }
+  /* Home (OD-SN-1, OD-SN-2 after review 2): no header Start (the hero's Start learning is on the first screen), so the
+     brand name shows at every width. The language control takes the auto margin instead. */
+  @media (max-width: 44.99em) { .hr-site[data-sn-home] .sn-lang { margin-left: auto; } }
+  /* 22.5em = 360 px: mark 48 + name + Language 64 + Sign in 66 fit one row from there in every locale. */
+  @media (min-width: 22.5em) and (max-width: 44.99em) { .hr-site[data-sn-home] .hr-site-brand-name { display: inline !important; } }
   .hr-site .hr-site-header-start.sn-start { display: inline-flex !important; margin-left: auto; min-width: var(--hr-site-touch-min);
     padding: 0 var(--hr-site-sm) !important; font-size: var(--hr-site-size-body-sm); }
   .hr-site .hr-site-signin { padding: 0 var(--hr-site-sm) !important; min-width: var(--hr-site-touch-min); justify-content: center; font-size: var(--hr-site-size-body-sm); }
@@ -90,14 +97,19 @@
     font-weight: 600; text-decoration-line: underline; text-decoration-thickness: var(--hr-site-border-thin); text-underline-offset: var(--hr-site-xs); }
   .sn-art { position: relative; justify-self: center; width: 100%; max-width: 22rem; display: flex; justify-content: center; align-items: flex-end;
     padding: var(--hr-site-lg) var(--hr-site-lg) 0; background: var(--hr-site-brand-light); border-radius: var(--radii-xxl); overflow: hidden; }
-  .sn-phone { width: 52%; margin-left: 30%; background: var(--frame-ink); padding: var(--hr-site-xs); border-radius: var(--radii-xl) var(--radii-xl) 0 0; padding-bottom: 0; }
-  .sn-phone img { display: block; width: 100%; height: auto; aspect-ratio: 390 / 650; object-fit: cover; object-position: top; border-radius: 20px 20px 0 0; }
-  .sn-art-hoya { position: absolute; left: var(--hr-site-md); bottom: var(--hr-site-md); width: 34%; aspect-ratio: 1 / 1; display: flex; }
-  .sn-art-bubble { position: absolute; left: var(--hr-site-sm); bottom: 42%; max-width: 44%; padding: var(--hr-site-sm) var(--hr-site-md);
+  .sn-phone { width: 60%; margin-left: 40%; background: var(--frame-ink); padding: var(--hr-site-xs); border-radius: var(--radii-xl) var(--radii-xl) 0 0; padding-bottom: 0; }
+  .sn-phone img { display: block; width: 100%; height: auto; border-radius: 20px 20px 0 0; }
+  @media (min-width: 45em) {
+    .sn-phone { width: 52%; margin-left: 30%; }
+    .sn-phone img { aspect-ratio: 390 / 650; object-fit: cover; object-position: top; }
+  }
+  .sn-art-hoya { position: absolute; left: var(--hr-site-xs); bottom: var(--hr-site-md); width: 34%; aspect-ratio: 1 / 1; display: flex; }
+  .sn-art-bubble { position: absolute; left: var(--hr-site-sm); bottom: 46%; max-width: 34%; padding: var(--hr-site-sm) var(--hr-site-md);
     background: var(--surface-paper); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); font-weight: 600; font-size: var(--hr-site-size-caption); line-height: 1.35; }
   @media (min-width: 45em) {
     .sn-art { max-width: var(--hr-site-hero-art-max-wide); padding-top: var(--hr-site-xl); }
-    .sn-art-bubble { font-size: var(--hr-site-size-body-sm); }
+    .sn-art-hoya { left: var(--hr-site-md); }
+    .sn-art-bubble { bottom: 42%; max-width: 44%; font-size: var(--hr-site-size-body-sm); }
   }
 
   /* ---------- closing band and the quiet launch-news section ---------- */
@@ -124,7 +136,7 @@
   .hr-site-closing .sn-closing-actions { display: grid; justify-items: start; gap: var(--hr-site-xs); }
   .sn-figure { margin: var(--hr-site-lg) 0 0; }
   .sn-phone-sm { width: min(12rem, 100%); background: var(--frame-ink); padding: var(--hr-site-xs); border-radius: var(--radii-xl); }
-  .sn-phone-sm img { display: block; width: 100%; height: auto; border-radius: 20px; aspect-ratio: 390 / 700; object-fit: cover; object-position: top; }
+  .sn-phone-sm img { display: block; width: 100%; height: auto; border-radius: 20px; }
   .sn-screen { background: var(--surface-paper); border: var(--hr-site-border-thin) solid var(--hr-site-border-subtle); border-radius: var(--radii-lg);
     box-shadow: var(--shadow-card); overflow: hidden; }
   .sn-screen img { display: block; width: 100%; height: auto; }
@@ -134,17 +146,19 @@
   .sn-screen-slide img { display: block; width: 100%; height: auto; border-radius: var(--hr-site-sm); }
   .sn-trio { list-style: none; margin: var(--hr-site-lg) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--hr-site-sm); max-width: 34rem; }
   .sn-trio .sn-phone-sm { width: 100%; padding: 3px; border-radius: var(--radii-lg); }
-  .sn-trio .sn-phone-sm img { border-radius: 13px; aspect-ratio: 390 / 760; }
+  .sn-trio { align-items: start; }
+  .sn-trio .sn-phone-sm img { border-radius: 13px; }
   .sn-trio-fig { margin: 0; }
   .sn-trio-fig figcaption { margin-top: var(--hr-site-xs); font-size: var(--hr-site-size-caption); color: var(--hr-site-text-secondary); text-align: center; }
   .sn-trio { margin-bottom: var(--hr-site-md); }
   .sn-lines { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--hr-site-sm); line-height: 1.55; color: var(--hr-site-text-secondary); max-width: 40em; }
 
   /* ---------- 404 ---------- */
-  .sn-404 { display: grid; justify-items: center; text-align: center; gap: var(--hr-site-md); padding: var(--hr-site-xxl) 0; }
-  .sn-404 h1 { margin: var(--hr-site-md) 0 0; font-size: var(--hr-site-size-display); line-height: 1.15; }
+  .sn-404 { display: grid; justify-items: center; text-align: center; gap: var(--hr-site-sm); padding: var(--hr-site-lg) 0 var(--hr-site-xxl); }
+  .sn-404 h1 { margin: var(--hr-site-xs) 0 0; font-size: var(--hr-site-size-display); line-height: 1.15; }
   .sn-404 p { margin: 0; color: var(--hr-site-text-secondary); max-width: 26em; line-height: 1.55; }
-  .sn-404-hoya { width: 7rem; aspect-ratio: 1 / 1; display: flex; }
+  .sn-404-hoya { width: 4.5rem; aspect-ratio: 1 / 1; display: flex; }
+  @media (min-width: 45em) { .sn-404 { gap: var(--hr-site-md); padding: var(--hr-site-xxl) 0; } .sn-404 h1 { margin-top: var(--hr-site-md); } .sn-404-hoya { width: 7rem; } }
   `;
 
   const style = el('style', { id: 'sn-mock' });
@@ -170,7 +184,13 @@
     const wrap = document.querySelector('.hr-site-header .hr-site-wrap');
     if (!wrap) return;
     const start = wrap.querySelector('.hr-site-header-start');
-    if (start) {
+    if (start && page === '/') {
+      // OD-SN-1 default after review 2: on '/' the header Start stays wide-only (as today), because the hero's Start
+      // learning is on the first screen; the phone header keeps the brand name instead.
+      start.setAttribute('aria-label', start.textContent);
+      start.textContent = S.nav.startShort;
+      document.querySelector('.hr-site')?.setAttribute('data-sn-home', '');
+    } else if (start) {
       start.classList.add('sn-start');
       start.setAttribute('aria-label', start.textContent);
       start.textContent = S.nav.startShort;
@@ -222,8 +242,12 @@
     const art = el('div', { class: 'sn-art hr-site-hero-art-new' });
     const hoya = el('span', { class: 'sn-art-hoya', 'aria-hidden': 'true', html: hoyaSvg() });
     const bubble = el('span', { class: 'sn-art-bubble', 'aria-hidden': 'true', text: bubbleText });
+    // Below 45em a tighter crop (title, the first letter, Hear it) so the words stay readable on a phone.
+    const dn = D('discover-narrow');
     const phone = el('div', { class: 'sn-phone' },
-      el('img', { src: `${captures}/discover.webp`, width: '520', height: '1125', alt: S.captures.discover(V.firstLetter, V.firstLetterRoman), fetchpriority: 'high' }));
+      el('picture', {},
+        el('source', { media: '(min-width: 45em)', srcset: `${captures}/discover.webp`, width: '520', height: '1125' }),
+        el('img', { src: `${captures}/discover-narrow.webp`, width: String(dn[0]), height: String(dn[1]), alt: S.captures.discover(V.firstLetter, V.firstLetterRoman), fetchpriority: 'high' })));
     art.append(phone, hoya, bubble);
     oldArt.replaceWith(art);
 
@@ -278,7 +302,7 @@
     convert('parents');
     const follow = document.querySelector('section[aria-labelledby="parents-follow"]');
     follow.append(el('figure', { class: 'sn-figure' },
-      el('div', { class: 'sn-phone-sm' }, el('img', { src: `${captures}/report.webp`, width: '600', height: '1298', alt: S.captures.report, loading: 'lazy' }))));
+      el('div', { class: 'sn-phone-sm' }, el('img', { src: `${captures}/report.webp`, width: String(D('report')[0]), height: String(D('report')[1]), alt: S.captures.report, loading: 'lazy' }))));
   }
 
   function teachers() {
@@ -286,7 +310,9 @@
     const cls = document.querySelector('section[aria-labelledby="teachers-class"]');
     const twoCol = cls.parentElement.parentElement.matches('main') ? cls.parentElement : cls.parentElement.parentElement;
     const media = el('div', { class: 'sn-media', style: 'padding-bottom:var(--hr-site-lg)' },
-      el('figure', { style: 'margin:0' }, el('div', { class: 'sn-screen' }, el('img', { src: `${captures}/class-list.webp`, width: '720', height: '456', alt: S.captures.classList, loading: 'lazy' }))),
+      el('figure', { style: 'margin:0' }, el('div', { class: 'sn-screen' }, el('picture', {},
+        el('source', { media: '(min-width: 45em)', srcset: `${captures}/class-list.webp`, width: String(D('class-list')[0]), height: String(D('class-list')[1]) }),
+        el('img', { src: `${captures}/class-list-narrow.webp`, width: String(D('class-list-narrow')[0]), height: String(D('class-list-narrow')[1]), alt: S.captures.classList, loading: 'lazy' })))),
       el('figure', { style: 'margin:0' }, el('div', { class: 'sn-screen-slide' }, el('img', { src: `${captures}/lecture-slide.webp`, width: '1080', height: '608', alt: S.captures.lectureSlide, loading: 'lazy' }))));
     twoCol.after(media);
     const schools = el('section', { class: 'hr-site-section', 'aria-labelledby': 'teachers-schools' },
@@ -303,7 +329,7 @@
     const trio = el('ul', { class: 'sn-trio', role: 'list' });
     for (const [file, alt] of [['home', S.captures.home], ['game', S.captures.game], ['card', S.captures.card(V.card.word, V.card.roman, S.cardMeaning)]]) {
       trio.append(el('li', {}, el('figure', { class: 'sn-trio-fig' },
-        el('div', { class: 'sn-phone-sm' }, el('img', { src: `${captures}/${file}.webp`, width: '400', height: '866', alt, loading: 'lazy' })),
+        el('div', { class: 'sn-phone-sm' }, el('img', { src: `${captures}/${file}.webp`, width: String(D(file)[0]), height: String(D(file)[1]), alt, loading: 'lazy' })),
         el('figcaption', { text: S.captures.caption[file] }))));
     }
     // After the steps and Hoya's line, before the mini-games fold: a sampler of real screens, not step pictures.

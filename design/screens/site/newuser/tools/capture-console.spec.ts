@@ -1,5 +1,6 @@
 /*
- * AMENDMENTS-SITE-NEWUSER item 7: the console captures of the mocks (a parent's weekly report, a teacher's class page).
+ * AMENDMENTS-SITE-NEWUSER item 7: the console captures of the mocks (a parent's weekly report, a teacher's class page;
+ * review round 3 crops, spec section 3.13).
  * A design tool, not a test: it lives here so no suite collects it. To run it, copy it into apps/web/e2e (it imports
  * the reports e2e fixtures there), build the export the reports e2e uses, and run it alone:
  *
@@ -40,34 +41,48 @@ async function mockRoster(page: Page): Promise<void> {
 }
 
 for (const loc of LOCS) {
-  test(`report ${loc}`, async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+  // The weekly report at 390 x 844, 2x: from the period tabs to the end of "What to practice next". Review round 3: no
+  // print hint at the top edge, no "Now on Stage" line (its stage name is English in the Korean UI, spec section 11),
+  // no tiles cut at the bottom. The encoder drops the top 16 px (8 CSS px) so the line above the tabs never shows.
+  test(`report ${loc}`, async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+    const page = await ctx.newPage();
     await mockReport(page, { kind: 'family' });
     await page.goto(`${reportUrl('family', 'period=week&from=home')}&lang=${loc}`);
     await page.getByTestId('report-headline').waitFor();
     await page.waitForTimeout(800);
-    const h = await page.getByRole('heading', { level: 1 }).first().boundingBox();
-    await page.evaluate((y) => window.scrollTo(0, y), Math.max(0, (h?.y ?? 0) - 12));
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: `${OUT}/${loc}/report.png` });
+    const box = await page.evaluate(() => {
+      const top = (n: Element | null) => (n ? n.getBoundingClientRect().top + window.scrollY : 0);
+      const tabs = document.querySelector('[role="tablist"]');
+      const practice = [...document.querySelectorAll('h2,h3')][1]?.parentElement ?? null; // "What to practice next"
+      return { top: top(tabs), bottom: practice ? practice.getBoundingClientRect().bottom + window.scrollY : 0 };
+    });
+    const y = Math.round(box.top - 12);
+    await page.screenshot({ path: `${OUT}/${loc}/report.png`, fullPage: true, clip: { x: 0, y, width: 390, height: Math.round(box.bottom - y + 16) } });
+    await ctx.close();
   });
-  test(`roster ${loc}`, async ({ page }) => {
-    await page.setViewportSize({ width: 720, height: 900 });
-    await mockRoster(page);
-    await page.goto(`/teach/space?id=space%3Asunflower&lang=${loc}`);
-    await page.waitForTimeout(2500);
-    // The student cards: from the "Most recent activity first" heading to the bottom of the first row of cards.
-    const heading = { en: 'Most recent activity first', es: 'Primero la actividad más reciente', ko: '최근 활동 순서' }[loc];
-    const top = await page.getByText(heading, { exact: true }).first().boundingBox();
-    const y = Math.max(0, (top?.y ?? 900) - 16);
-    const bottom = await page.evaluate((from) => {
-      const cards = [...document.querySelectorAll('li, article, section, div')].filter((n) => {
-        const r = n.getBoundingClientRect();
-        return r.top + window.scrollY > from + 20 && r.width > 200 && r.width < 400 && r.height > 150;
-      });
-      const first = cards.sort((p, q) => p.getBoundingClientRect().top - q.getBoundingClientRect().top)[0];
-      return first ? first.getBoundingClientRect().bottom + window.scrollY : from + 480;
-    }, y);
-    await page.screenshot({ path: `${OUT}/${loc}/roster.png`, fullPage: true, clip: { x: 0, y, width: 720, height: Math.round(bottom - y + 6) } });
-  });
+  // The class page (class-list.webp wide, class-list-narrow.webp below 45em). Review round 3: no student cards, which carry
+  // the Learning Route row (`learningRoute` is off on the site) and the level check's starting spot (`levelCheck` off).
+  // Wide: from the class name to the end of "This week" at 720 px. Narrow: the "This week" card alone at 390 px, 2x.
+  for (const [tag, width, scale] of [['class-list', 720, 1], ['class-list-narrow', 390, 2]] as const) {
+    test(`${tag} ${loc}`, async ({ browser }) => {
+      const ctx = await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: scale });
+      const page = await ctx.newPage();
+      await mockRoster(page);
+      await page.goto(`/teach/space?id=space%3Asunflower&lang=${loc}`);
+      await page.waitForTimeout(2500);
+      const week = { en: 'This week', es: 'Esta semana', ko: '이번 주' }[loc];
+      const box = await page.evaluate((w) => {
+        const h = [...document.querySelectorAll('h1,h2')].find((n) => n.textContent?.trim() === 'Sunflower');
+        const t = [...document.querySelectorAll('h2,h3,div,span,p')].find((n) => n.textContent?.trim() === w && n.children.length === 0);
+        let card = t as HTMLElement | null;
+        while (card && parseFloat(getComputedStyle(card).borderTopWidth) === 0) card = card.parentElement;
+        const abs = (r: DOMRect | undefined, k: 'top' | 'bottom') => (r ? r[k] + window.scrollY : 0);
+        return { name: abs(h?.getBoundingClientRect(), 'top'), cardTop: abs(card?.getBoundingClientRect(), 'top'), bottom: abs(card?.getBoundingClientRect(), 'bottom') };
+      }, week);
+      const y = Math.max(0, Math.round((tag === 'class-list' ? box.name : box.cardTop) - 16));
+      await page.screenshot({ path: `${OUT}/${loc}/${tag}.png`, fullPage: true, clip: { x: 0, y, width, height: Math.round(box.bottom - y + 16) } });
+      await ctx.close();
+    });
+  }
 }

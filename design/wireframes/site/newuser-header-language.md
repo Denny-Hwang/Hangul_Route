@@ -17,7 +17,8 @@ Audience: every visitor on every site page; often someone whose language is not 
 
 ## Box diagram
 
-Phone, below 30em (480 px): brand mark only.
+Phone, below 30em (480 px): brand mark only. On `/` (review round 3): no Start pill on phones, and the brand name shows from 22.5em (360 px):
+`[HR Hangul Route] ....... [globe English][Sign in]`.
 
 ```
 ┌──────────────────────────────────────────┐
@@ -82,6 +83,8 @@ States:
 
 ## Open questions
 
-- OD-SN-1: keep the Start pill on `/` (default: yes, for one header everywhere) or hide it there because the hero has
-  the big button.
-- OD-SN-2: the brand name on phones shows from 30em only (default); the alternative is a second header row.
+- OD-SN-1 (default changed after review round 3): on `/` the header Start stays wide-only, as today, because the hero's
+  Start learning is on the first screen; every other page has the phone Start pill.
+- OD-SN-2 (default changed after review round 3): on `/` the phone header shows the brand name from 22.5em (360 px), so a
+  first-time visitor reads "Hangul Route" on the first screen; on other pages the name shows from 30em (480 px), the mark
+  alone below. The alternative is a second header row.

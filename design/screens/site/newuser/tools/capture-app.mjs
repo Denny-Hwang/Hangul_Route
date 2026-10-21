@@ -27,7 +27,7 @@ const require = createRequire(join(REPO, 'apps/web/package.json'));
 const { chromium } = require('@playwright/test');
 
 const [messagesFile, outDir, only] = process.argv.slice(2);
-const M = JSON.parse(readFileSync(messagesFile, 'utf8'));
+const M = messagesFile ? JSON.parse(readFileSync(messagesFile, 'utf8')) : {}; // empty when only `encode` is imported
 const APP = process.env.APP_URL ?? 'http://localhost:4373';
 const BROWSER_LOCALE = { en: 'en-US', es: 'es-ES', ko: 'ko-KR' };
 const NAME = { en: 'Dami', es: 'Dami', ko: '다미' };
@@ -57,7 +57,9 @@ async function silentKoreanVoice(ctx) {
 
 async function learner(browser, locale, out) {
   const L = M[locale].learner;
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: BROWSER_LOCALE[locale], hasTouch: true, isMobile: true });
+  // HOME_WIDTH=430 for the Home capture (review round 3): at 390 px the Korean greeting breaks before its comma
+  // (spec section 11); at 430 it breaks after it. Every other screen is taken at 390.
+  const ctx = await browser.newContext({ viewport: { width: Number(process.env.HOME_WIDTH ?? 390), height: 844 }, deviceScaleFactor: 2, locale: BROWSER_LOCALE[locale], hasTouch: true, isMobile: true });
   await silentKoreanVoice(ctx);
   const p = await ctx.newPage();
   const shot = async (name) => {
@@ -94,7 +96,7 @@ async function learner(browser, locale, out) {
   await toastGone();
   await shot('home');
   const library = M[locale].a11y.tabs.library;
-  await p.getByRole('tab', { name: library, exact: true }).or(p.getByRole('button', { name: library, exact: true })).first().click();
+  await p.getByText(library, { exact: true }).last().click(); // the tab bar's label (its accessible name may carry more)
   await p.waitForTimeout(1500);
   await p.locator('[role=button]').filter({ hasText: L.library.new.pill }).first().click();
   await shot('card');
@@ -116,11 +118,68 @@ async function lecture(browser, locale, out) {
   await ctx.close();
 }
 
-/** PNG -> WebP at the widths of spec section 3.13 (2x of the largest drawn size), quality 72. */
+/**
+ * PNG -> WebP at the widths of spec section 3.13 (2x of the largest drawn size), quality 72, with the review round 3
+ * crops (spec section 3.13 "Crops"): the crop boxes are found in the pixels, so a copy change that moves a line moves
+ * the crop with it.
+ *   home               top of the screen to 12 CSS px under the Start button (the Learning Route link and the tab
+ *                      bar stay out: `learningRoute` is off on the site); taken at HOME_WIDTH=430
+ *   discover-narrow    Discover page 1 from the title to under Hear it (the hero below 45em)
+ *   game               under the Close row to the last letter tile
+ *   card               the card face only
+ *   report             the console capture minus its top 16 px
+ *   class-list(-narrow), discover, lecture-slide   as captured
+ */
 export async function encode(srcDir, destDir) {
   const sharp = require(require.resolve('sharp', { paths: [join(REPO, 'node_modules/.pnpm/node_modules')] }));
-  const sizes = { discover: 520, home: 400, game: 400, card: 400, report: 600, 'class-list': 720, 'lecture-slide': 1080 };
-  for (const [name, width] of Object.entries(sizes)) await sharp(join(srcDir, `${name}.png`)).resize(width).webp({ quality: 72, effort: 6 }).toFile(join(destDir, `${name}.webp`));
+  const px = async (file) => sharp(file).raw().toBuffer({ resolveWithObject: true });
+  const at = ({ data, info }, x, y) => data.slice((y * info.width + x) * info.channels, (y * info.width + x) * info.channels + 3);
+  /** First and last row of the first run of `test` pixels in column x, from y0 down. */
+  const run = (img, x, y0, test) => {
+    let first = -1;
+    for (let y = y0; y < img.info.height; y += 1) {
+      if (test(...at(img, x, y))) { if (first < 0) first = y; }
+      else if (first >= 0) return [first, y - 1];
+    }
+    return [first, img.info.height - 1];
+  };
+  const orange = (r, g, b) => r > 150 && g < 110 && b < 60; // brand.primary on the Start button
+  const blue = (r, g, b) => r < 90 && g > 80 && b > 130; // the Hear it button
+  const frame = (r, g, b) => r > 200 && g > 80 && g < 160 && b < 110; // the card's border
+  const webp = (img, width, out) => img.resize(width).webp({ quality: 72, effort: 6 }).toFile(join(destDir, `${out}.webp`));
+  const src = (n) => join(srcDir, `${n}.png`);
+
+  const home = await px(src('home'));
+  const [, startEnd] = run(home, 110, 500, orange);
+  await webp(sharp(src('home')).extract({ left: 0, top: 0, width: home.info.width, height: startEnd + 24 }), 400, 'home');
+
+  const disc = await px(src('discover'));
+  const [, hearEnd] = run(disc, 268, 900, blue);
+  await webp(sharp(src('discover')).extract({ left: 0, top: 230, width: disc.info.width, height: hearEnd + 28 - 230 }), 400, 'discover-narrow');
+  await webp(sharp(src('discover')), 520, 'discover');
+
+  const game = await px(src('game'));
+  const bg = at(game, 10, game.info.height - 80);
+  let last = 0;
+  for (let y = 168; y < game.info.height - 160; y += 1)
+    for (let x = 0; x < game.info.width; x += 2) {
+      const [r, g, b] = at(game, x, y);
+      if (Math.abs(r - bg[0]) + Math.abs(g - bg[1]) + Math.abs(b - bg[2]) > 40) { last = y; break; }
+    }
+  await webp(sharp(src('game')).extract({ left: 0, top: 168, width: game.info.width, height: last + 28 - 168 }), 400, 'game');
+
+  const card = await px(src('card'));
+  const cx = Math.round(card.info.width / 2);
+  const [faceTop] = run(card, cx, 100, frame);
+  let faceEnd = faceTop; // the frame's bottom edge: the lowest frame-coloured pixel (the word above it is a similar orange)
+  for (let y = card.info.height - 1; y > faceTop; y -= 1) if (frame(...at(card, cx, y))) { faceEnd = y; break; }
+  await webp(sharp(src('card')).extract({ left: 0, top: faceTop - 20, width: card.info.width, height: faceEnd + 20 - (faceTop - 20) }), 400, 'card');
+
+  const rep = await sharp(src('report')).metadata();
+  await webp(sharp(src('report')).extract({ left: 0, top: 16, width: rep.width, height: rep.height - 16 }), 600, 'report');
+  await webp(sharp(src('class-list')), 720, 'class-list');
+  await webp(sharp(src('class-list-narrow')), 600, 'class-list-narrow');
+  await webp(sharp(src('lecture-slide')), 1080, 'lecture-slide');
 }
 
 if (messagesFile && outDir) {
