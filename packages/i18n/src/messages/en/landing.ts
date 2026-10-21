@@ -252,7 +252,7 @@ export const landing = {
       /** One paragraph under "What you learn first": what comes after Stage 1. */
       after: {
         title: 'After the alphabet',
-        body: 'Words, short sentences, conversations and heritage stories, in the same five-minute steps.',
+        body: 'Words, short sentences, conversations and heritage stories, in the same five-minute quests.',
       },
     },
     parents: {

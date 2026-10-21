@@ -155,7 +155,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     const learnerOn = /launchDefaults: Flags = \{[^}]*\bplacementEnabled: true,/.test(learnerFlags);
     expect(learnerOn).toBe(true);
     expect(SITE_CLAIMS.levelCheck).toBe(false);
-    // The flip may never run ahead of the feature.
+    // The flip may never run ahead of the feature. Vacuous while the claim is false: it guards the owner's flip PR.
     expect(!SITE_CLAIMS.levelCheck || learnerOn).toBe(true);
   });
 

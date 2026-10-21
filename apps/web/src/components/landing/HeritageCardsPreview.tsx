@@ -30,7 +30,9 @@ function CardTile({ card, t }: { card: SiteCard; t: CardWords }): JSX.Element {
         display: 'flex',
         flexDirection: 'column',
         gap: spacing.xs,
-        minHeight: 168,
+        // The even height (and the blurb's `marginTop: 'auto'`) lines up a row of glossed cards. A card with no gloss
+        // takes its own height, so it shows no empty band between the romanization and the blurb (every ko card).
+        ...(card.gloss === null ? {} : { minHeight: 168 }),
       }}
     >
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

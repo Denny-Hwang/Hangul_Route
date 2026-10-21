@@ -120,7 +120,7 @@ Removed from `/`: the audience badges, the trust strip's long bodies, the 24-car
 Wireframe: `design/wireframes/site/learners.md`. Strings: appendix B.2. Audience: anyone learning, any age (no age words, no "kids").
 
 1. h1 "For learners" + one-line lead + primary `Start learning`.
-2. **What you learn first.** One line on Stage 1 (the Korean alphabet: letters, their sounds, building syllables) and three bullets: Read, Listen, Write (tracing), then one paragraph, **After the alphabet** ("Words, short sentences, conversations and heritage stories, in the same five-minute steps."). No speaking line anywhere (owner decision 2026-10-10).
+2. **What you learn first.** One line on Stage 1 (the Korean alphabet: letters, their sounds, building syllables) and three bullets: Read, Listen, Write (tracing), then one paragraph, **After the alphabet** ("Words, short sentences, conversations and heritage stories, in the same five-minute quests."). No speaking line anywhere (owner decision 2026-10-10).
 3. **How most quests work.** Three bullets: Discover (see and hear the letter), Play (mini-games), Check (gentle: wrong answers get an amber nudge and Hoya thinking, never red). The heading says "most" because two Stage 1 quests (`quest:stage1-nature-q1`, `quest:stage1-crafts-q1`) have no Discover and Check steps until F-QUEST-002 Q-8 adds them; Q-8 may then drop the word (one string). One line with the small Hoya art: "Hoya the tiger guides every quest and never says “wrong.”" (replaces the Meet Hoya section). `<details>` "See the mini-games" holds `MiniGamesGallery`: the eight Stage 1 kinds `apps/mobile/src/logic/minigame-config.ts` configures (listen-pick, match-sound, build-letter, pic-word-match, trace-stroke, odd-one-out, culture-quiz, story-sequence; no speaking game, no game of a later stage), each title and blurb `landing.games.items.<kind>` in the UI language (site-learners-l10n PR, 2026-10-21).
 4. **Collect Korean culture.** One line + a row of six card tiles (the first six of `stage1Cards`) + `<details>` "See all {n} Stage 1 cards" holding the full `HeritageCardsPreview` grid. Closed by default, so its height does not count in the budget. In es and ko each card's gloss is its content overlay's `title` and its blurb the overlay's `blurb` (`stage1CardsIn`, applied on the server); a title that only repeats the Korean word or its romanization (every ko title, and es titles such as "Bap") is not shown, as on the app's card face.
 5. **Your Learning Route** — only when the `learningRoute` claim is on: one line ("One map shows where you started, where you are and what comes next.").
@@ -198,8 +198,9 @@ export interface SiteClaims {
   lectureMode: boolean;                   // F-TCH-004 presenter on in production with its entry points (LV-7)
   levelCheck: boolean;                    // F-PLC-001 level check offered to a new profile on every platform
 }
+// Current values as in apps/web/src/data/site-claims.ts (the table below records each flip).
 export const SITE_CLAIMS: SiteClaims = { freePlan: 'stage1', paidPlans: 'coming', learningRoute: false,
-  parentReports: false, teacherReports: false, feedbackNotes: false, browseAsLearner: false, lectureMode: false,
+  parentReports: true, teacherReports: true, feedbackNotes: true, browseAsLearner: true, lectureMode: true,
   levelCheck: false };
 
 /** A line about a paid feature shows only when its claim is on AND paidPlans === 'inApp'. */

@@ -159,12 +159,12 @@ export const landing = {
         // The button label is learner.placement.invite.knowSome in Spanish, word for word; "prueba de nivel" as in the app.
         level: {
           q: 'Ya sé algo de hangul. ¿Tengo que empezar desde el principio?',
-          a: 'No. Al empezar, toca Ya sé algo de coreano y haz una breve prueba de nivel. Hoya te sugiere por dónde empezar.',
+          a: 'No. Al comenzar, toca Ya sé algo de coreano y haz una breve prueba de nivel. Hoya te sugiere por dónde empezar.',
         },
       },
       after: {
         title: 'Después del alfabeto',
-        body: 'Palabras, frases cortas, conversaciones e historias del patrimonio, en los mismos pasos de cinco minutos.',
+        body: 'Palabras, frases cortas, conversaciones e historias del patrimonio, en las mismas misiones de cinco minutos.',
       },
     },
     parents: {
@@ -261,7 +261,7 @@ export const landing = {
     listLabel: 'Minijuegos de la Etapa 1',
     family: { recognition: 'Reconocer', production: 'Producir', application: 'Aplicar', review: 'Repasar' },
     beta: 'Beta: opcional',
-    // Titles follow the app's game names (learner.myRoute.games) where it has one.
+    // Titles mostly follow the app's game names (learner.myRoute.games).
     items: {
       'listen-pick': { title: 'Escucha y elige', blurb: 'Escucha un sonido y toca la letra o la palabra.' },
       'match-sound': { title: 'Une el sonido', blurb: 'Escucha una letra. Toca la ficha que coincide. Sin prisa.' },
@@ -270,7 +270,7 @@ export const landing = {
       'trace-stroke': { title: 'Traza la letra', blurb: 'Sigue el orden de los trazos. Tu dedo aprende la forma.' },
       'odd-one-out': { title: 'Busca el intruso', blurb: 'Tres van juntas. ¿Puedes encontrar la que es diferente?' },
       'culture-quiz': { title: 'Trivia cultural', blurb: 'Una palabra coreana y cuatro respuestas. Elige lo que significa.' },
-      'story-sequence': { title: 'Ordena la historia', blurb: 'Cuatro tarjetas, una historia. Tócalas en el orden en que pasan.' },
+      'story-sequence': { title: 'Ordena la historia', blurb: 'Cuatro tarjetas, una historia. Tócalas en el orden en que ocurren.' },
     },
   },
   footer: {

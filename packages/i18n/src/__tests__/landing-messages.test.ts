@@ -52,7 +52,7 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.home.how.levelBody).toBe('Pick who learns, or check your level.');
     expect(l.persona.learners.after).toEqual({
       title: 'After the alphabet',
-      body: 'Words, short sentences, conversations and heritage stories, in the same five-minute steps.',
+      body: 'Words, short sentences, conversations and heritage stories, in the same five-minute quests.',
     });
     // Placement is a level check, never a "test", in the English copy.
     expect(JSON.stringify([l.persona.learners.faq.level, l.home.how.levelBody])).not.toMatch(/\btest\b|\bplacement\b/i);
