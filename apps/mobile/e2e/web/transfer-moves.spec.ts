@@ -370,10 +370,10 @@ test('a grown-up session left open elsewhere never carries the Home line: Review
   await seedSynced(page, 30);
   await openGrownUpZone(page, 'Mina');
   await unlockWithPin(page);
-  await expect(page.getByRole('heading', { name: 'Family Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Grown-up area' })).toBeVisible();
   // Back to the learner (in the app, so the session stays open), then the Home line.
-  // The dashboard's back arrow sits just before its title block.
-  await page.getByRole('heading', { name: 'Family Dashboard' }).locator('xpath=../preceding-sibling::*[1]').click();
+  // The dashboard's header Back (its title row also holds the Display button, so the arrow is found by its test id).
+  await headerBack(page).first().click();
   await expect(page.getByRole('heading', { name: 'Classes & family' })).toBeVisible();
   await headerBack(page).first().click();
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
@@ -381,8 +381,9 @@ test('a grown-up session left open elsewhere never carries the Home line: Review
   await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
   await unlockWithPin(page);
   await expect(page.getByRole('heading', { name: 'A move is waiting' })).toBeVisible();
-  // Leaving the sheet ends the session: the next Review asks again.
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  // Leaving the sheet ends the session: the next Review asks again. The sheet has a header Back and its own Back
+  // under Not now; the header one is used.
+  await headerBack(page).first().click();
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
   await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();

@@ -204,7 +204,7 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     await shot(page, 'dn3b-culture-quiz-largest-320x568');
   });
 
-  test('Stage complete: the letter wall\'s fixed tiles hold their letters at Largest', async ({ page }) => {
+  test('Stage complete: the letter wall\'s tiles grow to hold their letters at Largest', async ({ page }) => {
     await learnerAtLargest(page, 'Dami');
     const id = await profileIdOf(page, 'Dami');
     await seedStored(page, `progress:${id}`, stageOneDone(id));
