@@ -1148,6 +1148,8 @@ The owner decided every row on 2026-10-21 (section 21). OD-2 changed from the pr
 | OD-13 | My Story keepsake | **Not kept**: "My page" is shown at the end and cleared, as F-CURR-001 OD-6 | A kept, device-only keepsake page (needs a privacy review row and its own spec) | CM-38 |
 | OD-14 | What keeps the streak | **Any learning activity** (quest, Daily Review, story, word set); amend F-REPORT-001 OD-19 in CM-0b | Quest sessions only, as F-REPORT-001 OD-19 today | CM-4, CM-17 |
 
+**After OD-12 (open, needs owner wording).** Row CM-1 changed only the four OD-12 strings. Four older `stages.ts` strings still break the `review-copy` patterns (9.3), and CM-1's test holds them in a shrink-only `KNOWN_EXCEPTIONS` list: `stage7.oneLinerEn` "Say what you think, feel, and create — in Korean." (a speaking word; shown on the Journey), `stage2.anchorSkillEn` "Read and pronounce 60 core words across daily themes" (a speaking word), and `stage1.anchorSkillEn` and `stage5.anchorSkillEn` (`%`). The es and ko values of these fields carry the same wording. A reading and writing frame for Stage 7, such as "Write about what you think, feel and make, in Korean.", is a proposal only. A follow-up copy PR with the owner's wording rewrites them with es and ko and removes them from the list.
+
 ## 17. PR breakdown
 
 Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split if it grows past about 2,000). "W→A" means the Worker deploys first, then the app. Strings are new English UI strings, each with es and ko in the same PR. "×n" rows count as n PRs.

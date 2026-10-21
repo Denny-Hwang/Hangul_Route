@@ -8691,7 +8691,7 @@ export const OVERLAYS: Overlays = {
     },
     "stage:stage5": {
       "anchorSkill": "5문장 이야기를 읽고 80% 이상 이해하기",
-      "oneLiner": "호야와 함께 문화 이야기와 동화를 읽어요.",
+      "oneLiner": "호야와 함께 문화 이야기와 짧은 이야기를 읽어요.",
       "title": "이야기"
     },
     "stage:stage6": {

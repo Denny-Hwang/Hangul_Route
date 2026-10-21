@@ -11,13 +11,17 @@ import { stages } from '../stages';
  * speaking-UI words (the app teaches reading, listening and writing; it measures no speaking).
  *
  * KNOWN_EXCEPTIONS lists the strings that predate OD-12 and that OD-12 did not reword. It is a
- * ratchet: a new string may not join it, and a string that is fixed must leave it.
+ * ratchet: a new string may not join it, a listed string may not break a further rule, and a
+ * string that is fixed must leave it. The open item that clears it is the "After OD-12" note under
+ * the owner decisions table of F-CURR-002 section 16.
  */
 
 const PERCENT_OR_FRACTION = /%|\b\d+\s*(of|\/)\s*\d+\b/i;
 const AGE_WORDING =
   /\b(ages?\s+\d+|\d+\s*(-|–|to)\s*\d+\s*(years?|yrs?)|\d+\s*(years?|yrs?)\s*(old|\+)|kids?|child(ren)?|toddlers?|little ones?)\b/i;
-const SPEAKING_WORDS = /\b(record(s|ed|ing)?|speak(s|ing)?|spoke|say(s|ing)?|said|call(s|ed|ing)?)\b/i;
+const SPEAKING_WORDS =
+  /\b(record(s|ed|ing)?|speak(s|ing)?|spoke|say(s|ing)?|said|call(s|ed|ing)?|pronounc(e|es|ed|ing))\b/i;
+const EMOJI = /\p{Extended_Pictographic}/u;
 
 const RULES: Array<[string, RegExp]> = [
   ['percent or fraction', PERCENT_OR_FRACTION],
@@ -25,11 +29,23 @@ const RULES: Array<[string, RegExp]> = [
   ['speaking word', SPEAKING_WORDS],
 ];
 
-/** `<stage key>.<field>` -> the rule it still breaks. Shrinks only. */
-const KNOWN_EXCEPTIONS: Record<string, string> = {
-  'stage1.anchorSkillEn': 'percent or fraction',
-  'stage5.anchorSkillEn': 'percent or fraction',
-  'stage7.oneLinerEn': 'speaking word',
+/** `<stage key>.<field>` -> every rule it still breaks. Shrinks only. */
+const KNOWN_EXCEPTIONS: Record<string, string[]> = {
+  'stage1.anchorSkillEn': ['percent or fraction'],
+  'stage2.anchorSkillEn': ['speaking word'],
+  'stage5.anchorSkillEn': ['percent or fraction'],
+  'stage7.oneLinerEn': ['speaking word'],
+};
+
+/**
+ * The same ratchet for the es and ko overlays, for the rules that do not depend on language:
+ * `%`, "n/m" and emoji. `<locale>.stage:<key>.<field>` -> every rule it still breaks.
+ */
+const KNOWN_OVERLAY_EXCEPTIONS: Record<string, string[]> = {
+  'es.stage:stage1.anchorSkill': ['percent or fraction'],
+  'es.stage:stage5.anchorSkill': ['percent or fraction'],
+  'ko.stage:stage1.anchorSkill': ['percent or fraction'],
+  'ko.stage:stage5.anchorSkill': ['percent or fraction'],
 };
 
 const fields = stages.flatMap((s) => [
@@ -37,15 +53,28 @@ const fields = stages.flatMap((s) => [
   [`${s.key}.anchorSkillEn`, s.anchorSkillEn] as const,
 ]);
 
-const violations = (): Record<string, string> => {
-  const out: Record<string, string> = {};
-  for (const [where, text] of fields) {
-    for (const [rule, re] of RULES) {
-      if (re.test(text)) out[where] = rule;
+const violations = (
+  entries: ReadonlyArray<readonly [string, string]>,
+  rules: ReadonlyArray<[string, RegExp]>,
+): Record<string, string[]> => {
+  const out: Record<string, string[]> = {};
+  for (const [where, text] of entries) {
+    for (const [rule, re] of rules) {
+      if (re.test(text)) out[where] = [...(out[where] ?? []), rule];
     }
   }
   return out;
 };
+
+const overlayFields = (['es', 'ko'] as const).flatMap((locale) =>
+  stages.flatMap((s) => {
+    const entry = OVERLAYS[locale][`stage:${s.key}`];
+    return [
+      [`${locale}.stage:${s.key}.oneLiner`, entry?.oneLiner ?? ''] as const,
+      [`${locale}.stage:${s.key}.anchorSkill`, entry?.anchorSkill ?? ''] as const,
+    ];
+  }),
+);
 
 describe('stage copy (F-CURR-002 OD-12)', () => {
   it('carries the OD-12 wording', () => {
@@ -70,18 +99,45 @@ describe('stage copy (F-CURR-002 OD-12)', () => {
     expect(SPEAKING_WORDS.test('Speak with Hoya')).toBe(true);
     expect(SPEAKING_WORDS.test('Say what you think')).toBe(true);
     expect(SPEAKING_WORDS.test('menus, signs, calls')).toBe(true);
+    expect(SPEAKING_WORDS.test('Read and pronounce 60 core words')).toBe(true);
     expect(SPEAKING_WORDS.test('Recognize every letter')).toBe(false);
     expect(SPEAKING_WORDS.test('Read and answer short everyday exchanges.')).toBe(false);
   });
 
   it('no stage one-liner or anchor skill breaks the review-copy patterns, beyond the known exceptions', () => {
-    expect(violations()).toEqual(KNOWN_EXCEPTIONS);
+    expect(violations(fields, RULES)).toEqual(KNOWN_EXCEPTIONS);
+  });
+
+  it('the ratchet records every rule a field breaks, not only the last one', () => {
+    expect(violations([['x', 'Say it at 90%']], RULES)).toEqual({ x: ['percent or fraction', 'speaking word'] });
   });
 
   it('no stage copy carries emoji', () => {
     for (const [where, text] of fields) {
-      expect(/\p{Extended_Pictographic}/u.test(text), where).toBe(false);
+      expect(EMOJI.test(text), where).toBe(false);
     }
+  });
+
+  it('no es or ko stage overlay carries a percent, a fraction or emoji, beyond the known exceptions', () => {
+    expect(
+      violations(overlayFields, [
+        ['percent or fraction', PERCENT_OR_FRACTION],
+        ['emoji', EMOJI],
+      ]),
+    ).toEqual(KNOWN_OVERLAY_EXCEPTIONS);
+  });
+
+  it('carries the reviewed es and ko values of the OD-12 strings', () => {
+    const es = OVERLAYS.es;
+    const ko = OVERLAYS.ko;
+    expect(es['stage:stage4']?.oneLiner).toBe('Lee y responde diálogos cortos de todos los días.');
+    expect(es['stage:stage5']?.oneLiner).toBe('Lee historias del patrimonio y cuentos con Hoya.');
+    expect(es['stage:stage6']?.oneLiner).toBe('Lleva el coreano al mundo: menús, letreros y mensajes cortos.');
+    expect(es['stage:stage7']?.anchorSkill).toBe('Escribe una presentación personal corta');
+    expect(ko['stage:stage4']?.oneLiner).toBe('짧은 일상 대화를 읽고 답해요.');
+    expect(ko['stage:stage5']?.oneLiner).toBe('호야와 함께 문화 이야기와 짧은 이야기를 읽어요.');
+    expect(ko['stage:stage6']?.oneLiner).toBe('메뉴, 표지판, 짧은 메시지까지, 한국어를 밖에서 써 봐요.');
+    expect(ko['stage:stage7']?.anchorSkill).toBe('짧은 자기소개 쓰기');
   });
 
   it('every stage has es and ko one-liner and anchor skill overlays', () => {
@@ -101,8 +157,8 @@ describe('stage copy (F-CURR-002 OD-12)', () => {
     expect(es['stage:stage7']?.anchorSkill).not.toMatch(/\bgrab/i);
     expect(es['stage:stage6']?.oneLiner).not.toMatch(/\bllamad/i);
     expect(es['stage:stage5']?.oneLiner).not.toMatch(/populares/i);
-    // Korean, as escapes so this file holds no Hangul: noeum ("recording"), jeonhwa ("phone call"),
-    // yetiyagi ("folk tale"), and the 1-minute (1bun) length of the old Stage 7 skill.
+    // Korean: noeum ("recording"), jeonhwa ("phone call"), yetiyagi ("folk tale"), and the
+    // 1-minute (1bun) length of the old Stage 7 skill.
     expect(ko['stage:stage7']?.anchorSkill).not.toMatch(/녹음|1분/u);
     expect(ko['stage:stage6']?.oneLiner).not.toMatch(/전화/u);
     expect(ko['stage:stage5']?.oneLiner).not.toMatch(/옛이야기/u);
