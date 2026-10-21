@@ -15,8 +15,12 @@ export type PinResetMethod = 'rescue_code' | 'wait';
 export const GROWN_UP_AREA = 'GrownUpArea';
 
 export interface PinRouteParams {
-  /** `'setup'` opens creation even when a PIN is stored (Forgot PIN, or a deliberate setup). */
-  mode?: 'setup';
+  /**
+   * `'setup'` opens creation even when a PIN is stored (Forgot PIN, or a deliberate setup). [OA] `'change'` asks the
+   * current PIN first and then opens creation (Change PIN on the reset-by-wait notice when the last PIN is older than
+   * `GROWN_UP_FRESH_PIN_MS`, OA-D21).
+   */
+  mode?: 'setup' | 'change';
   via?: PinResetMethod;
   /** Where the screen continues; only `GrownUpArea` changes how it opens. */
   next?: string;
@@ -57,6 +61,7 @@ export function forGrownUpUse(params: PinRouteParams): boolean {
  */
 export function initialPinMode(params: PinRouteParams, storedHash: string | null): PinMode {
   if (forGrownUpArea(params) || forGrownUpUse(params) || forCancelReset(params)) return 'verify';
+  if (params.mode === 'change') return storedHash === null ? 'setup-1' : 'verify';
   return params.mode === 'setup' || storedHash === null ? 'setup-1' : 'verify';
 }
 
@@ -65,7 +70,7 @@ export function initialPinMode(params: PinRouteParams, storedHash: string | null
  * for Cancel the wait ([OA]: a reset is already waiting; this screen only stops it).
  */
 export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boolean {
-  return mode === 'verify' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params);
+  return mode === 'verify' && !forGrownUpArea(params) && !forCancelReset(params);
 }
 
 /**
@@ -79,5 +84,10 @@ export function grownUpAreaNoPin(params: PinRouteParams, storedHash: string | nu
 /** The `where` of `pin.created` for a PIN stored by this screen (the first-run card reports `first_run` itself). */
 export function pinCreatedWhere(params: PinRouteParams): 'gate' | 'reset' | 'optional' {
   if (params.via !== undefined) return 'reset';
-  return params.mode === 'setup' ? 'optional' : 'gate';
+  return params.mode === 'setup' || params.mode === 'change' ? 'optional' : 'gate';
+}
+
+/** [OA] After a correct PIN, `'change'` goes on to create the new PIN instead of to the destination (never for Cancel the wait). */
+export function verifiedGoesToSetup(params: PinRouteParams): boolean {
+  return params.mode === 'change' && !forGrownUpArea(params) && !forCancelReset(params);
 }

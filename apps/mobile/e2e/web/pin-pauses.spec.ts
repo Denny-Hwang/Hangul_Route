@@ -36,10 +36,14 @@ test('10 misses give 30 s, then 60 s; the pad waits out each pause and the steps
   await page.clock.fastForward(30_000);
   await expect(page.getByRole('button', { name: 'Digit 1', exact: true })).toBeEnabled();
   await miss(page, 5);
-  // The second pause is 60 s: it reads in seconds, as every pause under a minute does.
+  // The second pause is 60 s. The page clock keeps running, so the line already reads a few ms under the minute
+  // ("60s", rounded up) or exactly "1 min"; the boundary itself is pinned in pin-pause.test.ts (60 000 ms is
+  // "1 min", 59 000 ms is "59s"). Two seconds on it is plainly in seconds.
   await expect(pauseLine(page)).toHaveText(/^Let's take a short break\. Try again in (60s|1 min)\.$/);
+  await page.clock.fastForward(2_000);
+  await expect(pauseLine(page)).toHaveText(/^Let's take a short break\. Try again in 5[78]s\.$/);
   await expect.poll(() => readStored<{ strikes: number }>(page, 'account:pinAttempts')).toMatchObject({ strikes: 2 });
-  await page.clock.fastForward(20_000);
+  await page.clock.fastForward(18_000);
   await expect(pauseLine(page)).toHaveText(/^Let's take a short break\. Try again in (3\d|40)s\.$/);
   // The pause survives a reload.
   await page.reload();
@@ -78,9 +82,10 @@ test('5 misses spread over 2 tabs pause both', async ({ page, context }) => {
   await miss(other, 2);
   // The 5th miss of the device, in the second tab, starts the pause there.
   await expect(pauseLine(other)).toHaveText("Let's take a short break. Try again in 30s.");
-  // The first tab meets it at its next try, and shows it when it comes back to the front.
-  await miss(page, 1);
+  // The first tab shows it at once, with no try of its own: the tabs tell each other (hr-pin-attempts).
   await expect(pauseLine(page)).toHaveText(/^Let's take a short break\. Try again in \d+s\.$/);
   await expect(page.getByRole('button', { name: 'Digit 1', exact: true })).toBeDisabled();
+  // A try there meets the same pause.
+  await expect.poll(() => readStored<{ lockedUntil: number | null }>(page, 'account:pinAttempts')).toMatchObject({ lockedUntil: expect.any(Number) });
   await other.close();
 });

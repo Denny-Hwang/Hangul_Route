@@ -335,36 +335,56 @@ describe('[OA] mergeAttemptStates (OA-D19)', () => {
   it('takes the later lockedUntil, the larger strikes and the later lastMissAt', () => {
     const a: AttemptState = { failures: [], lockedUntil: T0 + 60_000, strikes: 2, lastMissAt: T0 };
     const b: AttemptState = { failures: [], lockedUntil: T0 + 30_000, strikes: 3, lastMissAt: T0 - 5 };
-    expect(mergeAttemptStates(a, b)).toEqual({ failures: [], lockedUntil: T0 + 60_000, strikes: 3, lastMissAt: T0 });
-    expect(mergeAttemptStates(b, a)).toEqual(mergeAttemptStates(a, b));
+    expect(mergeAttemptStates(a, b, T0)).toEqual({ failures: [], lockedUntil: T0 + 60_000, strikes: 3, lastMissAt: T0 });
+    expect(mergeAttemptStates(b, a, T0)).toEqual(mergeAttemptStates(a, b, T0));
   });
 
   it('unions the misses of two tabs: 3 here and 1 there, then one more miss, is the 5th and pauses', () => {
     const here: AttemptState = { failures: [T0, T0 + 10, T0 + 20], lockedUntil: null, strikes: 0, lastMissAt: T0 + 20 };
     const there: AttemptState = { failures: [T0 + 5, T0 + 15], lockedUntil: null, strikes: 0, lastMissAt: T0 + 15 };
-    const merged = mergeAttemptStates(here, there);
+    const merged = mergeAttemptStates(here, there, T0);
     expect(merged.failures).toEqual([T0, T0 + 5, T0 + 10, T0 + 15, T0 + 20]);
     expect(merged.lockedUntil).toBeNull();
-    expect(registerMiss(mergeAttemptStates(here, { ...there, failures: [T0 + 5] }), T0 + 30).paused).toEqual({ step: 1, ms: 30_000 });
+    expect(registerMiss(mergeAttemptStates(here, { ...there, failures: [T0 + 5] }, T0), T0 + 30).paused).toEqual({ step: 1, ms: 30_000 });
   });
 
   it('drops misses up to the start of the merged pause (that round is spent)', () => {
     const paused: AttemptState = { failures: [], lockedUntil: T0 + 30_000, strikes: 1, lastMissAt: T0 };
     const stale: AttemptState = { failures: [T0 - 30, T0 - 20], lockedUntil: null, strikes: 0, lastMissAt: T0 - 20 };
-    expect(mergeAttemptStates(stale, paused)).toEqual(paused);
+    expect(mergeAttemptStates(stale, paused, T0)).toEqual(paused);
   });
 
   it('keeps every miss when the paused state is legacy (no lastMissAt) or nobody is paused', () => {
     const legacy: AttemptState = { failures: [], lockedUntil: T0 + 30_000 };
     const other: AttemptState = { failures: [T0 - 1], lockedUntil: null };
-    expect(mergeAttemptStates(legacy, other)).toEqual({ failures: [T0 - 1], lockedUntil: T0 + 30_000, strikes: 0 });
-    expect(mergeAttemptStates(INITIAL_ATTEMPT_STATE, INITIAL_ATTEMPT_STATE)).toEqual(INITIAL_ATTEMPT_STATE);
+    expect(mergeAttemptStates(legacy, other, T0)).toEqual({ failures: [T0 - 1], lockedUntil: T0 + 30_000, strikes: 0 });
+    expect(mergeAttemptStates(INITIAL_ATTEMPT_STATE, INITIAL_ATTEMPT_STATE, T0)).toEqual(INITIAL_ATTEMPT_STATE);
+  });
+
+  it('applies the 24-hour decay before it compares strikes, so a stale copy never brings decayed strikes back (OQ-23)', () => {
+    const now = T0 + 3 * PIN_STRIKE_DECAY_MS;
+    const stale: AttemptState = { failures: [], lockedUntil: null, strikes: 4, lastMissAt: T0 };
+    const fresh: AttemptState = { failures: [now], lockedUntil: null, strikes: 1, lastMissAt: now };
+    const merged = mergeAttemptStates(stale, fresh, now);
+    expect(effectiveStrikes(merged, now)).toBe(1);
+    expect(merged).toEqual({ failures: [now], lockedUntil: null, strikes: 1, lastMissAt: now });
+    expect(mergeAttemptStates(fresh, stale, now)).toEqual(merged);
+  });
+
+  it('never takes a decay step twice: two old copies keep their decayed count now and decay on from there', () => {
+    const now = T0 + 3 * PIN_STRIKE_DECAY_MS;
+    const old: AttemptState = { failures: [], lockedUntil: null, strikes: 4, lastMissAt: T0 };
+    const merged = mergeAttemptStates(old, old, now);
+    expect(merged).toEqual(old);
+    expect(effectiveStrikes(merged, now)).toBe(1);
+    expect(effectiveStrikes(mergeAttemptStates(old, INITIAL_ATTEMPT_STATE, now), now)).toBe(1);
+    expect(effectiveStrikes(merged, now + PIN_STRIKE_DECAY_MS)).toBe(0);
   });
 
   it('an older bundle that wrote a state without strikes does not lose the step', () => {
     const ours: AttemptState = { failures: [], lockedUntil: null, strikes: 4, lastMissAt: T0 };
     const olderTab = { failures: [T0 + 10], lockedUntil: null };
-    const merged = mergeAttemptStates(normalizeAttemptState(olderTab), ours);
+    const merged = mergeAttemptStates(normalizeAttemptState(olderTab), ours, T0);
     expect(merged.strikes).toBe(4);
     expect(merged.failures).toEqual([T0 + 10]);
   });

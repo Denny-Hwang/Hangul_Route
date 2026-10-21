@@ -27,6 +27,7 @@ import {
   initialPinMode,
   pinCreatedWhere,
   showForgotPin,
+  verifiedGoesToSetup,
   type PinMode,
 } from '../../logic/profiles/pin-flow';
 import {
@@ -42,6 +43,7 @@ import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { flags } from '../../config/flags';
 import { subscribeAppVisibility } from '../../platform/app-visibility';
+import { onPinAttemptsChanged } from '../../platform/pin-attempts-channel';
 import { openBrowseFromGate } from '../../platform/browse-handoff';
 import { pinHasher } from '../../platform/crypto';
 import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
@@ -116,6 +118,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const m = messages.caregiver.pin;
   const openParentGate = useUiStore((s) => s.openParentGate);
   const markPinVerified = useUiStore((s) => s.markPinVerified);
+  const markGateReturn = useUiStore((s) => s.markGateReturn);
   const locale = useLocale();
   const forGrownUpArea = opensGrownUpArea(route.params);
   const forUse = forGrownUpUse(route.params);
@@ -166,9 +169,15 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         .catch(() => undefined);
     };
     refresh();
-    return subscribeAppVisibility((visible) => {
+    const offVisibility = subscribeAppVisibility((visible) => {
       if (visible) refresh();
     });
+    // CS-16: another tab's miss, pause or correct PIN shows here at once, even while both tabs are in front.
+    const offOtherTab = onPinAttemptsChanged(refresh);
+    return () => {
+      offVisibility();
+      offOtherTab();
+    };
   }, [refreshAttempts]);
 
   // Tick once a second only while a cooldown is showing.
@@ -180,6 +189,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   const leave = (): void => navigation.goBack();
 
+  // [OA] CS-1: back to the screen whose action asked for the PIN, gate open; that landing keeps the session for the
+  // waiting action only (the Grown-up area exit watcher closes it on the next learner screen).
+  const back = (): void => {
+    markGateReturn();
+    navigation.goBack();
+  };
+
   const handOff = async (): Promise<void> => {
     const { url, grownUpVia, use } = route.params;
     // [OA] A chooser row (row OA-4b): its own page, `via: 'chooser'`; the target is derived here, never read from the route.
@@ -189,14 +205,14 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     // screen stays until the page goes: going back there would close the grown-up session and clear the unlock this
     // hand-off just wrote, before the grown-up page reads it (CS-2). A return from the cache finds this PIN screen,
     // which asks again (the fresh PIN is forgotten on a restore).
-    if (result === 'opened' && !forUse) navigation.goBack();
+    if (result === 'opened' && !forUse) back();
   };
 
   const proceed = (): void => {
     openParentGate();
     if (route.params.next === 'PlacementFinish') {
       // The level check is underneath: it sees the gate open and ends the run for the grown-up.
-      navigation.goBack();
+      back();
     } else if (route.params.next === 'AddProfile') {
       navigation.replace('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
     } else if (route.params.next === 'Restore') {
@@ -207,16 +223,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       navigation.replace('Paywall', { from: route.params.from ?? 'journey' });
     } else if (route.params.next === 'Billing') {
       // Back to the Plan screen with the gate open: native opens Billing for the press that waited, the web asks for one more tap (F-BILL-002 §4.7).
-      navigation.goBack();
+      back();
     } else if (route.params.next === 'EditProfile') {
       const { profileId } = route.params;
-      if (profileId === undefined) navigation.goBack();
+      if (profileId === undefined) back();
       else navigation.replace('EditProfile', { profileId });
     } else if (route.params.next === 'MyRoute') {
       // A profile's Learning Route, read-only now that the gate is open (F-ROUTE-001 section 3.1); a grown-up
       // passed the gate, so it stays read-only even for the active profile (amendment section 5.1).
       const { profileId } = route.params;
-      if (profileId === undefined) navigation.goBack();
+      if (profileId === undefined) back();
       else navigation.replace('MyRoute', { profileId, viewer: 'grownup' });
     } else if (route.params.next === 'PlacementReport') {
       const { profileId } = route.params;
@@ -230,13 +246,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     } else if (route.params.next === 'RouteProposal' || route.params.next === 'RouteSetup' || route.params.next === 'RouteOverview') {
       // A child's weekly plan, through the gate (F-PLAN-002 section 3.9): made, changed, or stopped on the overview underneath.
       const step = routeGateStep(route.params.next, route.params.profileId);
-      if (step.kind === 'back') navigation.goBack();
+      if (step.kind === 'back') back();
       else if (step.kind === 'proposal') navigation.replace('RouteProposal', { source: 'profile', profileId: step.profileId });
       else navigation.replace('RouteSetup', { profileId: step.profileId });
     } else if (route.params.next === 'NoteReport') {
       // "Tell a grown-up" on a note page (F-FEEDBACK-001 section 6.10 item 4): the report sheet of that note.
       const { noteId, profileId, noteVia } = route.params;
-      if (noteId === undefined || profileId === undefined) navigation.goBack();
+      if (noteId === undefined || profileId === undefined) back();
       else navigation.replace('NoteReport', { noteId, profileId, via: noteVia ?? 'note_page' });
     } else if (route.params.next === 'NotesGrownUp') {
       // Notes for <learner> after the session lapsed (F-FEEDBACK-001 section 6.10 item 2).
@@ -247,30 +263,30 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       // A class move (F-SPACE-002 section 4.12). Without a class this was Set up PIN on the Classes card:
       // back to the card, which now says when moves open.
       const { profileId, fromSpaceId } = route.params;
-      if (profileId === undefined || fromSpaceId === undefined) navigation.goBack();
+      if (profileId === undefined || fromSpaceId === undefined) back();
       else navigation.replace('MoveClass', { profileId, fromSpaceId });
     } else if (route.params.next === 'ApproveTransfer') {
       // The request's sheet; on a device whose PIN was made just now it is the read-only veto (D24).
       const { profileId, transferId } = route.params;
-      if (profileId === undefined || transferId === undefined) navigation.goBack();
+      if (profileId === undefined || transferId === undefined) back();
       else navigation.replace('ApproveTransfer', { profileId, transferId });
     } else if (route.params.next === 'ClassScope') {
       // [TV] The class update of one learner (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4).
       const { profileId } = route.params;
-      if (profileId === undefined) navigation.goBack();
+      if (profileId === undefined) back();
       else navigation.replace('ClassScope', { profileId });
     } else if (route.params.next === 'BrowseLessons') {
       // All lessons (F-BROWSE-001 section 4.3, BR-12a): the gate hand-off writes a fresh gate pass and leaves in this
       // tab. A browser that refuses the pass opens the dashboard, which says why under Open all lessons.
-      if (afterGateHandoff(openBrowseFromGate(route.params.browseTarget)) === 'leave') navigation.goBack();
+      if (afterGateHandoff(openBrowseFromGate(route.params.browseTarget)) === 'leave') back();
       else navigation.replace('ParentDashboard', { browseBlocked: true });
     } else if (route.params.next === 'LectureMode') {
       // The Lecture mode card (AMENDMENTS-LECTURE-V2 E5): back to the dashboard with the gate open. A browser opens a new
       // tab only inside a tap, so the grown-up taps the row again there (as Open billing and Sources do on the web).
-      navigation.goBack();
+      back();
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
-      navigation.goBack();
+      back();
     } else {
       navigation.replace('ParentDashboard');
     }
@@ -322,6 +338,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         if (pinResetRequestedAt !== null) clearPinResetRequest();
         // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
         markPinVerified();
+        if (verifiedGoesToSetup(route.params)) {
+          // [OA] OA-D21: Change PIN after the current one was checked.
+          setHint(null);
+          setMode('setup-1');
+          return;
+        }
         if (forGrownUpArea || forUse) await handOff();
         else proceed();
         return;
@@ -333,6 +355,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         const left = attemptsRemaining(result.state, Date.now());
         setHint(left > 0 ? m.entry.triesLeft(left) : null);
       }
+    } catch {
+      // A check that could not finish (the hasher or the lock failed) is not a miss: the pad clears and stays usable.
+      setEntry('');
     } finally {
       setBusy(false);
     }

@@ -35,10 +35,12 @@ import { useAccountStore } from '../../../store/account-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useUiStore } from '../../../store/ui-store';
 import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+import { pinHasher } from '../../../platform/crypto';
 import { PinEntryScreen } from '../PinEntryScreen';
 
 const m = getMessages('en').caregiver.pin;
 const a11y = getMessages('en').a11y;
+const buttons = getMessages('en').common.buttons;
 
 const learner: Profile = {
   id: 'profile:mina',
@@ -83,7 +85,7 @@ beforeEach(() => {
   tracked.length = 0;
   useProfileStore.setState({ profiles: [learner], activeId: learner.id, hydrated: true });
   useAccountStore.setState({ parentPinHash: 'h:1234', pinAttempts: { failures: [], lockedUntil: null, strikes: 0 }, rescueAttempts: { failures: [], lockedUntil: null, strikes: 0 } });
-  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
+  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, gateReturnPending: false });
 });
 
 afterEach(async () => {
@@ -168,6 +170,55 @@ describe('PinEntry during a pause', () => {
     const opened = tracked.find((e) => e.name === 'parent.gate.opened');
     expect(opened?.payload).toEqual({ dest: 'area', via: 'pin', marker: 'pin' });
     expect(opened && 'profileId' in opened).toBe(false);
+  });
+});
+
+async function showWith(params: Record<string, unknown>, navigation = nav()) {
+  const route = { key: 'pin', name: 'PinEntry' as const, params };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+  const r = await render(<PinEntryScreen route={route as any} navigation={navigation as any} />);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  return { r, navigation };
+}
+
+describe('[OA] PinEntry hand-backs and Change PIN', () => {
+  it('CS-1: a PIN for an action on the screen that asked goes back with the gate open and marks that one return', async () => {
+    const { r, navigation } = await showWith({ next: 'ExternalLink', url: 'https://example.org' });
+    await typePin(r.root, '1234');
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+    expect(useUiStore.getState().gateReturnPending).toBe(true);
+  });
+
+  it('Cancel goes back without a return mark', async () => {
+    const { r, navigation } = await showWith({ next: 'ExternalLink' });
+    await press(buttonsNamed(r.root, buttons.cancel)[0] as ReactTestInstance);
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().gateReturnPending).toBe(false);
+  });
+
+  it("OA-D21: mode 'change' asks the current PIN first, then opens creation instead of the destination", async () => {
+    const { r, navigation } = await showWith({ next: 'ParentDashboard', mode: 'change' });
+    expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(1);
+    await typePin(r.root, '1234');
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(buttonsNamed(r.root, buttons.next)).toHaveLength(1);
+    expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
+  });
+
+  it('a check that cannot finish is no miss: the entry clears and the pad stays usable', async () => {
+    const spy = vi.spyOn(pinHasher, 'verify').mockRejectedValueOnce(new Error('crypto unavailable'));
+    try {
+      const { r, navigation } = await showWith({ next: 'ParentDashboard' });
+      await typePin(r.root, '1234');
+      expect(navigation.replace).not.toHaveBeenCalled();
+      expect(useAccountStore.getState().pinAttempts.failures).toEqual([]);
+      expect(buttonsNamed(r.root, a11y.pinDigit(1))[0]?.props['aria-disabled']).not.toBe(true);
+      await typePin(r.root, '1234');
+      expect(navigation.replace).toHaveBeenCalledWith('ParentDashboard');
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 

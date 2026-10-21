@@ -139,11 +139,14 @@ export function registerSuccess(): AttemptState {
 
 /**
  * [OA] OA-D19: two attempt states (two tabs, or this tab and storage) merged so that neither loses a miss or
- * shortens a pause: the later `lockedUntil`, the larger `strikes`, the later `lastMissAt` and the union of the
- * misses. Misses at or before the start of the merged pause (the paused state's `lastMissAt`, the miss that
- * started it) are dropped, as that round is spent. Order does not matter, and merging a state with itself is it.
+ * shortens a pause: the later `lockedUntil`, the larger strikes **after the 24-hour decay at `now`**, the later
+ * `lastMissAt` and the union of the misses. Misses at or before the start of the merged pause (the paused state's
+ * `lastMissAt`, the miss that started it) are dropped, as that round is spent. The decay is applied before the
+ * comparison, so a stale copy never brings back strikes that have already decayed (OQ-23), and the stored count is
+ * set so that `effectiveStrikes(merged, now)` is that larger value (the decay counts from the later `lastMissAt`).
+ * Order does not matter, and merging a state with itself is it.
  */
-export function mergeAttemptStates(a: AttemptState, b: AttemptState): AttemptState {
+export function mergeAttemptStates(a: AttemptState, b: AttemptState, now: number): AttemptState {
   const lockedUntil =
     a.lockedUntil === null ? b.lockedUntil : b.lockedUntil === null ? a.lockedUntil : Math.max(a.lockedUntil, b.lockedUntil);
   const owner = lockedUntil === null ? null : a.lockedUntil === lockedUntil ? a : b;
@@ -151,9 +154,12 @@ export function mergeAttemptStates(a: AttemptState, b: AttemptState): AttemptSta
   const failures = [...new Set([...a.failures, ...b.failures])]
     .filter((t) => pauseStart === undefined || t > pauseStart)
     .sort((x, y) => x - y);
-  const strikes = Math.max(a.strikes ?? 0, b.strikes ?? 0);
-  const last = [a.lastMissAt, b.lastMissAt].filter((t): t is number => t !== undefined);
-  return { failures, lockedUntil, strikes, ...(last.length > 0 ? { lastMissAt: Math.max(...last) } : {}) };
+  const best = Math.max(effectiveStrikes(a, now), effectiveStrikes(b, now));
+  const times = [a.lastMissAt, b.lastMissAt].filter((t): t is number => t !== undefined);
+  const lastMissAt = times.length > 0 ? Math.max(...times) : undefined;
+  // Stored so that the decay from `lastMissAt` gives `best` now: no step is taken twice.
+  const strikes = best === 0 || lastMissAt === undefined ? best : best + Math.floor(Math.max(0, now - lastMissAt) / PIN_STRIKE_DECAY_MS);
+  return { failures, lockedUntil, strikes, ...(lastMissAt === undefined ? {} : { lastMissAt }) };
 }
 
 /**

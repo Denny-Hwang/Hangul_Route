@@ -10,7 +10,7 @@ vi.mock('../../platform/grown-up-tab', () => ({ endGrownUpTab: vi.fn() }));
 
 import type { Profile } from '@hangul-route/content-schema';
 import { endGrownUpTab } from '../../platform/grown-up-tab';
-import { arriveAtChooser, closeGrownUpSession } from '../grown-up-session';
+import { arriveAtChooser, closeGrownUpSession, onGrownUpSessionClosed } from '../grown-up-session';
 import { useProfileStore } from '../profile-store';
 import { useUiStore } from '../ui-store';
 
@@ -19,7 +19,7 @@ const profile = (id: string): Profile =>
 
 beforeEach(() => {
   vi.mocked(endGrownUpTab).mockClear();
-  useUiStore.setState({ parentGateOpenedAt: 1000, lastPinVerifiedAt: 2000 });
+  useUiStore.setState({ parentGateOpenedAt: 1000, lastPinVerifiedAt: 2000, gateReturnPending: false });
   useProfileStore.setState({ profiles: [profile('aaaa1111'), profile('bbbb2222')], activeId: 'aaaa1111', hydrated: true, activeSince: 0 });
 });
 
@@ -31,6 +31,51 @@ describe('closeGrownUpSession', () => {
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
     expect(endGrownUpTab).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops a pending PIN-screen return and tells every listener, even after one that throws', () => {
+    useUiStore.setState({ gateReturnPending: true });
+    const heard = vi.fn();
+    const offBad = onGrownUpSessionClosed(() => {
+      throw new Error('boom');
+    });
+    const off = onGrownUpSessionClosed(heard);
+    closeGrownUpSession();
+    expect(useUiStore.getState().gateReturnPending).toBe(false);
+    expect(heard).toHaveBeenCalledTimes(1);
+    off();
+    offBad();
+    closeGrownUpSession();
+    expect(heard).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('every other change of the active learner closes the grown-up session too (OA-D5b (1))', () => {
+  it('a new learner made active (Add a learner) closes it', () => {
+    const before = Date.now();
+    const created = useProfileStore.getState().createProfile({ displayName: 'Joon', ageGroup: '10-11', avatar: 'hoya-blue' });
+    expect(useProfileStore.getState().activeId).toBe(created.id);
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    expect(useProfileStore.getState().activeSince).toBeGreaterThanOrEqual(before);
+  });
+
+  it('removing the active learner closes it; removing another learner does not', () => {
+    useProfileStore.getState().remove('bbbb2222');
+    expect(useUiStore.getState().parentGateOpenedAt).toBe(1000);
+    expect(endGrownUpTab).not.toHaveBeenCalled();
+    useProfileStore.getState().remove('aaaa1111');
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(endGrownUpTab).toHaveBeenCalledTimes(1);
+  });
+
+  it('adopting a restored learner onto a device with no active learner closes it; with one active it does not', () => {
+    useProfileStore.getState().adoptProfile(profile('cccc3333'));
+    expect(useUiStore.getState().parentGateOpenedAt).toBe(1000);
+    useProfileStore.setState({ profiles: [], activeId: null });
+    useProfileStore.getState().adoptProfile(profile('dddd4444'));
+    expect(useProfileStore.getState().activeId).toBe('dddd4444');
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
   });
 });
 

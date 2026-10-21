@@ -129,6 +129,37 @@ function persist(set: ProfileSet, before: ProfileSet, change?: ListChange, remov
   if (set.activeId !== before.activeId) persistActive(set.activeId);
 }
 
+/** [OA] How `commitSet` writes: the list change replayed over the merge, a removal's tombstone, or the active key only. */
+interface CommitOptions {
+  now?: number;
+  change?: ListChange;
+  removedId?: string;
+  /** OA-D19: a pick writes only `hr:profiles:active`, so a learner another tab just added is never written over. */
+  activeOnly?: boolean;
+}
+
+/**
+ * [OA] OA-D5b (1), CS-15: every write of a new profile set goes through here. When the active learner changes (a
+ * Profile tile, a new learner made active, the active learner removed, a restored learner adopted, any later writer),
+ * the session clock restarts and the grown-up session ends, from any surface.
+ */
+function commitSet(
+  set: (partial: Partial<State>) => void,
+  before: ProfileSet,
+  next: ProfileSet,
+  options: CommitOptions = {},
+): void {
+  const now = options.now ?? Date.now();
+  const changed = closesSession(before.activeId, next.activeId);
+  set(changed ? { ...next, activeSince: now } : next);
+  if (options.activeOnly === true) {
+    if (next.activeId !== null) persistActive(next.activeId);
+  } else {
+    persist(next, before, options.change, options.removedId);
+  }
+  if (changed) closeGrownUpSession();
+}
+
 const clock: Clock = {
   now: () => Date.now(),
   nextId: () => Math.random().toString(36).slice(2, 10),
@@ -162,8 +193,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   createProfile: (input) => {
     const { profiles, activeId } = get();
     const result = createProfileReducer({ profiles, activeId }, input, clock);
-    set(result.set);
-    persist(result.set, { profiles, activeId });
+    commitSet(set, { profiles, activeId }, result.set);
     return result.created;
   },
 
@@ -202,29 +232,20 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   setActive: (id) => {
     const { profiles, activeId } = get();
     const now = Date.now();
-    const next = setActiveProfile({ profiles, activeId }, id, now);
-    const changed = closesSession(activeId, next.activeId);
-    set(changed ? { ...next, activeSince: now } : next);
-    // [OA] OA-D19: a pick writes only `hr:profiles:active`, so a learner another tab just added is never written over.
-    if (next.activeId !== null) persistActive(next.activeId);
     // [OA] OA-D5b (1): every change of learner, from any surface, ends the grown-up session (always on, CS-15).
-    if (changed) closeGrownUpSession();
+    commitSet(set, { profiles, activeId }, setActiveProfile({ profiles, activeId }, id, now), { now, activeOnly: true });
   },
 
   remove: (id) => {
     const { profiles, activeId } = get();
-    const next = removeProfileReducer({ profiles, activeId }, id);
-    set(next);
-    persist(next, { profiles, activeId }, unchanged, id);
+    commitSet(set, { profiles, activeId }, removeProfileReducer({ profiles, activeId }, id), { removedId: id });
     notifyProfileRemoved(id);
   },
 
   adoptProfile: (profile) => {
     const { profiles, activeId } = get();
     if (profiles.some((p) => p.id === profile.id)) return;
-    const next = { profiles: [...profiles, profile], activeId: activeId ?? profile.id };
-    set(next);
-    persist(next, { profiles, activeId });
+    commitSet(set, { profiles, activeId }, { profiles: [...profiles, profile], activeId: activeId ?? profile.id });
   },
 
   setParentPin: (pinHash) => {

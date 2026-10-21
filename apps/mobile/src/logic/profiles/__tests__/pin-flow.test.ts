@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CANCEL_RESET, GROWN_UP_AREA, GROWN_UP_USE, forCancelReset, forGrownUpArea, forGrownUpUse, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin } from '../pin-flow';
+import { CANCEL_RESET, GROWN_UP_AREA, GROWN_UP_USE, forCancelReset, forGrownUpArea, forGrownUpUse, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin, verifiedGoesToSetup } from '../pin-flow';
 
 describe('initialPinMode: which step the PIN screen opens on', () => {
   it('verifies when a PIN is stored', () => {
@@ -79,6 +79,18 @@ describe('destination GrownUpArea (F-APP-001 section 3.9)', () => {
   });
 });
 
+describe("[OA] mode 'change': the current PIN first, then a new one (OA-D21)", () => {
+  it('verifies first when a PIN is stored, creates at once when none is, and never on the grown-up area', () => {
+    expect(initialPinMode({ next: 'ParentDashboard', mode: 'change' }, 'h:1')).toBe('verify');
+    expect(initialPinMode({ next: 'ParentDashboard', mode: 'change' }, null)).toBe('setup-1');
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard', mode: 'change' })).toBe(true);
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard', mode: 'setup' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: GROWN_UP_AREA, mode: 'change' })).toBe(false);
+    expect(pinCreatedWhere({ next: 'ParentDashboard', mode: 'change' })).toBe('optional');
+  });
+});
+
 describe('[OA] destination CancelReset (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21, CS-4)', () => {
   it('always verifies: it never creates or resets a PIN, whatever mode or via says', () => {
     expect(CANCEL_RESET).toBe('CancelReset');
@@ -87,6 +99,8 @@ describe('[OA] destination CancelReset (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21
     expect(initialPinMode({ next: CANCEL_RESET }, 'hash')).toBe('verify');
     expect(initialPinMode({ next: CANCEL_RESET }, null)).toBe('verify');
     expect(initialPinMode({ next: CANCEL_RESET, mode: 'setup', via: 'wait' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: CANCEL_RESET, mode: 'change' }, null)).toBe('verify');
+    expect(verifiedGoesToSetup({ next: CANCEL_RESET, mode: 'change' })).toBe(false);
   });
 
   it('offers no Forgot PIN? (a reset is already waiting) and is not the grown-up area', () => {

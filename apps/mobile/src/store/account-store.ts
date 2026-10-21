@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { SubscriptionState } from '../logic/entitlement';
 import {
   INITIAL_ATTEMPT_STATE,
+  effectiveStrikes,
   mergeAttemptStates,
   normalizeAttemptState,
   verifyPin,
@@ -21,6 +22,7 @@ import {
   reconcilePinEpoch as nextPinEpoch,
 } from '../logic/shell/device-gate';
 import { readJson, readJsonExact, writeJson } from '../platform/storage';
+import { announcePinAttempts } from '../platform/pin-attempts-channel';
 import { PIN_ATTEMPTS_LOCK, withTabLock } from '../platform/tab-lock';
 
 /**
@@ -67,14 +69,47 @@ function pinResetByWaitOf(raw: unknown): PinResetByWait | null {
 }
 
 /**
- * [OA] OA-D19: the attempt state under `key`, read again inside the `hr:pin-attempts` lock. With Web Locks every
- * write is serialised, so the stored state is the truth; without them (native, an older browser) another tab may
- * have written meanwhile without seeing ours, so the two are merged (later pause, larger strikes, union of misses).
+ * [OA] Attempt state keys whose last write from this tab failed (a full or refusing storage): until a write lands
+ * again, storage may hold an older state than this tab, so it is merged instead of trusted. In memory only.
  */
-async function sharedAttempts(key: string, own: AttemptState, locked: boolean): Promise<AttemptState> {
-  const stored = normalizeAttemptState(await readJson<unknown>(key));
-  return locked ? stored : mergeAttemptStates(stored, own);
+const unsavedAttempts = new Set<string>();
+
+/**
+ * [OA] OA-D19: the attempt state under `key`, read again inside the `hr:pin-attempts` lock. With Web Locks every
+ * write of this bundle is serialised, so the stored state is the truth (another tab's correct PIN clears the pause
+ * here too), except where it cannot be: nothing readable is stored (a first use, or a read that failed) and this
+ * tab's own state stands; a state an older bundle wrote (no `strikes`) keeps its misses and pause but not a lower
+ * step, so this tab's strikes stay (section 8.3); and after this tab's own write failed, the two are merged. Without
+ * Web Locks (native, an older browser) another tab may have written meanwhile without seeing ours, so the two are
+ * always merged (later pause, larger strikes after the decay, union of misses).
+ */
+async function sharedAttempts(key: string, own: AttemptState, locked: boolean, now: number): Promise<AttemptState> {
+  const raw = await readJson<unknown>(key);
+  const stored = normalizeAttemptState(raw);
+  if (!locked || unsavedAttempts.has(key)) return mergeAttemptStates(stored, own, now);
+  if (raw === null || typeof raw !== 'object') return own;
+  if (typeof (raw as { strikes?: unknown }).strikes !== 'number') {
+    const strikes = effectiveStrikes(own, now);
+    return strikes === 0 ? stored : { ...stored, strikes, ...(own.lastMissAt === undefined ? {} : { lastMissAt: own.lastMissAt }) };
+  }
+  return stored;
 }
+
+/**
+ * [OA] Best effort, as every other write of this store: a storage that refuses (quota, blocked site data, a lost
+ * IndexedDB connection) never stops a correct PIN from going on, and the state stays counted in memory. A write
+ * that landed tells the other tabs to re-read.
+ */
+async function saveAttempts(key: string, state: AttemptState): Promise<void> {
+  try {
+    await writeJson(key, state);
+    unsavedAttempts.delete(key);
+    announcePinAttempts();
+  } catch {
+    unsavedAttempts.add(key);
+  }
+}
+
 /**
  * When the current PIN was made (epoch ms), F-SPACE-002 section 4.11: a PIN made less than a day ago
  * cannot attest a class move. Written with every new PIN, and moved with the epoch when an older bundle
@@ -164,8 +199,8 @@ interface Actions {
   verifyPinAttempt: (pin: string, deps: { hasher: PinHasher; schedule: PauseSchedule; now?: () => number }) => Promise<PinVerifyResult>;
   /** [OA] Checks a Rescue Code against its own shared attempt state, the same way (section 8.3). */
   attemptRescue: (entry: string, storedCodes: readonly string[], now?: () => number) => Promise<RescueCodeResult>;
-  /** [OA] Re-reads the shared attempt states, so a pause another tab started shows here too. */
-  refreshAttempts: () => Promise<void>;
+  /** [OA] Re-reads the shared attempt states (under the same lock), so a pause another tab started or ended shows here too. */
+  refreshAttempts: (now?: () => number) => Promise<void>;
   /** [OA] OA-D21: the finished 24-hour wait just set a PIN. */
   markPinResetByWait: (at: number) => void;
   /** [OA] The notice was shown at a Grown-up area entry. */
@@ -298,7 +333,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     if (hash !== null) void writeJson(PIN_CREATED_AT_KEY, pinCreatedAt);
     void writeJson(PIN_HASH_SEEN_KEY, pinHashSeen);
     // [OA] OA-D19: the setup path writes the attempt state inside the same lock as every verify.
-    void withTabLock(PIN_ATTEMPTS_LOCK, () => writeJson(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE)).catch(() => undefined);
+    void withTabLock(PIN_ATTEMPTS_LOCK, () => saveAttempts(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE)).catch(() => undefined);
     if (hadReset) void writeJson(PIN_RESET_KEY, null);
   },
 
@@ -309,30 +344,33 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
 
   verifyPinAttempt: (pin, { hasher, schedule, now = Date.now }) =>
     withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
-      const state = await sharedAttempts(PIN_ATTEMPTS_KEY, get().pinAttempts, locked);
-      const result = await verifyPin({ pin, storedHash: get().parentPinHash, state, now: now(), hasher, schedule });
+      const at = now();
+      const state = await sharedAttempts(PIN_ATTEMPTS_KEY, get().pinAttempts, locked, at);
+      const result = await verifyPin({ pin, storedHash: get().parentPinHash, state, now: at, hasher, schedule });
       set({ pinAttempts: result.state });
-      await writeJson(PIN_ATTEMPTS_KEY, result.state);
+      await saveAttempts(PIN_ATTEMPTS_KEY, result.state);
       return result;
     }),
 
   attemptRescue: (entry, storedCodes, now = Date.now) =>
     withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
-      const state = await sharedAttempts(RESCUE_ATTEMPTS_KEY, get().rescueAttempts, locked);
-      const result = attemptRescueCode({ entry, storedCodes, state, now: now() });
+      const at = now();
+      const state = await sharedAttempts(RESCUE_ATTEMPTS_KEY, get().rescueAttempts, locked, at);
+      const result = attemptRescueCode({ entry, storedCodes, state, now: at });
       set({ rescueAttempts: result.state });
-      await writeJson(RESCUE_ATTEMPTS_KEY, result.state);
+      await saveAttempts(RESCUE_ATTEMPTS_KEY, result.state);
       return result;
     }),
 
-  refreshAttempts: async () => {
-    const [pin, rescue] = await Promise.all([readJson<unknown>(PIN_ATTEMPTS_KEY), readJson<unknown>(RESCUE_ATTEMPTS_KEY)]);
-    // Display only: merged with what this tab holds, so a refresh never shortens a pause shown here.
-    set({
-      pinAttempts: mergeAttemptStates(normalizeAttemptState(pin), get().pinAttempts),
-      rescueAttempts: mergeAttemptStates(normalizeAttemptState(rescue), get().rescueAttempts),
-    });
-  },
+  refreshAttempts: (now = Date.now) =>
+    // Read under the same lock as every verify, so the stored state is the truth where Web Locks exist (another
+    // tab's correct PIN or reset clears the pause here too); without them it is merged, never shortening a pause.
+    withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
+      const at = now();
+      const pinAttempts = await sharedAttempts(PIN_ATTEMPTS_KEY, get().pinAttempts, locked, at);
+      const rescueAttempts = await sharedAttempts(RESCUE_ATTEMPTS_KEY, get().rescueAttempts, locked, at);
+      set({ pinAttempts, rescueAttempts });
+    }),
 
   markPinResetByWait: (at) => {
     const record: PinResetByWait = { v: 1, at };

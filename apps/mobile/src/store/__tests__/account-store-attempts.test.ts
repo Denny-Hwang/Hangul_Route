@@ -16,6 +16,7 @@ vi.mock('../../platform/storage', () => ({
 }));
 
 import { INITIAL_ATTEMPT_STATE, MAX_ATTEMPTS, type AttemptState, type PinHasher } from '../../logic/profiles/pin-hash';
+import { writeJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 
 const hasher: PinHasher = { hash: async (pin) => `h:${pin}`, verify: async (pin, stored) => stored === `h:${pin}` };
@@ -113,13 +114,70 @@ describe('verifyPinAttempt: one count for every tab (OA-D19)', () => {
     expect(useAccountStore.getState().pinAttempts).toEqual({ failures: [], lockedUntil: 5000, strikes: 0 });
   });
 
-  it('refreshAttempts shows a pause another tab started, and never shortens one shown here', async () => {
+  it('refreshAttempts without Web Locks shows a pause another tab started, and never shortens one shown here', async () => {
     disk.set('account:pinAttempts', { failures: [], lockedUntil: T0 + 60_000, strikes: 2, lastMissAt: T0 });
-    await useAccountStore.getState().refreshAttempts();
+    await useAccountStore.getState().refreshAttempts(() => T0);
     expect(useAccountStore.getState().pinAttempts.lockedUntil).toBe(T0 + 60_000);
     disk.set('account:pinAttempts', INITIAL_ATTEMPT_STATE);
-    await useAccountStore.getState().refreshAttempts();
+    await useAccountStore.getState().refreshAttempts(() => T0);
     expect(useAccountStore.getState().pinAttempts.lockedUntil).toBe(T0 + 60_000);
+  });
+
+  it('refreshAttempts under Web Locks reads inside the lock and takes the stored state: another tab cleared the pause', async () => {
+    const locks = fakeLocks();
+    setLocks(locks);
+    reset({ failures: [], lockedUntil: T0 + 60_000, strikes: 2, lastMissAt: T0 });
+    disk.set('account:pinAttempts', INITIAL_ATTEMPT_STATE);
+    await useAccountStore.getState().refreshAttempts(() => T0 + 1);
+    expect(locks.names).toEqual(['hr:pin-attempts']);
+    expect(useAccountStore.getState().pinAttempts).toEqual(INITIAL_ATTEMPT_STATE);
+  });
+
+  it('under Web Locks a state an older bundle wrote (no strikes) keeps its misses and pause, and this tab keeps its step', async () => {
+    setLocks(fakeLocks());
+    reset({ failures: [], lockedUntil: null, strikes: 3, lastMissAt: T0 });
+    disk.set('account:pinAttempts', { failures: [T0 + 1, T0 + 2, T0 + 3, T0 + 4], lockedUntil: null });
+    const miss = await useAccountStore.getState().verifyPinAttempt('9999', { hasher, schedule: 'steps', now: () => T0 + 5 });
+    // The 5th miss of the round, at the 4th step (15 minutes), not back at 30 seconds.
+    expect(miss.paused).toEqual({ step: 4, ms: 900_000 });
+    // An older bundle's state with no step of ours to keep is taken as it is.
+    reset();
+    disk.set('account:pinAttempts', { failures: [], lockedUntil: T0 + 30_000 });
+    await useAccountStore.getState().refreshAttempts(() => T0);
+    expect(useAccountStore.getState().pinAttempts).toEqual({ failures: [], lockedUntil: T0 + 30_000, strikes: 0 });
+  });
+
+  it('under Web Locks with nothing readable stored, this tab keeps its own count', async () => {
+    setLocks(fakeLocks());
+    reset({ failures: [T0, T0 + 1], lockedUntil: null, strikes: 0, lastMissAt: T0 + 1 });
+    await useAccountStore.getState().refreshAttempts(() => T0 + 2);
+    expect(useAccountStore.getState().pinAttempts.failures).toEqual([T0, T0 + 1]);
+  });
+
+  it('a storage that refuses the write never stops a correct PIN, and a wrong one still counts in memory', async () => {
+    setLocks(fakeLocks());
+    vi.mocked(writeJson).mockRejectedValueOnce(new Error('QuotaExceededError'));
+    const ok = await useAccountStore.getState().verifyPinAttempt('1234', { hasher, schedule: 'steps', now: () => T0 });
+    expect(ok.ok).toBe(true);
+    // The misses add up in memory while every write fails, and the 5th still pauses.
+    vi.mocked(writeJson).mockRejectedValue(new Error('QuotaExceededError'));
+    try {
+      let last = null as Awaited<ReturnType<ReturnType<typeof useAccountStore.getState>['verifyPinAttempt']>> | null;
+      for (let i = 0; i < MAX_ATTEMPTS; i += 1) last = await useAccountStore.getState().verifyPinAttempt('9999', { hasher, schedule: 'steps', now: () => T0 + 1 + i });
+      expect(last?.paused).toEqual({ step: 1, ms: 30_000 });
+      expect(useAccountStore.getState().pinAttempts.lockedUntil).toBe(T0 + MAX_ATTEMPTS + 30_000);
+      const rescue = await useAccountStore.getState().attemptRescue('TIGER-MOON-RIVER-APPLE-000000', [CODE], () => T0);
+      expect(rescue.ok).toBe(false);
+      expect(useAccountStore.getState().rescueAttempts.failures).toEqual([T0]);
+    } finally {
+      vi.mocked(writeJson).mockReset();
+      vi.mocked(writeJson).mockImplementation(async (key: string, value: unknown) => {
+        disk.set(key, structuredClone(value));
+      });
+    }
+    // Once a write lands again, the stored state is trusted again.
+    await useAccountStore.getState().verifyPinAttempt('1234', { hasher, schedule: 'steps', now: () => T0 + 60_000 });
+    expect(disk.get('account:pinAttempts')).toEqual(INITIAL_ATTEMPT_STATE);
   });
 
   it('a new PIN writes the cleared attempt state inside the lock', async () => {

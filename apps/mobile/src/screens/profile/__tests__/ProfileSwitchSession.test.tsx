@@ -62,12 +62,15 @@ async function openGrownUpArea(root: ReactTestInstance): Promise<void> {
 }
 
 describe('Profile tiles and the grown-up session', () => {
-  it('with the session open, the Grown-up area opens directly; after a tile switch it asks the PIN', async () => {
+  it('CS-1: Profile is a learner screen, so even with the session open the Grown-up area asks the PIN', async () => {
     const r = await render(<ProfileScreen />);
     await openGrownUpArea(r.root);
-    expect(navigation.navigate).toHaveBeenLastCalledWith('ParentDashboard');
-    expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toEqual({ dest: 'area', via: 'session', marker: 'pin' });
+    expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'ParentDashboard' });
+    expect(tracked.filter((e) => e.name === 'parent.gate.opened')).toHaveLength(0);
+  });
 
+  it('a tile switch closes the session and sends profile.switch with codes only', async () => {
+    const r = await render(<ProfileScreen />);
     const [joon] = buttonsNamed(r.root, t.switchTo('Joon'));
     await press(joon as ReactTestInstance);
     expect(useProfileStore.getState().activeId).toBe('profile:joon');
@@ -79,6 +82,16 @@ describe('Profile tiles and the grown-up session', () => {
     navigation.navigate.mockReset();
     await openGrownUpArea(r.root);
     expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'ParentDashboard' });
+  });
+
+  it('a self-only device without a PIN opens the Grown-up area directly and says so (via open)', async () => {
+    useProfileStore.setState({ profiles: [{ ...child('profile:rio', 'Rio'), learnerType: 'self' }], activeId: 'profile:rio' });
+    useAccountStore.setState({ parentPinHash: null });
+    useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
+    const r = await render(<ProfileScreen />);
+    await openGrownUpArea(r.root);
+    expect(navigation.navigate).toHaveBeenLastCalledWith('ParentDashboard');
+    expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toEqual({ dest: 'area', via: 'open', marker: 'nopin' });
   });
 
   it('the active tile again is no switch: no event, the session stays', async () => {

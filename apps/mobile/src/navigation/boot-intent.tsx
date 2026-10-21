@@ -6,6 +6,7 @@ import { openBrowseFromGate } from '../platform/browse-handoff';
 import { flags } from '../config/flags';
 import { gateOpensDirectlyNow } from '../store/gate-now';
 import { useProfileStore } from '../store/profile-store';
+import { passGate } from '../store/gate-telemetry';
 import { deviceShared, holdJoin, whoReturnTrigger } from '../store/who-chooser';
 
 /**
@@ -31,7 +32,7 @@ export function BootIntentHook(): null {
       },
       { peek: peekBootIntent, consume: consumeBootIntent },
       {
-        opensDirectly: () => gateOpensDirectlyNow(),
+        opensDirectly: () => passGate('BrowseLessons', gateOpensDirectlyNow()),
         open: () => openBrowseFromGate(),
       },
       // Read when the intent is acted on: the profile store has hydrated before the root stack mounts.

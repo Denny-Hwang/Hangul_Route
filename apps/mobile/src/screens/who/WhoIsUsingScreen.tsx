@@ -56,7 +56,7 @@ const TILE_MIN_WIDE_REM = 10;
 /** The grown-up rows from `layout.breakpoint.wide` (GrownUpRow spec); one column below it. */
 const ROWS_ACROSS = 3;
 
-/** The end of the wait as a local time in the UI language ("6:40 PM", "18:40", "오후 6:40"); never throws. */
+/** The end of the wait as a local time in the UI language ("6:40 PM", "18:40", or the Korean afternoon form); never throws. */
 export function waitEndsAt(locale: UiLocale, readyAt: number): string {
   const date = new Date(readyAt);
   try {
