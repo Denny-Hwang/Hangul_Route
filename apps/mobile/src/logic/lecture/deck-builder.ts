@@ -376,7 +376,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
    * A repeat adds no slide but fills in what the first card lacks, as Word review's `add` does
    * (verify:learner-audio-gloss a): the card keeps its place and its sound (spoken form, rate),
    * takes the later block's clip path when it has none, and its word id, card and WordArt
-   * together when it has no word id yet.
+   * together only when it has none of the three.
    */
   const wordCard = (key: string, word: KoLine & { gloss: string }, voice: WordVoice, extra: { wordId?: string; cardId?: string; wordArt?: string } = {}): void => {
     if (!seenWords.has(word.ko)) {
@@ -386,7 +386,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     } else {
       const at = wordSlides.get(word.ko) ?? -1;
       const known = slides[at];
-      if (known?.kind === 'vocab') {
+      // A stale index (a slide moved or removed) never writes onto another word's card.
+      if (known?.kind === 'vocab' && known.word.ko === word.ko) {
         const clip = voice.spoken.audioRef;
         const spoken = known.spoken.audioRef === undefined && clip !== undefined ? { ...known.spoken, audioRef: clip } : known.spoken;
         const ids = known.wordId === undefined && known.cardId === undefined && known.wordArt === undefined ? extra : {};

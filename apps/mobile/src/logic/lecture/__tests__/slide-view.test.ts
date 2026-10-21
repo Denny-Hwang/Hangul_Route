@@ -337,6 +337,11 @@ describe('soundOutcome: what a finished slide sound or Read-to-me does (section 
     expect(soundOutcome({ ...base, slideIdxNow: 4, result: 'unavailable', lastFailure: { reason: 'blocked', at: 1001 } })).toEqual({ blocked: true, flash: null });
     expect(soundOutcome({ ...base, slideIdxNow: undefined, result: 'unavailable', lastFailure: { reason: 'no_voice', at: 1001 } })).toEqual({ blocked: false, flash: null });
   });
+  it('a Read-to-me whose Korean was skipped before the voice check settled flashes by its reason, though the English played', () => {
+    // The runner skips the unavailable Korean step, plays the English and reports `unavailable` (audio-runner.ts).
+    expect(soundOutcome({ ...base, result: 'unavailable', lastFailure: { reason: 'no_voice', at: 1400 } })).toEqual({ blocked: false, flash: 'no-voice' });
+    expect(soundOutcome({ ...base, result: 'unavailable', lastFailure: { reason: 'error', at: 1400 } })).toEqual({ blocked: false, flash: 'failed' });
+  });
   it('a forward sound build (not explicit) never flashes', () => {
     expect(soundOutcome({ ...base, explicit: false, result: 'unavailable', lastFailure: { reason: 'error', at: 1001 } })).toEqual({ blocked: false, flash: null });
   });

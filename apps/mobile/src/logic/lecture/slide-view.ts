@@ -601,7 +601,9 @@ export function soundFlashFor(result: PlayResult, failureReason: FallbackReason 
  * `blocked` is whether the browser blocked the voice (the failure the store recorded at or after
  * `startedAt`), and `flash` the chip an explicit press shows, only while the slide it was pressed on
  * (`slideIdx`) is still the one shown (`slideIdxNow`). A superseded Read-to-me chain (stopped, or a
- * newer press) does nothing: `null`.
+ * newer press) does nothing: `null`. A chain that skipped its Korean before the voice check settled
+ * reports `unavailable` after the English played, so it flashes by its reason (normally `no_voice`):
+ * the Korean did not play, and the teacher says it.
  */
 export function soundOutcome(input: {
   result: PlayResult | 'superseded';
