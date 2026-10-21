@@ -46,6 +46,7 @@ import {
 import { assertOneSender, prefixUpperBound } from './feedback-rules';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import { clampPct, readOn, type RemoteConfigRow } from './remote-config-types';
+import { uniqueRollupKeys, type RollupKey, type RollupRow } from './rollup-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
@@ -494,8 +495,11 @@ const CLASS_MOVE_TABLES = ['class_moves', 'class_scope_acks'] as const;
 const SPACE_EVENT_TABLES = ['space_events'] as const;
 /** [SA] The table of migration 0012 (AMENDMENTS-SEATS-ADMINS section 6.2). */
 const ADMIN_INVITE_TABLES = ['admin_invites'] as const;
+/** F-CURR-002 row CM-70a: the table of migration 0014 (section 11.2). */
+const ROLLUP_TABLES = ['learning_rollups'] as const;
 const RESET_TABLES = [
   'remote_config', // migration 0013 (F-CURR-002 CM-2), no foreign keys
+  ...ROLLUP_TABLES,
   ...ADMIN_INVITE_TABLES,
   ...SPACE_EVENT_TABLES,
   ...CLASS_MOVE_TABLES,
@@ -1685,6 +1689,37 @@ export class D1Db implements Db {
       'INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES (?, ?, ?, ?, ?) ON CONFLICT(flag) DO UPDATE SET "on" = excluded."on", pct = excluded.pct, updated_at = excluded.updated_at, reason = excluded.reason',
       [row.flag, row.on ? 1 : 0, row.pct, row.updatedAt, row.reason],
     );
+  }
+  /** F-CURR-002 section 11.2: one upsert per cell and one for the counter, all in one batch, so an event lands whole or not at all. */
+  async addRollups(day: string, keys: readonly RollupKey[], counter?: string): Promise<number> {
+    const unique = uniqueRollupKeys(keys);
+    if (unique.length === 0) return 0;
+    const statements = unique.map((k) =>
+      this.d1
+        .prepare('INSERT INTO learning_rollups (day, metric, dim, bucket, events) VALUES (?, ?, ?, ?, 1) ON CONFLICT(day, metric, dim, bucket) DO UPDATE SET events = events + 1')
+        .bind(day, k.metric, k.dim, k.bucket),
+    );
+    if (counter !== undefined) {
+      statements.push(
+        this.d1
+          .prepare("INSERT INTO learning_rollups (day, metric, dim, bucket, events) VALUES (?, ?, '', '', ?) ON CONFLICT(day, metric, dim, bucket) DO UPDATE SET events = events + excluded.events")
+          .bind(day, counter, unique.length + 1),
+      );
+    }
+    await this.d1.batch(statements);
+    if (counter === undefined) return 0;
+    // A read, not a row written; a concurrent write between the two can only make the total larger.
+    return (await this.one("SELECT events FROM learning_rollups WHERE day = ? AND metric = ? AND dim = '' AND bucket = ''", [day, counter], (r) => Number(r.events))) ?? 0;
+  }
+  rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]> {
+    const [where, params] = metric === undefined ? ['day >= ? AND day <= ?', [fromDay, toDay]] : ['day >= ? AND day <= ? AND metric = ?', [fromDay, toDay, metric]];
+    return this.many(`SELECT day, metric, dim, bucket, events FROM learning_rollups WHERE ${where} ORDER BY day, metric, dim, bucket LIMIT ?`, [...params, limit], (r) => ({
+      day: str(r.day),
+      metric: str(r.metric),
+      dim: str(r.dim),
+      bucket: str(r.bucket),
+      events: Number(r.events),
+    }));
   }
 
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */

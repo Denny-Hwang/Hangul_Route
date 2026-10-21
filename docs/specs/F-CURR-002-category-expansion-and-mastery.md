@@ -23,7 +23,7 @@ Parent and siblings: CLAUDE.md section 1 (audience, languages, anti-shame, grid)
 6. **New categories are Topic Packs on topic pages that the learner reaches by swiping the Journey view sideways, not a sixth grid column** (owner decision OD-2, 2026-10-21). The first page is the five themes exactly as today. Swiping sideways shows further pages of pack columns, at most five a page, so no cell is ever under the 48 dp touch target at 320 px. Page dots and an edge arrow show there is more to the side, and buttons do the same as the swipe for keyboard and screen-reader users. A sixth column would put the cell under 48 dp, and the theme key is in 54 files and the Worker. There are eight packs in three waves; the first wave is Numbers & Time, People & Family and Feelings & Me (OD-4; section 6).
 7. **Remove authoring bottlenecks before content scales.** Generated modules stop being committed, and the catalogue version becomes a date stamp authored in content, so parallel content PRs have no shared file (section 9).
 8. **Lessons and stories load outside the start bundle.** A manifest of 60 KB or less is loaded at start. Lesson and story bodies are precached, content-hashed static chunks, so offline still works and start-up gets lighter while content triples (section 10).
-9. **Every phase is measured without PII, and the data has somewhere to land first.** A persistent rollup table ships in Phase 0, before the shadow period it measures. A public, read-only remote config with off-only overrides replaces build-only kill switches, and a daily guardrail evaluator lowers a ramp on a breach. Each learner profile is placed in an experiment bucket. Metrics are counts by content id, and any group with fewer than 20 profiles is suppressed (sections 3, 11, 12).
+9. **Every phase is measured without PII, and the data has somewhere to land first.** A persistent rollup table ships in Phase 0, before the shadow period it measures. A public, read-only remote config with off-only overrides replaces build-only kill switches, and a daily guardrail evaluator lowers a ramp on a breach. Each learner profile is placed in an experiment bucket. Metrics are counts by content id, and any group with fewer than 20 events on a day (profile-days for the once-a-day names) is suppressed (sections 3, 11, 12).
 
 ## 1. Context
 
@@ -217,7 +217,7 @@ Each grid cell and each pack level shows a level from 0 to 3. It is drawn as a t
 
 ### 4.5 Review sessions
 
-All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine is pure, deterministic for a seed, and works offline.
+All sessions share one engine (`logic/reviews/engine.ts`, in the existing `apps/mobile/src/logic/reviews/` directory, row CM-13). The engine is pure, deterministic for a seed, and works offline.
 
 | Session | Length | Where it lives | Selection | Learner sees |
 |---|---|---|---|---|
@@ -235,7 +235,7 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 
 **Listening rounds never depend on telling homophones apart.**
 - **`dictation-unambiguous` lint and engine rule.** An item may be asked in Dictation (Type Hangul `hear`), or in any heard round whose options are spellings, only if its standard pronunciation has exactly one spelling among the taught items (낫 / 낮 / 낯 all sound [낟]; 같이 sounds [가치]), or the prompt shows a picture or gloss that settles it. Items with a `soundChange` flag stay out of hear mode until recordings A-9 and A-10 exist. The review engine applies the same rule when it picks a produce-rung format.
-- **The spelling round of Letters S2** (section 5.2) is a read-plus-meaning round: picture or gloss with audio, then "Which spelling matches this word?". Its two options may sound the same (책이 and 채기 are both [채기]), and the picture or gloss is what settles it. CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss on it.
+- **The spelling round of Letters S2** (section 5.2) is a read-plus-meaning round: picture or gloss with audio, then "Which spelling matches this word?". Its two options may sound the same (책이 and 채기 are both [채기]), and the picture or gloss is what settles it. CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss on it. With a screen reader on, each option's label spells the option block by block with the letter names (책이: 치읓 애 기역, 이응 이; 채기: 치읓 애, 기역 이), never the word or its romanization alone, so the two options can be told apart by ear.
 
 **Never on a review screen:** a percentage, an "n of m" score, or a per-question timer. A lint enforces this (section 9.3).
 
@@ -878,7 +878,7 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 - **Payloads.** They carry ids, codes, counts and buckets only: no names, no free text, no learner input. Write Frame and My Story text is never sent. `profileId` rides in the envelope, as rule 3 of TELEMETRY-NAMES-2 says, and is never stored by the rollup.
 - **Worker first.** Every name is added to `TELEMETRY_EVENT_NAMES` and deployed to the Worker before the app sends it. The exact-list test is updated.
 - **Per-item data stays on the device.** It is aggregated into one daily event.
-- **Small groups are hidden.** Dashboards suppress any group with fewer than 20 profiles.
+- **Small groups are hidden.** Dashboards suppress any group with fewer than 20 events on a day. For the once-a-day names (`memory.daily`, `items.seeded`, `goal.met`, `week.goal_met`) events are profile-days; every other metric is labelled as events, never as profiles (`readRollups` in `packages/backend/src/lib/learning-rollups.ts`).
 
 ### 11.2 Where the data lands (row CM-70a, Phase 0)
 
@@ -897,10 +897,11 @@ CREATE TABLE learning_rollups (
 ```
 
 - **Aggregate at ingest.** `POST /api/telemetry` keeps its validation. For names on a rollup allowlist, it also adds 1 to the matching rows. No profile id, install key or device id is stored.
-- **Profile-days, not profiles.** Each per-profile metric is a once-per-local-day device event (`memory.daily`, `goal.met`), so its `events` on one day equal the profiles that sent it that day. Suppression applies per day (fewer than 20 events hides the group), and a distribution such as the north star's p25, p50 and p75 comes from the counts per bucket.
+- **Profile-days, not profiles.** Each per-profile metric is a once-per-local-day device event (`memory.daily`, `goal.met`), so its `events` on one day are about the profiles that sent it that day: a local day straddles two UTC days, and a once-a-day event whose client time is more than 24 hours before ingest (a late offline flush) adds no rows, so a device back after days offline counts once. Suppression applies per day (fewer than 20 events hides the group), and a distribution such as the north star's p25, p50 and p75 comes from the counts per bucket.
 - **The device emits guardrail inputs itself**, so no per-profile join is needed: `questLeft` and `leftAtKind` on `session.end` give the quit rate, and `durableWeekBucket` in `memory.daily` gives the north star.
 - **Experiment arms** are a `dim`, so A/B arms can be compared without an id.
-- **Cost.** One upsert per rollup row touched; a daily event touches about 10 rows. Rows written count toward the D1 guardrail of 3.3.
+- **Cost.** One upsert per rollup row touched, plus one for the day's counter row; a daily event touches about 10 rows (at most 15). Rows written count toward the D1 guardrail of 3.3: rollups are capped at 20,000 rows written a day (20% of the free tier), counted exactly in the counter row, so 30,000 stay for sync and every other table under the 50% line. A day that reached the cap is partial, and readers mark or skip it.
+- **Retention.** No purge yet: the table holds aggregate codes and counts only, a few hundred rows a day. A bounded purge can follow with row CM-70.
 
 ### 11.3 New names: section R of `TELEMETRY-NAMES-2.md`, added by row CM-3
 

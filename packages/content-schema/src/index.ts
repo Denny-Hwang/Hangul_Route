@@ -66,3 +66,5 @@ export * from './story-card';
 export * from './schemas/class-scope';
 export * from './schemas/display-name';
 export * from './schemas/lesson-chooser';
+export * from './schemas/curr-telemetry';
+export * from './schemas/curr-rollup-buckets';
