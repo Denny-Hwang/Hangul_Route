@@ -793,7 +793,7 @@ export const caregiver = {
     removeAnyway: '그래도 빼기',
     removeAnywayAsk: '그래도 뺄까요? 이 기기에 있는 카드와 별이 사라져요.',
     keep: '그대로 두기',
-    checking: '진도가 저장됐는지 확인하고 있어요...',
+    checking: '진도가 저장됐는지 확인하고 있어요…',
     spacesStay: '가족이나 반 자리는 그대로예요. 어른이 계정 페이지에서 바꿀 수 있어요.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

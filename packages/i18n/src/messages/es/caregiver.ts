@@ -827,7 +827,7 @@ export const caregiver = {
     removeAnyway: 'Quitar de todos modos',
     removeAnywayAsk: '¿Quitar de todos modos? Sus tarjetas y estrellas de este dispositivo se perderán.',
     keep: 'Mantener',
-    checking: 'Comprobando que su progreso esté guardado...',
+    checking: 'Comprobando que su progreso esté guardado…',
     spacesStay: 'Su lugar en una familia o clase se mantiene. Un adulto puede cambiarlo en las páginas de la cuenta.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

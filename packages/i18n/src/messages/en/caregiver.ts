@@ -1100,7 +1100,7 @@ export const caregiver = {
     /** The second step's safe choice, first and focused. */
     keep: 'Keep',
     /** While the app tries to sync the learner before the sheet decides. */
-    checking: 'Checking that their progress is saved...',
+    checking: 'Checking that their progress is saved…',
     /** On the saved and unsaved sheets when the learner has memberships: nothing changes on the server. */
     spacesStay: 'Their place in a family or class stays. A grown-up can change it in the account pages.',
   },
