@@ -48,6 +48,7 @@ const state = vi.hoisted(() => ({
   spaces: [] as unknown[],
   spacesFail: false,
   signedOutTo: null as string | null,
+  locale: 'en' as 'en' | 'es' | 'ko',
   calls: [] as string[],
 }));
 vi.mock('@/components/console/auth-context', () => ({
@@ -101,7 +102,7 @@ vi.mock('@/components/console/use-console', async () => {
     { get: (target, key: string) => target[key] ?? (async () => ({ ok: true, data: [] })) },
   );
   const session = { accountId: 'acc_1', displayName: 'Ms Kim' };
-  return { useConsole: () => ({ ready: true, session, api, signOut: () => undefined, m: messages('en'), locale: 'en' }) };
+  return { useConsole: () => ({ ready: true, session, api, signOut: () => undefined, m: messages('en'), locale: state.locale }) };
 });
 
 import TransfersPage from '@/app/(console)/teach/space/transfers/page';
@@ -227,14 +228,20 @@ describe('the requests page, class variant (spec section 5: locked, 401, 403, an
     expect(state.calls.some((c) => c.startsWith('transfers:'))).toBe(false);
   });
 
-  it('401 on the list: "Please sign in again." and Sign in again back to this page', async () => {
+  // AMENDMENTS-DISPLAY-NAV section 6: Sign in again carries the console's language, English included.
+  it.each(['en', 'es', 'ko'] as const)('401 on the list: "Please sign in again." and Sign in again back to this page with lang=%s', async (locale) => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.listError = { error: 'unauthorized', status: 401 };
-    const root = await render(<TransfersPage />);
-    expect(textOf(root)).toContain(m.start.signInAgain);
-    const button = root.find((n) => n.type === 'button' && n.props['data-testid'] === 'transfers-sign-in');
-    await act(async () => button.props.onClick());
-    expect(state.signedOutTo).toBe(`/signin?next=${encodeURIComponent('/teach/space/transfers?id=space%3Aa')}`);
+    state.locale = locale;
+    try {
+      const root = await render(<TransfersPage />);
+      expect(textOf(root)).toContain(m.start.signInAgain);
+      const button = root.find((n) => n.type === 'button' && n.props['data-testid'] === 'transfers-sign-in');
+      await act(async () => button.props.onClick());
+      expect(state.signedOutTo).toBe(`/signin?next=${encodeURIComponent('/teach/space/transfers?id=space%3Aa')}&lang=${locale}`);
+    } finally {
+      state.locale = 'en';
+    }
   });
 
   it('403 on the list: "You can no longer answer this class\'s moves." with no names', async () => {

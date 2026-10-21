@@ -311,11 +311,11 @@ describe('GrownUpLock: the lock screen', () => {
     expect(h.assigned).toEqual(['/?gate=grown-up&next=%2Fteach%2Fspace%3Fid%3Dsp_1']);
   });
 
-  it('Sign in again hands /signin with this page as next to the sign-out', async () => {
+  it('Sign in again hands /signin with this page as next and the language to the sign-out', async () => {
     const urls: string[] = [];
     const { h, r } = await lockedAt({ pathname: '/parent/space', search: 'id=sp_1' }, (url) => urls.push(url));
     press(r, 'grown-up-lock-signin');
-    expect(urls).toEqual(['/signin?next=%2Fparent%2Fspace%3Fid%3Dsp_1']);
+    expect(urls).toEqual(['/signin?next=%2Fparent%2Fspace%3Fid%3Dsp_1&lang=en']);
     expect(h.assigned).toEqual([]);
   });
 
