@@ -498,10 +498,23 @@ export interface Db {
   // learning rollups (F-CURR-002 section 11.2, row CM-70a; migration 0014). Codes and counts only.
   /** Adds 1 to each cell of `day` (UTC `YYYY-MM-DD`), in one write; a key named twice still adds 1 once. */
   addRollups(day: string, keys: readonly RollupKey[]): Promise<void>;
-  /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Only lib/learning-rollups reads it, and it applies the suppression. */
+  /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Read through lib/learning-rollups (`readRollups`), which applies the suppression. */
   rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]>;
   /** Adds `cells` to the budget counter row (`metric`, dim '', bucket '') of `day` in one write and answers its new total. */
   reserveRollupCells(day: string, metric: string, cells: number): Promise<number>;
+  /**
+   * The guardrail evaluator's read (F-CURR-002 section 12.3, row CM-70b): the stored cells of `metrics` only, from
+   * `fromDay` to `toDay` inclusive, at most `limit`, unsuppressed. The evaluator applies its own per-(day, metric, dim)
+   * suppression and never shows a cell.
+   */
+  rollupRowsOf(fromDay: string, toDay: string, metrics: readonly string[], limit: number): Promise<RollupRow[]>;
+  /**
+   * The guardrail evaluator's only write (F-CURR-002 section 12.3, row CM-70b): sets `pct` to `toPct` with the reason and
+   * time, only while the row is still exactly as read (on, the whole-number `fromPct`, the `fromUpdatedAt`) and only
+   * when `toPct` is lower, and never touches `on`. Answers whether a row changed, so a row the owner edited in any way
+   * since it was read is left as the owner set it.
+   */
+  lowerRemoteConfigPct(flag: string, fromPct: number, fromUpdatedAt: string, toPct: number, updatedAt: string, reason: string): Promise<boolean>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;
