@@ -501,7 +501,7 @@ describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections
 
   it('a Stage 1 Check: a letter round plays its carrier syllable at the sound rate, a word round its word', () => {
     const [sym, word] = asked(stage1, 'listen');
-    expect(slideSound(sym)).toEqual({ spoken: { text: '어', romanization: 'eo' }, kind: 'sound' });
+    expect(slideSound(sym)).toEqual({ spoken: { text: '어', romanization: 'eo', audioRef: 'audio/jamo/eo.mp3' }, kind: 'sound' });
     expect(slideSound(word)?.kind).toBe('word');
     expect(slideSound(word)?.spoken.text).toBe((word!.prompt as Extract<Quiz['prompt'], { ask: 'listen' }>).line.ko);
   });
