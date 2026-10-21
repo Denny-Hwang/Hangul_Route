@@ -167,7 +167,7 @@ export const consoleMsgs = {
    * design/screens/app-shell/adult-frame.md), and the note shown when the build has no API address.
    */
   shell: {
-    home: 'Console',
+    home: 'Home',
     signOut: { cta: 'Sign out' },
     /**
      * The way to the learner app, at the right end of the header (AMENDMENTS-DISPLAY-NAV section 7.3): it leaves the
@@ -271,7 +271,7 @@ export const consoleMsgs = {
     roleTitle: 'Who are you?',
     roleLabel: 'Role',
     roles: {
-      family: { title: 'Parent / caregiver', line: 'Home — my kids' },
+      family: { title: 'Parent / caregiver', line: 'At home — the learners in my family' },
       class: { title: 'Teacher', line: 'My class' },
       school: { title: 'School admin', line: 'Teachers and classes' },
     },
@@ -279,7 +279,7 @@ export const consoleMsgs = {
     back: { cta: 'Back' },
     nameTitle: { family: 'Name your family', class: 'Name your class', school: 'Name your school' },
     nameLabel: 'Space name',
-    classJoinHint: 'Students join with a code — no accounts for kids.',
+    classJoinHint: 'Students join with a code. They do not need an account.',
     /** [SA] AMENDMENTS-SEATS-ADMINS section 5.3: under the prefilled name field. */
     nameLater: 'You can change this name later.',
     create: { cta: 'Create' },
@@ -427,7 +427,7 @@ export const consoleMsgs = {
 
   /** `document.title` of the grown-up pages, in the console's language (owner items 6 and 7). */
   docTitle: {
-    console: 'Console — Hangul Route',
+    console: 'Grown-up area — Hangul Route',
     signIn: 'Grown-ups sign in — Hangul Route',
   },
   /** Join-code expiry (`codeExpiry`). */
@@ -664,6 +664,11 @@ export const consoleMsgs = {
         notes: 'Send notes to your students',
       },
     },
+    /**
+     * One line under the offers (app-first-run, 2026-10-21): reports and notes are free on every plan
+     * (`CLAIM_REQUIRES_PAID` false), so they are not listed as what a plan includes.
+     */
+    freeForEveryone: 'Free for everyone: reports and notes.',
     /** A grown-up with no space yet. */
     noSpaces: {
       title: 'Plans belong to a family or a class.',

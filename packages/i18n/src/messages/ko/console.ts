@@ -102,7 +102,7 @@ export const consoleMsgs = {
   },
 
   shell: {
-    home: '콘솔',
+    home: '홈',
     signOut: { cta: '로그아웃' },
     backToLearning: '학습자 앱',
     aboutSite: 'Hangul Route 소개',
@@ -168,7 +168,7 @@ export const consoleMsgs = {
     roleTitle: '누구신가요?',
     roleLabel: '역할',
     roles: {
-      family: { title: '부모님 / 보호자', line: '집 — 우리 가족 학습자' },
+      family: { title: '부모님 / 보호자', line: '집에서 — 우리 가족 학습자' },
       class: { title: '선생님', line: '내 반' },
       school: { title: '학교 관리자', line: '선생님과 반' },
     },
@@ -176,7 +176,7 @@ export const consoleMsgs = {
     back: { cta: '뒤로' },
     nameTitle: { family: '가족 이름', class: '반 이름', school: '학교 이름' },
     nameLabel: '공간 이름',
-    classJoinHint: '학생은 코드로 참여해요 — 학생용 계정은 필요 없어요.',
+    classJoinHint: '학생은 코드로 참여해요. 계정은 필요 없어요.',
     nameLater: '이 이름은 나중에 바꿀 수 있어요.',
     create: { cta: '만들기' },
     creating: { cta: '만드는 중…' },
@@ -286,7 +286,7 @@ export const consoleMsgs = {
     failed: '처리되지 않았어요. 다시 해 보세요.',
   },
   docTitle: {
-    console: '콘솔 — Hangul Route',
+    console: '어른 공간 — Hangul Route',
     signIn: '어른 로그인 — Hangul Route',
   },
   codeExpiry: {
@@ -468,6 +468,7 @@ export const consoleMsgs = {
         notes: '학생에게 쪽지 보내기',
       },
     },
+    freeForEveryone: '누구나 무료: 리포트와 쪽지.',
     noSpaces: {
       title: '플랜은 가족이나 반에 속해요.',
       family: { cta: '나 또는 우리 가족용으로 시작' },

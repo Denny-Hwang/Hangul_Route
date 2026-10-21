@@ -132,7 +132,7 @@ export const consoleMsgs = {
   },
 
   shell: {
-    home: 'Consola',
+    home: 'Inicio',
     signOut: { cta: 'Salir' },
     backToLearning: 'App de estudiantes',
     aboutSite: 'Sobre Hangul Route',
@@ -207,7 +207,7 @@ export const consoleMsgs = {
     roleTitle: '¿Quién eres?',
     roleLabel: 'Rol',
     roles: {
-      family: { title: 'Familia', line: 'En casa: mi familia' },
+      family: { title: 'Familia', line: 'En casa: los estudiantes de mi familia' },
       class: { title: 'Docente', line: 'Mi clase' },
       school: { title: 'Dirección escolar', line: 'Docentes y clases' },
     },
@@ -215,7 +215,7 @@ export const consoleMsgs = {
     back: { cta: 'Atrás' },
     nameTitle: { family: 'Nombre de tu familia', class: 'Nombre de tu clase', school: 'Nombre de tu escuela' },
     nameLabel: 'Nombre',
-    classJoinHint: 'Los estudiantes se unen con un código, sin cuentas de estudiantes.',
+    classJoinHint: 'Los estudiantes se unen con un código. No necesitan una cuenta.',
     nameLater: 'Puedes cambiar este nombre después.',
     create: { cta: 'Crear' },
     creating: { cta: 'Creando…' },
@@ -328,7 +328,7 @@ export const consoleMsgs = {
   },
 
   docTitle: {
-    console: 'Consola — Hangul Route',
+    console: 'Zona de adultos — Hangul Route',
     signIn: 'Acceso para adultos — Hangul Route',
   },
   codeExpiry: {
@@ -513,6 +513,7 @@ export const consoleMsgs = {
         notes: 'Envía notas a tu clase',
       },
     },
+    freeForEveryone: 'Gratis para todos: informes y notas.',
     noSpaces: {
       title: 'Los planes son de una familia o de una clase.',
       family: { cta: 'Crear para mí o mi familia' },
