@@ -57,6 +57,7 @@ Every slide page uses `presenter.js` as before: `#b=<n>` shows builds 0 to n (de
 | `PIC_OPT` (LV-S2) | 112 units | `--pic-opt` as built: a picture option's side, smaller with a shorter row, its art never below 48 units |
 | `REALIA_ASK_MIN` (LV-S2) | 240 units | a realia question's lead line, then "Hoya's answer" in its place: under the key word when the column leaves less |
 | `REALIA_GRID_MIN` (LV-S2) | 480 units | the narrowest column beside a realia sheet that holds picture options in the 2 x 2 grid; a narrower one lists them as rows |
+| `WRITE_ICON`, `TRACE_STROKE`, `SOUND_CELL_W` (LV-S4) | 40, 6 and 84 units | the pencil beside the write line, the trace ghost's outline (`--trace-stroke`) and a sound-table block (`--cell-w`) as built; on a phone's text floor a block takes its own width at the slide's compact levels |
 | sentence line places (LV-S3) | the widest tile | every place on a sentence line, empty or placed, is as wide as the slide's widest tile (or its particle tile with both endings) and as tall as a tile (`buildPlaceWidth`): the line never reflows, the fit holds from the bank build and no empty box gives its tile away; the mock's 200-unit box is its empty place |
 
 ## Measured on the mocks (Chromium, the script in this pass)
