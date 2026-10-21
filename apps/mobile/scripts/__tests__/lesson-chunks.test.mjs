@@ -146,10 +146,12 @@ describe('precacheReport and its budget lines', () => {
     expect(reportLines({ ...report, start: null })).toHaveLength(3);
   });
 
-  it('the start bundle line is its size after CM-5 with a small margin; the precache line is the CM-5 measurement plus 2.5 MB', () => {
-    // Measured after CM-5: 7,335,066 B (8,321,783 B before); the margin stays under 10 KB, so the bundle cannot regrow.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(7_340_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 7_335_066).toBeLessThan(10_000);
+  it('the start bundle line is its size after CM-8 with a small margin; the precache line is the CM-5 measurement plus 2.5 MB', () => {
+    // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,357,584 B before CM-8, 6,364,341 B measured after CM-8;
+    // the margin stays under 10 KB, so the bundle cannot regrow.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_370_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_364_341).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(7_335_066);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_784_580 + 2_500_000);
   });
 

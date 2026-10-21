@@ -27,9 +27,10 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  * one-line change with the measured numbers in its PR.
  */
 export const PRECACHE_BUDGET = Object.freeze({
-  // The start bundle must not grow: its size after CM-5 (7,335,066 B raw, the release build on a384759ca; 8,321,783 B
-  // before the lessons left it) plus a 4,934 B rounding margin. A row that adds to it raises this line with its measurement.
-  startBundleRaw: 7_340_000,
+  // The start bundle must not grow: its size after CM-8 (6,364,341 B raw, the release build of the integration branch
+  // that lands CM-5 and CM-8 with the rows around them; 7,357,584 B before the stories left it, 8,321,783 B before CM-5)
+  // plus a 5,659 B rounding margin. A row that adds to it raises this line with its measurement (F-CURR-002 §10).
+  startBundleRaw: 6_370_000,
   // The learner precache measured after CM-5 (8,784,580 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_284_580,
