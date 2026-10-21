@@ -204,6 +204,14 @@ export interface Flags {
    * fresh-PIN check, the Rescue Code's own counter and the shared attempt state across tabs have no switch.
    */
   pinPauseStepsEnabled: boolean;
+
+  /**
+   * [OA] Face or fingerprint for grown-ups (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D10, section 8.6, row OA-9), native
+   * only. ON at launch, with every device's own opt-in off until a grown-up turns it on in the Grown-up area (OQ-6).
+   * `EXPO_PUBLIC_BIOMETRIC_SHORTCUT` is a kill switch (`parseKillSwitch`): off hides the switch and ignores a stored
+   * opt-in, so the PIN screen offers only the pad.
+   */
+  biometricShortcutEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -226,6 +234,7 @@ const launchDefaults: Flags = {
   // LV-7 turned this on with the web default and the site claim (AMENDMENTS-LECTURE-V2 LV-D1).
   lectureModeEnabled: true,
   pinPauseStepsEnabled: true,
+  biometricShortcutEnabled: true,
 };
 
 export const flags: Flags = {
@@ -253,6 +262,7 @@ export const flags: Flags = {
   routeEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_ENABLED, launchDefaults.routeEnabled),
   lectureModeEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_LECTURE_MODE, launchDefaults.lectureModeEnabled),
   pinPauseStepsEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS, launchDefaults.pinPauseStepsEnabled),
+  biometricShortcutEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT, launchDefaults.biometricShortcutEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

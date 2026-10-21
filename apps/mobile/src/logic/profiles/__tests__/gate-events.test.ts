@@ -1,6 +1,6 @@
 import { OA_TELEMETRY_PAYLOADS, TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { gateDestOf, gateOpenedEvent, markerCode, minutesInBucket, pinPausedEvent, profileSwitchEvent } from '../gate-events';
+import { biometricChangedEvent, gateDestOf, gateOpenedEvent, markerCode, minutesInBucket, pinPausedEvent, profileSwitchEvent } from '../gate-events';
 
 const parse = (event: { name: string; payload: Record<string, unknown> }) =>
   OA_TELEMETRY_PAYLOADS[event.name as keyof typeof OA_TELEMETRY_PAYLOADS].safeParse(event.payload);
@@ -68,5 +68,23 @@ describe('[OA] pin.paused payload', () => {
     for (const step of [1, 2, 3, 4, 5]) expect(parse(pinPausedEvent(step)).success).toBe(true);
     expect(parse(pinPausedEvent(6)).success).toBe(false);
     for (const name of ['pin.paused', 'parent.gate.opened', 'profile.switch']) expect(TELEMETRY_EVENT_NAMES).toContain(name);
+  });
+});
+
+describe('[OA] pin.biometric_changed payload (section 15, row OA-9)', () => {
+  it('on and the reason only, for every reason, and the Worker rule accepts it', () => {
+    for (const reason of ['user', 'pin_changed', 'enrolment_changed'] as const) {
+      for (const on of [true, false]) {
+        const event = biometricChangedEvent(on, reason);
+        expect(event).toEqual({ name: 'pin.biometric_changed', payload: { on, reason } });
+        expect(parse(event).success).toBe(true);
+      }
+    }
+    expect(TELEMETRY_EVENT_NAMES).toContain('pin.biometric_changed');
+  });
+
+  it('the gate opened by face or fingerprint is via biometric', () => {
+    const event = gateOpenedEvent({ dest: 'area', via: 'biometric', marker: 'pin' });
+    expect(parse(event).success).toBe(true);
   });
 });

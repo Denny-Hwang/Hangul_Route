@@ -78,3 +78,11 @@ export function gateOpenedEvent(input: { dest: GateDest; via: GateVia; marker: G
 export function pinPausedEvent(step: number): GateEvent {
   return { name: 'pin.paused', payload: { step } };
 }
+
+/** [OA] Why the face or fingerprint shortcut changed (section 15, row OA-9). */
+export type BiometricChangeReason = 'user' | 'pin_changed' | 'enrolment_changed';
+
+/** `pin.biometric_changed`: turned on or off, and why. No token, no epoch, no time. */
+export function biometricChangedEvent(on: boolean, reason: BiometricChangeReason): GateEvent {
+  return { name: 'pin.biometric_changed', payload: { on, reason } };
+}

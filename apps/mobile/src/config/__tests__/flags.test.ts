@@ -490,4 +490,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS');
   });
+
+  it('[OA] biometricShortcutEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-9) is ON at launch; the kill switch values turn it off', async () => {
+    delete process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT;
+    let mod = await reload();
+    expect(mod.flags.biometricShortcutEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.biometricShortcutEnabled).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', ' OFF ']) {
+      process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT = off;
+      mod = await reload();
+      expect(mod.flags.biometricShortcutEnabled, JSON.stringify(off)).toBe(false);
+    }
+    process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT = 'maybe';
+    mod = await reload();
+    expect(mod.flags.biometricShortcutEnabled).toBe(true);
+    delete process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT;
+  }, RELOADS_MS);
+
+  it('[OA] biometricShortcutEnabled is read by its literal name', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT');
+  });
 });

@@ -62,6 +62,8 @@ export type GrownUpDestination =
   | 'ClassScope'
   /** AMENDMENTS-LECTURE-V2 E5 (LV-6, web only): the dashboard's Lecture mode card after the session lapsed; back to the dashboard, where one more tap opens the presenter tab. */
   | 'LectureMode'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.6 (OA-9, native): the Grown-up area's face or fingerprint switch; a fresh PIN turns it on, then back. */
+  | 'BiometricShortcut'
   // add new members above this line
 ;
 
