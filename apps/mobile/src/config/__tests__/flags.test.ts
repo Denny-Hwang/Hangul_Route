@@ -469,4 +469,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_LECTURE_MODE');
   });
+
+  it('[OA] pinPauseStepsEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-2) is ON at launch; the kill switch values turn it off', async () => {
+    delete process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS;
+    let mod = await reload();
+    expect(mod.flags.pinPauseStepsEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.pinPauseStepsEnabled).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', ' OFF ']) {
+      process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS = off;
+      mod = await reload();
+      expect(mod.flags.pinPauseStepsEnabled, JSON.stringify(off)).toBe(false);
+    }
+    process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS = 'maybe';
+    mod = await reload();
+    expect(mod.flags.pinPauseStepsEnabled).toBe(true);
+    delete process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS;
+  }, RELOADS_MS);
+
+  it('[OA] pinPauseStepsEnabled is read by its literal name', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS');
+  });
 });
