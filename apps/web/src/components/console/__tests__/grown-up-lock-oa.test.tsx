@@ -27,15 +27,24 @@ beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 });
 
-/** A harness whose clock moves, whose `clearUnlock` really drops the unlock, and with a fake `hr-grownup` channel. */
-function oaHarness(): Harness & { clock: { now: number }; post: (data: unknown) => void; listening: () => boolean } {
+/**
+ * A harness whose clock moves, whose `clearUnlock` really drops the unlock (and the stored hidden time, as the browser's
+ * does), with a fake `hr-grownup` channel and a fake `hr:grownup:hiddenAt`.
+ */
+function oaHarness(): Harness & { clock: { now: number }; post: (data: unknown) => void; listening: () => boolean; hiddenAt: { value: number | null } } {
   const h = harness();
   const clock = { now: NOW };
+  const hiddenAt = { value: null as number | null };
   let listener: ((data: unknown) => void) | null = null;
   h.env.now = () => clock.now;
   h.env.clearUnlock = () => {
     h.calls.push('clearUnlock');
     h.unlock.value = null;
+    hiddenAt.value = null;
+  };
+  h.env.readHiddenAt = () => hiddenAt.value;
+  h.env.writeHiddenAt = (at) => {
+    hiddenAt.value = at;
   };
   h.env.listenLock = (onMessage) => {
     listener = onMessage;
@@ -43,7 +52,7 @@ function oaHarness(): Harness & { clock: { now: number }; post: (data: unknown) 
       listener = null;
     };
   };
-  return { ...h, clock, post: (data) => listener?.(data), listening: () => listener !== null };
+  return { ...h, clock, hiddenAt, post: (data) => listener?.(data), listening: () => listener !== null };
 }
 
 function recorder(): { states: LockState[]; devices: Array<DeviceGateRead | undefined>; latest: () => LockState | undefined } {
@@ -91,6 +100,121 @@ describe('the 5-minute hidden rule (OA-D16, CS-14)', () => {
     await flush();
     expect(h.calls).not.toContain('clearUnlock');
     expect(r.latest()?.decision.state).toBe('open');
+    c.stop();
+  });
+
+  it('the hidden time is kept in the tab and cleared when it is shown again', async () => {
+    const h = oaHarness();
+    h.unlock.value = SIGNED_IN;
+    const { c } = start(h);
+    await flush();
+    h.doc.visibilityState = 'hidden';
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    expect(h.hiddenAt.value).toBe(NOW);
+    h.clock.now = NOW + 1_000;
+    h.doc.visibilityState = 'visible';
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    expect(h.hiddenAt.value).toBeNull();
+    c.stop();
+  });
+
+  it('a tab the browser discarded while hidden for 5 minutes reloads locked: the stored time decides before the first check', async () => {
+    const h = oaHarness();
+    h.unlock.value = { ...SIGNED_IN, at: NOW, seen: NOW };
+    h.hiddenAt.value = NOW;
+    h.clock.now = NOW + 6 * 60_000;
+    const { r, c } = start(h);
+    await flush();
+    expect(h.calls).toContain('clearUnlock');
+    expect(h.hiddenAt.value).toBeNull();
+    expect(r.latest()?.decision.state).toBe('locked');
+    c.stop();
+  });
+
+  it('a reload after less than 5 minutes hidden keeps the unlock and forgets the stored time', async () => {
+    const h = oaHarness();
+    h.unlock.value = { ...SIGNED_IN, at: NOW, seen: NOW };
+    h.hiddenAt.value = NOW;
+    h.clock.now = NOW + GROWN_UP_BACKGROUND_MS - 1;
+    const { r, c } = start(h);
+    await flush();
+    expect(h.calls).not.toContain('clearUnlock');
+    expect(h.hiddenAt.value).toBeNull();
+    expect(r.latest()?.decision.state).toBe('open');
+    c.stop();
+  });
+
+  it('a stored time from a clock that ran backwards drops the unlock (fail closed)', async () => {
+    const h = oaHarness();
+    h.unlock.value = { ...SIGNED_IN, at: NOW, seen: NOW };
+    h.hiddenAt.value = NOW + 60_000;
+    const { r, c } = start(h);
+    await flush();
+    expect(r.latest()?.decision.state).toBe('locked');
+    c.stop();
+  });
+
+  it('a page loaded while hidden starts its clock, so 5 minutes later it is shown locked', async () => {
+    const h = oaHarness();
+    h.unlock.value = { ...SIGNED_IN, at: NOW, seen: NOW };
+    h.doc.visibilityState = 'hidden';
+    const { r, c } = start(h);
+    await flush();
+    expect(h.hiddenAt.value).toBe(NOW);
+    h.clock.now = NOW + GROWN_UP_BACKGROUND_MS;
+    h.doc.visibilityState = 'visible';
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    await flush();
+    expect(h.calls).toContain('clearUnlock');
+    expect(r.latest()?.decision.state).toBe('locked');
+    c.stop();
+  });
+
+  it('a page left by a navigation keeps no hidden time for the next page of the tab (a Stripe round trip stays open)', async () => {
+    for (const order of ['pagehide-first', 'visibility-first'] as const) {
+      const h = oaHarness();
+      h.unlock.value = { ...SIGNED_IN, at: NOW, seen: NOW };
+      const { c } = start(h);
+      await flush();
+      const hide = (): void => {
+        h.doc.visibilityState = 'hidden';
+        h.doc.dispatchEvent(new Event('visibilitychange'));
+      };
+      const pagehide = (): void => {
+        const event = new Event('pagehide') as Event & { persisted: boolean };
+        event.persisted = false;
+        h.win.dispatchEvent(event);
+      };
+      if (order === 'pagehide-first') {
+        pagehide();
+        hide();
+      } else {
+        hide();
+        pagehide();
+      }
+      expect(h.hiddenAt.value).toBeNull();
+      c.stop();
+    }
+  });
+
+  it('storage that throws never breaks the lock', async () => {
+    const h = oaHarness();
+    h.unlock.value = SIGNED_IN;
+    h.env.readHiddenAt = () => {
+      throw new Error('blocked');
+    };
+    h.env.writeHiddenAt = () => {
+      throw new Error('blocked');
+    };
+    const { r, c } = start(h);
+    await flush();
+    h.doc.visibilityState = 'hidden';
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    h.clock.now = NOW + GROWN_UP_BACKGROUND_MS;
+    h.doc.visibilityState = 'visible';
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    await flush();
+    expect(r.latest()?.decision.state).toBe('locked');
     c.stop();
   });
 
@@ -275,9 +399,33 @@ describe('GrownUpLock wiring: Use a passkey only off pin browsers (CS-17)', () =
     expect(byTestId(r, 'grown-up-lock')).toHaveLength(1);
   });
 
-  it('a pin browser never shows it', async () => {
-    const h = passkeyHarness({ readable: true, marker: { v: 1, gate: 'pin', pinEpoch: EPOCH }, hasProfiles: true });
-    const r = await render(h, { verifyPasskey: async () => true, passkeyFlag: true });
+  it('a pin browser never shows it, nor one that may be (a failed read, a missing marker with profiles)', async () => {
+    for (const device of [
+      { readable: true, marker: { v: 1, gate: 'pin', pinEpoch: EPOCH }, hasProfiles: true },
+      { readable: false, reason: 'failed' },
+      { readable: true, marker: null, hasProfiles: true },
+    ] as DeviceGateRead[]) {
+      const h = passkeyHarness(device);
+      const r = await render(h, { verifyPasskey: async () => true, passkeyFlag: true });
+      expect(byTestId(r, 'grown-up-lock')).toHaveLength(1);
+      expect(byTestId(r, 'grown-up-lock-passkey')).toHaveLength(0);
+      act(() => mounted?.unmount());
+      mounted = null;
+    }
+  });
+
+  it('a PIN set in another tab while the passkey ran (the marker is now pin): no unlock, the lock decides again', async () => {
+    const h = passkeyHarness(NOPIN);
+    let release: (verified: boolean) => void = () => undefined;
+    const r = await render(h, { verifyPasskey: () => new Promise<boolean>((resolve) => (release = resolve)), passkeyFlag: true });
+    act(() => byTestId(r, 'grown-up-lock-passkey')[0]?.props.onClick());
+    h.device.value = { readable: true, marker: { v: 1, gate: 'pin', pinEpoch: EPOCH }, hasProfiles: true };
+    await act(async () => {
+      release(true);
+      await flush();
+      await flush();
+    });
+    expect(h.written).toEqual([]);
     expect(byTestId(r, 'grown-up-lock')).toHaveLength(1);
     expect(byTestId(r, 'grown-up-lock-passkey')).toHaveLength(0);
   });

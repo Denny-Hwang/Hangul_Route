@@ -144,7 +144,8 @@ describe('deviceCanLock: whether the grown-up lock can close on this device (sec
 
 describe('planAfterSignIn: what a sign-in completed in this tab earns (section 3.9)', () => {
   const now = 1_000_000;
-  const proof = (secret: boolean, sessionId = 'sess_1', at = now - 1_000) => ({ v: 1 as const, kind: 'proof' as const, sessionId, secret, at });
+  // [OA] A secret proof names its factor (section 7.4: on a pin browser an absent one fails closed, signin-flow-oa.test.ts).
+  const proof = (secret: boolean, sessionId = 'sess_1', at = now - 1_000) => ({ v: 1 as const, kind: 'proof' as const, sessionId, secret, ...(secret ? { factor: 'password' } : {}), at });
 
   it('a secret-proving sign-in writes the unlock on every device', () => {
     for (const device of [PIN, NOPIN, OLD_APP, FAILED, NONE, NO_DATA]) expect(planAfterSignIn({ record: proof(true), sessionId: 'sess_1', device, now })).toBe('unlock');
@@ -480,7 +481,7 @@ describe('settleSignIn and finishReverify: the router spends the sign-in record 
     };
     return { io: value, calls };
   }
-  const proof = (secret: boolean) => ({ v: 1 as const, kind: 'proof' as const, sessionId: 'sess_1', secret, at: now - 10 });
+  const proof = (secret: boolean) => ({ v: 1 as const, kind: 'proof' as const, sessionId: 'sess_1', secret, ...(secret ? { factor: 'password' } : {}), at: now - 10 });
 
   it('no record: nothing read, nothing written', async () => {
     const readDevice = vi.fn(async () => PIN);

@@ -54,8 +54,15 @@ function cardsEnv(log: string[]): PinCardsEnvironment {
     readPromptSeen: async () => false,
     markPromptSeen: () => log.push('seen'),
     writePinOwner: async () => true,
-    assign: () => undefined,
+    assign: (url) => log.push(`assign:${url}`),
     setTimer: () => () => undefined,
+    clearGrownUpTab: () => log.push('cards:clearGrownUpTab'),
+    origin: () => 'https://app.hangulroute.com',
+    // In view in a visible tab at once.
+    observeSeen: (_element, onSeen) => {
+      onSeen();
+      return () => undefined;
+    },
   };
 }
 
@@ -106,6 +113,8 @@ async function render(e: Env, spaces: readonly SpaceListItem[] | null): Promise<
       <AdultFrame env={e} spaces={spaces}>
         <p>page</p>
       </AdultFrame>,
+      // A DOM-like node for refs (the set-a-PIN card observes its section).
+      { createNodeMock: (element) => (element.type === 'section' ? {} : null) },
     );
     for (let i = 0; i < 8; i += 1) await Promise.resolve();
   });
@@ -161,6 +170,13 @@ describe('the PIN cards sit on persona homes only (section 7.6)', () => {
     const r = await render(e, [item('space:fam', 'family', 'owner')]);
     expect(byTestId(r, 'pin-prompt-card')).toHaveLength(1);
     expect(e.log).toContain('seen');
+  });
+
+  it('Open the app on the card leaves the tab like the exit and opens the PIN gate back to this home', async () => {
+    const e = env('/parent');
+    const r = await render(e, [item('space:fam', 'family', 'owner')]);
+    act(() => byTestId(r, 'pin-prompt-open')[0]?.props.onClick());
+    expect(e.log.slice(-2)).toEqual(['cards:clearGrownUpTab', 'assign:/?gate=grown-up&next=%2Fparent']);
   });
 
   it('never on another page', async () => {

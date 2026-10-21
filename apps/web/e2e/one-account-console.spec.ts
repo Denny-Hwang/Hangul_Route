@@ -176,12 +176,32 @@ test.describe('one account, many users: the console side (row OA-3)', () => {
     await expect(page.getByTestId('pin-prompt-card')).toHaveCount(0);
   });
 
+  test('Open the app on the set-a-PIN card leaves the tab and opens the PIN gate back to this home', async ({ page, context }) => {
+    await mockConsole(context, signInUnlock);
+    await seedDevice(page, { marker: { v: 1, gate: 'nopin' } });
+    await page.goto('/parent');
+    await expect(page.getByTestId('pin-prompt-card')).toBeVisible();
+    // A 204 keeps this document (the init script would seed the session again on a real load), so the tab can be read.
+    await context.route(/\/\?gate=grown-up/, (route) => route.fulfill({ status: 204 }));
+    const leaving = page.waitForRequest(/\/\?gate=grown-up/);
+    await page.getByTestId('pin-prompt-open').click();
+    const target = new URL((await leaving).url());
+    expect(target.pathname).toBe('/');
+    expect(target.searchParams.get('gate')).toBe('grown-up');
+    expect(target.searchParams.get('next')).toBe('/parent');
+    // The tab keeps no unlock and no console session, so Back never reopens the grown-up pages.
+    expect(await page.evaluate((key) => [window.sessionStorage.getItem('hr:grownup:unlock'), window.sessionStorage.getItem(key)], SESSION_KEY)).toEqual([null, null]);
+    await expect.poll(() => readShell(page, 'pinPromptSeen')).toBe(true);
+  });
+
   test('a fresh PIN, then Let this account reset the PIN here, writes the fingerprint as owner', async ({ page, context }) => {
     await mockConsole(context, { v: 1, at: AT - 10_000, seen: AT - 10_000, src: 'pin', pinEpoch: EPOCH });
     await seedDevice(page, { marker: { v: 1, gate: 'pin', pinEpoch: EPOCH }, shell: { pinEpoch: EPOCH } });
     await page.goto('/parent');
     const card = page.getByTestId('pin-owner-card');
     await expect(card).toContainText(c.pinOwner.hint);
+    // The signed-in account is named on screen only (CS-10: a hand-off to the wrong account shows).
+    await expect(page.getByTestId('pin-owner-account')).toHaveText(c.adminInvite.signedInAs('kim@example.com'));
     await page.getByTestId('pin-owner-cta').click();
     await expect(page.getByTestId('pin-owner-done')).toContainText(c.pinOwner.done);
     const owner = createHash('sha256').update(ACCOUNT).digest('hex').slice(0, 16);

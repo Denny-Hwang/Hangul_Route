@@ -5,8 +5,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 /**
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-3 (sections 7.1, 7.2 and 7.4): the auth bridge's part. Sign out deletes
  * `deviceUses` before it leaves; Use a passkey is Clerk's session verification with the passkey factor; the moment-3
- * reverification refuses when one of the account's passkeys was used since the dialog opened (Clerk does not name the
- * factor its dialog used). The dev bridge offers no passkey and counts the dev bearer as a password.
+ * reverification refuses when one of the account's passkeys was used during the dialog: its `lastUsedAt` moved between
+ * the snapshot taken before and the account read again after (Clerk does not name the factor its dialog used; server
+ * stamps only, never this device's clock). The dev bridge offers no passkey and counts the dev bearer as a password.
  */
 const shell = vi.hoisted(() => ({ deleted: 0, order: [] as string[] }));
 vi.mock('@/lib/console/shell-store', async (original) => ({
@@ -175,6 +176,18 @@ describe('reverifySecret: moment 3 takes a password or a code, never a passkey (
     clerk.passkeys = [{ lastUsedAt: new Date(Date.now() - 24 * 60 * 60_000) }];
     clerk.reloaded = [{ lastUsedAt: new Date(Date.now() - 24 * 60 * 60_000) }];
     expect(await (await mount(true)).reverifySecret()).toBe('done');
+  });
+
+  it('compares Clerk stamps only: a stamp that moved refuses even when this device’s clock runs 5 minutes fast', async () => {
+    const base = Date.now();
+    clerk.passkeys = [{ lastUsedAt: new Date(base - 24 * 60 * 60_000) }];
+    clerk.reloaded = [{ lastUsedAt: new Date(base - 60_000) }];
+    const spy = vi.spyOn(Date, 'now').mockReturnValue(base + 5 * 60_000);
+    try {
+      expect(await (await mount(true)).reverifySecret()).toBe('refused');
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('an account that cannot be read again, holding a passkey, fails closed', async () => {

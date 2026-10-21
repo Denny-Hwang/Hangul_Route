@@ -1,12 +1,10 @@
-import { GROWN_UP_BACKGROUND_MS, GROWN_UP_FRESH_PIN_MS, type GrownUpUnlock, type PinOwner } from '@hangul-route/content-schema';
+import { APP_ORIGIN, GROWN_UP_BACKGROUND_MS, GROWN_UP_FRESH_PIN_MS, SITE_ORIGIN, safeNextPath, type GrownUpUnlock, type PinOwner } from '@hangul-route/content-schema';
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { lockPasskeyEnabled } from '../config';
 import type { DeviceGateRead } from '../grown-up-lock';
 import {
-  PASSKEY_CLOCK_SKEW_MS,
   PIN_OWNER_FACTORS,
-  PIN_PROMPT_TARGET,
   PIN_RESET_PATH,
   RESET_LEG_FACTORS,
   deviceUsesOf,
@@ -16,13 +14,15 @@ import {
   isResetLeg,
   ownsPin,
   passkeyButtonShown,
-  passkeyUsedSince,
+  passkeySnapshot,
+  passkeyUsedDuring,
   pinOwnerAtSignIn,
   pinOwnerFingerprint,
   pinOwnerOffer,
   pinOwnerRecord,
   pinOwnerRefresh,
   pinPromptShown,
+  pinPromptTarget,
   platformAuthenticatorAvailable,
   realPinEpoch,
 } from '../one-account';
@@ -213,16 +213,21 @@ describe('pinOwnerFingerprint: the first 16 hex digits of SHA-256 of the user id
 });
 
 describe('Use a passkey: the availability check and the pin marker rule (section 7.4, CS-17)', () => {
-  it('shows only with the flag, a platform authenticator and a marker that is not pin', () => {
-    for (const device of [NOPIN, NONE, ABSENT, NO_IDB, { readable: true, marker: null, hasProfiles: false } as DeviceGateRead]) {
-      expect(passkeyButtonShown({ flag: true, available: true, device })).toBe(true);
-    }
+  it('shows only with the flag, a platform authenticator and a read nopin marker (the one locked row that is not pin)', () => {
+    expect(passkeyButtonShown({ flag: true, available: true, device: NOPIN })).toBe(true);
   });
 
-  it('never on a pin browser, nor where the read failed (it may be one)', () => {
+  it('never on a pin browser, nor where it may be one: a failed read or a missing marker with profiles (fail closed)', () => {
     expect(passkeyButtonShown({ flag: true, available: true, device: PIN })).toBe(false);
     expect(passkeyButtonShown({ flag: true, available: true, device: PIN_ZERO })).toBe(false);
     expect(passkeyButtonShown({ flag: true, available: true, device: FAILED })).toBe(false);
+    expect(passkeyButtonShown({ flag: true, available: true, device: { readable: true, marker: null, hasProfiles: true } })).toBe(false);
+  });
+
+  it('never where the lock never closes either (none, no learner data, no IndexedDB)', () => {
+    for (const device of [NONE, NO_IDB, { readable: true, marker: null, hasProfiles: false } as DeviceGateRead]) {
+      expect(passkeyButtonShown({ flag: true, available: true, device })).toBe(false);
+    }
   });
 
   it('never with the flag off, no authenticator or no read yet', () => {
@@ -244,22 +249,45 @@ describe('Use a passkey: the availability check and the pin marker rule (section
   });
 });
 
-describe('passkeyUsedSince: the passkey check after a Clerk reverification', () => {
-  const started = NOW;
-  it('a passkey used since the start (within the clock skew) counts as used', () => {
-    expect(passkeyUsedSince([{ lastUsedAt: new Date(NOW + 5_000) }], started, true)).toBe(true);
-    expect(passkeyUsedSince([{ lastUsedAt: NOW - PASSKEY_CLOCK_SKEW_MS }], started, true)).toBe(true);
+describe('passkeyUsedDuring: the passkey check after a Clerk reverification (server stamps only)', () => {
+  const before = passkeySnapshot([
+    { id: 'pk_1', lastUsedAt: new Date(NOW - 86_400_000) },
+    { id: 'pk_2', lastUsedAt: null },
+  ]);
+
+  it('a passkey whose lastUsedAt moved, or that was used for the first time, counts as used', () => {
+    expect(passkeyUsedDuring(before, [{ id: 'pk_1', lastUsedAt: new Date(NOW - 86_400_000 + 1) }, { id: 'pk_2', lastUsedAt: null }])).toBe(true);
+    expect(passkeyUsedDuring(before, [{ id: 'pk_1', lastUsedAt: new Date(NOW - 86_400_000) }, { id: 'pk_2', lastUsedAt: NOW }])).toBe(true);
   });
 
-  it('older use, no use and no passkeys do not', () => {
-    expect(passkeyUsedSince([{ lastUsedAt: new Date(NOW - PASSKEY_CLOCK_SKEW_MS - 1) }, { lastUsedAt: null }, {}], started, true)).toBe(false);
-    expect(passkeyUsedSince([{ lastUsedAt: Number.NaN }], started, true)).toBe(false);
-    expect(passkeyUsedSince([], started, false)).toBe(false);
+  it('a new passkey already used counts as used; a new one never used does not', () => {
+    expect(passkeyUsedDuring(passkeySnapshot([]), [{ id: 'pk_9', lastUsedAt: NOW }])).toBe(true);
+    expect(passkeyUsedDuring(passkeySnapshot([]), [{ id: 'pk_9', lastUsedAt: null }])).toBe(false);
   });
 
-  it('an account that could not be read again fails closed when it holds a passkey', () => {
-    expect(passkeyUsedSince(null, started, true)).toBe(true);
-    expect(passkeyUsedSince(null, started, false)).toBe(false);
+  it('unchanged stamps, no passkeys and unreadable stamps do not', () => {
+    expect(passkeyUsedDuring(before, [{ id: 'pk_1', lastUsedAt: new Date(NOW - 86_400_000) }, { id: 'pk_2', lastUsedAt: null }])).toBe(false);
+    expect(passkeyUsedDuring(passkeySnapshot([]), [])).toBe(false);
+    expect(passkeyUsedDuring(passkeySnapshot([{ id: 'pk_1', lastUsedAt: Number.NaN }]), [{ id: 'pk_1', lastUsedAt: Number.NaN }])).toBe(false);
+  });
+
+  it('does not depend on this device’s clock: a client 5 minutes fast still sees a stamp that moved', () => {
+    // The old check compared lastUsedAt with Date.now() minus a skew; the snapshot compares server stamps only.
+    const stamp = NOW - 10 * 60_000;
+    expect(passkeyUsedDuring(passkeySnapshot([{ id: 'pk_1', lastUsedAt: stamp - 3_600_000 }]), [{ id: 'pk_1', lastUsedAt: stamp }])).toBe(true);
+  });
+
+  it('keys passkeys without an id by position', () => {
+    expect(passkeyUsedDuring(passkeySnapshot([{ lastUsedAt: 1 }]), [{ lastUsedAt: 2 }])).toBe(true);
+    expect(passkeyUsedDuring(passkeySnapshot([{ lastUsedAt: 1 }]), [{ lastUsedAt: 1 }])).toBe(false);
+  });
+
+  it('fails closed: no snapshot (the account was not loaded), or an account with passkeys that could not be read again', () => {
+    expect(passkeySnapshot(undefined)).toBeNull();
+    expect(passkeySnapshot(null)).toBeNull();
+    expect(passkeyUsedDuring(null, [])).toBe(true);
+    expect(passkeyUsedDuring(before, null)).toBe(true);
+    expect(passkeyUsedDuring(passkeySnapshot([]), null)).toBe(false);
   });
 });
 
@@ -299,8 +327,18 @@ describe('pinPromptShown: the set-a-PIN card (section 7.6)', () => {
     expect(pinPromptShown(null, false)).toBe(false);
   });
 
-  it('opens the learner app’s gate, which runs PIN setup', () => {
-    expect(PIN_PROMPT_TARGET).toBe('/?gate=grown-up');
+  it('opens the learner app’s PIN gate with this home as next (the app drops a grown-up gate without one)', () => {
+    expect(pinPromptTarget('https://app.hangulroute.com', '/parent')).toBe('/?gate=grown-up&next=%2Fparent');
+    expect(pinPromptTarget('http://localhost:3000', '/teach')).toBe('/?gate=grown-up&next=%2Fteach');
+    // The learner app's boot intent (apps/mobile logic/shell/boot-intent.ts) keeps the gate only with a next that
+    // safeNextPath accepts.
+    const query = new URLSearchParams(pinPromptTarget('http://localhost:3000', '/parent').split('?')[1]);
+    expect(query.get('gate')).toBe('grown-up');
+    expect(safeNextPath(query.get('next'))).toBe('/parent');
+  });
+
+  it('on a site origin it is the app host’s address', () => {
+    expect(pinPromptTarget(SITE_ORIGIN, '/parent')).toBe(`${APP_ORIGIN}/?gate=grown-up&next=%2Fparent`);
   });
 });
 

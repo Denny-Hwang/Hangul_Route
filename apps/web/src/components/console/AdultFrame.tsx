@@ -460,7 +460,15 @@ export function AdultFrame({
       </header>
       <main className="hr-frame-main">
         {back ? <PageBack href={back.href} label={back.label} /> : null}
-        {onHome && browser.pinCards ? <PinCards accountId={auth.session?.accountId ?? null} reverifySecret={auth.reverifySecret} env={browser.pinCards} /> : null}
+        {onHome && browser.pinCards ? (
+          <PinCards
+            accountId={auth.session?.accountId ?? null}
+            accountLabel={auth.session?.email ?? auth.session?.displayName ?? null}
+            home={pathname}
+            reverifySecret={auth.reverifySecret}
+            env={browser.pinCards}
+          />
+        ) : null}
         <FlashNote here={`${pathname}${search ? (search.startsWith('?') ? search : `?${search}`) : ''}`} />
         {title ? (
           <p data-testid="frame-title" style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
