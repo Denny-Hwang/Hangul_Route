@@ -37,6 +37,8 @@ const STAGE_PADDING = 48;
 const CAPTION = 28;
 const TEXT_FLOOR = 18;
 const KIND = 'Build a sentence';
+/** Longer than the fit's settle time (`FIT_SETTLE_MS`, 150 ms, in ReadingParts) plus a frame or two. */
+const FIT_SETTLE_WAIT_MS = 400;
 
 function link(deck: LectureDeckInput = DECK): string {
   return `/present#d=${encodeDeck(deck)}`;
@@ -162,6 +164,24 @@ async function fitProblems(page: Page, phone: boolean): Promise<string[]> {
   );
 }
 
+/** The bank once it has held still across two reads `FIT_SETTLE_WAIT_MS` apart: the slide's fit level has settled. */
+async function settledBank(page: Page): Promise<string[]> {
+  let last = await bankBoxes(page);
+  await expect
+    .poll(
+      async () => {
+        await page.waitForTimeout(FIT_SETTLE_WAIT_MS);
+        const now = await bankBoxes(page);
+        const same = JSON.stringify(now) === JSON.stringify(last);
+        last = now;
+        return same;
+      },
+      { message: 'the fit level settles', timeout: 5000 },
+    )
+    .toBe(true);
+  return last;
+}
+
 /** Where each bank tile is drawn, so a step that moved one shows. */
 async function bankBoxes(page: Page): Promise<string[]> {
   return page
@@ -187,8 +207,9 @@ async function walkBuilds(page: Page, label: string, phone: boolean, ask: string
     expect(await stage.locator('[role="button"]').count(), `${label} slide ${n}: nothing to press`).toBe(0);
     await expect.poll(() => fitProblems(page, phone), { message: `${label}: slide ${n}, bank`, timeout: 3000 }).toEqual([]);
     await shot(page, `presenter-build-${label}-${String(n).padStart(2, '0')}-0`);
-    // The fit level is settled once nothing is outside; from here no build may move a bank tile.
-    const bank = await bankBoxes(page);
+    // The fit level is settled once nothing is outside and it holds past the fit's settle time (a slide may still be
+    // stepping down a level once it is already inside the stage); from here no build may move a bank tile.
+    const bank = await settledBank(page);
     let step = 0;
     let particle = false;
     while ((await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal') {
