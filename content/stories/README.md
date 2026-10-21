@@ -1,6 +1,6 @@
 # content/stories/
 
-Story mode tales: one JSON file per story, the source of truth for every heritage story in the app (F-STORY-001, decisions D4 and D14). The app never reads these files directly: `scripts/build-stories.mjs` turns the `ready` ones into `apps/mobile/src/content/stories.generated.ts`.
+Story mode tales: one JSON file per story, the source of truth for every heritage story in the app (F-STORY-001, decisions D4 and D14). The app never reads these files directly: `scripts/build-stories.mjs` turns the `ready` ones into the start-loaded shelf `apps/mobile/src/content/__generated__/stories-index.ts` and one body chunk per story under `__generated__/story-chunks/` (F-CURR-002 CM-8).
 
 Specs: `docs/specs/F-STORY-001-story-schema-pipeline.md` (schema §3.2, facts and coverage §3.3, inline terms §3.4, traditional tales §3.5, verification §3.6, versions and corrections §3.7, validators §3.8, bundle §3.9). The reader and Sources screen are F-STORY-002, checks F-STORY-003, the shelf F-STORY-004. Romanization policy: `docs/specs/F-CNT-002-romanization-policy.md`.
 

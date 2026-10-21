@@ -61,6 +61,8 @@ import { PRIZE_STAGE, opensStagePrize } from '../../logic/stage1/stage-complete'
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { resultsStoryOf, storyResultsActionEvent, storyResultsExtras } from '../../logic/story/results-extras';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
+import { storyIdOfQuest } from '../../logic/story/story-ref';
+import { useStoriesLoaded } from '../story-content';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { nextStoryAfter, storyLockFor } from '../../logic/story/story-pick';
 import { useReducedMotion } from '../../platform/motion';
@@ -290,6 +292,9 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   // generic buttons. Next story (F-STORY-004 `nextStoryAfter`) walks the same book or shelf category
   // and never offers a locked story; the culture-note link waits for the Culture notes route
   // (F-STORY-004 PR 4.7), so none is supplied yet.
+  // The story's tiers come from its chunk (F-CURR-002 §10, row CM-8): in already when the quest played it, loaded again after a reload.
+  const questStoryId = quest === undefined ? null : storyIdOfQuest(quest);
+  const storyChunks = useStoriesLoaded(questStoryId === null ? [] : [questStoryId]);
   const storyResults = useMemo(() => {
     const story = resultsStoryOf(quest, (id) => {
       const found = storyById(id);
@@ -316,7 +321,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       messages.learner.story.results,
     );
     return { story, next, view };
-  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks]);
 
   const goHome = (): void => {
     navigation.dispatch(

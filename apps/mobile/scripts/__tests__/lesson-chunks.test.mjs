@@ -74,6 +74,43 @@ describe('lessonChunkProblems', () => {
   });
 });
 
+describe('the story chunks of row CM-8 (the same checks)', () => {
+  const STORIES = [{ name: 'story-sun-and-moon', hash: '1111222233334444' }];
+  const storyChunk = (name, hash) => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}";e.STORY_BODY={}});`;
+    return { url: `${WEB_JS_DIR}/${name}-${md5(text)}.js`, text };
+  };
+  const withStory = () => [
+    { url: START, text: `${startText}var s=[{"id":"story:sun-and-moon","chunk":"1111222233334444"}];` },
+    ...MANIFEST.map((m) => chunk(m.name, m.hash)),
+    storyChunk('story-sun-and-moon', '1111222233334444'),
+  ];
+
+  it('passes a story chunk that is its own precached bundle, and fails one missing from the precache or pulled into the start bundle', () => {
+    const bundles = withStory();
+    const manifest = [...MANIFEST, ...STORIES];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles).slice(0, 3) })).toEqual([`${bundles[3].url} is missing from the precache`]);
+    const pulled = [{ url: START, text: `${bundles[0].text}e.CHUNK_HASH="1111222233334444";` }, ...bundles.slice(1, 3), { url: `${WEB_JS_DIR}/story-sun-and-moon-${md5('')}.js`, text: '' }];
+    expect(lessonChunkProblems({ manifest, bundles: pulled, precached: all(pulled) })).toEqual([
+      `story-sun-and-moon is in the start bundle ${START}: a static import pulled the chunk in`,
+      `${pulled[3].url} does not carry 1111222233334444, the hash the manifest names for story-sun-and-moon`,
+    ]);
+  });
+
+  it('counts the story chunks apart from the lesson chunks in the report', () => {
+    const bundles = withStory();
+    const report = precacheReport({ manifest: MANIFEST, stories: STORIES, bundles, precache: { count: 4, size: 99 } });
+    expect(report.lessonChunks.count).toBe(2);
+    expect(report.storyChunks).toEqual({ count: 1, raw: bundles[3].text.length, gzip: expect.any(Number) });
+    const lines = reportLines(report);
+    expect(lines[3]).toMatch(/^ {2}story chunks {2}1 bundles {2}\d+ B raw {2}\d+ B gzip$/);
+    expect(lines).toHaveLength(5);
+    // Without a story manifest the story line counts none.
+    expect(precacheReport({ manifest: MANIFEST, bundles, precache: { count: 4, size: 99 } }).storyChunks.count).toBe(0);
+  });
+});
+
 describe('precacheReport and its budget lines', () => {
   it('measures the start bundle, the lesson chunks and the learner precache', () => {
     const bundles = sound();
@@ -87,7 +124,8 @@ describe('precacheReport and its budget lines', () => {
     expect(lines[1]).toContain(`start bundle  ${START}  ${startText.length} B raw`);
     expect(lines[1]).toContain(`(ceiling ${PRECACHE_BUDGET.startBundleRaw} B raw)`);
     expect(lines[2]).toMatch(/^ {2}lesson chunks {2}2 bundles {2}\d+ B raw {2}\d+ B gzip$/);
-    expect(lines[3]).toBe(`  learner precache  9 files  1234 B  (ceiling ${PRECACHE_BUDGET.learnerPrecacheRaw} B)`);
+    expect(lines[3]).toBe('  story chunks  0 bundles  0 B raw  0 B gzip');
+    expect(lines[4]).toBe(`  learner precache  9 files  1234 B  (ceiling ${PRECACHE_BUDGET.learnerPrecacheRaw} B)`);
     expect(precacheBudgetProblems(report)).toEqual([]);
   });
 
@@ -104,6 +142,7 @@ describe('precacheReport and its budget lines', () => {
       `the learner precache is ${PRECACHE_BUDGET.learnerPrecacheRaw + 1} B, over its ceiling of ${PRECACHE_BUDGET.learnerPrecacheRaw} B: row CM-5B (Save for offline) is triggered`,
     ]);
     expect(precacheBudgetProblems({ ...report, start: null, precache: { count: 0, raw: 0 } })).toEqual(['no start bundle to measure']);
+    // A report without the story line (as CM-5 built it) prints the others.
     expect(reportLines({ ...report, start: null })).toHaveLength(3);
   });
 

@@ -77,6 +77,7 @@ import { lastStreakDay } from '../../logic/sessions/session-log';
 import { shownStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
+import { useStoriesLoaded } from '../story-content';
 import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
 import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
@@ -529,6 +530,17 @@ export function HomeScreen(): React.ReactElement {
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked, vocabTopicOf, localToday]);
+  // A story card's cover comes from its story's chunk (F-CURR-002 §10, row CM-8): the theme tint stands in until it arrives.
+  const missionStoryIds = useMemo(
+    () =>
+      (mission?.cards ?? []).flatMap((card) => {
+        const questId = card.kind === 'story' || card.practiceKind === 'story' ? card.questId : undefined;
+        const entry = questId ? entryForQuest(storyIndex, questId) : undefined;
+        return entry ? [entry.storyId] : [];
+      }),
+    [mission, storyIndex],
+  );
+  useStoriesLoaded(missionStoryIds);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.

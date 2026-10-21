@@ -1,7 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
-import { buildStoryCards } from '../logic/awards/story-cards';
+import { buildStoryCards, storyCardFor } from '../logic/awards/story-cards';
 import type { CardSet } from '../logic/awards/types';
-import { heldStoryCards, storiesAll } from './stories';
+import { heldStoryCards, storiesAll, storyById, storyContent } from './stories';
 import { storySetDefs } from './story-sets';
 
 /**
@@ -16,7 +16,35 @@ import { storySetDefs } from './story-sets';
  */
 const built = buildStoryCards(storiesAll, storySetDefs, heldStoryCards);
 
-export const storyCards: readonly HeritageCard[] = built.cards;
+/**
+ * The fields of a story card that come from its story's body chunk (F-CURR-002 §10, row CM-8): the
+ * blurb (the story's summary), the fact and its citation. The face (title, Korean word, theme, stage)
+ * is in the shelf, so a card is listed and awarded at start; the back reads these once the story's
+ * chunk is in (the card screens load it, `useStoriesLoaded`).
+ */
+const BODY_FIELDS = ['blurbEn', 'factEn', 'factId', 'citation'] as const;
+
+function liveStoryCard(card: HeritageCard, held: ReadonlySet<string>): HeritageCard {
+  const story = card.storyId === undefined || held.has(card.id) ? undefined : storyById(card.storyId);
+  if (story === undefined) return card;
+  let cached: { version: number; card: HeritageCard } | null = null;
+  const current = (): HeritageCard => {
+    const version = storyContent.version();
+    if (cached === null || cached.version !== version) {
+      cached = { version, card: storyContent.isStoryReady(story.id) ? (storyCardFor(story) ?? card) : card };
+    }
+    return cached.card;
+  };
+  const live = { ...card };
+  for (const field of BODY_FIELDS) {
+    Object.defineProperty(live, field, { enumerable: true, configurable: false, get: () => current()[field] });
+  }
+  return live;
+}
+
+const heldIds = new Set(built.heldCardIds);
+
+export const storyCards: readonly HeritageCard[] = built.cards.map((card) => liveStoryCard(card, heldIds));
 export const storySets: readonly CardSet[] = built.sets;
 export const heldStoryCardIds: readonly string[] = built.heldCardIds;
 export const heldSetCardIds: readonly string[] = built.heldSetCardIds;

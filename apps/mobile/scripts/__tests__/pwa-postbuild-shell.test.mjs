@@ -8,8 +8,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LESSON_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
 import { PRECACHE_BUDGET } from '../pwa/lesson-chunks.mjs';
+import { LESSON_MANIFEST, STORY_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GROWN_UP_PREFIXES, LEARNER_ROOTS, isGrownUpPath } from '@hangul-route/content-schema';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
@@ -410,9 +410,13 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
 
   it('precaches every lesson chunk and prints the precache report (F-CURR-002 §10)', () => {
     for (const { name } of LESSON_MANIFEST) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
+    // Row CM-8: every story chunk too.
+    expect(STORY_MANIFEST.length).toBeGreaterThan(0);
+    for (const { name } of STORY_MANIFEST) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
     expect(run.stdout).toContain('pwa-postbuild: precache report (F-CURR-002 §10)');
     expect(run.stdout).toMatch(/ {2}start bundle {2}_expo\/static\/js\/web\/index-abc\.js {2}\d+ B raw {2}\d+ B gzip {2}\(ceiling \d+ B raw\)/);
     expect(run.stdout).toContain(`  lesson chunks  ${LESSON_MANIFEST.length} bundles  `);
+    expect(run.stdout).toContain(`  story chunks  ${STORY_MANIFEST.length} bundles  `);
     expect(run.stdout).toMatch(/ {2}learner precache {2}\d+ files {2}\d+ B {2}\(ceiling \d+ B\)/);
   });
 
