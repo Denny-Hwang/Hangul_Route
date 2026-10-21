@@ -195,6 +195,8 @@ describe('icons and the share card (SN-2)', () => {
       const png = readFileSync(join(publicDir, file));
       expect(png.subarray(1, 4).toString('latin1'), file).toBe('PNG');
       expect([png.readUInt32BE(16), png.readUInt32BE(20)], file).toEqual([size, size]);
+      // Palette PNGs: a browser may fetch these as favicon candidates on a first visit, so they stay small.
+      expect(png.length, file).toBeLessThan(40 * 1024);
     }
   });
 
