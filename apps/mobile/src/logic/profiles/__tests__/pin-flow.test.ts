@@ -129,6 +129,9 @@ describe('destination GrownUpUse (row OA-4b, CS-4)', () => {
     expect(initialPinMode({ next: GROWN_UP_USE }, null)).toBe('verify');
     expect(initialPinMode({ next: GROWN_UP_USE, mode: 'setup' }, 'hash')).toBe('verify');
     expect(initialPinMode({ next: GROWN_UP_USE, mode: 'setup', via: 'rescue_code' }, null)).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'change' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'change' }, null)).toBe('verify');
+    expect(verifiedGoesToSetup({ next: GROWN_UP_USE, mode: 'change' })).toBe(false);
   });
 
   it('hides Forgot PIN', () => {

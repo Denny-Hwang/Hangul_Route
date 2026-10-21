@@ -70,7 +70,7 @@ export function initialPinMode(params: PinRouteParams, storedHash: string | null
  * for Cancel the wait ([OA]: a reset is already waiting; this screen only stops it).
  */
 export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boolean {
-  return mode === 'verify' && !forGrownUpArea(params) && !forCancelReset(params);
+  return mode === 'verify' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params);
 }
 
 /**
@@ -89,5 +89,5 @@ export function pinCreatedWhere(params: PinRouteParams): 'gate' | 'reset' | 'opt
 
 /** [OA] After a correct PIN, `'change'` goes on to create the new PIN instead of to the destination (never for Cancel the wait). */
 export function verifiedGoesToSetup(params: PinRouteParams): boolean {
-  return params.mode === 'change' && !forGrownUpArea(params) && !forCancelReset(params);
+  return params.mode === 'change' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params);
 }
