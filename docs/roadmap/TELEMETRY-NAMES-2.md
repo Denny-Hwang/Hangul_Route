@@ -217,3 +217,43 @@ Three names in the new `billing.` namespace, recorded from the Stripe webhook. B
 A retried webhook delivery writes no second history row and sends no second `payment_failed` or `refund_recorded`. `checkout_completed` is sent each time a completion is applied. Every event is recorded only after the whole webhook request has succeeded, so a request that fails and is retried sends it once.
 
 Payload note on an existing name (section D style): `paywall.viewed` keeps the payload `{ from, state }`, where `state` is `covered | premium | free`. F-BILL-002 keeps it for the status-only Plan screen (B-9). `paywall.console_opened` is sent on the web only, when Open billing actually opens after the gate. A native build never sends it, because the button does not exist there. Its payload is `{ state }` (`covered | premium | free`, codes only, through `billingOpenedEvent`) from F-BILL-002 B-9, and it is sent only when the hand-off reports `opened` (a blocked tab, an offline device or a cancelled gate sends nothing). Earlier builds sent `{ plan: 'family_lifetime' }` on every press, and installed copies of them may still do so, so anyone reading stored events must accept both shapes under this one name. With `flags.grownUpHomeEnabled` on (F-BILL-002 B-9b), Open billing hands off in the same tab and sends `shell.grown_up_handoff { via: 'plan', target: 'billing' }` instead; `paywall.console_opened` is then not sent. The Worker passes `paywall.*` payloads through unchanged, so no Worker change was needed.
+
+## R. Category expansion and mastery names (F-CURR-002; added by its CM-0b docs PR)
+
+> **Names only.** This section records the names and payloads of F-CURR-002 section 11.3 (owner decisions of 2026-10-21, F-CURR-002 sections 16 and 21). None of them is in `TELEMETRY_EVENT_NAMES` yet. Row **CM-3** adds every name below to `TELEMETRY_EVENT_NAMES` (the list the Worker allowlist reads), updates the exact-list test (rule 2) and deploys the Worker; only then may the emitting rows send them (rule 1, Worker first). Row CM-70a then puts the metric names on the `learning_rollups` allowlist (F-CURR-002 section 11.2).
+
+Nineteen new names. None collides with sections A to Q or with `TELEMETRY_EVENT_NAMES` on `main` at `a384759ca` (121 names). The namespaces `memory.`, `items.`, `mastery.`, `testout.`, `goal.`, `week.`, `decode.`, `stamp.`, `weekly_quest.`, `pack.`, `family.` and `exp.` are new; `stage.`, `quest.`, `space.` and `lecture.` already exist, and no name below repeats one of theirs.
+
+**Payload rules** (F-CURR-002 section 11.1, on top of rule 3): ids, codes, counts and buckets only. No names, no free text and no learner input: Write Frame and My Story text is never sent. `profileId` rides in the envelope, and the rollup table never stores it, an install key or a device id. Per-item answers stay on the device and are aggregated into the one daily `memory.daily` event. Dashboards suppress any group with fewer than 20 profiles.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `memory.daily` | F-CURR-002 §11.3 | `{ hist, lapses, calib, items, newHeld, minutes, durableWeekBucket, dueVolumeBucket, arms }`: `hist` is counts by item kind x rung x lag bucket x `{ right, wrong }`, with lag buckets 0-1, 2-3, 4-7, 8-14, 15-30 and 31+ days; `calib` is 10 calibration bins, sent by row CM-72 only. Sent once a local day | CM-3 | CM-12 (`calib`: CM-72) |
+| 2 | `items.seeded` | F-CURR-002 §11.3 | `{ countBucket, spreadDaysBucket }` (the one-time seeding of an existing learner's items, F-CURR-002 §4.8) | CM-3 | CM-12 |
+| 3 | `mastery.level_up` | F-CURR-002 §11.3 | `{ cellId, level }` (`level` 1-3, F-CURR-002 §4.4) | CM-3 | CM-20 |
+| 4 | `stage.card_opened` | F-CURR-002 §11.3 | `{ stage }` (the stage card or its Passport page was opened) | CM-3 | CM-22 |
+| 5 | `testout.finished` | F-CURR-002 §11.3 | `{ cellId, passed, items, firstTryCorrect }` | CM-3 | CM-21 |
+| 6 | `quest.adapt` | F-CURR-002 §11.3 | `{ questId, dir: 'compact' \| 'scaffold' }` | CM-3 | CM-24 |
+| 7 | `goal.set` | F-CURR-002 §11.3 | `{ daily, weeklyDays }` | CM-3 | CM-17 |
+| 8 | `goal.met` | F-CURR-002 §11.3 | `{ points, target }` (once a local day) | CM-3 | CM-17 |
+| 9 | `week.goal_met` | F-CURR-002 §11.3 | `{ days, target }` | CM-3 | CM-17 |
+| 10 | `decode.sprint.finished` | F-CURR-002 §11.3 | `{ rateBucket, probeRateBucket, sprintIndexBucket }` | CM-3 | CM-32 |
+| 11 | `stamp.earned` | F-CURR-002 §11.3 | `{ stampId }` | CM-3 | CM-60 |
+| 12 | `weekly_quest.complete` | F-CURR-002 §11.3 | `{ questKind }` | CM-3 | CM-60 |
+| 13 | `pack.opened` | F-CURR-002 §11.3 | `{ packId }` | CM-3 | CM-50b |
+| 14 | `pack.level_complete` | F-CURR-002 §11.3 | `{ packId, stage }` | CM-3 | CM-50b |
+| 15 | `family.goal_met` | F-CURR-002 §11.3 | `{ weekTarget }`, account level, no profile breakdown | CM-3 | CM-61 |
+| 16 | `space.goal.set` | F-CURR-002 §11.3 | Worker side (the class goal of F-CURR-002 §7.6) | CM-3 | CM-62 (Worker) |
+| 17 | `space.goal.met` | F-CURR-002 §11.3 | Worker side (the class goal of F-CURR-002 §7.6) | CM-3 | CM-62 (Worker) |
+| 18 | `lecture.game.finished` | F-CURR-002 §11.3 | `{ preset, rounds, teams }` | CM-3 | CM-63 |
+| 19 | `exp.exposure` | F-CURR-002 §11.3 | `{ experimentId, arm }` | CM-3 | CM-71 |
+
+**Changed payloads of existing names** (section D style; no list change, and the Worker accepts any payload of a listed name):
+
+- `review.start` / `review.complete` (section B) keep their payloads. Their `kind` adds `cell-check` and `warmup` to `daily`, `feedback` and `stage-certificate` (`ReviewKindSchema`, additive, row CM-3b). Emitted by CM-14 (Daily Review, Keep going), CM-15 (warm-up, Try these again), CM-21 (Cell Check) and CM-22 (Stage Check).
+- `session.end` (section A) keeps `{ durationSeconds, streakDays }` and gains three **optional** fields, additively, in row CM-3:
+  - `questLeft: 0 | 1`: 1 when the session ended inside a quest, before its reward step.
+  - `leftAtKind`: the game kind code of the round on screen when the session ended.
+  - `afterWrongStreak: 0 | 1 | 2`: the wrong first tries in a row just before the end, where 2 means two or more.
+
+  These three give the quit-rate guardrail without a per-profile join (F-CURR-002 sections 3.3 and 11.2). An older build sends none of them, and a reader treats a missing field as unknown, never as 0.
