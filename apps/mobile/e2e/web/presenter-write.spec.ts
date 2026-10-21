@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
+import { colors } from '@hangul-route/design-system';
 import { expect, test } from './fixtures';
 import { shot } from './shots';
 
@@ -91,6 +92,12 @@ async function koreanVoice(page: Page, ms = 50): Promise<void> {
       },
     });
   }, ms);
+}
+
+/** A `#RRGGBB` token as the browser computes it. */
+function rgb(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
 }
 
 async function lastSpoken(page: Page): Promise<string> {
@@ -262,7 +269,7 @@ test.describe('the write-together slides on a phone sideways (LV-M1)', () => {
 
 test.describe('the write-together slides in Spanish and Korean (longer lines and prompts)', () => {
   for (const [locale, kind, where] of [
-    ['es', 'Escribir en grupo', 'Escribe en papel o en tu propio dispositivo. Aquí no se escribe nada.'],
+    ['es', 'Escribir en grupo', 'Escribe en papel o en tu propio dispositivo. Aquí no se teclea nada.'],
     ['ko', '함께 써요', '종이나 각자 기기에 써요. 이 화면에는 아무것도 입력하지 않아요.'],
   ] as const) {
     for (const size of [
@@ -310,18 +317,32 @@ test.describe('Sound on a write slide (section 3.4 amendment 2026-10-17)', () =>
     for (const n of writes) {
       const variant = await variantAt(n);
       if (variant === 'trace' && !traced) {
+        // The ghost is drawn in the browser as an outline: a text.secondary stroke of at least 1 px and no fill (V11).
+        const ghost = await stage
+          .getByTestId('presenter-write-ghost')
+          .getByText('아침', { exact: true })
+          .evaluate((el) => {
+            const style = getComputedStyle(el);
+            return { width: parseFloat(style.webkitTextStrokeWidth), stroke: style.webkitTextStrokeColor, fill: style.color };
+          });
+        expect(ghost.width, 'the ghost outline').toBeGreaterThanOrEqual(1);
+        expect(ghost.stroke).toBe(rgb(colors.text.secondary));
+        expect(['transparent', 'rgba(0, 0, 0, 0)']).toContain(ghost.fill);
         await page.keyboard.press('s');
         await expect.poll(() => lastSpoken(page)).toBe('아침');
         traced = true;
       }
       if (variant === 'type' && !typed) {
+        // The prompt's own S asks the voice for nothing; the answer's S asks for its target, once. Counted, not
+        // compared by text: the trace before it already left the same word (아침) as the last thing said.
         const before = await spokenNow();
         await page.keyboard.press('s');
-        await page.waitForTimeout(300);
-        expect(await spokenNow(), 'nothing before the answer').toBe(before);
         await page.keyboard.press('PageDown');
+        const target = (await stage.getByTestId('presenter-write-answer-ko').innerText()).trim();
         await page.keyboard.press('s');
-        await expect.poll(() => lastSpoken(page)).toBe('아침');
+        await expect.poll(spokenNow).toBeGreaterThan(before);
+        await expect.poll(() => lastSpoken(page)).toBe(target);
+        expect(await spokenNow(), 'the prompt said nothing; the answer once').toBe(before + 1);
         typed = true;
       }
       if (variant === 'frame' && !framed) {
