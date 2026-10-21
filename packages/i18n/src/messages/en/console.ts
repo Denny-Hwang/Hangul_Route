@@ -2232,7 +2232,8 @@ export const consoleMsgs = {
   },
   /**
    * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2 moment 3 (design D13): the persona home card, shown only while
-   * the tab's PIN hand-off is under 2 minutes old and this account is not yet the PIN owner. No name, no email.
+   * the tab's PIN hand-off is under 2 minutes old and this account is not yet the PIN owner. These strings carry no name
+   * and no email; the card names the signed-in account above them with `adminInvite.signedInAs`.
    */
   pinOwner: {
     cta: 'Let this account reset the PIN here',

@@ -1,4 +1,5 @@
 import {
+  APP_ORIGIN,
   DeviceUsesSchema,
   GROWN_UP_BACKGROUND_MS,
   GROWN_UP_FRESH_PIN_MS,
@@ -11,7 +12,7 @@ import {
   type SpaceKind,
   type SpaceRole,
 } from '@hangul-route/content-schema';
-import type { DeviceGateRead } from './grown-up-lock';
+import { isSiteOrigin, pinPathUrl, type DeviceGateRead } from './grown-up-lock';
 import { isKnownSpaceKind } from './routing';
 
 /**
@@ -128,13 +129,14 @@ export async function pinOwnerFingerprint(userId: string | null | undefined, sub
 
 /**
  * Use a passkey on the lock (section 7.4, OA-D10): the flag, a platform authenticator, and a device read that says the
- * marker is not `pin`. A read that failed may be a `pin` browser, so it hides the button too (fail closed, CS-17).
+ * marker is not `pin`. Only a read `nopin` marker qualifies: a failed read, or a missing marker on a device with
+ * profiles (a learner app older than A-6), may be a `pin` browser, so both hide it (fail closed, CS-17); `none` and a
+ * device without learner data never show the lock at all.
  */
 export function passkeyButtonShown(input: { flag: boolean; available: boolean; device: DeviceGateRead | null }): boolean {
   const { flag, available, device } = input;
-  if (!flag || !available || !device) return false;
-  if (!device.readable) return device.reason === 'unavailable';
-  return device.marker?.gate !== 'pin';
+  if (!flag || !available || !device?.readable) return false;
+  return device.marker?.gate === 'nopin';
 }
 
 interface PublicKeyCredentialLike {
@@ -152,22 +154,42 @@ export async function platformAuthenticatorAvailable(win: { PublicKeyCredential?
   }
 }
 
-/**
- * How early a passkey's `lastUsedAt` may be stamped (Clerk's clock against this one) and still count as used by the
- * reverification that just ran. Wide on purpose: a passkey used a moment before only refuses, it never lets in.
- */
-export const PASSKEY_CLOCK_SKEW_MS = 2 * 60_000;
+/** A passkey as Clerk's user resource lists it (`id` and `lastUsedAt` only are read). */
+export interface PasskeyLike {
+  id?: string | null;
+  lastUsedAt?: Date | number | null;
+}
+
+/** Each passkey's `lastUsedAt` (milliseconds, or null when never used), keyed by its id. */
+export type PasskeySnapshot = ReadonlyMap<string, number | null>;
+
+const stampOf = (at: Date | number | null | undefined): number | null => {
+  const ms = at instanceof Date ? at.getTime() : at;
+  return typeof ms === 'number' && Number.isFinite(ms) ? ms : null;
+};
+const keyOf = (passkey: PasskeyLike, index: number): string => (typeof passkey.id === 'string' && passkey.id ? passkey.id : `#${index}`);
+
+/** The account's passkeys before a Clerk reverification opens its dialog; null when the account could not be read. */
+export function passkeySnapshot(passkeys: readonly PasskeyLike[] | null | undefined): PasskeySnapshot | null {
+  if (!Array.isArray(passkeys)) return null;
+  return new Map(passkeys.map((passkey, index) => [keyOf(passkey, index), stampOf(passkey.lastUsedAt)]));
+}
 
 /**
- * Whether one of the account's passkeys was used since `startedAt` (the passkey check after a Clerk reverification
- * whose factor Clerk does not name, sections 7.2 and 7.4). `null` (the account could not be read again) fails closed
- * when the account holds a passkey.
+ * Whether a passkey of the account was used by the Clerk reverification that just ran (sections 7.2 and 7.4), whose
+ * factor Clerk does not name: a passkey whose `lastUsedAt` moved since the snapshot taken before the dialog, or a new
+ * one already used. Server stamps are compared with server stamps, never with this device's clock. Fails closed: no
+ * snapshot (the account was not loaded), or an account that holds a passkey and could not be read again, counts as a
+ * passkey.
  */
-export function passkeyUsedSince(passkeys: readonly { lastUsedAt?: Date | number | null }[] | null, startedAt: number, holdsPasskey: boolean): boolean {
-  if (passkeys === null) return holdsPasskey;
-  return passkeys.some((passkey) => {
-    const at = passkey.lastUsedAt instanceof Date ? passkey.lastUsedAt.getTime() : passkey.lastUsedAt;
-    return typeof at === 'number' && Number.isFinite(at) && at >= startedAt - PASSKEY_CLOCK_SKEW_MS;
+export function passkeyUsedDuring(before: PasskeySnapshot | null, after: readonly PasskeyLike[] | null | undefined): boolean {
+  if (before === null) return true;
+  if (!Array.isArray(after)) return before.size > 0;
+  return after.some((passkey, index) => {
+    const stamp = stampOf(passkey.lastUsedAt);
+    if (stamp === null) return false;
+    const earlier = before.get(keyOf(passkey, index));
+    return earlier === undefined || earlier === null || stamp > earlier;
   });
 }
 
@@ -188,5 +210,12 @@ export function pinPromptShown(device: DeviceGateRead | null, seen: boolean | nu
   return seen === false && !!device?.readable && device.marker?.gate === 'nopin';
 }
 
-/** The set-a-PIN card's Open the app: the learner app's gate, which runs PIN setup on a `nopin` device. */
-export const PIN_PROMPT_TARGET = '/?gate=grown-up';
+/**
+ * The set-a-PIN card's Open the app: the learner app's grown-up gate with this persona home as `next`
+ * (`/?gate=grown-up&next=%2Fparent`), which opens the PIN screen and, on a `nopin` device, runs setup; the learner app
+ * drops a `gate=grown-up` that has no `next`. On a site origin it is the app host's address.
+ */
+export function pinPromptTarget(origin: string, home: string): string {
+  const path = pinPathUrl(home);
+  return isSiteOrigin(origin) ? `${APP_ORIGIN}${path}` : path;
+}

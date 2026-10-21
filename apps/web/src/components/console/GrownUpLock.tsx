@@ -11,7 +11,7 @@ import { decideGrownUpLock, learnerHome, pinPathUrl, signInAgainUrl, type Device
 import { hiddenTooLong, isGrownUpLockMessage, passkeyButtonShown, pinOwnerFingerprint, pinOwnerRefresh, platformAuthenticatorAvailable, realPinEpoch } from '@/lib/console/one-account';
 import { clearSession } from '@/lib/console/session';
 import { readPinOwner, readTrustedEpoch, writePinOwner } from '@/lib/console/shell-store';
-import { clearGrownUpTab, clearUnlock, readUnlock, touchUnlock, writeSignInUnlock } from '@/lib/console/unlock';
+import { clearGrownUpTab, clearUnlock, readHiddenAt, readUnlock, touchUnlock, writeHiddenAt, writeSignInUnlock } from '@/lib/console/unlock';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { DisplayButton } from './DisplaySheet';
 import { headRem, rem } from '@/lib/console/rem';
@@ -39,7 +39,9 @@ import { headRem, rem } from '@/lib/console/rem';
  * re-check that opens it again (A-4a review 2026-10-12).
  *
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.2, 7.4 and 7.6 (row OA-3):
- * - a tab hidden for at least 5 minutes drops its unlock when it is shown again (wall clock, not a timer; CS-14);
+ * - a tab hidden for at least 5 minutes drops its unlock when it is shown again (wall clock, not a timer; CS-14); the
+ *   hidden time is also kept in this tab's `sessionStorage` (`hr:grownup:hiddenAt`), so a background tab the browser
+ *   discarded, or a page loaded while hidden, still drops it when it is shown (a page left by a navigation keeps none);
  * - a `{ v: 1, kind: 'lock' }` on the `hr-grownup` BroadcastChannel (the learner app's chooser opened) drops the
  *   unlock and shows the lock (CS-2); anything else on the channel is ignored;
  * - a page opened through the PIN path refreshes the PIN owner's epoch, for the same owner only (moment 2);
@@ -72,6 +74,10 @@ export interface GrownUpLockEnvironment {
   passkeyAvailable?: () => Promise<boolean>;
   /** [OA] The `signin` unlock a passkey success writes. */
   writeSignInUnlock?: (now: number) => void;
+  /** [OA] The hidden time kept in this tab's `sessionStorage` (the 5-minute rule across a discard and reload). */
+  readHiddenAt?: () => number | null;
+  /** [OA] Stores the hidden time; `null` removes it. */
+  writeHiddenAt?: (at: number | null) => void;
 }
 
 /** [OA] The browser's `hr-grownup` channel, or null without BroadcastChannel. */
@@ -117,6 +123,8 @@ export function browserLockEnvironment(): GrownUpLockEnvironment {
     writeSignInUnlock: (now) => {
       writeSignInUnlock(now);
     },
+    readHiddenAt: () => readHiddenAt(),
+    writeHiddenAt: (at) => writeHiddenAt(at),
   };
 }
 
@@ -176,6 +184,22 @@ export function createGrownUpLockController(options: {
   const { env, getPath, onState, onHide, readTimeoutMs = LOCK_READ_TIMEOUT_MS, onPinOpen } = options;
   /** [OA] When the tab was last hidden (wall clock), for the 5-minute rule. */
   let hiddenAt: number | null = null;
+  /** [OA] The page is being left (`pagehide`): its hidden time is not kept for the next page of this tab. */
+  let leaving = false;
+  const storeHiddenAt = (at: number | null): void => {
+    try {
+      env.writeHiddenAt?.(at);
+    } catch {
+      // Storage refused: the in-memory time still applies to this page.
+    }
+  };
+  const storedHiddenAt = (): number | null => {
+    try {
+      return env.readHiddenAt?.() ?? null;
+    } catch {
+      return null;
+    }
+  };
   let stopLockChannel: (() => void) | null = null;
   const dropUnlock = (): void => {
     try {
@@ -229,10 +253,15 @@ export function createGrownUpLockController(options: {
     void run();
   };
   const onPageShow = (event: Event): void => {
+    leaving = false;
     if ((event as PageTransitionEvent).persisted) recheck();
   };
   // Covered before the page enters the back/forward cache, so a restore never paints it.
   const onPageHide = (event: Event): void => {
+    // [OA] A navigation away (a same-tab round trip, Stripe Checkout included) keeps no hidden time for the next page;
+    // a back/forward-cache restore still has the in-memory one.
+    leaving = true;
+    storeHiddenAt(null);
     if ((event as PageTransitionEvent).persisted) cover();
   };
   const onVisibility = (): void => {
@@ -240,13 +269,15 @@ export function createGrownUpLockController(options: {
     // Covered before the tab switcher takes its picture; a page that cannot lock is left as it is.
     if (visibility === 'hidden') {
       hiddenAt = env.now();
+      if (!leaving) storeHiddenAt(hiddenAt);
       if (guarded) cover();
       return;
     }
     if (visibility !== 'visible') return;
     // [OA] OA-D16, CS-14: hidden for 5 minutes or more (wall clock) drops the unlock before the decision.
-    const dropped = hiddenTooLong(hiddenAt, env.now());
+    const dropped = hiddenTooLong(hiddenAt ?? storedHiddenAt(), env.now());
     hiddenAt = null;
+    storeHiddenAt(null);
     if (dropped) dropUnlock();
     if (guarded || dropped) recheck();
     else void run();
@@ -283,6 +314,16 @@ export function createGrownUpLockController(options: {
 
   return {
     start: () => {
+      // [OA] A tab the browser discarded while hidden (or restored after a crash) reloads with its unlock but without
+      // the in-memory time: the stored one decides before the first check. A page loaded while hidden starts its clock.
+      const stored = storedHiddenAt();
+      if (env.document?.visibilityState === 'hidden') {
+        hiddenAt = stored ?? env.now();
+        storeHiddenAt(hiddenAt);
+      } else if (stored !== null) {
+        if (hiddenTooLong(stored, env.now())) dropUnlock();
+        storeHiddenAt(null);
+      }
       env.window?.addEventListener('pageshow', onPageShow);
       env.window?.addEventListener('pagehide', onPageHide);
       env.document?.addEventListener('visibilitychange', onVisibility);
@@ -468,10 +509,13 @@ export function GrownUpLock({ children, pathname, search = '', exempt = false, o
             .then((verified) => {
               setPasskeyBusy(false);
               // A refusal returns to the lock with its existing line; a success is a secret-proving sign-in here.
-              if (!verified) return;
+              if (!verified) return undefined;
               const env = envOf();
-              env.writeSignInUnlock?.(env.now());
-              controllerRef.current?.check();
+              // [OA] CS-17: the marker is read again, so a PIN set in another tab while the passkey ran keeps this lock.
+              return settle(env.readDevice, FAILED_READ, LOCK_READ_TIMEOUT_MS).then((fresh) => {
+                if (passkeyButtonShown({ flag, available: passkeyOffered, device: fresh })) env.writeSignInUnlock?.(env.now());
+                controllerRef.current?.check();
+              });
             });
         }
       : undefined;

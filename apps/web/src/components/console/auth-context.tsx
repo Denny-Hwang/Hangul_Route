@@ -7,7 +7,7 @@ import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkLocalization } from '@/lib/console/clerk-localization';
 import { clerkPublishableKey } from '@/lib/console/config';
 import { signInHome } from '@/lib/console/grown-up-lock';
-import { passkeyUsedSince } from '@/lib/console/one-account';
+import { passkeySnapshot, passkeyUsedDuring, type PasskeyLike } from '@/lib/console/one-account';
 import { deleteDeviceUses } from '@/lib/console/shell-store';
 import { reverifyOnce, withTimeout } from '@/lib/console/signin-flow';
 import { ROUTES } from '@/lib/console/routing';
@@ -70,8 +70,9 @@ export interface ConsoleAuth {
   verifyPasskey: () => Promise<boolean>;
   /**
    * [OA] Section 7.2 moment 3: Clerk reverification that must be a password, an email code or a phone code. Clerk does
-   * not name the factor its dialog used, so a passkey of the account used since the dialog opened refuses it
-   * (`refused`; an account that could not be read again fails closed when it holds a passkey). Dev mode (no Clerk,
+   * not name the factor its dialog used, so a passkey whose `lastUsedAt` moved between the snapshot taken before the
+   * dialog and the account read again after it refuses it (`refused`; server stamps only, never this device's clock;
+   * an account without a passkey list, or one that holds a passkey and could not be read again, fails closed). Dev mode (no Clerk,
    * never on a production build with Clerk) counts the dev bearer as a password, as the dev sign-in does.
    */
   reverifySecret: () => Promise<SecretReverify>;
@@ -111,10 +112,10 @@ export function useConsoleAuth(): ConsoleAuth {
 /** The Clerk user methods the language sync uses (`user.update` replaces `unsafeMetadata` whole). */
 export interface LocaleUser {
   id: string;
-  /** [OA] The account's passkeys (`lastUsedAt` only is read), for the moment-3 passkey check. */
-  passkeys?: readonly { lastUsedAt?: Date | null }[];
+  /** [OA] The account's passkeys (`id` and `lastUsedAt` only are read), for the moment-3 passkey check. */
+  passkeys?: readonly PasskeyLike[];
   /** [OA] Reads the account again (Clerk's `user.reload`). */
-  reload?: () => Promise<{ passkeys?: readonly { lastUsedAt?: Date | null }[] }>;
+  reload?: () => Promise<{ passkeys?: readonly PasskeyLike[] }>;
   unsafeMetadata?: UnsafeMetadata;
   update: (params: { unsafeMetadata: Record<string, unknown> }) => Promise<unknown>;
 }
@@ -195,18 +196,17 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
   const reverifySecret = useCallback(async (): Promise<SecretReverify> => {
     const account = user as unknown as LocaleUser | null | undefined;
     if (!account) return 'unavailable';
-    const startedAt = Date.now();
-    const holdsPasskey = (account.passkeys?.length ?? 0) > 0;
+    const before = passkeySnapshot(account.passkeys);
     const hint = await reverifyOnce()();
     const outcome = await reverify(async () => ({ verified: true }), hint as unknown);
     if (outcome.kind !== 'result') return outcome.kind;
-    let passkeys: readonly { lastUsedAt?: Date | null }[] | null = null;
+    let after: readonly PasskeyLike[] | null = null;
     try {
-      passkeys = account.reload ? ((await account.reload()).passkeys ?? []) : null;
+      after = account.reload ? ((await account.reload()).passkeys ?? null) : null;
     } catch {
-      passkeys = null;
+      after = null;
     }
-    return passkeyUsedSince(passkeys, startedAt, holdsPasskey) ? 'refused' : 'done';
+    return passkeyUsedDuring(before, after) ? 'refused' : 'done';
   }, [user, reverify]);
   const value = useMemo<ConsoleAuth>(
     () => ({

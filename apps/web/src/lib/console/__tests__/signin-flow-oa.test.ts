@@ -71,7 +71,22 @@ describe('isSecretProvingSignIn: the passkey rule (section 7.4, CS-17)', () => {
   });
 
   it('a password or a code counts everywhere off the reset leg', () => {
-    for (const factor of ['password', 'email_code', 'phone_code', undefined]) expect(isSecretProvingSignIn({ factor, device: PIN, resetLeg: false })).toBe(true);
+    for (const factor of ['password', 'email_code', 'phone_code', 'reset_password_email_code', 'reset_password_phone_code']) {
+      expect(isSecretProvingSignIn({ factor, device: PIN, resetLeg: false })).toBe(true);
+      expect(isSecretProvingSignIn({ factor, device: FAILED, resetLeg: false })).toBe(true);
+      expect(isSecretProvingSignIn({ factor, device: NOPIN, resetLeg: false })).toBe(true);
+    }
+  });
+
+  it('where it may be a pin browser, an absent or unknown factor fails closed (a record from an earlier build)', () => {
+    for (const factor of [undefined, null, '', 'oauth_google', 'ticket', 'totp']) {
+      expect(isSecretProvingSignIn({ factor, device: PIN, resetLeg: false })).toBe(false);
+      expect(isSecretProvingSignIn({ factor, device: FAILED, resetLeg: false })).toBe(false);
+    }
+  });
+
+  it('elsewhere a secret proof counts whatever factor it names', () => {
+    for (const factor of [undefined, 'passkey', 'password']) expect(isSecretProvingSignIn({ factor, device: NOPIN, resetLeg: false })).toBe(true);
   });
 
   it('on the reset leg only a password, a code or a password-reset code counts, on every browser', () => {
@@ -89,6 +104,13 @@ describe('planAfterSignIn with the factor and the reset leg', () => {
   it('a passkey on a pin browser signs in but unlocks nothing and asks for no reverification: the lock decides', () => {
     expect(planAfterSignIn({ record: proof('passkey'), sessionId: 's1', device: PIN, now: NOW })).toBe('none');
     expect(planAfterSignIn({ record: proof('passkey'), sessionId: 's1', device: NOPIN, now: NOW })).toBe('unlock');
+  });
+
+  it('a secret proof with no factor on a pin browser asks for the reverification (which refuses a passkey) instead of opening', () => {
+    expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: PIN, now: NOW })).toBe('reverify');
+    expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: FAILED, now: NOW })).toBe('reverify');
+    expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: NOPIN, now: NOW })).toBe('unlock');
+    expect(planAfterSignIn({ record: proof(), sessionId: 's1', device: PIN, now: NOW, next: PIN_RESET_PATH })).toBe('none');
   });
 
   it('on the reset leg a passkey unlocks nothing; a code does', () => {
