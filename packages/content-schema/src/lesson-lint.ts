@@ -85,15 +85,15 @@ export const CURRICULUM_RULES: Readonly<Record<CurriculumRule | CurriculumReport
   'lesson-recycle':
     'At least 30% of a Volume 2 or pack quest\'s Practice and Check items were taught in earlier quests of the route or the pack (§5.1, §6.4).',
   'lesson-check-variety':
-    'Check rotation (§7.1): no game kind in more than 40% of a stage\'s Checks; from Stage 2 on every Check has at least 1 read-meaning or produce round (a produce or read-meaning game, or a Listen & Pick round whose options are meanings: pictures or English labels); no two adjacent quests share their Practice, Apply and Check games.',
+    'Check rotation (§7.1): no game kind in more than 40% of a stage\'s Checks; from Stage 2 on every Check has at least 1 read-meaning or produce round (a produce or read-meaning game, or a Listen & Pick round that shows its Korean prompt, `promptShown: true`, and whose options are meanings: pictures or English labels; a heard Listen & Pick is the recognize rung of §4.3 and does not count); no two adjacent quests share their Practice, Apply and Check games.',
   'lesson-culture-coverage': 'At least 2 culture notes in each Volume 2 cell and at least 1 in each pack level (§5.1, §6.4).',
   'culture-source':
-    'Every note has a source from the §6.6 allowlist: the publisher names the institution (its whole English name, or its Korean name) and the URL is on a host the institution runs. MAR: check each institution\'s name as of the source\'s access date (the Korea Heritage Service was called the Cultural Heritage Administration before 2024-05-17; the lint knows this one rename), and use Ramsar sources for Ramsar site status only.',
+    'Every note has a source from the §6.6 allowlist: the publisher names the institution (its whole English name, or its Korean name) and the URL is on a host the institution runs. MAR: check each institution\'s name as of the source\'s access date (the lint knows two renames: the Korea Heritage Service was the Cultural Heritage Administration, 문화재청, before 2024-05-17, and 국립공원공단 was 국립공원관리공단 before 2019-01-17), and use Ramsar sources for Ramsar site status only.',
   'items-stable-id': 'Review-item ids are frozen in a snapshot, with alias and retired lists (§4.2). Stub until row CM-10 adds the snapshot.',
   'pack-skeleton':
     'A pack follows the template of §6.4: pack.json lists its levels at S2, S3, S4, S6, S7 in that order (all five once the pack is ready), and each ready level has three quests, the new-item caps and its one new pattern, exchange or frame, the formats, three new realia in L4, the two pack cards and the Pack Check in L5. A draft level (the CM-50a scaffold) is checked for its ids, stage and file name only.',
   'dictation-unambiguous':
-    'An item asked by ear (Dictation, or a heard round whose options are spellings) has exactly one spelling among the taught items with its pronunciation, unless a picture or the gloss settles it; an item with a sound change stays out of Dictation until recordings A-9 and A-10 exist (§4.5).',
+    'An item asked by ear (Dictation, or a heard round whose options are spellings) has exactly one spelling among the taught items with its pronunciation, unless the prompt shows a picture or the gloss that settles it (a label on the answer option alone does not, as it gives the answer away). Taught items are those met by that quest on the route or in the pack. An item with a sound change (tensification such as 학교 [학꾜] included) stays out of Dictation until recordings A-9 and A-10 exist (§4.5).',
   'story-order-text': 'At least 1 Story Order round in 2 has captions only, or captions that settle the order on their own (`captionsSettleOrder: true`, checked by MAR) (§7.1 F5).',
   'story-topic-unique':
     'A new story declares its topicTags, and shares no topic (a topic tag or a story slug, compared both ways) and no source URL with another story in content/stories/ (§5.1).',
@@ -156,9 +156,9 @@ export const PRODUCE_KINDS: ReadonlySet<string> = new Set([
 /**
  * Check games that show the Korean and ask its meaning, a picture or a reply (§4.3 read rung).
  * Story Sequence is not here: its steps need only English labels, and their art can settle the
- * order. Read Pick Meaning (the S2 default Check) is a Listen & Pick whose options are meanings,
- * so it counts by its rounds (isReadMeaningRound); the row that adds a shown-text prompt keeps
- * that option shape and needs no change here.
+ * order. Listen & Pick is not here either: its prompt is heard (the Korean shows only when sound
+ * cannot play), so hearing a word and picking its picture is the recognize rung. Read Pick
+ * Meaning (the S2 default Check) counts by its rounds (isReadMeaningRound).
  */
 export const READ_MEANING_KINDS: ReadonlySet<string> = new Set([
   'card-match',
@@ -169,11 +169,17 @@ export const READ_MEANING_KINDS: ReadonlySet<string> = new Set([
   'story-order',
 ]);
 
-/** A Listen & Pick round that asks for a meaning: every option is a picture or an English label, none a spelling. */
+/**
+ * A Read Pick Meaning round: a Listen & Pick round that shows its Korean prompt
+ * (`promptShown: true`) and whose every option is a picture or an English label, none a
+ * spelling. `promptShown` is the contract for the row that adds Read Pick Meaning: a round
+ * without it is heard, the recognize rung of §4.3, and is not a read-meaning round.
+ */
 export function isReadMeaningRound(round: unknown): boolean {
   if (typeof round !== 'object' || round === null) return false;
-  const options = (round as Record<string, unknown>).options;
+  const { options, promptShown } = round as Record<string, unknown>;
   return (
+    promptShown === true &&
     Array.isArray(options) &&
     options.length > 0 &&
     options.every((o) => isRecord(o) && o.text === undefined && (o.pictureRef !== undefined || o.labelEn !== undefined))
@@ -188,7 +194,11 @@ export interface SourceInstitution {
   aliases?: readonly string[];
   /** Its earlier name, used for sources accessed before `until` (YYYY-MM-DD). */
   formerly?: { name: string; ko: string; until: string };
-  /** The domains it publishes on; a source counts only from one of them or a subdomain. */
+  /**
+   * The domains it publishes on; a source counts only from one of them or a subdomain. An entry
+   * with a path (`cheongju.go.kr/jikjiworld`) also needs the URL's path to start with it, for an
+   * institution whose site is a section of a larger one.
+   */
   hosts: readonly string[];
 }
 
@@ -205,10 +215,16 @@ export const CULTURE_SOURCE_ALLOWLIST: readonly SourceInstitution[] = [
     hosts: ['khs.go.kr', 'heritage.go.kr', 'cha.go.kr'],
   },
   { name: 'National Gugak Center', ko: '국립국악원', hosts: ['gugak.go.kr'] },
-  { name: 'Cheongju Early Printing Museum', ko: '청주고인쇄박물관', hosts: ['cheongju.go.kr'] },
+  { name: 'Cheongju Early Printing Museum', ko: '청주고인쇄박물관', hosts: ['cheongju.go.kr/jikjiworld'] },
   { name: 'Korea Astronomy and Space Science Institute', ko: '한국천문연구원', hosts: ['kasi.re.kr'] },
   { name: 'Korea Meteorological Administration', ko: '기상청', hosts: ['kma.go.kr', 'weather.go.kr'] },
-  { name: 'Korea National Park Service', ko: '국립공원공단', hosts: ['knps.or.kr'] },
+  {
+    name: 'Korea National Park Service',
+    ko: '국립공원공단',
+    // 국립공원관리공단 until the amended act took effect on 2019-01-17; the English name did not change.
+    formerly: { name: 'Korea National Park Service', ko: '국립공원관리공단', until: '2019-01-17' },
+    hosts: ['knps.or.kr'],
+  },
   { name: 'National Institute of Biological Resources', ko: '국립생물자원관', hosts: ['nibr.go.kr'] },
   { name: 'National Institute of Ecology', ko: '국립생태원', aliases: ['National Wetlands Center', '국립습지센터'], hosts: ['nie.re.kr'] },
   { name: 'Ramsar Convention Secretariat', ko: '람사르협약', aliases: ['Ramsar Convention'], hosts: ['ramsar.org'] },
@@ -235,10 +251,18 @@ function namesInstitution(publisher: string, name: string): boolean {
   return new RegExp(`(?<![A-Za-z0-9-])${escapeRe(name)}(?![A-Za-z0-9-])`, 'i').test(publisher);
 }
 
-const hostUnder = (host: string, domain: string): boolean => host === domain || host.endsWith(`.${domain}`);
-const urlHost = (url: string): string | undefined => {
+/** True when the URL is on `entry`: its domain or a subdomain, and under its path when it has one. */
+const onHost = (url: URL, entry: string): boolean => {
+  const slash = entry.indexOf('/');
+  const domain = slash < 0 ? entry : entry.slice(0, slash);
+  const prefix = slash < 0 ? '' : entry.slice(slash);
+  const host = url.hostname.toLowerCase();
+  const path = url.pathname.toLowerCase();
+  return (host === domain || host.endsWith(`.${domain}`)) && (prefix === '' || path === prefix || path.startsWith(`${prefix}/`));
+};
+const parseUrl = (url: string): URL | undefined => {
   try {
-    return new URL(url).hostname.toLowerCase();
+    return new URL(url);
   } catch {
     return undefined;
   }
@@ -251,13 +275,13 @@ const urlHost = (url: string): string | undefined => {
  * Commission for UNESCO, the Export-Import Bank of Korea) passes.
  */
 export function allowlistedInstitution(publisher: string, accessed: string, url?: string): InstitutionMatch | undefined {
-  const host = url === undefined ? undefined : urlHost(url);
+  const parsed = url === undefined ? undefined : parseUrl(url);
   const names = (...list: string[]): boolean => list.some((n) => namesInstitution(publisher, n));
   for (const institution of CULTURE_SOURCE_ALLOWLIST) {
     const current = names(institution.name, institution.ko, ...(institution.aliases ?? []));
     const former = institution.formerly !== undefined && names(institution.formerly.name, institution.formerly.ko);
     if (!current && !former) continue;
-    if (url !== undefined && (host === undefined || !institution.hosts.some((d) => hostUnder(host, d)))) continue;
+    if (url !== undefined && (parsed === undefined || !institution.hosts.some((d) => onHost(parsed, d)))) continue;
     if (institution.formerly === undefined) return { institution, nameAsOfAccess: true };
     const before = accessed < institution.formerly.until;
     return { institution, nameAsOfAccess: before ? former : current };
@@ -304,14 +328,18 @@ type Add = (rule: CurriculumFinding['rule'], path: string, message: string) => v
  * for a Volume 2 cell, Volume 1 up to its stage and Volume 2 below it; for a pack level, Volume 1
  * up to its stage and the pack's lower levels. Stage 1 is hand-written TypeScript, outside the tree.
  */
-function priorKnown(entry: LessonEntry, lessons: readonly LessonEntry[]): Set<string> {
+function lessonsBefore(entry: LessonEntry, lessons: readonly LessonEntry[]): LessonEntry[] {
   const before = (other: LessonEntry): boolean => {
     if (other === entry) return false;
     if (entry.tier === 'volume1') return other.tier === 'volume1' && other.stage < entry.stage;
     if (entry.tier === 'volume2') return (other.tier === 'volume1' && other.stage <= entry.stage) || (other.tier === 'volume2' && other.stage < entry.stage);
     return (other.tier === 'volume1' && other.stage <= entry.stage) || (other.pack === entry.pack && other.stage < entry.stage);
   };
-  return new Set(lessons.filter(before).flatMap((o) => o.known));
+  return lessons.filter(before);
+}
+
+function priorKnown(entry: LessonEntry, lessons: readonly LessonEntry[]): Set<string> {
+  return new Set(lessonsBefore(entry, lessons).flatMap((o) => o.known));
 }
 
 function lintLoadAndRecycle(entry: LessonEntry, prior: Set<string>, add: Add): void {
@@ -386,32 +414,28 @@ function lintCultureSource(entry: LessonEntry, tree: ReadonlyMap<string, unknown
     matches.forEach((m, si) => {
       if (m === undefined || m.nameAsOfAccess) return;
       const s = sources[si] as LessonBodySource;
-      const expected = m.institution.formerly !== undefined && s.accessed < m.institution.formerly.until ? m.institution.formerly.name : m.institution.name;
+      const { formerly } = m.institution;
+      const expected = formerly !== undefined && s.accessed < formerly.until ? formerly : m.institution;
       // A note restating a story fact is reported on its factRef: the fact's source is fixed in the story.
       const at = note.sources === undefined ? pathOf('culture', ni, 'factRef') : pathOf('culture', ni, 'sources', si, 'publisher');
-      add('culture-source', at, `on ${s.accessed} the institution was called the ${expected}`);
+      add('culture-source', at, `on ${s.accessed} the institution was called the ${expected.name} (${expected.ko})`);
     });
   });
 }
 
 /** Spellings of the taught items, by pronunciation key. */
-type Homophones = ReadonlyMap<string, ReadonlySet<string>>;
+type Homophones = Map<string, Set<string>>;
 
-function homophonesOf(lessons: readonly LessonEntry[]): Homophones {
-  const map = new Map<string, Set<string>>();
-  for (const entry of lessons) {
-    for (const quest of entry.body.quests) {
-      for (const unit of questUnits(quest)) {
-        for (const ko of unit.texts) {
-          const key = pronunciationKey(ko);
-          const set = map.get(key) ?? new Set<string>();
-          set.add(ko);
-          map.set(key, set);
-        }
-      }
+/** Adds the spellings a quest's Discover units teach. */
+function addTaught(map: Homophones, quest: LessonBodyQuest): void {
+  for (const unit of questUnits(quest)) {
+    for (const ko of unit.texts) {
+      const key = pronunciationKey(ko);
+      const set = map.get(key) ?? new Set<string>();
+      set.add(ko);
+      map.set(key, set);
     }
   }
-  return map;
 }
 
 function otherSpellings(ko: string, homophones: Homophones, alsoHeard: readonly string[]): string[] {
@@ -427,8 +451,16 @@ function glossShown(prompt: string, gloss: string): boolean {
   return g !== '' && new RegExp(`(?<![a-z0-9])${escapeRe(g)}(?![a-z0-9])`, 'i').test(prompt);
 }
 
-function lintDictation(entry: LessonEntry, homophones: Homophones, add: Add): void {
+/**
+ * `dictation-unambiguous`. The taught items are those the learner has met by the quest: what
+ * the route or the pack taught before the file (the scope of lesson-new-load), the file's earlier
+ * quests and the quest's own Discover pages. A later stage or another pack does not count.
+ */
+function lintDictation(entry: LessonEntry, lessons: readonly LessonEntry[], add: Add): void {
+  const homophones: Homophones = new Map();
+  for (const other of lessonsBefore(entry, lessons)) for (const quest of other.body.quests) addTaught(homophones, quest);
   entry.body.quests.forEach((quest, qi) => {
+    addTaught(homophones, quest);
     quest.scopes.forEach((scope, si) => {
       const rounds = Array.isArray(scope.rounds) ? scope.rounds.filter(isRecord) : [];
       rounds.forEach((round, ri) => {
@@ -449,9 +481,14 @@ function lintDictation(entry: LessonEntry, homophones: Homophones, add: Add): vo
           if (answer === undefined || !isRecord(answer.text)) return;
           const ko = normalizeKo(String(answer.text.ko ?? ''));
           const heard = options.filter((o) => o !== answer).flatMap((o) => koStrings(o.text));
-          const settled = answer.pictureRef !== undefined || answer.labelEn !== undefined;
+          // Only the prompt settles it: a picture on the round, or the gloss in its shown line. A label on
+          // the answer option alone would give the answer away, so it does not count.
+          const glosses = [isRecord(round.prompt) ? round.prompt.en : undefined, answer.text.en, answer.labelEn].filter((g): g is string => typeof g === 'string');
+          const settled = round.pictureRef !== undefined || glosses.some((g) => glossShown(String(round.promptEn ?? ''), g));
           const others = otherSpellings(ko, homophones, heard);
-          if (others.length > 0 && !settled) add('dictation-unambiguous', at, `${ko} sounds like ${others.join(', ')}; a heard round with spelling options needs one spelling per sound`);
+          if (others.length > 0 && !settled) {
+            add('dictation-unambiguous', at, `${ko} sounds like ${others.join(', ')}; a heard round with spelling options shows a picture (pictureRef) or the gloss (promptEn) on its prompt`);
+          }
         }
       });
     });
@@ -696,10 +733,11 @@ function lintPack(
   });
 }
 
+/** A source URL as compared by story-topic-unique: no scheme, no `www.`, no fragment, no trailing slash. */
 const normalizeUrl = (url: string): string => {
   try {
     const u = new URL(url);
-    return `${u.protocol}//${u.host.toLowerCase()}${u.pathname.replace(/\/+$/, '')}${u.search}`;
+    return `${u.host.toLowerCase().replace(/^www\./, '')}${u.pathname.replace(/\/+$/, '')}${u.search}`;
   } catch {
     return url.trim();
   }
@@ -894,7 +932,6 @@ export function lintCurriculum(tree: ReadonlyMap<string, unknown>, opts: Curricu
     .filter((s): s is { file: string; raw: Record<string, unknown> } => isRecord(s.raw) && typeof s.raw.id === 'string')
     .map((s) => ({ ...s, tier: shipped.has(String(s.raw.id)) ? 'shipped-story' : 'new-story' }));
 
-  const homophones = homophonesOf(lessons);
   const strictCtx = { today: opts.today ?? '9999-12-31', storyFacts: storyFactsOf(tree) };
   // Content rules wait for a ready pack level; its ids are pack-skeleton's, its copy review-copy's.
   const content = lessons.filter((e) => !e.draft);
@@ -906,7 +943,7 @@ export function lintCurriculum(tree: ReadonlyMap<string, unknown>, opts: Curricu
     lintQuestChecks(entry, add);
     lintCultureCoverage(entry, add);
     lintCultureSource(entry, tree, add);
-    lintDictation(entry, homophones, add);
+    lintDictation(entry, lessons, add);
     lintStoryOrder(entry.body.quests, 'quests', add);
     if (entry.tier !== 'volume1') lintStrictLesson(entry, strictCtx, add);
   }

@@ -84,15 +84,28 @@ export function newCopyProblems(text: string): ReviewCopyProblem[] {
 }
 
 /**
+ * Wording that asks the learner to speak or record, in the Spanish and Korean UI locales. A
+ * translation can add speaking UI that its English source does not have, so each locale has its
+ * own list. A device voice reading aloud ("escúchalo en voz alta") is not here, nor is 따라 읽어 보세요
+ * on its own (read along).
+ */
+export const REVIEW_COPY_SPEAKING_PATTERNS_BY_LOCALE: Readonly<Record<'es' | 'ko', readonly RegExp[]>> = {
+  es: [/(?<!\b(?:escuch|o[iíy])[a-záéíóúñ]*\s+(?:[a-záéíóúñ]+\s+){0,3})\b(?:d[ií]|l[eé]{2}|rep[ií]t|repet|pronunci|habl)[a-záéíóúñ]*\s+(?:[a-záéíóúñ]+\s+){0,2}en voz alta/i, /\bmicr[oó]fonos?\b/i, /\bgr[aá]ba(?:te)?\s+(?:tu voz|tu respuesta|a ti mism[oa])/i, /\busa tu voz\b/i, /\brepite (?:despu[eé]s de|conmigo|con hoya)/i],
+  ko: [/소리\s*내어/, /따라\s*말해/, /말해\s*보세요/, /마이크/, /녹음(?:해|하세요|하기|하고)/, /목소리로\s*(?:말|대답|읽)/],
+};
+
+/**
  * Problems of new learner copy in a UI locale: English gets every check of newCopyProblems;
- * Spanish and Korean get their age patterns and the emoji check (the speaking patterns are
- * English; a Spanish or Korean string translates an English one that is checked).
+ * Spanish and Korean get their own age and speaking patterns and the emoji check.
  */
 export function localeCopyProblems(text: string, locale: string): ReviewCopyProblem[] {
   if (locale === 'en') return newCopyProblems(text);
   const out: ReviewCopyProblem[] = [];
-  const age = locale === 'es' || locale === 'ko' ? REVIEW_COPY_AGE_PATTERNS_BY_LOCALE[locale] : [];
+  const known = locale === 'es' || locale === 'ko';
+  const age = known ? REVIEW_COPY_AGE_PATTERNS_BY_LOCALE[locale] : [];
+  const speaking = known ? REVIEW_COPY_SPEAKING_PATTERNS_BY_LOCALE[locale] : [];
   if (age.some((re) => re.test(text))) out.push('age-word');
+  if (speaking.some((re) => re.test(text))) out.push('speaking-ui');
   if (hasEmoji(text)) out.push('emoji');
   return out;
 }
@@ -110,12 +123,14 @@ export const reviewCopyMessage = (problem: ReviewCopyProblem): string => PROBLEM
 
 /**
  * The learner review surfaces of `packages/i18n` whose strings the rule reads: the Hangul
- * Check (shipped) and the F-CURR-002 review screens, by the sub-object of `learner` each
- * row adds (Daily Review and Keep going CM-14, warm-up and Try these again CM-15, Cell
- * Check CM-21, Stage Check CM-22, Pack Check CM-51). A key not present yet is skipped.
+ * Check and the star results screen of F-RVW-001 §3.1 (shipped; the Daily Review reuses it)
+ * and the F-CURR-002 review screens, by the sub-object of `learner` each row adds (Daily
+ * Review and Keep going CM-14, warm-up and Try these again CM-15, Cell Check CM-21, Stage
+ * Check CM-22, Pack Check CM-51). A key not present yet is skipped.
  */
 export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'stageReview',
+  'results',
   'dailyReview',
   'keepGoing',
   'warmUp',
@@ -132,11 +147,36 @@ export interface ReviewStringFinding {
 
 /** Sample arguments for a message function: numbers, so a template like `${n} of ${total}` shows. */
 const SAMPLE_ARGS = [3, 5, 7, 9];
+/** A sample object argument whose every property is a number, for `({ n, total }) => ...` messages. */
+const SAMPLE_OBJECT: unknown = new Proxy({}, { get: (_target, key) => (typeof key === 'symbol' ? undefined : 7) });
+
+/** Score shapes in a message function's source: two interpolations around "of" or "/", or one before "%". */
+const SOURCE_SCORE_PATTERNS: ReadonlyArray<readonly [ReviewCopyProblem, RegExp]> = [
+  ['percent', /\}\s*[%％]/],
+  ['n-of-m', /\}\s*\/\s*\$\{/],
+  ['n-of-m', /\}\s+(?:out\s+)?of\s+\$\{/i],
+  ['n-of-m', /\}\s+sobre\s+\$\{/i],
+  ['n-of-m', /\}\s*\S{0,3}\s*중(?:에서|에)?\s*\$\{/],
+];
+
+/** What a message function renders: with positional numbers, with an object of numbers, else its source. */
+function renderings(fn: (...args: unknown[]) => unknown): string[] {
+  const out: string[] = [];
+  for (const args of [SAMPLE_ARGS, [SAMPLE_OBJECT]]) {
+    try {
+      out.push(String(fn(...args)));
+    } catch {
+      // Read below as source text.
+    }
+  }
+  return out.length > 0 ? out : [String(fn)];
+}
 
 /**
  * Every problem in the review sub-objects of one locale's `learner` messages: a score, and the
  * new-copy problems of that locale (localeCopyProblems). A message function is called with
- * numbers so its template is read; one that throws on them is read as its source text instead.
+ * positional numbers and with an object of numbers so its template is read (one that throws on
+ * both is read as its source text), and its source is also searched for score templates.
  */
 export function lintReviewMessages(
   learner: unknown,
@@ -144,17 +184,14 @@ export function lintReviewMessages(
   locale = 'en',
 ): ReviewStringFinding[] {
   const out: ReviewStringFinding[] = [];
+  const problemsOf = (text: string): ReviewCopyProblem[] => [...reviewScoreProblems(text), ...localeCopyProblems(text, locale)];
   const visit = (value: unknown, path: string): void => {
     if (typeof value === 'string') {
-      for (const problem of new Set([...reviewScoreProblems(value), ...localeCopyProblems(value, locale)])) out.push({ path, problem });
+      for (const problem of new Set(problemsOf(value))) out.push({ path, problem });
     } else if (typeof value === 'function') {
-      let text: string;
-      try {
-        text = String((value as (...args: unknown[]) => unknown)(...SAMPLE_ARGS));
-      } catch {
-        text = String(value);
-      }
-      visit(text, path);
+      const fn = value as (...args: unknown[]) => unknown;
+      const source = SOURCE_SCORE_PATTERNS.filter(([, re]) => re.test(String(fn))).map(([problem]) => problem);
+      for (const problem of new Set([...renderings(fn).flatMap(problemsOf), ...source])) out.push({ path, problem });
     } else if (typeof value === 'object' && value !== null) {
       for (const [key, child] of Object.entries(value)) visit(child, `${path}.${key}`);
     }

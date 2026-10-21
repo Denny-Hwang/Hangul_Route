@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a word with one spelling for its sound, of a homophone settled by a picture or by its gloss in the prompt, and a heard pick whose answer shows its picture. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a word with one spelling for its sound, of a homophone settled by a picture or by its gloss in the prompt, and heard picks with spelling options whose prompt shows the settling picture (pictureRef) or the gloss (promptEn). Not real content.",
   "rule": "dictation-unambiguous",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -204,6 +204,7 @@
                     "romanization": "nat",
                     "en": "daytime"
                   },
+                  "pictureRef": "word:daytime",
                   "options": [
                     {
                       "id": "a",
@@ -211,8 +212,7 @@
                         "ko": "낮",
                         "romanization": "nat",
                         "en": "daytime"
-                      },
-                      "labelEn": "daytime"
+                      }
                     },
                     {
                       "id": "b",
@@ -220,8 +220,35 @@
                         "ko": "낫",
                         "romanization": "nat",
                         "en": "sickle"
-                      },
-                      "labelEn": "sickle"
+                      }
+                    }
+                  ],
+                  "answerId": "a"
+                },
+                {
+                  "id": "r3",
+                  "promptEn": "Which spelling means sickle?",
+                  "prompt": {
+                    "ko": "낫",
+                    "romanization": "nat",
+                    "en": "sickle"
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "낫",
+                        "romanization": "nat",
+                        "en": "sickle"
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "text": {
+                        "ko": "낮",
+                        "romanization": "nat",
+                        "en": "daytime"
+                      }
                     }
                   ],
                   "answerId": "a"

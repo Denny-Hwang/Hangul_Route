@@ -171,11 +171,21 @@ function deriveShelf(story) {
 }
 
 /**
+ * Pure: a story without its build-time-only fields: `topicTags` (F-CURR-002 §5.1) is read by the
+ * story-topic-unique lint and never shown, so it stays out of the app bundle (§10).
+ */
+export function withoutBuildOnly(story) {
+  const { topicTags: _topicTags, ...rest } = story;
+  return rest;
+}
+
+/**
  * Pure: ready stories (already filtered and sorted by the caller or not) to
- * the three arrays. Sorting by id happens here so every caller gets it.
+ * the three arrays. Build-time-only fields are dropped (withoutBuildOnly).
+ * Sorting by id happens here so every caller gets it.
  */
 export function buildBundle(stories) {
-  const sorted = [...stories].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const sorted = stories.map(withoutBuildOnly).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const episodes = [];
   const quests = [];
   for (const story of sorted) {

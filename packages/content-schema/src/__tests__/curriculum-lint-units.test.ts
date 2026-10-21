@@ -89,6 +89,18 @@ describe('review-copy patterns', () => {
     expect(localeCopyProblems('7세 이상', 'ko')).toEqual(['age-word']);
     expect(localeCopyProblems('아이들이 달렸어요.', 'ko')).toEqual([]);
     expect(localeCopyProblems('pour les enfants ⭐', 'fr')).toEqual(['emoji']);
+    // A translation can add speaking UI its English source does not have.
+    expect(localeCopyProblems('Dilo en voz alta.', 'es')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('Lee la frase en voz alta.', 'es')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('Repite después de Hoya.', 'es')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('Usa el micrófono.', 'es')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('Graba tu voz.', 'es')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('Escucha a Hoya leerlo en voz alta.', 'es')).toEqual([]);
+    expect(localeCopyProblems('소리 내어 따라 말해 보세요.', 'ko')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('마이크를 켜세요.', 'ko')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('목소리를 녹음해 보세요.', 'ko')).toEqual(['speaking-ui']);
+    expect(localeCopyProblems('녹음된 소리를 들어요.', 'ko')).toEqual([]);
+    expect(localeCopyProblems('따라 읽어 보세요.', 'ko')).toEqual([]);
     expect(lintReviewMessages({ stageReview: { a: 'para niños', b: '3 de 5' } }, undefined, 'es')).toEqual([
       { path: 'learner.stageReview.a', problem: 'age-word' },
       { path: 'learner.stageReview.b', problem: 'n-of-m' },
@@ -110,7 +122,15 @@ describe('review-copy patterns', () => {
     // A function that throws on numbers is read as its source text.
     expect(lintReviewMessages({ dailyReview: { f: (s: string) => `${s.toUpperCase()} 3/5` } })).toEqual([{ path: 'learner.dailyReview.f', problem: 'n-of-m' }]);
     expect(lintReviewMessages(null)).toEqual([]);
-    expect(REVIEW_COPY_NAMESPACES[0]).toBe('stageReview');
+    // A message that takes one object is called with an object of numbers, and its source is read too.
+    expect(lintReviewMessages({ cellCheck: { a: ({ right, total }: { right: number; total: number }) => `You got ${right} of ${total}` } })).toEqual([
+      { path: 'learner.cellCheck.a', problem: 'n-of-m' },
+    ]);
+    expect(lintReviewMessages({ cellCheck: { a: (p: { right: number; total: number }) => `${p.right}/${p.total}` } })).toEqual([{ path: 'learner.cellCheck.a', problem: 'n-of-m' }]);
+    expect(lintReviewMessages({ cellCheck: { a: (p: { share: number }) => `${p.share.toFixed(0)}%` } })).toEqual([{ path: 'learner.cellCheck.a', problem: 'percent' }]);
+    // Two interpolations around a word that is not a score are not one.
+    expect(lintReviewMessages({ results: { a: (t: { title: string; name: string }) => `${t.title} by ${t.name}` } })).toEqual([]);
+    expect(REVIEW_COPY_NAMESPACES.slice(0, 2)).toEqual(['stageReview', 'results']);
     expect(lintReviewStrings({ cellCheck: { a: '50%' } }, 'packages/i18n/src/messages/en/learner.ts')).toEqual([
       {
         rule: 'review-copy',
@@ -134,6 +154,12 @@ describe('culture-source allowlist', () => {
     expect(allowlistedInstitution('문화재청', '2024-05-17')?.nameAsOfAccess).toBe(false);
     expect(allowlistedInstitution('국가유산청', '2024-05-17')?.nameAsOfAccess).toBe(true);
     expect(allowlistedInstitution('한국학중앙연구원 (Academy of Korean Studies)', '2026-01-01')).toBeUndefined();
+    // 국립공원관리공단 became 국립공원공단 on 2019-01-17; its English name did not change.
+    expect(allowlistedInstitution('국립공원관리공단', '2018-06-01')?.nameAsOfAccess).toBe(true);
+    expect(allowlistedInstitution('국립공원관리공단', '2019-01-17')?.nameAsOfAccess).toBe(false);
+    expect(allowlistedInstitution('국립공원공단', '2018-06-01')?.nameAsOfAccess).toBe(false);
+    expect(allowlistedInstitution('Korea National Park Service', '2018-06-01')?.nameAsOfAccess).toBe(true);
+    expect(allowlistedInstitution('Korea National Park Service', '2026-01-01')?.nameAsOfAccess).toBe(true);
     expect(CURRICULUM_RULES['culture-source']).toMatch(/as of the source's access date/);
   });
 
@@ -149,6 +175,11 @@ describe('culture-source allowlist', () => {
     expect(at('Export-Import Bank of Korea', 'https://www.koreaexim.go.kr/')).toBeUndefined();
     expect(at('SBS 뉴스 (includes 국립한글박물관 학예연구사 인터뷰)', 'https://news.sbs.co.kr/x')).toBeUndefined();
     expect(at('UNESCO', 'not a url')).toBeUndefined();
+    // The Cheongju Early Printing Museum is a section of the city's site, not the whole site.
+    expect(at('청주고인쇄박물관', 'https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509')).toBe('Cheongju Early Printing Museum');
+    expect(at('청주고인쇄박물관', 'https://www.cheongju.go.kr/jikjiworld')).toBe('Cheongju Early Printing Museum');
+    expect(at('청주고인쇄박물관', 'https://www.cheongju.go.kr/www/contents.do?key=1')).toBeUndefined();
+    expect(at('청주고인쇄박물관', 'https://www.cheongju.go.kr/jikjiworldwide/x')).toBeUndefined();
     expect(allowlistedInstitution('National Museum of Korean Contemporary History', '2026-01-01')).toBeUndefined();
     expect(allowlistedInstitution('the Bank of Korea-run museum', '2026-01-01')).toBeUndefined();
     expect(allowlistedInstitution('Bank of Korea, Money Museum', '2026-01-01')?.institution.name).toBe('Bank of Korea');
@@ -225,6 +256,15 @@ describe('taught items and pronunciation', () => {
     expect(hasSoundChange('읽어요')).toBe(false);
     expect(hasSoundChange('빨리')).toBe(false);
     expect(hasSoundChange('5,000 원')).toBe(false);
+    // Tensification, which RR does not write: an obstruent final before ㄱ ㄷ ㅂ ㅅ ㅈ.
+    expect(hasSoundChange('학교')).toBe(true);
+    expect(hasSoundChange('읽다')).toBe(true);
+    expect(hasSoundChange('식당')).toBe(true);
+    expect(hasSoundChange('앉다')).toBe(true);
+    expect(hasSoundChange('하늘')).toBe(false);
+    expect(hasSoundChange('사과')).toBe(false);
+    // After ㄹ or a nasal in a compound the spelling does not show it: the explicit flag covers it.
+    expect(hasSoundChange('물고기')).toBe(false);
   });
 
   it('lists the lesson bodies of a tree in file order, cells and pack levels only', () => {
@@ -304,8 +344,11 @@ describe('lintCurriculum edge cases', () => {
   });
 
   it('counts a Check by its rounds: meanings, not spellings, and no Story Sequence on English labels', () => {
-    expect(isReadMeaningRound({ options: [{ id: 'a', pictureRef: 'word:sky' }, { id: 'b', labelEn: 'sea' }] })).toBe(true);
-    expect(isReadMeaningRound({ options: [{ id: 'a', text: kt('하늘'), labelEn: 'sky' }] })).toBe(false);
+    // A heard Listen & Pick is the recognize rung: only a round that shows its Korean prompt reads for meaning.
+    expect(isReadMeaningRound({ promptShown: true, options: [{ id: 'a', pictureRef: 'word:sky' }, { id: 'b', labelEn: 'sea' }] })).toBe(true);
+    expect(isReadMeaningRound({ options: [{ id: 'a', pictureRef: 'word:sky' }, { id: 'b', labelEn: 'sea' }] })).toBe(false);
+    expect(isReadMeaningRound({ promptShown: 'yes', options: [{ id: 'a', pictureRef: 'word:sky' }] })).toBe(false);
+    expect(isReadMeaningRound({ promptShown: true, options: [{ id: 'a', text: kt('하늘'), labelEn: 'sky' }] })).toBe(false);
     expect(isReadMeaningRound({ options: [] })).toBe(false);
     expect(isReadMeaningRound({ options: ['x'] })).toBe(false);
     expect(isReadMeaningRound({ options: [{ id: 'a' }] })).toBe(false);
@@ -314,7 +357,8 @@ describe('lintCurriculum edge cases', () => {
       body('episode:stage2-nature-v2', 2, [q('quest:a', [step('check', { minigameKind: kind, minigameRef: 'm:c' })], [{ ref: 'm:c', kind, ...scope }])], { volume: 2 });
     const check = (kind: string, scope: Json) => rows(lint({ 'content/episodes/stage-2/nature.v2.json': cell(kind, scope) }), 'lesson-check-variety').filter((r) => !r.endsWith('(stage)'));
     expect(check('card-match', { pairs: [kt('해'), kt('달')] })).toEqual([]);
-    expect(check('listen-pick', { rounds: [{ options: [{ id: 'a', pictureRef: 'word:sky' }], answerId: 'a' }] })).toEqual([]);
+    expect(check('listen-pick', { rounds: [{ promptShown: true, options: [{ id: 'a', pictureRef: 'word:sky' }], answerId: 'a' }] })).toEqual([]);
+    expect(check('listen-pick', { rounds: [{ options: [{ id: 'a', pictureRef: 'word:sky' }, { id: 'b', pictureRef: 'word:sea' }], answerId: 'a' }] })).toHaveLength(1);
     expect(check('listen-pick', { rounds: [{ options: [{ id: 'a', text: kt('하늘') }], answerId: 'a' }] })).toHaveLength(1);
     expect(check('listen-pick', {})).toHaveLength(1);
     expect(check('story-sequence', { lines: [{ id: 'a', speakerEn: 'Hoya', line: kt('안녕') }] })).toHaveLength(1);
@@ -480,6 +524,34 @@ describe('lintCurriculum edge cases', () => {
       // c declares no topicTags (a non-string tag of b is skipped, its string tag kept).
       'story-topic-unique error content/stories/c.json topicTags',
     ]);
+  });
+
+  it('compares story source URLs without their scheme, www., fragment or trailing slash', () => {
+    const story = (id: string, url: string) => ({ id, topicTags: [id.slice('story:'.length)], facts: [{ id: 'f1', sources: [{ url }] }] });
+    const files = {
+      'content/stories/old.json': story('story:old', 'http://museum.go.kr/x'),
+      'content/stories/new-one.json': story('story:new-one', 'https://www.museum.go.kr/x/#top'),
+      'content/stories/new-two.json': story('story:new-two', 'https://www.museum.go.kr/y'),
+    };
+    expect(rows(lintCurriculum(new Map(Object.entries(files)), { shippedStoryIds: new Set(['story:old']) }), 'story-topic-unique')).toEqual([
+      'story-topic-unique error content/stories/new-one.json facts',
+    ]);
+  });
+
+  it('judges a heard round against the items taught by that quest, not a later stage or another pack', () => {
+    const teach = (ko: string, id: string) => q(id, [discover({ type: 'word', word: kt(ko) })]);
+    const hear = q('quest:h', [step('intro')], [{ ref: 'm:c', kind: 'type-hangul', rounds: [{ mode: 'hear', promptEn: 'Type the word you hear.', target: kt('낫') }] }]);
+    const files: Record<string, unknown> = {
+      'content/episodes/stage-2/nature.v2.json': body('episode:stage2-nature-v2', 2, [teach('낫', 'quest:t'), hear], { volume: 2 }),
+      // A Stage 7 pack level teaches 낮, which a Stage 2 learner has not met.
+      'content/packs/p/stage-7.json': body('episode:pack-p-s7', 7, [teach('낮', 'quest:pack-p-s7-q1')], { status: 'ready' }),
+    };
+    expect(rows(lint(files), 'dictation-unambiguous')).toEqual([]);
+    // A later quest of the same file does not count either; an earlier one does.
+    files['content/episodes/stage-2/nature.v2.json'] = body('episode:stage2-nature-v2', 2, [teach('낫', 'quest:t'), hear, teach('낮', 'quest:u')], { volume: 2 });
+    expect(rows(lint(files), 'dictation-unambiguous')).toEqual([]);
+    files['content/episodes/stage-2/nature.v2.json'] = body('episode:stage2-nature-v2', 2, [teach('낫', 'quest:t'), teach('낮', 'quest:u'), hear], { volume: 2 });
+    expect(rows(lint(files), 'dictation-unambiguous')).toEqual(['dictation-unambiguous error content/episodes/stage-2/nature.v2.json quests[2].scopes[0].rounds[0]']);
   });
 });
 
