@@ -335,7 +335,7 @@ All sessions share one engine (`logic/reviews/engine.ts`, in the existing `apps/
 5. Placement `priorityTokens` symbols are seeded at box 1, due on day 1.
 6. `cellBest` starts at 1 for every cell done.
 7. **Upper-cell cards and stage ceremonies are awarded retroactively.** Each card row (CM-23) awards its own cards from `questDoneAt` when it ships. The Stage Check row (CM-22) shows one summary screen, "You finished Stages 2-3 earlier", which lists whatever cards exist at that time. The summary is shown once, not one modal per stage.
-8. **Streak switch-over.** `streakLocal.run` starts at `max(old streakDays, the run recomputed on local days)`, and `streakBest` at the larger of that and any earlier best. The old `streakDays` is still written for older builds, but the new build displays only `streakLocal` and `streakBest`, so a sync from an older device can never make the number drop.
+8. **Streak switch-over.** `streakLocal.run` starts at `max(old streakDays, the run recomputed on local days)`, and `streakBest` at the larger of that and any earlier best. The old `streakDays` is still written for older builds, but the new build displays only `streakLocal` and `streakBest`, so a sync from an older device can never make the number drop (section 7.4 names the one case between two new builds where a sync shows a run has ended).
 
 Fixture tests run against snapshots from five historical schema points: before `vocab`, before `questDoneAt`, before `placements`, a current snapshot, and an empty one. Backup-file restore is tested too. A fixture with all 107 quests done asserts that every item has a due day, no day has more than 15 seeded items due, and the spread length is reported.
 
@@ -699,7 +699,11 @@ Default Checks by stage:
 - The streak stays, counted on the local day (`streakLocal`, section 4.8).
 - Any learning activity keeps it: a quest, a Daily Review, a story or a word set. This amends F-REPORT-001 OD-19, where only quest sessions moved the streak (open decision OD-14).
 - Up to 2 rest days a local week are granted automatically.
-- When a run ends, Home shows "Start a new run" and keeps the best run (`streakBest`). It never says "lost". The displayed number never drops because of a sync.
+- When a run ends, Home shows "Start a new run" and keeps the best run (`streakBest`). It never says "lost". The displayed number never drops because of a sync, with one exception (amended 2026-10-21 in the CM-4 review, for the owner to see):
+  - **The exception.** Another device on a new build already shows the same run as ended, because it knew a learning day earlier in that week that this device did not. It holds a longer run on the same last day, and a stored run never goes down in a merge (the field rule in section 4.8, the Worker's too). So the merged record also shows that the run has ended. It never shows a smaller number, and the next learning day starts the run as usual.
+  - **Why it cannot be avoided without a schema change.** The merged record is then the same as that other device's own record, which must show nothing: it showed the longer run the day before, and showing a shorter one would be visible decay (section 7.7).
+  - **Everything else holds.** A sync with an older build never lowers the number. Days another device adds never end the run this device shows: the merge carries each copy's own run, and `streakLocal` keeps the run Home shows.
+  - **Hand-off.** CM-4 shows nothing for an ended run (the pill hides). Row CM-17 ships the "Start a new run" copy (en, es and ko, with the review ledger) and the `streakBest` display on Home.
 
 **Copy.** Copy may nudge positively ("2 minutes to today's goal", "4 items are ready to refresh"). It never uses loss framing, and nothing sends a nagging notification.
 
@@ -1166,7 +1170,7 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-2 | `feat(backend,mobile): public remote config in D1 with off-only overrides, per-profile percentage ramps and a foreground refetch (F-CURR-002)` (W→A) | M | — | 0 | Worker route, cache headers, only-reduce, client fallback order, pct bucketing per profile, refetch age |
 | CM-3 | `feat(content-schema,backend): telemetry names section R and session.end fields (F-CURR-002)` (Worker first) | S | CM-0b | 0 | exact-list test |
 | CM-3b | `feat(content-schema,backend): additive snapshot fields, review kinds cell-check and warmup, SessionLog localDay, summary memory block, all lenient on read (F-CURR-002)` (Worker first) | M | CM-0b | 0 | unknown kind dropped per entry in snapshot, backup and Rescue Code paths; Worker preserve rule; older-client round-trip |
-| CM-4 | `fix(mobile): streak on the local day, streakLocal and streakBest, no-drop switch-over (F-CURR-002 OD-14)` (W→A) | M | CM-3b | 0 | TZ fixed-clock tests, switch-over, an older-build sync never lowers the display |
+| CM-4 | `fix(mobile): streak on the local day, streakLocal and streakBest, no-drop switch-over (F-CURR-002 OD-14)` (W→A) | M | CM-3b | 0 | TZ fixed-clock tests, switch-over, an older-build sync never lowers the display; between two new builds, only the section 7.4 exception (a run another copy already ended), never a smaller number |
 | CM-5 | `perf(content): lesson manifest split, per-locale title chunks, content-hashed precached bodies, budget lines, precache report (F-CURR-002)` | L | — | 0 | start-bundle and manifest budgets, precache gaps, chunk hash check, lazy-load test, offline e2e |
 | CM-5B | `feat(mobile): Save for offline for packs` (only if the precache ceiling is crossed) | M | CM-5 report | 4 | offline e2e |
 | CM-6 | `build(content): generated modules no longer committed, turbo generate task, generated catalogue, addedIn date stamps for CATALOG_VERSION, derived route-day pins, presenter font and e2e cell list (F-CURR-002)` | L | CM-5 | 0 | generator determinism, catalogue parity, stamp check, route-day snapshot, font coverage |
@@ -1189,7 +1193,7 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-14 | `feat(mobile): Daily Review, Keep going and mission slot 3 (F-CURR-002)` | M | CM-13, CM-D1 | about 16 | e2e incl. offline, stars-only result, end-early, review-first suggestion |
 | CM-15 | `feat(mobile): quest warm-up and Try these again (F-CURR-002)` (W→A for `warmup`) | M | CM-13, CM-3b | about 6 | U-5 unchanged, e2e |
 | CM-16 | `feat(content-schema,backend,web,mobile): summary memory block, teacher learning-summary route, reports show words known, ready to refresh and mastery (F-CURR-002)` (W→A) | L | CM-3b, CM-12, CM-20 | about 10 | report builder tests, route permission tests, console e2e |
-| CM-17 | `feat(mobile,backend): daily and weekly goals, rest days, points per install key (F-CURR-002)` (W→A for new fields) | L | CM-4, CM-3, CM-3b, CM-D1 | about 16 | points accrual and sum, rest days, TZ tests, merge |
+| CM-17 | `feat(mobile,backend): daily and weekly goals, rest days, points per install key (F-CURR-002)` (W→A for new fields) | L | CM-4, CM-3, CM-3b, CM-D1 | about 16 | points accrual and sum, rest days, TZ tests, merge; also ships the ended-run "Start a new run" copy (en, es, ko, review ledger) and the `streakBest` display on Home (section 7.4), which CM-4 leaves out |
 
 ### Phase 2: achievement
 

@@ -443,10 +443,19 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
  * `streakLocal` and `streakBest` for a merge. The computed run is kept under the Worker's rule against both stored
  * ones (later `lastDay`, then the higher `run`), so the result always holds both sides even where the computation
  * reads a stored run as no run (a run of 0, or a day too far ahead); the Worker then has nothing to add.
+ *
+ * A stored run can beat the run the merge shows only when a copy holds a longer run on the same last day that it
+ * has already shown as ended (section 7.4, the one case where a sync can end a run). The record then keeps the run
+ * as of that day, so merging the result again changes nothing.
  */
 function localStreakFields(local: ProgressSnapshot, server: ProgressSnapshot, sessions: readonly SessionLog[], today: string): Partial<ProgressSnapshot> {
   const computed = streakFields(streakOf([local, server], sessions, today));
-  const streakLocal = mergeStreakLocal(computed.streakLocal, mergeStreakLocal(local.streakLocal, server.streakLocal));
+  const stored = mergeStreakLocal(local.streakLocal, server.streakLocal);
+  let streakLocal = mergeStreakLocal(computed.streakLocal, stored);
+  if (streakLocal !== undefined && computed.streakLocal !== undefined && streakLocal.run !== computed.streakLocal.run) {
+    // What the merged record reads as on its own: the run has ended, so it keeps the run as of its last day.
+    streakLocal = mergeStreakLocal(streakOf([{ sessions: [...sessions], streakLocal, streakDays: 0 }], sessions, today).local, stored);
+  }
   return { ...computed, ...(streakLocal !== undefined ? { streakLocal } : {}) };
 }
 

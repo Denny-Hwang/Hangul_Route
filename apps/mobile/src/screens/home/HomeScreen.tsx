@@ -73,8 +73,7 @@ import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access-copy';
 import { favoriteReplay, freeEndPrimary, practiceTarget } from '../../logic/free-end';
 import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
-import { lastStreakDay } from '../../logic/sessions/session-log';
-import { shownStreak } from '../../logic/streak';
+import { learnedOn, shownStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
@@ -852,7 +851,7 @@ export function HomeScreen(): React.ReactElement {
       </Pressable>
 
       <Spacer size="xl" />
-      <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: lastStreakDay(snap?.sessions ?? []) === today })]} />
+      <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: learnedOn(snap?.sessions ?? [], localToday) })]} />
       {/* A class move the learner side must answer, or one that is planned (F-SPACE-002 T-7c); nothing while transfers are off. */}
       {profile ? <TransferHomeLine profileId={profile.id} learnerName={profile.displayName} /> : null}
       {/* [TV] A teacher move notice, shown once, and the class update when the family has not read it (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER). */}
