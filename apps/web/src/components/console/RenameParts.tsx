@@ -1,6 +1,6 @@
 'use client';
 
-import { SPACE_NAME_MAX, type SpaceKind } from '@hangul-route/content-schema';
+import type { SpaceKind } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
 import type { ConsoleApi } from '@/lib/console/api';
@@ -57,6 +57,18 @@ const inputStyle = (invalid: boolean, saving: boolean): CSSProperties => ({
 });
 const hintStyle: CSSProperties = { margin: 0, color: colors.text.secondary, fontSize: rem(typography.size.bodySm), lineHeight: typography.leading.relaxed };
 const movesStyle: CSSProperties = { margin: 0, padding: `${spacing.sm}px ${spacing.md}px`, borderRadius: radii.md, backgroundColor: colors.surface.sunken, color: colors.text.primary, fontSize: rem(typography.size.bodySm), lineHeight: typography.leading.relaxed };
+/**
+ * The input's HTML `maxLength` ([SA-0b review], section 5.3): it counts raw UTF-16 units before NFC, and a decomposed
+ * Hangul paste takes up to 3 units a syllable, so 40 would cut a valid name; the 40 is checked after NFC
+ * (`checkSpaceName`, shown as `tooLong(40)`).
+ */
+export const RENAME_INPUT_MAX = 120;
+
+/** An IME is composing (Korean, Japanese, Chinese): Enter and Escape belong to it, never to the field. */
+function composing(event: KeyboardEvent<HTMLInputElement>, held: boolean): boolean {
+  return held || event.nativeEvent?.isComposing === true || event.keyCode === 229;
+}
+
 const errorStyle: CSSProperties = { margin: 0, color: colors.text.primary, fontWeight: typography.weight.semibold, lineHeight: typography.leading.relaxed };
 
 /** The page's one polite live region (mock: "One polite live region per page"); a new line is a new node, so a repeat is read again. */
@@ -143,11 +155,25 @@ export function useSpaceRename({
   return { state, start, edit, cancel, submit, buttonRef, inputRef };
 }
 
-/** The text button "Rename" (D1): secondary, `touchTarget.min`, its accessible name starts with the visible word. */
+/**
+ * The text button "Rename" (D1): secondary, `touchTarget.min`, its accessible name starts with the visible word. While
+ * a save is under way it stays `aria-disabled` and `aria-busy` (it keeps its focus), so a second rename never races the
+ * first.
+ */
 export function RenameButton({ rename, name, testId = 'rename' }: { rename: SpaceRename; name: string; testId?: string }): JSX.Element {
   const r = useConsoleLocale().messages.console.rename;
+  const saving = rename.state.saving;
   return (
-    <button type="button" ref={rename.buttonRef} style={control} aria-label={r.a11y(name)} onClick={rename.start} data-testid={testId}>
+    <button
+      type="button"
+      ref={rename.buttonRef}
+      style={control}
+      aria-label={r.a11y(name)}
+      aria-disabled={saving ? true : undefined}
+      aria-busy={saving ? true : undefined}
+      onClick={() => !saving && rename.start()}
+      data-testid={testId}
+    >
       {r.cta}
     </button>
   );
@@ -168,7 +194,14 @@ export function RenameForm({ rename, kind, openMoves, testId = 'rename-form' }: 
   const errorLine = failure ?? renameCheckLine(check, locale);
   const blocked = state.saving || state.failure === 'archived' || check.state !== 'ok';
   const describedBy = [errorLine ? `${id}-error` : null, `${id}-hint`, openMoves ? `${id}-moves` : null].filter(Boolean).join(' ');
+  // IME composition ([SA-0b review]): Enter and Escape during it do nothing, the implicit submit included, so a
+  // Hangul name is never saved without its last syllable; Save reads the committed value once it ends.
+  const imeOn = useRef(false);
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if ((event.key === 'Enter' || event.key === 'Escape') && composing(event, imeOn.current)) {
+      if (event.key === 'Enter') event.preventDefault();
+      return;
+    }
     if (event.key === 'Escape') {
       event.preventDefault();
       if (!state.saving) rename.cancel();
@@ -180,7 +213,7 @@ export function RenameForm({ rename, kind, openMoves, testId = 'rename-form' }: 
       data-testid={testId}
       onSubmit={(event) => {
         event.preventDefault();
-        rename.submit();
+        if (!imeOn.current) rename.submit();
       }}
     >
       <label htmlFor={`${id}-input`} style={{ fontWeight: typography.weight.semibold }}>
@@ -192,13 +225,18 @@ export function RenameForm({ rename, kind, openMoves, testId = 'rename-form' }: 
           ref={rename.inputRef}
           className="hr-rn-input"
           name="name"
-          maxLength={SPACE_NAME_MAX}
+          maxLength={RENAME_INPUT_MAX}
           value={state.draft}
           readOnly={state.saving}
           aria-invalid={errorLine ? true : undefined}
           aria-describedby={describedBy}
           onChange={(event) => rename.edit(event.target.value)}
           onKeyDown={onKeyDown}
+          onCompositionStart={() => (imeOn.current = true)}
+          onCompositionEnd={(event) => {
+            imeOn.current = false;
+            rename.edit(event.currentTarget.value);
+          }}
           style={inputStyle(errorLine !== null, state.saving)}
           data-testid={`${testId}-input`}
         />

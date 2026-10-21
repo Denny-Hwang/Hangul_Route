@@ -167,7 +167,8 @@ describe('class page: the title row', () => {
     await press(root, 'rename');
     const input = one(root, 'rename-form-input');
     expect(input.props.value).toBe('Room 4');
-    expect(input.props.maxLength).toBe(40);
+    // 120, not 40: a decomposed Hangul paste is never cut; the 40 is checked after NFC.
+    expect(input.props.maxLength).toBe(120);
     expect(focused).toContain('rename-form-input');
     expect(selected).toContain('rename-form-input');
     expect(h1(root)).toEqual(['Room 4']);
@@ -211,6 +212,54 @@ describe('class page: the title row', () => {
     expect(textOf(one(root, 'rename-live'))).toBe(r.saved);
     expect(one(root, 'rename-live').props.role).toBe('status');
     expect(one(root, 'rename').props['aria-label']).toBe('Rename Room 5');
+  });
+
+  it('Rename stays aria-disabled and aria-busy until the PATCH settles, so a second rename cannot race the first', async () => {
+    let settle: (value: unknown) => void = () => undefined;
+    state.answer = () => new Promise((resolve) => (settle = resolve));
+    const root = await render(<SpacePage />);
+    await press(root, 'rename');
+    await type(root, 'rename-form-input', 'Room 5');
+    await submit(root, 'rename-form');
+    expect(one(root, 'rename').props['aria-disabled']).toBe(true);
+    expect(one(root, 'rename').props['aria-busy']).toBe(true);
+    await press(root, 'rename');
+    expect(byTestId(root, 'rename-form')).toHaveLength(0);
+    await act(async () => settle(ok({ space: { ...SPACE, name: 'Room 5' }, changed: true })));
+    expect(one(root, 'rename').props['aria-disabled']).toBeUndefined();
+    expect(one(root, 'rename').props['aria-busy']).toBeUndefined();
+  });
+
+  it('IME: Enter and Escape during composition do nothing; the committed name saves on the next Enter', async () => {
+    const root = await render(<SpacePage />);
+    await press(root, 'rename');
+    await act(async () => one(root, 'rename-form-input').props.onCompositionStart());
+    await type(root, 'rename-form-input', '해바라');
+    let prevented = false;
+    await act(async () => one(root, 'rename-form-input').props.onKeyDown({ key: 'Enter', keyCode: 229, nativeEvent: { isComposing: true }, preventDefault: () => (prevented = true) }));
+    expect(prevented).toBe(true);
+    await key(root, 'rename-form-input', 'Escape');
+    expect(byTestId(root, 'rename-form')).toHaveLength(1);
+    // A submit that slips through mid-composition sends nothing either.
+    await submit(root, 'rename-form');
+    expect(state.renames).toEqual([]);
+    await act(async () => one(root, 'rename-form-input').props.onCompositionEnd({ currentTarget: { value: '해바라기 반' } }));
+    expect(one(root, 'rename-form-input').props.value).toBe('해바라기 반');
+    await submit(root, 'rename-form');
+    expect(state.renames).toEqual([{ id: 'space:c1', name: '해바라기 반' }]);
+  });
+
+  it('a 60-unit decomposed Hangul paste is not cut and saves as its NFC form', async () => {
+    const composed = '한글학당 일요일반 선생님들 함께 공부합니다 늘 즐겁게';
+    const decomposed = composed.normalize('NFD');
+    expect(decomposed.length).toBeGreaterThanOrEqual(60);
+    const root = await render(<SpacePage />);
+    await press(root, 'rename');
+    expect(decomposed.length).toBeLessThanOrEqual(one(root, 'rename-form-input').props.maxLength);
+    await type(root, 'rename-form-input', decomposed);
+    expect(byTestId(root, 'rename-form-error')).toHaveLength(0);
+    await submit(root, 'rename-form');
+    expect(state.renames).toEqual([{ id: 'space:c1', name: composed }]);
   });
 
   it('a failed save brings the old name back and reopens the field with the typed value and the line', async () => {
