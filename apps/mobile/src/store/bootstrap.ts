@@ -1,4 +1,4 @@
-import { useAccountStore } from './account-store';
+import { useAccountStore, watchCoveredLearners } from './account-store';
 import { useAudioStore } from './audio-store';
 import { useLayoutStore } from './layout-store';
 import { useLocaleStore } from './locale-store';
@@ -30,6 +30,11 @@ import { useTierStore } from './tier-store';
  * render and the first plan derivation already read the access tier the server
  * last gave: a premium learner offline never sees a lesson close or a plan item
  * go, and a member the server has not answered for yet fails open.
+ * Then, with a premium legacy subscription, the learners it covers are recorded once
+ * (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5), and the newer learners it covers
+ * are remembered now and on every later change to the profile list. A record that
+ * cannot be made yet is tried again at the next start, and a failed record or write
+ * never fails the start. These steps run even when another hydrate rejected.
  * App.tsx mounts the navigator, derives plans and runs the start-up sync
  * (F-SYNC-002 §3.2, "after hydration") only once this resolves.
  */
@@ -55,6 +60,12 @@ export async function hydrateLearnerData(): Promise<void> {
     ...profiles.map((p) => tiers.hydrate(p.id)),
     ...profiles.map((p) => memberships.hydrate(p.id)),
   ]);
+  // Even when another hydrate rejected (App.tsx still starts the app): each step needs the
+  // account and profile stores hydrated and does nothing otherwise.
+  const account = useAccountStore.getState();
+  await account.recordSubscriptionCovers(new Date()).catch(() => undefined);
+  await account.rememberCoveredLearners(new Date()).catch(() => undefined);
+  watchCoveredLearners();
   const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
   if (failed) throw failed.reason;
 }

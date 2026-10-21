@@ -58,10 +58,11 @@ const UNCHANGED = Symbol('unchanged');
  * another call makes in between is never lost (AMENDMENTS-DISPLAY-NAV section 3.1). `next` gets
  * the stored value (null when missing or unparsable) and returns the value to store, or
  * `undefined` to store nothing. A failed read rejects and writes nothing, so a write is never made
- * over data that could not be read. A key the write fence rejects is left untouched (`next` is not
- * called). Resolves to whether a value was stored.
+ * over data that could not be read. With `exact`, a stored value that does not parse rejects too (as
+ * `readJsonExact`), so `next` gets null only for a missing key. A key the write fence rejects is left
+ * untouched (`next` is not called). Resolves to whether a value was stored.
  */
-export async function updateJson<T>(key: string, next: (current: T | null) => T | undefined): Promise<boolean> {
+export async function updateJson<T>(key: string, next: (current: T | null) => T | undefined, options?: { exact?: boolean }): Promise<boolean> {
   if (!writePasses(key, 'write')) return false;
   try {
     await update<string | undefined>(KEY_PREFIX + key, (raw) => {
@@ -69,7 +70,8 @@ export async function updateJson<T>(key: string, next: (current: T | null) => T 
       if (raw) {
         try {
           current = JSON.parse(raw) as T;
-        } catch {
+        } catch (error) {
+          if (options?.exact) throw error;
           current = null;
         }
       }
