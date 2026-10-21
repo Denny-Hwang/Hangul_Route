@@ -54,6 +54,9 @@ Every slide page uses `presenter.js` as before: `#b=<n>` shows builds 0 to n (de
 | `SHEET_MAX_W` (LV-S1) | 700 units | on a small phone the 18 px floor draws the sheet's romanization bigger than its units, so the sheet grows with it; 436 units stay for the caption and key words |
 | `SHEET_ROOMY_LINES` (LV-S1) | 4 lines | a longer sheet (the five-board trail sign) draws each romanization beside its Korean |
 | read-along glyph (LV-S1) | `spacing.xxl` units | the speaker glyph of the playing line is one caption line tall, so lighting a line moves nothing (the mock drew 48 units) |
+| `PIC_OPT` (LV-S2) | 112 units | `--pic-opt` as built: a picture option's side, smaller with a shorter row, its art never below 48 units |
+| `REALIA_ASK_MIN` (LV-S2) | 240 units | a realia question's lead line, then "Hoya's answer" in its place: under the key word when the column leaves less |
+| `REALIA_GRID_MIN` (LV-S2) | 480 units | the narrowest column beside a realia sheet that holds picture options in the 2 x 2 grid; a narrower one lists them as rows |
 
 ## Measured on the mocks (Chromium, the script in this pass)
 
