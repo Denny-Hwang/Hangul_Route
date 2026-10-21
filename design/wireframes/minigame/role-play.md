@@ -137,7 +137,7 @@ Exit to: `quest/player` (Continue on the end card) · the quest player's leave s
 
 - **partner speaking** (reply bubbles shown, the line playing), **awaiting a reply**, **nudge** (less natural, locked bubble, Hoya), **second miss ring**, **reply sending** (the reply said), **end card**.
 - **empty / bad data**: a scene that fails `role-play-good-endings` or `role-play-even-branches` never builds; a scope that resolves to no scene shows the shell's empty state with [ Back to quest ].
-- **long chat at 320 or 200 % text**: the log scrolls; the newest partner bubble is scrolled into view above the reply area when a turn opens; the reply area grows up to half the window (less when the newest partner bubble needs the room, never less than its instruction row and one reply) and then scrolls itself, so the newest line and at least one reply are always visible (three replies at 320 x 568: the area stops at 265 and scrolls, drawn in the mock). CM-35's Playwright check opens turn 2 of the fixture at 320 x 568 and at 200 % text and asserts that the newest partner bubble and its Hear it are inside the log's visible part and the first reply is inside the pinned area's visible part.
+- **long chat at 320 or 200 % text**: the log scrolls; the newest partner bubble is scrolled into view above the reply area when a turn opens; the reply area grows up to half the window (less when the newest partner bubble needs the room, never less than its instruction row and one reply) and then scrolls itself, so the newest line and at least one reply are always visible (three replies at 320 x 568: the area stops at 265 and scrolls, drawn in the mock). **Scroll cue**: while the pinned area has replies below its edge, its bottom edge shows a cue that is not colour only: a fade (`surface.canvas`) over the partly shown next reply, a chevron glyph and the caption "More replies below" (`rolePlay.moreReplies`, `typography.size.caption` bold, `text.secondary`). The cue is not a tap target (it never covers a reply's hit area: taps pass through it) and is hidden for screen readers, which reach every reply in the list; it disappears once the area is scrolled to its end and never shows when everything fits (768 x 1024). With reduced motion it appears and disappears at once. CM-35's Playwright check opens turn 2 of the fixture at 320 x 568 and at 200 % text and asserts that the newest partner bubble and its Hear it are inside the log's visible part, the first reply is inside the pinned area's visible part, and the scroll cue is visible when the third reply is below the edge and hidden after the area is scrolled to its end.
 - **reduced motion**: no bubble rise; the log jumps to the newest line.
 - **no Korean voice / sound off**: as above.
 
@@ -168,6 +168,7 @@ Reused: `learner.minigame.tapRespond.*` (the fallback), `progress.pill`, `audio.
 |---|---|
 | `rolePlay.tapReply` | Tap a reply |
 | `rolePlay.showMeanings` | Show meanings |
+| `rolePlay.moreReplies` | More replies below |
 | `rolePlay.meaningsShown` | Meanings shown |
 | `rolePlay.lookHere` | This one fits here. |
 | `rolePlay.continue` | Continue |

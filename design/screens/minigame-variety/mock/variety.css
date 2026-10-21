@@ -13,8 +13,8 @@
 
 :root {
   /* Constants (../README.md, "Constants") */
-  --board-band: 128px;          /* the Yut board drawing on a phone: 2 x touchTarget.min */
-  --board-pane: 320px;          /* the Yut board drawing from window class regular: 5 x touchTarget.min */
+  --board-band: calc(2 * var(--touch-min)); /* the Yut board drawing on a phone: 2 x touchTarget.min (128) */
+  --board-pane: calc(5 * var(--touch-min)); /* the Yut board drawing from window class regular: 5 x touchTarget.min (320) */
   --origin-art: var(--trace-canvas-min); /* the Match Shape origin picture height on a phone: TRACE_CANVAS_MIN */
   --bubble-max: 85%;            /* a chat bubble's width cap in the chat column on a phone */
   --bubble-max-regular: 80%;    /* the same cap from window class regular (the reading column is wider) */
@@ -144,6 +144,11 @@
 .bubble .hear { align-self: flex-start; margin-top: var(--spacing-xs); }
 .pinned { flex: none; width: 100%; max-width: calc(var(--max-width-reading) + 2 * var(--gutter-compact)); margin: 0 auto; padding: var(--spacing-sm) var(--gutter-compact) calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px)); border-top: var(--border-width-thin) solid var(--colors-border-subtle); background: var(--colors-surface-canvas); display: flex; flex-direction: column; gap: var(--spacing-sm); max-height: var(--pinned-max); overflow-y: auto; }
 .pinned > * { flex: none; }
+/* the scroll cue of an overflowing pinned area: a fade over the partly shown next reply, a chevron and a text line (not colour only) */
+.pinned { position: relative; }
+.more-cue[hidden] { display: none; }
+.more-cue { position: sticky; bottom: calc(-1 * var(--spacing-md)); margin-top: calc(-1 * var(--spacing-xl)); padding: var(--spacing-xxs) 0; display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-size: var(--size-caption); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--colors-text-secondary); background: linear-gradient(to bottom, transparent, var(--colors-surface-canvas) 35%); pointer-events: none; }
+.more-cue .icon { width: var(--size-bodySm); height: var(--size-bodySm); }
 .reply { min-height: var(--touch-child); display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-none); padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); position: relative; }
 .reply .ko { font-size: var(--size-bodyLg); }
 .reply.miss { background: var(--colors-feedback-nudgeLight); border: var(--border-width-thick) solid var(--colors-feedback-nudge); }

@@ -25,12 +25,12 @@ Facts already shipped and reviewed in `content/stories/seollal-new-year.json` (f
 - The board, 윷판 `yutpan`, has 29 stations (the article above). The drawing places 20 on the edge (6 to a side, corners shared) and 9 on the two crossing lines (the centre shared), 29 in all; the article gives the total and describes routes through the centre (방), so the MAR culture pass checks the drawing against the board figure of the article.
 - Pieces start from the entrance and leave by the exit, 참먹이 (the article: "말 네 개가 모두 입구(入口)인 도에서 출발하여 참먹이［出口］를 먼저 빠져나가는 편이 이긴다"); the skin uses one piece at a time and four in all, and has no winner, because there is no other side.
 
-What the skin leaves out on purpose, so it stays a calm solo board and every claim stays inside the sources: no other team or player (no comparison between learners), no capturing, no backward move, no inner routes (the piece walks the outer ring of 20 stations), and no claim about which way up each stick counts (the sources checked for the story do not say, so the art never shows a "which side is up" rule). The MAR culture pass checks the board drawing and the five names against the sources above. CM-39 cites them in its content note.
+What the skin leaves out on purpose, so it stays a calm solo board and every claim stays inside the sources: no other team or player (no comparison between learners), no capturing, no backward move, no inner routes (the piece walks the outer ring of 20 stations), and no claim about which way up each stick counts (the sources checked for the story do not say, so the art never shows a "which side is up" rule). The MAR culture pass checks the board drawing and the five names against the sources above. CM-39 cites them in its content note and the MAR note only; the skin shows no sources row and no link (Navigation graph).
 
 ## Round shape (what changes from the plain review screen)
 
 - **The items are the review session's items**, unchanged: the same engine (CM-13), the same selection, formats, scoring, stars and "N got stronger" (§4.5). The skin adds a board band and a throw after each item.
-- **Every item throws when it ends, whatever its result**: right first try, right after a retry, or ended by the review screen's own miss rule (a reveal and move on, row CM-D1). The throw is taken when the item ends and does not read how it ended, so the rule holds whatever CM-D1 decides, and the board never shows which items were missed. A first-try miss is scored exactly as on the plain screen; the board does not know about it.
+- **Every item throws when it ends, whatever its result**: right first try, right after a retry, or ended by the review screen's own miss rule (a reveal and move on, row CM-D1). The throw is taken when the item ends and does not read how it ended, so the rule holds whatever CM-D1 decides, and the board never shows which items were missed. A first-try miss is scored exactly as on the plain screen; the board does not know about it. **This supersedes the §7.1 F10 wording "Right answers throw the yut sticks"** (CM-D2 review round 3): every item throws so the board never reveals a miss. Row CM-D2 amends the F10 row of the spec to match, so CM-39 is reviewed against one text.
 - **The throw is seeded** by the session seed and the item index (deterministic for tests), with the weights in a named constant in `logic/review/yut-board.ts`. It moves the piece only.
 - **Laps.** The piece starts at the start station, walks the 20 outer stations, and on reaching home a small piece token is placed in the "home" tray and a new piece starts. The tray holds up to 4 pieces (each side has four). **A fifth lap** (a long Stage Check, or Keep going): when a fifth piece reaches home, the tray clears and holds that piece alone, with no message and no sound beyond the usual "A piece went home!" (and the same for the ninth, and so on); nothing marks a full tray as finished, so it is never a goal or a count to beat. The tray empties at the end of the session.
 - **The tray draws only the pieces that are home**, one filled piece each, with no empty slots, so it never reads as "n of 4". An empty tray shows its "Home" label alone.
@@ -99,6 +99,8 @@ The **plain review screen**: the same session and items, no board band. A learne
 Enter from: the Daily Review, Keep going and Cell Check screens (row CM-14 / CM-21) with the yut look on; the review step of a Play S2 quest (content, §5.6)
 Exit to: the review result (plain, stars only) · the stop sheet -> back to where the session started
 
+No link and no other exit: the skin shows no sources row, no citation and no link on the learner screen. The board's sources live only in content metadata and the MAR note. If a sources line is ever shown on the skin, it follows the Match Shape and Culture notes rule (plain text expanded in place, no `Linking`, no navigation; a grown-up finds the links behind the PIN gate). CM-39 test: a grep test that nothing under `YutBoardSkin.tsx` or `logic/review/yut-board.ts` imports `Linking` or `openExternalUrl`, or navigates to `StorySources`, `ExternalLink` or `CultureNotes` (the CM-33 test, applied here).
+
 ## States
 
 - **item open** (board idle), **throwing**, **walking**, **throw again** (윷, 모), **piece home**, **session end** (board gone; the plain result).
@@ -109,7 +111,7 @@ Exit to: the review result (plain, stars only) · the stop sheet -> back to wher
 
 ## Accessibility
 
-- The board is one image with a live description after each throw: "Throw: gae. Your piece moved 2 stations." (`a11y.minigame.yutReview.throw`); "A piece went home." (the description never counts the tray against a total) It never says a station number out of a total: an "n of m" reads like a score, which a review screen never shows (§4.5, the `review-copy` lint). The stations are not focusable (they do nothing). The description is a polite live region and never interrupts the next item's prompt (it is queued after the item's own announcements).
+- The board is one image with a live description after each throw: "Throw: 개, gae. Your piece moved 2 stations." (`a11y.minigame.yutReview.throw`; the Korean part is tagged `lang="ko"` / `accessibilityLanguage="ko"`, shell rule 12); "A piece went home." (the description never counts the tray against a total) It never says a station number out of a total: an "n of m" reads like a score, which a review screen never shows (§4.5, the `review-copy` lint). The stations are not focusable (they do nothing). The description is a polite live region and never interrupts the next item's prompt (it is queued after the item's own announcements).
 - The look switch reads "Yut board, on".
 - The review item keeps its own accessibility.
 - No colour-only state: the learner's piece is a distinct shape (a filled disc with a ring) and named in the description.
@@ -137,7 +139,7 @@ The five throw names and 윷판 are taught Korean drawn with `KoreanText` (roman
 | `yutReview.throwAgain` | Throw again |
 | `yutReview.pieceHome` | A piece went home! |
 | `yutReview.homeTray` | Home |
-| `a11y.minigame.yutReview.throw(romanization, n)` | Throw: {romanization}. Your piece moved {n} stations. (plural rules: 1 station / {n} stations) |
+| `a11y.minigame.yutReview.throw(ko, romanization, n)` | Throw: {ko}, {romanization}. Your piece moved {n} stations. (plural rules: 1 station / {n} stations; {ko} is tagged Korean) |
 | `a11y.minigame.yutReview.throwAgain` | Throw again. |
 | `a11y.minigame.yutReview.home` | A piece went home. |
 | `a11y.minigame.yutReview.board` | Yut board |
