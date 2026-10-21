@@ -9,17 +9,24 @@
 // miss the new quest. A quest is new when the branch ships it and the base does not:
 //
 //   - a quest of a ready lesson cell, content/episodes/stage-<n>/<theme>.json (its `addedIn`);
-//   - the listen quest of a story file, content/stories/<slug>.json (the story's `addedIn`).
+//   - the listen quest of a story file, content/stories/<slug>.json (the story's `addedIn`);
+//   - a hand-written quest (Stage 1, the Stage 5 books in catalog/data.ts) listed with its stamp in
+//     packages/content-schema/src/catalog/hand-stamps.json, the one place a TypeScript row is stamped.
 //
 // The base's version is the largest of 32 (the last hand-kept version), the base's own stamps and,
 // before CM-6, the `CATALOG_VERSION` literal of its packages/content-schema/src/catalog/data.ts.
-// The fix is a one-field edit in the PR's own content file. Three more rules keep the stamps honest:
+// The fix is a one-field edit in the PR's own content file. Four more rules keep the stamps honest:
 //
-//   - a new quest's stamp is at most today (UTC) plus FUTURE_DAYS, so a typo such as a year ahead
-//     cannot raise every later PR's floor (HANGUL_ROUTE_TODAY, YYYY-MM-DD, overrides today in tests);
+//   - a new quest's stamp is at most FUTURE_DAYS after the first stamp the branch may use (today in
+//     UTC, or the day after main's version when that is later), so a typo such as a year ahead cannot
+//     raise every later PR's floor, and a run of merges stamped ahead of the calendar still leaves
+//     room (HANGUL_ROUTE_TODAY, YYYY-MM-DD, overrides today in tests);
 //   - a quest the base already ships keeps the stamp it has there: adding, changing or removing it
 //     would rewrite that quest's history after the fact (a quest of the hand-kept history up to 32
 //     carries none);
+//   - the catalogue version never falls: a branch that stops shipping the quest that holds main's
+//     version (a removed story, a ready cell turned back to draft) fails, because a plan or placement
+//     stored at the higher version would stop growing;
 //   - the base tree is read leniently (cell status, quest ids and stamps, story ids and stamps), so
 //     a lesson rule that only this branch enforces cannot fail the check on the base's files.
 //
@@ -27,16 +34,17 @@
 //   node scripts/check-added-in.mjs --base <ref>     e.g. --base origin/main (needs the base's history)
 //
 // `node scripts/build-lessons.mjs --check` (content-validation.yml, a full-history checkout) runs it
-// against origin/main. Exit 0 when every new quest is stamped above the base's version and every
+// against origin/main, and scripts/__tests__/stamp-order.test.mjs runs it in the required CI unit job
+// (`test:scripts`) against the pull request's base branch, fetched there. Exit 0 when every new quest is stamped above the base's version and every
 // shipped quest keeps its stamp, 1 when one does not, 2 on a usage error or a base ref that does not resolve. HANGUL_ROUTE_ROOT overrides the
 // repo root (tests).
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readdirSync, readFileSync, rmSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { ContentError, HISTORY_LAST_VERSION, LESSON_STAGES, readCells, shapeStoryRow } from "./build-lessons.mjs";
+import { ContentError, HAND_STAMPS, HISTORY_LAST_VERSION, LESSON_STAGES, readCells, readHandStamps, shapeStoryRow } from "./build-lessons.mjs";
 
 const USAGE = "Usage: node scripts/check-added-in.mjs --base <ref>";
 
@@ -70,6 +78,7 @@ export function shippedQuests(root) {
       out.set(`quest:story-${row.slug}-listen`, { stamp: row.addedIn, file: rel });
     }
   }
+  for (const [id, stamp] of Object.entries(readHandStamps(root))) out.set(id, { stamp, file: HAND_STAMPS });
   return out;
 }
 
@@ -111,10 +120,15 @@ export function baseQuests(root) {
       out.set(`quest:story-${slug}-listen`, { stamp: Number.isInteger(story.addedIn) ? story.addedIn : undefined, file: `content/stories/${name}` });
     }
   }
+  const hand = join(root, ...HAND_STAMPS.split("/"));
+  const stamps = existsSync(hand) ? parse(hand) : undefined;
+  if (isObject(stamps)) {
+    for (const [id, stamp] of Object.entries(stamps)) if (Number.isInteger(stamp)) out.set(id, { stamp, file: HAND_STAMPS });
+  }
   return out;
 }
 
-/** How many days past today (UTC) a new quest's stamp may be: room for a burst of PRs on one day. */
+/** How many days past the first free stamp (suggestedStamp) a new quest's stamp may be: room for a burst of PRs. */
 export const FUTURE_DAYS = 14;
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -146,9 +160,13 @@ export function suggestedStamp(baseVersion, today) {
   return Math.max(today, stampOf(plusDays(base, 1)));
 }
 
-/** The latest stamp a new quest may carry: today plus FUTURE_DAYS. */
-export function latestStamp(today) {
-  return stampOf(plusDays(dateOf(today), FUTURE_DAYS));
+/**
+ * The latest stamp a new quest may carry: FUTURE_DAYS after `first`, the first stamp the branch may use
+ * (suggestedStamp). Measured from that stamp, not from today: each stamped merge can move main's version
+ * a day ahead of the calendar, and a bound from today would leave no valid stamp after a long burst.
+ */
+export function latestStamp(first) {
+  return stampOf(plusDays(dateOf(first), FUTURE_DAYS));
 }
 
 /** The catalogue version of a shipped set: the largest stamp, never below the hand-kept history. */
@@ -160,7 +178,7 @@ export function versionOf(quests, legacy = HISTORY_LAST_VERSION) {
 export function stampProblems(head, base, baseVersion, today = todayStamp()) {
   const problems = [];
   const suggest = suggestedStamp(baseVersion, today);
-  const latest = latestStamp(today);
+  const latest = latestStamp(suggest);
   for (const [id, { stamp, file }] of [...head].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     if (base.has(id)) {
       const was = base.get(id).stamp;
@@ -175,7 +193,20 @@ export function stampProblems(head, base, baseVersion, today = todayStamp()) {
       const relation = stamp === baseVersion ? "equal to" : "lower than";
       problems.push({ file, message: `${id} has addedIn ${stamp}, ${relation} main's catalogue version ${baseVersion}: set it to ${suggest} (a one-field edit in this file)` });
     } else if (stamp > latest) {
-      problems.push({ file, message: `${id} has addedIn ${stamp}, more than ${FUTURE_DAYS} days after today (${today}): set it to ${suggest}` });
+      problems.push({
+        file,
+        message: `${id} has addedIn ${stamp}, more than ${FUTURE_DAYS} days after ${suggest}, the first stamp this branch may use (today ${today}, or the day after main's version): set it to ${suggest}`,
+      });
+    }
+  }
+  // The version never falls: a plan or placement stored at main's version would stop growing.
+  const headVersion = versionOf(head);
+  if (headVersion < baseVersion) {
+    const gone = [...base].filter(([id, { stamp }]) => stamp !== undefined && stamp > headVersion && !head.has(id)).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    const why = `the catalogue version would fall from ${baseVersion} to ${headVersion}, and a plan or placement stored at ${baseVersion} would stop growing`;
+    if (gone.length === 0) problems.push({ file: HAND_STAMPS, message: `this branch ships no quest stamped ${baseVersion} or later: ${why}` });
+    for (const [id, { stamp, file }] of gone) {
+      problems.push({ file, message: `${id} (addedIn ${stamp}) ships on main and not on this branch: ${why}; keep it shipped (a ready cell stays ready, a story file stays)` });
     }
   }
   return problems;
@@ -198,6 +229,11 @@ function withBaseTree(root, ref, use) {
       if (archive.status !== 0) throw new Error(`git archive ${ref} failed: ${archive.stderr}`);
       const untar = spawnSync("tar", ["-x", "-C", tmp], { input: archive.stdout });
       if (untar.status !== 0) throw new Error(`tar failed: ${untar.stderr}`);
+    }
+    const hand = spawnSync("git", ["show", `${ref}:${HAND_STAMPS}`], { cwd: root, encoding: "utf8", maxBuffer: 1 << 26 });
+    if (hand.status === 0) {
+      mkdirSync(join(tmp, ...dirname(HAND_STAMPS).split("/")), { recursive: true });
+      writeFileSync(join(tmp, ...HAND_STAMPS.split("/")), hand.stdout);
     }
     const data = spawnSync("git", ["show", `${ref}:packages/content-schema/src/catalog/data.ts`], { cwd: root, encoding: "utf8", maxBuffer: 1 << 26 });
     return use(tmp, legacyVersion(data.status === 0 ? data.stdout : ""));

@@ -21,6 +21,9 @@
 //   build-lecture-catalogue.mjs  content/stories, vocab, i18n           -> lecture-catalogue.generated.ts,
 //                                                                          catalogue-titles.generated.ts
 //
+// build-lessons.mjs reads the app's jamo (TypeScript) through scripts/ts-loader.mjs, so generation
+// needs the devDependencies (`typescript`): an install with --prod or NODE_ENV=production fails here.
+//
 // The presenter font (apps/mobile/public/fonts/) stays committed: it is subset from a source font
 // with pyftsubset, which CI does not have; build-presenter-font.mjs --check proves it covers all
 // taught Korean.

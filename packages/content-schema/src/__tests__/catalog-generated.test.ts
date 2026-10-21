@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -17,6 +17,9 @@ import {
 } from '..';
 import { assembleCatalog, expandCellRows, type CatalogSources, type GeneratedStoryRow } from '../catalog/assemble';
 import { GENERATED_CATALOG_VERSION, GENERATED_QUEST_ADDITIONS } from '../catalog/catalog.generated';
+import { STORY_SHELF } from '../catalog/data';
+import HAND_STAMPS from '../catalog/hand-stamps.json';
+import { StoryShelfSchema } from '../schemas/story';
 import CATALOG_V32_JSON from './fixtures/catalog-v32.json';
 
 /**
@@ -101,6 +104,19 @@ describe('CATALOG_VERSION from addedIn stamps', () => {
 
   it('lists every shipped quest under some version, so a stored placement knows what it skipped', () => {
     expect([...questIdsAtVersion(CATALOG_VERSION)].sort()).toEqual(CATALOG.quests.map((q) => q.id).sort());
+  });
+
+  it('stamps a hand-written quest only in hand-stamps.json: a Stage 1 or Stage 5 lesson quest added after version 32', () => {
+    const v32 = questIdsAtVersion(LAST_HAND_KEPT_CATALOG_VERSION);
+    const generated = new Set(Object.values(GENERATED_QUEST_ADDITIONS).flat());
+    for (const [id, stamp] of Object.entries(HAND_STAMPS as Record<string, unknown>)) {
+      const quest = CATALOG.quests.find((q) => q.id === id);
+      expect(quest, `${id} in hand-stamps.json is a quest of the catalogue`).toBeDefined();
+      expect(quest?.kind === 'lesson' && (quest.stage === 'stage1' || quest.stage === 'stage5'), `${id} is a hand-written Stage 1 or Stage 5 quest`).toBe(true);
+      expect(v32.has(id), `${id} shipped by version 32, so it carries no stamp`).toBe(false);
+      expect(AddedInSchema.safeParse(stamp).success, `${id}: ${String(stamp)} is a date stamp`).toBe(true);
+      expect(generated.has(id), `${id} is in the generated additions`).toBe(true);
+    }
   });
 
   it('a stamp is a real calendar date YYYYMMDD, larger than every hand-kept version', () => {
@@ -200,6 +216,27 @@ describe('assembleCatalog', () => {
       sources({ cells: [lessonCell('stage2', 'letters', ['quest:l1', 'quest:gone'])], lessonQuests: [lessonQuest('quest:l1', letters), lessonQuest('quest:stray', letters)] }),
     );
     expect(catalog.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toEqual(['quest:l1']);
+  });
+
+  it('a story after the frozen shelf names its festival anchor in its own file; the first 24 state none there', () => {
+    const frozen = new Set(STORY_SHELF.map(([slug]) => slug));
+    const dir = join(CONTENT, 'stories');
+    for (const name of readdirSync(dir).filter((n) => n.endsWith('.json'))) {
+      const file = JSON.parse(readFileSync(join(dir, name), 'utf8'));
+      const slug = String(file.id).replace(/^story:/, '');
+      if (frozen.has(slug)) expect(file.shelf?.anchor, `${name}: the frozen shelf in catalog/data.ts holds its anchor`).toBeUndefined();
+    }
+    const shelf = { category: 'culture', order: 30, sampler: false, minutes: 5 };
+    expect(StoryShelfSchema.safeParse({ ...shelf, anchor: 'chuseok' }).success).toBe(true);
+    expect(StoryShelfSchema.safeParse({ ...shelf, anchor: 'christmas' }).success).toBe(false);
+    const later = assembleCatalog(sources({ stories: [story('zeta'), story('hangeul-day'), { ...story('moon', 1, 20261105), anchor: 'chuseok' }] }));
+    expect(later.stories.map((s) => [s.id, s.anchor])).toEqual([
+      ['story:hangeul-day', 'hangeul-day'],
+      ['story:zeta', null],
+      ['story:moon', 'chuseok'],
+    ]);
+    const ignored = assembleCatalog(sources({ stories: [{ ...story('zeta'), anchor: 'seollal' }, story('hangeul-day')] }));
+    expect(ignored.stories.map((s) => s.anchor)).toEqual(['hangeul-day', null]);
   });
 
   it('keeps the frozen shelf order and anchors, and puts a later story after them by slug with no anchor', () => {

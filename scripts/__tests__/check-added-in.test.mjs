@@ -136,9 +136,71 @@ describe("check-added-in.mjs", () => {
     put(root, "content/episodes/stage-3/nature.json", stamped("stage3", "nature", [20271112, 20261126, 20261127]));
     const r = run(root, ["--base", "main"]);
     assert.equal(r.status, 1);
-    assert.match(r.stdout, /quest:stage3-nature-q1 has addedIn 20271112, more than 14 days after today \(20261112\): set it to 20261112/);
+    assert.match(
+      r.stdout,
+      /quest:stage3-nature-q1 has addedIn 20271112, more than 14 days after 20261112, the first stamp this branch may use \(today 20261112, or the day after main's version\): set it to 20261112/,
+    );
     assert.match(r.stdout, /quest:stage3-nature-q3 has addedIn 20261127, more than 14 days/);
     assert.doesNotMatch(r.stdout, /nature-q2/);
+  });
+
+  test(`when main's version runs ahead of the calendar, the ${FUTURE_DAYS} days count from the first free stamp`, () => {
+    // A burst of stamped merges moved main's version to 20261130, 18 days after today (20261112).
+    const root = repo({ "content/episodes/stage-3/rites.json": stamped("stage3", "rites", [20261130]) });
+    put(root, "content/episodes/stage-3/nature.json", stamped("stage3", "nature", [20261201, 20261215, 20261216]));
+    const r = run(root, ["--base", "main"]);
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stdout, /quest:stage3-nature-q3 has addedIn 20261216, more than 14 days after 20261201, the first stamp this branch may use/);
+    assert.doesNotMatch(r.stdout, /nature-q[12]/, "the suggested stamp and the last day of the window pass");
+    put(root, "content/episodes/stage-3/nature.json", stamped("stage3", "nature", [20261201, 20261215, 20261215]));
+    assert.equal(run(root, ["--base", "main"]).status, 0);
+  });
+
+  test("the version never falls: a branch that stops shipping main's top-stamped quest fails", () => {
+    const root = repo({
+      "content/episodes/stage-3/rites.json": stamped("stage3", "rites", [20261105, 20261105, 20261105]),
+      "content/stories/owl.json": story("owl", { addedIn: 20261110 }),
+      "content/episodes/stage-3/nature.json": stamped("stage3", "nature", [20261108, 20261108, 20261108]),
+    });
+    git(root, "rm", "-q", "content/stories/owl.json");
+    const removed = run(root, ["--base", "main"]);
+    assert.equal(removed.status, 1, removed.stdout);
+    assert.match(
+      removed.stdout,
+      /content\/stories\/owl\.json::quest:story-owl-listen \(addedIn 20261110\) ships on main and not on this branch: the catalogue version would fall from 20261110 to 20261108/,
+    );
+    git(root, "checkout", "-q", "main", "--", "content/stories/owl.json");
+    put(root, "content/episodes/stage-3/nature.json", cell("stage3", "nature", "draft"));
+    const drafted = run(root, ["--base", "main"]);
+    assert.equal(drafted.status, 0, `a lower-stamped cell turned back to draft leaves the version: ${drafted.stdout}`);
+    git(root, "rm", "-q", "content/stories/owl.json");
+    put(root, "content/stories/fox.json", story("fox", { addedIn: 20261112 }));
+    assert.equal(run(root, ["--base", "main"]).status, 0, "a new quest above it keeps the version from falling");
+  });
+
+  test("a hand-written quest is stamped in catalog/hand-stamps.json and held to the same rules", () => {
+    const HAND = "packages/content-schema/src/catalog/hand-stamps.json";
+    const root = repo({ "content/episodes/stage-3/rites.json": stamped("stage3", "rites", [20261110]), [HAND]: { "quest:stage1-letters-q4": 20261108 } });
+    put(root, HAND, { "quest:stage1-letters-q4": 20261108, "quest:story-hangul-letters-read": 20261110 });
+    const equal = run(root, ["--base", "main"]);
+    assert.equal(equal.status, 1, equal.stdout);
+    assert.match(
+      equal.stdout,
+      /::error file=packages\/content-schema\/src\/catalog\/hand-stamps\.json::quest:story-hangul-letters-read has addedIn 20261110, equal to main's catalogue version 20261110: set it to 20261112/,
+    );
+    put(root, HAND, { "quest:stage1-letters-q4": 20261109, "quest:story-hangul-letters-read": 20261112 });
+    const changed = run(root, ["--base", "main"]);
+    assert.equal(changed.status, 1);
+    assert.match(changed.stdout, /quest:stage1-letters-q4 already ships on main and this branch changes its addedIn from 20261108 to 20261109/);
+    assert.doesNotMatch(changed.stdout, /story-hangul-letters-read/);
+    put(root, HAND, { "quest:stage1-letters-q4": 20261108, "quest:story-hangul-letters-read": 20261112 });
+    const ok = run(root, ["--base", "main"]);
+    assert.equal(ok.status, 0, ok.stdout);
+    assert.match(ok.stdout, /catalogue version 20261110 there\), new quests: 1/);
+    put(root, HAND, { "quest:stage1-letters-q4": "20261108" });
+    const bad = run(root, ["--base", "main"]);
+    assert.equal(bad.status, 1);
+    assert.match(bad.stdout, /hand-stamps\.json::quest:stage1-letters-q4: addedIn must be a date stamp YYYYMMDD/);
   });
 
   test("a quest main already ships keeps its stamp: adding, changing or removing it fails", () => {
@@ -231,8 +293,17 @@ describe("check-added-in.mjs", () => {
     assert.deepEqual(
       stampProblems(head, base, 20261110, 20261101).map((p) => p.file),
       ["b.json", "c.json"],
-      "20261201 is more than 14 days after 20261101",
+      "20261201 is more than 14 days after 20261111, the first free stamp",
     );
+    // The reviewers' case: main's version is past today + 13; the named stamp passes, one past the window fails.
+    const ahead = (stamp) => stampProblems(new Map([["quest:n", { stamp, file: "n.json" }]]), new Map(), 20261115, 20261101);
+    assert.deepEqual(ahead(20261116), []);
+    assert.deepEqual(ahead(20261130), []);
+    assert.equal(ahead(20261201).length, 1);
+    // The version falls when the top-stamped quest leaves.
+    const fell = stampProblems(new Map(), new Map([["quest:top", { stamp: 20261110, file: "t.json" }]]), 20261110, 20261112);
+    assert.deepEqual(fell.map((p) => p.file), ["t.json"]);
+    assert.match(fell[0].message, /would fall from 20261110 to 32/);
     assert.equal(suggestedStamp(32, 20261112), 20261112);
     assert.equal(suggestedStamp(20261110, 20261112), 20261112);
     assert.equal(suggestedStamp(20261112, 20261112), 20261113);

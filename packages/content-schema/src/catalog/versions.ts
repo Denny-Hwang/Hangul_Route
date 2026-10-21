@@ -84,7 +84,8 @@ export const LAST_HAND_KEPT_CATALOG_VERSION = 32;
 /**
  * The quest ids each version from 9 to 32 added, appended by the row that bumped
  * `CATALOG_VERSION` (a cell row added its cell's quests under its new version). Frozen
- * since F-CURR-002 row CM-6: a later quest carries its `addedIn` stamp in its content file.
+ * since F-CURR-002 row CM-6: a later quest carries its `addedIn` stamp in its content file (a
+ * hand-written Stage 1 or Stage 5 quest in `hand-stamps.json`).
  */
 const HAND_KEPT_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.freeze({
   // F-CURR-001 S4-1: Read Along.
@@ -140,7 +141,8 @@ const HAND_KEPT_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.
 
 /**
  * The quest ids each later version added: the hand-kept history up to 32, then each `addedIn`
- * stamp with the shipped quests that carry it (`catalog.generated.ts`). Every stamp (YYYYMMDD)
+ * stamp with the shipped quests that carry it (`catalog.generated.ts`: the content files' stamps and
+ * those of `hand-stamps.json`, for a hand-written Stage 1 or Stage 5 quest added after 32). Every stamp (YYYYMMDD)
  * is larger than 32, so the versions keep their order. `catalog-versions.test.ts` fails when the
  * catalogue holds a quest no version lists.
  */

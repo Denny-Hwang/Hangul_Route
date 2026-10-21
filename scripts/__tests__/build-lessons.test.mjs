@@ -452,7 +452,8 @@ describe("build-lessons.mjs: --check and --report", () => {
 
 // ---- F-CURR-002 §9.1 (row CM-6): the generated catalogue rows and the addedIn stamps ----------
 
-const { CATALOG_OUT, HISTORY_LAST_VERSION, addedInStamp, catalogueOf, cellRowsOf, loadSymbolKeys, renderCatalogue, shapeStoryRow, shapeTopicRow, symbolKeyOf } = await import(SCRIPT);
+const { CATALOG_OUT, HAND_STAMPS, HISTORY_LAST_VERSION, addedInStamp, catalogueOf, cellRowsOf, loadSymbolKeys, readHandStamps, renderCatalogue, shapeStoryRow, shapeTopicRow, symbolKeyOf } =
+  await import(SCRIPT);
 
 const story = (slug, extra = {}) => ({
   id: `story:${slug}`,
@@ -548,6 +549,30 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
     assert.match(source, /  20261105: \["quest:stage3-rites-q3"\],/);
   });
 
+  test("a hand-written quest's stamp (catalog/hand-stamps.json) counts in the version and the additions", () => {
+    const root = makeRoot();
+    const c = cell("stage3", "rites");
+    c.quests[0].addedIn = 20261105;
+    put(root, "content/episodes/stage-3/rites.json", c);
+    assert.deepEqual(readHandStamps(root), {}, "absent: no hand stamps");
+    put(root, HAND_STAMPS, { "quest:story-hangul-letters-read": 20261112, "quest:stage1-letters-q4": 20261105 });
+    const handStamps = readHandStamps(root);
+    assert.deepEqual(Object.keys(handStamps), ["quest:stage1-letters-q4", "quest:story-hangul-letters-read"], "sorted by id");
+    const model = catalogueOf({ cells: readCellsOf(root), handStamps });
+    assert.equal(model.version, 20261112);
+    assert.deepEqual(model.additions, { 20261105: ["quest:stage1-letters-q4", "quest:stage3-rites-q1"], 20261112: ["quest:story-hangul-letters-read"] });
+    assert.throws(
+      () => catalogueOf({ cells: readCellsOf(root), handStamps: { "quest:stage3-rites-q2": 20261112 } }),
+      /quest:stage3-rites-q2 is a quest of content\/: its addedIn goes in its own content file/,
+    );
+    put(root, HAND_STAMPS, { "quest:stage1-letters-q4": 2026110 });
+    assert.throws(() => readHandStamps(root), /quest:stage1-letters-q4: addedIn must be a date stamp/);
+    put(root, HAND_STAMPS, { "stage1-letters-q4": 20261105 });
+    assert.throws(() => readHandStamps(root), /is not a quest id/);
+    put(root, HAND_STAMPS, "[]");
+    assert.throws(() => readHandStamps(root), /holds one object/);
+  });
+
   test("a stamp in a draft cell does not count until the cell ships", () => {
     const root = makeRoot();
     const c = cell("stage3", "rites", "draft");
@@ -575,6 +600,10 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
     assert.equal(shapeStoryRow(story("owl", { state: "draft" }), "s.json").status, "draft");
     assert.equal(shapeStoryRow(story("owl", { review: { language: "draft", culture: "culture-reviewed" } }), "s.json").status, "draft");
     assert.equal(shapeStoryRow(story("owl", { shelf: { order: 2 } }), "s.json").sampler, false);
+    // A story after the frozen shelf names its festival anchor in its own file.
+    assert.equal(shapeStoryRow(story("owl", { shelf: { order: 2, anchor: "chuseok" } }), "s.json").anchor, "chuseok");
+    assert.equal("anchor" in shapeStoryRow(story("owl"), "s.json"), false);
+    assert.throws(() => shapeStoryRow(story("owl", { shelf: { order: 2, anchor: 7 } }), "s.json"), /anchor/);
     assert.throws(() => shapeStoryRow(story("owl", { id: "owl" }), "s.json"), /must be story:<slug>/);
     assert.throws(() => shapeStoryRow([], "s.json"), /a story file holds one object/);
     assert.throws(() => shapeStoryRow(story("owl", { title: "Owl" }), "s.json"), /title must be an object/);

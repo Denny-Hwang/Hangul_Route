@@ -1082,9 +1082,21 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
   },
 };
 
-/** A cell with no deep play: its first quest opens from the launcher and its intro moves on. */
+/**
+ * A cell with no deep play: its first quest opens from the launcher, its intro moves on, its Discover
+ * pages are read, and its first game step mounts (through its launcher when it has one), so a cell
+ * whose games break after the intro fails here too (the test also fails on any page error).
+ */
 async function openFirstQuest(page: Page): Promise<void> {
   await startFirstQuest(page);
+  await passDiscover(page);
+  const launch = page.getByRole('button', { name: 'Play minigame' });
+  await launch.waitFor({ state: 'visible', timeout: 3_000 }).catch(() => undefined);
+  if (await launch.isVisible()) {
+    await launch.click();
+    await expect(launch).toHaveCount(0);
+  }
+  await expect(page.getByText('Look and learn', { exact: true })).toHaveCount(0);
   await expect(headerClose(page)).toBeVisible();
 }
 
@@ -1124,7 +1136,7 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   // Every shipped cell has a deep play today, so the generic path a new cell takes (openFirstQuest, then its
   // day on the Learning Route) runs here for the first cell of the manifest: a content PR that adds a cell
   // with no deep play never meets that path for the first time.
-  test('the generic path of a cell with no deep play: its first quest opens and its Learning Route day appears', async ({ page }) => {
+  test('the generic path of a cell with no deep play: its first quest opens, its first game mounts and its Learning Route day appears', async ({ page }) => {
     const episode = LESSON_EPISODES[0];
     expect(episode, 'the lesson manifest lists a cell').toBeDefined();
     const stage = Number(episode!.stage.replace('stage', ''));

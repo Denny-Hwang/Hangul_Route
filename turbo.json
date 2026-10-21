@@ -3,7 +3,7 @@
   "tasks": {
     "//#generate": {
       "cache": false,
-      "inputs": ["content/**", "scripts/**", "apps/mobile/src/content/jamo.ts"],
+      "inputs": ["content/**", "scripts/**", "apps/mobile/src/content/jamo.ts", "packages/content-schema/src/catalog/hand-stamps.json"],
       "outputs": [
         "apps/mobile/src/content/__generated__/vocab.ts",
         "apps/web/src/data/vocab-catalog.ts",
@@ -28,7 +28,7 @@
       "outputs": [".next/**", "!.next/cache/**", "out/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint", "//#generate"]
     },
     "test": {
       "dependsOn": ["^build", "//#generate"]

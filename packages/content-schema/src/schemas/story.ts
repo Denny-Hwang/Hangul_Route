@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FestivalAnchorSchema } from '../catalog/schema';
 import { narrationTokenIds, narrationWordCount } from '../narration';
 import { CompanionIdSchema, PillarTagSchema } from '../pillars';
 import { ThemeKeySchema } from './heritage-card';
@@ -213,6 +214,11 @@ export const StoryShelfSchema = z
     order: z.number().int().min(1).max(999),
     sampler: z.boolean().default(false),
     minutes: z.number().int().min(2).max(10),
+    /**
+     * F-CURR-002 §9.1 (row CM-6): the festival a story added after the frozen shelf is anchored to
+     * (catalog/data.ts keeps the anchors of the first 24, which state none here). One story per anchor.
+     */
+    anchor: FestivalAnchorSchema.optional(),
   })
   .strict();
 export type StoryShelf = z.infer<typeof StoryShelfSchema>;

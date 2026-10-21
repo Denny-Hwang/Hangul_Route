@@ -27,7 +27,9 @@
 //   catalog.generated.ts
 //       GENERATED_CATALOG_VERSION   the largest `addedIn` stamp of a shipped quest, else 32 (the last
 //                                   hand-kept version; every stamp is a YYYYMMDD date, so larger)
-//       GENERATED_QUEST_ADDITIONS   the shipped quest ids by their `addedIn` stamp
+//       GENERATED_QUEST_ADDITIONS   the shipped quest ids by their `addedIn` stamp: the content files'
+//                                   stamps and those of catalog/hand-stamps.json (a hand-written quest
+//                                   added after version 32: Stage 1, a Stage 5 book)
 //       GENERATED_LESSON_CELL_ROWS  one compact row per upper-stage cell file (a draft is "Coming soon"),
 //                                   with its quests' titles, minutes and `teaches` (Discover symbols);
 //                                   expandCellRows (catalog/assemble.ts) gives the ids, cells and kinds
@@ -63,7 +65,10 @@
 //   node scripts/build-lessons.mjs --report   print raw and gzip bytes per cell, per module, per stage
 //                                             and in total; fail over budget (CI)
 //
-// Dependency-free Node. Exit 0 when written / in sync / within budget, 1 on a content,
+// Node with one devDependency: `typescript`, which scripts/ts-loader.mjs uses to read the app's
+// jamo (apps/mobile/src/content/jamo.ts) for the catalogue's `teaches`. The postinstall, the turbo
+// `generate` task and metro.config.js all run this script, so an install without devDependencies
+// (`pnpm install --prod`, NODE_ENV=production) cannot generate the modules. Exit 0 when written / in sync / within budget, 1 on a content,
 // drift or budget error, 2 on a usage error. HANGUL_ROUTE_ROOT overrides the repo root (tests).
 
 import { spawnSync } from "node:child_process";
@@ -484,6 +489,36 @@ export const CATALOG_HEADER =
  */
 export const HISTORY_LAST_VERSION = 32;
 
+/**
+ * The stamps of hand-written quests added after version 32 (a Stage 1 quest or a Stage 5 book quest of
+ * catalog/data.ts), by quest id: the one place a TypeScript row carries its `addedIn`. A quest of
+ * content/ is stamped in its own file instead. scripts/check-added-in.mjs holds these to the same rules.
+ */
+export const HAND_STAMPS = "packages/content-schema/src/catalog/hand-stamps.json";
+
+/** catalog/hand-stamps.json as `{ questId: stamp }` (empty when absent); throws ContentError on a bad entry. */
+export function readHandStamps(root) {
+  const file = join(root, ...HAND_STAMPS.split("/"));
+  if (!existsSync(file)) return {};
+  let json;
+  try {
+    json = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new ContentError(`invalid JSON: ${error.message}`, HAND_STAMPS);
+  }
+  if (!isObject(json)) throw new ContentError("hand-stamps.json holds one object: quest id -> addedIn", HAND_STAMPS);
+  const out = {};
+  for (const id of Object.keys(json).sort(byString)) {
+    if (!/^quest:[a-z0-9-]+$/.test(id)) throw new ContentError(`${JSON.stringify(id)} is not a quest id (quest:<id>)`, HAND_STAMPS);
+    try {
+      out[id] = addedInStamp(json[id], HAND_STAMPS);
+    } catch (error) {
+      throw new ContentError(`${id}: ${error.message}`, HAND_STAMPS);
+    }
+  }
+  return out;
+}
+
 /** The span of an `addedIn` stamp: a calendar date written YYYYMMDD. */
 const STAMP_MIN = 20260101;
 const STAMP_MAX = 20991231;
@@ -520,6 +555,8 @@ export function shapeStoryRow(story, rel) {
     theme: need(story, "theme", rel),
     minutes: need(story, "minutes", rel, "number"),
     sampler: isObject(story.shelf) && story.shelf.sampler === true,
+    // A festival anchor (F-STORY-005 section 3.3) of a story after the frozen shelf; data.ts keeps the first 24's.
+    ...(isObject(story.shelf) && story.shelf.anchor !== undefined ? { anchor: need(story.shelf, "anchor", `${rel} shelf`) } : {}),
     // catalogStatusOfStory (catalog/schema.ts): ready, with a shelf block and both review sign-offs.
     status:
       story.state === "ready" && isObject(story.shelf) && review.language === "native-reviewed" && review.culture === "culture-reviewed" ? "ready" : "draft",
@@ -556,10 +593,11 @@ export const symbolKeyOf = (jamo) => (jamo.kind === "batchim" ? `${jamo.char}/fi
 const byString = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * Pure: shaped cells, story rows and topic rows -> the generated catalogue model.
- * `symbolKeys` maps a jamo id to its symbol key (the app's `jamoKnown`).
+ * Pure: shaped cells, story rows, topic rows and hand stamps -> the generated catalogue model.
+ * `symbolKeys` maps a jamo id to its symbol key (the app's `jamoKnown`); `handStamps` is
+ * readHandStamps (quest id -> stamp, for the hand-written quests of catalog/data.ts).
  */
-export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new Map() }) {
+export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new Map(), handStamps = {} }) {
   const lessonCells = [];
   const lessonQuests = [];
   const stamps = [];
@@ -596,6 +634,11 @@ export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new
   }
   const storyRows = [...stories].sort((a, b) => byString(a.slug, b.slug));
   for (const story of storyRows) if (story.addedIn !== undefined) stamps.push([story.addedIn, `quest:story-${story.slug}-listen`]);
+  const fromContent = new Set([...lessonQuests.map((q) => q.id), ...storyRows.map((story) => `quest:story-${story.slug}-listen`)]);
+  for (const [id, stamp] of Object.entries(handStamps)) {
+    if (fromContent.has(id)) throw new ContentError(`${id} is a quest of content/: its addedIn goes in its own content file, not in hand-stamps.json`, HAND_STAMPS);
+    stamps.push([stamp, id]);
+  }
   const additions = {};
   for (const [stamp, id] of stamps.sort((a, b) => a[0] - b[0] || byString(a[1], b[1]))) (additions[stamp] ??= []).push(id);
   return {
@@ -826,7 +869,13 @@ const USAGE = "Usage: node scripts/build-lessons.mjs [--check] [--report]";
 /** Every file this generator writes, by path relative to the root: the lesson modules and the catalogue. */
 export async function generatedOutputs(root, cells = readCells(root)) {
   const modules = buildModules(cells);
-  const catalogue = catalogueOf({ cells, stories: readStoryRows(root), topics: readTopicRows(root), symbolKeys: await loadSymbolKeys(root) });
+  const catalogue = catalogueOf({
+    cells,
+    stories: readStoryRows(root),
+    topics: readTopicRows(root),
+    symbolKeys: await loadSymbolKeys(root),
+    handStamps: readHandStamps(root),
+  });
   const outputs = {};
   for (const [name, source] of Object.entries(modules)) outputs[join(OUT_DIR, name)] = source;
   outputs[CATALOG_OUT] = renderCatalogue(catalogue);

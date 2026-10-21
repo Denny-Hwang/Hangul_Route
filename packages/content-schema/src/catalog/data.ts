@@ -8,7 +8,9 @@ import type { Catalog, CatalogCell, CatalogQuest } from './schema';
  * content/ defines are generated (`./catalog.generated.ts`, written by scripts/build-lessons.mjs:
  * the upper-stage cells and their quests, the story rows, the vocabulary topics) and this file adds
  * what content/ cannot say: the hand-written Stage 1 cells and quests, the Stage 5 books, and the
- * shelf order and festival anchors of the first 24 stories. `apps/mobile/src/content/__tests__/catalog-parity.test.ts`
+ * shelf order and festival anchors of the first 24 stories. A hand-written quest added after version 32
+ * is stamped in `./hand-stamps.json` (quest id -> `addedIn`), which the generator folds into the version
+ * and the history and scripts/check-added-in.mjs checks like a content file's stamp. `apps/mobile/src/content/__tests__/catalog-parity.test.ts`
  * keeps the result equal to the shipped bundle.
  *
  * `CATALOG_VERSION` is generated too: the largest `addedIn` stamp (YYYYMMDD) a shipped quest carries in
@@ -145,10 +147,11 @@ const handLessonQuests: CatalogQuest[] = [
 
 /**
  * The shelf order and festival anchors of the stories that shipped up to version 32 (F-STORY-005
- * section 3.3, table order). Frozen: a story file added later takes the next order after these, by its
- * slug, with no anchor, so its PR edits only its own file.
+ * section 3.3, table order). Frozen: a story file added later takes the next order after these, in
+ * `addedIn` order (slug breaks a tie), with the festival anchor its own `shelf.anchor` names, if any,
+ * so its PR edits only its own file. A story listed here states no `shelf.anchor` in its file.
  */
-const STORY_SHELF: readonly StoryShelfEntry[] = [
+export const STORY_SHELF: readonly StoryShelfEntry[] = [
   ['sejong-new-letters'],
   ['shapes-of-hangeul'],
   ['hangeul-day', 'hangeul-day'],

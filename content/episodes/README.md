@@ -68,11 +68,16 @@ before that row lands.
    after main's catalogue version if that is later; that is the only shared fact a
    cell PR writes. `CATALOG_VERSION` is generated as the largest stamp (the history up to 32 keeps
    its integers), and `node scripts/check-added-in.mjs --base origin/main` (run by
-   `build-lessons.mjs --check` in content-validation) fails a stamp that is not above main's
-   version (an equal stamp would leave the version where it is, so a placement stored between the
-   two deploys would miss the new quest) or that is more than 14 days after today. It names the
-   stamp to use, a one-field edit in the PR's own file; after bringing a branch up to date with
-   main, run it again. A quest main already ships keeps its stamp. The catalogue rows, the route days
+   `build-lessons.mjs --check` in content-validation, and by `scripts/__tests__/stamp-order.test.mjs`
+   in the required CI unit job against the pull request's base branch) fails a stamp that is not
+   above main's version (an equal stamp would leave the version where it is, so a placement stored
+   between the two deploys would miss the new quest) or that is more than 14 days after the first
+   stamp the branch may use. It names the stamp to use, a one-field edit in the PR's own file; after
+   bringing a branch up to date with main, run it again. A quest main already ships keeps its stamp,
+   and the version never falls: a branch that stops shipping the quest holding main's version (a
+   ready cell turned back to draft, a removed story) fails. A hand-written quest (Stage 1, a Stage 5
+   book) is stamped in `packages/content-schema/src/catalog/hand-stamps.json` instead. A festival
+   story added after the first 24 names its anchor in its own `shelf.anchor`. The catalogue rows, the route days
    (derived from the manifest, `route-days-manifest.test.ts`) and the e2e cell list follow by
    themselves. The presenter font is rebuilt (`node scripts/build-presenter-font.mjs --source …`)
    only when `--check` says the cell's Korean has a code point the font lacks.
