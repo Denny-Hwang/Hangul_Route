@@ -845,22 +845,54 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
    - A new precache-size report shows the totals.
 4. **Fallback.** If the learner precache passes its ceiling, packs switch to runtime caching with a "Save for offline" control (row CM-5B, conditional). The precache is measured first.
 
+**Decision record (row CM-5, 2026-10-21): Metro async bundles, not JSON assets.**
+- **Spike.** One stage module behind a literal `import()` in `expo export --platform web` (Expo SDK 52, Metro 0.81). Metro emits it as its own bundle, `_expo/static/js/web/<module>-<md5>.js`, named by the md5 of its content, and leaves it out of the start bundle. If the same module is also reached by a static import or `require`, Metro keeps it in the start bundle and emits an empty bundle (0 B). At runtime the start bundle needs Metro's bundle loader (`__loadBundleAsync`). Expo Router installs it with the whole of `@expo/metro-runtime`; this app does not use Expo Router, so the first spike build failed with "Requiring unknown module". `apps/mobile/src/async-bundles.ts` installs only the loader (`@expo/metro-runtime/src/async-require`), and `index.ts` imports it first. The loader adds 1,948 B to the start bundle. With it, a chunk loads by a script tag, from the precache when offline (PWA offline e2e).
+- **Decision.** The async bundles work in the PWA build, so they are used, as item 2 says. JSON assets stay the fallback if a later Expo upgrade breaks them. Native builds keep every chunk in their one bundle: the `import()` resolves from it without a network request, so iOS 14 offline is not made worse.
+- **Layout.** `scripts/build-lessons.mjs` writes `__generated__/lessons-index.ts` (the start-loaded manifest) and `__generated__/lesson-chunks/`:
+  - one chunk per ready cell, `lessons-cell-stage<n>-<theme>.ts`, with the steps of its quests, its game scopes and the es / ko glosses of both;
+  - one title chunk per locale, `lessons-titles-<locale>.ts`.
+- **What the manifest holds.** The manifest keeps the cell header that the grid and the Home cards draw without a fetch: each episode as before, and each quest's id, English title, blurb, teaser, minutes and reward card. Steps leave it. It measures 29,574 B, under the 60,000 B line. When Volume 2 and the packs bring it near the line, the display lines (subtitle, Hoya intro, blurb, teaser) move into the cell chunks first.
+- **Content hashes.** Each chunk exports `CHUNK_HASH`, the first 16 hex characters of the sha256 of its data, and the manifest names the same hash. The app refuses a chunk whose hash differs. `apps/mobile/scripts/pwa/lesson-chunks.mjs`, run by `pwa-postbuild.mjs`, fails the build in each of these cases:
+  - a manifest entry has no bundle, or more than one;
+  - a bundle does not carry the manifest's hash;
+  - a bundle's file name is not the md5 of its content;
+  - a bundle is missing from the precache;
+  - the start bundle does not name every hash;
+  - the start bundle carries a chunk.
+- **On demand.**
+  - The learner app loads the active locale's title chunk before its first screen, and a newly chosen locale applies once its titles are in.
+  - The quest player and the game screen load their cell's chunk, drawing only the screen header (the way back) for the frame or two this takes. A chunk that cannot load goes to the crash screen, whose Try again loads it again.
+  - My Route and the grown-up reports count skills over every quest, so they load every chunk and recompute as each one arrives. Counts only fill.
+  - All lessons and the presenter read the whole catalogue, so they mount once every chunk is in.
+- **Measured (release build, no recorded clips).**
+
+  | Measure | Size |
+  |---|---|
+  | Start bundle | 8,321,783 B raw / 1,921,695 B gzip before CM-5; 7,331,204 B raw / 1,790,976 B gzip after (-990,579 B raw) |
+  | Lesson chunks (27 bundles) | 1,014,012 B raw / 151,301 B gzip |
+  | Generated lesson modules (`build-lessons.mjs --report`) | 939,801 B raw / 142,070 B gzip |
+  | Title chunks | es 17,517 B, ko 18,659 B |
+  | Stage game content | largest is Stage 6, 129,982 B raw / 16,806 B gzip |
+  | Learner precache | 35 files, 8,780,718 B |
+
+  The learner precache line is therefore 11,280,718 B (measured + 2.5 MB), and CM-5B stays untriggered. The start bundle line is its size before CM-5, so the bundle never grows past it. Lesson content that slips back into the start bundle is caught by the chunk check above. CM-8 lowers the line with its own measurement.
+
 **Ceilings.** Each ceiling is a reviewed one-line change with measured numbers in its PR. These are lazy and precached, so they put no weight on start-up (OD-5).
 
 | Budget line | Today | New ceiling |
 |---|---|---|
-| Start bundle | measured in CM-5 | must not grow at any row; after CM-5 and CM-8 it shrinks by about 1.5 MB raw (the lesson index and the story module leave it) |
+| Start bundle | 8,321,783 B raw before CM-5; 7,331,204 B raw after CM-5 | must not grow at any row: 8,321,783 B raw (`PRECACHE_BUDGET.startBundleRaw`); after CM-5 and CM-8 it shrinks by about 1.5 MB raw (the lesson index and the story module leave it) |
 | `manifestRaw` (English, lessons and story shelf) | 372 KB (whole lesson index) | 60,000 B |
 | Title chunk per locale | — | 30,000 B |
 | Core lessons total (Volume 1 + 2), raw / gzip | 950,000 / 140,000 | 1,400,000 / 210,000 |
-| Per stage chunk, raw / gzip | 150,000 / 32,000 | 220,000 / 40,000 |
+| Per stage chunk (a stage's game scopes and their glosses, as F-CURR-001 measured its stage module), raw / gzip | 150,000 / 32,000 | 220,000 / 40,000 |
 | Per pack chunk, raw / gzip | — | 90,000 / 14,000 |
 | All packs, raw / gzip | — | 750,000 / 120,000 (8 packs) |
 | Review-item index, raw / gzip | — | 150,000 / 30,000 |
 | Per story chunk, raw | — | 70,000 |
 | Stories total, raw | 1,255,855 (1,300,000 ceiling), in the start bundle | 2,000,000, precached; the gzip ceiling is set from the CM-8 measurement |
 | Hidden Heritage scene | — | 25,000 B each |
-| Learner precache total | measured in CM-5 | measured + 2.5 MB |
+| Learner precache total | 8,780,718 B (CM-5, 35 files) | measured + 2.5 MB = 11,280,718 B (`PRECACHE_BUDGET.learnerPrecacheRaw`) |
 | Per-quest average, raw | 9,000 | 9,000 (unchanged) |
 
 **Sizing basis.**
@@ -1310,7 +1342,7 @@ CM-5B is conditional and is counted only if the CM-5 report triggers it. Each co
 ## 19. Unverified assumptions
 
 1. **Per-quest size.** About 5 KB raw per quest on the compact literal is measured on Volume 1 cells. The first Volume 2 cell records its real number here.
-2. **Assets instead of async bundles on web.** Whether Metro async bundles work in the PWA build is not known. CM-5 decides with a spike, and JSON assets are the safe default.
+2. **Assets instead of async bundles on web.** Resolved by CM-5 (decision record in section 10): Metro async bundles work in the PWA build once Metro's bundle loader is installed at the entry, so they are used; JSON assets stay the fallback.
 3. **Memory delta size.** About 60-80 B per changed item state after JSON. CM-12's shadow period measures the p95 delta per day.
 4. **NIKL word list licence.** The 2003 list is publicly distributed. It is used at build time only, and its terms are checked before it enters the repo. If they forbid that, `freq-coverage` runs from a local file outside the repo.
 5. **Device voice on pseudo-words.** The Decoding Sprint uses real syllables only, because device voices read some non-words unpredictably. CM-32 tests the allowlist on iOS, Android and desktop voices.

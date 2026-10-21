@@ -37,7 +37,7 @@ review record. Ids keep the placeholder ids: `episode:stage<n>-<theme>`,
 carries no note text (no screen shows a lesson note yet), so the claims a learner sees are the
 Hoya lines, Discover `noteEn` and realia captions, and the MAR culture review (pass 5) checks
 each of them against a note of the cell. The row that first draws a lesson note on screen
-emits `culture[].{id, kind, textEn}` into `lessons-index.ts` with an episode overlay path
+emits `culture[].{id, kind, textEn}` into the lesson modules with an episode overlay path
 `culture.<noteId>.text` that U-10 covers, and points the copy lints (`lesson-copies-source`,
 `lesson-national-treasure-number`) at the text it shows; no ready cell carries a culture claim
 before that row lands.
@@ -47,11 +47,13 @@ before that row lands.
 1. `node scripts/validate-content.mjs` runs the `lesson-*` rules (`packages/content-schema/src/lesson-lint.ts`).
 2. `node scripts/build-lessons.mjs` drops draft cells, fails a `ready` cell without both
    sign-offs, and writes
-   `apps/mobile/src/content/__generated__/lessons-index.ts` (episodes, quests, their glosses;
-   imported at start) and `lessons-stage<n>.ts` (the game scopes and their glosses; loaded the
-   first time a quest of that stage opens). `--check` fails on drift, `--report` on the budget
-   (9 KB raw per quest on average, 150 KB raw / 32 KB gzip per stage module, 950,000 B raw /
-   140,000 B gzip in total; F-CURR-001 section 3.12).
+   `apps/mobile/src/content/__generated__/lessons-index.ts` (the start-loaded manifest: episodes
+   and quest headers in English) and, under `__generated__/lesson-chunks/`, one content-hashed
+   chunk per cell (its steps, game scopes and their glosses; loaded when one of its quests opens)
+   and one title chunk per locale (loaded for the active locale only; F-CURR-002 section 10).
+   `--check` fails on drift or a module no longer built, `--report` on the budget (9 KB raw per
+   quest on average, 60,000 B raw for the manifest, 30,000 B raw per title chunk, 220 KB raw /
+   40 KB gzip of game content per stage, 1,400,000 B raw / 210,000 B gzip in total).
 3. `apps/mobile/src/content/__tests__/upper-stage-curriculum.test.ts` checks U-1 .. U-10 and
    that a ready cell plays only games the app has a screen for (`PLAYABLE_KINDS`, so a game row
    lands before the cells that use its game), and `e2e/web/journey-upper-cell.spec.ts` needs an
