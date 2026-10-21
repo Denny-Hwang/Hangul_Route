@@ -11,8 +11,10 @@ import {
   type ProfilePatch,
   type ProfileSet,
 } from '../logic/profiles/profile-model';
+import { closesSession } from '../logic/profiles/session';
 import { changedServerFields, hasFields, serverProfileChanges, type ServerLearnerFields } from '../logic/sync/learner-profile';
 import { readJson, writeJson } from '../platform/storage';
+import { closeGrownUpSession } from './grown-up-session';
 import { notifyProfileEdited } from './profile-edits';
 import { notifyProfileRemoved } from './profile-removal';
 
@@ -28,6 +30,11 @@ const ACTIVE_KEY = 'profiles:active';
 
 interface State extends ProfileSet {
   hydrated: boolean;
+  /**
+   * [OA] When the active learner's session on this device began (epoch ms, in memory only): the app start, then
+   * every change of learner. `profile.switch` buckets the minutes since (`minutesIn`, G1).
+   */
+  activeSince: number;
 }
 
 interface Actions {
@@ -70,11 +77,12 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   profiles: [],
   activeId: null,
   hydrated: false,
+  activeSince: Date.now(),
 
   hydrate: async () => {
     const profiles = (await readJson<Profile[]>(PROFILES_KEY)) ?? [];
     const activeId = await readJson<string | null>(ACTIVE_KEY);
-    set({ profiles, activeId: activeId ?? null, hydrated: true });
+    set({ profiles, activeId: activeId ?? null, hydrated: true, activeSince: Date.now() });
   },
 
   createProfile: (input) => {
@@ -113,9 +121,13 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
 
   setActive: (id) => {
     const { profiles, activeId } = get();
-    const next = setActiveProfile({ profiles, activeId }, id, Date.now());
-    set(next);
+    const now = Date.now();
+    const next = setActiveProfile({ profiles, activeId }, id, now);
+    const changed = closesSession(activeId, next.activeId);
+    set(changed ? { ...next, activeSince: now } : next);
     persist(next);
+    // [OA] OA-D5b (1): every change of learner, from any surface, ends the grown-up session (always on, CS-15).
+    if (changed) closeGrownUpSession();
   },
 
   remove: (id) => {

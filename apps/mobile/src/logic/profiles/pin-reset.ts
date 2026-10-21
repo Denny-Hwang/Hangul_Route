@@ -1,20 +1,23 @@
-import { normalizeRescueCode } from '@hangul-route/content-schema';
+import { RESCUE_MAX_ATTEMPTS, RESCUE_PAUSE_MS, RESCUE_WINDOW_MS, normalizeRescueCode } from '@hangul-route/content-schema';
 import { LOCALE_META, formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
 import {
   cooldownRemainingMs,
   isLocked,
-  registerFailure,
+  registerFlatFailure,
   registerSuccess,
   type AttemptState,
+  type FlatThrottle,
 } from './pin-hash';
+import { pauseText } from './pin-pause';
 
 /**
  * Forgot PIN, offline — F-LEARN-001 §3.5, L9. Pure: no storage, no React, no
  * network. Two ways to a new PIN, both keep the learners, cards and progress:
  *
  *  1. Re-enter a Rescue Code that this device already stores for a synced
- *     learner. Wrong entries count through the same throttle as PIN attempts
- *     (`account:pinAttempts`), so the code cannot be brute-forced here.
+ *     learner. Wrong entries count on the code's **own** throttle
+ *     (`account:rescueAttempts`, [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3: 5 per 15 minutes, then a flat
+ *     15-minute pause), so the code cannot be brute-forced here and stays usable while the PIN pad is paused.
  *  2. Wait 24 hours (`account:pinResetRequestedAt`), then set a new PIN.
  */
 
@@ -36,6 +39,9 @@ export function collectRescueCodes(byLearner: Readonly<Record<string, { rescueCo
   return codes;
 }
 
+/** [OA] The Rescue Code's own throttle (section 8.3): a code is several words, so a flat pause is enough. */
+export const RESCUE_THROTTLE: FlatThrottle = { max: RESCUE_MAX_ATTEMPTS, windowMs: RESCUE_WINDOW_MS, pauseMs: RESCUE_PAUSE_MS };
+
 export type RescueCodeFailure = 'cooldown' | 'bad-format' | 'no-code' | 'wrong-code';
 
 export type RescueCodeResult =
@@ -43,7 +49,8 @@ export type RescueCodeResult =
   | { ok: false; state: AttemptState; reason: RescueCodeFailure; cooldownRemainingMs?: number };
 
 /**
- * Check a typed Rescue Code against the codes stored on the device. The
+ * Check a typed Rescue Code against the codes stored on the device. `state` is the code's own attempt state
+ * (`account:rescueAttempts`), never the PIN's. The
  * cooldown gate comes first so a locked-out attempt is never compared. An
  * entry that is not a Rescue Code shape, or a device with no stored code, is
  * not a guess and does not burn an attempt; a well-formed wrong code does.
@@ -62,7 +69,7 @@ export function attemptRescueCode(input: {
   const normalized = normalizeRescueCode(entry);
   if (normalized === null) return { ok: false, state, reason: 'bad-format' };
   if (storedCodes.includes(normalized)) return { ok: true, state: registerSuccess() };
-  return { ok: false, state: registerFailure(state, now), reason: 'wrong-code' };
+  return { ok: false, state: registerFlatFailure(state, now, RESCUE_THROTTLE), reason: 'wrong-code' };
 }
 
 export type ResetWaitState =
@@ -96,7 +103,7 @@ type PinMessages = Messages['caregiver']['pin'];
 export function rescueFailureMessage(result: Extract<RescueCodeResult, { ok: false }>, m: PinMessages): string {
   switch (result.reason) {
     case 'cooldown':
-      return m.cooldown(Math.ceil((result.cooldownRemainingMs ?? 0) / 1000));
+      return pauseText(result.cooldownRemainingMs ?? 0, m);
     case 'bad-format':
       return m.reset.failure.badFormat;
     case 'no-code':
@@ -147,4 +154,13 @@ export function waitCardView(
     case 'ready':
       return { caption: m.reset.wait.ready.caption, buttonLabel: m.reset.wait.ready.button, buttonDisabled: false };
   }
+}
+
+/**
+ * [OA] OA-D21: whether the Grown-up area shows "The grown-up PIN was changed after the 24-hour wait." now: a PIN set
+ * by the finished wait is on record and a PIN was entered after it (so the grown-up who sees it is not the one who
+ * just set it, and the setup step itself never shows it). The screen clears the record once shown.
+ */
+export function resetByWaitNoticeDue(record: { at: number } | null, lastPinVerifiedAt: number | null): boolean {
+  return record !== null && lastPinVerifiedAt !== null && lastPinVerifiedAt > record.at;
 }

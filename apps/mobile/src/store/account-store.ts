@@ -1,8 +1,17 @@
 import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import type { SubscriptionState } from '../logic/entitlement';
-import { INITIAL_ATTEMPT_STATE, type AttemptState } from '../logic/profiles/pin-hash';
-import { startResetWait } from '../logic/profiles/pin-reset';
+import {
+  INITIAL_ATTEMPT_STATE,
+  mergeAttemptStates,
+  normalizeAttemptState,
+  verifyPin,
+  type AttemptState,
+  type PauseSchedule,
+  type PinHasher,
+  type PinVerifyResult,
+} from '../logic/profiles/pin-hash';
+import { attemptRescueCode, startResetWait, type RescueCodeResult } from '../logic/profiles/pin-reset';
 import {
   PIN_HASH_SEEN_KEY,
   PIN_HASH_UNREAD,
@@ -12,6 +21,7 @@ import {
   reconcilePinEpoch as nextPinEpoch,
 } from '../logic/shell/device-gate';
 import { readJson, readJsonExact, writeJson } from '../platform/storage';
+import { PIN_ATTEMPTS_LOCK, withTabLock } from '../platform/tab-lock';
 
 /**
  * Family-level account settings, persisted across sessions.
@@ -33,6 +43,38 @@ const SUBSCRIPTION_KEY = 'account:subscription';
 // cannot clear an active cooldown (§3.1).
 export const PIN_HASH_KEY = 'account:parentPinHash';
 const PIN_ATTEMPTS_KEY = 'account:pinAttempts';
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3: the Rescue Code's own attempt state (same shape, 5 per 15
+ * minutes, then a flat 15-minute pause), so the code stays usable while the PIN pad is paused.
+ */
+const RESCUE_ATTEMPTS_KEY = 'account:rescueAttempts';
+/**
+ * [OA] OA-D21: `{ v: 1, at }`, written when the finished 24-hour wait sets a PIN; the next Grown-up area entry
+ * after a PIN shows the notice once and clears it. A reset by the Rescue Code (or a sign-in) writes nothing.
+ */
+const PIN_RESET_BY_WAIT_KEY = 'account:pinResetByWait';
+
+/** [OA] The record of a PIN set by the finished 24-hour wait. */
+export interface PinResetByWait {
+  v: 1;
+  at: number;
+}
+
+function pinResetByWaitOf(raw: unknown): PinResetByWait | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  return r.v === 1 && typeof r.at === 'number' && Number.isFinite(r.at) ? { v: 1, at: r.at } : null;
+}
+
+/**
+ * [OA] OA-D19: the attempt state under `key`, read again inside the `hr:pin-attempts` lock. With Web Locks every
+ * write is serialised, so the stored state is the truth; without them (native, an older browser) another tab may
+ * have written meanwhile without seeing ours, so the two are merged (later pause, larger strikes, union of misses).
+ */
+async function sharedAttempts(key: string, own: AttemptState, locked: boolean): Promise<AttemptState> {
+  const stored = normalizeAttemptState(await readJson<unknown>(key));
+  return locked ? stored : mergeAttemptStates(stored, own);
+}
 /**
  * When the current PIN was made (epoch ms), F-SPACE-002 section 4.11: a PIN made less than a day ago
  * cannot attest a class move. Written with every new PIN, and moved with the epoch when an older bundle
@@ -96,6 +138,10 @@ interface State {
    */
   pinHashReadFailed: boolean;
   pinAttempts: AttemptState;
+  /** [OA] The Rescue Code's own attempt state (`account:rescueAttempts`). */
+  rescueAttempts: AttemptState;
+  /** [OA] A PIN set by the finished 24-hour wait, until the next Grown-up area entry shows it (`account:pinResetByWait`). */
+  pinResetByWait: PinResetByWait | null;
   hydrated: boolean;
 }
 
@@ -111,6 +157,19 @@ interface Actions {
   /** Stores the PIN hash; every new PIN (first set, change, Forgot PIN reset) moves the epoch to now. */
   setParentPinHash: (hash: string | null) => void;
   setPinAttempts: (state: AttemptState) => void;
+  /**
+   * [OA] Checks a PIN against the shared attempt state: read, verify and write run inside the `hr:pin-attempts`
+   * lock (or re-read and merged without Web Locks), so all tabs share one count (OA-D19, CS-16).
+   */
+  verifyPinAttempt: (pin: string, deps: { hasher: PinHasher; schedule: PauseSchedule; now?: () => number }) => Promise<PinVerifyResult>;
+  /** [OA] Checks a Rescue Code against its own shared attempt state, the same way (section 8.3). */
+  attemptRescue: (entry: string, storedCodes: readonly string[], now?: () => number) => Promise<RescueCodeResult>;
+  /** [OA] Re-reads the shared attempt states, so a pause another tab started shows here too. */
+  refreshAttempts: () => Promise<void>;
+  /** [OA] OA-D21: the finished 24-hour wait just set a PIN. */
+  markPinResetByWait: (at: number) => void;
+  /** [OA] The notice was shown at a Grown-up area entry. */
+  clearPinResetByWait: () => void;
   /**
    * Boot step of the device gate marker writer: a hash that differs from the one last seen was
    * changed by an older bundle, so the epoch moves to `now` before the marker is written.
@@ -131,6 +190,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   pinHashSeen: null,
   pinHashReadFailed: false,
   pinAttempts: INITIAL_ATTEMPT_STATE,
+  rescueAttempts: INITIAL_ATTEMPT_STATE,
+  pinResetByWait: null,
   hydrated: false,
 
   hydrate: async () => {
@@ -141,7 +202,9 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const pinResetRequestedAt = await readJson<string | null>(PIN_RESET_KEY);
     const subscription = await readJson<SubscriptionState | null>(SUBSCRIPTION_KEY);
     const pinHash = await readPinHash();
-    const pinAttempts = await readJson<AttemptState | null>(PIN_ATTEMPTS_KEY);
+    const pinAttempts = await readJson<unknown>(PIN_ATTEMPTS_KEY);
+    const rescueAttempts = await readJson<unknown>(RESCUE_ATTEMPTS_KEY);
+    const pinResetByWait = await readJson<unknown>(PIN_RESET_BY_WAIT_KEY);
     const pinSetAt = await readJson<unknown>(PIN_SET_AT_KEY);
     const pinCreatedAt = await readJson<unknown>(PIN_CREATED_AT_KEY);
     const pinHashSeen = await readPinHashSeen();
@@ -166,7 +229,10 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       // just before the upgrade still waits its day (F-SPACE-002 4.11); absent both, it predates them and counts as old enough.
       pinCreatedAt: pinSetAtOf(pinCreatedAt) ?? pinSetAtOf(pinSetAt),
       pinHashSeen,
-      pinAttempts: pinAttempts ?? INITIAL_ATTEMPT_STATE,
+      // A state an older bundle wrote (no `strikes`) reads as 0 strikes; the pause it holds still runs (section 8.3).
+      pinAttempts: normalizeAttemptState(pinAttempts),
+      rescueAttempts: normalizeAttemptState(rescueAttempts),
+      pinResetByWait: pinResetByWaitOf(pinResetByWait),
       hydrated: true,
     });
   },
@@ -231,13 +297,52 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     if (hash !== null) void writeJson(PIN_SET_AT_KEY, pinSetAt);
     if (hash !== null) void writeJson(PIN_CREATED_AT_KEY, pinCreatedAt);
     void writeJson(PIN_HASH_SEEN_KEY, pinHashSeen);
-    void writeJson(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE);
+    // [OA] OA-D19: the setup path writes the attempt state inside the same lock as every verify.
+    void withTabLock(PIN_ATTEMPTS_LOCK, () => writeJson(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE)).catch(() => undefined);
     if (hadReset) void writeJson(PIN_RESET_KEY, null);
   },
 
   setPinAttempts: (state) => {
     set({ pinAttempts: state });
     void writeJson(PIN_ATTEMPTS_KEY, state);
+  },
+
+  verifyPinAttempt: (pin, { hasher, schedule, now = Date.now }) =>
+    withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
+      const state = await sharedAttempts(PIN_ATTEMPTS_KEY, get().pinAttempts, locked);
+      const result = await verifyPin({ pin, storedHash: get().parentPinHash, state, now: now(), hasher, schedule });
+      set({ pinAttempts: result.state });
+      await writeJson(PIN_ATTEMPTS_KEY, result.state);
+      return result;
+    }),
+
+  attemptRescue: (entry, storedCodes, now = Date.now) =>
+    withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
+      const state = await sharedAttempts(RESCUE_ATTEMPTS_KEY, get().rescueAttempts, locked);
+      const result = attemptRescueCode({ entry, storedCodes, state, now: now() });
+      set({ rescueAttempts: result.state });
+      await writeJson(RESCUE_ATTEMPTS_KEY, result.state);
+      return result;
+    }),
+
+  refreshAttempts: async () => {
+    const [pin, rescue] = await Promise.all([readJson<unknown>(PIN_ATTEMPTS_KEY), readJson<unknown>(RESCUE_ATTEMPTS_KEY)]);
+    // Display only: merged with what this tab holds, so a refresh never shortens a pause shown here.
+    set({
+      pinAttempts: mergeAttemptStates(normalizeAttemptState(pin), get().pinAttempts),
+      rescueAttempts: mergeAttemptStates(normalizeAttemptState(rescue), get().rescueAttempts),
+    });
+  },
+
+  markPinResetByWait: (at) => {
+    const record: PinResetByWait = { v: 1, at };
+    set({ pinResetByWait: record });
+    void writeJson(PIN_RESET_BY_WAIT_KEY, record);
+  },
+
+  clearPinResetByWait: () => {
+    set({ pinResetByWait: null });
+    void writeJson(PIN_RESET_BY_WAIT_KEY, null);
   },
 
   reconcilePinEpoch: (now) => {
