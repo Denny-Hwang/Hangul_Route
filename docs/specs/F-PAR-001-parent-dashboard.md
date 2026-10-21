@@ -5,6 +5,8 @@
 **Owner**: solo dev
 **Rollout**: MVP-thin — read-only summary cards. Explicit assignment + parent-message recording are Phase 2 expansions of the same surface.
 
+> **Amended 2026-10-21 by `AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` [OA]**: the Grown-up area lists **every** learner on the device (standing rule: parents and teachers see all learner info), replacing §3.5's "linked by this parent profile"; it gains People on this device (lock with the grown-up PIN, remove from this device) and Switch user (row OA-7a).
+
 Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §1.3, §3.5, §4.2. Originally hinted in `F-001 §4` (was referenced as `F-PAR-001`).
 
 ---

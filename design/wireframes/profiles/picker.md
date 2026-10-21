@@ -1,5 +1,7 @@
 # Profiles/Picker — cold-launch profile picker (wireframe v1)
 
+> **Superseded 2026-10-21 [OA]** by `profiles/who-is-using.md` (`docs/specs/AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` section 6): one chooser for learner profiles and the grown-up uses of the account. Kept for history; this picker was never built.
+
 Spec: `docs/specs/F-PROF-001-device-profiles.md` §3.1
 Audience: **learner (P4/P5 child, 5–11)** primary · parent secondary
 

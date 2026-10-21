@@ -121,7 +121,8 @@ F-XXX-<slug>.md
 - `F-CURR-001-upper-stage-content.md` — content of the 22 placeholder cells of Stages 2, 3, 4, 6 and 7: per-stage goals and can-do lines, scope, six-step quests per cell, five new games (Sentence Builder, Realia Read, Type Hangul, Trace a Word, Write Frame), writing without speaking, sourced culture notes, the MAR language and culture passes, a per-cell JSON pipeline with its own bundle budget, Stage 2+ paid · **shipped** (all 35 rows, #617 to #678); follow-up open: Discover sentence, pattern and realia page views
 
 ### Phase 2 / planned
-- `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
+- `F-PROF-001-device-profiles.md` — multi-learner · **ready** (code shipped PR #13; the file was promoted by T-023)
+  - amended 2026-10-21 by `AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` ([OA], owner request; rows OA-0b to OA-10, also amends F-APP-001, F-PAR-001, F-LEARN-001 and F-SPACE-001): one account, many users: a **Who is using this?** chooser for every learner profile and the account's grown-up uses (Family, Teacher, School, Grown-up area) on one device, the grown-up PIN on every move into a grown-up use with growing pauses, a reset by signing in on the web and optional face or fingerprint on native builds, locked learner profiles, remove from this device, Who is joining? for family codes, the legacy device subscription capped at 4 with grandfathering; no D1 change · **ready** · wireframes `design/wireframes/profiles/who-is-using.md`, `profiles/pin-entry-v2.md`, `profiles/people-on-device.md`
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
 - `F-RVW-001-review-tests.md` — Reviews · **draft**
 - `F-PAR-001-parent-dashboard.md` — Parent dashboard · **draft**
