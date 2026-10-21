@@ -25,8 +25,8 @@ A. The cell's page after its first volume is done (episode/detail.md, the added 
 | Lunch Box Words        (title) |
 | +----------------------------+ |
 | | (ring48) Practiced         | |  <- mastery block (journey/mastery-ring.md E):
-| |          Ready to refresh  | |     the ring at 48 dp, the level word, then
-| |                            | |     at most two state lines
+| | Take the Cell Check to     | |     the ring at 48 dp, the level word, at most
+| | reach Mastered.            | |     two state lines (level 3 only) and the hint
 | | Cell Check                 | |
 | | About 3 minutes. Show what | |
 | | you know from this place.  | |
@@ -160,7 +160,7 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 
 ## Accessibility
 
-- Mastery block: one group read as "Practiced. Ready to refresh." (the ring itself is hidden; its level is in the words).
+- Mastery block: one group read as its words, for example "Practiced. Take the Cell Check to reach Mastered." or "Mastered. Ready to refresh." (the ring itself is hidden; its level is in the words).
 - [ Test out ]: the line "Already know this?" is its description.
 - "Tested out" pill: read with the quest ("Fruit and Snacks. Tested out. 2 stars.").
 - Results: the headline, "3 stars", then the lines; focus starts on the headline.

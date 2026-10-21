@@ -6,7 +6,7 @@ Stylesheet, tokens, constants and the checks made on the shots: `design/screens/
 | File | Shows |
 |---|---|
 | `mock/cell-check.html` | A (the cell page with the mastery block and the Cell Check as the page primary), A2 (Cell Check done), B (an unstarted cell: Test out under the quest list), C (the test-out intro), D (a Read Pick Meaning round from the cell), E (3 stars, the level rose to Mastered), E2 (2 stars, a calm next step), F (test out, 3 stars: Done), G (test out, 2 stars: Good start), H (Tested out pills and 2 stars), I (Stop the check?) |
-| `shots/cell-check-320.png`, `shots/cell-check-768.png` | the page at 320 (2x) and 768 (1x) |
+| `shots/cell-check-320.png`, `shots/cell-check-768.png`, `shots/cell-check-320-text200.png` | the page at 320 (2x) and 768 (1x); and 320 with the text at 200 % |
 
 Decisions drawn here:
 - The 80 % rule is the 3-star tier of F-RVW-001 §3.1, so the learner sees only stars; no result says pass or fail.

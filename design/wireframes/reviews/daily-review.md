@@ -66,11 +66,11 @@ B2. A miss (first try wrong)
 C. Result
 +--------------------------------+
 |        [hoya - cheering]       |
-|          Great work!           |  <- one word per star tier, never a number
+|          Wonderful!            |  <- one word per star tier, never a number
 |            * * *               |  <- 1 to 3 stars (F-RVW-001 §3.1), never 0
 |   [up] 6 got stronger          |  <- count of items whose best box rose today
 |                                |     (0: "Every answer helps them stick.")
-|   (ring) Today's goal is done  |  <- goal line from home/goal-ring-weekly-dots.md
+|   (ring) Daily goal done       |  <- goal line from home/goal-ring-weekly-dots.md
 |                                |     (only with `goals` on)
 |   [[        BACK HOME        ]]|  <- the ONE primary
 |   Want a few more?             |  <- only while due items remain and fewer than
@@ -133,7 +133,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 
 - [x]: "Stop the review" (button). Dots: one group with the label "Round 4" (position only, never right or wrong). Theme glyph: hidden; the theme word is read once ("Food").
 - Options: the Korean, its romanization and, for pictures, the picture's word ("사과, sagwa, apple"); a miss announces Hoya's line politely, never "wrong".
-- Result: stars read as "3 stars" (words), "6 got stronger", then the buttons. Focus starts on the headline.
+- Result: stars read as "3 stars" (words), "6 got stronger", then the buttons. Focus starts on the headline. The "Want a few more?" line is the Keep going button's description (`aria-describedby`).
 - Every target is at least 48 dp, and buttons and options are `touchTarget.min` (64) or more.
 - Colour is never the only cue: a miss is amber plus a thicker border and a dot; a right answer is the check mark.
 
@@ -164,8 +164,8 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 
 | Key | English |
 |---|---|
-| `learner.dailyReview.title` | Daily Review |
-| `learner.dailyReview.card.subtitle` | About 3 minutes |
+| `learner.home.mission.dailyReview.title` | Daily Review |
+| `learner.home.mission.subtitle.dailyReview` | About 3 minutes |
 | `learner.dailyReview.readyLine(count)` | 1 item is ready to refresh / {count} items are ready to refresh |
 | `learner.dailyReview.result.headline.three` / `.two` / `.one` | Wonderful! / Great work! / Good try! |
 | `learner.dailyReview.result.stronger(count)` | 1 got stronger / {count} got stronger |
@@ -179,6 +179,12 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 | `learner.dailyReview.leave.stop.cta` | Stop |
 | `a11y.dailyReview.close` | Stop the review |
 | `a11y.dailyReview.round(n)` | Round {n} |
+
+**Slot 3 copy.** The card is a mission card like every other slot (F-HW-001 `logic/homework/mission-builder`, a new card kind `dailyReview`), so its title and subtitle sit beside the existing `learner.home.mission.*` strings. The superseded Daily Test card strings (`learner.home.mission.dailyTest.title` "Quick review", `learner.home.mission.subtitle.dailyTest` "About a minute with Hoya") are left in place until CM-14 removes the `dailyTest` kind, and CM-14 deletes them in the same PR, with their es and ko values. The page title uses `learner.dailyReview.title` ("Daily Review").
+
+| Key | English |
+|---|---|
+| `learner.dailyReview.title` | Daily Review |
 
 The Hoya miss line reuses the shipped round's feedback strings. Every string passes `review-copy` (§9.3).
 

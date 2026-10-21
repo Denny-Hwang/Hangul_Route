@@ -6,7 +6,7 @@ Stylesheet, tokens, constants and the checks made on the shots: `design/screens/
 | File | Shows |
 |---|---|
 | `mock/mastery-ring.html` | A (one 54 x 76 cell at levels 0 to 3; level 2 in each of the five theme tokens), B and C (Ready to refresh: halo and sparkle; New volume: the plus marker; both), D (two grid rows with the Next triangle, the In your plan ring, the start pin, story counts and the legend line), E (the cell page block), G (Words known: Home pill, milestone and level-up banners, the route card line) |
-| `shots/mastery-ring-320.png`, `shots/mastery-ring-768.png` | the page at 320 (2x) and 768 (1x; the grid rows use the 112 dp cell) |
+| `shots/mastery-ring-320.png`, `shots/mastery-ring-768.png`, `shots/mastery-ring-320-text200.png` | the page at 320 (2x) and 768 (1x; the grid rows use the 112 dp cell); and 320 with the text at 200 % |
 
 How the track is drawn (SVG in the mock; CM-20 draws it with react-native-svg inside the cell's border box):
 - The outline of the cell's rounded rectangle (`radii.md`), started at the top centre and drawn clockwise, is split into three equal segments with three `spacing.xs` gaps; the first gap is centred on the top edge, under the Next triangle.

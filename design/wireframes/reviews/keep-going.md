@@ -31,7 +31,7 @@ C. Keep going result
 |          Great work!           |  <- one word per star tier
 |            * * *               |
 |   [up] 4 got stronger          |
-|   (ring) Today's goal is done  |  <- goal line, with `goals` on
+|   (ring) Daily goal done       |  <- goal line, with `goals` on
 |   [[        BACK HOME        ]]|
 |   Want a few more?             |  <- A again, only while due items remain
 |   [ Keep going ]               |     and fewer than 3 Keep goings today
@@ -52,7 +52,7 @@ E. Done today (the collected Daily Review card on Home is tapped)
 | [<- back]                      |
 |        [hoya - waving]         |
 |   Daily Review done today      |
-|   (ring) Today's goal is done  |
+|   (ring) Daily goal done       |
 |   Want a few more?             |  <- only while a Keep going is still on offer;
 |   [[ KEEP GOING ]]             |     here it is the primary, because the learner
 |   [ Back home ]                |     came back for more on their own
@@ -112,7 +112,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` B
 | no age wording | none |
 | no speaking UI | none |
 | no emoji | none |
-| (§4.5) never shown as owed | no count left, no badge, no reminder, Back home is the primary |
+| (§4.5) never shown as owed | no count left, no badge, no reminder; Back home is the primary on A, C and D. Only E, a page the learner opened on their own to do more, makes Keep going the primary, and it still says nothing about what is left |
 
 ## Data needs
 

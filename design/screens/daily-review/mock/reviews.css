@@ -144,6 +144,7 @@
   --ring-lg: 48px;              /* the page-block ring: spacing.xxxl */
   --day-dot: 24px;              /* spacing.xl */
   --round-dot: 8px;             /* spacing.sm */
+  --caption-fixed: 14px;        /* typography.size.caption in dp: the theme word keeps its size at large text (maxFontSizeMultiplier 1, as the grid) */
   --cell-max: 112px;            /* layout.columns.journeyCellMax */
   --band: 22px;                 /* the corner band: spacing.xxs + the 20 dp count mark (journeyCellMetrics) */
   --card-w: 140px;              /* a stage card in the ceremony: half of the 280 dp reading width at 320, rounded */
@@ -309,3 +310,6 @@ body { font-family: var(--font-stack); color: var(--colors-text-primary); backgr
 /* 200 % text: long words wrap inside the column instead of scrolling sideways (F-LAYOUT-001). */
 .h1 { overflow-wrap: anywhere; }
 .radio { flex-wrap: wrap; }
+.h1 { hyphens: auto; }
+.mini span span, .cellbox .word, .cols span { font-size: var(--caption-fixed); }
+.mini span span { white-space: nowrap; letter-spacing: var(--tracking-tight); }

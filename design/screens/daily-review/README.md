@@ -50,14 +50,15 @@ Values that are not tokens. The rows write them as named constants, never bare l
 | `MASTERY_SEGMENTS` / `MASTERY_GAP` | 3 / 4 dp | §4.4 levels; `spacing.xs` |
 | `GLOW_OPACITY` | 0.4 | the Ready to refresh halo over the theme token (decorative; the sparkle and the label carry the meaning) |
 | Page-block ring | 48 dp | `spacing.xxxl` |
+| Theme word size | 14 dp, fixed | `typography.size.caption` with `maxFontSizeMultiplier` 1, as the Journey grid's theme word, so mini cells never collide at 200 % text |
 | Day dot | 24 dp | `spacing.xl` |
 | Goal ring | 48 dp, 3 dp track | `spacing.xxxl`, `borderWidth.thick` |
 | Stage card in the ceremony | 140 dp wide | about half of the 288 dp column at 320 (two cards and a gap fit one row) |
 
 ## Checks made on the shots (Chromium, Playwright 1.63)
 
-- No sideways scroll at 320, at 768, or at 320 with 200 % text on any of the six pages (`scrollWidth` equals the viewport).
-- Every drawn button, option, chip and cell is at least 48 x 48; buttons and options are at least 64 tall (`touchTarget.min`); Journey cells are 54 wide at 320.
+- No sideways scroll at 320, at 768, or at 320 with 200 % text on any of the six pages (`scrollWidth` equals the viewport). Every folder has its `-320-text200.png` shot; long display words hyphenate (`hyphens: auto`) rather than overflow.
+- Every drawn button, option, chip and cell is at least 48 x 48 (measured). Primary and full-width buttons, answer options, the close and back buttons, radio cards and segments are at least 64 tall (`touchTarget.min`; options 96). The small secondary buttons (`btn-sm`: Play again and Play on a quest row, See your prize and Stage Check on the Journey stage header) are 48 tall, the Stage 1 header pattern. Journey cells are 54 wide at 320.
 - No red anywhere: a miss uses `feedback.nudge` / `nudgeLight` with a thicker border and a dot; `feedback.danger` is not in any page.
 - No percentage, no "n of m", no "n / m", no timer, no emoji and no speaking UI in any drawn learner string of a review screen (searched in the six HTML files; the only hits are board notes, the reassurance "No timer." already shipped on the Hangul Check, and the unchanged Next lesson hero's "lesson 2 of 3" on Home, which is not a review screen).
 - Contrast (non-text, WCAG 1.4.11): the mastery keyline `border.shape` is 4.55:1 on paper, 4.29:1 on canvas, 3.84:1 on sunken; the theme tokens alone are 1.86:1 (life) to 4.58:1 (rites) on paper, so they are never the only cue. Learned day dots are `brand.primary` (5.44:1 on paper); the goal arc is `brand.primary`; round dots are `brand.secondary` (5.20:1) on a `border.shape` outline.
@@ -69,3 +70,7 @@ Values that are not tokens. The rows write them as named constants, never bare l
 | `daily-review-320.png` | A, A2, B, B2, C, C (0 right), D, E |
 | `daily-review-768.png` | the same in the reading column |
 | `daily-review-320-text200.png` | 200 % text: rounds and results wrap, no sideways scroll |
+
+## Review
+
+The independent multi-agent design review (three reviewers: the §7.7 anti-shame checklist; visual and accessibility; spec fidelity and buildability) and what was changed for each finding are recorded in the PR body of row CM-D1.
