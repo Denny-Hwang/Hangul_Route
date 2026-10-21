@@ -433,4 +433,34 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_ROUTE_ENABLED');
   });
+
+  it('lectureModeEnabled (AMENDMENTS-LECTURE-V2 LV-D1, LV-6) is OFF at launch until LV-7; "false", "0", "off", "no" or "disabled" in any case, trimmed, switch it off', async () => {
+    delete process.env.EXPO_PUBLIC_LECTURE_MODE;
+    let mod = await reload();
+    expect(mod.flags.lectureModeEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.lectureModeEnabled).toBe(false);
+    for (const off of ['false', '0', 'off', 'no', 'disabled', 'FALSE', ' Off ', 'NO', ' disabled', 'DISABLED ', '\t0\n']) {
+      process.env.EXPO_PUBLIC_LECTURE_MODE = off;
+      mod = await reload();
+      expect(mod.flags.lectureModeEnabled, JSON.stringify(off)).toBe(false);
+    }
+    // A build (the e2e build, a preview) turns it on before LV-7 flips the default: the console's own value
+    // (`enabled`) and the kill switch's on values.
+    for (const on of ['enabled', 'ENABLED', ' enabled ', 'true', '1', 'on', 'yes', 'TRUE']) {
+      process.env.EXPO_PUBLIC_LECTURE_MODE = on;
+      mod = await reload();
+      expect(mod.flags.lectureModeEnabled, JSON.stringify(on)).toBe(true);
+    }
+    // Anything else is the launch default.
+    for (const other of ['', 'maybe', 'enable', 'disable']) {
+      process.env.EXPO_PUBLIC_LECTURE_MODE = other;
+      mod = await reload();
+      expect(mod.flags.lectureModeEnabled, JSON.stringify(other)).toBe(mod.launchDefaultFlags.lectureModeEnabled);
+    }
+  });
+
+  it('lectureModeEnabled is read by its literal name, so a web build can carry the switch', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_LECTURE_MODE');
+  });
 });
