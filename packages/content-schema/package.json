@@ -25,6 +25,7 @@
   "devDependencies": {
     "@hangul-route/test-utils": "workspace:*",
     "@vitest/coverage-v8": "^2.1.8",
+    "fast-check": "4.10.2",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   }
