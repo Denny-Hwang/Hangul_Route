@@ -6,7 +6,7 @@ No new URL. The field opens in place on the page that shows the name.
 
 ## Anatomy
 
-Closed (boards 1, 16, 19, 20, 22, 24):
+Closed (boards 1, 8, 9, 16, 19, 20, 22, 24):
 
 ```
  < Back to Classes
@@ -17,7 +17,7 @@ Closed (boards 1, 16, 19, 20, 22, 24):
 - `.title-row`: flex, wrap, `spacing.md` between the title and the button, `spacing.xs` between rows; on a narrow phone with a long name the button wraps under the title, left-aligned.
 - Rename's accessible name is `console.rename.a11y(name)` ("Rename Sunday Class A"); the school's uses the school's name, not the title's " · school".
 
-Open (boards 2 to 13, 17, 21, 23, 25):
+Open (boards 2 to 7, 10 to 13, 17, 21, 23, 25):
 
 ```
  Name                                      label, semibold (console.rename.label)
@@ -60,9 +60,9 @@ Narrower than 36rem (phones, a class row): label, input, the error line, the hin
 | 2 | open, unchanged | Save aria-disabled |
 | 4 | typing | Save enabled |
 | 5, 6, 7 | invalid | `empty`, `tooLong(40)`, `invalid` |
-| 8 | saving | Save `aria-busy`, input read-only, Cancel unavailable |
+| 8 | saving | the field closed at once (optimistic), the new name in the title; **Rename** `aria-disabled` and `aria-busy` until the `PATCH` settles |
 | 9 | saved | the new name in the title; the live region (drawn visibly as a board note) says `console.rename.saved` |
-| 10 | failed | old name back, field reopened with the typed value, `console.rename.failed` |
+| 10 | failed | the last name the server confirmed back in the title, field reopened with the typed value, `console.rename.failed` |
 | 11 | offline | `caregiver.retry.offline` |
 | 12 | 429 | `caregiver.retry.tooManyAttempts` |
 | 13 | 422 archived | `console.rename.archived`, Save unavailable |
@@ -73,13 +73,15 @@ Narrower than 36rem (phones, a class row): label, input, the error line, the hin
 
 - **Rename** → the field opens, the value selected, focus in the input.
 - **Enter** saves when Save is enabled; **Escape** cancels; either way the field closes and focus returns to Rename (on a class row, the row's Rename).
-- **Save** → optimistic: the title, the frame's space switcher, the PageBack labels of the pages under it (`settings.back(name)` and the other `s.back(name)`) and the browser tab title change at once; `PATCH /api/spaces/:id/name`; on failure the old name comes back and the field reopens (boards 10 to 13).
+- **IME**: Enter and Escape are ignored while `event.isComposing` is true (or `keyCode` is 229), and Save reads the committed value after `compositionend`, so a Hangul name pressed Enter on mid-syllable is neither saved clipped nor cancelled.
+- **Save** → optimistic: the title, the frame's space switcher, the PageBack labels of the pages under it (`settings.back(name)` and the other `s.back(name)`) and the browser tab title change at once; `PATCH /api/spaces/:id/name`; Rename stays `aria-disabled` and `aria-busy` until it settles (board 8); on failure the name the server last confirmed comes back and the field reopens (boards 10 to 13).
 - `200 changed: false` closes the field silently.
 - The client normalizes with `SpaceNameSchema` before comparing and sending (NFC, whitespace collapsed, trimmed), so "Sunday  Class A " is unchanged.
 
 ## Accessibility
 
-- The field is a labelled `input` (`maxlength` 40) inside a `form`; its description lists the error line (when any), the kind hint and the openMoves line, in that order.
+- The field is a labelled `input` (`maxlength` 120: room for a decomposed Hangul paste; the 40 is checked after NFC and shown as `tooLong(40)`, board 6) inside a `form`; its description lists the error line (when any), the kind hint and the openMoves line, in that order.
 - One polite live region per page (`role="status"`) announces `saved`; the failure lines are in the field's description and the focus stays in the field, so they are read without an alert.
+- `aria-invalid="true"` only for the client checks (`empty`, `tooLong`, `invalid`, boards 5 to 7). A server or network failure (boards 10 to 13) leaves the value valid: its line is only in `aria-describedby`, so a screen reader never says "invalid entry" for it.
 - Every control is at least `touchTarget.min` tall; at 320 px with 200 % text nothing scrolls sideways (a long value scrolls inside the input, as any text input does; titles wrap with `overflow-wrap: anywhere`).
 - Contrast: see the README.

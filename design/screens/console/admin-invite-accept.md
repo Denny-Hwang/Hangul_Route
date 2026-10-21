@@ -37,16 +37,18 @@ URL: `https://app.hangulroute.com/account/invite` (`APP_ROUTES.adminInvite`); th
 | 6 | loading | `console.space.loading`, `aria-busy` |
 | 7 | accepting | Accept `aria-busy`, Not now unavailable |
 | 8 to 15 | refusals | `used`, `expired`, `revoked`, `full(2)`, `owner`, `alreadyAdmin(school)`, `notFound`, `emailUnverified` (at accept): h1 `pageTitle`, one calm line (`role="status"`), **Go to my home** (secondary) |
-| 16 | 429 | `caregiver.retry.tooManyAttempts`, Go to my home; the stash kept |
-| 17 | network failure, `503 identity_not_configured` | `console.cantReach`, **Try again** |
+| 16 | 429 | `caregiver.retry.tooManyAttempts`, **Try again** (the stash kept for it) and **Go to my home** (the stash removed) |
+| 17 | network failure, `503 identity_not_configured` | `console.cantReach`, **Try again** (the stash kept for it) and **Go to my home** (the stash removed) |
 | 18 | no stash | `console.adminInvite.reopen`, Go to my home |
-| 19 | accepted | the school page with `console.adminInvite.done(school)` as a done note (`feedback.successLight`, the check glyph in `feedback.successDark`, decoration) above the title |
+| 19 | accepted | the school page with `console.adminInvite.done(school)` (from the one-shot flash `hr:console-flash`, never a query parameter) as a done note (`feedback.successLight`, the check glyph in `feedback.successDark`, decoration) above the title |
 
 ## Behaviour
 
-- **Accept** → `POST /api/admin-invites/accept { token }` → `/teach/space?id=<school>` with the done note; the stash removed.
-- **Not now** and **Go to my home** → the grown-up's home (the router's choice; `/start` when the account holds no space). The stash is removed after Not now and after a final refusal (boards 8 to 15), kept after 429, a network failure and a 503 (boards 16, 17).
+- **Accept** → `POST /api/admin-invites/accept { token }` → `/teach/space?id=<school>` with the done note; the stash removed. The note travels as a one-shot flash (`sessionStorage` `hr:console-flash` `{ kind: 'adminJoined', school }`, in this tab only, read and removed on the school page's first render), so no school name is in an address, the history or a log.
+- **Not now** and **Go to my home** → the grown-up's home (the router's choice; `/start` when the account holds no space). Both **always** remove the stash, on every board: the original link still works, and a kept stash would make `/start` forward an invitee with no space straight back here, into the same `429`.
+- **Try again** (boards 16, 17) → the preview or the accept once more; it is the only action besides Use another account that keeps the stash.
 - **Use another account** → Clerk's sign-out with the stash kept, then `/signin?next=/account/invite` (board 3), so the right person can sign in on a shared computer.
+- **Every other sign-out** (the frame's Sign out, Back to learning, Open the app on this device: the callers of `clearGrownUpTab`) removes the stash with the rest of the grown-up tab, so the next person to sign in in that tab is never forwarded to this invite. The lock's Sign in again and PIN are not sign-outs and keep it (board 5).
 - A refusal at accept (the invite used, revoked, expired or the school full in between) replaces the preview with that refusal's board.
 - The token never appears in an address the app builds (`/signin?next=`, Clerk's `redirect_url`), a page title, a log line or telemetry.
 

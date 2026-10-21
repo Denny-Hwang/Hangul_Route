@@ -42,7 +42,7 @@ Then: they see the class tree with aggregate activity, can invite a teacher with
 |                                                            |
 |  This week (whole school, aggregate)                       |
 |   o 31 of 38 students practiced                            |
-|   o 3 of 4 classes have a published plan                   |
+|   o 2 of 3 classes have a published plan                   |
 |                                                            |
 |  Classes                                                   |
 |  +------------------------------------------------------+  |
@@ -56,6 +56,9 @@ Then: they see the class tree with aggregate activity, can invite a teacher with
 |  |   [ Open roster > ]                                  |  |  <- archived: no Rename
 |  +------------------------------------------------------+  |
 |  [ + New class ]                                           |
+|                                                            |
+|  School settings · rosters opened from here show initials  |  <- footer link -> console/space-settings
+|  by default.                                               |     (owner and admins; read-only values for an admin)
 +------------------------------------------------------------+
 ```
 - Aggregate only: class rows show counts and freshness; no names of students, no per-student numbers. `anonymize_roster` is on by default for school-owned classes, so even `console/roster` opened from here shows nicknames / initials.
@@ -68,8 +71,8 @@ Then: they see the class tree with aggregate activity, can invite a teacher with
 - [ + New class ] → inline name field → `POST /spaces {kind: class, parent_space_id: school}` → row appears (teacher assigned later)
 - [ regenerate ] → confirm → `POST /spaces/:id/code` for the school space (role=teacher code)
 - [ Manage billing ] / Seats block → `console/billing` (school plan)
-- [ Settings ] → `console/space-settings` (school variant: members = teachers, archive school)
-- [< back to home] → `console/home`
+- **School settings** (the footer link, owner and admins) → `console/space-settings` (school variant: members = teachers, archive school; for an admin the Name row with Rename, the other values read-only, no danger zone, AMENDMENTS-SEATS-ADMINS section 6.6)
+- PageBack (`< Back to Classes`) → `console/home`
 - [ Rename ] (title or a class row) [SA] → the inline field of `console/rename-inline` (school hint on the title, class hint on a row)
 - Administrators panel [SA] → `console/admins-panel` (invite, revoke, remove, stop being an administrator, history)
 

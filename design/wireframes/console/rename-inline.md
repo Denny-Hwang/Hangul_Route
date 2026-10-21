@@ -51,7 +51,7 @@ Class page, open (Rename pressed):
 +-----------------------------------+
 | < Back to Classes                 |
 | Name                              |  <- Field label (console.rename.label)
-| [ Sunday Class A______________ ]  |  <- the current name, selected; maxLength 40
+| [ Sunday Class A______________ ]  |  <- the current name, selected; HTML maxLength 120 (the 40 is checked after NFC)
 | Students see this name in the app.|  <- console.rename.hint.class
 | Some moves into or out of this    |  <- only when openMoves (console.rename.openMoves)
 | space are waiting. A new name asks|
@@ -91,9 +91,11 @@ Settings, first block:
 
 - **Rename** → the field opens in place, the current name selected, focus in the field. The button is gone while the field is open.
 - Typing → client validation with `SpaceNameSchema` (NFC, whitespace collapsed, trimmed): empty → `console.rename.empty`; longer than 40 → `console.rename.tooLong(40)`; no letter or digit (or a control or format character) → `console.rename.invalid`. The line sits under the field as its description. **Save** is disabled while the value is invalid or the same as the stored name (after normalizing).
-- **Save** or Enter → the new name shows at once (optimistic) in the title, the frame's space switcher, the PageBack label (`s.back(name)`) of the pages under it and the tab title; the field closes; focus goes back to **Rename**; a polite live region says `console.rename.saved`.
+- **Save** or Enter → the new name shows at once (optimistic) in the title, the frame's space switcher, the PageBack label (`s.back(name)`) of the pages under it and the tab title; the field closes; focus goes back to **Rename**, which stays `aria-disabled` with `aria-busy` until the `PATCH` settles (so a second rename cannot race the first); a polite live region says `console.rename.saved` once it settles.
 - **Cancel** or Escape → the field closes with no change; focus back to **Rename**.
-- Save fails → the old name comes back, the field reopens with the typed value and one line: `console.rename.failed` (any error), `caregiver.retry.offline` (offline), `console.rename.archived` (`422 archived`, the space was archived in another tab), `caregiver.retry.tooManyAttempts` (`429`). `422 bad_name` cannot reach the page (the client runs the same function) and reads as `failed`.
+- **IME composition** (Korean, Japanese, Chinese and any other IME): Enter and Escape do nothing while `event.isComposing` is true (or `keyCode` is 229); Save reads the input's committed value after `compositionend`. The form's implicit submit is handled in the same keydown check, so a Hangul name is never saved without its last syllable.
+- **Length**: the input's HTML `maxLength` is 120, not 40. It counts raw UTF-16 units before NFC, and a decomposed (NFD) Hangul paste, common from macOS file names, takes up to 3 units per syllable, so a cap of 40 would cut a valid name silently. `SpaceNameSchema` checks the 40 after NFC and the field shows `console.rename.tooLong(40)` for a longer name, typed or pasted.
+- Save fails → the name the server last confirmed comes back (not merely the one shown before the click), the field reopens with the typed value and one line: `console.rename.failed` (any error), `caregiver.retry.offline` (offline), `console.rename.archived` (`422 archived`, the space was archived in another tab), `caregiver.retry.tooManyAttempts` (`429`). `422 bad_name` cannot reach the page (the client runs the same function) and reads as `failed`.
 - `200 changed: false` (the same name after normalizing) → the field closes, nothing is announced.
 
 ## Navigation graph
@@ -106,7 +108,7 @@ Exit to: the same page (the field closes in place)
 - **closed**: name + **Rename** (only with `canRename`).
 - **open**: the field with the current name, the kind hint, the openMoves hint when `openMoves`, Save disabled until changed.
 - **invalid**: one of `empty`, `tooLong`, `invalid` under the field; Save disabled.
-- **saving**: Save shows busy (`aria-busy`), the field read-only; the new name is already in the title behind it once the field closes.
+- **saving**: the field has closed (optimistic) and the new name is in the title; **Rename** is `aria-disabled` and `aria-busy` until the `PATCH` settles; nothing else on the page waits.
 - **saved**: the new name; `saved` in the live region (no visible toast).
 - **failed**: the old name back, the field open with the typed value and the failure line.
 - **archived**: no button on the page; the Settings Name row reads the name and `console.rename.archived`.

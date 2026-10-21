@@ -102,19 +102,22 @@ open /account/invite#t=TOKEN
         open          -> preview (title, invitedBy, can / cannot / leave, Accept, Not now)
         already_admin -> alreadyAdmin(school) + Go to my home (the invite stays open for someone else)
         404 / 410 / 409 / 429 -> the refusal line
+        429 / network / 503 -> the line + Try again (stash kept) + Go to my home (stash removed)
         Use another account -> sign out (stash kept) -> /signin?next=/account/invite
-  -> Accept  -> POST /admin-invites/accept { token } -> /teach/space?id=<school> with done(school)
-  -> Not now -> the home (stash removed)
+  -> Accept  -> POST /admin-invites/accept { token } -> /teach/space?id=<school> with done(school) (one-shot flash)
+  -> Not now, Go to my home -> the home (stash removed)
+  -> the frame's Sign out, or any sign-out but Use another account -> stash removed
   -> signed in, no stash -> reopen + Go to my home
 ```
 
 ## Interaction points
 
-- **Accept** → `POST /api/admin-invites/accept` (token in the JSON body only) → the school page `/teach/space?id=<school>` with the notice `console.adminInvite.done(school)` at the top; the stash is removed. A refusal at accept (used, revoked, expired or full in between) → that refusal's line on this page.
+- **Accept** → `POST /api/admin-invites/accept` (token in the JSON body only) → the school page `/teach/space?id=<school>` with the notice `console.adminInvite.done(school)` at the top; the stash is removed. The notice reaches the school page as a one-shot flash (`sessionStorage` key `hr:console-flash` `{ kind: 'adminJoined', school }` through `safe-storage.ts`, the school's name kept in this tab only, read and removed by the next page on its first render), never as a query parameter, so no name sits in the address, history or a log. A refusal at accept (used, revoked, expired or full in between) → that refusal's line on this page.
 - **Not now** → the grown-up's home (`/teach/home` or `/parent`, the router's choice; `/start` when the account holds no space); the stash is removed; the invite stays open for the owner to revoke.
-- **Go to my home** → the same destination as Not now; the stash is removed after a final refusal (used, expired, revoked, full, owner, already admin, not found, email not verified) and kept after `429` and a network failure.
-- **Use another account** → Clerk sign-out with the stash kept, then `/signin?next=/account/invite`.
-- **Try again** (network failure or `503 identity_not_configured`, `console.cantReach`) → the preview or the accept once more with the stashed token.
+- **Go to my home** → the same destination as Not now; the stash is **always** removed (after a final refusal, after `429`, after a network failure or a `503`, and with no stash). The original link still works, so the person opens it again later. This keeps `/start` from forwarding an invitee with no space straight back here (section 6.6 step 3), where the same rate limit would answer `429` again.
+- **Use another account** → Clerk sign-out with the stash kept, then `/signin?next=/account/invite`. It is the only sign-out that keeps the stash.
+- **Sign out** anywhere else (the frame's Sign out through `use-console` `signOut`, Back to learning, Open the app on this device: every caller of `clearGrownUpTab` in `apps/web/src/lib/console/unlock.ts`) → the stash is removed with the rest of the grown-up tab (`clearGrownUpTab` removes `hr:admin-invite` too), so on a shared computer the next person who signs in in that tab never lands on someone else's invite. The `GrownUpLock` re-auth ("Sign in again", the PIN) is not a sign-out and keeps it.
+- **Try again** (`429`, a network failure or `503 identity_not_configured`) → the preview or the accept once more with the stashed token; the stash is kept for it.
 
 ## Navigation graph
 
@@ -132,14 +135,15 @@ Exit to: `console/school-admin` (accepted) · persona home (Not now, Go to my ho
 - **accepting**: Accept busy (`aria-busy`), Not now disabled
 - **already admin** (`200 already_admin`): `alreadyAdmin(school)` + Go to my home
 - **refusals**: `used` (410 invite_used), `expired` (410 invite_expired), `revoked` (410 invite_revoked), `full(2)` (409 admins_full), `owner` (409 already_owner), `notFound` (404 invite_not_found), `emailUnverified` (403 email_unverified, at accept; the invite stays open)
-- **slow down** (429): `caregiver.retry.tooManyAttempts` + Go to my home (the stash kept)
-- **network failure**, or **503 identity_not_configured**: `console.cantReach` + **Try again**
+- **slow down** (429): `caregiver.retry.tooManyAttempts` + **Try again** (stash kept) + Go to my home (stash removed)
+- **network failure**, or **503 identity_not_configured**: `console.cantReach` + **Try again** (stash kept) + Go to my home (stash removed)
 - **no stash**: `reopen` + Go to my home
-- **done**: the school page with `done(school)` (drawn in the mock as the page's first notice)
+- **done**: the school page with `done(school)` (drawn in the mock as the page's first notice), from the one-shot flash
 
 ## Data needs
 
-- local: `sessionStorage` key `hr:admin-invite` `{ token, savedAt }` through `safe-storage.ts`; removed after accept, Not now, a final refusal, or 30 minutes
+- local: `sessionStorage` key `hr:admin-invite` `{ token, savedAt }` through `safe-storage.ts`; removed after accept, Not now, Go to my home, any sign-out except **Use another account**, or 30 minutes; kept only for **Try again**, **Use another account** and the lock's re-auth
+- local: `sessionStorage` key `hr:console-flash` (one-shot, read and removed on the next page's first render) carries the notice's kind and the school's name, in this tab only, never in an address or telemetry
 - reads: `POST /api/admin-invites/preview { token }` → `{ school: { name }, invitedBy, expiresAt, state }`
 - writes: `POST /api/admin-invites/accept { token }` → `{ space, role: 'admin' }`
 - never: the token in a path, a query, `next`, Clerk's `redirect_url`, the page title or telemetry
