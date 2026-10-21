@@ -223,6 +223,14 @@ export interface Flags {
    * hides the option and drops the intent.
    */
   pinResetSignInEnabled: boolean;
+
+  /**
+   * [OA] Face or fingerprint for grown-ups (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D10, section 8.6, row OA-9), native
+   * only. ON at launch, with every device's own opt-in off until a grown-up turns it on in the Grown-up area (OQ-6).
+   * `EXPO_PUBLIC_BIOMETRIC_SHORTCUT` is a kill switch (`parseKillSwitch`): off hides the switch and ignores a stored
+   * opt-in, so the PIN screen offers only the pad.
+   */
+  biometricShortcutEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -247,6 +255,7 @@ const launchDefaults: Flags = {
   pinPauseStepsEnabled: true,
   whoChooserEnabled: false,
   pinResetSignInEnabled: false,
+  biometricShortcutEnabled: true,
 };
 
 export const flags: Flags = {
@@ -277,6 +286,7 @@ export const flags: Flags = {
   whoChooserEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_WHO_CHOOSER, launchDefaults.whoChooserEnabled),
   // The console twin's vocabulary too (`enabled`, `disabled`): one value turns both sides on.
   pinResetSignInEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN, launchDefaults.pinResetSignInEnabled),
+  biometricShortcutEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT, launchDefaults.biometricShortcutEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

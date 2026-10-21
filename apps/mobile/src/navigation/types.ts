@@ -69,6 +69,8 @@ export type GrownUpDestination =
   | 'LockedProfile'
   /** [OA] Row OA-5, OA-D5b (3): the PIN again for a control that changes who is on the device (the Edit profile lock switch); verify only, marks a fresh PIN and goes back. */
   | 'FreshPin'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.6 (OA-9, native): the Grown-up area's face or fingerprint switch; a fresh PIN turns it on, then back. */
+  | 'BiometricShortcut'
   // add new members above this line
 ;
 

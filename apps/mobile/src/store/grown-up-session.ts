@@ -31,7 +31,7 @@ const closedListeners = new Set<(closed: SessionClosed) => void>();
 export function closeGrownUpSession(reason: SessionCloseReason = 'exit'): void {
   const { parentGateOpenedAt, lastPinVerifiedAt } = useUiStore.getState();
   const closed: SessionClosed = { reason, wasOpen: parentGateOpenedAt !== null || lastPinVerifiedAt !== null };
-  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, gateReturnPending: false });
+  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, lastPinTypedAt: null, gateReturnPending: false });
   endGrownUpTab();
   for (const listener of [...closedListeners]) {
     try {

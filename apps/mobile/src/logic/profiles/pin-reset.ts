@@ -169,7 +169,9 @@ export function resetByWaitNoticeDue(record: { at: number } | null, lastPinVerif
 /**
  * [OA] OA-D21: Change PIN on the reset-by-wait notice sets a new PIN, so it needs a PIN entered within
  * `GROWN_UP_FRESH_PIN_MS` (`needsFreshPin`): fresh, it opens creation (`setup`); otherwise the current PIN is asked
- * first (`change`), so whoever holds a device left on the Grown-up area cannot take the PIN over.
+ * first (`change`), so whoever holds a device left on the Grown-up area cannot take the PIN over. The caller passes
+ * when a PIN was last typed (`lastPinTypedAt`), never a face or fingerprint success: those never set, change or reset
+ * the PIN (section 8.6).
  */
 export function changePinMode(lastPinVerifiedAt: number | null, now: number): 'setup' | 'change' {
   return needsFreshPin('change_pin', lastPinVerifiedAt, now) ? 'change' : 'setup';

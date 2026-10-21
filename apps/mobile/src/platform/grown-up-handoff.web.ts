@@ -162,7 +162,7 @@ function sendQuietly(env: HandoffEnv, event: TelemetryEvent): Promise<void> {
  * so a device handed back after a grown-up page asks for the PIN again (A-6 review).
  */
 export function forgetFreshPin(): void {
-  useUiStore.setState({ lastPinVerifiedAt: null, parentGateOpenedAt: null });
+  useUiStore.setState({ lastPinVerifiedAt: null, lastPinTypedAt: null, parentGateOpenedAt: null });
 }
 
 /**

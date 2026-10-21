@@ -90,9 +90,10 @@ export function closesSession(prevActiveId: string | null, nextActiveId: string 
 
 /**
  * [OA] The grown-up controls that change who is on the device need a PIN within `GROWN_UP_FRESH_PIN_MS` (OA-D5b (3));
- * so does Change PIN on the reset-by-wait notice (OA-D21), which sets a new PIN without asking the current one.
+ * so does Change PIN on the reset-by-wait notice (OA-D21), which sets a new PIN without asking the current one, and
+ * so does turning face or fingerprint on (`biometric_on`, section 8.6, row OA-9).
  */
-export type FreshPinAction = 'remove' | 'lock' | 'unlock' | 'join_other' | 'change_pin';
+export type FreshPinAction = 'remove' | 'lock' | 'unlock' | 'join_other' | 'change_pin' | 'biometric_on';
 
 /**
  * [OA] Whether `action` must ask for the PIN (or face or fingerprint) again: unless one was entered in the last

@@ -19,7 +19,7 @@ const profile = (id: string): Profile =>
 
 beforeEach(() => {
   vi.mocked(endGrownUpTab).mockClear();
-  useUiStore.setState({ parentGateOpenedAt: 1000, lastPinVerifiedAt: 2000, gateReturnPending: false });
+  useUiStore.setState({ parentGateOpenedAt: 1000, lastPinVerifiedAt: 2000, lastPinTypedAt: 2000, gateReturnPending: false });
   useProfileStore.setState({ profiles: [profile('aaaa1111'), profile('bbbb2222')], activeId: 'aaaa1111', hydrated: true, activeSince: 0 });
 });
 
@@ -30,6 +30,7 @@ describe('closeGrownUpSession', () => {
     closeGrownUpSession();
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    expect(useUiStore.getState().lastPinTypedAt).toBeNull();
     expect(endGrownUpTab).toHaveBeenCalledTimes(1);
   });
 

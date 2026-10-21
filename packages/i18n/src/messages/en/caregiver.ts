@@ -82,6 +82,17 @@ export const caregiver = {
     resetByWaitChange: 'Change PIN',
     /** [OA] Section 8.2: the lock and face or fingerprint switches are disabled with this hint while no PIN exists. */
     needsPinFirst: 'Set a grown-up PIN first.',
+    /**
+     * [OA] Face or fingerprint for grown-ups (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.6, row OA-9), native only:
+     * `cta` above the pad in verify mode (also the system prompt's title), `toggle` and `warning` on the Grown-up
+     * area switch, `changed` in the subtitle's place after an enrolment change voided the shortcut.
+     */
+    biometric: {
+      cta: 'Use face or fingerprint',
+      toggle: 'Face or fingerprint for grown-ups',
+      warning: 'Anyone whose face or fingerprint is saved on this device can use it.',
+      changed: 'Face or fingerprint changed on this device. Enter the PIN.',
+    },
     entry: {
       createAgain: 'Enter it once more',
       verifySubtitle: 'Enter your 4-digit PIN to continue.',

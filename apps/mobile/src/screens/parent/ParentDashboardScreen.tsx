@@ -30,6 +30,7 @@ import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { LectureCard } from './LectureCard';
 import { PeopleOnDeviceCard } from './PeopleOnDeviceCard';
 import { ResetByWaitNotice } from './ResetByWaitNotice';
+import { BiometricShortcutCard } from './BiometricShortcutCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
@@ -142,11 +143,14 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
         onChange={() =>
           navigation.navigate('PinEntry', {
             next: 'ParentDashboard',
-            mode: changePinMode(useUiStore.getState().lastPinVerifiedAt, Date.now()),
+            // [OA] Section 8.6: only a typed PIN counts here; face or fingerprint never leads to a new PIN.
+            mode: changePinMode(useUiStore.getState().lastPinTypedAt, Date.now()),
             returnAfterSet: true,
           })
         }
       />
+      {/* [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-9: native with strong face or fingerprint only; draws nothing otherwise. */}
+      <BiometricShortcutCard onNeedPin={() => navigation.navigate('PinEntry', { next: 'BiometricShortcut' })} />
       {grownUpHome ? (
         <>
           <GrownUpHomeCard onOpen={openGrownUpHome} />
