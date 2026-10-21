@@ -16,9 +16,10 @@ import { shot } from './shots';
  *   E2E_WHO=1 GROWN_UP_SHELL_E2E=1 pnpm --filter @hangul-route/mobile exec playwright test who-grown-up
  *
  * Covered: G2 (chooser, Teacher, the PIN, the teacher home: 2 taps and 4 digits), School to the teacher home with
- * focus on its first school card and the query gone, Family to the family home, Cancel back to the chooser, CS-1 (an
- * earlier unlock in the tab never opens a row without the PIN; a wrong PIN opens nothing), CS-7 (generic labels only,
- * never the account's name or email), Sign in as a grown-up with no known use, and the offline rows.
+ * focus on its first school card and the query gone, Family to the family home, Cancel back to the chooser, CS-1 (a
+ * PIN entered for the Grown-up area just before Switch user never opens a row without the PIN; a wrong PIN opens
+ * nothing), CS-7 (generic labels only, never the account's name or email), Sign in as a grown-up with no known use,
+ * and the offline rows.
  */
 test.skip(process.env.E2E_WHO !== '1' || process.env.GROWN_UP_SHELL_E2E !== '1', 'needs a build with EXPO_PUBLIC_WHO_CHOOSER=true and an API address (E2E_WHO=1 GROWN_UP_SHELL_E2E=1)');
 test.use({ viewport: { width: 360, height: 740 } });
@@ -212,7 +213,7 @@ test.describe('the grown-up use rows on the chooser (row OA-4b)', () => {
     await expectOpen(page);
   });
 
-  test('Cancel on the PIN screen returns to the chooser; CS-1: an earlier unlock never opens a row, a wrong PIN opens nothing', async ({ page }) => {
+  test('Cancel on the PIN screen returns to the chooser; CS-1: a PIN entered before Switch user never opens a row, a wrong PIN opens nothing', async ({ page }) => {
     await mockApi(page, [CLASS]);
     await sharedDevice(page, ['teacher']);
     await useRow(page, w.use.teacher).click();
@@ -221,13 +222,24 @@ test.describe('the grown-up use rows on the chooser (row OA-4b)', () => {
     await expect(title(page)).toBeVisible();
     await expect(page).not.toHaveURL(/\/teach/);
 
-    // A grown-up session from before (the PIN entered on Profile) is closed by the chooser: the row asks again.
-    await page.evaluate(() => sessionStorage.setItem('hr:grownup:unlock', JSON.stringify({ v: 1, at: Date.now(), seen: Date.now(), src: 'pin', pinEpoch: 1 })));
+    // CS-1 with a real session: the PIN entered for the Grown-up area seconds ago (an open gate session and a fresh
+    // PIN, well inside the 2 minutes), then Switch user back to the chooser. The chooser closed it: Teacher asks again.
+    await useRow(page, en.caregiver.audience.family.zoneLabel).click();
+    await typePin(page, E2E_PIN);
+    await expect(page.getByTestId('dashboard-switch-user')).toBeVisible();
+    await page.getByTestId('dashboard-switch-user').click();
+    await expect(title(page)).toBeVisible();
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem('hr:grownup:unlock'))).toBeNull();
     await useRow(page, w.use.teacher).click();
     await expect(page.getByText(en.caregiver.pin.entry.verifySubtitle)).toBeVisible();
+    await expect(page).not.toHaveURL(/\/teach/);
     await typePin(page, '9999');
     await expect(page.getByText(en.caregiver.pin.entry.triesLeft(4))).toBeVisible();
     await expect(page).not.toHaveURL(/\/teach/);
+    expect(await page.evaluate(() => sessionStorage.getItem('hr:grownup:unlock'))).toBeNull();
+    // Straight to the teacher home from here: the console's lock, never the page (the tab holds no unlock).
+    await page.goto('/teach/home');
+    await expect(page.getByRole('heading', { name: en.console.lock.title })).toBeVisible();
   });
 
   test('no known use: Sign in as a grown-up, then the sign-in router; offline the row is disabled with Needs the internet', async ({ page, context }) => {
