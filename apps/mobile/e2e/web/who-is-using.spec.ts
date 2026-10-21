@@ -117,7 +117,10 @@ test.describe('Who is using this?', () => {
 
   test('who=1 with a held hand-off code keeps the join: the chooser once, with the caption', async ({ page }) => {
     await sharedDevice(page);
-    await page.evaluate(() => sessionStorage.setItem('hr:shell:joinCode', JSON.stringify({ v: 1, code: 'FAM234', at: Date.now() })));
+    // Written as the who=1 page starts (as the family home leaves it), so the page running before it cannot take it.
+    await page.addInitScript(() => {
+      if (location.search.includes('who=1')) sessionStorage.setItem('hr:shell:joinCode', JSON.stringify({ v: 1, code: 'FAM234', at: Date.now() }));
+    });
     await page.goto('/?who=1');
     await expect(title(page)).toBeVisible();
     await expect(page.getByText(w.joinCaption, { exact: true })).toBeVisible();
@@ -171,18 +174,23 @@ test.describe('Who is using this?', () => {
     await expect(title(page)).toBeVisible();
   });
 
-  test('CS-5: a correct PIN on a gate intent over the launch chooser still hands off: the console gets its unlock', async ({ page }) => {
-    await sharedDevice(page);
-    await page.route(
-      (url) => url.pathname === '/parent',
-      (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Grown-up page</title><p>Grown-up page stand-in</p>' }),
-    );
-    await page.goto('/?gate=grown-up&next=%2Fparent');
-    await unlockWithPin(page);
-    await expect(page.getByText('Grown-up page stand-in')).toBeVisible();
-    // The chooser the PIN screen went back to as the tab left did not clear what the hand-off wrote.
-    const unlock = JSON.parse((await page.evaluate(() => sessionStorage.getItem('hr:grownup:unlock'))) ?? 'null') as Record<string, unknown> | null;
-    expect(unlock).toMatchObject({ v: 1, src: 'pin' });
+  test.describe('the console hand-off', () => {
+    // A service worker that controls the page serves /parent itself, past the stand-in route.
+    test.use({ serviceWorkers: 'block' });
+
+    test('CS-5: a correct PIN on a gate intent over the launch chooser still hands off: the console gets its unlock', async ({ page }) => {
+      await sharedDevice(page);
+      await page.route(
+        (url) => url.pathname === '/parent' || url.pathname.startsWith('/parent/'),
+        (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Grown-up page</title><p>Grown-up page stand-in</p>' }),
+      );
+      await page.goto('/?gate=grown-up&next=%2Fparent');
+      await unlockWithPin(page);
+      await expect(page.getByText('Grown-up page stand-in')).toBeVisible();
+      // The chooser the PIN screen went back to as the tab left did not clear what the hand-off wrote.
+      const unlock = JSON.parse((await page.evaluate(() => sessionStorage.getItem('hr:grownup:unlock'))) ?? 'null') as Record<string, unknown> | null;
+      expect(unlock).toMatchObject({ v: 1, src: 'pin' });
+    });
   });
 
   test('CS-5: a correct PIN on gate=browse over the launch chooser opens All lessons with its pass', async ({ page }) => {
