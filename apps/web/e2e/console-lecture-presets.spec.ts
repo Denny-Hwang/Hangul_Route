@@ -449,7 +449,14 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
       await expect(lecture.getByRole('heading', { level: 2, name: card.title })).toBeVisible();
       await expect(lecture).toContainText(card.tagline);
       await expect(lecture).toContainText(card.bodyClass);
-      const classes = page.getByRole('heading', { level: 1, name: en.console.kind.group.class });
+      // The page heading (h1, the nav name, visually hidden) comes before the card; the visible Classes heading is an h2 below it.
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(en.console.shell.nav.classes);
+      const h1First = await page.evaluate(() => {
+        const all = Array.from(document.querySelectorAll('main h1, main h2'));
+        return all[0]?.tagName ?? '';
+      });
+      expect(h1First).toBe('H1');
+      const classes = page.getByRole('heading', { level: 2, name: en.console.kind.group.class });
       expect((await lecture.boundingBox())?.y ?? Infinity).toBeLessThan((await classes.boundingBox())?.y ?? 0);
       const start = lecture.getByRole('link', { name: card.cta });
       await expect(start).toHaveAttribute('href', `/teach/space/lecture?id=${encodeURIComponent(SUNFLOWER.space.id)}`);
@@ -477,10 +484,11 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
     await page.goto(`/teach/space/plan?id=${encodeURIComponent(SUNFLOWER.space.id)}`);
     await expect(page.getByTestId('nav-lecture')).toHaveAttribute('href', '/teach/home#lecture-mode');
     await page.getByTestId('nav-lecture').click();
-    await expect(page).toHaveURL(/\/teach\/home#lecture-mode$/);
     const lecture = page.getByTestId('lecture-card');
     await expect(lecture.getByRole('heading', { level: 2, name: card.title })).toBeFocused();
     await expect(lecture).toBeInViewport();
+    // The arrival is answered once: the fragment leaves the address, so a later redraw never takes focus again.
+    await expect(page).toHaveURL(/\/teach\/home$/);
     const group = lecture.getByRole('group', { name: card.chooseClass });
     await expect(group.getByRole('radio')).toHaveCount(2);
     await expect(group.getByRole('radio', { name: 'Saturday class' })).toBeChecked();
@@ -543,7 +551,7 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
     await shot(page, 'lv5-parent-home-375');
   });
 
-  test('family home at 768: the card takes the row after the first row of learner cards', async ({ page }) => {
+  test('family home at 768: the card takes the row after the first row of learner cards, and comes after them in the reading and focus order', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 900 });
     await mockHome(page, [PARKS]);
     await page.goto('/parent');
@@ -555,17 +563,32 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
     const box = await lecture.boundingBox();
     expect(Math.abs((first?.y ?? 0) - (second?.y ?? 1))).toBeLessThan(1);
     expect(box?.y ?? 0).toBeGreaterThan((first?.y ?? 0) + (first?.height ?? 0) - 1);
+    // The page order is the screen order (WCAG 1.3.2, 2.4.3): both learner cards, then the Lecture mode card.
+    const order = await page.evaluate(() => Array.from(document.querySelectorAll('[data-testid="learner-card"], [data-testid="lecture-card"]')).map((el) => el.getAttribute('data-testid')));
+    expect(order).toEqual(['learner-card', 'learner-card', 'lecture-card']);
+    // Tab from the first learner card's last control: the second learner card comes before Start.
+    const firstLinks = cards.nth(0).getByRole('link');
+    await firstLinks.last().focus();
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => !!document.activeElement?.closest('[data-testid="learner-card"]') && !document.activeElement?.closest('[data-testid="lecture-card"]'))).toBe(true);
+    const insideSecond = await cards.nth(1).evaluate((el) => el.contains(document.activeElement));
+    expect(insideSecond).toBe(true);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await noSidewaysScroll(page);
     await shot(page, 'lv5-parent-home-768');
   });
 
-  test('family home at 1280, several families: the card first in the side column, "Which family?" most recent first', async ({ page }) => {
+  test('family home at 1280, several families: the card first in the side column of the first family, "Which family?" in the home\'s order with that family chosen', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await mockHome(page, [PARKS, GRANDMA]);
     await page.goto('/parent');
     const lecture = page.getByTestId('lecture-card');
     await expect(lecture.getByRole('group', { name: card.chooseFamily }).getByRole('radio')).toHaveCount(2);
-    await expect(lecture.locator('label')).toHaveText(["Grandma's house", 'The Parks']);
+    await expect(lecture.locator('label')).toHaveText(['The Parks', "Grandma's house"]);
+    await expect(lecture.getByRole('radio', { name: 'The Parks' })).toBeChecked();
+    // The card sits in The Parks' section, the first on the home, and Start opens that family at first.
+    await expect(page.locator('section.hr-ph-family').first().getByTestId('lecture-card')).toHaveCount(1);
+    await expect(lecture.getByRole('link', { name: card.cta })).toHaveAttribute('href', `/parent/space/lecture?id=${encodeURIComponent(PARKS.space.id)}`);
     await expect(page.getByTestId('lecture-card')).toHaveCount(1);
     const box = await lecture.boundingBox();
     const learnerBox = await page.getByTestId('learner-card').first().boundingBox();
@@ -592,6 +615,39 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
       await shot(page, `lv5-${path === '/parent' ? 'parent' : 'teacher'}-home-320-text200`);
     }
   });
+
+  // The review bar's windows (landscape phones, 1280 x 720, 1920 x 1080) and 150 % text, for both homes.
+  const WINDOWS: { width: number; height: number; text?: string }[] = [
+    { width: 568, height: 320 },
+    { width: 844, height: 390 },
+    { width: 1280, height: 720 },
+    { width: 1920, height: 1080 },
+    { width: 320, height: 640, text: '150%' },
+  ];
+  for (const win of WINDOWS) {
+    test(`homes at ${win.width} x ${win.height}${win.text ? ` with ${win.text} text` : ''}: no sideways scroll, Start reachable, the nav item lands on the card`, async ({ page }) => {
+      await page.setViewportSize({ width: win.width, height: win.height });
+      await mockHome(page, [PARKS, GRANDMA, SUNFLOWER, SATURDAY]);
+      for (const path of ['/parent', '/teach/home']) {
+        await page.goto(path);
+        const lecture = page.getByTestId('lecture-card');
+        await expect(lecture.getByRole('group')).toBeVisible();
+        if (win.text) {
+          await page.evaluate((size) => {
+            document.documentElement.style.fontSize = size;
+          }, win.text);
+        }
+        await noSidewaysScroll(page);
+        const start = lecture.getByRole('link', { name: card.cta });
+        await start.scrollIntoViewIfNeeded();
+        await expect(start).toBeInViewport();
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        await page.getByTestId('nav-lecture').click();
+        await expect(lecture.getByRole('heading', { level: 2, name: card.title })).toBeFocused();
+        await expect(lecture).toBeInViewport();
+      }
+    });
+  }
 
   test('the space page: the button keeps its place and secondary weight and reads Lecture mode (E4)', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });

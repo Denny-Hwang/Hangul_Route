@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner, SpaceListItem } from '../api';
-import { familyActionLinks, familyLectureCard, isArchivedFamily, joinOrder, learnerCardActions, lectureCardSlot, managesJoinCode, parentHomeView } from '../parent-home';
+import { familyActionLinks, familyLectureCard, firstRowEnd, gridColumnCount, isArchivedFamily, joinOrder, learnerCardActions, lectureCardSlot, managesJoinCode, parentHomeView } from '../parent-home';
 
 /**
  * F-APP-001 A-5b, section 3.8 (design/screens/app-shell/parent-home.md): what the family home draws.
@@ -144,14 +144,27 @@ describe('familyLectureCard (AMENDMENTS-LECTURE-V2 E2, LV-5)', () => {
     expect(familyLectureCard([newer], on)).toEqual({ state: 'one', href: '/parent/space/lecture?id=sp_new' });
   });
 
-  it('several families: the choice by family name, most recent first', () => {
-    expect(familyLectureCard([older, newer], on)).toEqual({
+  it('several families: the choice by family name in the home\'s own order (oldest first), whatever the list order', () => {
+    const several = {
       state: 'several',
       choices: [
-        { id: 'sp_new', name: 'sp_new name', href: '/parent/space/lecture?id=sp_new' },
         { id: 'sp_old', name: 'sp_old name', href: '/parent/space/lecture?id=sp_old' },
+        { id: 'sp_new', name: 'sp_new name', href: '/parent/space/lecture?id=sp_new' },
       ],
-    });
+    };
+    expect(familyLectureCard([older, newer], on)).toEqual(several);
+    expect(familyLectureCard([newer, older], on)).toEqual(several);
+  });
+
+  it('several families: the first choice, chosen at first, is the first family on the home, whose section holds the card', () => {
+    for (const items of [
+      [older, newer],
+      [newer, older],
+    ]) {
+      const card = familyLectureCard(items, on);
+      const home = parentHomeView(items);
+      expect(card?.state === 'several' ? card.choices[0]?.id : null).toBe(home.state === 'families' ? home.families[0]?.space.id : undefined);
+    }
   });
 
   it('no family (a class teacher only, or a student seat): Start opens the presenter, which needs no space', () => {
@@ -178,9 +191,37 @@ describe('lectureCardSlot (lecture-card.md "Placement")', () => {
     expect(lectureCardSlot(true, 0)).toBe('side');
   });
 
-  it('below 70em: after the first learner card, or at the end of the main column with no card to follow', () => {
-    expect(lectureCardSlot(false, 1)).toBe('afterFirstCard');
-    expect(lectureCardSlot(false, 3)).toBe('afterFirstCard');
+  it('below 70em: after the first row of learner cards, or at the end of the main column with no card to follow', () => {
+    expect(lectureCardSlot(false, 1)).toBe('afterFirstRow');
+    expect(lectureCardSlot(false, 3)).toBe('afterFirstRow');
     expect(lectureCardSlot(false, 0)).toBe('afterMain');
+  });
+});
+
+describe('firstRowEnd and gridColumnCount (the card follows the last card of the first row, in the page as on screen)', () => {
+  it('one column (below 45em): directly after the first card', () => {
+    expect(firstRowEnd(2, 1)).toBe(0);
+    expect(firstRowEnd(5, 1)).toBe(0);
+  });
+
+  it('several columns (45em to 70em): after the last card of the first row, or after the last card when the row is short', () => {
+    expect(firstRowEnd(2, 2)).toBe(1);
+    expect(firstRowEnd(5, 2)).toBe(1);
+    expect(firstRowEnd(5, 3)).toBe(2);
+    expect(firstRowEnd(1, 3)).toBe(0);
+  });
+
+  it('never before the first card, whatever the inputs', () => {
+    expect(firstRowEnd(0, 2)).toBe(0);
+    expect(firstRowEnd(3, 0)).toBe(0);
+    expect(firstRowEnd(3, Number.NaN)).toBe(0);
+  });
+
+  it('counts the tracks of a computed grid-template-columns; one with none', () => {
+    expect(gridColumnCount('288px')).toBe(1);
+    expect(gridColumnCount('288px 288px')).toBe(2);
+    expect(gridColumnCount(' 300.5px  300.5px 300.5px ')).toBe(3);
+    expect(gridColumnCount('')).toBe(1);
+    expect(gridColumnCount('none')).toBe(1);
   });
 });

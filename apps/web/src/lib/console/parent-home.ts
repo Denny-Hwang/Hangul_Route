@@ -91,14 +91,26 @@ export function familyLectureCard(items: readonly SpaceListItem[] | 'failed' | n
 /**
  * Where the family home draws its one card (design/screens/app-shell/lecture-card.md "Placement", measured at
  * 375 x 667): from 70em (`wide`) first in the first family's side column, level with the learner cards and above the
- * family actions; below it directly after the first family's first learner card (or loading card), so the first
- * screen keeps that whole card and shows the top of this one (from 45em the CSS lets it take the row after the first
- * row of cards); with no card to follow (a family with no learner yet, a roster that did not load), at the end of the
- * family's main column.
+ * family actions; below it in the first family's card grid right after the last card of its first row (one column
+ * below 45em: directly after the first learner card or loading card, so the first screen keeps that whole card and
+ * shows the top of this one), so the order on screen is the order in the page (`firstRowEnd`); with no card to follow
+ * (a family with no learner yet, a roster that did not load), at the end of the family's main column.
  */
-export type LectureSlot = 'side' | 'afterFirstCard' | 'afterMain';
+export type LectureSlot = 'side' | 'afterFirstRow' | 'afterMain';
 
 export function lectureCardSlot(wide: boolean, cards: number): LectureSlot {
   if (wide) return 'side';
-  return cards > 0 ? 'afterFirstCard' : 'afterMain';
+  return cards > 0 ? 'afterFirstRow' : 'afterMain';
+}
+
+/** The index of the card the Lecture mode card follows: the last card of the grid's first row of `columns`. */
+export function firstRowEnd(cards: number, columns: number): number {
+  const perRow = Number.isFinite(columns) && columns >= 1 ? Math.floor(columns) : 1;
+  return Math.max(0, Math.min(cards, perRow) - 1);
+}
+
+/** The column count of a grid from its computed `grid-template-columns` ("288px 288px"); one when there is none. */
+export function gridColumnCount(template: string): number {
+  const tracks = template.trim() === '' || template.trim() === 'none' ? [] : template.trim().split(/\s+/);
+  return Math.max(1, tracks.length);
 }

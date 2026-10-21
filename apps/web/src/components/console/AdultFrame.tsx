@@ -314,7 +314,7 @@ export function AdultFrame({
   const names: Record<AdultPersona, string> = { parent: shell.persona.parent, teacher: shell.persona.teacher };
   const navPersona = list ? active.persona : fallbackPersona(last, null);
   const items: NavEntry[] = failed ? [] : navItemsFor({ persona: navPersona, spaces: list ?? [], soloLearner: solo, flags });
-  const current = list ? currentNavItem(pathname, active.persona, active.resolved) : currentNavItem(pathname, navPersona, false);
+  const current = list ? currentNavItem(pathname, active.persona, active.resolved, flags.lecture) : currentNavItem(pathname, navPersona, false, flags.lecture);
   const withSwitch = !!list && showPersonaSwitch(held);
   const rowRef = useRef<HTMLUListElement | null>(null);
   const currentShown = items.some((entry) => entry.id === current);

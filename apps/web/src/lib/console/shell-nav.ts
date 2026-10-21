@@ -143,10 +143,12 @@ const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
  * item. Nothing while the persona is only a guess, and nothing on a page of no persona. On a home,
  * the persona's home item only when it links to this very home: on a home the account does not
  * hold (the "not set up yet" states), the nav keeps the other persona's items and none is current.
+ * `lectureShown` is whether the Lecture mode item is drawn (`NavFlags.lecture`): while it is off, a lecture page
+ * reached by URL is a space page like any other and keeps the persona's home item current.
  */
-export function currentNavItem(pathname: string, persona: AdultPersona, resolved: boolean): NavId | null {
+export function currentNavItem(pathname: string, persona: AdultPersona, resolved: boolean, lectureShown = false): NavId | null {
   if (BILLING_PAGE.test(pathname)) return 'billing';
-  if (LECTURE_PAGE.test(pathname)) return 'lecture';
+  if (lectureShown && LECTURE_PAGE.test(pathname)) return 'lecture';
   if (!resolved) return null;
   if (persona === 'parent' && REPORT_PAGE.test(pathname)) return 'reports';
   if (persona === 'teacher' && CLASS_REPORT_PAGE.test(pathname)) return 'classReports';

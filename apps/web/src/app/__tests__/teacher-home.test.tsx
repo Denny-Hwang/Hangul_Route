@@ -108,8 +108,9 @@ const headings = (r: ReactTestRenderer, type: 'h1' | 'h2'): string[] => r.root.f
 describe('the teacher home (F-APP-001 A-5a)', () => {
   it('lists Classes and the School group, with no Family group and no "Hi, {name}"', async () => {
     const r = await render([family, klass, school]);
+    // The page heading (the nav name, visually hidden) is the h1; the visible Classes and School groups are h2.
     expect(headings(r, 'h1')).toEqual(['Classes']);
-    expect(headings(r, 'h2')).toEqual(['School']);
+    expect(headings(r, 'h2')).toEqual(['Classes', 'School']);
     expect(byTestId(r, 'space-row-sp_f')).toHaveLength(0);
     expect(byTestId(r, 'space-row-sp_c')).toHaveLength(1);
     expect(allText(r)).not.toContain('Hi, ');

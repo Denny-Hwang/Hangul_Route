@@ -281,13 +281,20 @@ describe('currentNavItem', () => {
   });
 
   it('highlights Lecture mode on the lecture setup page of either kind, like Billing even before the persona resolves (E3)', () => {
-    expect(currentNavItem('/teach/space/lecture', 'teacher', true)).toBe('lecture');
-    expect(currentNavItem('/parent/space/lecture', 'parent', true)).toBe('lecture');
-    expect(currentNavItem('/parent/space/lecture.html', 'parent', true)).toBe('lecture');
-    expect(currentNavItem('/teach/space/lecture', 'parent', false)).toBe('lecture');
+    expect(currentNavItem('/teach/space/lecture', 'teacher', true, true)).toBe('lecture');
+    expect(currentNavItem('/parent/space/lecture', 'parent', true, true)).toBe('lecture');
+    expect(currentNavItem('/parent/space/lecture.html', 'parent', true, true)).toBe('lecture');
+    expect(currentNavItem('/teach/space/lecture', 'parent', false, true)).toBe('lecture');
     // The space page itself and its other pages keep the persona's home item.
     expect(currentNavItem('/teach/space', 'teacher', true)).toBe('classes');
     expect(currentNavItem('/parent/space/plan', 'parent', true)).toBe('home');
+  });
+
+  it('with lectureModeEnabled() off (no Lecture mode item drawn), a lecture page reached by URL keeps the persona home item current', () => {
+    expect(currentNavItem('/teach/space/lecture', 'teacher', true, false)).toBe('classes');
+    expect(currentNavItem('/parent/space/lecture', 'parent', true, false)).toBe('home');
+    expect(currentNavItem('/teach/space/lecture', 'teacher', true)).toBe('classes');
+    expect(currentNavItem('/teach/space/lecture', 'teacher', false, false)).toBeNull();
   });
 
   it('highlights nothing while the persona is a guess, or on a page of no persona', () => {

@@ -31,12 +31,15 @@ const PERSONA_KIND: Record<AdultPersona, SpaceKind> = { teacher: 'class', parent
 /**
  * The spaces a persona's Lecture mode entries offer: of the persona's kind, where the account composes
  * (`composesIn`), not archived (an archived space is read-only and its home row is labelled so; its own page keeps its
- * Lecture mode button), most recent first, then by id. No counts and no ranking reach the card.
+ * Lecture mode button). Classes most recent first; families in the family home's own order (oldest first, as its
+ * sections, `parentHomeView`), so the first choice, chosen at first, is the family whose section holds the card. Then
+ * by id. No counts and no ranking reach the card.
  */
 export function lectureSpaces(spaces: readonly SpaceListItem[], persona: AdultPersona): SpaceListItem[] {
+  const newestFirst = persona === 'teacher';
   return spaces
     .filter((entry) => entry.space.kind === PERSONA_KIND[persona] && !entry.space.archivedAt && composesIn(entry))
-    .sort((a, b) => b.space.createdAt.localeCompare(a.space.createdAt) || a.space.id.localeCompare(b.space.id));
+    .sort((a, b) => (newestFirst ? b.space.createdAt.localeCompare(a.space.createdAt) : a.space.createdAt.localeCompare(b.space.createdAt)) || a.space.id.localeCompare(b.space.id));
 }
 
 /** A space's lecture setup page (presets first, LV-4): `/teach/space/lecture?id=` or `/parent/space/lecture?id=`. */
@@ -61,7 +64,7 @@ export interface LectureChoice {
  * - `loading`: the spaces list has not answered; Start waits (Loading…), so nothing jumps.
  * - `none`: no space to teach in, or the list failed; the no-space line, and Start opens the presenter in a new tab.
  * - `one`: Start opens that space's setup page.
- * - `several`: a choice of spaces (most recent first, the first chosen), and Start opens the chosen one's setup page.
+ * - `several`: a choice of spaces (`lectureSpaces` order, the first chosen), and Start opens the chosen one's setup page.
  */
 export type LectureCardView =
   | { state: 'loading' }
