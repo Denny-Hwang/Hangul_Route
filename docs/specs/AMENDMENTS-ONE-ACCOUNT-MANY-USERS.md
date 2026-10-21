@@ -211,7 +211,7 @@ Archived spaces count (their pages stay reachable, as for personas). `student` r
 | family, teacher | learner | **Learner app** exit | lands on the chooser; clears the unlock and the console session |
 | any grown-up page | the same page after 15 idle minutes, or after 5 minutes hidden (OA-D16) | console lock | PIN (trusted epoch) or a secret-proving sign-in, or a passkey where the marker is read and is not `pin` (OA-D10, section 7.4) |
 
-`target` per use: `family` → `/parent`, `teacher` → `/teach`, `school` → `/teach?focus=school`. Each passes `safeNextPath`. The teacher home reads `focus=school` and moves focus to its first school card (no scroll jump without focus; the query is removed with `history.replaceState`).
+`target` per use: `family` → `/parent`, `teacher` → `/teach?persona=teacher`, `school` → `/teach?focus=school`. Each passes `safeNextPath`. (Row OA-4b: `/teach` alone is the generic router, which follows the last persona and could open Family on an account that holds both, so the Teacher row carries the teacher hint; the router reads `focus=school` as the teacher hint too and carries it to `/teach/home`.) The teacher home reads `focus=school` and moves focus to its first school card (no scroll jump without focus; the query is removed with `history.replaceState`).
 
 ---
 

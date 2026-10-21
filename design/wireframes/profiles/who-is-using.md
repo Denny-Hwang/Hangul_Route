@@ -38,7 +38,7 @@ Panel A — phone 360 x 740, web, shared family device, account uses known (Fami
 |--------------------------------|
 | Grown-ups                      |  <- section label, body size, smaller than tiles
 | [L] Family                   > |  <- PIN (verify only) -> /parent
-| [L] Teacher                  > |  <- PIN (verify only) -> /teach
+| [L] Teacher                  > |  <- PIN (verify only) -> /teach?persona=teacher
 | [L] Grown-up area            > |  <- PIN as today -> local Grown-up area
 +--------------------------------+
 ```
