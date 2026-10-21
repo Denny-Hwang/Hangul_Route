@@ -264,13 +264,18 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       (p): p is Pick<Profile, 'id' | 'role'> => typeof p === 'object' && p !== null && typeof (p as { id?: unknown }).id === 'string',
     );
     const record = subscriptionCoversFor([...useProfileStore.getState().profiles, ...fromStorage], now);
-    // One read-modify-write, so two tabs starting together still make the record once.
+    // One read-modify-write, so two tabs starting together still make the record once. `exact`: only a truly missing
+    // key is null here, so a value that became damaged since the read above rejects and is never written over.
     let kept = null as SubscriptionCovers | null;
-    await updateJson<unknown>(SUBSCRIPTION_COVERS_KEY, (current) => {
-      if (current === null) return record;
-      kept = subscriptionCoversOf(current);
-      return undefined;
-    });
+    await updateJson<unknown>(
+      SUBSCRIPTION_COVERS_KEY,
+      (current) => {
+        if (current === null) return record;
+        kept = subscriptionCoversOf(current);
+        return undefined;
+      },
+      { exact: true },
+    );
     if (get().subscriptionCovers === null) set({ subscriptionCovers: kept ?? record });
   },
 
@@ -347,20 +352,27 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   },
 }));
 
-let watchingCovers = false;
+let stopCoverWatch: (() => void) | null = null;
 
 /**
  * From the start-up pass on, every change to the profile list (a learner made, restored or removed) remembers the newer
- * learners the legacy subscription now covers, at once (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5). Once per app run.
+ * learners the legacy subscription now covers, at once (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5). Once per app run:
+ * a second call keeps the one watch. Returns the function that stops it (`stopWatchingCoveredLearners`).
  */
-export function watchCoveredLearners(): void {
-  if (watchingCovers) return;
-  watchingCovers = true;
-  useProfileStore.subscribe((state, prev) => {
+export function watchCoveredLearners(): () => void {
+  if (stopCoverWatch) return stopWatchingCoveredLearners;
+  stopCoverWatch = useProfileStore.subscribe((state, prev) => {
     if (state.profiles === prev.profiles) return;
     void useAccountStore
       .getState()
       .rememberCoveredLearners(new Date())
       .catch(() => undefined);
   });
+  return stopWatchingCoveredLearners;
+}
+
+/** Stops the watch of `watchCoveredLearners`, so the next call starts a new one (tests; the app never stops it). */
+export function stopWatchingCoveredLearners(): void {
+  stopCoverWatch?.();
+  stopCoverWatch = null;
 }

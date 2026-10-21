@@ -1,8 +1,19 @@
 import type { Profile } from '@hangul-route/content-schema';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /** AsyncStorage through the wrapper, with a switch per key for a read that fails (strict and exact reads throw). */
-const disk = vi.hoisted(() => ({ mem: new Map<string, unknown>(), failing: new Set<string>(), damaged: new Set<string>(), lenientFails: new Set<string>() }));
+const disk = vi.hoisted(() => ({
+  mem: new Map<string, unknown>(),
+  failing: new Set<string>(),
+  damaged: new Set<string>(),
+  lenientFails: new Set<string>(),
+  /** Values actually stored, per key (a call that stores nothing or rejects is not one). */
+  stored: new Map<string, number>(),
+}));
+const storeValue = vi.hoisted(() => (k: string, v: unknown) => {
+  disk.mem.set(k, v);
+  disk.stored.set(k, (disk.stored.get(k) ?? 0) + 1);
+});
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => (disk.failing.has(k) || disk.damaged.has(k) || disk.lenientFails.has(k) ? null : (disk.mem.get(k) ?? null))),
   readJsonStrict: vi.fn(async (k: string) => {
@@ -14,17 +25,17 @@ vi.mock('../../platform/storage', () => ({
     return disk.mem.get(k) ?? null;
   }),
   writeJson: vi.fn(async (k: string, v: unknown) => {
-    disk.mem.set(k, v);
+    storeValue(k, v);
   }),
   removeKey: vi.fn(async (k: string) => {
     disk.mem.delete(k);
   }),
-  // One read-modify-write: a failed read rejects and writes nothing; a damaged value reads as null.
-  updateJson: vi.fn(async (k: string, next: (current: unknown) => unknown) => {
-    if (disk.failing.has(k)) throw new Error('storage');
+  // One read-modify-write: a failed read rejects and writes nothing; a damaged value reads as null, or rejects with `exact`.
+  updateJson: vi.fn(async (k: string, next: (current: unknown) => unknown, options?: { exact?: boolean }) => {
+    if (disk.failing.has(k) || (options?.exact && disk.damaged.has(k))) throw new Error('storage');
     const value = next(disk.damaged.has(k) ? null : (disk.mem.get(k) ?? null));
     if (value === undefined) return false;
-    disk.mem.set(k, value);
+    storeValue(k, value);
     return true;
   }),
 }));
@@ -33,9 +44,11 @@ vi.mock('../../platform/locale', () => ({ deviceLanguages: () => [], takeLangHan
 vi.mock('../../platform/device', () => ({ getDeviceId: vi.fn(async () => 'device-test') }));
 
 import { updateJson, writeJson } from '../../platform/storage';
-import { SUBSCRIPTION_COVERS_KEY, useAccountStore, watchCoveredLearners } from '../account-store';
+import { SUBSCRIPTION_COVERS_KEY, stopWatchingCoveredLearners, useAccountStore, watchCoveredLearners } from '../account-store';
 import { hydrateLearnerData } from '../bootstrap';
 import { PROFILES_KEY, useProfileStore } from '../profile-store';
+import { useProgressStore } from '../progress-store';
+import { effectiveTier } from '../tier-store';
 
 const now = new Date('2026-10-21T09:00:00.000Z');
 const ACTIVE = { status: 'active', plan: 'yearly', expiresAt: '2027-10-01T00:00:00.000Z' } as const;
@@ -51,9 +64,8 @@ async function start(): Promise<void> {
 }
 
 const record = (): unknown => disk.mem.get(SUBSCRIPTION_COVERS_KEY);
-const writesOfRecord = (): number =>
-  vi.mocked(writeJson).mock.calls.filter(([k]) => k === SUBSCRIPTION_COVERS_KEY).length +
-  vi.mocked(updateJson).mock.results.filter((r, i) => vi.mocked(updateJson).mock.calls[i]?.[0] === SUBSCRIPTION_COVERS_KEY && r.type === 'return').length;
+/** Values of the record actually stored (not calls made). */
+const writesOfRecord = (): number => disk.stored.get(SUBSCRIPTION_COVERS_KEY) ?? 0;
 const settle = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {
@@ -61,8 +73,14 @@ beforeEach(() => {
   disk.failing.clear();
   disk.damaged.clear();
   disk.lenientFails.clear();
+  disk.stored.clear();
   vi.mocked(writeJson).mockClear();
   vi.mocked(updateJson).mockClear();
+});
+
+// The watch is once per app run; each test starts without one, so no listener carries over.
+afterEach(() => {
+  stopWatchingCoveredLearners();
 });
 
 describe('account:subscriptionCovers (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D15, section 10.5)', () => {
@@ -258,9 +276,8 @@ describe('account:subscriptionCovers (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D15, 
     disk.mem.set(PROFILES_KEY, [ana, person('profile:bo')]);
     disk.mem.set(SUBSCRIPTION_COVERS_KEY, { v: 1, ids: ['profile:ana', 'profile:bo'], at: 't' });
     await start();
-    watchCoveredLearners();
-    watchCoveredLearners();
-    const { effectiveTier } = await import('../tier-store');
+    const stop = watchCoveredLearners();
+    expect(watchCoveredLearners()).toBe(stop);
     const store = useProfileStore.getState();
     const cy = store.createProfile({ displayName: 'Cy', ageGroup: '8-9', avatar: 'hoya-blue' });
     const dee = store.createProfile({ displayName: 'Dee', ageGroup: '8-9', avatar: 'hoya-blue' });
@@ -300,5 +317,75 @@ describe('account:subscriptionCovers (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D15, 
     useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
     await hydrateLearnerData();
     expect(record()).toMatchObject({ v: 1, ids: ['profile:ana', 'profile:bo', 'profile:cy'] });
+  });
+
+  it('makes the first write only for a truly missing key: a value damaged since the check rejects and stays (round 2)', async () => {
+    disk.mem.set('account:subscription', ACTIVE);
+    disk.mem.set(PROFILES_KEY, learners);
+    await start();
+    // Another tab leaves a damaged value between the exact check and the write.
+    const exact = vi.mocked(updateJson).getMockImplementation();
+    vi.mocked(updateJson).mockImplementationOnce(async (k, next, options) => {
+      disk.mem.set(k, '{damaged');
+      disk.damaged.add(k);
+      return (exact as NonNullable<typeof exact>)(k, next, options);
+    });
+    await expect(useAccountStore.getState().recordSubscriptionCovers(now)).rejects.toThrow('storage');
+    expect(record()).toBe('{damaged');
+    expect(writesOfRecord()).toBe(0);
+    expect(useAccountStore.getState().subscriptionCovers).toBeNull();
+  });
+
+  it('a failed write after a profile change keeps the cover for the session, with no unhandled rejection (round 2)', async () => {
+    const stored = { v: 1, ids: ['profile:ana', 'profile:bo'], at: 't' };
+    disk.mem.set('account:subscription', ACTIVE);
+    disk.mem.set(PROFILES_KEY, [person('profile:ana'), person('profile:bo')]);
+    disk.mem.set(SUBSCRIPTION_COVERS_KEY, stored);
+    await start();
+    disk.failing.add(SUBSCRIPTION_COVERS_KEY);
+    watchCoveredLearners();
+    const profiles = useProfileStore.getState();
+    const cy = profiles.createProfile({ displayName: 'Cy', ageGroup: '8-9', avatar: 'hoya-blue' });
+    const dee = profiles.createProfile({ displayName: 'Dee', ageGroup: '8-9', avatar: 'hoya-blue' });
+    await settle();
+    expect(useAccountStore.getState().subscriptionCovers?.added).toEqual([cy.id, dee.id]);
+    profiles.remove(cy.id);
+    const eve = profiles.createProfile({ displayName: 'Eve', ageGroup: '8-9', avatar: 'hoya-blue' });
+    profiles.adoptProfile(cy);
+    await settle();
+    expect(effectiveTier(cy.id, now).tier).toBe('premium');
+    expect(effectiveTier(dee.id, now).tier).toBe('premium');
+    expect(effectiveTier(eve.id, now).tier).toBe('free');
+    expect(record()).toEqual(stored);
+    expect(writesOfRecord()).toBe(0);
+  });
+
+  it('records, remembers and watches even when another hydrate rejects (round 2)', async () => {
+    disk.mem.set('account:subscription', ACTIVE);
+    disk.mem.set(PROFILES_KEY, [person('profile:ana')]);
+    useAccountStore.setState({ subscription: null, subscriptionCovers: null, hydrated: false });
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
+    const hydrateProgress = useProgressStore.getState().hydrate;
+    useProgressStore.setState({ hydrate: vi.fn(async () => Promise.reject(new Error('progress'))) });
+    try {
+      await expect(hydrateLearnerData()).rejects.toThrow('progress');
+    } finally {
+      useProgressStore.setState({ hydrate: hydrateProgress });
+    }
+    expect(record()).toMatchObject({ v: 1, ids: ['profile:ana'], added: [] });
+
+    // The watch is armed: covered newer learners are remembered, so remove, add and restore keeps premium.
+    const profiles = useProfileStore.getState();
+    const bo = profiles.createProfile({ displayName: 'Bo', ageGroup: '8-9', avatar: 'hoya-blue' });
+    const cy = profiles.createProfile({ displayName: 'Cy', ageGroup: '8-9', avatar: 'hoya-blue' });
+    const dee = profiles.createProfile({ displayName: 'Dee', ageGroup: '8-9', avatar: 'hoya-blue' });
+    expect(useAccountStore.getState().subscriptionCovers?.added).toEqual([bo.id, cy.id, dee.id]);
+    profiles.remove(bo.id);
+    const eve = profiles.createProfile({ displayName: 'Eve', ageGroup: '8-9', avatar: 'hoya-blue' });
+    profiles.adoptProfile(bo);
+    expect(effectiveTier(bo.id, now).tier).toBe('premium');
+    expect(effectiveTier(eve.id, now).tier).toBe('free');
+    await settle();
+    expect(record()).toMatchObject({ ids: ['profile:ana'], added: [bo.id, cy.id, dee.id] });
   });
 });

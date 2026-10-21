@@ -57,13 +57,14 @@ let updates: Promise<unknown> = Promise.resolve();
  * transaction; here the app is the only writer, so the calls only need to queue). `next` gets the
  * stored value (null when missing or unparsable) and returns the value to store, or `undefined` to
  * store nothing. A failed read rejects and writes nothing, so a write is never made over data that
- * could not be read. A key the write fence rejects is left untouched (`next` is not called).
- * Resolves to whether a value was stored.
+ * could not be read. With `exact`, a stored value that does not parse rejects too (as `readJsonExact`), so
+ * `next` gets null only for a missing key. A key the write fence rejects is left untouched (`next` is not
+ * called). Resolves to whether a value was stored.
  */
-export function updateJson<T>(key: string, next: (current: T | null) => T | undefined): Promise<boolean> {
+export function updateJson<T>(key: string, next: (current: T | null) => T | undefined, options?: { exact?: boolean }): Promise<boolean> {
   const run = updates.then(async () => {
     if (!writePasses(key, 'write')) return false;
-    const value = next(await readJsonStrict<T>(key));
+    const value = next(await (options?.exact ? readJsonExact<T>(key) : readJsonStrict<T>(key)));
     if (value === undefined) return false;
     await AsyncStorage.setItem(KEY_PREFIX + key, JSON.stringify(value));
     return true;

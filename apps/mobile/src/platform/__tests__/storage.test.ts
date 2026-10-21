@@ -91,6 +91,19 @@ describe('platform/storage (AsyncStorage wrapper)', () => {
     setWriteFence(null);
   });
 
+  it('updateJson with exact: only a missing key comes in as null; a damaged value rejects and stays as it is', async () => {
+    const seen: unknown[] = [];
+    expect(await updateJson('fresh', (current) => (seen.push(current), 1), { exact: true })).toBe(true);
+    mem.set('hr:bad', '{not json');
+    const next = vi.fn(() => 2);
+    await expect(updateJson('bad', next, { exact: true })).rejects.toThrow();
+    expect(next).not.toHaveBeenCalled();
+    expect(seen).toEqual([null]);
+    expect(mem.get('hr:bad')).toBe('{not json');
+    // A rejection does not stop the next call.
+    expect(await updateJson('bad', () => 3)).toBe(true);
+  });
+
   it('removeKey deletes only the prefixed key', async () => {
     await writeJson('a', 1);
     await writeJson('b', 2);

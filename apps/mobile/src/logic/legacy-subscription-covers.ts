@@ -63,8 +63,9 @@ function uncountedCovered(record: SubscriptionCovers, profiles: readonly Pick<Pr
  * Whether the legacy subscription covers `learnerId` (section 10.5). Before the record exists it
  * covers every profile, as before. Then: every learner in `ids` or `added`, and a newer learner
  * while the covered count plus the newer learners before it is below `FAMILY_LIFETIME_LEARNERS`,
- * in device order (the account store then adds it to `added`, so it stays covered). A grown-up's
- * profile takes no family place (OQ-11) and stays covered. An id that is no profile here is not.
+ * in device order (the account store then adds it to `added`, so it stays covered). A non-learner
+ * profile (parent, teacher or admin) takes no family place and stays covered, while a grown-up's own
+ * "Me" learner profile counts like any learner (section 10.2). An id that is no profile here is not.
  */
 export function legacyCovers(record: SubscriptionCovers | null, profiles: readonly Pick<Profile, 'id' | 'role'>[], learnerId: string): boolean {
   if (record === null) return true;
