@@ -1,6 +1,9 @@
 import { isServerOnlyTelemetryName, isTelemetryEventName } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
+import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
+import { rollUpEvent } from '../lib/learning-rollups';
+import { clientKey } from '../lib/rate-limit';
 import { appendEvent, keptEventFields } from '../lib/server-events';
 import { id, type TelemetryEvent } from '../store';
 
@@ -21,6 +24,10 @@ import { id, type TelemetryEvent } from '../store';
  * and the log is
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
+ * The log stays transient diagnostics. A name on the rollup allowlist also adds
+ * 1 to a few `learning_rollups` cells (F-CURR-002 section 11.2, row CM-70a,
+ * lib/learning-rollups.ts) from the kept payload alone, never the profile id;
+ * a failed rollup write never fails the event.
  * There is deliberately no read route (audit SEC-3).
  */
 export const telemetryRoutes = new Hono();
@@ -66,5 +73,8 @@ telemetryRoutes.post('/', async (c) => {
     at: clientTimestamp(body?.at, now.getTime()) ?? receivedAt,
     receivedAt,
   };
-  return ok(c, { event: appendEvent(event) }, 201);
+  const stored = appendEvent(event);
+  // The name and kept payload only: the profile id never reaches the rollup.
+  await rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt }, clientKey((h) => c.req.header(h)));
+  return ok(c, { event: stored }, 201);
 });
