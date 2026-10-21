@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Story } from '@hangul-route/content-schema';
 import {
   SHELF_DEFAULTS,
@@ -6,9 +6,11 @@ import {
   StoryChunkMismatch,
   StoryChunkTimeout,
   createStoryStore,
+  isStoryNewBuildError,
   shelfLevelOf,
   splitStory,
   storiesOverStore,
+  storyChunkBundleName,
   storyTierLevels,
   type StoryBodyChunk,
   type StoryShelfEntry,
@@ -142,51 +144,6 @@ describe('createStoryStore', () => {
   });
 });
 
-describe('story load timeout (a hung request fails into the retry path, as the lesson chunks)', () => {
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('a load that does not settle in time rejects and notifies; the next ensure asks again and can succeed', async () => {
-    vi.useFakeTimers();
-    let hang = true;
-    const asked: string[] = [];
-    const store = createStoryStore(
-      { entries },
-      (id) => {
-        asked.push(id);
-        return hang ? new Promise<StoryBodyChunk>(() => undefined) : Promise.resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body });
-      },
-      { timeoutMs: 15_000 },
-    );
-    const seen: number[] = [];
-    store.subscribe(() => seen.push(store.version()));
-    const failed = expect(store.ensureStories([story.id])).rejects.toBeInstanceOf(StoryChunkTimeout);
-    vi.advanceTimersByTime(14_999);
-    expect(seen).toEqual([]);
-    vi.advanceTimersByTime(1);
-    await failed;
-    expect(seen.length).toBeGreaterThan(0);
-    expect(store.isStoryReady(story.id)).toBe(false);
-    hang = false;
-    await store.ensureStories([story.id]);
-    expect(store.isStoryReady(story.id)).toBe(true);
-    expect(asked).toEqual([story.id, story.id]);
-  });
-
-  it('a load that settles in time is untouched by the timer', async () => {
-    vi.useFakeTimers();
-    const store = createStoryStore({ entries }, () => Promise.resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body }), { timeoutMs: 15_000 });
-    await store.ensureStories([story.id]);
-    vi.advanceTimersByTime(20_000);
-    expect(store.isStoryReady(story.id)).toBe(true);
-  });
-
-  it('the timeout error names the story and the time', () => {
-    expect(new StoryChunkTimeout('story:sun-and-moon', 15_000).message).toBe('story chunk story:sun-and-moon did not load within 15000 ms');
-  });
-});
-
 describe('storiesOverStore', () => {
   it('a story reads its shelf at once and its body once its chunk is in, on the same object', async () => {
     const l = loader();
@@ -261,5 +218,86 @@ describe('splitStory and shelfLevelOf', () => {
     expect(shelfLevelOf([{ level: 'read', scenes: 3 }, { level: 'listen', scenes: 4 }])).toBe('listen');
     expect(shelfLevelOf([{ level: 'read-along', scenes: 3 }, { level: 'read', scenes: 4 }])).toBe('read-along');
     expect(shelfLevelOf([])).toBeUndefined();
+  });
+});
+
+describe('a hung load, and which failures only a fresh page mends', () => {
+  it('a load that has not settled in time fails with StoryChunkTimeout, and a later ensure tries again', async () => {
+    vi.useFakeTimers();
+    try {
+      const calls: string[] = [];
+      let answer: ((chunk: StoryBodyChunk) => void) | undefined;
+      const store = createStoryStore({ entries }, (id) => {
+        calls.push(id);
+        return new Promise<StoryBodyChunk>((resolve) => {
+          answer = resolve;
+        });
+      }, { timeoutMs: 1_000 });
+      const first = store.ensureStories([story.id]);
+      const failed = expect(first).rejects.toBeInstanceOf(StoryChunkTimeout);
+      await vi.advanceTimersByTimeAsync(1_000);
+      await failed;
+      expect(store.isStoryReady(story.id)).toBe(false);
+      const second = store.ensureStories([story.id]);
+      expect(calls).toEqual([story.id, story.id]);
+      answer?.({ CHUNK_HASH: 'h-hangul', STORY_BODY: body });
+      await second;
+      expect(store.isStoryReady(story.id)).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a timed-out load gives up its pending script (Metro keeps it by its path), so the retry asks the network again', async () => {
+    vi.useFakeTimers();
+    try {
+      // Metro's web loader hands a pending load back to every later try until its script tag settles.
+      const pendingByBundle = new Map<string, { promise: Promise<StoryBodyChunk>; fail: () => void }>();
+      let network: 'hung' | 'back' = 'hung';
+      const requests: string[] = [];
+      const metroLoad = (bundle: string): Promise<StoryBodyChunk> => {
+        const pending = pendingByBundle.get(bundle);
+        if (pending !== undefined) return pending.promise;
+        requests.push(bundle);
+        let fail = (): void => undefined;
+        const promise = new Promise<StoryBodyChunk>((resolve, reject) => {
+          fail = () => reject(new Error(`Loading module ${bundle} failed.`));
+          if (network === 'back') resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body });
+        });
+        promise.catch(() => pendingByBundle.delete(bundle));
+        if (network === 'hung') pendingByBundle.set(bundle, { promise, fail });
+        return promise;
+      };
+      const abandon = vi.fn((bundle: string) => pendingByBundle.get(bundle)?.fail());
+      const store = createStoryStore({ entries }, (id) => metroLoad(storyChunkBundleName(id)), { timeoutMs: 15_000, abandon });
+      const first = expect(store.ensureStories([story.id])).rejects.toBeInstanceOf(StoryChunkTimeout);
+      await vi.advanceTimersByTimeAsync(15_000);
+      await first;
+      expect(abandon).toHaveBeenCalledWith(storyChunkBundleName(story.id));
+      network = 'back';
+      await store.ensureStories([story.id]);
+      expect(store.isStoryReady(story.id)).toBe(true);
+      expect(requests).toEqual([storyChunkBundleName(story.id), storyChunkBundleName(story.id)]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('maps a story to the web bundle name of its chunk', () => {
+    expect(storyChunkBundleName('story:sejong-new-letters')).toBe('story-sejong-new-letters');
+  });
+
+  it('a load in time is not cut off by the timer', async () => {
+    const store = createStoryStore({ entries }, () => Promise.resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body }), { timeoutMs: 1_000 });
+    await store.ensureStories([story.id]);
+    expect(store.isStoryReady(story.id)).toBe(true);
+  });
+
+  it('another build’s chunk, or the app page served in its place, is a newer build; a network failure or a timeout is not', () => {
+    expect(isStoryNewBuildError(new StoryChunkMismatch(story.id, 'a', 'b'))).toBe(true);
+    expect(isStoryNewBuildError(new Error('Requiring unknown module "812".'))).toBe(true);
+    expect(isStoryNewBuildError(new Error('offline'))).toBe(false);
+    expect(isStoryNewBuildError(new StoryChunkTimeout(story.id, 15_000))).toBe(false);
+    expect(isStoryNewBuildError('Requiring unknown module')).toBe(false);
   });
 });

@@ -1,4 +1,3 @@
-import { Screen } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo } from 'react';
 import { storyById } from '../../content/stories';
@@ -8,6 +7,7 @@ import { useLocale } from '../../i18n/use-messages';
 import { readerStory } from '../../logic/story/reader-locale';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { LessonWaiting } from '../lesson-content';
 import { useStoryReady } from '../story-content';
 import { usePracticeSession } from '../use-practice-session';
 import { StoryReaderView } from './StoryReaderView';
@@ -47,8 +47,9 @@ const NOTHING = (): void => undefined;
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
 export function StoryReaderScreen(props: Props): React.ReactElement {
-  // The story's scenes come from its chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws nothing.
-  return useStoryReady(props.route.params.storyId) ? <StoryReaderBody {...props} /> : <Screen>{null}</Screen>;
+  // The story's scenes come from its chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
+  // only its waiting state (the way back, then a calm status line if it takes longer).
+  return useStoryReady(props.route.params.storyId) ? <StoryReaderBody {...props} /> : <LessonWaiting />;
 }
 
 function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, onDone, ...exitProps }: Props): React.ReactElement {

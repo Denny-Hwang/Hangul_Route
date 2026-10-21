@@ -3,6 +3,7 @@ import * as generated from './__generated__/stories-index';
 import { HELD_STORY_CARDS, STORY_SHELF, loadStoryBody } from './__generated__/stories-index';
 import { createStoryStore, shelfLevelOf, storiesOverStore, storyTierLevels, type StoryBody } from '../logic/story/story-chunk-store';
 import { storyQuestSkeleton } from './story-skeleton';
+import { abandonPendingChunk } from '../platform/lesson-chunk-abandon';
 
 /**
  * The only reader of the generated story modules (F-STORY-001 §3.9, F-CURR-002 §10 row CM-8):
@@ -17,8 +18,14 @@ const extras = generated as unknown as { STORY_INLINE_BODIES?: Readonly<Record<s
 export const storyContent = createStoryStore(
   { entries: STORY_SHELF, inline: extras.STORY_INLINE_BODIES ?? {} },
   loadStoryBody,
-  // As the lesson chunks: a chunk comes from the precache in a frame or two; a request that hangs fails into the retry path.
-  { timeoutMs: 15_000 },
+  {
+    // A chunk comes from the precache in a frame or two; a request that hangs fails into the retry path,
+    // and its pending script is given up so the retry asks again (as the lessons').
+    timeoutMs: 15_000,
+    abandon: (bundleName) => {
+      abandonPendingChunk(bundleName);
+    },
+  },
 );
 
 /** Every bundled story; a story's body fields read its chunk, so they hold placeholders until `storyContent` has it. */

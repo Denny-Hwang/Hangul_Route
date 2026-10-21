@@ -96,7 +96,7 @@ export class StoryChunkMismatch extends Error {
   }
 }
 
-/** A story chunk that did not arrive in time (a hung request: flaky Wi-Fi, a captive portal); a later ensure tries again. */
+/** A chunk that did not arrive in time (a hung request: flaky Wi-Fi, a captive portal); a later ensure tries again. */
 export class StoryChunkTimeout extends Error {
   constructor(
     readonly storyId: string,
@@ -107,9 +107,30 @@ export class StoryChunkTimeout extends Error {
   }
 }
 
+/** The web bundle name of a story's chunk: `story-sejong-new-letters` for `story:sejong-new-letters`. */
+export function storyChunkBundleName(storyId: string): string {
+  return `story-${storyId.replace(/^story:/, '')}`;
+}
+
 export interface StoryStoreOptions {
-  /** A load that has not settled after this many ms fails with `StoryChunkTimeout`; none when omitted (as the lesson store). */
+  /** A load that has not settled after this many ms fails with `StoryChunkTimeout`; none when omitted. */
   timeoutMs?: number;
+  /**
+   * Called with a chunk's bundle name (`storyChunkBundleName`) when its load times out, as the lesson
+   * store does: Metro keeps a pending load by its path until it settles, so the web build fails the
+   * pending script and the next ensure asks again (`platform/lesson-chunk-abandon`).
+   */
+  abandon?: (bundleName: string) => void;
+}
+
+/**
+ * True for a story chunk failure that only a fresh page can mend (the twin of `isNewBuildError` of the lesson
+ * store): another build's chunk under this name, or the app's HTML page served in its place (Metro then finds
+ * no module in it). A network failure (offline, a timeout) is not one: trying again later can mend it.
+ */
+export function isStoryNewBuildError(error: unknown): boolean {
+  if (error instanceof StoryChunkMismatch) return true;
+  return error instanceof Error && /^Requiring unknown module\b/.test(error.message);
 }
 
 export interface StoryStore {
@@ -131,7 +152,7 @@ export interface StoryStore {
 }
 
 export function createStoryStore(manifest: StoryManifest, load: StoryLoader, options: StoryStoreOptions = {}): StoryStore {
-  const { timeoutMs } = options;
+  const { timeoutMs, abandon } = options;
   const entries = new Map(manifest.entries.map((e) => [e.id, e]));
   const bodies = new Map<string, StoryBody>(Object.entries(manifest.inline ?? {}));
   const loads = new Map<string, Promise<void>>();
@@ -146,7 +167,10 @@ export function createStoryStore(manifest: StoryManifest, load: StoryLoader, opt
   const withinTime = <T>(storyId: string, started: Promise<T>): Promise<T> => {
     if (timeoutMs === undefined) return started;
     return new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new StoryChunkTimeout(storyId, timeoutMs)), timeoutMs);
+      const timer = setTimeout(() => {
+        reject(new StoryChunkTimeout(storyId, timeoutMs));
+        abandon?.(storyChunkBundleName(storyId));
+      }, timeoutMs);
       started.then(
         (value) => {
           clearTimeout(timer);
@@ -165,9 +189,10 @@ export function createStoryStore(manifest: StoryManifest, load: StoryLoader, opt
     if (entry === undefined || bodies.has(storyId)) return Promise.resolve();
     const pending = loads.get(storyId);
     if (pending !== undefined) return pending;
-    const started = load(storyId);
-    if (started === undefined) return Promise.reject(new Error(`no loader for the story chunk of ${storyId}`));
-    const promise = withinTime(storyId, started).then(
+    const loading = load(storyId);
+    if (loading === undefined) return Promise.reject(new Error(`no loader for the story chunk of ${storyId}`));
+    const started = withinTime(storyId, loading);
+    const promise = started.then(
       (mod) => {
         loads.delete(storyId);
         if (mod.CHUNK_HASH !== entry.chunk) throw new StoryChunkMismatch(storyId, entry.chunk, mod.CHUNK_HASH);

@@ -23,6 +23,7 @@ import { HAND_OFF_NEEDS_TAP, openExternalUrl } from '../../platform/external-lin
 import { copyText } from '../../platform/pwa';
 import { track } from '../../platform/telemetry';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { LessonWaiting } from '../lesson-content';
 import { useStoryReady } from '../story-content';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { CitationText, CorrectionsList, Disclosure, FactCard, SeeFactRow, SourcesHeader, SourcesHeading } from './SourcesParts';
@@ -46,8 +47,9 @@ type Props = {
  * opens directly, and only for an https link the story itself cites.
  */
 export function StorySourcesScreen(props: Props): React.ReactElement {
-  // The facts and their sources come from the story's chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws nothing.
-  return useStoryReady(props.route.params.storyId) ? <StorySourcesBody {...props} /> : <Screen>{null}</Screen>;
+  // The facts and their sources come from the story's chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
+  // only its waiting state (the way back, then a calm status line if it takes longer).
+  return useStoryReady(props.route.params.storyId) ? <StorySourcesBody {...props} /> : <LessonWaiting />;
 }
 
 function StorySourcesBody({ route, navigation, ...exitProps }: Props): React.ReactElement {

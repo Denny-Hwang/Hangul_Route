@@ -40,9 +40,7 @@ import { playPrompt, stop } from '../../platform/audio';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { useStoriesLoaded } from '../story-content';
-
-const NO_STORIES: readonly string[] = [];
+import { useStoryLoaded } from '../story-content';
 
 /** Side of the card face on the front of the card page. */
 const CARD_FACE = 200;
@@ -65,8 +63,9 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
   const titles = useLessonTitlesVersion();
   const source = cardById(cardId);
-  // A story card's blurb, fact and citation come from its story's chunk (F-CURR-002 §10, row CM-8): drawn once it arrives.
-  useStoriesLoaded(source?.storyId === undefined ? NO_STORIES : [source.storyId]);
+  // A story card's blurb, fact and citation come from its story's chunk (F-CURR-002 §10, row CM-8): until it is in,
+  // the card shows its front only (no flip, no Share), so its back is never drawn or shared blank.
+  const storyReady = useStoryLoaded(source?.storyId);
   const card = source && localizeCard(source, locale);
   const profile = useProfileStore(activeProfileSelector);
   // A preview reads no learner's cards: it shows every card as an earned one.
@@ -103,7 +102,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
 
   // F-MOTION-002 flip (components/FlipCard.tsx); Share is gated mid-flip (F-CARD-003 §8).
   const [isFlipping, setIsFlipping] = useState(false);
-  const canFlip = unlocked;
+  const canFlip = unlocked && storyReady;
   // A card that stops being flippable (the active profile changed while it showed its back) returns to its front.
   useEffect(() => {
     if (!canFlip) setFace('front');
@@ -135,9 +134,11 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
           face={face}
           onFlip={flip}
           disabled={!canFlip}
+          // While the story's chunk loads (a frame or two) an earned card is not called locked: it is busy.
+          busy={unlocked && !storyReady}
           onFlippingChange={setIsFlipping}
-          accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : lockedLabel}
-          accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : lockedLabel}
+          accessibilityLabelFront={unlocked ? messages.a11y.flipToBack : lockedLabel}
+          accessibilityLabelBack={unlocked ? messages.a11y.flipToFront : lockedLabel}
           front={
             <CardShell card={card} rarityLabel={messages.learner.library.rarity[card.rarity]} flipHint={canFlip ? m.flip.front : null}>
               <FrontFaceBody card={card} unlocked={unlocked} />
@@ -207,7 +208,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
             tone="ghost"
             size="md"
             accessibilityLabel={messages.a11y.shareCard}
-            disabled={isFlipping}
+            disabled={isFlipping || !storyReady}
             leading={<Icon name="card" size={18} color={colors.brand.primary} />}
             onPress={async () => {
               setShareError(null);

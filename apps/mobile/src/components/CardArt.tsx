@@ -17,7 +17,7 @@ import { storyById } from '../content/stories';
 import { cardArtSource, cardCoverCrop, cardPlateLayout, cardWordFontSize, type CardArtDeps } from '../logic/card-art';
 import { storyCoverArt } from '../logic/story/scene-view';
 import { storyCoverVariant } from '../logic/story/story-tile';
-import { useStoriesLoaded } from '../screens/story-content';
+import { useStoryLoaded } from '../screens/story-content';
 
 /**
  * What a screen may set on the face: corner radius and placement only. A
@@ -26,8 +26,6 @@ import { useStoriesLoaded } from '../screens/story-content';
  * (see `CardArtThumb`), never on the face itself.
  */
 export type CardArtStyle = Pick<ViewStyle, 'borderRadius' | 'position' | 'top' | 'left'>;
-
-const NO_STORIES: readonly string[] = [];
 
 const DEPS: CardArtDeps = {
   drawnCardIds: supportedCardIds,
@@ -94,9 +92,10 @@ export function CardArt({
   /** The Korean word face's font family (the presenter's taught-Korean font); the system Korean stack when absent. */
   wordFontFamily?: string;
 }): React.ReactElement {
-  // A story card's cover comes from its story's chunk (F-CURR-002 §10, row CM-8): the face redraws once it arrives.
-  const coverChunks = useStoriesLoaded(card.storyId === undefined ? NO_STORIES : [card.storyId]);
-  const source = useMemo(() => cardArtSource(card, DEPS), [card, coverChunks]);
+  // A story card's cover comes from its story's chunk (F-CURR-002 §10, row CM-8): the face redraws once that
+  // story's chunk arrives (and not when another story's does).
+  const coverReady = useStoryLoaded(card.storyId);
+  const source = useMemo(() => cardArtSource(card, DEPS), [card, coverReady]);
   const labelled = accessibilityLabel !== undefined;
   const background =
     source.kind === 'heritage' ? colors.surface.paper : source.kind === 'plate' ? colors.surface.sunken : colors.theme[source.theme];
