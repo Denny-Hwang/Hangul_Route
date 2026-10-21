@@ -43,6 +43,8 @@ export interface SettingsSectionsProps {
    * `familyMovable` (T-6d): on a family, the learners in a live class, whose rows show **Move to a class**.
    */
   move?: { online: boolean; onMove: (member: MemberView) => void; familyMovable?: ReadonlySet<string> };
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 3.4: under the join code, a family's count and its at-cap line. */
+  joinCodeNote?: ReactNode;
   /** Panel D, who may send notes (F-FEEDBACK-001 FB-12, `console/family-notes.md` D): drawn after the learners, before the Danger zone. */
   notesPanel?: ReactNode;
 }
@@ -70,6 +72,7 @@ export function SettingsSections({
   onDelete,
   move,
   notesPanel,
+  joinCodeNote,
 }: SettingsSectionsProps): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -88,6 +91,7 @@ export function SettingsSections({
           <h2 style={h2Style}>{s.joinCode.title}</h2>
           <div style={{ fontSize: headRem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>{roster.joinCode ?? '—'}</div>
           <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
+          {joinCodeNote}
           <Button disabled={busy} onClick={onRegenerate}>
             {roster.joinCode ? s.joinCode.regenerate.cta : s.joinCode.create.cta}
           </Button>

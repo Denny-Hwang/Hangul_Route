@@ -1,5 +1,6 @@
 'use client';
 
+import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -19,6 +20,8 @@ import { notesEnabled, schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
 import { isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
 import { spaceSubPageBack } from '@/lib/console/page-back';
+import { capState, familyCountLine, seatLine } from '@/lib/console/rollup';
+import { RenameStyles, SettingsNameRow, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import type { BillingSummary } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
@@ -59,9 +62,12 @@ function SettingsInner(): JSX.Element {
   const asking = useRef(false);
   const now = new Date();
 
+  // [SA] A read that began before a rename settled may hold the old name: the renamed name is laid over it (section 5.3).
+  const names = useNameOverrides();
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
+    const read = names.begin();
     const [r, mem] = await Promise.all([api.roster(spaceId), api.members(spaceId)]);
     if (!r.ok) {
       setError(loadErrorKey(r.error));
@@ -72,7 +78,7 @@ function SettingsInner(): JSX.Element {
       setError('cantReach');
       return;
     }
-    setRoster(r.data);
+    setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, read) } });
     setMembers(mem.data);
     if (r.data.space.kind === 'family' && movesShown) {
       // The move options are extra: a failed read leaves them empty and never breaks the settings page.
@@ -81,11 +87,22 @@ function SettingsInner(): JSX.Element {
         .catch(() => null);
       setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
     }
-  }, [api, spaceId, movesShown]);
+  }, [api, spaceId, movesShown, names]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // [SA] The Name block (AMENDMENTS-SEATS-ADMINS section 5.3): the title and the Back label read the new name at once.
+  const { announce, region: renameLive } = useAnnouncer();
+  const setName = useCallback(
+    (name: string, settled: boolean) => {
+      names.set(spaceId, name, settled);
+      setRoster((prev) => (prev ? { ...prev, space: { ...prev.space, name } } : prev));
+    },
+    [names, spaceId],
+  );
+  const rename = useSpaceRename({ api, spaceId, name: roster?.space.name ?? '', onName: setName, announce });
 
   // Known once the roster loads: null until then. Only a live space reads the summary.
   const archivedFlag = roster ? !!roster.space.archivedAt : null;
@@ -123,9 +140,13 @@ function SettingsInner(): JSX.Element {
       {moveNote === 'signIn' ? <Notice tone="nudge">{c.start.signInAgain}</Notice> : null}
       {moveNote === 'familyTooNew' || moveNote === 'conflicted' ? <Notice tone="nudge">{c.transfer.states[moveNote]}</Notice> : null}
 
+      <RenameStyles />
+      {renameLive}
       {roster && space && api ? (
         <>
+          <SettingsNameRow rename={rename} name={space.name} kind={space.kind} canRename={roster.canRename === true} openMoves={roster.openMoves === true} archived={archived} />
           <SettingsSections
+            joinCodeNote={space.kind === 'family' ? <FamilySeats roster={roster} /> : undefined}
             roster={roster}
             members={members}
             accountId={session.accountId}
@@ -245,6 +266,27 @@ function SettingsInner(): JSX.Element {
         </>
       ) : null}
     </AdultFrame>
+  );
+}
+
+/**
+ * A family's count and, at the cap or over it, the one line that says so ([SA] section 3.4): "3 of 4 learners", then
+ * `seats.family.at` / `seats.family.over`. Nobody is removed; the line says to remove a learner below to add someone.
+ */
+function FamilySeats({ roster }: { roster: Roster }): JSX.Element | null {
+  const { locale } = useConsole();
+  const seats = capState('family', roster.learners.length, roster.seats);
+  if (!seats) return null;
+  const line = seatLine('family', seats, locale);
+  return (
+    <div data-testid="family-seats" style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs, margin: `${spacing.xs}px 0 ${spacing.sm}px` }}>
+      <p style={{ margin: 0, color: colors.text.secondary }}>{familyCountLine(seats, locale)}</p>
+      {line ? (
+        <p style={{ margin: 0, fontWeight: typography.weight.semibold }} data-testid="family-seats-line">
+          {line.text}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

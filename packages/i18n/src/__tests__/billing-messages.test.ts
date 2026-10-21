@@ -62,7 +62,7 @@ const BILLING_ADDED = [
   'includesLines.family.reports',
   'includesLines.family.notes',
   'includesLines.license.everyStudent',
-  'includesLines.license.noCap',
+  'includesLines.license.classLearners',
   'includesLines.license.school',
   'includesLines.license.browse',
   'includesLines.license.reports',
@@ -242,8 +242,8 @@ describe('console.billing additions (F-BILL-002 §6.1, BY-D9 values)', () => {
     expect(f.notes).toBe('Send notes to your learners');
     const l = b.includesLines.license;
     expect(l.everyStudent).toBe('Every lesson for every student while they are enrolled');
-    expect(l.noCap(20)).toBe('No 20-student cap');
-    expect(l.noCap(25)).toBe('No 25-student cap');
+    expect(l.classLearners(50)).toBe('Up to 50 students in the class');
+    expect(l.classLearners(1)).toBe('Up to 1 student in the class');
     expect(l.school(10, 300)).toBe('A school holds up to 10 teachers and 300 students');
     expect(l.school(1, 1)).toBe('A school holds up to 1 teacher and 1 student');
     expect(l.browse).toBe('Browse every lesson as your students see it');
@@ -481,7 +481,8 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; drawn?
   { wireframe: 'billing-home', text: 'Add a plan', path: 'console.billing.sections.add' },
   { wireframe: 'billing-home', text: 'Group License for Maple Class', drawn: 'Group License for <class name>', path: 'console.billing.buy.forSpace', args: ['Group License', 'Maple Class'] },
   { wireframe: 'billing-home', text: 'Every lesson for every student while they are enrolled', path: 'console.billing.includesLines.license.everyStudent' },
-  // [SA] The wireframe now draws "Up to 50 students in the class" (`includesLines.license.classLearners`, row SA-3, which deletes `noCap`).
+  // [SA] row SA-3: `classLearners` replaces `noCap`.
+  { wireframe: 'billing-home', text: 'Up to 50 students in the class', path: 'console.billing.includesLines.license.classLearners', args: [50] },
   { wireframe: 'billing-home', text: 'Get Group License', drawn: 'GET GROUP LICENSE', path: 'console.billing.buy.group_license.cta' },
   { wireframe: 'billing-home', text: 'Next: connect a learner to this family.', path: 'console.billing.connectLearner.line' },
   { wireframe: 'billing-home', text: 'Connect a learner', path: 'console.billing.connectLearner.cta' },
@@ -614,8 +615,6 @@ describe('every string a billing wireframe draws has a key (§11)', () => {
         'console.billing.includesLines.license.notes',
         'console.billing.includesLines.license.reports',
         'console.billing.includesLines.license.school',
-        // [SA] no longer drawn: the wireframe draws its successor `classLearners` (row SA-3 deletes `noCap`)
-        'console.billing.includesLines.license.noCap',
         'console.entitlementStatus.pastDuePaused',
         'caregiver.plan.covered.sourceFallback',
       ].sort(),

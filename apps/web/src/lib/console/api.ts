@@ -107,11 +107,29 @@ export interface RosterLearner {
   scope?: 'base' | 'full';
 }
 
+/**
+ * [SA] `GET /:id/roster` `seats` (AMENDMENTS-SEATS-ADMINS section 3.6): the space's learners and its cap, and for a class
+ * in a live school the school's distinct students and cap. A cap of `null` is none; the school fields are `null`
+ * outside a school.
+ */
+export interface RosterSeats {
+  learners: number;
+  cap: number | null;
+  schoolLearners: number | null;
+  schoolCap: number | null;
+}
+
 export interface Roster {
   space: SpaceView;
   learners: RosterLearner[];
   joinCode: string | null;
   joinCodeExpiresAt: string | null;
+  /** [SA] Absent from a Worker older than SA-1: the page then counts the roster against the free cap, as before. */
+  seats?: RosterSeats;
+  /** [SA] section 5.3: this grown-up may rename the space (`space.rename`); absent reads as no. */
+  canRename?: boolean;
+  /** [SA] section 5.4: an open class move names this space, so a new name asks its grown-ups again. */
+  openMoves?: boolean;
 }
 
 export interface CreatedSpace {
@@ -181,6 +199,10 @@ export interface SchoolClassRow {
   practiced: number;
   lastActiveAt: string | null;
   hasPublishedPlan: boolean;
+  /** [SA] section 5.3: this grown-up may rename the class from the school page; absent reads as no. */
+  canRename?: boolean;
+  /** [SA] section 5.4: an open class move names this class. */
+  openMoves?: boolean;
 }
 
 export interface SchoolView {
@@ -191,6 +213,8 @@ export interface SchoolView {
   usage: { students: number; teachers: number };
   thisWeek: { students: number; practiced: number; classes: number; classesWithPlan: number };
   classes: SchoolClassRow[];
+  /** [SA] section 5.3: this grown-up may rename the school (its owner and administrators); absent reads as no. */
+  canRename?: boolean;
 }
 
 /** One space's receipts for its payer — F-BILL-002 section 5.3 (`GET /api/billing/receipts`). */
@@ -301,6 +325,9 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ members: MemberView[] }>(`${base}/${encodeURIComponent(spaceId)}/members`, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.members } : r)),
     removeMember: (spaceId: string, kind: 'account' | 'learner', memberId: string) =>
       call<{ removed: boolean }>(`${base}/${encodeURIComponent(spaceId)}/members/${kind}/${encodeURIComponent(memberId)}`, { method: 'DELETE' }, [200]),
+    /** [SA] AMENDMENTS-SEATS-ADMINS section 5.2: `PATCH /:id/name`; the answer names the stored name and whether it changed. */
+    renameSpace: (spaceId: string, name: string) =>
+      call<{ space: SpaceView; changed: boolean }>(`${base}/${encodeURIComponent(spaceId)}/name`, { method: 'PATCH', body: JSON.stringify({ name }) }, [200]),
     patchSettings: (spaceId: string, patch: { anonymizeRoster?: boolean; consentMode?: 'parent' | 'school' }) =>
       call<{ space: SpaceView }>(`${base}/${encodeURIComponent(spaceId)}/settings`, { method: 'PATCH', body: JSON.stringify(patch) }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.space } : r)),
     archiveSpace: (spaceId: string, archive: boolean) =>

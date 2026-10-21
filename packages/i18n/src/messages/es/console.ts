@@ -76,10 +76,60 @@ export const consoleMsgs = {
   promoNotConfigured: 'Los códigos aún no están configurados aquí.',
   schoolInviteHint: 'Los docentes inician sesión, escriben este código y crean su clase; o la creas tú y se la asignas.',
   schoolEmpty: 'Invita a un docente con el código, o crea una clase y asígnala.',
-  schoolNoLicence: (cap: number) => `Aún no hay licencia: cada clase mantiene el tope gratuito de ${cap} estudiantes.`,
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 9.2 (replaces `schoolNoLicence`). */
+  schoolNoLicenceCaps: (classCap: number, schoolCap: number) =>
+    `Aún no hay licencia. Cada clase admite hasta ${plural('es', classCap, { one: `${classCap} estudiante`, other: `${classCap} estudiantes` })}, y la escuela hasta ${schoolCap}.`,
   schoolNearLimit: 'Cerca del límite de la licencia: revisa la facturación antes de que se llene la próxima clase.',
   schoolAtLimit: 'En el límite de la licencia: a los estudiantes nuevos se les pedirá que hablen con su docente.',
   schoolLicenceLapsed: 'La licencia necesita atención. Las clases siguen visibles; los estudiantes conservan la Etapa 1 de todos modos.',
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 3.4 and 9.2: the line when a space holds the most learners its plan holds, or more. */
+  seats: {
+    family: {
+      at: (cap: number) =>
+        plural('es', cap, {
+          one: `Esta familia tiene ${cap} estudiante, el máximo posible. Para sumar a alguien, primero quita a un estudiante en Ajustes. Su progreso se queda en su dispositivo.`,
+          other: `Esta familia tiene ${cap} estudiantes, el máximo posible. Para sumar a alguien, primero quita a un estudiante en Ajustes. Su progreso se queda en su dispositivo.`,
+        }),
+      over: (n: number, cap: number) => `Esta familia tiene ${n} estudiantes. Nadie pierde su lugar. Pueden unirse estudiantes nuevos cuando haya menos de ${cap}.`,
+    },
+    class: {
+      at: (cap: number) =>
+        plural('es', cap, {
+          one: `Esta clase tiene ${cap} estudiante, el máximo de la Licencia de Grupo. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+          other: `Esta clase tiene ${cap} estudiantes, el máximo de la Licencia de Grupo. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+        }),
+      over: (n: number, cap: number) => `Esta clase tiene ${n} estudiantes. Nadie pierde su lugar. Pueden unirse estudiantes nuevos cuando haya menos de ${cap}.`,
+    },
+    school: {
+      at: (cap: number) =>
+        plural('es', cap, {
+          one: `Esta escuela tiene ${cap} estudiante, el máximo sin contrato. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+          other: `Esta escuela tiene ${cap} estudiantes, el máximo sin contrato. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+        }),
+      over: (n: number, cap: number) =>
+        `Esta escuela tiene ${n} estudiantes. Nadie pierde su lugar ni lo que aprendió. Pueden unirse estudiantes nuevos cuando haya menos de ${cap}, o escríbenos para un contrato.`,
+    },
+  },
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 5.3 and 9.3: renombrar una familia, una clase o una escuela donde se ve su nombre. */
+  rename: {
+    cta: 'Renombrar',
+    a11y: (name: string) => `Renombrar ${name}`,
+    label: 'Nombre',
+    save: { cta: 'Guardar' },
+    cancel: { cta: 'Cancelar' },
+    hint: {
+      family: 'Todos en la familia ven este nombre.',
+      class: 'Los estudiantes ven este nombre en la app.',
+      school: 'Docentes y admins ven este nombre.',
+    },
+    empty: 'Escribe un nombre.',
+    tooLong: (max: number) => `Los nombres pueden tener hasta ${max} caracteres.`,
+    invalid: 'Usa letras o números en el nombre.',
+    saved: 'Nombre guardado.',
+    failed: 'No se pudo guardar el nombre. Inténtalo de nuevo.',
+    openMoves: 'Hay cambios de clase pendientes hacia o desde este espacio. Con un nombre nuevo, los adultos de esos estudiantes tendrán que revisarlos otra vez.',
+    archived: 'Primero desarchívala para cambiar el nombre.',
+  },
 
   shell: {
     home: 'Consola',
@@ -165,6 +215,7 @@ export const consoleMsgs = {
     nameTitle: { family: 'Nombre de tu familia', class: 'Nombre de tu clase', school: 'Nombre de tu escuela' },
     nameLabel: 'Nombre',
     classJoinHint: 'Los estudiantes se unen con un código, sin cuentas de estudiantes.',
+    nameLater: 'Puedes cambiar este nombre después.',
     create: { cta: 'Crear' },
     creating: { cta: 'Creando…' },
     signInAgain: 'Vuelve a iniciar sesión.',
@@ -429,6 +480,7 @@ export const consoleMsgs = {
       family: 'La persona que creó esta familia gestiona este plan.',
       class: 'Quien creó la clase gestiona este plan.',
       school: 'Tu escuela gestiona este plan.',
+      schoolAdmin: 'Quien creó la escuela gestiona este plan.',
     },
     usage: {
       learners: usageCount('estudiante', 'estudiantes'),
@@ -452,7 +504,7 @@ export const consoleMsgs = {
       },
       license: {
         everyStudent: 'Cada lección para cada estudiante mientras siga en la clase',
-        noCap: (cap: number) => `Sin tope de ${cap} estudiantes`,
+        classLearners: (n: number) => plural('es', n, { one: `Hasta ${n} estudiante en la clase`, other: `Hasta ${n} estudiantes en la clase` }),
         school: (teachers: number, students: number) =>
           `Una escuela admite hasta ${plural('es', teachers, { one: `${teachers} docente`, other: `${teachers} docentes` })} y ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })}`,
         browse: 'Explora cada lección como la ven tus estudiantes',

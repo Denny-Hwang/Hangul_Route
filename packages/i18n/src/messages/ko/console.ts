@@ -59,10 +59,47 @@ export const consoleMsgs = {
   promoNotConfigured: '이 배포에는 아직 코드가 설정되어 있지 않아요.',
   schoolInviteHint: '선생님이 로그인해서 이 코드를 입력한 뒤 반을 만들어요 — 또는 관리자가 반을 만들고 선생님을 배정해요.',
   schoolEmpty: '코드로 선생님을 초대하거나, 반을 만들고 선생님을 배정해 주세요.',
-  schoolNoLicence: (cap: number) => `아직 라이선스가 없어요 — 반마다 무료 한도인 학생 ${cap}명이 그대로 적용돼요.`,
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 9.2 (replaces `schoolNoLicence`). */
+  schoolNoLicenceCaps: (classCap: number, schoolCap: number) => `아직 라이선스가 없어요. 반마다 학생 최대 ${classCap}명, 학교 전체는 최대 ${schoolCap}명이에요.`,
   schoolNearLimit: '라이선스 한도에 가까워요 — 다음 반이 차기 전에 결제 화면을 확인해 주세요.',
   schoolAtLimit: '라이선스 한도에 도달했어요 — 새 학생은 선생님에게 확인해 달라는 안내를 받아요.',
   schoolLicenceLapsed: '라이선스를 확인해 주세요. 반은 계속 볼 수 있고, 학생은 어느 경우든 1단계를 계속 이용해요.',
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 3.4 and 9.2: 공간에 플랜이 허용하는 최대 인원이 있거나 그보다 많을 때의 안내. */
+  seats: {
+    family: {
+      at: (cap: number) => `이 가족에는 학습자가 ${cap}명 있어서 더 들어올 수 없어요. 새로 추가하려면 먼저 설정에서 학습자 한 명을 빼 주세요. 그 학습자의 진도는 기기에 그대로 남아요.`,
+      over: (n: number, cap: number) => `이 가족에는 학습자가 ${n}명 있어요. 모두 그대로 함께해요. 학습자가 ${cap}명보다 적어지면 새 학습자가 들어올 수 있어요.`,
+    },
+    class: {
+      at: (cap: number) => `이 반에는 학생이 ${cap}명 있어요. 그룹 라이선스로 함께할 수 있는 최대 인원이에요. 자리가 나면 새 학생이 들어올 수 있어요.`,
+      over: (n: number, cap: number) => `이 반에는 학생이 ${n}명 있어요. 모두 그대로 함께해요. 학생이 ${cap}명보다 적어지면 새 학생이 들어올 수 있어요.`,
+    },
+    school: {
+      at: (cap: number) => `이 학교에는 학생이 ${cap}명 있어요. 계약 없이 함께할 수 있는 최대 인원이에요. 자리가 나면 새 학생이 들어올 수 있어요.`,
+      over: (n: number, cap: number) =>
+        `이 학교에는 학생이 ${n}명 있어요. 모두의 자리와 배운 내용은 그대로 남아요. 학생이 ${cap}명보다 적어지면 새 학생이 들어올 수 있어요. 더 필요하면 계약을 문의해 주세요.`,
+    },
+  },
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 5.3 and 9.3: 이름이 보이는 자리에서 가족, 반, 학교 이름 바꾸기. */
+  rename: {
+    cta: '이름 바꾸기',
+    a11y: (name: string) => `이름 바꾸기: ${name}`,
+    label: '이름',
+    save: { cta: '저장' },
+    cancel: { cta: '취소' },
+    hint: {
+      family: '가족 모두가 이 이름을 봐요.',
+      class: '학생들이 앱에서 이 이름을 봐요.',
+      school: '선생님과 관리자가 이 이름을 봐요.',
+    },
+    empty: '이름을 적어 주세요.',
+    tooLong: (max: number) => `이름은 ${max}자까지 쓸 수 있어요.`,
+    invalid: '이름에 글자나 숫자를 넣어 주세요.',
+    saved: '이름을 저장했어요.',
+    failed: '이름을 저장하지 못했어요. 다시 해 볼까요?',
+    openMoves: '이 공간으로 오거나 이 공간에서 나가는 반 이동이 아직 끝나지 않았어요. 이름을 바꾸면 그 학습자의 어른이 이동을 다시 확인해야 해요.',
+    archived: '이름을 바꾸려면 먼저 보관을 풀어 주세요.',
+  },
 
   shell: {
     home: '콘솔',
@@ -140,6 +177,7 @@ export const consoleMsgs = {
     nameTitle: { family: '가족 이름', class: '반 이름', school: '학교 이름' },
     nameLabel: '공간 이름',
     classJoinHint: '학생은 코드로 참여해요 — 학생용 계정은 필요 없어요.',
+    nameLater: '이 이름은 나중에 바꿀 수 있어요.',
     create: { cta: '만들기' },
     creating: { cta: '만드는 중…' },
     signInAgain: '다시 로그인해 주세요.',
@@ -399,6 +437,7 @@ export const consoleMsgs = {
       family: '이 가족을 만든 분이 플랜을 관리해요.',
       class: '반을 만든 선생님이 플랜을 관리해요.',
       school: '학교에서 이 플랜을 관리해요.',
+      schoolAdmin: '학교를 만든 분이 이 플랜을 관리해요.',
     },
     usage: {
       learners: (n: number, cap: number | null) => (cap === null ? `학습자 ${n}명` : `학습자 ${cap}명 중 ${n}명`),
@@ -422,7 +461,7 @@ export const consoleMsgs = {
       },
       license: {
         everyStudent: '등록된 동안 모든 학생에게 모든 레슨',
-        noCap: (cap: number) => `학생 ${cap}명 한도 없음`,
+        classLearners: (n: number) => `반 하나에 학생 최대 ${n}명`,
         school: (teachers: number, students: number) => `학교 하나에 선생님 최대 ${teachers}명, 학생 최대 ${students}명`,
         browse: '학생이 보는 그대로 모든 레슨 둘러보기',
         reports: '학생 리포트와 반 리포트',

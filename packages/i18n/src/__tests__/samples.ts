@@ -136,7 +136,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.story.sources.counts': [[1, 1], [12, 31]],
   'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
   'console.capWarning': [[16, 20]],
-  'console.schoolNoLicence': [[20]],
+  'console.schoolNoLicenceCaps': [[20, 50], [1, 1]],
   'console.codeExpiry.inDays': [[1], [18]],
   'console.spaceCounts.learners': [[1], [2]],
   'console.spaceCounts.students': [[1], [12]],
@@ -554,7 +554,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.billing.usage.teachers': [[7, 10], [2, null], [1, null]],
   'console.billing.buy.forSpace': [['Group License', 'Maple Class']],
   'console.billing.includesLines.family.learners': [[5], [1]],
-  'console.billing.includesLines.license.noCap': [[20]],
+  'console.billing.includesLines.license.classLearners': [[50], [1]],
   'console.billing.includesLines.license.school': [[10, 300], [1, 1]],
   'console.billing.receipts.viewA11y': [['Oct 21, 2026']],
   'console.billing.receipts.pageTitle': [['Maple Class']],
@@ -870,4 +870,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.options.languageHintChosen': [['English'], ['Español']],
   // [SA] The School Contract line with the limits as arguments (AMENDMENTS-SEATS-ADMINS section 9.2).
   'console.contactLineCaps': [[50, 10], [1, 1]],
+  // [SA] Seat lines and the inline rename (AMENDMENTS-SEATS-ADMINS sections 9.2, 9.3).
+  'console.seats.family.at': [[4], [1]],
+  'console.seats.family.over': [[5, 4]],
+  'console.seats.class.at': [[50], [1]],
+  'console.seats.class.over': [[62, 50]],
+  'console.seats.school.at': [[50], [1]],
+  'console.seats.school.over': [[62, 50]],
+  'console.rename.a11y': [['Sunday Class A']],
+  'console.rename.tooLong': [[40]],
 };

@@ -1,7 +1,7 @@
 import { formatDate, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner } from '../api';
-import { CAP_WARNING_RATIO, capState, classRollup, codeExpiry, percent, relativeDay } from '../rollup';
+import { CAP_WARNING_RATIO, capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '../rollup';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 // relativeDay counts calendar days in the host time zone (describeRelativeDay reads local
@@ -138,8 +138,8 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
   });
 
   it('caps only apply to classes and warn from 80 %', () => {
-    expect(capState('family', 30)).toBeNull();
-    expect(capState('class', 15)).toEqual({ used: 15, total: 20, warning: false, reached: false });
+    expect(capState('school', 30)).toBeNull();
+    expect(capState('class', 15)).toEqual({ used: 15, total: 20, warning: false, reached: false, over: false, free: true });
     expect(capState('class', Math.ceil(20 * CAP_WARNING_RATIO))).toMatchObject({ warning: true, reached: false });
     expect(capState('class', 20)).toMatchObject({ warning: true, reached: true });
   });
@@ -177,5 +177,52 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
       expect(codeExpiry(undefined, localNow, locale)).toBe(expiry.none);
     }
     expect(relativeDay(at(17, 10), localNow, 'ko')).not.toBe('Thu');
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS section 3.4: the count and the line come from the roster's `seats`, not the free cap. */
+describe('capState and seatLine from the roster seats (SA-3)', () => {
+  const c = getMessages('en').console;
+  const seats = (learners: number, cap: number | null) => ({ learners, cap, schoolLearners: null, schoolCap: null });
+
+  it('a free class keeps its nudge and the billing link', () => {
+    expect(capState('class', 0, seats(15, 20))).toMatchObject({ used: 15, total: 20, free: true });
+    expect(seatLine('class', capState('class', 15, seats(15, 20)))).toBeNull();
+    expect(seatLine('class', capState('class', 16, seats(16, 20)))).toEqual({ text: c.capWarning(16, 20), upgrade: true });
+    expect(seatLine('class', capState('class', 20, seats(20, 20)))).toEqual({ text: c.capReached, upgrade: true });
+  });
+
+  it('a licensed class at 50 and over it: calm lines, no billing link', () => {
+    expect(capState('class', 49, seats(49, 50))).toMatchObject({ free: false, reached: false });
+    expect(seatLine('class', capState('class', 45, seats(45, 50)))).toBeNull();
+    expect(seatLine('class', capState('class', 50, seats(50, 50)))).toEqual({ text: c.seats.class.at(50), upgrade: false });
+    expect(seatLine('class', capState('class', 70, seats(70, 50)))).toEqual({ text: c.seats.class.over(70, 50), upgrade: false });
+  });
+
+  it('a class its school covers has no cap of its own', () => {
+    expect(capState('class', 70, { learners: 70, cap: null, schoolLearners: 70, schoolCap: 50 })).toBeNull();
+    expect(seatLine('class', null)).toBeNull();
+  });
+
+  it('a family counts n of 4, says when it is full, and when it holds more than 4', () => {
+    const three = capState('family', 3, seats(3, 4));
+    expect(three).toMatchObject({ used: 3, total: 4, free: false });
+    expect(familyCountLine(three as NonNullable<typeof three>)).toBe('3 of 4 learners');
+    expect(seatLine('family', three)).toBeNull();
+    expect(seatLine('family', capState('family', 4, seats(4, 4)))).toEqual({ text: c.seats.family.at(4), upgrade: false });
+    expect(seatLine('family', capState('family', 5, seats(5, 4)))).toEqual({ text: c.seats.family.over(5, 4), upgrade: false });
+    for (const locale of ['es', 'ko'] as const) {
+      expect(seatLine('family', capState('family', 4, seats(4, 4)), locale)?.text).toBe(getMessages(locale).console.seats.family.at(4));
+      expect(familyCountLine(three as NonNullable<typeof three>, locale)).toBe(getMessages(locale).console.billing.usage.learners(3, 4));
+    }
+  });
+
+  it('a Worker older than SA-1 (no seats): the free cap for a class, the family cap from content-schema', () => {
+    expect(capState('class', 20)).toMatchObject({ total: 20, reached: true, free: true });
+    expect(capState('family', 4)).toMatchObject({ used: 4, total: 4, reached: true });
+  });
+
+  it('a school has no roster cap line (the school page has its own)', () => {
+    expect(seatLine('school', { used: 1, total: 1, warning: true, reached: true, over: false, free: false })).toBeNull();
   });
 });
