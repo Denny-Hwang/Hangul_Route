@@ -5,8 +5,9 @@ import { getMessages } from '../resolve';
 
 // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-7b, section 17.4: "Who is joining?" for family codes. Names only, no
 // age, no comparison; a refused seat is a calm line, never an error. es and ko follow the F-I18N-001 section 3.10 style
-// guide and glossary (learner: estudiante / 학습자; grown-up: adultos / 어른; join: unirse / 들어가다): Korean never puts a
-// particle on a name or a family name (the colon form), and Spanish counts agree with the number.
+// guide and glossary (learner: estudiante / 학습자; grown-up: adultos / 어른; join: unirse / 들어가다, and 참여 on the consent step,
+// the shipped Join verb): Korean never puts a particle on a name or a family name (the colon form), and Spanish counts
+// agree with the number.
 
 const LOCALES = ['en', 'es', 'ko'] as const;
 const KEYS = ['title', 'hint', 'takesPlace', 'classOnly', 'retry', 'consentSees', 'consentYes', 'notNow'] as const;
@@ -60,8 +61,27 @@ describe('caregiver.join.who (OA-7b)', () => {
     const ko = getMessages('ko').caregiver.join.who;
     expect(ko.joined('민아')).toBe('민아: 들어갔어요.');
     expect(ko.already('민아')).toBe('민아: 이미 이 가족에 있어요.');
-    expect(ko.consentTitle('김 가족')).toBe('김 가족: 들어갈까요?');
-    expect(ko.consentLine('민아')).toBe('민아: 들어가면 진도가 계정에 저장돼요.');
+    expect(ko.consentTitle('김 가족')).toBe('김 가족: 참여할까요?');
+    expect(ko.consentLine('민아')).toBe('민아: 참여하면 진도가 계정에 저장돼요.');
+  });
+
+  it('the spec 17.4 es and ko values decided by the OA-0b language review (round 2)', () => {
+    const es = getMessages('es').caregiver.join.who;
+    const ko = getMessages('ko').caregiver.join.who;
+    expect(es.classOnly).toBe('En este dispositivo, solo es para su clase.');
+    expect(ko.consentYes).toBe('네, 참여하기');
+    expect(ko.notNow).toBe('지금은 안 함');
+  });
+
+  it('the consent uses the Join verb of the running button, and Not now the words of the transfer consent', () => {
+    for (const locale of LOCALES) {
+      const c = getMessages(locale).caregiver;
+      expect(c.join.who.notNow, locale).toBe(c.transfer.actions.notNow.cta);
+    }
+    const ko = getMessages('ko').caregiver.join;
+    // 참여할까요? / 네, 참여하기, then 참여하는 중… on the running button: one verb throughout.
+    expect(ko.confirm.joining.cta).toContain('참여');
+    for (const s of [ko.who.consentTitle('김 가족'), ko.who.consentLine('민아'), ko.who.consentYes]) expect(s).toContain('참여');
   });
 
   it('the refused line keeps the cap line whole, in every locale', () => {

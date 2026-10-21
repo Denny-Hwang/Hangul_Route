@@ -355,7 +355,7 @@ export const caregiver = {
       already: (name: string) => `${name} ya está en esta familia.`,
       refused: (name: string, line: string) => `${name}: ${line}`,
       takesPlace: 'Ocupa un lugar en la familia.',
-      classOnly: 'En este dispositivo solo está en una clase.',
+      classOnly: 'En este dispositivo, solo es para su clase.',
       retry: 'Reintentar',
       consentTitle: (space: string) => `¿Unirse a ${space}?`,
       consentLine: (name: string) => `${name}: al unirse, su progreso se guarda en la cuenta.`,
