@@ -439,5 +439,7 @@ export const a11y = {
     grownUpRow: (label: string) => `${label}, for grown-ups, needs the PIN`,
     /** [OA] Row OA-5: a locked learner tile (the chooser and the Profile tiles); the lock is also a glyph and a caption. */
     lockedTile: (name: string) => `${name}, locked. A grown-up PIN opens it.`,
+    /** [OA] Row OA-7a: a locked learner's row in People on this device, where a tap opens the person page without a PIN. */
+    lockedRow: (name: string) => `${name}, locked`,
   },
 } as const;
