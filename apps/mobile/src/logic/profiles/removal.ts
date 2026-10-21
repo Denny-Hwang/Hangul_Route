@@ -13,6 +13,8 @@ export interface SavedSyncFacts {
   pendingProfile: unknown;
   /** The last acknowledged push (ISO time), or null when none. */
   lastSyncedAt: string | null;
+  /** The learner's Rescue Code on this device, or null when none was issued (or it is not stored here). */
+  rescueCode?: string | null;
 }
 
 const timeOf = (iso: string): number => Date.parse(iso);
@@ -32,6 +34,15 @@ export function isSaved(sync: SavedSyncFacts | null, lastLocalWrite: string | nu
   const written = timeOf(lastLocalWrite);
   if (Number.isNaN(pushed) || Number.isNaN(written)) return false;
   return pushed >= written;
+}
+
+/**
+ * Section 10.4 (row OA-7a review): the one-step Remove needs more than a saved learner: the learner's Rescue Code is on
+ * this device, so the sheet can show it before Remove deletes the only copy here (the sync check may have just
+ * registered the learner and issued it, unseen). A saved learner without a code goes the unsaved way (two steps).
+ */
+export function savedWithCode(sync: SavedSyncFacts | null, lastLocalWrite: string | null): boolean {
+  return isSaved(sync, lastLocalWrite) && typeof sync?.rescueCode === 'string' && sync.rescueCode.length > 0;
 }
 
 /**

@@ -39,6 +39,10 @@ export function createSyncScheduler(run: (learnerId: string) => void, timers: Sc
       timers.clearTimeout(handle);
       pending.delete(learnerId);
     },
+    /** [OA] Row OA-7a: whether a run is queued for this learner (a write not pushed yet). */
+    has(learnerId: string): boolean {
+      return pending.has(learnerId);
+    },
     pendingCount(): number {
       return pending.size;
     },

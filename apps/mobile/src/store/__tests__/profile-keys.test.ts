@@ -40,6 +40,29 @@ describe('[OA] the per-profile key registry (row OA-7a, CS-20)', () => {
     expect(found.length).toBeGreaterThanOrEqual(15);
   });
 
+  it('every other `prefix:${...id}` template in the source is a known non-storage one, so a new per-profile key built another way is not missed', () => {
+    // Any template literal joining a lowercase prefix with an id-like expression (`${p.id}`, `${PREFIX_ID}`, ...).
+    const ANY_ID = /`([a-z][a-zA-Z-]*(?::[a-zA-Z-]+)*):\$\{([^}]*[iI][dD])\}`/g;
+    // Prefixes that name content, rows or React keys, never a stored value.
+    const NOT_STORED = new Set(['jamo', 'check', 'cp', 'lp:sym', 'quest', 'episode', 'set', 'kw', 'note', 'card', 'title', 'line', 'option', 'row', 'story']);
+    const listed = new Set(Object.values(PER_PROFILE_KEYS).map((template) => template('ID').replace(/:ID$/, '')));
+    const unknown: string[] = [];
+    for (const file of sources(SRC)) {
+      for (const match of readFileSync(file, 'utf8').matchAll(ANY_ID)) {
+        const prefix = match[1]!;
+        if (!listed.has(prefix) && !NOT_STORED.has(prefix)) unknown.push(`${relative(SRC, file)}: ${match[0]}`);
+      }
+    }
+    expect(unknown, 'a per-profile key goes in store/profile-keys.ts; a template that is not stored goes in NOT_STORED').toEqual([]);
+  });
+
+  it('no per-profile key is built by string concatenation (a sweep by template would miss it)', () => {
+    const CONCAT = /(?:readJson\w*|writeJson|updateJson|removeKey)\(\s*['"][a-z][a-z-]*:['"]\s*\+/g;
+    const found: string[] = [];
+    for (const file of sources(SRC)) for (const match of readFileSync(file, 'utf8').matchAll(CONCAT)) found.push(`${relative(SRC, file)}: ${match[0]}`);
+    expect(found).toEqual([]);
+  });
+
   it('every template keeps the id at its end, so a sweep by id finds it, and no two templates share a key', () => {
     const keys = Object.values(PER_PROFILE_KEYS).map((template) => template('profile:abc12345'));
     for (const key of keys) expect(key.endsWith(':profile:abc12345'), key).toBe(true);

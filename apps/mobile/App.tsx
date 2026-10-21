@@ -19,7 +19,7 @@ import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { leaveGrownUpAreaOnClose, watchGrownUpAreaExit } from './src/navigation/grown-up-area-exit';
 import { followProfileChanges } from './src/store/profile-store';
-import { bindChooserResume } from './src/store/who-chooser';
+import { bindChooserResume, bindRemovedElsewhere } from './src/store/who-chooser';
 import { bindGrownUpBackgroundRule } from './src/screens/parent/use-gate-lapse';
 import { subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
@@ -64,7 +64,10 @@ export default function App(): React.ReactElement {
     const stopAreaLeave = leaveGrownUpAreaOnClose(navigation);
     // [OA] Row OA-4a: back after 30 minutes on a shared device, the chooser opens over the screen (flag on only).
     const stopResume = bindChooserResume(navigation);
+    // [OA] Row OA-7a: the learner active here removed in another tab: the chooser (or Welcome) opens (flag on only).
+    const stopRemoved = bindRemovedElsewhere(navigation);
     stopBridge.current = () => {
+      stopRemoved();
       stopHistory();
       stopAreaExit();
       stopAreaLeave();

@@ -96,6 +96,16 @@ interface Actions {
    * in flight, until a restore adopts it again (`adoptCredentials`, `adoptServerLearner`). No server call is made.
    */
   forgetLearner: (learnerId: string) => void;
+  /**
+   * [OA] Row OA-7a (section 10.4): whether a push for the learner is running, due to run again or queued, so a
+   * write may not be on the server yet (the saved check reads it as not saved).
+   */
+  syncBusy: (learnerId: string) => boolean;
+  /**
+   * [OA] Row OA-7a (section 10.4): pushes the learner now, a queued run included, and waits for a run that follows
+   * (a merge queues one); at most three runs. Answers the record after the last one.
+   */
+  flushLearner: (learnerId: string) => Promise<LearnerSyncState>;
 }
 
 export interface AdoptInput {
@@ -402,6 +412,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     update(learnerId, { status: 'syncing' });
     const registered = await ensureRegistered(profile, state, client);
+    // [OA] Row OA-7a (CS-12, CS-20): a learner removed while this run waited goes no further: no push, no code.
+    if (removedHere.has(learnerId)) return state;
     if (!registered?.secret) return get().byLearner[learnerId] ?? state;
     const creds = { deviceId: await getDeviceId(), secret: registered.secret };
     let profileError: string | null = null;
@@ -423,6 +435,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       api: { putSnapshot: (id, body) => client.putSnapshot(id, body, creds) },
     });
 
+    if (removedHere.has(learnerId)) return state;
     if (outcome.status === 'error') return update(learnerId, { status: 'error', lastError: outcome.code });
     if (outcome.status === 'retry-later') {
       applyServerSnapshot(learnerId, local, outcome.snapshot);
@@ -432,7 +445,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
     const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: profileError });
     // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
-    if (!synced.rescueCode) await get().issueRescueCode(learnerId);
+    if (!synced.rescueCode && !removedHere.has(learnerId)) await get().issueRescueCode(learnerId);
+    if (removedHere.has(learnerId)) return state;
     for (const listener of syncedListeners) listener(learnerId);
     return get().byLearner[learnerId] ?? synced;
   }
@@ -503,8 +517,10 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     issueRescueCode: async (learnerId) => {
       const client = api();
+      // [OA] Row OA-7a: never for a learner removed from this device (its record is gone; CS-12).
+      if (removedHere.has(learnerId)) return null;
       const state = await get().hydrate(learnerId);
-      if (!client || !state.secret) return null;
+      if (!client || !state.secret || removedHere.has(learnerId)) return null;
       const result = await client.issueRescueCode(learnerId, { deviceId: await getDeviceId(), secret: state.secret });
       if (result.status !== 'ok') {
         update(learnerId, { lastError: result.code });
@@ -580,6 +596,24 @@ export const useSyncStore = create<State & Actions>((set, get) => {
         return { byLearner: rest };
       });
       removeKey(key(learnerId)).catch(() => undefined);
+    },
+
+    syncBusy: (learnerId) => inflight.has(learnerId) || rerun.has(learnerId) || scheduler.has(learnerId),
+
+    flushLearner: async (learnerId) => {
+      scheduler.cancel(learnerId);
+      let state = await get().syncNow(learnerId);
+      for (let run = 1; run < 3; run += 1) {
+        const running = inflight.get(learnerId);
+        if (running) {
+          state = await running;
+          continue;
+        }
+        if (!scheduler.has(learnerId)) break;
+        scheduler.cancel(learnerId);
+        state = await get().syncNow(learnerId);
+      }
+      return state;
     },
   };
 });

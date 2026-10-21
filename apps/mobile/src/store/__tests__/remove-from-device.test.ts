@@ -36,14 +36,19 @@ vi.mock('../../platform/telemetry', () => ({
 vi.mock('../../platform/locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: vi.fn() }));
 vi.mock('../../platform/device', () => ({ getDeviceId: vi.fn(async () => 'device-test') }));
 vi.mock('../../platform/profiles-channel', () => ({ postProfilesChanged: () => undefined, subscribeProfilesChanged: () => () => undefined }));
+vi.mock('../../platform/app-visibility', () => ({ subscribeAppVisibility: () => () => undefined }));
+vi.mock('../../platform/app-root', () => ({ peekBootIntent: () => null, consumeBootIntent: () => undefined }));
+vi.mock('../../platform/join-handoff', () => ({ takeJoinHandoff: () => null }));
 
-import { listKeys } from '../../platform/storage';
+import { listKeys, removeKey } from '../../platform/storage';
+import { onProfileRemoved } from '../profile-removal';
 import { PER_PROFILE_KEYS } from '../profile-keys';
-import { useProfileStore } from '../profile-store';
+import { onActiveRemovedElsewhere, useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { removeFromDevice, savedNow, syncThenCheck } from '../remove-from-device';
+import { removalCheck, removeFromDevice, savedNow, syncThenCheck } from '../remove-from-device';
 import { useSyncStore, type LearnerSyncState } from '../sync-store';
 import { useUiStore } from '../ui-store';
+import { bindRemovedElsewhere } from '../who-chooser';
 
 const fetchSpy = vi.fn(async () => {
   throw new Error('no network in this test');
@@ -69,7 +74,12 @@ function seedAll(id: string): void {
 }
 
 /** The sync store's own actions, put back before each test (some tests stand in for `hydrate` or `syncNow`). */
-const syncActions = { hydrate: useSyncStore.getState().hydrate, syncNow: useSyncStore.getState().syncNow };
+const syncActions = {
+  hydrate: useSyncStore.getState().hydrate,
+  syncNow: useSyncStore.getState().syncNow,
+  syncBusy: useSyncStore.getState().syncBusy,
+  issueRescueCode: useSyncStore.getState().issueRescueCode,
+};
 
 beforeEach(async () => {
   useSyncStore.setState(syncActions);
@@ -87,7 +97,7 @@ beforeEach(async () => {
 /** A push acknowledged after every write of the test (a hydrate may stamp the welcome card's write now). */
 const LATER = '2099-01-01T00:00:00.000Z';
 const syncRecord = (patch: Partial<LearnerSyncState>): string =>
-  JSON.stringify({ secret: 'device-secret', rev: 1, lastSyncedAt: LATER, rescueCode: null, pendingProfile: null, profileAt: null, ...patch });
+  JSON.stringify({ secret: 'device-secret', rev: 1, lastSyncedAt: LATER, rescueCode: 'TIGER-MOON-RIVER', pendingProfile: null, profileAt: null, ...patch });
 const progress = (id: string, updatedAt: string): string =>
   JSON.stringify({ profileId: id, quests: [], cards: [], sessions: [], homework: [], reviews: [], placements: [], updatedAt });
 
@@ -97,6 +107,22 @@ describe('[OA] the saved check (10.4: registered and nothing pending)', () => {
     disk.set(`sync:${jun}`, syncRecord({}));
     disk.set(`progress:${jun}`, progress(jun, '2026-10-21T09:00:00.000Z'));
     expect(await savedNow(jun)).toBe(true);
+    expect(await removalCheck(jun)).toEqual({ saved: true, rescueCode: 'TIGER-MOON-RIVER' });
+  });
+
+  it('saved on the server but no Rescue Code on this device: not saved for the one-step Remove (the code is shown first)', async () => {
+    const { jun } = learners();
+    disk.set(`sync:${jun}`, syncRecord({ rescueCode: null }));
+    expect(await removalCheck(jun)).toEqual({ saved: false, rescueCode: null });
+  });
+
+  it('a push running, due to run again or queued: not saved (a write may not be on the server yet)', async () => {
+    const { jun } = learners();
+    disk.set(`sync:${jun}`, syncRecord({}));
+    const busy = vi.fn(() => true);
+    useSyncStore.setState({ syncBusy: busy });
+    expect(await savedNow(jun)).toBe(false);
+    expect(busy).toHaveBeenCalledWith(jun);
   });
 
   it('a queued edit, a write after the push, or no registration: not saved', async () => {
@@ -126,16 +152,40 @@ describe('[OA] sync first (10.4: a pending queue tries syncNow)', () => {
       return { learnerId: id, secret: 'device-secret', rev: 1, lastSyncedAt: '2026-10-21T10:00:00.000Z', lastError: null, status: 'synced', rescueCode: null, pendingProfile: null, profileAt: null };
     });
     useSyncStore.setState({ syncNow });
-    expect(await syncThenCheck(jun)).toBe(true);
+    expect(await syncThenCheck(jun)).toEqual({ saved: true, rescueCode: 'TIGER-MOON-RIVER' });
     expect(syncNow).toHaveBeenCalledWith(jun);
+  });
+
+  it('a learner the check registers without a code: the code is asked for, and the check answers it to show', async () => {
+    const { jun } = learners();
+    disk.set(`progress:${jun}`, progress(jun, '2026-10-21T09:00:00.000Z'));
+    useSyncStore.setState({
+      syncNow: vi.fn(async (id: string) => {
+        disk.set(`sync:${id}`, syncRecord({ rescueCode: null }));
+        return JSON.parse(syncRecord({ rescueCode: null })) as LearnerSyncState;
+      }),
+      issueRescueCode: vi.fn(async (id: string) => {
+        disk.set(`sync:${id}`, syncRecord({ rescueCode: 'NEW-CODE-ONE-TWO 123456' }));
+        useSyncStore.setState({ byLearner: {} });
+        return 'NEW-CODE-ONE-TWO 123456';
+      }),
+    });
+    expect(await syncThenCheck(jun)).toEqual({ saved: true, rescueCode: 'NEW-CODE-ONE-TWO 123456' });
+  });
+
+  it('no answer within the time limit: unsaved (the safe side), the sheet does not wait on a slow network', async () => {
+    const { jun } = learners();
+    disk.set(`sync:${jun}`, syncRecord({}));
+    useSyncStore.setState({ syncNow: vi.fn(() => new Promise<LearnerSyncState>(() => undefined)) });
+    expect(await syncThenCheck(jun, 20)).toEqual({ saved: false, rescueCode: null });
   });
 
   it('a sync that fails (offline, or sync off in this build) leaves the learner unsaved', async () => {
     const { jun } = learners();
     disk.set(`progress:${jun}`, progress(jun, '2026-10-21T09:00:00.000Z'));
-    expect(await syncThenCheck(jun)).toBe(false);
+    expect((await syncThenCheck(jun)).saved).toBe(false);
     useSyncStore.setState({ syncNow: () => Promise.reject(new Error('offline')) });
-    expect(await syncThenCheck(jun)).toBe(false);
+    expect((await syncThenCheck(jun)).saved).toBe(false);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
@@ -143,25 +193,25 @@ describe('[OA] sync first (10.4: a pending queue tries syncNow)', () => {
 describe('[OA] removeFromDevice (OA-D13, CS-12)', () => {
   it('checking and unsaved never remove: the unsaved sheet needs its second step', async () => {
     const { jun } = learners();
-    expect(removeFromDevice(jun, 'checking')).toBeNull();
-    expect(removeFromDevice(jun, 'unsaved')).toBeNull();
+    expect(await removeFromDevice(jun, 'checking')).toBeNull();
+    expect(await removeFromDevice(jun, 'unsaved')).toBeNull();
     expect(useProfileStore.getState().profiles.map((p) => p.id)).toContain(jun);
     expect(sent).toEqual([]);
   });
 
   it('a non-active learner: removed, the app stays, profile.removed without a profile id', async () => {
     const { mina, jun } = learners();
-    expect(removeFromDevice(jun, 'saved')).toBe('stay');
+    expect(await removeFromDevice(jun, 'saved')).toBe('stay');
     expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual([mina]);
     expect(useProfileStore.getState().activeId).toBe(mina);
     expect(sent).toEqual([{ name: 'profile.removed', payload: { saved: true, wasActive: false, anyway: false } }]);
-    expect(removeFromDevice(jun, 'saved')).toBeNull();
+    expect(await removeFromDevice(jun, 'saved')).toBeNull();
   });
 
   it('the active learner: the chooser opens and the grown-up session ends (OA-D5b)', async () => {
     const { mina } = learners();
     useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now() });
-    expect(removeFromDevice(mina, 'anyway')).toBe('chooser');
+    expect(await removeFromDevice(mina, 'anyway')).toBe('chooser');
     expect(sent.at(-1)).toEqual({ name: 'profile.removed', payload: { saved: false, wasActive: true, anyway: true } });
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
@@ -169,15 +219,15 @@ describe('[OA] removeFromDevice (OA-D13, CS-12)', () => {
 
   it('the last learner: Welcome', async () => {
     const { mina, jun } = learners();
-    removeFromDevice(jun, 'saved');
-    expect(removeFromDevice(mina, 'saved')).toBe('welcome');
+    await removeFromDevice(jun, 'saved');
+    expect(await removeFromDevice(mina, 'saved')).toBe('welcome');
     expect(useProfileStore.getState().profiles).toEqual([]);
   });
 
   it('the lock entry goes and a tombstone is written in the same write sequence', async () => {
     const { mina, jun } = learners();
     disk.set('profiles:locks', JSON.stringify({ v: 1, ids: [mina, jun] }));
-    removeFromDevice(jun, 'saved');
+    await removeFromDevice(jun, 'saved');
     await settle();
     expect(parse('profiles:locks')).toEqual({ v: 1, ids: [mina] });
     expect((parse('profiles:tombstones') as { ids: string[] }).ids).toEqual([jun]);
@@ -195,7 +245,7 @@ describe('[OA] the key sweep (CS-20)', () => {
     await useProgressStore.getState().hydrate(jun);
     useSyncStore.getState().requestSync(jun);
 
-    removeFromDevice(jun, 'anyway');
+    await removeFromDevice(jun, 'anyway');
     await settle();
 
     const keys = await listKeys();
@@ -212,7 +262,7 @@ describe('[OA] the key sweep (CS-20)', () => {
     const { jun } = learners();
     seedAll(jun);
     await useSyncStore.getState().hydrate(jun);
-    removeFromDevice(jun, 'anyway');
+    await removeFromDevice(jun, 'anyway');
     // A run that started before the removal and lands now (here: its credential write).
     useSyncStore.getState().markProfileDirty(jun, { displayName: 'Jun' }).catch(() => undefined);
     await settle();
@@ -226,7 +276,7 @@ describe('[OA] the key sweep (CS-20)', () => {
   it('a progress write still in flight for a removed learner is not written back; a restored profile saves again', async () => {
     const { jun } = learners();
     disk.set(`progress:${jun}`, progress(jun, '2026-10-21T09:00:00.000Z'));
-    removeFromDevice(jun, 'anyway');
+    await removeFromDevice(jun, 'anyway');
     await settle();
     useProgressStore.getState().replaceSnapshot(jun, JSON.parse(progress(jun, '2026-10-21T12:00:00.000Z')));
     await settle();
@@ -235,5 +285,126 @@ describe('[OA] the key sweep (CS-20)', () => {
     useProgressStore.getState().replaceSnapshot(jun, JSON.parse(progress(jun, '2026-10-21T12:00:00.000Z')));
     await settle();
     expect(disk.has(`progress:${jun}`)).toBe(true);
+  });
+});
+
+describe('[OA] every store forgets on its own, and the sweep catches what is left (CS-20, review round 1)', () => {
+  it('profile-store.remove alone (no sweep): every per-profile store deleted its own key (a store that forgets to subscribe fails)', async () => {
+    const { mina, jun } = learners();
+    seedAll(jun);
+    useProfileStore.getState().remove(jun);
+    await settle();
+    expect((await listKeys()).filter((k) => k.includes(jun))).toEqual([]);
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual([mina]);
+  });
+
+  it('a store whose listener throws never keeps the others from forgetting the learner', async () => {
+    const { jun } = learners();
+    seedAll(jun);
+    const off = onProfileRemoved(() => {
+      throw new Error('a broken store');
+    });
+    await expect(removeFromDevice(jun, 'anyway')).resolves.toBe('stay');
+    await settle();
+    expect((await listKeys()).filter((k) => k.includes(jun))).toEqual([]);
+    off();
+  });
+
+  it('a delete that fails once: the sweep after the removal looks again and deletes it', async () => {
+    const { jun } = learners();
+    seedAll(jun);
+    vi.mocked(removeKey).mockImplementationOnce(async () => {
+      throw new Error('IndexedDB busy');
+    });
+    await removeFromDevice(jun, 'anyway');
+    await settle();
+    expect((await listKeys()).filter((k) => k.includes(jun))).toEqual([]);
+  });
+
+  it('at launch, a key written back for a tombstoned learner (an older bundle) goes; a learner on the list keeps its keys', async () => {
+    const { mina, jun } = learners();
+    await removeFromDevice(jun, 'anyway');
+    await settle();
+    seedAll(jun);
+    seedAll(mina);
+    await useProfileStore.getState().hydrate();
+    await settle();
+    expect((await listKeys()).filter((k) => k.includes(jun))).toEqual([]);
+    expect(await listKeys()).toContain(`settings:${mina}`);
+  });
+
+  it('a learner removed, then restored with its Rescue Code on this device: it stays through a refresh and a launch, and its record is kept', async () => {
+    const { mina, jun } = learners();
+    const saved = useProfileStore.getState().profiles.find((p) => p.id === jun)!;
+    seedAll(jun);
+    await removeFromDevice(jun, 'saved');
+    await settle();
+    useProfileStore.getState().adoptProfile(saved);
+    useSyncStore.getState().adoptCredentials(jun, 'new-secret', 2);
+    await settle();
+    await useProfileStore.getState().refresh();
+    await useProfileStore.getState().hydrate();
+    await settle();
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual([mina, jun]);
+    expect((parse('profiles') as { id: string }[]).map((p) => p.id)).toEqual([mina, jun]);
+    expect(parse(`sync:${jun}`)).toMatchObject({ secret: 'new-secret' });
+  });
+
+  it('removed in another tab: this tab forgets the learner too (no sync record written back) and, when it was active here, the chooser is asked for', async () => {
+    const { mina, jun } = learners();
+    useProfileStore.getState().setActive(jun);
+    await settle();
+    seedAll(jun);
+    await useSyncStore.getState().hydrate(jun);
+    const opened = vi.fn();
+    const off = onActiveRemovedElsewhere(opened);
+    // Another tab removed Jun: its list and tombstone are what this tab reads.
+    disk.set('profiles', JSON.stringify((parse('profiles') as { id: string }[]).filter((p) => p.id !== jun)));
+    disk.set('profiles:tombstones', JSON.stringify({ v: 1, ids: [jun], at: { [jun]: Date.now() } }));
+    await useProfileStore.getState().refresh();
+    await settle();
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual([mina]);
+    expect(opened).toHaveBeenCalledWith({ learnersLeft: 1 });
+    expect(useSyncStore.getState().byLearner[jun]).toBeUndefined();
+    // A queued edit or a sync landing here afterwards writes nothing for Jun.
+    await useSyncStore.getState().markProfileDirty(jun, { displayName: 'Jun' }).catch(() => undefined);
+    await settle();
+    expect((await listKeys()).filter((k) => k.includes(jun))).toEqual([]);
+    off();
+  });
+
+  it('the learner app opens the chooser alone (trigger manual), or Welcome when no learner is left; nothing with the flag off', async () => {
+    const nav = { isReady: () => true, dispatch: vi.fn() };
+    let flag = true;
+    const off = bindRemovedElsewhere(nav, () => flag);
+    const { mina, jun } = learners();
+    const removeElsewhere = async (id: string): Promise<void> => {
+      const list = (parse('profiles') as { id: string }[]).filter((p) => p.id !== id);
+      const tomb = (parse('profiles:tombstones') as { ids: string[]; at: Record<string, number> } | null) ?? { ids: [], at: {} };
+      disk.set('profiles', JSON.stringify(list));
+      disk.set('profiles:tombstones', JSON.stringify({ v: 1, ids: [...tomb.ids, id], at: { ...tomb.at, [id]: Date.now() } }));
+      await useProfileStore.getState().refresh();
+      await settle();
+    };
+    await settle();
+    await removeElsewhere(mina);
+    expect(nav.dispatch).toHaveBeenLastCalledWith({ type: 'RESET', payload: { index: 0, routes: [{ name: 'WhoIsUsing', params: { trigger: 'manual' } }] } });
+    await removeElsewhere(jun);
+    expect(nav.dispatch).toHaveBeenLastCalledWith({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Onboarding', params: { screen: 'Welcome' } }] } });
+    expect(nav.dispatch).toHaveBeenCalledTimes(2);
+    flag = false;
+    const kai = useProfileStore.getState().createProfile({ ...input, displayName: 'Kai' }).id;
+    await settle();
+    await removeElsewhere(kai);
+    expect(nav.dispatch).toHaveBeenCalledTimes(2);
+    off();
+  });
+
+  it('a Rescue Code is never asked for a learner removed from this device (CS-12)', async () => {
+    const { jun } = learners();
+    disk.set(`sync:${jun}`, syncRecord({ rescueCode: null }));
+    await removeFromDevice(jun, 'anyway');
+    expect(await useSyncStore.getState().issueRescueCode(jun)).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
