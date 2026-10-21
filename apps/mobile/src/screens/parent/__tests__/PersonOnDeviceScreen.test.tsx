@@ -15,14 +15,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const removal = vi.hoisted(() => ({
   saved: vi.fn(async (_id: string) => true),
   sync: vi.fn(async (_id: string) => true),
-  remove: vi.fn((_id: string, _step: string): 'stay' | 'chooser' | 'welcome' | null => 'stay'),
+  remove: vi.fn(async (_id: string, _step: string): Promise<'stay' | 'chooser' | 'welcome' | null> => 'stay'),
 }));
+const CODE = 'TIGER-MOON-RIVER-STAR 123456';
+const check = (saved: boolean) => ({ saved, rescueCode: saved ? CODE : null });
 vi.mock('../../../store/remove-from-device', () => ({
-  savedNow: (id: string) => removal.saved(id),
-  syncThenCheck: (id: string) => removal.sync(id),
+  removalCheck: async (id: string) => check(await removal.saved(id)),
+  syncThenCheck: async (id: string) => check(await removal.sync(id)),
   removeFromDevice: (id: string, step: string) => removal.remove(id, step),
 }));
 vi.mock('../../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
+const lockSpy = vi.hoisted(() => vi.fn(async (_id: string, _on: boolean, _profiles: unknown) => true));
+vi.mock('../../../store/profile-locks', async (original) => ({ ...(await original<Record<string, unknown>>()), setProfileLocked: lockSpy }));
 
 import { useAccountStore } from '../../../store/account-store';
 import { useLocaleStore } from '../../../store/locale-store';
@@ -35,7 +39,23 @@ import { PersonOnDeviceScreen } from '../PersonOnDeviceScreen';
 
 const en = getMessages('en');
 const people = en.caregiver.people;
-const navigation = { navigate: vi.fn(), goBack: vi.fn(), reset: vi.fn(), canGoBack: vi.fn(() => true) };
+const focusListeners = new Set<() => void>();
+const navigation = {
+  navigate: vi.fn(),
+  goBack: vi.fn(),
+  reset: vi.fn(),
+  canGoBack: vi.fn(() => true),
+  addListener: vi.fn((_event: 'focus', listener: () => void) => {
+    focusListeners.add(listener);
+    return () => focusListeners.delete(listener);
+  }),
+};
+/** The screen comes back in front (a PIN screen closed). */
+async function refocus(): Promise<void> {
+  await act(async () => {
+    for (const listener of focusListeners) listener();
+  });
+}
 
 const child = (id: string, displayName: string): Profile => ({
   id,
@@ -62,6 +82,9 @@ async function settle(): Promise<void> {
   });
 }
 
+const lockSwitch = (root: ReactTestInstance): ReactTestInstance =>
+  root.findAll((n) => typeof n.type !== 'string' && n.props.testID === 'person-lock-switch' && typeof n.props.onValueChange === 'function')[0]!;
+
 async function pressRemove(root: ReactTestInstance): Promise<void> {
   await press(byTestId(root, 'person-remove')[0]!);
   await settle();
@@ -74,7 +97,9 @@ beforeEach(() => {
   for (const fn of Object.values(navigation)) fn.mockClear();
   removal.saved.mockReset().mockResolvedValue(true);
   removal.sync.mockReset().mockResolvedValue(true);
-  removal.remove.mockReset().mockReturnValue('stay');
+  removal.remove.mockReset().mockResolvedValue('stay');
+  lockSpy.mockClear();
+  focusListeners.clear();
   resetProfileLocks();
   useLocaleStore.setState({ device: 'en', byProfile: {} });
   useProfileStore.setState({ profiles: [child('profile:mina0001', 'Mina'), child(JUN, 'Jun')], activeId: 'profile:mina0001' });
@@ -134,6 +159,7 @@ describe('[OA] People on this device: one person (row OA-7a)', () => {
       visible: true,
       title: people.removeAsk('Jun'),
       message: people.removeSaved,
+      code: CODE,
       detail: people.spacesStay,
       cancelLabel: en.common.buttons.cancel,
       confirmLabel: en.console.confirm.remove,
@@ -143,6 +169,7 @@ describe('[OA] People on this device: one person (row OA-7a)', () => {
     });
     expect(sheet.quietLabel).toBeUndefined();
     await act(async () => sheet.onConfirm());
+    await settle();
     expect(removal.remove).toHaveBeenCalledWith(JUN, 'saved');
     expect(navigation.goBack).toHaveBeenCalled();
     expect(sheetOf(r.root).visible).toBe(false);
@@ -203,7 +230,81 @@ describe('[OA] People on this device: one person (row OA-7a)', () => {
     await pressRemove(r.root);
     await act(async () => sheetOf(r.root).onQuiet!());
     await act(async () => sheetOf(r.root).onConfirm());
+    await settle();
     expect(removal.remove).toHaveBeenCalledWith(JUN, 'anyway');
+  });
+
+  it('the unsaved steps show no Rescue Code; the saved step shows it before Remove (an unregistered learner registered by the check)', async () => {
+    removal.saved.mockResolvedValue(false);
+    removal.sync.mockResolvedValue(false);
+    const r = await render(screen());
+    await pressRemove(r.root);
+    expect(sheetOf(r.root).code).toBeUndefined();
+    await act(async () => sheetOf(r.root).onCancel());
+    // Never registered before: the check registers it and a code is issued; the sheet shows that code with Remove.
+    removal.sync.mockResolvedValue(true);
+    await pressRemove(r.root);
+    expect(sheetOf(r.root)).toMatchObject({ message: people.removeSaved, code: CODE, confirmLabel: en.console.confirm.remove });
+  });
+
+  it('a Remove PIN screen closed without the PIN: a PIN entered later for the lock switch changes the lock only, no sheet opens', async () => {
+    useUiStore.setState({ lastPinVerifiedAt: Date.now() - 3 * 60_000 });
+    const r = await render(screen());
+    await pressRemove(r.root);
+    expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'FreshPin' });
+    await refocus();
+    await act(async () => lockSwitch(r.root).props.onValueChange(true));
+    expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'FreshPin' });
+    await act(async () => useUiStore.setState({ lastPinVerifiedAt: Date.now() }));
+    await settle();
+    expect(lockSpy).toHaveBeenCalledWith(JUN, true, expect.anything());
+    expect(removal.saved).not.toHaveBeenCalled();
+    expect(sheetOf(r.root).visible).toBe(false);
+  });
+
+  it('a lock PIN screen closed without the PIN: a PIN entered later for Remove opens the sheet only, the lock stays', async () => {
+    useUiStore.setState({ lastPinVerifiedAt: Date.now() - 3 * 60_000 });
+    const r = await render(screen());
+    await act(async () => lockSwitch(r.root).props.onValueChange(true));
+    expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'FreshPin' });
+    await refocus();
+    await pressRemove(r.root);
+    await act(async () => useUiStore.setState({ lastPinVerifiedAt: Date.now() }));
+    await settle();
+    expect(sheetOf(r.root)).toMatchObject({ visible: true, title: people.removeAsk('Jun') });
+    expect(lockSpy).not.toHaveBeenCalled();
+  });
+
+  it('the PIN went stale while the sheet was open: Remove asks the PIN again and removes nothing; the sheet starts over once it is right', async () => {
+    removal.saved.mockResolvedValue(false);
+    removal.sync.mockResolvedValue(false);
+    const r = await render(screen());
+    await pressRemove(r.root);
+    await act(async () => sheetOf(r.root).onQuiet!());
+    expect(sheetOf(r.root).title).toBe(people.removeAnywayAsk);
+    useUiStore.setState({ lastPinVerifiedAt: Date.now() - 3 * 60_000 });
+    await act(async () => sheetOf(r.root).onConfirm());
+    await settle();
+    expect(removal.remove).not.toHaveBeenCalled();
+    expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'FreshPin' });
+    expect(sheetOf(r.root).visible).toBe(false);
+    await act(async () => useUiStore.setState({ lastPinVerifiedAt: Date.now() }));
+    await settle();
+    // Back at the first step, checked again: Remove anyway needs its second step again.
+    expect(sheetOf(r.root)).toMatchObject({ visible: true, message: people.removeUnsaved, quietLabel: people.removeAnyway });
+  });
+
+  it('a saved learner written to while the sheet was open: Remove checks again and goes through the sync check', async () => {
+    const r = await render(screen());
+    await pressRemove(r.root);
+    expect(sheetOf(r.root).message).toBe(people.removeSaved);
+    removal.saved.mockResolvedValue(false);
+    removal.sync.mockResolvedValue(false);
+    await act(async () => sheetOf(r.root).onConfirm());
+    await settle();
+    expect(removal.remove).not.toHaveBeenCalled();
+    expect(removal.sync).toHaveBeenCalledWith(JUN);
+    expect(sheetOf(r.root)).toMatchObject({ visible: true, message: people.removeUnsaved, confirmLabel: people.saveFirst });
   });
 
   it('a check that lands after Cancel changes nothing', async () => {
@@ -219,15 +320,18 @@ describe('[OA] People on this device: one person (row OA-7a)', () => {
   });
 
   it('removing the active learner opens the chooser; removing the last one opens Welcome', async () => {
-    removal.remove.mockReturnValue('chooser');
+    removal.remove.mockResolvedValue('chooser');
     const r = await render(screen());
     await pressRemove(r.root);
     await act(async () => sheetOf(r.root).onConfirm());
-    expect(navigation.reset).toHaveBeenCalledWith({ index: 1, routes: [{ name: 'Main' }, { name: 'WhoIsUsing', params: { trigger: 'return' } }] });
+    await settle();
+    // The chooser alone: no learner's Home under it (the learner who takes over may be locked).
+    expect(navigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'WhoIsUsing', params: { trigger: 'manual' } }] });
 
-    removal.remove.mockReturnValue('welcome');
+    removal.remove.mockResolvedValue('welcome');
     await pressRemove(r.root);
     await act(async () => sheetOf(r.root).onConfirm());
+    await settle();
     expect(navigation.reset).toHaveBeenLastCalledWith({ index: 0, routes: [{ name: 'Onboarding', params: { screen: 'Welcome' } }] });
   });
 

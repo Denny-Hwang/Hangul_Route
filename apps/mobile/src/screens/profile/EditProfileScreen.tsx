@@ -289,7 +289,13 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
       {lockShown ? (
         <>
           <Spacer size="lg" />
-          <ProfileLockCard profileId={profileId} onAskPin={() => navigation.navigate('PinEntry', { next: 'FreshPin' })} failedLine={e.saveFailed} testID="edit-lock" />
+          <ProfileLockCard
+            profileId={profileId}
+            onAskPin={() => navigation.navigate('PinEntry', { next: 'FreshPin' })}
+            subscribeFocus={(listener) => navigation.addListener('focus', listener)}
+            failedLine={e.saveFailed}
+            testID="edit-lock"
+          />
         </>
       ) : null}
 

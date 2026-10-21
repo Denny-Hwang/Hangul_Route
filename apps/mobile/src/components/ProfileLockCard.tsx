@@ -12,6 +12,12 @@ export interface ProfileLockCardProps {
   profileId: string;
   /** Opens the PIN screen for a fresh PIN (`PinEntry { next: 'FreshPin' }`); the change applies once it is right. */
   onAskPin: () => void;
+  /**
+   * Subscribes to the screen coming back in front (`navigation.addListener('focus', …)`); returns the unsubscribe. A
+   * PIN screen left without a right PIN (Cancel, Close, a back) drops the change it was asked for, so a later PIN
+   * entered for something else (Remove from this device) never applies a lock or unlock the grown-up abandoned.
+   */
+  subscribeFocus: (listener: () => void) => () => void;
   /** The line shown when the lock could not be written (the caller's own words). */
   failedLine: string;
   /** Prefix of the switch, hint and failure line test ids (`<testID>-switch`, `-hint`, `-failed`). */
@@ -25,7 +31,7 @@ export interface ProfileLockCardProps {
  * change when that PIN is right; without a PIN it is disabled with **Set a grown-up PIN first.** Used by Edit profile
  * and the People on this device person page. Nothing here is synced.
  */
-export function ProfileLockCard({ profileId, onAskPin, failedLine, testID }: ProfileLockCardProps): React.ReactElement {
+export function ProfileLockCard({ profileId, onAskPin, subscribeFocus, failedLine, testID }: ProfileLockCardProps): React.ReactElement {
   const messages = useMessages();
   const people = messages.caregiver.people;
   const pinSet = useAccountStore((s) => s.parentPinHash !== null);
@@ -53,6 +59,18 @@ export function ProfileLockCard({ profileId, onAskPin, failedLine, testID }: Pro
     void applyLock(pending);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a PIN was entered
   }, [lastPinVerifiedAt]);
+
+  useEffect(
+    () =>
+      subscribeFocus(() => {
+        const pending = pendingLock.current;
+        if (pending !== null && needsFreshPin(pending ? 'lock' : 'unlock', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
+          pendingLock.current = null;
+        }
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- subscribed once per mount
+    [],
+  );
 
   const toggle = (on: boolean): void => {
     if (!pinSet || busy) return;

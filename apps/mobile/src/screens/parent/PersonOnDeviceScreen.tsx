@@ -14,7 +14,7 @@ import { useAudience } from '../../store/audience';
 import { passGate } from '../../store/gate-telemetry';
 import { useMembershipStore } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
-import { removeFromDevice, savedNow, syncThenCheck } from '../../store/remove-from-device';
+import { removalCheck, removeFromDevice, syncThenCheck, type RemovalCheck } from '../../store/remove-from-device';
 import { useUiStore } from '../../store/ui-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PersonOnDevice'>;
@@ -28,14 +28,17 @@ const GLYPH = 20;
  *
  * - **Lock with the grown-up PIN** (`ProfileLockCard`, the switch of row OA-5), Edit profile and the learner's report.
  * - **Remove from this device**, a secondary paper button, never red. It asks a PIN entered in the last 2 minutes
- *   (`needsFreshPin('remove')`, else `PinEntry { next: 'FreshPin' }`), then the ConfirmSheet with the name. A saved
- *   learner (registered and nothing pending) gets Remove and Cancel; any other first tries `syncNow` with the
+ *   (`needsFreshPin('remove')`, else `PinEntry { next: 'FreshPin' }`; a PIN screen left without the PIN drops the
+ *   request), then the ConfirmSheet with the name. A saved learner (registered, nothing pending, and its Rescue Code
+ *   here, shown on the sheet) gets Remove and Cancel; any other first tries `syncNow` with the
  *   checking line, and stays unsaved when that fails: **Save progress first** (the main action: Save my progress for
  *   that learner), Cancel, and a quiet **Remove anyway** that opens a second step, **Keep** first and **Remove** in the
  *   danger tone, used only here for a grown-up's destructive confirmation (CS-12). `spacesStay` shows when the learner
  *   has memberships. Without a PIN the button is disabled with **Set a grown-up PIN first.**, as the lock is.
+ * - Remove checks again when it is pressed: a PIN older than 2 minutes is asked again (and the sheet starts over),
+ *   and a saved learner that is no longer saved goes back through the sync check.
  * - The removal is local only (no server call, section 10.6 for a class-scoped learner too). Removing the active
- *   learner opens the chooser; removing the last one opens Welcome.
+ *   learner opens the chooser on its own (`trigger: 'manual'`, nothing under it); removing the last one opens Welcome.
  */
 export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactElement {
   const messages = useMessages();
@@ -51,26 +54,34 @@ export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactE
   const hydrateMemberships = useMembershipStore((s) => s.hydrate);
   const { opensDirectly } = useAudience();
   const [step, setStep] = useState<RemoveStep | null>(null);
+  const [rescueCode, setRescueCode] = useState<string | null>(null);
   /** Remove was pressed and the fresh PIN it asked for has not come back yet. */
   const pendingRemove = useRef(false);
   /** Bumped when the sheet opens or closes, so a sync check that lands after Cancel changes nothing. */
   const run = useRef(0);
+  /** A removal is under way (one press removes once). */
+  const removing = useRef(false);
 
   useEffect(() => {
     void hydrateMemberships(profileId);
   }, [profileId, hydrateMemberships]);
 
+  const show = useCallback((next: RemoveStep, check: RemovalCheck): void => {
+    setRescueCode(next === 'saved' ? check.rescueCode : null);
+    setStep(next);
+  }, []);
+
   const openSheet = useCallback(async (): Promise<void> => {
     const token = ++run.current;
-    const saved = await savedNow(profileId);
+    const first = await removalCheck(profileId);
     if (run.current !== token) return;
-    const first = openingStep(saved);
-    setStep(first);
-    if (first !== 'checking') return;
-    const savedAfterSync = await syncThenCheck(profileId);
+    const opening = openingStep(first.saved);
+    show(opening, first);
+    if (opening !== 'checking') return;
+    const afterSync = await syncThenCheck(profileId);
     if (run.current !== token) return;
-    setStep(checkedStep(savedAfterSync));
-  }, [profileId]);
+    show(checkedStep(afterSync.saved), afterSync);
+  }, [profileId, show]);
 
   // OA-D5b (3): the fresh PIN came back right; the Remove it was asked for goes on now.
   useEffect(() => {
@@ -79,11 +90,25 @@ export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactE
     void openSheet();
   }, [lastPinVerifiedAt, openSheet]);
 
+  // A PIN screen left without a right PIN (Cancel, Close, a back) drops the Remove it was asked for, so a PIN entered
+  // later for something else (the lock switch) never opens the sheet unasked.
+  useEffect(
+    () =>
+      navigation.addListener('focus', () => {
+        if (pendingRemove.current && needsFreshPin('remove', useUiStore.getState().lastPinVerifiedAt, Date.now())) pendingRemove.current = false;
+      }),
+    [navigation],
+  );
+
+  const askPin = (): void => {
+    pendingRemove.current = true;
+    navigation.navigate('PinEntry', { next: 'FreshPin' });
+  };
+
   const onRemove = (): void => {
     if (!pinSet || step !== null) return;
     if (needsFreshPin('remove', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
-      pendingRemove.current = true;
-      navigation.navigate('PinEntry', { next: 'FreshPin' });
+      askPin();
       return;
     }
     void openSheet();
@@ -92,19 +117,46 @@ export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactE
   const close = useCallback((): void => {
     run.current += 1;
     setStep(null);
+    setRescueCode(null);
   }, []);
 
   const goAfter = (after: AfterRemoval): void => {
+    // The chooser stands alone: no learner's Home is mounted under it (the one who takes over may be locked).
     if (after === 'welcome') navigation.reset({ index: 0, routes: [{ name: 'Onboarding', params: { screen: 'Welcome' } }] });
-    else if (after === 'chooser') navigation.reset({ index: 1, routes: [{ name: 'Main' }, { name: 'WhoIsUsing', params: { trigger: 'return' } }] });
+    else if (after === 'chooser') navigation.reset({ index: 0, routes: [{ name: 'WhoIsUsing', params: { trigger: 'manual' } }] });
     else if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate('ParentDashboard');
   };
 
-  const remove = (from: RemoveStep): void => {
-    const after = removeFromDevice(profileId, from);
-    close();
-    if (after !== null) goAfter(after);
+  /**
+   * Remove on the `saved` or `anyway` step. The PIN is checked again (the sheet may have stayed open past 2 minutes):
+   * when it is stale the sheet closes and the PIN is asked, and the sheet starts over once it is right. A saved
+   * learner is checked again too: written to since, it goes back through the sync check.
+   */
+  const remove = async (from: RemoveStep): Promise<void> => {
+    if (removing.current) return;
+    if (needsFreshPin('remove', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
+      close();
+      askPin();
+      return;
+    }
+    removing.current = true;
+    try {
+      if (from === 'saved') {
+        const token = run.current;
+        const again = await removalCheck(profileId);
+        if (run.current !== token) return;
+        if (!again.saved) {
+          void openSheet();
+          return;
+        }
+      }
+      const after = await removeFromDevice(profileId, from);
+      close();
+      if (after !== null) goAfter(after);
+    } finally {
+      removing.current = false;
+    }
   };
 
   const openReport = (): void => {
@@ -134,7 +186,13 @@ export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactE
         {name}
       </Heading>
       <Spacer size="lg" />
-      <ProfileLockCard profileId={profileId} onAskPin={() => navigation.navigate('PinEntry', { next: 'FreshPin' })} failedLine={messages.learner.editProfile.saveFailed} testID="person-lock" />
+      <ProfileLockCard
+        profileId={profileId}
+        onAskPin={() => navigation.navigate('PinEntry', { next: 'FreshPin' })}
+        subscribeFocus={(listener) => navigation.addListener('focus', listener)}
+        failedLine={messages.learner.editProfile.saveFailed}
+        testID="person-lock"
+      />
       <Spacer size="md" />
       <Card padding="md">
         <Pressable
@@ -204,6 +262,7 @@ export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactE
         visible={sheet !== null}
         title={sheet?.title ?? ''}
         message={sheet?.message}
+        {...(step === 'saved' && rescueCode !== null ? { code: rescueCode } : {})}
         detail={sheet?.detail}
         cancelLabel={sheet?.cancelLabel ?? messages.common.buttons.cancel}
         confirmLabel={sheet?.confirmLabel ?? ''}
@@ -212,7 +271,7 @@ export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactE
         busy={step === 'checking'}
         onCancel={close}
         onConfirm={() => {
-          if (step === 'saved' || step === 'anyway') remove(step);
+          if (step === 'saved' || step === 'anyway') void remove(step);
           else if (step === 'unsaved') {
             close();
             navigation.navigate('SaveProgress', { profileId });
