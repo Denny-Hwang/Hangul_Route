@@ -6,6 +6,7 @@ import { expandDeck, type Slide } from '../deck-builder';
 import {
   activityTimerMs,
   buildMove,
+  buildPlaceWidth,
   cardView,
   frameSpoken,
   markerFor,
@@ -541,6 +542,17 @@ describe('the sentence build at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
       { whole: '저녁에 달걀을 먹어요., jeonyeoge dalgyareul meogeoyo, In the evening, I eat an egg.' },
     ]);
     expect(buildMove(particle, 99)).toBeNull();
+  });
+
+  it('every place on the line is as wide as the widest tile, or the particle tile while both endings show (V9 as built)', () => {
+    const sizes = { tile: 80, choice: 56, padX: 24, border: 3, gap: 8, choicePadX: 12 };
+    // 친구가 / 학교에 / 가요: three blocks at 80, plus the padding and the border on both sides.
+    expect(buildPlaceWidth(plain, sizes)).toBe(3 * 80 + 2 * (24 + 3));
+    // 달걀 + 을 / 를 is wider than 저녁에 or 먹어요: the stem, three gaps, the slash and two ending boxes.
+    expect(buildPlaceWidth(particle, sizes)).toBe(2 * 80 + 3 * 8 + 56 + 2 * (56 + 2 * (12 + 3)) + 2 * (24 + 3));
+    // Smaller text, a smaller place; no tiles, the padding alone.
+    expect(buildPlaceWidth(plain, { ...sizes, tile: 40 })).toBe(3 * 40 + 54);
+    expect(buildPlaceWidth({ tiles: [] }, sizes)).toBe(54);
   });
 
   it('Sound plays the whole sentence at every build (the Hear it of the learner game), at the sentence rate', () => {

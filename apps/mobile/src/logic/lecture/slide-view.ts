@@ -208,6 +208,35 @@ export function sentenceBuildView(slide: Of<'sentence-build'>, reveal: number): 
   return { line, bank, ask: whole ? null : line.includes('choosing') ? 'particle' : 'next', whole };
 }
 
+/** The pixel sizes a sentence-build place is drawn with (`SentenceBuildSlide`): text sizes, a tile's side padding, the stage border, the gaps inside a particle tile and an ending box's side padding. */
+export interface BuildPlaceSizes {
+  tile: number;
+  choice: number;
+  padX: number;
+  border: number;
+  gap: number;
+  choicePadX: number;
+}
+
+/**
+ * The width of every place on the sentence line (V9 as built, LV-S3): the widest of the slide's tiles,
+ * and of a particle tile while both its endings show, each character counted one em of its text (a
+ * Hangul block's advance in the presenter font; punctuation is narrower), plus the tile's padding and
+ * border. Every place, empty or not, takes this one width, so the line lays out the same at every
+ * build (nothing under it moves, and the fit level the bank build finds holds to the end), and no
+ * empty box's size gives its tile away (the learner game sizes its empty places by the widest tile too).
+ */
+export function buildPlaceWidth(slide: Pick<Of<'sentence-build'>, 'tiles'>, s: BuildPlaceSizes): number {
+  const em = (text: string, size: number): number => [...text].length * size;
+  const plain = slide.tiles.map((t) => em(t.ko, s.tile));
+  const choosing = slide.tiles.map((t) =>
+    t.particle === undefined
+      ? 0
+      : em(t.particle.stem, s.tile) + 3 * s.gap + em('/', s.choice) + t.particle.choices.reduce((n, c) => n + em(c.ko, s.choice) + 2 * (s.choicePadX + s.border), 0),
+  );
+  return Math.ceil(Math.max(0, ...plain, ...choosing) + 2 * (s.padX + s.border));
+}
+
 /** How a tile reads aloud: its Korean, then its romanization when it has one ("Korean, romanization", as `KoreanText`). */
 const tileWords = (ko: string, romanization: string): string => (romanization === '' ? ko : `${ko}, ${romanization}`);
 

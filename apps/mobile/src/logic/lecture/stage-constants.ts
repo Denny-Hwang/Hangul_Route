@@ -119,14 +119,6 @@ export const REALIA_ASK_MIN = 240;
  */
 export const REALIA_GRID_MIN = 480;
 
-/**
- * The sentence-build slide (LV-S3; lecture-v2.md "Constants", V9): an empty place on the sentence line
- * is this many ems of the tiles' text wide (200 units at `presenter.size.title`, the mock's dashed
- * box), the same for every place, so no box's size gives a tile away; it shrinks with the tiles at a
- * compact level.
- */
-export const BUILD_SLOT_EM = 2.5;
-
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;
 
