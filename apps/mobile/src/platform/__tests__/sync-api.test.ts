@@ -102,7 +102,8 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
       .mockResolvedValueOnce(json(500, {}))
       .mockRejectedValueOnce(new Error('offline'));
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
-    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'ok', space: { id: 'space:c', kind: 'class', name: 'A' }, full: true, roster: [] });
+    // An old-shape answer (no `seat`, before AMENDMENTS-SEATS-ADMINS SA-1) still reads, with `seat` null.
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'ok', space: { id: 'space:c', kind: 'class', name: 'A' }, full: true, seat: null, roster: [] });
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'code_not_found' });
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'code_expired' });
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'too_many_attempts' });
@@ -110,6 +111,50 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'unknown' });
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'network' });
     expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/spaces/lookup');
+  });
+
+  it('[SA] lookupSpace sends the learner with the device header when it has one, and reads seat leniently', async () => {
+    const space = { id: 'space:f', kind: 'family', name: 'Kim family' };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { space, full: false, seat: { full: true, reason: 'cap_family', cap: 4 } } }))
+      .mockResolvedValueOnce(json(200, { data: { space, full: false, seat: { full: false, reason: null, cap: 4 } } }))
+      .mockResolvedValueOnce(json(200, { data: { space, full: false, seat: { full: 'yes', reason: 'cap_x' } } }));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.lookupSpace('K7M2X9', { learnerId: 'profile:a', creds })).toEqual({ status: 'ok', space, full: false, seat: { full: true, reason: 'cap_family', cap: 4 }, roster: [] });
+    const init = fetchImpl.mock.calls[0]?.[1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe('Device device-x:s3cret');
+    expect(JSON.parse(String(init.body))).toEqual({ code: 'K7M2X9', learnerId: 'profile:a' });
+    // Without a learner: no header, no learnerId, the answer is for a new learner.
+    expect(await api.lookupSpace('K7M2X9')).toMatchObject({ seat: { full: false, reason: null, cap: 4 } });
+    const bare = fetchImpl.mock.calls[1]?.[1] as RequestInit;
+    expect((bare.headers as Record<string, string>).Authorization).toBeUndefined();
+    expect(JSON.parse(String(bare.body))).toEqual({ code: 'K7M2X9' });
+    // A seat this app cannot read is dropped (null), never a failure: the screen falls back to `full`.
+    expect(await api.lookupSpace('K7M2X9')).toMatchObject({ status: 'ok', seat: null });
+  });
+
+  it('[SA] joinSpace maps cap_family and cap_school (cap_class with details.reason) to their own codes, with the cap', async () => {
+    const capErr = (code: string, details?: unknown) => json(409, { error: { code, message: 'm', ...(details === undefined ? {} : { details }) } });
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(capErr('cap_family', { reason: 'cap_family', cap: 4 }))
+      .mockResolvedValueOnce(capErr('cap_family'))
+      .mockResolvedValueOnce(capErr('cap_class', { reason: 'cap_school', cap: 50 }))
+      .mockResolvedValueOnce(capErr('cap_class', { reason: 'cap_class', cap: 50 }))
+      .mockResolvedValueOnce(capErr('cap_class'))
+      .mockResolvedValueOnce(capErr('cap_school', { cap: 50 }))
+      .mockResolvedValueOnce(capErr('cap_learner', { reason: 'cap_learner', cap: 3 }))
+      .mockResolvedValueOnce(capErr('cap_family', { reason: 'cap_family', cap: 'four' }));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    const body = { code: 'K7M2X9', learnerId: 'profile:a' };
+    expect(await api.joinSpace('space:f', body, creds)).toEqual({ status: 'error', code: 'cap_family', cap: 4 });
+    expect(await api.joinSpace('space:f', body, creds)).toEqual({ status: 'error', code: 'cap_family' });
+    expect(await api.joinSpace('space:c', body, creds)).toEqual({ status: 'error', code: 'cap_school', cap: 50 });
+    expect(await api.joinSpace('space:c', body, creds)).toEqual({ status: 'error', code: 'cap_class', cap: 50 });
+    expect(await api.joinSpace('space:c', body, creds)).toEqual({ status: 'error', code: 'cap_class' });
+    expect(await api.joinSpace('space:c', body, creds)).toEqual({ status: 'error', code: 'cap_school', cap: 50 });
+    expect(await api.joinSpace('space:c', body, creds)).toEqual({ status: 'error', code: 'cap_learner' });
+    // A cap this app cannot read is left out: the line falls back to FAMILY_LIFETIME_LEARNERS.
+    expect(await api.joinSpace('space:f', body, creds)).toEqual({ status: 'error', code: 'cap_family' });
   });
 
   it('joinSpace sends the device header and maps every outcome', async () => {

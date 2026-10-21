@@ -1,4 +1,4 @@
-import { JOIN_CODE_ALPHABET, JOIN_CODE_LENGTH, normalizeJoinCode } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, JOIN_CODE_ALPHABET, JOIN_CODE_LENGTH, normalizeJoinCode, type LookupSeat, type SpaceKind } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
 /**
@@ -52,6 +52,8 @@ export type JoinErrorCode =
   | 'code_expired'
   | 'cap_learner'
   | 'cap_class'
+  | 'cap_family'
+  | 'cap_school'
   | 'not_joinable'
   | 'learner_not_found'
   | 'already_bound'
@@ -67,7 +69,7 @@ export type JoinErrorCode =
  * §3.4 rule 3): `join.errors`, the `retry` lines Restore shares, and the two
  * audience-free lines of `audience.shared`.
  */
-export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregiver'], 'join' | 'retry' | 'audience'>): string {
+export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregiver'], 'join' | 'retry' | 'audience'>, cap?: number | null): string {
   switch (code) {
     case 'code_not_found':
       return m.join.errors.codeNotFound;
@@ -77,6 +79,11 @@ export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregive
       return m.audience.shared.joinCodeFull;
     case 'cap_class':
       return m.join.errors.classFull;
+    // [SA] AMENDMENTS-SEATS-ADMINS section 3.4: the cap the Worker sent (`seat.cap`, `details.cap`), else the family cap.
+    case 'cap_family':
+      return m.join.errors.familyFull(cap ?? FAMILY_LIFETIME_LEARNERS);
+    case 'cap_school':
+      return m.join.errors.schoolFull;
     case 'not_joinable':
       return m.audience.shared.joinCodeNotForLearners;
     case 'learner_not_found':
@@ -94,6 +101,20 @@ export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregive
     default:
       return m.retry.unknown;
   }
+}
+
+/**
+ * [SA] The at-cap refusal a lookup answer carries (AMENDMENTS-SEATS-ADMINS section 3.4), or null when the learner finds
+ * room. `seat` decides when the Worker sent it (learner-aware: a member already holds its seat), and its `reason`
+ * picks the line, not the kind of space; an older Worker sends only `full`, which was always the class cap. A seat
+ * with no reason (never sent) falls back to the space's own cap. Advisory only: the `/join` is the gate.
+ */
+export function lookupRefusal(result: { kind: SpaceKind; full: boolean; seat: LookupSeat | null }): { code: 'cap_family' | 'cap_class' | 'cap_school'; cap: number | null } | null {
+  if (result.seat) {
+    if (!result.seat.full) return null;
+    return { code: result.seat.reason ?? (result.kind === 'family' ? 'cap_family' : 'cap_class'), cap: result.seat.cap };
+  }
+  return result.full ? { code: 'cap_class', cap: null } : null;
 }
 
 /** Errors that mean "fix the code" (stay on the code step) versus "stop here". */

@@ -1,5 +1,6 @@
 import {
   InboxTransferSchema,
+  LookupSeatSchema,
   InboxVisibleSpaceSchema,
   SyncInboxSchema,
   lenientArray,
@@ -11,6 +12,7 @@ import {
   type InboxVisibleSpace,
   type LearnerLevelId,
   type LearnerMembership,
+  type LookupSeat,
   type NoteDevicePrefsPut,
   type NoteReport,
   type NoteStatePut,
@@ -68,13 +70,19 @@ export interface RosterName {
   name: string;
 }
 
+/**
+ * [SA] `seat` (AMENDMENTS-SEATS-ADMINS section 3.4): whether this learner (the one sent with the device header, else a
+ * new one) finds room, and which cap is full; null from a Worker older than SA-1 or a value this app cannot read.
+ */
 export type LookupResult =
-  | { status: 'ok'; space: { id: string; kind: SpaceKind; name: string }; full: boolean; roster: RosterName[] }
+  | { status: 'ok'; space: { id: string; kind: SpaceKind; name: string }; full: boolean; seat: LookupSeat | null; roster: RosterName[] }
   | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
 
+/** [SA] A seat refusal carries the Worker's `details.cap` when it sent a readable one. */
 export type JoinResult =
   | { status: 'ok'; alreadyMember: boolean; membership: LearnerMembership }
-  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'cap_class' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
+  | { status: 'error'; code: 'cap_family' | 'cap_class' | 'cap_school'; cap?: number }
+  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
 
 export type LeaveResult = { status: 'ok'; left: boolean } | { status: 'error'; code: string };
 
@@ -220,6 +228,26 @@ function errorCode(body: Record<string, unknown>): string | null {
   return err && typeof err === 'object' && typeof (err as { code?: unknown }).code === 'string' ? (err as { code: string }).code : null;
 }
 
+/** The envelope's `error.details`, when it is an object. */
+function errorDetails(body: Record<string, unknown>): Record<string, unknown> {
+  const err = body.error;
+  const details = err && typeof err === 'object' ? (err as { details?: unknown }).details : undefined;
+  return details && typeof details === 'object' ? (details as Record<string, unknown>) : {};
+}
+
+/**
+ * [SA] A `/join` 409 (AMENDMENTS-SEATS-ADMINS section 3.4). `cap_family` is its own code; the Worker answers a school
+ * cap as `cap_class` with `details.reason: 'cap_school'` (so shipped apps show the class line), read here as
+ * `cap_school`. Any other 409 stays the three-classes code, as before.
+ */
+function seatRefusal(code: string | null, body: Record<string, unknown>): JoinResult & { status: 'error' } {
+  const details = errorDetails(body);
+  const seat = code === 'cap_family' ? 'cap_family' : code === 'cap_school' || (code === 'cap_class' && details.reason === 'cap_school') ? 'cap_school' : code === 'cap_class' ? 'cap_class' : null;
+  if (seat === null) return { status: 'error', code: 'cap_learner' };
+  const cap = details.cap;
+  return typeof cap === 'number' && Number.isInteger(cap) && cap >= 0 ? { status: 'error', code: seat, cap } : { status: 'error', code: seat };
+}
+
 async function call(
   fetchImpl: typeof fetch,
   url: string,
@@ -314,12 +342,20 @@ export function createSyncApi(opts: SyncApiOptions) {
       return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot };
     },
 
-    async lookupSpace(code: string): Promise<LookupResult> {
-      const r = await call(fetchImpl, `${spaces}/lookup`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+    /**
+     * POST /spaces/lookup. [SA] With `learner` (a device that holds this learner), the learner id goes with the device
+     * header, so `seat` says whether this learner already holds its seat; without it, the answer is for a new learner.
+     */
+    async lookupSpace(code: string, learner?: { learnerId: string; creds: DeviceCredentials }): Promise<LookupResult> {
+      const init: RequestInit = learner
+        ? { method: 'POST', headers: authHeader(learner.creds), body: JSON.stringify({ code, learnerId: learner.learnerId }) }
+        : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) };
+      const r = await call(fetchImpl, `${spaces}/lookup`, init);
       if (r.status === -1) return { status: 'error', code: 'network' };
       if (r.status === 200) {
-        const data = r.body.data as { space: { id: string; kind: SpaceKind; name: string }; full: boolean; roster?: RosterName[] };
-        return { status: 'ok', space: data.space, full: data.full, roster: data.roster ?? [] };
+        const data = r.body.data as { space: { id: string; kind: SpaceKind; name: string }; full: boolean; seat?: unknown; roster?: RosterName[] };
+        const seat = LookupSeatSchema.safeParse(data.seat);
+        return { status: 'ok', space: data.space, full: data.full, seat: seat.success ? seat.data : null, roster: data.roster ?? [] };
       }
       if (r.status === 404) return { status: 'error', code: errorCode(r.body) === 'code_expired' ? 'code_expired' : 'code_not_found' };
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
@@ -340,7 +376,7 @@ export function createSyncApi(opts: SyncApiOptions) {
         };
       }
       if (r.status === 404) return { status: 'error', code: code === 'code_expired' ? 'code_expired' : 'code_not_found' };
-      if (r.status === 409) return { status: 'error', code: code === 'cap_class' ? 'cap_class' : 'cap_learner' };
+      if (r.status === 409) return seatRefusal(code, r.body);
       if (r.status === 422) return { status: 'error', code: code === 'not_joinable' ? 'not_joinable' : 'invalid' };
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
       return { status: 'error', code: 'unknown' };
