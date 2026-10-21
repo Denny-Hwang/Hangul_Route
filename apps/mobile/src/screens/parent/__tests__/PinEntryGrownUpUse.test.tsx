@@ -1,6 +1,7 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import React from 'react';
+import { act } from 'react-test-renderer';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -118,6 +119,38 @@ describe('PinEntry for a chooser use row (GrownUpUse)', () => {
     expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
     expect(navigation.replace).not.toHaveBeenCalled();
     expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toEqual(expect.objectContaining({ dest: 'use', via: 'pin' }));
+  });
+
+  it('while the page goes, the pad, Unlock and Cancel wait: a second PIN does not hand off again, Cancel does not leave', async () => {
+    const { r, navigation } = await show('teacher');
+    await typePin(r.root, '1234');
+    expect(handoff.opened).toHaveLength(1);
+    await typePin(r.root, '1234');
+    expect(handoff.opened).toHaveLength(1);
+    await press(buttonsNamed(r.root, en.common.buttons.cancel)[0] as ReactTestInstance);
+    expect(navigation.goBack).not.toHaveBeenCalled();
+    expect(tracked.filter((e) => e.name === 'parent.gate.opened')).toHaveLength(1);
+  });
+
+  it('a page that comes back in front (the back/forward cache) finds the PIN screen usable again', async () => {
+    const visibility = await import('../../../platform/app-visibility');
+    const listeners: ((visible: boolean) => void)[] = [];
+    const spy = vi.spyOn(visibility, 'subscribeAppVisibility').mockImplementation((l) => {
+      listeners.push(l);
+      return () => undefined;
+    });
+    const { r, navigation } = await show('family');
+    await typePin(r.root, '1234');
+    expect(handoff.opened).toHaveLength(1);
+    await press(buttonsNamed(r.root, en.common.buttons.cancel)[0] as ReactTestInstance);
+    expect(navigation.goBack).not.toHaveBeenCalled();
+    await act(async () => {
+      for (const l of [...listeners]) l(true);
+      await Promise.resolve();
+    });
+    spy.mockRestore();
+    await press(buttonsNamed(r.root, en.common.buttons.cancel)[0] as ReactTestInstance);
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
   });
 
   it('Sign in as a grown-up: the hand-off has no target (the sign-in router)', async () => {

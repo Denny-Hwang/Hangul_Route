@@ -46,7 +46,7 @@ import { subscribeAppVisibility } from '../../platform/app-visibility';
 import { onPinAttemptsChanged } from '../../platform/pin-attempts-channel';
 import { openBrowseFromGate } from '../../platform/browse-handoff';
 import { pinHasher } from '../../platform/crypto';
-import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
+import { continueToGrownUpPage, openGrownUpArea, type HandoffResult } from '../../platform/grown-up-handoff';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
@@ -130,6 +130,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const [firstPin, setFirstPin] = useState('');
   const [hint, setHint] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // [OA] Row OA-4b: a chooser row's hand-off is leaving the tab; the pad and Cancel wait for the page to go, so a second
+  // PIN cannot hand off twice and a Cancel cannot close the session under the page that is opening.
+  const [leavingTab, setLeavingTab] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [headerHeight, setHeaderHeight] = useState(HEADER_ESTIMATE);
   // The route's ScreenHeader (Close, AMENDMENTS-DISPLAY-NAV section 7.1) sits above the title block: the pad leaves room for both.
@@ -180,6 +183,14 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     };
   }, [refreshAttempts]);
 
+  // A page that never went, or came back from the back/forward cache, shows this screen in front again: it is usable.
+  useEffect(() => {
+    if (!leavingTab) return;
+    return subscribeAppVisibility((visible) => {
+      if (visible) setLeavingTab(false);
+    });
+  }, [leavingTab]);
+
   // Tick once a second only while a cooldown is showing.
   useEffect(() => {
     if (!locked) return;
@@ -196,7 +207,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     navigation.goBack();
   };
 
-  const handOff = async (): Promise<void> => {
+  const handOff = async (): Promise<HandoffResult> => {
     const { url, grownUpVia, use } = route.params;
     // [OA] A chooser row (row OA-4b): its own page, `via: 'chooser'`; the target is derived here, never read from the route.
     const request = forUse ? chooserHandoff(use ?? 'signin') : { via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) };
@@ -206,6 +217,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     // hand-off just wrote, before the grown-up page reads it (CS-2). A return from the cache finds this PIN screen,
     // which asks again (the fresh PIN is forgotten on a restore).
     if (result === 'opened' && !forUse) back();
+    return result;
   };
 
   const proceed = (): void => {
@@ -293,7 +305,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   };
 
   const submit = async (): Promise<void> => {
-    if (entry.length !== PIN_LENGTH || busy) return;
+    if (entry.length !== PIN_LENGTH || busy || leavingTab) return;
     setBusy(true);
     try {
       if (mode === 'setup-1') {
@@ -344,7 +356,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           setMode('setup-1');
           return;
         }
-        if (forGrownUpArea || forUse) await handOff();
+        if (forUse) {
+          if ((await handOff()) === 'opened') setLeavingTab(true);
+        } else if (forGrownUpArea) await handOff();
         else proceed();
         return;
       }
@@ -492,7 +506,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
             if (next.length >= entry.length) setHint(null);
             setEntry(next);
           }}
-          disabled={locked || busy}
+          disabled={locked || busy || leavingTab}
           layout={pad}
         />
       </View>
@@ -503,11 +517,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         tone="primary"
         size="lg"
         fullWidth
-        disabled={entry.length !== PIN_LENGTH || locked || busy}
+        disabled={entry.length !== PIN_LENGTH || locked || busy || leavingTab}
         onPress={() => void submit()}
       />
       <Spacer size="sm" />
-      <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={leave} />
+      <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth disabled={leavingTab} onPress={leave} />
       {/* Quiet on purpose: plain text, no icon, nothing for a child to gain from poking it. */}
       {showForgotPin(mode, route.params) ? (
         <Button

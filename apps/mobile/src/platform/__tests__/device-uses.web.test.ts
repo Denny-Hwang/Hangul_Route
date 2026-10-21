@@ -10,7 +10,7 @@ const idb = vi.hoisted(() => ({
 vi.mock('idb-keyval', () => idb);
 
 import * as native from '../device-uses';
-import { readDeviceUses } from '../device-uses.web';
+import { DEVICE_USES_READ_TIMEOUT_MS, readDeviceUses } from '../device-uses.web';
 import type { ShellReader } from '../shell-store.web';
 
 /**
@@ -85,6 +85,31 @@ describe('readDeviceUses (web)', () => {
       }),
     ).toEqual([]);
     expect(await readDeviceUses(() => null)).toEqual([]);
+  });
+
+  it('a read that never answers is no uses after DEVICE_USES_READ_TIMEOUT_MS, so the launch never waits on it for ever', async () => {
+    vi.useFakeTimers();
+    try {
+      const pending = readDeviceUses(() => ({ get: () => new Promise<unknown>(() => undefined) }), () => NOW);
+      let settled: unknown = 'pending';
+      void pending.then((uses) => {
+        settled = uses;
+      });
+      await vi.advanceTimersByTimeAsync(DEVICE_USES_READ_TIMEOUT_MS - 1);
+      expect(settled).toBe('pending');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(settled).toEqual([]);
+      // An answer inside the time still counts.
+      const quick = readDeviceUses(
+        () => ({ get: () => new Promise<unknown>((resolve) => setTimeout(() => resolve({ v: 1, uses: ['teacher'], at: NOW }), 100)) }),
+        () => NOW,
+      );
+      await vi.advanceTimersByTimeAsync(100);
+      expect(await quick).toEqual(['teacher']);
+      expect(DEVICE_USES_READ_TIMEOUT_MS).toBeLessThanOrEqual(3000);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('by default reads hr-shell / kv, and nothing without IndexedDB', async () => {

@@ -98,41 +98,45 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
   const wait = resetWaitState(pinResetRequestedAt, Date.now());
   // [OA] Row OA-4b: the uses known on this browser, as read at launch, then read again on every opening.
   const [uses, setUses] = useState(() => knownUses());
-  const grownUps = grownUpRows({
-    os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
-    uses,
-    online,
-    marker,
-    // A wait only exists beside a PIN (Forgot PIN starts from one); none is shown without a PIN to cancel it.
-    resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
-  });
+  const rowsFor = (known: typeof uses) =>
+    grownUpRows({
+      os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
+      uses: known,
+      online,
+      marker,
+      // A wait only exists beside a PIN (Forgot PIN starts from one); none is shown without a PIN to cancel it.
+      resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
+    });
+  const grownUps = rowsFor(uses);
   const joining = heldJoin() !== null;
 
   // Arriving here, and coming back here from a PIN screen or the Grown-up area, ends any grown-up session (CS-2).
   useFocusEffect(useCallback(() => arriveAtChooser(), []));
 
-  // The console may have written `deviceUses` since launch (a grown-up signed in in another tab).
+  // The console may have written `deviceUses` since launch (a grown-up signed in in another tab). One `who.shown`
+  // per opening (section 15, G6), never one per focus, sent once this read lands so it counts the rows that show.
   useEffect(() => {
     let live = true;
     void refreshKnownUses().then((read) => {
       if (live) setUses(read);
+      const shown = rowsFor(read);
+      void track(
+        whoShownEvent({
+          trigger,
+          learners: learners.length,
+          grownUps: shown.rows.length,
+          anyLocked: false,
+          resetPending: shown.pending !== null,
+        }),
+      );
     });
     return () => {
       live = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per opening
   }, []);
 
-  // One `who.shown` per opening (section 15, G6), never one per focus.
   useEffect(() => {
-    void track(
-      whoShownEvent({
-        trigger,
-        learners: learners.length,
-        grownUps: grownUps.rows.length,
-        anyLocked: false,
-        resetPending: grownUps.pending !== null,
-      }),
-    );
     // Pre-warm every learner's snapshot so Home renders at once after a pick (G7).
     for (const p of learners) void useProgressStore.getState().hydrate(p.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per opening
@@ -201,7 +205,14 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
     if (opensDirectly(false)) {
       trackGateOpened('GrownUpUse', 'open');
       leaving.current = true;
-      void openGrownUpArea(chooserHandoff(use));
+      void openGrownUpArea(chooserHandoff(use)).then((result) => {
+        // The hand-off's own device gate still asks a PIN (a stale marker): the PIN screen, never a dead tap, and
+        // the chooser keeps holding back (CS-5).
+        if (result === 'pin') {
+          leaving.current = false;
+          navigation.navigate('PinEntry', { next: 'GrownUpUse', use });
+        }
+      });
     } else navigation.navigate('PinEntry', { next: 'GrownUpUse', use });
   };
 

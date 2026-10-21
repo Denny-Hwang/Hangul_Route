@@ -24,11 +24,11 @@ const uses = vi.hoisted(() => ({ value: [] as string[] }));
 vi.mock('../../../platform/device-uses', () => ({ readDeviceUses: vi.fn(async () => [...uses.value]) }));
 const net = vi.hoisted(() => ({ online: true }));
 vi.mock('../../../platform/online', () => ({ isOnline: () => net.online, subscribeOnline: () => () => undefined }));
-const handoff = vi.hoisted(() => ({ opened: [] as { via: string; target?: string }[] }));
+const handoff = vi.hoisted(() => ({ opened: [] as { via: string; target?: string }[], result: 'opened' as 'opened' | 'pin' }));
 vi.mock('../../../platform/grown-up-handoff', () => ({
   openGrownUpArea: vi.fn(async (request: { via: string; target?: string }) => {
     handoff.opened.push(request);
-    return 'opened';
+    return handoff.result;
   }),
   continueToGrownUpPage: vi.fn(),
   clearGrownUpTab: vi.fn(),
@@ -97,6 +97,7 @@ beforeEach(() => {
   setPlatform('web');
   tracked.length = 0;
   handoff.opened.length = 0;
+  handoff.result = 'opened';
   uses.value = [];
   net.online = true;
   resetChooserState();
@@ -133,8 +134,8 @@ describe('the grown-up rows on the chooser (row OA-4b)', () => {
     uses.value = ['family', 'teacher'];
     const { r } = await renderChooser();
     expect(rowIds(r.root)).toEqual(['who-row-family', 'who-row-teacher', 'who-row-area']);
-    // who.shown counted the rows of the first frame (Family and the Grown-up area).
-    expect(tracked.find((e) => e.name === 'who.shown')?.payload?.grownUps).toBe(2);
+    // One who.shown, sent once the opening read landed: it counts the rows that show (Family, Teacher, Grown-up area).
+    expect(tracked.filter((e) => e.name === 'who.shown').map((e) => e.payload?.grownUps)).toEqual([3]);
   });
 
   it('native: only the Grown-up area, whatever is known', async () => {
@@ -155,7 +156,15 @@ describe('the grown-up rows on the chooser (row OA-4b)', () => {
       await press(node);
     }
     expect(navigation.navigate).not.toHaveBeenCalled();
+    // The web reads the reason too: the caption is the disabled row's description (aria-describedby), not its name.
+    const family = row(r.root, 'family');
+    const describedBy = family.props['aria-describedby'] as string;
+    expect(describedBy).toEqual(expect.any(String));
+    const [described] = r.root.findAll((n) => typeof n.type === 'string' && (n.props.id === describedBy || n.props.nativeID === describedBy));
+    expect(described && screenTexts(described)).toContain(needsInternet);
+    expect(family.props.accessibilityLabel ?? family.props['aria-label']).not.toContain(needsInternet);
     expect(row(r.root, 'area').props['aria-disabled']).not.toBe(true);
+    expect(row(r.root, 'area').props['aria-describedby']).toBeUndefined();
     expect(rowTexts(r.root, 'area')).not.toContain(needsInternet);
     await press(row(r.root, 'area'));
     expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'ParentDashboard' });
@@ -196,6 +205,18 @@ describe('the grown-up rows on the chooser (row OA-4b)', () => {
     expect(navigation.navigate).not.toHaveBeenCalled();
     expect(handoff.opened).toEqual([{ via: 'chooser', target: '/teach?persona=teacher' }]);
     expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toEqual(expect.objectContaining({ dest: 'use', via: 'open' }));
+  });
+
+  it('marker none, but the hand-off still asks a PIN (a stale device marker): the PIN screen opens, never a dead tap', async () => {
+    useProfileStore.setState({ profiles: [learner('profile:me', 'Me', 'self')], activeId: 'profile:me' });
+    useAccountStore.setState({ parentPinHash: null });
+    uses.value = ['school'];
+    handoff.result = 'pin';
+    const { r, navigation } = await renderChooser();
+    await press(row(r.root, 'school'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(handoff.opened).toEqual([{ via: 'chooser', target: '/teach?focus=school' }]);
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'GrownUpUse', use: 'school' });
   });
 
   it('a device with child profiles and no PIN yet (nopin): the use rows ask the PIN screen, which sends to sign-in (CS-4)', async () => {
