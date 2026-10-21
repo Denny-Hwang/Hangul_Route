@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { touchTarget } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
@@ -75,7 +76,7 @@ test.describe('the card, on a build with the switch on (E2E_LECTURE_MODE=1)', ()
     { width: 320, height: 568 },
     { width: 1280, height: 800 },
   ] as const) {
-    test(`${vp.width}: the card after the grown-up home card, its row and Open lecture mode, targets at least 48 px`, async ({ page }) => {
+    test(`${vp.width}: the card after the grown-up home card, its row and Open lecture mode, targets at least touchTarget.min`, async ({ page }) => {
       await page.setViewportSize(vp);
       await dashboard(page);
       const card = page.getByTestId('dashboard-lecture');
@@ -83,7 +84,7 @@ test.describe('the card, on a build with the switch on (E2E_LECTURE_MODE=1)', ()
       await expect(card.getByText(en.caregiver.lecture.body)).toBeVisible();
       for (const name of [en.caregiver.lecture.next(NAME), en.caregiver.lecture.open.cta]) {
         const box = await card.getByRole('button', { name }).boundingBox();
-        expect(box?.height ?? 0, name).toBeGreaterThanOrEqual(48);
+        expect(box?.height ?? 0, name).toBeGreaterThanOrEqual(touchTarget.min);
       }
       // After the grown-up home card (when it is drawn) and before the learner cards; Open lecture mode at the card's end.
       const cardBox = await card.boundingBox();

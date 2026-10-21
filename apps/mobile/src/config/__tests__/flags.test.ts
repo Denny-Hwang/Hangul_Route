@@ -434,6 +434,9 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_ROUTE_ENABLED');
   });
 
+  // Each case re-imports flags.ts (about 25 imports in all), so the cases are split and get room on a loaded runner.
+  const RELOADS_MS = 30_000;
+
   it('lectureModeEnabled (AMENDMENTS-LECTURE-V2 LV-D1, LV-6) is OFF at launch until LV-7; "false", "0", "off", "no" or "disabled" in any case, trimmed, switch it off', async () => {
     delete process.env.EXPO_PUBLIC_LECTURE_MODE;
     let mod = await reload();
@@ -444,20 +447,23 @@ describe('flags', () => {
       mod = await reload();
       expect(mod.flags.lectureModeEnabled, JSON.stringify(off)).toBe(false);
     }
+  }, RELOADS_MS);
+
+  it('lectureModeEnabled turns on before LV-7 with the console value "enabled" or the kill switch on values; anything else is the launch default', async () => {
     // A build (the e2e build, a preview) turns it on before LV-7 flips the default: the console's own value
     // (`enabled`) and the kill switch's on values.
+    let mod: Awaited<ReturnType<typeof reload>>;
     for (const on of ['enabled', 'ENABLED', ' enabled ', 'true', '1', 'on', 'yes', 'TRUE']) {
       process.env.EXPO_PUBLIC_LECTURE_MODE = on;
       mod = await reload();
       expect(mod.flags.lectureModeEnabled, JSON.stringify(on)).toBe(true);
     }
-    // Anything else is the launch default.
     for (const other of ['', 'maybe', 'enable', 'disable']) {
       process.env.EXPO_PUBLIC_LECTURE_MODE = other;
       mod = await reload();
       expect(mod.flags.lectureModeEnabled, JSON.stringify(other)).toBe(mod.launchDefaultFlags.lectureModeEnabled);
     }
-  });
+  }, RELOADS_MS);
 
   it('lectureModeEnabled is read by its literal name, so a web build can carry the switch', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');

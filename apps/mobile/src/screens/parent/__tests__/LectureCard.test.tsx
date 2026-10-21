@@ -1,3 +1,4 @@
+import { colors } from '@hangul-route/design-system';
 import { CATALOG, decodeDeck, routeCatalogOf, type LectureDeck, type Profile, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { LOCALES, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { readFileSync } from 'node:fs';
@@ -98,8 +99,20 @@ const deckOf = (href: string): LectureDeck => {
   return decoded.deck;
 };
 
-/** Every piece of a name a deck could leak: the whole name, trimmed, and each word of three or more letters. */
-const piecesOf = (name: string): string[] => [name, name.trim(), ...name.split(/[\s"'<>/&#=.\-‮]+/u).filter((w) => [...w].length >= 3)];
+const words = (name: string): string[] => name.split(/[\s"'<>/&#=.\-‮]+/u);
+
+/**
+ * Every piece of a name a deck could leak: the whole name, trimmed, each word of `min` or more letters, and each
+ * 2-letter run of Hangul (most Korean given names are 2 syllables). The deck and its title are searched with
+ * `min` 2; the base64 link with `min` 3, where a short random match is possible.
+ */
+const piecesOf = (name: string, min = 2): string[] => {
+  const hangul = [...name.matchAll(/\p{Script=Hangul}+/gu)].flatMap(([run]) => {
+    const chars = [...run];
+    return chars.slice(0, -1).map((c, i) => c + chars[i + 1]!);
+  });
+  return [...new Set([name, name.trim(), ...words(name).filter((w) => [...w].length >= min), ...(min <= 2 ? hangul : [])])];
+};
 
 describe('LectureCard: where it is drawn (section 3 E5, LV-D1)', () => {
   it('web, flag on: the title, the line, a row per learner and Open lecture mode, in the dictionary words', async () => {
@@ -208,6 +221,52 @@ describe('LectureCard: the gate on every press (section 7 item 1)', () => {
     expect(byTestId(r.root, 'dashboard-lecture-blocked')).toHaveLength(0);
   });
 
+  it('each press the browser blocks draws a fresh line, so the live region says it again', async () => {
+    seed(AWKWARD.slice(0, 1));
+    const open = vi.fn((_href: string) => false);
+    const r = await render(<LectureCard learners={learnersOf(AWKWARD.slice(0, 1))} onGate={() => undefined} opensDirectly={() => true} open={open} />);
+    await press(buttonsNamed(r.root, en.caregiver.lecture.open.cta)[0]!);
+    const first = byTestId(r.root, 'dashboard-lecture-blocked')[0]!;
+    await press(buttonsNamed(r.root, en.caregiver.lecture.open.cta)[0]!);
+    const second = byTestId(r.root, 'dashboard-lecture-blocked')[0]!;
+    expect(byTestId(r.root, 'dashboard-lecture-blocked')).toHaveLength(1);
+    expect(second).not.toBe(first);
+    expect(screenTexts(second)).toContain(en.caregiver.lecture.blocked);
+  });
+
+  it('a press that goes to the gate clears an earlier blocked line', async () => {
+    seed(AWKWARD.slice(0, 1));
+    let direct = true;
+    const onGate = vi.fn();
+    const r = await render(<LectureCard learners={learnersOf(AWKWARD.slice(0, 1))} onGate={onGate} opensDirectly={() => direct} open={() => false} />);
+    await press(buttonsNamed(r.root, en.caregiver.lecture.open.cta)[0]!);
+    expect(byTestId(r.root, 'dashboard-lecture-blocked')).toHaveLength(1);
+    direct = false;
+    await press(buttonsNamed(r.root, en.caregiver.lecture.open.cta)[0]!);
+    expect(onGate).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'dashboard-lecture-blocked')).toHaveLength(0);
+  });
+
+  it('a row whose link throws while it is built still opens the presenter home', async () => {
+    seed(AWKWARD.slice(0, 1));
+    const open = vi.fn((_href: string) => true);
+    const hrefFor = vi.fn((): string | null => {
+      throw new Error('too_large');
+    });
+    const r = await render(<LectureCard learners={learnersOf(AWKWARD.slice(0, 1))} onGate={() => undefined} opensDirectly={() => true} open={open} hrefFor={hrefFor} />);
+    await press(byTestId(r.root, `dashboard-lecture-next-${AWKWARD[0].id}`)[0]!);
+    expect(open).toHaveBeenCalledWith('/present');
+  });
+
+  it('a Next lesson row draws the focus colour as its keyboard ring', async () => {
+    seed(AWKWARD.slice(0, 1));
+    const r = await render(<LectureCard learners={learnersOf(AWKWARD.slice(0, 1))} onGate={() => undefined} />);
+    const row = r.root.findAll((n) => n.props.testID === `dashboard-lecture-next-${AWKWARD[0].id}` && typeof n.props.style === 'function')[0]!;
+    const style = row.props.style as (s: { pressed: boolean; focused?: boolean }) => Record<string, unknown>;
+    expect(style({ pressed: false, focused: true })).toMatchObject({ outlineStyle: 'solid', outlineColor: colors.border.focus });
+    expect(style({ pressed: false, focused: false }).outlineColor).toBeUndefined();
+  });
+
   it('a row whose deck cannot be built still opens the presenter home, never a dead button', async () => {
     seed(AWKWARD.slice(0, 1));
     const open = vi.fn((_href: string) => true);
@@ -237,8 +296,9 @@ describe('LectureCard: no name in the link or the deck (sections 7 item 4 and 8)
       const json = JSON.stringify(deck);
       for (const p of AWKWARD) {
         for (const piece of piecesOf(p.displayName)) {
-          for (const where of [href, json, deck.title]) expect(where.includes(piece), `${p.id}: "${piece}"`).toBe(false);
+          for (const where of [json, deck.title]) expect(where.includes(piece), `${p.id}: "${piece}"`).toBe(false);
         }
+        for (const piece of piecesOf(p.displayName, 3)) expect(href.includes(piece), `${p.id}: "${piece}" in the link`).toBe(false);
         for (const where of [href, json]) {
           expect(where.includes(p.id), p.id).toBe(false);
           expect(where.includes(p.id.slice('profile:'.length)), p.id).toBe(false);
