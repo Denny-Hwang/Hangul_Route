@@ -115,7 +115,7 @@ A. Stage 1 (all of Hangul) is free. The Family Plan is $15.30 a year for
 the whole route, renews yearly, and you can cancel any time.
 
 **Q. Family plan?**
-A. One Family Plan covers up to 5 learners in one family, on every device.
+A. One Family Plan covers up to 4 learners in one family, on every device.
 
 **Q. What happens if I cancel?**
 A. The plan stays on until the end of the year you paid for. Every card,

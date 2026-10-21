@@ -314,8 +314,8 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | plan_key | 대상 | 가격 | 포함 | 결제 경로 |
 |---|---|---|---|---|
 | (free) | P-A, P-B, 자원봉사 교사 | $0 | Stage 1 전체, 로컬 진도, Rescue Code, 파일 백업; 학급은 학생 ≤ 20 | — |
-| `family_lifetime` (Family Plan) | P-B (성인 개인 포함) | **$15.30/년** (매년 갱신, 언제든 해지; 2026-10-11 일회 평생에서 변경) | 모든 Stage (활성 동안 신규 포함), 클라우드 동기화, 부모 대시보드, 가정 계획, 한 가족 space 학습자 ≤ 5 | 웹 Stripe 연간 구독 · 네이티브는 F-IAP-002 때 자동 갱신 연간 구독 |
-| `group_license` | P-C 교사 (단독 학급) · P-D 학교 | **$153/년** | 학급: 학생 전원 프리미엄(재학 중), 20명 cap 해제 · 학교: 교사 ≤ 10, 학생 ≤ 300, 전 학급 Pro, admin 대시보드 | Stripe 연간 구독 (웹 전용) |
+| `family_lifetime` (Family Plan) | P-B (성인 개인 포함) | **$15.30/년** (매년 갱신, 언제든 해지; 2026-10-11 일회 평생에서 변경) | 모든 Stage (활성 동안 신규 포함), 클라우드 동기화, 부모 대시보드, 가정 계획, 한 가족 space 학습자 ≤ 4 [SA, AMENDMENTS-SEATS-ADMINS; 이전 5] | 웹 Stripe 연간 구독 · 네이티브는 F-IAP-002 때 자동 갱신 연간 구독 |
+| `group_license` | P-C 교사 (단독 학급) · P-D 학교 | **$153/년** | 학급: 학생 전원 프리미엄(재학 중), 20명 cap 대신 학생 ≤ 50 · 학교: 교사 ≤ 10, 학생 ≤ 50 [SA, AMENDMENTS-SEATS-ADMINS; 이전 cap 해제 · 학생 ≤ 300], 전 학급 Pro, admin 대시보드 | Stripe 연간 구독 (웹 전용) |
 | `school_seat` | 상한 초과 (P-D 대규모 / P-E) | **Contact us** (계약) | 좌석 단위, SSO 검토 | `manual` |
 
 설계 원칙:

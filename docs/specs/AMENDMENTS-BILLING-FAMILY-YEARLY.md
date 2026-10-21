@@ -26,7 +26,7 @@ Status: ready (applied in the BY-0 docs PR to F-ENT-001, F-ENT-002, F-BILL-002, 
 | Term | never lapses (`expiresAt` null) | **1 year**, renews every year until cancelled |
 | Stripe | Checkout `mode=payment`, one-off price | Checkout **`mode=subscription`**, a **recurring yearly** price, the same mechanism the Group License ($153 / year) already uses |
 | Cancel | nothing to cancel | **any time** in the Stripe Billing Portal (**Manage subscription**); access continues to the end of the paid year |
-| Covers | one family space, up to 5 learners, every Stage | unchanged: one family space, up to `FAMILY_LIFETIME_LEARNERS` (5) learners, every Stage, new ones included while the plan is active |
+| Covers | one family space, up to 5 learners, every Stage | unchanged: one family space, up to `FAMILY_LIFETIME_LEARNERS` (5; **4** since 2026-10-20, AMENDMENTS-SEATS-ADMINS [SA]) learners, every Stage, new ones included while the plan is active |
 | Group License, School contract | $153 / year; Contact us | unchanged |
 
 ## 2. Decisions taken in this amendment

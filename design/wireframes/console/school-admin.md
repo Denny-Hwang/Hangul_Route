@@ -1,5 +1,7 @@
 # Console/School-admin — class tree, teacher invites, seats (wireframe v1)
 
+> **Amended 2026-10-20 [SA]** (`docs/specs/AMENDMENTS-SEATS-ADMINS.md`): a family holds up to **4** learners (was 5); the Group License covers up to **50** students in a class or a school (was no cap for a class and 300 for a school). Only the numbers on this page changed; the new rename and administrator surfaces get their own wireframes and mocks in row SA-0b.
+
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §1 (P-D), §2 (`parent_space_id`), §3.1 (admin: summary only, invite teachers, manage entitlement), §6 (school paragraph — no individual learner cards, `anonymize_roster` default on), §7 (`school_license` / `school_seat`), §10 S7
 Code (F-SCHOOL-001, 2026-09-21): `apps/web/src/components/console/SchoolAdmin.tsx` rendered by `/teach/space/[id]` for school spaces — licence + seats (near / at limit notes), teacher invite code (copy, regenerate), this-week aggregate, class rows (teacher, students, last active, plan; Assign / Change teacher from the school's teachers; Open roster), + New class, empty state. Server: `GET /spaces/:id/school`, `POST /spaces/:id/members`, seat cap on join. Not yet: SSO, admin consent record, per-class licence.
 Audience: **school admin** (한글학교 organizer)
@@ -21,7 +23,7 @@ Then: they see the class tree with aggregate activity, can invite a teacher with
 | [< back to home]   Seoul Hangul School         [ Settings ] |  -> console/space-settings (school)
 |                                                            |
 |  License   group_license - active - renews Jan 5           |
-|  Seats     students 38 / 300     teachers 4 / 10           |  -> console/billing
+|  Seats     students 38 / 50      teachers 4 / 10           |  -> console/billing
 |  [ Manage billing ]                                        |
 |                                                            |
 |  Invite a teacher                                          |
@@ -65,7 +67,7 @@ Exit to:    `console/roster` · `console/space-settings` · `console/billing` ·
 
 - **success**: as above.
 - **empty** (no classes, no teachers yet): license + invite code blocks only, invite code rendered large; "This week" and "Classes" replaced by one 2-line guide ("invite a teacher, or create a class and assign one").
-- **seats near / at limit**: Seats block shows "290 / 300" with a 1-line note → `console/billing`; at limit, new class joins are refused server-side and the class roster shows the cap banner instead of the teacher-free-cap one.
+- **seats near / at limit**: Seats block shows "45 / 50" with a 1-line note → `console/billing`; at limit, new class joins are refused server-side and the class roster shows the cap banner instead of the teacher-free-cap one.
 - **error** (tree fetch fails): license + invite code from cache; class list shows "can't load classes yet" + [ TRY AGAIN ].
 - **license past_due / expired**: banner at top → `console/billing`; classes keep reading access; premium tier for students lapses per roadmap §3.2 (7-day offline grace) — the banner says "students keep Stage 1 either way".
 

@@ -5,6 +5,7 @@
 **Owner**: solo dev
 **Rollout**: Roadmap S6 — PR 1 server + device tier (§3.1–§3.4), PR 2 paywall screen (§3.5), PR 3 console billing (§3.6). Prices stay **placeholders** (owner decision: family price deferred).
 **Amended 2026-10-11 [BY]** by `AMENDMENTS-BILLING-FAMILY-YEARLY.md`: the Family plan is a **yearly subscription** ($15.30 / year, renews yearly, cancel any time), no longer a one-time lifetime purchase. The stored key stays `family_lifetime` (BY-D1).
+**Amended 2026-10-20 [SA]** by `AMENDMENTS-SEATS-ADMINS.md`: a family holds up to **4** learners, free or paid (`FAMILY_LIFETIME_LEARNERS` 5 → 4); the Group License covers up to **50** students (a stand-alone licensed class, was no cap; a licensed school, was 300); every school holds up to 50 distinct students; seats are taken atomically; checkout and portal need the owner-only `billing.manage`. Prices unchanged.
 
 Parent: roadmap §3.2 (tier rule), §7 (plans), §8 (`/entitlements/*`) · F-SUB-001 (mobile tier consumer) · F-IAP-001 / F-IAP-003 (receipts and lifecycle — converged here through `applyEntitlement`) · wireframes `console/billing.md`, `paywall/upgrade.md`
 
@@ -22,7 +23,7 @@ Who pays is an adult or a space; who benefits is every learner attached to it. O
 
 ### 3.1 Data
 
-- **Products (owner decision #30, 2026-10-06; family term amended 2026-10-11 [BY])**: `family_lifetime` — the **Family Plan**, **$15.30 / year**, renews yearly until cancelled, one family space, up to 5 learners (`FAMILY_LIFETIME_LEARNERS`), every Stage (new ones included) while active, `expiresAt` = the Stripe subscription's current period end. The key keeps its historical name because D1's CHECK on `plan_key` cannot change additively (BY-D1); rows from the old one-time sandbox checkout (`expiresAt` null) stay readable (BY-D2); `group_license` — **$153 / year**, a stand-alone class or a school (up to 10 teachers / 300 students); `school_seat` — beyond those caps, by contract (**Contact us**, `manual`). Teacher Pro and monthly intervals are retired. `PLAN_PRICING` in `content-schema` is the one source for the labels.
+- **Products (owner decision #30, 2026-10-06; family term amended 2026-10-11 [BY])**: `family_lifetime` — the **Family Plan**, **$15.30 / year**, renews yearly until cancelled, one family space, up to **4** learners [SA] (`FAMILY_LIFETIME_LEARNERS`), every Stage (new ones included) while active, `expiresAt` = the Stripe subscription's current period end. The key keeps its historical name because D1's CHECK on `plan_key` cannot change additively (BY-D1); rows from the old one-time sandbox checkout (`expiresAt` null) stay readable (BY-D2); `group_license` — **$153 / year**, a stand-alone class (up to **50** students [SA]) or a school (up to 10 teachers / **50** students [SA]); `school_seat` — beyond those caps, by contract (**Contact us**, `manual`). Teacher Pro and monthly intervals are retired. `PLAN_PRICING` in `content-schema` is the one source for the labels.
 - `entitlements` (roadmap §2): `id`, `subjectKind` (`account` | `space`), `subjectId`, `planKey` (`family_lifetime` | `group_license` | `school_seat`), `status` (`trial` | `active` | `past_due` | `expired` | `cancelled`), `provider` (`apple` | `google` | `stripe` | `manual`), `providerRef` (subscription / receipt / contract id), `customerRef` (Stripe customer, for the portal), `seats` (school seats, null = unlimited), `expiresAt`, `updatedAt`. Unique per (subject, plan). `schema-v2.sql` mirrors it.
 - `applyEntitlement(input, now)` upserts one row; every provider path calls it.
 
@@ -30,7 +31,7 @@ Who pays is an adult or a space; who benefits is every learner attached to it. O
 
 - `isEntitlementActive(e, now)`: `trial` / `active` while `expiresAt` is null or in the future; `cancelled` only while `expiresAt` is in the future (cancel = no renewal, not revoke); `past_due` for **7 days** after `updatedAt`; `expired` never.
 - `tierForLearner(learnerId, now)` (roadmap §3.2): **premium** when any of the learner's live spaces is a family with active `family_lifetime`, or a class with its own active `group_license`, or a class under a school with active `group_license` / `school_seat`; otherwise free. Returns the covering space (`kind`, `spaceId`, `name`) as `source`.
-- `classCap(space, now)`: the free cap (20) unless the class or its parent school holds a group licence → unlimited. Join and lookup use it. A family space holds at most `FAMILY_LIFETIME_LEARNERS` (5) learners (`cap_family` on join).
+- `classCap(space, now)` [SA]: free 20; a stand-alone class with its own group licence 50 (`GROUP_LICENSE_LEARNERS`); a class in a covered school: no class cap, the school cap binds (AMENDMENTS-SEATS-ADMINS section 3.2; was: a licensed class or school → unlimited). Join uses it; lookup reads it only for the advisory `seat` field (AMENDMENTS-SEATS-ADMINS section 3.4). A family space holds at most `FAMILY_LIFETIME_LEARNERS` (4 [SA], was 5) learners (`cap_family` on join).
 
 ### 3.3 Routes (`/api/entitlements`)
 
@@ -57,7 +58,7 @@ Legacy `/api/subscriptions/*` (v1 family subscription) was removed on 2026-10-09
 > **Amended by F-APP-001 (2026-10-11).** On the web with `flags.grownUpHomeEnabled` on, the Plan screen's **Open billing** opens `/account/billing` on the app host **in the same tab** through `openGrownUpArea({ via: 'plan', target: APP_ROUTES.billing })`, after a fresh PIN (F-APP-001 sections 3.6, 3.9). With the flag off the console link of F-BILL-002 (`billingUrl()`, new tab) applies. Native builds show no purchase link.
 
 - Entered from a locked Stage 2+ cell on the journey grid and from the settings plan card, through `profiles/pin-entry`.
-- States: **covered** (premium via class/school — no prices, "Back to journey"), **already premium** (family), **free** — "Stage 1 is always free" first, 4 bullets (every Stage, cloud save, dashboard, up to 5 learners), **one Family Plan card ($15.30 / year, "Renews every year. Cancel any time.")** [BY], one button that opens the web console billing (`EXPO_PUBLIC_CONSOLE_URL`, web) or explains the store purchase arrives with F-IAP-002 (native). Never a teacher/school plan on the native app.
+- States: **covered** (premium via class/school — no prices, "Back to journey"), **already premium** (family), **free** — "Stage 1 is always free" first, 4 bullets (every Stage, cloud save, dashboard, up to **4** learners [SA]), **one Family Plan card ($15.30 / year, "Renews every year. Cancel any time.")** [BY], one button that opens the web console billing (`EXPO_PUBLIC_CONSOLE_URL`, web) or explains the store purchase arrives with F-IAP-002 (native). Never a teacher/school plan on the native app.
 
 ### 3.6 Console billing (PR 3) — `/teach/billing`
 

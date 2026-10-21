@@ -4,6 +4,7 @@
 **Scope**: `packages/content-schema` · `packages/backend` · `apps/api` (D1 schema v2) · `apps/mobile` (`sync/join-space`, settings row)
 **Owner**: solo dev
 **Rollout**: Roadmap S3 (`docs/roadmap/multi-persona-sync-platform.md` §1–§3.1, §6, §8). Owner decisions 2026-09-20: school consent mode **(c) selectable per space** (legal review before school mode ships), teacher free cap **20**.
+**Amended 2026-10-20 [SA]** by `AMENDMENTS-SEATS-ADMINS.md`: `PATCH /api/spaces/:id/name` and the action `space.rename`; owner-only actions `billing.manage`, `admin.manage`, `space.settings`, `space.archive`; the learner join takes its seat in one guarded D1 statement (`cap_family` 4, `cap_class`, `cap_school`, each with `details.cap`); lookup keeps `full` for classes (shipped apps) and adds a learner-aware `seat { full, reason, cap }` (optional device-authorized `learnerId`); `putSpace` no longer writes the name on update.
 
 Parent: F-SYNC-001 / F-RESTORE-001 · **F-TCH-001 §3.1 (class creation + join code) is migrated here** and F-TCH-001 keeps roster / plans / projection · wireframes `design/wireframes/sync/join-space.md`, `profile/settings.md`; server side of `console/onboarding-role.md`, `console/home.md`, `console/roster.md` (the web screens themselves are F-CONSOLE-001).
 
