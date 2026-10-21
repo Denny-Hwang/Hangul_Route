@@ -205,6 +205,7 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | `EXPO_PUBLIC_MY_ROUTE_ENABLED` | 비워 둔다: F-ROUTE-001 R-10b 부터 기본 켜짐 (Learning Route 의 Route 탭). 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 Learning Route kill switch 확인을 한 번 한다 | R-10b 머지 후 | Route 탭 · Home 의 route strip · 리포트의 Open Learning Route 가 보인다 (en 만) |
 | `EXPO_PUBLIC_PLACEMENT_ENABLED` | 비워 둔다: F-PLC-001 P-10 부터 모든 플랫폼에서 기본 켜짐 (수준 확인, level check). F-ROUTE-001 OD-14 는 오너가 2026-10-14 에 확정했다 (F-ENT-003 OD-14 와는 다른 질문): 본인 (Me) 프로필은 결과 화면의 **Use this plan** 한 번으로 PIN 없이 주간 계획을 만든다 (PIN 이 있는 기기에서도). 아이 프로필은 어른의 PIN 뒤 리포트에서만 계획을 만든다. 스토어 빌드 조건은 충족이다 (오너 결정 2026-10-14: 스토어 앱이 없으므로 모든 플랫폼에서 수준 확인을 켜기로 오너가 정했다): 스토어에도 TestFlight 에도 네이티브 빌드가 나간 적이 없고, 첫 빌드가 P-3b 스키마를 이미 담는다. 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 수준 확인 kill switch 확인을 한 번 한다 | P-10 머지 후 | 온보딩의 "Where should we start?" 갈림길 · Home 의 "Take the level check" 카드 · Profile 의 "Find my starting spot again" 줄 · 어른 리포트 진입점이 보인다 |
 | `EXPO_PUBLIC_GROWN_UP_HOME` | 비워 두거나 `true` (같은 값): F-APP-001 A-10 (2026-10-14) 부터 기본 켜짐. S-3 (M3) 에 넣은 `true` 는 남겨 둬도 무해하다. 되돌릴 때만 `false` (또는 `0`, `off`, `no`; 대소문자와 앞뒤 공백 무관. 다른 값은 켜짐으로 읽힌다; 변수를 **지우면** 이제 켜짐) | S-3 (M3), A-10 머지 후엔 할 일 없음 | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
+| `EXPO_PUBLIC_CURR_*` (19개 스위치, 예: `EXPO_PUBLIC_CURR_DAILY_REVIEW`) · `EXPO_PUBLIC_CURR_PACKS_OFF` · `EXPO_PUBLIC_CURR_GAMES_OFF` | 비워 둔다: 바닥 (floor) 이 켜진 상태이고, 실제 켜짐과 비율은 D1 `remote_config` 가 정한다 (§K). 기능을 강제로 끌 때만 넣는다 (§K K-2 의 4) | F-CURR-002 CM-2 머지 후, 끌 때만 | 넣은 스위치의 F-CURR-002 화면은 `remote_config` 가 무엇이라 해도 숨어 있다 |
 | `EXPO_PUBLIC_SITE_URL` | `https://hangulroute.com` | S-3 | 기본값도 `https://hangulroute.com` (그다음 `EXPO_PUBLIC_CONSOLE_URL`) |
 | `EXPO_PUBLIC_CONSOLE_URL` | 삭제 | S-3 뒤, F-BILL-002 가 더 읽지 않을 때 | — |
 
@@ -580,13 +581,13 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
    `INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES ('dailyReview', 1, 10, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 'ramp 10%') ON CONFLICT(flag) DO UPDATE SET "on" = excluded."on", pct = excluded.pct, updated_at = excluded.updated_at, reason = excluded.reason;`
    `on` 은 SQL 예약어라 큰따옴표로 쓴다. `on` 은 0 또는 1, `pct` 는 0-100 만 들어간다 (표의 CHECK 가 250 같은 오타를 거부한다). 프로필마다 고정된 칸 (bucket) 으로 나뉘어 비율을 올려도 이미 켜진 학습자는 그대로 켜져 있다.
 2. 확인 (운영 요청은 이것 하나만, 공개 읽기 전용): `https://api.hangulroute.com/api/config` 에 그 줄이 `{ "on": true, "pct": 10 }` 으로 보인다. 엣지 캐시 때문에 최대 5분 늦을 수 있다.
-3. 학습자 기기에는 약 20분 안에 닿는다 (엣지 캐시 5분 + 기기가 앱을 다시 앞으로 가져올 때, 가진 사본이 15분 넘었으면 다시 읽는다). 오프라인 기기는 마지막으로 받은 값을 쓴다.
+3. 학습자 기기에는 약 20분 안에 닿는다 (엣지 캐시 5분 + 가진 사본이 15분 넘으면 기기가 다시 읽는다: 앱을 다시 앞으로 가져올 때, 그리고 앱이 앞에 떠 있는 동안 15분마다. 그래서 숨기지 않고 켜 둔 발표 화면이나 태블릿에도 닿는다). 기기는 자기 HTTP 캐시를 쓰지 않고 (`no-store`) 매번 엣지에서 받는다. 오프라인 기기는 마지막으로 받은 값을 쓴다.
 
 **K-2. 급하게 끄기 (엣지 캐시 비우기 포함, 5분)**
 1. D1 Console: `UPDATE remote_config SET "on" = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now'), reason = '<이유>' WHERE flag = '<스위치>';` (줄이 없으면 K-1 의 INSERT 를 `"on"` 0 으로 실행).
 2. 엣지 캐시 비우기: 대시보드 → `hangulroute.com` 도메인 → Caching → Configuration → **Purge Cache** → Custom Purge → URL 에 `https://api.hangulroute.com/api/config` 한 줄 → Purge. 이렇게 하면 엣지의 5분을 건너뛰고, 다음 요청부터 새 값이 나간다.
-3. 확인: 위 K-1 의 2 처럼 주소를 열어 `"on": false` 를 본다. 기기는 다음에 앱을 앞으로 가져올 때 (사본이 15분 넘었으면) 새 값을 받는다.
-4. 더 확실히 (몇 시간 넘게 끌 때): `hangul-route-app` → Settings → Build → Variables 에 그 스위치의 빌드 변수 (`EXPO_PUBLIC_CURR_DAILY_REVIEW=false` 처럼 `EXPO_PUBLIC_CURR_` + 대문자 스네이크 이름; 팩과 게임은 `EXPO_PUBLIC_CURR_PACKS_OFF=k-food,space` · `EXPO_PUBLIC_CURR_GAMES_OFF=cloze` 처럼 쉼표 목록) 를 넣고 **Retry deployment**. 빌드 변수가 바닥 (floor) 이라 원격 설정으로는 다시 켤 수 없다. 다시 켤 때는 변수를 지우고 Retry deployment.
+3. 확인: 위 K-1 의 2 처럼 주소를 열어 `"on": false` 를 본다. 기기는 사본이 15분 넘으면 새 값을 받는다 (앱을 앞으로 가져올 때, 또는 앞에 떠 있는 동안 15분마다).
+4. 더 확실히 (몇 시간 넘게 끌 때): `hangul-route-app` → Settings → Build → Variables 에 그 스위치의 빌드 변수 (`EXPO_PUBLIC_CURR_DAILY_REVIEW=false` 처럼 `EXPO_PUBLIC_CURR_` + 대문자 스네이크 이름; 팩과 게임은 `EXPO_PUBLIC_CURR_PACKS_OFF=numbers-time,k-culture` · `EXPO_PUBLIC_CURR_GAMES_OFF=cloze-pick` 처럼 쉼표 목록. 값은 정확한 팩 키 (사양 section 6) 나 라운드 종류 코드 (section 7.1), 곧 `remote_config` 의 `pack.` · `game.` 뒤 글자와 같아야 한다. 다른 글자 (`cloze` 같은) 는 아무것도 끄지 않는다) 를 넣고 **Retry deployment**. 빌드 변수가 바닥 (floor) 이라 원격 설정으로는 다시 켤 수 없다. 다시 켤 때는 변수를 지우고 Retry deployment.
    이 빌드 변수는 웹 앱 (`hangul-route-app`, PWA) 에만 Retry deployment 로 닿는다. iOS 앱은 빌드할 때 변수가 들어가므로, 새 Xcode 빌드를 만들어 제출해야 바뀐다. 그래서 iOS 기기에는 위 1-3 (원격 `"on"` 0 과 엣지 캐시 비우기) 이 바로 끄는 방법이고, `GET /api/config` 로 결과를 확인한다.
 5. 끄는 것은 화면만이다: 진도, 카드, 기억 상태는 지워지지 않고, 다시 켜면 그대로 보인다 (사양 section 12.2 "What off does").
 

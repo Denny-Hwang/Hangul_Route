@@ -317,7 +317,8 @@ export function routeEnabledFor(
  * The F-CURR-002 switches (section 12.2, row CM-2). Each has two parts:
  * - a **build-time floor**: `parseKillSwitch` on its literal `EXPO_PUBLIC_CURR_*` variable (on unless it says
  *   `false`, `0`, `off` or `no`). A `pack.<key>` or `game.<kind>` floor is off when the key is listed in
- *   `EXPO_PUBLIC_CURR_PACKS_OFF` or `EXPO_PUBLIC_CURR_GAMES_OFF` (comma-separated, any case);
+ *   `EXPO_PUBLIC_CURR_PACKS_OFF` or `EXPO_PUBLIC_CURR_GAMES_OFF` (comma-separated exact pack keys or round-kind
+ *   codes, the text after `pack.` or `game.`, any case);
  * - a **remote form** from `GET /api/config` (`store/remote-config-store.ts`), which can only reduce: `on: false` or
  *   a lower `pct`, bucketed per profile (`logic/remote-config`). It never turns on a flag the build has off.
  * When the device has never fetched the config, a flag uses its built-in pct. Every F-CURR-002 flag ships with

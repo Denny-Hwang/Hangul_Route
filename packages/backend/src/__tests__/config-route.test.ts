@@ -93,10 +93,10 @@ describe('GET /api/config · shape', () => {
 
   it('serves on and pct per flag and never reason or updated_at', async () => {
     await testDb.putRemoteConfig(row('dailyReview', true, 10, 'ramp step 2'));
-    await testDb.putRemoteConfig(row('pack.k-food', false, 100));
-    await testDb.putRemoteConfig(row('game.cloze_pick', true, 0));
+    await testDb.putRemoteConfig(row('pack.k-culture', false, 100));
+    await testDb.putRemoteConfig(row('game.cloze-pick', true, 0));
     const r = await get();
-    expect(r.body.data).toEqual({ flags: { dailyReview: { on: true, pct: 10 }, 'game.cloze_pick': { on: true, pct: 0 }, 'pack.k-food': { on: false, pct: 100 } } });
+    expect(r.body.data).toEqual({ flags: { dailyReview: { on: true, pct: 10 }, 'game.cloze-pick': { on: true, pct: 0 }, 'pack.k-culture': { on: false, pct: 100 } } });
     expect(r.text).not.toMatch(/ramp step|updated_at|updatedAt|reason/);
   });
 
@@ -207,7 +207,7 @@ describe('remote config values', () => {
   });
 
   it('serves valid names only', () => {
-    const good = ['dailyReview', 'memoryRecord', 'fsrsShadow', 'pack.k-food', 'game.cloze_pick', 'pack.a1'];
+    const good = ['dailyReview', 'memoryRecord', 'fsrsShadow', 'pack.k-culture', 'game.cloze-pick', 'pack.a1'];
     const bad = ['', 'DailyReview', '__proto__', 'pack.', 'pack.K-Food', 'a.b.c', 'daily review', 'pack.-x', `a${'b'.repeat(60)}`];
     for (const name of good) expect(REMOTE_FLAG_NAME.test(name), name).toBe(true);
     for (const name of bad) expect(REMOTE_FLAG_NAME.test(name), name).toBe(false);

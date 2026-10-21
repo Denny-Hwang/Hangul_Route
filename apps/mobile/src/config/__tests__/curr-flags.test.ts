@@ -54,15 +54,15 @@ describe('F-CURR-002 flags (CM-2)', () => {
   it('every flag ships with built-in pct 0, keyed flags too', async () => {
     const mod = await reload();
     for (const flag of mod.CURR_FLAGS) expect(mod.currBuiltInPct(flag), flag).toBe(0);
-    expect(mod.currBuiltInPct('pack.k-food')).toBe(0);
-    expect(mod.currBuiltInPct('game.cloze')).toBe(0);
+    expect(mod.currBuiltInPct('pack.k-culture')).toBe(0);
+    expect(mod.currBuiltInPct('game.cloze-pick')).toBe(0);
   });
 
   it('every floor is on by default', async () => {
     const mod = await reload();
     for (const flag of mod.CURR_FLAGS) expect(mod.currBuildFloor(flag), flag).toBe(true);
-    expect(mod.currBuildFloor('pack.k-food')).toBe(true);
-    expect(mod.currBuildFloor('game.cloze')).toBe(true);
+    expect(mod.currBuildFloor('pack.k-culture')).toBe(true);
+    expect(mod.currBuildFloor('game.cloze-pick')).toBe(true);
   });
 
   it.each(['false', '0', 'off', 'no', ' FALSE ', 'Off'])('each floor is a kill switch: %j turns it off', async (value) => {
@@ -87,13 +87,13 @@ describe('F-CURR-002 flags (CM-2)', () => {
   });
 
   it('a listed pack or game is off at build time; others stay on; an empty key or an unknown name is off', async () => {
-    process.env.EXPO_PUBLIC_CURR_PACKS_OFF = ' K-Food , , space ';
-    process.env.EXPO_PUBLIC_CURR_GAMES_OFF = 'cloze';
+    process.env.EXPO_PUBLIC_CURR_PACKS_OFF = ' K-Culture , , numbers-time ';
+    process.env.EXPO_PUBLIC_CURR_GAMES_OFF = 'cloze-pick';
     const mod = await reload();
-    expect(mod.currBuildFloor('pack.k-food')).toBe(false);
-    expect(mod.currBuildFloor('pack.space')).toBe(false);
-    expect(mod.currBuildFloor('pack.music')).toBe(true);
-    expect(mod.currBuildFloor('game.cloze')).toBe(false);
+    expect(mod.currBuildFloor('pack.k-culture')).toBe(false);
+    expect(mod.currBuildFloor('pack.numbers-time')).toBe(false);
+    expect(mod.currBuildFloor('pack.arts-music')).toBe(true);
+    expect(mod.currBuildFloor('game.cloze-pick')).toBe(false);
     expect(mod.currBuildFloor('game.dictation')).toBe(true);
     expect(mod.currBuildFloor('pack.' as never)).toBe(false);
     expect(mod.currBuildFloor('somethingElse' as never)).toBe(false);

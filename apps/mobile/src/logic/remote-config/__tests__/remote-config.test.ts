@@ -4,6 +4,7 @@ import {
   REFETCH_MIN_AGE_MS,
   RETRY_AFTER_FAILURE_MS,
   bucketOf,
+  fmix32,
   fnv1a32,
   parentFlagOf,
   parseConfigBody,
@@ -31,10 +32,16 @@ describe('bucketOf · per profile, stable, no new identifier', () => {
     expect(fnv1a32('foobar')).toBe(0xbf9cf968);
   });
 
+  it('fmix32 matches murmur3 fmix32, so buckets never move between releases', () => {
+    expect(fmix32(0)).toBe(0);
+    expect(fmix32(1)).toBe(0x514e28b7);
+    expect(fmix32(0xdeadbeef)).toBe(0x0de5c6a9);
+  });
+
   it('is hash(profileId + flag) mod 100, in 0-99, and the same on every call', () => {
-    for (const [profile, flag] of [['p1', 'dailyReview'], ['abc123xy', 'pack.k-food'], ['profile-9', 'game.cloze']] as const) {
+    for (const [profile, flag] of [['p1', 'dailyReview'], ['abc123xy', 'pack.k-culture'], ['profile-9', 'game.cloze-pick']] as const) {
       const b = bucketOf(profile, flag);
-      expect(b).toBe(fnv1a32(profile + flag) % 100);
+      expect(b).toBe(fmix32(fnv1a32(profile + flag)) % 100);
       expect(b).toBeGreaterThanOrEqual(0);
       expect(b).toBeLessThan(100);
       for (let i = 0; i < 5; i += 1) expect(bucketOf(profile, flag)).toBe(b);
@@ -43,11 +50,11 @@ describe('bucketOf · per profile, stable, no new identifier', () => {
 
   it('pins known buckets (a change here moves learners between arms)', () => {
     expect([bucketOf('k7f3x9qa', 'dailyReview'), bucketOf('k7f3x9qa', 'mastery'), bucketOf('m2p8w1zt', 'dailyReview')]).toEqual([
-      fnv1a32('k7f3x9qadailyReview') % 100,
-      fnv1a32('k7f3x9qamastery') % 100,
-      fnv1a32('m2p8w1ztdailyReview') % 100,
+      fmix32(fnv1a32('k7f3x9qadailyReview')) % 100,
+      fmix32(fnv1a32('k7f3x9qamastery')) % 100,
+      fmix32(fnv1a32('m2p8w1ztdailyReview')) % 100,
     ]);
-    expect([bucketOf('k7f3x9qa', 'dailyReview'), bucketOf('k7f3x9qa', 'mastery'), bucketOf('m2p8w1zt', 'dailyReview')]).toEqual([50, 42, 65]);
+    expect([bucketOf('k7f3x9qa', 'dailyReview'), bucketOf('k7f3x9qa', 'mastery'), bucketOf('m2p8w1zt', 'dailyReview')]).toEqual([85, 33, 15]);
   });
 
   it('two profiles on one device get their own buckets; one profile gets independent buckets per flag', () => {
@@ -56,6 +63,22 @@ describe('bucketOf · per profile, stable, no new identifier', () => {
     expect(buckets.size).toBeGreaterThan(80);
     const sameAcrossFlags = profiles.filter((p) => bucketOf(p, 'dailyReview') === bucketOf(p, 'mastery')).length;
     expect(sameAcrossFlags).toBeLessThan(20);
+  });
+
+  it("a profile's buckets for two flags are independent (no shared low bits: all 16 mod-4 pairs, joint 10%/10% near 1%)", () => {
+    const n = 20000;
+    const pairs = new Set<string>();
+    let both = 0;
+    for (let i = 0; i < n; i += 1) {
+      const p = `p${i.toString(36)}x`;
+      const a = bucketOf(p, 'dailyReview');
+      const b = bucketOf(p, 'memoryRecord');
+      pairs.add(`${a % 4}:${b % 4}`);
+      if (a < 10 && b < 10) both += 1;
+    }
+    expect(pairs.size).toBe(16);
+    expect(both / n).toBeGreaterThan(0.007);
+    expect(both / n).toBeLessThan(0.013);
   });
 
   it('spreads profiles evenly enough that a 10% ramp reaches about 10%', () => {
@@ -169,8 +192,8 @@ describe('resolveRemoteFlag · remote can only reduce, in every combination', ()
 
 describe('parentFlagOf and remoteFlagValue', () => {
   it('a pack flag sits under topicPacks; other flags have no parent', () => {
-    expect(parentFlagOf('pack.k-food')).toBe('topicPacks');
-    expect(parentFlagOf('game.cloze')).toBeNull();
+    expect(parentFlagOf('pack.k-culture')).toBe('topicPacks');
+    expect(parentFlagOf('game.cloze-pick')).toBeNull();
     expect(parentFlagOf('dailyReview')).toBeNull();
   });
 
@@ -183,9 +206,9 @@ describe('parentFlagOf and remoteFlagValue', () => {
 
 describe('parseConfigBody', () => {
   it('reads the envelope { ok, data: { flags } }', () => {
-    expect(parseConfigBody({ ok: true, data: { flags: { goals: { on: true, pct: 20 }, 'pack.k-food': { on: false, pct: 100 } } } })).toEqual({
+    expect(parseConfigBody({ ok: true, data: { flags: { goals: { on: true, pct: 20 }, 'pack.k-culture': { on: false, pct: 100 } } } })).toEqual({
       goals: { on: true, pct: 20 },
-      'pack.k-food': { on: false, pct: 100 },
+      'pack.k-culture': { on: false, pct: 100 },
     });
     expect(parseConfigBody({ ok: true, data: { flags: {} } })).toEqual({});
   });

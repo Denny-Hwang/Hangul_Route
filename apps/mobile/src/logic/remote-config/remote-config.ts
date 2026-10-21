@@ -57,9 +57,27 @@ export function fnv1a32(text: string): number {
   return h >>> 0;
 }
 
-/** The profile's bucket for a flag, 0-99 (section 11.4): `hash(profileId + flag) mod 100`. */
+/**
+ * murmur3's 32-bit finalizer (fmix32): spreads every input bit over every output bit. Raw FNV-1a's low k bits depend
+ * only on the low k bits of the input, and 100 is divisible by 4, so without this a profile's bucket mod 4 for one
+ * flag would fix it for every other flag, and ramp and experiment arms would not be independent across flags.
+ */
+export function fmix32(h: number): number {
+  let x = h >>> 0;
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x85ebca6b);
+  x ^= x >>> 13;
+  x = Math.imul(x, 0xc2b2ae35);
+  x ^= x >>> 16;
+  return x >>> 0;
+}
+
+/**
+ * The profile's bucket for a flag, 0-99 (section 11.4): `hash(profileId + flag) mod 100`, where the hash is FNV-1a
+ * finished with `fmix32`. Frozen: a change moves learners between ramp arms.
+ */
 export function bucketOf(profileId: string, flag: string): number {
-  return fnv1a32(profileId + flag) % 100;
+  return fmix32(fnv1a32(profileId + flag)) % 100;
 }
 
 /** A pack flag also needs `topicPacks` (section 12.2, "What off does"); no other flag has a parent. */
