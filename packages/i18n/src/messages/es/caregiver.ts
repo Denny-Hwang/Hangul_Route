@@ -334,6 +334,8 @@ export const caregiver = {
       codeNotFound: 'Ese código no funcionó. Revísalo con tu docente.',
       codeExpired: 'Ese código es muy antiguo. Pide uno nuevo.',
       classFull: 'Esta clase está llena. Pregúntale a tu docente.',
+      familyFull: (cap: number) => `Esta familia ya tiene ${cap} estudiantes. Pregúntale a un adulto de tu familia.`,
+      schoolFull: 'Esta escuela está llena por ahora. Pregúntale a tu docente.',
       learnerGone: 'Ese nombre ya no está en esta clase. Pregúntale a tu docente.',
       alreadyOnDevice: 'Este dispositivo ya tiene a ese estudiante: cambia de perfil.',
       badFormat: 'Un código tiene 6 letras o números.',

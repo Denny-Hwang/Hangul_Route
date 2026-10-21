@@ -29,7 +29,7 @@ beforeEach(async () => db.reset());
 describe('school admin (F-SCHOOL-001)', () => {
   it('shows invite, licence, seats, classes with teachers and aggregates — to the admin only', async () => {
     const sch = await createSpace('principal', 'school', 'Seoul Hangul School', { displayName: 'Principal' });
-    expect((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data).toMatchObject({ invite: { joinCode: null }, license: null, limits: { licensed: false, students: null, teachers: null }, usage: { students: 0, teachers: 0 }, classes: [] });
+    expect((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data).toMatchObject({ invite: { joinCode: null }, license: null, limits: { licensed: false, students: 50, teachers: null }, usage: { students: 0, teachers: 0 }, classes: [], canRename: true });
     const invite = await issueCode('principal', sch);
     expect((await call('POST', `/api/spaces/${sch}/join`, bearer('ms-park'), { code: invite })).status).toBe(201);
     await call('POST', '/api/spaces', bearer('ms-park'), { kind: 'family', name: 'x', displayName: 'Ms Park' }); // seeds a display name
@@ -57,7 +57,7 @@ describe('school admin (F-SCHOOL-001)', () => {
     };
     expect(view.invite.joinCode).toBe(invite);
     expect(view.license).toMatchObject({ planKey: 'group_license', active: true, subjectName: 'Seoul Hangul School' });
-    expect(view.limits).toEqual({ licensed: true, students: 300, teachers: 10 });
+    expect(view.limits).toEqual({ licensed: true, students: 50, teachers: 10 });
     expect(view.usage).toEqual({ students: 1, teachers: 1 });
     expect(view.thisWeek).toEqual({ students: 1, practiced: 1, classes: 2, classesWithPlan: 1 });
     const rowA = view.classes.find((k) => k.space.id === clsA);
@@ -92,14 +92,38 @@ describe('school admin (F-SCHOOL-001)', () => {
     expect((await registerAndJoin(cls, code, 'device-a0000001', 'A')).status).toBe(201);
     const b = await registerAndJoin(cls, code, 'device-b0000001', 'B');
     expect(b.status).toBe(201);
-    expect((await call('POST', '/api/spaces/lookup', json, { code })).body.data).toMatchObject({ full: true });
+    // [SA] section 3.4: `full` is always false (relink stays reachable); `seat` names the school cap
+    expect((await call('POST', '/api/spaces/lookup', json, { code })).body.data).toMatchObject({ full: false, seat: { full: true, reason: 'cap_school', cap: 2 } });
     const third = await registerAndJoin(cls, code, 'device-c0000001', 'C');
     expect(third.status).toBe(409);
-    expect(third.code).toBe('cap_school');
+    expect(third.code).toBe('cap_class'); // a school cap answers cap_class with details.reason cap_school
     // a learner already counted in the school may join a second class
     const cls2 = await createSpace('principal', 'class', 'Second', { parentSpaceId: sch });
     const code2 = ((await db.getSpace(cls2)) as { joinCode: string }).joinCode;
     expect((await call('POST', `/api/spaces/${cls2}/join`, b.auth, { code: code2, learnerId: b.learnerId })).status).toBe(201);
     expect(((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as { usage: { students: number } }).usage.students).toBe(2);
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS section 3.6: the school view's licence is an allow-list for every caller. */
+describe('[SA] the school licence view', () => {
+  it('has exactly planKey, status, seats, expiresAt, updatedAt, active and subjectName, for the owner and for an admin', async () => {
+    const sch = await createSpace('principal', 'school', 'Seoul Hangul School');
+    await db.addMembership({ spaceId: sch, memberKind: 'account', memberId: 'dean', role: 'admin', joinedAt: new Date().toISOString() });
+    const at = new Date();
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_secret', customerRef: 'cus_secret', promoCode: 'HOYA20', expiresAt: '2027-10-20T00:00:00.000Z' }, at);
+    for (const user of ['principal', 'dean']) {
+      const license = ((await call('GET', `/api/spaces/${sch}/school`, bearer(user))).body.data as { license: Record<string, unknown> }).license;
+      expect(Object.keys(license).sort(), user).toEqual(['active', 'expiresAt', 'planKey', 'seats', 'status', 'subjectName', 'updatedAt']);
+      expect(license).toEqual({ planKey: 'group_license', status: 'active', seats: null, expiresAt: '2027-10-20T00:00:00.000Z', updatedAt: at.toISOString(), active: true, subjectName: 'Seoul Hangul School' });
+    }
+  });
+
+  it('keeps updatedAt so the console reads a past-due licence inside its grace week as kept, not paused', async () => {
+    const sch = await createSpace('principal', 'school', 'Seoul Hangul School');
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'past_due', provider: 'stripe', expiresAt: '2027-10-20T00:00:00.000Z' }, twoDaysAgo);
+    const license = ((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as { license: { status: string; updatedAt: string; active: boolean } }).license;
+    expect(license).toMatchObject({ status: 'past_due', updatedAt: twoDaysAgo.toISOString(), active: true });
   });
 });

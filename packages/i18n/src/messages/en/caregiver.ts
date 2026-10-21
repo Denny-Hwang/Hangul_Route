@@ -444,6 +444,10 @@ export const caregiver = {
       codeNotFound: "That code didn't work. Check it with your teacher.",
       codeExpired: 'That code is too old. Ask for a new one.',
       classFull: 'This class is full. Ask your teacher.',
+      /** [SA] AMENDMENTS-SEATS-ADMINS section 9.1: the family's learner cap (`cap_family`); `cap` is the number. */
+      familyFull: (cap: number) => `This family already has ${cap} learners. Ask a grown-up in your family.`,
+      /** [SA] A school's learner cap (`cap_school`). */
+      schoolFull: 'This school is full right now. Ask your teacher.',
       learnerGone: 'That name is not in this class anymore. Ask your teacher.',
       alreadyOnDevice: 'This device already has that learner — switch profiles instead.',
       badFormat: 'A code has 6 letters or numbers.',

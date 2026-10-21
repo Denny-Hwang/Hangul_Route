@@ -1,4 +1,4 @@
-import { LEARNER_LEVELS } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, LEARNER_LEVELS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -71,8 +71,8 @@ describe('privacy policy', () => {
     expect(terms).not.toMatch(/age group/i);
   });
 
-  it('says the privacy page was last updated 2026-10-12 (the backup sentences, privacy-statements.test.tsx)', () => {
-    expect(privacy).toContain('Effective October 14, 2026');
+  it('says the privacy page was last updated 2026-10-20 (the school administrators bullet, [SA] section 6.7)', () => {
+    expect(privacy).toContain('Effective October 20, 2026');
   });
 
   describe('launch-news email list', () => {
@@ -219,6 +219,9 @@ describe('payment facts (F-SITE-002 S-7)', () => {
     'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.';
   const SPONSORED =
     'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learner limits, before Stripe Live is ever enabled. */
+  const SIZES =
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.';
   const IN_APP = /^In-app purchases: /;
   const STORE = /App Store|Google Play/;
   const STORES_LINE = 'Apple App Store / Google Play — payments and subscription management for in-app purchases.';
@@ -312,6 +315,19 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       );
     });
 
+    it('[SA] says how many learners each plan holds, after the sponsored line and before the in-app terms (SA-6)', () => {
+      const sponsored = termsBilling.indexOf(SPONSORED);
+      const sizes = termsBilling.indexOf(SIZES);
+      expect(sizes).toBe(sponsored + SPONSORED.length + 1);
+      expect(sizes).toBeLessThan(termsBilling.indexOf('In-app purchases:'));
+      expect(SIZES).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
+      expect(SIZES).toContain(`up to ${GROUP_LICENSE_LEARNERS} students`);
+      expect(SIZES).toContain(`up to ${SCHOOL_LICENSE_TEACHERS} teachers`);
+      const consoleBilling = getMessages('en').console.billing;
+      expect(SIZES).toContain(`The ${consoleBilling.planTitle.family_lifetime} covers one family`);
+      expect(SIZES).toContain(`The ${consoleBilling.planTitle.group_license} covers one class or one school`);
+    });
+
     it('marks every list item of the billing section as in-app, and no longer bills premium through the stores alone', () => {
       const section = between(termsHtml, 'Subscriptions, billing, and cancellation', 'Acceptable use');
       const items = [...section.matchAll(/<li\b[^>]*>(.*?)<\/li>/g)].map((m) => textOf(m[1] ?? '').trim());
@@ -381,10 +397,11 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       );
     });
 
-    it('Terms of Service: the effective date moves to 2026-10-12 with the payment facts; the Privacy Policy keeps 2026-10-12', () => {
-      expect(terms).toContain('Effective October 14, 2026');
+    it('Terms of Service: the effective date moves to 2026-10-20 with the plan sizes ([SA] SA-6); the Privacy Policy keeps 2026-10-14', () => {
+      expect(terms).toContain('Effective October 20, 2026');
+      expect(terms).not.toContain('Effective October 14, 2026');
       expect(terms).not.toContain('Effective May 22, 2026');
-      expect(privacy).toContain('Effective October 14, 2026');
+      expect(privacy).toContain('Effective October 20, 2026');
     });
 
     it.each(['es', 'ko'] as const)('%s: shows the same English payment facts under the English-authoritative notice (L10)', (locale) => {
@@ -396,6 +413,7 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       expect(localizedPrivacy).toContain(CHANNELS);
       expect(localizedTerms).toContain(CHANNELS);
       expect(localizedTerms).toContain(WEB_RENEWAL);
+      expect(localizedTerms).toContain(SIZES);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type SpaceEvent, type TransferBlockReason, type TransferEndReason, type TransferSlot, SpaceEventKindSchema } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type LearnerProfileFields, type SnapshotRecord } from '../store';
 import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { assertNoteChecks, assertOneSender } from './feedback-rules';
@@ -20,11 +20,13 @@ import {
   type StoredSenderBlock,
   type StoredSenderHold,
 } from './feedback-types';
+import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type AddLearnerWithinCapsInput,
   type BillingEventInput,
   type EntitlementMerge,
   type ConsentResetReason,
@@ -104,6 +106,11 @@ export class MemoryDb implements Db {
   /** [TV] migration 0009. */
   private classScopeAcks = new Map<string, StoredClassScopeAck>();
   private classMoves = new Map<string, StoredClassMove>();
+  /** [SA] migration 0011. */
+  private spaceEvents = new Map<string, SpaceEvent>();
+  /** [SA] migration 0012: the invites, and the membership keys whose row holds `promoted_from = 'teacher'`. */
+  private adminInvites = new Map<string, StoredAdminInvite>();
+  private promotedFromTeacher = new Set<string>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -213,7 +220,9 @@ export class MemoryDb implements Db {
     return clone(this.spaces.get(spaceId) ?? null);
   }
   async putSpace(space: Space): Promise<void> {
-    this.spaces.set(space.id, clone(space));
+    // [SA] section 5.2: as on D1, an update keeps the stored name (written at insert and by `renameSpace` only).
+    const stored = this.spaces.get(space.id);
+    this.spaces.set(space.id, clone(stored ? { ...space, name: stored.name } : space));
   }
   async spaceByCode(code: string): Promise<Space | null> {
     return clone([...this.spaces.values()].find((s) => s.joinCode === code) ?? null);
@@ -231,13 +240,195 @@ export class MemoryDb implements Db {
     this.memberships.set(membershipKey(m.spaceId, m.memberKind, m.memberId), clone(m));
   }
   async removeMembership(spaceId: string, kind: MemberKind, memberId: string): Promise<boolean> {
+    this.promotedFromTeacher.delete(membershipKey(spaceId, kind, memberId));
     return this.memberships.delete(membershipKey(spaceId, kind, memberId));
+  }
+  async removeMembershipIfRole(spaceId: string, kind: MemberKind, memberId: string, role: Membership['role']): Promise<boolean> {
+    if (this.memberships.get(membershipKey(spaceId, kind, memberId))?.role !== role) return false;
+    return this.removeMembership(spaceId, kind, memberId);
   }
   async membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]> {
     return clone([...this.memberships.values()].filter((m) => m.memberKind === kind && m.memberId === memberId));
   }
+  async addLearnerWithinCaps(input: AddLearnerWithinCapsInput): Promise<'added' | 'already' | 'refused'> {
+    // The rules of the D1 statement (section 3.3), in one synchronous step: no await between the counts and the write.
+    const { spaceId, learnerId } = input;
+    if (this.memberships.has(membershipKey(spaceId, 'learner', learnerId))) return 'already';
+    const rows = [...this.memberships.values()];
+    const liveClass = (id: string): Space | undefined => {
+      const s = this.spaces.get(id);
+      return s && s.kind === 'class' && s.archivedAt === null ? s : undefined;
+    };
+    const inSpace = rows.filter((m) => m.spaceId === spaceId && m.memberKind === 'learner').length;
+    const classes = rows.filter((m) => m.memberKind === 'learner' && m.memberId === learnerId && liveClass(m.spaceId)).length;
+    const fits =
+      (input.spaceCap === null || inSpace < input.spaceCap) &&
+      (input.learnerClassCap === null || classes < input.learnerClassCap) &&
+      this.schoolSeatFree(input.schoolId, input.schoolCap, learnerId);
+    if (!fits) return 'refused';
+    this.memberships.set(membershipKey(spaceId, 'learner', learnerId), { spaceId, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: input.joinedAt });
+    return 'added';
+  }
+  /** [SA] The school seat test of the D1 `schoolSeatCondition`, on the live maps. */
+  private schoolSeatFree(schoolId: string | null | undefined, schoolCap: number | null | undefined, learnerId: string): boolean {
+    if (schoolId === null || schoolId === undefined || schoolCap === null || schoolCap === undefined) return true;
+    const learners = new Set<string>();
+    for (const m of this.memberships.values()) {
+      const s = this.spaces.get(m.spaceId);
+      if (m.memberKind !== 'learner' || !s || s.kind !== 'class' || s.archivedAt !== null || s.parentSpaceId !== schoolId) continue;
+      if (m.memberId === learnerId) return true;
+      learners.add(m.memberId);
+    }
+    return learners.size < schoolCap;
+  }
+  async renameSpace(spaceId: string, name: string): Promise<number> {
+    const space = this.spaces.get(spaceId);
+    if (!space || space.archivedAt !== null) return 0;
+    this.spaces.set(spaceId, { ...space, name });
+    return 1;
+  }
+  async addSpaceEvent(event: SpaceEvent): Promise<void> {
+    if (!this.spaces.has(event.spaceId)) throw new Error('FOREIGN KEY constraint failed');
+    this.spaceEvents.set(event.id, clone({ ...event, kind: SpaceEventKindSchema.parse(event.kind) }));
+  }
+  async spaceEventsOf(spaceId: string, limit: number): Promise<SpaceEvent[]> {
+    return clone(
+      [...this.spaceEvents.values()]
+        .filter((e) => e.spaceId === spaceId && this.spaces.has(e.spaceId))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+        .slice(0, limit)
+        // as D1: a kind this build does not know (written by a newer Worker) is skipped, never thrown
+        .filter((e) => SpaceEventKindSchema.safeParse(e.kind).success),
+    );
+  }
+  async purgeSpaceEvents(before: Date, limit: number): Promise<number> {
+    const cut = before.toISOString();
+    let removed = 0;
+    for (const [key, e] of this.spaceEvents) {
+      if (removed >= limit) break;
+      if (e.createdAt < cut) {
+        this.spaceEvents.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
+  }
   async membersOf(spaceId: string): Promise<Membership[]> {
     return clone([...this.memberships.values()].filter((m) => m.spaceId === spaceId));
+  }
+  async latestSpaceEvent(spaceId: string, kind: SpaceEvent['kind'], subjectAccountId: string): Promise<SpaceEvent | null> {
+    const rows = [...this.spaceEvents.values()].filter((e) => e.spaceId === spaceId && e.kind === kind && e.subjectAccountId === subjectAccountId);
+    rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    return clone(rows[0] ?? null);
+  }
+  async addMembershipIfAbsent(m: Membership): Promise<boolean> {
+    const key = membershipKey(m.spaceId, m.memberKind, m.memberId);
+    if (this.memberships.has(key)) return false;
+    this.memberships.set(key, clone(m));
+    return true;
+  }
+
+  // ---- school administrators ([SA] migration 0012): the rules of the D1 statements, each in one synchronous step ----
+
+  /** The account's role in the space, or null. */
+  private accountRole(spaceId: string, accountId: string): Membership['role'] | null {
+    return this.memberships.get(membershipKey(spaceId, 'account', accountId))?.role ?? null;
+  }
+  private adminCount(spaceId: string): number {
+    return [...this.memberships.values()].filter((m) => m.spaceId === spaceId && m.memberKind === 'account' && m.role === 'admin').length;
+  }
+  private isOpenInvite(i: StoredAdminInvite, at: string): boolean {
+    return i.acceptedAt === null && i.revokedAt === null && i.expiresAt > at;
+  }
+  private liveSchool(spaceId: string): Space | null {
+    const s = this.spaces.get(spaceId);
+    return s && s.kind === 'school' && s.archivedAt === null ? s : null;
+  }
+  private pushSpaceEvent(e: SpaceEvent): void {
+    this.spaceEvents.set(e.id, clone({ ...e, kind: SpaceEventKindSchema.parse(e.kind) }));
+  }
+  /** The `TEACHES_LIVE_CLASS` test of D1, on the live maps. */
+  private teachesLiveClass(schoolId: string, accountId: string): boolean {
+    for (const s of this.spaces.values()) {
+      if (s.parentSpaceId !== schoolId || s.kind !== 'class' || s.archivedAt !== null) continue;
+      const role = this.accountRole(s.id, accountId);
+      if (s.ownerAccountId === accountId || role === 'owner' || role === 'teacher') return true;
+    }
+    return false;
+  }
+  async createAdminInvite({ invite: i, cap, eventId }: CreateAdminInviteInput): Promise<boolean> {
+    const open = [...this.adminInvites.values()].filter((x) => x.spaceId === i.spaceId && this.isOpenInvite(x, i.createdAt)).length;
+    if (!this.liveSchool(i.spaceId) || this.adminCount(i.spaceId) + open >= cap) return false;
+    if ([...this.adminInvites.values()].some((x) => x.tokenHash === i.tokenHash) || this.adminInvites.has(i.id)) throw new Error('UNIQUE constraint failed: admin_invites');
+    this.adminInvites.set(i.id, { ...i, acceptedBy: null, acceptedAt: null, revokedAt: null });
+    this.pushSpaceEvent({ id: eventId, spaceId: i.spaceId, kind: 'admin_invite_created', actorAccountId: i.createdBy, subjectAccountId: null, subjectSpaceId: null, inviteId: i.id, createdAt: i.createdAt });
+    return true;
+  }
+  async getAdminInvite(inviteId: string): Promise<StoredAdminInvite | null> {
+    return clone(this.adminInvites.get(inviteId) ?? null);
+  }
+  async adminInviteByHash(tokenHash: string): Promise<StoredAdminInvite | null> {
+    return clone([...this.adminInvites.values()].find((i) => i.tokenHash === tokenHash) ?? null);
+  }
+  async openAdminInvites(spaceId: string, now: Date): Promise<StoredAdminInvite[]> {
+    const at = now.toISOString();
+    return clone([...this.adminInvites.values()].filter((i) => i.spaceId === spaceId && this.isOpenInvite(i, at)).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)));
+  }
+  async revokeAdminInvite({ inviteId, spaceId, actorAccountId, now, eventId }: RevokeAdminInviteInput): Promise<number> {
+    const row = this.adminInvites.get(inviteId);
+    if (!row || row.spaceId !== spaceId || row.acceptedAt !== null || row.revokedAt !== null) return 0;
+    const at = now.toISOString();
+    this.adminInvites.set(inviteId, { ...row, revokedAt: at });
+    this.pushSpaceEvent({ id: eventId, spaceId, kind: 'admin_invite_revoked', actorAccountId, subjectAccountId: null, subjectSpaceId: null, inviteId, createdAt: at });
+    return 1;
+  }
+  async acceptAdminInvite({ inviteId, spaceId, accountId, now, cap, eventId }: AcceptAdminInviteInput): Promise<boolean> {
+    const at = now.toISOString();
+    const row = this.adminInvites.get(inviteId);
+    const school = this.liveSchool(spaceId);
+    const role = this.accountRole(spaceId, accountId);
+    const gate = !!row && row.spaceId === spaceId && this.isOpenInvite(row, at) && !!school && school.ownerAccountId !== accountId && (role === null || role === 'teacher') && this.adminCount(spaceId) < cap;
+    if (!gate || !row) return false;
+    this.adminInvites.set(inviteId, { ...row, acceptedBy: accountId, acceptedAt: at });
+    const key = membershipKey(spaceId, 'account', accountId);
+    const existing = this.memberships.get(key);
+    if (!existing) {
+      this.memberships.set(key, { spaceId, memberKind: 'account', memberId: accountId, role: 'admin', joinedAt: at });
+    } else if (existing.role === 'teacher') {
+      this.memberships.set(key, { ...existing, role: 'admin' });
+      this.promotedFromTeacher.add(key);
+    }
+    this.pushSpaceEvent({ id: eventId, spaceId, kind: 'admin_joined', actorAccountId: accountId, subjectAccountId: accountId, subjectSpaceId: null, inviteId, createdAt: at });
+    return true;
+  }
+  async endAdminRole({ spaceId, accountId, actorAccountId, kind, now, eventId }: EndAdminRoleInput): Promise<EndAdminRoleResult> {
+    const key = membershipKey(spaceId, 'account', accountId);
+    const row = this.memberships.get(key);
+    if (!row || row.role !== 'admin') return null;
+    this.pushSpaceEvent({ id: eventId, spaceId, kind, actorAccountId, subjectAccountId: accountId, subjectSpaceId: null, inviteId: null, createdAt: now.toISOString() });
+    if (this.promotedFromTeacher.has(key) || this.teachesLiveClass(spaceId, accountId)) {
+      this.memberships.set(key, { ...row, role: 'teacher' });
+      this.promotedFromTeacher.delete(key);
+      return 'teacher';
+    }
+    this.memberships.delete(key);
+    return 'none';
+  }
+  async adminStaysTeacher(spaceId: string, accountId: string): Promise<boolean> {
+    const key = membershipKey(spaceId, 'account', accountId);
+    return this.memberships.get(key)?.role === 'admin' && (this.promotedFromTeacher.has(key) || this.teachesLiveClass(spaceId, accountId));
+  }
+  async purgeAdminInvites(before: Date, limit: number): Promise<number> {
+    const cut = before.toISOString();
+    let removed = 0;
+    for (const [key, i] of this.adminInvites) {
+      if (removed >= limit) break;
+      if (i.expiresAt < cut || (i.acceptedAt !== null && i.acceptedAt < cut) || (i.revokedAt !== null && i.revokedAt < cut)) {
+        this.adminInvites.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
   }
 
   async getPlan(planId: string): Promise<Plan | null> {
@@ -433,7 +624,7 @@ export class MemoryDb implements Db {
       sourceSpace?.kind === 'class' &&
       destSpace?.kind === 'class' &&
       destSpace.archivedAt === null &&
-      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap)));
+      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap) && this.schoolSeatFree(input.destSchoolId, input.destSchoolCap, learnerId)));
     if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
 
     this.transfers.set(transferId, { ...row, status: 'executed', executedAt: at, blockReason: null, updatedAt: at, rev: row.rev + 1 });
@@ -960,7 +1151,7 @@ export class MemoryDb implements Db {
       sourceSpace?.kind === 'class' &&
       destSpace?.kind === 'class' &&
       destSpace.archivedAt === null &&
-      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap)));
+      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap) && this.schoolSeatFree(input.destSchoolId, input.destSchoolCap, learnerId)));
     if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
     this.classMoves.set(id, { ...row, status: 'executed', executedAt: at, updatedAt: at, decidedAccountId: input.decider.accountId, decidedVia: input.decider.via });
     return { executed: true, ...this.swapClassMembership(learnerId, source, dest, at) };
@@ -981,7 +1172,8 @@ export class MemoryDb implements Db {
   }
 
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents, this.adminInvites]) m.clear();
+    this.promotedFromTeacher.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }

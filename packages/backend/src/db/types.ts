@@ -1,4 +1,4 @@
-import { isStripeSubscriptionRef, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space } from '@hangul-route/content-schema';
+import { isStripeSubscriptionRef, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space, type SpaceEvent } from '@hangul-route/content-schema';
 import type { TransferBlockReason, TransferEndReason, TransferSlot } from '@hangul-route/content-schema';
 import { isEntitlementActive } from '../lib/entitlement';
 import type { Account, Learner, LearnerDevice, LearnerProfileFields, SnapshotRecord } from '../store';
@@ -31,10 +31,12 @@ import type {
 } from './feedback-types';
 import type { ClassMoveDecider, ClassMoveEndStatus, ExecuteClassMoveInput, ExecuteClassMoveResult, StoredClassMove, StoredClassScopeAck } from './class-move-types';
 import type { ClassMoveEndReason } from '@hangul-route/content-schema';
+import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 
 export * from './transfer-types';
 export * from './class-move-types';
 export * from './feedback-types';
+export * from './admin-types';
 
 /** A keyset position in a newest-first note list: rows strictly older than this (`createdAt`, then `id`). */
 export interface NoteCursor {
@@ -74,6 +76,20 @@ export interface StoredSummary {
  * interface; `D1Db` is the Worker's binding, `MemoryDb` the test / dev stand-in.
  * Reads return copies: mutate, then `put` — nothing is saved by reference.
  */
+/** [SA] `Db.addLearnerWithinCaps` input: every cap that applies; an absent cap is `null`. */
+export interface AddLearnerWithinCapsInput {
+  spaceId: string;
+  learnerId: string;
+  joinedAt: string;
+  /** The space's own cap: a family 4, a class 20 or 50. */
+  spaceCap: number | null;
+  /** `LEARNER_CLASS_CAP` when the space is a class (the learner's live classes), else null. */
+  learnerClassCap: number | null;
+  /** The live school above a class and its distinct-student cap. */
+  schoolId: string | null;
+  schoolCap: number | null;
+}
+
 export interface Db {
   // accounts (F-SPACE-001 §3.1)
   getAccount(id: string): Promise<Account | null>;
@@ -147,8 +163,66 @@ export interface Db {
   membership(spaceId: string, kind: MemberKind, memberId: string): Promise<Membership | null>;
   addMembership(membership: Membership): Promise<void>;
   removeMembership(spaceId: string, kind: MemberKind, memberId: string): Promise<boolean>;
+  /** [SA] One guarded delete: removes the row only while its role is still `role` (section 6.4). Whether it removed one. */
+  removeMembershipIfRole(spaceId: string, kind: MemberKind, memberId: string, role: Membership['role']): Promise<boolean>;
   membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]>;
   membersOf(spaceId: string): Promise<Membership[]>;
+  /**
+   * [SA] Takes one learner seat atomically (AMENDMENTS-SEATS-ADMINS section 3.3): one statement inserts the student
+   * membership only while every cap given still has room, so two joins can never both take the last seat. `added`:
+   * the row is new; `already`: the learner was a member (nothing written); `refused`: a cap was full (nothing written).
+   */
+  addLearnerWithinCaps(input: AddLearnerWithinCapsInput): Promise<'added' | 'already' | 'refused'>;
+  /**
+   * [SA] Renames a live space with one column-only statement (section 5.2): the name is written only here and at
+   * insert (`putSpace` never writes it on update). The rows changed: 0 when the space is gone or archived.
+   */
+  renameSpace(spaceId: string, name: string): Promise<number>;
+  /** [SA] One `space_events` row (section 6.2); the kind is checked against `SpaceEventKindSchema`. */
+  addSpaceEvent(event: SpaceEvent): Promise<void>;
+  /** [SA] A space's events, newest first, at most `limit`. */
+  spaceEventsOf(spaceId: string, limit: number): Promise<SpaceEvent[]>;
+  /** [SA] Deletes at most `limit` `space_events` rows created before `before` (the 400-day purge); the count removed. */
+  purgeSpaceEvents(before: Date, limit: number): Promise<number>;
+  /** [SA] The newest event of `kind` on the space whose subject is `subjectAccountId` (an admin's `admin_joined`), or null. */
+  latestSpaceEvent(spaceId: string, kind: SpaceEvent['kind'], subjectAccountId: string): Promise<SpaceEvent | null>;
+  /**
+   * [SA] Inserts the membership only when the space has no row for that member (`ON CONFLICT DO NOTHING`), so a
+   * teacher-code join or a class assignment never rewrites the role of an existing row (section 6.1). Whether it inserted.
+   */
+  addMembershipIfAbsent(membership: Membership): Promise<boolean>;
+
+  // school administrators ([SA] AMENDMENTS-SEATS-ADMINS section 6, migration 0012)
+  /**
+   * One guarded statement: inserts the invite only while the school is a live school and its admins plus its open
+   * invites are below `cap`, with its `admin_invite_created` event. Whether it inserted (false: full or not a live school).
+   */
+  createAdminInvite(input: CreateAdminInviteInput): Promise<boolean>;
+  getAdminInvite(id: string): Promise<StoredAdminInvite | null>;
+  adminInviteByHash(tokenHash: string): Promise<StoredAdminInvite | null>;
+  /** The school's open invites (not accepted, not revoked, not expired at `now`), oldest first. */
+  openAdminInvites(spaceId: string, now: Date): Promise<StoredAdminInvite[]>;
+  /**
+   * One guarded statement stamps `revoked_at` on an invite of this school that is neither accepted nor revoked, with
+   * its `admin_invite_revoked` event; a revoke that lands after an accept changes nothing. The rows changed (0 or 1).
+   */
+  revokeAdminInvite(input: RevokeAdminInviteInput): Promise<number>;
+  /**
+   * The accept batch (section 6.4): the gate marks the invite accepted only while it is open, the school is live and
+   * not owned by the account, the account has no row there or only a teacher row and the school's admins are below
+   * `cap`; then, guarded by the gate, the admin row is inserted (a teacher row is promoted and records
+   * `promoted_from = 'teacher'`; no other row is ever changed) and the `admin_joined` event written. Whether it accepted.
+   */
+  acceptAdminInvite(input: AcceptAdminInviteInput): Promise<boolean>;
+  /**
+   * Ends an admin role in one batch (section 6.1): the school row goes back to `teacher` when it was promoted from a
+   * teacher or the account owns or teaches a live class of the school, else it is deleted; with its event.
+   */
+  endAdminRole(input: EndAdminRoleInput): Promise<EndAdminRoleResult>;
+  /** Whether ending this admin's role would leave them a teacher of the school (the test of `endAdminRole`). */
+  adminStaysTeacher(spaceId: string, accountId: string): Promise<boolean>;
+  /** Deletes at most `limit` invites whose `expires_at`, `accepted_at` or `revoked_at` is before `before` (the 30-day purge). */
+  purgeAdminInvites(before: Date, limit: number): Promise<number>;
 
   // plans (F-PLAN-001)
   getPlan(id: string): Promise<Plan | null>;

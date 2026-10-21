@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { ReactNode } from 'react';
 import { MoveRowAction } from '@/components/console/TransferParts';
 import { Button, Field, Muted, panelStyle } from '@/components/console/ui';
@@ -43,11 +43,21 @@ export interface SettingsSectionsProps {
    * `familyMovable` (T-6d): on a family, the learners in a live class, whose rows show **Move to a class**.
    */
   move?: { online: boolean; onMove: (member: MemberView) => void; familyMovable?: ReadonlySet<string> };
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 3.4: under the join code, a family's count and its at-cap line. */
+  joinCodeNote?: ReactNode;
   /** Panel D, who may send notes (F-FEEDBACK-001 FB-12, `console/family-notes.md` D): drawn after the learners, before the Danger zone. */
   notesPanel?: ReactNode;
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 6.6 (SA-0b D16): the viewer is an administrator, not the owner, of this school.
+   * Consent mode and Anonymize roster read as text with `ownerOnly`, a grown-up's Remove shows only where the Worker's
+   * `canRemove` says so (teachers), and there is no Danger zone (archive and delete are the owner's).
+   */
+  schoolAdmin?: boolean;
 }
 
 const h2Style = { fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` } as const;
+/** A setting's value as text, for a school administrator (no switch). */
+const readValue = { margin: 0, color: colors.text.primary, lineHeight: typography.leading.relaxed } as const;
 const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, padding: `${spacing.xs}px 0` } as const;
 
 export function SettingsSections({
@@ -70,6 +80,8 @@ export function SettingsSections({
   onDelete,
   move,
   notesPanel,
+  joinCodeNote,
+  schoolAdmin = false,
 }: SettingsSectionsProps): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -88,13 +100,19 @@ export function SettingsSections({
           <h2 style={h2Style}>{s.joinCode.title}</h2>
           <div style={{ fontSize: headRem(typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono }}>{roster.joinCode ?? '—'}</div>
           <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
+          {joinCodeNote}
           <Button disabled={busy} onClick={onRegenerate}>
             {roster.joinCode ? s.joinCode.regenerate.cta : s.joinCode.create.cta}
           </Button>
         </section>
       ) : null}
 
-      {space.kind !== 'family' ? (
+      {space.kind !== 'family' && schoolAdmin ? (
+        <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.consent.title} data-testid="settings-consent-readonly">
+          <h2 style={h2Style}>{s.consent.title}</h2>
+          <p style={readValue}>{s.consent[space.settings.consentMode]}</p>
+        </section>
+      ) : space.kind !== 'family' ? (
         <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.consent.title}>
           <h2 style={h2Style}>{s.consent.title}</h2>
           <Muted>{c.consentHint}</Muted>
@@ -109,6 +127,16 @@ export function SettingsSections({
         </section>
       ) : null}
 
+      {schoolAdmin ? (
+        <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.privacy.title} data-testid="settings-privacy-readonly">
+          <h2 style={h2Style}>{s.privacy.title}</h2>
+          <p style={readValue}>{s.privacy.anonymize}</p>
+          <p style={{ ...readValue, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>{space.settings.anonymizeRoster ? s.privacy.anonymizeOn : s.privacy.anonymizeOff}</p>
+          <p style={{ ...readValue, marginTop: spacing.sm, padding: `${spacing.sm}px ${spacing.md}px`, borderRadius: radii.md, backgroundColor: colors.surface.sunken }} data-testid="settings-owner-only">
+            {s.ownerOnly}
+          </p>
+        </section>
+      ) : (
       <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.privacy.title}>
         <h2 style={h2Style}>{s.privacy.title}</h2>
         <label style={{ display: 'block' }}>
@@ -116,6 +144,7 @@ export function SettingsSections({
         </label>
         <Muted>{c.anonymizeHint}</Muted>
       </section>
+      )}
 
       <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.grownUps.label}>
         <h2 style={h2Style}>{s.grownUps.title}</h2>
@@ -124,7 +153,7 @@ export function SettingsSections({
             <span>
               {m.name} <span style={{ color: colors.text.muted }}>· {s.grownUps.roleLine(s.grownUps.role[m.role] ?? m.role, m.memberId === accountId)}</span>
             </span>
-            {!m.isOwner ? (
+            {(schoolAdmin ? m.canRemove === true : !m.isOwner) ? (
               <Button disabled={busy || archived} onClick={() => onRemoveAdult(m)}>
                 {s.grownUps.remove.cta}
               </Button>
@@ -155,6 +184,7 @@ export function SettingsSections({
 
       {notesPanel}
 
+      {schoolAdmin ? null : (
       <section style={{ ...panelStyle, marginBottom: spacing.lg, borderColor: colors.feedback.danger }} aria-label={s.danger.title}>
         <h2 style={{ ...h2Style, color: colors.feedback.danger }}>{s.danger.title}</h2>
         <div style={{ marginBottom: spacing.md }}>
@@ -188,6 +218,7 @@ export function SettingsSections({
           )}
         </div>
       </section>
+      )}
     </>
   );
 }

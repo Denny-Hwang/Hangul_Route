@@ -4,6 +4,7 @@
 **Scope**: `packages/content-schema` · `packages/backend` · `apps/web` (`/teach/space/:id` for school spaces)
 **Owner**: solo dev
 **Rollout**: Roadmap S7 — the last stage of the multi-persona platform
+**Amended 2026-10-20 [SA]** by `AMENDMENTS-SEATS-ADMINS.md`: a licensed school holds **50** students (was 300; teachers stay 10), an unlicensed school also holds up to 50; a school has its owner and up to **2 administrators**, added by a single-use invite link; admins run the school but billing, settings, archive and the admin list stay with the owner; the school and its classes can be renamed in place.
 
 Parent: F-SPACE-001 (spaces, `class.create`, school join code = teacher invite), F-ENT-001 (`group_license` / `school_seat`), F-CONSOLE-001 (console shell), F-TCH-001 §10 · wireframe `console/school-admin.md`
 
@@ -21,7 +22,7 @@ A 한글학교 organizer runs several classes taught by other teachers. The scho
 
 ### 3.1 Limits (`lib/entitlement.ts`)
 
-- `schoolLimits(school, now)`: active `group_license` ($153 / year, decision #30) → **300 students / 10 teachers**; active `school_seat` → `seats` students (null = unlimited) / unlimited teachers; nothing active → not licensed (no school-level caps; each class keeps the free cap).
+- `schoolLimits(school, now)`: active `group_license` ($153 / year, decision #30) → **50 students [SA] / 10 teachers**; active `school_seat` → `seats` students (null = unlimited) / unlimited teachers; nothing active → not licensed (each class keeps the free cap of 20, and the school holds up to **50** distinct students, `SCHOOL_LEARNER_CAP` [SA]; was no school-level cap).
 - `schoolUsage(schoolId)`: distinct learners across the school's live classes (a learner in two classes counts once) and distinct teaching accounts (teacher members of the school plus owners / teachers of its classes, excluding the school owner).
 - Learner join into a class under a licensed school is refused with 409 `cap_school` when the school's distinct learners already reach the student limit; the lookup's `full` reflects it.
 
@@ -35,7 +36,7 @@ A 한글학교 organizer runs several classes taught by other teachers. The scho
 
 ### 3.3 Console — `/teach/space/:id` when the space is a school (console/school-admin)
 
-- Licence block (plan, status, **Manage billing** → `/teach/billing`), seats block ("students 38 / 300 · teachers 4 / 10", near-limit note from 90 %), teacher invite code (Copy, Regenerate with confirm, "they sign in, enter this code, then create their class"), this-week aggregate, classes table (teacher, students, last active, plan, **Open roster**, **Assign teacher** from the school's teachers), **+ New class** (inline name), Settings link, empty state with the invite code large.
+- Licence block (plan, status, **Manage billing** → `/teach/billing`), seats block ("students 38 / 50 · teachers 4 / 10" [SA], near-limit note from 90 %), teacher invite code (Copy, Regenerate with confirm, "they sign in, enter this code, then create their class"), this-week aggregate, classes table (teacher, students, last active, plan, **Open roster**, **Assign teacher** from the school's teachers), **+ New class** (inline name), Settings link, empty state with the invite code large.
 - Aggregate only: no student names or per-student numbers on this page; rosters opened from here follow the class's anonymize setting (on by default for school-owned classes).
 
 ## 4. Out of scope

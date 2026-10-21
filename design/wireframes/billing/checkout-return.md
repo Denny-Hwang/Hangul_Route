@@ -1,5 +1,7 @@
 # Billing/Checkout return — waiting honestly for the payment to land (wireframe v2)
 
+> **Amended 2026-10-20 [SA]** (`docs/specs/AMENDMENTS-SEATS-ADMINS.md`): a family holds up to **4** learners (was 5); the Group License covers up to **50** students in a class or a school (was no cap for a class and 300 for a school). Only the numbers on this page changed; the new rename and administrator surfaces get their own wireframes and mocks in row SA-0b.
+
 > **Amended 2026-10-11 [BY]** (`docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`): the family product is the **Family Plan**, $15.30 / year, renews yearly, cancel any time (was the one-time "Family Lifetime"). Lines below are updated.
 
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.5, §4.12
@@ -48,7 +50,7 @@ state: done
 | Family · <space name> | Family Plan · Renews on <date>       |
 
 state: done, family with no learner yet (next step on the card)
-| Family · <space name> | Family Plan · Renews on <date> | 0 of 5 learners |
+| Family · <space name> | Family Plan · Renews on <date> | 0 of 4 learners |
 | Next: connect a learner to this family.                      |
 | [ Connect a learner ]                                         |   -> F-APP-001 family page (join code)
 

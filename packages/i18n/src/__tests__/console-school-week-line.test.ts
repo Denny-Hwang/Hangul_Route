@@ -1,4 +1,4 @@
-import { FREE_CLASS_STUDENT_CAP } from '@hangul-route/content-schema';
+import { FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { getMessages } from '../resolve';
 
@@ -6,7 +6,7 @@ import { getMessages } from '../resolve';
 // (a) The school admin's week line counts students and classes through plural(), so one student or
 // one class reads in the singular, the same way `school.classes.line` and `week.notSynced` do. The
 // verb agrees with the numerator; at 0 it follows the total. ko needs no plural.
-// (b) `schoolNoLicence` takes the free cap as an argument instead of spelling it.
+// (b) `schoolNoLicenceCaps` ([SA] AMENDMENTS-SEATS-ADMINS 9.2, replacing `schoolNoLicence`) takes both caps as arguments.
 const line = (locale: 'en' | 'es' | 'ko') => getMessages(locale).console.school.week.line;
 
 describe('console.school.week.line', () => {
@@ -41,19 +41,25 @@ describe('console.school.week.line', () => {
   });
 });
 
-describe('console.schoolNoLicence', () => {
-  it('renders the free cap it is given in every locale', () => {
-    expect(getMessages('en').console.schoolNoLicence(FREE_CLASS_STUDENT_CAP)).toBe(`No licence yet — each class keeps the free cap of ${FREE_CLASS_STUDENT_CAP} students.`);
-    expect(getMessages('es').console.schoolNoLicence(FREE_CLASS_STUDENT_CAP)).toBe(`Aún no hay licencia: cada clase mantiene el tope gratuito de ${FREE_CLASS_STUDENT_CAP} estudiantes.`);
-    expect(getMessages('ko').console.schoolNoLicence(FREE_CLASS_STUDENT_CAP)).toBe(`아직 라이선스가 없어요 — 반마다 무료 한도인 학생 ${FREE_CLASS_STUDENT_CAP}명이 그대로 적용돼요.`);
+describe('console.schoolNoLicenceCaps', () => {
+  it('renders the class and school caps it is given in every locale', () => {
+    expect(getMessages('en').console.schoolNoLicenceCaps(FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP)).toBe('No licence yet. Each class holds up to 20 students, and the school up to 50.');
+    expect(getMessages('es').console.schoolNoLicenceCaps(FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP)).toBe('Aún no hay licencia. Cada clase admite hasta 20 estudiantes, y la escuela hasta 50.');
+    expect(getMessages('ko').console.schoolNoLicenceCaps(FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP)).toBe('아직 라이선스가 없어요. 반마다 학생 최대 20명, 학교 전체는 최대 50명이에요.');
+    expect(getMessages('en').console.schoolNoLicenceCaps(1, 1)).toBe('No licence yet. Each class holds up to 1 student, and the school up to 1.');
   });
 
-  it('follows the constant rather than a typed number', () => {
+  it('follows the constants rather than a typed number', () => {
     for (const locale of ['en', 'es', 'ko'] as const) {
-      const text = getMessages(locale).console.schoolNoLicence(37);
+      const text = getMessages(locale).console.schoolNoLicenceCaps(37, 73);
       expect(text).toContain('37');
-      expect(text).not.toContain(String(FREE_CLASS_STUDENT_CAP));
+      expect(text).toContain('73');
+      expect(text.split('37').join('').split('73').join('')).not.toMatch(/\d/);
     }
+  });
+
+  it('the old key is gone', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) expect((getMessages(locale).console as Record<string, unknown>).schoolNoLicence).toBeUndefined();
   });
 });
 

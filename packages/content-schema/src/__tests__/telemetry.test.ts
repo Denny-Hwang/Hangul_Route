@@ -132,6 +132,14 @@ describe('telemetry event names (one list for the client type and the API whitel
         'space.move.cancelled',
         'space.move.notice_seen',
         'space.scope.acknowledged',
+        'space.seat_refused',
+        'space.renamed',
+        'space.admin.invite_created',
+        'space.admin.invite_revoked',
+        'space.admin.joined',
+        'space.admin.accept_refused',
+        'space.admin.removed',
+        'space.admin.left',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -277,6 +285,31 @@ describe('[TV] teacher moves and the class-scope update (AMENDMENTS-TEACHER-VISI
       expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
       expect(isTelemetryEventName(name)).toBe(true);
     }
-    expect(TELEMETRY_EVENT_NAMES.slice(-6)).toEqual([...names]);
+    const at = TELEMETRY_EVENT_NAMES.indexOf(names[0]);
+    expect(TELEMETRY_EVENT_NAMES.slice(at, at + 6)).toEqual([...names]);
+  });
+});
+
+describe('[SA] seats and renames (AMENDMENTS-SEATS-ADMINS section 8)', () => {
+  it('appends the two Worker names once each, after the [TV] names', () => {
+    const names = ['space.seat_refused', 'space.renamed'] as const;
+    for (const name of names) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(TELEMETRY_EVENT_NAMES.indexOf('space.seat_refused')).toBeGreaterThan(TELEMETRY_EVENT_NAMES.indexOf('space.scope.acknowledged'));
+  });
+});
+
+describe('[SA] school administrators (AMENDMENTS-SEATS-ADMINS section 6.8)', () => {
+  it('appends the six Worker names once each, after the seat and rename names', () => {
+    const names = ['space.admin.invite_created', 'space.admin.invite_revoked', 'space.admin.joined', 'space.admin.accept_refused', 'space.admin.removed', 'space.admin.left'] as const;
+    for (const name of names) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    const at = TELEMETRY_EVENT_NAMES.indexOf(names[0]);
+    expect(at).toBeGreaterThan(TELEMETRY_EVENT_NAMES.indexOf('space.renamed'));
+    expect(TELEMETRY_EVENT_NAMES.slice(at, at + 6)).toEqual([...names]);
   });
 });

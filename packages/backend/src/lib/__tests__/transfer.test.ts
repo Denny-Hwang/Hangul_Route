@@ -54,6 +54,8 @@ async function space(id: string): Promise<Space> {
 }
 async function putSpace(id: string, over: Partial<Space>): Promise<void> {
   await db.putSpace({ ...(await space(id)), ...over });
+  // [SA] putSpace never writes the name on update: a rename goes through its own statement.
+  if (over.name !== undefined) await db.renameSpace(id, over.name);
 }
 async function row(id: string): Promise<StoredTransfer> {
   const t = await db.getTransfer(id);
@@ -806,11 +808,21 @@ describe('executeTransfer (§4.6 over the Db)', () => {
       await fillClass(db, DEST, 3);
     });
 
-    it('a full licensed school blocks a move from outside with cap_school, before the batch', async () => {
+    it('a full licensed school blocks a move from outside with cap_school ([SA] in the gate itself)', async () => {
       const t = await approved();
       expect(await executeTransfer(db, t, DUE)).toMatchObject({ executed: false, blockReason: 'cap_school', request: { status: 'approved', blockReason: 'cap_school' } });
       expect(await learnerSpaces()).toEqual([FAMILY, SOURCE].sort());
       expect(await events(t.id)).toEqual(['created', 'blocked']);
+    });
+
+    it('[SA] an unlicensed school at 50 blocks a move from outside too (SA-D3)', async () => {
+      await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:school', planKey: 'school_seat', status: 'expired', provider: 'manual', seats: 3 }, at(0));
+      // DEST keeps 3 of its free 20; a sibling class brings the school to 50 distinct students
+      await putSpace('space:class-c', { parentSpaceId: 'space:school' });
+      await fillClass(db, 'space:class-c', 47);
+      const t = await approved();
+      expect(await executeTransfer(db, t, DUE)).toMatchObject({ executed: false, blockReason: 'cap_school' });
+      expect(await learnerSpaces()).toEqual([FAMILY, SOURCE].sort());
     });
 
     it('a move between two live classes of the same school takes no new seat', async () => {

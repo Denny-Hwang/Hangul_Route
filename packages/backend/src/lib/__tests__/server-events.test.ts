@@ -264,6 +264,39 @@ describe('lecture events (AMENDMENTS-LECTURE-V2 section 11: codes and bounded co
   });
 });
 
+describe('[SA] seat and rename events (AMENDMENTS-SEATS-ADMINS section 8: codes only, no profile id)', () => {
+  it('space.seat_refused keeps kind, reason and path from their lists only', () => {
+    expect(keptEventFields('space.seat_refused', { kind: 'family', reason: 'cap_family', path: 'join', spaceId: 'space:x', name: 'Kim family' }, 'profile:a')).toEqual({ profileId: undefined, payload: { kind: 'family', reason: 'cap_family', path: 'join' } });
+    expect(keptEventFields('space.seat_refused', { kind: 'school', reason: 'cap_teacher', path: 'space:x' }, undefined)).toEqual({ profileId: undefined, payload: undefined });
+    for (const reason of ['cap_class', 'cap_school', 'cap_learner']) expect(keptEventFields('space.seat_refused', { kind: 'class', reason, path: 'move' }, undefined).payload).toEqual({ kind: 'class', reason, path: 'move' });
+  });
+
+  it('space.renamed keeps kind and role only, never the name', () => {
+    const event = recordServerEvent('space.renamed', { kind: 'school', role: 'admin', name: 'Maple School', spaceId: 'space:x', accountId: 'dean' });
+    expect(event?.payload).toEqual({ kind: 'school', role: 'admin' });
+    expect(JSON.stringify(store.events)).not.toMatch(/Maple|space:x|dean/);
+    expect(keptEventFields('space.renamed', { kind: 'class', role: 'caregiver' }, undefined).payload).toEqual({ kind: 'class' });
+  });
+});
+
+describe('[SA] school administrator events (AMENDMENTS-SEATS-ADMINS section 6.8: codes only)', () => {
+  it('space.admin.accept_refused keeps the reason from its list only', () => {
+    for (const reason of ['used', 'expired', 'revoked', 'full', 'owner', 'not_found', 'email_unverified']) {
+      expect(keptEventFields('space.admin.accept_refused', { reason, token: 'A'.repeat(43), email: 'dean@example.org', spaceId: 'space:x' }, 'profile:a')).toEqual({ profileId: undefined, payload: { reason } });
+    }
+    expect(keptEventFields('space.admin.accept_refused', { reason: 'dean@example.org' }, undefined).payload).toBeUndefined();
+  });
+
+  it('the other admin events keep no payload at all', () => {
+    for (const name of ['space.admin.invite_created', 'space.admin.invite_revoked', 'space.admin.joined', 'space.admin.removed', 'space.admin.left'] as const) {
+      const event = recordServerEvent(name, { token: 'A'.repeat(43), name: 'Dr Cho', email: 'cho@example.org', accountId: 'dean', spaceId: 'space:x', inviteId: 'invite:1' });
+      expect(event?.payload, name).toBeUndefined();
+      expect(event?.profileId, name).toBeUndefined();
+    }
+    expect(JSON.stringify(store.events)).not.toMatch(/AAAA|Cho|@|dean|space:x|invite:1/);
+  });
+});
+
 describe('appendEvent', () => {
   it('pushes and trims from the front once past the cap', () => {
     store.events = Array.from({ length: MAX_EVENTS }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));

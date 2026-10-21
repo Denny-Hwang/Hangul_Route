@@ -19,6 +19,7 @@
  * - The launch-news consent line (`waitlist.consentLead` + `contactLink` + `privacyLink`) must stay
  *   in step with CONSENT_TEXT_VERSION on the API.
  */
+import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
 import { plural } from '../../plural';
 
 /**
@@ -170,6 +171,13 @@ export const landing = {
       inApp: 'Plans for families and classes are at app.hangulroute.com.',
     },
     managedInApp: 'Plans and billing are managed at app.hangulroute.com after you sign in.',
+    /**
+     * [SA] AMENDMENTS-SEATS-ADMINS sections 4 and 9.5: the learners each plan holds, the numbers passed in
+     * (`FAMILY_LIFETIME_LEARNERS`, `GROUP_LICENSE_LEARNERS`). A persona Plans block shows it in the paid line's place
+     * only while plans are on sale (`paidPlans: 'inApp'`). It names a plan, never a price or a term (OD-7).
+     */
+    sizes: (family: number, group: number) =>
+      `The Family Plan is for up to ${plural('en', family, { one: `${family} learner`, other: `${family} learners` })}. The Group License is for up to ${plural('en', group, { one: `${group} student`, other: `${group} students` })} in a class or a school.`,
   },
   /**
    * The three persona pages (F-SITE-002 §3.4 to §3.6, appendix B.2 to B.4). Lines named after a claim (`route`,
@@ -422,7 +430,8 @@ export const landing = {
     draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      effective: 'Effective October 14, 2026',
+      /** [SA] October 20, 2026: the school administrators bullet (AMENDMENTS-SEATS-ADMINS section 6.7). */
+      effective: 'Effective October 20, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -463,6 +472,14 @@ export const landing = {
             /** [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D7 to TV-D11, the owner's decision of 2026-10-14. */
             classMoves:
               "Class moves: a teacher may move a learner from one class to another without asking the family first. When the teacher runs both classes, or is an admin of their school, the move happens at once; otherwise the receiving class has to accept it. Until it accepts, the receiving class sees only the learner's initials, picture and level. The family then sees a one-time notice in the app and in the console. Cards, stars and finished lessons always stay with the learner. A family can also start a move itself, and a learner can leave a class from Profile at any time. We keep a record of each move (which classes, which teacher account moved the learner and when, never a name) for 90 days after it happens.",
+            /**
+             * [SA] AMENDMENTS-SEATS-ADMINS section 6.7 (SA-4; SA-D10 to SA-D12, the owner's request of 2026-10-20, not
+             * reviewed by counsel; the draft banner stays): what a school's administrators see, the verified email an
+             * accept needs, and the school history the owner sees (400 days). Family and stand-alone class renames keep
+             * no such history.
+             */
+            schoolAdmins:
+              "A school's owner can add up to two administrators with an invite link. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
             contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },
@@ -563,7 +580,7 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective October 14, 2026',
+      effective: 'Effective October 20, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -599,6 +616,11 @@ export const landing = {
             /** BY-D4: a sponsored Group License (100%-off code, `payment_method_collection=if_required`) has no card and lapses at the end of its year. */
             sponsored:
               'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.',
+            /**
+             * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, the numbers from the
+             * content-schema constants. Must ship before Stripe Live is ever enabled.
+             */
+            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.`,
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {

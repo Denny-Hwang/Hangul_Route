@@ -62,7 +62,7 @@ const BILLING_ADDED = [
   'includesLines.family.reports',
   'includesLines.family.notes',
   'includesLines.license.everyStudent',
-  'includesLines.license.noCap',
+  'includesLines.license.classLearners',
   'includesLines.license.school',
   'includesLines.license.browse',
   'includesLines.license.reports',
@@ -242,8 +242,8 @@ describe('console.billing additions (F-BILL-002 §6.1, BY-D9 values)', () => {
     expect(f.notes).toBe('Send notes to your learners');
     const l = b.includesLines.license;
     expect(l.everyStudent).toBe('Every lesson for every student while they are enrolled');
-    expect(l.noCap(20)).toBe('No 20-student cap');
-    expect(l.noCap(25)).toBe('No 25-student cap');
+    expect(l.classLearners(50)).toBe('Up to 50 students in the class');
+    expect(l.classLearners(1)).toBe('Up to 1 student in the class');
     expect(l.school(10, 300)).toBe('A school holds up to 10 teachers and 300 students');
     expect(l.school(1, 1)).toBe('A school holds up to 1 teacher and 1 student');
     expect(l.browse).toBe('Browse every lesson as your students see it');
@@ -448,10 +448,11 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; drawn?
   { wireframe: 'billing-home', text: 'Class', path: 'console.billing.kind.class' },
   { wireframe: 'billing-home', text: 'School', path: 'console.billing.kind.school' },
   { wireframe: 'billing-home', text: 'Free plan', path: 'console.billing.coverage.free' },
-  { wireframe: 'billing-home', text: '2 of 5 learners', path: 'console.billing.usage.learners', args: [2, 5] },
+  // [SA] AMENDMENTS-SEATS-ADMINS: the wireframe draws the new caps (4 learners, 50 students; SA-0).
+  { wireframe: 'billing-home', text: '2 of 4 learners', path: 'console.billing.usage.learners', args: [2, 4] },
   { wireframe: 'billing-home', text: 'Family Plan', path: 'console.billing.coverage.family' },
   { wireframe: 'billing-home', text: 'Every lesson of every Stage, new ones included', drawn: 'Every lesson of every', path: 'console.billing.includesLines.family.everyLesson' },
-  { wireframe: 'billing-home', text: 'Up to 5 learners in one family', drawn: 'Up to 5 learners in one', path: 'console.billing.includesLines.family.learners', args: [5] },
+  { wireframe: 'billing-home', text: 'Up to 4 learners in one family', drawn: 'Up to 4 learners in one', path: 'console.billing.includesLines.family.learners', args: [4] },
   { wireframe: 'billing-home', text: 'Cloud save on every device', path: 'console.billing.includesLines.family.cloudSave' },
   { wireframe: 'billing-home', text: 'Browse every lesson as your learner sees it', drawn: 'Browse every lesson as', path: 'console.billing.includesLines.family.browse' },
   { wireframe: 'billing-home', text: '$15.30 / year', path: 'console.price.year', args: ['$15.30'] },
@@ -469,9 +470,9 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; drawn?
   { wireframe: 'billing-home', text: 'Ends on Oct 21, 2027', drawn: 'Ends on <date>', path: 'console.billing.status.endsOn', args: ['Oct 21, 2027'] },
   { wireframe: 'billing-home', text: '23 students', path: 'console.billing.usage.students', args: [23, null] },
   { wireframe: 'billing-home', text: '14 of 20 students', path: 'console.billing.usage.students', args: [14, 20] },
-  { wireframe: 'billing-home', text: '212 of 300 students', path: 'console.billing.usage.students', args: [212, 300] },
+  { wireframe: 'billing-home', text: '42 of 50 students', path: 'console.billing.usage.students', args: [42, 50] },
   { wireframe: 'billing-home', text: '7 of 10 teachers', path: 'console.billing.usage.teachers', args: [7, 10] },
-  { wireframe: 'billing-home', text: '4 of 5 learners', path: 'console.billing.usage.learners', args: [4, 5] },
+  { wireframe: 'billing-home', text: '3 of 4 learners', path: 'console.billing.usage.learners', args: [3, 4] },
   { wireframe: 'billing-home', text: 'Manage subscription', path: 'console.billing.manage.cta' },
   { wireframe: 'billing-home', text: "Covered by Maple School's license until Jun 30, 2027", drawn: "Covered by <school>'s license until <date>", path: 'console.billing.coverage.schoolUntil', args: ['Maple School', 'Jun 30, 2027'] },
   { wireframe: 'billing-home', text: 'Your school manages this plan.', path: 'console.billing.readOnly.school' },
@@ -480,7 +481,8 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; drawn?
   { wireframe: 'billing-home', text: 'Add a plan', path: 'console.billing.sections.add' },
   { wireframe: 'billing-home', text: 'Group License for Maple Class', drawn: 'Group License for <class name>', path: 'console.billing.buy.forSpace', args: ['Group License', 'Maple Class'] },
   { wireframe: 'billing-home', text: 'Every lesson for every student while they are enrolled', path: 'console.billing.includesLines.license.everyStudent' },
-  { wireframe: 'billing-home', text: 'No 20-student cap', path: 'console.billing.includesLines.license.noCap', args: [20] },
+  // [SA] row SA-3: `classLearners` replaces `noCap`.
+  { wireframe: 'billing-home', text: 'Up to 50 students in the class', path: 'console.billing.includesLines.license.classLearners', args: [50] },
   { wireframe: 'billing-home', text: 'Get Group License', drawn: 'GET GROUP LICENSE', path: 'console.billing.buy.group_license.cta' },
   { wireframe: 'billing-home', text: 'Next: connect a learner to this family.', path: 'console.billing.connectLearner.line' },
   { wireframe: 'billing-home', text: 'Connect a learner', path: 'console.billing.connectLearner.cta' },

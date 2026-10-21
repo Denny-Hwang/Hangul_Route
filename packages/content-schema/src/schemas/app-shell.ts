@@ -37,6 +37,8 @@ export const APP_ROUTES = {
   teacherIndex: '/teach',
   teacherHome: '/teach/home',
   billing: '/account/billing',
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 6.6: the administrator invite page (`ADMIN_INVITE_PATH`). */
+  adminInvite: '/account/invite',
   learn: '/',
 } as const;
 
@@ -229,6 +231,36 @@ export function parseJoinLink(location: { pathname: string; hash: string }): { c
   const raw = new URLSearchParams(fragment).get(JOIN_LINK_CODE_KEY);
   return { code: raw === null ? null : normalizeJoinCode(raw) };
 }
+
+/**
+ * [SA] The school administrator invite link (AMENDMENTS-SEATS-ADMINS section 6.3):
+ * `https://app.hangulroute.com/account/invite#t=<token>`. The token is 32 random bytes in base64url (43 characters,
+ * no padding) and rides only in the address fragment, which a browser never sends to a server or in a `Referer`.
+ * Nothing else is in the link: no school name, no email, no id. The Worker stores only the token's SHA-256 hash.
+ */
+export const ADMIN_INVITE_PATH = '/account/invite';
+/** The fragment key of the invite token. */
+export const ADMIN_INVITE_TOKEN_KEY = 't';
+/** 43 base64url characters: 32 bytes with no padding. */
+export const ADMIN_INVITE_TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
+
+/** The invite link of a token on an app origin; null when it is not an invite token. */
+export function adminInviteUrl(appUrl: string, token: string): string | null {
+  if (!ADMIN_INVITE_TOKEN_RE.test(token)) return null;
+  return `${appUrl.replace(/\/+$/, '')}${ADMIN_INVITE_PATH}#${ADMIN_INVITE_TOKEN_KEY}=${token}`;
+}
+
+/** The token of an invite link's fragment (`#t=<token>`, the `#` optional), or null when it holds none that is valid. */
+export function parseAdminInvite(hash: string): string | null {
+  const fragment = hash.startsWith('#') ? hash.slice(1) : hash;
+  // URLSearchParams never throws; a token holds no character it would decode.
+  const raw = new URLSearchParams(fragment).get(ADMIN_INVITE_TOKEN_KEY);
+  return raw !== null && ADMIN_INVITE_TOKEN_RE.test(raw) ? raw : null;
+}
+
+/** POST /api/admin-invites/preview and /accept body: the token travels only here, never in a path or a query. */
+export const AdminInviteBodySchema = z.object({ token: z.string().regex(ADMIN_INVITE_TOKEN_RE) });
+export type AdminInviteBody = z.infer<typeof AdminInviteBodySchema>;
 
 /** Idle window of a grown-up unlock: the learner gate's 15-minute session. */
 export const GROWN_UP_IDLE_MS = 15 * 60_000;

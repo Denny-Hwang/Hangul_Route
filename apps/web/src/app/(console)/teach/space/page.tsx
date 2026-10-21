@@ -31,7 +31,9 @@ import { rosterNotesLinks } from '@/lib/console/notes-page';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { rosterReportLink } from '@/lib/console/report-view';
 import { rosterClassReportLink } from '@/lib/console/class-report-view';
-import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
+import { capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '@/lib/console/rollup';
+import { renameShown } from '@/lib/console/rename';
+import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { classGoalLine } from '@/lib/console/class-goal-line';
@@ -77,6 +79,8 @@ function SpaceInner(): JSX.Element {
   // read that ends later never puts back what it replaced (a removed learner, an old name). A quiet read takes none: it
   // draws only while no newer user read started after it.
   const loadSeq = useRef(0);
+  // [SA] A rename never drops a read: the renamed name is laid over each read that lands (section 5.3, `NameOverrides`).
+  const names = useNameOverrides();
 
   // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). It keeps what is drawn while it
   // reads, and a quiet read that cannot reach the Worker changes nothing: the page never turns into an error because a
@@ -84,6 +88,7 @@ function SpaceInner(): JSX.Element {
   const load = useCallback(async (quiet = false): Promise<void> => {
     if (!api) return;
     const call = quiet ? loadSeq.current : ++loadSeq.current;
+    const read = names.begin();
     if (!quiet) {
       setError(null);
       setCoverage('unknown');
@@ -104,7 +109,7 @@ function SpaceInner(): JSX.Element {
     if (planList.ok) setPlans(planList.data);
     if (relinks.ok) setPendingRelinks(relinks.data.length);
     if (result.ok) {
-      setRoster(result.data);
+      setRoster({ ...result.data, space: { ...result.data.space, name: names.nameFor(result.data.space.id, result.data.space.name, read) } });
       if (quiet) setError(null);
     } else if (!quiet) setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
     else if (result.error === 'forbidden' || result.error === 'not_found') {
@@ -113,7 +118,7 @@ function SpaceInner(): JSX.Element {
       setRoster(null);
       setError(result.error === 'forbidden' ? 'forbidden' : 'gone');
     }
-  }, [api, spaceId]);
+  }, [api, spaceId, names]);
 
   useEffect(() => {
     void load();
@@ -123,9 +128,22 @@ function SpaceInner(): JSX.Element {
   // A roster page also reads slowly while it stays in front (a classroom screen), never a report page.
   useVisibleRefresh(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone', { poll: true });
 
+  // [SA] The inline rename (AMENDMENTS-SEATS-ADMINS section 5.3): the new name shows at once in the title, the Back
+  // labels and the frame, all read from this roster. A read still under way would hold the old name, so the name is
+  // kept in `names` and laid over it; the rest of that read still draws.
+  const { announce, region: renameLive } = useAnnouncer();
+  const setName = useCallback(
+    (name: string, settled: boolean) => {
+      names.set(spaceId, name, settled);
+      setRoster((prev) => (prev ? { ...prev, space: { ...prev.space, name } } : prev));
+    },
+    [names, spaceId],
+  );
+  const rename = useSpaceRename({ api, spaceId, name: roster?.space.name ?? '', onName: setName, announce });
+
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.
-  if (roster?.space.kind === 'school' && api) return <SchoolAdmin api={api} spaceId={spaceId} onSignOut={signOut} />;
+  if (roster?.space.kind === 'school' && api) return <SchoolAdmin api={api} spaceId={spaceId} onSignOut={signOut} accountId={session.accountId} />;
 
   const regenerate = async (): Promise<void> => {
     if (!api || !roster) return;
@@ -150,7 +168,9 @@ function SpaceInner(): JSX.Element {
   const rollup = roster ? classRollup(roster.learners, now) : null;
   // The class join link and its QR code (owner decision 2026-10-17): a class with a code only, the code alone in the fragment.
   const joinLink = roster ? rosterJoinLink({ kind: roster.space.kind, code: roster.joinCode, origin: appUrl() }) : null;
-  const cap = roster ? capState(roster.space.kind, roster.learners.length) : null;
+  // [SA] section 3.4: the count against the roster's own cap (`seats`), not the free cap.
+  const cap = roster ? capState(roster.space.kind, roster.learners.length, roster.seats) : null;
+  const capLine = roster ? seatLine(roster.space.kind, cap, locale) : null;
   const empty = roster !== null && roster.learners.length === 0;
   // The newest plan for everyone: a plan for one learner (a suggested start) never takes over the roster.
   const latestPlan = rosterPlan(plans);
@@ -173,9 +193,27 @@ function SpaceInner(): JSX.Element {
     <AdultFrame
       onSignOut={signOut}
       back={spacePageBack(roster?.space.kind ?? pathKind, c)}
-      title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}
+      title={roster ? undefined : c.space.loading}
     >
       {confirmSheet}
+      <RenameStyles />
+      {renameLive}
+      {roster ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs, marginBottom: spacing.md }} data-testid="space-head">
+          <RenameTitle
+            rename={rename}
+            name={roster.space.name}
+            kind={roster.space.kind}
+            canRename={renameShown(roster.space, roster.canRename)}
+            openMoves={roster.openMoves === true}
+            heading="h1"
+            headingStyle={{ fontSize: headRem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold }}
+          />
+          <p style={{ margin: 0, color: colors.text.secondary }} data-testid="space-count">
+            {roster.space.kind === 'family' ? c.spaceCounts.learners(roster.learners.length) : c.spaceCounts.students(roster.learners.length)}
+          </p>
+        </div>
+      ) : null}
       {error ? (
         <div style={panelStyle}>
           <p style={{ margin: 0 }}>{spaceErrorText(error, locale)}</p>
@@ -192,6 +230,7 @@ function SpaceInner(): JSX.Element {
               {roster.joinCode ?? '—'}
             </div>
             <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
+            {roster.space.kind === 'family' && cap ? <Muted>{familyCountLine(cap, locale)}</Muted> : null}
             <div style={{ display: 'flex', gap: spacing.sm, justifyContent: empty ? 'center' : 'flex-start' }}>
               {roster.joinCode ? <Button onClick={() => void copy()}>{copied ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button> : null}
               <Button onClick={() => void regenerate()} disabled={busy}>
@@ -204,10 +243,15 @@ function SpaceInner(): JSX.Element {
 
           <ClassGoalLineView line={goalLine} />
 
-          {cap?.warning ? (
+          {capLine ? (
             <Notice tone="nudge">
-              {cap.reached ? c.capReached : c.capWarning(cap.used, cap.total)}{' '}
-              <Link href={ROUTES.billing}>{c.space.upgrade}</Link>
+              {capLine.text}
+              {capLine.upgrade ? (
+                <>
+                  {' '}
+                  <Link href={ROUTES.billing}>{c.space.upgrade}</Link>
+                </>
+              ) : null}
             </Notice>
           ) : null}
 

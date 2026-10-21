@@ -1,5 +1,7 @@
 # Console/Billing — plan, upgrade, cancel, invoices (wireframe v1)
 
+> **Amended 2026-10-20 [SA]** (`docs/specs/AMENDMENTS-SEATS-ADMINS.md`): a family holds up to **4** learners (was 5); the Group License covers up to **50** students in a class or a school (was no cap for a class and 300 for a school). Only the numbers on this page changed; the new rename and administrator surfaces get their own wireframes and mocks in row SA-0b.
+
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §3.2 (tier), §7 (plans, web-only teacher/school), §8 (`/entitlements/*`), §10 S6 · F-SUB-001 / F-IAP-001 (mobile IAP, existing) · `docs/blueprints/02-core-feature-spec.md` §6.6
 Code (F-ENT-001 §3.1–3.3, 2026-09-21 — API): `GET /api/entitlements`, `POST /verify` (family receipt), `POST /stripe/checkout` · `/stripe/portal` (503 until keys and price ids are set), `POST /stripe/webhook` (HMAC signature, subscription lifecycle → `applyEntitlement`). Learner tier travels in the sync inbox with a 7-day grace. Page `apps/web/src/app/teach/billing/page.tsx`: current-plan cards (status line, provider, seats, Manage subscription → portal), plan rows per role with one recommended Choose (monthly / yearly selector), School Seats → Contact us, return notices for `?checkout=`, past-due note, the kids-never-see-billing line. Prices stay placeholders (decision deferred); invoices list and native IAP rows are not built (F-IAP-002).
 Audience: **parent** (family_lifetime = the Family Plan, $15.30 / year, renews yearly [BY]; web Stripe or native IAP later) · **teacher** (group_license, $153/yr for a stand-alone class; web only) · **school admin** (group_license / school_seat contract; web only)
@@ -30,7 +32,7 @@ Then: they see their current plan and status, what each plan unlocks, and one cl
 |  | Free                                                 |  |  <- or family_premium / teacher_pro /
 |  | status: -   (trial - active - past_due - expired - cancelled) |     school_license / school_seat
 |  | renews / ends: -     paid via: -  (stripe / apple / google / manual) |
-|  | seats: 38 / 300  (school only)                       |  |
+|  | seats: 38 / 50  (school only)                        |  |
 |  |          [ Manage subscription ]  [ Restore purchases ] |  |  <- Stripe portal (web) / IAP restore (native)
 |  +------------------------------------------------------+  |
 |                                                            |
@@ -46,10 +48,10 @@ Then: they see their current plan and status, what each plan unlocks, and one cl
 |  |                 students premium while enrolled,     |  |
 |  |                 worksheets, templates                |  |
 |  |                 price: placeholder     [ Choose ]    |  |
-|  | School License  up to 10 teachers / 300 students,    |  |  <- web only
+|  | School License  up to 10 teachers / 50 students,     |  |  <- web only
 |  |                 all classes Pro, admin view          |  |
 |  |                 price: placeholder     [ Choose ]    |  |
-|  | School Seats    per-student, 300+, contract          |  |  <- web only
+|  | School Seats    per-student, 50+, contract           |  |  <- web only
 |  |                 price: placeholder     [ Contact us ]|  |
 |  +------------------------------------------------------+  |
 |                                                            |

@@ -3,7 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
-import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill } from '../../logic/spaces/join-code';
+import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill, lookupRefusal } from '../../logic/spaces/join-code';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
 import { NAME_MAX, validateDisplayName } from '../../logic/profiles/profile-model';
 import { relinkNotice } from '../../logic/sync/restore';
@@ -40,6 +40,10 @@ export const RELINK_POLL_MS = 4000;
  * whose gate is closed the field keeps the profile name and says the name changes in Edit profile. A class tablet
  * keeps the profile name too, with Edit profile's class-device line. The store decides again when the join is sent
  * (`membership-store.join`), so a session that ends between this render and the tap renames nothing anywhere.
+ *
+ * [SA] Learner caps (AMENDMENTS-SEATS-ADMINS section 3.4): the lookup carries the active learner, and its `seat` picks
+ * the line (a full family, class or school). At a full class with a roster the roster pick and relink stay, with the
+ * line above "I'm new"; the atomic `/join` is still the only gate, and its refusal reads the cap the Worker sent.
  */
 export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElement {
   const textScale = useTypeScale();
@@ -59,6 +63,8 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
   const [found, setFound] = useState<Found | null>(null);
   const [name, setName] = useState(profile?.displayName ?? '');
   const [message, setMessage] = useState<string | null>(null);
+  // [SA] The at-cap line of a full class with a roster (section 3.4): shown above "I'm new", never in place of the roster.
+  const [seatLine, setSeatLine] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ name: string; alreadyMember: boolean; notice?: string } | null>(null);
   const cloudAvailable = !!apiBaseUrl();
@@ -97,16 +103,26 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
 
   const find = async (): Promise<void> => {
     setMessage(null);
+    setSeatLine(null);
     setBusy(true);
-    const result = await lookup(code);
+    // [SA] The active learner goes with the lookup, so a member who already holds the seat finds room (section 3.4).
+    const result = await lookup(code, profileId ?? undefined);
     setBusy(false);
     if (!result.ok) {
       setMessage(joinErrorMessage(result.error, messages.caregiver));
       return;
     }
-    if (result.full) {
-      setMessage(joinErrorMessage('cap_class', messages.caregiver));
-      return;
+    // [SA] The line comes from `seat.reason` (else the old `full`). At a class with a roster, a returning student can
+    // still pick their name (relink takes no seat), so the roster stays and the line sits above "I'm new".
+    const refusal = lookupRefusal({ kind: result.space.kind, full: result.full, seat: result.seat });
+    if (refusal !== null) {
+      const line = joinErrorMessage(refusal.code, messages.caregiver, refusal.cap);
+      if (result.space.kind !== 'class' || result.roster.length === 0) {
+        setMessage(line);
+        return;
+      }
+      setSeatLine(line);
+      setPicking(true);
     }
     setFound(result.space);
     setRoster(result.roster);
@@ -166,7 +182,7 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
     const result = await join(profile.id, found.id, code, joinName.trim() || undefined);
     setBusy(false);
     if (!result.ok) {
-      setMessage(joinErrorMessage(result.error, messages.caregiver));
+      setMessage(joinErrorMessage(result.error, messages.caregiver, result.cap));
       if (isCodeError(result.error)) setFound(null);
       return;
     }
@@ -206,7 +222,23 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
             ))}
           </View>
           <Spacer size="sm" />
-          <Button label={m.pick.newHere.cta} tone="ghost" size="sm" fullWidth onPress={() => setPicking(false)} />
+          {seatLine !== null ? (
+            <>
+              <Caption tone="secondary" align="center" testID="join-seat-line">{seatLine}</Caption>
+              <Spacer size="sm" />
+            </>
+          ) : null}
+          <Button
+            label={m.pick.newHere.cta}
+            tone="ghost"
+            size="sm"
+            fullWidth
+            onPress={() => {
+              setPicking(false);
+              // A new learner reads the line on the name step too; the join still decides.
+              if (seatLine !== null) setMessage(seatLine);
+            }}
+          />
         </Card>
       ) : found ? (
         <Card padding="lg" tone="brand" testID="join-confirm">
@@ -254,8 +286,20 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
           <Spacer size="md" />
           <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
           <Spacer size="sm" />
-          {roster.length > 0 ? <Button label={m.confirm.alreadyIn.cta} tone="ghost" size="sm" fullWidth onPress={() => setPicking(true)} /> : null}
-          <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); }} />
+          {roster.length > 0 ? (
+            <Button
+              label={m.confirm.alreadyIn.cta}
+              tone="ghost"
+              size="sm"
+              fullWidth
+              onPress={() => {
+                // The pick card shows the at-cap line itself, so the slot below lets it go: the line is said once.
+                if (seatLine !== null && message === seatLine) setMessage(null);
+                setPicking(true);
+              }}
+            />
+          ) : null}
+          <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); if (message === seatLine) setMessage(null); setSeatLine(null); }} />
         </Card>
       ) : (
         <>

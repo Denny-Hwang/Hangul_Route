@@ -25,8 +25,9 @@ import { allSlotsIn, consentedLearnerSlot, finiteCap, isOpenTransfer } from '../
 import { learnerContexts, spaceContext } from './access';
 import { can, type AccountActor, type SpaceContext } from './can';
 import { hashSecret } from './device-auth';
-import { classCap, schoolIsFull, tierAfterMove, tierForLearner } from './entitlement';
+import { learnerCapOf, tierAfterMove, tierForLearner } from './entitlement';
 import { classSeatCheck } from './seats';
+import { recordServerEvent } from './server-events';
 
 export { tierAfterMove };
 
@@ -526,9 +527,9 @@ async function oldSpaceAccessCount(db: Db, sourceSpaceId: string, learnerId: str
 const systemEvent = (transferId: string, now: Date) => ({ transferId, at: now.toISOString(), actorKind: 'system' as const, actorRef: null, slot: null });
 
 /**
- * The move (§4.6). Computes in JS what the SQL cannot — the destination's cap
- * (unlimited as 1e9) and the advisory school-seat check (`cap_school`, the one
- * residual check-then-act, as in /join) — then runs `Db.executeTransfer`: one
+ * The move (§4.6). Computes in JS what the SQL cannot — the destination's caps
+ * (unlimited as 1e9; [SA] its school's distinct-student cap, now in the gate
+ * too) — then runs `Db.executeTransfer`: one
  * batch whose first statement is the gate carrying every precondition, the
  * rest guarded by it. Executed: the revocation counts and the
  * old-space-access check are audited afterwards, best effort, outside the
@@ -546,10 +547,21 @@ const systemEvent = (transferId: string, now: Date) => ({ transferId, at: now.to
 export async function executeTransfer(db: Db, request: StoredTransfer, now: Date): Promise<ExecuteOutcome> {
   const { id, learnerId, sourceSpaceId, destSpaceId } = request;
   const dest = await db.getSpace(destSpaceId);
-  const alreadyIn = (await db.membership(destSpaceId, 'learner', learnerId)) !== null;
-  const schoolFull = !!dest && !alreadyIn && (await schoolIsFull(db, dest, now, learnerId));
-  if (dest && !schoolFull) {
-    const result = await db.executeTransfer({ id, learnerId, sourceSpaceId, destSpaceId, now, destCap: finiteCap(await classCap(db, dest, now)), learnerCap: LEARNER_CLASS_CAP });
+  if (dest) {
+    // [SA] AMENDMENTS-SEATS-ADMINS section 3.3: the class cap and the destination school's distinct-student cap are
+    // both in the gate, so the move and a join can never both take the last seat.
+    const caps = await learnerCapOf(db, dest, now);
+    const result = await db.executeTransfer({
+      id,
+      learnerId,
+      sourceSpaceId,
+      destSpaceId,
+      now,
+      destCap: finiteCap(caps.cap ?? Number.POSITIVE_INFINITY),
+      learnerCap: LEARNER_CLASS_CAP,
+      destSchoolId: caps.schoolId,
+      destSchoolCap: caps.schoolCap,
+    });
     if (result.executed) {
       await auditAfterMove(db, request, now, result.devicesRevoked, result.relinksClosed);
       return { executed: true, request: await db.getTransfer(id), blockReason: null, devicesRevoked: result.devicesRevoked, relinksClosed: result.relinksClosed };
@@ -559,9 +571,12 @@ export async function executeTransfer(db: Db, request: StoredTransfer, now: Date
   let row = await db.getTransfer(id);
   const due = row?.status === 'approved' && row.executeAfter !== null && row.executeAfter <= now.toISOString() && row.expiresAt > now.toISOString();
   if (!row || !due || !dest) return { executed: false, request: row, blockReason: null, devicesRevoked: 0, relinksClosed: 0 };
-  const reason: TransferBlockReason | null = schoolFull ? 'cap_school' : await classSeatCheck(db, dest, learnerId, now, { excludeSpaceId: sourceSpaceId });
+  const reason: TransferBlockReason | null = await classSeatCheck(db, dest, learnerId, now, { excludeSpaceId: sourceSpaceId });
   if (reason && row.blockReason !== reason) {
-    if ((await db.blockTransfer(id, reason, now)) === 1) await db.addTransferEvent({ ...systemEvent(id, now), event: 'blocked', detail: { reason } });
+    if ((await db.blockTransfer(id, reason, now)) === 1) {
+      await db.addTransferEvent({ ...systemEvent(id, now), event: 'blocked', detail: { reason } });
+      recordServerEvent('space.seat_refused', { kind: 'class', reason, path: 'transfer' });
+    }
     row = await db.getTransfer(id);
   }
   return { executed: false, request: row, blockReason: reason ?? row?.blockReason ?? null, devicesRevoked: 0, relinksClosed: 0 };

@@ -2,7 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { typography } from '@hangul-route/design-system/tokens';
-import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { captureAdminInviteHere, settleAdminInviteOnSession, stripAdminInviteFragmentHere } from '@/lib/console/admin-invite';
 import { rem } from '@/lib/console/rem';
 import { CLERK_LOAD_TIMEOUT_MS, signedOutTarget } from '@/lib/console/signin-flow';
 import { LocaleProvider, useConsoleLocale } from '@/lib/i18n/locale-context';
@@ -51,12 +52,29 @@ function DocumentTitle({ kind }: { kind: GrownUpTitle }): null {
 }
 
 export function GrownUpGate({ children, title = 'console' }: { children: ReactNode; title?: GrownUpTitle }): JSX.Element {
+  // [SA] AMENDMENTS-SEATS-ADMINS section 6.6 step 1: on `/account/invite`, the token in the fragment is stashed in this
+  // tab on the gate's first render: before its sign-in redirect (which keeps the path and the query only), before the
+  // lock and before any page renders. Never runs again for this mount.
+  useState(captureAdminInviteHere);
+  // The fragment leaves the address in the gate's first effect, before the redirect effect below; the stash has the token.
+  useEffect(() => {
+    stripAdminInviteFragmentHere();
+  }, []);
   const pathname = usePathname() ?? '';
   const search = useSearchParams()?.toString() ?? '';
   const router = useRouter();
   const auth = useConsoleAuth();
   const exempt = isSignInPage(pathname);
   const signedOut = !exempt && auth.ready && !auth.session;
+  // [SA] A session that ends without the app's sign-out (it expired, was revoked, or ended in another tab) drops a
+  // waiting invite, as every sign-out but Use another account and the lock's Sign in again does (section 6.6 step 1).
+  const accountId = auth.ready ? (auth.session?.accountId ?? null) : undefined;
+  const lastAccount = useRef<string | null>(null);
+  useEffect(() => {
+    if (accountId === undefined) return;
+    settleAdminInviteOnSession(lastAccount.current, accountId);
+    lastAccount.current = accountId;
+  }, [accountId]);
 
   useEffect(() => {
     if (signedOut) router.replace(signedOutTarget(pathname, search));
@@ -86,7 +104,8 @@ export function GrownUpGate({ children, title = 'console' }: { children: ReactNo
   return (
     <GrownUpLocationContext.Provider value={location}>
       <DocumentTitle kind={title} />
-      <GrownUpLock pathname={pathname} search={search} onSignInAgain={(url) => void auth.signOut(url)}>
+      {/* The lock's Sign in again is no sign-out of this tab's invite: it comes straight back to the page ([SA] step 4). */}
+      <GrownUpLock pathname={pathname} search={search} onSignInAgain={(url) => void auth.signOut(url, { keepInvite: true })}>
         {/* The account's language is read and written only once a grown-up has opened the page. */}
         <AccountLocaleSlot />
         {children}

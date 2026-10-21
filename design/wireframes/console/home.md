@@ -1,5 +1,7 @@
 # Console/Home — my spaces hub (wireframe v1)
 
+> **Amended 2026-10-20 [SA]** (`docs/specs/AMENDMENTS-SEATS-ADMINS.md`): a family holds up to **4** learners (was 5); the Group License covers up to **50** students in a class or a school (was no cap for a class and 300 for a school). Only the numbers on this page changed; the new rename and administrator surfaces get their own wireframes and mocks in row SA-0b.
+
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §1–2 (an adult can own / belong to several spaces), §4 (sync hints), §8 · `docs/blueprints/10-app-map.md` §4.3
 Code (F-CONSOLE-001, 2026-09-21): `apps/web/src/app/teach/home/page.tsx` — groups, count-only status lines, archived last, empty and error states as drawn. Every row opens `/teach/space/:id` (§7 #23); sync-freshness / plan / re-link hints arrive with S4–S5; Account · Billing are disabled.
 Audience: **parent / teacher / school admin**
@@ -40,7 +42,7 @@ Then: they see every space they belong to, grouped by kind, with one line of sta
 |  School                                              |
 |  +------------------------------------------------+  |
 |  | Seoul Hangul School                            |  |
-|  | 4 classes - 38 / 300 seats         [ Open > ]  |  |  -> console/school-admin
+|  | 4 classes - 38 / 50 seats          [ Open > ]  |  |  -> console/school-admin
 |  +------------------------------------------------+  |
 |                                                      |
 |  [ + New space ]                                     |  -> console/onboarding-role

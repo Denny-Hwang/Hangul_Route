@@ -184,7 +184,8 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
 
   it('looks up a code and maps errors, including no API', async () => {
     setSyncApiForTests(fakeApi() as never);
-    expect(await useMembershipStore.getState().lookup('K7M2X9')).toEqual({ ok: true, space: { id: 'space:cls', kind: 'class', name: 'Sunday Class A' }, full: false, roster: [{ learnerId: 'profile:m', name: 'Minho' }] });
+    // An old-shape client answer (no `seat`) reads as seat null.
+    expect(await useMembershipStore.getState().lookup('K7M2X9')).toEqual({ ok: true, space: { id: 'space:cls', kind: 'class', name: 'Sunday Class A' }, full: false, seat: null, roster: [{ learnerId: 'profile:m', name: 'Minho' }] });
     setSyncApiForTests(fakeApi({ lookupSpace: vi.fn(async () => ({ status: 'error', code: 'code_expired' })) }) as never);
     expect(await useMembershipStore.getState().lookup('K7M2X9')).toEqual({ ok: false, error: 'code_expired' });
     vi.mocked(apiBaseUrl).mockReturnValue(null);
@@ -192,6 +193,55 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     expect(await useMembershipStore.getState().lookup('K7M2X9')).toEqual({ ok: false, error: 'off' });
     expect(await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9')).toEqual({ ok: false, error: 'off' });
     expect(await useMembershipStore.getState().leave('profile:a', 'space:cls')).toBe(false);
+  });
+
+  it('[SA] looks up with the learner and its device credentials when it has them, never registering a device (AMENDMENTS-SEATS-ADMINS section 3.4)', async () => {
+    const seat = { full: false, reason: null, cap: 4 };
+    const lookupSpace = vi.fn(async () => ({ status: 'ok', space: { id: 'space:fam', kind: 'family', name: 'Kim family' }, full: false, seat, roster: [] }));
+    const api = fakeApi({ lookupSpace });
+    setSyncApiForTests(api as never);
+    // Never synced: no credentials, so the lookup answers for a new learner and nothing registers.
+    expect(await useMembershipStore.getState().lookup('K7M2X9', 'profile:a')).toMatchObject({ ok: true, seat });
+    expect(lookupSpace).toHaveBeenLastCalledWith('K7M2X9', undefined);
+    expect(api.register).not.toHaveBeenCalled();
+    // A returning family member: the device vouches for the learner, so the Worker can say it already holds its seat.
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    expect(await useMembershipStore.getState().lookup('K7M2X9', 'profile:a')).toEqual({ ok: true, space: { id: 'space:fam', kind: 'family', name: 'Kim family' }, full: false, seat, roster: [] });
+    expect(lookupSpace).toHaveBeenLastCalledWith('K7M2X9', { learnerId: 'profile:a', creds: { deviceId: 'device-test', secret: 'sec' } });
+    // No learner given: the lookup goes without one.
+    await useMembershipStore.getState().lookup('K7M2X9');
+    expect(lookupSpace).toHaveBeenLastCalledWith('K7M2X9', undefined);
+  });
+
+  it('[SA] a seat refusal from the join keeps its cap, and space.join.failed reports cap_family and cap_school', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    setSyncApiForTests(fakeApi({ joinSpace: vi.fn(async () => ({ status: 'error', code: 'cap_family', cap: 4 })) }) as never);
+    expect(await useMembershipStore.getState().join('profile:a', 'space:fam', 'K7M2X9')).toEqual({ ok: false, error: 'cap_family', cap: 4 });
+    setSyncApiForTests(fakeApi({ joinSpace: vi.fn(async () => ({ status: 'error', code: 'cap_school', cap: 50 })) }) as never);
+    expect(await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9')).toEqual({ ok: false, error: 'cap_school', cap: 50 });
+    setSyncApiForTests(fakeApi({ joinSpace: vi.fn(async () => ({ status: 'error', code: 'cap_family' })) }) as never);
+    expect(await useMembershipStore.getState().join('profile:a', 'space:fam', 'K7M2X9')).toEqual({ ok: false, error: 'cap_family' });
+    const failed = vi.mocked(track).mock.calls.filter((c) => c[0].name === 'space.join.failed').map((c) => c[0].payload);
+    expect(failed).toEqual([{ reason: 'cap_family' }, { reason: 'cap_school' }, { reason: 'cap_family' }]);
+    expect(useMembershipStore.getState().byLearner['profile:a'] ?? []).toEqual([]);
+  });
+
+  it('[SA] a renamed family or class replaces the cached name after one inbox refresh (AMENDMENTS-SEATS-ADMINS section 5.4)', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    setSyncApiForTests(fakeApi() as never);
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(useMembershipStore.getState().byLearner['profile:a']?.map((r) => r.name)).toEqual(['Kim family', 'Sunday Class A']);
+    const renamed = { rev: 2, plans: [], memberships: [{ ...familyRow, name: 'Park Home' }, { ...classRow, name: 'Room 3 Tigers' }], tier: 'premium', tierSource: { kind: 'class', spaceId: 'space:cls', name: 'Room 3 Tigers' }, tierValidUntil: '2099-01-01T00:00:00.000Z', serverTime: 't2' };
+    setSyncApiForTests(fakeApi({ getInbox: vi.fn(async () => ({ status: 'ok', inbox: renamed })) }) as never);
+    const rows = await useMembershipStore.getState().refresh('profile:a');
+    // Settings ("Classes & family") reads these rows; the Plan screen reads the tier source.
+    expect(rows?.map((r) => r.name)).toEqual(['Park Home', 'Room 3 Tigers']);
+    expect(useMembershipStore.getState().byLearner['profile:a']?.map((r) => r.name)).toEqual(['Park Home', 'Room 3 Tigers']);
+    expect((mem.get('memberships:profile:a') as Array<{ name: string }>).map((r) => r.name)).toEqual(['Park Home', 'Room 3 Tigers']);
+    expect(useTierStore.getState().byLearner['profile:a']?.source).toEqual({ kind: 'class', spaceId: 'space:cls', name: 'Room 3 Tigers' });
+    // After a restart the saved copy holds the new names too: nothing keeps the old one.
+    useMembershipStore.setState({ byLearner: {} });
+    expect((await useMembershipStore.getState().hydrate('profile:a')).map((r) => r.name)).toEqual(['Park Home', 'Room 3 Tigers']);
   });
 
   it('a saved copy read while a refresh lands does not replace the newer rows', async () => {

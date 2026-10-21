@@ -2,7 +2,7 @@ import type { DeepPartial, Messages } from '../../types';
 
 /**
  * Korean web console (F-I18N-001 PR 16): every grown-up page on app.hangulroute.com. 해요체 on every page; the
- * plan terms and price lines (`familyLine`, `groupLine`, `contactLine`, `price`, `billing.current`,
+ * plan terms and price lines (`familyLine`, `groupLine`, `contactLineCaps`, `price`, `billing.current`,
  * `billing.includes`) read in 합니다체, as the §3.10 style guide asks for pricing text. Names, dates, amounts and
  * titles arrive as arguments and stand before a colon, a middle dot or an invariant particle (에게, 의, 에서, 까지),
  * never before 은/는, 이/가, 을/를. Korean has no plural: counts read "학생 n명", "항목 n개". Caregiver surface:
@@ -51,7 +51,7 @@ export const consoleMsgs = {
   billingCancelled: '청구된 금액은 없어요.',
   familyLine: '매년 갱신됩니다. 구독 관리에서 언제든지 해지할 수 있습니다.',
   groupLine: '매년 갱신됩니다. 구독 관리에서 언제든지 해지할 수 있습니다.',
-  contactLine: '학생 300명 또는 선생님 10명이 넘으면 계약 문의를 보내 주십시오.',
+  contactLineCaps: (students: number, teachers: number) => `학생 ${students}명 또는 선생님 ${teachers}명이 넘으면 계약 문의를 보내 주십시오.`,
   promoLabel: '프로모션 또는 추천 코드',
   promoHint: '선생님, 친구, 게시물에서 받은 코드가 있나요? 결제할 때 할인돼요.',
   promoInvalid: '지금은 이 코드를 쓸 수 없어요 — 철자나 날짜를 확인해 주세요.',
@@ -59,10 +59,47 @@ export const consoleMsgs = {
   promoNotConfigured: '이 배포에는 아직 코드가 설정되어 있지 않아요.',
   schoolInviteHint: '선생님이 로그인해서 이 코드를 입력한 뒤 반을 만들어요 — 또는 관리자가 반을 만들고 선생님을 배정해요.',
   schoolEmpty: '코드로 선생님을 초대하거나, 반을 만들고 선생님을 배정해 주세요.',
-  schoolNoLicence: (cap: number) => `아직 라이선스가 없어요 — 반마다 무료 한도인 학생 ${cap}명이 그대로 적용돼요.`,
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 9.2 (replaces `schoolNoLicence`). */
+  schoolNoLicenceCaps: (classCap: number, schoolCap: number) => `아직 라이선스가 없어요. 반마다 학생 최대 ${classCap}명, 학교 전체는 최대 ${schoolCap}명이에요.`,
   schoolNearLimit: '라이선스 한도에 가까워요 — 다음 반이 차기 전에 결제 화면을 확인해 주세요.',
   schoolAtLimit: '라이선스 한도에 도달했어요 — 새 학생은 선생님에게 확인해 달라는 안내를 받아요.',
   schoolLicenceLapsed: '라이선스를 확인해 주세요. 반은 계속 볼 수 있고, 학생은 어느 경우든 1단계를 계속 이용해요.',
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 3.4 and 9.2: 공간에 플랜이 허용하는 최대 인원이 있거나 그보다 많을 때의 안내. */
+  seats: {
+    family: {
+      at: (cap: number) => `이 가족에는 학습자가 ${cap}명 있어서 더 들어올 수 없어요. 새로 추가하려면 먼저 설정에서 학습자 한 명을 빼 주세요. 그 학습자의 진도는 기기에 그대로 남아요.`,
+      over: (n: number, cap: number) => `이 가족에는 학습자가 ${n}명 있어요. 모두 그대로 함께해요. 학습자가 ${cap}명보다 적어지면 새 학습자가 들어올 수 있어요.`,
+    },
+    class: {
+      at: (cap: number) => `이 반에는 학생이 ${cap}명 있어요. 그룹 라이선스로 함께할 수 있는 최대 인원이에요. 자리가 나면 새 학생이 들어올 수 있어요.`,
+      over: (n: number, cap: number) => `이 반에는 학생이 ${n}명 있어요. 모두 그대로 함께해요. 학생이 ${cap}명보다 적어지면 새 학생이 들어올 수 있어요.`,
+    },
+    school: {
+      at: (cap: number) => `이 학교에는 학생이 ${cap}명 있어요. 계약 없이 함께할 수 있는 최대 인원이에요. 자리가 나면 새 학생이 들어올 수 있어요.`,
+      over: (n: number, cap: number) =>
+        `이 학교에는 학생이 ${n}명 있어요. 모두의 자리와 배운 내용은 그대로 남아요. 학생이 ${cap}명보다 적어지면 새 학생이 들어올 수 있어요. 더 필요하면 계약을 문의해 주세요.`,
+    },
+  },
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 5.3 and 9.3: 이름이 보이는 자리에서 가족, 반, 학교 이름 바꾸기. */
+  rename: {
+    cta: '이름 바꾸기',
+    a11y: (name: string) => `이름 바꾸기: ${name}`,
+    label: '이름',
+    save: { cta: '저장' },
+    cancel: { cta: '취소' },
+    hint: {
+      family: '가족 모두가 이 이름을 봐요.',
+      class: '학생들이 앱에서 이 이름을 봐요.',
+      school: '선생님과 관리자가 이 이름을 봐요.',
+    },
+    empty: '이름을 적어 주세요.',
+    tooLong: (max: number) => `이름은 ${max}자까지 쓸 수 있어요.`,
+    invalid: '이름에 글자나 숫자를 넣어 주세요.',
+    saved: '이름을 저장했어요.',
+    failed: '이름을 저장하지 못했어요. 다시 해 볼까요?',
+    openMoves: '이 공간으로 오거나 이 공간에서 나가는 반 이동이 아직 끝나지 않았어요. 이름을 바꾸면 그 학습자의 어른이 이동을 다시 확인해야 해요.',
+    archived: '이름을 바꾸려면 먼저 보관을 풀어 주세요.',
+  },
 
   shell: {
     home: '콘솔',
@@ -140,6 +177,7 @@ export const consoleMsgs = {
     nameTitle: { family: '가족 이름', class: '반 이름', school: '학교 이름' },
     nameLabel: '공간 이름',
     classJoinHint: '학생은 코드로 참여해요 — 학생용 계정은 필요 없어요.',
+    nameLater: '이 이름은 나중에 바꿀 수 있어요.',
     create: { cta: '만들기' },
     creating: { cta: '만드는 중…' },
     signInAgain: '다시 로그인해 주세요.',
@@ -399,6 +437,7 @@ export const consoleMsgs = {
       family: '이 가족을 만든 분이 플랜을 관리해요.',
       class: '반을 만든 선생님이 플랜을 관리해요.',
       school: '학교에서 이 플랜을 관리해요.',
+      schoolAdmin: '학교를 만든 분이 이 플랜을 관리해요.',
     },
     usage: {
       learners: (n: number, cap: number | null) => (cap === null ? `학습자 ${n}명` : `학습자 ${cap}명 중 ${n}명`),
@@ -422,7 +461,7 @@ export const consoleMsgs = {
       },
       license: {
         everyStudent: '등록된 동안 모든 학생에게 모든 레슨',
-        noCap: (cap: number) => `학생 ${cap}명 한도 없음`,
+        classLearners: (n: number) => `반 하나에 학생 최대 ${n}명`,
         school: (teachers: number, students: number) => `학교 하나에 선생님 최대 ${teachers}명, 학생 최대 ${students}명`,
         browse: '학생이 보는 그대로 모든 레슨 둘러보기',
         reports: '학생 리포트와 반 리포트',
@@ -904,6 +943,8 @@ export const consoleMsgs = {
     privacy: {
       title: '개인정보',
       anonymize: '명단 익명으로 보기',
+      anonymizeOn: '명단에 이니셜만 보여요.',
+      anonymizeOff: '명단에 이름이 보여요.',
     },
     grownUps: {
       label: '구성원',
@@ -945,6 +986,7 @@ export const consoleMsgs = {
       deleteData: (name: string) => `${name}의 데이터 지우기`,
     },
     backToConsole: { cta: '콘솔로 돌아가기' },
+    ownerOnly: '이 설정은 학교를 만든 분만 바꿀 수 있어요.',
   },
   school: {
     title: '학교',
@@ -1579,5 +1621,86 @@ export const consoleMsgs = {
     chosen: (n: number, minutes: number) => `${n}개 골랐어요 · 약 ${minutes}분`,
     full: '가득 찼어요. 하나를 빼면 더 넣을 수 있어요.',
     bar: '고른 것',
+  },
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 9.4 (SA-4): 해요체; a name or a school leads with the colon form, never a particle on a variable. */
+  admins: {
+    title: '관리자',
+    count: (n: number, max: number) => `추가한 관리자: ${n}/${max}명`,
+    ownerRow: (name: string) => `${name} · 소유자`,
+    adminRow: (name: string, day: string) => `${name} · 관리자 · 참여: ${day}`,
+    newAdmin: (name: string, email: string) => `새 관리자: ${name} (${email}). 초대한 분이 아니면 관리자에서 빼 주세요.`,
+    newAdminDismiss: { cta: '확인' },
+    about: (max: number) => `학교에는 만든 분 말고도 관리자를 ${max}명까지 둘 수 있어요.`,
+    full: (max: number) => `관리자 자리 ${max}개가 모두 찼어요. 다른 분을 추가하려면 관리자 한 명을 빼거나 초대를 취소해 주세요.`,
+    invite: {
+      cta: '관리자 초대하기',
+      warning: '이 링크가 있으면 누구나 로그인한 뒤 관리자가 될 수 있어요. 초대할 분에게만 보내 주세요.',
+      once: (date: string) => `한 번만 쓸 수 있어요. 끝나는 날: ${date}. 지금만 보이니 닫기 전에 복사해 주세요.`,
+      copy: { cta: '링크 복사' },
+      copied: '링크를 복사했어요.',
+      copyFailed: '복사하지 못했어요. 링크를 선택해서 복사해 주세요.',
+      failed: '초대를 만들지 못했어요. 다시 해 볼까요?',
+      stepUp: {
+        body: '초대 링크를 만들기 전에 다시 로그인해 주세요.',
+        reason: '공유 기기에서도 학교 명단을 안전하게 지키기 위해서예요.',
+      },
+    },
+    openInvite: (day: string, date: string) => `초대 만든 날: ${day} · 끝나는 날: ${date}`,
+    revoke: { cta: '초대 취소' },
+    revokeAsk: '이 초대를 취소할까요? 링크를 더는 쓸 수 없어요.',
+    revokeKeep: { cta: '그대로 두기' },
+    remove: { cta: '빼기', a11y: (name: string) => `관리자에서 빼기: ${name}` },
+    removeAsk: (name: string, school: string) => `관리자에서 뺄까요? ${name} · ${school}`,
+    removeNote: {
+      staysTeacher: '학교 선생님으로는 그대로 남고, 반도 그대로예요. 다시 초대할 수 있어요.',
+      leaves: '학교에서 나가게 돼요. 다시 초대할 수 있어요.',
+    },
+    leave: { cta: '관리자 그만두기' },
+    leaveAsk: (school: string) => `관리자를 그만둘까요? ${school}`,
+    leaveNote: {
+      staysTeacher: '학교 선생님으로는 그대로 남고, 내 반도 그대로예요.',
+      leaves: '학교에서 나가게 돼요.',
+    },
+    revoked: '초대를 취소했어요. 이제 링크를 쓸 수 없어요.',
+    removed: (name: string) => `관리자에서 뺐어요: ${name}`,
+    left: (school: string) => `관리자를 그만뒀어요: ${school}`,
+    actionFailed: '변경하지 못했어요. 다시 해 볼까요?',
+    history: {
+      title: '기록',
+      inviteCreated: (name: string, day: string) => `초대 만듦: ${name} · ${day}`,
+      inviteRevoked: (name: string, day: string) => `초대 취소: ${name} · ${day}`,
+      joined: (name: string, day: string) => `관리자로 참여: ${name} · ${day}`,
+      removed: (name: string, day: string) => `관리자에서 빠짐: ${name} · ${day}`,
+      left: (name: string, day: string) => `관리자 그만둠: ${name} · ${day}`,
+      renamed: (name: string, day: string) => `학교 이름 바꿈: ${name} · ${day}`,
+      renamedClass: (name: string, day: string) => `반 이름 바꿈: ${name} · ${day}`,
+      someone: '이전 구성원',
+    },
+  },
+  adminInvite: {
+    pageTitle: '관리자 초대',
+    signIn: '이 초대를 보려면 로그인해 주세요.',
+    title: (school: string) => `관리자로 참여할까요? ${school}`,
+    invitedBy: (name: string) => `초대한 분: ${name}`,
+    invitedByOwner: '학교를 만든 분이 초대했어요',
+    signedInAs: (who: string) => `로그인한 계정: ${who}`,
+    switchAccount: { cta: '다른 계정 쓰기' },
+    reopen: '초대를 보려면 초대 링크를 다시 열어 주세요.',
+    can: '관리자는 학교와 반 이름을 바꾸고, 반을 만들고, 선생님을 초대·배정하거나 빼고, 반 명단과 리포트를 열고, 학교 안의 반끼리 학생을 옮기고, 반에서 학생을 빼고, 학생이 새 기기를 연결하려는 요청을 승인할 수 있어요.',
+    cannot: '결제와 관리자 목록은 학교를 만든 분이 맡아요.',
+    leave: '학교를 만든 분이 참여 기록과 로그인 이메일을 볼 수 있어요. 언제든 나갈 수 있고, 학교를 만든 분이 나를 관리자에서 뺄 수도 있어요.',
+    accept: { cta: '수락' },
+    notNow: { cta: '나중에' },
+    done: (school: string) => `이제 관리자예요: ${school}`,
+    used: '이미 사용된 초대예요. 새 초대를 요청해 주세요.',
+    expired: '기간이 끝난 초대예요. 새 초대를 요청해 주세요.',
+    revoked: '취소된 초대예요. 필요하면 새 초대를 요청해 주세요.',
+    full: (max: number) => `이 학교에는 이미 관리자가 ${max}명 있어요.`,
+    owner: '이 학교를 만든 분이라서 이미 관리하고 있어요.',
+    alreadyAdmin: (school: string) => `이미 관리자예요: ${school}`,
+    notFound: '이 링크로는 초대를 열 수 없어요. 링크가 모두 복사됐는지 확인해 주세요.',
+    emailUnverified: '수락하려면 계정 이메일 인증이 필요해요. 계정 설정에서 이메일을 인증한 뒤 링크를 다시 열어 주세요.',
+    tryAgain: '지금은 초대를 확인하지 못했어요. 잠시 뒤에 다시 해 볼까요?',
+    home: { cta: '내 홈으로' },
   },
 } satisfies DeepPartial<Messages['console']>;

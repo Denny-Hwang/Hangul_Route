@@ -81,7 +81,12 @@ export const consoleMsgs = {
   billingCancelled: 'Nothing was charged.',
   familyLine: 'Renews yearly. Cancel from Manage subscription any time.',
   groupLine: 'Renews yearly. Cancel from Manage subscription any time.',
-  contactLine: 'More than 300 students or 10 teachers? Write to us for a contract.',
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 9.2: the School Contract line, the limits as arguments
+   * (`SCHOOL_LICENSE_STUDENTS`, `SCHOOL_LICENSE_TEACHERS`), so no locale types a limit into its copy.
+   */
+  contactLineCaps: (students: number, teachers: number) =>
+    `More than ${plural('en', students, { one: `${students} student`, other: `${students} students` })} or ${plural('en', teachers, { one: `${teachers} teacher`, other: `${teachers} teachers` })}? Write to us for a contract.`,
   promoLabel: 'Promo or referral code',
   promoHint: 'Got a code from a teacher, a friend or a post? It comes off at checkout.',
   promoInvalid: "That code can't be used right now — check the spelling or the date.",
@@ -89,11 +94,73 @@ export const consoleMsgs = {
   promoNotConfigured: 'Codes are not set up on this deployment yet.',
   schoolInviteHint: 'Teachers sign in, enter this code, then create their class — or you create it and assign them.',
   schoolEmpty: 'Invite a teacher with the code, or create a class and assign one.',
-  /** `cap` is content-schema `FREE_CLASS_STUDENT_CAP`, so no locale types the free cap into its copy. */
-  schoolNoLicence: (cap: number) => `No licence yet — each class keeps the free cap of ${cap} students.`,
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 9.2 (replaces `schoolNoLicence`): a school with no licence or contract.
+   * `classCap` is `FREE_CLASS_STUDENT_CAP`, `schoolCap` is `SCHOOL_LEARNER_CAP`, so no locale types a limit.
+   */
+  schoolNoLicenceCaps: (classCap: number, schoolCap: number) =>
+    `No licence yet. Each class holds up to ${plural('en', classCap, { one: `${classCap} student`, other: `${classCap} students` })}, and the school up to ${schoolCap}.`,
   schoolNearLimit: 'Close to the licence limit — see billing before the next class fills up.',
   schoolAtLimit: 'At the licence limit — new students will be asked to check with their teacher.',
   schoolLicenceLapsed: 'The licence needs attention. Classes stay readable; students keep Stage 1 either way.',
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS sections 3.4 and 9.2: the line under a space's count when it holds the most learners
+   * its plan holds (`at`), or more, kept from before the limit (`over`, SA-D7). Calm: nobody is removed, the line says
+   * what to do. The caps arrive from content-schema (`FAMILY_LIFETIME_LEARNERS`, `GROUP_LICENSE_LEARNERS`,
+   * `SCHOOL_LEARNER_CAP`); a covered school at its cap keeps `schoolAtLimit`.
+   */
+  seats: {
+    family: {
+      at: (cap: number) =>
+        plural('en', cap, {
+          one: `This family has ${cap} learner, the most it can hold. To add someone new, remove a learner in Settings first. Their progress stays on their device.`,
+          other: `This family has ${cap} learners, the most it can hold. To add someone new, remove a learner in Settings first. Their progress stays on their device.`,
+        }),
+      over: (n: number, cap: number) =>
+        `This family has ${n} learners. Everyone keeps their place. New learners can join when there are fewer than ${cap}.`,
+    },
+    class: {
+      at: (cap: number) =>
+        plural('en', cap, {
+          one: `This class has ${cap} student, the most the Group License holds. New students can join when a place opens.`,
+          other: `This class has ${cap} students, the most the Group License holds. New students can join when a place opens.`,
+        }),
+      over: (n: number, cap: number) => `This class has ${n} students. Everyone keeps their place. New students can join when there are fewer than ${cap}.`,
+    },
+    school: {
+      at: (cap: number) =>
+        plural('en', cap, {
+          one: `This school has ${cap} student, the most it holds without a contract. New students can join when a place opens.`,
+          other: `This school has ${cap} students, the most it holds without a contract. New students can join when a place opens.`,
+        }),
+      over: (n: number, cap: number) =>
+        `This school has ${n} students. Everyone keeps their place and everything they learned. New students can join when there are fewer than ${cap}, or write to us for a contract.`,
+    },
+  },
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS sections 5.3 and 9.3: the one-tap rename of a family, class or school where its name
+   * is shown (design/screens/console/rename-inline.md). The name arrives as an argument; `tooLong` gets
+   * `SPACE_NAME_MAX`. The offline and wait lines are `caregiver.retry`.
+   */
+  rename: {
+    cta: 'Rename',
+    a11y: (name: string) => `Rename ${name}`,
+    label: 'Name',
+    save: { cta: 'Save' },
+    cancel: { cta: 'Cancel' },
+    hint: {
+      family: 'Everyone in the family sees this name.',
+      class: 'Students see this name in the app.',
+      school: 'Teachers and administrators see this name.',
+    },
+    empty: 'Type a name.',
+    tooLong: (max: number) => `Names can be up to ${max} characters.`,
+    invalid: 'Use letters or numbers in the name.',
+    saved: 'Name saved.',
+    failed: "Couldn't save the name. Try again.",
+    openMoves: 'Some moves into or out of this space are waiting. A new name asks their grown-ups to look at the move again.',
+    archived: 'Unarchive it first to change the name.',
+  },
 
   /**
    * The adult frame of every grown-up page (`AdultFrame`, F-APP-001 A-5a, section 3.8;
@@ -213,6 +280,8 @@ export const consoleMsgs = {
     nameTitle: { family: 'Name your family', class: 'Name your class', school: 'Name your school' },
     nameLabel: 'Space name',
     classJoinHint: 'Students join with a code — no accounts for kids.',
+    /** [SA] AMENDMENTS-SEATS-ADMINS section 5.3: under the prefilled name field. */
+    nameLater: 'You can change this name later.',
     create: { cta: 'Create' },
     creating: { cta: 'Creating…' },
     signInAgain: 'Please sign in again.',
@@ -554,6 +623,8 @@ export const consoleMsgs = {
       family: 'The person who set up this family manages this plan.',
       class: 'The class owner manages this plan.',
       school: 'Your school manages this plan.',
+      /** [SA] AMENDMENTS-SEATS-ADMINS SA-D11: a school administrator's read-only school card (the owner is the only payer). */
+      schoolAdmin: "The school's owner manages this plan.",
     },
     /** The usage line; a null cap means no cap (`Usage.learnerCap` / `teacherCap`). */
     usage: {
@@ -584,7 +655,8 @@ export const consoleMsgs = {
       },
       license: {
         everyStudent: 'Every lesson for every student while they are enrolled',
-        noCap: (cap: number) => `No ${cap}-student cap`,
+        /** [SA] AMENDMENTS-SEATS-ADMINS section 4 (replaces `noCap`): `GROUP_LICENSE_LEARNERS`. */
+        classLearners: (n: number) => plural('en', n, { one: `Up to ${n} student in the class`, other: `Up to ${n} students in the class` }),
         school: (teachers: number, students: number) =>
           `A school holds up to ${plural('en', teachers, { one: `${teachers} teacher`, other: `${teachers} teachers` })} and ${plural('en', students, { one: `${students} student`, other: `${students} students` })}`,
         browse: 'Browse every lesson as your students see it',
@@ -1194,6 +1266,9 @@ export const consoleMsgs = {
     privacy: {
       title: 'Privacy',
       anonymize: 'Anonymize roster',
+      /** [SA] AMENDMENTS-SEATS-ADMINS section 6.6: the read-only value a school administrator sees (SA-0b D16). */
+      anonymizeOn: 'Rosters show initials.',
+      anonymizeOff: 'Rosters show names.',
     },
     grownUps: {
       label: 'Members',
@@ -1239,6 +1314,8 @@ export const consoleMsgs = {
       deleteData: (name: string) => `Delete ${name}'s data`,
     },
     backToConsole: { cta: 'Back to console' },
+    /** [SA] section 6.6: under the read-only consent mode and privacy values a school administrator sees. */
+    ownerOnly: "Only the school's owner can change these settings.",
   },
   /**
    * The school admin view (`SchoolAdmin`, `school.ts`, F-SCHOOL-001 §3.3, F-I18N-001 PR 10c),
@@ -2042,5 +2119,106 @@ export const consoleMsgs = {
     full: 'This is full. Remove something to add more.',
     /** The sticky bar under the plan builder (its count and Publish plan). */
     bar: 'Your choices',
+  },
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 9.4 (row SA-4): the Administrators panel on the school page (section 6.6,
+   * design/screens/console/admins-panel.md). The cap arrives as an argument (`SCHOOL_ADMIN_CAP`), never typed here;
+   * `{day}` and `{date}` arrive formatted (`formatDate`); names arrive as data and never reach a URL or telemetry.
+   */
+  admins: {
+    title: 'Administrators',
+    count: (n: number, max: number) => `${n} of ${max} added`,
+    ownerRow: (name: string) => `${name} · owner`,
+    adminRow: (name: string, day: string) => `${name} · admin · joined ${day}`,
+    /** Owner only, for 7 days after an admin joined (section 6.3 item 3); `email` is the verified sign-in email. */
+    newAdmin: (name: string, email: string) => `New administrator: ${name} (${email}). If this is not the person you invited, remove them.`,
+    newAdminDismiss: { cta: 'Got it' },
+    about: (max: number) => `A school can have ${max} administrators besides its owner.`,
+    full: (max: number) => `All ${max} places are taken. Remove an administrator or revoke an invite to add someone else.`,
+    invite: {
+      cta: 'Invite an administrator',
+      warning: 'Anyone with this link can become an administrator after signing in. Send it only to the person you mean.',
+      once: (date: string) => `It works once and ends on ${date}. It is shown only now: copy it before you close this.`,
+      copy: { cta: 'Copy link' },
+      copied: 'Link copied.',
+      copyFailed: "Couldn't copy. Select the link and copy it.",
+      failed: "Couldn't make the invite. Try again.",
+      /** The billing step-up dialog with these two lines in place of its body and reason (SA-0b D10). */
+      stepUp: {
+        body: 'Before you make an invite link, sign in again.',
+        reason: "This keeps the school's rosters safe on a shared device.",
+      },
+    },
+    openInvite: (day: string, date: string) => `Invite made ${day} · ends ${date}`,
+    revoke: { cta: 'Revoke' },
+    revokeAsk: 'Revoke this invite? The link stops working.',
+    /** The revoke sheet's dismiss button, so the sheet never shows two cancel buttons. */
+    revokeKeep: { cta: 'Keep it' },
+    /** `a11y` is the accessible name of each row's Remove and of the new-admin notice's Remove. */
+    remove: { cta: 'Remove', a11y: (name: string) => `Remove ${name}` },
+    removeAsk: (name: string, school: string) => `Remove ${name} as an administrator of ${school}?`,
+    removeNote: {
+      staysTeacher: 'They stay a teacher of the school, with their classes. You can invite them again.',
+      leaves: 'They leave the school. You can invite them again.',
+    },
+    leave: { cta: 'Stop being an administrator' },
+    leaveAsk: (school: string) => `Stop being an administrator of ${school}?`,
+    leaveNote: {
+      staysTeacher: 'You stay a teacher of the school, with your classes.',
+      leaves: 'You leave the school.',
+    },
+    revoked: 'Invite revoked. The link no longer works.',
+    removed: (name: string) => `${name} is no longer an administrator.`,
+    /** On the next home after Stop being an administrator (a one-shot flash, never a query parameter). */
+    left: (school: string) => `You're no longer an administrator of ${school}.`,
+    /** Revoke, Remove or Stop failed on the network or with a 5xx (a 404, 403 or 409 reloads the panel instead). */
+    actionFailed: "Couldn't save that change. Try again.",
+    /** Owner only: the last 20 school events, newest first; `name` is read at request time. */
+    history: {
+      title: 'History',
+      inviteCreated: (name: string, day: string) => `${name} made an invite · ${day}`,
+      inviteRevoked: (name: string, day: string) => `${name} revoked an invite · ${day}`,
+      joined: (name: string, day: string) => `${name} joined as an administrator · ${day}`,
+      removed: (name: string, day: string) => `${name} was removed as an administrator · ${day}`,
+      left: (name: string, day: string) => `${name} stopped being an administrator · ${day}`,
+      renamed: (name: string, day: string) => `${name} renamed the school · ${day}`,
+      renamedClass: (name: string, day: string) => `${name} renamed a class · ${day}`,
+      /** The `name` of a line whose account no longer exists: never an id. */
+      someone: 'A former member',
+    },
+  },
+  /**
+   * [SA] section 9.4: the administrator invite page `/account/invite` (section 6.6 steps 1 to 8,
+   * design/screens/console/admin-invite-accept.md). The tab title is `pageTitle` in every state, never the school's name.
+   */
+  adminInvite: {
+    pageTitle: 'Administrator invite',
+    /** On `/signin` while a live invite waits in this tab. */
+    signIn: 'Sign in to see this invite.',
+    title: (school: string) => `Join ${school} as an administrator?`,
+    invitedBy: (name: string) => `Invited by ${name}`,
+    /** The owner has no display name: the preview never carries the owner's email. */
+    invitedByOwner: "Invited by the school's owner",
+    /** `who` is the signed-in account's own email (or display name), shown only to that person. */
+    signedInAs: (who: string) => `Signed in as ${who}`,
+    switchAccount: { cta: 'Use another account' },
+    reopen: 'Open your invite link again to see it.',
+    can: "As an administrator you can rename the school and its classes, make classes, invite, assign and remove teachers, open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device.",
+    cannot: "Billing and the list of administrators stay with the school's owner.",
+    leave: 'The owner sees that you joined and the email you sign in with. You can leave at any time, and the owner can remove you.',
+    accept: { cta: 'Accept' },
+    notNow: { cta: 'Not now' },
+    done: (school: string) => `You're an administrator of ${school}.`,
+    used: 'This invite was already used. Ask for a new one.',
+    expired: 'This invite has ended. Ask for a new one.',
+    revoked: 'This invite was cancelled. Ask for a new one if you need it.',
+    full: (max: number) => `This school already has ${max} administrators.`,
+    owner: 'You already run this school as its owner.',
+    alreadyAdmin: (school: string) => `You're already an administrator of ${school}.`,
+    notFound: "This link doesn't open an invite. Check that it was copied whole.",
+    emailUnverified: 'To accept, your account needs a verified email. Verify it in your account settings, then open the link again.',
+    /** Accept answered `503 identity_unavailable`: the sign-in service could not be asked (section 6.3 item 1); Try again. */
+    tryAgain: "Couldn't check your invite right now. Try again in a moment.",
+    home: { cta: 'Go to my home' },
   },
 } as const;

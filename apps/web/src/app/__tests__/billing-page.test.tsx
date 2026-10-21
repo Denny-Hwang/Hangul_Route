@@ -1,4 +1,4 @@
-import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, type BillingSpaceCard, type BillingSummary, type Promo } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type BillingSpaceCard, type BillingSummary, type Promo } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
@@ -337,6 +337,9 @@ describe('cards per persona', () => {
     const link = root.find((n) => n.type === 'a' && textOf(n) === b.contact.cta);
     expect(String(link.props.href)).toMatch(/^mailto:/);
     expect(String(link.props.href)).not.toContain('Maple');
+    // [SA] section 3.4: the contract line beside Contact us, its numbers from the content-schema caps.
+    expect(pageText()).toContain('More than 50 students or 10 teachers? Write to us for a contract.');
+    expect(pageText()).toContain(en.console.contactLineCaps(SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS));
   });
 
   it('past due: one neutral note above the cards', async () => {

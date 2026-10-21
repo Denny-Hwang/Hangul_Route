@@ -1,10 +1,14 @@
 # Billing/Home — one billing page for every grown-up persona (wireframe v2)
 
+> **Amended 2026-10-20 [SA]** (`docs/specs/AMENDMENTS-SEATS-ADMINS.md`): a family holds up to **4** learners (was 5); the Group License covers up to **50** students in a class or a school (was no cap for a class and 300 for a school). Only the numbers on this page changed; the new rename and administrator surfaces get their own wireframes and mocks in row SA-0b.
+
+> **Amended 2026-10-20 [SA] (design row SA-0b)** (`docs/specs/AMENDMENTS-SEATS-ADMINS.md` sections 6.5, 6.6, SA-D11): a school's **owner** is its only payer. A school **administrator** sees a read-only school card: plan, status and seat counts, the line `console.billing.readOnly.schoolAdmin` ("The school's owner manages this plan."), no amount, no offer, no button, no receipts. Mock: board 22 and 23 of `design/screens/billing/mock/billing-home-states.html`.
+
 > **Amended 2026-10-11 [BY]** (`docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`): the family product is the **Family Plan**, $15.30 / year, renews yearly, cancel any time (was the one-time "Family Lifetime"). Lines below are updated.
 
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.1-§4.6, §4.9, §4.12 · supersedes `console/billing.md` (F-ENT-001 §3.6) · promo box: F-ENT-002 §3.3 · frame: `shell/adult-frame.md` (F-APP-001 §3.8)
 Screen ID: `billing/billing-home` · URL: `https://app.hangulroute.com/account/billing` (`APP_ROUTES.billing`, F-APP-001)
-Audience: **parent** (family owner), **co-parent** (family caregiver), **teacher** (class owner, co-teacher, or teacher in a school), **school admin** (school owner or admin), **adult self-learner** (owner of their own family space). Grown-ups only; signed in with Clerk; inside F-APP-001's grown-up lock. Never a learner surface.
+Audience: **parent** (family owner), **co-parent** (family caregiver), **teacher** (class owner, co-teacher, or teacher in a school), **school owner** (payer), **school administrator** (read-only school card [SA]), **adult self-learner** (owner of their own family space). Grown-ups only; signed in with Clerk; inside F-APP-001's grown-up lock. Never a learner surface.
 
 ## Scenario (Given-When-Then)
 
@@ -37,12 +41,12 @@ Phone (375), the most common case: one parent, one free family (offer inside the
 | +-------------------------------+ |
 | | Family · <space name>         | |  <- h3: kind + name (payer card)
 | | Free plan                     | |  <- plan line
-| | 2 of 5 learners               | |  <- usage line
+| | 2 of 4 learners               | |  <- usage line
 | |-------------------------------| |
 | | Family Plan                   | |  <- the offer, inside the one buyable card
 | |  - Every lesson of every      | |  <- includes lines (base)
 | |    Stage, new ones included   | |
-| |  - Up to 5 learners in one    | |
+| |  - Up to 4 learners in one    | |
 | |    family                     | |
 | |  - Cloud save on every device | |
 | |  - Browse every lesson as     | |  <- only when SITE_CLAIMS.browseAsLearner
@@ -81,7 +85,7 @@ Wide (1280), a teacher who pays for two classes and is a member of a school (sev
 |  | Class · <name>                |  | Class · <name>                |     |
 |  | Group License                 |  | Free plan                     |     |
 |  | Renews on <date>              |  | 14 of 20 students             |     |
-|  | 23 students                   |  |                               |     |
+|  | 23 of 50 students [SA]        |  |                               |     |
 |  | [ Manage subscription ]       |  |                               |     |
 |  | > Receipts                    |  |                               |     |
 |  +-------------------------------+  +-------------------------------+     |
@@ -96,7 +100,7 @@ Wide (1280), a teacher who pays for two classes and is a member of a school (sev
 |  +---------------------------------------------------------------------+  |
 |  | Group License for <class name>                                      |  |
 |  |  - Every lesson for every student while they are enrolled          |  |
-|  |  - No 20-student cap                                                |  |
+|  |  - Up to 50 students in the class                                   |  |
 |  | <price> / year (sandbox amount)                                     |  |
 |  | > Have a code?                                                      |  |
 |  | [[ GET GROUP LICENSE ]]                                             |  |
@@ -109,13 +113,15 @@ Wide (1280), a teacher who pays for two classes and is a member of a school (sev
 Card variants (same box, different lines):
 
 ```
-Parent, Family Plan       | Family · <name> | Family Plan · Renews on <date> | 4 of 5 learners | [ Manage subscription ] | > Receipts |
-Parent, plan, 0 learners  | Family · <name> | Family Plan · Renews on <date> | 0 of 5 learners | Next: connect a learner to this family. | [ Connect a learner ] |
-Co-parent (caregiver)     | Family · <name> | Family Plan · Renews on <date> | 4 of 5 learners | The person who set up this family manages this plan. |
+Parent, Family Plan       | Family · <name> | Family Plan · Renews on <date> | 3 of 4 learners | [ Manage subscription ] | > Receipts |
+Parent, plan, 0 learners  | Family · <name> | Family Plan · Renews on <date> | 0 of 4 learners | Next: connect a learner to this family. | [ Connect a learner ] |
+Co-parent (caregiver)     | Family · <name> | Family Plan · Renews on <date> | 3 of 4 learners | The person who set up this family manages this plan. |
 Co-teacher (class teacher)| Class · <name>  | Group License · Renews on <date> | 23 students | The class owner manages this plan. |
 Class in a school         | Class · <name>  | Covered by <school>'s license until <date> | 31 students | Your school manages this plan. |
-School owner / admin      | School · <name> | Group License · Renews on <date> | 212 of 300 students · 7 of 10 teachers | [ Manage subscription ] [ Contact us ] | > Receipts |
-Cancelled, still covered  | Class · <name>  | Group License · Ends on <date> | 23 students | [ Manage subscription ] | > Receipts |
+School owner             | School · <name> | Group License · Renews on <date> | 42 of 50 students · 7 of 10 teachers | [ Manage subscription ] [ Contact us ] | > Receipts |
+School admin [SA]         | School · <name> | Group License · Renews on <date> | 42 of 50 students · 7 of 10 teachers | The school's owner manages this plan. |  (read only: no Manage, no Receipts; `billing.readOnly.schoolAdmin`, SA-D11)
+School admin, free [SA]   | School · <name> | Free plan | 18 of 50 students · 2 teachers | The school's owner manages this plan. |  (read only: no offer)
+Cancelled, still covered  | Class · <name>  | Group License · Ends on <date> | 23 of 50 students [SA] | [ Manage subscription ] | > Receipts |
 Past due (payer)          | ... | payment needs attention · full route kept for a week | [ Manage subscription ] |  + one neutral note above the cards
 Archived class, license   | Class · <name> (archived) | Group License · Renews on <date> | [ Manage subscription ] |  (payers only)
 ```
@@ -130,7 +136,7 @@ Past-due note (above the cards, neutral tone, never the danger colour):
 Rules shown above:
 
 - Payer cards first, then read-only cards; within each group: family, class, school; newest first.
-- Prices appear only in an offer (inside the card, or in Add a plan). Read-only cards never show an amount, a button or receipts.
+- Prices appear only in an offer (inside the card, or in Add a plan). Read-only cards never show an amount, a button or receipts. A school administrator's card is a read-only card [SA]: it keeps the seat counts a payer sees, and never shows Contact us.
 - Exactly one `[[ PRIMARY ]]` on the page (the first recommended offer). Manage, Contact us and Connect a learner are secondary.
 - Inline Receipts rows show date, kind and amount only; links to Stripe live on `billing/receipts` behind step-up.
 - Includes lines for a feature that is not live (browse, reports, notes) do not render.

@@ -217,6 +217,50 @@ describe('a direct move (TV-D7): the teacher manages both classes', () => {
   });
 });
 
+/** [SA] AMENDMENTS-SEATS-ADMINS section 3.3: the destination school's distinct-student cap, in the check and in the gate. */
+describe('[SA] a move and the school cap', () => {
+  async function schoolWithD(fill: number): Promise<void> {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    await db.putSpace(space(S1, 'class', 'teacher-c', { parentSpaceId: SCHOOL }));
+    const d = await db.getSpace(D);
+    if (d) await db.putSpace({ ...d, parentSpaceId: SCHOOL });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: SCHOOL, planKey: 'group_license', status: 'active', provider: 'manual' }, NOW);
+    for (let i = 0; i < fill; i += 1) await filler(`profile:sch-${String(i).padStart(2, '0')}`, S1);
+  }
+
+  it('refuses a move into a class of a school at 50 with cap_school, and the learner stays', async () => {
+    await schoolWithD(50);
+    const r = await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D });
+    expect(r.body.error?.code).toBe('cap_school');
+    expect([await isIn(A), await isIn(D)]).toEqual([true, false]);
+  });
+
+  it('the gate refuses when the last school seat goes between the check and the swap', async () => {
+    await schoolWithD(49);
+    const original = db.createClassMove.bind(db);
+    const spy = vi.spyOn(db, 'createClassMove').mockImplementation(async (row) => {
+      const out = await original(row);
+      await filler('profile:late-one', S1);
+      return out;
+    });
+    const r = await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D });
+    spy.mockRestore();
+    expect([r.status, r.body.error?.code, r.body.error?.details]).toEqual([409, 'move_blocked', { reason: 'cap_school' }]);
+    expect([await isIn(A), await isIn(D)]).toEqual([true, false]);
+    expect(store.events.filter((e) => e.name === 'space.seat_refused').map((e) => e.payload)).toEqual([{ kind: 'class', reason: 'cap_school', path: 'move' }]);
+  });
+
+  it('allows a move between two classes of one school at its cap: the learner already holds a seat there', async () => {
+    await schoolWithD(49);
+    await member(S1, 'learner', MINA, 'student'); // 50 of 50
+    await member(D, 'account', 'teacher-c', 'teacher');
+    const r = await post(moves(S1), 'admin', { learnerId: MINA, destinationSpaceId: D });
+    expect(r.status).toBe(200);
+    expect([await isIn(S1, MINA), await isIn(D, MINA)]).toEqual([false, true]);
+  });
+});
+
 describe("a move into another teacher's class (TV-D8): the receiving class accepts", () => {
   async function send(): Promise<Move> {
     const r = await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: B, code: CODE_B.toLowerCase() });

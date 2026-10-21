@@ -129,7 +129,11 @@ function inertOutside(dialog: HTMLElement): () => void {
   };
 }
 
-export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPhase; onContinue: () => void; onCancel: () => void }): JSX.Element | null {
+/**
+ * `lines` replaces the billing body and reason for a call that moves no money ([SA] AMENDMENTS-SEATS-ADMINS SA-0b D10:
+ * making an administrator invite link); the title, Continue, Not now and the unavailable line stay the billing ones.
+ */
+export function StepUpDialog({ phase, onContinue, onCancel, lines }: { phase: StepUpPhase; onContinue: () => void; onCancel: () => void; lines?: { body: string; reason: string } }): JSX.Element | null {
   const s = useMessages().console.billing.stepUp;
   const titleId = useId();
   const bodyId = useId();
@@ -185,8 +189,8 @@ export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPha
           </p>
         ) : (
           <>
-            <p id={bodyId}>{s.body}</p>
-            <p className="hr-bill-reason">{s.reason}</p>
+            <p id={bodyId}>{lines?.body ?? s.body}</p>
+            <p className="hr-bill-reason">{lines?.reason ?? s.reason}</p>
           </>
         )}
         <div className="hr-bill-dialog-actions">

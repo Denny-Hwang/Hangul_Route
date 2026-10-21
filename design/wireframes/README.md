@@ -71,6 +71,7 @@
 | `console/curriculum-wizard.md` | S | F-PLAN-002 §3.8 (P2-6, P2-6b; promoted in P2-8) |
 | `console/curriculum-free-days.md` · `console/free-lessons-line.md` | R | F-ENT-003 §3.9.2-3.9.3 (E3-0) |
 | `console/school-admin.md` | P | roadmap S7 |
+| `console/rename-inline.md` · `console/admins-panel.md` · `console/admin-invite-accept.md` | R | AMENDMENTS-SEATS-ADMINS §5.3, §6.6 (SA-0b; mocks in `design/screens/console/`) |
 | `browse/home.md` · `browse/episode.md` · `browse/item.md` · `browse/preview-player.md` · `browse/preview-end.md` · `browse/show-as.md` · `browse/access.md` · `browse/entry-points.md` | R | F-BROWSE-001 (All lessons: paying parents and teachers preview every lesson as a learner sees it, at `app.hangulroute.com/browse`, same-tab entry from the adult navigation and the grown-up area; BR-0) |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
 | `parent/notes.md` · `parent/note-report.md` | R | F-FEEDBACK-001 §6.10 (FB-0; built in FB-9) |

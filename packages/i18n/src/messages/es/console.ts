@@ -67,7 +67,8 @@ export const consoleMsgs = {
   billingCancelled: 'No se cobró nada.',
   familyLine: 'Se renueva cada año. Cancela cuando quieras en Gestionar suscripción.',
   groupLine: 'Se renueva cada año. Cancela cuando quieras en Gestionar suscripción.',
-  contactLine: '¿Más de 300 estudiantes o 10 docentes? Escríbenos para un contrato.',
+  contactLineCaps: (students: number, teachers: number) =>
+    `¿Más de ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })} o ${plural('es', teachers, { one: `${teachers} docente`, other: `${teachers} docentes` })}? Escríbenos para un contrato.`,
   promoLabel: 'Código promocional o de referido',
   promoHint: '¿Tienes un código de un docente, un amigo o una publicación? Se descuenta al pagar.',
   promoInvalid: 'Ahora no se puede usar ese código: revisa cómo se escribe o la fecha.',
@@ -75,10 +76,60 @@ export const consoleMsgs = {
   promoNotConfigured: 'Los códigos aún no están configurados aquí.',
   schoolInviteHint: 'Los docentes inician sesión, escriben este código y crean su clase; o la creas tú y se la asignas.',
   schoolEmpty: 'Invita a un docente con el código, o crea una clase y asígnala.',
-  schoolNoLicence: (cap: number) => `Aún no hay licencia: cada clase mantiene el tope gratuito de ${cap} estudiantes.`,
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 9.2 (replaces `schoolNoLicence`). */
+  schoolNoLicenceCaps: (classCap: number, schoolCap: number) =>
+    `Aún no hay licencia. Cada clase admite hasta ${plural('es', classCap, { one: `${classCap} estudiante`, other: `${classCap} estudiantes` })}, y la escuela hasta ${schoolCap}.`,
   schoolNearLimit: 'Cerca del límite de la licencia: revisa la facturación antes de que se llene la próxima clase.',
   schoolAtLimit: 'En el límite de la licencia: a los estudiantes nuevos se les pedirá que hablen con su docente.',
   schoolLicenceLapsed: 'La licencia necesita atención. Las clases siguen visibles; los estudiantes conservan la Etapa 1 de todos modos.',
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 3.4 and 9.2: the line when a space holds the most learners its plan holds, or more. */
+  seats: {
+    family: {
+      at: (cap: number) =>
+        plural('es', cap, {
+          one: `Esta familia tiene ${cap} estudiante, el máximo posible. Para sumar a alguien, primero quita a un estudiante en Ajustes. Su progreso se queda en su dispositivo.`,
+          other: `Esta familia tiene ${cap} estudiantes, el máximo posible. Para sumar a alguien, primero quita a un estudiante en Ajustes. Su progreso se queda en su dispositivo.`,
+        }),
+      over: (n: number, cap: number) => `Esta familia tiene ${n} estudiantes. Nadie pierde su lugar. Pueden unirse estudiantes nuevos cuando haya menos de ${cap}.`,
+    },
+    class: {
+      at: (cap: number) =>
+        plural('es', cap, {
+          one: `Esta clase tiene ${cap} estudiante, el máximo de la Licencia de Grupo. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+          other: `Esta clase tiene ${cap} estudiantes, el máximo de la Licencia de Grupo. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+        }),
+      over: (n: number, cap: number) => `Esta clase tiene ${n} estudiantes. Nadie pierde su lugar. Pueden unirse estudiantes nuevos cuando haya menos de ${cap}.`,
+    },
+    school: {
+      at: (cap: number) =>
+        plural('es', cap, {
+          one: `Esta escuela tiene ${cap} estudiante, el máximo sin contrato. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+          other: `Esta escuela tiene ${cap} estudiantes, el máximo sin contrato. Pueden unirse estudiantes nuevos cuando se libere un lugar.`,
+        }),
+      over: (n: number, cap: number) =>
+        `Esta escuela tiene ${n} estudiantes. Nadie pierde su lugar ni lo que aprendió. Pueden unirse estudiantes nuevos cuando haya menos de ${cap}, o escríbenos para un contrato.`,
+    },
+  },
+  /** [SA] AMENDMENTS-SEATS-ADMINS sections 5.3 and 9.3: renombrar una familia, una clase o una escuela donde se ve su nombre. */
+  rename: {
+    cta: 'Renombrar',
+    a11y: (name: string) => `Renombrar ${name}`,
+    label: 'Nombre',
+    save: { cta: 'Guardar' },
+    cancel: { cta: 'Cancelar' },
+    hint: {
+      family: 'Todos en la familia ven este nombre.',
+      class: 'Los estudiantes ven este nombre en la app.',
+      school: 'Docentes y admins ven este nombre.',
+    },
+    empty: 'Escribe un nombre.',
+    tooLong: (max: number) => `Los nombres pueden tener hasta ${max} caracteres.`,
+    invalid: 'Usa letras o números en el nombre.',
+    saved: 'Nombre guardado.',
+    failed: 'No se pudo guardar el nombre. Inténtalo de nuevo.',
+    openMoves: 'Hay cambios de clase pendientes hacia o desde este espacio. Con un nombre nuevo, los adultos de esos estudiantes tendrán que revisarlos otra vez.',
+    archived: 'Primero desarchívala para cambiar el nombre.',
+  },
 
   shell: {
     home: 'Consola',
@@ -165,6 +216,7 @@ export const consoleMsgs = {
     nameTitle: { family: 'Nombre de tu familia', class: 'Nombre de tu clase', school: 'Nombre de tu escuela' },
     nameLabel: 'Nombre',
     classJoinHint: 'Los estudiantes se unen con un código, sin cuentas de estudiantes.',
+    nameLater: 'Puedes cambiar este nombre después.',
     create: { cta: 'Crear' },
     creating: { cta: 'Creando…' },
     signInAgain: 'Vuelve a iniciar sesión.',
@@ -429,6 +481,7 @@ export const consoleMsgs = {
       family: 'La persona que creó esta familia gestiona este plan.',
       class: 'Quien creó la clase gestiona este plan.',
       school: 'Tu escuela gestiona este plan.',
+      schoolAdmin: 'Quien creó la escuela gestiona este plan.',
     },
     usage: {
       learners: usageCount('estudiante', 'estudiantes'),
@@ -452,7 +505,7 @@ export const consoleMsgs = {
       },
       license: {
         everyStudent: 'Cada lección para cada estudiante mientras siga en la clase',
-        noCap: (cap: number) => `Sin tope de ${cap} estudiantes`,
+        classLearners: (n: number) => plural('es', n, { one: `Hasta ${n} estudiante en la clase`, other: `Hasta ${n} estudiantes en la clase` }),
         school: (teachers: number, students: number) =>
           `Una escuela admite hasta ${plural('es', teachers, { one: `${teachers} docente`, other: `${teachers} docentes` })} y ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })}`,
         browse: 'Explora cada lección como la ven tus estudiantes',
@@ -973,6 +1026,8 @@ export const consoleMsgs = {
     privacy: {
       title: 'Privacidad',
       anonymize: 'Anonimizar la lista',
+      anonymizeOn: 'Las listas muestran iniciales.',
+      anonymizeOff: 'Las listas muestran nombres.',
     },
     grownUps: {
       label: 'Miembros',
@@ -1014,6 +1069,7 @@ export const consoleMsgs = {
       deleteData: (name: string) => `Borrar los datos de ${name}`,
     },
     backToConsole: { cta: 'Volver a la consola' },
+    ownerOnly: 'Solo quien creó la escuela puede cambiar estos ajustes.',
   },
   school: {
     title: 'Escuela',
@@ -1664,5 +1720,86 @@ export const consoleMsgs = {
     chosen: (n: number, minutes: number) => `Elegiste ${n} · aprox. ${minutes} min`,
     full: 'Ya está lleno. Quita algo para añadir más.',
     bar: 'Tu selección',
+  },
+  /** [SA] AMENDMENTS-SEATS-ADMINS section 9.4 (SA-4): glossary "admin" for administrador/a, so no gender agrees with the reader. */
+  admins: {
+    title: 'Admins',
+    count: (n: number, max: number) => `${n} de ${max} agregados`,
+    ownerRow: (name: string) => `${name} · titular`,
+    adminRow: (name: string, day: string) => `${name} · admin · se unió ${day}`,
+    newAdmin: (name: string, email: string) => `Admin nuevo: ${name} (${email}). Si no es la persona que invitaste, quítala.`,
+    newAdminDismiss: { cta: 'Entendido' },
+    about: (max: number) => `Una escuela puede tener ${max} admins además de quien la creó.`,
+    full: (max: number) => `Los ${max} lugares están ocupados. Quita a un admin o anula una invitación para sumar a otra persona.`,
+    invite: {
+      cta: 'Invitar a un admin',
+      warning: 'Cualquiera con este enlace puede ser admin después de iniciar sesión. Envíalo solo a la persona indicada.',
+      once: (date: string) => `Funciona una vez y vence el ${date}. Solo se muestra ahora: cópialo antes de cerrar.`,
+      copy: { cta: 'Copiar enlace' },
+      copied: 'Enlace copiado.',
+      copyFailed: 'No se pudo copiar. Selecciona el enlace y cópialo.',
+      failed: 'No se pudo crear la invitación. Inténtalo de nuevo.',
+      stepUp: {
+        body: 'Antes de crear un enlace de invitación, vuelve a iniciar sesión.',
+        reason: 'Así las listas de la escuela quedan protegidas en un dispositivo compartido.',
+      },
+    },
+    openInvite: (day: string, date: string) => `Invitación creada ${day} · vence el ${date}`,
+    revoke: { cta: 'Anular' },
+    revokeAsk: '¿Anular esta invitación? El enlace dejará de funcionar.',
+    revokeKeep: { cta: 'Mantenerla' },
+    remove: { cta: 'Quitar', a11y: (name: string) => `Quitar a ${name}` },
+    removeAsk: (name: string, school: string) => `¿Quitar a ${name} como admin de ${school}?`,
+    removeNote: {
+      staysTeacher: 'Sigue como docente de la escuela, con sus clases. Puedes volver a invitar a esa persona.',
+      leaves: 'Sale de la escuela. Puedes volver a invitar a esa persona.',
+    },
+    leave: { cta: 'Dejar de ser admin' },
+    leaveAsk: (school: string) => `¿Dejar de ser admin de ${school}?`,
+    leaveNote: {
+      staysTeacher: 'Sigues como docente de la escuela, con tus clases.',
+      leaves: 'Sales de la escuela.',
+    },
+    revoked: 'Invitación anulada. El enlace ya no funciona.',
+    removed: (name: string) => `${name} ya no es admin.`,
+    left: (school: string) => `Ya no eres admin de ${school}.`,
+    actionFailed: 'No se pudo guardar el cambio. Inténtalo de nuevo.',
+    history: {
+      title: 'Historial',
+      inviteCreated: (name: string, day: string) => `${name} creó una invitación · ${day}`,
+      inviteRevoked: (name: string, day: string) => `${name} anuló una invitación · ${day}`,
+      joined: (name: string, day: string) => `${name} se unió como admin · ${day}`,
+      removed: (name: string, day: string) => `Se quitó a ${name} como admin · ${day}`,
+      left: (name: string, day: string) => `${name} dejó de ser admin · ${day}`,
+      renamed: (name: string, day: string) => `${name} cambió el nombre de la escuela · ${day}`,
+      renamedClass: (name: string, day: string) => `${name} cambió el nombre de una clase · ${day}`,
+      someone: 'Alguien que ya salió',
+    },
+  },
+  adminInvite: {
+    pageTitle: 'Invitación de admin',
+    signIn: 'Inicia sesión para ver esta invitación.',
+    title: (school: string) => `¿Unirte a ${school} como admin?`,
+    invitedBy: (name: string) => `Te invitó ${name}`,
+    invitedByOwner: 'Te invitó quien creó la escuela',
+    signedInAs: (who: string) => `Cuenta actual: ${who}`,
+    switchAccount: { cta: 'Usar otra cuenta' },
+    reopen: 'Vuelve a abrir el enlace de invitación para verla.',
+    can: 'Como admin puedes cambiar el nombre de la escuela y de sus clases, crear clases, invitar, asignar y quitar docentes, abrir listas e informes de clase, mover estudiantes entre las clases de la escuela, quitar estudiantes de una clase y aprobar la solicitud de un estudiante para vincular un dispositivo nuevo.',
+    cannot: 'La facturación y la lista de admins quedan a cargo de quien creó la escuela.',
+    leave: 'Quien creó la escuela verá que te uniste y el correo con el que inicias sesión. Puedes salir cuando quieras, y esa persona puede quitarte.',
+    accept: { cta: 'Aceptar' },
+    notNow: { cta: 'Ahora no' },
+    done: (school: string) => `Ahora eres admin de ${school}.`,
+    used: 'Esta invitación ya se usó. Pide una nueva.',
+    expired: 'Esta invitación venció. Pide una nueva.',
+    revoked: 'Esta invitación se anuló. Pide una nueva si la necesitas.',
+    full: (max: number) => `Esta escuela ya tiene ${max} admins.`,
+    owner: 'Ya diriges esta escuela porque la creaste.',
+    alreadyAdmin: (school: string) => `Ya eres admin de ${school}.`,
+    notFound: 'Este enlace no abre ninguna invitación. Revisa que se haya copiado completo.',
+    emailUnverified: 'Para aceptar, tu cuenta necesita un correo verificado. Verifícalo en los ajustes de tu cuenta y vuelve a abrir el enlace.',
+    tryAgain: 'No se pudo revisar la invitación ahora. Inténtalo de nuevo en un momento.',
+    home: { cta: 'Ir a mi inicio' },
   },
 } satisfies DeepPartial<Messages['console']>;
