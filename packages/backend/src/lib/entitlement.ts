@@ -128,9 +128,21 @@ export interface SchoolUsage {
 /** Distinct learners and teaching accounts across a school's live classes. */
 export async function schoolUsage(db: Db, school: Space): Promise<SchoolUsage> {
   const classes = (await db.childSpaces(school.id)).filter((s) => s.kind === 'class' && !s.archivedAt);
-  const members = new Map<string, Membership[]>([[school.id, await db.membersOf(school.id)]]);
-  for (const cls of classes) members.set(cls.id, await db.membersOf(cls.id));
+  // [SA] one set-wise read for the school and every live class (a fixed cost, not one read per class)
+  const members = new Map<string, Membership[]>();
+  for (const m of await db.membersOfSpaces([school.id, ...classes.map((cls) => cls.id)])) {
+    const list = members.get(m.spaceId);
+    if (list) list.push(m);
+    else members.set(m.spaceId, [m]);
+  }
   return schoolUsageFrom(school, classes, (spaceId) => members.get(spaceId) ?? []);
+}
+
+/** [SA] Whether the learner is in a live class of the school (it already holds a school seat): two reads, any class count. */
+export async function inLiveClassOfSchool(db: Db, schoolId: string, learnerId: string): Promise<boolean> {
+  const live = new Set((await db.childSpaces(schoolId)).filter((s) => s.kind === 'class' && !s.archivedAt).map((s) => s.id));
+  if (live.size === 0) return false;
+  return (await db.membershipsOf('learner', learnerId)).some((m) => live.has(m.spaceId));
 }
 
 /** `schoolUsage` from reads already made: the school's child spaces and each space's memberships. */
@@ -159,11 +171,7 @@ export async function schoolIsFull(db: Db, cls: Space, now: Date, joiningLearner
   if (!school || school.kind !== 'school' || school.archivedAt) return false;
   const limits = await schoolLimits(db, school, now);
   if (limits.students === null) return false;
-  if (joiningLearnerId) {
-    for (const s of await db.childSpaces(school.id)) {
-      if (s.kind === 'class' && !s.archivedAt && (await db.membership(s.id, 'learner', joiningLearnerId))) return false; // already counted
-    }
-  }
+  if (joiningLearnerId && (await inLiveClassOfSchool(db, school.id, joiningLearnerId))) return false; // already counted
   return (await schoolUsage(db, school)).students >= limits.students;
 }
 

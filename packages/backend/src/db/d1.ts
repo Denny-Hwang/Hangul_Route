@@ -525,10 +525,17 @@ function schoolSeatCondition(schoolId: string | null, schoolCap: number | null, 
   ];
 }
 
-const toSpaceEvent = (r: Row): SpaceEvent => ({
+/**
+ * [SA] section 6.2: `kind` has no CHECK so later kinds stay additive; a reader that meets a kind it does not know (a
+ * row a newer Worker wrote, read after a rollback) skips that row instead of throwing. Inserts stay strict.
+ */
+const toSpaceEvent = (r: Row): SpaceEvent | null => {
+  const kind = SpaceEventKindSchema.safeParse(r.kind);
+  return kind.success ? { ...spaceEventRow(r), kind: kind.data } : null;
+};
+const spaceEventRow = (r: Row): Omit<SpaceEvent, 'kind'> => ({
   id: str(r.id),
   spaceId: str(r.space_id),
-  kind: SpaceEventKindSchema.parse(r.kind),
   actorAccountId: str(r.actor_account_id),
   subjectAccountId: r.subject_account_id === null || r.subject_account_id === undefined ? null : str(r.subject_account_id),
   subjectSpaceId: r.subject_space_id === null || r.subject_space_id === undefined ? null : str(r.subject_space_id),
@@ -760,7 +767,9 @@ export class D1Db implements Db {
     );
   }
   spaceEventsOf(spaceId: string, limit: number): Promise<SpaceEvent[]> {
-    return this.many('SELECT * FROM space_events WHERE space_id = ? ORDER BY created_at DESC, id DESC LIMIT ?', [spaceId, limit], toSpaceEvent);
+    return this.many('SELECT * FROM space_events WHERE space_id = ? ORDER BY created_at DESC, id DESC LIMIT ?', [spaceId, limit], toSpaceEvent).then((rows) =>
+      rows.filter((e): e is SpaceEvent => e !== null),
+    );
   }
   purgeSpaceEvents(before: Date, limit: number): Promise<number> {
     return this.changes('DELETE FROM space_events WHERE id IN (SELECT id FROM space_events WHERE created_at < ? LIMIT ?)', [before.toISOString(), limit]);

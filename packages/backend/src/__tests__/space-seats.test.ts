@@ -5,6 +5,7 @@ import { relinkLimiter } from '../routes/relink';
 import { lookupLimiter } from '../routes/spaces';
 import { store } from '../store';
 import { testDb as db } from './helpers/db';
+import { countDbCalls } from './helpers/transfer-world';
 
 /**
  * [SA] AMENDMENTS-SEATS-ADMINS sections 3.2-3.6 and 6.5, through the routes: the learner caps per plan at `/join`,
@@ -197,6 +198,35 @@ describe('[SA] classes and schools hold up to 50 (SA-D2, SA-D3)', () => {
   });
 });
 
+describe('[SA] a refused join reads a fixed number of rows, whatever the class count (D1 statement budget)', () => {
+  /** A school at 50 across `classes` live classes; the refused join is a new learner into the last one. */
+  async function refusedJoinCalls(classes: number): Promise<number> {
+    await db.reset();
+    const sch = await createSpace('principal', 'school', `School ${classes}`);
+    const rows: Array<{ id: string; joinCode: string }> = [];
+    for (let i = 0; i < classes; i += 1) rows.push(await createSpace('principal', 'class', `Class ${i + 1}`, sch.id));
+    for (let i = 0; i < SCHOOL_LEARNER_CAP; i += 1) {
+      const cls = rows[i % rows.length]!;
+      await db.addMembership({ spaceId: cls.id, memberKind: 'learner', memberId: `profile:s-${i}`, role: 'student', joinedAt: new Date().toISOString() });
+    }
+    const target = rows[rows.length - 1]!;
+    const learner = await registerLearner('New');
+    let code: string | undefined;
+    const n = await countDbCalls(async () => {
+      code = (await join(target, learner)).body.error?.code;
+    });
+    expect(code).toBe('cap_class'); // the school cap answered as cap_class with details.reason cap_school
+    return n;
+  }
+
+  it('20 live classes cost the same reads as 3, inside the Free-plan budget', async () => {
+    const few = await refusedJoinCalls(3);
+    const many = await refusedJoinCalls(20);
+    expect(many).toBe(few);
+    expect(many).toBeLessThan(50);
+  });
+});
+
 describe('[SA] lookup: `full` is always false, `seat` is learner-aware (section 3.4)', () => {
   it('a full family: full false (shipped apps), seat full for a new learner, room for a vouched member', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
@@ -215,6 +245,10 @@ describe('[SA] lookup: `full` is always false, `seat` is learner-aware (section 
     expect(unvouched.body.data).toMatchObject({ full: false, seat: { full: true, reason: 'cap_family' } });
     const noDevice = await lookup(fam.joinCode, json, member.learnerId);
     expect(noDevice.body.data).toMatchObject({ seat: { full: true } });
+    // a malformed learnerId with a valid code is unvouched: 200 with the new-learner seat, never 422 invalid_code
+    const malformed = await lookup(fam.joinCode, member.auth, 'account:not-a-learner');
+    expect(malformed.status).toBe(200);
+    expect(malformed.body.data).toMatchObject({ full: false, seat: { full: true, reason: 'cap_family', cap: 4 } });
   });
 
   it('a school at 50: full for a new learner, room for a learner already in a live sibling class', async () => {

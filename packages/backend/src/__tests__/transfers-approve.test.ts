@@ -894,4 +894,13 @@ describe('[SA] a rename and the consent terms (section 5.4)', () => {
     // a space no transfer ever named
     expect(await openMovesOf(C, 'teacher-c')).toBe(false);
   });
+
+  it('the school page reads openMoves set-wise for every class row: the class an open transfer names, and not the others', async () => {
+    await agreedFamilyMove();
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    for (const id of [B, C]) await db.putSpace({ ...(await db.getSpace(id))!, parentSpaceId: SCHOOL });
+    const view = (await call('GET', `/api/spaces/${SCHOOL}/school`, bearer('admin'))).body.data as { classes: Array<{ space: { id: string }; openMoves: boolean }> };
+    expect(Object.fromEntries(view.classes.map((k) => [k.space.id, k.openMoves]))).toEqual({ [B]: true, [C]: false });
+  });
 });

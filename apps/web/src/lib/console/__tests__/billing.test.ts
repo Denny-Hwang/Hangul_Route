@@ -105,3 +105,13 @@ describe('billing page words per locale (F-I18N-001 PR 10b)', () => {
     expect(promoNoteText({ kind: 'applied', code: 'HOYA20', name: null }, PSEUDO)).toMatch(bracketed);
   });
 });
+
+/** [SA] AMENDMENTS-SEATS-ADMINS section 3.6: the school view's licence is an allow-list; the status line must still read it. */
+describe('[SA] status line from the school licence allow-list', () => {
+  it('reads a past-due school licence inside its grace week as kept, not paused', () => {
+    const now = new Date('2026-10-20T12:00:00.000Z');
+    const allowListed = { planKey: 'group_license', status: 'past_due', seats: null, expiresAt: '2027-10-20T00:00:00.000Z', updatedAt: '2026-10-18T12:00:00.000Z', active: true, subjectName: 'Seoul Hangul School' } as unknown as EntitlementView;
+    expect(statusLine(allowListed, now)).toBe(getMessages('en').console.entitlementStatus.pastDueKept);
+    expect(statusLine({ ...allowListed, updatedAt: '2026-10-01T12:00:00.000Z' }, now)).toBe(getMessages('en').console.entitlementStatus.pastDuePaused);
+  });
+});

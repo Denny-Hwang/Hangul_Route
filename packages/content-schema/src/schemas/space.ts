@@ -86,12 +86,14 @@ export type SpaceNameRefusal = 'empty' | 'too_long' | 'invalid';
  */
 export const SPACE_NAME_FORBIDDEN = /[\u0000-\u001F\u007F-\u009F\u00AD\u061C\u180E\u200B\u200E\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB]/;
 /**
- * [SA] section 5.2 step 5: a letter or a digit, as an explicit BMP allow-list (Latin with its extensions, Greek,
- * Cyrillic, Hebrew, Arabic, the Indic and Southeast Asian blocks, Hangul jamo and syllables, kana, CJK, full-width
- * letters and digits). It errs toward accepting: a name with any listed character passes.
+ * [SA] section 5.2 step 5: a letter or a digit, as an explicit allow-list of UTF-16 units (Latin with its extensions,
+ * Greek, Cyrillic, Armenian, Hebrew, Arabic, Syriac, Thaana and N'Ko, the Indic and Southeast Asian blocks, Tibetan,
+ * Myanmar, Georgian, Hangul jamo and syllables, Ethiopic, Cherokee, Canadian syllabics, Khmer, Mongolian, Tifinagh,
+ * kana, Bopomofo, CJK, Yi, full-width letters and digits, and the lead surrogates of the CJK extension planes
+ * U+20000 to U+33FFF). It errs toward accepting: a name with any listed unit passes.
  */
 export const SPACE_NAME_LETTER =
-  /[A-Za-z0-9\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02AF\u0370-\u03FF\u0400-\u052F\u0590-\u05FF\u0600-\u06FF\u0900-\u0DFF\u0E00-\u0EFF\u1100-\u11FF\u1E00-\u1FFF\u3040-\u30FF\u3130-\u318F\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7A3\uF900-\uFAFF\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFDC]/;
+  /[A-Za-z0-9\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02AF\u0370-\u03FF\u0400-\u052F\u0530-\u058F\u0590-\u05FF\u0600-\u06FF\u0700-\u08FF\u0900-\u0DFF\u0E00-\u0EFF\u0F00-\u0FFF\u1000-\u109F\u10A0-\u10FF\u1100-\u11FF\u1200-\u139F\u13A0-\u13FF\u1400-\u167F\u1780-\u17FF\u1800-\u18AF\u1C90-\u1CBF\u1E00-\u1FFF\u2D00-\u2D7F\u2D80-\u2DDF\u3040-\u30FF\u3100-\u312F\u3130-\u318F\u31A0-\u31BF\u3400-\u4DBF\u4E00-\u9FFF\uA000-\uA4CF\uA720-\uA7FF\uAC00-\uD7A3\uD840-\uD88F\uF900-\uFAFF\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFDC]/;
 
 /**
  * A space name as stored ([SA] section 5.2), the same on the Worker and in the console, in this order:
@@ -170,9 +172,10 @@ export type SpaceCreate = z.infer<typeof SpaceCreateSchema>;
 
 /**
  * POST /api/spaces/lookup body. [SA] `learnerId` (optional): with the device `Authorization` header for that learner,
- * `seat` says whether this learner finds room (a member already holds its seat); otherwise it is ignored.
+ * `seat` says whether this learner finds room (a member already holds its seat); otherwise it is ignored. Any
+ * short string parses: the Worker checks the `profile:` shape itself, so a malformed one is unvouched, never a 422.
  */
-export const SpaceLookupSchema = z.object({ code: JoinCodeFieldSchema, learnerId: z.string().regex(/^profile:[a-z0-9-]+$/).optional() });
+export const SpaceLookupSchema = z.object({ code: JoinCodeFieldSchema, learnerId: z.string().max(80).optional() });
 export type SpaceLookup = z.infer<typeof SpaceLookupSchema>;
 
 /**

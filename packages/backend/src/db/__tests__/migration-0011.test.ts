@@ -55,6 +55,22 @@ describe('migration 0011_space_events.sql · production safety', () => {
     d1.close();
   });
 
+  it('a reader skips a kind it does not know (a row a newer Worker wrote, read after a rollback) and never throws', async () => {
+    const d1 = openSqliteD1({ before: FILE });
+    for (const st of statements) await d1.prepare(st).run();
+    const db = new D1Db(d1);
+    await db.putAccount({ id: 'principal', email: null, displayName: null, consent: null, createdAt: T });
+    await db.putSpace(school);
+    await db.addSpaceEvent(event({ id: 'sev:known' }));
+    await d1
+      .prepare('INSERT INTO space_events (id, space_id, kind, actor_account_id, subject_account_id, subject_space_id, invite_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind('sev:later', school.id, 'kind_from_a_later_release', 'principal', null, null, null, T)
+      .run();
+    await expect(db.spaceEventsOf(school.id, 10)).resolves.toEqual([event({ id: 'sev:known' })]);
+    await expect(db.addSpaceEvent({ ...event({ id: 'sev:bad' }), kind: 'kind_from_a_later_release' as never })).rejects.toThrow();
+    d1.close();
+  });
+
   it('a Worker that runs before the migration skips the event purge and keeps purging the rest', async () => {
     const d1 = openSqliteD1({ before: FILE });
     expect(await runScheduledPurge(new D1Db(d1), new Date())).toMatchObject({ rounds: 1, spaceEvents: 0 });

@@ -6,7 +6,6 @@ import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
 import { isEntitlementActive, schoolLimits, schoolUsage } from '../lib/entitlement';
 import { isJoinCodeLive } from '../lib/join-code';
-import { hasOpenMoves } from './spaces';
 
 /** /api/spaces/:id/school + /:id/members — F-SCHOOL-001 §3.2. Aggregates only. */
 export const schoolRoutes = new Hono();
@@ -47,7 +46,15 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
   const classes = [];
   const seen = new Set<string>();
   let practiced = 0;
-  for (const cls of (await db.childSpaces(school.id)).filter((s) => s.kind === 'class')) {
+  const classRows = (await db.childSpaces(school.id)).filter((s) => s.kind === 'class');
+  // [SA] section 3.6: one source read and one destination read for every live class this caller may rename, not two per row.
+  const movable = classRows.filter((cls) => !cls.archivedAt && renames(cls, school)).map((cls) => cls.id);
+  const withMoves = new Set<string>();
+  if (movable.length > 0) {
+    for (const t of await db.openTransfersOfSpaces(movable, 'source')) withMoves.add(t.sourceSpaceId);
+    for (const t of await db.openTransfersOfSpaces(movable, 'destination')) withMoves.add(t.destSpaceId);
+  }
+  for (const cls of classRows) {
     const learners = (await db.membersOf(cls.id)).filter((m) => m.memberKind === 'learner');
     const lastActive: string[] = [];
     let clsPracticed = 0;
@@ -70,7 +77,7 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
       lastActiveAt: lastActive.sort().at(-1) ?? null,
       hasPublishedPlan: (await db.plansOf(cls.id)).some((p) => p.publishedAt && !p.archivedAt),
       canRename: renames(cls, school),
-      openMoves: renames(cls, school) ? await hasOpenMoves(db, cls.id) : false,
+      openMoves: withMoves.has(cls.id),
     });
   }
   classes.sort((a, b) => Number(!!a.space.archivedAt) - Number(!!b.space.archivedAt) || b.space.createdAt.localeCompare(a.space.createdAt));
@@ -80,7 +87,8 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
     school: publicSpace(school),
     invite: isJoinCodeLive(school, now) ? { joinCode: school.joinCode, joinCodeExpiresAt: school.joinCodeExpiresAt } : { joinCode: null, joinCodeExpiresAt: null },
     // [SA] section 3.6: an allow-list for every caller; never a Stripe id or a promo code (billing is the owner's).
-    license: license ? { planKey: license.planKey, status: license.status, seats: license.seats, expiresAt: license.expiresAt, active: isEntitlementActive(license, now), subjectName: school.name } : null,
+    // `updatedAt` stays: the console's past-due grace line reads it (billing.ts statusLine).
+    license: license ? { planKey: license.planKey, status: license.status, seats: license.seats, expiresAt: license.expiresAt, updatedAt: license.updatedAt, active: isEntitlementActive(license, now), subjectName: school.name } : null,
     // [SA] section 3.2: 50 for a licence, the contract's seats, or 50 for a school with nothing active (`licensed: false`).
     limits: { licensed: limits.licensed, students: limits.students, teachers: limits.teachers },
     canRename: renames(school, null),
