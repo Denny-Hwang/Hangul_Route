@@ -88,8 +88,11 @@ export function closesSession(prevActiveId: string | null, nextActiveId: string 
   return prevActiveId !== nextActiveId;
 }
 
-/** [OA] The grown-up controls that change who is on the device need a PIN within `GROWN_UP_FRESH_PIN_MS` (OA-D5b (3)). */
-export type FreshPinAction = 'remove' | 'lock' | 'unlock' | 'join_other';
+/**
+ * [OA] The grown-up controls that change who is on the device need a PIN within `GROWN_UP_FRESH_PIN_MS` (OA-D5b (3));
+ * so does Change PIN on the reset-by-wait notice (OA-D21), which sets a new PIN without asking the current one.
+ */
+export type FreshPinAction = 'remove' | 'lock' | 'unlock' | 'join_other' | 'change_pin';
 
 /**
  * [OA] Whether `action` must ask for the PIN (or face or fingerprint) again: unless one was entered in the last
@@ -136,29 +139,67 @@ const AREA_ROUTES: ReadonlySet<string> = new Set([
   'RouteSetup',
   'RoutePreview',
 ]);
-const GATE_ROUTES: ReadonlySet<string> = new Set(['PinEntry', 'PinReset', 'Onboarding']);
+// The onboarding stack's own screens are the focused routes while it shows (`getCurrentRoute` names the leaf).
+const GATE_ROUTES: ReadonlySet<string> = new Set(['PinEntry', 'PinReset', 'Onboarding', 'Welcome', 'CreateProfile', 'FirstQuestPreview', 'PlacementInvite']);
+/** Routes shared by learners and grown-ups: in the area when opened from it (`viewer: 'grownup'`), else a learner screen. */
+const SHARED_ROUTES: ReadonlySet<string> = new Set(['MyRoute', 'RouteOverview']);
 
 export function routeZone(name: string, params?: unknown): RouteZone {
   if (GATE_ROUTES.has(name)) return 'gate';
   if (AREA_ROUTES.has(name)) return 'area';
-  // A learner's Learning Route opened read-only from the Grown-up area (F-ROUTE-001 section 3.1).
-  if (name === 'MyRoute' && (params as { viewer?: unknown } | undefined)?.viewer === 'grownup') return 'area';
+  // A learner's Learning Route or weekly plan opened from the Grown-up area (F-ROUTE-001 section 3.1, F-PLAN-002 3.9).
+  if (SHARED_ROUTES.has(name) && (params as { viewer?: unknown } | undefined)?.viewer === 'grownup') return 'area';
   return 'learner';
 }
 
+/** [OA] What the tracker needs to know about the grown-up session when focus lands on a route. */
+export interface FocusContext {
+  /** A grown-up session (the 15-minute gate or a fresh PIN) is open. */
+  sessionOpen: boolean;
+  /**
+   * The PIN screen just went back to the screen that asked, with the gate open for the action that waited there
+   * (an Open link, Open billing, the level check's finish): that one landing keeps the session for that action.
+   */
+  returning: boolean;
+}
+
+const NO_SESSION: FocusContext = { sessionOpen: false, returning: false };
+
 /**
- * [OA] Follows focus from route to route and says when it left the Grown-up area for a learner screen (Back,
- * Close or the tab bar, whatever the area was opened from). The PIN screens in between do not count: area, PIN
- * screen, learner screen is a leave too.
+ * [OA] Follows focus from route to route and says when the grown-up session must close (OA-D5b (2), CS-1, CS-15):
+ * when focus leaves the Grown-up area for a learner screen (Back, Close or the tab bar, whatever the area was opened
+ * from), and when it lands on any learner screen while a session is open, unless that landing is the PIN screen's
+ * return to the action that asked for it. So an open session is honoured only inside the Grown-up area stack and
+ * for that one waiting action, never by a later gate on a learner screen. The PIN screens and onboarding in
+ * between do not count: area, PIN screen, learner screen is a leave too.
  */
-export function areaExitTracker(): (zone: RouteZone) => boolean {
+export function areaExitTracker(): (zone: RouteZone, ctx?: FocusContext) => boolean {
   let last: RouteZone | null = null;
-  return (zone) => {
+  return (zone, ctx = NO_SESSION) => {
     if (zone === 'gate') return false;
-    const left = last === 'area' && zone === 'learner';
+    const close = zone === 'learner' && (last === 'area' || (ctx.sessionOpen && !ctx.returning));
     last = zone;
-    return left;
+    return close;
   };
+}
+
+/** [OA] A root stack route as the navigator keeps it; `key` and nested `state` are kept as they are. */
+export interface LeaveRoute {
+  name: string;
+  params?: unknown;
+  key?: string;
+  state?: unknown;
+}
+
+/**
+ * [OA] OA-D16, CS-14: the root routes to keep when a closed session leaves the Grown-up area: everything below the
+ * first Grown-up area route (the learner screens the area was opened from). Null when no area route is on the
+ * stack. A stack that starts in the area keeps the learner home (`Main`).
+ */
+export function areaLeaveRoutes(routes: ReadonlyArray<LeaveRoute>): LeaveRoute[] | null {
+  const first = routes.findIndex((r) => routeZone(r.name, r.params) === 'area');
+  if (first < 0) return null;
+  return first === 0 ? [{ name: 'Main' }] : routes.slice(0, first);
 }
 
 /** [OA] The grown-up session times the learner app holds in memory (`ui-store`). */

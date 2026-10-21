@@ -1,4 +1,4 @@
-import { RESCUE_MAX_ATTEMPTS, RESCUE_PAUSE_MS, RESCUE_WINDOW_MS } from '@hangul-route/content-schema';
+import { GROWN_UP_FRESH_PIN_MS, RESCUE_MAX_ATTEMPTS, RESCUE_PAUSE_MS, RESCUE_WINDOW_MS } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -16,6 +16,7 @@ import {
   formatReadyAt,
   resetWaitState,
   rescueFailureMessage,
+  changePinMode,
   resetByWaitNoticeDue,
   startResetWait,
   waitCardView,
@@ -306,5 +307,13 @@ describe('[OA] resetByWaitNoticeDue (OA-D21)', () => {
     expect(resetByWaitNoticeDue({ at: NOW }, NOW - 1)).toBe(false);
     expect(resetByWaitNoticeDue({ at: NOW }, null)).toBe(false);
     expect(resetByWaitNoticeDue(null, NOW + 1)).toBe(false);
+  });
+});
+
+describe('[OA] changePinMode (OA-D21): Change PIN needs a fresh PIN', () => {
+  it('opens creation within 2 minutes of a PIN, and asks the current PIN first after that or without one', () => {
+    expect(changePinMode(NOW, NOW + 1000)).toBe('setup');
+    expect(changePinMode(NOW, NOW + GROWN_UP_FRESH_PIN_MS)).toBe('change');
+    expect(changePinMode(null, NOW)).toBe('change');
   });
 });

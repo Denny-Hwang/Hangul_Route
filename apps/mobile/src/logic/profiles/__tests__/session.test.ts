@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PARENT_SESSION_MS,
   areaExitTracker,
+  areaLeaveRoutes,
   backgroundLapsed,
   closeOnChooser,
   closesSession,
@@ -99,7 +100,7 @@ describe('[OA] needsFreshPin (GROWN_UP_FRESH_PIN_MS)', () => {
   const now = 1_800_000_000_000;
   it('asks unless a PIN was entered in the last 2 minutes', () => {
     expect(GROWN_UP_FRESH_PIN_MS).toBe(2 * 60_000);
-    for (const action of ['remove', 'lock', 'unlock', 'join_other'] as const) {
+    for (const action of ['remove', 'lock', 'unlock', 'join_other', 'change_pin'] as const) {
       expect(needsFreshPin(action, null, now), action).toBe(true);
       expect(needsFreshPin(action, now, now), action).toBe(false);
       expect(needsFreshPin(action, now - GROWN_UP_FRESH_PIN_MS + 1, now), action).toBe(false);
@@ -126,7 +127,11 @@ describe('[OA] routeZone and areaExitTracker (OA-D5b (2))', () => {
     expect(routeZone('MyRoute', { profileId: 'p', viewer: 'grownup' })).toBe('area');
     expect(routeZone('MyRoute', { profileId: 'p' })).toBe('learner');
     expect(routeZone('MyRoute')).toBe('learner');
-    for (const name of ['PinEntry', 'PinReset', 'Onboarding']) expect(routeZone(name), name).toBe('gate');
+    expect(routeZone('RouteOverview', { profileId: 'p', viewer: 'grownup' })).toBe('area');
+    expect(routeZone('RouteOverview', { profileId: 'p' })).toBe('learner');
+    for (const name of ['PinEntry', 'PinReset', 'Onboarding', 'Welcome', 'CreateProfile', 'FirstQuestPreview', 'PlacementInvite']) {
+      expect(routeZone(name), name).toBe('gate');
+    }
     for (const name of ['Home', 'Profile', 'Journey', 'QuestPlayer', 'SomethingNew']) expect(routeZone(name), name).toBe('learner');
   });
 
@@ -141,6 +146,47 @@ describe('[OA] routeZone and areaExitTracker (OA-D5b (2))', () => {
     expect(left('area')).toBe(false);
     expect(left('gate')).toBe(false);
     expect(left('learner')).toBe(true);
+  });
+});
+
+describe('[OA] areaExitTracker with the session (CS-1: honoured only inside the Grown-up area stack)', () => {
+  const open = { sessionOpen: true, returning: false };
+  const back = { sessionOpen: true, returning: true };
+
+  it('closes an open session on any landing on a learner screen, also one never in the area', () => {
+    const left = areaExitTracker();
+    expect(left('learner')).toBe(false);
+    expect(left('gate', open)).toBe(false);
+    // Add a learner: PIN, then Cancel in onboarding, back on Profile.
+    expect(left('learner', open)).toBe(true);
+    expect(left('learner')).toBe(false);
+  });
+
+  it("keeps it for the PIN screen's return to the waiting action, then closes it on the next learner screen", () => {
+    const left = areaExitTracker();
+    expect(left('learner')).toBe(false);
+    expect(left('gate', open)).toBe(false);
+    expect(left('learner', back)).toBe(false);
+    expect(left('learner', open)).toBe(true);
+  });
+
+  it('a return never keeps a session that leaves the area, and moves inside the area never close it', () => {
+    const left = areaExitTracker();
+    expect(left('area', open)).toBe(false);
+    expect(left('area', open)).toBe(false);
+    expect(left('gate', open)).toBe(false);
+    expect(left('area', back)).toBe(false);
+    expect(left('learner', back)).toBe(true);
+  });
+});
+
+describe('[OA] areaLeaveRoutes (OA-D16)', () => {
+  it('keeps the routes below the first Grown-up area route, or the learner home when the stack starts there', () => {
+    expect(areaLeaveRoutes([{ name: 'Main', key: 'm' }, { name: 'ParentDashboard' }, { name: 'CardDetail' }])).toEqual([{ name: 'Main', key: 'm' }]);
+    expect(areaLeaveRoutes([{ name: 'Main' }, { name: 'MyRoute', params: { profileId: 'p', viewer: 'grownup' } }])).toEqual([{ name: 'Main' }]);
+    expect(areaLeaveRoutes([{ name: 'EditProfile', params: { profileId: 'p' } }])).toEqual([{ name: 'Main' }]);
+    expect(areaLeaveRoutes([{ name: 'Main' }, { name: 'Profile' }])).toBeNull();
+    expect(areaLeaveRoutes([])).toBeNull();
   });
 });
 
