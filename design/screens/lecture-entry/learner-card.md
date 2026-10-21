@@ -20,6 +20,10 @@ In `ParentDashboardScreen`, after `GrownUpHomeCard`, the same `rn-card` look: h2
 
 375 and 1280: no overflow in the card, targets at least 64 px. 320 with 200 % text: the card wraps cleanly; the existing "Family Dashboard" heading row (unchanged, F-PAR-001) runs 3 px past 320, which is a separate existing issue (the heading needs `overflow-wrap`), not part of this card; it is tracked in the spec's LV-6 row (the fix and a no-sideways-scroll assertion at 320 / 200 % in its e2e).
 
+## Built (LV-6)
+
+Shots of the built card on a switch-on build (`EXPO_PUBLIC_LECTURE_MODE=enabled`, `E2E_LECTURE_MODE=1 HR_SHOTS=1 … playwright test grown-up-lecture-card`): `shots/lv6-dashboard-card-320.png`, `shots/lv6-dashboard-card-1280.png` and `shots/lv6-dashboard-320-text200-card.png` (320 px at 200 % text, a 160 px layout). Targets at least `touchTarget.min`; no sideways scroll; the Family Dashboard heading wraps (`overflow-wrap: anywhere`).
+
 ## Strings
 
 Section 12.4: `caregiver.lecture.title`, `body`, `open.cta`, `next`, and `opensTab` and `blocked` (added in LV-6, section 12.4 as amended). Korean `next` is "다음 수업: {name}" (no particle on the name). No other gap found.
