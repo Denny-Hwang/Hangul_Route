@@ -22,7 +22,7 @@ vi.mock('../use-console', async () => {
   return { useConsole: () => ({ ready: true, session: { accountId: 'user_1', displayName: 'Kim' }, api: null, signOut: () => undefined, m: messages('en'), locale: 'en' }) };
 });
 vi.mock('../auth-context', () => ({
-  useConsoleAuth: () => ({ session: { accountId: 'user_1', displayName: 'Kim' }, reverifySecret: async () => 'done' }),
+  useConsoleAuth: () => ({ session: { accountId: 'user_1', displayName: 'Kim' }, reverifySecret: async () => 'done', secretReverifyReady: true }),
 }));
 vi.mock('@/lib/i18n/locale-context', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -63,6 +63,8 @@ function cardsEnv(log: string[]): PinCardsEnvironment {
       onSeen();
       return () => undefined;
     },
+    readOfferClosed: () => null,
+    writeOfferClosed: (at) => log.push(`offerClosed:${at}`),
   };
 }
 

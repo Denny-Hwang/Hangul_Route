@@ -466,6 +466,7 @@ export function AdultFrame({
             accountLabel={auth.session?.email ?? auth.session?.displayName ?? null}
             home={pathname}
             reverifySecret={auth.reverifySecret}
+            offerAllowed={auth.secretReverifyReady === true}
             env={browser.pinCards}
           />
         ) : null}

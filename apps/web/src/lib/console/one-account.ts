@@ -193,6 +193,17 @@ export function passkeyUsedDuring(before: PasskeySnapshot | null, after: readonl
   });
 }
 
+/**
+ * Whether a Clerk reverification, whose factor Clerk does not name, may stand for a password or a code (section 7.2
+ * moment 3, section 7.4, CS-10, CS-17): only for an account read before the dialog that holds no passkey, so the dialog
+ * has no passkey to offer. An account that holds a passkey, or one not read, is refused before any dialog opens (fail
+ * closed: nothing rests on how Clerk stamps `lastUsedAt` during a reverification). A passkey that shows up during the
+ * dialog is still refused after it (`passkeyUsedDuring`).
+ */
+export function secretReverifyAllowed(passkeys: readonly PasskeyLike[] | null | undefined): boolean {
+  return Array.isArray(passkeys) && passkeys.length === 0;
+}
+
 /** Section 7.6 (OA-D16, CS-14): a tab hidden since `hiddenAt` drops its unlock once 5 minutes passed (wall clock; a clock that ran backwards drops it too). */
 export function hiddenTooLong(hiddenAt: number | null, now: number): boolean {
   if (hiddenAt === null) return false;
@@ -200,9 +211,18 @@ export function hiddenTooLong(hiddenAt: number | null, now: number): boolean {
   return hidden < 0 || hidden >= GROWN_UP_BACKGROUND_MS;
 }
 
-/** Section 7.6: the one message on `hr-grownup`, `{ v: 1, kind: 'lock' }`, and nothing else. */
+/**
+ * Section 7.6 (CS-2): whether a message on `hr-grownup` locks this tab. The learner app posts exactly
+ * `{ v: 1, kind: 'lock' }` (`GrownUpLockMessageSchema`, strict on the sending side). The console reads it leniently, in
+ * the safe direction: any object whose `kind` is `'lock'` and whose `v` is a whole number from 1 locks, so a later
+ * learner-app build that adds a field (or a version) still locks every open console tab. Nothing in the message is kept.
+ * A string, a different kind, or no version changes nothing.
+ */
 export function isGrownUpLockMessage(data: unknown): boolean {
-  return GrownUpLockMessageSchema.safeParse(data).success;
+  if (GrownUpLockMessageSchema.safeParse(data).success) return true;
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) return false;
+  const { v, kind } = data as { v?: unknown; kind?: unknown };
+  return kind === 'lock' && typeof v === 'number' && Number.isInteger(v) && v >= 1;
 }
 
 /** Section 7.6: the set-a-PIN card on a persona home, once per browser, only on a `nopin` browser. */

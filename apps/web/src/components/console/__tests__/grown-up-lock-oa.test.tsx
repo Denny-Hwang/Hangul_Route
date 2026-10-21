@@ -11,7 +11,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => 'en' };
 });
 
-import { GrownUpLock, GrownUpLockScreen, createGrownUpLockController, lockView, type LockState } from '../GrownUpLock';
+import { GrownUpLock, GrownUpLockScreen, createGrownUpLockController, lockView, startExemptGuard, type LockState } from '../GrownUpLock';
 import { EPOCH, NOW, SIGNED_IN, flush, harness, type Harness } from './lock-harness';
 
 /**
@@ -255,13 +255,25 @@ describe('the hr-grownup lock message (section 7.6, CS-2)', () => {
     h.unlock.value = SIGNED_IN;
     const { r, c } = start(h);
     await flush();
-    for (const data of [{ v: 1, kind: 'open' }, { v: 1, kind: 'lock', extra: 1 }, 'lock', null]) h.post(data);
+    for (const data of [{ v: 1, kind: 'open' }, { kind: 'lock' }, 'lock', null]) h.post(data);
     await flush();
     expect(h.calls).not.toContain('clearUnlock');
     expect(r.latest()?.decision.state).toBe('open');
     expect(h.listening()).toBe(true);
     c.stop();
     expect(h.listening()).toBe(false);
+  });
+
+  it('a lock message with an extra field still locks (the safe direction)', async () => {
+    const h = oaHarness();
+    h.unlock.value = SIGNED_IN;
+    const { r, c } = start(h);
+    await flush();
+    h.post({ v: 1, kind: 'lock', at: 1 });
+    await flush();
+    expect(h.unlock.value).toBeNull();
+    expect(r.latest()?.decision.state).toBe('locked');
+    c.stop();
   });
 
   it('without a channel (no BroadcastChannel) the lock still runs', async () => {
@@ -464,5 +476,64 @@ describe('GrownUpLock wiring: Use a passkey only off pin browsers (CS-17)', () =
     };
     await render(h, { accountId: null });
     expect(refreshed).toEqual([]);
+  });
+});
+
+describe('an exempt page (/signin) still drops the unlock (section 7.6, CS-2, CS-14)', () => {
+  let mounted: ReactTestRenderer | null = null;
+  afterEach(() => {
+    act(() => mounted?.unmount());
+    mounted = null;
+  });
+
+  function visibility(h: Harness, state: DocumentVisibilityState): void {
+    (h.env.document as unknown as { visibilityState: DocumentVisibilityState }).visibilityState = state;
+    (h.env.document as EventTarget).dispatchEvent(new Event('visibilitychange'));
+  }
+
+  it('the hr-grownup lock message drops a fresh PIN unlock carried into the sign-in, and the page renders as it was', async () => {
+    const h = oaHarness();
+    h.unlock.value = PIN_UNLOCK;
+    await act(async () => {
+      mounted = create(
+        <GrownUpLock pathname="/signin" exempt onSignInAgain={() => undefined} environment={h.env}>
+          <p data-testid="signin-page">sign in</p>
+        </GrownUpLock>,
+      );
+      await flush();
+    });
+    expect(h.listening()).toBe(true);
+    h.post({ kind: 'open' });
+    expect(h.unlock.value).toEqual(PIN_UNLOCK);
+    h.post({ v: 1, kind: 'lock' });
+    expect(h.unlock.value).toBeNull();
+    expect(mounted?.root.findAll((n) => n.props['data-testid'] === 'signin-page')).toHaveLength(1);
+    act(() => mounted?.unmount());
+    mounted = null;
+    expect(h.listening()).toBe(false);
+  });
+
+  it('5 minutes hidden drops it when shown again; less keeps it', () => {
+    const kept = oaHarness();
+    kept.unlock.value = PIN_UNLOCK;
+    const stopKept = startExemptGuard(kept.env);
+    visibility(kept, 'hidden');
+    kept.clock.now += GROWN_UP_BACKGROUND_MS - 1;
+    visibility(kept, 'visible');
+    expect(kept.unlock.value).toEqual(PIN_UNLOCK);
+    stopKept();
+
+    const dropped = oaHarness();
+    dropped.unlock.value = PIN_UNLOCK;
+    const stop = startExemptGuard(dropped.env);
+    visibility(dropped, 'hidden');
+    dropped.clock.now += GROWN_UP_BACKGROUND_MS;
+    visibility(dropped, 'visible');
+    expect(dropped.unlock.value).toBeNull();
+    stop();
+    // Stopped: a later message changes nothing.
+    dropped.unlock.value = PIN_UNLOCK;
+    dropped.post({ v: 1, kind: 'lock' });
+    expect(dropped.unlock.value).toEqual(PIN_UNLOCK);
   });
 });

@@ -2237,6 +2237,8 @@ export const consoleMsgs = {
    */
   pinOwner: {
     cta: 'Let this account reset the PIN here',
+    /** [OA] Section 7.2 moment 3 (OA-0b): closes the card for this unlock in this tab; the words of `transfer.consent.notNow.cta`. */
+    notNow: 'Not now',
     hint: 'If the grown-up PIN is forgotten, signing in to this account can set a new one on this device.',
     done: 'Done. This account can reset the PIN here.',
   },

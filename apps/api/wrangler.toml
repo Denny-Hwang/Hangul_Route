@@ -105,6 +105,9 @@ keep_vars = true
 #                                    any other value) is the kill switch: no counter writes, and the
 #                                    telemetry route reads nothing for them; events are still accepted.
 #                                    The daily purge keeps removing rows older than 400 days either way.
+#                                    Writes are bounded per isolate only (600 rows a minute, 5,000 a UTC
+#                                    day): on a D1 write-quota alert, set "disabled" first, so sync,
+#                                    sign-up and billing keep their share of the quota.
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db

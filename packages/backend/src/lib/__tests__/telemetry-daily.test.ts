@@ -4,7 +4,7 @@ import { MemoryDb, type Db } from '../../db';
 import { OA_PAYLOAD_RULES } from '../server-events';
 import {
   TELEMETRY_DAILY_PURGE_LIMIT,
-  TELEMETRY_DAILY_FLUSH_MS,
+  TELEMETRY_DAILY_WINDOW_MS,
   TELEMETRY_DAILY_WRITES_PER_DAY,
   TELEMETRY_DAILY_WRITES_PER_MIN,
   countTelemetryDaily,
@@ -64,28 +64,38 @@ describe('utcDay', () => {
 
 describe('countTelemetryDaily', () => {
   const event = { name: 'who.picked', payload: { kind: 'learner' }, at: '2026-10-21T08:00:00.000Z' };
-  const MIN = TELEMETRY_DAILY_FLUSH_MS;
+  const MIN = TELEMETRY_DAILY_WINDOW_MS;
 
-  it('sums counts in memory and writes them at most once a minute, by day, name and dims', async () => {
-    expect(TELEMETRY_DAILY_FLUSH_MS).toBe(60_000);
+  it('writes each count through at once, by day, name and dims', async () => {
+    expect(TELEMETRY_DAILY_WINDOW_MS).toBe(60_000);
     const db = new MemoryDb();
     const add = vi.spyOn(db, 'addTelemetryDaily');
-    // A fresh isolate writes its first count at once.
     expect(await countTelemetryDaily(() => db, undefined, event, NOW)).toBe(1);
-    expect(await countTelemetryDaily(() => db, undefined, event, NOW + 1_000)).toBe(0);
-    expect(await countTelemetryDaily(() => db, undefined, { ...event, payload: { kind: 'add' } }, NOW + 2_000)).toBe(0);
-    expect(await countTelemetryDaily(() => db, undefined, { name: 'session.start', payload: { a: 1 }, at: event.at }, NOW + 3_000)).toBe(0);
-    expect(add).toHaveBeenCalledTimes(1);
-    expect(await countTelemetryDaily(() => db, undefined, event, NOW + MIN)).toBe(3);
-    expect(add).toHaveBeenCalledTimes(2);
+    expect(await countTelemetryDaily(() => db, undefined, event, NOW + 1_000)).toBe(1);
+    expect(await countTelemetryDaily(() => db, undefined, { ...event, payload: { kind: 'add' } }, NOW + 2_000)).toBe(1);
+    expect(await countTelemetryDaily(() => db, undefined, { name: 'session.start', payload: { a: 1 }, at: event.at }, NOW + 3_000)).toBe(1);
+    expect(add).toHaveBeenCalledTimes(4);
     expect(await db.telemetryDailyOf('2026-10-21')).toEqual([
       { day: '2026-10-21', name: 'session.start', dims: '', n: 1 },
       { day: '2026-10-21', name: 'who.picked', dims: '{"kind":"add"}', n: 1 },
-      { day: '2026-10-21', name: 'who.picked', dims: '{"kind":"learner"}', n: 3 },
+      { day: '2026-10-21', name: 'who.picked', dims: '{"kind":"learner"}', n: 2 },
     ]);
-    // Nothing held: a due flush asks nothing of the Db.
+    // Nothing held: a flush asks nothing of the Db.
     expect(await flushTelemetryDaily(() => db, NOW + 10 * MIN)).toBe(0);
-    expect(add).toHaveBeenCalledTimes(2);
+    expect(add).toHaveBeenCalledTimes(4);
+  });
+
+  it('a short burst in a fresh isolate that then ends loses nothing: who.shown and the who.picked after it both land', async () => {
+    const db = new MemoryDb();
+    await countTelemetryDaily(() => db, undefined, { name: 'who.shown', payload: { trigger: 'launch' }, at: event.at }, NOW);
+    await countTelemetryDaily(() => db, undefined, { name: 'who.picked', payload: { kind: 'learner' }, at: event.at }, NOW + 2_000);
+    // No later request: the isolate is evicted here. Everything it counted is already written.
+    expect(await db.telemetryDailyOf('2026-10-21')).toEqual([
+      { day: '2026-10-21', name: 'who.picked', dims: '{"kind":"learner"}', n: 1 },
+      { day: '2026-10-21', name: 'who.shown', dims: '{"trigger":"launch"}', n: 1 },
+    ]);
+    resetTelemetryDailyBudgetForTests();
+    expect(await flushTelemetryDaily(() => db, NOW + 3_000)).toBe(0);
   });
 
   it('counts nothing when off, for a name that is not counted, or for a new row past the 600 held', async () => {
@@ -104,18 +114,59 @@ describe('countTelemetryDaily', () => {
     expect(rows.some((r) => r.dims === '{"kind":"learner"}')).toBe(false);
   });
 
-  it('a flood of 10,000 events with new dims writes at most 600 rows a flush and 5,000 a UTC day', async () => {
+  it('past the minute window\'s 600 rows, counts are held and summed, and written when the next window opens', async () => {
+    const db = new MemoryDb();
+    const add = vi.spyOn(db, 'addTelemetryDaily');
+    for (let i = 0; i < TELEMETRY_DAILY_WRITES_PER_MIN; i += 1) await countTelemetryDaily(() => db, undefined, { ...event, payload: { i } }, NOW + i);
+    expect(add).toHaveBeenCalledTimes(TELEMETRY_DAILY_WRITES_PER_MIN);
+    // The window is spent: these are held (the second adds to the first), and nothing is asked of the Db.
+    expect(await countTelemetryDaily(() => db, undefined, { ...event, payload: { held: 1 } }, NOW + 1_000)).toBe(0);
+    expect(await countTelemetryDaily(() => db, undefined, { ...event, payload: { held: 1 } }, NOW + 2_000)).toBe(0);
+    expect(await countTelemetryDaily(() => db, undefined, { ...event, payload: { held: 2 } }, NOW + MIN - 1)).toBe(0);
+    expect(add).toHaveBeenCalledTimes(TELEMETRY_DAILY_WRITES_PER_MIN);
+    // The next window: the held rows and the new count go in one write.
+    expect(await countTelemetryDaily(() => db, undefined, event, NOW + MIN)).toBe(3);
+    expect(add).toHaveBeenCalledTimes(TELEMETRY_DAILY_WRITES_PER_MIN + 1);
+    const rows = await db.telemetryDailyOf('2026-10-21');
+    expect(rows.find((r) => r.dims === '{"held":1}')?.n).toBe(2);
+    expect(rows.find((r) => r.dims === '{"held":2}')?.n).toBe(1);
+    expect(rows.find((r) => r.dims === '{"kind":"learner"}')?.n).toBe(1);
+  });
+
+  it('a flood of 10,000 events with new dims writes at most 600 rows a minute and 5,000 a UTC day', async () => {
     expect(TELEMETRY_DAILY_WRITES_PER_DAY).toBe(5_000);
     const db = new MemoryDb();
     const add = vi.spyOn(db, 'addTelemetryDaily');
-    // 10,000 events in 10 minutes, then a quiet hour of single events: 20,000 rows were asked for.
-    for (let i = 0; i < 10_000; i += 1) await countTelemetryDaily(() => db, undefined, { ...event, payload: { i } }, NOW + Math.floor(i / 1_000) * MIN);
-    for (let m = 10; m < 70; m += 1) await countTelemetryDaily(() => db, undefined, { ...event, payload: { m } }, NOW + m * MIN);
-    const written = add.mock.calls.map(([rows]) => rows.length);
-    expect(Math.max(...written)).toBeLessThanOrEqual(TELEMETRY_DAILY_WRITES_PER_MIN);
-    expect(written.reduce((a, b) => a + b, 0)).toBe(TELEMETRY_DAILY_WRITES_PER_DAY);
-    // The first count at once, then one full flush a minute; the last one takes only what the day's budget has left.
-    expect(written).toEqual([1, ...Array<number>(8).fill(600), 199]);
+    const writtenAt: Array<[number, number]> = [];
+    let clock = 0;
+    add.mockImplementation(async (rows) => {
+      writtenAt.push([clock, rows.length]);
+      await MemoryDb.prototype.addTelemetryDaily.call(db, rows);
+    });
+    // 10,000 events over 10 minutes, then one event a minute for an hour: 10,060 rows were asked for.
+    for (let i = 0; i < 10_000; i += 1) {
+      clock = NOW + Math.floor(i * (10 * MIN / 10_000));
+      await countTelemetryDaily(() => db, undefined, { ...event, payload: { i } }, clock);
+    }
+    for (let m = 10; m < 70; m += 1) {
+      clock = NOW + m * MIN;
+      await countTelemetryDaily(() => db, undefined, { ...event, payload: { m } }, clock);
+    }
+    const total = writtenAt.reduce((a, [, n]) => a + n, 0);
+    expect(total).toBe(TELEMETRY_DAILY_WRITES_PER_DAY);
+    // Each one-minute window (opened by the first write a minute or more after the last window opened) holds at
+    // most 600 written rows, and the flood spends the day's budget in about nine windows, not at once.
+    const windows: number[] = [];
+    let opened = Number.NEGATIVE_INFINITY;
+    for (const [t, n] of writtenAt) {
+      if (t - opened >= MIN) {
+        opened = t;
+        windows.push(0);
+      }
+      windows[windows.length - 1] += n;
+    }
+    expect(Math.max(...windows)).toBeLessThanOrEqual(TELEMETRY_DAILY_WRITES_PER_MIN);
+    expect(windows.length).toBeGreaterThanOrEqual(Math.ceil(TELEMETRY_DAILY_WRITES_PER_DAY / TELEMETRY_DAILY_WRITES_PER_MIN));
     // Held counts wait for the next UTC day's budget and keep their own day.
     const tomorrow = Date.parse('2026-10-22T00:00:30.000Z');
     expect(await flushTelemetryDaily(() => db, tomorrow)).toBe(600);

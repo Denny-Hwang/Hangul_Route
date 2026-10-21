@@ -10,7 +10,7 @@ import { freshPinUnlock, pinOwnerFingerprint, pinOwnerOffer, pinOwnerRecord, pin
 import { rem } from '@/lib/console/rem';
 import { readPinOwner, readPinPromptSeen, writePinOwner, writePinPromptSeen } from '@/lib/console/shell-store';
 import { withTimeout } from '@/lib/console/signin-flow';
-import { clearGrownUpTab, readUnlock } from '@/lib/console/unlock';
+import { clearGrownUpTab, readPinOwnerOfferClosed, readUnlock, writePinOwnerOfferClosed } from '@/lib/console/unlock';
 import { useMessages } from '@/lib/i18n/locale-context';
 import type { SecretReverify } from './auth-context';
 
@@ -26,13 +26,18 @@ import type { SecretReverify } from './auth-context';
  *   the Learner app exit (`clearGrownUpTab()`, so Back never reopens them) and goes to the learner app's PIN gate with
  *   this home as `next` (`/?gate=grown-up&next=…`), which runs PIN setup on a `nopin` device.
  * - **Let this account reset the PIN here** (section 7.2 moment 3): only while the tab's `pin` unlock is under 2
- *   minutes old for the marker's real epoch and this account is not the owner of that epoch. It names the signed-in
- *   account (`adminInvite.signedInAs`, on screen only), so a grown-up handed off to the wrong account sees it. Clerk
+ *   minutes old for the marker's real epoch, this account is not the owner of that epoch, the account holds no passkey
+ *   (`offerAllowed`: Clerk does not name the factor its reverification used, so an account with a passkey is never
+ *   offered a step that could be a passkey; it becomes the owner by moment 1, a password or a code right after the
+ *   PIN), and the card was not closed for this unlock in this tab. It names the signed-in account
+ *   (`adminInvite.signedInAs`, on screen only), so a grown-up handed off to the wrong account sees it. Clerk
  *   reverification with a password or a code (`reverifySecret`); the fresh PIN unlock is checked again when the button
  *   is pressed and when the reverification completes, and a lapsed one writes nothing and removes the card. Success
  *   writes `pinOwner` and shows the done status until the page is left. A cancel returns to the offer while the window
- *   lasts; a refusal shows the calm "Can't confirm right now" line of the step-up dialog. One status region stays
- *   mounted, so the done and refusal lines are announced.
+ *   lasts; an unavailable Clerk shows the calm "Can't confirm right now" line of the step-up dialog; a refusal (a
+ *   passkey showed up, the account could not be read) closes the card. **Not now** (a quiet button), and the first
+ *   navigation away from the persona home, close it for this unlock in this tab (`pinOwnerOfferClosed`, the unlock's
+ *   time only). One status region stays mounted, so the done and unavailable lines are announced.
  *
  * No id and no number is shown; nothing is sent anywhere.
  */
@@ -54,6 +59,9 @@ export interface PinCardsEnvironment {
   origin: () => string;
   /** Calls `onSeen` once the element has been in view in a visible tab; returns the way to stop. */
   observeSeen: (element: Element, onSeen: () => void) => () => void;
+  /** The unlock time the PIN-owner card was closed for in this tab (Not now, or leaving the persona home). */
+  readOfferClosed: () => number | null;
+  writeOfferClosed: (at: number) => void;
 }
 
 /** How long a card's reads may take before the home renders without it. */
@@ -81,6 +89,8 @@ export function browserPinCardsEnvironment(): PinCardsEnvironment {
     clearGrownUpTab: () => clearGrownUpTab(),
     origin: () => window.location.origin,
     observeSeen: observeSeenInView,
+    readOfferClosed: () => readPinOwnerOfferClosed(),
+    writeOfferClosed: (at) => writePinOwnerOfferClosed(at),
   };
 }
 
@@ -132,6 +142,24 @@ const cardStyle: CSSProperties = {
 
 const lineStyle: CSSProperties = { margin: 0, fontSize: rem(typography.size.body), lineHeight: typography.leading.relaxed, color: colors.text.primary };
 
+/** The lock's quiet style (Not now). */
+const quietStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: touchTarget.min,
+  maxWidth: '100%',
+  boxSizing: 'border-box',
+  padding: `${spacing.sm}px ${spacing.sm}px`,
+  border: 'none',
+  backgroundColor: 'transparent',
+  color: colors.text.secondary,
+  fontSize: rem(typography.size.body),
+  fontWeight: typography.weight.bold,
+  lineHeight: typography.leading.tight,
+  textAlign: 'left',
+  cursor: 'pointer',
+};
+
 const buttonStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -176,6 +204,8 @@ export interface PinCardsProps {
   home: string;
   /** Moment 3's reverification (`useConsoleAuth().reverifySecret`). */
   reverifySecret: () => Promise<SecretReverify>;
+  /** Whether that reverification can complete for this account (`useConsoleAuth().secretReverifyReady`: no passkey on it). */
+  offerAllowed: boolean;
   env?: PinCardsEnvironment;
 }
 
@@ -190,7 +220,7 @@ function SeenMarker({ target, observe, onSeen }: { target: RefObject<HTMLElement
   return null;
 }
 
-export function PinCards({ accountId, accountLabel = null, home, reverifySecret, env }: PinCardsProps): JSX.Element | null {
+export function PinCards({ accountId, accountLabel = null, home, reverifySecret, offerAllowed, env }: PinCardsProps): JSX.Element | null {
   const m = useMessages().console;
   const [browser] = useState<PinCardsEnvironment>(() => env ?? browserPinCardsEnvironment());
   const [card, setCard] = useState<Card>({ kind: 'none' });
@@ -200,6 +230,34 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
   const markedRef = useRef(false);
   /** The `pin` unlock the offer was made for (its `at`), or null once it has lapsed. */
   const unlockAtRef = useRef<number | null>(null);
+  /** The offer is on screen (not yet done, lapsed or closed): leaving the persona home closes it. */
+  const offerLiveRef = useRef(false);
+  const offerAllowedRef = useRef(offerAllowed);
+  offerAllowedRef.current = offerAllowed;
+
+  /** Section 7.2 moment 3: Not now, a refusal, or the first navigation away close the card for this unlock in this tab. */
+  const closeOffer = (): void => {
+    const at = unlockAtRef.current;
+    offerLiveRef.current = false;
+    unlockAtRef.current = null;
+    expiryRef.current?.();
+    expiryRef.current = null;
+    if (at !== null) {
+      try {
+        browser.writeOfferClosed(at);
+      } catch {
+        // Storage refused: the card still goes for this page.
+      }
+    }
+    setCard({ kind: 'none' });
+  };
+  const readClosed = (): number | null => {
+    try {
+      return browser.readOfferClosed();
+    } catch {
+      return null;
+    }
+  };
 
   const markSeen = (): void => {
     if (markedRef.current) return;
@@ -217,6 +275,7 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
     expiryRef.current = browser.setTimer(
       () => {
         unlockAtRef.current = null;
+        offerLiveRef.current = false;
         setCard((current) => (current.kind === 'offer' && !current.busy ? { kind: 'none' } : current));
       },
       Math.max(0, at + GROWN_UP_FRESH_PIN_MS - browser.now()),
@@ -227,6 +286,7 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
     const at = unlockAtRef.current;
     if (at === null || !stillFresh(epoch)) {
       unlockAtRef.current = null;
+      offerLiveRef.current = false;
       setCard({ kind: 'none' });
       return;
     }
@@ -250,7 +310,10 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
       const unlock = browser.readUnlock();
       const epoch = pinOwnerOffer({ unlock, device, stored, owner, now });
       if (epoch === null || !unlock) return;
+      // An account with a passkey is never offered it; Not now or an earlier visit closed it for this unlock.
+      if (!offerAllowedRef.current || readClosed() === unlock.at) return;
       unlockAtRef.current = unlock.at;
+      offerLiveRef.current = true;
       setCard({ kind: 'offer', epoch, busy: false, line: null });
       armExpiry(unlock.at);
     })();
@@ -258,6 +321,16 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
       live = false;
       expiryRef.current?.();
       expiryRef.current = null;
+      // Leaving the persona home (or signing in as another account) closes a live offer for this unlock in this tab.
+      const at = unlockAtRef.current;
+      if (offerLiveRef.current && at !== null) {
+        offerLiveRef.current = false;
+        try {
+          browser.writeOfferClosed(at);
+        } catch {
+          // Storage refused: nothing else to do.
+        }
+      }
     };
   }, [accountId, browser]);
 
@@ -266,6 +339,7 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
     // The window is checked again at the press: a card left up past it asks nothing and goes.
     if (!stillFresh(epoch)) {
       unlockAtRef.current = null;
+      offerLiveRef.current = false;
       setCard({ kind: 'none' });
       return;
     }
@@ -281,6 +355,11 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
         backToOffer(epoch, null);
         return;
       }
+      // A refusal (a passkey showed up, the account could not be read) would refuse every retry: the card closes.
+      if (outcome === 'refused') {
+        closeOffer();
+        return;
+      }
       if (outcome !== 'done') {
         backToOffer(epoch, 'unavailable');
         return;
@@ -289,6 +368,7 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
       // lapsed one writes nothing and removes the card.
       if (!stillFresh(epoch)) {
         unlockAtRef.current = null;
+        offerLiveRef.current = false;
         setCard({ kind: 'none' });
         return;
       }
@@ -299,6 +379,7 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
       if (written) {
         expiryRef.current?.();
         expiryRef.current = null;
+        offerLiveRef.current = false;
         setCard({ kind: 'done' });
       } else backToOffer(epoch, 'unavailable');
     })();
@@ -327,7 +408,11 @@ export function PinCards({ accountId, accountLabel = null, home, reverifySecret,
       </section>
     );
   }
-  return <OwnerCardView card={card} label={accountLabel} onConfirm={confirm} />;
+  const notNow = (): void => {
+    if (card.kind !== 'offer' || card.busy) return;
+    closeOffer();
+  };
+  return <OwnerCardView card={card} label={accountLabel} onConfirm={confirm} onNotNow={notNow} />;
 }
 
 const doneStyle: CSSProperties = {
@@ -345,21 +430,27 @@ const doneStyle: CSSProperties = {
 };
 
 /** Boards 9 to 12: the offer, busy while Clerk asks, then the done status inside the same card until the page is left. */
-function OwnerCardView({ card, label, onConfirm }: { card: OwnerCard; label: string | null; onConfirm: (epoch: number) => void }): JSX.Element {
+function OwnerCardView({ card, label, onConfirm, onNotNow }: { card: OwnerCard; label: string | null; onConfirm: (epoch: number) => void; onNotNow: () => void }): JSX.Element {
   const m = useMessages().console;
   const offer = card.kind === 'offer' ? card : null;
   return (
     <section style={cardStyle} data-testid="pin-owner-card" data-state={card.kind}>
+      {/* Design D13 (console-pin.md boards 10 to 12): the hint, then the signed-in account, then the action and Not now. */}
+      {offer ? <p style={lineStyle}>{m.pinOwner.hint}</p> : null}
       {offer && label ? (
-        <p style={{ ...lineStyle, color: colors.text.secondary }} data-testid="pin-owner-account">
+        <p style={{ ...lineStyle, fontWeight: typography.weight.semibold }} data-testid="pin-owner-account">
           {m.adminInvite.signedInAs(label)}
         </p>
       ) : null}
-      {offer ? <p style={lineStyle}>{m.pinOwner.hint}</p> : null}
       {offer ? (
         <CardButton onClick={() => onConfirm(offer.epoch)} busy={offer.busy} testId="pin-owner-cta">
           {m.pinOwner.cta}
         </CardButton>
+      ) : null}
+      {offer ? (
+        <button type="button" onClick={onNotNow} aria-disabled={offer.busy || undefined} data-testid="pin-owner-not-now" style={{ ...quietStyle, ...(offer.busy ? { cursor: 'progress' } : {}) }}>
+          {m.pinOwner.notNow}
+        </button>
       ) : null}
       {/* One region, always mounted, so a screen reader announces the line that appears in it. */}
       <div role="status" data-testid="pin-owner-status" style={{ alignSelf: 'stretch' }}>

@@ -20,9 +20,9 @@ import { id, type TelemetryEvent } from '../store';
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
  * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS (and `session.start`) is also counted in the
- * anonymous `telemetry_daily` table (section 15.1, lib/telemetry-daily.ts): summed in the isolate and written at
- * most once a minute within per-isolate bounds, best effort, after the response is decided, never failing this
- * route and never retried.
+ * anonymous `telemetry_daily` table (section 15.1, lib/telemetry-daily.ts): written through within per-isolate
+ * bounds (held and summed only past them), best effort, after the response is decided, never failing this route
+ * and never retried.
  * There is deliberately no read route (audit SEC-3).
  */
 export const telemetryRoutes = new Hono();

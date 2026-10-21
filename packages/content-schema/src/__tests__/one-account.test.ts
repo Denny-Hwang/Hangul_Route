@@ -19,6 +19,7 @@ import {
   PIN_STRIKE_DECAY_MS,
   PROFILES_CHANNEL,
   PROFILE_LOCKS_KEY,
+  PROFILE_LOCKS_MAX_IDS,
   PinOwnerSchema,
   PinPromptSeenSchema,
   PinResetTicketSchema,
@@ -180,8 +181,12 @@ describe('device records (sections 7.1, 7.2, 7.6, 8.5, 13.1)', () => {
     expect(ProfileLocksSchema.parse({ v: 1, ids: ['profile:a', 'profile:b-2', 'profile:a'] }).ids).toEqual(['profile:a', 'profile:b-2']);
     // A malformed id can never match a profile: dropped, and the other locks still hold.
     expect(ProfileLocksSchema.parse({ v: 1, ids: ['Mina', '', 'profile:a'] }).ids).toEqual(['profile:a']);
-    for (const junk of [{ v: 1 }, { v: 1, ids: [7] }, { v: 1, ids: ['profile:a', null] }, { v: 1, ids: 'profile:a' }, { v: 2, ids: [] }, null]) {
-      expect(ProfileLocksSchema.safeParse(junk).success, JSON.stringify(junk)).toBe(false);
+    // At most 200 ids: a longer record (corrupted or hostile) is a failed read, refused before any id is checked.
+    expect(PROFILE_LOCKS_MAX_IDS).toBe(200);
+    const many = (count: number) => Array.from({ length: count }, (_, i) => `profile:p${i}`);
+    expect(ProfileLocksSchema.parse({ v: 1, ids: many(PROFILE_LOCKS_MAX_IDS) }).ids).toHaveLength(PROFILE_LOCKS_MAX_IDS);
+    for (const junk of [{ v: 1 }, { v: 1, ids: [7] }, { v: 1, ids: ['profile:a', null] }, { v: 1, ids: 'profile:a' }, { v: 2, ids: [] }, null, { v: 1, ids: many(PROFILE_LOCKS_MAX_IDS + 1) }]) {
+      expect(ProfileLocksSchema.safeParse(junk).success, JSON.stringify(junk).slice(0, 60)).toBe(false);
     }
   });
 
@@ -261,7 +266,10 @@ describe('telemetry (section 15)', () => {
   it('lists every section 15 name in the shared list, the new ones appended', () => {
     for (const name of OA_NAMES) expect(isTelemetryEventName(name), name).toBe(true);
     expect(Object.keys(OA_TELEMETRY_PAYLOADS)).toEqual([...OA_NAMES]);
-    expect(TELEMETRY_EVENT_NAMES.slice(-7)).toEqual(['who.shown', 'who.picked', 'pin.paused', 'pin.biometric_changed', 'profile.lock_changed', 'profile.removed', 'space.join.batch']);
+    // Appended together, in this order; other rows may append after them (the list is append-only).
+    const at = TELEMETRY_EVENT_NAMES.indexOf('who.shown');
+    expect(at).toBeGreaterThan(0);
+    expect(TELEMETRY_EVENT_NAMES.slice(at, at + 7)).toEqual(['who.shown', 'who.picked', 'pin.paused', 'pin.biometric_changed', 'profile.lock_changed', 'profile.removed', 'space.join.batch']);
   });
 
   it('every payload schema takes its documented example and refuses a profile id, an extra key or an off-list value', () => {

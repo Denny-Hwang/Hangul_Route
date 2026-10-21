@@ -347,6 +347,45 @@ export function createGrownUpLockController(options: {
   };
 }
 
+/**
+ * [OA] Section 7.6 (CS-2, CS-14) on an exempt page (`/signin`), where no lock controller runs: the tab still drops its
+ * unlock on the `hr-grownup` lock message and after 5 minutes hidden (wall clock), so a fresh PIN unlock carried into
+ * the sign-in (moment 1 of section 7.2) cannot outlive the chooser opening in another tab or a long absence. It decides
+ * nothing and covers nothing; the page it returns to decides as usual. Returns the way to stop.
+ */
+export function startExemptGuard(env: GrownUpLockEnvironment): () => void {
+  let stopped = false;
+  let hiddenAt: number | null = env.document?.visibilityState === 'hidden' ? env.now() : null;
+  const drop = (): void => {
+    try {
+      (env.clearUnlock ?? env.clearGrownUpTab)();
+    } catch {
+      // Storage refused: nothing else to drop.
+    }
+  };
+  const onVisibility = (): void => {
+    const visibility = env.document?.visibilityState;
+    if (visibility === 'hidden') {
+      hiddenAt = env.now();
+      return;
+    }
+    if (visibility !== 'visible') return;
+    const dropped = hiddenTooLong(hiddenAt, env.now());
+    hiddenAt = null;
+    if (dropped) drop();
+  };
+  env.document?.addEventListener('visibilitychange', onVisibility);
+  const stopChannel =
+    env.listenLock?.((data) => {
+      if (!stopped && isGrownUpLockMessage(data)) drop();
+    }) ?? null;
+  return () => {
+    stopped = true;
+    env.document?.removeEventListener('visibilitychange', onVisibility);
+    stopChannel?.();
+  };
+}
+
 type LockedDecision = Extract<LockDecision, { state: 'locked' }>;
 
 export type LockView = { kind: 'pending' } | { kind: 'open'; hidden: boolean } | { kind: 'locked'; decision: LockedDecision; device?: DeviceGateRead };
@@ -451,7 +490,8 @@ export function GrownUpLock({ children, pathname, search = '', exempt = false, o
   const envOf = (): GrownUpLockEnvironment => (envRef.current ??= browserLockEnvironment());
 
   useEffect(() => {
-    if (exempt) return undefined;
+    // [OA] An exempt page still drops the unlock on the lock message and after 5 minutes hidden (section 7.6).
+    if (exempt) return startExemptGuard(envOf());
     const controller = createGrownUpLockController({
       env: envOf(),
       getPath: () => pathRef.current,

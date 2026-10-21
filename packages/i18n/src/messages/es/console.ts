@@ -1183,7 +1183,7 @@ export const consoleMsgs = {
     noPin: 'Crea un PIN de adultos en la app, o vuelve a iniciar sesión.',
     pinRenew: 'Para usar aquí el PIN de adultos, créalo otra vez en la app y luego inicia sesión una vez.',
     signInOnly: 'Vuelve a iniciar sesión para abrir aquí las páginas para adultos.',
-    passkey: { cta: 'Usar una llave de acceso' },
+    passkey: { cta: 'Usar llave de acceso' },
   },
   access: {
     product: {
@@ -1807,6 +1807,7 @@ export const consoleMsgs = {
   },
   pinOwner: {
     cta: 'Permitir que esta cuenta restablezca el PIN aquí',
+    notNow: 'Ahora no',
     hint: 'Si se olvida el PIN de adultos, entrar a esta cuenta permite crear uno nuevo en este dispositivo.',
     done: 'Listo. Esta cuenta puede restablecer el PIN aquí.',
   },

@@ -174,15 +174,20 @@ export function deviceCanLock(device: DeviceGateRead): boolean {
 
 export type AfterSignIn = 'unlock' | 'reverify' | 'none';
 
-/** [OA] The browser's marker is `pin`, or its read failed (it may be one). */
-function mayBePinBrowser(device: DeviceGateRead): boolean {
-  return device.readable ? device.marker?.gate === 'pin' : device.reason === 'failed';
+/**
+ * [OA] The browser may be a `pin` browser (section 7.4, CS-17): its marker is `pin`, its read failed, or it holds learner
+ * profiles with no marker (a learner app older than A-6, which may hold a PIN). The same states hide the lock's Use a
+ * passkey (`passkeyButtonShown`), so the button and the sign-in rule fail closed together.
+ */
+export function mayBePinBrowser(device: DeviceGateRead): boolean {
+  if (!device.readable) return device.reason === 'failed';
+  return device.marker?.gate === 'pin' || (device.marker === null && device.hasProfiles);
 }
 
 /**
  * [OA] Whether a secret sign-in counts as the grown-up unlock here (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4,
- * OA-D10, OQ-21, CS-17). On a browser whose marker is `pin`, or whose read failed (it may be one), a passkey does not
- * count: a platform authenticator may fall back to the device passcode, in a child's reach; the sign-in completes and
+ * OA-D10, OQ-21, CS-17). On a browser that may be a `pin` browser (`mayBePinBrowser`: the marker is `pin`, the read
+ * failed, or profiles with no marker), a passkey does not count: a platform authenticator may fall back to the device passcode, in a child's reach; the sign-in completes and
  * the lock asks for the PIN or another factor. There only a factor Clerk named as a password or a code counts: an
  * absent or unknown factor (a record from an earlier build, a factor this bundle does not know) fails closed. On the
  * reset leg (`next` = `/account/pin-reset`) only a password, a code or a Clerk password-reset code counts, on every
@@ -216,7 +221,7 @@ export function planAfterSignIn(input: { record: SignInRecord | null; sessionId:
     const resetLeg = isResetLeg(input.next);
     if (isSecretProvingSignIn({ factor: record.factor, device, resetLeg })) return 'unlock';
     if (resetLeg || record.factor === 'passkey') return 'none';
-    // Only a `pin` browser or a failed read gets here, and the lock can close on both.
+    // Only a browser that may be a `pin` one gets here, and the lock can close on each of them.
     return 'reverify';
   }
   return deviceCanLock(device) ? 'reverify' : 'none';

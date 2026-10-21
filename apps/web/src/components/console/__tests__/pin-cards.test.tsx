@@ -47,16 +47,20 @@ interface Fake extends PinCardsEnvironment {
   unlock: { value: GrownUpUnlock | null };
   /** The `observeSeen` callbacks the cards registered (the card in view in a visible tab). */
   seenBy: Array<() => void>;
+  /** The unlock times the PIN-owner card was closed for (`pinOwnerOfferClosed`). */
+  closed: number[];
 }
 
-function fake(over: { device?: DeviceGateRead; unlock?: GrownUpUnlock | null; stored?: PinOwner | null; seen?: boolean | null; write?: boolean; origin?: string } = {}): Fake {
+function fake(over: { device?: DeviceGateRead; unlock?: GrownUpUnlock | null; stored?: PinOwner | null; seen?: boolean | null; write?: boolean; origin?: string; closed?: number[] } = {}): Fake {
   const log: string[] = [];
   const device = { value: over.device ?? PIN };
   const timers: Fake['timers'] = [];
   const clock = { now: NOW };
   const unlock = { value: over.unlock === undefined ? FRESH : over.unlock };
   const seenBy: Array<() => void> = [];
+  const closed = over.closed ?? [];
   return {
+    closed,
     log,
     device,
     timers,
@@ -88,6 +92,10 @@ function fake(over: { device?: DeviceGateRead; unlock?: GrownUpUnlock | null; st
       seenBy.push(onSeen);
       return () => undefined;
     },
+    readOfferClosed: () => closed.at(-1) ?? null,
+    writeOfferClosed: (at) => {
+      closed.push(at);
+    },
   };
 }
 
@@ -95,9 +103,9 @@ const flush = async (): Promise<void> => {
   for (let i = 0; i < 8; i += 1) await Promise.resolve();
 };
 
-async function render(env: Fake, reverify: () => Promise<SecretReverify> = async () => 'done', accountId: string | null = 'user_1', label: string | null = null): Promise<ReactTestRenderer> {
+async function render(env: Fake, reverify: () => Promise<SecretReverify> = async () => 'done', accountId: string | null = 'user_1', label: string | null = null, offerAllowed = true): Promise<ReactTestRenderer> {
   await act(async () => {
-    mounted = create(<PinCards accountId={accountId} accountLabel={label} home="/parent" reverifySecret={reverify} env={env} />, {
+    mounted = create(<PinCards accountId={accountId} accountLabel={label} home="/parent" reverifySecret={reverify} offerAllowed={offerAllowed} env={env} />, {
       createNodeMock: () => ({}),
     });
     await flush();
@@ -319,19 +327,115 @@ describe('the PIN-owner card (section 7.2 moment 3, D13)', () => {
     expect(env.log).toEqual([]);
   });
 
-  it('a refused (passkey) or unavailable reverification writes nothing and says it cannot confirm', async () => {
-    for (const outcome of ['refused', 'unavailable'] as const) {
-      const env = fake();
-      const r = await render(env, async () => outcome);
-      await act(async () => {
-        byTestId(r, 'pin-owner-cta')[0]?.props.onClick();
-        await flush();
-      });
-      expect(env.log).toEqual([]);
-      expect(textOf(byTestId(r, 'pin-owner-line')[0] as ReactTestInstance)).toBe(en.billing.stepUp.unavailable);
-      act(() => mounted?.unmount());
-      mounted = null;
-    }
+  it('an unavailable reverification writes nothing and says it cannot confirm right now', async () => {
+    const env = fake();
+    const r = await render(env, async () => 'unavailable');
+    await act(async () => {
+      byTestId(r, 'pin-owner-cta')[0]?.props.onClick();
+      await flush();
+    });
+    expect(env.log).toEqual([]);
+    expect(textOf(byTestId(r, 'pin-owner-line')[0] as ReactTestInstance)).toBe(en.billing.stepUp.unavailable);
+  });
+
+  it('a refused reverification (a passkey showed up) writes no owner, asks for no retry and closes the card for this unlock', async () => {
+    const env = fake();
+    const r = await render(env, async () => 'refused');
+    await act(async () => {
+      byTestId(r, 'pin-owner-cta')[0]?.props.onClick();
+      await flush();
+    });
+    expect(env.log).toEqual([]);
+    expect(byTestId(r, 'pin-owner-card')).toHaveLength(0);
+    expect(env.closed).toEqual([FRESH.at]);
+  });
+
+  it('is never offered to an account whose reverification could be a passkey (offerAllowed false; CS-10, CS-17)', async () => {
+    const env = fake();
+    const r = await render(env, async () => 'done', 'user_1', 'sam@example.com', false);
+    expect(byTestId(r, 'pin-owner-card')).toHaveLength(0);
+    expect(env.log).toEqual([]);
+    act(() => mounted?.unmount());
+    mounted = null;
+    expect(env.closed).toEqual([]);
+  });
+
+  it('Not now, a quiet button, closes the card for this unlock in this tab and writes nothing else', async () => {
+    const env = fake();
+    let r = await render(env, undefined, 'user_1', 'sam@example.com');
+    const quiet = byTestId(r, 'pin-owner-not-now')[0] as ReactTestInstance;
+    expect(textOf(quiet)).toBe(en.pinOwner.notNow);
+    act(() => quiet.props.onClick());
+    expect(byTestId(r, 'pin-owner-card')).toHaveLength(0);
+    expect(env.closed).toEqual([FRESH.at]);
+    expect(env.log).toEqual([]);
+    expect(env.timers.every((timer) => timer.cleared)).toBe(true);
+    act(() => mounted?.unmount());
+    // A return to the persona home within the 2 minutes, with the same unlock: still closed.
+    r = await render(env);
+    expect(byTestId(r, 'pin-owner-card')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    // A later PIN unlock offers it again.
+    env.unlock.value = { ...FRESH, at: FRESH.at + 10_000, seen: FRESH.at + 10_000 };
+    r = await render(env);
+    expect(byTestId(r, 'pin-owner-card')).toHaveLength(1);
+  });
+
+  it('Not now does nothing while Clerk asks', async () => {
+    const env = fake();
+    let finish: (value: SecretReverify) => void = () => undefined;
+    const r = await render(env, () => new Promise<SecretReverify>((resolve) => (finish = resolve)));
+    await act(async () => {
+      byTestId(r, 'pin-owner-cta')[0]?.props.onClick();
+      await flush();
+    });
+    const quiet = byTestId(r, 'pin-owner-not-now')[0] as ReactTestInstance;
+    expect(quiet.props['aria-disabled']).toBe(true);
+    act(() => quiet.props.onClick());
+    expect(byTestId(r, 'pin-owner-card')).toHaveLength(1);
+    expect(env.closed).toEqual([]);
+    await act(async () => {
+      finish('cancelled');
+      await flush();
+    });
+  });
+
+  it('leaving the persona home closes a live offer for this unlock; leaving after done or with no offer writes nothing', async () => {
+    const live = fake();
+    await render(live);
+    act(() => mounted?.unmount());
+    mounted = null;
+    expect(live.closed).toEqual([FRESH.at]);
+
+    const done = fake();
+    const r = await render(done);
+    await act(async () => {
+      byTestId(r, 'pin-owner-cta')[0]?.props.onClick();
+      await flush();
+    });
+    expect(byTestId(r, 'pin-owner-done')).toHaveLength(1);
+    act(() => mounted?.unmount());
+    mounted = null;
+    expect(done.closed).toEqual([]);
+
+    const none = fake({ unlock: null });
+    await render(none);
+    act(() => mounted?.unmount());
+    mounted = null;
+    expect(none.closed).toEqual([]);
+  });
+
+  it('a storage that refuses the closed flag still closes the card on screen', async () => {
+    const env = fake();
+    env.writeOfferClosed = () => {
+      throw new Error('quota');
+    };
+    env.readOfferClosed = () => {
+      throw new Error('denied');
+    };
+    const r = await render(env);
+    act(() => byTestId(r, 'pin-owner-not-now')[0]?.props.onClick());
+    expect(byTestId(r, 'pin-owner-card')).toHaveLength(0);
   });
 
   it('a reverification that throws, a PIN changed meanwhile, or a refused write writes no done line', async () => {

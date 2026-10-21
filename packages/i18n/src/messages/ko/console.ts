@@ -1708,6 +1708,7 @@ export const consoleMsgs = {
   },
   pinOwner: {
     cta: '이 계정으로 여기서 PIN을 다시 만들 수 있게 하기',
+    notNow: '지금은 안 함',
     hint: '어른용 PIN을 잊으면 이 계정으로 로그인해서 이 기기에 새 PIN을 만들 수 있어요.',
     done: '됐어요. 이 계정으로 여기서 PIN을 다시 만들 수 있어요.',
   },
