@@ -1,4 +1,5 @@
-import type { HeritageCard } from '@hangul-route/content-schema';
+import type { HeritageCard, Story } from '@hangul-route/content-schema';
+import type { StoryStore } from '../logic/story/story-chunk-store';
 import { buildStoryCards, storyCardFor } from '../logic/awards/story-cards';
 import type { CardSet } from '../logic/awards/types';
 import { heldStoryCards, storiesAll, storyById, storyContent } from './stories';
@@ -24,14 +25,24 @@ const built = buildStoryCards(storiesAll, storySetDefs, heldStoryCards);
  */
 const BODY_FIELDS = ['blurbEn', 'factEn', 'factId', 'citation'] as const;
 
-function liveStoryCard(card: HeritageCard, held: ReadonlySet<string>): HeritageCard {
-  const story = card.storyId === undefined || held.has(card.id) ? undefined : storyById(card.storyId);
+/** What a live card reads: the story store and the stories over it. */
+export interface LiveStoryCardDeps {
+  store: Pick<StoryStore, 'version' | 'isStoryReady'>;
+  storyById: (id: string) => Story | undefined;
+}
+
+/**
+ * A card built at start (its back fields the placeholders of a cold store) whose blurb, fact, fact id and
+ * citation read the story's card again once its chunk is in. Held cards and set cards are returned as built.
+ */
+export function liveStoryCard(card: HeritageCard, held: ReadonlySet<string>, deps: LiveStoryCardDeps): HeritageCard {
+  const story = card.storyId === undefined || held.has(card.id) ? undefined : deps.storyById(card.storyId);
   if (story === undefined) return card;
   let cached: { version: number; card: HeritageCard } | null = null;
   const current = (): HeritageCard => {
-    const version = storyContent.version();
+    const version = deps.store.version();
     if (cached === null || cached.version !== version) {
-      cached = { version, card: storyContent.isStoryReady(story.id) ? (storyCardFor(story) ?? card) : card };
+      cached = { version, card: deps.store.isStoryReady(story.id) ? (storyCardFor(story) ?? card) : card };
     }
     return cached.card;
   };
@@ -44,7 +55,7 @@ function liveStoryCard(card: HeritageCard, held: ReadonlySet<string>): HeritageC
 
 const heldIds = new Set(built.heldCardIds);
 
-export const storyCards: readonly HeritageCard[] = built.cards.map((card) => liveStoryCard(card, heldIds));
+export const storyCards: readonly HeritageCard[] = built.cards.map((card) => liveStoryCard(card, heldIds, { store: storyContent, storyById }));
 export const storySets: readonly CardSet[] = built.sets;
 export const heldStoryCardIds: readonly string[] = built.heldCardIds;
 export const heldSetCardIds: readonly string[] = built.heldSetCardIds;
