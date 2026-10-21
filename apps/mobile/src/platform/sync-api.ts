@@ -4,7 +4,7 @@ import {
   InboxVisibleSpaceSchema,
   SyncInboxSchema,
   lenientArray,
-  withKnownReviews,
+  readSnapshotCopy,
   type DeviceTransferApproveBody,
   type DeviceTransferCreateBody,
   type DeviceTransferPreviewBody,
@@ -28,13 +28,14 @@ import { notifyInboxRead } from './inbox-events';
 
 /**
  * A snapshot the server sent (GET, a 409, a Rescue Code claim, a relink) is
- * not parsed, so its reviews go through the per-entry read first: an entry of
- * a kind this build does not know is dropped and the rest kept (F-CURR-002
- * section 4.8).
+ * not parsed, so it goes through the lenient read first (F-CURR-002 section
+ * 4.8): a review of a kind this build does not know is dropped and the rest
+ * kept, and each new snapshot field is read through its own schema, so a
+ * value a newer build widened never reaches this build's merge or storage.
  */
 function readServerCopy<T extends { snapshot: ProgressSnapshot } | null | undefined>(copy: T): T {
   if (!copy || typeof copy !== 'object' || !copy.snapshot) return copy;
-  const snapshot = withKnownReviews(copy.snapshot);
+  const snapshot = readSnapshotCopy(copy.snapshot);
   return snapshot === copy.snapshot ? copy : { ...copy, snapshot };
 }
 
@@ -328,7 +329,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 200) return { status: 'ok', rev: (r.body.data as { rev: number }).rev };
       if (r.status === 409) {
         const data = r.body.data as { rev: number; snapshot: ProgressSnapshot | null };
-        return { status: 'conflict', rev: data.rev, snapshot: data.snapshot && withKnownReviews(data.snapshot) };
+        return { status: 'conflict', rev: data.rev, snapshot: data.snapshot && readSnapshotCopy(data.snapshot) };
       }
       return { status: 'error', code: `http_${r.status}` };
     },
@@ -573,7 +574,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 404) return { status: 'none' };
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const data = r.body.data as { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null };
-      return { status: 'ok', rev: data.rev, snapshot: withKnownReviews(data.snapshot), summary: data.summary ?? null };
+      return { status: 'ok', rev: data.rev, snapshot: readSnapshotCopy(data.snapshot), summary: data.summary ?? null };
     },
   };
 }

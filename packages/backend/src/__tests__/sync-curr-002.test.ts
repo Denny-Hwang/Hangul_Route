@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
 import { claimLimiter } from '../routes/recovery';
 import { testDb as db } from './helpers/db';
@@ -77,8 +77,14 @@ async function get(learnerId: string, auth: Record<string, string>): Promise<Sto
 
 describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
   beforeEach(async () => {
+    // The Worker's time guard reads the clock: pin it after every date in these fixtures.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-22T12:00:00.000Z'));
     await db.reset();
     claimLimiter.reset();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('accepts cell-check and warmup reviews and drops an unknown kind per entry, on PUT and then on GET', async () => {
@@ -140,6 +146,50 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     const got = await get('profile:suni', auth);
     expect(got.snapshot).toMatchObject(fields);
     expect(got.summary).not.toHaveProperty('memory');
+  });
+
+  it('a PUT without a reviews list is still a 422 and never clears the stored reviews', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews: mixedReviews }), summary });
+    const { reviews: _none, ...noReviews } = snapshotFor('profile:suni');
+    for (const snapshot of [noReviews, { ...noReviews, reviews: null }, { ...noReviews, reviews: 'x' }]) {
+      expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot, summary })).status).toBe(422);
+    }
+    const got = await get('profile:suni', auth);
+    expect(got.snapshot.reviews.map((r) => r.id)).toEqual(keptIds);
+  });
+
+  it('a wrong device clock never evicts real days, freezes the streak or pins the goals (time guard)', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const realDays = { '2026-10-20': { 'install-a': 5 }, '2026-10-21': { 'install-a': 7 } };
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { dayLog: realDays, streakLocal: { run: 30, lastDay: '2026-10-21' }, streakBest: 30 }), summary });
+    // A tablet whose clock reads 2099.
+    const wrong = await put('profile:suni', auth, {
+      ...base,
+      baseRev: 1,
+      snapshot: snapshotFor('profile:suni', {
+        dayLog: { '2099-01-01': { 'install-b': 1 }, '2026-10-23': { 'install-b': 2 }, '2026-10-22': { 'install-b': 3 } },
+        streakLocal: { run: 1, lastDay: '2099-01-01' },
+        goals: { daily: 10, weeklyDays: 7, setAt: '2099-01-01T00:00:00.000Z' },
+        stamps: { 'first-cell': '2099-01-01T00:00:00.000Z' },
+      }),
+      summary,
+    });
+    expect(wrong.status).toBe(200);
+    const got = await get('profile:suni', auth);
+    // 2026-10-23 can already be a local day (UTC+14); 2099 cannot.
+    expect(got.snapshot.dayLog).toEqual({ ...realDays, '2026-10-22': { 'install-b': 3 }, '2026-10-23': { 'install-b': 2 } });
+    expect(got.snapshot.streakLocal).toEqual({ run: 30, lastDay: '2026-10-21' });
+    expect(got.snapshot.goals).toEqual({ daily: 10, weeklyDays: 7, setAt: '2026-10-22T12:00:00.000Z' });
+    expect(got.snapshot.stamps).toEqual({ 'first-cell': '2026-10-22T12:00:00.000Z' });
+
+    // A later real goal change on a phone with a right clock wins.
+    vi.setSystemTime(new Date('2026-10-22T13:00:00.000Z'));
+    const goals = { daily: 3, weeklyDays: 3, setAt: '2026-10-22T13:00:00.000Z' };
+    expect((await put('profile:suni', auth, { ...base, baseRev: 2, snapshot: snapshotFor('profile:suni', { goals, stamps: { 'first-cell': '2026-10-22T12:30:00.000Z' } }), summary })).status).toBe(200);
+    const later = await get('profile:suni', auth);
+    expect(later.snapshot.goals).toEqual(goals);
+    expect(later.snapshot.stamps).toEqual({ 'first-cell': '2026-10-22T12:00:00.000Z' });
   });
 
   it('the Rescue Code claim hands back the stored reviews and fields to the new device', async () => {

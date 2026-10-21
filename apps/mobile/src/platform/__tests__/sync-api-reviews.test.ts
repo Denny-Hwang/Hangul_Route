@@ -73,4 +73,13 @@ describe('platform/sync-api reads review kinds per entry', () => {
     const none = await api.pollRelink('space:1', 'req:1', 'device-x');
     expect(none.status === 'ok' && none.state === 'approved' && none.snapshot).toBeNull();
   });
+
+  it('reads each new snapshot field through its lenient schema, so a value a newer build widened never reaches the merge', async () => {
+    const widened = { ...fromServer, cellBest: { 'letters-s2': 4, 'life-s3': 1 }, goals: { daily: 12, weeklyDays: 7, setAt: '2026-10-21T09:00:00.000Z' }, streakBest: 7 };
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl: vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: { rev: 3, snapshot: widened, summary: null } })) });
+    const got = await api.getSnapshot('profile:a', creds);
+    expect(got.status === 'ok' && got.snapshot.cellBest).toEqual({ 'life-s3': 1 });
+    expect(got.status === 'ok' && got.snapshot).not.toHaveProperty('goals');
+    expect(got.status === 'ok' && got.snapshot.streakBest).toBe(7);
+  });
 });

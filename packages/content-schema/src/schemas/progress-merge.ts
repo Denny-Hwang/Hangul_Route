@@ -1,3 +1,4 @@
+import { addDays, dateKey } from '../curriculum/dates';
 import {
   DAY_LOG_INSTALL_KEYS_MAX,
   PROGRESS_RECORD_MAX,
@@ -6,6 +7,7 @@ import {
   type CellLevel,
   type DayLog,
   type Goals,
+  type ProgressSnapshot,
   type StreakLocal,
 } from './progress';
 
@@ -25,9 +27,10 @@ const codePointOrder = (a: string, b: string): number => (a < b ? -1 : a > b ? 1
 
 /**
  * Orders two ISO instants by the moment they name (an offset form and a `Z`
- * form compare as equal instants). A value that does not parse sorts first;
- * equal instants and two unparseable values fall back to code-point order, so
- * the order is total and the same on every engine.
+ * form compare as equal instants). The schemas only admit strict ISO 8601
+ * with `Z` or an offset (`IsoInstantSchema`), which every engine parses the
+ * same way. A value that does not parse sorts first; equal instants and two
+ * unparseable values fall back to code-point order, so the order is total.
  */
 export function compareIsoInstant(a: string, b: string): number {
   const ta = Date.parse(a);
@@ -146,4 +149,54 @@ export function mergeDayLog(a: DayLog | undefined, b: DayLog | undefined): DayLo
 /** Points of one local day: the sum over install keys, 0 for a day with none. */
 export function dayLogPoints(log: DayLog | undefined, day: string): number {
   return Object.values(log?.[day] ?? {}).reduce((sum, points) => sum + points, 0);
+}
+
+/**
+ * The latest local day any time zone can have at `now`: the UTC day after
+ * `now` (the furthest time zone ahead, UTC+14, is less than one day ahead).
+ */
+export function latestLocalDay(now: Date): string {
+  return addDays(dateKey(now), 1);
+}
+
+type TimedFields = Pick<ProgressSnapshot, 'cellCheckAt' | 'stageCheckAt' | 'testedOut' | 'stamps' | 'goals' | 'dayLog' | 'streakLocal' | 'memSeededAt'>;
+const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps'] as const;
+
+/**
+ * The time guard the Worker applies to a sent snapshot before it merges
+ * (F-CURR-002 section 4.8). A device with a wrong clock, or a tampered
+ * client, must not write a time that would win every merge from then on:
+ *
+ * - a `dayLog` day later than `latestLocalDay(now)` is dropped;
+ * - a `streakLocal` whose `lastDay` is later than that reads as absent, so the
+ *   stored run is kept;
+ * - a `goals.setAt`, a latch time or `memSeededAt` later than `now` is read as
+ *   `now` (the `PATCH /learners` rule for `at`), so a later real change still
+ *   wins.
+ *
+ * Kept out of the merge rules themselves, which stay pure, commutative and
+ * free of a clock. Returns the snapshot itself when nothing is out of bounds.
+ */
+export function boundToNow<T extends Partial<TimedFields>>(snapshot: T, now: Date): T {
+  const nowMs = now.getTime();
+  const nowIso = now.toISOString();
+  const lastDay = latestLocalDay(now);
+  const future = (at: string): boolean => Date.parse(at) > nowMs;
+  const next: Partial<TimedFields> = {};
+  for (const key of LATCH_KEYS) {
+    const latch = snapshot[key];
+    if (latch && Object.values(latch).some(future)) {
+      next[key] = Object.fromEntries(Object.entries(latch).map(([id, at]) => [id, future(at) ? nowIso : at]));
+    }
+  }
+  if (snapshot.goals && future(snapshot.goals.setAt)) next.goals = { ...snapshot.goals, setAt: nowIso };
+  if (snapshot.memSeededAt !== undefined && future(snapshot.memSeededAt)) next.memSeededAt = nowIso;
+  if (snapshot.dayLog && Object.keys(snapshot.dayLog).some((day) => day > lastDay)) {
+    next.dayLog = Object.fromEntries(Object.entries(snapshot.dayLog).filter(([day]) => day <= lastDay));
+  }
+  const dropStreak = snapshot.streakLocal !== undefined && snapshot.streakLocal.lastDay > lastDay;
+  if (!dropStreak && Object.keys(next).length === 0) return snapshot;
+  const out: Record<string, unknown> = { ...snapshot, ...next };
+  if (dropStreak) delete out.streakLocal;
+  return out as T;
 }

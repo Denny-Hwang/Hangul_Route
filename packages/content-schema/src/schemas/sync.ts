@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ProfileSchema } from './profile';
-import { ProgressSnapshotSchema, type ProgressSnapshot } from './progress';
+import { LocalDaySchema, ProgressSnapshotSchema, lenientRecord, type ProgressSnapshot } from './progress';
 import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema, type InboxPlan } from './plan';
 import { LearnerMembershipSchema } from './space';
@@ -309,19 +309,25 @@ export const BACKUP_VERSION = 1 as const;
  */
 export const MemoryItemStateSchema = z.object({
   b: z.number().int().min(0).max(7),
-  d: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+  d: LocalDaySchema.nullable(),
   c: z.number().int().min(0).max(3),
   r: z.number().int().min(0).max(7),
   n: z.number().int().nonnegative(),
-  f: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  f: LocalDaySchema,
   s: z.number().int().min(0).max(7),
   at: z.string().min(1).max(40),
 });
 export type MemoryItemState = z.infer<typeof MemoryItemStateSchema>;
 
-/** The memory store in a backup file: shard (`stage2`, `pack:<key>`, `week`) -> item id -> state. */
-export const MemoryBackupSchema = z.record(z.string().min(1).max(64), z.record(z.string().min(1).max(64), MemoryItemStateSchema));
-export type MemoryBackup = z.infer<typeof MemoryBackupSchema>;
+const MemoryKeySchema = z.string().min(1).max(64);
+/**
+ * The memory store in a backup file: shard (`stage2`, `pack:<key>`, `week`) ->
+ * item id -> state. Read per entry at both levels: an item state that does
+ * not parse drops only itself, a shard that is not an object drops only that
+ * shard, and a value that is not an object reads as absent.
+ */
+export const MemoryBackupSchema = lenientRecord(MemoryKeySchema, lenientRecord(MemoryKeySchema, MemoryItemStateSchema, Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
+export type MemoryBackup = NonNullable<z.infer<typeof MemoryBackupSchema>>;
 
 export const BackupFileSchema = z.object({
   format: z.literal(BACKUP_FORMAT),
@@ -331,7 +337,12 @@ export const BackupFileSchema = z.object({
   /**
    * The word slice is lenient here only (F-VOC-005 section 3.10): a malformed
    * or newer-version slice is dropped so the file still restores quests, cards
-   * and episodes. The sync contract stays strict (a 422 on the Worker).
+   * and episodes; on the Worker a malformed `vocab` stays a 422. Reviews and
+   * the F-CURR-002 fields are lenient on every path, this one included
+   * (`ProgressSnapshotSchema`). An app build from before F-CURR-002 reads
+   * backups strictly: it cannot restore a file that holds a `cell-check` or
+   * `warmup` review, so the first row that writes one must gate on the app
+   * version (F-CURR-002 section 13).
    */
   snapshot: ProgressSnapshotSchema.extend({ vocab: VocabProgressSchema.optional().catch(undefined) }),
   /**

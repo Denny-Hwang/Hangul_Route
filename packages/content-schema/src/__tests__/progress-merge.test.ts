@@ -7,9 +7,11 @@ import {
   GoalsSchema,
   LatchRecordSchema,
   StreakLocalSchema,
+  boundToNow,
   compareIsoInstant,
   dayLogPoints,
   earlierInstant,
+  latestLocalDay,
   mergeCellBest,
   mergeDayLog,
   mergeEarliest,
@@ -97,6 +99,15 @@ laws<Record<string, CellLevel>>('mergeCellBest', cellBest, mergeCellBest);
 laws<Record<string, string>>('mergeLatchRecord (cellCheckAt, stageCheckAt, testedOut, stamps)', latch, mergeLatchRecord);
 laws<Goals>('mergeGoals', goals, mergeGoals);
 laws<DayLog>('mergeDayLog', dayLog, mergeDayLog);
+/** Logs longer than DAY_LOG_DAYS, with empty days and a far-future day, so the count trim is exercised. */
+const longDay = fc.oneof(
+  { arbitrary: fc.integer({ min: 0, max: 120 }).map((n) => new Date(Date.UTC(2026, 3, 1) + n * 86_400_000).toISOString().slice(0, 10)), weight: 20 },
+  { arbitrary: fc.constant('2099-01-01'), weight: 1 },
+);
+const longDayLog = optional(fc.dictionary(longDay, fc.dictionary(fc.constantFrom('install-a', 'install-b'), fc.integer({ min: 0, max: 9 }), { maxKeys: 2 }), { minKeys: 40, maxKeys: 90 })).map((v) =>
+  v === undefined ? undefined : read(DayLogSchema)(v),
+);
+laws<DayLog>('mergeDayLog (logs longer than DAY_LOG_DAYS)', longDayLog, mergeDayLog);
 laws<StreakLocal>('mergeStreakLocal', streakLocal, mergeStreakLocal);
 laws<number>('mergeStreakBest', streakBest, mergeStreakBest);
 laws<string>('mergeEarliest (memSeededAt)', seededAt, mergeEarliest);
@@ -184,5 +195,87 @@ describe('the rules each merge keeps', () => {
       }),
       RUNS,
     );
+  });
+});
+
+describe('a wrong clock never wipes real days (F-CURR-002 section 4.8)', () => {
+  const realDay = (n: number) => new Date(Date.UTC(2026, 7, 1) + n * 86_400_000).toISOString().slice(0, 10);
+  const real = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [realDay(i), { 'install-a': i + 1 }]));
+
+  it('a far-future day merged in keeps every real day while the log holds fewer than DAY_LOG_DAYS of them', () => {
+    const merged = mergeDayLog({ '2026-10-20': { a: 5 }, '2026-10-21': { a: 7 } }, { '2099-01-01': { b: 1 } });
+    expect(merged).toEqual({ '2026-10-20': { a: 5 }, '2026-10-21': { a: 7 }, '2099-01-01': { b: 1 } });
+    expect(mergeDayLog(real, { '2099-01-01': { 'install-b': 1 } })).toMatchObject(real);
+  });
+
+  it('one far-future day evicts at most one real day, whatever the log', () => {
+    fc.assert(
+      fc.property(longDayLog, (log) => {
+        const realDays = Object.keys(log ?? {}).filter((d) => d < '2099-01-01');
+        const kept = Object.keys(mergeDayLog(log, { '2099-01-01': { 'install-z': 1 } }) ?? {}).filter((d) => d < '2099-01-01');
+        expect(kept.length).toBeGreaterThanOrEqual(realDays.length - 1);
+      }),
+      RUNS,
+    );
+  });
+});
+
+describe('boundToNow: the Worker time guard', () => {
+  const now = new Date('2026-10-21T12:00:00.000Z');
+  const nowIso = now.toISOString();
+
+  it('the latest local day is the UTC day after now (UTC+14 is less than a day ahead)', () => {
+    expect(latestLocalDay(now)).toBe('2026-10-22');
+    expect(latestLocalDay(new Date('2026-12-31T23:59:59.999Z'))).toBe('2027-01-01');
+  });
+
+  it('drops dayLog days after the latest local day and keeps the rest', () => {
+    const sent = { dayLog: { '2026-10-21': { a: 5 }, '2026-10-22': { a: 1 }, '2026-10-23': { a: 2 }, '2099-01-01': { b: 1 } } };
+    expect(boundToNow(sent, now).dayLog).toEqual({ '2026-10-21': { a: 5 }, '2026-10-22': { a: 1 } });
+  });
+
+  it('reads a streakLocal whose lastDay is after the latest local day as absent', () => {
+    const out = boundToNow({ streakLocal: { run: 1, lastDay: '2099-01-01' }, streakBest: 30 }, now);
+    expect(out).not.toHaveProperty('streakLocal');
+    expect(out.streakBest).toBe(30);
+    const today = { streakLocal: { run: 30, lastDay: '2026-10-22' } };
+    expect(boundToNow(today, now)).toBe(today);
+  });
+
+  it('reads a goals.setAt, a latch time or memSeededAt after now as now, so a later real change still wins', () => {
+    const out = boundToNow(
+      {
+        goals: { daily: 10 as const, weeklyDays: 7 as const, setAt: '2099-01-01T00:00:00.000Z' },
+        stamps: { s1: '2099-01-01T00:00:00.000Z', s2: '2026-10-01T00:00:00.000Z' },
+        cellCheckAt: { c: '2026-10-21T12:00:00.001Z' },
+        stageCheckAt: { s: '2026-10-20T00:00:00.000Z' },
+        testedOut: { t: '2027-01-01T00:00:00+09:00' },
+        memSeededAt: '2030-01-01T00:00:00Z',
+      },
+      now,
+    );
+    expect(out.goals).toEqual({ daily: 10, weeklyDays: 7, setAt: nowIso });
+    expect(out.stamps).toEqual({ s1: nowIso, s2: '2026-10-01T00:00:00.000Z' });
+    expect(out.cellCheckAt).toEqual({ c: nowIso });
+    expect(out.stageCheckAt).toEqual({ s: '2026-10-20T00:00:00.000Z' });
+    expect(out.testedOut).toEqual({ t: nowIso });
+    expect(out.memSeededAt).toBe(nowIso);
+    const later = { daily: 3 as const, weeklyDays: 3 as const, setAt: '2026-10-22T00:00:00.000Z' };
+    expect(mergeGoals(out.goals, later)).toEqual(later);
+  });
+
+  it('returns the snapshot itself when nothing is out of bounds, and keeps every other key', () => {
+    const fine = {
+      profileId: 'p1',
+      goals: { daily: 6 as const, weeklyDays: 5 as const, setAt: nowIso },
+      dayLog: { '2026-10-22': { a: 1 } },
+      stamps: { s1: '2026-10-01T00:00:00.000Z' },
+      memSeededAt: '2026-10-01T00:00:00.000Z',
+    };
+    expect(boundToNow(fine, now)).toBe(fine);
+    const bare: { profileId: string; memSeededAt?: string } = { profileId: 'p1' };
+    expect(boundToNow(bare, now)).toBe(bare);
+    const mixed = boundToNow({ profileId: 'p1', memSeededAt: '2099-01-01T00:00:00Z', reviews: [] }, now);
+    expect(mixed).toEqual({ profileId: 'p1', memSeededAt: nowIso, reviews: [] });
   });
 });

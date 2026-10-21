@@ -1,4 +1,5 @@
 import { BackupFileSchema, ProgressSnapshotSchema, type ProgressSnapshot } from '@hangul-route/content-schema';
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { decodeBackup } from '../backup';
 import { isSubsetOf, mergeSession, mergeSnapshots } from '../merge';
@@ -147,5 +148,62 @@ describe('backup restore, F-CURR-002 section 4.8', () => {
       expect(decoded.file.memory).toBeUndefined();
     }
     expect(BackupFileSchema.safeParse(JSON.parse(file(base()))).success).toBe(true);
+  });
+});
+
+describe('mergeSnapshots, F-CURR-002 fields: property tests (fast-check)', () => {
+  const key = fc.constantFrom('letters-s2', 'life-s3', 'stage2', 'pack:numbers-time:1');
+  const instant = fc.integer({ min: 0, max: 6 }).map((n) => new Date(Date.UTC(2026, 9, 14 + n, 9)).toISOString());
+  const day = fc.integer({ min: 0, max: 90 }).map((n) => new Date(Date.UTC(2026, 6, 1) + n * 86_400_000).toISOString().slice(0, 10));
+  const opt = <T>(arb: fc.Arbitrary<T>) => fc.option(arb, { nil: undefined, freq: 3 });
+  const latch = opt(fc.dictionary(key, instant));
+  /** Each side as the app holds it: generated, then read through the snapshot schema. */
+  const side = fc
+    .record({
+      cellBest: opt(fc.dictionary(key, fc.integer({ min: 0, max: 3 }))),
+      cellCheckAt: latch,
+      stageCheckAt: latch,
+      testedOut: latch,
+      goals: opt(fc.record({ daily: fc.constantFrom(3, 6, 10), weeklyDays: fc.constantFrom(3, 5, 7), setAt: instant })),
+      dayLog: opt(fc.dictionary(day, fc.dictionary(fc.constantFrom('install-a', 'install-b'), fc.integer({ min: 0, max: 20 })), { maxKeys: 80 })),
+      streakLocal: opt(fc.record({ run: fc.integer({ min: 0, max: 40 }), lastDay: day })),
+      streakBest: opt(fc.integer({ min: 0, max: 100 })),
+      stamps: latch,
+      memSeededAt: opt(instant),
+    })
+    .map((fields) => ProgressSnapshotSchema.parse(JSON.parse(JSON.stringify(base(fields as Partial<ProgressSnapshot>)))) as ProgressSnapshot);
+  const pick = (s: ProgressSnapshot) => Object.fromEntries(NEW_KEYS.filter((k) => s[k] !== undefined).map((k) => [k, s[k]]));
+  const merge = (a: ProgressSnapshot, b: ProgressSnapshot) => mergeSnapshots(a, b, { now: NOW });
+  const RUNS = { numRuns: 200 };
+
+  it('is commutative on every new field', () => {
+    fc.assert(fc.property(side, side, (a, b) => {
+      expect(pick(merge(a, b))).toEqual(pick(merge(b, a)));
+    }), RUNS);
+  });
+
+  it('is idempotent: merging a side again, or a merge with itself, changes nothing', () => {
+    fc.assert(
+      fc.property(side, side, (a, b) => {
+        const once = merge(a, b);
+        expect(pick(merge(once, b))).toEqual(pick(once));
+        expect(pick(merge(once, once))).toEqual(pick(once));
+        expect(pick(merge(a, a))).toEqual(pick(a));
+      }),
+      RUNS,
+    );
+  });
+
+  it('invents no key and never lowers streakBest; the server copy then holds the merge', () => {
+    fc.assert(
+      fc.property(side, side, (a, b) => {
+        const m = merge(a, b);
+        for (const k of NEW_KEYS) expect(m[k] !== undefined).toBe(a[k] !== undefined || b[k] !== undefined);
+        if (a.streakBest !== undefined) expect(m.streakBest).toBeGreaterThanOrEqual(a.streakBest);
+        if (b.streakBest !== undefined) expect(m.streakBest).toBeGreaterThanOrEqual(b.streakBest);
+        expect(isSubsetOf(a, m) && isSubsetOf(b, m)).toBe(true);
+      }),
+      RUNS,
+    );
   });
 });

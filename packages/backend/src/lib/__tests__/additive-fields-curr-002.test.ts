@@ -100,8 +100,8 @@ describe('preserveAdditiveFields (F-CURR-002 section 4.8 fields)', () => {
   });
 
   it('reads an unreadable stored value as none: the sent value is kept', () => {
-    const out = preserveAdditiveFields(incoming({ cellBest: { a: 2 }, goals: { daily: 3, weeklyDays: 3, setAt: 't' } }, {}), stored({ cellBest: 'junk', goals: 7 }, {}));
-    expect(out.payload).toEqual({ cellBest: { a: 2 }, goals: { daily: 3, weeklyDays: 3, setAt: 't' } });
+    const out = preserveAdditiveFields(incoming({ cellBest: { a: 2 }, goals: { daily: 3, weeklyDays: 3, setAt: '2026-10-21T09:00:00.000Z' } }, {}), stored({ cellBest: 'junk', goals: 7 }, {}));
+    expect(out.payload).toEqual({ cellBest: { a: 2 }, goals: { daily: 3, weeklyDays: 3, setAt: '2026-10-21T09:00:00.000Z' } });
   });
 
   it('summary.memory travels with memSeededAt: a sent marker without a block keeps the stored block', () => {
