@@ -1,4 +1,4 @@
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS, SCHOOL_LEARNER_CAP, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../locales';
 import { en } from '../messages/en';
@@ -73,5 +73,44 @@ describe('Terms: what each plan holds (landing.legal.terms.sections.billing.para
     for (const locale of ['es', 'ko'] as const) expect(getMessages(locale).landing.legal.terms.sections.billing.paragraphs.sizes, locale).toBe(sizes);
     expect(lookup(es, 'landing.legal.terms.sections.billing.paragraphs.sizes')).toBeUndefined();
     expect(lookup(ko, 'landing.legal.terms.sections.billing.paragraphs.sizes')).toBeUndefined();
+  });
+});
+
+/**
+ * F-SITE-002 site facts (2026-10-21): every persona Plans block says what a free space holds, in every claim state.
+ * The numbers come from content-schema: a family `FAMILY_LIFETIME_LEARNERS`, a stand-alone free class
+ * `FREE_CLASS_STUDENT_CAP` (packages/backend `classCapFrom`), a school `SCHOOL_LEARNER_CAP` (`schoolLimitsFrom`).
+ */
+describe('landing.plans.freeSizes(family, cls, school)', () => {
+  it('reads the free limits from content-schema in every locale', () => {
+    expect([FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP]).toEqual([4, 20, 50]);
+    const args = [FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP] as const;
+    expect(en.landing.plans.freeSizes(...args)).toBe('Free: a family space holds up to 4 learners, a class up to 20 students and a school up to 50.');
+    expect(getMessages('es').landing.plans.freeSizes(...args)).toBe(
+      'Gratis: un espacio familiar admite hasta 4 estudiantes, una clase hasta 20 estudiantes y una escuela hasta 50.',
+    );
+    expect(getMessages('ko').landing.plans.freeSizes(...args)).toBe('무료: 가족 공간에는 학습자 최대 4명, 반에는 학생 최대 20명, 학교에는 학생 최대 50명까지 함께할 수 있어요.');
+  });
+
+  it('says one learner or one student in the singular', () => {
+    expect(en.landing.plans.freeSizes(1, 1, 1)).toBe('Free: a family space holds up to 1 learner, a class up to 1 student and a school up to 1.');
+    expect(getMessages('es').landing.plans.freeSizes(1, 1, 1)).toBe('Gratis: un espacio familiar admite hasta 1 estudiante, una clase hasta 1 estudiante y una escuela hasta 1.');
+  });
+
+  it('types no number of its own, and names no price, no term and no store word, in every locale', () => {
+    for (const locale of LOCALES) {
+      const out = getMessages(locale).landing.plans.freeSizes(73, 19, 86);
+      for (const n of ['73', '19', '86']) expect(out, locale).toContain(n);
+      expect(out.split('73').join('').split('19').join('').split('86').join(''), `${locale}: ${out}`).not.toMatch(/\d/);
+      expect(out, locale).not.toMatch(/[$€£₩]|\b(USD|dollars?|d[oó]lares)\b|yearly|monthly|annual|lifetime|subscription|al año|anual|mensual|suscripci[oó]n|연간|매년|매달|월간|구독|평생/i);
+    }
+  });
+
+  it('es and ko overlays define their own free sizes line, and the managed line for while plans are coming', () => {
+    expect(lookup(es, 'landing.plans.freeSizes')).toBeTypeOf('function');
+    expect(lookup(ko, 'landing.plans.freeSizes')).toBeTypeOf('function');
+    expect(en.landing.plans.managedLater).toBe('When plans arrive, you will manage them at app.hangulroute.com after you sign in.');
+    expect(lookup(es, 'landing.plans.managedLater')).toBeTypeOf('string');
+    expect(lookup(ko, 'landing.plans.managedLater')).toBeTypeOf('string');
   });
 });

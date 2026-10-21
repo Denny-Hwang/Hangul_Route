@@ -13,7 +13,7 @@ const FAQ_ADULT = {
 } as const;
 const FAQ_KOREAN = {
   q: '¿Necesito saber algo de coreano?',
-  a: 'No: lo hicimos justo para empezar desde cero. Las instrucciones están en un español sencillo y claro. El coreano solo aparece como lo que se aprende.',
+  a: 'No. Lo hicimos justo para empezar desde cero. Los menús están en inglés, español o coreano sencillo, y cada palabra coreana viene con su romanización y su significado.',
 } as const;
 
 export const landing = {
@@ -21,7 +21,7 @@ export const landing = {
     title: 'Hangul Route: aprende hangul desde cero con Hoya',
     tagline: 'Aprende hangul desde cero, a cualquier edad.',
     description:
-      'Aprende hangul desde cero con Hoya, el tigre, a cualquier edad: familias de herencia coreana, fans de la cultura K y principiantes con curiosidad. Misiones de cinco minutos enseñan el alfabeto coreano para leer, escuchar y escribir, y cada letra te da una tarjeta de cultura coreana. La Etapa 1 es gratis y vienen más etapas. Sin anuncios, nunca.',
+      'Aprende hangul desde cero con Hoya, el tigre, a cualquier edad. Misiones de cinco minutos enseñan el alfabeto coreano y luego palabras, oraciones y cuentos. La Etapa 1 es gratis. Sin anuncios, nunca.',
     keywords: ['aprender hangul', 'alfabeto coreano', 'aprender coreano', 'coreano para principiantes', 'coreano de herencia', 'cultura coreana', 'Hoya'],
     ogDescription: 'Aprende el alfabeto coreano desde cero con Hoya, el tigre, a cualquier edad, y colecciona tarjetas de cultura coreana. La Etapa 1 es gratis.',
     twitterDescription: 'Aprende el alfabeto coreano desde cero con Hoya, el tigre, a cualquier edad, y colecciona tarjetas de cultura coreana.',
@@ -36,7 +36,7 @@ export const landing = {
       },
       teachers: {
         title: 'Para docentes: Hangul Route',
-        description: 'Los estudiantes se unen con un código de clase, sin correos ni cuentas de estudiantes. Planifica la semana y mira quién practicó. Nunca un ranking.',
+        description: 'Los estudiantes se unen con un código, un enlace o un código QR, sin correos ni cuentas de estudiantes. Planifica la semana y mira quién practicó. Nunca un ranking.',
       },
     },
   },
@@ -56,11 +56,11 @@ export const landing = {
   home: {
     hero: {
       title: 'Aprende hangul desde cero, a cualquier edad.',
-      lead: 'Misiones cortas y divertidas te enseñan a leer, escuchar y escribir el alfabeto coreano, con Hoya, el tigre, como guía.',
+      lead: 'El hangul es el alfabeto coreano. Aprende a leerlo, escucharlo y escribirlo con Hoya.',
       start: 'Empezar a aprender',
       grownUps: '¿Familia o docente? Busca tu página',
-      facts: 'Funciona en tu navegador · No hay que instalar nada · La app funciona sin conexión en la mayoría de los dispositivos después de tu primera visita',
-      bubble: (letter: string, romanization: string) => `¡Annyeong! Conozcamos la letra ${letter}\u00a0(${romanization}).`,
+      facts: 'Sin correo ni contraseña · Funciona en tu navegador, y sin conexión en la mayoría de los dispositivos después de tu primera visita',
+      bubble: (letter: string, romanization: string) => `¡Hola! Conozcamos la letra ${letter}\u00a0(${romanization}).`,
     },
     who: {
       title: '¿Para quién es?',
@@ -75,14 +75,14 @@ export const landing = {
         },
         teachers: {
           title: 'Docentes',
-          body: 'Los estudiantes se unen con un código. Sin correos ni cuentas.',
+          body: 'Tus estudiantes entran con código, enlace o QR, sin cuentas.',
         },
       },
     },
     how: {
       title: 'Cómo funciona',
       steps: {
-        start: { title: 'Abre la app', body: 'Elige quién aprende y empieza.' },
+        start: { title: 'Crea un perfil', body: 'Elige un nombre y un Hoya.' },
         quests: { title: 'Aprende en misiones de cinco minutos', body: 'Letras, sonidos y primeras palabras, con sonido e imágenes en cada pantalla.' },
         collect: { title: 'Colecciona y sigue adelante', body: 'Gana tarjetas de cultura coreana. Tu progreso se guarda y se respalda.' },
       },
@@ -95,7 +95,7 @@ export const landing = {
     },
     news: {
       title: 'Noticias del lanzamiento',
-      body: 'Deja tu correo y te enviaremos la noticia del lanzamiento. Nada más.',
+      body: 'Solo te avisaremos de los planes para familias y clases.',
     },
   },
   plans: {
@@ -104,13 +104,16 @@ export const landing = {
       stage1: 'La Etapa 1 es gratis.',
     },
     paid: {
-      coming: 'Vienen más etapas, con planes para familias y clases.',
+      coming: 'En la app también hay palabras, oraciones y cuentos. Los planes para familias y clases están en camino.',
       inApp: 'Los planes para familias y clases están en app.hangulroute.com.',
     },
     managedInApp: 'Los planes y la facturación se gestionan en app.hangulroute.com después de iniciar sesión.',
+    managedLater: 'Cuando lleguen los planes, los gestionarás en app.hangulroute.com después de iniciar sesión.',
     // [SA] AMENDMENTS-SEATS-ADMINS 9.5: glossary Plan Familiar, Licencia de Grupo, estudiante.
     sizes: (family: number, group: number) =>
       `El Plan Familiar es para hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })}. La Licencia de Grupo es para hasta ${plural('es', group, { one: `${group} estudiante`, other: `${group} estudiantes` })} en una clase o una escuela.`,
+    freeSizes: (family: number, cls: number, school: number) =>
+      `Gratis: un espacio familiar admite hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })}, una clase hasta ${plural('es', cls, { one: `${cls} estudiante`, other: `${cls} estudiantes` })} y una escuela hasta ${school}.`,
   },
   persona: {
     learners: {
@@ -148,7 +151,7 @@ export const landing = {
         },
         code: {
           q: 'Tengo un código para unirme. ¿Dónde lo escribo?',
-          a: 'En la app: toca Perfil, ve a Clases y familia y toca Unirme a una clase.',
+          a: 'Abre el enlace para unirse que comparte tu docente. O, en la app, toca Perfil, ve a Clases y familia y toca Unirme a una clase.',
         },
         offline: {
           q: '¿Funciona sin conexión?',
@@ -182,7 +185,7 @@ export const landing = {
           ads: 'Sin anuncios y sin venta de datos.',
           backup:
             'El apodo y el progreso de cada estudiante se guardan en el dispositivo y se respaldan en nuestros servidores, para recuperarlos con un código de rescate. Cuando un estudiante se une a una clase o familia con un código, ese espacio ve el nombre con que se une y su progreso. Los adultos de una familia también pueden recuperar su progreso.',
-          gate: 'Un control para adultos protege todo lo que cuesta dinero o borra datos.',
+          gate: 'Un PIN de adultos protege todo lo que cuesta dinero o borra datos.',
           siblings: 'Los hermanos pueden compartir un dispositivo. Cada estudiante conserva sus estrellas y tarjetas.',
         },
       },
@@ -193,7 +196,7 @@ export const landing = {
         route: 'Abre la Ruta de aprendizaje de cada estudiante para ver dónde está y qué sigue.',
         notes: 'Envía una nota corta de ánimo que tu estudiante ve en la app.',
         browse: 'Con el Plan Familiar, explora cada lección tal como la ve tu estudiante.',
-        lecture: 'El modo proyección pone una lección en tu TV para aprender en familia.',
+        lecture: 'El modo proyección muestra lecciones listas de las Etapas 1 a 7 en una TV, una computadora portátil o un teléfono en horizontal, para aprender en familia.',
       },
       faq: {
         account: { q: '¿Mi estudiante necesita una cuenta?', a: 'No. Los estudiantes nunca necesitan correo ni contraseña.' },
@@ -214,7 +217,7 @@ export const landing = {
         title: 'Listo en minutos',
         steps: {
           space: 'Inicia sesión y crea un espacio de clase.',
-          code: 'Comparte el código de la clase. Los estudiantes lo escriben en la app; sin correos ni cuentas de estudiantes.',
+          code: 'Comparte el código de la clase, el enlace para unirse o su código QR. Los estudiantes lo abren en la app; sin correos ni cuentas de estudiantes.',
           devices: 'Los estudiantes aprenden en cualquier dispositivo con navegador.',
         },
       },
@@ -222,7 +225,7 @@ export const landing = {
         title: 'Planifica y asigna',
         bullets: {
           pick: 'Elige misiones para la semana. Aparecen en la lista de tareas de cada estudiante.',
-          planner: 'O deja que el planificador arme una ruta del periodo según el nivel y el ritmo de tu clase.',
+          planner: 'O usa Plan del periodo: arma un plan del periodo según el nivel y el ritmo de tu clase.',
         },
       },
       class: {
@@ -231,12 +234,12 @@ export const landing = {
         reports: 'Informes de cada estudiante y datos de toda la clase, por día, semana, mes o en total. Nunca un ranking.',
         route: 'Abre la Ruta de aprendizaje de cada estudiante para ver dónde está y qué sigue.',
         notes: 'Envía a tus estudiantes una nota corta de ánimo.',
-        browse: 'Con un plan de clase o escolar, revisa cada lección tal como la ven tus estudiantes.',
-        lecture: 'Modo proyección: enseña al frente con un proyector o una TV, con lecciones listas.',
+        browse: 'Con la Licencia de Grupo, revisa cada lección tal como la ven tus estudiantes.',
+        lecture: 'Modo proyección: enseña al frente con diapositivas listas de las Etapas 1 a 7, cuentos y temas de palabras, en un proyector, una TV o un teléfono en horizontal.',
       },
       privacy: {
         title: 'Privacidad para clases',
-        bullets: { initials: 'Muestra solo iniciales en la lista de la clase.', ads: 'Sin anuncios y sin venta de datos.' },
+        bullets: { initials: 'Puedes mostrar iniciales en lugar de nombres en la lista de la clase.', ads: 'Sin anuncios y sin venta de datos.' },
       },
       faq: {
         students: { q: '¿Los estudiantes necesitan cuentas?', a: 'No. Se unen con el código de la clase dentro de la app.' },
@@ -288,10 +291,10 @@ export const landing = {
   waitlist: {
     label: 'Tu correo',
     placeholder: 'tu@correo.com',
-    submit: 'Quiero la invitación',
+    submit: 'Recibir noticias',
     sending: 'Enviando',
     retry: 'Reintentar',
-    success: 'Ya estás en la lista. Te escribiremos cuando Hangul Route se lance.',
+    success: 'Ya estás en la lista. Te escribiremos cuando lancemos algo nuevo.',
     invalid: 'Escribe un correo válido.',
     error: 'No pudimos llegar al servidor. Revisa tu conexión y reintenta.',
     rateLimited: 'Demasiados intentos. Espera un poco y reintenta.',
@@ -307,13 +310,13 @@ export const landing = {
     lead: 'Hecho por un equipo pequeño (casi siempre una persona y un tigre). Para cualquier persona que aprende hangul desde cero, a cualquier edad: familias de herencia cuyos padres o abuelos hablan coreano, fans del K-pop, la comida coreana y todo lo K, y principiantes con curiosidad que buscan una forma amable de empezar, sin culpas.',
     promises: {
       title: 'Nuestras promesas',
-      plainEnglish: 'Los menús y las instrucciones usan un español sencillo y claro (CEFR Pre-A1).',
+      plainEnglish: 'Los menús y las instrucciones usan palabras cortas y sencillas, en inglés, español o coreano.',
       koreanTaught: 'El coreano se usa solo para lo que se enseña.',
       noRed: 'Sin marcas rojas cuando te equivocas: Hoya avisa con ámbar.',
-      noAds: 'Sin anuncios, nunca. Sin anuncios dirigidos a niños. Punto.',
+      noAds: 'Sin anuncios, nunca, y sin venta de datos.',
       localFirst:
         'El apodo y el progreso de cada estudiante se guardan en el dispositivo y se respaldan en nuestros servidores, para recuperarlos con un código de rescate.',
-      gate: 'Control para adultos con una multiplicación ante cualquier compra o acción que borre datos.',
+      gate: 'Un PIN de adultos protege todo lo que cuesta dinero o borra datos.',
     },
     feedback: {
       title: '¿Tienes comentarios?',
@@ -346,7 +349,7 @@ export const landing = {
   },
   localeBanner: {
     label: 'Sugerencia de idioma',
-    viewIn: (endonym: string) => `Ver en ${endonym}`,
+    viewIn: (endonym: string) => `Ver en ${endonym.toLocaleLowerCase('es')}`,
     dismiss: 'Cerrar',
     close: { cta: '×' },
   },

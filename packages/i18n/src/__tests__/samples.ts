@@ -917,4 +917,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.presets.chooser.showMore': [[8], [4]],
   // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
   'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
+  // The free limits in every persona Plans block (F-SITE-002 site facts): family, stand-alone class, school.
+  'landing.plans.freeSizes': [[4, 20, 50], [1, 1, 1]],
 };

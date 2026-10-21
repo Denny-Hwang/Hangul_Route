@@ -4,7 +4,7 @@ import { KIDS_ONLY_FRAMING } from '../audience';
 import { pseudoLocalize, pseudoText } from '../pseudo';
 import { fallbackPaths, getMessages } from '../resolve';
 import { leafPaths, lookup } from '../tree';
-import { landingBannedWord } from './landing-banned';
+import { STALE_SITE_WORDS, landingBannedWord } from './landing-banned';
 import { SAMPLES } from './samples';
 
 // F-I18N-001 PR 11a: the site's copy (metadata, landing, about, privacy, terms, the waitlist
@@ -66,6 +66,8 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.footer.language).toBe('Language');
     expect(l.localeBanner.label).toBe('Language suggestion');
     expect(l.localeBanner.viewIn('Español')).toBe('View in Español');
+    // Spanish writes a language name in lower case after "en".
+    expect(getMessages('es').landing.localeBanner.viewIn('Español')).toBe('Ver en español');
     expect(l.localeBanner.dismiss).toBe('Close');
     expect(l.localeBanner.close.cta).toBe('×');
   });
@@ -186,12 +188,24 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 });
 
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
-  it('keeps the waitlist copy (#146)', () => {
-    expect(l.waitlist.submit).toBe('Send me the invite');
+  it('keeps the waitlist consent line byte-identical (#146, CONSENT_TEXT_VERSION); the band speaks of launch news only', () => {
     expect(l.waitlist.consentLead).toBe(
       'We use your email only to send Hangul Route launch news. It is never sold or shared. To be removed, reply to any message or ',
     );
-    expect(l.waitlist.success).toBe("You're on the list. We'll email you when Hangul Route launches.");
+    // F-SITE-002 site facts (2026-10-21): the app is live, so the band no longer reads as pre-launch.
+    expect(l.waitlist.submit).toBe('Get launch news');
+    expect(l.waitlist.success).toBe("You're on the list. We'll email you when something new launches.");
+    expect(l.home.news.title).toBe('Launch news by email');
+    expect(l.home.news.body).toBe("We'll email you when family and class plans launch. Nothing else.");
+  });
+
+  it('keeps the es and ko consent lines byte-identical too', () => {
+    expect(getMessages('es').landing.waitlist.consentLead).toBe(
+      'Usamos tu correo solo para enviarte noticias del lanzamiento de Hangul Route. Nunca lo vendemos ni lo compartimos. Para darte de baja, responde a cualquier mensaje o ',
+    );
+    expect(getMessages('ko').landing.waitlist.consentLead).toBe(
+      '이메일은 Hangul Route 출시 소식을 보내는 데에만 써요. 절대 팔거나 공유하지 않아요. 그만 받으려면 아무 메일에나 답장하거나 ',
+    );
   });
 
   it('keeps the cost words price-free (owner decision 2026-10-10, F-SITE-002 §3.9)', () => {
@@ -306,7 +320,7 @@ describe('landing: no emoji in any locale (en, es, ko, en-XA)', () => {
 
 describe('landing: offline claims stay qualified until the recordings ship (F-AUDIO-004 §3.12)', () => {
   it('says the app works offline on most devices and that letter sounds may need a device voice', () => {
-    expect(l.home.hero.facts).toMatch(/works offline on most devices after your first visit/);
+    expect(l.home.hero.facts).toMatch(/offline on most devices after your first visit/);
     expect(l.persona.learners.faq.offline.a).toMatch(/Letter sounds may need a Korean voice installed on your device/);
   });
 
@@ -336,3 +350,97 @@ describe('a shipped locale has its own language words, not the English fallback'
   });
 });
 
+
+/**
+ * F-SITE-002 site facts (2026-10-21): the site says what the app does today. No locale brings back an older
+ * version's words (`STALE_SITE_WORDS`: the multiplication gate, the invite, "when Hangul Route launches",
+ * "nothing to install", a romanized greeting), and the English uses US spelling ("practice", never "practise").
+ */
+describe('landing: no words of an older site, in any locale', () => {
+  it('the check catches the old words (self-check)', () => {
+    for (const bad of [
+      'Parent-gate behind multiplication',
+      'Control para adultos con una multiplicación',
+      '곱셈 문제로 된 부모 확인 장치',
+      'Send me the invite',
+      'Quiero la invitación',
+      '초대 받기',
+      "We'll email you when Hangul Route launches.",
+      'cuando Hangul Route se lance',
+      'Hangul Route가 출시되면',
+      'Nothing to install',
+      'No hay que instalar nada',
+      '설치할 것이 없어요',
+      'Annyeong!',
+    ]) {
+      expect(STALE_SITE_WORDS.test(bad), bad).toBe(true);
+    }
+    expect(STALE_SITE_WORDS.test("We'll email you when something new launches.")).toBe(false);
+  });
+
+  for (const locale of LOCALES) {
+    it(`${locale}: no stale word outside the legal documents`, () => {
+      const tree = getMessages(locale).landing;
+      for (const path of leafPaths(tree).filter((p) => !p.startsWith('legal.'))) {
+        for (const out of outputs(tree, path)) expect(STALE_SITE_WORDS.test(out), `landing.${path}: ${out}`).toBe(false);
+      }
+    });
+  }
+
+  it('en: US spelling, "practice" and "practiced", never "practise"', () => {
+    const tree = getMessages('en').landing;
+    for (const path of leafPaths(tree)) {
+      for (const out of outputs(tree, path)) expect(out, `landing.${path}`).not.toMatch(/practis/i);
+    }
+    expect(l.home.who.items.parents.body).toContain('what your learner practices');
+    expect(l.persona.teachers.class.body).toContain('who practiced');
+  });
+
+  it('the grown-up PIN, not a gate puzzle, guards money and deletion (PinEntryScreen replaced the v1.0 math gate)', () => {
+    const PIN = {
+      en: 'A grown-up PIN guards anything that costs money or deletes data.',
+      es: 'Un PIN de adultos protege todo lo que cuesta dinero o borra datos.',
+      ko: '돈이 드는 일이나 데이터를 지우는 일은 어른용 PIN이 지켜요.',
+    } as const;
+    for (const locale of LOCALES) {
+      const m = getMessages(locale).landing;
+      expect(m.about.promises.gate, locale).toBe(PIN[locale]);
+      expect(m.persona.parents.safe.bullets.gate, locale).toBe(PIN[locale]);
+    }
+  });
+
+  it('names all three UI languages where it says what the menus are in', () => {
+    const NAMES = { en: ['English', 'Spanish', 'Korean'], es: ['inglés', 'español', 'coreano'], ko: ['영어', '스페인어', '한국어'] } as const;
+    for (const locale of LOCALES) {
+      const m = getMessages(locale).landing;
+      for (const name of NAMES[locale]) {
+        expect(m.about.promises.plainEnglish, locale).toContain(name);
+        expect(m.persona.learners.faq.korean.a, locale).toContain(name);
+      }
+      expect(m.about.promises.plainEnglish, locale).not.toMatch(/CEFR/);
+    }
+  });
+
+  it('says every taught Korean word comes with its romanization and meaning, in every locale', () => {
+    expect(l.persona.learners.faq.korean.a).toContain('romanization and meaning');
+    expect(getMessages('es').landing.persona.learners.faq.korean.a).toContain('romanización y su significado');
+    expect(getMessages('ko').landing.persona.learners.faq.korean.a).toContain('로마자 표기와 뜻');
+  });
+
+  it('the hero bubble greets in the UI language and keeps the letter with its romanization (no-break space)', () => {
+    expect(l.home.hero.bubble('ㅏ', 'a')).toBe("Hi! Let's meet ㅏ\u00a0(a).");
+    expect(getMessages('es').landing.home.hero.bubble('ㅏ', 'a')).toBe('¡Hola! Conozcamos la letra ㅏ\u00a0(a).');
+    expect(getMessages('ko').landing.home.hero.bubble('ㅏ', 'a')).toBe('안녕하세요! 오늘 만날 글자: ㅏ\u00a0(a)');
+  });
+
+  it('later stages are in the app: the cost line and the description no longer say they are coming', () => {
+    expect(l.plans.paid.coming).toBe('Words, sentences and stories are in the app too. Family and class plans are on the way.');
+    expect(l.meta.description).toBe(
+      'Learn Hangul from zero with Hoya the tiger, at any age. Five-minute quests teach the Korean alphabet, then words, sentences and stories. Stage 1 is free. No ads, ever.',
+    );
+    for (const locale of LOCALES) {
+      const m = getMessages(locale).landing;
+      expect(`${m.meta.description} ${m.plans.paid.coming}`, locale).not.toMatch(/more stages are coming|vienen más etapas|더 많은 단계가 준비/i);
+    }
+  });
+});
