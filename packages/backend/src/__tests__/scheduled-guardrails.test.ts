@@ -38,7 +38,7 @@ async function breach(target: Db, flags: readonly RemoteConfigRow[] = [ramp()]):
   await cohorts(target, 40);
 }
 
-const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate:${KIND} 20.0%->40.0%`;
+const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate 20.0%->40.0%; quitRate:${KIND} 20.0%->40.0%`;
 
 /** A D1 binding over the real migrations that counts every statement prepared. */
 function countingD1(): { raw: ReturnType<typeof openSqliteD1>; own: D1Db; binding: D1Like; prepared: () => number } {
@@ -93,7 +93,30 @@ describe('scheduled · guardrail evaluator (CM-70b)', () => {
       kept: [],
       skipped: [{ flag: 'goals', why: 'stale-step' }],
       deferred: [],
+      unguarded: 1,
     });
+  });
+
+  it('GUARDRAIL_EVALUATOR=disabled stops the evaluator only: the purge runs, nothing is read or lowered, and the run logs disabled', async () => {
+    await breach(db);
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    const purge = vi.spyOn(db, 'purgeRateHits');
+    const read = vi.spyOn(db, 'remoteConfig');
+    await scheduled({ scheduledTime: NOW }, { GUARDRAIL_EVALUATOR: 'disabled' });
+    expect(purge).toHaveBeenCalled();
+    expect(read).not.toHaveBeenCalled();
+    expect(await db.remoteConfig()).toEqual([ramp()]);
+    expect(info.mock.calls.map((c) => JSON.parse(String(c[0])))).toEqual([{ event: 'guardrail.run', day: '2026-10-21', disabled: true }]);
+  });
+
+  it('GUARDRAIL_EVALUATOR unset, empty or enabled runs the evaluator', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    for (const value of ['', 'enabled']) {
+      await db.reset();
+      await breach(db);
+      await scheduled({ scheduledTime: NOW }, { GUARDRAIL_EVALUATOR: value });
+      expect((await db.remoteConfig())[0]?.pct).toBe(10);
+    }
   });
 
   it('runs the retention purge first, so the evaluator never holds it up', async () => {
@@ -160,11 +183,14 @@ describe('scheduled · guardrail evaluator on D1', () => {
 
   it('reads only the guardrail metrics', async () => {
     const { raw, own } = countingD1();
-    await own.addRollups('2026-10-15', [
-      { metric: 'session.end.minutes', dim: '', bucket: '5' },
-      { metric: 'mastery.level_up', dim: 'cell:letters-1', bucket: '2' },
-    ]);
-    await own.reserveRollupCells('2026-10-15', ROLLUP_BUDGET_METRIC, 500);
+    await own.addRollups(
+      '2026-10-15',
+      [
+        { metric: 'session.end.minutes', dim: '', bucket: '5' },
+        { metric: 'mastery.level_up', dim: 'cell:letters-1', bucket: '2' },
+      ],
+      ROLLUP_BUDGET_METRIC,
+    );
     expect((await own.rollupRowsOf('2026-10-01', '2026-10-20', GUARDRAIL_METRICS, 10)).map((r) => r.metric).sort()).toEqual([ROLLUP_BUDGET_METRIC, 'session.end.minutes']);
     expect(await own.rollupRowsOf('2026-10-01', '2026-10-20', [], 10)).toEqual([]);
     expect(await own.rollupRowsOf('2026-10-01', '2026-10-20', GUARDRAIL_METRICS, 1)).toHaveLength(1);

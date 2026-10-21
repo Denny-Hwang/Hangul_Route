@@ -105,6 +105,12 @@ keep_vars = true
 #                                    the kill switch: no rollup row is written; events are still
 #                                    accepted. Keep it out of [vars] (a [vars] value returns on every
 #                                    deploy).
+# GUARDRAIL_EVALUATOR                F-CURR-002 section 12.3 (row CM-70b): leave UNSET (on). Unset,
+#                                    empty or "enabled" lets the daily Cron Trigger lower a breached
+#                                    ramp in remote_config. "disabled" (or any other value) is the
+#                                    kill switch: the evaluator reads and writes nothing, the purge
+#                                    still runs, and Workers Logs show guardrail.run disabled: true.
+#                                    Keep it out of [vars].
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db

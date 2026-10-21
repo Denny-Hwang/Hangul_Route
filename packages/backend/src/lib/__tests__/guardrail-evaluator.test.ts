@@ -3,6 +3,7 @@ import { MemoryDb, type RemoteConfigRow, type RollupRow } from '../../db';
 import {
   D1_FREE_ROWS_WRITTEN_PER_DAY,
   GUARDRAIL_FAMILY_ALPHA,
+  GUARDRAIL_MAX_STEP_AGE_DAYS,
   GUARDRAIL_METRICS,
   GUARDRAIL_REASON_MAX,
   MAX_GUARDRAIL_LOWERS,
@@ -10,8 +11,12 @@ import {
   RAMP_STEPS,
   addDays,
   baseDayOf,
+  cohortDays,
   familyZ,
   guardrailBreaches,
+  guardrailCheck,
+  guardrailDisabledLog,
+  guardrailEvaluatorEnabled,
   guardrailReason,
   guardrailRunLog,
   minutesQuantile,
@@ -21,14 +26,13 @@ import {
   runGuardrailEvaluator,
   shorterZ,
   stepDayOf,
-  visibleGroups,
 } from '../guardrail-evaluator';
-import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT } from '../learning-rollups';
+import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_GLOBAL_ROWS_PER_DAY, ROLLUP_READ_LIMIT } from '../learning-rollups';
 
 /**
  * F-CURR-002 section 12.3 (row CM-70b), guardrails of section 3.3, "remote can only reduce" of section 12.2. The
  * run of 2026-10-21 for a flag stepped on 2026-10-10 compares the after window 2026-10-14..20 (the last 7 full days)
- * with the before window 2026-10-03..09 (the 7 days before the step day).
+ * with the before window 2026-10-03..09 (the 7 days before the step day). 2026-10-21 is a Wednesday.
  */
 const NOW = new Date('2026-10-21T11:17:00.000Z');
 const STEP_AT = '2026-10-10T09:00:00.000Z';
@@ -46,6 +50,12 @@ const row = (day: string, metric: string, dim: string, bucket: string, events: n
  */
 function quits(day: string, kind: string, q: number, sessions: number): RollupRow[] {
   return [row(day, 'session.end.questLeft', '', '0', sessions - q), row(day, 'session.end.questLeft', '', '1', q), row(day, 'session.end.questLeft', kind, '1', q)];
+}
+
+/** `sessions` reporting sessions of a day, with `perKind` quits at each kind (the rest finished their quest). */
+function mixed(day: string, sessions: number, perKind: Readonly<Record<string, number>>): RollupRow[] {
+  const q = Object.values(perKind).reduce((a, b) => a + b, 0);
+  return [row(day, 'session.end.questLeft', '', '0', sessions - q), row(day, 'session.end.questLeft', '', '1', q), ...Object.entries(perKind).map(([kind, n]) => row(day, 'session.end.questLeft', kind, '1', n))];
 }
 
 /** Session lengths: bucket -> events. */
@@ -177,12 +187,39 @@ describe('minutesQuantile', () => {
   });
 });
 
-describe('visibleGroups and the tests', () => {
-  it('keeps a (day, metric, dim) group of 20 events or more, whatever its cells hold', () => {
-    const kept = visibleGroups([...quits('2026-10-14', KIND, 2, 20), ...quits('2026-10-15', KIND, 2, 19)]);
-    expect(kept.every((r) => r.day === '2026-10-14' && r.dim === '')).toBe(true); // the kind's group holds 2 quits
-    expect(kept.find((r) => r.bucket === '1')?.events).toBe(2); // a cell under 20 inside a kept group stays
+describe('cohort days, groups and the tests', () => {
+  it('compares the same weekdays on both sides: a Friday-to-Sunday after window reads Friday to Sunday before the step', () => {
+    // a step on Thursday 2026-10-15, compared on Monday 2026-10-19
+    const days = cohortDays([], { fromDay: '2026-10-08', toDay: '2026-10-14' }, { fromDay: '2026-10-16', toDay: '2026-10-18' });
+    expect([...days.before]).toEqual(['2026-10-09', '2026-10-10', '2026-10-11']);
+    expect([...days.after]).toEqual(['2026-10-16', '2026-10-17', '2026-10-18']);
+    const full = cohortDays([], BEFORE, AFTER);
+    expect([...full.before]).toEqual(BEFORE_DAYS);
+    expect([...full.after]).toEqual(AFTER_DAYS);
+  });
+
+  it(`leaves out a day the rollups stopped at their cap (${ROLLUP_GLOBAL_ROWS_PER_DAY} rows), and the same weekday on the other side`, () => {
+    const capped = [row('2026-10-20', ROLLUP_BUDGET_METRIC, '', '', ROLLUP_GLOBAL_ROWS_PER_DAY), row('2026-10-15', ROLLUP_BUDGET_METRIC, '', '', ROLLUP_GLOBAL_ROWS_PER_DAY - 1)];
+    const days = cohortDays(capped, BEFORE, AFTER);
+    expect(days.after.has('2026-10-20')).toBe(false); // a Tuesday
+    expect(days.before.has('2026-10-06')).toBe(false); // the Tuesday before the step
+    expect(days.after.has('2026-10-15')).toBe(true);
+    expect([days.before.size, days.after.size]).toEqual([6, 6]);
+  });
+
+  it('applies the 20-event threshold to the group a comparison uses, summed over the cohort: an after group under 20 is never compared', () => {
     expect(MIN_GROUP_EVENTS).toBe(20);
+    // 19 quits at a new kind in the whole after window: not compared, and the '' cells did not move
+    const nineteen = [...healthy(BEFORE_DAYS), ...healthy(AFTER_DAYS), row('2026-10-14', 'session.end.questLeft', 'build-letter', '1', 19)];
+    const twenty = [...healthy(BEFORE_DAYS), ...healthy(AFTER_DAYS), row('2026-10-14', 'session.end.questLeft', 'build-letter', '1', 20)];
+    expect(guardrailCheck(nineteen, BEFORE, AFTER)).toEqual({ breaches: [], comparisons: 4, days: 7 }); // all kinds, KIND, median, p90
+    expect(guardrailCheck(twenty, BEFORE, AFTER)).toEqual({ breaches: [], comparisons: 5, days: 7 });
+  });
+
+  it('reads a before group under 20 as its upper bound (19), so the rise is understated and the reason says so', () => {
+    // 2 quits at KIND a day before (14 in the window), 10 a day after
+    const rows = [...each(BEFORE_DAYS, (d) => quits(d, KIND, 2, 100)), ...each(AFTER_DAYS, (d) => quits(d, KIND, 10, 100))];
+    expect(guardrailBreaches(rows, BEFORE, AFTER)).toEqual(['quitRate 2.0%->10.0%', `quitRate:${KIND} <=2.7%->10.0%`]);
   });
 
   it('riseZ is 0 when nobody (or everybody) quit in either cohort, and carries the continuity correction', () => {
@@ -227,12 +264,12 @@ describe('guardrailBreaches (section 3.3)', () => {
   it('quit rate per game kind: a significant rise of more than 2 pp is a breach, exactly 2 pp is not', () => {
     const week = (days: readonly string[], q: number): RollupRow[] => each(days, (d) => [...quits(d, KIND, q, 1000), ...minutes(d, { '4': 30, '6': 40, '9': 30 })]);
     expect(guardrailBreaches([...week(BEFORE_DAYS, 100), ...week(AFTER_DAYS, 120)], BEFORE, AFTER)).toEqual([]);
-    expect(guardrailBreaches([...week(BEFORE_DAYS, 100), ...week(AFTER_DAYS, 130)], BEFORE, AFTER)).toEqual([`quitRate:${KIND} 10.0%->13.0%`]);
+    expect(guardrailBreaches([...week(BEFORE_DAYS, 100), ...week(AFTER_DAYS, 130)], BEFORE, AFTER)).toEqual(['quitRate 10.0%->13.0%', `quitRate:${KIND} 10.0%->13.0%`]);
   });
 
   it('quit rate: a rise of more than 2 pp that the cohort size cannot tell from noise is not a breach', () => {
-    // 20% -> 26% of 100 sessions a day: z = 2.6, over the 2.47 of 3 comparisons
-    expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 26, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])], BEFORE, AFTER)).toHaveLength(1);
+    // 20% -> 27% of 100 sessions a day: z = 2.9, over the 2.58 of 4 comparisons (all kinds, KIND, median, p90)
+    expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 27, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])], BEFORE, AFTER)).toHaveLength(2);
     // 20% -> 24% of 100 sessions a day: z = 1.7, noise at this size
     expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 24, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])], BEFORE, AFTER)).toEqual([]);
   });
@@ -241,18 +278,28 @@ describe('guardrailBreaches (section 3.3)', () => {
     // 1,600 reporting sessions a day: 20 -> 32 quits at KIND is 1.25% -> 2.0% (0.75 pp), however significant
     const day = (d: string, q: number): RollupRow[] => [...quits(d, KIND, q, 1600), ...minutes(d, { '4': 30, '6': 40, '9': 30 })];
     expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => day(d, 20)), ...each(AFTER_DAYS, (d) => day(d, 32))], BEFORE, AFTER)).toEqual([]);
-    expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => day(d, 20)), ...each(AFTER_DAYS, (d) => day(d, 60))], BEFORE, AFTER)).toEqual([`quitRate:${KIND} 1.3%->3.8%`]);
+    expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => day(d, 20)), ...each(AFTER_DAYS, (d) => day(d, 60))], BEFORE, AFTER)).toEqual(['quitRate 1.3%->3.8%', `quitRate:${KIND} 1.3%->3.8%`]);
   });
 
-  it(`quit rate: a kind with no before cohort, or fewer than ${MIN_COHORT_SESSIONS} sessions in a cohort, or under 20 events a day, triggers nothing`, () => {
-    const base = healthy(BEFORE_DAYS);
-    expect(guardrailBreaches([...base, ...each(AFTER_DAYS, (d) => quits(d, 'build-letter', 50, 100))], BEFORE, AFTER)).toEqual([]);
+  it(`quit rate: fewer than ${MIN_COHORT_SESSIONS} sessions in a cohort triggers nothing, and nothing is compared`, () => {
     // 24 sessions a day on 4 days is 96 sessions, under the cohort minimum, though every one of them quit at KIND
-    expect(guardrailBreaches([...base, ...each(AFTER_DAYS.slice(0, 4), (d) => quits(d, KIND, 24, 24))], BEFORE, AFTER)).toEqual([]);
-    // 19 quits at KIND a day: the kind's group is suppressed every day, so 20% -> 47.5% is never compared
-    expect(guardrailBreaches([...base, ...each(AFTER_DAYS, (d) => quits(d, KIND, 19, 40))], BEFORE, AFTER)).toEqual([]);
-    expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => quits(d, KIND, 1, 19)), ...each(AFTER_DAYS, (d) => quits(d, KIND, 18, 19))], BEFORE, AFTER)).toEqual([]);
-    expect(guardrailBreaches([...base, ...each(AFTER_DAYS, (d) => quits(d, KIND, 18, 19))], BEFORE, AFTER)).toEqual([]);
+    const rows = [...each(BEFORE_DAYS, (d) => quits(d, KIND, 20, 100)), ...each(AFTER_DAYS.slice(0, 4), (d) => quits(d, KIND, 24, 24))];
+    expect(guardrailCheck(rows, BEFORE, AFTER)).toEqual({ breaches: [], comparisons: 0, days: 7 });
+  });
+
+  it('quit rate: under 20 quits a kind a day still counts, because the threshold applies to the whole cohort (19 a day is 133)', () => {
+    expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => quits(d, KIND, 19, 40))], BEFORE, AFTER)).toEqual(['quitRate 20.0%->47.5%', `quitRate:${KIND} 20.0%->47.5%`]);
+  });
+
+  it('quit rate: a game kind that did not exist before the step (a game.<kind> ramp) moves both quit lines', () => {
+    // 30 new sessions a day, every one left mid-quest on the new kind
+    const rows = [...each(BEFORE_DAYS, (d) => mixed(d, 100, { [KIND]: 20 })), ...each(AFTER_DAYS, (d) => mixed(d, 130, { [KIND]: 20, 'build-letter': 30 }))];
+    expect(guardrailBreaches(rows, BEFORE, AFTER)).toEqual(['quitRate 20.0%->38.5%', 'quitRate:build-letter <=2.7%->23.1%']);
+  });
+
+  it('quit rate: a kind suppressed before the step and at 100 quits a day after it is a breach', () => {
+    const rows = [...each(BEFORE_DAYS, (d) => mixed(d, 1000, { [KIND]: 2 })), ...each(AFTER_DAYS, (d) => mixed(d, 1000, { [KIND]: 100 }))];
+    expect(guardrailBreaches(rows, BEFORE, AFTER)).toEqual(['quitRate 0.2%->10.0%', `quitRate:${KIND} <=0.3%->10.0%`]);
   });
 
   it('quits after a wrong streak: a significant rise per quest session is a breach, noise is not', () => {
@@ -263,11 +310,11 @@ describe('guardrailBreaches (section 3.3)', () => {
     expect(guardrailBreaches([...week(BEFORE_DAYS, 20), ...week(AFTER_DAYS, 30)], BEFORE, AFTER)).toEqual(['wrongStreakQuits 2.0%->3.0%']);
   });
 
-  it('quits after a wrong streak: a day whose streak group is under 20 leaves that day out of both counts', () => {
-    // after: every day's streak group holds 19 events (all after a streak), so nothing is counted
-    const before = each(BEFORE_DAYS, (d) => [...quits(d, KIND, 30, 1000), ...streaks(d, 5, 5, 10)]);
-    const after = each(AFTER_DAYS, (d) => [...quits(d, KIND, 30, 1000), ...streaks(d, 0, 0, 19)]);
-    expect(guardrailBreaches([...before, ...after], BEFORE, AFTER)).toEqual([]);
+  it('quits after a wrong streak: an after group under 20 events in the window is never compared; a before group under 20 is read as 19', () => {
+    const qs = (days: readonly string[]): RollupRow[] => each(days, (d) => quits(d, KIND, 30, 1000));
+    const before = [...qs(BEFORE_DAYS), ...streaks('2026-10-05', 0, 0, 5)];
+    expect(guardrailBreaches([...before, ...qs(AFTER_DAYS), ...streaks('2026-10-15', 0, 0, 19)], BEFORE, AFTER)).toEqual([]);
+    expect(guardrailBreaches([...before, ...qs(AFTER_DAYS), ...streaks('2026-10-15', 0, 0, 60)], BEFORE, AFTER)).toEqual(['wrongStreakQuits <=0.3%->0.9%']);
   });
 
   it('median session length: a significant fall of more than 10% is a breach, 5% is not', () => {
@@ -301,13 +348,27 @@ describe('guardrailBreaches (section 3.3)', () => {
     expect(guardrailBreaches([...under, ...edge], BEFORE, AFTER)).toEqual([]);
   });
 
-  it('session length: a cohort under 20 sessions a day triggers nothing', () => {
-    const before = each(BEFORE_DAYS, (d) => minutes(d, { '9': 19 }));
+  it(`session length: a cohort under ${MIN_COHORT_SESSIONS} sessions triggers nothing; 19 sessions a day on 7 days is 133 and is compared (half the sessions got shorter and half longer: no median breach)`, () => {
     const after = each(AFTER_DAYS, (d) => minutes(d, { '1': 9, '40': 1, '30-59': 9 }));
-    expect(guardrailBreaches([...before, ...after], BEFORE, AFTER)).toEqual([]);
+    expect(guardrailCheck([...each(BEFORE_DAYS.slice(0, 5), (d) => minutes(d, { '9': 19 })), ...after], BEFORE, AFTER)).toEqual({ breaches: [], comparisons: 0, days: 7 });
+    expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => minutes(d, { '9': 19 })), ...after], BEFORE, AFTER)).toEqual(['p90Minutes 9.9->54.0']);
   });
 
-  it("D1 rows written: a day of the rollup sink's counter at 50% or more of the free-tier quota is a breach when the cohort before stayed under", () => {
+  it('session length: a weekend rhythm is not a breach when the after window holds only Friday to Sunday', () => {
+    // weekdays: 9-minute sessions and 10% quits; weekends: 6-minute sessions and 15% quits; nothing changed with the step
+    const day = (d: string, short: string): RollupRow[] => {
+      const weekend = [0, 6].includes(new Date(`${d}T00:00:00.000Z`).getUTCDay());
+      return [...quits(d, KIND, weekend ? 45 : 30, 300), ...minutes(d, { [weekend ? short : '9']: 300 })];
+    };
+    const before = { fromDay: '2026-10-08', toDay: '2026-10-14' };
+    const after = { fromDay: '2026-10-16', toDay: '2026-10-18' };
+    const beforeRows = each(['2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14'], (d) => day(d, '6'));
+    expect(guardrailBreaches([...beforeRows, ...each(['2026-10-16', '2026-10-17', '2026-10-18'], (d) => day(d, '6'))], before, after)).toEqual([]);
+    // the same rhythm, with weekend sessions after the step really shorter: a breach
+    expect(guardrailBreaches([...beforeRows, ...each(['2026-10-16', '2026-10-17', '2026-10-18'], (d) => day(d, '3'))], before, after)).toEqual(['medianMinutes 6.8->3.8']);
+  });
+
+  it("D1 rows written: a day of the rollup sink's counter at 50% or more of the free-tier quota is a breach when the cohort before stayed under (only once the sink's cap is raised)", () => {
     const line = D1_FREE_ROWS_WRITTEN_PER_DAY / 2;
     expect(line).toBe(50_000);
     const writes = (day: string, n: number): RollupRow => row(day, ROLLUP_BUDGET_METRIC, '', '', n);
@@ -317,6 +378,17 @@ describe('guardrailBreaches (section 3.3)', () => {
     expect(guardrailBreaches([writes('2026-10-05', line), writes('2026-10-20', line + 5)], BEFORE, AFTER)).toEqual([]);
     // events of other metrics are learner counts, not the sink's writes
     expect(guardrailBreaches([row('2026-10-20', 'session.end.minutes', '', '5', line)], BEFORE, AFTER)).toEqual([]);
+    // the sink counts the rows it wrote and stops at its cap, so at the cap this line is far from 50%
+    expect(ROLLUP_GLOBAL_ROWS_PER_DAY).toBeLessThan(line);
+    expect(guardrailBreaches([...BEFORE_DAYS.map((d) => writes(d, 1_000)), ...AFTER_DAYS.map((d) => writes(d, ROLLUP_GLOBAL_ROWS_PER_DAY + 40))], BEFORE, AFTER)).toEqual([]);
+  });
+
+  it('a capped day is left out of the learner comparisons; when every day is capped nothing is compared', () => {
+    const cap = (d: string): RollupRow => row(d, ROLLUP_BUDGET_METRIC, '', '', ROLLUP_GLOBAL_ROWS_PER_DAY);
+    // a spike on the capped Tuesday after the step is not read
+    const rows = [...healthy(BEFORE_DAYS), ...healthy(AFTER_DAYS.slice(0, 6)), ...quits('2026-10-20', KIND, 90, 100), cap('2026-10-20')];
+    expect(guardrailCheck(rows, BEFORE, AFTER)).toEqual({ breaches: [], comparisons: 4, days: 6 });
+    expect(guardrailCheck([...healthy(BEFORE_DAYS), ...healthy(AFTER_DAYS), ...AFTER_DAYS.map(cap)], BEFORE, AFTER)).toEqual({ breaches: [], comparisons: 0, days: 0 });
   });
 
   it('counts only rows inside the windows', () => {
@@ -325,7 +397,7 @@ describe('guardrailBreaches (section 3.3)', () => {
   });
 });
 
-describe('guardrailBreaches under noise (seeded, no real change)', { timeout: 30_000 }, () => {
+describe('guardrailBreaches under noise (seeded, no real change)', { timeout: 90_000 }, () => {
   // A healthy ramp must not be walked down by chance: each run's comparisons share a 2% family alpha.
   it.each([
     [8, 25],
@@ -374,15 +446,28 @@ describe('guardrailReason and the run log', () => {
   });
 
   it('logs flag names, steps and skip codes only, never the reason text', () => {
-    const line = guardrailRunLog({ day: '2026-10-21', ramping: 2, lowered: [{ flag: 'dailyReview', from: 50, to: 10, reason: 'guardrail ... quitRate:match-shape 10.0%->15.0%' }], kept: [], skipped: [{ flag: 'goals', why: 'stale-step' }], deferred: [] });
-    expect(JSON.parse(line)).toEqual({ event: 'guardrail.run', day: '2026-10-21', ramping: 2, lowered: [{ flag: 'dailyReview', from: 50, to: 10 }], kept: [], skipped: [{ flag: 'goals', why: 'stale-step' }], deferred: [] });
+    const skipped = [
+      { flag: 'goals', why: 'stale-step' },
+      { flag: 'mastery', why: 'unchecked' },
+      { flag: 'packs', why: 'too-few-days' },
+      { flag: 'volumes', why: 'changed-today' },
+    ] as const;
+    const line = guardrailRunLog({ day: '2026-10-21', ramping: 5, lowered: [{ flag: 'dailyReview', from: 50, to: 10, reason: 'guardrail ... quitRate:match-shape 10.0%->15.0%' }], kept: [], skipped: [...skipped], deferred: [] });
+    // unguarded: the stale and the unchecked flag (waiting ends the other two skips)
+    expect(JSON.parse(line)).toEqual({ event: 'guardrail.run', day: '2026-10-21', ramping: 5, lowered: [{ flag: 'dailyReview', from: 50, to: 10 }], kept: [], skipped, deferred: [], unguarded: 2 });
     expect(line).not.toContain('quitRate');
+  });
+
+  it('the kill switch: on when GUARDRAIL_EVALUATOR is unset, empty or enabled; any other value stops the evaluator', () => {
+    expect([undefined, {}, { GUARDRAIL_EVALUATOR: '' }, { GUARDRAIL_EVALUATOR: 'enabled' }].map(guardrailEvaluatorEnabled)).toEqual([true, true, true, true]);
+    expect([{ GUARDRAIL_EVALUATOR: 'disabled' }, { GUARDRAIL_EVALUATOR: 'off' }, { GUARDRAIL_EVALUATOR: 'Enabled' }].map(guardrailEvaluatorEnabled)).toEqual([false, false, false]);
+    expect(JSON.parse(guardrailDisabledLog(NOW))).toEqual({ event: 'guardrail.run', day: '2026-10-21', disabled: true });
   });
 });
 
 describe('runGuardrailEvaluator', () => {
-  const breached = (): RollupRow[] => [...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 26, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
-  const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate:${KIND} 20.0%->26.0%`;
+  const breached = (): RollupRow[] => [...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 28, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
+  const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate 20.0%->28.0%; quitRate:${KIND} 20.0%->28.0%`;
 
   it('a breach lowers the flag by one step and records the reason with updated_at; on is untouched', async () => {
     await db.putRemoteConfig(flag());
@@ -411,7 +496,7 @@ describe('runGuardrailEvaluator', () => {
     await db.putRemoteConfig(flag());
     await db.putRemoteConfig(flag({ flag: 'goals', pct: 10, updatedAt: '2026-10-12T08:00:00.000Z' }));
     // goals: before 2026-10-05..11, after 2026-10-14..20
-    rows = [...healthy(['2026-10-03', '2026-10-04', ...BEFORE_DAYS, '2026-10-11']), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 26, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
+    rows = [...healthy(['2026-10-03', '2026-10-04', ...BEFORE_DAYS, '2026-10-11']), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 28, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
     const result = await runGuardrailEvaluator(db, NOW);
     expect(result.lowered.map((l) => [l.flag, l.from, l.to])).toEqual([
       ['dailyReview', 50, 10],
@@ -454,12 +539,30 @@ describe('runGuardrailEvaluator', () => {
     expect(await db.lowerRemoteConfigPct('mastery', 25, STEP_AT, 10, at, 'x')).toBe(true);
   });
 
-  it('suppressed groups are ignored: a big rise in groups under 20 events a day changes nothing', async () => {
+  it('suppressed groups are ignored: an after group under 20 events at a kind changes nothing', async () => {
     await db.putRemoteConfig(flag());
-    rows = [...each(BEFORE_DAYS, (d) => [...quits(d, KIND, 1, 19), ...minutes(d, { '9': 19 })]), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 15, 19), ...minutes(d, { '1': 10, '30-59': 9 })])];
+    rows = [...healthy(BEFORE_DAYS), ...healthy(AFTER_DAYS), row('2026-10-14', 'session.end.questLeft', 'build-letter', '1', 19)];
     const result = await runGuardrailEvaluator(db, NOW);
     expect(result).toMatchObject({ lowered: [], kept: ['dailyReview'] });
     expect(await db.remoteConfig()).toEqual([flag()]);
+  });
+
+  it('a flag with nothing to compare (cohorts too small, or no rollups) is skipped as unchecked, never kept', async () => {
+    await db.putRemoteConfig(flag());
+    // 13 sessions a day, every one left mid-quest after the step: 91 sessions, under the cohort minimum
+    rows = [...each(BEFORE_DAYS, (d) => quits(d, KIND, 1, 13)), ...each(AFTER_DAYS, (d) => quits(d, KIND, 13, 13))];
+    expect(await runGuardrailEvaluator(db, NOW)).toEqual({ day: '2026-10-21', ramping: 1, lowered: [], kept: [], skipped: [{ flag: 'dailyReview', why: 'unchecked' }], deferred: [] });
+    rows = [];
+    expect((await runGuardrailEvaluator(db, NOW)).skipped).toEqual([{ flag: 'dailyReview', why: 'unchecked' }]);
+    expect(await db.remoteConfig()).toEqual([flag()]);
+  });
+
+  it('25 sessions per kind a day among 8 kinds, one kind from 10% to 60% quits: lowered, never kept', async () => {
+    await db.putRemoteConfig(flag());
+    const rand = seeded(2026);
+    rows = [...each(BEFORE_DAYS, (d) => simulatedDay(rand, d, KINDS.slice(0, 8), 25, 0.1)), ...each(AFTER_DAYS, (d) => simulatedDay(rand, d, KINDS.slice(0, 8), 25, 0.1, { [KIND]: 0.6 }))];
+    const result = await runGuardrailEvaluator(db, NOW);
+    expect(result.lowered).toEqual([expect.objectContaining({ flag: 'dailyReview', from: 50, to: 10, reason: expect.stringContaining(`quitRate:${KIND} `) })]);
   });
 
   it('a second run on the same day does nothing more', async () => {
@@ -477,7 +580,8 @@ describe('runGuardrailEvaluator', () => {
     rows = breached();
     for (const day of ['2026-10-22', '2026-10-23', '2026-10-24']) expect((await runGuardrailEvaluator(db, new Date(`${day}T11:17:00.000Z`))).skipped).toEqual([{ flag: 'dailyReview', why: 'too-few-days' }]);
     expect(await db.remoteConfig()).toEqual([flag({ updatedAt: '2026-10-21T11:17:00.000Z', pct: 10 })]);
-    expect((await runGuardrailEvaluator(db, new Date('2026-10-25T11:17:00.000Z'))).skipped).toEqual([]);
+    // compared now (no rollups after the lowering yet, so nothing to compare)
+    expect((await runGuardrailEvaluator(db, new Date('2026-10-25T11:17:00.000Z'))).skipped).toEqual([{ flag: 'dailyReview', why: 'unchecked' }]);
   });
 
   it('after its own lowering it keeps the baseline from before the ramp, so a lower step that is still worse is lowered again', async () => {
@@ -488,10 +592,21 @@ describe('runGuardrailEvaluator', () => {
     rows = [...healthy(['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06']), ...fiftyWeek, ...stillWorse];
     await db.putRemoteConfig(lowered);
     const result = await runGuardrailEvaluator(db, NOW);
-    expect(result.lowered).toEqual([{ flag: 'dailyReview', from: 10, to: 0, reason: `guardrail 2026-10-21 base 2026-10-07 pct 10->0: quitRate:${KIND} 20.0%->28.0%` }]);
+    expect(result.lowered).toEqual([{ flag: 'dailyReview', from: 10, to: 0, reason: `guardrail 2026-10-21 base 2026-10-07 pct 10->0: quitRate 20.0%->28.0%; quitRate:${KIND} 20.0%->28.0%` }]);
     // the owner touched the row (a new note): the breached week becomes the baseline, and 28% reads as better than 35%
     await db.putRemoteConfig({ ...lowered, reason: 'owner keeps 10' });
     expect(await runGuardrailEvaluator(db, NOW)).toMatchObject({ lowered: [], kept: ['dailyReview'] });
+  });
+
+  it(`a kept baseline older than ${GUARDRAIL_MAX_STEP_AGE_DAYS} days is stale, even when the lowering itself is recent`, async () => {
+    // owner stepped on 2026-10-06; the evaluator lowered on 2026-10-14 and kept base 2026-10-06
+    await db.putRemoteConfig(flag({ pct: 10, updatedAt: '2026-10-14T11:17:00.000Z', reason: `guardrail 2026-10-14 base 2026-10-06 pct 50->10: quitRate 20.0%->35.0%` }));
+    rows = breached();
+    expect(await runGuardrailEvaluator(db, NOW)).toMatchObject({ lowered: [], skipped: [{ flag: 'dailyReview', why: 'stale-step' }] });
+    expect(db.rollupRowsOf).not.toHaveBeenCalled();
+    // the same lowering with base 2026-10-07 is still compared
+    await db.putRemoteConfig(flag({ pct: 10, updatedAt: '2026-10-14T11:17:00.000Z', reason: `guardrail 2026-10-14 base 2026-10-07 pct 50->10: quitRate 20.0%->35.0%` }));
+    expect((await runGuardrailEvaluator(db, NOW)).skipped).toEqual([]);
   });
 
   it('skips a flag the owner stepped today, a step in the future, a stale step, or an updated_at that is not a day', async () => {
@@ -519,8 +634,8 @@ describe('runGuardrailEvaluator', () => {
     expect(GUARDRAIL_METRICS).toEqual(['session.end.questLeft', 'session.end.leftAfterWrongStreak', 'session.end.minutes', ROLLUP_BUDGET_METRIC]);
     // the mastery.level_up row is not read at all
     await expect(vi.mocked(db.rollupRowsOf).mock.results[0]?.value).resolves.not.toContainEqual(expect.objectContaining({ metric: 'mastery.level_up' }));
-    // goals: its before window holds 4 of the healthy days, too few to call the same rise significant
-    expect(result).toMatchObject({ ramping: 2, kept: ['goals'], lowered: [{ flag: 'dailyReview' }] });
+    // goals (base 2026-10-07): its before window holds 4 of the healthy days, still enough to show the rise
+    expect(result).toMatchObject({ ramping: 2, kept: [], lowered: [{ flag: 'dailyReview' }, { flag: 'goals', reason: expect.stringContaining('base 2026-10-07') }] });
   });
 
   it('refuses a read over the rollup read limit instead of judging a partial window', async () => {
@@ -535,7 +650,10 @@ describe('runGuardrailEvaluator', () => {
     await db.putRemoteConfig(flag({ updatedAt: '2026-10-17T10:00:00.000Z' }));
     rows = [...healthy(['2026-10-10', '2026-10-11']), ...quits('2026-10-17', KIND, 90, 100), ...healthy(['2026-10-18', '2026-10-19', '2026-10-20'])];
     expect(await runGuardrailEvaluator(db, NOW)).toMatchObject({ kept: ['dailyReview'], lowered: [] });
+    // Sunday to Tuesday after it, so Sunday to Tuesday before it (2026-10-11..13): the Saturday 2026-10-10 is not read
     rows = [...healthy(['2026-10-10']), ...quits('2026-10-20', KIND, 40, 100)];
+    expect((await runGuardrailEvaluator(db, NOW)).skipped).toEqual([{ flag: 'dailyReview', why: 'unchecked' }]);
+    rows = [...healthy(['2026-10-11']), ...quits('2026-10-20', KIND, 40, 100)];
     expect((await runGuardrailEvaluator(db, NOW)).lowered).toEqual([expect.objectContaining({ from: 50, to: 10 })]);
   });
 
@@ -546,6 +664,18 @@ describe('runGuardrailEvaluator', () => {
     const result = await runGuardrailEvaluator(db, NOW);
     expect(result.lowered.map((l) => l.flag)).toEqual(names.slice(0, MAX_GUARDRAIL_LOWERS));
     expect(result.deferred).toEqual(names.slice(MAX_GUARDRAIL_LOWERS));
+  });
+
+  it(`a refused write counts toward the ${MAX_GUARDRAIL_LOWERS} attempts, so a run never prepares more UPDATEs`, async () => {
+    const names = Array.from({ length: MAX_GUARDRAIL_LOWERS + 2 }, (_, i) => `flag${String.fromCharCode(97 + i)}`);
+    for (const name of names) await db.putRemoteConfig(flag({ flag: name }));
+    rows = breached();
+    const write = db.lowerRemoteConfigPct.bind(db);
+    const lower = vi.spyOn(db, 'lowerRemoteConfigPct').mockResolvedValueOnce(false).mockImplementation(write);
+    const result = await runGuardrailEvaluator(db, NOW);
+    expect(lower).toHaveBeenCalledTimes(MAX_GUARDRAIL_LOWERS);
+    expect(result.lowered.map((l) => l.flag)).toEqual(names.slice(1, MAX_GUARDRAIL_LOWERS));
+    expect(result.deferred).toEqual([names[0], ...names.slice(MAX_GUARDRAIL_LOWERS)]);
   });
 
   it('leaves a row the owner edited in any way during the run exactly as the owner set it', async () => {

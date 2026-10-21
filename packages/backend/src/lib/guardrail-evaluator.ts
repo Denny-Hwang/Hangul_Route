@@ -1,5 +1,5 @@
 import { REMOTE_FLAG_NAME, type Db, type RemoteConfigRow, type RollupRow } from '../db';
-import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT } from './learning-rollups';
+import { cappedDays, MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT } from './learning-rollups';
 
 /**
  * The daily guardrail evaluator: F-CURR-002 section 12.3 (row CM-70b), the guardrails of section 3.3, and
@@ -10,6 +10,13 @@ import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT } from './lea
  * `learning_rollups` for the days since the flag's last ramp step (at most the last 7 full UTC days, and at least
  * GUARDRAIL_MIN_AFTER_DAYS of them) with the cohort of the 7 days before that step. The step is the row's
  * `updated_at`; the step day itself is in neither window, because part of it ran at each percentage.
+ *
+ * Same weekdays on both sides. Use has a weekly rhythm (school days and weekends), and the after window holds 3 to 7
+ * days while the before window holds 7. So each cohort keeps only the days whose weekday the other cohort also holds
+ * (each window has at most 7 consecutive days, so every weekday counts once on each side): a step on Thursday compared
+ * on Monday reads Friday to Sunday after it against Friday to Sunday before it. A day on which the rollups stopped at
+ * their global cap (`cappedDays`, row CM-70a) is partial and leans to the hours before the stop, so it is left out of
+ * the learner comparisons on both sides in the same way.
  *
  * Cohorts, not arms (a recorded deviation, section 12.3 and section 19). Section 3.4: with too few weekly actives for
  * an A/B test, a ramp is compared with the cohort before it and the result is directional. The rollups carry no
@@ -22,30 +29,42 @@ import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT } from './lea
  * Guardrails (section 3.3). Each statistical rule needs the point line AND a one-sided test at GUARDRAIL_FAMILY_ALPHA
  * (2%) shared (Bonferroni) by every comparison of the run for that flag, so day-to-day noise across 20-odd game kinds
  * is not read as a breach. A step is checked on about 5 daily runs that share most of their days, so the chance a
- * healthy step is lowered stays near 2-5% per step (seeded tests measure it). A comparison runs only when both cohorts hold MIN_COHORT_SESSIONS or more.
- * - Mid-quest quit rate per game kind up by more than 2 pp, and the two-proportion z of the rise at the threshold or
- *   more. The rate for kind K is the rollups' own definition (`learning-rollups.ts`, `sessionEnd`): the quits at K
- *   (`session.end.questLeft`, dim K, bucket 1; a kind is written only for a quit) over the sessions that report
- *   `questLeft` (the '' cells, buckets 0 + 1), on the days both groups were kept.
+ * healthy step is lowered stays near 2-5% per step (seeded tests measure it). A comparison runs only when both cohorts
+ * hold MIN_COHORT_SESSIONS or more.
+ * - Mid-quest quit rate, all game kinds together: the quits (`session.end.questLeft`, dim '', bucket 1) over the
+ *   sessions that report `questLeft` (buckets 0 + 1), up by more than 2 pp, and the two-proportion z of the rise at the
+ *   threshold or more. This line also sees a game kind that did not exist before the step (a `game.<kind>` ramp).
+ * - Mid-quest quit rate per game kind, the same line and test. The rate for kind K is the rollups' own definition
+ *   (`learning-rollups.ts`, `sessionEnd`): the quits at K (dim K, bucket 1; a kind is written only for a quit) over the
+ *   same reporting sessions, so it is K's share of all play (row CM-70c adds a per-kind count of sessions).
  * - Quits after a wrong streak rising: `session.end.leftAfterWrongStreak` bucket 2 per quest session, the same z-test.
  * - Median session length (`session.end.minutes`) down by more than 10%, and the Mann-Whitney z of "sessions got
  *   shorter" at the threshold or more.
  * - p90 session length reaching 20 minutes when it was under 20 before, and the share of sessions of 20 minutes or
  *   more significantly above 10% (a one-sample z).
  * - D1 rows written per day reaching 50% or more of the free-tier daily quota. The Worker cannot read the account's
- *   D1 analytics, so this reads the rollup sink's own day counter (`ROLLUP_BUDGET_METRIC`, the cells reserved that day,
- *   at least the rows the sink wrote). The sink's global budget stops at 40%, so this line only fires if that budget is
- *   raised; the account total, sync included, is the owner's check in the D1 dashboard (runbook K-3).
+ *   D1 analytics, so this reads the rollup sink's own day counter (`ROLLUP_BUDGET_METRIC`: the rows the sink wrote
+ *   that day, counted exactly, row CM-70a). The sink stops at ROLLUP_GLOBAL_ROWS_PER_DAY (20% of the quota), so this
+ *   line cannot fire while that cap holds: it is advisory, and the account total, sync included, is the owner's check
+ *   in the D1 dashboard (runbook K-3).
  *
  * The two absolute lines (p90 and D1 writes) are "must stay under" lines: they count as a breach when the cohort after
  * the step is at or over the line and the cohort before it was under, so a level the ramp did not cause never walks a
- * flag down to 0 one step a day.
+ * flag down to 0 one step a day (section 12.3; the owner watches a level that was already over the line).
  *
- * Small groups never trigger anything. A group is a (day, metric, dim); one with fewer than MIN_GROUP_EVENTS (20)
- * events on its day is left out (section 11.2: suppression applies per day). The D1 counter is not a group of learners,
- * so it is not suppressed. The inputs come from an anonymous endpoint: the closed sets and the sink's budget bound what
- * a forger can write, the significance gate means a breach needs a sustained, sizeable change, and the only thing a
- * forged breach can do is pause a ramp one step, with its reason on the row.
+ * Small groups never trigger anything. The evaluator shows no cell, so it applies MIN_GROUP_EVENTS (20) to the group
+ * a comparison uses: a (cohort, metric, dim) sum over the cohort's days. A per-day threshold (the display rule of
+ * section 11.2) would leave out nearly every game kind at the app's real traffic (2 or 3 quits a kind a day) and keep
+ * only the days with many quits, which leans every rate upward. An after group under 20 is never compared. A before
+ * group under 20 is read as its upper bound (19), which understates a rise, so the group that triggers a breach is
+ * always the large after group. The D1 counter is not a group of learners, so it is not suppressed. The inputs come
+ * from an anonymous endpoint: the closed sets and the sink's budget bound what a forger can write, the significance gate
+ * means a breach needs a sustained, sizeable change, and the only thing a forged breach can do is pause a ramp one
+ * step, with its reason on the row. A forger who spends the whole budget makes every day capped, which leaves the flag
+ * `unchecked`, never lowered.
+ *
+ * A flag none of whose comparisons had the cohorts to run is reported as skipped `unchecked`, not as kept, so the run
+ * log never calls a ramp healthy when nothing was compared.
  *
  * Lowering is the only action. On a breach the flag's `pct` goes to the previous ramp step (100 -> 50 -> 10 -> 0; a
  * percentage between steps goes to the step below it), with the breaches in `remote_config.reason` and the time in
@@ -58,13 +77,18 @@ import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT } from './lea
  * run on a row the evaluator lowered (its `updated_at` day and `pct` still those of the reason) keeps that before
  * window and compares the days after the lowering with it, so a lower step that is still worse than the cohort before
  * the ramp is lowered again instead of being compared with the breached week. Any owner edit of the row starts a new
- * baseline from its `updated_at`.
+ * baseline from its `updated_at`. The age limit applies to the baseline: once the base step is more than
+ * GUARDRAIL_MAX_STEP_AGE_DAYS old the flag is skipped as `stale-step` (it already passed two weeks of checks, and a
+ * baseline that old reads seasonal drift as a breach). A stale ramp has no automatic guardrail until the owner
+ * advances or re-stamps it; the run log counts such flags as `unguarded`.
  *
  * Bounded: one read of `remote_config`, then (only when a flag is ramping) one read of `learning_rollups` limited to
- * the four metrics used and to steps of the last GUARDRAIL_MAX_STEP_AGE_DAYS days (an older step is skipped as
- * `stale-step`: it already passed two weeks of checks, and a baseline that old reads seasonal drift as a breach), and at
- * most MAX_GUARDRAIL_LOWERS writes, so with the purge's 36 statements a run stays at 46 of the 50 a Free-plan
- * invocation allows.
+ * the four metrics used and to the windows of the last GUARDRAIL_MAX_STEP_AGE_DAYS + GUARDRAIL_WINDOW_DAYS days, and
+ * at most MAX_GUARDRAIL_LOWERS write attempts (a refused write counts), so with the purge's 36 statements a run stays
+ * at 46 of the 50 a Free-plan invocation allows.
+ *
+ * Kill switch: `GUARDRAIL_EVALUATOR` (a dashboard text variable, kept across deploys) stops the evaluator when set to
+ * anything but `enabled`; unset is on. The purge still runs, and the run logs `guardrail.run` with `disabled: true`.
  */
 
 /** The ramp of section 12.3: 10%, then 50%, then 100% (0 before it starts). */
@@ -73,13 +97,13 @@ export const RAMP_STEPS = [0, 10, 50, 100] as const;
 export const GUARDRAIL_WINDOW_DAYS = 7;
 /** A step is compared only once this many full days have passed since it. */
 export const GUARDRAIL_MIN_AFTER_DAYS = 3;
-/** A step (or a lowering) older than this many days is no longer compared (`stale-step`). */
+/** A baseline step older than this many days is no longer compared (`stale-step`). */
 export const GUARDRAIL_MAX_STEP_AGE_DAYS = 14;
 /** The chance, per run and flag, that a ramp with no real change is lowered anyway: shared by every comparison. */
 export const GUARDRAIL_FAMILY_ALPHA = 0.02;
 /** A comparison needs at least this many sessions (or quest sessions) in each cohort. */
 export const MIN_COHORT_SESSIONS = 100;
-/** Mid-quest quit rate per game kind may rise by at most this many percentage points. */
+/** Mid-quest quit rate (all kinds, and per game kind) may rise by at most this many percentage points. */
 export const QUIT_RATE_MAX_RISE_PP = 2;
 /** The median session length may fall by at most this share. */
 export const MEDIAN_MAX_FALL = 0.1;
@@ -89,7 +113,7 @@ export const P90_MAX_MINUTES = 20;
 export const D1_FREE_ROWS_WRITTEN_PER_DAY = 100_000;
 /** D1 rows written per day must stay under this share of the free-tier quota. */
 export const D1_ROWS_WRITTEN_MAX_SHARE = 0.5;
-/** The most flags one run lowers; a breached flag past it is lowered on the next day's run. */
+/** The most write attempts one run makes; a breached flag past it is lowered on the next day's run. */
 export const MAX_GUARDRAIL_LOWERS = 8;
 /** `remote_config.reason` is cut to this many characters. */
 export const GUARDRAIL_REASON_MAX = 500;
@@ -102,6 +126,15 @@ export const GUARDRAIL_METRICS = [QUIT, STREAK, MINUTES, ROLLUP_BUDGET_METRIC] a
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const DAY_MS = 86_400_000;
 const REASON = /^guardrail (\d{4}-\d{2}-\d{2}) base (\d{4}-\d{2}-\d{2}) pct \d+->(\d+): /;
+
+/** The kill switch: on when unset, empty or `enabled`; any other value (the switch is `disabled`) stops the evaluator. */
+export interface GuardrailEnv {
+  GUARDRAIL_EVALUATOR?: string;
+}
+export function guardrailEvaluatorEnabled(env: GuardrailEnv | undefined): boolean {
+  const v = env?.GUARDRAIL_EVALUATOR;
+  return v === undefined || v === '' || v === 'enabled';
+}
 
 /** The ramp step below `pct`: 100 -> 50, 50 -> 10, 10 -> 0, and 25 -> 10. */
 export function previousRampStep(pct: number): number {
@@ -221,67 +254,84 @@ export function shorterZ(before: ReadonlyMap<string, number>, after: ReadonlyMap
   return variance > 0 ? (u - (na * nb) / 2) / Math.sqrt(variance) : 0;
 }
 
-/** The rows of the days a learner group keeps: a (day, metric, dim) group under MIN_GROUP_EVENTS events is left out. */
-export function visibleGroups(rows: readonly RollupRow[]): RollupRow[] {
-  const totals = new Map<string, number>();
-  const key = (r: RollupRow): string => `${r.day}\n${r.metric}\n${r.dim}`;
-  for (const r of rows) totals.set(key(r), (totals.get(key(r)) ?? 0) + r.events);
-  return rows.filter((r) => (totals.get(key(r)) ?? 0) >= MIN_GROUP_EVENTS);
+/** The days from `w.fromDay` to `w.toDay`, inclusive. */
+function daysOf(w: CohortWindow): string[] {
+  const days: string[] = [];
+  for (let d = w.fromDay; d <= w.toDay; d = addDays(d, 1)) days.push(d);
+  return days;
 }
 
-const inWindow = (r: RollupRow, w: CohortWindow): boolean => r.day >= w.fromDay && r.day <= w.toDay;
+const weekdayOf = (day: string): number => new Date(`${day}T00:00:00.000Z`).getUTCDay();
 
-/** Bucket -> events of one metric and dim over a window, from rows already suppressed. */
-function bucketsOf(rows: readonly RollupRow[], metric: string, dim: string, w: CohortWindow, days?: ReadonlySet<string>): Map<string, number> {
-  const out = new Map<string, number>();
-  for (const r of rows) {
-    if (r.metric !== metric || r.dim !== dim || !inWindow(r, w) || (days && !days.has(r.day))) continue;
-    out.set(r.bucket, (out.get(r.bucket) ?? 0) + r.events);
-  }
-  return out;
+/** The days each cohort compares (see the module comment): no capped day, and only the weekdays both cohorts hold. */
+export interface CohortDays {
+  before: ReadonlySet<string>;
+  after: ReadonlySet<string>;
 }
 
-const sum = (m: ReadonlyMap<string, number>): number => [...m.values()].reduce((a, b) => a + b, 0);
-const pct1 = (num: number, den: number): string => ((100 * num) / den).toFixed(1);
+/**
+ * The days of each window the learner comparisons use: the days on which the rollups did not stop at their global cap,
+ * then, on each side, only the days whose weekday the other side also holds. Windows hold at most 7 days, so each
+ * weekday counts once on each side.
+ */
+export function cohortDays(rows: readonly RollupRow[], before: CohortWindow, after: CohortWindow): CohortDays {
+  const capped = new Set(cappedDays(rows));
+  const b = daysOf(before).filter((d) => !capped.has(d));
+  const a = daysOf(after).filter((d) => !capped.has(d));
+  const inB = new Set(b.map(weekdayOf));
+  const inA = new Set(a.map(weekdayOf));
+  return { before: new Set(b.filter((d) => inA.has(weekdayOf(d)))), after: new Set(a.filter((d) => inB.has(weekdayOf(d)))) };
+}
 
 interface Rate {
   num: number;
   den: number;
+  /** The numerator is the upper bound of a group under MIN_GROUP_EVENTS, not its count. */
+  bound?: boolean;
 }
 
-/**
- * Quit rates per game kind in a window: the quits at the kind (its bucket 1) over the reporting sessions (the '' cells,
- * buckets 0 + 1), summed over the days on which both the kind's group and the '' group were kept. A day whose kind group
- * was suppressed says nothing about the kind, so its sessions are left out of that kind's rate too (counting it as no
- * quits would let a suppressed group make a rise).
- */
-function quitRates(rows: readonly RollupRow[], w: CohortWindow): Map<string, Rate> {
-  const sessions = new Map<string, number>(); // day -> reporting sessions
-  for (const r of rows) {
-    if (r.metric === QUIT && r.dim === '' && inWindow(r, w) && (r.bucket === '0' || r.bucket === '1')) sessions.set(r.day, (sessions.get(r.day) ?? 0) + r.events);
-  }
-  const out = new Map<string, Rate>();
-  for (const r of rows) {
-    const den = sessions.get(r.day);
-    if (r.metric !== QUIT || r.dim === '' || r.bucket !== '1' || den === undefined || !inWindow(r, w)) continue;
-    const rate = out.get(r.dim) ?? { num: 0, den: 0 };
-    rate.num += r.events;
-    rate.den += den;
-    out.set(r.dim, rate);
-  }
-  return out;
+/** One cohort's sums over its days, each a (cohort, metric, dim) group. */
+interface Cohort {
+  /** Sessions that report `questLeft` (the '' cells, buckets 0 + 1). */
+  sessions: number;
+  /** Of those, the mid-quest quits (bucket 1). */
+  quits: number;
+  /** Quits per game kind (the kind's bucket 1). */
+  kinds: Map<string, number>;
+  /** The wrong-streak group (every bucket) and its bucket 2. */
+  streakGroup: number;
+  streak2: number;
+  /** Session length bucket -> sessions. */
+  minutes: Map<string, number>;
 }
 
-/**
- * Quits after two or more wrong first tries, per quest session, on the days both groups were kept (a day whose
- * wrong-streak group was suppressed says nothing about it, so it leaves the quest sessions of that day out too).
- */
-function wrongStreakRate(rows: readonly RollupRow[], w: CohortWindow): Rate {
-  const quitDays = new Set(rows.filter((r) => r.metric === QUIT && r.dim === '' && inWindow(r, w)).map((r) => r.day));
-  const days = new Set(rows.filter((r) => r.metric === STREAK && r.dim === '' && quitDays.has(r.day) && inWindow(r, w)).map((r) => r.day));
-  const sessions = bucketsOf(rows, QUIT, '', w, days);
-  return { num: bucketsOf(rows, STREAK, '', w, days).get('2') ?? 0, den: (sessions.get('0') ?? 0) + (sessions.get('1') ?? 0) };
+function cohortOf(rows: readonly RollupRow[], days: ReadonlySet<string>): Cohort {
+  const c: Cohort = { sessions: 0, quits: 0, kinds: new Map(), streakGroup: 0, streak2: 0, minutes: new Map() };
+  for (const r of rows) {
+    if (!days.has(r.day)) continue;
+    if (r.metric === QUIT && r.dim === '') {
+      if (r.bucket === '0' || r.bucket === '1') c.sessions += r.events;
+      if (r.bucket === '1') c.quits += r.events;
+    } else if (r.metric === QUIT && r.bucket === '1') {
+      c.kinds.set(r.dim, (c.kinds.get(r.dim) ?? 0) + r.events);
+    } else if (r.metric === STREAK && r.dim === '') {
+      c.streakGroup += r.events;
+      if (r.bucket === '2') c.streak2 += r.events;
+    } else if (r.metric === MINUTES && r.dim === '') {
+      c.minutes.set(r.bucket, (c.minutes.get(r.bucket) ?? 0) + r.events);
+    }
+  }
+  return c;
 }
+
+/** A before group's count, or its upper bound when the group is under MIN_GROUP_EVENTS (a suppressed group is never read as its count). */
+function beforeRate(group: number, num: number, den: number): Rate {
+  return group >= MIN_GROUP_EVENTS ? { num, den } : { num: MIN_GROUP_EVENTS - 1, den, bound: true };
+}
+
+const sum = (m: ReadonlyMap<string, number>): number => [...m.values()].reduce((a, b) => a + b, 0);
+const pct1 = (r: Rate): string => `${r.bound ? '<=' : ''}${((100 * r.num) / r.den).toFixed(1)}%`;
+
 
 /**
  * One-sided two-proportion z of `after` over `before`, with the continuity correction (so a few dozen sessions are
@@ -296,49 +346,66 @@ export function riseZ(before: Rate, after: Rate): number {
   return corrected / se;
 }
 
-/** The most rows the rollup sink reserved on a day of the window (its day counter, unsuppressed). */
+/** The most rows the rollup sink wrote on a day of the window (its day counter, unsuppressed). */
 function maxRowsWritten(rows: readonly RollupRow[], w: CohortWindow): number {
   let max = 0;
-  for (const r of rows) if (r.metric === ROLLUP_BUDGET_METRIC && inWindow(r, w)) max = Math.max(max, r.events);
+  for (const r of rows) if (r.metric === ROLLUP_BUDGET_METRIC && r.dim === '' && r.bucket === '' && r.day >= w.fromDay && r.day <= w.toDay) max = Math.max(max, r.events);
   return max;
 }
 
+/** What one step's check found: the breaches, how many statistical comparisons had the cohorts to run, and the days per cohort. */
+export interface GuardrailCheck {
+  breaches: string[];
+  comparisons: number;
+  days: number;
+}
+
+/** a/A - b/B > 2/100, in whole numbers so a rise of exactly 2 pp is not a breach. */
+const overLine = (b: Rate, a: Rate): boolean => 100 * (a.num * b.den - b.num * a.den) > QUIT_RATE_MAX_RISE_PP * a.den * b.den;
+
 /**
- * The breaches of one ramp step, as short codes with their numbers (`quitRate:match-shape 8.0%->12.0%`), in the
- * order of section 3.3. `rows` are the rollup rows of the guardrail metrics in both windows, unsuppressed.
+ * Checks one ramp step (section 3.3): the breaches as short codes with their numbers (`quitRate:match-shape
+ * 8.0%->12.0%`), in the order of section 3.3. `rows` are the rollup rows of the guardrail metrics in both windows,
+ * unsuppressed; see the module comment for the days, the suppression and the tests.
  */
-export function guardrailBreaches(rows: readonly RollupRow[], before: CohortWindow, after: CohortWindow): string[] {
-  const kept = visibleGroups(rows.filter((r) => r.metric !== ROLLUP_BUDGET_METRIC));
+export function guardrailCheck(rows: readonly RollupRow[], before: CohortWindow, after: CohortWindow): GuardrailCheck {
+  const days = cohortDays(rows, before, after);
+  const b = cohortOf(rows, days.before);
+  const a = cohortOf(rows, days.after);
   const big = (n: number): boolean => n >= MIN_COHORT_SESSIONS;
 
   // Every comparison that has the cohorts to run shares the family alpha.
-  const quitsBefore = quitRates(kept, before);
-  const kinds = [...quitRates(kept, after)].filter(([kind, a]) => big(a.den) && big(quitsBefore.get(kind)?.den ?? 0)).sort(([x], [y]) => (x < y ? -1 : 1));
-  const sb = wrongStreakRate(kept, before);
-  const sa = wrongStreakRate(kept, after);
-  const streak = big(sb.den) && big(sa.den);
-  const mb = bucketsOf(kept, MINUTES, '', before);
-  const ma = bucketsOf(kept, MINUTES, '', after);
-  const lengths = big(sum(mb)) && big(sum(ma));
-  const z = familyZ(kinds.length + (streak ? 1 : 0) + (lengths ? 2 : 0));
+  const quitting = big(b.sessions) && big(a.sessions);
+  const kinds = quitting ? [...a.kinds].filter(([, n]) => n >= MIN_GROUP_EVENTS).sort(([x], [y]) => (x < y ? -1 : 1)) : [];
+  const streak = quitting && a.streakGroup >= MIN_GROUP_EVENTS;
+  const lengths = big(sum(b.minutes)) && big(sum(a.minutes));
+  const comparisons = (quitting ? 1 : 0) + kinds.length + (streak ? 1 : 0) + (lengths ? 2 : 0);
+  const z = familyZ(comparisons);
 
   const out: string[] = [];
-  for (const [kind, a] of kinds) {
-    const b = quitsBefore.get(kind)!;
-    // a/A - b/B > 2/100, in whole numbers so a rise of exactly 2 pp is not a breach
-    if (100 * (a.num * b.den - b.num * a.den) > QUIT_RATE_MAX_RISE_PP * a.den * b.den && riseZ(b, a) >= z) out.push(`quitRate:${kind} ${pct1(b.num, b.den)}%->${pct1(a.num, a.den)}%`);
+  const rise = (code: string, rb: Rate, ra: Rate, line: boolean): void => {
+    if (line && riseZ(rb, ra) >= z) out.push(`${code} ${pct1(rb)}->${pct1(ra)}`);
+  };
+  if (quitting) {
+    const rb = { num: b.quits, den: b.sessions };
+    const ra = { num: a.quits, den: a.sessions };
+    rise('quitRate', rb, ra, overLine(rb, ra));
   }
-
-  if (streak && riseZ(sb, sa) >= z) out.push(`wrongStreakQuits ${pct1(sb.num, sb.den)}%->${pct1(sa.num, sa.den)}%`);
+  for (const [kind, n] of kinds) {
+    const rb = beforeRate(b.kinds.get(kind) ?? 0, b.kinds.get(kind) ?? 0, b.sessions);
+    const ra = { num: n, den: a.sessions };
+    rise(`quitRate:${kind}`, rb, ra, overLine(rb, ra));
+  }
+  if (streak) rise('wrongStreakQuits', beforeRate(b.streakGroup, b.streak2, b.sessions), { num: a.streak2, den: a.sessions }, true);
 
   if (lengths) {
-    const medB = minutesQuantile(mb, 0.5) ?? 0;
-    const medA = minutesQuantile(ma, 0.5) ?? 0;
-    if (medA < medB * (1 - MEDIAN_MAX_FALL) && shorterZ(mb, ma) >= z) out.push(`medianMinutes ${medB.toFixed(1)}->${medA.toFixed(1)}`);
-    const p90B = minutesQuantile(mb, 0.9) ?? 0;
-    const p90A = minutesQuantile(ma, 0.9) ?? 0;
-    const na = sum(ma);
-    const longShare = minutesRanges(ma).reduce((s, [lo, , n]) => (lo >= P90_MAX_MINUTES ? s + n : s), 0) / na;
+    const medB = minutesQuantile(b.minutes, 0.5) ?? 0;
+    const medA = minutesQuantile(a.minutes, 0.5) ?? 0;
+    if (medA < medB * (1 - MEDIAN_MAX_FALL) && shorterZ(b.minutes, a.minutes) >= z) out.push(`medianMinutes ${medB.toFixed(1)}->${medA.toFixed(1)}`);
+    const p90B = minutesQuantile(b.minutes, 0.9) ?? 0;
+    const p90A = minutesQuantile(a.minutes, 0.9) ?? 0;
+    const na = sum(a.minutes);
+    const longShare = minutesRanges(a.minutes).reduce((s, [lo, , n]) => (lo >= P90_MAX_MINUTES ? s + n : s), 0) / na;
     if (p90A >= P90_MAX_MINUTES && p90B < P90_MAX_MINUTES && (longShare - 0.1) / Math.sqrt(0.09 / na) >= z) out.push(`p90Minutes ${p90B.toFixed(1)}->${p90A.toFixed(1)}`);
   }
 
@@ -347,7 +414,12 @@ export function guardrailBreaches(rows: readonly RollupRow[], before: CohortWind
   const wa = maxRowsWritten(rows, after);
   if (wa >= line && wb < line) out.push(`d1RowsWritten ${wa}/day of ${D1_FREE_ROWS_WRITTEN_PER_DAY}`);
 
-  return out;
+  return { breaches: out, comparisons, days: days.after.size };
+}
+
+/** The breaches of one ramp step (`guardrailCheck`), as short codes with their numbers. */
+export function guardrailBreaches(rows: readonly RollupRow[], before: CohortWindow, after: CohortWindow): string[] {
+  return guardrailCheck(rows, before, after).breaches;
 }
 
 /** The text stored in `remote_config.reason`: who, when, the baseline step, the step taken, and the breaches; codes and numbers only. */
@@ -356,7 +428,10 @@ export function guardrailReason(day: string, base: string, from: number, to: num
   return text.length <= GUARDRAIL_REASON_MAX ? text : `${text.slice(0, GUARDRAIL_REASON_MAX - 3)}...`;
 }
 
-export type GuardrailSkip = 'changed-today' | 'future-updated-at' | 'too-few-days' | 'stale-step' | 'bad-updated-at';
+export type GuardrailSkip = 'changed-today' | 'future-updated-at' | 'too-few-days' | 'stale-step' | 'bad-updated-at' | 'unchecked';
+
+/** The skips that waiting does not end: the flag has no automatic guardrail until the owner edits the row or traffic grows. */
+const UNGUARDED: ReadonlySet<GuardrailSkip> = new Set<GuardrailSkip>(['future-updated-at', 'stale-step', 'bad-updated-at', 'unchecked']);
 
 export interface GuardrailRunResult {
   /** The UTC day of the run. */
@@ -364,10 +439,10 @@ export interface GuardrailRunResult {
   /** Flags that were ramping (on, 0 < pct < 100, a servable name). */
   ramping: number;
   lowered: Array<{ flag: string; from: number; to: number; reason: string }>;
-  /** Ramping flags compared with no breach. */
+  /** Ramping flags compared with no breach (at least one comparison ran). */
   kept: string[];
   skipped: Array<{ flag: string; why: GuardrailSkip }>;
-  /** Breached flags left for the next run: past MAX_GUARDRAIL_LOWERS, or edited during this run. */
+  /** Breached flags left for the next run: past MAX_GUARDRAIL_LOWERS write attempts, or edited during this run. */
   deferred: string[];
 }
 
@@ -389,23 +464,23 @@ export async function runGuardrailEvaluator(db: Db, now: Date): Promise<Guardrai
     if (!row.on || row.pct <= 0 || row.pct >= 100 || !REMOTE_FLAG_NAME.test(row.flag)) continue;
     out.ramping += 1;
     const step = stepDayOf(row.updatedAt);
+    const base = step === null ? null : baseDayOf(row, step);
     const why: GuardrailSkip | null =
-      step === null
+      step === null || base === null
         ? 'bad-updated-at'
         : step > today
           ? 'future-updated-at'
           : step === today
             ? 'changed-today'
-            : step < addDays(today, -GUARDRAIL_MAX_STEP_AGE_DAYS)
+            : base < addDays(today, -GUARDRAIL_MAX_STEP_AGE_DAYS)
               ? 'stale-step'
               : step > addDays(today, -1 - GUARDRAIL_MIN_AFTER_DAYS)
                 ? 'too-few-days'
                 : null;
-    if (why !== null || step === null) {
+    if (why !== null || step === null || base === null) {
       out.skipped.push({ flag: row.flag, why: why ?? 'bad-updated-at' });
       continue;
     }
-    const base = baseDayOf(row, step);
     const fromDay = addDays(step, 1) > addDays(today, -GUARDRAIL_WINDOW_DAYS) ? addDays(step, 1) : addDays(today, -GUARDRAIL_WINDOW_DAYS);
     plans.push({ row, base, before: { fromDay: addDays(base, -GUARDRAIL_WINDOW_DAYS), toDay: addDays(base, -1) }, after: { fromDay, toDay: yesterday } });
   }
@@ -415,29 +490,34 @@ export async function runGuardrailEvaluator(db: Db, now: Date): Promise<Guardrai
   const rows = await db.rollupRowsOf(first, yesterday, GUARDRAIL_METRICS, ROLLUP_READ_LIMIT + 1);
   if (rows.length > ROLLUP_READ_LIMIT) throw new RangeError('guardrail read over the rollup read limit');
   const at = now.toISOString();
+  let attempts = 0;
   for (const { row, base, before, after } of plans) {
-    const breaches = guardrailBreaches(
-      rows.filter((r) => inWindow(r, before) || inWindow(r, after)),
-      before,
-      after,
-    );
-    if (breaches.length === 0) {
-      out.kept.push(row.flag);
+    const inWindows = rows.filter((r) => (r.day >= before.fromDay && r.day <= before.toDay) || (r.day >= after.fromDay && r.day <= after.toDay));
+    const check = guardrailCheck(inWindows, before, after);
+    if (check.breaches.length === 0) {
+      if (check.comparisons === 0) out.skipped.push({ flag: row.flag, why: 'unchecked' });
+      else out.kept.push(row.flag);
       continue;
     }
-    if (out.lowered.length >= MAX_GUARDRAIL_LOWERS) {
+    // A refused write counts too, so the run never prepares more than MAX_GUARDRAIL_LOWERS UPDATEs.
+    if (attempts >= MAX_GUARDRAIL_LOWERS) {
       out.deferred.push(row.flag);
       continue;
     }
+    attempts += 1;
     const to = previousRampStep(row.pct);
-    const reason = guardrailReason(today, base, row.pct, to, breaches);
+    const reason = guardrailReason(today, base, row.pct, to, check.breaches);
     if (await db.lowerRemoteConfigPct(row.flag, row.pct, row.updatedAt, to, at, reason)) out.lowered.push({ flag: row.flag, from: row.pct, to, reason });
     else out.deferred.push(row.flag);
   }
   return out;
 }
 
-/** One log line of a run for Workers Logs: flag names, steps, skip codes and counts only (no reason text, no ids). */
+/**
+ * One log line of a run for Workers Logs: flag names, steps, skip codes and counts only (no reason text, no ids).
+ * `unguarded` counts the ramping flags that have no automatic guardrail until the owner acts (a stale, future or
+ * unreadable step, or no comparison with the cohorts to run).
+ */
 export function guardrailRunLog(result: GuardrailRunResult): string {
   return JSON.stringify({
     event: 'guardrail.run',
@@ -447,5 +527,11 @@ export function guardrailRunLog(result: GuardrailRunResult): string {
     kept: result.kept,
     skipped: result.skipped,
     deferred: result.deferred,
+    unguarded: result.skipped.filter((s) => UNGUARDED.has(s.why)).length,
   });
+}
+
+/** The log line of a run with the kill switch on: nothing was read or written. */
+export function guardrailDisabledLog(now: Date): string {
+  return JSON.stringify({ event: 'guardrail.run', day: now.toISOString().slice(0, 10), disabled: true });
 }
