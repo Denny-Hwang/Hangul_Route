@@ -27,6 +27,7 @@ import { SentenceBuildSlide } from './slides/SentenceBuildSlide';
 import { SentenceSlide } from './slides/SentenceSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
 import { SyllableSlide } from './slides/SyllableSlide';
+import { WriteTogetherSlide } from './slides/WriteTogetherSlide';
 import { StoryCheckSlide, isStoryCheck } from './slides/StoryCheckSlide';
 import { StorySlide } from './slides/StorySlide';
 import { TitleSlide } from './slides/TitleSlide';
@@ -92,6 +93,8 @@ export function Stage(props: StageProps): React.ReactElement {
     reply: messages.learner.presenter.quiz.reply,
     build: messages.learner.presenter.slide.build.next,
     particle: messages.learner.presenter.slide.build.particle,
+    frame: messages.learner.presenter.slide.write.frame,
+    ownName: messages.learner.presenter.slide.write.ownName,
   }, reveal);
   // A sentence-build move says what it placed (section 10, LV-S3); anything else announces the slide.
   const lastLive = useRef<BuildLive | null>(null);
@@ -197,6 +200,8 @@ export function Stage(props: StageProps): React.ReactElement {
           <RealiaSlide slide={slide} reveal={reveal} />
         ) : slide.kind === 'sentence-build' ? (
           <SentenceBuildSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'write-together' ? (
+          <WriteTogetherSlide slide={slide} reveal={reveal} romanization={props.romanization} />
         ) : null}
       </View>
       {props.barStrip !== undefined ? <Grabber pad={units(unit, STAGE_PADDING)} /> : null}
