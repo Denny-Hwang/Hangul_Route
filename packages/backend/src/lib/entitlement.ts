@@ -1,6 +1,9 @@
 import {
+  FAMILY_LIFETIME_LEARNERS,
   FREE_CLASS_STUDENT_CAP,
+  GROUP_LICENSE_LEARNERS,
   PAST_DUE_GRACE_MS,
+  SCHOOL_LEARNER_CAP,
   SCHOOL_LICENSE_STUDENTS,
   SCHOOL_LICENSE_TEACHERS,
   type BrowseScopeResponse,
@@ -47,14 +50,31 @@ export async function classIsPro(db: Db, space: Space, now: Date): Promise<boole
   return !!parent && parent.kind === 'school' && (await hasActive(db, 'space', parent.id, ['group_license', 'school_seat'], now));
 }
 
-/** Students a class may hold: the free cap unless it is pro. */
+const activeIn = (rows: readonly Entitlement[], planKeys: readonly Entitlement['planKey'][], now: Date): boolean =>
+  rows.some((e) => planKeys.includes(e.planKey) && isEntitlementActive(e, now));
+
+/**
+ * [SA] The learner cap of a class from rows already read (AMENDMENTS-SEATS-ADMINS section 3.2), checked in this
+ * order: a live school with an active licence or School Contract decides (no class cap, the school's cap binds:
+ * `Infinity`); otherwise the class's own active Group License (50); otherwise the free cap (20). An archived school
+ * covers nothing here: its classes keep their own cap.
+ */
+export function classCapFrom(ownRows: readonly Entitlement[], school: Space | null, schoolRows: readonly Entitlement[], now: Date): number {
+  if (school && school.kind === 'school' && !school.archivedAt && activeIn(schoolRows, ['group_license', 'school_seat'], now)) return Number.POSITIVE_INFINITY;
+  if (activeIn(ownRows, ['group_license'], now)) return GROUP_LICENSE_LEARNERS;
+  return FREE_CLASS_STUDENT_CAP;
+}
+
+/** [SA] Students a class may hold (section 3.2): `Infinity` under a covered school, else 50 with its own licence, else 20. */
 export async function classCap(db: Db, space: Space, now: Date): Promise<number> {
-  return (await classIsPro(db, space, now)) ? Number.POSITIVE_INFINITY : FREE_CLASS_STUDENT_CAP;
+  const parent = space.parentSpaceId ? await db.getSpace(space.parentSpaceId) : null;
+  const school = parent?.kind === 'school' ? parent : null;
+  return classCapFrom(await db.entitlementsFor('space', space.id), school, school ? await db.entitlementsFor('space', school.id) : [], now);
 }
 
 export interface SchoolLimits {
   licensed: boolean;
-  /** null = unlimited */
+  /** null = unlimited (a School Contract without seats) */
   students: number | null;
   teachers: number | null;
   license: Entitlement | null;
@@ -65,14 +85,39 @@ export async function schoolLimits(db: Db, school: Space, now: Date): Promise<Sc
   return schoolLimitsFrom(await db.entitlementsFor('space', school.id), now);
 }
 
-/** `schoolLimits` from rows already read (the school's own entitlement rows). */
+/**
+ * `schoolLimits` from rows already read (the school's own entitlement rows). [SA] section 3.2: a licence holds 50
+ * students and 10 teachers, a contract its `seats` (null = no cap), and a school with nothing active still holds
+ * `SCHOOL_LEARNER_CAP` (50) students (`licensed: false`, no teacher cap).
+ */
 export function schoolLimitsFrom(rows: readonly Entitlement[], now: Date): SchoolLimits {
   const active = rows.filter((e) => isEntitlementActive(e, now));
   const license = active.find((e) => e.planKey === 'group_license') ?? null;
   if (license) return { licensed: true, students: SCHOOL_LICENSE_STUDENTS, teachers: SCHOOL_LICENSE_TEACHERS, license };
   const seats = active.find((e) => e.planKey === 'school_seat') ?? null;
   if (seats) return { licensed: true, students: seats.seats ?? null, teachers: null, license: seats };
-  return { licensed: false, students: null, teachers: null, license: null };
+  return { licensed: false, students: SCHOOL_LEARNER_CAP, teachers: null, license: null };
+}
+
+/** [SA] Every learner cap a join into `space` meets, in one read (section 3.3); `null` = no such cap. */
+export interface LearnerCaps {
+  /** The space's own cap: a family 4, a class 20 or 50; null for a class under a covered school. */
+  cap: number | null;
+  /** The live school above a class, whose distinct students are capped too. */
+  schoolId: string | null;
+  schoolCap: number | null;
+}
+
+/** [SA] `LearnerCaps` of a family or a class (a school takes no learner joins: no caps). */
+export async function learnerCapOf(db: Db, space: Space, now: Date): Promise<LearnerCaps> {
+  if (space.kind === 'family') return { cap: FAMILY_LIFETIME_LEARNERS, schoolId: null, schoolCap: null };
+  if (space.kind !== 'class') return { cap: null, schoolId: null, schoolCap: null };
+  const parent = space.parentSpaceId ? await db.getSpace(space.parentSpaceId) : null;
+  const school = parent?.kind === 'school' ? parent : null;
+  const schoolRows = school ? await db.entitlementsFor('space', school.id) : [];
+  const cap = classCapFrom(await db.entitlementsFor('space', space.id), school, schoolRows, now);
+  const live = school && !school.archivedAt ? school : null;
+  return { cap: Number.isFinite(cap) ? cap : null, schoolId: live?.id ?? null, schoolCap: live ? schoolLimitsFrom(schoolRows, now).students : null };
 }
 
 export interface SchoolUsage {
@@ -104,15 +149,19 @@ export function schoolUsageFrom(school: Space, children: readonly Space[], membe
   return { students: learners.size, teachers: teachers.size };
 }
 
-/** A licensed school's student limit blocks joins into its classes once reached (§3.1). */
+/**
+ * A school's student limit blocks joins into its classes once reached (§3.1). [SA] section 3.2: every live school
+ * has one (50 unless a School Contract says otherwise), licensed or not; an archived school takes none. A learner
+ * already in a live class of the school takes no new seat.
+ */
 export async function schoolIsFull(db: Db, cls: Space, now: Date, joiningLearnerId?: string): Promise<boolean> {
   const school = cls.parentSpaceId ? await db.getSpace(cls.parentSpaceId) : null;
-  if (!school || school.kind !== 'school') return false;
+  if (!school || school.kind !== 'school' || school.archivedAt) return false;
   const limits = await schoolLimits(db, school, now);
-  if (!limits.licensed || limits.students === null) return false;
+  if (limits.students === null) return false;
   if (joiningLearnerId) {
     for (const s of await db.childSpaces(school.id)) {
-      if (!s.archivedAt && (await db.membership(s.id, 'learner', joiningLearnerId))) return false; // already counted
+      if (s.kind === 'class' && !s.archivedAt && (await db.membership(s.id, 'learner', joiningLearnerId))) return false; // already counted
     }
   }
   return (await schoolUsage(db, school)).students >= limits.students;
@@ -205,7 +254,7 @@ export interface AdultSpace {
   role: AdultRole;
   space: Space;
   parent: Space | null;
-  /** `space.manage`: the space's owner, and on a school also an admin (F-BILL-002 section 4.2). */
+  /** `billing.manage`: the space's owner only ([SA] section 6.5; a school admin no longer pays, F-BILL-002 section 4.2 as amended). */
   payer: boolean;
 }
 
@@ -241,7 +290,7 @@ export async function adultSpacesOf(db: Db, accountId: string, now: Date): Promi
     const space = reads.spaces.get(membership.spaceId);
     if (!space || !isAdultRole(membership.role)) continue;
     const parent = space.parentSpaceId ? (reads.spaces.get(space.parentSpaceId) ?? null) : null;
-    entries.push({ membership, role: membership.role, space, parent, payer: can(actor, 'space.manage', { kind: 'space', ctx: { space, parent } }) });
+    entries.push({ membership, role: membership.role, space, parent, payer: can(actor, 'billing.manage', { kind: 'space', ctx: { space, parent } }) });
   }
   return { memberships, entries, rowsFor: reads.rowsFor, activeFor: reads.activeFor };
 }
@@ -251,7 +300,7 @@ export async function adultSpacesOf(db: Db, accountId: string, now: Date): Promi
  * card set). Live spaces: a family with an active family plan; a class with
  * its own active group licence or under a live school with an active licence
  * or seat contract; a school with an active licence or seat contract. An
- * archived space counts only for its payer (`space.manage`, F-BILL-002
+ * archived space counts only for its payer (`billing.manage` [SA], F-BILL-002
  * section 4.2) while it still holds an active group licence, as the billing
  * home keeps showing it to them.
  */

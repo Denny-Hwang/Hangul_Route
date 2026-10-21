@@ -432,7 +432,7 @@ describe('create', () => {
     const shown = await digestOf();
     expect(await digestOf()).toBe(shown);
     // the destination teacher renames the class between preview and create
-    await db.putSpace(space(B, 'class', 'teacher-b', { name: 'Trusted Class', joinCode: CODE_B, joinCodeExpiresAt: ahead(20 * DAY), createdAt: ago(90 * DAY) }));
+    await db.renameSpace(B, 'Trusted Class');
     const renamed = await create(FAMILY, 'mom', familyCreate({ consent: { ...consent, termsDigest: shown } }));
     expect([renamed.status, renamed.body.error?.code]).toEqual([409, 'terms_changed']);
     // a conditional line appears (a source plan now reaches the learner)

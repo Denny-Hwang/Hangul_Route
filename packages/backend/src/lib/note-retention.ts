@@ -36,6 +36,23 @@ export interface ScheduledPurgeResult {
   notes: number;
   rateHits: number;
   classMoves: number;
+  /** [SA] `space_events` rows past 400 days. */
+  spaceEvents: number;
+}
+
+/** [SA] How long a school's audit rows are kept (AMENDMENTS-SEATS-ADMINS section 6.2, OQ-10). */
+export const SPACE_EVENT_RETENTION_DAYS = 400;
+
+/**
+ * [SA] One bounded `space_events` purge step: rows created more than 400 days ago. A failure (a Worker that runs
+ * before migration 0011) removes nothing and never stops the other purges; tomorrow's run retries.
+ */
+export async function purgeSpaceEventsStep(db: Db, now: Date): Promise<number> {
+  try {
+    return await db.purgeSpaceEvents(new Date(now.getTime() - SPACE_EVENT_RETENTION_DAYS * DAY_MS), NOTE_PURGE_LIMIT);
+  } catch {
+    return 0;
+  }
 }
 
 /**
@@ -57,18 +74,20 @@ export async function purgeClassMovesStep(db: Db, now: Date): Promise<number> {
  * full step of each (nothing left) or after `SCHEDULED_PURGE_ROUNDS` rounds; tomorrow's run continues.
  */
 export async function runScheduledPurge(db: Db, now: Date): Promise<ScheduledPurgeResult> {
-  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0, classMoves: 0 };
+  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0, classMoves: 0, spaceEvents: 0 };
   const hitsBefore = new Date(now.getTime() - RATE_HIT_WINDOW_MS);
   while (out.rounds < SCHEDULED_PURGE_ROUNDS) {
     out.rounds += 1;
     const notes = await purgeNotesLazily(db, now);
     const rateHits = await db.purgeRateHits(hitsBefore, NOTE_PURGE_LIMIT);
     const classMoves = await purgeClassMovesStep(db, now);
+    const spaceEvents = await purgeSpaceEventsStep(db, now);
     out.notes += notes;
     out.rateHits += rateHits;
     out.classMoves += classMoves;
+    out.spaceEvents += spaceEvents;
     // The note step's four statements each remove at most a full step, so a total under one step means all four are done.
-    if (notes < NOTE_PURGE_LIMIT && rateHits < NOTE_PURGE_LIMIT && classMoves < NOTE_PURGE_LIMIT) break;
+    if (notes < NOTE_PURGE_LIMIT && rateHits < NOTE_PURGE_LIMIT && classMoves < NOTE_PURGE_LIMIT && spaceEvents < NOTE_PURGE_LIMIT) break;
   }
   return out;
 }

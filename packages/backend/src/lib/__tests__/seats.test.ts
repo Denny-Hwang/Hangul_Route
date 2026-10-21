@@ -1,7 +1,8 @@
 import type { Space } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDb as db } from '../../__tests__/helpers/db';
-import { activeClassesOf, classSeatCheck, studentsIn } from '../seats';
+import type { Db } from '../../db';
+import { activeClassesOf, classSeatCheck, lookupSeat, seatRefusal, studentsIn, takeLearnerSeat } from '../seats';
 
 /** `lib/seats.ts` — F-SPACE-002 §4.3 (PR T-4a): the class cap checks shared by /join and, later, transfer. */
 
@@ -149,5 +150,62 @@ describe('classSeatCheck (F-SPACE-002 §4.3)', () => {
     const sch = await put(space('space:sch', 'school', 'principal'));
     expect(await classSeatCheck(db, fam, 'profile:x', now)).toBeNull();
     expect(await classSeatCheck(db, sch, 'profile:x', now)).toBeNull();
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS sections 3.3 and 3.4: the atomic seat and the names of its refusals. */
+describe('[SA] takeLearnerSeat, seatRefusal and lookupSeat', () => {
+  it('names the first full cap in the /join order, with the number reached', async () => {
+    const fam = await put(space('space:fam', 'family', 'mom'));
+    await fill(fam.id, 4);
+    expect(await seatRefusal(db, fam, 'profile:new', now)).toEqual({ code: 'cap_family', cap: 4 });
+    expect(await seatRefusal(db, fam, 'profile:space:fam-0', now)).toBeNull(); // a member holds its seat
+    expect(await seatRefusal(db, await put(space('space:sch', 'school', 'principal')), 'profile:new', now)).toBeNull();
+    const cls = await put(space('space:cls', 'class', 't1'));
+    for (const id of ['space:x', 'space:y', 'space:z']) {
+      await put(space(id, 'class', 't2'));
+      await join(id, 'profile:busy');
+    }
+    await fill(cls.id, 20);
+    expect(await seatRefusal(db, cls, 'profile:busy', now)).toEqual({ code: 'cap_learner', cap: 3 });
+    expect(await seatRefusal(db, cls, 'profile:busy', now, { skipLearnerCap: true })).toEqual({ code: 'cap_class', cap: 20 });
+    // the lookup never answers the learner's own class count
+    expect(await lookupSeat(db, cls, 'profile:busy', now)).toEqual({ full: true, reason: 'cap_class', cap: 20 });
+    await db.removeMembership(cls.id, 'learner', 'profile:space:cls-0');
+    expect(await lookupSeat(db, cls, 'profile:busy', now)).toEqual({ full: false, reason: null, cap: null });
+  });
+
+  it('adds, answers already, and refuses with the cap named', async () => {
+    const fam = await put(space('space:fam', 'family', 'mom'));
+    expect(await takeLearnerSeat(db, fam, 'profile:a', now)).toEqual({ kind: 'added' });
+    expect(await takeLearnerSeat(db, fam, 'profile:a', now)).toEqual({ kind: 'already' });
+    await fill(fam.id, 3);
+    expect(await takeLearnerSeat(db, fam, 'profile:e', now)).toEqual({ kind: 'refused', refusal: { code: 'cap_family', cap: 4 } });
+  });
+
+  it('when no cap reads full after a refusal, retries once, then answers the space own cap rather than loop', async () => {
+    const cls = await put(space('space:cls', 'class', 't1'));
+    const fam = await put(space('space:fam', 'family', 'mom'));
+    let statements = 0;
+    const flaky = new Proxy(db, {
+      get(target, prop, receiver) {
+        if (prop === 'addLearnerWithinCaps') {
+          return async () => {
+            statements += 1;
+            return 'refused' as const;
+          };
+        }
+        const value: unknown = Reflect.get(target, prop, receiver);
+        return typeof value === 'function' ? (value as (...a: unknown[]) => unknown).bind(target) : value;
+      },
+    }) as Db;
+    expect(await takeLearnerSeat(flaky, cls, 'profile:a', now)).toEqual({ kind: 'refused', refusal: { code: 'cap_class', cap: 20 } });
+    expect(statements).toBe(2);
+    expect(await takeLearnerSeat(flaky, fam, 'profile:a', now)).toEqual({ kind: 'refused', refusal: { code: 'cap_family', cap: 4 } });
+    // a class of a covered school has no cap of its own: the school's is named
+    const sch = await put(space('space:sch', 'school', 'principal'));
+    const inSchool = await put(space('space:in', 'class', 't2', sch.id));
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch.id, planKey: 'group_license', status: 'active', provider: 'manual' }, now);
+    expect(await takeLearnerSeat(flaky, inSchool, 'profile:a', now)).toEqual({ kind: 'refused', refusal: { code: 'cap_school', cap: 50 } });
   });
 });

@@ -29,7 +29,7 @@ beforeEach(async () => db.reset());
 describe('school admin (F-SCHOOL-001)', () => {
   it('shows invite, licence, seats, classes with teachers and aggregates — to the admin only', async () => {
     const sch = await createSpace('principal', 'school', 'Seoul Hangul School', { displayName: 'Principal' });
-    expect((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data).toMatchObject({ invite: { joinCode: null }, license: null, limits: { licensed: false, students: null, teachers: null }, usage: { students: 0, teachers: 0 }, classes: [] });
+    expect((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data).toMatchObject({ invite: { joinCode: null }, license: null, limits: { licensed: false, students: 50, teachers: null }, usage: { students: 0, teachers: 0 }, classes: [], canRename: true });
     const invite = await issueCode('principal', sch);
     expect((await call('POST', `/api/spaces/${sch}/join`, bearer('ms-park'), { code: invite })).status).toBe(201);
     await call('POST', '/api/spaces', bearer('ms-park'), { kind: 'family', name: 'x', displayName: 'Ms Park' }); // seeds a display name
@@ -57,7 +57,7 @@ describe('school admin (F-SCHOOL-001)', () => {
     };
     expect(view.invite.joinCode).toBe(invite);
     expect(view.license).toMatchObject({ planKey: 'group_license', active: true, subjectName: 'Seoul Hangul School' });
-    expect(view.limits).toEqual({ licensed: true, students: 300, teachers: 10 });
+    expect(view.limits).toEqual({ licensed: true, students: 50, teachers: 10 });
     expect(view.usage).toEqual({ students: 1, teachers: 1 });
     expect(view.thisWeek).toEqual({ students: 1, practiced: 1, classes: 2, classesWithPlan: 1 });
     const rowA = view.classes.find((k) => k.space.id === clsA);

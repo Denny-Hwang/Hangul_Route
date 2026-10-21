@@ -65,7 +65,8 @@ async function ownedSpace(c: Context, db: Db, account: Account, spaceId: string,
   const space = await db.getSpace(spaceId);
   if (!space) return fail(c, 'not_found', 'Space not found', 404);
   if (!kinds.includes(space.kind)) return fail(c, 'bad_request', `Expected a ${kinds.join(' or ')} space`, 422);
-  if (!can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) })) return fail(c, 'forbidden', 'Not your space', 403);
+  // [SA] AMENDMENTS-SEATS-ADMINS section 6.5: only the owner buys or manages a plan (a school admin no longer does).
+  if (!can(await accountActor(db, account), 'billing.manage', { kind: 'space', ctx: await spaceContext(db, space) })) return fail(c, 'forbidden', 'Not your space', 403);
   return space;
 }
 

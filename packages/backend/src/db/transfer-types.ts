@@ -170,6 +170,13 @@ export interface ExecuteTransferInput {
    * than the source must be below this. `Number.POSITIVE_INFINITY` is compared as 1e9.
    */
   learnerCap: number;
+  /**
+   * [SA] The destination's live school and its distinct-student cap (AMENDMENTS-SEATS-ADMINS section 3.3); null when
+   * the destination is not in a live school or the school has no cap. A learner already in a live class of the
+   * school (the source included, whose membership still exists when the gate runs) takes no new school seat.
+   */
+  destSchoolId?: string | null;
+  destSchoolCap?: number | null;
 }
 
 export interface ExecuteTransferResult {
