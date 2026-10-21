@@ -9,6 +9,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   // F-I18N-001 PR 15: Spanish strings a few letters over 1.5x the English, each still inside its drawn budget or never drawn.
   'common.buttons.next': 'the standard Spanish button word "Siguiente" (9) against "Next" (4); buttons wrap (Button sizes by minHeight)',
   'report.step.next': 'the standard Spanish button word "Siguiente", inside the 16-character stepper budget',
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17 (row OA-4a).
+  'learner.who.switchUser': '"Cambiar de persona" (18) against "Switch user" (11), one letter over; gender-neutral where "usuario" is not; a full-width button that wraps',
   'report.when.prevWeek': '"la semana pasada" needs its article inside the sentence; inside the 32-character words-in-a-sentence budget',
   'report.previous.week': '"la semana pasada" needs its article inside the sentence; inside the 32-character words-in-a-sentence budget',
   'report.figure.cards': '"Tarjetas nuevas", one letter over, inside the 20-character report label budget',

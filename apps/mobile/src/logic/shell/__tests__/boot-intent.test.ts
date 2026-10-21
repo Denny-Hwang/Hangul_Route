@@ -242,6 +242,12 @@ describe('the join link boot intent', () => {
     expect(parseJoinBootIntent({ pathname: '/join/', search: '?lang=ko', hash: '#c=abc234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/?lang=ko' });
   });
 
+  it('[OA] OA-D20: a join link takes who=1 out of the address too, and keeps every other key', () => {
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?who=1', hash: '#c=ABC234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/' });
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?lang=ko&who=1', hash: '#c=ABC234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/?lang=ko' });
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?who=2', hash: '' })).toEqual({ intent: { kind: 'join', code: null }, address: '/?who=2' });
+  });
+
   it('a /join with no valid code still opens Join a class, empty', () => {
     expect(parseJoinBootIntent({ pathname: '/join', search: '', hash: '' })).toEqual({ intent: { kind: 'join', code: null }, address: '/' });
     expect(parseJoinBootIntent({ pathname: '/join', search: '', hash: '#c=O0O0O0' })).toEqual({ intent: { kind: 'join', code: null }, address: '/' });
@@ -292,5 +298,67 @@ describe('the join link boot intent', () => {
     openBootIntentWhenReady(nav, src);
     expect(nav.navigate).not.toHaveBeenCalled();
     expect(src.consume).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---- [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a (section 6.2, OA-D12, OA-D20; CS-5) ----
+
+describe('[OA] the who=1 boot intent', () => {
+  it('who=1 is the return to the chooser and leaves the address; lang and other keys stay', () => {
+    expect(parseBootIntent('?who=1')).toEqual({ intent: { kind: 'who' }, search: '', changed: true });
+    expect(parseBootIntent('?lang=ko&who=1&x=2')).toEqual({ intent: { kind: 'who' }, search: '?lang=ko&x=2', changed: true });
+    expect(parseBootIntent('who=1&who=1')).toEqual({ intent: { kind: 'who' }, search: '', changed: true });
+  });
+
+  it('any other who value is no intent and stays where it was', () => {
+    for (const search of ['?who=0', '?who=true', '?who=', '?who=2']) expect(parseBootIntent(search), search).toEqual({ intent: null, search, changed: false });
+  });
+
+  it('a gate intent beside it wins and both leave; a refused next keeps the return', () => {
+    expect(parseBootIntent('?who=1&gate=grown-up&next=%2Fparent')).toEqual({ intent: { kind: 'grown-up', next: '/parent' }, search: '', changed: true });
+    expect(parseBootIntent('?gate=browse&who=1')).toEqual({ intent: { kind: 'browse' }, search: '', changed: true });
+    expect(parseBootIntent('?who=1&gate=grown-up&next=https%3A%2F%2Fevil.example')).toEqual({ intent: { kind: 'who' }, search: '', changed: true });
+  });
+
+  const readyNavigator = () => ({ isReady: vi.fn(() => true), navigate: vi.fn(), addListener: vi.fn(() => () => undefined) });
+  const whoSource = () => {
+    let intent: { kind: 'who' } | null = { kind: 'who' };
+    return { peek: vi.fn(() => intent), consume: vi.fn(() => void (intent = null)) };
+  };
+
+  it('is handed to the chooser hand-off once; without one it is taken and dropped', () => {
+    const nav = readyNavigator();
+    const open = vi.fn(() => true);
+    const src = whoSource();
+    openBootIntentWhenReady(nav, src, undefined, undefined, { open });
+    openBootIntentWhenReady(nav, src, undefined, undefined, { open });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).not.toHaveBeenCalled();
+
+    const dropped = whoSource();
+    openBootIntentWhenReady(nav, dropped);
+    expect(dropped.consume).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('[OA] joinIntentTarget on a shared device (OA-D20)', () => {
+  it('holds the code and opens the chooser with the join trigger; never Join for whoever played last', () => {
+    expect(joinIntentTarget({ kind: 'join', code: 'ABC234' }, true, true)).toEqual({ screen: 'WhoIsUsing', params: { trigger: 'join' }, hold: { code: 'ABC234' } });
+    expect(joinIntentTarget({ kind: 'join', code: null }, true, true)).toEqual({ screen: 'WhoIsUsing', params: { trigger: 'join' }, hold: { code: null } });
+  });
+
+  it('unshared, or no profile: as before', () => {
+    expect(joinIntentTarget({ kind: 'join', code: 'ABC234' }, true, false)).toEqual({ screen: 'JoinSpace', params: { code: 'ABC234' } });
+    expect(joinIntentTarget({ kind: 'join', code: 'ABC234' }, false, true).screen).toBe('Onboarding');
+  });
+
+  it('the hand-off holds the code before it opens the chooser', () => {
+    const nav = { isReady: vi.fn(() => true), navigate: vi.fn(), addListener: vi.fn(() => () => undefined) };
+    let intent: { kind: 'join'; code: string | null } | null = { kind: 'join', code: 'ABC234' };
+    const hold = vi.fn();
+    openBootIntentWhenReady(nav, { peek: () => intent, consume: () => void (intent = null) }, undefined, { hasProfile: () => true, shared: () => true, hold });
+    expect(hold).toHaveBeenCalledWith('ABC234');
+    expect(nav.navigate).toHaveBeenCalledWith('WhoIsUsing', { trigger: 'join' });
   });
 });

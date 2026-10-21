@@ -28,8 +28,11 @@ export type ScreenHeaderRouteName =
 export const SCREEN_HEADER_EXCEPTIONS = ['PlacementInvite', 'FirstQuestPreview'] as const satisfies readonly ScreenHeaderRouteName[];
 export type ScreenHeaderException = (typeof SCREEN_HEADER_EXCEPTIONS)[number];
 
-/** The roots: no leading control (Welcome, the tab navigator and its four tabs, All lessons home, BrowseAccess, the onboarding stack). */
-export const SCREEN_HEADER_ROOTS = ['Onboarding', 'Main', 'Welcome', 'Home', 'Route', 'Journey', 'Library', 'BrowseHome', 'BrowseAccess'] as const satisfies readonly ScreenHeaderRouteName[];
+/**
+ * The roots: no leading control (Welcome, the tab navigator and its four tabs, All lessons home, BrowseAccess, the onboarding stack).
+ * [OA] `WhoIsUsing` (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.1, CS-5): the chooser has no Back, even pushed over a screen.
+ */
+export const SCREEN_HEADER_ROOTS = ['Onboarding', 'Main', 'Welcome', 'Home', 'Route', 'Journey', 'Library', 'BrowseHome', 'BrowseAccess', 'WhoIsUsing'] as const satisfies readonly ScreenHeaderRouteName[];
 
 export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, ScreenHeaderVariant>> = {
   // Containers and roots.
@@ -42,6 +45,8 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   Library: 'none',
   BrowseHome: 'none',
   BrowseAccess: 'none',
+  // [OA] "Who is using this?": no Back, the Android back swallowed (CS-5).
+  WhoIsUsing: 'none',
   // The end of first-run setup (the exception list).
   PlacementInvite: 'none',
   FirstQuestPreview: 'none',

@@ -10,7 +10,7 @@ vi.mock('../../platform/grown-up-tab', () => ({ endGrownUpTab: vi.fn() }));
 
 import type { Profile } from '@hangul-route/content-schema';
 import { endGrownUpTab } from '../../platform/grown-up-tab';
-import { closeGrownUpSession, onGrownUpSessionClosed } from '../grown-up-session';
+import { arriveAtChooser, closeGrownUpSession, onGrownUpSessionClosed } from '../grown-up-session';
 import { useProfileStore } from '../profile-store';
 import { useUiStore } from '../ui-store';
 
@@ -117,5 +117,38 @@ describe('profile-store.setActive closes the grown-up session on a change', () =
     expect(useUiStore.getState().parentGateOpenedAt).toBe(1000);
     expect(endGrownUpTab).not.toHaveBeenCalled();
     expect(useProfileStore.getState().activeSince).toBe(0);
+  });
+});
+
+// [OA] Row OA-4a, CS-2: arriving at "Who is using this?" closes the session whatever it was.
+describe('arriveAtChooser', () => {
+  it('clears both times, the tab unlock, and posts the lock', () => {
+    arriveAtChooser();
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    expect(endGrownUpTab).toHaveBeenCalledTimes(1);
+  });
+
+  it('with nothing open it still clears the tab and tells the other tabs', () => {
+    useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
+    arriveAtChooser();
+    expect(endGrownUpTab).toHaveBeenCalledTimes(1);
+  });
+
+  it('is closeGrownUpSession: a pending PIN-screen return goes and the listeners hear it (OA-4a review)', () => {
+    useUiStore.setState({ gateReturnPending: true });
+    const heard = vi.fn();
+    const off = onGrownUpSessionClosed(heard);
+    arriveAtChooser();
+    off();
+    expect(useUiStore.getState().gateReturnPending).toBe(false);
+    expect(heard).toHaveBeenCalledTimes(1);
+  });
+
+  it('a tab leaving for another page (a hand-off from a PIN screen over the chooser) keeps what it handed off (CS-5)', () => {
+    useUiStore.setState({ gateReturnPending: true });
+    arriveAtChooser(() => true);
+    expect(useUiStore.getState()).toMatchObject({ parentGateOpenedAt: 1000, lastPinVerifiedAt: 2000, gateReturnPending: true });
+    expect(endGrownUpTab).not.toHaveBeenCalled();
   });
 });

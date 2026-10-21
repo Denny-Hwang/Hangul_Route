@@ -289,4 +289,9 @@ export const a11y = {
     slot: '빈칸',
     tilePlaced: (word: string) => `놓은 낱말: ${word}`,
   },
+  /** [OA] 선택 화면의 접근성 이름 (OA-4a, 17.2): 이름 뒤에는 조사 대신 쌍점. */
+  who: {
+    tile: (name: string) => `${name}: 눌러서 배우기 시작해요.`,
+    grownUpRow: (label: string) => `${label}: 어른용, PIN 필요`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;

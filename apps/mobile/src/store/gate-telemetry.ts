@@ -1,4 +1,4 @@
-import { gateDestOf, gateOpenedEvent, markerCode, pinPausedEvent, profileSwitchEvent, type GateVia, type SwitchVia } from '../logic/profiles/gate-events';
+import { gateDestOf, gateOpenedEvent, markerCode, pinPausedEvent, profileSwitchEvent, type GateVia, type SwitchTrigger, type SwitchVia } from '../logic/profiles/gate-events';
 import { gateOpensDirectly } from '../logic/profiles/gate-route';
 import { track } from '../platform/telemetry';
 import { useAccountStore } from './account-store';
@@ -32,9 +32,12 @@ export function passGate(next: string, opens: boolean): boolean {
   return true;
 }
 
-/** `profile.switch` for a switch about to happen, timed from the leaving learner's session start (G1). */
-export function trackProfileSwitch(via: SwitchVia, locked: boolean, now: number = Date.now()): void {
-  void track(profileSwitchEvent({ via, locked, sinceMs: now - useProfileStore.getState().activeSince }));
+/**
+ * `profile.switch` for a switch about to happen, timed from the leaving learner's session start (G1). [OA] `trigger`
+ * (row OA-4a): the chooser's trigger when `via` is `chooser`.
+ */
+export function trackProfileSwitch(via: SwitchVia, locked: boolean, now: number = Date.now(), trigger?: SwitchTrigger): void {
+  void track(profileSwitchEvent({ via, locked, sinceMs: now - useProfileStore.getState().activeSince, ...(trigger === undefined ? {} : { trigger }) }));
 }
 
 /** `pin.paused` with the step of the pause that just started. */

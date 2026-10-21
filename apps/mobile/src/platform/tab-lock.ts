@@ -11,6 +11,9 @@ interface LockManagerLike {
 /** The PIN attempt state's lock (`account:pinAttempts` and `account:rescueAttempts`). */
 export const PIN_ATTEMPTS_LOCK = 'hr:pin-attempts';
 
+/** [OA] OA-D19 (row OA-4a): the profile list's lock (`hr:profiles`; `hr:profiles:active` is written outside it). */
+export const PROFILES_LOCK = 'hr:profiles';
+
 function browserLocks(): LockManagerLike | null {
   try {
     const locks = (globalThis as { navigator?: { locks?: Partial<LockManagerLike> } }).navigator?.locks;

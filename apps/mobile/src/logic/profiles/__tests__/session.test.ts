@@ -5,6 +5,7 @@ import {
   areaExitTracker,
   areaLeaveRoutes,
   backgroundLapsed,
+  closeOnChooser,
   closesSession,
   needsFreshPin,
   routeZone,
@@ -186,5 +187,44 @@ describe('[OA] areaLeaveRoutes (OA-D16)', () => {
     expect(areaLeaveRoutes([{ name: 'EditProfile', params: { profileId: 'p' } }])).toEqual([{ name: 'Main' }]);
     expect(areaLeaveRoutes([{ name: 'Main' }, { name: 'Profile' }])).toBeNull();
     expect(areaLeaveRoutes([])).toBeNull();
+  });
+});
+
+// ---- [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a (section 6.2, 6.3; CS-2) ----
+
+describe('[OA] the resume origin', () => {
+  it('a pick on the chooser opened over a running screen is always allowed', () => {
+    expect(canSwitchProfileFrom('resume')).toBe(true);
+    expect(canEnterPicker(true, 'resume')).toBe(true);
+  });
+
+  it('always persists the leaving learner first, whatever the screen reports', () => {
+    expect(planProfileSwitch('resume', true)).toEqual({ allowed: true, persistRequired: true });
+    expect(planProfileSwitch('resume', false)).toEqual({ allowed: true, persistRequired: true });
+  });
+
+  it('the screens it opens over still offer no Switch of their own', () => {
+    for (const origin of ['quest', 'minigame', 'onboarding'] as const) expect(canSwitchProfileFrom(origin)).toBe(false);
+  });
+});
+
+describe('[OA] closeOnChooser (CS-2)', () => {
+  it('clears both session times, the tab unlock and posts the lock, whatever was open', () => {
+    for (const state of [
+      { parentGateOpenedAt: T0, lastPinVerifiedAt: T0 },
+      { parentGateOpenedAt: T0, lastPinVerifiedAt: null },
+      { parentGateOpenedAt: null, lastPinVerifiedAt: T0 },
+    ]) {
+      expect(closeOnChooser(state)).toEqual({
+        times: { parentGateOpenedAt: null, lastPinVerifiedAt: null },
+        closed: true,
+        clearTab: true,
+        postLock: true,
+      });
+    }
+  });
+
+  it('with nothing open it still clears the tab and posts the lock, and says nothing was closed', () => {
+    expect(closeOnChooser({ parentGateOpenedAt: null, lastPinVerifiedAt: null })).toMatchObject({ closed: false, clearTab: true, postLock: true });
   });
 });

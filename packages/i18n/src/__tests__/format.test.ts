@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { describeRelativeDay, formatDate, formatMinorAmount, formatNumber, formatUsd } from '../format';
+import { compareNames, describeRelativeDay, formatDate, formatMinorAmount, formatNumber, formatUsd } from '../format';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -271,5 +271,26 @@ describe('describeRelativeDay', () => {
     const es = { today: 'hoy', yesterday: 'ayer', notYet: 'todavía no' };
     expect(describeRelativeDay('es', es, null, now)).toBe('todavía no');
     expect(describeRelativeDay('es', es, new Date(2026, 8, 9, 12).toISOString(), now)).toBe('ayer');
+  });
+});
+
+// [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D17 (row OA-4a): the chooser orders 13 or more learners by name.
+describe('compareNames', () => {
+  it('ignores case and accents, and reads digits as numbers', () => {
+    const cmp = compareNames('en');
+    expect(['Zoe', 'ana', 'Émile', 'Student 10', 'Student 9'].sort(cmp)).toEqual(['ana', 'Émile', 'Student 9', 'Student 10', 'Zoe']);
+    expect(cmp('ana', 'Ana')).toBe(0);
+  });
+
+  it('Spanish puts ñ after n; Korean follows the Hangul order', () => {
+    expect(['Ñoño', 'Oscar', 'Nora'].sort(compareNames('es'))).toEqual(['Nora', 'Ñoño', 'Oscar']);
+    expect(['다은', '가온', '나래'].sort(compareNames('ko'))).toEqual(['가온', '나래', '다은']);
+  });
+
+  it('a runtime without Intl.Collator compares by code point', () => {
+    vi.stubGlobal('Intl', { ...Intl, Collator: () => { throw new Error('no data'); } });
+    const cmp = compareNames('en');
+    expect(['b', 'a', 'a'].sort(cmp)).toEqual(['a', 'a', 'b']);
+    expect(cmp('b', 'a')).toBe(1);
   });
 });

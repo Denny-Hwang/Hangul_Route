@@ -38,7 +38,8 @@ export const pinCreated = (where: 'first_run' | 'gate' | 'reset' | 'optional'): 
   payload: { where },
 });
 
-export const pinResetRequested = (method: 'rescue_code' | 'wait'): OnboardingEvent => ({
+/** [OA] `wait_cancelled`: the chooser's Cancel the wait (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15, row OA-4a). */
+export const pinResetRequested = (method: 'rescue_code' | 'wait' | 'wait_cancelled'): OnboardingEvent => ({
   name: 'pin.reset_requested',
   payload: { method },
 });
