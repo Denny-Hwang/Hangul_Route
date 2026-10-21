@@ -140,6 +140,13 @@ describe('telemetry event names (one list for the client type and the API whitel
         'space.admin.accept_refused',
         'space.admin.removed',
         'space.admin.left',
+        'who.shown',
+        'who.picked',
+        'pin.paused',
+        'pin.biometric_changed',
+        'profile.lock_changed',
+        'profile.removed',
+        'space.join.batch',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);

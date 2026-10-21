@@ -1,7 +1,7 @@
 import { LECTURE_DECODE_FAILURES, LECTURE_PRESETS, REPORT_TELEMETRY_PAYLOAD, type TelemetryEventName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { store } from '../../store';
-import { MAX_EVENTS, appendEvent, keptEventFields, recordServerEvent } from '../server-events';
+import { MAX_EVENTS, OA_PAYLOAD_RULES, appendEvent, keptEventFields, recordServerEvent } from '../server-events';
 
 /**
  * The Worker's own telemetry (F-REPORT-001 section 3.13): the console has no
@@ -294,6 +294,59 @@ describe('[SA] school administrator events (AMENDMENTS-SEATS-ADMINS section 6.8:
       expect(event?.profileId, name).toBeUndefined();
     }
     expect(JSON.stringify(store.events)).not.toMatch(/AAAA|Cho|@|dean|space:x|invite:1/);
+  });
+});
+
+/** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15: every name, a documented payload, and one out-of-range value per key. */
+const OA_EVENTS: Record<string, { valid: Record<string, unknown>; off: Record<string, unknown> }> = {
+  'profile.switch': { valid: { via: 'chooser', trigger: 'resume', locked: true, minutesIn: '10+' }, off: { via: 'kitchen', trigger: 'profile:a', locked: 'yes', minutesIn: 12 } },
+  'parent.gate.opened': { valid: { dest: 'cancel_reset', via: 'session', marker: 'nopin' }, off: { dest: '/parent', via: 'passkey', marker: 'pin:123' } },
+  'who.shown': { valid: { trigger: 'join', learners: '13+', grownUps: 4, anyLocked: false, resetPending: true }, off: { trigger: 'none', learners: 14, grownUps: 5, anyLocked: 1, resetPending: 'no' } },
+  'who.picked': { valid: { kind: 'add' }, off: { kind: 'Mina', use: 'parent' } },
+  'pin.paused': { valid: { step: 5 }, off: { step: 6 } },
+  'pin.reset_requested': { valid: { method: 'wait_cancelled' }, off: { method: 'email' } },
+  'pin.reset_completed': { valid: { method: 'sign_in' }, off: { method: 'wait_cancelled' } },
+  'pin.biometric_changed': { valid: { on: true, reason: 'user' }, off: { on: 'true', reason: 'face' } },
+  'profile.lock_changed': { valid: { locked: false }, off: { locked: 0 } },
+  'profile.removed': { valid: { saved: false, wasActive: true, anyway: true }, off: { saved: null, wasActive: 'profile:a', anyway: [] } },
+  'space.join.batch': { valid: { picked: 12, joined: 0, refused: 12 }, off: { picked: 13, joined: -1, refused: 2.5 } },
+  'shell.grown_up_handoff': { valid: { via: 'chooser', target: 'router' }, off: { via: 'menu', target: '/teach/space?id=space:a' } },
+};
+
+describe('[OA] OA_PAYLOAD_RULES (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15: codes, booleans and bounded counts, no profile id)', () => {
+  it('has a rule set for exactly the section 15 names', () => {
+    expect(Object.keys(OA_PAYLOAD_RULES)).toEqual(Object.keys(OA_EVENTS));
+  });
+
+  it.each(Object.entries(OA_EVENTS))('%s keeps its documented payload and never a profile id', (name, { valid }) => {
+    expect(keptEventFields(name as TelemetryEventName, valid, 'profile:a')).toEqual({ profileId: undefined, payload: valid });
+  });
+
+  it.each(Object.entries(OA_EVENTS))('%s drops a smuggled profileId, an extra key and every out-of-range value', (name, { valid, off }) => {
+    const sent = { ...valid, profileId: 'profile:a', learnerId: 'profile:b', name: 'Mina', spaceId: 'space:x' };
+    expect(keptEventFields(name as TelemetryEventName, sent, 'profile:a')).toEqual({ profileId: undefined, payload: valid });
+    expect(keptEventFields(name as TelemetryEventName, { ...off, profileId: 'profile:a', extra: 'x' }, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
+    for (const [key, value] of Object.entries(off)) {
+      const kept = keptEventFields(name as TelemetryEventName, { ...valid, [key]: value }, undefined).payload ?? {};
+      expect(Object.keys(kept), `${name}.${key}`).not.toContain(key);
+      expect(Object.keys(kept).length, `${name}.${key}`).toBe(Object.keys(valid).length - (key in valid ? 1 : 0));
+    }
+    expect(keptEventFields(name as TelemetryEventName, undefined, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
+  });
+
+  it('who.picked keeps use only when it is a documented use', () => {
+    expect(keptEventFields('who.picked', { kind: 'grown_up', use: 'school' }, undefined).payload).toEqual({ kind: 'grown_up', use: 'school' });
+    expect(keptEventFields('who.picked', { kind: 'grown_up', use: undefined }, undefined).payload).toEqual({ kind: 'grown_up' });
+  });
+
+  it('shell.grown_up_handoff takes the OA rule before the shell.* prefix and keeps its shape with chooser', () => {
+    expect(keptEventFields('shell.grown_up_handoff', { via: 'chooser', target: 'next', next: '/teach' }, 'profile:a')).toEqual({ profileId: undefined, payload: { via: 'chooser', target: 'next' } });
+    expect(keptEventFields('shell.grown_up_handoff', { via: 'lock', target: 'billing' }, undefined).payload).toEqual({ via: 'lock', target: 'billing' });
+  });
+
+  it('leaves the other names as they were (an ordinary event keeps its profile id)', () => {
+    expect(keptEventFields('session.start', { a: 1 }, 'profile:a')).toEqual({ profileId: 'profile:a', payload: { a: 1 } });
+    expect(keptEventFields('profile.updated', { field: 'level' }, 'profile:a')).toEqual({ profileId: 'profile:a', payload: { field: 'level' } });
   });
 });
 
