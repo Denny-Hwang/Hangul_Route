@@ -26,7 +26,7 @@ import { requireAccount, spaceContext } from '../lib/access';
 import type { AccountActor } from '../lib/can';
 import { recordClassScopeAck } from '../lib/class-scope';
 import { authorizeDevice } from '../lib/device-auth';
-import { classCap, schoolIsFull } from '../lib/entitlement';
+import { learnerCapOf } from '../lib/entitlement';
 import { isJoinCodeLive } from '../lib/join-code';
 import { createRateLimiter } from '../lib/rate-limit';
 import { classSeatCheck, type SeatBlock } from '../lib/seats';
@@ -82,27 +82,32 @@ function event(name: TelemetryEventName, payload?: Record<string, unknown>): voi
 }
 
 // ---------------------------------------------------------------------------
-// Execution (section 4.2): advisory school check in JS, then the self-guarding batch.
+// Execution (section 4.2): the caps read in JS, then the self-guarding batch ([SA] the school cap in its gate).
 
 type MoveOutcome = { executed: true } | { executed: false; reason: SeatBlock | null };
 
 async function executeMove(db: Db, move: StoredClassMove, decider: ClassMoveDecider, now: Date): Promise<MoveOutcome> {
   const dest = await db.getSpace(move.destSpaceId);
   if (!dest) return { executed: false, reason: null };
-  const alreadyIn = (await db.membership(dest.id, 'learner', move.learnerId)) !== null;
-  if (!alreadyIn && (await schoolIsFull(db, dest, now, move.learnerId))) return { executed: false, reason: 'cap_school' };
+  // [SA] AMENDMENTS-SEATS-ADMINS section 3.3: the destination school's distinct-student cap is in the gate (a move
+  // between two live classes of one school takes no new school seat: the source membership counts).
+  const caps = await learnerCapOf(db, dest, now);
   const result = await db.executeClassMove({
     id: move.id,
     learnerId: move.learnerId,
     sourceSpaceId: move.sourceSpaceId,
     destSpaceId: move.destSpaceId,
     decider,
-    destCap: finiteCap(await classCap(db, dest, now)),
+    destCap: finiteCap(caps.cap ?? Number.POSITIVE_INFINITY),
     learnerCap: LEARNER_CLASS_CAP,
+    destSchoolId: caps.schoolId,
+    destSchoolCap: caps.schoolCap,
     now,
   });
   if (result.executed) return { executed: true };
-  return { executed: false, reason: await classSeatCheck(db, dest, move.learnerId, now, { excludeSpaceId: move.sourceSpaceId }) };
+  const reason = await classSeatCheck(db, dest, move.learnerId, now, { excludeSpaceId: move.sourceSpaceId });
+  if (reason) event('space.seat_refused', { kind: 'class', reason, path: 'move' });
+  return { executed: false, reason };
 }
 
 /**

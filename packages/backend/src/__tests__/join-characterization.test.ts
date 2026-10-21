@@ -16,12 +16,15 @@ import { testDb as db } from './helpers/db';
 
 type Outcome = { status: number; code: string | null };
 
-/** The pre-refactor wording of the seat errors (clients key off the code; the text stays the same too). */
-const LEGACY_MESSAGES: Record<string, string> = {
-  cap_learner: `A learner can be in at most ${LEARNER_CLASS_CAP} classes`,
-  cap_class: 'This class is full',
-  cap_school: 'This school has used all its seats',
-  cap_family: `A family holds up to ${FAMILY_LIFETIME_LEARNERS} learners`,
+/**
+ * The wording of the seat errors (clients key off the code). [SA] AMENDMENTS-SEATS-ADMINS section 3.4: the messages
+ * (logs only, English) name the cap reached, which also comes as `details.cap`.
+ */
+const SEAT_MESSAGES: Record<string, (cap: number) => string> = {
+  cap_learner: (cap) => `A learner can be in at most ${cap} classes`,
+  cap_class: (cap) => `This class has room for ${cap} students`,
+  cap_school: (cap) => `This school has room for ${cap} students`,
+  cap_family: (cap) => `This family has room for ${cap} learners`,
 };
 
 /** The pre-refactor learner path of `/join`, after code and device checks. Do not edit: it is the reference. */
@@ -46,9 +49,9 @@ async function legacyJoinOutcome(store: Db, space: Space, learnerId: string, now
 
 const json = { 'content-type': 'application/json' };
 const bearer = (user: string): Record<string, string> => ({ ...json, authorization: `Bearer ${user}` });
-async function call(method: string, path: string, headers: Record<string, string>, body?: unknown): Promise<{ status: number; body: { ok: boolean; data?: Record<string, unknown>; error?: { code: string; message: string } } }> {
+async function call(method: string, path: string, headers: Record<string, string>, body?: unknown): Promise<{ status: number; body: { ok: boolean; data?: Record<string, unknown>; error?: { code: string; message: string; details?: unknown } } }> {
   const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-  return { status: res.status, body: (await res.json()) as { ok: boolean; data?: Record<string, unknown>; error?: { code: string; message: string } } };
+  return { status: res.status, body: (await res.json()) as { ok: boolean; data?: Record<string, unknown>; error?: { code: string; message: string; details?: unknown } } };
 }
 async function createSpace(user: string, kind: Space['kind'], name: string, parentSpaceId?: string): Promise<Space> {
   const r = await call('POST', '/api/spaces', bearer(user), { kind, name, ...(parentSpaceId ? { parentSpaceId } : {}) });
@@ -238,11 +241,16 @@ describe('/join characterization: old inline order vs classSeatCheck (F-SPACE-00
     }
 
     const r = await call('POST', `/api/spaces/${space.id}/join`, auth, { code: space.joinCode, learnerId });
-    expect({ status: r.status, code: r.body.error?.code ?? null }).toEqual(legacy);
+    // [SA] AMENDMENTS-SEATS-ADMINS section 3.4: the learner /join answers a school cap as cap_class (shipped apps map only
+    // cap_class to the class line), with details.reason naming the cap; every other code is unchanged.
+    expect({ status: r.status, code: r.body.error?.code ?? null }).toEqual(legacy.code === 'cap_school' ? { ...legacy, code: 'cap_class' } : legacy);
     if (legacy.status === 200) expect(r.body.data).toMatchObject({ alreadyMember: true });
     if (legacy.status === 201) expect(await db.membership(space.id, 'learner', learnerId)).toMatchObject({ role: 'student' });
     if (legacy.status === 409) {
-      expect(r.body.error?.message).toBe(LEGACY_MESSAGES[legacy.code as string]);
+      const { cap, reason } = (r.body.error?.details ?? {}) as { cap?: number; reason?: string };
+      expect(typeof cap).toBe('number');
+      expect(reason).toBe(legacy.code);
+      expect(r.body.error?.message).toBe(SEAT_MESSAGES[legacy.code as string]?.(cap as number));
       expect(await db.membership(space.id, 'learner', learnerId)).toBeNull();
     }
   });

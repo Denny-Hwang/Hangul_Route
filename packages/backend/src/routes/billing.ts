@@ -35,11 +35,11 @@ function receiptIdOf(body: unknown): string | null {
   return typeof id === 'string' && /^bev:[a-z0-9-]+$/.test(id) ? id : null;
 }
 
-/** The space when the account pays for it (`space.manage`: its owner, or a school admin), else why not. */
+/** The space when the account pays for it (`billing.manage`: its owner only, [SA] AMENDMENTS-SEATS-ADMINS section 6.5), else why not. */
 async function paidSpace(db: Db, account: Account, spaceId: string): Promise<Space | 'forbidden' | 'not_found'> {
   const space = await db.getSpace(spaceId);
   if (!space) return 'not_found';
-  return can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) }) ? space : 'forbidden';
+  return can(await accountActor(db, account), 'billing.manage', { kind: 'space', ctx: await spaceContext(db, space) }) ? space : 'forbidden';
 }
 
 function refusal(c: Context, verdict: 'forbidden' | 'not_found'): Response {

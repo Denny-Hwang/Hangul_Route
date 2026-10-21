@@ -35,15 +35,26 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
   if (!school || school.kind !== 'school') return fail(c, 'not_found', 'School not found', 404);
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
-  if (!can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, school) })) return fail(c, 'forbidden', 'Not allowed for this school', 403);
+  const actor = await accountActor(db, account);
+  if (!can(actor, 'space.manage', { kind: 'space', ctx: await spaceContext(db, school) })) return fail(c, 'forbidden', 'Not allowed for this school', 403);
 
   const now = new Date();
+  // [SA] section 5.3: whether this grown-up may rename the school and each class row (an admin holds both).
+  const renames = (space: Space, parent: Space | null): boolean => can(actor, 'space.rename', { kind: 'space', ctx: { space, parent } });
   const limits = await schoolLimits(db, school, now);
   const usage = await schoolUsage(db, school);
   const classes = [];
   const seen = new Set<string>();
   let practiced = 0;
-  for (const cls of (await db.childSpaces(school.id)).filter((s) => s.kind === 'class')) {
+  const classRows = (await db.childSpaces(school.id)).filter((s) => s.kind === 'class');
+  // [SA] section 3.6: one source read and one destination read for every live class this caller may rename, not two per row.
+  const movable = classRows.filter((cls) => !cls.archivedAt && renames(cls, school)).map((cls) => cls.id);
+  const withMoves = new Set<string>();
+  if (movable.length > 0) {
+    for (const t of await db.openTransfersOfSpaces(movable, 'source')) withMoves.add(t.sourceSpaceId);
+    for (const t of await db.openTransfersOfSpaces(movable, 'destination')) withMoves.add(t.destSpaceId);
+  }
+  for (const cls of classRows) {
     const learners = (await db.membersOf(cls.id)).filter((m) => m.memberKind === 'learner');
     const lastActive: string[] = [];
     let clsPracticed = 0;
@@ -65,6 +76,8 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
       practiced: clsPracticed,
       lastActiveAt: lastActive.sort().at(-1) ?? null,
       hasPublishedPlan: (await db.plansOf(cls.id)).some((p) => p.publishedAt && !p.archivedAt),
+      canRename: renames(cls, school),
+      openMoves: withMoves.has(cls.id),
     });
   }
   classes.sort((a, b) => Number(!!a.space.archivedAt) - Number(!!b.space.archivedAt) || b.space.createdAt.localeCompare(a.space.createdAt));
@@ -73,8 +86,12 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
   return ok(c, {
     school: publicSpace(school),
     invite: isJoinCodeLive(school, now) ? { joinCode: school.joinCode, joinCodeExpiresAt: school.joinCodeExpiresAt } : { joinCode: null, joinCodeExpiresAt: null },
-    license: license ? { ...license, subjectName: school.name, active: isEntitlementActive(license, now) } : null,
+    // [SA] section 3.6: an allow-list for every caller; never a Stripe id or a promo code (billing is the owner's).
+    // `updatedAt` stays: the console's past-due grace line reads it (billing.ts statusLine).
+    license: license ? { planKey: license.planKey, status: license.status, seats: license.seats, expiresAt: license.expiresAt, updatedAt: license.updatedAt, active: isEntitlementActive(license, now), subjectName: school.name } : null,
+    // [SA] section 3.2: 50 for a licence, the contract's seats, or 50 for a school with nothing active (`licensed: false`).
     limits: { licensed: limits.licensed, students: limits.students, teachers: limits.teachers },
+    canRename: renames(school, null),
     usage,
     thisWeek: { students: usage.students, practiced, classes: live.length, classesWithPlan: live.filter((k) => k.hasPublishedPlan).length },
     classes,

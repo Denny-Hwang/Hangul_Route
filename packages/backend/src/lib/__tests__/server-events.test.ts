@@ -264,6 +264,21 @@ describe('lecture events (AMENDMENTS-LECTURE-V2 section 11: codes and bounded co
   });
 });
 
+describe('[SA] seat and rename events (AMENDMENTS-SEATS-ADMINS section 8: codes only, no profile id)', () => {
+  it('space.seat_refused keeps kind, reason and path from their lists only', () => {
+    expect(keptEventFields('space.seat_refused', { kind: 'family', reason: 'cap_family', path: 'join', spaceId: 'space:x', name: 'Kim family' }, 'profile:a')).toEqual({ profileId: undefined, payload: { kind: 'family', reason: 'cap_family', path: 'join' } });
+    expect(keptEventFields('space.seat_refused', { kind: 'school', reason: 'cap_teacher', path: 'space:x' }, undefined)).toEqual({ profileId: undefined, payload: undefined });
+    for (const reason of ['cap_class', 'cap_school', 'cap_learner']) expect(keptEventFields('space.seat_refused', { kind: 'class', reason, path: 'move' }, undefined).payload).toEqual({ kind: 'class', reason, path: 'move' });
+  });
+
+  it('space.renamed keeps kind and role only, never the name', () => {
+    const event = recordServerEvent('space.renamed', { kind: 'school', role: 'admin', name: 'Maple School', spaceId: 'space:x', accountId: 'dean' });
+    expect(event?.payload).toEqual({ kind: 'school', role: 'admin' });
+    expect(JSON.stringify(store.events)).not.toMatch(/Maple|space:x|dean/);
+    expect(keptEventFields('space.renamed', { kind: 'class', role: 'caregiver' }, undefined).payload).toEqual({ kind: 'class' });
+  });
+});
+
 describe('appendEvent', () => {
   it('pushes and trims from the front once past the cap', () => {
     store.events = Array.from({ length: MAX_EVENTS }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));

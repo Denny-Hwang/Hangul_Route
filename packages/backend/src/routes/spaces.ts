@@ -1,13 +1,13 @@
 import {
-  FAMILY_LIFETIME_LEARNERS,
-  LEARNER_CLASS_CAP,
   SpaceCreateSchema,
   SpaceJoinSchema,
   SpaceLookupSchema,
   SpaceSettingsPatchSchema,
+  checkSpaceName,
   rosterAlias,
   type Membership,
   type Space,
+  type SpaceEventKind,
   type SpaceRole,
 } from '@hangul-route/content-schema';
 import { Hono, type Context } from 'hono';
@@ -16,12 +16,13 @@ import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can, type Action } from '../lib/can';
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
-import { classCap, schoolIsFull } from '../lib/entitlement';
+import { learnerCapOf, schoolUsage } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { learnerScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
-import { classSeatCheck, studentsIn, type SeatBlock } from '../lib/seats';
+import { lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
+import { recordServerEvent } from '../lib/server-events';
 import { id, type Account } from '../store';
 
 /**
@@ -38,6 +39,10 @@ export function schoolConsentModeEnabled(env: { SCHOOL_CONSENT_MODE?: string } |
 export const LOOKUP_LIMIT = 20;
 export const LOOKUP_WINDOW_MS = 60 * 60 * 1000;
 export const lookupLimiter = createRateLimiter(LOOKUP_LIMIT, LOOKUP_WINDOW_MS);
+
+/** [SA] Renames per account per hour (AMENDMENTS-SEATS-ADMINS section 5.2). */
+export const RENAME_LIMIT = 30;
+export const renameLimiter = createRateLimiter(RENAME_LIMIT, 60 * 60 * 1000);
 
 /** What members see about a space — never the code (handed out separately, by role). */
 export function publicSpace(space: Space) {
@@ -187,8 +192,16 @@ spacesRoutes.post('/lookup', async (c) => {
     }
     roster.sort((a, b) => a.name.localeCompare(b.name));
   }
-  const full = space.kind === 'class' && ((await studentsIn(db, space.id)) >= (await classCap(db, space, now)) || (await schoolIsFull(db, space, now)));
-  return ok(c, { space: { id: space.id, kind: space.kind, name: space.name }, full, roster });
+  // [SA] section 3.4: `full` is always false. Shipped apps stop on it before the class roster and its relink step, so a
+  // student at a full class (or a class of a full school) on a new device could not reach relink, which takes no
+  // seat; the atomic `/join` refuses a new learner instead. The field stays so shipped apps parse the answer.
+  const full = false;
+  // [SA] `seat` is learner-aware: a learner this device vouches for (the `/join` check) who already holds the seat
+  // finds room. An unvouched `learnerId` is ignored, never an error, so the lookup reveals nothing about it.
+  const learnerId = parsed.data.learnerId && LOOKUP_LEARNER_ID.test(parsed.data.learnerId) ? parsed.data.learnerId : null;
+  const vouched = learnerId && parseDeviceHeader(c.req.header('Authorization')) && typeof (await authorizeDevice(c, learnerId)) === 'string' ? learnerId : null;
+  const seat = await lookupSeat(db, space, vouched, now);
+  return ok(c, { space: { id: space.id, kind: space.kind, name: space.name }, full, seat, roster });
 });
 
 spacesRoutes.get('/:id/members', async (c) => {
@@ -214,7 +227,7 @@ spacesRoutes.patch('/:id/settings', async (c) => {
   const db = dbFor(c);
   const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, db, space, 'space.manage');
+  const account = await requireCan(c, db, space, 'space.settings');
   if (!('id' in account)) return account;
   const parsed = SpaceSettingsPatchSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Invalid settings', 422, { issues: parsed.error.issues });
@@ -230,7 +243,7 @@ spacesRoutes.post('/:id/archive', async (c) => {
   const db = dbFor(c);
   const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, db, space, 'space.manage');
+  const account = await requireCan(c, db, space, 'space.archive');
   if (!('id' in account)) return account;
   space.archivedAt = space.archivedAt ?? new Date().toISOString();
   await db.putSpace(space);
@@ -241,7 +254,7 @@ spacesRoutes.post('/:id/unarchive', async (c) => {
   const db = dbFor(c);
   const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, db, space, 'space.manage');
+  const account = await requireCan(c, db, space, 'space.archive');
   if (!('id' in account)) return account;
   space.archivedAt = null;
   await db.putSpace(space);
@@ -259,6 +272,57 @@ spacesRoutes.delete('/:id/learners/:learnerId/data', async (c) => {
   return ok(c, { deleted: await db.deleteLearner(learnerId) });
 });
 
+/** [SA] The role a rename is recorded with (section 5.5): the actor's own role, else its role in the school above. */
+function renameRole(memberships: readonly Membership[], accountId: string, space: Space, parent: Space | null): 'owner' | 'teacher' | 'admin' {
+  const roleIn = (spaceId: string): SpaceRole | null => memberships.find((m) => m.spaceId === spaceId && m.memberKind === 'account' && m.memberId === accountId)?.role ?? null;
+  const own = roleIn(space.id);
+  if (own === 'owner' || own === 'teacher' || own === 'admin') return own;
+  return parent && roleIn(parent.id) === 'owner' ? 'owner' : 'admin';
+}
+
+/** [SA] The school a rename is recorded on, and how (section 6.2): schools only, never a family or a stand-alone class. */
+function renameEvent(space: Space, parent: Space | null): { schoolId: string; kind: SpaceEventKind; subjectSpaceId: string | null } | null {
+  if (space.kind === 'school') return { schoolId: space.id, kind: 'renamed', subjectSpaceId: null };
+  if (space.kind === 'class' && parent?.kind === 'school') return { schoolId: parent.id, kind: 'class_renamed', subjectSpaceId: space.id };
+  return null;
+}
+
+spacesRoutes.patch('/:id/name', async (c) => {
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const actor = await accountActor(db, account);
+  const ctx = await spaceContext(db, space);
+  if (!can(actor, 'space.rename', { kind: 'space', ctx })) return fail(c, 'forbidden', 'Not allowed for this space', 403);
+  if (space.archivedAt) return fail(c, 'archived', 'Unarchive the space to rename it', 422);
+  const body = (await c.req.json().catch(() => null)) as { name?: unknown } | null;
+  if (!body || typeof body !== 'object' || typeof body.name !== 'string') return fail(c, 'bad_request', 'name required', 422);
+  const checked = checkSpaceName(body.name);
+  if (!checked.ok) return fail(c, 'bad_name', 'This name cannot be used', 422, { reason: checked.reason });
+  if (checked.name === space.name) return ok(c, { space: publicSpace(space), changed: false });
+  const decision = renameLimiter.check(account.id);
+  if (!decision.allowed) return fail(c, 'too_many_attempts', 'Too many renames: try again later', 429, { retryAfterSeconds: decision.retryAfterSeconds });
+  if ((await db.renameSpace(space.id, checked.name)) === 0) {
+    // An archive or a delete landed between the read and the write: say which, record nothing.
+    const now = await db.getSpace(space.id);
+    return now ? fail(c, 'archived', 'Unarchive the space to rename it', 422) : fail(c, 'not_found', 'Space not found', 404);
+  }
+  const event = renameEvent(space, ctx.parent);
+  if (event) {
+    // After the committed rename, best effort: an audit write that fails never reports the rename as failed. A
+    // fixed code only, never the name.
+    try {
+      await db.addSpaceEvent({ id: id('sev'), spaceId: event.schoolId, kind: event.kind, actorAccountId: account.id, subjectAccountId: null, subjectSpaceId: event.subjectSpaceId, inviteId: null, createdAt: new Date().toISOString() });
+    } catch {
+      console.warn('space_event_write_failed');
+    }
+  }
+  recordServerEvent('space.renamed', { kind: space.kind, role: renameRole(actor.kind === 'account' ? actor.memberships : [], account.id, space, ctx.parent) });
+  return ok(c, { space: publicSpace({ ...space, name: checked.name }), changed: true });
+});
+
 spacesRoutes.post('/:id/code', async (c) => {
   const db = dbFor(c);
   const space = await findSpace(c, db, c.req.param('id'));
@@ -271,11 +335,12 @@ spacesRoutes.post('/:id/code', async (c) => {
   return ok(c, { joinCode: space.joinCode, expiresAt: space.joinCodeExpiresAt });
 });
 
-/** Messages for the seat checks of `/join` (unchanged wording; the client keys off the code). */
-const SEAT_MESSAGES: Record<SeatBlock, string> = {
-  cap_learner: `A learner can be in at most ${LEARNER_CLASS_CAP} classes`,
-  cap_class: 'This class is full',
-  cap_school: 'This school has used all its seats',
+/** Messages of the `/join` seat refusals (logs only, English; the client keys off the code and `details.cap`). */
+const SEAT_MESSAGES: Record<SeatRefusal, (cap: number) => string> = {
+  cap_learner: (cap) => `A learner can be in at most ${cap} classes`,
+  cap_class: (cap) => `This class has room for ${cap} students`,
+  cap_school: (cap) => `This school has room for ${cap} students`,
+  cap_family: (cap) => `This family has room for ${cap} learners`,
 };
 
 spacesRoutes.post('/:id/join', async (c) => {
@@ -315,13 +380,22 @@ spacesRoutes.post('/:id/join', async (c) => {
       await applyName();
       return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
     }
-    const seat = await classSeatCheck(db, space, learnerId, now);
-    if (seat) return fail(c, seat, SEAT_MESSAGES[seat], 409);
-    if (space.kind === 'family' && (await studentsIn(db, space.id)) >= FAMILY_LIFETIME_LEARNERS) {
-      return fail(c, 'cap_family', `A family holds up to ${FAMILY_LIFETIME_LEARNERS} learners`, 409);
+    // [SA] One atomic statement takes the seat under every cap (AMENDMENTS-SEATS-ADMINS section 3.3).
+    const taken = await takeLearnerSeat(db, space, learnerId, now);
+    if (taken.kind === 'already') {
+      // Another device of this learner joined between the read above and the statement.
+      await applyName();
+      const row = await db.membership(space.id, 'learner', learnerId);
+      return ok(c, { alreadyMember: true, membership: row, space: { id: space.id, kind: space.kind, name: space.name } });
+    }
+    if (taken.kind === 'refused') {
+      const { code: reason, cap } = taken.refusal;
+      recordServerEvent('space.seat_refused', { kind: space.kind, reason, path: 'join' });
+      // [SA] section 3.4: a school cap answers `cap_class` (shipped apps map only `cap_class` to the class line);
+      // `details.reason` names the cap that was reached.
+      return fail(c, reason === 'cap_school' ? 'cap_class' : reason, SEAT_MESSAGES[reason](cap), 409, { reason, cap });
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
-    await db.addMembership(membership);
     await applyName();
     return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name } }, 201);
   }
@@ -408,9 +482,38 @@ spacesRoutes.get('/:id/roster', async (c) => {
     });
   }
   learners.sort((a, b) => b.lastActiveAt.localeCompare(a.lastActiveAt));
-  const manage = can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) });
-  return ok(c, { space: publicSpace(space), learners, ...(manage ? liveCode(space, now) : { joinCode: null, joinCodeExpiresAt: null }) });
+  const actor = await accountActor(db, account);
+  const ctx = await spaceContext(db, space);
+  const manage = can(actor, 'space.manage', { kind: 'space', ctx });
+  // [SA] section 3.6 and 5.3: the seat counts the console shows, and whether this grown-up may rename the space.
+  const canRename = can(actor, 'space.rename', { kind: 'space', ctx });
+  return ok(c, {
+    space: publicSpace(space),
+    learners,
+    ...(manage ? liveCode(space, now) : { joinCode: null, joinCodeExpiresAt: null }),
+    seats: await rosterSeats(db, space, members.filter((m) => m.memberKind === 'learner').length, now),
+    canRename,
+    openMoves: canRename ? await hasOpenMoves(db, space.id) : false,
+  });
 });
+
+/**
+ * [SA] `GET /:id/roster` `seats` (section 3.6): the space's learners and cap, and for a class in a live school the
+ * school's distinct students and cap. A cap of `null` is none; the school fields are `null` outside a school.
+ */
+export async function rosterSeats(db: Db, space: Space, learners: number, now: Date): Promise<{ learners: number; cap: number | null; schoolLearners: number | null; schoolCap: number | null }> {
+  const caps = await learnerCapOf(db, space, now);
+  const school = caps.schoolId ? await db.getSpace(caps.schoolId) : null;
+  return { learners, cap: caps.cap, schoolLearners: school ? (await schoolUsage(db, school)).students : null, schoolCap: school ? caps.schoolCap : null };
+}
+
+/** [SA] Whether an open class transfer names the space as its source or destination (a rename resets its consent, section 5.4). */
+/** [SA] section 3.4: the learner id shape `/lookup` may vouch for; any other value is ignored. */
+const LOOKUP_LEARNER_ID = /^profile:[a-z0-9-]+$/;
+
+export async function hasOpenMoves(db: Db, spaceId: string): Promise<boolean> {
+  return (await db.openTransfersOfSpaces([spaceId], 'source')).length > 0 || (await db.openTransfersOfSpaces([spaceId], 'destination')).length > 0;
+}
 
 /** Learner-facing rows for the sync inbox (archived spaces drop out). */
 export async function learnerMembershipRows(db: Db, learnerId: string) {

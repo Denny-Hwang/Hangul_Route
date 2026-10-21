@@ -26,7 +26,20 @@ export type Action =
    */
   | 'feedback.send'
   /** Read, hide, report and block every note to a learner of the family: the family owner and every caregiver, granted or not. */
-  | 'feedback.oversee';
+  | 'feedback.oversee'
+  /**
+   * [SA] Rename the space (AMENDMENTS-SEATS-ADMINS section 5.1): a family's owner; a class's owner and teacher members,
+   * and its school's owner and admins (cascade); a school's owner and admins. Never a caregiver or a learner.
+   */
+  | 'space.rename'
+  /** [SA] Buy, manage or cancel the space's plan, open its receipts (section 6.5): the owner only, on every kind. */
+  | 'billing.manage'
+  /** [SA] Invite, revoke and remove a school's administrators (section 6.5): the owner only. */
+  | 'admin.manage'
+  /** [SA] Change the space's settings (anonymized roster, consent mode): the owner only. */
+  | 'space.settings'
+  /** [SA] Archive or unarchive the space: the owner only. */
+  | 'space.archive';
 
 export type Actor =
   | { kind: 'learner'; learnerId: string }
@@ -56,7 +69,12 @@ const BASE: Record<SpaceKind, Partial<Record<SpaceRole, readonly Action[]>>> = {
   },
 };
 
-/** The owner's membership row is `owner`; it acts as the kind's working role plus `space.manage`. */
+/**
+ * The owner's membership row is `owner`; it acts as the kind's working role plus `space.manage` and the [SA]
+ * owner-only actions (on a family or a class they match `space.manage`, so nothing changes there).
+ */
+const OWNER_ACTIONS: readonly Action[] = ['space.manage', 'billing.manage', 'admin.manage', 'space.settings', 'space.archive', 'space.rename'];
+
 const OWNER_AS: Record<SpaceKind, SpaceRole> = { family: 'caregiver', class: 'teacher', school: 'admin' };
 
 function roleIn(actor: AccountActor, spaceId: string): SpaceRole | null {
@@ -69,7 +87,10 @@ export function allowedOnSpace(actor: AccountActor, ctx: SpaceContext): Set<Acti
   if (role) {
     const effective = role === 'owner' ? OWNER_AS[ctx.space.kind] : role;
     for (const action of BASE[ctx.space.kind][effective] ?? []) out.add(action);
-    if (role === 'owner') out.add('space.manage');
+    if (role === 'owner') for (const action of OWNER_ACTIONS) out.add(action);
+    // [SA] section 5.1: a class's teachers rename it; a school's admins rename the school.
+    if (ctx.space.kind === 'class' && effective === 'teacher') out.add('space.rename');
+    if (ctx.space.kind === 'school' && role === 'admin') out.add('space.rename');
     // Deletion rights (F-TCH-001 §10.3): caregivers always; teachers only under school consent.
     if (ctx.space.kind === 'family' && effective === 'caregiver') out.add('learner.delete');
     if (ctx.space.kind === 'class' && effective === 'teacher' && ctx.space.settings.consentMode === 'school') out.add('learner.delete');
@@ -86,6 +107,7 @@ export function allowedOnSpace(actor: AccountActor, ctx: SpaceContext): Set<Acti
       out.add('summary.read');
       out.add('roster.manage');
       out.add('learner.transfer');
+      out.add('space.rename');
     }
   }
   return out;

@@ -81,7 +81,12 @@ export const consoleMsgs = {
   billingCancelled: 'Nothing was charged.',
   familyLine: 'Renews yearly. Cancel from Manage subscription any time.',
   groupLine: 'Renews yearly. Cancel from Manage subscription any time.',
-  contactLine: 'More than 300 students or 10 teachers? Write to us for a contract.',
+  /**
+   * [SA] AMENDMENTS-SEATS-ADMINS section 9.2: the School Contract line, the limits as arguments
+   * (`SCHOOL_LICENSE_STUDENTS`, `SCHOOL_LICENSE_TEACHERS`), so no locale types a limit into its copy.
+   */
+  contactLineCaps: (students: number, teachers: number) =>
+    `More than ${plural('en', students, { one: `${students} student`, other: `${students} students` })} or ${plural('en', teachers, { one: `${teachers} teacher`, other: `${teachers} teachers` })}? Write to us for a contract.`,
   promoLabel: 'Promo or referral code',
   promoHint: 'Got a code from a teacher, a friend or a post? It comes off at checkout.',
   promoInvalid: "That code can't be used right now — check the spelling or the date.",

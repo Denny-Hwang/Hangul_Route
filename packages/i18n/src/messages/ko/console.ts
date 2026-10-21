@@ -2,7 +2,7 @@ import type { DeepPartial, Messages } from '../../types';
 
 /**
  * Korean web console (F-I18N-001 PR 16): every grown-up page on app.hangulroute.com. 해요체 on every page; the
- * plan terms and price lines (`familyLine`, `groupLine`, `contactLine`, `price`, `billing.current`,
+ * plan terms and price lines (`familyLine`, `groupLine`, `contactLineCaps`, `price`, `billing.current`,
  * `billing.includes`) read in 합니다체, as the §3.10 style guide asks for pricing text. Names, dates, amounts and
  * titles arrive as arguments and stand before a colon, a middle dot or an invariant particle (에게, 의, 에서, 까지),
  * never before 은/는, 이/가, 을/를. Korean has no plural: counts read "학생 n명", "항목 n개". Caregiver surface:
@@ -51,7 +51,7 @@ export const consoleMsgs = {
   billingCancelled: '청구된 금액은 없어요.',
   familyLine: '매년 갱신됩니다. 구독 관리에서 언제든지 해지할 수 있습니다.',
   groupLine: '매년 갱신됩니다. 구독 관리에서 언제든지 해지할 수 있습니다.',
-  contactLine: '학생 300명 또는 선생님 10명이 넘으면 계약 문의를 보내 주십시오.',
+  contactLineCaps: (students: number, teachers: number) => `학생 ${students}명 또는 선생님 ${teachers}명이 넘으면 계약 문의를 보내 주십시오.`,
   promoLabel: '프로모션 또는 추천 코드',
   promoHint: '선생님, 친구, 게시물에서 받은 코드가 있나요? 결제할 때 할인돼요.',
   promoInvalid: '지금은 이 코드를 쓸 수 없어요 — 철자나 날짜를 확인해 주세요.',

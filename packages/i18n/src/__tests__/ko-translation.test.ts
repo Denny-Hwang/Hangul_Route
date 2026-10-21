@@ -237,7 +237,7 @@ const KO_ALL_ARGUMENTS: readonly string[] = [
 const FORMAL_ALLOWED: readonly string[] = [
   'console.familyLine',
   'console.groupLine',
-  'console.contactLine',
+  'console.contactLineCaps',
   'landing.legal.englishAuthoritative',
   'landing.legal.draft',
   // The class-move consent sheet's frame (F-SPACE-002 T-6d): one voice with the 합니다체 consent lines it frames.
