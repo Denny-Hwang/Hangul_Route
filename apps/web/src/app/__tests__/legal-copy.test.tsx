@@ -64,7 +64,9 @@ describe('privacy policy', () => {
   it('describes the learner level as a self-chosen reading level, never an age', () => {
     const labels = LEARNER_LEVELS.map((l) => l.label);
     expect(labels.length).toBeGreaterThan(0);
-    expect(privacy).toContain(`starting level the learner picks (${labels.join(' / ')})`);
+    // AMENDMENTS-SITE-NEWUSER SN-2: or the short level check suggests it, and its answers go up as usage events.
+    expect(privacy).toContain(`starting level the learner picks or a short level check suggests (${labels.join(' / ')})`);
+    expect(privacy).toContain('If the learner takes the level check, each answer is sent to us as a usage event');
     expect(privacy).toMatch(/It describes how much the learner reads, not how old they are/);
     expect(privacy).not.toMatch(/age group/i);
     expect(privacy).not.toMatch(/\b5\s*[–-]\s*7\b|\b8\s*[–-]\s*9\b|\b10\s*[–-]\s*11\b/);

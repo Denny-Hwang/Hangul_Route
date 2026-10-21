@@ -37,6 +37,8 @@ import * as LocPrivacy from '../(loc)/[locale]/privacy/page';
 import * as LocTeachers from '../(loc)/[locale]/teachers/page';
 import * as LocLicenses from '../(loc)/[locale]/licenses/page';
 import * as LocTerms from '../(loc)/[locale]/terms/page';
+import * as LocNotFound from '../(loc)/[locale]/404/page';
+import * as EnNotFound from '../not-found';
 import { SITE_PRICE_PATTERNS } from './site-price-patterns';
 
 /**
@@ -219,6 +221,13 @@ function renderRoutes(): Rendered[] {
       out.push({ label: `${page} (${locale} route)`, html: renderToStaticMarkup(createElement(LocLayout, { params, children })) });
     }
   }
+  // The 404 pages (AMENDMENTS-SITE-NEWUSER SN-2): `out/404.html` and `out/<locale>/404.html`.
+  out.push({ label: '404 (en)', html: renderToStaticMarkup(createElement(EnNotFound.default)) });
+  for (const locale of LOCALES.filter((l) => l !== 'en')) {
+    const params = { locale };
+    const children: ReactNode = createElement(LocNotFound.default, { params });
+    out.push({ label: `404 (${locale} route)`, html: renderToStaticMarkup(createElement(LocLayout, { params, children })) });
+  }
   return out;
 }
 
@@ -247,6 +256,10 @@ function metadataTexts(): Array<{ label: string; text: string }> {
       out.push({ label: `${page} (${locale})`, text: JSON.stringify(LOC_ROUTES[page].generateMetadata({ params: { locale } })) });
     }
   }
+  out.push({ label: '404 (en)', text: JSON.stringify(EnNotFound.metadata) });
+  for (const locale of LOCALES.filter((l) => l !== 'en')) {
+    out.push({ label: `404 (${locale})`, text: JSON.stringify(LocNotFound.generateMetadata({ params: { locale } })) });
+  }
   return out;
 }
 
@@ -262,7 +275,8 @@ describe('site-no-billing: rendered pages carry no billing link (F-BILL-002 B-10
       vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', showAll);
       const pages = [...renderRoutes(), ...renderClaimStates()];
       const nonEn = LOCALES.length - 1;
-      expect(pages).toHaveLength(SITE_PAGES.length * (1 + nonEn) + LOCALES.length * (CLAIMS_PAGES.length * 2 + PLAIN_PAGES.length));
+      // + 1 + nonEn: the 404 page in English and in each site locale.
+      expect(pages).toHaveLength((SITE_PAGES.length + 1) * (1 + nonEn) + LOCALES.length * (CLAIMS_PAGES.length * 2 + PLAIN_PAGES.length));
       const found = pages.flatMap(({ label, html }) => linksOf(html).filter(isBillingLink).map((href) => `${label}: ${href}`));
       expect(found).toEqual([]);
       const printed = pages.filter(({ html }) => STRIPE_PAYMENT_URL.test(textOf(html))).map(({ label }) => label);
@@ -293,7 +307,9 @@ describe('site-no-billing: rendered pages carry no billing link (F-BILL-002 B-10
     expect([...CLAIMS_PAGES, ...PLAIN_PAGES].map(([page]) => page).sort()).toEqual([...SITE_PAGES].sort());
     const routeFiles = (dir: string): string[] => sourceFiles(dir).filter((file) => /(?:^|\/)page\.tsx$/.test(file));
     expect(routeFiles(join(appDir, '(en)'))).toHaveLength(SITE_PAGES.length);
-    expect(routeFiles(join(appDir, '(loc)'))).toHaveLength(SITE_PAGES.length);
+    // Plus `[locale]/404`, the locale 404 page, scanned on its own in renderRoutes (SN-2).
+    expect(routeFiles(join(appDir, '(loc)'))).toHaveLength(SITE_PAGES.length + 1);
+    expect(routeFiles(join(appDir, '(loc)')).some((file) => file.endsWith(join('[locale]', '404', 'page.tsx')))).toBe(true);
   });
 });
 
