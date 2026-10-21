@@ -1,7 +1,7 @@
 import { TELEMETRY_EVENT_NAMES, isServerOnlyTelemetryName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
-import { TELEMETRY_DAILY_WRITES_PER_MIN, resetTelemetryDailyBudgetForTests, takeDailyWrite } from '../lib/telemetry-daily';
+import { TELEMETRY_DAILY_FLUSH_MS, TELEMETRY_DAILY_WRITES_PER_MIN, flushTelemetryDaily, holdDailyCount, resetTelemetryDailyBudgetForTests } from '../lib/telemetry-daily';
 import { store } from '../store';
 import { testDb } from './helpers/db';
 
@@ -244,6 +244,8 @@ describe('POST /api/telemetry', () => {
 describe('[OA] POST /api/telemetry · section 15 names and the daily counters', () => {
   const DAY = NOW.toISOString().slice(0, 10);
   const rows = () => testDb.telemetryDailyOf(DAY);
+  /** The next due flush: what the isolate's in-memory sums write a minute later. */
+  const drain = () => flushTelemetryDaily(() => testDb, Date.now() + TELEMETRY_DAILY_FLUSH_MS);
 
   beforeEach(async () => {
     await testDb.reset();
@@ -280,6 +282,7 @@ describe('[OA] POST /api/telemetry · section 15 names and the daily counters', 
     await post({ name: 'session.start', profileId: 'profile:suni', payload: { source: 'pwa' } });
     // not counted: an ordinary name
     await post({ name: 'quest.complete', profileId: 'profile:suni', payload: { questId: 'quest:1' } });
+    await drain();
     expect(await rows()).toEqual([
       { day: DAY, name: 'session.start', dims: '', n: 1 },
       { day: DAY, name: 'space.join.batch', dims: '{"joined":2,"refused":0}', n: 1 },
@@ -292,27 +295,38 @@ describe('[OA] POST /api/telemetry · section 15 names and the daily counters', 
   it("counts on the UTC day of the event's own time (an offline-queued event counts on its day)", async () => {
     await post({ name: 'pin.paused', at: '2026-10-08T23:59:00.000Z', payload: { step: 2 } });
     await post({ name: 'pin.paused', at: '2026-10-09T00:00:01.000+09:00', payload: { step: 2 } });
+    await drain();
     expect(await testDb.telemetryDailyOf('2026-10-08')).toEqual([
       { day: '2026-10-08', name: 'pin.paused', dims: '{"step":2}', n: 2 },
     ]);
     expect(await rows()).toEqual([]);
   });
 
-  it('stops counting past the per-isolate budget, and keeps accepting events', async () => {
-    for (let i = 0; i < TELEMETRY_DAILY_WRITES_PER_MIN; i += 1) takeDailyWrite(NOW.getTime());
-    const r = await post({ name: 'profile.lock_changed', payload: { locked: true } });
-    expect(r.status).toBe(201);
-    expect(store.events.at(-1)?.name).toBe('profile.lock_changed');
-    expect(await rows()).toEqual([]);
-    vi.setSystemTime(new Date(NOW.getTime() + 60_000));
-    await post({ name: 'profile.lock_changed', payload: { locked: true } });
-    expect(await rows()).toEqual([{ day: DAY, name: 'profile.lock_changed', dims: '{"locked":true}', n: 1 }]);
+  it('stops counting new rows past the 600 the isolate holds, and keeps accepting events', async () => {
+    for (let i = 0; i < TELEMETRY_DAILY_WRITES_PER_MIN; i += 1) holdDailyCount(undefined, { name: 'pin.paused', payload: { step: i }, at: NOW.toISOString() });
+    const add = vi.spyOn(testDb, 'addTelemetryDaily');
+    try {
+      const r = await post({ name: 'profile.lock_changed', payload: { locked: true } });
+      expect(r.status).toBe(201);
+      expect(store.events.at(-1)?.name).toBe('profile.lock_changed');
+      // The one flush of this minute wrote the 600 held rows, in one call, and not the new one.
+      expect(add).toHaveBeenCalledTimes(1);
+      expect(add.mock.calls[0]?.[0]).toHaveLength(TELEMETRY_DAILY_WRITES_PER_MIN);
+      expect((await rows()).some((row) => row.name === 'profile.lock_changed')).toBe(false);
+      vi.setSystemTime(new Date(NOW.getTime() + TELEMETRY_DAILY_FLUSH_MS));
+      await post({ name: 'profile.lock_changed', payload: { locked: true } });
+      expect(add).toHaveBeenCalledTimes(2);
+      expect((await rows()).filter((row) => row.name === 'profile.lock_changed')).toEqual([{ day: DAY, name: 'profile.lock_changed', dims: '{"locked":true}', n: 1 }]);
+    } finally {
+      add.mockRestore();
+    }
   });
 
   it('TELEMETRY_DAILY off writes nothing; events are still accepted', async () => {
     const res = await app.request('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'who.picked', payload: { kind: 'add' } }) }, { TELEMETRY_DAILY: 'disabled' });
     expect(res.status).toBe(201);
     expect(store.events).toHaveLength(1);
+    await drain();
     expect(await rows()).toEqual([]);
   });
 
@@ -323,6 +337,12 @@ describe('[OA] POST /api/telemetry · section 15 names and the daily counters', 
       expect(r.status).toBe(201);
       expect(r.body.data?.event.payload).toEqual({ saved: true, wasActive: false, anyway: false });
       expect(add).toHaveBeenCalledTimes(1);
+      // The rows that write took are dropped, never written again.
+      await post({ name: 'profile.removed', payload: { saved: true, wasActive: false, anyway: false } });
+      expect(add).toHaveBeenCalledTimes(1);
+      add.mockRestore();
+      await drain();
+      expect(await rows()).toEqual([{ day: DAY, name: 'profile.removed', dims: '{"anyway":false,"saved":true,"wasActive":false}', n: 1 }]);
     } finally {
       add.mockRestore();
     }

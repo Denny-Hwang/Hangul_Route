@@ -1,20 +1,35 @@
 import { TELEMETRY_DAILY_KEEP_DAYS } from '@hangul-route/content-schema';
-import type { Db } from '../db';
+import type { Db, TelemetryDailyRow } from '../db';
 import type { TelemetryEvent } from '../store';
 import { OA_PAYLOAD_RULES } from './server-events';
 
 /**
- * [OA] Anonymous daily counters (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1, OA-D18, migration 0013). After
+ * [OA] Anonymous daily counters (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1, OA-D18, migration 0015). After
  * `keptEventFields`, POST /api/telemetry adds one to the `telemetry_daily` row of the event's UTC day, its name and
  * the payload the rules kept, for every section 15 name and for `session.start` (counted with empty dims, the G1
  * denominator). Counts only: the row holds no profile, device or account id, no IP address and no time finer than a
- * day; `dims` can only hold codes the rules kept. The write is best effort and never retried, and a per-isolate
- * budget caps it so a flood on the anonymous route cannot use up the D1 write quota (events past the budget are
- * still accepted, just not counted). No route reads the table: the goals of section 1 are D1 queries.
+ * day; `dims` can only hold codes the rules kept. No route reads the table: the goals of section 1 are D1 queries.
+ *
+ * The route is anonymous and has no rate limit, and the D1 write quota is shared with every other table, so the
+ * counts are first summed in this isolate's memory and written at most once a minute, as one D1 batch of
+ * `n = n + excluded.n` upserts. Three per-isolate bounds hold whatever a caller sends:
+ * - at most `TELEMETRY_DAILY_WRITES_PER_MIN` (600) distinct rows are held; an event for a new row past that is
+ *   accepted and not counted (an event for a held row only adds to it, which costs no write);
+ * - one flush writes at most 600 rows, at most once every `TELEMETRY_DAILY_FLUSH_MS` (one minute);
+ * - at most `TELEMETRY_DAILY_WRITES_PER_DAY` (5,000) rows are written per UTC day; past it, held counts wait for the
+ *   next day's budget (they keep their own `day`).
+ * The write is best effort and never retried: a failed flush, or an isolate that ends before its next flush, loses
+ * the counts it held.
  */
 
-/** Counter writes one isolate makes per wall-clock minute; past it, events are accepted and not counted. */
+/** Rows one isolate writes per flush (at most one flush a minute), and the most distinct rows it holds. */
 export const TELEMETRY_DAILY_WRITES_PER_MIN = 600;
+
+/** Rows one isolate writes per UTC day: 5,000 upserts stay a small share of the D1 Free plan's 100,000 a day. */
+export const TELEMETRY_DAILY_WRITES_PER_DAY = 5_000;
+
+/** The shortest time between two flushes of one isolate. */
+export const TELEMETRY_DAILY_FLUSH_MS = 60_000;
 
 /** Rows removed per purge round (the daily purge's step size). */
 export const TELEMETRY_DAILY_PURGE_LIMIT = 200;
@@ -53,52 +68,95 @@ export function utcDay(iso: string): string {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
-let budgetMinute = Number.NaN;
+/** Held counts, keyed by the JSON of (`day`, `name`, `dims`), in the order they were first held. */
+const held = new Map<string, TelemetryDailyRow>();
+let lastFlushMs = Number.NEGATIVE_INFINITY;
+let budgetDay = '';
 let budgetUsed = 0;
 
-/** Takes one counter write from this isolate's budget for the minute of `nowMs`; false when it is spent. */
-export function takeDailyWrite(nowMs: number): boolean {
-  const minute = Math.floor(nowMs / 60_000);
-  if (minute !== budgetMinute) {
-    budgetMinute = minute;
-    budgetUsed = 0;
-  }
-  if (budgetUsed >= TELEMETRY_DAILY_WRITES_PER_MIN) return false;
-  budgetUsed += 1;
-  return true;
-}
-
-/** Tests only: a fresh budget. */
+/** Tests only: nothing held, no flush yet, a fresh daily budget. */
 export function resetTelemetryDailyBudgetForTests(): void {
-  budgetMinute = Number.NaN;
+  held.clear();
+  lastFlushMs = Number.NEGATIVE_INFINITY;
+  budgetDay = '';
   budgetUsed = 0;
 }
 
 /**
- * Counts one stored event, best effort: answers whether a row was added. Off, a name that is not counted, a spent
- * budget, a missing Db or a failed write (for example an isolate that runs before migration 0013) add nothing and
- * never throw, so POST /api/telemetry never fails on a counter.
+ * Holds one counted event in this isolate's sums: answers whether it was counted. Off, a name that is not counted,
+ * or a new row while `TELEMETRY_DAILY_WRITES_PER_MIN` rows are already held count nothing.
+ */
+export function holdDailyCount(env: TelemetryDailyEnv | undefined, event: Pick<TelemetryEvent, 'name' | 'payload' | 'at'>): boolean {
+  if (!telemetryDailyEnabled(env) || !isDailyCountedName(event.name)) return false;
+  const day = utcDay(event.at);
+  const dims = dailyDims(event.name, event.payload);
+  const key = JSON.stringify([day, event.name, dims]);
+  const row = held.get(key);
+  if (row) {
+    row.n += 1;
+    return true;
+  }
+  if (held.size >= TELEMETRY_DAILY_WRITES_PER_MIN) return false;
+  held.set(key, { day, name: event.name, dims, n: 1 });
+  return true;
+}
+
+/** Takes the rows a flush at `nowMs` may write (none before the flush interval or past the daily budget). */
+function takeDueRows(nowMs: number): TelemetryDailyRow[] {
+  if (held.size === 0 || nowMs - lastFlushMs < TELEMETRY_DAILY_FLUSH_MS) return [];
+  const today = new Date(nowMs).toISOString().slice(0, 10);
+  if (today !== budgetDay) {
+    budgetDay = today;
+    budgetUsed = 0;
+  }
+  const allowed = Math.min(TELEMETRY_DAILY_WRITES_PER_MIN, TELEMETRY_DAILY_WRITES_PER_DAY - budgetUsed);
+  if (allowed <= 0) return [];
+  lastFlushMs = nowMs;
+  const rows: TelemetryDailyRow[] = [];
+  for (const [key, row] of held) {
+    if (rows.length >= allowed) break;
+    held.delete(key);
+    rows.push(row);
+  }
+  budgetUsed += rows.length;
+  return rows;
+}
+
+/**
+ * Writes the held counts when a flush is due at `nowMs`, best effort: answers how many rows were written. Nothing
+ * due asks nothing of the Db; a missing Db or a failed write (for example an isolate that runs before migration
+ * 0015) writes nothing, drops the rows it took (never retried) and never throws.
+ */
+export async function flushTelemetryDaily(db: () => Db, nowMs: number): Promise<number> {
+  const rows = takeDueRows(nowMs);
+  if (rows.length === 0) return 0;
+  try {
+    await db().addTelemetryDaily(rows);
+    return rows.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Counts one stored event and flushes when a flush is due, best effort: answers how many rows were written. Off
+ * holds nothing, writes nothing and never asks for the Db, so POST /api/telemetry never fails on a counter.
  */
 export async function countTelemetryDaily(
   db: () => Db,
   env: TelemetryDailyEnv | undefined,
   event: Pick<TelemetryEvent, 'name' | 'payload' | 'at'>,
   nowMs: number,
-): Promise<boolean> {
-  if (!telemetryDailyEnabled(env) || !isDailyCountedName(event.name)) return false;
-  if (!takeDailyWrite(nowMs)) return false;
-  try {
-    await db().addTelemetryDaily(utcDay(event.at), event.name, dailyDims(event.name, event.payload));
-    return true;
-  } catch {
-    return false;
-  }
+): Promise<number> {
+  if (!telemetryDailyEnabled(env)) return 0;
+  holdDailyCount(env, event);
+  return flushTelemetryDaily(db, nowMs);
 }
 
 /**
  * One bounded purge step of the daily Cron Trigger: rows whose day is more than `TELEMETRY_DAILY_KEEP_DAYS` (400)
  * days before `now`'s UTC day, at most `TELEMETRY_DAILY_PURGE_LIMIT` (200). The purge keeps the retention promise
- * whatever the switch says; it never reads a count. A failure (a Worker that runs before migration 0013) removes
+ * whatever the switch says; it never reads a count. A failure (a Worker that runs before migration 0015) removes
  * nothing and never stops the other purges.
  */
 export async function purgeTelemetryDailyStep(db: Db, now: Date): Promise<number> {
