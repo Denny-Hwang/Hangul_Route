@@ -213,23 +213,24 @@ export function TwoColumns({ left, right }: { left: ReactNode; right: ReactNode 
  * coming (once they are on sale, the managed line already says where), then the managed line, so the app host is named
  * once. No price, no plan term and no billing link, ever. [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): once plans
  * are on sale, the sizes line takes the paid line's place, with the learner limits from content-schema. In every claim
- * state the free limits follow (`freeSizes`: a family, a stand-alone free class, a school), then the managed line:
- * `managedLater` while plans are coming (nothing is on sale yet to manage), `managedInApp` once they are on sale.
+ * state the free limits (`freeSizes`: a family, a stand-alone free class, a school) sit beside the free line, so the
+ * free facts come first and together; then the paid (or sizes) line; then the managed line: `managedLater` while plans
+ * are coming (nothing is on sale yet to manage), `managedInApp` once they are on sale.
  */
 export function PlansBlock({ locale, claims, id }: { locale: UiLocale; claims: Readonly<SiteClaims>; id: string }): JSX.Element {
   const t = getMessages(locale).landing;
   return (
     <Section id={id} title={t.persona.plansTitle}>
       <div style={{ display: 'grid', gap: spacing.sm }}>
-        {/* Two keys in one paragraph: each stays its own text node, so a locale can word each one alone. */}
+        {/* Two keys in one paragraph: each stays its own text node, so a locale can word each one alone. The free facts sit together. */}
         <Body>
           <span>{t.plans.free.stage1}</span>
           {' '}
-          <span>
-            {claims.paidPlans === 'coming' ? t.plans.paid.coming : t.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS)}
-          </span>
+          <span>{t.plans.freeSizes(FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP)}</span>
         </Body>
-        <Body>{t.plans.freeSizes(FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP)}</Body>
+        <Body>
+          {claims.paidPlans === 'coming' ? t.plans.paid.coming : t.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS)}
+        </Body>
         <Body>{claims.paidPlans === 'coming' ? t.plans.managedLater : t.plans.managedInApp}</Body>
       </div>
     </Section>

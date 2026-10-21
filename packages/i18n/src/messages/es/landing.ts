@@ -13,7 +13,7 @@ const FAQ_ADULT = {
 } as const;
 const FAQ_KOREAN = {
   q: '¿Necesito saber algo de coreano?',
-  a: 'No. Lo hicimos justo para empezar desde cero. Los menús están en inglés, español o coreano sencillo, y cada palabra coreana viene con su romanización y su significado.',
+  a: 'No. Lo hicimos justo para empezar desde cero. Los menús usan palabras sencillas en inglés, español o coreano, y cada palabra coreana viene con su romanización y su significado.',
 } as const;
 
 export const landing = {
@@ -32,7 +32,7 @@ export const landing = {
       },
       parents: {
         title: 'Para madres, padres y quien cuide: Hangul Route',
-        description: 'Lecciones de hangul cortas y amables, sin anuncios y con un control para adultos. Crea un espacio familiar gratis y mira la semana de cada estudiante.',
+        description: 'Lecciones de hangul cortas y amables, sin anuncios y con un PIN de adultos. Crea un espacio familiar gratis y mira la semana de cada estudiante.',
       },
       teachers: {
         title: 'Para docentes: Hangul Route',
@@ -59,7 +59,7 @@ export const landing = {
       lead: 'El hangul es el alfabeto coreano. Aprende a leerlo, escucharlo y escribirlo con Hoya.',
       start: 'Empezar a aprender',
       grownUps: '¿Familia o docente? Busca tu página',
-      facts: 'Sin correo ni contraseña · Funciona en tu navegador, y sin conexión en la mayoría de los dispositivos después de tu primera visita',
+      facts: 'La Etapa 1 es gratis · Sin registro para empezar · Funciona sin conexión en la mayoría de los dispositivos después de tu primera visita',
       bubble: (letter: string, romanization: string) => `¡Hola! Conozcamos la letra ${letter}\u00a0(${romanization}).`,
     },
     who: {
@@ -71,11 +71,11 @@ export const landing = {
         },
         parents: {
           title: 'Madres, padres y quien cuide',
-          body: 'Mira qué practica tu estudiante, con control para adultos y sin anuncios.',
+          body: 'Mira qué practica tu estudiante, con un PIN de adultos y sin anuncios.',
         },
         teachers: {
           title: 'Docentes',
-          body: 'Tus estudiantes entran con código, enlace o QR, sin cuentas.',
+          body: 'Tus estudiantes se unen con código, enlace o QR. Sin cuentas de estudiante.',
         },
       },
     },
@@ -95,7 +95,7 @@ export const landing = {
     },
     news: {
       title: 'Noticias del lanzamiento',
-      body: 'Solo te avisaremos de los planes para familias y clases.',
+      body: 'Te escribiremos cuando lleguen los planes para familias y clases.',
     },
   },
   plans: {
@@ -113,7 +113,7 @@ export const landing = {
     sizes: (family: number, group: number) =>
       `El Plan Familiar es para hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })}. La Licencia de Grupo es para hasta ${plural('es', group, { one: `${group} estudiante`, other: `${group} estudiantes` })} en una clase o una escuela.`,
     freeSizes: (family: number, cls: number, school: number) =>
-      `Gratis: un espacio familiar admite hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })}, una clase hasta ${plural('es', cls, { one: `${cls} estudiante`, other: `${cls} estudiantes` })} y una escuela hasta ${school}.`,
+      `Los espacios gratuitos admiten hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })} en una familia, ${plural('es', cls, { one: `${cls} estudiante`, other: `${cls} estudiantes` })} en una clase y ${plural('es', school, { one: `${school} estudiante`, other: `${school} estudiantes` })} en una escuela.`,
   },
   persona: {
     learners: {
@@ -217,7 +217,7 @@ export const landing = {
         title: 'Listo en minutos',
         steps: {
           space: 'Inicia sesión y crea un espacio de clase.',
-          code: 'Comparte el código de la clase, el enlace para unirse o su código QR. Los estudiantes lo abren en la app; sin correos ni cuentas de estudiantes.',
+          code: 'Comparte el código de la clase, el enlace para unirse o su código QR. Los estudiantes escriben el código o abren el enlace; sin correos ni cuentas de estudiantes.',
           devices: 'Los estudiantes aprenden en cualquier dispositivo con navegador.',
         },
       },
@@ -225,7 +225,7 @@ export const landing = {
         title: 'Planifica y asigna',
         bullets: {
           pick: 'Elige misiones para la semana. Aparecen en la lista de tareas de cada estudiante.',
-          planner: 'O usa Plan del periodo: arma un plan del periodo según el nivel y el ritmo de tu clase.',
+          planner: 'O usa Plan del periodo: lo arma según el nivel y el ritmo de tu clase.',
         },
       },
       class: {
@@ -242,7 +242,7 @@ export const landing = {
         bullets: { initials: 'Puedes mostrar iniciales en lugar de nombres en la lista de la clase.', ads: 'Sin anuncios y sin venta de datos.' },
       },
       faq: {
-        students: { q: '¿Los estudiantes necesitan cuentas?', a: 'No. Se unen con el código de la clase dentro de la app.' },
+        students: { q: '¿Los estudiantes necesitan cuentas?', a: 'No. Se unen con el código de la clase, el enlace o el código QR.' },
         ranking: { q: '¿Hay una tabla de posiciones?', a: 'No. Hangul Route nunca compara a los estudiantes entre sí.' },
         try: { q: '¿Puedo probarla antes?', a: 'Sí. Abre la app y juega las primeras misiones como estudiante.' },
       },
@@ -294,7 +294,7 @@ export const landing = {
     submit: 'Recibir noticias',
     sending: 'Enviando',
     retry: 'Reintentar',
-    success: 'Ya estás en la lista. Te escribiremos cuando lancemos algo nuevo.',
+    success: 'Ya estás en la lista. Te escribiremos cuando lleguen los planes para familias y clases.',
     invalid: 'Escribe un correo válido.',
     error: 'No pudimos llegar al servidor. Revisa tu conexión y reintenta.',
     rateLimited: 'Demasiados intentos. Espera un poco y reintenta.',
@@ -311,7 +311,7 @@ export const landing = {
     promises: {
       title: 'Nuestras promesas',
       plainEnglish: 'Los menús y las instrucciones usan palabras cortas y sencillas, en inglés, español o coreano.',
-      koreanTaught: 'El coreano se usa solo para lo que se enseña.',
+      koreanTaught: 'Cada palabra coreana que aprendes viene con su romanización y su significado.',
       noRed: 'Sin marcas rojas cuando te equivocas: Hoya avisa con ámbar.',
       noAds: 'Sin anuncios, nunca, y sin venta de datos.',
       localFirst:

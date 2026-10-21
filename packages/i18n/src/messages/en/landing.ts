@@ -73,7 +73,7 @@ export const landing = {
       },
       parents: {
         title: 'For parents and caregivers — Hangul Route',
-        description: "Short, kind Hangul lessons with no ads and a grown-up gate. Create a free family space and see each learner's week.",
+        description: "Short, kind Hangul lessons with no ads and a grown-up PIN. Create a free family space and see each learner's week.",
       },
       teachers: {
         title: 'For teachers — Hangul Route',
@@ -114,9 +114,10 @@ export const landing = {
       grownUps: 'Parent or teacher? Find your page',
       /**
        * Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). No
-       * "nothing to install": the app offers Install (PWA), so the line says it runs in the browser instead.
+       * "nothing to install": the app offers Install (PWA). "Stage 1 is free" leads, so a first-time visitor sees the
+       * cost above the fold; "No sign-up to start" is the learner's start (grown-ups do sign in, on their pages).
        */
-      facts: 'No email or password · Runs in your browser, and offline on most devices after your first visit',
+      facts: 'Stage 1 is free · No sign-up to start · Works offline on most devices after your first visit',
       /**
        * A no-break space keeps the letter and its romanization on one line when the bubble wraps. No romanized Korean
        * greeting: taught Korean is passed in with its romanization, never typed here (CLAUDE.md §1).
@@ -132,7 +133,7 @@ export const landing = {
         },
         parents: {
           title: 'Parents and caregivers',
-          body: 'See what your learner practices, with a grown-up gate and no ads.',
+          body: 'See what your learner practices, with a grown-up PIN and no ads.',
         },
         teachers: {
           title: 'Teachers',
@@ -143,7 +144,7 @@ export const landing = {
     how: {
       title: 'How it works',
       steps: {
-        /** The first run: a name and a Hoya (`learner.createProfile.avatarHeading` "Pick a Hoya"); "No email or password" is in the hero facts. */
+        /** The first run: a name and a Hoya (`learner.createProfile.avatarHeading` "Pick a Hoya"); "No sign-up to start" is in the hero facts. */
         start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
         quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
         /** "Saved and backed up": the app backs up every learner's progress with no sign-in (see `persona.parents.safe.bullets.backup`). */
@@ -169,8 +170,8 @@ export const landing = {
   },
   /**
    * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The home's cost line is the
-   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line, the
-   * `paid.coming` line only while plans are coming (`sizes` once they are on sale), then `freeSizes`, then
+   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line with
+   * `freeSizes`, then the `paid.coming` line only while plans are coming (`sizes` once they are on sale), then
    * `managedLater` while plans are coming or `managedInApp` once they are on sale, so the host is named once (§3.5). The free
    * plan is all of Stage 1 (F-ENT-003 OD-1), so
    * `free.stage1` is the same in every state and says nothing about paid plans. Plans bought on the web renew
@@ -202,7 +203,7 @@ export const landing = {
      * (`FAMILY_LIFETIME_LEARNERS`, `FREE_CLASS_STUDENT_CAP` for a stand-alone class, `SCHOOL_LEARNER_CAP`). No price.
      */
     freeSizes: (family: number, cls: number, school: number) =>
-      `Free: a family space holds up to ${plural('en', family, { one: `${family} learner`, other: `${family} learners` })}, a class up to ${plural('en', cls, { one: `${cls} student`, other: `${cls} students` })} and a school up to ${school}.`,
+      `Free spaces hold up to ${plural('en', family, { one: `${family} learner`, other: `${family} learners` })} in a family, ${plural('en', cls, { one: `${cls} student`, other: `${cls} students` })} in a class and ${plural('en', school, { one: `${school} student`, other: `${school} students` })} in a school.`,
   },
   /**
    * The three persona pages (F-SITE-002 §3.4 to §3.6, appendix B.2 to B.4). Lines named after a claim (`route`,
@@ -335,7 +336,7 @@ export const landing = {
         title: 'Set up in minutes',
         steps: {
           space: 'Sign in and create a class space.',
-          code: 'Share the class code, the join link or its QR code. Students open it in the app; no student emails or accounts.',
+          code: 'Share the class code, the join link or its QR code. Students type the code or open the link; no student emails or accounts.',
           devices: 'Students learn on any device with a browser.',
         },
       },
@@ -364,7 +365,7 @@ export const landing = {
         bullets: { initials: 'You can show initials instead of names on the class list.', ads: 'No ads, and no data sold.' },
       },
       faq: {
-        students: { q: 'Do students need accounts?', a: 'No. They join with the class code inside the app.' },
+        students: { q: 'Do students need accounts?', a: 'No. They join with the class code, link or QR code.' },
         ranking: { q: 'Is there a leaderboard?', a: 'No. Hangul Route never ranks students against each other.' },
         try: { q: 'Can I try it first?', a: 'Yes. Open the app and play the first quests as a learner.' },
       },
@@ -435,7 +436,7 @@ export const landing = {
     submit: 'Get launch news',
     sending: 'Sending',
     retry: 'Try again',
-    success: "You're on the list. We'll email you when something new launches.",
+    success: "You're on the list. We'll email you when family and class plans launch.",
     invalid: 'Please enter a valid email address.',
     error: 'We could not reach the server. Check your connection and try again.',
     rateLimited: 'Too many tries. Please wait a little and try again.',
@@ -453,7 +454,7 @@ export const landing = {
     promises: {
       title: 'Our promises',
       plainEnglish: 'Menus and instructions use short, plain words, in English, Spanish or Korean.',
-      koreanTaught: 'Korean is only used for the content being taught.',
+      koreanTaught: 'Every Korean word you learn comes with its romanization and meaning.',
       /** Said in words: the page shows no cross-mark glyph (no emoji, CLAUDE.md). */
       noRed: 'No red X marks for wrong answers — Hoya nudges with amber.',
       noAds: 'No ads, ever, and no data sold.',

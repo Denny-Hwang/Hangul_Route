@@ -48,9 +48,9 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.hero.lead).toBe('Hangul is the Korean alphabet. Learn to read, hear and write it with Hoya the tiger.');
     expect(l.home.hero.start).toBe('Start learning');
     expect(l.home.hero.grownUps).toBe('Parent or teacher? Find your page');
-    // No "Nothing to install": the app offers Install. The offline hedge (OD-15) stays. "Stage 1 is free" is the cost block's
-    // line, so the facts do not repeat it (rule 3).
-    expect(l.home.hero.facts).toBe('No email or password · Runs in your browser, and offline on most devices after your first visit');
+    // No "Nothing to install": the app offers Install. The offline hedge (OD-15) stays. "Stage 1 is free" leads, so a
+    // first-time visitor sees the cost above the fold (review of #806); "No sign-up to start" is the learner's start.
+    expect(l.home.hero.facts).toBe('Stage 1 is free · No sign-up to start · Works offline on most devices after your first visit');
     // A greeting in the UI language: a romanized Korean word with no Hangul and no gloss breaks CLAUDE.md §1.
     expect(l.home.hero.bubble('x', 'a')).toBe("Hi! Let's meet x\u00a0(a).");
   });
@@ -80,7 +80,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
       },
       parents: {
         title: 'Parents and caregivers',
-        body: 'See what your learner practices, with a grown-up gate and no ads.',
+        body: 'See what your learner practices, with a grown-up PIN and no ads.',
       },
       teachers: {
         title: 'Teachers',
@@ -118,7 +118,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.plans.managedLater).toBe('When plans arrive, you will manage them at app.hangulroute.com after you sign in.');
     // [SA] SA-6: the learners each plan holds, numbers passed in (landing-plan-sizes.test.ts).
     expect(l.plans.sizes(4, 50)).toBe('The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.');
-    expect(l.plans.freeSizes(4, 20, 50)).toBe('Free: a family space holds up to 4 learners, a class up to 20 students and a school up to 50.');
+    expect(l.plans.freeSizes(4, 20, 50)).toBe('Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school.');
     expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp', 'managedLater', 'sizes', 'freeSizes']);
     expect(Object.keys(l.plans.paid)).toEqual(['coming', 'inApp']);
   });
@@ -144,8 +144,8 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
    */
   const homeCost = (paidPlans: 'coming' | 'inApp'): string => `${l.plans.free.stage1} ${l.plans.paid[paidPlans]}`;
   const personaPlans = (paidPlans: 'coming' | 'inApp'): string[] => [
-    `${l.plans.free.stage1} ${paidPlans === 'coming' ? l.plans.paid.coming : l.plans.sizes(4, 50)}`,
-    l.plans.freeSizes(4, 20, 50),
+    `${l.plans.free.stage1} ${l.plans.freeSizes(4, 20, 50)}`,
+    paidPlans === 'coming' ? l.plans.paid.coming : l.plans.sizes(4, 50),
     paidPlans === 'coming' ? l.plans.managedLater : l.plans.managedInApp,
   ];
 
@@ -158,13 +158,13 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
 
   it('the Plans block of a persona page, in both paidPlans states, names the app host once (rule 3: no repeats)', () => {
     expect(personaPlans('coming')).toEqual([
-      'Stage 1 is free. Words, sentences and stories are in the app too. Family and class plans are on the way.',
-      'Free: a family space holds up to 4 learners, a class up to 20 students and a school up to 50.',
+      'Stage 1 is free. Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school.',
+      'Words, sentences and stories are in the app too. Family and class plans are on the way.',
       'When plans arrive, you will manage them at app.hangulroute.com after you sign in.',
     ]);
     expect(personaPlans('inApp')).toEqual([
-      'Stage 1 is free. The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.',
-      'Free: a family space holds up to 4 learners, a class up to 20 students and a school up to 50.',
+      'Stage 1 is free. Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school.',
+      'The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.',
       'Plans and billing are managed at app.hangulroute.com after you sign in.',
     ]);
     for (const state of ['coming', 'inApp'] as const) {
@@ -385,7 +385,7 @@ describe('B.4 teachers', () => {
       title: 'Set up in minutes',
       steps: {
         space: 'Sign in and create a class space.',
-        code: 'Share the class code, the join link or its QR code. Students open it in the app; no student emails or accounts.',
+        code: 'Share the class code, the join link or its QR code. Students type the code or open the link; no student emails or accounts.',
         devices: 'Students learn on any device with a browser.',
       },
     });
@@ -437,7 +437,7 @@ describe('B.4 teachers', () => {
 
   it('three folded questions in order', () => {
     expect(p().faq).toEqual({
-      students: { q: 'Do students need accounts?', a: 'No. They join with the class code inside the app.' },
+      students: { q: 'Do students need accounts?', a: 'No. They join with the class code, link or QR code.' },
       ranking: { q: 'Is there a leaderboard?', a: 'No. Hangul Route never ranks students against each other.' },
       try: { q: 'Can I try it first?', a: 'Yes. Open the app and play the first quests as a learner.' },
     });

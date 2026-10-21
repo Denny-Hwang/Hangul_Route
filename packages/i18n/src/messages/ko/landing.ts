@@ -36,7 +36,7 @@ export const landing = {
       },
       parents: {
         title: '부모님과 보호자를 위해 — Hangul Route',
-        description: '광고 없이 어른 확인 장치가 있는 짧고 다정한 한글 레슨이에요. 무료 가족 공간을 만들고 학습자마다 한 주를 살펴봐요.',
+        description: '광고 없이 어른용 PIN이 있는 짧고 다정한 한글 레슨이에요. 무료 가족 공간을 만들고 학습자마다 한 주를 살펴봐요.',
       },
       teachers: {
         title: '선생님을 위해 — Hangul Route',
@@ -63,7 +63,7 @@ export const landing = {
       lead: '한글은 한국어의 글자예요. 호랑이 호야와 함께 한글을 읽고, 듣고, 쓰는 법을 배워요.',
       start: '배우기 시작하기',
       grownUps: '부모님이나 선생님인가요? 내 페이지 찾기',
-      facts: '이메일이나 비밀번호는 필요 없어요 · 브라우저에서 바로 되고, 처음 방문한 뒤에는 대부분의 기기에서 오프라인으로도 돼요',
+      facts: '1단계는 무료예요 · 가입 없이 바로 시작해요 · 처음 방문한 뒤에는 대부분의 기기에서 오프라인으로도 돼요',
       bubble: (letter: string, romanization: string) => `안녕하세요! 오늘 만날 글자: ${letter} (${romanization})`,
     },
     who: {
@@ -75,7 +75,7 @@ export const landing = {
         },
         parents: {
           title: '부모님과 보호자',
-          body: '어른 확인 장치와 광고 없는 환경에서, 학습자가 무엇을 연습하는지 봐요.',
+          body: '어른용 PIN과 광고 없는 환경에서, 학습자가 무엇을 연습하는지 봐요.',
         },
         teachers: {
           title: '선생님',
@@ -99,7 +99,7 @@ export const landing = {
     },
     news: {
       title: '출시 소식을 이메일로 받기',
-      body: '가족 플랜과 반 플랜이 출시되면 이메일로 알려 드려요. 다른 메일은 보내지 않아요.',
+      body: '가족과 반을 위한 플랜이 출시되면 이메일로 알려 드려요. 다른 메일은 보내지 않아요.',
     },
   },
   plans: {
@@ -116,7 +116,7 @@ export const landing = {
     // [SA] AMENDMENTS-SEATS-ADMINS 9.5: glossary 가족 플랜, 그룹 라이선스, 학습자, 학생; the count takes 명, no particle on it.
     sizes: (family: number, group: number) => `가족 플랜은 학습자 최대 ${family}명이 함께 써요. 그룹 라이선스는 반이나 학교 하나에서 학생 최대 ${group}명이 함께 써요.`,
     freeSizes: (family: number, cls: number, school: number) =>
-      `무료: 가족 공간에는 학습자 최대 ${family}명, 반에는 학생 최대 ${cls}명, 학교에는 학생 최대 ${school}명까지 함께할 수 있어요.`,
+      `무료로 쓸 때 가족 공간에는 학습자 최대 ${family}명, 반에는 학생 최대 ${cls}명, 학교에는 학생 최대 ${school}명까지 함께할 수 있어요.`,
   },
   persona: {
     learners: {
@@ -218,7 +218,7 @@ export const landing = {
         title: '몇 분이면 준비 끝',
         steps: {
           space: '로그인하고 반 공간을 만들어요.',
-          code: '반 코드, 참여 링크나 그 QR 코드를 공유해요. 학생은 앱에서 열기만 하면 되고, 학생 이메일이나 계정은 필요 없어요.',
+          code: '반 코드, 참여 링크나 그 QR 코드를 공유해요. 학생은 코드를 입력하거나 링크를 열면 되고, 학생 이메일이나 계정은 필요 없어요.',
           devices: '학생은 브라우저가 있는 어떤 기기로든 배워요.',
         },
       },
@@ -226,7 +226,7 @@ export const landing = {
         title: '계획하고 배정하기',
         bullets: {
           pick: '한 주의 퀘스트를 골라요. 학생마다 숙제 목록에 나타나요.',
-          planner: '또는 학기 계획하기를 써 보세요: 반의 수준과 수업 리듬에 맞춰 학기 계획을 만들어 줘요.',
+          planner: '또는 학기 계획하기를 써 보세요. 반의 수준과 수업 리듬에 맞춰 학기 계획을 만들어 줘요.',
         },
       },
       class: {
@@ -243,7 +243,7 @@ export const landing = {
         bullets: { initials: '반 명단에 이름 대신 이니셜을 보여 줄 수 있어요.', ads: '광고가 없고, 데이터를 팔지 않아요.' },
       },
       faq: {
-        students: { q: '학생에게 계정이 필요한가요?', a: '아니요. 앱 안에서 반 코드로 참여해요.' },
+        students: { q: '학생에게 계정이 필요한가요?', a: '아니요. 반 코드, 링크, QR 코드로 참여해요.' },
         ranking: { q: '순위표가 있나요?', a: '아니요. Hangul Route는 학생끼리 순위를 매기지 않아요.' },
         try: { q: '먼저 해 볼 수 있나요?', a: '네. 앱을 열고 학습자로 첫 퀘스트를 해 보세요.' },
       },
@@ -295,7 +295,7 @@ export const landing = {
     submit: '출시 소식 받기',
     sending: '보내는 중',
     retry: '다시 해 보기',
-    success: '목록에 올렸어요. 새로운 것이 출시되면 이메일을 보내 드릴게요.',
+    success: '목록에 올렸어요. 가족과 반을 위한 플랜이 출시되면 이메일을 보내 드릴게요.',
     invalid: '올바른 이메일 주소를 입력해 주세요.',
     error: '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 보세요.',
     rateLimited: '너무 많이 시도했어요. 조금 기다렸다가 다시 해 보세요.',

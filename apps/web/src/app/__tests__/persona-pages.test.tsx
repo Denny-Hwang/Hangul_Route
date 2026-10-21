@@ -210,11 +210,12 @@ const SIZES = plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
 const FREE_SIZES = plans.freeSizes(FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP);
 function expectPlans(html: string, paidPlans: SiteClaims['paidPlans']): void {
   const lines = linesOf(html, t.persona.plansTitle);
-  // The free limits show in every claim state; the managed line says "when plans arrive" until they are on sale.
+  // The free facts come first and together (the free line and the free limits, in every claim state); then the paid or
+  // sizes line; the managed line says "when plans arrive" until they are on sale.
   expect(lines).toEqual(
     paidPlans === 'coming'
-      ? [`${plans.free.stage1} ${plans.paid.coming}`, FREE_SIZES, plans.managedLater]
-      : [`${plans.free.stage1} ${SIZES}`, FREE_SIZES, plans.managedInApp],
+      ? [`${plans.free.stage1} ${FREE_SIZES}`, plans.paid.coming, plans.managedLater]
+      : [`${plans.free.stage1} ${FREE_SIZES}`, SIZES, plans.managedInApp],
   );
   expect(count(textOf(mainOf(html)), FREE_SIZES)).toBe(1);
   expect(textOf(mainOf(html))).not.toContain(paidPlans === 'coming' ? plans.managedInApp : plans.managedLater);
@@ -555,7 +556,7 @@ describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', (
       const html = renderToStaticMarkup(<Page locale={locale} claims={onSale} />);
       expect(count(textOf(mainOf(html)), sizes), `${locale} ${path}`).toBe(1);
       const free = l.plans.freeSizes(FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP);
-      expect(linesOf(html, l.persona.plansTitle), `${locale} ${path}`).toEqual([`${l.plans.free.stage1} ${sizes}`, free, l.plans.managedInApp]);
+      expect(linesOf(html, l.persona.plansTitle), `${locale} ${path}`).toEqual([`${l.plans.free.stage1} ${free}`, sizes, l.plans.managedInApp]);
     }
   });
 

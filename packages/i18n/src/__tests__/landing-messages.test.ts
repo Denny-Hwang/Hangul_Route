@@ -194,7 +194,7 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     );
     // F-SITE-002 site facts (2026-10-21): the app is live, so the band no longer reads as pre-launch.
     expect(l.waitlist.submit).toBe('Get launch news');
-    expect(l.waitlist.success).toBe("You're on the list. We'll email you when something new launches.");
+    expect(l.waitlist.success).toBe("You're on the list. We'll email you when family and class plans launch.");
     expect(l.home.news.title).toBe('Launch news by email');
     expect(l.home.news.body).toBe("We'll email you when family and class plans launch. Nothing else.");
   });
@@ -375,7 +375,7 @@ describe('landing: no words of an older site, in any locale', () => {
     ]) {
       expect(STALE_SITE_WORDS.test(bad), bad).toBe(true);
     }
-    expect(STALE_SITE_WORDS.test("We'll email you when something new launches.")).toBe(false);
+    expect(STALE_SITE_WORDS.test("We'll email you when family and class plans launch.")).toBe(false);
   });
 
   for (const locale of LOCALES) {
@@ -425,6 +425,14 @@ describe('landing: no words of an older site, in any locale', () => {
     expect(l.persona.learners.faq.korean.a).toContain('romanization and meaning');
     expect(getMessages('es').landing.persona.learners.faq.korean.a).toContain('romanización y su significado');
     expect(getMessages('ko').landing.persona.learners.faq.korean.a).toContain('로마자 표기와 뜻');
+    // The /about promise under the three-language line says the same (review of #806): with a Korean UI, "Korean is only
+    // used for the content being taught" would contradict the line above it.
+    expect(l.about.promises.koreanTaught).toBe('Every Korean word you learn comes with its romanization and meaning.');
+    expect(getMessages('es').landing.about.promises.koreanTaught).toBe('Cada palabra coreana que aprendes viene con su romanización y su significado.');
+    expect(getMessages('ko').landing.about.promises.koreanTaught).toContain('로마자 표기와 뜻');
+    for (const locale of LOCALES) {
+      expect(getMessages(locale).landing.about.promises.koreanTaught, locale).not.toMatch(/only used for|se usa solo/);
+    }
   });
 
   it('the hero bubble greets in the UI language and keeps the letter with its romanization (no-break space)', () => {
