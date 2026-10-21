@@ -30,12 +30,16 @@ import { uniqueRollupKeys } from '../db/rollup-types';
  *   off its list is dropped, or stored as `other` where the count still matters, so a caller can
  *   neither store text of its own nor create new rows at will.
  * - Profile-days for the once-a-day names. `memory.daily`, `items.seeded`, `goal.met` and
- *   `week.goal_met` are sent at most once a local day per profile, so their `events` on one day are
- *   the profiles that sent them. Every other name counts events: one profile can send many.
- * - Bounded writes. At most MAX_ROLLUP_ROWS_PER_EVENT cells an event, one upsert each, and the
- *   table is `WITHOUT ROWID`, so a cell costs one row written. The budget below caps cells per
- *   client and per isolate, and all isolates together through a reserved counter in the table
- *   (`ROLLUP_BUDGET_METRIC`), so rollups stay well under the D1 guardrail of section 3.3.
+ *   `week.goal_met` are sent at most once a local day per profile, so their `events` on one UTC day
+ *   are about the profiles that sent them: a local day straddles two UTC days, so a profile can
+ *   now and then count twice. A late offline flush (client time more than a day before ingest)
+ *   adds no rows, so a device back after days offline counts once, not once per day it was away.
+ *   Every other name counts events: one profile can send many.
+ * - Bounded writes. At most MAX_ROLLUP_ROWS_PER_EVENT cells an event, one upsert each, plus one
+ *   upsert of the day's counter row, and the table is `WITHOUT ROWID`, so a cell costs one row
+ *   written. The budget below caps cells per client and per isolate, and the rows all isolates
+ *   write through that counter (`ROLLUP_BUDGET_METRIC`), so rollups stay inside their share of the
+ *   D1 guardrail of section 3.3.
  * - Kill switch. `LEARNING_ROLLUPS` (a dashboard text variable, kept across deploys) turns the
  *   writes off at once when set to anything but `enabled`; unset is on.
  * - Small groups are hidden when read. `readRollups` applies the suppression of section 11.1.
@@ -72,24 +76,37 @@ export const MIN_GROUP_EVENTS = 20;
 export const OTHER_DIM = 'other';
 
 /**
- * The write budget, counted in cells (one cell is one row written). Rollups are best effort: an
- * event over budget is still accepted and logged, it only adds no rows.
- * - Per client key (the caller's IP, never stored), per isolate: cells an hour, and events a UTC
- *   day for each once-a-day name. Both are well above a class sharing one school address.
+ * The write budget. Rollups are best effort: an event over budget is still accepted and logged, it
+ * only adds no rows.
+ * - Per client key (the caller's IP, an IPv6 address by its /64 prefix, never stored), per
+ *   isolate: cells an hour, and events a UTC day for each once-a-day name. A school address with
+ *   more learners than ROLLUP_CLIENT_DAILY_EVENTS sending one name in a day, or more than
+ *   ROLLUP_CLIENT_CELLS_PER_HOUR cells in an hour, has the rest of that day or hour left out of the
+ *   rollups (never out of the log), so class-heavy days can read a little low.
  * - Per isolate: cells a UTC day.
- * - All isolates: cells a UTC day, reserved in chunks through one counter row, at 40% of the
- *   free tier's 100,000 rows written a day, so the guardrail of section 3.3 (under 50%) holds
- *   with room for sync.
+ * - All isolates: rows written a UTC day, counted exactly. Each event's batch also adds its rows
+ *   (its cells plus the counter row itself) to one counter row (`ROLLUP_BUDGET_METRIC`), and the
+ *   isolate stops writing for the day once the counter reaches ROLLUP_GLOBAL_ROWS_PER_DAY. Events
+ *   already in flight when it does can pass it by a few rows.
+ *
+ * The shared D1 budget (section 3.3: all rows written under 50% of the free tier's 100,000 a day):
+ * rollups take at most ROLLUP_GLOBAL_ROWS_PER_DAY = 20,000 (20%), so 30,000 rows a day stay for
+ * sync, the other telemetry sinks and the purges before the guardrail is reached.
  */
 export const ROLLUP_CLIENT_CELLS_PER_HOUR = 1200;
-export const ROLLUP_CLIENT_DAILY_EVENTS = 40;
-export const ROLLUP_ISOLATE_CELLS_PER_DAY = 20_000;
-export const ROLLUP_GLOBAL_CELLS_PER_DAY = 40_000;
-export const ROLLUP_RESERVE_CHUNK = 500;
+export const ROLLUP_CLIENT_DAILY_EVENTS = 200;
+export const ROLLUP_ISOLATE_CELLS_PER_DAY = 15_000;
+export const ROLLUP_GLOBAL_ROWS_PER_DAY = 20_000;
 /** Client keys tracked per isolate; a new key past this many adds no rows until the hour turns. */
 export const ROLLUP_MAX_CLIENT_KEYS = 10_000;
-/** The counter row of the global budget: cells reserved that UTC day, by every isolate. Not an event count. */
+/** The counter row of the global budget: rows written that UTC day, by every isolate. Not an event count. */
 export const ROLLUP_BUDGET_METRIC = 'rollup.cells';
+/**
+ * A once-a-day name whose client time is more than this before ingest is a late offline flush: it
+ * stays in the log but adds no rows, so a device back after days offline does not count as several
+ * profile-days on the day it returns.
+ */
+export const ROLLUP_ONCE_A_DAY_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 /** The most rows one read returns; a wider read is refused, so suppression never runs on a partial day. */
 export const ROLLUP_READ_LIMIT = 50_000;
 
@@ -200,6 +217,15 @@ function itemsSeeded(p: CurrPayload<'items.seeded'>): RollupKey[] {
  * `session.end` (its payload is kept as sent, so every field is checked here): the session length
  * for the median and p90 guardrail; the mid-quest quit, overall and by the game kind on screen; and,
  * for a quit, the wrong-first-try streak just before it (section 3.3).
+ *
+ * The quit rate per game kind has one denominator: the sessions that report `questLeft` (the ''
+ * cells, buckets 0 and 1). `leftAtKind` names the round on screen at a quit; a session that ends
+ * after the reward step has no round on screen, so a kind's own bucket 0 would count only stray
+ * sends and make the kind's rate look like 100%. So a kind is written only for a quit (bucket 1),
+ * and the rate for kind K on a day is `questLeft[K][1] / (questLeft[''][0] + questLeft[''][1])`:
+ * the share of reporting sessions that ended in a quit at K. It moves when quits at K move, and
+ * also, a little, when the mix of kinds played shifts; a reader compares it across arms or across
+ * the days around a ramp step, where the mix holds.
  */
 function sessionEnd(p: Payload): RollupKey[] {
   const keys: RollupKey[] = [];
@@ -208,10 +234,11 @@ function sessionEnd(p: Payload): RollupKey[] {
   const left = SESSION_END_QUEST_FIELDS.questLeft.safeParse(p.questLeft);
   if (!left.success) return keys;
   keys.push(cell('session.end.questLeft', '', String(left.data)));
+  if (left.data !== 1) return keys;
   const kind = SESSION_END_QUEST_FIELDS.leftAtKind.safeParse(p.leftAtKind);
-  if (kind.success) keys.push(cell('session.end.questLeft', kind.data, String(left.data)));
+  if (kind.success) keys.push(cell('session.end.questLeft', kind.data, '1'));
   const streak = SESSION_END_QUEST_FIELDS.afterWrongStreak.safeParse(p.afterWrongStreak);
-  if (left.data === 1 && streak.success) keys.push(cell('session.end.leftAfterWrongStreak', '', String(streak.data)));
+  if (streak.success) keys.push(cell('session.end.leftAfterWrongStreak', '', String(streak.data)));
   return keys;
 }
 
@@ -261,6 +288,20 @@ export function rollupKeysFor(name: string, payload: Payload | undefined): Rollu
     .slice(0, MAX_ROLLUP_ROWS_PER_EVENT);
 }
 
+/**
+ * The rollup key of a caller: its IPv4 address as is, an IPv6 address by its /64 prefix (one home
+ * or one network holds a whole /64, so rotating addresses inside it does not reset the caps).
+ */
+export function rollupClientKey(ip: string): string {
+  if (!ip.includes(':') || ip.includes('.')) return ip;
+  const [head = '', tail] = ip.toLowerCase().split('::');
+  const left = head === '' ? [] : head.split(':');
+  const right = tail === undefined || tail === '' ? [] : tail.split(':');
+  const groups = tail === undefined ? left : [...left, ...Array<string>(Math.max(0, 8 - left.length - right.length)).fill('0'), ...right];
+  const prefix = groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, ''));
+  return `${prefix.join(':')}::/64`;
+}
+
 /** The per-isolate write budget (see the constants above). Hour and day windows are fixed, so old keys are dropped when a window turns. */
 class RollupBudget {
   private hour = -1;
@@ -268,9 +309,10 @@ class RollupBudget {
   private day = '';
   private clientDaily = new Map<string, number>();
   private spent = 0;
-  private reserved = 0;
-  /** The reservation in flight, so concurrent events of one day share one counter write. */
-  private reserving: { day: string; p: Promise<void> } | null = null;
+  /** The day's global counter as last seen (undefined until read or written this day). */
+  private total: number | undefined = undefined;
+  /** The first counter read of the day, shared by the events that arrive while it is in flight. */
+  private reading: Promise<number> | null = null;
 
   /** Charges the event to the client and the isolate when it fits; answers whether it may be written. */
   admit(client: string, name: string, cells: number, nowMs: number, day: string): boolean {
@@ -283,8 +325,10 @@ class RollupBudget {
       this.day = day;
       this.clientDaily.clear();
       this.spent = 0;
-      this.reserved = 0;
+      this.total = undefined;
+      this.reading = null;
     }
+    if (this.capped()) return false;
     const used = this.clientCells.get(client);
     if (used === undefined && this.clientCells.size >= ROLLUP_MAX_CLIENT_KEYS) return false;
     if ((used ?? 0) + cells > ROLLUP_CLIENT_CELLS_PER_HOUR) return false;
@@ -298,30 +342,38 @@ class RollupBudget {
     return true;
   }
 
-  /**
-   * Makes sure the cells charged so far are covered by cells reserved from the global day budget,
-   * reserving one chunk at a time (one counter write per chunk). False once the day's global
-   * budget is used up.
-   */
-  async cover(db: Db, day: string): Promise<boolean> {
-    while (this.spent > this.reserved) {
-      if (this.reserved < 0) return false;
-      if (this.reserving?.day !== day) {
-        const p: Promise<void> = this.reserve(db, day).finally(() => {
-          if (this.reserving?.p === p) this.reserving = null;
-        });
-        this.reserving = { day, p };
-      }
-      await this.reserving.p;
-    }
-    return true;
+  private capped(): boolean {
+    return this.total !== undefined && this.total >= ROLLUP_GLOBAL_ROWS_PER_DAY;
   }
 
-  private async reserve(db: Db, day: string): Promise<void> {
-    const total = await db.reserveRollupCells(day, ROLLUP_BUDGET_METRIC, ROLLUP_RESERVE_CHUNK);
+  /**
+   * Whether an admitted event of `day` may write: false once the day's global counter has reached
+   * the cap, or when the isolate has already moved on to the next day (a stale event never reads
+   * or writes for a day the isolate left). The first event of a day reads the counter once (a read,
+   * not a row written); the events behind it share that read.
+   */
+  async open(db: Db, day: string): Promise<boolean> {
+    if (day !== this.day) return false;
+    if (this.total === undefined) {
+      if (!this.reading) {
+        const p: Promise<number> = db.rollupRows(day, day, ROLLUP_BUDGET_METRIC, 1).then((rows) => rows[0]?.events ?? 0);
+        // A failed read (no table yet) is not kept, so the next event of the day asks again.
+        p.catch(() => {
+          if (this.reading === p) this.reading = null;
+        });
+        this.reading = p;
+      }
+      const seen = await this.reading;
+      if (day !== this.day) return false;
+      this.note(day, seen);
+    }
+    return !this.capped();
+  }
+
+  /** Records a counter total read or written for `day`; one from a day the isolate left is ignored. */
+  note(day: string, total: number): void {
     if (day !== this.day) return;
-    // Past the global budget: mark the day spent (reserved < 0) so no later event asks again.
-    this.reserved = total > ROLLUP_GLOBAL_CELLS_PER_DAY ? -1 : this.reserved + ROLLUP_RESERVE_CHUNK;
+    this.total = Math.max(this.total ?? 0, total);
   }
 
   reset(): void {
@@ -330,8 +382,8 @@ class RollupBudget {
     this.clientCells.clear();
     this.clientDaily.clear();
     this.spent = 0;
-    this.reserved = 0;
-    this.reserving = null;
+    this.total = undefined;
+    this.reading = null;
   }
 }
 
@@ -339,20 +391,22 @@ export const rollupBudget = new RollupBudget();
 
 /**
  * Rolls one accepted event up: the stored name and kept payload (never the envelope), on the UTC
- * day it was received. Answers the cells written. A slip never fails the event: the switch off, a
- * spent budget, a missing binding, a Worker that runs before migration 0014, or a D1 error writes
- * nothing and answers 0. Rollups count at least once: a client that retries after a lost answer
- * is counted again.
+ * day it was received. Answers the cells written. A slip never fails the event and never rejects:
+ * the switch off, a spent budget, a late offline flush of a once-a-day name, a missing binding, a
+ * Worker that runs before migration 0014, a D1 error or any other error writes nothing and answers
+ * 0. Rollups count at least once: a client that retries after a lost answer is counted again.
  */
-export async function rollUpEvent(db: () => Db, event: { name: string; payload?: Payload; receivedAt: string }, client: string): Promise<number> {
-  const keys = rollupKeysFor(event.name, event.payload);
-  if (keys.length === 0) return 0;
-  const day = event.receivedAt.slice(0, 10);
-  if (!rollupBudget.admit(client, event.name, keys.length, Date.parse(event.receivedAt), day)) return 0;
+export async function rollUpEvent(db: () => Db, event: { name: string; payload?: Payload; receivedAt: string; at?: string }, client: string): Promise<number> {
   try {
+    const keys = rollupKeysFor(event.name, event.payload);
+    if (keys.length === 0) return 0;
+    const receivedMs = Date.parse(event.receivedAt);
+    if (ONCE_A_DAY.has(event.name) && event.at !== undefined && receivedMs - Date.parse(event.at) > ROLLUP_ONCE_A_DAY_MAX_AGE_MS) return 0;
+    const day = event.receivedAt.slice(0, 10);
+    if (!rollupBudget.admit(rollupClientKey(client), event.name, keys.length, receivedMs, day)) return 0;
     const d = db();
-    if (!(await rollupBudget.cover(d, day))) return 0;
-    await d.addRollups(day, keys);
+    if (!(await rollupBudget.open(d, day))) return 0;
+    rollupBudget.note(day, await d.addRollups(day, keys, ROLLUP_BUDGET_METRIC));
     return keys.length;
   } catch {
     return 0;
@@ -426,8 +480,17 @@ export function suppressSmallGroups(rows: readonly RollupRow[]): RollupRow[] {
  * - The inputs come from an anonymous endpoint. The closed sets and the budget bound what a
  *   forger can write, but not what it can count, so the evaluator (CM-70b) acts only on a
  *   significant change of sizeable cohorts, and its only action is lowering a ramp one step.
- * - `ROLLUP_BUDGET_METRIC` is the cells reserved that day, an input to the D1 guardrail, not events.
+ * - `ROLLUP_BUDGET_METRIC` is the rows rollups wrote that day, an input to the D1 guardrail, not
+ *   events. The evaluator must not count rows a forger spent, up to the cap, as an organic breach.
+ * - A day whose counter reached ROLLUP_GLOBAL_ROWS_PER_DAY is partial: writes stopped part-way
+ *   through the UTC day, so its counts are low and lean to the hours before the stop. Read the
+ *   counter for the same days and pass the rows to `cappedDays`; mark those days or skip them.
  */
+/** The days among `rows` whose rollups stopped at the global cap (see `readRollups`). */
+export function cappedDays(rows: readonly RollupRow[]): string[] {
+  return rows.filter((r) => r.metric === ROLLUP_BUDGET_METRIC && r.dim === '' && r.bucket === '' && r.events >= ROLLUP_GLOBAL_ROWS_PER_DAY).map((r) => r.day);
+}
+
 export async function readRollups(db: Db, query: RollupQuery): Promise<RollupRow[]> {
   if (!DAY.test(query.fromDay) || !DAY.test(query.toDay)) throw new RangeError('rollup days are YYYY-MM-DD');
   const rows = await db.rollupRows(query.fromDay, query.toDay, query.metric, ROLLUP_READ_LIMIT + 1);
