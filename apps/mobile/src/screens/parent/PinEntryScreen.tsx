@@ -83,7 +83,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * session and counts as no fresh PIN (CS-4).
  *
  * [OA] Destination `JoinSpace` (row OA-7b, CS-11): Who is joining? asks the PIN before a learner other than the
- * active one joins. A correct PIN (a fresh PIN, `markPinVerified`) or a PIN set here returns to Join, which goes on.
+ * active one joins. A correct PIN (a fresh PIN, `markPinVerified`) or a first PIN set here returns to Join, which goes on;
+ * a PIN set at the end of a reset (`via`) returns too but is no fresh PIN, so Join asks it once more.
  */
 
 const DOT_SIZE = 20;
@@ -323,8 +324,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           navigation.goBack();
           return;
         }
-        // [OA] CS-11 (row OA-7b): a PIN set just now for Who is joining? was entered twice this minute, so it is fresh.
-        if (route.params.next === 'JoinSpace') markPinVerified();
+        // [OA] CS-11 (row OA-7b): a first PIN set just now for Who is joining? was entered twice this minute, so it is
+        // fresh. A PIN set at the end of a reset (the 24-hour wait or the Rescue Code, `via`) is not: Join asks it again.
+        if (route.params.next === 'JoinSpace' && route.params.via === undefined) markPinVerified();
         proceed();
         return;
       }

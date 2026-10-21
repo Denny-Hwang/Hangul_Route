@@ -62,7 +62,9 @@ type Step = { kind: 'who' } | { kind: 'name'; index: number } | { kind: 'consent
  *    learner that never synced) and the family's grown-ups see each name and their progress. Not now goes back to the
  *    checklist and registers nobody. Yes, join asks the PIN again if it is no longer fresh.
  * 4. The joins in sequence (`membership-store.join` per learner, one `/join` each). A refused seat is a result line.
- *    The first network error stops them: the lines so far, the offline line and **Try again** for the rest.
+ *    The first network error stops them: the lines so far, the offline line and **Try again** for the rest. Try again
+ *    asks the fresh PIN again before the rest join when they include anyone but the active learner (CS-11). One run at
+ *    a time: a second tap sends nothing more.
  * 5. One result line per learner, a polite status heading, `space.join.batch` once.
  */
 export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, onDone }: JoinBatchProps): React.ReactElement {
@@ -77,15 +79,18 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
   const [names, setNames] = useState<Record<string, string>>(() => Object.fromEntries(rows.map((r) => [r.id, r.displayName])));
   const [step, setStep] = useState<Step>({ kind: 'who' });
   const [run, setRun] = useState<BatchRun | null>(null);
-  // What waits on the PIN screen: the name steps (Next) or the joins (Yes, join).
-  const [afterPin, setAfterPin] = useState<'names' | 'joins' | null>(null);
+  // What waits on the PIN screen: the name steps (Next), the joins (Yes, join) or the rest of them (Try again).
+  const [afterPin, setAfterPin] = useState<'names' | 'joins' | 'retry' | null>(null);
   const picked = pickedInOrder(picks, rows);
   const sent = useRef(false);
   // Read when the run is reported, which may be on leaving the screen.
   const pickedCount = useRef(picked.length);
   pickedCount.current = picked.length;
 
-  const needsPin = (): boolean => batchPickNeedsPin({ picks, rows, lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt, now: Date.now() });
+  const needsPin = (ids: readonly string[] = picks): boolean =>
+    batchPickNeedsPin({ picks: ids, rows, lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt, now: Date.now() });
+  // Try again joins only the learners left; they need the fresh PIN (CS-11) however long the results stood.
+  const retryIds = (before: BatchRun | null): string[] => before?.stop?.remaining.map((p) => p.id) ?? [];
 
   const report = (finished: BatchRun): void => {
     if (sent.current) return;
@@ -93,13 +98,21 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
     void track(batchEvent(pickedCount.current, finished.results));
   };
 
+  // One run at a time: a second tap on Yes, join or Try again before the step re-renders sends nothing more.
+  const running = useRef(false);
   const start = async (before?: BatchRun): Promise<void> => {
-    setStep({ kind: 'running' });
-    const todo = before?.stop?.remaining ?? picked.map((r) => ({ id: r.id, name: (names[r.id] ?? r.displayName).trim() }));
-    const finished = await runBatch(todo, (id, name) => join(id, space.id, code, name || undefined), before);
-    setRun(finished);
-    setStep({ kind: 'results' });
-    if (finished.stop === null || !finished.stop.retry) report(finished);
+    if (running.current) return;
+    running.current = true;
+    try {
+      setStep({ kind: 'running' });
+      const todo = before?.stop?.remaining ?? picked.map((r) => ({ id: r.id, name: (names[r.id] ?? r.displayName).trim() }));
+      const finished = await runBatch(todo, (id, name) => join(id, space.id, code, name || undefined), before);
+      setRun(finished);
+      setStep({ kind: 'results' });
+      if (finished.stop === null || !finished.stop.retry) report(finished);
+    } finally {
+      running.current = false;
+    }
   };
 
   // A run left with Try again still counts once (the grown-up left the screen instead).
@@ -113,12 +126,13 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
     [],
   );
 
-  // Back from the PIN screen with a fresh PIN: go on where Next or Yes, join waited.
+  // Back from the PIN screen with a fresh PIN: go on where Next, Yes, join or Try again waited.
   useEffect(() => {
-    if (afterPin === null || needsPin()) return;
+    if (afterPin === null || needsPin(afterPin === 'retry' ? retryIds(runRef.current) : picks)) return;
     const next = afterPin;
     setAfterPin(null);
     if (next === 'names') setStep({ kind: 'name', index: 0 });
+    else if (next === 'retry') void start(runRef.current ?? undefined);
     else void start();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reacts to a new PIN only
   }, [lastPinVerifiedAt, afterPin]);
@@ -142,6 +156,16 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
     void start();
   };
 
+  const retry = (): void => {
+    if (running.current) return;
+    if (needsPin(retryIds(run))) {
+      setAfterPin('retry');
+      askPin();
+      return;
+    }
+    void start(run ?? undefined);
+  };
+
   if (step.kind === 'name') {
     const row = picked[step.index];
     if (row === undefined) return <></>;
@@ -151,6 +175,12 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
     const nameOk = value.trim().length > 0 && (unchanged || validateDisplayName(value) === null);
     return (
       <Card padding="lg" tone="brand" testID="join-confirm">
+        {/* Whose step this is: the learner's cub and profile name, read before the field. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }} testID="join-who-name-for">
+          <ProfileAvatar avatar={row.avatar} size={ROW_AVATAR} />
+          <Body weight="bold">{row.displayName}</Body>
+        </View>
+        <Spacer size="sm" />
         <Caption tone="muted">{m.confirm.seeYouAs.family}</Caption>
         <Spacer size="xs" />
         <JoinNameField
@@ -207,8 +237,9 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
     const stop = run?.stop ?? null;
     return (
       <View testID="join-who-results">
+        {/* The heading is announced once there are results: during the first run nothing has answered yet. */}
         <View role="status" aria-live="polite">
-          <Heading level="prompt">{w.result(batchJoined(done), picked.length)}</Heading>
+          {run !== null ? <Heading level="prompt">{w.result(batchJoined(done), picked.length)}</Heading> : null}
         </View>
         <Spacer size="md" />
         <View role="list">
@@ -230,7 +261,7 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
         {step.kind === 'running' ? (
           <Button label={m.confirm.joining.cta} tone="primary" size="lg" fullWidth disabled onPress={() => undefined} />
         ) : stop !== null && stop.retry ? (
-          <Button label={w.retry} tone="primary" size="lg" fullWidth onPress={() => void start(run ?? undefined)} />
+          <Button label={w.retry} tone="primary" size="lg" fullWidth onPress={retry} />
         ) : (
           <Button label={messages.common.buttons.done} tone="primary" size="lg" fullWidth onPress={onDone} />
         )}

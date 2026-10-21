@@ -143,5 +143,8 @@ test.describe('Who is joining? (CS-11)', () => {
     await page.getByRole('button', { name: who.consentYes, exact: true }).click();
     await expect(page.getByRole('heading', { name: who.result(1, 1), exact: true })).toBeVisible();
     expect(calls.joins).toEqual([ids.mina]);
+    // OA-D20, CS-5: the launch's chooser waited for the join; Done opens it, never Home as whoever played last.
+    await page.getByRole('button', { name: en.common.buttons.done, exact: true }).click();
+    await expect(page.getByRole('heading', { name: en.learner.who.title, exact: true })).toBeVisible();
   });
 });

@@ -377,6 +377,22 @@ describe('PinEntry JoinSpace (Who is joining?, CS-11, row OA-7b)', () => {
     expect(useUiStore.getState().gateReturnPending).toBe(true);
   });
 
+  it('a PIN set at the end of a reset (the 24-hour wait or the Rescue Code) is not a fresh PIN for Join', async () => {
+    for (const via of ['wait', 'rescue_code'] as const) {
+      useAccountStore.setState({ parentPinHash: null });
+      useUiStore.setState({ lastPinVerifiedAt: null });
+      const navigation = nav();
+      const route = { key: 'pin', name: 'PinEntry' as const, params: { next: 'JoinSpace' as const, via } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+      const r = await render(<PinEntryScreen route={route} navigation={navigation as any} />);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await typeSetup(r.root, '2468');
+      expect(useAccountStore.getState().parentPinHash).toBe('h:2468');
+      expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+      await cleanup();
+    }
+  });
+
   it('a PIN set for another destination is not a fresh PIN (unchanged)', async () => {
     useAccountStore.setState({ parentPinHash: null });
     const { r } = await show('AddProfile');

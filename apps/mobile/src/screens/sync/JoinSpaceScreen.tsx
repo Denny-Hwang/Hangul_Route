@@ -20,7 +20,7 @@ import { flags } from '../../config/flags';
 import { tileOrder } from '../../logic/profiles/who';
 import { batchOffered, checklistRows, locksThatCount, type ChecklistRow } from '../../logic/spaces/join-batch';
 import { useAccountStore } from '../../store/account-store';
-import { holdJoin, learnerProfiles, readProfileLocks, takeBatchHandoff } from '../../store/who-chooser';
+import { holdJoin, learnerProfiles, readProfileLocks, takeBatchHandoff, takeBatchLaunchChooser } from '../../store/who-chooser';
 import { JoinBatch } from './JoinBatch';
 import { JoinNameField } from './JoinNameField';
 
@@ -130,7 +130,8 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
     const learners = tileOrder(learnerProfiles(useProfileStore.getState().profiles), locale);
     if (!flags.multiJoinEnabled || kind !== 'family' || learners.length < 2) return null;
     const ids = learners.map((l) => l.id);
-    const scopes = await Promise.all(ids.map((id) => deviceScope(id).catch(() => 'full' as const)));
+    // A scope that cannot be read fails closed, as the locks do: the row is disabled (Linked for a class on this device.).
+    const scopes = await Promise.all(ids.map((id) => deviceScope(id).catch(() => 'class' as const)));
     const classScoped = ids.filter((_, i) => scopes[i] === 'class');
     if (!batchOffered({ flag: true, kind, learners, classScoped })) return null;
     const locks = locksThatCount(await readProfileLocks(), useAccountStore.getState().parentPinHash !== null, ids);
@@ -151,6 +152,8 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
     // [OA] OA-D20: the launch's hand-off code was a class code after all: the chooser asks who is joining.
     if (launchCode !== null && result.space.kind !== 'family' && flags.whoChooserEnabled) {
       setBusy(false);
+      // The chooser shows now, so the one the launch deferred is spent.
+      takeBatchLaunchChooser();
       holdJoin(typed);
       navigation.navigate('WhoIsUsing', { trigger: 'join' });
       return;
@@ -182,6 +185,18 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
     void find(launchCode);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per launch code
   }, [launchCode]);
+
+  // [OA] OA-D20, CS-5: a launch that took the hand-off code deferred its chooser. Leaving Join (Done, Back to today, a
+  // back gesture) opens "Who is using this?" as the launch would have, instead of Home as whoever played last.
+  useEffect(() => {
+    if (launchCode === null) return undefined;
+    return navigation.addListener('beforeRemove', (e) => {
+      const trigger = takeBatchLaunchChooser();
+      if (trigger === null) return;
+      e.preventDefault();
+      navigation.reset({ index: 0, routes: [{ name: 'WhoIsUsing', params: { trigger } }] });
+    });
+  }, [launchCode, navigation]);
 
   const askRelink = async (pick: RosterName): Promise<void> => {
     if (!found) return;

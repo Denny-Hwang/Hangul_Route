@@ -171,6 +171,7 @@ describe('classifyJoin', () => {
     expect(classifyJoin(ok(true))).toBe('already');
     for (const code of ['cap_family', 'cap_class', 'cap_school', 'cap_learner'] as const) expect(classifyJoin(fail(code))).toBe('refused');
     for (const code of ['network', 'unknown', 'too_many_attempts', 'code_expired', 'off'] as const) expect(classifyJoin(fail(code))).toBe('stop');
+    for (const code of ['forbidden', 'learner_not_found', 'already_bound'] as const) expect(classifyJoin(fail(code))).toBe('skipped');
   });
 });
 
@@ -236,6 +237,25 @@ describe('runBatch: the joins in sequence (section 10.3)', () => {
     const first = await runBatch(picked, async (id) => (id === MINA.id ? fail('network') : ok()));
     const again = await runBatch(first.stop!.remaining, async () => ok(true), first);
     expect(again.results.map((r) => r.kind)).toEqual(['joined', 'already', 'already']);
+  });
+
+  it('a failure about one learner (the device check refused it, or it is gone) is that learner\'s line; the rest go on', async () => {
+    for (const error of ['forbidden', 'learner_not_found'] as const) {
+      const join = vi.fn(async (id: string) => (id === JUN.id ? fail(error) : ok()));
+      const run = await runBatch(picked, join);
+      expect(join.mock.calls.map(([id]) => id), error).toEqual([MINA.id, JUN.id, SORA.id]);
+      expect(run.results).toEqual<BatchResult[]>([
+        { id: MINA.id, name: 'Mina', kind: 'joined' },
+        { id: JUN.id, name: 'Jun', kind: 'skipped', error },
+        { id: SORA.id, name: 'Sora', kind: 'joined' },
+      ]);
+      expect(run.stop).toBeNull();
+      // One line per learner, the skipped one led by its name; it is not joined and not a refused seat.
+      expect(resultLines(run.results, caregiver)).toHaveLength(3);
+      expect(resultLine(run.results[1]!, caregiver).startsWith('Jun: ')).toBe(true);
+      expect(batchJoined(run.results)).toBe(2);
+      expect(batchEvent(3, run.results).payload).toEqual({ picked: 3, joined: 2, refused: 0 });
+    }
   });
 
   it('a join that throws is a network stop, never a crash', async () => {

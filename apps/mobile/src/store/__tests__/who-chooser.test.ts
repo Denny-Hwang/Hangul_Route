@@ -51,6 +51,7 @@ import {
   resetChooserState,
   switchOffered,
   takeBatchHandoff,
+  takeBatchLaunchChooser,
   takeHeldJoin,
   whoMarker,
   whoReturnTrigger,
@@ -397,6 +398,25 @@ describe('[OA] Who is joining? at launch (OA-D14, OA-D20; row OA-7b)', () => {
     expect(takeBatchHandoff()).toBe('FAM234');
     expect(takeBatchHandoff()).toBeNull();
     expect(batchHandoffPending()).toBe(false);
+  });
+
+  it('the chooser the launch would have shown waits for the end of the join, taken once (OA-D20, CS-5)', async () => {
+    handoff.code = 'FAM234';
+    expect(await chooserLaunchTrigger(1_000)).toBeNull();
+    expect(takeBatchLaunchChooser()).toBe('launch');
+    expect(takeBatchLaunchChooser()).toBeNull();
+    // reset clears it too
+    handoff.code = 'FAM234';
+    await chooserLaunchTrigger(1_000);
+    resetChooserState();
+    expect(takeBatchLaunchChooser()).toBeNull();
+  });
+
+  it('no hand-off taken for Who is joining?: nothing is deferred', async () => {
+    flags.multiJoinEnabled = false;
+    handoff.code = 'FAM234';
+    await chooserLaunchTrigger(1_000);
+    expect(takeBatchLaunchChooser()).toBeNull();
   });
 
   it('who=1 with the hand-off: the join wins and who=1 is taken', async () => {

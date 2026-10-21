@@ -106,7 +106,27 @@ function worker(opts: { cap?: number; members?: string[]; dropJoinOf?: string } 
   return { api, members };
 }
 
-const navigation = { navigate: vi.fn(), goBack: vi.fn(), replace: vi.fn() };
+// `beforeRemove` listeners Join registers, called the way the navigator calls them when Join is left.
+const leaving = vi.hoisted(() => [] as ((e: { preventDefault: () => void }) => void)[]);
+const navigation = {
+  navigate: vi.fn(),
+  goBack: vi.fn(),
+  replace: vi.fn(),
+  reset: vi.fn(),
+  addListener: vi.fn((name: string, cb: (e: { preventDefault: () => void }) => void) => {
+    if (name === 'beforeRemove') leaving.push(cb);
+    return () => {
+      const i = leaving.indexOf(cb);
+      if (i >= 0) leaving.splice(i, 1);
+    };
+  }),
+};
+/** Join is left (Done goes Home, Back to today, a back gesture): whether a listener kept it from leaving as asked. */
+const leave = (): boolean => {
+  let prevented = false;
+  for (const cb of [...leaving]) cb({ preventDefault: () => (prevented = true) });
+  return prevented;
+};
 const realDeviceScope = useMembershipStore.getState().deviceScope;
 const settle = async (): Promise<void> => {
   for (let i = 0; i < 6; i++) await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
@@ -167,6 +187,8 @@ beforeEach(() => {
   handoff.code = null;
   resetChooserState();
   navigation.navigate.mockClear();
+  navigation.reset.mockClear();
+  leaving.length = 0;
   flags.multiJoinEnabled = true;
   useMembershipStore.setState({ byLearner: {}, deviceScope: realDeviceScope });
 });
@@ -440,5 +462,159 @@ describe('Who is joining? with the mocked Worker (OA-7b)', () => {
     const sent = tracked.filter((e) => e.name === 'space.join.batch');
     expect(sent.map((e) => e.payload)).toEqual([{ picked: 1, joined: 0, refused: 0 }]);
     expect(sent[0]!.profileId).toBeUndefined();
+  });
+  it('CS-11 on Try again: a PIN that lapsed while the results stood is asked again before the rest join', async () => {
+    seed();
+    const { api } = worker({ dropJoinOf: JUN.id });
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    await press(row(root, JUN.id));
+    await press(row(root, SORA.id));
+    await press(button(root, en.common.buttons.next));
+    await enterPin();
+    await throughNames(root, 3);
+    await press(button(root, who.consentYes));
+    await settle();
+    expect(buttonsNamed(root, who.retry)).toHaveLength(1);
+    expect(api.joinSpace).toHaveBeenCalledTimes(2);
+    // The grown-up walked away: the PIN is older than 2 minutes (or the session closed it).
+    await act(async () => {
+      useUiStore.setState({ lastPinVerifiedAt: Date.now() - 3 * 60_000 });
+    });
+    navigation.navigate.mockClear();
+    await press(button(root, who.retry));
+    await settle();
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'JoinSpace' });
+    expect(api.joinSpace).toHaveBeenCalledTimes(2);
+    await enterPin();
+    expect(api.joinSpace.mock.calls.map(([, body]) => (body as { learnerId: string }).learnerId)).toEqual([MINA.id, JUN.id, JUN.id, SORA.id]);
+    expect(screenTexts(root)).toContain(who.result(3, 3));
+  });
+
+  it('Try again for the active, unlocked learner alone asks no PIN, as today', async () => {
+    seed();
+    const { api } = worker({ dropJoinOf: MINA.id });
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    await press(button(root, en.common.buttons.next));
+    await throughNames(root, 1);
+    await press(button(root, who.consentYes));
+    await settle();
+    navigation.navigate.mockClear();
+    await press(button(root, who.retry));
+    await settle();
+    expect(navigation.navigate).not.toHaveBeenCalledWith('PinEntry', expect.anything());
+    expect(screenTexts(root)).toEqual(expect.arrayContaining([who.result(1, 1), who.joined('Mina')]));
+  });
+
+  it('a second tap on Yes, join sends nothing more; nothing is announced before a join answers', async () => {
+    seed();
+    const { api } = worker();
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const real = api.joinSpace.getMockImplementation()!;
+    api.joinSpace.mockImplementation(async (...args: Parameters<typeof real>) => {
+      await gate;
+      return real(...args);
+    });
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    await press(row(root, JUN.id));
+    await press(button(root, en.common.buttons.next));
+    await enterPin();
+    await throughNames(root, 2);
+    // Two taps in the same frame, before the step re-renders.
+    const yes = button(root, who.consentYes);
+    const tap = (): void => {
+      const currentTarget = { getAttribute: (name: string): unknown => yes.props[name] ?? null, tagName: String(yes.type) };
+      (yes.props.onClick as (event: unknown) => void)({ altKey: false, currentTarget, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined });
+    };
+    await act(async () => {
+      tap();
+      tap();
+    });
+    await settle();
+    // Running: the Joining button, and no result heading yet ("0 of 2 joined." would read like a failure).
+    expect(byTestId(root, 'join-who-results')).toHaveLength(1);
+    expect(screenTexts(root)).not.toContain(who.result(0, 2));
+    await act(async () => release());
+    await settle();
+    expect(api.joinSpace.mock.calls.map(([, body]) => (body as { learnerId: string }).learnerId)).toEqual([MINA.id, JUN.id]);
+    expect(screenTexts(root)).toContain(who.result(2, 2));
+  });
+
+  it('each name step shows whose step it is: the cub and the profile name', async () => {
+    seed();
+    setSyncApiForTests(worker().api as never);
+    const root = await reachChecklist();
+    await press(row(root, JUN.id));
+    await press(button(root, en.common.buttons.next));
+    await enterPin();
+    const owner = (): string[] => screenTexts(byTestId(root, 'join-who-name-for')[0]!);
+    expect(owner()).toContain('Mina');
+    await press(button(root, join.confirm.me.cta));
+    expect(owner()).toContain('Jun');
+  });
+
+  it('a learner scope that cannot be read fails closed: the row is disabled', async () => {
+    seed([MINA, JUN], []);
+    setSyncApiForTests(worker().api as never);
+    useMembershipStore.setState({ deviceScope: vi.fn(async (id: string) => (id === JUN.id ? Promise.reject(new Error('read')) : 'full')) as never });
+    const root = await reachChecklist();
+    expect(row(root, JUN.id).props['aria-disabled']).toBe(true);
+    expect(screenTexts(root)).toContain(who.classOnly);
+  });
+
+  it('the device check refuses one learner: its own line, and the others still join', async () => {
+    seed();
+    const { api } = worker();
+    const real = api.joinSpace.getMockImplementation()!;
+    api.joinSpace.mockImplementation(async (...args: Parameters<typeof real>) =>
+      (args[1] as { learnerId: string }).learnerId === JUN.id ? ({ status: 'error', code: 'forbidden' } as never) : real(...args),
+    );
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    await press(row(root, JUN.id));
+    await press(row(root, SORA.id));
+    await press(button(root, en.common.buttons.next));
+    await enterPin();
+    await throughNames(root, 3);
+    await press(button(root, who.consentYes));
+    await settle();
+    expect(api.joinSpace).toHaveBeenCalledTimes(3);
+    expect(screenTexts(root)).toEqual(expect.arrayContaining([who.result(2, 3), who.joined('Mina'), who.refused('Jun', en.caregiver.retry.unknown), who.joined('Sora')]));
+    expect(buttonsNamed(root, who.retry)).toHaveLength(0);
+    expect(buttonsNamed(root, en.common.buttons.done)).toHaveLength(1);
+  });
+
+  it('after a launch hand-off, leaving Join opens the chooser the launch deferred, never Home as whoever played last (OA-D20, CS-5)', async () => {
+    seed();
+    flags.whoChooserEnabled = true;
+    const { api } = worker();
+    setSyncApiForTests(api as never);
+    handoff.code = 'FAM234';
+    expect(await chooserLaunchTrigger()).toBeNull();
+    const r = await render(<JoinSpaceScreen navigation={navigation as never} route={{ key: 'JoinSpace', name: 'JoinSpace' } as never} />);
+    await settle();
+    await press(button(r.root, en.common.buttons.next));
+    await throughNames(r.root, 1);
+    await press(button(r.root, who.consentYes));
+    await settle();
+    await press(button(r.root, en.common.buttons.done));
+    // Done asks for Home; the navigator then removes Join, and the launch's chooser takes its place.
+    expect(leave()).toBe(true);
+    expect(navigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'WhoIsUsing', params: { trigger: 'launch' } }] });
+    // Once: the reset itself leaves Join as asked.
+    expect(leave()).toBe(false);
+    expect(navigation.reset).toHaveBeenCalledTimes(1);
+  });
+
+  it('a Join opened any other way leaves as before (no chooser)', async () => {
+    seed();
+    flags.whoChooserEnabled = true;
+    setSyncApiForTests(worker().api as never);
+    await reachChecklist();
+    expect(leave()).toBe(false);
+    expect(navigation.reset).not.toHaveBeenCalled();
   });
 });

@@ -115,18 +115,27 @@ type CapCode = 'cap_family' | 'cap_class' | 'cap_school' | 'cap_learner';
 const CAP_CODES: ReadonlySet<JoinErrorCode> = new Set<JoinErrorCode>(['cap_family', 'cap_class', 'cap_school', 'cap_learner']);
 /** Offline, a timeout, a `5xx` (the client's `unknown`) or a busy Worker: the rest can be tried again as they are. */
 const RETRY_CODES: ReadonlySet<JoinErrorCode> = new Set<JoinErrorCode>(['network', 'unknown', 'too_many_attempts']);
+/**
+ * About one learner, not the code: this device cannot act for that learner (`forbidden`, a `401` or `403` from the
+ * device check) or the learner is gone. Trying again cannot help, and the others can still join: a result line, and
+ * the sequence goes on (section 10.3, one result line per learner).
+ */
+type LearnerCode = 'forbidden' | 'learner_not_found' | 'already_bound';
+const LEARNER_CODES: ReadonlySet<JoinErrorCode> = new Set<JoinErrorCode>(['forbidden', 'learner_not_found', 'already_bound']);
 
-export type JoinClass = 'joined' | 'already' | 'refused' | 'stop';
+export type JoinClass = 'joined' | 'already' | 'refused' | 'skipped' | 'stop';
 
 export function classifyJoin(answer: BatchAnswer): JoinClass {
   if (answer.ok) return answer.alreadyMember ? 'already' : 'joined';
-  return CAP_CODES.has(answer.error) ? 'refused' : 'stop';
+  if (CAP_CODES.has(answer.error)) return 'refused';
+  return LEARNER_CODES.has(answer.error) ? 'skipped' : 'stop';
 }
 
 /** One learner's result line. `refused` keeps the cap the Worker sent (null when it sent none). */
 export type BatchResult =
   | { id: string; name: string; kind: 'joined' | 'already' }
-  | { id: string; name: string; kind: 'refused'; error: CapCode; cap: number | null };
+  | { id: string; name: string; kind: 'refused'; error: CapCode; cap: number | null }
+  | { id: string; name: string; kind: 'skipped'; error: LearnerCode };
 
 /** A learner still to join, with the name it joins under (the name step's answer). */
 export interface BatchPick {
@@ -149,10 +158,10 @@ export interface BatchRun {
 }
 
 /**
- * Section 10.3: the joins in sequence, one `/join` per learner. A refused seat is a result and the sequence goes on.
- * The first other failure stops it: the results so far stay, and the rest wait for **Try again** (`retry` for a
- * network error, a timeout, a `5xx` or a busy Worker; a code that no longer works cannot be helped by trying again).
- * A join that throws is a network stop.
+ * Section 10.3: the joins in sequence, one `/join` per learner. A refused seat is a result and the sequence goes on;
+ * so is a failure about that one learner (`LEARNER_CODES`). The first other failure stops it: the results so far
+ * stay, and the rest wait for **Try again** (`retry` for a network error, a timeout, a `5xx` or a busy Worker; a code
+ * that no longer works cannot be helped by trying again). A join that throws is a network stop.
  *
  * A retry passes the earlier run as `before`: it is idempotent. The learner whose answer was lost (`before.stop.tried`)
  * answers "already a member" when the Worker had taken its seat, and reads **joined**; a learner who was a member
@@ -170,10 +179,12 @@ export async function runBatch(picks: readonly BatchPick[], join: (id: string, n
       answer = { ok: false, error: 'network' };
     }
     if (!answer.ok) {
-      if (!CAP_CODES.has(answer.error)) {
+      const kind = classifyJoin(answer);
+      if (kind === 'stop') {
         return { results, stop: { error: answer.error, retry: RETRY_CODES.has(answer.error), remaining: picks.slice(i), tried: pick.id } };
       }
-      results.push({ id: pick.id, name: pick.name, kind: 'refused', error: answer.error as CapCode, cap: answer.cap ?? null });
+      if (kind === 'skipped') results.push({ id: pick.id, name: pick.name, kind: 'skipped', error: answer.error as LearnerCode });
+      else results.push({ id: pick.id, name: pick.name, kind: 'refused', error: answer.error as CapCode, cap: answer.cap ?? null });
       continue;
     }
     results.push({ id: pick.id, name: pick.name, kind: answer.alreadyMember && pick.id !== lost ? 'already' : 'joined' });
@@ -183,18 +194,19 @@ export async function runBatch(picks: readonly BatchPick[], join: (id: string, n
 
 /** The learners in the family after the batch: joined and already a member both count (`join.who.result`). */
 export function batchJoined(results: readonly BatchResult[]): number {
-  return results.filter((r) => r.kind !== 'refused').length;
+  return results.filter((r) => r.kind === 'joined' || r.kind === 'already').length;
 }
 
 type CaregiverCopy = Pick<Messages['caregiver'], 'join' | 'retry' | 'audience'>;
 
 /**
  * One result line (section 10.3, 17.4): `join.who.joined(name)`, `join.who.already(name)`, or the cap line
- * (`caregiver.join.errors.familyFull(cap)`, SA) after the name in the colon form (`join.who.refused`). Calm, never an
- * error word.
+ * (`caregiver.join.errors.familyFull(cap)`, SA) after the name in the colon form (`join.who.refused`); a learner the
+ * device could not join reads its own shipped line the same way. Calm, never an error word.
  */
 export function resultLine(result: BatchResult, m: CaregiverCopy): string {
   if (result.kind === 'refused') return m.join.who.refused(result.name, joinErrorMessage(result.error, m, result.cap));
+  if (result.kind === 'skipped') return m.join.who.refused(result.name, joinErrorMessage(result.error, m));
   return result.kind === 'joined' ? m.join.who.joined(result.name) : m.join.who.already(result.name);
 }
 

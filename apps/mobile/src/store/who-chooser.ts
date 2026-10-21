@@ -132,8 +132,19 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
     } else {
       const handed = takeJoinHandoff();
       if (handed !== null && batchOpensAtLaunch(profiles.length)) {
-        // [OA] OA-D20, OA-D14 (row OA-7b): the family home's code opens Who is joining? instead of the chooser.
+        // [OA] OA-D20, OA-D14 (row OA-7b): the family home's code opens Who is joining? instead of the chooser. The
+        // chooser this launch would have shown waits for the end of the join (`takeBatchLaunchChooser`), so the device
+        // never goes on as whoever played last (CS-5).
         batchHandoff = handed;
+        batchLaunchChooser = chooserTrigger({
+          event: intent?.kind === 'who' ? 'return' : 'launch',
+          shared,
+          activeLocked: activeProfileLocked(),
+          profiles: profiles.length,
+          backgroundMs: 0,
+          joinHeld: false,
+          flag: true,
+        });
         if (intent?.kind === 'who') consumeBootIntent();
         return null;
       }
@@ -165,6 +176,20 @@ export function batchOpensAtLaunch(learnerCount: number = learnerProfiles().leng
 /** Whether the launch took a hand-off code for Who is joining? (the root stack then opens Join over Home). */
 export function batchHandoffPending(): boolean {
   return batchHandoff !== null;
+}
+
+/** The chooser the launch deferred for Who is joining? (OA-D20, CS-5), or null. */
+let batchLaunchChooser: WhoTrigger | null = null;
+
+/**
+ * [OA] Leaving Join after a launch that took the hand-off code (Done, or Back): the chooser that launch would have
+ * shown, taken once, so "Who is using this?" still asks before anyone plays (OA-D20, CS-5). Null when the launch took
+ * no code or the chooser already showed.
+ */
+export function takeBatchLaunchChooser(): WhoTrigger | null {
+  const trigger = batchLaunchChooser;
+  batchLaunchChooser = null;
+  return trigger;
 }
 
 /** Join takes the launch's hand-off code once; the lookup then runs at once and the checklist follows. */
@@ -295,4 +320,5 @@ export function resetChooserState(): void {
   locksAtLaunch = [];
   held = null;
   batchHandoff = null;
+  batchLaunchChooser = null;
 }
