@@ -39,11 +39,14 @@ export function closeParentSession(): null {
 /**
  * Where a profile switch may be initiated from — §3.4. Switching mid-Quest
  * would strand the running game's state, so it is offered on home only.
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.2 (row OA-4a): `resume` is a pick on the chooser that a return
+ * from the background opened over a running screen (a quest, a game, the story reader, the level check). It is
+ * always allowed and always persists the leaving learner's state first.
  */
-export type SwitchOrigin = 'home' | 'quest' | 'minigame' | 'onboarding';
+export type SwitchOrigin = 'home' | 'quest' | 'minigame' | 'onboarding' | 'resume';
 
 export function canSwitchProfileFrom(origin: SwitchOrigin): boolean {
-  return origin === 'home';
+  return origin === 'home' || origin === 'resume';
 }
 
 /**
@@ -70,6 +73,8 @@ export function planProfileSwitch(origin: SwitchOrigin, questInProgress: boolean
   if (!canSwitchProfileFrom(origin)) {
     return { allowed: false, persistRequired: false, reason: 'locked-to-quest' };
   }
+  // [OA] A pick over a running screen never discards it without a persist, whatever the screen reports.
+  if (origin === 'resume') return { allowed: true, persistRequired: true };
   return { allowed: true, persistRequired: questInProgress };
 }
 
@@ -153,5 +158,37 @@ export function areaExitTracker(): (zone: RouteZone) => boolean {
     const left = last === 'area' && zone === 'learner';
     last = zone;
     return left;
+  };
+}
+
+/** [OA] The grown-up session times the learner app holds in memory (`ui-store`). */
+export interface GrownUpSessionTimes {
+  parentGateOpenedAt: number | null;
+  lastPinVerifiedAt: number | null;
+}
+
+/** [OA] What arriving at the chooser does (section 6.3, OA-D5, CS-2). */
+export interface ChooserArrival {
+  /** The session times after the arrival: both cleared. */
+  times: GrownUpSessionTimes;
+  /** Whether a grown-up session (the gate or a fresh PIN) was open and is now closed. */
+  closed: boolean;
+  /** This tab's `hr:grownup:unlock` and `hr:console:session` are cleared (web). */
+  clearTab: true;
+  /** The `hr-grownup` lock message is posted to the other tabs (web). */
+  postLock: true;
+}
+
+/**
+ * [OA] Section 6.3, OA-D5, CS-2: arriving at the chooser closes the grown-up session whatever it was (the 15-minute
+ * gate and the fresh PIN both), clears the tab's unlock and console session, and tells the other tabs to lock. It
+ * writes nothing else. A grown-up row opened right after asks the PIN again.
+ */
+export function closeOnChooser(state: GrownUpSessionTimes): ChooserArrival {
+  return {
+    times: { parentGateOpenedAt: null, lastPinVerifiedAt: null },
+    closed: state.parentGateOpenedAt !== null || state.lastPinVerifiedAt !== null,
+    clearTab: true,
+    postLock: true,
   };
 }
