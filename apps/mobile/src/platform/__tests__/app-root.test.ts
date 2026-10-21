@@ -11,7 +11,7 @@ vi.mock('../telemetry', () => ({ track: vi.fn(async () => true) }));
 vi.mock('../locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: () => undefined }));
 
 import * as nativeRoot from '../app-root';
-import { bootRoot, consumeBootIntent, peekBootIntent, pickRoot, type RootEnv } from '../app-root.web';
+import { bootRoot, consumeBootIntent, peekBootIntent, pickRoot, takeBootPinResetTicket, type RootEnv } from '../app-root.web';
 import { LEAVE_TELEMETRY_WAIT_MS, type SessionArea } from '../grown-up-handoff.web';
 import type { TelemetryEvent } from '../telemetry';
 import { useUiStore } from '../../store/ui-store';
@@ -428,5 +428,42 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5 (row OA-6): the sign-in reset ticket, read once at boot. */
+describe('bootRoot (web): the sign-in reset ticket', () => {
+  afterEach(() => {
+    consumeBootIntent();
+    takeBootPinResetTicket();
+  });
+
+  const TICKET = '{"v":1,"at":1,"epoch":2}';
+
+  it('gate=pin-reset keeps the ticket for the navigator, once, and takes it out of the tab', () => {
+    const h = harness('/?gate=pin-reset&lang=es');
+    h.area.data.set('hr:shell:pinReset', TICKET);
+    expect(bootRoot(h.env)).toBe('app');
+    expect(peekBootIntent()).toEqual({ kind: 'pin-reset' });
+    expect(h.area.data.has('hr:shell:pinReset')).toBe(false);
+    expect(h.log).toEqual([`replaceState {"s":1} /?lang=es`]);
+    expect(takeBootPinResetTicket()).toBe(TICKET);
+    // Read once (CS-9): a second take, a remount, gets nothing.
+    expect(takeBootPinResetTicket()).toBeNull();
+  });
+
+  it('any other boot removes a waiting ticket and keeps nothing', () => {
+    for (const url of ['/', '/?gate=grown-up&next=%2Fparent', '/?lang=ko']) {
+      const h = harness(url);
+      h.area.data.set('hr:shell:pinReset', TICKET);
+      bootRoot(h.env);
+      expect(h.area.data.has('hr:shell:pinReset'), url).toBe(false);
+      expect(takeBootPinResetTicket(), url).toBeNull();
+      consumeBootIntent();
+    }
+  });
+
+  it('the native stub has no ticket', () => {
+    expect(nativeRoot.takeBootPinResetTicket()).toBeNull();
   });
 });

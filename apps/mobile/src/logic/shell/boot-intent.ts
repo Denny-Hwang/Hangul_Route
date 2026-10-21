@@ -1,6 +1,7 @@
 import { parseJoinLink, safeNextPath } from '@hangul-route/content-schema';
 import { afterGateHandoff } from '../browse/gate-entry';
 import { grownUpPinParams } from './handoff-rules';
+import { PIN_RESET_SETUP_PARAMS, type PinResetOutcome } from './pin-reset-ticket';
 
 /**
  * Boot intents of the learner app (F-APP-001 sections 3.9 and 3.11). Pure: the root reads the
@@ -18,6 +19,10 @@ import { grownUpPinParams } from './handoff-rules';
  * `gate=browse` (F-BROWSE-001 section 4.3, BR-12b) is the All lessons Access screen's "Back to the
  * grown-up area": the PIN screen for All lessons (`PinEntry { next: 'BrowseLessons' }`), then a fresh
  * gate pass. Only `gate` leaves the address; every other key stays, `lang` included.
+ *
+ * [OA] `gate=pin-reset` (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5, row OA-6) is the console's
+ * `/account/pin-reset` after a fresh sign-in by the PIN owner: the ticket it wrote decides (`pin-reset-ticket.ts`), so
+ * the intent itself carries nothing. Only `gate` leaves the address; every other key stays, `lang` included.
  */
 export interface GrownUpBootIntent {
   kind: 'grown-up';
@@ -48,7 +53,12 @@ export interface WhoBootIntent {
   kind: 'who';
 }
 
-export type BootIntent = GrownUpBootIntent | BrowseBootIntent | JoinBootIntent | WhoBootIntent;
+/** [OA] Section 8.5 step 5: the sign-in reset's hand-off; the ticket in `sessionStorage` holds the rest. */
+export interface PinResetBootIntent {
+  kind: 'pin-reset';
+}
+
+export type BootIntent = GrownUpBootIntent | BrowseBootIntent | JoinBootIntent | WhoBootIntent | PinResetBootIntent;
 
 export interface ParsedBootIntent {
   intent: BootIntent | null;
@@ -64,6 +74,7 @@ const GROWN_UP_GATE = 'grown-up';
 const BROWSE_GATE = 'browse';
 const WHO = 'who';
 const WHO_RETURN = '1';
+const PIN_RESET_GATE = 'pin-reset';
 
 const queryOf = (params: URLSearchParams): string => {
   const rest = params.toString();
@@ -98,6 +109,10 @@ export function parseBootIntent(search: string): ParsedBootIntent {
     params.delete(GATE);
     return { intent: { kind: 'browse' }, search: queryOf(params), changed: true };
   }
+  if (gate === PIN_RESET_GATE) {
+    params.delete(GATE);
+    return { intent: { kind: 'pin-reset' }, search: queryOf(params), changed: true };
+  }
   if (gate !== GROWN_UP_GATE) return whoOnly();
   const next = safeNextPath(params.get(NEXT));
   params.delete(GATE);
@@ -110,8 +125,8 @@ export function parseBootIntent(search: string): ParsedBootIntent {
 }
 
 /** What `openBootIntentWhenReady` needs of the navigation container (a subset of its ref). */
-/** The PIN screen params a boot intent opens: the grown-up area's, or All lessons' (BR-12b). */
-export type BootPinParams = ReturnType<typeof grownUpPinParams> | { next: 'BrowseLessons' };
+/** The PIN screen params a boot intent opens: the grown-up area's, All lessons' (BR-12b), or [OA] the new PIN's. */
+export type BootPinParams = ReturnType<typeof grownUpPinParams> | { next: 'BrowseLessons' } | typeof PIN_RESET_SETUP_PARAMS;
 
 /**
  * Where the join link opens: Join a class on a device with a profile, else Welcome with the link's code shown, where
@@ -168,6 +183,14 @@ export interface WhoIntentHandoff {
   open: () => boolean;
 }
 
+/** [OA] The sign-in reset's hand-off for `gate=pin-reset` (section 8.5 step 5): web only. */
+export interface PinResetIntentHandoff {
+  /** The ticket read once at boot, checked against the clock and the current marker; `off` when the switch is off. */
+  outcome: () => PinResetOutcome | 'off';
+  /** Shows "That took a while. Sign in again to set a new PIN." over the start screen. */
+  showExpired: () => void;
+}
+
 /** The All lessons gate hand-off for `gate=browse` (F-BROWSE-001 section 4.3): web only. */
 export interface BrowseIntentHandoff {
   /** Whether the grown-up gate opens without the PIN now (`gateOpensDirectlyNow`). */
@@ -182,6 +205,8 @@ export interface BrowseIntentHandoff {
  * stops listening. Nothing happens when there is no intent, or when it was already taken (an
  * ErrorBoundary remount). `gate=browse` opens the PIN screen for All lessons, or the hand-off
  * itself when the gate opens directly; without a `browse` hand-off it is taken and dropped.
+ * [OA] `gate=pin-reset` opens the new-PIN screen for an accepted ticket, else the expired line; with the switch off, or
+ * without a `pinReset` hand-off, it is taken and dropped.
  * Returns the cleanup for the effect.
  */
 export function openBootIntentWhenReady(
@@ -190,6 +215,7 @@ export function openBootIntentWhenReady(
   browse?: BrowseIntentHandoff,
   join?: JoinIntentHandoff,
   who?: WhoIntentHandoff,
+  pinReset?: PinResetIntentHandoff,
 ): () => void {
   const open = (): boolean => {
     const intent = source.peek();
@@ -197,7 +223,11 @@ export function openBootIntentWhenReady(
     if (!nav.isReady()) return false;
     source.consume();
     if (intent.kind === 'grown-up') nav.navigate('PinEntry', grownUpPinParams({ via: 'lock', target: intent.next }));
-    else if (intent.kind === 'join') {
+    else if (intent.kind === 'pin-reset') {
+      const outcome = pinReset?.outcome() ?? 'off';
+      if (outcome === 'setup') nav.navigate('PinEntry', PIN_RESET_SETUP_PARAMS);
+      else if (outcome === 'expired') pinReset?.showExpired();
+    } else if (intent.kind === 'join') {
       // The join link (owner decision 2026-10-17): without a `join` hand-off it is taken and dropped, as `browse` is.
       if (join === undefined) return true;
       const target = joinIntentTarget(intent, join.hasProfile(), join.shared?.() ?? false);

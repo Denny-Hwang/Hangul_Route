@@ -58,6 +58,7 @@ import { useUiStore } from '../../store/ui-store';
 import { pickLanding } from '../../logic/profiles/who';
 import { routeZone } from '../../logic/profiles/session';
 import { heldJoin, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
+import { RESET_SETUP_IDLE_MS, bindResetSetupLapse, resetSetupLapseDeps } from './use-gate-lapse';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
 
@@ -262,6 +263,27 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     else leave();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, [voided]);
+
+  // [OA] Row OA-6 review: a new PIN after a reset (the sign-in ticket, the Rescue Code, the wait) is chosen now or not
+  // at all. The screen closes when the page comes back from the back/forward cache and after 5 minutes in the
+  // background, so a tab left on it never lets someone else set the PIN later (`bindResetSetupLapse`); and (round 2)
+  // after `RESET_SETUP_IDLE_MS` with no key press while it stays in view. Closing writes nothing, once.
+  const resetSetup = route.params.via !== undefined && mode !== 'verify';
+  const resetClosed = useRef(false);
+  const closeReset = useRef(() => {
+    if (resetClosed.current) return;
+    resetClosed.current = true;
+    navigation.goBack();
+  });
+  useEffect(() => {
+    if (!resetSetup) return undefined;
+    return bindResetSetupLapse(resetSetupLapseDeps(() => closeReset.current()));
+  }, [resetSetup]);
+  useEffect(() => {
+    if (!resetSetup) return undefined;
+    const timer = setTimeout(() => closeReset.current(), RESET_SETUP_IDLE_MS);
+    return () => clearTimeout(timer);
+  }, [resetSetup, mode, entry]);
 
   // [OA] CS-1: back to the screen whose action asked for the PIN, gate open; that landing keeps the session for the
   // waiting action only (the Grown-up area exit watcher closes it on the next learner screen).
@@ -484,6 +506,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     }
   };
 
+  // [OA] The console's sign-in reset ticket opens setup titled Choose a new grown-up PIN (section 8.5 step 5).
+  const setupTitle = route.params.via === 'sign_in' ? m.reset.signIn.newPinTitle : copy.pinCreateTitle;
   const title = cancelReset
     ? messages.learner.who.resetCancel
     : lockedProfile && mode === 'verify' && lockedName !== null
@@ -491,7 +515,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       : mode === 'verify'
         ? copy.pinVerifyTitle
         : mode === 'setup-1'
-          ? copy.pinCreateTitle
+          ? setupTitle
           : m.entry.createAgain;
   const subtitle =
     mode === 'verify'

@@ -4,8 +4,11 @@
  */
 export type PinMode = 'setup-1' | 'setup-2' | 'verify';
 
-/** Which Forgot PIN path led to a new-PIN screen; carried so telemetry can name it. */
-export type PinResetMethod = 'rescue_code' | 'wait';
+/**
+ * Which Forgot PIN path led to a new-PIN screen; carried so telemetry can name it. [OA] `sign_in`: the console's
+ * sign-in reset ticket (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5), which also titles the screen.
+ */
+export type PinResetMethod = 'rescue_code' | 'wait' | 'sign_in';
 
 /**
  * The destination of the PIN screen opened for the grown-up area on the app host (F-APP-001

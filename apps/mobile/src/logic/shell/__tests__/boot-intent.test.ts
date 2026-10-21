@@ -362,3 +362,55 @@ describe('[OA] joinIntentTarget on a shared device (OA-D20)', () => {
     expect(nav.navigate).toHaveBeenCalledWith('WhoIsUsing', { trigger: 'join' });
   });
 });
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5 (row OA-6): `gate=pin-reset` from the console's
+ * `/account/pin-reset`. The intent carries nothing; the ticket the app root read decides.
+ */
+describe('gate=pin-reset (row OA-6)', () => {
+  it('parses to the pin-reset intent; only gate leaves the address, lang and the rest stay', () => {
+    expect(parseBootIntent('?gate=pin-reset')).toEqual({ intent: { kind: 'pin-reset' }, search: '', changed: true });
+    expect(parseBootIntent('?gate=pin-reset&lang=ko&from=x')).toEqual({ intent: { kind: 'pin-reset' }, search: '?lang=ko&from=x', changed: true });
+    // A next on this intent is not read: the reset never forwards anywhere but the new-PIN screen.
+    expect(parseBootIntent('?gate=pin-reset&next=%2Fparent').search).toBe('?next=%2Fparent');
+  });
+
+  function navigator() {
+    return { isReady: vi.fn(() => true), navigate: vi.fn(), addListener: vi.fn(() => () => undefined) };
+  }
+  function pinResetSource() {
+    let intent: { kind: 'pin-reset' } | null = { kind: 'pin-reset' };
+    return { peek: () => intent, consume: vi.fn(() => (intent = null)) };
+  }
+
+  it('an accepted ticket opens setup titled for the sign-in reset, then the Grown-up area', () => {
+    const nav = navigator();
+    const showExpired = vi.fn();
+    openBootIntentWhenReady(nav, pinResetSource(), undefined, undefined, undefined, { outcome: () => 'setup', showExpired });
+    expect(nav.navigate).toHaveBeenCalledWith('PinEntry', { next: 'ParentDashboard', mode: 'setup', via: 'sign_in' });
+    expect(showExpired).not.toHaveBeenCalled();
+  });
+
+  it('a refused or absent ticket shows the expired line and opens nothing', () => {
+    const nav = navigator();
+    const showExpired = vi.fn();
+    openBootIntentWhenReady(nav, pinResetSource(), undefined, undefined, undefined, { outcome: () => 'expired', showExpired });
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(showExpired).toHaveBeenCalledTimes(1);
+  });
+
+  it('the switch off, or no hand-off at all: taken and dropped, nothing shown', () => {
+    const off = navigator();
+    const showExpired = vi.fn();
+    const src = pinResetSource();
+    openBootIntentWhenReady(off, src, undefined, undefined, undefined, { outcome: () => 'off', showExpired });
+    expect(off.navigate).not.toHaveBeenCalled();
+    expect(showExpired).not.toHaveBeenCalled();
+    expect(src.consume).toHaveBeenCalledTimes(1);
+    const none = navigator();
+    const bare = pinResetSource();
+    openBootIntentWhenReady(none, bare);
+    expect(none.navigate).not.toHaveBeenCalled();
+    expect(bare.consume).toHaveBeenCalledTimes(1);
+  });
+});

@@ -1,7 +1,20 @@
 import { CONSOLE_SESSION_KEY, GROWN_UP_IDLE_MS, UNLOCK_SESSION_KEY } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import type { KeyValueStorage } from '../../i18n/safe-storage';
-import { HIDDEN_AT_SESSION_KEY, UNLOCK_TOUCH_MS, clearGrownUpTab, clearUnlock, readHiddenAt, readUnlock, touchUnlock, writeHiddenAt, writeSignInUnlock } from '../unlock';
+import {
+  HIDDEN_AT_SESSION_KEY,
+  RESET_LEG_SESSION_KEY,
+  UNLOCK_TOUCH_MS,
+  clearGrownUpTab,
+  clearUnlock,
+  readHiddenAt,
+  readResetLegStamp,
+  readUnlock,
+  touchUnlock,
+  writeHiddenAt,
+  writeResetLegStamp,
+  writeSignInUnlock,
+} from '../unlock';
 
 /**
  * F-APP-001 section 3.9: `sessionStorage` `hr:grownup:unlock` of this tab. The learner app
@@ -176,5 +189,44 @@ describe('[OA] hr:grownup:hiddenAt: the 5-minute hidden rule across a discard (A
     expect(() => writeHiddenAt(1, throwing)).not.toThrow();
     expect(() => writeHiddenAt(null, throwing)).not.toThrow();
     expect(readHiddenAt(null)).toBeNull();
+  });
+});
+
+describe('[OA-6] hr:grownup:resetLeg: the reset leg stamps its sign-in unlock (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.4 and 8.5)', () => {
+  it('stores the unlock time as a number only and reads it back', () => {
+    const storage = fakeStorage();
+    expect(RESET_LEG_SESSION_KEY).toBe('hr:grownup:resetLeg');
+    expect(readResetLegStamp(storage)).toBeNull();
+    expect(writeResetLegStamp(1_700, storage)).toBe(true);
+    expect(storage.map.get(RESET_LEG_SESSION_KEY)).toBe('1700');
+    expect(readResetLegStamp(storage)).toBe(1_700);
+  });
+
+  it('a corrupt or empty value reads as none', () => {
+    for (const raw of ['', ' ', 'soon', 'NaN', 'Infinity']) {
+      const storage = fakeStorage();
+      storage.map.set(RESET_LEG_SESSION_KEY, raw);
+      expect(readResetLegStamp(storage), raw).toBeNull();
+    }
+  });
+
+  it('a new sign-in unlock drops the stamp of an earlier one, and it goes whenever the unlock goes', () => {
+    const fresh = fakeStorage();
+    writeResetLegStamp(1_000, fresh);
+    writeSignInUnlock(2_000, fresh);
+    expect(fresh.map.has(RESET_LEG_SESSION_KEY)).toBe(false);
+    for (const clear of [clearUnlock, (s: KeyValueStorage) => clearGrownUpTab(s)]) {
+      const storage = fakeStorage();
+      writeSignInUnlock(1_000, storage);
+      writeResetLegStamp(1_000, storage);
+      clear(storage);
+      expect(storage.map.has(RESET_LEG_SESSION_KEY)).toBe(false);
+    }
+  });
+
+  it('blocked storage reads as none and never throws', () => {
+    expect(readResetLegStamp(throwing)).toBeNull();
+    expect(writeResetLegStamp(1, throwing)).toBe(false);
+    expect(readResetLegStamp(null)).toBeNull();
   });
 });

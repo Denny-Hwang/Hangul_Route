@@ -213,6 +213,16 @@ export interface Flags {
    * row as before. The session close on every change of learner and the cross-tab profile list have no switch.
    */
   whoChooserEnabled: boolean;
+
+  /**
+   * [OA] Reset the grown-up PIN by signing in (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D8, sections 8.5 and 16, row OA-6):
+   * Forgot PIN? shows **Sign in to the account** first on the web while online, and the `gate=pin-reset` boot intent
+   * opens the new-PIN screen for the console's ticket. OFF when OA-6 lands; OA-10 turns it on. `EXPO_PUBLIC_PIN_RESET_SIGNIN`
+   * takes the same words as its console twin `NEXT_PUBLIC_PIN_RESET_SIGNIN` (`parseLectureSwitch`: `true`, `1`, `on`,
+   * `yes` or `enabled` on; `false`, `0`, `off`, `no` or `disabled` off), so one value set on both turns both on. Off
+   * hides the option and drops the intent.
+   */
+  pinResetSignInEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -236,6 +246,7 @@ const launchDefaults: Flags = {
   lectureModeEnabled: true,
   pinPauseStepsEnabled: true,
   whoChooserEnabled: false,
+  pinResetSignInEnabled: false,
 };
 
 export const flags: Flags = {
@@ -264,6 +275,8 @@ export const flags: Flags = {
   lectureModeEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_LECTURE_MODE, launchDefaults.lectureModeEnabled),
   pinPauseStepsEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS, launchDefaults.pinPauseStepsEnabled),
   whoChooserEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_WHO_CHOOSER, launchDefaults.whoChooserEnabled),
+  // The console twin's vocabulary too (`enabled`, `disabled`): one value turns both sides on.
+  pinResetSignInEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN, launchDefaults.pinResetSignInEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

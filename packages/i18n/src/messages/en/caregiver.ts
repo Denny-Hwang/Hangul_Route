@@ -120,6 +120,18 @@ export const caregiver = {
         badFormat:
           'Type every word and the number, like TIGER-MOON-RIVER-APPLE-482139 (older codes: TIGER-MOON-4821).',
       },
+      /**
+       * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 (row OA-6): the third way to a new PIN, first on the web while
+       * online. `newPinTitle` titles the new-PIN screen the console's ticket opens; `expired` shows over the start screen
+       * when that ticket was too old, already used or for another PIN.
+       */
+      signIn: {
+        heading: 'Sign in to the account',
+        caption: 'Sign in as the grown-up who uses this device. Then choose a new PIN.',
+        button: 'Sign in',
+        newPinTitle: 'Choose a new grown-up PIN',
+        expired: 'That took a while. Sign in again to set a new PIN.',
+      },
     },
   },
 

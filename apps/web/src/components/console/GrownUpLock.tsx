@@ -576,7 +576,8 @@ export function GrownUpLock({ children, pathname, search = '', exempt = false, o
 
 const TITLE_ID = 'grown-up-lock-title';
 
-const pageStyle: CSSProperties = {
+/** [OA] Shared with `/account/pin-reset` (row OA-6), which draws the lock's single card. */
+export const pageStyle: CSSProperties = {
   minHeight: '100vh',
   boxSizing: 'border-box',
   padding: spacing.lg,
@@ -584,9 +585,9 @@ const pageStyle: CSSProperties = {
   color: colors.text.primary,
 };
 
-const columnStyle: CSSProperties = { maxWidth: layout.maxWidth.reading, margin: '0 auto' };
+export const columnStyle: CSSProperties = { maxWidth: layout.maxWidth.reading, margin: '0 auto' };
 
-const sectionStyle: CSSProperties = {
+export const sectionStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -619,7 +620,7 @@ const TONE: Readonly<Record<'primary' | 'secondary' | 'quiet', CSSProperties>> =
   quiet: { paddingLeft: spacing.sm, backgroundColor: 'transparent', color: colors.text.secondary, border: 'none' },
 };
 
-function LockButton({ tone, onClick, testId, busy, children }: { tone: keyof typeof TONE; onClick: () => void; testId: string; busy?: boolean; children: ReactNode }): JSX.Element {
+export function LockButton({ tone, onClick, testId, busy, children }: { tone: keyof typeof TONE; onClick: () => void; testId: string; busy?: boolean; children: ReactNode }): JSX.Element {
   return (
     <button
       type="button"

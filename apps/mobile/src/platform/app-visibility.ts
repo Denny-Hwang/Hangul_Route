@@ -20,3 +20,8 @@ export function subscribeAppVisibility(listener: (visible: boolean) => void): ()
 export function isAppVisible(): boolean {
   return AppState.currentState !== 'background';
 }
+
+/** [OA] No back/forward cache on native: nothing is ever restored (row OA-6). Returns the unsubscribe. */
+export function subscribePageRestore(_listener: () => void): () => void {
+  return () => undefined;
+}
