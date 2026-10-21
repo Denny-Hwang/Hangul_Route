@@ -221,6 +221,12 @@ describe('lock screen targets', () => {
     expect(learnerHome('', 'en')).toBe('/?lang=en');
   });
 
+  it('[OA] learnerHome with who adds the chooser intent after the language (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.3)', () => {
+    expect(learnerHome('https://app.hangulroute.com', 'ko', { who: true })).toBe('/?lang=ko&who=1');
+    expect(learnerHome('https://hangulroute.com', 'en', { who: true })).toBe('https://app.hangulroute.com/?lang=en&who=1');
+    expect(learnerHome('https://app.hangulroute.com', 'en', { who: false })).toBe('/?lang=en');
+  });
+
   it('learnerHome always carries the console language, English included (AMENDMENTS-DISPLAY-NAV section 6)', () => {
     for (const locale of ['en', 'es', 'ko'] as const) expect(learnerHome('https://app.hangulroute.com', locale)).toBe(`/?lang=${locale}`);
   });

@@ -93,6 +93,18 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
 
 /**
+ * Drawn strings with a wider budget than their key word gives, each with the budget and the reason. They are drawn
+ * where the design pass measured the longest locale (no sideways scroll at 320, the button wraps its words).
+ */
+const WIDER_BUDGET: Readonly<Record<string, { max: number; reason: string }>> = {
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.5 (OA-3; design/screens/profiles/console-pin.md boards 10 to 12).
+  'console.pinOwner.cta': {
+    max: 48,
+    reason: 'the one action of the persona-home PIN-owner card, a full-width button (400 px column) that wraps its words; en 35, es 48, ko 29 as measured in the OA-0b lengths board',
+  },
+};
+
+/**
  * Screen-reader labels whose key name happens to match a budget word: they are read aloud, never
  * drawn, so no visible budget applies. Each with a reason.
  */
@@ -120,7 +132,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       const value = lookup(messages, path);
       const last = path.split('.').pop() ?? '';
       // Tab labels live under `a11y.tabs.*` (F-I18N-001 §3.4 rule 2) and share the `tab` budget.
-      const budget = NOT_DRAWN[path] !== undefined ? undefined : (BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined));
+      const budget = NOT_DRAWN[path] !== undefined ? undefined : (WIDER_BUDGET[path]?.max ?? BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined));
       if (budget !== undefined) {
         it(`${locale}:${path} fits ${budget} characters`, () => {
           const outputs = renderings(value, path);
@@ -143,7 +155,8 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
 
   it('the allow-list names only real paths and gives a reason', () => {
     const en = getMessages('en');
-    for (const [path, reason] of Object.entries({ ...ES_LENGTH_ALLOW_LIST, ...NOT_DRAWN })) {
+    const wider = Object.fromEntries(Object.entries(WIDER_BUDGET).map(([path, entry]) => [path, entry.reason]));
+    for (const [path, reason] of Object.entries({ ...ES_LENGTH_ALLOW_LIST, ...NOT_DRAWN, ...wider })) {
       expect(lookup(en, path)).toBeDefined();
       expect(reason.length).toBeGreaterThan(0);
     }

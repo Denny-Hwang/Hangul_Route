@@ -105,7 +105,14 @@ export function GrownUpGate({ children, title = 'console' }: { children: ReactNo
     <GrownUpLocationContext.Provider value={location}>
       <DocumentTitle kind={title} />
       {/* The lock's Sign in again is no sign-out of this tab's invite: it comes straight back to the page ([SA] step 4). */}
-      <GrownUpLock pathname={pathname} search={search} onSignInAgain={(url) => void auth.signOut(url, { keepInvite: true })}>
+      {/* [OA] The lock fingerprints the account for the PIN owner's refresh and offers a passkey under Clerk only. */}
+      <GrownUpLock
+        pathname={pathname}
+        search={search}
+        onSignInAgain={(url) => void auth.signOut(url, { keepInvite: true })}
+        accountId={auth.session.accountId}
+        verifyPasskey={auth.mode === 'clerk' ? auth.verifyPasskey : undefined}
+      >
         {/* The account's language is read and written only once a grown-up has opened the page. */}
         <AccountLocaleSlot />
         {children}
