@@ -14,9 +14,10 @@ vi.mock('../../platform/telemetry', () => ({
 }));
 
 import { episodesAll } from '../../content/episodes';
+import { shownStreak } from '../../logic/streak';
 import { setProgressPersistListener } from '../../logic/sync/persist-hook';
 import { readJson, writeJson } from '../../platform/storage';
-import { localDay } from '../../logic/vocab/progress';
+import { VOCAB_MAX_TOPICS, localDay } from '../../logic/vocab/progress';
 import { addDays } from '../../logic/vocab/srs';
 import { placementResult } from '../../logic/placement/__tests__/fixtures';
 import { selfRoute } from '../../logic/homework/__tests__/curriculum-fixture';
@@ -521,6 +522,41 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
     const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
     expect(after.streakLocal).toEqual({ run: 5, lastDay: TODAY });
     expect(after.streakBest).toBe(6);
+  });
+
+  it('a session event the reducer ignores logs no day, though other events change the words (F-CURR-002 OD-14)', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    // an unreadable topic key: the session event is dropped, the introduced word is kept
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }, { type: 'session', topicKey: 'Not A Key!', kind: 'speed', stars: 2 }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(vocabIn(after)).toBeDefined();
+    expect(after.sessions).toEqual(before.sessions);
+    expect(after.streakLocal).toBeUndefined();
+  });
+
+  it('a session event over the topic cap logs no day', async () => {
+    const topics = Array.from({ length: VOCAB_MAX_TOPICS }, (_, i) => ({ topic: `topic-${i}`, bestStars: 1, sessions: 1, last: addDays(TODAY, -2), bestCaught: 0 }));
+    mem.set('progress:p1', { ...savedSnapshot(), vocab: { v: 1, items: [], topics } });
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }, { type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.vocab?.topics).toHaveLength(VOCAB_MAX_TOPICS);
+    expect(after.sessions).toEqual(before.sessions);
+  });
+
+  it('two word sets on one day add one learning row; the second still keeps the run', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], T1);
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'body', kind: 'speed', stars: 3 }], new Date(T1.getTime() + 60_000));
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.sessions).toHaveLength(before.sessions.length + 1);
+    expect(after.vocab?.topics.map((t) => t.sessions)).toEqual([1, 1]);
+    expect(after.streakLocal).toEqual({ run: 1, lastDay: TODAY });
   });
 
   it('writes nothing when every event is ignored', async () => {
@@ -1756,5 +1792,66 @@ describe('the local-day streak in the store (F-CURR-002 row CM-4; OD-14, OD-6)',
     await useProgressStore.getState().hydrate('p1');
     visit(QUEST, DAY2);
     expect(snap()).toMatchObject({ streakDays: 6, streakLocal: { run: 6, lastDay: DAY2 }, streakBest: 6 });
+  });
+});
+
+describe('the local-day streak in the store on a device in another time zone (F-CURR-002 row CM-4)', () => {
+  // The suite runs under TZ=UTC. Each case sets the process time zone, as the device has it, so the store's own
+  // local-day writer (beginSession, recordVocab) runs there; Node reads TZ again when it changes.
+  const zone = process.env.TZ;
+  const snap = (): ProgressSnapshot => useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+
+  beforeEach(() => {
+    resetStore();
+    vi.useFakeTimers({ toFake: ['Date'] });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    if (zone === undefined) delete process.env.TZ;
+    else process.env.TZ = zone;
+  });
+
+  /** Begins and ends a quest session at `iso` on a device in `tz`. */
+  function questAt(tz: string, iso: string): void {
+    process.env.TZ = tz;
+    vi.setSystemTime(new Date(iso));
+    const { beginSession, endSession } = useProgressStore.getState();
+    const id = beginSession('p1', QUEST);
+    if (id !== null) endSession('p1', id);
+  }
+
+  it.each([
+    // UTC+14: 10:30Z is 00:30 the next day, 09:30Z is 23:30; one UTC day, two local days
+    ['Pacific/Kiritimati', ['2026-10-21T09:30:00.000Z', '2026-10-21T10:30:00.000Z'], ['2026-10-21', '2026-10-22'], 2],
+    // UTC-12: 11:30Z is 23:30 the day before, 12:30Z is 00:30
+    ['Etc/GMT+12', ['2026-10-21T11:30:00.000Z', '2026-10-21T12:30:00.000Z'], ['2026-10-20', '2026-10-21'], 2],
+    // Asia/Seoul: 08:00 local every morning is 23:00Z the day before; local days in a row
+    ['Asia/Seoul', ['2026-10-19T23:00:00.000Z', '2026-10-20T23:00:00.000Z', '2026-10-21T23:00:00.000Z'], ['2026-10-20', '2026-10-21', '2026-10-22'], 3],
+    // America/Los_Angeles across the end of daylight time: 23:30 PDT, 00:30 PDT, then 23:30 PST on the 25-hour day
+    ['America/Los_Angeles', ['2026-11-01T06:30:00.000Z', '2026-11-01T07:30:00.000Z', '2026-11-02T07:30:00.000Z'], ['2026-10-31', '2026-11-01', '2026-11-01'], 2],
+  ] as const)('%s: each session records the device\'s local day, and the run counts local days', (tz, instants, days, run) => {
+    for (const iso of instants) questAt(tz, iso);
+    expect(snap().sessions.map((s) => s.localDay)).toEqual(days);
+    const last = days[days.length - 1] as string;
+    expect(snap().streakLocal).toEqual({ run, lastDay: last });
+    expect(shownStreak(snap(), last)).toBe(run);
+  });
+
+  it('America/Los_Angeles: 00:30 PST on 2 November is the next local day, after the 25-hour day', () => {
+    questAt('America/Los_Angeles', '2026-11-02T07:30:00.000Z');
+    questAt('America/Los_Angeles', '2026-11-02T08:30:00.000Z');
+    expect(snap().sessions.map((s) => s.localDay)).toEqual(['2026-11-01', '2026-11-02']);
+    expect(snap().streakLocal).toEqual({ run: 2, lastDay: '2026-11-02' });
+  });
+
+  it('Pacific/Kiritimati: a word set finished just after local midnight logs the local day, not the UTC one', async () => {
+    process.env.TZ = 'Pacific/Kiritimati';
+    const at = new Date('2026-10-21T10:30:00.000Z');
+    vi.setSystemTime(at);
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], at);
+    expect(snap().sessions.at(-1)?.localDay).toBe('2026-10-22');
+    expect(snap().streakLocal).toEqual({ run: 1, lastDay: '2026-10-22' });
   });
 });

@@ -435,8 +435,19 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     ...mergeCurr002Fields(local, server),
     // The local-day streak (row CM-4) over the merged sessions, with each side's run as a floor, so a sync from an
     // older build never lowers it; when neither side has one yet, the switch-over carries the old streakDays.
-    ...streakFields(streakOf([local, server], sessions, opts.today ?? localDay(opts.now))),
+    ...localStreakFields(local, server, sessions, opts.today ?? localDay(opts.now)),
   };
+}
+
+/**
+ * `streakLocal` and `streakBest` for a merge. The computed run is kept under the Worker's rule against both stored
+ * ones (later `lastDay`, then the higher `run`), so the result always holds both sides even where the computation
+ * reads a stored run as no run (a run of 0, or a day too far ahead); the Worker then has nothing to add.
+ */
+function localStreakFields(local: ProgressSnapshot, server: ProgressSnapshot, sessions: readonly SessionLog[], today: string): Partial<ProgressSnapshot> {
+  const computed = streakFields(streakOf([local, server], sessions, today));
+  const streakLocal = mergeStreakLocal(computed.streakLocal, mergeStreakLocal(local.streakLocal, server.streakLocal));
+  return { ...computed, ...(streakLocal !== undefined ? { streakLocal } : {}) };
 }
 
 /**
