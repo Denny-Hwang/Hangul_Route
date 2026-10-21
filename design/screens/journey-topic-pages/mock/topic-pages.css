@@ -323,6 +323,8 @@ svg { display: block; flex: none; }
 .spot.debug { outline: var(--border-width-thin) dashed var(--colors-text-muted); outline-offset: calc(-1 * var(--border-width-thin)); }
 .found-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-md); }
 .found-slot { min-width: var(--touch-min); min-height: var(--spacing-xxl); padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); border: var(--border-width-base) dashed var(--colors-border-strong); display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-xs); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); }
+.found-slot .slot-ko b { font-size: var(--size-bodySm); }
+.found-slot .slot-ko i { font-size: var(--size-caption); margin-top: 0; }
 .found-slot.on { border-style: solid; border-color: var(--colors-feedback-success); background: var(--colors-feedback-successLight); }
 .nudge { display: flex; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-lg); background: var(--colors-feedback-nudgeLight); }
 .end-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }

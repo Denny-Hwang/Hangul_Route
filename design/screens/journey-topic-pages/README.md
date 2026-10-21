@@ -62,7 +62,7 @@ Values that are not tokens. Each one derives from code or a token; CM-50b, CM-36
 | `pack-page-preview-320.png` | 320 | the free-learner preview: the dotted ring and "Not open yet" on each level, the album shown, the preview card with See a preview, Ask a grown-up, Back to open lessons; no primary button |
 | `hidden-heritage-ask-320.png` | 320 | the prompt 국 (guk) with the Hear button, the market stall, three empty found slots |
 | `hidden-heritage-spots-320.png` | 320 | every spot outlined (board view): six spots, each at least 54 dp |
-| `hidden-heritage-miss-320.png`, `-hint-320.png` | 320 | 국 found; the prompt 밥 (bap); a miss (the amber ring with its casing on the side dishes, Hoya "Look again"), then the look-here ring (`feedback.info`, dashed, inside the spot) on the rice bowl |
+| `hidden-heritage-miss-320.png`, `-hint-320.png` | 320 | 국 (guk) found, its slot showing the word with its romanization; the prompt 밥 (bap); a miss (the amber ring with its casing on the side dishes, Hoya "Look again"), then the look-here ring (`feedback.info`, dashed, inside the spot) on the rice bowl |
 | `hidden-heritage-end-320.png` | 320 | You found them all: each word with romanization and its meaning |
 | `hidden-heritage-found-768.png` | 768 | the prompt on one row, the scene at 720 |
 | `hidden-heritage-slide-1280.png` | 1280 x 720 | the projector slide, build b2 (밥, bap, rice, the ring on the rice bowl) |
@@ -79,8 +79,8 @@ Values that are not tokens. Each one derives from code or a token; CM-50b, CM-36
 | Rows line up across pages | same seven rows at the same heights (§6.1) | the swipe frame and the full-page shots: every stage header and cell row starts at the same height on page 1 and the pack pages, also at 200 % text |
 | Hidden Heritage spots | 48 dp (§7.1, §14) | the smallest spot (the 75-unit box rule) is 54 dp at 320; the drawn spots are 56-62 dp at 320, 154 dp and more at 768 |
 | Reduced motion | a page change jumps with no slide (§6.1) | the shots run with `prefers-reduced-motion: reduce`; the pager uses `scroll-behavior: auto` and the buttons scroll with `behavior: 'instant'` |
-| Keyboard paging (web) | Left and Right page while focus is in the bar or the header row; focus moves to the new page's first header (§6.1, §14) | in `topic-pages.html`: Tab to the right arrow, Enter, focus lands on "Numbers & Time. Opens its levels."; Right arrow from there goes to page 3 and focus lands on "Arts & Music"; Left from page 2's header row goes to page 1 and focus lands on the "Five themes" region |
-| Announcements | page name and number (§6.1) | the live region reads "Topics, page 2 of 3" after the focus move |
+| Keyboard paging (web) | Left and Right page while focus is in the bar or the header row; focus moves to the new page's first header (§6.1, §14) | in `topic-pages.html`: Tab to the right arrow, Enter, focus lands on "Numbers & Time. Opens its levels."; Right arrow from there goes to page 3 and focus lands on "Arts & Music"; Left from page 2's header row goes to page 1 and focus lands on the region named "Five themes, page 1 of 3", with no announcement after it |
+| Announcements | page name and number (§6.1) | the live region reads "Topics, page 2 of 3" after the focus move to page 2 or 3; a move back to page 1 is not announced (the region name says it) |
 
 These are the mock's numbers. CM-50b measures the real screens (target-size e2e at 320 and the topic-pages e2e of §14).
 

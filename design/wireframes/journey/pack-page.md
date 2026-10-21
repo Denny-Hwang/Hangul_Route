@@ -114,7 +114,7 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 
 ## Interaction points
 
-- [<- back] → the Journey topic page that holds the pack (from any entry: Journey, Explore slot, planner hand-off) · on two panes the detail pane's own Back clears the selection.
+- [<- back] → the Journey topic page that holds the pack (from any entry: Journey, Explore slot, planner hand-off, a card's "from" line; an entry from outside the Journey sets the session page first, `journey/topic-pages.md` "Navigation graph") · on two panes the detail pane's own Back clears the selection.
 - Level row → `episode/detail` (level `episodeId`).
 - [[ Open level n ]] → `episode/detail` of the Up next level · [[ Start the Pack Check ]] / [ Start the Pack Check ] → the review player (`reviews/stage-review.md` shape, kind `pack-check`, 10 items).
 - Album card (earned) → `library/card-detail` · waiting tile: no action (its earn line is on the tile).
@@ -123,11 +123,13 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 
   | Device and learner | Label | Goes to |
   |---|---|---|
-  | family device (`audience === 'family'`), learner with any family membership or none | **Ask a grown-up** | `PinEntry { next: 'Paywall', from: 'pack' }` |
-  | family device, learner whose only space membership is a class or school | **Ask your teacher or a grown-up** | `PinEntry { next: 'Paywall', from: 'pack' }` (the Plan screen adds the class line, F-ENT-003 §3.9.1) |
-  | self-only device (`audience === 'self'`) | **See how to open it** | the Plan screen: directly only when `gateOpensDirectly`, else through the settings PIN |
+  | family device (`audience === 'family'`), learner with any family membership or none | **Ask a grown-up** | `askGate(gateOpensDirectlyNow(), 'pack')` |
+  | family device, learner whose only space membership is a class or school | **Ask your teacher or a grown-up** | `askGate(gateOpensDirectlyNow(), 'pack')` (the Plan screen adds the class line, F-ENT-003 §3.9.1) |
+  | self-only device (`audience === 'self'`) | **See how to open it** | `askGate(gateOpensDirectlyNow(), 'pack')` |
 
-  Row CM-50b extends `AskFrom` (today `'episode' | 'home' | 'results' | 'library'`) with `'pack'`, and with it the `PinEntry` and `Paywall` `from` values. Per F-ENT-003 E3-6 the Plan screen's Back follows `from` (`planBack` in `logic/paywall.ts`, today Library, Home or Journey): for `'pack'` it returns to this pack page, never "Back to journey", labelled "Back to the topic" (a new key, `caregiver.plan.backToPack.cta`, beside `backToLibrary`, with es and ko in CM-50b). CM-50b adds an access-screens source test asserting that `PackScreen` asks through `askFor` / `askGate` with `help_asked` sent first, as the episode and Library tests do.
+  Every row first sends `helpAskedEvent(profileId, 'pack', ask.audience)` and then navigates to what `askGate` returns, exactly as the episode page, the Library and Home do: `PinEntry { next: 'Paywall', from: 'pack' }` when the gate does not open directly, `Paywall { from: 'pack' }` when it does. On a family device the PIN screen **replaces itself** with Paywall after the PIN (`navigation.replace`, as it does for the existing asks), so the stack is pack page, then Paywall, with no PIN screen between them.
+
+  Row CM-50b extends `AskFrom` (today `'episode' | 'home' | 'results' | 'library'`) with `'pack'`, and with it the `PinEntry` and `Paywall` `from` values. Per F-ENT-003 E3-6 the Plan screen's Back follows `from` (`planBack` in `logic/paywall.ts`, today Library, Home, Journey or plain Back): `planBack('pack')` returns `{ label: backToPack.cta, target: 'Back' }`, so one stack pop lands on this pack page (in two panes, the detail pane's pack page), never "Back to journey", labelled "Back to the topic" (a new key, `caregiver.plan.backToPack.cta`, beside `backToLibrary`, with es and ko in CM-50b). CM-50b's paywall unit test covers `planBack('pack')`, and a navigation test covers the PIN screen replacing itself, so Back from the Plan screen never lands on the PIN screen. CM-50b adds an access-screens source test asserting that `PackScreen` asks through `askFor` / `askGate` with `help_asked` sent first, as the episode and Library tests do.
 - Opening the page sends `pack.opened { packId }` once per open (§11.3). Finishing a level sends `pack.level_complete { packId, stage }` (from the quest flow, not this page).
 
 ## Navigation graph
@@ -135,13 +137,14 @@ Then: they see what the topic is (Hoya's intro), its five levels in order with w
 Enter from: `journey/topic-pages` (pack header) · `home/todays-mission` (Explore slot) · the planner's pack hand-off (F-PLAN-002) · `library/card-detail` (a pack card's "from" line)
 Exit to: `episode/detail` · the review player (Pack Check) · `library/card-detail` · `profiles/pin-entry` → `billing/plan-status-free-lessons` (preview ask) · `journey/topic-pages`
 
-- **Planner hand-off leaves the grown-up zone.** The pack page is never pushed above the PIN-gated planner. A hand-off resets the navigation to the learner tabs (Journey, on the page that holds the pack) and then pushes the pack page, the same way today's plan hand-offs reach an episode page. So Back, Android's hardware Back and any stack pop from the pack page land on the Journey topic page, never on a grown-up screen. Row CM-50b adds an e2e: from a pack page reached by a planner hand-off, hardware Back never reaches a grown-up screen.
+- **Planner hand-off leaves the grown-up zone and ends the grown-up session.** The pack page is never pushed above the PIN-gated planner. A hand-off first **ends the grown-up session** on every platform: `parentGateOpenedAt` and `lastPinVerifiedAt` are set to null through one shared helper in `store/` (today only the web-only `forgetFreshPin` in `platform/grown-up-handoff.web.ts` does this; CM-50b moves that body into the shared helper and has the web function call it), so a device handed to the learner asks for the PIN again, even within the 15 minutes of `PARENT_SESSION_MS`. It then resets the navigation to the learner tabs (Journey, with the session page set to the page that holds the pack, `journey/topic-pages.md` "Navigation graph") and pushes the pack page. No hand-off of this kind exists in the app today; this is the first. So Back, Android's hardware Back and any stack pop from the pack page land on the Journey topic page, never on a grown-up screen. Row CM-50b adds an e2e: after a planner hand-off, (a) hardware Back never reaches a grown-up screen, and (b) the pack page's ask lands on `PinEntry`, not Paywall, even within 15 minutes of the PIN.
 
 ## States
 
 - **A. open**: as drawn; a learner with nothing done sees an empty ring, no count line, and Level 1 as Up next.
 - **A'. every level Done**: the primary is Start the Pack Check; after the badge, no primary.
 - **B. preview**: as drawn.
+- **Route params.** `PackScreen`'s params are `{ packKey }` only: a content id, never a profile or learner id (the `BrowseTarget` rule, "a content target, never a learner id"), so the web URL never carries a person. The learner is the active profile. CM-50b's linking test rejects any other param.
 - **Hidden pack** (`topicPacks` or `pack.<key>` off, or the pack not `ready`): the page is not reachable from the Journey or Explore; a stale link (the planner, a restored deep link) shows "This topic is not here right now." and [ Back to Journey ]. Progress, cards and the badge stay (§12.2) and show again when it is back on.
 - **Loading**: the pack and its levels are in the bundled catalogue; level bodies load as precached chunks (§10) when a level opens, not here.
 - **Error** (progress unreadable): the page draws from content with no Done, no ring fill and Level 1 as Up next, plus the Journey's muted "progress will show up in a moment" line.
@@ -188,7 +191,7 @@ Exit to: `episode/detail` · the review player (Pack Check) · `library/card-det
 
 - Reused, no new key: `learner.access.notOpen` ("Not open yet"), the `askFor` labels and "Back to open lessons" (F-ENT-003). The route's `learner.routeNext.tag.next` ("Next") is **not** used here (Up next, above).
 - New with the ask: `caregiver.plan.backToPack.cta` ("Back to the topic"), the Plan screen's Back for `from: 'pack'`.
-- Count: 20 new strings here (19 above plus `caregiver.plan.backToPack.cta`) and 18 on the topic pages (`journey/topic-pages.md`), so the CM-50b row lands **about 38** strings, each in en, es and ko (spec §17 updated from "about 18").
+- Count: 20 new strings here (19 above plus `caregiver.plan.backToPack.cta`) and 17 on the topic pages (`journey/topic-pages.md`), so the CM-50b row lands **about 37** strings, each in en, es and ko (spec §17 updated from "about 18").
 - Terms: the pill "Topic", "Topic album" and "Back to the topic" use the topic word of the terminology table in `journey/topic-pages.md` (es "Unidad", ko 꾸러미), never es "tema" or ko 주제.
 
 ## Open questions
