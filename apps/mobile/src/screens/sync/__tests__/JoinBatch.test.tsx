@@ -169,10 +169,13 @@ async function enterPin(): Promise<void> {
   await settle();
 }
 
+/** Each name step: Next (`common.buttons.next`); the shipped That's me and Not this one are not shown (section 10.3). */
 async function throughNames(root: ReactTestInstance, count: number): Promise<void> {
   for (let i = 0; i < count; i++) {
     expect(byTestId(root, 'join-confirm')).toHaveLength(1);
-    await press(button(root, join.confirm.me.cta));
+    expect(buttonsNamed(root, join.confirm.me.cta)).toHaveLength(0);
+    expect(buttonsNamed(root, join.confirm.notThis.cta)).toHaveLength(0);
+    await press(button(root, en.common.buttons.next));
   }
   expect(byTestId(root, 'join-who-consent')).toHaveLength(1);
 }
@@ -437,14 +440,117 @@ describe('Who is joining? with the mocked Worker (OA-7b)', () => {
     expect(tracked.filter((e) => e.name === 'space.join.batch').map((e) => e.payload)).toEqual([{ picked: 1, joined: 0, refused: 0 }]);
   });
 
-  it('Not this one on a name step goes back to the code', async () => {
+  it('the name steps send nothing; Back returns to the previous name step, then to the checklist', async () => {
     seed();
-    setSyncApiForTests(worker().api as never);
+    const { api } = worker();
+    setSyncApiForTests(api as never);
     const root = await reachChecklist();
+    await press(row(root, JUN.id));
     await press(button(root, en.common.buttons.next));
-    await press(button(root, join.confirm.notThis.cta));
-    expect(byTestId(root, 'join-who')).toHaveLength(0);
-    expect(byTestId(root, 'join-code')).toHaveLength(1);
+    await enterPin();
+    const owner = (): string[] => screenTexts(byTestId(root, 'join-who-name-for')[0]!);
+    await press(button(root, en.common.buttons.next));
+    expect(owner()).toContain('Jun');
+    await press(button(root, en.common.buttons.back));
+    expect(owner()).toContain('Mina');
+    await press(button(root, en.common.buttons.back));
+    expect(byTestId(root, 'join-who')).toHaveLength(1);
+    expect(checked(row(root, JUN.id))).toBe(true);
+    expect(api.register).not.toHaveBeenCalled();
+    expect(api.joinSpace).not.toHaveBeenCalled();
+  });
+
+  it('CS-11: no join request before Yes, join, and none after Not now', async () => {
+    seed();
+    const { api } = worker();
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    await press(row(root, JUN.id));
+    await press(button(root, en.common.buttons.next));
+    await enterPin();
+    await throughNames(root, 2);
+    expect(api.joinSpace).not.toHaveBeenCalled();
+    expect(api.register).not.toHaveBeenCalled();
+    await press(button(root, who.notNow));
+    await settle();
+    expect(api.joinSpace).not.toHaveBeenCalled();
+    expect(api.register).not.toHaveBeenCalled();
+  });
+
+  it('CS-11: the picks are frozen with the PIN; a change after Not now asks a fresh PIN again, within 2 minutes too', async () => {
+    seed();
+    const { api } = worker();
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    await press(row(root, JUN.id));
+    await press(button(root, en.common.buttons.next));
+    await enterPin();
+    await throughNames(root, 2);
+    await press(button(root, who.notNow));
+    // Seconds later (the PIN is still fresh), someone checks the locked profile too.
+    await press(row(root, SORA.id));
+    navigation.navigate.mockClear();
+    await press(button(root, en.common.buttons.next));
+    await settle();
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'JoinSpace' });
+    expect(byTestId(root, 'join-confirm')).toHaveLength(0);
+    expect(byTestId(root, 'join-who')).toHaveLength(1);
+    expect(api.joinSpace).not.toHaveBeenCalled();
+    // The fresh PIN is entered for the new picks: they are the frozen set now, and they join after Yes, join.
+    await enterPin();
+    await throughNames(root, 3);
+    navigation.navigate.mockClear();
+    await press(button(root, who.consentYes));
+    await settle();
+    expect(navigation.navigate).not.toHaveBeenCalledWith('PinEntry', expect.anything());
+    expect(api.joinSpace.mock.calls.map(([, body]) => (body as { learnerId: string }).learnerId)).toEqual([MINA.id, JUN.id, SORA.id]);
+  });
+
+  it('CS-11: unchecking a learner after Not now is a change of picks too', async () => {
+    seed();
+    const { api } = worker();
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    await press(row(root, JUN.id));
+    await press(row(root, SORA.id));
+    await press(button(root, en.common.buttons.next));
+    await enterPin();
+    await throughNames(root, 3);
+    await press(button(root, who.notNow));
+    await press(row(root, SORA.id));
+    navigation.navigate.mockClear();
+    await press(button(root, en.common.buttons.next));
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'JoinSpace' });
+    expect(byTestId(root, 'join-confirm')).toHaveLength(0);
+  });
+
+  it('CS-11: the PIN screen closed without a PIN, then the picks changed: Next asks again and nothing goes on by itself', async () => {
+    seed();
+    const { api } = worker();
+    setSyncApiForTests(api as never);
+    const root = await reachChecklist();
+    // A PIN entered a moment ago elsewhere (the grown-up area), then Jun picked: Next goes on with it, frozen [Mina, Jun].
+    await act(async () => {
+      useUiStore.setState({ lastPinVerifiedAt: Date.now() });
+    });
+    await press(row(root, JUN.id));
+    await press(button(root, en.common.buttons.next));
+    expect(navigation.navigate).not.toHaveBeenCalledWith('PinEntry', expect.anything());
+    await throughNames(root, 2);
+    await press(button(root, who.notNow));
+    await press(row(root, SORA.id));
+    await press(button(root, en.common.buttons.next));
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'JoinSpace' });
+    // The PIN screen is closed with no PIN: the store's PIN time is the old one, so the wait does not go on.
+    await settle();
+    expect(byTestId(root, 'join-who')).toHaveLength(1);
+    // Sora unchecked again: the frozen set, still within 2 minutes; Next goes on with no PIN.
+    navigation.navigate.mockClear();
+    await press(row(root, SORA.id));
+    await press(button(root, en.common.buttons.next));
+    expect(navigation.navigate).not.toHaveBeenCalledWith('PinEntry', expect.anything());
+    expect(byTestId(root, 'join-confirm')).toHaveLength(1);
+    expect(api.joinSpace).not.toHaveBeenCalled();
   });
 
   it('leaving with Try again on screen still reports the batch once, counts only', async () => {
@@ -552,7 +658,7 @@ describe('Who is joining? with the mocked Worker (OA-7b)', () => {
     await enterPin();
     const owner = (): string[] => screenTexts(byTestId(root, 'join-who-name-for')[0]!);
     expect(owner()).toContain('Mina');
-    await press(button(root, join.confirm.me.cta));
+    await press(button(root, en.common.buttons.next));
     expect(owner()).toContain('Jun');
   });
 

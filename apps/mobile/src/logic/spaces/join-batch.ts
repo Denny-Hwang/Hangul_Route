@@ -90,10 +90,29 @@ export function pickedInOrder(picks: readonly string[], rows: readonly Checklist
  * when it is the active one: it is a grown-up's own, and joining it takes a family place. Joining only the active,
  * unlocked learner needs no PIN, as today.
  */
-export function batchPickNeedsPin(input: { picks: readonly string[]; rows: readonly ChecklistRow[]; lastPinVerifiedAt: number | null; now: number }): boolean {
-  const { picks, rows, lastPinVerifiedAt, now } = input;
+export function batchPickNeedsPin(input: {
+  picks: readonly string[];
+  rows: readonly ChecklistRow[];
+  lastPinVerifiedAt: number | null;
+  now: number;
+  /**
+   * The picks frozen when the PIN was last accepted on this screen (section 10.3, CS-11), or `null` before any was.
+   * A pick of anyone but the active learner that differs from it (a change after Not now, or after Back to the
+   * checklist) asks a fresh PIN again however recent the last one is.
+   */
+  frozen?: readonly string[] | null;
+}): boolean {
+  const { picks, rows, lastPinVerifiedAt, now, frozen = null } = input;
   const other = pickedInOrder(picks, rows).some((r) => !r.active || r.locked);
-  return other && needsFreshPin('join_other', lastPinVerifiedAt, now);
+  if (!other) return false;
+  if (frozen !== null && !samePicks(picks, frozen)) return true;
+  return needsFreshPin('join_other', lastPinVerifiedAt, now);
+}
+
+/** The same learners, whatever the order the boxes were checked in (section 10.3: the picked set). */
+export function samePicks(a: readonly string[], b: readonly string[]): boolean {
+  const set = new Set(a);
+  return set.size === new Set(b).size && b.every((id) => set.has(id));
 }
 
 /**

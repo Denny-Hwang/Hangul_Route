@@ -317,10 +317,6 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
           rows={batch}
           gateClosed={gateClosed}
           askPin={() => navigation.navigate('PinEntry', { next: 'JoinSpace' })}
-          onCodeAgain={() => {
-            setFound(null);
-            setBatch(null);
-          }}
           onDone={() => navigation.navigate('Main', { screen: 'Home' })}
         />
       ) : found ? (

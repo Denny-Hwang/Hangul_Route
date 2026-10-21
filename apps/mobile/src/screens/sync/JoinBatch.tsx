@@ -39,8 +39,6 @@ export interface JoinBatchProps {
   gateClosed: boolean;
   /** Opens the PIN screen for a fresh PIN (CS-11); the screen returns here. */
   askPin: () => void;
-  /** Not this one on a name step: back to the code. */
-  onCodeAgain: () => void;
   /** Done on the results. */
   onDone: () => void;
 }
@@ -57,17 +55,22 @@ type Step = { kind: 'who' } | { kind: 'name'; index: number } | { kind: 'consent
  *    learner starts checked; a locked profile starts unchecked with **Takes a family place.**; a class-scoped learner
  *    is disabled with **Linked for a class on this device.** Next asks a fresh PIN first when the pick includes anyone
  *    but the active learner (CS-11). Offline, Next stays reachable but does nothing and says it needs the internet.
- * 2. The shipped name step, once per picked learner in turn.
+ *    The picked set is frozen once that PIN is accepted: a change of the picks after Not now (or after Back to the
+ *    checklist) asks a fresh PIN again, however recent the last one is.
+ * 2. A name step per picked learner in turn: only the fields of the shipped confirm step, with **Next**, which keeps
+ *    the name in memory and sends nothing (the shipped That's me calls `join` at once and Not this one belongs to
+ *    class rosters, so neither is shown; OA-0b). Back returns to the previous learner's name step, or to the checklist.
  * 3. One consent step naming every picked learner: joining saves each one's progress to the account (it registers a
  *    learner that never synced) and the family's grown-ups see each name and their progress. Not now goes back to the
- *    checklist and registers nobody. Yes, join asks the PIN again if it is no longer fresh.
+ *    checklist and registers nobody. Yes, join asks the PIN again if it is no longer fresh (or the picks are not the
+ *    frozen set). No `/join` is sent before Yes, join.
  * 4. The joins in sequence (`membership-store.join` per learner, one `/join` each). A refused seat is a result line.
  *    The first network error stops them: the lines so far, the offline line and **Try again** for the rest. Try again
  *    asks the fresh PIN again before the rest join when they include anyone but the active learner (CS-11). One run at
  *    a time: a second tap sends nothing more.
  * 5. One result line per learner, a polite status heading, `space.join.batch` once.
  */
-export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, onDone }: JoinBatchProps): React.ReactElement {
+export function JoinBatch({ space, code, rows, gateClosed, askPin, onDone }: JoinBatchProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.join;
   const w = m.who;
@@ -87,8 +90,23 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
   const pickedCount = useRef(picked.length);
   pickedCount.current = picked.length;
 
-  const needsPin = (ids: readonly string[] = picks): boolean =>
-    batchPickNeedsPin({ picks: ids, rows, lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt, now: Date.now() });
+  // CS-11, section 10.3: the picks the PIN was accepted for. A different set asks a fresh PIN again.
+  const frozen = useRef<readonly string[] | null>(null);
+  // The PIN time when the PIN screen was opened: only a PIN entered after that lets the wait go on.
+  const askedWith = useRef<number | null>(null);
+  const needsPin = (ids: readonly string[] = picks, withFrozen = true): boolean =>
+    batchPickNeedsPin({
+      picks: ids,
+      rows,
+      lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt,
+      now: Date.now(),
+      frozen: withFrozen ? frozen.current : null,
+    });
+  const ask = (what: 'names' | 'joins' | 'retry'): void => {
+    askedWith.current = useUiStore.getState().lastPinVerifiedAt;
+    setAfterPin(what);
+    askPin();
+  };
   // Try again joins only the learners left; they need the fresh PIN (CS-11) however long the results stood.
   const retryIds = (before: BatchRun | null): string[] => before?.stop?.remaining.map((p) => p.id) ?? [];
 
@@ -126,11 +144,16 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
     [],
   );
 
-  // Back from the PIN screen with a fresh PIN: go on where Next, Yes, join or Try again waited.
+  // Back from the PIN screen with a fresh PIN: go on where Next, Yes, join or Try again waited. Only a PIN entered
+  // since the PIN screen opened counts (a change of the picks asks it however recent the last one was), and the picks
+  // it was entered for are the frozen set from then on.
   useEffect(() => {
-    if (afterPin === null || needsPin(afterPin === 'retry' ? retryIds(runRef.current) : picks)) return;
+    if (afterPin === null) return;
+    if (useUiStore.getState().lastPinVerifiedAt === askedWith.current) return;
+    if (needsPin(afterPin === 'retry' ? retryIds(runRef.current) : picks, false)) return;
     const next = afterPin;
     setAfterPin(null);
+    if (next !== 'retry') frozen.current = [...picks];
     if (next === 'names') setStep({ kind: 'name', index: 0 });
     else if (next === 'retry') void start(runRef.current ?? undefined);
     else void start();
@@ -140,30 +163,36 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
   const next = (): void => {
     if (!online || picked.length === 0) return;
     if (needsPin()) {
-      setAfterPin('names');
-      askPin();
+      ask('names');
       return;
     }
+    // Accepted with the PIN as it stands (or none needed): this is the frozen set.
+    frozen.current = [...picks];
     setStep({ kind: 'name', index: 0 });
   };
 
   const consentYes = (): void => {
     if (needsPin()) {
-      setAfterPin('joins');
-      askPin();
+      ask('joins');
       return;
     }
     void start();
   };
 
+  // Try again joins only the learners left of the frozen set; only the PIN's age is checked again.
   const retry = (): void => {
     if (running.current) return;
-    if (needsPin(retryIds(run))) {
-      setAfterPin('retry');
-      askPin();
+    if (needsPin(retryIds(run), false)) {
+      ask('retry');
       return;
     }
     void start(run ?? undefined);
+  };
+
+  // A change of the picks drops a PIN wait left open (the PIN screen closed without a PIN): the new picks ask again.
+  const toggle = (id: string): void => {
+    setAfterPin(null);
+    setPicks((p) => togglePick(p, id, rows));
   };
 
   if (step.kind === 'name') {
@@ -192,8 +221,9 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
           hint={hint}
         />
         <Spacer size="md" />
+        {/* Next keeps the name in memory and sends nothing; the joins wait for Yes, join (section 10.3, CS-11). */}
         <Button
-          label={m.confirm.me.cta}
+          label={messages.common.buttons.next}
           tone="primary"
           size="lg"
           fullWidth
@@ -201,7 +231,13 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
           onPress={() => setStep(step.index + 1 < picked.length ? { kind: 'name', index: step.index + 1 } : { kind: 'consent' })}
         />
         <Spacer size="sm" />
-        <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={onCodeAgain} />
+        <Button
+          label={messages.common.buttons.back}
+          tone="ghost"
+          size="sm"
+          fullWidth
+          onPress={() => setStep(step.index > 0 ? { kind: 'name', index: step.index - 1 } : { kind: 'who' })}
+        />
       </Card>
     );
   }
@@ -227,7 +263,16 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
         <Spacer size="lg" />
         <Button label={w.consentYes} tone="primary" size="lg" fullWidth onPress={consentYes} />
         <Spacer size="sm" />
-        <Button label={w.notNow} tone="ghost" size="md" fullWidth onPress={() => setStep({ kind: 'who' })} />
+        <Button
+          label={w.notNow}
+          tone="ghost"
+          size="md"
+          fullWidth
+          onPress={() => {
+            setAfterPin(null);
+            setStep({ kind: 'who' });
+          }}
+        />
       </View>
     );
   }
@@ -278,7 +323,7 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onCodeAgain, 
       <Spacer size="md" />
       <View role="list" style={{ gap: spacing.sm }}>
         {rows.map((r) => (
-          <ChecklistItem key={r.id} row={r} checked={picks.includes(r.id)} caption={r.caption === null ? null : w[r.caption]} onToggle={() => setPicks((p) => togglePick(p, r.id, rows))} />
+          <ChecklistItem key={r.id} row={r} checked={picks.includes(r.id)} caption={r.caption === null ? null : w[r.caption]} onToggle={() => toggle(r.id)} />
         ))}
       </View>
       <Spacer size="lg" />

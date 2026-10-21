@@ -106,10 +106,12 @@ test.describe('Who is joining? (CS-11)', () => {
     await page.getByRole('button', { name: en.common.buttons.next, exact: true }).click();
     await unlockWithPin(page);
 
-    // The name step once per picked learner, then the one consent step naming both.
+    // The name step once per picked learner, with Next (it sends nothing), then the one consent step naming both.
     for (const name of ['Mina', 'Joon']) {
       await expect(page.getByTestId('join-name')).toHaveValue(name);
-      await page.getByRole('button', { name: join.confirm.me.cta, exact: true }).click();
+      await expect(page.getByRole('button', { name: join.confirm.me.cta, exact: true })).toHaveCount(0);
+      await page.getByRole('button', { name: en.common.buttons.next, exact: true }).click();
+      expect(calls.joins).toEqual([]);
     }
     await expect(page.getByText(who.consentLine('Mina'), { exact: true })).toBeVisible();
     await expect(page.getByText(who.consentLine('Joon'), { exact: true })).toBeVisible();
@@ -139,7 +141,7 @@ test.describe('Who is joining? (CS-11)', () => {
     await page.getByRole('button', { name: en.common.buttons.next, exact: true }).click();
     await expect(page.getByTestId('join-name')).toHaveValue('Mina');
     await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
-    await page.getByRole('button', { name: join.confirm.me.cta, exact: true }).click();
+    await page.getByRole('button', { name: en.common.buttons.next, exact: true }).click();
     await page.getByRole('button', { name: who.consentYes, exact: true }).click();
     await expect(page.getByRole('heading', { name: who.result(1, 1), exact: true })).toBeVisible();
     expect(calls.joins).toEqual([ids.mina]);

@@ -15,6 +15,7 @@ import {
   resultLine,
   resultLines,
   runBatch,
+  samePicks,
   togglePick,
   type BatchAnswer,
   type BatchLearner,
@@ -146,6 +147,28 @@ describe('batchPickNeedsPin (CS-11, OA-D5b (3))', () => {
 
   it('nothing picked needs nothing', () => {
     expect(batchPickNeedsPin({ picks: [], rows, lastPinVerifiedAt: null, now })).toBe(false);
+  });
+
+  it('the picked set is frozen once the PIN is accepted: a change asks a fresh PIN again, however recent the last one', () => {
+    const fresh = now - 1_000;
+    const frozen = [MINA.id, JUN.id];
+    // The same set (in any order) goes on with the PIN it was accepted with.
+    expect(batchPickNeedsPin({ picks: [JUN.id, MINA.id], rows, lastPinVerifiedAt: fresh, now, frozen })).toBe(false);
+    // Another learner checked, or one unchecked: a fresh PIN again.
+    expect(batchPickNeedsPin({ picks: [MINA.id, JUN.id, SORA.id], rows, lastPinVerifiedAt: fresh, now, frozen })).toBe(true);
+    expect(batchPickNeedsPin({ picks: [JUN.id], rows, lastPinVerifiedAt: fresh, now, frozen })).toBe(true);
+    // Frozen with the active learner alone, then anyone else checked.
+    expect(batchPickNeedsPin({ picks: [MINA.id, JUN.id], rows, lastPinVerifiedAt: fresh, now, frozen: [MINA.id] })).toBe(true);
+    // Back to the active, unlocked learner alone: no PIN, as today.
+    expect(batchPickNeedsPin({ picks: [MINA.id], rows, lastPinVerifiedAt: null, now, frozen })).toBe(false);
+    // The same set still ages out after 2 minutes.
+    expect(batchPickNeedsPin({ picks: frozen, rows, lastPinVerifiedAt: now - GROWN_UP_FRESH_PIN_MS, now, frozen })).toBe(true);
+  });
+
+  it('samePicks compares the sets, not the order', () => {
+    expect(samePicks([MINA.id, JUN.id], [JUN.id, MINA.id])).toBe(true);
+    expect(samePicks([MINA.id], [MINA.id, JUN.id])).toBe(false);
+    expect(samePicks([], [])).toBe(true);
   });
 });
 
