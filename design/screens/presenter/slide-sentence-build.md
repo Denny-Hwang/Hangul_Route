@@ -15,3 +15,13 @@ Mock: `mock/slide-build-0.html` (bank), `slide-build-2.html` (two tiles placed),
 ## Builds and announcements
 
 `[bank, tile 1 … tile n, (particle), whole]`; romanization only at `whole`. Each move is announced politely, "{word} placed" (`a11y.presenter.tilePlaced`). Reduced motion: a tile appears in its slot (no travel).
+
+## As built (LV-S3)
+
+Spec: AMENDMENTS-LECTURE-V2 section 5.2 "As built in LV-S3". Shots: `apps/mobile/e2e/web/presenter-build.spec.ts` with `HR_SHOTS=1` (1280 x 720, 1920 x 1080, 568 x 320, 844 x 390, es and ko).
+
+- **Tiles** drop the sentence mark, as the learner's Sentence Builder does (the mock drew 가요. beside the distractor 와요, so the mark told the last word apart); the meaning and the romanization still come at `whole`.
+- **The particle build** comes right after its tile reaches the line, as the particle mock draws it (the third place still empty while the room chooses the ending); the endings are in their pair's order (을/를), never the content's.
+- **One place size on the line**: every place, empty or placed, is as wide as the widest tile (or the particle tile with both endings) and as tall as a tile, so the line never reflows, nothing under it moves and no empty box's size gives its tile away; the mock's 200-unit empty box is this rule's empty place. Every move is an instant swap (nothing travels, with reduced motion or not).
+- **Fit**: two compact levels (tiles at `presenter.size.prompt`, then everything at `presenter.size.body`); the longest shipped sentences (제가 좋아하는 동물은 호랑이예요, a particle on the last tile) take the second at 1280 x 720.
+- **No picture**: the round's picture shows the meaning, which the room meets only at `whole`.
