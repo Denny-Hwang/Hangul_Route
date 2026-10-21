@@ -25,7 +25,13 @@ const m = en.caregiver.join;
 const hints = en.learner.createProfile.nameHint;
 const LEARNER_ID = 'profile:test';
 const navigation = { navigate: vi.fn(), goBack: vi.fn() };
-const real = { lookup: useMembershipStore.getState().lookup, join: useMembershipStore.getState().join, deviceScope: useMembershipStore.getState().deviceScope };
+const real = {
+  lookup: useMembershipStore.getState().lookup,
+  join: useMembershipStore.getState().join,
+  deviceScope: useMembershipStore.getState().deviceScope,
+  requestRelink: useMembershipStore.getState().requestRelink,
+  pollRelink: useMembershipStore.getState().pollRelink,
+};
 const join = vi.fn(async (..._args: unknown[]) => ({
   ok: true as const,
   alreadyMember: false,
@@ -43,7 +49,7 @@ function seed(profile: Profile, gated = false, scope: 'full' | 'class' = 'full')
   useUiStore.setState({ parentGateOpenedAt: null });
   useLocaleStore.setState({ device: 'en', byProfile: {} });
   useMembershipStore.setState({
-    lookup: vi.fn(async () => ({ ok: true as const, space: { id: 'space:c', kind: 'class' as const, name: 'Sunflower' }, full: false, roster: [] })),
+    lookup: vi.fn(async () => ({ ok: true as const, space: { id: 'space:c', kind: 'class' as const, name: 'Sunflower' }, full: false, seat: null, roster: [] })),
     join: join as never,
     deviceScope: vi.fn(async () => scope),
   });
@@ -156,6 +162,117 @@ describe('JoinSpaceScreen name field (F-LEARN-001 section 3.11)', () => {
     const renderer = await reachName();
     expect(input(renderer.root, 'join-name').props.editable).toBe(true);
     expect(byTestId(renderer.root, 'join-name-locked')).toHaveLength(0);
+    await unmount(renderer);
+  });
+});
+
+describe('[SA] JoinSpaceScreen at a learner cap (AMENDMENTS-SEATS-ADMINS section 3.4)', () => {
+  const classSpace = { id: 'space:c', kind: 'class' as const, name: 'Sunflower' };
+  const familySpace = { id: 'space:f', kind: 'family' as const, name: 'Kim family' };
+  const roster = [
+    { learnerId: 'profile:m', name: 'Minho' },
+    { learnerId: 'profile:s', name: 'Suni' },
+  ];
+  type Lookup = Awaited<ReturnType<ReturnType<typeof useMembershipStore.getState>['lookup']>>;
+  const withLookup = (answer: Lookup): ReturnType<typeof vi.fn> => {
+    const lookup = vi.fn(async (..._args: unknown[]) => answer);
+    useMembershipStore.setState({ lookup: lookup as never });
+    return lookup;
+  };
+  async function find(): Promise<Awaited<ReturnType<typeof render>>> {
+    const renderer = await render(<JoinSpaceScreen navigation={navigation as never} route={{ key: 'JoinSpace', name: 'JoinSpace' } as never} />);
+    await type(renderer.root, 'join-code', 'K7M2X9');
+    await press(buttonsNamed(renderer.root, m.code.join.cta)[0]!);
+    return renderer;
+  }
+
+  it('looks up with the active learner, so a member who already holds the seat finds room', async () => {
+    seed(learner());
+    const lookup = withLookup({ ok: true, space: familySpace, full: false, seat: { full: false, reason: null, cap: 4 }, roster: [] });
+    const renderer = await find();
+    expect(lookup).toHaveBeenCalledWith('K7M2X9', LEARNER_ID);
+    expect(byTestId(renderer.root, 'join-confirm')).toHaveLength(1);
+    expect(screenTexts(renderer.root)).not.toContain(m.errors.familyFull(4));
+    await unmount(renderer);
+  });
+
+  it('a full family says familyFull with the cap, never the class line, and stays on the code step', async () => {
+    seed(learner());
+    withLookup({ ok: true, space: familySpace, full: false, seat: { full: true, reason: 'cap_family', cap: 4 }, roster: [] });
+    const renderer = await find();
+    const texts = screenTexts(renderer.root);
+    expect(texts).toContain('This family already has 4 learners. Ask a grown-up in your family.');
+    expect(texts).not.toContain(m.errors.classFull);
+    expect(byTestId(renderer.root, 'join-confirm')).toHaveLength(0);
+    expect(input(renderer.root, 'join-code').props.value).toBe('K7M2X9');
+    await unmount(renderer);
+  });
+
+  it('at a full class with a roster, the roster pick and relink stay on screen with the at-cap line above "I\'m new"', async () => {
+    seed(learner());
+    withLookup({ ok: true, space: classSpace, full: false, seat: { full: true, reason: 'cap_class', cap: 20 }, roster });
+    const requestRelink = vi.fn(async (..._args: unknown[]) => ({ ok: true as const, requestId: 'relink:1', expiresAt: '2026-10-20T00:10:00.000Z' }));
+    const pollRelink = vi.fn(async (..._args: unknown[]) => ({ state: 'pending' as const }));
+    useMembershipStore.setState({ requestRelink: requestRelink as never, pollRelink: pollRelink as never });
+    const renderer = await find();
+    expect(byTestId(renderer.root, 'join-pick')).toHaveLength(1);
+    const pick = byTestId(renderer.root, 'join-pick')[0]!;
+    const texts = screenTexts(pick);
+    expect(texts).toContain('Minho');
+    expect(texts).toContain('Suni');
+    const line = texts.indexOf(m.errors.classFull);
+    expect(line).toBeGreaterThan(texts.indexOf('Suni'));
+    expect(line).toBeLessThan(texts.indexOf(m.pick.newHere.cta));
+    // The line is said once, in the card: never also in the slot under it.
+    expect(screenTexts(renderer.root).filter((t) => t === m.errors.classFull)).toHaveLength(1);
+    // A returning student picks their name: the relink, which takes no seat.
+    await press(buttonsNamed(renderer.root, 'Minho')[0]!);
+    expect(requestRelink).toHaveBeenCalledWith('space:c', 'K7M2X9', 'profile:m');
+    expect(byTestId(renderer.root, 'join-waiting')).toHaveLength(1);
+    await unmount(renderer);
+  });
+
+  it('a new learner at a full school reads schoolFull in the pick, then again on the name step', async () => {
+    seed(learner());
+    withLookup({ ok: true, space: classSpace, full: false, seat: { full: true, reason: 'cap_school', cap: 50 }, roster });
+    const renderer = await find();
+    expect(screenTexts(byTestId(renderer.root, 'join-pick')[0]!)).toContain(m.errors.schoolFull);
+    await press(buttonsNamed(renderer.root, m.pick.newHere.cta)[0]!);
+    expect(byTestId(renderer.root, 'join-confirm')).toHaveLength(1);
+    expect(screenTexts(renderer.root)).toContain(m.errors.schoolFull);
+    await unmount(renderer);
+  });
+
+  it('a school cap from the join (cap_class with details.reason cap_school, read as cap_school) shows schoolFull', async () => {
+    seed(learner());
+    withLookup({ ok: true, space: classSpace, full: false, seat: null, roster: [] });
+    join.mockResolvedValueOnce({ ok: false, error: 'cap_school', cap: 50 } as never);
+    const renderer = await find();
+    await press(meButton(renderer.root));
+    const texts = screenTexts(renderer.root);
+    expect(texts).toContain(m.errors.schoolFull);
+    expect(texts).not.toContain(m.errors.classFull);
+    // Not a code error: the name step stays, Back leaves.
+    expect(byTestId(renderer.root, 'join-confirm')).toHaveLength(1);
+    await unmount(renderer);
+  });
+
+  it('a full family from the join reads the Worker cap', async () => {
+    seed(learner());
+    withLookup({ ok: true, space: familySpace, full: false, seat: null, roster: [] });
+    join.mockResolvedValueOnce({ ok: false, error: 'cap_family', cap: 4 } as never);
+    const renderer = await find();
+    await press(meButton(renderer.root));
+    expect(screenTexts(renderer.root)).toContain(m.errors.familyFull(4));
+    await unmount(renderer);
+  });
+
+  it('an old-shape lookup (no seat) still stops on full with the class line', async () => {
+    seed(learner());
+    withLookup({ ok: true, space: classSpace, full: true, seat: null, roster: [] });
+    const renderer = await find();
+    expect(screenTexts(renderer.root)).toContain(m.errors.classFull);
+    expect(byTestId(renderer.root, 'join-confirm')).toHaveLength(0);
     await unmount(renderer);
   });
 });
