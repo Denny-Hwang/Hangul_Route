@@ -134,6 +134,13 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
                 <Step icon="plus" label={m.steps.addToHome} />
               </View>
             ) : null}
+            {variant === 'mac-safari' ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
+                <Step icon="home" label={m.steps.fileMenu} />
+                <Icon name="arrow-right" size={16} color={colors.text.muted} />
+                <Step icon="plus" label={m.steps.addToDock} />
+              </View>
+            ) : null}
             {variant === 'prompt' ? (
               <Button label={m.install.cta} tone="primary" size="lg" fullWidth onPress={() => void onInstall()} />
             ) : null}

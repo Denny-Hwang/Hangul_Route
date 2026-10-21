@@ -2,7 +2,7 @@
  * Install-guide decisions — F-PWA-001 §3.1, §3.3. Pure: every input is
  * passed in so the rules are testable without a browser.
  */
-export type InstallGuideVariant = 'ios-safari' | 'prompt' | 'desktop-hint' | 'in-app-browser' | 'none';
+export type InstallGuideVariant = 'ios-safari' | 'mac-safari' | 'prompt' | 'desktop-hint' | 'in-app-browser' | 'none';
 
 export interface InstallEnv {
   /** navigator.userAgent, or '' on native. */
@@ -13,20 +13,37 @@ export interface InstallEnv {
   hasPromptEvent: boolean;
   /** true only in the web build. */
   isWeb: boolean;
+  /**
+   * navigator.maxTouchPoints, or 0 on native. iPadOS Safari asks for the desktop site and sends a Mac user agent;
+   * a Mac reports 0 or 1 touch points and an iPad more, so this tells them apart.
+   */
+  maxTouchPoints: number;
 }
 
-const IN_APP_TOKENS = /FBAN|FBAV|Instagram|KAKAOTALK|Line\/|Twitter|Snapchat/i;
+/** In-app browsers, which cannot install a web app: Facebook, Instagram, KakaoTalk, LINE, X, Snapchat, Naver, Daum, WeChat, TikTok. */
+const IN_APP_TOKENS = /FBAN|FBAV|Instagram|KAKAOTALK|Line\/|Twitter|Snapchat|NAVER\(inapp|DaumApps|MicroMessenger|BytedanceWebview|musical_ly/i;
 const IOS = /iPhone|iPad|iPod/i;
+const MAC = /Macintosh/i;
 const ANDROID = /Android/i;
 const MOBILE = /Mobi|Android|iPhone|iPad|iPod/i;
+const FIREFOX = /Firefox\//i;
+/** Safari names itself `Version/… Safari/`; Chrome, Edge, Opera and Firefox on a Mac add their own token. */
+const NOT_SAFARI = /Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Firefox/i;
+const SAFARI = /Version\/[\d.]+.*Safari\//i;
 
 export function installGuideVariant(env: InstallEnv): InstallGuideVariant {
   if (!env.isWeb || env.standalone || !env.userAgent) return 'none';
-  if (IN_APP_TOKENS.test(env.userAgent)) return 'in-app-browser';
+  const ua = env.userAgent;
+  if (IN_APP_TOKENS.test(ua)) return 'in-app-browser';
   if (env.hasPromptEvent) return 'prompt';
-  if (IOS.test(env.userAgent)) return 'ios-safari';
-  if (ANDROID.test(env.userAgent) || !MOBILE.test(env.userAgent)) return 'desktop-hint';
-  return 'none';
+  if (IOS.test(ua) || (MAC.test(ua) && env.maxTouchPoints > 1)) return 'ios-safari';
+  if (ANDROID.test(ua)) return 'desktop-hint';
+  if (MOBILE.test(ua)) return 'none';
+  // Desktop Firefox has no way to install a web app: a hint would point at a menu item that is not there.
+  if (FIREFOX.test(ua)) return 'none';
+  // Safari 17 on macOS Sonoma and later: File menu, then Add to Dock.
+  if (MAC.test(ua) && SAFARI.test(ua) && !NOT_SAFARI.test(ua)) return 'mac-safari';
+  return 'desktop-hint';
 }
 
 export const INSTALL_GUIDE_MIN_VISITS = 3;
