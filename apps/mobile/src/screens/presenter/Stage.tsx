@@ -16,10 +16,12 @@ import { usePresenterView, useStageText } from './presenter-context';
 import { ActivitySlide } from './slides/ActivitySlide';
 import { CardSlide } from './slides/CardSlide';
 import { QuizSlide } from './slides/QuizSlide';
+import { QuestionSlide, isListenOrReply } from './slides/QuestionSlide';
 import { EndSlide } from './slides/EndSlide';
 import { LetterSlide } from './slides/LetterSlide';
 import { PatternSlide } from './slides/PatternSlide';
 import { ReadAlongSlide } from './slides/ReadAlongSlide';
+import { RealiaQuestionSlide, isRealiaQuestion } from './slides/RealiaQuestionSlide';
 import { RealiaSlide } from './slides/RealiaSlide';
 import { SentenceSlide } from './slides/SentenceSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
@@ -82,7 +84,12 @@ export function Stage(props: StageProps): React.ReactElement {
   const strip = props.barStrip === undefined ? 0 : barOverlap(props.barStrip, 0, scale.offsetY);
 
   const kind = messages.learner.presenter.grid.kind[gridKindKey(slide.kind)];
-  const detail = slideDetail(slide, { activity: (preset) => messages.learner.presenter.activity[preset], slot: messages.a11y.presenter.slot });
+  const detail = slideDetail(slide, {
+    activity: (preset) => messages.learner.presenter.activity[preset],
+    slot: messages.a11y.presenter.slot,
+    listen: messages.learner.presenter.quiz.listen,
+    reply: messages.learner.presenter.quiz.reply,
+  });
   const live = messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
 
   const onGrant = (event: GestureResponderEvent): void => {
@@ -159,6 +166,10 @@ export function Stage(props: StageProps): React.ReactElement {
           <CardSlide slide={slide} reveal={reveal} />
         ) : isStoryCheck(slide) ? (
           <StoryCheckSlide slide={slide} shown={shown} romanization={props.romanization} />
+        ) : isListenOrReply(slide) ? (
+          <QuestionSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
+        ) : isRealiaQuestion(slide) ? (
+          <RealiaQuestionSlide slide={slide} shown={shown} romanization={props.romanization} />
         ) : slide.kind === 'quiz' ? (
           <QuizSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
         ) : slide.kind === 'activity' ? (

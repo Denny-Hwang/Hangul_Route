@@ -110,7 +110,8 @@ function Question({ slide, sayIt, onPlaySound, crowded }: { slide: QuizBody; say
     );
   }
   if (prompt.ask === 'odd-one-out') return heading(m.oddOneOut);
-  return heading(prompt.text);
+  // A story check (StoryCheckSlide draws it on the stage); the LV-S2 questions have slides of their own.
+  return prompt.ask === 'check' ? heading(prompt.text) : null;
 }
 
 /**

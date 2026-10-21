@@ -10,6 +10,7 @@ import {
   presenter,
   radii,
   realiaGoodsRef,
+  realiaLineLook,
   realiaPaper,
   spacing,
   touchTarget,
@@ -37,13 +38,26 @@ import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
  * so the lines are text. The dressing is decorative and hidden; the sheet is one group named by its
  * own accessible text (`altEn`, F-CURR-001 §3.14). A sheet of more than four lines draws each
  * romanization beside its Korean (`sheetRoomy`), so a five-board trail sign fits.
+ *
+ * On a realia question (LV-S2, design V7) the sheet stays beside the question, and at the answer
+ * build the line that holds the answer gets RealiaSheet's `found` look (`realiaLineLook`: the
+ * `feedback.successLight` ground, a thick `feedback.success` border and the `check` glyph in
+ * `feedback.successDark`), named "Hoya's answer". Every line keeps a transparent border of that
+ * width from the start, so marking one moves nothing but that line's own text.
  */
+
+/** A realia question's answer line (`entryId`) and whether its answer build is reached. */
+export interface SheetAnswer {
+  entryId?: string | undefined;
+  shown: boolean;
+}
 
 const TAGS = { rect: Rect, circle: Circle, ellipse: Ellipse, line: Line, path: Path, polygon: Polygon } as const;
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true };
 
-export function RealiaSheetStage({ sheet, rom, width }: { sheet: RealiaSheetView; rom: boolean; width: number }): React.ReactElement {
+export function RealiaSheetStage({ sheet, rom, width, answer }: { sheet: RealiaSheetView; rom: boolean; width: number; answer?: SheetAnswer }): React.ReactElement {
   const { unit } = usePresenterView();
+  const mark = (id: string): Mark | undefined => (answer === undefined ? undefined : answer.shown && answer.entryId === id ? 'found' : 'none');
   const roomy = sheetRoomy(sheet);
   const paper = realiaPaper(sheet.kind);
   const dressing = REALIA_DRESSINGS[sheet.kind];
@@ -54,7 +68,9 @@ export function RealiaSheetStage({ sheet, rom, width }: { sheet: RealiaSheetView
     <View role="list" style={{ gap: units(unit, spacing.xs) }}>
       {sheet.entries.map((entry) => (
         <View role="listitem" key={entry.id}>
-          <SheetLine text={entry.text} value={entry.value} rom={rom} roomy={roomy} />
+          <Marked mark={mark(entry.id)}>
+            <SheetLine text={entry.text} value={entry.value} rom={rom} roomy={roomy} />
+          </Marked>
         </View>
       ))}
     </View>
@@ -92,7 +108,9 @@ export function RealiaSheetStage({ sheet, rom, width }: { sheet: RealiaSheetView
             <View role="list" style={{ gap: units(unit, spacing.sm) }}>
               {sheet.entries.map((entry) => (
                 <Board key={entry.id} dir={entry.dir} box={box} line={line}>
-                  <SheetLine text={entry.text} value={entry.value} rom={rom} roomy={roomy} />
+                  <Marked mark={mark(entry.id)}>
+                    <SheetLine text={entry.text} value={entry.value} rom={rom} roomy={roomy} />
+                  </Marked>
                 </Board>
               ))}
             </View>
@@ -109,7 +127,9 @@ export function RealiaSheetStage({ sheet, rom, width }: { sheet: RealiaSheetView
               <View role="listitem" key={entry.id} style={{ flexGrow: 1, flexBasis: 0, minWidth: units(unit, touchTarget.hero) }}>
                 {entry.goods ? <Dressing refId={realiaGoodsRef(entry.goods)} height={units(unit, spacing.xxxl)} stretch={false} centered /> : null}
                 <View style={{ ...box, padding: units(unit, spacing.xs) }}>
-                  <SheetLine text={entry.text} value={entry.value} rom={rom} roomy stack />
+                  <Marked mark={mark(entry.id)} corner>
+                    <SheetLine text={entry.text} value={entry.value} rom={rom} roomy stack />
+                  </Marked>
                 </View>
               </View>
             ))}
@@ -248,6 +268,46 @@ function Dressing({ refId, height, stretch, width, centered = false }: { refId: 
           return <Tag key={item.key} {...item.geometry} {...item.paint} transform={item.transform} />;
         })}
       </Svg>
+    </View>
+  );
+}
+
+type Mark = 'found' | 'none';
+
+/**
+ * A line of a realia question's sheet: RealiaSheet's line look in stage units (`found` at the
+ * answer build, else a transparent border of the same width), the `check` glyph before the found
+ * line's text. A price card's stacked, centred line (`corner`) keeps its text where it was: the
+ * glyph sits smaller in its top-left corner, over the card's margin. A realia page draws its lines
+ * bare (`mark` absent).
+ */
+function Marked({ mark, corner = false, children }: { mark: Mark | undefined; corner?: boolean; children: React.ReactNode }): React.ReactElement {
+  const { unit, messages } = usePresenterView();
+  if (mark === undefined) return <>{children}</>;
+  const look = realiaLineLook(mark);
+  return (
+    <View
+      testID={mark === 'found' ? 'presenter-realia-found' : undefined}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, look.borderWidth)),
+        borderColor: look.borderColor,
+        borderStyle: look.borderStyle,
+        borderRadius: units(unit, radii.sm),
+        backgroundColor: look.backgroundColor,
+      }}
+    >
+      {look.icon !== null ? (
+        <View
+          role="img"
+          accessibilityLabel={messages.a11y.presenter.answerMark}
+          style={corner ? { position: 'absolute', top: units(unit, spacing.xxs), left: units(unit, spacing.xxs), zIndex: 1 } : { paddingLeft: units(unit, spacing.xs) }}
+        >
+          <Icon name={look.icon.name} size={units(unit, corner ? spacing.xl : spacing.xxxl)} color={look.icon.color} />
+        </View>
+      ) : null}
+      <View style={{ flex: 1, minWidth: 0 }}>{children}</View>
     </View>
   );
 }

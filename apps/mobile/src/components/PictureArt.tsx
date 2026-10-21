@@ -62,13 +62,18 @@ export interface PictureArtTile {
   padding: number;
   border: number;
   radius: number;
+  /**
+   * The smallest the art is drawn, in the same scale (the presenter's 48 stage units, which a phone's
+   * small stage draws smaller than 48 dp, so a picture option fits its row there); 48 dp when absent.
+   */
+  minArt?: number;
 }
 
 /** The learner screens' tile, in dp. */
 const LEARNER_TILE: PictureArtTile = { padding: spacing.xs, border: borderWidth.thin, radius: radii.lg };
 
 /** Padding and border of the neutral art tile, per side, and the smallest art (the tested minimum). */
-const metricsOf = (tile: PictureArtTile): PictureTileMetrics => ({ inset: tile.padding + tile.border, minArt: spacing.xxxl });
+const metricsOf = (tile: PictureArtTile): PictureTileMetrics => ({ inset: tile.padding + tile.border, minArt: tile.minArt ?? spacing.xxxl });
 
 export interface PictureArtProps {
   /** `card:<id>`, `word:<key>` or `swatch:<token>`; absent shows the gloss. */
