@@ -453,16 +453,16 @@ The Journey view becomes a row of pages that the learner moves between by swipin
 
 | Part | Rule |
 |---|---|
-| Page 1 | The five themes and seven stage rows, **exactly as today** (`design/wireframes/journey/grid.md`): the same cells, sizes, glyphs, words, states and rings. Page 1 never scrolls sideways inside itself, so a theme column is never cut off |
+| Page 1 | The five themes and seven stage rows, **exactly as today** (`design/wireframes/journey/grid.md`): the same cells, sizes, glyphs, words, states and rings. Page 1 never scrolls sideways inside itself, so a theme column is never cut off. With no pack shown the screen is today's, unchanged. *(CM-D3 proposal, owner to confirm:)* with packs shown, the page bar sits above the column labels and the header band is one height on every page (the larger of 64 dp and page 1's measured label height), so only the space above page 1's theme labels grows (`design/wireframes/journey/topic-pages.md` "Header band") |
 | Pages 2 and later | Pack columns, **at most five a page**, in the pack order of section 6.5. With all eight packs: page 2 holds packs 1-5 and page 3 holds packs 6-8. A page with fewer than five packs keeps the same column width and leaves the rest of the row empty; columns never stretch or shrink to fill it |
 | Cell size | A pack column uses the theme-column width of the same window (`journeyCellSize`), so a pack cell is 54 dp wide at 320 px, as on page 1, and **never under the 48 dp target**. At 768 px and in the two-pane wide window, pages keep the cell sizes of `grid.md` |
 | Rows | Every page has the same seven stage rows at the same heights, so paging keeps the vertical scroll position. A pack level sits in the row of its stage (`levels[].stage`: Stages 2, 3, 4, 6 and 7). Rows 1 and 5 of a pack page hold an empty, unlabelled space, not a "coming later" cell |
-| Column header | The pack's name and its `homeTheme` glyph. Tapping it opens the pack page; the target is 48 dp or more |
+| Column header | The pack's name and its `homeTheme` glyph. Tapping it opens the pack page; the target is 48 dp or more. *(CM-D3 proposal, owner to confirm:)* the full name does not fit a 54 dp column, so the header shows the pack's short word (`learner.journey.packWord.<key>`, one word of the pack's title in the UI locale) under the glyph, with the full title as the accessible name (`design/wireframes/journey/topic-pages.md` "The pack word rule") |
 | Pack cell | Opens the level's cell sheet, like a theme cell. It shows the mastery ring of its pack level (4.4), and its entitlement follows section 6.3 |
 | Which packs show | Packs with `status: 'ready'` whose `topicPacks` and `pack.<key>` switches are on. A page with no pack to show is not drawn. With no pack to show, the Journey view is page 1 alone, with no dots and no arrows: exactly today's screen |
 | Swipe | A horizontal swipe moves one whole page and snaps to it. The gesture locks direction, so a swipe that starts mostly vertical stays a vertical scroll |
-| Visible affordance | A row of page dots under the title, the current dot filled, and an arrow button at the right edge of the column-header row while a later page exists (a matching arrow at the left edge on later pages). The dots and arrows only appear when there are two or more pages |
-| Buttons (no swipe needed) | The arrow buttons are 48 dp targets, in the tab order, and do exactly what a swipe does. On web, Left and Right arrow keys change the page while focus is in the column-header row. After a page change, focus moves to the first column header of the new page |
+| Visible affordance | A row of page dots under the title, the current dot filled, and an arrow button at the right edge of the column-header row while a later page exists (a matching arrow at the left edge on later pages). The dots and arrows only appear when there are two or more pages. As designed in CM-D3 (`design/wireframes/journey/topic-pages.md`): the arrows sit at the two ends of a page bar directly above the column-header row, with the page name and the dots between them, because at 320 px the five columns fill the whole header row |
+| Buttons (no swipe needed) | The arrow buttons are 48 dp targets or larger (64 dp, `touchTarget.min`, as designed in CM-D3), in the tab order, and do exactly what a swipe does. On web, Left and Right arrow keys change the page while focus is in the column-header row. After a page change, focus moves to the first column header of the new page; on page 1, which has no header button, focus moves to the page 1 region |
 | Screen readers | The arrows are labelled with where they go ("More topics, page 2 of 3", "Back to the five themes"). A page change is announced with the page name and number. Each page is a labelled region ("Five themes", "Topics, page 2 of 3"). Pack cells use the same label pattern as theme cells |
 | Reduced motion | With reduced motion on (`useReducedMotion`, `platform/motion.ts`), a page change jumps with no slide; a swipe still works and settles without animation |
 | Where it opens | Journey always opens on page 1. The Explore slot and the planner open the pack page, and Back from the pack page returns to the topic page that holds the pack. The current page is kept for the session only; it is never stored or sent |
@@ -1170,7 +1170,7 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 - grid with mastery rings at 320 px, cells still 54 dp
 - 48 dp targets on the topic pages (pack cells, column headers and arrow buttons at 320 px) and in the new games
 - reduced-motion ceremonies and page changes with no slide
-- keyboard paging on web and focus moving to the new page's first column header
+- keyboard paging on web and focus moving to the new page's first column header (on page 1, which has no header button, to the page 1 region)
 - contrast of theme tokens
 - screen-reader labels for rings ("Mastered", "Ready to refresh", "New volume"), and for the page arrows and page-change announcements
 
@@ -1311,7 +1311,7 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
 | CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, pack order list, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, every pack directory in `order.json`, scaffold |
-| CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 18 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
+| CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 38 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
 | CM-50c | `feat(mobile,web): lecture and console chooser accept pack levels (F-CURR-002)` | S-M | CM-50a | about 2 | chooser regex, deck schema, old-presenter decode failure |
 | CM-51 ×5 | `content(packs): Numbers & Time, levels 1-5 with the Pack Check in L5 (F-CURR-002)` | M each | CM-50a, CM-50b, plus the level rows above | overlays | U-rules, sources, MAR |
 | CM-52 ×5 | `content(packs): People & Family (F-CURR-002)` | M each | same | overlays | same |
@@ -1327,7 +1327,7 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-60 | `feat(mobile): weekly quests and Passport stamps (F-CURR-002)` | M | CM-17 | about 30 | deterministic pick, latch merge |
+| CM-60 | `feat(mobile): weekly quests and Passport stamps (F-CURR-002)` | M | CM-17 | about 42 | deterministic pick, latch merge |
 | CM-61 | `feat(backend,mobile,web): family lantern, Worker total from summaries, space-goal read, target behind the PIN (F-CURR-002 OD-7)` (W→A) | M | CM-16, CM-17, owner request A account switching and PIN | about 8 | totals only, cross-device sum, offline total, PIN gate, e2e with 2 profiles |
 | CM-62 | `feat(backend,web,mobile): class goal, space_goals, counts-only class-progress route, console setter, presenter bar (F-CURR-002 OD-7)` (W→A) | L | CM-3, CM-16, CM-17 | about 12 | Worker totals, class scope allowed on class-progress only, additive SQL, e2e |
 | CM-63 | `feat(lecture): game block and presets by-topic, class-check, class-review (F-CURR-002)` | L | CM-16, CM-21, CM-36, CM-39 | about 18 | no names on projector, slide mapping, old-presenter decode failure, e2e |
@@ -1401,6 +1401,7 @@ The owner answered section 16 on 2026-10-21:
 - **OD-4 confirmed.** The first wave is Numbers & Time, People & Family and Feelings & Me.
 - **OD-6 confirmed.** Weekly dots are the Home headline, with 2 automatic rest days a local week.
 - **Every other OD** stands as proposed and is now decided.
+- **Open for the owner (CM-D3 design pass).** Two §6.1 write-backs are proposals until the owner confirms them: the header band that grows the space above page 1's theme labels when packs are shown (README D3), and the short pack word under the column-header glyph in place of the full name (README D5).
 
 ---
 

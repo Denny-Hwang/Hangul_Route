@@ -74,7 +74,7 @@ A cell with both the start pin and the placed-out check (pin from the stored lev
 
 Cell looks (4): **shipped** (its column's theme glyph — `logic/journey.themeGlyph`, `design/components/Icon/theme-glyphs.md`; owner decision 2026-10-14 replaced the single letters L / F / H / N / P, which learners could not decode; stage-tinted border; the glyph is decorative and the cell label names the theme in words) · **completed** (success tint) · **preview** (lock glyph, disabled) · **premium-locked** (lock glyph + tappable, future — see below).
 
-- Rows scroll vertically; the 5 columns always fit one screen width (no horizontal scroll — a child must never lose a column).
+- Rows scroll vertically; the 5 columns always fit one screen width (no horizontal scroll on this page, page 1 — a learner must never lose a column). When Topic Packs are shown, topic pages of up to five pack columns sit beside page 1 and are reached by a horizontal swipe of whole pages, page dots and arrow buttons (F-CURR-002 §6.1, OD-2; `journey/topic-pages.md`); page 1 itself still never scrolls sideways.
 - Stage 1 row is first and open by default (`unlockedByDefault`).
 - The unlock hint under Stage 2 is one muted line, never a countdown.
 
