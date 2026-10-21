@@ -180,6 +180,7 @@ export const landing = {
         route: 'Abre la Ruta de aprendizaje de cada estudiante para ver dónde está y qué sigue.',
         notes: 'Envía una nota corta de ánimo que tu estudiante ve en la app.',
         browse: 'Con el Plan Familiar, explora cada lección tal como la ve tu estudiante.',
+        lecture: 'El modo proyección pone una lección en tu TV para aprender en familia.',
       },
       faq: {
         account: { q: '¿Mi estudiante necesita una cuenta?', a: 'No. Los estudiantes nunca necesitan correo ni contraseña.' },
@@ -218,7 +219,7 @@ export const landing = {
         route: 'Abre la Ruta de aprendizaje de cada estudiante para ver dónde está y qué sigue.',
         notes: 'Envía a tus estudiantes una nota corta de ánimo.',
         browse: 'Con un plan de clase o escolar, revisa cada lección tal como la ven tus estudiantes.',
-        lecture: 'Enseña al frente con un proyector o una TV.',
+        lecture: 'Modo proyección: enseña al frente con un proyector o una TV, con lecciones listas.',
       },
       privacy: {
         title: 'Privacidad para clases',
