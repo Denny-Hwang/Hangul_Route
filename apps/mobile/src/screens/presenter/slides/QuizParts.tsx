@@ -260,8 +260,11 @@ export function OptionRows({
 }): React.ReactElement {
   const { unit } = usePresenterView();
   const romOn = optionRomShown(romanization, revealed);
+  // The answer's row draws its thicker border outward (a negative margin, so no row moves); the list keeps that
+  // room at its top and bottom from the first build, so the answer in the first or last row stays inside the fit.
+  const grow = Math.max(STAGE_BORDER_MIN, units(unit, spacing.sm)) - Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER));
   return (
-    <View role="list" testID="presenter-quiz-options" style={{ gap: units(unit, compact ? spacing.sm : spacing.md) }}>
+    <View role="list" testID="presenter-quiz-options" style={{ gap: units(unit, compact ? spacing.sm : spacing.md), paddingVertical: Math.max(0, grow) }}>
       {options.map((option, i) => (
         <OptionRow key={i} option={option} index={i} revealed={revealed} romOn={romOn} compact={compact} small={small} />
       ))}
@@ -288,6 +291,7 @@ function OptionRow({ option, index, revealed, romOn, compact, small }: { option:
   const romColor = revealed ? colors.text.primary : colors.text.secondary;
   // A picture's gloss is its name (PictureArt's), never drawn as text.
   const glossShown = revealed && option.gloss !== undefined;
+  const markSide = units(unit, compact ? spacing.xxxl : spacing.jumbo);
   return (
     <View
       role="listitem"
@@ -339,11 +343,14 @@ function OptionRow({ option, index, revealed, romOn, compact, small }: { option:
           </Text>
         ) : null}
       </View>
+      {/* Every row keeps the mark's room from the first build, so the answer's mark never narrows its row and wraps its meaning (the rows would grow past the stage). */}
       {correct ? (
         <View role="img" accessibilityLabel={messages.a11y.presenter.answerMark} testID="presenter-quiz-mark">
-          <Icon name="check-circle" size={units(unit, compact ? spacing.xxxl : spacing.jumbo)} color={colors.feedback.success} />
+          <Icon name="check-circle" size={markSide} color={colors.feedback.success} />
         </View>
-      ) : null}
+      ) : (
+        <View aria-hidden testID="presenter-quiz-mark-room" style={{ width: markSide, height: markSide }} />
+      )}
     </View>
   );
 }

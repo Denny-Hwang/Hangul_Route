@@ -87,6 +87,9 @@ describe('QuestionSlide: listen (LV-S2)', () => {
     expect(marks).toHaveLength(1);
     const right = slide.options.findIndex((o) => o.correct);
     expect(byTestId(byTestId(shown.root, `presenter-quiz-option-${right + 1}`)[0]!, 'presenter-quiz-mark')).toHaveLength(1);
+    // Every row keeps the mark's room from the question build on, so the mark never narrows a row and wraps its meaning.
+    expect(byTestId(r.root, 'presenter-quiz-mark-room')).toHaveLength(slide.options.length);
+    expect(byTestId(shown.root, 'presenter-quiz-mark-room')).toHaveLength(slide.options.length - 1);
   });
 
   it('with no Korean voice the teacher reads the romanization; the Hangul joins the Say it box only at the answer build', async () => {
