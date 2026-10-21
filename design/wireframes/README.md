@@ -40,6 +40,7 @@
 | `library/stories.md` · `library/culture.md` · `story/culture-notes.md` | R | F-STORY-004 §3.3-3.5 (PR 4.0; briefs `screens/23-library-stories`, `screens/24-culture-notes`) |
 | `profile/settings.md` · `parent/gate.md` | S | F-SUB-001 · (gate 통합 대상) |
 | `reviews/daily-test.md` · `feedback-review.md` · `stage-review.md` | D | F-RVW-001 |
+| `reviews/daily-review.md` (supersedes the layout of `daily-test.md`) · `reviews/keep-going.md` · `reviews/cell-check.md` (with Test out) · `reviews/stage-check.md` (Stages 2-7 ceremony, stage card, Stage Check; supersedes `stage-review.md` for Stages 2-7) · `journey/mastery-ring.md` · `home/goal-ring-weekly-dots.md` | R | F-CURR-002 §4.4, §4.5, §7.3, §7.4, §7.7, §14 (row CM-D1; mocks `design/screens/daily-review/`, `keep-going/`, `cell-check/`, `stage-check/`, `mastery-ring/`, `goal-ring-weekly-dots/`; built in CM-14, CM-17, CM-20, CM-21, CM-22) |
 | `sync/save-progress.md` · `restore.md` · `join-space.md` · `merge-notice.md` | P | roadmap multi-persona §4–6 |
 | `paywall/upgrade.md` | R | F-SUB-001 · F-IAP-001 |
 | `pwa/install-guide.md` · `pwa/system-banners.md` | P | roadmap web-pwa-offline §3 |
