@@ -787,6 +787,13 @@ Today every new cell hand-edits or regenerates several shared files: the committ
 | Presenter font subset | Derived from all taught Korean |
 | e2e spec | `journey-upper-cell.spec.ts` lists cells and packs from the manifest |
 
+**Decision record (row CM-6, 2026-10-21).**
+- **Where the modules are written.** `scripts/generate.mjs` (`pnpm generate`) runs the six content generators. The turbo task `//#generate` is a dependency of `dev`, `build`, `typecheck`, `test` and `test:coverage`. The root `postinstall` runs it too: the content-validation steps call package scripts directly, and the three Workers Builds deploys run only `pnpm install` before they bundle. No workflow file changed.
+- **`--check` is the determinism test.** In CI the files on disk come from the postinstall run, so each existing `--check` step compares a second run with the first. `scripts/__tests__/generate.test.mjs` (`test:scripts`) runs the generators twice into fresh trees, once with every folder listed in reverse, and compares the bytes.
+- **Catalogue.** `build-lessons.mjs` writes `packages/content-schema/src/catalog/catalog.generated.ts`: the upper-stage cells and quests, the story rows and the topic rows. `data.ts` keeps the Stage 1 and Stage 5 rows, which are TypeScript, and the frozen shelf order and anchors of the first 24 stories. A later story takes the next shelf place by slug. Row for row, the switch matched the committed catalogue (`fixtures/catalog-v32.json`). Only the quest order changed: it is now route order, so the console quest picker lists stages 1 to 7 in order.
+- **Stamp check.** `scripts/check-added-in.mjs` runs from `build-lessons.mjs --check` against `origin/main`. Content-validation checks out the full history; elsewhere the check is skipped with a notice.
+- **Presenter font.** The font stays committed, because CI has neither the subsetter nor the source font. It is built from all taught Korean: the drawn fields plus every `ko` / `…Ko` field of the letters, scopes, quests, cards, listed topics, and the title, keywords and tiers of listed stories (566 code points, 49,408 B). `--check` now tests coverage, so a wider font passes.
+
 - **Pack scaffolding (row CM-50a).** `scripts/new-pack.mjs <key> --home <theme>` scaffolds `pack.json` and five `stage-<n>.json` skeletons with `status: 'draft'`. Their TODO strings fail lint for `ready`.
 - **Target.** A level PR (3 quests plus es and ko overlays) touches only its own files under `content/` and `content/i18n/`. Level PRs can run in parallel worktrees with no shared conflict point.
 

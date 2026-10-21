@@ -52,17 +52,26 @@ before that row lands.
    `__generated__/lesson-chunks/`, one content-hashed
    chunk per cell (its steps, game scopes and their glosses; loaded when one of its quests opens)
    and one title chunk per locale (loaded for the active locale only; F-CURR-002 section 10).
-   `--check` fails on drift or a module no longer built, `--report` on the budget (9 KB raw per
+   It also writes the catalogue rows of the cells, their quests, the stories and the topics
+   (`packages/content-schema/src/catalog/catalog.generated.ts`). None of these modules is committed
+   (F-CURR-002 row CM-6): `pnpm generate` writes them, and the turbo `generate` task and the root
+   `postinstall` run it. `--check` (CI) is a determinism check: a fresh run must give the bytes an
+   earlier run wrote; `--report` fails on the budget (9 KB raw per
    quest on average, 60,000 B raw for the manifest, 30,000 B raw per title chunk, 90,000 B raw /
    16,000 B gzip per cell chunk, 220 KB raw /
    40 KB gzip of game content per stage, 1,400,000 B raw / 210,000 B gzip in total).
 3. `apps/mobile/src/content/__tests__/upper-stage-curriculum.test.ts` checks U-1 .. U-10 and
    that a ready cell plays only games the app has a screen for (`PLAYABLE_KINDS`, so a game row
-   lands before the cells that use its game), and `e2e/web/journey-upper-cell.spec.ts` needs an
-   entry for every shipped cell.
-4. A shipped cell also updates `packages/content-schema/src/catalog/data.ts` (the cell, its
-   lessons, `CATALOG_VERSION` + 1 and the version's quest ids in `CATALOG_QUEST_ADDITIONS`),
-   the route-days test pins, and the presenter font (`node scripts/build-presenter-font.mjs`).
+   lands before the cells that use its game), and `e2e/web/journey-upper-cell.spec.ts` tests every
+   cell of the generated manifest (a hand-written deep play is optional).
+4. A new quest carries `"addedIn": <YYYYMMDD>` in its own cell file, the date it is added; that is
+   the only shared fact a cell PR writes. `CATALOG_VERSION` is generated as the largest stamp (the
+   history up to 32 keeps its integers), and `node scripts/check-added-in.mjs --base origin/main`
+   (run by `build-lessons.mjs --check` in content-validation) fails a stamp lower than main's
+   version: the fix is a one-field edit in the PR's own file. The catalogue rows, the route days
+   (derived from the manifest, `route-days-manifest.test.ts`) and the e2e cell list follow by
+   themselves. The presenter font is rebuilt (`node scripts/build-presenter-font.mjs --source …`)
+   only when `--check` says the cell's Korean has a code point the font lacks.
 5. Release order for the first `CATALOG_VERSION` bump: the Worker that keeps a stored placement
    result's `catalogVersion` when an older build re-uploads it without one
    (`packages/backend/src/lib/additive-fields.ts`, row C-2) is deployed before any app build
