@@ -132,6 +132,8 @@ describe('telemetry event names (one list for the client type and the API whitel
         'space.move.cancelled',
         'space.move.notice_seen',
         'space.scope.acknowledged',
+        'space.seat_refused',
+        'space.renamed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -277,6 +279,18 @@ describe('[TV] teacher moves and the class-scope update (AMENDMENTS-TEACHER-VISI
       expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
       expect(isTelemetryEventName(name)).toBe(true);
     }
-    expect(TELEMETRY_EVENT_NAMES.slice(-6)).toEqual([...names]);
+    const at = TELEMETRY_EVENT_NAMES.indexOf(names[0]);
+    expect(TELEMETRY_EVENT_NAMES.slice(at, at + 6)).toEqual([...names]);
+  });
+});
+
+describe('[SA] seats and renames (AMENDMENTS-SEATS-ADMINS section 8)', () => {
+  it('appends the two Worker names once each, after the [TV] names', () => {
+    const names = ['space.seat_refused', 'space.renamed'] as const;
+    for (const name of names) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(TELEMETRY_EVENT_NAMES.indexOf('space.seat_refused')).toBeGreaterThan(TELEMETRY_EVENT_NAMES.indexOf('space.scope.acknowledged'));
   });
 });

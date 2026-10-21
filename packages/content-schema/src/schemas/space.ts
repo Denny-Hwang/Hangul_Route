@@ -70,18 +70,96 @@ export const MembershipSchema = z.object({
 });
 export type Membership = z.infer<typeof MembershipSchema>;
 
+/** The most UTF-16 units a space name may hold (the create rule since F-SPACE-001). */
+export const SPACE_NAME_MAX = 40;
+
+/** Why a space name was refused ([SA] AMENDMENTS-SEATS-ADMINS section 5.2): `422 bad_name` `details.reason`. */
+export type SpaceNameRefusal = 'empty' | 'too_long' | 'invalid';
+
+/** Control (`Cc`) and format (`Cf`) characters, except ZWNJ U+200C and ZWJ U+200D, which some scripts need. */
+const SPACE_NAME_REFUSED = /(?![\u200C\u200D])[\p{Cc}\p{Cf}]/u;
+const SPACE_NAME_LETTER_OR_DIGIT = /[\p{L}\p{N}]/u;
+
+/**
+ * A space name as stored ([SA] section 5.2), the same on the Worker and in the console, in this order:
+ * 1. Unicode NFC (a decomposed Hangul name and its composed form are one string, for the length and for "same name");
+ * 2. every run of JavaScript `\s` whitespace (tabs, new lines, no-break and ideographic spaces, U+FEFF and the other
+ *    Unicode spaces) becomes one U+0020, then trim: tabs and new lines are collapsed, not refused;
+ * 3. 1 to `SPACE_NAME_MAX` UTF-16 units (`empty`, `too_long`);
+ * 4. no remaining control or format character (the bidi embeddings, overrides and isolates, zero-width space, soft
+ *    hyphen and the rest), ZWNJ and ZWJ kept (`invalid`);
+ * 5. at least one letter or digit (`invalid`).
+ */
+export function checkSpaceName(raw: string): { ok: true; name: string } | { ok: false; reason: SpaceNameRefusal } {
+  const name = raw.normalize('NFC').replace(/\s+/g, ' ').trim();
+  if (name.length === 0) return { ok: false, reason: 'empty' };
+  if (name.length > SPACE_NAME_MAX) return { ok: false, reason: 'too_long' };
+  if (SPACE_NAME_REFUSED.test(name)) return { ok: false, reason: 'invalid' };
+  if (!SPACE_NAME_LETTER_OR_DIGIT.test(name)) return { ok: false, reason: 'invalid' };
+  return { ok: true, name };
+}
+
+/** A space name field: `checkSpaceName`, the normalized name as its output; the issue's `params.reason` says why not. */
+export const SpaceNameSchema = z.string().transform((value, ctx) => {
+  const checked = checkSpaceName(value);
+  if (!checked.ok) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Space name ${checked.reason}`, params: { reason: checked.reason } });
+    return z.NEVER;
+  }
+  return checked.name;
+});
+
+/** PATCH /api/spaces/:id/name body ([SA] section 5.2). */
+export const SpaceRenameSchema = z.object({ name: SpaceNameSchema });
+export type SpaceRename = z.infer<typeof SpaceRenameSchema>;
+
+/**
+ * `space_events.kind` ([SA] section 6.2): the registry the column has no CHECK for, so later kinds stay additive.
+ * Every insert goes through it. Rows are written for schools only.
+ */
+export const SpaceEventKindSchema = z.enum(['renamed', 'class_renamed', 'admin_invite_created', 'admin_invite_revoked', 'admin_joined', 'admin_removed', 'admin_left']);
+export type SpaceEventKind = z.infer<typeof SpaceEventKindSchema>;
+
+/** One `space_events` row: account and space ids and a time, never a name, an email or a token. */
+export interface SpaceEvent {
+  id: string;
+  spaceId: string;
+  kind: SpaceEventKind;
+  actorAccountId: string;
+  subjectAccountId: string | null;
+  subjectSpaceId: string | null;
+  inviteId: string | null;
+  createdAt: string;
+}
+
+/** [SA] The learner caps a join can meet, as `409` codes (section 3.4); `cap_learner` is the learner's own class count. */
+export const SeatCapCodeSchema = z.enum(['cap_family', 'cap_class', 'cap_school']);
+export type SeatCapCode = z.infer<typeof SeatCapCodeSchema>;
+
+/** [SA] POST /api/spaces/lookup `seat`: whether a learner (the one sent, else a new one) finds room, and which cap is full. */
+export const LookupSeatSchema = z.object({
+  full: z.boolean(),
+  reason: SeatCapCodeSchema.nullable(),
+  cap: z.number().int().nonnegative().nullable(),
+});
+export type LookupSeat = z.infer<typeof LookupSeatSchema>;
+
 /** POST /api/spaces body. `email` / `displayName` seed the account row on first use. */
 export const SpaceCreateSchema = z.object({
   kind: SpaceKindSchema,
-  name: z.string().trim().min(1).max(40),
+  /** [SA] The rename rule (`SpaceNameSchema`); a refusal still answers create's `422 bad_request`. */
+  name: SpaceNameSchema,
   parentSpaceId: z.string().regex(/^space:[a-z0-9-]+$/).optional(),
   email: z.string().email().optional(),
   displayName: z.string().trim().min(1).max(40).optional(),
 });
 export type SpaceCreate = z.infer<typeof SpaceCreateSchema>;
 
-/** POST /api/spaces/lookup body. */
-export const SpaceLookupSchema = z.object({ code: JoinCodeFieldSchema });
+/**
+ * POST /api/spaces/lookup body. [SA] `learnerId` (optional): with the device `Authorization` header for that learner,
+ * `seat` says whether this learner finds room (a member already holds its seat); otherwise it is ignored.
+ */
+export const SpaceLookupSchema = z.object({ code: JoinCodeFieldSchema, learnerId: z.string().regex(/^profile:[a-z0-9-]+$/).optional() });
 export type SpaceLookup = z.infer<typeof SpaceLookupSchema>;
 
 /**
