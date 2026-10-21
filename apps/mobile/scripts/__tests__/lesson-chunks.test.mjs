@@ -1,12 +1,17 @@
 // F-CURR-002 §10 (row CM-5): the lesson chunk checks and the precache report of pwa-postbuild.mjs.
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
+import { grownUpHeadersBlock } from '../app-host/headers.mjs';
 import {
   PRECACHE_BUDGET,
   WEB_JS_DIR,
   budgetIsAdvisory,
   isStartBundle,
   lessonChunkProblems,
+  lessonChunkUrls,
   md5,
+  nosniffLessonChunks,
   precacheBudgetProblems,
   precacheReport,
   reportLines,
@@ -108,10 +113,10 @@ describe('precacheReport and its budget lines', () => {
   });
 
   it('the start bundle line is its size after CM-5 with a small margin; the precache line is the CM-5 measurement plus 2.5 MB', () => {
-    // Measured after CM-5: 7,335,066 B (8,321,783 B before); the margin stays under 10 KB, so the bundle cannot regrow.
+    // Measured after CM-5: 7,337,815 B (8,321,783 B before); the margin stays under 10 KB, so the bundle cannot regrow.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(7_340_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 7_335_066).toBeLessThan(10_000);
-    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_784_580 + 2_500_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 7_337_815).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
 
   it('the budget only warns on the deploy build (Cloudflare Workers Builds or Pages), and fails everywhere else', () => {
@@ -119,5 +124,27 @@ describe('precacheReport and its budget lines', () => {
     expect(budgetIsAdvisory({ CF_PAGES: '1' })).toBe(true);
     expect(budgetIsAdvisory({ CI: 'true', GITHUB_ACTIONS: 'true' })).toBe(false);
     expect(budgetIsAdvisory({})).toBe(false);
+  });
+});
+
+describe('nosniffLessonChunks', () => {
+  const urls = lessonChunkUrls(MANIFEST, sound());
+
+  it('lists the lesson chunk bundles of a build, not the start bundle', () => {
+    expect(urls).toHaveLength(MANIFEST.length);
+    expect(urls.every((u) => /^_expo\/static\/js\/web\/lessons-/.test(u))).toBe(true);
+  });
+
+  it('passes the shipped rules: public/_headers plus the grown-up block merge-console.mjs appends', () => {
+    const shipped = readFileSync(new URL('../../public/_headers', import.meta.url), 'utf8');
+    expect(nosniffLessonChunks(`${shipped}\n${grownUpHeadersBlock(GROWN_UP_PREFIXES)}`, urls)).toEqual([]);
+  });
+
+  it('fails a rule that would serve the chunks with nosniff, so a chunk request of an older build keeps reaching the reload', () => {
+    expect(nosniffLessonChunks('/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual(urls);
+    expect(nosniffLessonChunks('/_expo/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual(urls);
+    expect(nosniffLessonChunks('/teach/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual([]);
+    expect(nosniffLessonChunks('/*\n  X-Content-Type-Options: nosniff\n/_expo/*\n  ! X-Content-Type-Options\n', urls)).toEqual([]);
+    expect(nosniffLessonChunks('', urls)).toEqual([]);
   });
 });

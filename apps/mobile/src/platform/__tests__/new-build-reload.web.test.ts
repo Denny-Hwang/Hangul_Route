@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { reloadForNewBuild as nativeReload } from '../new-build-reload';
-import { RELOAD_GAP_MS, RELOAD_KEY, reloadForNewBuild, type ReloadEnv } from '../new-build-reload.web';
+import { isNewBuildAnswer as nativeAnswer, reloadForNewBuild as nativeReload } from '../new-build-reload';
+import { RELOAD_GAP_MS, RELOAD_KEY, failedChunkUrl, isNewBuildAnswer, reloadForNewBuild, type ProbeEnv, type ReloadEnv } from '../new-build-reload.web';
 
 function env(over: Partial<ReloadEnv> & { store?: Map<string, string> | null; at?: number } = {}) {
   const store = over.store === undefined ? new Map<string, string>() : over.store;
@@ -91,5 +91,63 @@ describe('reloadForNewBuild (F-CURR-002 §10: a page older than its lesson chunk
 
   it('the native build never reloads', () => {
     expect(nativeReload()).toBe(false);
+  });
+});
+
+describe('isNewBuildAnswer (F-CURR-002 §10: a chunk script error is asked again before it counts as a network failure)', () => {
+  const ORIGIN = 'https://app.example.test';
+  const CHUNK = `${ORIGIN}/_expo/static/js/web/lessons-cell-stage2-letters-0123456789abcdef0123456789abcdef.js`;
+  const scriptError = (request: unknown = CHUNK): Error =>
+    Object.assign(new Error(`Loading module ${String(request)} failed.`), { name: 'AsyncRequireError', type: 'error', request });
+  const answer = (status: number, type: string | null) => ({ status, headers: { get: (n: string) => (n.toLowerCase() === 'content-type' ? type : null) } });
+  function probe(over: Partial<ProbeEnv> = {}) {
+    const asked: string[] = [];
+    const env: ProbeEnv = {
+      onLine: over.onLine ?? (() => true),
+      origin: over.origin ?? (() => ORIGIN),
+      fetch:
+        over.fetch ??
+        (async (url) => {
+          asked.push(url);
+          return answer(200, 'text/html; charset=utf-8');
+        }),
+    };
+    return { env, asked };
+  }
+
+  it('is a newer build when the URL now answers with the HTML page (the single-page fallback) or 404 / 410', async () => {
+    const p = probe();
+    expect(await isNewBuildAnswer(scriptError(), p.env)).toBe(true);
+    expect(p.asked).toEqual([CHUNK]);
+    for (const status of [404, 410]) expect(await isNewBuildAnswer(scriptError(), probe({ fetch: async () => answer(status, 'text/plain') }).env)).toBe(true);
+  });
+
+  it('is a network failure when the URL answers with the script, a server error, or not at all', async () => {
+    expect(await isNewBuildAnswer(scriptError(), probe({ fetch: async () => answer(200, 'application/javascript') }).env)).toBe(false);
+    expect(await isNewBuildAnswer(scriptError(), probe({ fetch: async () => answer(503, 'text/html') }).env)).toBe(false);
+    expect(await isNewBuildAnswer(scriptError(), probe({ fetch: async () => Promise.reject(new TypeError('Failed to fetch')) }).env)).toBe(false);
+  });
+
+  it('never asks offline, for another host, for a file that is not a lesson chunk, or for another error', async () => {
+    for (const [error, over] of [
+      [scriptError(), { onLine: () => false }],
+      [scriptError('https://elsewhere.test/_expo/static/js/web/lessons-cell-stage2-letters-0123456789abcdef0123456789abcdef.js'), {}],
+      [scriptError(`${ORIGIN}/_expo/static/js/web/index-0123456789abcdef0123456789abcdef.js`), {}],
+      [scriptError(42), {}],
+      [new Error('Loading module failed.'), {}],
+      ['AsyncRequireError', {}],
+    ] as const) {
+      const p = probe(over);
+      expect(await isNewBuildAnswer(error, p.env)).toBe(false);
+      expect(p.asked).toEqual([]);
+    }
+    expect(failedChunkUrl(scriptError(), undefined)).toBeUndefined();
+    expect(failedChunkUrl(scriptError('/_expo/static/js/web/lessons-titles-ko-0123456789abcdef0123456789abcdef.js'), ORIGIN)).toBe(
+      `${ORIGIN}/_expo/static/js/web/lessons-titles-ko-0123456789abcdef0123456789abcdef.js`,
+    );
+  });
+
+  it('is never a newer build on native, where the chunks are in the one bundle', async () => {
+    expect(await nativeAnswer()).toBe(false);
   });
 });

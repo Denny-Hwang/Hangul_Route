@@ -14,6 +14,7 @@
 
 import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
+import { headersFor, parseHeaders } from '../app-host/headers.mjs';
 
 /** The web bundle folder of an Expo export, relative to dist. */
 export const WEB_JS_DIR = '_expo/static/js/web';
@@ -25,12 +26,13 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  * one-line change with the measured numbers in its PR.
  */
 export const PRECACHE_BUDGET = Object.freeze({
-  // The start bundle must not grow: its size after CM-5 (7,335,066 B raw, the release build on a384759ca; 8,321,783 B
-  // before the lessons left it) plus a 4,934 B rounding margin. A row that adds to it raises this line with its measurement.
+  // The start bundle must not grow: its size after CM-5 (7,337,815 B raw, the release build on 619f4ae2b; 8,321,783 B
+  // before the lessons left it) plus a 2,185 B rounding margin. A row that adds to it raises this line with its measurement;
+  // a line that turns red after a rebase is re-measured in the row that grew the bundle, not in the next one to build.
   startBundleRaw: 7_340_000,
-  // The learner precache measured after CM-5 (8,784,580 B, 35 files, the release build, no recorded clips) + 2.5 MB;
+  // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
-  learnerPrecacheRaw: 11_284_580,
+  learnerPrecacheRaw: 11_287_329,
 });
 
 export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
@@ -68,6 +70,27 @@ export function lessonChunkProblems({ manifest, bundles, precached }) {
     }
   }
   return problems;
+}
+
+/**
+ * Lesson chunk bundles that the host's `_headers` rules would serve with `X-Content-Type-Options: nosniff`
+ * (empty = none). A page of an older build that asks for a chunk the host no longer has gets the app's HTML
+ * page (the single-page fallback, 200); without nosniff the browser runs it, Metro finds no module in it and
+ * the page reloads onto the new build. With nosniff the browser refuses it as a script error, which the app
+ * then has to tell from a network failure by asking the URL again (`platform/new-build-reload.web.ts`). The
+ * check keeps the plain path the one in use: a `/*` or `/_expo/*` nosniff rule fails the build.
+ * @param {string} headersText the content of `dist/_headers` ('' when there is none)
+ * @param {string[]} chunkUrls the lesson chunk bundles, relative to dist (`_expo/static/js/web/<name>-<md5>.js`)
+ */
+export function nosniffLessonChunks(headersText, chunkUrls) {
+  const rules = parseHeaders(headersText);
+  return chunkUrls.filter((url) => /\bnosniff\b/i.test(headersFor(rules, `/${url.replace(/^\/+/, '')}`)['x-content-type-options'] ?? ''));
+}
+
+/** The lesson chunk bundles of a build: every bundle named after a manifest entry. */
+export function lessonChunkUrls(manifest, bundles) {
+  const names = new Set(manifest.map((m) => m.name));
+  return bundles.filter((b) => !isStartBundle(b.url) && names.has(NAMED.exec(b.url)?.[1] ?? '')).map((b) => b.url);
 }
 
 /**

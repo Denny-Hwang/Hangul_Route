@@ -75,12 +75,16 @@ const settle = async (): Promise<void> => {
   });
 };
 
-function bindings(over: { reload?: () => boolean } = {}) {
+function bindings(over: { reload?: () => boolean; answer?: (error: unknown) => Promise<boolean> } = {}) {
   const cold = coldStore();
   const reload = vi.fn(over.reload ?? (() => false));
-  const b = lessonContentBindings({ store: cold.store, locale: () => 'en', reloadForNewBuild: reload });
-  return { ...cold, ...b, reload };
+  const answer = vi.fn(over.answer ?? (async () => false));
+  const b = lessonContentBindings({ store: cold.store, locale: () => 'en', reloadForNewBuild: reload, isNewBuildAnswer: answer });
+  return { ...cold, ...b, reload, answer };
 }
+
+/** What Metro's web loader rejects with when a chunk's script tag fires `error` (a network failure, or HTML refused under nosniff). */
+const scriptError = (): Error => Object.assign(new Error('Loading module /_expo/static/js/web/lessons-cell-stage2-rites-0.js failed.'), { name: 'AsyncRequireError' });
 
 describe('useLessonQuestReady (the quest player and the game screen)', () => {
   function Player({ hook, questId }: { hook: (id: string) => boolean; questId: string }): React.ReactElement {
@@ -109,6 +113,8 @@ describe('useLessonQuestReady (the quest player and the game screen)', () => {
     await settle();
     const retry = buttonsNamed(r.root, TRY_AGAIN);
     expect(retry).toHaveLength(1);
+    // The URL was asked again and did not answer for a newer build: a network failure, no reload.
+    expect(t.answer).toHaveBeenCalledTimes(1);
     expect(t.reload).not.toHaveBeenCalled();
     await press(retry[0]!);
     expect(t.asked).toEqual(['episode:stage2-rites', 'episode:stage2-rites']);
@@ -125,6 +131,26 @@ describe('useLessonQuestReady (the quest player and the game screen)', () => {
     await settle();
     expect(t.reload).toHaveBeenCalledTimes(1);
     expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+  });
+
+  it('a script error whose URL now answers for a newer build (HTML refused under nosniff, a 404) reloads the page', async () => {
+    const t = bindings({ reload: () => true, answer: async () => true });
+    const r = await render(<Player hook={t.useLessonQuestReady} questId="quest:stage2-rites-q1" />);
+    const error = scriptError();
+    await act(async () => t.pending['episode:stage2-rites']?.reject(error));
+    await settle();
+    expect(t.answer).toHaveBeenCalledWith(error);
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+  });
+
+  it('a chunk that says it is of a newer build reloads without asking its URL again', async () => {
+    const t = bindings({ reload: () => true });
+    await render(<Player hook={t.useLessonQuestReady} questId="quest:stage2-rites-q1" />);
+    await act(async () => t.pending['episode:stage2-rites']?.reject(new Error('Requiring unknown module "812".')));
+    await settle();
+    expect(t.answer).not.toHaveBeenCalled();
+    expect(t.reload).toHaveBeenCalledTimes(1);
   });
 
   it('a newer-build chunk throws when the reload was refused (offline, or reloaded a moment ago)', async () => {
@@ -228,6 +254,17 @@ describe('withLessonContent (All lessons and the presenter)', () => {
     const r = await render(<Wrapped />);
     await act(async () => t.pending['episode:stage2-rites']?.reject(new LessonChunkMismatch('episode:stage2-rites', 'h-rites', 'x')));
     await settle();
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
+  });
+
+  it('a script error whose URL now answers for a newer build reloads the page', async () => {
+    const t = bindings({ reload: () => true, answer: async () => true });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    await act(async () => t.pending['episode:stage2-rites']?.reject(scriptError()));
+    await settle();
+    expect(t.answer).toHaveBeenCalledTimes(1);
     expect(t.reload).toHaveBeenCalledTimes(1);
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
   });

@@ -32,7 +32,16 @@ import {
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
-import { WEB_JS_DIR, budgetIsAdvisory, lessonChunkProblems, precacheBudgetProblems, precacheReport, reportLines } from './pwa/lesson-chunks.mjs';
+import {
+  WEB_JS_DIR,
+  budgetIsAdvisory,
+  lessonChunkProblems,
+  lessonChunkUrls,
+  nosniffLessonChunks,
+  precacheBudgetProblems,
+  precacheReport,
+  reportLines,
+} from './pwa/lesson-chunks.mjs';
 
 const args = process.argv.slice(2);
 const budget = args.includes('--budget');
@@ -209,6 +218,11 @@ const bundles = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
   : [];
 const chunkProblems = lessonChunkProblems({ manifest: lessonManifest, bundles, precached: manifestUrls });
+// A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
+const headersFile = join(dist, '_headers');
+for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls(lessonManifest, bundles))) {
+  chunkProblems.push(`${url} would be served with X-Content-Type-Options: nosniff (${headersFile}): keep nosniff off /_expo/static/js/`);
+}
 if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson chunks:\n  ${chunkProblems.join('\n  ')}`);
 const report = precacheReport({ manifest: lessonManifest, bundles, precache: { count, size } });
 for (const line of reportLines(report)) process.stdout.write(`${line}\n`);

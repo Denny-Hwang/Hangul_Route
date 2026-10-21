@@ -59,3 +59,63 @@ export function reloadForNewBuild(env: ReloadEnv = webEnv()): boolean {
   env.reload();
   return true;
 }
+
+/** A lesson chunk bundle of this host (`/_expo/static/js/web/lessons-<name>-<md5>.js`). */
+const CHUNK_PATH = /^\/_expo\/static\/js\/web\/lessons-[a-z0-9-]+-[0-9a-f]{32}\.js$/;
+
+interface ProbeAnswer {
+  status: number;
+  headers: { get: (name: string) => string | null };
+}
+
+export interface ProbeEnv {
+  onLine: () => boolean;
+  origin: () => string | undefined;
+  fetch: (url: string) => Promise<ProbeAnswer>;
+}
+
+function webProbeEnv(): ProbeEnv {
+  const g = globalThis as unknown as {
+    navigator?: { onLine?: boolean };
+    location?: { origin?: string };
+    fetch?: (url: string, init: { cache: 'no-store'; credentials: 'same-origin' }) => Promise<ProbeAnswer>;
+  };
+  return {
+    onLine: () => g.navigator?.onLine !== false,
+    origin: () => g.location?.origin,
+    fetch: (url) => (g.fetch === undefined ? Promise.reject(new Error('no fetch')) : g.fetch(url, { cache: 'no-store', credentials: 'same-origin' })),
+  };
+}
+
+/** The chunk URL a failed script load names (Metro's `AsyncRequireError.request`), when it is a lesson chunk of this host. */
+export function failedChunkUrl(error: unknown, origin: string | undefined): string | undefined {
+  if (!(error instanceof Error) || error.name !== 'AsyncRequireError') return undefined;
+  const request = (error as Error & { request?: unknown }).request;
+  if (typeof request !== 'string' || origin === undefined) return undefined;
+  try {
+    const url = new URL(request, origin);
+    return url.origin === origin && CHUNK_PATH.test(url.pathname) ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * True when a lesson chunk's script failed to load because the host has a newer build (F-CURR-002 §10):
+ * asked again, its URL answers 404 or with an HTML page (the single-page fallback). The script tag cannot
+ * tell this from a network failure when the HTML is refused as a script (an `X-Content-Type-Options:
+ * nosniff` rule, a platform default), so the URL is asked once, online only, past every cache. A failed or
+ * offline request is a network failure, never a newer build: the screen shows its Try again.
+ */
+export async function isNewBuildAnswer(error: unknown, env: ProbeEnv = webProbeEnv()): Promise<boolean> {
+  if (!env.onLine()) return false;
+  const url = failedChunkUrl(error, env.origin());
+  if (url === undefined) return false;
+  try {
+    const answer = await env.fetch(url);
+    if (answer.status === 404 || answer.status === 410) return true;
+    return answer.status >= 200 && answer.status < 300 && /\btext\/html\b/i.test(answer.headers.get('content-type') ?? '');
+  } catch {
+    return false;
+  }
+}

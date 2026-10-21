@@ -296,7 +296,7 @@ test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale
  * F-CURR-002 §10: a page with no worker in control (the iOS 14 home-screen app, a first visit) loads each chunk
  * from the network. A chunk URL that answers with the app's HTML page (a deploy landed: the host's single-page
  * fallback) reloads the page once, onto the new build, and the lesson then plays; a chunk that cannot load at all
- * shows the crash screen's Try again, never a reload loop, and Try again loads it once it can.
+ * shows the crash screen, never a reload loop; its Try again returns to Home, and the lesson then loads once it can.
  */
 test.describe('lesson chunks without a service worker (F-CURR-002 CM-5 recovery)', () => {
   test.use({ serviceWorkers: 'block' });
@@ -336,7 +336,49 @@ test.describe('lesson chunks without a service worker (F-CURR-002 CM-5 recovery)
     expect(served).toBe(2);
   });
 
-  test('a chunk that cannot load shows Try again, never a reload loop, and Try again loads it once it can', async ({ page }) => {
+  test('a chunk of a newer build that the browser refuses as a script (its HTML page under nosniff) reloads once, and the lesson then plays', async ({ page }) => {
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    await page.getByRole('button', { name: "Let's start" }).click();
+    await completeChildForm(page, { name: 'Suni' });
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    // Until the page reloads, the chunk URL answers what a host that sends nosniff answers for a chunk of an older
+    // build: its HTML page, which the browser refuses to run, so the script tag fires error as for a network failure.
+    // The app asks the URL once more, gets the HTML page again, and reloads onto the new build.
+    let stale = true;
+    const answered: string[] = [];
+    await page.route(LETTERS_BUNDLE, async (route) => {
+      answered.push(`${stale ? 'html' : 'js'} ${route.request().resourceType()}`);
+      if (!stale) return route.continue();
+      return route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff' },
+        body: '<!doctype html><html><body><div id="root"></div></body></html>',
+      });
+    });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Suni!')).toBeVisible();
+    await page.evaluate(() => {
+      (window as Window & { __beforeReload?: boolean }).__beforeReload = true;
+    });
+    const reloaded = page.waitForEvent('load').then(() => {
+      stale = false;
+    });
+    const guide = page.getByTestId('install-guide');
+    await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByRole('button', { name: journeyCellName(2, 'Letters & Books'), exact: true }).click();
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    await reloaded;
+    expect(await page.evaluate(() => (window as Window & { __beforeReload?: boolean }).__beforeReload ?? false)).toBe(false);
+    expect(answered).toContain('html fetch');
+    await expect(page.getByText('Hi, Suni!')).toBeVisible();
+    await playStage2LettersDiscover(page);
+    expect(answered.at(-1)).toBe('js script');
+  });
+
+  test('a chunk that cannot load shows Try again, never a reload loop; Try again returns to Home and the lesson then loads', async ({ page }) => {
     let blocked = true;
     await page.route(LETTERS_BUNDLE, async (route) => (blocked ? route.abort('internetdisconnected') : route.continue()));
     await page.goto('/');

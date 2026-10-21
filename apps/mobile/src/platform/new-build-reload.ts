@@ -5,3 +5,8 @@
 export function reloadForNewBuild(): boolean {
   return false;
 }
+
+/** Native: a lesson chunk never comes from the network, so a failed one never means a newer build. */
+export async function isNewBuildAnswer(_error?: unknown): Promise<boolean> {
+  return false;
+}
