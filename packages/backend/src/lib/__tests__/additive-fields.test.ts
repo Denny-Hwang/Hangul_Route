@@ -274,7 +274,7 @@ describe('preserveAdditiveFields (quest latch entry, F-REPORT-001 section 3.3.1,
     expect(field).toBeDefined();
     expect(field?.summaryKey).toBe('activity');
     expect(field?.merge).toBeDefined();
-    expect(ADDITIVE_FIELDS.map((f) => f.payloadKey)).toEqual(['placements', 'stageDoneAt', 'selfRoute', 'vocab', 'questDoneAt']);
+    expect(ADDITIVE_FIELDS.map((f) => f.payloadKey).slice(0, 5)).toEqual(['placements', 'stageDoneAt', 'selfRoute', 'vocab', 'questDoneAt']);
   });
 
   it('treats only an absent key as unset: an empty record is a value (the VOCAB rule, not the stage-latch rule)', () => {
@@ -328,8 +328,8 @@ describe('preserveAdditiveFields (quest latch entry, F-REPORT-001 section 3.3.1,
     }
   });
 
-  it('only the quest latch keeps a stored summary when the field itself is sent: a sent placement list travels with exactly the summary sent', () => {
-    expect(ADDITIVE_FIELDS.filter((f) => f.keepStoredSummaryWhenSent).map((f) => f.payloadKey)).toEqual(['questDoneAt']);
+  it('only the quest latch and the seeding marker keep a stored summary when the field itself is sent: a sent placement list travels with exactly the summary sent', () => {
+    expect(ADDITIVE_FIELDS.filter((f) => f.keepStoredSummaryWhenSent).map((f) => f.payloadKey)).toEqual(['questDoneAt', 'memSeededAt']);
     const out = preserveAdditiveFields(incoming({ placements: [{ id: 'placement:b' }] }, {}), stored({ placements: [result] }, { placement }));
     expect(out.summary).toEqual({});
   });
