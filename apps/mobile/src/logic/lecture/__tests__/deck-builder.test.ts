@@ -2124,6 +2124,20 @@ describe('expandDeck: the sentence builds (AMENDMENTS-LECTURE-V2 sections 5.1 an
         ],
       },
     },
+    // A particle round whose distractor reads as the particle word's stem (달걀 beside 달걀을).
+    'mg:order-stem': {
+      kind: 'order-it',
+      orderIt: {
+        rounds: [
+          {
+            id: 'r1',
+            sentence: kt('저녁에 달걀을 먹어요.', 'jeonyeoge dalgyareul meogeoyo', 'In the evening, I eat an egg.'),
+            distractors: [kt('달걀', 'dalgyal', 'egg'), kt('아침에', 'achime', 'in the morning')],
+            particle: { tile: 1, choices: [kt('을', 'eul', 'object marker'), kt('를', 'reul', 'object marker')] },
+          },
+        ],
+      },
+    },
     // A round the game cannot play (one word only): left out and counted.
     'mg:order-one': { kind: 'order-it', orderIt: { rounds: [{ id: 'r1', sentence: kt('가요.', 'gayo', 'I go.'), distractors: [] }] } },
     'mg:order-none': { kind: 'order-it', orderIt: { rounds: [] } },
@@ -2196,6 +2210,18 @@ describe('expandDeck: the sentence builds (AMENDMENTS-LECTURE-V2 sections 5.1 an
     ]);
     expect(particle!.bank.some((p) => 'distractor' in p && p.distractor.ko === '아침에')).toBe(true);
     expect(particle!.builds).toEqual(['bank', 'tile', 'tile', 'particle', 'tile', 'whole']);
+  });
+
+  it("a distractor that reads as the particle word's stem is dropped, so the bank never holds two same tiles", () => {
+    const stemQuest = quest('built-stem', [['practice', 'mg:order-stem']], { rewardCardId: undefined });
+    const bun = b({ questById: (id) => (id === stemQuest.id ? stemQuest : undefined) });
+    const { slides, skipped } = run(stemQuest.id, {}, VOICE, bun);
+    expect(skipped).toEqual([]);
+    const [slide] = only(slides, 'sentence-build') as Build[];
+    const bankText = slide!.bank.map((p) => ('tile' in p ? (slide!.tiles[p.tile]!.particle?.stem ?? slide!.tiles[p.tile]!.ko) : p.distractor.ko));
+    expect(bankText.filter((t) => t === '달걀')).toHaveLength(1);
+    expect(new Set(bankText).size).toBe(bankText.length);
+    expect(slide!.bank.filter((p) => 'distractor' in p)).toEqual([{ distractor: { ko: '아침에', romanization: 'achime' } }]);
   });
 
   it('a build tests and does not teach: nothing joins the End slide, the slides sit inside the quest minutes, the builds are the same with tap', () => {

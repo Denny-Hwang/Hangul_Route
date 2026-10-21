@@ -1,9 +1,9 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import React, { useState } from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
 import type { BuildTile } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
-import { buildPlaceWidth, sentenceBuildView, type BuildBankPlace } from '../../../logic/lecture/slide-view';
+import { buildPlaceWidth, linePlaceSize, sentenceBuildView, type BuildBankPlace } from '../../../logic/lecture/slide-view';
 import { units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
@@ -61,7 +61,9 @@ export function SentenceBuildSlide({ slide, reveal }: { slide: SentenceBuildBody
   const lineOf = (n: number): number => Math.round(n * typography.leading.tight);
   const placeHeight = Math.max(lineOf(tileSize), lineOf(choiceSize) + 2 * border) + 2 * (tile.padY + border);
   const placeWidth = buildPlaceWidth(slide, { tile: tileSize, choice: choiceSize, padX: tile.padX, border, gap: tile.inner, choicePadX: tile.choicePadX });
-  const place: ViewStyle = { width: placeWidth, height: placeHeight };
+  // A place wider than the line takes the line's inner width instead, so nothing leaves the line sideways.
+  const [lineWidth, setLineWidth] = useState(0);
+  const place: ViewStyle = linePlaceSize(placeWidth, placeHeight, lineWidth, gap);
   const whole = revealProps(view.whole);
   return (
     <View testID="presenter-build" style={{ flex: 1, gap }}>
@@ -75,11 +77,12 @@ export function SentenceBuildSlide({ slide, reveal }: { slide: SentenceBuildBody
           </View>
           <View
             testID="presenter-build-line"
+            onLayout={(e) => setLineWidth(e.nativeEvent.layout.width)}
             style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap, padding: gap, borderBottomWidth: border, borderColor: colors.text.primary }}
           >
             {slide.tiles.map((t, i) => {
               const state = view.line[i];
-              if (state === 'empty') return <View key={i} testID="presenter-build-slot" aria-hidden style={[tileLook(tile, 'dashed'), place, { backgroundColor: colors.surface.paper }]} />;
+              if (state === 'empty') return <View key={i} testID="presenter-build-slot" aria-hidden style={[tileLook(tile, 'dashed'), place, { backgroundColor: colors.surface.paper, borderColor: colors.border.shape }]} />;
               if (state === 'choosing') return <ParticleTile key={i} tile={t} metrics={tile} place={place} />;
               return <Tile key={i} ko={t.ko} metrics={tile} place={place} testID="presenter-build-placed" />;
             })}
@@ -137,7 +140,9 @@ const bankText = (tile: BuildTile): string => tile.particle?.stem ?? tile.ko;
 
 /**
  * The look every tile shares: paper, a `text.primary` stage border, `radii.lg` units; `dashed` (an
- * empty place, a ghost): a dashed `border.strong` border on the ground under it.
+ * empty place, a ghost): a dashed `border.strong` border on the ground under it. An empty place on
+ * the line tells the room how many words are still to come, so it is drawn in `border.shape`
+ * instead (3:1 on paper, WCAG 1.4.11); a bank ghost is decorative and hidden from readers.
  */
 function tileLook(m: TileMetrics, line: 'solid' | 'dashed'): ViewStyle {
   const dashed = line === 'dashed';

@@ -133,14 +133,30 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
     const all = [...expandDeck(deck(episodes.slice(0, 30)), lectureBundle('en'), { canPlayKorean: true }).slides, ...expandDeck(deck(episodes.slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
     const builds = all.filter((s): s is Extract<Slide, { kind: 'sentence-build' }> => s.kind === 'sentence-build');
     expect(builds.length).toBeGreaterThan(100);
-    const drawn = new Set(builds.flatMap((s) => strings(s)));
-    for (const slide of builds) {
-      for (const tile of slide.tiles) {
-        expect(drawn.has(tile.ko)).toBe(true);
-        if (tile.particle) for (const piece of [tile.particle.stem, ...tile.particle.choices.map((c) => c.ko)]) expect(drawn.has(piece), piece).toBe(true);
+    // Each field the slide draws, checked against the font itself (not against the walk's own strings,
+    // which would pass whatever the walk leaves out).
+    const missing = new Map<string, string>();
+    const check = (key: string, text: string): void => {
+      for (const ch of text) {
+        const cp = ch.codePointAt(0)!;
+        if (isHangul(cp) && !font.has(cp) && !missing.has(ch)) missing.set(ch, `${key}: ${text}`);
       }
-      for (const place of slide.bank) if ('distractor' in place) expect(drawn.has(place.distractor.ko)).toBe(true);
+    };
+    let pieces = 0;
+    for (const slide of builds) {
+      const drawn = [
+        slide.sentence.ko,
+        ...slide.tiles.flatMap((t) => [t.ko, ...(t.particle ? [t.particle.stem, ...t.particle.choices.map((c) => c.ko)] : [])]),
+        ...slide.bank.flatMap((p) => ('distractor' in p ? [p.distractor.ko] : [])),
+      ];
+      pieces += drawn.length;
+      for (const text of drawn) check(slide.key, text);
+      // The main walk reads these fields too: none is left out as not taught Korean.
+      const walked = new Set(strings(slide));
+      for (const text of drawn) expect(walked.has(text), `${slide.key}: ${text}`).toBe(true);
     }
+    expect(pieces).toBeGreaterThan(builds.length * 3);
+    expect([...missing.entries()]).toEqual([]);
     expect(builds.some((s) => s.tiles.some((t) => t.particle !== undefined))).toBe(true);
     expect(builds.some((s) => s.bank.some((p) => 'distractor' in p))).toBe(true);
   });

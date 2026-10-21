@@ -7,6 +7,7 @@ import {
   activityTimerMs,
   buildMove,
   buildPlaceWidth,
+  linePlaceSize,
   cardView,
   frameSpoken,
   markerFor,
@@ -553,6 +554,18 @@ describe('the sentence build at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
     // Smaller text, a smaller place; no tiles, the padding alone.
     expect(buildPlaceWidth(plain, { ...sizes, tile: 40 })).toBe(3 * 40 + 54);
     expect(buildPlaceWidth({ tiles: [] }, sizes)).toBe(54);
+  });
+
+  it('a place never leaves the line sideways: wider than the line holds, it takes the line\'s inner width and may grow taller', () => {
+    // Fits (or the line not measured yet): the one place size.
+    expect(linePlaceSize(294, 120, 1200, 16)).toEqual({ width: 294, height: 120 });
+    expect(linePlaceSize(294, 120, 0, 16)).toEqual({ width: 294, height: 120 });
+    expect(linePlaceSize(1168, 120, 1200, 16)).toEqual({ width: 1168, height: 120 });
+    // An artificially long tile on a phone-sized line: clamped to the inner width, at least a tile tall.
+    const long = { tiles: [{ ko: '가나다라마바사아자차카타파하가나다라', romanization: 'ganadara' }] };
+    const width = buildPlaceWidth(long, { tile: 80, choice: 56, padX: 24, border: 3, gap: 8, choicePadX: 12 });
+    expect(width).toBeGreaterThan(536);
+    expect(linePlaceSize(width, 120, 568, 16)).toEqual({ width: 536, minHeight: 120 });
   });
 
   it('Sound plays the whole sentence at every build (the Hear it of the learner game), at the sentence rate', () => {

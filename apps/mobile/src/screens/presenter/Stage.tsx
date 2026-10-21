@@ -91,7 +91,8 @@ export function Stage(props: StageProps): React.ReactElement {
     listen: messages.learner.presenter.quiz.listen,
     reply: messages.learner.presenter.quiz.reply,
     build: messages.learner.presenter.slide.build.next,
-  });
+    particle: messages.learner.presenter.slide.build.particle,
+  }, reveal);
   // A sentence-build move says what it placed (section 10, LV-S3); anything else announces the slide.
   const lastLive = useRef<BuildLive | null>(null);
   const liveNow = buildLive(slide, reveal, lastLive.current, messages.a11y.presenter.tilePlaced);

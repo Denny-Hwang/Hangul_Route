@@ -502,6 +502,32 @@ describe('the sentence builds in the live region (AMENDMENTS-LECTURE-V2 section 
     expect(slideDetail(plain)).toBe('');
   });
 
+  it('names a build by the question its stage shows at that build: the words on the line, then the next word or the ending that fits', () => {
+    const names = { activity: () => '', build: 'Which word comes next?', particle: 'Which ending fits?' };
+    expect(slideDetail(plain, names, 0)).toBe('Which word comes next?');
+    expect(slideDetail(plain, names, 1)).toBe('친구가, chinguga, Which word comes next?');
+    // Two steps back in a row change the text, so each is heard.
+    expect(slideDetail(plain, names, 2)).toBe('친구가, chinguga, 학교에, hakgyoe, Which word comes next?');
+    expect(slideDetail(plain, names, 2)).not.toBe(slideDetail(plain, names, 1));
+    // Stepping back onto a particle tile still choosing asks for the ending, by its stem only.
+    expect(slideDetail(particle, names, 2)).toBe('저녁에, jeonyeoge, 달걀, Which ending fits?');
+    expect(slideDetail(particle, names, 3)).toBe('저녁에, jeonyeoge, 달걀을, dalgyareul, Which word comes next?');
+    // No tile still in the bank is named.
+    expect(slideDetail(particle, names, 3)).not.toContain('먹어요');
+    // With no particle name the next-word question stands in.
+    expect(slideDetail(particle, { activity: () => '', build: 'Which word comes next?' }, 2)).toBe('저녁에, jeonyeoge, 달걀, Which word comes next?');
+  });
+
+  it('Previous from the next slide lands on the whole build: no question shows there, so it says the sentence, never a question', () => {
+    const names = { activity: () => '', build: 'Which word comes next?', particle: 'Which ending fits?' };
+    const last = plain.builds.length - 1;
+    expect(plain.builds[last]).toBe('whole');
+    expect(slideDetail(plain, names, last)).toBe('친구가 학교에 가요., chinguga hakgyoe gayo, My friend goes to school.');
+    expect(slideDetail(particle, names, particle.builds.length - 1)).not.toContain('?');
+    // Landing there is an arrival, so the live region uses this announcement, not a move's words.
+    expect(buildLive(plain, last, { key: 'other', reveal: 0 }, placed).words).toBeUndefined();
+  });
+
   it('each step forward says the tile it placed (Korean, romanization), then the sentence and its meaning at the whole build', () => {
     expect(walk(plain)).toEqual([undefined, '친구가, chinguga placed', '학교에, hakgyoe placed', '가요, gayo placed', '친구가 학교에 가요., chinguga hakgyoe gayo, My friend goes to school.']);
   });

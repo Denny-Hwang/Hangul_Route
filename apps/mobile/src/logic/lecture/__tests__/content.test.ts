@@ -314,6 +314,33 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     },
   );
 
+  it.each(['es', 'ko'] as const)(
+    'no sentence build on a shipped %s deck shows the English meaning at its whole build (AMENDMENTS-LECTURE-V2 5.2, LV-S3)',
+    (locale) => {
+      let english = 0;
+      let localized = 0;
+      for (const q of questsAll) {
+        const en = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+        const byKey = new Map(en.map((s) => [s.key, s]));
+        english += en.filter((s) => s.kind === 'sentence-build').length;
+        for (const s of expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle(locale), { canPlayKorean: true }).slides) {
+          if (s.kind !== 'sentence-build') continue;
+          const same = byKey.get(s.key);
+          expect(same?.kind, s.key).toBe('sentence-build');
+          if (same?.kind !== 'sentence-build') continue;
+          localized += 1;
+          // The Korean and its romanization are the deck's; only the meaning follows the device language.
+          expect(s.sentence.ko).toBe(same.sentence.ko);
+          expect(s.sentence.gloss.trim(), s.key).not.toBe('');
+          expect({ key: s.key, gloss: s.sentence.gloss }).not.toEqual({ key: s.key, gloss: same.sentence.gloss });
+        }
+      }
+      // Every order-it round, the Stage 7 Checks included, is a slide in every language.
+      expect(localized).toBe(english);
+      expect(localized).toBeGreaterThanOrEqual(135);
+    },
+  );
+
   it('localizes content text through the overlays, never the Korean or its romanization', () => {
     const overlays: Overlays = {
       es: {

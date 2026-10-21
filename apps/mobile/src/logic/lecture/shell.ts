@@ -6,7 +6,7 @@ import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
 import type { RecentItem, RecentList } from './recent';
-import { buildMove } from './slide-view';
+import { buildLineWords, buildMove, buildWholeWords, sentenceBuildView } from './slide-view';
 import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
@@ -316,13 +316,26 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
  * the presenter at the device, who holds the deck, not to the room, which sees only the stage.
  * A listen or reply question is named by its question (`names.listen`, `names.reply`), a realia
  * question by its own (LV-S2); never by an option, which would be the answer. A sentence build is
- * named by its question too (`names.build`, LV-S3), never by its sentence: each move says its tile
- * and the whole build the sentence (`buildLive`).
+ * named by the question its stage shows at `reveal` (LV-S3): the next word (`names.build`) or the
+ * ending that fits (`names.particle`), after the words already on the line, so a step back is heard
+ * even when the question stays the same; at the whole build, where no question shows, by the
+ * sentence with its romanization and meaning, as that build's move said it. Never by a tile still
+ * in the bank: each move says its tile and the whole build the sentence (`buildLive`). With no
+ * `reveal`, a build is named by its first question.
  */
-export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string; build?: string }): string {
+export function slideDetail(
+  slide: Slide,
+  names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string; build?: string; particle?: string },
+  reveal?: number,
+): string {
   switch (slide.kind) {
-    case 'sentence-build':
-      return names?.build ?? '';
+    case 'sentence-build': {
+      if (reveal === undefined) return names?.build ?? '';
+      const { ask } = sentenceBuildView(slide, reveal);
+      if (ask === null) return buildWholeWords(slide);
+      const question = (ask === 'particle' ? (names?.particle ?? names?.build) : names?.build) ?? '';
+      return [...buildLineWords(slide, reveal), question].filter((w) => w !== '').join(', ');
+    }
     case 'quiz':
       switch (slide.prompt.ask) {
         case 'listen':

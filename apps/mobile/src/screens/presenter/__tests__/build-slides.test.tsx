@@ -64,6 +64,16 @@ describe('SentenceBuildSlide (LV-S3)', () => {
     expect(textOf(byTestId(r.root, 'presenter-kind-label')[0]!)).toBe(en.learner.presenter.slide.build.title);
     expect(textOf(byTestId(r.root, 'presenter-build-ask')[0]!)).toBe(en.learner.presenter.slide.build.next);
     expect(byTestId(r.root, 'presenter-build-slot')).toHaveLength(3);
+    // An empty place tells the room a word is still to come: its dashes are border.shape (3:1 on paper, WCAG 1.4.11), not the quiet border.strong.
+    for (const slot of byTestId(r.root, 'presenter-build-slot')) {
+      const style = Object.assign({}, ...[slot.props.style].flat(Infinity).filter(Boolean)) as Record<string, unknown>;
+      const rgba = (hex: string) => `rgba(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',')},1.00)`;
+      for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
+        expect(style[`border${side}Color`]).toBe(rgba(colors.border.shape));
+        expect(style[`border${side}Style`] ?? style.borderStyle).toBe('dashed');
+      }
+      expect(style.backgroundColor).toBe(rgba(colors.surface.paper));
+    }
     expect(byTestId(r.root, 'presenter-build-placed')).toHaveLength(0);
     expect(bankWords(r.root).map((t) => t.text).sort()).toEqual(['가요', '와요', '친구가', '학교에']);
     expect(bankWords(r.root).every((t) => t.look === 'tile' && !t.hidden)).toBe(true);
@@ -166,6 +176,16 @@ describe('Stage: the live region says each move of a sentence build (section 10)
     expect(live()).toBe(said[said.length - 1]);
     await act(async () => r.update(stage(stage7, idx, 2)));
     expect(live()).toContain(`Slide ${idx + 1} of ${stage7.length}`);
+    // Stepping back onto the particle tile still choosing asks what the stage asks: the ending that fits.
+    const head = `Slide ${idx + 1} of ${stage7.length}, ${en.learner.presenter.grid.kind.build}`;
+    expect(live()).toBe(`${head}, 저녁에, jeonyeoge, 달걀, ${en.learner.presenter.slide.build.particle}`);
+    // A second step back is heard too: the line it names is shorter.
+    await act(async () => r.update(stage(stage7, idx, 1)));
+    expect(live()).toBe(`${head}, 저녁에, jeonyeoge, ${en.learner.presenter.slide.build.next}`);
+    // Previous from the next slide lands on the whole build, where no question shows: it says the sentence.
+    await act(async () => r.update(stage(stage7, idx + 1, 0)));
+    await act(async () => r.update(stage(stage7, idx, particle.builds.length - 1)));
+    expect(live()).toBe(`${head}, ${particle.sentence.ko}, ${particle.sentence.romanization}, ${particle.sentence.gloss}`);
     // Nothing on the slide takes input.
     expect(hostNodes(byTestId(r.root, 'presenter-stage')[0]!, (n) => n.props.role === 'button')).toHaveLength(0);
   });

@@ -237,6 +237,19 @@ export function buildPlaceWidth(slide: Pick<Of<'sentence-build'>, 'tiles'>, s: B
   return Math.ceil(Math.max(0, ...plain, ...choosing) + 2 * (s.padX + s.border));
 }
 
+/**
+ * The size of every place on the sentence line, given the line's measured width (0 before its first
+ * layout) and its side padding: the one place size (`buildPlaceWidth`, the tile height), unless that
+ * is wider than the line can hold (a long tile, or a fallback font with a wider advance than the one
+ * em the width counts), where the place takes the line's inner width and may grow taller so its text
+ * wraps inside it, never past the line's side.
+ */
+export function linePlaceSize(width: number, height: number, lineWidth: number, pad: number): { width: number; height?: number; minHeight?: number } {
+  const inner = Math.floor(lineWidth - 2 * pad);
+  if (lineWidth <= 0 || inner <= 0 || width <= inner) return { width, height };
+  return { width: inner, minHeight: height };
+}
+
 /** How a tile reads aloud: its Korean, then its romanization when it has one ("Korean, romanization", as `KoreanText`). */
 const tileWords = (ko: string, romanization: string): string => (romanization === '' ? ko : `${ko}, ${romanization}`);
 
@@ -248,12 +261,33 @@ const tileWords = (ko: string, romanization: string): string => (romanization ==
  */
 export function buildMove(slide: Of<'sentence-build'>, reveal: number): { placed: string } | { whole: string } | null {
   const name = slide.builds[reveal];
-  if (name === 'whole') return { whole: `${slide.sentence.ko}, ${slide.sentence.romanization}, ${slide.sentence.gloss}` };
+  if (name === 'whole') return { whole: buildWholeWords(slide) };
   if (name !== 'tile' && name !== 'particle') return null;
   const nth = slide.builds.slice(0, reveal + 1).filter((b) => b === 'tile').length - 1;
   const tile = slide.tiles[nth];
   if (tile === undefined) return null;
   return { placed: name === 'tile' && tile.particle !== undefined ? tile.particle.stem : tileWords(tile.ko, tile.romanization) };
+}
+
+/**
+ * The words on a sentence-build slide's line at `reveal`, in sentence order: each placed tile as it
+ * reads aloud (Korean, romanization), a particle tile still choosing by its stem. What the stage
+ * already shows the room, so the slide's announcement can say it (`slideDetail`) without giving away
+ * a tile still in the bank.
+ */
+export function buildLineWords(slide: Of<'sentence-build'>, reveal: number): string[] {
+  const { line } = sentenceBuildView(slide, reveal);
+  return slide.tiles.flatMap((tile, i): string[] => {
+    const place = line[i];
+    if (place === 'placed') return [tileWords(tile.ko, tile.romanization)];
+    if (place === 'choosing' && tile.particle !== undefined) return [tile.particle.stem];
+    return [];
+  });
+}
+
+/** The whole sentence as the `whole` build says it: the Korean, its romanization and its meaning. */
+export function buildWholeWords(slide: Of<'sentence-build'>): string {
+  return `${slide.sentence.ko}, ${slide.sentence.romanization}, ${slide.sentence.gloss}`;
 }
 
 /**

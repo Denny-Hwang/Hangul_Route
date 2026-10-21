@@ -282,7 +282,7 @@ function withoutParticle(round: OrderItRound): OrderItRound {
 }
 
 /**
- * A particle tile's endings (LV-S3): in their pair's own order (이/가, 을/를, 은/는, 이에요/예요 ...,
+ * A particle tile's endings (LV-S3): in their pair's own order (i/ga, eul/reul, eun/neun, ieyo/yeyo ...,
  * `ALLOMORPH_PAIRS`), never in the content's, which often lists the answer first; `answer` is the
  * one that ends the word.
  */
@@ -594,7 +594,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     return text === undefined ? undefined : taughtGloss(text.ko);
   };
 
-  /** Korean with its spaces and punctuation taken out, to tell a heard answer ("이천 원") from a reply. */
+  /** Korean with its spaces and punctuation taken out, to tell a heard answer ("icheon won") from a reply. */
   const bare = (ko: string): string => ko.replace(/[\s.,!?~]/g, '');
 
   /**
@@ -627,7 +627,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return { ko: text.ko, romanization: text.romanization, ...(gloss !== undefined ? { gloss } : {}), correct };
       });
       // A word or sentence round whose answer is not in the line heard asks for the reply that fits it (the Stage 4
-      // Checks); an answer the line holds ("이천 원" in "이천 원이에요.") was heard, so the round asks which one.
+      // Checks); an answer the line holds ("icheon won" in "icheon wonieyo.") was heard, so the round asks which one.
       const answer = round.options.find((o) => o.id === round.answerId);
       const reply =
         speech !== 'sound' && answer?.pictureRef === undefined && answer?.text !== undefined && !bare(round.prompt.ko).includes(bare(answer.text.ko));
@@ -732,7 +732,12 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         continue;
       }
       const tiles = order.words.map((w, i): BuildTile => (chosen !== undefined && chosen.word === i ? { ...w, particle: particleOf(round.particle!, chosen) } : { ...w }));
-      const bank = order.tray.map((t): BankPlace => (t.id.startsWith('w') ? { tile: Number(t.id.slice(1)) } : { distractor: { ko: t.ko, romanization: t.romanization } }));
+      // The particle word sits in the bank as its stem, so a distractor that reads as that stem is
+      // dropped too (the game drops one that reads as a word): two same tiles, one set back, would read as a wrong answer.
+      const stem = chosen === undefined ? undefined : tiles[chosen.word]?.particle?.stem;
+      const bank = order.tray.flatMap((t): BankPlace[] =>
+        t.id.startsWith('w') ? [{ tile: Number(t.id.slice(1)) }] : t.ko === stem ? [] : [{ distractor: { ko: t.ko, romanization: t.romanization } }],
+      );
       // Keyed by the round's id, so a saved resume point stays on its round when a content update adds one.
       push(`${path}/${round.id.replace(/\//g, '-')}`, { kind: 'sentence-build', sentence: spokenLine(round.sentence), tiles, bank });
     }
