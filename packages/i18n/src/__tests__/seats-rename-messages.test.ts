@@ -76,7 +76,7 @@ describe('seat lines (section 9.2)', () => {
     expect(k.seats.family.at(4)).toBe('이 가족에는 학습자가 4명 있어서 더 들어올 수 없어요. 새로 추가하려면 먼저 설정에서 학습자 한 명을 빼 주세요. 그 학습자의 진도는 기기에 그대로 남아요.');
     expect(k.seats.family.over(5, 4)).toBe('이 가족에는 학습자가 5명 있어요. 모두 그대로 함께해요. 학습자가 4명보다 적어지면 새 학습자가 들어올 수 있어요.');
     expect(k.seats.class.at(50)).toBe('이 반에는 학생이 50명 있어요. 그룹 라이선스로 함께할 수 있는 최대 인원이에요. 자리가 나면 새 학생이 들어올 수 있어요.');
-    expect(k.seats.school.over(62, 50)).toBe('이 학교에는 학생이 62명 있어요. 모두 자리와 배운 내용을 그대로 지켜요. 학생이 50명보다 적어지면 새 학생이 들어올 수 있어요. 더 필요하면 계약을 문의해 주세요.');
+    expect(k.seats.school.over(62, 50)).toBe('이 학교에는 학생이 62명 있어요. 모두의 자리와 배운 내용은 그대로 남아요. 학생이 50명보다 적어지면 새 학생이 들어올 수 있어요. 더 필요하면 계약을 문의해 주세요.');
     expect(k.billing.includesLines.license.classLearners(50)).toBe('반 하나에 학생 최대 50명');
     expect(k.billing.readOnly.schoolAdmin).toBe('학교를 만든 분이 이 플랜을 관리해요.');
   });
@@ -127,7 +127,12 @@ describe('inline rename (section 9.3)', () => {
     expect([e.rename.cta, e.rename.a11y('Clase A'), e.rename.label, e.rename.save.cta, e.rename.cancel.cta]).toEqual(['Renombrar', 'Renombrar Clase A', 'Nombre', 'Guardar', 'Cancelar']);
     expect(e.rename.tooLong(40)).toBe('Los nombres pueden tener hasta 40 caracteres.');
     expect(e.start.nameLater).toBe('Puedes cambiar este nombre después.');
+    // Familia, clase and escuela are all feminine: "desarchívala", as the settings lines' "la desarchives".
+    expect(e.rename.archived).toBe('Primero desarchívala para cambiar el nombre.');
+    expect(e.rename.openMoves).toBe('Hay cambios de clase pendientes hacia o desde este espacio. Con un nombre nuevo, los adultos de esos estudiantes tendrán que revisarlos otra vez.');
     const k = getMessages('ko').console;
+    // The glossary's 반 이동, as the transfer strings word it.
+    expect(k.rename.openMoves).toBe('이 공간으로 오거나 이 공간에서 나가는 반 이동이 아직 끝나지 않았어요. 이름을 바꾸면 그 학습자의 어른이 이동을 다시 확인해야 해요.');
     expect([k.rename.cta, k.rename.a11y('일요일 반'), k.rename.label, k.rename.save.cta, k.rename.cancel.cta]).toEqual(['이름 바꾸기', '이름 바꾸기: 일요일 반', '이름', '저장', '취소']);
     expect(k.rename.tooLong(40)).toBe('이름은 40자까지 쓸 수 있어요.');
     expect(k.rename.failed).toBe('이름을 저장하지 못했어요. 다시 해 볼까요?');

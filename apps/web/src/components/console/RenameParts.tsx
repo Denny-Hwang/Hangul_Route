@@ -4,7 +4,7 @@ import type { SpaceKind } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
 import type { ConsoleApi } from '@/lib/console/api';
-import { checkRename, renameCancel, renameCheckLine, renameEdit, renameFailureLine, renameFailureOf, renameHint, renameIdle, renameOpen, renameSettled, renameSubmit, type RenameState } from '@/lib/console/rename';
+import { NameOverrides, checkRename, renameCancel, renameCheckLine, renameEdit, renameFailureLine, renameFailureOf, renameHint, renameIdle, renameOpen, renameSettled, renameSubmit, type RenameState } from '@/lib/console/rename';
 import { rem } from '@/lib/console/rem';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { buttonBase } from './ui';
@@ -97,6 +97,12 @@ export interface SpaceRename {
  * The field and the save of one space's name. `name` is what the page shows; `onName` sets it (at once on Save, back
  * on a failure, to the Worker's stored name when it answers). `onOpenChange` lets a class row step its buttons aside.
  */
+/** The page's `NameOverrides`, one for its life: every read numbers itself with `begin()` and draws names through `nameFor`. */
+export function useNameOverrides(): NameOverrides {
+  const [overrides] = useState(() => new NameOverrides());
+  return overrides;
+}
+
 export function useSpaceRename({
   api,
   spaceId,
@@ -108,7 +114,8 @@ export function useSpaceRename({
   api: ConsoleApi | null;
   spaceId: string;
   name: string;
-  onName: (name: string) => void;
+  /** The name to show: `settled` false for the optimistic one, true once the PATCH answered (see `NameOverrides`). */
+  onName: (name: string, settled: boolean) => void;
   announce: (text: string) => void;
   onOpenChange?: (open: boolean) => void;
 }): SpaceRename {
@@ -138,7 +145,7 @@ export function useSpaceRename({
     if (send === null || !api) return;
     live.current = next;
     setState(next);
-    onName(send);
+    onName(send, false);
     void api
       .renameSpace(spaceId, send)
       .catch(() => ({ ok: false as const, error: 'network' as const, status: -1 }))
@@ -147,7 +154,7 @@ export function useSpaceRename({
         const settled = renameSettled(live.current, result.ok ? { ok: true, name: result.data.space.name, changed: result.data.changed } : { ok: false, failure: renameFailureOf(result, online) });
         live.current = settled.state;
         setState(settled.state);
-        onName(settled.name);
+        onName(settled.name, true);
         if (settled.announce) announce(messages.console.rename.saved);
       });
   }, [api, spaceId, onName, announce, messages]);
@@ -180,7 +187,8 @@ export function RenameButton({ rename, name, testId = 'rename' }: { rename: Spac
 }
 
 /**
- * The open field (mock "Open"): label, the input (the name selected, `maxLength` 40), then under it the error line
+ * The open field (mock "Open"): label, the input (the name selected, `maxLength` `RENAME_INPUT_MAX` = 120 so a long NFD
+ * paste is never cut; the 40 is checked after NFC by `checkRename`), then under it the error line
  * (when any), the kind hint and the open-moves line, which are its description in that order, and Save / Cancel.
  * Save is `aria-disabled` while the value is unchanged or invalid (D3); Enter saves, Escape cancels.
  */
@@ -345,7 +353,8 @@ export function SettingsNameRow({ rename, name, kind, canRename, openMoves, arch
           {canRename && !archived ? <RenameButton rename={rename} name={name} testId="settings-rename" /> : null}
         </div>
       )}
-      {archived ? <p style={hintStyle}>{r.archived}</p> : null}
+      {/* Only to someone who may rename: a caregiver or a teacher who is not the owner cannot unarchive either. */}
+      {archived && canRename ? <p style={hintStyle}>{r.archived}</p> : null}
     </section>
   );
 }

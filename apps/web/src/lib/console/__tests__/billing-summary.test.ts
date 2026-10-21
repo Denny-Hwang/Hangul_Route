@@ -146,12 +146,34 @@ describe('billingHomeView: one card per persona row of section 4.2', () => {
     expect(contactHref()).toBe(`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(b.contact.mailSubject)}`);
   });
 
+  it('[SA] section 3.4: the school Contact us card carries the contract line, its numbers from the content-schema caps', () => {
+    const owner = card({ spaceId: 'space:sch', kind: 'school', name: 'Maple School', role: 'owner', coverage: own({ planKey: 'group_license' }), usage: { learners: 42, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 7, teacherCap: SCHOOL_LICENSE_TEACHERS }, actions: { buy: null, manage: true, contact: true } });
+    expect(view(summary([owner])).cards[0]?.contactLine).toBe('More than 50 students or 10 teachers? Write to us for a contract.');
+    expect(view(summary([owner])).cards[0]?.contactLine).toBe(w.contactLineCaps(SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS));
+    for (const locale of ['es', 'ko'] as const) {
+      expect(billingHomeView(summary([owner]), { now, locale, claims: OFF }).cards[0]?.contactLine).toBe(getMessages(locale).console.contactLineCaps(SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS));
+    }
+    // No Contact us, no line: a school without the action, an admin's read-only card, a class card.
+    expect(view(summary([{ ...owner, actions: { buy: null, manage: true, contact: false } }])).cards[0]?.contactLine).toBeNull();
+    const admin = { ...owner, role: 'admin' as const, payer: false, readOnlyReason: 'school' as const, coverage: { state: 'school' as const, schoolName: 'Maple School', planKey: 'group_license' as const, expiresAt: YEAR_ON } };
+    expect(view(summary([admin])).cards[0]?.contactLine).toBeNull();
+    expect(view(summary([card({ spaceId: 'space:cls', kind: 'class', name: 'Room 4', actions: { buy: 'group_license', manage: false, contact: true } })])).cards[0]?.contactLine).toBeNull();
+    // Add a plan: a free school's Contact us row says the same line.
+    const freeSchool = card({ spaceId: 'space:sch2', kind: 'school', name: 'Pine Hill School', usage: { learners: 18, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 2, teacherCap: null }, actions: { buy: 'group_license', manage: false, contact: true } });
+    const add = view(summary([card(), freeSchool])).addPlan;
+    expect(add?.contact).toEqual([expect.objectContaining({ spaceId: 'space:sch2', line: w.contactLineCaps(SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS), cta: b.contact.cta })]);
+  });
+
   it('[SA] school administrator (SA-D11): the read-only school card with the owner\'s seat counts, no amount, button, Contact us or receipts', () => {
     const covered = { state: 'school' as const, schoolName: 'Maple School', planKey: 'group_license' as const, expiresAt: '2029-08-31T00:00:00.000Z' };
     const admin = card({ spaceId: 'space:sch', kind: 'school', name: 'Maple School', role: 'admin', payer: false, readOnlyReason: 'school', coverage: covered, usage: { learners: 42, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 7, teacherCap: SCHOOL_LICENSE_TEACHERS }, actions: { buy: null, manage: false, contact: false } });
     const c = view(summary([admin])).cards[0];
     expect(c).toMatchObject({ heading: `${b.kind.school} · Maple School`, readOnly: b.readOnly.schoolAdmin, usage: '42 of 50 students · 7 of 10 teachers', manage: false, contact: false, offer: null, receipts: [], allReceiptsHref: null });
     expect(c?.readOnly).toBe("The school's owner manages this plan.");
+    // Board 22: the school's own plan and date, never "Covered by Maple School's Group License" on Maple School's card.
+    expect(c).toMatchObject({ plan: 'Group License', status: 'Renews on Aug 31, 2029' });
+    expect(view(summary([{ ...admin, coverage: { ...covered, planKey: 'school_seat' } }])).cards[0]).toMatchObject({ plan: b.coverage.contract, status: b.status.endsOn(day('2029-08-31T00:00:00.000Z')) });
+    expect(view(summary([{ ...admin, coverage: { ...covered, expiresAt: null } }])).cards[0]).toMatchObject({ plan: b.coverage.license, status: null });
     // A free school: the same card, never the Group License offer, even if a summary says so.
     const free = view(summary([{ ...admin, coverage: { state: 'free' }, usage: { learners: 18, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 2, teacherCap: null }, actions: { buy: 'group_license', manage: true, contact: true }, receipts: [receipt()], hasReceipts: true }]));
     expect(free.cards[0]).toMatchObject({ plan: b.coverage.free, usage: '18 of 50 students · 2 teachers', readOnly: b.readOnly.schoolAdmin, offer: null, manage: false, contact: false, receipts: [] });
@@ -222,7 +244,7 @@ describe('billingHomeView: order and offers', () => {
     ]);
     expect(v.addPlan?.offers[1]?.title).toBe(b.buy.forSpace(b.planTitle.group_license, 'Room 4'));
     expect(v.addPlan?.offers[2]?.includes).toContain(b.includesLines.license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS));
-    expect(v.addPlan?.contact).toEqual([{ spaceId: 'space:sch', title: b.buy.forSpace(b.planTitle.school_seat, 'Maple School'), cta: b.contact.cta, href: contactHref() }]);
+    expect(v.addPlan?.contact).toEqual([{ spaceId: 'space:sch', title: b.buy.forSpace(b.planTitle.school_seat, 'Maple School'), line: w.contactLineCaps(SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS), cta: b.contact.cta, href: contactHref() }]);
   });
 
   it("the Contact us rows follow the server's contact action, like the card's own button", () => {

@@ -2,6 +2,7 @@ import { SPACE_NAME_MAX } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
+  NameOverrides,
   checkRename,
   renameCancel,
   renameCheckLine,
@@ -129,5 +130,36 @@ describe('the optimistic save and its rollback', () => {
     const archived = renameSettled(state, { ok: false, failure: 'archived' }).state;
     expect(renameEdit(archived, 'Park family 2').failure).toBe('archived');
     expect(renameSubmit(renameEdit(archived, 'Park family 2')).send).toBeNull();
+  });
+});
+
+describe('NameOverrides: a rename never drops a read, and no read puts an old name back', () => {
+  it('a pending name wins over every read; a settled one over reads that began before it settled', () => {
+    const names = new NameOverrides();
+    const before = names.begin();
+    names.set('space:c1', 'Room 5', false);
+    const during = names.begin();
+    // Both reads may hold the old name while the PATCH is under way.
+    expect(names.nameFor('space:c1', 'Room 4', before)).toBe('Room 5');
+    expect(names.nameFor('space:c1', 'Room 4', during)).toBe('Room 5');
+    names.set('space:c1', 'Room 5', true);
+    // Settled: a read that began earlier still answers with the old name and is overruled...
+    expect(names.nameFor('space:c1', 'Room 4', during)).toBe('Room 5');
+    // ...a read that began after it draws its own name (a later rename from another device included).
+    const after = names.begin();
+    expect(names.nameFor('space:c1', 'Room 6', after)).toBe('Room 6');
+    // The older read can still land after that one (two reads of one space, either order): it is still overruled.
+    expect(names.nameFor('space:c1', 'Room 4', before)).toBe('Room 5');
+    // Another space is untouched.
+    expect(names.nameFor('space:c2', 'Room 9', before)).toBe('Room 9');
+  });
+
+  it('a failed save settles on the last confirmed name', () => {
+    const names = new NameOverrides();
+    const read = names.begin();
+    names.set('space:c1', 'Room 5', false);
+    names.set('space:c1', 'Room 4', true);
+    expect(names.nameFor('space:c1', 'Room 4', read)).toBe('Room 4');
+    expect(names.nameFor('space:c1', 'Room 4', names.begin())).toBe('Room 4');
   });
 });

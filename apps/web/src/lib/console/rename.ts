@@ -104,3 +104,35 @@ export function renameSettled(state: RenameState, outcome: { ok: true; name: str
   if (outcome.ok) return { state: { ...renameIdle(outcome.name) }, name: outcome.name, announce: outcome.changed };
   return { state: { open: true, draft: state.pending ?? state.draft, stored: state.stored, saving: false, pending: null, failure: outcome.failure }, name: state.stored, announce: false };
 }
+
+/**
+ * The names a rename put on screen, laid over every read that lands (section 5.3). A rename never drops a read: the
+ * read's other parts (a new class, an assigned teacher, members, plans) always draw, and only the renamed name is kept.
+ * - A name still being saved wins over any read: a read the Worker answered before the save committed holds the old one.
+ * - A settled name (the Worker's, or the last confirmed one after a failure) wins over a read that began before the save
+ *   settled; a read that began after it settled draws its own name (the Worker holds the new one by then, or a later
+ *   rename from another device).
+ * Reads are numbered with `begin()` when they start, background reads included.
+ */
+export class NameOverrides {
+  private reads = 0;
+  private readonly names = new Map<string, { name: string; pending: boolean; mark: number }>();
+
+  /** A read starts: its number, passed back to `nameFor` when it lands. */
+  begin(): number {
+    this.reads += 1;
+    return this.reads;
+  }
+
+  /** `onName` of a rename: `settled` false for the optimistic name, true once the PATCH answered. */
+  set(spaceId: string, name: string, settled: boolean): void {
+    this.names.set(spaceId, { name, pending: !settled, mark: this.reads });
+  }
+
+  /** The name to draw for space `spaceId` from read number `read`, which brought `fetched`. */
+  nameFor(spaceId: string, fetched: string, read: number): string {
+    const kept = this.names.get(spaceId);
+    // Kept, not deleted: one page may read the same space twice (the family list and its roster), in either order.
+    return kept && (kept.pending || read <= kept.mark) ? kept.name : fetched;
+  }
+}

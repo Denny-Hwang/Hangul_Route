@@ -9,7 +9,7 @@ import type { ApiResult, SchoolView } from '@/lib/console/api';
  * one-tap rename on the class page, the school page and its class rows, the family home and the Settings Name row.
  * Rename shows only with `canRename` on a live space; Enter saves and Escape cancels, focus going back to Rename; the
  * new name shows at once (title, Back label, frame title) and comes back on a failure; a polite live region says
- * "Name saved."; the tab title never carries the name. Rendered with react-test-renderer (no DOM); refs get focus and
+ * "Name saved."; the tab title never carries the name (e2e). Rendered with react-test-renderer (no DOM); refs get focus and
  * select spies through `createNodeMock`.
  */
 vi.mock('@/lib/i18n/locale-context', async () => {
@@ -64,6 +64,8 @@ const api = {
   entitlements: async () => ok([]),
   members: async () => ok([]),
   school: async () => ok(state.school),
+  createSpace: async () => ok({ space: { ...SPACE, id: 'space:n', name: 'Brand New' } }),
+  patchSettings: async () => ok({}),
   billingSummary: async () => ({ ok: false, error: 'network', status: -1 }),
   renameSpace: (id: string, name: string): Promise<ApiResult<unknown>> => {
     state.renames.push({ id, name });
@@ -106,6 +108,7 @@ let mounted: ReactTestRenderer | null = null;
 afterEach(() => {
   act(() => mounted?.unmount());
   mounted = null;
+  vi.unstubAllGlobals();
   Object.assign(SPACE, { kind: 'class', name: 'Room 4', archivedAt: null, parentSpaceId: null });
   Object.assign(state, { canRename: true, openMoves: false, renames: [], answer: null, school: null, seats: null });
   query.value = 'id=space%3Ac1';
@@ -310,9 +313,8 @@ describe('class page: the title row', () => {
 });
 
 describe('Settings: the Name row, the frame title and the Back label', () => {
-  it('renames from the Name block; the frame title and Back to <name> follow at once; the tab title never names it', async () => {
-    const doc = { title: m.console.docTitle.console };
-    vi.stubGlobal('document', doc);
+  // The tab title stays `console.docTitle` (GrownUpGate, not rendered here): the e2e checks it never names the space.
+  it('renames from the Name block; the frame title and Back to <name> follow at once', async () => {
     const root = await render(<SettingsPage />);
     expect(textOf(one(root, 'settings-name-text'))).toBe('Room 4');
     expect(frame.titles.at(-1)).toBe(m.console.settings.titleFor('Room 4'));
@@ -323,8 +325,6 @@ describe('Settings: the Name row, the frame title and the Back label', () => {
     expect(frame.titles.at(-1)).toBe(m.console.settings.titleFor('Room 5'));
     expect(frame.backs.at(-1)).toBe(m.console.settings.back('Room 5'));
     expect(textOf(one(root, 'settings-name-text'))).toBe('Room 5');
-    expect(doc.title).toBe(m.console.docTitle.console);
-    vi.unstubAllGlobals();
   });
 
   it('archived: the name and the archived line, no Rename', async () => {
@@ -332,6 +332,39 @@ describe('Settings: the Name row, the frame title and the Back label', () => {
     const root = await render(<SettingsPage />);
     expect(byTestId(root, 'settings-rename')).toHaveLength(0);
     expect(textOf(one(root, 'settings-name'))).toContain(r.archived);
+  });
+
+  it('archived, and this grown-up may not rename (a caregiver, a teacher who is not the owner): the name only, no line to unarchive', async () => {
+    SPACE.archivedAt = '2026-10-01T00:00:00.000Z';
+    state.canRename = false;
+    const root = await render(<SettingsPage />);
+    expect(byTestId(root, 'settings-rename')).toHaveLength(0);
+    expect(textOf(one(root, 'settings-name-text'))).toBe('Room 4');
+    expect(textOf(one(root, 'settings-name'))).not.toContain(r.archived);
+  });
+
+  it('a read that began before the rename settled and lands after it keeps the new name (no old name put back)', async () => {
+    const root = await render(<SettingsPage />);
+    let settle: () => void = () => undefined;
+    state.answer = () => new Promise((resolve) => (settle = () => resolve(ok({ space: { ...SPACE, name: 'Room 5' }, changed: true }))));
+    await press(root, 'settings-rename');
+    await type(root, 'settings-rename-form-input', 'Room 5');
+    await submit(root, 'settings-rename-form');
+    // A settings save reads the roster again; the Worker answers that read with the old name, after the PATCH settled.
+    const roster = api.roster;
+    let release: () => void = () => undefined;
+    api.roster = () => new Promise((resolve) => (release = () => void roster().then(resolve)));
+    try {
+      const sections = root.find((n) => typeof n.props.onAnonymize === 'function');
+      await act(async () => sections.props.onAnonymize(true));
+      await act(async () => settle());
+      await act(async () => release());
+    } finally {
+      api.roster = roster;
+    }
+    expect(textOf(one(root, 'settings-name-text'))).toBe('Room 5');
+    expect(frame.titles.at(-1)).toBe(m.console.settings.titleFor('Room 5'));
+    expect(frame.backs.at(-1)).toBe(m.console.settings.back('Room 5'));
   });
 
   it('a family: n of 4 learners under the join code', async () => {
@@ -398,6 +431,36 @@ describe('school page: the title and each class row', () => {
     expect(textOf(byTestId(root, 'class-row')[0] as ReactTestInstance)).toContain('Sunday Hangul A');
     expect(focused).toEqual(['class-rename']);
     expect(textOf(one(root, 'rename-live'))).toBe(r.saved);
+  });
+
+  it('a rename settling while a create-class read is in flight drops nothing: the new class and the new name both show', async () => {
+    state.school = view(true);
+    const root = await render(school());
+    let settle: () => void = () => undefined;
+    state.answer = () => new Promise((resolve) => (settle = () => resolve(ok({ space: { ...SPACE, id: 'space:a', name: 'Sunday Hangul A' }, changed: true }))));
+    const live = byTestId(root, 'class-row')[0] as ReactTestInstance;
+    await act(async () => (byTestId(live, 'class-rename')[0] as ReactTestInstance).props.onClick());
+    await type(root, 'class-rename-form-input', 'Sunday Hangul A');
+    await submit(root, 'class-rename-form');
+    // The school read after Create class: slow, and answered before the PATCH committed (the old class name).
+    const read = api.school;
+    let release: () => void = () => undefined;
+    const before = view(true);
+    const created = { ...before, classes: [...before.classes, row('space:n', 'Brand New', true)] };
+    api.school = () => new Promise((resolve) => (release = () => resolve(ok(created))));
+    try {
+      const panel = root.find((n) => typeof n.props.onCreateClass === 'function');
+      await act(async () => panel.props.onCreateClass('Brand New'));
+      await act(async () => settle());
+      await act(async () => release());
+    } finally {
+      api.school = read;
+    }
+    const rows = byTestId(root, 'class-row').map(textOf);
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toContain('Sunday Hangul A');
+    expect(rows[0]).not.toContain('Sunday Class A');
+    expect(rows[2]).toContain('Brand New');
   });
 });
 

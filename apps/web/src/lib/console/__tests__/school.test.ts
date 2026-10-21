@@ -27,6 +27,10 @@ describe('school view models (F-SCHOOL-001 §3.3)', () => {
     expect(limitState({ students: 45, teachers: 2 }, licensed)).toBe('near');
     expect(limitState({ students: 50, teachers: 2 }, licensed)).toBe('at');
     expect(limitState({ students: 62, teachers: 2 }, licensed)).toBe('over');
+    // A School Contract over its seats reads at the limit: the over line would ask it to write for a contract it holds.
+    expect(limitState({ students: 130, teachers: 2 }, { licensed: true, students: 120, teachers: 10 }, true)).toBe('at');
+    expect(limitState({ students: 130, teachers: 2 }, { licensed: true, students: 120, teachers: 10 }, false)).toBe('over');
+    expect(limitState({ students: 62, teachers: 2 }, unlicensed, true)).toBe('over');
     expect(limitState({ students: 62, teachers: 2 }, { licensed: true, students: null, teachers: null })).toBe('ok');
     // A Worker older than SA-1 sends no cap for an unlicensed school.
     expect(limitState({ students: 62, teachers: 2 }, { licensed: false, students: null, teachers: null })).toBe('unlicensed');
