@@ -1,0 +1,302 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Story Order with half its rounds told by captions only, or captions marked as settling the order. Not real content.",
+  "rule": "story-order-text",
+  "files": {
+    "content/episodes/stage-4/nature.v2.json": {
+      "id": "episode:stage4-nature-v2",
+      "stage": "stage4",
+      "theme": "nature",
+      "volume": 2,
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage4-nature-v2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "story-order",
+              "minigameRef": "minigame:s4-nature-q1-check"
+            },
+            {
+              "id": "s3",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s4-nature-q1-check",
+              "kind": "story-order",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "panels": [
+                    {
+                      "id": "haneul",
+                      "caption": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      },
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "byeol",
+                      "caption": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      },
+                      "pictureRef": "word:byeol"
+                    },
+                    {
+                      "id": "namu",
+                      "caption": {
+                        "ko": "나무",
+                        "romanization": "namu",
+                        "en": "tree"
+                      },
+                      "pictureRef": "word:namu"
+                    },
+                    {
+                      "id": "kkot",
+                      "caption": {
+                        "ko": "꽃",
+                        "romanization": "kkot",
+                        "en": "flower"
+                      },
+                      "pictureRef": "word:kkot"
+                    }
+                  ]
+                },
+                {
+                  "id": "r2",
+                  "panels": [
+                    {
+                      "id": "haneul",
+                      "caption": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    },
+                    {
+                      "id": "byeol",
+                      "caption": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    },
+                    {
+                      "id": "namu",
+                      "caption": {
+                        "ko": "나무",
+                        "romanization": "namu",
+                        "en": "tree"
+                      }
+                    },
+                    {
+                      "id": "kkot",
+                      "caption": {
+                        "ko": "꽃",
+                        "romanization": "kkot",
+                        "en": "flower"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage4-nature-v2-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "story-order",
+              "minigameRef": "minigame:s4-nature-q2-check"
+            },
+            {
+              "id": "s3",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s4-nature-q2-check",
+              "kind": "story-order",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "panels": [
+                    {
+                      "id": "haneul",
+                      "caption": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      },
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "byeol",
+                      "caption": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      },
+                      "pictureRef": "word:byeol"
+                    },
+                    {
+                      "id": "namu",
+                      "caption": {
+                        "ko": "나무",
+                        "romanization": "namu",
+                        "en": "tree"
+                      },
+                      "pictureRef": "word:namu"
+                    },
+                    {
+                      "id": "kkot",
+                      "caption": {
+                        "ko": "꽃",
+                        "romanization": "kkot",
+                        "en": "flower"
+                      },
+                      "pictureRef": "word:kkot"
+                    }
+                  ],
+                  "captionsSettleOrder": true
+                },
+                {
+                  "id": "r2",
+                  "panels": [
+                    {
+                      "id": "haneul",
+                      "caption": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      },
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "byeol",
+                      "caption": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      },
+                      "pictureRef": "word:byeol"
+                    },
+                    {
+                      "id": "namu",
+                      "caption": {
+                        "ko": "나무",
+                        "romanization": "namu",
+                        "en": "tree"
+                      },
+                      "pictureRef": "word:namu"
+                    },
+                    {
+                      "id": "kkot",
+                      "caption": {
+                        "ko": "꽃",
+                        "romanization": "kkot",
+                        "en": "flower"
+                      },
+                      "pictureRef": "word:kkot"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/stories/fixture-order.json": {
+      "id": "story:fixture-order",
+      "tiers": [
+        {
+          "level": "read",
+          "checks": [
+            {
+              "id": "c1",
+              "kind": "story-order",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "panels": [
+                    {
+                      "id": "haneul",
+                      "caption": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      },
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "byeol",
+                      "caption": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      },
+                      "pictureRef": "word:byeol"
+                    },
+                    {
+                      "id": "namu",
+                      "caption": {
+                        "ko": "나무",
+                        "romanization": "namu",
+                        "en": "tree"
+                      },
+                      "pictureRef": "word:namu"
+                    },
+                    {
+                      "id": "kkot",
+                      "caption": {
+                        "ko": "꽃",
+                        "romanization": "kkot",
+                        "en": "flower"
+                      },
+                      "pictureRef": "word:kkot"
+                    }
+                  ],
+                  "captionsOnly": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": []
+}

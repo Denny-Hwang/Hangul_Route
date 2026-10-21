@@ -1,0 +1,715 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): the CM-50a scaffold (a draft pack of five draft levels, checked for ids, stage and file names only), a draft pack with a ready L1, a scaffolded L2 and L3-L5 not written yet (one level PR at a time), and content/packs/order.json. Not real content.",
+  "rule": "pack-skeleton",
+  "files": {
+    "content/packs/order.json": {
+      "order": [
+        "scaffold-fixture",
+        "partial-fixture"
+      ]
+    },
+    "content/packs/scaffold-fixture/pack.json": {
+      "id": "pack:scaffold-fixture",
+      "key": "scaffold-fixture",
+      "titleEn": "TODO",
+      "hoyaIntroEn": "TODO",
+      "homeTheme": "life",
+      "levels": [
+        {
+          "stage": "stage2",
+          "episodeId": "episode:pack-scaffold-fixture-s2"
+        },
+        {
+          "stage": "stage3",
+          "episodeId": "episode:pack-scaffold-fixture-s3"
+        },
+        {
+          "stage": "stage4",
+          "episodeId": "episode:pack-scaffold-fixture-s4"
+        },
+        {
+          "stage": "stage6",
+          "episodeId": "episode:pack-scaffold-fixture-s6"
+        },
+        {
+          "stage": "stage7",
+          "episodeId": "episode:pack-scaffold-fixture-s7"
+        }
+      ],
+      "status": "draft"
+    },
+    "content/packs/scaffold-fixture/stage-2.json": {
+      "id": "episode:pack-scaffold-fixture-s2",
+      "stage": "stage2",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-scaffold-fixture-s2-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s2-q2",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s2-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/scaffold-fixture/stage-3.json": {
+      "id": "episode:pack-scaffold-fixture-s3",
+      "stage": "stage3",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-scaffold-fixture-s3-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s3-q2",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s3-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/scaffold-fixture/stage-4.json": {
+      "id": "episode:pack-scaffold-fixture-s4",
+      "stage": "stage4",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-scaffold-fixture-s4-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s4-q2",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s4-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/scaffold-fixture/stage-6.json": {
+      "id": "episode:pack-scaffold-fixture-s6",
+      "stage": "stage6",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-scaffold-fixture-s6-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s6-q2",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s6-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/scaffold-fixture/stage-7.json": {
+      "id": "episode:pack-scaffold-fixture-s7",
+      "stage": "stage7",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-scaffold-fixture-s7-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s7-q2",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-scaffold-fixture-s7-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/partial-fixture/pack.json": {
+      "id": "pack:partial-fixture",
+      "key": "partial-fixture",
+      "titleEn": "Partial",
+      "hoyaIntroEn": "Let us start!",
+      "homeTheme": "life",
+      "levels": [
+        {
+          "stage": "stage2",
+          "episodeId": "episode:pack-partial-fixture-s2"
+        },
+        {
+          "stage": "stage3",
+          "episodeId": "episode:pack-partial-fixture-s3"
+        },
+        {
+          "stage": "stage4",
+          "episodeId": "episode:pack-partial-fixture-s4"
+        },
+        {
+          "stage": "stage6",
+          "episodeId": "episode:pack-partial-fixture-s6"
+        },
+        {
+          "stage": "stage7",
+          "episodeId": "episode:pack-partial-fixture-s7"
+        }
+      ],
+      "status": "draft"
+    },
+    "content/packs/partial-fixture/stage-2.json": {
+      "id": "episode:pack-partial-fixture-s2",
+      "stage": "stage2",
+      "status": "ready",
+      "titleEn": "Numbers",
+      "quests": [
+        {
+          "id": "quest:pack-partial-fixture-s2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q1-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    },
+                    {
+                      "id": "p2",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q1-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-partial-fixture-s2-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "syllable-build",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q2-practice",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                },
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q2-apply",
+              "kind": "syllable-build",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q2-check",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-partial-fixture-s2-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나무",
+                          "romanization": "namu",
+                          "en": "tree"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "syllable-build",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-partial-fixture-s2-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q3-practice",
+              "kind": "syllable-build",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q3-apply",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-partial-fixture-s2-q3-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": []
+    },
+    "content/packs/partial-fixture/stage-3.json": {
+      "id": "episode:pack-partial-fixture-s3",
+      "stage": "stage3",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-partial-fixture-s3-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-partial-fixture-s3-q2",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-partial-fixture-s3-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    }
+  },
+  "expect": []
+}

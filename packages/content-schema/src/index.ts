@@ -35,7 +35,7 @@ export * from './schemas/audio';
 export * from './schemas/vocab';
 export * from './story-sources';
 export * from './story-lint';
-export * from './lesson-lint';
+export * from './lesson-cell-lint';
 export * from './curriculum/dates';
 export * from './assessment';
 export * from './schemas/placement';
