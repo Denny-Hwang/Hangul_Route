@@ -49,8 +49,8 @@ const exactly = (...labels: string[]): RegExp => new RegExp(`^(${labels.map(esca
 
 /**
  * The four pages of section 13, each with its PageBack's test id and label. Lecture mode's page names the space once
- * it has read the roster; with `NEXT_PUBLIC_LECTURE_MODE` off (this export) it shows its coming-soon note and goes
- * back to "the space".
+ * it has read the roster (on by default since AMENDMENTS-LECTURE-V2 LV-7); with `NEXT_PUBLIC_LECTURE_MODE` off (the kill
+ * switch) it shows its coming-soon note and goes back to "the space".
  */
 const PAGES = [
   { name: 'plan', path: `/teach/space/plan?id=${ID}`, testId: 'page-back', label: exactly(c.plan.back(SPACE.name)) },

@@ -10,16 +10,17 @@ import { shot } from './shots';
  * the Lecture mode card in the learner app's grown-up area, and the dashboard heading that ran 3 px past 320 at
  * 200 % text (LV-0b `learner-card.md`, now `overflow-wrap: anywhere`).
  *
- * What CI checks: the release build, where `flags.lectureModeEnabled` is off until LV-7, so the dashboard draws no
- * card, and the dashboard has no sideways scroll at 320 px, at 320 px with 200 % text (a 160 px layout: React Native
- * Web sets text in px, so 200 % browser zoom of 320 px is this window, WCAG 1.4.10) and at the Largest text size.
- * The card itself runs on a build with the switch on (LV-7 makes this the release build):
+ * What CI checks: the release build, where `flags.lectureModeEnabled` is on by default since LV-7, so the dashboard
+ * draws the card, and the dashboard has no sideways scroll at 320 px, at 320 px with 200 % text (a 160 px layout:
+ * React Native Web sets text in px, so 200 % browser zoom of 320 px is this window, WCAG 1.4.10) and at the Largest
+ * text size. The kill switch (LV-D1) runs on a build with the switch off, where the dashboard draws no card:
  *
- *   EXPO_PUBLIC_LECTURE_MODE=enabled pnpm --filter @hangul-route/mobile build:web
- *   E2E_LECTURE_MODE=1 pnpm --filter @hangul-route/mobile exec playwright test grown-up-lecture-card
+ *   EXPO_PUBLIC_LECTURE_MODE=off pnpm --filter @hangul-route/mobile build:web
+ *   E2E_LECTURE_MODE=0 pnpm --filter @hangul-route/mobile exec playwright test grown-up-lecture-card
  */
 
-const ON = process.env.E2E_LECTURE_MODE === '1';
+/** On unless the run says the build has the kill switch off (`E2E_LECTURE_MODE=0`): the launch default since LV-7. */
+const ON = process.env.E2E_LECTURE_MODE !== '0';
 const en = getMessages('en');
 const NAME = 'Mina Ruiz';
 
@@ -61,7 +62,7 @@ for (const vp of [
       await expect(page.getByTestId('dashboard-lecture')).toBeVisible();
       await expect(page.getByRole('button', { name: en.caregiver.lecture.next(NAME) })).toBeVisible();
     } else {
-      // Off until LV-7: no card and no disabled control (section 3, LV-D1).
+      // The kill switch off: no card and no disabled control (section 3, LV-D1).
       await expect(page.getByTestId('dashboard-lecture')).toHaveCount(0);
       await expect(page.getByText(en.caregiver.lecture.title, { exact: true })).toHaveCount(0);
     }
@@ -69,8 +70,8 @@ for (const vp of [
   });
 }
 
-test.describe('the card, on a build with the switch on (E2E_LECTURE_MODE=1)', () => {
-  test.skip(!ON, 'flags.lectureModeEnabled is off in the release build until LV-7');
+test.describe('the card, on the release build (the launch default since LV-7)', () => {
+  test.skip(!ON, 'this build has the lecture mode kill switch off (E2E_LECTURE_MODE=0)');
 
   for (const vp of [
     { width: 320, height: 568 },
