@@ -174,13 +174,13 @@ describe('the shared grown-up layout (F-APP-001 A-4b)', () => {
   });
 
   it('titles the tab from the dictionary in the console language, once the record is read', () => {
-    const doc = { title: 'Console — Hangul Route' };
+    const doc = { title: 'Hangul Route' };
     vi.stubGlobal('document', doc);
     try {
       auth.session = { accountId: 'user_1' };
       locale.locale = 'ko';
       render();
-      expect(doc.title).toBe('콘솔 — Hangul Route');
+      expect(doc.title).toBe('어른 공간 — Hangul Route');
       act(() => mounted?.unmount());
       mounted = null;
       nav.pathname = '/signin';

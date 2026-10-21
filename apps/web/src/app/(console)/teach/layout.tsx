@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { GrownUpLayout } from '@/components/console/GrownUpLayout';
 
 export const metadata: Metadata = {
-  title: 'Console — Hangul Route',
+  // Neutral until the client sets the localized `console.docTitle` (GrownUpLayout): never English-only jargon.
+  title: 'Hangul Route',
   description: 'For parents, teachers and schools: create a class or family, share a code, see progress summaries.',
   robots: { index: false, follow: false },
 };
