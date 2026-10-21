@@ -362,6 +362,17 @@ describe('signedOutTarget: a signed-out visitor on a grown-up page (sections 3.7
     expect(signedOutTarget('/teach/home', '?lang=ko')).toBe(`/signin?lang=ko&next=${encodeURIComponent('/teach/home?lang=ko')}`);
   });
 
+  it('[OA] the chooser rows signed out (row OA-4b): School and Teacher open /signin as a teacher, next kept, no id', () => {
+    expect(signedOutTarget('/teach', '?focus=school&lang=ko')).toBe('/signin?persona=teacher&lang=ko&next=%2Fteach%3Ffocus%3Dschool%26lang%3Dko');
+    expect(signedOutTarget('/teach', '?persona=teacher&lang=en')).toBe('/signin?persona=teacher&lang=en&next=%2Fteach%3Fpersona%3Dteacher%26lang%3Den');
+    // An explicit hint still wins; any other focus is no hint.
+    expect(signedOutTarget('/teach', '?as=parent&focus=school')).toContain('persona=parent');
+    expect(signedOutTarget('/teach', '?focus=other')).toBe(`/signin?next=${encodeURIComponent('/teach?focus=other')}`);
+    // After sign-in the router follows next back to /teach?focus=school, which carries the focus to the teacher home.
+    const next = new URLSearchParams(signedOutTarget('/teach', '?focus=school&lang=ko').split('?')[1]).get('next');
+    expect(next).toBe('/teach?focus=school&lang=ko');
+  });
+
   it('a page safeNextPath refuses (not a grown-up path) goes to /signin alone', () => {
     expect(signedOutTarget('/somewhere', '?a=1')).toBe('/signin');
   });
