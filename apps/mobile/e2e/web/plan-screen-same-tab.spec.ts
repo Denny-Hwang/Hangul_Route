@@ -95,14 +95,12 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     expect(await unlockOf(page)).toBeNull();
   });
 
-  // [OA] CS-15 (row OA-2): leaving Edit profile ended the session that its PIN opened, so Open billing asks the PIN
-  // once more, and that fresh PIN also serves the grown-up area: no second ask.
-  test('three minutes after a session another gate opened and Back ended, Open billing asks the PIN once', async ({ page }) => {
+  test('a PIN older than 2 minutes (the 15-minute session still open) asks on the grown-up PIN screen first', async ({ page }) => {
     await page.clock.install();
     await standInBilling(page);
     await onboardChild(page, { name: 'Mina' });
     await openProfile(page, 'Mina');
-    // A session through another gate (Edit profile), then Back to Profile, which ends it.
+    // Open the 15-minute session through another gate (Edit profile), then come back to Profile.
     await page.getByRole('button', { name: /^Edit Mina/ }).click();
     await unlockWithPin(page);
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
@@ -111,7 +109,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await page.clock.fastForward('03:00');
     await openPlanDetails(page);
 
-    // The gate asks again; the PIN entered now is fresh, so the grown-up area takes it.
+    // The session opens the gate directly, but the PIN is stale: the grown-up area's own PIN screen.
     await page.getByRole('button', { name: 'Open billing' }).click();
     await unlockWithPin(page);
     await expect(page).toHaveURL(/\/account\/billing\?lang=en$/);

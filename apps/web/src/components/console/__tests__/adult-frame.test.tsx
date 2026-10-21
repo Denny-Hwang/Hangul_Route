@@ -373,14 +373,14 @@ describe('the Learner app exit and PageBack (sections 3.8, 3.9; AMENDMENTS-DISPL
     expect(textOf(exit)).toBe('Learner app');
     await act(async () => exit.props.onClick());
     expect(env.cleared).toBe(1);
-    expect(env.assigned).toEqual(['/?lang=en&who=1']);
+    expect(env.assigned).toEqual(['/?lang=en']);
   });
 
   it('from the site origin (before F-SITE-002 S-10) the exit goes to the app host', async () => {
     const env = fakeEnv({ origin: 'https://hangulroute.com' });
     const r = await render(env, [klass]);
     await act(async () => byTestId(r, 'frame-learner-app')[0]?.props.onClick());
-    expect(env.assigned).toEqual(['https://app.hangulroute.com/?lang=en&who=1']);
+    expect(env.assigned).toEqual(['https://app.hangulroute.com/?lang=en']);
   });
 
   it('the exit is the last control of the header row, after the Aa button and Sign out, with the glyph after its label; nothing that leaves sits top left', async () => {

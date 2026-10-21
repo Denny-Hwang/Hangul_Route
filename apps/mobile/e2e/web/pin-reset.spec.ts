@@ -4,8 +4,7 @@ import { answerForkNew, E2E_PIN, onboardChild, openForGrownUps, openGrownUpZone,
 /**
  * F-LEARN-001 §3.5, §3.14: Forgot PIN. The Rescue Code path is covered in
  * onboarding-guardian.spec.ts; here the 24-hour wait (no code stored), the
- * Rescue Code's own attempt throttle ([OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3, row OA-2), and the
- * PIN screen's titles by audience (§3.4).
+ * shared attempt throttle, and the PIN screen's titles by audience (§3.4).
  */
 const VIEWPORTS = [
   { width: 375, height: 667 },
@@ -64,8 +63,6 @@ for (const vp of VIEWPORTS) {
       await expect.poll(() => readStored<string>(page, 'account:parentPinHash')).not.toBe(oldHash);
       // Only after the new PIN is stored is the request cleared.
       await expect.poll(() => readStored(page, 'account:pinResetRequestedAt')).toBeNull();
-      // [OA] OA-D21: a PIN set by the finished wait is recorded for the next Grown-up area entry.
-      await expect.poll(() => readStored<{ v: number; at: number }>(page, 'account:pinResetByWait')).toMatchObject({ v: 1 });
     });
 
     test('a waiting request is shown again on return, and a stored code sits behind "I don\'t have the code"', async ({ page }) => {
@@ -86,7 +83,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole('button', { name: 'Wait started' })).toBeDisabled();
     });
 
-    test('[OA] wrong Rescue Codes have their own throttle: five wrong tries give a calm 15-minute break', async ({ page }) => {
+    test('wrong Rescue Codes share the PIN throttle: five wrong tries give a calm break', async ({ page }) => {
       await onboardChild(page, { name: 'Mina' });
       await seedRescueCode(page, 'TIGER-MOON-RIVER-APPLE-482139');
       await openGrownUpZone(page, 'Mina');
@@ -98,28 +95,8 @@ for (const vp of VIEWPORTS) {
         await code.fill('TIGER-MOON-RIVER-APPLE-000000');
         await go.click();
       }
-      await expect(page.getByText("Let's take a short break. Try again in 15 min.")).toBeVisible();
+      await expect(page.getByText(/^Let's take a short break\. Try again in \d+s\.$/)).toBeVisible();
       await expect(go).toBeDisabled();
-      await expect.poll(() => readStored<{ lockedUntil: number | null }>(page, 'account:rescueAttempts')).toMatchObject({ lockedUntil: expect.any(Number) });
-      // The PIN's own count is untouched.
-      expect((await readStored<{ failures: number[] }>(page, 'account:pinAttempts'))?.failures ?? []).toEqual([]);
-    });
-
-    test('[OA] the Rescue Code is accepted during a PIN pause (CS-8)', async ({ page }) => {
-      await onboardChild(page, { name: 'Mina' });
-      await seedRescueCode(page, 'TIGER-MOON-RIVER-APPLE-482139');
-      await seedStored(page, 'account:pinAttempts', { failures: [], lockedUntil: Date.now() + 60 * 60_000, strikes: 5, lastMissAt: Date.now() });
-      // Home to the PIN screen by hand: during a pause the pause line takes the subtitle's place.
-      await expect(page.getByText('Hi, Mina!')).toBeVisible();
-      await page.getByRole('button', { name: 'Profile and settings' }).click();
-      await openForGrownUps(page);
-      await page.getByRole('button', { name: 'Grown-up area (PIN required)' }).click();
-      await expect(page.getByTestId('pin-pause-line')).toHaveText("Let's take a short break. Try again in 60 min.");
-      await expect(page.getByText('You can also set a new PIN with Forgot PIN?')).toBeVisible();
-      await page.getByRole('button', { name: 'Forgot PIN?' }).click();
-      await page.getByTestId('pin-reset-code-input').fill('tiger moon river apple 482139');
-      await page.getByRole('button', { name: 'Continue' }).click();
-      await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
     });
 
     test('a self-only device with a PIN says "Settings PIN" and "Create a PIN", never "grown-up"', async ({ page }) => {

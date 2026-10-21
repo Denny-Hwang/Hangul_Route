@@ -347,7 +347,7 @@ describe('the dashboard and the PIN screen (source)', () => {
   it('after a correct PIN the PIN screen goes back to the dashboard, which opens the tab on the next tap', () => {
     const pin = code('PinEntryScreen.tsx');
     const branch = pin.slice(pin.indexOf("route.params.next === 'LectureMode'"));
-    expect(branch.slice(0, branch.indexOf('} else if'))).toMatch(/\bback\(\);/);
+    expect(branch.slice(0, branch.indexOf('} else if'))).toMatch(/navigation\.goBack\(\);/);
     expect(pin.indexOf("route.params.next === 'LectureMode'")).toBeGreaterThan(pin.indexOf('const proceed = ('));
   });
 });

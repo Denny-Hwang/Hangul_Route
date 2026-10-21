@@ -154,10 +154,8 @@ describe('the gate destination Billing (navigation/types.ts, PinEntryScreen.tsx)
   it('opens the gate and returns to the Plan screen, which finishes the hand-off', () => {
     const branch = pinEntry.indexOf("=== 'Billing'");
     expect(branch).toBeGreaterThan(-1);
-    // The first navigation step after the Billing branch goes back (marking the PIN screen's return, CS-1): the Plan
-    // screen finishes the hand-off.
-    expect(pinEntry.slice(branch).match(/(navigation\.\w+|\bback)\(/)?.[1]).toBe('back');
-    expect(pinEntry).toMatch(/const back = \(\): void => \{\n\s*markGateReturn\(\);\n\s*navigation\.goBack\(\);/);
+    // The first navigation call after the Billing branch is goBack: the Plan screen finishes the hand-off.
+    expect(pinEntry.slice(branch).match(/navigation\.(\w+)\(/)?.[1]).toBe('goBack');
   });
 });
 

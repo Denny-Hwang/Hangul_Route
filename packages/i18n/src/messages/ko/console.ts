@@ -1090,7 +1090,6 @@ export const consoleMsgs = {
     noPin: '앱에서 어른용 PIN을 설정하거나 다시 로그인해 주세요.',
     pinRenew: '여기서 어른용 PIN을 쓰려면 앱에서 다시 설정한 뒤 한 번 로그인해 주세요.',
     signInOnly: '이 기기에서 어른용 페이지를 열려면 다시 로그인해 주세요.',
-    passkey: { cta: '패스키 쓰기' },
   },
   access: {
     product: {
@@ -1705,14 +1704,5 @@ export const consoleMsgs = {
     emailUnverified: '수락하려면 계정 이메일 인증이 필요해요. 계정 설정에서 이메일을 인증한 뒤 링크를 다시 열어 주세요.',
     tryAgain: '지금은 초대를 확인하지 못했어요. 잠시 뒤에 다시 해 볼까요?',
     home: { cta: '내 홈으로' },
-  },
-  pinOwner: {
-    cta: '이 계정으로 여기서 PIN을 다시 만들 수 있게 하기',
-    hint: '어른용 PIN을 잊으면 이 계정으로 로그인해서 이 기기에 새 PIN을 만들 수 있어요.',
-    done: '됐어요. 이 계정으로 여기서 PIN을 다시 만들 수 있어요.',
-  },
-  pinPrompt: {
-    body: '어른만 이 페이지를 열 수 있게 앱에서 어른용 PIN을 만들어요.',
-    cta: '앱 열기',
   },
 } satisfies DeepPartial<Messages['console']>;

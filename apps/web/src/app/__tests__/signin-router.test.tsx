@@ -48,10 +48,6 @@ const clerk = vi.hoisted(() => ({
   signUp: [] as Array<Record<string, unknown>>,
   reverify: 'verify' as 'verify' | 'cancel',
   reverifyAsked: 0,
-  /** [OA] The signed-in user's passkeys, as `useUser()` returns them (section 7.4 passkey check). */
-  user: null as null | undefined | { passkeys: Array<{ id?: string; lastUsedAt: Date | null }>; reload: () => Promise<{ passkeys: Array<{ id?: string; lastUsedAt: Date | null }> }> },
-  /** [OA] `useUser().isLoaded`. */
-  userLoaded: true,
 }));
 vi.mock('@clerk/clerk-react', () => ({
   SignIn: (props: Record<string, unknown>) => {
@@ -72,7 +68,6 @@ vi.mock('@clerk/clerk-react', () => ({
       };
     },
   }),
-  useUser: () => ({ user: clerk.user, isLoaded: clerk.userLoaded }),
   // Clerk's handler: a reverification hint opens the dialog; success retries the fetcher, a cancel rejects.
   useReverification: (fetcher: () => Promise<unknown>) => async () => {
     const first = (await fetcher()) as { clerk_error?: unknown };
@@ -181,9 +176,6 @@ beforeEach(() => {
   clerk.signIn = [];
   clerk.signUp = [];
   clerk.reverify = 'verify';
-  // A signed-in account without a passkey (the reverification runs only for a signed-in visitor).
-  clerk.user = { passkeys: [], reload: async () => ({ passkeys: [] }) };
-  clerk.userLoaded = true;
   clerk.reverifyAsked = 0;
   api.spaces = { ok: true, data: [] };
   api.calls = 0;
@@ -461,10 +453,9 @@ function routerEnv(over: Partial<RouterEnvironment> = {}): RouterEnvironment & {
   };
 }
 
-// [OA] A secret proof names its factor (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4).
-const proof = (secret: boolean, sessionId = 'sess_1') => JSON.stringify({ v: 1, kind: 'proof', sessionId, secret, ...(secret ? { factor: 'password' } : {}), at: NOW - 1_000 });
+const proof = (secret: boolean, sessionId = 'sess_1') => JSON.stringify({ v: 1, kind: 'proof', sessionId, secret, at: NOW - 1_000 });
 /** The same record for the pages, whose clock is the real one. */
-const proofNow = (secret: boolean) => JSON.stringify({ v: 1, kind: 'proof', sessionId: 'sess_1', secret, ...(secret ? { factor: 'password' } : {}), at: Date.now() - 1_000 });
+const proofNow = (secret: boolean) => JSON.stringify({ v: 1, kind: 'proof', sessionId: 'sess_1', secret, at: Date.now() - 1_000 });
 
 describe('the router after sign-in (sections 3.5, 3.7, 3.9)', () => {
   beforeEach(() => {
@@ -575,65 +566,6 @@ describe('the router after sign-in (sections 3.5, 3.7, 3.9)', () => {
     expect(clerk.reverifyAsked).toBe(1);
     expect(JSON.parse(browser.session.getItem('hr:grownup:unlock') ?? 'null')).toMatchObject({ src: 'signin' });
     expect(browser.replaced).toEqual(['/teach/home']);
-  });
-
-  it('[OA] on a pin browser a reverification that used one of the account’s passkeys writes no unlock (CS-17)', async () => {
-    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
-    stores.device = PIN_DEVICE;
-    api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => ({ passkeys: [{ lastUsedAt: new Date(Date.now() + 1_000) }] }) };
-    await render(<SignInPage />);
-    expect(clerk.reverifyAsked).toBe(1);
-    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
-    expect(browser.replaced).toEqual(['/teach/home']);
-  });
-
-  it('[OA] a passkey holder whose passkey was not used since unlocks; an account that cannot be read fails closed', async () => {
-    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
-    stores.device = PIN_DEVICE;
-    api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => ({ passkeys: [{ lastUsedAt: null }] }) };
-    await render(<SignInPage />);
-    expect(JSON.parse(browser.session.getItem('hr:grownup:unlock') ?? 'null')).toMatchObject({ src: 'signin' });
-  });
-
-  it('[OA] the passkey check compares Clerk stamps only: a stamp that moved refuses even with this clock 5 minutes fast', async () => {
-    vi.spyOn(Date, 'now').mockReturnValue(NOW + 5 * 60_000);
-    browser.session.setItem(SIGNIN_RECORD_KEY, JSON.stringify({ v: 1, kind: 'proof', sessionId: 'sess_1', secret: false, at: NOW + 5 * 60_000 - 1_000 }));
-    stores.device = PIN_DEVICE;
-    api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ id: 'pk_1', lastUsedAt: new Date(NOW - 86_400_000) }], reload: async () => ({ passkeys: [{ id: 'pk_1', lastUsedAt: new Date(NOW - 60_000) }] }) };
-    await render(<SignInPage />);
-    expect(clerk.reverifyAsked).toBe(1);
-    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
-    vi.restoreAllMocks();
-  });
-
-  it('[OA] with a passkey to refuse, the reverification waits for Clerk’s user; a user that loads as none fails closed', async () => {
-    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
-    stores.device = PIN_DEVICE;
-    api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = undefined;
-    clerk.userLoaded = false;
-    const page = await render(<SignInPage />);
-    expect(clerk.reverifyAsked).toBe(0);
-    clerk.user = null;
-    clerk.userLoaded = true;
-    await act(async () => {
-      page.update(<SignInPage />);
-      for (let i = 0; i < 20; i += 1) await Promise.resolve();
-    });
-    expect(clerk.reverifyAsked).toBe(1);
-    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
-  });
-
-  it('[OA] a reverification whose account cannot be read again, on a pin browser, writes no unlock', async () => {
-    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
-    stores.device = PIN_DEVICE;
-    api.spaces = { ok: true, data: [CLASS] };
-    clerk.user = { passkeys: [{ lastUsedAt: null }], reload: async () => Promise.reject(new Error('offline')) };
-    await render(<SignInPage />);
-    expect(browser.session.getItem('hr:grownup:unlock')).toBeNull();
   });
 
   it('OAuth on a device without a lock asks nothing more', async () => {

@@ -85,7 +85,7 @@ function DevSignInForm(): JSX.Element {
       return;
     }
     // The dev bearer stands in for a password: it counts as a secret-proving sign-in in this tab.
-    writeSignInProof({ sessionId: id, secret: true, factor: 'password' }, Date.now());
+    writeSignInProof({ sessionId: id, secret: true }, Date.now());
     auth.devSignIn({ token: id, accountId: id, displayName: name, email: email.trim() || undefined });
   };
 

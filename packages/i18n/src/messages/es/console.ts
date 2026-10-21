@@ -1183,7 +1183,6 @@ export const consoleMsgs = {
     noPin: 'Crea un PIN de adultos en la app, o vuelve a iniciar sesión.',
     pinRenew: 'Para usar aquí el PIN de adultos, créalo otra vez en la app y luego inicia sesión una vez.',
     signInOnly: 'Vuelve a iniciar sesión para abrir aquí las páginas para adultos.',
-    passkey: { cta: 'Usar una llave de acceso' },
   },
   access: {
     product: {
@@ -1804,14 +1803,5 @@ export const consoleMsgs = {
     emailUnverified: 'Para aceptar, tu cuenta necesita un correo verificado. Verifícalo en los ajustes de tu cuenta y vuelve a abrir el enlace.',
     tryAgain: 'No se pudo revisar la invitación ahora. Inténtalo de nuevo en un momento.',
     home: { cta: 'Ir a mi inicio' },
-  },
-  pinOwner: {
-    cta: 'Permitir que esta cuenta restablezca el PIN aquí',
-    hint: 'Si se olvida el PIN de adultos, entrar a esta cuenta permite crear uno nuevo en este dispositivo.',
-    done: 'Listo. Esta cuenta puede restablecer el PIN aquí.',
-  },
-  pinPrompt: {
-    body: 'Crea un PIN de adultos en la app para que solo los adultos abran estas páginas.',
-    cta: 'Abrir la app',
   },
 } satisfies DeepPartial<Messages['console']>;

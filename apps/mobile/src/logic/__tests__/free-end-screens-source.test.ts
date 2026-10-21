@@ -26,7 +26,7 @@ describe('Home (section 3.7)', () => {
   });
 
   it('asks from Home through askFor and askGate, with access.help_asked first', () => {
-    expect(src).toMatch(/helpAskedEvent\(profile\?\.id, 'home', ask\.audience\)[\s\S]*askGate\(passGate\('Paywall', gateOpensDirectlyNow\(\)\), 'home'\)/);
+    expect(src).toMatch(/helpAskedEvent\(profile\?\.id, 'home', ask\.audience\)[\s\S]*askGate\(gateOpensDirectlyNow\(\), 'home'\)/);
   });
 
   it('the free-end card has Hoya cheering, the title, the line and its three actions, and no lock glyph', () => {
@@ -52,7 +52,7 @@ describe('Results (section 3.8)', () => {
     expect(src).toMatch(/routeNext\(\{ \.\.\.routeInput, justCompleted: questId \}\)/);
     expect(src).toMatch(/freeEndResults\(\{ next, scored: total > 0, seen: freeEndSeen \}\)/);
     expect(src).toMatch(/markFreeEndSeen\(profileId, next\.placedOut\)/);
-    expect(src).toMatch(/helpAskedEvent\(profileId, 'results', ask\.audience\)[\s\S]*askGate\(passGate\('Paywall', gateOpensDirectlyNow\(\)\), 'results'\)/);
+    expect(src).toMatch(/helpAskedEvent\(profileId, 'results', ask\.audience\)[\s\S]*askGate\(gateOpensDirectlyNow\(\), 'results'\)/);
   });
 
   it('the calm line has no ask; the celebration has Back home, Practice words and the ask', () => {

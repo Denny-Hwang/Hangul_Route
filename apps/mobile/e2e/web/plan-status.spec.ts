@@ -223,30 +223,31 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true): the same tab opens the 
     expect(tabs.seen()).toBe(0);
   });
 
-  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-1, CS-15 (row OA-2): a session a gate opened ends when its page is
-  // left, so Back to Profile and three minutes on, Edit asks the PIN again, and Open billing asks it once and opens
-  // the billing page. (The 2-minute rule inside the Grown-up area is grown-up-shell.spec.ts item 22.)
-  test('leaving Edit profile ends the session: Edit asks the PIN again, and Open billing asks it once, then the billing page opens without the lock', async ({ page, context }) => {
+  test('a PIN older than 2 minutes asks again on the grown-up area PIN screen, then the billing page opens without the lock', async ({ page, context }) => {
     await page.clock.install();
     await signedInGrownUp(page);
     await onboardChild(page, { name: 'Mina' });
     await trustPinEpoch(page);
     await openProfile(page, 'Mina');
+    // Open the 15-minute grown-up session through another gate (Edit profile), then come back to Profile.
     await page.getByRole('button', { name: /^Edit Mina/ }).click();
     await unlockWithPin(page);
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
     await headerBack(page).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await page.clock.fastForward('03:00');
+    // Three minutes on, the 15-minute session still opens a gate with no PIN (the Plan screen's gate is one of
+    // them), so the PIN asked below can only be the grown-up area's 2-minute rule.
     await page.getByRole('button', { name: /^Edit Mina/ }).click();
-    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
-    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    await headerBack(page).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await openPlanDetails(page);
     const tabs = watchTabs(context);
 
     await page.getByRole('button', { name: 'Open billing' }).click();
-    // One PIN: it opens the gate and is fresh for the grown-up area, so the billing page opens with no second ask.
+    // The session is open, but the PIN is stale: the grown-up area's own PIN screen asks first, and only once.
     await unlockWithPin(page);
     await expectBillingPage(page);
     expect(tabs.seen()).toBe(0);

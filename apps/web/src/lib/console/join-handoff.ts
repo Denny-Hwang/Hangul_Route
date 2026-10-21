@@ -22,16 +22,12 @@ export function writeJoinHandoff(code: string, now: number, storage: KeyValueSto
  * On a site origin (the console there until F-SITE-002 S-10) no hand-off is written: `sessionStorage` is per
  * origin, so the app host could never read it, and the code would only sit in the site tab. The app opens all the
  * same, and the join line on the page says where to enter the code.
- * [OA] Whenever no hand-off was written (a site origin, a refused write, a code that is not one), the app opens "Who is
- * using this?" (`who=1`, AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.3).
  */
 export function openAppWithJoinCode(input: { code: string; now: number; locale: UiLocale; origin?: string; storage?: KeyValueStorage | null; assign?: (url: string) => void }): void {
   const storage = input.storage === undefined ? browserStorage('session') : input.storage;
   const origin = input.origin ?? (typeof window === 'undefined' ? '' : window.location.origin);
-  const handedOff = !isSiteOrigin(origin) && writeJoinHandoff(input.code, input.now, storage);
+  if (!isSiteOrigin(origin)) writeJoinHandoff(input.code, input.now, storage);
   clearGrownUpTab(storage);
   const assign = input.assign ?? ((url: string) => window.location.assign(url));
-  // [OA] Section 7.3: with a code the app lands on Join (Who is joining? applies there); without one it opens the
-  // chooser (`who=1`, OA-D12).
-  assign(learnerHome(origin, input.locale, { who: !handedOff }));
+  assign(learnerHome(origin, input.locale));
 }

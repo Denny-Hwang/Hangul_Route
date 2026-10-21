@@ -35,7 +35,7 @@ describe('the episode page (E3-6)', () => {
 
   it('asks through askFor and askGate, sends access.help_asked first and access.preview_opened once per open', () => {
     expect(src).toMatch(/askFor\(audience, isClassOnly\(/);
-    expect(src).toMatch(/helpAskedEvent\(profileId, 'episode', ask\.audience\)[\s\S]*askGate\(passGate\('Paywall', gateOpensDirectlyNow\(\)\), 'episode'\)/);
+    expect(src).toMatch(/helpAskedEvent\(profileId, 'episode', ask\.audience\)[\s\S]*askGate\(gateOpensDirectlyNow\(\), 'episode'\)/);
     expect(src).toMatch(/previewOpenedEvent\(/);
     expect(src).toMatch(/previewSent\.current === episode\.id/);
   });

@@ -10,13 +10,6 @@ interface State {
    */
   lastPinVerifiedAt: number | null;
   /**
-   * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-1: the PIN screen is going back, gate open, to the screen whose action
-   * asked for it (an Open link, Open billing, the level check's finish). The Grown-up area exit watcher takes it
-   * at the next landing, so that one return keeps the session for the waiting action; any other landing on a
-   * learner screen closes it. In memory only.
-   */
-  gateReturnPending: boolean;
-  /**
    * Height of the bottom tab bar while it shows, else 0. Window-level overlays
    * (PwaBanners) sit above it (F-LAYOUT-001 §3.3, audit UX-26). Not persisted.
    */
@@ -29,10 +22,6 @@ interface Actions {
   resetParentGate: () => void;
   /** The PIN screen verified a correct PIN just now. */
   markPinVerified: () => void;
-  /** [OA] The PIN screen goes back to the action that waited for it (CS-1). */
-  markGateReturn: () => void;
-  /** [OA] Reads and clears `gateReturnPending`. */
-  takeGateReturn: () => boolean;
   setTabBarHeight: (height: number) => void;
 }
 
@@ -40,18 +29,11 @@ export const useUiStore = create<State & Actions>((set, get) => ({
   hapticsOn: true,
   parentGateOpenedAt: null,
   lastPinVerifiedAt: null,
-  gateReturnPending: false,
   tabBarHeight: 0,
 
   toggleHaptics: () => set({ hapticsOn: !get().hapticsOn }),
   openParentGate: () => set({ parentGateOpenedAt: Date.now() }),
   resetParentGate: () => set({ parentGateOpenedAt: null }),
   markPinVerified: () => set({ lastPinVerifiedAt: Date.now() }),
-  markGateReturn: () => set({ gateReturnPending: true }),
-  takeGateReturn: () => {
-    const pending = get().gateReturnPending;
-    if (pending) set({ gateReturnPending: false });
-    return pending;
-  },
   setTabBarHeight: (tabBarHeight) => set({ tabBarHeight }),
 }));

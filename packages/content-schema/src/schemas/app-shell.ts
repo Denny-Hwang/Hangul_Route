@@ -381,15 +381,18 @@ export type PinResetTicket = z.infer<typeof PinResetTicketSchema>;
 
 /** [OA] OA-D9: learner key of the profile locks (stored as `hr:profiles:locks`), outside `hr:profiles`. */
 export const PROFILE_LOCKS_KEY = 'profiles:locks';
+/** [OA] Section 13.2: the most ids a locks record holds; far above the profiles any one device keeps. */
+export const PROFILE_LOCKS_MAX_IDS = 200;
 /**
  * [OA] OA-D9, section 13.2: the locked learner profiles, by id, each once. Local only, never synced. Tolerant in the
  * safe direction: a repeated id (two tabs appending the same lock) is kept once and a malformed id, which can never
  * match a profile, is dropped, so neither turns the whole record into a failed read. A record that still does not
- * parse is a failed read (fail closed), never a missing key.
+ * parse is a failed read (fail closed), never a missing key; so is one with more than `PROFILE_LOCKS_MAX_IDS` ids,
+ * which no device holds (a corrupted or hostile value is refused before any id is checked).
  */
 export const ProfileLocksSchema = z.object({
   v: z.literal(1),
-  ids: z.array(z.string()).transform((ids) => [...new Set(ids.filter((id) => ProfileSchema.shape.id.safeParse(id).success))]),
+  ids: z.array(z.string()).max(PROFILE_LOCKS_MAX_IDS).transform((ids) => [...new Set(ids.filter((id) => ProfileSchema.shape.id.safeParse(id).success))]),
 });
 export type ProfileLocks = z.infer<typeof ProfileLocksSchema>;
 

@@ -13,7 +13,6 @@ import { useAudience } from '../../store/audience';
 import { useMembershipStore, type LearnerTransfers } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
-import { passGate } from '../../store/gate-telemetry';
 
 /**
  * Hooks the class-move surfaces share — F-SPACE-002 section 4.12, T-7b / T-7c. They only read stores
@@ -113,7 +112,7 @@ export function useOpenMove(): (target: MoveTarget) => void {
   const gated = !opensDirectly(false);
   return useCallback(
     (target: MoveTarget) => {
-      const direct = passGate(target.screen, moveEntry({ gateOpen, gated }) === 'direct');
+      const direct = moveEntry({ gateOpen, gated }) === 'direct';
       if (target.screen === 'MoveClass') {
         if (direct) navigation.navigate('MoveClass', { profileId: target.profileId, fromSpaceId: target.fromSpaceId });
         else navigation.navigate('PinEntry', { next: 'MoveClass', profileId: target.profileId, fromSpaceId: target.fromSpaceId });

@@ -61,8 +61,8 @@ describe('secret-proving first factors (section 3.9)', () => {
 
 describe('proofFromSignIn: the completed sign-in of this tab', () => {
   it('a complete password or email-code sign-in proves a secret for the session it created', () => {
-    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'password' } })).toEqual({ sessionId: 'sess_1', secret: true, factor: 'password' });
-    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'email_code' } })).toEqual({ sessionId: 'sess_1', secret: true, factor: 'email_code' });
+    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'password' } })).toEqual({ sessionId: 'sess_1', secret: true });
+    expect(proofFromSignIn({ status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'email_code' } })).toEqual({ sessionId: 'sess_1', secret: true });
   });
 
   it('a complete Google sign-in is a proof without a secret', () => {
@@ -81,9 +81,9 @@ describe('proofFromSignIn: the completed sign-in of this tab', () => {
 describe('proofFromSignUp: the account the adult step created', () => {
   it('an email sign-up (verified by a code) proves a secret', () => {
     const code = { strategy: 'email_code', status: 'verified' };
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { externalAccount: { status: 'unverified' }, emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true, factor: 'email_code' });
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true, factor: 'email_code' });
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { phoneNumber: { strategy: 'phone_code', status: 'verified' } } })).toEqual({ sessionId: 'sess_3', secret: true, factor: 'phone_code' });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { externalAccount: { status: 'unverified' }, emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { phoneNumber: { strategy: 'phone_code', status: 'verified' } } })).toEqual({ sessionId: 'sess_3', secret: true });
   });
 
   it('an email-link sign-up, or one that names no verified code, does not (section 3.9)', () => {
@@ -144,8 +144,7 @@ describe('deviceCanLock: whether the grown-up lock can close on this device (sec
 
 describe('planAfterSignIn: what a sign-in completed in this tab earns (section 3.9)', () => {
   const now = 1_000_000;
-  // [OA] A secret proof names its factor (section 7.4: on a pin browser an absent one fails closed, signin-flow-oa.test.ts).
-  const proof = (secret: boolean, sessionId = 'sess_1', at = now - 1_000) => ({ v: 1 as const, kind: 'proof' as const, sessionId, secret, ...(secret ? { factor: 'password' } : {}), at });
+  const proof = (secret: boolean, sessionId = 'sess_1', at = now - 1_000) => ({ v: 1 as const, kind: 'proof' as const, sessionId, secret, at });
 
   it('a secret-proving sign-in writes the unlock on every device', () => {
     for (const device of [PIN, NOPIN, OLD_APP, FAILED, NONE, NO_DATA]) expect(planAfterSignIn({ record: proof(true), sessionId: 'sess_1', device, now })).toBe('unlock');
@@ -195,7 +194,7 @@ describe('proofAtSignIn: what the sign-in this page saw complete proved', () => 
   const now = 50_000;
   it("uses Clerk's completed sign-in or sign-up when it names this session", () => {
     expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'oauth_google' } }, record: null, now })).toEqual({ sessionId: 's1', secret: false });
-    expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'password' } }, record: { v: 1, kind: 'oauth', at: now }, now })).toEqual({ sessionId: 's1', secret: true, factor: 'password' });
+    expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'password' } }, record: { v: 1, kind: 'oauth', at: now }, now })).toEqual({ sessionId: 's1', secret: true });
     expect(proofAtSignIn({ sessionId: 's2', signUp: { status: 'complete', createdSessionId: 's2', verifications: { externalAccount: { status: 'verified' } } }, record: null, now })).toEqual({ sessionId: 's2', secret: false });
     expect(proofAtSignIn({ sessionId: 's3', signIn: { status: 'complete', createdSessionId: 's3', firstFactorVerification: { strategy: 'email_link' } }, record: { v: 1, kind: 'secret', at: now - 1 }, now })).toEqual({ sessionId: 's3', secret: false });
   });
@@ -481,7 +480,7 @@ describe('settleSignIn and finishReverify: the router spends the sign-in record 
     };
     return { io: value, calls };
   }
-  const proof = (secret: boolean) => ({ v: 1 as const, kind: 'proof' as const, sessionId: 'sess_1', secret, ...(secret ? { factor: 'password' } : {}), at: now - 10 });
+  const proof = (secret: boolean) => ({ v: 1 as const, kind: 'proof' as const, sessionId: 'sess_1', secret, at: now - 10 });
 
   it('no record: nothing read, nothing written', async () => {
     const readDevice = vi.fn(async () => PIN);

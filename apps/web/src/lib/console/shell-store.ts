@@ -1,4 +1,4 @@
-import { DeviceUsesSchema, LastPersonaSchema, PinOwnerSchema, SHELL_DB, SHELL_KEYS, SHELL_STORE, parseLenient, type AdultPersona, type DeviceUses, type LastPersona, type PinOwner } from '@hangul-route/content-schema';
+import { LastPersonaSchema, SHELL_DB, SHELL_KEYS, SHELL_STORE, parseLenient, type AdultPersona, type LastPersona } from '@hangul-route/content-schema';
 import { createStore, del, get, set, type UseStore } from 'idb-keyval';
 import { indexedDbAvailable } from '../i18n/safe-storage';
 
@@ -77,65 +77,4 @@ export async function writeTrustedEpoch(epoch: number | null, store: ShellStore 
   } catch {
     return false;
   }
-}
-
-// ---- [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.1, 7.2 and 7.6 (row OA-3) ----
-
-/** Writes `value` under `key`; false when there is no store or the write is refused. */
-async function put(key: string, value: unknown, store: ShellStore | null): Promise<boolean> {
-  if (!store) return false;
-  try {
-    await store.set(key, value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** [OA] `deviceUses` (`DeviceUsesSchema`): written by the adult frame on every persona home; a record that does not parse is never written. */
-export async function writeDeviceUses(record: DeviceUses, store: ShellStore | null = defaultShellStore()): Promise<boolean> {
-  const parsed = DeviceUsesSchema.safeParse(record);
-  return parsed.success ? put(SHELL_KEYS.deviceUses, parsed.data, store) : false;
-}
-
-/** [OA] Sign out deletes `deviceUses` (section 7.1). */
-export async function deleteDeviceUses(store: ShellStore | null = defaultShellStore()): Promise<boolean> {
-  if (!store) return false;
-  try {
-    await store.del(SHELL_KEYS.deviceUses);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** [OA] `pinOwner` (`PinOwnerSchema`); unreadable or junk reads as none. */
-export async function readPinOwner(store: ShellStore | null = defaultShellStore()): Promise<PinOwner | null> {
-  if (!store) return null;
-  try {
-    return parseLenient(PinOwnerSchema, await store.get(SHELL_KEYS.pinOwner));
-  } catch {
-    return null;
-  }
-}
-
-/** [OA] Writes `pinOwner`; a record that does not parse (epoch `0`, a bad fingerprint) is never written. */
-export async function writePinOwner(record: PinOwner, store: ShellStore | null = defaultShellStore()): Promise<boolean> {
-  const parsed = PinOwnerSchema.safeParse(record);
-  return parsed.success ? put(SHELL_KEYS.pinOwner, parsed.data, store) : false;
-}
-
-/** [OA] `pinPromptSeen`: true once the set-a-PIN card showed; null when the store cannot be read (the card then stays away). */
-export async function readPinPromptSeen(store: ShellStore | null = defaultShellStore()): Promise<boolean | null> {
-  if (!store) return null;
-  try {
-    return (await store.get(SHELL_KEYS.pinPromptSeen)) === true;
-  } catch {
-    return null;
-  }
-}
-
-/** [OA] Marks the set-a-PIN card seen: `true`, no other data. */
-export async function writePinPromptSeen(store: ShellStore | null = defaultShellStore()): Promise<boolean> {
-  return put(SHELL_KEYS.pinPromptSeen, true, store);
 }

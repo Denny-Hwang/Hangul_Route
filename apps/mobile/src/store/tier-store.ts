@@ -4,7 +4,6 @@ import { create } from 'zustand';
 import { bundleOs, flags, gatingActive } from '../config/flags';
 import { questOpenPredicate } from '../logic/content-access';
 import { entitlementTier } from '../logic/entitlement';
-import { legacyCovers } from '../logic/legacy-subscription-covers';
 import { readJson, writeJson } from '../platform/storage';
 import { useAccountStore } from './account-store';
 import { useProfileStore } from './profile-store';
@@ -75,19 +74,11 @@ export function cachedTierIsPremium(cached: LearnerTier | null | undefined, now:
   return !cached.validUntil || Date.parse(cached.validUntil) > now.getTime();
 }
 
-/**
- * Premium through a space (cached inbox) or the legacy device subscription. Billing surfaces read this.
- * The legacy subscription is capped like a family (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D15, section 10.5):
- * it covers the learners recorded in `account:subscriptionCovers` and newer ones up to 4, and every profile
- * until that record exists.
- */
+/** Premium through a space (cached inbox) or the legacy family subscription. Billing surfaces read this. */
 export function effectiveTier(learnerId: string, now: Date): { tier: Tier; source: TierSource | null } {
   const cached = useTierStore.getState().byLearner[learnerId];
   if (cachedTierIsPremium(cached, now)) return { tier: 'premium', source: cached?.source ?? null };
-  const { subscription, subscriptionCovers } = useAccountStore.getState();
-  if (entitlementTier(subscription, now) === 'premium' && legacyCovers(subscriptionCovers, useProfileStore.getState().profiles, learnerId)) {
-    return { tier: 'premium', source: null };
-  }
+  if (entitlementTier(useAccountStore.getState().subscription, now) === 'premium') return { tier: 'premium', source: null };
   return { tier: 'free', source: null };
 }
 
@@ -173,8 +164,7 @@ export function useQuestAccess(): (questId: string) => boolean {
 }
 
 function subscribeTier(onChange: () => void): () => void {
-  // The profile list too: which newer learners the legacy subscription covers follows it (section 10.5).
-  const offs = [useTierStore.subscribe(onChange), useAccountStore.subscribe(onChange), useProfileStore.subscribe(onChange)];
+  const offs = [useTierStore.subscribe(onChange), useAccountStore.subscribe(onChange)];
   return () => {
     for (const off of offs) off();
   };
@@ -183,8 +173,7 @@ function subscribeTier(onChange: () => void): () => void {
 /**
  * `accessTier` for one learner, as a React hook: the tier every learner-facing
  * access read uses (story locks, the cursor's stages, the level check's start
- * quest), re-read when the tier cache, the spaces, the subscription or the
- * profile list (the legacy subscription's newer learners) change.
+ * quest), re-read when the tier cache, the spaces or the subscription change.
  * Billing surfaces keep `effectiveTier` (F-ENT-003 section 3.4).
  */
 export function useAccessTier(learnerId: string): Tier {

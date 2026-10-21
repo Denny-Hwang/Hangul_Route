@@ -73,13 +73,6 @@ export const caregiver = {
     /** The wording the PIN screen and the first-run PIN field share. */
     mismatch: "Those didn't match. Let's start again.",
     cooldown: (seconds: number) => `Let's take a short break. Try again in ${seconds}s.`,
-    /** [OA] A pause of a minute or more (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3); under a minute is `cooldown`. */
-    cooldownMinutes: (n: number) => `Let's take a short break. Try again in ${n} min.`,
-    /** [OA] From the 3rd pause, on the Grown-up area destination only (CS-21). */
-    cooldownHelp: 'You can also set a new PIN with Forgot PIN?',
-    /** [OA] OA-D21: shown once at the next Grown-up area entry after a PIN set by the 24-hour wait. */
-    resetByWaitNotice: 'The grown-up PIN was changed after the 24-hour wait. If that was not you, change it now.',
-    resetByWaitChange: 'Change PIN',
     entry: {
       createAgain: 'Enter it once more',
       verifySubtitle: 'Enter your 4-digit PIN to continue.',

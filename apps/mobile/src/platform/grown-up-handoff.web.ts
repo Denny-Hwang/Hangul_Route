@@ -1,4 +1,11 @@
-import { APP_ROUTES, UNLOCK_SESSION_KEY, safeNextPath, type DeviceGateMarker } from '@hangul-route/content-schema';
+import {
+  APP_ROUTES,
+  BROWSE_PASS_SESSION_KEY,
+  CONSOLE_SESSION_KEY,
+  UNLOCK_SESSION_KEY,
+  safeNextPath,
+  type DeviceGateMarker,
+} from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
 import {
   decideHandoff,
@@ -11,11 +18,6 @@ import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { useUiStore } from '../store/ui-store';
 import { track as sendEvent, type TelemetryEvent } from './telemetry';
 import { markLeaving } from './history-bridge.web';
-import { sessionArea, type SessionArea } from './grown-up-tab.web';
-
-// [OA] The tab's session area and its clear moved to `grown-up-tab.web.ts` (no store imports), so the profile
-// store can end a grown-up session without loading this module; re-exported for every existing caller.
-export { clearGrownUpTab, sessionArea, type SessionArea } from './grown-up-tab.web';
 
 /**
  * The learner app's hand-off into the grown-up area on the same origin (F-APP-001 section 3.9),
@@ -29,6 +31,11 @@ export { clearGrownUpTab, sessionArea, type SessionArea } from './grown-up-tab.w
  * Profile row, the dashboard card and the Plan screen. Native builds use the stub
  * (`grown-up-handoff.ts`), which no native screen calls (OD-6).
  */
+export interface SessionArea {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+}
 
 export interface HandoffState {
   /** The device gate marker as the learner app sees it (`null` before the stores load). */
@@ -57,6 +64,16 @@ export const LEAVE_TELEMETRY_WAIT_MS = 1000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** This tab's `sessionStorage`, or null where it is missing or the browser refuses it. */
+export function sessionArea(): SessionArea | null {
+  try {
+    return (globalThis as { sessionStorage?: SessionArea }).sessionStorage ?? null;
+  } catch {
+    // Blocked site data: the getter itself throws.
+    return null;
+  }
 }
 
 function browserAssign(url: string): void {
@@ -128,6 +145,25 @@ export async function openGrownUpArea(request: GrownUpHandoffRequest, env: Hando
     env,
   );
   return 'opened';
+}
+
+/**
+ * Removes the grown-up unlock, the console session and the All lessons pass of this tab
+ * (section 3.9; the pass is F-BROWSE-001 section 4.3's `hr:browse:pass`): every boot of a learner
+ * root and a learner page restored from the back/forward cache. A device handed back to a child
+ * after [ Close ] or Back therefore cannot reopen All lessons from this tab by typing `/browse` or
+ * pressing Forward (BR-6 review). The gate hand-off writes its pass after this boot, just before it
+ * leaves, so it is unaffected. Nothing else in `sessionStorage` is touched; blocked or missing
+ * storage is a no-op.
+ */
+export function clearGrownUpTab(area: SessionArea | null = sessionArea()): void {
+  for (const key of [UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY, BROWSE_PASS_SESSION_KEY]) {
+    try {
+      area?.removeItem(key);
+    } catch {
+      // A storage that refuses keeps nothing we could remove.
+    }
+  }
 }
 
 /**

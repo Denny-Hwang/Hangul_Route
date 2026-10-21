@@ -94,7 +94,6 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
-import { passGate } from '../../store/gate-telemetry';
 import { PictureArt } from '../minigames/PictureArt';
 import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
 import { DisplayButton } from '../../components/DisplayButton';
@@ -586,7 +585,7 @@ export function HomeScreen(): React.ReactElement {
   const ask = askFor(audience, isClassOnly(memberships ?? []), m.learner.access);
   const onAsk = (): void => {
     void track(helpAskedEvent(profile?.id, 'home', ask.audience));
-    const gate = askGate(passGate('Paywall', gateOpensDirectlyNow()), 'home');
+    const gate = askGate(gateOpensDirectlyNow(), 'home');
     if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
     else navigation.navigate('PinEntry', gate.params);
   };
@@ -617,7 +616,6 @@ export function HomeScreen(): React.ReactElement {
   const openLocked = (card: MissionCard): boolean => {
     const lock = homeCardLock({ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked, opensDirectly: gateOpensDirectlyNow() });
     if (!lock) return false;
-    if (lock.gate.route === 'Paywall') passGate('Paywall', true);
     if (lock.storyId) void track({ name: 'story.locked.tapped', profileId: profile?.id, payload: { storyId: lock.storyId } });
     if (lock.gate.route === 'Paywall') navigation.navigate('Paywall', lock.gate.params);
     else navigation.navigate('PinEntry', lock.gate.params);

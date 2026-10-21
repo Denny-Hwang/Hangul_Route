@@ -46,7 +46,7 @@ describe('GateLessonsButton', () => {
     // The decision itself is `gateLessonsStep` (logic/browse/__tests__/gate-entry.test.ts); here, that the press reads
     // the gate fresh and that the PIN branch returns before the hand-off.
     const press = code(button).slice(code(button).indexOf('const open = ('));
-    const pin = press.indexOf("gateLessonsStep(passGate('BrowseLessons', gateOpensDirectlyNow())) === 'pin'");
+    const pin = press.indexOf("gateLessonsStep(gateOpensDirectlyNow()) === 'pin'");
     expect(pin).toBeGreaterThan(-1);
     const pinBranch = press.slice(pin, press.indexOf('openBrowseFromGate('));
     expect(pinBranch).toMatch(/navigation\.navigate\('PinEntry'/);
@@ -107,7 +107,7 @@ describe('the gate=browse intent in the learner app', () => {
   const hook = read('navigation/boot-intent.tsx');
 
   it('the boot hook reads the gate fresh and hands over through the same hand-off, passing its result on', () => {
-    expect(code(hook)).toMatch(/opensDirectly: \(\) => passGate\('BrowseLessons', gateOpensDirectlyNow\(\)\)/);
+    expect(code(hook)).toMatch(/opensDirectly: \(\) => gateOpensDirectlyNow\(\)/);
     expect(code(hook)).toMatch(/open: \(\) => openBrowseFromGate\(\)/);
   });
 });

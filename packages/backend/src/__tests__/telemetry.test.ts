@@ -1,7 +1,7 @@
 import { TELEMETRY_EVENT_NAMES, isServerOnlyTelemetryName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
-import { TELEMETRY_DAILY_FLUSH_MS, TELEMETRY_DAILY_WRITES_PER_MIN, flushTelemetryDaily, holdDailyCount, resetTelemetryDailyBudgetForTests } from '../lib/telemetry-daily';
+import { TELEMETRY_DAILY_WINDOW_MS, TELEMETRY_DAILY_WRITES_PER_MIN, flushTelemetryDaily, holdDailyCount, resetTelemetryDailyBudgetForTests } from '../lib/telemetry-daily';
 import { store } from '../store';
 import { testDb } from './helpers/db';
 
@@ -244,8 +244,8 @@ describe('POST /api/telemetry', () => {
 describe('[OA] POST /api/telemetry · section 15 names and the daily counters', () => {
   const DAY = NOW.toISOString().slice(0, 10);
   const rows = () => testDb.telemetryDailyOf(DAY);
-  /** The next due flush: what the isolate's in-memory sums write a minute later. */
-  const drain = () => flushTelemetryDaily(() => testDb, Date.now() + TELEMETRY_DAILY_FLUSH_MS);
+  /** A write in the next window: anything still held (the counts are written through, so usually nothing). */
+  const drain = () => flushTelemetryDaily(() => testDb, Date.now() + TELEMETRY_DAILY_WINDOW_MS);
 
   beforeEach(async () => {
     await testDb.reset();
@@ -309,11 +309,11 @@ describe('[OA] POST /api/telemetry · section 15 names and the daily counters', 
       const r = await post({ name: 'profile.lock_changed', payload: { locked: true } });
       expect(r.status).toBe(201);
       expect(store.events.at(-1)?.name).toBe('profile.lock_changed');
-      // The one flush of this minute wrote the 600 held rows, in one call, and not the new one.
+      // The one write this window allows took the 600 held rows, in one call, and not the new one.
       expect(add).toHaveBeenCalledTimes(1);
       expect(add.mock.calls[0]?.[0]).toHaveLength(TELEMETRY_DAILY_WRITES_PER_MIN);
       expect((await rows()).some((row) => row.name === 'profile.lock_changed')).toBe(false);
-      vi.setSystemTime(new Date(NOW.getTime() + TELEMETRY_DAILY_FLUSH_MS));
+      vi.setSystemTime(new Date(NOW.getTime() + TELEMETRY_DAILY_WINDOW_MS));
       await post({ name: 'profile.lock_changed', payload: { locked: true } });
       expect(add).toHaveBeenCalledTimes(2);
       expect((await rows()).filter((row) => row.name === 'profile.lock_changed')).toEqual([{ day: DAY, name: 'profile.lock_changed', dims: '{"locked":true}', n: 1 }]);
@@ -337,10 +337,12 @@ describe('[OA] POST /api/telemetry · section 15 names and the daily counters', 
       expect(r.status).toBe(201);
       expect(r.body.data?.event.payload).toEqual({ saved: true, wasActive: false, anyway: false });
       expect(add).toHaveBeenCalledTimes(1);
-      // The rows that write took are dropped, never written again.
+      // The rows that write took are dropped, never written again: the next write carries only its own count.
       await post({ name: 'profile.removed', payload: { saved: true, wasActive: false, anyway: false } });
-      expect(add).toHaveBeenCalledTimes(1);
+      expect(add).toHaveBeenCalledTimes(2);
+      expect(add.mock.calls[1]?.[0]).toEqual([{ day: DAY, name: 'profile.removed', dims: '{"anyway":false,"saved":true,"wasActive":false}', n: 1 }]);
       add.mockRestore();
+      await post({ name: 'profile.removed', payload: { saved: true, wasActive: false, anyway: false } });
       await drain();
       expect(await rows()).toEqual([{ day: DAY, name: 'profile.removed', dims: '{"anyway":false,"saved":true,"wasActive":false}', n: 1 }]);
     } finally {

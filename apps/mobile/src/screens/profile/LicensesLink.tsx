@@ -7,7 +7,6 @@ import { licensesUrl } from '../../logic/links';
 import { openLinkStep, pendingLinkStep, type OpenLinkOutcome } from '../../logic/story/source-link';
 import { HAND_OFF_NEEDS_TAP, openExternalUrl } from '../../platform/external-link';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
-import { passGate } from '../../store/gate-telemetry';
 
 export interface LicensesLinkProps {
   url?: string;
@@ -58,7 +57,7 @@ export function LicensesLink({
   );
 
   const onPress = (): void => {
-    if (openLinkStep(passGate('ExternalLink', opensDirectly())) === 'open') {
+    if (openLinkStep(opensDirectly()) === 'open') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff();
       return;

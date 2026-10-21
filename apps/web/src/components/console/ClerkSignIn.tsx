@@ -1,6 +1,6 @@
 'use client';
 
-import { SignIn, SignUp, useClerk, useReverification, useUser } from '@clerk/clerk-react';
+import { SignIn, SignUp, useClerk, useReverification } from '@clerk/clerk-react';
 import { colors, radii } from '@hangul-route/design-system/tokens';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -10,13 +10,12 @@ import {
   oauthSignUpStarted,
   proofAtSignIn,
   reverifyOnce,
-  secretFactorVerifiedHere,
+  secretVerifiedHere,
   signedInHere,
   type ClerkSignInLike,
   type ClerkSignUpLike,
 } from '@/lib/console/signin-flow';
 import { clearAffirmation, readSignInRecord, writeOAuthStarted, writeSecretVerified, writeSignInProof } from '@/lib/console/signin-record';
-import { passkeySnapshot, passkeyUsedDuring, type PasskeyLike } from '@/lib/console/one-account';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { RetryPanel, WidgetBox } from './SignInParts';
 
@@ -80,9 +79,8 @@ function useSignInRecorder(enabled: boolean): void {
       if (signedInHere(previous, current)) {
         writeSignInProof(proofAtSignIn({ sessionId: current, signIn, signUp, record: readSignInRecord(), now }), now);
         clearAffirmation();
-      } else if (!current && secretFactorVerifiedHere(signIn, signUp) !== null) {
-        // [OA] The factor is kept, so a passkey stays a passkey for the unlock rule (section 7.4).
-        writeSecretVerified(now, undefined, secretFactorVerifiedHere(signIn, signUp));
+      } else if (!current && secretVerifiedHere(signIn, signUp)) {
+        writeSecretVerified(now);
       } else if (!current && (oauthRedirectStarted(signIn) || oauthSignUpStarted(signUp))) {
         writeOAuthStarted(now);
       }
@@ -139,34 +137,17 @@ export function ClerkWidget({ kind, record, returnUrl, startUrl, standalone, aff
  * email code to the account's address, the password or a passkey) and reports the outcome.
  * Closing the dialog is a cancel: the visitor stays signed in and the lock decides.
  */
-export function ClerkReverify({ onDone, refusePasskey = false }: { onDone: (verified: boolean) => void; refusePasskey?: boolean }): null {
+export function ClerkReverify({ onDone }: { onDone: (verified: boolean) => void }): null {
   const fetcher = useRef(reverifyOnce());
   const confirm = useReverification(() => fetcher.current());
-  const { user, isLoaded } = useUser();
   const started = useRef(false);
   useEffect(() => {
     if (started.current) return;
-    // [OA] With a passkey to refuse, the account's passkeys are read before the dialog opens: wait for Clerk's user.
-    if (refusePasskey && !isLoaded) return;
     started.current = true;
-    const before = refusePasskey ? passkeySnapshot((user as { passkeys?: readonly PasskeyLike[] } | null | undefined)?.passkeys) : null;
     confirm().then(
-      async (result) => {
-        const verified = 'verified' in result && result.verified === true;
-        // [OA] Section 7.4, CS-17: on a `pin` browser (or the reset leg) a reverification that used a passkey is no
-        // unlock. Clerk does not name the factor, so a passkey whose `lastUsedAt` moved during the dialog counts as it
-        // (server stamps against server stamps); no account to read before or after fails closed.
-        if (!verified || !refusePasskey) return onDone(verified);
-        let after: readonly PasskeyLike[] | null = null;
-        try {
-          after = ((await user?.reload()) as { passkeys?: readonly PasskeyLike[] } | undefined)?.passkeys ?? null;
-        } catch {
-          after = null;
-        }
-        onDone(!passkeyUsedDuring(before, after));
-      },
+      (result) => onDone('verified' in result && result.verified === true),
       () => onDone(false),
     );
-  }, [confirm, onDone, refusePasskey, user, isLoaded]);
+  }, [confirm, onDone]);
   return null;
 }

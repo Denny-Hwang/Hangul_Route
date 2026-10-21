@@ -167,7 +167,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
   // A plan already in force when the screen opens: its overview instead (G3). A plan started here leaves through `leave`.
   const started = useRef(false);
   useEffect(() => {
-    if (context !== null && active !== null && !started.current) navigation.replace('RouteOverview', { profileId, viewer: 'grownup' });
+    if (context !== null && active !== null && !started.current) navigation.replace('RouteOverview', { profileId });
   }, [context, active, navigation, profileId]);
 
   const pace = choice?.pace;

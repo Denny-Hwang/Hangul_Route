@@ -63,19 +63,10 @@ describe('openAppWithJoinCode', () => {
     openAppWithJoinCode({ code: 'K7MPQ4', now: 5, locale: 'en', origin: 'https://hangulroute.com', storage: store, assign: (url) => opened.push(url) });
     expect(store.data.has(JOIN_HANDOFF_KEY)).toBe(false);
     expect(store.data.has(UNLOCK_SESSION_KEY)).toBe(false);
-    // [OA] No code reaches the app, so it opens the chooser (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.3).
-    expect(opened).toEqual(['https://app.hangulroute.com/?lang=en&who=1']);
+    expect(opened).toEqual(['https://app.hangulroute.com/?lang=en']);
     const www = memory();
     openAppWithJoinCode({ code: 'K7MPQ4', now: 5, locale: 'en', origin: 'https://www.hangulroute.com', storage: www, assign: () => undefined });
     expect(www.data.has(JOIN_HANDOFF_KEY)).toBe(false);
-  });
-
-  it('[OA] without a hand-off (a refused write or a code that is not one) opens the chooser with who=1; with one it lands on Join', () => {
-    const opened: string[] = [];
-    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, locale: 'es', origin: 'https://app.hangulroute.com', storage: null, assign: (url) => opened.push(url) });
-    openAppWithJoinCode({ code: 'nope', now: 5, locale: 'en', origin: 'https://app.hangulroute.com', storage: memory(), assign: (url) => opened.push(url) });
-    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, locale: 'en', origin: 'https://app.hangulroute.com', storage: memory(), assign: (url) => opened.push(url) });
-    expect(opened).toEqual(['/?lang=es&who=1', '/?lang=en&who=1', '/?lang=en']);
   });
 
   afterEach(() => {

@@ -42,7 +42,6 @@ import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
-import { passGate } from '../../store/gate-telemetry';
 import { canRenderPicture, pickerTopic, topicIntroMemory, topicWords } from './topic-data';
 import { WordWall } from './WordWall';
 
@@ -78,7 +77,7 @@ export function VocabTopicScreen({ route, navigation }: Props): React.ReactEleme
   useEffect(() => {
     if (access !== 'locked' || gated.current) return;
     gated.current = true;
-    const gate = lockedStoryGate(passGate('Paywall', opensDirectly(false)));
+    const gate = lockedStoryGate(opensDirectly(false));
     if (gate.route === 'Paywall') navigation.replace('Paywall', gate.params);
     else navigation.replace('PinEntry', gate.params);
   }, [access, navigation, opensDirectly]);

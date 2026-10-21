@@ -16,12 +16,6 @@ export interface SignInProof {
   sessionId: string;
   /** Its first factor asked for a secret (password, email or SMS code, passkey). */
   secret: boolean;
-  /**
-   * [OA] The secret first factor itself, when known (`password`, `email_code`, `phone_code`, `passkey`, a password-reset
-   * code): a passkey does not unlock a `pin` browser, and only a password or a code names a PIN owner
-   * (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.2 and 7.4). Absent when the sign-in proved no secret.
-   */
-  factor?: string;
 }
 
 /**
@@ -29,16 +23,13 @@ export interface SignInProof {
  * window. `secret`: while still signed out, the widget verified a secret factor (the positive
  * evidence a completed sign-in needs when Clerk no longer names its first factor).
  */
-export type SignInRecord = ({ v: 1; kind: 'proof'; at: number } & SignInProof) | { v: 1; kind: 'oauth'; at: number } | { v: 1; kind: 'secret'; at: number; factor?: string };
+export type SignInRecord = ({ v: 1; kind: 'proof'; at: number } & SignInProof) | { v: 1; kind: 'oauth' | 'secret'; at: number };
 
 function defaultStorage(): KeyValueStorage | null {
   return browserStorage('session');
 }
 
 const isTime = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0;
-
-/** [OA] A stored factor: a short strategy name, or absent (anything else reads as absent). */
-const factorOf = (value: unknown): { factor?: string } => (typeof value === 'string' && /^[a-z_]{1,40}$/.test(value) ? { factor: value } : {});
 
 function parse(raw: string | null): SignInRecord | null {
   if (raw === null) return null;
@@ -51,10 +42,9 @@ function parse(raw: string | null): SignInRecord | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   if (record.v !== 1 || !isTime(record.at)) return null;
-  if (record.kind === 'oauth') return { v: 1, kind: 'oauth', at: record.at };
-  if (record.kind === 'secret') return { v: 1, kind: 'secret', at: record.at, ...factorOf(record.factor) };
+  if (record.kind === 'oauth' || record.kind === 'secret') return { v: 1, kind: record.kind, at: record.at };
   if (record.kind === 'proof' && typeof record.sessionId === 'string' && record.sessionId !== '' && typeof record.secret === 'boolean') {
-    return { v: 1, kind: 'proof', sessionId: record.sessionId, secret: record.secret, ...(record.secret ? factorOf(record.factor) : {}), at: record.at };
+    return { v: 1, kind: 'proof', sessionId: record.sessionId, secret: record.secret, at: record.at };
   }
   return null;
 }
@@ -65,7 +55,7 @@ export function readSignInRecord(storage: KeyValueStorage | null = defaultStorag
 }
 
 export function writeSignInProof(proof: SignInProof, now: number, storage: KeyValueStorage | null = defaultStorage()): boolean {
-  const record: SignInRecord = { v: 1, kind: 'proof', sessionId: proof.sessionId, secret: proof.secret, ...(proof.secret && proof.factor ? { factor: proof.factor } : {}), at: now };
+  const record: SignInRecord = { v: 1, kind: 'proof', sessionId: proof.sessionId, secret: proof.secret, at: now };
   return writeItem(storage, SIGNIN_RECORD_KEY, JSON.stringify(record));
 }
 
@@ -74,9 +64,8 @@ export function writeOAuthStarted(now: number, storage: KeyValueStorage | null =
   return writeItem(storage, SIGNIN_RECORD_KEY, JSON.stringify(record));
 }
 
-/** [OA] `factor`: the verified secret strategy, kept so a passkey stays a passkey when Clerk no longer names it. */
-export function writeSecretVerified(now: number, storage: KeyValueStorage | null = defaultStorage(), factor?: string | null): boolean {
-  const record: SignInRecord = { v: 1, kind: 'secret', at: now, ...(factor ? { factor } : {}) };
+export function writeSecretVerified(now: number, storage: KeyValueStorage | null = defaultStorage()): boolean {
+  const record: SignInRecord = { v: 1, kind: 'secret', at: now };
   return writeItem(storage, SIGNIN_RECORD_KEY, JSON.stringify(record));
 }
 

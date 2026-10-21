@@ -1,17 +1,15 @@
 'use client';
 
-import { GROWN_UP_LOCK_CHANNEL, unlockActive, type GrownUpUnlock, type UiLocale } from '@hangul-route/content-schema';
+import { unlockActive, type GrownUpUnlock, type UiLocale } from '@hangul-route/content-schema';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
-import { lockPasskeyEnabled } from '@/lib/console/config';
 import { readDeviceGate } from '@/lib/console/device-marker';
 import { decideGrownUpLock, learnerHome, pinPathUrl, signInAgainUrl, type DeviceGateRead, type LockDecision } from '@/lib/console/grown-up-lock';
-import { hiddenTooLong, isGrownUpLockMessage, passkeyButtonShown, pinOwnerFingerprint, pinOwnerRefresh, platformAuthenticatorAvailable, realPinEpoch } from '@/lib/console/one-account';
 import { clearSession } from '@/lib/console/session';
-import { readPinOwner, readTrustedEpoch, writePinOwner } from '@/lib/console/shell-store';
-import { clearGrownUpTab, clearUnlock, readHiddenAt, readUnlock, touchUnlock, writeHiddenAt, writeSignInUnlock } from '@/lib/console/unlock';
+import { readTrustedEpoch } from '@/lib/console/shell-store';
+import { clearGrownUpTab, readUnlock, touchUnlock } from '@/lib/console/unlock';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { DisplayButton } from './DisplaySheet';
 import { headRem, rem } from '@/lib/console/rem';
@@ -37,15 +35,6 @@ import { headRem, rem } from '@/lib/console/rem';
  *   idle minutes, and after them is stopped, covers the page and decides again.
  * The page is covered, never collapsed, so its layout, scroll position and focus survive a
  * re-check that opens it again (A-4a review 2026-10-12).
- *
- * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.2, 7.4 and 7.6 (row OA-3):
- * - a tab hidden for at least 5 minutes drops its unlock when it is shown again (wall clock, not a timer; CS-14); the
- *   hidden time is also kept in this tab's `sessionStorage` (`hr:grownup:hiddenAt`), so a background tab the browser
- *   discarded, or a page loaded while hidden, still drops it when it is shown (a page left by a navigation keeps none);
- * - a `{ v: 1, kind: 'lock' }` on the `hr-grownup` BroadcastChannel (the learner app's chooser opened) drops the
- *   unlock and shows the lock (CS-2); anything else on the channel is ignored;
- * - a page opened through the PIN path refreshes the PIN owner's epoch, for the same owner only (moment 2);
- * - **Use a passkey** shows where the browser offers a platform authenticator and the marker is not `pin` (CS-17).
  */
 
 /** How long a device or trusted-epoch read may take before the lock decides without it. */
@@ -64,39 +53,6 @@ export interface GrownUpLockEnvironment {
   assign: (url: string) => void;
   window: EventTarget | null;
   document: (EventTarget & { visibilityState: DocumentVisibilityState }) | null;
-  /** [OA] Drops this tab's unlock only (the 5-minute hidden rule, the `hr-grownup` message). */
-  clearUnlock?: () => void;
-  /** [OA] Listens on `hr-grownup`; returns the way to stop. Null where the browser has no BroadcastChannel. */
-  listenLock?: (onMessage: (data: unknown) => void) => (() => void) | null;
-  /** [OA] Moment 2 of section 7.2: the page opened through the PIN path at `epoch` for `accountId`. */
-  refreshPinOwner?: (accountId: string, epoch: number) => Promise<void>;
-  /** [OA] Whether the browser offers a user-verifying platform authenticator. */
-  passkeyAvailable?: () => Promise<boolean>;
-  /** [OA] The `signin` unlock a passkey success writes. */
-  writeSignInUnlock?: (now: number) => void;
-  /** [OA] The hidden time kept in this tab's `sessionStorage` (the 5-minute rule across a discard and reload). */
-  readHiddenAt?: () => number | null;
-  /** [OA] Stores the hidden time; `null` removes it. */
-  writeHiddenAt?: (at: number | null) => void;
-}
-
-/** [OA] The browser's `hr-grownup` channel, or null without BroadcastChannel. */
-function listenLockChannel(onMessage: (data: unknown) => void): (() => void) | null {
-  if (typeof BroadcastChannel === 'undefined') return null;
-  try {
-    const channel = new BroadcastChannel(GROWN_UP_LOCK_CHANNEL);
-    channel.onmessage = (event: MessageEvent) => onMessage(event.data);
-    return () => channel.close();
-  } catch {
-    return null;
-  }
-}
-
-/** [OA] Moment 2: refreshes the stored owner's epoch when this account is that owner; writes nothing otherwise. */
-export async function refreshPinOwnerHere(accountId: string, epoch: number): Promise<void> {
-  const [stored, owner] = await Promise.all([readPinOwner(), pinOwnerFingerprint(accountId)]);
-  const next = pinOwnerRefresh({ stored, owner, epoch });
-  if (next) await writePinOwner(next);
 }
 
 export function browserLockEnvironment(): GrownUpLockEnvironment {
@@ -116,15 +72,6 @@ export function browserLockEnvironment(): GrownUpLockEnvironment {
     assign: (url) => win?.location.assign(url),
     window: win,
     document: doc,
-    clearUnlock: () => clearUnlock(),
-    listenLock: listenLockChannel,
-    refreshPinOwner: refreshPinOwnerHere,
-    passkeyAvailable: () => platformAuthenticatorAvailable(win as unknown as Parameters<typeof platformAuthenticatorAvailable>[0]),
-    writeSignInUnlock: (now) => {
-      writeSignInUnlock(now);
-    },
-    readHiddenAt: () => readHiddenAt(),
-    writeHiddenAt: (at) => writeHiddenAt(at),
   };
 }
 
@@ -173,41 +120,12 @@ const STOPPABLE_INPUT = ['pointerdown', 'keydown', 'click'] as const;
 export function createGrownUpLockController(options: {
   env: GrownUpLockEnvironment;
   getPath: () => string;
-  /** [OA] `device`: the read this decision used (the passkey button reads its marker). */
-  onState: (state: LockState, device?: DeviceGateRead) => void;
+  onState: (state: LockState) => void;
   /** Must cover the page before the next paint (the component flushes synchronously). */
   onHide: () => void;
   readTimeoutMs?: number;
-  /** [OA] The page opened through the PIN path (a `pin` unlock, all three epochs equal) at this epoch. */
-  onPinOpen?: (epoch: number) => void;
 }): GrownUpLockController {
-  const { env, getPath, onState, onHide, readTimeoutMs = LOCK_READ_TIMEOUT_MS, onPinOpen } = options;
-  /** [OA] When the tab was last hidden (wall clock), for the 5-minute rule. */
-  let hiddenAt: number | null = null;
-  /** [OA] The page is being left (`pagehide`): its hidden time is not kept for the next page of this tab. */
-  let leaving = false;
-  const storeHiddenAt = (at: number | null): void => {
-    try {
-      env.writeHiddenAt?.(at);
-    } catch {
-      // Storage refused: the in-memory time still applies to this page.
-    }
-  };
-  const storedHiddenAt = (): number | null => {
-    try {
-      return env.readHiddenAt?.() ?? null;
-    } catch {
-      return null;
-    }
-  };
-  let stopLockChannel: (() => void) | null = null;
-  const dropUnlock = (): void => {
-    try {
-      (env.clearUnlock ?? env.clearGrownUpTab)();
-    } catch {
-      // Storage refused: the decision that follows reads whatever is left.
-    }
-  };
+  const { env, getPath, onState, onHide, readTimeoutMs = LOCK_READ_TIMEOUT_MS } = options;
   let latest = 0;
   let stopped = false;
   /** The page is open. */
@@ -238,10 +156,7 @@ export function createGrownUpLockController(options: {
     covered = false;
     if (decision.state === 'locked') env.clearConsoleSession();
     else env.touchUnlock(now);
-    // [OA] Moment 2 (section 7.2): only the PIN path, never a sign-in unlock, refreshes the owner's epoch.
-    const epoch = realPinEpoch(device);
-    if (open && onPinOpen && epoch !== null && input.unlock?.src === 'pin' && unlockActive(input.unlock, now) && input.unlock.pinEpoch === epoch && trustedEpoch === epoch) onPinOpen(epoch);
-    onState({ path, decision, hidden: false }, device);
+    onState({ path, decision, hidden: false });
   };
 
   const cover = (): void => {
@@ -253,40 +168,22 @@ export function createGrownUpLockController(options: {
     void run();
   };
   const onPageShow = (event: Event): void => {
-    leaving = false;
     if ((event as PageTransitionEvent).persisted) recheck();
   };
   // Covered before the page enters the back/forward cache, so a restore never paints it.
   const onPageHide = (event: Event): void => {
-    // [OA] A navigation away (a same-tab round trip, Stripe Checkout included) keeps no hidden time for the next page;
-    // a back/forward-cache restore still has the in-memory one.
-    leaving = true;
-    storeHiddenAt(null);
     if ((event as PageTransitionEvent).persisted) cover();
   };
   const onVisibility = (): void => {
     const visibility = env.document?.visibilityState;
     // Covered before the tab switcher takes its picture; a page that cannot lock is left as it is.
     if (visibility === 'hidden') {
-      hiddenAt = env.now();
-      if (!leaving) storeHiddenAt(hiddenAt);
       if (guarded) cover();
       return;
     }
     if (visibility !== 'visible') return;
-    // [OA] OA-D16, CS-14: hidden for 5 minutes or more (wall clock) drops the unlock before the decision.
-    const dropped = hiddenTooLong(hiddenAt ?? storedHiddenAt(), env.now());
-    hiddenAt = null;
-    storeHiddenAt(null);
-    if (dropped) dropUnlock();
-    if (guarded || dropped) recheck();
+    if (guarded) recheck();
     else void run();
-  };
-  // [OA] Section 7.6, CS-2: the learner app's chooser opened in another tab.
-  const onLockMessage = (data: unknown): void => {
-    if (stopped || !isGrownUpLockMessage(data)) return;
-    dropUnlock();
-    recheck();
   };
   const interact = (event: Event, stoppable: boolean): void => {
     const stop = (): void => {
@@ -314,22 +211,11 @@ export function createGrownUpLockController(options: {
 
   return {
     start: () => {
-      // [OA] A tab the browser discarded while hidden (or restored after a crash) reloads with its unlock but without
-      // the in-memory time: the stored one decides before the first check. A page loaded while hidden starts its clock.
-      const stored = storedHiddenAt();
-      if (env.document?.visibilityState === 'hidden') {
-        hiddenAt = stored ?? env.now();
-        storeHiddenAt(hiddenAt);
-      } else if (stored !== null) {
-        if (hiddenTooLong(stored, env.now())) dropUnlock();
-        storeHiddenAt(null);
-      }
       env.window?.addEventListener('pageshow', onPageShow);
       env.window?.addEventListener('pagehide', onPageHide);
       env.document?.addEventListener('visibilitychange', onVisibility);
       for (const type of STOPPABLE_INPUT) env.window?.addEventListener(type, onInput, CAPTURE);
       env.window?.addEventListener('wheel', onWheel, PASSIVE_CAPTURE);
-      stopLockChannel = env.listenLock?.(onLockMessage) ?? null;
     },
     check: () => {
       if (!stopped) void run();
@@ -341,21 +227,19 @@ export function createGrownUpLockController(options: {
       env.document?.removeEventListener('visibilitychange', onVisibility);
       for (const type of STOPPABLE_INPUT) env.window?.removeEventListener(type, onInput, CAPTURE);
       env.window?.removeEventListener('wheel', onWheel, PASSIVE_CAPTURE);
-      stopLockChannel?.();
-      stopLockChannel = null;
     },
   };
 }
 
 type LockedDecision = Extract<LockDecision, { state: 'locked' }>;
 
-export type LockView = { kind: 'pending' } | { kind: 'open'; hidden: boolean } | { kind: 'locked'; decision: LockedDecision; device?: DeviceGateRead };
+export type LockView = { kind: 'pending' } | { kind: 'open'; hidden: boolean } | { kind: 'locked'; decision: LockedDecision };
 
 /** Pending until a decision exists for this very pathname; the lock screen shows no data, so it stays during a re-check. */
-export function lockView(state: LockState | null, path: string, device?: DeviceGateRead): LockView {
+export function lockView(state: LockState | null, path: string): LockView {
   if (!state || state.path !== path) return { kind: 'pending' };
   if (state.decision.state === 'open') return { kind: 'open', hidden: state.hidden };
-  return device ? { kind: 'locked', decision: state.decision, device } : { kind: 'locked', decision: state.decision };
+  return { kind: 'locked', decision: state.decision };
 }
 
 /** The page the lock returns to: the pathname and its query (with or without a leading `?`). */
@@ -368,10 +252,6 @@ interface LockHandlers {
   onUsePin: () => void;
   onSignInAgain: () => void;
   onBackToLearning: () => void;
-  /** [OA] Use a passkey (section 7.4); absent, the button is not drawn. */
-  onUsePasskey?: () => void;
-  /** [OA] A passkey check is running: the button is `aria-disabled` and `aria-busy`. */
-  passkeyBusy?: boolean;
 }
 
 /** The three lock buttons for the page at `path` (pathname and query); Sign in again and Back to learning carry the console's language. */
@@ -397,13 +277,9 @@ const coverStyle: CSSProperties = {
   backgroundColor: colors.surface.canvas,
 };
 
-export function GrownUpLockGate({ view, children, passkeyShown, ...handlers }: LockHandlers & { view: LockView; children: ReactNode; passkeyShown?: (device: DeviceGateRead | undefined) => boolean }): JSX.Element {
+export function GrownUpLockGate({ view, children, ...handlers }: LockHandlers & { view: LockView; children: ReactNode }): JSX.Element {
   if (view.kind === 'pending') return <div aria-busy="true" data-testid="grown-up-lock-pending" />;
-  if (view.kind === 'locked') {
-    // [OA] Use a passkey only off `pin` browsers (section 7.4, CS-17).
-    const { onUsePasskey, ...rest } = handlers;
-    return <GrownUpLockScreen decision={view.decision} {...rest} onUsePasskey={onUsePasskey && passkeyShown?.(view.device) ? onUsePasskey : undefined} />;
-  }
+  if (view.kind === 'locked') return <GrownUpLockScreen decision={view.decision} {...handlers} />;
   // One wrapper in both states: covering during a re-check keeps the page mounted, laid out and
   // focused where it was (a half-typed form survives, the scroll position does not jump).
   return (
@@ -427,23 +303,11 @@ export interface GrownUpLockProps {
   /** Sign in again: sign out, then go to `signInUrl` (`/signin?next=…`). */
   onSignInAgain: (signInUrl: string) => void;
   environment?: GrownUpLockEnvironment;
-  /** [OA] The signed-in account (fingerprinted for moment 2 of section 7.2, never shown or stored). */
-  accountId?: string | null;
-  /** [OA] Clerk reverification with the passkey first factor; true on success. Absent outside Clerk mode: no button. */
-  verifyPasskey?: () => Promise<boolean>;
-  /** [OA] `NEXT_PUBLIC_LOCK_PASSKEY`, read once by default. */
-  passkeyFlag?: boolean;
 }
 
-export function GrownUpLock({ children, pathname, search = '', exempt = false, onSignInAgain, environment, accountId = null, verifyPasskey, passkeyFlag }: GrownUpLockProps): JSX.Element {
+export function GrownUpLock({ children, pathname, search = '', exempt = false, onSignInAgain, environment }: GrownUpLockProps): JSX.Element {
   const locale = useLocale();
   const [state, setState] = useState<LockState | null>(null);
-  const [passkeyOffered, setPasskeyOffered] = useState(false);
-  const [device, setDevice] = useState<DeviceGateRead | undefined>(undefined);
-  const [passkeyBusy, setPasskeyBusy] = useState(false);
-  const accountRef = useRef(accountId);
-  accountRef.current = accountId;
-  const flag = passkeyFlag ?? lockPasskeyEnabled();
   const pathRef = useRef(pathname);
   const decidedPathRef = useRef<string | null>(null);
   const envRef = useRef<GrownUpLockEnvironment | null>(environment ?? null);
@@ -455,16 +319,8 @@ export function GrownUpLock({ children, pathname, search = '', exempt = false, o
     const controller = createGrownUpLockController({
       env: envOf(),
       getPath: () => pathRef.current,
-      onState: (next, read) => {
-        setDevice(read);
-        setState(next);
-      },
+      onState: setState,
       onHide: () => flushSync(() => setState((s) => (s && !s.hidden ? { ...s, hidden: true } : s))),
-      onPinOpen: (epoch) => {
-        const account = accountRef.current;
-        const refresh = envOf().refreshPinOwner;
-        if (account && refresh) void refresh(account, epoch).catch(() => undefined);
-      },
     });
     controllerRef.current = controller;
     controller.start();
@@ -487,48 +343,9 @@ export function GrownUpLock({ children, pathname, search = '', exempt = false, o
     controllerRef.current?.check();
   }, [pathname, search, exempt]);
 
-  // [OA] Section 7.4: asked once per mount, only where a passkey could be offered at all.
-  const askPasskey = !exempt && flag && !!verifyPasskey;
-  useEffect(() => {
-    if (!askPasskey) return undefined;
-    let live = true;
-    const available = envOf().passkeyAvailable;
-    if (available) void available().then((yes) => live && setPasskeyOffered(yes === true), () => undefined);
-    return () => {
-      live = false;
-    };
-  }, [askPasskey]);
-
-  const onUsePasskey =
-    askPasskey && verifyPasskey
-      ? () => {
-          if (passkeyBusy) return;
-          setPasskeyBusy(true);
-          void verifyPasskey()
-            .catch(() => false)
-            .then((verified) => {
-              setPasskeyBusy(false);
-              // A refusal returns to the lock with its existing line; a success is a secret-proving sign-in here.
-              if (!verified) return undefined;
-              const env = envOf();
-              // [OA] CS-17: the marker is read again, so a PIN set in another tab while the passkey ran keeps this lock.
-              return settle(env.readDevice, FAILED_READ, LOCK_READ_TIMEOUT_MS).then((fresh) => {
-                if (passkeyButtonShown({ flag, available: passkeyOffered, device: fresh })) env.writeSignInUnlock?.(env.now());
-                controllerRef.current?.check();
-              });
-            });
-        }
-      : undefined;
-
   if (exempt) return <>{children}</>;
   return (
-    <GrownUpLockGate
-      view={lockView(state, pathname, device)}
-      {...lockActions(envOf(), returnPath(pathname, search), onSignInAgain, locale)}
-      onUsePasskey={onUsePasskey}
-      passkeyBusy={passkeyBusy}
-      passkeyShown={(device) => passkeyButtonShown({ flag, available: passkeyOffered, device: device ?? null })}
-    >
+    <GrownUpLockGate view={lockView(state, pathname)} {...lockActions(envOf(), returnPath(pathname, search), onSignInAgain, locale)}>
       {children}
     </GrownUpLockGate>
   );
@@ -579,17 +396,9 @@ const TONE: Readonly<Record<'primary' | 'secondary' | 'quiet', CSSProperties>> =
   quiet: { paddingLeft: spacing.sm, backgroundColor: 'transparent', color: colors.text.secondary, border: 'none' },
 };
 
-function LockButton({ tone, onClick, testId, busy, children }: { tone: keyof typeof TONE; onClick: () => void; testId: string; busy?: boolean; children: ReactNode }): JSX.Element {
+function LockButton({ tone, onClick, testId, children }: { tone: keyof typeof TONE; onClick: () => void; testId: string; children: ReactNode }): JSX.Element {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{ ...buttonBase, ...TONE[tone], ...(busy ? { cursor: 'progress' } : {}) }}
-      data-tone={tone}
-      data-testid={testId}
-      aria-disabled={busy || undefined}
-      aria-busy={busy || undefined}
-    >
+    <button type="button" onClick={onClick} style={{ ...buttonBase, ...TONE[tone] }} data-tone={tone} data-testid={testId}>
       {children}
     </button>
   );
@@ -600,7 +409,7 @@ function LockButton({ tone, onClick, testId, busy, children }: { tone: keyof typ
  * number, no countdown; the same single column at every width. Focus moves to the heading (a
  * reading start point for screen readers, not a control, so it draws no focus ring).
  */
-export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToLearning, onUsePasskey, passkeyBusy }: LockHandlers & { decision: LockedDecision }): JSX.Element {
+export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToLearning }: LockHandlers & { decision: LockedDecision }): JSX.Element {
   const lock = useMessages().console.lock;
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -629,12 +438,6 @@ export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToL
           <LockButton tone={decision.pinPath ? 'secondary' : 'primary'} onClick={onSignInAgain} testId="grown-up-lock-signin">
             {lock.signInAgain.cta}
           </LockButton>
-          {/* [OA] Design D15: a secondary button under the last one, only off `pin` browsers. */}
-          {onUsePasskey ? (
-            <LockButton tone="secondary" onClick={onUsePasskey} testId="grown-up-lock-passkey" busy={passkeyBusy}>
-              {lock.passkey.cta}
-            </LockButton>
-          ) : null}
         </section>
       </div>
       {/* The Aa button (owner items 6 and 7): the device's language and text size, drawn top right; last in the

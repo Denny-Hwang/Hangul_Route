@@ -83,7 +83,7 @@ export function RoutePreviewScreen({ route, navigation }: Props): React.ReactEle
       return;
     }
     navigation.dispatch((state) => {
-      const routes = routesAfterStart(state.routes, { key: `RouteOverview-${created.id}`, name: 'RouteOverview' as const, params: { profileId, viewer: 'grownup' as const } });
+      const routes = routesAfterStart(state.routes, { key: `RouteOverview-${created.id}`, name: 'RouteOverview' as const, params: { profileId } });
       return CommonActions.reset({ ...state, routes, index: routes.length - 1 });
     });
   };
