@@ -34,18 +34,20 @@ import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLas
 import {
   completePayload,
   homeStart,
+  lessonStartPayload,
   nextStrokePlay,
   presenterLocale,
   resolveBoot,
   slideLocale,
   runDeck,
   SHELL_SLIDE_KINDS,
-  startPayload,
+  readyFromBoot,
   startTally,
   strokeTokenFor,
   tallyStep,
   voiceCheck,
   type BootResult,
+  type ReadyStart,
   type RunTally,
   type StartSource,
   type StrokePlay,
@@ -186,7 +188,7 @@ function readAddress(): DeckAddress | null {
  * the ready-made lesson the presenter resolved (its in-session state, AMENDMENTS-LECTURE-V2 section
  * 11), which also draws the preview.
  */
-type ReadyPhase = { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string; fresh?: true; preset?: LecturePreset };
+type ReadyPhase = ReadyStart;
 
 type Phase =
   | { kind: 'boot' }
@@ -197,16 +199,7 @@ type Phase =
   | { kind: 'running'; deck: LectureDeck; source: StartSource; from: ReadyPhase };
 
 function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
-  if (result.kind === 'deck') {
-    return {
-      kind: 'ready',
-      deck: result.deck,
-      source: result.source,
-      ...(result.resumeKey !== undefined ? { resumeKey: result.resumeKey } : {}),
-      ...(address?.fresh === true ? { fresh: true as const } : {}),
-      ...(result.preset !== undefined ? { preset: result.preset } : {}),
-    };
-  }
+  if (result.kind === 'deck') return readyFromBoot(result, address?.fresh === true);
   // A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5): the page offers Reload.
   if (result.kind === 'invalid') return result.reason === 'unsupported_version' ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
   return { kind: result.kind };
@@ -696,16 +689,8 @@ function Presenter(): React.ReactElement {
     updateRecent((list) => setLastSlide(rememberDeck(list, started, savedAt), started.id, key));
     void track({
       name: 'lecture.start',
-      payload: {
-        ...startPayload({
-          deck: started,
-          run,
-          source: phase.source,
-          ...(phase.from.preset !== undefined ? { preset: phase.from.preset } : {}),
-          capability,
-          offlineReady: isOfflineReady(),
-        }),
-      },
+      // The start screen's source and preset (shell.test.ts follows each start through to this payload).
+      payload: { ...lessonStartPayload(phase.from, { deck: started, run, capability, offlineReady: isOfflineReady() }) },
     });
   }, [phase, run, slides, capability, updateRecent]);
 
@@ -914,7 +899,13 @@ function Presenter(): React.ReactElement {
   const onPreset = useCallback(
     (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => {
       const resolved = resolveHere(preset, minutes, stage);
-      const built = presetLectureDeck(resolved, { title: presetTitle(resolved, messages.learner.presenter.presets), now: new Date(), rng: Math.random });
+      const built = presetLectureDeck(resolved, {
+        title: presetTitle(resolved, messages.learner.presenter.presets),
+        // A localized title the deck schema refuses gives way to the English one, so Start always opens a start screen.
+        fallbackTitle: presetTitle(resolved, getMessages('en').learner.presenter.presets),
+        now: new Date(),
+        rng: Math.random,
+      });
       if (built) openFromHome({ kind: 'preset', deck: built, preset: resolved.preset });
     },
     [resolveHere, messages, openFromHome],

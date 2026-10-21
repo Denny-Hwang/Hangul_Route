@@ -394,6 +394,44 @@ export function startPayload(input: {
   };
 }
 
+/**
+ * A start screen as the presenter holds it: its deck, where the deck came from (`source`), the
+ * Recent slide it resumes at, Start over's `fresh`, and the ready-made lesson it was resolved from
+ * on this presenter (`preset`, its in-session state, section 11).
+ */
+export interface ReadyStart {
+  kind: 'ready';
+  deck: LectureDeck;
+  source: StartSource;
+  resumeKey?: string;
+  fresh?: true;
+  preset?: LecturePreset;
+}
+
+/** The start screen a boot opens on a deck (a link, or the tab's kept entry after a reload), its preset kept. */
+export function readyFromBoot(result: Extract<BootResult, { kind: 'deck' }>, fresh: boolean): ReadyStart {
+  return {
+    kind: 'ready',
+    deck: result.deck,
+    source: result.source,
+    ...(result.resumeKey !== undefined ? { resumeKey: result.resumeKey } : {}),
+    ...(fresh ? { fresh: true as const } : {}),
+    ...(result.preset !== undefined ? { preset: result.preset } : {}),
+  };
+}
+
+/**
+ * `lecture.start` for a lesson begun from its start screen: the start screen's `source` and
+ * `preset` (so a ready-made lesson counts as `preset`, a Customize build as `quick`, a Resume as
+ * `recent`), the deck's counts and modes. The one place the presenter builds it.
+ */
+export function lessonStartPayload(
+  from: Pick<ReadyStart, 'source' | 'preset'>,
+  input: { deck: Pick<LectureDeck, 'blocks' | 'options'> & { preset?: LecturePreset }; run: RunDeck; capability: AudioCapability; offlineReady: boolean },
+): StartPayload {
+  return startPayload({ ...input, source: from.source, ...(from.preset !== undefined ? { preset: from.preset } : {}) });
+}
+
 /** Slides seen and reveals made in this run, for `lecture.complete`. */
 export interface RunTally {
   startedAt: number;

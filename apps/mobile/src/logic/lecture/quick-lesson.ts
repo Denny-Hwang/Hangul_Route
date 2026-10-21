@@ -142,8 +142,13 @@ export function chooserTray(selection: ChooserSelection, groups: readonly Choose
 /**
  * A character the deck title class (TD8) cannot hold whose loss would change what the title says:
  * a letter or digit (a compatibility jamo such as ㅐ), a bracket, or the opening ¿ and ¡ of Spanish.
+ * Explicit ranges, not `\p{}` classes (Hermes support for them is not guaranteed and this module is
+ * in the native bundle): digits and Latin with its accents and ordinals, the Hangul jamo blocks
+ * (conjoining, compatibility, extended A and B, half-width) and syllables, then Greek, Cyrillic and
+ * the CJK and kana blocks a content title could one day hold.
  */
-const MEANINGFUL_RE = /[\p{L}\p{N}[\]{}<>¿¡]/u;
+const MEANINGFUL_RE =
+  /[0-9A-Za-z\u00AA\u00B2\u00B3\u00B5\u00B9\u00BA\u00BC-\u00BE\u00C0-\u024F\u1E00-\u1EFF\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7A3\uD7B0-\uD7FF\uFFA0-\uFFDC\u0370-\u03FF\u0400-\u04FF\u3040-\u30FF\u4E00-\u9FFF[\]{}<>¿¡]/;
 
 /**
  * A content title in the deck title class (TD8): spaces collapsed, and other characters dropped

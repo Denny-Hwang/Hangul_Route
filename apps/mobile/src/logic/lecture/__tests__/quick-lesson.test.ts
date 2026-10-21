@@ -172,6 +172,14 @@ describe('the deck title', () => {
     for (const t of [quickDeckTitle([ko('quest:stage2-letters-q2')], 'x'), quickDeckTitle([es('episode:stage1-letters')], 'x')]) expect(LECTURE_TITLE_RE.test(t)).toBe(true);
   });
 
+  it('a title losing ㅐ, a conjoining jamo, a bracket or ¿ / ¡ is left out; a dash alone is dropped (no \\p{} classes, Hermes)', () => {
+    for (const title of ['모음 ㅐ', '\u1100\u1161 소리', '[ㄱ] 소리', '¿Qué es?', '¡Hola!', 'Ω letter', 'Буква', 'ひらがな', '漢字', 'x²', 'Café 1º']) {
+      expect(quickDeckTitle([title], 'Your lesson'), title).toBe('Your lesson');
+    }
+    expect(quickDeckTitle(['Sun – Moon'], 'Your lesson')).toBe('Sun Moon');
+    expect(quickDeckTitle(['Hola · amigos'], 'Your lesson')).toBe('Hola amigos');
+  });
+
   it('falls back when nothing usable is left', () => {
     expect(quickDeckTitle([], 'Your lesson')).toBe('Your lesson');
     expect(quickDeckTitle(['&&&'], 'Tu lección')).toBe('Tu lección');
