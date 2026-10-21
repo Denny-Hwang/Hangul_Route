@@ -48,6 +48,8 @@ const AREA_DESTINATIONS: ReadonlySet<string> = new Set([
   'ApproveTransfer',
   'ClassScope',
   'LectureMode',
+  // [OA] Row OA-9: the face or fingerprint switch lives on the Grown-up area.
+  'BiometricShortcut',
 ]);
 
 /**

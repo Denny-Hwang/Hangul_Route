@@ -74,6 +74,8 @@ const PIN_RESET_BY_WAIT_KEY = 'account:pinResetByWait';
  * The token itself lives only in SecureStore (`hr.biometricShortcut`, `platform/biometric.native.ts`).
  */
 const BIOMETRIC_SHORTCUT_KEY = 'account:biometricShortcut';
+/** [OA] The last delete of the shortcut item, awaited before a new token is written. */
+let pendingRemove: Promise<void> = Promise.resolve();
 
 /** [OA] What a tap on Use face or fingerprint did: opened (`ok`), voided and turned off, cancelled, or nothing on. */
 export type BiometricUseResult = ShortcutReadResult | 'off';
@@ -429,9 +431,16 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     // tab's correct PIN or reset clears the pause here too); without them it is merged, never shortening a pause.
     withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
       const at = now();
-      const pinAttempts = await sharedAttempts(PIN_ATTEMPTS_KEY, get().pinAttempts, locked, at);
-      const rescueAttempts = await sharedAttempts(RESCUE_ATTEMPTS_KEY, get().rescueAttempts, locked, at);
-      set({ pinAttempts, rescueAttempts });
+      const ownPin = get().pinAttempts;
+      const ownRescue = get().rescueAttempts;
+      const pinAttempts = await sharedAttempts(PIN_ATTEMPTS_KEY, ownPin, locked, at);
+      const rescueAttempts = await sharedAttempts(RESCUE_ATTEMPTS_KEY, ownRescue, locked, at);
+      // [OA] A state that changed while the read was out (a face or fingerprint success as the Face ID sheet hands
+      // the app back, CS-8; a verify without Web Locks) is newer than what was read: it wins, never the stale read.
+      set({
+        ...(get().pinAttempts === ownPin ? { pinAttempts } : {}),
+        ...(get().rescueAttempts === ownRescue ? { rescueAttempts } : {}),
+      });
     }),
 
   markPinResetByWait: (at) => {
@@ -447,6 +456,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
 
   enableBiometricShortcut: async (prompt, now = Date.now) => {
     if (get().parentPinHash === null) return 'unavailable';
+    await pendingRemove;
     const written = await biometric.write(prompt);
     if (written !== 'written') return written;
     const record = shortcutRecord(now(), get().pinSetAt);
@@ -460,7 +470,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const had = get().biometricShortcut !== null;
     set({ biometricShortcut: null });
     void writeJson(BIOMETRIC_SHORTCUT_KEY, null);
-    void biometric.remove();
+    // Kept, so a quick off-then-on writes the new token only after this delete (native calls may finish out of order).
+    pendingRemove = biometric.remove().catch(() => undefined);
     if (had) void track(biometricChangedEvent(false, reason));
   },
 
@@ -472,10 +483,10 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       get().disableBiometricShortcut('enrolment_changed');
     } else if (read === 'ok') {
       // A correct PIN for every count (section 8.3): no misses, no pause, `strikes` back to 0.
-      await withTabLock(PIN_ATTEMPTS_LOCK, async () => {
-        set({ pinAttempts: registerSuccess() });
-        await writeJson(PIN_ATTEMPTS_KEY, registerSuccess());
-      });
+      // Set before any await, so a refresh still reading the paused state cannot bring it back (`refreshAttempts`);
+      // the write is best effort, as for a correct PIN.
+      set({ pinAttempts: registerSuccess() });
+      await withTabLock(PIN_ATTEMPTS_LOCK, () => saveAttempts(PIN_ATTEMPTS_KEY, registerSuccess())).catch(() => undefined);
     }
     return read;
   },

@@ -13,7 +13,8 @@ import { useBiometricAvailable } from './use-biometric-available';
  * [OA] Face or fingerprint for grown-ups (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D10, sections 8.2 and 8.6, row OA-9;
  * mock `design/screens/profiles/people-on-device.md`, decision D18): a switch card in the Grown-up area, native
  * builds with strong face or fingerprint only (`EXPO_PUBLIC_BIOMETRIC_SHORTCUT` off hides it). Off on every device
- * until a grown-up turns it on (OQ-6). The warning is the switch's hint, so it is read before turning it on.
+ * until a grown-up turns it on (OQ-6). The warning is part of the switch's spoken name (not only its hint, which a
+ * screen reader user can turn off), so it is heard before turning it on.
  *
  * - On needs a PIN entered in the last 2 minutes (`needsFreshPin`); otherwise the PIN screen asks first
  *   (destination `BiometricShortcut`) and turns it on after the PIN.
@@ -53,7 +54,7 @@ export function BiometricShortcutCard({ onNeedPin }: { onNeedPin: () => void }):
 
   return (
     <Card padding="md" style={{ marginBottom: spacing.lg }} testID="dashboard-biometric">
-      {/* The whole row is the target (at least 64); the label names the switch and the hint describes it. */}
+      {/* The whole row is the target (at least 64); the switch's spoken name carries the label and the warning. */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
         <Pressable
           style={{ flex: 1 }}
@@ -72,8 +73,7 @@ export function BiometricShortcutCard({ onNeedPin }: { onNeedPin: () => void }):
           value={on}
           disabled={disabled}
           onValueChange={toggle}
-          accessibilityLabel={m.biometric.toggle}
-          accessibilityHint={hint}
+          accessibilityLabel={`${m.biometric.toggle}. ${hint}`}
           trackColor={{ true: colors.brand.primary, false: colors.border.shape }}
           ios_backgroundColor={colors.border.shape}
           thumbColor={colors.surface.paper}

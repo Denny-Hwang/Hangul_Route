@@ -93,6 +93,13 @@ describe('[OA] where the shortcut shows', () => {
     expect(shortcutSwitch({ ...on, flagOn: false })).toBe('hidden');
     expect(shortcutSwitch({ ...on, available: false, hasPin: false })).toBe('hidden');
   });
+
+  it('without strong biometrics right now an on switch stays, so it can be turned off; an off one is hidden', () => {
+    expect(shortcutSwitch({ ...on, available: false })).toBe('on');
+    expect(shortcutSwitch({ ...on, available: false, record: null })).toBe('hidden');
+    expect(shortcutSwitch({ ...on, available: false, pinSetAt: EPOCH + 1 })).toBe('hidden');
+    expect(shortcutSwitch({ ...on, available: false, flagOn: false })).toBe('hidden');
+  });
 });
 
 describe('[OA] what a read means (CS-13, CS-18)', () => {

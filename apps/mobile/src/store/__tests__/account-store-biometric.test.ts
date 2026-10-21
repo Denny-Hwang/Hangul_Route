@@ -32,6 +32,7 @@ vi.mock('../../platform/telemetry', () => ({
 }));
 
 import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
+import { readJson } from '../../platform/storage';
 import { INITIAL_ATTEMPT_STATE, type AttemptState } from '../../logic/profiles/pin-hash';
 import { useAccountStore } from '../account-store';
 
@@ -124,6 +125,47 @@ describe('[OA] opt-in validity by epoch (section 8.6)', () => {
     expect(changes()).toEqual([{ on: false, reason: 'pin_changed' }]);
   });
 
+  it('hydrate keeps any record while the PIN hash cannot be read, and emits nothing', async () => {
+    disk.set('account:parentPinHash', 42);
+    disk.set(PIN_SET_AT_KEY, EPOCH);
+    disk.set(RECORD_KEY, { v: 1, enabledAt: EPOCH + 1, epoch: EPOCH - 5 });
+    await useAccountStore.getState().hydrate();
+    expect(useAccountStore.getState().pinHashReadFailed).toBe(true);
+    expect(useAccountStore.getState().biometricShortcut).toEqual({ v: 1, enabledAt: EPOCH + 1, epoch: EPOCH - 5 });
+    expect(disk.get(RECORD_KEY)).toEqual({ v: 1, enabledAt: EPOCH + 1, epoch: EPOCH - 5 });
+    expect(port.remove).not.toHaveBeenCalled();
+    expect(changes()).toEqual([]);
+    // It opens nothing meanwhile.
+    expect(await useAccountStore.getState().verifyBiometricShortcut(PROMPT)).toBe('off');
+  });
+
+  it('off then on again at once: the new token is written only after the delete', async () => {
+    await useAccountStore.getState().enableBiometricShortcut(PROMPT);
+    const order: string[] = [];
+    let finishRemove: () => void = () => undefined;
+    port.remove.mockImplementationOnce(
+      () =>
+        new Promise<undefined>((resolve) => {
+          finishRemove = () => {
+            order.push('remove');
+            resolve(undefined);
+          };
+        }),
+    );
+    port.write.mockImplementationOnce(async () => {
+      order.push('write');
+      return 'written';
+    });
+    useAccountStore.getState().disableBiometricShortcut('user');
+    const enabling = useAccountStore.getState().enableBiometricShortcut(PROMPT);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(order).toEqual([]);
+    finishRemove();
+    expect(await enabling).toBe('written');
+    expect(order).toEqual(['remove', 'write']);
+    expect(useAccountStore.getState().biometricShortcut).not.toBeNull();
+  });
+
   it('a stale record does nothing on the PIN screen', async () => {
     useAccountStore.setState({ biometricShortcut: { v: 1, enabledAt: 1, epoch: EPOCH - 1 } });
     expect(await useAccountStore.getState().verifyBiometricShortcut(PROMPT)).toBe('off');
@@ -147,6 +189,26 @@ describe('[OA] using it (CS-8, CS-18)', () => {
     // It never sets, changes or resets the PIN.
     expect(useAccountStore.getState().parentPinHash).toBe('h:1234');
     expect(useAccountStore.getState().pinSetAt).toBe(EPOCH);
+  });
+
+  it('a refresh still reading the paused state when the success lands cannot bring the pause back (CS-8)', async () => {
+    const state = paused();
+    disk.set('account:pinAttempts', state);
+    useAccountStore.setState({ pinAttempts: state });
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    // The Face ID sheet hands the app back: the refresh reads the stored pause, and its read is slow.
+    vi.mocked(readJson).mockImplementationOnce(async (key: string) => {
+      const value = structuredClone(disk.get(key));
+      await gate;
+      return value as never;
+    });
+    const refreshing = useAccountStore.getState().refreshAttempts();
+    expect(await useAccountStore.getState().verifyBiometricShortcut(PROMPT)).toBe('ok');
+    release();
+    await refreshing;
+    expect(useAccountStore.getState().pinAttempts).toEqual(INITIAL_ATTEMPT_STATE);
+    expect(disk.get('account:pinAttempts')).toEqual(INITIAL_ATTEMPT_STATE);
   });
 
   it('a cancel or failed match is not a miss and leaves the pause as it is', async () => {

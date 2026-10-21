@@ -13,6 +13,12 @@
 /** [OA] The SecureStore key of the shortcut item (section 13.1). SecureStore keys allow letters, digits, `.`, `-`, `_`. */
 export const BIOMETRIC_SHORTCUT_ITEM_KEY = 'hr.biometricShortcut';
 
+/**
+ * [OA] The shortcut's own keychain service (iOS) and key alias (Android), so no other SecureStore item, and no write of
+ * this key without `requireAuthentication` under the default service, can stand in for the token.
+ */
+export const BIOMETRIC_SHORTCUT_SERVICE = 'hr.biometric';
+
 /** [OA] The token: 32 random bytes as lower-case hex. A read that returns anything else is not the shortcut. */
 export const SHORTCUT_TOKEN_BYTES = 32;
 const TOKEN_RE = new RegExp(`^[0-9a-f]{${SHORTCUT_TOKEN_BYTES * 2}}$`);
@@ -72,15 +78,19 @@ export function shortcutOffered(c: ShortcutContext): boolean {
 }
 
 /**
- * The Grown-up area switch: `hidden` with the flag off or no strong biometrics; `needsPin` (disabled, with
- * `needsPinFirst` as its hint) while there is no PIN (section 8.2); else `on` or `off`.
+ * The Grown-up area switch: `hidden` with the flag off; `needsPin` (disabled, with `needsPinFirst` as its hint)
+ * while there is no PIN (section 8.2); else `on` or `off`. Without strong biometrics right now (a lockout, Face ID
+ * refused for the app, no finger enrolled for a moment) it is hidden unless it is on: an on switch stays, so a
+ * grown-up can always turn it off.
  */
 export type ShortcutSwitch = 'hidden' | 'needsPin' | 'off' | 'on';
 
 export function shortcutSwitch(c: ShortcutContext): ShortcutSwitch {
-  if (!c.flagOn || !c.available) return 'hidden';
+  if (!c.flagOn) return 'hidden';
+  const on = shortcutValid(c.record, c.pinSetAt, c.hasPin);
+  if (!c.available) return on ? 'on' : 'hidden';
   if (!c.hasPin) return 'needsPin';
-  return shortcutValid(c.record, c.pinSetAt, c.hasPin) ? 'on' : 'off';
+  return on ? 'on' : 'off';
 }
 
 /**

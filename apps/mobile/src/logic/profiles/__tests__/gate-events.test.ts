@@ -31,7 +31,7 @@ describe('[OA] profile.switch payload (section 15)', () => {
 
 describe('[OA] parent.gate.opened payload (section 15)', () => {
   it('maps every PIN screen destination to a dest code', () => {
-    for (const next of [undefined, 'ParentDashboard', 'LearnerReport', 'PlacementReport', 'NotesGrownUp', 'NoteReport', 'MoveClass', 'ApproveTransfer', 'ClassScope', 'LectureMode']) {
+    for (const next of [undefined, 'ParentDashboard', 'LearnerReport', 'PlacementReport', 'NotesGrownUp', 'NoteReport', 'MoveClass', 'ApproveTransfer', 'ClassScope', 'LectureMode', 'BiometricShortcut']) {
       expect(gateDestOf(next), String(next)).toBe('area');
     }
     expect(gateDestOf('GrownUpArea')).toBe('use');

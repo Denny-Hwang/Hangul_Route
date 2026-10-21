@@ -48,6 +48,7 @@ import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
+import { gateDestOf } from '../../logic/profiles/gate-events';
 import { trackGateOpened, trackPinPaused } from '../../store/gate-telemetry';
 import { useUiStore } from '../../store/ui-store';
 import { useBiometricAvailable } from './use-biometric-available';
@@ -132,6 +133,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   // [OA] A face or fingerprint read is running (the system prompt is up), and whether it found the shortcut voided.
   const [biometricBusy, setBiometricBusy] = useState(false);
   const [biometricChanged, setBiometricChanged] = useState(false);
+  // [OA] CS-8: the Face ID sheet sends the app to inactive and back; no attempt refresh while a read is out, so a
+  // stale paused read cannot land after the success that reset the strikes.
+  const biometricReading = useRef(false);
   const [now, setNow] = useState(() => Date.now());
   // [OA] `parent.gate.opened` once per gate: Change PIN checks the PIN first, then sets a new one.
   const gateSent = useRef(false);
@@ -171,6 +175,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   // [OA] OA-D19: a pause another tab started shows here too (on arrival and whenever the app comes back in front).
   useEffect(() => {
     const refresh = (): void => {
+      if (biometricReading.current) return;
       void refreshAttempts()
         .then(() => setNow(Date.now()))
         .catch(() => undefined);
@@ -300,6 +305,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   /** A correct PIN, or face or fingerprint standing in for it (section 8.6): the same path for every destination. */
   const afterVerified = async (via: 'pin' | 'biometric'): Promise<void> => {
+    // [OA] CS-3, fail closed until row OA-5 adds `verifyForLockedProfile` here: a locked tile's PIN or face or
+    // fingerprint never marks a fresh PIN and never opens the grown-up gate.
+    if (gateDestOf(route.params.next) === 'locked_profile') {
+      leave();
+      return;
+    }
     trackGateOpened(route.params.next, via);
     gateSent.current = true;
     // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
@@ -322,6 +333,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const tryFaceOrFingerprint = async (): Promise<void> => {
     if (biometricBusy || busy) return;
     setBiometricBusy(true);
+    biometricReading.current = true;
     try {
       const result = await verifyBiometricShortcut(m.biometric.cta);
       if (result === 'ok') {
@@ -334,6 +346,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       }
       // A cancel or a failed match: the pad as it was, no miss, the pause unchanged.
     } finally {
+      biometricReading.current = false;
       setBiometricBusy(false);
     }
   };

@@ -89,13 +89,18 @@ describe('[OA] no passcode fallback (CS-13)', () => {
     const [key, value, options] = store.setItemAsync.mock.calls[0]!;
     expect(key).toBe('hr.biometricShortcut');
     expect(value).toBe(TOKEN);
-    expect(options).toEqual({ requireAuthentication: true, keychainAccessible: 6, authenticationPrompt: PROMPT });
+    expect(options).toEqual({ requireAuthentication: true, keychainAccessible: 6, keychainService: 'hr.biometric', authenticationPrompt: PROMPT });
   });
 
   it('reads with the same options, and never asks expo-local-authentication to authenticate', async () => {
     store.getItemAsync.mockResolvedValueOnce(TOKEN);
     expect(await biometric.read(PROMPT)).toBe('ok');
-    expect(store.getItemAsync).toHaveBeenCalledWith('hr.biometricShortcut', { requireAuthentication: true, keychainAccessible: 6, authenticationPrompt: PROMPT });
+    expect(store.getItemAsync).toHaveBeenCalledWith('hr.biometricShortcut', {
+      requireAuthentication: true,
+      keychainAccessible: 6,
+      keychainService: 'hr.biometric',
+      authenticationPrompt: PROMPT,
+    });
     await biometric.available();
     await biometric.write(PROMPT);
     expect(la.authenticateAsync).not.toHaveBeenCalled();
@@ -126,9 +131,27 @@ describe('[OA] reading the item (CS-18)', () => {
     expect(await biometric.read(PROMPT)).toBe('cancelled');
   });
 
+  it('iOS: a biometry lockout reads as cancelled without touching the keychain, so no passcode prompt can appear', async () => {
+    store.canUseBiometricAuthentication.mockReturnValue(false);
+    expect(await biometric.read(PROMPT)).toBe('cancelled');
+    expect(store.getItemAsync).not.toHaveBeenCalled();
+  });
+
+  it('Android: below the strong class right before the read, it reads as cancelled without the keystore', async () => {
+    platform.OS = 'android';
+    la.getEnrolledLevelAsync.mockResolvedValue(2);
+    expect(await biometric.read(PROMPT)).toBe('cancelled');
+    la.getEnrolledLevelAsync.mockRejectedValueOnce(new Error('module missing'));
+    expect(await biometric.read(PROMPT)).toBe('cancelled');
+    expect(store.getItemAsync).not.toHaveBeenCalled();
+    la.getEnrolledLevelAsync.mockResolvedValue(3);
+    store.getItemAsync.mockResolvedValueOnce(TOKEN);
+    expect(await biometric.read(PROMPT)).toBe('ok');
+  });
+
   it('remove deletes the item and never throws', async () => {
     await biometric.remove();
-    expect(store.deleteItemAsync).toHaveBeenCalledWith('hr.biometricShortcut');
+    expect(store.deleteItemAsync).toHaveBeenCalledWith('hr.biometricShortcut', { keychainService: 'hr.biometric' });
     store.deleteItemAsync.mockRejectedValueOnce(new Error('gone'));
     await expect(biometric.remove()).resolves.toBeUndefined();
   });

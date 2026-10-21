@@ -156,7 +156,25 @@ describe('[OA] the Grown-up area switch', () => {
     await cleanup();
     flags.biometricShortcutEnabled = true;
     port.available.mockResolvedValue(false);
+    useAccountStore.setState({ biometricShortcut: null });
     shown = await show();
     expect(byTestId(shown.r.root, 'dashboard-biometric')).toHaveLength(0);
+  });
+
+  it('on, while strong biometrics are out for now (a lockout), it stays and turns off', async () => {
+    port.available.mockResolvedValue(false);
+    useAccountStore.setState({ biometricShortcut: { v: 1, enabledAt: EPOCH + 1, epoch: EPOCH } });
+    const { r } = await show();
+    const node = theSwitch(r.root);
+    expect(node.props['aria-checked'] ?? node.props.checked).toBe(true);
+    await flip(r.root, false);
+    expect(useAccountStore.getState().biometricShortcut).toBeNull();
+    expect(port.remove).toHaveBeenCalled();
+  });
+
+  it('a screen reader hears the warning in the switch name, not only in a hint that can be turned off', async () => {
+    const { r } = await show();
+    const node = theSwitch(r.root);
+    expect(node.props['aria-label']).toBe(`${m.biometric.toggle}. ${m.biometric.warning}`);
   });
 });

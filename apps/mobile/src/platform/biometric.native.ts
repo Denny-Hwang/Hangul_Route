@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import {
   BIOMETRIC_SHORTCUT_ITEM_KEY,
+  BIOMETRIC_SHORTCUT_SERVICE,
   SHORTCUT_TOKEN_BYTES,
   classifyShortcutRead,
   tokenOf,
@@ -24,12 +25,17 @@ import {
  *   button is Cancel, and a new enrolment invalidates it.
  * - A read the platform voided comes back null, a cancel or failed match throws: `classifyShortcutRead` tells the two
  *   apart. Nothing here counts a PIN miss or touches the PIN.
+ * - Every read checks the strong class again first (CS-13): a biometry lockout (iOS `canEvaluatePolicy` then fails)
+ *   or a weaker enrolment on Android never reaches the keychain, so the system cannot offer the device passcode to
+ *   lift the lockout. Such a tap reads as a cancel: nothing opens and the pad stays.
+ * - The item has its own keychain service (`hr.biometric`), so no other SecureStore item can stand in for it.
  */
 
 function options(prompt: string): SecureStore.SecureStoreOptions {
   return {
     requireAuthentication: true,
     keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
+    keychainService: BIOMETRIC_SHORTCUT_SERVICE,
     authenticationPrompt: prompt,
   };
 }
@@ -74,6 +80,11 @@ export const biometric: BiometricPort = {
 
   read: async (prompt) => {
     try {
+      if (!(await strongClass())) return 'cancelled';
+    } catch {
+      return 'cancelled';
+    }
+    try {
       return classifyShortcutRead({ value: await SecureStore.getItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, options(prompt)) });
     } catch (error) {
       return classifyShortcutRead({ error });
@@ -82,7 +93,7 @@ export const biometric: BiometricPort = {
 
   remove: async () => {
     try {
-      await SecureStore.deleteItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY);
+      await SecureStore.deleteItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, { keychainService: BIOMETRIC_SHORTCUT_SERVICE });
     } catch {
       // Already gone, or the store is unavailable: the account record is what turns the shortcut off.
     }

@@ -66,7 +66,7 @@ function nav() {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-async function show(params: { next: 'ParentDashboard' | 'AddProfile' | 'BiometricShortcut'; mode?: 'setup' }, navigation = nav()) {
+async function show(params: { next: 'ParentDashboard' | 'AddProfile' | 'BiometricShortcut'; mode?: 'setup' | 'change' }, navigation = nav()) {
   const route = { key: 'pin', name: 'PinEntry' as const, params };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
   const r = await render(<PinEntryScreen route={route} navigation={navigation as any} />);
@@ -143,6 +143,26 @@ describe('[OA] Use face or fingerprint on the PIN screen', () => {
   it('never in setup: it never sets, changes or resets the PIN', async () => {
     const { r } = await show({ next: 'ParentDashboard', mode: 'setup' });
     expect(cta(r.root)).toHaveLength(0);
+  });
+
+  it('never on the Change PIN check (OA-D21): only the current PIN leads to a new one', async () => {
+    const { r } = await show({ next: 'ParentDashboard', mode: 'change' });
+    expect(cta(r.root)).toHaveLength(0);
+    expect(buttonsNamed(r.root, a11y.pinDigit(1))).toHaveLength(1);
+  });
+
+  it('fails closed on a locked tile until OA-5: no fresh PIN, no grown-up gate (CS-3)', async () => {
+    const navigation = nav();
+    const route = { key: 'pin', name: 'PinEntry' as const, params: { next: 'LockedProfile', profileId: learner.id } };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- `LockedProfile` arrives with row OA-5
+    const r = await render(<PinEntryScreen route={route as any} navigation={navigation as any} />);
+    await settle();
+    await settle();
+    await tapCta(r.root);
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(navigation.goBack).toHaveBeenCalled();
   });
 
   it('a success opens the destination as a correct PIN does (via biometric), and the PIN is untouched', async () => {
@@ -227,6 +247,19 @@ describe('[OA] destination BiometricShortcut (the Grown-up area switch asked for
     expect(useAccountStore.getState().biometricShortcut).toMatchObject({ v: 1, epoch: EPOCH });
     expect(navigation.goBack).toHaveBeenCalled();
     expect(tracked.find((e) => e.name === 'pin.biometric_changed')?.payload).toEqual({ on: true, reason: 'user' });
+  });
+
+  it('a correct PIN with the write cancelled (Android asks on the write) goes back with nothing on', async () => {
+    useAccountStore.setState({ biometricShortcut: null });
+    port.write.mockResolvedValueOnce('cancelled');
+    const { r, navigation } = await show({ next: 'BiometricShortcut' });
+    for (const digit of '1234') await press(buttonsNamed(r.root, a11y.pinDigit(Number(digit)))[0] as ReactTestInstance);
+    await press(buttonsNamed(r.root, m.entry.unlock.cta)[0] as ReactTestInstance);
+    await settle();
+    expect(port.write).toHaveBeenCalledWith(m.biometric.cta);
+    expect(navigation.goBack).toHaveBeenCalled();
+    expect(useAccountStore.getState().biometricShortcut).toBeNull();
+    expect(tracked.filter((e) => e.name === 'pin.biometric_changed')).toEqual([]);
   });
 
   it('a wrong PIN turns nothing on', async () => {
