@@ -3,7 +3,7 @@ import { D1Db, type D1Like } from './d1';
 import { MemoryDb } from './memory';
 import type { Db } from './types';
 
-export type { Db, NoteCursor, StoredRelink } from './types';
+export type { Db, NoteCursor, StoredRelink, TelemetryDailyRow } from './types';
 export * from './transfer-types';
 export * from './feedback-types';
 export * from './class-move-types';

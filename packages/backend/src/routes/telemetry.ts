@@ -1,7 +1,9 @@
 import { isServerOnlyTelemetryName, isTelemetryEventName } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
+import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
 import { appendEvent, keptEventFields } from '../lib/server-events';
+import { countTelemetryDaily, type TelemetryDailyEnv } from '../lib/telemetry-daily';
 import { id, type TelemetryEvent } from '../store';
 
 /**
@@ -17,6 +19,9 @@ import { id, type TelemetryEvent } from '../store';
  * only the Worker records them (F-BILL-002 section 10), and the log is
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
+ * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS (and `session.start`) is also counted in the
+ * anonymous `telemetry_daily` table (section 15.1, lib/telemetry-daily.ts): best effort, after the response is
+ * decided, never failing this route and never retried.
  * There is deliberately no read route (audit SEC-3).
  */
 export const telemetryRoutes = new Hono();
@@ -62,5 +67,13 @@ telemetryRoutes.post('/', async (c) => {
     at: clientTimestamp(body?.at, now.getTime()) ?? receivedAt,
     receivedAt,
   };
-  return ok(c, { event: appendEvent(event) }, 201);
+  const stored = appendEvent(event);
+  const count = countTelemetryDaily(() => dbFor(c), c.env as TelemetryDailyEnv | undefined, stored, now.getTime());
+  try {
+    c.executionCtx.waitUntil(count);
+  } catch {
+    // No execution context (tests, local dev): finish the count before answering. It never rejects.
+    await count;
+  }
+  return ok(c, { event: stored }, 201);
 });

@@ -43,6 +43,7 @@ import {
   type TransferPrefs,
   type TransferSlotConsent,
   type NoteCursor,
+  type TelemetryDailyRow,
   type WaitlistEntry,
 } from './types';
 
@@ -108,6 +109,8 @@ export class MemoryDb implements Db {
   private classMoves = new Map<string, StoredClassMove>();
   /** [SA] migration 0011. */
   private spaceEvents = new Map<string, SpaceEvent>();
+  /** [OA] migration 0013: counters keyed by `day`, `name` and `dims` (JSON of the triple). */
+  private telemetryDaily = new Map<string, TelemetryDailyRow>();
   /** [SA] migration 0012: the invites, and the membership keys whose row holds `promoted_from = 'teacher'`. */
   private adminInvites = new Map<string, StoredAdminInvite>();
   private promotedFromTeacher = new Set<string>();
@@ -1171,8 +1174,28 @@ export class MemoryDb implements Db {
     return removed;
   }
 
+  async addTelemetryDaily(day: string, name: string, dims: string): Promise<void> {
+    const key = JSON.stringify([day, name, dims]);
+    const row = this.telemetryDaily.get(key);
+    this.telemetryDaily.set(key, { day, name, dims, n: (row?.n ?? 0) + 1 });
+  }
+  async purgeTelemetryDaily(beforeDay: string, limit: number): Promise<number> {
+    let removed = 0;
+    for (const [key, row] of this.telemetryDaily) {
+      if (removed >= limit) break;
+      if (row.day < beforeDay) {
+        this.telemetryDaily.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
+  }
+  async telemetryDailyOf(day: string): Promise<TelemetryDailyRow[]> {
+    return clone([...this.telemetryDaily.values()].filter((r) => r.day === day).sort((a, b) => a.name.localeCompare(b.name) || a.dims.localeCompare(b.dims)));
+  }
+
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents, this.adminInvites]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents, this.adminInvites, this.telemetryDaily]) m.clear();
     this.promotedFromTeacher.clear();
     this.transferEventRows = [];
     this.rateHits = [];
