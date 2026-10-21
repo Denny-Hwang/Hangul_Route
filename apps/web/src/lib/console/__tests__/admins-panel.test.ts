@@ -138,3 +138,38 @@ describe('what a refused action does', () => {
     expect(afterLeaving('none')).toBe('/teach');
   });
 });
+
+describe('reading GET /:id/admins leniently', () => {
+  it('keeps the rows this build can show and refuses an answer it cannot read', async () => {
+    const { readAdminsView } = await import('../api');
+    expect(readAdminsView({ plans: [] })).toBeNull();
+    expect(readAdminsView({ owner: { accountId: 1 }, admins: [], limit: 2 })).toBeNull();
+    expect(readAdminsView({ owner: { accountId: 'ms-park', name: 'Ms Park' }, admins: 'x', limit: 2 })).toBeNull();
+    expect(
+      readAdminsView({
+        owner: { accountId: 'ms-park', name: null },
+        admins: [{ accountId: 'mr-lee', name: 'Mr Lee', email: 'lee@example.org', joinedAt: '2026-10-03T10:00:00.000Z', staysTeacher: true }, { accountId: 2 }, { accountId: 'dr-cho', joinedAt: '2026-10-18T10:00:00.000Z' }],
+        limit: 2,
+        invites: [{ id: 'invite:1', createdAt: 'a', expiresAt: 'b' }, { id: 3 }],
+        events: [{ kind: 'renamed', at: '2026-10-12T00:00:00.000Z', actorName: 'Ms Park', subjectName: null }, { kind: 1 }],
+      }),
+    ).toEqual({
+      ok: true,
+      data: {
+        owner: { accountId: 'ms-park', name: null },
+        admins: [
+          { accountId: 'mr-lee', name: 'Mr Lee', email: 'lee@example.org', joinedAt: '2026-10-03T10:00:00.000Z', staysTeacher: true },
+          { accountId: 'dr-cho', name: null, joinedAt: '2026-10-18T10:00:00.000Z', staysTeacher: false },
+        ],
+        limit: 2,
+        invites: [{ id: 'invite:1', createdAt: 'a', expiresAt: 'b' }],
+        events: [{ kind: 'renamed', at: '2026-10-12T00:00:00.000Z', actorName: 'Ms Park', subjectName: null }],
+      },
+    });
+    // An administrator's answer carries no invites, no events and no email.
+    expect(readAdminsView({ owner: { accountId: 'ms-park', name: 'Ms Park' }, admins: [{ accountId: 'mr-lee', name: 'Mr Lee', joinedAt: 'x', staysTeacher: false }], limit: 2 })).toEqual({
+      ok: true,
+      data: { owner: { accountId: 'ms-park', name: 'Ms Park' }, admins: [{ accountId: 'mr-lee', name: 'Mr Lee', joinedAt: 'x', staysTeacher: false }], limit: 2 },
+    });
+  });
+});

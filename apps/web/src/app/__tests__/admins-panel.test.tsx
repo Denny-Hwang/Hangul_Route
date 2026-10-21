@@ -369,6 +369,14 @@ describe('the owner', () => {
   });
 });
 
+describe('a Worker without the admin routes', () => {
+  it('a 404 keeps the panel out of the school page', async () => {
+    const root = await render('ms-park', fail(404));
+    expect(byTestId(root, 'admins-panel')).toHaveLength(0);
+    expect(allText(root)).not.toContain(m.console.cantReach);
+  });
+});
+
 describe('an administrator', () => {
   it('sees the list without emails or buttons, about, and Stop being an administrator; no invites, no history', async () => {
     const root = await render('mr-lee', ok(adminView([LEE, CHO])));

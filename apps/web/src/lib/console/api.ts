@@ -227,6 +227,24 @@ export interface AdminInviteAccepted {
   role: 'admin';
 }
 
+/** [SA] `GET /:id/admins` as this build can show it: the owner and the admin rows checked, unknown rows dropped. */
+export function readAdminsView(raw: unknown): { ok: true; data: AdminsView } | null {
+  if (!isPlainRecord(raw) || !isPlainRecord(raw.owner) || typeof raw.owner.accountId !== 'string' || !Array.isArray(raw.admins) || typeof raw.limit !== 'number') return null;
+  const text = (v: unknown): string | null => (typeof v === 'string' ? v : null);
+  const admins: AdminRow[] = raw.admins.flatMap((a: unknown) =>
+    isPlainRecord(a) && typeof a.accountId === 'string' && typeof a.joinedAt === 'string'
+      ? [{ accountId: a.accountId, name: text(a.name), ...('email' in a ? { email: text(a.email) } : {}), joinedAt: a.joinedAt, staysTeacher: a.staysTeacher === true }]
+      : [],
+  );
+  const invites = Array.isArray(raw.invites)
+    ? raw.invites.flatMap((i: unknown) => (isPlainRecord(i) && typeof i.id === 'string' && typeof i.createdAt === 'string' && typeof i.expiresAt === 'string' ? [{ id: i.id, createdAt: i.createdAt, expiresAt: i.expiresAt }] : []))
+    : undefined;
+  const events = Array.isArray(raw.events)
+    ? raw.events.flatMap((e: unknown) => (isPlainRecord(e) && typeof e.kind === 'string' && typeof e.at === 'string' ? [{ kind: e.kind, at: e.at, actorName: text(e.actorName), subjectName: text(e.subjectName) }] : []))
+    : undefined;
+  return { ok: true, data: { owner: { accountId: raw.owner.accountId, name: text(raw.owner.name) }, admins, limit: raw.limit, ...(invites ? { invites } : {}), ...(events ? { events } : {}) } };
+}
+
 export interface RelinkView {
   id: string;
   learnerId: string;
@@ -397,7 +415,12 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ code: string; issuedAt: string }>(`${recovery}/issue`, { method: 'POST', body: JSON.stringify({ learnerId }) }, [201]),
     school: (spaceId: string) => call<SchoolView>(`${base}/${encodeURIComponent(spaceId)}/school`, { method: 'GET' }, [200]),
     /** [SA] AMENDMENTS-SEATS-ADMINS section 6.4: the school's owner and administrators (owner: also invites and history). */
-    admins: (spaceId: string) => call<AdminsView>(`${base}/${encodeURIComponent(spaceId)}/admins`, { method: 'GET' }, [200]),
+    admins: (spaceId: string): Promise<ApiResult<AdminsView>> =>
+      call<unknown>(`${base}/${encodeURIComponent(spaceId)}/admins`, { method: 'GET' }, [200]).then((r) => {
+        if (!r.ok) return r;
+        // Read leniently: an answer this build cannot read is a failed read, never a crashed school page.
+        return readAdminsView(r.data) ?? { ok: false as const, error: 'unknown' as const, status: 200 };
+      }),
     /** [SA] A one-time invite link (step-up: a `403` carries Clerk's reverification hint as is). The link is never kept. */
     createAdminInvite: (spaceId: string) =>
       call<{ invite: AdminInviteRow; url: string | null }>(`${base}/${encodeURIComponent(spaceId)}/admin-invites`, { method: 'POST' }, [201]),

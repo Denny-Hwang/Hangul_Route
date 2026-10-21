@@ -147,6 +147,8 @@ export function AdminsPanel({ api, school, accountId, confirm, onLeave, now = ()
   const urlId = useId();
   const [view, setView] = useState<AdminsView | null>(null);
   const [failed, setFailed] = useState(false);
+  // A Worker without the admin routes (older than SA-2) answers 404: the panel stays out of the page.
+  const [absent, setAbsent] = useState(false);
   const [line, setLine] = useState<PanelLine>(null);
   const [busy, setBusy] = useState(false);
   const [box, setBox] = useState<{ url: string; expiresAt: string; inviteId: string } | null>(null);
@@ -170,7 +172,8 @@ export function AdminsPanel({ api, school, accountId, confirm, onLeave, now = ()
     const result = await api.admins(school.id);
     if (!live.current) return null;
     if (!result.ok) {
-      setFailed(true);
+      if (result.status === 404) setAbsent(true);
+      else setFailed(true);
       return null;
     }
     setFailed(false);
@@ -328,6 +331,7 @@ export function AdminsPanel({ api, school, accountId, confirm, onLeave, now = ()
   const history = viewer === 'owner' ? historyLines(view?.events, locale) : [];
   const self = view?.admins.find((x) => x.accountId === accountId) ?? null;
 
+  if (absent && !view) return <></>;
   return (
     <>
       <style>{ADMINS_CSS}</style>
