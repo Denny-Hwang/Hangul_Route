@@ -735,7 +735,7 @@ export const consoleMsgs = {
       title: '강의 모드',
       tagline: '큰 화면으로 가르쳐요',
       bodyClass: '준비된 수업을 프로젝터나 TV에 띄워요. 큰 글자와 소리, 질문 몇 개가 나와요. 누구의 진도도 바뀌지 않아요.',
-      bodyFamily: 'TV에 수업을 띄우고 집에서 함께 배워요. 따로 준비할 것이 없어요.',
+      bodyFamily: 'TV에 수업을 띄우고 집에서 함께 배워요. 따로 준비할 것이 없고, 누구의 진도도 바뀌지 않아요.',
       cta: '강의 모드 시작',
       chooseClass: '어느 반인가요?',
       chooseFamily: '어느 가족인가요?',

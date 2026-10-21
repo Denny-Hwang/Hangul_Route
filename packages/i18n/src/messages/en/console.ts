@@ -1001,7 +1001,7 @@ export const consoleMsgs = {
       title: 'Lecture mode',
       tagline: 'Teach on a big screen',
       bodyClass: "Show a ready lesson on a projector or TV: big letters, sounds and a few questions. Nobody's progress changes.",
-      bodyFamily: 'Put a lesson on your TV and learn together at home. No setup needed.',
+      bodyFamily: "Put a lesson on your TV and learn together at home. No setup needed, and nobody's progress changes.",
       cta: 'Start lecture mode',
       chooseClass: 'Which class?',
       chooseFamily: 'Which family?',

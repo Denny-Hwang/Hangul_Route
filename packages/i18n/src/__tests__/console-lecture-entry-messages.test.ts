@@ -35,18 +35,18 @@ const TABLE: Record<string, Record<UiLocale, string>> = {
   'lecture.card.tagline': { en: 'Teach on a big screen', es: 'Enseña en una pantalla grande', ko: '큰 화면으로 가르쳐요' },
   'lecture.card.bodyClass': {
     en: "Show a ready lesson on a projector or TV: big letters, sounds and a few questions. Nobody's progress changes.",
-    es: 'Muestra una lección lista en un proyector o una TV: letras grandes, sonidos y algunas preguntas. El progreso de nadie cambia.',
+    es: 'Muestra una lección lista en un proyector o una TV: letras grandes, sonidos y algunas preguntas. No cambia el progreso de nadie.',
     ko: '준비된 수업을 프로젝터나 TV에 띄워요. 큰 글자와 소리, 질문 몇 개가 나와요. 누구의 진도도 바뀌지 않아요.',
   },
   'lecture.card.bodyFamily': {
-    en: 'Put a lesson on your TV and learn together at home. No setup needed.',
-    es: 'Pon una lección en tu TV y aprende en familia, en casa. No hace falta preparar nada.',
-    ko: 'TV에 수업을 띄우고 집에서 함께 배워요. 따로 준비할 것이 없어요.',
+    en: "Put a lesson on your TV and learn together at home. No setup needed, and nobody's progress changes.",
+    es: 'Pon una lección en tu TV y aprende en familia, en casa. No hace falta preparar nada y no cambia el progreso de nadie.',
+    ko: 'TV에 수업을 띄우고 집에서 함께 배워요. 따로 준비할 것이 없고, 누구의 진도도 바뀌지 않아요.',
   },
   'lecture.card.cta': { en: 'Start lecture mode', es: 'Empezar modo proyección', ko: '강의 모드 시작' },
   'lecture.card.chooseClass': { en: 'Which class?', es: '¿Qué clase?', ko: '어느 반인가요?' },
   'lecture.card.chooseFamily': { en: 'Which family?', es: '¿Qué familia?', ko: '어느 가족인가요?' },
-  'lecture.card.noSpace': { en: 'No class needed: you can still show a lesson.', es: 'No hace falta una clase: igual puedes mostrar una lección.', ko: '반이 없어도 수업을 띄울 수 있어요.' },
+  'lecture.card.noSpace': { en: 'No class needed: you can still show a lesson.', es: 'No hace falta una clase: aun así puedes mostrar una lección.', ko: '반이 없어도 수업을 띄울 수 있어요.' },
   'lecture.card.noSpaceFamily': { en: 'You can show a lesson without a family space.', es: 'Puedes mostrar una lección sin un espacio familiar.', ko: '가족 공간이 없어도 수업을 띄울 수 있어요.' },
   'lecture.card.opensTab': { en: 'Opens in a new tab', es: 'Se abre en una pestaña nueva', ko: '새 탭에서 열려요' },
 };

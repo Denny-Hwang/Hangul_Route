@@ -182,13 +182,28 @@ describe('LectureModeCard', () => {
     expect(textOf(start(r))).toBe(ko.cta);
   });
 
-  it('with #lecture-mode it scrolls into view and focuses its heading once it has its place', () => {
+  /** A window whose address holds `#lecture-mode` until the card takes it off (`history.replaceState`). */
+  function fragmentWindow(): { listeners: Record<string, () => void>; location: { hash: string; pathname: string; search: string }; replaced: unknown[][] } {
     const listeners: Record<string, () => void> = {};
+    const location = { hash: '#lecture-mode', pathname: '/parent', search: '' };
+    const replaced: unknown[][] = [];
     vi.stubGlobal('window', {
-      location: { hash: '#lecture-mode' },
+      location,
+      history: {
+        state: { router: 'kept' },
+        replaceState: (...args: unknown[]) => {
+          replaced.push(args);
+          location.hash = String(args[2]).includes('#') ? String(args[2]).slice(String(args[2]).indexOf('#')) : '';
+        },
+      },
       addEventListener: (type: string, fn: () => void) => (listeners[type] = fn),
       removeEventListener: (type: string) => delete listeners[type],
     });
+    return { listeners, location, replaced };
+  }
+
+  it('with #lecture-mode it scrolls into view and focuses its heading once it has its place', () => {
+    const { listeners, location, replaced } = fragmentWindow();
     const calls: NodeCalls = { focused: 0, scrolled: [] };
     // Not yet: still loading, or the page says its place can still move.
     render({ state: 'loading' }, 'parent', true, calls);
@@ -199,9 +214,70 @@ describe('LectureModeCard', () => {
     render({ state: 'one', href: '/x' }, 'parent', true, calls);
     expect(calls.focused).toBe(1);
     expect(calls.scrolled).toEqual([{ block: 'start' }]);
+    // The arrival is answered: the fragment leaves the address, the router's history state kept.
+    expect(replaced).toEqual([[{ router: 'kept' }, '', '/parent']]);
+    expect(location.hash).toBe('');
     // The frame sets the fragment again on this page: the card answers the hashchange.
+    location.hash = '#lecture-mode';
     act(() => listeners.hashchange?.());
     expect(calls.focused).toBe(2);
+    expect(location.hash).toBe('');
+  });
+
+  it('answers each arrival once: a remount or a redraw after it (the card moving at 70em, a Try again) takes no focus', () => {
+    const { listeners } = fragmentWindow();
+    const calls: NodeCalls = { focused: 0, scrolled: [] };
+    render({ state: 'one', href: '/x' }, 'parent', true, calls);
+    expect(calls.focused).toBe(1);
+    // A Try again: loading, then ready again, in the same card.
+    act(() => mounted?.update(<LectureModeCard view={{ state: 'loading' }} persona="parent" />));
+    act(() => mounted?.update(<LectureModeCard view={{ state: 'one', href: '/x' }} persona="parent" />));
+    // A move to another slot: a new card.
+    act(() => mounted?.unmount());
+    render({ state: 'one', href: '/x' }, 'parent', true, calls);
+    // A hashchange to some other fragment.
+    act(() => listeners.hashchange?.());
+    expect(calls).toEqual({ focused: 1, scrolled: [{ block: 'start' }] });
+  });
+
+  it('a page that holds the choice keeps it across a remount (chosen / onChoose)', () => {
+    vi.stubGlobal('window', { location: { hash: '' }, addEventListener: () => undefined, removeEventListener: () => undefined });
+    const view: LectureCardView = {
+      state: 'several',
+      choices: [
+        { id: 'sp_a', name: 'A', href: '/a' },
+        { id: 'sp_b', name: 'B', href: '/b' },
+      ],
+    };
+    const chosen: string[] = [];
+    act(() => {
+      mounted = create(<LectureModeCard view={view} persona="parent" chosen={null} onChoose={(id) => chosen.push(id)} />);
+    });
+    let r = mounted as unknown as ReactTestRenderer;
+    expect(start(r).props.href).toBe('/a');
+    act(() => (byTestId(r, 'lecture-card-choice-sp_b') as ReactTestInstance).props.onChange());
+    expect(chosen).toEqual(['sp_b']);
+    // The page's own value draws, on a new card as on the old one.
+    act(() => mounted?.unmount());
+    act(() => {
+      mounted = create(<LectureModeCard view={view} persona="parent" chosen="sp_b" onChoose={(id) => chosen.push(id)} />);
+    });
+    r = mounted as unknown as ReactTestRenderer;
+    expect(start(r).props.href).toBe('/b');
+    expect((byTestId(r, 'lecture-card-choice-sp_b') as ReactTestInstance).props.checked).toBe(true);
+  });
+
+  it('the family body says once that nobody\'s progress changes, in every UI language (section 3)', () => {
+    for (const value of ['en', 'es', 'ko'] as const) {
+      locale.value = value;
+      const r = render({ state: 'one', href: '/x' }, 'parent');
+      const c = getMessages(value).console.lecture.card;
+      expect(allText(r)).toContain(c.bodyFamily);
+      act(() => mounted?.unmount());
+    }
+    expect(getMessages('en').console.lecture.card.bodyFamily).toMatch(/nobody's progress changes/);
+    expect(getMessages('es').console.lecture.card.bodyFamily).toMatch(/no cambia el progreso de nadie/);
+    expect(getMessages('ko').console.lecture.card.bodyFamily).toMatch(/누구의 진도도 바뀌지 않아요/);
   });
 
   it('without the fragment it moves nothing', () => {
