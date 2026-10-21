@@ -176,6 +176,6 @@ Exit to: learner Home · `profiles/pin-entry` (locked tile, any grown-up row, Ad
 - `hr:profiles` (names, avatars), `hr:profiles:locks`, `hr-shell` / `kv` `deviceUses` (web, read-only), the device gate marker (lock glyph or not), `navigator.onLine`.
 - Writes: `hr:profiles:active` on a learner pick; nothing else.
 
-## Open questions (defaults in the spec, section 23)
+## Owner decisions (spec section 23, decided 2026-10-21)
 
-- OQ-1 launch condition, OQ-2 resume time, OQ-10 School row, OQ-11 tile order.
+- OQ-1 launch condition, OQ-2 resume time, OQ-10 School row, OQ-11 tile order: the defaults above are decided.
