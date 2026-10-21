@@ -1898,5 +1898,11 @@ export const learner = {
     nopinCaption: 'Aquí un adulto crea un PIN.',
     resetPending: (time: string) => `Un PIN de adultos nuevo se podrá crear desde: ${time}. Escribe el PIN para cancelar.`,
     resetCancel: 'Cancelar la espera',
+    use: {
+      family: 'Familia',
+      teacher: 'Docente',
+      school: 'Escuela',
+      signIn: 'Entrar como adulto',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;

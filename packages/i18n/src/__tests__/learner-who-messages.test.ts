@@ -59,6 +59,42 @@ describe('learner.who (OA-4a)', () => {
   });
 });
 
+// Row OA-4b: the grown-up use rows (section 17.1; glossary Family Familia 가족, Teacher Docente 선생님, School Escuela
+// 학교). Generic labels only (CS-7): no account, name, email or space in any of them.
+const USES = ['family', 'teacher', 'school', 'signIn'] as const;
+
+describe('learner.who.use (OA-4b)', () => {
+  it('English is the spec text (section 17.1)', () => {
+    expect(getMessages('en').learner.who.use).toEqual({ family: 'Family', teacher: 'Teacher', school: 'School', signIn: 'Sign in as a grown-up' });
+  });
+
+  it('Spanish and Korean follow the glossary and have their own value for every use', () => {
+    expect(getMessages('es').learner.who.use).toEqual({ family: 'Familia', teacher: 'Docente', school: 'Escuela', signIn: 'Entrar como adulto' });
+    expect(getMessages('ko').learner.who.use).toEqual({ family: '가족', teacher: '선생님', school: '학교', signIn: '어른으로 로그인' });
+    const en = getMessages('en').learner.who.use;
+    for (const locale of ['es', 'ko'] as const) for (const key of USES) expect(getMessages(locale).learner.who.use[key], `${locale}.${key}`).not.toBe(en[key]);
+  });
+
+  it('the Teacher row says what the Welcome grown-ups row and the console say (one word per role)', () => {
+    for (const locale of LOCALES) expect(getMessages(locale).learner.who.use.teacher, locale).toBe(getMessages(locale).learner.welcome.grownUps.teacher);
+  });
+
+  it('Sign in uses the grown-up word of the glossary (adultos / 어른)', () => {
+    expect(getMessages('es').learner.who.use.signIn).toContain('adulto');
+    expect(getMessages('ko').learner.who.use.signIn).toContain('어른');
+  });
+
+  it('no use row names an account, an email, a space or a person (CS-7)', () => {
+    for (const locale of LOCALES) {
+      for (const key of USES) {
+        const label = getMessages(locale).learner.who.use[key];
+        expect(label, `${locale}.${key}`).not.toMatch(/@|account|cuenta|계정|\{|\$/i);
+        expect(findBannedWord(label, locale, 'learner'), `${locale}.${key}`).toBeNull();
+      }
+    }
+  });
+});
+
 describe('a11y.who (OA-4a, section 17.2)', () => {
   it('English is the spec text', () => {
     const a = getMessages('en').a11y.who;

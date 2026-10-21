@@ -1832,5 +1832,11 @@ export const learner = {
     nopinCaption: '여기서 어른이 PIN을 만들어요.',
     resetPending: (time: string) => `${time} 이후에 새 어른용 PIN을 만들 수 있어요. 취소하려면 PIN을 입력해요.`,
     resetCancel: '기다리기 취소',
+    use: {
+      family: '가족',
+      teacher: '선생님',
+      school: '학교',
+      signIn: '어른으로 로그인',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;
