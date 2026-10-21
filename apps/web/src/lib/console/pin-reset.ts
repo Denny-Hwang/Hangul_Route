@@ -10,10 +10,11 @@ import { realPinEpoch } from './one-account';
  *
  * The checks, in order (section 8.5 step 3):
  * 1. the switch (`NEXT_PUBLIC_PIN_RESET_SIGNIN`); off answers `unavailable`;
- * 2. a `signin` unlock of this tab less than `GROWN_UP_FRESH_PIN_MS` (2 minutes) old, written by a password, an email
- *    code, a phone code or a Clerk password-reset code (the reset leg's sign-in, section 7.4); a passkey of the account
- *    used around that sign-in never counts, on any browser (OQ-21, CS-17). Else Clerk reverification runs, refusing a
- *    passkey too (`reverifySecret`);
+ * 2. a `signin` unlock of this tab less than `GROWN_UP_FRESH_PIN_MS` (2 minutes) old that the reset leg wrote with a
+ *    password, an email code, a phone code or a Clerk password-reset code, or after the router's reverification that
+ *    refuses a passkey (section 7.4): the reset-leg stamp (`hr:grownup:resetLeg`) carries its `at`. A passkey never
+ *    counts, on any browser (OQ-21, CS-17), and neither does an ordinary-leg unlock, whatever its factor. Else Clerk
+ *    reverification runs, refusing a passkey too (`reverifySecret`);
  * 3. the device marker is readable and `pin`;
  * 4. `pinOwner.epoch === marker.pinEpoch` (no record for this epoch: `firstSignIn`) and `pinOwner.owner` equals the
  *    signed-in account's fingerprint (another account: `notOwner`).
@@ -33,13 +34,14 @@ export function pinResetTarget(locale: UiLocale): string {
 }
 
 /**
- * Step 2: this tab's `signin` unlock is under 2 minutes old and no passkey of the account was used around it. Only the
- * reset leg's allowed factors write that unlock on a `pin` browser (`isSecretProvingSignIn`, section 7.4); the passkey
- * check refuses a sign-in a passkey made anyway (a marker that changed since, an unlock from Use a passkey).
+ * Step 2: this tab's `signin` unlock is under 2 minutes old and the reset leg stamped it (`resetLegAt === unlock.at`,
+ * written by `grantSignInUnlock` only for the leg's factors, never a passkey). An unlock from the ordinary leg (an email
+ * link, a Clerk ticket, a factor Clerk did not name, Use a passkey) or a PIN unlock does not count: the page runs the
+ * passkey-refusing reverification instead.
  */
-export function freshResetSignIn(input: { unlock: GrownUpUnlock | null; now: number; passkeyUsed: boolean }): boolean {
+export function freshResetSignIn(input: { unlock: GrownUpUnlock | null; resetLegAt: number | null; now: number }): boolean {
   const { unlock, now } = input;
-  if (input.passkeyUsed || !unlock || unlock.src !== 'signin') return false;
+  if (!unlock || unlock.src !== 'signin' || input.resetLegAt === null || input.resetLegAt !== unlock.at) return false;
   const age = now - unlock.at;
   return age >= 0 && age < GROWN_UP_FRESH_PIN_MS;
 }

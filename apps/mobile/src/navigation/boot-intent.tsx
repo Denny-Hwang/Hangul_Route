@@ -51,7 +51,8 @@ export function BootIntentHook(): null {
       },
       // Read when the intent is acted on: the profile store has hydrated before the root stack mounts.
       { hasProfile: () => useProfileStore.getState().profiles.length > 0 },
-      { outcome: pinResetOutcomeNow, showExpired: () => usePinResetNotice.getState().showExpired() },
+      // The expired line is for Home, the start screen of a device with a profile; a first run never shows it.
+      { outcome: pinResetOutcomeNow, showExpired: () => (useProfileStore.getState().profiles.length > 0 ? usePinResetNotice.getState().showExpired() : undefined) },
     );
   }, [root]);
   return null;

@@ -495,12 +495,13 @@ describe('flags', () => {
     let mod = await reload();
     expect(mod.flags.pinResetSignInEnabled).toBe(false);
     expect(mod.launchDefaultFlags.pinResetSignInEnabled).toBe(false);
-    for (const on of ['true', '1', 'on', 'yes', ' TRUE ']) {
+    // The same words as the console twin NEXT_PUBLIC_PIN_RESET_SIGNIN (apps/web pin-reset tests pin the same lists).
+    for (const on of ['true', '1', 'on', 'yes', 'enabled', ' TRUE ', 'Enabled']) {
       process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN = on;
       mod = await reload();
       expect(mod.flags.pinResetSignInEnabled, JSON.stringify(on)).toBe(true);
     }
-    for (const other of ['false', '0', 'off', 'maybe', '']) {
+    for (const other of ['false', '0', 'off', 'no', 'disabled', 'maybe', '']) {
       process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN = other;
       mod = await reload();
       expect(mod.flags.pinResetSignInEnabled, JSON.stringify(other)).toBe(false);

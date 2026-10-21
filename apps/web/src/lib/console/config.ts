@@ -23,7 +23,7 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_CLASS_TRANSFER?: string;
   /** [OA] Use a passkey on the grown-up lock (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): on unless `false`, `0`, `off` or `disabled`. */
   NEXT_PUBLIC_LOCK_PASSKEY?: string;
-  /** [OA] The sign-in PIN reset page (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): off unless `true`, `1`, `on` or `enabled`. */
+  /** [OA] The sign-in PIN reset page (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): off unless `true`, `1`, `on`, `yes` or `enabled`. */
   NEXT_PUBLIC_PIN_RESET_SIGNIN?: string;
   NODE_ENV?: string;
 }
@@ -216,14 +216,15 @@ const PIN_RESET_SIGNIN_LAUNCH_DEFAULT = false;
 /**
  * [OA] Reset the grown-up PIN by signing in (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 8.5 and 16, row OA-6), the
  * console twin of the learner app's `EXPO_PUBLIC_PIN_RESET_SIGNIN`: `/account/pin-reset` checks and hands off only with
- * it on. `true`, `1`, `on` or `enabled` turns it on and `false`, `0`, `off` or `disabled` off (case and spaces
- * ignored); anything else, or none, is the launch default, off. Off, the page answers `console.pinReset.unavailable`
+ * it on. `true`, `1`, `on`, `yes` or `enabled` turns it on and `false`, `0`, `off`, `no` or `disabled` off (case and
+ * spaces ignored; the same words as the learner app's twin, so one value set on both turns both on); anything else, or
+ * none, is the launch default, off. Off, the page answers `console.pinReset.unavailable`
  * and writes nothing.
  */
 export function pinResetSignInEnabled(env: ConsoleEnv = buildEnv()): boolean {
   const value = env.NEXT_PUBLIC_PIN_RESET_SIGNIN?.trim().toLowerCase();
-  if (value === 'true' || value === '1' || value === 'on' || value === 'enabled') return true;
-  if (value === 'false' || value === '0' || value === 'off' || value === 'disabled') return false;
+  if (value === 'true' || value === '1' || value === 'on' || value === 'yes' || value === 'enabled') return true;
+  if (value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled') return false;
   return PIN_RESET_SIGNIN_LAUNCH_DEFAULT;
 }
 

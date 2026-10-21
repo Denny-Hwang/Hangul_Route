@@ -31,6 +31,8 @@ const AT = Date.parse(NOW);
 const EPOCH = AT - 24 * 60 * 60_000;
 const TICKET_KEY = 'hr:shell:pinReset';
 const UNLOCK_KEY = 'hr:grownup:unlock';
+/** The reset leg's stamp of its own sign-in unlock (`apps/web/src/lib/console/unlock.ts`, `RESET_LEG_SESSION_KEY`). */
+const RESET_LEG_KEY = 'hr:grownup:resetLeg';
 const fingerprint = (id: string) => createHash('sha256').update(id).digest('hex').slice(0, 16);
 
 const FAMILY = {
@@ -49,19 +51,23 @@ const json = (route: Route, status: number, data: unknown) =>
 
 /**
  * A signed-in dev session for `account` and this tab's unlock, seeded once per tab (a hand-off that clears them is
- * then seen as cleared), and a mocked API that records every call.
+ * then seen as cleared), and a mocked API that records every call. A `signin` unlock is seeded as the reset leg's own
+ * (its stamp carries its `at`, as `grantSignInUnlock` writes it) unless `resetLeg` is false. `account` null seeds no
+ * session: the tab signs in on `/signin` itself.
  */
-async function signedIn(context: BrowserContext, account: string, unlock: Record<string, unknown> | null): Promise<string[]> {
+async function signedIn(context: BrowserContext, account: string | null, unlock: Record<string, unknown> | null, options: { resetLeg?: boolean } = {}): Promise<string[]> {
   const calls: string[] = [];
+  const stamp = unlock && unlock.src === 'signin' && options.resetLeg !== false ? String(unlock.at) : null;
   await context.clock.setFixedTime(new Date(NOW));
   await context.addInitScript(
-    ([key, id, record, unlockKey]) => {
+    ([key, id, record, unlockKey, legKey, leg]) => {
       if (window.sessionStorage.getItem('e2e:seeded')) return;
       window.sessionStorage.setItem('e2e:seeded', '1');
-      window.sessionStorage.setItem(key as string, JSON.stringify({ token: id, accountId: id, displayName: 'Ms Kim', email: 'kim@example.com' }));
+      if (id) window.sessionStorage.setItem(key as string, JSON.stringify({ token: id, accountId: id, displayName: 'Ms Kim', email: 'kim@example.com' }));
       if (record) window.sessionStorage.setItem(unlockKey as string, record as string);
+      if (leg) window.sessionStorage.setItem(legKey as string, leg as string);
     },
-    [SESSION_KEY, account, unlock ? JSON.stringify(unlock) : null, UNLOCK_KEY],
+    [SESSION_KEY, account, unlock ? JSON.stringify(unlock) : null, UNLOCK_KEY, RESET_LEG_KEY, stamp],
   );
   await context.route(`${API}/**`, async (route) => {
     const request = route.request();
@@ -216,11 +222,44 @@ test.describe('reset the grown-up PIN by signing in (row OA-6)', () => {
     await page.waitForTimeout(300);
     expect(await readShell(page, 'pinOwner')).toBeUndefined();
     // 3. The child then tries the sign-in reset with a fresh sign-in of their own: refused, nothing written.
-    await page.evaluate(([key, value]) => window.sessionStorage.setItem(key, value), [UNLOCK_KEY, JSON.stringify(freshSignIn)] as const);
+    await page.evaluate(
+      ([key, value, legKey, leg]) => {
+        window.sessionStorage.setItem(key, value);
+        window.sessionStorage.setItem(legKey, leg);
+      },
+      [UNLOCK_KEY, JSON.stringify(freshSignIn), RESET_LEG_KEY, String(freshSignIn.at)] as const,
+    );
     await page.goto('/account/pin-reset');
     await expect(page.getByTestId('pin-reset-line')).toHaveText(c.pinReset.firstSignIn);
     expect(await page.evaluate((key) => window.sessionStorage.getItem(key), TICKET_KEY)).toBeNull();
     expect(await readShell(page, 'pinOwner')).toBeUndefined();
+  });
+
+  test('the reset leg itself: the dev sign-in on /signin?next=/account/pin-reset hands off and writes no trusted epoch and no PIN owner', async ({ page, context }) => {
+    test.skip(APP, 'the merged app-host build has no dev sign-in form');
+    await signedIn(context, null, null);
+    // No trusted epoch on this browser yet, and the grown-up owns the PIN from an earlier sign-in (section 7.2).
+    await seedDevice(page, { marker: PIN_MARKER, shell: { pinOwner: ownerRecord(GROWN_UP) } });
+    await page.goto('/signin?next=%2Faccount%2Fpin-reset&lang=en');
+    await page.locator('input[name="accountId"]').fill(GROWN_UP);
+    await page.locator('input[name="displayName"]').fill('Ms Kim');
+    const leaving = handOff(page);
+    await page.getByTestId('sign-in').click();
+    // The router follows the fixed next (no id in either address), then the page hands off on the leg's own sign-in.
+    expect((await leaving).search).toBe('?gate=pin-reset&lang=en');
+    await page.waitForURL((url) => url.pathname === '/');
+    expect(JSON.parse((await page.evaluate((key) => window.sessionStorage.getItem(key), TICKET_KEY)) ?? 'null')).toEqual({ v: 1, at: AT, epoch: EPOCH });
+    // Section 8.5 step 2: the reset leg's sign-in wrote no trusted epoch and left the PIN owner as it was.
+    expect(await readShell(page, 'pinEpoch')).toBeUndefined();
+    expect(await readShell(page, 'pinOwner')).toEqual(ownerRecord(GROWN_UP));
+  });
+
+  test('an ordinary-leg sign-in (no reset-leg stamp) asks the reverification first (the dev bridge passes it), then hands off', async ({ page, context }) => {
+    await signedIn(context, GROWN_UP, freshSignIn, { resetLeg: false });
+    await seedDevice(page, { marker: PIN_MARKER, shell: { pinEpoch: EPOCH, pinOwner: ownerRecord(GROWN_UP) } });
+    const leaving = handOff(page);
+    await page.goto('/account/pin-reset');
+    expect((await leaving).search).toBe('?gate=pin-reset&lang=en');
   });
 
   test('a sign-in older than 2 minutes asks the reverification first (the dev bridge passes it), then hands off', async ({ page, context }) => {

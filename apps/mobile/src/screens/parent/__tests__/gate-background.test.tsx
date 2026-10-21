@@ -1,7 +1,7 @@
 import { GROWN_UP_BACKGROUND_MS } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
 import { useUiStore } from '../../../store/ui-store';
-import { bindGrownUpBackgroundRule, type BackgroundRuleDeps } from '../use-gate-lapse';
+import { bindGrownUpBackgroundRule, bindResetSetupLapse, type BackgroundRuleDeps } from '../use-gate-lapse';
 
 // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D16, CS-14: 5 minutes in the background end the grown-up session,
 // measured by wall clock between hidden and shown (AppState on native, visibilitychange on the web).
@@ -87,5 +87,71 @@ describe('bindGrownUpBackgroundRule', () => {
     stop();
     spy.mockRestore();
     nowSpy.mockRestore();
+  });
+});
+
+// [OA] Row OA-6 review: a new-PIN screen a reset opened closes after 5 minutes hidden and on a back/forward-cache restore.
+describe('bindResetSetupLapse', () => {
+  function setup() {
+    let visibility: ((visible: boolean) => void) | null = null;
+    let restore: (() => void) | null = null;
+    let clock = 1_000_000;
+    const close = vi.fn();
+    const stop = bindResetSetupLapse({
+      subscribe: (l) => {
+        visibility = l;
+        return () => {
+          visibility = null;
+        };
+      },
+      onRestore: (l) => {
+        restore = l;
+        return () => {
+          restore = null;
+        };
+      },
+      now: () => clock,
+      close,
+    });
+    return {
+      close,
+      stop,
+      hide: () => visibility?.(false),
+      show: () => visibility?.(true),
+      restore: () => restore?.(),
+      wait: (ms: number) => {
+        clock += ms;
+      },
+      get bound() {
+        return visibility !== null || restore !== null;
+      },
+    };
+  }
+
+  it('closes after 5 minutes hidden, not before, and only once', () => {
+    const r = setup();
+    r.hide();
+    r.wait(GROWN_UP_BACKGROUND_MS - 1);
+    r.show();
+    expect(r.close).not.toHaveBeenCalled();
+    r.hide();
+    r.wait(GROWN_UP_BACKGROUND_MS);
+    r.show();
+    r.hide();
+    r.wait(GROWN_UP_BACKGROUND_MS);
+    r.show();
+    expect(r.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes at once when the page comes back from the back/forward cache', () => {
+    const r = setup();
+    r.restore();
+    expect(r.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('unsubscribes both', () => {
+    const r = setup();
+    r.stop();
+    expect(r.bound).toBe(false);
   });
 });

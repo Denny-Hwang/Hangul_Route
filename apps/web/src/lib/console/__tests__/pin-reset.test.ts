@@ -27,22 +27,26 @@ const pinUnlock = (age: number): GrownUpUnlock => ({ v: 1, at: NOW - age, seen: 
 
 const base = { flag: true, signInFresh: true, device: PIN, stored: OWNED, owner: OWNER };
 
-describe('freshResetSignIn: a signin unlock under 2 minutes old, no passkey around it', () => {
-  it('counts a signin unlock in [0, 2 min)', () => {
-    expect(freshResetSignIn({ unlock: signin(0), now: NOW, passkeyUsed: false })).toBe(true);
-    expect(freshResetSignIn({ unlock: signin(GROWN_UP_FRESH_PIN_MS - 1), now: NOW, passkeyUsed: false })).toBe(true);
+const stamped = (unlock: GrownUpUnlock) => ({ unlock, resetLegAt: unlock.at, now: NOW });
+
+describe('freshResetSignIn: the reset leg\'s own signin unlock, under 2 minutes old', () => {
+  it('counts a stamped signin unlock in [0, 2 min)', () => {
+    expect(freshResetSignIn(stamped(signin(0)))).toBe(true);
+    expect(freshResetSignIn(stamped(signin(GROWN_UP_FRESH_PIN_MS - 1)))).toBe(true);
   });
 
   it('refuses 2 minutes or older, a clock that ran backwards, no unlock and a PIN unlock', () => {
-    expect(freshResetSignIn({ unlock: signin(GROWN_UP_FRESH_PIN_MS), now: NOW, passkeyUsed: false })).toBe(false);
-    expect(freshResetSignIn({ unlock: signin(-1), now: NOW, passkeyUsed: false })).toBe(false);
-    expect(freshResetSignIn({ unlock: null, now: NOW, passkeyUsed: false })).toBe(false);
+    expect(freshResetSignIn(stamped(signin(GROWN_UP_FRESH_PIN_MS)))).toBe(false);
+    expect(freshResetSignIn(stamped(signin(-1)))).toBe(false);
+    expect(freshResetSignIn({ unlock: null, resetLegAt: NOW, now: NOW })).toBe(false);
     // The PIN is the thing that was forgotten: a PIN hand-off never stands in for the sign-in.
-    expect(freshResetSignIn({ unlock: pinUnlock(0), now: NOW, passkeyUsed: false })).toBe(false);
+    expect(freshResetSignIn(stamped(pinUnlock(0)))).toBe(false);
   });
 
-  it('a passkey used around the sign-in never counts, however fresh (CS-17)', () => {
-    expect(freshResetSignIn({ unlock: signin(0), now: NOW, passkeyUsed: true })).toBe(false);
+  it('an ordinary-leg signin unlock never counts, however fresh: no stamp, or the stamp of an earlier unlock', () => {
+    // An email link, a Clerk ticket, a factor Clerk did not name, Use a passkey: none stamps the unlock (signin-flow).
+    expect(freshResetSignIn({ unlock: signin(0), resetLegAt: null, now: NOW })).toBe(false);
+    expect(freshResetSignIn({ unlock: signin(0), resetLegAt: NOW - 30_000, now: NOW })).toBe(false);
   });
 });
 
@@ -151,11 +155,12 @@ describe('the ticket (section 8.5 step 4)', () => {
 describe('NEXT_PUBLIC_PIN_RESET_SIGNIN (section 16): off when OA-6 lands', () => {
   it('is off when unset or unknown', () => {
     expect(pinResetSignInEnabled({})).toBe(false);
-    for (const raw of ['', 'maybe', 'yes']) expect(pinResetSignInEnabled({ NEXT_PUBLIC_PIN_RESET_SIGNIN: raw }), raw).toBe(false);
+    for (const raw of ['', 'maybe', 'later']) expect(pinResetSignInEnabled({ NEXT_PUBLIC_PIN_RESET_SIGNIN: raw }), raw).toBe(false);
   });
 
-  it('turns on with true, 1, on or enabled, and off with false, 0, off or disabled (case and spaces ignored)', () => {
-    for (const on of ['true', '1', 'on', 'enabled', ' TRUE ', 'Enabled']) expect(pinResetSignInEnabled({ NEXT_PUBLIC_PIN_RESET_SIGNIN: on }), on).toBe(true);
-    for (const off of ['false', '0', 'off', 'disabled', ' OFF ']) expect(pinResetSignInEnabled({ NEXT_PUBLIC_PIN_RESET_SIGNIN: off }), off).toBe(false);
+  it('turns on with true, 1, on, yes or enabled, and off with false, 0, off, no or disabled (case and spaces ignored)', () => {
+    // The same words as the learner app's twin EXPO_PUBLIC_PIN_RESET_SIGNIN (apps/mobile flags tests pin the same lists).
+    for (const on of ['true', '1', 'on', 'yes', 'enabled', ' TRUE ', 'Enabled']) expect(pinResetSignInEnabled({ NEXT_PUBLIC_PIN_RESET_SIGNIN: on }), on).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', 'disabled', ' OFF ']) expect(pinResetSignInEnabled({ NEXT_PUBLIC_PIN_RESET_SIGNIN: off }), off).toBe(false);
   });
 });

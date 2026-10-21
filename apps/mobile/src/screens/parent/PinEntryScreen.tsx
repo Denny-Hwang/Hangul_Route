@@ -49,6 +49,7 @@ import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
 import { trackGateOpened, trackPinPaused } from '../../store/gate-telemetry';
 import { useUiStore } from '../../store/ui-store';
+import { bindResetSetupLapse, resetSetupLapseDeps } from './use-gate-lapse';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
 
@@ -178,6 +179,15 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   }, [locked]);
 
   const leave = (): void => navigation.goBack();
+
+  // [OA] Row OA-6 review: a new PIN after a reset (the sign-in ticket, the Rescue Code, the wait) is chosen now or not
+  // at all. The screen closes when the page comes back from the back/forward cache and after 5 minutes in the
+  // background, so a tab left on it never lets someone else set the PIN later (`bindResetSetupLapse`).
+  const resetSetup = route.params.via !== undefined && mode !== 'verify';
+  useEffect(() => {
+    if (!resetSetup) return undefined;
+    return bindResetSetupLapse(resetSetupLapseDeps(() => navigation.goBack()));
+  }, [resetSetup, navigation]);
 
   // [OA] CS-1: back to the screen whose action asked for the PIN, gate open; that landing keeps the session for the
   // waiting action only (the Grown-up area exit watcher closes it on the next learner screen).

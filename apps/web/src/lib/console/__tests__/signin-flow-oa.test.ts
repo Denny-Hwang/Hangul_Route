@@ -47,6 +47,10 @@ function writers(earlier: GrownUpUnlock | null): UnlockWriters & { log: string[]
       log.push(`read:${unlock?.src ?? 'none'}`);
       return unlock;
     },
+    writeResetLeg: (at) => {
+      log.push(`resetLeg:${at}`);
+      return true;
+    },
     writeUnlock: (now) => {
       log.push('writeUnlock');
       unlock = { v: 1, at: now, seen: now, src: 'signin' };
@@ -181,7 +185,31 @@ describe('grantSignInUnlock: the PIN owner (section 7.2, CS-10)', () => {
   it('the reset leg writes the sign-in unlock only: no trusted epoch and no owner', async () => {
     const w = writers(pinUnlock(NOW - 1000));
     await grantSignInUnlock(PIN, NOW, w, { factor: 'password', resetLeg: true, accountId: 'user_grown_up' });
-    expect(w.log).toEqual(['read:pin', 'writeUnlock']);
+    expect(w.log).toEqual(['read:pin', 'writeUnlock', `resetLeg:${NOW}`]);
+  });
+
+  it('[OA-6] the reset leg stamps its unlock only for a factor the leg accepts or the passkey-refusing reverification', async () => {
+    for (const factor of ['password', 'email_code', 'phone_code', 'reset_password_email_code', 'reset_password_phone_code']) {
+      const w = writers(null);
+      await grantSignInUnlock(PIN, NOW, w, { factor, resetLeg: true });
+      expect(w.log).toContain(`resetLeg:${NOW}`);
+    }
+    for (const factor of ['passkey', 'email_link', 'ticket', 'oauth_google', null, undefined]) {
+      const w = writers(null);
+      await grantSignInUnlock(PIN, NOW, w, { factor, resetLeg: true });
+      expect(w.log).toEqual(['read:none', 'writeUnlock']);
+    }
+    const reverified = writers(null);
+    await grantSignInUnlock(PIN, NOW, reverified, { factor: null, resetLeg: true, reverified: true });
+    expect(reverified.log).toEqual(['read:none', 'writeUnlock', `resetLeg:${NOW}`]);
+  });
+
+  it('[OA-6] the ordinary leg never stamps its unlock as the reset leg, whatever the factor', async () => {
+    for (const factor of ['password', 'email_code', 'passkey', null]) {
+      const w = writers(null);
+      await grantSignInUnlock(PIN, NOW, w, { factor, reverified: factor === null });
+      expect(w.log.some((entry) => entry.startsWith('resetLeg:'))).toBe(false);
+    }
   });
 
   it('writers without the OA hooks keep the earlier behaviour', async () => {
@@ -201,7 +229,8 @@ describe('the CS-10 sequence', () => {
     // 3. The child tries the reset leg: it writes no owner and no trusted epoch either.
     const reset = writers(pinUnlock(NOW + 60_000));
     await grantSignInUnlock(PIN, NOW + 70_000, reset, { factor: 'email_code', resetLeg: true, accountId: 'user_child' });
-    expect(reset.log).toEqual(['read:pin', 'writeUnlock']);
+    // Its unlock is the reset leg's, but `/account/pin-reset` then answers notOwner or firstSignIn (pin-reset tests).
+    expect(reset.log).toEqual(['read:pin', 'writeUnlock', `resetLeg:${NOW + 70_000}`]);
   });
 });
 
@@ -235,14 +264,14 @@ describe('settleSignIn and finishReverify pass the context on', () => {
     expect(x.grants).toEqual([{ factor: null, resetLeg: false, accountId: null }]);
   });
 
-  it('a reverification names no factor', async () => {
+  it('a reverification names no factor and says it was one', async () => {
     const x = io(null, PIN);
     await finishReverify(x, PIN, true, { next: PIN_RESET_PATH, accountId: 'user_1' });
     await finishReverify(x, PIN, true);
     await finishReverify(x, PIN, false);
     expect(x.grants).toEqual([
-      { factor: null, resetLeg: true, accountId: 'user_1' },
-      { factor: null, resetLeg: false, accountId: null },
+      { factor: null, resetLeg: true, accountId: 'user_1', reverified: true },
+      { factor: null, resetLeg: false, accountId: null, reverified: true },
     ]);
   });
 });

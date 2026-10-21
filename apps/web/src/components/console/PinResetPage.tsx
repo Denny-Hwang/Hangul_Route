@@ -7,12 +7,12 @@ import { useEffect, useRef, useState } from 'react';
 import { pinResetSignInEnabled } from '@/lib/console/config';
 import { readDeviceGate } from '@/lib/console/device-marker';
 import { learnerHome, type DeviceGateRead } from '@/lib/console/grown-up-lock';
-import { passkeyUsedSince, pinOwnerFingerprint } from '@/lib/console/one-account';
+import { pinOwnerFingerprint } from '@/lib/console/one-account';
 import { decidePinReset, freshResetSignIn, pinResetTarget, pinResetTicket, writePinResetTicket, type PinResetDecision, type PinResetLine } from '@/lib/console/pin-reset';
 import { headRem, rem } from '@/lib/console/rem';
 import { readPinOwner } from '@/lib/console/shell-store';
 import { withTimeout } from '@/lib/console/signin-flow';
-import { clearGrownUpTab, readUnlock } from '@/lib/console/unlock';
+import { clearGrownUpTab, readResetLegStamp, readUnlock } from '@/lib/console/unlock';
 import { browserStorage } from '@/lib/i18n/safe-storage';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import type { SecretReverify } from './auth-context';
@@ -24,8 +24,9 @@ import { LockButton, columnStyle, pageStyle, sectionStyle } from './GrownUpLock'
  * the grown-up layout, so behind the lock: the forgotten PIN leaves Sign in again, which is the point. No API call, no
  * frame: the lock's single paper card titled **New grown-up PIN** and one line.
  *
- * The decision is `lib/console/pin-reset.ts`. A sign-in older than 2 minutes runs Clerk reverification first (a
- * password or a code; a passkey refuses it, `reverifySecret`). A refusal shows its line and Back to learning and writes
+ * The decision is `lib/console/pin-reset.ts`. Only the reset leg's own sign-in under 2 minutes old counts (stamped by
+ * the sign-in with a password or a code, never a passkey); any other unlock runs Clerk reverification first (a password
+ * or a code; a passkey refuses it, `reverifySecret`). A refusal shows its line and Back to learning and writes
  * nothing. Success writes the ticket (`hr:shell:pinReset`, a time and the marker epoch), clears the console session of
  * this tab and opens the learner app's `/?gate=pin-reset` in this tab, where a new PIN is chosen.
  */
@@ -35,6 +36,8 @@ export interface PinResetEnvironment {
   now: () => number;
   readDevice: () => Promise<DeviceGateRead>;
   readUnlock: () => GrownUpUnlock | null;
+  /** [OA-6] The reset leg's stamp of the `signin` unlock (`hr:grownup:resetLeg`), or null. */
+  readResetLeg: () => number | null;
   readPinOwner: () => Promise<PinOwner | null>;
   fingerprint: (accountId: string) => Promise<string | null>;
   writeTicket: (ticket: PinResetTicket) => boolean;
@@ -53,6 +56,7 @@ export function browserPinResetEnvironment(): PinResetEnvironment {
     now: () => Date.now(),
     readDevice: () => withTimeout(() => readDeviceGate(), FAILED, PIN_RESET_READ_MS),
     readUnlock: () => readUnlock(),
+    readResetLeg: () => readResetLegStamp(),
     readPinOwner: () => withTimeout(() => readPinOwner(), null, PIN_RESET_READ_MS),
     fingerprint: (accountId) => pinOwnerFingerprint(accountId),
     writeTicket: (ticket) => writePinResetTicket(ticket, browserStorage('session')),
@@ -69,8 +73,6 @@ export interface PinResetViewProps {
   accountId: string;
   /** Clerk reverification with a password or a code (`useConsoleAuth().reverifySecret`). */
   reverifySecret: () => Promise<SecretReverify>;
-  /** The account's passkeys as Clerk last read them (`lastUsedAt` only); null outside Clerk. */
-  passkeys: readonly { lastUsedAt?: Date | null }[] | null;
   /** `NEXT_PUBLIC_PIN_RESET_SIGNIN`, read once by default. */
   flag?: boolean;
   env?: PinResetEnvironment;
@@ -78,7 +80,7 @@ export interface PinResetViewProps {
 
 const TITLE_ID = 'pin-reset-title';
 
-export function PinResetView({ accountId, reverifySecret, passkeys, flag, env }: PinResetViewProps): JSX.Element {
+export function PinResetView({ accountId, reverifySecret, flag, env }: PinResetViewProps): JSX.Element {
   const m = useMessages().console;
   const locale = useLocale();
   const [browser] = useState<PinResetEnvironment>(() => env ?? browserPinResetEnvironment());
@@ -88,8 +90,8 @@ export function PinResetView({ accountId, reverifySecret, passkeys, flag, env }:
   const mounted = useRef(true);
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Read when the check runs: a new function or list from the auth bridge never starts it again.
-  const latest = useRef({ accountId, reverifySecret, passkeys, locale });
-  latest.current = { accountId, reverifySecret, passkeys, locale };
+  const latest = useRef({ accountId, reverifySecret, locale });
+  latest.current = { accountId, reverifySecret, locale };
 
   useEffect(() => {
     mounted.current = true;
@@ -107,10 +109,8 @@ export function PinResetView({ accountId, reverifySecret, passkeys, flag, env }:
     started.current = true;
     const decide = async (reverified: boolean): Promise<PinResetDecision> => {
       const [device, stored, owner] = await Promise.all([browser.readDevice(), browser.readPinOwner(), browser.fingerprint(latest.current.accountId)]);
-      const unlock = browser.readUnlock();
-      // A passkey of the account used around this sign-in never counts on the reset leg, on any browser (CS-17).
-      const passkeyUsed = unlock?.src === 'signin' && passkeyUsedSince(latest.current.passkeys ?? [], unlock.at, false);
-      const signInFresh = reverified || freshResetSignIn({ unlock, now: browser.now(), passkeyUsed });
+      // Only the reset leg's stamped sign-in counts: never a passkey, on any browser (CS-17), nor an ordinary-leg unlock.
+      const signInFresh = reverified || freshResetSignIn({ unlock: browser.readUnlock(), resetLegAt: browser.readResetLeg(), now: browser.now() });
       return decidePinReset({ flag: on, signInFresh, device, stored, owner });
     };
     const finish = (decision: PinResetDecision): void => {

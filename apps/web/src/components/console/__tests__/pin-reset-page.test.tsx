@@ -45,7 +45,7 @@ interface Fake extends PinResetEnvironment {
   tickets: PinResetTicket[];
 }
 
-function fake(over: { device?: DeviceGateRead; unlock?: GrownUpUnlock | null; stored?: PinOwner | null; owner?: string | null; write?: boolean } = {}): Fake {
+function fake(over: { device?: DeviceGateRead; unlock?: GrownUpUnlock | null; resetLeg?: number | null; stored?: PinOwner | null; owner?: string | null; write?: boolean } = {}): Fake {
   const log: string[] = [];
   const tickets: PinResetTicket[] = [];
   return {
@@ -54,6 +54,8 @@ function fake(over: { device?: DeviceGateRead; unlock?: GrownUpUnlock | null; st
     now: () => NOW,
     readDevice: async () => over.device ?? PIN,
     readUnlock: () => (over.unlock === undefined ? fresh() : over.unlock),
+    // The reset leg stamps its own unlock (signin-flow `grantSignInUnlock`); by default the fake unlock is stamped.
+    readResetLeg: () => (over.resetLeg === undefined ? (over.unlock === undefined ? fresh().at : (over.unlock?.at ?? null)) : over.resetLeg),
     readPinOwner: async () => (over.stored === undefined ? OWNED : over.stored),
     fingerprint: async () => (over.owner === undefined ? OWNER : over.owner),
     writeTicket: (ticket) => {
@@ -68,10 +70,10 @@ function fake(over: { device?: DeviceGateRead; unlock?: GrownUpUnlock | null; st
   };
 }
 
-async function show(env: Fake, options: { reverify?: () => Promise<SecretReverify>; passkeys?: readonly { lastUsedAt?: Date | null }[] | null; flag?: boolean } = {}): Promise<{ root: ReactTestInstance; reverify: ReturnType<typeof vi.fn> }> {
+async function show(env: Fake, options: { reverify?: () => Promise<SecretReverify>; flag?: boolean } = {}): Promise<{ root: ReactTestInstance; reverify: ReturnType<typeof vi.fn> }> {
   const reverify = vi.fn(options.reverify ?? (async (): Promise<SecretReverify> => 'done'));
   await act(async () => {
-    mounted = create(<PinResetView accountId="user_1" reverifySecret={reverify} passkeys={options.passkeys ?? null} flag={options.flag ?? true} env={env} />);
+    mounted = create(<PinResetView accountId="user_1" reverifySecret={reverify} flag={options.flag ?? true} env={env} />);
   });
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -167,17 +169,23 @@ describe('/account/pin-reset: refusals write nothing', () => {
     expect(line(root)?.props['data-line']).toBe('unavailable');
   });
 
-  it('a passkey used around the fresh sign-in never counts: Clerk is asked, and a passkey there refuses (CS-17)', async () => {
-    const env = fake();
-    const { root, reverify } = await show(env, { passkeys: [{ lastUsedAt: new Date(NOW - 20_000) }], reverify: async () => 'refused' });
+  it('an ordinary-leg signin unlock (no reset-leg stamp) never counts: Clerk is asked, and a passkey there refuses (CS-17)', async () => {
+    const env = fake({ resetLeg: null });
+    const { root, reverify } = await show(env, { reverify: async () => 'refused' });
     expect(reverify).toHaveBeenCalledTimes(1);
     expect(line(root)?.props['data-line']).toBe('unavailable');
     expect(env.tickets).toEqual([]);
   });
 
-  it('a passkey used long before the sign-in does not stand in the way', async () => {
+  it('the stamp of an earlier unlock does not stand for this one', async () => {
+    const env = fake({ resetLeg: fresh().at - 1 });
+    const { reverify } = await show(env);
+    expect(reverify).toHaveBeenCalledTimes(1);
+  });
+
+  it('the reset leg\'s own stamped sign-in goes without a reverification', async () => {
     const env = fake();
-    const { reverify } = await show(env, { passkeys: [{ lastUsedAt: new Date(NOW - 24 * 60 * 60_000) }] });
+    const { reverify } = await show(env);
     expect(reverify).not.toHaveBeenCalled();
     expect(env.tickets).toHaveLength(1);
   });

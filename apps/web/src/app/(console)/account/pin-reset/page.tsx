@@ -15,5 +15,5 @@ export default function PinResetPage(): JSX.Element {
   const { ready, session } = useConsole();
   const auth = useConsoleAuth();
   if (!ready || !session) return <SignInColumn>{null}</SignInColumn>;
-  return <PinResetView accountId={session.accountId} reverifySecret={auth.reverifySecret} passkeys={auth.localeUser?.passkeys ?? null} />;
+  return <PinResetView accountId={session.accountId} reverifySecret={auth.reverifySecret} />;
 }

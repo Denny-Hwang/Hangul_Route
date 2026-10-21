@@ -44,12 +44,12 @@ vi.mock('../../../platform/pin-reset', () => ({
   }),
 }));
 
-import { UNLOCK_SESSION_KEY } from '@hangul-route/content-schema';
+import { GROWN_UP_BACKGROUND_MS, UNLOCK_SESSION_KEY } from '@hangul-route/content-schema';
 import { ScreenHeaderSlotContext, type ScreenHeaderSlotProps } from '@hangul-route/design-system';
 import { Text } from 'react-native';
 import { flags } from '../../../config/flags';
 import { useAccountStore } from '../../../store/account-store';
-import { usePinResetNotice } from '../../../store/pin-reset-notice';
+import { PIN_RESET_NOTICE_MS, expiredNoticeLive, usePinResetNotice } from '../../../store/pin-reset-notice';
 import { useProfileStore } from '../../../store/profile-store';
 import { useUiStore } from '../../../store/ui-store';
 import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform, type RenderPlatform } from '../../../test-support/render';
@@ -104,7 +104,7 @@ beforeEach(() => {
     rescueAttempts: { failures: [], lockedUntil: null, strikes: 0 },
   });
   useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
-  usePinResetNotice.setState({ expired: false });
+  usePinResetNotice.setState({ expiredAt: null });
 });
 
 afterEach(async () => {
@@ -172,6 +172,53 @@ describe('the ticket’s new-PIN screen (section 8.5 step 5)', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 
+  it('closes, writing nothing, when the page comes back from the back/forward cache or after 5 minutes hidden', async () => {
+    const visibility = await import('../../../platform/app-visibility');
+    let restore: (() => void) | null = null;
+    let shown: ((visible: boolean) => void) | null = null;
+    const restoreSpy = vi.spyOn(visibility, 'subscribePageRestore').mockImplementation((l) => {
+      restore = l;
+      return () => {
+        restore = null;
+      };
+    });
+    const visibleSpy = vi.spyOn(visibility, 'subscribeAppVisibility').mockImplementation((l) => {
+      shown = l;
+      return () => undefined;
+    });
+    try {
+      const first = await showSetup();
+      expect(restore).not.toBeNull();
+      restore!();
+      expect(first.navigation.goBack).toHaveBeenCalledTimes(1);
+      await cleanup();
+      const second = await showSetup();
+      const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+      shown!(false);
+      nowSpy.mockReturnValue(1_000_000 + GROWN_UP_BACKGROUND_MS);
+      shown!(true);
+      nowSpy.mockRestore();
+      expect(second.navigation.goBack).toHaveBeenCalledTimes(1);
+      expect(useAccountStore.getState().parentPinHash).toBe('h:1234');
+    } finally {
+      restoreSpy.mockRestore();
+      visibleSpy.mockRestore();
+    }
+  });
+
+  it('a PIN check (no reset) binds no such close', async () => {
+    const visibility = await import('../../../platform/app-visibility');
+    const restoreSpy = vi.spyOn(visibility, 'subscribePageRestore');
+    try {
+      const route = { key: 'pin', name: 'PinEntry' as const, params: { next: 'ParentDashboard' as const } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+      await render(<PinEntryScreen route={route} navigation={nav() as any} />);
+      expect(restoreSpy).not.toHaveBeenCalled();
+    } finally {
+      restoreSpy.mockRestore();
+    }
+  });
+
   it('is setup-1 titled Choose a new grown-up PIN, with no Forgot PIN?', async () => {
     const { r } = await showSetup();
     expect(screenTexts(r.root)).toContain(m.reset.signIn.newPinTitle);
@@ -206,9 +253,26 @@ describe('the expired line (section 8.5 step 5, board 10)', () => {
     const [notice] = byTestId(first.root, 'pin-reset-expired');
     expect(screenTexts(notice as ReactTestInstance)).toEqual([m.reset.signIn.expired]);
     expect(notice?.props.role).toBe('status');
-    expect(usePinResetNotice.getState().expired).toBe(false);
+    expect(usePinResetNotice.getState().expiredAt).toBeNull();
     await cleanup();
     const again = await render(<PinResetExpiredNotice />);
     expect(byTestId(again.root, 'pin-reset-expired')).toHaveLength(0);
+  });
+
+  it('a line raised for a boot that started elsewhere is stale when Home first renders: taken, never shown', async () => {
+    // The boot refused the ticket on Welcome (or onboarding, or a picker); Home renders for the first time later.
+    usePinResetNotice.getState().showExpired(Date.now() - PIN_RESET_NOTICE_MS);
+    const later = await render(<PinResetExpiredNotice />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(byTestId(later.root, 'pin-reset-expired')).toHaveLength(0);
+    expect(usePinResetNotice.getState().expiredAt).toBeNull();
+  });
+
+  it('expiredNoticeLive: only within PIN_RESET_NOTICE_MS of the boot that raised it', () => {
+    expect(expiredNoticeLive(null, 1_000)).toBe(false);
+    expect(expiredNoticeLive(1_000, 1_000)).toBe(true);
+    expect(expiredNoticeLive(1_000, 1_000 + PIN_RESET_NOTICE_MS - 1)).toBe(true);
+    expect(expiredNoticeLive(1_000, 1_000 + PIN_RESET_NOTICE_MS)).toBe(false);
+    expect(expiredNoticeLive(1_000, 999)).toBe(false);
   });
 });

@@ -14,7 +14,7 @@ import { RESET_LEG_FACTORS, isResetLeg, pinOwnerAtSignIn, pinOwnerFingerprint, p
 import { isKnownSpaceKind } from './routing';
 import { writePinOwner, writeTrustedEpoch } from './shell-store';
 import type { SignInProof, SignInRecord } from './signin-record';
-import { readUnlock, writeSignInUnlock } from './unlock';
+import { readUnlock, writeResetLegStamp, writeSignInUnlock } from './unlock';
 
 /**
  * Grown-up sign-in and routing on the app host (F-APP-001 A-4b; sections 3.5, 3.7, 3.9, 3.11,
@@ -234,6 +234,8 @@ export interface UnlockWriters {
   readUnlock?: () => GrownUpUnlock | null;
   /** [OA] Records `accountId` (fingerprinted) as the PIN owner of `epoch`. */
   writePinOwner?: (accountId: string, epoch: number) => Promise<boolean>;
+  /** [OA] Stamps the reset leg's `signin` unlock written at `at` (`RESET_LEG_SESSION_KEY`, row OA-6). */
+  writeResetLeg?: (at: number) => boolean;
 }
 
 /** [OA] Fingerprints the account id and writes `pinOwner`; false when either step fails. */
@@ -247,6 +249,7 @@ const BROWSER_WRITERS: UnlockWriters = {
   writeEpoch: (epoch) => writeTrustedEpoch(epoch),
   readUnlock: () => readUnlock(),
   writePinOwner: recordPinOwner,
+  writeResetLeg: (at) => writeResetLegStamp(at),
 };
 
 /**
@@ -257,6 +260,8 @@ export interface GrantContext {
   factor?: string | null;
   resetLeg?: boolean;
   accountId?: string | null;
+  /** [OA] The grant follows the router's reverification, which on the reset leg refuses a passkey (`refusePasskey`). */
+  reverified?: boolean;
 }
 
 /**
@@ -266,13 +271,19 @@ export interface GrantContext {
  *
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2: the earlier unlock of this tab is read first; a password or a
  * code right after a fresh PIN for the marker's epoch names this account the PIN owner (moment 1). The reset leg
- * (`next` = `/account/pin-reset`) writes the unlock only: no trusted epoch and no owner.
+ * (`next` = `/account/pin-reset`) writes the unlock only: no trusted epoch and no owner. Its unlock is stamped as the
+ * reset leg's (row OA-6) only when the factor is one the leg accepts (`RESET_LEG_FACTORS`) or the passkey-refusing
+ * reverification proved it; `/account/pin-reset` reverifies any other `signin` unlock itself.
  */
 export async function grantSignInUnlock(device: DeviceGateRead, now: number, writers: UnlockWriters = BROWSER_WRITERS, context: GrantContext = {}): Promise<void> {
   const earlier = writers.readUnlock ? writers.readUnlock() : null;
   writers.writeUnlock(now);
   const resetLeg = context.resetLeg === true;
-  if (resetLeg) return;
+  if (resetLeg) {
+    const accepted = context.reverified === true || (typeof context.factor === 'string' && RESET_LEG_FACTORS.has(context.factor));
+    if (accepted && writers.writeResetLeg) writers.writeResetLeg(now);
+    return;
+  }
   if (device.readable) await writers.writeEpoch(trustableEpoch(device.marker));
   const epoch = pinOwnerAtSignIn({ earlier, device, factor: context.factor, resetLeg, now });
   if (epoch !== null && context.accountId && writers.writePinOwner) await writers.writePinOwner(context.accountId, epoch);
@@ -469,7 +480,7 @@ export async function settleSignIn(io: SignInIo, sessionId: string | null, conte
  * writes no trusted epoch.
  */
 export async function finishReverify(io: SignInIo, device: DeviceGateRead, verified: boolean, context: SettleContext = {}): Promise<void> {
-  if (verified) await io.grant(device, io.now(), { factor: null, resetLeg: isResetLeg(context.next), accountId: context.accountId ?? null });
+  if (verified) await io.grant(device, io.now(), { factor: null, resetLeg: isResetLeg(context.next), accountId: context.accountId ?? null, reverified: true });
   io.clearRecord();
 }
 

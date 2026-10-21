@@ -29,6 +29,8 @@ function writeUnlock(record: GrownUpUnlock, storage: KeyValueStorage | null): bo
 
 /** The unlock a secret-proving sign-in writes in this tab: `src: 'signin'`, no epoch. */
 export function writeSignInUnlock(now: number, storage: KeyValueStorage | null = defaultStorage()): boolean {
+  // [OA] A new unlock never inherits the reset leg's stamp of an earlier one (`RESET_LEG_SESSION_KEY`).
+  removeItem(storage, RESET_LEG_SESSION_KEY);
   return writeUnlock({ v: 1, at: now, seen: now, src: 'signin' }, storage);
 }
 
@@ -45,6 +47,29 @@ export function touchUnlock(now: number, storage: KeyValueStorage | null = defau
 export function clearUnlock(storage: KeyValueStorage | null = defaultStorage()): void {
   removeItem(storage, UNLOCK_SESSION_KEY);
   removeItem(storage, HIDDEN_AT_SESSION_KEY);
+  removeItem(storage, RESET_LEG_SESSION_KEY);
+}
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.4 and 8.5 step 2 (row OA-6): the reset leg's stamp, the `at` of the
+ * `signin` unlock that a reset-leg sign-in wrote with a factor the leg accepts (a password, an email or phone code, a
+ * Clerk password-reset code, or the router's reverification that refuses a passkey). `/account/pin-reset` counts a
+ * `signin` unlock only when this stamp carries its `at`: an unlock from the ordinary leg, whatever its factor, makes
+ * the page run its own reverification. A number only, cleared whenever the unlock is.
+ */
+export const RESET_LEG_SESSION_KEY = 'hr:grownup:resetLeg';
+
+/** [OA] The stamp, or null (absent, corrupt, storage refused). */
+export function readResetLegStamp(storage: KeyValueStorage | null = defaultStorage()): number | null {
+  const raw = readItem(storage, RESET_LEG_SESSION_KEY);
+  if (raw === null) return null;
+  const at = Number(raw);
+  return raw.trim() !== '' && Number.isFinite(at) ? at : null;
+}
+
+/** [OA] Stamps the reset-leg sign-in unlock written at `at`; false when the storage refused it. */
+export function writeResetLegStamp(at: number, storage: KeyValueStorage | null = defaultStorage()): boolean {
+  return writeItem(storage, RESET_LEG_SESSION_KEY, String(at));
 }
 
 /**

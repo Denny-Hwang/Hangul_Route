@@ -89,7 +89,7 @@ export const caregiver = {
       },
       signIn: {
         heading: 'Entra a la cuenta',
-        caption: 'Entra con la cuenta de adultos de este dispositivo. Luego elige un PIN nuevo.',
+        caption: 'Entra con la cuenta de adulto que usa este dispositivo. Luego elige un PIN nuevo.',
         button: 'Entrar',
         newPinTitle: 'Elige un PIN de adultos nuevo',
         expired: 'Pasó un rato. Entra otra vez para crear un PIN nuevo.',
