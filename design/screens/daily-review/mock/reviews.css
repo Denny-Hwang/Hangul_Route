@@ -237,7 +237,7 @@ body { font-family: var(--font-stack); color: var(--colors-text-primary); backgr
 .days { display: grid; grid-template-columns: repeat(7, var(--day-dot)); column-gap: var(--spacing-xs); row-gap: var(--spacing-none); }
 .days b { font-size: var(--size-caption); font-weight: var(--weight-regular); color: var(--colors-text-secondary); text-align: center; line-height: var(--leading-tight); }
 .days b.today { font-weight: var(--weight-bold); color: var(--colors-text-primary); }
-.dot { width: var(--day-dot); height: var(--day-dot); border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-strong); }
+.dot { width: var(--day-dot); height: var(--day-dot); border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-shape); }
 .dot.learned { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); }
 .dot.rest { background: var(--colors-surface-sunken); border-color: var(--colors-border-shape); }
 .dot.today { border: var(--border-width-base) solid var(--colors-border-shape); }
@@ -245,7 +245,9 @@ body { font-family: var(--font-stack); color: var(--colors-text-primary); backgr
 @container device (min-width: 600px) {
   .week.compact { display: none; }
   .week-wide { display: flex; align-items: center; gap: var(--spacing-xl); }
-  .week-wide .split { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+  .week-wide .split { flex: 1; display: flex; align-items: center; justify-content: flex-start; gap: var(--spacing-md); }
+  /* OD-6: the dots and steady weeks lead and are the largest text; the daily goal follows in regular text */
+  .week-wide .split.goal { flex: none; padding-left: var(--spacing-xl); border-left: var(--border-width-thin) solid var(--colors-border-subtle); }
 }
 .radio { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-lg); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); }
 .radio i { flex: none; width: var(--spacing-xl); height: var(--spacing-xl); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-border-shape); }
@@ -266,6 +268,8 @@ body { font-family: var(--font-stack); color: var(--colors-text-primary); backgr
 .cellbox { position: relative; height: var(--cell-h); border-radius: var(--radii-md); background: var(--colors-surface-paper); }
 @container device (min-width: 600px) { .cellbox { height: auto; aspect-ratio: 1 / 1; } }
 .cellbox.done { background: var(--colors-feedback-successLight); }
+/* Selected in two panes: the focus outline sits outside the track, in the grid gap, and replaces the Ready to refresh halo */
+.cellbox.selected { outline: var(--border-width-base) solid var(--colors-border-focus); outline-offset: var(--spacing-none); }
 .cellbox > svg.outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .cellbox .glyph { position: absolute; left: 50%; top: var(--band); transform: translateX(-50%); }
 .cellbox .word { position: absolute; left: 0; right: 0; bottom: calc(var(--border-width-thick) + var(--spacing-xs)); text-align: center; font-size: var(--size-caption); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); color: var(--colors-text-secondary); white-space: nowrap; overflow: hidden; }

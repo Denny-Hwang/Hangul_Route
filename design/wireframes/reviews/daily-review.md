@@ -29,12 +29,13 @@ A. Home: Today with Hoya, card 3 (F-HW-001 slots, `home/todays-mission.md`)
 | +----------------------------+ |
 +--------------------------------+
 
-A2. Review first (the due pool is more than 3 x the Daily Review size, §4.3)
+A2. Review first (the due pool is more than 3 x the Daily Review size, §4.3: over 30 at size 10,
+    over 18 in E2's 6 arm)
 | Today with Hoya           (h2) |
-| 12 items are ready to refresh  |  <- one positive line above the cards
+| 34 items are ready to refresh  |  <- one positive line above the cards
 | [ (1) [refresh] Daily Review ] |  <- the day's plan puts it in slot 1; the slots
-| [ (2) ...                    ] |     then keep their order all day (F-HW-001 §3.2)
-| [ (3) ...                    ] |  <- new lessons stay right here: never blocked
+| [ (2) normal day's card 1    ] |     then keep their order all day (F-HW-001 §3.2)
+| [ (3) normal day's card 2    ] |  <- new lessons stay right here: never blocked
 
 B. A round (route DailyReview; one of the shipped round renderers, chosen by rung and kind, §4.3)
 +--------------------------------+
@@ -94,7 +95,7 @@ E. Stop for now? (over B; [x] or a system back)
 
 - **Never on any panel** (§4.5, lint `review-copy`): a percentage, an "n of m" or "n/m", a running count of misses, a per-question timer, a session clock, hearts or a fail state.
 - The dots row holds 10 dots at 320 (and 6 in experiment E2's short arm): `spacing.sm` dots with `spacing.xs` gaps, 116 dp wide. A dot fills when its round is answered, the same fill for right and wrong.
-- "N got stronger" is a count of the learner's own items, never a ratio and never compared with anyone. "12 items are ready to refresh" is a positive nudge (§7.4 copy rule), never "overdue", "behind" or "missed".
+- "N got stronger" is a count of the learner's own items, never a ratio and never compared with anyone. "34 items are ready to refresh" is a positive nudge (§7.4 copy rule), never "overdue", "behind" or "missed".
 - Rounds use only shipped renderers and the F-CURR-002 formats as they ship (Listen & Pick, Read Pick Meaning, Pic-Word Match, Type Hangul `see` / `picture`, Dictation, Syllable Build, Cloze Pick, Sentence Builder, Realia Read). Every format is reading, listening or writing; nothing records or measures speech.
 
 ## Interaction points
@@ -117,7 +118,9 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 ## States
 
 - **success**: A -> B x 10 -> C.
-- **review first**: A2 (one line, slot 1). Nothing is locked; card 1 of a normal day moves to slot 2.
+- **review first**: A2 (one line, slot 1). Nothing is locked; the normal day's cards 1 and 2 move down to slots 2 and 3 in their order (the normal day's slot 3 fallback is not shown that day).
+- **loading**: the round frame ([x] and the empty dots row) shows until the engine returns the session and the review-item chunk is read; one frame, no spinner, nothing written.
+- **store unreadable** (the memory store or IndexedDB read fails through the safe storage wrapper): D's "Nothing is waiting right now" page with [[ Back home ]]; nothing is written, no `review.start` is sent, and card 3 stays as it was.
 - **ends early**: the pool runs out before 10 rounds (stretch items fill only what the pool cannot, §4.5) -> C with the stars of what was answered; with no round answered at all -> D.
 - **nothing due** (fewer than 3 due, `dailyReview` on): the slot 3 builder does not emit the card (today's fallback chain); a deep link shows D.
 - **already done today**: card 3 has the collected look and stays tappable (keep-going panel E).
@@ -126,7 +129,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 - **an item cannot play** (missing art or audio for its rung): skipped silently; if fewer than 3 rounds can play -> D.
 - **`dailyReview` off** (build or remote, §12.2): the card is not emitted, slot 3 falls back to today's chain, a deep link shows D's "Nothing is waiting right now" page with [[ Back home ]]. Memory states stay.
 - **reduced motion**: no slide between rounds and no star pop; the next round replaces the last at once; the check mark appears without a scale.
-- **320 x 568 and 200 % text**: B scrolls inside the round area; the [x] and dots row stays at the top; options keep `touchTarget.min`; no sideways scroll.
+- **320 x 568 and 200 % text**: B scrolls inside the round area; the [x] and dots row stays at the top; options keep `touchTarget.min`; no sideways scroll. **Display headlines** ("Wonderful!", "All refreshed today", and on the other review screens "Mastered!", "You tested out!", "Stage 2 complete!") use `useCappedFont('display', DISPLAY_HEADLINE_MAX_SCALE)` with the named constant `DISPLAY_HEADLINE_MAX_SCALE = 1.5` (the existing `cappedFont` budget for OS size x the chosen step), so one word never breaks mid-word in the 288 dp column; Korean keeps `KOREAN_LINE_BREAK`; web adds `hyphens: auto` as the mock does. The CM-14, CM-20, CM-21 and CM-22 visual tests cover 320 at 200 % on native as well as web. This rule is shared by `reviews/keep-going.md`, `reviews/cell-check.md` and `reviews/stage-check.md`.
 - **768 and wide**: the round sits in the reading column (`layout.maxWidth.reading`), centred; options in a 2 x 2 grid up to 4 across on wide; the dots row stays above the round.
 
 ## Accessibility
@@ -157,7 +160,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` · (system back) the stop
 ## Data needs
 
 - reads: active profile; the memory store (`logic/review/engine.ts` selection for `kind: 'daily'`, size 10 or the E2 arm), the review-item chunk, `dayLog` (goal line), the `dailyReview` flag, the device-voice check
-- writes: one answer per round to the memory store (CM-12, spacing rule); on finish one `reviews[]` entry `{ kind: 'daily', resultStars, itemIds }`, 3 points in `dayLog[today][installKey]`
+- writes: one answer per round to the memory store (CM-12, spacing rule); on finish one `reviews[]` entry `{ kind: 'daily', scope: localDay, resultStars, itemIds }` (`scope` is the required field, holding the local day the review was played, `YYYY-MM-DD`; `reviews/keep-going.md` counts today's Keep goings from it), 3 points in `dayLog[today][installKey]`
 - telemetry: `review.start` / `review.complete` with `kind: 'daily'` (existing names, §11.3); no item text, no id beyond the content ids already allowed
 
 ## Proposed copy (English; keys for CM-14, which adds es and ko)

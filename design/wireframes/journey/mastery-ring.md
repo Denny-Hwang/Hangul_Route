@@ -46,6 +46,9 @@ B. Ready to refresh (a level 3 cell with items due today)
  '#==========#'
    The ring itself never changes: no thinning, fading, desaturating, cracking or wilting. The glow is only
    ever added on top, and it goes away once nothing is due.
+   Selected (two panes, wide): the focus outline takes the halo's place (see D); the sparkle and the label
+   still say Ready to refresh. So a selected glowing cell next to a glowing neighbour needs the same
+   2 dp a side as two glowing cells: 4 dp in all, the spacing.xs gap.
 
 C. New volume (a started cell whose next volume has shipped and is not started; `volumes` on)
  +-- ==== --+
@@ -63,8 +66,17 @@ D. Next to the other marks (precedence and places, unchanged from grid-plan-and-
  - Start pin, placed-out check, story count: the corner band, unchanged. A placed-out cell keeps its dashed
    border only while it is level 0; from level 1 the track replaces it and the check stays.
  - Completed tint (successLight fill): unchanged; the track replaces only the success border.
+ - Level 0 against Mastered: a level 0 cell keeps today's closed 2 dp border in colors.stage.<stage>, and
+   several stage tokens match or are close to theme tokens (stage1 / 3 / 4 / 5 have the hex of letters /
+   nature / crafts / rites; stage2 is close to life). They are told apart by three cues that do not use
+   colour: Mastered has the successLight fill (level 0 is paper), the 1 dp border.shape keyline inside
+   the band, and the 3 dp weight against 2 dp. CM-20's greyscale visual test at 320 includes a level 0
+   cell and a Mastered cell of the same colour in one column.
  - Selected (two panes, wide): the border.focus outline (borderWidth.base) moves outside the track, into the
    grid gap, so selection never hides a segment; a level 0 cell keeps today's selected border.
+   Precedence: on a selected cell the focus outline replaces the Ready to refresh halo (both would use the
+   same 2 dp outside the track); the sparkle sticker and the label keep saying Ready to refresh. The 768
+   mock draws a selected glowing cell beside a glowing neighbour.
 
 E. The cell's page (episode/detail.md; the block under the header, also used by reviews/cell-check.md A)
  +----------------------------+
@@ -72,10 +84,11 @@ E. The cell's page (episode/detail.md; the block under the header, also used by 
  |          Ready to refresh  |     the level word (bodyLg, semibold), then at most two lines:
  |          New volume        |     "Ready to refresh" (with the sparkle; the same rule as the map: a
                                      level 3 cell with items due) and "New volume" (with the plus)
- | Take the Cell Check to     |  <- one hint line for the next level, below level 3:
- | reach Mastered.            |     0-1: "Keep reviewing to reach Practiced."; 2 without a Cell Check:
+ | Take the Cell Check to     |  <- one hint line for the next level, levels 1 and 2 only:
+ | reach Mastered.            |     1: "Keep reviewing to reach Practiced."; 2 without a Cell Check:
  +----------------------------+     this line; 2 with one: "Keep reviewing to reach Mastered."
-                                    level 3: no hint line
+                                    level 0: no E block at all (nothing to review yet: the next step
+                                    is the cell's quests); level 3: no hint line
 
 F. Legend line (grid-plan-and-access.md D4, aria-hidden): lists only the marks drawn now
  |  v Next  (==) In your plan  (seg) Mastery ring  (*) Ready to refresh  (+) New volume |
@@ -107,13 +120,13 @@ Exit to: unchanged: the cell opens `episode/detail`
 
 ## States
 
-- **level 0**: today's cell exactly (no track).
+- **level 0**: today's cell exactly (no track); on the cell's page no E block.
 - **level 1 / 2 / 3**: A. Level 3 closes the gaps.
 - **level up** (`mastery.level_up { cellId, level }`): on the Results of the activity that raised it, the G banner fills the new segment once (`motion.duration.slow`); on the Journey the ring is simply drawn at the new level (no animation on the map).
 - **ready to refresh**: B, only on level 3 cells with items due today; gone when nothing is due.
 - **new volume**: C, only with `volumes` on.
 - **tested out** (`reviews/cell-check.md` F): level 1 like any Done cell.
-- **`mastery` off** (§12.2): no track, no glow, no marker, no E block, no G banners; today's cells exactly. `cellBest` stays and shows again when it is back on. Words known (G) is part of `mastery` too.
+- **`mastery` off** (§12.2): no track, no glow, no marker, no E block, no G banners; today's cells exactly. `cellBest` stays and shows again when it is back on. Words known (G) is part of `mastery` too: Home's pills row drops the pill and shows the others (`home/goal-ring-weekly-dots.md` States). With `cellCheck` still on, the Cell Check keeps its own block without the ring (`reviews/cell-check.md` States).
 - **memory not ready** (shadow mode, seeding not finished): rings show `cellBest`, which starts at 1 for every cell done (§4.8 step 6); nothing waits.
 - **reduced motion**: the level-up fill and the glow have no animation: they are drawn in their end state at once. The glow never pulses in any mode.
 - **200 % text**: the theme word keeps `maxFontSizeMultiplier` 1 (unchanged); E's words wrap beside the 48 dp ring; the legend wraps.
@@ -146,7 +159,7 @@ Exit to: unchanged: the cell opens `episode/detail`
 
 ## Data needs
 
-- reads: `cellBest` (levels), the memory store's due flag per cell (`hasDueItems(cellId)`), the volume list per cell and `questDoneAt` (New volume), `wordsKnown` (the §4.4 count: `lex` items with best box 2 or higher and at least one real answer), the `mastery` and `volumes` flags
+- reads: `cellBest` (levels), the memory store's due cells as **one memoised selector**, `selectDueCellIds(memory, today): ReadonlySet<cellId>`, built once per memory-store change (and once when the local day turns), never one store query per cell; each cell reads `dueCells.has(cellId)` synchronously, so a 35-cell map renders the glow in the same frame as the ring, with no async glow and no flicker, the volume list per cell and `questDoneAt` (New volume), `wordsKnown` (the §4.4 count: `lex` items with best box 2 or higher and at least one real answer), the `mastery` and `volumes` flags
 - writes: none on the map; `cellBest` is written by the level derivation (CM-20) when it rises
 - telemetry: `mastery.level_up { cellId, level }` (§11.3), sent once per rise
 

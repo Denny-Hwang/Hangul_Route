@@ -28,7 +28,7 @@ B. A round: reviews/daily-review.md B (same screen, same dots row of 10, same [x
 C. Keep going result
 +--------------------------------+
 |        [hoya - cheering]       |
-|          Great work!           |  <- one word per star tier
+|          Wonderful!            |  <- one word per star tier (3 stars: Wonderful!)
 |            * * *               |
 |   [up] 4 got stronger          |
 |   (ring) Daily goal done       |  <- goal line, with `goals` on
@@ -37,14 +37,18 @@ C. Keep going result
 |   [ Keep going ]               |     and fewer than 3 Keep goings today
 +--------------------------------+
 
-D. The last offer is used, or the pool is empty
+D. No offer left (a Keep going result), by cause
 |        [hoya - cheering]       |
 |          Wonderful!            |
 |            * * *               |
 |   [up] 5 got stronger          |
-|   That is plenty for today.    |  <- one calm line instead of the offer
+|   -- D1, the 3rd Keep going of |  <- the 3-a-day cap, items still due:
+|   today, items still due:      |     one calm line instead of the offer
+|   That is plenty for today.    |
 |   Hoya will bring the rest     |
 |   back soon.                   |
+|   -- D2, the pool is empty:    |  <- whatever the count: nothing is left,
+|   All refreshed today          |     so no "rest" is promised
 |   [[        BACK HOME        ]]|
 
 E. Done today (the collected Daily Review card on Home is tapped)
@@ -56,8 +60,14 @@ E. Done today (the collected Daily Review card on Home is tapped)
 |   Want a few more?             |  <- only while a Keep going is still on offer;
 |   [[ KEEP GOING ]]             |     here it is the primary, because the learner
 |   [ Back home ]                |     came back for more on their own
-|   -- or, with nothing on offer:|
+|   -- or, the pool is empty:    |
 |   All refreshed today          |
+|   [[ BACK HOME ]]              |
+|   -- or, 3 Keep goings played  |
+|   today and items still due:   |
+|   That is plenty for today.    |
+|   Hoya will bring the rest     |
+|   back soon.                   |
 |   [[ BACK HOME ]]              |
 +--------------------------------+
 ```
@@ -68,7 +78,7 @@ E. Done today (the collected Daily Review card on Home is tapped)
 
 ## Interaction points
 
-- A: [ Keep going ] -> B round 1; `review.start { kind: 'daily' }` (a Keep going is a `daily`-kind review, §11.3; its `reviews[]` entry carries `keepGoing: 1..3` for reports only).
+- A: [ Keep going ] -> B round 1; `review.start { kind: 'daily' }` (a Keep going is a `daily`-kind review, §11.3). Its `reviews[]` entry is a plain `daily` entry with no extra field (`ReviewEntrySchema` strips unknown keys on every parse); see Data needs for how today's count is found.
 - A / C / D: [[ BACK HOME ]] -> Home.
 - B: as `reviews/daily-review.md` B, B2 and E.
 - Last round -> C (offer left) or D (none left); `review.complete`; 2 points to today's `dayLog` (§7.4).
@@ -82,13 +92,15 @@ Exit to: `home/todays-mission` · `reviews/keep-going` B
 ## States
 
 - **offer**: due items remain after the session and fewer than 3 Keep goings were played today (local day) -> A.
-- **no offer**: the pool is empty, or 3 Keep goings were played -> D's calm line (after a Keep going) or the Daily Review's plain result (after the Daily Review, with no offer row at all).
+- **no offer**: after a Keep going, D by cause: the pool is empty -> D2 "All refreshed today" (this wins when both hold); 3 Keep goings were played and items are still due -> D1 "That is plenty for today. Hoya will bring the rest back soon.". After the Daily Review with an empty pool -> its plain result with no offer row at all.
+- **loading**: as the Daily Review (the round frame with the empty dots row, no spinner).
+- **store unreadable**: as the Daily Review: D's "Nothing is waiting right now" page of `reviews/daily-review.md` with [[ Back home ]]; nothing written.
 - **ends early**: the pool runs out inside a Keep going -> C or D with the stars of what was answered.
 - **stopped**: the stop sheet of `reviews/daily-review.md` E; nothing is lost; the next offer still shows on E.
 - **offline**: as the Daily Review (local engine, precached items).
 - **`dailyReview` off**: no Daily Review, so no Keep going; a deep link shows the Daily Review's D page.
 - **reduced motion**: as the Daily Review.
-- **320 and 768**: as the Daily Review; the offer row stays under the primary at every width.
+- **320 and 768**: as the Daily Review (including its 200 % display-headline rule); the offer row stays under the primary at every width.
 
 ## Accessibility
 
@@ -101,7 +113,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` B
 | Rule | Here |
 |---|---|
 | no red for a miss | as the Daily Review: amber nudge only |
-| no visible decay | nothing drops or fades; D says the rest comes back soon |
+| no visible decay | nothing drops or fades; D1 says the rest comes back soon only when items are still due |
 | no lost streak copy | none |
 | no percentage | none |
 | no per-question timer | none |
@@ -116,8 +128,9 @@ Exit to: `home/todays-mission` · `reviews/keep-going` B
 
 ## Data needs
 
-- reads: the engine's due pool after the session (`hasMoreDue`), today's Keep going count (from `reviews[]` entries of the local day), `dayLog`
-- writes: answers to the memory store; one `reviews[]` entry per finished Keep going; 2 points in `dayLog[today][installKey]`
+- reads: the engine's due pool after the session (`hasMoreDue`), today's Keep going count, `dayLog`
+- **today's Keep going count, derived with no new field**: every `daily` entry (the Daily Review and each Keep going) writes the local day it was played as its required `scope` (`YYYY-MM-DD`, the same local day as `SessionLog.localDay`). Today's count is the number of `daily` entries whose `scope` is today's local day, minus 1 for the Daily Review itself (never below 0). It never depends on the UTC `generatedAt` or on today's time zone. An assigned Daily Review (`homework/list`) is the same session as card 3, not a second entry.
+- writes: answers to the memory store; one plain `daily` `reviews[]` entry `{ kind: 'daily', scope: localDay, resultStars, itemIds }` per finished Keep going (no `keepGoing` field: `ReviewEntrySchema` strips unknown keys on every parse, sync and backup); 2 points in `dayLog[today][installKey]`
 - telemetry: `review.start` / `review.complete` (`kind: 'daily'`); nothing new
 
 ## Proposed copy (English; keys for CM-14, which adds es and ko)
@@ -130,7 +143,7 @@ Exit to: `home/todays-mission` · `reviews/keep-going` B
 | `learner.keepGoing.enough.body` | Hoya will bring the rest back soon. |
 | `learner.keepGoing.doneToday.title` | Daily Review done today |
 
-Results reuse `learner.dailyReview.result.*`; the round and stop sheet reuse `learner.dailyReview.leave.*`.
+Results reuse `learner.dailyReview.result.*`; D2 and E's empty-pool line reuse `learner.dailyReview.allRefreshed.title`; the round and stop sheet reuse `learner.dailyReview.leave.*`.
 
 ## Open questions
 
