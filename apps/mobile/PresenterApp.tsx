@@ -22,7 +22,7 @@ import { canPlayKorean, type AudioCapability } from './src/logic/audio/capabilit
 import { lectureBundle, soundCheckSpec } from './src/logic/lecture/content';
 import { lectureStories } from './src/logic/lecture/sources/story';
 import { readToMePlan } from './src/logic/lecture/story-slides';
-import { createAudioRunner } from './src/logic/story/audio-runner';
+import { createAudioRunner, type RunnerResult } from './src/logic/story/audio-runner';
 import { initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
 import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
@@ -59,7 +59,7 @@ import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
-import { readAlongView, slideSound, soundFlashFor, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
+import { readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
 import {
   getCapability,
@@ -558,13 +558,21 @@ function Presenter(): React.ReactElement {
       }
       // The device-wide mute the learner app shares: the same action as the chip's Turn sound on.
       if (press === 'unmute-then-play') useAudioStore.getState().setMuted(false, 'fallback_panel');
+      const at = Date.now();
+      const slideIdx = stateRef.current?.slideIdx;
+      /** A finished play: a blocked voice is noted, and an explicit press on the slide still shown flashes. */
+      const settle = (result: RunnerResult): void => {
+        const outcome = soundOutcome({ result, lastFailure: useAudioStore.getState().lastFailure, startedAt: at, explicit, slideIdx, slideIdxNow: stateRef.current?.slideIdx });
+        if (outcome === null) return;
+        setSoundBlocked(outcome.blocked);
+        if (outcome.flash !== null) flash(outcome.flash === 'no-voice' ? 'noVoice' : 'soundFailed');
+      };
       if (story) {
-        void narrator.play(story.steps, story.options);
+        // Read-to-me answers like any other slide's Sound (section 3.7); a stopped or newer chain shows nothing.
+        void narrator.play(story.steps, story.options).then(settle);
         return;
       }
       if (!sound) return;
-      const at = Date.now();
-      const slideIdx = stateRef.current?.slideIdx;
       // Read along: the line that plays (the current one) is lit while it plays; a later press lights its own.
       // Lines shown together (no Korean voice) light none.
       const line = slide.kind === 'read-along' ? readAlongView(slide, reveal ?? slide.builds.length - 1).current : null;
@@ -572,12 +580,8 @@ function Presenter(): React.ReactElement {
       if (lit) setPlayingLine(lit);
       void playPrompt({ ...soundPrompt(sound), source: 'presenter' }).then((result) => {
         if (lit) setPlayingLine((now) => (now === lit ? null : now));
-        const failure = useAudioStore.getState().lastFailure;
-        const reason = failure !== null && failure.at >= at ? failure.reason : null;
-        setSoundBlocked(result !== 'played' && reason === 'blocked');
         // A result that comes back after the slide changed (or the lesson ended) flashes nothing there.
-        const shown = explicit && stateRef.current?.slideIdx === slideIdx ? soundFlashFor(result, reason) : null;
-        if (shown !== null) flash(shown === 'no-voice' ? 'noVoice' : 'soundFailed');
+        settle(result);
       });
     },
     [deck, stories, narrator, canPlay, voiceChecked],

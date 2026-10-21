@@ -21,6 +21,9 @@ const DECK: LectureDeckInput = {
   blocks: [{ kind: 'quest', id: 'quest:stage2-life-q1' }],
 };
 
+/** One story, King Sejong's new letters: a cover, then its scenes (art, narration, korean). */
+const STORY_DECK: LectureDeckInput = { ...DECK, id: 'lecture:sound020', title: 'King Sejong', blocks: [{ kind: 'story', storyId: 'story:sejong-new-letters' }] };
+
 const link = (deck: LectureDeckInput = DECK): string => `/present#d=${encodeDeck(deck)}`;
 
 interface Utterance {
@@ -118,6 +121,16 @@ test.beforeEach(async ({ page }) => {
 /** What the page asked to say aloud (the silent unlock utterance of Start left out). */
 const spoken = (page: Page): Promise<Utterance[]> =>
   page.evaluate(() => ((window as SoundWindow).__utterances ?? []).filter((u) => u.volume !== 0 && u.text.trim() !== ''));
+
+/**
+ * Waits until the stand-in engine has answered every utterance (it ends one 300 ms after it is asked,
+ * or fails it after 50 ms) and the press's result has had time to show, so a flash that is not there
+ * is not there because nothing came, not because it has not come yet.
+ */
+async function settled(page: Page): Promise<void> {
+  await expect.poll(() => page.evaluate(() => window.speechSynthesis.speaking)).toBe(false);
+  await page.waitForTimeout(400);
+}
 
 /** The Korean drawn on the stage: its text without the screen reader's live line. */
 const stageText = (page: Page): Promise<string> =>
@@ -404,7 +417,7 @@ test.describe('Sound at 1280 x 720 with the S key', () => {
   });
 
   test("a story scene: S reads the narration, then the scene's Korean once it shows", async ({ page }) => {
-    await startDocked(page, { ...DECK, id: 'lecture:sound020', title: 'King Sejong', blocks: [{ kind: 'story', storyId: 'story:sejong-new-letters' }] });
+    await startDocked(page, STORY_DECK);
     await page.keyboard.press('ArrowRight');
     await expect(page.getByTestId('presenter-story')).toBeVisible();
     // The narration build: Read-to-me says the narration only.
@@ -412,6 +425,10 @@ test.describe('Sound at 1280 x 720 with the S key', () => {
     let before = (await spoken(page)).length;
     await page.keyboard.press('s');
     await expect.poll(async () => (await spoken(page)).slice(before).map((u) => u.lang)).toEqual(['en-US']);
+    // The narration played, so the press flashes nothing once the chain ends (section 3.7, 2026-10-20).
+    await settled(page);
+    await expect(page.getByTestId('presenter-sound-failed-flash')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-no-voice-flash')).toHaveCount(0);
     // The korean build: the narration, then the Korean drawn on the stage, in Korean.
     await page.keyboard.press('ArrowRight');
     // The scene's keyword, with its romanization under it.
@@ -420,6 +437,42 @@ test.describe('Sound at 1280 x 720 with the S key', () => {
     await page.keyboard.press('s');
     await expect.poll(async () => (await spoken(page)).slice(before).map((u) => u.lang), { timeout: 5_000 }).toEqual(['en-US', 'ko-KR']);
     expect((await spoken(page)).at(-1)).toMatchObject({ text: '세종대왕', lang: 'ko-KR' });
+  });
+
+  test('a voice that fails: S on a story scene flashes "The sound did not play. You say it!" (section 3.7, 2026-10-20)', async ({ page }) => {
+    await speechConfig(page, { error: 'synthesis-failed' });
+    await startDocked(page, STORY_DECK);
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-story')).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('s');
+    const flash = page.getByTestId('presenter-sound-failed-flash');
+    await expect(flash).toHaveText('The sound did not play. You say it!');
+    await expect(page.getByTestId('presenter-sound-live')).toHaveText('The sound did not play. You say it!');
+    // The narration was asked for once and failed; the chain ended there.
+    expect(await spoken(page)).toMatchObject([{ lang: 'en-US' }]);
+    await expect(page.getByTestId('presenter-no-voice-flash')).toHaveCount(0);
+  });
+
+  test('a Read-to-me stopped by the next slide flashes nothing, even when its voice fails', async ({ page }) => {
+    await speechConfig(page, { error: 'synthesis-failed' });
+    await startDocked(page, STORY_DECK);
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-story')).toBeVisible();
+    // The narration, then the korean build: the scene's last build, so the next step is the next slide.
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-story-korean-line')).toContainText('세종대왕');
+    await expect(page.getByTestId('presenter-next')).not.toHaveAccessibleName('Reveal');
+    const at = await counter(page);
+    await page.keyboard.press('s');
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-counter')).not.toHaveText(at);
+    await expect.poll(async () => (await spoken(page)).length).toBe(1);
+    // The failing voice answers 50 ms after it is asked; by then the chain was stopped.
+    await settled(page);
+    await expect(page.getByTestId('presenter-sound-failed-flash')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-sound-live')).toHaveText('');
   });
 
   test('S on the title slide flashes "This slide has no sound." over the docked stage', async ({ page }) => {

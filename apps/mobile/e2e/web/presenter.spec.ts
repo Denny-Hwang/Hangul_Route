@@ -967,9 +967,13 @@ test.describe('presenter story slides at 1280 x 720 (PR 11)', () => {
     await expect(page.getByTestId('presenter-story-korean')).toHaveCSS('opacity', '1');
     await expect(page.getByTestId('presenter-story-korean')).toContainText('Hunminjeongeum');
     await expect(page.getByTestId('presenter-story-korean')).toContainText('the proper sounds for teaching the people');
-    // Read-to-me (S) on a scene with no voice falls back quietly: the text stays on the slide (D6).
+    // Read-to-me (S) on a scene with no Korean voice reads only the English (the silent engine answers
+    // it at once), so the press flashes nothing (section 3.7, 2026-10-20); the text stays on the slide (D6).
     await page.keyboard.press('KeyS');
     await expect(page.getByTestId('presenter-story-narration')).toHaveCSS('opacity', '1');
+    await page.waitForTimeout(400);
+    await expect(page.getByTestId('presenter-sound-failed-flash')).toHaveCount(0);
+    await expect(page.getByTestId('presenter-no-voice-flash')).toHaveCount(0);
     await shot(page, 'presenter-story-1280x720');
 
     // The first check: its own prompt and four options with shape-and-number markers; no answer yet.

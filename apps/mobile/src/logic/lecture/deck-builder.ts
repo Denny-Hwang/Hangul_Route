@@ -334,6 +334,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const seenJamo = new Set<string>();
   // One card per word per deck (AMENDMENTS-LECTURE-V2 section 5.1), by Korean text: a repeat is not a skip.
   const seenWords = new Set<string>();
+  // Each word's one card, by Korean text, so a later block can fill in what the card still lacks.
+  const wordSlides = new Map<string, number>();
   // One page per realia sheet (LV-S2): a Realia Read whose sheet a realia page already showed goes straight to its questions.
   const seenRealia = new Set<string>();
   const usedKeys = new Map<string, number>();
@@ -369,11 +371,30 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     }
   };
   const seed = (): number => deck.seed + slides.length;
-  /** A word card, once per deck; the word is taught either way (a later gloss still upgrades it). */
+  /**
+   * A word card, once per deck; the word is taught either way (a later gloss still upgrades it).
+   * A repeat adds no slide but fills in what the first card lacks, as Word review's `add` does
+   * (verify:learner-audio-gloss a): the card keeps its place and its sound (spoken form, rate),
+   * takes the later block's clip path when it has none, and its word id, card and WordArt
+   * together only when it has none of the three.
+   */
   const wordCard = (key: string, word: KoLine & { gloss: string }, voice: WordVoice, extra: { wordId?: string; cardId?: string; wordArt?: string } = {}): void => {
     if (!seenWords.has(word.ko)) {
       seenWords.add(word.ko);
+      wordSlides.set(word.ko, slides.length);
       push(key, { kind: 'vocab', word, ...voice, ...extra });
+    } else {
+      const at = wordSlides.get(word.ko) ?? -1;
+      const known = slides[at];
+      // A stale index (a slide moved or removed) never writes onto another word's card.
+      if (known?.kind === 'vocab' && known.word.ko === word.ko) {
+        const clip = voice.spoken.audioRef;
+        const spoken = known.spoken.audioRef === undefined && clip !== undefined ? { ...known.spoken, audioRef: clip } : known.spoken;
+        const ids = known.wordId === undefined && known.cardId === undefined && known.wordArt === undefined ? extra : {};
+        const filled = { ...known, spoken, ...ids };
+        // The builds follow the card (a WordArt or card adds the `art` build); the key stays.
+        slides[at] = { ...filled, builds: buildsFor(filled, opts) };
+      }
     }
     teachWord(word);
   };
