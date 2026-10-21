@@ -413,8 +413,10 @@ export function suppressSmallGroups(rows: readonly RollupRow[]): RollupRow[] {
 }
 
 /**
- * The read helper every reader uses (the owner metrics page, row CM-70; the guardrail evaluator,
- * row CM-70b): the cells of the days asked for, with `suppressSmallGroups` applied. Counts only.
+ * The read helper for every reader that shows cells (the owner metrics page, row CM-70): the cells
+ * of the days asked for, with `suppressSmallGroups` applied. Counts only. The guardrail evaluator
+ * (row CM-70b) shows no cell: it reads `Db.rollupRowsOf` for its four metrics, unsuppressed, and
+ * leaves out every (day, metric, dim) group under MIN_GROUP_EVENTS itself.
  *
  * What a reader must know:
  * - The threshold counts events. Only for the once-a-day names (ONCE_A_DAY_ROLLUP_NAMES) are
@@ -422,8 +424,8 @@ export function suppressSmallGroups(rows: readonly RollupRow[]): RollupRow[] {
  * - Show only what this returns, and never combine it with counts from another source (that
  *   could undo the complementary suppression).
  * - The inputs come from an anonymous endpoint. The closed sets and the budget bound what a
- *   forger can write, but not what it can count, so the evaluator (CM-70b) must cross-check a
- *   breach before acting on it.
+ *   forger can write, but not what it can count, so the evaluator (CM-70b) acts only on a
+ *   significant change of sizeable cohorts, and its only action is lowering a ramp one step.
  * - `ROLLUP_BUDGET_METRIC` is the cells reserved that day, an input to the D1 guardrail, not events.
  */
 export async function readRollups(db: Db, query: RollupQuery): Promise<RollupRow[]> {

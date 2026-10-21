@@ -1722,8 +1722,27 @@ export class D1Db implements Db {
     return total ?? cells;
   }
 
-  async lowerRemoteConfigPct(flag: string, fromPct: number, toPct: number, updatedAt: string, reason: string): Promise<boolean> {
-    return (await this.changes('UPDATE remote_config SET pct = ?, updated_at = ?, reason = ? WHERE flag = ? AND pct = ? AND pct > ?', [toPct, updatedAt, reason, flag, fromPct, toPct])) > 0;
+  rollupRowsOf(fromDay: string, toDay: string, metrics: readonly string[], limit: number): Promise<RollupRow[]> {
+    if (metrics.length === 0) return Promise.resolve([]);
+    return this.many(
+      `SELECT day, metric, dim, bucket, events FROM learning_rollups WHERE day >= ? AND day <= ? AND metric IN (${metrics.map(() => '?').join(', ')}) ORDER BY day, metric, dim, bucket LIMIT ?`,
+      [fromDay, toDay, ...metrics, limit],
+      (r) => ({ day: str(r.day), metric: str(r.metric), dim: str(r.dim), bucket: str(r.bucket), events: Number(r.events) }),
+    );
+  }
+  async lowerRemoteConfigPct(flag: string, fromPct: number, fromUpdatedAt: string, toPct: number, updatedAt: string, reason: string): Promise<boolean> {
+    // CAST: a console edit can store 25.5 (INTEGER affinity keeps a REAL); the evaluator read it as 25 (clampPct).
+    return (
+      (await this.changes('UPDATE remote_config SET pct = ?, updated_at = ?, reason = ? WHERE flag = ? AND "on" = 1 AND CAST(pct AS INTEGER) = ? AND updated_at = ? AND pct > ?', [
+        toPct,
+        updatedAt,
+        reason,
+        flag,
+        fromPct,
+        fromUpdatedAt,
+        toPct,
+      ])) > 0
+    );
   }
 
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */

@@ -85,7 +85,7 @@ Baselines come from the two-week shadow period of row CM-12, which writes into t
 
 ### 3.3 Guardrails
 
-The guardrail evaluator (row CM-70b) checks these once a day from the rollup table. On a breach it lowers the ramping flag to its previous step through the remote config (section 12.3).
+The guardrail evaluator (row CM-70b) checks these once a day from the rollup table. On a breach it lowers the ramping flag to its previous step through the remote config (section 12.3). A rise or fall counts as a breach only when it passes the line below and is statistically clear for the cohort sizes; section 12.3 gives the exact rule.
 
 - Mid-quest quit rate per game kind (`session.end` with `questLeft: 1`, by `leftAtKind`) must not rise by more than 2 pp.
 - Quits after a wrong streak (`session.end` with `afterWrongStreak: 2` and `questLeft: 1`) must not rise.
@@ -1007,7 +1007,13 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 4. 100%.
 
 - **The owner advances each step** by editing `remote_config`.
-- **Guardrail evaluator (row CM-70b).** A scheduled Worker (Cron Trigger) runs once a day. For each ramping flag it compares the last 7 days of guardrail metrics (3.3) for the flag's arm with the cohort before the ramp step. On a breach it lowers the flag's `pct` to the previous step, writes the reason to `remote_config.reason`, and the owner metrics page shows it. Lowering is the only automatic action, which matches "remote can only reduce".
+- **Guardrail evaluator (row CM-70b).** A scheduled Worker (Cron Trigger) runs once a day. For each ramping flag it compares the last 7 days of guardrail metrics (3.3) with the cohort before the ramp step. On a breach it lowers the flag's `pct` to the previous step, writes the reason to `remote_config.reason`, and the owner metrics page shows it. Lowering is the only automatic action, which matches "remote can only reduce". The rule as built (row CM-70b):
+  - **Windows.** The step is the row's `updated_at`. The cohort after it is the full UTC days since the step (at most the last 7); the cohort before it is the 7 days before the step day; the step day is in neither. A step is compared once 3 full days have passed, and no longer once it is more than 14 days old (`stale-step`: it has passed about 10 daily checks, and a baseline that old reads seasonal drift as a breach).
+  - **Noise.** Each rule needs its line and a one-sided test: a two-proportion z with continuity correction for the quit rates, Mann-Whitney for the median, a one-sample z on the share of sessions of 20 minutes or more for p90. All comparisons of one run for one flag share a 2% alpha (Bonferroni: about z 3.1 with 21 game kinds). A comparison needs at least 100 sessions in each cohort, on top of the 20-event suppression per (day, metric, dim). Seeded tests show a healthy ramp at realistic sizes (1 to 21 kinds, 25 to 200 sessions per kind a day) is lowered on at most about 4% of steps.
+  - **D1 rows written** reads the rollup sink's own day counter (cells reserved, at least the rows it wrote). The sink's global budget stops at 40% of the free tier, so this line only fires if that budget is raised; the account total, sync included, is the owner's check in the D1 dashboard.
+  - **Cohort, not arm (a deviation from "for the flag's arm").** `session.end` names no flag, so the cohort after a step is everyone who used the app in that window, not the flag's arm. A real effect inside a 10% arm shows about 10 times smaller overall, so the guardrail is weakest at the first step. A breach cannot be pinned on one flag, so every ramping flag whose windows show it is lowered in the same run (the safe direction). The owner ramps one flag at a time to keep a breach attributable. Row CM-70c adds per-flag arms so this becomes the arm comparison.
+  - **Baseline after a lowering.** The reason names the step whose before window was used (`guardrail <day> base <day> pct 50->10: ...`). While the row is as the evaluator left it (its `updated_at` day and `pct` are those of the reason), the next comparisons keep that before window, so a lower step that is still worse than before the ramp is lowered again. Any owner edit of the row, even of `reason` alone with a new `updated_at`, starts a new baseline from that `updated_at`, so the owner changes `updated_at` only when advancing a step.
+  - **Writes.** The UPDATE applies only while the row is exactly as read (on, the whole-number `pct`, the same `updated_at`), so any owner edit during the run wins. Each run logs one `guardrail.run` line (flag names, steps, skip codes) to Workers Logs. The run goes after the retention purge, so the purge never waits on it.
 - **Shadow first.** `memoryRecord` ships 2 weeks before `dailyReview`. During that time it only records and computes, and its `memory.daily` events land in `learning_rollups`. That sets the baselines for G1 to G3 and checks the seeding's due spread.
 
 ## 13. Risks
@@ -1170,6 +1176,7 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-8 | `perf(content): stories out of the start bundle, shelf metadata in the manifest, per-story precached chunks (F-CURR-002)` | L | CM-5 | 0 | start bundle shrinks, per-story budget, offline story e2e |
 | CM-70a | `feat(backend): learning_rollups table and aggregation at ingest (F-CURR-002)` (Worker first) | M | CM-3 | 0 | no id stored, profile-day counting, suppression, additive SQL |
 | CM-70b | `feat(backend): daily guardrail evaluator on a Cron Trigger that lowers a breached ramp (F-CURR-002)` | M | CM-2, CM-70a | 0 | breach lowers one step, only lowers, reason recorded |
+| CM-70c | `feat(content-schema,backend,mobile): per-flag arms on session.end and arm cells in learning_rollups, so the guardrail evaluator compares a flag's arm with the rest (F-CURR-002)` (Worker first) | M | CM-2, CM-3, CM-70a, CM-70b | 0 | arm list closed to served flag names, no id stored, arm-vs-rest comparison, cohort fallback while arms are under the minimum |
 | CM-D1 | `design(reviews): Daily Review and Keep going, mastery ring, Cell and Stage Check, ceremony, goal ring and weekly dots (F-CURR-002)` | M | CM-0 | 0 | MAR design review |
 | CM-D2 | `design(minigame): Cloze Pick, Dictation, Syllable Build, Match Shape, Story Order, Role Play, My Story, Yut Review (F-CURR-002)` | M | CM-0 | 0 | MAR design review |
 | CM-D3 | `design(journey): Hidden Heritage scene style, Journey topic pages by horizontal swipe with page dots and arrow buttons, pack page, Passport; grid.md amended for the topic pages (F-CURR-002 OD-2)` | M | CM-0 | 0 | MAR design review |
@@ -1268,14 +1275,14 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | Group | PRs |
 |---|---|
-| Phase 0 | 16 (plus the conditional CM-5B) |
+| Phase 0 | 17 (plus the conditional CM-5B) |
 | Phase 1 | 8 |
 | Phase 2 | 8 (CM-23 counts as 3) |
 | Phase 3 | 20 (CM-37 ×4, CM-3A ×5) |
 | Phase 4 | 34 (5 themes ×5, book 2 ×5, plus CM-40, CM-46a, CM-47, CM-48) |
 | Phase 5 | 44 (8 packs ×5, plus CM-50a, CM-50b, CM-50c, CM-59) |
 | Phase 6 | 7 |
-| **Total** | **137** |
+| **Total** | **138** |
 
 CM-5B is conditional and is counted only if the CM-5 report triggers it. Each content row's PR description lists the MAR pass findings with outcomes, the `--report` bytes for the chunk, test counts and one 320 px screenshot.
 
@@ -1317,6 +1324,7 @@ CM-5B is conditional and is counted only if the CM-5 report triggers it. Each co
 6. **Weekly actives.** If there are fewer than about 400 per arm, A/B tests become directional staged rollouts (3.4).
 7. **Review load.** The 60-day simulation (4.3) models learner behaviour. The shadow period checks the real due-pool sizes against it before `dailyReview` ramps.
 8. **Worker CPU on shard merges.** A 500-item merge is expected to fit the free-tier CPU limit. CM-11 benchmarks it; if it does not fit, the cap per call is lowered.
+9. **Guardrails on cohorts, not arms.** Until row CM-70c, the guardrail evaluator compares everyone before a step with everyone after it (12.3). It assumes a harmful feature shows in the whole cohort. At a 10% step an effect inside the arm is diluted about 10 times, and a breach lowers every ramping flag whose windows show it. The inputs come from an anonymous endpoint; a forger can at most pause a ramp one step, with the reason on the row.
 
 ## 20. Review round 1 (2026-10-21)
 
