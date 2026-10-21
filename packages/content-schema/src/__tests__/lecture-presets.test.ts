@@ -253,7 +253,7 @@ describe('titles', () => {
     const story = resolvePreset('story-time', 20, empty);
     expect(story.titleKey).toBe('story.title');
     expect(story).not.toHaveProperty('storyId');
-    const words = resolvePreset('word-review', 10, { catalog: CATALOG, recentWords: { questIds: [], vocabIds: ['vocab:apple'] } });
+    const words = resolvePreset('word-review', 10, { catalog: CATALOG, recentWords: { questIds: [], vocabIds: ['vocab:apple', 'vocab:rice', 'vocab:kimchi', 'vocab:tiger'] } });
     expect(words.titleKey).toBe('words.title');
   });
 
@@ -508,6 +508,18 @@ describe('word-review (W1-W3)', () => {
   it('no usable id: the warm-up, with its line, from the letters to revisit', () => {
     const r = resolvePreset('word-review', 10, { catalog: CATALOG, recentWords: { questIds: ['quest:nope'], vocabIds: ['nope'] }, revisitChars: ['ㅎ'] });
     expect([r.preset, outline(r), r.fallback, r.titleKey]).toEqual(['warm-up', 'revisit ㅎㄱㄴㄷ · air-write 3', 'warm-up', 'warmup.short']);
+  });
+
+  it('fewer than 4 words and no quest: the warm-up with its line (section 4.2 W)', () => {
+    const words = ['vocab:apple', 'vocab:rice', 'vocab:kimchi', 'vocab:tiger'];
+    for (const n of [1, 2, 3]) {
+      const r = resolvePreset('word-review', 10, { catalog: CATALOG, recentWords: { questIds: [], vocabIds: words.slice(0, n) }, revisitChars: ['ㅎ'] });
+      expect([r.preset, r.fallback, r.titleKey], `${n} words`).toEqual(['warm-up', 'warm-up', 'warmup.short']);
+    }
+    const four = resolvePreset('word-review', 10, { catalog: CATALOG, recentWords: { questIds: [], vocabIds: words } });
+    expect([four.preset, outline(four), four.fallback]).toEqual(['word-review', 'word-review 0q 4w 5r', null]);
+    const oneQuest = resolvePreset('word-review', 10, { catalog: CATALOG, recentWords: { questIds: ['quest:stage2-life-q1'], vocabIds: ['vocab:apple'] } });
+    expect([oneQuest.preset, outline(oneQuest), oneQuest.fallback]).toEqual(['word-review', 'word-review 1q 1w 5r', null]);
   });
 
   it('W1: plan quests this week first then last week (at most 12); rollup words only with at least 2 vocab summaries (at most 3)', () => {

@@ -1526,6 +1526,64 @@ describe('expandDeck: every word card carries its sound (section 3.4 amendment 2
     expect(byKo(slides, '물')?.speech).toBe('word');
   });
 
+  it('a word a quest showed first keeps one card; a later vocab block fills in its clip, word id and art (verify:learner-audio-gloss a)', () => {
+    // The quest board shows 김밥 with no clip; the topic after it has 김밥 with a clip, an id and WordArt.
+    const boardScope: MinigameScope = {
+      kind: 'pic-word-match',
+      picWord: {
+        boards: [
+          {
+            pairs: [
+              { id: 'gimbap', word: { ko: '김밥', romanization: 'gimbap', en: 'gimbap', spokenKo: '김빱' } },
+              { id: 'san', word: { ko: '산', romanization: 'san', en: 'mountain' } },
+              { id: 'bam', word: { ko: '밤', romanization: 'bam', en: 'night' } },
+            ],
+          },
+        ],
+      },
+    };
+    const boardQuest: Quest = { ...quest('gimbapboard', [['intro'], ['practice', 'mg:gimbap-board']], { rewardCardId: undefined }) };
+    const topic: LectureVocabTopic = {
+      title: 'Food',
+      words: [{ id: 'vocab:gimbap', ko: '김밥', romanization: 'gimbap', gloss: 'gimbap', audioRef: 'audio/vocab/gimbap.mp3', wordArt: 'gimbap' }],
+    };
+    const b = bundle({
+      ...spoken,
+      scopeFor: (ref) => (ref === 'mg:gimbap-board' ? boardScope : spokenScopes[ref] ?? scopes[ref]),
+      questById: (id) => (id === boardQuest.id ? boardQuest : quests.find((q) => q.id === id)),
+      vocabTopic: (id) => (id === 'vocab-topic:food' ? topic : undefined),
+    });
+    const blocks: LectureDeckInput['blocks'] = [
+      { kind: 'quest', id: boardQuest.id },
+      { kind: 'vocab', topicId: 'vocab-topic:food' },
+    ];
+    const questOnly = only(expandDeck(deckOf([blocks[0]!]), b, VOICE).slides, 'vocab');
+    const mixed = expandDeck(deckOf(blocks), b, VOICE);
+    const cards = only(mixed.slides, 'vocab').filter((s) => s.word.ko === '김밥');
+    expect(cards).toHaveLength(1);
+    // The quest's place and its spoken form stay; the clip, word id and art come from the vocab entry.
+    expect(cards[0]).toMatchObject({
+      key: questOnly.find((s) => s.word.ko === '김밥')!.key,
+      spoken: { text: '김빱', romanization: 'gimbap', audioRef: 'audio/vocab/gimbap.mp3' },
+      speech: 'word',
+      wordId: 'vocab:gimbap',
+      wordArt: 'gimbap',
+    });
+    expect(cards[0]!.builds).toContain('art');
+    // No slide is added: the deck is the quest's slides plus the topic title (a single word gets no quiz).
+    expect(mixed.slides.length).toBe(expandDeck(deckOf([blocks[0]!]), b, VOICE).slides.length + 1);
+  });
+
+  it('a later block never replaces what the first card already has', () => {
+    const first: LectureVocabTopic = { title: 'A', words: [{ id: 'vocab:gimbap', ko: '김밥', romanization: 'gimbap', gloss: 'gimbap', audioRef: 'audio/vocab/gimbap.mp3', cardId: 'card:gimbap' }] };
+    const second: LectureVocabTopic = { title: 'B', words: [{ id: 'vocab:gimbap-2', ko: '김밥', romanization: 'gimbap', gloss: 'gimbap', audioRef: 'audio/vocab/other.mp3', cardId: 'card:other', wordArt: 'gimbap' }] };
+    const b = bundle({ ...spoken, vocabTopic: (id) => (id === 'vocab-topic:a' ? first : id === 'vocab-topic:b' ? second : undefined) });
+    const cards = only(expandDeck(deckOf([{ kind: 'vocab', topicId: 'vocab-topic:a' }, { kind: 'vocab', topicId: 'vocab-topic:b' }]), b, VOICE).slides, 'vocab');
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({ spoken: { audioRef: 'audio/vocab/gimbap.mp3' }, wordId: 'vocab:gimbap', cardId: 'card:gimbap' });
+    expect(cards[0]).not.toHaveProperty('wordArt');
+  });
+
   it('a syllable slide plays the syllable itself (the scope syllable has no clip in the schema)', () => {
     const syllable = only(expand([{ kind: 'quest', id: 'quest:letters' }]).slides, 'syllable')[0];
     expect(syllable?.spoken).toEqual({ text: '가', romanization: 'ga' });
