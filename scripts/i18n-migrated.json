@@ -119,7 +119,10 @@
     "apps/web/src/components/console/ReportScopeBlock.tsx",
     "apps/mobile/src/screens/class-update/**",
     "apps/web/src/components/console/GroupedLessonPicker.tsx",
-    "apps/web/src/components/console/RenameParts.tsx"
+    "apps/web/src/components/console/RenameParts.tsx",
+    "apps/web/src/components/console/AdminsPanel.tsx",
+    "apps/web/src/components/console/AdminInvitePage.tsx",
+    "apps/web/src/app/(console)/account/invite/page.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

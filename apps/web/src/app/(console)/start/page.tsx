@@ -2,11 +2,12 @@
 
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
-import { personaHint, type SpaceKind } from '@hangul-route/content-schema';
+import { Suspense, useEffect, useState } from 'react';
+import { APP_ROUTES, personaHint, type SpaceKind } from '@hangul-route/content-schema';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { adminInviteLive } from '@/lib/console/admin-invite';
 import { homeOfHint } from '@/lib/console/personas';
 import { codeExpiry } from '@/lib/console/rollup';
 import { ROUTES, landingAfterCreate, prefillName, presetKind, roleCards } from '@/lib/console/routing';
@@ -32,8 +33,14 @@ function StartInner(): JSX.Element {
   // A key, not text: worded at render time, so it follows the header language select.
   const [message, setMessage] = useState<'signInAgain' | 'createFailed' | null>(null);
   const [copied, setCopied] = useState(false);
+  // [SA] AMENDMENTS-SEATS-ADMINS section 6.6 step 3: an invitee never has to make a space of their own. While an
+  // administrator invite waits in this tab, a signed-in grown-up goes to the invite page first.
+  const [toInvite] = useState(() => adminInviteLive());
+  useEffect(() => {
+    if (toInvite && ready && session) router.replace(APP_ROUTES.adminInvite);
+  }, [toInvite, ready, session, router]);
 
-  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
+  if (!ready || !session || toInvite) return <AdultFrame>{null}</AdultFrame>;
 
   const create = async (): Promise<void> => {
     if (step.at !== 'name' || !api) return;

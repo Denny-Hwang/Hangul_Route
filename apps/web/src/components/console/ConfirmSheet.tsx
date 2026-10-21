@@ -24,6 +24,8 @@ export interface ConfirmAsk {
   message?: string;
   /** The verb (`console.confirm.*`). */
   confirmLabel: string;
+  /** The safe choice's word when Cancel would read wrong ([SA] the revoke sheet's "Keep it"); Cancel otherwise. */
+  cancelLabel?: string;
 }
 
 const alphaHex = Math.round(shadows.modal.shadowOpacity * 255)
@@ -163,7 +165,7 @@ export function ConfirmSheet({ ask, onAnswer }: { ask: ConfirmAsk; onAnswer: (ye
         {ask.message ? <p id={messageId}>{ask.message}</p> : null}
         <div className="hr-confirm-actions">
           <button ref={cancel} type="button" className="hr-confirm-button hr-confirm-cancel" onClick={() => onAnswer(false)} data-testid="confirm-sheet-cancel">
-            {m.common.buttons.cancel}
+            {ask.cancelLabel ?? m.common.buttons.cancel}
           </button>
           <button type="button" className="hr-confirm-button hr-confirm-ok" onClick={() => onAnswer(true)} data-testid="confirm-sheet-confirm">
             {ask.confirmLabel}

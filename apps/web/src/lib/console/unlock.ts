@@ -1,5 +1,6 @@
 import { BROWSE_PASS_SESSION_KEY, GrownUpUnlockSchema, UNLOCK_SESSION_KEY, parseLenient, unlockActive, type GrownUpUnlock } from '@hangul-route/content-schema';
 import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
+import { clearAdminInvite } from './admin-invite';
 import { clearSession } from './session';
 
 /**
@@ -50,9 +51,14 @@ export function clearUnlock(storage: KeyValueStorage | null = defaultStorage()):
  * console session and no All lessons pass (`hr:browse:pass`, F-BROWSE-001 section 4.3), so a
  * device handed back cannot reopen All lessons from this tab with Back, Forward or a typed
  * `/browse` (F-BROWSE-001 BR-6 review).
+ *
+ * [SA] It also drops a waiting administrator invite (`hr:admin-invite`, AMENDMENTS-SEATS-ADMINS section 6.6 step 1),
+ * so the next person to sign in in a shared tab is never forwarded to someone else's invite. Only the invite page's
+ * Use another account and the lock's Sign in again keep it (`keepInvite`): both come straight back to the invite.
  */
-export function clearGrownUpTab(storage: KeyValueStorage | null = defaultStorage()): void {
+export function clearGrownUpTab(storage: KeyValueStorage | null = defaultStorage(), options: { keepInvite?: boolean } = {}): void {
   clearUnlock(storage);
   clearSession(storage);
   removeItem(storage, BROWSE_PASS_SESSION_KEY);
+  if (!options.keepInvite) clearAdminInvite(storage);
 }

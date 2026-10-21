@@ -117,6 +117,8 @@ function SettingsInner(): JSX.Element {
 
   const space = roster?.space ?? null;
   const archived = !!space?.archivedAt;
+  // [SA] AMENDMENTS-SEATS-ADMINS section 6.6: an administrator (not the owner) of this school sees it control by control.
+  const schoolAdmin = space?.kind === 'school' && members.some((mb) => mb.memberKind === 'account' && mb.memberId === session.accountId && mb.role === 'admin' && !mb.isOwner);
 
   return (
     <AdultFrame onSignOut={signOut} back={spaceSubPageBack(spaceId, space?.kind, s.back(space?.name ?? null))} title={space ? s.titleFor(space.name) : s.title}>
@@ -144,6 +146,7 @@ function SettingsInner(): JSX.Element {
             now={now}
             busy={busy}
             schoolConsent={schoolConsentModeEnabled()}
+            schoolAdmin={schoolAdmin}
             deleteTarget={deleteTarget}
             typedName={typedName}
             onRegenerate={() => {

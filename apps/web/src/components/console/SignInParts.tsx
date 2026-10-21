@@ -308,9 +308,9 @@ export function RetryPanel({ line, retryLabel, onRetry, testId }: { line: string
 }
 
 /** An info line above the widget (`feedback.infoLight`): the installed PWA's "Finish signing in here with an email code". */
-export function InfoLine({ children }: { children: ReactNode }): JSX.Element {
+export function InfoLine({ children, testId = 'signin-standalone-finish' }: { children: ReactNode; testId?: string }): JSX.Element {
   return (
-    <p role="status" data-testid="signin-standalone-finish" style={{ margin: 0, padding: `${spacing.md}px ${spacing.lg}px`, backgroundColor: colors.feedback.infoLight, borderRadius: radii.md, textAlign: 'left' }}>
+    <p role="status" data-testid={testId} style={{ margin: 0, padding: `${spacing.md}px ${spacing.lg}px`, backgroundColor: colors.feedback.infoLight, borderRadius: radii.md, textAlign: 'left' }}>
       {children}
     </p>
   );
