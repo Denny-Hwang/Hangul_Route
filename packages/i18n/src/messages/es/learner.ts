@@ -1673,7 +1673,7 @@ export const learner = {
         lessonsIn: (n: number) => plural('es', n, { one: `${n} lección adentro`, other: `${n} lecciones adentro` }),
         showMore: (n: number) => `Mostrar ${n} más`,
         tray: { title: 'Tu lección', empty: 'Todavía no elegiste nada. Elige en las pestañas de arriba.' },
-        summary: (n: number, m: number) => plural('es', n, { one: `1 parte · unos ${m} min`, other: `${n} partes · unos ${m} min` }),
+        summary: (n: number, m: number) => plural('es', n, { one: `1 parte · aprox. ${m} min`, other: `${n} partes · aprox. ${m} min` }),
       },
     },
     bar: {
