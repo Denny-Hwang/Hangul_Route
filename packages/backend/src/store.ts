@@ -131,3 +131,8 @@ export const store = new Store();
 export function id(prefix: string): string {
   return `${prefix}:${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;
 }
+
+/** [SA] A `space_events` id: `sev:<uuid>` (AMENDMENTS-SEATS-ADMINS section 6.2), so a primary-key clash cannot fail a guarded batch. */
+export function spaceEventId(): string {
+  return `sev:${crypto.randomUUID()}`;
+}

@@ -23,7 +23,7 @@ import { learnerScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
 import { lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
 import { recordServerEvent } from '../lib/server-events';
-import { id, type Account } from '../store';
+import { id, spaceEventId, type Account } from '../store';
 
 /**
  * /api/spaces — F-SPACE-001 §3.3. One shape for family / class / school;
@@ -337,7 +337,7 @@ spacesRoutes.patch('/:id/name', async (c) => {
     // After the committed rename, best effort: an audit write that fails never reports the rename as failed. A
     // fixed code only, never the name.
     try {
-      await db.addSpaceEvent({ id: id('sev'), spaceId: event.schoolId, kind: event.kind, actorAccountId: account.id, subjectAccountId: null, subjectSpaceId: event.subjectSpaceId, inviteId: null, createdAt: new Date().toISOString() });
+      await db.addSpaceEvent({ id: spaceEventId(), spaceId: event.schoolId, kind: event.kind, actorAccountId: account.id, subjectAccountId: null, subjectSpaceId: event.subjectSpaceId, inviteId: null, createdAt: new Date().toISOString() });
     } catch {
       console.warn('space_event_write_failed');
     }
@@ -456,6 +456,33 @@ spacesRoutes.post('/:id/leave', async (c) => {
   return ok(c, { left });
 });
 
+/**
+ * [SA] Removes an account member by the rules of section 6.4, guarded on the role it read: the delete runs only while
+ * the row still has that role, so an accept or a leave landing between the read and the write is never overridden
+ * (an admin never deletes another admin's row; a concurrent leave that kept a teacher row is not undone). On a
+ * changed row it reads again and applies the rules to what is there now, a bounded number of times.
+ */
+async function removeAccountMember(c: Context, db: Db, space: Space, account: Account, memberId: string): Promise<Response | boolean> {
+  const rules = await removalRules(db, await accountActor(db, account), space);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const row = await db.membership(space.id, 'account', memberId);
+    const rule = rules({ memberKind: 'account', memberId, role: row?.role ?? 'teacher' });
+    if (rule === 'owner_only') return fail(c, 'owner_only', "Only the school's owner can remove an administrator", 403);
+    if (!row) return false;
+    if (space.kind === 'school' && row.role === 'admin') {
+      // [SA] section 6.4: the owner's removal of an admin ends the role as DELETE /:id/admins/:accountId does.
+      const stays = await db.endAdminRole({ spaceId: space.id, accountId: memberId, actorAccountId: account.id, kind: 'admin_removed', now: new Date(), eventId: spaceEventId() });
+      if (stays) {
+        recordServerEvent('space.admin.removed');
+        return ok(c, { removed: true, stays });
+      }
+      continue; // no longer an admin (a leave or a removal landed first): read the row again
+    }
+    if (await db.removeMembershipIfRole(space.id, 'account', memberId, row.role)) return true;
+  }
+  return fail(c, 'conflict', 'This member changed while removing: try again', 409);
+}
+
 spacesRoutes.delete('/:id/members/:kind/:memberId', async (c) => {
   const db = dbFor(c);
   const space = await findSpace(c, db, c.req.param('id'));
@@ -466,20 +493,14 @@ spacesRoutes.delete('/:id/members/:kind/:memberId', async (c) => {
   const account = await requireCan(c, db, space, 'roster.manage');
   if (!('id' in account)) return account;
   if (kind === 'account' && memberId === space.ownerAccountId) return fail(c, 'owner', 'The owner cannot be removed', 409);
+  let removed: boolean;
   if (kind === 'account') {
-    const row = await db.membership(space.id, 'account', memberId);
-    const rule = (await removalRules(db, await accountActor(db, account), space))({ memberKind: 'account', memberId, role: row?.role ?? 'teacher' });
-    if (rule === 'owner_only') return fail(c, 'owner_only', "Only the school's owner can remove an administrator", 403);
-    if (space.kind === 'school' && row?.role === 'admin') {
-      // [SA] section 6.4: the owner's removal of an admin ends the role as DELETE /:id/admins/:accountId does.
-      const stays = await db.endAdminRole({ spaceId: space.id, accountId: memberId, actorAccountId: account.id, kind: 'admin_removed', now: new Date(), eventId: id('sev') });
-      if (stays) {
-        recordServerEvent('space.admin.removed');
-        return ok(c, { removed: true, stays });
-      }
-    }
+    const outcome = await removeAccountMember(c, db, space, account, memberId);
+    if (outcome instanceof Response) return outcome;
+    removed = outcome;
+  } else {
+    removed = await db.removeMembership(space.id, kind, memberId);
   }
-  const removed = await db.removeMembership(space.id, kind, memberId);
   // F-FEEDBACK-001 section 7.5: a removed learner's notes of this space are kept, not deleted, so an adult cannot
   // erase a note (a taken-back one included) by removing the learner before the family looks (D5, D9, 8.3 item 3);
   // delivery rule 2 already stops them, and the 180-day / 90-day retention purges them. A removed family adult

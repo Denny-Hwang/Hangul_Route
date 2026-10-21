@@ -9,7 +9,7 @@ import { identityPortFor, type IdentityPort } from '../lib/identity';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { recordServerEvent } from '../lib/server-events';
 import { requireStepUp } from '../lib/step-up';
-import { id, type Account } from '../store';
+import { spaceEventId, type Account } from '../store';
 import { findSpace } from './spaces';
 
 /**
@@ -43,9 +43,17 @@ export function newInviteToken(): string {
 }
 
 /** A grown-up's name for these routes: the display name, else the email (signed-in members of the school), else null. */
-async function accountName(db: Db, accountId: string): Promise<string | null> {
-  const account = await db.getAccount(accountId);
+function nameOf(account: Account | undefined): string | null {
   return account?.displayName ?? account?.email ?? null;
+}
+
+/**
+ * The names of `ids` from one set-wise read (chunked inside the Db), so the owner's view stays a flat number of D1
+ * statements however long the history grows (Workers Free: 50 per invocation). A missing account reads null.
+ */
+async function namesOf(db: Db, ids: Iterable<string>): Promise<(accountId: string | null) => string | null> {
+  const byId = new Map((await db.getAccounts([...new Set(ids)])).map((a) => [a.id, a]));
+  return (accountId) => (accountId === null ? null : nameOf(byId.get(accountId)));
 }
 
 /** The account allowed `action` on the space and the space a school, else the refusal (403, then 422 `not_a_school`). */
@@ -73,7 +81,7 @@ async function verifiedEmail(port: IdentityPort | null, accountId: string): Prom
  * account was promoted from a teacher or owns or teaches a live class of the school, else out of the school.
  */
 export async function endAdmin(db: Db, school: Space, accountId: string, actorAccountId: string, kind: 'admin_removed' | 'admin_left'): Promise<EndAdminRoleResult> {
-  const stays = await db.endAdminRole({ spaceId: school.id, accountId, actorAccountId, kind, now: new Date(), eventId: id('sev') });
+  const stays = await db.endAdminRole({ spaceId: school.id, accountId, actorAccountId, kind, now: new Date(), eventId: spaceEventId() });
   if (stays) recordServerEvent(kind === 'admin_removed' ? 'space.admin.removed' : 'space.admin.left');
   return stays;
 }
@@ -87,13 +95,18 @@ adminSpaceRoutes.get('/:id/admins', async (c) => {
   const actor = await accountActor(db, account);
   const isOwner = can(actor, 'admin.manage', { kind: 'space', ctx: await spaceContext(db, space) });
   const port = isOwner ? identityPortFor(c) : null;
+  const rows = (await db.membersOf(space.id)).filter((x) => x.memberKind === 'account' && x.role === 'admin');
+  // The history only for the owner; every name of the view comes from one read.
+  const history = isOwner ? await db.spaceEventsOf(space.id, ADMIN_HISTORY_LIMIT) : [];
+  const name = await namesOf(db, [space.ownerAccountId, ...rows.map((m) => m.memberId), ...history.flatMap((e) => (e.subjectAccountId ? [e.actorAccountId, e.subjectAccountId] : [e.actorAccountId]))]);
   const admins = [];
-  for (const m of (await db.membersOf(space.id)).filter((x) => x.memberKind === 'account' && x.role === 'admin')) {
+  // At most SCHOOL_ADMIN_CAP rows, so two reads each stay within the statement budget.
+  for (const m of rows) {
     // A promoted teacher's row keeps its teacher join date: the admin joined at the latest `admin_joined` event.
     const joined = await db.latestSpaceEvent(space.id, 'admin_joined', m.memberId);
     admins.push({
       accountId: m.memberId,
-      name: await accountName(db, m.memberId),
+      name: name(m.memberId),
       // The verified sign-in email, for the owner only (section 6.3): read now, never stored, never sent to an admin.
       ...(isOwner ? { email: await verifiedEmail(port, m.memberId) } : {}),
       joinedAt: joined?.createdAt ?? m.joinedAt,
@@ -101,14 +114,11 @@ adminSpaceRoutes.get('/:id/admins', async (c) => {
     });
   }
   admins.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt) || a.accountId.localeCompare(b.accountId));
-  const owner = { accountId: space.ownerAccountId, name: await accountName(db, space.ownerAccountId) };
+  const owner = { accountId: space.ownerAccountId, name: name(space.ownerAccountId) };
   if (!isOwner) return ok(c, { owner, admins, limit: SCHOOL_ADMIN_CAP });
   const invites = (await db.openAdminInvites(space.id, new Date())).map((i) => ({ id: i.id, createdAt: i.createdAt, expiresAt: i.expiresAt }));
-  const events = [];
-  for (const e of await db.spaceEventsOf(space.id, ADMIN_HISTORY_LIMIT)) {
-    // Names at read time; a missing account reads null (the console shows "A former member", never an id).
-    events.push({ kind: e.kind, at: e.createdAt, actorName: await accountName(db, e.actorAccountId), subjectName: e.subjectAccountId ? await accountName(db, e.subjectAccountId) : null });
-  }
+  // Names at read time; a missing account reads null (the console shows "A former member", never an id).
+  const events = history.map((e) => ({ kind: e.kind, at: e.createdAt, actorName: name(e.actorAccountId), subjectName: name(e.subjectAccountId) }));
   return ok(c, { owner, admins, limit: SCHOOL_ADMIN_CAP, invites, events });
 });
 
@@ -125,7 +135,7 @@ adminSpaceRoutes.post('/:id/admin-invites', async (c) => {
   const token = newInviteToken();
   const now = new Date();
   const invite = { id: `invite:${crypto.randomUUID()}`, spaceId: space.id, tokenHash: await hashSecret(token), createdBy: account.id, createdAt: now.toISOString(), expiresAt: new Date(now.getTime() + ADMIN_INVITE_TTL_MS).toISOString() };
-  if (!(await db.createAdminInvite({ invite, cap: SCHOOL_ADMIN_CAP, eventId: id('sev') }))) {
+  if (!(await db.createAdminInvite({ invite, cap: SCHOOL_ADMIN_CAP, eventId: spaceEventId() }))) {
     // The statement refused: say which, from one read (an archive may have landed since the read above).
     const again = await db.getSpace(space.id);
     if (!again) return fail(c, 'not_found', 'Space not found', 404);
@@ -145,7 +155,7 @@ adminSpaceRoutes.delete('/:id/admin-invites/:inviteId', async (c) => {
   const account = await requireSchool(c, db, space, 'admin.manage');
   if (!('id' in account)) return account;
   const inviteId = c.req.param('inviteId');
-  const changed = await db.revokeAdminInvite({ inviteId, spaceId: space.id, actorAccountId: account.id, now: new Date(), eventId: id('sev') });
+  const changed = await db.revokeAdminInvite({ inviteId, spaceId: space.id, actorAccountId: account.id, now: new Date(), eventId: spaceEventId() });
   const row = await db.getAdminInvite(inviteId);
   if (!row || row.spaceId !== space.id) return fail(c, 'not_found', 'Invite not found', 404);
   // A revoke that lands after an accept changes nothing: the accepted row keeps `revoked_at` null.
@@ -281,7 +291,7 @@ adminInviteRoutes.post('/accept', async (c) => {
     recordServerEvent('space.admin.accept_refused', { reason: 'email_unverified' });
     return fail(c, 'email_unverified', 'Verify the email you sign in with, then open the invite again', 403);
   }
-  if (await db.acceptAdminInvite({ inviteId: invite.id, spaceId: invite.spaceId, accountId: account.id, now, cap: SCHOOL_ADMIN_CAP, eventId: id('sev') })) {
+  if (await db.acceptAdminInvite({ inviteId: invite.id, spaceId: invite.spaceId, accountId: account.id, now, cap: SCHOOL_ADMIN_CAP, eventId: spaceEventId() })) {
     recordServerEvent('space.admin.joined');
     const school = before.school;
     return ok(c, { space: { id: school.id, kind: school.kind, name: school.name }, role: 'admin' as const });

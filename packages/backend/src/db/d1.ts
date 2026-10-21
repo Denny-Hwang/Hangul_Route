@@ -760,6 +760,9 @@ export class D1Db implements Db {
     if (existed) await this.run('DELETE FROM memberships WHERE space_id = ? AND member_kind = ? AND member_id = ?', [spaceId, kind, memberId]);
     return existed;
   }
+  async removeMembershipIfRole(spaceId: string, kind: MemberKind, memberId: string, role: Membership['role']): Promise<boolean> {
+    return (await this.changes('DELETE FROM memberships WHERE space_id = ? AND member_kind = ? AND member_id = ? AND role = ?', [spaceId, kind, memberId, role])) === 1;
+  }
   membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]> {
     return this.many('SELECT * FROM memberships WHERE member_kind = ? AND member_id = ? ORDER BY joined_at', [kind, memberId], toMembership);
   }
@@ -855,7 +858,7 @@ export class D1Db implements Db {
         `UPDATE admin_invites SET accepted_by = ?, accepted_at = ?
          WHERE id = ? AND space_id = ? AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at > ?
            AND EXISTS (SELECT 1 FROM spaces WHERE id = ? AND kind = 'school' AND archived_at IS NULL AND owner_account_id <> ?)
-           AND NOT EXISTS (SELECT 1 FROM memberships WHERE space_id = ? AND member_kind = 'account' AND member_id = ? AND role IN ('admin', 'owner'))
+           AND NOT EXISTS (SELECT 1 FROM memberships WHERE space_id = ? AND member_kind = 'account' AND member_id = ? AND role <> 'teacher')
            AND (SELECT COUNT(*) FROM memberships WHERE space_id = ? AND member_kind = 'account' AND role = 'admin') < ?`,
         [accountId, at, inviteId, spaceId, at, spaceId, accountId, spaceId, accountId, spaceId, cap],
       ],

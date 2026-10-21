@@ -243,6 +243,10 @@ export class MemoryDb implements Db {
     this.promotedFromTeacher.delete(membershipKey(spaceId, kind, memberId));
     return this.memberships.delete(membershipKey(spaceId, kind, memberId));
   }
+  async removeMembershipIfRole(spaceId: string, kind: MemberKind, memberId: string, role: Membership['role']): Promise<boolean> {
+    if (this.memberships.get(membershipKey(spaceId, kind, memberId))?.role !== role) return false;
+    return this.removeMembership(spaceId, kind, memberId);
+  }
   async membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]> {
     return clone([...this.memberships.values()].filter((m) => m.memberKind === kind && m.memberId === memberId));
   }
@@ -383,7 +387,7 @@ export class MemoryDb implements Db {
     const row = this.adminInvites.get(inviteId);
     const school = this.liveSchool(spaceId);
     const role = this.accountRole(spaceId, accountId);
-    const gate = !!row && row.spaceId === spaceId && this.isOpenInvite(row, at) && !!school && school.ownerAccountId !== accountId && role !== 'admin' && role !== 'owner' && this.adminCount(spaceId) < cap;
+    const gate = !!row && row.spaceId === spaceId && this.isOpenInvite(row, at) && !!school && school.ownerAccountId !== accountId && (role === null || role === 'teacher') && this.adminCount(spaceId) < cap;
     if (!gate || !row) return false;
     this.adminInvites.set(inviteId, { ...row, acceptedBy: accountId, acceptedAt: at });
     const key = membershipKey(spaceId, 'account', accountId);
