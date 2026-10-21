@@ -3,8 +3,10 @@
 -- inserted, so every F-CURR-002 flag keeps its built-in percentage (0) until the owner adds a row.
 -- remote_config: one row per flag (`dailyReview`, `pack.<key>`, `game.<kind>`, ...). The owner edits
 -- the rows in the D1 console (docs/launch/owner-runbook.md section K) and the guardrail evaluator
--- (row CM-70b) only lowers `pct`. `on` is 1 (on) or 0 (off; any other value reads as off); `pct` is
--- 0-100 (a value outside reads clamped). `reason` is the last change's note and is never served.
+-- (row CM-70b) only lowers `pct`. `on` is 1 (on) or 0 (off) and `pct` is 0-100: the CHECK constraints refuse any
+-- other value at the console, so a typo during a ramp (250 meant as 25) is rejected instead of releasing a feature to
+-- every profile (a value that still reads out of range is served as 0, off). `reason` is the last change's note and
+-- is never served.
 -- `"on"` is quoted because ON is an SQL keyword; the column is named `on`.
 -- No identifier, name or email: the table holds switch values only. GET /api/config serves `on` and
 -- `pct` with Cache-Control public, max-age=300.
@@ -12,8 +14,8 @@
 -- Rollback: an older Worker never reads the table; leave it in place.
 CREATE TABLE IF NOT EXISTS remote_config (
   flag        TEXT PRIMARY KEY,
-  "on"        INTEGER NOT NULL,
-  pct         INTEGER NOT NULL,
+  "on"        INTEGER NOT NULL CHECK ("on" IN (0, 1)),
+  pct         INTEGER NOT NULL CHECK (pct BETWEEN 0 AND 100),
   updated_at  TEXT NOT NULL,
   reason      TEXT
 );

@@ -8,6 +8,7 @@ import {
   parseStoredConfig,
   refetchDue,
   resolveRemoteFlag,
+  retryWaiting,
   type RemoteConfigCache,
 } from '../logic/remote-config/remote-config';
 import { subscribeAppVisibility } from '../platform/app-visibility';
@@ -41,11 +42,13 @@ interface Actions {
   hydrate: () => Promise<void>;
   /** Fetches now; resolves true when a new copy was kept. Never throws; one fetch at a time. */
   refresh: (deps?: Deps) => Promise<boolean>;
-  /** Fetches only when `refetchDue` says so. */
+  /** Fetches only when `refetchDue` says so, and not within 5 minutes of a failed fetch (`RETRY_AFTER_FAILURE_MS`). */
   refreshIfDue: (deps?: Deps) => Promise<boolean>;
 }
 
 let inFlight: Promise<boolean> | null = null;
+/** When the last fetch failed (device clock), in memory only; null after a success. */
+let failedAt: number | null = null;
 
 export const useRemoteConfigStore = create<State & Actions>((set, get) => ({
   cache: null,
@@ -64,7 +67,7 @@ export const useRemoteConfigStore = create<State & Actions>((set, get) => ({
     if (!endpoint) return Promise.resolve(false);
     const fetchImpl = deps.fetchImpl ?? globalThis.fetch;
     const now = deps.now ?? Date.now;
-    const run = (async (): Promise<boolean> => {
+    const attempt = async (): Promise<boolean> => {
       try {
         const res = await fetchImpl(`${endpoint}${CONFIG_PATH}`, { method: 'GET', credentials: 'omit', headers: { Accept: 'application/json' } });
         if (!res.ok) return false;
@@ -77,7 +80,11 @@ export const useRemoteConfigStore = create<State & Actions>((set, get) => ({
       } catch {
         return false;
       }
-    })();
+    };
+    const run = attempt().then((kept) => {
+      failedAt = kept ? null : now();
+      return kept;
+    });
     inFlight = run;
     void run.finally(() => {
       if (inFlight === run) inFlight = null;
@@ -87,7 +94,8 @@ export const useRemoteConfigStore = create<State & Actions>((set, get) => ({
 
   refreshIfDue: (deps = {}) => {
     const now = deps.now ?? Date.now;
-    if (!refetchDue(get().cache, now())) return Promise.resolve(false);
+    const t = now();
+    if (!refetchDue(get().cache, t) || retryWaiting(failedAt, t)) return Promise.resolve(false);
     return get().refresh(deps);
   },
 }));
@@ -112,22 +120,51 @@ function oneFlagOn(flag: CurrFlagName, profileId: string | null, cache: RemoteCo
   return resolveRemoteFlag({ flag, buildOn: currBuildFloor(flag), builtInPct: currBuiltInPct(flag), remote: cache?.flags ?? null, profileId });
 }
 
+/** Whether the store can decide yet: the stored copy has been read, or a fetch has already kept a copy. */
+function decidable(s: State): boolean {
+  return s.hydrated || s.cache !== null;
+}
+
 /**
  * Whether an F-CURR-002 switch is on for a profile (default: the active one): its build floor, then the last known
  * remote copy or its built-in pct, bucketed per profile. A `pack.<key>` also needs `topicPacks`.
+ *
+ * For logic outside React. A component uses `useCurrFlag`, which re-renders when the copy arrives or the active
+ * profile changes. With no `cache` given it reads the store, and it is off until the stored copy has been read (or a
+ * fetch kept one), so a cold start never shows a feature on its built-in pct that the last known copy turned off.
  */
 export function currFlagOn(
   flag: CurrFlagName,
   profileId: string | null = useProfileStore.getState().activeId,
-  cache: RemoteConfigCache | null = useRemoteConfigStore.getState().cache,
+  cache?: RemoteConfigCache | null,
 ): boolean {
+  let copy: RemoteConfigCache | null;
+  if (cache === undefined) {
+    const state = useRemoteConfigStore.getState();
+    if (!decidable(state)) return false;
+    copy = state.cache;
+  } else {
+    copy = cache;
+  }
   const parent = parentFlagOf(flag);
-  if (parent && !oneFlagOn(parent as CurrFlagName, profileId, cache)) return false;
-  return oneFlagOn(flag, profileId, cache);
+  if (parent && !oneFlagOn(parent as CurrFlagName, profileId, copy)) return false;
+  return oneFlagOn(flag, profileId, copy);
+}
+
+/**
+ * The React form of `currFlagOn` for the active profile: subscribes to the remote copy, the hydration and the active
+ * profile, so a surface re-renders when any of them changes. Off until the stored copy has been read.
+ */
+export function useCurrFlag(flag: CurrFlagName): boolean {
+  const cache = useRemoteConfigStore((s) => s.cache);
+  const ready = useRemoteConfigStore(decidable);
+  const activeId = useProfileStore((s) => s.activeId);
+  return ready ? currFlagOn(flag, activeId, cache) : false;
 }
 
 /** Tests only. */
 export function resetRemoteConfigForTests(): void {
   inFlight = null;
+  failedAt = null;
   useRemoteConfigStore.setState({ cache: null, hydrated: false });
 }

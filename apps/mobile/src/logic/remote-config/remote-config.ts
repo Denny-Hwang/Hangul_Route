@@ -10,7 +10,8 @@
  *   no copy at all (never fetched), uses the flag's built-in pct.
  * - **Bucket.** `hash(profileId + flag) mod 100` on the device, per profile, with no new identifier: a profile is in
  *   when its bucket is below the pct, so widening a ramp keeps everyone who was already in.
- * - Anything the device cannot read fails toward off: a damaged entry is `{ on: false, pct: 0 }`.
+ * - Anything the device cannot read fails toward off: a damaged entry is `{ on: false, pct: 0 }`, and a pct outside
+ *   0-100 reads as 0.
  */
 
 export interface RemoteFlagValue {
@@ -31,6 +32,8 @@ export interface RemoteConfigCache {
 
 /** Refetch on foreground once the copy is at least this old (section 12.2). */
 export const REFETCH_MIN_AGE_MS = 15 * 60 * 1000;
+/** After a failed foreground fetch, the next foreground waits this long, so a degraded API is not hit on every foreground. */
+export const RETRY_AFTER_FAILURE_MS = 5 * 60 * 1000;
 /** The longest `max-age` honoured, so a bad header can never freeze the config on a device. */
 export const MAX_HONOURED_MAX_AGE_S = 6 * 60 * 60;
 /** The server's `max-age` (packages/backend routes/config.ts), used when a response carries none. */
@@ -97,9 +100,11 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+/** One entry; a pct outside 0-100 reads as 0 (off), never as 100, so a ramp typo cannot release a feature to everyone. */
 function readValue(raw: unknown): RemoteFlagValue {
   if (!isRecord(raw) || typeof raw.on !== 'boolean' || typeof raw.pct !== 'number' || !Number.isFinite(raw.pct)) return OFF;
-  return { on: raw.on, pct: Math.min(100, Math.max(0, Math.floor(raw.pct))) };
+  if (raw.pct < 0 || raw.pct > 100) return { on: raw.on, pct: 0 };
+  return { on: raw.on, pct: Math.floor(raw.pct) };
 }
 
 /** Valid names only; an entry that does not read is off. */
@@ -140,4 +145,11 @@ export function parseStoredConfig(stored: unknown): RemoteConfigCache | null {
   if (typeof maxAgeS !== 'number' || !Number.isFinite(maxAgeS) || maxAgeS < 0) return null;
   if (!isRecord(flags)) return null;
   return { v: 1, fetchedAt, maxAgeS, flags: readFlags(flags) };
+}
+
+/** Whether a foreground fetch waits after a failure at `failedAtMs` (in memory only); a clock moved back never waits. */
+export function retryWaiting(failedAtMs: number | null, nowMs: number): boolean {
+  if (failedAtMs === null) return false;
+  const since = nowMs - failedAtMs;
+  return since >= 0 && since < RETRY_AFTER_FAILURE_MS;
 }

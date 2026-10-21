@@ -22,7 +22,7 @@ vi.mock('../../platform/app-visibility', () => ({
 const api = vi.hoisted(() => ({ base: null as string | null }));
 vi.mock('../../platform/sync-api', () => ({ apiBaseUrl: () => api.base }));
 
-import { bucketOf, REFETCH_MIN_AGE_MS } from '../../logic/remote-config/remote-config';
+import { bucketOf, REFETCH_MIN_AGE_MS, RETRY_AFTER_FAILURE_MS } from '../../logic/remote-config/remote-config';
 import { useProfileStore } from '../profile-store';
 import { CONFIG_PATH, REMOTE_CONFIG_KEY, currFlagOn, resetRemoteConfigForTests, startRemoteConfig, useRemoteConfigStore } from '../remote-config-store';
 
@@ -211,6 +211,44 @@ describe('startRemoteConfig · foreground refetch by age', () => {
       globalThis.fetch = original;
       api.base = null;
     }
+  });
+
+  it('after a failed fetch, a foreground waits 5 minutes before trying again (in memory only)', async () => {
+    let t = 1_000_000;
+    let listener: ((visible: boolean) => void) | null = null;
+    const f = fetchReturning(answer({}, { status: 503 }), answer({}, { status: 503 }), answer({ goals: { on: true, pct: 100 } }));
+    const stop = startRemoteConfig({
+      endpoint: ENDPOINT,
+      fetchImpl: f.impl,
+      now: () => t,
+      subscribe: (l) => {
+        listener = l;
+        return () => undefined;
+      },
+    });
+    await vi.waitFor(() => expect(f.calls).toHaveLength(1));
+    await new Promise((r) => setTimeout(r, 0));
+
+    t += MIN;
+    listener!(true); // still within the wait: no request
+    await new Promise((r) => setTimeout(r, 0));
+    expect(f.calls).toHaveLength(1);
+
+    t = 1_000_000 + RETRY_AFTER_FAILURE_MS;
+    listener!(true);
+    await vi.waitFor(() => expect(f.calls).toHaveLength(2));
+    await new Promise((r) => setTimeout(r, 0));
+
+    t += RETRY_AFTER_FAILURE_MS - 1;
+    listener!(true);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(f.calls).toHaveLength(2);
+
+    t += 1;
+    listener!(true);
+    await vi.waitFor(() => expect(useRemoteConfigStore.getState().cache?.fetchedAt).toBe(t));
+    expect(f.calls).toHaveLength(3);
+    stop();
   });
 
   it('a fresh stored copy is not refetched at start', async () => {

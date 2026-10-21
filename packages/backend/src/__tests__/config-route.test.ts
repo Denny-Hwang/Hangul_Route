@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
 import type { D1Like } from '../db/d1';
-import { clampPct, publicFlags, readOn, REMOTE_FLAG_NAME, type RemoteConfigRow } from '../db';
+import { clampPct, MemoryDb, publicFlags, readOn, REMOTE_FLAG_NAME, type RemoteConfigRow } from '../db';
 import { CONFIG_CACHE_CONTROL, CONFIG_MAX_AGE_SECONDS } from '../routes/config';
 import { testDb } from './helpers/db';
 import { openSqliteD1 } from './helpers/sqlite';
@@ -199,10 +199,11 @@ describe('GET /api/config · edge cache', () => {
 });
 
 describe('remote config values', () => {
-  it('only exactly 1 is on; pct is clamped to an integer in 0-100 and a non-number is 0', () => {
+  it('only exactly 1 is on; pct is an integer in 0-100, and a value outside it or a non-number is 0 (off)', () => {
     expect([1, true, '1'].map(readOn)).toEqual([true, true, true]);
     expect([0, 2, -1, null, undefined, 'on', 'true'].map(readOn)).toEqual([false, false, false, false, false, false, false]);
-    expect([0, 10, 99.9, 100, 101, -5, '25', '', ' ', 'x', null, Number.NaN, Number.POSITIVE_INFINITY].map(clampPct)).toEqual([0, 10, 99, 100, 100, 0, 25, 0, 0, 0, 0, 0, 0]);
+    expect([0, 10, 99.9, 100, 101, -5, '25', '', ' ', 'x', null, Number.NaN, Number.POSITIVE_INFINITY].map(clampPct)).toEqual([0, 10, 99, 100, 0, 0, 25, 0, 0, 0, 0, 0, 0]);
+    expect([250, 1000, 100.5, '250'].map(clampPct)).toEqual([0, 0, 0, 0]);
   });
 
   it('serves valid names only', () => {
@@ -213,14 +214,23 @@ describe('remote config values', () => {
     expect(publicFlags([row('dailyReview', true, 5), row('__proto__', true, 100), row('Bad Name', true, 100)])).toEqual({ dailyReview: { on: true, pct: 5 } });
   });
 
-  it('a stored value outside the rules reads toward off', async () => {
+  it('the table refuses a value outside the rules (CHECK), so a console typo never reaches a device', async () => {
     const d1 = openSqliteD1();
     const put = (flag: string, on: unknown, pct: unknown) => d1.prepare('INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES (?, ?, ?, ?, ?)').bind(flag, on, pct, T, null).run();
-    await put('dailyReview', 2, 50);
-    await put('mastery', 1, 250);
-    await put('goals', 1, -3);
+    await expect(put('dailyReview', 2, 50)).rejects.toThrow(/CHECK/i);
+    await expect(put('mastery', 1, 250)).rejects.toThrow(/CHECK/i);
+    await expect(put('goals', 1, -3)).rejects.toThrow(/CHECK/i);
+    await put('volumes', 1, 100);
+    await put('cellCheck', 0, 0);
     const r = await get('/api/config', {}, { DB: d1 });
-    expect(r.body.data).toEqual({ flags: { dailyReview: { on: false, pct: 50 }, goals: { on: true, pct: 0 }, mastery: { on: true, pct: 100 } } });
+    expect(r.body.data).toEqual({ flags: { cellCheck: { on: false, pct: 0 }, volumes: { on: true, pct: 100 } } });
     d1.close();
+  });
+
+  it('a stored value outside the rules (a database without the CHECK) reads toward off', async () => {
+    const db = new MemoryDb();
+    await db.putRemoteConfig({ flag: 'mastery', on: true, pct: 250, updatedAt: T, reason: null });
+    await db.putRemoteConfig({ flag: 'goals', on: true, pct: -3, updatedAt: T, reason: null });
+    expect(publicFlags(await db.remoteConfig())).toEqual({ goals: { on: true, pct: 0 }, mastery: { on: true, pct: 0 } });
   });
 });
