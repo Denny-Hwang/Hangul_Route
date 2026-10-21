@@ -11,20 +11,25 @@ Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §2.
 
 > **Amended 2026-10-12 by F-QUEST-002 (PR Q-11).** §3.3: a quest with a Check step shows no Feedback Review (decision L13). §3.4: for Stage 1 the Stage Review is the **Hangul Check**, 35 items (F-QUEST-002 §3.9, PR Q-10b), superseding "N = 4 to 6" for Stage 1 only. The `stage_anchor_accuracy` event is replaced by `review.complete` (analytics) and `ProgressSummary.stage1Anchor` (the caregiver channel). F-QUEST-002 Q-10b built the minimal engine files this spec names, `logic/reviews/star-calc.ts` and `logic/reviews/banned-text.ts`; this spec's PR 1 extends them.
 
+> **Amended 2026-10-21 by F-CURR-002 (row CM-0b; owner decisions of 2026-10-21, F-CURR-002 sections 16 and 21).**
+> - **Age wording removed** (CLAUDE.md section 1: the app is for anyone learning Hangul, at any age, so a shared surface or spec never names an age range or an age group). Sections 1, 2, 3.7 and 4 now say "learner", "parent or teacher" and "learners"; no rule changed with the wording.
+> - **The Daily Test is rebuilt as the F-CURR-002 Daily Review** on the F-CURR-002 memory model and review engine (F-CURR-002 sections 4.2, 4.3 and 4.5; `logic/review/engine.ts`, rows CM-12 to CM-14). The Pool A/B/C/D selection of section 3.2 is replaced by the F-CURR-002 due pool (lowest box first, then the oldest due day, then a jitter seeded by the item id) and its spacing rule; the quest reward step may offer F-CURR-002's "Try these again" (kind `feedback`, the misses of the quest just played), while a quest with a Check step still shows no one-question Feedback Review of section 3.3 (F-QUEST-002 L13 as amended); and for Stages 2-7 the Stage Review of section 3.4 is the F-CURR-002 Stage Check (sections 4.5 and 7.3): optional, never blocking, called "Stage Check" and never "exam", with a ceremony and a stage card and no certificate (F-CURR-002 OD-1). The Stage 1 Hangul Check of section 3.4 is unchanged.
+> - **Kept unchanged:** the stars-only learner result of section 3.1 (1-3 stars, the 1-star floor, no percentage, ratio or fraction on a learner screen) and the anti-shame rules of section 3.7. Every F-CURR-002 review session (Daily Review, Keep going, warm-up, Try these again, Cell, Stage and Pack Check) follows them.
+
 ---
 
 ## 1. Context
 
-Review tests are how Hangul Route turns *measurement into collection*. The blueprint forbids learner-visible scores (`02-core-feature-spec §4.3`, anti-shame); however, spaced retrieval is critical for jamo retention (a 5-year-old learner forgets ㅂ in 72 hours without reactivation). F-RVW-001 reconciles these by routing every measurement into one of two channels:
+Review tests are how Hangul Route turns *measurement into collection*. The blueprint forbids learner-visible scores (`02-core-feature-spec §4.3`, anti-shame); however, spaced retrieval is critical for jamo retention (a new learner can forget ㅂ within a few days without reactivation). F-RVW-001 reconciles these by routing every measurement into one of two channels:
 
 | Channel | Audience | Format |
 |---|---|---|
-| **Learner channel** | the child | stars (1–3, minimum 1) + collection count delta |
+| **Learner channel** | the learner | stars (1–3, minimum 1) + collection count delta |
 | **Caregiver channel** | parent / teacher (F-PAR-001 / F-TCH-001) | accuracy %, time-on-task, missed-element list |
 
 Three review kinds, all sharing one engine:
 
-- **Daily Test** — gateway from home card ③ (F-HW-001). 60–90 s. Spaced retrieval focus.
+- **Daily Test** — gateway from home card ③ (F-HW-001). 60–90 s. Spaced retrieval focus. (Rebuilt as the F-CURR-002 Daily Review, 10 items in about 2-3 minutes: see the 2026-10-21 amendment above.)
 - **Feedback Review** — tail of every Quest, attached to Step 5 Celebrate. 30–45 s. Memory consolidation.
 - **Stage Review** — fires once when a learner completes the last Episode of a Stage. 5–7 min. Anchor-skill audit + Stage Certificate.
 
@@ -34,7 +39,7 @@ Three review kinds, all sharing one engine:
 
 Companion stories:
 
-- As a **parent**, I want a single number ("Stage 1 jamo recognition: 78%") so I can answer "is my kid actually learning?" — but never have that number shown to my child.
+- As a **parent or teacher**, I want a single number ("Stage 1 jamo recognition: 78%") so I can answer "is this learner actually learning?" — but never have that number shown to the learner.
 - As a **content author**, I want one review engine across three kinds so adding a new prompt type doesn't fork the code.
 
 ## 3. Acceptance criteria
@@ -50,6 +55,8 @@ Companion stories:
 - The learner result screen must not render any percentage, ratio, fraction, or comparative number. Lint: extend F-CNT-001 banned regex with `\d+\s*%`, `\d+\s*/\s*\d+`.
 
 ### 3.2 Daily Test — spaced retrieval
+
+> **Superseded 2026-10-21 by F-CURR-002 section 4.5 (owner decisions of 2026-10-21; row CM-0b).** The Daily Review selects from the F-CURR-002 due pool under its spacing rule (section 4.3), so the pools below no longer apply once row CM-14 ships. The placement hand-over below (the `sym:` priority tokens) is carried by F-CURR-002 seeding (section 4.8 step 5: placement `priorityTokens` symbols are seeded at box 1, due on day 1). Kept here as the record of the earlier design.
 
 - **Given** a learner runs the daily test on day N,
   **when** items are selected,
@@ -116,13 +123,13 @@ Source: `CLAUDE.md` §1 "Feedback & motivation" (owner decision 2026-10-09) and 
 - **Fill-only meters (allowed)** — item dots, collection counts and progress meters only grow; a miss never empties or shrinks them. A combo counter that resets on a miss is a meter that drops, so it is not allowed.
 - **Encouraging streak messages (allowed)** — e.g. Hoya after a Daily Test: *"3 days in a row!"*. A missed day gets no message about the break and no "streak lost" state.
 - **Challenge mode (allowed, opt-in)** — off by default. When the learner or a caregiver turns it on, a review may show a real countdown timer. With it off, nothing else changes.
-- **Still forbidden** — red-X or red failure styling (`colors.feedback.danger` is never used on a learner's miss), any public ranking of children (§4), and taking away earned stars, cards or collection progress.
+- **Still forbidden** — red-X or red failure styling (`colors.feedback.danger` is never used on a learner's miss), any public ranking of learners (§4), and taking away earned stars, cards or collection progress.
 
 ## 4. Out of scope
 
 - **Voice / pronunciation review** (speak-the-jamo) → blocked on STT bench (INBOX T-013), tracked separately.
 - **Adaptive difficulty** (raise stakes after a 3-star streak) — out of scope. Encouraging streak *messages* are allowed (§3.7), but raising the stakes on a streak turns encouragement into pressure. The placement check (F-PLC-001) is the one adaptive use: it lives in `src/placement/`, runs once at the learner's request, decides only which rung comes next, and is never a review. The shared session reducer (`assessment/session.ts`) stays non-adaptive and is used by both.
-- **Public ranking of children** (multi-learner leaderboards, class rankings) — explicit no, ever (§3.7).
+- **Public ranking of learners** (multi-learner leaderboards, class rankings) — explicit no, ever (§3.7).
 - **Stage 2+ Review content** — content work, this spec only covers the engine + Stage 1 question set.
 
 ## 5. UI sketch
