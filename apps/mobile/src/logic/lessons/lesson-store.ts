@@ -83,9 +83,26 @@ export function isNewBuildError(error: unknown): boolean {
   return error instanceof Error && /^Requiring unknown module\b/.test(error.message);
 }
 
+/** The web bundle name of a chunk the store loads: `lessons-cell-stage2-letters` for `episode:stage2-letters`, `lessons-titles-es`. */
+export function chunkBundleName(chunk: string): string {
+  return chunk.startsWith('titles-') ? `lessons-${chunk}` : `lessons-cell-${chunk.replace(/^episode:/, '')}`;
+}
+
 export interface LessonStoreOptions {
   /** A load that has not settled after this many ms fails with `LessonChunkTimeout`; none when omitted. */
   timeoutMs?: number;
+  /**
+   * Called with a chunk's bundle name (`chunkBundleName`) when its load times out. Metro keeps a pending
+   * load by its path until it settles, so without this a later ensure would get the same hung request
+   * back; the web build fails the pending script so the next ensure asks again (`platform/lesson-chunk-abandon`).
+   */
+  abandon?: (bundleName: string) => void;
+  /**
+   * A locale's titles count as settled (`titlesSettled`) once their load has taken this many ms, while it
+   * goes on: the screen then shows in that locale with the lesson titles in English, and they change
+   * when the chunk arrives (`titlesVersion`). None when omitted: settled only when in or failed.
+   */
+  titlesGraceMs?: number;
 }
 
 export interface LessonStore {
@@ -100,8 +117,12 @@ export interface LessonStore {
   /** True when the quest's body is in (always true for a quest that is not a lesson quest). */
   isQuestReady: (questId: string) => boolean;
   isAllReady: () => boolean;
-  /** True when the locale's titles are in, or their load has failed (the English stays). */
+  /** True when the locale's titles are in, their load has failed (the English stays), or it has run past `titlesGraceMs`. */
   titlesSettled: (locale: UiLocale) => boolean;
+  /** Loads the locale's titles and resolves once they are settled (`titlesSettled`): within `titlesGraceMs` at most. Never rejects. */
+  untilTitlesSettled: (locale: UiLocale) => Promise<void>;
+  /** Bumps when a locale's titles arrive, fail or run past the grace: what a localized memo keys on. */
+  titlesVersion: () => number;
   /** A lesson quest's steps, once its cell is loaded. */
   stepsOf: (questId: string) => readonly QuestStep[] | undefined;
   /** A lesson minigame ref's scope, once its cell is loaded. */
@@ -124,7 +145,7 @@ export function cellOfScopeRef(ref: string): string | undefined {
 }
 
 export function createLessonStore(manifest: LessonManifest, load: LessonLoaders, options: LessonStoreOptions = {}): LessonStore {
-  const { timeoutMs } = options;
+  const { timeoutMs, abandon, titlesGraceMs } = options;
   const questCell = new Map<string, string>();
   for (const e of manifest.episodes) {
     if (manifest.cells[e.id] === undefined) continue;
@@ -135,6 +156,8 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
   const titles = new Map<OverlayLocale, LessonTitleChunk>();
   const titleLoads = new Map<OverlayLocale, Promise<void>>();
   const titleFailed = new Set<OverlayLocale>();
+  const titleLate = new Set<OverlayLocale>();
+  let titleChanges = 0;
   const glosses: Overlays[] = [];
   const overlayListeners = new Set<(overlays: Overlays) => void>();
   const listeners = new Set<() => void>();
@@ -156,7 +179,10 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
   const withinTime = <T>(chunk: string, started: Promise<T>): Promise<T> => {
     if (timeoutMs === undefined) return started;
     return new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new LessonChunkTimeout(chunk, timeoutMs)), timeoutMs);
+      const timer = setTimeout(() => {
+        reject(new LessonChunkTimeout(chunk, timeoutMs));
+        abandon?.(chunkBundleName(chunk));
+      }, timeoutMs);
       started.then(
         (value) => {
           clearTimeout(timer);
@@ -206,25 +232,59 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
     const pending = titleLoads.get(locale);
     if (pending !== undefined) return pending;
     const expected = manifest.titles[locale];
+    const grace =
+      titlesGraceMs === undefined
+        ? undefined
+        : setTimeout(() => {
+            if (!titleLoads.has(locale) || titleLate.has(locale)) return;
+            titleLate.add(locale);
+            titleChanges += 1;
+            changed();
+          }, titlesGraceMs);
     const promise = withinTime(`titles-${locale}`, load.titles(locale))
       .then((mod) => checked(`titles-${locale}`, expected, mod))
       .then(
         (mod) => {
+          clearTimeout(grace);
           titles.set(locale, mod);
           titleFailed.delete(locale);
           titleLoads.delete(locale);
           addOverlays(locale === 'es' ? { es: mod.LESSON_TITLE_OVERLAYS, ko: {} } : { es: {}, ko: mod.LESSON_TITLE_OVERLAYS });
+          titleChanges += 1;
           changed();
         },
         (error: unknown) => {
+          clearTimeout(grace);
           titleFailed.add(locale);
           titleLoads.delete(locale);
+          titleChanges += 1;
           changed();
           throw error;
         },
       );
     titleLoads.set(locale, promise);
     return promise;
+  };
+
+  const titlesSettled = (locale: UiLocale): boolean => locale === 'en' || titles.has(locale) || titleFailed.has(locale) || titleLate.has(locale);
+
+  const subscribe = (listener: () => void): (() => void) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+
+  const untilTitlesSettled = (locale: UiLocale): Promise<void> => {
+    ensureTitles(locale).catch(() => undefined);
+    if (titlesSettled(locale)) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const off = subscribe(() => {
+        if (!titlesSettled(locale)) return;
+        off();
+        resolve();
+      });
+    });
   };
 
   const stepsOf = (questId: string): readonly QuestStep[] | undefined => {
@@ -242,7 +302,9 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
       return cell === undefined || cells.has(cell);
     },
     isAllReady: () => Object.keys(manifest.cells).every((id) => cells.has(id)),
-    titlesSettled: (locale) => locale === 'en' || titles.has(locale) || titleFailed.has(locale),
+    titlesSettled,
+    untilTitlesSettled,
+    titlesVersion: () => titleChanges,
     stepsOf,
     scopeFor: (ref) => {
       const cell = cellOfScopeRef(ref);
@@ -256,12 +318,7 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
         overlayListeners.delete(listener);
       };
     },
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
+    subscribe,
     version: () => changes,
   };
 }

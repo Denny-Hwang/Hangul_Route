@@ -8,7 +8,7 @@ import { View } from 'react-native';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
 import { vocabTopics } from '../../content/vocab';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeEpisode, localizeQuest } from '../../logic/content-locale';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
 import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
@@ -142,6 +142,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const messages = useMessages();
   const m = messages.learner.myRoute;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId));
   const snap = useProgressStore((s) => s.byProfile[profileId]);
   // The access tier (F-ENT-003 section 3.4); re-renders when it changes, as Home and Results do.
@@ -189,7 +191,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const seen = seenForView({ focusKey, seenFor, focused, seen: seenRead });
 
   const [attempt, setAttempt] = useState(0);
-  const localized = useMemo(() => localizedRouteContent(locale), [locale]);
+  const localized = useMemo(() => localizedRouteContent(locale), [locale, titles]);
   // The free-end hero's Practice words: the first free word topic this build lists (LR-5b).
   const practiceTopic = useMemo(() => practiceTopicOf(vocabTopics.map((t) => t.key)), []);
 
@@ -245,7 +247,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       inPlanQuestIds: inPlan,
       copy: { where: r.myRoute.nextLessons.where, row: r.myRoute.nextLessons.row, next: r.routeNext.tag.next, inPlan: r.routeNext.tag.inPlan },
     });
-  }, [upcoming, inPlan, messages, locale]);
+  }, [upcoming, inPlan, messages, locale, titles]);
   // The first visit that shows a reached plan goal (LR-5c, section 4.3): Hoya cheers and the card says so for this
   // visit only; the effect below records the goal and sends route_map.goal_reached. Never read-only.
   const firstReached = firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead });

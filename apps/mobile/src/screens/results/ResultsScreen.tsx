@@ -36,7 +36,7 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
 import { storyById } from '../../content/stories';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
 import { cardKoLine } from '../../logic/card-art';
 import { cursorContext } from '../../logic/cursor-context';
@@ -95,6 +95,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const messages = useMessages();
   const m = messages.learner.results;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const { questId, episodeId, stars, correct, total, retries = 0 } = route.params;
   const quest = questById(questId);
   const episode = episodeById(episodeId);
@@ -169,7 +171,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (!view) return null;
     const finished = view.episodeId ? episodeById(view.episodeId) : undefined;
     return { ...view, episodeTitle: finished && localizeEpisode(finished, locale).titleEn };
-  }, [outcome, locale]);
+  }, [outcome, locale, titles]);
 
   // Android/web read the live region below (a second announcement would double-read);
   // iOS VoiceOver ignores live regions, so it gets one explicit announcement for both banners.

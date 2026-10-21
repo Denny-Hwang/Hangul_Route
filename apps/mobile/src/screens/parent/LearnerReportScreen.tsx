@@ -26,7 +26,7 @@ import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native
 import Svg, { Polyline } from 'react-native-svg';
 import { flags, reportsEnabledFor } from '../../config/flags';
 import { jamoAll, questsAll, stages } from '../../content';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeJamo, localizeQuest, localizeStage } from '../../logic/content-locale';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { useLessonContentVersion } from '../lesson-content';
@@ -226,11 +226,13 @@ type BodyProps = {
 };
 
 function ReportBody({ profileId, name, voice, navigation, locale, messages }: BodyProps): React.ReactElement {
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const textScale = useTypeScale();
   const stored = useProgressStore((s) => s.byProfile[profileId]);
   const hydrated = useProgressStore((s) => s.hydratedFor.has(profileId));
   const tier = useAccessTier(profileId);
-  const localized = useMemo(() => localizedRouteContent(locale), [locale]);
+  const localized = useMemo(() => localizedRouteContent(locale), [locale, titles]);
   const [period, setPeriod] = useState<ReportPeriod>('week');
   const [at, setAt] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);

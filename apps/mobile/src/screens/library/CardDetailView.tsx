@@ -28,7 +28,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { cardById } from '../../content';
 import { visibleItems } from '../../content/vocab';
 import { awardWorld } from '../../content/award-world';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
 import { cardCitationView, type CardCitationView } from '../../logic/library/card-citation';
 import { CARD_DETAIL_AUDIO_SOURCE, cardSpeech } from '../../logic/library/card-speech';
@@ -59,6 +59,8 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const source = cardById(cardId);
   const card = source && localizeCard(source, locale);
   const profile = useProfileStore(activeProfileSelector);
@@ -70,7 +72,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
     if (!source) return null;
     const world = { ...awardWorld, episodes: awardWorld.episodes.map((e) => localizeEpisode(e, locale)) };
     return earnHint(source, world, messages.learner.library.earnHint)?.text ?? null;
-  }, [source, locale, messages]);
+  }, [source, locale, messages, titles]);
   const lockedLabel = hint ? messages.a11y.lockedCardHint(hint) : messages.a11y.lockedCard;
   const [face, setFace] = useState<FlipFace>('front');
   const [shareAvailable, setShareAvailable] = useState(false);

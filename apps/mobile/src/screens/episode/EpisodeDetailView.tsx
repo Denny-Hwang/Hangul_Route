@@ -25,7 +25,7 @@ import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { askFor, askGate, helpAskedEvent, isClassOnly, type AskGate } from '../../logic/access-copy';
 import {
   backToOpenLessons,
@@ -115,10 +115,12 @@ export function EpisodeDetailView({
   const m = messages.learner.episode;
   const access = messages.learner.access;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const episode = useMemo(() => {
     const source = episodeById(episodeId);
     return source && localizeEpisode(source, locale);
-  }, [episodeId, locale]);
+  }, [episodeId, locale, titles]);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
 

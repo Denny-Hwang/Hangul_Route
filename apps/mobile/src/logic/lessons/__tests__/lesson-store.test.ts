@@ -5,6 +5,7 @@ import {
   LessonChunkMismatch,
   LessonChunkTimeout,
   cellOfScopeRef,
+  chunkBundleName,
   isNewBuildError,
   createLessonStore,
   mergeOverlaysInto,
@@ -254,6 +255,110 @@ describe('load timeout (a hung request fails into the retry path)', () => {
     vi.advanceTimersByTime(20_000);
     expect(store.isQuestReady('quest:stage2-rites-q1')).toBe(true);
     expect(store.titlesSettled('es')).toBe(true);
+  });
+});
+
+describe('a timed-out load is given up, so a later try asks again (Metro keeps a pending load by its path)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('names the own bundle of the chunk to give up, and a try after the network is back gets a new request', async () => {
+    vi.useFakeTimers();
+    // Metro's web loader in small: one pending promise per bundle until its script settles; giving it up rejects it.
+    const pendingByBundle = new Map<string, { promise: Promise<LessonCellChunk>; fail: () => void }>();
+    let network: 'hung' | 'back' = 'hung';
+    const requests: string[] = [];
+    const metroLoad = (bundle: string): Promise<LessonCellChunk> => {
+      const pending = pendingByBundle.get(bundle);
+      if (pending !== undefined) return pending.promise;
+      requests.push(bundle);
+      let fail = (): void => undefined;
+      const promise = new Promise<LessonCellChunk>((resolve, reject) => {
+        fail = () => reject(new Error(`Loading module ${bundle} failed.`));
+        if (network === 'back') resolve(rites);
+      });
+      promise.catch(() => pendingByBundle.delete(bundle));
+      if (network === 'hung') pendingByBundle.set(bundle, { promise, fail });
+      return promise;
+    };
+    const abandon = vi.fn((bundle: string) => pendingByBundle.get(bundle)?.fail());
+    const store = createLessonStore(
+      manifest,
+      { cell: (id) => metroLoad(chunkBundleName(id)), titles: () => new Promise<LessonTitleChunk>(() => undefined) },
+      { timeoutMs: 15_000, abandon },
+    );
+    const first = expect(store.ensureCells(['episode:stage2-rites'])).rejects.toBeInstanceOf(LessonChunkTimeout);
+    await vi.advanceTimersByTimeAsync(15_000);
+    await first;
+    expect(abandon).toHaveBeenCalledWith('lessons-cell-stage2-rites');
+    network = 'back';
+    await store.ensureCells(['episode:stage2-rites']);
+    expect(store.isQuestReady('quest:stage2-rites-q1')).toBe(true);
+    expect(requests).toEqual(['lessons-cell-stage2-rites', 'lessons-cell-stage2-rites']);
+  });
+
+  it('maps a cell and a title chunk to their web bundle names', () => {
+    expect(chunkBundleName('episode:stage2-letters')).toBe('lessons-cell-stage2-letters');
+    expect(chunkBundleName('titles-ko')).toBe('lessons-titles-ko');
+  });
+});
+
+describe('titles grace (the first screen and a newly chosen locale wait for the titles a short while only)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('a title load that hangs counts as settled after the grace, and its late arrival bumps titlesVersion', async () => {
+    vi.useFakeTimers();
+    let arrive: (mod: LessonTitleChunk) => void = () => undefined;
+    const store = createLessonStore(
+      manifest,
+      { cell: () => undefined, titles: () => new Promise<LessonTitleChunk>((resolve) => (arrive = resolve)) },
+      { timeoutMs: 15_000, titlesGraceMs: 2_500 },
+    );
+    let shown = false;
+    void store.untilTitlesSettled('ko').then(() => (shown = true));
+    const v0 = store.titlesVersion();
+    await vi.advanceTimersByTimeAsync(2_499);
+    expect(store.titlesSettled('ko')).toBe(false);
+    expect(shown).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(store.titlesSettled('ko')).toBe(true);
+    expect(shown).toBe(true);
+    const v1 = store.titlesVersion();
+    expect(v1).toBeGreaterThan(v0);
+    const glosses: Overlays[] = [];
+    store.onOverlays((o) => glosses.push(o));
+    arrive(titles('ko'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(store.titlesVersion()).toBeGreaterThan(v1);
+    expect(glosses.at(-1)?.ko['quest:stage2-rites-q1']).toEqual({ title: '명절' });
+    // The 15 s timeout of the same load no longer fires anything.
+    const v2 = store.titlesVersion();
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(store.titlesVersion()).toBe(v2);
+  });
+
+  it('titles that arrive within the grace settle at once; English never waits; a load that fails settles', async () => {
+    vi.useFakeTimers();
+    const l = loaders();
+    l.failNext.add('titles-ko');
+    const store = createLessonStore(manifest, l, { titlesGraceMs: 2_500 });
+    await store.untilTitlesSettled('en');
+    await store.untilTitlesSettled('es');
+    expect(store.titlesSettled('es')).toBe(true);
+    await store.untilTitlesSettled('ko');
+    expect(store.titlesSettled('ko')).toBe(true);
+    expect(l.asked).toEqual(['titles-es', 'titles-ko']);
+  });
+
+  it('without a grace, settled means in or failed only', async () => {
+    vi.useFakeTimers();
+    const store = createLessonStore(manifest, { cell: () => undefined, titles: () => new Promise<LessonTitleChunk>(() => undefined) });
+    void store.ensureTitles('es');
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(store.titlesSettled('es')).toBe(false);
   });
 });
 

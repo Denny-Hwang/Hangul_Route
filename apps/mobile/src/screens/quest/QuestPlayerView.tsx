@@ -17,7 +17,7 @@ import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { questById } from '../../content';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import {
@@ -76,10 +76,12 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const quest = useMemo(() => {
     const source = questById(questId);
     return source && localizeQuest(source, locale);
-  }, [questId, locale]);
+  }, [questId, locale, titles]);
 
   const begin = useQuestRunStore((s) => s.beginQuest);
   // One leave question at a time (a second back while the sheet is open is the same question).

@@ -89,8 +89,9 @@ export default function App(): React.ReactElement {
     let stopPrefetch = (): void => {};
     void hydrateLearnerData()
       .catch(() => undefined)
-      // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen.
-      .then(() => lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())).catch(() => undefined))
+      // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen, waited
+      // for 2.5 s at most (TITLES_GRACE_MS); past that the first screen shows with English lesson titles until they arrive.
+      .then(() => lessonContent.untilTitlesSettled(activeLocale(useLocaleStore.getState())))
       .then(async () => {
         if (!live) return;
         setReady(true);
