@@ -82,8 +82,9 @@ My page (after the last frame; replaces Write Frame's single-frame page):
 | |  (gibuni gwaenchanayo)     | |
 | |  (I feel okay.)    [ Hear ]| |
 | +----------------------------+ |
-|  (Hoya cheering) (You wrote a  |
-|   whole story!)                |
+|  (Hoya cheering) (You wrote a  |  <- myStory.done after the last frame; after Skip with
+|   whole story!)                |     some lines written: myStory.donePartial "(Here is your
+|                                |     story so far.)" (the same page, the same not-kept line)
 |  [[ Done ]]                    |  <- ends the step; the page is cleared
 +--------------------------------+
 ```
@@ -101,7 +102,7 @@ Regular (768 x 1024): "My story so far" sits beside the current frame card (two 
 - **"My story so far"**: read-only; each line has no button during the chain (Hear buttons are on My page), so a stray tap cannot leave the current frame.
 - **Hear** (My page): says that sentence.
 - **Done** (My page): `markStepComplete()` + `onFinish()`, clears the text.
-- **[ Skip ]**: ends the chain; My page shows the sentences written so far (if any) with the same not-kept line, then Done.
+- **[ Skip ]**: ends the chain; My page shows the sentences written so far (if any) with the same not-kept line and Hoya's `myStory.donePartial` line ("Here is your story so far."), never "You wrote a whole story!", then Done. `myStory.done` shows only when every frame of the chain was written.
 
 ## Fallback round when `game.my-story` is off
 
@@ -128,8 +129,8 @@ Exit to: `quest/player` (Done on My page)
 ## Data and privacy
 
 - reads: the `my-story` scope: `{ id, topicKey, pictureRef?, frames: WriteFrameRound[3..5] }` where every frame's bank has exactly one `neutral: true` option (CM-38).
-- writes: `answerRound(frameIdx, correct)` for the write part (Write Frame rule); memory items: the picked word's `lex` item at the produce rung and the frame's `pat` item at the produce rung.
-- **The text stays in the renderer's React state only.** It is never written to a store, a persisted slice, a breadcrumb, a log line, telemetry, a sync snapshot, a backup or a report (test P-1, extended to My Story by CM-38; the grep test covers `MyStoryGame.tsx` and `logic/my-story/`). The picked words are not recorded by id either beyond the memory model's item answer (which records that a taught item was answered, not which story it made).
+- writes: `answerRound(frameIdx, correct)` for the write part (Write Frame rule); memory items: **only the frame's `pat` item** at the produce rung, credited the same whichever bank word was picked. **No `lex` credit for a picked word**, in any slot: a per-word credit would record which word was picked (가족 or 호야 for "I go with ___", 좋아요 or 괜찮아요 for "I feel ___"), and memory states sync to the server (`memory_shards`) and feed the learning summaries a caregiver or teacher can see, which would undo the neutral option. This matches the shipped Write Frame, which records no pick either.
+- **The text stays in the renderer's React state only.** It is never written to a store, a persisted slice, a breadcrumb, a log line, telemetry, a sync snapshot, a backup or a report (test P-1, extended to My Story by CM-38; the grep test covers `MyStoryGame.tsx` and `logic/my-story/`). **The picked words are not recorded anywhere either**, memory included: the only thing that leaves the renderer is the frame's `pat` credit, which is identical for every pick. CM-38's P-1 extension adds a test: two runs of the same chain with different picks (and the same write results) produce identical memory writes, `answerRound` calls and telemetry.
 - telemetry: `minigame.finished { kind: 'my-story' | 'write-frame', questId, stepIndex }` only; `audio.fallback_shown { source: 'my-story', reason }`.
 
 ## Accessibility
@@ -152,7 +153,8 @@ Reused: `learner.minigame.writeFrame.*` (pick line, Change word, sentence done, 
 | `myStory.heading` | Write your story |
 | `myStory.soFar` | My story so far |
 | `myStory.soFarFolded(n)` | {n} lines so far (plural rules: 1 line / {n} lines) |
-| `myStory.done` | You wrote a whole story! |
+| `myStory.done` | You wrote a whole story! (every frame written) |
+| `myStory.donePartial` | Here is your story so far. (after Skip, one line or more written) |
 | `myStory.doneCta` | Done |
 | `a11y.minigame.myStory.soFar(n)` | My story so far, {n} lines |
 | `a11y.minigame.myStory.hearSentence(romanization)` | Hear {romanization} |

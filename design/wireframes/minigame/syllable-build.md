@@ -89,7 +89,7 @@ Exit to: `quest/player` · the review session's next item
 - **sym item at the produce rung**: the asked symbol's zone is already filled and locked (a quiet look, no tile), so the learner builds the rest around it (§4.3 "with the symbol in place").
 - **empty** / **error**: the shell's states; a round whose target is not in the Stage 1 table or the round's tiles fails the schema refinement.
 - **no Korean voice / sound off**: as above.
-- **large text (200 %)**: captions and the gloss grow; tile faces are media and keep their size; the rows wrap to 3 per line before the tiles shrink; the part under the block scrolls.
+- **large text (150 % and 200 %)**: captions and the gloss grow; jamo tile faces are media and keep their size; the rows wrap to 3 per line before the tiles shrink; the part under the block scrolls. The **No final** tile is a text label, not media: its label grows with the text setting and wraps onto two lines inside the tile, and the tile grows taller (never narrower than `touchTarget.min`, never truncated); the other tiles in its row keep their size. CM-32 adds a 320 px screenshot check at 150 % text with the final row shown.
 - **reduced motion**: no letter travel into the block; the speaker does not pulse.
 
 ## Accessibility

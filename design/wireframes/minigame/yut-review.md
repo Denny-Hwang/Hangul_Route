@@ -30,9 +30,10 @@ What the skin leaves out on purpose, so it stays a calm solo board and every cla
 ## Round shape (what changes from the plain review screen)
 
 - **The items are the review session's items**, unchanged: the same engine (CM-13), the same selection, formats, scoring, stars and "N got stronger" (§4.5). The skin adds a board band and a throw after each item.
-- **Every finished item throws.** An item is finished when it ends on a right answer (the shell keeps a round open until the right answer, so every item ends this way, first try or not). This follows "right answers throw" and still gives every item a throw, so the board never shows who missed. A first-try miss is scored exactly as on the plain screen; the board does not know about it.
+- **Every item throws when it ends, whatever its result**: right first try, right after a retry, or ended by the review screen's own miss rule (a reveal and move on, row CM-D1). The throw is taken when the item ends and does not read how it ended, so the rule holds whatever CM-D1 decides, and the board never shows which items were missed. A first-try miss is scored exactly as on the plain screen; the board does not know about it.
 - **The throw is seeded** by the session seed and the item index (deterministic for tests), with the weights in a named constant in `logic/review/yut-board.ts`. It moves the piece only.
-- **Laps.** The piece starts at the start station, walks the 20 outer stations, and on reaching home a small piece token is placed in the "home" tray (up to 4, as each side has four pieces), and a new piece starts. The tray empties at the end of the session.
+- **Laps.** The piece starts at the start station, walks the 20 outer stations, and on reaching home a small piece token is placed in the "home" tray and a new piece starts. The tray holds up to 4 pieces (each side has four). **A fifth lap** (a long Stage Check, or Keep going): when a fifth piece reaches home, the tray clears and holds that piece alone, with no message and no sound beyond the usual "A piece went home!" (and the same for the ninth, and so on); nothing marks a full tray as finished, so it is never a goal or a count to beat. The tray empties at the end of the session.
+- **The tray draws only the pieces that are home**, one filled piece each, with no empty slots, so it never reads as "n of 4". An empty tray shows its "Home" label alone.
 - **Never a reward from the board** (§7.1, §7.5): the board gives no stars, points, stamps, cards, unlocks or extra items; laps and position are not saved, not synced and not sent; the result screen is the plain review result (no board, no lap count). A session with a lucky throw ends exactly like one without.
 - **No timer, no count**: the item row uses fill-only dots (no "n of m"), and the board shows stations, not a score.
 
@@ -46,7 +47,7 @@ Compact (320 x 568, layout C of the shell):
 | +-----------+  ~~ 개 ~~ (gae)   |  <- board band: the board (left, 128) and the last throw
 | | (o)(o)(o) |  (two stations)  |     (right): its Korean name, romanization, how far
 | | (o) \ /(o)|  [sticks art]    |     the piece went, the sticks as they fell (art)
-| | (o) (+) (o)|  (home: [p][ ]) |  <- home tray: pieces that went round
+| | (o) (+) (o)|  (home: [p])    |  <- home tray: only the pieces that went round (no empty slots)
 | | (o) / \(o)|                  |
 | | (o)(o)(P) |                  |  <- P: the learner's piece
 | +-----------+                  |
@@ -108,7 +109,7 @@ Exit to: the review result (plain, stars only) · the stop sheet -> back to wher
 
 ## Accessibility
 
-- The board is one image with a live description after each throw: "Throw: gae. Your piece moved 2 stations." (`a11y.minigame.yutReview.throw`); "A piece went home. 1 piece home." It never says a station number out of a total: an "n of m" reads like a score, which a review screen never shows (§4.5, the `review-copy` lint). The stations are not focusable (they do nothing). The description is a polite live region and never interrupts the next item's prompt (it is queued after the item's own announcements).
+- The board is one image with a live description after each throw: "Throw: gae. Your piece moved 2 stations." (`a11y.minigame.yutReview.throw`); "A piece went home." (the description never counts the tray against a total) It never says a station number out of a total: an "n of m" reads like a score, which a review screen never shows (§4.5, the `review-copy` lint). The stations are not focusable (they do nothing). The description is a polite live region and never interrupts the next item's prompt (it is queued after the item's own announcements).
 - The look switch reads "Yut board, on".
 - The review item keeps its own accessibility.
 - No colour-only state: the learner's piece is a distinct shape (a filled disc with a ring) and named in the description.
@@ -121,7 +122,7 @@ Exit to: the review result (plain, stars only) · the stop sheet -> back to wher
 ## Data needs
 
 - reads: the review session (CM-13 engine) and the session seed; the look setting (`device:` storage through the platform wrapper).
-- logic: `yutBoard(seed)` -> stations, `throwFor(seed, itemIndex)` -> 'do' | 'gae' | 'geol' | 'yut' | 'mo', `walk(position, steps)` -> path and laps (pure, 100 %; property test: the review's stars, points, `dayLog` and memory writes are identical with the skin on and off for any seed).
+- logic: `yutBoard(seed)` -> stations, `throwFor(seed, itemIndex)` -> 'do' | 'gae' | 'geol' | 'yut' | 'mo', `walk(position, steps)` -> path and laps, `homeTray(laps)` -> pieces drawn (0 for no lap, else `((laps - 1) mod 4) + 1`, so 1 to 4 and a fifth lap draws 1; pure, 100 %; property test: for any seed and any mix of item results, first try, retry and an item that ends on a reveal, the review's stars, points, `dayLog` and memory writes are identical with the skin on and off, and there is exactly one throw per item).
 - writes: nothing of its own. The board state lives in the screen's state and is dropped at the end.
 - telemetry: none new (the review session's `review.start` / `review.complete` are unchanged; the look is not sent).
 
@@ -138,7 +139,7 @@ The five throw names and 윷판 are taught Korean drawn with `KoreanText` (roman
 | `yutReview.homeTray` | Home |
 | `a11y.minigame.yutReview.throw(romanization, n)` | Throw: {romanization}. Your piece moved {n} stations. (plural rules: 1 station / {n} stations) |
 | `a11y.minigame.yutReview.throwAgain` | Throw again. |
-| `a11y.minigame.yutReview.home(count)` | A piece went home. {count} pieces home. |
+| `a11y.minigame.yutReview.home` | A piece went home. |
 | `a11y.minigame.yutReview.board` | Yut board |
 
 ## Open questions

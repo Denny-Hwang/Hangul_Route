@@ -20,7 +20,7 @@ Then: each card moves into the next slot and its line is said; a card that does 
 
 - **4 cards** per round (3 to 5 allowed by the schema; 4 is the authoring default). Each card has a Korean caption (one short sentence of taught words) with its romanization; a picture when the round is **illustrated**; no picture when it is **captions only**.
 - **No meaning on the cards while ordering.** The gloss in the UI language would let the order come from English, so cards show Korean and romanization only (the realia rule, `realia-read` D3). [ Show meanings ] reveals the glosses on every card for the rest of the round; the round is then recorded as hinted for the memory model (§4.3) and still scores as usual. The replay always shows the meanings.
-- **The text settles the order** (lint `story-order-text`, CM-34): at least 1 round in 2 of a step is captions only, or its captions settle the order on their own (sequence words such as 먼저, 그다음에, 그리고, 마지막에; time words such as 아침, 점심, 저녁; or cause and result). The lint checks that a captions-only round has such a marker in at least 3 of its 4 captions, or an authored `orderCue` note the MAR confirms.
+- **The text settles the order** (lint `story-order-text`, CM-34): counted over all the `story-order` rounds of a quest (or of a pack level), at least half of them, rounded up, are **text-settled**: captions only, or illustrated with captions that settle the order on their own (sequence words such as 먼저, 그다음에, 그리고, 마지막에; time words such as 아침, 점심, 저녁; or cause and result). So a quest with a single Story Order round makes that round text-settled. A round counts as text-settled only if it passes the marker test, illustrated or not: a sequence or time marker in at least 3 of its 4 captions (n - 1 of n), or an authored `orderCue` note the MAR confirms. An illustrated round that does not pass is allowed but does not count.
 - **Start order** is a derangement (never the right order, no card in its own place), seeded per round (the shipped `seeded-order`).
 - **Scoring** per slot: the slot's first answer scores (the Story Sequence rule). The round's first-try result is right when every slot was right first time.
 - **Rounds per step**: 1 or 2. **Skip**: [ Skip this one ] (as Story Sequence).
@@ -35,9 +35,10 @@ Captions only, compact (320 x 568):
 |  (Put the lines in order)      |  <- heading (illustrated rounds: "Put the pictures in order")
 |  (Read each line. Tap the one  |
 |   that comes first.)           |
-|  slots: [ 1 ][ 2 ]             |  <- 2 x 2 on a phone (4 across from regular), filled in
-|         [ 3 ][ 4 ]             |     order; a filled slot shows its line's first word with
-|                                |     romanization (~~ 먼저 ~~ meonjeo) and is read-only
+|  slots: [ 1      ][ 2      ]   |  <- 2 x 2 on a phone, each half the column wide (4 across
+|         [ 3      ][ 4      ]   |     from regular), filled in order; a filled slot shows its
+|                                |     line's first word with romanization (~~ 먼저 ~~ meonjeo)
+|                                |     and is read-only
 |  +--------------------------+  |
 |  | ~~ 그리고 밥을 먹어요. ~~    |  |  <- cards: one column at 320, full width, each at least
 |  | (geurigo babeul meogeoyo)|  |     touchTarget.child tall; Korean at bodyLg, romanization
@@ -99,7 +100,7 @@ Exit to: `quest/player` (next step) · the quest player's leave sheet
 - **empty / bad data** (fewer than 3 cards): the Story Sequence empty line "There is nothing to put in order yet." with Continue.
 - **missing art** on an illustrated round: the card shows the text block alone (never a broken image).
 - **no Korean voice / sound off**: as above.
-- **large text (200 %)**: cards grow; slots wrap to two rows; the screen scrolls; Skip stays reachable at the end.
+- **large text (150 % and 200 %)**: cards grow; a slot's first word and romanization wrap inside the slot and the slot grows taller (never truncated, never narrower than half the column on a phone); slots that no longer fit two across stack one per row; the screen scrolls; Skip stays reachable at the end. CM-34 adds a 320 px screenshot check at 150 % text with every slot filled.
 - **reduced motion**: no card travel, no flash animation (the mark and Hoya's line still show), no auto-advance in the replay.
 
 ## Accessibility
@@ -111,7 +112,7 @@ Exit to: `quest/player` (next step) · the quest player's leave sheet
 
 ## Tokens and targets
 
-- Cards: min height `touchTarget.child` (80), full width at 320 (48 dp floor met); `radii.lg`, `borderWidth.base`, `surface.paper`, `border.subtle`. Slots: `touchTarget.min` square, `radii.md`, empty `borderWidth.base` dashed `border.shape`, filled `brand.secondaryLight`. Korean `bodyLg` bold; romanization `bodySm` `text.secondary`; meaning `bodySm` `text.secondary`.
+- Cards: min height `touchTarget.child` (80), full width at 320 (48 dp floor met); `radii.lg`, `borderWidth.base`, `surface.paper`, `border.subtle`. Slots: half the column wide on a phone (2 x 2; 4 across from regular), at least `touchTarget.min` tall, growing with their text, `radii.md`, empty `borderWidth.base` dashed `border.shape`, filled `brand.secondaryLight`. Korean `bodyLg` bold; romanization `bodySm` `text.secondary`; meaning `bodySm` `text.secondary`.
 - Nudge `feedback.nudge` / `nudgeLight`, success `feedback.success` / `successLight`, ring `border.focus`. Replay current line: a `spacing.xs` bar in `brand.secondary` at its side and the bold weight.
 
 ## Data needs
