@@ -26,8 +26,10 @@ after(() => {
   for (const r of roots) rmSync(r, { recursive: true, force: true });
 });
 
-function run(root, args = []) {
-  return spawnSync("node", [SCRIPT, ...args], { env: { ...process.env, HANGUL_ROUTE_ROOT: root }, encoding: "utf8" });
+// GITHUB_ACTIONS is cleared: a CI run fails the stamp check closed where origin/main does not resolve,
+// and these runs test the generator as a local run (the CI case has its own test below).
+function run(root, args = [], env = {}) {
+  return spawnSync("node", [SCRIPT, ...args], { env: { ...process.env, HANGUL_ROUTE_ROOT: root, GITHUB_ACTIONS: "", ...env }, encoding: "utf8" });
 }
 function put(root, rel, value) {
   const file = join(root, rel);
@@ -107,6 +109,8 @@ describe("build-lessons.mjs: cells", () => {
       ],
     };
     put(root, "content/episodes/stage-2/letters.json", { ...taught, order: 1 });
+    // The catalogue rows resolve the Discover jamo to the app's symbol keys (row CM-6).
+    put(root, "apps/mobile/src/content/jamo.ts", readFileSync(join(REPO, "apps", "mobile", "src", "content", "jamo.ts"), "utf8"));
     const r = run(root);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     const index = read(root, "lessons-index.ts");
@@ -462,7 +466,7 @@ const story = (slug, extra = {}) => ({
   ...extra,
 });
 const topicFile = (key, order) => ({ topic: { id: `vocab-topic:${key}`, key, order, titleEn: key.toUpperCase() }, items: [] });
-const discoverJamo = (ids) => ({ id: "s2", kind: "discover", titleEn: "Meet", discover: { pages: [{ items: ids.map((jamoId) => ({ type: "jamo", jamoId })) }] } });
+const discoverStepOf = (ids) => ({ id: "s2", kind: "discover", titleEn: "Meet", discover: { pages: [{ items: ids.map((jamoId) => ({ type: "jamo", jamoId })) }] } });
 
 describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
   test("a ready cell gives a shipped catalogue cell and its quests, a draft cell a 'Coming soon' one with no quests", () => {
@@ -500,7 +504,7 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
   test("teaches is the symbol keys of the Discover jamo items; an unknown jamo fails", () => {
     const root = makeRoot();
     const c = cell("stage2", "letters");
-    c.quests[0].steps[1] = { ...c.quests[0].steps[1], ...discoverJamo(["jamo:ae", "jamo:nieun-batchim"]) };
+    c.quests[0].steps[1] = { ...c.quests[0].steps[1], ...discoverStepOf(["jamo:ae", "jamo:nieun-batchim"]) };
     put(root, "content/episodes/stage-2/letters.json", c);
     const symbolKeys = new Map([["jamo:ae", "ㅐ"], ["jamo:nieun-batchim", "ㄴ/final"]]);
     assert.deepEqual(catalogueOf({ cells: readCellsOf(root), symbolKeys }).quests[0].teaches, ["ㅐ", "ㄴ/final"]);
@@ -518,7 +522,9 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
     const model = catalogueOf({ cells: readCellsOf(root), stories: [shapeStoryRow(story("owl", { addedIn: 20261110 }), "s.json")] });
     assert.equal(model.version, 20261110);
     assert.deepEqual(model.additions, { 20261105: ["quest:stage3-rites-q3"], 20261110: ["quest:stage3-rites-q2", "quest:story-owl-listen"] });
-    assert.deepEqual(Object.keys(model.stories[0]).sort(), ["minutes", "recommendedStage", "sampler", "slug", "status", "theme", "title"]);
+    // A story keeps its stamp: the catalogue orders the stories after the frozen shelf by it.
+    assert.deepEqual(Object.keys(model.stories[0]).sort(), ["addedIn", "minutes", "recommendedStage", "sampler", "slug", "status", "theme", "title"]);
+    assert.match(renderCatalogue(model), /"slug":"owl"[^\n]*"addedIn":20261110|"addedIn":20261110[^\n]*"slug":"owl"/);
     const source = renderCatalogue(model);
     assert.match(source, /export const GENERATED_CATALOG_VERSION = 20261110;/);
     assert.match(source, /  20261105: \["quest:stage3-rites-q3"\],/);
@@ -594,8 +600,17 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
     const skipped = run(root, ["--check"]);
     assert.equal(skipped.status, 0, skipped.stdout);
     assert.match(skipped.stdout, /addedIn stamp check skipped: origin\/main does not resolve here/);
-    const off = spawnSync("node", [SCRIPT, "--check"], { env: { ...process.env, HANGUL_ROUTE_ROOT: root, HANGUL_ROUTE_STAMP_BASE: "none" }, encoding: "utf8" });
+    const off = run(root, ["--check"], { HANGUL_ROUTE_STAMP_BASE: "none" });
     assert.equal(off.status, 0);
     assert.doesNotMatch(off.stdout, /addedIn/);
+  });
+
+  test("on CI (GITHUB_ACTIONS=true) a base that does not resolve fails the stamp check closed", () => {
+    const root = makeRoot();
+    assert.equal(run(root).status, 0);
+    const ci = run(root, ["--check"], { GITHUB_ACTIONS: "true" });
+    assert.equal(ci.status, 1, ci.stdout);
+    assert.match(ci.stdout, /::error::addedIn stamp check: origin\/main does not resolve/);
+    assert.equal(run(root, ["--check"], { GITHUB_ACTIONS: "true", HANGUL_ROUTE_STAMP_BASE: "none" }).status, 0);
   });
 });

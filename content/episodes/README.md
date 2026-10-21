@@ -64,11 +64,15 @@ before that row lands.
    that a ready cell plays only games the app has a screen for (`PLAYABLE_KINDS`, so a game row
    lands before the cells that use its game), and `e2e/web/journey-upper-cell.spec.ts` tests every
    cell of the generated manifest (a hand-written deep play is optional).
-4. A new quest carries `"addedIn": <YYYYMMDD>` in its own cell file, the date it is added; that is
-   the only shared fact a cell PR writes. `CATALOG_VERSION` is generated as the largest stamp (the
-   history up to 32 keeps its integers), and `node scripts/check-added-in.mjs --base origin/main`
-   (run by `build-lessons.mjs --check` in content-validation) fails a stamp lower than main's
-   version: the fix is a one-field edit in the PR's own file. The catalogue rows, the route days
+4. A new quest carries `"addedIn": <YYYYMMDD>` in its own cell file: today's date (UTC), or the day
+   after main's catalogue version if that is later; that is the only shared fact a
+   cell PR writes. `CATALOG_VERSION` is generated as the largest stamp (the history up to 32 keeps
+   its integers), and `node scripts/check-added-in.mjs --base origin/main` (run by
+   `build-lessons.mjs --check` in content-validation) fails a stamp that is not above main's
+   version (an equal stamp would leave the version where it is, so a placement stored between the
+   two deploys would miss the new quest) or that is more than 14 days after today. It names the
+   stamp to use, a one-field edit in the PR's own file; after bringing a branch up to date with
+   main, run it again. A quest main already ships keeps its stamp. The catalogue rows, the route days
    (derived from the manifest, `route-days-manifest.test.ts`) and the e2e cell list follow by
    themselves. The presenter font is rebuilt (`node scripts/build-presenter-font.mjs --source …`)
    only when `--check` says the cell's Korean has a code point the font lacks.

@@ -2,24 +2,33 @@
 // F-CURR-002 §9.1 (row CM-6) — the `addedIn` stamp check.
 //
 // From CM-6 on, `CATALOG_VERSION` is generated as the largest `addedIn` stamp of a shipped quest
-// (scripts/build-lessons.mjs), so a quest added on a branch must carry a stamp that is not lower than
-// the version `main` already has: a placement result stored at main's version would otherwise skip
-// the new quest as one it already knew (the catalogue-growth rule, F-CURR-001 §3.13). A quest is new
-// when the branch ships it and the base does not:
+// (scripts/build-lessons.mjs), so a quest added on a branch must carry a stamp above the version
+// `main` already has: a placement result stored at main's version would otherwise skip the new quest
+// as one it already knew (the catalogue-growth rule, F-CURR-001 §3.13). A stamp equal to main's
+// version fails too: the version would not move, so a result stored between the two deploys would
+// miss the new quest. A quest is new when the branch ships it and the base does not:
 //
 //   - a quest of a ready lesson cell, content/episodes/stage-<n>/<theme>.json (its `addedIn`);
 //   - the listen quest of a story file, content/stories/<slug>.json (the story's `addedIn`).
 //
 // The base's version is the largest of 32 (the last hand-kept version), the base's own stamps and,
 // before CM-6, the `CATALOG_VERSION` literal of its packages/content-schema/src/catalog/data.ts.
-// The fix is a one-field edit in the PR's own content file.
+// The fix is a one-field edit in the PR's own content file. Three more rules keep the stamps honest:
+//
+//   - a new quest's stamp is at most today (UTC) plus FUTURE_DAYS, so a typo such as a year ahead
+//     cannot raise every later PR's floor (HANGUL_ROUTE_TODAY, YYYY-MM-DD, overrides today in tests);
+//   - a quest the base already ships keeps the stamp it has there: adding, changing or removing it
+//     would rewrite that quest's history after the fact (a quest of the hand-kept history up to 32
+//     carries none);
+//   - the base tree is read leniently (cell status, quest ids and stamps, story ids and stamps), so
+//     a lesson rule that only this branch enforces cannot fail the check on the base's files.
 //
 // Usage:
 //   node scripts/check-added-in.mjs --base <ref>     e.g. --base origin/main (needs the base's history)
 //
 // `node scripts/build-lessons.mjs --check` (content-validation.yml, a full-history checkout) runs it
-// against origin/main. Exit 0 when every new quest is stamped at or above the base's version, 1 when
-// one is not, 2 on a usage error or a base ref that does not resolve. HANGUL_ROUTE_ROOT overrides the
+// against origin/main. Exit 0 when every new quest is stamped above the base's version and every
+// shipped quest keeps its stamp, 1 when one does not, 2 on a usage error or a base ref that does not resolve. HANGUL_ROUTE_ROOT overrides the
 // repo root (tests).
 
 import { spawnSync } from "node:child_process";
@@ -27,7 +36,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync, existsSync } from "node
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { ContentError, HISTORY_LAST_VERSION, readCells, shapeStoryRow } from "./build-lessons.mjs";
+import { ContentError, HISTORY_LAST_VERSION, LESSON_STAGES, readCells, shapeStoryRow } from "./build-lessons.mjs";
 
 const USAGE = "Usage: node scripts/check-added-in.mjs --base <ref>";
 
@@ -64,20 +73,109 @@ export function shippedQuests(root) {
   return out;
 }
 
+/**
+ * The quests a base tree ships, read leniently: only a cell's `status`, its quests' `id` (or the id
+ * its position gives) and `addedIn`, and a story's `id` and `addedIn`, with no lesson rule applied.
+ * A file that is not JSON is skipped: the base's own CI ran on it.
+ */
+export function baseQuests(root) {
+  const out = new Map();
+  const parse = (file) => {
+    try {
+      return JSON.parse(readFileSync(file, "utf8"));
+    } catch {
+      return undefined;
+    }
+  };
+  const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+  for (const n of LESSON_STAGES) {
+    const dir = join(root, "content", "episodes", `stage-${n}`);
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+      const rel = `content/episodes/stage-${n}/${name}`;
+      const cell = parse(join(dir, name));
+      if (!isObject(cell) || cell.status !== "ready" || !Array.isArray(cell.quests)) continue;
+      const theme = name.replace(/\.json$/, "");
+      cell.quests.forEach((quest, qi) => {
+        const id = isObject(quest) && typeof quest.id === "string" ? quest.id : `quest:stage${n}-${theme}-q${qi + 1}`;
+        out.set(id, { stamp: isObject(quest) && Number.isInteger(quest.addedIn) ? quest.addedIn : undefined, file: rel });
+      });
+    }
+  }
+  const dir = join(root, "content", "stories");
+  if (existsSync(dir)) {
+    for (const name of readdirSync(dir).filter((n) => n.endsWith(".json")).sort()) {
+      const story = parse(join(dir, name));
+      const slug = isObject(story) && typeof story.id === "string" ? /^story:([a-z0-9-]+)$/.exec(story.id)?.[1] : undefined;
+      if (slug === undefined) continue;
+      out.set(`quest:story-${slug}-listen`, { stamp: Number.isInteger(story.addedIn) ? story.addedIn : undefined, file: `content/stories/${name}` });
+    }
+  }
+  return out;
+}
+
+/** How many days past today (UTC) a new quest's stamp may be: room for a burst of PRs on one day. */
+export const FUTURE_DAYS = 14;
+
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** A YYYYMMDD stamp -> its UTC date, or null when it is not a calendar date (the history's 9..32). */
+function dateOf(stamp) {
+  if (!Number.isInteger(stamp) || stamp < 19700101) return null;
+  const y = Math.floor(stamp / 10000);
+  const m = Math.floor(stamp / 100) % 100;
+  const d = stamp % 100;
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d ? date : null;
+}
+
+const stampOf = (date) => date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
+const plusDays = (date, days) => new Date(date.getTime() + days * 86_400_000);
+
+/** Today (UTC) as a stamp; HANGUL_ROUTE_TODAY (YYYY-MM-DD) overrides it. */
+export function todayStamp(env = process.env, now = new Date()) {
+  const m = ISO_DATE.exec(env.HANGUL_ROUTE_TODAY ?? "");
+  const stamp = m === null ? null : Number(`${m[1]}${m[2]}${m[3]}`);
+  return stamp !== null && dateOf(stamp) !== null ? stamp : stampOf(now);
+}
+
+/** The stamp to suggest for a new quest: today, or the day after the base's version when that is later. */
+export function suggestedStamp(baseVersion, today) {
+  const base = dateOf(baseVersion);
+  if (base === null) return today;
+  return Math.max(today, stampOf(plusDays(base, 1)));
+}
+
+/** The latest stamp a new quest may carry: today plus FUTURE_DAYS. */
+export function latestStamp(today) {
+  return stampOf(plusDays(dateOf(today), FUTURE_DAYS));
+}
+
 /** The catalogue version of a shipped set: the largest stamp, never below the hand-kept history. */
 export function versionOf(quests, legacy = HISTORY_LAST_VERSION) {
   return Math.max(HISTORY_LAST_VERSION, legacy, ...[...quests.values()].flatMap((q) => (q.stamp === undefined ? [] : [q.stamp])));
 }
 
 /** Pure: the problems of a branch against its base (empty = the stamps hold the order). */
-export function stampProblems(head, base, baseVersion) {
+export function stampProblems(head, base, baseVersion, today = todayStamp()) {
   const problems = [];
+  const suggest = suggestedStamp(baseVersion, today);
+  const latest = latestStamp(today);
   for (const [id, { stamp, file }] of [...head].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
-    if (base.has(id)) continue;
-    if (stamp === undefined) {
-      problems.push({ file, message: `${id} is new on this branch and has no addedIn: give it "addedIn": ${baseVersion} or a later date stamp (YYYYMMDD)` });
-    } else if (stamp < baseVersion) {
-      problems.push({ file, message: `${id} has addedIn ${stamp}, lower than main's catalogue version ${baseVersion}: set it to ${baseVersion} or later (a one-field edit in this file)` });
+    if (base.has(id)) {
+      const was = base.get(id).stamp;
+      if (was === stamp) continue;
+      const change =
+        was === undefined ? `adds addedIn ${stamp}` : stamp === undefined ? `removes its addedIn ${was}` : `changes its addedIn from ${was} to ${stamp}`;
+      const keep = was === undefined ? "remove the addedIn field (a quest of the history up to 32 carries none)" : `keep "addedIn": ${was}`;
+      problems.push({ file, message: `${id} already ships on main and this branch ${change}: a shipped quest keeps its stamp, so ${keep}` });
+    } else if (stamp === undefined) {
+      problems.push({ file, message: `${id} is new on this branch and has no addedIn: give it "addedIn": ${suggest} (a date stamp YYYYMMDD above main's catalogue version ${baseVersion})` });
+    } else if (stamp <= baseVersion) {
+      const relation = stamp === baseVersion ? "equal to" : "lower than";
+      problems.push({ file, message: `${id} has addedIn ${stamp}, ${relation} main's catalogue version ${baseVersion}: set it to ${suggest} (a one-field edit in this file)` });
+    } else if (stamp > latest) {
+      problems.push({ file, message: `${id} has addedIn ${stamp}, more than ${FUTURE_DAYS} days after today (${today}): set it to ${suggest}` });
     }
   }
   return problems;
@@ -120,7 +218,7 @@ export function checkAddedIn(root, ref) {
   try {
     head = shippedQuests(root);
     withBaseTree(root, ref, (tmp, legacy) => {
-      base = shippedQuests(tmp);
+      base = baseQuests(tmp);
       baseVersion = versionOf(base, legacy);
     });
   } catch (error) {
@@ -128,7 +226,7 @@ export function checkAddedIn(root, ref) {
     process.stdout.write(`::error file=${error.file}::${error.message}\n`);
     return 1;
   }
-  const problems = stampProblems(head, base, baseVersion);
+  const problems = stampProblems(head, base, baseVersion, todayStamp());
   for (const p of problems) process.stdout.write(`::error file=${p.file}::${p.message}\n`);
   if (problems.length > 0) return 1;
   const added = [...head.keys()].filter((id) => !base.has(id)).length;
