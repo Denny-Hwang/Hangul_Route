@@ -46,5 +46,5 @@ Never an account name, email, space name or count (CS-7).
 
 ## Accessibility
 
-- Name: `a11y.who.grownUpRow(label)` ("Family, for grown-ups, needs the PIN"), plus the caption when there is one; the unlocked row is its label alone. Rows are buttons in order after Add a learner.
+- Name: `a11y.who.grownUpRow(label)` ("Family, for grown-ups, needs the PIN"); the label alone where no PIN guards the row (marker `none`, and `nopin`, where no PIN exists yet, so the name never announces a PIN). The caption (Needs the internet, the `nopin` caption) is the row's description (`accessibilityHint`, `aria-describedby`), never joined into the name. Rows are buttons in order after Add a learner.
 - A disabled row stays in the reading order and says why; it is never hidden while offline.
