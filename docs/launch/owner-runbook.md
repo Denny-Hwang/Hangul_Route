@@ -577,16 +577,17 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 **K-1. 비율 바꾸기 (램프, 배포 불필요)**
 1. 대시보드 → D1 → `hangul-route` → Console 에서 한 줄 실행 (예: `dailyReview` 를 10%):
-   `INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES ('dailyReview', 1, 10, '2026-10-21T00:00:00Z', 'ramp 10%') ON CONFLICT(flag) DO UPDATE SET "on" = excluded."on", pct = excluded.pct, updated_at = excluded.updated_at, reason = excluded.reason;`
-   `on` 은 SQL 예약어라 큰따옴표로 쓴다. `pct` 는 0-100, 프로필마다 고정된 칸 (bucket) 으로 나뉘어 비율을 올려도 이미 켜진 학습자는 그대로 켜져 있다.
+   `INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES ('dailyReview', 1, 10, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 'ramp 10%') ON CONFLICT(flag) DO UPDATE SET "on" = excluded."on", pct = excluded.pct, updated_at = excluded.updated_at, reason = excluded.reason;`
+   `on` 은 SQL 예약어라 큰따옴표로 쓴다. `on` 은 0 또는 1, `pct` 는 0-100 만 들어간다 (표의 CHECK 가 250 같은 오타를 거부한다). 프로필마다 고정된 칸 (bucket) 으로 나뉘어 비율을 올려도 이미 켜진 학습자는 그대로 켜져 있다.
 2. 확인 (운영 요청은 이것 하나만, 공개 읽기 전용): `https://api.hangulroute.com/api/config` 에 그 줄이 `{ "on": true, "pct": 10 }` 으로 보인다. 엣지 캐시 때문에 최대 5분 늦을 수 있다.
 3. 학습자 기기에는 약 20분 안에 닿는다 (엣지 캐시 5분 + 기기가 앱을 다시 앞으로 가져올 때, 가진 사본이 15분 넘었으면 다시 읽는다). 오프라인 기기는 마지막으로 받은 값을 쓴다.
 
 **K-2. 급하게 끄기 (엣지 캐시 비우기 포함, 5분)**
-1. D1 Console: `UPDATE remote_config SET "on" = 0, updated_at = '<지금 UTC>', reason = '<이유>' WHERE flag = '<스위치>';` (줄이 없으면 K-1 의 INSERT 를 `"on"` 0 으로 실행).
+1. D1 Console: `UPDATE remote_config SET "on" = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now'), reason = '<이유>' WHERE flag = '<스위치>';` (줄이 없으면 K-1 의 INSERT 를 `"on"` 0 으로 실행).
 2. 엣지 캐시 비우기: 대시보드 → `hangulroute.com` 도메인 → Caching → Configuration → **Purge Cache** → Custom Purge → URL 에 `https://api.hangulroute.com/api/config` 한 줄 → Purge. 이렇게 하면 엣지의 5분을 건너뛰고, 다음 요청부터 새 값이 나간다.
 3. 확인: 위 K-1 의 2 처럼 주소를 열어 `"on": false` 를 본다. 기기는 다음에 앱을 앞으로 가져올 때 (사본이 15분 넘었으면) 새 값을 받는다.
 4. 더 확실히 (몇 시간 넘게 끌 때): `hangul-route-app` → Settings → Build → Variables 에 그 스위치의 빌드 변수 (`EXPO_PUBLIC_CURR_DAILY_REVIEW=false` 처럼 `EXPO_PUBLIC_CURR_` + 대문자 스네이크 이름; 팩과 게임은 `EXPO_PUBLIC_CURR_PACKS_OFF=k-food,space` · `EXPO_PUBLIC_CURR_GAMES_OFF=cloze` 처럼 쉼표 목록) 를 넣고 **Retry deployment**. 빌드 변수가 바닥 (floor) 이라 원격 설정으로는 다시 켤 수 없다. 다시 켤 때는 변수를 지우고 Retry deployment.
+   이 빌드 변수는 웹 앱 (`hangul-route-app`, PWA) 에만 Retry deployment 로 닿는다. iOS 앱은 빌드할 때 변수가 들어가므로, 새 Xcode 빌드를 만들어 제출해야 바뀐다. 그래서 iOS 기기에는 위 1-3 (원격 `"on"` 0 과 엣지 캐시 비우기) 이 바로 끄는 방법이고, `GET /api/config` 로 결과를 확인한다.
 5. 끄는 것은 화면만이다: 진도, 카드, 기억 상태는 지워지지 않고, 다시 켜면 그대로 보인다 (사양 section 12.2 "What off does").
 
 ## 나중에 (법률 검토 후)

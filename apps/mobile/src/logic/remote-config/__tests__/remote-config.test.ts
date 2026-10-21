@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_HONOURED_MAX_AGE_S,
   REFETCH_MIN_AGE_MS,
+  RETRY_AFTER_FAILURE_MS,
   bucketOf,
   fnv1a32,
   parentFlagOf,
@@ -11,6 +12,7 @@ import {
   refetchDue,
   remoteFlagValue,
   resolveRemoteFlag,
+  retryWaiting,
   type RemoteConfigCache,
   type RemoteFlagValue,
 } from '../remote-config';
@@ -194,10 +196,10 @@ describe('parseConfigBody', () => {
     }
   });
 
-  it('an entry it cannot read is off (fails toward off); a bad name is dropped', () => {
+  it('an entry it cannot read is off (fails toward off), a pct outside 0-100 is 0 (never 100); a bad name is dropped', () => {
     expect(
-      parseConfigBody({ ok: true, data: { flags: { goals: { on: 'yes', pct: 50 }, mastery: { on: true, pct: 'all' }, volumes: null, cellCheck: { on: true, pct: 150 }, stageChecks: { on: true, pct: 12.7 }, 'Bad Name': { on: true, pct: 100 }, __proto__x: { on: true, pct: 1 } } } }),
-    ).toEqual({ goals: { on: false, pct: 0 }, mastery: { on: false, pct: 0 }, volumes: { on: false, pct: 0 }, cellCheck: { on: true, pct: 100 }, stageChecks: { on: true, pct: 12 } });
+      parseConfigBody({ ok: true, data: { flags: { goals: { on: 'yes', pct: 50 }, mastery: { on: true, pct: 'all' }, volumes: null, cellCheck: { on: true, pct: 150 }, upperCards: { on: true, pct: -4 }, stageChecks: { on: true, pct: 12.7 }, 'Bad Name': { on: true, pct: 100 }, __proto__x: { on: true, pct: 1 } } } }),
+    ).toEqual({ goals: { on: false, pct: 0 }, mastery: { on: false, pct: 0 }, volumes: { on: false, pct: 0 }, cellCheck: { on: true, pct: 0 }, upperCards: { on: true, pct: 0 }, stageChecks: { on: true, pct: 12 } });
   });
 });
 
@@ -257,5 +259,16 @@ describe('parseStoredConfig', () => {
 
   it('an entry it cannot read is off', () => {
     expect(parseStoredConfig({ v: 1, fetchedAt: 1, maxAgeS: 300, flags: { goals: { on: 1, pct: 100 } } })?.flags).toEqual({ goals: { on: false, pct: 0 } });
+  });
+});
+
+describe('retryWaiting · a short wait after a failed fetch', () => {
+  it('waits 5 minutes after a failure, never without one, and never when the clock moved back', () => {
+    expect(RETRY_AFTER_FAILURE_MS).toBe(5 * MIN);
+    expect(retryWaiting(null, 0)).toBe(false);
+    expect(retryWaiting(1000, 1000)).toBe(true);
+    expect(retryWaiting(1000, 1000 + 5 * MIN - 1)).toBe(true);
+    expect(retryWaiting(1000, 1000 + 5 * MIN)).toBe(false);
+    expect(retryWaiting(1000, 999)).toBe(false);
   });
 });

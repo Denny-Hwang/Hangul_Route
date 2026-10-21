@@ -28,7 +28,7 @@ describe('migration 0013_remote_config.sql · production safety', () => {
 
   it('creates one table and nothing else: no ALTER, DROP, UPDATE, DELETE or INSERT', () => {
     expect(statements).toEqual([
-      'CREATE TABLE IF NOT EXISTS remote_config ( flag TEXT PRIMARY KEY, "on" INTEGER NOT NULL, pct INTEGER NOT NULL, updated_at TEXT NOT NULL, reason TEXT )',
+      'CREATE TABLE IF NOT EXISTS remote_config ( flag TEXT PRIMARY KEY, "on" INTEGER NOT NULL CHECK ("on" IN (0, 1)), pct INTEGER NOT NULL CHECK (pct BETWEEN 0 AND 100), updated_at TEXT NOT NULL, reason TEXT )',
     ]);
     expect(statements.join(' ')).not.toMatch(/\bALTER\b|\bDROP\b|\bUPDATE\b|\bDELETE\b|\bINSERT\b|\bREPLACE\b/i);
   });
@@ -54,6 +54,15 @@ describe('migration 0013_remote_config.sql · production safety', () => {
     await expect(d1.prepare('INSERT INTO remote_config (flag, pct, updated_at) VALUES (?, ?, ?)').bind('goals', 0, T).run()).rejects.toThrow();
     await expect(d1.prepare('INSERT INTO remote_config (flag, "on", updated_at) VALUES (?, ?, ?)').bind('goals', 1, T).run()).rejects.toThrow();
     await expect(d1.prepare('INSERT INTO remote_config (flag, "on", pct) VALUES (?, ?, ?)').bind('goals', 1, 0).run()).rejects.toThrow();
+    d1.close();
+  });
+
+  it('a row with on outside 0/1 or pct outside 0-100 is refused (CHECK), so a ramp typo fails at the console', async () => {
+    const d1 = openSqliteD1();
+    const put = (on: unknown, pct: unknown) => d1.prepare('INSERT INTO remote_config (flag, "on", pct, updated_at) VALUES (?, ?, ?, ?)').bind('goals', on, pct, T).run();
+    for (const [on, pct] of [[2, 10], [-1, 10], [1, 101], [1, 250], [1, -1]] as const) await expect(put(on, pct), `${on}/${pct}`).rejects.toThrow(/CHECK/i);
+    await put(1, 100);
+    await expect(new D1Db(d1).remoteConfig()).resolves.toEqual([{ flag: 'goals', on: true, pct: 100, updatedAt: T, reason: null }]);
     d1.close();
   });
 

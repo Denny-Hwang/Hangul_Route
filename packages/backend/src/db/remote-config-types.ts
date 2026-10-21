@@ -27,11 +27,15 @@ export interface PublicRemoteFlag {
  */
 export const REMOTE_FLAG_NAME = /^[a-z][A-Za-z0-9]{0,47}(\.[a-z0-9][a-z0-9_-]{0,47})?$/;
 
-/** A stored `pct` as served: an integer in 0-100; anything that is not a finite number is 0 (fails toward off). */
+/**
+ * A stored `pct` as served: an integer in 0-100 (a fraction rounds down). Anything outside 0-100, or not a finite
+ * number, is 0: it fails toward off, so a typo such as 250 (meant as 25) never releases a feature to every profile.
+ * The table's CHECK constraint already refuses such a value; this covers a database without it.
+ */
 export function clampPct(raw: unknown): number {
   const n = typeof raw === 'number' ? raw : typeof raw === 'string' && raw.trim() !== '' ? Number(raw) : Number.NaN;
-  if (!Number.isFinite(n)) return 0;
-  return Math.min(100, Math.max(0, Math.floor(n)));
+  if (!Number.isFinite(n) || n < 0 || n > 100) return 0;
+  return Math.floor(n);
 }
 
 /** A stored `on` as served: only exactly 1 (or true) is on; anything else is off. */
