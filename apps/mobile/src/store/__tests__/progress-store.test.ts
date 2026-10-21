@@ -7,6 +7,9 @@ vi.mock('../../platform/storage', () => ({
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
+  removeKey: vi.fn(async (k: string) => {
+    mem.delete(k);
+  }),
 }));
 
 vi.mock('../../platform/telemetry', () => ({
@@ -1154,6 +1157,11 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       await useProgressStore.getState().hydrate('profile:a');
       notifyProfileRemoved('profile:a');
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      // [OA] Row OA-7a (section 10.4, CS-20): the snapshot goes too, in memory and stored.
+      await settle();
+      expect(useProgressStore.getState().byProfile['profile:a']).toBeUndefined();
+      expect(useProgressStore.getState().hydratedFor.has('profile:a')).toBe(false);
+      expect(mem.has('progress:profile:a')).toBe(false);
     });
 
     it('a malformed saved record is loaded as it is: the rules add nothing and the read still lands', async () => {

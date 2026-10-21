@@ -5,7 +5,7 @@ import { routeGoalInputsChanged } from '../logic/my-route/summary';
 import type { JoinErrorCode } from '../logic/spaces/join-code';
 import type { RestorePlan } from '../logic/sync/restore';
 import { getDeviceId } from '../platform/device';
-import { readJson, writeJson } from '../platform/storage';
+import { readJson, removeKey, writeJson } from '../platform/storage';
 import { TRANSFER_SCOPE_KEY, classScopeMarker, deviceScopeOf } from '../logic/transfers/device-scope';
 import { validateDisplayName } from '../logic/profiles/profile-model';
 import { gateOpensDirectlyNow } from './gate-now';
@@ -14,6 +14,7 @@ import { track } from '../platform/telemetry';
 import { useAccountStore } from './account-store';
 import { useNotesStore } from './notes-store';
 import { usePlanStore } from './plan-store';
+import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 import { useRouteStore } from './route-store';
 import { useClassUpdateStore } from './class-update-store';
@@ -111,7 +112,9 @@ interface Actions {
   deviceScope: (learnerId: string) => Promise<'full' | 'class'>;
 }
 
-const key = (learnerId: string): string => `memberships:${learnerId}`;
+/** The learner's cached memberships (`hr:memberships:<id>`); exported for the removal sweep (row OA-7a). */
+export const MEMBERSHIPS_KEY = (learnerId: string): string => `memberships:${learnerId}`;
+const key = MEMBERSHIPS_KEY;
 
 async function credentialsFor(learnerId: string, registerIfNeeded: boolean): Promise<DeviceCredentials | null> {
   const sync = useSyncStore.getState();
@@ -557,6 +560,22 @@ export async function rederiveAllLocal(): Promise<void> {
     if (!synced) await repaceAfterSync(p.id);
   }
 }
+
+/**
+ * [OA] Row OA-7a (section 10.4, CS-20): a learner removed from this device leaves no membership cache, class-move
+ * switch or device-scope marker behind. Nothing is sent: the memberships and seats stay on the server (CS-12).
+ */
+onProfileRemoved((learnerId) => {
+  const prefix = `${learnerId}|`;
+  useMembershipStore.setState((s) => ({
+    byLearner: withoutKey(s.byLearner, learnerId),
+    transfersByLearner: withoutKey(s.transfersByLearner, learnerId),
+    movedByLearner: withoutKey(s.movedByLearner, learnerId),
+    rejoinByLearner: withoutKey(s.rejoinByLearner, learnerId),
+    executedSeen: Object.fromEntries(Object.entries(s.executedSeen).filter(([seen]) => !seen.startsWith(prefix))),
+  }));
+  for (const stored of [MEMBERSHIPS_KEY, TRANSFERS_ON_KEY, TRANSFER_SELF_SET_KEY, TRANSFER_SCOPE_KEY]) removeKey(stored(learnerId)).catch(() => undefined);
+});
 
 /** After every successful sync (call once at app start; returns the unsubscribe): refresh the inbox, then move an own weekly plan along when due. */
 export function registerInboxRefresh(): () => void {

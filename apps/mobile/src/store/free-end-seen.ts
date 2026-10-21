@@ -3,6 +3,9 @@ import { readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
 
+/** Whether the free-end celebration was seen (`hr:free-end-seen:<id>`); exported for the removal sweep (row OA-7a). */
+export const FREE_END_SEEN_KEY = freeEndSeenKey;
+
 /**
  * "The end of the free lessons was celebrated" for a profile on this device (F-ENT-003 sections
  * 3.7, 3.8 and 3.16): the key `free-end-seen:<profileId>` in `platform/storage.ts`, never synced.

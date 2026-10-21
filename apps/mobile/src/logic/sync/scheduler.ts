@@ -32,6 +32,13 @@ export function createSyncScheduler(run: (learnerId: string) => void, timers: Sc
         run(learnerId);
       }
     },
+    /** [OA] Row OA-7a: drop a queued run (the learner was removed from this device). */
+    cancel(learnerId: string): void {
+      const handle = pending.get(learnerId);
+      if (handle === undefined) return;
+      timers.clearTimeout(handle);
+      pending.delete(learnerId);
+    },
     pendingCount(): number {
       return pending.size;
     },

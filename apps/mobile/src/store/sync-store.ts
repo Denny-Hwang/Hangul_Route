@@ -23,10 +23,11 @@ import { summarize } from '../logic/sync/summarize';
 import { TRANSFER_SCOPE_KEY, deviceScopeOf } from '../logic/transfers/device-scope';
 import { getDeviceId } from '../platform/device';
 import { onInboxRead } from '../platform/inbox-events';
-import { readJson, readJsonStrict, writeJson } from '../platform/storage';
+import { readJson, readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-api';
 import { usePlanStore } from './plan-store';
 import { onProfileEdited } from './profile-edits';
+import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 import { questOpenFor } from './tier-store';
@@ -89,6 +90,12 @@ interface Actions {
   applyInboxLearner: (learnerId: string, learner: InboxLearnerRow) => Promise<void>;
   /** Take over a learner the server handed us (rescue claim, re-link approval): profile, snapshot, credentials. */
   adoptServerLearner: (input: AdoptInput) => Promise<RestorePlan>;
+  /**
+   * [OA] Row OA-7a (section 10.4, CS-20): the learner was removed from this device. Its record (device secret, Rescue
+   * Code, queued edit) is deleted, a queued run is dropped, and nothing more is written for it, even by a run already
+   * in flight, until a restore adopts it again (`adoptCredentials`, `adoptServerLearner`). No server call is made.
+   */
+  forgetLearner: (learnerId: string) => void;
 }
 
 export interface AdoptInput {
@@ -98,7 +105,12 @@ export interface AdoptInput {
   rescueCode?: string | null;
 }
 
-const key = (learnerId: string): string => `sync:${learnerId}`;
+/** The per-learner sync record (`hr:sync:<id>`); exported for the removal sweep (row OA-7a). */
+export const SYNC_KEY = (learnerId: string): string => `sync:${learnerId}`;
+const key = SYNC_KEY;
+
+/** [OA] Learners removed from this device in this session (row OA-7a): nothing is written for them until a restore. */
+const removedHere = new Set<string>();
 
 function blank(learnerId: string): LearnerSyncState {
   return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off', rescueCode: null, pendingProfile: null, profileAt: null };
@@ -190,6 +202,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
   const update = (learnerId: string, patch: Partial<LearnerSyncState>): LearnerSyncState => {
     const current = get().byLearner[learnerId] ?? blank(learnerId);
     const next = { ...current, ...patch };
+    // [OA] A run that was in flight when the learner was removed writes nothing back (CS-20).
+    if (removedHere.has(learnerId)) return next;
     set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: next } }));
     void writeJson(key(learnerId), persistable(next));
     return next;
@@ -483,6 +497,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     },
 
     adoptCredentials: (learnerId, secret, rev) => {
+      removedHere.delete(learnerId);
       update(learnerId, { secret, rev, status: 'idle', lastError: null });
     },
 
@@ -511,6 +526,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     adoptServerLearner: async ({ learner, secret, snapshot: server, rescueCode }) => {
       const learnerId = learner.id;
+      // [OA] A learner removed earlier in this session comes back through its Rescue Code (section 10.4).
+      removedHere.delete(learnerId);
       // Let a running sync finish first: its fold would read the restored copy as a local write.
       await inflight.get(learnerId);
       // Loaded first: `update` below would otherwise start from a blank record and lose a queued edit.
@@ -552,8 +569,23 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       get().requestSync(learnerId);
       return plan;
     },
+
+    forgetLearner: (learnerId) => {
+      removedHere.add(learnerId);
+      scheduler.cancel(learnerId);
+      rerun.delete(learnerId);
+      editCounts.delete(learnerId);
+      set((s) => {
+        const { [learnerId]: _gone, ...rest } = s.byLearner;
+        return { byLearner: rest };
+      });
+      removeKey(key(learnerId)).catch(() => undefined);
+    },
   };
 });
+
+// [OA] Row OA-7a: a removed learner leaves no sync record (device secret, Rescue Code, queued edit) behind (CS-20).
+onProfileRemoved((learnerId) => useSyncStore.getState().forgetLearner(learnerId));
 
 // Every learner name, level or avatar edit on this device is queued for the server (F-PROF-001).
 onProfileEdited((learnerId, fields) => {
