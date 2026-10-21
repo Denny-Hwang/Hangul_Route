@@ -51,7 +51,7 @@ Panel B — one person (after tapping Sora)
 | Edit profile                 > |  <- existing
 | See report                   > |  <- existing
 |--------------------------------|
-| [ Remove from this device ]    |  <- secondary, not red
+| [ Remove from this device ]    |  <- secondary, not red; asks the PIN again when the last one is older than 2 min
 +--------------------------------+
 ```
 
@@ -63,11 +63,25 @@ Panel C — Remove ConfirmSheet, progress not saved anywhere
 | Their progress is only on this |
 | device. Save it first to keep  |
 | it.                            |
-| [[ Save progress first ]]      |  -> Save my progress (existing)
-| [ Remove ]                     |
+| [[ Save progress first ]]      |  -> Save my progress (existing); the main action
 | [ Cancel ]                     |
+|   Remove anyway                |  <- quiet text button
 +--------------------------------+
 ```
+
+Panel C2 — Remove anyway, second step
+
+```
++--------------------------------+
+| Remove anyway? Their cards and |
+| stars on this device will be   |
+| gone.                          |
+| [[ Keep ]]                     |
+| [ Remove ]                     |  <- danger tone, used only for grown-up confirmations
++--------------------------------+
+```
+
+"Saved" means registered and nothing waiting to be pushed; before showing the sheet the app tries to sync ("Checking that their progress is saved...").
 
 Saved variant: "Their progress is saved. Their Rescue Code brings it back on any device." and, when the learner is in a family or class, "Their place in a family or class stays. A grown-up can change it in the account pages." Buttons: [[ Remove ]] [ Cancel ].
 
@@ -82,7 +96,8 @@ Panel D — Join with a family code, device with 3 learner profiles: Who is join
 | device who should join.        |
 | [x] (Hoya) Mina   (active)     |
 | [x] (Hoya) Jun                 |  <- picking anyone but the active learner asks the PIN first
-| [ ] (Hoya) Sora                |
+| [ ] (Hoya) Sora   [L]          |  <- a locked (grown-up's own) profile starts unchecked
+|     Takes a family place.      |
 | [[ Next ]]                     |  -> name check per learner -> one consent naming each -> joins
 +--------------------------------+
 ```
@@ -104,7 +119,7 @@ Panel E — results
 - Lock switch: `profile.lock_changed`; immediate; the chooser shows the glyph at once.
 - Remove: `profile.removed { saved, wasActive }`; removing the active learner opens the chooser; removing the last learner opens Welcome.
 - Face or fingerprint switch: turning on asks the system prompt once; any PIN change turns it off.
-- Who is joining?: `space.join.batch { picked, joined, refused }`. Class codes skip this step (one learner, roster pick and relink as today).
+- Who is joining?: `space.join.batch { picked, joined, refused }`. Class codes skip this step (one learner, roster pick and relink as today). Learners linked for a class on this device are listed disabled. The joins stop at the first network error and offer Try again (a retry is safe).
 
 ## States
 

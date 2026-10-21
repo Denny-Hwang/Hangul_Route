@@ -9,7 +9,7 @@ Mock: `design/screens/profiles/pin-entry-v2.md` (row OA-0b)
 
 Given: a family tablet with a grown-up PIN
 When: someone types wrong PINs again and again, or the grown-up has forgotten the PIN
-Then: the pauses grow calmly (30 s, 1 min, 5 min, 15 min, then 60 min), every reset path stays open, and on the web the grown-up can sign in to the account to choose a new PIN
+Then: the pauses grow calmly (30 s, 1 min, 5 min, 15 min, then 60 min), face or fingerprint and the Rescue Code (its own counter) still work during a pause, and on the web the grown-up can sign in to the account to choose a new PIN
 
 ## Screen goal
 
@@ -34,7 +34,7 @@ Panel A — verify, native, face or fingerprint turned on for this device
 +--------------------------------+
 ```
 
-Panel B — third pause (5 min) and later
+Panel B — third pause (5 min) and later, Grown-up area destination (the help line is never shown on a locked tile, a Family/Teacher/School row or Cancel the wait)
 
 ```
 |        o  o  o  o              |
@@ -43,7 +43,8 @@ Panel B — third pause (5 min) and later
 | You can also set a new PIN     |  <- from the 3rd pause on
 | with Forgot PIN?               |
 |   (pad disabled)               |
-|  Forgot PIN?                   |  <- stays enabled during every pause
+|  ( Use face or fingerprint )   |  <- native, when on: still works during a pause; success resets the steps
+|  Forgot PIN?                   |  <- stays enabled during every pause; the Rescue Code has its own counter
 ```
 
 Panel C — Forgot PIN? on the web, online (PinReset)
@@ -60,7 +61,9 @@ Panel C — Forgot PIN? on the web, online (PinReset)
 | a new PIN.                     |
 | [[ Sign in ]]                  |  -> /signin?next=/account/pin-reset
 |--------------------------------|
-| Use a Rescue Code   (existing) |
+| Use a Rescue Code   (existing; |
+|   own counter, works during a  |
+|   PIN pause)                   |
 |--------------------------------|
 | Wait 24 hours       (existing) |
 +--------------------------------+
@@ -98,7 +101,8 @@ Panel F — learner app after the ticket: `PinEntry` setup-1, title **Choose a n
 
 - Wrong PIN: the existing "tries left" line; the 5th miss in 60 s starts the next pause step (`pin.paused { step }`).
 - Correct PIN, face or fingerprint, or a finished reset: steps go back to the first.
-- Use face or fingerprint: the system prompt with no passcode fallback.
+- Use face or fingerprint: reads the SecureStore item, so the system prompt runs with no passcode fallback; an enrolment change since it was turned on shows "Face or fingerprint changed on this device. Enter the PIN." and turns it off.
+- Sign in to the account: password, email code or phone code only (never a passkey).
 
 ## States
 
