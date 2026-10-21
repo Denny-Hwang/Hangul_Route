@@ -57,11 +57,19 @@ export const CURR_TELEMETRY_SERVER_ONLY: readonly CurrTelemetryEventName[] = ['s
 const count = z.number().int().min(0).max(100_000);
 const wholeUpTo = (max: number) => z.number().int().min(0).max(max);
 
+const BUCKET_RE = /^(0|[1-9]\d{0,4})(?:-(0|[1-9]\d{0,4})|\+)?$/;
+
 /**
- * A bucket code: one number, a range or an open top, such as `0`, `10-19` or `31+`. The emitting
- * rows choose the edges; the shape alone keeps free text and raw values out.
+ * A bucket code: one number, a range with its lower edge below its upper edge, or an open top,
+ * such as `0`, `10-19` or `31+`, with no leading zeros. The shape keeps free text out, but a
+ * single number such as `37` still fits it, so it cannot tell a bucket from a raw value: the
+ * emitting row (CM-12, CM-32) adds a per-field enum of its bucket codes to
+ * `CURR_TELEMETRY_PAYLOADS`, Worker first, before it sends (TELEMETRY-NAMES-2 section R).
  */
-export const TelemetryBucketSchema = z.string().regex(/^\d{1,5}(?:-\d{1,5}|\+)?$/);
+export const TelemetryBucketSchema = z.string().refine((code) => {
+  const m = BUCKET_RE.exec(code);
+  return m !== null && (m[2] === undefined || Number(m[1]) < Number(m[2]));
+}, 'a bucket code: a number, an ascending range or an open top');
 
 /** Review item kinds (section 4.2). */
 export const REVIEW_ITEM_KINDS = ['sym', 'syl', 'lex', 'pat', 'exc', 'rea'] as const;

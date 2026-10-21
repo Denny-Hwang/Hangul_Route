@@ -113,10 +113,12 @@ describe('F-CURR-002 section 11.3 telemetry names (TELEMETRY-NAMES-2 section R, 
     }
   });
 
-  it.each(SECTION_R.filter((n) => Object.keys(VALID[n]).length > 0).map((n) => [n]))('%s rejects a missing field and a non-object payload', (name) => {
-    const [first] = Object.keys(VALID[name]);
-    const { [first as string]: _dropped, ...rest } = VALID[name];
-    expect(S[name].safeParse(rest).success).toBe(false);
+  it.each(SECTION_R.filter((n) => Object.keys(VALID[n]).length > 0).map((n) => [n]))('%s rejects any missing required field and a non-object payload', (name) => {
+    for (const key of Object.keys(VALID[name])) {
+      const { [key]: _dropped, ...rest } = VALID[name];
+      // `arms` (until CM-71) and `calib` (CM-72 only) are the two optional section R fields.
+      expect(S[name].safeParse(rest).success, key).toBe(name === 'memory.daily' && (key === 'arms' || key === 'calib'));
+    }
     expect(S[name].safeParse(undefined).success).toBe(false);
     expect(S[name].safeParse('memory').success).toBe(false);
   });
@@ -175,7 +177,7 @@ describe('memory.daily (F-CURR-002 sections 3.1, 11.2 and 11.3)', () => {
 
   it('takes buckets as bucket codes, never free text or a raw number', () => {
     for (const bucket of ['0', '1-4', '10-19', '31+']) expect(M.safeParse({ ...daily, durableWeekBucket: bucket }).success, bucket).toBe(true);
-    for (const bucket of ['', 'many', 'Suni', '1 to 4', '-1', 12, '1-4-9', '123456']) {
+    for (const bucket of ['', 'many', 'Suni', '1 to 4', '-1', 12, '1-4-9', '123456', '19-10', '5-5', '00000', '010-19', '07+']) {
       expect(M.safeParse({ ...daily, durableWeekBucket: bucket }).success, String(bucket)).toBe(false);
       expect(M.safeParse({ ...daily, dueVolumeBucket: bucket }).success, String(bucket)).toBe(false);
     }

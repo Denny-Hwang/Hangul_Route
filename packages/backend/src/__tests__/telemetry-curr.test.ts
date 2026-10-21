@@ -151,6 +151,13 @@ describe('POST /api/telemetry, session.end with the three optional CM-3 fields',
     expect(partial.body.data?.event.payload).toEqual({ ...older, questLeft: 1 });
   });
 
+  it('keeps a session.end key that is not a CM-3 field, as before CM-3 (lenient on purpose)', async () => {
+    const payload = { ...older, someLegacyKey: 'x', questLeft: 1 };
+    const r = await post({ name: 'session.end', profileId: 'profile:suni', payload });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.payload).toEqual(payload);
+  });
+
   it('still drops a non-object session.end payload instead of rejecting the event', async () => {
     expect((await post({ name: 'session.end', payload: 'nope' })).body.data?.event.payload).toBeUndefined();
     expect((await post({ name: 'session.end' })).status).toBe(201);
