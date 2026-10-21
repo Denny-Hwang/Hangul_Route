@@ -1,0 +1,2261 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a pack with five levels of three quests in the template's formats, three realia in L4, its two cards and the Pack Check. An L2 quest re-shows three L1 words beside its four new ones; the caps count new items only. Not real content.",
+  "rule": "pack-skeleton",
+  "files": {
+    "content/packs/numbers-fixture/pack.json": {
+      "id": "pack:numbers-fixture",
+      "key": "numbers-fixture",
+      "titleEn": "Numbers",
+      "hoyaIntroEn": "Let us count!",
+      "homeTheme": "life",
+      "levels": [
+        {
+          "stage": "stage2",
+          "episodeId": "episode:pack-numbers-fixture-s2"
+        },
+        {
+          "stage": "stage3",
+          "episodeId": "episode:pack-numbers-fixture-s3"
+        },
+        {
+          "stage": "stage4",
+          "episodeId": "episode:pack-numbers-fixture-s4"
+        },
+        {
+          "stage": "stage6",
+          "episodeId": "episode:pack-numbers-fixture-s6"
+        },
+        {
+          "stage": "stage7",
+          "episodeId": "episode:pack-numbers-fixture-s7"
+        }
+      ],
+      "status": "ready"
+    },
+    "content/packs/numbers-fixture/stage-2.json": {
+      "id": "episode:pack-numbers-fixture-s2",
+      "stage": "stage2",
+      "status": "ready",
+      "titleEn": "Numbers",
+      "quests": [
+        {
+          "id": "quest:pack-numbers-fixture-s2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q1-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    },
+                    {
+                      "id": "p2",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q1-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s2-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "syllable-build",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q2-practice",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                },
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q2-apply",
+              "kind": "syllable-build",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q2-check",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s2-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나무",
+                          "romanization": "namu",
+                          "en": "tree"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "syllable-build",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-numbers-fixture-s2-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q3-practice",
+              "kind": "syllable-build",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q3-apply",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s2-q3-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": []
+    },
+    "content/packs/numbers-fixture/stage-3.json": {
+      "id": "episode:pack-numbers-fixture-s3",
+      "stage": "stage3",
+      "status": "ready",
+      "titleEn": "Numbers",
+      "quests": [
+        {
+          "id": "quest:pack-numbers-fixture-s3-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "꽃",
+                          "romanization": "kkot",
+                          "en": "flower"
+                        }
+                      },
+                      {
+                        "type": "pattern",
+                        "frame": {
+                          "ko": "___에 가요.",
+                          "romanization": "___e gayo",
+                          "en": "I go to ___."
+                        },
+                        "noteEn": "A pattern.",
+                        "examples": [
+                          {
+                            "ko": "하늘",
+                            "romanization": "haneul",
+                            "en": "sky"
+                          },
+                          {
+                            "ko": "별",
+                            "romanization": "byeol",
+                            "en": "star"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나무",
+                          "romanization": "namu",
+                          "en": "tree"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "비",
+                          "romanization": "bi",
+                          "en": "rain"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "눈",
+                          "romanization": "nun",
+                          "en": "snow"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "구름",
+                          "romanization": "gureum",
+                          "en": "cloud"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "order-it",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "cloze-pick",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "cloze-pick",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q1-practice",
+              "kind": "order-it",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q1-apply",
+              "kind": "cloze-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q1-check",
+              "kind": "cloze-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s3-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "산",
+                          "romanization": "san",
+                          "en": "mountain"
+                        }
+                      },
+                      {
+                        "type": "pattern",
+                        "frame": {
+                          "ko": "___이 있어요.",
+                          "romanization": "___i isseoyo",
+                          "en": "There is ___."
+                        },
+                        "noteEn": "A pattern.",
+                        "examples": [
+                          {
+                            "ko": "하늘",
+                            "romanization": "haneul",
+                            "en": "sky"
+                          },
+                          {
+                            "ko": "별",
+                            "romanization": "byeol",
+                            "en": "star"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "cloze-pick",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "order-it",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "order-it",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q2-practice",
+              "kind": "cloze-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q2-apply",
+              "kind": "order-it",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q2-check",
+              "kind": "order-it",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s3-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "달",
+                          "romanization": "dal",
+                          "en": "moon"
+                        }
+                      },
+                      {
+                        "type": "pattern",
+                        "frame": {
+                          "ko": "___을 봐요.",
+                          "romanization": "___eul bwayo",
+                          "en": "I see ___."
+                        },
+                        "noteEn": "A pattern.",
+                        "examples": [
+                          {
+                            "ko": "하늘",
+                            "romanization": "haneul",
+                            "en": "sky"
+                          },
+                          {
+                            "ko": "별",
+                            "romanization": "byeol",
+                            "en": "star"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "order-it",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "order-it",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "cloze-pick",
+              "minigameRef": "minigame:pack-numbers-fixture-s3-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q3-practice",
+              "kind": "order-it",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q3-apply",
+              "kind": "order-it",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s3-q3-check",
+              "kind": "cloze-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": []
+    },
+    "content/packs/numbers-fixture/stage-4.json": {
+      "id": "episode:pack-numbers-fixture-s4",
+      "stage": "stage4",
+      "status": "ready",
+      "titleEn": "Numbers",
+      "quests": [
+        {
+          "id": "quest:pack-numbers-fixture-s4-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "바다",
+                          "romanization": "bada",
+                          "en": "sea"
+                        }
+                      },
+                      {
+                        "type": "exchange",
+                        "lines": [
+                          {
+                            "speaker": "a",
+                            "speakerEn": "Hoya",
+                            "line": {
+                              "ko": "하늘",
+                              "romanization": "haneul",
+                              "en": "sky"
+                            }
+                          },
+                          {
+                            "speaker": "b",
+                            "speakerEn": "Mina",
+                            "line": {
+                              "ko": "별",
+                              "romanization": "byeol",
+                              "en": "star"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "role-play",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "tap-respond",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "tap-respond",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q1-practice",
+              "kind": "role-play",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q1-apply",
+              "kind": "tap-respond",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q1-check",
+              "kind": "tap-respond",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s4-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "강",
+                          "romanization": "gang",
+                          "en": "river"
+                        }
+                      },
+                      {
+                        "type": "exchange",
+                        "lines": [
+                          {
+                            "speaker": "a",
+                            "speakerEn": "Hoya",
+                            "line": {
+                              "ko": "고마워요.",
+                              "romanization": "gomawoyo",
+                              "en": "Thank you."
+                            }
+                          },
+                          {
+                            "speaker": "b",
+                            "speakerEn": "Mina",
+                            "line": {
+                              "ko": "괜찮아요.",
+                              "romanization": "gwaenchanayo",
+                              "en": "It's fine."
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "tap-respond",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "story-order",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "role-play",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q2-practice",
+              "kind": "tap-respond",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q2-apply",
+              "kind": "story-order",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q2-check",
+              "kind": "role-play",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s4-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나비",
+                          "romanization": "nabi",
+                          "en": "butterfly"
+                        }
+                      },
+                      {
+                        "type": "exchange",
+                        "lines": [
+                          {
+                            "speaker": "a",
+                            "speakerEn": "Hoya",
+                            "line": {
+                              "ko": "어디 가요?",
+                              "romanization": "eodi gayo",
+                              "en": "Where are you going?"
+                            }
+                          },
+                          {
+                            "speaker": "b",
+                            "speakerEn": "Mina",
+                            "line": {
+                              "ko": "집에 가요.",
+                              "romanization": "jibe gayo",
+                              "en": "I'm going home."
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "story-order",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "role-play",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "tap-respond",
+              "minigameRef": "minigame:pack-numbers-fixture-s4-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q3-practice",
+              "kind": "story-order",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "나비",
+                    "romanization": "nabi",
+                    "en": "butterfly"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q3-apply",
+              "kind": "role-play",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s4-q3-check",
+              "kind": "tap-respond",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": [
+        "card:numbers-fixture-1"
+      ]
+    },
+    "content/packs/numbers-fixture/stage-6.json": {
+      "id": "episode:pack-numbers-fixture-s6",
+      "stage": "stage6",
+      "status": "ready",
+      "titleEn": "Numbers",
+      "quests": [
+        {
+          "id": "quest:pack-numbers-fixture-s6-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "비",
+                          "romanization": "bi",
+                          "en": "rain"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "realia-read",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "realia-read",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q1-practice",
+              "kind": "realia-read",
+              "realia": {
+                "ref": "realia:numbers-fixture-r1",
+                "entries": [
+                  {
+                    "id": "e1",
+                    "text": {
+                      "ko": "하늘",
+                      "romanization": "haneul",
+                      "en": "sky"
+                    }
+                  },
+                  {
+                    "id": "e2",
+                    "text": {
+                      "ko": "비",
+                      "romanization": "bi",
+                      "en": "rain"
+                    }
+                  }
+                ],
+                "altEn": "A drawn sign."
+              },
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Which word is on the sign?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q1-apply",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q1-check",
+              "kind": "realia-read",
+              "realia": {
+                "ref": "realia:numbers-fixture-r1",
+                "entries": [
+                  {
+                    "id": "e1",
+                    "text": {
+                      "ko": "하늘",
+                      "romanization": "haneul",
+                      "en": "sky"
+                    }
+                  }
+                ],
+                "altEn": "A drawn sign."
+              },
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Which word is on the sign?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s6-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "눈",
+                          "romanization": "nun",
+                          "en": "snow"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "realia-read",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q2-practice",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q2-apply",
+              "kind": "realia-read",
+              "realia": {
+                "ref": "realia:numbers-fixture-r2",
+                "entries": [
+                  {
+                    "id": "e1",
+                    "text": {
+                      "ko": "별",
+                      "romanization": "byeol",
+                      "en": "star"
+                    }
+                  }
+                ],
+                "altEn": "A drawn sign."
+              },
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Which word is on the sign?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q2-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s6-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "구름",
+                          "romanization": "gureum",
+                          "en": "cloud"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "realia-read",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "realia-read",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-numbers-fixture-s6-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q3-practice",
+              "kind": "realia-read",
+              "realia": {
+                "ref": "realia:numbers-fixture-r3",
+                "entries": [
+                  {
+                    "id": "e1",
+                    "text": {
+                      "ko": "하늘",
+                      "romanization": "haneul",
+                      "en": "sky"
+                    }
+                  },
+                  {
+                    "id": "e2",
+                    "text": {
+                      "ko": "구름",
+                      "romanization": "gureum",
+                      "en": "cloud"
+                    }
+                  }
+                ],
+                "altEn": "A drawn sign."
+              },
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Which word is on the sign?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q3-apply",
+              "kind": "realia-read",
+              "realia": {
+                "ref": "realia:numbers-fixture-r3",
+                "entries": [
+                  {
+                    "id": "e1",
+                    "text": {
+                      "ko": "별",
+                      "romanization": "byeol",
+                      "en": "star"
+                    }
+                  }
+                ],
+                "altEn": "A drawn sign."
+              },
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Which word is on the sign?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s6-q3-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": []
+    },
+    "content/packs/numbers-fixture/stage-7.json": {
+      "id": "episode:pack-numbers-fixture-s7",
+      "stage": "stage7",
+      "status": "ready",
+      "titleEn": "Numbers",
+      "quests": [
+        {
+          "id": "quest:pack-numbers-fixture-s7-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "바람",
+                          "romanization": "baram",
+                          "en": "wind"
+                        }
+                      },
+                      {
+                        "type": "pattern",
+                        "frame": {
+                          "ko": "___을 좋아해요.",
+                          "romanization": "___eul joahaeyo",
+                          "en": "I like ___."
+                        },
+                        "noteEn": "A pattern.",
+                        "examples": [
+                          {
+                            "ko": "하늘",
+                            "romanization": "haneul",
+                            "en": "sky"
+                          },
+                          {
+                            "ko": "별",
+                            "romanization": "byeol",
+                            "en": "star"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "write-frame",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "my-story",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "write-frame",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q1-practice",
+              "kind": "write-frame",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q1-apply",
+              "kind": "my-story",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q1-check",
+              "kind": "write-frame",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s7-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "호수",
+                          "romanization": "hosu",
+                          "en": "lake"
+                        }
+                      },
+                      {
+                        "type": "pattern",
+                        "frame": {
+                          "ko": "___에 살아요.",
+                          "romanization": "___e sarayo",
+                          "en": "I live in ___."
+                        },
+                        "noteEn": "A pattern.",
+                        "examples": [
+                          {
+                            "ko": "하늘",
+                            "romanization": "haneul",
+                            "en": "sky"
+                          },
+                          {
+                            "ko": "별",
+                            "romanization": "byeol",
+                            "en": "star"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "my-story",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "write-frame",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "order-it",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q2-practice",
+              "kind": "my-story",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "호수",
+                    "romanization": "hosu",
+                    "en": "lake"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q2-apply",
+              "kind": "write-frame",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q2-check",
+              "kind": "order-it",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:pack-numbers-fixture-s7-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "섬",
+                          "romanization": "seom",
+                          "en": "island"
+                        }
+                      },
+                      {
+                        "type": "pattern",
+                        "frame": {
+                          "ko": "___가 좋아요.",
+                          "romanization": "___ga joayo",
+                          "en": "___ is nice."
+                        },
+                        "noteEn": "A pattern.",
+                        "examples": [
+                          {
+                            "ko": "하늘",
+                            "romanization": "haneul",
+                            "en": "sky"
+                          },
+                          {
+                            "ko": "별",
+                            "romanization": "byeol",
+                            "en": "star"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "write-frame",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "write-frame",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "my-story",
+              "minigameRef": "minigame:pack-numbers-fixture-s7-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q3-practice",
+              "kind": "write-frame",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "섬",
+                    "romanization": "seom",
+                    "en": "island"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q3-apply",
+              "kind": "write-frame",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-numbers-fixture-s7-q3-check",
+              "kind": "my-story",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": [
+        "card:numbers-fixture-2"
+      ],
+      "packCheck": {
+        "items": 10
+      }
+    }
+  },
+  "expect": []
+}

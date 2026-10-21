@@ -254,6 +254,16 @@ export const StoryObjectSchema = z
       .optional(),
     shelf: StoryShelfSchema.optional(),
     pillarTags: z.array(PillarTagSchema).max(3).default([]),
+    /**
+     * What the story is about, as topic slugs (`sun-and-moon`, `tiger-tale`): build-time data
+     * for the F-CURR-002 §5.1 lint `story-topic-unique`, which requires it on every story added
+     * after row CM-7 and compares it with the other stories' slugs and tags. Never shown.
+     */
+    topicTags: z
+      .array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/))
+      .min(1)
+      .max(5)
+      .optional(),
     companionId: CompanionIdSchema.default('hoya'),
     card: StoryCardSchema.optional(),
     facts: z.array(FactSchema).min(1).max(16),
