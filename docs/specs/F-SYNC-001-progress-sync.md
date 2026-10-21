@@ -67,6 +67,7 @@ Merging is idempotent and commutative on the sets above (`merge(a,b) ≡ merge(b
 ### 3.6 File backup (server-less restore path)
 
 - `logic/sync/backup.ts` encodes `{ format: 'hangul-route-backup', version: 1, exportedAt, profile, snapshot }` and decodes/validates with `BackupFileSchema`; unknown versions or malformed JSON produce a typed error, never a throw.
+- **[OA]** (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 13.1, row OA-10) The exported profile never carries the legacy per-profile `parentPinHash` (the grown-up PIN lives in `account:parentPinHash`), and a file that still holds one restores without it. Every other profile field is kept.
 - The file name is `hangul-route-<name>-<date>.hangulroute.json`.
 
 ### 3.7 Learner profile edits after registration (SYNC-PROF-1, 2026-10-14)

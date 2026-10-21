@@ -6,8 +6,6 @@ import {
   isScopedKey,
   keysForProfile,
   learners,
-  nextOnboardingStep,
-  parentProfile,
   parseScopedKey,
   removeProfile,
   renameProfile,
@@ -137,29 +135,13 @@ describe('profile set operations', () => {
     expect(() => renameProfile(seeded(), 'profile:kid1', 'Sun 🐯')).toThrow(/Invalid display name/);
   });
 
-  it('separates learners from the parent profile', () => {
+  it('separates learners from a legacy parent record', () => {
     const set = seeded();
     expect(learners(set).map((p) => p.displayName)).toEqual(['Suni', 'Jin']);
-    expect(parentProfile(set)?.displayName).toBe('Mom');
   });
 
   it('activeProfile is null when nothing is active', () => {
     expect(activeProfile(EMPTY)).toBeNull();
-  });
-});
-
-describe('nextOnboardingStep', () => {
-  it('forces the parent profile first on an empty install (§3.2)', () => {
-    expect(nextOnboardingStep(EMPTY)).toBe('create-parent');
-  });
-
-  it('then requires at least one learner', () => {
-    const set = createProfile(EMPTY, { ...learnerInput, role: 'parent' }, clockFrom(['p1'])).set;
-    expect(nextOnboardingStep(set)).toBe('create-learner');
-  });
-
-  it('is done once a parent and a learner exist', () => {
-    expect(nextOnboardingStep(seeded())).toBe('done');
   });
 });
 
