@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { D1Like } from '../db/d1';
 import app from '../index';
-import { MIN_GROUP_EVENTS, readRollups, rollupLimiter } from '../lib/learning-rollups';
+import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, readRollups, rollupBudget } from '../lib/learning-rollups';
 import { D1Db } from '../db';
 import { store } from '../store';
 import { openSqliteD1 } from './helpers/sqlite';
@@ -20,13 +20,18 @@ const DEVICE = 'device:41b2-install';
 type Sqlite = D1Like & { close: () => void };
 let d1: Sqlite;
 
-async function post(body: unknown, headers: Record<string, string> = {}, env: Record<string, unknown> = { DB: d1 }) {
-  const res = await app.request('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }, env);
+type Ctx = { waitUntil: (p: Promise<unknown>) => void; passThroughOnException: () => void; props: unknown };
+async function post(body: unknown, headers: Record<string, string> = {}, env: Record<string, unknown> = { DB: d1 }, ctx?: Ctx) {
+  const res = await app.request('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }, env, ctx);
   return res.status;
 }
 
+/** One caller address per profile, as many homes are (the once-a-day cap is per address). */
+const ip = (who: string) => ({ 'cf-connecting-ip': `ip-${who}` });
+
+/** Every rollup row but the budget counter (asserted on its own). */
 async function table(): Promise<Array<Record<string, unknown>>> {
-  return (await d1.prepare('SELECT * FROM learning_rollups ORDER BY day, metric, dim, bucket').all<Record<string, unknown>>()).results;
+  return (await d1.prepare('SELECT * FROM learning_rollups WHERE metric != ? ORDER BY day, metric, dim, bucket').bind(ROLLUP_BUDGET_METRIC).all<Record<string, unknown>>()).results;
 }
 
 const MEMORY_DAILY = {
@@ -46,7 +51,7 @@ const MEMORY_DAILY = {
 beforeEach(() => {
   d1 = openSqliteD1();
   store.reset();
-  rollupLimiter.reset();
+  rollupBudget.reset();
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
 });
@@ -66,7 +71,9 @@ describe('POST /api/telemetry · learning_rollups', () => {
     expect(rows).toEqual([
       { day: DAY, metric: 'memory.daily.dueVolume', dim: '', bucket: '10-19', events: 1 },
       { day: DAY, metric: 'memory.daily.durableWeek', dim: '', bucket: '5-9', events: 1 },
-      { day: DAY, metric: 'memory.daily.durableWeekByArm', dim: 'E2:b', bucket: '5-9', events: 1 },
+      { day: DAY, metric: 'memory.daily.durableWeek', dim: 'E2:b', bucket: '5-9', events: 1 },
+      { day: DAY, metric: 'memory.daily.minutes', dim: '', bucket: '10-14', events: 1 },
+      { day: DAY, metric: 'memory.daily.newHeld', dim: '', bucket: '2', events: 1 },
       { day: DAY, metric: 'memory.daily.recallLag', dim: '4-7', bucket: '80-89', events: 1 },
       { day: DAY, metric: 'memory.daily.recallLag', dim: '8-14', bucket: '90-92', events: 1 },
       { day: DAY, metric: 'session.end.leftAfterWrongStreak', dim: '', bucket: '1', events: 1 },
@@ -74,6 +81,8 @@ describe('POST /api/telemetry · learning_rollups', () => {
       { day: DAY, metric: 'session.end.questLeft', dim: '', bucket: '1', events: 1 },
       { day: DAY, metric: 'session.end.questLeft', dim: 'order-it', bucket: '1', events: 1 },
     ]);
+    // The only other row is the budget counter: codes and a count.
+    expect((await d1.prepare('SELECT * FROM learning_rollups WHERE metric = ?').bind(ROLLUP_BUDGET_METRIC).all()).results).toEqual([{ day: DAY, metric: ROLLUP_BUDGET_METRIC, dim: '', bucket: '', events: 500 }]);
     const columns = (await d1.prepare("SELECT name FROM pragma_table_info('learning_rollups') ORDER BY cid").all<{ name: string }>()).results.map((r) => r.name);
     expect(columns).toEqual(['day', 'metric', 'dim', 'bucket', 'events']);
     const values = JSON.stringify(rows);
@@ -83,10 +92,11 @@ describe('POST /api/telemetry · learning_rollups', () => {
   it('counts profile-days: 25 profiles sending their once-a-day memory.daily make 25 events in each cell', async () => {
     for (let i = 0; i < 25; i += 1) expect(await post({ name: 'memory.daily', profileId: `learner:p${i}`, payload: MEMORY_DAILY })).toBe(201);
     const rows = await table();
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(7);
     for (const row of rows) expect(row.events).toBe(25);
     expect(await readRollups(new D1Db(d1), { fromDay: DAY, toDay: DAY, metric: 'memory.daily.durableWeek' })).toEqual([
       { day: DAY, metric: 'memory.daily.durableWeek', dim: '', bucket: '5-9', events: 25 },
+      { day: DAY, metric: 'memory.daily.durableWeek', dim: 'E2:b', bucket: '5-9', events: 25 },
     ]);
   });
 
@@ -101,9 +111,13 @@ describe('POST /api/telemetry · learning_rollups', () => {
   });
 
   it('suppresses small groups when read: 19 profile-days are hidden, 20 are shown', async () => {
-    for (let i = 0; i < MIN_GROUP_EVENTS - 1; i += 1) await post({ name: 'week.goal_met', profileId: `learner:w${i}`, payload: { days: 3, target: 3 } });
-    for (let i = 0; i < MIN_GROUP_EVENTS; i += 1) await post({ name: 'week.goal_met', profileId: `learner:x${i}`, payload: { days: 5, target: 5 } });
-    expect(await readRollups(new D1Db(d1), { fromDay: DAY, toDay: DAY })).toEqual([{ day: DAY, metric: 'week.goal_met', dim: '', bucket: '5', events: 20 }]);
+    for (let i = 0; i < MIN_GROUP_EVENTS - 1; i += 1) await post({ name: 'week.goal_met', profileId: `learner:w${i}`, payload: { days: 3, target: 3 } }, ip(`w${i}`));
+    for (let i = 0; i < MIN_GROUP_EVENTS; i += 1) await post({ name: 'week.goal_met', profileId: `learner:x${i}`, payload: { days: 5, target: 5 } }, ip(`x${i}`));
+    for (let i = 0; i < MIN_GROUP_EVENTS + 5; i += 1) await post({ name: 'week.goal_met', profileId: `learner:y${i}`, payload: { days: 7, target: 7 } }, ip(`y${i}`));
+    // Target 3 (19) is hidden, and with it the smallest visible target (5, 20 events), so 3 cannot be derived from a total.
+    expect(await readRollups(new D1Db(d1), { fromDay: DAY, toDay: DAY, metric: 'week.goal_met' })).toEqual([{ day: DAY, metric: 'week.goal_met', dim: '', bucket: '7', events: 25 }]);
+    for (let i = 0; i < MIN_GROUP_EVENTS; i += 1) await post({ name: 'goal.met', profileId: `learner:g${i}`, payload: { points: 6, target: 6 } }, ip(`g${i}`));
+    expect(await readRollups(new D1Db(d1), { fromDay: DAY, toDay: DAY, metric: 'goal.met' })).toEqual([{ day: DAY, metric: 'goal.met', dim: '', bucket: '6', events: 20 }]);
   });
 
   it('ignores names off the allowlist, refused names and payloads that do not fit; the event is still logged', async () => {
@@ -121,6 +135,26 @@ describe('POST /api/telemetry · learning_rollups', () => {
     expect(await post({ name: 'goal.met', profileId: PROFILE, payload: { points: 3, target: 3 } }, {}, { DB: before })).toBe(201);
     expect(store.events).toHaveLength(1);
     before.close();
+  });
+
+  it('kill switch: LEARNING_ROLLUPS=disabled writes no row, also for names shipped clients already send; unset or enabled writes', async () => {
+    const shipped = { name: 'session.end', profileId: PROFILE, payload: { durationSeconds: 300, streakDays: 2 } };
+    expect(await post(shipped, {}, { DB: d1, LEARNING_ROLLUPS: 'disabled' })).toBe(201);
+    expect(await post({ name: 'review.complete', profileId: PROFILE, payload: { kind: 'daily', stars: 3 } }, {}, { DB: d1, LEARNING_ROLLUPS: 'disabled' })).toBe(201);
+    expect(await table()).toEqual([]);
+    expect(store.events).toHaveLength(2);
+    expect(await post(shipped, {}, { DB: d1, LEARNING_ROLLUPS: 'enabled' })).toBe(201);
+    expect(await post({ name: 'review.complete', profileId: PROFILE, payload: { kind: 'daily', stars: 3 } }, {}, { DB: d1 })).toBe(201);
+    expect((await table()).map((r) => r.metric)).toEqual(['review.complete.stars', 'session.end.minutes']);
+  });
+
+  it('on the Worker the rollup runs after the answer (waitUntil), so a slow D1 write never delays the 201', async () => {
+    const pending: Array<Promise<unknown>> = [];
+    const ctx: Ctx = { waitUntil: (p) => pending.push(p), passThroughOnException: () => undefined, props: {} };
+    expect(await post({ name: 'goal.met', profileId: PROFILE, payload: { points: 3, target: 3 } }, {}, { DB: d1 }, ctx)).toBe(201);
+    expect(pending).toHaveLength(1);
+    await Promise.all(pending);
+    expect((await table()).map((r) => [r.metric, r.events])).toEqual([['goal.met', 1]]);
   });
 
   it('a production Worker with no D1 binding still accepts the event (the rollup is skipped, never a 503)', async () => {

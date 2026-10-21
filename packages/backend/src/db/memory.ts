@@ -1185,7 +1185,15 @@ export class MemoryDb implements Db {
     }
     this.rollups.set(day, cells);
   }
-  async rollupRows(fromDay: string, toDay: string, metric?: string): Promise<RollupRow[]> {
+  async reserveRollupCells(day: string, metric: string, cells: number): Promise<number> {
+    const dayCells = this.rollups.get(day) ?? new Map<string, RollupRow>();
+    const key = { metric, dim: '', bucket: '' };
+    const events = (dayCells.get(rollupCellKey(key))?.events ?? 0) + cells;
+    dayCells.set(rollupCellKey(key), { day, ...key, events });
+    this.rollups.set(day, dayCells);
+    return events;
+  }
+  async rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]> {
     const rows: RollupRow[] = [];
     for (const [day, cells] of this.rollups) {
       if (day < fromDay || day > toDay) continue;
@@ -1193,7 +1201,7 @@ export class MemoryDb implements Db {
     }
     // '\n' sorts below every character a code holds, so this is the (day, metric, dim, bucket) order D1 answers in.
     const order = (r: RollupRow): string => `${r.day}\n${rollupCellKey(r)}`;
-    return rows.sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0));
+    return rows.sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0)).slice(0, limit);
   }
 
   async reset(): Promise<void> {
