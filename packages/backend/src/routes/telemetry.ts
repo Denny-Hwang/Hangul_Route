@@ -14,7 +14,11 @@ import { id, type TelemetryEvent } from '../store';
  * codes and never a profile id, `browse.*` and `notes.*` events keep only
  * their documented fields and never a profile id (F-BROWSE-001 section 9,
  * F-FEEDBACK-001 section 10), `billing.*` names are refused with 422 because
- * only the Worker records them (F-BILL-002 section 10), and the log is
+ * only the Worker records them (F-BILL-002 section 10), as are `space.goal.set`
+ * and `space.goal.met` (F-CURR-002 section 11.3), an F-CURR-002 name
+ * (section 11.3, row CM-3) keeps its payload only when it parses against its
+ * strict schema, `session.end` keeps only the CM-3 fields that fit their codes,
+ * and the log is
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
  * There is deliberately no read route (audit SEC-3).
@@ -47,7 +51,7 @@ telemetryRoutes.post('/', async (c) => {
   if (!isTelemetryEventName(name)) {
     return fail(c, 'bad_request', 'unknown event name', 422);
   }
-  // `billing.*` is recorded by the Worker itself (F-BILL-002 section 10): a client can never forge one.
+  // `billing.*` (F-BILL-002 section 10) and `space.goal.*` (F-CURR-002 section 11.3) are recorded by the Worker itself: a client can never forge one.
   if (isServerOnlyTelemetryName(name)) {
     return fail(c, 'bad_request', 'server-only event name', 422);
   }
