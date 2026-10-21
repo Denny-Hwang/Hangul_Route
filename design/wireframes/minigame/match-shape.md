@@ -38,12 +38,15 @@ Origin round, compact (320 x 568):
 |  (Which letter comes from      |  <- heading
 |   this shape?)                 |
 | +----------------------------+ |
-| |   (art: side view, tongue  | |  <- picture card: the part that makes the shape is drawn
-| |    touching the upper gum) | |     heavier; the rest is a quiet outline
-| |  (The tongue touches the   | |  <- one line from the sourced fact
-| |   top of the mouth.)       | |
+| |   (art: side view facing   | |  <- picture card: the part that makes the shape is drawn
+| |    left, tongue touching   | |     heavier (it reads as the letter); the rest is a
+| |    the upper gum)          | |     quiet outline
+| |  (The tongue touches the   | |  <- one line in the wording of the sourced fact f3
+| |   upper gum.)              | |
 | +----------------------------+ |
-|  [ ㄱ g ] [ ㄴ n ] [ ㅁ m ]     |  <- 3 letter tiles, one row (3 x 88 at 320)
+|  [ ㄱ g/k ] [ ㄴ n ] [ ㅁ m ]   |  <- 3 letter tiles, one row, each a third of the column
+|                                |     (at least touchTarget.min tall); sound values are the
+|                                |     isolated-letter values of JAMO_SOUND_VALUES (g/k)
 |  ( Hoya bubble slot )          |
 +--------------------------------+
 
@@ -51,8 +54,7 @@ after the right tile:
 | +----------------------------+ |
 | |  (art)        ~~ ㄴ ~~  n  | |  <- the letter beside the picture, its shape traced over the
 | |  (ㄴ copies the tongue     | |     picture's heavy line (static under reduced motion)
-| |   touching the top of the | |
-| |   mouth.)                  | |
+| |   touching the upper gum.) | |
 | +----------------------------+ |
 |  [ ㄱ ] [ ㄴ (check) ] [ ㅁ ]   |
 |  [ Sources ]                   |  <- opens the fact's sources (the Culture notes sheet)
@@ -65,7 +67,9 @@ Pair round, compact:
 | [=====-----]          (3 / 5)  |
 |  (Tap every ~~ ㅂ ~~ b)         |  <- heading with the target and its sound
 |                                |
-|   [ ㅂ ] [ ㅍ ] [ ㅂ ]          |  <- 6 tiles, 3 x 2, each 88 x 88 at 320
+|   [ ㅂ ] [ ㅍ ] [ ㅂ ]          |  <- 6 tiles, 3 x 2, each a third of the column wide and
+|                                |     at least touchTarget.min tall (touchTarget.hero where
+|                                |     the window allows)
 |   [ ㅍ ] [ ㅍ ] [ ㅂ ]          |
 |                                |
 |  (found: 1 of the ones here    |  <- no count shown; found tiles carry a check and their
@@ -95,7 +99,7 @@ Regular (768 x 1024): origin: picture and tiles side by side in the reading colu
 |  pair round: ~~ ㅂ ~~ with [ b ] [ p ] [ m ]: the look-alike's sound is a distractor
 ```
 
-Read Pick renders with the Listen & Pick option cards and the text prompt mode of row CM-30 (`cloze-pick.md`, fallback section), so it adds no new renderer. Same scoring; the origin picture and its note are left out (they are a culture layer, not the asked skill).
+Read Pick renders with the Listen & Pick option cards and the text prompt mode first described for row CM-30 (`cloze-pick.md`, fallback section), so it adds no new renderer. **Dependency**: the spec's §17 table lists only CM-D2 before CM-33, so whichever of CM-30 and CM-33 merges first adds Listen & Pick's `promptMode: 'text'` (additive, with its tests) and the other reuses it; without it the `game.match-shape`-off fallback would have no renderer. Same scoring; the origin picture and its note are left out (they are a culture layer, not the asked skill).
 
 ## No device voice
 
@@ -119,14 +123,14 @@ Exit to: `quest/player` · the review session's next item · [ Sources ] -> the 
 
 ## Accessibility
 
-- The origin picture is an image with a description that is the fact itself ("A head from the side. The tongue touches the top of the mouth."), not decorative, because it is the prompt.
-- Tiles are buttons named by the letter and, in origin rounds, its sound ("ㄴ, n"). In pair rounds a tile is named by its letter only, and a found tile adds "found" and its sound ("ㅂ, b, found"), so the screen-reader user does the same task: read the letter shape (the screen reader names the jamo, which the learner then compares with the target).
+- The origin picture is an image with a description that is the fact itself ("A head from the side. The tongue touches the upper gum."), not decorative, because it is the prompt.
+- Tiles are buttons named by the letter and, in origin rounds, its sound value read as words ("ㄴ, n"; "ㄱ, g or k"). In pair rounds a tile is named by its letter only, and a found tile adds "found" and its sound ("ㅂ, b, found"), so the screen-reader user does the same task: read the letter shape (the screen reader names the jamo, which the learner then compares with the target).
 - The pair heading reads "Tap every ㅂ, b". Hoya's line and the status panel are polite live regions.
 - No colour-only state: found tiles have a check, missed tiles a mark and a thicker border.
 
 ## Tokens and targets
 
-- Letter tiles: origin 88 wide on a phone (three across, each at least `touchTarget.min`; 48 dp floor met), pair `touchTarget.hero` (96) where the window allows, never under `touchTarget.min`; letter face `typography.size.display`, sound value `caption`; `radii.lg`, `borderWidth.base`.
+- Letter tiles: origin a third of the column wide on a phone (three across, each at least `touchTarget.min` tall; 48 dp floor met), pair tiles the same width and `touchTarget.hero` (96) tall where the window allows, never under `touchTarget.min`; letter face `typography.size.display`, sound value `caption`; `radii.lg`, `borderWidth.base`.
 - Picture card: `surface.paper`, `border.subtle`, `shadows.card`; the picture in token colours only: outline `border.shape`, the shape-making part `text.primary` at the letter's stroke weight, skin and mouth in `hoya.belly` / `surface.sunken` (no `brand.primary`, no `feedback.danger`). Scene-art budget per prop: at most 8 shapes and 5 colours (style guide).
 
 ## Data needs

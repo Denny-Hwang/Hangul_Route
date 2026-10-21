@@ -22,7 +22,7 @@ Facts already shipped and reviewed in `content/stories/seollal-new-year.json` (f
 
 - Four wooden yut sticks are thrown, and how they land moves a piece on the board (f7).
 - The five throws: 도 `do` 1 station, 개 `gae` 2, 걸 `geol` 3, 윷 `yut` 4, 모 `mo` 5; 윷 and 모 give another throw (f8).
-- The board, 윷판 `yutpan`, has 29 stations (the article above). The drawing places 20 on the edge (5 to a side, corners shared) and 9 on the two crossing lines (the centre shared), 29 in all; the article gives the total and describes routes through the centre (방), so the MAR culture pass checks the drawing against the board figure of the article.
+- The board, 윷판 `yutpan`, has 29 stations (the article above). The drawing places 20 on the edge (6 to a side, corners shared) and 9 on the two crossing lines (the centre shared), 29 in all; the article gives the total and describes routes through the centre (방), so the MAR culture pass checks the drawing against the board figure of the article.
 - Pieces start from the entrance and leave by the exit, 참먹이 (the article: "말 네 개가 모두 입구(入口)인 도에서 출발하여 참먹이［出口］를 먼저 빠져나가는 편이 이긴다"); the skin uses one piece at a time and four in all, and has no winner, because there is no other side.
 
 What the skin leaves out on purpose, so it stays a calm solo board and every claim stays inside the sources: no other team or player (no comparison between learners), no capturing, no backward move, no inner routes (the piece walks the outer ring of 20 stations), and no claim about which way up each stick counts (the sources checked for the story do not say, so the art never shows a "which side is up" rule). The MAR culture pass checks the board drawing and the five names against the sources above. CM-39 cites them in its content note.
@@ -59,7 +59,7 @@ Compact (320 x 568, layout C of the shell):
 +--------------------------------+
 ```
 
-The board band is 128 + `spacing.md` padding tall at 320 (the board drawing at 128 x 128 is media; its stations are not tap targets). The item area keeps every target at `touchTarget.min` or more. Below 600 tall the band shrinks to 96 and the throw text sits beside it on one line.
+The board band is 128 + `spacing.md` padding tall on a phone from 600 tall (the board drawing at 128 x 128 is media; its stations are not tap targets). The item area keeps every target at `touchTarget.min` or more. **Below 600 tall** (a 320 x 568 phone, a landscape phone) the drawing shrinks to `touchTarget.hero` (96), the throw name, its romanization and how far it went sit on one line beside it, and the sticks art is left out (the name says the throw), so the review item keeps its room; this is the state in `shots/yut-review-320.png`.
 
 Regular (768 x 1024): two panes (`layout.pane.gap`): the board on the left at up to 320 x 320 with the throw under it; the review item on the right in its reading width. Wide: the same with the board at up to 400.
 
@@ -108,7 +108,7 @@ Exit to: the review result (plain, stars only) · the stop sheet -> back to wher
 
 ## Accessibility
 
-- The board is one image with a live description after each throw: "Throw: gae, 2 stations. Your piece is on station 9 of 20." (`a11y.minigame.yutReview.throw`); "A piece went home. 1 piece home." The stations are not focusable (they do nothing). The description is a polite live region and never interrupts the next item's prompt (it is queued after the item's own announcements).
+- The board is one image with a live description after each throw: "Throw: gae. Your piece moved 2 stations." (`a11y.minigame.yutReview.throw`); "A piece went home. 1 piece home." It never says a station number out of a total: an "n of m" reads like a score, which a review screen never shows (§4.5, the `review-copy` lint). The stations are not focusable (they do nothing). The description is a polite live region and never interrupts the next item's prompt (it is queued after the item's own announcements).
 - The look switch reads "Yut board, on".
 - The review item keeps its own accessibility.
 - No colour-only state: the learner's piece is a distinct shape (a filled disc with a ring) and named in the description.
@@ -136,11 +136,12 @@ The five throw names and 윷판 are taught Korean drawn with `KoreanText` (roman
 | `yutReview.throwAgain` | Throw again |
 | `yutReview.pieceHome` | A piece went home! |
 | `yutReview.homeTray` | Home |
-| `a11y.minigame.yutReview.throw(romanization, n, station, total)` | Throw: {romanization}, {n} stations. Your piece is on station {station} of {total}. |
+| `a11y.minigame.yutReview.throw(romanization, n)` | Throw: {romanization}. Your piece moved {n} stations. (plural rules: 1 station / {n} stations) |
+| `a11y.minigame.yutReview.throwAgain` | Throw again. |
 | `a11y.minigame.yutReview.home(count)` | A piece went home. {count} pieces home. |
 | `a11y.minigame.yutReview.board` | Yut board |
 
 ## Open questions
 
-1. **Station count in the description.** "Station 9 of 20" is a position on a board, not a score, and §4.5's ban on "n of m" is about results. The MAR checks the wording; if it reads as a score, the description drops the total ("Your piece moved 2 stations").
+1. **Station count in the description** (decided in the CM-D2 review): the description says how far the piece moved, never "station n of 20", so nothing on a review screen reads as "n of m".
 2. **The inner stations.** The 29 stations include the inner lines of the board; the skin draws them but walks the outer ring only. Using the inner routes needs its own sourced rule and a MAR culture check, so it is left for a later row.

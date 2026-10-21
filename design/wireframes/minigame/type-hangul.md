@@ -172,7 +172,7 @@ The round says what the learner types from (round schema, C-1); every mode shows
 | `hear` | [speaker, hero size] (Type the word you hear) · (Hoya) {picture when the round has one} | Dictation (F-CURR-002 F2): hear and spell; the Korean and its romanization are hidden until the result panel (see "Hear mode: Dictation" below) |
 | `picture` | [WordArt picture] (Type the word for the picture) (gimbap) · (gimbap) | Stage 6 apply ("type the dish you want to order") |
 
-- `hear` hides the romanization before Done (decided in row CM-D2, superseding the earlier "keep it visible" draft and open question 4): the Korean is the answer and is not on screen, so CLAUDE.md §1 (taught Korean always carries romanization) is kept wherever the Korean is drawn, and Revised Romanization spells most words letter for letter, so a visible romanization would turn Dictation into transliteration. [ Show how it sounds ] reveals it as a hint (below).
+- `hear` hides the romanization before Done (decided in row CM-D2, superseding the earlier "keep it visible" draft and open question 4): the Korean is the answer and is not on screen, so CLAUDE.md §1 (taught Korean always carries romanization) is kept wherever the Korean is drawn, and for the unambiguous words Dictation admits the romanization maps straight to the spelling, so showing it would give the answer away and turn Dictation into transliteration. [ Show how it sounds ] reveals it as a hint (below).
 - `hear` without a Korean voice (F-AUDIO-004): the round opens as a `see` round with the visible sound notice (below); it never stays a hear round that cannot be heard.
 - In every mode the Korean target is shown in the result panel after Done; before Done only `see` shows it.
 
@@ -192,8 +192,8 @@ Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §7.1 row F2 (Ty
 ```
 Compact (320 x 568)                         after Done, near miss (사과 typed as 사가)
 +--------------------------------+          +--------------------------------+
-| (2/4) [(spk)] (apple) [ Skip ] |          | (2/4) [(spk)] (apple) [ Skip ] |
-|  [ Show how it sounds ]        |  <- hint | +--------------------------+   |
+| [(spk)] (apple)      [ Skip ]  |          | [(spk)] (apple)      [ Skip ]  |
+|         (Show how it sounds)   |  <- hint | +--------------------------+   |
 | +----------------------+ +----+|          | |  사가                    |   |
 | | 사ㄱ|                | |Done||          | +--------------------------+   |
 | +----------------------+ +----+|          | (Hoya thinking)                |
@@ -206,7 +206,7 @@ Compact (320 x 568)                         after Done, near miss (사과 typed 
                                             +--------------------------------+
 ```
 
-- **Below `layout.compactHeight` (320 x 568, a landscape phone)** the prompt part above the answer row has 103 of height (Type Hangul budget: 568 - 72 - 393). Its one row holds the count pill, the speaker at `touchTarget.min` (it replays on every tap, so there is no separate Hear it again), the meaning, and Skip; the heading is the empty field's placeholder ("Type the word you hear", the Type Hangul rule). [ Show how it sounds ] is the next row of that scrolling part: its top shows on the first screen and one scroll brings it fully into view; the answer row and the keyboard never move. A round's picture is left out below 640 tall (the meaning settles the item on its own; the lint requires a meaning that settles it for every round that also has a picture).
+- **Below `layout.compactHeight` (a 320 x 568 phone in portrait, or any window under 640 tall)** the prompt part above the answer row has 103 of height (Type Hangul budget: 568 - 72 - 393), room for one row of `touchTarget.min`. That row holds the speaker at `touchTarget.min` (it replays on every tap, so there is no separate Hear it again), the **meaning button** and Skip; the heading is the empty field's placeholder ("Type the word you hear", the Type Hangul rule). The meaning button is one hit area at least 64 tall showing the meaning on its first line and "Show how it sounds" as a link line under it; a tap reveals the romanization in place of the link line. So every control is fully on the first screen, nothing is cut, and the answer row and the keyboard never move (review of row CM-D2: a hint row that only half showed read as broken). The count pill is left out of this row in hear mode, because the row has no room for it (the round bar is already left out below 640 tall); it comes back from 640 tall. With text at 200 % the row grows and the prompt part scrolls, as Type Hangul's does. A round's picture is left out below 640 tall (the meaning settles the item on its own; the lint requires a meaning that settles it for every round that also has a picture).
 - **From 640 tall** (375 x 667 and up): the shell's top row with the round bar, then the heading, then the prompt row: the speaker at `touchTarget.hero`, [ Hear it again ], the meaning and the picture, then [ Show how it sounds ].
 - **Regular (768 x 1024)**: the same in the reading column, the speaker at `touchTarget.hero` (it does not scale past the hero size), the standard keyboard, Done and Skip under it.
 
@@ -247,7 +247,7 @@ A pick round, not a typing round; it belongs here because it is the one heard ro
 |   word?)                       |
 | +----------------------------+ |
 | |  [picture: a book]         | |  <- picture or gloss: what settles it (required by the lint)
-| |  (the book, as the subject)| |  <- meaning in the UI language
+| |  (book)                    | |  <- meaning in the UI language, plain (no grammar terms)
 | |  [ (speaker) Hear it ]     | |  <- says [채기]; plays on round open like Listen & Pick
 | +----------------------------+ |
 |  [ ~~ 책이 ~~ (chaegi) ]        |  <- two options; they may sound the same and their
@@ -256,11 +256,11 @@ A pick round, not a typing round; it belongs here because it is the one heard ro
 +--------------------------------+
 ```
 
-- **What it trains**: liaison and other sound changes (책이 is said [채기]); the meaning shows which spelling is a word. A miss nudges with "Look at the meaning again." and, after the right pick, Hoya adds the sound-change line from the quest's Discover note (content, CM-0b and the S2 Volume 2 rows).
+- **What it trains**: liaison and other sound changes (책이 is said [채기]); the picture and the plain meaning ("book") show which spelling holds the word 책. The meaning never uses grammar terms ("subject", "particle"): the copy stays at CEFR Pre-A1. A miss nudges with "Look at the meaning again." and, after the right pick, Hoya adds the sound-change line from the quest's Discover note (content, CM-0b and the S2 Volume 2 rows).
 - **Identical romanization is expected**: both options show `chaegi`, because romanization follows pronunciation (Revised Romanization). The options are still told apart by their Hangul.
 - **No device voice**: the prompt still has the picture and the meaning, so the round is answerable; the status panel (W9) appears under Hear it after a tap or after the opening sound fails; source `spelling-pick`.
 - **Fallback**: it is a shipped kind with a new prompt (`listen-pick` with `promptKind: 'spelling'`), so it has no `game.<kind>` switch of its own; with `game.cloze-pick` or any other switch off it is unaffected. CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss.
-- Accessibility: the prompt reads "Picture: a book. The book, as the subject." then "Hear it"; each option reads its Hangul letter by letter and its romanization ("책이, chaegi"), because the two options would otherwise sound the same to a screen-reader user.
+- Accessibility: the prompt reads "Picture: a book. Book." then "Hear it"; each option reads its Hangul letter by letter and its romanization ("책이, chaegi"), because the two options would otherwise sound the same to a screen-reader user.
 
 ### Accessibility (hear mode)
 
@@ -275,6 +275,7 @@ Reused as they are: `typeHangul.heading.see` (the fallback), `typeHangul.near` /
 | Key (proposed) | en draft |
 |---|---|
 | `typeHangul.heading.hear` | Type the word you hear |
+| `typeHangul.hear.showSound` | Show how it sounds (the meaning button's link line; the same en, es and ko as `learner.placement.item.showSound`) |
 | `typeHangul.hear.meaning(gloss)` | Meaning: {gloss} |
 | `spellingPick.heading` | Which spelling matches this word? |
 | `spellingPick.miss` | Look at the meaning again. |
@@ -332,6 +333,7 @@ No `packages/i18n` key is added by this design row. G-3 adds these under `learne
 |---|---|
 | `typeHangul.heading.see` | Type this word |
 | `typeHangul.heading.hear` | Type the word you hear |
+| `typeHangul.hear.showSound` | Show how it sounds (the meaning button's link line; the same en, es and ko as `learner.placement.item.showSound`) |
 | `typeHangul.heading.picture` | Type the word for the picture |
 | `typeHangul.pass` | You typed it! |
 | `typeHangul.near` | Almost! Check the marked block. |

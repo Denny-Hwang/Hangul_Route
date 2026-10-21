@@ -20,7 +20,8 @@ Then: a natural reply is sent and the partner answers, sometimes along a differe
 
 - **A scene** is one step: a title ("At the library desk" `~~ 도서관 ~~`), a partner named by role, never by a personal name (`~~ 사서 ~~ (saseo) · (librarian)`; the cast names Hoya and the shipped companions are the only names), and 4 to 6 learner turns.
 - **A turn**: the partner's line (Korean, romanization, meaning in the UI language, [ Hear it ]), then 2 or 3 reply bubbles (Korean and romanization). Reply meanings are hidden: the produce-like `exc` rung reads the reply in Korean (§4.3). [ Show meanings ] reveals the meanings for this turn and records the turn as hinted (no penalty line).
-- **Replies are `natural` or `lessNatural`.** A natural reply moves to its next node; two natural replies may lead to different branches. A less natural reply has an authored `why` line (content, with es and ko overlays) and is never sent.
+- **Replies are `natural` or `lessNatural`.** A natural reply moves to its next node; two natural replies may lead to different branches. A less natural reply has an authored `why` line (content, with es and ko overlays) and is never sent. A `why` line that quotes Korean draws it as taught Korean with its romanization (`~~ 안녕히 계세요 ~~ (annyeonghi gyeseyo)`), never as bare Hangul inside the sentence.
+- **Every turn has at least one less natural reply** (refinement `role-play-turn-options`, CM-35). It gives the turn something to nudge and gives the fallback a wrong option on every turn, including a turn with two natural replies.
 - **Every branch ends well** (refinement `role-play-good-endings`, CM-35): every leaf node is an `end` with a friendly closing line; there is no node a learner can reach that ends badly, no failure node, no "the partner leaves". **Every branch has the same number of learner turns** (refinement `role-play-even-branches`), so the progress bar is honest whichever way the chat goes.
 - **Scoring** per learner turn: the turn's first tap scores (a natural reply is right, a less natural one is a miss); the retry is a retry. Stars follow the shell.
 - **No Skip** (an interaction game, as Tap & Respond); the quest player's leave control is the way out.
@@ -31,9 +32,9 @@ Example scene (fixture words, CM-35 and the S4 Letters rows author the real ones
 | Turn | Partner | Natural replies -> next | Less natural reply and Hoya's `why` |
 |---|---|---|---|
 | 1 | 안녕하세요! (annyeonghaseyo) · Hello! | 안녕하세요! (annyeonghaseyo) -> 2 | 잘 먹겠습니다! (jal meokgetseumnida): "That one is for the start of a meal. Try a greeting." |
-| 2 | 무슨 책을 찾아요? (museun chaegeul chajayo) · What book are you looking for? | 동화책을 찾아요. (donghwachaegeul chajayo) -> 3a · 한글 책을 찾아요. (hangeul chaegeul chajayo) -> 3b | (none: two natural branches) |
+| 2 | 무슨 책을 찾아요? (museun chaegeul chajayo) · What book are you looking for? | 동화책을 찾아요. (donghwachaegeul chajayo) -> 3a · 한글 책을 찾아요. (hangeul chaegeul chajayo) -> 3b | 괜찮아요. (gwaenchanayo): "They asked which book. Tell them the book you want." |
 | 3a / 3b | 여기 있어요. (yeogi isseoyo) · Here it is. (each branch names its own shelf in its meaning) | 감사합니다! (gamsahamnida) -> 4 | 미안합니다. (mianhamnida): "Here a thank-you fits better." |
-| 4 | 또 오세요! (tto oseyo) · Come again! | 안녕히 계세요! (annyeonghi gyeseyo) -> end | 안녕히 가세요! (annyeonghi gaseyo): "You are the one leaving, so 안녕히 계세요 fits: it is said to the one who stays." |
+| 4 | 또 오세요! (tto oseyo) · Come again! | 안녕히 계세요! (annyeonghi gyeseyo) -> end | 안녕히 가세요! (annyeonghi gaseyo): "You are the one leaving, so 안녕히 계세요 (annyeonghi gyeseyo) fits: it is said to the one who stays." |
 | end | (Hoya cheering) "You found your book!" | | |
 
 ## Box diagram
@@ -110,7 +111,7 @@ Regular (768 x 1024): the chat log and the reply area in the reading column; the
 
 ## Fallback round when `game.role-play` is off
 
-**Tap to Respond on the same turns**, derived by `rolePlayToTapRespond(scene)`: the scene's main path (at each turn the first natural reply, and its next node) as a list of Tap & Respond turns; each turn's natural reply is the right answer and its less natural replies are the other options (a turn with two natural replies keeps the first; the second is left out, so every option left has one right answer). The Tap & Respond screen shows the partner line as "Someone says" with its meaning and the replies with their meanings (its shipped look); its miss line is "Hmm, that doesn't fit. Try another!". Branches other than the main path are not played. Same scoring per turn.
+**Tap to Respond on the same turns**, derived by `rolePlayToTapRespond(scene)`: the scene's main path (at each turn the first natural reply, and its next node) as a list of Tap & Respond turns; each turn's natural reply is the right answer and its less natural replies are the other options (a turn with two natural replies keeps the first; the second is left out, so every option left has one right answer; `role-play-turn-options` guarantees each turn has at least one other option, so no fallback turn is a single button). The Tap & Respond screen shows the partner line as "Someone says" with its meaning and the replies with their meanings (its shipped look); its miss line is "Hmm, that doesn't fit. Try another!". Branches other than the main path are not played. Same scoring per turn.
 
 ## No device voice
 
@@ -145,7 +146,7 @@ Exit to: `quest/player` (Continue on the end card) · the quest player's leave s
 
 ## Data needs
 
-- reads: the `role-play` scene: `{ id, titleKo: KoText, partnerRoleKo: KoText, nodes: { [nodeId]: { line: KoText, replies: [{ text: KoText, kind: 'natural' | 'lessNatural', next?: nodeId, whyKey? }][2..3] } | { end: true, closingKey } }, start: nodeId }` (CM-35); refinements: every path from `start` ends at an `end` node, every path has the same learner-turn count (4 to 6), each turn has at least one natural reply, every less natural reply has a `why`, no cycles.
+- reads: the `role-play` scene: `{ id, titleKo: KoText, partnerRoleKo: KoText, nodes: { [nodeId]: { line: KoText, replies: [{ text: KoText, kind: 'natural' | 'lessNatural', next?: nodeId, whyKey? }][2..3] } | { end: true, closingKey } }, start: nodeId }` (CM-35); refinements: every path from `start` ends at an `end` node, every path has the same learner-turn count (4 to 6), each turn has at least one natural and at least one less natural reply, every less natural reply has a `why`, no cycles.
 - logic: branch reducer, path length, scoring and `rolePlayToTapRespond` (pure, 100 %); the "every branch ends well" property test walks every path.
 - writes: `answerRound(turnKey, correct)` per learner turn (first tap); memory items: each turn's `exc` item (line and natural reply) at the read rung, and the `lex` items inside it (credit inside sentences).
 - telemetry: `minigame.finished { kind: 'role-play' | 'tap-respond', ... }`; `audio.fallback_shown { source: 'role-play', reason }`. The branch taken is not sent.

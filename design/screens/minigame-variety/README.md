@@ -34,17 +34,17 @@ Open any file in a browser. Nothing is interactive (the Role Play page scrolls i
 
 **D3. Meanings are held back where they would answer the round.** Cloze tiles, Story Order cards and Role Play replies show Korean and romanization only; Story Order and Role Play offer [ Show meanings ] as a hint (recorded as hinted for the memory model, never a penalty line). Prompts keep their meaning (the sentence's meaning in Cloze Pick, the partner line's meaning in Role Play, the word's meaning in Dictation), because the meaning is the input the round reads from.
 
-**D4. Dictation hides the romanization before Done.** The Korean is the answer and is not drawn, so the romanization (which spells most words letter for letter) is held too; [ Show how it sounds ] reveals it as a hint. After Done the word is shown with its romanization and meaning. With no device voice the round opens as a `see` round with the sound notice (board D1), decided before the round opens.
+**D4. Dictation hides the romanization before Done.** The Korean is the answer and is not drawn, so the romanization (which, for the unambiguous words Dictation admits, maps straight to the spelling) is held too; "Show how it sounds" reveals it as a hint. Below 640 tall it is the link line of the meaning button in the one prompt row (speaker, meaning button, Skip), so it is never half-shown. After Done the word is shown with its romanization and meaning. With no device voice the round opens as a `see` round with the sound notice (board D1), decided before the round opens.
 
 **D5. Syllable Build at 320 fits on one screen** by putting the speaker beside the block (measured: top row 64, speaker and block 140, three rows of caption and 64, the Hoya slot). The final row never offers two letters with the same final sound (밥 offers ㅂ, ㄴ, ㅇ and No final, never ㅍ).
 
-**D6. Match Shape's origin picture faces left**, so the tongue drawn heavier reads as the letter (ㄴ: the tongue touching the top of the mouth, from the shipped, sourced fact f3 of `content/stories/shapes-of-hangeul.json`). The picture is an original, simple side view in tokens; CM-33 draws the five consonant pictures and the vowel bases as registry props with a `sourceRef`, to the scene-art style guide. The mock's picture is a proposal for the ㄴ prop's shape budget (5 shapes, 5 colours).
+**D6. Match Shape's origin picture faces left**, so the tongue drawn heavier reads as the letter (ㄴ: the tongue touching the upper gum, in the wording of the shipped, sourced fact f3 of `content/stories/shapes-of-hangeul.json`). The picture is an original, simple side view in tokens; CM-33 draws the five consonant pictures and the vowel bases as registry props with a `sourceRef`, to the scene-art style guide. The mock's picture is a proposal for the ㄴ prop's shape budget (5 shapes, 5 colours).
 
 **D7. Role Play never ends badly.** A less natural reply is never sent: it locks in amber, Hoya says why another fits (board R1), and the learner taps again. Every branch ends with a closing line and Continue (board R2). The partner is named by role (사서, librarian), never by a personal name; the learner is "you".
 
 **D8. My page is shown and not kept.** The not-kept line sits above the text (board Y1), and there is no save, share, copy, download or print control. Every bank has one neutral option (호야 for a person, 괜찮아요 for a feeling, 공원 for a place), drawn like the others.
 
-**D9. The Yut board is play only.** The board band (128 on a phone, 320 from regular) shows the 29 stations of the board (20 on the edge, 9 on the two crossing lines), the learner's piece, the last throw's name in Korean with romanization and how far it went, the sticks as drawn art, and the home tray of four pieces. The stations are not tap targets. Stars and everything else come from the review answers; the result screen is the plain one. No other player, no capture, no backward move.
+**D9. The Yut board is play only.** The board band (128 on a phone from 600 tall, 96 below 600 tall with the throw on one line and no sticks art, 320 from regular) shows the 29 stations of the board (20 on the edge, 6 to a side with shared corners, and 9 on the two crossing lines), the learner's piece, the last throw's name in Korean with romanization and how far it went, the sticks as drawn art, and the home tray of four pieces. The stations are not tap targets. Stars and everything else come from the review answers; the result screen is the plain one. No other player, no capture, no backward move.
 
 **D10. Fallbacks are shipped games.** Each board's last device is the format's fallback round, rendered as the shipped game would render it (C3 Listen & Pick with a text prompt, S2 Listen & Pick on the block, M3 Read Pick, R3 Tap to Respond). The dashed note under each is a board note, not UI: the learner sees no notice.
 
@@ -69,29 +69,29 @@ Values that are not tokens. The build rows write them as named constants, never 
 
 | Where | Value | Derived from |
 |---|---|---|
-| Yut board drawing, phone | 128 | 2 x `touchTarget.min` |
+| Yut board drawing, phone | 128 from 600 tall; 96 below | 2 x `touchTarget.min`; `touchTarget.hero` |
 | Yut board drawing, from regular | 320 | 5 x `touchTarget.min` |
-| Match Shape origin picture, phone height | 160 | `TRACE_CANVAS_MIN` (the smallest drawing surface the app uses for a letter) |
+| Match Shape origin picture, phone height | `var(--trace-canvas-min)` (160) | `TRACE_CANVAS_MIN`, referenced, not copied |
 | Chat bubble width cap | 85 % phone, 80 % from regular | keeps the side of a bubble (who said it) visible at every width |
 | Syllable Build block zones | 64 x 64 each, the final zone 64 tall across both columns (phone); 96 and a 64-tall final zone from regular | `spacing.jumbo` (= `touchTarget.min`, because a filled zone is a tap target that empties it); `touchTarget.hero` / `touchTarget.min` |
-| Story Order slots | 4 across at 320 | the authoring default of 4 cards; each slot at least `touchTarget.min` tall |
+| Story Order slots | 2 x 2 on a phone, 4 across from regular | a filled slot shows its line's first word with romanization (`그다음에` `geudaeume` needs half the column); each slot at least `touchTarget.min` tall |
 
 ## Screens
 
 | Shot | Viewport | Shows |
 |---|---|---|
 | `shots/cloze-pick-320.png`, `-768.png` | 320 x 568 2x, 768 x 1024 | asking: the sentence with the gap, three tiles (one column at 320, two from regular) |
-| `shots/dictation-320.png`, `-768.png` | same | hear mode: compact row with the speaker at 320 (the hint row scrolls into view), the hero speaker with Hear it again from 640 tall; the keyboard of Type Hangul |
+| `shots/dictation-320.png`, `-768.png` | same | hear mode: below 640 tall one row (speaker, meaning button with its "Show how it sounds" link line, Skip); the hero speaker with Hear it again from 640 tall; the keyboard of Type Hangul |
 | `shots/syllable-build-320.png`, `-768.png` | same | building: the first letter placed, three labelled rows, No final |
 | `shots/match-shape-320.png`, `-768.png` | same | origin round: the ㄴ picture and line, three letter tiles |
 | `shots/story-order-320.png`, `-768.png` | same | captions only: two slots filled with their first words, two cards left, Show meanings, Skip this one |
 | `shots/role-play-320.png`, `-768.png` | same | turn 2 of 4: the log, the partner line with Hear it, two replies pinned |
 | `shots/my-story-320.png`, `-768.png` | same | frame 2 of 3, pick: My story so far, the frame, the bank with the neutral option 호야 |
-| `shots/yut-review-320.png`, `-768.png` | same | after a throw (개, 2 stations) with the next review item; the board beside the item from regular |
+| `shots/yut-review-320.png`, `-768.png` | same | after a throw (개, 2 stations) with the next review item; below 600 tall the 96 band with the throw on one line; the board beside the item from regular |
 | `shots/states.png` | 1180 wide, 1x, full page | boards C, D, S, M, O, R, Y, B |
 
 ## Checked by eye
 
-- 320 x 568: every target at least 64 tall (48 dp floor of §14 met), no text cut, no horizontal scroll; Syllable Build, Cloze Pick, Match Shape and Yut Review fit the first screen; Story Order, Role Play and My Story scroll as their wireframes say (Role Play's reply area stays pinned).
+- 320 x 568: every target at least 64 tall (48 dp floor of §14 met), no text cut, no horizontal scroll; Syllable Build, Cloze Pick, Match Shape, Dictation and Yut Review fit the first screen; Story Order, Role Play and My Story scroll as their wireframes say (Role Play's reply area stays pinned).
 - 768 x 1024: one reading column (or two panes for Yut Review and My Story), nothing stretched past the reading width.
 - No red, no emoji, no percentage, no timer, no age wording, no microphone or speaking control on any board.
