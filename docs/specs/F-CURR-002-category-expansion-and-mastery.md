@@ -1,13 +1,13 @@
-Status: ready (spec only; no row has started). Revised 2026-10-21 after review round 1 (section 20).
+Status: ready (spec only; no row has started). Revised 2026-10-21 after review round 1 (section 20), then with the owner decisions of 2026-10-21 (section 21): every decision in section 16 is decided, and OD-2 changed to horizontally swiped topic pages on the Journey view.
 
 # F-CURR-002 — Category expansion and mastery: one memory model, review sessions, mastery and stage checks, Volume 2 of the five themes, and Topic Packs
 
-> **Owner request 2026-10-21 (B, binding):** plan further development of the lesson categories. Today there are five themes (Letters 글자, Food 음식, Holidays 명절, Nature 자연, Play 놀이). Plan both directions: richer content inside each category, and new categories. The service must be more fun and varied, and above all give a sense of achievement and efficient learning. Production level: every row ships finished content reviewed by the multi-agent review (MAR, owner decision 2026-10-12). Rows do not wait on the owner, except where section 16 names an open decision; until the owner answers, rows follow the recommended default.
+> **Owner request 2026-10-21 (B, binding):** plan further development of the lesson categories. Today there are five themes (Letters 글자, Food 음식, Holidays 명절, Nature 자연, Play 놀이). Plan both directions: richer content inside each category, and new categories. The service must be more fun and varied, and above all give a sense of achievement and efficient learning. Production level: every row ships finished content reviewed by the multi-agent review (MAR, owner decision 2026-10-12). Rows do not wait on the owner. Every decision in section 16 was decided by the owner on 2026-10-21 (section 21).
 
-**Scope**: `packages/content-schema` (review items, memory state, topic packs, mastery, new round schemas, lint rules) · `scripts/` (`build-lessons.mjs` and `build-stories.mjs` item extraction, manifest and story split, generated catalogue, `new-pack.mjs`) · `content/episodes/` (Volume 2 cells), `content/packs/` (new), `content/stories/` (new tales and read tiers), `content/i18n/{es,ko}/` · `apps/mobile` (memory store, review engine, Daily Review, mastery ring, Cell and Stage Checks, goals, new game renderers, Explore shelf) · `packages/backend` and `apps/api/migrations` (memory shard routes, remote config, telemetry rollups, guardrail evaluator, class goal; additive, Worker first) · `apps/web` console (reports, class goal, metrics page) · lecture mode (presets and slide kinds) · `packages/i18n` (en, es, ko) · `design/wireframes/` and `design/screens/` (design rows CM-D1 to CM-D3)
+**Scope**: `packages/content-schema` (review items, memory state, topic packs, mastery, new round schemas, lint rules) · `scripts/` (`build-lessons.mjs` and `build-stories.mjs` item extraction, manifest and story split, generated catalogue, `new-pack.mjs`) · `content/episodes/` (Volume 2 cells), `content/packs/` (new), `content/stories/` (new tales and read tiers), `content/i18n/{es,ko}/` · `apps/mobile` (memory store, review engine, Daily Review, mastery ring, Cell and Stage Checks, goals, new game renderers, Journey topic pages) · `packages/backend` and `apps/api/migrations` (memory shard routes, remote config, telemetry rollups, guardrail evaluator, class goal; additive, Worker first) · `apps/web` console (reports, class goal, metrics page) · lecture mode (presets and slide kinds) · `packages/i18n` (en, es, ko) · `design/wireframes/` and `design/screens/` (design rows CM-D1 to CM-D3)
 **Owner**: solo dev (content written by agents and reviewed by MAR)
 **Rollout**: phases 0 to 6 in section 12. Every new surface has a build-time kill switch and a remote off switch with a defined fallback (section 12.2). The memory model runs in shadow mode for two weeks, with its data landing in a persistent rollup table, before any learner sees a review screen.
-**Wireframes**: design rows CM-D1 (review and achievement surfaces), CM-D2 (new games), CM-D3 (Hidden Heritage, Explore shelf, pack page, Passport) produce them before any UI code. Existing `design/wireframes/journey/grid.md`, `quest/{player,discover,check}.md`, `reviews/hangul-check.md` and `minigame/*` stay valid.
+**Wireframes**: design rows CM-D1 (review and achievement surfaces), CM-D2 (new games), CM-D3 (Hidden Heritage, Journey topic pages, pack page, Passport) produce them before any UI code. Existing `design/wireframes/journey/grid.md`, `quest/{player,discover,check}.md`, `reviews/hangul-check.md` and `minigame/*` stay valid. CM-D3 amends one line of `grid.md`, "no horizontal scroll", for the topic pages only (section 6.1): the five theme columns still always fit one screen width.
 
 Parent and siblings: CLAUDE.md section 1 (audience, languages, anti-shame, grid) · blueprint 04 (grid, themes, pillars, companions) · blueprint 05 (stage goals, cumulative word targets) · blueprint 06 (game catalogue: Role Play, Hidden Heritage, My Story) · F-CURR-001 (upper-stage content, rules U-1 to U-10, the lesson pipeline; section 4, U-8 and OD-6 referenced or amended here) · F-QUEST-002 (six-step quest; L13 amended) · F-RVW-001 (review tests; amended by row CM-0b) · F-VOC-005 (Leitner boxes, local day, monotonic merge; P3 amended) · F-STORY-005 (volumes, `MAX_EPISODES_PER_CELL`, PR 5.8) · F-STORY-006 (card awards) · F-CARD-S2-001 .. S7-001 (card art, unblocked here) · F-PLC-001 (level check ceiling) · F-PLAN-002 (catalogue, `CATALOG_VERSION`) · F-ENT-003 (free plan = all of Stage 1) · F-TCH-004 and `AMENDMENTS-LECTURE-V2.md` (lecture mode) · F-REPORT-001 (reports; OD-19 amended) · F-SYNC-001 / F-SYNC-002 (snapshot sync, backup) · F-RESTORE-001 (Rescue Code) · the device principal of audit SEC-3 / SEC-4 (`packages/backend/src/lib/device-auth.ts`; F-AUTH-003 is superseded) · F-AUDIO-004 (device voice, visible sound notice) · F-I18N-001 (overlays, ratchets) · `docs/roadmap/TELEMETRY-NAMES-2.md` (new section R) · the multi-learner account plan of owner request A (2026-10-21, its own spec; section 4.9 states what this spec needs from it)
 
@@ -20,7 +20,7 @@ Parent and siblings: CLAUDE.md section 1 (audience, languages, anti-shame, grid)
 3. **Achievement continues past Stage 1.** Every cell gets a visible mastery ring that never goes down. Each cell gets a Cell Check, which doubles as a test-out. Stages 2-7 get a Stage Check, a ceremony and a stage card. The 25 upper cells get cards, grouped into five category albums (sections 4.4, 7).
 4. **Variety comes from formats, not only content.** Eight new formats, all reading, listening or writing, each with a shipped fallback. A lint caps any one game at 40% of a stage's Checks, down from 100% today (section 7.1).
 5. **Depth inside a category is Volume 2.** The volume system F-STORY-005 already specifies gives 25 upper cells a second volume and five Stage 5 books a second book of tales that do not ship yet. Nature and Play go first, because they are the thinnest (section 5).
-6. **New categories are Topic Packs on an Explore shelf, not a sixth grid column.** A sixth column puts the cell under the 48 dp touch target at 320 px, and the theme key is in 54 files and the Worker. There are eight packs in three waves, starting with Numbers & Time (section 6).
+6. **New categories are Topic Packs on topic pages that the learner reaches by swiping the Journey view sideways, not a sixth grid column** (owner decision OD-2, 2026-10-21). The first page is the five themes exactly as today. Swiping sideways shows further pages of pack columns, at most five a page, so no cell is ever under the 48 dp touch target at 320 px. Page dots and an edge arrow show there is more to the side, and buttons do the same as the swipe for keyboard and screen-reader users. A sixth column would put the cell under 48 dp, and the theme key is in 54 files and the Worker. There are eight packs in three waves; the first wave is Numbers & Time, People & Family and Feelings & Me (OD-4; section 6).
 7. **Remove authoring bottlenecks before content scales.** Generated modules stop being committed, and the catalogue version becomes a date stamp authored in content, so parallel content PRs have no shared file (section 9).
 8. **Lessons and stories load outside the start bundle.** A manifest of 60 KB or less is loaded at start. Lesson and story bodies are precached, content-hashed static chunks, so offline still works and start-up gets lighter while content triples (section 10).
 9. **Every phase is measured without PII, and the data has somewhere to land first.** A persistent rollup table ships in Phase 0, before the shadow period it measures. A public, read-only remote config with off-only overrides replaces build-only kill switches, and a daily guardrail evaluator lowers a ramp on a breach. Each learner profile is placed in an experiment bucket. Metrics are counts by content id, and any group with fewer than 20 profiles is suppressed (sections 3, 11, 12).
@@ -433,17 +433,40 @@ On a shared device the memory store is partitioned by profile id. A profile swit
 
 ## 6. New categories: Topic Packs
 
-### 6.1 Why packs and not a sixth column
+### 6.1 Why packs on topic pages and not a sixth column
 
 - **Touch target.** A sixth column takes the 320 px cell from 54 dp to about 45 dp, under the 48 dp target.
 - **Reach of the theme key.** `ThemeKey` appears in 54 non-test files, in the Worker's hard-coded `/themes` list, in the colour tokens and in `catalog/data.ts`.
 - **Cost before it is worth showing.** A coherent column needs 7 cells, about 21 quests.
 
-So the 5 x 7 grid stays the core route, and new categories ship as **Topic Packs** on an **Explore** shelf under the Journey grid and on Home. Pack details:
-- **Colour.** A pack borrows a `homeTheme` for its colour and a small marker on that theme's column, so it needs no new tokens.
+So the 5 x 7 grid stays the core route, and new categories ship as **Topic Packs** on **topic pages** of the Journey view, which the learner reaches by swiping sideways (owner decision OD-2, 2026-10-21). Pack details:
+- **Colour.** A pack borrows a `homeTheme` for its colour tokens and its column glyph, so it needs no new tokens. The first page shows no pack marker, so it stays exactly as today.
 - **Progress.** A pack has its own ring, album, cards and badge.
-- **Routing.** Packs never move the Journey cursor. They appear in the Today mission's "Explore" slot, in the planner and in lecture mode.
+- **Routing.** Packs never move the Journey cursor, and the Next marker stays on the first page. Packs appear on the topic pages, in the Today mission's "Explore" slot, in the planner and in lecture mode. Home has no pack shelf; the Explore slot opens the pack page.
 - **Promotion.** A pack that later earns a grid column already has 5 of the 7 stages. That promotion needs its own spec.
+
+**Journey topic pages (row CM-50b; wireframe and mock in CM-D3)**
+
+The Journey view becomes a row of pages that the learner moves between by swiping sideways. Code: `screens/journey/JourneyScreen.tsx`, `components/JourneyGrid.tsx`, and the pure layout in `logic/journey-grid.ts`.
+
+| Part | Rule |
+|---|---|
+| Page 1 | The five themes and seven stage rows, **exactly as today** (`design/wireframes/journey/grid.md`): the same cells, sizes, glyphs, words, states and rings. Page 1 never scrolls sideways inside itself, so a theme column is never cut off |
+| Pages 2 and later | Pack columns, **at most five a page**, in the pack order of section 6.5. With all eight packs: page 2 holds packs 1-5 and page 3 holds packs 6-8. A page with fewer than five packs keeps the same column width and leaves the rest of the row empty; columns never stretch or shrink to fill it |
+| Cell size | A pack column uses the theme-column width of the same window (`journeyCellSize`), so a pack cell is 54 dp wide at 320 px, as on page 1, and **never under the 48 dp target**. At 768 px and in the two-pane wide window, pages keep the cell sizes of `grid.md` |
+| Rows | Every page has the same seven stage rows at the same heights, so paging keeps the vertical scroll position. A pack level sits in the row of its stage (`levels[].stage`: Stages 2, 3, 4, 6 and 7). Rows 1 and 5 of a pack page hold an empty, unlabelled space, not a "coming later" cell |
+| Column header | The pack's name and its `homeTheme` glyph. Tapping it opens the pack page; the target is 48 dp or more |
+| Pack cell | Opens the level's cell sheet, like a theme cell. It shows the mastery ring of its pack level (4.4), and its entitlement follows section 6.3 |
+| Which packs show | Packs with `status: 'ready'` whose `topicPacks` and `pack.<key>` switches are on. A page with no pack to show is not drawn. With no pack to show, the Journey view is page 1 alone, with no dots and no arrows: exactly today's screen |
+| Swipe | A horizontal swipe moves one whole page and snaps to it. The gesture locks direction, so a swipe that starts mostly vertical stays a vertical scroll |
+| Visible affordance | A row of page dots under the title, the current dot filled, and an arrow button at the right edge of the column-header row while a later page exists (a matching arrow at the left edge on later pages). The dots and arrows only appear when there are two or more pages |
+| Buttons (no swipe needed) | The arrow buttons are 48 dp targets, in the tab order, and do exactly what a swipe does. On web, Left and Right arrow keys change the page while focus is in the column-header row. After a page change, focus moves to the first column header of the new page |
+| Screen readers | The arrows are labelled with where they go ("More topics, page 2 of 3", "Back to the five themes"). A page change is announced with the page name and number. Each page is a labelled region ("Five themes", "Topics, page 2 of 3"). Pack cells use the same label pattern as theme cells |
+| Reduced motion | With reduced motion on (`useReducedMotion`, `platform/motion.ts`), a page change jumps with no slide; a swipe still works and settles without animation |
+| Where it opens | Journey always opens on page 1. The Explore slot and the planner open the pack page, and Back from the pack page returns to the topic page that holds the pack. The current page is kept for the session only; it is never stored or sent |
+
+- **Copy.** Page names, arrow labels and announcements are new strings of CM-50b, in en, es and ko. They name topics and pages and never say "locked", "lost" or anything about age.
+- **Wireframe change.** `grid.md` says the 5 columns always fit one screen width with no horizontal scroll. CM-D3 keeps that for page 1 and adds the topic pages beside it, with the 320 px and 768 px layouts, the dots, the arrows, the focus order and the reduced-motion behaviour.
 
 ### 6.2 Schema and files
 
@@ -463,8 +486,11 @@ TopicPackSchema = z.object({
 })
 ```
 
+The schema is the same for the topic pages (OD-2): a page is drawn from `levels[].stage` and the pack order below, and needs no layout field.
+
 **Files**
 - Each pack lives in `content/packs/<key>/`, with a `pack.json` and five stage files, `stage-<n>.json`.
+- **Pack order.** `content/packs/order.json` lists all eight keys in the order of section 6.5. CM-50a writes it once with every key, so level PRs never touch it. The generated catalogue gives `CatalogPack` an `order` from it, and the topic pages fill five columns a page in that order, skipping any pack that is not shown. A pack directory missing from the list fails the build.
 - A stage file uses the lesson cell **body** schema: the 9 `lesson-*` rules, U-1 to U-11, the overlays and MAR all apply.
 
 **Ids**
@@ -480,6 +506,7 @@ TopicPackSchema = z.object({
 | Lecture `CHOOSER_KEY_RE` (`logic/lecture/home-state.ts`) | `episode:stage[1-7]-[a-z]+` | accept v2 and pack ids; the lecture deck schema accepts them too (CM-40, CM-50c) |
 | `CatalogCell` (`catalog/data.ts`) | one `episodeId` built as `episode:${stage}-${theme}` | `episodeIds[]` ordered by volume (CM-40); a separate `CatalogPack` type (CM-50a) |
 | Placement (`questsPlacedOutAtLevel`, catalogue quest additions) and route days | hang off the single cell episode | Volume 2 quests of a stage below the placed level are placed out like Volume 1; pack quests are **never** placed out, because packs sit off the route; neither adds route days (CM-40, CM-50a) |
+| Journey layout (`logic/journey-grid.ts`, `components/JourneyGrid.tsx`, `screens/journey/JourneyScreen.tsx`) | one page, five columns, no horizontal scroll | a pager: page 1 unchanged, then topic pages of at most five pack columns built from `CatalogPack.order` and `levels[].stage`, with `journeyCellSize` reused for the column width (CM-50b) |
 
 **Integration**
 - Packs do not count toward cell capacity, so `cellsOverCapacity` is unchanged.
@@ -967,7 +994,7 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 |---|---|
 | `game.<kind>` | Every round of that kind renders its fallback round (7.1). A test turns each `game.<kind>` off and renders every quest |
 | `volumes` | Volume 2 entry points hide. Progress, cards and memory states stay. The review engine skips items whose only source is Volume 2 |
-| `topicPacks` or `pack.<key>` | The Explore shelf or that pack hides. Progress, cards and badges stay. The review engine skips items whose only source is a hidden pack |
+| `topicPacks` or `pack.<key>` | The topic pages, or that pack's column, hide; a page left with no pack is not drawn, and with `topicPacks` off the Journey view is page 1 alone with no dots or arrows. Progress, cards and badges stay. The review engine skips items whose only source is a hidden pack |
 | `dailyReview`, `questWarmup`, `missedPractice` | The surface hides; mission slot 3 falls back to today's behaviour |
 | `memoryRecord` | Answers are not recorded; existing states stay and nothing is deleted |
 | `mastery`, `cellCheck`, `stageChecks` | The ring or check hides; latched levels and results stay and show again when it is back on |
@@ -1001,7 +1028,8 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 | Heritage accuracy at volume | Source allowlist lint, fact conventions, folk-tale adaptation rule, MAR culture pass, weekly 10% audit, `draft` until passes |
 | Duplicate stories | `story-topic-unique` lint against `content/stories/` |
 | Hidden Heritage art cost and size | Original token scenes, 25 KB each, 1 scene before scaling to 5 |
-| Confusion between packs and the route | Packs never move the Journey cursor; clear "Explore" label |
+| Confusion between packs and the route | Packs never move the Journey cursor, which stays on page 1; topic pages are named "Topics" and the first page "Five themes" |
+| Learners miss the topic pages, or cannot swipe | Page dots and an edge arrow whenever a later page exists; 48 dp arrow buttons, arrow keys on web and screen-reader labels do what the swipe does (6.1) |
 | Pressure to widen `ThemeKey` | Recorded decision: packs use `homeTheme`; promoting a pack to the grid needs its own spec |
 | A kill switch bricks content | Fallback rounds and defined off behaviour (12.2), with a test per switch |
 | Author and MAR throughput (25 Volume 2 cells, 8 packs, about 195 quests) | Generated modules not committed (9.1), parallel level PRs, a calendar derived from 4 PRs a week |
@@ -1065,16 +1093,17 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 - the retroactive summary
 - goal ring and weekly dots
 - each new format
-- the Explore shelf and a pack level
+- the topic pages: reached by swipe and by the arrow buttons, page 1 unchanged, a pack level opened from page 2, Back returns to the same page, and `topicPacks` off shows page 1 alone
 - family lantern across 2 learner profiles with PIN-gated target setting
 - lecture `team-relay`, `class-check` and `class-review`
 
 **Visual and accessibility**:
 - grid with mastery rings at 320 px, cells still 54 dp
-- 48 dp targets on the shelf and the new games
-- reduced-motion ceremonies
+- 48 dp targets on the topic pages (pack cells, column headers and arrow buttons at 320 px) and in the new games
+- reduced-motion ceremonies and page changes with no slide
+- keyboard paging on web and focus moving to the new page's first column header
 - contrast of theme tokens
-- screen-reader labels for rings ("Mastered", "Ready to refresh", "New volume")
+- screen-reader labels for rings ("Mastered", "Ready to refresh", "New volume"), and for the page arrows and page-change announcements
 
 **Budgets**: the ceilings of section 10, the start bundle and manifest enforced in CI, and the chunk hash check.
 
@@ -1083,6 +1112,7 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 ## 15. Out of scope
 
 - A sixth grid column or widening `ThemeKey`.
+- Any change to page 1 of the Journey view to make room for packs: no narrower cells and no pack marker on the theme columns.
 - Speaking measurement or speaking UI of any kind; `voice-echo` stays banned.
 - Certificates.
 - Individual leaderboards.
@@ -1097,16 +1127,18 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 - A kept My Story keepsake (OD-13; it needs a privacy review and its own spec).
 - Companions other than Hoya; blueprint 04 section 2.4's five companions are a later spec.
 
-## 16. Open owner decisions (rows follow the recommended default until the owner answers)
+## 16. Owner decisions (all decided 2026-10-21)
 
-| OD | Question | Recommended default | Alternative | Affects |
+The owner decided every row on 2026-10-21 (section 21). OD-2 changed from the proposed default; OD-4 and OD-6 were confirmed explicitly; every other row is decided as proposed.
+
+| OD | Question | Decision (2026-10-21) | Alternative not taken | Affects |
 |---|---|---|---|---|
 | OD-1 | Stage Checks for Stages 2-7 against F-CURR-001 section 4, which excluded stage exams and certificates | **Yes**: an optional, never-blocking "Stage Check" with a ceremony and a stage card; no certificate; amend section 4 in CM-0b | No checks; ceremony and card only | CM-22 |
-| OD-2 | Where new categories live | **Topic Packs on an Explore shelf**; the grid stays 5 x 7 | A sixth grid column (cells under 48 dp at 320 px; 54-file refactor) | CM-50a onward |
+| OD-2 | Where new categories live | **Changed by the owner: Topic Packs on topic pages reached by a horizontal swipe of the Journey view.** Page 1 keeps the five themes exactly as today; later pages hold up to five pack columns each, never under 48 dp at 320 px, with page dots, an edge arrow, arrow buttons for keyboard and screen-reader users, and no slide under reduced motion (6.1). The pack data model is unchanged | An Explore shelf under the Journey grid and on Home (the proposed default); a sixth grid column (cells under 48 dp at 320 px; 54-file refactor) | CM-D3, CM-50a, CM-50b |
 | OD-3 | Pack entitlement | **Levels follow their stage** (S2+ paid once gating is on); free learners see the pack page and one Discover preview | The first quest of each pack is free (widens the free plan beyond Stage 1) | CM-50a, CM-50b |
-| OD-4 | First wave of packs | **Numbers & Time, People & Family, Feelings & Me** | Any other order of section 6.5 | CM-51 to CM-53 |
+| OD-4 | First wave of packs | **Confirmed: Numbers & Time, People & Family, Feelings & Me** | Any other order of section 6.5 | CM-51 to CM-53 |
 | OD-5 | Lesson and story budget ceilings | **Raise as in section 10**; all lazy and precached; the start bundle must not grow | Keep today's ceilings (no Volume 2, book 2 or packs fit) | CM-5, CM-8, CM-40, CM-46, CM-50a |
-| OD-6 | Home headline number | **Weekly dots and steady weeks**, with the local-day streak kept below them and 2 automatic rest days | Keep the streak as the headline | CM-17 |
+| OD-6 | Home headline number | **Confirmed: weekly dots and steady weeks**, with the local-day streak kept below them and 2 automatic rest days a local week | Keep the streak as the headline | CM-17 |
 | OD-7 | Family lantern and class goal | **On**, totals only, target set by a grown-up behind the PIN | Off until asked | CM-61, CM-62 |
 | OD-8 | Decoding Sprint, a 60-second optional bonus | **Yes**, optional, private personal best, like the vocab Speed Round | No timed activity outside the Speed Round | CM-32 |
 | OD-9 | 차례 (ancestral memorial rite) in Holidays Volume 2 | **Teach as a reading word with a neutral, sourced note** (National Folk Museum of Korea) | Keep it out, as in Volume 1 (F-CURR-001 OD-9) | CM-45 |
@@ -1140,7 +1172,7 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-70b | `feat(backend): daily guardrail evaluator on a Cron Trigger that lowers a breached ramp (F-CURR-002)` | M | CM-2, CM-70a | 0 | breach lowers one step, only lowers, reason recorded |
 | CM-D1 | `design(reviews): Daily Review and Keep going, mastery ring, Cell and Stage Check, ceremony, goal ring and weekly dots (F-CURR-002)` | M | CM-0 | 0 | MAR design review |
 | CM-D2 | `design(minigame): Cloze Pick, Dictation, Syllable Build, Match Shape, Story Order, Role Play, My Story, Yut Review (F-CURR-002)` | M | CM-0 | 0 | MAR design review |
-| CM-D3 | `design(journey): Hidden Heritage scene style, Explore shelf, pack page, Passport (F-CURR-002)` | M | CM-0 | 0 | MAR design review |
+| CM-D3 | `design(journey): Hidden Heritage scene style, Journey topic pages by horizontal swipe with page dots and arrow buttons, pack page, Passport; grid.md amended for the topic pages (F-CURR-002 OD-2)` | M | CM-0 | 0 | MAR design review |
 
 ### Phase 1: memory and review
 
@@ -1207,8 +1239,8 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, scaffold |
-| CM-50b | `feat(mobile): Explore shelf and pack page (F-CURR-002)` | M | CM-50a, CM-20, CM-D3 | about 14 | entitlement, `topicPacks` off behaviour, e2e |
+| CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, pack order list, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, every pack directory in `order.json`, scaffold |
+| CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 18 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
 | CM-50c | `feat(mobile,web): lecture and console chooser accept pack levels (F-CURR-002)` | S-M | CM-50a | about 2 | chooser regex, deck schema, old-presenter decode failure |
 | CM-51 ×5 | `content(packs): Numbers & Time, levels 1-5 with the Pack Check in L5 (F-CURR-002)` | M each | CM-50a, CM-50b, plus the level rows above | overlays | U-rules, sources, MAR |
 | CM-52 ×5 | `content(packs): People & Family (F-CURR-002)` | M each | same | overlays | same |
@@ -1258,7 +1290,7 @@ CM-5B is conditional and is counted only if the CM-5 report triggers it. Each co
 | Items in spaced review | 144 | all, from lessons, Stage 1 and stories |
 | Stages with a ceremony and card | 1 | 7 |
 | Listen & Pick share of Checks | about 90% | 40% or less |
-| Grid | 5 x 7 | 5 x 7, unchanged, plus an Explore shelf of 8 packs |
+| Grid | 5 x 7 | 5 x 7, unchanged on page 1, plus two topic pages that hold the 8 packs |
 
 ## 18. Dependencies
 
@@ -1289,6 +1321,15 @@ CM-5B is conditional and is counted only if the CM-5 report triggers it. Each co
 ## 20. Review round 1 (2026-10-21)
 
 Two reviews (learning science and content; engineering and pipeline) raised 36 findings: 2 blockers, 21 majors and 13 minors. The blockers were that a box could rise several times inside one quest (fixed by the spacing rule, 4.3) and that telemetry had nowhere to persist before the shadow period (fixed by CM-70a and CM-70b in Phase 0). Every blocker and major is fixed in this revision, and so is every minor except the parts noted in the PR comment. The phase plan is unchanged; section 17 is re-sequenced.
+
+## 21. Owner decisions (2026-10-21)
+
+The owner answered section 16 on 2026-10-21:
+
+- **OD-2 changed.** New categories (Topic Packs) are browsed by a horizontal swipe. The Journey view keeps the five themes exactly as today, and swiping sideways shows further pages of pack columns. Cells never shrink below the 48 dp target at 320 px; a visible affordance shows there is more to the side; buttons that need no swipe serve keyboard and screen-reader users; reduced motion is respected. The pack data model is unchanged. Sections 0, 6.1, 6.2, 12.2, 13, 14, 15 and 17 (rows CM-D3 and CM-50b) are updated, and the Explore shelf of the earlier draft is removed.
+- **OD-4 confirmed.** The first wave is Numbers & Time, People & Family and Feelings & Me.
+- **OD-6 confirmed.** Weekly dots are the Home headline, with 2 automatic rest days a local week.
+- **Every other OD** stands as proposed and is now decided.
 
 ---
 
@@ -1356,4 +1397,4 @@ Three independent proposals were scored on five criteria. Each was scored 1-5 (5
 
 ---
 
-_Created 2026-10-21 (owner request B of 2026-10-21), synthesized from three independent planning proposals on `main` at `a384759ca`. Revised the same day after review round 1 (section 20)._
+_Created 2026-10-21 (owner request B of 2026-10-21), synthesized from three independent planning proposals on `main` at `a384759ca`. Revised the same day after review round 1 (section 20) and with the owner decisions (section 21)._
