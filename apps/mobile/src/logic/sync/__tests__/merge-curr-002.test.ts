@@ -188,17 +188,29 @@ describe('mergeSnapshots, F-CURR-002 fields: property tests (fast-check)', () =>
         const once = merge(a, b);
         expect(pick(merge(once, b))).toEqual(pick(once));
         expect(pick(merge(once, once))).toEqual(pick(once));
-        expect(pick(merge(a, a))).toEqual(pick(a));
+        // A side on its own may gain the streakBest its streakLocal implies (the CM-4 switch-over), so merging it
+        // with itself is idempotent after the first merge.
+        const self = merge(a, a);
+        expect(pick(merge(self, self))).toEqual(pick(self));
       }),
       RUNS,
     );
   });
 
   it('invents no key and never lowers streakBest; the server copy then holds the merge', () => {
+    // The local-day streak (row CM-4) is derived as well: streakBest also appears when a side holds a run of at least
+    // 1 (the switch-over), and streakLocal also from a learning day, which these sides, with no session, never hold.
+    const derived = (s: ProgressSnapshot) => ({
+      streakLocal: s.streakLocal !== undefined,
+      streakBest: s.streakBest !== undefined || (s.streakLocal !== undefined && s.streakLocal.run >= 1),
+    });
     fc.assert(
       fc.property(side, side, (a, b) => {
         const m = merge(a, b);
-        for (const k of NEW_KEYS) expect(m[k] !== undefined).toBe(a[k] !== undefined || b[k] !== undefined);
+        for (const k of NEW_KEYS) {
+          const held = k === 'streakLocal' || k === 'streakBest' ? derived(a)[k] || derived(b)[k] : a[k] !== undefined || b[k] !== undefined;
+          expect(m[k] !== undefined, k).toBe(held);
+        }
         if (a.streakBest !== undefined) expect(m.streakBest).toBeGreaterThanOrEqual(a.streakBest);
         if (b.streakBest !== undefined) expect(m.streakBest).toBeGreaterThanOrEqual(b.streakBest);
         expect(isSubsetOf(a, m) && isSubsetOf(b, m)).toBe(true);

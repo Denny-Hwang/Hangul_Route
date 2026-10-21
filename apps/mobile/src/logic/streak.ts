@@ -39,16 +39,26 @@ export function computeStreak(sessionDates: string[], now: Date = new Date()): n
  *   is never a rest day: the day is not over.
  * - The run is the longest stretch of learning days ending on the last one in
  *   which no local week holds more than 2 rest days, counted in learning days
- *   (a rest day keeps the run and adds nothing). Home shows the run that is
- *   still open today: the rest days since the last learning day count too,
- *   and once even the last learning day alone cannot hold them, the run has
- *   ended and Home shows nothing. More learning days only ever make a stretch
- *   longer, so a sync that brings sessions from another device never lowers
- *   the number.
+ *   (a rest day keeps the run and adds nothing). More learning days only ever
+ *   make a stretch longer, so a sync that brings sessions from another device
+ *   never lowers the number.
+ * - Home shows the run that is still open today: the rest days since the last
+ *   learning day join that stretch as they are. While it holds, Home shows the
+ *   run; once a week of it holds a third rest day, the run has ended and Home
+ *   shows nothing until the next learning day (section 7.4). The stretch is
+ *   never shortened to fit, so the number never steps down to a smaller one
+ *   on a day without learning (section 7.7, no visible decay).
  * - `streakLocal` keeps the run as of its last learning day (the current run,
  *   or the last one once it ended) and `streakBest` the best. A run carried in
  *   a copy is a floor for the stretch that holds its last day: the switch-over
  *   number, or a session another device has not uploaded yet, is never lost.
+ *   The floor goes on past its last day only within the week's allowance: the
+ *   rest days it may already have used that week (any day of the week before
+ *   its last day without a known learning day; none for the old streakDays,
+ *   which counted days in a row) and the ones after it add up to at most 2.
+ * - A day more than 2 days after today (a clock set forward, then back) is
+ *   not read until it comes: no time zone is that far ahead of the learner's
+ *   day, and the Worker reads such a `streakLocal` as absent too.
  * - Switch-over (section 4.8 step 8): a record with no `streakLocal` starts at
  *   `max(old streakDays, the run recomputed on local days)`.
  *
@@ -63,6 +73,9 @@ export const REST_DAYS_PER_WEEK = 2;
 const LONGEST_REST = 2 * REST_DAYS_PER_WEEK;
 
 const DAY_MS = 86_400_000;
+
+/** The latest day any time zone can have, in days after the learner's today (UTC-12 to UTC+14 spans 26 hours). */
+const LATEST_AHEAD = 2;
 
 /** The day number (days since 1970-01-01) of a valid day key. */
 function dayNumber(day: string): number {
@@ -127,10 +140,18 @@ class RestWeeks {
   }
 }
 
+/**
+ * A run a copy carries. `consecutive` marks the switch-over carry of the old
+ * `streakDays`, which counted days in a row, so it used no rest day.
+ */
+export interface CarriedRun extends StreakLocal {
+  consecutive?: boolean;
+}
+
 export interface StreakInput {
   sessions: readonly SessionLog[];
   /** The runs the copies being read carry (`streakLocal`); each is a floor for the stretch that holds its last day. */
-  carried: readonly (StreakLocal | undefined)[];
+  carried: readonly (CarriedRun | undefined)[];
   /** The copies' `streakBest`. */
   best: readonly (number | undefined)[];
 }
@@ -144,7 +165,7 @@ export interface StreakState {
   best: number | undefined;
 }
 
-function validRun(run: StreakLocal | undefined): run is StreakLocal {
+function validRun(run: CarriedRun | undefined): run is CarriedRun {
   return run !== undefined && Number.isInteger(run.run) && run.run >= 1 && typeof run.lastDay === 'string' && isDateKey(run.lastDay);
 }
 
@@ -155,8 +176,10 @@ function validRun(run: StreakLocal | undefined): run is StreakLocal {
  * and more learning days or carried runs never give a lower one.
  */
 export function streakState(input: StreakInput, today: string): StreakState {
-  const carried = input.carried.filter(validRun);
-  const keys = new Set(learningDays(input.sessions));
+  // A day after the latest any time zone can have is not read yet (a clock set forward, then back).
+  const latest = isDateKey(today) ? dayNumber(today) + LATEST_AHEAD : Number.POSITIVE_INFINITY;
+  const carried = input.carried.filter((c): c is CarriedRun => validRun(c) && dayNumber(c.lastDay) <= latest);
+  const keys = new Set(learningDays(input.sessions).filter((day) => dayNumber(day) <= latest));
   for (const run of carried) keys.add(run.lastDay);
   const days = [...keys].map(dayNumber).sort((a, b) => a - b);
   const bests = [...input.best, ...carried.map((c) => c.run)].filter((b): b is number => b !== undefined && Number.isInteger(b) && b >= 0);
@@ -169,6 +192,13 @@ export function streakState(input: StreakInput, today: string): StreakState {
   const now = isDateKey(today) ? dayNumber(today) : last + 1;
   /** The rest days between two learning days: the days in between that are before today. */
   const restBetween = (a: number, b: number): [number, number] => [a + 1, Math.min(b, now) - 1];
+  const indexOf = new Map(days.map((n, i) => [n, i]));
+  /** How many of the days `from` to `to` (inclusive) are rest days: before today, without learning. */
+  const restIn = (from: number, to: number): number => {
+    let count = 0;
+    for (let n = from; n <= to; n += 1) if (n < now && !indexOf.has(n)) count += 1;
+    return count;
+  };
 
   // Two pointers: the stretch [days[start], days[end]] is the longest one ending at `end` that holds.
   const rest = new RestWeeks();
@@ -190,29 +220,32 @@ export function streakState(input: StreakInput, today: string): StreakState {
     longest = Math.max(longest, end - start + 1);
   }
 
-  /** The run of the stretch from `first`: its learning days, or a carried run in it plus the learning days after it. */
-  const runFrom = (first: number): number => {
+  /**
+   * The run of the stretch from `first` with the rest days up to `until`: its learning days, or a carried run in
+   * it plus the learning days after it. A carried run goes on past its last day only while its week holds the rest
+   * days it may have used before that day and the ones after it; the later weeks are the stretch's own.
+   */
+  const runFrom = (first: number, until: number): number => {
     let run = lastIndex - first + 1;
     for (const c of carried) {
-      const at = days.indexOf(dayNumber(c.lastDay));
-      if (at >= first) run = Math.max(run, c.run + (lastIndex - at));
+      const day = dayNumber(c.lastDay);
+      const at = indexOf.get(day) as number;
+      if (at < first) continue;
+      const week = weekOf(day);
+      const after = restIn(day + 1, Math.min(week + 6, until));
+      const before = c.consecutive === true ? 0 : restIn(week, day - 1);
+      if (after === 0 || before + after <= REST_DAYS_PER_WEEK) run = Math.max(run, c.run + (lastIndex - at));
     }
     return run;
   };
-  const atLast = runFrom(start);
+  const atLast = runFrom(start, last);
 
-  // Still open today: the rest days since the last learning day join the stretch, which gives up its oldest days
-  // while a week is over; when the last learning day alone cannot hold them, the run has ended.
-  const [from, to] = [last + 1, now - 1];
+  // Still open today: the rest days since the last learning day join the stretch as they are. Once a week of it
+  // holds a third rest day the run has ended, and Home shows nothing rather than a shorter stretch.
   let shown = 0;
-  if (to - from + 1 <= LONGEST_REST) {
-    rest.shift(from, to, 1);
-    while (!rest.holds() && start < lastIndex) {
-      const [f, t] = restBetween(days[start] as number, days[start + 1] as number);
-      rest.shift(f, t, -1);
-      start += 1;
-    }
-    if (rest.holds()) shown = runFrom(start);
+  if (now - 1 - last <= LONGEST_REST) {
+    rest.shift(last + 1, now - 1, 1);
+    if (rest.holds()) shown = runFrom(start, now - 1);
   }
   return { shown, local: { run: atLast, lastDay: dayKeyOf(last) }, best: bestOf(Math.max(longest, atLast)) };
 }
@@ -231,11 +264,11 @@ function lastQuestDay(sessions: readonly SessionLog[]): string | undefined {
 type StreakCopy = Pick<ProgressSnapshot, 'streakDays' | 'streakLocal' | 'streakBest' | 'sessions'>;
 
 /** What a copy carries: its `streakLocal`, or, before the switch-over, its old `streakDays` on its newest quest day. */
-function carriedBy(copy: StreakCopy): StreakLocal | undefined {
+function carriedBy(copy: StreakCopy): CarriedRun | undefined {
   if (validRun(copy.streakLocal)) return copy.streakLocal;
   const legacy = Number.isInteger(copy.streakDays) ? copy.streakDays : 0;
   const lastDay = lastQuestDay(copy.sessions);
-  return legacy > 0 && lastDay !== undefined ? { run: legacy, lastDay } : undefined;
+  return legacy > 0 && lastDay !== undefined ? { run: legacy, lastDay, consecutive: true } : undefined;
 }
 
 /**

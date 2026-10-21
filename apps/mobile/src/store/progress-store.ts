@@ -1,4 +1,13 @@
-import { PlacementResultSchema, ReviewEntrySchema, SelfRouteSchema, type PlacementResult, type ProgressSnapshot, type ReviewEntry, type SelfRoute } from '@hangul-route/content-schema';
+import {
+  PlacementResultSchema,
+  ReviewEntrySchema,
+  SelfRouteSchema,
+  type PlacementResult,
+  type ProgressSnapshot,
+  type ReviewEntry,
+  type SelfRoute,
+  type VocabProgress,
+} from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
@@ -9,8 +18,8 @@ import { missingAwards } from '../logic/awards/derive';
 import type { DerivedAward } from '../logic/awards/types';
 import { latchQuests, recordBestQuest } from '../logic/quest-progress';
 import { sessionKindOf, takesOver, type SessionOptions } from '../logic/sessions/hold';
-import { elapsedSeconds, lastStreakDay, newSessionId } from '../logic/sessions/session-log';
-import { withLocalStreak } from '../logic/streak';
+import { elapsedSeconds, keepsRun, lastStreakDay, newSessionId } from '../logic/sessions/session-log';
+import { sessionDay, withLocalStreak } from '../logic/streak';
 import { mergePlacements, mergeReview, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { applyVocabEvents, emptyVocab, localDay, vocabOf, type VocabEvent } from '../logic/vocab/progress';
@@ -386,14 +395,23 @@ function settle(profileId: string, snapshot: ProgressSnapshot): void {
   }));
 }
 
+/** Whether applying vocab events finished a word set: a topic's `sessions` count rose (an ignored event moves none). */
+function finishedWordSet(before: VocabProgress, after: VocabProgress): boolean {
+  const held = new Map(before.topics.map((t) => [t.topic, t.sessions]));
+  return after.topics.some((t) => t.sessions > (held.get(t.topic) ?? 0));
+}
+
 /**
  * `snap` with a finished word set's day logged (F-CURR-002 OD-14): a learning
  * session of no length (it adds no minutes, and a grown-up's session count
- * reads quest sessions only) on the local day, and the run kept.
+ * reads quest sessions only) on the local day, and the run kept. A day that
+ * already holds a session that keeps the run gains no second one, so a busy
+ * day of word sets adds one row to the synced log, not one per set.
  */
 function withWordSetDay(snap: ProgressSnapshot, profileId: string, clock: Date): ProgressSnapshot {
   const at = clock.toISOString();
   const day = localDay(clock);
+  if (snap.sessions.some((s) => keepsRun(s) && sessionDay(s) === day)) return withLocalStreak(snap, day);
   const session = { id: newSessionId(at, 'learn', snap.sessions), profileId, startedAt: at, endedAt: at, durationSeconds: 0, episodesTouched: [], localDay: day };
   return withLocalStreak({ ...snap, sessions: [...snap.sessions, session] }, day);
 }
@@ -709,7 +727,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const withVocab: ProgressSnapshot = { ...snap, vocab, updatedAt: at };
     // A finished word set (its `session` event) is a learning activity: it keeps the local-day run (F-CURR-002
     // OD-14). It is logged as a learning session of no length, so the day is on the record every device reads.
-    const updated = events.some((e) => e.type === 'session') ? withWordSetDay(withVocab, profileId, clock) : withVocab;
+    const updated = finishedWordSet(current, vocab) ? withWordSetDay(withVocab, profileId, clock) : withVocab;
     const hydrated = get().hydratedFor.has(profileId);
     set((s) => ({
       byProfile: { ...s.byProfile, [profileId]: updated },
