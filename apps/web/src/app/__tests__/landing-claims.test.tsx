@@ -1,5 +1,10 @@
+import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { ParentsPage as ParentsDocument } from '../../components/landing/ParentsPage';
+import { TeachersPage as TeachersDocument } from '../../components/landing/TeachersPage';
+import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { siteMetadata } from '../../data/landing-copy';
 import { SITE_CLAIMS } from '../../data/site-claims';
 import { SITE_PAGES, siteMetadataFor } from '../../lib/site-metadata';
@@ -30,6 +35,8 @@ const COMMERCIAL_CLAIMS: ReadonlyArray<{ name: string; re: RegExp }> = [
   { name: '"every stage"', re: /\bevery\s+stage\b/i },
   { name: '"all stages"', re: /\ball\s+stages\b/i },
   { name: '"lifetime"', re: /\blifetime\b/i },
+  // The plan's name appears only in the sizes line once plans are on sale ([SA] SA-6, scanned below): OD-7 lets the site
+  // name a plan without an amount, and no other line may.
   { name: '"Group License"', re: /\bgroup\s+license\b/i },
   { name: '"one purchase" / "pay once"', re: /\bone purchase\b|\bpay(s)?\s+once\b/i },
   { name: 'a subscription', re: /\bsubscription\b/i },
@@ -87,6 +94,40 @@ describe('site text — no prices, nothing sold that is not built', () => {
     it(`${path} names no amount`, () => {
       expect(text).not.toMatch(/\$\s?\d/);
     });
+  }
+});
+
+/**
+ * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): once `paidPlans` is 'inApp', the persona Plans blocks add the sizes
+ * line, which names the Family Plan and the Group License with their learner limits. It names no amount, no term and
+ * no lifetime; the rest of each page still passes every commercial check, the plan name included.
+ */
+describe('site text — the plan sizes line once plans are on sale', () => {
+  const sizes = getMessages('en').landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+  const states = [
+    ['the paidPlans flip', { ...SITE_CLAIMS, paidPlans: 'inApp' }],
+    ['every claim on', ALL_CLAIMS_ON],
+  ] as const;
+  const pages = [
+    ['/parents', ParentsDocument],
+    ['/teachers', TeachersDocument],
+  ] as const;
+
+  it('the sizes line itself names no price, no term, no lifetime and no subscription', () => {
+    for (const { name, re } of COMMERCIAL_CLAIMS) {
+      if (name !== '"Group License"') expect(sizes, name).not.toMatch(re);
+    }
+  });
+
+  for (const [state, claims] of states) {
+    for (const [path, Page] of pages) {
+      it(`${path} (${state}): shows the sizes line once, and nothing else on the page makes a commercial claim`, () => {
+        const text = textOf(renderToStaticMarkup(<Page locale="en" claims={claims} />));
+        expect(text.split(sizes)).toHaveLength(2);
+        const rest = text.split(sizes).join(' ');
+        for (const { name, re } of COMMERCIAL_CLAIMS) expect(rest, name).not.toMatch(re);
+      });
+    }
   }
 });
 

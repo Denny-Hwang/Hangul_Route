@@ -107,6 +107,9 @@ export const landing = {
       inApp: 'Los planes para familias y clases están en app.hangulroute.com.',
     },
     managedInApp: 'Los planes y la facturación se gestionan en app.hangulroute.com después de iniciar sesión.',
+    // [SA] AMENDMENTS-SEATS-ADMINS 9.5: glossary Plan Familiar, Licencia de Grupo, estudiante.
+    sizes: (family: number, group: number) =>
+      `El Plan Familiar es para hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })}. La Licencia de Grupo es para hasta ${plural('es', group, { one: `${group} estudiante`, other: `${group} estudiantes` })} en una clase o una escuela.`,
   },
   persona: {
     learners: {

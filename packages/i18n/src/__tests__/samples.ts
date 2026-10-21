@@ -173,6 +173,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.cards.body': [[24, 10, 8, 4, 2], [1, 1, 0, 0, 0]],
   'landing.cards.cardLabel': [['gangaji', 'Puppy']],
   'landing.games.eyebrow': [[8, 1], [9, 0], [1, 0]],
+  'landing.plans.sizes': [[4, 50], [1, 1]],
   'landing.footer.copyright': [[2026]],
   'landing.localeBanner.viewIn': [['Español']],
   'landing.about.feedback.body': [['hello@example.com']],
