@@ -242,6 +242,12 @@ describe('the join link boot intent', () => {
     expect(parseJoinBootIntent({ pathname: '/join/', search: '?lang=ko', hash: '#c=abc234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/?lang=ko' });
   });
 
+  it('[OA] OA-D20: a join link takes who=1 out of the address too, and keeps every other key', () => {
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?who=1', hash: '#c=ABC234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/' });
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?lang=ko&who=1', hash: '#c=ABC234' })).toEqual({ intent: { kind: 'join', code: 'ABC234' }, address: '/?lang=ko' });
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?who=2', hash: '' })).toEqual({ intent: { kind: 'join', code: null }, address: '/?who=2' });
+  });
+
   it('a /join with no valid code still opens Join a class, empty', () => {
     expect(parseJoinBootIntent({ pathname: '/join', search: '', hash: '' })).toEqual({ intent: { kind: 'join', code: null }, address: '/' });
     expect(parseJoinBootIntent({ pathname: '/join', search: '', hash: '#c=O0O0O0' })).toEqual({ intent: { kind: 'join', code: null }, address: '/' });

@@ -15,9 +15,10 @@ import { shot } from './shots';
  * Covered: launch on a shared device, one tap to Home, the return after 30 minutes in the background, a
  * single-learner device not asked, the class join link (the caption, then Join prefilled for the learner picked),
  * `who=1` with a held join (the join is kept), CS-2 (the session and the console tab state end on arrival, the other
- * tabs are told), CS-5 (no Back; a `gate=` intent ends on a PIN screen whose Cancel returns here), CS-16 (a learner
- * added in another tab survives a pick here) and CS-21 (the pending 24-hour wait with Cancel the wait). G7's p95 is
- * measured in the nightly run, not here.
+ * tabs are told), CS-5 (no Back; a `gate=` intent ends on a PIN screen whose Cancel returns here, and whose correct PIN
+ * still hands off to the console or to All lessons), CS-16 (a learner added in another tab survives a pick here) and
+ * CS-21 (the pending 24-hour wait with Cancel the wait). G7 (a tile tap to Home, p95 within 300 ms) runs with
+ * `E2E_WHO_TIMING=1` too, for the nightly switch-on lane, which row OA-10 wires (spec section 22).
  */
 test.skip(process.env.E2E_WHO !== '1', 'needs a build with EXPO_PUBLIC_WHO_CHOOSER=true (E2E_WHO=1)');
 test.use({ viewport: { width: 360, height: 740 } });
@@ -168,6 +169,62 @@ test.describe('Who is using this?', () => {
     await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(title(page)).toBeVisible();
+  });
+
+  test('CS-5: a correct PIN on a gate intent over the launch chooser still hands off: the console gets its unlock', async ({ page }) => {
+    await sharedDevice(page);
+    await page.route(
+      (url) => url.pathname === '/parent',
+      (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Grown-up page</title><p>Grown-up page stand-in</p>' }),
+    );
+    await page.goto('/?gate=grown-up&next=%2Fparent');
+    await unlockWithPin(page);
+    await expect(page.getByText('Grown-up page stand-in')).toBeVisible();
+    // The chooser the PIN screen went back to as the tab left did not clear what the hand-off wrote.
+    const unlock = JSON.parse((await page.evaluate(() => sessionStorage.getItem('hr:grownup:unlock'))) ?? 'null') as Record<string, unknown> | null;
+    expect(unlock).toMatchObject({ v: 1, src: 'pin' });
+  });
+
+  test('CS-5: a correct PIN on gate=browse over the launch chooser opens All lessons with its pass', async ({ page }) => {
+    await sharedDevice(page);
+    await page.goto('/?gate=browse');
+    await unlockWithPin(page);
+    await expect(page).toHaveURL(/\/browse$/);
+    const pass = JSON.parse((await page.evaluate(() => sessionStorage.getItem('hr:browse:pass'))) ?? 'null') as Record<string, unknown> | null;
+    expect(pass).toMatchObject({ v: 1, source: 'gate' });
+  });
+
+  test('G7: a tile tap renders that learner\'s Home within 300 ms at the 95th percentile (nightly)', async ({ page }) => {
+    test.skip(process.env.E2E_WHO_TIMING !== '1', 'G7 is measured on the nightly switch-on lane (E2E_WHO_TIMING=1)');
+    test.setTimeout(120_000);
+    await sharedDevice(page);
+    const samples: number[] = [];
+    for (let i = 0; i < 20; i += 1) {
+      await expect(title(page)).toBeVisible();
+      const name = i % 2 === 0 ? 'Joon' : 'Mina';
+      // Timed in the page: from the tap to the first frame whose text greets that learner.
+      const ms = await page.evaluate(
+        ({ label, greeting }) =>
+          new Promise<number>((resolve, reject) => {
+            const button = Array.from(document.querySelectorAll<HTMLElement>('[role="button"]')).find((b) => b.getAttribute('aria-label') === label);
+            if (button === undefined) return reject(new Error(`no tile ${label}`));
+            const t0 = performance.now();
+            const check = (): void => {
+              if (!document.body.innerText.includes(greeting)) return void requestAnimationFrame(check);
+              resolve(performance.now() - t0);
+            };
+            button.click();
+            requestAnimationFrame(check);
+          }),
+        { label: en.a11y.who.tile(name), greeting: `Hi, ${name}!` },
+      );
+      samples.push(ms);
+      await page.getByTestId('home-who-switch').click();
+    }
+    const sorted = [...samples].sort((a, b) => a - b);
+    const p95 = sorted[Math.ceil(0.95 * sorted.length) - 1]!;
+    test.info().annotations.push({ type: 'G7 p95 (ms)', description: p95.toFixed(0) });
+    expect(p95).toBeLessThanOrEqual(300);
   });
 
   test('CS-16: a learner added in another tab shows here and survives a pick here', async ({ page, context }) => {

@@ -18,6 +18,11 @@ export function markLeaving(): void {
   // No browser history on native: nothing to hold while a page leaves.
 }
 
+/** [OA] Whether the page is leaving for another document; never on native. */
+export function pageLeaving(): boolean {
+  return false;
+}
+
 export function syncHistory(): void {
   // No browser history on native.
 }

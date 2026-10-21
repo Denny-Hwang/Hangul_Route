@@ -1,5 +1,5 @@
-import { closeOnChooser } from '../logic/profiles/session';
 import { endGrownUpTab } from '../platform/grown-up-tab';
+import { pageLeaving } from '../platform/history-bridge';
 import { useUiStore } from './ui-store';
 
 /**
@@ -64,11 +64,13 @@ export function onGrownUpSessionClosed(listener: (closed: SessionClosed) => void
 
 /**
  * [OA] Section 6.3, OA-D5, CS-2 (row OA-4a): arriving at "Who is using this?" closes the grown-up session whatever
- * it was (`closeOnChooser`), clears this tab's unlock and console session and posts the `hr-grownup` lock to the other
- * tabs. It writes nothing else. A grown-up row picked right after asks the PIN again.
+ * it was (`closeOnChooser` describes it): `closeGrownUpSession`, the one way a session ends, so the times, a pending
+ * PIN-screen return, this tab's unlock and console session go, the `hr-grownup` lock is posted to the other tabs and
+ * the listeners hear it. A grown-up row picked right after asks the PIN again. The one exception is a tab that is
+ * leaving for another page (a PIN screen over the chooser handed off to the console or to All lessons and went back
+ * as it left, `pageLeaving`): the unlock or pass it just wrote is what that page reads, so nothing is cleared.
  */
-export function arriveAtChooser(): void {
-  const arrival = closeOnChooser(useUiStore.getState());
-  useUiStore.setState(arrival.times);
-  if (arrival.clearTab || arrival.postLock) endGrownUpTab();
+export function arriveAtChooser(leaving: () => boolean = pageLeaving): void {
+  if (leaving()) return;
+  closeGrownUpSession();
 }

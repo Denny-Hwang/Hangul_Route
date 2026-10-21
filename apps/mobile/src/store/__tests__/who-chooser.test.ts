@@ -38,6 +38,7 @@ import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import {
   activeProfileLocked,
+  anyProfileLocked,
   bindChooserResume,
   chooserLaunchTrigger,
   deviceShared,
@@ -218,7 +219,13 @@ describe('bindChooserResume (section 6.2)', () => {
   function harness(route: { name: string; params?: unknown } | null = { name: 'Main' }) {
     let listener: (visible: boolean) => void = () => undefined;
     let now = 0;
-    const nav = { isReady: vi.fn(() => true), getCurrentRoute: vi.fn(() => route ?? undefined), navigate: vi.fn() };
+    const nav = {
+      isReady: vi.fn(() => true),
+      getCurrentRoute: vi.fn(() => route ?? undefined),
+      navigate: vi.fn(),
+      getRootState: vi.fn(() => (route === null ? undefined : { routes: [{ name: 'Main' }, route] })),
+      dispatch: vi.fn(),
+    };
     const off = bindChooserResume(nav, {
       subscribe: (l) => {
         listener = l;
@@ -273,12 +280,90 @@ describe('bindChooserResume (section 6.2)', () => {
     expect(early.nav.navigate).not.toHaveBeenCalled();
   });
 
+  it("the PIN screen a closed session left for the Grown-up area gives way to the chooser; any other PIN screen stays", () => {
+    const pin = { name: 'PinEntry', params: { next: 'ParentDashboard' } };
+    const { nav, away } = harness(pin);
+    away(CHOOSER_RESUME_MS - 1);
+    expect(nav.dispatch).not.toHaveBeenCalled();
+    away(CHOOSER_RESUME_MS);
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(nav.dispatch).toHaveBeenCalledWith({
+      type: 'RESET',
+      payload: { index: 1, routes: [{ name: 'Main' }, { name: 'WhoIsUsing', params: { trigger: 'resume' } }] },
+    });
+    for (const params of [{ next: 'AddProfile' }, { next: 'ParentDashboard', mode: 'change' }, { next: 'CancelReset' }]) {
+      const other = harness({ name: 'PinEntry', params });
+      other.away(CHOOSER_RESUME_MS);
+      expect(other.nav.dispatch, JSON.stringify(params)).not.toHaveBeenCalled();
+      expect(other.nav.navigate).not.toHaveBeenCalled();
+    }
+  });
+
   it('a shown without a hidden first counts no time', () => {
     let listener: (visible: boolean) => void = () => undefined;
-    const nav = { isReady: () => true, getCurrentRoute: () => ({ name: 'Main' }), navigate: vi.fn() };
+    const nav = { isReady: () => true, getCurrentRoute: () => ({ name: 'Main' }), navigate: vi.fn(), getRootState: () => undefined, dispatch: vi.fn() };
     bindChooserResume(nav, { subscribe: (l) => ((listener = l), () => undefined), now: () => 10 * CHOOSER_RESUME_MS, flag: () => true });
     listener(true);
     expect(nav.navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('a resume with a Grown-up area page in front, both rules bound in App order (OA-D6, OA-D16)', () => {
+  it('the background rule closes the session first; the chooser still ends up in front and the area is off the stack', async () => {
+    const { bindGrownUpBackgroundRule } = await import('../../screens/parent/use-gate-lapse');
+    const { leaveGrownUpAreaOnClose } = await import('../../navigation/grown-up-area-exit');
+    const { useUiStore } = await import('../ui-store');
+    type R = { name: string; params?: unknown };
+    let stack: R[] = [{ name: 'Main' }, { name: 'ParentDashboard' }];
+    const nav = {
+      isReady: () => true,
+      getCurrentRoute: () => stack[stack.length - 1],
+      getRootState: () => ({ routes: stack }),
+      navigate: (name: 'WhoIsUsing', params: unknown) => void (stack = [...stack, { name, params }]),
+      dispatch: (action: { type: 'RESET'; payload: { routes: R[] } }) => void (stack = [...action.payload.routes]),
+    };
+    const listeners: ((visible: boolean) => void)[] = [];
+    let now = 0;
+    const subscribe = (l: (visible: boolean) => void) => (listeners.push(l), () => undefined);
+    useUiStore.setState({ parentGateOpenedAt: 0, lastPinVerifiedAt: null });
+    // App.tsx: the background rule in the mount effect, then (onReady) the area leave and the chooser resume.
+    const closed = new Set<() => void>();
+    // As closeGrownUpSession: the session ends, then the listeners (the area leave) hear it.
+    const close = (): void => {
+      useUiStore.setState({ parentGateOpenedAt: null });
+      for (const c of [...closed]) c();
+    };
+    const offBackground = bindGrownUpBackgroundRule({ subscribe, now: () => now, close, sessionOpen: () => useUiStore.getState().parentGateOpenedAt !== null });
+    const offLeave = leaveGrownUpAreaOnClose(nav, () => false, (l) => (closed.add(l), () => closed.delete(l)));
+    const offResume = bindChooserResume(nav, { subscribe, now: () => now, flag: () => true });
+    const emit = (visible: boolean) => {
+      for (const l of listeners) l(visible);
+    };
+    emit(false);
+    now += CHOOSER_RESUME_MS + 60_000;
+    emit(true);
+    expect(stack.map((r) => r.name)).toEqual(['Main', 'WhoIsUsing']);
+    expect(stack[1]?.params).toEqual({ trigger: 'resume' });
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    offBackground();
+    offLeave();
+    offResume();
+  });
+});
+
+describe('anyProfileLocked (who.shown anyLocked)', () => {
+  it('false with no locks or no PIN, true with a lock, every profile while the locks are unreadable', async () => {
+    expect(anyProfileLocked()).toBe(false);
+    disk.set('profiles:locks', { v: 1, ids: ['profile:jun'] });
+    await chooserLaunchTrigger();
+    expect(anyProfileLocked()).toBe(true);
+    useAccountStore.setState({ parentPinHash: null });
+    expect(anyProfileLocked()).toBe(false);
+    useAccountStore.setState({ parentPinHash: 'h' });
+    disk.delete('profiles:locks');
+    failRead.on = true;
+    await chooserLaunchTrigger();
+    expect(anyProfileLocked()).toBe(true);
   });
 });
 

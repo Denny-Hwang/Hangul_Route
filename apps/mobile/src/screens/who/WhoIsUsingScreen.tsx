@@ -10,16 +10,15 @@ import {
   useEffectiveFontScale,
   useLayoutClass,
 } from '@hangul-route/design-system';
-import { LOCALE_META, type UiLocale } from '@hangul-route/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { BackHandler, Platform, View } from 'react-native';
 import { GrownUpRow } from '../../components/GrownUpRow';
 import { WhoTile } from '../../components/WhoTile';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { resetWaitState } from '../../logic/profiles/pin-reset';
+import { formatReadyAt, resetWaitState } from '../../logic/profiles/pin-reset';
 import { planProfileSwitch, routeZone } from '../../logic/profiles/session';
 import { grownUpRows, pickLanding, tileOrder, tileTints, whoPickedEvent, whoShownEvent, type WhoMarker } from '../../logic/profiles/who';
 import { gateRequired } from '../../logic/profiles/learner-type';
@@ -32,7 +31,7 @@ import { trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry'
 import { arriveAtChooser } from '../../store/grown-up-session';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { heldJoin, learnerProfiles, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
+import { anyProfileLocked, heldJoin, learnerProfiles, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
 import { useBackGuard } from '../use-back-guard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WhoIsUsing'>;
@@ -41,16 +40,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'WhoIsUsing'>;
 const REM = 16;
 const TILE_MIN_REM = 8;
 const TILE_MIN_WIDE_REM = 10;
-
-/** The end of the wait as a local time in the UI language ("6:40 PM", "18:40", or the Korean afternoon form); never throws. */
-export function waitEndsAt(locale: UiLocale, readyAt: number): string {
-  const date = new Date(readyAt);
-  try {
-    return date.toLocaleTimeString(LOCALE_META[locale].speechLang, { hour: 'numeric', minute: '2-digit' });
-  } catch {
-    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  }
-}
 
 /**
  * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6.1 to 6.3 and 14, row OA-4a; wireframe
@@ -90,23 +79,33 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
   const joining = heldJoin() !== null;
 
   // Arriving here, and coming back here from a PIN screen or the Grown-up area, ends any grown-up session (CS-2).
-  useFocusEffect(useCallback(() => arriveAtChooser(), []));
+  // While it is in front, the Android hardware back does nothing, also when the chooser is the stack's root at launch,
+  // where no `beforeRemove` runs and the system would close the app (CS-5).
+  useFocusEffect(
+    useCallback(() => {
+      arriveAtChooser();
+      const back = BackHandler.addEventListener('hardwareBackPress', () => true);
+      return () => back.remove();
+    }, []),
+  );
 
-  // One `who.shown` per opening (section 15, G6), never one per focus.
+  // One `who.shown` per opening (section 15, G6), never one per focus. An opening is a mount, or a navigate that
+  // brings this chooser back to the front with new params (the Grown-up area's Switch user over a chooser that is
+  // still on the stack).
   useEffect(() => {
     void track(
       whoShownEvent({
         trigger,
         learners: learners.length,
         grownUps: grownUps.rows.length,
-        anyLocked: false,
+        anyLocked: anyProfileLocked(),
         resetPending: grownUps.pending !== null,
       }),
     );
     // Pre-warm every learner's snapshot so Home renders at once after a pick (G7).
     for (const p of learners) void useProgressStore.getState().hydrate(p.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per opening
-  }, []);
+  }, [route.params]);
 
   // No Back (CS-5): every back is held; the screen's own ways on (a pick) let it go.
   const leaving = useRef(false);
@@ -127,8 +126,10 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
   const clearUnder = (): void => {
     const state = navigation.getState();
     const current = state.routes[state.index]!;
-    if (!state.routes.slice(0, state.index).some((r) => r.name !== 'Main')) return;
-    if (planProfileSwitch('resume', true).persistRequired) persistLeaving();
+    // The launch chooser is the stack's root: the learner home goes under it, so the Grown-up area opened from here
+    // is left (and `navigate('Main')` from it pops back) as from anywhere else.
+    if (state.index > 0 && !state.routes.slice(0, state.index).some((r) => r.name !== 'Main')) return;
+    if (state.index > 0 && planProfileSwitch('resume', true).persistRequired) persistLeaving();
     navigation.reset({ index: 1, routes: [{ name: 'Main' }, { key: current.key, name: 'WhoIsUsing', params: route.params }] });
   };
 
@@ -276,7 +277,7 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
         {grownUps.pending !== null ? (
           // Plain text read in order with the section, not a live region (section 14).
           <View testID="who-reset-pending" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, padding: spacing.md, gap: spacing.sm }}>
-            <Body>{w.resetPending(waitEndsAt(locale, grownUps.pending.readyAt))}</Body>
+            <Body>{w.resetPending(formatReadyAt(locale, grownUps.pending.readyAt))}</Body>
             <Button label={w.resetCancel} tone="secondary" size="md" onPress={pickCancelWait} testID="who-reset-cancel" />
           </View>
         ) : null}

@@ -64,6 +64,11 @@ export function deviceShared(): boolean {
   return isSharedDevice({ profiles, locks: effectiveLocks(profiles), uses: [], marker: whoMarker() });
 }
 
+/** Whether any learner profile is locked now (`who.shown` `anyLocked`, section 15); every one while unreadable. */
+export function anyProfileLocked(): boolean {
+  return effectiveLocks(learnerProfiles()).length > 0;
+}
+
 /** Whether the active profile is locked now (CS-19). */
 export function activeProfileLocked(): boolean {
   const { activeId } = useProfileStore.getState();
@@ -157,11 +162,22 @@ export function switchOffered(profileCount: number = learnerProfiles().length): 
 
 // ---- Resume (section 6.2) ----
 
+/** A root route as the navigation container holds it. */
+interface ChooserStackRoute {
+  name: string;
+  params?: unknown;
+  key?: string;
+  state?: unknown;
+}
+
 /** What the resume rule needs of the navigation container. */
 export interface ChooserNavigation {
   isReady: () => boolean;
   getCurrentRoute: () => { name: string; params?: unknown } | undefined;
   navigate: (screen: 'WhoIsUsing', params: { trigger: WhoTrigger }) => void;
+  getRootState: () => { routes: ReadonlyArray<ChooserStackRoute> } | undefined;
+  /** `CommonActions.reset`, written out so this module loads without the navigation package. */
+  dispatch: (action: { type: 'RESET'; payload: { index: number; routes: ChooserStackRoute[] } }) => void;
 }
 
 export interface ResumeDeps {
@@ -176,6 +192,16 @@ const resumeDeps = (): ResumeDeps => ({ subscribe: subscribeAppVisibility, now: 
 function opensOver(route: { name: string; params?: unknown } | undefined): boolean {
   if (route === undefined || route.name === 'WhoIsUsing') return false;
   return routeZone(route.name, route.params) !== 'gate';
+}
+
+/**
+ * The PIN screen a closed session leaves in place of the Grown-up area (`leaveGrownUpAreaOnClose`: 5 minutes in the
+ * background end the session first, with the area in front). On a resume that opens the chooser it gives way to it.
+ */
+function areaLeavePin(route: { name: string; params?: unknown } | undefined): boolean {
+  if (route?.name !== 'PinEntry') return false;
+  const params = (route.params ?? {}) as Record<string, unknown>;
+  return params.next === 'ParentDashboard' && Object.keys(params).length === 1;
 }
 
 /**
@@ -203,7 +229,19 @@ export function bindChooserResume(nav: ChooserNavigation, deps: ResumeDeps = res
       joinHeld: false,
       flag: true,
     });
-    if (trigger !== null && opensOver(nav.getCurrentRoute())) nav.navigate('WhoIsUsing', { trigger });
+    if (trigger === null) return;
+    const route = nav.getCurrentRoute();
+    if (opensOver(route)) {
+      nav.navigate('WhoIsUsing', { trigger });
+      return;
+    }
+    // A Grown-up area page was in front: the background rule already closed the session and left the area for its
+    // PIN screen. The chooser takes that PIN screen's place, so whoever picks the device up is asked who is using it
+    // (OA-D6), never handed the last learner's screen by Cancel.
+    const routes = nav.getRootState()?.routes ?? [];
+    if (!areaLeavePin(route) || routes.length < 2) return;
+    const kept = [...routes.slice(0, -1), { name: 'WhoIsUsing', params: { trigger } }];
+    nav.dispatch({ type: 'RESET', payload: { index: kept.length - 1, routes: kept } });
   });
 }
 

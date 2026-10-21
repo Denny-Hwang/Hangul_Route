@@ -134,4 +134,21 @@ describe('arriveAtChooser', () => {
     arriveAtChooser();
     expect(endGrownUpTab).toHaveBeenCalledTimes(1);
   });
+
+  it('is closeGrownUpSession: a pending PIN-screen return goes and the listeners hear it (OA-4a review)', () => {
+    useUiStore.setState({ gateReturnPending: true });
+    const heard = vi.fn();
+    const off = onGrownUpSessionClosed(heard);
+    arriveAtChooser();
+    off();
+    expect(useUiStore.getState().gateReturnPending).toBe(false);
+    expect(heard).toHaveBeenCalledTimes(1);
+  });
+
+  it('a tab leaving for another page (a hand-off from a PIN screen over the chooser) keeps what it handed off (CS-5)', () => {
+    useUiStore.setState({ gateReturnPending: true });
+    arriveAtChooser(() => true);
+    expect(useUiStore.getState()).toMatchObject({ parentGateOpenedAt: 1000, lastPinVerifiedAt: 2000, gateReturnPending: true });
+    expect(endGrownUpTab).not.toHaveBeenCalled();
+  });
 });

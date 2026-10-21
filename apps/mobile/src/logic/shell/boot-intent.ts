@@ -78,7 +78,11 @@ const queryOf = (params: URLSearchParams): string => {
 export function parseJoinBootIntent(location: { pathname: string; search: string; hash: string }): { intent: JoinBootIntent; address: string } | null {
   const link = parseJoinLink(location);
   if (link === null) return null;
-  return { intent: { kind: 'join', code: link.code }, address: `/${location.search}` };
+  // [OA] OA-D20: a join wins over `who=1`, which leaves the address too, so a reload does not open the chooser again.
+  const params = new URLSearchParams(location.search);
+  if (params.get(WHO) !== WHO_RETURN) return { intent: { kind: 'join', code: link.code }, address: `/${location.search}` };
+  params.delete(WHO);
+  return { intent: { kind: 'join', code: link.code }, address: `/${queryOf(params)}` };
 }
 
 export function parseBootIntent(search: string): ParsedBootIntent {

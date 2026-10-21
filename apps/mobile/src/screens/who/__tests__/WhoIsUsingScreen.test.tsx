@@ -1,7 +1,8 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import React from 'react';
-import type { ReactTestInstance } from 'react-test-renderer';
+import { act, type ReactTestInstance } from 'react-test-renderer';
+import { BackHandler } from 'react-native';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -29,6 +30,7 @@ import { useUiStore } from '../../../store/ui-store';
 import { holdJoin, resetChooserState } from '../../../store/who-chooser';
 import { readJson, writeJson } from '../../../platform/storage';
 import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+import { formatReadyAt } from '../../../logic/profiles/pin-reset';
 import { WhoIsUsingScreen } from '../WhoIsUsingScreen';
 
 const en = getMessages('en');
@@ -100,7 +102,7 @@ beforeEach(() => {
     activeSince: Date.now() - 30_000,
   });
   useAccountStore.setState({ parentPinHash: 'pin-hash', pinResetRequestedAt: null });
-  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null });
+  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, gateReturnPending: false });
 });
 
 afterEach(async () => {
@@ -145,11 +147,51 @@ describe('Who is using this? (row OA-4a)', () => {
   });
 
   it('arriving closes the grown-up session, clears the tab and tells the other tabs (CS-2)', async () => {
-    useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now() });
+    useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now(), gateReturnPending: true });
     await renderChooser();
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    // It is closeGrownUpSession: a stale PIN-screen return never carries past the chooser.
+    expect(useUiStore.getState().gateReturnPending).toBe(false);
     expect(tab.ended).toBe(1);
+  });
+
+  it('as the launch root (no beforeRemove runs there) the Android hardware back is still swallowed, not the app closed (CS-5)', async () => {
+    const remove = vi.fn();
+    const spy = vi.spyOn(BackHandler, 'addEventListener').mockImplementation(() => ({ remove }));
+    try {
+      await renderChooser([CHOOSER], 'launch');
+      const handler = spy.mock.calls.find(([name]) => name === 'hardwareBackPress')?.[1] as (() => boolean) | undefined;
+      expect(handler).toBeDefined();
+      expect(handler?.()).toBe(true);
+      await cleanup();
+      expect(remove).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('a navigate that brings this chooser back with new params (Switch user over it) is a new opening: one more who.shown', async () => {
+    const { r, navigation } = await renderChooser();
+    expect(tracked.filter((e) => e.name === 'who.shown')).toHaveLength(1);
+    await act(async () => {
+      r.update(<WhoIsUsingScreen navigation={navigation as never} route={{ key: 'who-1', name: 'WhoIsUsing', params: { trigger: 'manual' } } as never} />);
+    });
+    expect(tracked.filter((e) => e.name === 'who.shown')).toHaveLength(2);
+  });
+
+  it('who.shown says whether a learner is locked: every one while the locks are unreadable (fail closed)', async () => {
+    const { chooserLaunchTrigger } = await import('../../../store/who-chooser');
+    const { flags } = await import('../../../config/flags');
+    flags.whoChooserEnabled = true;
+    try {
+      await writeJson('profiles:locks', { v: 9 });
+      await chooserLaunchTrigger();
+    } finally {
+      flags.whoChooserEnabled = false;
+    }
+    await renderChooser();
+    expect(tracked.find((e) => e.name === 'who.shown')?.payload).toMatchObject({ anyLocked: true });
   });
 
   it('swallows every back: the Android hardware back, the browser back and a pop (CS-5)', async () => {
@@ -204,8 +246,16 @@ describe('Who is using this? (row OA-4a)', () => {
     expect(useProfileStore.getState().activeId).toBe('profile:mina');
   });
 
-  it('at launch (nothing under it) a grown-up row only asks the PIN', async () => {
+  it('at launch (nothing under it) a grown-up row puts Home under the chooser, then asks the PIN', async () => {
     const { r, navigation } = await renderChooser([CHOOSER], 'launch');
+    await press(byTestId(r.root, 'who-row-area')[0] as ReactTestInstance);
+    // The Grown-up area then sits over Home, as from anywhere else, so leaving it (or `navigate('Main')`) pops to Home.
+    expect(navigation.reset).toHaveBeenCalledWith({ index: 1, routes: [{ name: 'Main' }, { key: 'who-1', name: 'WhoIsUsing', params: { trigger: 'launch' } }] });
+    expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'ParentDashboard' });
+  });
+
+  it('with Home already under it, a grown-up row only asks the PIN', async () => {
+    const { r, navigation } = await renderChooser([{ key: 'main', name: 'Main' }, CHOOSER]);
     await press(byTestId(r.root, 'who-row-area')[0] as ReactTestInstance);
     expect(navigation.reset).not.toHaveBeenCalled();
     expect(navigation.navigate).toHaveBeenLastCalledWith('PinEntry', { next: 'ParentDashboard' });
@@ -236,10 +286,15 @@ describe('Who is using this? (row OA-4a)', () => {
   });
 
   it('a running Forgot PIN wait: the pending line and Cancel the wait, which asks the PIN to stop it (CS-21)', async () => {
-    useAccountStore.setState({ pinResetRequestedAt: new Date(Date.now() - 60 * 60_000).toISOString() });
+    const requested = Date.now() - 60 * 60_000;
+    useAccountStore.setState({ pinResetRequestedAt: new Date(requested).toISOString() });
     const { r, navigation } = await renderChooser();
     const [line] = byTestId(r.root, 'who-reset-pending');
     expect(screenTexts(line as ReactTestInstance).join(' ')).toMatch(/^A new grown-up PIN can be set after .+\. Enter the PIN to cancel\./);
+    // The end of the wait with its date (it is tomorrow for most of the 24 hours), the reset screen's own formatter.
+    const end = formatReadyAt('en', requested + 24 * 60 * 60_000);
+    expect(end).toMatch(/\d{4}/);
+    expect(screenTexts(line as ReactTestInstance).join(' ')).toContain(end);
     expect(tracked.find((e) => e.name === 'who.shown')?.payload).toMatchObject({ resetPending: true });
     // The line comes before the rows, and no live region carries it.
     expect(r.root.findAll((n) => n.props['aria-live'] !== undefined && screenTexts(n).some((t) => t.includes('grown-up PIN can be set')))).toEqual([]);
