@@ -12,6 +12,7 @@ import { readDeviceGate } from '@/lib/console/device-marker';
 import { readLastPersona } from '@/lib/console/shell-store';
 import { finishReverify, grantSignInUnlock, resolveDestination, settleSignIn, type RouteIo, type SignInIo } from '@/lib/console/signin-flow';
 import { clearSignInRecord, readSignInRecord } from '@/lib/console/signin-record';
+import { withSchoolFocus } from '@/lib/console/teacher-home';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { useConsoleAuth } from './auth-context';
@@ -66,9 +67,11 @@ export interface GrownUpRouterProps {
   /** Clerk mode passes its reverification; without it a reverification counts as cancelled (the lock then decides). */
   reverify?: ReverifySlot;
   environment?: RouterEnvironment;
+  /** [OA] Row OA-4b: `/teach?focus=school` carries `focus=school` to the teacher home (`withSchoolFocus`). */
+  schoolFocus?: boolean;
 }
 
-export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRouterProps): JSX.Element {
+export function GrownUpRouter({ next, hint, reverify, environment, schoolFocus = false }: GrownUpRouterProps): JSX.Element {
   const auth = useConsoleAuth();
   const m = useMessages();
   const locale = useLocale();
@@ -110,19 +113,20 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
       },
       readLastPersona: env.readLastPersona,
     };
-    void resolveDestination(io, { next, hint }).then((href) => {
+    void resolveDestination(io, { next, hint }).then((found) => {
       if (!live) return;
-      if (!href) {
+      if (!found) {
         setPhase({ at: 'error' });
         return;
       }
+      const href = withSchoolFocus(found, schoolFocus);
       setPhase({ at: 'going', href });
       env.replace(href);
     });
     return () => {
       live = false;
     };
-  }, [phase.at, attempt, api, env, next, hint]);
+  }, [phase.at, attempt, api, env, next, hint, schoolFocus]);
 
   if (phase.at === 'reverify') {
     const device = phase.device;

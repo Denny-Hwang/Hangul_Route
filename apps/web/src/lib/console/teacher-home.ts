@@ -1,4 +1,4 @@
-import { APP_ROUTES } from '@hangul-route/content-schema';
+import { APP_ROUTES, SCHOOL_FOCUS, SCHOOL_FOCUS_QUERY } from '@hangul-route/content-schema';
 import type { SpaceListItem } from './api';
 import { lectureCardView, type LectureCardView } from './lecture-entry';
 import { heldPersonas } from './personas';
@@ -62,4 +62,32 @@ export function classRowLinks(item: SpaceListItem, flags: { reports: boolean; no
  */
 export function teacherLectureCard(items: readonly SpaceListItem[] | 'failed' | null, opts: { enabled: boolean; appUrl: string }): LectureCardView | null {
   return opts.enabled ? lectureCardView(items, 'teacher', opts.appUrl) : null;
+}
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3 (row OA-4b): the chooser's School row opens `/teach?focus=school`.
+ * Whether a query asks for the School group (exactly `focus=school`; any other value is ignored).
+ */
+export function wantsSchoolFocus(params: { get(name: string): string | null }): boolean {
+  return params.get(SCHOOL_FOCUS.param) === SCHOOL_FOCUS.value;
+}
+
+/**
+ * [OA] The `/teach` router's destination with the School focus carried on: only the teacher home takes it (a
+ * `/start` set-up or any other page never does), and it is added once.
+ */
+export function withSchoolFocus(href: string, focus: boolean): string {
+  return focus && href === APP_ROUTES.teacherHome ? `${href}?${SCHOOL_FOCUS_QUERY}` : href;
+}
+
+/**
+ * [OA] The teacher home's address once the School focus is spent: `focus` removed, every other pair kept in its
+ * order, the hash kept. `null` when there is nothing to remove.
+ */
+export function withoutSchoolFocus(search: string, pathname: string, hash = ''): string | null {
+  const params = new URLSearchParams(search);
+  if (!params.has(SCHOOL_FOCUS.param)) return null;
+  params.delete(SCHOOL_FOCUS.param);
+  const rest = params.toString();
+  return `${pathname}${rest ? `?${rest}` : ''}${hash}`;
 }
