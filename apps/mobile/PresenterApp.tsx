@@ -30,22 +30,24 @@ import { recentView } from './src/logic/lecture/home-view';
 import { blockMinutesOn, blockTitleIn, presenterChooserGroups, wordReviewWordsOn } from './src/logic/lecture/quick-source';
 import { HOME_DEFAULT, type HomeSnapshot } from './src/logic/lecture/home-state';
 import { presenterPresetContext, presetLectureDeck, presetPreview, presetTitle, resolveOnPresenter, type WordReviewBlock } from './src/logic/lecture/preset-source';
-import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
+import { boundedRecent, commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
 import {
   completePayload,
   homeStart,
+  lessonStartPayload,
   nextStrokePlay,
   presenterLocale,
   resolveBoot,
   slideLocale,
   runDeck,
   SHELL_SLIDE_KINDS,
-  startPayload,
+  readyFromBoot,
   startTally,
   strokeTokenFor,
   tallyStep,
   voiceCheck,
   type BootResult,
+  type ReadyStart,
   type RunTally,
   type StartSource,
   type StrokePlay,
@@ -57,7 +59,7 @@ import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
-import { slideSound, soundFlashFor, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
+import { readAlongView, slideSound, soundFlashFor, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
 import {
   getCapability,
@@ -186,7 +188,7 @@ function readAddress(): DeckAddress | null {
  * the ready-made lesson the presenter resolved (its in-session state, AMENDMENTS-LECTURE-V2 section
  * 11), which also draws the preview.
  */
-type ReadyPhase = { kind: 'ready'; deck: LectureDeck; source: StartSource; resumeKey?: string; fresh?: true; preset?: LecturePreset };
+type ReadyPhase = ReadyStart;
 
 type Phase =
   | { kind: 'boot' }
@@ -197,16 +199,7 @@ type Phase =
   | { kind: 'running'; deck: LectureDeck; source: StartSource; from: ReadyPhase };
 
 function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
-  if (result.kind === 'deck') {
-    return {
-      kind: 'ready',
-      deck: result.deck,
-      source: result.source,
-      ...(result.resumeKey !== undefined ? { resumeKey: result.resumeKey } : {}),
-      ...(address?.fresh === true ? { fresh: true as const } : {}),
-      ...(result.preset !== undefined ? { preset: result.preset } : {}),
-    };
-  }
+  if (result.kind === 'deck') return readyFromBoot(result, address?.fresh === true);
   // A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5): the page offers Reload.
   if (result.kind === 'invalid') return result.reason === 'unsupported_version' ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
   return { kind: result.kind };
@@ -355,11 +348,17 @@ function Presenter(): React.ReactElement {
       });
     void flushQueue();
     recent.current = readRecent(recentStore);
+    // A read that never settles counts as storage off after a bound, so the home's Start and a reload do
+    // not wait forever; writes still chain on the real read, and its late answer replaces the off view.
+    const bootRecent = boundedRecent(recent.current);
+    void bootRecent.then((loaded) => {
+      if (live) setRecentLoaded(loaded);
+    });
     void recent.current.then((loaded) => {
       if (live) setRecentLoaded(loaded);
     });
     if (address?.reloaded) {
-      void recent.current.then(({ list }) => {
+      void bootRecent.then(({ list }) => {
         if (live) setPhase(phaseOf(resolveBoot(address, list), address));
       });
     }
@@ -454,6 +453,8 @@ function Presenter(): React.ReactElement {
   // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6);
   // on both bars an explicit Sound press that has nothing to play, or does not play, says so there (section 3.7).
   const [soundFlash, setSoundFlash] = useState<{ key: SoundFlashKey; at: number } | null>(null);
+  /** The read-along line Sound is playing (design V6): lit on its slide until that play ends. */
+  const [playingLine, setPlayingLine] = useState<{ key: string; line: number } | null>(null);
   // The flash's own time is kept here, so a remount (a turn upright and back, a new lesson) never shows an old one again.
   useEffect(() => {
     if (soundFlash === null) return undefined;
@@ -564,7 +565,13 @@ function Presenter(): React.ReactElement {
       if (!sound) return;
       const at = Date.now();
       const slideIdx = stateRef.current?.slideIdx;
+      // Read along: the line that plays (the current one) is lit while it plays; a later press lights its own.
+      // Lines shown together (no Korean voice) light none.
+      const line = slide.kind === 'read-along' ? readAlongView(slide, reveal ?? slide.builds.length - 1).current : null;
+      const lit = slide.kind === 'read-along' && line !== null ? { key: slide.key, line } : null;
+      if (lit) setPlayingLine(lit);
       void playPrompt({ ...soundPrompt(sound), source: 'presenter' }).then((result) => {
+        if (lit) setPlayingLine((now) => (now === lit ? null : now));
         const failure = useAudioStore.getState().lastFailure;
         const reason = failure !== null && failure.at >= at ? failure.reason : null;
         setSoundBlocked(result !== 'played' && reason === 'blocked');
@@ -696,16 +703,8 @@ function Presenter(): React.ReactElement {
     updateRecent((list) => setLastSlide(rememberDeck(list, started, savedAt), started.id, key));
     void track({
       name: 'lecture.start',
-      payload: {
-        ...startPayload({
-          deck: started,
-          run,
-          source: phase.source,
-          ...(phase.from.preset !== undefined ? { preset: phase.from.preset } : {}),
-          capability,
-          offlineReady: isOfflineReady(),
-        }),
-      },
+      // The start screen's source and preset (shell.test.ts follows each start through to this payload).
+      payload: { ...lessonStartPayload(phase.from, { deck: started, run, capability, offlineReady: isOfflineReady() }) },
     });
   }, [phase, run, slides, capability, updateRecent]);
 
@@ -914,7 +913,13 @@ function Presenter(): React.ReactElement {
   const onPreset = useCallback(
     (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => {
       const resolved = resolveHere(preset, minutes, stage);
-      const built = presetLectureDeck(resolved, { title: presetTitle(resolved, messages.learner.presenter.presets), now: new Date(), rng: Math.random });
+      const built = presetLectureDeck(resolved, {
+        title: presetTitle(resolved, messages.learner.presenter.presets),
+        // A localized title the deck schema refuses gives way to the English one, so Start always opens a start screen.
+        fallbackTitle: presetTitle(resolved, getMessages('en').learner.presenter.presets),
+        now: new Date(),
+        rng: Math.random,
+      });
       if (built) openFromHome({ kind: 'preset', deck: built, preset: resolved.preset });
     },
     [resolveHere, messages, openFromHome],
@@ -1239,6 +1244,7 @@ function Presenter(): React.ReactElement {
               romanization={romanizationNow}
               sayIt={sayIt}
               storyScene={stories.scene}
+              playingLine={playingLine !== null && playingLine.key === slide?.key ? playingLine.line : null}
               {...(phone
                 ? {
                     barStrip: PHONE_BAR_STRIP,

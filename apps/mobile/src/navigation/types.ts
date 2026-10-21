@@ -60,6 +60,8 @@ export type GrownUpDestination =
   | 'BrowseLessons'
   /** [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4: the class update of one learner (`PinEntry.profileId`). */
   | 'ClassScope'
+  /** AMENDMENTS-LECTURE-V2 E5 (LV-6, web only): the dashboard's Lecture mode card after the session lapsed; back to the dashboard, where one more tap opens the presenter tab. */
+  | 'LectureMode'
   // add new members above this line
 ;
 

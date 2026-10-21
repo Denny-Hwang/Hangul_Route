@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { ADULT_NAV, currentNavItem, navFlags, navItemsFor, ownFamilySpaces, soloFamilyLearnerSpace, type NavContext } from '../shell-nav';
+import { ADULT_NAV, currentNavItem, navFlags, navItemsFor, ownFamilySpaces, revealScrollLeft, samePageFragment, soloFamilyLearnerSpace, type NavContext } from '../shell-nav';
 
 /** F-APP-001 A-5a, section 3.8: the adult navigation registry, its predicates and its targets. */
-function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'], learners = 1): SpaceListItem {
+function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'], learners = 1, over: { archivedAt?: string; createdAt?: string } = {}): SpaceListItem {
   return {
-    space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: '2026-10-01T00:00:00Z' },
+    space: {
+      id,
+      kind,
+      name: id,
+      parentSpaceId: null,
+      settings: { consentMode: 'parent', anonymizeRoster: false },
+      archivedAt: over.archivedAt ?? null,
+      createdAt: over.createdAt ?? '2026-10-01T00:00:00Z',
+    },
     role,
     counts: { learners, accounts: 1, classes: 0 },
     joinCode: null,
@@ -13,8 +21,10 @@ function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListI
   };
 }
 
-const ALL_ON = { reports: true, notes: true, browse: true };
-const ALL_OFF = { reports: false, notes: false, browse: false };
+const ALL_ON = { reports: true, notes: true, browse: true, lecture: true };
+const ALL_OFF = { reports: false, notes: false, browse: false, lecture: false };
+/** Every sibling flag on: Lecture mode too, since its launch default went on in LV-7 (AMENDMENTS-LECTURE-V2 LV-D1). */
+const DEFAULTS = ALL_ON;
 
 function ctx(over: Partial<NavContext>): NavContext {
   return { persona: 'parent', spaces: [], soloLearner: null, flags: ALL_OFF, ...over };
@@ -32,16 +42,25 @@ describe('ADULT_NAV', () => {
       ['classReports', 'teacher', 'classReports'],
       ['teacherNotes', 'teacher', 'notes'],
       ['lessons', 'both', 'lessons'],
+      ['lecture', 'both', 'lecture'],
       ['billing', 'both', 'billing'],
     ]);
   });
 });
 
 describe('navFlags', () => {
-  it('reads the three sibling predicates: Reports (F-REPORT-001 RP-11), Lessons (F-BROWSE-001 BR-14) and Notes (F-FEEDBACK-001 FB-14) on by default', () => {
-    expect(navFlags('en', {}, 'https://app.hangulroute.com')).toEqual(ALL_ON);
-    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'false', NEXT_PUBLIC_NOTES_ENABLED: 'false', NEXT_PUBLIC_BROWSE: 'false' }, 'https://app.hangulroute.com')).toEqual(ALL_OFF);
-    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true', NEXT_PUBLIC_NOTES_ENABLED: '1', NEXT_PUBLIC_BROWSE: 'enabled' }, 'https://app.hangulroute.com')).toEqual(ALL_ON);
+  it('reads the sibling predicates: Reports (F-REPORT-001 RP-11), Lessons (F-BROWSE-001 BR-14) and Notes (F-FEEDBACK-001 FB-14) and Lecture mode (LV-7) on by default', () => {
+    expect(navFlags('en', {}, 'https://app.hangulroute.com')).toEqual(DEFAULTS);
+    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'false', NEXT_PUBLIC_NOTES_ENABLED: 'false', NEXT_PUBLIC_BROWSE: 'false', NEXT_PUBLIC_LECTURE_MODE: 'false' }, 'https://app.hangulroute.com')).toEqual(ALL_OFF);
+    expect(
+      navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true', NEXT_PUBLIC_NOTES_ENABLED: '1', NEXT_PUBLIC_BROWSE: 'enabled', NEXT_PUBLIC_LECTURE_MODE: 'enabled' }, 'https://app.hangulroute.com'),
+    ).toEqual(ALL_ON);
+  });
+
+  it('shows Lecture mode with lectureModeEnabled() (AMENDMENTS-LECTURE-V2 E3, LV-D1): the existing switch, not a new one', () => {
+    expect(navFlags('en', { NEXT_PUBLIC_LECTURE_MODE: 'enabled' }).lecture).toBe(true);
+    expect(navFlags('en', {}).lecture).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', 'disabled', ' OFF ']) expect(navFlags('en', { NEXT_PUBLIC_LECTURE_MODE: off }).lecture, off).toBe(false);
   });
 
   it('shows Lessons only with browseEnabled() on the app origin (F-BROWSE-001 section 4.3, BR-0b)', () => {
@@ -62,12 +81,23 @@ describe('navFlags', () => {
 });
 
 describe('navItemsFor', () => {
-  it('Family with every flag on: Home, Reports, Notes, Lessons, Billing', () => {
-    expect(ids(ctx({ persona: 'parent', flags: ALL_ON }))).toEqual(['home', 'reports', 'notes', 'lessons', 'billing']);
+  it('Family with every flag on: Home, Reports, Notes, Lessons, Lecture mode, Billing', () => {
+    expect(ids(ctx({ persona: 'parent', flags: ALL_ON }))).toEqual(['home', 'reports', 'notes', 'lessons', 'lecture', 'billing']);
   });
 
-  it('Teacher with every flag on: Classes, Class reports, Notes, Lessons, Billing', () => {
-    expect(ids(ctx({ persona: 'teacher', flags: ALL_ON }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'billing']);
+  it('Teacher with every flag on: Classes, Class reports, Notes, Lessons, Lecture mode, Billing', () => {
+    expect(ids(ctx({ persona: 'teacher', flags: ALL_ON }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'lecture', 'billing']);
+  });
+
+  it('with the launch defaults (Lecture mode on since LV-7): the Lecture mode item after Lessons for both personas', () => {
+    expect(ids(ctx({ persona: 'parent', flags: DEFAULTS }))).toEqual(['home', 'reports', 'notes', 'lessons', 'lecture', 'billing']);
+    expect(ids(ctx({ persona: 'teacher', flags: DEFAULTS }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'lecture', 'billing']);
+  });
+
+  it('with the Lecture mode kill switch off: no Lecture mode item for either persona, never a disabled one', () => {
+    const off = { ...DEFAULTS, lecture: false };
+    expect(ids(ctx({ persona: 'parent', flags: off }))).toEqual(['home', 'reports', 'notes', 'lessons', 'billing']);
+    expect(ids(ctx({ persona: 'teacher', flags: off }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'billing']);
   });
 
   it('with the flags off (today): Home and Billing, or Classes and Billing; an item whose page is not built is not drawn', () => {
@@ -82,6 +112,8 @@ describe('navItemsFor', () => {
     expect(ids(ctx({ flags: { ...ALL_OFF, notes: true } }))).toEqual(['home', 'notes', 'billing']);
     expect(ids(ctx({ persona: 'teacher', flags: { ...ALL_OFF, notes: true } }))).toEqual(['classes', 'teacherNotes', 'billing']);
     expect(ids(ctx({ flags: { ...ALL_OFF, browse: true } }))).toEqual(['home', 'lessons', 'billing']);
+    expect(ids(ctx({ flags: { ...ALL_OFF, lecture: true } }))).toEqual(['home', 'lecture', 'billing']);
+    expect(ids(ctx({ persona: 'teacher', flags: { ...ALL_OFF, lecture: true } }))).toEqual(['classes', 'lecture', 'billing']);
   });
 
   it('targets: Home the family home, Classes the teacher home, Billing the billing page, Lessons All lessons at /browse (a learner root)', () => {
@@ -110,6 +142,89 @@ describe('navItemsFor', () => {
     expect(one.find((entry) => entry.id === 'notes')?.target).toEqual({ href: '/parent/notes' });
     const teacher = navItemsFor(ctx({ persona: 'teacher', flags: ALL_ON, spaces: [item('sp_c', 'class', 'teacher')] }));
     expect(teacher.find((entry) => entry.id === 'teacherNotes')?.target).toEqual({ href: '/teach/notes' });
+  });
+});
+
+describe('the Lecture mode item (AMENDMENTS-LECTURE-V2 E3, LV-5)', () => {
+  const lectureTarget = (c: NavContext): string | undefined => navItemsFor(c).find((entry) => entry.id === 'lecture')?.target.href;
+  const on = { ...ALL_OFF, lecture: true };
+
+  it('one composable space: that space\'s lecture setup page, under the prefix of its kind', () => {
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: [item('sp_c', 'class', 'teacher')] }))).toBe('/teach/space/lecture?id=sp_c');
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: [item('sp_c', 'class', 'owner')] }))).toBe('/teach/space/lecture?id=sp_c');
+    expect(lectureTarget(ctx({ persona: 'parent', flags: on, spaces: [item('sp_f', 'family', 'caregiver')] }))).toBe('/parent/space/lecture?id=sp_f');
+    expect(lectureTarget(ctx({ persona: 'parent', flags: on, spaces: [item('sp_f', 'family', 'owner')] }))).toBe('/parent/space/lecture?id=sp_f');
+  });
+
+  it('several composable spaces: the persona home at its card, which offers the choice', () => {
+    const classes = [item('sp_a', 'class', 'teacher'), item('sp_b', 'class', 'owner')];
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: classes }))).toBe('/teach/home#lecture-mode');
+    const families = [item('sp_f', 'family', 'owner'), item('sp_g', 'family', 'caregiver')];
+    expect(lectureTarget(ctx({ persona: 'parent', flags: on, spaces: families }))).toBe('/parent#lecture-mode');
+  });
+
+  it('no composable space: the persona home at its card, whose Start opens the presenter with no space', () => {
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: [] }))).toBe('/teach/home#lecture-mode');
+    expect(lectureTarget(ctx({ persona: 'parent', flags: on, spaces: [] }))).toBe('/parent#lecture-mode');
+  });
+
+  it('counts only canComposeIn spaces of the persona: a school admin without a teacher or owner role in any class gets the no-space path', () => {
+    const admin = [item('sp_s', 'school', 'admin'), item('sp_child', 'class', 'admin'), item('sp_s2', 'school', 'owner')];
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: admin }))).toBe('/teach/home#lecture-mode');
+    // A student seat in a family and a class of the other persona never count.
+    expect(lectureTarget(ctx({ persona: 'parent', flags: on, spaces: [item('sp_f', 'family', 'student'), item('sp_c', 'class', 'teacher')] }))).toBe('/parent#lecture-mode');
+    // The one class beside the admin seats is the one target.
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: [...admin, item('sp_c', 'class', 'teacher'), item('sp_f', 'family', 'owner')] }))).toBe('/teach/space/lecture?id=sp_c');
+  });
+
+  it('an archived space is not offered: its own page keeps the button, the entry points teach in live spaces', () => {
+    const archived = item('sp_old', 'class', 'owner', 1, { archivedAt: '2026-09-01T00:00:00Z' });
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: [archived] }))).toBe('/teach/home#lecture-mode');
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: [archived, item('sp_c', 'class', 'teacher')] }))).toBe('/teach/space/lecture?id=sp_c');
+  });
+
+  it('puts ids only in the link, never a space name', () => {
+    const named = { ...item('sp_c', 'class', 'teacher'), space: { ...item('sp_c', 'class', 'teacher').space, name: 'Mina and Jun' } };
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: on, spaces: [named] }))).not.toMatch(/Mina|Jun/);
+  });
+
+  it('is not drawn while lectureModeEnabled() is off, whatever the spaces', () => {
+    const off = { ...DEFAULTS, lecture: false };
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: off, spaces: [item('sp_c', 'class', 'teacher')] }))).toBeUndefined();
+    expect(lectureTarget(ctx({ persona: 'parent', flags: off, spaces: [item('sp_f', 'family', 'owner')] }))).toBeUndefined();
+  });
+});
+
+describe('samePageFragment', () => {
+  it('names the fragment of a target on the page already open, whatever its trailing slash or .html', () => {
+    expect(samePageFragment('/parent#lecture-mode', '/parent')).toBe('lecture-mode');
+    expect(samePageFragment('/parent#lecture-mode', '/parent/')).toBe('lecture-mode');
+    expect(samePageFragment('/parent#lecture-mode', '/parent.html')).toBe('lecture-mode');
+    expect(samePageFragment('/teach/home#lecture-mode', '/teach/home')).toBe('lecture-mode');
+  });
+
+  it('is null for another page, for a target with no fragment and for an empty one', () => {
+    expect(samePageFragment('/parent#lecture-mode', '/teach/home')).toBeNull();
+    expect(samePageFragment('/parent#lecture-mode', '/parent/space')).toBeNull();
+    expect(samePageFragment('/teach/space/lecture?id=sp_c', '/teach/space/lecture')).toBeNull();
+    expect(samePageFragment('/parent#', '/parent')).toBeNull();
+  });
+});
+
+describe('revealScrollLeft (the tab row shows its current item, inline nearest)', () => {
+  it('leaves the row alone when the item already shows whole', () => {
+    expect(revealScrollLeft({ scrollLeft: 0, width: 300 }, { left: 0, width: 80 })).toBeNull();
+    expect(revealScrollLeft({ scrollLeft: 100, width: 300 }, { left: 320, width: 80 })).toBeNull();
+  });
+
+  it('moves the least: an item past the end lines up with the end, one before the start with the start', () => {
+    // The family row at 375: Lecture mode and Billing start past the end.
+    expect(revealScrollLeft({ scrollLeft: 0, width: 343 }, { left: 330, width: 110 })).toBe(97);
+    expect(revealScrollLeft({ scrollLeft: 200, width: 300 }, { left: 120, width: 80 })).toBe(120);
+  });
+
+  it('an item wider than the row starts at its start edge', () => {
+    expect(revealScrollLeft({ scrollLeft: 0, width: 100 }, { left: 150, width: 140 })).toBe(150);
   });
 });
 
@@ -170,6 +285,23 @@ describe('currentNavItem', () => {
     expect(currentNavItem('/teach/home', 'parent', true)).toBeNull();
     expect(currentNavItem('/parent', 'parent', true)).toBe('home');
     expect(currentNavItem('/teach/home', 'teacher', true)).toBe('classes');
+  });
+
+  it('highlights Lecture mode on the lecture setup page of either kind, like Billing even before the persona resolves (E3)', () => {
+    expect(currentNavItem('/teach/space/lecture', 'teacher', true, true)).toBe('lecture');
+    expect(currentNavItem('/parent/space/lecture', 'parent', true, true)).toBe('lecture');
+    expect(currentNavItem('/parent/space/lecture.html', 'parent', true, true)).toBe('lecture');
+    expect(currentNavItem('/teach/space/lecture', 'parent', false, true)).toBe('lecture');
+    // The space page itself and its other pages keep the persona's home item.
+    expect(currentNavItem('/teach/space', 'teacher', true)).toBe('classes');
+    expect(currentNavItem('/parent/space/plan', 'parent', true)).toBe('home');
+  });
+
+  it('with lectureModeEnabled() off (no Lecture mode item drawn), a lecture page reached by URL keeps the persona home item current', () => {
+    expect(currentNavItem('/teach/space/lecture', 'teacher', true, false)).toBe('classes');
+    expect(currentNavItem('/parent/space/lecture', 'parent', true, false)).toBe('home');
+    expect(currentNavItem('/teach/space/lecture', 'teacher', true)).toBe('classes');
+    expect(currentNavItem('/teach/space/lecture', 'teacher', false, false)).toBeNull();
   });
 
   it('highlights nothing while the persona is a guess, or on a page of no persona', () => {

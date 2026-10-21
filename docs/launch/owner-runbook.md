@@ -197,7 +197,8 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | 변수 | 값 | 언제 | 없으면 |
 |---|---|---|---|
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `hangul-route-web` 과 **같은** `pk_live_…` | S-1 (A-4b 머지 후) | 앱 호스트의 어른 페이지가 "sign-in is not set up on this build" 한 줄만 보여 준다 (아무 데서도 링크하지 않으므로 무해) |
-| `NEXT_PUBLIC_LECTURE_MODE` · `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` | (선택) `hangul-route-web` 과 같은 값 | S-1 | 해당 콘솔 기능이 앱 호스트에서 꺼진 채로 |
+| `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` | (선택) `hangul-route-web` 과 같은 값 | S-1 | 해당 콘솔 기능이 앱 호스트에서 꺼진 채로 |
+| `NEXT_PUBLIC_LECTURE_MODE` (콘솔) · `EXPO_PUBLIC_LECTURE_MODE` (학습자 앱) | 비워 둔다: AMENDMENTS-LECTURE-V2 LV-7 부터 둘 다 기본 켜짐 (강의 모드, Lecture mode). 이제 이 두 변수는 **kill switch 일 뿐**이다. 이전에 `enabled` 를 넣어 두었다면 남겨도 무해하다 (켜짐). 이전에 `hangul-route-app` 이나 `hangul-route-web` 에 `false`·`0`·`off`·`no`·`disabled` 를 넣어 두었다면 (S-1 3단계로 `hangul-route-web` 에서 복사한 값 포함) LV-7 배포 전이나 같은 때에 지우고 Retry deployment: 남겨 두면 사이트에는 강의 모드 줄이 보이는데 콘솔·앱은 꺼진 채로 남는다. 끌 때만 `false`, `0`, `off`, `no` 또는 `disabled` (대소문자·앞뒤 공백 무시, 그 밖의 값은 켜짐). 빌드 변수라서 끄려면 그 앱을 **다시 빌드·배포** (Retry deployment) 해야 한다. 끄면 진입점만 숨는다: `/present` 와 준비된 수업은 주소로 계속 열린다. 사이트 문구는 이 변수가 아니라 코드의 `SITE_CLAIMS.lectureMode` 를 따른다 (아래 §J) | LV-7 머지 후 | 콘솔: 두 홈의 Lecture mode 카드 · 어른 메뉴의 Lecture mode · 공간의 강의 모드 버튼 · 반 리포트의 Plan a lesson 이 보인다. 학습자 앱: 어른 영역 (대시보드) 의 Lecture mode 카드가 보인다 (웹만) |
 | `NEXT_PUBLIC_REPORTS_ENABLED` (학습자 앱은 `EXPO_PUBLIC_REPORTS_ENABLED`) | 비워 둔다: F-REPORT-001 RP-11 부터 기본 켜짐. 되돌릴 때만 정확히 `false` 또는 `0` (`FALSE`·`off` 같은 다른 값은 켜짐으로 읽힌다) | RP-11 머지 후 | 리포트 메뉴·카드·페이지가 보인다 (en 만) |
 | 형제 스펙의 콘솔 플래그 (`NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED`) | 각 스펙이 켤 때 `true` | 각 형제 스펙의 단계 | 해당 메뉴·카드가 숨겨진다 |
 | `NEXT_PUBLIC_BROWSE` (All lessons) | 비워 둔다: F-BROWSE-001 BR-14 부터 기본 켜짐 (owner 결정 2026-10-13). 이전에 `false`·`0`·`disabled` 를 넣어 두었다면 지우고 Retry deployment. 되돌릴 때만 `false`, `0` 또는 `disabled` (대소문자·앞뒤 공백은 무시, 그 밖의 값은 `enabled` 포함 켜짐으로 읽힌다). 끄면 결제 페이지의 'All lessons' 포함 줄도 함께 사라진다 | BR-14 머지 후 | 어른 메뉴의 Lessons · 홈의 Lessons · 계획/명단/Learning Route/리포트/쪽지의 Preview 링크가 보인다 (app.hangulroute.com 에서만) |
@@ -551,6 +552,24 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 3. Xcode 빌드 (실기기, 한국어 설정): Welcome · Home 의 긴 한국어 줄이 낱말 가운데에서 끊기지 않는다 ("처음부 / 터" 같은 줄이 없다).
 
 **되돌리기**: 한 언어만 숨기려면 `packages/i18n/src/locales.ts` 의 `LOCALE_STATUS` 에서 그 언어를 `'hidden'` 으로 바꾸는 PR (같은 PR 에서 `.github/workflows/content-validation.yml` 의 `HANGUL_ROUTE_STRICT_LOCALES` 에서도 뺀다). 대시보드 변수는 없다. 저장된 언어 선택은 지워지지 않고, 다시 출시하면 그대로 돌아온다. 숨긴 언어의 `/es` · `/ko` 페이지는 빌드에서 빠진다.
+
+## J. 강의 모드 (Lecture mode, AMENDMENTS-LECTURE-V2 LV-7, LV-D1)
+
+> LV-7 부터 강의 모드는 콘솔과 학습자 앱에서 기본으로 켜져 있고, 사이트의 `/parents` · `/teachers` 에 강의 모드 한 줄씩이 보인다. 대시보드에서 할 일은 없다. 가격·결제와는 무관하다 (Stripe Live 는 계속 꺼 둔다).
+
+**J-1. 즉시 끄기 (kill switch, 5분)**
+1. 콘솔 진입점: `hangul-route-app` **과** `hangul-route-web` 두 프로젝트 모두 (`hangul-route-web` 도 콘솔을 빌드한다) → Settings → Build → Variables → `NEXT_PUBLIC_LECTURE_MODE=off` → 두 프로젝트 모두 **Retry deployment**. 빌드 변수라서 다시 빌드·배포해야 바뀐다.
+2. 학습자 앱의 어른 영역 카드: `hangul-route-app` → 같은 메뉴 → `EXPO_PUBLIC_LECTURE_MODE=off` → **Retry deployment** (1 과 같은 배포로 해도 된다).
+3. 확인: 콘솔 홈에 Lecture mode 카드와 메뉴가 없고, 학습자 앱 대시보드에 Lecture mode 카드가 없다. 끄는 것은 **진입점뿐**이다: `https://app.hangulroute.com/present` 는 주소로 계속 열린다 (의도된 동작, F-TCH-004 TD2). 그래서 짧은 사고 동안에는 사이트 문구를 그대로 둔다. 끈 동안 북마크나 링크로 강의 모드 설정 페이지 (`/teach/space/lecture`) 를 열면 'Lecture mode is coming soon: …' 안내가 보인다 (꺼짐 상태의 기존 문구). 교사에게는 `https://app.hangulroute.com/present` 를 직접 열도록 안내한다.
+4. 다시 켜기: `hangul-route-app` 과 `hangul-route-web` 두 프로젝트에서 두 변수를 지우고 두 프로젝트 모두 Retry deployment.
+
+**J-2. 사이트 문구 되돌리기 (하루 넘게 끌 때)**
+- 사이트의 강의 모드 문구는 콘솔·앱 변수를 읽지 않는다. 코드 상수 `SITE_CLAIMS.lectureMode` (`apps/web/src/data/site-claims.ts`) 만 따른다.
+- 강의 모드를 사고 대응보다 길게 (하루 넘게) 끄거나 `/present` 자체를 내릴 때는, `SITE_CLAIMS.lectureMode` 를 `false` 로 되돌리는 한 줄 PR 을 요청한다 (테스트가 켜짐·꺼짐 두 상태를 모두 고정한다). 머지 후 사이트가 다시 배포되면 `/parents` · `/teachers` 의 강의 모드 줄이 사라진다.
+
+**J-3. 배포 순서 (강의 모드를 바꾸는 모든 변경)**
+- 발표 화면 (presenter) 이 있는 학습자 앱 웹 빌드 (`hangul-route-app`) 를 **먼저** 배포하고, 그다음 콘솔을 배포한다. 콘솔의 링크가 그 링크를 아직 읽지 못하는 발표 화면에 닿지 않게 하기 위해서다. 둘이 같은 `hangul-route-app` 빌드에 들어 있으면 한 번에 나가므로 따로 할 일이 없다. `hangul-route-web` 에도 콘솔이 있으면 `hangul-route-app` 배포가 끝난 뒤에 배포한다.
+- LV-7 을 배포하기 전에 두 프로젝트의 빌드 변수에서 `NEXT_PUBLIC_LECTURE_MODE` · `EXPO_PUBLIC_LECTURE_MODE` 를 확인한다. `false`·`0`·`off`·`no`·`disabled` 가 남아 있으면 지운다 (위 변수 표의 줄). 남겨 두면 사이트 문구와 콘솔·앱이 서로 맞지 않는다.
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.

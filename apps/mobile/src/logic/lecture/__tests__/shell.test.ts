@@ -1,3 +1,5 @@
+import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
+import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { encodeDeck, LectureDeckSchema, type LectureBlock, type LectureDeckInput } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { UNKNOWN_CAPABILITY, type AudioCapability } from '../../audio/capability';
@@ -8,6 +10,7 @@ import { emptyRecent, rememberDeck, setLastSlide } from '../recent';
 import {
   SHELL_SLIDE_KINDS,
   blockIndexOfSlide,
+  buildLive,
   countRows,
   distinctParts,
   completePayload,
@@ -17,6 +20,8 @@ import {
   gestureCommand,
   inBarStrip,
   homeStart,
+  lessonStartPayload,
+  readyFromBoot,
   presenterLocale,
   slideLocale,
   resolveBoot,
@@ -142,8 +147,25 @@ describe('homeStart', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check and End slides (PR 6, PR 7, PR 9 and PR 11)', () => {
-    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'quiz', 'sequence', 'story', 'syllable', 'title', 'vocab']);
+  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides, the sentence builds and the write-together slides (PR 6, PR 7, PR 9, PR 11, LV-S1, LV-S3 and LV-S4)', () => {
+    expect([...SHELL_SLIDE_KINDS].sort()).toEqual([
+      'activity',
+      'card',
+      'end',
+      'letter',
+      'pattern',
+      'quiz',
+      'read-along',
+      'realia',
+      'sentence',
+      'sentence-build',
+      'sequence',
+      'story',
+      'syllable',
+      'title',
+      'vocab',
+      'write-together',
+    ]);
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quest', id: 'quest:stage1-life-q1' },
@@ -189,6 +211,42 @@ describe('runDeck: the slides this build draws', () => {
     expect(withBuilds(run.slides, { romanization: 'tap', strokeGuide: true })[1]?.builds).toEqual(['ko', 'rom', 'gloss']);
     // Without the WordArt list the key passes through unchanged (the card list alone does not touch it).
     expect(runDeck(deck, { slides: [undrawn, end], skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']).slides[0]).toEqual(undrawn);
+  });
+
+  it('the reading slides of shipped Stage 3, 4 and 6 lessons are drawn, none of them a skipped part (LV-S1)', () => {
+    const deck = deckOf([
+      { kind: 'quest', id: 'quest:stage3-life-q1' },
+      { kind: 'quest', id: 'quest:stage4-life-q1' },
+      { kind: 'quest', id: 'quest:stage6-life-q1' },
+    ]);
+    const expanded = expandDeck(deck, lectureBundle('en'), { canPlayKorean: true });
+    const run = runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds, WORD_ART_KEYS);
+    for (const kind of ['sentence', 'pattern', 'read-along', 'realia'] as const) expect(run.slides.some((s) => s.kind === kind), kind).toBe(true);
+    expect(expanded.slides.filter((s) => s.kind === 'sentence' || s.kind === 'pattern' || s.kind === 'read-along' || s.kind === 'realia')).toEqual(
+      run.slides.filter((s) => s.kind === 'sentence' || s.kind === 'pattern' || s.kind === 'read-along' || s.kind === 'realia'),
+    );
+  });
+
+  it('a sentence picture the art cannot draw loses its art build; a drawn card or WordArt picture keeps it', () => {
+    const end: Slide = { kind: 'end', letters: [], words: [], key: 'end', builds: ['summary'] };
+    const sentence = { ko: '물을 마셔요.', romanization: 'mureul masyeoyo', gloss: 'I drink water.', spoken: { text: '물을 마셔요.', romanization: 'mureul masyeoyo' } };
+    const of = (key: string, picture?: string): Slide => ({ kind: 'sentence', sentence, ...(picture ? { picture } : {}), key, builds: picture ? ['ko', 'gloss', 'art'] : ['ko', 'gloss'] });
+    const deck = deckOf([{ kind: 'jamo-set', jamoIds: ['jamo:giyeok'] }]);
+    const slides = [of('s/1', 'card:book'), of('s/2', 'word:apple'), of('s/3', 'card:nope'), of('s/4', 'word:no-glyph'), of('s/5', 'swatch:brand-primary'), of('s/6'), end];
+    const run = runDeck(deck, { slides, skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book'], ['apple']);
+    expect(run.slides.map((s) => [s.key, s.kind === 'sentence' ? s.picture ?? null : null, s.builds])).toEqual([
+      ['s/1', 'card:book', ['ko', 'gloss', 'art']],
+      ['s/2', 'word:apple', ['ko', 'gloss', 'art']],
+      ['s/3', null, ['ko', 'gloss']],
+      ['s/4', null, ['ko', 'gloss']],
+      ['s/5', null, ['ko', 'gloss']],
+      ['s/6', null, ['ko', 'gloss']],
+      ['end', null, ['summary']],
+    ]);
+    // The live romanization flip recomputes builds from the slide, and the art stays gone.
+    expect(withBuilds(run.slides, { romanization: 'tap', strokeGuide: true })[2]?.builds).toEqual(['ko', 'rom', 'gloss']);
+    // Without both drawable lists the slides pass through unchanged.
+    expect(runDeck(deck, { slides, skipped: [], taught: [], minutes: 2 }, SHELL_SLIDE_KINDS, ['card:book']).slides[2]).toEqual(slides[2]);
   });
 
   it('regression pin: a card slide keeps its art build even when the heritage art cannot draw it (CardSlide shows the CardArt face; covered in presenter.spec.ts)', () => {
@@ -391,6 +449,116 @@ describe('the End slide', () => {
   });
 });
 
+describe('slideDetail: the question slides (LV-S2)', () => {
+  const slides = expandDeck(
+    deckOf([
+      { kind: 'quest', id: 'quest:stage3-life-q1' },
+      { kind: 'quest', id: 'quest:stage4-life-q1' },
+      { kind: 'quest', id: 'quest:stage6-life-q3' },
+    ]),
+    lectureBundle('en'),
+    { canPlayKorean: true },
+  ).slides;
+  const of = (ask: string) => slides.find((s): s is Extract<Slide, { kind: 'quiz' }> => s.kind === 'quiz' && s.prompt.ask === ask)!;
+  const names = { activity: () => '', listen: 'Which one did you hear?', reply: 'Which answer fits?' };
+
+  it('names a listen or reply question by its question, a realia question by its own; never by an option', () => {
+    expect(slideDetail(of('listen'), names)).toBe('Which one did you hear?');
+    expect(slideDetail(of('reply'), names)).toBe('Which answer fits?');
+    const realia = of('realia');
+    expect(slideDetail(realia, names)).toBe((realia.prompt as { text: string }).text);
+    for (const ask of ['listen', 'reply', 'realia']) {
+      const detail = slideDetail(of(ask), names);
+      for (const o of of(ask).options) if (o.ko !== undefined) expect(detail).not.toContain(o.ko);
+    }
+    // A listen round that asks for the reply to what was heard (the Stage 4 Check) is named by the reply question.
+    const replyRound = slides.find((s) => s.kind === 'quiz' && s.prompt.ask === 'listen' && s.prompt.reply === true)!;
+    expect(slideDetail(replyRound, names)).toBe('Which answer fits?');
+    // Without the names a listen or reply question says its kind alone.
+    expect(slideDetail(of('listen'))).toBe('');
+    expect(slideDetail(of('reply'))).toBe('');
+  });
+});
+
+describe('the sentence builds in the live region (AMENDMENTS-LECTURE-V2 section 10, LV-S3)', () => {
+  const slides = expandDeck(deckOf([{ kind: 'quest', id: 'quest:stage3-life-q3' }, { kind: 'quest', id: 'quest:stage7-life-q2' }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+  type Build = Extract<Slide, { kind: 'sentence-build' }>;
+  const builds = slides.filter((s): s is Build => s.kind === 'sentence-build');
+  const plain = builds.find((s) => s.sentence.ko === '친구가 학교에 가요.')!;
+  const particle = builds.find((s) => s.sentence.ko === '저녁에 달걀을 먹어요.')!;
+  const placed = (word: string) => `${word} placed`;
+  /** Steps forward through every build, as the teacher's clicks do, and returns what the live region says at each. */
+  const walk = (slide: Build): Array<string | undefined> => {
+    let live = buildLive(slide, 0, null, placed);
+    const said = [live.words];
+    for (let reveal = 1; reveal < slide.builds.length; reveal += 1) {
+      live = buildLive(slide, reveal, live, placed);
+      said.push(live.words);
+    }
+    return said;
+  };
+
+  it('names a sentence build by its question on arrival, never by its sentence', () => {
+    const detail = slideDetail(plain, { activity: () => '', build: 'Which word comes next?' });
+    expect(detail).toBe('Which word comes next?');
+    expect(detail).not.toContain('친구');
+    expect(slideDetail(plain)).toBe('');
+  });
+
+  it('names a build by the question its stage shows at that build: the words on the line, then the next word or the ending that fits', () => {
+    const names = { activity: () => '', build: 'Which word comes next?', particle: 'Which ending fits?' };
+    expect(slideDetail(plain, names, 0)).toBe('Which word comes next?');
+    expect(slideDetail(plain, names, 1)).toBe('친구가, chinguga, Which word comes next?');
+    // Two steps back in a row change the text, so each is heard.
+    expect(slideDetail(plain, names, 2)).toBe('친구가, chinguga, 학교에, hakgyoe, Which word comes next?');
+    expect(slideDetail(plain, names, 2)).not.toBe(slideDetail(plain, names, 1));
+    // Stepping back onto a particle tile still choosing asks for the ending, by its stem only.
+    expect(slideDetail(particle, names, 2)).toBe('저녁에, jeonyeoge, 달걀, Which ending fits?');
+    expect(slideDetail(particle, names, 3)).toBe('저녁에, jeonyeoge, 달걀을, dalgyareul, Which word comes next?');
+    // No tile still in the bank is named.
+    expect(slideDetail(particle, names, 3)).not.toContain('먹어요');
+    // With no particle name the next-word question stands in.
+    expect(slideDetail(particle, { activity: () => '', build: 'Which word comes next?' }, 2)).toBe('저녁에, jeonyeoge, 달걀, Which word comes next?');
+  });
+
+  it('Previous from the next slide lands on the whole build: no question shows there, so it says the sentence, never a question', () => {
+    const names = { activity: () => '', build: 'Which word comes next?', particle: 'Which ending fits?' };
+    const last = plain.builds.length - 1;
+    expect(plain.builds[last]).toBe('whole');
+    expect(slideDetail(plain, names, last)).toBe('친구가 학교에 가요., chinguga hakgyoe gayo, My friend goes to school.');
+    expect(slideDetail(particle, names, particle.builds.length - 1)).not.toContain('?');
+    // Landing there is an arrival, so the live region uses this announcement, not a move's words.
+    expect(buildLive(plain, last, { key: 'other', reveal: 0 }, placed).words).toBeUndefined();
+  });
+
+  it('each step forward says the tile it placed (Korean, romanization), then the sentence and its meaning at the whole build', () => {
+    expect(walk(plain)).toEqual([undefined, '친구가, chinguga placed', '학교에, hakgyoe placed', '가요, gayo placed', '친구가 학교에 가요., chinguga hakgyoe gayo, My friend goes to school.']);
+  });
+
+  it('a particle tile says its stem when it reaches the line, then the whole word once the ending that fits stays', () => {
+    expect(particle.builds).toEqual(['bank', 'tile', 'tile', 'particle', 'tile', 'whole']);
+    expect(walk(particle)).toEqual([
+      undefined,
+      '저녁에, jeonyeoge placed',
+      '달걀 placed',
+      '달걀을, dalgyareul placed',
+      '먹어요, meogeoyo placed',
+      '저녁에 달걀을 먹어요., jeonyeoge dalgyareul meogeoyo, In the evening, I eat an egg.',
+    ]);
+  });
+
+  it('a redraw at the same build keeps what was said; arriving, stepping back or jumping says the slide again', () => {
+    const once = buildLive(plain, 1, buildLive(plain, 0, null, placed), placed);
+    expect(buildLive(plain, 1, once, placed)).toBe(once);
+    expect(buildLive(plain, 0, once, placed).words).toBeUndefined();
+    expect(buildLive(plain, 3, once, placed).words).toBeUndefined();
+    expect(buildLive(particle, 1, once, placed).words).toBeUndefined();
+    // Any other slide always announces itself.
+    const title = slides[0]!;
+    expect(buildLive(title, 0, { key: title.key, reveal: -1 }, placed)).toEqual({ key: title.key, reveal: 0 });
+  });
+});
+
 describe('slideDetail', () => {
   it('says the title, or the letter and its romanization; nothing for the End slide', () => {
     const [title, letter] = expandDeck(deckOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]), lectureBundle('en'), { canPlayKorean: true }).slides;
@@ -421,6 +589,32 @@ describe('slideDetail', () => {
     expect(slideDetail(of('activity'), names)).toBe('name of air-write');
     expect(slideDetail(of('activity'))).toBe('');
     expect(slideDetail(of('sequence'), names)).toBe('');
+  });
+
+  it('names the reading slides with their meanings: the sentence, the frame with each gap by name, every line with its speaker, the sheet text and its key words (LV-S1)', () => {
+    const slides = expandDeck(
+      deckOf([
+        { kind: 'quest', id: 'quest:stage3-life-q1' },
+        { kind: 'quest', id: 'quest:stage4-life-q1' },
+        { kind: 'quest', id: 'quest:stage6-life-q1' },
+        { kind: 'quest', id: 'quest:stage7-rites-q2' },
+      ]),
+      lectureBundle('en'),
+      { canPlayKorean: true },
+    ).slides;
+    const of = <K extends Slide['kind']>(kind: K) => slides.find((s) => s.kind === kind) as Extract<Slide, { kind: K }>;
+    const names = { activity: (preset: string) => preset, slot: 'gap' };
+    expect(slideDetail(of('sentence'), names)).toBe('물을 마셔요., mureul masyeoyo, I drink water.');
+    expect(slideDetail(of('pattern'), names)).toBe('gap 을/를 먹어요., gap eul/reul meogeoyo, I eat gap.');
+    const twoSlots = slides.find((s): s is Extract<Slide, { kind: 'pattern' }> => s.kind === 'pattern' && s.frame.pieces.length === 3)!;
+    expect(slideDetail(twoSlots, names)).toBe('gap 에 gap 을/를 먹었어요., gap e gap eul/reul meogeosseoyo, On gap, I ate gap.');
+    const readAlong = of('read-along');
+    expect(slideDetail(readAlong, names)).toBe(readAlong.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}, ${l.gloss}`).join(', '));
+    const realia = of('realia');
+    expect(realia.keyWords.length).toBeGreaterThan(0);
+    expect(slideDetail(realia, names)).toBe([realia.sheet.alt, ...realia.keyWords.map((w) => `${w.ko}, ${w.romanization}, ${w.gloss}`)].join(', '));
+    // With no slot name the gap stays as written.
+    expect(slideDetail(of('pattern'))).toBe('___ 을/를 먹어요., ___ eul/reul meogeoyo, I eat ___.');
   });
 
   it('says a story scene by its caption (README D8), and nothing for a check', () => {
@@ -464,6 +658,45 @@ describe('telemetry payloads', () => {
     const v2 = deckOf([{ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 }], { v: 2, source: 'quick', preset: 'word-review' });
     const v2Run = runDeck(v2, expandDeck(v2, lectureBundle('en'), { canPlayKorean: true }));
     expect(startPayload({ deck: v2, run: v2Run, source: 'preset', capability: ready, offlineReady: false })).toMatchObject({ source: 'preset', preset: 'word-review' });
+  });
+
+  it('lecture.start follows each start from the home or a reload through the start screen to the payload (section 11)', () => {
+    const zero = deckOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }, { kind: 'quest', id: 'quest:stage1-letters-q2' }], { source: 'quick', title: 'Hangul week 1' });
+    const review = deckOf([{ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 }], { v: 2, id: 'lecture:review01', source: 'quick', preset: 'word-review', title: 'Word review' });
+    const begun = (from: Parameters<typeof lessonStartPayload>[0], deck: typeof zero) =>
+      lessonStartPayload(from, { deck, run: runDeck(deck, expandDeck(deck, lectureBundle('en'), { canPlayKorean: true })), capability: ready, offlineReady: true });
+    const boot = (address: Parameters<typeof resolveBoot>[0], recent = emptyRecent()) => {
+      const result = resolveBoot(address, recent);
+      if (result.kind !== 'deck') throw new Error(result.kind);
+      return readyFromBoot(result, address?.fresh === true);
+    };
+    const KEYS = ['blocks', 'offlineReady', 'picker', 'romanization', 'skipped', 'slides', 'source', 'voice'];
+
+    // A ready-made lesson's Start: preset, with the id that built the deck.
+    const preset = begun(homeStart({ kind: 'preset', deck: zero, preset: 'hangul-week-1' }), zero);
+    expect(preset).toMatchObject({ source: 'preset', preset: 'hangul-week-1' });
+    expect(Object.keys(preset).sort()).toEqual([...KEYS, 'preset'].sort());
+    // A reload on its start screen (the entry keeps the preset): still preset.
+    expect(begun(boot({ raw: encodeDeck(zero), reloaded: true, preset: 'hangul-week-1' }), zero)).toMatchObject({ source: 'preset', preset: 'hangul-week-1' });
+    // A link that is not a reload never takes a preset from history.
+    expect('preset' in begun(boot({ raw: encodeDeck(zero), reloaded: false, preset: 'hangul-week-1' }), zero)).toBe(false);
+    // A Customize build: quick, no preset key.
+    const quick = begun(homeStart({ kind: 'quick', deck: zero }), zero);
+    expect(quick.source).toBe('quick');
+    expect(Object.keys(quick).sort()).toEqual(KEYS);
+    // A Recent Resume of a v2 Word review deck (it carries its preset): recent, no preset key.
+    const list = setLastSlide(rememberDeck(emptyRecent(), review, '2026-10-16T09:00:00.000Z'), review.id, 'x');
+    const resumed = begun(homeStart({ kind: 'resume', item: list.items[0]! }), review);
+    expect(resumed.source).toBe('recent');
+    expect(Object.keys(resumed).sort()).toEqual(KEYS);
+    // A reload in a begun lesson: Recent holds it, so recent, even with the preset kept in its entry.
+    const reloaded = begun(boot({ raw: encodeDeck(zero), reloaded: true, preset: 'hangul-week-1' }, rememberDeck(emptyRecent(), zero, '2026-10-16T09:00:00.000Z')), zero);
+    expect(reloaded.source).toBe('recent');
+    expect(Object.keys(reloaded).sort()).toEqual(KEYS);
+    // The v2 link itself, opened fresh: preset from the deck.
+    expect(begun(boot({ raw: encodeDeck(review), reloaded: false }), review)).toMatchObject({ source: 'preset', preset: 'word-review' });
+    // No title and no word ever rides along.
+    for (const payload of [preset, quick, resumed]) expect(JSON.stringify(payload)).not.toMatch(/Hangul week|Word review|quest:|vocab/);
   });
 
   it('voice: ready with a voice or a clip, none without, unknown before the check', () => {
@@ -662,5 +895,47 @@ describe('homeStart, presenterLocale and slideLocale (the presenter home, F-TCH-
     expect(slideLocale({ deck: null, device: 'en', available })).toBe('en');
     // A deck language this build does not offer is passed over.
     expect(slideLocale({ deck: es, device: 'en', available: ['en'] })).toBe('en');
+  });
+});
+
+describe('slideDetail: the write-together slides (LV-S4)', () => {
+  const names = { activity: () => '', frame: 'Fill the gap with a word from the list.', ownName: 'Write your own name in Hangul on paper.' };
+  const spoken = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const frame = { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' };
+  const of = (body: Record<string, unknown>) => ({ kind: 'write-together', key: 'w/1', builds: ['prompt', 'answer'], ...body }) as unknown as Slide;
+
+  it('names each by what its first build shows, never by its answer', () => {
+    // A type round by its prompt and its cue, the target's meaning (the Korean and romanization are the answer).
+    expect(slideDetail(of({ variant: 'type', prompt: 'Ask for water.', answer: spoken('물 주세요', 'mul juseyo', 'Water, please.') }), names)).toBe('Ask for water. Water, please.');
+    expect(slideDetail(of({ variant: 'type', prompt: 'Type the price', answer: spoken('천 원', 'cheon won', '1,000 won') }), names)).toBe('Type the price, 1,000 won');
+    // A trace round by its Korean only: its romanization waits for the answer build in both modes.
+    expect(slideDetail(of({ variant: 'trace', word: spoken('아침', 'achim', 'morning') }), names)).toBe('아침');
+    expect(slideDetail(of({ variant: 'frame', frame, banks: [], example: { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '', romanization: '' } } }), names)).toBe(names.frame);
+    expect(slideDetail(of({ variant: 'own-name', frame, groups: [] }), names)).toBe(names.ownName);
+    // Without names a frame and the name round say nothing more than their kind.
+    expect(slideDetail(of({ variant: 'own-name', frame, groups: [] }))).toBe('');
+  });
+
+  it('each step forward says what that build showed; arriving or stepping back names the slide again (buildLive, section 10)', () => {
+    const placed = (w: string) => `${w} placed`;
+    const walk = (slide: Slide): (string | undefined)[] => {
+      const said: (string | undefined)[] = [];
+      let live = buildLive(slide, 0, null, placed, 'For example');
+      said.push(live.words);
+      for (let reveal = 1; reveal < slide.builds.length; reveal++) {
+        live = buildLive(slide, reveal, live, placed, 'For example');
+        said.push(live.words);
+      }
+      // Back one build: the slide's own announcement again.
+      expect(buildLive(slide, slide.builds.length - 2, live, placed, 'For example').words).toBeUndefined();
+      return said;
+    };
+    expect(walk(of({ variant: 'type', prompt: 'Type the price', answer: spoken('천 원', 'cheon won', '1,000 won') }))).toEqual([undefined, '천 원, cheon won']);
+    expect(walk(of({ variant: 'trace', word: spoken('아침', 'achim', 'morning') }))).toEqual([undefined, '아침, achim, morning']);
+    const banks = [[{ ko: '밥', romanization: 'bap' }, { ko: '빵', romanization: 'ppang' }]];
+    const example = { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } };
+    expect(walk(of({ variant: 'frame', builds: ['frame', 'bank', 'example'], frame, banks, example }))).toEqual([undefined, '밥, 빵', 'For example, 아침에 밥을 먹어요., achime babeul meogeoyo']);
+    const groups = Array.from({ length: 6 }, (_, g) => [{ ko: ['가', '나', '다', '라', '마', '바'][g]!, romanization: 'x' }]);
+    expect(walk(of({ variant: 'own-name', builds: ['frame', 'table', 'table'], frame, groups }))).toEqual([undefined, '가, 나, 다, 라, 마', '바']);
   });
 });

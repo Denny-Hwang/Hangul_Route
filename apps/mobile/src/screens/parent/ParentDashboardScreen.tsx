@@ -15,7 +15,7 @@ import { type StageKey } from '@hangul-route/content-schema';
 import { formatDate, levelWords, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, View, type TextStyle } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
@@ -27,6 +27,7 @@ import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { FreeLessonsRow } from './FreeLessonsRow';
 import { GateLessonsButton } from './GateLessonsButton';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
+import { LectureCard } from './LectureCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
@@ -91,7 +92,10 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
     <Screen tone="canvas" scrollable>
       <View>
         {/* One name for the Profile row, the PIN title and this page (owner request 2026-10-16, item 8), the persona under it. */}
-        <Heading level="title">{copy.zoneLabel}</Heading>
+        {/* Wraps inside a long word too: at 320 px with 200 % text "Dashboard" alone is wider than the line (AMENDMENTS-LECTURE-V2 LV-6). */}
+        <Heading level="title" style={{ overflowWrap: 'anywhere' } as TextStyle}>
+          {copy.zoneLabel}
+        </Heading>
         {audience === 'family' ? (
           <Body tone="secondary" weight="semibold" testID="dashboard-persona">
             {m.persona}
@@ -107,6 +111,8 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
           <Spacer size="lg" />
         </>
       ) : null}
+      {/* AMENDMENTS-LECTURE-V2 E5 (LV-6): web only and behind flags.lectureModeEnabled; it draws nothing otherwise. */}
+      <LectureCard learners={profiles.map((p) => ({ id: p.id, name: p.displayName }))} onGate={() => navigation.navigate('PinEntry', { next: 'LectureMode' })} />
       {profiles.length === 0 ? (
         <Body>{m.noProfiles}</Body>
       ) : (

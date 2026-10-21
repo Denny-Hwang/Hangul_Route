@@ -6,8 +6,10 @@ import {
   firstUses,
   fullscreenToggle,
   gridItems,
+  gridKindKey,
   narrationStops,
   optionContent,
+  optionLayout,
   optionRomShown,
   presetLabel,
   radioMove,
@@ -112,6 +114,33 @@ describe('optionContent (slide-quiz.md: one option card for quizzes and story ch
   });
 });
 
+describe('optionLayout (lecture-v2.md V8, LV-S2): rows for words and sentences, the grid for letters, syllables and pictures', () => {
+  const line = { ko: '빵을 먹어요.', romanization: 'ppangeul meogeoyo', gloss: 'I eat bread.', spoken: { text: '빵을 먹어요.', romanization: 'ppangeul meogeoyo' } };
+  const sheet = { kind: 'menu' as const, entries: [], alt: 'A menu.', spoken: { text: '', romanization: '' } };
+  const text = [{ ko: '빵을 먹어요.', romanization: 'ppangeul meogeoyo', gloss: 'I eat bread.', correct: true }];
+  const pictures = [{ picture: 'word:food-milk', gloss: 'milk', correct: true }];
+
+  it('a listen question: rows for a word or sentence round, the grid for a letter or syllable round and for pictures', () => {
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'sentence' }, options: text })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'word' }, options: text })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'sound' }, options: [{ ko: 'ㅓ', romanization: 'eo', correct: true }] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'word' }, options: pictures })).toBe('grid');
+  });
+
+  it('a reply or realia question: rows (a realia figure too); pictures keep the grid', () => {
+    expect(optionLayout({ prompt: { ask: 'reply', line }, options: text })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'realia', text: 'How much?', sheet }, options: [{ figure: '1,000 won', correct: true }] })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'realia', text: 'Which picture?', sheet }, options: pictures })).toBe('grid');
+  });
+
+  it('every earlier quiz keeps the grid', () => {
+    expect(optionLayout({ prompt: { ask: 'sound', spoken: { text: '가', romanization: 'ga' } }, options: [] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'meaning', ko: '밥', romanization: 'bap' }, options: [] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'odd-one-out' }, options: [] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'check', text: 'Who?' }, options: [] })).toBe('grid');
+  });
+});
+
 describe('fullscreenToggle (lecture.tool_used, section 3.14)', () => {
   it('enters full screen when not in it, and reports the tool', () => {
     expect(fullscreenToggle(false)).toEqual({ action: 'enter', tools: ['fullscreen'] });
@@ -170,6 +199,54 @@ describe('gridItems (README D13)', () => {
       [9, 'end', ''],
     ]);
     expect(items.map((i) => i.title).join(' ')).not.toMatch(/[ᄀ-ᇿ㄰-㆏가-힯]/);
+  });
+
+  it('the reading slides: their meaning, the frame meaning, the first line meaning and the sheet text, never Korean (LV-S1)', () => {
+    const line = (ko: string, gloss: string) => ({ ko, romanization: 'x', gloss, spoken: { text: ko, romanization: 'x' } });
+    const reading = [
+      { kind: 'sentence', key: 'r/s', builds: ['ko'], sentence: line('물을 마셔요.', 'I drink water.') },
+      { kind: 'pattern', key: 'r/p', builds: ['frame'], frame: { pieces: ['', '을/를 먹어요.'], romanization: '___eul/reul meogeoyo', gloss: 'I eat ___.' }, examples: [] },
+      { kind: 'read-along', key: 'r/r', builds: ['line'], lines: [{ speaker: 'Grandma', ...line('밥 먹었어요?', 'Have you eaten?') }] },
+      { kind: 'realia', key: 'r/m', builds: ['sheet'], sheet: { kind: 'menu', entries: [], alt: 'A small menu.', spoken: { text: '메뉴', romanization: 'menyu' } }, keyWords: [] },
+      { kind: 'read-along', key: 'r/e', builds: [], lines: [] },
+    ] as unknown as Slide[];
+    const items = gridItems(reading, state({ slideIdx: 0 }), names);
+    expect(items.map((i) => [i.kind, i.title])).toEqual([
+      ['sentence', 'I drink water.'],
+      ['pattern', 'I eat ___.'],
+      ['read-along', 'Have you eaten?'],
+      ['realia', 'A small menu.'],
+      ['read-along', ''],
+    ]);
+  });
+
+  it('a sentence build has no title: like a question, its meaning shows only once the room built it (LV-S3)', () => {
+    const sentence = { ko: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo', gloss: 'My friend goes to school.', spoken: { text: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo' } };
+    const build = [{ kind: 'sentence-build', key: 'b/1', builds: ['bank', 'tile', 'whole'], sentence, tiles: [{ ko: '친구가', romanization: 'chinguga' }], bank: [{ tile: 0 }] }] as unknown as Slide[];
+    expect(gridItems(build, state({ slideIdx: 0 }), names).map((i) => [i.kind, i.title])).toEqual([['sentence-build', '']]);
+  });
+
+  it('a write-together slide is titled by what its first build shows (a type round by its prompt and cue); a trace word has none, its meaning is the answer (LV-S4)', () => {
+    const spoken = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+    const frame = { pieces: ['제 이름은 ', '이에요/예요.'], romanization: 'je ireumeun ___ieyo/yeyo', gloss: 'My name is ___.' };
+    const write = [
+      { kind: 'write-together', key: 'w/1', builds: ['prompt', 'answer'], variant: 'type', prompt: 'Ask for water.', answer: spoken('물 주세요', 'mul juseyo', 'Water, please.') },
+      { kind: 'write-together', key: 'w/2', builds: ['prompt', 'answer'], variant: 'trace', word: spoken('아침', 'achim', 'morning') },
+      { kind: 'write-together', key: 'w/3', builds: ['frame', 'table'], variant: 'own-name', frame, groups: [[{ ko: '아', romanization: 'a' }]] },
+    ] as unknown as Slide[];
+    expect(gridItems(write, state({ slideIdx: 0 }), names).map((i) => [i.kind, i.title])).toEqual([
+      ['write-together', 'Ask for water. Water, please.'],
+      ['write-together', ''],
+      ['write-together', 'My name is ___.'],
+    ]);
+  });
+
+  it('gridKindKey: the dictionary key of each kind (read-along is readAlong, sentence-build is build, write-together is write)', () => {
+    expect(gridKindKey('write-together')).toBe('write');
+    expect(gridKindKey('sentence-build')).toBe('build');
+    expect(gridKindKey('read-along')).toBe('readAlong');
+    expect(gridKindKey('sentence')).toBe('sentence');
+    expect(gridKindKey('vocab')).toBe('vocab');
   });
 
   it('marks the open slide, the hidden ones, and never offers Hide on the End slide', () => {

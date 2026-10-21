@@ -2207,6 +2207,15 @@ export const learner = {
         card: 'Card',
         activity: 'Activity',
         end: 'End',
+        /** The reading slides (AMENDMENTS-LECTURE-V2 LV-S1, section 12.3). The realia page's question slide (LV-S2) is `quiz`. */
+        sentence: 'Sentence',
+        pattern: 'Sentence pattern',
+        readAlong: 'Read along',
+        realia: 'Look and read',
+        /** The sentence-build slide (LV-S3): the same value as `myRoute.games.sentenceBuilder`. */
+        build: 'Build a sentence',
+        /** The write-together slide (LV-S4): the same value as `slide.write.title`. */
+        write: 'Write together',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2224,6 +2233,9 @@ export const learner = {
       /** The projected Match Sound question, with a voice and without (README D6). */
       sound: 'Which letter makes this sound?',
       oddOneOut: 'Which one is different?',
+      /** The question slides (AMENDMENTS-LECTURE-V2 section 12.3, LV-S2): a Listen & Pick round, a Tap to Respond turn. */
+      listen: 'Which one did you hear?',
+      reply: 'Which answer fits?',
     },
     /** Activity preset names on the activity slide (PR 7): the same values as `console.lecture.activity`. */
     activity: {
@@ -2263,6 +2275,31 @@ export const learner = {
         /** `cta` is the shipped Join label (`caregiver.spaces.join.cta`). */
         howToJoin: (cta: string) => `Tap “${cta}” in Hangul Route and type this code.`,
         exitHint: 'To finish, choose Exit.',
+      },
+      /** The kind label at the top left of a reading slide (LV-S1, design V5): the same values as `grid.kind`. */
+      sentence: { label: 'Sentence' },
+      pattern: { label: 'Sentence pattern' },
+      readAlong: { label: 'Read along' },
+      /** A realia question's line beside its key word, until "Hoya's answer" takes its place (LV-S2, design V7). */
+      realia: { ask: 'Look closely and find the answer.' },
+      /**
+       * The sentence-build slide (LV-S3, design V9): its kind label, and the question over the sentence line,
+       * the next word or, on a particle tile, the ending that fits. The room answers by pointing (LV-D9).
+       */
+      build: { title: 'Build the sentence together', next: 'Which word comes next?', particle: 'Which ending fits?' },
+      /**
+       * The write-together slides (LV-S4, design V10-V12; AMENDMENTS-LECTURE-V2 section 5.3, LV-D8): the kind label,
+       * the line every one carries (nothing is typed on the big screen), each variant's line, the label over a frame's
+       * filled example, and the name round's line (no name is ever typed, shown or stored). The room writes; nobody speaks.
+       */
+      write: {
+        title: 'Write together',
+        where: 'Write on paper or on your own device. Nothing is typed here.',
+        type: 'Type it on your own device, then look.',
+        trace: 'Trace it in the air, then on paper.',
+        frame: 'Fill the gap with a word from the list.',
+        example: 'For example',
+        ownName: 'Write your own name in Hangul on paper.',
       },
     },
     start: {

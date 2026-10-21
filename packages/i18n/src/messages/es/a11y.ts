@@ -282,9 +282,11 @@ export const a11y = {
     option: (n: number, shape: string) => `Opción ${n}, ${shape}`,
     shape: { circle: 'círculo', triangle: 'triángulo', square: 'cuadrado', star: 'estrella' },
     removeRecent: (t: string) => `Quitar: ${t}`,
-    presetCard: (title: string, n: number) => `${title}, unos ${n} minutos`,
+    presetCard: (title: string, n: number) => `${title}, aproximadamente ${n} minutos`,
     chooserRemove: (title: string) => `Quitar ${title}`,
     answerMark: 'La respuesta de Hoya',
     timerLeft: (t: string) => `Tiempo que queda: ${t}`,
+    slot: 'espacio',
+    tilePlaced: (word: string) => `Se colocó: ${word}`,
   },
 } satisfies DeepPartial<Messages['a11y']>;

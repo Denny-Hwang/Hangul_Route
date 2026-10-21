@@ -19,7 +19,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
 });
 
 import { GroupedLessonPicker } from '../GroupedLessonPicker';
-import { LectureCatalogueSection } from '../LectureParts';
+import { LectureChooserSection } from '../LectureParts';
 import { applyToPlan, chooserKeys, consoleChooserGroups, planSelection } from '@/lib/console/lesson-picker';
 
 afterEach(() => {
@@ -305,40 +305,193 @@ describe('GroupedLessonPicker', () => {
   });
 });
 
-describe('LectureCatalogueSection (the lecture page)', () => {
-  it('adds stories, topics and Stage 2 lessons as blocks, and removes them in place; a quiz keeps its place', () => {
-    let blocks: LectureBlock[] = [{ kind: 'quiz', from: 'previous', rounds: 5 }];
-    let renderer!: ReactTestRenderer;
-    const render = (): JSX.Element => (
-      <LectureCatalogueSection
-        blocks={blocks}
-        onChange={(next) => {
-          blocks = next;
-          renderer.update(render());
-        }}
-      />
-    );
-    act(() => {
-      renderer = create(render(), { createNodeMock: () => ({ indeterminate: false }) });
+/** The lecture page's chooser (AMENDMENTS-LECTURE-V2 section 18.3, row LV-4): the outline it edits, re-rendered the way the page does. */
+function lectureHarness(initial: LectureBlock[] = [], locale = 'en'): { renderer: ReactTestRenderer; blocks: () => LectureBlock[]; focused: string[]; reset: (next: LectureBlock[]) => void } {
+  view.locale = locale;
+  let blocks = initial;
+  let key = 0;
+  const focused: string[] = [];
+  let renderer!: ReactTestRenderer;
+  const render = (): JSX.Element => (
+    <LectureChooserSection
+      blocks={blocks}
+      resetKey={key}
+      onChange={(next) => {
+        blocks = next;
+        renderer.update(render());
+      }}
+    />
+  );
+  act(() => {
+    renderer = create(render(), {
+      createNodeMock: (element) => {
+        const id = String(element.props['data-testid'] ?? '');
+        return { indeterminate: false, focus: () => focused.push(id) };
+      },
     });
+  });
+  const reset = (next: LectureBlock[]): void => {
+    blocks = next;
+    key += 1;
+    act(() => renderer.update(render()));
+  };
+  return { renderer, blocks: () => blocks, focused, reset };
+}
+
+const lw = getMessages('en').console.lecture.presets;
+
+describe('LectureChooserSection (the lecture page, tabs)', () => {
+  it('is What to add with three tabs (no Letters: the console offers no letter sets), one panel, Stage 1 by default', () => {
+    const { renderer } = lectureHarness();
     const root = renderer.root;
-    const chips = root.findAll((n) => n.type === 'input' && n.props.type === 'radio').map((c) => c.props['data-testid']);
-    expect(chips.slice(-2)).toEqual(['lecture-picker-chip-stories', 'lecture-picker-chip-topics']);
-    act(() => byTestId(root, 'lecture-picker-chip-stories').props.onChange());
+    expect(textOf(root.find((n) => n.type === 'h2'))).toBe(lw.chooser.label);
+    const tabs = root.findAll((n) => n.type === 'button' && n.props.role === 'tab');
+    expect(tabs.map((t) => textOf(t))).toEqual([lw.chooser.tab.lessons, lw.chooser.tab.stories, lw.chooser.tab.words]);
+    expect(tabs.map((t) => t.props['aria-selected'])).toEqual([true, false, false]);
+    expect(tabs.map((t) => t.props.tabIndex)).toEqual([0, -1, -1]);
+    const list = root.find((n) => n.props.role === 'tablist');
+    expect(list.props['aria-labelledby']).toBe(root.find((n) => n.type === 'h2').props.id);
+    const panels = root.findAll((n) => n.props.role === 'tabpanel' && typeof n.type === 'string');
+    expect(panels).toHaveLength(1);
+    expect(panels[0]?.props['aria-labelledby']).toBe(tabs[0]?.props.id);
+    expect(tabs[0]?.props['aria-controls']).toBe(panels[0]?.props.id);
+    // The Lessons tab's stage chips: one per ready stage, a legend naming them; no group chips.
+    const stageChips = root.findAll((n) => n.type === 'input' && n.props.type === 'radio');
+    expect(stageChips.map((c) => c.props['data-testid'])).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7'].map((s) => `lecture-picker-stage-${s}`));
+    expect(textOf(root.find((n) => n.type === 'legend'))).toBe(lw.stage.choose);
+    expect(hasTestId(root, 'lecture-picker-chip-stories')).toBe(false);
+    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('Stage 1 · 15 lessons');
+  });
+
+  it('the arrow keys, Home and End move between the tabs and select them', () => {
+    const { renderer, focused } = lectureHarness();
+    const root = renderer.root;
+    const key = (id: string, k: string): void => {
+      const preventDefault = vi.fn();
+      act(() => byTestId(root, id).props.onKeyDown({ key: k, preventDefault }));
+      expect(preventDefault).toHaveBeenCalled();
+    };
+    key('lecture-picker-tab-lessons', 'ArrowRight');
+    expect(byTestId(root, 'lecture-picker-tab-stories').props['aria-selected']).toBe(true);
+    expect(focused.at(-1)).toBe('lecture-picker-tab-stories');
+    key('lecture-picker-tab-stories', 'End');
+    expect(byTestId(root, 'lecture-picker-tab-topics').props['aria-selected']).toBe(true);
+    key('lecture-picker-tab-topics', 'ArrowRight');
+    expect(byTestId(root, 'lecture-picker-tab-lessons').props['aria-selected']).toBe(true);
+    key('lecture-picker-tab-lessons', 'ArrowLeft');
+    expect(byTestId(root, 'lecture-picker-tab-topics').props['aria-selected']).toBe(true);
+    key('lecture-picker-tab-topics', 'Home');
+    expect(byTestId(root, 'lecture-picker-tab-lessons').props['aria-selected']).toBe(true);
+    const ignored = vi.fn();
+    act(() => byTestId(root, 'lecture-picker-tab-lessons').props.onKeyDown({ key: 'a', preventDefault: ignored }));
+    expect(ignored).not.toHaveBeenCalled();
+  });
+
+  it('"{n} lessons inside" shows an episode\'s lessons; the whole episode locks them (one tri-state choice)', () => {
+    const { renderer, blocks } = lectureHarness();
+    const root = renderer.root;
+    act(() => byTestId(root, 'lecture-picker-stage-stage2').props.onChange());
+    const inside = byTestId(root, 'lecture-picker-open-episode:stage2-letters');
+    expect(textOf(inside)).toBe(lw.chooser.lessonsIn(6));
+    expect(inside.props['aria-expanded']).toBe(false);
+    expect(inside.props['aria-label']).toBeUndefined();
+    // Its row's title describes it, so six "lessons inside" buttons are told apart.
+    const title = root.find((n) => n.props.id === inside.props['aria-describedby']);
+    expect(textOf(title)).toBe('Word Builder');
+    act(() => inside.props.onClick());
+    expect(byTestId(root, 'lecture-picker-open-episode:stage2-letters').props['aria-expanded']).toBe(true);
+    // Some lessons: separate blocks, the episode mixed.
+    act(() => byTestId(root, 'lecture-picker-lesson-quest:stage2-letters-q2').props.onChange());
+    act(() => byTestId(root, 'lecture-picker-lesson-quest:stage2-letters-q4').props.onChange());
+    expect(blocks()).toEqual([
+      { kind: 'quest', id: 'quest:stage2-letters-q2' },
+      { kind: 'quest', id: 'quest:stage2-letters-q4' },
+    ]);
+    // Checking the mixed episode merges them into one block at the first one's place.
+    act(() => byTestId(root, 'lecture-picker-row-episode:stage2-letters').props.onChange());
+    expect(blocks()).toEqual([{ kind: 'episode', id: 'episode:stage2-letters' }]);
+    for (const n of [1, 2, 3, 4, 5, 6]) {
+      const box = byTestId(root, `lecture-picker-lesson-quest:stage2-letters-q${n}`);
+      expect(box.props.checked).toBe(true);
+      expect(box.props.disabled).toBe(true);
+    }
+    // Unchecking the episode clears it and its lessons.
+    act(() => byTestId(root, 'lecture-picker-row-episode:stage2-letters').props.onChange());
+    expect(blocks()).toEqual([]);
+    expect(byTestId(root, 'lecture-picker-lesson-quest:stage2-letters-q1').props.disabled).toBe(false);
+  });
+
+  it('Stories and Word topics show 8 rows, then Show {n} more; focus moves to the first new row', () => {
+    const { renderer, focused } = lectureHarness();
+    const root = renderer.root;
+    act(() => byTestId(root, 'lecture-picker-tab-stories').props.onClick());
+    const rows = (): ReactTestInstance[] => root.findAll((n) => typeof n.props['data-testid'] === 'string' && n.props['data-testid'].startsWith('lecture-picker-row-story:') && n.type === 'input');
+    expect(rows()).toHaveLength(8);
+    const more = byTestId(root, 'lecture-picker-more-stories');
+    expect(textOf(more)).toBe(lw.chooser.showMore(8));
+    act(() => more.props.onClick());
+    expect(rows()).toHaveLength(16);
+    expect(focused.at(-1)).toBe(rows()[8]?.props['data-testid']);
+    act(() => byTestId(root, 'lecture-picker-more-stories').props.onClick());
+    expect(rows()).toHaveLength(24);
+    expect(hasTestId(root, 'lecture-picker-more-stories')).toBe(false);
+    act(() => byTestId(root, 'lecture-picker-tab-topics').props.onClick());
+    const topics = root.findAll((n) => typeof n.props['data-testid'] === 'string' && n.props['data-testid'].startsWith('lecture-picker-row-vocab-topic:') && n.type === 'input');
+    expect(topics).toHaveLength(8);
+    expect(textOf(byTestId(root, 'lecture-picker-more-topics'))).toBe(lw.chooser.showMore(4));
+  });
+
+  it('adds stories, topics and Stage 2 lessons as blocks, and removes them in place; a quiz keeps its place', () => {
+    const { renderer, blocks } = lectureHarness([{ kind: 'quiz', from: 'previous', rounds: 5 }]);
+    const root = renderer.root;
+    act(() => byTestId(root, 'lecture-picker-tab-stories').props.onClick());
     act(() => byTestId(root, 'lecture-picker-row-story:hangeul-day').props.onChange());
-    act(() => byTestId(root, 'lecture-picker-chip-topics').props.onChange());
+    act(() => byTestId(root, 'lecture-picker-tab-topics').props.onClick());
     act(() => byTestId(root, 'lecture-picker-row-vocab-topic:food').props.onChange());
-    act(() => byTestId(root, 'lecture-picker-chip-stage2').props.onChange());
+    act(() => byTestId(root, 'lecture-picker-tab-lessons').props.onClick());
+    act(() => byTestId(root, 'lecture-picker-stage-stage2').props.onChange());
     act(() => byTestId(root, 'lecture-picker-lesson-quest:stage2-letters-q1').props.onChange());
-    expect(blocks).toEqual([
+    expect(blocks()).toEqual([
       { kind: 'quiz', from: 'previous', rounds: 5 },
       { kind: 'story', storyId: 'story:hangeul-day', checks: true },
       { kind: 'vocab', topicId: 'vocab-topic:food' },
       { kind: 'quest', id: 'quest:stage2-letters-q1' },
     ]);
-    act(() => byTestId(root, 'lecture-picker-chip-stories').props.onChange());
+    act(() => byTestId(root, 'lecture-picker-tab-stories').props.onClick());
     act(() => byTestId(root, 'lecture-picker-row-story:hangeul-day').props.onChange());
-    expect(blocks.map((b) => b.kind)).toEqual(['quiz', 'vocab', 'quest']);
+    expect(blocks().map((b) => b.kind)).toEqual(['quiz', 'vocab', 'quest']);
     expect(LECTURE_MAX_BLOCKS).toBe(30);
+  });
+
+  it('a replaced outline (a preset) opens on the tab and stage of its first lesson', () => {
+    const { renderer, reset } = lectureHarness();
+    const root = renderer.root;
+    reset([{ kind: 'quiz', from: 'previous', rounds: 4 }, { kind: 'quest', id: 'quest:stage3-letters-q1' }]);
+    expect(byTestId(root, 'lecture-picker-tab-lessons').props['aria-selected']).toBe(true);
+    expect(byTestId(root, 'lecture-picker-stage-stage3').props.checked).toBe(true);
+    reset([{ kind: 'story', storyId: 'story:hangeul-day', checks: true }]);
+    expect(byTestId(root, 'lecture-picker-tab-stories').props['aria-selected']).toBe(true);
+    reset([{ kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㅏ'] }]);
+    expect(byTestId(root, 'lecture-picker-tab-lessons').props['aria-selected']).toBe(true);
+    expect(byTestId(root, 'lecture-picker-stage-stage1').props.checked).toBe(true);
+  });
+
+  it('a search lists every matching group with no tabs; clearing it brings the tabs back', () => {
+    const { renderer } = lectureHarness();
+    const root = renderer.root;
+    act(() => byTestId(root, 'lecture-picker-search').props.onChange({ target: { value: 'hangul' } }));
+    expect(root.findAll((n) => n.props.role === 'tablist')).toHaveLength(0);
+    expect(root.findAll((n) => n.type === 'h3').length).toBeGreaterThan(1);
+    act(() => byTestId(root, 'lecture-picker-clear').props.onClick());
+    expect(root.findAll((n) => n.props.role === 'tablist')).toHaveLength(1);
+  });
+
+  it('titles and tabs follow the console language (ko)', () => {
+    const { renderer } = lectureHarness([], 'ko');
+    const root = renderer.root;
+    const ko = getMessages('ko').console.lecture.presets;
+    expect(textOf(byTestId(root, 'lecture-picker-tab-stories'))).toBe(ko.chooser.tab.stories);
+    expect(textOf(byTestId(root, 'lecture-picker-open-episode:stage1-letters'))).toBe(ko.chooser.lessonsIn(3));
+    expect(textOf(root.find((n) => n.type === 'legend'))).toBe(ko.stage.choose);
   });
 });

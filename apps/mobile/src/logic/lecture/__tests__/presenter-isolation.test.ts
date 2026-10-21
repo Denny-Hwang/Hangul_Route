@@ -36,8 +36,15 @@ function normalise(specifier: string): string {
     .replace(/\/$/, '');
 }
 
+/**
+ * The helper picker was removed from the presenter (LV-H, AMENDMENTS-LECTURE-V2 sections 3.10 and 13, row LV-M1):
+ * its logic, labels, roster message and overlay files are deleted, and nothing may bring them back.
+ */
+const REMOVED_PICKER = /(^|\/)(picker|picker-labels|roster-message|overlays\/PickerOverlay)$/;
+
 function forbiddenSpecifier(raw: string): boolean {
   const specifier = normalise(raw);
+  if (REMOVED_PICKER.test(specifier)) return true;
   // The `store` barrel (`store/index.ts`) re-exports the profile, progress and quest-run stores.
   if (/(^|\/)store$/.test(specifier)) return true;
   if (FORBIDDEN_STORE_FILES.some((name) => specifier === `store/${name}` || specifier.endsWith(`/store/${name}`))) return true;
@@ -109,6 +116,32 @@ describe('presenter isolation (F-TCH-004 §3.9)', () => {
     expect(hits).toHaveLength(20);
     expect(hits[0]).toBe('logic/lecture/x.ts:1 imports ../../store/progress-store');
     expect(hits[10]).toBe('logic/lecture/x.ts:11 imports ../../screens/minigames/MatchSoundGame.tsx');
+  });
+
+  it('flags the removed helper picker files (LV-H): picker, picker-labels, roster-message and the picker overlay', () => {
+    const source = [
+      "import { pickNext } from './picker';",
+      "import { pickerLabels } from '../../logic/lecture/picker-labels';",
+      "import { parseRoster } from '../lecture/roster-message.ts';",
+      "import { PickerOverlay } from './overlays/PickerOverlay';",
+      "const o = import('../screens/presenter/overlays/PickerOverlay.tsx');",
+      "vi.mock('../picker', () => ({}));",
+      "export * from './picker/index';",
+    ].join('\n');
+    const hits = scanSource('screens/presenter/x.tsx', source);
+    expect(hits).toHaveLength(7);
+    expect(hits[3]).toBe('screens/presenter/x.tsx:4 imports ./overlays/PickerOverlay');
+  });
+
+  it('keeps the other pickers and overlays the presenter uses', () => {
+    const allowed = [
+      "import { languagePicker } from '../locale/language-picker';",
+      "import { GroupedLessonPicker } from './GroupedLessonPicker';",
+      "import { HelpOverlay } from './overlays/HelpOverlay';",
+      "import { pickerless } from './pickerless';",
+      "import { useRosterStore } from './roster';",
+    ].join('\n');
+    expect(scanSource('x.ts', allowed)).toEqual([]);
   });
 
   it('allows the stores and leaves the presenter may read', () => {

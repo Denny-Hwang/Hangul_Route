@@ -316,6 +316,7 @@ describe('B.3 parents', () => {
       route: "Open each learner's Learning Route to see where they are and what comes next.",
       notes: 'Send a short note of encouragement that your learner sees in the app.',
       browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
+      lecture: 'Lecture mode puts a lesson on your TV so you can learn together.',
     });
   });
 
@@ -391,7 +392,7 @@ describe('B.4 teachers', () => {
       route: "Open each student's Learning Route to see where they are and what comes next.",
       notes: 'Send students a short note of encouragement.',
       browse: 'With a class or school plan, preview every lesson exactly as students see it.',
-      lecture: 'Teach from the front on a projector or TV.',
+      lecture: 'Lecture mode: teach from the front on a projector or TV, with ready-made lessons.',
     });
   });
 

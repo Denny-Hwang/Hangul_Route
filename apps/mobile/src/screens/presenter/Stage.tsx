@@ -1,12 +1,13 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { LOCALE_META } from '@hangul-route/i18n';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
-import { barOverlap, gestureCommand, inBarStrip, slideDetail } from '../../logic/lecture/shell';
+import { barOverlap, buildLive, gestureCommand, inBarStrip, slideDetail, type BuildLive } from '../../logic/lecture/shell';
+import { gridKindKey } from '../../logic/lecture/tools';
 import type { LectureSceneView } from '../../logic/lecture/sources/story';
 import { units } from '../../logic/lecture/stage-constants';
 import { STAGE_PADDING } from './stage-metrics';
@@ -15,10 +16,18 @@ import { usePresenterView, useStageText } from './presenter-context';
 import { ActivitySlide } from './slides/ActivitySlide';
 import { CardSlide } from './slides/CardSlide';
 import { QuizSlide } from './slides/QuizSlide';
+import { QuestionSlide, isListenOrReply } from './slides/QuestionSlide';
 import { EndSlide } from './slides/EndSlide';
 import { LetterSlide } from './slides/LetterSlide';
+import { PatternSlide } from './slides/PatternSlide';
+import { ReadAlongSlide } from './slides/ReadAlongSlide';
+import { RealiaQuestionSlide, isRealiaQuestion } from './slides/RealiaQuestionSlide';
+import { RealiaSlide } from './slides/RealiaSlide';
+import { SentenceBuildSlide } from './slides/SentenceBuildSlide';
+import { SentenceSlide } from './slides/SentenceSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
 import { SyllableSlide } from './slides/SyllableSlide';
+import { WriteTogetherSlide } from './slides/WriteTogetherSlide';
 import { StoryCheckSlide, isStoryCheck } from './slides/StoryCheckSlide';
 import { StorySlide } from './slides/StorySlide';
 import { TitleSlide } from './slides/TitleSlide';
@@ -58,6 +67,8 @@ export interface StageProps {
   barStrip?: number;
   /** A tap in the strip: show or hide the bar. */
   onStripTap?: () => void;
+  /** The read-along line Sound is playing on this slide, lit while it plays (V6); null when none. */
+  playingLine?: number | null;
 }
 
 export function Stage(props: StageProps): React.ReactElement {
@@ -74,9 +85,24 @@ export function Stage(props: StageProps): React.ReactElement {
   const stageTop = insets.top + scale.offsetY;
   const strip = props.barStrip === undefined ? 0 : barOverlap(props.barStrip, 0, scale.offsetY);
 
-  const kind = messages.learner.presenter.grid.kind[slide.kind];
-  const detail = slideDetail(slide, { activity: (preset) => messages.learner.presenter.activity[preset] });
-  const live = messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
+  const kind = messages.learner.presenter.grid.kind[gridKindKey(slide.kind)];
+  const detail = slideDetail(slide, {
+    activity: (preset) => messages.learner.presenter.activity[preset],
+    slot: messages.a11y.presenter.slot,
+    listen: messages.learner.presenter.quiz.listen,
+    reply: messages.learner.presenter.quiz.reply,
+    build: messages.learner.presenter.slide.build.next,
+    particle: messages.learner.presenter.slide.build.particle,
+    frame: messages.learner.presenter.slide.write.frame,
+    ownName: messages.learner.presenter.slide.write.ownName,
+  }, reveal);
+  // A sentence-build move says what it placed (section 10, LV-S3), a write-together build what it showed (LV-S4); anything else announces the slide.
+  const lastLive = useRef<BuildLive | null>(null);
+  const liveNow = buildLive(slide, reveal, lastLive.current, messages.a11y.presenter.tilePlaced, messages.learner.presenter.slide.write.example);
+  useEffect(() => {
+    lastLive.current = liveNow;
+  });
+  const live = liveNow.words ?? messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
 
   const onGrant = (event: GestureResponderEvent): void => {
     const { pageX, pageY, locationX } = event.nativeEvent;
@@ -152,6 +178,10 @@ export function Stage(props: StageProps): React.ReactElement {
           <CardSlide slide={slide} reveal={reveal} />
         ) : isStoryCheck(slide) ? (
           <StoryCheckSlide slide={slide} shown={shown} romanization={props.romanization} />
+        ) : isListenOrReply(slide) ? (
+          <QuestionSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
+        ) : isRealiaQuestion(slide) ? (
+          <RealiaQuestionSlide slide={slide} shown={shown} romanization={props.romanization} />
         ) : slide.kind === 'quiz' ? (
           <QuizSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
         ) : slide.kind === 'activity' ? (
@@ -160,6 +190,18 @@ export function Stage(props: StageProps): React.ReactElement {
           <StorySlide slide={slide} shown={shown} scene={props.storyScene(slide.storyId, slide.sceneId)} />
         ) : slide.kind === 'end' ? (
           <EndSlide slide={slide} joinCta={props.joinCta} />
+        ) : slide.kind === 'sentence' ? (
+          <SentenceSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'pattern' ? (
+          <PatternSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'read-along' ? (
+          <ReadAlongSlide slide={slide} reveal={reveal} playing={props.playingLine ?? null} />
+        ) : slide.kind === 'realia' ? (
+          <RealiaSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'sentence-build' ? (
+          <SentenceBuildSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'write-together' ? (
+          <WriteTogetherSlide slide={slide} reveal={reveal} romanization={props.romanization} />
         ) : null}
       </View>
       {props.barStrip !== undefined ? <Grabber pad={units(unit, STAGE_PADDING)} /> : null}

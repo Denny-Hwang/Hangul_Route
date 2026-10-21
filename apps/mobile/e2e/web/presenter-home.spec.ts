@@ -96,7 +96,12 @@ test.describe('presenter home, wide (two columns)', () => {
     await expect(quick.getByRole('tab', { name: 'Lessons' })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByTestId('presenter-home-recent-empty')).toBeVisible();
     const build = page.getByTestId('presenter-home-build');
-    await expect(page.getByTestId('presenter-home-chosen')).toHaveText('Choose at least one item to build a lesson.');
+    // The count is the footer's polite status (section 18.3).
+    const chosen = page.getByTestId('presenter-home-chosen');
+    await expect(chosen).toHaveAttribute('role', 'status');
+    await expect(chosen).toHaveAttribute('aria-live', 'polite');
+    await expect(page.getByRole('status').filter({ hasText: 'Choose at least one item to build a lesson.' })).toBeVisible();
+    await expect(chosen).toHaveText('Choose at least one item to build a lesson.');
     await expect(build).toBeDisabled();
     await shot(page, 'presenter-home-empty-1280');
 
@@ -105,7 +110,7 @@ test.describe('presenter home, wide (two columns)', () => {
     const consonants = quick.getByRole('checkbox', { name: /^Consonants/ });
     await consonants.click();
     await expect(consonants).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('presenter-home-chosen')).toHaveText('2 parts · about 23 min');
+    await expect(page.getByRole('status').filter({ hasText: '2 parts · about 23 min' })).toHaveText('2 parts · about 23 min');
     await consonants.click();
     await expect(page.getByTestId('presenter-home-chosen')).toHaveText('1 part · about 15 min');
     await build.click();

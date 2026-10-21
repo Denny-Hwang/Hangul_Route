@@ -1,7 +1,7 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceRole } from '@hangul-route/content-schema';
 import Page from '@/app/(console)/teach/space/curriculum/page';
 
@@ -12,6 +12,9 @@ import Page from '@/app/(console)/teach/space/curriculum/page';
  * re-runs the preview and moves focus to the heading); a co-teacher reads the neutral line; with
  * the switch off the page makes no extra request and keeps today's words. Rendered with
  * react-test-renderer (the repo's web tests have no DOM) on the frozen October 2026 catalogue.
+ * The page seeds the plan's start date from the clock, and how many coming-soon placeholders
+ * fill a 6-month plan's last sessions depends on that start, so the clock is frozen too
+ * (`NOW`): on the real clock the test began failing on 2026-10-19.
  */
 vi.mock('@hangul-route/content-schema', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@hangul-route/content-schema')>();
@@ -75,9 +78,16 @@ vi.mock('@/components/console/use-console', async () => {
 
 const en = getMessages('en').console;
 const focus = vi.fn();
+/** The wizard's "today": a Wednesday in the week the free-plan words were written against. */
+const NOW = new Date('2026-10-14T12:00:00.000Z');
 
 beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+});
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(NOW);
 });
 
 let mounted: ReactTestRenderer | null = null;
@@ -88,6 +98,7 @@ afterEach(() => {
   role = 'owner';
   focus.mockClear();
   vi.unstubAllEnvs();
+  vi.useRealTimers();
 });
 
 const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => root.findAll((node) => typeof node.type === 'string' && node.props['data-testid'] === id);

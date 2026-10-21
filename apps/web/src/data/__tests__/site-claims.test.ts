@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { en, getMessages, UI_LOCALES } from '@hangul-route/i18n';
-import { REPORT_REVIEWED_LOCALES, browseEnabled } from '../../lib/console/config';
+import { REPORT_REVIEWED_LOCALES, browseEnabled, lectureModeEnabled } from '../../lib/console/config';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { CLAIM_LOCALES, CLAIM_REQUIRES_PAID, SITE_CLAIMS, claimLiveIn, showsClaim, type BooleanClaimKey, type SiteClaims } from '../site-claims';
 import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from './site-claims-fixtures';
@@ -17,7 +17,7 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14) and the notes line (F-FEEDBACK-001 FB-14) on, every other feature line off', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14) and lecture mode (AMENDMENTS-LECTURE-V2 LV-7) on, every other feature line off', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
@@ -26,7 +26,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       teacherReports: true,
       feedbackNotes: true,
       browseAsLearner: true,
-      lectureMode: false,
+      lectureMode: true,
     });
   });
 
@@ -48,8 +48,46 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       const shown = BOOLEAN_KEYS.filter((key) => showsClaim(SITE_CLAIMS, key, locale));
       // The reports lines follow REPORT_REVIEWED_LOCALES; the notes line is live in every UI locale (FB-5b).
       const reports = REPORT_REVIEWED_LOCALES.includes(locale) ? (['parentReports', 'teacherReports'] as const) : [];
-      expect(shown, locale).toEqual(['feedbackNotes', ...reports]);
+      expect(shown, locale).toEqual(['feedbackNotes', 'lectureMode', ...reports]);
     }
+  });
+
+  it('turns the lecture mode lines on only with both lecture switches on by default (AMENDMENTS-LECTURE-V2 LV-7, LV-D1)', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+    const learnerFlags = readFileSync(join(root, 'mobile', 'src', 'config', 'flags.ts'), 'utf8');
+    const learnerOn = /launchDefaults: Flags = \{[^}]*\blectureModeEnabled: true,/.test(learnerFlags);
+    expect(!SITE_CLAIMS.lectureMode || (lectureModeEnabled({}) && learnerOn)).toBe(true);
+  });
+
+  it('shows the lecture mode lines in every UI locale, free, while its claim is on, and hides them with it off (LV-D1 rollback)', () => {
+    expect(CLAIM_LOCALES.lectureMode).toBeUndefined();
+    expect(CLAIM_REQUIRES_PAID.lectureMode).toBe(false);
+    for (const locale of UI_LOCALES) {
+      for (const paidPlans of PAID_PLANS) {
+        expect(showsClaim({ ...SITE_CLAIMS, paidPlans, lectureMode: true }, 'lectureMode', locale), locale).toBe(true);
+        // The coordinated rollback (LV-D1): a PR that sets the claim back to false takes both lines off the site.
+        expect(showsClaim({ ...SITE_CLAIMS, paidPlans, lectureMode: false }, 'lectureMode', locale), locale).toBe(false);
+      }
+    }
+  });
+
+  it('the lecture mode lines have their copy in every UI locale, with no price, no plan and no age wording', () => {
+    for (const locale of UI_LOCALES) {
+      const { persona } = getMessages(locale).landing;
+      for (const line of [persona.parents.follow.lecture, persona.teachers.class.lecture]) {
+        expect(line.trim().length, locale).toBeGreaterThan(0);
+        expect(line, locale).not.toMatch(/[$€£]\s?\d|\d+([.,]\d+)?\s?(usd|dollars?)|lifetime|\bplan\b|\bfree\b|\bkids?\b|\bchild(ren)?\b|\bages?\b/i);
+      }
+    }
+    // AMENDMENTS-LECTURE-V2 section 12.5, word for word.
+    expect(en.landing.persona.parents.follow.lecture).toBe('Lecture mode puts a lesson on your TV so you can learn together.');
+    expect(en.landing.persona.teachers.class.lecture).toBe('Lecture mode: teach from the front on a projector or TV, with ready-made lessons.');
+    const es = getMessages('es').landing.persona;
+    expect(es.parents.follow.lecture).toBe('El modo proyección pone una lección en tu TV para aprender en familia.');
+    expect(es.teachers.class.lecture).toBe('Modo proyección: enseña al frente con un proyector o una TV, con lecciones listas.');
+    const ko = getMessages('ko').landing.persona;
+    expect(ko.parents.follow.lecture).toBe('강의 모드로 TV에 수업을 띄우고 함께 배워요.');
+    expect(ko.teachers.class.lecture).toBe('강의 모드: 준비된 수업으로 프로젝터나 TV 앞에서 가르쳐요.');
   });
 
   it('turns the notes line on only with the notes flags on by default in both apps (F-FEEDBACK-001 FB-14, OD-19)', () => {

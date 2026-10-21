@@ -76,13 +76,23 @@ export function schoolConsentModeEnabled(env: ConsoleEnv = buildEnv()): boolean 
   return env.NEXT_PUBLIC_SCHOOL_CONSENT_MODE === 'enabled';
 }
 
+/** The lecture mode switch when the build sets no value (AMENDMENTS-LECTURE-V2 LV-7 turned it on, LV-D1). */
+const LECTURE_LAUNCH_DEFAULT = true;
+
+/** The values that switch lecture mode off: the learner app's kill-switch words plus `disabled` (LV-D1). */
+const LECTURE_OFF_VALUES: readonly string[] = ['false', '0', 'off', 'no', 'disabled'];
+
 /**
- * Lecture mode (F-TCH-004): the console setup page and its entry points stay hidden until the
- * presenter (PR 6) is deployed in the learner app, so no teacher opens a link the app cannot
- * play yet. Switched on with `NEXT_PUBLIC_LECTURE_MODE=enabled` at build time.
+ * Lecture mode (F-TCH-004; AMENDMENTS-LECTURE-V2 LV-D1): the console setup page and its entry points (E1-E4: the
+ * Lecture mode card on both homes, the nav item, the space button). On by default since LV-7, the `browseEnabled()`
+ * pattern: `NEXT_PUBLIC_LECTURE_MODE` set to `false`, `0`, `off`, `no` or `disabled` (case and surrounding spaces
+ * ignored) is the kill switch; any other value, `enabled` included, or none is the launch default, on. Build time:
+ * switching it off needs a rebuild and redeploy of the console, and it hides the entry points only, so `/present` and
+ * its presets stay reachable by URL (F-TCH-004 TD2). The site lines follow `SITE_CLAIMS.lectureMode`, never this flag.
  */
 export function lectureModeEnabled(env: ConsoleEnv = buildEnv()): boolean {
-  return env.NEXT_PUBLIC_LECTURE_MODE === 'enabled';
+  const raw = env.NEXT_PUBLIC_LECTURE_MODE?.trim().toLowerCase();
+  return raw !== undefined && LECTURE_OFF_VALUES.includes(raw) ? false : LECTURE_LAUNCH_DEFAULT;
 }
 
 /**

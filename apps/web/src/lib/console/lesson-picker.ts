@@ -13,6 +13,7 @@ import {
   shownLessons,
   toggleLesson,
   toggleRow,
+  type ChooserEpisodeRow,
   type ChooserGroup,
   type ChooserRow,
   type ChooserSelection,
@@ -246,4 +247,67 @@ export function outlineSelection(blocks: readonly LectureBlock[], keys: Readonly
 /** An outline with a new selection applied in place: quizzes, activities and the class code keep their place (a block has no date or note to carry over). */
 export function applyToOutline(blocks: readonly LectureBlock[], groups: readonly ChooserGroup[], keys: ReadonlySet<string>, next: ChooserSelection): LectureBlock[] {
   return applyChooserSelection(blocks, (b) => blockKey(b, keys), next, (key) => selectionBlocks([key], groups));
+}
+
+// ---- the lecture page's tabs (AMENDMENTS-LECTURE-V2 section 18.3, row LV-4) --------------------
+
+/**
+ * The tabs the lecture page's Customize draws over the same groups (LC-D2 lets LV-4 restyle the chips this way):
+ * **Lessons** (every stage, behind stage chips), **Stories** and **Word topics**, each only when it has rows. The
+ * console offers no letter sets (the web build holds no jamo content), so it draws no Letters tab ("a tab with
+ * nothing in this build is not drawn"). The model, the search and the selection rules stay the picker's.
+ */
+export type ChooserTab = 'lessons' | 'stories' | 'topics';
+
+/** Stories and Word topics show this many rows, then **Show {n} more** (section 18.3). */
+export const CHOOSER_PAGE = 8;
+
+/** The tab a group sits under. */
+export function tabOf(id: ChooserGroup['id']): ChooserTab {
+  if (id === 'stories') return 'stories';
+  if (id === 'topics') return 'topics';
+  return 'lessons';
+}
+
+/** The stage groups the Lessons tab's chips offer: stages with an episode row. */
+export function stageGroupsOf(groups: readonly ChooserGroup[]): ChooserGroup[] {
+  return groups.filter((g) => g.stage !== null && g.rows.some((r) => r.kind === 'episode'));
+}
+
+/** The tabs drawn, in order: only those with something in this build. */
+export function chooserTabs(groups: readonly ChooserGroup[]): ChooserTab[] {
+  const out: ChooserTab[] = [];
+  if (stageGroupsOf(groups).length > 0) out.push('lessons');
+  if (groups.some((g) => g.id === 'stories' && g.rows.length > 0)) out.push('stories');
+  if (groups.some((g) => g.id === 'topics' && g.rows.length > 0)) out.push('topics');
+  return out;
+}
+
+export interface ChooserView {
+  tab: ChooserTab;
+  /** The Lessons tab's stage chip; null when no stage is offered. */
+  stage: StageKey | null;
+}
+
+/**
+ * Where the tabs open: the tab and stage of the first chosen thing (the open preset's first lesson), else the first
+ * tab on the first stage (Stage 1). The stage chip keeps the first stage when the first chosen thing is a story or a topic.
+ */
+export function initialView(groups: readonly ChooserGroup[], selection: ChooserSelection): ChooserView {
+  const stages = stageGroupsOf(groups);
+  const firstStage = (stages[0]?.id ?? null) as StageKey | null;
+  const id = initialGroup(groups, selection);
+  const tabs = chooserTabs(groups);
+  if (id === null) return { tab: tabs[0] ?? 'lessons', stage: firstStage };
+  const tab = tabOf(id);
+  const stage = tab === 'lessons' && stages.some((g) => g.id === id) ? (id as StageKey) : firstStage;
+  return { tab: tabs.includes(tab) ? tab : (tabs[0] ?? 'lessons'), stage };
+}
+
+/**
+ * An episode and its lessons are one tri-state choice on the lecture page (section 18.3): while the whole episode is
+ * chosen (one deck block), its lessons are checked and off; unchecking the episode clears them.
+ */
+export function lessonLocked(selection: ChooserSelection, row: ChooserEpisodeRow): boolean {
+  return selection.includes(row.key);
 }

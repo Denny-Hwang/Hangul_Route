@@ -1,6 +1,6 @@
 import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, z, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { distinctParts, type SkipPart, type SoundCheckOutcome, type VoiceCheck } from '../../logic/lecture/shell';
 import { START_BUTTON_HEIGHT, TEACHER_COLUMN } from './stage-metrics';
@@ -371,45 +371,69 @@ function PhoneStart(props: StartScreenProps): React.ReactElement {
   );
 }
 
+/**
+ * The window width from which a ready-made lesson's start screen sets What's in this lesson beside
+ * the checks, Start and Customize (two columns of the full page width): a 30-minute preview of six
+ * to eight rows above the checks would push Start below the fold on a 1280 x 720 or 1920 x 1080
+ * projector, so the teacher would scroll on the big screen (LV-3 review).
+ */
+export const START_COLUMNS_MIN = layout.maxWidth.full;
+
 function WideStart(props: StartScreenProps): React.ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
   const start = useRef<View>(null);
+  const { width } = useWindowDimensions();
+  const columns = props.preview !== undefined && width >= START_COLUMNS_MIN;
   useEffect(() => {
     if (props.fontReady) start.current?.focus?.();
   }, [props.fontReady]);
 
-  return (
-    <ScrollView testID="presenter-start" style={{ flex: 1, backgroundColor: colors.surface.paper }} contentContainerStyle={{ paddingVertical: spacing.xxl, paddingHorizontal: layout.gutter.compact }}>
-      <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: spacing.xl }}>
-        <View style={{ gap: spacing.md }}>
-          {props.onBack || props.onDisplay ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
-              {props.onBack ? <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} /> : <View />}
-              {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-start-display" /> : null}
-            </View>
-          ) : null}
-          <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} />
-        </View>
-
-        {props.preview ? <Preview rows={props.preview.rows} /> : null}
-
-        <Checks {...props} />
-
-        <View style={{ alignItems: 'center', gap: spacing.sm }}>
-          <PrimaryButton
-            ref={start}
-            testID="presenter-start-button"
-            label={m.cta}
-            large
-            minHeight={START_BUTTON_HEIGHT}
-            disabled={!props.fontReady}
-            onPress={props.onStart}
-          />
-          {!props.fontReady ? <FontWait /> : null}
-          {props.preview ? <GhostButton testID="presenter-preview-customize" label={messages.learner.presenter.presets.customize.cta} onPress={props.preview.onCustomize} /> : null}
-        </View>
+  const topRow =
+    props.onBack || props.onDisplay ? (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+        {props.onBack ? <GhostButton testID="presenter-start-back" label={m.back.cta} onPress={props.onBack} /> : <View />}
+        {props.onDisplay ? <DisplayButton onPress={props.onDisplay} testID="presenter-start-display" /> : null}
       </View>
+    ) : null;
+  const head = <DeckHead deckTitle={props.deckTitle} slides={props.slides} minutes={props.minutes} />;
+  const preview = props.preview ? <Preview rows={props.preview.rows} /> : null;
+  const go = (
+    <View style={{ alignItems: 'center', gap: spacing.sm }}>
+      <PrimaryButton ref={start} testID="presenter-start-button" label={m.cta} large minHeight={START_BUTTON_HEIGHT} disabled={!props.fontReady} onPress={props.onStart} />
+      {!props.fontReady ? <FontWait /> : null}
+      {props.preview ? <GhostButton testID="presenter-preview-customize" label={messages.learner.presenter.presets.customize.cta} onPress={props.preview.onCustomize} /> : null}
+    </View>
+  );
+
+  return (
+    <ScrollView testID="presenter-start" style={{ flex: 1, backgroundColor: colors.surface.paper }} contentContainerStyle={{ paddingVertical: columns ? spacing.xl : spacing.xxl, paddingHorizontal: layout.gutter.compact }}>
+      {columns ? (
+        // In reading order: the way back and the deck, its parts, then the checks and Start.
+        <View testID="presenter-start-columns" style={{ width: '100%', maxWidth: layout.maxWidth.full, alignSelf: 'center', gap: spacing.md }}>
+          {topRow}
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xxxl }}>
+            <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, gap: spacing.xl }}>
+              {head}
+              {preview}
+            </View>
+            <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, gap: spacing.lg }}>
+              <Checks {...props} />
+              {go}
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View style={{ width: '100%', maxWidth: TEACHER_COLUMN, alignSelf: 'center', gap: spacing.xl }}>
+          <View style={{ gap: spacing.md }}>
+            {topRow}
+            {head}
+          </View>
+          {preview}
+          <Checks {...props} />
+          {go}
+        </View>
+      )}
     </ScrollView>
   );
 }

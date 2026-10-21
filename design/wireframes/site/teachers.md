@@ -43,7 +43,7 @@ Phone:
 |  + open each student's Learning Route      (claim learningRoute)
 |  + notes line                              (claim feedbackNotes)
 |  + with a class or school plan, preview lessons (claim browseAsLearner AND paidPlans = inApp)
-|  + teach-from-the-front                    (claim lectureMode)
+|  + lecture-mode: teach-from-the-front, ready-made lessons (claim lectureMode)
 +--------------------------------------+
 | H2 Privacy for classes               |
 |  - initials only on the class list   |

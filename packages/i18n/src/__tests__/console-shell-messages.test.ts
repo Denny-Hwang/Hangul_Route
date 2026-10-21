@@ -20,7 +20,17 @@ describe('console.shell (the adult frame)', () => {
   });
 
   it('labels every item of the navigation registry', () => {
-    expect(c.shell.nav).toEqual({ home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing', classReports: 'Class reports' });
+    expect(c.shell.nav).toEqual({
+      home: 'Home',
+      reports: 'Reports',
+      notes: 'Notes',
+      classes: 'Classes',
+      lessons: 'Lessons',
+      billing: 'Billing',
+      classReports: 'Class reports',
+      // AMENDMENTS-LECTURE-V2 E3 (LV-5): both personas, after Lessons.
+      lecture: 'Lecture mode',
+    });
   });
 
   it('labels Class reports in every shipped locale (F-REPORT-001 RP-7c)', () => {

@@ -197,31 +197,34 @@ test.describe('the plan builder\'s picker at 1280 and at 320 with 200 % text (LV
   });
 });
 
-test.describe('the lecture page\'s catalogue is grouped at 360 (LV-3a)', () => {
+test.describe('the lecture page\'s chooser is grouped at 360 (LV-3a, tabs from LV-4)', () => {
   test.skip(!FULL || !LECTURE, 'needs the console e2e export with lecture mode on (CURRICULUM_E2E=1 LECTURE_E2E=1)');
   test.use({ viewport: { width: 360, height: 640 } });
 
-  test('stages, stories and word topics behind chips; a story and a Stage 3 lesson go into the outline', async ({ page }) => {
+  test('under Customize: Lessons (stage chips), Stories and Word topics behind tabs; a story and a Stage 3 lesson go into the outline', async ({ page }) => {
     const { unexpected } = await mockClass(page);
     await page.goto(`/teach/space/lecture?id=${encodeURIComponent(SPACE.id)}`);
+    // The page opens on the ready-made lessons; the chooser is under Customize (AMENDMENTS-LECTURE-V2 section 4.6).
+    await page.getByTestId('lecture-customize-toggle').click();
+    // The outline starts as the open preset's (Hangul week 1: three lessons and a quiz); the chooser adds to its end.
+    const outline = page.getByTestId('lecture-outline');
+    await expect(outline.getByRole('listitem')).toHaveCount(4);
     const picker = page.getByTestId('lecture-picker');
-    await expect(picker.getByRole('heading', { level: 2, name: en.console.lecture.catalogue.title })).toBeVisible();
-    const chips = picker.getByRole('radio');
-    await expect(chips).toHaveCount(9);
-    await expect(picker.getByTestId('lecture-picker-chip-stories')).toBeVisible();
-    await expect(picker.getByTestId('lecture-picker-chip-topics')).toBeVisible();
-    // The old flat Stage 1 list is gone: one group at a time.
+    await expect(picker.getByRole('heading', { level: 2, name: en.console.lecture.presets.chooser.label })).toBeVisible();
+    await expect(picker.getByRole('tab')).toHaveCount(3);
+    await expect(picker.getByRole('radio')).toHaveCount(7);
+    // One group at a time.
     await expect(picker.getByRole('heading', { level: 3 })).toHaveCount(1);
 
-    await picker.getByTestId('lecture-picker-chip-stories').check();
+    await picker.getByTestId('lecture-picker-tab-stories').click();
     await expect(picker.getByRole('heading', { level: 3, name: /^Stories · \d+ stories$/ })).toBeVisible();
     await picker.getByTestId('lecture-picker-row-story:hangeul-day').check();
-    await picker.getByTestId('lecture-picker-chip-stage3').check();
-    await picker.getByRole('button', { name: w.lessonsOf('First Sentences') }).click();
+    await picker.getByTestId('lecture-picker-tab-lessons').click();
+    await picker.getByTestId('lecture-picker-stage-stage3').check();
+    await picker.getByTestId('lecture-picker-open-episode:stage3-letters').click();
     await picker.getByTestId('lecture-picker-lesson-quest:stage3-letters-q1').check();
-    const outline = page.getByTestId('lecture-outline');
-    await expect(outline.getByRole('listitem')).toHaveCount(2);
-    await expect(outline).toContainText('Happy Hangul Day!');
+    await expect(outline.getByRole('listitem')).toHaveCount(6);
+    await expect(outline.getByRole('listitem').nth(4)).toContainText('Happy Hangul Day!');
     await page.screenshot({ path: test.info().outputPath('lecture-picker-360.png'), fullPage: true });
     await noSidewaysScroll(page);
     expect(unexpected).toEqual([]);
@@ -230,6 +233,7 @@ test.describe('the lecture page\'s catalogue is grouped at 360 (LV-3a)', () => {
   test('the Slides language hint follows the choice: the device\'s language by default, the chosen one on every device (AMENDMENTS-LECTURE-V2 section 18.4)', async ({ page }) => {
     const { unexpected } = await mockClass(page);
     await page.goto(`/teach/space/lecture?id=${encodeURIComponent(SPACE.id)}`);
+    await page.getByTestId('lecture-customize-toggle').click();
     const o = en.console.lecture.options;
     const select = page.getByTestId('lecture-slides-language');
     const hint = page.getByTestId('lecture-slides-language-hint');

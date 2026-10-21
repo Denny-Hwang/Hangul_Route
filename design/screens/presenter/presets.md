@@ -22,7 +22,7 @@ Overview, constants, decisions V1 to V4, strings and review log: `lecture-v2.md`
 
 ## Start → preview (`preset-preview.html`)
 
-Start on a card opens the start screen of the resolved deck (v1 `start-screen.md`; no picker row from 2026-10-16; **Back to lessons** and **Display (Aa)** share its top row) with two additions (V4): **What's in this lesson** (`presets.preview.title`) listing the resolved blocks in order (content title or the block's row label, and "about {n} min"), and a ghost **Customize** under Start, which goes back to the home with Customize open and nothing chosen (section 4.6). The deck is saved to Recent only at Start on this screen. The facts line and the skipped line are the builder's own (observation O1 in `lecture-v2.md`).
+Start on a card opens the start screen of the resolved deck (v1 `start-screen.md`; no picker row from 2026-10-16; **Back to lessons** and **Display (Aa)** share its top row) with two additions (V4): **What's in this lesson** (`presets.preview.title`) listing the resolved blocks in order (content title or the block's row label, and "about {n} min"), and a ghost **Customize** under Start, which goes back to the home with Customize open and nothing chosen (section 4.6). The deck is saved to Recent only at Start on this screen. The facts line and the skipped line are the builder's own (observation O1 in `lecture-v2.md`). From a window of `layout.maxWidth.full` (1120 px) wide, What's in this lesson sits beside the checks, Start and Customize (two columns under the Back / Display row, in that reading order), so a 30-minute preview of up to eight rows keeps Start and Customize on a 1280 x 720 or 1920 x 1080 projector without scrolling (LV-3 review follow-up; `presenter-presets.spec.ts`).
 
 ## States drawn
 

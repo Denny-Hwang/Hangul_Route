@@ -6,15 +6,16 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
+import { LectureModeCard } from '@/components/console/LectureModeCard';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { useMovesWaiting, useSchoolMoveLinks } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import type { SpaceListItem } from '@/lib/console/api';
-import { browseEntryShown, reportsEnabled, notesEnabled } from '@/lib/console/config';
+import { appUrl, browseEntryShown, lectureModeEnabled, reportsEnabled, notesEnabled } from '@/lib/console/config';
 import { personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
-import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView } from '@/lib/console/teacher-home';
+import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView, teacherLectureCard } from '@/lib/console/teacher-home';
 import { headRem, rem } from '@/lib/console/rem';
 
 /**
@@ -25,6 +26,12 @@ import { headRem, rem } from '@/lib/console/rem';
  * percentages, no ranking (F-CONSOLE-001 section 3.4). Class moves (F-SPACE-002 T-6b, requests-page.md "Entry
  * points"): a class row's link line gains "N class moves waiting" and a school row one link per child class with a
  * waiting move, each to that class's requests page; nothing while class moves are off.
+ *
+ * Lecture mode (AMENDMENTS-LECTURE-V2 E1, LV-5; design/screens/app-shell/lecture-card.md): the card first in the
+ * content column, above Classes, at every width, from the first paint (Start waits for the spaces list); in the
+ * no-class state after the set-up panel. Nothing while `lectureModeEnabled()` is off. The page heading (h1, the nav
+ * name, visually hidden) comes before the card in the list and loading states, so the outline starts at h1 and the
+ * card and the visible Classes and School headings are h2.
  */
 
 const smallButton: CSSProperties = {
@@ -55,6 +62,8 @@ const textLink: CSSProperties = {
 const columnStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.xl, maxWidth: layout.maxWidth.reading };
 const rowsStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.sm };
 const headStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm };
+/** The page's own heading (its nav name), read first by a screen reader: the Lecture mode card's h2 comes before the visible Classes heading. */
+const visuallyHidden: CSSProperties = { position: 'absolute', width: borderWidth.thin, height: borderWidth.thin, overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap', margin: 0 };
 const h1Style: CSSProperties = { margin: 0, fontSize: headRem(typography.size.title), lineHeight: typography.leading.tight, fontWeight: typography.weight.bold };
 const groupTitle: CSSProperties = { margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold };
 
@@ -90,6 +99,8 @@ export default function HomePage(): JSX.Element {
     router.push(personaHome('parent'));
   };
   const lessons = browseEntryShown(typeof window === 'undefined' ? '' : window.location.origin);
+  const lectureView = teacherLectureCard(frameSpaces, { enabled: lectureModeEnabled(), appUrl: appUrl() });
+  const lectureCard = <LectureModeCard view={lectureView} persona="teacher" />;
 
   const row = (item: SpaceListItem): JSX.Element => {
     const archived = !!item.space.archivedAt;
@@ -203,13 +214,22 @@ export default function HomePage(): JSX.Element {
               </Link>
             ) : null}
           </div>
+          {lectureCard}
           {crossLink}
+        </div>
+      ) : null}
+      {!view && lectureView ? (
+        <div style={columnStyle}>
+          <h1 style={visuallyHidden}>{c.shell.nav.classes}</h1>
+          {lectureCard}
         </div>
       ) : null}
       {view?.state === 'list' ? (
         <div style={columnStyle}>
+          <h1 style={visuallyHidden}>{c.shell.nav.classes}</h1>
+          {lectureCard}
           <div style={headStyle}>
-            <h1 style={h1Style}>{c.kind.group.class}</h1>
+            <h2 style={h1Style}>{c.kind.group.class}</h2>
             <Link href={START_CLASS} style={view.newClassPrimary ? primaryButton : smallButton} data-testid="new-class">
               {c.home.newClass.cta}
             </Link>

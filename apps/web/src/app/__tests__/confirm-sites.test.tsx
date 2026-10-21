@@ -251,15 +251,24 @@ describe('each confirm site opens the ConfirmSheet with its verb, and only the v
       meta: null,
     };
 
-    async function lectureWithCode(): Promise<ReactTestInstance> {
+    async function lectureWithCode(kind = 'class'): Promise<ReactTestInstance> {
       vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
       vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://app.test');
-      fake.impl = { roster: () => roster(), listPlans: () => ok([lessonPlan]) };
+      fake.impl = { roster: () => roster(kind), listPlans: () => ok([lessonPlan]) };
       const root = await mount(<LecturePage />);
-      // The plan's outline, then its class code: the outline is edited and the link would carry the join code.
-      await press(button(root, c.lecture.outline.addClassCode.cta));
+      // Customize, then the plan's outline gets its join code: the outline is edited and the link would carry the code.
+      await press(byTestId(root, 'lecture-customize-toggle')[0]!);
+      await press(button(root, kind === 'family' ? c.lecture.outline.addFamilyCode.cta : c.lecture.outline.addClassCode.cta));
       return root;
     }
+
+    it('copy a link that holds the family join code: the family words (AMENDMENTS-LECTURE-V2 section 6)', async () => {
+      const root = await lectureWithCode('family');
+      vi.stubGlobal('navigator', { clipboard: { writeText: async () => undefined } });
+      await press(byTestId(root, 'copy-presenter-link')[0]!);
+      expect(sheetOf(root)).toEqual({ title: c.lecture.copyHasFamilyCode, verb: c.confirm.copyAnyway });
+      await answer(root, false);
+    });
 
     it('copy a link that holds the join code (console.confirm.copyAnyway)', async () => {
       const writes: string[] = [];

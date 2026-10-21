@@ -11,10 +11,26 @@ import {
   type ChooserGroup,
   type ChooserRow,
   type ChooserSelection,
+  type StageKey,
 } from '@hangul-route/content-schema';
+import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
-import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { addsItems, groupChip, groupHeading, initialGroup, rowDetail, visibleCount } from '@/lib/console/lesson-picker';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  CHOOSER_PAGE,
+  addsItems,
+  chooserTabs,
+  groupChip,
+  groupHeading,
+  initialGroup,
+  initialView,
+  lessonLocked,
+  rowDetail,
+  stageGroupsOf,
+  visibleCount,
+  type ChooserTab,
+  type ChooserView,
+} from '@/lib/console/lesson-picker';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
 
@@ -29,6 +45,12 @@ import { rem } from '@/lib/console/rem';
  * does not hold: the page owns the selection (its plan items or outline blocks) and gets each
  * change as an update. Search results only narrow what is drawn: every press acts on the whole
  * episode (`searchChooser` keeps `lessons` whole and names the `shown` ones).
+ *
+ * The lecture page's Customize draws it as tabs (`tabs`, AMENDMENTS-LECTURE-V2 section 18.3, row LV-4; mock
+ * `design/screens/app-shell/lecture-setup.md`): **Lessons · Stories · Word topics** (`role="tablist"`, one tab stop,
+ * the arrows move and select, one panel at a time), the Lessons tab's stage chips, a "{n} lessons inside" disclosure
+ * per episode, and Stories and Word topics 8 rows at a time with **Show {n} more** (focus moves to the first new row).
+ * There an episode and its lessons are one tri-state choice: the whole episode locks its lessons (`lessonLocked`).
  */
 
 const px = (value: number): string => `${value}px`;
@@ -67,6 +89,17 @@ export const PICKER_CSS = `
 .hr-pick-lessons .hr-pick-title{font-weight:${typography.weight.regular}}
 .hr-pick .hr-pick-note{padding:${rem(spacing.sm)} ${rem(spacing.md)};border-left:${px(borderWidth.thick)} solid ${colors.feedback.nudge};border-radius:${px(radii.sm)};background:${colors.feedback.nudgeLight};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)}}
 .hr-pick-note a{color:inherit;font-weight:${typography.weight.semibold};text-decoration:underline;text-underline-offset:${px(borderWidth.thick)}}
+.hr-pick-tabs{display:flex;flex-wrap:wrap;gap:${rem(spacing.xs)}}
+.hr-pick-tab{display:inline-flex;align-items:center;justify-content:center;min-height:${px(touchTarget.min)};min-width:${px(touchTarget.min)};padding:0 ${rem(spacing.lg)};border-radius:${px(radii.pill)};border:${px(borderWidth.base)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-weight:${typography.weight.regular};cursor:pointer}
+.hr-pick-tab[aria-selected="true"]{border-color:${colors.brand.primaryDark};background:${colors.brand.primaryDark};color:${colors.text.onPrimary};font-weight:${typography.weight.bold}}
+.hr-pick-tab:focus-visible{${focusRing}}
+.hr-pick-panel{display:flex;flex-direction:column;gap:${rem(spacing.sm)};min-width:0}
+.hr-pick-legend{padding:0;margin:0 0 ${rem(spacing.xs)};font-weight:${typography.weight.bold}}
+.hr-pick-inside{flex:0 1 auto;gap:${rem(spacing.xs)};padding:0 ${rem(spacing.md)};border-radius:${px(radii.md)}}
+.hr-pick-line-wrap{flex-wrap:wrap}
+.hr-pick-line-wrap > .hr-pick-check{flex:1 1 16rem}
+.hr-pick-inside svg{flex:none}
+.hr-pick-more{align-self:flex-start}
 .hr-pick-hidden{position:absolute;width:${px(borderWidth.thin)};height:${px(borderWidth.thin)};margin:-${px(borderWidth.thin)};padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 `;
 
@@ -97,7 +130,22 @@ export interface GroupedLessonPickerProps {
    * search and every episode closed. An edit in the list never changes it.
    */
   resetKey?: string | number;
+  /**
+   * The lecture page's words for its tabs layout (AMENDMENTS-LECTURE-V2 section 18.3): given, the picker draws the
+   * Lessons, Stories and Word topics tabs with stage chips, "{n} lessons inside" and Show more, and the whole
+   * episode locks its lessons. Absent (the plan builder), one chip per group.
+   */
+  tabs?: ChooserTabWords;
   testId: string;
+}
+
+/** `console.lecture.presets.chooser` with the stage chips' words (`presets.stage.choose`, `.chip`). */
+export interface ChooserTabWords {
+  tab: { lessons: string; stories: string; words: string };
+  lessonsIn: (n: number) => string;
+  showMore: (n: number) => string;
+  stageChoose: string;
+  stageChip: (n: number) => string;
 }
 
 function Checkbox({
@@ -106,16 +154,21 @@ function Checkbox({
   disabled,
   onChange,
   title,
+  titleId,
   detail,
   testId,
+  inputRef,
 }: {
   checked: boolean;
   mixed: boolean;
   disabled: boolean;
   onChange: () => void;
   title: string;
+  /** The title's id, for a button that names its row (`aria-describedby`). */
+  titleId?: string;
   detail: string;
   testId: string;
+  inputRef?: (el: HTMLInputElement | null) => void;
 }): JSX.Element {
   return (
     <label className="hr-pick-check">
@@ -128,29 +181,46 @@ function Checkbox({
         // The tri-state of a row: some of its lessons are chosen (read as "mixed").
         ref={(el) => {
           if (el) el.indeterminate = mixed;
+          inputRef?.(el);
         }}
       />
-      <span className="hr-pick-title">{title}</span>
+      <span className="hr-pick-title" id={titleId}>
+        {title}
+      </span>
       {detail ? <span className="hr-pick-detail">{detail}</span> : null}
     </label>
   );
 }
 
-export function GroupedLessonPicker({ groups, selection, onChange, room, title, fullNote, notice, merge = true, resetKey, testId }: GroupedLessonPickerProps): JSX.Element {
+export function GroupedLessonPicker({ groups, selection, onChange, room, title, fullNote, notice, merge = true, resetKey, tabs, testId }: GroupedLessonPickerProps): JSX.Element {
   const w = useMessages().console.chooser;
   const uid = useId();
   const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [groupId, setGroupId] = useState<ChooserGroup['id'] | null>(() => initialGroup(groups, selection));
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+  // The tabs layout: the tab, the Lessons tab's stage chip and how many story and topic rows show.
+  const [view, setView] = useState<ChooserView>(() => initialView(groups, selection));
+  const [more, setMore] = useState<Readonly<Record<'stories' | 'topics', number>>>({ stories: CHOOSER_PAGE, topics: CHOOSER_PAGE });
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+  const rowInputs = useRef(new Map<string, HTMLInputElement>());
+  const tabButtons = useRef(new Map<ChooserTab, HTMLButtonElement>());
   // A new list from the page (resetKey): open on its first chosen item's group again (state adjusted while rendering).
   const [seenKey, setSeenKey] = useState(resetKey);
   if (seenKey !== resetKey) {
     setSeenKey(resetKey);
     setGroupId(initialGroup(groups, selection));
+    setView(initialView(groups, selection));
+    setMore({ stories: CHOOSER_PAGE, topics: CHOOSER_PAGE });
     setQuery('');
     setOpen(new Set());
   }
+  // Show more moves the keyboard to the first new row (section 18.3).
+  useEffect(() => {
+    if (focusKey === null) return;
+    rowInputs.current.get(focusKey)?.focus();
+    setFocusKey(null);
+  }, [focusKey]);
   // The chips change with the groups (the plan builder's stages load later): a chip that is gone falls back to the first group.
   const groupShown = groups.some((g) => g.id === groupId) ? groupId : initialGroup(groups, selection);
   const results = useMemo(() => (query.trim().length > 0 ? searchChooser(groups, query) : null), [groups, query]);
@@ -178,7 +248,8 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
             checked={lessonChosen(selection, row, lesson.key)}
             mixed={false}
             // Off when the press would add more than fits, a chosen lesson's too: unticking one lesson of a whole episode adds the others.
-            disabled={blocked(row, lesson.key)}
+            // On the lecture page the whole episode locks its lessons: one tri-state choice (section 18.3).
+            disabled={(tabs !== undefined && lessonLocked(selection, row)) || blocked(row, lesson.key)}
             onChange={() => onChange((s) => toggleLesson(s, row, lesson.key))}
             title={lesson.title}
             detail={w.minutes(lesson.minutes)}
@@ -188,6 +259,167 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
       ))}
     </ul>
   );
+
+  const rowItem = (row: ChooserRow): JSX.Element => {
+    const state = rowState(selection, row);
+    const listId = `${uid}-${row.key}`;
+    const isOpen = results !== null || open.has(row.key);
+    const titleId = `${listId}-title`;
+    return (
+      <li key={row.key}>
+        {/* On the lecture page a row asks for 16rem before it shares a line with its "lessons inside" button (200 % text at 320). */}
+        <div className={tabs === undefined ? 'hr-pick-line' : 'hr-pick-line hr-pick-line-wrap'}>
+          <Checkbox
+            checked={state === 'all'}
+            mixed={state === 'some'}
+            disabled={state !== 'all' && blocked(row)}
+            onChange={() => onChange((s) => toggleRow(s, row, options))}
+            title={row.title}
+            titleId={titleId}
+            detail={rowDetail(row, w)}
+            testId={`${testId}-row-${row.key}`}
+            inputRef={(el) => {
+              if (el) rowInputs.current.set(row.key, el);
+              else rowInputs.current.delete(row.key);
+            }}
+          />
+          {row.kind === 'episode' && results === null && tabs === undefined ? (
+            <button
+              type="button"
+              className="hr-pick-btn hr-pick-open"
+              aria-expanded={isOpen}
+              aria-controls={listId}
+              aria-label={w.lessonsOf(row.title)}
+              onClick={() => toggleOpen(row.key)}
+              data-testid={`${testId}-open-${row.key}`}
+            >
+              <span className="hr-pick-chevron" aria-hidden="true" />
+            </button>
+          ) : null}
+          {row.kind === 'episode' && results === null && tabs !== undefined ? (
+            // "{n} lessons inside" (section 18.3): its own words, and the row's title as its description.
+            <button
+              type="button"
+              className="hr-pick-btn hr-pick-inside"
+              aria-expanded={isOpen}
+              aria-controls={listId}
+              aria-describedby={titleId}
+              onClick={() => toggleOpen(row.key)}
+              data-testid={`${testId}-open-${row.key}`}
+            >
+              <IconSvg name={isOpen ? 'dash' : 'plus'} size={spacing.xl} color={colors.text.primary} />
+              <span>{tabs.lessonsIn(row.lessons.length)}</span>
+            </button>
+          ) : null}
+        </div>
+        {row.kind === 'episode' ? lessonList(row, listId, isOpen) : null}
+      </li>
+    );
+  };
+
+  const groupBlock = (group: ChooserGroup, rows: readonly ChooserRow[], after?: ReactNode): JSX.Element => (
+    <div key={group.id} className="hr-pick-group" data-testid={`${testId}-group-${group.id}`}>
+      <h3>{groupHeading(group, w)}</h3>
+      <ul className="hr-pick-rows">{rows.map(rowItem)}</ul>
+      {after}
+    </div>
+  );
+
+  const tabsBody = (t: ChooserTabWords): ReactNode => {
+    const tabList = chooserTabs(groups);
+    if (tabList.length === 0) return null;
+    const stages = stageGroupsOf(groups);
+    const tab = tabList.includes(view.tab) ? view.tab : (tabList[0] as ChooserTab);
+    const stage = stages.some((g) => g.id === view.stage) ? (view.stage as StageKey) : ((stages[0]?.id ?? null) as StageKey | null);
+    const names: Record<ChooserTab, string> = { lessons: t.tab.lessons, stories: t.tab.stories, topics: t.tab.words };
+    const select = (next: ChooserTab | undefined): void => {
+      if (next === undefined) return;
+      setView((v) => ({ ...v, tab: next }));
+      tabButtons.current.get(next)?.focus();
+    };
+    const step = (from: ChooserTab, by: number): void => select(tabList[(tabList.indexOf(from) + by + tabList.length) % tabList.length]);
+    let panel: ReactNode = null;
+    if (tab === 'lessons') {
+      const group = stages.find((g) => g.id === stage);
+      panel = (
+        <>
+          <fieldset className="hr-pick-chips">
+            <legend className="hr-pick-legend">{t.stageChoose}</legend>
+            {stages.map((g) => (
+              <label key={g.id} className="hr-pick-chip">
+                <input type="radio" name={`${uid}-stage`} checked={g.id === stage} onChange={() => setView((v) => ({ ...v, stage: g.id as StageKey }))} data-testid={`${testId}-stage-${g.id}`} />
+                {t.stageChip(g.stage ?? 0)}
+              </label>
+            ))}
+          </fieldset>
+          {group ? groupBlock(group, group.rows.filter((r) => r.kind === 'episode')) : null}
+        </>
+      );
+    } else {
+      const group = groups.find((g) => g.id === tab);
+      if (group) {
+        const page = tab === 'stories' ? more.stories : more.topics;
+        const shownRows = group.rows.slice(0, page);
+        const rest = group.rows.length - shownRows.length;
+        const next = group.rows[shownRows.length];
+        panel = groupBlock(
+          group,
+          shownRows,
+          rest > 0 && next ? (
+            <button
+              type="button"
+              className="hr-pick-btn hr-pick-inside hr-pick-more"
+              onClick={() => {
+                setMore((m) => ({ ...m, [tab]: page + CHOOSER_PAGE }));
+                setFocusKey(next.key);
+              }}
+              data-testid={`${testId}-more-${tab}`}
+            >
+              <IconSvg name="plus" size={spacing.xl} color={colors.text.primary} />
+              <span>{t.showMore(Math.min(CHOOSER_PAGE, rest))}</span>
+            </button>
+          ) : null,
+        );
+      }
+    }
+    return (
+      <>
+        <div className="hr-pick-tabs" role="tablist" aria-labelledby={`${uid}-title`} data-testid={`${testId}-tabs`}>
+          {tabList.map((name) => (
+            <button
+              key={name}
+              ref={(node) => {
+                if (node) tabButtons.current.set(name, node);
+                else tabButtons.current.delete(name);
+              }}
+              type="button"
+              role="tab"
+              className="hr-pick-tab"
+              id={`${uid}-tab-${name}`}
+              aria-selected={name === tab}
+              aria-controls={`${uid}-panel`}
+              tabIndex={name === tab ? 0 : -1}
+              onClick={() => setView((v) => ({ ...v, tab: name }))}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') step(name, 1);
+                else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') step(name, -1);
+                else if (event.key === 'Home') select(tabList[0]);
+                else if (event.key === 'End') select(tabList[tabList.length - 1]);
+                else return;
+                event.preventDefault();
+              }}
+              data-testid={`${testId}-tab-${name}`}
+            >
+              {names[name]}
+            </button>
+          ))}
+        </div>
+        <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`} className="hr-pick-panel" data-testid={`${testId}-panel-${tab}`}>
+          {panel}
+        </div>
+      </>
+    );
+  };
 
   return (
     <section className="hr-pick" aria-labelledby={`${uid}-title`} data-testid={testId}>
@@ -214,7 +446,7 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
           {w.search.hint}
         </p>
       </div>
-      {results === null ? (
+      {results === null && tabs === undefined ? (
         <fieldset className="hr-pick-chips">
           <legend className="hr-pick-hidden">{w.groups}</legend>
           {groups.map((g) => (
@@ -235,47 +467,7 @@ export function GroupedLessonPicker({ groups, selection, onChange, room, title, 
         </p>
       ) : null}
       {room <= 0 && fullNote ? <p className="hr-pick-note">{fullNote}</p> : null}
-      {shown.map((group) => (
-        <div key={group.id} className="hr-pick-group" data-testid={`${testId}-group-${group.id}`}>
-          <h3>{groupHeading(group, w)}</h3>
-          <ul className="hr-pick-rows">
-            {group.rows.map((row) => {
-              const state = rowState(selection, row);
-              const listId = `${uid}-${row.key}`;
-              const isOpen = results !== null || open.has(row.key);
-              return (
-                <li key={row.key}>
-                  <div className="hr-pick-line">
-                    <Checkbox
-                      checked={state === 'all'}
-                      mixed={state === 'some'}
-                      disabled={state !== 'all' && blocked(row)}
-                      onChange={() => onChange((s) => toggleRow(s, row, options))}
-                      title={row.title}
-                      detail={rowDetail(row, w)}
-                      testId={`${testId}-row-${row.key}`}
-                    />
-                    {row.kind === 'episode' && results === null ? (
-                      <button
-                        type="button"
-                        className="hr-pick-btn hr-pick-open"
-                        aria-expanded={isOpen}
-                        aria-controls={listId}
-                        aria-label={w.lessonsOf(row.title)}
-                        onClick={() => toggleOpen(row.key)}
-                        data-testid={`${testId}-open-${row.key}`}
-                      >
-                        <span className="hr-pick-chevron" aria-hidden="true" />
-                      </button>
-                    ) : null}
-                  </div>
-                  {row.kind === 'episode' ? lessonList(row, listId, isOpen) : null}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+      {results === null && tabs !== undefined ? tabsBody(tabs) : shown.map((group) => groupBlock(group, group.rows))}
     </section>
   );
 }
