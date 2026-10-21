@@ -21,13 +21,14 @@ The shipped `PinEntryScreen` layout stays: `ScreenHeader` (Close, the title inli
 
 ## Boards
 
-1 verify with face or fingerprint · 2 pause 30 s · 3 pause 5 min on the Grown-up area (help line, face or fingerprint enabled, Forgot PIN? enabled) · 4 pause 60 min on a locked tile (no help line) · 5 pause 15 min on a Family row (no help line) · 6 enrolment changed · 7 reset choice on the web, online · 8 reset choice offline or native (no sign-in card) · 9 Choose a new grown-up PIN · 10 expired ticket over the chooser · 11 reset-by-wait notice · 12 Cancel the wait.
+1 verify with face or fingerprint · 2 pause 30 s · 3 pause 5 min on the Grown-up area (help line, face or fingerprint enabled, Forgot PIN? enabled) · 4 pause 60 min on a locked tile (no help line) · 5 pause 15 min on a Family row (no help line) · 6 enrolment changed · 7 reset choice on the web, online · 8 reset choice offline or native (no sign-in card) · 9 Choose a new grown-up PIN · 10 expired ticket over the chooser · 11 reset-by-wait notice · 12 Cancel the wait (no Forgot PIN?).
 
 ## Rules the boards fix
 
 - During a pause the keys are disabled and keep their shipped names (`a11y.pinDigit(digit)` "Digit 1", `a11y.pinDelete` "Delete last digit"), which the platform announces as disabled; the pause line says why, so no extra string is needed. Unlock is disabled; Cancel, Forgot PIN? and Use face or fingerprint stay enabled (no hard lock, OA-D7).
 - Never red, never "failed", never a count of tries during a pause; the existing "tries left" line before a pause is unchanged.
 - The help line never appears on `LockedProfile`, `GrownUpUse` or `CancelReset` (CS-21).
+- `CancelReset` (board 12) is verify only and shows no **Forgot PIN?**: offering the reset paths on the screen that cancels a reset is circular, and the chooser's pending box leads to the PIN screen a child is most likely to reach (spec 8.5, CS-21). Its buttons are Unlock and Cancel.
 - On 320 with 200 % text the header's title keeps 8rem and the Aa control wraps under it; the pad keeps 80 px keys (264 of 288).
 
 ## Tokens

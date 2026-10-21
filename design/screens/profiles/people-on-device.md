@@ -10,19 +10,19 @@ Behind the gate. Lock, unlock and Remove ask a PIN, face or fingerprint entered 
 
 ## One person (boards 3 to 5)
 
-`ScreenHeader` with the learner's name; the lock card: **Lock with the grown-up PIN** (`people.lock`) with the switch and the hint `people.lockHint`; with no PIN the switch is disabled and the hint reads `caregiver.pin.needsPinFirst`; **Edit profile** (`learner.editProfile.title`); the learner's report row (unchanged); **Remove from this device** (`people.remove`), a full-width secondary paper button (`border.strong`), never red.
+`ScreenHeader` with the learner's name; the lock card: **Lock with the grown-up PIN** (`people.lock`) with the switch and the hint `people.lockHint`; with no PIN the switch is disabled and the hint reads `caregiver.pin.needsPinFirst`, and **Remove from this device** is disabled the same way, with the same line as its description (board 4; spec 10.4, CS-12: Remove needs a fresh PIN, which a device without one cannot give); **Edit profile** (`learner.editProfile.title`); the learner's report row (unchanged); **Remove from this device** (`people.remove`), a full-width secondary paper button (`border.strong`), never red.
 
 ## Remove (boards 6 to 9)
 
 | Board | Sheet | Actions, in order |
 |---|---|---|
-| 6 checking | `removeAsk(name)` and `checking` (`aria-busy`) | Cancel |
-| 7 saved | `removeAsk(name)`, `removeSaved`, `spacesStay` (when the learner has memberships) | Cancel, **Remove** (primary) |
-| 8 unsaved | `removeAsk(name)`, `removeUnsaved`, `spacesStay` | **Save progress first** (primary), Cancel, Remove anyway (quiet text) |
+| 6 checking | `removeAsk(name)` and `checking` (`aria-busy`) | Cancel (focused) |
+| 7 saved | `removeAsk(name)`, `removeSaved`, `spacesStay` (when the learner has memberships) | Cancel (focused), **Remove** (primary) |
+| 8 unsaved | `removeAsk(name)`, `removeUnsaved`, `spacesStay` | **Save progress first** (primary), Cancel (focused), Remove anyway (quiet text) |
 | 9 Remove anyway | `removeAnywayAsk` as the title | **Keep** (first, focused), **Remove** in `feedback.danger` |
 
 `spacesStay` sits on the saved and unsaved sheets whenever the learner has memberships. Removing the active learner opens the chooser; removing the last learner opens Welcome.
 
 ## Accessibility
 
-Switches are named by their label and announce on and off; the hint is their description. Rows and buttons are at least 64. Each ConfirmSheet (`role="alertdialog"`) is labelled by its title and described by its message lines (`aria-labelledby`, `aria-describedby`; native: the title is the sheet's accessibility label). The sheet traps focus, starts on its safe choice, and returns focus to Remove from this device on Cancel or Keep. Danger is never the only cue: the word Remove and the question carry it.
+Switches are named by their label and announce on and off; the hint is their description. Rows and buttons are at least 64. Each ConfirmSheet (`role="alertdialog"`) is labelled by its title and described by its message lines (`aria-labelledby`, `aria-describedby`; native: the title is the sheet's accessibility label). The sheet traps focus and starts on its safe choice: **Cancel** on the checking, saved and unsaved sheets (never Save progress first, which leaves the sheet, and never Remove anyway, so no single activation from the opening focus removes anything), **Keep** on the Remove anyway step; the mock marks it with the focus ring. It returns focus to Remove from this device on Cancel or Keep. Danger is never the only cue: the word Remove and the question carry it.

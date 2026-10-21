@@ -134,6 +134,8 @@
 /* The danger tone: used only for the grown-up's Remove anyway confirmation (never on a learner screen). */
 .rn-btn.danger { background: var(--colors-feedback-danger); border-color: var(--colors-feedback-danger); color: var(--colors-text-onPrimary); }
 .rn-btn[aria-disabled="true"] { background: var(--colors-surface-sunken); border-color: transparent; color: var(--colors-text-muted); cursor: default; }
+/* The initial focus of a ConfirmSheet (the safe choice), drawn as the keyboard focus ring. */
+.rn-btn:focus-visible, .rn-btn.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
 .rn-card h2, .rn-card h3 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
 .rn-card .stack { display: flex; flex-direction: column; gap: var(--spacing-sm); align-items: flex-start; }
 .rn-card .stack p { overflow-wrap: anywhere; }

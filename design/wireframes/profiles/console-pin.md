@@ -68,6 +68,7 @@ Panel D — a persona home in a tab whose PIN hand-off is under 2 minutes old, f
  | | new one on this device.                 | |
  | | Signed in as kim.parent@example.com     | |  <- console.adminInvite.signedInAs(who)
  | | [ Let this account reset the PIN here ] | |  -> Clerk reverification (password, email or phone code)
+ | | ( Not now )                             | |  -> closes the card for this unlock in this tab
  | +-----------------------------------------+ |
  |  then:  [check] Done. This account can reset the PIN here.
 ```
@@ -78,6 +79,7 @@ Panel D — a persona home in a tab whose PIN hand-off is under 2 minutes old, f
 - `/account/pin-reset`: the checks of spec section 8.5 step 3 decide the line; nothing is written on a refusal; going writes the ticket and leaves.
 - Open the app: `/?gate=grown-up`; the card is marked seen once it has been in view in a visible tab, or when Open the app is pressed, so it never shows twice in this browser and a render nobody saw does not use it up.
 - Let this account reset the PIN here: reverification (never a passkey); on completion the `pin` unlock's age (under 2 minutes) and epoch are checked again; success writes `pinOwner` and shows the done line until the page is left. The card goes at once when the tab's unlock drops (the `hr-grownup` lock message, 5 minutes hidden, 15 idle minutes, sign out).
+- Not now (quiet): closes the card for this unlock in this tab and writes nothing else (`sessionStorage` `pinOwnerOfferClosed`, the unlock's time only); the first navigation away from the persona home closes it the same way, so it never stays live on a page nobody is watching.
 
 ## Entry and exit
 
@@ -89,12 +91,12 @@ Exit to: the grown-up page that was locked · `/?gate=pin-reset` · the learner 
 - Lock: marker `pin` (no passkey) · `nopin` with the passkey when offered · unreadable, or missing with profiles (no passkey) · passkey refused (the existing line).
 - Reset page: going · notOwner · firstSignIn · noPin · unavailable.
 - Set-a-PIN card: shown once on `nopin` · never on `pin` or `none`.
-- PIN-owner card: offer · reverifying · done · hidden (no fresh hand-off, already owner, flag off, marker not `pin`, the unlock dropped).
+- PIN-owner card: offer · reverifying · done · hidden (no fresh hand-off, already owner, flag off, marker not `pin`, the unlock dropped, closed by Not now or by leaving the persona home).
 
 ## Data needs
 
 - Reads: the device gate marker and its `pinEpoch` (`hr-shell`), `pinOwner` and `pinPromptSeen` (`hr-shell` / `kv`), the tab's grown-up unlock (`hr:grownup:unlock`, its kind and `at`), the signed-in account's id (fingerprinted, never shown) and its email (shown on the PIN-owner card only, as `adminInvite.signedInAs` does), `PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()`.
-- Writes: the `signin` unlock (passkey), the ticket `hr:shell:pinReset` (going only), `pinOwner` (done only), `pinPromptSeen` (`true`). No API call.
+- Writes: the `signin` unlock (passkey), the ticket `hr:shell:pinReset` (going only), `pinOwner` (done only), `pinPromptSeen` (`true`), `sessionStorage` `pinOwnerOfferClosed` (Not now or leaving the home; the unlock's time only). No API call.
 
 ## Open questions
 

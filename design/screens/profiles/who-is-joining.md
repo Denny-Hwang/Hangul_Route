@@ -16,8 +16,12 @@ The shipped Join screen header (`caregiver.join.title`) and the found line (`bub
 
 ## Name step and consent (boards 6 to 8)
 
-- **Name step** (board 6): the shipped Join confirm step, unchanged (`join.confirm.seeYouAs.family`, the name field, `sameEverywhere`, **That's me**, **Not this one**), shown once per picked learner in turn.
-- **Consent** (boards 7, 8): one step for every picked learner, new strings in section 17.4 (OA-0b): the title `join.who.consentTitle(space)` (`size.prompt` bold), one line per picked learner `join.who.consentLine(name)` ("Mina: joining saves their progress to the account.", in pick order, divided by `border.subtle`), the line `join.who.consentSees`, then **Yes, join** (`join.who.consentYes`, primary) and **Not now** (`join.who.notNow`, ghost; back to the checklist, nobody is registered). It names every learner it registers (spec 10.3); a learner not named here is never joined. The longest es line wraps at 320 (board 8).
+- **Name step** (board 6): only the fields of the shipped Join confirm step (`join.confirm.seeYouAs.family`, the name field, `sameEverywhere` and the name-rule hints), shown once per picked learner in turn, with **Next** (`common.buttons.next`, primary). Next keeps the name in memory and sends nothing. The shipped **That's me** is not reused: it calls `membership-store.join` at once (`JoinSpaceScreen.tsx` `confirmName`), which would register the learner before the consent step; **Not this one** belongs to class rosters and is not shown. Back returns to the previous learner's name step, or to the checklist from the first.
+- **Consent** (boards 7, 8): one step for every picked learner, new strings in section 17.4 (OA-0b): the title `join.who.consentTitle(space)` (`size.prompt` bold), one line per picked learner `join.who.consentLine(name)` ("Mina: joining saves their progress to the account.", in pick order, divided by `border.subtle`), the line `join.who.consentSees`, then **Yes, join** (`join.who.consentYes`, primary) and **Not now** (`join.who.notNow`, ghost; back to the checklist, nothing is sent and nobody is registered). `membership-store.join` runs only after Yes, join. It names every learner it registers (spec 10.3); a learner not named here is never joined. The longest es line wraps at 320 (board 8).
+
+## Fresh PIN across the steps (CS-11)
+
+The PIN is asked at Next on the checklist when the pick includes anyone but the active learner. Once it is accepted the picked set is frozen: the name and consent steps show only those learners. After **Not now**, any change to the picks asks a fresh PIN again before Next goes on. **Yes, join** checks the PIN's age again and, when more than 2 minutes (`GROWN_UP_FRESH_PIN_MS`) have passed since it was entered, asks it again before the first join; a cancel there returns to the consent step and sends nothing.
 
 ## Results (boards 3 to 5)
 
