@@ -133,8 +133,12 @@ export type RootStackParamList = {
    * replaces only that one, and refuses when another plan became active meanwhile.
    */
   RoutePreview: { profileId: string; setup: SetupState; replacing: string | null };
-  /** "Your weekly plan" (G3): this week first, later weeks folded, Move my plan along, Change, Stop. */
-  RouteOverview: { profileId: string };
+  /**
+   * "Your weekly plan" (G3): this week first, later weeks folded, Move my plan along, Change, Stop. [OA]
+   * `viewer: 'grownup'` when opened from the Grown-up area (the plan steps, a learner's Learning Route there): it then
+   * counts as a Grown-up area page, so the grown-up session is not closed on the way (OA-D5b (2)).
+   */
+  RouteOverview: { profileId: string; viewer?: 'grownup' };
   /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */
   StageComplete: { stageKey: StageKey };
   /** The Hangul Check (F-QUEST-002 §3.9), from the ceremony and the Journey Stage 1 header; never gates anything. */
@@ -143,8 +147,11 @@ export type RootStackParamList = {
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {
     next: GrownUpDestination;
-    /** `'setup'` opens PIN creation even when one is stored (Forgot PIN, F-LEARN-001 §3.5). */
-    mode?: 'setup';
+    /**
+     * `'setup'` opens PIN creation even when one is stored (Forgot PIN, F-LEARN-001 §3.5). [OA] `'change'` asks the
+     * current PIN first, then opens creation (the reset-by-wait notice's Change PIN, OA-D21).
+     */
+    mode?: 'setup' | 'change';
     /** Which Forgot PIN path led here (telemetry only). */
     via?: PinResetMethod;
     /**

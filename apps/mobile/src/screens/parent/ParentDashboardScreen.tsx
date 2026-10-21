@@ -28,10 +28,12 @@ import { FreeLessonsRow } from './FreeLessonsRow';
 import { GateLessonsButton } from './GateLessonsButton';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { LectureCard } from './LectureCard';
+import { ResetByWaitNotice } from './ResetByWaitNotice';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
 import { practiceTotals } from '../../logic/sessions/session-log';
+import { changePinMode } from '../../logic/profiles/pin-reset';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import { reportEntry } from '../../logic/reports/entry';
 import { useAudience } from '../../store/audience';
@@ -45,6 +47,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { syncApi } from '../../store/sync-store';
+import { passGate } from '../../store/gate-telemetry';
 
 /** Learner's cub beside the name (F-LEARN-001 §3.6). */
 const AVATAR_SIZE = 40;
@@ -64,7 +67,7 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
   // else through the PIN screen when the 15-minute session has lapsed.
   const openReport = (profileId: string): void => {
     const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
-    const entry = reportEntry(profileId, opensDirectly(sessionOpen));
+    const entry = reportEntry(profileId, passGate('LearnerReport', opensDirectly(sessionOpen)));
     if (entry.screen === 'LearnerReport') navigation.navigate('LearnerReport', entry.params);
     else navigation.navigate('PinEntry', entry.params);
   };
@@ -105,6 +108,9 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
       </View>
 
       <Spacer size="lg" />
+      <ResetByWaitNotice
+        onChange={() => navigation.navigate('PinEntry', { next: 'ParentDashboard', mode: changePinMode(useUiStore.getState().lastPinVerifiedAt, Date.now()) })}
+      />
       {grownUpHome ? (
         <>
           <GrownUpHomeCard onOpen={openGrownUpHome} />

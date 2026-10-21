@@ -637,7 +637,7 @@ OA-0b: a row's caption is its accessibility hint (description), never joined int
 
 | Key | en | es | ko |
 |---|---|---|---|
-| `cooldownMinutes(n)` | Let's take a short break. Try again in {n} min. | Tomemos un descanso. Reintenta en {n} min. | 잠깐 쉬어요. {n}분 뒤에 다시 해 보세요. |
+| `cooldownMinutes(n)` | Let's take a short break. Try again in {n} min. | Tomemos un descanso corto. Reintenta en {n} min. | 잠깐 쉬어요. {n}분 뒤에 다시 해 보세요. |
 | `cooldownHelp` | You can also set a new PIN with Forgot PIN? | También puedes crear un PIN nuevo con Olvidé el PIN. | 'PIN을 잊었나요?'에서 새 PIN을 만들 수도 있어요. |
 | `reset.signIn.heading` | Sign in to the account | Entra a la cuenta | 계정으로 로그인하기 |
 | `reset.signIn.caption` | Sign in as the grown-up who uses this device. Then choose a new PIN. | Entra como el adulto que usa este dispositivo. Luego elige un PIN nuevo. | 이 기기를 쓰는 어른 계정으로 로그인해요. 그다음 새 PIN을 골라요. |

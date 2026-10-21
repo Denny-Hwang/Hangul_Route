@@ -11,8 +11,10 @@ import {
   type ProfilePatch,
   type ProfileSet,
 } from '../logic/profiles/profile-model';
+import { closesSession } from '../logic/profiles/session';
 import { changedServerFields, hasFields, serverProfileChanges, type ServerLearnerFields } from '../logic/sync/learner-profile';
 import { readJson, writeJson } from '../platform/storage';
+import { closeGrownUpSession } from './grown-up-session';
 import { notifyProfileEdited } from './profile-edits';
 import { notifyProfileRemoved } from './profile-removal';
 
@@ -28,6 +30,11 @@ const ACTIVE_KEY = 'profiles:active';
 
 interface State extends ProfileSet {
   hydrated: boolean;
+  /**
+   * [OA] When the active learner's session on this device began (epoch ms, in memory only): the app start, then
+   * every change of learner. `profile.switch` buckets the minutes since (`minutesIn`, G1).
+   */
+  activeSince: number;
 }
 
 interface Actions {
@@ -61,6 +68,23 @@ function persist(set: ProfileSet): void {
   void writeJson(ACTIVE_KEY, set.activeId);
 }
 
+/**
+ * [OA] OA-D5b (1), CS-15: every write of a new profile set goes through here. When the active learner changes (a
+ * Profile tile, a new learner made active, the active learner removed, a restored learner adopted, any later writer),
+ * the session clock restarts and the grown-up session ends, from any surface.
+ */
+function commitSet(
+  set: (partial: Partial<State>) => void,
+  prevActiveId: string | null,
+  next: ProfileSet,
+  now: number = Date.now(),
+): void {
+  const changed = closesSession(prevActiveId, next.activeId);
+  set(changed ? { ...next, activeSince: now } : next);
+  persist(next);
+  if (changed) closeGrownUpSession();
+}
+
 const clock: Clock = {
   now: () => Date.now(),
   nextId: () => Math.random().toString(36).slice(2, 10),
@@ -70,18 +94,18 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   profiles: [],
   activeId: null,
   hydrated: false,
+  activeSince: Date.now(),
 
   hydrate: async () => {
     const profiles = (await readJson<Profile[]>(PROFILES_KEY)) ?? [];
     const activeId = await readJson<string | null>(ACTIVE_KEY);
-    set({ profiles, activeId: activeId ?? null, hydrated: true });
+    set({ profiles, activeId: activeId ?? null, hydrated: true, activeSince: Date.now() });
   },
 
   createProfile: (input) => {
     const { profiles, activeId } = get();
     const result = createProfileReducer({ profiles, activeId }, input, clock);
-    set(result.set);
-    persist(result.set);
+    commitSet(set, activeId, result.set);
     return result.created;
   },
 
@@ -113,25 +137,21 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
 
   setActive: (id) => {
     const { profiles, activeId } = get();
-    const next = setActiveProfile({ profiles, activeId }, id, Date.now());
-    set(next);
-    persist(next);
+    const now = Date.now();
+    // [OA] OA-D5b (1): every change of learner, from any surface, ends the grown-up session (always on, CS-15).
+    commitSet(set, activeId, setActiveProfile({ profiles, activeId }, id, now), now);
   },
 
   remove: (id) => {
     const { profiles, activeId } = get();
-    const next = removeProfileReducer({ profiles, activeId }, id);
-    set(next);
-    persist(next);
+    commitSet(set, activeId, removeProfileReducer({ profiles, activeId }, id));
     notifyProfileRemoved(id);
   },
 
   adoptProfile: (profile) => {
     const { profiles, activeId } = get();
     if (profiles.some((p) => p.id === profile.id)) return;
-    const next = { profiles: [...profiles, profile], activeId: activeId ?? profile.id };
-    set(next);
-    persist(next);
+    commitSet(set, activeId, { profiles: [...profiles, profile], activeId: activeId ?? profile.id });
   },
 
   setParentPin: (pinHash) => {

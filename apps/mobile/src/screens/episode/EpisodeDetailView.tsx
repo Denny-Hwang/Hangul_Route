@@ -52,6 +52,7 @@ import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as Prereq
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
+import { passGate } from '../../store/gate-telemetry';
 import { episodeIntro } from '../../logic/episode/intro';
 import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
@@ -246,7 +247,7 @@ export function EpisodeDetailView({
   const ask = askFor(audience, isClassOnly(memberships ?? []), access);
   const onAsk = (): void => {
     void track(helpAskedEvent(profileId, 'episode', ask.audience));
-    openAsk(askGate(gateOpensDirectlyNow(), 'episode'));
+    openAsk(askGate(passGate('Paywall', gateOpensDirectlyNow()), 'episode'));
   };
   const onBackToOpen = (): void => onBackToOpenLessons(backToOpenLessons(route?.next ?? null, firstFreeTopicKey()));
 
