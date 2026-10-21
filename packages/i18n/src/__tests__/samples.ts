@@ -926,4 +926,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.who.resetPending': [['Oct 22, 2026, 6:40 PM'], ['22 oct 2026, 18:40'], ['22 oct 2026, 6:40 p.m.']],
   'a11y.who.tile': [['Mina'], ['Jo Ann']],
   'a11y.who.grownUpRow': [['Grown-up area'], ['Family']],
+  // [OA] Who is joining? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-7b): counts, a learner name, a family name, a cap line.
+  'caregiver.join.who.result': [[0, 2], [1, 3], [2, 3], [12, 12]],
+  'caregiver.join.who.joined': [['Mina'], ['Jo Ann']],
+  'caregiver.join.who.already': [['Mina'], ['Jo Ann']],
+  'caregiver.join.who.refused': [['Sora', 'This family already has 4 learners. Ask a grown-up in your family.']],
+  'caregiver.join.who.consentTitle': [['Kim family']],
+  'caregiver.join.who.consentLine': [['Mina'], ['Jo Ann']],
 };

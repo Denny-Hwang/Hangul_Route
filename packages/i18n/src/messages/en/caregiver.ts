@@ -460,6 +460,34 @@ export const caregiver = {
       badFormat: 'A code has 6 letters or numbers.',
       off: 'Joining a class is not set up on this build.',
     },
+    /**
+     * [OA] "Who is joining?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, sections 10.3 and 17.4, row OA-7b): a family
+     * code on a device with 2 or more learner profiles lists them with check boxes, then one consent step names every
+     * picked learner, then one result line per learner. A refused seat reads calmly (`refused` puts the name before
+     * `errors.familyFull`, the colon form); it is never an error. Names only, no age, no comparison.
+     */
+    who: {
+      title: 'Who is joining?',
+      hint: 'Pick each learner on this device who should join.',
+      /** The results heading: joined and already a member both count, of everyone picked. */
+      result: (joined: number, total: number) => `${joined} of ${total} joined.`,
+      joined: (name: string) => `${name} joined.`,
+      already: (name: string) => `${name} is already in this family.`,
+      /** A refused seat: the name, then the cap line (`errors.familyFull(cap)`) as it is. */
+      refused: (name: string, line: string) => `${name}: ${line}`,
+      /** Under a locked profile (typically a grown-up's own), which starts unchecked. */
+      takesPlace: 'Takes a family place.',
+      /** Under a learner whose link on this device is class-scoped; the row is disabled. */
+      classOnly: 'Linked for a class on this device.',
+      retry: 'Try again',
+      /** The one consent step: `space` is the family name the lookup returned. */
+      consentTitle: (space: string) => `Join ${space}?`,
+      /** One line per picked learner; it covers registering a learner that never synced. */
+      consentLine: (name: string) => `${name}: joining saves their progress to the account.`,
+      consentSees: "The family's grown-ups will see each name and their progress.",
+      consentYes: 'Yes, join',
+      notNow: 'Not now',
+    },
   },
 
   /** The install bottom sheet (web); its heading and help line are `audience.installGuideLine` / `installGuideHelp`. */
