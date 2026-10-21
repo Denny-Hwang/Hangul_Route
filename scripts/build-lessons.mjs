@@ -21,6 +21,25 @@
 //   lesson-chunks/lessons-titles-<locale>.ts          one title chunk per overlay locale (active locale only)
 //       CHUNK_HASH, LESSON_TITLE_OVERLAYS (the episode and quest titles, subtitles, intros, blurbs, teasers)
 //
+// and the catalogue rows that come from content/ (F-CURR-002 §9.1, row CM-6), under
+// packages/content-schema/src/catalog/:
+//
+//   catalog.generated.ts
+//       GENERATED_CATALOG_VERSION   the largest `addedIn` stamp of a shipped quest, else 32 (the last
+//                                   hand-kept version; every stamp is a YYYYMMDD date, so larger)
+//       GENERATED_QUEST_ADDITIONS   the shipped quest ids by their `addedIn` stamp
+//       GENERATED_LESSON_CELLS      one catalogue cell per upper-stage cell file (a draft is "Coming soon")
+//       GENERATED_LESSON_QUESTS     the quests of the ready cells: titles, minutes, `teaches` (Discover symbols)
+//       GENERATED_STORIES           one row per content/stories/*.json (the offer status rule of the catalogue)
+//       GENERATED_TOPICS            one row per content/vocab/<topic>.json
+//   catalog/data.ts adds the hand-written Stage 1 and Stage 5 rows and the frozen shelf order of the
+//   first 24 stories, so a content PR touches only its own files under content/ (§9.1 target).
+//
+// Every one of these modules is generated, never committed (row CM-6): `pnpm generate`
+// (scripts/generate.mjs) writes them, the turbo `generate` task runs it before dev, build,
+// typecheck and test, and the root `postinstall` runs it after every `pnpm install` (CI jobs and
+// the Workers Builds deploys install first).
+//
 // Nothing imports a chunk statically: Metro splits every `import()` of the manifest into its own
 // web bundle (the PWA precaches it, the app loads it on demand) and keeps them all in the one
 // native bundle. The hash is the sha256 of the chunk's data; pwa-postbuild.mjs checks every
@@ -36,15 +55,20 @@
 //
 // Usage:
 //   node scripts/build-lessons.mjs            write the modules (and remove the ones no longer built)
-//   node scripts/build-lessons.mjs --check    fail if a checked-in module differs or is no longer built (CI)
+//   node scripts/build-lessons.mjs --check    determinism (CI): fail if a module on disk (written by an earlier
+//                                             run, e.g. the postinstall) differs from this run or is no longer
+//                                             built; then the addedIn stamp check against origin/main
+//                                             (scripts/check-added-in.mjs) when that ref exists
 //   node scripts/build-lessons.mjs --report   print raw and gzip bytes per cell, per module, per stage
 //                                             and in total; fail over budget (CI)
 //
 // Dependency-free Node. Exit 0 when written / in sync / within budget, 1 on a content,
 // drift or budget error, 2 on a usage error. HANGUL_ROUTE_ROOT overrides the repo root (tests).
 
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { register } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
@@ -227,11 +251,13 @@ export function shapeCell(cell, rel) {
   }
   const quests = need(cell, "quests", rel, "array");
   const scopes = {};
+  const stamps = {};
   const shapedQuests = quests.map((quest, qi) => {
     const where = `${rel} quests[${qi}]`;
     if (!isObject(quest)) throw new ContentError("a quest is an object", where);
     const questId = `quest:${stage}-${theme}-q${qi + 1}`;
     if (quest.id !== questId) throw new ContentError(`id must be ${questId}`, where);
+    if (quest.addedIn !== undefined) stamps[questId] = addedInStamp(quest.addedIn, where);
     const steps = need(quest, "steps", where, "array");
     for (const scope of need(quest, "scopes", where, "array")) {
       const ref = need(scope, "ref", where);
@@ -261,7 +287,7 @@ export function shapeCell(cell, rel) {
     pillarTags: need(cell, "pillarTags", rel, "array"),
     status: "shipped",
   };
-  return { status: cell.status, stageNo, episode, quests: shapedQuests, scopes };
+  return { status: cell.status, stageNo, episode, quests: shapedQuests, scopes, stamps, file: rel };
 }
 
 /** The ids an overlay of this cell may name: its episode, its quests and its scope refs. */
@@ -441,6 +467,218 @@ export function buildModules(cells) {
   return modules;
 }
 
+// ---- catalogue rows (F-CURR-002 §9.1, row CM-6) ----------------------------------------------
+
+/** The catalogue module, beside catalog/data.ts in the content-schema package. */
+export const CATALOG_OUT = join("packages", "content-schema", "src", "catalog", "catalog.generated.ts");
+
+export const CATALOG_HEADER =
+  "// GENERATED by scripts/build-lessons.mjs — do not edit. Source: content/episodes/stage-<n>/*.json, content/stories/*.json, content/vocab/*.json (F-CURR-002 §9.1, row CM-6)\n";
+
+/**
+ * The last hand-kept catalogue version (F-CURR-001 S7-5). Versions up to it keep their integers
+ * (`CATALOG_QUEST_ADDITIONS` in versions.ts); a quest added after it carries an `addedIn` date stamp,
+ * and every stamp is larger, so the order of versions holds.
+ */
+export const HISTORY_LAST_VERSION = 32;
+
+/** The span of an `addedIn` stamp: a calendar date written YYYYMMDD. */
+const STAMP_MIN = 20260101;
+const STAMP_MAX = 20991231;
+
+/** An `addedIn` value checked as a real YYYYMMDD date; throws ContentError otherwise. */
+export function addedInStamp(value, where) {
+  const ok =
+    Number.isInteger(value) &&
+    value >= STAMP_MIN &&
+    value <= STAMP_MAX &&
+    (() => {
+      const y = Math.floor(value / 10000);
+      const m = Math.floor(value / 100) % 100;
+      const d = value % 100;
+      const date = new Date(Date.UTC(y, m - 1, d));
+      return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+    })();
+  if (!ok) throw new ContentError(`addedIn must be a date stamp YYYYMMDD (an integer such as 20261105), not ${JSON.stringify(value)}`, where);
+  return value;
+}
+
+/** A content/stories file -> its catalogue row, the fields catalog/data.ts cannot know. */
+export function shapeStoryRow(story, rel) {
+  if (!isObject(story)) throw new ContentError("a story file holds one object", rel);
+  const id = need(story, "id", rel);
+  const slug = /^story:([a-z0-9-]+)$/.exec(id)?.[1];
+  if (slug === undefined) throw new ContentError(`id ${JSON.stringify(id)} must be story:<slug>`, rel);
+  if (!isObject(story.title)) throw new ContentError("title must be an object with en", rel);
+  const review = isObject(story.review) ? story.review : {};
+  const row = {
+    slug,
+    title: need(story.title, "en", rel),
+    recommendedStage: need(story, "recommendedStage", rel, "number"),
+    theme: need(story, "theme", rel),
+    minutes: need(story, "minutes", rel, "number"),
+    sampler: isObject(story.shelf) && story.shelf.sampler === true,
+    // catalogStatusOfStory (catalog/schema.ts): ready, with a shelf block and both review sign-offs.
+    status:
+      story.state === "ready" && isObject(story.shelf) && review.language === "native-reviewed" && review.culture === "culture-reviewed" ? "ready" : "draft",
+  };
+  return story.addedIn === undefined ? row : { ...row, addedIn: addedInStamp(story.addedIn, rel) };
+}
+
+/** A content/vocab/<topic>.json file -> its catalogue row (id, key, title, order). */
+export function shapeTopicRow(file, rel) {
+  if (!isObject(file) || !isObject(file.topic)) throw new ContentError("a topic file needs a topic object", rel);
+  const key = need(file.topic, "key", rel);
+  return { id: `topic:${key}`, key, title: need(file.topic, "titleEn", rel), order: need(file.topic, "order", rel, "number") };
+}
+
+/** The symbol keys of the quest's Discover jamo items (`questTeaches` + the catalogue spelling). */
+function teachesOf(quest, symbolKeys, where) {
+  const keys = [];
+  for (const step of quest.steps) {
+    for (const page of isObject(step.discover) && Array.isArray(step.discover.pages) ? step.discover.pages : []) {
+      for (const item of Array.isArray(page?.items) ? page.items : []) {
+        if (item?.type !== "jamo") continue;
+        const key = symbolKeys.get(item.jamoId);
+        if (key === undefined) throw new ContentError(`Discover teaches ${item.jamoId}, which the app's jamo (apps/mobile/src/content/jamo.ts) do not know`, where);
+        keys.push(key);
+      }
+    }
+  }
+  return keys;
+}
+
+/** A jamo's symbol key as the catalogue spells it: the letter, or `<letter>/final` for a batchim. */
+export const symbolKeyOf = (jamo) => (jamo.kind === "batchim" ? `${jamo.char}/final` : jamo.char);
+
+const byString = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * Pure: shaped cells, story rows and topic rows -> the generated catalogue model.
+ * `symbolKeys` maps a jamo id to its symbol key (the app's `jamoKnown`).
+ */
+export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new Map() }) {
+  const lessonCells = [];
+  const lessonQuests = [];
+  const stamps = [];
+  const sortedCells = [...cells].sort((a, b) => a.stageNo - b.stageNo || THEMES.indexOf(a.episode.theme) - THEMES.indexOf(b.episode.theme));
+  for (const cell of sortedCells) {
+    const { episode } = cell;
+    if (cell.status !== "ready") {
+      // A draft cell stays the bundle's "Coming soon" placeholder (`makePreviewEpisode`: 10 minutes, no quests).
+      lessonCells.push({ stage: episode.stage, theme: episode.theme, episodeId: episode.id, title: episode.titleEn, status: "preview", minutes: 10, questIds: [] });
+      continue;
+    }
+    lessonCells.push({
+      stage: episode.stage,
+      theme: episode.theme,
+      episodeId: episode.id,
+      title: episode.titleEn,
+      status: "shipped",
+      minutes: episode.estimatedMinutes,
+      questIds: episode.questIds,
+    });
+    for (const quest of cell.quests) {
+      lessonQuests.push({
+        id: quest.id,
+        episodeId: episode.id,
+        stage: episode.stage,
+        theme: episode.theme,
+        title: quest.titleEn,
+        minutes: quest.estimatedMinutes,
+        teaches: teachesOf(quest, symbolKeys, `${cell.file ?? episode.id} ${quest.id}`),
+        kind: "lesson",
+      });
+      if (cell.stamps?.[quest.id] !== undefined) stamps.push([cell.stamps[quest.id], quest.id]);
+    }
+  }
+  const storyRows = [...stories].sort((a, b) => byString(a.slug, b.slug));
+  for (const story of storyRows) if (story.addedIn !== undefined) stamps.push([story.addedIn, `quest:story-${story.slug}-listen`]);
+  const additions = {};
+  for (const [stamp, id] of stamps.sort((a, b) => a[0] - b[0] || byString(a[1], b[1]))) (additions[stamp] ??= []).push(id);
+  return {
+    version: Math.max(HISTORY_LAST_VERSION, ...stamps.map(([stamp]) => stamp)),
+    additions,
+    cells: lessonCells,
+    quests: lessonQuests,
+    stories: storyRows.map(({ addedIn, ...row }) => row),
+    topics: [...topics].sort((a, b) => a.order - b.order || byString(a.key, b.key)),
+  };
+}
+
+/** Pure: the catalogue model -> the source of catalog.generated.ts. */
+export function renderCatalogue(model) {
+  const rows = (items) => (items.length === 0 ? "[]" : `[\n${items.map((item) => `  ${literal(item)},`).join("\n")}\n]`);
+  const additions = Object.entries(model.additions);
+  return (
+    CATALOG_HEADER +
+    "import type { GeneratedStoryRow, GeneratedTopicRow } from './assemble';\n" +
+    "import type { CatalogCell, CatalogQuest } from './schema';\n\n" +
+    "/**\n" +
+    " * The catalogue rows content/ defines (F-CURR-002 §9.1, row CM-6), assembled with the hand-written\n" +
+    " * Stage 1 and Stage 5 rows by ./data.ts. Gitignored: `pnpm generate` writes it.\n" +
+    " */\n\n" +
+    `/** The largest \`addedIn\` stamp of a shipped quest, or ${HISTORY_LAST_VERSION} (the last hand-kept version) when none carries one. */\n` +
+    `export const GENERATED_CATALOG_VERSION = ${model.version};\n\n` +
+    "/** The shipped quests that carry an `addedIn` stamp, by stamp (versions.ts appends them to the history). */\n" +
+    "export const GENERATED_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = " +
+    (additions.length === 0 ? "{}" : `{\n${additions.map(([stamp, ids]) => `  ${stamp}: ${literal(ids)},`).join("\n")}\n}`) +
+    ";\n\n" +
+    "/** One cell per upper-stage cell file (stages 2, 3, 4, 6 and 7), in grid order. */\n" +
+    `export const GENERATED_LESSON_CELLS: CatalogCell[] = ${rows(model.cells)};\n\n` +
+    "/** The quests of the ready cells, in cell order. */\n" +
+    `export const GENERATED_LESSON_QUESTS: CatalogQuest[] = ${rows(model.quests)};\n\n` +
+    "/** One row per story file, by slug; ./data.ts gives each its shelf order and festival anchor. */\n" +
+    `export const GENERATED_STORIES: GeneratedStoryRow[] = ${rows(model.stories)};\n\n` +
+    "/** One row per vocabulary topic file, in topic order. */\n" +
+    `export const GENERATED_TOPICS: GeneratedTopicRow[] = ${rows(model.topics)};\n`
+  );
+}
+
+/** Every content/stories/*.json (not recursive: research/ is provenance) as a catalogue row, by file name. */
+export function readStoryRows(root) {
+  const dir = join(root, "content", "stories");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((name) => name.endsWith(".json"))
+    .sort(byString)
+    .map((name) => {
+      const { rel, json } = readJson(root, join(dir, name));
+      return shapeStoryRow(json, rel);
+    });
+}
+
+/** Every content/vocab/<topic>.json (not the `_` registries) as a catalogue row. */
+export function readTopicRows(root) {
+  const dir = join(root, "content", "vocab");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((name) => name.endsWith(".json") && !name.startsWith("_"))
+    .sort(byString)
+    .map((name) => {
+      const { rel, json } = readJson(root, join(dir, name));
+      return shapeTopicRow(json, rel);
+    });
+}
+
+let loaderRegistered = false;
+
+/**
+ * The app's jamo symbol keys (`jamoKnown` of apps/mobile/src/content/jamo.ts, read through
+ * scripts/ts-loader.mjs): the Stage 1 symbols and the Word Builder ones. An empty map when the
+ * file is absent (a test tree with no Discover jamo).
+ */
+export async function loadSymbolKeys(root) {
+  const file = join(root, "apps", "mobile", "src", "content", "jamo.ts");
+  if (!existsSync(file)) return new Map();
+  if (!loaderRegistered) {
+    register(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "ts-loader.mjs")));
+    loaderRegistered = true;
+  }
+  const { jamoKnown } = await import(pathToFileURL(file).href);
+  return new Map(jamoKnown.map((jamo) => [jamo.id, symbolKeyOf(jamo)]));
+}
+
 // ---- budget -------------------------------------------------------------------------------
 
 const measure = (name, text) => ({ name, raw: bytes(text), gzip: gzipSync(text).length });
@@ -557,7 +795,17 @@ export function staleFiles(root, modules) {
 
 const USAGE = "Usage: node scripts/build-lessons.mjs [--check] [--report]";
 
-export function main(argv, root) {
+/** Every file this generator writes, by path relative to the root: the lesson modules and the catalogue. */
+export async function generatedOutputs(root, cells = readCells(root)) {
+  const modules = buildModules(cells);
+  const catalogue = catalogueOf({ cells, stories: readStoryRows(root), topics: readTopicRows(root), symbolKeys: await loadSymbolKeys(root) });
+  const outputs = {};
+  for (const [name, source] of Object.entries(modules)) outputs[join(OUT_DIR, name)] = source;
+  outputs[CATALOG_OUT] = renderCatalogue(catalogue);
+  return { modules, outputs };
+}
+
+export async function main(argv, root) {
   const opts = { check: false, report: false };
   for (const arg of argv) {
     if (arg === "--check") opts.check = true;
@@ -568,14 +816,16 @@ export function main(argv, root) {
     }
   }
   let cells;
+  let generated;
   try {
     cells = readCells(root);
+    generated = await generatedOutputs(root, cells);
   } catch (error) {
     if (!(error instanceof ContentError)) throw error;
     process.stdout.write(`::error file=${error.file}::${error.message}\n`);
     return 1;
   }
-  const modules = buildModules(cells);
+  const { modules, outputs } = generated;
   const ready = cells.filter((c) => c.status === "ready").length;
   const outRel = OUT_DIR.split(sep).join("/");
 
@@ -598,33 +848,59 @@ export function main(argv, root) {
 
   const stale = staleFiles(root, modules);
   if (opts.check) {
+    // Determinism (F-CURR-002 §9.1): the files on disk come from an earlier run (`pnpm generate`, the postinstall);
+    // this run must give the same bytes. The modules are generated, never committed.
     let drift = 0;
-    for (const [name, source] of Object.entries(modules)) {
-      const target = join(root, OUT_DIR, name);
+    for (const [name, source] of Object.entries(outputs)) {
+      const target = join(root, name);
       if (!existsSync(target) || readFileSync(target, "utf8") !== source) {
         drift += 1;
         process.stdout.write(
-          `::error file=${relOf(root, target)}::generated lesson module is missing or out of date with content/episodes; run node scripts/build-lessons.mjs and commit the result\n`,
+          `::error file=${relOf(root, target)}::generated module is missing or differs from a fresh run of scripts/build-lessons.mjs (generators must be deterministic); run pnpm generate\n`,
         );
       }
     }
     for (const name of stale) {
       drift += 1;
-      process.stdout.write(`::error file=${outRel}/${name}::generated lesson module is no longer built; run node scripts/build-lessons.mjs and commit the deletion\n`);
+      process.stdout.write(`::error file=${outRel}/${name}::generated lesson module is no longer built; run pnpm generate (it removes it)\n`);
     }
     if (drift > 0) return 1;
-    process.stdout.write(`lesson modules are up to date (ready cells: ${ready})\n`);
-    return 0;
+    process.stdout.write(`lesson modules and catalogue are deterministic (ready cells: ${ready})\n`);
+    return checkStampsAgainstBase(root);
   }
 
   mkdirSync(join(root, OUT_DIR, CHUNK_DIR), { recursive: true });
   for (const name of stale) rmSync(join(root, OUT_DIR, name));
-  for (const [name, source] of Object.entries(modules)) writeFileSync(join(root, OUT_DIR, name), source);
+  for (const [name, source] of Object.entries(outputs)) {
+    mkdirSync(dirname(join(root, name)), { recursive: true });
+    writeFileSync(join(root, name), source);
+  }
   process.stdout.write(
-    `wrote ${Object.keys(modules).length} lesson modules (ready cells: ${ready}, drafts left out: ${cells.length - ready})` +
+    `wrote ${Object.keys(modules).length} lesson modules (ready cells: ${ready}, drafts left out: ${cells.length - ready}) and the catalogue rows` +
       (stale.length > 0 ? `, removed ${stale.length} no longer built\n` : "\n"),
   );
   return 0;
+}
+
+/**
+ * The addedIn stamp check of `--check` (scripts/check-added-in.mjs): against HANGUL_ROUTE_STAMP_BASE,
+ * default origin/main; skipped with a notice when that ref does not resolve (a shallow checkout).
+ * HANGUL_ROUTE_STAMP_BASE=none skips it.
+ */
+function checkStampsAgainstBase(root) {
+  const base = process.env.HANGUL_ROUTE_STAMP_BASE ?? "origin/main";
+  if (base === "none") return 0;
+  const known = spawnSync("git", ["rev-parse", "--verify", "--quiet", `${base}^{commit}`], { cwd: root, encoding: "utf8" });
+  if (known.status !== 0) {
+    process.stdout.write(`addedIn stamp check skipped: ${base} does not resolve here (content-validation.yml checks out the full history)\n`);
+    return 0;
+  }
+  // A child process: check-added-in.mjs imports this module, which is still evaluating here.
+  const script = join(dirname(fileURLToPath(import.meta.url)), "check-added-in.mjs");
+  const run = spawnSync(process.execPath, [script, "--base", base], { cwd: root, encoding: "utf8", env: { ...process.env, HANGUL_ROUTE_ROOT: root } });
+  process.stdout.write(run.stdout ?? "");
+  process.stderr.write(run.stderr ?? "");
+  return run.status ?? 1;
 }
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
@@ -632,5 +908,5 @@ if (isMain) {
   const root = process.env.HANGUL_ROUTE_ROOT
     ? resolve(process.env.HANGUL_ROUTE_ROOT)
     : join(dirname(fileURLToPath(import.meta.url)), "..");
-  process.exitCode = main(process.argv.slice(2), root);
+  process.exitCode = await main(process.argv.slice(2), root);
 }

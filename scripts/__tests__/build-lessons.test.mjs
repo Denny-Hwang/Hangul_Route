@@ -37,51 +37,8 @@ function put(root, rel, value) {
 const read = (root, name) => readFileSync(join(root, OUT, name), "utf8");
 const chunk = (root, name) => read(root, `lesson-chunks/${name}.ts`);
 
-const kt = (ko, romanization, en, extra = {}) => ({ ko, romanization, en, ...extra });
-const lp = (id) => ({ id, prompt: kt("연", "yeon", "kite"), options: [{ id: "a", pictureRef: "word:kite" }, { id: "b", pictureRef: "word:ball" }], answerId: "a" });
+import { cell, kt, lp, quest } from "./helpers/lesson-fixtures.mjs";
 
-function quest(stage, theme, k, seconds = [7, 50, 80, 70, 35, 8]) {
-  const n = stage.slice(5);
-  const ref = (step) => `minigame:s${n}-${theme}-q${k}-${step}`;
-  const kinds = ["intro", "discover", "practice", "apply", "check", "reward"];
-  return {
-    id: `quest:${stage}-${theme}-q${k}`,
-    titleEn: `Quest ${k}`,
-    estimatedMinutes: 4,
-    steps: kinds.map((kind, i) => ({
-      id: `s${i + 1}`,
-      kind,
-      titleEn: kind,
-      durationSeconds: seconds[i],
-      ...(kind === "practice" ? { minigameKind: "card-match", minigameRef: ref("practice") } : {}),
-      ...(kind === "apply" ? { minigameKind: "build-letter", minigameRef: ref("apply") } : {}),
-      ...(kind === "check" ? { minigameKind: "listen-pick", minigameRef: ref("check") } : {}),
-    })),
-    scopes: [
-      { ref: ref("practice"), kind: "card-match", pairs: [kt("연", "yeon", "kite"), kt("공", "gong", "ball")] },
-      { ref: ref("apply"), kind: "build-letter", words: [kt("설날", "seollal", "Lunar New Year", { syllables: ["seol", "lal"] }), kt("연", "yeon", "kite")] },
-      { ref: ref("check"), kind: "listen-pick", rounds: [lp("c1"), lp("c2")] },
-    ],
-  };
-}
-function cell(stage, theme, status = "ready", extra = {}) {
-  return {
-    id: `episode:${stage}-${theme}`,
-    stage,
-    theme,
-    status,
-    titleEn: "Holiday Words",
-    subtitleEn: "Words of the holidays",
-    hoyaIntroEn: "Let us read holiday words!",
-    order: 3,
-    pillarTags: ["B5"],
-    quests: [1, 2, 3].map((k) => quest(stage, theme, k)),
-    culture: [{ id: "n1", kind: "culture", textEn: "A note.", sources: [{ title: "t", publisher: "p", url: "https://stdict.korean.go.kr/", accessed: "2026-10-01", quoteOrLocator: "q" }], verification: { passes: 3, checkedAt: "2026-10-01", scope: "lesson", notes: "x" } }],
-    review: { language: "native-reviewed", culture: "culture-reviewed", reviewedBy: "MAR", reviewedAt: "2026-10-01" },
-    contentVer: 1,
-    ...extra,
-  };
-}
 const overlay = (locale, domain, entries) => ({ locale, domain, entries });
 const { readCells } = await import(SCRIPT);
 const readCellsOf = (root) => readCells(root);
@@ -106,7 +63,7 @@ describe("build-lessons.mjs: empty trees", () => {
     }
   });
 
-  test("the checked-in modules are what the repository's cells build (CI --check)", () => {
+  test("the generated modules on disk are what a fresh run builds (determinism, CI --check)", () => {
     const r = run(REPO, ["--check"]);
     assert.equal(r.status, 0, r.stdout);
   });
@@ -390,9 +347,11 @@ describe("build-lessons.mjs: --check and --report", () => {
     put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
     const missing = run(root, ["--check"]);
     assert.equal(missing.status, 1);
-    assert.match(missing.stdout, /::error file=apps\/mobile\/src\/content\/__generated__\/lessons-index\.ts::generated lesson module is missing or out of date/);
+    assert.match(missing.stdout, /::error file=apps\/mobile\/src\/content\/__generated__\/lessons-index\.ts::generated module is missing or differs from a fresh run/);
+    assert.match(missing.stdout, /::error file=packages\/content-schema\/src\/catalog\/catalog\.generated\.ts::generated module is missing/);
+    assert.match(missing.stdout, /run pnpm generate/);
     assert.equal(run(root).status, 0);
-    assert.match(run(root, ["--check"]).stdout, /lesson modules are up to date \(ready cells: 1\)/);
+    assert.match(run(root, ["--check"]).stdout, /lesson modules and catalogue are deterministic \(ready cells: 1\)/);
     put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", { titleEn: "Festival Words" }));
     assert.equal(run(root, ["--check"]).status, 1);
     assert.equal(run(root).status, 0);
@@ -401,7 +360,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     put(root, `${OUT}/lesson-chunks/lessons-cell-stage2-life.ts`, "export {};\n");
     const stale = run(root, ["--check"]);
     assert.equal(stale.status, 1);
-    assert.match(stale.stdout, /::error file=apps\/mobile\/src\/content\/__generated__\/lessons-stage7\.ts::generated lesson module is no longer built/);
+    assert.match(stale.stdout, /::error file=apps\/mobile\/src\/content\/__generated__\/lessons-stage7\.ts::generated lesson module is no longer built; run pnpm generate/);
     assert.match(stale.stdout, /lesson-chunks\/lessons-cell-stage2-life\.ts::generated lesson module is no longer built/);
     assert.match(run(root).stdout, /removed 2 no longer built/);
     assert.ok(!existsSync(join(root, OUT, "lessons-stage7.ts")));
@@ -484,5 +443,159 @@ describe("build-lessons.mjs: --check and --report", () => {
     const r = run(makeRoot(), ["--nope"]);
     assert.equal(r.status, 2);
     assert.match(r.stderr, /Usage: node scripts\/build-lessons\.mjs/);
+  });
+});
+
+// ---- F-CURR-002 §9.1 (row CM-6): the generated catalogue rows and the addedIn stamps ----------
+
+const { CATALOG_OUT, HISTORY_LAST_VERSION, addedInStamp, catalogueOf, loadSymbolKeys, renderCatalogue, shapeStoryRow, shapeTopicRow, symbolKeyOf } = await import(SCRIPT);
+
+const story = (slug, extra = {}) => ({
+  id: `story:${slug}`,
+  state: "ready",
+  title: { ko: "이야기", romanization: "iyagi", en: `Tale ${slug}` },
+  recommendedStage: 2,
+  theme: "nature",
+  minutes: 5,
+  shelf: { order: 1, sampler: true },
+  review: { language: "native-reviewed", culture: "culture-reviewed" },
+  ...extra,
+});
+const topicFile = (key, order) => ({ topic: { id: `vocab-topic:${key}`, key, order, titleEn: key.toUpperCase() }, items: [] });
+const discoverJamo = (ids) => ({ id: "s2", kind: "discover", titleEn: "Meet", discover: { pages: [{ items: ids.map((jamoId) => ({ type: "jamo", jamoId })) }] } });
+
+describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
+  test("a ready cell gives a shipped catalogue cell and its quests, a draft cell a 'Coming soon' one with no quests", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-3/rites.json", cell("stage3", "rites"));
+    put(root, "content/episodes/stage-2/life.json", cell("stage2", "life", "draft", { titleEn: "Lunch Box Words" }));
+    const model = catalogueOf({ cells: readCellsOf(root) });
+    assert.deepEqual(model.cells, [
+      { stage: "stage2", theme: "life", episodeId: "episode:stage2-life", title: "Lunch Box Words", status: "preview", minutes: 10, questIds: [] },
+      {
+        stage: "stage3",
+        theme: "rites",
+        episodeId: "episode:stage3-rites",
+        title: "Holiday Words",
+        status: "shipped",
+        minutes: 13,
+        questIds: ["quest:stage3-rites-q1", "quest:stage3-rites-q2", "quest:stage3-rites-q3"],
+      },
+    ]);
+    assert.deepEqual(model.quests[0], {
+      id: "quest:stage3-rites-q1",
+      episodeId: "episode:stage3-rites",
+      stage: "stage3",
+      theme: "rites",
+      title: "Quest 1",
+      minutes: 4,
+      teaches: [],
+      kind: "lesson",
+    });
+    assert.equal(model.quests.length, 3);
+    assert.equal(model.version, HISTORY_LAST_VERSION);
+    assert.deepEqual(model.additions, {});
+  });
+
+  test("teaches is the symbol keys of the Discover jamo items; an unknown jamo fails", () => {
+    const root = makeRoot();
+    const c = cell("stage2", "letters");
+    c.quests[0].steps[1] = { ...c.quests[0].steps[1], ...discoverJamo(["jamo:ae", "jamo:nieun-batchim"]) };
+    put(root, "content/episodes/stage-2/letters.json", c);
+    const symbolKeys = new Map([["jamo:ae", "ㅐ"], ["jamo:nieun-batchim", "ㄴ/final"]]);
+    assert.deepEqual(catalogueOf({ cells: readCellsOf(root), symbolKeys }).quests[0].teaches, ["ㅐ", "ㄴ/final"]);
+    assert.throws(() => catalogueOf({ cells: readCellsOf(root) }), /Discover teaches jamo:ae, which the app's jamo/);
+    assert.equal(symbolKeyOf({ char: "ㄴ", kind: "batchim" }), "ㄴ/final");
+    assert.equal(symbolKeyOf({ char: "ㅐ", kind: "vowel" }), "ㅐ");
+  });
+
+  test("the version is the largest addedIn stamp, and the additions list each stamp's quests", () => {
+    const root = makeRoot();
+    const c = cell("stage3", "rites");
+    c.quests[1].addedIn = 20261110;
+    c.quests[2].addedIn = 20261105;
+    put(root, "content/episodes/stage-3/rites.json", c);
+    const model = catalogueOf({ cells: readCellsOf(root), stories: [shapeStoryRow(story("owl", { addedIn: 20261110 }), "s.json")] });
+    assert.equal(model.version, 20261110);
+    assert.deepEqual(model.additions, { 20261105: ["quest:stage3-rites-q3"], 20261110: ["quest:stage3-rites-q2", "quest:story-owl-listen"] });
+    assert.deepEqual(Object.keys(model.stories[0]).sort(), ["minutes", "recommendedStage", "sampler", "slug", "status", "theme", "title"]);
+    const source = renderCatalogue(model);
+    assert.match(source, /export const GENERATED_CATALOG_VERSION = 20261110;/);
+    assert.match(source, /  20261105: \["quest:stage3-rites-q3"\],/);
+  });
+
+  test("a stamp in a draft cell does not count until the cell ships", () => {
+    const root = makeRoot();
+    const c = cell("stage3", "rites", "draft");
+    c.quests[0].addedIn = 20261201;
+    put(root, "content/episodes/stage-3/rites.json", c);
+    assert.equal(catalogueOf({ cells: readCellsOf(root) }).version, HISTORY_LAST_VERSION);
+  });
+
+  test("addedIn must be a real YYYYMMDD date", () => {
+    for (const ok of [20260101, 20261105, 20280229]) assert.equal(addedInStamp(ok, "x"), ok);
+    for (const bad of [32, "20261105", 20261332, 20260230, 20251231, 2026110, 20261105.5]) {
+      assert.throws(() => addedInStamp(bad, "x"), /addedIn must be a date stamp YYYYMMDD/, String(bad));
+    }
+    const root = makeRoot();
+    const c = cell("stage3", "rites");
+    c.quests[0].addedIn = 20261340;
+    put(root, "content/episodes/stage-3/rites.json", c);
+    assert.throws(() => readCellsOf(root), /addedIn must be a date stamp/);
+    assert.throws(() => shapeStoryRow(story("owl", { addedIn: 1 }), "s.json"), /addedIn must be a date stamp/);
+  });
+
+  test("a story row carries the catalogue's offer status rule and the shelf sampler; a topic row its key, title and order", () => {
+    assert.deepEqual(shapeStoryRow(story("owl"), "s.json"), { slug: "owl", title: "Tale owl", recommendedStage: 2, theme: "nature", minutes: 5, sampler: true, status: "ready" });
+    assert.equal(shapeStoryRow(story("owl", { shelf: undefined }), "s.json").status, "draft");
+    assert.equal(shapeStoryRow(story("owl", { state: "draft" }), "s.json").status, "draft");
+    assert.equal(shapeStoryRow(story("owl", { review: { language: "draft", culture: "culture-reviewed" } }), "s.json").status, "draft");
+    assert.equal(shapeStoryRow(story("owl", { shelf: { order: 2 } }), "s.json").sampler, false);
+    assert.throws(() => shapeStoryRow(story("owl", { id: "owl" }), "s.json"), /must be story:<slug>/);
+    assert.throws(() => shapeStoryRow([], "s.json"), /a story file holds one object/);
+    assert.throws(() => shapeStoryRow(story("owl", { title: "Owl" }), "s.json"), /title must be an object/);
+    assert.deepEqual(shapeTopicRow(topicFile("food", 1), "t.json"), { id: "topic:food", key: "food", title: "FOOD", order: 1 });
+    assert.throws(() => shapeTopicRow({}, "t.json"), /a topic file needs a topic object/);
+  });
+
+  test("the CLI writes the catalogue module beside catalog/data.ts, sorted, and --check holds it to a fresh run", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-3/rites.json", cell("stage3", "rites"));
+    put(root, "content/stories/zeta.json", story("zeta"));
+    put(root, "content/stories/alpha.json", story("alpha"));
+    put(root, "content/vocab/colors.json", topicFile("colors", 2));
+    put(root, "content/vocab/food.json", topicFile("food", 1));
+    put(root, "content/vocab/_senses.json", { groups: [] });
+    assert.equal(run(root).status, 0);
+    const source = readFileSync(join(root, CATALOG_OUT), "utf8");
+    assert.match(source, /^\/\/ GENERATED by scripts\/build-lessons\.mjs — do not edit\./);
+    assert.match(source, /export const GENERATED_CATALOG_VERSION = 32;/);
+    assert.match(source, /export const GENERATED_QUEST_ADDITIONS: Readonly<Record<number, readonly string\[\]>> = \{\};/);
+    assert.ok(source.indexOf('"slug":"alpha"') < source.indexOf('"slug":"zeta"'));
+    assert.ok(source.indexOf('"key":"food"') < source.indexOf('"key":"colors"'));
+    assert.equal(run(root, ["--check"]).status, 0);
+    writeFileSync(join(root, CATALOG_OUT), source.replace("= 32;", "= 33;"));
+    const drift = run(root, ["--check"]);
+    assert.equal(drift.status, 1);
+    assert.match(drift.stdout, /catalog\.generated\.ts::generated module is missing or differs from a fresh run/);
+  });
+
+  test("the repository's jamo give their symbol keys (Stage 1 and Word Builder)", async () => {
+    const keys = await loadSymbolKeys(REPO);
+    assert.equal(keys.get("jamo:ae"), "ㅐ");
+    assert.equal(keys.get("jamo:nieun-batchim"), "ㄴ/final");
+    assert.equal(keys.get("jamo:giyeok"), "ㄱ");
+    assert.equal((await loadSymbolKeys(makeRoot())).size, 0);
+  });
+
+  test("--check skips the stamp check where origin/main does not resolve, and HANGUL_ROUTE_STAMP_BASE=none turns it off", () => {
+    const root = makeRoot();
+    assert.equal(run(root).status, 0);
+    const skipped = run(root, ["--check"]);
+    assert.equal(skipped.status, 0, skipped.stdout);
+    assert.match(skipped.stdout, /addedIn stamp check skipped: origin\/main does not resolve here/);
+    const off = spawnSync("node", [SCRIPT, "--check"], { env: { ...process.env, HANGUL_ROUTE_ROOT: root, HANGUL_ROUTE_STAMP_BASE: "none" }, encoding: "utf8" });
+    assert.equal(off.status, 0);
+    assert.doesNotMatch(off.stdout, /addedIn/);
   });
 });

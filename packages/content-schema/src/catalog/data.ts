@@ -1,12 +1,28 @@
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
-import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } from './schema';
+import { assembleCatalog, type StoryShelfEntry } from './assemble';
+import {
+  GENERATED_CATALOG_VERSION,
+  GENERATED_LESSON_CELLS,
+  GENERATED_LESSON_QUESTS,
+  GENERATED_STORIES,
+  GENERATED_TOPICS,
+} from './catalog.generated';
+import type { Catalog, CatalogCell, CatalogQuest } from './schema';
 
 /**
- * The shipped catalogue data (F-PLAN-002 appendix A). Hand-kept and guarded by
- * `apps/mobile/src/content/__tests__/catalog-parity.test.ts`, which fails with the
- * corrected row when the bundle and this file drift apart. Bump `CATALOG_VERSION`
- * on every content change that alters what a generated route can contain.
+ * The shipped catalogue data (F-PLAN-002 appendix A). Since F-CURR-002 row CM-6 the rows that
+ * content/ defines are generated (`./catalog.generated.ts`, written by scripts/build-lessons.mjs:
+ * the upper-stage cells and their quests, the story rows, the vocabulary topics) and this file adds
+ * what content/ cannot say: the hand-written Stage 1 cells and quests, the Stage 5 books, and the
+ * shelf order and festival anchors of the first 24 stories. `apps/mobile/src/content/__tests__/catalog-parity.test.ts`
+ * keeps the result equal to the shipped bundle.
  *
+ * `CATALOG_VERSION` is generated too: the largest `addedIn` stamp (YYYYMMDD) a shipped quest carries in
+ * its content file, or 32 when none does. The history below, up to 32, keeps its integers, which are all
+ * smaller than any date stamp, so the order holds; a new quest is stamped in its own file instead of
+ * bumping a shared line (scripts/check-added-in.mjs fails a stamp lower than main's version).
+ *
+ * The history (hand-kept until version 32):
  * Since F-QUEST-002 Q-8 this file lists the 15 Stage 1 quests the bundle ships: Q-6a
  * filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3), Q-7b for
  * rites q1-q3 (adding rites q2-q3) and Q-8 for nature q1 (adding nature and crafts q2-q3).
@@ -44,7 +60,7 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * F-STORY-005 row 5.6c renames the Stage 5 nature cell to Nature Tales (was Tiger Folktales) with no version bump:
  * a cell title is display text and does not alter what a generated route can contain (same ids, quests and minutes).
  */
-export const CATALOG_VERSION = 32;
+export const CATALOG_VERSION: number = GENERATED_CATALOG_VERSION;
 
 const cell = (
   stage: StageKey,
@@ -64,30 +80,13 @@ const lesson = (
   teaches: string[] = [],
 ): CatalogQuest => ({ id: `quest:${id}`, episodeId: `episode:${stage}-${theme}`, stage, theme, title, minutes, teaches, kind: 'lesson' });
 
-/** A cell that is a placeholder in the bundle (`makePreviewEpisode`: 10 minutes, no quests). */
-const soon = (stage: StageKey, theme: ThemeKey, title: string): CatalogCell => cell(stage, theme, title, 'preview', 10);
-
-const cells: CatalogCell[] = [
+/** The hand-written cells: Stage 1 (TypeScript quests) and the Stage 5 books (`books.ts`). */
+const handCells: CatalogCell[] = [
   cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
   cell('stage1', 'life', 'Around the Korean Table', 'shipped', 12, ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']),
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 14, ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
   cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
-  cell('stage2', 'letters', 'Word Builder', 'shipped', 25, ['quest:stage2-letters-q1', 'quest:stage2-letters-q2', 'quest:stage2-letters-q3', 'quest:stage2-letters-q4', 'quest:stage2-letters-q5', 'quest:stage2-letters-q6']),
-  cell('stage2', 'life', 'Lunch Box Words', 'shipped', 13, ['quest:stage2-life-q1', 'quest:stage2-life-q2', 'quest:stage2-life-q3']),
-  cell('stage2', 'rites', 'Holiday Words', 'shipped', 13, ['quest:stage2-rites-q1', 'quest:stage2-rites-q2', 'quest:stage2-rites-q3']),
-  cell('stage2', 'nature', 'Outdoor Words', 'shipped', 13, ['quest:stage2-nature-q1', 'quest:stage2-nature-q2', 'quest:stage2-nature-q3']),
-  cell('stage2', 'crafts', 'Playground Words', 'shipped', 12, ['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']),
-  cell('stage3', 'letters', 'First Sentences', 'shipped', 14, ['quest:stage3-letters-q1', 'quest:stage3-letters-q2', 'quest:stage3-letters-q3']),
-  cell('stage3', 'life', 'Daily Mini-Sentences', 'shipped', 14, ['quest:stage3-life-q1', 'quest:stage3-life-q2', 'quest:stage3-life-q3']),
-  cell('stage3', 'rites', 'Festival Sentences', 'shipped', 14, ['quest:stage3-rites-q1', 'quest:stage3-rites-q2', 'quest:stage3-rites-q3']),
-  cell('stage3', 'nature', 'Animal Sentences', 'shipped', 14, ['quest:stage3-nature-q1', 'quest:stage3-nature-q2', 'quest:stage3-nature-q3']),
-  cell('stage3', 'crafts', 'Game Sentences', 'shipped', 14, ['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']),
-  cell('stage4', 'letters', 'Read Along', 'shipped', 13, ['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
-  cell('stage4', 'life', 'Kitchen Talk', 'shipped', 13, ['quest:stage4-life-q1', 'quest:stage4-life-q2', 'quest:stage4-life-q3']),
-  cell('stage4', 'rites', 'Greeting Dialogues', 'shipped', 13, ['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']),
-  cell('stage4', 'nature', 'Park Conversations', 'shipped', 14, ['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3']),
-  cell('stage4', 'crafts', 'Playdate Talk', 'shipped', 14, ['quest:stage4-crafts-q1', 'quest:stage4-crafts-q2', 'quest:stage4-crafts-q3']),
   cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
     'quest:story-sejong-new-letters-read',
     'quest:story-shapes-of-hangeul-read',
@@ -109,16 +108,6 @@ const cells: CatalogCell[] = [
     'quest:story-jagyeongnu-water-clock-read',
     'quest:story-pansori-tales-read',
   ]),
-  cell('stage6', 'letters', 'Read the Menu', 'shipped', 15, ['quest:stage6-letters-q1', 'quest:stage6-letters-q2', 'quest:stage6-letters-q3']),
-  cell('stage6', 'life', 'Order Food', 'shipped', 15, ['quest:stage6-life-q1', 'quest:stage6-life-q2', 'quest:stage6-life-q3']),
-  cell('stage6', 'rites', 'Travel for Chuseok', 'shipped', 15, ['quest:stage6-rites-q1', 'quest:stage6-rites-q2', 'quest:stage6-rites-q3']),
-  cell('stage6', 'nature', 'Hike & Ask', 'shipped', 15, ['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']),
-  cell('stage6', 'crafts', 'Buy at Market', 'shipped', 15, ['quest:stage6-crafts-q1', 'quest:stage6-crafts-q2', 'quest:stage6-crafts-q3']),
-  cell('stage7', 'letters', 'Write Your Name', 'shipped', 15, ['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']),
-  cell('stage7', 'life', 'My Day in Korean', 'shipped', 15, ['quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-life-q3']),
-  cell('stage7', 'rites', 'My Holiday Memory', 'shipped', 15, ['quest:stage7-rites-q1', 'quest:stage7-rites-q2', 'quest:stage7-rites-q3']),
-  cell('stage7', 'nature', 'My Favorite Animal', 'shipped', 15, ['quest:stage7-nature-q1', 'quest:stage7-nature-q2', 'quest:stage7-nature-q3']),
-  cell('stage7', 'crafts', 'Make & Share', 'shipped', 15, ['quest:stage7-crafts-q1', 'quest:stage7-crafts-q2', 'quest:stage7-crafts-q3']),
 ];
 
 /**
@@ -127,7 +116,7 @@ const cells: CatalogCell[] = [
  * q1-q3 since Q-7b, nature q1 since Q-8. Nature q2-q3 and crafts q1-q3 teach nothing new:
  * they read words built from all 30 symbols (F-QUEST-002 rule R5).
  */
-const lessonQuests: CatalogQuest[] = [
+const handLessonQuests: CatalogQuest[] = [
   lesson('stage1-letters-q1', 'stage1', 'letters', 'Meet a, eo, g, n', 5, ['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']),
   lesson('stage1-letters-q2', 'stage1', 'letters', 'Meet o, u, m and the circle', 5, ['ㅗ', 'ㅜ', 'ㅁ', 'ㅇ']),
   lesson('stage1-letters-q3', 'stage1', 'letters', 'Meet eu, i, d, r', 5, ['ㅡ', 'ㅣ', 'ㄷ', 'ㄹ']),
@@ -143,86 +132,6 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage1-crafts-q1', 'stage1', 'crafts', 'Yut, Kite, Top', 4),
   lesson('stage1-crafts-q2', 'stage1', 'crafts', 'Paper and Pottery', 4),
   lesson('stage1-crafts-q3', 'stage1', 'crafts', 'Read Hangul!', 4),
-  // F-CURR-001 S2-1: Word Builder teaches the rest of Hangul, so `teaches` names its symbols.
-  lesson('stage2-letters-q1', 'stage2', 'letters', 'Vowel Pairs ae and e', 4, ['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']),
-  lesson('stage2-letters-q2', 'stage2', 'letters', 'Double Letters', 4, ['ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ']),
-  lesson('stage2-letters-q3', 'stage2', 'letters', 'Joined Vowels wa, wo, wi, ui', 4, ['ㅘ', 'ㅝ', 'ㅟ', 'ㅢ']),
-  lesson('stage2-letters-q4', 'stage2', 'letters', 'Joined Vowels oe, wae, we', 4, ['ㅚ', 'ㅙ', 'ㅞ']),
-  lesson('stage2-letters-q5', 'stage2', 'letters', 'One Sound for Six Letters', 4, ['ㅅ/final', 'ㅈ/final', 'ㅊ/final', 'ㅌ/final', 'ㄷ/final', 'ㅆ/final']),
-  lesson('stage2-letters-q6', 'stage2', 'letters', 'More Letters for k and p', 4, ['ㅋ/final', 'ㄲ/final', 'ㅍ/final']),
-  lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 4),
-  lesson('stage2-life-q2', 'stage2', 'life', 'Fruit and Snacks', 4),
-  lesson('stage2-life-q3', 'stage2', 'life', 'At the Table', 4),
-  lesson('stage2-rites-q1', 'stage2', 'rites', 'Seollal Words', 4),
-  lesson('stage2-rites-q2', 'stage2', 'rites', 'Chuseok Words', 4),
-  lesson('stage2-rites-q3', 'stage2', 'rites', 'Holiday Play and Gifts', 4),
-  lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 4),
-  lesson('stage2-nature-q2', 'stage2', 'nature', 'Rain and Snow', 4),
-  lesson('stage2-nature-q3', 'stage2', 'nature', 'Rivers and Seas', 4),
-  lesson('stage2-crafts-q1', 'stage2', 'crafts', 'At the Playground', 4),
-  lesson('stage2-crafts-q2', 'stage2', 'crafts', 'Traditional Games', 4),
-  lesson('stage2-crafts-q3', 'stage2', 'crafts', 'Playing Together', 4),
-  lesson('stage4-rites-q1', 'stage4', 'rites', 'Nice to Meet You', 4),
-  lesson('stage4-rites-q2', 'stage4', 'rites', 'Long Time No See', 4),
-  lesson('stage4-rites-q3', 'stage4', 'rites', 'Happy New Year', 4),
-  // F-CURR-001 upper-stage cells: they teach no symbol, so `teaches` is [].
-  lesson('stage3-letters-q1', 'stage3', 'letters', 'It Is a Book', 5),
-  lesson('stage3-letters-q2', 'stage3', 'letters', 'There Is a Book', 5),
-  lesson('stage3-letters-q3', 'stage3', 'letters', 'This Is Hangul', 5),
-  lesson('stage3-rites-q1', 'stage3', 'rites', 'Grandma and Grandpa', 5),
-  lesson('stage3-rites-q2', 'stage3', 'rites', 'Pretty and Tasty', 5),
-  lesson('stage3-rites-q3', 'stage3', 'rites', 'Festival Days', 5),
-  lesson('stage4-letters-q1', 'stage4', 'letters', 'What Is This?', 4),
-  lesson('stage4-letters-q2', 'stage4', 'letters', 'Where Is It?', 4),
-  lesson('stage4-letters-q3', 'stage4', 'letters', 'Thank You, Teacher', 4),
-  lesson('stage3-crafts-q1', 'stage3', 'crafts', 'I Want to Play', 5),
-  lesson('stage3-crafts-q2', 'stage3', 'crafts', 'Places to Play', 5),
-  lesson('stage3-crafts-q3', 'stage3', 'crafts', 'Kick, Spin, Throw', 5),
-  lesson('stage3-life-q1', 'stage3', 'life', 'I Eat, I Drink', 5),
-  lesson('stage3-life-q2', 'stage3', 'life', 'Tasty and Hot', 5),
-  lesson('stage3-life-q3', 'stage3', 'life', 'Go and Come', 5),
-  lesson('stage4-life-q1', 'stage4', 'life', 'Have You Eaten?', 4),
-  lesson('stage4-life-q2', 'stage4', 'life', 'How Does It Taste?', 5),
-  lesson('stage4-life-q3', 'stage4', 'life', 'Not Spicy', 4),
-  lesson('stage4-nature-q1', 'stage4', 'nature', 'Sky Watching', 5),
-  lesson('stage4-nature-q2', 'stage4', 'nature', 'Rain Later', 5),
-  lesson('stage4-nature-q3', 'stage4', 'nature', 'Where To?', 5),
-  lesson('stage4-crafts-q1', 'stage4', 'crafts', 'What Shall We Play?', 5),
-  lesson('stage4-crafts-q2', 'stage4', 'crafts', 'My Turn, Your Turn', 5),
-  lesson('stage4-crafts-q3', 'stage4', 'crafts', 'Shall We Play Together?', 5),
-  lesson('stage6-letters-q1', 'stage6', 'letters', 'Dishes on the Menu', 5),
-  lesson('stage6-letters-q2', 'stage6', 'letters', 'How Much Is It?', 5),
-  lesson('stage6-letters-q3', 'stage6', 'letters', 'Spicy or Not?', 5),
-  lesson('stage6-life-q1', 'stage6', 'life', 'Excuse Me!', 5),
-  lesson('stage6-life-q2', 'stage6', 'life', 'How Many?', 5),
-  lesson('stage6-life-q3', 'stage6', 'life', 'How Much Is It?', 5),
-  lesson('stage6-rites-q1', 'stage6', 'rites', 'The Train Ticket', 5),
-  lesson('stage6-rites-q2', 'stage6', 'rites', 'Train Times', 5),
-  lesson('stage6-rites-q3', 'stage6', 'rites', "Hoya's Trip", 5),
-  lesson('stage6-nature-q1', 'stage6', 'nature', 'Trail Signs', 5),
-  lesson('stage6-nature-q2', 'stage6', 'nature', 'Which Way?', 5),
-  lesson('stage6-nature-q3', 'stage6', 'nature', 'How Long?', 5),
-  lesson('stage6-crafts-q1', 'stage6', 'crafts', 'At the Stall', 5),
-  lesson('stage6-crafts-q2', 'stage6', 'crafts', 'How Many, How Much?', 5),
-  lesson('stage6-crafts-q3', 'stage6', 'crafts', 'A Little Extra', 5),
-  lesson('stage3-nature-q1', 'stage3', 'nature', 'Where Is the Bird?', 5),
-  lesson('stage3-nature-q2', 'stage3', 'nature', 'Big and Small', 5),
-  lesson('stage3-nature-q3', 'stage3', 'nature', 'Fly, Hop, Swim', 5),
-  lesson('stage7-letters-q1', 'stage7', 'letters', "Hoya's Name", 5),
-  lesson('stage7-letters-q2', 'stage7', 'letters', 'My Name Is ...', 5),
-  lesson('stage7-letters-q3', 'stage7', 'letters', 'Your Name in Hangul', 5),
-  lesson('stage7-life-q1', 'stage7', 'life', 'Morning to Evening', 5),
-  lesson('stage7-life-q2', 'stage7', 'life', 'What I Eat', 5),
-  lesson('stage7-life-q3', 'stage7', 'life', 'Where I Go Today', 5),
-  lesson('stage7-rites-q1', 'stage7', 'rites', 'I Ate Tteokguk', 5),
-  lesson('stage7-rites-q2', 'stage7', 'rites', 'On Seollal I Ate ...', 5),
-  lesson('stage7-rites-q3', 'stage7', 'rites', 'My Favorite Day', 5),
-  lesson('stage7-nature-q1', 'stage7', 'nature', 'Animals I Like', 5),
-  lesson('stage7-nature-q2', 'stage7', 'nature', 'Big Tiger, Cute Cat', 5),
-  lesson('stage7-nature-q3', 'stage7', 'nature', 'My Favorite Animal', 5),
-  lesson('stage7-crafts-q1', 'stage7', 'crafts', 'Fold, Cut, Draw', 5),
-  lesson('stage7-crafts-q2', 'stage7', 'crafts', 'First, Next, Last', 5),
-  lesson('stage7-crafts-q3', 'stage7', 'crafts', 'My Making Page', 5),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),
@@ -240,93 +149,46 @@ const lessonQuests: CatalogQuest[] = [
   lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
 ];
 
-type StoryRow = [slug: string, title: string, stage: number, theme: ThemeKey, minutes: number, anchor?: CatalogStory['anchor'], sampler?: true];
-
-/** F-STORY-005 section 3.3, in table order (112 minutes; the six free samplers are flagged). */
-const storyRows: StoryRow[] = [
-  ['sejong-new-letters', "King Sejong's New Letters", 1, 'letters', 4, null, true],
-  ['shapes-of-hangeul', 'The Secret in the Shapes', 1, 'letters', 5],
-  ['hangeul-day', 'Happy Hangul Day!', 1, 'letters', 4, 'hangeul-day', true],
-  ['tripitaka-koreana', 'Eighty Thousand Woodblocks', 1, 'letters', 5],
-  ['sillok-royal-historians', 'Hoya Meets the Royal Historians', 1, 'letters', 4],
-  ['kim-hongdo-genre-paintings', "Kim Hongdo's Pictures of Everyday Life", 1, 'life', 5],
-  ['seollal-new-year', "Hoya's Seollal Morning", 1, 'rites', 4, 'seollal', true],
-  ['chuseok-ganggangsullae', 'Chuseok: Songpyeon and the Full Moon', 1, 'rites', 5, 'chuseok', true],
-  ['sun-and-moon', 'The Sun and the Moon (A Traditional Tale)', 1, 'nature', 5, null, true],
-  ['cheugugi-rain-gauge', 'The Bowl That Measured the Rain', 1, 'crafts', 4, null, true],
-  ['sillok-mountain-archives', 'The Annals Hide in the Mountains', 2, 'letters', 5],
-  ['jikji-metal-type', 'Jikji: Printed with Metal Type', 2, 'letters', 5],
-  ['gimjang-arirang', 'Gimjang Day: Sharing Kimchi, Singing Arirang', 2, 'life', 5],
-  ['dano-ssireum', 'Dano Day: Swings, Masks and Ssireum', 2, 'rites', 5],
-  ['angbuilgu-sundial', 'The Sky-Facing Pot That Told the Time', 2, 'nature', 4],
-  ['janggyeong-panjeon', 'Guarded by the Wind', 2, 'crafts', 5],
-  ['jagyeongnu-water-clock', 'Jang Yeongsil and the Clock That Rang by Itself', 2, 'crafts', 5],
-  ['pansori-tales', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 2, 'crafts', 6],
-  ['seungjeongwon-ilgi-every-day', "The Royal Secretariat's Everyday Diary", 3, 'letters', 5],
-  ['nanjung-ilgi', "Admiral Yi's Diary", 3, 'letters', 4],
-  ['donguibogam', "Heo Jun's Treasured Mirror of Medicine", 3, 'life', 5],
-  ['ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 4, 'letters', 4],
-  ['uigwe-royal-birthday', 'A Picture Record of a Royal Birthday', 5, 'rites', 5],
-  ['joseon-records-today', 'Old Records, New Discoveries', 6, 'letters', 4],
+/**
+ * The shelf order and festival anchors of the stories that shipped up to version 32 (F-STORY-005
+ * section 3.3, table order). Frozen: a story file added later takes the next order after these, by its
+ * slug, with no anchor, so its PR edits only its own file.
+ */
+const STORY_SHELF: readonly StoryShelfEntry[] = [
+  ['sejong-new-letters'],
+  ['shapes-of-hangeul'],
+  ['hangeul-day', 'hangeul-day'],
+  ['tripitaka-koreana'],
+  ['sillok-royal-historians'],
+  ['kim-hongdo-genre-paintings'],
+  ['seollal-new-year', 'seollal'],
+  ['chuseok-ganggangsullae', 'chuseok'],
+  ['sun-and-moon'],
+  ['cheugugi-rain-gauge'],
+  ['sillok-mountain-archives'],
+  ['jikji-metal-type'],
+  ['gimjang-arirang'],
+  ['dano-ssireum'],
+  ['angbuilgu-sundial'],
+  ['janggyeong-panjeon'],
+  ['jagyeongnu-water-clock'],
+  ['pansori-tales'],
+  ['seungjeongwon-ilgi-every-day'],
+  ['nanjung-ilgi'],
+  ['donguibogam'],
+  ['ilseongnok-daily-reflection'],
+  ['uigwe-royal-birthday'],
+  ['joseon-records-today'],
 ];
 
-const stories: CatalogStory[] = storyRows.map(([slug, title, stage, theme, minutes, anchor, sampler], index) => ({
-  id: `story:${slug}`,
-  questId: `quest:story-${slug}-listen`,
-  order: index + 1,
-  title,
-  recommendedStage: stage,
-  theme,
-  minutes,
-  anchor: anchor ?? null,
-  sampler: sampler === true,
-  // F-PLAN-002 section 3.2: every story file is ready with its shelf block and both review
-  // sign-offs since F-STORY-001 PR 1.9 (catalog-parity.test.ts checks the rule per file).
-  status: 'ready',
-}));
-
-/** One listen quest per story (F-STORY-004 section 3.1), on the shelf episode of its slug. */
-const storyQuests: CatalogQuest[] = storyRows.map(([slug, title, stage, theme, minutes]) => ({
-  id: `quest:story-${slug}-listen`,
-  episodeId: `episode:shelf-${slug}`,
-  stage: `stage${stage}` as StageKey,
-  theme,
-  title,
-  minutes,
-  teaches: [],
-  kind: 'story',
-}));
-
-/** F-VOC-001 section 3.3: the twelve launch topics, the first four free (D5). */
-const topicRows: Array<[key: CatalogTopic['key'], title: string]> = [
-  ['food', 'Food'],
-  ['animals', 'Animals'],
-  ['colors', 'Colors'],
-  ['numbers', 'Numbers'],
-  ['family', 'Family'],
-  ['school', 'School'],
-  ['body', 'Body'],
-  ['nature', 'Nature'],
-  ['travel', 'Travel'],
-  ['sports', 'Sports'],
-  ['k-culture', 'K-Culture'],
-  ['science', 'Science'],
-];
-
-const topics: CatalogTopic[] = topicRows.map(([key, title], index) => ({
-  id: `topic:${key}`,
-  key,
-  title,
-  order: index + 1,
-  free: index < 4,
-  minutes: 5,
-  questId: null,
-}));
-
-export const CATALOG: Catalog = {
+export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
-  cells,
-  quests: [...lessonQuests, ...storyQuests],
-  stories,
-  topics,
-};
+  cells: [...handCells, ...GENERATED_LESSON_CELLS],
+  lessonQuests: [...handLessonQuests, ...GENERATED_LESSON_QUESTS],
+  stories: GENERATED_STORIES,
+  storyShelf: STORY_SHELF,
+  topics: GENERATED_TOPICS,
+  // F-VOC-001 section 3.3: twelve launch topics, the first four free (D5), five minutes each.
+  freeTopics: 4,
+  topicMinutes: 5,
+});
