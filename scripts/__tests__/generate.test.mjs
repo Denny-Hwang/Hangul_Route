@@ -4,7 +4,7 @@
 
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { after, describe, test } from "node:test";
@@ -35,7 +35,7 @@ const run = (root, args = [], env = {}) =>
   spawnSync("node", [SCRIPT, ...args], { env: { ...process.env, HANGUL_ROUTE_ROOT: root, HANGUL_ROUTE_STAMP_BASE: "none", ...env }, encoding: "utf8" });
 
 describe("generate.mjs: determinism", () => {
-  test("two runs over the repository's content give identical bytes, even when every folder lists in reverse", () => {
+  test("two runs over the repository's content give identical bytes, even when every folder lists in reverse or the locale differs", () => {
     const a = inputTree();
     const b = inputTree();
     const first = run(a);
@@ -47,7 +47,29 @@ describe("generate.mjs: determinism", () => {
     const reversed = run(b, [], { NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --import ${REVERSE}`.trim() });
     assert.equal(reversed.status, 0, reversed.stdout + reversed.stderr);
     assert.deepEqual(digest(b), once, "the output depends on the order the file system lists a folder");
+    // Estonian collation sorts z between s and t: a sort that leans on the default locale would differ.
+    const c = inputTree();
+    const estonian = run(c, [], { LC_ALL: "et_EE.UTF-8", LANG: "et_EE.UTF-8" });
+    assert.equal(estonian.status, 0, estonian.stdout + estonian.stderr);
+    assert.deepEqual(digest(c), once, "the output depends on the runtime's default locale");
     for (const rel of GENERATED_PATHS) assert.ok(existsSync(join(a, ...rel.split("/"))), `${rel} was written`);
+  });
+
+  test("a run whose output is unchanged touches no file, so dev servers and watchers stay quiet", () => {
+    const root = inputTree();
+    assert.equal(run(root).status, 0);
+    const past = new Date(Date.UTC(2026, 0, 1));
+    const files = generatedFiles(root).map((rel) => join(root, ...rel.split("/")));
+    for (const file of files) utimesSync(file, past, past);
+    assert.equal(run(root).status, 0);
+    const touched = files.filter((file) => statSync(file).mtimeMs !== past.getTime());
+    assert.deepEqual(touched, [], "an unchanged module was rewritten");
+    const stories = join(root, "apps", "mobile", "src", "content", "stories.generated.ts");
+    writeFileSync(stories, "// stale\n");
+    utimesSync(stories, past, past);
+    assert.equal(run(root).status, 0);
+    assert.notEqual(statSync(stories).mtimeMs, past.getTime(), "a changed module is written");
+    assert.notEqual(readFileSync(stories, "utf8"), "// stale\n");
   });
 
   test("--check passes on a tree an earlier run wrote and fails when a generated module was changed", () => {
@@ -107,6 +129,13 @@ describe("generate.mjs: the modules are never committed", () => {
     assert.equal(pkg.scripts.postinstall, "node scripts/generate.mjs");
     assert.equal(new Set(GENERATED_PATHS).size, GENERATED_PATHS.length);
     for (const { script } of GENERATORS) assert.ok(existsSync(join(REPO, "scripts", script)), script);
+  });
+
+  test("Metro runs it before it bundles: expo start, expo export and the Xcode bundle phase load apps/mobile/metro.config.js", () => {
+    const config = readFileSync(join(REPO, "apps", "mobile", "metro.config.js"), "utf8");
+    assert.match(config, /execFileSync\(process\.execPath, \[path\.join\(__dirname, '\.\.', '\.\.', 'scripts', 'generate\.mjs'\)\]/);
+    assert.match(config, /module\.exports = getDefaultConfig\(__dirname\);/);
+    assert.ok(config.indexOf("execFileSync(") < config.indexOf("module.exports"), "the generators run before Metro gets its config");
   });
 
   test("generatedFiles walks a folder output and skips what is absent", () => {
