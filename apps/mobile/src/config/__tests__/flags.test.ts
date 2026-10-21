@@ -469,4 +469,46 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_LECTURE_MODE');
   });
+
+  it('[OA] pinPauseStepsEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-2) is ON at launch; the kill switch values turn it off', async () => {
+    delete process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS;
+    let mod = await reload();
+    expect(mod.flags.pinPauseStepsEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.pinPauseStepsEnabled).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', ' OFF ']) {
+      process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS = off;
+      mod = await reload();
+      expect(mod.flags.pinPauseStepsEnabled, JSON.stringify(off)).toBe(false);
+    }
+    process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS = 'maybe';
+    mod = await reload();
+    expect(mod.flags.pinPauseStepsEnabled).toBe(true);
+    delete process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS;
+  }, RELOADS_MS);
+
+  it('[OA] pinPauseStepsEnabled is read by its literal name', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS');
+  });
+
+  it('[OA] whoChooserEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-4a) is OFF when the row lands; the switch values turn it on', async () => {
+    delete process.env.EXPO_PUBLIC_WHO_CHOOSER;
+    let mod = await reload();
+    expect(mod.flags.whoChooserEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.whoChooserEnabled).toBe(false);
+    for (const on of ['true', '1', 'on', ' YES ']) {
+      process.env.EXPO_PUBLIC_WHO_CHOOSER = on;
+      mod = await reload();
+      expect(mod.flags.whoChooserEnabled, JSON.stringify(on)).toBe(true);
+    }
+    process.env.EXPO_PUBLIC_WHO_CHOOSER = 'maybe';
+    mod = await reload();
+    expect(mod.flags.whoChooserEnabled).toBe(false);
+    delete process.env.EXPO_PUBLIC_WHO_CHOOSER;
+  }, RELOADS_MS);
+
+  it('[OA] whoChooserEnabled is read by its literal name', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_WHO_CHOOSER');
+  });
 });

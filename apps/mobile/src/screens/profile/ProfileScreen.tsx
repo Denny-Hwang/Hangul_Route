@@ -36,10 +36,12 @@ import { installEnv } from '../../platform/pwa';
 import { useAudioStore } from '../../store/audio-store';
 import { useTierStore } from '../../store/tier-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { learnerProfiles, switchOffered } from '../../store/who-chooser';
 import { useProgressStore } from '../../store/progress-store';
 import { useLocaleStore } from '../../store/locale-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useAudience } from '../../store/audience';
+import { trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry';
 import { useUiStore } from '../../store/ui-store';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
@@ -105,6 +107,8 @@ export function ProfileScreen(): React.ReactElement {
     profileId?: string,
   ): void => {
     if (opensDirectly(parentSessionOpen)) {
+      // [OA] Section 15: a gate the open session (or a device without a gate) opened directly.
+      trackGateOpened(next, parentSessionOpen ? 'session' : 'open');
       if (next === 'EditProfile') {
         if (profileId !== undefined) navigation.navigate('EditProfile', { profileId });
       } else if (next === 'AddProfile') {
@@ -152,7 +156,12 @@ export function ProfileScreen(): React.ReactElement {
               }}
             >
               <Pressable
-                onPress={() => setActive(p.id)}
+                onPress={() => {
+                  // [OA] G1 baseline (section 15): a switch from the Profile tiles; the same tile again is no switch.
+                  if (p.id !== active?.id) trackProfileSwitch('profile', false);
+                  // setActive closes any grown-up session on a change of learner (OA-D5b, CS-15).
+                  setActive(p.id);
+                }}
                 accessibilityRole="button"
                 accessibilityLabel={t.switchTo(p.displayName)}
                 style={{ padding: spacing.md, alignItems: 'center', minHeight: touchTarget.hero, borderRadius: radii.lg }}
@@ -178,6 +187,27 @@ export function ProfileScreen(): React.ReactElement {
           );
         })}
       </View>
+
+      {switchOffered(learnerProfiles(profiles).length) ? (
+        <>
+          {/* [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): the chooser; the tiles above stay a second way to switch. */}
+          <Spacer size="lg" />
+          <Card padding="md">
+            <Pressable
+              testID="profile-who-row"
+              onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })}
+              accessibilityRole="button"
+              accessibilityLabel={m.learner.who.profileRow}
+              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+            >
+              <Body weight="semibold" style={{ flex: 1 }}>
+                {m.learner.who.profileRow}
+              </Body>
+              <Icon name="arrow-right" size={24} color={colors.text.muted} />
+            </Pressable>
+          </Card>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <Button

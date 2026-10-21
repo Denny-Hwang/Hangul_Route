@@ -5,6 +5,7 @@ import type { PreviewFrom } from '../logic/episode-access';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { PlanChoice, ProposalSource } from '../logic/route/proposal-flow';
 import type { SetupState } from '../logic/route/setup-flow';
+import type { WhoTrigger } from '../logic/profiles/who';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
@@ -62,6 +63,8 @@ export type GrownUpDestination =
   | 'ClassScope'
   /** AMENDMENTS-LECTURE-V2 E5 (LV-6, web only): the dashboard's Lecture mode card after the session lapsed; back to the dashboard, where one more tap opens the presenter tab. */
   | 'LectureMode'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21 (row OA-4a): the chooser's Cancel the wait; verify only, never creates or resets a PIN; a correct PIN clears the pending 24-hour wait and returns to the chooser. */
+  | 'CancelReset'
   // add new members above this line
 ;
 
@@ -293,6 +296,12 @@ export type RootStackParamList = {
    * that a teacher may move the learner; OK records it. Behind the grown-up gate whenever the device needs one.
    */
   ClassScope: { profileId: string };
+  /**
+   * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6, row OA-4a; wireframe `profiles/who-is-using.md`):
+   * the device's one chooser. Root stack, above `Main`, no Back, the Android back swallowed. `trigger`: why it opened
+   * (`who.shown`, and `profile.switch` with `via: 'chooser'`). A held join code is never a param (OA-D20).
+   */
+  WhoIsUsing: { trigger: WhoTrigger };
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

@@ -2428,4 +2428,32 @@ export const learner = {
     scopeSelf: 'There is an update about your class.',
     open: { cta: 'Open' },
   },
+  /**
+   * [OA] "Who is using this?", the device's one chooser (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6.1 and 17.1, row
+   * OA-4a; mock design/screens/profiles/who-is-using.md). Names only on the tiles; nothing compares learners. The use
+   * rows (Family, Teacher, School, Sign in as a grown-up) and the lock lines arrive with rows OA-4b and OA-5.
+   */
+  who: {
+    title: 'Who is using this?',
+    /** The learner tiles' section. */
+    learning: 'Learning',
+    /** The grown-up rows' section. */
+    grownUps: 'Grown-ups',
+    /** The dashed tile after the learners (gated as Add a profile is). */
+    add: 'Add a learner',
+    /** The Home header button between Display and Profile; its hint is `title`. */
+    switch: 'Switch',
+    /** The Profile screen's row that opens the chooser. */
+    profileRow: 'Who is using this?',
+    /** The Grown-up area's button that hands the device back through the chooser. */
+    switchUser: 'Switch user',
+    /** Under the title when a held join code opened the chooser (OA-D20). */
+    joinCaption: 'Pick who is joining.',
+    /** Under the Grown-up area row on a device with child profiles and no PIN yet. */
+    nopinCaption: 'A grown-up sets a PIN here.',
+    /** While a Forgot PIN wait runs (OA-D21): `time` is the local time it ends. No name, no count of tries. */
+    resetPending: (time: string) => `A new grown-up PIN can be set after ${time}. Enter the PIN to cancel.`,
+    /** Opens the PIN screen in verify mode; a correct PIN stops the wait. Also the title of that PIN screen. */
+    resetCancel: 'Cancel the wait',
+  },
 } as const;

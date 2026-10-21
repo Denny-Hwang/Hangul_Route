@@ -196,6 +196,23 @@ export interface Flags {
    * switching it off needs a rebuild and redeploy of the learner app.
    */
   lectureModeEnabled: boolean;
+
+  /**
+   * [OA] Longer PIN pauses (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D7, section 8.3, row OA-2): each round of 5 misses
+   * pauses 30 s, 1 min, 5 min, 15 min, then 60 min. ON at launch; `EXPO_PUBLIC_PIN_PAUSE_STEPS` is a kill switch
+   * (`parseKillSwitch`), and off is the flat 30-second pause of before. The session close on every hand-back, the
+   * fresh-PIN check, the Rescue Code's own counter and the shared attempt state across tabs have no switch.
+   */
+  pinPauseStepsEnabled: boolean;
+
+  /**
+   * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6 and 16, row OA-4a): the chooser at launch
+   * on a shared device, after 30 minutes in the background, on the `who=1` boot intent and on a held join code, the
+   * Home Switch button, the Profile row and the Grown-up area's Switch user. OFF when row OA-4a lands; OA-10 turns it
+   * on. `EXPO_PUBLIC_WHO_CHOOSER` (`parseKillSwitch`). Off: no trigger, no Switch, `who=1` ignored, the Profile tile
+   * row as before. The session close on every change of learner and the cross-tab profile list have no switch.
+   */
+  whoChooserEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -217,6 +234,8 @@ const launchDefaults: Flags = {
   routeEnabled: true,
   // LV-7 turned this on with the web default and the site claim (AMENDMENTS-LECTURE-V2 LV-D1).
   lectureModeEnabled: true,
+  pinPauseStepsEnabled: true,
+  whoChooserEnabled: false,
 };
 
 export const flags: Flags = {
@@ -243,6 +262,8 @@ export const flags: Flags = {
   reportsEnabled: parseBool(process.env.EXPO_PUBLIC_REPORTS_ENABLED, launchDefaults.reportsEnabled),
   routeEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_ENABLED, launchDefaults.routeEnabled),
   lectureModeEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_LECTURE_MODE, launchDefaults.lectureModeEnabled),
+  pinPauseStepsEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS, launchDefaults.pinPauseStepsEnabled),
+  whoChooserEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_WHO_CHOOSER, launchDefaults.whoChooserEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

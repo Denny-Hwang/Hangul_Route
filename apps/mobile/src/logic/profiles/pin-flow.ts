@@ -28,18 +28,32 @@ export function forGrownUpArea(params: PinRouteParams): boolean {
 }
 
 /**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21 (row OA-4a): the chooser's **Cancel the wait**. It only checks the
+ * PIN: a correct one clears the pending 24-hour wait and returns to the chooser, opening nothing (CS-4).
+ */
+export const CANCEL_RESET = 'CancelReset';
+
+/** [OA] Whether the screen was opened by Cancel the wait. */
+export function forCancelReset(params: PinRouteParams): boolean {
+  return params.next === CANCEL_RESET;
+}
+
+/**
  * The step the screen opens on. `GrownUpArea` never creates or resets a PIN (F-APP-001 section
  * 3.9): it always verifies, whatever `mode` says, so a child cannot make a PIN that opens the
  * grown-up area. With no PIN stored it shows `grownUpAreaNoPin` instead of the pad.
  */
 export function initialPinMode(params: PinRouteParams, storedHash: string | null): PinMode {
-  if (forGrownUpArea(params)) return 'verify';
+  if (forGrownUpArea(params) || forCancelReset(params)) return 'verify';
   return params.mode === 'setup' || storedHash === null ? 'setup-1' : 'verify';
 }
 
-/** "Forgot PIN?" exists only where a PIN is being checked, and never for the grown-up area (no reset from there). */
+/**
+ * "Forgot PIN?" exists only where a PIN is being checked, and never for the grown-up area (no reset from there) or
+ * for Cancel the wait ([OA]: a reset is already waiting; this screen only stops it).
+ */
 export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boolean {
-  return mode === 'verify' && !forGrownUpArea(params);
+  return mode === 'verify' && !forGrownUpArea(params) && !forCancelReset(params);
 }
 
 /** The grown-up area on a device with no PIN stored: one line and Continue to the grown-up page, no pad. */

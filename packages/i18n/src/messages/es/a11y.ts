@@ -289,4 +289,9 @@ export const a11y = {
     slot: 'espacio',
     tilePlaced: (word: string) => `Se colocó: ${word}`,
   },
+  /** [OA] Nombres accesibles del selector (OA-4a, 17.2). */
+  who: {
+    tile: (name: string) => `${name}. Toca para empezar a aprender.`,
+    grownUpRow: (label: string) => `${label}, para adultos, requiere PIN`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;
