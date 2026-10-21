@@ -9,7 +9,10 @@ export interface GrownUpRowProps {
   locked: boolean;
   /** Offline (web): every use row but the Grown-up area. */
   disabled?: boolean;
-  /** A line under the label (the `nopin` caption, Needs the internet); its accessibility hint, never in the name. */
+  /**
+   * A line under the label (the `nopin` caption, Needs the internet): the row's description, never in the name; the
+   * accessibility hint on native and `aria-describedby` on the web (react-native-web maps no hint to the DOM).
+   */
   caption?: string | null;
   accessibilityLabel: string;
   onPress: () => void;
@@ -20,11 +23,14 @@ export interface GrownUpRowProps {
  * [OA] One grown-up use on "Who is using this?" (component spec `design/components/GrownUpRow/spec.md`,
  * AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6.1, 12, 14, row OA-4a): visibly secondary to the learner tiles, a lock
  * glyph, the generic label and a chevron, at least `touchTarget.min` high. A disabled row stays in the reading order
- * and says why. The caption is the row's hint, so the name is the label (and the PIN) alone.
+ * and says why. The caption is the row's description, so the name is the label (and the PIN) alone.
  */
 export function GrownUpRow({ label, locked, disabled = false, caption = null, accessibilityLabel, onPress, testID }: GrownUpRowProps): React.ReactElement {
+  const captionId = `grown-up-row-caption${React.useId().replace(/:/g, '-')}`;
+  const describedBy = caption ? { 'aria-describedby': captionId } : {};
   return (
     <Pressable
+      {...describedBy}
       testID={testID}
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
@@ -52,9 +58,11 @@ export function GrownUpRow({ label, locked, disabled = false, caption = null, ac
           {label}
         </Body>
         {caption ? (
-          <Caption tone="secondary" testID={testID === undefined ? undefined : `${testID}-caption`}>
-            {caption}
-          </Caption>
+          <View nativeID={captionId} {...{ id: captionId }}>
+            <Caption tone="secondary" testID={testID === undefined ? undefined : `${testID}-caption`}>
+              {caption}
+            </Caption>
+          </View>
         ) : null}
       </View>
       {disabled ? null : <Icon name="arrow-right" size={24} color={colors.text.secondary} />}

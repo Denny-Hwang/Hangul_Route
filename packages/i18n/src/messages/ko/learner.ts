@@ -1834,5 +1834,11 @@ export const learner = {
     resetCancel: '기다리기 취소',
     lockedCaption: '어른이 열어 줘요.',
     locksUnread: '이름을 누르면 어른이 PIN을 입력해요.',
+    use: {
+      family: '가족',
+      teacher: '선생님',
+      school: '학교',
+      signIn: '어른으로 로그인',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;

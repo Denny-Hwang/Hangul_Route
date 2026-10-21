@@ -37,6 +37,15 @@ vi.mock('../../platform/join-handoff', () => ({
   },
 }));
 
+// [OA] Row OA-4b: the known grown-up uses (`deviceUses`, web); the node lane would load the native stub.
+const uses = vi.hoisted(() => ({ value: [] as string[], reads: 0 }));
+vi.mock('../../platform/device-uses', () => ({
+  readDeviceUses: vi.fn(async () => {
+    uses.reads += 1;
+    return [...uses.value];
+  }),
+}));
+
 import { flags } from '../../config/flags';
 import { useAccountStore } from '../account-store';
 import { readProfileLocks, resetProfileLocks } from '../profile-locks';
@@ -50,7 +59,9 @@ import {
   deviceShared,
   heldJoin,
   holdJoin,
+  knownUses,
   persistLeaving,
+  refreshKnownUses,
   resetChooserState,
   switchOffered,
   takeHeldJoin,
@@ -75,6 +86,8 @@ beforeEach(() => {
   failRead.on = false;
   boot.intent = null;
   handoff.code = null;
+  uses.value = [];
+  uses.reads = 0;
   resetChooserState();
   resetProfileLocks();
   flags.whoChooserEnabled = true;
@@ -116,6 +129,39 @@ describe('the device as the chooser reads it', () => {
     expect(switchOffered(1)).toBe(false);
     flags.whoChooserEnabled = false;
     expect(switchOffered(5)).toBe(false);
+  });
+
+  it('row OA-4b: a known grown-up use offers Switch on a single-learner device too (section 6.2)', async () => {
+    uses.value = ['teacher'];
+    await refreshKnownUses();
+    expect(knownUses()).toEqual(['teacher']);
+    expect(switchOffered(1)).toBe(true);
+    flags.whoChooserEnabled = false;
+    expect(switchOffered(1)).toBe(false);
+  });
+
+  it('row OA-4b: a known use makes a single-learner device shared, except a self-only device without a PIN', async () => {
+    useProfileStore.setState({ profiles: [learner('profile:mina')], activeId: 'profile:mina' });
+    expect(deviceShared()).toBe(false);
+    uses.value = ['family'];
+    await refreshKnownUses();
+    expect(deviceShared()).toBe(true);
+    useProfileStore.setState({ profiles: [learner('profile:me', 'self')], activeId: 'profile:me' });
+    useAccountStore.setState({ parentPinHash: null });
+    expect(deviceShared()).toBe(false);
+  });
+
+  it('row OA-4b: the launch reads the known uses, so a single learner whose grown-up teaches sees the chooser', async () => {
+    useProfileStore.setState({ profiles: [learner('profile:mina')], activeId: 'profile:mina' });
+    expect(await chooserLaunchTrigger()).toBeNull();
+    uses.value = ['teacher', 'school'];
+    expect(await chooserLaunchTrigger()).toBe('launch');
+    expect(knownUses()).toEqual(['teacher', 'school']);
+    // The flag off reads nothing.
+    flags.whoChooserEnabled = false;
+    const before = uses.reads;
+    expect(await chooserLaunchTrigger()).toBeNull();
+    expect(uses.reads).toBe(before);
   });
 });
 

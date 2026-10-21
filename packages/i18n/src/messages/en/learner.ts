@@ -2431,7 +2431,7 @@ export const learner = {
   /**
    * [OA] "Who is using this?", the device's one chooser (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6.1 and 17.1, row
    * OA-4a; mock design/screens/profiles/who-is-using.md). Names only on the tiles; nothing compares learners. The use
-   * rows (Family, Teacher, School, Sign in as a grown-up) and the lock lines arrive with rows OA-4b and OA-5.
+   * rows (Family, Teacher, School, Sign in as a grown-up) are row OA-4b's; the lock lines arrive with row OA-5.
    */
   who: {
     title: 'Who is using this?',
@@ -2459,5 +2459,16 @@ export const learner = {
     lockedCaption: 'A grown-up opens this one.',
     /** [OA] Row OA-5, section 13.2: under the title when the locks cannot be read, so every tile is locked (no per-tile caption). */
     locksUnread: 'Tap a name, then a grown-up enters the PIN.',
+    /**
+     * Row OA-4b: the grown-up rows of the signed-in account's uses on this browser (web), in this order, each also the
+     * title of its PIN screen. Generic labels only, never an account name or email (CS-7). `signIn` replaces the use
+     * rows when no use is known.
+     */
+    use: {
+      family: 'Family',
+      teacher: 'Teacher',
+      school: 'School',
+      signIn: 'Sign in as a grown-up',
+    },
   },
 } as const;

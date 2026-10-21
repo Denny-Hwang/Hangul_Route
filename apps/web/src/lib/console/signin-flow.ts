@@ -1,5 +1,6 @@
 import {
   APP_ROUTES,
+  SCHOOL_FOCUS,
   homeFor,
   personaHint,
   personasFor,
@@ -334,7 +335,8 @@ export function signedOutTarget(pathname: string, search: string): string {
   const query = new URLSearchParams();
   const hasQuery = params.toString() !== '';
   if (TEACH_ROUTER.test(pathname)) {
-    const hint = personaHint(params);
+    // [OA] Row OA-4b: `focus=school` (the chooser's School row) is the teacher hint too, as on the router itself.
+    const hint = personaHint(params) ?? (params.get(SCHOOL_FOCUS.param) === SCHOOL_FOCUS.value ? 'teacher' : null);
     if (hint) query.set('persona', hint);
   }
   const lang = params.get('lang');

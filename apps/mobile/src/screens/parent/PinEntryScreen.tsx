@@ -24,6 +24,7 @@ import {
   forFreshPin,
   forGrownUpArea as opensGrownUpArea,
   forLockedProfile,
+  forGrownUpUse,
   grownUpAreaNoPin,
   initialPinMode,
   pinCreatedWhere,
@@ -41,6 +42,7 @@ import {
 import { pauseAnnounceKey, pauseText, showsPauseHelp } from '../../logic/profiles/pin-pause';
 import { shortcutOffered } from '../../logic/profiles/biometric-shortcut';
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
+import { chooserHandoff, rowLabelKey } from '../../logic/profiles/who';
 import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { flags } from '../../config/flags';
@@ -48,7 +50,7 @@ import { subscribeAppVisibility } from '../../platform/app-visibility';
 import { onPinAttemptsChanged } from '../../platform/pin-attempts-channel';
 import { openBrowseFromGate } from '../../platform/browse-handoff';
 import { pinHasher } from '../../platform/crypto';
-import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
+import { continueToGrownUpPage, openGrownUpArea, type HandoffResult } from '../../platform/grown-up-handoff';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
@@ -88,6 +90,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * `design/screens/profiles/pin-entry-v2.md` boards 2 and 3): longer pauses (30 s, 1 min, 5 min, 15 min, 60 min),
  * minutes from a minute on, the Forgot PIN? help line from the 3rd pause on the Grown-up area only, a polite live
  * region updated once a minute, one attempt count shared by every tab, `pin.paused` and `parent.gate.opened`.
+ *
+ * [OA] Destination `GrownUpUse` (row OA-4b, section 5.3, CS-4): the chooser's Family, Teacher, School and Sign in as a
+ * grown-up rows. Verify only, no Forgot PIN?, never a new PIN; a correct PIN hands off with `via: 'chooser'` to that
+ * use's page (`grownUpTarget`); with no PIN stored, the no-PIN line and Continue to `/signin`. Cancel returns to the
+ * chooser.
  *
  * [OA] Destination `CancelReset` (row OA-4a, OA-D21; mock `design/screens/profiles/pin-entry-v2.md` D8): the chooser's
  * **Cancel the wait**, titled with those words. Verify only, no Forgot PIN?: a correct PIN clears the pending 24-hour
@@ -149,6 +156,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const markGateReturn = useUiStore((s) => s.markGateReturn);
   const locale = useLocale();
   const forGrownUpArea = opensGrownUpArea(route.params);
+  const forUse = forGrownUpUse(route.params);
   const cancelReset = forCancelReset(route.params);
   const lockedProfile = forLockedProfile(route.params);
   const freshPin = forFreshPin(route.params);
@@ -168,6 +176,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const biometricReading = useRef(false);
   // [OA] A PIN check is running: read before the next render, so a face or fingerprint tap in the same frame waits.
   const submitting = useRef(false);
+  // [OA] Row OA-4b: a chooser row's hand-off is leaving the tab; the pad and Cancel wait for the page to go, so a second
+  // PIN cannot hand off twice and a Cancel cannot close the session under the page that is opening.
+  const [leavingTab, setLeavingTab] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   // [OA] `parent.gate.opened` once per gate: Change PIN checks the PIN first, then sets a new one.
   const gateSent = useRef(false);
@@ -223,6 +234,14 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       offOtherTab();
     };
   }, [refreshAttempts]);
+
+  // A page that never went, or came back from the back/forward cache, shows this screen in front again: it is usable.
+  useEffect(() => {
+    if (!leavingTab) return;
+    return subscribeAppVisibility((visible) => {
+      if (visible) setLeavingTab(false);
+    });
+  }, [leavingTab]);
 
   // Tick once a second only while a cooldown is showing.
   useEffect(() => {
@@ -316,12 +335,18 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     navigation.goBack();
   };
 
-  const handOff = async (): Promise<void> => {
-    const { url, grownUpVia } = route.params;
+  const handOff = async (): Promise<HandoffResult> => {
+    const { url, grownUpVia, use } = route.params;
+    // [OA] A chooser row (row OA-4b): its own page, `via: 'chooser'`; the target is derived here, never read from the route.
+    const request = forUse ? chooserHandoff(use ?? 'signin') : { via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) };
     // The PIN screen already sent `parent.gate.opened` for this gate.
-    const result = await openGrownUpArea({ via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) }, undefined, { gateSent: true });
-    // The tab is leaving; a return through the back/forward cache lands on the start screen.
-    if (result === 'opened') back();
+    const result = await openGrownUpArea(request, undefined, { gateSent: true });
+    // The tab is leaving; a return through the back/forward cache lands on the start screen. [OA] From the chooser the
+    // screen stays until the page goes: going back there would close the grown-up session and clear the unlock this
+    // hand-off just wrote, before the grown-up page reads it (CS-2). A return from the cache finds this PIN screen,
+    // which asks again (the fresh PIN is forgotten on a restore).
+    if (result === 'opened' && !forUse) back();
+    return result;
   };
 
   const proceed = (): void => {
@@ -456,14 +481,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     if (route.params.next === 'BiometricShortcut' && via === 'pin') await enableBiometricShortcut(m.biometric.cta);
     // [OA] Row OA-5: the fresh PIN a control asked for; the control applies the change on the way back.
     if (freshPin) leave();
-    else if (forGrownUpArea) await handOff();
+    else if (forUse) {
+      if ((await handOff()) === 'opened') setLeavingTab(true);
+    } else if (forGrownUpArea) await handOff();
     else proceed();
   };
 
   /** [OA] Use face or fingerprint: reads the shortcut; only a returned token opens (CS-8, CS-13, CS-18). */
   const tryFaceOrFingerprint = async (): Promise<void> => {
     // Refs, not render state: two taps in one frame start one read and navigate once.
-    if (biometricReading.current || submitting.current) return;
+    if (biometricReading.current || submitting.current || leavingTab) return;
     biometricReading.current = true;
     setBiometricBusy(true);
     try {
@@ -486,7 +513,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   };
 
   const submit = async (): Promise<void> => {
-    if (entry.length !== PIN_LENGTH || busy || submitting.current || biometricReading.current) return;
+    if (entry.length !== PIN_LENGTH || busy || leavingTab || submitting.current || biometricReading.current) return;
     submitting.current = true;
     setBusy(true);
     try {
@@ -590,15 +617,19 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   // [OA] The console's sign-in reset ticket opens setup titled Choose a new grown-up PIN (section 8.5 step 5).
   const setupTitle = route.params.via === 'sign_in' ? m.reset.signIn.newPinTitle : copy.pinCreateTitle;
+  // [OA] A chooser row's PIN screen is titled with that row's label (mock pin-entry-v2.md, "Title per destination").
+  const useTitle = forUse ? messages.learner.who.use[rowLabelKey(route.params.use ?? 'signin')] : null;
   const title = cancelReset
     ? messages.learner.who.resetCancel
     : lockedProfile && mode === 'verify' && lockedName !== null
       ? lockedName
-      : mode === 'verify'
-        ? copy.pinVerifyTitle
-        : mode === 'setup-1'
-          ? setupTitle
-          : m.entry.createAgain;
+      : useTitle !== null
+        ? useTitle
+        : mode === 'verify'
+          ? copy.pinVerifyTitle
+          : mode === 'setup-1'
+            ? setupTitle
+            : m.entry.createAgain;
   const subtitle =
     mode === 'verify'
       ? m.entry.verifySubtitle
@@ -642,7 +673,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     // F-APP-001 section 3.9: the grown-up area never creates a PIN here; the grown-up signs in instead.
     const g = messages.caregiver.grownUpHome;
     return (
-      <Screen tone="canvas" header={{ title: copy.pinVerifyTitle, titleInline: true }}>
+      <Screen tone="canvas" header={{ title: useTitle ?? copy.pinVerifyTitle, titleInline: true }}>
         <Spacer size="xs" />
         <Body tone="secondary">{g.noPin}</Body>
         <Spacer size="lg" />
@@ -654,7 +685,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           onPress={() => {
             // [OA] Section 15: this gate opens with no PIN (none is stored), so it is sent as `open`.
             trackGateOpened(route.params.next, 'open');
-            continueToGrownUpPage(route.params.url, locale);
+            // [OA] A chooser row has no URL in its route: Continue opens the sign-in page (CS-4).
+            continueToGrownUpPage(forUse ? undefined : route.params.url, locale);
           }}
         />
         <Spacer size="sm" />
@@ -733,7 +765,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
               tone="secondary"
               size="md"
               fullWidth
-              disabled={biometricBusy || busy}
+              disabled={biometricBusy || busy || leavingTab}
               onPress={() => void tryFaceOrFingerprint()}
               testID="pin-biometric"
             />
@@ -780,7 +812,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
             if (next.length >= entry.length) setHint(null);
             setEntry(next);
           }}
-          disabled={locked || busy || biometricBusy}
+          disabled={locked || busy || biometricBusy || leavingTab}
           layout={pad}
         />
       </View>
@@ -791,11 +823,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         tone="primary"
         size="lg"
         fullWidth
-        disabled={entry.length !== PIN_LENGTH || locked || busy || biometricBusy}
+        disabled={entry.length !== PIN_LENGTH || locked || busy || biometricBusy || leavingTab}
         onPress={() => void submit()}
       />
       <Spacer size="sm" />
-      <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={leave} />
+      <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth disabled={leavingTab} onPress={leave} />
       {/* Quiet on purpose: plain text, no icon, nothing for a child to gain from poking it. */}
       {showForgotPin(mode, route.params) ? (
         <Button

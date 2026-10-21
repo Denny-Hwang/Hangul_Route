@@ -434,6 +434,13 @@ export const CHOOSER_NAME_ORDER_FROM = 13;
 /** [OA] OQ-24: days the Worker keeps the anonymous `telemetry_daily` counters. */
 export const TELEMETRY_DAILY_KEEP_DAYS = 400;
 
+/**
+ * [OA] Section 5.3 (row OA-4b): the query the chooser's School row adds to `/teach`; the `/teach` router carries it to
+ * the teacher home, which moves focus to its first school card and then removes it. Holds no id.
+ */
+export const SCHOOL_FOCUS = { param: 'focus', value: 'school' } as const;
+export const SCHOOL_FOCUS_QUERY = `${SCHOOL_FOCUS.param}=${SCHOOL_FOCUS.value}`;
+
 /** [OA] Section 6.2: why the chooser opened. */
 export const WHO_TRIGGERS = ['launch', 'return', 'resume', 'join', 'manual'] as const;
 

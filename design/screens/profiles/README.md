@@ -101,7 +101,7 @@ Character counts of the section 17 drafts against English, for the pieces with t
 | `learner.who.add` | 13 | 18 (138 %) | 6 (46 %) | Add tile, 8rem |
 | `learner.who.lockedCaption` | 26 | 18 (69 %) | 10 (38 %) | tile caption |
 | `learner.who.title` | 18 | 20 (111 %) | 10 (56 %) | title |
-| `learner.who.use.signIn` | 21 | 18 (86 %) | 8 (38 %) | row |
+| `learner.who.use.signIn` | 21 | 26 (124 %) | 8 (38 %) | row |
 | `learner.who.nopinCaption` | 27 | 27 (100 %) | 18 (67 %) | row caption |
 | `learner.who.locksUnread` | 43 | 42 (98 %) | 22 (51 %) | line |
 | `learner.who.resetPending` | 68 | 93 (137 %) | 48 (71 %) | pending box |

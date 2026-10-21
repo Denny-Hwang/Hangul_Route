@@ -1901,5 +1901,11 @@ export const learner = {
     resetCancel: 'Cancelar la espera',
     lockedCaption: 'Lo abre un adulto.',
     locksUnread: 'Toca un nombre y un adulto escribe el PIN.',
+    use: {
+      family: 'Familia',
+      teacher: 'Docente',
+      school: 'Escuela',
+      signIn: 'Entrar como persona adulta',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;

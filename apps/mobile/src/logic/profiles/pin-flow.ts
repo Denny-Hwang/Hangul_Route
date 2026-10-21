@@ -71,12 +71,24 @@ export function forFreshPin(params: PinRouteParams): boolean {
 }
 
 /**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3, CS-4 (row OA-4b): the chooser's Family, Teacher, School and Sign in
+ * as a grown-up rows (`PinEntry.use`). Verify only, like `GrownUpArea`: a correct PIN hands off to that use's page
+ * (`openGrownUpArea({ via: 'chooser', target })`); it never creates or resets a PIN.
+ */
+export const GROWN_UP_USE = 'GrownUpUse';
+
+/** [OA] Whether the screen was opened by a use row on the chooser. */
+export function forGrownUpUse(params: PinRouteParams): boolean {
+  return params.next === GROWN_UP_USE;
+}
+
+/**
  * The step the screen opens on. `GrownUpArea` never creates or resets a PIN (F-APP-001 section
  * 3.9): it always verifies, whatever `mode` says, so a child cannot make a PIN that opens the
  * grown-up area. With no PIN stored it shows `grownUpAreaNoPin` instead of the pad.
  */
 export function initialPinMode(params: PinRouteParams, storedHash: string | null): PinMode {
-  if (forGrownUpArea(params) || forCancelReset(params) || forFreshPin(params)) return 'verify';
+  if (forGrownUpArea(params) || forGrownUpUse(params) || forCancelReset(params) || forFreshPin(params)) return 'verify';
   // [OA] A locked tile never opens setup by itself (no Forgot PIN shortcut to setup): only the reset paths' new PIN.
   if (forLockedProfile(params)) return params.mode === 'setup' && params.via !== undefined ? 'setup-1' : 'verify';
   if (params.mode === 'change') return storedHash === null ? 'setup-1' : 'verify';
@@ -89,7 +101,7 @@ export function initialPinMode(params: PinRouteParams, storedHash: string | null
  * grown-up inside the Grown-up area changes the PIN there).
  */
 export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boolean {
-  return mode === 'verify' && !forGrownUpArea(params) && !forCancelReset(params) && !forFreshPin(params);
+  return mode === 'verify' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params) && !forFreshPin(params);
 }
 
 /**
@@ -101,9 +113,12 @@ export function voidWithoutPin(params: PinRouteParams, storedHash: string | null
   return storedHash === null && !hashReadFailed && (forFreshPin(params) || (forLockedProfile(params) && params.mode !== 'setup'));
 }
 
-/** The grown-up area on a device with no PIN stored: one line and Continue to the grown-up page, no pad. */
+/**
+ * The grown-up area on a device with no PIN stored: one line and Continue to the grown-up page, no pad. [OA] A use row
+ * of the chooser too (CS-4): its Continue opens the sign-in page.
+ */
 export function grownUpAreaNoPin(params: PinRouteParams, storedHash: string | null): boolean {
-  return forGrownUpArea(params) && storedHash === null;
+  return (forGrownUpArea(params) || forGrownUpUse(params)) && storedHash === null;
 }
 
 /** The `where` of `pin.created` for a PIN stored by this screen (the first-run card reports `first_run` itself). */
@@ -118,6 +133,6 @@ export function pinCreatedWhere(params: PinRouteParams): 'gate' | 'reset' | 'opt
  */
 export function verifiedGoesToSetup(params: PinRouteParams): boolean {
   return (
-    params.mode === 'change' && !forGrownUpArea(params) && !forCancelReset(params) && !forFreshPin(params) && !forLockedProfile(params)
+    params.mode === 'change' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params) && !forFreshPin(params) && !forLockedProfile(params)
   );
 }

@@ -736,6 +736,38 @@ describe('/teach: a router page with the hint of persona or as, none otherwise (
     expect(browser.replaced).toEqual(['/teach/home']);
   });
 
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3, row OA-4b: the chooser's Teacher and School rows.
+  it('the Teacher row (persona=teacher) lands on the teacher home even when the last persona was Family', async () => {
+    nav.params = new URLSearchParams('persona=teacher&lang=en');
+    stores.last = 'parent';
+    api.spaces = { ok: true, data: [FAMILY, CLASS] };
+    await render(<TeachRouterPage />);
+    expect(browser.replaced).toEqual(['/teach/home']);
+  });
+
+  it('the School row (focus=school) lands on the teacher home with focus=school, whatever the last persona', async () => {
+    nav.params = new URLSearchParams('focus=school&lang=ko');
+    stores.last = 'parent';
+    api.spaces = { ok: true, data: [FAMILY, { space: { kind: 'school' }, role: 'admin' }] };
+    const page = (await render(<TeachRouterPage />)).root;
+    expect(browser.replaced).toEqual(['/teach/home?focus=school']);
+    expect(byTestId(page, 'signin-go-now')[0]?.props.href).toBe('/teach/home?focus=school');
+  });
+
+  it('focus=school with no teacher persona goes to /start with the teacher hint, without the focus', async () => {
+    nav.params = new URLSearchParams('focus=school');
+    api.spaces = { ok: true, data: [] };
+    await render(<TeachRouterPage />);
+    expect(browser.replaced).toEqual(['/start?persona=teacher']);
+  });
+
+  it('any other focus value is ignored', async () => {
+    nav.params = new URLSearchParams('focus=sp_1');
+    api.spaces = { ok: true, data: [CLASS] };
+    await render(<TeachRouterPage />);
+    expect(browser.replaced).toEqual(['/teach/home']);
+  });
+
   it('renders nothing while signed out (the layout sends the visitor to /signin)', async () => {
     auth.value = { mode: 'clerk', ready: true, session: null, sessionId: null };
     const page = (await render(<TeachRouterPage />)).root;
