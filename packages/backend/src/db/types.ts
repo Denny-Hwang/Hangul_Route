@@ -504,6 +504,12 @@ export interface Db {
   addRollups(day: string, keys: readonly RollupKey[], counter?: string): Promise<number>;
   /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Only lib/learning-rollups reads it, and it applies the suppression. */
   rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]>;
+  /**
+   * The guardrail evaluator's only write (F-CURR-002 section 12.3, row CM-70b): sets `pct` to `toPct` with the reason and
+   * time, only while the row still holds `fromPct` and only when `toPct` is lower, and never touches `on`. Answers
+   * whether a row changed, so a row the owner edited since it was read is left as the owner set it.
+   */
+  lowerRemoteConfigPct(flag: string, fromPct: number, toPct: number, updatedAt: string, reason: string): Promise<boolean>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

@@ -1207,6 +1207,12 @@ export class MemoryDb implements Db {
     const order = (r: RollupRow): string => `${r.day}\n${rollupCellKey(r)}`;
     return rows.sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0)).slice(0, limit);
   }
+  async lowerRemoteConfigPct(flag: string, fromPct: number, toPct: number, updatedAt: string, reason: string): Promise<boolean> {
+    const row = this.remoteConfigRows.get(flag);
+    if (!row || row.pct !== fromPct || !(toPct < row.pct)) return false;
+    this.remoteConfigRows.set(flag, { ...row, pct: toPct, updatedAt, reason });
+    return true;
+  }
 
   async reset(): Promise<void> {
     this.remoteConfigRows.clear();
