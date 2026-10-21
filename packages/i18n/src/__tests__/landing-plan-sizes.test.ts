@@ -56,7 +56,7 @@ describe('Terms: what each plan holds (landing.legal.terms.sections.billing.para
 
   it('is the section 4 paragraph, word for word, with the numbers from the constants', () => {
     expect(sizes).toBe(
-      'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed.',
+      'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.',
     );
     expect(sizes).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
     expect(sizes).toContain(`up to ${GROUP_LICENSE_LEARNERS} students`);

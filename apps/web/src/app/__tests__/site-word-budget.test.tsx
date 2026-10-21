@@ -60,6 +60,29 @@ describe('visible-word budgets with every claim on (F-SITE-002 §3.11)', () => {
     expect(words).toContain(sizes);
   });
 
+  // [SA] SA-6 review: es and ko carry the longer sizes line too, so their persona pages are held to the owner-approved
+  // locale allowance (F-SITE-002 §3.11 "Locales", the same 10 % as `LOCALE_ALLOWANCE` in e2e/site-budgets.spec.ts).
+  const LOCALE_ALLOWANCE = { es: 1.1, ko: 1.1 } as const;
+  it.each(
+    (['es', 'ko'] as const).flatMap((locale) =>
+      (
+        [
+          ['/learners', LearnersPage],
+          ['/parents', ParentsPage],
+          ['/teachers', TeachersPage],
+        ] as const
+      ).map(([path, Page]) => [locale, path, Page] as const),
+    ),
+  )('%s %s: within the locale allowance with every claim on', (locale, path, Page) => {
+    const words = visibleWords(renderToStaticMarkup(<Page locale={locale} claims={ALL_CLAIMS_ON} />));
+    expect(words.length).toBeGreaterThan(100);
+    expect(words.length).toBeLessThanOrEqual(Math.round(PERSONA_PAGE_WORDS * LOCALE_ALLOWANCE[locale]));
+    if (path !== '/learners') {
+      const sizes = getMessages(locale).landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+      expect(words.join(' ')).toContain(sizes);
+    }
+  });
+
   it(`/: at most ${HOME_WORDS} words`, () => {
     const words = visibleWords(renderToStaticMarkup(<HomePage locale="en" claims={ALL_CLAIMS_ON} />));
     expect(words.length).toBeGreaterThan(80);

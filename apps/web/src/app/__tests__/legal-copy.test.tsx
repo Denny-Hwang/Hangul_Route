@@ -221,7 +221,7 @@ describe('payment facts (F-SITE-002 S-7)', () => {
     'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
   /** [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learner limits, before Stripe Live is ever enabled. */
   const SIZES =
-    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed.';
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.';
   const IN_APP = /^In-app purchases: /;
   const STORE = /App Store|Google Play/;
   const STORES_LINE = 'Apple App Store / Google Play — payments and subscription management for in-app purchases.';

@@ -498,13 +498,21 @@ describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', (
     }
   });
 
-  it.each(['en', 'es', 'ko'] as const)('%s: absent while plans are coming (today), and never on /learners', (locale) => {
+  it.each(['en', 'es', 'ko'] as const)('%s: absent while plans are coming', (locale) => {
     const sizes = getMessages(locale).landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
-    expect(SITE_CLAIMS.paidPlans).toBe('coming');
+    const coming: Readonly<SiteClaims> = { ...SITE_CLAIMS, paidPlans: 'coming' };
     for (const [path, Page] of pages) {
-      expect(textOf(mainOf(renderToStaticMarkup(<Page locale={locale} />))), `${locale} ${path}`).not.toContain(sizes);
+      expect(textOf(mainOf(renderToStaticMarkup(<Page locale={locale} claims={coming} />))), `${locale} ${path}`).not.toContain(sizes);
     }
-    expect(textOf(renderToStaticMarkup(<LearnersPage locale={locale} />))).not.toContain(sizes);
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s: never on /learners, whether plans are coming or on sale', (locale) => {
+    const sizes = getMessages(locale).landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+    const states: ReadonlyArray<Readonly<SiteClaims>> = [{ ...SITE_CLAIMS, paidPlans: 'coming' }, onSale, ALL_CLAIMS_ON];
+    for (const claims of states) {
+      const html = renderToStaticMarkup(<LearnersPage locale={locale} claims={claims} />);
+      expect(textOf(html), `${locale} paidPlans ${claims.paidPlans}`).not.toContain(sizes);
+    }
   });
 
   it('the numbers come from content-schema: 4 learners in a family, 50 students on a Group License', () => {
