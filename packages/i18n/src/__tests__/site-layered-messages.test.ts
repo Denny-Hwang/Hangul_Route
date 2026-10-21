@@ -111,7 +111,9 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.plans.paid.coming).toBe('More stages are coming, with plans for families and classes.');
     expect(l.plans.paid.inApp).toBe('Plans for families and classes are at app.hangulroute.com.');
     expect(l.plans.managedInApp).toBe('Plans and billing are managed at app.hangulroute.com after you sign in.');
-    expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp']);
+    // [SA] SA-6: the learners each plan holds, numbers passed in (landing-plan-sizes.test.ts).
+    expect(l.plans.sizes(4, 50)).toBe('The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.');
+    expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp', 'sizes']);
     expect(Object.keys(l.plans.paid)).toEqual(['coming', 'inApp']);
   });
 

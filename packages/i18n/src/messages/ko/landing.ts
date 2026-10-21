@@ -111,6 +111,8 @@ export const landing = {
       inApp: '가족과 반을 위한 플랜은 app.hangulroute.com에 있어요.',
     },
     managedInApp: '플랜과 결제는 로그인한 뒤 app.hangulroute.com에서 관리해요.',
+    // [SA] AMENDMENTS-SEATS-ADMINS 9.5: glossary 가족 플랜, 그룹 라이선스, 학습자, 학생; the count takes 명, no particle on it.
+    sizes: (family: number, group: number) => `가족 플랜은 학습자 최대 ${family}명이 함께 써요. 그룹 라이선스는 반이나 학교 하나에서 학생 최대 ${group}명이 함께 써요.`,
   },
   persona: {
     learners: {

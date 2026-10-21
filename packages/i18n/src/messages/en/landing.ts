@@ -19,6 +19,7 @@
  * - The launch-news consent line (`waitlist.consentLead` + `contactLink` + `privacyLink`) must stay
  *   in step with CONSENT_TEXT_VERSION on the API.
  */
+import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
 import { plural } from '../../plural';
 
 /**
@@ -170,6 +171,13 @@ export const landing = {
       inApp: 'Plans for families and classes are at app.hangulroute.com.',
     },
     managedInApp: 'Plans and billing are managed at app.hangulroute.com after you sign in.',
+    /**
+     * [SA] AMENDMENTS-SEATS-ADMINS sections 4 and 9.5: the learners each plan holds, the numbers passed in
+     * (`FAMILY_LIFETIME_LEARNERS`, `GROUP_LICENSE_LEARNERS`). A persona Plans block shows it in the paid line's place
+     * only while plans are on sale (`paidPlans: 'inApp'`). It names a plan, never a price or a term (OD-7).
+     */
+    sizes: (family: number, group: number) =>
+      `The Family Plan is for up to ${plural('en', family, { one: `${family} learner`, other: `${family} learners` })}. The Group License is for up to ${plural('en', group, { one: `${group} student`, other: `${group} students` })} in a class or a school.`,
   },
   /**
    * The three persona pages (F-SITE-002 §3.4 to §3.6, appendix B.2 to B.4). Lines named after a claim (`route`,
@@ -562,7 +570,7 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective October 14, 2026',
+      effective: 'Effective October 20, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -598,6 +606,11 @@ export const landing = {
             /** BY-D4: a sponsored Group License (100%-off code, `payment_method_collection=if_required`) has no card and lapses at the end of its year. */
             sponsored:
               'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.',
+            /**
+             * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, the numbers from the
+             * content-schema constants. Must ship before Stripe Live is ever enabled.
+             */
+            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed.`,
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {

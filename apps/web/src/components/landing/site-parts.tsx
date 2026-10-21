@@ -1,3 +1,4 @@
+import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
@@ -210,7 +211,8 @@ export function TwoColumns({ left, right }: { left: ReactNode; right: ReactNode 
 /**
  * The Plans block of a persona page (F-SITE-002 §3.5, §3.6): the free line, the paid line only while paid plans are
  * coming (once they are on sale, the managed line already says where), then the managed line, so the app host is named
- * once. No price, no plan term and no billing link, ever.
+ * once. No price, no plan term and no billing link, ever. [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): once plans
+ * are on sale, the sizes line takes the paid line's place, with the learner limits from content-schema.
  */
 export function PlansBlock({ locale, claims, id }: { locale: UiLocale; claims: Readonly<SiteClaims>; id: string }): JSX.Element {
   const t = getMessages(locale).landing;
@@ -220,12 +222,10 @@ export function PlansBlock({ locale, claims, id }: { locale: UiLocale; claims: R
         {/* Two keys in one paragraph: each stays its own text node, so a locale can word each one alone. */}
         <Body>
           <span>{t.plans.free.stage1}</span>
-          {claims.paidPlans === 'coming' ? (
-            <>
-              {' '}
-              <span>{t.plans.paid.coming}</span>
-            </>
-          ) : null}
+          {' '}
+          <span>
+            {claims.paidPlans === 'coming' ? t.plans.paid.coming : t.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS)}
+          </span>
         </Body>
         <Body>{t.plans.managedInApp}</Body>
       </div>

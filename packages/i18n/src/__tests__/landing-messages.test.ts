@@ -107,6 +107,9 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   // BY-D4: a sponsored Group License (100%-off code, no card on file) lapses at the end of its year.
   const SPONSORED =
     'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
+  // [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, before Stripe Live.
+  const SIZES =
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed.';
   const privacy = l.legal.privacy.sections;
   const billing = l.legal.terms.sections.billing;
 
@@ -128,8 +131,9 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
   it('Terms of Service: the channels and the web renewal (BY-D10) lead the billing section', () => {
     expect(billing.heading).toBe('Subscriptions, billing, and cancellation');
-    expect(billing.paragraphs).toEqual({ channels: CHANNELS, webRenewal: WEB_RENEWAL, sponsored: SPONSORED });
-    expect(Object.keys(billing.paragraphs)).toEqual(['channels', 'webRenewal', 'sponsored']);
+    expect(billing.paragraphs).toEqual({ channels: CHANNELS, webRenewal: WEB_RENEWAL, sponsored: SPONSORED, sizes: SIZES });
+    // [SA] SA-6: what each plan holds follows the renewal paragraphs (landing-plan-sizes.test.ts pins its numbers).
+    expect(Object.keys(billing.paragraphs)).toEqual(['channels', 'webRenewal', 'sponsored', 'sizes']);
   });
 
   it('Terms of Service: the web renewal names the console labels the grown-up sees, so a relabel breaks this test', () => {
@@ -173,8 +177,9 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
     expect(l.legal.privacy.effective).toBe('Effective October 14, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
-    expect(l.legal.terms.effective).toBe('Effective October 14, 2026');
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
+    // October 20, 2026 ([SA] SA-6): the Terms say how many learners each plan holds; the Privacy Policy is unchanged.
+    expect(l.legal.terms.effective).toBe('Effective October 20, 2026');
     expect(l.legal.draft).toBe('Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.');
   });
 });

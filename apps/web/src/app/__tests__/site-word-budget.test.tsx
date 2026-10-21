@@ -1,3 +1,5 @@
+import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { HomePage } from '../../components/landing/HomePage';
@@ -46,6 +48,16 @@ describe('visible-word budgets with every claim on (F-SITE-002 §3.11)', () => {
     const words = visibleWords(renderToStaticMarkup(<Page locale="en" claims={ALL_CLAIMS_ON} />));
     expect(words.length).toBeGreaterThan(100);
     expect(words.length).toBeLessThanOrEqual(PERSONA_PAGE_WORDS);
+  });
+
+  // [SA] SA-6: the longest state carries the plan sizes line on both grown-up pages, so the budget above counts it.
+  it.each([
+    ['/parents', ParentsPage],
+    ['/teachers', TeachersPage],
+  ] as const)('%s: the longest state includes the plan sizes line', (_path, Page) => {
+    const sizes = getMessages('en').landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+    const words = visibleWords(renderToStaticMarkup(<Page locale="en" claims={ALL_CLAIMS_ON} />)).join(' ');
+    expect(words).toContain(sizes);
   });
 
   it(`/: at most ${HOME_WORDS} words`, () => {

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -186,14 +187,20 @@ function linesOf(html: string, title: string): string[] {
 }
 const render = (Page: typeof ParentsPage, claims?: Readonly<SiteClaims>): string => renderToStaticMarkup(<Page locale="en" claims={claims} />);
 
-/** The Plans block both grown-up pages share (§3.5, §3.6): the paid line only while plans are coming; host named once. */
+/**
+ * The Plans block both grown-up pages share (§3.5, §3.6): the paid line only while plans are coming; host named once.
+ * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): once plans are on sale (`paidPlans: 'inApp'`), the sizes line takes
+ * the paid line's place, its numbers from content-schema, never a price or a term.
+ */
+const SIZES = plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
 function expectPlans(html: string, paidPlans: SiteClaims['paidPlans']): void {
   const lines = linesOf(html, t.persona.plansTitle);
   expect(lines).toEqual(
-    paidPlans === 'coming' ? [`${plans.free.stage1} ${plans.paid.coming}`, plans.managedInApp] : [plans.free.stage1, plans.managedInApp],
+    paidPlans === 'coming' ? [`${plans.free.stage1} ${plans.paid.coming}`, plans.managedInApp] : [`${plans.free.stage1} ${SIZES}`, plans.managedInApp],
   );
   expect(lines.join(' ').match(/app\.hangulroute\.com/g)).toHaveLength(1);
   expect(textOf(mainOf(html))).not.toContain(plans.paid.inApp);
+  expect(count(textOf(mainOf(html)), SIZES)).toBe(paidPlans === 'inApp' ? 1 : 0);
 }
 
 describe('/parents (S-4b)', () => {
@@ -471,5 +478,44 @@ describe('persona page modules hold no console, demo, account or billing path', 
   it.each(files)('%s', (file) => {
     const source = readFileSync(join(webSrc, file), 'utf8');
     expect(source).not.toMatch(/['"`]\/(teach|parent|account|billing)\b/);
+  });
+});
+
+describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', () => {
+  const pages = [
+    ['/parents', ParentsPage],
+    ['/teachers', TeachersPage],
+  ] as const;
+  const onSale: Readonly<SiteClaims> = { ...SITE_CLAIMS, paidPlans: 'inApp' };
+
+  it.each(['en', 'es', 'ko'] as const)('%s: shown once on both grown-up pages while plans are on sale, in the Plans block', (locale) => {
+    const l = getMessages(locale).landing;
+    const sizes = l.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+    for (const [path, Page] of pages) {
+      const html = renderToStaticMarkup(<Page locale={locale} claims={onSale} />);
+      expect(count(textOf(mainOf(html)), sizes), `${locale} ${path}`).toBe(1);
+      expect(linesOf(html, l.persona.plansTitle), `${locale} ${path}`).toEqual([`${l.plans.free.stage1} ${sizes}`, l.plans.managedInApp]);
+    }
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s: absent while plans are coming (today), and never on /learners', (locale) => {
+    const sizes = getMessages(locale).landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+    expect(SITE_CLAIMS.paidPlans).toBe('coming');
+    for (const [path, Page] of pages) {
+      expect(textOf(mainOf(renderToStaticMarkup(<Page locale={locale} />))), `${locale} ${path}`).not.toContain(sizes);
+    }
+    expect(textOf(renderToStaticMarkup(<LearnersPage locale={locale} />))).not.toContain(sizes);
+  });
+
+  it('the numbers come from content-schema: 4 learners in a family, 50 students on a Group License', () => {
+    expect([FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS]).toEqual([4, 50]);
+    expect(SIZES).toBe('The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.');
+  });
+
+  it('names no price and no term in any locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const sizes = getMessages(locale).landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+      expect(sizes, locale).not.toMatch(/[$€£₩]|\d+\.\d+|\b153\b|\bper\s+(year|month)\b|yearly|annual|lifetime|al año|anual|연간|매년|평생/i);
+    }
   });
 });
