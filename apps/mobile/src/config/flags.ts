@@ -204,6 +204,15 @@ export interface Flags {
    * fresh-PIN check, the Rescue Code's own counter and the shared attempt state across tabs have no switch.
    */
   pinPauseStepsEnabled: boolean;
+
+  /**
+   * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6 and 16, row OA-4a): the chooser at launch
+   * on a shared device, after 30 minutes in the background, on the `who=1` boot intent and on a held join code, the
+   * Home Switch button, the Profile row and the Grown-up area's Switch user. OFF when row OA-4a lands; OA-10 turns it
+   * on. `EXPO_PUBLIC_WHO_CHOOSER` (`parseKillSwitch`). Off: no trigger, no Switch, `who=1` ignored, the Profile tile
+   * row as before. The session close on every change of learner and the cross-tab profile list have no switch.
+   */
+  whoChooserEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -226,6 +235,7 @@ const launchDefaults: Flags = {
   // LV-7 turned this on with the web default and the site claim (AMENDMENTS-LECTURE-V2 LV-D1).
   lectureModeEnabled: true,
   pinPauseStepsEnabled: true,
+  whoChooserEnabled: false,
 };
 
 export const flags: Flags = {
@@ -253,6 +263,7 @@ export const flags: Flags = {
   routeEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_ENABLED, launchDefaults.routeEnabled),
   lectureModeEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_LECTURE_MODE, launchDefaults.lectureModeEnabled),
   pinPauseStepsEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS, launchDefaults.pinPauseStepsEnabled),
+  whoChooserEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_WHO_CHOOSER, launchDefaults.whoChooserEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

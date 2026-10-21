@@ -431,4 +431,11 @@ export const a11y = {
     /** A sentence-build move, announced politely (AMENDMENTS-LECTURE-V2 section 10, LV-S3): the tile just placed. */
     tilePlaced: (word: string) => `${word} placed`,
   },
+  /** [OA] The chooser's accessible names (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.2, row OA-4a); a caption is a hint, never joined in. */
+  who: {
+    /** A learner tile: the name and the action. */
+    tile: (name: string) => `${name}. Tap to start learning.`,
+    /** A grown-up row that asks the PIN; a row no PIN guards is named by its label alone. */
+    grownUpRow: (label: string) => `${label}, for grown-ups, needs the PIN`,
+  },
 } as const;
