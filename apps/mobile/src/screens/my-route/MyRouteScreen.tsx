@@ -14,6 +14,7 @@ import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-rout
 import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
+import { useLessonContentVersion } from '../lesson-content';
 import { nextLessonRows, nextLessonTapEvent, type NextLessonRowView } from '../../logic/my-route/next-lessons';
 import { localizedRouteContent, routeLetterWall, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, withGoalReached, writeSeen } from '../../logic/my-route/seen';
@@ -195,6 +196,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   // Today's UTC day, read again at midnight, on focus and on foreground (F-ROUTE-001 R-7e), so the plan line and
   // the card's one next move to the new day on a page left open across the boundary.
   const today = useToday();
+  // The skills count every quest's games, so every lesson chunk loads and the counts follow (F-CURR-002 §10).
+  const lessonsLoaded = useLessonContentVersion();
   const built = useMemo((): { model: MyRouteModel; week: number | null; upcoming: RouteNextQuestResult[]; inPlan: ReadonlySet<string> } | { error: true } => {
     try {
       const snapshot = snap ?? emptySnapshot(profileId);
@@ -219,7 +222,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       return { error: true };
     }
     // `attempt` is the retry.
-  }, [snap, profileId, today, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt, variant]);
+  }, [snap, profileId, today, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt, variant, lessonsLoaded]);
   const model = 'model' in built ? built.model : null;
   const week = 'model' in built ? built.week : null;
   const upcoming = 'model' in built ? built.upcoming : null;

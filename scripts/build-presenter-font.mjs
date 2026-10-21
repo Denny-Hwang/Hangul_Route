@@ -396,16 +396,17 @@ export async function loadRepoContent(root) {
     loaderRegistered = true;
   }
   const load = (rel) => import(pathToFileURL(join(root, ...rel.split("/"))).href);
-  const [content, config, lecture, ...lessonStages] = await Promise.all([
+  const [content, config, lecture, lessons] = await Promise.all([
     load("apps/mobile/src/content/index.ts"),
     load("apps/mobile/src/logic/minigame-config.ts"),
     load("apps/mobile/src/logic/lecture/content.ts"),
-    // F-CURR-001 §3.12: the scopes of the generated lesson modules (the lesson quests come with questsAll).
-    ...[2, 3, 4, 6, 7].map((n) => load(`apps/mobile/src/content/__generated__/lessons-stage${n}.ts`)),
+    load("apps/mobile/src/content/lessons.ts"),
   ]);
+  // F-CURR-002 §10: every lesson cell's chunk (its quests' steps and its scopes), loaded as the app loads them.
+  await lessons.lessonContent.ensureAll();
   return {
     jamo: content.jamoKnown, // the Stage 1 symbols and the Word Builder ones (F-CURR-001 S2-1)
-    scopes: Object.assign({}, config.minigameScopes, ...lessonStages.map((m) => m.LESSON_SCOPES)),
+    scopes: Object.assign({}, config.minigameScopes, lessons.lessonContent.loadedScopes()),
     quests: content.questsAll,
     cards: content.heritageCardsAll,
     extra: [lecture.PAUSE_WORD.ko],

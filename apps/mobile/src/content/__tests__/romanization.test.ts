@@ -26,7 +26,7 @@ import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
 import { questsAll } from '../quests';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
-import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
+import { ALL_LESSON_STEPS, LESSON_CELL_MODULES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 
 // F-CNT-002 PR 3, source class B1 (mobile TS data): the romanization that ships in the app is
 // Revised Romanization, unhyphenated, and every taught Korean string carries one (R1 to R7).
@@ -216,7 +216,10 @@ describe('lesson modules romanization (B1, F-CURR-001 §3.10)', () => {
     !HANGUL.test(ko) ? [] : ko.includes('___') ? checkFrameRomanization(ko, given ?? '', ctx) : checkRomanization(ko, given ?? '', ctx);
 
   it('every taught Korean string of the lesson quests and scopes has its Revised Romanization (R1 to R4)', () => {
-    const values = [LESSON_EPISODES, LESSON_QUESTS, ...Object.values(LESSON_STAGE_MODULES).map((m) => m.LESSON_SCOPES)];
+    // The manifest's headers and every cell chunk's steps and scopes (__generated__/lesson-chunks/, F-CURR-002 §10).
+    const values = [LESSON_EPISODES, LESSON_QUESTS, ALL_LESSON_STEPS, ...Object.values(LESSON_STAGE_MODULES).map((m) => m.LESSON_SCOPES)];
+    expect(Object.keys(ALL_LESSON_STEPS).sort()).toEqual(LESSON_QUESTS.map((q) => q.id).sort());
+    expect(Object.keys(LESSON_CELL_MODULES)).toHaveLength(LESSON_EPISODES.length);
     expect(values.flatMap((v) => pairsIn(v)).flatMap(check).map((i) => i.message)).toEqual([]);
   });
 

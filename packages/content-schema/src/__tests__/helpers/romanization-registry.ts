@@ -42,11 +42,8 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'apps/mobile/src/logic/stage1/hangul-check.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'stage1/hangul-check' },
   // F-CURR-001 §3.10: the generated lesson modules (built from content/episodes/stage-<n>/*.json, which class A scans).
   { path: 'apps/mobile/src/content/__generated__/lessons-index.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '__generated__/lessons-index' },
-  { path: 'apps/mobile/src/content/__generated__/lessons-stage2.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
-  { path: 'apps/mobile/src/content/__generated__/lessons-stage3.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
-  { path: 'apps/mobile/src/content/__generated__/lessons-stage4.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
-  { path: 'apps/mobile/src/content/__generated__/lessons-stage6.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
-  { path: 'apps/mobile/src/content/__generated__/lessons-stage7.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'helpers/lesson-stages' },
+  // F-CURR-002 §10: every cell's body chunk and the es / ko title chunks, one folder (a path ending in `/` covers the files below it).
+  { path: 'apps/mobile/src/content/__generated__/lesson-chunks/', cls: 'B1', suite: MOBILE_SUITE, needle: 'ALL_LESSON_STEPS' },
   // B2. TS data, web
   { path: 'apps/web/src/data/stage1-cards.ts', cls: 'B2', suite: WEB_DATA_SUITE, needle: '../stage1-cards' },
   // B3. TS data, API (isolated jamo only: R7)
@@ -185,6 +182,17 @@ function isDirPrefix(entry: string): boolean {
   return entry.endsWith('/');
 }
 
+/** A registered file, or a file below a registered folder (an entry ending in `/`, such as the generated lesson chunks). */
+export function isRegistered(path: string): boolean {
+  return REGISTERED_SOURCES.some((s) => (isDirPrefix(s.path) ? path.startsWith(s.path) : path === s.path));
+}
+
+/** The files a registered entry covers: itself, or every scanned file below a registered folder. */
+function registeredFiles(root: string): string[] {
+  const scanned = REGISTERED_SOURCES.some((s) => isDirPrefix(s.path)) ? scannedFiles(root) : [];
+  return REGISTERED_SOURCES.flatMap((s) => (isDirPrefix(s.path) ? scanned.filter((f) => f.startsWith(s.path)) : [s.path]));
+}
+
 /**
  * Findings of the coverage check (F-CNT-002 §3.4): a Hangul-bearing file that is neither
  * registered, scanned as class A nor ignored; a registered file or suite that is gone (or a
@@ -193,9 +201,8 @@ function isDirPrefix(entry: string): boolean {
 export function coverageProblems(root: string = REPO_ROOT): string[] {
   const problems: string[] = [];
   const scanned = scannedFiles(root);
-  const registered = new Set(REGISTERED_SOURCES.map((s) => s.path));
   for (const f of scanned.filter((p) => HANGUL_SYLLABLE.test(readFileSync(join(root, p), 'utf8')))) {
-    if (isClassA(f) || registered.has(f) || isIgnored(f) !== undefined) continue;
+    if (isClassA(f) || isRegistered(f) || isIgnored(f) !== undefined) continue;
     problems.push(
       `::error file=${f}::romanization-coverage: contains Hangul but is not registered; add it to REGISTERED_SOURCES (with the suite that checks it) or to ROMANIZATION_SCAN_IGNORE (with a reason) in packages/content-schema/src/__tests__/helpers/romanization-registry.ts`,
     );
@@ -225,7 +232,7 @@ export function coverageProblems(root: string = REPO_ROOT): string[] {
 
 /** The Korean strings of `exceptions` that appear in a registered source or in the content JSON (R8 input). */
 export function seenExceptionKo(exceptions: ReadonlyArray<{ ko: string }>, root: string = REPO_ROOT): string[] {
-  const texts = [...REGISTERED_SOURCES.map((s) => s.path), ...contentJsonFiles(root)]
+  const texts = [...registeredFiles(root), ...contentJsonFiles(root)]
     .filter((p) => existsSync(join(root, p)))
     .map((p) => readFileSync(join(root, p), 'utf8'));
   return exceptions.map((e) => e.ko).filter((ko) => texts.some((t) => t.includes(ko)));

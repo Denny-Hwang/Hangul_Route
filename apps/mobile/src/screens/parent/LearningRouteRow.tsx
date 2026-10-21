@@ -11,6 +11,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { dashboardRowView, type DashboardRowView } from '../../logic/my-route/dashboard-row';
 import { buildMyRoute } from '../../logic/my-route/model';
+import { useLessonContentVersion } from '../lesson-content';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
 import { bandLabel } from '../../logic/placement/copy';
@@ -163,6 +164,8 @@ export function LearningRouteRow({
   // This learner's cached inbox plans: the goal follows them (amendment section 4.1).
   const plans = usePlanStore((s) => s.byLearner[profileId]);
   const localized = useMemo(() => localizedRouteContent(locale), [locale]);
+  // The skills count every quest's games, so every lesson chunk loads and the counts follow (F-CURR-002 §10).
+  const lessonsLoaded = useLessonContentVersion();
 
   const view = useMemo((): DashboardRowView | null => {
     try {
@@ -187,7 +190,7 @@ export function LearningRouteRow({
     } catch {
       return null;
     }
-  }, [stored, profileId, name, showStarted, tier, plans, locale, localized, messages]);
+  }, [stored, profileId, name, showStarted, tier, plans, locale, localized, messages, lessonsLoaded]);
 
   if (!hydrated) return null;
   const onOpen = (): void => navigation.navigate('MyRoute', { profileId, viewer: 'grownup' });
