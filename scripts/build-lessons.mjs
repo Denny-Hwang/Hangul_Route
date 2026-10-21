@@ -11,6 +11,7 @@
 //   lessons-index.ts                                  the manifest (imported at start)
 //       LESSON_EPISODES        Episode[]               one shipped grid episode per ready cell
 //       LESSON_QUESTS          LessonQuestHeader[]     its quests: ids, English titles, blurbs, minutes, cards (no steps)
+//       LESSON_TEACHES         Record<quest, jamo[]>   the jamo ids each quest's Discover step teaches (only quests that teach)
 //       LESSON_CELL_CHUNKS     Record<episode, hash>   the hash of each cell's body chunk
 //       LESSON_TITLE_CHUNKS    Record<locale, hash>    the hash of each locale's title chunk
 //       loadLessonCell / loadLessonTitles             one literal `import()` per chunk
@@ -67,6 +68,8 @@ export const BUDGET = Object.freeze({
   perQuestRawAvg: 9_000, // average per quest in a cell (S4-1 raise, measured Stage 4 cells 24.1-25.8 KB for three): 54 KB for six, 27 KB for three
   manifestRaw: 60_000, // F-CURR-002 CM-5: the start-loaded lessons-index.ts (372,236 B before the split)
   titleChunkRaw: 30_000, // F-CURR-002 CM-5: one locale's title chunk
+  cellChunkRaw: 90_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (largest at CM-5: stage2-letters, 61,381 B for six quests)
+  cellChunkGzip: 16_000, // F-CURR-002 CM-5: the same, gzip (largest at CM-5: stage2-letters, 11,070 B)
   stageRaw: 220_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000 for the stage module)
   stageGzip: 40_000, // F-CURR-002 CM-5 (OD-5): was 32,000
   totalRaw: 1_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000)
@@ -299,6 +302,22 @@ const QUEST_HEADER = PICK_QUEST.filter((k) => k !== "steps");
 /** A quest overlay field of the body chunk (`steps.<stepId>....`); every other episode or quest field is a title. */
 const isBodyField = (id, field) => overlayPrefix(id) === "minigame" || field.startsWith("steps.");
 
+/**
+ * The jamo ids a quest's Discover step introduces, in page order: `questTeaches`
+ * (apps/mobile/src/logic/stage1/curriculum.ts) over its steps. The manifest keeps them, so the
+ * screens that name a quest's letters before its chunk loads (a closed quest's preview on the
+ * lesson page, the results teaser, the placement and letter-wall catalogues) read them at start.
+ */
+export function discoverJamo(steps) {
+  const ids = [];
+  for (const step of steps) {
+    for (const page of step.discover?.pages ?? []) {
+      for (const item of page.items ?? []) if (item.type === "jamo") ids.push(item.jamoId);
+    }
+  }
+  return ids;
+}
+
 /** The content hash a chunk module carries (`CHUNK_HASH`) and the manifest names: sha256 of its data literal, 16 hex. */
 export const chunkHash = (text) => createHash("sha256").update(text, "utf8").digest("hex").slice(0, 16);
 
@@ -346,6 +365,7 @@ export function planChunks(cells) {
   return {
     episodes: ready.map((c) => c.episode),
     quests: ready.flatMap((c) => c.quests.map((q) => Object.fromEntries(QUEST_HEADER.filter((k) => q[k] !== undefined).map((k) => [k, q[k]])))),
+    teaches: Object.fromEntries(ready.flatMap((c) => c.quests.map((q) => [q.id, discoverJamo(q.steps)]).filter(([, ids]) => ids.length > 0))),
     cells: cellChunks,
     titles: titleChunks,
   };
@@ -378,6 +398,8 @@ export function buildModules(cells) {
       " */\n" +
       `export const LESSON_EPISODES: Episode[] = ${literal(plan.episodes)};\n\n` +
       `export const LESSON_QUESTS: LessonQuestHeader[] = ${literal(plan.quests)};\n\n` +
+      "/** The jamo ids each lesson quest's Discover step teaches, in page order (only the quests that teach some): read before any chunk loads. */\n" +
+      `export const LESSON_TEACHES: Readonly<Record<string, readonly string[]>> = ${literal(plan.teaches)};\n\n` +
       "/** Each cell's body chunk by episode id: the hash its module carries as `CHUNK_HASH`. */\n" +
       `export const LESSON_CELL_CHUNKS: Readonly<Record<string, string>> = ${literal(Object.fromEntries(plan.cells.map((c) => [c.id, c.hash])))};\n\n` +
       "/** The title chunk of each overlay locale: the hash its module carries as `CHUNK_HASH`. */\n" +
@@ -464,6 +486,10 @@ export function checkBudget({ perCell, perModule, perStage = [], total }) {
     }
     if (m.name.startsWith(`${CHUNK_DIR}/lessons-titles-`) && m.raw > BUDGET.titleChunkRaw) {
       problems.push(`${m.name} is ${m.raw} B raw, over the title chunk ceiling of ${BUDGET.titleChunkRaw} B`);
+    }
+    if (m.name.startsWith(`${CHUNK_DIR}/lessons-cell-`)) {
+      if (m.raw > BUDGET.cellChunkRaw) problems.push(`${m.name} is ${m.raw} B raw, over the cell chunk ceiling of ${BUDGET.cellChunkRaw} B`);
+      if (m.gzip > BUDGET.cellChunkGzip) problems.push(`${m.name} is ${m.gzip} B gzip, over the cell chunk ceiling of ${BUDGET.cellChunkGzip} B`);
     }
   }
   for (const s of perStage) {
@@ -562,6 +588,7 @@ export function main(argv, root) {
     process.stdout.write(`  total  ${report.total.raw} B raw  ${report.total.gzip} B gzip\n`);
     process.stdout.write(
       `Budget: ${BUDGET.perQuestRawAvg} B raw per quest (cell average), ${BUDGET.manifestRaw} B raw for the manifest, ${BUDGET.titleChunkRaw} B raw per title chunk, ` +
+        `${BUDGET.cellChunkRaw} B raw and ${BUDGET.cellChunkGzip} B gzip per cell chunk, ` +
         `${BUDGET.stageRaw} B raw and ${BUDGET.stageGzip} B gzip per stage, ${BUDGET.totalRaw} B raw and ${BUDGET.totalGzip} B gzip in total\n`,
     );
     const problems = checkBudget(report);

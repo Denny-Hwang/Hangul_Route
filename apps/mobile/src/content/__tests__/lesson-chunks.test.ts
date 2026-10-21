@@ -36,7 +36,7 @@ describe('the lesson manifest and its chunks', () => {
     expect(imports.sort()).toEqual(
       [...cells.map((id) => `import('./lesson-chunks/${name(id)}')`), "import('./lesson-chunks/lessons-titles-es')", "import('./lesson-chunks/lessons-titles-ko')"].sort(),
     );
-    expect(Object.keys(index).sort()).toEqual(['LESSON_CELL_CHUNKS', 'LESSON_EPISODES', 'LESSON_QUESTS', 'LESSON_TITLE_CHUNKS', 'loadLessonCell', 'loadLessonTitles']);
+    expect(Object.keys(index).sort()).toEqual(['LESSON_CELL_CHUNKS', 'LESSON_EPISODES', 'LESSON_QUESTS', 'LESSON_TEACHES', 'LESSON_TITLE_CHUNKS', 'loadLessonCell', 'loadLessonTitles']);
   });
 
   it('no other app source names a chunk, so none can reach the start bundle', () => {
