@@ -69,7 +69,7 @@ describe('learner.who.use (OA-4b)', () => {
   });
 
   it('Spanish and Korean follow the glossary and have their own value for every use', () => {
-    expect(getMessages('es').learner.who.use).toEqual({ family: 'Familia', teacher: 'Docente', school: 'Escuela', signIn: 'Entrar como adulto' });
+    expect(getMessages('es').learner.who.use).toEqual({ family: 'Familia', teacher: 'Docente', school: 'Escuela', signIn: 'Entrar como persona adulta' });
     expect(getMessages('ko').learner.who.use).toEqual({ family: '가족', teacher: '선생님', school: '학교', signIn: '어른으로 로그인' });
     const en = getMessages('en').learner.who.use;
     for (const locale of ['es', 'ko'] as const) for (const key of USES) expect(getMessages(locale).learner.who.use[key], `${locale}.${key}`).not.toBe(en[key]);
@@ -80,7 +80,7 @@ describe('learner.who.use (OA-4b)', () => {
   });
 
   it('Sign in uses the grown-up word of the glossary (adultos / 어른)', () => {
-    expect(getMessages('es').learner.who.use.signIn).toContain('adulto');
+    expect(getMessages('es').learner.who.use.signIn).toContain('adult');
     expect(getMessages('ko').learner.who.use.signIn).toContain('어른');
   });
 

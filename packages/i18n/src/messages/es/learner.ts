@@ -1902,7 +1902,7 @@ export const learner = {
       family: 'Familia',
       teacher: 'Docente',
       school: 'Escuela',
-      signIn: 'Entrar como adulto',
+      signIn: 'Entrar como persona adulta',
     },
   },
 } satisfies DeepPartial<Messages['learner']>;
