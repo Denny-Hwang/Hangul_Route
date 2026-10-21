@@ -119,6 +119,7 @@ F-XXX-<slug>.md
 
 ### Spec wave 2026-10-13 (owner decision: the 22 "Coming later" cells)
 - `F-CURR-001-upper-stage-content.md` — content of the 22 placeholder cells of Stages 2, 3, 4, 6 and 7: per-stage goals and can-do lines, scope, six-step quests per cell, five new games (Sentence Builder, Realia Read, Type Hangul, Trace a Word, Write Frame), writing without speaking, sourced culture notes, the MAR language and culture passes, a per-cell JSON pipeline with its own bundle budget, Stage 2+ paid · **shipped** (all 35 rows, #617 to #678); follow-up open: Discover sentence, pattern and realia page views
+- `F-CURR-002-category-expansion-and-mastery.md` — category expansion and mastery (owner request B, 2026-10-21): every taught item in one memory model on the F-VOC-005 Leitner boxes with a modality ladder and a separate memory delta table, Daily Review, warm-up and missed-items practice, mastery rings that never drop, Cell Check and test-out, Stage Checks and ceremonies for Stages 2-7, upper-cell cards and category albums, eight new reading, listening and writing formats with a Check-rotation lint, Volume 2 of the five themes and Stage 5 book 2, eight Topic Packs on an Explore shelf (not a sixth grid column), goals with rest days, family and class totals, lecture games, a manifest split with precached content chunks, remote kill switches, section R telemetry · **ready** (spec only; rows CM-0 to CM-72, 139 PRs)
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
