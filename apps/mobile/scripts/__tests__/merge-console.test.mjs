@@ -1,5 +1,5 @@
 // F-APP-001 A-3 (sections 3.1, 3.3 and 3.17, section 5): one host, two bundles, one Worker.
-// `build:web` = audio map, `expo export`, `scripts/app-host/merge-console.mjs dist`, `pwa-postbuild.mjs dist`.
+// `build:web` = audio map, `expo export`, `scripts/app-host/merge-console.mjs dist`, `pwa-postbuild.mjs dist --budget`.
 // The merge builds the console role of apps/web (unless SKIP_CONSOLE=1), copies `out-console/` into the
 // learner dist under the reserved grown-up prefixes and `_next/`, refuses anything else, and appends the
 // grown-up `_headers` block. Checked here on stand-in exports; the real merged build is
@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { lessonBundles } from './helpers/lesson-bundles.mjs';
 import { GROWN_UP_PREFIXES, isGrownUpPath } from '@hangul-route/content-schema';
 import {
   GROWN_UP_HEADERS,
@@ -49,7 +50,8 @@ const SECTION_3_17 = [
 
 const LEARNER_DIST = {
   'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
-  '_expo/static/js/web/index-abc.js': 'console.info("learner bundle");',
+  // The lesson chunks the learner build emits (F-CURR-002 §10), with the start bundle that names them.
+  ...lessonBundles(),
   'manifest.webmanifest': '{"name":"Hangul Route","id":"/","start_url":"/","scope":"/"}',
   'favicon.ico': 'icon',
   // F-TCH-004 PR 3: the presenter font expo copies from public/fonts/ (the post-build requires it in the precache).
@@ -448,7 +450,7 @@ describe('package.json', () => {
 
   it('build:web merges the console after the export and before the service worker is generated', () => {
     expect(pkg.scripts['build:web']).toBe(
-      'node scripts/audio/gen-audio-map.mjs && expo export --platform web --output-dir dist && node scripts/app-host/merge-console.mjs dist && node scripts/pwa-postbuild.mjs dist',
+      'node scripts/audio/gen-audio-map.mjs && expo export --platform web --output-dir dist && node scripts/app-host/merge-console.mjs dist && node scripts/pwa-postbuild.mjs dist --budget',
     );
   });
 

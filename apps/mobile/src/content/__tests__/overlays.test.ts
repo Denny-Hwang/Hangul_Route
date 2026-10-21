@@ -166,13 +166,14 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
     expect(duplicateGlosses(OVERLAYS)).toEqual([]);
   });
 
-  it('the lesson glosses compiled into the lesson modules (F-CURR-001 §3.10) name shipped entities with allowed, resolvable fields', () => {
+  it('the lesson glosses compiled into the lesson chunks (F-CURR-001 §3.10, F-CURR-002 §10) name shipped entities with allowed, resolvable fields', () => {
     const { es, ko } = CONTENT_OVERLAYS;
-    const fromIndex: Overlays = {
+    // Every chunk is loaded in tests: the titles and the cells' step and game glosses, merged into CONTENT_OVERLAYS.
+    const fromChunks: Overlays = {
       es: Object.fromEntries(Object.entries(es).filter(([id]) => OVERLAYS.es[id] === undefined)),
       ko: Object.fromEntries(Object.entries(ko).filter(([id]) => OVERLAYS.ko[id] === undefined)),
     };
-    expect(overlayProblems(fromIndex)).toEqual([]);
+    expect(overlayProblems(fromChunks)).toEqual([]);
     for (const [n, mod] of Object.entries(LESSON_STAGE_MODULES)) {
       expect(overlayProblems(mod.LESSON_SCOPE_OVERLAYS), `stage ${n}`).toEqual([]);
       expect(duplicateGlosses(mod.LESSON_SCOPE_OVERLAYS, mod.LESSON_SCOPES), `stage ${n}`).toEqual([]);
@@ -181,7 +182,7 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
       }
     }
     for (const locale of ['es', 'ko'] as const) {
-      for (const id of Object.keys(fromIndex[locale])) expect(['episode', 'quest'], id).toContain(overlayPrefix(id));
+      for (const id of Object.keys(fromChunks[locale])) expect(['episode', 'quest', 'minigame'], id).toContain(overlayPrefix(id));
     }
   });
 

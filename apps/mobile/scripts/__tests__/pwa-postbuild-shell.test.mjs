@@ -8,6 +8,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LESSON_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
+import { PRECACHE_BUDGET } from '../pwa/lesson-chunks.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GROWN_UP_PREFIXES, LEARNER_ROOTS, isGrownUpPath } from '@hangul-route/content-schema';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
@@ -28,6 +30,7 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const postbuild = join(here, '..', 'pwa-postbuild.mjs');
+
 
 /** Paths on both sides of every R-1 boundary, plus the learner roots and near misses. */
 const PROBES = [
@@ -374,7 +377,7 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     dist = mkdtempSync(join(tmpdir(), 'hr-pwa-shell-'));
     const files = {
       'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
-      '_expo/static/js/web/index-abc.js': 'console.info("learner bundle");',
+      ...lessonBundles(),
       'teacher.html': '<!doctype html><title>near miss</title>',
       'present.html': '<!doctype html><title>learner root</title>',
       // F-TCH-004 PR 3: expo copies public/fonts/ into the export.
@@ -403,6 +406,14 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
   it('succeeds', () => {
     expect(run.status, run.stderr).toBe(0);
     expect(run.stdout).toMatch(/pwa-postbuild: precached \d+ files/);
+  });
+
+  it('precaches every lesson chunk and prints the precache report (F-CURR-002 §10)', () => {
+    for (const { name } of LESSON_MANIFEST) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
+    expect(run.stdout).toContain('pwa-postbuild: precache report (F-CURR-002 §10)');
+    expect(run.stdout).toMatch(/ {2}start bundle {2}_expo\/static\/js\/web\/index-abc\.js {2}\d+ B raw {2}\d+ B gzip {2}\(ceiling \d+ B raw\)/);
+    expect(run.stdout).toContain(`  lesson chunks  ${LESSON_MANIFEST.length} bundles  `);
+    expect(run.stdout).toMatch(/ {2}learner precache {2}\d+ files {2}\d+ B {2}\(ceiling \d+ B\)/);
   });
 
   it('writes the denylist into sw.js, one literal per prefix, and never the learner roots', () => {
@@ -459,6 +470,79 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(index).toContain('src: url("/fonts/hr-presenter-kr.woff2") format("woff2");');
     expect(index).toContain('font-display: block;');
     expect(sw).toContain('"fonts/hr-presenter-kr.woff2"');
+  });
+});
+
+describe('pwa-postbuild.mjs refuses an export that lacks a lesson chunk (F-CURR-002 §10)', () => {
+  let dist;
+  let run;
+
+  beforeAll(() => {
+    dist = mkdtempSync(join(tmpdir(), 'hr-pwa-nochunk-'));
+    const missing = LESSON_MANIFEST[0]?.name;
+    const files = {
+      'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
+      'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
+      ...lessonBundles(missing),
+    };
+    for (const [path, body] of Object.entries(files)) {
+      mkdirSync(dirname(join(dist, path)), { recursive: true });
+      writeFileSync(join(dist, path), body);
+    }
+    run = spawnSync(process.execPath, [postbuild, dist], { encoding: 'utf8' });
+  }, 120_000);
+
+  afterAll(() => {
+    if (dist) rmSync(dist, { recursive: true, force: true });
+  });
+
+  it('fails the build and names the chunk', () => {
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain(`${LESSON_MANIFEST[0]?.name} has no web bundle: the chunk is missing from the build`);
+    expect(run.stdout).not.toMatch(/pwa-postbuild: precached/);
+  });
+});
+
+describe('pwa-postbuild.mjs --budget fails a start bundle that grew', () => {
+  let dist;
+  let run;
+  let deploy;
+
+  beforeAll(() => {
+    dist = mkdtempSync(join(tmpdir(), 'hr-pwa-budget-'));
+    const bundles = lessonBundles();
+    // A start bundle one byte over its line: the same hashes, padded.
+    const start = bundles['_expo/static/js/web/index-abc.js'];
+    bundles['_expo/static/js/web/index-abc.js'] = start + ' '.repeat(Math.max(0, PRECACHE_BUDGET.startBundleRaw + 1 - start.length));
+    const files = {
+      'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
+      'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
+      ...bundles,
+    };
+    for (const [path, body] of Object.entries(files)) {
+      mkdirSync(dirname(join(dist, path)), { recursive: true });
+      writeFileSync(join(dist, path), body);
+    }
+    const { WORKERS_CI: _w, CF_PAGES: _p, ...env } = process.env;
+    run = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8', env });
+    // The deploy's own build (Cloudflare Workers Builds sets WORKERS_CI): the same overrun only warns.
+    deploy = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8', env: { ...env, WORKERS_CI: '1' } });
+  }, 120_000);
+
+  afterAll(() => {
+    if (dist) rmSync(dist, { recursive: true, force: true });
+  });
+
+  it('fails over the start bundle line and says it must not grow', () => {
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain(`the start bundle is ${PRECACHE_BUDGET.startBundleRaw + 1} B raw, over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B: it must not grow`);
+  });
+
+  it('on the deploy build, warns and still finishes, so a budget line never stops a deploy', () => {
+    expect(deploy.status).toBe(0);
+    expect(deploy.stdout).toContain('pwa-postbuild: WARNING over budget');
+    expect(deploy.stdout).toContain(`over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B`);
+    expect(deploy.stdout).toMatch(/pwa-postbuild: precached/);
   });
 });
 

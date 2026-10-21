@@ -34,6 +34,7 @@ import { TraceWordGame } from './TraceWordGame';
 import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
+import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 
 /**
  * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
@@ -55,7 +56,13 @@ type Props = {
   inPreview?: boolean;
 } & ScreenExitProps;
 
-export function MinigameScreen({ route, navigation, onOpenCultureNote, inPreview = false, ...exitProps }: Props): React.ReactElement {
+export function MinigameScreen(props: Props): React.ReactElement {
+  // A lesson game's scope and its quest's steps come from the cell's chunk (F-CURR-002 §10): until it is in,
+  // the screen draws only its header (and a calm status line if it takes longer), so the way back is always there.
+  return useLessonQuestReady(props.route.params.questId) ? <MinigameBody {...props} /> : <LessonWaiting />;
+}
+
+function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false, ...exitProps }: Props): React.ReactElement {
   const { questId, stepIndex } = route.params;
   const quest = questById(questId);
   const step = quest?.steps[stepIndex];
