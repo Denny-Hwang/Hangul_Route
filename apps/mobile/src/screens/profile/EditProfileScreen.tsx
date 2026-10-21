@@ -18,11 +18,12 @@ import {
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
-import { Linking, Pressable, Switch, TextInput, View } from 'react-native';
+import { Linking, Pressable, TextInput, View } from 'react-native';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
 import { flags } from '../../config/flags';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { ProfileLockCard } from '../../components/ProfileLockCard';
 import { useMessages } from '../../i18n/use-messages';
 import { privacyUrl } from '../../logic/links';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
@@ -40,7 +41,6 @@ import {
   type EditState,
 } from '../../logic/profiles/edit-profile';
 import { createPinHash } from '../../logic/profiles/pin-hash';
-import { needsFreshPin } from '../../logic/profiles/session';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
@@ -48,9 +48,7 @@ import { confirm } from '../../platform/dialog';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useMembershipStore } from '../../store/membership-store';
-import { setProfileLocked, useLocks } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
-import { useUiStore } from '../../store/ui-store';
 import { useBackGuard } from '../use-back-guard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
@@ -89,17 +87,8 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const acceptGuardianConsent = useAccountStore((s) => s.acceptGuardianConsent);
   const acceptSelfConsent = useAccountStore((s) => s.acceptSelfConsent);
   const setParentPinHash = useAccountStore((s) => s.setParentPinHash);
-  // [OA] Row OA-5: the lock of this learner (every learner while the locks cannot be read; void without a PIN).
-  const allProfiles = useProfileStore((s) => s.profiles);
-  const locks = useLocks(allProfiles);
-  const lastPinVerifiedAt = useUiStore((s) => s.lastPinVerifiedAt);
+  // [OA] Row OA-5: the lock of this learner (`ProfileLockCard`, shared with People on this device, row OA-7a).
   const lockShown = flags.whoChooserEnabled && original?.role === 'learner';
-  const pinSet = parentPinHash !== null;
-  const isLocked = locks.locked.has(profileId);
-  /** The lock change waiting for the fresh PIN it asked for (`FreshPin`), applied once that PIN is right. */
-  const pendingLock = useRef<boolean | null>(null);
-  const [lockBusy, setLockBusy] = useState(false);
-  const [lockFailed, setLockFailed] = useState(false);
   const inClass = useMembershipStore((s) => (s.byLearner[profileId] ?? []).some((r) => r.kind === 'class'));
   const hydrateMemberships = useMembershipStore((s) => s.hydrate);
   const deviceScope = useMembershipStore((s) => s.deviceScope);
@@ -132,47 +121,6 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   useEffect(() => {
     void hydrateMemberships(profileId);
   }, [profileId, hydrateMemberships]);
-
-  const applyLock = async (on: boolean): Promise<void> => {
-    setLockBusy(true);
-    const ok = await setProfileLocked(profileId, on, useProfileStore.getState().profiles);
-    setLockFailed(!ok);
-    setLockBusy(false);
-  };
-
-  // [OA] OA-D5b (3): the fresh PIN came back right; the change it was asked for applies now.
-  useEffect(() => {
-    const pending = pendingLock.current;
-    if (pending === null || needsFreshPin(pending ? 'lock' : 'unlock', lastPinVerifiedAt, Date.now())) return;
-    pendingLock.current = null;
-    void applyLock(pending);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a PIN was entered
-  }, [lastPinVerifiedAt]);
-
-  // [OA] A fresh PIN screen left without a right PIN (Cancel, Close, a back) drops the change it was asked for, so a
-  // later PIN entered for something else never applies a lock or unlock the grown-up abandoned.
-  useEffect(
-    () =>
-      navigation.addListener('focus', () => {
-        const pending = pendingLock.current;
-        if (pending !== null && needsFreshPin(pending ? 'lock' : 'unlock', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
-          pendingLock.current = null;
-        }
-      }),
-    [navigation],
-  );
-
-  const toggleLock = (on: boolean): void => {
-    if (!pinSet || lockBusy) return;
-    setLockFailed(false);
-    if (needsFreshPin(on ? 'lock' : 'unlock', useUiStore.getState().lastPinVerifiedAt, Date.now())) {
-      pendingLock.current = on;
-      navigation.navigate('PinEntry', { next: 'FreshPin' });
-      return;
-    }
-    pendingLock.current = null;
-    void applyLock(on);
-  };
 
   useEffect(() => {
     let live = true;
@@ -341,34 +289,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
       {lockShown ? (
         <>
           <Spacer size="lg" />
-          <Card padding="md">
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
-              <View style={{ flex: 1 }}>
-                <Body weight="semibold">{messages.caregiver.people.lock}</Body>
-                <Caption tone="secondary" testID="edit-lock-hint">
-                  {pinSet ? messages.caregiver.people.lockHint : messages.caregiver.pin.needsPinFirst}
-                </Caption>
-              </View>
-              <Switch
-                testID="edit-lock-switch"
-                value={isLocked}
-                onValueChange={toggleLock}
-                disabled={!pinSet || lockBusy}
-                accessibilityLabel={messages.caregiver.people.lock}
-                accessibilityHint={pinSet ? messages.caregiver.people.lockHint : messages.caregiver.pin.needsPinFirst}
-                trackColor={{ true: colors.brand.primary, false: colors.border.strong }}
-                thumbColor={colors.surface.paper}
-              />
-            </View>
-            {lockFailed ? (
-              <>
-                <Spacer size="xs" />
-                <Caption tone="secondary" testID="edit-lock-failed">
-                  {e.saveFailed}
-                </Caption>
-              </>
-            ) : null}
-          </Card>
+          <ProfileLockCard profileId={profileId} onAskPin={() => navigation.navigate('PinEntry', { next: 'FreshPin' })} failedLine={e.saveFailed} testID="edit-lock" />
         </>
       ) : null}
 

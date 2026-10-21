@@ -130,7 +130,10 @@
     "apps/mobile/src/components/WhoTile.tsx",
     "apps/mobile/src/components/GrownUpRow.tsx",
     "apps/mobile/src/components/WhoSwitchButton.tsx",
-    "apps/mobile/src/components/LockBadge.tsx"
+    "apps/mobile/src/components/LockBadge.tsx",
+    "apps/mobile/src/screens/parent/PeopleOnDeviceCard.tsx",
+    "apps/mobile/src/screens/parent/PersonOnDeviceScreen.tsx",
+    "apps/mobile/src/components/ProfileLockCard.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

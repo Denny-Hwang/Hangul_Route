@@ -53,6 +53,7 @@ import { VocabMatchScreen } from '../screens/vocab/VocabMatchScreen';
 import { VocabTopicScreen } from '../screens/vocab/VocabTopicScreen';
 import { VocabTopicsScreen } from '../screens/vocab/VocabTopicsScreen';
 import { WhoIsUsingScreen } from '../screens/who/WhoIsUsingScreen';
+import { PersonOnDeviceScreen } from '../screens/parent/PersonOnDeviceScreen';
 import { cellStoriesRouteId } from '../logic/story/cell-stories';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 import { PlacementE2eHook } from './placement-e2e';
@@ -183,6 +184,8 @@ export function RootNavigator(): React.ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TypeHangulE2e" component={TypeHangulE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TraceWordE2e" component={TraceWordE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
+        {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
+        {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
       </Stack.Navigator>
       {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}
       <BootIntentHook />

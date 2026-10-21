@@ -202,8 +202,11 @@ export type RootStackParamList = {
   };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
-  /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
-  SaveProgress: undefined;
+  /**
+   * sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). [OA] `profileId` (row OA-7a): Save progress
+   * first on the Remove sheet opens it for that learner; absent, the active learner.
+   */
+  SaveProgress: { profileId?: string } | undefined;
   /**
    * A class move from this device (F-SPACE-002 section 4.12, T-7c; `design/screens/transfer/app-sheets.md`):
    * enter the new class code, Find class, read the consent sheet, send. Behind the grown-up gate unless it
@@ -325,6 +328,12 @@ export type RootStackParamList = {
    * (`who.shown`, and `profile.switch` with `via: 'chooser'`). A held join code is never a param (OA-D20).
    */
   WhoIsUsing: { trigger: WhoTrigger };
+  /**
+   * [OA] One person on this device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.4, row OA-7a; wireframe
+   * `profiles/people-on-device.md` Panel B): the lock switch, Edit profile, the report and Remove from this device.
+   * In the Grown-up area stack, reached from its People on this device card.
+   */
+  PersonOnDevice: { profileId: string };
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

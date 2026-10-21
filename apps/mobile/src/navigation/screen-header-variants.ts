@@ -94,6 +94,8 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   Profile: 'back',
   EditProfile: 'back',
   ParentDashboard: 'back',
+  // [OA] Row OA-7a: one person on this device (Grown-up area).
+  PersonOnDevice: 'back',
   PinEntry: 'close',
   // Forgot PIN replaced the PIN screen: its Back returns there (a guard in the screen).
   PinReset: 'back',
