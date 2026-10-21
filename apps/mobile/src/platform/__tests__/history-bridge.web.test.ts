@@ -418,7 +418,7 @@ describe('history bridge: a page that leaves for another document', () => {
         expect(before, `${name}:${i + 1} leaves without markLeaving()`).toMatch(/markLeaving\(\)/);
       });
     }
-    expect(new Set(sites)).toEqual(new Set(['browse-env.web.ts', 'browse-handoff.web.ts', 'grown-up-handoff.web.ts', 'persona-signin.web.ts']));
+    expect(new Set(sites)).toEqual(new Set(['browse-env.web.ts', 'browse-handoff.web.ts', 'grown-up-handoff.web.ts', 'persona-signin.web.ts', 'pin-reset.web.ts']));
   });
 
   it('input that follows no leave changes nothing', () => {

@@ -490,4 +490,26 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS');
   });
+  it('[OA] pinResetSignInEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-6) is OFF when the row lands; only an on value turns it on', async () => {
+    delete process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN;
+    let mod = await reload();
+    expect(mod.flags.pinResetSignInEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.pinResetSignInEnabled).toBe(false);
+    for (const on of ['true', '1', 'on', 'yes', ' TRUE ']) {
+      process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN = on;
+      mod = await reload();
+      expect(mod.flags.pinResetSignInEnabled, JSON.stringify(on)).toBe(true);
+    }
+    for (const other of ['false', '0', 'off', 'maybe', '']) {
+      process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN = other;
+      mod = await reload();
+      expect(mod.flags.pinResetSignInEnabled, JSON.stringify(other)).toBe(false);
+    }
+    delete process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN;
+  }, RELOADS_MS);
+
+  it('[OA] pinResetSignInEnabled is read by its literal name', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN');
+  });
 });

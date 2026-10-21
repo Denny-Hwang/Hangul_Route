@@ -38,12 +38,14 @@ export const pinCreated = (where: 'first_run' | 'gate' | 'reset' | 'optional'): 
   payload: { where },
 });
 
-export const pinResetRequested = (method: 'rescue_code' | 'wait'): OnboardingEvent => ({
+/** [OA] `sign_in`: Sign in to the account on Forgot PIN? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15, row OA-6). */
+export const pinResetRequested = (method: 'rescue_code' | 'wait' | 'sign_in'): OnboardingEvent => ({
   name: 'pin.reset_requested',
   payload: { method },
 });
 
-export const pinResetCompleted = (method: 'rescue_code' | 'wait'): OnboardingEvent => ({
+/** [OA] `sign_in`: a new PIN set after the console's sign-in reset ticket (section 15, row OA-6). */
+export const pinResetCompleted = (method: 'rescue_code' | 'wait' | 'sign_in'): OnboardingEvent => ({
   name: 'pin.reset_completed',
   payload: { method },
 });

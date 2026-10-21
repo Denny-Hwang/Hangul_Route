@@ -204,6 +204,15 @@ export interface Flags {
    * fresh-PIN check, the Rescue Code's own counter and the shared attempt state across tabs have no switch.
    */
   pinPauseStepsEnabled: boolean;
+
+  /**
+   * [OA] Reset the grown-up PIN by signing in (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D8, sections 8.5 and 16, row OA-6):
+   * Forgot PIN? shows **Sign in to the account** first on the web while online, and the `gate=pin-reset` boot intent
+   * opens the new-PIN screen for the console's ticket. OFF when OA-6 lands; OA-10 turns it on. `EXPO_PUBLIC_PIN_RESET_SIGNIN`
+   * (`parseKillSwitch`: `true`, `1`, `on` or `yes` on; `false`, `0`, `off` or `no` off). Off hides the option and drops
+   * the intent; the console twin is `NEXT_PUBLIC_PIN_RESET_SIGNIN`.
+   */
+  pinResetSignInEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -226,6 +235,7 @@ const launchDefaults: Flags = {
   // LV-7 turned this on with the web default and the site claim (AMENDMENTS-LECTURE-V2 LV-D1).
   lectureModeEnabled: true,
   pinPauseStepsEnabled: true,
+  pinResetSignInEnabled: false,
 };
 
 export const flags: Flags = {
@@ -253,6 +263,7 @@ export const flags: Flags = {
   routeEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_ENABLED, launchDefaults.routeEnabled),
   lectureModeEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_LECTURE_MODE, launchDefaults.lectureModeEnabled),
   pinPauseStepsEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS, launchDefaults.pinPauseStepsEnabled),
+  pinResetSignInEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN, launchDefaults.pinResetSignInEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

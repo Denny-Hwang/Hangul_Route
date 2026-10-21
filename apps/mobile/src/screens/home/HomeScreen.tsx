@@ -109,6 +109,7 @@ import { RouteStrip } from './RouteStrip';
 import { VocabMissionCard } from './VocabMissionCard';
 import { ClassUpdateHomeLines } from '../class-update/ClassUpdateHomeLines';
 import { TransferHomeLine } from '../transfer/TransferHomeLine';
+import { PinResetExpiredNotice } from '../parent/PinResetExpiredNotice';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -884,6 +885,8 @@ export function HomeScreen(): React.ReactElement {
   return (
     <View style={{ flex: 1 }}>
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
+      {/* [OA] A refused sign-in reset ticket (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5): once, over the start. */}
+      <PinResetExpiredNotice />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         {/* The catch-up card's cheering Hoya stands in for the greeting's while it shows. */}
         {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}

@@ -14,7 +14,9 @@ import {
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Platform, Pressable, TextInput, View } from 'react-native';
+import { useOnline } from '../../components/use-online';
+import { flags } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { pinResetRequested } from '../../logic/onboarding/onboarding-events';
 import { cooldownRemainingMs } from '../../logic/profiles/pin-hash';
@@ -27,8 +29,10 @@ import {
   resetWaitState,
   waitCardView,
 } from '../../logic/profiles/pin-reset';
+import { signInResetShown } from '../../logic/shell/pin-reset-ticket';
 import { RESCUE_INPUT_MAX, cleanRescueInput, rescueInputRows } from '../../logic/sync/rescue-code';
 import type { RootStackParamList } from '../../navigation/types';
+import { openPinResetSignIn } from '../../platform/pin-reset';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
@@ -46,6 +50,11 @@ const CODE_BORDER = 2;
  * boxes F and G (and profiles/pin-entry.md). Two offline ways to a new PIN, both keep
  * the learners, cards and progress: re-enter a Rescue Code this device already
  * stores, or wait 24 hours. Adult tone, nothing here teaches a child to try.
+ *
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 1 (row OA-6; mock `design/screens/profiles/pin-entry-v2.md`
+ * boards 7 and 8): on the web, online, with `EXPO_PUBLIC_PIN_RESET_SIGNIN` on, **Sign in to the account** comes first.
+ * Its Sign in opens `/signin?next=/account/pin-reset` in this tab and writes no unlock; the console checks that the
+ * PIN owner signed in with a password or a code and sends the tab back with a ticket (`gate=pin-reset`).
  */
 export function PinResetScreen({ route, navigation }: Props): React.ReactElement {
   const textScale = useTypeScale();
@@ -69,6 +78,9 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   const [message, setMessage] = useState<string | null>(null);
   const [waitOpen, setWaitOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const online = useOnline();
+  const signInShown = signInResetShown({ os: Platform.OS, online, flag: flags.pinResetSignInEnabled });
+  const [leaving, setLeaving] = useState(false);
 
   // The Rescue Codes live in the per-learner sync records; load them all before
   // choosing which cards to draw, so the layout does not jump.
@@ -144,6 +156,12 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
     true,
   );
 
+  const signIn = (): void => {
+    if (leaving) return;
+    setLeaving(true);
+    void openPinResetSignIn().catch(() => setLeaving(false));
+  };
+
   const codeRows = rescueInputRows(codeInput);
   const codeLine = locked ? pauseText(cooldownMs, m) : message;
   const showWait = !hasCode || waitOpen || wait.status !== 'idle';
@@ -157,6 +175,18 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
 
       {loaded ? (
         <>
+          {signInShown ? (
+            <>
+              <Card padding="lg" tone="paper" testID="pin-reset-signin">
+                <Heading level="prompt">{m.reset.signIn.heading}</Heading>
+                <Spacer size="sm" />
+                <Body tone="secondary">{m.reset.signIn.caption}</Body>
+                <Spacer size="md" />
+                <Button label={m.reset.signIn.button} tone="primary" size="lg" fullWidth disabled={leaving} onPress={signIn} testID="pin-reset-signin-button" />
+              </Card>
+              <Spacer size="md" />
+            </>
+          ) : null}
           {hasCode ? (
             <Card padding="lg" tone="paper">
               <Heading level="prompt">{m.reset.code.heading}</Heading>

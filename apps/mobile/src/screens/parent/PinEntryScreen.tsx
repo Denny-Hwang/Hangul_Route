@@ -349,8 +349,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     }
   };
 
-  const title =
-    mode === 'verify' ? copy.pinVerifyTitle : mode === 'setup-1' ? copy.pinCreateTitle : m.entry.createAgain;
+  // [OA] The console's sign-in reset ticket opens setup titled Choose a new grown-up PIN (section 8.5 step 5).
+  const setupTitle = route.params.via === 'sign_in' ? m.reset.signIn.newPinTitle : copy.pinCreateTitle;
+  const title = mode === 'verify' ? copy.pinVerifyTitle : mode === 'setup-1' ? setupTitle : m.entry.createAgain;
   const subtitle =
     mode === 'verify'
       ? m.entry.verifySubtitle
