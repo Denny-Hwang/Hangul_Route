@@ -644,11 +644,11 @@ describe('lockActions: the three buttons (A-4a review, 2026-10-12)', () => {
     expect(h.assigned).toEqual(['/?gate=grown-up&next=%2Fteach%2Fspace%3Fid%3Dsp_1']);
   });
 
-  it('Sign in again hands /signin with this page as next to the sign-out', () => {
+  it.each(['en', 'es', 'ko'] as const)('Sign in again hands /signin with this page as next and lang=%s to the sign-out', (locale) => {
     const h = harness();
     const urls: string[] = [];
-    lockActions(h.env, '/parent', (url) => urls.push(url), 'en').onSignInAgain();
-    expect(urls).toEqual(['/signin?next=%2Fparent']);
+    lockActions(h.env, '/parent', (url) => urls.push(url), locale).onSignInAgain();
+    expect(urls).toEqual([`/signin?next=%2Fparent&lang=${locale}`]);
     expect(h.assigned).toEqual([]);
   });
 

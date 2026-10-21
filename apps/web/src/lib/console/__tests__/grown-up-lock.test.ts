@@ -5,6 +5,7 @@ import {
   learnerHome,
   pinPathUrl,
   signInAgainUrl,
+  signInHome,
   trustableEpoch,
   type DeviceGateRead,
   type LockDecision,
@@ -184,18 +185,27 @@ describe('lock screen targets', () => {
     expect(next).toBe('/teach/space?id=sp%3A1');
   });
 
-  it('Sign in again goes to /signin with this page as next', () => {
-    expect(signInAgainUrl('/parent/space?id=sp_1')).toBe('/signin?next=%2Fparent%2Fspace%3Fid%3Dsp_1');
+  it('Sign in again goes to /signin with this page as next and the console language', () => {
+    expect(signInAgainUrl('/parent/space?id=sp_1', 'en')).toBe('/signin?next=%2Fparent%2Fspace%3Fid%3Dsp_1&lang=en');
   });
 
-  it('a path that safeNextPath refuses falls back to the router (/signin) or no next', () => {
+  it('a path that safeNextPath refuses falls back to the router (/signin) or no next, the language kept', () => {
     expect(pinPathUrl('//evil.example')).toBe('/?gate=grown-up&next=%2Fsignin');
-    expect(signInAgainUrl('https://evil.example')).toBe('/signin');
-    expect(signInAgainUrl('/')).toBe('/signin');
+    expect(signInAgainUrl('https://evil.example', 'en')).toBe('/signin?lang=en');
+    expect(signInAgainUrl('/', 'ko')).toBe('/signin?lang=ko');
+  });
+
+  // AMENDMENTS-DISPLAY-NAV section 6: Sign out to /signin and Sign in again carry ?lang=, English included.
+  it.each(['en', 'es', 'ko'] as const)('Sign out and Sign in again carry lang=%s', (locale) => {
+    expect(signInHome(locale)).toBe(`/signin?lang=${locale}`);
+    const url = new URL(signInAgainUrl('/teach/space?id=sp_1', locale), 'https://app.hangulroute.com');
+    expect(url.pathname).toBe('/signin');
+    expect(url.searchParams.get('lang')).toBe(locale);
+    expect(url.searchParams.get('next')).toBe('/teach/space?id=sp_1');
   });
 
   it('the fragment is dropped', () => {
-    expect(signInAgainUrl('/account/billing?checkout=success#top')).toBe('/signin?next=%2Faccount%2Fbilling%3Fcheckout%3Dsuccess');
+    expect(signInAgainUrl('/account/billing?checkout=success#top', 'es')).toBe('/signin?next=%2Faccount%2Fbilling%3Fcheckout%3Dsuccess&lang=es');
   });
 
   it('learnerHome is the app host only while the console is still served on the site (hangulroute.com, www)', () => {

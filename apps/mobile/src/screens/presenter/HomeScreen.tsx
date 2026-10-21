@@ -229,7 +229,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
   const pageWidth = Math.min(width, layout.maxWidth.full) - 2 * gutter;
   const presetsWidth = Math.max(0, wide ? pageWidth - Math.min(sideWidth, pageWidth * 0.4) - spacing.xl : pageWidth);
   const presets = (
-    <PresetCards messages={messages} ctx={props.presetCtx} resolve={props.resolve} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} initialWidth={presetsWidth} />
+    <PresetCards messages={messages} ctx={props.presetCtx} resolve={props.resolve} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} ready={props.recent.status !== 'loading'} initialWidth={presetsWidth} />
   );
   const recent = <RecentPanel {...props} onResume={leaving(props.onResume)} onStartOver={leaving(props.onStartOver)} />;
 

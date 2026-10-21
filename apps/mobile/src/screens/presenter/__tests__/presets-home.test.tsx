@@ -152,6 +152,33 @@ describe('Ready-made lessons (sections 4.1 and 10)', () => {
     expect(onPresetSpy).toHaveBeenCalledWith('hangul-week-1', 30, 'stage1');
   });
 
+  // Codex review of #742: a Start pressed before the Recent read settles would build from no history for good.
+  it('holds every Start until Recent has loaded; a finished read with storage off counts as empty', async () => {
+    const onPresetSpy = vi.fn();
+    const r = await render(<Harness onPresetSpy={onPresetSpy} recent={{ status: 'loading' }} />);
+    for (const preset of ['hangul-week-1', 'word-review', 'next-lesson'] as const) {
+      await press(one(r.root, `presenter-preset-${preset}`));
+      const start = one(r.root, `presenter-preset-start-${preset}`);
+      expect(start.props['aria-disabled']).toBe(true);
+      await press(start);
+    }
+    expect(onPresetSpy).not.toHaveBeenCalled();
+
+    // The read finished with storage off: Start builds from an empty Recent.
+    await act(async () => r.update(<Harness onPresetSpy={onPresetSpy} recent={{ status: 'off' }} />));
+    await press(one(r.root, 'presenter-preset-hangul-week-1'));
+    const start = one(r.root, 'presenter-preset-start-hangul-week-1');
+    expect(start.props['aria-disabled']).not.toBe(true);
+    await press(start);
+    expect(onPresetSpy).toHaveBeenCalledTimes(1);
+    expect(onPresetSpy).toHaveBeenCalledWith('hangul-week-1', 20, 'stage1');
+
+    // And with Recent read.
+    await act(async () => r.update(<Harness onPresetSpy={onPresetSpy} recent={{ status: 'ready', list: emptyRecent() }} />));
+    await press(one(r.root, 'presenter-preset-start-hangul-week-1'));
+    expect(onPresetSpy).toHaveBeenCalledTimes(2);
+  });
+
   it('the length chips are one radiogroup for the keyboard: the arrows, Home and End move and select', async () => {
     const r = await render(<Harness />);
     await press(one(r.root, 'presenter-preset-hangul-week-1'));

@@ -254,11 +254,11 @@ interface LockHandlers {
   onBackToLearning: () => void;
 }
 
-/** The three lock buttons for the page at `path` (pathname and query); Back to learning carries the console's language. */
+/** The three lock buttons for the page at `path` (pathname and query); Sign in again and Back to learning carry the console's language. */
 export function lockActions(env: GrownUpLockEnvironment, path: string, onSignInAgain: (signInUrl: string) => void, locale: UiLocale): LockHandlers {
   return {
     onUsePin: () => env.assign(pinPathUrl(path)),
-    onSignInAgain: () => onSignInAgain(signInAgainUrl(path)),
+    onSignInAgain: () => onSignInAgain(signInAgainUrl(path, locale)),
     onBackToLearning: () => {
       env.clearGrownUpTab();
       env.assign(learnerHome(env.origin(), locale));

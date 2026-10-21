@@ -100,10 +100,21 @@ export function pinPathUrl(path: string): string {
   return `/?gate=grown-up&next=${encodeURIComponent(safeNextPath(path) ?? APP_ROUTES.signIn)}`;
 }
 
-/** Sign in again: after the sign-out, `/signin` with this page as `next`. */
-export function signInAgainUrl(path: string): string {
+/**
+ * `/signin` in the console's language: where Sign out goes (AMENDMENTS-DISPLAY-NAV section 6, the hand-off
+ * always carries `lang`, English included). `/signin` uses it only to seed a device that never chose.
+ */
+export function signInHome(locale: UiLocale): string {
+  return `${APP_ROUTES.signIn}?lang=${locale}`;
+}
+
+/** Sign in again: after the sign-out, `/signin` with this page as `next` and the console's language as `lang` (section 6). */
+export function signInAgainUrl(path: string, locale: UiLocale): string {
+  const query = new URLSearchParams();
   const next = safeNextPath(path);
-  return next ? `${APP_ROUTES.signIn}?next=${encodeURIComponent(next)}` : APP_ROUTES.signIn;
+  if (next) query.set('next', next);
+  query.set('lang', locale);
+  return `${APP_ROUTES.signIn}?${query.toString()}`;
 }
 
 /** The site origins that still serve the console until F-SITE-002 S-10 (hangulroute.com and www). */

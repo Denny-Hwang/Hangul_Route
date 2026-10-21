@@ -74,11 +74,16 @@ export interface PresetCardsProps {
   state: HomeSnapshot;
   onState: (patch: Partial<HomeSnapshot>) => void;
   onStart: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => void;
+  /**
+   * Recent has been read (a finished read with storage off counts, as empty). Until then every Start is
+   * disabled, so a ready-made lesson is never built from no history (Next lesson, Word review, the warm-up).
+   */
+  ready?: boolean;
   /** The section's width until it is measured (the page's estimate), so the first frame has its columns. */
   initialWidth?: number;
 }
 
-export function PresetCards({ messages, ctx, resolve, stages, state, onState, onStart, initialWidth = 0 }: PresetCardsProps): React.ReactElement {
+export function PresetCards({ messages, ctx, resolve, stages, state, onState, onStart, ready = true, initialWidth = 0 }: PresetCardsProps): React.ReactElement {
   const scale = useTypeScale();
   const ts = scale.size;
   const w = messages.learner.presenter.presets;
@@ -165,6 +170,7 @@ export function PresetCards({ messages, ctx, resolve, stages, state, onState, on
                     onMinutes={(m) => onState({ lengths: { ...state.lengths, [preset]: m } })}
                     onStage={(s) => onState({ stage: s })}
                     onStart={() => onStart(preset, minutes, stage)}
+                    ready={ready}
                   />
                 ) : null}
               </View>
@@ -186,6 +192,7 @@ function PresetPanel({
   onMinutes,
   onStage,
   onStart,
+  ready,
 }: {
   messages: Messages;
   preset: LecturePreset;
@@ -196,6 +203,7 @@ function PresetPanel({
   onMinutes: (m: PresetMinutes) => void;
   onStage: (s: StageKey) => void;
   onStart: () => void;
+  ready: boolean;
 }): React.ReactElement {
   const ts = useTypeScale().size;
   const w = messages.learner.presenter.presets;
@@ -235,7 +243,7 @@ function PresetPanel({
       ) : null}
       <View style={{ alignItems: 'flex-end' }}>
         {/* Start builds what the fallback line says, so a keyboard or screen-reader user hears it on Start too. */}
-        <HomeButton label={w.start.cta} onPress={onStart} primary describedBy={fallback !== null ? fallbackId : undefined} {...(regular ? { minWidth: touchTarget.hero * 2 } : { upTo: touchTarget.hero * 2 })} testID={`presenter-preset-start-${preset}`} />
+        <HomeButton label={w.start.cta} onPress={onStart} primary disabled={!ready} describedBy={fallback !== null ? fallbackId : undefined} {...(regular ? { minWidth: touchTarget.hero * 2 } : { upTo: touchTarget.hero * 2 })} testID={`presenter-preset-start-${preset}`} />
       </View>
     </>
   );

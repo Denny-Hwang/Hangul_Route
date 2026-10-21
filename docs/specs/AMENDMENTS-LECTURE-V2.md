@@ -422,7 +422,7 @@ Every value below lands in the row that draws it, in all three locales, through 
 | `grid.kind.realia` (LV-S1; its question slide is `grid.kind.quiz`) | Look and read | Mira y lee | 보고 읽기 |
 | `grid.kind.build` (LV-S3) | Build a sentence | Arma una oración | 문장 만들기 |
 | `grid.kind.write` (LV-S4) | Write together | Escribir en grupo | 함께 써요 |
-| `a11y.presenter.presetCard` (`title`, `n`) | {title}, about {n} minutes | {title}, unos {n} minutos | {title}, 약 {n}분 |
+| `a11y.presenter.presetCard` (`title`, `n`) | {title}, about {n} minutes | {title}, aproximadamente {n} minutos | {title}, 약 {n}분 |
 | `a11y.presenter.slot` | gap | espacio | 빈칸 |
 | `a11y.presenter.tilePlaced` (`word`) | {word} placed | Se colocó: {word} | 놓은 낱말: {word} |
 
@@ -479,7 +479,7 @@ Each row lands its keys in en, es and ko in the same PR and re-signs the namespa
 | `showMore` (`n`) | Show {n} more | Mostrar {n} más | {n}개 더 보기 |
 | `tray.title` | Your lesson | Tu lección | 내 수업 |
 | `tray.empty` | Nothing chosen yet. Choose from the tabs above. | Todavía no elegiste nada. Elige en las pestañas de arriba. | 아직 고른 것이 없어요. 위 탭에서 골라요. |
-| `summary` (`n`, `m`; plural on `n`) | 1 part · about {m} min / {n} parts · about {m} min | 1 parte · unos {m} min / {n} partes · unos {m} min | {n}개 · 약 {m}분 |
+| `summary` (`n`, `m`; plural on `n`) | 1 part · about {m} min / {n} parts · about {m} min | 1 parte · aprox. {m} min / {n} partes · aprox. {m} min | {n}개 · 약 {m}분 |
 | `a11y.presenter.chooserRemove` (`title`) | Remove {title} | Quitar {title} | 빼기: {title} |
 
 **Changed, LV-3**: `learner.presenter.state.invalid.line` "Choose a lesson here, or get a new link from the setup page." / "Elige una lección aquí o pide un enlace nuevo en la página de preparación." / "여기에서 수업을 고르거나 준비 페이지에서 새 링크를 받아요." · `learner.presenter.state.invalid.cta` "Choose a lesson" / "Elegir una lección" / "수업 고르기" (the page no longer has a "Quick lesson" by that name; the button opens the home with Customize open, as before).

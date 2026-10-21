@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 import { createConsoleApi, type ConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl } from '@/lib/console/config';
-import { ROUTES } from '@/lib/console/routing';
+import { signInHome } from '@/lib/console/grown-up-lock';
 import { signedOutTarget } from '@/lib/console/signin-flow';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { useConsoleAuth } from './auth-context';
@@ -45,8 +45,9 @@ export function useConsole(): ConsoleView {
     return auth.session && endpoint ? createConsoleApi({ endpoint, token: auth.getToken }) : null;
   }, [auth.session, auth.getToken]);
 
+  // Sign out goes to `/signin?lang=<this page's language>` (AMENDMENTS-DISPLAY-NAV section 6).
   const signOut = (): void => {
-    void auth.signOut().finally(() => router.replace(ROUTES.signIn));
+    void auth.signOut().finally(() => router.replace(signInHome(locale)));
   };
 
   return { ready: auth.ready, session: auth.session, api, signOut, m, locale };

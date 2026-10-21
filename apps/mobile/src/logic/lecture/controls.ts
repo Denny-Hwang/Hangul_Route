@@ -30,6 +30,8 @@
 
 /** Overlays that cover the slide; at most one is open. */
 export type CoveringOverlay = null | 'blank' | 'pause' | 'grid' | 'help' | 'exit';
+/** The covering overlays the reducer opens; any other name (the removed helper `picker`, LV-H) opens nothing. */
+const COVERING_OVERLAYS: ReadonlySet<string> = new Set<NonNullable<CoveringOverlay>>(['blank', 'pause', 'grid', 'help', 'exit']);
 /** What `{ overlay }` can ask for: a covering overlay, or `timer` (T) which toggles the class timer. */
 export type Overlay = CoveringOverlay | 'timer';
 export type TimerMode = 'corner' | 'full';
@@ -212,6 +214,7 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
       if (state.overlay !== null) return { state: { ...state, overlay: null, timerOpen: true } };
       return { state: { ...state, timerOpen: !state.timerOpen } };
     }
+    if (event.overlay !== null && !COVERING_OVERLAYS.has(event.overlay)) return { state };
     const overlay = event.overlay === state.overlay ? null : event.overlay;
     return { state: { ...state, overlay } };
   }
