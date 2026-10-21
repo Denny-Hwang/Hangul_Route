@@ -74,6 +74,8 @@ Companion stories:
   **then** the current screen state is persisted (Quest in progress is auto-paused, not lost) and the Profile Picker re-renders.
 - Switch is reachable from the home screen via a small avatar-corner button (≥ 44 × 44 dp tap target). It is **not** reachable from within a Quest screen (prevents mid-game switching that loses state).
 
+> **[OA]** The avatar-corner sheet is not built: the Home **Switch** is its own button in the Home header trail (at least 44 × 44) and opens Who is using this? (`AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` section 6.2; design D7 and `design/screens/profiles/who-is-using.md` board 13). The avatar stays the Profile entry.
+
 ### 3.5 PIN management
 
 - PIN is 4 digits. Stored as `<salt>:<digest>` — a per-PIN 16-byte salt from a native CSPRNG plus SHA-256 — in AsyncStorage under `parent.<profileId>.pin_hash`. The hash primitive is injected (`PinHasher`), so the choice is swappable without touching PIN logic. Rationale and the rejected bcrypt-cost-10 option are recorded in §9.2.
@@ -103,7 +105,7 @@ Wireframes authored (T-025 — v1, low-fi):
 - `design/wireframes/profiles/create-parent.md` — parent onboarding (name + PIN)
 - `design/wireframes/profiles/create-learner.md` — learner onboarding (name + avatar)
 - `design/wireframes/profiles/pin-entry.md` — PIN modal
-- `design/wireframes/profiles/switch-button.md` — corner switch on home
+- `design/wireframes/profiles/switch-button.md` — corner switch on home (partly superseded [OA]: see §3.4)
 
 ## 6. Tests
 

@@ -1,6 +1,6 @@
 # Profiles/Who-is-using — one chooser for every learner and grown-up use of a device (wireframe v1)
 
-Spec: `docs/specs/AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` sections 5, 6, 7.3, 9, 14 (rows OA-4a, OA-4b, OA-5) · supersedes `profiles/picker.md` · keeps `profiles/switch-button.md` (the Home corner button now opens this screen)
+Spec: `docs/specs/AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` sections 5, 6, 7.3, 9, 14 (rows OA-4a, OA-4b, OA-5) · supersedes `profiles/picker.md` · the Home **Switch** is its own button in the Home header trail, between Display and Profile, and opens this screen (OA-0b design D7); the avatar stays the Profile entry, so `profiles/switch-button.md`'s sheet is not built
 Audience: **learner** first (any age; many are children), **grown-up** second (parent, teacher, school admin on the same account)
 Route: learner app `WhoIsUsing` (root stack, above `Main`; no Back)
 Mock: `design/screens/profiles/who-is-using.md` (row OA-0b)
