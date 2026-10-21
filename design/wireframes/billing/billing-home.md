@@ -6,7 +6,7 @@
 
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.1-§4.6, §4.9, §4.12 · supersedes `console/billing.md` (F-ENT-001 §3.6) · promo box: F-ENT-002 §3.3 · frame: `shell/adult-frame.md` (F-APP-001 §3.8)
 Screen ID: `billing/billing-home` · URL: `https://app.hangulroute.com/account/billing` (`APP_ROUTES.billing`, F-APP-001)
-Audience: **parent** (family owner), **co-parent** (family caregiver), **teacher** (class owner, co-teacher, or teacher in a school), **school admin** (school owner or admin), **adult self-learner** (owner of their own family space). Grown-ups only; signed in with Clerk; inside F-APP-001's grown-up lock. Never a learner surface.
+Audience: **parent** (family owner), **co-parent** (family caregiver), **teacher** (class owner, co-teacher, or teacher in a school), **school admin** (school owner or admin; [SA] an admin sees the school card read only, the owner is the payer, SA-D11), **adult self-learner** (owner of their own family space). Grown-ups only; signed in with Clerk; inside F-APP-001's grown-up lock. Never a learner surface.
 
 ## Scenario (Given-When-Then)
 
@@ -83,7 +83,7 @@ Wide (1280), a teacher who pays for two classes and is a member of a school (sev
 |  | Class · <name>                |  | Class · <name>                |     |
 |  | Group License                 |  | Free plan                     |     |
 |  | Renews on <date>              |  | 14 of 20 students             |     |
-|  | 23 students                   |  |                               |     |
+|  | 23 of 50 students [SA]        |  |                               |     |
 |  | [ Manage subscription ]       |  |                               |     |
 |  | > Receipts                    |  |                               |     |
 |  +-------------------------------+  +-------------------------------+     |
@@ -116,8 +116,9 @@ Parent, plan, 0 learners  | Family · <name> | Family Plan · Renews on <date> |
 Co-parent (caregiver)     | Family · <name> | Family Plan · Renews on <date> | 3 of 4 learners | The person who set up this family manages this plan. |
 Co-teacher (class teacher)| Class · <name>  | Group License · Renews on <date> | 23 students | The class owner manages this plan. |
 Class in a school         | Class · <name>  | Covered by <school>'s license until <date> | 31 students | Your school manages this plan. |
-School owner / admin      | School · <name> | Group License · Renews on <date> | 42 of 50 students · 7 of 10 teachers | [ Manage subscription ] [ Contact us ] | > Receipts |
-Cancelled, still covered  | Class · <name>  | Group License · Ends on <date> | 23 students | [ Manage subscription ] | > Receipts |
+School owner             | School · <name> | Group License · Renews on <date> | 42 of 50 students · 7 of 10 teachers | [ Manage subscription ] [ Contact us ] | > Receipts |
+School admin [SA]         | School · <name> | Group License · Renews on <date> | 42 of 50 students · 7 of 10 teachers | The school's owner manages this plan. |  (read only: no Manage, no Receipts; `billing.readOnly.schoolAdmin`, SA-D11)
+Cancelled, still covered  | Class · <name>  | Group License · Ends on <date> | 23 of 50 students [SA] | [ Manage subscription ] | > Receipts |
 Past due (payer)          | ... | payment needs attention · full route kept for a week | [ Manage subscription ] |  + one neutral note above the cards
 Archived class, license   | Class · <name> (archived) | Group License · Renews on <date> | [ Manage subscription ] |  (payers only)
 ```

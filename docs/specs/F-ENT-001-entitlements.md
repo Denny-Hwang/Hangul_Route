@@ -31,7 +31,7 @@ Who pays is an adult or a space; who benefits is every learner attached to it. O
 
 - `isEntitlementActive(e, now)`: `trial` / `active` while `expiresAt` is null or in the future; `cancelled` only while `expiresAt` is in the future (cancel = no renewal, not revoke); `past_due` for **7 days** after `updatedAt`; `expired` never.
 - `tierForLearner(learnerId, now)` (roadmap §3.2): **premium** when any of the learner's live spaces is a family with active `family_lifetime`, or a class with its own active `group_license`, or a class under a school with active `group_license` / `school_seat`; otherwise free. Returns the covering space (`kind`, `spaceId`, `name`) as `source`.
-- `classCap(space, now)`: the free cap (20) unless the class or its parent school holds a group licence → unlimited. Join and lookup use it. A family space holds at most `FAMILY_LIFETIME_LEARNERS` (5) learners (`cap_family` on join).
+- `classCap(space, now)` [SA]: free 20; a stand-alone class with its own group licence 50 (`GROUP_LICENSE_LEARNERS`); a class in a covered school: no class cap, the school cap binds (AMENDMENTS-SEATS-ADMINS section 3.2; was: a licensed class or school → unlimited). Join uses it; lookup reads it only for the advisory `seat` field (AMENDMENTS-SEATS-ADMINS section 3.4). A family space holds at most `FAMILY_LIFETIME_LEARNERS` (4 [SA], was 5) learners (`cap_family` on join).
 
 ### 3.3 Routes (`/api/entitlements`)
 

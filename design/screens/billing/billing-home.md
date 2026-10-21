@@ -37,7 +37,7 @@ Inside F-APP-001's grown-up layout and `AdultFrame` (Billing current in the tab 
 
 **Viewer cards** (co-parent, co-teacher, a class its school pays for, a school seen by a teacher member) show the heading, plan, status and usage lines the summary gives and the read-only line. Never an amount, a promo field, a button or a receipt (section 4.2; the view model enforces it whatever the summary says).
 
-Variants on the board: Family Plan with 3 of 4 learners (4), no learner yet (5), cancelled "Ends on" (6), past due (7), school owner or admin with Contact us (8), a school on the free plan with the Group License offer, the school line and Contact us (9), archived with a live license, payers only (10), a legacy one-time sandbox Family Plan with no date and no Manage (11), the legacy "Your account" card (12).
+Variants on the board: Family Plan with 3 of 4 learners (4), no learner yet (5), cancelled "Ends on" (6), past due (7), school owner with Contact us (8; [SA] a school admin sees this card read only, with no Manage, no Contact us and no Receipts, `billing.readOnly.schoolAdmin`; that board lands in SA-0b), a school on the free plan with the Group License offer, the school line and Contact us (9), archived with a live license, payers only (10), a legacy one-time sandbox Family Plan with no date and no Manage (11), the legacy "Your account" card (12).
 
 ## The offer
 
