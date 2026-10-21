@@ -28,13 +28,20 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  * one-line change with the measured numbers in its PR.
  */
 export const PRECACHE_BUDGET = Object.freeze({
-  // The start bundle must not grow: its size after CM-8 moved the stories out (6,342,002 B raw / 1,572,188 B gzip, the
-  // release build, no recorded clips; 7,337,815 B after CM-5, 8,321,783 B before CM-5) plus a 7,998 B rounding
-  // margin. A row that adds to it raises this line with its measurement.
+  // The start bundle must not grow: its size after CM-8 moved the stories out (6,345,469 B raw / 1,573,399 B gzip, the
+  // release build of CM-8's final code on CM-5's head, no recorded clips; 7,337,815 B after CM-5, 8,321,783 B before
+  // CM-5) plus a 4,531 B rounding margin. A row that adds to it raises this line with its measurement; the es / ko story
+  // overlays still in the start bundle leave it with row CM-8b, before CM-46a adds narration.
   startBundleRaw: 6_350_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
+  // The story lines of scripts/build-stories.mjs `BUDGET` (perStoryRaw, totalRaw, totalGzip), held on the built story
+  // bundles too, which are what the service worker caches: a built bundle is about 13% larger than its generated
+  // module (CM-8: 983,601 B built against 869,644 B of modules). The test keeps the two sets of lines equal.
+  storyChunkRaw: 70_000,
+  storiesRaw: 2_000_000,
+  storiesGzip: 510_000,
 });
 
 export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
@@ -97,11 +104,16 @@ export function lessonChunkUrls(manifest, bundles) {
 
 const bytes = (text) => Buffer.byteLength(text, 'utf8');
 
-/** Count, raw and gzip bytes of the bundles of these manifest entries. */
+/** Count, raw and gzip bytes of the bundles of these manifest entries, and the largest of them (null when none). */
 function chunkTotals(manifest, bundles) {
   const names = new Set(manifest.map((m) => m.name));
   const chunks = bundles.filter((b) => !isStartBundle(b.url) && names.has(NAMED.exec(b.url)?.[1] ?? ''));
-  return { count: chunks.length, raw: chunks.reduce((s, b) => s + bytes(b.text), 0), gzip: chunks.reduce((s, b) => s + gzipSize(b.text), 0) };
+  let largest = null;
+  for (const b of chunks) {
+    const raw = bytes(b.text);
+    if (largest === null || raw > largest.raw) largest = { url: b.url, raw };
+  }
+  return { count: chunks.length, raw: chunks.reduce((s, b) => s + bytes(b.text), 0), gzip: chunks.reduce((s, b) => s + gzipSize(b.text), 0), largest };
 }
 
 /**
@@ -149,6 +161,19 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
       `the start bundle is ${report.start.raw} B raw, over its ceiling of ${budget.startBundleRaw} B: it must not grow ` +
         '(move the code out of the start bundle, or raise PRECACHE_BUDGET.startBundleRaw in apps/mobile/scripts/pwa/lesson-chunks.mjs as a reviewed one-line change with the measured numbers in the PR)',
     );
+  }
+  const stories = report.storyChunks;
+  if (stories !== undefined) {
+    const raise = '(raise it in scripts/build-stories.mjs BUDGET and PRECACHE_BUDGET together, as a reviewed one-line change with the measured numbers in the PR)';
+    if (stories.largest !== null && stories.largest !== undefined && stories.largest.raw > budget.storyChunkRaw) {
+      problems.push(`the story bundle ${stories.largest.url} is ${stories.largest.raw} B raw, over the per-story ceiling of ${budget.storyChunkRaw} B ${raise}`);
+    }
+    if (stories.raw > budget.storiesRaw) {
+      problems.push(`the story bundles are ${stories.raw} B raw, over the stories ceiling of ${budget.storiesRaw} B ${raise}`);
+    }
+    if (stories.gzip > budget.storiesGzip) {
+      problems.push(`the story bundles are ${stories.gzip} B gzip, over the stories ceiling of ${budget.storiesGzip} B gzip ${raise}`);
+    }
   }
   if (report.precache.raw > budget.learnerPrecacheRaw) {
     problems.push(

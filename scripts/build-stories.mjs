@@ -75,7 +75,11 @@ export const LEGACY_BUNDLE = join("apps", "mobile", "src", "content", "stories.g
  *   measurement (869,644 B raw / 220,524 B gzip for 24 stories) scaled to the raw line (507,155 B) and
  *   rounded up.
  * - `manifestRaw`: the start-loaded manifest, lessons-index.ts and stories-index.ts together
- *   (F-CURR-002 CM-5 / CM-8: 60,000 B, the line of build-lessons.mjs `BUDGET.manifestRaw`).
+ *   (F-CURR-002 CM-5 / CM-8: 60,000 B, the line of build-lessons.mjs `BUDGET.manifestRaw`). Today this line, not
+ *   `totalRaw`, sets how many stories fit (2,520 B left at CM-8, about two shelf entries); row CM-8b makes the room
+ *   before CM-46a adds to the shelf (F-CURR-002 §10, CM-8 decision record).
+ * pwa-postbuild.mjs holds the built story bundles to `perStoryRaw`, `totalRaw` and `totalGzip` too
+ * (`PRECACHE_BUDGET` of apps/mobile/scripts/pwa/lesson-chunks.mjs, kept equal by its test).
  * - `artRaw`: the scene-art share (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
  */
 export const BUDGET = Object.freeze({
