@@ -221,7 +221,21 @@ describe('the F-CURR-002 snapshot fields are optional, additive and lenient on r
       expect([parsed.memSeededAt, parsed.stamps, parsed.goals?.setAt]).toEqual([at, { s1: at }, at]);
     }
     // No offset (local time on a device, UTC on the Worker), a space, RFC 2822: dropped on read.
-    for (const at of ['2026-10-21T09:00:00', '2026-10-21 09:00:00Z', 'Wed, 21 Oct 2026 09:00:00 GMT', '2026-10-21']) {
+    // Outside the ECMAScript format or off the calendar: +02 and +0200 offsets, a 6- or 9-digit fraction, 30 February, hour 24.
+    for (const at of [
+      '2026-10-21T09:00:00',
+      '2026-10-21 09:00:00Z',
+      'Wed, 21 Oct 2026 09:00:00 GMT',
+      '2026-10-21',
+      '2026-10-21T00:00:00+02',
+      '2026-10-21T08:00:00+0900',
+      '2026-10-21T09:00:00.123456Z',
+      '2026-10-21T09:00:00.123456789Z',
+      '2026-02-30T00:00:00Z',
+      '2026-10-21T24:00:00Z',
+      '2026-10-21T09:60:00Z',
+      '2026-10-21T09:00:00+24:00',
+    ]) {
       const parsed = ProgressSnapshotSchema.parse({ ...legacy, memSeededAt: at, stamps: { s1: at, s2: '2026-10-21T09:00:00Z' }, goals: { daily: 3, weeklyDays: 3, setAt: at } });
       expect([parsed.memSeededAt, parsed.stamps, parsed.goals]).toEqual([undefined, { s2: '2026-10-21T09:00:00Z' }, undefined]);
     }
@@ -368,7 +382,15 @@ describe('the backup memory key (F-CURR-002 section 4.8, F-SYNC-002, F-RESTORE-0
 
   it('reads per entry: a bad item drops only itself and a bad shard only that shard', () => {
     const memory = {
-      stage2: { 'lex:sagwa': state, 'lex:bad': { ...state, b: 8 }, 'lex:feb': { ...state, d: '2026-02-30' }, 'lex:first': { ...state, f: '2026-13-01' } },
+      stage2: {
+        'lex:sagwa': state,
+        'lex:bad': { ...state, b: 8 },
+        'lex:feb': { ...state, d: '2026-02-30' },
+        'lex:first': { ...state, f: '2026-13-01' },
+        // A local-time clock would order differently on Hermes and V8: the item drops, its siblings stay.
+        'lex:local': { ...state, at: '2026-10-21T09:00:00' },
+        'lex:offset': { ...state, at: '2026-10-21T18:00:00+0900' },
+      },
       'pack:numbers-time': { 'rea:price-won': { ...state, d: null } },
       week: 'x',
     };

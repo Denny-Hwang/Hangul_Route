@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   CellBestSchema,
   DAY_LOG_DAYS,
+  DAY_LOG_INSTALL_KEYS_MAX,
   DayLogSchema,
+  GOALS_CLOCK_SKEW_MS,
   GoalsSchema,
+  PROGRESS_RECORD_MAX,
   LatchRecordSchema,
   StreakLocalSchema,
   boundToNow,
@@ -108,6 +111,52 @@ const longDayLog = optional(fc.dictionary(longDay, fc.dictionary(fc.constantFrom
   v === undefined ? undefined : read(DayLogSchema)(v),
 );
 laws<DayLog>('mergeDayLog (logs longer than DAY_LOG_DAYS)', longDayLog, mergeDayLog);
+/*
+ * At the caps: records with more keys than PROGRESS_RECORD_MAX and days with
+ * more install keys than DAY_LOG_INSTALL_KEYS_MAX, so the laws are checked
+ * where the merge cuts entries, not only below the caps.
+ */
+const CAPS = { numRuns: 15 };
+const bigKey = (n: number) => `c${String(n).padStart(5, '0')}`;
+const bigRecord = <V>(value: fc.Arbitrary<V>) =>
+  fc.uniqueArray(fc.integer({ min: 0, max: PROGRESS_RECORD_MAX + 400 }), { minLength: PROGRESS_RECORD_MAX - 300, maxLength: PROGRESS_RECORD_MAX + 200 }).chain((ids) =>
+    fc.array(value, { minLength: ids.length, maxLength: ids.length }).map((values) => Object.fromEntries(ids.map((id, i) => [bigKey(id), values[i]]))),
+  );
+const bigCellBest = bigRecord(fc.integer({ min: 0, max: 3 })).map(read(CellBestSchema));
+const bigLatch = bigRecord(instant).map(read(LatchRecordSchema));
+const manyInstalls = fc.dictionary(fc.integer({ min: 0, max: DAY_LOG_INSTALL_KEYS_MAX + 20 }).map((n) => `install-${String(n).padStart(3, '0')}`), fc.integer({ min: 0, max: 9 }), {
+  minKeys: DAY_LOG_INSTALL_KEYS_MAX - 5,
+  maxKeys: DAY_LOG_INSTALL_KEYS_MAX + 15,
+});
+const wideDayLog = fc.dictionary(day, manyInstalls, { minKeys: 1, maxKeys: 4 }).map(read(DayLogSchema));
+function lawsAtCaps<T>(name: string, arb: fc.Arbitrary<T | undefined>, merge: Merge<T>): void {
+  it(`${name}: commutative, idempotent and associative at the caps`, () => {
+    fc.assert(
+      fc.property(arb, arb, arb, (a, b, c) => {
+        const ab = merge(a, b);
+        expect(ab).toEqual(merge(b, a));
+        expect(merge(ab, b)).toEqual(ab);
+        expect(merge(ab, c)).toEqual(merge(a, merge(b, c)));
+      }),
+      CAPS,
+    );
+  });
+}
+describe('the merge laws hold where the caps cut entries', () => {
+  lawsAtCaps<Record<string, CellLevel>>('mergeCellBest', bigCellBest, mergeCellBest);
+  lawsAtCaps<Record<string, string>>('mergeLatchRecord', bigLatch, mergeLatchRecord);
+  lawsAtCaps<DayLog>('mergeDayLog', wideDayLog, mergeDayLog);
+  it('the caps hold on the merged result', () => {
+    fc.assert(
+      fc.property(bigCellBest, bigCellBest, wideDayLog, wideDayLog, (a, b, x, y) => {
+        expect(Object.keys(mergeCellBest(a, b) ?? {}).length).toBeLessThanOrEqual(PROGRESS_RECORD_MAX);
+        for (const keys of Object.values(mergeDayLog(x, y) ?? {})) expect(Object.keys(keys).length).toBeLessThanOrEqual(DAY_LOG_INSTALL_KEYS_MAX);
+      }),
+      CAPS,
+    );
+  });
+});
+
 laws<StreakLocal>('mergeStreakLocal', streakLocal, mergeStreakLocal);
 laws<number>('mergeStreakBest', streakBest, mergeStreakBest);
 laws<string>('mergeEarliest (memSeededAt)', seededAt, mergeEarliest);
@@ -208,6 +257,21 @@ describe('a wrong clock never wipes real days (F-CURR-002 section 4.8)', () => {
     expect(mergeDayLog(real, { '2099-01-01': { 'install-b': 1 } })).toMatchObject(real);
   });
 
+  it('a day with 0 points never takes a place, so it never evicts a day that holds points', () => {
+    const full = Object.fromEntries(Array.from({ length: DAY_LOG_DAYS }, (_, i) => [realDay(i), { 'install-a': i + 1 }]));
+    const zeros = { '2099-01-01': { 'install-z': 0 }, '2099-01-02': { 'install-z': 0, 'install-y': 0 } };
+    expect(mergeDayLog(full, zeros)).toEqual(full);
+    expect(mergeDayLog({ [realDay(1)]: { a: 0, b: 2 } }, undefined)).toEqual({ [realDay(1)]: { b: 2 } });
+    fc.assert(
+      fc.property(longDayLog, fc.dictionary(longDay, fc.constant({ 'install-z': 0 }), { maxKeys: 90 }), (log, zeroDays) => {
+        const merged = mergeDayLog(log, zeroDays);
+        expect(merged).toEqual(mergeDayLog(log, log === undefined ? {} : undefined));
+        for (const keys of Object.values(merged ?? {})) for (const points of Object.values(keys)) expect(points).toBeGreaterThan(0);
+      }),
+      RUNS,
+    );
+  });
+
   it('one far-future day evicts at most one real day, whatever the log', () => {
     fc.assert(
       fc.property(longDayLog, (log) => {
@@ -262,6 +326,22 @@ describe('boundToNow: the Worker time guard', () => {
     expect(out.memSeededAt).toBe(nowIso);
     const later = { daily: 3 as const, weeklyDays: 3 as const, setAt: '2026-10-22T00:00:00.000Z' };
     expect(mergeGoals(out.goals, later)).toEqual(later);
+  });
+
+  it('goals: a fast clock within GOALS_CLOCK_SKEW_MS reads as now; further ahead it never replaces stored goals', () => {
+    const goalsAt = (ms: number) => ({ goals: { daily: 10 as const, weeklyDays: 7 as const, setAt: new Date(now.getTime() + ms).toISOString() } });
+    const stored = { goals: { daily: 3, weeklyDays: 3, setAt: '2026-10-20T00:00:00.000Z' } };
+    // A little fast: a real change made now, also over stored goals.
+    expect(boundToNow(goalsAt(GOALS_CLOCK_SKEW_MS), now, stored).goals).toEqual({ daily: 10, weeklyDays: 7, setAt: nowIso });
+    // Far ahead with goals stored: absent, so the Worker keeps the stored goals.
+    const far = boundToNow({ profileId: 'p1', ...goalsAt(GOALS_CLOCK_SKEW_MS + 1) }, now, stored);
+    expect(far).toEqual({ profileId: 'p1' });
+    // Far ahead with nothing (or nothing readable) stored: read as now.
+    for (const none of [undefined, null, 'x', {}, { goals: { daily: 4 } }]) {
+      expect(boundToNow(goalsAt(GOALS_CLOCK_SKEW_MS + 1), now, none).goals).toEqual({ daily: 10, weeklyDays: 7, setAt: nowIso });
+    }
+    const fine = goalsAt(0);
+    expect(boundToNow(fine, now, stored)).toBe(fine);
   });
 
   it('returns the snapshot itself when nothing is out of bounds, and keeps every other key', () => {

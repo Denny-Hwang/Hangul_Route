@@ -190,6 +190,40 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     const later = await get('profile:suni', auth);
     expect(later.snapshot.goals).toEqual(goals);
     expect(later.snapshot.stamps).toEqual({ 'first-cell': '2026-10-22T12:00:00.000Z' });
+
+    // The 2099 tablet syncs again with its own far-future goals: the later real change stays, sync after sync.
+    for (const [i, at] of ['2026-10-22T14:00:00.000Z', '2026-10-23T09:00:00.000Z'].entries()) {
+      vi.setSystemTime(new Date(at));
+      const again = snapshotFor('profile:suni', { goals: { daily: 10, weeklyDays: 7, setAt: '2099-01-01T00:00:00.000Z' } });
+      expect((await put('profile:suni', auth, { ...base, baseRev: 3 + i, snapshot: again, summary })).status).toBe(200);
+      expect((await get('profile:suni', auth)).snapshot.goals).toEqual(goals);
+    }
+
+    // A clock only a few minutes fast is a real change made now.
+    vi.setSystemTime(new Date('2026-10-23T10:00:00.000Z'));
+    const fast = snapshotFor('profile:suni', { goals: { daily: 6, weeklyDays: 5, setAt: '2026-10-23T10:05:00.000Z' } });
+    expect((await put('profile:suni', auth, { ...base, baseRev: 5, snapshot: fast, summary })).status).toBe(200);
+    expect((await get('profile:suni', auth)).snapshot.goals).toEqual({ daily: 6, weeklyDays: 5, setAt: '2026-10-23T10:00:00.000Z' });
+  });
+
+  it('no client can clear a new field: a start-over that sends empty values keeps the stored ones', async () => {
+    // A reset or start-over row needs a Worker-side reset first (F-CURR-002 section 13); this pins the gap.
+    const auth = await register(DEVICE_A, 'profile:suni');
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', fields), summary: { ...summary, memory } });
+    const empty = { cellBest: {}, cellCheckAt: {}, stageCheckAt: {}, testedOut: {}, dayLog: {}, streakBest: 0, stamps: {} };
+    expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot: snapshotFor('profile:suni', empty), summary })).status).toBe(200);
+    const got = await get('profile:suni', auth);
+    expect(got.snapshot).toMatchObject(fields);
+    expect(got.summary.memory).toEqual(memory);
+  });
+
+  it('stores the reviews list as sent: an entry the sender left out is not kept (F-CURR-002 section 13)', async () => {
+    // A review kind added after CM-3b needs a Worker-side preserve rule first, or a build that drops it erases it here.
+    const auth = await register(DEVICE_A, 'profile:suni');
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews: mixedReviews }), summary });
+    const fewer = snapshotFor('profile:suni', { reviews: [review('review:a', 'daily')] });
+    expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot: fewer, summary })).status).toBe(200);
+    expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['review:a']);
   });
 
   it('the Rescue Code claim hands back the stored reviews and fields to the new device', async () => {

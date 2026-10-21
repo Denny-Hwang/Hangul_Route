@@ -155,12 +155,22 @@ export function lenientRecord<V extends z.ZodTypeAny>(key: z.ZodType<string>, va
 
 const KeySchema = z.string().min(1).max(ID_MAX);
 /**
- * A strict ISO 8601 instant with `Z` or an offset (what `toISOString()`
- * writes). A form without an offset, with a space, or in RFC 2822 parses
- * differently on Hermes and V8, so the app and the Worker could pick
- * different winners; such a value drops on read.
+ * The ECMAScript Date Time String Format with seconds, at most 3 fractional
+ * digits and `Z` or a `+HH:mm` offset: the one form the spec makes every
+ * engine parse alike (`toISOString()` writes it).
  */
-export const IsoInstantSchema = z.string().max(ISO_MAX).datetime({ offset: true });
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,3})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+/**
+ * A strict ISO 8601 instant (F-CURR-002 section 4.8). A form outside the
+ * ECMAScript format (no offset, a space, RFC 2822, `+09` or `+0900`, more
+ * than 3 fractional digits, hour 24) or a day not on the calendar (30
+ * February) parses differently on Hermes and V8, or rolls over, so the app
+ * and the Worker could pick different winners; such a value drops on read.
+ */
+export const IsoInstantSchema = z
+  .string()
+  .max(ISO_MAX)
+  .refine((at) => ISO_INSTANT.test(at) && isDateKey(at.slice(0, 10)) && Number.isFinite(Date.parse(at)));
 
 export const CellLevelSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]);
 export type CellLevel = z.infer<typeof CellLevelSchema>;
@@ -178,14 +188,15 @@ export const GoalsSchema = z
   .catch(undefined);
 export type Goals = NonNullable<z.infer<typeof GoalsSchema>>;
 
-/** Points of one install key on one day; bounded so a tampered client cannot inflate a shared total without limit. */
+/** Points of one install key on one day (0 reads, then trims away); bounded so a tampered client cannot inflate a shared total without limit. */
 const DayPointsSchema = z.number().int().nonnegative().max(10_000);
 const InstallKeySchema = KeySchema;
 
 /**
  * Keeps the newest `DAY_LOG_DAYS` days that hold points, by count, and at most
- * `DAY_LOG_INSTALL_KEYS_MAX` install keys a day; a day with no install key is
- * dropped. Counting days (rather than keeping the days within 70 of the
+ * `DAY_LOG_INSTALL_KEYS_MAX` install keys a day. An install key with 0 points
+ * is dropped first (0 is the identity of max, so it means nothing), then a
+ * day with no install key left, so a day without points never takes a place. Counting days (rather than keeping the days within 70 of the
  * newest one) means a single wrong-clock day can evict at most one real day,
  * never the whole log. Depends only on the log itself, never on today's date,
  * so a merge that applies it stays commutative, associative and idempotent.
@@ -194,7 +205,7 @@ const InstallKeySchema = KeySchema;
  */
 export function trimDayLog(log: Readonly<Record<string, Readonly<Record<string, number>>>>): Record<string, Record<string, number>> {
   const days = Object.entries(log)
-    .map(([d, keys]): [string, Record<string, number>] => [d, capRecord(Object.entries(keys), DAY_LOG_INSTALL_KEYS_MAX)])
+    .map(([d, keys]): [string, Record<string, number>] => [d, capRecord(Object.entries(keys).filter(([, points]) => points > 0), DAY_LOG_INSTALL_KEYS_MAX)])
     .filter(([, keys]) => Object.keys(keys).length > 0)
     // `YYYY-MM-DD` keys sort in calendar order: newest first.
     .sort(([a], [b]) => codePointOrder(b, a));
