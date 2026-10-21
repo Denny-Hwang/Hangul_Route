@@ -57,7 +57,7 @@ export const caregiver = {
     needsPinFirst: '먼저 어른용 PIN을 만들어요.',
     biometric: {
       cta: '얼굴이나 지문 쓰기',
-      toggle: '어른용 얼굴·지문 열기',
+      toggle: '어른용 얼굴·지문 인식',
       warning: '이 기기에 얼굴이나 지문이 저장된 사람은 누구나 쓸 수 있어요.',
       changed: '이 기기의 얼굴이나 지문이 바뀌었어요. PIN을 입력해요.',
     },

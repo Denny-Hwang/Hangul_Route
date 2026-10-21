@@ -58,7 +58,7 @@ export const caregiver = {
     biometric: {
       cta: 'Usar rostro o huella',
       toggle: 'Rostro o huella para adultos',
-      warning: 'Cualquier persona con su rostro o huella guardados en este dispositivo podrá usarlo.',
+      warning: 'Cualquier persona con su rostro o huella guardados en este dispositivo podrá usar esta opción.',
       changed: 'El rostro o la huella cambió en este dispositivo. Escribe el PIN.',
     },
     entry: {

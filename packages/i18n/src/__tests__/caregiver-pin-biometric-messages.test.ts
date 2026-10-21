@@ -25,13 +25,13 @@ describe('caregiver.pin OA-9 keys', () => {
     expect(es.biometric).toEqual({
       cta: 'Usar rostro o huella',
       toggle: 'Rostro o huella para adultos',
-      warning: 'Cualquier persona con su rostro o huella guardados en este dispositivo podrá usarlo.',
+      warning: 'Cualquier persona con su rostro o huella guardados en este dispositivo podrá usar esta opción.',
       changed: 'El rostro o la huella cambió en este dispositivo. Escribe el PIN.',
     });
     expect(es.needsPinFirst).toBe('Primero crea un PIN de adultos.');
     expect(ko.biometric).toEqual({
       cta: '얼굴이나 지문 쓰기',
-      toggle: '어른용 얼굴·지문 열기',
+      toggle: '어른용 얼굴·지문 인식',
       warning: '이 기기에 얼굴이나 지문이 저장된 사람은 누구나 쓸 수 있어요.',
       changed: '이 기기의 얼굴이나 지문이 바뀌었어요. PIN을 입력해요.',
     });
