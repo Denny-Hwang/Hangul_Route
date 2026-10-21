@@ -5,7 +5,7 @@ import { KOREAN_LINE_BREAK } from '../../line-break';
 import { Body, Heading } from '../Heading';
 import { useLayoutClass } from '../Layout';
 import { useTypeScale } from '../TextSize';
-import { actionStyle, actionTextStyle, actionsStyle, backdropStyle, sheetStyle } from './style';
+import { actionStyle, actionTextStyle, actionsStyle, backdropStyle, quietActionStyle, quietTextStyle, sheetStyle } from './style';
 import type { ConfirmSheetProps } from './types';
 
 type PressState = { pressed: boolean; focused?: boolean };
@@ -46,11 +46,33 @@ const webDocument = (): DocumentLike | undefined => (Platform.OS === 'web' ? (gl
  * keyup, so its `onRequestClose` is the system back of native only. The backdrop is hidden from
  * assistive tech: the sheet's own Cancel is the one control with that name. The bottom sheet sits above the home
  * indicator (the nearest provider's safe-area insets, as `Screen` reads them).
+ *
+ * [OA] The Remove from this device steps (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.4; OA-0b addendum in
+ * design/components/ConfirmSheet/spec.md): a `detail` paragraph, `busy` (only the cancel, the message marked busy),
+ * `confirmFirst` (the confirm is the main action and is drawn first; the cancel still takes focus), a quiet third action, and
+ * `confirmTone: 'danger'` for a grown-up's destructive step only.
  */
-export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabel, onCancel, onConfirm, testID = 'confirm-sheet' }: ConfirmSheetProps): React.ReactElement {
+export function ConfirmSheet({
+  visible,
+  title,
+  message,
+  cancelLabel,
+  confirmLabel,
+  onCancel,
+  onConfirm,
+  testID = 'confirm-sheet',
+  detail,
+  confirmTone = 'primary',
+  confirmFirst = false,
+  quietLabel,
+  onQuiet,
+  busy = false,
+}: ConfirmSheetProps): React.ReactElement {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const titleId = `${testID}-title-${id}`;
   const messageId = `${testID}-message-${id}`;
+  const detailId = `${testID}-detail-${id}`;
+  const describedBy = [message ? messageId : null, detail ? detailId : null].filter((d): d is string => d !== null).join(' ');
   const dialog = useLayoutClass().width !== 'compact';
   const scale = useTypeScale();
   const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
@@ -76,6 +98,13 @@ export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabe
     };
   }, [visible, onCancel]);
 
+  // [OA] A sheet that moves to its next step while open (the sync check done, Remove anyway's second step) puts focus
+  // back on the safe choice of the new step (mock people-on-device.md: never on Save progress first or Remove anyway).
+  useEffect(() => {
+    if (!visible || !webDocument()) return;
+    cancelRef.current?.focus?.();
+  }, [visible, busy, title, confirmFirst]);
+
   const action = (kind: 'cancel' | 'confirm'): React.ReactElement => (
     <Pressable
       key={kind}
@@ -89,7 +118,7 @@ export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabe
       testID={`${testID}-${kind}`}
       accessibilityRole="button"
       onPress={kind === 'cancel' ? onCancel : onConfirm}
-      style={(state: PressState) => actionStyle(kind, dialog, state)}
+      style={(state: PressState) => actionStyle(kind, dialog, state, confirmTone)}
     >
       <Text {...KOREAN_LINE_BREAK} style={actionTextStyle(kind, scale)}>
         {kind === 'cancel' ? cancelLabel : confirmLabel}
@@ -115,7 +144,7 @@ export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabe
           role="alertdialog"
           aria-modal
           aria-labelledby={titleId}
-          {...(message ? { 'aria-describedby': messageId } : {})}
+          {...(describedBy ? { 'aria-describedby': describedBy } : {})}
           testID={testID}
           style={sheetStyle(dialog, insets.bottom)}
         >
@@ -123,13 +152,24 @@ export function ConfirmSheet({ visible, title, message, cancelLabel, confirmLabe
             <Heading level="prompt">{title}</Heading>
           </View>
           {message ? (
-            <View nativeID={messageId} {...{ id: messageId }}>
+            <View nativeID={messageId} {...{ id: messageId }} {...(busy ? { 'aria-busy': true } : {})}>
               <Body tone="secondary">{message}</Body>
             </View>
           ) : null}
+          {detail ? (
+            <View nativeID={detailId} {...{ id: detailId }}>
+              <Body tone="secondary">{detail}</Body>
+            </View>
+          ) : null}
           <View style={actionsStyle(dialog)}>
-            {action('cancel')}
-            {action('confirm')}
+            {busy ? action('cancel') : confirmFirst ? [action('confirm'), action('cancel')] : [action('cancel'), action('confirm')]}
+            {!busy && quietLabel && onQuiet ? (
+              <Pressable key="quiet" testID={`${testID}-quiet`} accessibilityRole="button" onPress={onQuiet} style={(state: PressState) => quietActionStyle(dialog, state)}>
+                <Text {...KOREAN_LINE_BREAK} style={quietTextStyle(scale)}>
+                  {quietLabel}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
       </View>
