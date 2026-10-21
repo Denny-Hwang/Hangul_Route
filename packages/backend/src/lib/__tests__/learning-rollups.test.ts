@@ -212,6 +212,27 @@ describe('rows per event', () => {
     ]);
   });
 
+  it('session.end: a game kind is written only for a quit, so its rate has the reporting sessions as denominator', () => {
+    // a session that did not end inside a quest adds to the '' total only, even if it names a kind
+    expect(rollupKeysFor('session.end', { durationSeconds: 300, streakDays: 1, questLeft: 0, leftAtKind: 'order-it', afterWrongStreak: 1 })).toEqual([
+      { metric: 'session.end.minutes', dim: '', bucket: '5' },
+      { metric: 'session.end.questLeft', dim: '', bucket: '0' },
+    ]);
+    // 80 sessions report: 60 finish, 20 quit (15 at order-it, 5 at listen-pick)
+    const counts = new Map<string, number>();
+    const send = (n: number, payload: Record<string, unknown>) => {
+      for (let i = 0; i < n; i++) for (const k of rollupKeysFor('session.end', payload)) counts.set(`${k.metric}|${k.dim}|${k.bucket}`, (counts.get(`${k.metric}|${k.dim}|${k.bucket}`) ?? 0) + 1);
+    };
+    send(60, { durationSeconds: 600, streakDays: 1, questLeft: 0, leftAtKind: 'order-it' });
+    send(15, { durationSeconds: 120, streakDays: 1, questLeft: 1, leftAtKind: 'order-it' });
+    send(5, { durationSeconds: 120, streakDays: 1, questLeft: 1, leftAtKind: 'listen-pick' });
+    const den = (counts.get('session.end.questLeft||0') ?? 0) + (counts.get('session.end.questLeft||1') ?? 0);
+    expect(den).toBe(80);
+    expect(counts.has('session.end.questLeft|order-it|0')).toBe(false);
+    expect((counts.get('session.end.questLeft|order-it|1') ?? 0) / den).toBe(15 / 80);
+    expect((counts.get('session.end.questLeft|listen-pick|1') ?? 0) / den).toBe(5 / 80);
+  });
+
   it('review.complete needs a known kind and a star count from 0 to 3', () => {
     expect(rollupKeysFor('review.complete', { kind: 'feedback', stars: 3 })).toEqual([{ metric: 'review.complete.stars', dim: 'feedback', bucket: '3' }]);
     expect(rollupKeysFor('review.complete', { kind: 'secret', stars: 3 })).toEqual([]);

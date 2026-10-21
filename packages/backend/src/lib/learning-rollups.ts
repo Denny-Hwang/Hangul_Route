@@ -200,6 +200,15 @@ function itemsSeeded(p: CurrPayload<'items.seeded'>): RollupKey[] {
  * `session.end` (its payload is kept as sent, so every field is checked here): the session length
  * for the median and p90 guardrail; the mid-quest quit, overall and by the game kind on screen; and,
  * for a quit, the wrong-first-try streak just before it (section 3.3).
+ *
+ * The quit rate per game kind has one denominator: the sessions that report `questLeft` (the ''
+ * cells, buckets 0 and 1). `leftAtKind` names the round on screen at a quit; a session that ends
+ * after the reward step has no round on screen, so a kind's own bucket 0 would count only stray
+ * sends and make the kind's rate look like 100%. So a kind is written only for a quit (bucket 1),
+ * and the rate for kind K on a day is `questLeft[K][1] / (questLeft[''][0] + questLeft[''][1])`:
+ * the share of reporting sessions that ended in a quit at K. It moves when quits at K move, and
+ * also, a little, when the mix of kinds played shifts; a reader compares it across arms or across
+ * the days around a ramp step, where the mix holds.
  */
 function sessionEnd(p: Payload): RollupKey[] {
   const keys: RollupKey[] = [];
@@ -208,10 +217,11 @@ function sessionEnd(p: Payload): RollupKey[] {
   const left = SESSION_END_QUEST_FIELDS.questLeft.safeParse(p.questLeft);
   if (!left.success) return keys;
   keys.push(cell('session.end.questLeft', '', String(left.data)));
+  if (left.data !== 1) return keys;
   const kind = SESSION_END_QUEST_FIELDS.leftAtKind.safeParse(p.leftAtKind);
-  if (kind.success) keys.push(cell('session.end.questLeft', kind.data, String(left.data)));
+  if (kind.success) keys.push(cell('session.end.questLeft', kind.data, '1'));
   const streak = SESSION_END_QUEST_FIELDS.afterWrongStreak.safeParse(p.afterWrongStreak);
-  if (left.data === 1 && streak.success) keys.push(cell('session.end.leftAfterWrongStreak', '', String(streak.data)));
+  if (streak.success) keys.push(cell('session.end.leftAfterWrongStreak', '', String(streak.data)));
   return keys;
 }
 
