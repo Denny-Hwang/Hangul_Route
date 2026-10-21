@@ -127,8 +127,8 @@ export const consoleMsgs = {
     invalid: 'Usa letras o números en el nombre.',
     saved: 'Nombre guardado.',
     failed: 'No se pudo guardar el nombre. Inténtalo de nuevo.',
-    openMoves: 'Hay cambios de clase pendientes que entran o salen de este espacio. Con un nombre nuevo, sus adultos deberán revisar el cambio otra vez.',
-    archived: 'Primero desarchívalo para cambiar el nombre.',
+    openMoves: 'Hay cambios de clase pendientes hacia o desde este espacio. Con un nombre nuevo, los adultos de esos estudiantes tendrán que revisarlos otra vez.',
+    archived: 'Primero desarchívala para cambiar el nombre.',
   },
 
   shell: {

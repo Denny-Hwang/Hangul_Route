@@ -299,6 +299,7 @@ export function BillingCard({ card, handlers }: { card: BillingCardView; handler
           </Link>
         </div>
       ) : null}
+      {card.contactLine ? <p className="hr-bill-line">{card.contactLine}</p> : null}
       {card.manage || card.contact ? (
         <div className="hr-bill-actions">
           {card.manage ? (
@@ -384,6 +385,7 @@ export function AddPlanSection({
         {contact.map((row) => (
           <div className="hr-bill-add-row hr-bill-offer" key={`contact-${row.spaceId}`}>
             <h3>{row.title}</h3>
+            <p className="hr-bill-line">{row.line}</p>
             <a className="hr-bill-btn" href={row.href}>
               {row.cta}
             </a>

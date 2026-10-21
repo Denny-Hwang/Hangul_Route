@@ -24,7 +24,7 @@ import { personaHome } from '@/lib/console/personas';
 import { dateKey, livePublished } from '@/lib/console/plans';
 import { capState, codeExpiry, familyCountLine, relativeDay, seatLine } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
-import { RenameStyles, RenameTitle, useAnnouncer, useSpaceRename } from '@/components/console/RenameParts';
+import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import type { ConsoleApi } from '@/lib/console/api';
 import { ROUTES, spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
@@ -148,6 +148,8 @@ export default function ParentHomePage(): JSX.Element {
   // none: it draws only while no newer user read started after it.
   const loadSeq = useRef(0);
   const rosterSeq = useRef<Record<string, number>>({});
+  // [SA] A rename never drops a read: the renamed family name is laid over each read that lands (section 5.3).
+  const names = useNameOverrides();
 
   // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). The drawn cards stay while it
   // reads, and a failed quiet read keeps them: a background read never turns a family into an error.
@@ -157,6 +159,7 @@ export default function ParentHomePage(): JSX.Element {
       const seen = rosterSeq.current[spaceId] ?? 0;
       const call = quiet ? seen : seen + 1;
       rosterSeq.current[spaceId] = call;
+      const read = names.begin();
       if (!quiet) setRosters((prev) => ({ ...prev, [spaceId]: { state: 'loading' } }));
       // Plans only for a family this account owns: the line is owner only, so a co-caregiver's family needs no plan read.
       const readPlans = contentGatingEnabled() && role === 'owner';
@@ -164,12 +167,12 @@ export default function ParentHomePage(): JSX.Element {
       if (call !== rosterSeq.current[spaceId]) return;
       if (planList?.ok) setPlans((prev) => ({ ...prev, [spaceId]: planList.data }));
       setRosters((prev) => {
-        if (result?.ok) return { ...prev, [spaceId]: { state: 'ready', roster: result.data } };
+        if (result?.ok) return { ...prev, [spaceId]: { state: 'ready', roster: { ...result.data, space: { ...result.data.space, name: names.nameFor(spaceId, result.data.space.name, read) } } } };
         if (quiet && prev[spaceId]?.state === 'ready') return prev;
         return { ...prev, [spaceId]: { state: 'failed' } };
       });
     },
-    [api],
+    [api, names],
   );
 
   // Background reads that failed in a row. A signed-out answer, or the third failure, stops the background reads and
@@ -181,6 +184,7 @@ export default function ParentHomePage(): JSX.Element {
     async (quiet = false): Promise<void> => {
       if (!api) return;
       const call = quiet ? loadSeq.current : ++loadSeq.current;
+      const read = names.begin();
       if (!quiet) setFailed(false);
       const [result, owned] = await Promise.all([api.listSpaces(), contentGatingEnabled() ? api.entitlements().catch(() => null) : null]);
       if (call !== loadSeq.current) return;
@@ -201,11 +205,12 @@ export default function ParentHomePage(): JSX.Element {
       setRefreshStopped(false);
       if (!quiet || owned?.ok) setEntitlements(owned?.ok ? owned.data : null);
       setFailed(false);
-      setItems(result.data);
-      const view = parentHomeView(result.data);
+      const listed = result.data.map((item) => ({ ...item, space: { ...item.space, name: names.nameFor(item.space.id, item.space.name, read) } }));
+      setItems(listed);
+      const view = parentHomeView(listed);
       if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id, family.role, quiet)));
     },
-    [api, loadRoster],
+    [api, loadRoster, names],
   );
 
   useEffect(() => {
@@ -217,18 +222,17 @@ export default function ParentHomePage(): JSX.Element {
   useVisibleRefresh(() => void load(true), !!api && !refreshStopped, { poll: true });
 
   // [SA] The inline rename of a family (AMENDMENTS-SEATS-ADMINS section 5.3): the heading, the actions' label and the
-  // roster all read the new name at once. A read still under way would put the old name back, so a rename takes a new
-  // read number for the list and for that family's roster.
+  // roster all read the new name at once. A read still under way would hold the old name, so the name is kept in
+  // `names` and laid over the list and that family's roster when they land; the rest of each read still draws.
   const { announce, region: renameLive } = useAnnouncer();
-  const setFamilyName = useCallback((spaceId: string, name: string) => {
-    loadSeq.current += 1;
-    rosterSeq.current[spaceId] = (rosterSeq.current[spaceId] ?? 0) + 1;
+  const setFamilyName = useCallback((spaceId: string, name: string, settled: boolean) => {
+    names.set(spaceId, name, settled);
     setItems((prev) => (prev ? prev.map((item) => (item.space.id === spaceId ? { ...item, space: { ...item.space, name } } : item)) : prev));
     setRosters((prev) => {
       const entry = prev[spaceId];
       return entry?.state === 'ready' ? { ...prev, [spaceId]: { state: 'ready', roster: { ...entry.roster, space: { ...entry.roster.space, name } } } } : prev;
     });
-  }, []);
+  }, [names]);
 
   const frameSpaces: FrameSpaces = !api || (failed && !items) ? 'failed' : items;
   if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;
@@ -555,11 +559,11 @@ function FamilyHeading({
   roster: Roster | null;
   headingId: string;
   archivedMark: JSX.Element | null;
-  onName: (spaceId: string, name: string) => void;
+  onName: (spaceId: string, name: string, settled: boolean) => void;
   announce: (text: string) => void;
 }): JSX.Element {
   const id = family.space.id;
-  const setName = useCallback((name: string) => onName(id, name), [onName, id]);
+  const setName = useCallback((name: string, settled: boolean) => onName(id, name, settled), [onName, id]);
   const rename = useSpaceRename({ api, spaceId: id, name: family.space.name, onName: setName, announce });
   return (
     <RenameTitle

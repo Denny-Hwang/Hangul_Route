@@ -18,11 +18,12 @@ export type LimitState = 'unlicensed' | 'unlicensedAt' | 'ok' | 'near' | 'at' | 
  * How full the school is ([SA] AMENDMENTS-SEATS-ADMINS section 3.4). Every school holds up to `limits.students`
  * distinct students (50 unlicensed or licensed, a contract's seats; SA-1), so an unlicensed school can be at its
  * cap too (`unlicensedAt`). More students than the cap, kept from before the limit, is `over` (SA-D7). A Worker older
- * than SA-1 sends no student cap for an unlicensed school: it reads `unlicensed`, as before.
+ * than SA-1 sends no student cap for an unlicensed school: it reads `unlicensed`, as before. A school that holds a
+ * School Contract (`contract`) and is over its seats reads `at`: the over line asks to write for a contract it has.
  */
-export function limitState(usage: SchoolView['usage'], limits: SchoolView['limits']): LimitState {
+export function limitState(usage: SchoolView['usage'], limits: SchoolView['limits'], contract = false): LimitState {
   const cap = limits.students;
-  if (cap !== null && usage.students > cap) return 'over';
+  if (cap !== null && usage.students > cap) return contract && limits.licensed ? 'at' : 'over';
   if (!limits.licensed) return cap !== null && usage.students >= cap ? 'unlicensedAt' : 'unlicensed';
   const ratios = [cap === null ? 0 : usage.students / cap, limits.teachers === null ? 0 : usage.teachers / limits.teachers];
   const worst = Math.max(...ratios);

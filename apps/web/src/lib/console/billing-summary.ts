@@ -90,6 +90,8 @@ export interface BillingCardView {
   pastDue: boolean;
   manage: boolean;
   contact: boolean;
+  /** [SA] section 3.4: the school contract threshold beside Contact us, from the content-schema caps; null when no Contact us. */
+  contactLine: string | null;
   connectLearner: ConnectLearnerView | null;
   /** The offer inside this card when it is the only space that can buy. */
   offer: BillingOfferView | null;
@@ -113,6 +115,8 @@ export interface BillingAccountCardView {
 export interface ContactRowView {
   spaceId: string;
   title: string;
+  /** [SA] section 3.4: "More than 50 students or 10 teachers? Write to us for a contract." */
+  line: string;
   cta: string;
   href: string;
 }
@@ -259,6 +263,22 @@ function coverageLines(coverage: Coverage, now: Date, locale: UiLocale): { plan:
   return { plan: ownPlanLine(coverage.planKey, locale), status: ownStatusLine(coverage, now, locale), pastDue: coverage.status === 'past_due', covers: ownCovers(coverage, now) };
 }
 
+/** [SA] section 3.4: the line on a school's Contact us, the numbers from the content-schema caps (no locale types them). */
+function contactCapsLine(locale: UiLocale): string {
+  return getMessages(locale).console.contactLineCaps(SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS);
+}
+
+/**
+ * [SA] SA-D11 (billing mock board 22): a school's administrator reads the school's own plan, not "Covered by <this
+ * school>'s license". The Worker sends a non-payer school member `school` coverage without Stripe details, so the
+ * status is the plan's date alone: a Group License renews, a School Contract ends.
+ */
+function adminSchoolLines(coverage: Extract<Coverage, { state: 'school' }>, locale: UiLocale): { plan: string; status: string | null } {
+  const status = getMessages(locale).console.billing.status;
+  const when = coverage.expiresAt ? day(locale, coverage.expiresAt) : null;
+  return { plan: ownPlanLine(coverage.planKey, locale), status: when ? (coverage.planKey === 'school_seat' ? status.endsOn(when) : status.renewsOn(when)) : null };
+}
+
 function usageLine(kind: SpaceKind, usage: Usage | null, locale: UiLocale): string | null {
   if (!usage) return null;
   const words = getMessages(locale).console.billing.usage;
@@ -306,8 +326,10 @@ function orderCards(cards: readonly BillingSpaceCard[]): BillingSpaceCard[] {
 
 function cardView(card: BillingSpaceCard, offer: BillingOfferView | null, now: Date, locale: UiLocale): BillingCardView {
   const billing = getMessages(locale).console.billing;
-  const lines = coverageLines(card.coverage, now, locale);
+  const covered = coverageLines(card.coverage, now, locale);
+  const lines = card.kind === 'school' && card.role === 'admin' && card.coverage.state === 'school' ? { ...covered, ...adminSchoolLines(card.coverage, locale) } : covered;
   const payer = card.payer;
+  const contact = payer && card.actions.contact;
   const name = card.archived ? `${card.name} ${billing.archived}` : card.name;
   const noLearnerYet = card.kind === 'family' && card.usage?.learners === 0;
   return {
@@ -322,7 +344,8 @@ function cardView(card: BillingSpaceCard, offer: BillingOfferView | null, now: D
     readOnly: card.readOnlyReason ? readOnlyLine(card, locale) : null,
     pastDue: lines.pastDue,
     manage: payer && card.actions.manage,
-    contact: payer && card.actions.contact,
+    contact,
+    contactLine: contact && card.kind === 'school' ? contactCapsLine(locale) : null,
     connectLearner: payer && noLearnerYet && card.coverage.state === 'own' && lines.covers ? { line: billing.connectLearner.line, cta: billing.connectLearner.cta, href: connectLearnerHref(card.spaceId) } : null,
     offer,
     receipts: payer ? card.receipts.slice(0, RECEIPTS_CARD_LIMIT).map((r) => receiptRow(r, locale)) : [],
@@ -382,7 +405,7 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
           contact: buyers
             // The server's contact action, the same flag the card's own Contact us button reads.
             .filter((card) => card.actions.contact)
-            .map((card) => ({ spaceId: card.spaceId, title: billing.buy.forSpace(planTitle('school_seat', locale), card.name), cta: billing.contact.cta, href: contactHref(locale) })),
+            .map((card) => ({ spaceId: card.spaceId, title: billing.buy.forSpace(planTitle('school_seat', locale), card.name), line: contactCapsLine(locale), cta: billing.contact.cta, href: contactHref(locale) })),
         }
       : null;
 

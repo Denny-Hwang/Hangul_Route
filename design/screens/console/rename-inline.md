@@ -74,7 +74,7 @@ Narrower than 36rem (phones, a class row): label, input, the error line, the hin
 - **Rename** → the field opens, the value selected, focus in the input.
 - **Enter** saves when Save is enabled; **Escape** cancels; either way the field closes and focus returns to Rename (on a class row, the row's Rename).
 - **IME**: Enter and Escape are ignored while `event.isComposing` is true (or `keyCode` is 229), and Save reads the committed value after `compositionend`, so a Hangul name pressed Enter on mid-syllable is neither saved clipped nor cancelled.
-- **Save** → optimistic: the title, the frame's space switcher, the PageBack labels of the pages under it (`settings.back(name)` and the other `s.back(name)`) and the browser tab title change at once; `PATCH /api/spaces/:id/name`; Rename stays `aria-disabled` and `aria-busy` until it settles (board 8); on failure the name the server last confirmed comes back and the field reopens (boards 10 to 13).
+- **Save** → optimistic: the title, the frame's space switcher, the PageBack labels of the pages under it (`settings.back(name)` and the other `s.back(name)`) change at once (the browser tab title stays `console.docTitle`, never a space name); `PATCH /api/spaces/:id/name`; Rename stays `aria-disabled` and `aria-busy` until it settles (board 8); on failure the name the server last confirmed comes back and the field reopens (boards 10 to 13).
 - `200 changed: false` closes the field silently.
 - The client normalizes with `SpaceNameSchema` before comparing and sending (NFC, whitespace collapsed, trimmed), so "Sunday  Class A " is unchanged.
 

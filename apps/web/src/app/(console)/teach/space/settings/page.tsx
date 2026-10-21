@@ -21,7 +21,7 @@ import { personaHome, personaOfKind } from '@/lib/console/personas';
 import { isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
 import { spaceSubPageBack } from '@/lib/console/page-back';
 import { capState, familyCountLine, seatLine } from '@/lib/console/rollup';
-import { RenameStyles, SettingsNameRow, useAnnouncer, useSpaceRename } from '@/components/console/RenameParts';
+import { RenameStyles, SettingsNameRow, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import type { BillingSummary } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
@@ -62,9 +62,12 @@ function SettingsInner(): JSX.Element {
   const asking = useRef(false);
   const now = new Date();
 
+  // [SA] A read that began before a rename settled may hold the old name: the renamed name is laid over it (section 5.3).
+  const names = useNameOverrides();
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
+    const read = names.begin();
     const [r, mem] = await Promise.all([api.roster(spaceId), api.members(spaceId)]);
     if (!r.ok) {
       setError(loadErrorKey(r.error));
@@ -75,7 +78,7 @@ function SettingsInner(): JSX.Element {
       setError('cantReach');
       return;
     }
-    setRoster(r.data);
+    setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, read) } });
     setMembers(mem.data);
     if (r.data.space.kind === 'family' && movesShown) {
       // The move options are extra: a failed read leaves them empty and never breaks the settings page.
@@ -84,7 +87,7 @@ function SettingsInner(): JSX.Element {
         .catch(() => null);
       setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
     }
-  }, [api, spaceId, movesShown]);
+  }, [api, spaceId, movesShown, names]);
 
   useEffect(() => {
     void load();
@@ -92,7 +95,13 @@ function SettingsInner(): JSX.Element {
 
   // [SA] The Name block (AMENDMENTS-SEATS-ADMINS section 5.3): the title and the Back label read the new name at once.
   const { announce, region: renameLive } = useAnnouncer();
-  const setName = useCallback((name: string) => setRoster((prev) => (prev ? { ...prev, space: { ...prev.space, name } } : prev)), []);
+  const setName = useCallback(
+    (name: string, settled: boolean) => {
+      names.set(spaceId, name, settled);
+      setRoster((prev) => (prev ? { ...prev, space: { ...prev.space, name } } : prev));
+    },
+    [names, spaceId],
+  );
   const rename = useSpaceRename({ api, spaceId, name: roster?.space.name ?? '', onName: setName, announce });
 
   // Known once the roster loads: null until then. Only a live space reads the summary.

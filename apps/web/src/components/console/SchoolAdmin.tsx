@@ -17,7 +17,7 @@ import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES, loadErrorKey, type LoadError } from '@/lib/console/routing';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '@/lib/console/school';
 import { renameShown } from '@/lib/console/rename';
-import { RenameButton, RenameForm, RenameStyles, RenameTitle, useAnnouncer, useSpaceRename } from './RenameParts';
+import { RenameButton, RenameForm, RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from './RenameParts';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
 import { headRem, rem } from '@/lib/console/rem';
@@ -42,10 +42,13 @@ export function SchoolAdmin({ api, spaceId, onSignOut, accountId }: { api: Conso
   // The confirm step in the console language (AMENDMENTS-DISPLAY-NAV section 8).
   const { confirm, sheet: confirmSheet } = useConfirm();
 
-  // A rename takes a new read number, so a read still under way never puts an old name back ([SA] section 5.3).
+  // A newer read supersedes an older one. A rename never drops a read: the read draws in full and only the renamed
+  // names are laid over it ([SA] section 5.3, `NameOverrides`), so a class created while a rename settles still shows.
   const loadSeq = useRef(0);
+  const names = useNameOverrides();
   const load = useCallback(async (): Promise<void> => {
     const call = ++loadSeq.current;
+    const read = names.begin();
     const [v, m] = await Promise.all([api.school(spaceId), api.members(spaceId)]);
     if (call !== loadSeq.current) return;
     if (!v.ok) {
@@ -53,9 +56,10 @@ export function SchoolAdmin({ api, spaceId, onSignOut, accountId }: { api: Conso
       return;
     }
     setError(null);
-    setView(v.data);
+    const named = (space: SchoolView['school']): SchoolView['school'] => ({ ...space, name: names.nameFor(space.id, space.name, read) });
+    setView({ ...v.data, school: named(v.data.school), classes: v.data.classes.map((row) => ({ ...row, space: named(row.space) })) });
     if (m.ok) setMembers(m.data);
-  }, [api, spaceId]);
+  }, [api, spaceId, names]);
 
   useEffect(() => {
     void load();
@@ -72,14 +76,20 @@ export function SchoolAdmin({ api, spaceId, onSignOut, accountId }: { api: Conso
 
   // [SA] The school's own name and each class row's (AMENDMENTS-SEATS-ADMINS section 5.3): one live region for the page.
   const { announce, region: renameLive } = useAnnouncer();
-  const setSchoolName = useCallback((name: string) => {
-    loadSeq.current += 1;
-    setView((prev) => (prev ? { ...prev, school: { ...prev.school, name } } : prev));
-  }, []);
-  const setClassName = useCallback((classId: string, name: string) => {
-    loadSeq.current += 1;
-    setView((prev) => (prev ? { ...prev, classes: prev.classes.map((row) => (row.space.id === classId ? { ...row, space: { ...row.space, name } } : row)) } : prev));
-  }, []);
+  const setSchoolName = useCallback(
+    (name: string, settled: boolean) => {
+      names.set(spaceId, name, settled);
+      setView((prev) => (prev ? { ...prev, school: { ...prev.school, name } } : prev));
+    },
+    [names, spaceId],
+  );
+  const setClassName = useCallback(
+    (classId: string, name: string, settled: boolean) => {
+      names.set(classId, name, settled);
+      setView((prev) => (prev ? { ...prev, classes: prev.classes.map((row) => (row.space.id === classId ? { ...row, space: { ...row.space, name } } : row)) } : prev));
+    },
+    [names],
+  );
   const rename = useSpaceRename({ api, spaceId, name: view?.school.name ?? '', onName: setSchoolName, announce });
 
   const copy = async (): Promise<void> => {
@@ -188,7 +198,7 @@ export function SchoolAdminView({
   onNewClass: (value: string) => void;
   onCreateClass: (name: string) => void;
   /** [SA] section 5.3: renaming a class from its row (shown with the row's `canRename`); absent, rows show no Rename. */
-  rename?: { api: ConsoleApi | null; announce: (text: string) => void; onClassName: (classId: string, name: string) => void };
+  rename?: { api: ConsoleApi | null; announce: (text: string) => void; onClassName: (classId: string, name: string, settled: boolean) => void };
   /** [SA] The viewer is one of the school's administrators: no Manage billing (SA-0b D9, billing is the owner's). */
   viewerIsAdmin?: boolean;
   /** [SA] The Administrators panel, drawn under Invite a teacher. */
@@ -197,7 +207,7 @@ export function SchoolAdminView({
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
   const s = c.school;
-  const state = limitState(view.usage, view.limits);
+  const state = limitState(view.usage, view.limits, view.license?.active === true && view.license.planKey === 'school_seat');
   const note = limitNote(state, locale, { students: view.usage.students, cap: view.limits.students });
   const teachers = assignableTeachers(members);
   const empty = view.classes.length === 0 && members.filter((m) => m.memberKind === 'account').length <= 1;
@@ -314,14 +324,14 @@ function ClassRowView({
   assigning: boolean;
   onAssigning: (classId: string | null) => void;
   onAssign: (classId: string, accountId: string) => void;
-  rename?: { api: ConsoleApi | null; announce: (text: string) => void; onClassName: (classId: string, name: string) => void };
+  rename?: { api: ConsoleApi | null; announce: (text: string) => void; onClassName: (classId: string, name: string, settled: boolean) => void };
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
   const s = c.school;
   const classId = row.space.id;
   const onClassName = rename?.onClassName;
-  const setName = useCallback((name: string) => onClassName?.(classId, name), [onClassName, classId]);
+  const setName = useCallback((name: string, settled: boolean) => onClassName?.(classId, name, settled), [onClassName, classId]);
   const field = useSpaceRename({ api: rename?.api ?? null, spaceId: classId, name: row.space.name, onName: setName, announce: rename?.announce ?? noAnnounce });
   const canRename = !!rename && renameShown(row.space, row.canRename);
   const open = canRename && field.state.open;

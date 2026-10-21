@@ -33,7 +33,7 @@ import { rosterReportLink } from '@/lib/console/report-view';
 import { rosterClassReportLink } from '@/lib/console/class-report-view';
 import { capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
-import { RenameStyles, RenameTitle, useAnnouncer, useSpaceRename } from '@/components/console/RenameParts';
+import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { classGoalLine } from '@/lib/console/class-goal-line';
@@ -79,6 +79,8 @@ function SpaceInner(): JSX.Element {
   // read that ends later never puts back what it replaced (a removed learner, an old name). A quiet read takes none: it
   // draws only while no newer user read started after it.
   const loadSeq = useRef(0);
+  // [SA] A rename never drops a read: the renamed name is laid over each read that lands (section 5.3, `NameOverrides`).
+  const names = useNameOverrides();
 
   // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). It keeps what is drawn while it
   // reads, and a quiet read that cannot reach the Worker changes nothing: the page never turns into an error because a
@@ -86,6 +88,7 @@ function SpaceInner(): JSX.Element {
   const load = useCallback(async (quiet = false): Promise<void> => {
     if (!api) return;
     const call = quiet ? loadSeq.current : ++loadSeq.current;
+    const read = names.begin();
     if (!quiet) {
       setError(null);
       setCoverage('unknown');
@@ -106,7 +109,7 @@ function SpaceInner(): JSX.Element {
     if (planList.ok) setPlans(planList.data);
     if (relinks.ok) setPendingRelinks(relinks.data.length);
     if (result.ok) {
-      setRoster(result.data);
+      setRoster({ ...result.data, space: { ...result.data.space, name: names.nameFor(result.data.space.id, result.data.space.name, read) } });
       if (quiet) setError(null);
     } else if (!quiet) setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
     else if (result.error === 'forbidden' || result.error === 'not_found') {
@@ -115,7 +118,7 @@ function SpaceInner(): JSX.Element {
       setRoster(null);
       setError(result.error === 'forbidden' ? 'forbidden' : 'gone');
     }
-  }, [api, spaceId]);
+  }, [api, spaceId, names]);
 
   useEffect(() => {
     void load();
@@ -126,13 +129,16 @@ function SpaceInner(): JSX.Element {
   useVisibleRefresh(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone', { poll: true });
 
   // [SA] The inline rename (AMENDMENTS-SEATS-ADMINS section 5.3): the new name shows at once in the title, the Back
-  // labels and the frame, all read from this roster. A read still under way would put the old name back, so a rename
-  // takes a new read number, as a read the user starts does.
+  // labels and the frame, all read from this roster. A read still under way would hold the old name, so the name is
+  // kept in `names` and laid over it; the rest of that read still draws.
   const { announce, region: renameLive } = useAnnouncer();
-  const setName = useCallback((name: string) => {
-    loadSeq.current += 1;
-    setRoster((prev) => (prev ? { ...prev, space: { ...prev.space, name } } : prev));
-  }, []);
+  const setName = useCallback(
+    (name: string, settled: boolean) => {
+      names.set(spaceId, name, settled);
+      setRoster((prev) => (prev ? { ...prev, space: { ...prev.space, name } } : prev));
+    },
+    [names, spaceId],
+  );
   const rename = useSpaceRename({ api, spaceId, name: roster?.space.name ?? '', onName: setName, announce });
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
