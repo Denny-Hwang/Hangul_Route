@@ -60,6 +60,34 @@ export class LessonChunkMismatch extends Error {
   }
 }
 
+/** A chunk that did not arrive in time (a hung request: flaky Wi-Fi, a captive portal); a later ensure tries again. */
+export class LessonChunkTimeout extends Error {
+  constructor(
+    readonly chunk: string,
+    readonly ms: number,
+  ) {
+    super(`lesson chunk ${chunk} did not load within ${ms} ms`);
+    this.name = 'LessonChunkTimeout';
+  }
+}
+
+/**
+ * True for a chunk failure that only a fresh page can mend: the page runs an older build than the
+ * server (another tab applied an update and its worker dropped the old chunks, or a deploy landed
+ * while no worker controlled the page), so the chunk's URL answers with the app's HTML page
+ * (Metro then finds no module in it and keeps that load as done) or with another build's chunk.
+ * A network failure (offline, a timeout) is not one: trying again later can mend it.
+ */
+export function isNewBuildError(error: unknown): boolean {
+  if (error instanceof LessonChunkMismatch) return true;
+  return error instanceof Error && /^Requiring unknown module\b/.test(error.message);
+}
+
+export interface LessonStoreOptions {
+  /** A load that has not settled after this many ms fails with `LessonChunkTimeout`; none when omitted. */
+  timeoutMs?: number;
+}
+
 export interface LessonStore {
   /** The cell (episode id) that holds a lesson quest; undefined for every other quest. */
   cellOfQuest: (questId: string) => string | undefined;
@@ -95,7 +123,8 @@ export function cellOfScopeRef(ref: string): string | undefined {
   return match === null ? undefined : `episode:stage${match[1]}-${match[2]}`;
 }
 
-export function createLessonStore(manifest: LessonManifest, load: LessonLoaders): LessonStore {
+export function createLessonStore(manifest: LessonManifest, load: LessonLoaders, options: LessonStoreOptions = {}): LessonStore {
+  const { timeoutMs } = options;
   const questCell = new Map<string, string>();
   for (const e of manifest.episodes) {
     if (manifest.cells[e.id] === undefined) continue;
@@ -124,6 +153,23 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders)
     return mod;
   };
 
+  const withinTime = <T>(chunk: string, started: Promise<T>): Promise<T> => {
+    if (timeoutMs === undefined) return started;
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new LessonChunkTimeout(chunk, timeoutMs)), timeoutMs);
+      started.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error: unknown) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
+  };
+
   const ensureCell = (cellId: string): Promise<void> => {
     const expected = manifest.cells[cellId];
     if (expected === undefined || cells.has(cellId)) return Promise.resolve();
@@ -131,7 +177,7 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders)
     if (pending !== undefined) return pending;
     const started = load.cell(cellId);
     if (started === undefined) return Promise.reject(new Error(`no loader for the lesson chunk of ${cellId}`));
-    const promise = started
+    const promise = withinTime(cellId, started)
       .then((mod) => checked(cellId, expected, mod))
       .then(
         (mod) => {
@@ -160,8 +206,7 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders)
     const pending = titleLoads.get(locale);
     if (pending !== undefined) return pending;
     const expected = manifest.titles[locale];
-    const promise = load
-      .titles(locale)
+    const promise = withinTime(`titles-${locale}`, load.titles(locale))
       .then((mod) => checked(`titles-${locale}`, expected, mod))
       .then(
         (mod) => {

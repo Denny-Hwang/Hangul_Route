@@ -1,9 +1,11 @@
 import type { OverlayLocale, Overlays, QuestStep } from '@hangul-route/content-schema';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { MinigameScope } from '../../minigame-config';
 import {
   LessonChunkMismatch,
+  LessonChunkTimeout,
   cellOfScopeRef,
+  isNewBuildError,
   createLessonStore,
   mergeOverlaysInto,
   questsOverStore,
@@ -201,5 +203,70 @@ describe('cellOfScopeRef', () => {
     expect(cellOfScopeRef('minigame:s5-rites-q1-check')).toBeUndefined();
     expect(cellOfScopeRef('minigame:s1-letters-q1-check')).toBeUndefined();
     expect(cellOfScopeRef('minigame:story-read-listen-sun-and-moon')).toBeUndefined();
+  });
+});
+
+describe('load timeout (a hung request fails into the retry path)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('a cell or title load that does not settle in time rejects; the next ensure asks again and can succeed', async () => {
+    vi.useFakeTimers();
+    let hang = true;
+    const asked: string[] = [];
+    const store = createLessonStore(
+      manifest,
+      {
+        cell: (id) => {
+          asked.push(id);
+          return hang ? new Promise<LessonCellChunk>(() => undefined) : Promise.resolve(rites);
+        },
+        titles: (locale) => {
+          asked.push(`titles-${locale}`);
+          return new Promise<LessonTitleChunk>(() => undefined);
+        },
+      },
+      { timeoutMs: 15_000 },
+    );
+    const cell = store.ensureCells(['episode:stage2-rites']);
+    const title = store.ensureTitles('ko');
+    const cellFailed = expect(cell).rejects.toBeInstanceOf(LessonChunkTimeout);
+    const titleFailed = expect(title).rejects.toThrow('lesson chunk titles-ko did not load within 15000 ms');
+    vi.advanceTimersByTime(14_999);
+    expect(store.titlesSettled('ko')).toBe(false);
+    vi.advanceTimersByTime(1);
+    await cellFailed;
+    await titleFailed;
+    expect(store.titlesSettled('ko')).toBe(true);
+    expect(store.isQuestReady('quest:stage2-rites-q1')).toBe(false);
+    hang = false;
+    await store.ensureCells(['episode:stage2-rites']);
+    expect(store.isQuestReady('quest:stage2-rites-q1')).toBe(true);
+    expect(asked).toEqual(['episode:stage2-rites', 'titles-ko', 'episode:stage2-rites']);
+  });
+
+  it('a load that settles in time is untouched by the timer', async () => {
+    vi.useFakeTimers();
+    const store = createLessonStore(manifest, loaders(), { timeoutMs: 15_000 });
+    await store.ensureCells(['episode:stage2-rites']);
+    await store.ensureTitles('es');
+    vi.advanceTimersByTime(20_000);
+    expect(store.isQuestReady('quest:stage2-rites-q1')).toBe(true);
+    expect(store.titlesSettled('es')).toBe(true);
+  });
+});
+
+describe('isNewBuildError (a page older than its chunks: only a reload mends it)', () => {
+  it('is a hash mismatch or a chunk that held no module (the app page served in its place)', () => {
+    expect(isNewBuildError(new LessonChunkMismatch('episode:stage2-rites', 'a', 'b'))).toBe(true);
+    expect(isNewBuildError(new Error('Requiring unknown module "812".'))).toBe(true);
+  });
+
+  it('is not a network failure, a timeout or anything else', () => {
+    expect(isNewBuildError(new Error('Loading module /_expo/static/js/web/lessons-cell-stage2-rites-0a.js failed.'))).toBe(false);
+    expect(isNewBuildError(new LessonChunkTimeout('episode:stage2-rites', 15_000))).toBe(false);
+    expect(isNewBuildError('Requiring unknown module "1"')).toBe(false);
+    expect(isNewBuildError(undefined)).toBe(false);
   });
 });

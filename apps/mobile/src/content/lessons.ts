@@ -11,6 +11,8 @@ import { createLessonStore, questsOverStore } from '../logic/lessons/lesson-stor
 export const lessonContent = createLessonStore(
   { episodes: LESSON_EPISODES, cells: LESSON_CELL_CHUNKS, titles: LESSON_TITLE_CHUNKS },
   { cell: loadLessonCell, titles: loadLessonTitles },
+  // A chunk comes from the precache in a frame or two; a request that hangs fails into the retry path.
+  { timeoutMs: 15_000 },
 );
 
 export const lessonEpisodes = LESSON_EPISODES;
