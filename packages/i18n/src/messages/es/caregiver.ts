@@ -50,6 +50,10 @@ export const caregiver = {
   pin: {
     mismatch: 'No coinciden. Empecemos otra vez.',
     cooldown: (seconds: number) => `Tomemos un descanso corto. Reintenta en ${seconds} s.`,
+    cooldownMinutes: (n: number) => `Tomemos un descanso corto. Reintenta en ${n} min.`,
+    cooldownHelp: 'También puedes crear un PIN nuevo con Olvidé el PIN.',
+    resetByWaitNotice: 'El PIN de adultos se cambió después de la espera de 24 horas. Si no fuiste tú, cámbialo ahora.',
+    resetByWaitChange: 'Cambiar el PIN',
     entry: {
       createAgain: 'Escríbelo otra vez',
       verifySubtitle: 'Escribe tu PIN de 4 dígitos para continuar.',

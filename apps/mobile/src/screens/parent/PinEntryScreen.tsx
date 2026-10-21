@@ -9,10 +9,11 @@ import {
   spacing,
   touchTarget,
   useLayoutClass,
+  KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -31,17 +32,20 @@ import {
   attemptsRemaining,
   cooldownRemainingMs,
   createPinHash,
-  verifyPin,
 } from '../../logic/profiles/pin-hash';
+import { pauseAnnounceKey, pauseText, showsPauseHelp } from '../../logic/profiles/pin-pause';
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
+import { flags } from '../../config/flags';
+import { subscribeAppVisibility } from '../../platform/app-visibility';
 import { openBrowseFromGate } from '../../platform/browse-handoff';
 import { pinHasher } from '../../platform/crypto';
 import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
+import { trackGateOpened, trackPinPaused } from '../../store/gate-telemetry';
 import { useUiStore } from '../../store/ui-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
@@ -64,6 +68,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  *
  * Destination `ExternalLink` (F-STORY-002): a source link on Sources; a correct PIN returns there,
  * which likewise asks for one more tap on the web.
+ *
+ * [OA] PIN v2 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-2, section 8.3; wireframe `profiles/pin-entry-v2.md`, mock
+ * `design/screens/profiles/pin-entry-v2.md` boards 2 and 3): longer pauses (30 s, 1 min, 5 min, 15 min, 60 min),
+ * minutes from a minute on, the Forgot PIN? help line from the 3rd pause on the Grown-up area only, a polite live
+ * region updated once a minute, one attempt count shared by every tab, `pin.paused` and `parent.gate.opened`.
  */
 
 const DOT_SIZE = 20;
@@ -77,12 +86,16 @@ const SCREEN_HEADER_ESTIMATE = touchTarget.min + spacing.sm;
  * and the CTA itself. Cancel may scroll — Close stays in the header.
  */
 const PAD_CHROME = 2 * spacing.lg + 3 * spacing.md + DOT_SIZE + touchTarget.child;
+/** Read by a screen reader, drawn nowhere (the presenter's and the games' live regions use the same box). */
+const SR_ONLY = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
 export function PinEntryScreen({ route, navigation }: Props): React.ReactElement {
   const storedHash = useAccountStore((s) => s.parentPinHash);
   const attempts = useAccountStore((s) => s.pinAttempts);
   const setParentPinHash = useAccountStore((s) => s.setParentPinHash);
-  const setPinAttempts = useAccountStore((s) => s.setPinAttempts);
+  const verifyPinAttempt = useAccountStore((s) => s.verifyPinAttempt);
+  const refreshAttempts = useAccountStore((s) => s.refreshAttempts);
+  const markPinResetByWait = useAccountStore((s) => s.markPinResetByWait);
   const clearPinResetRequest = useAccountStore((s) => s.clearPinResetRequest);
   const pinResetRequestedAt = useAccountStore((s) => s.pinResetRequestedAt);
   const { copy } = useAudience();
@@ -124,8 +137,24 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     gap: PIN_PAD_GAP,
   });
 
-  const cooldownMs = cooldownRemainingMs(attempts, now);
+  // The ticking `now` may be a moment old when the attempt state changes (a pause that just started): never older
+  // than the clock, so a fresh pause never reads a second longer than it is.
+  const clock = Math.max(now, Date.now());
+  const cooldownMs = cooldownRemainingMs(attempts, clock);
   const locked = cooldownMs > 0;
+
+  // [OA] OA-D19: a pause another tab started shows here too (on arrival and whenever the app comes back in front).
+  useEffect(() => {
+    const refresh = (): void => {
+      void refreshAttempts()
+        .then(() => setNow(Date.now()))
+        .catch(() => undefined);
+    };
+    refresh();
+    return subscribeAppVisibility((visible) => {
+      if (visible) refresh();
+    });
+  }, [refreshAttempts]);
 
   // Tick once a second only while a cooldown is showing.
   useEffect(() => {
@@ -247,21 +276,20 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           return;
         }
         setParentPinHash(await createPinHash(entry, pinHasher));
+        // [OA] OA-D21: a PIN the finished 24-hour wait set is announced once at the next Grown-up area entry.
+        if (route.params.via === 'wait') markPinResetByWait(Date.now());
         void track(pinCreated(pinCreatedWhere(route.params)));
         if (route.params.via) void track(pinResetCompleted(route.params.via));
+        trackGateOpened(route.params.next, 'pin');
         proceed();
         return;
       }
-      const result = await verifyPin({
-        pin: entry,
-        storedHash,
-        state: attempts,
-        now: Date.now(),
-        hasher: pinHasher,
-      });
-      setPinAttempts(result.state);
+      // [OA] OA-D19: read, checked and written inside the shared attempt lock, so every tab counts the same misses.
+      const result = await verifyPinAttempt(entry, { hasher: pinHasher, schedule: flags.pinPauseStepsEnabled ? 'steps' : 'flat' });
       setEntry('');
+      if (result.paused) trackPinPaused(result.paused.step);
       if (result.ok) {
+        trackGateOpened(route.params.next, 'pin');
         // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
         if (pinResetRequestedAt !== null) clearPinResetRequest();
         // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
@@ -291,7 +319,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         ? copy.pinCreateSubtitle
         : m.entry.createAgainSubtitle;
 
-  const hintText = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : hint;
+  // [OA] Section 8.3: seconds under a minute, minutes above; the help line from the 3rd pause, Grown-up area only.
+  const hintText = locked ? pauseText(cooldownMs, m) : hint;
+  const pauseHelp = showsPauseHelp(attempts, clock, route.params.next);
+  // The screen reader hears the pause once a minute (section 14), not at every second the line changes.
+  const announceKey = pauseAnnounceKey(cooldownMs);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed only when the minute changes, on purpose
+  const announced = useMemo(() => (announceKey === null ? '' : pauseText(cooldownMs, m)), [announceKey, m]);
 
   if (noPin) {
     // F-APP-001 section 3.9: the grown-up area never creates a PIN here; the grown-up signs in instead.
@@ -326,21 +360,45 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           with it the keypad, keeps its size when a hint appears (p1-L1 follow-up).
         */}
         <View style={{ position: 'relative' }}>
-          <View
-            style={{ opacity: hintText ? 0 : 1 }}
-            accessibilityElementsHidden={Boolean(hintText)}
-            importantForAccessibility={hintText ? 'no-hide-descendants' : 'auto'}
-          >
-            <Body tone="secondary">{subtitle}</Body>
-          </View>
+          {/*
+            [OA] With the help line (3rd pause on, the pad paused anyway) the pause line takes the subtitle's place in
+            the flow, so the two lines never overlap at 320 px; the measured header gives the pad what is left.
+          */}
+          {pauseHelp ? null : (
+            <View
+              style={{ opacity: hintText ? 0 : 1 }}
+              accessibilityElementsHidden={Boolean(hintText)}
+              importantForAccessibility={hintText ? 'no-hide-descendants' : 'auto'}
+            >
+              <Body tone="secondary">{subtitle}</Body>
+            </View>
+          )}
           {hintText ? (
-            <View accessibilityLiveRegion="polite" style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+            <View
+              // A pause line changes every second under a minute; the live region below carries it once a minute.
+              {...(locked
+                ? { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true }
+                : { accessibilityLiveRegion: 'polite' as const })}
+              testID={locked ? 'pin-pause-line' : 'pin-hint-line'}
+              style={pauseHelp ? undefined : { position: 'absolute', top: 0, left: 0, right: 0 }}
+            >
               <Body tone="secondary" size="sm" weight="semibold">
                 {hintText}
               </Body>
             </View>
           ) : null}
         </View>
+        {/* [OA] The pause, for screen readers: a polite live region that changes once a minute (section 14). */}
+        <Text {...KOREAN_LINE_BREAK} testID="pin-pause-live" accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }} style={SR_ONLY}>
+          {locked ? announced : ''}
+        </Text>
+        {pauseHelp ? (
+          <View testID="pin-pause-help" style={{ paddingTop: spacing.xs }}>
+            <Body tone="secondary" size="sm">
+              {m.cooldownHelp}
+            </Body>
+          </View>
+        ) : null}
       </View>
 
       <Spacer size="md" />
