@@ -3178,21 +3178,21 @@ export const OVERLAYS: Overlays = {
     },
     "stage:stage4": {
       "anchorSkill": "Mantén un diálogo de 4 turnos con saludo y pregunta",
-      "oneLiner": "Practica tus primeras conversaciones cortas de la vida real.",
+      "oneLiner": "Lee y responde diálogos cortos de todos los días.",
       "title": "Diálogo"
     },
     "stage:stage5": {
       "anchorSkill": "Lee una historia de 5 oraciones y entiende el 80 % o más",
-      "oneLiner": "Lee relatos cortos y cuentos populares coreanos con Hoya.",
+      "oneLiner": "Lee historias del patrimonio y cuentos con Hoya.",
       "title": "Historias"
     },
     "stage:stage6": {
       "anchorSkill": "Pide comida, pregunta cómo llegar y escribe a tu primo o prima",
-      "oneLiner": "Lleva el coreano al mundo: menús, letreros, llamadas.",
+      "oneLiner": "Lleva el coreano al mundo: menús, letreros y mensajes cortos.",
       "title": "Uso real"
     },
     "stage:stage7": {
-      "anchorSkill": "Graba una presentación personal de 1 minuto",
+      "anchorSkill": "Escribe una presentación personal corta",
       "oneLiner": "Di lo que piensas, sientes y creas, en coreano.",
       "title": "Expresión personal"
     },
@@ -8686,21 +8686,21 @@ export const OVERLAYS: Overlays = {
     },
     "stage:stage4": {
       "anchorSkill": "인사와 질문으로 4번 주고받는 대화하기",
-      "oneLiner": "실생활에서 쓰는 첫 짧은 대화를 나눠요.",
+      "oneLiner": "짧은 일상 대화를 읽고 답해요.",
       "title": "대화"
     },
     "stage:stage5": {
       "anchorSkill": "5문장 이야기를 읽고 80% 이상 이해하기",
-      "oneLiner": "호야와 함께 짧은 이야기와 한국 옛이야기를 읽어요.",
+      "oneLiner": "호야와 함께 문화 이야기와 동화를 읽어요.",
       "title": "이야기"
     },
     "stage:stage6": {
       "anchorSkill": "음식 주문하기, 길 묻기, 사촌에게 메시지 보내기",
-      "oneLiner": "메뉴, 표지판, 전화까지, 한국어를 밖에서 써 봐요.",
+      "oneLiner": "메뉴, 표지판, 짧은 메시지까지, 한국어를 밖에서 써 봐요.",
       "title": "실생활"
     },
     "stage:stage7": {
-      "anchorSkill": "1분 자기소개 녹음하기",
+      "anchorSkill": "짧은 자기소개 쓰기",
       "oneLiner": "생각하고 느끼고 만든 것을 한국어로 말해요.",
       "title": "자기표현"
     },
