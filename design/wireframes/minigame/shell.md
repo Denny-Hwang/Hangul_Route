@@ -1,14 +1,14 @@
 # Minigame/Shell — the common frame every minigame renders inside (wireframe v1)
 
 Spec: `docs/blueprints/06-mini-game-catalog.md` §0.3 (5 common rules: ≤ 3 min, 5–7 rounds, fail-but-advance, touch only, sound + visual) · `.claude/skills/minigame-skill/SKILL.md` · `docs/specs/F-HOYA-001-hoya-character-system.md` (bubble tones)
-Audience: **learner (P4/P5 child, 5–11)**
+Audience: **any learner, any age** (CLAUDE.md §1; this line said a child age range before the 2026-10-09 audience rule, corrected in row CM-D2)
 Code (back-filled): `apps/mobile/src/screens/minigames/MinigameScreen.tsx` (router by `scope.kind`) + one component per game; run state `store/quest-run-store.ts`
 
 ## Scenario (Given-When-Then)
 
 Given: the quest player launched a play step (`present` / `practice` / `apply`)
 When: the game opens
-Then: the child sees the same frame they saw last time — where the prompt is, where the answers are, where Hoya talks — and only the middle changes per game family
+Then: the learner sees the same frame they saw last time — where the prompt is, where the answers are, where Hoya talks — and only the middle changes per game family
 
 ## Screen goal
 
@@ -40,7 +40,7 @@ Then: the child sees the same frame they saw last time — where the prompt is, 
 ```
 
 - No back / close control inside a game (see open questions); the frame belongs to the quest.
-- Tiles show the jamo (taught content) **with romanization**; every tile ≥ child touch target.
+- Tiles show the jamo (taught content) **with romanization**; every tile ≥ `touchTarget.child` (the token name; it is an accessibility size for every age).
 
 ## Interaction points
 
@@ -71,7 +71,7 @@ Exit to:    `quest/player` (always, via goBack) — never to results directly
 ## Open questions
 
 - **Discrepancy**: there is no shared frame component — each game re-implements the progress row, prompt heading and Hoya slot. Extract a `MinigameFrame` in `packages/design-system` before the mid-fi pass so the layout cannot drift per game.
-- Wrong-answer rule: catalog §0.3 says "soft feedback + reveal answer + auto-advance"; shipped recognition games keep the round open until the child finds the right tile. Which is kinder for a 5-year-old on round 5 of a bad day? Beta A/B: reveal-after-2-wrong.
+- Wrong-answer rule: catalog §0.3 says "soft feedback + reveal answer + auto-advance"; shipped recognition games keep the round open until the learner finds the right tile. Which is kinder for a beginner on round 5 of a bad day? Beta A/B: reveal-after-2-wrong.
 - Progress element: the shell uses a **bar**, the quest player uses **dots**. One idiom for both, or bar = rounds, dots = steps on purpose?
 - Quit from inside a game: none today. Route through the quest's [x quit] confirm sheet rather than adding a second control here.
 
@@ -79,7 +79,7 @@ Exit to:    `quest/player` (always, via goBack) — never to results directly
 
 ## F-CURR-002 formats in the shell (row CM-D2, 2026-10-21)
 
-Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §7.1 (formats F1-F6, F8, F10), §4.5 (`dictation-unambiguous`, the spelling round), §7.7 (anti-shame checklist), §12.2 (`game.<kind>` switches). F7 Hidden Heritage is designed in row CM-D3 and F9 Decoding Sprint with row CM-32; both use the rules below. The audience line of this file predates the owner rule: every F-CURR-002 screen is for **any learner, any age** (CLAUDE.md §1), with no age wording.
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §7.1 (formats F1-F6, F8, F10), §4.5 (`dictation-unambiguous`, the spelling round), §7.7 (anti-shame checklist), §12.2 (`game.<kind>` switches). F7 Hidden Heritage is designed in row CM-D3 and F9 Decoding Sprint with row CM-32; both use the rules below. Every F-CURR-002 screen is for **any learner, any age** (CLAUDE.md §1), with no age wording.
 
 The eight formats render inside this frame. Each one has its own wireframe; this section holds what they share, so the frame cannot drift per game.
 

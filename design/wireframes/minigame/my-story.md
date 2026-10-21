@@ -32,7 +32,7 @@ Example chain (fixture words; the allomorph helper picks 과 / 와; romanization
 |---|---|---|
 | 1 | 저는 주말에 [___]에 가요. (jeoneun jumare ___e gayo) · On the weekend I go to ___. | 도서관 (doseogwan) · 시장 (sijang) · **공원 (gongwon)** |
 | 2 | [___]과/와 같이 가요. (___gwa/wa gachi gayo) · I go with ___. | 친구 (chingu) · 가족 (gajok) · **호야 (hoya)** |
-| 3 | 기분이 [___]. (gibuni ___) · I feel ___. | 좋아요 (joayo) · 신나요 (sinnayo) · **괜찮아요 (gwaenchanayo)** |
+| 3 | 기분이 [___]. (gibuni ___) · I feel ___. | 좋아요 (joayo) · 아주 좋아요 (aju joayo) · **괜찮아요 (gwaenchanayo)** |
 
 ## Box diagram
 

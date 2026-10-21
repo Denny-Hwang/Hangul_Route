@@ -35,8 +35,9 @@ Captions only, compact (320 x 568):
 |  (Put the lines in order)      |  <- heading (illustrated rounds: "Put the pictures in order")
 |  (Read each line. Tap the one  |
 |   that comes first.)           |
-|  slots: [ 1 ][ 2 ][   ][   ]   |  <- filled left to right; a filled slot shows the first
-|                                |     block of its line ("먼저 ...") and is read-only
+|  slots: [ 1 ][ 2 ]             |  <- 2 x 2 on a phone (4 across from regular), filled in
+|         [ 3 ][ 4 ]             |     order; a filled slot shows its line's first word with
+|                                |     romanization (~~ 먼저 ~~ meonjeo) and is read-only
 |  +--------------------------+  |
 |  | ~~ 그리고 밥을 먹어요. ~~    |  |  <- cards: one column at 320, full width, each at least
 |  | (geurigo babeul meogeoyo)|  |     touchTarget.child tall; Korean at bodyLg, romanization
@@ -73,7 +74,7 @@ Replay (after the last slot):
 ## Interaction points
 
 - **Card that comes next**: moves into the next slot (`motion.duration.base`; at once with reduced motion), its line is said once (`playPrompt({ kind: 'sentence' })`), `answerRound(slot, firstAnswer)`.
-- **Card that does not come next**: a brief nudge look on the card (amber border and the mark glyph for `motion.duration.slow`, then back), nothing moves, Hoya (`thinking`, amber) "Read the lines again. What happens first?" (later slots: "What happens next?"); with sequence words in the captions, Hoya adds "Look for words like 먼저 and 마지막에." (the markers are shown as taught Korean with romanization). Second wrong tap on one slot: the right card gets the look-here ring and "This one comes next." (the shipped `sequence.lookHere`).
+- **Card that does not come next**: a brief nudge look on the card (amber border and the mark glyph for `motion.duration.slow`, then back), nothing moves, Hoya (`thinking`, amber) "Read the lines again. What happens first?" (later slots: "What happens next?"); with sequence words in the captions, Hoya adds "Look for words like these:" followed by the round's markers drawn as taught Korean with romanization (`~~ 먼저 ~~ (meonjeo)` · `~~ 마지막에 ~~ (majimage)`), never as bare Hangul inside the English line. Second wrong tap on one slot: the right card gets the look-here ring and "This one comes next." (the shipped `sequence.lookHere`).
 - **[ Show meanings ]**: glosses appear under every card's romanization; the button changes to a quiet "Meanings shown" label (not a toggle back: the round is hinted either way).
 - **Replay**: auto-advances about every 2.5 s with a visible Pause; with reduced motion nothing auto-advances and Back / Next buttons step through (the Story Sequence replay rule). **Done** ends the step.
 - **[ Skip this one ]**: completes the step without recording the remaining slots.
