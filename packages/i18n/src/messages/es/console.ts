@@ -848,6 +848,7 @@ export const consoleMsgs = {
     comingSoon: 'El modo proyección llega muy pronto: lecciones con diapositivas para mostrar en un proyector o una TV.',
     plansFailed: 'No se cargaron los planes de este espacio, así que no se ofrece el plan de esta semana. Reintenta para cargarlos.',
     replaceOutline: '¿Empezar un esquema nuevo desde esta fuente? Se reemplazarán los cambios que hiciste aquí.',
+    cannotCompose: 'Con tu rol no puedes preparar lecciones para este espacio. Aun así puedes mostrar una lección lista.',
     entry: { cta: 'Modo proyección' },
     card: {
       title: 'Modo proyección',

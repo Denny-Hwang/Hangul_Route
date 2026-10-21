@@ -3,6 +3,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SpaceRole } from '@hangul-route/content-schema';
 import type { PlanView, RosterLearner } from '@/lib/console/api';
 import { aboutMinutes } from '@/lib/console/lecture';
 import { consolePresetContext, resolveConsolePreset } from '@/lib/console/lecture-presets';
@@ -82,11 +83,24 @@ const state = {
   learners: [] as RosterLearner[],
   joinCode: 'ABC234' as string | null,
   plans: { ok: true, data: [] as PlanView[] } as { ok: true; data: PlanView[] } | { ok: false; error: string },
+  /** This account's role in the space as the spaces list gives it: the space's composer (a class teacher, a family caregiver) by default; 'absent': the space is not in the list. */
+  role: 'composer' as SpaceRole | 'composer' | 'absent',
+  spacesFail: false,
 };
 
 const api = {
   roster: async () => ({ ok: true as const, data: { space: space(state.kind), learners: state.learners, joinCode: state.joinCode, joinCodeExpiresAt: null } }),
   listPlans: async () => state.plans,
+  listSpaces: async () =>
+    state.spacesFail
+      ? { ok: false as const, error: 'network' }
+      : {
+          ok: true as const,
+          data:
+            state.role === 'absent'
+              ? []
+              : [{ space: space(state.kind), role: state.role === 'composer' ? (state.kind === 'family' ? ('caregiver' as const) : ('teacher' as const)) : state.role, counts: { learners: 0, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }],
+        },
 };
 
 vi.mock('@/components/console/use-console', async () => {
@@ -127,6 +141,8 @@ afterEach(() => {
   state.learners = [];
   state.joinCode = 'ABC234';
   state.plans = { ok: true, data: [] };
+  state.role = 'composer';
+  state.spacesFail = false;
   nav.params = new URLSearchParams('id=space%3Ac1');
   opened.length = 0;
   vi.useRealTimers();
@@ -507,5 +523,56 @@ describe('review fixes (LV-4 second review)', () => {
     expect(minutes).not.toBe(10);
     expect(textOf(one(root, 'lecture-footer-minutes'))).toBe(l.outline.about(minutes));
     expect(one(root, 'lecture-preset-warm-up').props['aria-label']).toBe(en.a11y.presenter.presetCard(l.presets.warmup.title, minutes));
+  });
+});
+
+describe('a role that cannot compose here (section 16, canComposeIn)', () => {
+  const builder = (root: ReactTestInstance): number => cards(root).length + all(root, 'open-presenter').length + all(root, 'lecture-customize-toggle').length;
+
+  it('a school admin whom the roster admits, without plan.write: the no-space line, Start opens /present alone, no deck', async () => {
+    state.role = 'admin';
+    const root = await render();
+    expect(builder(root)).toBe(0);
+    const panel = one(root, 'lecture-cannot-compose');
+    expect(textOf(panel)).toContain(l.cannotCompose);
+    const start = one(root, 'lecture-present-alone');
+    expect(start.type).toBe('a');
+    expect(textOf(start)).toBe(l.card.cta);
+    expect(start.props.href).toBe('https://app.hangulroute.com/present');
+    expect(start.props.href).not.toContain('#d=');
+    expect(start.props.target).toBe('_blank');
+    expect(start.props.rel).toBe('noopener noreferrer');
+    const note = root.findAll((n) => n.type === 'p' && n.props.id === start.props['aria-describedby']);
+    expect(note.map((n) => textOf(n))).toEqual([l.card.opensTab]);
+    expect(opened).toEqual([]);
+  });
+
+  it('a space the list does not hold for this account reads the same line', async () => {
+    state.role = 'absent';
+    const root = await render();
+    expect(builder(root)).toBe(0);
+    expect(all(root, 'lecture-cannot-compose')).toHaveLength(1);
+  });
+
+  it('the spaces list fails: the could-not-load line with Try again, and no builder', async () => {
+    state.spacesFail = true;
+    const root = await render();
+    expect(builder(root)).toBe(0);
+    expect(all(root, 'lecture-cannot-compose')).toHaveLength(0);
+    expect(textOf(root)).toContain(en.console.cantReach);
+  });
+
+  it.each([
+    ['class', 'owner'],
+    ['class', 'teacher'],
+    ['family', 'caregiver'],
+    ['family', 'owner'],
+  ] as const)('a %s %s keeps the builder as it was', async (kind, role) => {
+    state.kind = kind;
+    state.role = role;
+    const root = await render();
+    expect(all(root, 'lecture-cannot-compose')).toHaveLength(0);
+    expect(cards(root).length).toBeGreaterThan(0);
+    expect(one(root, 'open-presenter').props.disabled).toBe(false);
   });
 });

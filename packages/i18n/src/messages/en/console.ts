@@ -1063,6 +1063,11 @@ export const consoleMsgs = {
     comingSoon: 'Lecture mode is coming soon: slide lessons you can show on a projector or TV.',
     plansFailed: "This space's plans did not load, so this week's plan is not offered. Try again to load them.",
     replaceOutline: 'Start a new outline from this source? The changes you made here will be replaced.',
+    /**
+     * The setup page for a role that cannot compose plans in the space (`canComposeIn`, AMENDMENTS-LECTURE-V2 section 16):
+     * no builder, and Start (`card.cta`) opens the presenter alone in a new tab (`card.opensTab`).
+     */
+    cannotCompose: "You can't set up lessons for this space with your role. You can still show a ready-made lesson.",
     entry: { cta: 'Lecture mode' },
     /**
      * The Lecture mode card at the top of the teacher home and on the family home (AMENDMENTS-LECTURE-V2 E1, E2, LV-5;
