@@ -206,10 +206,9 @@ test.describe('presenter at 1280 x 720', () => {
     // No helper picker (LV-H), even for a link that still names one.
     await expect(page.getByTestId('presenter-picker-row')).toHaveCount(0);
     await expect(page.getByText(/Helper|Numbers 1 to/)).toHaveCount(0);
-    await expect(page.getByTestId('presenter-check-skipped')).toBeVisible();
-    await page.getByTestId('presenter-see-which').click();
-    await expect(page.getByTestId('presenter-skipped-list')).toBeVisible();
-    await expect(page.getByTestId('presenter-skipped-list').getByText('A step the slides do not show').first()).toBeVisible();
+    // The quest's Check is listen questions since LV-S2 (AMENDMENTS-LECTURE-V2 section 5.1): nothing is left out, so no
+    // skipped line (the list itself is checked with a story the bundle does not have, below).
+    await expect(page.getByTestId('presenter-check-skipped')).toHaveCount(0);
     await shot(page, 'presenter-start-1280');
 
     await startLesson(page);

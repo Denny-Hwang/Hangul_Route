@@ -5,6 +5,7 @@ import type { SpokenForm } from '../../../logic/audio/spoken';
 import { units } from '../../../logic/lecture/stage-constants';
 import { STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
+import { revealProps } from './reveal';
 
 /**
  * The teacher-says text (spec section 3.7; slide-letter.md "No Korean voice or sound off",
@@ -13,7 +14,20 @@ import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
  * letter's IPA in brackets), all `text.primary`, the only 7:1 text on sunken. The teacher reads it
  * aloud; nothing records or measures speech.
  */
-export function SayIt({ spoken, ipa }: { spoken: SpokenForm; ipa?: string }): React.ReactElement {
+export function SayIt({
+  spoken,
+  ipa,
+  koShown,
+}: {
+  spoken: SpokenForm;
+  ipa?: string;
+  /**
+   * A listen question (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2): the romanization comes first, as the
+   * teacher reads it, and the Hangul waits in its place, unread, until `koShown` (its answer build),
+   * because showing it at once would give the answer away. Absent: the Hangul first, always shown.
+   */
+  koShown?: boolean;
+}): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const promptSize = size(presenter.size.prompt);
@@ -33,10 +47,22 @@ export function SayIt({ spoken, ipa }: { spoken: SpokenForm; ipa?: string }): Re
       }}
     >
       <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.primary }}>{messages.learner.presenter.slide.sayIt}</Text>
-      <View accessibilityLabel={koreanTextLabel(spoken.text, spoken.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md) }}>
-        <TaughtKo size={promptSize}>{spoken.text}</TaughtKo>
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{spoken.romanization}</Text>
-      </View>
+      {koShown === undefined ? (
+        <View accessibilityLabel={koreanTextLabel(spoken.text, spoken.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md) }}>
+          <TaughtKo size={promptSize}>{spoken.text}</TaughtKo>
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{spoken.romanization}</Text>
+        </View>
+      ) : (
+        <View
+          accessibilityLabel={koShown ? koreanTextLabel(spoken.text, spoken.romanization) : spoken.romanization}
+          style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: units(unit, spacing.lg) }}
+        >
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-say-it-rom" style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{spoken.romanization}</Text>
+          <View testID="presenter-say-it-ko" {...revealProps(koShown)}>
+            <TaughtKo size={promptSize}>{spoken.text}</TaughtKo>
+          </View>
+        </View>
+      )}
       {ipa !== undefined ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, color: colors.text.primary }}>{`[${ipa}]`}</Text> : null}
     </View>
   );
