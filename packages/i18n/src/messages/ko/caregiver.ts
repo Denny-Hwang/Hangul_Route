@@ -321,6 +321,8 @@ export const caregiver = {
       codeNotFound: '이 코드로는 들어갈 수 없어요. 선생님과 같이 확인해 봐요.',
       codeExpired: '오래된 코드예요. 새 코드를 받아 주세요.',
       classFull: '이 반은 자리가 다 찼어요. 선생님에게 물어봐요.',
+      familyFull: (cap: number) => `이 가족에는 이미 학습자가 ${cap}명 있어요. 가족 어른에게 물어봐요.`,
+      schoolFull: '이 학교는 지금 자리가 다 찼어요. 선생님에게 물어봐요.',
       learnerGone: '그 이름은 이제 이 반에 없어요. 선생님에게 물어봐요.',
       alreadyOnDevice: '이 기기에 이미 그 학습자가 있어요 — 대신 프로필을 바꿔 주세요.',
       badFormat: '코드는 글자나 숫자 6개예요.',

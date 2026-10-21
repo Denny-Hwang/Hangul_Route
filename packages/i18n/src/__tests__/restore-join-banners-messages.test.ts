@@ -156,15 +156,33 @@ describe('caregiver.join (sync/join-space)', () => {
   });
 
   it('keeps the calm error lines (the shared ones live in `retry` and `audience`)', () => {
-    expect(j.errors).toEqual({
+    const { familyFull, ...lines } = j.errors;
+    expect(lines).toEqual({
       codeNotFound: "That code didn't work. Check it with your teacher.",
       codeExpired: 'That code is too old. Ask for a new one.',
       classFull: 'This class is full. Ask your teacher.',
+      // [SA] AMENDMENTS-SEATS-ADMINS section 9.1.
+      schoolFull: 'This school is full right now. Ask your teacher.',
       learnerGone: 'That name is not in this class anymore. Ask your teacher.',
       alreadyOnDevice: 'This device already has that learner — switch profiles instead.',
       badFormat: 'A code has 6 letters or numbers.',
       off: 'Joining a class is not set up on this build.',
     });
+    expect(familyFull(4)).toBe('This family already has 4 learners. Ask a grown-up in your family.');
+  });
+
+  it('[SA] the full-family and full-school lines in es and ko (AMENDMENTS-SEATS-ADMINS section 9.1): the cap as an argument, no number typed', () => {
+    const es = getMessages('es').caregiver.join.errors;
+    const ko = getMessages('ko').caregiver.join.errors;
+    expect(es.familyFull(4)).toBe('Esta familia ya tiene 4 estudiantes. Pregúntale a un adulto de tu familia.');
+    expect(es.schoolFull).toBe('Esta escuela está llena por ahora. Pregúntale a tu docente.');
+    expect(ko.familyFull(4)).toBe('이 가족에는 이미 학습자가 4명 있어요. 가족 어른에게 물어봐요.');
+    expect(ko.schoolFull).toBe('이 학교는 지금 자리가 다 찼어요. 선생님에게 물어봐요.');
+    for (const errors of [j.errors, es, ko]) {
+      expect(errors.familyFull(7)).toContain('7');
+      expect(errors.familyFull(7)).not.toMatch(/\b4\b/);
+      expect(errors.schoolFull).not.toMatch(/\d/);
+    }
   });
 });
 
