@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ProfileSchema } from './profile';
-import { ProgressSnapshotSchema, type ProgressSnapshot } from './progress';
+import { LocalDaySchema, ProgressSnapshotSchema, lenientRecord, type ProgressSnapshot } from './progress';
 import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema, type InboxPlan } from './plan';
 import { LearnerMembershipSchema } from './space';
@@ -108,6 +108,26 @@ export const VocabSummarySchema = z.object({
 });
 export type VocabSummary = z.infer<typeof VocabSummarySchema>;
 
+/**
+ * Memory counts for reports, the console, the family lantern and
+ * `class-review` (F-CURR-002 sections 4.8, 7.6, 8), computed on the device.
+ * Counts and up to 8 item ids only, never a per-answer history. Bounded like
+ * `journey`, so a tampered client cannot grow every roster that copies it.
+ */
+const MEMORY_COUNT_MAX = 100_000;
+const memoryCount = z.number().int().nonnegative().max(MEMORY_COUNT_MAX);
+export const MemorySummarySchema = z.object({
+  wordsKnown: memoryCount,
+  readyToRefresh: memoryCount,
+  /** Cells at mastery level 1, 2 and 3. */
+  cellBestCounts: z.tuple([memoryCount, memoryCount, memoryCount]),
+  stageChecks: memoryCount,
+  weekPoints: memoryCount,
+  /** The review items due first, at most 8. */
+  topDue: z.array(z.string().min(1).max(64)).max(8),
+});
+export type MemorySummary = z.infer<typeof MemorySummarySchema>;
+
 /** Client-computed aggregate; the only column caregivers/teachers read (roadmap §3.3). */
 export const ProgressSummarySchema = z.object({
   schemaVersion: z.literal(1),
@@ -160,6 +180,13 @@ export const ProgressSummarySchema = z.object({
    * never a 422 (the `journey` pattern). Hidden from every roster until RP-W2.
    */
   activity: ActivitySummarySchema.optional().catch(undefined),
+  /**
+   * Memory counts (F-CURR-002 section 4.8); absent from builds before the
+   * memory store. Malformed is dropped, never a 422. Hidden from every class
+   * and school roster (`TEACHER_HIDDEN_SUMMARY_KEYS`) until a later row adds
+   * its consent item.
+   */
+  memory: MemorySummarySchema.optional().catch(undefined),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 
@@ -275,6 +302,33 @@ export type SyncInbox = Omit<z.infer<typeof SyncInboxSchema>, 'plans'> & { plans
 export const BACKUP_FORMAT = 'hangul-route-backup' as const;
 export const BACKUP_VERSION = 1 as const;
 
+/**
+ * One review item's state in the memory store (F-CURR-002 section 4.8, the
+ * per-item fields of a shard): box, due local day, next rung, rungs passed as
+ * a bitmask, reps, first day, best box and the time of the last write.
+ */
+export const MemoryItemStateSchema = z.object({
+  b: z.number().int().min(0).max(7),
+  d: LocalDaySchema.nullable(),
+  c: z.number().int().min(0).max(3),
+  r: z.number().int().min(0).max(7),
+  n: z.number().int().nonnegative(),
+  f: LocalDaySchema,
+  s: z.number().int().min(0).max(7),
+  at: z.string().min(1).max(40),
+});
+export type MemoryItemState = z.infer<typeof MemoryItemStateSchema>;
+
+const MemoryKeySchema = z.string().min(1).max(64);
+/**
+ * The memory store in a backup file: shard (`stage2`, `pack:<key>`, `week`) ->
+ * item id -> state. Read per entry at both levels: an item state that does
+ * not parse drops only itself, a shard that is not an object drops only that
+ * shard, and a value that is not an object reads as absent.
+ */
+export const MemoryBackupSchema = lenientRecord(MemoryKeySchema, lenientRecord(MemoryKeySchema, MemoryItemStateSchema, Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
+export type MemoryBackup = NonNullable<z.infer<typeof MemoryBackupSchema>>;
+
 export const BackupFileSchema = z.object({
   format: z.literal(BACKUP_FORMAT),
   version: z.literal(BACKUP_VERSION),
@@ -283,9 +337,20 @@ export const BackupFileSchema = z.object({
   /**
    * The word slice is lenient here only (F-VOC-005 section 3.10): a malformed
    * or newer-version slice is dropped so the file still restores quests, cards
-   * and episodes. The sync contract stays strict (a 422 on the Worker).
+   * and episodes; on the Worker a malformed `vocab` stays a 422. Reviews and
+   * the F-CURR-002 fields are lenient on every path, this one included
+   * (`ProgressSnapshotSchema`). An app build from before F-CURR-002 reads
+   * backups strictly: it cannot restore a file that holds a `cell-check` or
+   * `warmup` review, so the first row that writes one must gate on the app
+   * version (F-CURR-002 section 13).
    */
   snapshot: ProgressSnapshotSchema.extend({ vocab: VocabProgressSchema.optional().catch(undefined) }),
+  /**
+   * The memory store (F-CURR-002 section 4.8). Optional and lenient: an older
+   * app ignores the key, and an unreadable one is dropped without failing the
+   * file. `BACKUP_VERSION` stays 1.
+   */
+  memory: MemoryBackupSchema.optional().catch(undefined),
 });
 export type BackupFile = Omit<z.infer<typeof BackupFileSchema>, 'snapshot'> & { snapshot: ProgressSnapshot };
 

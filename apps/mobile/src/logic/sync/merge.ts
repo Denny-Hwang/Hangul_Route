@@ -1,5 +1,12 @@
 import {
   PLACEMENT_KEEP,
+  mergeCellBest,
+  mergeDayLog,
+  mergeEarliest,
+  mergeGoals,
+  mergeLatchRecord,
+  mergeStreakBest,
+  mergeStreakLocal,
   type CardCollectionEntry,
   type EpisodeProgress,
   type HomeworkAssignment,
@@ -349,6 +356,44 @@ function vocabCovered(local: VocabProgress | undefined, server: VocabProgress | 
   );
 }
 
+/**
+ * One session held on both sides: the local copy, with the other copy's
+ * `localDay` (F-CURR-002 section 4.8) when the local one went through a build
+ * that dropped it. A session is written once, so the two copies never hold
+ * different days.
+ */
+export function mergeSession(l: SessionLog, s: SessionLog): SessionLog {
+  return l.localDay === undefined && s.localDay !== undefined ? { ...l, localDay: s.localDay } : l;
+}
+
+/**
+ * The F-CURR-002 section 4.8 fields on both sides, by the rules the Worker
+ * applies too (`progress-merge.ts` in content-schema): max for `cellBest` and
+ * `streakBest`, earliest for the latches and `memSeededAt`, the later `setAt`
+ * for `goals`, max per day and install key for `dayLog`, the later `lastDay`
+ * for `streakLocal`. A key neither side holds stays absent.
+ */
+function mergeCurr002Fields(local: ProgressSnapshot, server: ProgressSnapshot): Partial<ProgressSnapshot> {
+  const merged: Partial<ProgressSnapshot> = {
+    cellBest: mergeCellBest(local.cellBest, server.cellBest),
+    cellCheckAt: mergeLatchRecord(local.cellCheckAt, server.cellCheckAt),
+    stageCheckAt: mergeLatchRecord(local.stageCheckAt, server.stageCheckAt),
+    testedOut: mergeLatchRecord(local.testedOut, server.testedOut),
+    goals: mergeGoals(local.goals, server.goals),
+    dayLog: mergeDayLog(local.dayLog, server.dayLog),
+    streakLocal: mergeStreakLocal(local.streakLocal, server.streakLocal),
+    streakBest: mergeStreakBest(local.streakBest, server.streakBest),
+    stamps: mergeLatchRecord(local.stamps, server.stamps),
+    memSeededAt: mergeEarliest(local.memSeededAt, server.memSeededAt),
+  };
+  return Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== undefined));
+}
+
+/** True when the server copy of every F-CURR-002 field already holds the local one (merging changes nothing). */
+function curr002Covered(local: ProgressSnapshot, server: ProgressSnapshot): boolean {
+  return JSON.stringify(mergeCurr002Fields(local, server)) === JSON.stringify(mergeCurr002Fields(server, server));
+}
+
 export interface MergeOptions {
   /** Clock for the streak recomputation; injected for determinism. */
   now: Date;
@@ -358,7 +403,7 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
   const stageDoneAt = mergeStageDoneAt(local.stageDoneAt, server.stageDoneAt);
   const questDoneAt = mergeQuestDoneAt(local.questDoneAt, server.questDoneAt);
   const vocab = mergeVocab(local.vocab, server.vocab);
-  const sessions = unionBy<SessionLog>(local.sessions, server.sessions, (x) => x.id, (l) => l).sort(
+  const sessions = unionBy<SessionLog>(local.sessions, server.sessions, (x) => x.id, mergeSession).sort(
     (a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id),
   );
   return {
@@ -384,6 +429,8 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     ...(vocab !== undefined ? { vocab } : {}),
     // Quest latch (F-REPORT-001): omitted only when neither side has the key.
     ...(questDoneAt !== undefined ? { questDoneAt } : {}),
+    // F-CURR-002 section 4.8: each omitted only when neither side has the key.
+    ...mergeCurr002Fields(local, server),
   };
 }
 
@@ -431,14 +478,17 @@ export function rebaseSnapshot(base: ProgressSnapshot, ours: ProgressSnapshot, t
  * seen too (F-STORY-006 section 3.6 M3), so a cleared "New" flag still uploads.
  * Word progress counts as held when the server would gain nothing by merging
  * it (F-VOC-005 section 3.3, `vocabCovered`). A stage or quest latch entry is
- * held when the server has it at the same or an earlier time.
+ * held when the server has it at the same or an earlier time. The F-CURR-002
+ * fields are held when merging them into the server copy changes nothing.
  */
 export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): boolean {
   const has = <T>(arr: readonly T[], key: (t: T) => string) => new Set(arr.map(key));
   const q = has(server.quests, (x) => `${x.questId}:${x.stars}`);
   const c = has(server.cards, (x) => `${x.cardId}:${x.newSinceLastView ? 'new' : 'seen'}`);
   const cardHeld = (x: CardCollectionEntry): boolean => c.has(`${x.cardId}:seen`) || (x.newSinceLastView && c.has(`${x.cardId}:new`));
+  // A session is held when the server has its id, with its localDay when the local copy has one.
   const s = has(server.sessions, (x) => x.id);
+  const dated = has(server.sessions.filter((x) => x.localDay !== undefined), (x) => x.id);
   // A placement is held when the server has its id with the same or a newer override.
   const placed = new Map((server.placements ?? []).map((x) => [x.id, x]));
   const holdsPlacement = (x: PlacementResult): boolean => {
@@ -468,7 +518,8 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
     vocabCovered(local.vocab, server.vocab) &&
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every(cardHeld) &&
-    local.sessions.every((x) => s.has(x.id)) &&
+    local.sessions.every((x) => s.has(x.id) && (x.localDay === undefined || dated.has(x.id))) &&
+    curr002Covered(local, server) &&
     (local.placements ?? []).every(holdsPlacement) &&
     Object.entries(local.stageDoneAt ?? {}).every(([stage, at]) => holds(stage, at)) &&
     Object.entries(local.questDoneAt ?? {}).every(([questId, at]) => holdsFirst(questId, at))

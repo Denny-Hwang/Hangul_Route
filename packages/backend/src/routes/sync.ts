@@ -1,4 +1,4 @@
-import { LearnerProfilePatchSchema, LearnerRegisterSchema, NoteDevicePrefsPutSchema, NoteReportSchema, NoteStatePutSchema, SnapshotPutSchema, TIER_GRACE_MS } from '@hangul-route/content-schema';
+import { LearnerProfilePatchSchema, LearnerRegisterSchema, NoteDevicePrefsPutSchema, NoteReportSchema, NoteStatePutSchema, SnapshotPutSchema, TIER_GRACE_MS, boundToNow } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { dbFor, NOTE_INBOX_LIMIT, noteRateKey, noteRetentionCuts, type Db, type NoteDeviceScope, type StoredNote } from '../db';
 import { fail, ok } from '../envelope';
@@ -76,8 +76,10 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
   const currentRev = current?.rev ?? 0;
   if (body.baseRev !== currentRev) return conflict(current);
 
+  // A wrong device clock never writes a day or a time that would win every later merge (F-CURR-002 section 4.8).
+  const sent = boundToNow(body.snapshot, new Date());
   // An older app build re-uploads without the newer additive fields: keep what is stored (lib/additive-fields.ts).
-  const kept = preserveAdditiveFields({ payload: body.snapshot, summary: body.summary }, current && { payload: current.payload, summary: current.summary });
+  const kept = preserveAdditiveFields({ payload: sent, summary: body.summary }, current && { payload: current.payload, summary: current.summary });
   const record: SnapshotRecord = {
     learnerId,
     rev: currentRev + 1,

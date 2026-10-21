@@ -9,6 +9,7 @@ export * from './hangul/allomorph';
 export * from './hangul/compose-typed';
 export * from './schemas/profile';
 export * from './schemas/progress';
+export * from './schemas/progress-merge';
 export * from './schemas/sync';
 export * from './schemas/space';
 export * from './schemas/plan';

@@ -282,14 +282,16 @@ describe('/api/sync Hangul Check fields (F-QUEST-002 §3.9, Q-10a)', () => {
     expect(body.data.summary.stage1Anchor).toEqual(anchor);
   });
 
-  it('rejects malformed values with 422 and stores nothing', async () => {
+  it('drops a malformed review entry on its own (F-CURR-002 section 4.8) and rejects a malformed anchor with 422', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);
-    const badIds = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withReviews(r.learnerId, [{ ...review, missedItemIds: [1] }]), summary });
-    expect(badIds.status).toBe(422);
-    const badAnchor = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, stage1Anchor: { met: 'yes', checkedAt: 'x', tricky: [] } } });
+    const badIds = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withReviews(r.learnerId, [{ ...review, missedItemIds: [1] }, { ...review, id: 'review:kept' }]), summary });
+    expect(badIds.status).toBe(200);
+    expect((await getSnapshot(r.learnerId, auth)).data.snapshot.reviews.map((x) => x.id)).toEqual(['review:kept']);
+    const fresh = await register(DEVICE_A);
+    const badAnchor = await put(fresh.learnerId, deviceAuth(DEVICE_A, fresh.secret), { ...base, baseRev: 0, snapshot: snapshotFor(fresh.learnerId), summary: { ...summary, stage1Anchor: { met: 'yes', checkedAt: 'x', tricky: [] } } });
     expect(badAnchor.status).toBe(422);
-    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+    expect(await db.getSnapshot(fresh.learnerId)).toBeNull();
   });
 });
 

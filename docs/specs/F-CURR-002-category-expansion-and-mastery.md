@@ -317,7 +317,7 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 | `stageCheckAt` | `Record<stage, ISO>` | earliest |
 | `testedOut` | `Record<cellId, ISO>` | earliest |
 | `goals` | `{ daily: 3 \| 6 \| 10, weeklyDays: 3 \| 5 \| 7, setAt }` | last writer wins on `setAt` |
-| `dayLog` | `Record<localDay, Record<installKey, points>>`, last 70 days. `installKey` is a random id made on the device; it never leaves the snapshot | max per day and install key; read as the sum over install keys |
+| `dayLog` | `Record<localDay, Record<installKey, points>>`, the newest 70 days that hold points (counted as days, so one wrong-clock day evicts at most one real day). `installKey` is a random id made on the device; it never leaves the snapshot | max per day and install key; read as the sum over install keys |
 | `streakLocal` | `{ run, lastDay }`, the current run on the local day | later `lastDay` wins; equal days take the higher `run` |
 | `streakBest` | the best run ever | max |
 | `stamps` | `Record<stampId, ISO>` | earliest |
@@ -1020,6 +1020,8 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 | Counters that drop | Learner screens read only `s`, `r`, `n` and latches (4.4) |
 | Memory sync size or cost | Shard rows (1-3 written per sync); server `seq` cursor; seeded states never uploaded; 500-item and 64 KB caps; p95 delta and D1 rows-written guardrails |
 | Strict schemas break older clients | Lenient-on-read arrays and keys, Worker first (CM-3b); `BACKUP_VERSION` stays 1 |
+| Older builds and rollbacks after a W→A row ships | The Worker must not be rolled back past CM-3b once any W→A row has shipped: an older Worker strips the new fields on the next PUT and answers 422 to the new review kinds. App builds from before CM-3b read backups strictly and cannot restore a file that holds a `cell-check` or `warmup` review, so the first row that writes one gates on a minimum app version (CM-3b) |
+| A wrong device clock wins every merge | The Worker drops a `dayLog` day after its own UTC today + 1 day, reads such a `streakLocal` as absent, and reads a `goals.setAt`, latch time or `memSeededAt` after its now as now; `dayLog` is trimmed by count, not by distance from its newest day (CM-3b) |
 | Item ids shift when copy is edited | `items-stable-id` snapshot plus alias and retired lists |
 | Device voice only (no recordings; the iOS 14 offline issue is open) | Sound-change and homophone flags; `dictation-unambiguous`; the read-plus-meaning spelling round; Dictation and Decoding Sprint fall back to reading with the existing sound notice; recordings A-9 and A-10 are an owner task and block nothing here |
 | Goals or streak become pressure | Light default, automatic rest days, no loss copy, no nagging, MAR anti-shame list |

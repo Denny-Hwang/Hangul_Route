@@ -1,3 +1,19 @@
+import {
+  CellBestSchema,
+  DayLogSchema,
+  GoalsSchema,
+  LatchRecordSchema,
+  ProgressSnapshotSchema,
+  StreakLocalSchema,
+  mergeCellBest,
+  mergeDayLog,
+  mergeEarliest,
+  mergeGoals,
+  mergeLatchRecord,
+  mergeStreakBest,
+  mergeStreakLocal,
+} from '@hangul-route/content-schema';
+
 /**
  * The Worker's preserve rule for additive snapshot fields.
  *
@@ -9,7 +25,8 @@
  * never describes data the payload no longer holds.
  *
  * One list serves every additive field (F-PLC-001 `placements`, F-VOC-005
- * `vocab`, F-PLAN-002 `selfRoute`, F-REPORT-001 `questDoneAt`): a later spec
+ * `vocab`, F-PLAN-002 `selfRoute`, F-REPORT-001 `questDoneAt`, the F-CURR-002
+ * section 4.8 fields and `sessions[].localDay`): a later spec
  * appends an entry, nothing else changes. Deploy the Worker before any app build that can send the field.
  */
 export interface AdditiveField {
@@ -51,7 +68,12 @@ const isPlain = (value: unknown): value is Plain => typeof value === 'object' &&
  */
 const PLACEMENT_NESTED_KEYS = ['catalogVersion'] as const;
 
-function keepPlacementFields(incoming: unknown, stored: unknown): unknown {
+/**
+ * For a list of records keyed by `id`: each sent record without one of `keys`
+ * takes the stored copy's value for the same id. A sent value is never
+ * overwritten, and a record the server does not hold is left alone.
+ */
+const keepNestedById = (keys: readonly string[]) => (incoming: unknown, stored: unknown): unknown => {
   if (!Array.isArray(incoming) || !Array.isArray(stored)) return incoming;
   const byId = new Map<unknown, Plain>();
   for (const r of stored) if (isPlain(r)) byId.set(r.id, r);
@@ -60,7 +82,7 @@ function keepPlacementFields(incoming: unknown, stored: unknown): unknown {
     const prior = isPlain(r) ? byId.get(r.id) : undefined;
     if (!isPlain(r) || prior === undefined) return r;
     let kept: Plain = r;
-    for (const key of PLACEMENT_NESTED_KEYS) {
+    for (const key of keys) {
       if (kept[key] === undefined && prior[key] !== undefined) kept = { ...kept, [key]: prior[key] };
     }
     if (kept !== r) changed = true;
@@ -68,7 +90,9 @@ function keepPlacementFields(incoming: unknown, stored: unknown): unknown {
   });
   // The sent list itself when nothing was filled in, so an unchanged upload stays the same object.
   return changed ? out : incoming;
-}
+};
+
+const keepPlacementFields = keepNestedById(PLACEMENT_NESTED_KEYS);
 
 const PLACEMENTS: AdditiveField = {
   payloadKey: 'placements',
@@ -178,7 +202,67 @@ const QUEST_DONE_AT: AdditiveField = {
   keepStoredSummaryWhenSent: true,
 };
 
-export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT];
+/**
+ * `sessions[].localDay` (F-CURR-002 section 4.8) is written once, when the
+ * session is logged. An older build's schema drops it on every re-upload, so a
+ * sent session without it keeps the stored copy's day. `sessions` itself is
+ * always sent; this entry only fills the nested key and never adds or removes
+ * a session (a sent empty list stays empty).
+ */
+const SESSIONS: AdditiveField = {
+  payloadKey: 'sessions',
+  isUnset: (value) => !Array.isArray(value),
+  merge: keepNestedById(['localDay']),
+};
+
+/** Lenient read (never throws: the F-CURR-002 schemas catch) of the stored and sent values, then the shared merge. */
+interface LenientSchema<T> {
+  parse: (value: unknown) => T | undefined;
+}
+const sameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+const lenientMerge =
+  <T>(schema: LenientSchema<T>, merge: (a: T | undefined, b: T | undefined) => T | undefined) =>
+  (incoming: unknown, stored: unknown): unknown => {
+    const merged = merge(schema.parse(incoming), schema.parse(stored));
+    // The sent value itself when the stored one adds nothing, so an unchanged upload stays the same object.
+    return sameJson(merged, incoming) ? incoming : merged;
+  };
+
+/**
+ * An F-CURR-002 section 4.8 field: optional with no default, so only an absent
+ * key means "an older build sent this" and the stored value is kept; missing
+ * keys are never cleared. A sent value is merged with the stored one by the
+ * rule both the app and the Worker share (`progress-merge.ts` in
+ * content-schema), so a device that synced on an older build never lowers a
+ * level, a best run or a day's points, and never moves a first time later.
+ */
+const curr002 = <T>(payloadKey: string, schema: LenientSchema<T>, merge: (a: T | undefined, b: T | undefined) => T | undefined): AdditiveField => ({
+  payloadKey,
+  isUnset: (value) => value === undefined,
+  merge: lenientMerge(schema, merge),
+});
+
+const shape = ProgressSnapshotSchema.shape;
+const CURR_002_FIELDS: readonly AdditiveField[] = [
+  curr002('cellBest', CellBestSchema, mergeCellBest),
+  curr002('cellCheckAt', LatchRecordSchema, mergeLatchRecord),
+  curr002('stageCheckAt', LatchRecordSchema, mergeLatchRecord),
+  curr002('testedOut', LatchRecordSchema, mergeLatchRecord),
+  curr002('goals', GoalsSchema, mergeGoals),
+  curr002('dayLog', DayLogSchema, mergeDayLog),
+  curr002('streakLocal', StreakLocalSchema, mergeStreakLocal),
+  curr002('streakBest', shape.streakBest, mergeStreakBest),
+  curr002('stamps', LatchRecordSchema, mergeLatchRecord),
+  /*
+   * `summary.memory` travels with the seeding marker: a build that writes the
+   * memory block has seeded, so an older build that sends neither keeps the
+   * stored block, and a sent marker without a block (one the schema dropped as
+   * malformed) keeps it too, as `summary.activity` does.
+   */
+  { ...curr002('memSeededAt', shape.memSeededAt, mergeEarliest), summaryKey: 'memory', keepStoredSummaryWhenSent: true },
+];
+
+export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT, SESSIONS, ...CURR_002_FIELDS];
 
 export interface SnapshotParts<P, S> {
   payload: P;
