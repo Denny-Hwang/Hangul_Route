@@ -102,6 +102,8 @@ export function refusalLine(reason: InviteRefusal, invite: Messages['console']['
       return invite.full(SCHOOL_ADMIN_CAP);
     case 'owner':
       return invite.owner;
+    case 'ineligible':
+      return invite.ineligible;
     case 'alreadyAdmin':
       return invite.alreadyAdmin(school ?? '');
     case 'notFound':

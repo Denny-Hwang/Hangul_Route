@@ -363,6 +363,7 @@ describe('the invite page', () => {
     [fail(410, 'invite_revoked'), t.revoked],
     [fail(409, 'admins_full'), 'This school already has 2 administrators.'],
     [fail(409, 'already_owner'), t.owner],
+    [fail(409, 'invite_ineligible'), t.ineligible],
     [fail(404, 'invite_not_found'), t.notFound],
     [{ ok: true, data: { state: 'already_admin', school: { name: 'Maple School' } } }, "You're already an administrator of Maple School."],
   ] as Array<[ApiResult<unknown>, string]>)('a refusal at preview is one calm line with Go to my home: %#', async (answer, line) => {
@@ -417,6 +418,19 @@ describe('the invite page', () => {
     expect(textOf(byTestId(root, 'invite-refused')[0] as ReactTestInstance)).toBe(t.emailUnverified);
     expect(byTestId(root, 'invite-accept')).toHaveLength(0);
     // The line asks them to open the link again, so the stash goes.
+    expect(stashed()).toBeNull();
+  });
+
+  it('a refusal at accept replaces the preview: a caregiver or student member of the school (409 invite_ineligible)', async () => {
+    signIn();
+    stash();
+    answers.preview.push(OPEN);
+    answers.accept.push(fail(409, 'invite_ineligible'));
+    const root = await render(<AdminInvitePage />);
+    await press(root, 'invite-accept');
+    expect(textOf(byTestId(root, 'invite-refused')[0] as ReactTestInstance)).toBe(t.ineligible);
+    expect(byTestId(root, 'invite-accept')).toHaveLength(0);
+    expect(byTestId(root, 'invite-try-again')).toHaveLength(0);
     expect(stashed()).toBeNull();
   });
 

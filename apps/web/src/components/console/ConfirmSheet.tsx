@@ -183,19 +183,23 @@ export function ConfirmSheet({ ask, onAnswer }: { ask: ConfirmAsk; onAnswer: (ye
  */
 export function useConfirm(): { confirm: (ask: ConfirmAsk) => Promise<boolean>; sheet: JSX.Element | null } {
   const [open, setOpen] = useState<{ ask: ConfirmAsk; resolve: (yes: boolean) => void } | null>(null);
+  // The open question lives in the ref first, set in the same call that asks or answers, so two asks in one batch
+  // see each other (the render that follows only draws it).
   const current = useRef<typeof open>(null);
-  current.current = open;
   useEffect(() => () => current.current?.resolve(false), []);
   const confirm = useCallback(
     (ask: ConfirmAsk) =>
       new Promise<boolean>((resolve) => {
         current.current?.resolve(false);
-        setOpen({ ask, resolve });
+        const next = { ask, resolve };
+        current.current = next;
+        setOpen(next);
       }),
     [],
   );
   const answer = useCallback((yes: boolean): void => {
     const asked = current.current;
+    current.current = null;
     setOpen(null);
     asked?.resolve(yes);
   }, []);

@@ -246,7 +246,7 @@ const SPACE_SERVER_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
   'space.admin.invite_created': {},
   'space.admin.invite_revoked': {},
   'space.admin.joined': {},
-  'space.admin.accept_refused': { reason: oneOf(['used', 'expired', 'revoked', 'full', 'owner', 'not_found', 'email_unverified']) },
+  'space.admin.accept_refused': { reason: oneOf(['used', 'expired', 'revoked', 'full', 'owner', 'not_found', 'email_unverified', 'ineligible']) },
   'space.admin.removed': {},
   'space.admin.left': {},
 };

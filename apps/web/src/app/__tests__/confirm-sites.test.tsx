@@ -254,7 +254,9 @@ describe('each confirm site opens the ConfirmSheet with its verb, and only the v
     async function lectureWithCode(kind = 'class'): Promise<ReactTestInstance> {
       vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
       vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://app.test');
-      fake.impl = { roster: () => roster(kind), listPlans: () => ok([lessonPlan]) };
+      // The setup page builds only for a role that composes here (canComposeIn, AMENDMENTS-LECTURE-V2 section 16).
+      const composer = { space: space(kind), role: kind === 'family' ? 'caregiver' : 'teacher', counts: { learners: 1, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null };
+      fake.impl = { roster: () => roster(kind), listPlans: () => ok([lessonPlan]), listSpaces: () => ok([composer]) };
       const root = await mount(<LecturePage />);
       // Customize, then the plan's outline gets its join code: the outline is edited and the link would carry the code.
       await press(byTestId(root, 'lecture-customize-toggle')[0]!);

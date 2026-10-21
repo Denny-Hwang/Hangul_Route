@@ -228,6 +228,7 @@ describe('preview and accept answers (steps 6 to 8)', () => {
       [410, 'invite_revoked', { at: 'refused', reason: 'revoked' }],
       [409, 'already_owner', { at: 'refused', reason: 'owner' }],
       [409, 'admins_full', { at: 'refused', reason: 'full' }],
+      [409, 'invite_ineligible', { at: 'refused', reason: 'ineligible' }],
       [403, 'email_unverified', { at: 'refused', reason: 'emailUnverified' }],
       [429, 'too_many_attempts', { at: 'retry', reason: 'tooMany' }],
       [503, 'identity_not_configured', { at: 'retry', reason: 'cantReach' }],

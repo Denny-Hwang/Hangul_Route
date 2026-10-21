@@ -1,7 +1,7 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import Page from '@/app/(console)/teach/space/curriculum/page';
 
 /**
@@ -69,8 +69,16 @@ vi.mock('@/components/console/use-console', async () => {
 
 const c = getMessages('en').console.curriculum;
 
+/** The wizard's "today", fixed as in `curriculum-free-days-wiring.test.tsx` (#761): the real clock can shift the week. */
+const NOW = new Date('2026-10-14T12:00:00Z');
+
 beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+});
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(NOW);
 });
 
 let mounted: ReactTestRenderer | null = null;
@@ -78,6 +86,7 @@ afterEach(() => {
   act(() => mounted?.unmount());
   mounted = null;
   learners = [learner('l:sam', 'Sam', '10-11', 2)];
+  vi.useRealTimers();
 });
 
 const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => root.findAll((node) => typeof node.type === 'string' && node.props['data-testid'] === id);
