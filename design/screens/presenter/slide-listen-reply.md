@@ -16,3 +16,12 @@ Mock: `mock/slide-quiz-listen.html` (Stage 3 life q1 Check c1, pictures), `slide
 - Options: replies (Korean and romanization) one row each; each reply's gloss joins its row at the answer build.
 
 Builds `[question, answer]` for both; the dimmed options and the mark are README D6's.
+
+## As built (LV-S2)
+
+Spec: AMENDMENTS-LECTURE-V2 section 5.2 "As built in LV-S2". Shots: `apps/mobile/e2e/web/presenter-questions.spec.ts` with `HR_SHOTS=1` (1280 x 720, 1920 x 1080, 568 x 320, 844 x 390, es and ko).
+
+- **Listen**: as the mock. A letter or syllable round (`lp:sym:`, `lp:syl:`, Stage 1) keeps the 2 x 2 grid with the letters at display size and no meanings; its answer line reads the carrier syllable heard ("어 eo the letter eo"). A word or sentence round whose answer is not the line heard (the Stage 4 Checks: hear a question, pick its reply) asks **Which answer fits?** (`quiz.reply`); the line heard still joins at the answer build.
+- **Pictures** sit in the neutral `PictureArt` tile (F-VOC-002: card art and WordArt look alike, so a style never gives the answer away), `PIC_OPT` units, smaller with a shorter row.
+- **Reply**: the box holds the other speaker's line without the speaker's name: the lesson scope keeps no speaker for a turn (the learner's Tap to Respond shows none), and a name needs an overlay field of its own to follow the slide language. A later content row can add it.
+- **Fit**: the rows step to compact levels on a long text (Korean and Spanish meanings, a phone's 18 px floor): compact rows, then the line's Korean at body size, then romanizations and meanings at caption size.
