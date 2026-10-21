@@ -6,7 +6,7 @@ Behind the gate. Lock, unlock and Remove ask a PIN, face or fingerprint entered 
 
 ## Grown-up area, new top (boards 1, 2)
 
-`ScreenHeader` (Back, Grown-up area, Aa); **Switch user** (`learner.who.switchUser`, full-width ghost; opens the chooser and ends the session); the **People on this device** card (`caregiver.people.title`): one row per learner (cub 40, name `size.body` semibold, the lock glyph for a locked profile, chevron; at least 64 high, `border.subtle` dividers); on native with strong biometrics, the **Face or fingerprint for grown-ups** card (switch, off by default, and the warning `biometric.warning` as its hint). Everything after is unchanged (dashed box).
+`ScreenHeader` (Back, Grown-up area, Aa); **Switch user** (`learner.who.switchUser`, full-width ghost; opens the chooser and ends the session); the **People on this device** card (`caregiver.people.title`): one row per learner (cub 40, name `size.body` semibold, the lock glyph for a locked profile, chevron; at least 64 high, `border.subtle` dividers; a locked profile's row is named `a11y.who.lockedRow(name)` "Sora, locked", because here a tap opens the person page without asking the PIN); on native with strong biometrics, the **Face or fingerprint for grown-ups** card (switch, off by default, and the warning `biometric.warning` as its hint). Everything after is unchanged (dashed box).
 
 ## One person (boards 3 to 5)
 
@@ -25,4 +25,4 @@ Behind the gate. Lock, unlock and Remove ask a PIN, face or fingerprint entered 
 
 ## Accessibility
 
-Switches are named by their label and announce on and off; the hint is their description. Rows and buttons are at least 64. The sheet traps focus, starts on its safe choice, and returns focus to Remove from this device on Cancel or Keep. Danger is never the only cue: the word Remove and the question carry it.
+Switches are named by their label and announce on and off; the hint is their description. Rows and buttons are at least 64. Each ConfirmSheet (`role="alertdialog"`) is labelled by its title and described by its message lines (`aria-labelledby`, `aria-describedby`; native: the title is the sheet's accessibility label). The sheet traps focus, starts on its safe choice, and returns focus to Remove from this device on Cancel or Keep. Danger is never the only cue: the word Remove and the question carry it.

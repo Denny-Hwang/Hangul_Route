@@ -95,7 +95,7 @@ Panel D — Join with a family code, device with 3 learner profiles: Who is join
 | Pick each learner on this      |
 | device who should join.        |
 | [x] (Hoya) Mina   (active)     |
-| [x] (Hoya) Jun                 |  <- picking anyone but the active learner asks the PIN first
+| [ ] (Hoya) Jun                 |  <- only the active learner starts checked; picking anyone else asks the PIN first
 | [ ] (Hoya) Sora   [L]          |  <- a locked (grown-up's own) profile starts unchecked
 |     Takes a family place.      |
 | [[ Next ]]                     |  -> name check per learner -> one consent naming each -> joins

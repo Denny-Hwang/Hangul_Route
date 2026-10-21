@@ -110,4 +110,4 @@ Panel F — learner app after the ticket: `PinEntry` setup-1, title **Choose a n
 
 ## Accessibility
 
-- The pad stays for anyone who cannot use face or fingerprint. Pause lines are a polite live region. Disabled pad keys keep their names and say "paused".
+- The pad stays for anyone who cannot use face or fingerprint. Pause lines are a polite live region. Disabled pad keys keep their shipped names (`a11y.pinDigit`, `a11y.pinDelete`); the platform announces them as disabled, and the pause line says why (OA-0b review: no extra "paused" string).

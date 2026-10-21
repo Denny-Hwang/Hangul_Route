@@ -18,7 +18,7 @@ Screen: `surface.canvas`, side padding `layout.gutter`, `spacing.lg` between blo
 
 | # | State | Notes |
 |---|---|---|
-| 1 | phone, web, uses Family and Teacher | Mina and Jun share the orange cub: tinted `letters`, `crafts`; Sora locked |
+| 1 | phone, web, uses Family and Teacher | Mina and Jun share the orange cub: tinted `letters`, `crafts`; Sora locked; Leo (class-scoped on this device, section 10.6) is a tile like any other |
 | 2 | native | Grown-up area only |
 | 3 | web, no known use | Sign in as a grown-up, Grown-up area |
 | 4 | offline (web) | Family and Teacher disabled with Needs the internet |
@@ -30,7 +30,7 @@ Screen: `surface.canvas`, side padding `layout.gutter`, `spacing.lg` between blo
 | 10 | over a quest after 30 min | the quest is held under; Mina continues it, any other pick saves it first |
 | 11 | six profiles on one cub | the five tints, then they repeat |
 | 12 | profile store unreadable | Hoya, the existing calm line, Try again; never wipes |
-| 13 | Home | the Switch button between Display and Profile (D7) |
+| 13 | Home | the Switch button between Display and Profile, 73 x 64 (D7) |
 | 14 | states | tile default, pressed, focus, locked, Add; row default, pressed, focus, disabled |
 | 15 | tablet 1180, 26 learners | by name, six per row, rows three across, School row |
 | 16 | Largest text, 360 | one column; rows wrap their captions |
@@ -43,7 +43,7 @@ Screen: `surface.canvas`, side padding `layout.gutter`, `spacing.lg` between blo
 
 ## Accessibility
 
-- Reading order: title, the optional line, Learning and its tiles in tile order, Add a learner, Grown-ups, the pending box, the rows. Tile names `a11y.who.tile(name)` / `lockedTile(name)`; row names `a11y.who.grownUpRow(label)` plus the caption.
-- Web: the grid is one tab stop with arrow keys, Home and End; rows are buttons in order.
+- Reading order: title, the optional line, Learning and its tiles in tile order, Add a learner, Grown-ups, the pending box, the rows. Tile names `a11y.who.tile(name)` / `lockedTile(name)`; row names `a11y.who.grownUpRow(label)`, or the label alone where no PIN guards the row (`none`, and `nopin`, where no PIN exists yet); a row's caption (Needs the internet, the `nopin` caption) is its description (`accessibilityHint`, `aria-describedby`), never joined into the name. The Home Switch is named `learner.who.switch` with `learner.who.title` as its hint.
+- Web: the grid is one tab stop (roving `tabindex`: the first tile, or the active learner's on a resume, is `0`, every other tile `-1`) with arrow keys, Home and End; rows are buttons in order.
 - The lock is a glyph and a caption (or the screen line), never colour alone; tints are never the only cue (the name is).
 - No time limit; reduced motion: no pose animation.

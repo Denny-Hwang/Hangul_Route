@@ -2,7 +2,7 @@
 
 Spec: AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 8.2 to 8.6, CS-8, CS-13, CS-18, CS-21, 17.3 · wireframe `design/wireframes/profiles/pin-entry-v2.md` (Panels A to F) · mock `mock/pin-entry-v2.html` (boards 1 to 12) · shots `shots/pin-entry-v2-320.png`, `-1280.png`, `-320-text200.png` · rows OA-2, OA-6, OA-9
 
-The shipped `PinEntryScreen` layout stays: `ScreenHeader` (Close, the title inline, Aa), the subtitle block (whose place a hint or a pause line takes, polite live region), four dots (`brand.primary`), the 3 x 4 pad (keys `touchTarget.child` on a phone, `size.prompt` bold), **Unlock** (primary, `aria-disabled` until four digits), **Cancel** and **Forgot PIN?** (ghost: `brand.primary` outline and text).
+The shipped `PinEntryScreen` layout stays: `ScreenHeader` (Close, the title inline, Aa), the subtitle block (whose place a hint or a pause line takes, polite live region), four dots (`brand.primary`), the 3 x 4 `PinPad` (keys `touchTarget.child` on a phone, `radii.lg`, `surface.paper` with a `borderWidth.thin` `border.strong` outline, digits `size.title` bold; the delete key is the bare `arrow-left` glyph in `text.secondary`, disabled while nothing is entered), **Unlock** (primary, `aria-disabled` until four digits; **Next**, `common.buttons.next`, in the setup modes, board 9), **Cancel** and **Forgot PIN?** (ghost: `brand.primary` outline and text).
 
 ## What changes
 
@@ -25,7 +25,7 @@ The shipped `PinEntryScreen` layout stays: `ScreenHeader` (Close, the title inli
 
 ## Rules the boards fix
 
-- During a pause the keys are `aria-disabled` and keep their names with ", paused"; Unlock is disabled; Cancel, Forgot PIN? and Use face or fingerprint stay enabled (no hard lock, OA-D7).
+- During a pause the keys are disabled and keep their shipped names (`a11y.pinDigit(digit)` "Digit 1", `a11y.pinDelete` "Delete last digit"), which the platform announces as disabled; the pause line says why, so no extra string is needed. Unlock is disabled; Cancel, Forgot PIN? and Use face or fingerprint stay enabled (no hard lock, OA-D7).
 - Never red, never "failed", never a count of tries during a pause; the existing "tries left" line before a pause is unchanged.
 - The help line never appears on `LockedProfile`, `GrownUpUse` or `CancelReset` (CS-21).
 - On 320 with 200 % text the header's title keeps 8rem and the Aa control wraps under it; the pad keeps 80 px keys (264 of 288).
