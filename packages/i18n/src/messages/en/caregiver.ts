@@ -80,6 +80,8 @@ export const caregiver = {
     /** [OA] OA-D21: shown once at the next Grown-up area entry after a PIN set by the 24-hour wait. */
     resetByWaitNotice: 'The grown-up PIN was changed after the 24-hour wait. If that was not you, change it now.',
     resetByWaitChange: 'Change PIN',
+    /** [OA] Section 8.2: the lock and face or fingerprint switches are disabled with this hint while no PIN exists. */
+    needsPinFirst: 'Set a grown-up PIN first.',
     entry: {
       createAgain: 'Enter it once more',
       verifySubtitle: 'Enter your 4-digit PIN to continue.',
@@ -1069,5 +1071,15 @@ export const caregiver = {
     opensTab: 'Opens in a new tab',
     /** Under the card when the browser gave no new tab (a pop-up blocker, an in-app browser); the tap is kept, nothing else changes. */
     blocked: 'The new tab did not open. Allow pop-ups for this site, then try again.',
+  },
+
+  /**
+   * [OA] People on this device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.4): the lock switch of one learner, in
+   * Edit profile (row OA-5) and, with row OA-7a, on the person page. It needs a fresh grown-up PIN and is disabled
+   * with `pin.needsPinFirst` while no PIN exists.
+   */
+  people: {
+    lock: 'Lock with the grown-up PIN',
+    lockHint: "Good for a grown-up's own profile, so nobody else plays on it.",
   },
 } as const;

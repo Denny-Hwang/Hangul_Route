@@ -65,6 +65,10 @@ export type GrownUpDestination =
   | 'LectureMode'
   /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21 (row OA-4a): the chooser's Cancel the wait; verify only, never creates or resets a PIN; a correct PIN clears the pending 24-hour wait and returns to the chooser. */
   | 'CancelReset'
+  /** [OA] Row OA-5, section 6.3: a locked learner tile (`PinEntry.profileId`); verify only with `verifyForLockedProfile`, then that learner's Home; never a grown-up session (CS-3). */
+  | 'LockedProfile'
+  /** [OA] Row OA-5, OA-D5b (3): the PIN again for a control that changes who is on the device (the Edit profile lock switch); verify only, marks a fresh PIN and goes back. */
+  | 'FreshPin'
   // add new members above this line
 ;
 
@@ -186,9 +190,16 @@ export type RootStackParamList = {
     transferId?: string;
     /** `next: 'BrowseLessons'`: where All lessons opens (a content target, never a learner id); absent opens its home. */
     browseTarget?: BrowseTarget;
+    /** [OA] `next: 'LockedProfile'`: the surface of the locked tile (the chooser and its trigger, or the Profile tiles), for `profile.switch`. */
+    lockedFrom?: { via: 'chooser'; trigger: WhoTrigger } | { via: 'profile' };
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
-  PinReset: { next: GrownUpDestination; profileId?: string };
+  PinReset: {
+    next: GrownUpDestination;
+    profileId?: string;
+    /** [OA] Row OA-5: carried back to the PIN screen, so a locked tile's reset still sends `profile.switch` and keeps a held join. */
+    lockedFrom?: RootStackParamList['PinEntry']['lockedFrom'];
+  };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */

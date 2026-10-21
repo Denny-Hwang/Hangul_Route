@@ -671,7 +671,7 @@ OA-0b: a row's caption is its accessibility hint (description), never joined int
 |---|---|---|---|
 | `people.title` | People on this device | Personas en este dispositivo | 이 기기를 쓰는 사람 |
 | `people.lock` | Lock with the grown-up PIN | Bloquear con el PIN de adultos | 어른용 PIN으로 잠그기 |
-| `people.lockHint` | Good for a grown-up's own profile, so nobody else plays on it. | Útil para el perfil propio de un adulto, para que nadie más juegue en él. | 어른의 자기 프로필에 좋아요. 다른 사람이 대신 하지 않아요. |
+| `people.lockHint` | Good for a grown-up's own profile, so nobody else plays on it. | Útil para el perfil propio de un adulto, para que nadie más juegue en él. | 어른 본인 프로필에 좋아요. 다른 사람이 이 프로필로 하지 못해요. |
 | `people.remove` | Remove from this device | Quitar de este dispositivo | 이 기기에서 빼기 |
 | `people.removeAsk(name)` | Remove {name} from this device? | ¿Quitar a {name} de este dispositivo? | {name}: 이 기기에서 뺄까요? |
 | `people.removeSaved` | Their progress is saved. Their Rescue Code brings it back on any device. | Su progreso está guardado. Su código de rescate lo trae de vuelta en cualquier dispositivo. | 진도는 저장돼 있어요. 복구 코드로 어느 기기에서나 다시 불러올 수 있어요. |

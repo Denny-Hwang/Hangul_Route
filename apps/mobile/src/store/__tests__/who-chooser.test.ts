@@ -12,6 +12,11 @@ vi.mock('../../platform/storage', () => ({
     if (failRead.on) throw new Error('read failed');
     return disk.has(key) ? disk.get(key) : null;
   }),
+  // [OA] Row OA-5: the one retry on a fresh connection fails the same way.
+  readJsonExactFresh: vi.fn(async (key: string) => {
+    if (failRead.on) throw new Error('read failed');
+    return disk.has(key) ? disk.get(key) : null;
+  }),
   writeJson: vi.fn(async (key: string, value: unknown) => void disk.set(key, value)),
 }));
 const boot = vi.hoisted(() => ({ intent: null as null | { kind: string; code?: string | null; next?: string } }));
@@ -34,6 +39,7 @@ vi.mock('../../platform/join-handoff', () => ({
 
 import { flags } from '../../config/flags';
 import { useAccountStore } from '../account-store';
+import { readProfileLocks, resetProfileLocks } from '../profile-locks';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import {
@@ -45,7 +51,6 @@ import {
   heldJoin,
   holdJoin,
   persistLeaving,
-  readProfileLocks,
   resetChooserState,
   switchOffered,
   takeHeldJoin,
@@ -71,6 +76,7 @@ beforeEach(() => {
   boot.intent = null;
   handoff.code = null;
   resetChooserState();
+  resetProfileLocks();
   flags.whoChooserEnabled = true;
   useProfileStore.setState({ profiles: two, activeId: 'profile:mina', hydrated: true });
   useAccountStore.setState({ parentPinHash: 'h' });

@@ -54,6 +54,7 @@ export const caregiver = {
     cooldownHelp: 'También puedes crear un PIN nuevo con Olvidé el PIN.',
     resetByWaitNotice: 'El PIN de adultos se cambió después de la espera de 24 horas. Si no fuiste tú, cámbialo ahora.',
     resetByWaitChange: 'Cambiar el PIN',
+    needsPinFirst: 'Primero crea un PIN de adultos.',
     entry: {
       createAgain: 'Escríbelo otra vez',
       verifySubtitle: 'Escribe tu PIN de 4 dígitos para continuar.',
@@ -813,5 +814,9 @@ export const caregiver = {
     next: (name: string) => `Siguiente lección para ${name}`,
     opensTab: 'Se abre en una pestaña nueva',
     blocked: 'La pestaña nueva no se abrió. Permite las ventanas emergentes de este sitio y vuelve a intentarlo.',
+  },
+  people: {
+    lock: 'Bloquear con el PIN de adultos',
+    lockHint: 'Útil para el perfil propio de un adulto, para que nadie más juegue en él.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

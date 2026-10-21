@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { CANCEL_RESET, GROWN_UP_AREA, forCancelReset, forGrownUpArea, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin, verifiedGoesToSetup } from '../pin-flow';
+import {
+  CANCEL_RESET,
+  FRESH_PIN,
+  GROWN_UP_AREA,
+  LOCKED_PROFILE,
+  forCancelReset,
+  forFreshPin,
+  forGrownUpArea,
+  forLockedProfile,
+  grownUpAreaNoPin,
+  initialPinMode,
+  pinCreatedWhere,
+  showForgotPin,
+  verifiedGoesToSetup,
+  voidWithoutPin,
+} from '../pin-flow';
 
 describe('initialPinMode: which step the PIN screen opens on', () => {
   it('verifies when a PIN is stored', () => {
@@ -107,5 +122,55 @@ describe('[OA] destination CancelReset (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21
     expect(showForgotPin('verify', { next: CANCEL_RESET })).toBe(false);
     expect(forGrownUpArea({ next: CANCEL_RESET })).toBe(false);
     expect(grownUpAreaNoPin({ next: CANCEL_RESET }, null)).toBe(false);
+  });
+});
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-5 (section 6.3, OA-D5b (3), CS-3, CS-4): a locked tile and a fresh PIN
+ * verify only and never create or reset a PIN by themselves.
+ */
+describe('[OA] destinations LockedProfile and FreshPin (CS-4)', () => {
+  it('names the destinations', () => {
+    expect(LOCKED_PROFILE).toBe('LockedProfile');
+    expect(FRESH_PIN).toBe('FreshPin');
+    expect(forLockedProfile({ next: 'LockedProfile' })).toBe(true);
+    expect(forLockedProfile({ next: 'ParentDashboard' })).toBe(false);
+    expect(forFreshPin({ next: 'FreshPin' })).toBe(true);
+    expect(forFreshPin({})).toBe(false);
+  });
+
+  it('a locked tile verifies, even with no PIN stored or mode setup; only a reset path opens setup', () => {
+    expect(initialPinMode({ next: 'LockedProfile' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile' }, null)).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile', mode: 'setup' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile', mode: 'setup', via: 'rescue_code' }, 'hash')).toBe('setup-1');
+  });
+
+  it('a fresh PIN always verifies', () => {
+    expect(initialPinMode({ next: 'FreshPin' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: 'FreshPin', mode: 'setup' }, null)).toBe('verify');
+  });
+
+  it("mode 'change' never turns a locked tile or a fresh PIN into a new PIN", () => {
+    expect(initialPinMode({ next: 'FreshPin', mode: 'change' }, null)).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile', mode: 'change' }, null)).toBe('verify');
+    expect(verifiedGoesToSetup({ next: 'FreshPin', mode: 'change' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: 'LockedProfile', mode: 'change' })).toBe(false);
+  });
+
+  it('Forgot PIN? stays on a locked tile (it leads to the reset paths) and is hidden for a fresh PIN', () => {
+    expect(showForgotPin('verify', { next: 'LockedProfile' })).toBe(true);
+    expect(showForgotPin('verify', { next: 'FreshPin' })).toBe(false);
+  });
+
+  it('with no PIN stored there is nothing to check: the lock is void and the fresh PIN has nothing to confirm', () => {
+    expect(voidWithoutPin({ next: 'LockedProfile' }, null)).toBe(true);
+    expect(voidWithoutPin({ next: 'FreshPin' }, null)).toBe(true);
+    expect(voidWithoutPin({ next: 'LockedProfile' }, 'hash')).toBe(false);
+    expect(voidWithoutPin({ next: 'LockedProfile', mode: 'setup', via: 'wait' }, null)).toBe(false);
+    expect(voidWithoutPin({ next: 'ParentDashboard' }, null)).toBe(false);
+    // A hash that could not be read is not "no PIN": nothing is void (fail closed, 13.2).
+    expect(voidWithoutPin({ next: 'LockedProfile' }, null, true)).toBe(false);
+    expect(voidWithoutPin({ next: 'FreshPin' }, null, true)).toBe(false);
   });
 });

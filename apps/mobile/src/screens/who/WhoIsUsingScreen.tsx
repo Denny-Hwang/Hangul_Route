@@ -29,6 +29,7 @@ import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
 import { trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry';
 import { arriveAtChooser } from '../../store/grown-up-session';
+import { useLocks } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { anyProfileLocked, heldJoin, learnerProfiles, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
@@ -48,6 +49,8 @@ const TILE_MIN_WIDE_REM = 10;
  * the pending 24-hour wait with Cancel the wait (OA-D21) and the Grown-up area row (the use rows come with OA-4b).
  * No tile shows progress, stars, a level, a streak, a space or a time (CS-6). No Back; the browser, phone and
  * Android back are swallowed (CS-5). Arriving here closes the grown-up session (CS-2).
+ * [OA] Row OA-5: a locked learner's tile carries the lock badge and the caption and asks the grown-up PIN
+ * (`LockedProfile`); while the locks cannot be read every tile is locked and one line under the title says so.
  */
 export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactElement {
   const messages = useMessages();
@@ -66,6 +69,8 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
 
   const learners = useMemo(() => tileOrder(learnerProfiles(allProfiles), locale), [allProfiles, locale]);
   const tints = useMemo(() => tileTints(learnerProfiles(allProfiles)), [allProfiles]);
+  // [OA] Row OA-5: the locked learners (void without a PIN; every learner while the locks cannot be read).
+  const locks = useLocks(allProfiles);
   const marker: WhoMarker = !gateRequired({ profiles: allProfiles, parentPinHash }) ? 'none' : parentPinHash !== null ? 'pin' : 'nopin';
   const wait = resetWaitState(pinResetRequestedAt, Date.now());
   const grownUps = grownUpRows({
@@ -171,6 +176,16 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
     } else navigation.navigate('PinEntry', { next: 'AddProfile' });
   };
 
+  /**
+   * [OA] Section 6.3 (row OA-5): a locked tile asks the grown-up PIN, the active learner's included (a grown-up's own
+   * profile locks again at launch and after 5 minutes away, CS-19). The PIN screen opens that learner only, never a
+   * grown-up session (CS-3); its Cancel comes back here.
+   */
+  const pickLocked = (id: string): void => {
+    void track(whoPickedEvent('locked_learner'));
+    navigation.navigate('PinEntry', { next: 'LockedProfile', profileId: id, lockedFrom: { via: 'chooser', trigger } });
+  };
+
   const pickCancelWait = (): void => {
     void track(whoPickedEvent('cancel_reset'));
     navigation.navigate('PinEntry', { next: 'CancelReset' });
@@ -225,6 +240,15 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
           </Body>
         </View>
       ) : null}
+      {locks.unread ? (
+        // [OA] Section 13.2: the locks could not be read, so every tile is locked; one line says it for all of them,
+        // under the join caption too (the tiles then carry no caption of their own).
+        <View style={{ paddingTop: spacing.xs }}>
+          <Body tone="secondary" testID="who-locks-unread">
+            {w.locksUnread}
+          </Body>
+        </View>
+      ) : null}
 
       <View style={{ paddingTop: spacing.lg, gap: spacing.sm }}>
         <Body weight="bold" tone="secondary">
@@ -236,24 +260,29 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
           style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}
           {...keyProps}
         >
-          {learners.map((p, i) => (
-            <WhoTile
-              key={p.id}
-              ref={(node) => {
-                tileRefs.current[i] = node;
-              }}
-              variant="learner"
-              label={p.displayName}
-              avatar={p.avatar}
-              tint={tints[p.id] ?? null}
-              width={tileWidth}
-              accessibilityLabel={messages.a11y.who.tile(p.displayName)}
-              tabStop={Platform.OS !== 'web' || i === rove}
-              onFocus={() => setRove(i)}
-              onPress={() => pickLearner(p.id)}
-              testID={`who-tile-${i}`}
-            />
-          ))}
+          {learners.map((p, i) => {
+            const locked = locks.locked.has(p.id);
+            return (
+              <WhoTile
+                key={p.id}
+                ref={(node) => {
+                  tileRefs.current[i] = node;
+                }}
+                variant="learner"
+                label={p.displayName}
+                avatar={p.avatar}
+                tint={tints[p.id] ?? null}
+                width={tileWidth}
+                locked={locked}
+                caption={locks.unread ? null : w.lockedCaption}
+                accessibilityLabel={locked ? messages.a11y.who.lockedTile(p.displayName) : messages.a11y.who.tile(p.displayName)}
+                tabStop={Platform.OS !== 'web' || i === rove}
+                onFocus={() => setRove(i)}
+                onPress={() => (locked ? pickLocked(p.id) : pickLearner(p.id))}
+                testID={`who-tile-${i}`}
+              />
+            );
+          })}
           <WhoTile
             ref={(node) => {
               tileRefs.current[learners.length] = node;

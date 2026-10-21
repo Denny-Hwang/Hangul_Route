@@ -3,6 +3,7 @@ import { useAudioStore } from './audio-store';
 import { useLayoutStore } from './layout-store';
 import { useLocaleStore } from './locale-store';
 import { useMembershipStore } from './membership-store';
+import { hydrateProfileLocks } from './profile-locks';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 import { useStoryStore } from './story-store';
@@ -55,6 +56,8 @@ export async function hydrateLearnerData(): Promise<void> {
       { activeProfileId: activeId },
     ),
     useAccountStore.getState().hydrate(),
+    // [OA] Row OA-5: the locks, before the first screen (they fail closed and never throw).
+    hydrateProfileLocks(),
     ...profiles.map((p) => progress.hydrate(p.id)),
     ...profiles.map((p) => stories.hydrate(p.id)),
     ...profiles.map((p) => tiers.hydrate(p.id)),

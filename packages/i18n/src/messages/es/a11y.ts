@@ -293,5 +293,6 @@ export const a11y = {
   who: {
     tile: (name: string) => `${name}. Toca para empezar a aprender.`,
     grownUpRow: (label: string) => `${label}, para adultos, requiere PIN`,
+    lockedTile: (name: string) => `${name}, con candado. Se abre con el PIN de adultos.`,
   },
 } satisfies DeepPartial<Messages['a11y']>;

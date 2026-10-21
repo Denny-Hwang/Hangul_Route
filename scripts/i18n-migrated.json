@@ -129,7 +129,8 @@
     "apps/mobile/src/screens/who/**",
     "apps/mobile/src/components/WhoTile.tsx",
     "apps/mobile/src/components/GrownUpRow.tsx",
-    "apps/mobile/src/components/WhoSwitchButton.tsx"
+    "apps/mobile/src/components/WhoSwitchButton.tsx",
+    "apps/mobile/src/components/LockBadge.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

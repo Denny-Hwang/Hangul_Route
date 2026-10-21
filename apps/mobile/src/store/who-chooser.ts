@@ -1,4 +1,4 @@
-import { JOIN_HANDOFF_MS, PROFILE_LOCKS_KEY, ProfileLocksSchema, type Profile } from '@hangul-route/content-schema';
+import { JOIN_HANDOFF_MS, type Profile } from '@hangul-route/content-schema';
 import { flags } from '../config/flags';
 import { gateRequired } from '../logic/profiles/learner-type';
 import { routeZone } from '../logic/profiles/session';
@@ -6,8 +6,8 @@ import { chooserTrigger, isSharedDevice, type ChooserEvent, type WhoMarker, type
 import { consumeBootIntent, peekBootIntent } from '../platform/app-root';
 import { subscribeAppVisibility } from '../platform/app-visibility';
 import { takeJoinHandoff } from '../platform/join-handoff';
-import { readJsonExact } from '../platform/storage';
 import { useAccountStore } from './account-store';
+import { hydrateProfileLocks, lockedIds } from './profile-locks';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
@@ -32,47 +32,21 @@ export function whoMarker(): WhoMarker {
   return parentPinHash !== null ? 'pin' : 'nopin';
 }
 
-/** The locks as read at launch: ids, or `unread` for a stored record that does not parse or a failed read (13.2). */
-export type LocksRead = readonly string[] | 'unread';
-
-/**
- * Reads `hr:profiles:locks` for the launch and resume triggers (OA-D9, CS-19). Locks themselves are row OA-5; this
- * only reads them, failing closed: a record that does not parse, or a read that fails, is `unread`.
- */
-export async function readProfileLocks(): Promise<LocksRead> {
-  try {
-    const raw = await readJsonExact<unknown>(PROFILE_LOCKS_KEY);
-    if (raw === null) return [];
-    const parsed = ProfileLocksSchema.safeParse(raw);
-    return parsed.success ? parsed.data.ids : 'unread';
-  } catch {
-    return 'unread';
-  }
-}
-
-let locksAtLaunch: LocksRead = [];
-
-/** The locks that count now: none without a PIN (a lock without a PIN is void), every profile while unreadable. */
-function effectiveLocks(profiles: readonly Profile[]): string[] {
-  if (useAccountStore.getState().parentPinHash === null) return [];
-  return locksAtLaunch === 'unread' ? profiles.map((p) => p.id) : [...locksAtLaunch];
-}
-
 /** Section 6.2: whether the device is shared now. The known uses (`deviceUses`, web) arrive with row OA-4b. */
 export function deviceShared(): boolean {
   const profiles = learnerProfiles();
-  return isSharedDevice({ profiles, locks: effectiveLocks(profiles), uses: [], marker: whoMarker() });
+  return isSharedDevice({ profiles, locks: lockedIds(profiles), uses: [], marker: whoMarker() });
 }
 
 /** Whether any learner profile is locked now (`who.shown` `anyLocked`, section 15); every one while unreadable. */
 export function anyProfileLocked(): boolean {
-  return effectiveLocks(learnerProfiles()).length > 0;
+  return lockedIds(learnerProfiles()).length > 0;
 }
 
 /** Whether the active profile is locked now (CS-19). */
 export function activeProfileLocked(): boolean {
   const { activeId } = useProfileStore.getState();
-  return activeId !== null && effectiveLocks(learnerProfiles()).includes(activeId);
+  return activeId !== null && lockedIds(learnerProfiles()).includes(activeId);
 }
 
 // ---- The held join code (OA-D20) ----
@@ -120,7 +94,8 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
   if (!flags.whoChooserEnabled) return null;
   const profiles = learnerProfiles();
   if (profiles.length === 0) return null;
-  locksAtLaunch = await readProfileLocks();
+  // The locks are read again here, so a launch decides on the record as it is now (a failed read fails closed).
+  await hydrateProfileLocks();
   const shared = deviceShared();
   const intent = peekBootIntent();
   let joinHeld = false;
@@ -258,8 +233,7 @@ export function persistLeaving(): void {
   }
 }
 
-/** Test seam: forget the launch locks and the held join. */
+/** Test seam: forget the held join. */
 export function resetChooserState(): void {
-  locksAtLaunch = [];
   held = null;
 }

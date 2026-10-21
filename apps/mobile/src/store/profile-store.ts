@@ -27,6 +27,7 @@ import { readJson, readJsonStrict, writeJson } from '../platform/storage';
 import { PROFILES_LOCK, withTabLock } from '../platform/tab-lock';
 import { closeGrownUpSession } from './grown-up-session';
 import { notifyProfileEdited } from './profile-edits';
+import { dropProfileLock, hydrateProfileLocks, lockedIds } from './profile-locks';
 import { notifyProfileRemoved } from './profile-removal';
 
 /**
@@ -190,6 +191,8 @@ function flushStep(): Promise<void> {
     pending.splice(0, changes.length);
     for (const [id, at] of touched) if (touches.get(id) === at) touches.delete(id);
     forget(tombstones.ids);
+    // [OA] Row OA-5, section 13.2: a removed learner leaves the locks in the same write sequence.
+    for (const c of changes) if (c.removedId !== undefined) await dropProfileLock(c.removedId);
     remember(merged);
     followMerged(withPending(merged));
     postProfilesChanged();
@@ -202,14 +205,27 @@ function persistList(change: ListChange = unchanged, ids: ListIds = {}): void {
 }
 
 /**
+ * [OA] Row OA-5: the learner who becomes active when the active one left the list (a removal here or in another tab)
+ * is never a locked one while an unlocked one is left; with every one left locked, the relock at the next launch or
+ * return asks the PIN (CS-19).
+ */
+function unlockedFallback(profiles: readonly Profile[], fallback: string | null): string | null {
+  if (fallback === null) return null;
+  const locked = new Set(lockedIds(profiles));
+  if (!locked.has(fallback)) return fallback;
+  return profiles.find((p) => !locked.has(p.id))?.id ?? fallback;
+}
+
+/**
  * The list in memory after a merge or a refresh. The active profile stays unless it is gone; when another tab removed
  * it, the change of learner takes the same path as a pick (OA-D5b (1), CS-15): the session clock restarts, the
- * active key is written and the grown-up session ends.
+ * active key is written and the grown-up session ends. [OA] Row OA-5: the learner who takes over is never a locked one
+ * while an unlocked one is left.
  */
 function followMerged(merged: Profile[]): void {
   const { profiles, activeId } = useProfileStore.getState();
   const keep = activeId !== null && merged.some((p) => p.id === activeId);
-  const nextActive = keep ? activeId : (merged[0]?.id ?? null);
+  const nextActive = keep ? activeId : unlockedFallback(merged, merged[0]?.id ?? null);
   if (nextActive === activeId) {
     if (!sameProfileList(profiles, merged)) useProfileStore.setState({ profiles: merged });
     return;
@@ -349,7 +365,9 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
 
   remove: (id) => {
     const { profiles, activeId } = get();
-    commitSet(set, { profiles, activeId }, removeProfileReducer({ profiles, activeId }, id), { change: removing(id), removedId: id });
+    const next = removeProfileReducer({ profiles, activeId }, id);
+    const guarded = next.activeId === activeId ? next : { ...next, activeId: unlockedFallback(next.profiles, next.activeId) };
+    commitSet(set, { profiles, activeId }, guarded, { change: removing(id), removedId: id });
     notifyProfileRemoved(id);
   },
 
@@ -374,12 +392,14 @@ export function activeProfileSelector(state: State): Profile | null {
 }
 
 /**
- * [OA] OA-D19: another tab changed the profile list (`hr-profiles`), or this page is back in front: read it again, so a
- * learner added there shows here and a removed one goes. Bound once by App.tsx; returns the unsubscribe.
+ * [OA] OA-D19: another tab changed the profile list or the locks (`hr-profiles`), or this page is back in front: read
+ * them again, so a learner added there shows here, a removed one goes and a lock set there holds here. Bound once by App.tsx; returns the unsubscribe.
  */
 export function followProfileChanges(): () => void {
   return subscribeProfilesChanged(() => {
     if (!useProfileStore.getState().hydrated) return;
     useProfileStore.getState().refresh().catch(() => undefined);
+    // [OA] Row OA-5: a lock changed in another tab shows here too (and a failed read is tried again).
+    void hydrateProfileLocks();
   });
 }

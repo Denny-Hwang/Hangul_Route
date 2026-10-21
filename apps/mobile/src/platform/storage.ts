@@ -43,6 +43,14 @@ export async function readJsonExact<T>(key: string): Promise<T | null> {
   return JSON.parse(raw) as T;
 }
 
+/**
+ * [OA] `readJsonExact` on a fresh connection, for the one retry of a read that failed (AMENDMENTS-ONE-ACCOUNT-MANY-
+ * USERS section 13.2, `hr:profiles:locks`). AsyncStorage holds no connection, so this is the same read again.
+ */
+export async function readJsonExactFresh<T>(key: string): Promise<T | null> {
+  return readJsonExact<T>(key);
+}
+
 /** Stores `value`; a key the write fence rejects is left untouched (F-BROWSE-001 section 4.10). */
 export async function writeJson<T>(key: string, value: T): Promise<void> {
   if (!writePasses(key, 'write')) return;

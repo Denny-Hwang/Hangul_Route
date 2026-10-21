@@ -50,7 +50,7 @@ const CODE_BORDER = 2;
 export function PinResetScreen({ route, navigation }: Props): React.ReactElement {
   const textScale = useTypeScale();
   const fieldLineHeight = codeLineHeight(textScale.size.bodyLg);
-  const { next, profileId } = route.params;
+  const { next, profileId, lockedFrom } = route.params;
   const locale = useLocale();
   const messages = useMessages();
   const m = messages.caregiver.pin;
@@ -100,7 +100,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   }, [locked, wait.status]);
 
   const goToSetup = (via: PinResetMethod): void => {
-    navigation.replace('PinEntry', { next, profileId, mode: 'setup', via });
+    navigation.replace('PinEntry', { next, profileId, mode: 'setup', via, ...(lockedFrom === undefined ? {} : { lockedFrom }) });
   };
 
   const submitCode = (): void => {
@@ -138,7 +138,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   useBackGuard(
     navigation,
     () => {
-      void Promise.resolve().then(() => navigation.replace('PinEntry', { next, profileId }));
+      void Promise.resolve().then(() => navigation.replace('PinEntry', { next, profileId, ...(lockedFrom === undefined ? {} : { lockedFrom }) }));
       return true;
     },
     true,
