@@ -17,6 +17,8 @@ import {
   gestureCommand,
   inBarStrip,
   homeStart,
+  lessonStartPayload,
+  readyFromBoot,
   presenterLocale,
   slideLocale,
   resolveBoot,
@@ -464,6 +466,45 @@ describe('telemetry payloads', () => {
     const v2 = deckOf([{ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 }], { v: 2, source: 'quick', preset: 'word-review' });
     const v2Run = runDeck(v2, expandDeck(v2, lectureBundle('en'), { canPlayKorean: true }));
     expect(startPayload({ deck: v2, run: v2Run, source: 'preset', capability: ready, offlineReady: false })).toMatchObject({ source: 'preset', preset: 'word-review' });
+  });
+
+  it('lecture.start follows each start from the home or a reload through the start screen to the payload (section 11)', () => {
+    const zero = deckOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }, { kind: 'quest', id: 'quest:stage1-letters-q2' }], { source: 'quick', title: 'Hangul week 1' });
+    const review = deckOf([{ kind: 'word-review', questIds: ['quest:stage1-life-q1'], vocabIds: [], rounds: 5 }], { v: 2, id: 'lecture:review01', source: 'quick', preset: 'word-review', title: 'Word review' });
+    const begun = (from: Parameters<typeof lessonStartPayload>[0], deck: typeof zero) =>
+      lessonStartPayload(from, { deck, run: runDeck(deck, expandDeck(deck, lectureBundle('en'), { canPlayKorean: true })), capability: ready, offlineReady: true });
+    const boot = (address: Parameters<typeof resolveBoot>[0], recent = emptyRecent()) => {
+      const result = resolveBoot(address, recent);
+      if (result.kind !== 'deck') throw new Error(result.kind);
+      return readyFromBoot(result, address?.fresh === true);
+    };
+    const KEYS = ['blocks', 'offlineReady', 'picker', 'romanization', 'skipped', 'slides', 'source', 'voice'];
+
+    // A ready-made lesson's Start: preset, with the id that built the deck.
+    const preset = begun(homeStart({ kind: 'preset', deck: zero, preset: 'hangul-week-1' }), zero);
+    expect(preset).toMatchObject({ source: 'preset', preset: 'hangul-week-1' });
+    expect(Object.keys(preset).sort()).toEqual([...KEYS, 'preset'].sort());
+    // A reload on its start screen (the entry keeps the preset): still preset.
+    expect(begun(boot({ raw: encodeDeck(zero), reloaded: true, preset: 'hangul-week-1' }), zero)).toMatchObject({ source: 'preset', preset: 'hangul-week-1' });
+    // A link that is not a reload never takes a preset from history.
+    expect('preset' in begun(boot({ raw: encodeDeck(zero), reloaded: false, preset: 'hangul-week-1' }), zero)).toBe(false);
+    // A Customize build: quick, no preset key.
+    const quick = begun(homeStart({ kind: 'quick', deck: zero }), zero);
+    expect(quick.source).toBe('quick');
+    expect(Object.keys(quick).sort()).toEqual(KEYS);
+    // A Recent Resume of a v2 Word review deck (it carries its preset): recent, no preset key.
+    const list = setLastSlide(rememberDeck(emptyRecent(), review, '2026-10-16T09:00:00.000Z'), review.id, 'x');
+    const resumed = begun(homeStart({ kind: 'resume', item: list.items[0]! }), review);
+    expect(resumed.source).toBe('recent');
+    expect(Object.keys(resumed).sort()).toEqual(KEYS);
+    // A reload in a begun lesson: Recent holds it, so recent, even with the preset kept in its entry.
+    const reloaded = begun(boot({ raw: encodeDeck(zero), reloaded: true, preset: 'hangul-week-1' }, rememberDeck(emptyRecent(), zero, '2026-10-16T09:00:00.000Z')), zero);
+    expect(reloaded.source).toBe('recent');
+    expect(Object.keys(reloaded).sort()).toEqual(KEYS);
+    // The v2 link itself, opened fresh: preset from the deck.
+    expect(begun(boot({ raw: encodeDeck(review), reloaded: false }), review)).toMatchObject({ source: 'preset', preset: 'word-review' });
+    // No title and no word ever rides along.
+    for (const payload of [preset, quick, resumed]) expect(JSON.stringify(payload)).not.toMatch(/Hangul week|Word review|quest:|vocab/);
   });
 
   it('voice: ready with a voice or a clip, none without, unknown before the check', () => {

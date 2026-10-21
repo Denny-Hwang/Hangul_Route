@@ -30,8 +30,11 @@ import { parseHomeSnapshot, type HomeSnapshot } from './home-state';
  * 8. Only the presenter's own entries are touched: no step crosses the `home` entry.
  * 9. The home entry keeps the home's state (`home`, section 18.2: the open card, chips, Customize,
  *    the chooser and the scroll position; ids and chip values only) through every rewrite, and a
- *    start screen opened from a ready-made lesson keeps which one (`preset`), as does its lesson's
- *    entry, so a reload on either still reports the start as `preset` (section 11).
+ *    start screen opened from a ready-made lesson keeps which one (`preset`), so a reload there,
+ *    before Start, still reports the start as `preset` (section 11). Its lesson's entry keeps the
+ *    preset too, but a reload in the lesson is a Recent start once the lesson began (its first
+ *    slide wrote it to Recent, and `resolveBoot` reads Recent first); the kept preset only counts
+ *    there when Recent could not be written.
  */
 
 export type HistoryStep = 'home' | 'ready' | 'running';
@@ -177,7 +180,8 @@ export function pushPlan(current: HistoryEntry | null, step: 'ready' | 'running'
   const here = current ?? { step: 'home', index: 0 };
   const homeBack = entry.homeBack ?? here.homeBack;
   const index = step === 'ready' ? 1 : here.step === 'ready' ? here.index + 1 : DEFAULT_INDEX.running;
-  // The lesson's entry keeps the ready-made lesson its start screen was resolved from (rule 9).
+  // The lesson's entry keeps the ready-made lesson its start screen was resolved from (rule 9); a
+  // reload there counts as `recent` once Recent holds the lesson, as `preset` only when it could not.
   const preset = entry.preset ?? (step === 'running' && here.step !== 'home' ? here.preset : undefined);
   const next: HistoryEntry = { ...entry, step, index, ...(homeBack !== undefined ? { homeBack } : {}), ...(preset !== undefined ? { preset } : {}) };
   delete next.home;

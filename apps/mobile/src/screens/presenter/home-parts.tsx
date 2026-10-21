@@ -64,6 +64,7 @@ export function HomeButton({
   accessibilityLabel,
   labelledBy,
   labelId,
+  describedBy,
   minWidth,
   upTo,
   buttonRef,
@@ -82,6 +83,8 @@ export function HomeButton({
   labelledBy?: string;
   /** An id for the label's text, so `labelledBy` can name it. */
   labelId?: string;
+  /** Ids of the elements that describe the button (`aria-describedby`). */
+  describedBy?: string;
   minWidth?: number;
   /** The width of its row up to this many pixels, in place of `minWidth` (a narrow window: never wider than the row). */
   upTo?: number;
@@ -92,7 +95,7 @@ export function HomeButton({
   const fill = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.surface.paper;
   const edge = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.border.strong;
   const ink = primary && !disabled ? colors.text.onPrimary : colors.text.primary;
-  const disclosure = { ...(expanded !== undefined ? { 'aria-expanded': expanded } : {}), ...(controls !== undefined ? { 'aria-controls': controls } : {}) };
+  const disclosure = { ...(expanded !== undefined ? { 'aria-expanded': expanded } : {}), ...(controls !== undefined ? { 'aria-controls': controls } : {}), ...(describedBy !== undefined ? { 'aria-describedby': describedBy } : {}) };
   return (
     <Pressable
       ref={buttonRef}

@@ -181,9 +181,48 @@ describe('Ready-made lessons (sections 4.1 and 10)', () => {
     const r = await render(<Harness presetCtx={presenterPresetContext(list, NOW)} recent={{ status: 'ready', list }} onPresetSpy={onPresetSpy} />);
     await press(one(r.root, 'presenter-preset-word-review'));
     expect(textOf(one(r.root, 'presenter-preset-fallback-word-review'))).toBe(p.presets.fallback.warmUp);
-    await press(one(r.root, 'presenter-preset-length-word-review-20'));
-    // The 20-minute chip still builds the 10-minute warm-up, and the card says so.
+    // The warm-up has one fixed length (section 4.1): no length chips that would change nothing.
+    expect(byTestId(r.root, 'presenter-preset-length-word-review')).toHaveLength(0);
+    expect(hostNodes(one(r.root, 'presenter-preset-panel-word-review'), (n) => n.props.role === 'radiogroup')).toHaveLength(0);
     expect(one(r.root, 'presenter-preset-word-review').props['aria-label']).toBe('Word review, about 10 minutes');
+    // Start builds the warm-up, as the card and the line say.
+    await press(one(r.root, 'presenter-preset-start-word-review'));
+    expect(onPresetSpy).toHaveBeenCalledWith('word-review', 10, 'stage1');
+  });
+
+  it('a fresh device (nothing in Recent): Word review is the warm-up, with no length chips and named 10 minutes', async () => {
+    const r = await render(<Harness initial={{ ...HOME_DEFAULT, lengths: { 'word-review': 20 } }} />);
+    await press(one(r.root, 'presenter-preset-word-review'));
+    expect(textOf(one(r.root, 'presenter-preset-fallback-word-review'))).toBe(p.presets.fallback.warmUp);
+    expect(hostNodes(one(r.root, 'presenter-preset-panel-word-review'), (n) => n.props.role === 'radiogroup')).toHaveLength(0);
+    expect(one(r.root, 'presenter-preset-word-review').props['aria-label']).toBe('Word review, about 10 minutes');
+  });
+
+  it('Word review with enough words this week offers 10 and 20, and the chip changes the card', async () => {
+    const deck = { v: 1, id: 'lecture:recent0003', title: 'Week 2 words', createdAt: '2026-10-01T09:00:00.000Z', seed: 1, blocks: [{ kind: 'episode', id: 'episode:stage1-life' }], options: { romanization: 'always', strokeGuide: true, quizRounds: 5, sound: true }, picker: null } as LectureDeck;
+    const list = rememberDeck(emptyRecent(), deck, '2026-10-16T09:00:00.000Z');
+    const r = await render(<Harness presetCtx={presenterPresetContext(list, NOW)} recent={{ status: 'ready', list }} />);
+    await press(one(r.root, 'presenter-preset-word-review'));
+    expect(byTestId(r.root, 'presenter-preset-fallback-word-review')).toHaveLength(0);
+    expect(hostNodes(one(r.root, 'presenter-preset-length-word-review'), (n) => n.props.role === 'radio').map((n) => textOf(n))).toEqual(['10 min', '20 min']);
+    await press(one(r.root, 'presenter-preset-length-word-review-20'));
+    expect(one(r.root, 'presenter-preset-word-review').props['aria-label']).toBe('Word review, about 20 minutes');
+  });
+
+  it('the card is described by its line, and Start by the fallback line when there is one', async () => {
+    const r = await render(<Harness />);
+    const describedText = (node: ReactTestInstance): string =>
+      (node.props['aria-describedby'] as string)
+        .split(' ')
+        .map((id) => textOf(hostNodes(r.root, (n) => n.props.id === id)[0]!))
+        .join(' ');
+    expect(describedText(one(r.root, 'presenter-preset-story-time'))).toBe(p.presets.story.body);
+    expect(describedText(one(r.root, 'presenter-preset-next-lesson'))).toBe(p.presets.next.device);
+    await press(one(r.root, 'presenter-preset-next-lesson'));
+    expect(describedText(one(r.root, 'presenter-preset-start-next-lesson'))).toBe(p.presets.fallback.zero);
+    // No fallback: Start has no description.
+    await press(one(r.root, 'presenter-preset-hangul-week-1'));
+    expect(one(r.root, 'presenter-preset-start-hangul-week-1').props['aria-describedby']).toBeUndefined();
   });
 
   it('Stage by stage has the stage chips of the ready stages; Word review offers 10 and 20; the warm-up no chips', async () => {
@@ -197,9 +236,9 @@ describe('Ready-made lessons (sections 4.1 and 10)', () => {
     await press(one(r.root, 'presenter-preset-start-by-stage'));
     expect(onPresetSpy).toHaveBeenLastCalledWith('by-stage', 20, 'stage3');
     await press(one(r.root, 'presenter-preset-word-review'));
-    expect(hostNodes(one(r.root, 'presenter-preset-length-word-review'), (n) => n.props.role === 'radio').map((n) => textOf(n))).toEqual(['10 min', '20 min']);
-    // No words this week: the warm-up line.
+    // No words this week: the warm-up line, and the warm-up's one length (no chips).
     expect(textOf(one(r.root, 'presenter-preset-fallback-word-review'))).toBe(p.presets.fallback.warmUp);
+    expect(byTestId(r.root, 'presenter-preset-length-word-review')).toHaveLength(0);
     await press(one(r.root, 'presenter-preset-warm-up'));
     expect(byTestId(r.root, 'presenter-preset-length-warm-up')).toHaveLength(0);
     await press(one(r.root, 'presenter-preset-next-lesson'));

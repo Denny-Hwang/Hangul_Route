@@ -269,8 +269,12 @@ test.describe('one tap, then Start (1280 x 720)', () => {
     await seed(page, 'lecture:recent', WEEK1_RECENT);
     await page.getByTestId('presenter-preset-word-review').click();
     await expect(page.getByTestId('presenter-preset-fallback-word-review')).toHaveText(w.fallback.warmUp);
-    await page.getByTestId('presenter-preset-length-word-review-20').click();
+    // The warm-up has one fixed length: no length chips, and the card says 10 minutes.
+    await expect(page.getByTestId('presenter-preset-length-word-review')).toHaveCount(0);
     await expect(page.getByTestId('presenter-preset-word-review')).toHaveAccessibleName(`${TITLES['word-review']}, about 10 minutes`);
+    await expect(page.getByTestId('presenter-preset-word-review')).toHaveAccessibleDescription(w.words.body);
+    // Start is described by the line that says what it builds instead.
+    await expect(page.getByTestId('presenter-preset-start-word-review')).toHaveAccessibleDescription(w.fallback.warmUp);
     await shot(page, 'lv3-presets-words-fallback-1280');
     await page.getByTestId('presenter-preset-start-word-review').click();
     await expect(page.getByTestId('presenter-start').getByRole('heading', { level: 1, name: w.warmup.short })).toBeVisible();
@@ -295,6 +299,30 @@ test.describe('one tap, then Start (1280 x 720)', () => {
   });
 });
 
+for (const [width, height] of [
+  [1280, 720],
+  [1920, 1080],
+] as const) {
+  test.describe(`the longest previews on a projector, ${width} x ${height}`, () => {
+    test.use({ viewport: { width, height }, isMobile: false, hasTouch: false });
+
+    for (const preset of ['by-stage', 'story-time'] as const) {
+      test(`${preset} at 30 minutes: Start and Customize are on the screen without scrolling`, async ({ page }) => {
+        await page.goto('/present');
+        await page.getByTestId(`presenter-preset-${preset}`).click();
+        await page.getByTestId(`presenter-preset-length-${preset}-30`).click();
+        await page.getByTestId(`presenter-preset-start-${preset}`).click();
+        await expect(page.getByTestId('presenter-preview')).toBeVisible();
+        expect(await page.getByTestId('presenter-preview').getByRole('listitem').count()).toBeGreaterThanOrEqual(4);
+        // Nothing scrolled the start screen: the teacher sees Start on the big screen as it opens.
+        await expect(page.getByTestId('presenter-start-button')).toBeInViewport({ ratio: 1 });
+        await expect(page.getByTestId('presenter-preview-customize')).toBeInViewport({ ratio: 1 });
+        if (width === 1280) await shot(page, `lv3-preset-preview-${preset}-30-1280`);
+      });
+    }
+  });
+}
+
 /** The home arranged (a card, its chips, Customize, a tab, a choice and a scroll), then Start: where the page was. */
 async function arrange(page: Page, touch: boolean): Promise<number> {
   const hit = (target: ReturnType<Page['getByTestId']>) => (touch ? target.tap() : target.click());
@@ -316,9 +344,12 @@ async function arrange(page: Page, touch: boolean): Promise<number> {
   });
   await expect(startButton).toBeInViewport();
   await expect.poll(() => homeScroll(page)).toBeGreaterThan(0);
-  // The scroll end is reported to the page before Start (react-native-web reports it 100 ms late).
-  await page.waitForTimeout(400);
+  // The scroll end has reached the page before Start (react-native-web reports it late): the home's
+  // kept position (its debounced history save) matches where the page is.
   const y = await homeScroll(page);
+  await expect
+    .poll(async () => Math.abs(((await page.evaluate(() => (history.state as { hrHome?: { scrollY?: number } } | null)?.hrHome?.scrollY)) ?? -100) - y))
+    .toBeLessThanOrEqual(2);
   await hit(startButton);
   await expect(page.getByTestId('presenter-start')).toBeVisible();
   return y;
