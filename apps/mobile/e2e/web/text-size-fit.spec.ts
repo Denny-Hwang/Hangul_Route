@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { touchTarget } from '@hangul-route/design-system/tokens';
+import { TEXT_SIZE_FACTORS } from '@hangul-route/design-system/text-size';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardSelf, openForGrownUps, openLettersEpisode, passDiscover, readStored, seedStored, journeyCellName, onboardChild, openGrownUpZone, seedRescueCode, unlockWithPin } from './helpers';
@@ -204,7 +206,7 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     await shot(page, 'dn3b-culture-quiz-largest-320x568');
   });
 
-  test('Stage complete: the letter wall\'s fixed tiles hold their letters at Largest', async ({ page }) => {
+  test('Stage complete: the letter wall\'s tiles grow to hold their letters at Largest', async ({ page }) => {
     await learnerAtLargest(page, 'Dami');
     const id = await profileIdOf(page, 'Dami');
     await seedStored(page, `progress:${id}`, stageOneDone(id));
@@ -228,6 +230,9 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
       }),
     );
     expect(spill, 'a wall tile whose text passes its border').toEqual([]);
+    // The tiles grow with the text size: none is narrower than the size token at Largest's factor.
+    const widths = await wall.locator('[data-testid^="stage-complete-tile-"]').evaluateAll((tiles) => tiles.map((t) => t.getBoundingClientRect().width));
+    expect(Math.min(...widths), 'the narrowest wall tile').toBeGreaterThanOrEqual(Math.round(touchTarget.min * TEXT_SIZE_FACTORS.largest) - 1);
     await shot(page, 'dn3b-stage-complete-largest-320x568');
   });
 

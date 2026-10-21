@@ -127,9 +127,9 @@ export function fontSizeOf(target: Locator): Promise<number> {
   return target.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 }
 
-/** The install guide's Not now, if it opens. */
+/** The install guide's Not now (by test id, so any UI language), if it opens. */
 export async function closeInstallGuide(page: Page): Promise<void> {
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  if (await guide.isVisible()) await guide.getByTestId('install-guide-not-now').click();
 }

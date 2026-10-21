@@ -158,7 +158,7 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
           </View>
 
           <View style={{ marginTop: spacing.sm, alignItems: 'flex-end' }}>
-            <Button label={m.notNow.cta} tone="ghost" size="sm" onPress={dismiss} />
+            <Button testID="install-guide-not-now" label={m.notNow.cta} tone="ghost" size="sm" onPress={dismiss} />
           </View>
         </Card>
       </View>

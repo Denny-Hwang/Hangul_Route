@@ -89,7 +89,7 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
     </View>
   ) : null;
 
-  const backButton = <Button label={messages.common.buttons.back} tone="ghost" size="lg" fullWidth disabled={busy} onPress={() => navigation.goBack()} />;
+  const backButton = <Button testID="approve-transfer-back" label={messages.common.buttons.back} tone="ghost" size="lg" fullWidth disabled={busy} onPress={() => navigation.goBack()} />;
 
   if (!request || !action || !device) {
     return (

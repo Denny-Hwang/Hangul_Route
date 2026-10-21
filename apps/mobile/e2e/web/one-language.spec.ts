@@ -69,7 +69,8 @@ async function closeInstallGuideWhenShown(page: Page): Promise<void> {
   if (guideHandled.has(page)) return;
   guideHandled.add(page);
   await page.addLocatorHandler(page.getByTestId('install-guide'), async (guide) => {
-    await guide.getByRole('button', { name: 'Not now' }).click();
+    // By test id: the case switches the app to Korean, and the handler still closes the guide after that.
+    await guide.getByTestId('install-guide-not-now').click();
   });
 }
 

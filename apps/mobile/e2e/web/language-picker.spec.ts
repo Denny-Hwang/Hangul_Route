@@ -36,9 +36,10 @@ async function onboardAndOpenProfile(page: Page): Promise<string> {
   await expect(page.getByText('Your first card is waiting.')).toBeVisible();
   await waitForSaved(page, ['profiles']);
   // The install guide shows from the third cached open, whenever it is ready, and covers the Home
-  // tabs: it is closed whenever it appears, never after a fixed wait.
+  // tabs: it is closed whenever it appears, never after a fixed wait. Its Not now is found by test id, so the
+  // handler still closes it after a case switches the app to Spanish or Korean.
   await page.addLocatorHandler(page.getByTestId('install-guide'), async (guide) => {
-    await guide.getByRole('button', { name: 'Not now' }).click();
+    await guide.getByTestId('install-guide-not-now').click();
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Profile and settings' }).click();
