@@ -492,8 +492,10 @@ export interface Db {
   // learning rollups (F-CURR-002 section 11.2, row CM-70a; migration 0014). Codes and counts only.
   /** Adds 1 to each cell of `day` (UTC `YYYY-MM-DD`), in one write; a key named twice still adds 1 once. */
   addRollups(day: string, keys: readonly RollupKey[]): Promise<void>;
-  /** Every stored cell from `fromDay` to `toDay` inclusive, optionally of one metric, unsuppressed. Only lib/learning-rollups reads it, and it applies the suppression. */
-  rollupRows(fromDay: string, toDay: string, metric?: string): Promise<RollupRow[]>;
+  /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Only lib/learning-rollups reads it, and it applies the suppression. */
+  rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]>;
+  /** Adds `cells` to the budget counter row (`metric`, dim '', bucket '') of `day` in one write and answers its new total. */
+  reserveRollupCells(day: string, metric: string, cells: number): Promise<number>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

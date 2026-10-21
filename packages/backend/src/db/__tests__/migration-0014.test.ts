@@ -28,9 +28,16 @@ describe('migration 0014_learning_rollups.sql · production safety', () => {
 
   it('is one CREATE TABLE and nothing else: no ALTER, DROP, UPDATE, DELETE, INSERT or CHECK', () => {
     expect(statements).toEqual([
-      'CREATE TABLE IF NOT EXISTS learning_rollups ( day TEXT NOT NULL, metric TEXT NOT NULL, dim TEXT NOT NULL, bucket TEXT NOT NULL, events INTEGER NOT NULL, PRIMARY KEY (day, metric, dim, bucket) )',
+      'CREATE TABLE IF NOT EXISTS learning_rollups ( day TEXT NOT NULL, metric TEXT NOT NULL, dim TEXT NOT NULL, bucket TEXT NOT NULL, events INTEGER NOT NULL, PRIMARY KEY (day, metric, dim, bucket) ) WITHOUT ROWID',
     ]);
     expect(statements.join(' ')).not.toMatch(/\bALTER\b|\bDROP\b|\bUPDATE\b|\bDELETE\b|\bINSERT\b|\bCHECK\b|\bREPLACE\b/i);
+  });
+
+  it('is WITHOUT ROWID, so an upsert writes one row and no separate primary-key index', async () => {
+    const d1 = openSqliteD1();
+    const indexes = (await d1.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'learning_rollups'").all()).results;
+    expect(indexes).toEqual([]);
+    d1.close();
   });
 
   it('has exactly the five columns of section 11.2: none for a profile, install, device or account id', async () => {
@@ -60,7 +67,11 @@ describe('migration 0014_learning_rollups.sql · production safety', () => {
       { metric: 'goal.met', dim: '', bucket: '3' },
       { metric: 'goal.met', dim: '', bucket: '3' },
     ]);
-    expect(await after.rollupRows('2026-10-21', '2026-10-21')).toEqual([{ day: '2026-10-21', metric: 'goal.met', dim: '', bucket: '3', events: 2 }]);
+    expect(await after.rollupRows('2026-10-21', '2026-10-21', undefined, 10)).toEqual([{ day: '2026-10-21', metric: 'goal.met', dim: '', bucket: '3', events: 2 }]);
+    expect(await after.reserveRollupCells('2026-10-21', 'rollup.cells', 500)).toBe(500);
+    expect(await after.reserveRollupCells('2026-10-21', 'rollup.cells', 500)).toBe(1000);
+    expect(await after.rollupRows('2026-10-21', '2026-10-21', 'rollup.cells', 10)).toEqual([{ day: '2026-10-21', metric: 'rollup.cells', dim: '', bucket: '', events: 1000 }]);
+    expect(await after.rollupRows('2026-10-21', '2026-10-21', undefined, 1)).toHaveLength(1);
     d1.close();
   });
 

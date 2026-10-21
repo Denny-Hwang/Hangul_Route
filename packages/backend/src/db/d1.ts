@@ -1685,15 +1685,23 @@ export class D1Db implements Db {
       ),
     );
   }
-  rollupRows(fromDay: string, toDay: string, metric?: string): Promise<RollupRow[]> {
+  rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]> {
     const [where, params] = metric === undefined ? ['day >= ? AND day <= ?', [fromDay, toDay]] : ['day >= ? AND day <= ? AND metric = ?', [fromDay, toDay, metric]];
-    return this.many(`SELECT day, metric, dim, bucket, events FROM learning_rollups WHERE ${where} ORDER BY day, metric, dim, bucket`, params, (r) => ({
+    return this.many(`SELECT day, metric, dim, bucket, events FROM learning_rollups WHERE ${where} ORDER BY day, metric, dim, bucket LIMIT ?`, [...params, limit], (r) => ({
       day: str(r.day),
       metric: str(r.metric),
       dim: str(r.dim),
       bucket: str(r.bucket),
       events: Number(r.events),
     }));
+  }
+  async reserveRollupCells(day: string, metric: string, cells: number): Promise<number> {
+    const total = await this.one(
+      "INSERT INTO learning_rollups (day, metric, dim, bucket, events) VALUES (?, ?, '', '', ?) ON CONFLICT(day, metric, dim, bucket) DO UPDATE SET events = events + excluded.events RETURNING events",
+      [day, metric, cells],
+      (r) => Number(r.events),
+    );
+    return total ?? cells;
   }
 
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */
