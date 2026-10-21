@@ -116,6 +116,8 @@ beforeEach(() => {
   // Notes are on by default since FB-14; this suite's baseline is every sibling flag off.
   vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
   vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
+  // Lecture mode is on by default since AMENDMENTS-LECTURE-V2 LV-7; the baseline is every sibling flag off.
+  vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -572,9 +574,15 @@ describe('the Lecture mode item (AMENDMENTS-LECTURE-V2 E3, LV-5)', () => {
     return Object.assign(env, { shown, showFragment: (href: string) => shown.push(href) });
   };
 
-  it('is not drawn while lectureModeEnabled() is off (the launch default until LV-7)', async () => {
+  it('is not drawn while lectureModeEnabled() is off (the kill switch, LV-D1)', async () => {
     const r = await render(fakeEnv(), [klass]);
     expect(navIds(r)).toEqual(['classes', 'billing']);
+  });
+
+  it('is drawn with no build value: the launch default is on since LV-7', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', undefined);
+    const r = await render(fakeEnv(), [klass]);
+    expect(navIds(r)).toEqual(['classes', 'lecture', 'billing']);
   });
 
   it('after Lessons, before Billing, for both personas; one class opens its lecture setup page', async () => {

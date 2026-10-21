@@ -17,7 +17,7 @@ import { routeNextInputFor } from '../../store/route-next-input';
  * The Lecture mode card in the grown-up area of the learner app (AMENDMENTS-LECTURE-V2 section 3 E5, row LV-6;
  * design `design/screens/lecture-entry/learner-card.md`, mock `mock/learner-card-states.html`). After
  * `GrownUpHomeCard` on the dashboard, which is behind the grown-up gate. Web only, as `GateLessonsButton` (the
- * presenter is a root of the web build), and only while `flags.lectureModeEnabled` is on (LV-D1, off until LV-7):
+ * presenter is a root of the web build), and only while `flags.lectureModeEnabled` is on (LV-D1, on by default since LV-7):
  * otherwise it draws nothing, never a disabled control.
  *
  * - **Next lesson for {name}**, one row per learner on this device once that learner's progress is read: the deck is

@@ -437,11 +437,11 @@ describe('flags', () => {
   // Each case re-imports flags.ts (about 25 imports in all), so the cases are split and get room on a loaded runner.
   const RELOADS_MS = 30_000;
 
-  it('lectureModeEnabled (AMENDMENTS-LECTURE-V2 LV-D1, LV-6) is OFF at launch until LV-7; "false", "0", "off", "no" or "disabled" in any case, trimmed, switch it off', async () => {
+  it('lectureModeEnabled (AMENDMENTS-LECTURE-V2 LV-D1, LV-7) is ON at launch; "false", "0", "off", "no" or "disabled" in any case, trimmed, switch it off', async () => {
     delete process.env.EXPO_PUBLIC_LECTURE_MODE;
     let mod = await reload();
-    expect(mod.flags.lectureModeEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.lectureModeEnabled).toBe(false);
+    expect(mod.flags.lectureModeEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.lectureModeEnabled).toBe(true);
     for (const off of ['false', '0', 'off', 'no', 'disabled', 'FALSE', ' Off ', 'NO', ' disabled', 'DISABLED ', '\t0\n']) {
       process.env.EXPO_PUBLIC_LECTURE_MODE = off;
       mod = await reload();
@@ -449,19 +449,19 @@ describe('flags', () => {
     }
   }, RELOADS_MS);
 
-  it('lectureModeEnabled turns on before LV-7 with the console value "enabled" or the kill switch on values; anything else is the launch default', async () => {
-    // A build (the e2e build, a preview) turns it on before LV-7 flips the default: the console's own value
-    // (`enabled`) and the kill switch's on values.
+  it('lectureModeEnabled stays on with the console value "enabled" or the kill switch on values; anything else is the launch default, on', async () => {
+    // The console's own on value (`enabled`) and the kill switch's on values keep it on.
     let mod: Awaited<ReturnType<typeof reload>>;
     for (const on of ['enabled', 'ENABLED', ' enabled ', 'true', '1', 'on', 'yes', 'TRUE']) {
       process.env.EXPO_PUBLIC_LECTURE_MODE = on;
       mod = await reload();
       expect(mod.flags.lectureModeEnabled, JSON.stringify(on)).toBe(true);
     }
+    // Anything else is the launch default, on: a typo never hides the card.
     for (const other of ['', 'maybe', 'enable', 'disable']) {
       process.env.EXPO_PUBLIC_LECTURE_MODE = other;
       mod = await reload();
-      expect(mod.flags.lectureModeEnabled, JSON.stringify(other)).toBe(mod.launchDefaultFlags.lectureModeEnabled);
+      expect(mod.flags.lectureModeEnabled, JSON.stringify(other)).toBe(true);
     }
   }, RELOADS_MS);
 

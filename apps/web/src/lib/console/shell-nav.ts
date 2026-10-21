@@ -26,8 +26,8 @@ export const BROWSE_PATH = '/browse';
 
 /**
  * The sibling predicates the registry reads (section 3.8): Reports, Lessons and Notes are on by default (RP-11, BR-14,
- * FB-14); Lecture mode follows `lectureModeEnabled()` (AMENDMENTS-LECTURE-V2 LV-D1: off until LV-7 turns its launch
- * default on).
+ * FB-14); Lecture mode follows `lectureModeEnabled()` (AMENDMENTS-LECTURE-V2 LV-D1: on by default since LV-7, the
+ * variable is a kill switch).
  */
 export interface NavFlags {
   reports: boolean;

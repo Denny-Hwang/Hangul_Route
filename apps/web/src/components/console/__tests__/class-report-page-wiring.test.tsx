@@ -145,7 +145,13 @@ describe('the class report page (RP-8)', () => {
     expect(textOf(root)).not.toMatch(/profile:|Mina/);
     expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(false);
     expect(textOf(byTestId(root, 'report-print-footer')[0] as ReactTestInstance)).toBe('Private: shared from Hangul Route on Oct 15.');
-    // Plan a lesson waits for lecture mode.
+    // Plan a lesson is drawn with the lecture mode launch default (on since AMENDMENTS-LECTURE-V2 LV-7).
+    expect(byTestId(root, 'class-plan-lesson')).toHaveLength(1);
+  });
+
+  it('no Plan a lesson while the lecture mode kill switch is off (LV-D1)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
+    const root = await page();
     expect(byTestId(root, 'class-plan-lesson')).toHaveLength(0);
   });
 

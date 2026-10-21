@@ -23,8 +23,8 @@ function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListI
 
 const ALL_ON = { reports: true, notes: true, browse: true, lecture: true };
 const ALL_OFF = { reports: false, notes: false, browse: false, lecture: false };
-/** Every sibling flag on except Lecture mode, whose launch default stays off until LV-7 (AMENDMENTS-LECTURE-V2 LV-D1). */
-const DEFAULTS = { ...ALL_ON, lecture: false };
+/** Every sibling flag on: Lecture mode too, since its launch default went on in LV-7 (AMENDMENTS-LECTURE-V2 LV-D1). */
+const DEFAULTS = ALL_ON;
 
 function ctx(over: Partial<NavContext>): NavContext {
   return { persona: 'parent', spaces: [], soloLearner: null, flags: ALL_OFF, ...over };
@@ -49,9 +49,9 @@ describe('ADULT_NAV', () => {
 });
 
 describe('navFlags', () => {
-  it('reads the sibling predicates: Reports (F-REPORT-001 RP-11), Lessons (F-BROWSE-001 BR-14) and Notes (F-FEEDBACK-001 FB-14) on by default, Lecture mode off until LV-7', () => {
+  it('reads the sibling predicates: Reports (F-REPORT-001 RP-11), Lessons (F-BROWSE-001 BR-14) and Notes (F-FEEDBACK-001 FB-14) and Lecture mode (LV-7) on by default', () => {
     expect(navFlags('en', {}, 'https://app.hangulroute.com')).toEqual(DEFAULTS);
-    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'false', NEXT_PUBLIC_NOTES_ENABLED: 'false', NEXT_PUBLIC_BROWSE: 'false' }, 'https://app.hangulroute.com')).toEqual(ALL_OFF);
+    expect(navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'false', NEXT_PUBLIC_NOTES_ENABLED: 'false', NEXT_PUBLIC_BROWSE: 'false', NEXT_PUBLIC_LECTURE_MODE: 'false' }, 'https://app.hangulroute.com')).toEqual(ALL_OFF);
     expect(
       navFlags('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true', NEXT_PUBLIC_NOTES_ENABLED: '1', NEXT_PUBLIC_BROWSE: 'enabled', NEXT_PUBLIC_LECTURE_MODE: 'enabled' }, 'https://app.hangulroute.com'),
     ).toEqual(ALL_ON);
@@ -59,8 +59,8 @@ describe('navFlags', () => {
 
   it('shows Lecture mode with lectureModeEnabled() (AMENDMENTS-LECTURE-V2 E3, LV-D1): the existing switch, not a new one', () => {
     expect(navFlags('en', { NEXT_PUBLIC_LECTURE_MODE: 'enabled' }).lecture).toBe(true);
-    expect(navFlags('en', {}).lecture).toBe(false);
-    expect(navFlags('en', { NEXT_PUBLIC_LECTURE_MODE: 'disabled' }).lecture).toBe(false);
+    expect(navFlags('en', {}).lecture).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', 'disabled', ' OFF ']) expect(navFlags('en', { NEXT_PUBLIC_LECTURE_MODE: off }).lecture, off).toBe(false);
   });
 
   it('shows Lessons only with browseEnabled() on the app origin (F-BROWSE-001 section 4.3, BR-0b)', () => {
@@ -89,9 +89,15 @@ describe('navItemsFor', () => {
     expect(ids(ctx({ persona: 'teacher', flags: ALL_ON }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'lecture', 'billing']);
   });
 
-  it('with the launch defaults (Lecture mode off until LV-7): no Lecture mode item for either persona, never a disabled one', () => {
-    expect(ids(ctx({ persona: 'parent', flags: DEFAULTS }))).toEqual(['home', 'reports', 'notes', 'lessons', 'billing']);
-    expect(ids(ctx({ persona: 'teacher', flags: DEFAULTS }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'billing']);
+  it('with the launch defaults (Lecture mode on since LV-7): the Lecture mode item after Lessons for both personas', () => {
+    expect(ids(ctx({ persona: 'parent', flags: DEFAULTS }))).toEqual(['home', 'reports', 'notes', 'lessons', 'lecture', 'billing']);
+    expect(ids(ctx({ persona: 'teacher', flags: DEFAULTS }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'lecture', 'billing']);
+  });
+
+  it('with the Lecture mode kill switch off: no Lecture mode item for either persona, never a disabled one', () => {
+    const off = { ...DEFAULTS, lecture: false };
+    expect(ids(ctx({ persona: 'parent', flags: off }))).toEqual(['home', 'reports', 'notes', 'lessons', 'billing']);
+    expect(ids(ctx({ persona: 'teacher', flags: off }))).toEqual(['classes', 'classReports', 'teacherNotes', 'lessons', 'billing']);
   });
 
   it('with the flags off (today): Home and Billing, or Classes and Billing; an item whose page is not built is not drawn', () => {
@@ -183,8 +189,9 @@ describe('the Lecture mode item (AMENDMENTS-LECTURE-V2 E3, LV-5)', () => {
   });
 
   it('is not drawn while lectureModeEnabled() is off, whatever the spaces', () => {
-    expect(lectureTarget(ctx({ persona: 'teacher', flags: DEFAULTS, spaces: [item('sp_c', 'class', 'teacher')] }))).toBeUndefined();
-    expect(lectureTarget(ctx({ persona: 'parent', flags: DEFAULTS, spaces: [item('sp_f', 'family', 'owner')] }))).toBeUndefined();
+    const off = { ...DEFAULTS, lecture: false };
+    expect(lectureTarget(ctx({ persona: 'teacher', flags: off, spaces: [item('sp_c', 'class', 'teacher')] }))).toBeUndefined();
+    expect(lectureTarget(ctx({ persona: 'parent', flags: off, spaces: [item('sp_f', 'family', 'owner')] }))).toBeUndefined();
   });
 });
 

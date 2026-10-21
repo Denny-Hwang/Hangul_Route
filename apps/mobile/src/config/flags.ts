@@ -190,10 +190,10 @@ export interface Flags {
 
   /**
    * Lecture mode in the learner app (AMENDMENTS-LECTURE-V2 section 3 E5, LV-D1): the Lecture mode card in the grown-up
-   * area (`ParentDashboardScreen`, web only, behind the grown-up gate). OFF at launch until LV-7 turns the web and app
-   * defaults on together; from then `EXPO_PUBLIC_LECTURE_MODE` is only a kill switch (`false`, `0`, `off`, `no` or
-   * `disabled`, any case, trimmed). Before LV-7 a build turns it on with `enabled` (or `true`, `1`, `on`, `yes`). It
-   * hides the entry only: `/present` stays served (F-TCH-004 TD2). Build time: switching it needs a rebuild.
+   * area (`ParentDashboardScreen`, web only, behind the grown-up gate). ON at launch since LV-7, which turned the web
+   * and app defaults on together; `EXPO_PUBLIC_LECTURE_MODE` is only a kill switch (`false`, `0`, `off`, `no` or
+   * `disabled`, any case, trimmed). It hides the entry only: `/present` stays served (F-TCH-004 TD2). Build time:
+   * switching it off needs a rebuild and redeploy of the learner app.
    */
   lectureModeEnabled: boolean;
 }
@@ -215,8 +215,8 @@ const launchDefaults: Flags = {
   notesEnabled: true,
   reportsEnabled: true,
   routeEnabled: true,
-  // LV-6 ships the card hidden; LV-7 turns this on with the web default and the site claim.
-  lectureModeEnabled: false,
+  // LV-7 turned this on with the web default and the site claim (AMENDMENTS-LECTURE-V2 LV-D1).
+  lectureModeEnabled: true,
 };
 
 export const flags: Flags = {
