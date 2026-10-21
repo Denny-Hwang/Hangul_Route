@@ -38,6 +38,8 @@ export interface ScheduledPurgeResult {
   classMoves: number;
   /** [SA] `space_events` rows past 400 days. */
   spaceEvents: number;
+  /** [SA] `admin_invites` rows 30 days after they expired, were accepted or were revoked. */
+  adminInvites: number;
 }
 
 /** [SA] How long a school's audit rows are kept (AMENDMENTS-SEATS-ADMINS section 6.2, OQ-10). */
@@ -50,6 +52,22 @@ export const SPACE_EVENT_RETENTION_DAYS = 400;
 export async function purgeSpaceEventsStep(db: Db, now: Date): Promise<number> {
   try {
     return await db.purgeSpaceEvents(new Date(now.getTime() - SPACE_EVENT_RETENTION_DAYS * DAY_MS), NOTE_PURGE_LIMIT);
+  } catch {
+    return 0;
+  }
+}
+
+/** [SA] How long an ended administrator invite row is kept (AMENDMENTS-SEATS-ADMINS section 6.2). */
+export const ADMIN_INVITE_RETENTION_DAYS = 30;
+
+/**
+ * [SA] One bounded `admin_invites` purge step, once per daily run: rows whose `expires_at`, `accepted_at` or
+ * `revoked_at` is more than 30 days old. A failure (a Worker that runs before migration 0012) removes nothing and
+ * never stops the other purges.
+ */
+export async function purgeAdminInvitesStep(db: Db, now: Date): Promise<number> {
+  try {
+    return await db.purgeAdminInvites(new Date(now.getTime() - ADMIN_INVITE_RETENTION_DAYS * DAY_MS), NOTE_PURGE_LIMIT);
   } catch {
     return 0;
   }
@@ -74,7 +92,7 @@ export async function purgeClassMovesStep(db: Db, now: Date): Promise<number> {
  * full step of each (nothing left) or after `SCHEDULED_PURGE_ROUNDS` rounds; tomorrow's run continues.
  */
 export async function runScheduledPurge(db: Db, now: Date): Promise<ScheduledPurgeResult> {
-  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0, classMoves: 0, spaceEvents: 0 };
+  const out: ScheduledPurgeResult = { rounds: 0, notes: 0, rateHits: 0, classMoves: 0, spaceEvents: 0, adminInvites: 0 };
   const hitsBefore = new Date(now.getTime() - RATE_HIT_WINDOW_MS);
   while (out.rounds < SCHEDULED_PURGE_ROUNDS) {
     out.rounds += 1;
@@ -89,5 +107,8 @@ export async function runScheduledPurge(db: Db, now: Date): Promise<ScheduledPur
     // The note step's four statements each remove at most a full step, so a total under one step means all four are done.
     if (notes < NOTE_PURGE_LIMIT && rateHits < NOTE_PURGE_LIMIT && classMoves < NOTE_PURGE_LIMIT && spaceEvents < NOTE_PURGE_LIMIT) break;
   }
+  // [SA] One step per run, not per round: a school makes a few invites a week, so 200 a day keeps the table small,
+  // and the run stays at 36 statements, well under the 50 a Free-plan invocation allows.
+  out.adminInvites = await purgeAdminInvitesStep(db, now);
   return out;
 }

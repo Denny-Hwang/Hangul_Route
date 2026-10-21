@@ -44,6 +44,7 @@ import {
   type StoredSenderHold,
 } from './feedback-types';
 import { assertOneSender, prefixUpperBound } from './feedback-rules';
+import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
@@ -490,7 +491,10 @@ const FEEDBACK_TABLES = ['feedback_reports', 'feedback_notes', 'learner_note_pre
 const CLASS_MOVE_TABLES = ['class_moves', 'class_scope_acks'] as const;
 /** [SA] The table of migration 0011 (AMENDMENTS-SEATS-ADMINS section 6.2). */
 const SPACE_EVENT_TABLES = ['space_events'] as const;
+/** [SA] The table of migration 0012 (AMENDMENTS-SEATS-ADMINS section 6.2). */
+const ADMIN_INVITE_TABLES = ['admin_invites'] as const;
 const RESET_TABLES = [
+  ...ADMIN_INVITE_TABLES,
   ...SPACE_EVENT_TABLES,
   ...CLASS_MOVE_TABLES,
   ...FEEDBACK_TABLES,
@@ -542,6 +546,30 @@ const spaceEventRow = (r: Row): Omit<SpaceEvent, 'kind'> => ({
   inviteId: r.invite_id === null || r.invite_id === undefined ? null : str(r.invite_id),
   createdAt: str(r.created_at),
 });
+
+const toAdminInvite = (r: Row): StoredAdminInvite => ({
+  id: str(r.id),
+  spaceId: str(r.space_id),
+  tokenHash: str(r.token_hash),
+  createdBy: str(r.created_by),
+  createdAt: str(r.created_at),
+  expiresAt: str(r.expires_at),
+  acceptedBy: nstr(r.accepted_by),
+  acceptedAt: nstr(r.accepted_at),
+  revokedAt: nstr(r.revoked_at),
+});
+
+/** [SA] `INSERT INTO space_events ... SELECT` with the row's eight values; the caller appends `WHERE <guard>`. */
+const SPACE_EVENT_INSERT_SELECT = 'INSERT INTO space_events (id, space_id, kind, actor_account_id, subject_account_id, subject_space_id, invite_id, created_at) SELECT ?, ?, ?, ?, ?, ?, ?, ?';
+
+/**
+ * [SA] Whether the account owns or is a teacher member of a live class of the school (section 6.1): with
+ * `promoted_from = 'teacher'`, the test that keeps an ending admin a teacher of the school. Binds (school, account, account).
+ */
+const TEACHES_LIVE_CLASS = `EXISTS (SELECT 1 FROM spaces s WHERE s.parent_space_id = ? AND s.kind = 'class' AND s.archived_at IS NULL
+  AND (s.owner_account_id = ? OR EXISTS (SELECT 1 FROM memberships cm WHERE cm.space_id = s.id AND cm.member_kind = 'account' AND cm.member_id = ? AND cm.role IN ('owner', 'teacher'))))`;
+/** [SA] The account's admin row of the school. Binds (school, account). */
+const ADMIN_ROW = "space_id = ? AND member_kind = 'account' AND member_id = ? AND role = 'admin'";
 
 /** `Db` over a D1 binding — F-INFRA-003. Schema: apps/api/migrations. */
 export class D1Db implements Db {
@@ -773,6 +801,92 @@ export class D1Db implements Db {
   }
   purgeSpaceEvents(before: Date, limit: number): Promise<number> {
     return this.changes('DELETE FROM space_events WHERE id IN (SELECT id FROM space_events WHERE created_at < ? LIMIT ?)', [before.toISOString(), limit]);
+  }
+  latestSpaceEvent(spaceId: string, kind: SpaceEvent['kind'], subjectAccountId: string): Promise<SpaceEvent | null> {
+    return this.one('SELECT * FROM space_events WHERE space_id = ? AND kind = ? AND subject_account_id = ? ORDER BY created_at DESC, id DESC LIMIT 1', [spaceId, kind, subjectAccountId], toSpaceEvent);
+  }
+  async addMembershipIfAbsent(m: Membership): Promise<boolean> {
+    const inserted = await this.changes('INSERT INTO memberships (space_id, member_kind, member_id, role, joined_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(space_id, member_kind, member_id) DO NOTHING', [m.spaceId, m.memberKind, m.memberId, m.role, m.joinedAt]);
+    return inserted === 1;
+  }
+
+  // ---- school administrators ([SA] migration 0012) ----
+
+  async createAdminInvite({ invite: i, cap, eventId }: CreateAdminInviteInput): Promise<boolean> {
+    // One guarded INSERT ... SELECT (section 6.3): the admins and the open invites are counted inside the statement
+    // that writes, with the cap bound, so two tabs can never both take the last place. The event follows the row.
+    const [inserted] = await this.batchChanges([
+      [
+        `INSERT INTO admin_invites (id, space_id, token_hash, created_by, created_at, expires_at)
+         SELECT ?, ?, ?, ?, ?, ?
+         WHERE EXISTS (SELECT 1 FROM spaces WHERE id = ? AND kind = 'school' AND archived_at IS NULL)
+           AND (SELECT COUNT(*) FROM memberships WHERE space_id = ? AND member_kind = 'account' AND role = 'admin')
+             + (SELECT COUNT(*) FROM admin_invites WHERE space_id = ? AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at > ?) < ?`,
+        [i.id, i.spaceId, i.tokenHash, i.createdBy, i.createdAt, i.expiresAt, i.spaceId, i.spaceId, i.spaceId, i.createdAt, cap],
+      ],
+      [`${SPACE_EVENT_INSERT_SELECT} WHERE EXISTS (SELECT 1 FROM admin_invites WHERE id = ?)`, [eventId, i.spaceId, SpaceEventKindSchema.parse('admin_invite_created'), i.createdBy, null, null, i.id, i.createdAt, i.id]],
+    ]);
+    return inserted === 1;
+  }
+  getAdminInvite(inviteId: string): Promise<StoredAdminInvite | null> {
+    return this.one('SELECT * FROM admin_invites WHERE id = ?', [inviteId], toAdminInvite);
+  }
+  adminInviteByHash(tokenHash: string): Promise<StoredAdminInvite | null> {
+    return this.one('SELECT * FROM admin_invites WHERE token_hash = ?', [tokenHash], toAdminInvite);
+  }
+  openAdminInvites(spaceId: string, now: Date): Promise<StoredAdminInvite[]> {
+    return this.many('SELECT * FROM admin_invites WHERE space_id = ? AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at > ? ORDER BY created_at, id', [spaceId, now.toISOString()], toAdminInvite);
+  }
+  async revokeAdminInvite({ inviteId, spaceId, actorAccountId, now, eventId }: RevokeAdminInviteInput): Promise<number> {
+    const at = now.toISOString();
+    const [changed] = await this.batchChanges([
+      ['UPDATE admin_invites SET revoked_at = ? WHERE id = ? AND space_id = ? AND accepted_at IS NULL AND revoked_at IS NULL', [at, inviteId, spaceId]],
+      [`${SPACE_EVENT_INSERT_SELECT} WHERE EXISTS (SELECT 1 FROM admin_invites WHERE id = ? AND space_id = ? AND revoked_at = ? AND accepted_at IS NULL)`, [eventId, spaceId, SpaceEventKindSchema.parse('admin_invite_revoked'), actorAccountId, null, null, inviteId, at, inviteId, spaceId, at]],
+    ]);
+    return changed ?? 0;
+  }
+  async acceptAdminInvite({ inviteId, spaceId, accountId, now, cap, eventId }: AcceptAdminInviteInput): Promise<boolean> {
+    const at = now.toISOString();
+    // The gate-then-guarded-writes batch (F-SPACE-002 section 4.6): every later statement runs only when the gate
+    // stamped this account and this time on the invite.
+    const accepted = 'EXISTS (SELECT 1 FROM admin_invites WHERE id = ? AND accepted_by = ? AND accepted_at = ?)';
+    const [gate] = await this.batchChanges([
+      [
+        `UPDATE admin_invites SET accepted_by = ?, accepted_at = ?
+         WHERE id = ? AND space_id = ? AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at > ?
+           AND EXISTS (SELECT 1 FROM spaces WHERE id = ? AND kind = 'school' AND archived_at IS NULL AND owner_account_id <> ?)
+           AND NOT EXISTS (SELECT 1 FROM memberships WHERE space_id = ? AND member_kind = 'account' AND member_id = ? AND role IN ('admin', 'owner'))
+           AND (SELECT COUNT(*) FROM memberships WHERE space_id = ? AND member_kind = 'account' AND role = 'admin') < ?`,
+        [accountId, at, inviteId, spaceId, at, spaceId, accountId, spaceId, accountId, spaceId, cap],
+      ],
+      // Only a teacher row is promoted (and records it); an owner row is never demoted.
+      [
+        `INSERT INTO memberships (space_id, member_kind, member_id, role, joined_at)
+         SELECT ?, 'account', ?, 'admin', ? WHERE ${accepted}
+         ON CONFLICT(space_id, member_kind, member_id) DO UPDATE SET role = 'admin', promoted_from = 'teacher' WHERE memberships.role = 'teacher'`,
+        [spaceId, accountId, at, inviteId, accountId, at],
+      ],
+      [`${SPACE_EVENT_INSERT_SELECT} WHERE ${accepted}`, [eventId, spaceId, SpaceEventKindSchema.parse('admin_joined'), accountId, accountId, null, inviteId, at, inviteId, accountId, at]],
+    ]);
+    return gate === 1;
+  }
+  async endAdminRole({ spaceId, accountId, actorAccountId, kind, now, eventId }: EndAdminRoleInput): Promise<EndAdminRoleResult> {
+    // One batch: the event while the admin row still exists, then back to teacher when the test holds, else out.
+    // Exactly one of the two writes can match, because the update leaves no admin row for the delete.
+    const [, toTeacher, removed] = await this.batchChanges([
+      [`${SPACE_EVENT_INSERT_SELECT} WHERE EXISTS (SELECT 1 FROM memberships WHERE ${ADMIN_ROW})`, [eventId, spaceId, SpaceEventKindSchema.parse(kind), actorAccountId, accountId, null, null, now.toISOString(), spaceId, accountId]],
+      [`UPDATE memberships SET role = 'teacher', promoted_from = NULL WHERE ${ADMIN_ROW} AND (promoted_from = 'teacher' OR ${TEACHES_LIVE_CLASS})`, [spaceId, accountId, spaceId, accountId, accountId]],
+      [`DELETE FROM memberships WHERE ${ADMIN_ROW}`, [spaceId, accountId]],
+    ]);
+    if (toTeacher === 1) return 'teacher';
+    return removed === 1 ? 'none' : null;
+  }
+  async adminStaysTeacher(spaceId: string, accountId: string): Promise<boolean> {
+    return !!(await this.one(`SELECT 1 AS x FROM memberships WHERE ${ADMIN_ROW} AND (promoted_from = 'teacher' OR ${TEACHES_LIVE_CLASS})`, [spaceId, accountId, spaceId, accountId, accountId], (r) => r));
+  }
+  purgeAdminInvites(before: Date, limit: number): Promise<number> {
+    const cut = before.toISOString();
+    return this.changes('DELETE FROM admin_invites WHERE id IN (SELECT id FROM admin_invites WHERE expires_at < ? OR accepted_at < ? OR revoked_at < ? LIMIT ?)', [cut, cut, cut, limit]);
   }
 
   getPlan(planId: string): Promise<Plan | null> {
