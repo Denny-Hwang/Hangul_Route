@@ -31,6 +31,7 @@ const {
   main,
   presenterStrings,
   renderGlyphs,
+  taughtKorean,
   woff2CodePoints,
 } = await import(SCRIPT);
 
@@ -196,6 +197,29 @@ const FIXTURE = {
 };
 
 const chars = (strings) => new Set(strings.join(""));
+
+describe("taughtKorean (all taught Korean, F-CURR-002 row CM-6)", () => {
+  test("adds every ko and ...Ko field of the letters, scopes, quests, cards, listed topics and listed stories' teaching parts", () => {
+    const all = chars(taughtKorean(FIXTURE));
+    for (const ch of "키읔한복사과축구해와달호랑이떡엄마밧줄하늘") assert.ok(all.has(ch), ch);
+    for (const ch of chars(presenterStrings(FIXTURE))) assert.ok(all.has(ch), `keeps what the presenter draws: ${ch}`);
+  });
+
+  test("leaves out UI-language text, draft topics and stories, and a story's facts and sources", () => {
+    const content = {
+      quests: [{ titleEn: "다", steps: [{ hoyaLineEn: "라", discover: { pages: [{ items: [{ type: "word", word: { ko: "마", en: "바" } }] }] } }] }],
+      topicFiles: [{ name: "t.json", json: topic("space", "draft", ["우주"]) }],
+      stories: [
+        { name: "a.json", json: story("a", { facts: [{ id: "f1", quote: { ko: "上사" } }], verification: { notesKo: "자" } }) },
+        { name: "b.json", json: story("b", { title: { ko: "초안", en: "Draft" }, review: { language: "draft", culture: "draft" } }) },
+      ],
+    };
+    const all = chars(taughtKorean(content));
+    assert.ok(all.has("마"));
+    for (const ch of "다라바우주上사자초안") assert.equal(all.has(ch), false, ch);
+    assert.deepEqual(taughtKorean(), []);
+  });
+});
 
 describe("presenterStrings (what the presenter draws in large Korean)", () => {
   const strings = presenterStrings(FIXTURE);
@@ -457,7 +481,7 @@ describe("woff2CodePoints (the font's character map, read in plain Node)", () =>
 
 describe("main on a temp root (injected content)", () => {
   const loadContent = async () => FIXTURE;
-  const fixtureCps = glyphList(presenterStrings(FIXTURE));
+  const fixtureCps = glyphList(taughtKorean(FIXTURE));
   const sidecar = renderGlyphs(fixtureCps);
   const fixtureFont = fontFor(fixtureCps);
 
@@ -472,7 +496,7 @@ describe("main on a temp root (injected content)", () => {
   test("--check passes when the sidecar matches the content and the font maps exactly that list", async () => {
     const r = await capture((io) => main(["--check"], seeded(), { ...io, loadContent }));
     assert.equal(r.status, 0, r.stdout);
-    assert.match(r.stdout, /glyph list and font are up to date/);
+    assert.match(r.stdout, /presenter font covers all taught Korean \(\d+ code points; the font holds \d+\)/);
   });
 
   test("--check fails when the list was edited by hand and the font not rebuilt", async () => {
@@ -495,10 +519,9 @@ describe("main on a temp root (injected content)", () => {
     assert.match(r.stdout, /cannot be read \(not a WOFF2 file\)/);
   });
 
-  test("--check fails when the sidecar's text differs although its code points match", async () => {
+  test("--check passes when the sidecar's text differs but it lists the same code points (coverage, not text)", async () => {
     const r = await capture((io) => main(["--check"], seeded({ glyphs: sidecar.replace("# GENERATED", "# EDITED") }), { ...io, loadContent }));
-    assert.equal(r.status, 1);
-    assert.match(r.stdout, /differs from the generated text/);
+    assert.equal(r.status, 0, r.stdout);
   });
 
   test("--check fails on a missing glyph and says how to rebuild", async () => {
@@ -510,10 +533,18 @@ describe("main on a temp root (injected content)", () => {
     assert.match(r.stdout, /node scripts\/build-presenter-font\.mjs --source/);
   });
 
-  test("--check names a glyph the content no longer uses", async () => {
-    const r = await capture((io) => main(["--check"], seeded({ glyphs: renderGlyphs([...glyphList(presenterStrings(FIXTURE)), 0xd7a3]) }), { ...io, loadContent }));
+  test("--check passes when the font holds a glyph the content no longer uses (a superset never forces a rebuild)", async () => {
+    const wider = [...fixtureCps, 0xd7a3];
+    const r = await capture((io) => main(["--check"], seeded({ glyphs: renderGlyphs(wider), font: fontFor(wider) }), { ...io, loadContent }));
+    assert.equal(r.status, 0, r.stdout);
+    assert.match(r.stdout, new RegExp(`${fixtureCps.length} code points; the font holds ${wider.length}`));
+  });
+
+  test("--check names the taught Korean the font lacks, beyond what the presenter draws (all taught Korean, CM-6)", async () => {
+    const drawn = glyphList(presenterStrings(FIXTURE));
+    const r = await capture((io) => main(["--check"], seeded({ glyphs: renderGlyphs(drawn), font: fontFor(drawn) }), { ...io, loadContent }));
     assert.equal(r.status, 1);
-    assert.match(r.stdout, /no longer used: U\+D7A3/);
+    assert.match(r.stdout, /does not cover all taught Korean \(missing: U\+C754 읔, U\+D0A4 키\)/);
   });
 
   test("--check fails when the sidecar, the font or the licence file is missing", async () => {
