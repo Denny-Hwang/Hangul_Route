@@ -332,6 +332,27 @@ describe('[SA] POST /api/admin-invites/accept (sections 6.3, 6.4)', () => {
     expect(await roleOf(school, 'kim')).toBe('admin');
   });
 
+  it('ineligible comes before the revoked, used, expiry and cap checks: a caregiver member reads the same line for a dead or full invite', async () => {
+    await db.addMembership({ spaceId: school, memberKind: 'account', memberId: 'dean', role: 'caregiver', joinedAt: '2026-09-01T00:00:00.000Z' });
+    const ended = await seededInvite(school, { createdAt: '2026-01-01T00:00:00.000Z', expiresAt: '2026-01-08T00:00:00.000Z' });
+    const revoked = await invite(school);
+    expect((await call('DELETE', `/api/spaces/${school}/admin-invites/${revoked.id}`, bearer('principal'))).status).toBe(200);
+    const used = await invite(school);
+    expect((await accept('kim', used.token)).status).toBe(200);
+    for (const token of [ended.token, revoked.token, used.token]) {
+      const seen = await preview('dean', token);
+      expect([seen.status, seen.body.error?.code]).toEqual([409, 'invite_ineligible']);
+      const r = await accept('dean', token);
+      expect([r.status, r.body.error?.code]).toEqual([409, 'invite_ineligible']);
+    }
+    // Every administrator place taken: still ineligible, not admins_full.
+    const open = await invite(school);
+    await member(school, 'vice', 'admin');
+    const full = await accept('dean', open.token);
+    expect([full.status, full.body.error?.code]).toEqual([409, 'invite_ineligible']);
+    expect(await roleOf(school, 'dean')).toBe('caregiver');
+  });
+
   it('signed-out: 401', async () => {
     const { token } = await invite(school);
     expect((await call('POST', '/api/admin-invites/accept', json, { token })).status).toBe(401);
@@ -615,6 +636,21 @@ describe('[SA] races the guarded writes settle', () => {
     });
     expect((await accept('vice', other.token)).body.data).toMatchObject({ state: 'already_admin', space: { id: school } });
     expect((await db.getAdminInvite(other.id))?.acceptedAt).toBeNull();
+  });
+
+  it('a caregiver membership that lands after the checks: the gate refuses, the answer is 409 invite_ineligible with reason ineligible, the invite stays open', async () => {
+    const { token, id } = await invite(school);
+    setIdentityPortForTests({
+      primaryEmail: async (accountId) => {
+        await db.addMembership({ spaceId: school, memberKind: 'account', memberId: accountId, role: 'caregiver', joinedAt: '2026-09-01T00:00:00.000Z' });
+        return { email: `${accountId}@example.org`, verified: true };
+      },
+    });
+    const r = await accept('dean', token);
+    expect([r.status, r.body.error?.code]).toEqual([409, 'invite_ineligible']);
+    expect(await roleOf(school, 'dean')).toBe('caregiver');
+    expect(await db.getAdminInvite(id)).toMatchObject({ acceptedAt: null, revokedAt: null });
+    expect(adminEvents().filter((e) => e.name === 'space.admin.accept_refused')).toEqual([{ name: 'space.admin.accept_refused', payload: { reason: 'ineligible' } }]);
   });
 
   it("the owner's list shows no email when Clerk fails", async () => {

@@ -267,6 +267,24 @@ describe('useConfirm', () => {
     expect(byTestId(h.root(), 'confirm-sheet')).toHaveLength(0);
   });
 
+  it('a new question then an answer in one batch: the first answers no, the answer goes to the new one', async () => {
+    const h = mount();
+    let first: Promise<boolean> | null = null;
+    let second: Promise<boolean> | null = null;
+    act(() => {
+      first = h.api().confirm({ title: 'A?', confirmLabel: 'Yes A' });
+    });
+    const yes = byTestId(h.root(), 'confirm-sheet-confirm')[0]!;
+    act(() => {
+      second = h.api().confirm({ title: 'B?', confirmLabel: 'Yes B' });
+      yes.props.onClick();
+    });
+    await expect(first).resolves.toBe(false);
+    await expect(second).resolves.toBe(true);
+    expect(byTestId(h.root(), 'confirm-sheet')).toHaveLength(0);
+  });
+
+  // A non-regression check: this order already worked before DN-6 (the stale ask was answered first either way).
   it('an answer then a new question in one batch: the new one stays open', async () => {
     const h = mount();
     let first: Promise<boolean> | null = null;

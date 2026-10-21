@@ -133,6 +133,8 @@ function LectureInner(): JSX.Element {
   const today = dateKey(now);
   /** Whether the grown-up has changed what the page opened on (a card, a chip, a source, an edit, a title). */
   const touched = useRef(false);
+  /** The space whose answer the page draws; another `?id=` on the same mounted page clears it before reading. */
+  const drawnFor = useRef<string | null>(null);
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
   const revisit = rollup ? revisitBlock(rollup.revisit) : null;
@@ -214,16 +216,30 @@ function LectureInner(): JSX.Element {
     if (!api || !enabled) return;
     setError(null);
     setLoading(true);
+    if (drawnFor.current !== spaceId) {
+      // Another space on the same mounted page: nothing of the last space's answer stays drawn while this one loads.
+      drawnFor.current = null;
+      setRoster(null);
+      setComposes(null);
+      setPlan(null);
+    }
     const [rosterRes, plansRes, spacesRes] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId), api.listSpaces()]);
     setLoading(false);
+    // A failed read after a cannot-compose answer: the could-not-load line and Try again show, not the old panel (and
+    // never the builder, which needs `composes === true`).
+    const failed = (next: SpaceError): void => {
+      setError(next);
+      setComposes((was) => (was === false ? null : was));
+    };
     if (!rosterRes.ok) {
-      setError(rosterRes.error === 'forbidden' ? 'forbidden' : rosterRes.error === 'not_found' ? 'gone' : 'cantReach');
+      failed(rosterRes.error === 'forbidden' ? 'forbidden' : rosterRes.error === 'not_found' ? 'gone' : 'cantReach');
       return;
     }
     if (!spacesRes.ok) {
-      setError('cantReach');
+      failed('cantReach');
       return;
     }
+    drawnFor.current = spaceId;
     const spaces: readonly SpaceListItem[] = spacesRes.data;
     if (!canComposeIn(spaces, spaceId)) {
       // A role that cannot compose here: the space's name for the frame, and no outline, no plan, no deck.
@@ -429,7 +445,7 @@ function LectureInner(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {loading && !roster ? (
+      {loading && (!roster || composes === null) ? (
         <>
           {heading}
           <Muted>{l.intro}</Muted>
@@ -437,7 +453,7 @@ function LectureInner(): JSX.Element {
         </>
       ) : null}
 
-      {roster ? (
+      {roster && composes === true ? (
         <>
           {heading}
           <Muted>{l.intro}</Muted>
