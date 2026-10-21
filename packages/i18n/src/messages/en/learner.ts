@@ -2229,6 +2229,9 @@ export const learner = {
       /** The projected Match Sound question, with a voice and without (README D6). */
       sound: 'Which letter makes this sound?',
       oddOneOut: 'Which one is different?',
+      /** The question slides (AMENDMENTS-LECTURE-V2 section 12.3, LV-S2): a Listen & Pick round, a Tap to Respond turn. */
+      listen: 'Which one did you hear?',
+      reply: 'Which answer fits?',
     },
     /** Activity preset names on the activity slide (PR 7): the same values as `console.lecture.activity`. */
     activity: {
@@ -2273,6 +2276,8 @@ export const learner = {
       sentence: { label: 'Sentence' },
       pattern: { label: 'Sentence pattern' },
       readAlong: { label: 'Read along' },
+      /** A realia question's line beside its key word, until "Hoya's answer" takes its place (LV-S2, design V7). */
+      realia: { ask: 'Look closely and find the answer.' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

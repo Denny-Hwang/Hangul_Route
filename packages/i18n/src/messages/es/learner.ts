@@ -1729,6 +1729,8 @@ export const learner = {
       answer: 'La respuesta de Hoya',
       sound: '¿Qué letra hace este sonido?',
       oddOneOut: '¿Cuál es diferente?',
+      listen: '¿Cuál escuchaste?',
+      reply: '¿Qué respuesta va bien?',
     },
     activity: {
       'air-write': 'Escribir en el aire',
@@ -1762,6 +1764,7 @@ export const learner = {
       sentence: { label: 'Oración' },
       pattern: { label: 'Patrón de oración' },
       readAlong: { label: 'Leer juntos' },
+      realia: { ask: 'Mira con atención y busca la respuesta.' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

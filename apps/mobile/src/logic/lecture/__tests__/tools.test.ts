@@ -9,6 +9,7 @@ import {
   gridKindKey,
   narrationStops,
   optionContent,
+  optionLayout,
   optionRomShown,
   presetLabel,
   radioMove,
@@ -110,6 +111,33 @@ describe('optionContent (slide-quiz.md: one option card for quizzes and story ch
 
   it('a Korean option without romanization draws no romanization line', () => {
     expect(optionContent({ ko: 'ga', correct: false }).ko).toEqual({ text: 'ga', size: 'display' });
+  });
+});
+
+describe('optionLayout (lecture-v2.md V8, LV-S2): rows for words and sentences, the grid for letters, syllables and pictures', () => {
+  const line = { ko: '빵을 먹어요.', romanization: 'ppangeul meogeoyo', gloss: 'I eat bread.', spoken: { text: '빵을 먹어요.', romanization: 'ppangeul meogeoyo' } };
+  const sheet = { kind: 'menu' as const, entries: [], alt: 'A menu.', spoken: { text: '', romanization: '' } };
+  const text = [{ ko: '빵을 먹어요.', romanization: 'ppangeul meogeoyo', gloss: 'I eat bread.', correct: true }];
+  const pictures = [{ picture: 'word:food-milk', gloss: 'milk', correct: true }];
+
+  it('a listen question: rows for a word or sentence round, the grid for a letter or syllable round and for pictures', () => {
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'sentence' }, options: text })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'word' }, options: text })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'sound' }, options: [{ ko: 'ㅓ', romanization: 'eo', correct: true }] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'listen', line, speech: 'word' }, options: pictures })).toBe('grid');
+  });
+
+  it('a reply or realia question: rows (a realia figure too); pictures keep the grid', () => {
+    expect(optionLayout({ prompt: { ask: 'reply', line }, options: text })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'realia', text: 'How much?', sheet }, options: [{ figure: '1,000 won', correct: true }] })).toBe('rows');
+    expect(optionLayout({ prompt: { ask: 'realia', text: 'Which picture?', sheet }, options: pictures })).toBe('grid');
+  });
+
+  it('every earlier quiz keeps the grid', () => {
+    expect(optionLayout({ prompt: { ask: 'sound', spoken: { text: '가', romanization: 'ga' } }, options: [] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'meaning', ko: '밥', romanization: 'bap' }, options: [] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'odd-one-out' }, options: [] })).toBe('grid');
+    expect(optionLayout({ prompt: { ask: 'check', text: 'Who?' }, options: [] })).toBe('grid');
   });
 });
 

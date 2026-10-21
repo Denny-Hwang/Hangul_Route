@@ -143,12 +143,28 @@ describe('Sound plays the Korean on every slide that shows it (F-TCH-004 section
     expect(unsaid).toEqual([]);
   });
 
-  it('only a letter, a syllable and a Match Sound question play at the sound rate', () => {
+  it('only a letter, a syllable, a Match Sound question and a letter or syllable listen round play at the sound rate', () => {
+    let listenSounds = 0;
     for (const slide of everySlide(true)) {
       const sound = slideSound(slide);
       if (sound?.kind !== 'sound') continue;
-      const soundRate = slide.kind === 'letter' || slide.kind === 'syllable' || (slide.kind === 'quiz' && slide.prompt.ask === 'sound');
+      // A Listen & Pick letter or syllable round (`lp:sym:`, `lp:syl:`) plays at the sound rate, as the learner's game does (LV-S2).
+      const listen = slide.kind === 'quiz' && slide.prompt.ask === 'listen' && slide.prompt.speech === 'sound';
+      if (listen) listenSounds += 1;
+      const soundRate = slide.kind === 'letter' || slide.kind === 'syllable' || (slide.kind === 'quiz' && slide.prompt.ask === 'sound') || listen;
       expect(soundRate, slide.key).toBe(true);
+    }
+    expect(listenSounds).toBeGreaterThan(0);
+  });
+
+  it('every question slide (LV-S2) plays what it asks about: the heard prompt, the other speaker\'s line, the key word or the sheet', () => {
+    const asked = everySlide(true).filter((s): s is Extract<Slide, { kind: 'quiz' }> => s.kind === 'quiz' && ['listen', 'reply', 'realia'].includes(s.prompt.ask));
+    for (const ask of ['listen', 'reply', 'realia'] as const) expect(asked.some((s) => s.prompt.ask === ask), ask).toBe(true);
+    for (const slide of asked) {
+      const sound = slideSound(slide);
+      if (slide.prompt.ask === 'listen') expect(sound, slide.key).toEqual({ spoken: slide.prompt.line.spoken, kind: slide.prompt.speech });
+      else if (slide.prompt.ask === 'reply') expect(sound, slide.key).toEqual({ spoken: slide.prompt.line.spoken, kind: 'sentence' });
+      else if (slide.prompt.ask === 'realia') expect(sound, slide.key).toEqual({ spoken: slide.prompt.key?.spoken ?? slide.prompt.sheet.spoken, kind: 'word' });
     }
   });
 });

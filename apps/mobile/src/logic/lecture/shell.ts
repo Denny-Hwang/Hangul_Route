@@ -312,9 +312,22 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
  * It names the whole slide on arrival, builds not yet revealed included (a reading slide's meanings and
  * key words too, as a vocab slide names its gloss): the live region speaks to
  * the presenter at the device, who holds the deck, not to the room, which sees only the stage.
+ * A listen or reply question is named by its question (`names.listen`, `names.reply`), a realia
+ * question by its own (LV-S2); never by an option, which would be the answer.
  */
-export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string; slot?: string }): string {
+export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string }): string {
   switch (slide.kind) {
+    case 'quiz':
+      switch (slide.prompt.ask) {
+        case 'listen':
+          return (slide.prompt.reply === true ? names?.reply : names?.listen) ?? '';
+        case 'reply':
+          return names?.reply ?? '';
+        case 'realia':
+          return slide.prompt.text;
+        default:
+          return '';
+      }
     case 'sentence':
       return `${slide.sentence.ko}, ${slide.sentence.romanization}, ${slide.sentence.gloss}`;
     case 'pattern': {
