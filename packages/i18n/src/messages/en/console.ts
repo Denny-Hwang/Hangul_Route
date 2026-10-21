@@ -2142,6 +2142,8 @@ export const consoleMsgs = {
     alreadyAdmin: (school: string) => `You're already an administrator of ${school}.`,
     notFound: "This link doesn't open an invite. Check that it was copied whole.",
     emailUnverified: 'To accept, your account needs a verified email. Verify it in your account settings, then open the link again.',
+    /** Accept answered `503 identity_unavailable`: the sign-in service could not be asked (section 6.3 item 1); Try again. */
+    tryAgain: "Couldn't check your invite right now. Try again in a moment.",
     home: { cta: 'Go to my home' },
   },
 } as const;

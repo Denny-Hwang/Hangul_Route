@@ -24,8 +24,9 @@ import { buttonBase } from './ui';
  * - Preview: "Join {school} as an administrator?", who invited, Signed in as with Use another account, what the role can
  *   and cannot do, Accept and Not now.
  * - Accept: the school page with `adminInvite.done(school)` (a one-shot flash, never a query parameter).
- * - A final refusal: one calm line and Go to my home. A `429`, a network failure or a `503`: the line, Try again (the
- *   stash kept) and Go to my home. Go to my home and Not now always drop the stash.
+ * - A final refusal: one calm line and Go to my home; the stash goes. A `429`, a network failure or a `503`: the line
+ *   (`adminInvite.tryAgain` for `identity_unavailable`), Try again (the stash kept) and Go to my home. Go to my home
+ *   and Not now always drop the stash.
  */
 
 type Phase = { at: 'loading' } | { at: 'reopen' } | { at: 'accepting'; preview: Extract<InviteAnswer, { at: 'preview' }> } | Exclude<InviteAnswer, { at: 'accepted' }>;
@@ -141,6 +142,15 @@ export function AdminInviteView({ api, who, m, go, switchAccount }: AdminInviteV
     if (typeof document !== 'undefined') document.title = t.pageTitle;
   }, [t.pageTitle]);
 
+  // Set while an accept is in flight: a preview answer that lands then is dropped, so it cannot redraw over the accept.
+  const accepting = useRef(false);
+
+  /** A final refusal drops the stash, so `/start` never forwards back to an invite that cannot open (section 6.6 step 8). */
+  const show = useCallback((answer: Exclude<InviteAnswer, { at: 'accepted' }>): void => {
+    if (answer.at === 'refused') clearAdminInvite();
+    setPhase(answer);
+  }, []);
+
   const preview = useCallback(async (): Promise<void> => {
     last.current = { kind: 'preview' };
     if (!token) return;
@@ -150,13 +160,20 @@ export function AdminInviteView({ api, who, m, go, switchAccount }: AdminInviteV
     }
     setPhase({ at: 'loading' });
     const answer = previewAnswer(await api.previewAdminInvite(token));
-    if (!live.current) return;
-    setPhase(answer.at === 'accepted' ? { at: 'retry', reason: 'cantReach' } : answer);
-  }, [api, token]);
+    if (!live.current || accepting.current) return;
+    show(answer.at === 'accepted' ? { at: 'retry', reason: 'cantReach' } : answer);
+  }, [api, token, show]);
 
+  // The automatic preview runs once per page (the page draws only with a session, so `api` is there unless the build
+  // has no API, which reads as can't reach): a new session object from Clerk (a resource refresh, the
+  // account-language write) rebuilds `api` but must not redraw the page or spend the preview limiter again. Only
+  // Try again asks once more.
+  const previewed = useRef(false);
   useEffect(() => {
+    if (previewed.current || !token) return;
+    previewed.current = true;
     void preview();
-  }, [preview]);
+  }, [api, token, preview]);
 
   // On arrival and after each change, focus goes to the h1, so the new state is read from its top.
   useEffect(() => {
@@ -170,7 +187,9 @@ export function AdminInviteView({ api, who, m, go, switchAccount }: AdminInviteV
       return;
     }
     setPhase({ at: 'accepting', preview: from });
+    accepting.current = true;
     const answer = acceptAnswer(await api.acceptAdminInvite(token));
+    accepting.current = false;
     if (!live.current) return;
     if (answer.at === 'accepted') {
       clearAdminInvite();
@@ -178,7 +197,7 @@ export function AdminInviteView({ api, who, m, go, switchAccount }: AdminInviteV
       go(ROUTES.space(answer.spaceId, 'school'));
       return;
     }
-    setPhase(answer);
+    show(answer);
   };
 
   const tryAgain = (): void => {
@@ -242,7 +261,9 @@ export function AdminInviteView({ api, who, m, go, switchAccount }: AdminInviteV
             ? refusalLine(phase.reason, t, phase.school)
             : phase.reason === 'tooMany'
               ? m.caregiver.retry.tooManyAttempts
-              : c.cantReach;
+              : phase.reason === 'identity'
+                ? t.tryAgain
+                : c.cantReach;
     body = (
       <>
         <h1 ref={heading} tabIndex={-1} data-testid="invite-title">

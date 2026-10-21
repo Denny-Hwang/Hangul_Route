@@ -10,6 +10,7 @@ import {
   isAdminInvitePath,
   previewAnswer,
   readAdminInvite,
+  settleAdminInviteOnSession,
   signUpLanding,
   strippedInviteAddress,
   stripAdminInviteFragmentHere,
@@ -152,6 +153,50 @@ describe('the life of the stash', () => {
     expect(storage.data.size).toBe(0);
   });
 
+  it('a tab whose sessionStorage cannot hold it keeps the token in memory for this page load, with the same 30 minutes', () => {
+    const broken: KeyValueStorage = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('QuotaExceededError');
+      },
+      removeItem: () => undefined,
+    };
+    expect(captureAdminInvite(at('/account/invite', `#t=${TOKEN}`), broken, NOW)).toBe(true);
+    expect(readAdminInvite(broken, NOW + 1)).toBe(TOKEN);
+    expect(readAdminInvite(null, NOW + 1)).toBe(TOKEN);
+    expect(readAdminInvite(broken, NOW + ADMIN_INVITE_STASH_MS)).toBeNull();
+    expect(readAdminInvite(broken, NOW + 1)).toBeNull();
+    captureAdminInvite(at('/account/invite', `#t=${TOKEN}`), broken, NOW);
+    clearAdminInvite(broken);
+    expect(readAdminInvite(broken, NOW + 1)).toBeNull();
+    // A later write that works takes over, and the memory copy goes.
+    captureAdminInvite(at('/account/invite', `#t=${TOKEN}`), broken, NOW);
+    const storage = memory();
+    captureAdminInvite(at('/account/invite', `#t=${TOKEN}`), storage, NOW);
+    expect(readAdminInvite(null, NOW + 1)).toBeNull();
+  });
+
+  it('a session that ends on its own drops it; the keeping sign-outs do not, until the next session', () => {
+    const storage = memory();
+    const fill = (): void => void captureAdminInvite(at('/account/invite', `#t=${TOKEN}`), storage, Date.now());
+    fill();
+    expect(settleAdminInviteOnSession(null, null, storage)).toBe(false);
+    expect(settleAdminInviteOnSession(null, 'jin', storage)).toBe(false);
+    expect(adminInviteLive(storage)).toBe(true);
+    // Expired, revoked or signed out in another tab: no app sign-out ran.
+    expect(settleAdminInviteOnSession('jin', null, storage)).toBe(true);
+    expect(adminInviteLive(storage)).toBe(false);
+    // Use another account or the lock's Sign in again: the stash stays through the session's end.
+    fill();
+    clearGrownUpTab(storage, { keepInvite: true });
+    expect(settleAdminInviteOnSession('jin', null, storage)).toBe(false);
+    expect(adminInviteLive(storage)).toBe(true);
+    // The next session clears the mark, so its own end drops the stash again.
+    settleAdminInviteOnSession(null, 'kim', storage);
+    expect(settleAdminInviteOnSession('kim', null, storage)).toBe(true);
+    expect(adminInviteLive(storage)).toBe(false);
+  });
+
   it('a sign-up lands on the invite page while a stash lives, else where it always did', () => {
     expect(signUpLanding('/start?persona=teacher', true)).toBe('/account/invite');
     expect(signUpLanding('/start?persona=teacher', false)).toBe('/start?persona=teacher');
@@ -186,7 +231,8 @@ describe('preview and accept answers (steps 6 to 8)', () => {
       [403, 'email_unverified', { at: 'refused', reason: 'emailUnverified' }],
       [429, 'too_many_attempts', { at: 'retry', reason: 'tooMany' }],
       [503, 'identity_not_configured', { at: 'retry', reason: 'cantReach' }],
-      [503, 'identity_unavailable', { at: 'retry', reason: 'cantReach' }],
+      [503, 'identity_unavailable', { at: 'retry', reason: 'identity' }],
+      [502, undefined, { at: 'retry', reason: 'cantReach' }],
       [-1, undefined, { at: 'retry', reason: 'cantReach' }],
     ];
     for (const [status, code, answer] of cases) {

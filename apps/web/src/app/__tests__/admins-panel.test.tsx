@@ -227,8 +227,11 @@ describe('the owner', () => {
     await press(root, 'admins-new-notice-dismiss');
     expect(byTestId(root, 'admins-new-notice')).toHaveLength(0);
     const stored = local.data.get('hr:admin-notice-seen') ?? '';
-    expect(stored).toContain('dr-cho@');
+    // A digest only: no account id, no name, no email in this browser.
+    expect(JSON.parse(stored)).toEqual([expect.stringMatching(/^n[0-9a-z]+$/)]);
+    expect(stored).not.toContain('dr-cho');
     expect(stored).not.toContain('Cho');
+    expect(stored).not.toContain('@');
     // Remembered: a fresh panel shows no notice.
     act(() => mounted?.unmount());
     const again = await render('ms-park', ok(ownerView([LEE, CHO])));
@@ -287,6 +290,18 @@ describe('the owner', () => {
     answers.create.push(fail(500));
     root = await render('ms-park', ok(ownerView([])));
     await press(root, 'admins-invite');
+    expect(textOf(one(root, 'admins-status'))).toBe(a.invite.failed);
+  });
+
+  it('a made invite this build has no link for: the open invite with Revoke appears, and the failed line', async () => {
+    answers.create.push(ok({ invite: { id: 'invite:new', createdAt: '2026-10-20T15:00:00.000Z', expiresAt: '2026-10-27T15:00:00.000Z' }, url: null }));
+    answers.admins.push(ok(ownerView([LEE], 1)));
+    const root = await render('ms-park', ok(ownerView([LEE])));
+    await press(root, 'admins-invite');
+    expect(calls.list.filter((c) => c === 'admins')).toHaveLength(2);
+    expect(byTestId(root, 'admins-invite-box')).toHaveLength(0);
+    expect(byTestId(root, 'admins-open-invite')).toHaveLength(1);
+    expect(byTestId(root, 'admins-revoke')).toHaveLength(1);
     expect(textOf(one(root, 'admins-status'))).toBe(a.invite.failed);
   });
 
@@ -410,13 +425,26 @@ describe('an administrator', () => {
     expect(left).toEqual(['/teach']);
   });
 
-  it('a reload that shows the role gone sends the viewer to their grown-up home', async () => {
+  it.each([
+    ['403, as the Worker answers someone without the role', fail(403, 'forbidden')],
+    ['404, the school gone from their spaces', fail(404, 'not_found')],
+    ['a 200 that leaves them out', ok(adminView([LEE]))],
+  ] as Array<[string, ApiResult<AdminsView>]>)('a reload that shows the role gone sends the viewer to their grown-up home: %s', async (_case, reloaded) => {
     answers.leave = fail(403);
-    answers.admins.push(ok(adminView([LEE])));
+    answers.admins.push(reloaded);
     const root = await render('dr-cho', ok(adminView([LEE, CHO])));
     await press(root, 'admins-leave');
     expect(left).toEqual(['/teach']);
     expect(session.data.has('hr:console-flash')).toBe(false);
+  });
+
+  it('a reload that fails for another reason keeps the panel and its Stop', async () => {
+    answers.leave = fail(409);
+    answers.admins.push(fail(500));
+    const root = await render('dr-cho', ok(adminView([LEE, CHO])));
+    await press(root, 'admins-leave');
+    expect(left).toEqual([]);
+    expect(byTestId(root, 'admins-leave')).toHaveLength(1);
   });
 
   it('a network failure on Stop says actionFailed and stays', async () => {

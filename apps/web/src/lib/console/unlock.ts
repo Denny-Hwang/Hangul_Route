@@ -1,6 +1,6 @@
 import { BROWSE_PASS_SESSION_KEY, GrownUpUnlockSchema, UNLOCK_SESSION_KEY, parseLenient, unlockActive, type GrownUpUnlock } from '@hangul-route/content-schema';
 import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
-import { clearAdminInvite } from './admin-invite';
+import { clearAdminInvite, keepAdminInviteThroughSignOut } from './admin-invite';
 import { clearSession } from './session';
 
 /**
@@ -60,5 +60,6 @@ export function clearGrownUpTab(storage: KeyValueStorage | null = defaultStorage
   clearUnlock(storage);
   clearSession(storage);
   removeItem(storage, BROWSE_PASS_SESSION_KEY);
-  if (!options.keepInvite) clearAdminInvite(storage);
+  if (options.keepInvite) keepAdminInviteThroughSignOut();
+  else clearAdminInvite(storage);
 }

@@ -73,20 +73,28 @@ describe('the new-admin notice (section 6.3 item 3)', () => {
     expect(newAdminNotices([{ ...cho, email: null }], 'owner', NOW, new Set())).toEqual([]);
   });
 
-  it('Got it is remembered per browser by an id (account and joining time), never a name or an email', () => {
+  it('Got it is remembered per browser by a digest of the joining, never an account id, a name or an email', () => {
     const storage = memory();
     expect(readSeenNotices(storage).size).toBe(0);
-    const seen = rememberNotice(noticeId(cho), storage);
-    expect(seen.has('dr-cho@2026-10-18T10:00:00.000Z')).toBe(true);
+    const id = noticeId(cho);
+    expect(id).toMatch(/^n[0-9a-z]{1,11}$/);
+    expect(noticeId(cho)).toBe(id);
+    // Another joining (the same person again, or someone else) is another id.
+    expect(noticeId({ ...cho, joinedAt: '2026-10-19T10:00:00.000Z' })).not.toBe(id);
+    expect(noticeId({ ...cho, accountId: 'mr-lee' })).not.toBe(id);
+    const seen = rememberNotice(id, storage);
+    expect(seen.has(id)).toBe(true);
     const raw = storage.data.get(ADMIN_NOTICE_SEEN_KEY) ?? '';
+    expect(raw).not.toContain('dr-cho');
     expect(raw).not.toContain('Cho');
-    expect(raw).not.toContain('@example');
-    for (let i = 0; i < 25; i += 1) rememberNotice(`a${i}@t`, storage);
+    expect(raw).not.toContain('@');
+    for (let i = 0; i < 25; i += 1) rememberNotice(noticeId({ accountId: `a${i}`, joinedAt: 't' }), storage);
     expect(readSeenNotices(storage).size).toBe(20);
     storage.setItem(ADMIN_NOTICE_SEEN_KEY, '{');
     expect(readSeenNotices(storage).size).toBe(0);
-    storage.setItem(ADMIN_NOTICE_SEEN_KEY, JSON.stringify([1, 'x']));
-    expect([...readSeenNotices(storage)]).toEqual(['x']);
+    // Anything but a digest (a raw account id from an earlier build, a number) is dropped on read.
+    storage.setItem(ADMIN_NOTICE_SEEN_KEY, JSON.stringify([1, 'dr-cho@2026-10-18T10:00:00.000Z', id]));
+    expect([...readSeenNotices(storage)]).toEqual([id]);
   });
 });
 

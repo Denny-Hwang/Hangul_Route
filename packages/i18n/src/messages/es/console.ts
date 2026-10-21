@@ -1750,6 +1750,7 @@ export const consoleMsgs = {
     alreadyAdmin: (school: string) => `Ya eres admin de ${school}.`,
     notFound: 'Este enlace no abre ninguna invitación. Revisa que se haya copiado completo.',
     emailUnverified: 'Para aceptar, tu cuenta necesita un correo verificado. Verifícalo en los ajustes de tu cuenta y vuelve a abrir el enlace.',
+    tryAgain: 'No se pudo revisar la invitación ahora. Inténtalo de nuevo en un momento.',
     home: { cta: 'Ir a mi inicio' },
   },
 } satisfies DeepPartial<Messages['console']>;

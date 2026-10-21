@@ -11,7 +11,7 @@ import type { AdminEventRow, AdminRow, AdminsView, ApiResult } from './api';
 
 /** How long the owner's new-admin notice shows after an administrator joined (section 6.3 item 3). */
 export const NEW_ADMIN_NOTICE_MS = 7 * 24 * 60 * 60 * 1000;
-/** Got it on a notice, remembered per browser (`localStorage`, the safe storage wrapper): ids only, never a name. */
+/** Got it on a notice, remembered per browser (`localStorage`, the safe storage wrapper): digests only, never an account id or a name. */
 export const ADMIN_NOTICE_SEEN_KEY = 'hr:admin-notice-seen';
 const SEEN_MAX = 20;
 
@@ -38,9 +38,26 @@ export function fullShown(view: Pick<AdminsView, 'admins' | 'invites' | 'limit'>
   return viewer === 'owner' && !archived && placesTaken(view) >= view.limit;
 }
 
-/** The id Got it remembers for one admin's joining: the account and the time it joined, never a name or an email. */
+/** The shape of a remembered notice id: `n` and a 53-bit digest in base 36. Anything else in the record is dropped. */
+const NOTICE_ID_RE = /^n[0-9a-z]{1,11}$/;
+
+/**
+ * The id Got it remembers for one admin's joining (section 6.3 item 3: an id, not PII). It is a one-way 53-bit digest
+ * (cyrb53) of the account and the time it joined, so this browser never stores another person's account id, a name or
+ * an email. `GET /:id/admins` carries no event id today; the digest stands in for it and changes when they join again.
+ */
 export function noticeId(admin: Pick<AdminRow, 'accountId' | 'joinedAt'>): string {
-  return `${admin.accountId}@${admin.joinedAt}`;
+  const text = `${admin.accountId}@${admin.joinedAt}`;
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return `n${(4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)}`;
 }
 
 /**
@@ -65,7 +82,7 @@ function localArea(): KeyValueStorage | null {
 export function readSeenNotices(storage: KeyValueStorage | null = localArea()): Set<string> {
   try {
     const raw = JSON.parse(readItem(storage, ADMIN_NOTICE_SEEN_KEY) ?? '[]') as unknown;
-    return new Set(Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : []);
+    return new Set(Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string' && NOTICE_ID_RE.test(x)) : []);
   } catch {
     return new Set();
   }

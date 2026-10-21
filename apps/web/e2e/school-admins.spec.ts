@@ -236,6 +236,12 @@ for (const width of [320, 1280]) {
       await expect(page.getByTestId('console-flash')).toHaveText("You're an administrator of Maple School.");
       expect(await page.evaluate(() => window.sessionStorage.getItem('hr:admin-invite'))).toBeNull();
       await shot(page, `invite-done-${width}`);
+      // Accept replaced the invite's history entry, and the strip had already taken the fragment from it (the App
+      // Router's replaceState patch kept its copy in step): Back never brings the token into an address again.
+      await page.goBack();
+      await expect.poll(() => page.url()).not.toContain('/teach/space');
+      expect(page.url()).not.toContain(TOKEN);
+      expect(page.url()).not.toContain('#t=');
     });
 
     test('signed out: the link goes to /signin?next=/account/invite with the invite line, no token in the address', async ({ page }) => {

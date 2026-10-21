@@ -75,9 +75,11 @@ const api = {
     return answers.accept.shift() ?? { ok: false, error: 'network', status: -1 };
   },
 };
+// `fresh.api` hands a new api object on each render, as useConsole does when Clerk rebuilds the session object.
+const fresh = vi.hoisted(() => ({ api: false }));
 vi.mock('@/components/console/use-console', async () => {
   const i18n = await import('@hangul-route/i18n');
-  return { useConsole: () => ({ ready: auth.ready, session: auth.session, api, signOut: () => undefined, m: i18n.getMessages('en'), locale: 'en' }) };
+  return { useConsole: () => ({ ready: auth.ready, session: auth.session, api: fresh.api ? { ...api } : api, signOut: () => undefined, m: i18n.getMessages('en'), locale: 'en' }) };
 });
 
 import { GrownUpGate } from '@/components/console/GrownUpLayout';
@@ -154,6 +156,7 @@ beforeEach(() => {
   calls.accept = [];
   answers.preview = [];
   answers.accept = [];
+  fresh.api = false;
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -217,6 +220,40 @@ describe('step 1: GrownUpGate captures the invite before anything else', () => {
     expect(stashed()).not.toBeNull();
     act(() => lock.onSignInAgain?.(`/signin?next=${encodeURIComponent('/account/invite')}`));
     expect(auth.signOuts).toEqual([{ url: `/signin?next=${encodeURIComponent('/account/invite')}`, options: { keepInvite: true } }]);
+  });
+});
+
+describe('step 1: a session that ends without the app sign-out drops the stash', () => {
+  it('expired or ended in another tab: the next sign-in in this tab sees reopen, not the invite', async () => {
+    signIn();
+    stash();
+    await render(<GrownUpGate>{null}</GrownUpGate>);
+    expect(stashed()).not.toBeNull();
+    auth.session = null;
+    await act(async () => mounted?.update(<GrownUpGate>{null}</GrownUpGate>));
+    expect(stashed()).toBeNull();
+    act(() => mounted?.unmount());
+    mounted = null;
+    signIn();
+    const root = await render(<AdminInvitePage />);
+    expect(byTestId(root, 'invite-reopen')).toHaveLength(1);
+    expect(calls.preview).toEqual([]);
+  });
+
+  it('Use another account and the lock keep it through the end of the session', async () => {
+    signIn();
+    stash();
+    await render(<GrownUpGate>{null}</GrownUpGate>);
+    clearGrownUpTab(undefined, { keepInvite: true });
+    auth.session = null;
+    await act(async () => mounted?.update(<GrownUpGate>{null}</GrownUpGate>));
+    expect(stashed()).not.toBeNull();
+    // The next session clears the mark.
+    signIn();
+    await act(async () => mounted?.update(<GrownUpGate>{null}</GrownUpGate>));
+    auth.session = null;
+    await act(async () => mounted?.update(<GrownUpGate>{null}</GrownUpGate>));
+    expect(stashed()).toBeNull();
   });
 });
 
@@ -336,8 +373,38 @@ describe('the invite page', () => {
     expect(textOf(byTestId(root, 'invite-refused')[0] as ReactTestInstance)).toBe(line);
     expect(textOf(byTestId(root, 'invite-title')[0] as ReactTestInstance)).toBe(t.pageTitle);
     expect(byTestId(root, 'invite-try-again')).toHaveLength(0);
+    // A final refusal drops the stash at once: leaving by Back or a typed address cannot loop through /start.
+    expect(stashed()).toBeNull();
     await press(root, 'invite-home');
     expect(stashed()).toBeNull();
+  });
+
+  it('after a final refusal, /start shows the role cards and does not forward to the dead invite', async () => {
+    signIn();
+    stash();
+    answers.preview.push(fail(410, 'invite_used'));
+    await render(<AdminInvitePage />);
+    act(() => mounted?.unmount());
+    mounted = null;
+    nav.replaced = [];
+    nav.pathname = '/start';
+    const root = await render(<StartPage />);
+    expect(nav.replaced).toEqual([]);
+    expect(textOf(root)).toContain(m.console.start.roleTitle);
+  });
+
+  it('the preview runs once: a new api object (Clerk refreshed the session) neither redraws the page nor asks again', async () => {
+    signIn();
+    stash();
+    fresh.api = true;
+    answers.preview.push(fail(403, 'email_unverified'), OPEN, OPEN);
+    answers.accept.push(fail(403, 'email_unverified'));
+    const root = await render(<AdminInvitePage />);
+    expect(calls.preview).toEqual([TOKEN]);
+    for (let i = 0; i < 3; i += 1) await act(async () => mounted?.update(<AdminInvitePage />));
+    for (let i = 0; i < 4; i += 1) await act(async () => Promise.resolve());
+    expect(calls.preview).toEqual([TOKEN]);
+    expect(textOf(byTestId(root, 'invite-refused')[0] as ReactTestInstance)).toBe(t.emailUnverified);
   });
 
   it('a refusal at accept replaces the preview: email not verified', async () => {
@@ -349,6 +416,22 @@ describe('the invite page', () => {
     await press(root, 'invite-accept');
     expect(textOf(byTestId(root, 'invite-refused')[0] as ReactTestInstance)).toBe(t.emailUnverified);
     expect(byTestId(root, 'invite-accept')).toHaveLength(0);
+    // The line asks them to open the link again, so the stash goes.
+    expect(stashed()).toBeNull();
+  });
+
+  it('503 identity_unavailable at accept: adminInvite.tryAgain, Try again runs the accept again with the stash kept', async () => {
+    signIn();
+    stash();
+    answers.preview.push(OPEN);
+    answers.accept.push(fail(503, 'identity_unavailable'), { ok: true, data: { space: { id: 'space:maple', kind: 'school', name: 'Maple School' }, role: 'admin' } });
+    const root = await render(<AdminInvitePage />);
+    await press(root, 'invite-accept');
+    expect(textOf(byTestId(root, 'invite-retry')[0] as ReactTestInstance)).toBe(t.tryAgain);
+    expect(stashed()).not.toBeNull();
+    await press(root, 'invite-try-again');
+    expect(calls.accept).toEqual([TOKEN, TOKEN]);
+    expect(nav.replaced).toEqual([`/teach/space?id=${encodeURIComponent('space:maple')}`]);
   });
 
   it('429: slow down with Try again (the stash kept); Go to my home still drops the stash', async () => {
@@ -369,7 +452,7 @@ describe('the invite page', () => {
     expect(nav.replaced).toEqual(['/teach']);
   });
 
-  it('a network failure or a 503 at accept: cantReach, Try again runs the accept again, Go to my home drops the stash', async () => {
+  it('a network failure or 503 identity_not_configured at accept: cantReach, Try again runs the accept again, Go to my home drops the stash', async () => {
     signIn();
     stash();
     answers.preview.push(OPEN);

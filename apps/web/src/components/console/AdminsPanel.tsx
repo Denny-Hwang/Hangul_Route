@@ -168,17 +168,21 @@ export function AdminsPanel({ api, school, accountId, confirm, onLeave, now = ()
     [],
   );
 
-  const load = useCallback(async (): Promise<AdminsView | null> => {
+  /**
+   * Reads the panel. `denied` is a `403` or `404`: the Worker answers so to someone who no longer runs the school (it
+   * checks `space.manage` first), and on the first read a `404` is also a Worker older than the admin routes.
+   */
+  const load = useCallback(async (): Promise<{ kind: 'ok'; view: AdminsView } | { kind: 'denied' } | { kind: 'failed' } | null> => {
     const result = await api.admins(school.id);
     if (!live.current) return null;
     if (!result.ok) {
       if (result.status === 404) setAbsent(true);
       else setFailed(true);
-      return null;
+      return result.status === 403 || result.status === 404 ? { kind: 'denied' } : { kind: 'failed' };
     }
     setFailed(false);
     setView(result.data);
-    return result.data;
+    return { kind: 'ok', view: result.data };
   }, [api, school.id]);
 
   useEffect(() => {
@@ -199,10 +203,15 @@ export function AdminsPanel({ api, school, accountId, confirm, onLeave, now = ()
   const viewer: PanelViewer = view ? panelViewer(view, accountId) : 'none';
   const archived = !!school.archivedAt;
 
-  /** A reload after a stale action: a viewer who no longer runs the school goes to their grown-up home. */
+  /**
+   * A reload after a stale action: a viewer who no longer runs the school goes to their grown-up home. That is a `200`
+   * that leaves them out, or, for an administrator, the `403` or `404` the Worker gives someone without the role.
+   */
   const reload = async (): Promise<void> => {
+    const before = viewer;
     const next = await load();
-    if (next && panelViewer(next, accountId) === 'none') onLeave(afterLeaving('none'));
+    if (!next) return;
+    if ((next.kind === 'ok' && panelViewer(next.view, accountId) === 'none') || (next.kind === 'denied' && before === 'admin')) onLeave(afterLeaving('none'));
     else focusNext.current = 'heading';
   };
 
@@ -239,6 +248,13 @@ export function AdminsPanel({ api, school, accountId, confirm, onLeave, now = ()
       setBox({ url: result.data.url, expiresAt: result.data.invite.expiresAt, inviteId: result.data.invite.id });
       focusNext.current = 'box';
       await load();
+      return;
+    }
+    if (result.ok) {
+      // The invite exists (it holds a place) but this build has no link for it: the panel shows it, with Revoke.
+      await load();
+      if (!live.current) return;
+      setLine({ kind: 'inviteFailed' });
       return;
     }
     // Another tab took the last place, or the school was archived meanwhile: the panel shows what is true now.

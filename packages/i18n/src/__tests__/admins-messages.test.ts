@@ -59,6 +59,7 @@ describe('section 9.4 in English', () => {
     expect(t.signedInAs('jin.cho@example.org')).toBe('Signed in as jin.cho@example.org');
     expect(t.full(SCHOOL_ADMIN_CAP)).toBe('This school already has 2 administrators.');
     expect(t.home.cta).toBe('Go to my home');
+    expect(t.tryAgain).toBe("Couldn't check your invite right now. Try again in a moment.");
     expect(en.console.settings.ownerOnly).toBe("Only the school's owner can change these settings.");
   });
 
@@ -78,6 +79,7 @@ describe('section 9.4 in Spanish and Korean', () => {
     expect(e.admins.revoked).toBe('Invitación anulada. El enlace ya no funciona.');
     expect(e.admins.history.someone).toBe('Alguien que ya salió');
     expect(e.adminInvite.title('Maple')).toBe('¿Unirte a Maple como admin?');
+    expect(e.adminInvite.tryAgain).toBe('No se pudo revisar la invitación ahora. Inténtalo de nuevo en un momento.');
     expect(e.settings.privacy.anonymizeOn).toBe('Las listas muestran iniciales.');
   });
 
@@ -87,6 +89,7 @@ describe('section 9.4 in Spanish and Korean', () => {
     expect(k.admins.left('Maple')).toBe('관리자를 그만뒀어요: Maple');
     expect(k.admins.removed('Mr Lee')).toBe('관리자에서 뺐어요: Mr Lee');
     expect(k.adminInvite.done('Maple')).toBe('이제 관리자예요: Maple');
+    expect(k.adminInvite.tryAgain).toBe('지금은 초대를 확인하지 못했어요. 잠시 뒤에 다시 해 볼까요?');
     expect(k.admins.invite.stepUp.reason).toBe('공유 기기에서도 학교 명단을 안전하게 지키기 위해서예요.');
   });
 

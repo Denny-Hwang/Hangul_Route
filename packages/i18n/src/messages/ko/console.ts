@@ -1652,6 +1652,7 @@ export const consoleMsgs = {
     alreadyAdmin: (school: string) => `이미 관리자예요: ${school}`,
     notFound: '이 링크로는 초대를 열 수 없어요. 링크가 모두 복사됐는지 확인해 주세요.',
     emailUnverified: '수락하려면 계정 이메일 인증이 필요해요. 계정 설정에서 이메일을 인증한 뒤 링크를 다시 열어 주세요.',
+    tryAgain: '지금은 초대를 확인하지 못했어요. 잠시 뒤에 다시 해 볼까요?',
     home: { cta: '내 홈으로' },
   },
 } satisfies DeepPartial<Messages['console']>;
