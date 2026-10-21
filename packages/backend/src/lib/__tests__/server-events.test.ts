@@ -279,6 +279,24 @@ describe('[SA] seat and rename events (AMENDMENTS-SEATS-ADMINS section 8: codes 
   });
 });
 
+describe('[SA] school administrator events (AMENDMENTS-SEATS-ADMINS section 6.8: codes only)', () => {
+  it('space.admin.accept_refused keeps the reason from its list only', () => {
+    for (const reason of ['used', 'expired', 'revoked', 'full', 'owner', 'not_found', 'email_unverified']) {
+      expect(keptEventFields('space.admin.accept_refused', { reason, token: 'A'.repeat(43), email: 'dean@example.org', spaceId: 'space:x' }, 'profile:a')).toEqual({ profileId: undefined, payload: { reason } });
+    }
+    expect(keptEventFields('space.admin.accept_refused', { reason: 'dean@example.org' }, undefined).payload).toBeUndefined();
+  });
+
+  it('the other admin events keep no payload at all', () => {
+    for (const name of ['space.admin.invite_created', 'space.admin.invite_revoked', 'space.admin.joined', 'space.admin.removed', 'space.admin.left'] as const) {
+      const event = recordServerEvent(name, { token: 'A'.repeat(43), name: 'Dr Cho', email: 'cho@example.org', accountId: 'dean', spaceId: 'space:x', inviteId: 'invite:1' });
+      expect(event?.payload, name).toBeUndefined();
+      expect(event?.profileId, name).toBeUndefined();
+    }
+    expect(JSON.stringify(store.events)).not.toMatch(/AAAA|Cho|@|dean|space:x|invite:1/);
+  });
+});
+
 describe('appendEvent', () => {
   it('pushes and trims from the front once past the cap', () => {
     store.events = Array.from({ length: MAX_EVENTS }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));

@@ -114,6 +114,7 @@ schoolRoutes.post('/:id/members', async (c: Context) => {
   const existing = await db.membership(cls.id, 'account', parsed.data.accountId);
   if (existing) return ok(c, { membership: existing, alreadyMember: true });
   const membership: Membership = { spaceId: cls.id, memberKind: 'account', memberId: parsed.data.accountId, role: 'teacher', joinedAt: new Date().toISOString() };
-  await db.addMembership(membership);
+  // [SA] section 6.1: never rewrites the role of a row another request added in between.
+  if (!(await db.addMembershipIfAbsent(membership))) return ok(c, { membership: await db.membership(cls.id, 'account', parsed.data.accountId), alreadyMember: true });
   return ok(c, { membership, alreadyMember: false }, 201);
 });

@@ -14,7 +14,7 @@ import { Hono, type Context } from 'hono';
 import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
-import { can, type Action } from '../lib/can';
+import { can, type Action, type Actor } from '../lib/can';
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { learnerCapOf, schoolUsage } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
@@ -210,18 +210,41 @@ spacesRoutes.get('/:id/members', async (c) => {
   if (!('id' in space)) return space;
   const account = await requireCan(c, db, space, 'roster.manage');
   if (!('id' in account)) return account;
+  // [SA] section 6.4: whether this caller may remove each member, by the rules of DELETE /:id/members (Settings never guesses).
+  const removable = await removalRules(db, await accountActor(db, account), space);
   const members = [];
   for (const m of await db.membersOf(space.id)) {
     if (m.memberKind === 'account') {
       const a = await db.getAccount(m.memberId);
-      members.push({ memberKind: 'account' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: a?.displayName ?? a?.email ?? m.memberId, isOwner: m.memberId === space.ownerAccountId });
+      members.push({ memberKind: 'account' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: a?.displayName ?? a?.email ?? m.memberId, isOwner: m.memberId === space.ownerAccountId, canRemove: removable(m) === null });
     } else {
       const learner = await db.getLearner(m.memberId);
-      members.push({ memberKind: 'learner' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: rosterName(space, learner?.displayName ?? '?'), isOwner: false });
+      members.push({ memberKind: 'learner' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: rosterName(space, learner?.displayName ?? '?'), isOwner: false, canRemove: true });
     }
   }
   return ok(c, { members });
 });
+
+/**
+ * [SA] Who a caller holding `roster.manage` may remove from the space (section 6.4), as the refusal code or null:
+ * never the space's owner (`owner`); on a school, an admin only with `admin.manage` (the school's owner); on a class
+ * of a school, the school's owner or one of its admins only with `admin.manage` on the school, so the class cascade
+ * cannot be used by one admin to unassign another admin or the owner (`owner_only`).
+ */
+async function removalRules(db: Db, actor: Actor, space: Space): Promise<(m: Pick<Membership, 'memberKind' | 'memberId' | 'role'>) => 'owner' | 'owner_only' | null> {
+  const ctx = await spaceContext(db, space);
+  const ownsHere = can(actor, 'admin.manage', { kind: 'space', ctx });
+  const school = ctx.parent?.kind === 'school' ? ctx.parent : null;
+  const ownsSchool = school ? can(actor, 'admin.manage', { kind: 'space', ctx: { space: school, parent: null } }) : false;
+  const schoolAdmins = new Set(school ? (await db.membersOf(school.id)).filter((x) => x.memberKind === 'account' && x.role === 'admin').map((x) => x.memberId) : []);
+  return (m) => {
+    if (m.memberKind !== 'account') return null;
+    if (m.memberId === space.ownerAccountId) return 'owner';
+    if (space.kind === 'school' && m.role === 'admin' && !ownsHere) return 'owner_only';
+    if (school && (m.memberId === school.ownerAccountId || schoolAdmins.has(m.memberId)) && !ownsSchool) return 'owner_only';
+    return null;
+  };
+}
 
 spacesRoutes.patch('/:id/settings', async (c) => {
   const db = dbFor(c);
@@ -409,7 +432,11 @@ spacesRoutes.post('/:id/join', async (c) => {
   const existing = await db.membership(space.id, 'account', account.id);
   if (existing) return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
   const membership: Membership = { spaceId: space.id, memberKind: 'account', memberId: account.id, role, joinedAt: now.toISOString() };
-  await db.addMembership(membership);
+  // [SA] section 6.1: insert-if-absent, so a teacher-code join that read "no row" just before an admin accept never
+  // demotes the new admin to teacher.
+  if (!(await db.addMembershipIfAbsent(membership))) {
+    return ok(c, { alreadyMember: true, membership: await db.membership(space.id, 'account', account.id), space: { id: space.id, kind: space.kind, name: space.name } });
+  }
   return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name } }, 201);
 });
 
@@ -439,6 +466,19 @@ spacesRoutes.delete('/:id/members/:kind/:memberId', async (c) => {
   const account = await requireCan(c, db, space, 'roster.manage');
   if (!('id' in account)) return account;
   if (kind === 'account' && memberId === space.ownerAccountId) return fail(c, 'owner', 'The owner cannot be removed', 409);
+  if (kind === 'account') {
+    const row = await db.membership(space.id, 'account', memberId);
+    const rule = (await removalRules(db, await accountActor(db, account), space))({ memberKind: 'account', memberId, role: row?.role ?? 'teacher' });
+    if (rule === 'owner_only') return fail(c, 'owner_only', "Only the school's owner can remove an administrator", 403);
+    if (space.kind === 'school' && row?.role === 'admin') {
+      // [SA] section 6.4: the owner's removal of an admin ends the role as DELETE /:id/admins/:accountId does.
+      const stays = await db.endAdminRole({ spaceId: space.id, accountId: memberId, actorAccountId: account.id, kind: 'admin_removed', now: new Date(), eventId: id('sev') });
+      if (stays) {
+        recordServerEvent('space.admin.removed');
+        return ok(c, { removed: true, stays });
+      }
+    }
+  }
   const removed = await db.removeMembership(space.id, kind, memberId);
   // F-FEEDBACK-001 section 7.5: a removed learner's notes of this space are kept, not deleted, so an adult cannot
   // erase a note (a taken-back one included) by removing the learner before the family looks (D5, D9, 8.3 item 3);

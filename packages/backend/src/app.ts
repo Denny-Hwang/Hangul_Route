@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { allowedOrigin } from './lib/cors';
+import { adminInviteRoutes, adminSpaceRoutes } from './routes/admins';
 import { healthReport, type RuntimeEnv } from './lib/runtime';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
@@ -90,6 +91,10 @@ app.route('/api/spaces', spaceReportRoutes);
 app.route('/api/spaces', notesRoutes);
 // Launch-invite waitlist: public, first-party, no auth. POST only (no read route).
 app.route('/api/waitlist', waitlistRoutes);
+// [SA] School administrators (AMENDMENTS-SEATS-ADMINS section 6.4): the admin list, invite links (create, revoke),
+// ending an admin role; preview and accept read the token from the JSON body only.
+app.route('/api/spaces', adminSpaceRoutes);
+app.route('/api/admin-invites', adminInviteRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),
