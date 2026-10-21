@@ -11,14 +11,24 @@ import {
   storyCoverage,
   type CurriculumFinding,
   type CurriculumRule,
-} from '../index';
+} from '../lesson-lint';
+import { StorySchema } from '../schemas/story';
 import { REPO_ROOT } from './helpers/romanization-registry';
 
 // F-CURR-002 §9.3 (row CM-7): every rule runs over the fixture bundles of
 // content/fixtures/curriculum-lint/. A bundle is a small content tree (`files`) and the findings
-// of its rule (`expect`: rule, severity, file, path), so a `.pass` bundle expects none.
+// of its rule (`expect`: rule, severity, file, path), so a `.pass` bundle expects none. A bundle
+// is clean for its own rule only: its files may break other rules. `learner` holds learner
+// messages by their packages/i18n file, read as lintReviewStrings reads the real ones.
 
-type Bundle = { rule: string; files: Record<string, unknown>; expect?: string[][]; gradeA?: string[]; report?: unknown[] };
+type Bundle = {
+  rule: string;
+  files: Record<string, unknown>;
+  learner?: Record<string, unknown>;
+  expect?: string[][];
+  gradeA?: string[];
+  report?: unknown[];
+};
 const DIR = join(REPO_ROOT, 'content/fixtures/curriculum-lint');
 const bundles = new Map<string, Bundle>(
   readdirSync(DIR)
@@ -39,7 +49,8 @@ describe('lintCurriculum over the content/fixtures/curriculum-lint bundles', () 
   for (const [name, bundle] of bundles) {
     if (bundle.expect === undefined) continue;
     it(`${name}: ${bundle.rule}`, () => {
-      const found = lintCurriculum(treeOf(bundle)).filter((f) => f.rule === bundle.rule);
+      const learner = Object.entries(bundle.learner ?? {}).flatMap(([file, messages]) => lintReviewStrings(messages, file));
+      const found = [...lintCurriculum(treeOf(bundle)), ...learner].filter((f) => f.rule === bundle.rule);
       expect(sorted(found.map(tuple))).toEqual(sorted(bundle.expect as string[][]));
       for (const f of found) expect(f.message.length, `${f.file} ${f.path}`).toBeGreaterThan(0);
     });
@@ -78,9 +89,16 @@ describe('lintCurriculum over the content/fixtures/curriculum-lint bundles', () 
     walk('content/episodes');
     walk('content/stories');
     expect(tree.size).toBeGreaterThanOrEqual(25 + SHIPPED_STORY_IDS.size);
-    const findings = lintCurriculum(tree);
-    expect(findings.length).toBeGreaterThan(0);
-    expect(findings.filter((f) => f.severity === 'error')).toEqual([]);
+    // Whatever Volume 1 still breaks (row CM-3A re-authors it), it is a warning until row CM-3B.
+    expect(lintCurriculum(tree).filter((f) => f.severity !== 'warning')).toEqual([]);
+  });
+
+  it('builds the story-topic-unique bundles from stories that parse with StorySchema', () => {
+    for (const name of ['story-topic-unique.pass', 'story-topic-unique.fail']) {
+      for (const [file, story] of Object.entries((bundles.get(name) as Bundle).files)) {
+        expect(StorySchema.safeParse(story).success, `${name} ${file}`).toBe(true);
+      }
+    }
   });
 
   it('passes review-copy on the learner review strings of every UI locale (validate-content reads the same files)', async () => {

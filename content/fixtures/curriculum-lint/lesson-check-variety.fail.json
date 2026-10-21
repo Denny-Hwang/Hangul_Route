@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Listen & Pick in every Check, the same triple three times: warnings in Volume 1, errors in Volume 2. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Listen & Pick between spellings in every Check (no read-meaning round), the same triple three times: warnings in Volume 1, errors in Volume 2. Not real content.",
   "rule": "lesson-check-variety",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -111,11 +111,19 @@
                   "options": [
                     {
                       "id": "a",
-                      "pictureRef": "word:haneul"
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
                     },
                     {
                       "id": "b",
-                      "pictureRef": "word:other"
+                      "text": {
+                        "ko": "바다",
+                        "romanization": "bada",
+                        "en": "sea"
+                      }
                     }
                   ],
                   "answerId": "a"
@@ -226,11 +234,19 @@
                   "options": [
                     {
                       "id": "a",
-                      "pictureRef": "word:haneul"
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
                     },
                     {
                       "id": "b",
-                      "pictureRef": "word:other"
+                      "text": {
+                        "ko": "바다",
+                        "romanization": "bada",
+                        "en": "sea"
+                      }
                     }
                   ],
                   "answerId": "a"
@@ -341,11 +357,19 @@
                   "options": [
                     {
                       "id": "a",
-                      "pictureRef": "word:haneul"
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
                     },
                     {
                       "id": "b",
-                      "pictureRef": "word:other"
+                      "text": {
+                        "ko": "바다",
+                        "romanization": "bada",
+                        "en": "sea"
+                      }
                     }
                   ],
                   "answerId": "a"
@@ -468,11 +492,19 @@
                   "options": [
                     {
                       "id": "a",
-                      "pictureRef": "word:haneul"
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
                     },
                     {
                       "id": "b",
-                      "pictureRef": "word:other"
+                      "text": {
+                        "ko": "바다",
+                        "romanization": "bada",
+                        "en": "sea"
+                      }
                     }
                   ],
                   "answerId": "a"
@@ -583,11 +615,19 @@
                   "options": [
                     {
                       "id": "a",
-                      "pictureRef": "word:haneul"
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
                     },
                     {
                       "id": "b",
-                      "pictureRef": "word:other"
+                      "text": {
+                        "ko": "바다",
+                        "romanization": "bada",
+                        "en": "sea"
+                      }
                     }
                   ],
                   "answerId": "a"
@@ -698,11 +738,19 @@
                   "options": [
                     {
                       "id": "a",
-                      "pictureRef": "word:haneul"
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
                     },
                     {
                       "id": "b",
-                      "pictureRef": "word:other"
+                      "text": {
+                        "ko": "바다",
+                        "romanization": "bada",
+                        "en": "sea"
+                      }
                     }
                   ],
                   "answerId": "a"

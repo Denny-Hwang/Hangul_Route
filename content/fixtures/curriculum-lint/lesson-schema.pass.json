@@ -6,6 +6,9 @@
       "id": "episode:stage2-nature",
       "stage": "stage2",
       "quests": []
+    },
+    "content/episodes/stage-1/cards.json": {
+      "about": "Stage 1 is not a lesson-cell directory"
     }
   },
   "expect": []

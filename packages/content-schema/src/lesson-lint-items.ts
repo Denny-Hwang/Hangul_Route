@@ -51,8 +51,10 @@ export type LessonBodySource = z.output<typeof LaxSourceSchema>;
 
 /** `content/episodes/stage-<n>/<theme>.json`, or `<theme>.v<k>.json` for volume k (row CM-40). */
 export const LESSON_FILE_RE = /^content\/episodes\/stage-([2-467])\/(letters|life|rites|nature|crafts)(?:\.v([0-9]+))?\.json$/;
-/** Any file of a pack directory, `content/packs/<key>/<name>` (row CM-50a). */
-export const PACK_FILE_RE = /^content\/packs\/([a-z0-9-]+)\/([^/]+)$/;
+/** A file directly in a pack directory, `content/packs/<key>/<name>` (row CM-50a). */
+export const PACK_FILE_RE = /^content\/packs\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([^/]+)$/;
+/** The one file under `content/packs/` outside a pack directory (§6.2 pack order, row CM-50a). */
+export const PACK_ORDER_FILE = 'content/packs/order.json';
 /** A pack level's file name inside its directory. */
 export const PACK_LEVEL_NAME_RE = /^stage-([2-467])\.json$/;
 export const STORY_FILE_RE = /^content\/stories\/[^/]+\.json$/;
@@ -161,15 +163,45 @@ export function stepGameKind(quest: LessonBodyQuest, kind: string): string | und
   return step?.minigameKind ?? scopeOfStep(quest, kind)?.kind;
 }
 
-/** Everything the quest puts in front of the learner as Korean: its units' keys and texts, and every scope. */
-export function questKnownAfter(quest: LessonBodyQuest): string[] {
-  return [...questUnits(quest).flatMap((u) => [u.key, ...u.texts]), ...koStrings(quest.scopes)];
+/** Keys whose Korean is never an answer: wrong tiles, the particle pair, the drawn realia sheet. */
+const UNASKED_KEYS = new Set(['distractors', 'particle', 'realia']);
+
+/**
+ * The Korean a scope asks for and accepts as right, normalized: a round's prompt, target,
+ * sentence or frame and its answer. A wrong option (a Listen & Pick or Realia Read option that is
+ * not `answerId`, a Tap to Respond reply that is not `correct`, a distractor tile) is shown but
+ * not taught, so a word seen only as a wrong option is still new when a later quest teaches it.
+ */
+export function askedKo(value: unknown, out: string[] = []): string[] {
+  if (Array.isArray(value)) {
+    for (const v of value) askedKo(v, out);
+    return out;
+  }
+  if (typeof value !== 'object' || value === null) return out;
+  const record = value as Record<string, unknown>;
+  for (const [key, child] of Object.entries(record)) {
+    if (UNASKED_KEYS.has(key)) continue;
+    if (key === 'options' && Array.isArray(child) && 'answerId' in record) {
+      askedKo(child.filter((o) => typeof o === 'object' && o !== null && (o as Record<string, unknown>).id === record.answerId), out);
+    } else if (key === 'replies' && Array.isArray(child)) {
+      askedKo(child.filter((r) => typeof r === 'object' && r !== null && (r as Record<string, unknown>).correct === true), out);
+    } else if (key === 'ko' && typeof child === 'string') {
+      const ko = normalizeKo(child);
+      if (ko !== '') out.push(ko);
+    } else askedKo(child, out);
+  }
+  return out;
 }
 
-/** The distinct Korean of the quest's Practice and Check rounds (the `lesson-recycle` items). */
+/** What the quest teaches: its Discover units' keys and texts, and the answers its rounds ask for. */
+export function questKnownAfter(quest: LessonBodyQuest): string[] {
+  return [...questUnits(quest).flatMap((u) => [u.key, ...u.texts]), ...askedKo(quest.scopes)];
+}
+
+/** The distinct Korean the quest's Practice and Check rounds ask for (the `lesson-recycle` items). */
 export function practiceCheckItems(quest: LessonBodyQuest): string[] {
   const scopes = ['practice', 'check'].map((kind) => scopeOfStep(quest, kind)).filter((s) => s !== undefined);
-  return [...new Set(koStrings(scopes))];
+  return [...new Set(askedKo(scopes))];
 }
 
 // ---- pronunciation ----------------------------------------------------------------------------------

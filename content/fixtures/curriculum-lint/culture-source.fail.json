@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): notes with no allowlisted source (a warning in Volume 1, an error in Volume 2), an institution named as it was not called on the access date, and a factRef whose fact has no allowlisted source. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): notes with no allowlisted source (a warning in Volume 1, an error in Volume 2), an institution named as it was not called on the access date, and a factRef whose fact has no allowlisted source. Also a publisher name on a site the institution does not run, bodies whose names contain an allowlisted one, and a factRef to a fact citing the Cultural Heritage Administration after its rename. Not real content.",
   "rule": "culture-source",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -990,6 +990,98 @@
             "scope": "lesson",
             "notes": "pass 1; pass 2; pass 3"
           }
+        },
+        {
+          "id": "n5",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "UNESCO",
+              "url": "https://any-blog.example/unesco-copy",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n6",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "Export-Import Bank of Korea",
+              "url": "https://www.koreaexim.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n7",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Museum of Korean Contemporary History",
+              "url": "https://www.much.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n8",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "Korean National Commission for UNESCO",
+              "url": "https://www.unesco.or.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n9",
+          "kind": "culture",
+          "textEn": "A fact from a story.",
+          "factRef": "story:fixture-renamed#f1",
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
         }
       ],
       "rewardCardIds": []
@@ -1005,6 +1097,24 @@
               "title": "Reference entry",
               "publisher": "Academy of Korean Studies",
               "url": "https://www.heritage.go.kr/fixture-other",
+              "accessed": "2025-03-02",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ]
+        }
+      ]
+    },
+    "content/stories/fixture-renamed.json": {
+      "id": "story:fixture-renamed",
+      "facts": [
+        {
+          "id": "f1",
+          "claimEn": "A documented fact.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "Cultural Heritage Administration",
+              "url": "https://www.heritage.go.kr/fixture-renamed",
               "accessed": "2025-03-02",
               "quoteOrLocator": "entry for the word, sense 1"
             }
@@ -1043,6 +1153,36 @@
       "error",
       "content/episodes/stage-2/nature.v2.json",
       "culture[3].sources"
+    ],
+    [
+      "culture-source",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "culture[4].sources"
+    ],
+    [
+      "culture-source",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "culture[5].sources"
+    ],
+    [
+      "culture-source",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "culture[6].sources"
+    ],
+    [
+      "culture-source",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "culture[7].sources"
+    ],
+    [
+      "culture-source",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "culture[8].factRef"
     ]
   ]
 }

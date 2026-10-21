@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a homophone with nothing to settle it (a warning in Volume 1, an error in Volume 2), of a word with a sound change, and a heard pick between two spellings of one sound. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a homophone with nothing to settle it (a warning in Volume 1, an error in Volume 2), of a word with a sound change, and a heard pick between two spellings of one sound. A gloss found only inside another prompt word (day in today) does not settle it. Not real content.",
   "rule": "dictation-unambiguous",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -151,6 +151,16 @@
                     "romanization": "gachi",
                     "en": "together"
                   }
+                },
+                {
+                  "id": "r3",
+                  "promptEn": "Type what you hear today.",
+                  "mode": "hear",
+                  "target": {
+                    "ko": "낮",
+                    "romanization": "nat",
+                    "en": "day"
+                  }
                 }
               ]
             }
@@ -244,6 +254,12 @@
       "error",
       "content/episodes/stage-2/nature.v2.json",
       "quests[1].scopes[0].rounds[0]"
+    ],
+    [
+      "dictation-unambiguous",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[0].scopes[0].rounds[2]"
     ]
   ]
 }

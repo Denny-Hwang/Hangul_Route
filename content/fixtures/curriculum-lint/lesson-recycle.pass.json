@@ -307,7 +307,7 @@
     "content/packs/food-fixture/stage-2.json": {
       "id": "episode:pack-food-fixture-s2",
       "stage": "stage2",
-      "status": "draft",
+      "status": "ready",
       "titleEn": "Numbers",
       "quests": [
         {
@@ -431,7 +431,7 @@
     "content/packs/food-fixture/stage-3.json": {
       "id": "episode:pack-food-fixture-s3",
       "stage": "stage3",
-      "status": "draft",
+      "status": "ready",
       "titleEn": "Numbers",
       "quests": [
         {

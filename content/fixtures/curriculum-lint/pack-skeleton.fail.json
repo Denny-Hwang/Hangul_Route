@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a pack that breaks the template in each way the rule checks, and a pack with no pack.json: errors. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a ready pack that breaks the template in each way the rule checks (an L2 quest with no new pattern, a sentence in L1, a draft level), a pack with no pack.json, a draft scaffold with a wrong quest id, a repeated level and an unlisted level file, and files outside the pack layout: errors. Not real content.",
   "rule": "pack-skeleton",
   "files": {
     "content/packs/numbers-fixture/pack.json": {
@@ -30,12 +30,12 @@
           "episodeId": "episode:pack-numbers-fixture-s7"
         }
       ],
-      "status": "draft"
+      "status": "ready"
     },
     "content/packs/numbers-fixture/stage-2.json": {
       "id": "episode:pack-numbers-fixture-s2",
       "stage": "stage2",
-      "status": "draft",
+      "status": "ready",
       "titleEn": "Numbers",
       "quests": [
         {
@@ -176,6 +176,14 @@
                           "romanization": "byeol",
                           "en": "star"
                         }
+                      },
+                      {
+                        "type": "sentence",
+                        "sentence": {
+                          "ko": "하늘이 커요.",
+                          "romanization": "haneuri keoyo",
+                          "en": "The sky is big."
+                        }
                       }
                     ]
                   }
@@ -291,7 +299,7 @@
     "content/packs/numbers-fixture/stage-3.json": {
       "id": "episode:pack-numbers-fixture-s9",
       "stage": "stage4",
-      "status": "draft",
+      "status": "ready",
       "titleEn": "Numbers",
       "quests": [
         {
@@ -484,9 +492,9 @@
                       {
                         "type": "pattern",
                         "frame": {
-                          "ko": "___에 가요.",
-                          "romanization": "___e gayo",
-                          "en": "I go to ___."
+                          "ko": "___이 있어요.",
+                          "romanization": "___i isseoyo",
+                          "en": "There is ___."
                         },
                         "noteEn": "A pattern.",
                         "examples": [
@@ -929,18 +937,18 @@
                             "speaker": "a",
                             "speakerEn": "Hoya",
                             "line": {
-                              "ko": "하늘",
-                              "romanization": "haneul",
-                              "en": "sky"
+                              "ko": "고마워요.",
+                              "romanization": "gomawoyo",
+                              "en": "Thank you."
                             }
                           },
                           {
                             "speaker": "b",
                             "speakerEn": "Mina",
                             "line": {
-                              "ko": "별",
-                              "romanization": "byeol",
-                              "en": "star"
+                              "ko": "괜찮아요.",
+                              "romanization": "gwaenchanayo",
+                              "en": "It's fine."
                             }
                           }
                         ]
@@ -1067,18 +1075,18 @@
                             "speaker": "a",
                             "speakerEn": "Hoya",
                             "line": {
-                              "ko": "하늘",
-                              "romanization": "haneul",
-                              "en": "sky"
+                              "ko": "어디 가요?",
+                              "romanization": "eodi gayo",
+                              "en": "Where are you going?"
                             }
                           },
                           {
                             "speaker": "b",
                             "speakerEn": "Mina",
                             "line": {
-                              "ko": "별",
-                              "romanization": "byeol",
-                              "en": "star"
+                              "ko": "집에 가요.",
+                              "romanization": "jibe gayo",
+                              "en": "I'm going home."
                             }
                           }
                         ]
@@ -1202,7 +1210,7 @@
     "content/packs/numbers-fixture/stage-6.json": {
       "id": "episode:pack-numbers-fixture-s6",
       "stage": "stage6",
-      "status": "draft",
+      "status": "ready",
       "titleEn": "Numbers",
       "quests": [
         {
@@ -2140,6 +2148,141 @@
         }
       ],
       "rewardCardIds": []
+    },
+    "content/packs/draft-fixture/pack.json": {
+      "id": "pack:draft-fixture",
+      "key": "draft-fixture",
+      "titleEn": "TODO",
+      "hoyaIntroEn": "TODO",
+      "homeTheme": "life",
+      "levels": [
+        {
+          "stage": "stage2",
+          "episodeId": "episode:pack-draft-fixture-s2"
+        },
+        {
+          "stage": "stage2",
+          "episodeId": "episode:pack-draft-fixture-s2"
+        }
+      ],
+      "status": "draft"
+    },
+    "content/packs/draft-fixture/stage-2.json": {
+      "id": "episode:pack-draft-fixture-s2",
+      "stage": "stage2",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-draft-fixture-s2-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-draft-fixture-s2-q9",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-draft-fixture-s2-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/draft-fixture/stage-3.json": {
+      "id": "episode:pack-draft-fixture-s3",
+      "stage": "stage3",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-draft-fixture-s3-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-draft-fixture-s3-q2",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        },
+        {
+          "id": "quest:pack-draft-fixture-s3-q3",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/Food/stage-2.json": {
+      "id": "episode:pack-Food-s2",
+      "stage": "stage2",
+      "status": "draft",
+      "titleEn": "TODO",
+      "quests": [
+        {
+          "id": "quest:pack-Food-s2-q1",
+          "titleEn": "TODO",
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "TODO"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "culture": []
+    },
+    "content/packs/numbers-fixture/extra/notes.json": {
+      "about": "a nested file"
+    },
+    "content/packs/stray.json": {
+      "about": "a file outside any pack"
     }
   },
   "expect": [
@@ -2220,6 +2363,60 @@
       "error",
       "content/packs/numbers-fixture/stage-6.json",
       "quests"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/numbers-fixture/stage-3.json",
+      "quests[2]"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/numbers-fixture/stage-2.json",
+      "quests[1]"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/numbers-fixture/stage-4.json",
+      "status"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/draft-fixture/pack.json",
+      "levels[1]"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/draft-fixture/stage-2.json",
+      "quests[1].id"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/draft-fixture/stage-3.json",
+      "(root)"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/Food/stage-2.json",
+      "(root)"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/numbers-fixture/extra/notes.json",
+      "(root)"
+    ],
+    [
+      "pack-skeleton",
+      "error",
+      "content/packs/stray.json",
+      "(root)"
     ]
   ]
 }

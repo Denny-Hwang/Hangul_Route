@@ -72,3 +72,7 @@ playwright-tmp*.config.*
 
 # Raw voice recordings stay local (public repo; F-AUDIO-004 §3.11)
 apps/mobile/recordings/
+
+# A local copy of the NIKL grade-A vocabulary list (freq-coverage) is never committed
+# until its licence is checked (F-CURR-002 §9.3, §19 assumption 4).
+*[Nn][Ii][Kk][Ll]*[Gg]rade*
