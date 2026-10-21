@@ -32,6 +32,7 @@ import type {
 import type { ClassMoveDecider, ClassMoveEndStatus, ExecuteClassMoveInput, ExecuteClassMoveResult, StoredClassMove, StoredClassScopeAck } from './class-move-types';
 import type { ClassMoveEndReason } from '@hangul-route/content-schema';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
+import type { RemoteConfigRow } from './remote-config-types';
 
 export * from './transfer-types';
 export * from './class-move-types';
@@ -487,6 +488,12 @@ export interface Db {
   executeClassMove(input: ExecuteClassMoveInput): Promise<ExecuteClassMoveResult>;
   /** Bounded purge: ended rows before `endedBefore`, executed rows before `executedBefore`, still-requested rows whose `expiresAt` is before `endedBefore` (an ask nobody settled). */
   purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number>;
+
+  // remote config (F-CURR-002 section 12.2, row CM-2): switch values only, no identifier
+  /** Every row of `remote_config`, by flag name. A database without migration 0013 rejects (the route answers 503). */
+  remoteConfig(): Promise<RemoteConfigRow[]>;
+  /** Upsert one row by flag. Tests and tooling only: the owner edits rows in the D1 console; no route writes them. */
+  putRemoteConfig(row: RemoteConfigRow): Promise<void>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

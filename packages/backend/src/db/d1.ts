@@ -45,6 +45,7 @@ import {
 } from './feedback-types';
 import { assertOneSender, prefixUpperBound } from './feedback-rules';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
+import { clampPct, readOn, type RemoteConfigRow } from './remote-config-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
@@ -494,6 +495,7 @@ const SPACE_EVENT_TABLES = ['space_events'] as const;
 /** [SA] The table of migration 0012 (AMENDMENTS-SEATS-ADMINS section 6.2). */
 const ADMIN_INVITE_TABLES = ['admin_invites'] as const;
 const RESET_TABLES = [
+  'remote_config', // migration 0013 (F-CURR-002 CM-2), no foreign keys
   ...ADMIN_INVITE_TABLES,
   ...SPACE_EVENT_TABLES,
   ...CLASS_MOVE_TABLES,
@@ -1666,6 +1668,22 @@ export class D1Db implements Db {
     return this.changes(
       "DELETE FROM class_moves WHERE id IN (SELECT id FROM class_moves WHERE (ended_at IS NOT NULL AND ended_at < ?) OR (status = 'executed' AND executed_at < ?) OR (status = 'requested' AND expires_at < ?) LIMIT ?)",
       [endedBefore.toISOString(), executedBefore.toISOString(), endedBefore.toISOString(), limit],
+    );
+  }
+
+  remoteConfig(): Promise<RemoteConfigRow[]> {
+    return this.many('SELECT flag, "on", pct, updated_at, reason FROM remote_config ORDER BY flag', [], (r) => ({
+      flag: str(r.flag),
+      on: readOn(r.on),
+      pct: clampPct(r.pct),
+      updatedAt: str(r.updated_at),
+      reason: nstr(r.reason),
+    }));
+  }
+  putRemoteConfig(row: RemoteConfigRow): Promise<void> {
+    return this.run(
+      'INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES (?, ?, ?, ?, ?) ON CONFLICT(flag) DO UPDATE SET "on" = excluded."on", pct = excluded.pct, updated_at = excluded.updated_at, reason = excluded.reason',
+      [row.flag, row.on ? 1 : 0, row.pct, row.updatedAt, row.reason],
     );
   }
 
