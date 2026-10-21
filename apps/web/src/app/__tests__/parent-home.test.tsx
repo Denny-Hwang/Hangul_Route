@@ -150,6 +150,8 @@ beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
   // Notes are on by default since FB-14; this suite's baseline is every sibling flag off.
   vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
+  // Lecture mode is on by default since AMENDMENTS-LECTURE-V2 LV-7; its card has its own suite (lecture-mode-card.test.tsx).
+  vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
 });
@@ -175,6 +177,19 @@ const cardNames = (r: ReactTestRenderer): string[] => byTestId(r, 'learner-card'
 const hrefs = (r: ReactTestRenderer): string[] => r.root.findAll((n) => n.type === 'a').map((n) => n.props.href as string);
 
 describe('the family home (F-APP-001 A-5b)', () => {
+  it('the Lecture mode card is drawn with the launch default (on since AMENDMENTS-LECTURE-V2 LV-7) and not with the kill switch off', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', undefined);
+    vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com', hash: '' }, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+    data.rosters = { sp_f: roster(family, [sam]) };
+    let r = await render([family]);
+    expect(byTestId(r, 'lecture-card')).toHaveLength(1);
+    act(() => mounted?.unmount());
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
+    r = await render([family]);
+    expect(byTestId(r, 'lecture-card')).toHaveLength(0);
+    vi.unstubAllGlobals();
+  });
+
   it('one section per family, headed by its name, with one card per learner in join order', async () => {
     data.rosters = { sp_f: roster(family, [mina, sam]) };
     const r = await render([family, klass]);

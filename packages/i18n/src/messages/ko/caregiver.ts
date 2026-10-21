@@ -765,4 +765,13 @@ export const caregiver = {
     failed: '저장하지 못했어요. 다시 해 보세요.',
     stale: '앱을 업데이트하면 새 안내를 읽을 수 있어요.',
   },
+  /** 학습 앱 어른 영역의 강의 모드 카드 (AMENDMENTS-LECTURE-V2 3절 E5, 12.4절). 이름은 콜론 뒤에 두어 조사를 붙이지 않아요. */
+  lecture: {
+    title: '강의 모드',
+    body: 'TV나 큰 화면에 수업을 띄우고 함께 배워요. 누구의 진도도 바뀌지 않아요.',
+    open: { cta: '강의 모드 열기' },
+    next: (name: string) => `다음 수업: ${name}`,
+    opensTab: '새 탭에서 열려요',
+    blocked: '새 탭이 열리지 않았어요. 이 사이트의 팝업을 허용한 뒤 다시 눌러 주세요.',
+  },
 } satisfies DeepPartial<Messages['caregiver']>;

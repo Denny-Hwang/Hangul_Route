@@ -215,6 +215,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       // tab. A browser that refuses the pass opens the dashboard, which says why under Open all lessons.
       if (afterGateHandoff(openBrowseFromGate(route.params.browseTarget)) === 'leave') navigation.goBack();
       else navigation.replace('ParentDashboard', { browseBlocked: true });
+    } else if (route.params.next === 'LectureMode') {
+      // The Lecture mode card (AMENDMENTS-LECTURE-V2 E5): back to the dashboard with the gate open. A browser opens a new
+      // tab only inside a tap, so the grown-up taps the row again there (as Open billing and Sources do on the web).
+      navigation.goBack();
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       navigation.goBack();

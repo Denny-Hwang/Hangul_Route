@@ -66,6 +66,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   // AMENDMENTS-LECTURE-V2 section 12.2 (LV-3): the presenter's ready-made lessons, one letter over each.
   'learner.presenter.presets.words.title': '"Repaso de palabras" (18) against "Word review" (11): Spanish needs "de" between the two nouns; a card title that wraps',
   'learner.presenter.presets.length.title': 'Spanish questions open with "¿": "¿Cuánto tiempo?" (15) against "How long?" (9) is one letter over; a chip group label that wraps',
+  // The same two values on the console setup page (LV-4).
+  'console.lecture.presets.words.title': '"Repaso de palabras" (18) against "Word review" (11): Spanish needs "de" between the two nouns; a card title that wraps',
+  'console.lecture.presets.length.title': 'Spanish questions open with "¿": "¿Cuánto tiempo?" (15) against "How long?" (9) is one letter over; a chip group label that wraps',
   // F-CURR-001 G-1: the Sentence Builder meaning card's label.
   'learner.minigame.sentenceBuilder.meaning': 'the one word "Significado" (11) against "Meaning" (7), the same word as a11y.minigame.meaning; a card label that wraps',
   // F-LEARN-001 §3.15: the Privacy step's text button and the policy link's accessible name.
@@ -81,6 +84,10 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.home.classCode.cta': '"¿Tienes un código de clase?" (27) against "Got a class code?" (17): Spanish opens the question with "¿" and needs the article; inside the 28-character cta budget, a link that wraps',
   // Owner decision 2026-10-17: the class join link's caption on the roster.
   'console.space.joinLink.title': '"Enlace para unirse" (18) against "Join link" (9): Spanish names what the link is for with "para"; an upper-case caption that wraps',
+  // AMENDMENTS-LECTURE-V2 LV-5 (section 12.1): the Lecture mode card's Start link, when it opens the presenter in a new tab.
+  'console.lecture.card.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the link\'s accessible description, read aloud and never drawn',
+  // AMENDMENTS-LECTURE-V2 LV-6 (section 12.4): the learner app's Lecture mode card buttons, which open the presenter in a new tab.
+  'caregiver.lecture.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the buttons\' accessible description, read aloud and never drawn (the same words as console.lecture.card.opensTab)',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

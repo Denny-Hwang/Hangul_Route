@@ -116,6 +116,8 @@ beforeEach(() => {
   // Notes are on by default since FB-14; this suite's baseline is every sibling flag off.
   vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
   vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
+  // Lecture mode is on by default since AMENDMENTS-LECTURE-V2 LV-7; the baseline is every sibling flag off.
+  vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -559,5 +561,83 @@ describe('Lessons opens All lessons in the same tab with the pass (F-BROWSE-001 
     vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
     const r = await render(fakeEnv({ pathname: '/parent' }), [family]);
     expect(byTestId(r, 'frame-lessons-notice')).toHaveLength(0);
+  });
+});
+
+describe('the Lecture mode item (AMENDMENTS-LECTURE-V2 E3, LV-5)', () => {
+  const click = (over: Partial<{ button: number; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }> = {}) => {
+    const event = { defaultPrevented: false, button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, ...over, preventDefault: () => (event.defaultPrevented = true) };
+    return event;
+  };
+  const withFragments = (env: FakeEnv): FakeEnv & { shown: string[] } => {
+    const shown: string[] = [];
+    return Object.assign(env, { shown, showFragment: (href: string) => shown.push(href) });
+  };
+
+  it('is not drawn while lectureModeEnabled() is off (the kill switch, LV-D1)', async () => {
+    const r = await render(fakeEnv(), [klass]);
+    expect(navIds(r)).toEqual(['classes', 'billing']);
+  });
+
+  it('is drawn with no build value: the launch default is on since LV-7', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', undefined);
+    const r = await render(fakeEnv(), [klass]);
+    expect(navIds(r)).toEqual(['classes', 'lecture', 'billing']);
+  });
+
+  it('after Lessons, before Billing, for both personas; one class opens its lecture setup page', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'true');
+    const r = await render(fakeEnv(), [klass]);
+    expect(navIds(r)).toEqual(['classes', 'lessons', 'lecture', 'billing']);
+    const item = byTestId(r, 'nav-lecture')[0] as ReactTestInstance;
+    expect(textOf(item)).toBe(en.console.shell.nav.lecture);
+    expect(item.props.href).toBe('/teach/space/lecture?id=sp_c');
+  });
+
+  it('several families or none: the family home at its card', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
+    const two = await render(fakeEnv({ pathname: '/parent' }), [family, item('sp_g', 'family', 'caregiver')]);
+    expect(byTestId(two, 'nav-lecture')[0]?.props.href).toBe('/parent#lecture-mode');
+    act(() => mounted?.unmount());
+    const admin = await render(fakeEnv({ pathname: '/teach/home' }), [item('sp_s', 'school', 'admin'), item('sp_k', 'class', 'admin')]);
+    expect(byTestId(admin, 'nav-lecture')[0]?.props.href).toBe('/teach/home#lecture-mode');
+  });
+
+  it('is the current item on a lecture setup page', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
+    const r = await render(fakeEnv({ pathname: '/teach/space/lecture', search: '?id=sp_c' }), [klass]);
+    expect(current(r)).toEqual([en.console.shell.nav.lecture]);
+  });
+
+  it('on the home it points into, a plain click sets the fragment there (the card takes focus) instead of navigating', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
+    const env = withFragments(fakeEnv({ pathname: '/parent' }));
+    const r = await render(env, [family, item('sp_g', 'family', 'owner')]);
+    const plain = click();
+    await act(async () => {
+      byTestId(r, 'nav-lecture')[0]?.props.onClick(plain);
+    });
+    expect(plain.defaultPrevented).toBe(true);
+    expect(env.shown).toEqual(['/parent#lecture-mode']);
+    // A modifier click keeps the browser's own behaviour (a new tab).
+    const modified = click({ metaKey: true });
+    await act(async () => {
+      byTestId(r, 'nav-lecture')[0]?.props.onClick(modified);
+    });
+    expect(modified.defaultPrevented).toBe(false);
+    expect(env.shown).toEqual(['/parent#lecture-mode']);
+  });
+
+  it('from another page the click is a plain navigation to the home and its card', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
+    const env = withFragments(fakeEnv({ pathname: '/parent/space/plan', search: '?id=sp_f' }));
+    const r = await render(env, [family, item('sp_g', 'family', 'owner')]);
+    const plain = click();
+    await act(async () => {
+      byTestId(r, 'nav-lecture')[0]?.props.onClick(plain);
+    });
+    expect(plain.defaultPrevented).toBe(false);
+    expect(env.shown).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 import { APP_ROUTES } from '@hangul-route/content-schema';
 import type { SpaceListItem } from './api';
+import { lectureCardView, type LectureCardView } from './lecture-entry';
 import { heldPersonas } from './personas';
 import { groupSpaces } from './routing';
 
@@ -51,4 +52,14 @@ export function classRowLinks(item: SpaceListItem, flags: { reports: boolean; no
   if (flags.reports) links.push('classReport');
   if (flags.notes && !item.space.archivedAt) links.push('notes');
   return links;
+}
+
+/**
+ * The Lecture mode card at the top of the teacher home (AMENDMENTS-LECTURE-V2 E1, LV-5): the classes the account
+ * teaches (`composesIn`, live, most recent first) give one, several or no space; a school admin with no teacher or
+ * owner role in any class gets the no-space path (the presenter, with no class). Null while `lectureModeEnabled()` is
+ * off: the card is not drawn at all.
+ */
+export function teacherLectureCard(items: readonly SpaceListItem[] | 'failed' | null, opts: { enabled: boolean; appUrl: string }): LectureCardView | null {
+  return opts.enabled ? lectureCardView(items, 'teacher', opts.appUrl) : null;
 }

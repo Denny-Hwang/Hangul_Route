@@ -5,13 +5,13 @@ import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import type { ConsoleApi, SpaceListItem } from '@/lib/console/api';
 import { learnerHome } from '@/lib/console/grown-up-lock';
 import { activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeLastPersona } from '@/lib/console/shell-store';
-import { currentNavItem, navFlags, navItemsFor, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
+import { currentNavItem, navFlags, navItemsFor, revealScrollLeft, samePageFragment, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { BrowseNoticeLine, useBrowseOpener } from './BrowseLink';
@@ -37,7 +37,12 @@ import { rem } from '@/lib/console/rem';
  *   the top left, above the page's context line and its h1.
  * - The active persona comes from the page: its own on a home, the kind of the page's space on a
  *   space page under either prefix (looked up in the spaces list the frame reads), never the path.
- * - The navigation is `ADULT_NAV` filtered by the active persona and the sibling predicates.
+ * - The navigation is `ADULT_NAV` filtered by the active persona and the sibling predicates. When the tab row scrolls
+ *   sideways it shows its current item on load (AMENDMENTS-LECTURE-V2 E3, LV-5), moving the row only. An item whose
+ *   target is a part of the page already open (Lecture mode's `/parent#lecture-mode` on `/parent`) moves there itself:
+ *   the fragment is set and the page's card takes focus. A tab keeps its label on one line (it is never narrower than
+ *   that line, `min-width: fit-content`) unless the label is wider than the whole row (Lecture mode at a 300 % root
+ *   at 320); then it wraps inside its tab instead of pushing the page sideways.
  * - Footer: About Hangul Route, Privacy and Terms on the site.
  * The frame refreshes nothing itself: `GrownUpLock` keeps the unlock fresh (A-4a review).
  */
@@ -52,6 +57,8 @@ export interface AdultFrameEnvironment {
   /** The tab's `sessionStorage`, where the Lessons item writes the All lessons pass (F-BROWSE-001 BR-10). */
   sessionStorage?: () => KeyValueStorage | null;
   now?: () => number;
+  /** Sets a fragment of the page already open (a nav target such as `/parent#lecture-mode`) and lets the page answer it. */
+  showFragment?: (href: string) => void;
 }
 
 export function browserFrameEnvironment(): AdultFrameEnvironment {
@@ -66,6 +73,13 @@ export function browserFrameEnvironment(): AdultFrameEnvironment {
     assign: (url) => win?.location.assign(url),
     sessionStorage: () => browserStorage('session'),
     now: () => Date.now(),
+    showFragment: (href) => {
+      if (!win) return;
+      // The router's own history entry stays (its state is kept); `hashchange` reaches the page even when the fragment
+      // was already set, so a second click moves to the card again.
+      win.history.replaceState(win.history.state, '', href);
+      win.dispatchEvent(new HashChangeEvent('hashchange'));
+    },
   };
 }
 
@@ -116,8 +130,8 @@ const FRAME_CSS = `
 .hr-frame-exit svg{flex:none}
 .hr-frame-wide{display:none}
 .hr-frame-list{display:flex;flex-wrap:wrap;list-style:none;margin:0;padding:0}
-.hr-frame-list li{flex:1 0 ${touchTarget.min}px;display:flex}
-.hr-frame-item{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;padding:0 ${spacing.xs}px;border:none;border-bottom:${borderWidth.thick}px solid transparent;background:transparent;color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};text-decoration:none;white-space:nowrap;cursor:pointer}
+.hr-frame-list li{flex:1 0 ${touchTarget.min}px;display:flex;min-width:fit-content;max-width:100%}
+.hr-frame-item{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;padding:0 ${spacing.xs}px;border:none;border-bottom:${borderWidth.thick}px solid transparent;background:transparent;color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};text-align:center;text-decoration:none;overflow-wrap:anywhere;cursor:pointer}
 .hr-frame-item[aria-current="page"]{color:${colors.text.primary};font-weight:${typography.weight.bold};border-bottom-color:${colors.brand.primary}}
 .hr-frame-main{flex:1;padding-top:${spacing.lg}px;padding-bottom:${spacing.xxl}px;overflow-wrap:anywhere}
 .hr-frame-foot{background:${colors.surface.sunken}}
@@ -300,8 +314,28 @@ export function AdultFrame({
   const names: Record<AdultPersona, string> = { parent: shell.persona.parent, teacher: shell.persona.teacher };
   const navPersona = list ? active.persona : fallbackPersona(last, null);
   const items: NavEntry[] = failed ? [] : navItemsFor({ persona: navPersona, spaces: list ?? [], soloLearner: solo, flags });
-  const current = list ? currentNavItem(pathname, active.persona, active.resolved) : currentNavItem(pathname, navPersona, false);
+  const current = list ? currentNavItem(pathname, active.persona, active.resolved, flags.lecture) : currentNavItem(pathname, navPersona, false, flags.lecture);
   const withSwitch = !!list && showPersonaSwitch(held);
+  const rowRef = useRef<HTMLUListElement | null>(null);
+  const currentShown = items.some((entry) => entry.id === current);
+  // A tab row that scrolls sideways shows its current item (the family row's fifth and sixth items start off-screen
+  // on a phone): only the row moves, never the page, with no smooth motion.
+  useEffect(() => {
+    const row = rowRef.current;
+    const item = row?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!row || !item || row.scrollWidth <= row.clientWidth) return;
+    const rowBox = row.getBoundingClientRect();
+    const itemBox = item.getBoundingClientRect();
+    const left = revealScrollLeft({ scrollLeft: row.scrollLeft, width: row.clientWidth }, { left: itemBox.left - rowBox.left + row.scrollLeft, width: itemBox.width });
+    if (left !== null) row.scrollLeft = left;
+  }, [current, currentShown]);
+  // A target inside the page already open: set its fragment here instead of a client navigation that would only scroll.
+  const toFragment = (entry: NavEntry) => (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (samePageFragment(entry.target.href, pathname) === null || !browser.showFragment) return;
+    event.preventDefault();
+    browser.showFragment(entry.target.href);
+  };
   const brandHref = list && held.length > 0 ? personaHome(active.persona) : ROUTES.signIn;
   const doSignOut = (): void => {
     // The per-tab roster read belongs to this account: the next one to sign in here reads its own.
@@ -353,7 +387,7 @@ export function AdultFrame({
         </div>
         {items.length > 0 ? (
           <nav className="hr-frame-nav" aria-label={names[navPersona]} data-testid="frame-nav">
-            <ul className="hr-frame-list">
+            <ul className="hr-frame-list" ref={rowRef}>
               {items.map((entry) => (
                 <li key={entry.id}>
                   {entry.target.document ? (
@@ -361,7 +395,13 @@ export function AdultFrame({
                       {shell.nav[entry.labelKey]}
                     </a>
                   ) : (
-                    <Link className="hr-frame-item" href={entry.target.href} aria-current={current === entry.id ? 'page' : undefined} data-testid={`nav-${entry.id}`}>
+                    <Link
+                      className="hr-frame-item"
+                      href={entry.target.href}
+                      onClick={entry.id === 'lecture' ? toFragment(entry) : undefined}
+                      aria-current={current === entry.id ? 'page' : undefined}
+                      data-testid={`nav-${entry.id}`}
+                    >
                       {shell.nav[entry.labelKey]}
                     </Link>
                   )}

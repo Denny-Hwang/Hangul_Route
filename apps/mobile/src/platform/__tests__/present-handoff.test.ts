@@ -72,7 +72,19 @@ describe('platform/present-handoff (web)', () => {
     vi.stubGlobal('open', open);
     expect(web.openPresenter('https://example.org/present#d=1.abc')).toBe(false);
     expect(web.openPresenter('/browse#d=1.abc')).toBe(false);
+    expect(web.openPresenter('/presenter')).toBe(false);
+    expect(web.openPresenter('/present?lang=ko')).toBe(false);
+    expect(web.openPresenter('/present/x')).toBe(false);
     expect(open).not.toHaveBeenCalled();
+  });
+
+  it('opens the presenter home itself, with nothing handed over (Open lecture mode, AMENDMENTS-LECTURE-V2 E5)', () => {
+    const tab: Tab = { opener: {} };
+    const open = vi.fn((_url: string, _target: string): Tab | null => tab);
+    vi.stubGlobal('open', open);
+    expect(web.openPresenter(PRESENTER_PATH)).toBe(true);
+    expect(open).toHaveBeenCalledWith('/present', '_blank');
+    expect(tab.opener).toBeNull();
   });
 });
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import * as schema from '../index';
 import {
   ACTIVITY_PRESETS,
   DECK_ID_RE,
-  LECTURE_CONSOLE_ORIGINS,
   LECTURE_DECK_VERSION,
   LECTURE_DECK_VERSIONS,
   LECTURE_MAX_BLOCKS,
@@ -14,7 +14,6 @@ import {
   LECTURE_MAX_JSON_BYTES,
   LECTURE_CREATED_AT_RE,
   LECTURE_JAMO_ID_RE,
-  LECTURE_MESSAGE_NS,
   LECTURE_REVISIT_CHAR_RE,
   LECTURE_TITLE_RE,
   LECTURE_VOCAB_TOPIC_ID_RE,
@@ -24,9 +23,6 @@ import {
   LectureBlockSchema,
   LectureCodecError,
   LectureDeckSchema,
-  LectureReadyMessageSchema,
-  LectureRosterMessageSchema,
-  PICKER_LABEL_RE,
   PickerModeSchema,
   decodeDeck,
   encodeDeck,
@@ -51,6 +47,17 @@ function b64url(bytes: Uint8Array): string {
 }
 const fragmentOfJson = (json: string): string => `1.${b64url(new TextEncoder().encode(json))}`;
 
+describe('the roster hand-off is gone (AMENDMENTS-LECTURE-V2 LV-D7, section 18.5)', () => {
+  it('exports no console <-> presenter message schema and no console origin list; the legacy picker grammar stays', () => {
+    const names = Object.keys(schema);
+    for (const gone of ['LectureReadyMessageSchema', 'LectureRosterMessageSchema', 'LECTURE_CONSOLE_ORIGINS', 'LECTURE_MESSAGE_NS', 'PICKER_LABEL_RE']) {
+      expect(names, gone).not.toContain(gone);
+    }
+    expect(names).toContain('LecturePickerSchema');
+    expect(LectureDeckSchema.parse(baseDeck({ picker: { mode: 'names', count: 12 } })).picker).toEqual({ mode: 'names', count: 12 });
+  });
+});
+
 describe('lecture constants', () => {
   it('pins the limits the spec names', () => {
     expect(LECTURE_DECK_VERSION).toBe(1);
@@ -58,13 +65,6 @@ describe('lecture constants', () => {
     expect(LECTURE_MAX_FRAGMENT_CHARS).toBe(8192);
     expect(LECTURE_MAX_JSON_BYTES).toBe(6144);
     expect(ACTIVITY_PRESETS).toEqual(['air-write', 'say-together', 'pair-share', 'copy-on-paper', 'stretch-break']);
-    expect(LECTURE_MESSAGE_NS).toBe('hangul-route.lecture');
-    expect(LECTURE_CONSOLE_ORIGINS).toEqual([
-      'https://hangulroute.com',
-      'https://www.hangulroute.com',
-      'http://localhost:3000',
-      'https://app.hangulroute.com',
-    ]);
   });
 
   it('deck ids are lecture: plus 6-12 lowercase letters or digits', () => {
@@ -290,61 +290,6 @@ describe('LectureDeckSchema', () => {
       expect(LECTURE_TITLE_RE.test('한글 Week 1')).toBe(true);
       expect(LECTURE_TITLE_RE.test('Week 🐯')).toBe(false);
     });
-  });
-});
-
-describe('console <-> presenter messages', () => {
-  const ready = { ns: 'hangul-route.lecture', v: 1, type: 'ready', deckId: 'lecture:abc123' };
-  const roster = { ns: 'hangul-route.lecture', v: 1, type: 'roster', deckId: 'lecture:abc123', mode: 'names', labels: ['Minho', 'Sora'] };
-
-  it('ready: accepts the exact shape only', () => {
-    expect(LectureReadyMessageSchema.safeParse(ready).success).toBe(true);
-    expect(LectureReadyMessageSchema.safeParse({ ...ready, ns: 'other' }).success).toBe(false);
-    expect(LectureReadyMessageSchema.safeParse({ ...ready, v: 2 }).success).toBe(false);
-    expect(LectureReadyMessageSchema.safeParse({ ...ready, type: 'roster' }).success).toBe(false);
-    expect(LectureReadyMessageSchema.safeParse({ ...ready, deckId: 'lecture:x' }).success).toBe(false);
-    expect(LectureReadyMessageSchema.safeParse({ ...ready, labels: ['Minho'] }).success).toBe(false);
-    expect(LectureReadyMessageSchema.safeParse('ready').success).toBe(false);
-  });
-
-  it('roster: accepts names and initials, never numbers', () => {
-    expect(LectureRosterMessageSchema.safeParse(roster).success).toBe(true);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, mode: 'initials', labels: ['M. K.', 'S. P.'] }).success).toBe(true);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, mode: 'numbers' }).success).toBe(false);
-  });
-
-  it('roster: rejects wrong ns, wrong version, wrong type and extra keys', () => {
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, ns: 'hangul-route' }).success).toBe(false);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, v: 2 }).success).toBe(false);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, type: 'ready' }).success).toBe(false);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, summaries: ['x'] }).success).toBe(false);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, deckId: 'deck:1' }).success).toBe(false);
-  });
-
-  it('roster: 1..60 labels of 1..20 characters', () => {
-    const many = (n: number) => Array.from({ length: n }, (_, i) => `L${i}`);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, labels: [] }).success).toBe(false);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, labels: many(60) }).success).toBe(true);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, labels: many(61) }).success).toBe(false);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, labels: ['a'.repeat(20)] }).success).toBe(true);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, labels: ['a'.repeat(21)] }).success).toBe(false);
-    expect(LectureRosterMessageSchema.safeParse({ ...roster, labels: ['   '] }).success).toBe(false);
-  });
-
-  it('picker labels: the learner-name class plus "." and "?" for aliases', () => {
-    const label = (l: string) => LectureRosterMessageSchema.safeParse({ ...roster, labels: [l] }).success;
-    for (const l of ['민호', 'María', 'Zoë', 'M. K.', '?', "O'Neil", 'Anne-Marie', 'Jo’s', 'Kid 7']) {
-      expect(label(l)).toBe(true);
-      expect(PICKER_LABEL_RE.test(l)).toBe(true);
-    }
-    for (const l of ['Minho 🐯', 'Миша', '美咲', '<script>', 'a,b', 'x\ny']) {
-      expect(label(l)).toBe(false);
-    }
-  });
-
-  it('trims labels before checking', () => {
-    const r = LectureRosterMessageSchema.parse({ ...roster, labels: ['  Minho '] });
-    expect(r.labels).toEqual(['Minho']);
   });
 });
 

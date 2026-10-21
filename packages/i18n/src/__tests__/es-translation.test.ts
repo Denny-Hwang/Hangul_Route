@@ -197,4 +197,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'common.display.button',
   // AMENDMENTS-LECTURE-V2 section 12.2 (LV-3): a length chip "{n} min", the SI unit symbol, the same in Spanish.
   'learner.presenter.presets.length.option',
+  // AMENDMENTS-LECTURE-V2 section 12.2 (LV-4): the console's length chip, the same "{n} min".
+  'console.lecture.presets.length.option',
 ];

@@ -85,6 +85,8 @@ beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
   // Notes are on by default since FB-14; this suite's baseline is every sibling flag off.
   vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
+  // Lecture mode is on by default since AMENDMENTS-LECTURE-V2 LV-7; its card has its own suite (lecture-mode-card.test.tsx).
+  vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -106,10 +108,23 @@ const allText = (r: ReactTestRenderer): string => textOf(r.root);
 const headings = (r: ReactTestRenderer, type: 'h1' | 'h2'): string[] => r.root.findAll((n) => n.type === type).map(textOf);
 
 describe('the teacher home (F-APP-001 A-5a)', () => {
+  it('the Lecture mode card is drawn with the launch default (on since AMENDMENTS-LECTURE-V2 LV-7) and not with the kill switch off', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', undefined);
+    vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com', hash: '' }, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+    let r = await render([klass]);
+    expect(byTestId(r, 'lecture-card')).toHaveLength(1);
+    act(() => mounted?.unmount());
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
+    r = await render([klass]);
+    expect(byTestId(r, 'lecture-card')).toHaveLength(0);
+    vi.unstubAllGlobals();
+  });
+
   it('lists Classes and the School group, with no Family group and no "Hi, {name}"', async () => {
     const r = await render([family, klass, school]);
+    // The page heading (the nav name, visually hidden) is the h1; the visible Classes and School groups are h2.
     expect(headings(r, 'h1')).toEqual(['Classes']);
-    expect(headings(r, 'h2')).toEqual(['School']);
+    expect(headings(r, 'h2')).toEqual(['Classes', 'School']);
     expect(byTestId(r, 'space-row-sp_f')).toHaveLength(0);
     expect(byTestId(r, 'space-row-sp_c')).toHaveLength(1);
     expect(allText(r)).not.toContain('Hi, ');
