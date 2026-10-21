@@ -6,7 +6,9 @@ import {
   mergeProfileLists,
   parseTombstones,
   pruneTombstones,
+  removeTombstone,
   sameProfileList,
+  storedProfileItems,
 } from '../profile-merge';
 
 // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D19, CS-16 (row OA-4a): one profile list across tabs.
@@ -87,6 +89,31 @@ describe('pruneTombstones on a hand-made record', () => {
     // A second id goes while one with no time stays: the kept one is written with 0.
     const mixed = { v: 1 as const, ids: ['profile:a', 'profile:c'], at: { 'profile:c': -TOMBSTONE_KEEP_MS } };
     expect(pruneTombstones(mixed, 5)).toEqual({ v: 1, ids: ['profile:a'], at: { 'profile:a': 0 } });
+  });
+});
+
+describe('removeTombstone (OA-D13: a restore under the same id)', () => {
+  it('drops the id and its time, and returns the same record when the id is not in it', () => {
+    const record = addTombstone(addTombstone(EMPTY_TOMBSTONES, 'profile:a1', 10), 'profile:b1', 20);
+    expect(removeTombstone(record, 'profile:a1')).toEqual({ v: 1, ids: ['profile:b1'], at: { 'profile:b1': 20 } });
+    expect(removeTombstone(record, 'profile:c1')).toBe(record);
+    expect(record.ids).toEqual(['profile:a1', 'profile:b1']);
+  });
+
+  it('a revived id is kept by the merge again', () => {
+    const record = removeTombstone(addTombstone(EMPTY_TOMBSTONES, 'profile:a1', 10), 'profile:a1');
+    const a = { id: 'profile:a1' };
+    expect(mergeProfileLists({ stored: [a], local: [], seen: new Set(), removed: record.ids })).toEqual([a]);
+  });
+});
+
+describe('storedProfileItems (a damaged hr:profiles never stops a write)', () => {
+  it('keeps the objects with a string id, in order; anything else is none', () => {
+    const a = { id: 'profile:a1' };
+    const b = { id: 'profile:b1', displayName: 'Bo' };
+    expect(storedProfileItems([a, null, 3, 'x', { id: 4 }, { id: '' }, {}, b])).toEqual([a, b]);
+    expect(storedProfileItems(null)).toEqual([]);
+    expect(storedProfileItems({ id: 'profile:a1' })).toEqual([]);
   });
 });
 

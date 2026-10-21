@@ -51,6 +51,26 @@ export function addTombstone(record: ProfileTombstones, id: string, now: number)
 }
 
 /**
+ * The record without `id`: a learner added here again under the same id (a restore from a file, a Rescue Code or a
+ * cloud claim keep it, OA-D13) is no longer removed. Returns the same record when `id` is not in it.
+ */
+export function removeTombstone(record: ProfileTombstones, id: string): ProfileTombstones {
+  if (!record.ids.includes(id)) return record;
+  const at: Record<string, number> = { ...record.at };
+  delete at[id];
+  return { v: 1, ids: record.ids.filter((x) => x !== id), at };
+}
+
+/**
+ * The stored `hr:profiles` value as a list to merge: anything that is not an array is none, and an item that is not
+ * an object with a string id is left out (a damaged item never stops every later write). Never mutates its input.
+ */
+export function storedProfileItems<T extends { id: string }>(raw: unknown): T[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item): item is T => typeof item === 'object' && item !== null && typeof (item as { id?: unknown }).id === 'string' && (item as { id: string }).id !== '');
+}
+
+/**
  * The record without the ids removed `TOMBSTONE_KEEP_MS` or more ago. A time in the future (a clock that ran back)
  * is kept until the clock passes it. Returns the same record when nothing goes.
  */

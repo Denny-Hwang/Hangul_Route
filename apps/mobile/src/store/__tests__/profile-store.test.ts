@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../platform/storage', () => ({
-  readJson: vi.fn(async () => null),
-  writeJson: vi.fn(),
-}));
+vi.mock('../../platform/storage', () => {
+  const readJson = vi.fn(async (_key: string): Promise<unknown> => null);
+  // The list is read strictly (a failed read is not "no learners"); it answers what `readJson` is set to answer.
+  return { readJson, readJsonStrict: vi.fn((key: string) => readJson(key)), writeJson: vi.fn() };
+});
 
 import { readJson, writeJson } from '../../platform/storage';
 import { onProfileEdited } from '../profile-edits';
