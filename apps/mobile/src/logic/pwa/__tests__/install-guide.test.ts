@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   INSTALL_GUIDE_MIN_VISITS,
@@ -69,5 +71,14 @@ describe('shouldShowInstallGuide', () => {
     expect(until).toBe(3 + INSTALL_GUIDE_SNOOZE_VISITS);
     expect(shouldShowInstallGuide({ ...base, visits: 8, snoozedUntilVisit: until })).toBe(false);
     expect(shouldShowInstallGuide({ ...base, visits: 9, snoozedUntilVisit: until })).toBe(true);
+  });
+});
+
+describe('the sheet source', () => {
+  // The mobile vitest config cannot render React Native, so this reads the source. The e2e locator handlers close
+  // the guide by this test id in every UI language; dropping it would only show there as a handler timeout.
+  it('keeps the test id on Not now, which dismisses the guide', () => {
+    const sheet = readFileSync(join(__dirname, '..', '..', '..', 'components', 'InstallGuideSheet.tsx'), 'utf8');
+    expect(sheet).toMatch(/<Button testID="install-guide-not-now"[^>]*onPress=\{dismiss\}/);
   });
 });

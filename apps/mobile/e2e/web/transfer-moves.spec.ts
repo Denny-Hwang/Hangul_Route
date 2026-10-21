@@ -371,6 +371,8 @@ test('a grown-up session left open elsewhere never carries the Home line: Review
   await openGrownUpZone(page, 'Mina');
   await unlockWithPin(page);
   await expect(page.getByRole('heading', { name: 'Grown-up area' })).toBeVisible();
+  // The PIN screen carries the same title, so the dashboard is told by its own line.
+  await expect(page.getByTestId('dashboard-persona')).toBeVisible();
   // Back to the learner (in the app, so the session stays open), then the Home line.
   // The dashboard's header Back (its title row also holds the Display button, so the arrow is found by its test id).
   await headerBack(page).first().click();
@@ -384,6 +386,13 @@ test('a grown-up session left open elsewhere never carries the Home line: Review
   // Leaving the sheet ends the session: the next Review asks again. The sheet has a header Back and its own Back
   // under Not now; the header one is used.
   await headerBack(page).first().click();
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
+  await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+  // The sheet's own Back ends the session the same way.
+  await unlockWithPin(page);
+  await expect(page.getByRole('heading', { name: 'A move is waiting' })).toBeVisible();
+  await page.getByTestId('approve-transfer-back').click();
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
   await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();

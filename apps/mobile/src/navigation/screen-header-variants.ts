@@ -21,9 +21,9 @@ export type ScreenHeaderRouteName =
 
 /**
  * A non-root screen without Back: the end of first-run setup. CreateProfile reaches both with
- * `navigation.reset`, so the onboarding stack holds that screen alone and nothing of setup is left under it:
- * a Back there would land on Welcome after a profile was saved (and Welcome leads into a second profile).
- * After the level check the stack is `[FirstQuestPreview]` alone.
+ * `navigation.reset`, so the onboarding stack holds that screen alone and a Back would have nowhere to go.
+ * None is drawn: setup is over once a profile is saved, and going back toward Welcome would lead into a
+ * second profile. After the level check the stack is `[FirstQuestPreview]` alone.
  */
 export const SCREEN_HEADER_EXCEPTIONS = ['PlacementInvite', 'FirstQuestPreview'] as const satisfies readonly ScreenHeaderRouteName[];
 export type ScreenHeaderException = (typeof SCREEN_HEADER_EXCEPTIONS)[number];
