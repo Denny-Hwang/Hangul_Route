@@ -1,6 +1,6 @@
 import type React from 'react';
 import { Platform } from 'react-native';
-import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
+import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer, type TestRendererOptions } from 'react-test-renderer';
 import { vi } from 'vitest';
 
 /**
@@ -29,11 +29,14 @@ export function resetPlatform(): void {
 /** Every renderer still mounted, so `cleanup` can unmount the ones a failed test left behind. */
 const mounted = new Set<ReactTestRenderer>();
 
-/** Mounts an element and lets its mount effects (and the promises they start) settle. */
-export async function render(element: React.ReactElement): Promise<ReactTestRenderer> {
+/**
+ * Mounts an element and lets its mount effects (and the promises they start) settle. `options` go to
+ * the renderer as they are (a `createNodeMock` for a tree that measures its own nodes).
+ */
+export async function render(element: React.ReactElement, options?: TestRendererOptions): Promise<ReactTestRenderer> {
   let renderer!: ReactTestRenderer;
   await act(async () => {
-    renderer = TestRenderer.create(element);
+    renderer = TestRenderer.create(element, options);
   });
   mounted.add(renderer);
   return renderer;
