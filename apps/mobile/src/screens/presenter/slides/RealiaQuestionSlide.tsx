@@ -49,7 +49,8 @@ const MAX_LEVEL = 3;
 export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: RealiaQuestionBody; shown: ReadonlySet<BuildName>; romanization: RomanizationMode }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
-  const fit = useFitLevel(MAX_LEVEL);
+  // The stage scale goes in, so a new scale fits again from level 0; `contentRef` lets a step with no layout event re-measure.
+  const fit = useFitLevel(MAX_LEVEL, unit);
   const revealed = shown.has('answer');
   const rom = optionRomShown(romanization, revealed);
   const { prompt } = slide;
@@ -65,6 +66,8 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
         <RealiaSheetStage sheet={prompt.sheet} rom={rom} width={units(unit, sheetW)} answer={{ entryId: prompt.answerEntryId, shown: revealed }} />
       </View>
       <View
+        ref={rows ? fit.contentRef : undefined}
+        testID="presenter-realia-question-content"
         onLayout={rows ? fit.onContent : undefined}
         // A picture grid fills the column (its rows share the height left), so only rows measure; the heading measures with them.
         {...{ dataSet: { fit: String(fit.level) } }}

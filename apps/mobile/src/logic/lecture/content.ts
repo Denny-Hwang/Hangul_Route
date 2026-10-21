@@ -69,6 +69,8 @@ export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBun
   // The Stage 1 symbols, then the Word Builder ones (F-CURR-001 S2-1), so a Word Builder Discover gets its letter slides.
   const localizedJamo = locale === 'en' ? jamoKnown : jamoKnown.map((j) => localizeJamo(j, locale, overlays));
   return {
+    // The deck builder reads it to keep English meanings off a Spanish or Korean slide (AMENDMENTS-LECTURE-V2 5.2).
+    locale,
     jamoAll: localizedJamo,
     scopeFor: (ref) => {
       const scope = scopeFor(ref);

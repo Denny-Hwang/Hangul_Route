@@ -283,6 +283,37 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(skipped.filter((s) => s.ref === 'minigame:s1-life-q1-apply')).toEqual([]);
   });
 
+  it('the bundle carries its language, which the deck builder reads to keep English off a Spanish or Korean slide', () => {
+    expect(lectureBundle('en').locale).toBe('en');
+    expect(lectureBundle('es').locale).toBe('es');
+    expect(lectureBundle('ko').locale).toBe('ko');
+  });
+
+  it.each(['es', 'ko'] as const)(
+    'no Listen & Pick option on a shipped %s deck shows or is named by the English meaning (AMENDMENTS-LECTURE-V2 5.2)',
+    (locale) => {
+      let named = 0;
+      for (const q of questsAll) {
+        const en = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+        const byKey = new Map(en.map((s) => [s.key, s]));
+        for (const s of expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle(locale), { canPlayKorean: true }).slides) {
+          if (s.kind !== 'quiz' || s.prompt.ask !== 'listen') continue;
+          const english = byKey.get(s.key);
+          expect(english?.kind).toBe('quiz');
+          if (english?.kind !== 'quiz') continue;
+          for (const o of s.options) {
+            if (o.gloss === undefined) continue;
+            named += 1;
+            const same = english.options.find((e) => (e.ko ?? e.picture) === (o.ko ?? o.picture));
+            expect({ key: s.key, option: o.ko ?? o.picture, gloss: o.gloss }).not.toEqual({ key: s.key, option: o.ko ?? o.picture, gloss: same?.gloss });
+          }
+        }
+      }
+      // The deck's own meanings still show where it taught every option's Korean.
+      expect(named).toBeGreaterThan(0);
+    },
+  );
+
   it('localizes content text through the overlays, never the Korean or its romanization', () => {
     const overlays: Overlays = {
       es: {

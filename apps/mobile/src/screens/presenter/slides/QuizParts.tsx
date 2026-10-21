@@ -324,7 +324,7 @@ function OptionRow({ option, index, revealed, romOn, compact, small }: { option:
           </TaughtKo>
         ) : null}
         {option.ko !== undefined && option.romanization !== undefined ? (
-          <Text {...KOREAN_LINE_BREAK} aria-hidden={!romOn} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: romColor, opacity: romOn ? 1 : 0 }}>
+          <Text {...KOREAN_LINE_BREAK} testID="presenter-quiz-option-rom" aria-hidden={!romOn} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: romColor, opacity: romOn ? 1 : 0 }}>
             {option.romanization}
           </Text>
         ) : null}

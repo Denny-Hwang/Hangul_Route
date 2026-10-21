@@ -547,11 +547,27 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
    * no field for these options, so each takes the meaning this deck already gave the same Korean,
    * and none shows unless every option has one, so the rows stay alike and nothing is in English.
    */
+  const english = (bundle.locale ?? 'en') === 'en';
+  const taughtGloss = (ko: string): string | undefined =>
+    taught.find((k): k is Extract<TaughtItem, { kind: 'word' }> => k.kind === 'word' && k.ko === ko)?.gloss;
   const optionGlosses = (texts: readonly KoText[]): Array<string | undefined> => {
-    if ((bundle.locale ?? 'en') === 'en') return texts.map((t) => t.en);
-    const met = texts.map((t) => taught.find((k): k is Extract<TaughtItem, { kind: 'word' }> => k.kind === 'word' && k.ko === t.ko)?.gloss);
+    if (english) return texts.map((t) => t.en);
+    const met = texts.map((t) => taughtGloss(t.ko));
     return met.every((g) => g !== undefined) ? met : texts.map(() => undefined);
   };
+
+  /**
+   * A picture option's name (its accessible name and the art's text fallback). English: the
+   * content's label. Another language: the meaning this deck already gave the picture's word, else
+   * none, so the stage names it "Picture" as the game does; never the English label.
+   */
+  const pictureName = (labelEn: string | undefined, text: KoText | undefined): string | undefined => {
+    if (english) return labelEn ?? text?.en;
+    return text === undefined ? undefined : taughtGloss(text.ko);
+  };
+
+  /** Korean with its spaces and punctuation taken out, to tell a heard answer ("이천 원") from a reply. */
+  const bare = (ko: string): string => ko.replace(/[\s.,!?~]/g, '');
 
   /**
    * Listen & Pick (practice, apply and the Check): a `listen` question per round. A letter or
@@ -575,16 +591,18 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         const correct = o.id === round.answerId;
         if (o.pictureRef !== undefined) {
           // Named by its label (the game's rule); a picture with none is named "Picture" on the stage, as in the game.
-          const name = o.labelEn ?? o.text?.en;
+          const name = pictureName(o.labelEn, o.text);
           return { picture: o.pictureRef, ...(name !== undefined ? { gloss: name } : {}), correct };
         }
         const text = o.text!;
         const gloss = glosses[t++];
         return { ko: text.ko, romanization: text.romanization, ...(gloss !== undefined ? { gloss } : {}), correct };
       });
-      // A word or sentence round whose answer is not the line heard asks for the reply that fits it (the Stage 4 Checks).
+      // A word or sentence round whose answer is not in the line heard asks for the reply that fits it (the Stage 4
+      // Checks); an answer the line holds ("이천 원" in "이천 원이에요.") was heard, so the round asks which one.
       const answer = round.options.find((o) => o.id === round.answerId);
-      const reply = speech !== 'sound' && answer?.pictureRef === undefined && answer?.text !== undefined && answer.text.ko !== round.prompt.ko;
+      const reply =
+        speech !== 'sound' && answer?.pictureRef === undefined && answer?.text !== undefined && !bare(round.prompt.ko).includes(bare(answer.text.ko));
       push(`${path}/q${i + 1}`, {
         kind: 'quiz',
         prompt: { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },

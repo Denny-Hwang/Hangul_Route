@@ -99,6 +99,13 @@ async function lastSpoken(page: Page): Promise<string> {
   return page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken?.at(-1) ?? '');
 }
 
+async function spokenCount(page: Page): Promise<number> {
+  return page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken?.length ?? 0);
+}
+
+/** Korean without its spaces and punctuation. */
+const bare = (ko: string): string => ko.replace(/[\s.,!?~]/g, '');
+
 async function startLesson(page: Page, touch = false): Promise<void> {
   const start = page.getByTestId('presenter-start-button');
   await expect(start).toBeEnabled({ timeout: 10_000 });
@@ -299,18 +306,26 @@ test.describe('the listen question without a Korean voice (section 3.7)', () => 
     await page.goto(link({ ...DECK, id: 'lecture:e2eq02', blocks: [{ kind: 'quest', id: 'quest:stage3-life-q1' }] }));
     await startLesson(page);
     const stage = page.getByTestId('presenter-stage');
+    let visited = 0;
     for (const n of await questionSlides(page)) {
       await goto(page, n);
       if ((await stage.getByTestId('presenter-question').count()) === 0) continue;
+      visited += 1;
       await expect(stage.getByTestId('presenter-quiz-speaker')).toHaveCount(0);
       await expect(stage.getByTestId('presenter-say-it-rom')).toBeVisible();
       await expect(stage.getByTestId('presenter-say-it-ko')).toHaveCSS('opacity', '0');
+      // The options' romanization waits for the answer build too: the room cannot match the box's letters to a row's.
+      const rows = stage.getByTestId('presenter-quiz-option-rom');
+      for (const rom of await rows.all()) await expect(rom).toHaveCSS('opacity', '0');
       await shot(page, `presenter-questions-say-it-${n}-q`);
       await reveal(page);
       await expect(stage.getByTestId('presenter-say-it-ko')).toHaveCSS('opacity', '1');
+      for (const rom of await rows.all()) await expect(rom).toHaveCSS('opacity', '1');
       await shot(page, `presenter-questions-say-it-${n}-a`);
       await expect.poll(() => fitProblems(page, false), { timeout: 3000 }).toEqual([]);
     }
+    // Stage 3 life q1 has listen rounds (a picture round and a sentence round): the walk must reach them.
+    expect(visited).toBeGreaterThan(0);
   });
 });
 
@@ -328,19 +343,30 @@ test.describe('Sound and the reveal on the question slides (section 3.4 amendmen
     for (const n of await questionSlides(page)) {
       await goto(page, n);
       if (!reply && (await stage.getByTestId('presenter-quiz-said').count()) > 0) {
+        const before = await spokenCount(page);
         await page.keyboard.press('s');
         const said = (await stage.getByTestId('presenter-quiz-said').locator('[lang="ko"]').innerText()).trim();
-        await expect.poll(() => lastSpoken(page)).not.toBe('');
-        // The line's spoken form may differ from its spelling (spokenKo); it is never empty and never an option.
-        expect((await lastSpoken(page)).length).toBeGreaterThan(0);
+        await expect.poll(() => spokenCount(page)).toBeGreaterThan(before);
+        // The line's spoken form may differ from its spelling (spokenKo), so it is matched without spaces and
+        // punctuation, by its first syllable; it is never one of the replies.
+        const spoken = await lastSpoken(page);
         expect(said.length).toBeGreaterThan(0);
+        expect(bare(spoken)[0]).toBe(bare(said)[0]);
+        const replies = (await stage.getByTestId('presenter-quiz-option-ko').allInnerTexts()).map((t) => t.trim());
+        expect(replies).not.toContain(spoken);
         reply = true;
       } else if (!listen && (await stage.getByTestId('presenter-quiz-speaker').count()) > 0) {
+        const before = await spokenCount(page);
         await stage.getByTestId('presenter-quiz-speaker').click();
-        await expect.poll(() => lastSpoken(page)).not.toBe('');
+        await expect.poll(() => spokenCount(page)).toBeGreaterThan(before);
+        const spoken = await lastSpoken(page);
         await reveal(page);
+        // Sound said the prompt (the line that joins under the question at the answer build), not an option it shows.
         const heard = (await stage.getByTestId('presenter-quiz-prompt-line').locator('[lang="ko"]').innerText()).trim();
         expect(heard.length).toBeGreaterThan(0);
+        expect(bare(spoken)[0]).toBe(bare(heard)[0]);
+        const options = (await stage.getByTestId('presenter-quiz-option-ko').allInnerTexts()).map((t) => t.trim());
+        if (!options.includes(heard)) expect(options).not.toContain(spoken);
         listen = true;
       } else if (!found && (await stage.getByTestId('presenter-realia-key').count()) > 0) {
         await expect(stage.getByTestId('presenter-realia-found')).toHaveCount(0);

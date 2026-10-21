@@ -1,8 +1,10 @@
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
+import TestRenderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { buildsFor, type BuildName } from '../../../logic/lecture/build-steps';
+import { questsAll } from '../../../content';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
 import { byTestId, hostNodes, render, screenTexts, textOf } from '../../../test-support/render';
@@ -53,6 +55,10 @@ const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
 const stage3Text = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }], false);
 const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
 const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }, { kind: 'quest', id: 'quest:stage6-crafts-q3' }]);
+/** Every realia question of the shipped Stage 6 lessons, so a figure and a picture question are always found. */
+const REALIA_ALL = slidesOf(questsAll.filter((q) => q.id.startsWith('quest:stage6-')).map((q): LectureBlock => ({ kind: 'quest', id: q.id }))).filter(
+  (s): s is RealiaQuestionBody => isRealiaQuestion(s),
+);
 
 /** A listen question of a word or sentence round with text options (`rows`), or of a picture round. */
 const listenOf = (slides: Slide[], rows: boolean): ListenBody =>
@@ -94,6 +100,20 @@ describe('QuestionSlide: listen (LV-S2)', () => {
     const shown = await render(inView(<QuestionSlide slide={slide} shown={ANSWER} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
     expect(hiddenNow(byTestId(shown.root, 'presenter-say-it-ko')[0]!)).toBe(false);
     expect(textOf(byTestId(shown.root, 'presenter-say-it-ko')[0]!)).toBe(slide.prompt.line.ko);
+  });
+
+  it("in the text variant the options' romanization waits for the answer build, so the room cannot match the box's letters", async () => {
+    const slide = listenOf(stage3Text, true);
+    const romOf = (root: TestRenderer.ReactTestInstance) =>
+      hostNodes(byTestId(root, 'presenter-quiz-options')[0]!, (n) => slide.options.some((o) => o.romanization === textOf(n)) && n.props['aria-hidden'] !== undefined);
+    const r = await render(inView(<QuestionSlide slide={slide} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(romOf(r.root).length).toBe(slide.options.length);
+    expect(romOf(r.root).every((n) => n.props['aria-hidden'] === true)).toBe(true);
+    const shown = await render(inView(<QuestionSlide slide={slide} shown={ANSWER} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(romOf(shown.root).every((n) => n.props['aria-hidden'] === false)).toBe(true);
+    // With a voice the deck's 'always' still shows them from the question build.
+    const voiced = await render(inView(<QuestionSlide slide={listenOf(stage3, true)} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(hostNodes(byTestId(voiced.root, 'presenter-quiz-options')[0]!, (n) => n.props['aria-hidden'] === true && listenOf(stage3, true).options.some((o) => o.romanization === textOf(n)))).toHaveLength(0);
   });
 
   it('a picture round keeps the 2 x 2 grid of pictures, each named by its label', async () => {
@@ -177,16 +197,115 @@ describe('RealiaQuestionSlide (LV-S2, V7)', () => {
   });
 
   it('a figure option is plain text; a picture option is a picture named by its label', async () => {
-    const figure = realia.find((s) => s.options.some((o) => o.figure !== undefined));
-    if (figure) {
-      const r = await render(inView(<RealiaQuestionSlide slide={figure} shown={QUESTION} romanization="always" />));
-      expect(byTestId(r.root, 'presenter-quiz-option-figure').map((n) => textOf(n)).sort()).toEqual(figure.options.map((o) => o.figure).sort());
+    const figure = REALIA_ALL.find((s) => s.options.some((o) => o.figure !== undefined));
+    const picture = REALIA_ALL.find((s) => s.options.some((o) => o.picture !== undefined));
+    expect(figure).toBeDefined();
+    expect(picture).toBeDefined();
+    const r = await render(inView(<RealiaQuestionSlide slide={figure!} shown={QUESTION} romanization="always" />));
+    expect(byTestId(r.root, 'presenter-quiz-option-figure').map((n) => textOf(n)).sort()).toEqual(figure!.options.map((o) => o.figure).sort());
+    const p = await render(inView(<RealiaQuestionSlide slide={picture!} shown={QUESTION} romanization="always" />));
+    expect(byTestId(p.root, 'presenter-quiz-picture')).toHaveLength(picture!.options.length);
+  });
+});
+
+describe('the question slides fit themselves like the reading slides (V8, useFitLevel)', () => {
+  /**
+   * A question slide drawn at a stage scale the test changes; its content box reports `measured.height` when the
+   * hook measures it again through `contentRef` (react-native-web's `offsetHeight`).
+   */
+  async function mount(
+    body: (rows: true) => React.ReactElement,
+    contentId: string,
+    roomId: string,
+    measured: { height: number },
+    unitOf: () => number,
+  ): Promise<{ r: ReactTestRenderer; fit: () => string; layout: (id: string, height: number) => void; rerender: () => Promise<void> }> {
+    const tree = (): React.ReactElement => (
+      <PresenterViewProvider value={{ messages: en, locale: 'en', unit: unitOf(), reducedMotion: true }}>{body(true)}</PresenterViewProvider>
+    );
+    let r!: ReactTestRenderer;
+    await act(async () => {
+      r = TestRenderer.create(tree(), {
+        // The stage speaker (a pressable) listens on its node; the content box reports its height.
+        createNodeMock: (el) => {
+          const node = { addEventListener: () => undefined, removeEventListener: () => undefined };
+          return (el.props as { 'data-testid'?: string })['data-testid'] === contentId ? { ...node, get offsetHeight() { return measured.height; } } : node;
+        },
+      });
+    });
+    const composite = (id: string) => r.root.findAll((n) => typeof n.type !== 'string' && n.props.testID === id)[0]!;
+    const layout = (id: string, height: number): void => {
+      (composite(id).props.onLayout as (e: { nativeEvent: { layout: { height: number } } }) => void)({ nativeEvent: { layout: { height } } });
+    };
+    const fit = (): string => (composite(contentId).props.dataSet as { fit: string }).fit;
+    const rerender = async (): Promise<void> => {
+      await act(async () => {
+        r.update(tree());
+      });
+    };
+    return { r, fit, layout, rerender };
+  }
+
+  const cases = [
+    ['QuestionSlide', 'presenter-question-content', 'presenter-question', () => <QuestionSlide slide={listenOf(stage3, true)} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />],
+    [
+      'RealiaQuestionSlide',
+      'presenter-realia-question-content',
+      'presenter-realia-question',
+      () => <RealiaQuestionSlide slide={REALIA_ALL.find((q) => q.options.every((o) => o.picture === undefined))!} shown={QUESTION} romanization="always" />,
+    ],
+  ] as const;
+
+  it.each(cases)('%s fits again from level 0 when the stage grows (fullscreen, the projector)', async (_name, contentId, roomId, body) => {
+    vi.useFakeTimers();
+    try {
+      const measured = { height: 330 };
+      let unit = 0.5;
+      const p = await mount(body, contentId, roomId, measured, () => unit);
+      await act(async () => {
+        p.layout(roomId, 278);
+        p.layout(contentId, 330);
+      });
+      expect(p.fit()).toBe('1');
+      unit = 1;
+      measured.height = 500;
+      await p.rerender();
+      expect(p.fit()).toBe('0');
+      await act(async () => {
+        p.layout(roomId, 560);
+        p.layout(contentId, 500);
+        vi.advanceTimersByTime(400);
+      });
+      expect(p.fit()).toBe('0');
+      await act(async () => {
+        p.r.unmount();
+      });
+    } finally {
+      vi.useRealTimers();
     }
-    const picture = realia.find((s) => s.options.some((o) => o.picture !== undefined));
-    expect(figure ?? picture).toBeDefined();
-    if (picture) {
-      const r = await render(inView(<RealiaQuestionSlide slide={picture} shown={QUESTION} romanization="always" />));
-      expect(byTestId(r.root, 'presenter-quiz-picture')).toHaveLength(picture.options.length);
+  });
+
+  it.each(cases)('%s measures its content again when no layout event follows a step, so it never steps a level too far', async (_name, contentId, roomId, body) => {
+    vi.useFakeTimers();
+    try {
+      const measured = { height: 330 };
+      const p = await mount(body, contentId, roomId, measured, () => 1);
+      await act(async () => {
+        p.layout(roomId, 278);
+        p.layout(contentId, 330);
+      });
+      expect(p.fit()).toBe('1');
+      // Level 1 fits (270 tall now), but no layout event comes: the hook reads the height through contentRef.
+      measured.height = 270;
+      await act(async () => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(p.fit()).toBe('1');
+      await act(async () => {
+        p.r.unmount();
+      });
+    } finally {
+      vi.useRealTimers();
     }
   });
 });

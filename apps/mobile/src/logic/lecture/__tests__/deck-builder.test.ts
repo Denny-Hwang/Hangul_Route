@@ -1877,6 +1877,16 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
             ],
             answerId: 'a',
           },
+          // The answer is in the line heard (s6-life-q3's Check c2): a heard round, not a reply.
+          {
+            id: 'c2',
+            prompt: kt('이천 원이에요.', 'icheon wonieyo', 'It is 2,000 won.'),
+            options: [
+              { id: 'a', text: kt('이천 원', 'icheon won', '2,000 won') },
+              { id: 'b', text: kt('삼천 원', 'samcheon won', '3,000 won') },
+            ],
+            answerId: 'a',
+          },
         ],
       },
     },
@@ -1960,8 +1970,11 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
   });
 
   it('listen: a round whose answer is not the line heard asks for the reply that fits it (a Stage 4 Check); a heard round does not', () => {
-    const [check] = quizzes(run(replyCheck.id).slides, 'listen');
+    const [check, heard] = quizzes(run(replyCheck.id).slides, 'listen');
     expect(check!.prompt).toMatchObject({ ask: 'listen', line: { ko: '밥 먹었어요?' }, speech: 'sentence', reply: true });
+    // An answer the line holds, spaces and punctuation aside, was heard: "Which one did you hear?".
+    expect(heard!.prompt).toMatchObject({ ask: 'listen', line: { ko: '이천 원이에요.' } });
+    expect(heard!.prompt).not.toHaveProperty('reply');
     for (const q of [...quizzes(run(asked.id).slides, 'listen'), ...quizzes(run(sheetFirst.id).slides, 'listen')]) expect(q.prompt).not.toHaveProperty('reply');
   });
 
@@ -1973,6 +1986,16 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
       { picture: 'word:food-milk', gloss: 'milk', correct: true },
       { picture: 'word:food-water', gloss: 'water', correct: false },
     ]);
+  });
+
+  it('in another language a listen picture is named by the meaning the deck gave its word, else not at all (never its English label)', () => {
+    const es = b({ locale: 'es' });
+    const [, pictures] = quizzes(run(asked.id, {}, VOICE, es).slides, 'listen');
+    expect(pictures!.options.map((o) => o.picture).sort()).toEqual(['word:food-bread', 'word:food-milk', 'word:food-water']);
+    expect(pictures!.options.some((o) => o.gloss !== undefined)).toBe(false);
+    // A realia picture keeps its label: the overlays carry it in the slide language (realiaRead options' label).
+    const [, , realiaPicture] = quizzes(run(asked.id, {}, VOICE, es).slides, 'realia');
+    expect(realiaPicture!.options.find((o) => o.correct)).toEqual({ picture: 'word:food-milk', gloss: 'milk', correct: true });
   });
 
   it('listen: a letter round plays at the sound rate and its options are the letters with no meaning (the grid)', () => {

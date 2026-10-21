@@ -40,7 +40,8 @@ const MAX_LEVEL = 3;
  *   build the prompt's Korean, romanization and meaning join under the question, so the room sees
  *   what it heard. With no Korean voice or sound off (section 3.7) the speaker gives way to a
  *   "Say it:" box with the prompt's romanization, which the teacher reads; its Hangul joins the box
- *   at the answer build (showing it first would give the answer away).
+ *   at the answer build (showing it first would give the answer away), and so does the options' romanization
+ *   (the room would otherwise match the box's letters to a row's).
  * - **Reply** (`ask: 'reply'`): "Which answer fits?" over the other speaker's line in a bordered
  *   box (Korean, romanization, meaning); the Sound button plays it.
  *
@@ -63,18 +64,24 @@ export function QuestionSlide({
 }): React.ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
-  const fit = useFitLevel(MAX_LEVEL);
+  // The stage scale goes in, so a new scale fits again from level 0; `contentRef` lets a step with no layout event re-measure.
+  const fit = useFitLevel(MAX_LEVEL, unit);
   const revealed = shown.has('answer');
   const rows = optionLayout(slide) === 'rows';
   const m = messages.learner.presenter.quiz;
   const prompt = slide.prompt;
   const listen = prompt.ask === 'listen';
   const say = listen && (sayIt || slide.textPrompt);
+  // In the text variant the Say it box shows the prompt's romanization: the options' romanization waits for the
+  // answer build there (as with `romanization: 'tap'`), so the room cannot answer by matching letters.
+  const optionRom: RomanizationMode = say ? 'tap' : romanization;
   const promptSize = size(presenter.size.prompt);
   const gap = units(unit, spacing.md);
   return (
     <View testID="presenter-question" onLayout={rows ? fit.onRoom : undefined} style={{ flex: 1, minHeight: 0 }}>
       <View
+        ref={rows ? fit.contentRef : undefined}
+        testID="presenter-question-content"
         onLayout={rows ? fit.onContent : undefined}
         {...{ dataSet: { fit: String(fit.level) } }}
         style={[{ gap }, rows ? null : { flex: 1, minHeight: 0 }]}
@@ -101,9 +108,9 @@ export function QuestionSlide({
           <PromptLine line={prompt.line} shown={revealed} level={fit.level} />
         )}
         {rows ? (
-          <OptionRows options={slide.options} revealed={revealed} romanization={romanization} compact={fit.level >= 1} small={fit.level >= 3} />
+          <OptionRows options={slide.options} revealed={revealed} romanization={optionRom} compact={fit.level >= 1} small={fit.level >= 3} />
         ) : (
-          <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} />
+          <QuizOptions options={slide.options} revealed={revealed} romanization={optionRom} />
         )}
       </View>
     </View>
