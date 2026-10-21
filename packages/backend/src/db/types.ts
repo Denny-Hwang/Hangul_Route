@@ -496,12 +496,14 @@ export interface Db {
   /** Upsert one row by flag. Tests and tooling only: the owner edits rows in the D1 console; no route writes them. */
   putRemoteConfig(row: RemoteConfigRow): Promise<void>;
   // learning rollups (F-CURR-002 section 11.2, row CM-70a; migration 0014). Codes and counts only.
-  /** Adds 1 to each cell of `day` (UTC `YYYY-MM-DD`), in one write; a key named twice still adds 1 once. */
-  addRollups(day: string, keys: readonly RollupKey[]): Promise<void>;
+  /**
+   * Adds 1 to each cell of `day` (UTC `YYYY-MM-DD`), in one batch; a key named twice still adds 1
+   * once. With `counter`, the same batch adds the rows it wrote (the cells plus the counter row) to
+   * the counter row (`counter`, dim '', bucket '') and the counter's new total is answered; else 0.
+   */
+  addRollups(day: string, keys: readonly RollupKey[], counter?: string): Promise<number>;
   /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Read through lib/learning-rollups (`readRollups`), which applies the suppression. */
   rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]>;
-  /** Adds `cells` to the budget counter row (`metric`, dim '', bucket '') of `day` in one write and answers its new total. */
-  reserveRollupCells(day: string, metric: string, cells: number): Promise<number>;
   /**
    * The guardrail evaluator's read (F-CURR-002 section 12.3, row CM-70b): the stored cells of `metrics` only, from
    * `fromDay` to `toDay` inclusive, at most `limit`, unsuppressed. The evaluator applies its own per-(day, metric, dim)

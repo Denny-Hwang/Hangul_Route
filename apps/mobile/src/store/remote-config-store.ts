@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { currBuildFloor, currBuiltInPct, type CurrFlagName } from '../config/flags';
 import {
   DEFAULT_MAX_AGE_S,
+  REFETCH_MIN_AGE_MS,
   parentFlagOf,
   parseConfigBody,
   parseMaxAge,
@@ -11,7 +12,7 @@ import {
   retryWaiting,
   type RemoteConfigCache,
 } from '../logic/remote-config/remote-config';
-import { subscribeAppVisibility } from '../platform/app-visibility';
+import { isAppVisible, subscribeAppVisibility } from '../platform/app-visibility';
 import { readJson, writeJson } from '../platform/storage';
 import { apiBaseUrl } from '../platform/sync-api';
 import { useProfileStore } from './profile-store';
@@ -69,7 +70,14 @@ export const useRemoteConfigStore = create<State & Actions>((set, get) => ({
     const now = deps.now ?? Date.now;
     const attempt = async (): Promise<boolean> => {
       try {
-        const res = await fetchImpl(`${endpoint}${CONFIG_PATH}`, { method: 'GET', credentials: 'omit', headers: { Accept: 'application/json' } });
+        // `no-store`: skip the device's HTTP cache (browser or NSURLCache), which would otherwise add up to another
+        // max-age of staleness after an urgent off; the device's own 15-minute gate and the edge cache still hold.
+        const res = await fetchImpl(`${endpoint}${CONFIG_PATH}`, {
+          method: 'GET',
+          credentials: 'omit',
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
         if (!res.ok) return false;
         const flags = parseConfigBody(await res.json());
         if (!flags) return false;
@@ -102,18 +110,41 @@ export const useRemoteConfigStore = create<State & Actions>((set, get) => ({
 
 /**
  * Starts the remote config: reads the stored copy, fetches when due, and checks again each time the app comes back
- * to the foreground. Returns the unsubscribe. Called once from `App.tsx`.
+ * to the foreground. While the app stays in front it also checks every 15 minutes (`REFETCH_MIN_AGE_MS`), so a
+ * screen that is never hidden (a presenter on a classroom display, a tablet left on one session) still picks up an
+ * urgent off; the check is a no-op until the copy is due. Returns the unsubscribe. Called once from `App.tsx`.
  */
-export function startRemoteConfig(deps: Deps & { subscribe?: typeof subscribeAppVisibility } = {}): () => void {
-  const store = useRemoteConfigStore.getState();
-  void store
+export function startRemoteConfig(
+  deps: Deps & { subscribe?: typeof subscribeAppVisibility; isVisible?: () => boolean } = {},
+): () => void {
+  const check = () => void useRemoteConfigStore.getState().refreshIfDue(deps);
+  let timer: ReturnType<typeof setInterval> | null = null;
+  const startTimer = () => {
+    if (timer === null) timer = setInterval(check, REFETCH_MIN_AGE_MS);
+  };
+  const stopTimer = () => {
+    if (timer !== null) clearInterval(timer);
+    timer = null;
+  };
+  void useRemoteConfigStore
+    .getState()
     .hydrate()
     .catch(() => undefined)
     .then(() => useRemoteConfigStore.getState().refreshIfDue(deps));
+  if ((deps.isVisible ?? isAppVisible)()) startTimer();
   const subscribe = deps.subscribe ?? subscribeAppVisibility;
-  return subscribe((visible) => {
-    if (visible) void useRemoteConfigStore.getState().refreshIfDue(deps);
+  const unsubscribe = subscribe((visible) => {
+    if (visible) {
+      check();
+      startTimer();
+    } else {
+      stopTimer();
+    }
   });
+  return () => {
+    stopTimer();
+    unsubscribe();
+  };
 }
 
 function oneFlagOn(flag: CurrFlagName, profileId: string | null, cache: RemoteConfigCache | null): boolean {

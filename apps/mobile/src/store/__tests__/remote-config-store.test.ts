@@ -69,6 +69,12 @@ describe('refresh · a request with no identifier', () => {
     expect(f.calls[0]?.init?.headers).toEqual({ Accept: 'application/json' });
   });
 
+  it('skips the device HTTP cache (cache: no-store), so a purged edge copy is not shadowed by a local one', async () => {
+    const f = fetchReturning(answer({}));
+    await useRemoteConfigStore.getState().refresh({ endpoint: ENDPOINT, fetchImpl: f.impl, now: () => 0 });
+    expect(f.calls[0]?.init?.cache).toBe('no-store');
+  });
+
   it('even with an active profile, the request names nobody', async () => {
     useProfileStore.setState({ activeId: 'k7f3x9qa' });
     const f = fetchReturning(answer({}));
@@ -109,7 +115,7 @@ describe('refresh · a request with no identifier', () => {
 describe('fallback order: last known when offline, built-in pct when never fetched', () => {
   it('never fetched: the built-in pct (0), so every F-CURR-002 flag is off', () => {
     useProfileStore.setState({ activeId: 'p1' });
-    for (const flag of ['dailyReview', 'mastery', 'goals', 'pack.k-food', 'game.cloze'] as const) expect(currFlagOn(flag), flag).toBe(false);
+    for (const flag of ['dailyReview', 'mastery', 'goals', 'pack.k-culture', 'game.cloze-pick'] as const) expect(currFlagOn(flag), flag).toBe(false);
   });
 
   it('a fetched copy turns a ramped flag on for its share of profiles', async () => {
@@ -152,13 +158,13 @@ describe('fallback order: last known when offline, built-in pct when never fetch
   });
 
   it('a pack also needs topicPacks', async () => {
-    const f = fetchReturning(answer({ topicPacks: { on: true, pct: 100 }, 'pack.k-food': { on: true, pct: 100 }, 'pack.space': { on: false, pct: 100 } }));
+    const f = fetchReturning(answer({ topicPacks: { on: true, pct: 100 }, 'pack.k-culture': { on: true, pct: 100 }, 'pack.numbers-time': { on: false, pct: 100 } }));
     await useRemoteConfigStore.getState().refresh({ endpoint: ENDPOINT, fetchImpl: f.impl, now: () => 0 });
-    expect(currFlagOn('pack.k-food', 'p1')).toBe(true);
-    expect(currFlagOn('pack.space', 'p1')).toBe(false);
-    const off = fetchReturning(answer({ topicPacks: { on: false, pct: 100 }, 'pack.k-food': { on: true, pct: 100 } }));
+    expect(currFlagOn('pack.k-culture', 'p1')).toBe(true);
+    expect(currFlagOn('pack.numbers-time', 'p1')).toBe(false);
+    const off = fetchReturning(answer({ topicPacks: { on: false, pct: 100 }, 'pack.k-culture': { on: true, pct: 100 } }));
     await useRemoteConfigStore.getState().refresh({ endpoint: ENDPOINT, fetchImpl: off.impl, now: () => 1 });
-    expect(currFlagOn('pack.k-food', 'p1')).toBe(false);
+    expect(currFlagOn('pack.k-culture', 'p1')).toBe(false);
   });
 });
 
@@ -249,6 +255,68 @@ describe('startRemoteConfig · foreground refetch by age', () => {
     await vi.waitFor(() => expect(useRemoteConfigStore.getState().cache?.fetchedAt).toBe(t));
     expect(f.calls).toHaveLength(3);
     stop();
+  });
+
+  it('while the app stays in front, it checks every 15 minutes; the timer stops when hidden and on unsubscribe', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    try {
+      let t = 1_000_000;
+      let listener: ((visible: boolean) => void) | null = null;
+      const f = fetchReturning(answer({}));
+      const stop = startRemoteConfig({
+        endpoint: ENDPOINT,
+        fetchImpl: f.impl,
+        now: () => t,
+        isVisible: () => true,
+        subscribe: (l) => {
+          listener = l;
+          return () => undefined;
+        },
+      });
+      await vi.waitFor(() => expect(useRemoteConfigStore.getState().cache?.fetchedAt).toBe(1_000_000));
+      expect(f.calls).toHaveLength(1);
+
+      // Never hidden: the interval alone refetches once the copy is due.
+      t += REFETCH_MIN_AGE_MS;
+      vi.advanceTimersByTime(REFETCH_MIN_AGE_MS);
+      await vi.waitFor(() => expect(f.calls).toHaveLength(2));
+      await vi.waitFor(() => expect(useRemoteConfigStore.getState().cache?.fetchedAt).toBe(t));
+
+      // Hidden: no timer runs, so nothing is fetched in the background.
+      listener!(false);
+      t += 3 * REFETCH_MIN_AGE_MS;
+      vi.advanceTimersByTime(3 * REFETCH_MIN_AGE_MS);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(f.calls).toHaveLength(2);
+
+      // Back in front: one check now, and the timer starts again (only one timer).
+      listener!(true);
+      await vi.waitFor(() => expect(f.calls).toHaveLength(3));
+      await vi.waitFor(() => expect(useRemoteConfigStore.getState().cache?.fetchedAt).toBe(t));
+      listener!(true);
+      expect(vi.getTimerCount()).toBe(1);
+
+      stop();
+      expect(vi.getTimerCount()).toBe(0);
+      t += REFETCH_MIN_AGE_MS;
+      vi.advanceTimersByTime(REFETCH_MIN_AGE_MS);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(f.calls).toHaveLength(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('started in the background, no timer runs until the app comes to the front', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    try {
+      const f = fetchReturning(answer({}));
+      const stop = startRemoteConfig({ endpoint: ENDPOINT, fetchImpl: f.impl, now: () => 1, isVisible: () => false, subscribe: () => () => undefined });
+      expect(vi.getTimerCount()).toBe(0);
+      stop();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('a fresh stored copy is not refetched at start', async () => {
