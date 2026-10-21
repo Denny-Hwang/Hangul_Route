@@ -22,7 +22,16 @@ export function PinResetExpiredNotice(): React.ReactElement | null {
     if (expiredNoticeLive(expiredAt, Date.now())) setShown(true);
     usePinResetNotice.getState().takeExpired();
   }, [expiredAt]);
-  if (!shown && !live) return null;
+  const visible = shown || live;
+  // [OA] Row OA-6 review round 2: many screen readers do not announce a live region's text that exists when the region
+  // is created, so the status mounts empty and the line goes in on the next turn, as a change the reader announces.
+  const [filled, setFilled] = useState(false);
+  useEffect(() => {
+    if (!visible) return undefined;
+    const timer = setTimeout(() => setFilled(true), 0);
+    return () => clearTimeout(timer);
+  }, [visible]);
+  if (!visible) return null;
   return (
     <View
       testID="pin-reset-expired"
@@ -30,7 +39,7 @@ export function PinResetExpiredNotice(): React.ReactElement | null {
       accessibilityLiveRegion="polite"
       style={{ backgroundColor: colors.feedback.infoLight, borderRadius: radii.lg, padding: spacing.md, marginBottom: spacing.lg }}
     >
-      <Body>{m.expired}</Body>
+      {filled ? <Body>{m.expired}</Body> : null}
     </View>
   );
 }

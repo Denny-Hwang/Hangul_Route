@@ -1,7 +1,7 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import React from 'react';
-import type { ReactTestInstance } from 'react-test-renderer';
+import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -51,11 +51,13 @@ import { flags } from '../../../config/flags';
 import { useAccountStore } from '../../../store/account-store';
 import { PIN_RESET_NOTICE_MS, expiredNoticeLive, usePinResetNotice } from '../../../store/pin-reset-notice';
 import { useProfileStore } from '../../../store/profile-store';
+import { useSyncStore } from '../../../store/sync-store';
 import { useUiStore } from '../../../store/ui-store';
 import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform, type RenderPlatform } from '../../../test-support/render';
 import { PinEntryScreen } from '../PinEntryScreen';
 import { PinResetExpiredNotice } from '../PinResetExpiredNotice';
 import { PinResetScreen } from '../PinResetScreen';
+import { RESET_SETUP_IDLE_MS } from '../use-gate-lapse';
 
 const m = getMessages('en').caregiver.pin;
 const a11y = getMessages('en').a11y;
@@ -76,8 +78,12 @@ function nav() {
 
 async function showReset(navigation = nav()) {
   const route = { key: 'reset', name: 'PinReset' as const, params: { next: 'ParentDashboard' as const } };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
-  const r = await render(<PinResetScreen route={route} navigation={navigation as any} />);
+  const r = await render(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+    <PinResetScreen route={route} navigation={navigation as any} />,
+    // The Rescue Code field (a stored code) is a DOM input on the web build.
+    { createNodeMock: () => ({ focus: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined }) },
+  );
   await new Promise((resolve) => setTimeout(resolve, 0));
   return { r, navigation };
 }
@@ -124,6 +130,25 @@ describe('Forgot PIN?: Sign in to the account (section 8.5 step 1)', () => {
     expect(texts.indexOf(m.reset.signIn.heading)).toBeLessThan(texts.indexOf(m.reset.wait.heading));
   });
 
+  // [OA] Round 2: first also above the Rescue Code card, on a device that stores one.
+  it('comes before the Rescue Code card when a code is stored', async () => {
+    const sync = useSyncStore.getState();
+    const byLearner = { [learner.id]: { rescueCode: 'tiger moon river apple 482139' } } as unknown as typeof sync.byLearner;
+    useSyncStore.setState({ byLearner, hydrate: (async () => byLearner[learner.id]) as typeof sync.hydrate });
+    // The Rescue Code field reads the focused element on the web build.
+    vi.stubGlobal('document', { activeElement: null });
+    try {
+      const { r } = await showReset();
+      const texts = screenTexts(r.root);
+      expect(texts).toContain(m.reset.code.heading);
+      expect(texts.indexOf(m.reset.signIn.heading)).toBeLessThan(texts.indexOf(m.reset.code.heading));
+    } finally {
+      await cleanup();
+      vi.unstubAllGlobals();
+      useSyncStore.setState({ byLearner: sync.byLearner, hydrate: sync.hydrate });
+    }
+  });
+
   const hidden: Array<[string, () => void]> = [
     ['offline', () => (net.online = false)],
     ['switch off', () => (flags.pinResetSignInEnabled = false)],
@@ -150,6 +175,31 @@ describe('Forgot PIN?: Sign in to the account (section 8.5 step 1)', () => {
     expect(store.has(UNLOCK_SESSION_KEY)).toBe(false);
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     vi.unstubAllGlobals();
+  });
+
+  // [OA] Round 2: Back from /signin can restore this page from the back/forward cache; Sign in works again then.
+  it('Sign in is pressable again after a back/forward-cache restore', async () => {
+    const visibility = await import('../../../platform/app-visibility');
+    let restore: (() => void) | null = null;
+    const restoreSpy = vi.spyOn(visibility, 'subscribePageRestore').mockImplementation((l) => {
+      restore = l;
+      return () => {
+        restore = null;
+      };
+    });
+    try {
+      const { r } = await showReset();
+      const button = () => buttonsNamed(r.root, m.reset.signIn.button)[0] as ReactTestInstance;
+      await press(button());
+      expect(signIn.calls).toBe(1);
+      expect(button().props['aria-disabled']).toBe(true);
+      await act(async () => restore!());
+      expect(button().props['aria-disabled']).toBeFalsy();
+      await press(buttonsNamed(r.root, m.reset.signIn.button)[0] as ReactTestInstance);
+      expect(signIn.calls).toBe(2);
+    } finally {
+      restoreSpy.mockRestore();
+    }
   });
 });
 
@@ -206,6 +256,33 @@ describe('the ticket’s new-PIN screen (section 8.5 step 5)', () => {
     }
   });
 
+  // [OA] Round 2: a tab left visible on the new-PIN screen closes after RESET_SETUP_IDLE_MS with no key press.
+  it('closes, writing nothing, after RESET_SETUP_IDLE_MS with no key press; each key press starts the wait again', async () => {
+    vi.useFakeTimers();
+    try {
+      const first = await showSetupFake();
+      await act(async () => void vi.advanceTimersByTime(RESET_SETUP_IDLE_MS - 1));
+      expect(first.navigation.goBack).not.toHaveBeenCalled();
+      await press(buttonsNamed(first.r.root, a11y.pinDigit(2))[0] as ReactTestInstance);
+      await act(async () => void vi.advanceTimersByTime(RESET_SETUP_IDLE_MS - 1));
+      expect(first.navigation.goBack).not.toHaveBeenCalled();
+      await act(async () => void vi.advanceTimersByTime(1));
+      expect(first.navigation.goBack).toHaveBeenCalledTimes(1);
+      await act(async () => void vi.advanceTimersByTime(RESET_SETUP_IDLE_MS));
+      expect(first.navigation.goBack).toHaveBeenCalledTimes(1);
+      expect(useAccountStore.getState().parentPinHash).toBe('h:1234');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  async function showSetupFake(navigation = nav()) {
+    const route = { key: 'pin', name: 'PinEntry' as const, params: { next: 'ParentDashboard' as const, mode: 'setup' as const, via: 'sign_in' as const } };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+    const r = await render(<PinEntryScreen route={route} navigation={navigation as any} />);
+    return { r, navigation };
+  }
+
   it('a PIN check (no reset) binds no such close', async () => {
     const visibility = await import('../../../platform/app-visibility');
     const restoreSpy = vi.spyOn(visibility, 'subscribePageRestore');
@@ -250,6 +327,7 @@ describe('the expired line (section 8.5 step 5, board 10)', () => {
     usePinResetNotice.getState().showExpired();
     await new Promise((resolve) => setTimeout(resolve, 0));
     await first.update(<PinResetExpiredNotice />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
     const [notice] = byTestId(first.root, 'pin-reset-expired');
     expect(screenTexts(notice as ReactTestInstance)).toEqual([m.reset.signIn.expired]);
     expect(notice?.props.role).toBe('status');
@@ -257,6 +335,18 @@ describe('the expired line (section 8.5 step 5, board 10)', () => {
     await cleanup();
     const again = await render(<PinResetExpiredNotice />);
     expect(byTestId(again.root, 'pin-reset-expired')).toHaveLength(0);
+  });
+
+  // [OA] Round 2: the status mounts empty and the line goes in on the next turn, so a screen reader announces it.
+  it('mounts the status empty, then puts the line in', async () => {
+    usePinResetNotice.getState().showExpired();
+    const r = await render(<PinResetExpiredNotice />);
+    const [empty] = byTestId(r.root, 'pin-reset-expired');
+    expect(empty).toBeDefined();
+    expect(screenTexts(empty as ReactTestInstance)).toEqual([]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await r.update(<PinResetExpiredNotice />);
+    expect(screenTexts(byTestId(r.root, 'pin-reset-expired')[0] as ReactTestInstance)).toEqual([m.reset.signIn.expired]);
   });
 
   it('a line raised for a boot that started elsewhere is stale when Home first renders: taken, never shown', async () => {

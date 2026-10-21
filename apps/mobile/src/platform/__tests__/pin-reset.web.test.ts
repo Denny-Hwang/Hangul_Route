@@ -20,7 +20,7 @@ import type { TelemetryEvent } from '../telemetry';
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 steps 1 and 5 (row OA-6): Forgot PIN?'s Sign in to the account
  * leaves for `/signin?next=/account/pin-reset` after its event, writing no unlock; the console's ticket is read once.
  */
-function area(initial: Record<string, string>, options: { getThrows?: boolean; removeThrows?: boolean } = {}): SessionArea & { data: Map<string, string> } {
+function area(initial: Record<string, string>, options: { getThrows?: boolean; removeThrows?: boolean; setThrows?: boolean } = {}): SessionArea & { data: Map<string, string> } {
   const data = new Map(Object.entries(initial));
   return {
     data,
@@ -28,7 +28,10 @@ function area(initial: Record<string, string>, options: { getThrows?: boolean; r
       if (options.getThrows) throw new Error('SecurityError');
       return data.get(key) ?? null;
     },
-    setItem: (key, value) => void data.set(key, value),
+    setItem: (key, value) => {
+      if (options.setThrows) throw new Error('SecurityError');
+      data.set(key, value);
+    },
     removeItem: (key) => {
       if (options.removeThrows) throw new Error('SecurityError');
       data.delete(key);
@@ -51,10 +54,23 @@ describe('takePinResetTicket (web): read once, removed whatever it holds', () =>
     expect(tab.data.size).toBe(0);
   });
 
-  it('no storage, a refusing read or a refusing remove never throws', () => {
+  it('no storage or a refusing read never throws', () => {
     expect(takePinResetTicket(null)).toBeNull();
     expect(takePinResetTicket(area({ [PIN_RESET_TICKET_KEY]: 'x' }, { getThrows: true }))).toBeNull();
-    expect(takePinResetTicket(area({ [PIN_RESET_TICKET_KEY]: 'x' }, { removeThrows: true }))).toBe('x');
+  });
+
+  // [OA] Row OA-6 review round 2: read once fails closed when the ticket cannot be deleted.
+  it('a refusing remove blanks the ticket, so the next boot finds nothing to accept', () => {
+    const tab = area({ [PIN_RESET_TICKET_KEY]: '{"v":1,"at":1,"epoch":2}' }, { removeThrows: true });
+    expect(takePinResetTicket(tab)).toBe('{"v":1,"at":1,"epoch":2}');
+    expect(tab.data.get(PIN_RESET_TICKET_KEY)).toBe('');
+    expect(takePinResetTicket(tab)).toBeNull();
+  });
+
+  it('a storage that will neither remove nor blank the ticket refuses it (never accepted twice)', () => {
+    const tab = area({ [PIN_RESET_TICKET_KEY]: '{"v":1,"at":1,"epoch":2}' }, { removeThrows: true, setThrows: true });
+    expect(takePinResetTicket(tab)).toBeNull();
+    expect(takePinResetTicket(tab)).toBeNull();
   });
 });
 

@@ -32,6 +32,7 @@ import {
 import { signInResetShown } from '../../logic/shell/pin-reset-ticket';
 import { RESCUE_INPUT_MAX, cleanRescueInput, rescueInputRows } from '../../logic/sync/rescue-code';
 import type { RootStackParamList } from '../../navigation/types';
+import { subscribePageRestore } from '../../platform/app-visibility';
 import { openPinResetSignIn } from '../../platform/pin-reset';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
@@ -155,6 +156,10 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
     },
     true,
   );
+
+  // [OA] Row OA-6 review round 2: Back from `/signin` can bring this page back from the back/forward cache with the
+  // hand-off already left; Sign in is pressable again then, as the page it shows is the one the grown-up returned to.
+  useEffect(() => subscribePageRestore(() => setLeaving(false)), []);
 
   const signIn = (): void => {
     if (leaving) return;

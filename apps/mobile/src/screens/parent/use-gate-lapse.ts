@@ -1,3 +1,4 @@
+import { PIN_RESET_TICKET_MS } from '@hangul-route/content-schema';
 import { useCallback, useEffect, useState } from 'react';
 import { backgroundLapsed, isParentSessionValid, parentSessionRemainingMs } from '../../logic/profiles/session';
 import { subscribeAppVisibility, subscribePageRestore } from '../../platform/app-visibility';
@@ -76,6 +77,13 @@ export function bindGrownUpBackgroundRule(deps: BackgroundRuleDeps = browserDeps
     hiddenAt = null;
   });
 }
+
+/**
+ * [OA] Row OA-6 review round 2: a new-PIN screen a reset opened also closes after this long with no key press, so a tab
+ * left visible on Choose a new grown-up PIN does not wait for someone else to choose it. The ticket's own window (2
+ * minutes): the grown-up who proved the reset is choosing now or not at all.
+ */
+export const RESET_SETUP_IDLE_MS = PIN_RESET_TICKET_MS;
 
 export interface ResetSetupLapseDeps {
   /** App in front or not (`subscribeAppVisibility`). */
