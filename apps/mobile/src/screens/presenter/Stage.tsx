@@ -1,12 +1,12 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { LOCALE_META } from '@hangul-route/i18n';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
-import { barOverlap, gestureCommand, inBarStrip, slideDetail } from '../../logic/lecture/shell';
+import { barOverlap, buildLive, gestureCommand, inBarStrip, slideDetail, type BuildLive } from '../../logic/lecture/shell';
 import { gridKindKey } from '../../logic/lecture/tools';
 import type { LectureSceneView } from '../../logic/lecture/sources/story';
 import { units } from '../../logic/lecture/stage-constants';
@@ -23,6 +23,7 @@ import { PatternSlide } from './slides/PatternSlide';
 import { ReadAlongSlide } from './slides/ReadAlongSlide';
 import { RealiaQuestionSlide, isRealiaQuestion } from './slides/RealiaQuestionSlide';
 import { RealiaSlide } from './slides/RealiaSlide';
+import { SentenceBuildSlide } from './slides/SentenceBuildSlide';
 import { SentenceSlide } from './slides/SentenceSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
 import { SyllableSlide } from './slides/SyllableSlide';
@@ -89,8 +90,15 @@ export function Stage(props: StageProps): React.ReactElement {
     slot: messages.a11y.presenter.slot,
     listen: messages.learner.presenter.quiz.listen,
     reply: messages.learner.presenter.quiz.reply,
+    build: messages.learner.presenter.slide.build.next,
   });
-  const live = messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
+  // A sentence-build move says what it placed (section 10, LV-S3); anything else announces the slide.
+  const lastLive = useRef<BuildLive | null>(null);
+  const liveNow = buildLive(slide, reveal, lastLive.current, messages.a11y.presenter.tilePlaced);
+  useEffect(() => {
+    lastLive.current = liveNow;
+  });
+  const live = liveNow.words ?? messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
 
   const onGrant = (event: GestureResponderEvent): void => {
     const { pageX, pageY, locationX } = event.nativeEvent;
@@ -186,6 +194,8 @@ export function Stage(props: StageProps): React.ReactElement {
           <ReadAlongSlide slide={slide} reveal={reveal} playing={props.playingLine ?? null} />
         ) : slide.kind === 'realia' ? (
           <RealiaSlide slide={slide} reveal={reveal} />
+        ) : slide.kind === 'sentence-build' ? (
+          <SentenceBuildSlide slide={slide} reveal={reveal} />
         ) : null}
       </View>
       {props.barStrip !== undefined ? <Grabber pad={units(unit, STAGE_PADDING)} /> : null}

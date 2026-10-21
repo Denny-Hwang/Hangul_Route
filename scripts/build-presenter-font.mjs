@@ -20,7 +20,10 @@
 // its note and of a realia page's caption, in English and in the es / ko content overlays
 // (content/i18n/<locale>/*.json), which give a Spanish or Korean deck its own note and caption;
 // the question slides (LV-S2) add the Listen & Pick prompts and options and the Tap to Respond
-// lines and replies (the realia questions' sheets, keys and options were already in the list).
+// lines and replies (the realia questions' sheets, keys and options were already in the list);
+// the sentence builds (LV-S3) draw the order-it sentences' tiles, a particle tile's stem and its two
+// endings, and the distractors, which the list held already (F-CURR-001 §3.12): a tile and a stem
+// are pieces of the sentence, so their code points are its own.
 // Only taught Korean uses the subset: UI-language text (titles, card facts, glosses) and
 // the teacher-typed deck title use the system Korean stack, so they are not in the list.
 // apps/mobile/src/logic/lecture/__tests__/presenter-glyphs.test.ts expands every shipped
