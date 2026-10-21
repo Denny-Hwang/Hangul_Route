@@ -1,7 +1,7 @@
 import { ProgressSnapshotSchema, type ProgressSnapshot, type SessionLog, type StreakLocal } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { streakSessionDates } from '../sessions/session-log';
-import { REST_DAYS_PER_WEEK, computeStreak, learningDays, sessionDay, shownStreak, streakFields, streakOf, streakState, withLocalStreak, type CarriedRun } from '../streak';
+import { REST_DAYS_PER_WEEK, computeStreak, learnedOn, learningDays, sessionDay, shownStreak, streakFields, streakOf, streakState, withLocalStreak, type CarriedRun } from '../streak';
 import { mergeSnapshots } from '../sync/merge';
 
 /**
@@ -68,6 +68,16 @@ describe('sessionDay and learningDays', () => {
   it('lists the days of quest and learning sessions, ascending, once each, never a game or a level check', () => {
     const days = learningDays([quest(WED), learn(MON), quest(MON), timeOnly(TUE), learn(THU), quest(undefined, 'nope')]);
     expect(days).toEqual([MON, WED, THU]);
+  });
+});
+
+describe('learnedOn: the day Home\'s tip reads, as the run does', () => {
+  it('is any learning activity on the local day: a story-only day counts, a game alone does not', () => {
+    expect(learnedOn([learn(WED)], WED)).toBe(true);
+    expect(learnedOn([timeOnly(WED)], WED)).toBe(false);
+    // a Seoul morning quest: the UTC day before, the local day of the run
+    expect(learnedOn([quest(THU, '2026-10-21T23:00:00.000Z')], THU)).toBe(true);
+    expect(learnedOn([quest(THU, '2026-10-21T23:00:00.000Z')], WED)).toBe(false);
   });
 });
 
@@ -196,6 +206,37 @@ describe('streakState: carried runs', () => {
     expect(state([quest(WED)], FRI, [consecutive]).shown).toBe(12);
     expect(state([quest(WED)], SAT, [consecutive]).shown).toBe(12);
     expect(state([quest(WED)], SUN, [consecutive]).shown).toBe(0);
+  });
+
+  it('a stored run longer than the sessions behind it ends, never steps down to the sessions\' stretch (section 7.7)', () => {
+    // Mon and Tue have no known learning day, so the run of 50 may have rested on both: Thu resting is a third
+    const snap = snapshot({ sessions: [quest(WED)], streakLocal: { run: 50, lastDay: WED } });
+    expect([WED, THU, FRI, SAT].map((day) => shownStreak(snap, day))).toEqual([50, 50, 0, 0]);
+    expect(state(snap.sessions, FRI, [{ run: 50, lastDay: WED }])).toEqual({ shown: 0, local: { run: 50, lastDay: WED }, best: 50 });
+  });
+
+  it('a record not yet switched over never steps down to its old streakDays', () => {
+    // Quests Mon, Wed, Thu and Fri: the old streak counted 3 days in a row, the local run is 4 with Tue resting
+    const snap = snapshot({ streakDays: 3, sessions: [quest(MON), quest(WED), quest(THU), quest(FRI)] });
+    // Sat rests (2 in the week), Sun rests (3): the run has ended, and the old 3 is not shown in its place
+    expect([FRI, SAT, SUN, MON2].map((day) => shownStreak(snap, day))).toEqual([4, 4, 4, 0]);
+  });
+
+  it('a stored run longer than its sessions: the next day is never smaller unless it is 0 (300 seeds)', () => {
+    let rng = 7;
+    const next = () => ((rng = (rng * 48271) % 2147483647) / 2147483647);
+    const dayAt = (n: number) => new Date(Date.UTC(2026, 9, 1) + n * 86_400_000).toISOString().slice(0, 10);
+    for (let seed = 1; seed <= 300; seed += 1) {
+      const days = Array.from({ length: 21 }, (_, n) => n).filter(() => next() < 0.5).map(dayAt);
+      if (days.length === 0) continue;
+      const lastDay = days[days.length - 1] as string;
+      const snap = snapshot({ sessions: days.map((d) => quest(d)), streakLocal: { run: days.length + 1 + Math.floor(next() * 40), lastDay } });
+      for (let n = 20; n < 30; n += 1) {
+        const today = shownStreak(snap, dayAt(n));
+        const tomorrow = shownStreak(snap, dayAt(n + 1));
+        expect(tomorrow === 0 || tomorrow >= today, `seed ${seed} ${dayAt(n + 1)}: ${today} then ${tomorrow}`).toBe(true);
+      }
+    }
   });
 
   it('reads no day more than 2 days after today: a clock set forward, then back', () => {
@@ -511,8 +552,16 @@ describe('sync: the streak merge is commutative and idempotent', () => {
 
   const fields = (s: ProgressSnapshot, today: string) => ({ streakLocal: s.streakLocal, streakBest: s.streakBest, shown: shownStreak(s, today) });
 
-  it('gives the same streakLocal and streakBest in either order, and merging the result again changes nothing (300 seeds)', () => {
-    for (let seed = 1; seed <= 300; seed += 1) {
+  /**
+   * Whether a copy's stored run has a learning session behind it, as every build writes it: streakLocal is written
+   * on a learning day the copy holds, and the session log is never trimmed. A run without one (only made up here)
+   * counts its day as a learning day while it is read, which the merged record, holding one run, cannot keep.
+   */
+  const grounded = (s: ProgressSnapshot) => s.streakLocal === undefined || learningDays(s.sessions).includes(s.streakLocal.lastDay);
+
+  it('gives the same streakLocal and streakBest in either order, and merging the result again changes nothing (1000 seeds)', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 1000; seed += 1) {
       const next = rng(seed);
       const shared = Array.from({ length: 6 }, () => quest(DAYS[Math.floor(next() * DAYS.length)] as string));
       const today = DAYS[20 + Math.floor(next() * 8)] as string;
@@ -521,42 +570,131 @@ describe('sync: the streak merge is commutative and idempotent', () => {
       const opts = { now: new Date(`${today}T12:00:00.000Z`), today };
       const ab = mergeSnapshots(a, b, opts);
       const ba = mergeSnapshots(b, a, opts);
+      // for any input
       expect(fields(ab, today), `seed ${seed}`).toEqual(fields(ba, today));
       expect(fields(mergeSnapshots(ab, ab, opts), today), `seed ${seed}`).toEqual(fields(ab, today));
+      // merging one side in again changes nothing, for the copies the builds write
+      if (!grounded(a) || !grounded(b)) continue;
+      checked += 1;
       expect(fields(mergeSnapshots(ab, b, opts), today), `seed ${seed}`).toEqual(fields(ab, today));
+      expect(fields(mergeSnapshots(ab, a, opts), today), `seed ${seed}`).toEqual(fields(ab, today));
     }
+    expect(checked).toBeGreaterThan(250);
   });
 
-  it('never shows a smaller number than either copy did (300 seeds of copies as the builds write them)', () => {
-    let ended = 0;
+  /**
+   * A device's copy, learning on `days` in order: a new build writes streakLocal on each learning day (as
+   * beginSession does); an older build writes only streakDays, and its sessions carry no localDay.
+   */
+  function deviceCopy(next: () => number, days: readonly string[], older: boolean): ProgressSnapshot {
+    let snap = snapshot();
+    for (const day of days) {
+      const kind = next();
+      const made = kind < 0.5 ? quest(day) : kind < 0.85 ? learn(day) : timeOnly(day);
+      const session = older ? { ...made, localDay: undefined } : made;
+      const sessions = [...snap.sessions, session];
+      snap = { ...snap, sessions, streakDays: computeStreak(streakSessionDates(sessions), new Date(`${day}T12:00:00.000Z`)) };
+      if (!older) snap = withLocalStreak(snap, day);
+    }
+    return snap;
+  }
+
+  /** Two devices of one learner: days both hold (synced earlier), and days each learned on its own since. */
+  function twoDevices(seed: number) {
+    const next = rng(seed);
+    const span = 21 + Math.floor(next() * 21);
+    const sharedEnd = Math.floor(next() * span);
+    const odds = 0.3 + next() * 0.6;
+    const dayOf = (n: number) => new Date(Date.UTC(2026, 9, 1) + n * 86_400_000).toISOString().slice(0, 10);
+    const shared = Array.from({ length: sharedEnd }, (_, n) => n).filter(() => next() < odds).map(dayOf);
+    const from = Math.max(0, sharedEnd - 7);
+    const own = () => Array.from({ length: span - from }, (_, n) => n + from).filter(() => next() < odds * 0.6).map(dayOf);
+    const aOlder = next() < 0.3;
+    const bOlder = next() < 0.4;
+    const a = deviceCopy(next, [...new Set([...shared, ...own()])].sort(), aOlder);
+    const b = deviceCopy(next, [...new Set([...shared, ...own()])].sort(), bOlder);
+    const todays = Array.from({ length: 9 }, (_, i) => dayOf(span - 3 + i)).filter((t) => [a, b].every((x) => learningDays(x.sessions).every((d) => d <= t)));
+    return { copies: [{ snap: a, older: aOlder }, { snap: b, older: bOlder }] as const, todays, dayOf };
+  }
+
+  it('a sync with an older build never lowers the number a new build showed, and the merged record never steps down (300 seeds of two devices)', () => {
+    let olderPairs = 0;
     for (let seed = 1; seed <= 300; seed += 1) {
-      const next = rng(seed);
-      const shared = Array.from({ length: 6 }, () => quest(DAYS[Math.floor(next() * DAYS.length)] as string));
-      const today = DAYS[20 + Math.floor(next() * 8)] as string;
-      const a = realCopy(next, shared, today);
-      const b = realCopy(next, shared, today);
-      const ab = mergeSnapshots(a, b, { now: new Date(`${today}T12:00:00.000Z`), today });
-      // It can show that the run had ended, when the other copy's days put a third rest day in a week of it (the
-      // next test), never a smaller run.
-      const before = Math.max(shownStreak(a, today), shownStreak(b, today));
-      const shown = shownStreak(ab, today);
-      expect(shown === 0 || shown >= before, `seed ${seed}: ${before} then ${shown}`).toBe(true);
-      if (shown < before) ended += 1;
+      const { copies, todays } = twoDevices(seed);
+      const [a, b] = copies;
+      for (const today of todays) {
+        const merged = mergeSnapshots(a.snap, b.snap, { now: new Date(`${today}T12:00:00.000Z`), today });
+        const shown = shownStreak(merged, today);
+        for (const [mine, theirs] of [[a, b], [b, a]] as const) {
+          if (!theirs.older) continue;
+          olderPairs += 1;
+          // strictly: no exception for an older build
+          expect(shown, `seed ${seed} ${today}`).toBeGreaterThanOrEqual(shownStreak(mine.snap, today));
+        }
+        // the record the merge writes reads as the merge did, and never steps down on a day without learning
+        expect(shownStreak(withLocalStreak(merged, today), today), `seed ${seed} ${today}`).toBe(shown);
+        const tomorrow = shownStreak(merged, new Date(Date.parse(`${today}T12:00:00.000Z`) + 86_400_000).toISOString().slice(0, 10));
+        expect(tomorrow === 0 || tomorrow >= shown, `seed ${seed} ${today}: ${shown} then ${tomorrow}`).toBe(true);
+      }
     }
-    // that case is the exception, not the rule
-    expect(ended).toBeLessThan(15);
+    expect(olderPairs).toBeGreaterThan(500);
   });
 
-  it('a sync shows a run has ended only when the other copy\'s days put a third rest day in one of its weeks', () => {
+  it('between two new builds the number drops only where another copy already ended that run (section 7.4), never to a smaller run (300 seeds)', () => {
+    for (let seed = 1; seed <= 300; seed += 1) {
+      const { copies, todays } = twoDevices(seed);
+      const [a, b] = copies;
+      if (a.older || b.older) continue;
+      for (const today of todays) {
+        const merged = mergeSnapshots(a.snap, b.snap, { now: new Date(`${today}T12:00:00.000Z`), today });
+        expect(merged, `seed ${seed}`).toEqual(mergeSnapshots(b.snap, a.snap, { now: new Date(`${today}T12:00:00.000Z`), today }));
+        const shown = shownStreak(merged, today);
+        for (const [mine, theirs] of [[a, b], [b, a]] as const) {
+          if (shown >= shownStreak(mine.snap, today)) continue;
+          // The other copy holds a run on the same last day that it already shows as ended: it knew a learning day
+          // earlier in that week, so a third rest day falls in it. The merged record holds that run (the stored
+          // run never goes down in a merge, here or in the Worker), so it shows the run has ended, as that copy does.
+          expect(shown, `seed ${seed} ${today}`).toBe(0);
+          expect(shownStreak(theirs.snap, today), `seed ${seed} ${today}`).toBe(0);
+          expect(theirs.snap.streakLocal?.lastDay, `seed ${seed} ${today}`).toBe(merged.streakLocal?.lastDay);
+        }
+      }
+    }
+  });
+
+  it('another copy\'s earlier day in the same week never ends the run this device shows (the reviewed case)', () => {
     // This device learned on Wed only; Thu and Fri rest: a run of 1 on Sat. The other device learned on Mon, so the
-    // run holds Tue, Thu and Fri: a third rest day in one week, and the run has ended (OD-6). Learning on Sat counts
-    // from Wed again.
+    // merged days hold Tue, Thu and Fri as rests, a third in one week, yet this device's own run (Wed, then Thu and
+    // Fri) still goes on: the merge keeps it, and so does the record it writes. Learning on Sat makes it 2.
     const mine = withLocalStreak(snapshot({ sessions: [quest(WED)] }), WED);
-    const theirs = withLocalStreak(snapshot({ sessions: [quest(MON)] }), MON);
+    for (const theirs of [withLocalStreak(snapshot({ sessions: [quest(MON)] }), MON), snapshot({ sessions: [quest(undefined, `${MON}T09:00:00.000Z`)], streakDays: 1 })]) {
+      expect(shownStreak(mine, SAT)).toBe(1);
+      const merged = mergeSnapshots(mine, theirs, { now: new Date(`${SAT}T12:00:00.000Z`), today: SAT });
+      expect(shownStreak(merged, SAT)).toBe(1);
+      expect(merged.streakLocal).toEqual({ run: 1, lastDay: WED });
+      expect(merged.streakBest).toBe(2);
+      expect(withLocalStreak(merged, SAT)).toBe(merged);
+      expect(shownStreak(merged, SUN)).toBe(0);
+      expect(shownStreak({ ...merged, sessions: [...merged.sessions, quest(SAT)] }, SAT)).toBe(2);
+    }
+  });
+
+  it('the one case where a sync ends a run: another new build already ended that same run (section 7.4)', () => {
+    // The other device learned on Mon and Wed, showed 2 on Thu and nothing from Fri: Tue, Thu and Fri are three rests
+    // in one week. It holds {2, Wed}. This device knew only Wed and shows 1 on Sat. The stored run never goes down in a
+    // merge (later day, then the higher run: the Worker's rule too), so the merged record holds {2, Wed}, which has
+    // ended, and shows nothing. It never shows a smaller run, and the next learning day counts from Wed again.
+    const mine = withLocalStreak(snapshot({ sessions: [quest(WED)] }), WED);
+    const monday = withLocalStreak(snapshot({ sessions: [quest(MON)] }), MON);
+    const theirs = withLocalStreak({ ...monday, sessions: [...monday.sessions, quest(WED)] }, WED);
+    expect(theirs.streakLocal).toEqual({ run: 2, lastDay: WED });
+    expect(shownStreak(theirs, THU)).toBe(2);
+    expect(shownStreak(theirs, SAT)).toBe(0);
     expect(shownStreak(mine, SAT)).toBe(1);
     const merged = mergeSnapshots(mine, theirs, { now: new Date(`${SAT}T12:00:00.000Z`), today: SAT });
-    expect(shownStreak(merged, SAT)).toBe(0);
     expect(merged.streakLocal).toEqual({ run: 2, lastDay: WED });
+    expect(shownStreak(merged, SAT)).toBe(0);
+    expect(mergeSnapshots(merged, mine, { now: new Date(`${SAT}T12:00:00.000Z`), today: SAT }).streakLocal).toEqual({ run: 2, lastDay: WED });
     expect(shownStreak({ ...merged, sessions: [...merged.sessions, quest(SAT)] }, SAT)).toBe(2);
   });
 });

@@ -32,7 +32,7 @@ import { welcomeCardIds } from '../../content/award-world';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { isContentLocked } from '../../logic/content-access';
 import { localizeEpisode, localizeMissionCard, localizeQuest } from '../../logic/content-locale';
@@ -73,8 +73,7 @@ import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access-copy';
 import { favoriteReplay, freeEndPrimary, practiceTarget } from '../../logic/free-end';
 import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
-import { lastStreakDay } from '../../logic/sessions/session-log';
-import { shownStreak } from '../../logic/streak';
+import { learnedOn, shownStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import { useStoriesLoaded } from '../story-content';
@@ -356,6 +355,8 @@ function CatchUpCard({
 export function HomeScreen(): React.ReactElement {
   const m = useMessages();
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const { copy, audience } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -467,14 +468,14 @@ export function HomeScreen(): React.ReactElement {
   const nextLessonTitle = useMemo(() => {
     const quest = nextLesson ? questsAll.find((q) => q.id === nextLesson.questId) : undefined;
     return quest ? localizeQuest(quest, locale).titleEn : '';
-  }, [nextLesson, locale]);
+  }, [nextLesson, locale, titles]);
   // Where the hero's lesson sits (AMENDMENTS-DISPLAY-NAV section 9.1): its stage, episode and place among the episode's lessons.
   const nextLessonWhere = useMemo(() => {
     if (!nextLesson) return null;
     const place = lessonPlace(nextLesson.questId, episodesAll, (stage) => stages.find((s) => s.key === stage)?.order ?? null, nextLesson.episodeId);
     const episode = place ? episodesAll.find((e) => e.id === place.episodeId) : undefined;
     return place && episode ? m.learner.home.next.where(place.stage, localizeEpisode(episode, locale).titleEn, place.index, place.total) : null;
-  }, [nextLesson, locale, m]);
+  }, [nextLesson, locale, m, titles]);
   const mission = useMemo(() => {
     if (!profile || !snap || !routeInput) return null;
     const today = routeInput.today;
@@ -545,7 +546,7 @@ export function HomeScreen(): React.ReactElement {
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
   // Localized only when the flag is on, so Home does no extra work with the flag off.
-  const routeContent = useMemo(() => (flags.myRouteEnabled ? localizedRouteContent(locale) : null), [locale]);
+  const routeContent = useMemo(() => (flags.myRouteEnabled ? localizedRouteContent(locale) : null), [locale, titles]);
   const routeStrip = useMemo((): HomeStripView | null => {
     if (!routeContent || !profile) return null;
     try {
@@ -864,7 +865,7 @@ export function HomeScreen(): React.ReactElement {
       </Pressable>
 
       <Spacer size="xl" />
-      <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: lastStreakDay(snap?.sessions ?? []) === today })]} />
+      <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: learnedOn(snap?.sessions ?? [], localToday) })]} />
       {/* A class move the learner side must answer, or one that is planned (F-SPACE-002 T-7c); nothing while transfers are off. */}
       {profile ? <TransferHomeLine profileId={profile.id} learnerName={profile.displayName} /> : null}
       {/* [TV] A teacher move notice, shown once, and the class update when the family has not read it (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER). */}
