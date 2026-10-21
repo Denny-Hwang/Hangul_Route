@@ -18,7 +18,9 @@
 // stories the Library lists (the same production gate as build-lecture-catalogue.mjs); the reading
 // slides (AMENDMENTS-LECTURE-V2 LV-S1) add a pattern's frame between its gaps, the Korean chips of
 // its note and of a realia page's caption, in English and in the es / ko content overlays
-// (content/i18n/<locale>/*.json), which give a Spanish or Korean deck its own note and caption.
+// (content/i18n/<locale>/*.json), which give a Spanish or Korean deck its own note and caption;
+// the question slides (LV-S2) add the Listen & Pick prompts and options and the Tap to Respond
+// lines and replies (the realia questions' sheets, keys and options were already in the list).
 // Only taught Korean uses the subset: UI-language text (titles, card facts, glosses) and
 // the teacher-typed deck title use the system Korean stack, so they are not in the list.
 // apps/mobile/src/logic/lecture/__tests__/presenter-glyphs.test.ts expands every shipped
@@ -120,6 +122,15 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
     for (const pair of list(scope.cardPairs)) add(pair.ko);
     for (const board of list(scope.picWord?.boards)) for (const pair of list(board.pairs)) add(pair.word?.ko);
     for (const step of list(scope.storySteps)) add(step.labelKo);
+    // AMENDMENTS-LECTURE-V2 LV-S2: a listen question's prompt (the answer line, the Say it box) and its options; a reply question's line and replies.
+    for (const round of list(scope.listenPick?.rounds)) {
+      add(round.prompt?.ko);
+      list(round.options).forEach((o) => add(o?.text?.ko));
+    }
+    for (const turn of list(scope.dialogue)) {
+      add(turn.npcKo);
+      list(turn.options).forEach((o) => add(o?.ko));
+    }
     // F-CURR-001 §3.12: the Korean of the upper-stage lesson scopes (build-lessons.mjs runtime shape).
     for (const round of list(scope.orderIt?.rounds)) {
       add(round.sentence?.ko);
