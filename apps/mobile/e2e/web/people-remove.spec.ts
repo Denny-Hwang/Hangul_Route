@@ -166,6 +166,8 @@ test.describe('Remove from this device', () => {
     await expect(sheet(page).getByText(people.removeAsk('Jun'), { exact: true })).toBeVisible();
     await expect(sheet(page).getByText(people.removeSaved, { exact: true })).toBeVisible();
     await expect(sheet(page).getByText(people.spacesStay, { exact: true })).toBeVisible();
+    // The Rescue Code is on the sheet before Remove deletes the only copy on this device.
+    await expect(sheet(page).getByTestId('remove-sheet-code')).toHaveText(RESCUE);
     await expect(sheet(page).getByTestId('remove-sheet-quiet')).toHaveCount(0);
     await page.setViewportSize({ width: 320, height: 640 });
     await shot(page, 'remove-saved-320');
@@ -191,7 +193,7 @@ test.describe('Remove from this device', () => {
       expect(value, key).not.toContain(RESCUE);
     }
     // No route for the removed learner after the removal (CS-12), and no delete of anything at all.
-    await page.waitForTimeout(500);
+    await page.waitForLoadState('networkidle');
     const after = calls.filter((c) => c.at >= removedAt);
     expect(after.filter((c) => c.url.includes(encodeURIComponent(JUN)) || c.url.includes(JUN) || c.auth.includes(JUN_SECRET) || c.body.includes(JUN))).toEqual([]);
     expect(calls.filter((c) => c.method === 'DELETE')).toEqual([]);
@@ -239,14 +241,25 @@ test.describe('Remove from this device', () => {
     await expect.poll(async () => (await storedKeys(page)).filter((k) => k.includes(JUN))).toEqual([]);
   });
 
-  test('removing the active learner opens the chooser; removing the last one opens Welcome; the PIN stays', async ({ page, context }) => {
-    await recordApi(context);
-    const mina = await device(page);
-    const removeAnyway = async (name: string): Promise<void> => {
+  test('removing the active learner opens the chooser; removing the last one opens Welcome; the PIN stays; a class-scoped learner calls no route (10.6)', async ({ page, context }) => {
+    const calls = await recordApi(context);
+    const SORA_SECRET = 'sora-device-secret-0001';
+    // Sora is class-scoped too (section 10.6: a device with two class-scoped learners).
+    const mina = await device(page, {
+      // Registered, with a local write after the last push: not saved (the Remove anyway path below).
+      [`sync:${SORA}`]: { ...syncRecord({ lastSyncedAt: '2026-10-21T08:00:00.000Z' }), secret: SORA_SECRET },
+      [`progress:${SORA}`]: snapshot(SORA, '2026-10-21T09:00:00.000Z'),
+      [`memberships:${SORA}`]: [{ spaceId: 'space:c', kind: 'class', name: 'Sunflower', role: 'learner', joinedAt: '2026-10-02T00:00:00.000Z' }],
+      [`transfer-scope:${SORA}`]: classScopeMarker(SORA_SECRET),
+    });
+    /** Removes `name` through Remove anyway; answers the time of the final Remove (the sync check before it may push). */
+    const removeAnyway = async (name: string): Promise<number> => {
       await page.getByRole('button', { name, exact: true }).click();
       await page.getByTestId('person-remove').click();
       await sheet(page).getByRole('button', { name: people.removeAnyway, exact: true }).click();
+      const at = Date.now();
       await sheet(page).getByRole('button', { name: en.console.confirm.remove, exact: true }).click();
+      return at;
     };
     await grownUpArea(page);
 
@@ -266,8 +279,11 @@ test.describe('Remove from this device', () => {
     await removeAnyway('Jun');
     await expect(page.getByText(people.title, { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Jun', exact: true })).toHaveCount(0);
-    await removeAnyway('Sora');
+    const soraRemovedAt = await removeAnyway('Sora');
     await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+    await expect.poll(async () => (await storedKeys(page)).filter((k) => k.includes(SORA))).toEqual([]);
+    await page.waitForLoadState('networkidle');
+    expect(calls.filter((c) => c.at >= soraRemovedAt && (c.url.includes(SORA) || c.url.includes(encodeURIComponent(SORA)) || c.auth.includes(SORA_SECRET) || c.body.includes(SORA)))).toEqual([]);
 
     await expect.poll(() => readStored(page, 'profiles')).toEqual([]);
     expect(await readStored(page, 'account:parentPinHash')).not.toBeNull();

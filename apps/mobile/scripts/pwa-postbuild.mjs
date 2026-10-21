@@ -12,7 +12,7 @@
 // console file reaches the learner precache, by path (consoleLeaks) or by content
 // (consolePages: an HTML page that loads /_next/ code, such as a Next 404.html).
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
-import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import * as nodeModule from 'node:module';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -197,5 +197,14 @@ const unprecachedJs = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => `_expo/static/js/web/${f}`).filter((url) => !manifestUrls.includes(url))
   : [];
 if (unprecachedJs.length > 0) throw new Error(`pwa-postbuild: app bundles missing from the precache (over maximumFileSizeToCacheInBytes?): ${unprecachedJs.join(', ')}`);
+// [OA] Row OA-7a review: a warning well before the limit, so the growth is seen before an offline start is at risk.
+if (existsSync(jsDir)) {
+  for (const f of readdirSync(jsDir).filter((name) => name.endsWith('.js'))) {
+    const bytes = statSync(join(jsDir, f)).size;
+    if (bytes > 0.9 * precache.maximumFileSizeToCacheInBytes) {
+      process.stdout.write(`pwa-postbuild: warning: ${f} is ${bytes} B, over 90 % of the ${precache.maximumFileSizeToCacheInBytes} B precache limit\n`);
+    }
+  }
+}
 
 process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);
