@@ -21,6 +21,7 @@ import {
   type StoredSenderHold,
 } from './feedback-types';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
+import type { RemoteConfigRow } from './remote-config-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
@@ -88,6 +89,7 @@ export class MemoryDb implements Db {
   private relinks = new Map<string, StoredRelink>();
   private entitlements = new Map<string, Entitlement>();
   private waitlist = new Map<string, WaitlistEntry>();
+  private remoteConfigRows = new Map<string, RemoteConfigRow>();
   private transfers = new Map<string, StoredTransfer>();
   private transferEventRows: TransferEvent[] = [];
   private transferEventSeq = 0;
@@ -1171,7 +1173,15 @@ export class MemoryDb implements Db {
     return removed;
   }
 
+  async remoteConfig(): Promise<RemoteConfigRow[]> {
+    return clone([...this.remoteConfigRows.values()].sort((a, b) => (a.flag < b.flag ? -1 : a.flag > b.flag ? 1 : 0)));
+  }
+  async putRemoteConfig(row: RemoteConfigRow): Promise<void> {
+    this.remoteConfigRows.set(row.flag, clone(row));
+  }
+
   async reset(): Promise<void> {
+    this.remoteConfigRows.clear();
     for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents, this.adminInvites]) m.clear();
     this.promotedFromTeacher.clear();
     this.transferEventRows = [];
