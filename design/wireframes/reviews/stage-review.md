@@ -2,6 +2,7 @@
 
 Spec: `docs/specs/F-RVW-001-review-tests.md` §3.4 (+ §3.1 star rules)
 Stage 1: replaced by `reviews/hangul-check.md` (F-QUEST-002 §3.9, 35 items, amended by PR Q-11); this file stays the pattern for later stages.
+**Superseded for Stages 2-7** by `reviews/stage-check.md` (F-CURR-002 §7.3: the optional Stage Check, no certificate); this file is kept for its history only.
 Audience: **learner (P4/P5 child, 5–11)**; the certificate is designed to be shown to a grown-up afterwards
 
 ## Scenario (Given-When-Then)

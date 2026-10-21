@@ -95,9 +95,9 @@ F. Result
 |   [ See my cards ]             |
 +--------------------------------+
 
-G. The one retroactive summary (§4.8 step 7; shown once, the first time Home opens on the CM-22 build for a
-   learner who had finished stages before it; latched in `stageRetroShownAt`, so it never shows again on
-   another device or after a restore)
+G. The one retroactive summary (§4.8 step 7; one screen, never one modal per stage: shown when Home opens on
+   the CM-22 build and some finished stage from 2 to 7 has no key in `stageCeremonyAt`; it lists all of
+   them and writes a key for each, so no stage is summed up twice on any device or after a restore)
 +--------------------------------+
 |        [hoya - cheering]       |
 |  You finished Stages 2 and 3   |
@@ -130,12 +130,12 @@ H. Stop the check? (over E or E2; the live `learner.stageReview.leave.*` sheet, 
 - E: as `reviews/daily-review.md` B; the last round of a part -> E2 (or F after part 4). [x] or system back -> H.
 - E2: [[ KEEP GOING ]] -> the next part.
 - F: `review.complete { kind: 'stage-certificate', stageKey, stars }`; [[ BACK HOME ]] -> Main; [ See my cards ] -> Library (Cards).
-- G: card -> `library/card-detail` (and `stage.card_opened`); [[ SEE MY CARDS ]] -> Library; [ Back home ] -> Home. Never shown again.
+- G: card -> `library/card-detail` (and `stage.card_opened`); [[ SEE MY CARDS ]] -> Library; [ Back home ] -> Home. A stage it lists is never listed again.
 - H: [[ KEEP GOING ]] -> where it was; [ Stop ] -> back. The answers already given are recorded by the spacing rule, as on every surface (§4.3 "Due items answered anywhere count"); a stopped check writes no `reviews[]` entry and no `stageCheckAt`, and C keeps its best stars.
 
 ## Navigation graph
 
-Enter from: `results/celebrate` (the run with `stageCompleted` in `PRIZE_STAGES`) · `journey/grid` stage header (C) · Home (G, once) · Passport "Stage N complete" page (CM-D3, CM-60)
+Enter from: `results/celebrate` (the run with `stageCompleted` in `PRIZE_STAGES`) · `journey/grid` stage header (C) · Home (G, once per stage it lists) · Passport "Stage N complete" page (CM-D3, CM-60)
 Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · back to `results/celebrate` or `journey/grid`
 
 ## States
@@ -143,7 +143,7 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 - **success**: A -> B -> (optional) D -> E x 4 with E2 -> F.
 - **ceremony seen**: the ceremony never shows automatically a second time; C's [ See your prize ] reopens it.
 - **no stage card yet** (the stage's card content has not shipped): B leaves the card block out and keeps everything else; G lists only cards that exist (and is skipped when none do).
-- **retroactive** (stages finished before CM-22): no ceremony per stage; G once, listing them all.
+- **retroactive** (stages finished before CM-22, or finished later on a device still on an older build): no ceremony per stage; G lists every finished stage with no `stageCeremonyAt` key, once. A stage finished on the CM-22 build gets its key from A, so it is never in G.
 - **not ready** (a stale link for a stage not complete, or `stage1`, which keeps `results/stage1-complete.md`): Hoya thinking, "This check is not open yet. Keep playing your quests." and [[ BACK HOME ]].
 - **taken again**: a new attempt; C keeps the best stars.
 - **an item cannot play**: skipped; a part with no playable round is skipped. When the stage has fewer than `STAGE_CHECK_MIN_ITEMS` = 10 playable items in all (for example no device voice and no recordings), C and B show no Stage Check button; otherwise the check plays what it can, with ceil(0.3 x rounds) produce rounds. The floor is a decision for CM-22 (see Open questions).
@@ -152,6 +152,10 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 - **no sound** (F-AUDIO-004): the sound notice; recognize rounds become read rounds.
 - **offline**: plays fully offline.
 - **`stageChecks` off** (§12.2): B has no Stage Check button (See my cards becomes the primary), C has no Stage Check button; latched results stay and show again when it is back on.
+- **`memoryRecord` off, `stageChecks` on**: the effective flag is `stageChecks && memoryRecord`, so this is the same as `stageChecks` off; the ceremony, the card and G are unchanged. CM-22 has a test that turns `memoryRecord` off remotely while `stageChecks` stays on.
+- **`mastery` off** (§12.2): B's places row shows the five mini cells with no rings, and its label reads only the theme words ("Your places in Stage 2: Letters, Food, Holidays, Nature, Play."). D to H and G are unchanged.
+- **access changed** (a plan lapses, a Family Plan ends, the learner leaves a class): a finished stage's Stage Check stays playable from B and C, because learned content stays reviewable, as "Play again on quests already finished" in `episode/detail-access-preview.md`. No Premium pill, price, plan word or ask-a-grown-up door is added to any panel. CM-22's e2e covers a lapsed-plan profile.
+- **the stage card's page**: B and G open `library/card-detail` unchanged; its Share keeps the F-CARD-003 behaviour it has today, so this design adds no new share surface (the ceremony is only a new way into the same page).
 - **reduced motion**: the F-MOTION-003 ceremony's reduced variant: no burst or confetti; the title, cells and card appear at once; no star pop on F.
 - **320 x 568 and 200 % text**: display headlines follow the native rule of `reviews/daily-review.md` (`DISPLAY_HEADLINE_MAX_SCALE`); B scrolls; the five mini cells keep one row (each 48 dp, not targets) and their theme words keep the caption size (`maxFontSizeMultiplier` 1, as the Journey grid's theme word), so they never collide; the level words are in the group's label; the card is 2 columns wide; buttons full width.
 - **768 and wide**: B in the reading column, the card beside the places row; F in the reading column.
@@ -184,9 +188,9 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 
 ## Data needs
 
-- reads: `QuestResultOutcome.stageCompleted`, `PRIZE_STAGES`, the stage's cards and the profile's cards, `cellBest` for the five cells, `stageCheckAt` and best stars from `reviews[]`, the stage's review items, the `stageChecks` flag, `stageRetroShownAt` for G
-- **`stageRetroShownAt`** (new snapshot field, added to the §4.8 table by this design and built Worker-first by CM-3b, W→A in CM-22): one ISO time, merge earliest. Written when G is first shown; G shows only while it is absent, so a second device, a sync or a restore from a backup never shows it again. A fixture test asserts it survives PUT / GET and a backup restore.
-- writes: answers to the memory store; one `reviews[]` entry `{ kind: 'stage-certificate', scope: stageKey, resultStars, itemIds, missedItemIds }`; `stageCheckAt[stage]` (earliest); `stageRetroShownAt` (G); the card award stays in `applyQuestResult` (F-STORY-006 engine)
+- reads: `QuestResultOutcome.stageCompleted`, `PRIZE_STAGES`, the stage's cards and the profile's cards, `cellBest` for the five cells, `stageCheckAt` and best stars from `reviews[]`, the stage's review items, the `stageChecks`, `memoryRecord` and `mastery` flags, `stageCeremonyAt` and the stages complete in `questDoneAt` for G
+- **`stageCeremonyAt`** (new snapshot field, added to the §4.8 table by this design and built Worker-first by CM-3b, W→A in CM-22): `Record<stageKey, ISO>`, one key per stage 2-7 whose ceremony was offered or which G summed up; merge is the union of keys with the earliest value per key. Written by A (the Results that offers the stage's ceremony, on the CM-22 build) for its stage, and by G for every stage it lists. G shows only while a finished stage 2-7 has no key. Fixture tests: a stage finished after CM-22 never appears in G; a stage finished on an older build and synced later appears in G once; the field survives PUT / GET and a backup restore.
+- writes: answers to the memory store; one `reviews[]` entry `{ kind: 'stage-certificate', scope: stageKey, resultStars, itemIds, missedItemIds }`; `stageCheckAt[stage]` (earliest); `stageCeremonyAt` (A, G); the card award stays in `applyQuestResult` (F-STORY-006 engine)
 - telemetry: `review.start` / `review.complete` (`kind: 'stage-certificate'`), `stage.card_opened { stage }`, `stage.complete` and `card.unlocked` (sent by `applyQuestResult`)
 
 ## Proposed copy (English; keys for CM-22, which adds es and ko)
@@ -206,7 +210,7 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 | `learner.stageCheck.result.best` | Your best result is kept. |
 | `learner.stageCheck.result.tricky` | Hoya will bring the tricky ones back in your Daily Review. |
 | `learner.stageCheck.notReady` | This check is not open yet. Keep playing your quests. |
-| `learner.stageCheck.retro.title(stages)` | one stage: You finished Stage {stages} earlier · more: You finished Stages {stages} earlier (`stages` is the list joined by the locale's `Intl.ListFormat`, "2 and 3"; the form is chosen by the number of stages) |
+| `learner.stageCheck.retro.title(stages: number[])` | one stage: You finished Stage {stage} earlier · more: You finished Stages {list} earlier. The message function joins the numbers itself with a per-locale join helper that CM-22 adds to packages/i18n (en "2 and 3", "2, 3 and 4"; es "2 y 3"; ko by the F-I18N-001 glossary), never `Intl.ListFormat`, which Hermes lacks (F-I18N-001 §3.9); `hermes-safe.test.ts` bans it. The form is chosen by the number of stages |
 | `learner.stageCheck.retro.body` | Here are your stage cards. |
 | `a11y.stageCheck.best(stars)` | Stage Check, best 1 star / Stage Check, best {stars} stars (one / other by `plural()`) |
 
