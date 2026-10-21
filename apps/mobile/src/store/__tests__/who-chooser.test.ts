@@ -327,11 +327,13 @@ describe('a resume with a Grown-up area page in front, both rules bound in App o
     const subscribe = (l: (visible: boolean) => void) => (listeners.push(l), () => undefined);
     useUiStore.setState({ parentGateOpenedAt: 0, lastPinVerifiedAt: null });
     // App.tsx: the background rule in the mount effect, then (onReady) the area leave and the chooser resume.
-    const closed = new Set<() => void>();
-    // As closeGrownUpSession: the session ends, then the listeners (the area leave) hear it.
+    type Closed = { reason: 'switch' | 'background' | 'exit'; wasOpen: boolean };
+    const closed = new Set<(c: Closed) => void>();
+    // As closeGrownUpSession('background'): the session ends, then the listeners (the area leave) hear it.
     const close = (): void => {
+      const wasOpen = useUiStore.getState().parentGateOpenedAt !== null;
       useUiStore.setState({ parentGateOpenedAt: null });
-      for (const c of [...closed]) c();
+      for (const c of [...closed]) c({ reason: 'background', wasOpen });
     };
     const offBackground = bindGrownUpBackgroundRule({ subscribe, now: () => now, close, sessionOpen: () => useUiStore.getState().parentGateOpenedAt !== null });
     const offLeave = leaveGrownUpAreaOnClose(nav, () => false, (l) => (closed.add(l), () => closed.delete(l)));

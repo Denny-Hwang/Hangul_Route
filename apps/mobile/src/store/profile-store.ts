@@ -216,7 +216,7 @@ function followMerged(merged: Profile[]): void {
   }
   useProfileStore.setState({ profiles: merged, activeId: nextActive, activeSince: Date.now() });
   persistActive(nextActive);
-  if (closesSession(activeId, nextActive)) closeGrownUpSession();
+  if (closesSession(activeId, nextActive)) closeGrownUpSession('switch');
 }
 
 function persist(set: ProfileSet, before: ProfileSet, change?: ListChange, ids?: ListIds): void {
