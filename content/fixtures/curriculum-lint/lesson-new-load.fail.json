@@ -1,0 +1,539 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): nine new items: a warning in Volume 1, an error in Volume 2. Not real content.",
+  "rule": "lesson-new-load",
+  "files": {
+    "content/episodes/stage-2/nature.json": {
+      "id": "episode:stage2-nature",
+      "stage": "stage2",
+      "theme": "nature",
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나무",
+                          "romanization": "namu",
+                          "en": "tree"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "꽃",
+                          "romanization": "kkot",
+                          "en": "flower"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "산",
+                          "romanization": "san",
+                          "en": "mountain"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "달",
+                          "romanization": "dal",
+                          "en": "moon"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "바다",
+                          "romanization": "bada",
+                          "en": "sea"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "강",
+                          "romanization": "gang",
+                          "en": "river"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나비",
+                          "romanization": "nabi",
+                          "en": "butterfly"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/episodes/stage-2/nature.v2.json": {
+      "id": "episode:stage2-nature-v2",
+      "stage": "stage2",
+      "theme": "nature",
+      "volume": 2,
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-v2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "비",
+                          "romanization": "bi",
+                          "en": "rain"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "눈",
+                          "romanization": "nun",
+                          "en": "snow"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-v2-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "비",
+                          "romanization": "bi",
+                          "en": "rain"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "눈",
+                          "romanization": "nun",
+                          "en": "snow"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "구름",
+                          "romanization": "gureum",
+                          "en": "cloud"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "바람",
+                          "romanization": "baram",
+                          "en": "wind"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "호수",
+                          "romanization": "hosu",
+                          "en": "lake"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "섬",
+                          "romanization": "seom",
+                          "en": "island"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "물고기",
+                          "romanization": "mulgogi",
+                          "en": "fish"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "물",
+                          "romanization": "mul",
+                          "en": "water"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "돌",
+                          "romanization": "dol",
+                          "en": "stone"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q2-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q2-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-v2-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "오리",
+                          "romanization": "ori",
+                          "en": "duck"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "모래",
+                          "romanization": "morae",
+                          "en": "sand"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "공",
+                          "romanization": "gong",
+                          "en": "ball"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "곰",
+                          "romanization": "gom",
+                          "en": "bear"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "친구",
+                          "romanization": "chingu",
+                          "en": "friend"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "가족",
+                          "romanization": "gajok",
+                          "en": "family"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "밥",
+                          "romanization": "bap",
+                          "en": "cooked rice"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "빵",
+                          "romanization": "ppang",
+                          "en": "bread"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "우유",
+                          "romanization": "uyu",
+                          "en": "milk"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q3-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q3-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "오리",
+                    "romanization": "ori",
+                    "en": "duck"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    }
+  },
+  "expect": [
+    [
+      "lesson-new-load",
+      "warning",
+      "content/episodes/stage-2/nature.json",
+      "quests[0]"
+    ],
+    [
+      "lesson-new-load",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[2]"
+    ]
+  ]
+}

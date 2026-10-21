@@ -1,0 +1,30 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a Volume 2 cell and a pack level that are not lesson bodies: errors. Not real content.",
+  "rule": "lesson-schema",
+  "files": {
+    "content/episodes/stage-2/nature.v2.json": {
+      "id": "episode:stage2-nature-v2",
+      "stage": "stage2",
+      "volume": 2,
+      "quests": []
+    },
+    "content/packs/food-fixture/stage-2.json": {
+      "stage": "stage2",
+      "quests": []
+    }
+  },
+  "expect": [
+    [
+      "lesson-schema",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests"
+    ],
+    [
+      "lesson-schema",
+      "error",
+      "content/packs/food-fixture/stage-2.json",
+      "id"
+    ]
+  ]
+}

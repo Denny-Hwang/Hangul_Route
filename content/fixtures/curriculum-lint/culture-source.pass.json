@@ -1,0 +1,531 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): allowlisted publishers, the Cultural Heritage Administration before its 2024 rename, and a factRef to a story fact with an allowlisted source. Not real content.",
+  "rule": "culture-source",
+  "files": {
+    "content/episodes/stage-2/nature.v2.json": {
+      "id": "episode:stage2-nature-v2",
+      "stage": "stage2",
+      "theme": "nature",
+      "volume": 2,
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-v2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    },
+                    {
+                      "id": "p2",
+                      "word": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q1-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                },
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-v2-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나무",
+                          "romanization": "namu",
+                          "en": "tree"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "꽃",
+                          "romanization": "kkot",
+                          "en": "flower"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "realia-read",
+              "minigameRef": "minigame:s2-nature-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q2-practice",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                },
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q2-apply",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    },
+                    {
+                      "id": "p2",
+                      "word": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q2-check",
+              "kind": "realia-read",
+              "realia": {
+                "ref": "realia:fixture-sign",
+                "entries": [
+                  {
+                    "id": "e1",
+                    "text": {
+                      "ko": "하늘",
+                      "romanization": "haneul",
+                      "en": "sky"
+                    }
+                  },
+                  {
+                    "id": "e2",
+                    "text": {
+                      "ko": "별",
+                      "romanization": "byeol",
+                      "en": "star"
+                    }
+                  }
+                ],
+                "altEn": "A drawn sign."
+              },
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Which word is on the sign?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-v2-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "산",
+                          "romanization": "san",
+                          "en": "mountain"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "달",
+                          "romanization": "dal",
+                          "en": "moon"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q3-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    },
+                    {
+                      "id": "p2",
+                      "word": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q3-apply",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "r2",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q3-check",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    },
+                    {
+                      "id": "p2",
+                      "word": {
+                        "ko": "별",
+                        "romanization": "byeol",
+                        "en": "star"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
+              "url": "https://encykorea.aks.ac.kr/Article/E0000001",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            },
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n2",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "Cultural Heritage Administration",
+              "url": "https://www.cha.go.kr/",
+              "accessed": "2023-05-01",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        },
+        {
+          "id": "n3",
+          "kind": "culture",
+          "textEn": "A fact from a story.",
+          "factRef": "story:fixture-heritage#f1",
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": []
+    },
+    "content/stories/fixture-heritage.json": {
+      "id": "story:fixture-heritage",
+      "facts": [
+        {
+          "id": "f1",
+          "claimEn": "A documented fact.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "Korea Heritage Service, National Heritage Portal",
+              "url": "https://www.heritage.go.kr/fixture-heritage",
+              "accessed": "2025-03-02",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": []
+}

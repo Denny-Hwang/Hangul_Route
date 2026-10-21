@@ -1,0 +1,354 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Volume 2 and pack quests with nothing taught earlier: errors. Not real content.",
+  "rule": "lesson-recycle",
+  "files": {
+    "content/episodes/stage-2/nature.json": {
+      "id": "episode:stage2-nature",
+      "stage": "stage2",
+      "theme": "nature",
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "나무",
+                          "romanization": "namu",
+                          "en": "tree"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/episodes/stage-2/nature.v2.json": {
+      "id": "episode:stage2-nature-v2",
+      "stage": "stage2",
+      "theme": "nature",
+      "volume": 2,
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-v2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "비",
+                          "romanization": "bi",
+                          "en": "rain"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "눈",
+                          "romanization": "nun",
+                          "en": "snow"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "구름",
+                          "romanization": "gureum",
+                          "en": "cloud"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s5",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-practice",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                },
+                {
+                  "ko": "눈",
+                  "romanization": "nun",
+                  "en": "snow"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/packs/food-fixture/stage-2.json": {
+      "id": "episode:pack-food-fixture-s2",
+      "stage": "stage2",
+      "status": "draft",
+      "titleEn": "Numbers",
+      "quests": [
+        {
+          "id": "quest:pack-food-fixture-s2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "사과",
+                          "romanization": "sagwa",
+                          "en": "apple"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "우유",
+                          "romanization": "uyu",
+                          "en": "milk"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:pack-food-fixture-s2-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:pack-food-fixture-s2-q1-check"
+            },
+            {
+              "id": "s5",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:pack-food-fixture-s2-q1-practice",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
+                },
+                {
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:pack-food-fixture-s2-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [
+        {
+          "id": "n1",
+          "kind": "culture",
+          "textEn": "People share food at the New Year.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Institute of Korean Language",
+              "url": "https://stdict.korean.go.kr/",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ],
+          "verification": {
+            "passes": 3,
+            "checkedAt": "2026-10-13",
+            "scope": "lesson",
+            "notes": "pass 1; pass 2; pass 3"
+          }
+        }
+      ],
+      "rewardCardIds": []
+    }
+  },
+  "expect": [
+    [
+      "lesson-recycle",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[0]"
+    ],
+    [
+      "lesson-recycle",
+      "error",
+      "content/packs/food-fixture/stage-2.json",
+      "quests[0]"
+    ]
+  ]
+}
