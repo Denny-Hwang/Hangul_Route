@@ -15,7 +15,7 @@ Built by:
 | `admin-invite-accept.md` | `/account/invite`: signed out, sign-up, locked, loading, preview, accepting, every refusal, no stash, done |
 | `mock/console.css` | the sheet of this pass, linked after `../../app-shell/mock/app-shell.css` (tokens, frame, board) and `../../app-shell/mock/display-nav.css` (the current frame: Aa, Learner app exit, PageBack) |
 | `mock/rename-inline.html` | 27 boards (two with the adult frame) |
-| `mock/admins-panel.html` | 27 boards: the school page as owner and as administrator (with the frame), then the states |
+| `mock/admins-panel.html` | 28 boards: the school page as owner and as administrator (with the frame), then the states |
 | `mock/admin-invite-accept.html` | 19 boards |
 | `shots/` | each mock in Chromium at 320 and 1280, and at 320 with the browser text size at 200 % (`-320-text200`), full page, 1x (boards) |
 
@@ -23,7 +23,7 @@ Built by:
 
 - **Tokens.** Every value is a token of `packages/design-system/src/tokens.ts` as a custom property named after it (`--spacing-xl` is `spacing.xl`). `console.css` copies three tokens the app-shell sheets do not carry (`colors.feedback.successDark`, `shadows.modal`, `radii.xl`) and redefines none. Every `var()` in the three sheets and the HTML was checked to resolve in Chromium. No colour, spacing or radius literal; no emoji; no `feedback.danger`; no motion.
 - **Units.** Text in rem, the console switch in em (45em, F-APP-001 section 3.8). The rename field switches its layout with a **container query** (`36rem`), so the same field is right in a narrow class row or a board column and on a wide page title.
-- **Words.** Every drawn UI string is an English dictionary value (`packages/i18n`) or a key of the amendment's section 9, word for word. Nine strings had no row; this pass adds them to section 9.4 with es and ko drafts (below). The mocks were made by a throw-away generator that is not committed (as for the reports, billing and browse mocks).
+- **Words.** Every drawn UI string is an English dictionary value (`packages/i18n`) or a key of the amendment's section 9, word for word. Ten strings had no row; this pass adds them to section 9.4 with es and ko drafts (below). The mocks were made by a throw-away generator that is not committed (as for the reports, billing and browse mocks).
 - **Annotations.** Grey dashed boxes and monospace labels are board notes, not UI. A dashed box stands for an unchanged part of a page.
 - **Fixture.** Tue Oct 20, 2026. Maple School: owner Ms Park; Mr Lee (administrator, teaches Sunday Class B, so `staysTeacher`); Dr Cho (administrator, no class, so she would leave the school); Ms Han (teacher). The invite token is a made-up 43-character base64url example.
 
@@ -46,8 +46,9 @@ Added to `docs/specs/AMENDMENTS-SEATS-ADMINS.md` section 9.4 by this pass, with 
 | `console.admins.invite.stepUp.reason` | This keeps the school's rosters safe on a shared device. | the billing reason names payments |
 | `console.admins.revoked` | Invite revoked. The link no longer works. | the polite line after Revoke |
 | `console.admins.removed(name)` | {name} is no longer an administrator. | the polite line after Remove |
-| `console.admins.left(school)` | You're no longer an administrator of {school}. | the line on the teacher home after Stop being an administrator |
-| `console.admins.actionFailed` | Couldn't save that change. Try again. | Revoke, Remove or Stop failed (only `invite.failed` existed) |
+| `console.admins.left(school)` | You're no longer an administrator of {school}. | the line on the next home after Stop being an administrator |
+| `console.admins.actionFailed` | Couldn't save that change. Try again. | Revoke, Remove or Stop failed on the network or with a `5xx` (only `invite.failed` existed) |
+| `console.admins.remove.a11y(name)` | Remove {name} | the accessible name of each panel row's Remove and of the new-admin notice's Remove (added in the fix stage; Settings keeps its shipped button unchanged) |
 | `console.settings.ownerOnly` | Only the school's owner can change these settings. | school Settings as an administrator (section 6.6: read-only values) |
 | `console.settings.privacy.anonymizeOn` | Rosters show initials. | the read-only value of Anonymize roster |
 | `console.settings.privacy.anonymizeOff` | Rosters show names. | the same, off |
@@ -56,7 +57,7 @@ Added to `docs/specs/AMENDMENTS-SEATS-ADMINS.md` section 9.4 by this pass, with 
 
 - **D1. Rename is text only.** A secondary text button "Rename" at `touchTarget.min`, never an icon alone; its accessible name `console.rename.a11y(name)` starts with the visible word (WCAG 2.5.3).
 - **D2. The field replaces the title; the heading stays.** While the field is open the h1 (or the family's h2) stays in the page as visually hidden text with the stored name, so the page outline and a screen reader's heading list do not change.
-- **D3. Save is `aria-disabled`, not `disabled`,** while the value is unchanged or invalid: it stays in the tab order and the reason is the field's description (the error line comes first in `aria-describedby`). Enter on an invalid value does nothing.
+- **D3. Save is `aria-disabled`, not `disabled`,** while the value is unchanged or invalid: it stays in the tab order and the reason is the field's description (the error line comes first in `aria-describedby`). Enter on an invalid value does nothing, and Enter or Escape during IME composition (`isComposing`, `keyCode` 229) does nothing either, so a Hangul name is never saved or cancelled mid-syllable.
 - **D4. One label everywhere.** The field's label is `console.rename.label` ("Name") on every surface; in Settings the block heading is the same word.
 - **D5. Errors use text and weight, never colour.** The error line is `text.primary` semibold and the input border thickens (`borderWidth.thick`, `text.primary`); never `feedback.danger`. The input border is `border.shape` (4.55:1 on paper) so the field is visible against the page (WCAG 1.4.11; `border.strong` is 1.95:1).
 - **D6. A class row holds one task.** While a row's field is open, its Change or Assign teacher and Open roster buttons step aside; Save or Cancel brings them back with focus on the row's Rename.
@@ -64,12 +65,12 @@ Added to `docs/specs/AMENDMENTS-SEATS-ADMINS.md` section 9.4 by this pass, with 
 - **D8. Archived spaces show no Rename.** Settings says `console.rename.archived` in the Name row instead; a `422 archived` after Save (archived in another tab) shows the same line in the open field.
 - **D9. The administrator sees no Manage billing** on the school page (the button would open a card they cannot act on); Billing stays in the frame's tab row and shows the read-only card.
 - **D10. The step-up dialog is the billing one with two admin lines** (`stepUp.title`, `.cta`, `.cancel`, `.cancelled` and `.unavailable` are reused as they are).
-- **D11. The invite box.** A raised paper box with a `brand.secondaryDark` border, the whole link in monospace on `surface.sunken`, selectable, wrapping anywhere; the lock glyph (decoration) before the warning; **Copy link** and **Close** (`common.buttons.close`); a polite status line. It sits first in the panel and takes focus on its link. It is never drawn again after Close.
+- **D11. The invite box.** A raised paper box with a `brand.secondaryDark` border, the whole link in monospace on `surface.sunken`, selectable, wrapping anywhere; the lock glyph (decoration) before the warning; **Copy link** and **Close** (`common.buttons.close`); a polite status line. It sits in the panel after the admin list, above the open invites, and takes focus on its link. It is never drawn again after Close.
 - **D12. The count counts administrators only** (`count(n, 2)`); an open invite holds a place, so one administrator and one open invite show `full(2)` with "1 of 2 added".
 - **D17. Owner-only identity lines.** Each admin's verified email sits under the name in `text.secondary` `size.bodySm`; the new-admin notice is an info note (`feedback.infoLight`) above the panel with **Remove** and **Got it**, never a warning colour. The invite page's "Signed in as" sits in a sunken strip between Invited by and the consent block, with **Use another account** beside it.
 - **D18. `503 identity_not_configured`** at accept reads as `console.cantReach` with **Try again** (it is the service, not the person; the invite stays open).
 - **D13. History is closed by default and hidden while empty.** Newest first, at most 20 lines, names at request time.
-- **D14. After Stop being an administrator** the page goes to the teacher home with `console.admins.left(school)` in both outcomes: section 6.6 says "the school page as a teacher", but a teacher member cannot open the school page (section 6.5 matrix, first row), so the school page would answer "This school isn't yours to manage.". Section 6.6 is corrected in this PR.
+- **D14. After Stop being an administrator** the page goes to the teacher home when `stays: 'teacher'` and to the router's grown-up home when `stays: 'none'` (`/start` when no space is left), with `console.admins.left(school)` from a one-shot `sessionStorage` flash (never a query parameter): section 6.6 said "the school page as a teacher", but a teacher member cannot open the school page (section 6.5 matrix, first row), so the school page would answer "This school isn't yours to manage.". Section 6.6 is corrected in this PR.
 - **D15. The accept page uses the `/start` column**, not the adult frame: an invitee may hold no space, so the frame's tab row would be empty. Its tab title is `console.adminInvite.pageTitle` in every state, never the school's name.
 - **D16. School Settings for an administrator** (section 6.6): consent mode as the current option's existing label (`console.settings.consent.*`), Anonymize roster as its label and `anonymizeOn` / `anonymizeOff`, one `ownerOnly` line, Remove only where `canRemove`; no danger zone.
 
@@ -80,7 +81,7 @@ Added to `docs/specs/AMENDMENTS-SEATS-ADMINS.md` section 9.4 by this pass, with 
 
 ## Notes for the language review (SA-3, SA-4 fix stages)
 
-- ko `console.admins.removed(name)` "관리자에서 뺐어요: {name}" and `left(school)` "관리자를 그만뒀어요. {school}" follow the colon and period forms of `removeAsk` and `done(school)`; a reviewer may prefer one form for both.
+- ko `console.admins.removed(name)` "관리자에서 뺐어요: {name}" and `left(school)` "관리자를 그만뒀어요: {school}" both use the colon form of `done(school)` (the period form of `left` was changed in the fix stage).
 - `console.settings.privacy.anonymizeOn` / `Off`: es "listas" and ko "명단" for rosters; check them against the console glossary's roster term.
 
 ## Review
@@ -95,4 +96,11 @@ Author pass (design, accessibility, copy, privacy, against sections 5.3, 6.6, 9 
 - Spec alignment: the pass was rebased onto #746's second adjudication (`7fd1b763a`) and draws what it added: each admin's verified email (owner only), the new-admin notice with Remove and Got it, Signed in as with Use another account, `revokeKeep` on the revoke sheet, `full(max)`, the wider `can` and `leave` lines, `emailUnverified`, `history.someone`.
 - Privacy: the invite token is shown only in the one-time box; no drawn address, title or label carries it, a name, an email or an id.
 
-The independent multi-agent review on the PR (CLAUDE.md section 5) approves this pass; its findings and the fixes are added here in the fix stage.
+Two independent multi-agent reviews on #753 (CLAUDE.md section 5), adjudicated in the fix stage; every finding was taken except the CI one, which is not a design change:
+
+- Invite page: **Go to my home** now always removes the stash (a kept stash after a `429` made `/start` loop a person with no space back into the same `429`), board 17 gains Go to my home and board 16 Try again; every sign-out other than **Use another account** (`clearGrownUpTab`) removes the stash, so a shared computer never forwards the next person to someone else's invite.
+- Rename: Enter and Escape are ignored during IME composition; the save is optimistic and Rename stays `aria-disabled` and `aria-busy` until the `PATCH` settles, a failure reverting to the last confirmed name (board 8 redrawn); the input's `maxLength` is 120 so a decomposed Hangul paste is never cut, the 40 being checked after NFC (board 6 relabelled); `aria-invalid` only for the client checks (boards 10 to 13).
+- Admins panel: on an archived school the owner keeps Remove and Revoke (only Invite is hidden; board 26 redrawn); a `404`, `403` or `409` reloads the panel instead of `actionFailed` (new board 28); the owner-only `email` is in Data needs; the done and left notices travel as a one-shot flash with no name in the address; Stop with `stays: 'none'` goes to the router's home; `console.admins.remove.a11y(name)` added; `history.left` reads "stopped being an administrator" (an admin who stays a teacher has not left the school); the invite box position is the same in D11, the spec and the mock; the fixture reads "2 of 3 classes".
+- School page wireframe: the School settings link is back in the diagram. Wireframe index: the three new wireframes are listed. Spec header: "approved in #753".
+- es/ko: es `revoked` "Invitación anulada." (glossary `anular`); ko `left(school)` colon form; ko `stepUp.reason` "공유 기기", matching the shipped billing reason. No `packages/i18n` file changes in this PR, so the review ledger is untouched; SA-3 and SA-4 sign it when they land these values.
+- Not taken here: CI did not start on #753 because GitHub Actions billing stopped every job (an account setting for the owner, not a design change); the repo checks were run locally instead.
