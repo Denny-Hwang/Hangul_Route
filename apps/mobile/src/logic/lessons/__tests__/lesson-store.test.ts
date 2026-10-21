@@ -1,6 +1,7 @@
 import type { OverlayLocale, Overlays, QuestStep } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { MinigameScope } from '../../minigame-config';
+import { StoryChunkMismatch, StoryChunkTimeout } from '../../story/story-chunk-store';
 import {
   LessonChunkMismatch,
   LessonChunkTimeout,
@@ -261,11 +262,14 @@ describe('isNewBuildError (a page older than its chunks: only a reload mends it)
   it('is a hash mismatch or a chunk that held no module (the app page served in its place)', () => {
     expect(isNewBuildError(new LessonChunkMismatch('episode:stage2-rites', 'a', 'b'))).toBe(true);
     expect(isNewBuildError(new Error('Requiring unknown module "812".'))).toBe(true);
+    // A story chunk of another build (row CM-8) is the same case.
+    expect(isNewBuildError(new StoryChunkMismatch('story:sun-and-moon', 'a', 'b'))).toBe(true);
   });
 
   it('is not a network failure, a timeout or anything else', () => {
     expect(isNewBuildError(new Error('Loading module /_expo/static/js/web/lessons-cell-stage2-rites-0a.js failed.'))).toBe(false);
     expect(isNewBuildError(new LessonChunkTimeout('episode:stage2-rites', 15_000))).toBe(false);
+    expect(isNewBuildError(new StoryChunkTimeout('story:sun-and-moon', 15_000))).toBe(false);
     expect(isNewBuildError('Requiring unknown module "1"')).toBe(false);
     expect(isNewBuildError(undefined)).toBe(false);
   });

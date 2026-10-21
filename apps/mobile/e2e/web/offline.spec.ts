@@ -387,8 +387,6 @@ const TALE = 'story:sun-and-moon';
 const TALE_BUNDLE = /^\/_expo\/static\/js\/web\/story-sun-and-moon-[0-9a-f]{32}\.js$/;
 /** The shelf (start bundle) knows the tale's levels and scene counts before its chunk loads. */
 const TALE_SCENES = STORY_SHELF.find((e) => e.id === TALE)?.levels.find((t) => t.level === 'listen')?.scenes ?? 0;
-/** A shelf story's tiles cover the stories on the screen: Home's story cards load their chunks, never all of them. */
-const HOME_STORY_CARDS_MAX = 2;
 
 /** One online visit, then the network goes: the learner home opens from the precache. */
 async function onboardThenOffline(page: Page, context: import('@playwright/test').BrowserContext, name: string): Promise<void> {
@@ -416,20 +414,19 @@ async function closeInstallGuide(page: Page, notNow: string): Promise<void> {
 
 /**
  * F-CURR-002 §10 (row CM-8): the story bodies left the start bundle. Every story's chunk is precached after
- * one online visit; at start only the stories Home shows load (their covers); offline, a story opens from
- * the Library shelf and its reader plays from its own chunk, loaded on demand from the precache.
+ * one online visit. Offline, once the first screen is up, every story's chunk loads in the background from
+ * the precache (as the lesson chunks do, so a session keeps every story whatever happens to the worker), and
+ * a story opens from the Library shelf and its reader plays from its own chunk.
  */
-test('story chunks are precached, load on demand, and a story opens and reads offline (F-CURR-002 CM-8)', async ({ page, context }) => {
+test('story chunks are precached, load from the precache offline, and a story opens and reads offline (F-CURR-002 CM-8)', async ({ page, context }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   expect(TALE_SCENES).toBeGreaterThan(0);
 
   await onboardThenOffline(page, context, 'Suni');
-  const atStart = await loadedStoryChunks(page);
-  expect(atStart.length).toBeLessThanOrEqual(HOME_STORY_CARDS_MAX);
-  for (const url of atStart) expect(url).toMatch(STORY_BUNDLE);
+  await expect.poll(async () => (await loadedStoryChunks(page)).filter((p) => STORY_BUNDLE.test(p)).length, { timeout: 15_000 }).toBe(STORY_SHELF.length);
 
-  // Library > Story Time: the tiles come from the shelf; the tale's page and its quest load its chunk only.
+  // Library > Story Time: the tiles come from the shelf; the tale's page and its quest read its chunk.
   await closeInstallGuide(page, 'Not now');
   await page.getByText('Library', { exact: true }).last().click();
   await page.getByRole('tab', { name: 'Story Time', exact: true }).click();
@@ -442,9 +439,7 @@ test('story chunks are precached, load on demand, and a story opens and reads of
   // The reader's first scene, from the chunk: its narration and the scene count the shelf named.
   await expect(position(page)).toHaveText(`1 / ${TALE_SCENES}`);
   await expect(page.getByText(/Story time with Hoya!/).first()).toBeVisible();
-  const loaded = await loadedStoryChunks(page);
-  expect(loaded.filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
-  expect(loaded.length).toBeLessThan(STORY_SHELF.length);
+  expect((await loadedStoryChunks(page)).filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
   expect(errors).toEqual([]);
 });
 

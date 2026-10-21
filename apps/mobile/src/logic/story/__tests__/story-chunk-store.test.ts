@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Story } from '@hangul-route/content-schema';
 import {
   SHELF_DEFAULTS,
   STORY_BODY_FIELDS,
   StoryChunkMismatch,
+  StoryChunkTimeout,
   createStoryStore,
   shelfLevelOf,
   splitStory,
@@ -138,6 +139,51 @@ describe('createStoryStore', () => {
     await l.flush();
     await p;
     expect(changes).toBe(0);
+  });
+});
+
+describe('story load timeout (a hung request fails into the retry path, as the lesson chunks)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('a load that does not settle in time rejects and notifies; the next ensure asks again and can succeed', async () => {
+    vi.useFakeTimers();
+    let hang = true;
+    const asked: string[] = [];
+    const store = createStoryStore(
+      { entries },
+      (id) => {
+        asked.push(id);
+        return hang ? new Promise<StoryBodyChunk>(() => undefined) : Promise.resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body });
+      },
+      { timeoutMs: 15_000 },
+    );
+    const seen: number[] = [];
+    store.subscribe(() => seen.push(store.version()));
+    const failed = expect(store.ensureStories([story.id])).rejects.toBeInstanceOf(StoryChunkTimeout);
+    vi.advanceTimersByTime(14_999);
+    expect(seen).toEqual([]);
+    vi.advanceTimersByTime(1);
+    await failed;
+    expect(seen.length).toBeGreaterThan(0);
+    expect(store.isStoryReady(story.id)).toBe(false);
+    hang = false;
+    await store.ensureStories([story.id]);
+    expect(store.isStoryReady(story.id)).toBe(true);
+    expect(asked).toEqual([story.id, story.id]);
+  });
+
+  it('a load that settles in time is untouched by the timer', async () => {
+    vi.useFakeTimers();
+    const store = createStoryStore({ entries }, () => Promise.resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body }), { timeoutMs: 15_000 });
+    await store.ensureStories([story.id]);
+    vi.advanceTimersByTime(20_000);
+    expect(store.isStoryReady(story.id)).toBe(true);
+  });
+
+  it('the timeout error names the story and the time', () => {
+    expect(new StoryChunkTimeout('story:sun-and-moon', 15_000).message).toBe('story chunk story:sun-and-moon did not load within 15000 ms');
   });
 });
 

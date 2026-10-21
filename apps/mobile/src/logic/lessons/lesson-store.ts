@@ -1,5 +1,6 @@
 import type { EntityOverlay, OverlayLocale, Overlays, Quest, QuestStep, UiLocale } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../minigame-config';
+import { StoryChunkMismatch } from '../story/story-chunk-store';
 
 /**
  * The upper-stage lesson content at runtime (F-CURR-002 §10, row CM-5). The start bundle holds
@@ -79,7 +80,8 @@ export class LessonChunkTimeout extends Error {
  * A network failure (offline, a timeout) is not one: trying again later can mend it.
  */
 export function isNewBuildError(error: unknown): boolean {
-  if (error instanceof LessonChunkMismatch) return true;
+  // A story chunk of another build (row CM-8, logic/story/story-chunk-store.ts) is the same case.
+  if (error instanceof LessonChunkMismatch || error instanceof StoryChunkMismatch) return true;
   return error instanceof Error && /^Requiring unknown module\b/.test(error.message);
 }
 

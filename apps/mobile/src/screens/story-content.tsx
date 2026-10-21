@@ -1,7 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { Quest } from '@hangul-route/content-schema';
 import { storiesAll, storyContent } from '../content/stories';
+import { isNewBuildError } from '../logic/lessons/lesson-store';
 import { storyIdOfQuest } from '../logic/story/story-ref';
+import { reloadForNewBuild } from '../platform/new-build-reload';
 
 /**
  * The screens' side of the on-demand story chunks (F-CURR-002 §10, row CM-8;
@@ -10,7 +12,7 @@ import { storyIdOfQuest } from '../logic/story/story-ref';
  * - `useStoryReady`: the screens that play or cite a story (the reader, its games, Sources) draw
  *   nothing until its chunk is in (the service worker answers from its precache, so this is a
  *   frame or two), and a chunk that cannot load goes to the app's crash screen, whose Try again
- *   loads it again;
+ *   loads it again; a chunk of a newer build reloads the page once instead (as the lesson chunks do);
  * - `useStoriesLoaded`: the screens that show covers or card backs (the shelf, Home, the card
  *   pages) load the chunks of the stories they show and draw them as each arrives (the theme tint
  *   stands in for a cover until then);
@@ -28,7 +30,9 @@ export function useStoryReady(storyId: string | null | undefined): boolean {
     if (ready || storyId == null) return undefined;
     let live = true;
     storyContent.ensureStories([storyId]).catch((error: unknown) => {
-      if (live) setFailed({ storyId, error });
+      if (!live) return;
+      if (isNewBuildError(error) && reloadForNewBuild()) return;
+      setFailed({ storyId, error });
     });
     return () => {
       live = false;

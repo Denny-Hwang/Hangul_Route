@@ -6,6 +6,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { createLessonStore, LessonChunkMismatch, type LessonCellChunk, type LessonManifest, type LessonTitleChunk } from '../../logic/lessons/lesson-store';
+import { StoryChunkMismatch } from '../../logic/story/story-chunk-store';
 import { buttonsNamed, byTestId, press, render, screenTexts } from '../../test-support/render';
 import { LESSON_WAITING_LINE_MS, lessonContentBindings } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
@@ -75,11 +76,29 @@ const settle = async (): Promise<void> => {
   });
 };
 
-function bindings(over: { reload?: () => boolean } = {}) {
+/** The story side of the grown-up roots (row CM-8): every story chunk loads or fails when the test says so. */
+function coldStories() {
+  let ready = false;
+  const pending: Deferred<void>[] = [];
+  const stories = {
+    isAllReady: () => ready,
+    ensureAll: () => {
+      const d = deferred<void>();
+      pending.push(d);
+      return d.promise.then(() => {
+        ready = true;
+      });
+    },
+  };
+  return { stories, storyLoads: pending };
+}
+
+function bindings(over: { reload?: () => boolean; withStories?: boolean } = {}) {
   const cold = coldStore();
+  const story = coldStories();
   const reload = vi.fn(over.reload ?? (() => false));
-  const b = lessonContentBindings({ store: cold.store, locale: () => 'en', reloadForNewBuild: reload });
-  return { ...cold, ...b, reload };
+  const b = lessonContentBindings({ store: cold.store, ...(over.withStories ? { stories: story.stories } : {}), locale: () => 'en', reloadForNewBuild: reload });
+  return { ...cold, ...story, ...b, reload };
 }
 
 describe('useLessonQuestReady (the quest player and the game screen)', () => {
@@ -227,6 +246,37 @@ describe('withLessonContent (All lessons and the presenter)', () => {
     const Wrapped = t.withLessonContent(Root);
     const r = await render(<Wrapped />);
     await act(async () => t.pending['episode:stage2-rites']?.reject(new LessonChunkMismatch('episode:stage2-rites', 'h-rites', 'x')));
+    await settle();
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
+  });
+
+  it('with the story chunks (row CM-8): waits for them too, and a story chunk that fails shows the crash screen', async () => {
+    const t = bindings({ withStories: true });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    for (const id of Object.keys(manifest.cells)) await act(async () => t.pending[id]?.resolve(chunkOf(id)));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(0);
+    expect(t.storyLoads).toHaveLength(1);
+    await act(async () => t.storyLoads[0]?.reject(new Error('offline')));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(0);
+    const retry = buttonsNamed(r.root, TRY_AGAIN);
+    expect(retry).toHaveLength(1);
+    await press(retry[0]!);
+    expect(t.storyLoads).toHaveLength(2);
+    await act(async () => t.storyLoads[1]?.resolve());
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+
+  it('a story chunk of a newer build reloads the page', async () => {
+    const t = bindings({ withStories: true, reload: () => true });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    for (const id of Object.keys(manifest.cells)) await act(async () => t.pending[id]?.resolve(chunkOf(id)));
+    await act(async () => t.storyLoads[0]?.reject(new StoryChunkMismatch('story:sun-and-moon', 'h-sun', 'x')));
     await settle();
     expect(t.reload).toHaveBeenCalledTimes(1);
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
