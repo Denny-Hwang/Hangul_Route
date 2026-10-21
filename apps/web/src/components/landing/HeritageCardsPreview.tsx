@@ -1,6 +1,6 @@
 import { colors, radii, shadows, spacing, typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
-import { stage1Cards, type CardRarity, type LandingCard } from '../../data/stage1-cards';
+import type { CardRarity, SiteCard } from '../../data/stage1-cards';
 import { rem } from '../../lib/site-style';
 
 const rarityBorder: Record<CardRarity, string> = {
@@ -12,14 +12,13 @@ const rarityBorder: Record<CardRarity, string> = {
 
 type CardWords = Messages['landing']['cards'];
 
-/** A text size: px on the old landing, rem inside a layered-site fold (F-SITE-002 §3.11). */
-type Size = (px: number) => number | string;
-
 /**
- * One card: the Korean word, its romanization and its English gloss (`card.en`, CLAUDE.md §1: some card titles are
- * romanizations, such as Bap), then the blurb.
+ * One card: the Korean word, its romanization and its gloss in the UI language (`card.gloss`, CLAUDE.md §1: never
+ * the English title, which for some cards is the romanization again, such as Bap), then the blurb. A card whose
+ * overlay title only repeats the word (`gloss: null`, every Korean title) shows the word and its romanization alone,
+ * and the word then carries `lang="ko"` so a screen reader reads it in Korean.
  */
-function CardTile({ card, t, size }: { card: LandingCard; t: CardWords; size: Size }): JSX.Element {
+function CardTile({ card, t }: { card: SiteCard; t: CardWords }): JSX.Element {
   return (
     <article
       style={{
@@ -35,10 +34,11 @@ function CardTile({ card, t, size }: { card: LandingCard; t: CardWords; size: Si
       }}
     >
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* The label is in the UI language, so `lang="ko"` marks the word only when it is read as itself. */}
         <span
-          aria-label={t.cardLabel(card.romanization, card.en)}
+          {...(card.gloss === null ? { lang: 'ko' } : { 'aria-label': t.cardLabel(card.romanization, card.gloss) })}
           style={{
-            fontSize: size(typography.size.title),
+            fontSize: rem(typography.size.title),
             fontWeight: typography.weight.bold,
             color: colors.text.primary,
             lineHeight: 1,
@@ -52,7 +52,7 @@ function CardTile({ card, t, size }: { card: LandingCard; t: CardWords; size: Si
             display: 'inline-flex',
             alignItems: 'center',
             gap: spacing.xs,
-            fontSize: size(typography.size.caption),
+            fontSize: rem(typography.size.caption),
             color: colors.text.secondary,
             fontWeight: typography.weight.semibold,
             textTransform: 'uppercase',
@@ -68,25 +68,27 @@ function CardTile({ card, t, size }: { card: LandingCard; t: CardWords; size: Si
       </header>
       <div
         style={{
-          fontSize: size(typography.size.bodySm),
+          fontSize: rem(typography.size.bodySm),
           color: colors.text.muted,
           fontVariant: 'small-caps',
         }}
       >
         {card.romanization}
       </div>
+      {card.gloss === null ? null : (
+        <div
+          style={{
+            fontSize: rem(typography.size.bodyLg),
+            color: colors.text.primary,
+            fontWeight: typography.weight.semibold,
+          }}
+        >
+          {card.gloss}
+        </div>
+      )}
       <div
         style={{
-          fontSize: size(typography.size.bodyLg),
-          color: colors.text.primary,
-          fontWeight: typography.weight.semibold,
-        }}
-      >
-        {card.en}
-      </div>
-      <div
-        style={{
-          fontSize: size(typography.size.bodySm),
+          fontSize: rem(typography.size.bodySm),
           color: colors.text.secondary,
           marginTop: 'auto',
           lineHeight: typography.leading.normal,
@@ -99,22 +101,14 @@ function CardTile({ card, t, size }: { card: LandingCard; t: CardWords; size: Si
 }
 
 /**
- * The Stage 1 Heritage Card grid. `embedded` is the grid inside the `/learners` cards fold (F-SITE-002 §3.4): the
- * section's h2 and the fold's summary already name it, so it renders the list alone (no eyebrow, heading, body line,
- * top margin or forward-looking Stage 2 line), with text in rem so the browser text size scales it (§3.11).
+ * The Stage 1 Heritage Card grid inside the `/learners` cards fold (F-SITE-002 §3.4): the section's h2 and the fold's
+ * summary already name it, so it renders the list alone, with text in rem so the browser text size scales it
+ * (§3.11). The page passes the cards already in its UI language (`stage1CardsIn`), so the content overlays stay on
+ * the server.
  */
-export function HeritageCardsPreview({ locale = DEFAULT_LOCALE, embedded = false }: { locale?: UiLocale; embedded?: boolean }): JSX.Element {
+export function HeritageCardsPreview({ locale = DEFAULT_LOCALE, cards }: { locale?: UiLocale; cards: readonly SiteCard[] }): JSX.Element {
   const t = getMessages(locale).landing.cards;
-  const size: Size = (px) => (embedded ? rem(px) : px);
-  const rarityCounts = stage1Cards.reduce<Record<CardRarity, number>>(
-    (acc, card) => {
-      acc[card.rarity] += 1;
-      return acc;
-    },
-    { common: 0, uncommon: 0, rare: 0, legendary: 0 },
-  );
-
-  const list = (
+  return (
     <div
       role="list"
       aria-label={t.listLabel}
@@ -125,63 +119,11 @@ export function HeritageCardsPreview({ locale = DEFAULT_LOCALE, embedded = false
         gap: spacing.md,
       }}
     >
-      {stage1Cards.map((card) => (
+      {cards.map((card) => (
         <div role="listitem" key={card.id}>
-          <CardTile card={card} t={t} size={size} />
+          <CardTile card={card} t={t} />
         </div>
       ))}
     </div>
-  );
-  if (embedded) return list;
-
-  return (
-    <section
-      aria-labelledby="cards-heading"
-      style={{ marginTop: spacing.jumbo }}
-    >
-      <header style={{ marginBottom: spacing.xl }}>
-        <span
-          style={{
-            display: 'inline-block',
-            padding: `${spacing.xs}px ${spacing.md}px`,
-            backgroundColor: colors.brand.primaryLight,
-            color: colors.brand.primaryDark,
-            borderRadius: radii.pill,
-            fontWeight: typography.weight.bold,
-            fontSize: typography.size.caption,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-          }}
-        >
-          {t.eyebrow}
-        </span>
-        <h2
-          id="cards-heading"
-          style={{
-            fontSize: typography.size.display,
-            margin: `${spacing.sm}px 0 ${spacing.sm}px`,
-            lineHeight: typography.leading.tight,
-          }}
-        >
-          {t.title(stage1Cards.length)}
-        </h2>
-        <p style={{ color: colors.text.secondary, fontSize: typography.size.bodyLg, maxWidth: 720, margin: 0 }}>
-          {t.body(stage1Cards.length, rarityCounts.common, rarityCounts.uncommon, rarityCounts.rare, rarityCounts.legendary)}
-        </p>
-      </header>
-
-      {list}
-
-      <p
-        style={{
-          marginTop: spacing.xl,
-          fontSize: typography.size.bodySm,
-          color: colors.text.muted,
-          textAlign: 'center',
-        }}
-      >
-        {t.more}
-      </p>
-    </section>
   );
 }

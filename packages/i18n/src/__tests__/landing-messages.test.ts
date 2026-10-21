@@ -15,21 +15,47 @@ import { SAMPLES } from './samples';
 const l = getMessages('en').landing;
 
 describe('landing: sentences that take a value render the former text', () => {
-  it('heritage cards: counts per rarity, and the card label', () => {
-    expect(l.cards.title(24)).toBe('24 Heritage Cards. One Korea, one card at a time.');
-    expect(l.cards.title(1)).toBe('1 Heritage Card. One Korea, one card at a time.');
-    expect(l.cards.body(1, 1, 0, 0, 0)).toContain('Stage 1 ships 1 card: 1 common, 0 uncommon, 0 rare, and 0 legendary.');
-    expect(l.cards.body(24, 10, 8, 4, 2)).toBe(
-      'Every letter you learn earns a real piece of Korean culture — a ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1 ships 24 cards: 10 common, 8 uncommon, 4 rare, and 2 legendary.',
-    );
+  it('heritage cards: the card label takes the romanization and the meaning', () => {
     expect(l.cards.cardLabel('gangaji', 'Puppy')).toBe('Korean word gangaji, meaning Puppy');
   });
 
-  it('mini-games: the beta count shows only when there is one', () => {
-    expect(l.games.eyebrow(8, 1)).toBe('8 mini-games + 1 in beta');
-    expect(l.games.eyebrow(9, 0)).toBe('9 mini-games');
-    expect(l.games.eyebrow(1, 0)).toBe('1 mini-game');
-    expect(l.games.eyebrow(1, 2)).toBe('1 mini-game + 2 in beta');
+  // site-learners-l10n: the /learners games fold reads each title and blurb from the dictionary, in every UI locale.
+  it('mini-games: one title and blurb per Stage 1 kind the site lists, in en, es and ko', () => {
+    const kinds = ['listen-pick', 'match-sound', 'build-letter', 'pic-word-match', 'trace-stroke', 'odd-one-out', 'culture-quiz', 'story-sequence'];
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const items = getMessages(locale).landing.games.items;
+      expect(Object.keys(items), locale).toEqual(kinds);
+      for (const kind of kinds) {
+        const { title, blurb } = items[kind as keyof typeof items];
+        expect(title.trim().length, `${locale} ${kind}`).toBeGreaterThan(0);
+        expect(blurb.trim().length, `${locale} ${kind}`).toBeGreaterThan(0);
+        if (locale !== 'en') {
+          expect(title, `${locale} ${kind}`).not.toBe(l.games.items[kind as keyof typeof items].title);
+          expect(blurb, `${locale} ${kind}`).not.toBe(l.games.items[kind as keyof typeof items].blurb);
+        }
+      }
+    }
+    // No timer on any of them (Culture Quiz has none), and no speaking line.
+    for (const { blurb } of Object.values(l.games.items)) expect(blurb).not.toMatch(/\bseconds?\b|\btimer\b|\bsay\b|\bspeak/i);
+  });
+
+  it('the level-check lines name the app\'s button label word for word, in every UI locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const m = getMessages(locale);
+      expect(m.landing.persona.learners.faq.level.a, locale).toContain(m.learner.placement.invite.knowSome);
+      expect(m.landing.home.how.levelBody.trim().length, locale).toBeGreaterThan(0);
+    }
+    expect(l.persona.learners.faq.level).toEqual({
+      q: 'I already know some Hangul. Do I have to start at the beginning?',
+      a: 'No. When you start, tap I already know some Korean and take a short level check. Hoya suggests where to begin.',
+    });
+    expect(l.home.how.levelBody).toBe('Pick who learns, or check your level.');
+    expect(l.persona.learners.after).toEqual({
+      title: 'After the alphabet',
+      body: 'Words, short sentences, conversations and heritage stories, in the same five-minute steps.',
+    });
+    // Placement is a level check, never a "test", in the English copy.
+    expect(JSON.stringify([l.persona.learners.faq.level, l.home.how.levelBody])).not.toMatch(/\btest\b|\bplacement\b/i);
   });
 
   it('the footer year is a value', () => {

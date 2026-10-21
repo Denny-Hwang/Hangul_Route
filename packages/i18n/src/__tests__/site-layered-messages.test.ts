@@ -88,7 +88,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(Object.keys(l.home.who.items)).toEqual(['learners', 'parents', 'teachers']);
   });
 
-  it('how it works: three steps in order, and the Learning Route variant of step 3', () => {
+  it('how it works: three steps in order, the level-check variant of step 1 and the Learning Route variant of step 3', () => {
     expect(l.home.how.title).toBe('How it works');
     expect(l.home.how.steps).toEqual({
       start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
@@ -96,6 +96,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
       collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
     });
     expect(Object.keys(l.home.how.steps)).toEqual(['start', 'quests', 'collect']);
+    expect(l.home.how.levelBody).toBe('Pick who learns, or check your level.');
     expect(l.home.how.routeBody).toBe('Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.');
   });
 
@@ -205,9 +206,9 @@ describe('B.2 learners', () => {
     expect(p().route).toEqual({ title: 'Your Learning Route', body: 'One map shows where you started, where you are and what comes next.' });
   });
 
-  it('five folded questions in order; the adult and Korean answers are today’s text', () => {
+  it('five folded questions in order, then the level-check one (behind its claim); the adult and Korean answers are today’s text', () => {
     const faq = p().faq;
-    expect(Object.keys(faq)).toEqual(['signIn', 'code', 'offline', 'adult', 'korean']);
+    expect(Object.keys(faq)).toEqual(['signIn', 'code', 'offline', 'adult', 'korean', 'level']);
     expect(faq.signIn).toEqual({
       q: 'Is there a sign-in for learners?',
       a: 'No email or password needed. Open the app and choose your profile, or enter your class or family code. Moving to a new device? Use your Rescue Code.',
