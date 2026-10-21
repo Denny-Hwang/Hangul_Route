@@ -1208,7 +1208,7 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-33 | `feat(mobile,content): Match Shape game and Stage 1 letter-shape origins (F-CURR-002)` | M | CM-D2 | about 4 | sources, Stage 1 additions unit tests, Playwright |
 | CM-34 | `feat(mobile): Story Order game (F-CURR-002)` | S | CM-D2 | about 3 | `story-order-text`, fallback, Playwright |
 | CM-35 | `feat(mobile): Role Play read-and-tap game (F-CURR-002)` | L | CM-D2 | about 5 | branch reducer, every branch ends well, no speaking UI, fallback, Playwright |
-| CM-36 | `feat(mobile): Hidden Heritage engine, first scene (Food) and slide kind (F-CURR-002 OD-10)` | L | CM-D3 | about 5 | hit areas a11y, Korean-word targets, 25 KB budget, fallback, Playwright |
+| CM-36 | `feat(mobile): Hidden Heritage engine, first scene (Food) and slide kind (F-CURR-002 OD-10)` | L | CM-D3 | about 8 | hit areas a11y, Korean-word targets, 25 KB budget, fallback, Playwright |
 | CM-37 ×4 | `feat(content): Hidden Heritage scenes for Letters, Holidays, Nature, Play (F-CURR-002)` | M each | CM-36 | about 10 each | scene budget, MAR culture pass |
 | CM-38 | `feat(mobile): My Story game, word-bank slots, not kept (F-CURR-002 OD-13)` | M | CM-D2 | about 5 | no free text, nothing stored (P-1 extended), fallback, Playwright |
 | CM-39 | `feat(mobile): Yut Review skin (F-CURR-002)` | M | CM-14, CM-D2 | about 4 | randomness never decides reward, Playwright |
@@ -1240,7 +1240,7 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
 | CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, pack order list, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, every pack directory in `order.json`, scaffold |
-| CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 38 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
+| CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 37 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
 | CM-50c | `feat(mobile,web): lecture and console chooser accept pack levels (F-CURR-002)` | S-M | CM-50a | about 2 | chooser regex, deck schema, old-presenter decode failure |
 | CM-51 ×5 | `content(packs): Numbers & Time, levels 1-5 with the Pack Check in L5 (F-CURR-002)` | M each | CM-50a, CM-50b, plus the level rows above | overlays | U-rules, sources, MAR |
 | CM-52 ×5 | `content(packs): People & Family (F-CURR-002)` | M each | same | overlays | same |
@@ -1256,7 +1256,7 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-60 | `feat(mobile): weekly quests and Passport stamps (F-CURR-002)` | M | CM-17 | about 42 | deterministic pick, latch merge |
+| CM-60 | `feat(mobile): weekly quests and Passport stamps (F-CURR-002)` | M | CM-17 | about 48 | deterministic pick, latch merge, quest kind stored with each weekly stamp |
 | CM-61 | `feat(backend,mobile,web): family lantern, Worker total from summaries, space-goal read, target behind the PIN (F-CURR-002 OD-7)` (W→A) | M | CM-16, CM-17, owner request A account switching and PIN | about 8 | totals only, cross-device sum, offline total, PIN gate, e2e with 2 profiles |
 | CM-62 | `feat(backend,web,mobile): class goal, space_goals, counts-only class-progress route, console setter, presenter bar (F-CURR-002 OD-7)` (W→A) | L | CM-3, CM-16, CM-17 | about 12 | Worker totals, class scope allowed on class-progress only, additive SQL, e2e |
 | CM-63 | `feat(lecture): game block and presets by-topic, class-check, class-review (F-CURR-002)` | L | CM-16, CM-21, CM-36, CM-39 | about 18 | no names on projector, slide mapping, old-presenter decode failure, e2e |

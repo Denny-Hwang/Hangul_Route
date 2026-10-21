@@ -33,7 +33,8 @@ Then: a right tap rings the thing, plays its word and shows its meaning, then th
 | |     content width }          | |     over drawn things (targets and other things)
 | |                              | |
 | +------------------------------+ |
-| (Found)  [ 국 ok ] [ ... ] [ ... ]|  <- one slot per target; a found word fills its slot
+| (Found)  [ok 국  ] [ ... ] [ ... ]|  <- one slot per target; a found word fills its slot
+|          [  guk  ]                |     with KoreanText: the word and its romanization under it
 |                                  |
 | (Hoya thinking: "Look again")    |  <- only after a miss
 +----------------------------------+
@@ -74,7 +75,7 @@ done:      every word found -> the end panel (below), then back to the quest
 | |   { scene, 4:3, up to layout.maxWidth.reading (720) }    | |  <- 720 x 540 dp: spots 135 dp or larger
 | |                                                          | |
 | +----------------------------------------------------------+ |
-| (Found)  [ 국 ok ] [  ] [  ]                                 |
+| (Found)  [ok 국 / guk ] [  ] [  ]                            |  <- each found slot: KoreanText, word over romanization
 +--------------------------------------------------------------+
 ```
 
@@ -125,11 +126,13 @@ Exit: the end panel's Continue or Skip → back to `quest/player` (step complete
 - **no device voice**: the visible sound notice of F-AUDIO-004; the written word with romanization carries the round, and nothing is lost.
 - **reduced motion**: no motion is used; rings appear and clear without fading.
 - **large text (200 %)**: the prompt and the found slots grow and wrap; the scene keeps its width, so the spots keep their size.
+- **found slots**: each found slot is `KoreanText`, the word with its romanization under it (two lines; CLAUDE.md §1: taught Korean always shows romanization), following `romanizationMode` like the prompt. At 320 px the slots wrap to a second row with 4-5 targets. An empty slot is read as "Not found yet".
 
 ## Accessibility
 
 - The scene is an image named by its `altEn` (in the UI locale), which describes the setting, never the things to find: "A food stall on a market day." The things are named only on their spots.
-- Each spot is a button in reading order. Its name is the thing's **meaning in the UI language** (the same rule as Pic-Word Match's picture tiles), and its state ("found"). So a screen-reader user hears the Korean word and picks the thing whose name means it: the same meaning match, without the visual search. Every scene has at least as many other things (spots that are not targets) as targets, so the list never gives the answer away.
+- Each spot is a button in reading order. Its name is the thing's **meaning in the UI language** (the same rule as Pic-Word Match's picture tiles), and, once found, its state: "soup, found" (`a11y.hiddenHeritage.spotFound`).
+- **Korean UI.** In the ko UI the meaning comes from the ko overlay gloss (F-I18N-001 overlays) when it differs from the target word (a Korean paraphrase). When the ko gloss is the target word itself (밥 for 밥), the spot is named by that gloss as given, and the found line, the live region and the end panel leave the meaning out ("Found: 밥" is not said twice; the end panel shows 밥 (bap) with no third column). This is the same as Pic-Word Match in the ko UI, recorded as accepted parity: a ko-UI screen-reader learner matches the word by sound and spelling, not by meaning. The open question below tracks whether a picture description should replace it. So a screen-reader user hears the Korean word and picks the thing whose name means it: the same meaning match, without the visual search. Every scene has at least as many other things (spots that are not targets) as targets, so the list never gives the answer away.
 - The target word is `KoreanText` (speech language `ko`, its romanization read too) with the Hear button beside it; the live region says "Found: soup" after a right tap and "Look again" after a miss.
 - Spots are at least 75 canvas units on each side (below), never overlap and keep at least 11 units (8 dp at 320 px) apart.
 
@@ -148,9 +151,12 @@ Exit: the end panel's Continue or Skip → back to `quest/player` (step complete
 | `learner.hiddenHeritage.again` | Look again |
 | `learner.hiddenHeritage.allFound` | You found them all |
 | `a11y.hiddenHeritage.foundLive(gloss)` | Found: {gloss} |
+| `a11y.hiddenHeritage.spotFound(gloss)` | {gloss}, found |
+| `a11y.hiddenHeritage.slotEmpty` | Not found yet |
 | `lecture.slide.hiddenHeritage.kind` | Find it together |
 
 - Reused: the shell's Skip, Continue, the Hear button's name and the empty state.
+- Count: 8 new strings, each in en, es and ko (spec §17, row CM-36, "about 8").
 
 ---
 
@@ -223,4 +229,5 @@ A Hidden Heritage scene is a **scene-art description** (`design/brief/illustrati
 ## Open questions
 
 - **Bigger scenes on a phone.** A scene wider than the screen (pan and zoom) would allow more and smaller things, but it adds a gesture and a second way to get lost. Default: one 4:3 scene that fits the width; more things means a second scene.
+- **Korean UI spot names.** When the ko gloss is the word itself, a screen-reader learner matches by sound and spelling ("Korean UI" above). Default: parity with Pic-Word Match; CM-36 asks MAR whether a short ko picture description (for example "밥그릇") reads better, and records the answer.
 - **Stage 3-5 targets that are phrases** ("씨름하는 사람") need a figure doing the action; the first scenes (CM-36 Food, CM-37) stay with nouns and noun phrases until a phrase target is tried on the contact sheet.

@@ -96,14 +96,15 @@ Then: they see this week's three quests with the stamp each one gives, every mil
 
 | Stamp | Id | Example |
 |---|---|---|
-| weekly quest | `wq:<isoWeek>:<slot>` (the local ISO week, slot 0-2 of that week's pick) | `wq:2026-W43:1` |
+| weekly quest | `wq:<isoWeek>:<slot>:<questKind>` (the local ISO week, slot 0-2 of that week's pick, and the quest kind collected) | `wq:2026-W43:1:stories2` |
 | first lesson in a theme | `m:first:<theme>` | `m:first:nature` |
 | album | `m:album:<theme>` | `m:album:rites` |
 | mastered column | `m:mastered:<theme>` | `m:mastered:letters` |
 | pack badge | `m:pack:<packKey>` | `m:pack:numbers-time` |
 
-- The week is in the weekly id, so a quest kind repeated in a later week is a new stamp and the history and this week's "Collected" stay right; the slot, not the quest kind, keeps the id stable if the table's wording changes.
-- **Growth.** At most 3 weekly keys a week: about 156 keys and under 6 KB a year in the synced profile. Row CM-60 checks this against the profile size budget; if it is ever too large, weeks older than a year fold into one `wqy:<year>` key a year (its earliest date), shown as one row "Weekly stamps, {year}", and the fold is a pure, tested function.
+- The week is in the weekly id, so a quest kind repeated in a later week is a new stamp and the history and this week's "Collected" stay right.
+- **The kind is stored with the stamp.** The pick can change mid-week: an unsynced profile can change id after a restore (§11.4), and a release can change the quest table. So a collected slot is always drawn from its **stored** kind, never from the current pick: "This week" shows a slot as collected only when a `wq:<thisWeek>:<slot>:*` key exists, and labels it with that key's kind. Only the slots not yet collected follow the current pick. The pick itself uses the quest table version in force on that week's Monday (the table carries a version and its first week), so a release mid-week changes nothing until the next Monday. `questKind` is a key of the quest table, never wording, so a wording change keeps the id. CM-60's unit tests: the profile id changes mid-week and the collected stamp keeps its label; a new table version mid-week does not change this week's pick.
+- **Growth.** At most 3 weekly keys a week: about 156 keys a year. One entry such as `"wq:2026-W43:1:stories2":"2026-10-21T08:20:10.000Z",` is about 52 bytes, so about **8 KB a year** in the synced profile. Row CM-60 checks this against the profile size budget; if it is ever too large, weeks older than a year fold into one `wqy:<year>` key a year (its earliest date), shown as one row "Weekly stamps, {year}", and the fold is a pure, tested function.
 - **Telemetry never carries a week.** A weekly stamp sends only `weekly_quest.complete { questKind }`; `stamp.earned { stampId }` is sent for milestone stamps (`m:` ids) only, which hold no week and no person.
 
 ## Interaction points
@@ -124,7 +125,7 @@ Exit to: the "Stage N complete" page · Journey (from a quest's link) · back
 
 - **success**: A, B.
 - **empty** (nothing collected yet): every stamp in its outline with its earn line; "This week" as always; the Stages list hidden until Stage 1 is complete; one line under the title, "Your first stamp is one lesson away." (no zero count).
-- **weekly quests off** (`weeklyQuests` off, §12.2): the "This week" section and its link are hidden; milestone stamps and stages stay.
+- **weekly quests off** (`weeklyQuests` off, §12.2): the "This week" section is hidden; milestone stamps and stages stay. The [ See your weekly stamps ] link **stays while any `wq:` stamp exists**, so stamps already collected are never hidden (nothing is ever taken away); with no weekly stamp yet, there is no link.
 - **pack stamps**: listed under "Topics" only for packs that are shown (`topicPacks`, `pack.<key>`); a collected pack badge stamp stays visible even if its pack is later hidden.
 - **error** (progress unreadable): stamps drawn from the table with no collected look, and the Journey's muted "progress will show up in a moment" line.
 - **offline**: everything is local; the weekly pick needs no network.
@@ -133,8 +134,8 @@ Exit to: the "Stage N complete" page · Journey (from a quest's link) · back
 
 ## Accessibility
 
-- Each weekly card is one group: "Finish 2 stories. 1 done. Gives the stories stamp." (the pips as words with a plural form per locale, `plural()`; no fraction); a collected one: "Refresh 20 items. Collected."
-- Each stamp tile is a button: "Nature album. Collect every Nature card." or "First Nature lesson. Collected."
+- Each weekly card is one group: "Finish 2 stories. 1 done. Gives this week's stamp." (`a11y.passport.weeklyCard`; the pips as words with a plural form per locale, `plural()`; no fraction); a collected one: "Refresh 20 items. Collected." (`a11y.passport.weeklyCardCollected`)
+- Each stamp tile is a button: "Nature album. Collect every Nature card." or "First Nature lesson. Collected." (`a11y.passport.stampTile(name, line)`)
 - Collected and not-collected stamps differ by more than colour: the collected stamp is drawn in full with its glyph, the other is an outline, and the state line says it in words.
 - Targets at least `touchTarget.min`; body text 18 or larger.
 
@@ -144,7 +145,7 @@ Exit to: the "Stage N complete" page · Journey (from a quest's link) · back
 - writes: `stamps[stampId]` when a stamp is earned (in the quest or review flow that earns it, not on this page)
 - telemetry: `stamp.earned { stampId }` for milestone stamps (`m:` ids) and `weekly_quest.complete { questKind }` for weekly ones (row CM-60), from where they are earned; `stage.card_opened { stage }` from a stage row. No profile name, no week id, no item ids.
 
-## Proposed copy (row CM-60 lands the strings with es and ko; about 42 with the 20 quest lines)
+## Proposed copy (row CM-60 lands the strings with es and ko; about 48 with the 20 quest lines)
 
 | Intended key | English |
 |---|---|
@@ -170,6 +171,12 @@ Exit to: the "Stage N complete" page · Journey (from a quest's link) · back
 | `learner.passport.earn.mastered(theme)` | Master every {theme} lesson |
 | `learner.passport.earn.packBadge(pack)` | Finish the {pack} Pack Check |
 | `learner.passport.cardBack` | Adds a new card back |
+| `learner.passport.collectedOn(date)` | Collected on {date} (the stamp sheet) |
+| `learner.passport.goToJourney` | Go to Journey (a quest's link) |
+| `learner.passport.week.year(year)` | Weekly stamps, {year} (the folded row, only if the fold is ever used) |
+| `a11y.passport.weeklyCard(quest, count)` | {quest}. {count} done. Gives this week's stamp. (`plural()`: "1 done"; with nothing done yet: "{quest}. Gives this week's stamp.") |
+| `a11y.passport.weeklyCardCollected(quest)` | {quest}. Collected. |
+| `a11y.passport.stampTile(name, line)` | {name}. {line}. |
 | `learner.passport.quest.<kind>` | the 20 weekly quest lines ("Finish 2 stories", "Refresh 20 items", ...) |
 
 - Theme and pack names inside these lines come from the theme titles and `CatalogPack.titleEn` in the UI locale; the Korean values write around particles (F-I18N-001 §3.10: never attach 은/는, 이/가, 을/를 to a variable).
