@@ -1,4 +1,4 @@
-import { LESSON_CELL_CHUNKS, LESSON_EPISODES, LESSON_QUESTS, LESSON_TITLE_CHUNKS, loadLessonCell, loadLessonTitles } from './__generated__/lessons-index';
+import { LESSON_CELL_CHUNKS, LESSON_EPISODES, LESSON_QUESTS, LESSON_TEACHES, LESSON_TITLE_CHUNKS, loadLessonCell, loadLessonTitles } from './__generated__/lessons-index';
 import { createLessonStore, questsOverStore } from '../logic/lessons/lesson-store';
 
 /**
@@ -17,3 +17,13 @@ export const lessonEpisodes = LESSON_EPISODES;
 
 /** The lesson quests; a quest's `steps` read its cell's chunk, so they are empty until `lessonContent` has it. */
 export const lessonQuests = questsOverStore(LESSON_QUESTS, lessonContent);
+
+/**
+ * The jamo ids a lesson quest's Discover step teaches, from the manifest, so they are there before
+ * its chunk loads (a closed quest's letters on the lesson page, the results teaser, the placement
+ * catalogue); undefined for a quest that is not a lesson quest.
+ */
+export function lessonQuestTeaches(questId: string): readonly string[] | undefined {
+  if (lessonContent.cellOfQuest(questId) === undefined) return undefined;
+  return LESSON_TEACHES[questId] ?? [];
+}

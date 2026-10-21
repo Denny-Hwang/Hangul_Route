@@ -13,7 +13,7 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-lessons.mjs");
 const OUT = join("apps", "mobile", "src", "content", "__generated__");
 
-const { BUDGET, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, jamoOf, planChunks, runtimeScope, shapeCell, sizes } =
+const { BUDGET, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, discoverJamo, jamoOf, planChunks, runtimeScope, shapeCell, sizes } =
   await import(SCRIPT);
 
 const roots = [];
@@ -137,6 +137,25 @@ describe("build-lessons.mjs: cells", () => {
     assert.doesNotMatch(index, /\n  "/);
     assert.doesNotMatch(body, /stage2-crafts|\n  "/);
     assert.ok(!existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-crafts.ts")));
+  });
+
+  test("the manifest lists the jamo each quest's Discover step teaches, only for the quests that teach some", () => {
+    const root = makeRoot();
+    const taught = cell("stage2", "letters");
+    const discover = taught.quests[0].steps.find((s) => s.kind === "discover");
+    discover.discover = {
+      pages: [
+        { items: [{ type: "jamo", jamoId: "jamo:ae" }, { type: "word", wordId: "word:gae" }] },
+        { items: [{ type: "jamo", jamoId: "jamo:e" }] },
+      ],
+    };
+    put(root, "content/episodes/stage-2/letters.json", { ...taught, order: 1 });
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const index = read(root, "lessons-index.ts");
+    assert.match(index, /export const LESSON_TEACHES: Readonly<Record<string, readonly string\[\]>> = \{"quest:stage2-letters-q1":\["jamo:ae","jamo:e"\]\};/);
+    assert.deepEqual(discoverJamo(taught.quests[0].steps), ["jamo:ae", "jamo:e"]);
+    assert.deepEqual(discoverJamo(taught.quests[1].steps), []);
   });
 
   test("each chunk carries the hash the manifest names: the sha256 of its data, 16 hex", () => {
@@ -402,7 +421,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(r.stdout, /stage 2 game content {2}1 cells {2}\d+ B raw {2}\d+ B gzip/);
     assert.match(r.stdout, /stage 3 game content {2}0 cells {2}0 B raw/);
     assert.match(r.stdout, /total {2}\d+ B raw {2}\d+ B gzip/);
-    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 220000 B raw and 40000 B gzip per stage, 1400000 B raw and 210000 B gzip in total/);
+    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 90000 B raw and 16000 B gzip per cell chunk, 220000 B raw and 40000 B gzip per stage, 1400000 B raw and 210000 B gzip in total/);
   });
 
   test("--report fails over budget; a draft is never measured", () => {
@@ -429,12 +448,26 @@ describe("build-lessons.mjs: --check and --report", () => {
       perStage: [{ stage: 2, cells: 5, raw: BUDGET.stageRaw + 1, gzip: BUDGET.stageGzip + 1 }],
       total: { raw: BUDGET.totalRaw + 1, gzip: BUDGET.totalGzip + 1 },
     });
-    assert.equal(over.length, 7);
+    assert.equal(over.length, 9);
     assert.match(over[0], /episode:x is 54001 B raw for 6 quests, over its ceiling of 54000 B/);
     assert.match(over[1], /the start-loaded manifest lessons-index\.ts is 60001 B raw, over the ceiling of 60000 B/);
     assert.match(over[2], /lessons-titles-es\.ts is 30001 B raw, over the title chunk ceiling of 30000 B/);
-    assert.match(over[3], /the Stage 2 game content is 220001 B raw/);
-    assert.deepEqual(BUDGET, { perQuestRawAvg: 9_000, manifestRaw: 60_000, titleChunkRaw: 30_000, stageRaw: 220_000, stageGzip: 40_000, totalRaw: 1_400_000, totalGzip: 210_000 });
+    assert.match(over[3], /lessons-cell-stage2-rites\.ts is 999999 B raw, over the cell chunk ceiling of 90000 B/);
+    assert.match(over[4], /lessons-cell-stage2-rites\.ts is 999999 B gzip, over the cell chunk ceiling of 16000 B/);
+    assert.match(over[5], /the Stage 2 game content is 220001 B raw/);
+    assert.deepEqual(BUDGET, {
+      perQuestRawAvg: 9_000,
+      manifestRaw: 60_000,
+      titleChunkRaw: 30_000,
+      cellChunkRaw: 90_000,
+      cellChunkGzip: 16_000,
+      stageRaw: 220_000,
+      stageGzip: 40_000,
+      totalRaw: 1_400_000,
+      totalGzip: 210_000,
+    });
+    // A cell chunk at its line passes it.
+    assert.deepEqual(checkBudget({ perCell: [], perModule: [{ name: "lesson-chunks/lessons-cell-stage2-rites.ts", raw: BUDGET.cellChunkRaw, gzip: BUDGET.cellChunkGzip }], total: { raw: 0, gzip: 0 } }), []);
     assert.deepEqual(checkBudget({ perCell: [], perModule: [], total: { raw: 0, gzip: 0 } }), []);
     const report = sizes([{ status: "draft", episode: { id: "d" }, quests: [], scopes: {} }], buildModules([]));
     assert.deepEqual(report.perCell, []);

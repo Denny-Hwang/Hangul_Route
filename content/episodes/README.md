@@ -47,12 +47,14 @@ before that row lands.
 1. `node scripts/validate-content.mjs` runs the `lesson-*` rules (`packages/content-schema/src/lesson-lint.ts`).
 2. `node scripts/build-lessons.mjs` drops draft cells, fails a `ready` cell without both
    sign-offs, and writes
-   `apps/mobile/src/content/__generated__/lessons-index.ts` (the start-loaded manifest: episodes
-   and quest headers in English) and, under `__generated__/lesson-chunks/`, one content-hashed
+   `apps/mobile/src/content/__generated__/lessons-index.ts` (the start-loaded manifest: episodes,
+   quest headers in English and the jamo each quest's Discover step teaches) and, under
+   `__generated__/lesson-chunks/`, one content-hashed
    chunk per cell (its steps, game scopes and their glosses; loaded when one of its quests opens)
    and one title chunk per locale (loaded for the active locale only; F-CURR-002 section 10).
    `--check` fails on drift or a module no longer built, `--report` on the budget (9 KB raw per
-   quest on average, 60,000 B raw for the manifest, 30,000 B raw per title chunk, 220 KB raw /
+   quest on average, 60,000 B raw for the manifest, 30,000 B raw per title chunk, 90,000 B raw /
+   16,000 B gzip per cell chunk, 220 KB raw /
    40 KB gzip of game content per stage, 1,400,000 B raw / 210,000 B gzip in total).
 3. `apps/mobile/src/content/__tests__/upper-stage-curriculum.test.ts` checks U-1 .. U-10 and
    that a ready cell plays only games the app has a screen for (`PLAYABLE_KINDS`, so a game row
