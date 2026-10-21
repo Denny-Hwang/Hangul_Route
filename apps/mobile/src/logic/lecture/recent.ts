@@ -182,6 +182,26 @@ export async function readRecent(store: RecentStore): Promise<LoadedRecent> {
   }
 }
 
+/** How long the home waits on the boot read of Recent before it counts as storage off (like the browse boot's bound). */
+export const RECENT_READ_TIMEOUT_MS = 2500;
+
+/**
+ * The boot read as the home and a reload see it, bounded: a read that never settles (an IndexedDB
+ * request that hangs on a blocked or upgrade-pending database) answers storage off after
+ * `RECENT_READ_TIMEOUT_MS`, so the ready-made lessons' Start is usable with an empty Recent instead
+ * of staying held. It is never writable, so nothing is saved over the list; writes still chain on the
+ * real read, and a late answer replaces this one.
+ */
+export function boundedRecent(read: Promise<LoadedRecent>, ms: number = RECENT_READ_TIMEOUT_MS): Promise<LoadedRecent> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve({ list: emptyRecent(), writable: false, off: true }), ms);
+    void read.then((loaded) => {
+      clearTimeout(timer);
+      resolve(loaded);
+    });
+  });
+}
+
 export async function loadRecent(store: RecentStore): Promise<RecentList> {
   return (await readRecent(store)).list;
 }

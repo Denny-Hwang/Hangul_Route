@@ -209,11 +209,13 @@ export function ConsoleAuthProvider({ children }: { children: ReactNode }): JSX.
   // The Clerk widget speaks the console's language (owner items 6 and 7); a change re-localizes it in place.
   const { locale } = useConsoleLocale();
   const localization = useMemo(() => clerkLocalization(locale), [locale]);
+  // A sign-out Clerk starts by itself (a session ended in another tab, its own widget) lands with lang too (DN-6 section 6).
+  const afterSignOutUrl = signInHome(locale);
   if (publishableKey) {
     return (
       <ClerkProvider
         publishableKey={publishableKey}
-        afterSignOutUrl={ROUTES.signIn}
+        afterSignOutUrl={afterSignOutUrl}
         signInUrl={ROUTES.signIn}
         signUpUrl={CREATE_ACCOUNT_URL}
         localization={localization}

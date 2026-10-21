@@ -30,7 +30,7 @@ import { recentView } from './src/logic/lecture/home-view';
 import { blockMinutesOn, blockTitleIn, presenterChooserGroups, wordReviewWordsOn } from './src/logic/lecture/quick-source';
 import { HOME_DEFAULT, type HomeSnapshot } from './src/logic/lecture/home-state';
 import { presenterPresetContext, presetLectureDeck, presetPreview, presetTitle, resolveOnPresenter, type WordReviewBlock } from './src/logic/lecture/preset-source';
-import { commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
+import { boundedRecent, commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
 import {
   completePayload,
   homeStart,
@@ -355,11 +355,17 @@ function Presenter(): React.ReactElement {
       });
     void flushQueue();
     recent.current = readRecent(recentStore);
+    // A read that never settles counts as storage off after a bound, so the home's Start and a reload do
+    // not wait forever; writes still chain on the real read, and its late answer replaces the off view.
+    const bootRecent = boundedRecent(recent.current);
+    void bootRecent.then((loaded) => {
+      if (live) setRecentLoaded(loaded);
+    });
     void recent.current.then((loaded) => {
       if (live) setRecentLoaded(loaded);
     });
     if (address?.reloaded) {
-      void recent.current.then(({ list }) => {
+      void bootRecent.then(({ list }) => {
         if (live) setPhase(phaseOf(resolveBoot(address, list), address));
       });
     }

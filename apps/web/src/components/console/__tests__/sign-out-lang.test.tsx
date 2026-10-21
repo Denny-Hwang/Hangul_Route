@@ -9,14 +9,17 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
  * wiring tests) pass `/signin?next=…&lang=…`.
  */
 const nav = vi.hoisted(() => ({ replaced: [] as string[] }));
-const clerk = vi.hoisted(() => ({ redirects: [] as Array<string | undefined> }));
+const clerk = vi.hoisted(() => ({ redirects: [] as Array<string | undefined>, afterSignOutUrl: [] as string[] }));
 const view = vi.hoisted(() => ({ locale: 'en' as 'en' | 'es' | 'ko' }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: (url: string) => nav.replaced.push(url), push: () => undefined }),
 }));
 vi.mock('@clerk/clerk-react', () => ({
-  ClerkProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+  ClerkProvider: ({ children, afterSignOutUrl }: { children: ReactNode; afterSignOutUrl: string }) => {
+    clerk.afterSignOutUrl.push(afterSignOutUrl);
+    return <>{children}</>;
+  },
   useUser: () => ({ isLoaded: true, user: { id: 'user_1', firstName: 'Kim', primaryEmailAddress: null } }),
   useAuth: () => ({ getToken: async () => 'token', sessionId: 'sess_1' }),
   useClerk: () => ({
@@ -55,6 +58,7 @@ afterEach(() => {
   mounted = null;
   nav.replaced = [];
   clerk.redirects = [];
+  clerk.afterSignOutUrl = [];
   view.locale = 'en';
   vi.unstubAllEnvs();
 });
@@ -97,6 +101,13 @@ describe.each(['en', 'es', 'ko'] as const)('lang=%s on the way to /signin', (loc
       await auth.signOut('/signin?next=%2Fparent&lang=ko');
     });
     expect(clerk.redirects).toEqual([`/signin?lang=${locale}`, '/signin?next=%2Fparent&lang=ko']);
+  });
+
+  it("a sign-out Clerk starts by itself (afterSignOutUrl) lands on /signin?lang=…", async () => {
+    view.locale = locale;
+    await mountUnderClerk();
+    expect(clerk.afterSignOutUrl.length).toBeGreaterThan(0);
+    expect(new Set(clerk.afterSignOutUrl)).toEqual(new Set([`/signin?lang=${locale}`]));
   });
 
   it("the lock's Sign in again hands /signin with next and lang to the sign-out", () => {

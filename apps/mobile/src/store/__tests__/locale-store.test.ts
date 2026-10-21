@@ -804,6 +804,14 @@ describe('locale-store: a stored locale that is currently hidden is ignored', ()
  */
 describe('locale-store: the learner app never touches hr:console:uiLocale', () => {
   const CONSOLE_KEY = 'hr:console:uiLocale';
+  // The literal key, the web constant that holds it, a module named console-locale (the web one or a
+  // future shared export) and the key built from parts ('…console:' + 'uiLocale') all count.
+  const NAMES_CONSOLE_KEY = [
+    /console:uiLocale/,
+    /\bCONSOLE_LOCALE_KEY\b/,
+    /(?:from|import\s*\(|require\s*\(|vi\.mock\s*\()\s*['"`][^'"`]*console-locale(?:\.tsx?)?['"`]/,
+    /['"`][^'"`\n]*console:?['"`]\s*\+\s*['"`]:?uiLocale['"`]/,
+  ];
   const local = new Map<string, string>();
   const spy = {
     getItem: vi.fn((k: string) => local.get(k) ?? null),
@@ -886,7 +894,27 @@ describe('locale-store: the learner app never touches hr:console:uiLocale', () =
     };
     walk(root);
     expect(files.length).toBeGreaterThan(100);
-    const offenders = files.filter((file) => /console:uiLocale/.test(readFileSync(file, 'utf8')));
+    const offenders = files.filter((file) => {
+      const text = readFileSync(file, 'utf8');
+      return NAMES_CONSOLE_KEY.some((pattern) => pattern.test(text));
+    });
     expect(offenders).toEqual([]);
+  });
+
+  it('the source scan catches each way of naming the console key', () => {
+    const caught = (text: string): boolean => NAMES_CONSOLE_KEY.some((pattern) => pattern.test(text));
+    for (const bad of [
+      "const k = 'hr:console:uiLocale';",
+      "import { CONSOLE_LOCALE_KEY } from '@hangul-route/shared';",
+      "import { readConsoleLocale } from '../../../web/src/lib/i18n/console-locale';",
+      "const m = await import('@/lib/i18n/console-locale.ts');",
+      "const k = 'hr:console:' + 'uiLocale';",
+      "const k = 'hr:console' + ':uiLocale';",
+    ]) {
+      expect(caught(bad), bad).toBe(true);
+    }
+    for (const fine of ["const k = 'device:settings';", "set({ uiLocale: 'ko' });", "import { localeLabel } from './locale';"]) {
+      expect(caught(fine), fine).toBe(false);
+    }
   });
 });
