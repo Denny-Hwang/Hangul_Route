@@ -256,7 +256,9 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
     const { unexpected } = await mock(page, { plans: [PLAN] });
     await page.goto(lecturePath('class', `&from=plan&plan=${encodeURIComponent(PLAN.id)}`));
     const presets = page.getByTestId('lecture-presets');
-    const next = presets.getByRole('button', { name: en.a11y.presenter.presetCard(p.next.title, 20) });
+    // The open card names the outline's own minutes once it is not the card's resolved outline (LV-4 second review):
+    // the plan's two Stage 1 lessons, about 10 minutes; the length chips keep 20, the length the card was built for.
+    const next = presets.getByRole('button', { name: en.a11y.presenter.presetCard(p.next.title, 10) });
     await expect(next).toHaveAttribute('aria-expanded', 'true');
     await expect(next).toContainText(p.next.plan(PLAN.title));
     await expect(presets.locator('li[data-testid^="lecture-preset-card-"]').first()).toHaveAttribute('data-testid', 'lecture-preset-card-next-lesson');
