@@ -356,6 +356,8 @@ describe('PinEntry JoinSpace (Who is joining?, CS-11, row OA-7b)', () => {
     expect(navigation.replace).not.toHaveBeenCalled();
     expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
     expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toMatchObject({ dest: 'action', via: 'pin' });
+    // CS-1: the gate return keeps the session (and the fresh PIN) for the waiting join; Join is a learner screen.
+    expect(useUiStore.getState().gateReturnPending).toBe(true);
   });
 
   it('a wrong PIN stays on the PIN screen and counts as no PIN', async () => {
@@ -372,6 +374,7 @@ describe('PinEntry JoinSpace (Who is joining?, CS-11, row OA-7b)', () => {
     expect(useAccountStore.getState().parentPinHash).toBe('h:2468');
     expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
     expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().gateReturnPending).toBe(true);
   });
 
   it('a PIN set for another destination is not a fresh PIN (unchanged)', async () => {

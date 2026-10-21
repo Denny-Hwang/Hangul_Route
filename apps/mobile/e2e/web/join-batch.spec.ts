@@ -66,6 +66,9 @@ async function sharedDevice(page: Page): Promise<{ mina: string; joon: string }>
   const mina = profiles[0]!;
   const joon = { ...mina, id: 'profile:joon0001', displayName: 'Joon', createdAt: new Date().toISOString() };
   await seedStored(page, 'profiles', [...profiles, joon]);
+  // Two learners make a shared device: the launch opens the chooser. Waiting for it lets that launch finish before
+  // the hand-off code is written, so the next launch (not this one) is the one that takes it.
+  await expect(page.getByRole('heading', { name: en.learner.who.title, exact: true })).toBeVisible();
   return { mina: String(mina.id), joon: joon.id };
 }
 
