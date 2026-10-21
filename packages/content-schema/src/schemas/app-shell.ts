@@ -1,5 +1,8 @@
 import { z } from 'zod';
+import { ONBOARDING_TELEMETRY_PAYLOADS } from './onboarding-telemetry';
+import { ProfileSchema } from './profile';
 import { JOIN_CODE_RE, normalizeJoinCode, type SpaceKind, type SpaceRole } from './space';
+import type { TelemetryEventName } from './telemetry';
 
 /**
  * Persona app shell on app.hangulroute.com (F-APP-001 section 3.14). One
@@ -282,9 +285,13 @@ export function unlockActive(record: GrownUpUnlock | null | undefined, now: numb
  * Worker keeps nothing else.
  */
 export const SHELL_TELEMETRY_PREFIX = 'shell.';
+/** `shell.grown_up_handoff` `via`: the entry that asked for the PIN; [OA] section 13.4 appends `chooser`. */
+export const GROWN_UP_HANDOFF_VIAS = ['profile', 'dashboard', 'plan', 'lock', 'chooser'] as const;
+/** `shell.grown_up_handoff` `target`. */
+export const GROWN_UP_HANDOFF_TARGETS = ['router', 'billing', 'next'] as const;
 export const SHELL_TELEMETRY_PAYLOADS: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> = {
   'shell.persona_chosen': { persona: PersonaSchema.options, from: ['welcome', 'welcome-continue'] },
-  'shell.grown_up_handoff': { via: ['profile', 'dashboard', 'plan', 'lock'], target: ['router', 'billing', 'next'] },
+  'shell.grown_up_handoff': { via: GROWN_UP_HANDOFF_VIAS, target: GROWN_UP_HANDOFF_TARGETS },
   'shell.path_bounced': { prefix: GROWN_UP_PREFIXES.map((prefix) => prefix.slice(1)) },
 };
 
@@ -295,8 +302,175 @@ export const PIN_SET_AT_KEY = 'account:pinSetAt';
 /** Shell store: its own IndexedDB database, outside the learner `hr:` namespace. */
 export const SHELL_DB = 'hr-shell';
 export const SHELL_STORE = 'kv';
-export const SHELL_KEYS = { lastPersona: 'lastPersona', pinEpoch: 'pinEpoch' } as const;
+export const SHELL_KEYS = {
+  lastPersona: 'lastPersona',
+  pinEpoch: 'pinEpoch',
+  /** [OA] section 7.1: `DeviceUsesSchema`, written by the adult frame, read by the learner app (web). */
+  deviceUses: 'deviceUses',
+  /** [OA] section 7.2: `PinOwnerSchema`, local only, never sent. */
+  pinOwner: 'pinOwner',
+  /** [OA] section 7.6: `true` once the set-a-PIN card was shown on a `nopin` browser. */
+  pinPromptSeen: 'pinPromptSeen',
+} as const;
 export const UNLOCK_SESSION_KEY = 'hr:grownup:unlock';
 /** The console's existing session key, named once. */
 export const CONSOLE_SESSION_KEY = 'hr:console:session';
 export const JOIN_HANDOFF_KEY = 'hr:shell:joinCode';
+
+
+// ---- [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS (row OA-1) ----
+
+/** [OA] Section 5.2: a grown-up use of the signed-in account. The device's own Grown-up area (`area`) is not one. */
+export const GrownUpUseSchema = z.enum(['family', 'teacher', 'school']);
+export type GrownUpUse = z.infer<typeof GrownUpUseSchema>;
+
+const FAMILY_USE_ROLES: ReadonlySet<SpaceRole> = new Set(['owner', 'caregiver']);
+const CLASS_TEACHER_ROLES: ReadonlySet<SpaceRole> = new Set(['owner', 'teacher']);
+const SCHOOL_USE_ROLES: ReadonlySet<SpaceRole> = new Set(['owner', 'admin']);
+
+/**
+ * [OA] Grown-up uses of an account, in this fixed order: family, teacher, school (section 5.2). `family` for a
+ * family owner or caregiver; `teacher` for a class owner or teacher, or a school teacher; `school` for a school
+ * owner or admin. Archived spaces count, `student` rows are ignored, and a kind this bundle does not know is
+ * skipped. `family` holds exactly when `personasFor` holds `parent`, `teacher` or `school` exactly when it holds
+ * `teacher`.
+ */
+export function usesFor(memberships: readonly { kind: SpaceKind; role: SpaceRole }[]): GrownUpUse[] {
+  let family = false;
+  let teacher = false;
+  let school = false;
+  for (const { kind, role } of memberships) {
+    if (kind === 'family') family = family || FAMILY_USE_ROLES.has(role);
+    else if (kind === 'class') teacher = teacher || CLASS_TEACHER_ROLES.has(role);
+    else if (kind === 'school') {
+      teacher = teacher || role === 'teacher';
+      school = school || SCHOOL_USE_ROLES.has(role);
+    }
+  }
+  return GrownUpUseSchema.options.filter((use) => (use === 'family' ? family : use === 'teacher' ? teacher : school));
+}
+
+const noRepeats = (values: readonly string[]): boolean => new Set(values).size === values.length;
+
+/**
+ * [OA] Section 7.1: shell store `deviceUses`, the account's uses known on this device and when they were seen.
+ * Holds no name, email, account id or space id (unknown keys are stripped).
+ */
+export const DeviceUsesSchema = z.object({
+  v: z.literal(1),
+  uses: z.array(GrownUpUseSchema).max(GrownUpUseSchema.options.length).refine(noRepeats),
+  at: Time,
+});
+export type DeviceUses = z.infer<typeof DeviceUsesSchema>;
+
+/** A PIN epoch that names a real PIN (the marker's `pinEpoch`; `0`, a PIN set before A-6, never qualifies). */
+const PinEpoch = z.number().finite().positive();
+
+/**
+ * [OA] Section 7.2: shell store `pinOwner`. `owner` is the first 16 hex digits of SHA-256 of the Clerk user id;
+ * `epoch` is the marker's `pinEpoch` it was recorded for. Local only, never sent.
+ */
+export const PinOwnerSchema = z.object({ v: z.literal(1), owner: z.string().regex(/^[0-9a-f]{16}$/), epoch: PinEpoch });
+export type PinOwner = z.infer<typeof PinOwnerSchema>;
+
+/** [OA] Section 8.5: `sessionStorage` key of the sign-in reset ticket, read once by the `gate=pin-reset` boot intent. */
+export const PIN_RESET_TICKET_KEY = 'hr:shell:pinReset';
+/** [OA] Section 8.5: the ticket written by `/account/pin-reset`; valid for `PIN_RESET_TICKET_MS` at the epoch it names. */
+export const PinResetTicketSchema = z.object({ v: z.literal(1), at: Time, epoch: PinEpoch });
+export type PinResetTicket = z.infer<typeof PinResetTicketSchema>;
+
+/** [OA] OA-D9: learner key of the profile locks (stored as `hr:profiles:locks`), outside `hr:profiles`. */
+export const PROFILE_LOCKS_KEY = 'profiles:locks';
+/** [OA] OA-D9, section 13.2: the locked learner profiles, by id, each once. Local only, never synced. */
+export const ProfileLocksSchema = z.object({ v: z.literal(1), ids: z.array(ProfileSchema.shape.id).refine(noRepeats) });
+export type ProfileLocks = z.infer<typeof ProfileLocksSchema>;
+
+/** [OA] Section 7.6: the BroadcastChannel that tells console tabs to drop their unlock. */
+export const GROWN_UP_LOCK_CHANNEL = 'hr-grownup';
+/** [OA] Section 7.6: the one message on `hr-grownup`; nothing else is ever posted. */
+export const GrownUpLockMessageSchema = z.object({ v: z.literal(1), kind: z.literal('lock') }).strict();
+export type GrownUpLockMessage = z.infer<typeof GrownUpLockMessageSchema>;
+
+/** [OA] OA-D19: the BroadcastChannel that tells other learner tabs to re-read the profile list. */
+export const PROFILES_CHANNEL = 'hr-profiles';
+/** [OA] OA-D19: the one message on `hr-profiles`; it carries no id. */
+export const ProfilesChangedMessageSchema = z.object({ v: z.literal(1), kind: z.literal('changed') }).strict();
+export type ProfilesChangedMessage = z.infer<typeof ProfilesChangedMessageSchema>;
+
+/** [OA] Section 7.6: shell store `pinPromptSeen` holds `true` and no other data. */
+export const PinPromptSeenSchema = z.literal(true);
+
+const MINUTE_MS = 60_000;
+const DAY_MS = 24 * 60 * MINUTE_MS;
+/** [OA] OA-D6: a shared device shows the chooser again after this long in the background. */
+export const CHOOSER_RESUME_MS = 30 * MINUTE_MS;
+/** [OA] OA-D16: a grown-up session ends after this long in the background; a locked active profile relocks. */
+export const GROWN_UP_BACKGROUND_MS = 5 * MINUTE_MS;
+/** [OA] OA-D7: the pause after each round of 5 misses, by strikes so far (the last step repeats). */
+export const PIN_PAUSE_STEPS_MS = [30_000, MINUTE_MS, 5 * MINUTE_MS, 15 * MINUTE_MS, 60 * MINUTE_MS] as const;
+/** [OA] OQ-23: one pause step falls back after this long with no miss. */
+export const PIN_STRIKE_DECAY_MS = DAY_MS;
+/** [OA] OQ-22: the Rescue Code's own throttle: this many wrong codes within `RESCUE_WINDOW_MS`, then `RESCUE_PAUSE_MS`. */
+export const RESCUE_MAX_ATTEMPTS = 5;
+export const RESCUE_WINDOW_MS = 15 * MINUTE_MS;
+export const RESCUE_PAUSE_MS = 15 * MINUTE_MS;
+/** [OA] Section 8.5: how long a sign-in reset ticket is accepted. */
+export const PIN_RESET_TICKET_MS = 2 * MINUTE_MS;
+/** [OA] Section 7.1: an older `deviceUses` record reads as "no uses". */
+export const DEVICE_USES_TTL_MS = 30 * DAY_MS;
+/** [OA] OA-D17: from this many learner profiles, chooser tiles are ordered by name instead of creation. */
+export const CHOOSER_NAME_ORDER_FROM = 13;
+/** [OA] OQ-24: days the Worker keeps the anonymous `telemetry_daily` counters. */
+export const TELEMETRY_DAILY_KEEP_DAYS = 400;
+
+/** [OA] Section 6.2: why the chooser opened. */
+export const WHO_TRIGGERS = ['launch', 'return', 'resume', 'join', 'manual'] as const;
+
+const wholeIn = (min: number, max: number) => z.number().int().min(min).max(max);
+
+/**
+ * [OA] Section 15: the payload of every event the amendment emits or newly emits. Strict: codes, booleans and
+ * bounded whole numbers only, never a profile id, a name or free text. The Worker enforces the same keys and values
+ * (`OA_PAYLOAD_RULES`, packages/backend) and stores every one of these events without a profile id. The
+ * `pin.reset_*` schemas are the onboarding ones, so the two lists cannot drift.
+ */
+export const OA_TELEMETRY_PAYLOADS = {
+  'profile.switch': z
+    .object({
+      via: z.enum(['chooser', 'profile', 'home']),
+      trigger: z.enum([...WHO_TRIGGERS, 'none']),
+      locked: z.boolean(),
+      minutesIn: z.enum(['0-2', '2-10', '10+']),
+    })
+    .strict(),
+  'parent.gate.opened': z
+    .object({
+      dest: z.enum(['area', 'use', 'locked_profile', 'action', 'cancel_reset']),
+      via: z.enum(['pin', 'biometric', 'session', 'open']),
+      marker: z.enum(['none', 'pin', 'nopin']),
+    })
+    .strict(),
+  'who.shown': z
+    .object({
+      trigger: z.enum(WHO_TRIGGERS),
+      learners: z.enum(['1', '2', '3-4', '5-12', '13+']),
+      grownUps: wholeIn(0, 4),
+      anyLocked: z.boolean(),
+      resetPending: z.boolean(),
+    })
+    .strict(),
+  'who.picked': z
+    .object({
+      kind: z.enum(['learner', 'locked_learner', 'grown_up', 'add', 'cancel_reset']),
+      use: z.enum(['family', 'teacher', 'school', 'area', 'signin']).optional(),
+    })
+    .strict(),
+  'pin.paused': z.object({ step: wholeIn(1, PIN_PAUSE_STEPS_MS.length) }).strict(),
+  'pin.reset_requested': ONBOARDING_TELEMETRY_PAYLOADS['pin.reset_requested'],
+  'pin.reset_completed': ONBOARDING_TELEMETRY_PAYLOADS['pin.reset_completed'],
+  'pin.biometric_changed': z.object({ on: z.boolean(), reason: z.enum(['user', 'pin_changed', 'enrolment_changed']) }).strict(),
+  'profile.lock_changed': z.object({ locked: z.boolean() }).strict(),
+  'profile.removed': z.object({ saved: z.boolean(), wasActive: z.boolean(), anyway: z.boolean() }).strict(),
+  'space.join.batch': z.object({ picked: wholeIn(0, 12), joined: wholeIn(0, 12), refused: wholeIn(0, 12) }).strict(),
+  'shell.grown_up_handoff': z.object({ via: z.enum(GROWN_UP_HANDOFF_VIAS), target: z.enum(GROWN_UP_HANDOFF_TARGETS) }).strict(),
+} as const satisfies Partial<Record<TelemetryEventName, z.AnyZodObject>>;
