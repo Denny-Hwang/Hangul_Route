@@ -86,6 +86,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.space.joinLink.title': '"Enlace para unirse" (18) against "Join link" (9): Spanish names what the link is for with "para"; an upper-case caption that wraps',
   // AMENDMENTS-LECTURE-V2 LV-5 (section 12.1): the Lecture mode card's Start link, when it opens the presenter in a new tab.
   'console.lecture.card.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the link\'s accessible description, read aloud and never drawn',
+  // AMENDMENTS-LECTURE-V2 LV-6 (section 12.4): the learner app's Lecture mode card buttons, which open the presenter in a new tab.
+  'caregiver.lecture.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the buttons\' accessible description, read aloud and never drawn (the same words as console.lecture.card.opensTab)',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

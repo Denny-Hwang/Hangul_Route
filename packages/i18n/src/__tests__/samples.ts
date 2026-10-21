@@ -875,4 +875,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.presets.length.option': [[10], [20], [30]],
   'console.lecture.presets.chooser.lessonsIn': [[1], [3], [6]],
   'console.lecture.presets.chooser.showMore': [[8], [4]],
+  // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
+  'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
 };

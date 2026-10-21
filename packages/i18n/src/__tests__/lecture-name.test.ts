@@ -19,6 +19,8 @@ const LECTURE_NAME_KEYS = [
   // LV-5: the nav item and the home card (section 3, E1 to E3).
   'console.shell.nav.lecture',
   'console.lecture.card.title',
+  // LV-6: the learner app's grown-up card (section 3, E5).
+  'caregiver.lecture.title',
 ] as const;
 
 /** The name itself, per locale (section 12, LV-D2). */
