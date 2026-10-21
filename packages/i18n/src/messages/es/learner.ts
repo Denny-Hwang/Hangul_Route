@@ -1885,4 +1885,18 @@ export const learner = {
     scopeSelf: 'Hay novedades sobre tu clase.',
     open: { cta: 'Abrir' },
   },
+  /** [OA] "¿Quién lo usa ahora?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.1, OA-4a): adultos, estudiante, Zona de adultos. */
+  who: {
+    title: '¿Quién lo usa ahora?',
+    learning: 'Aprender',
+    grownUps: 'Adultos',
+    add: 'Añadir un estudiante',
+    switch: 'Cambiar',
+    profileRow: '¿Quién lo usa ahora?',
+    switchUser: 'Cambiar usuario',
+    joinCaption: 'Elige quién se une.',
+    nopinCaption: 'Aquí un adulto crea un PIN.',
+    resetPending: (time: string) => `Un PIN de adultos nuevo se podrá crear desde: ${time}. Escribe el PIN para cancelar.`,
+    resetCancel: 'Cancelar la espera',
+  },
 } satisfies DeepPartial<Messages['learner']>;
