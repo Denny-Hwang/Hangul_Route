@@ -1673,17 +1673,26 @@ export class D1Db implements Db {
     );
   }
 
-  /** F-CURR-002 section 11.2: one upsert per cell, all in one batch, so an event lands whole or not at all. */
-  async addRollups(day: string, keys: readonly RollupKey[]): Promise<void> {
+  /** F-CURR-002 section 11.2: one upsert per cell and one for the counter, all in one batch, so an event lands whole or not at all. */
+  async addRollups(day: string, keys: readonly RollupKey[], counter?: string): Promise<number> {
     const unique = uniqueRollupKeys(keys);
-    if (unique.length === 0) return;
-    await this.d1.batch(
-      unique.map((k) =>
-        this.d1
-          .prepare('INSERT INTO learning_rollups (day, metric, dim, bucket, events) VALUES (?, ?, ?, ?, 1) ON CONFLICT(day, metric, dim, bucket) DO UPDATE SET events = events + 1')
-          .bind(day, k.metric, k.dim, k.bucket),
-      ),
+    if (unique.length === 0) return 0;
+    const statements = unique.map((k) =>
+      this.d1
+        .prepare('INSERT INTO learning_rollups (day, metric, dim, bucket, events) VALUES (?, ?, ?, ?, 1) ON CONFLICT(day, metric, dim, bucket) DO UPDATE SET events = events + 1')
+        .bind(day, k.metric, k.dim, k.bucket),
     );
+    if (counter !== undefined) {
+      statements.push(
+        this.d1
+          .prepare("INSERT INTO learning_rollups (day, metric, dim, bucket, events) VALUES (?, ?, '', '', ?) ON CONFLICT(day, metric, dim, bucket) DO UPDATE SET events = events + excluded.events")
+          .bind(day, counter, unique.length + 1),
+      );
+    }
+    await this.d1.batch(statements);
+    if (counter === undefined) return 0;
+    // A read, not a row written; a concurrent write between the two can only make the total larger.
+    return (await this.one("SELECT events FROM learning_rollups WHERE day = ? AND metric = ? AND dim = '' AND bucket = ''", [day, counter], (r) => Number(r.events))) ?? 0;
   }
   rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]> {
     const [where, params] = metric === undefined ? ['day >= ? AND day <= ?', [fromDay, toDay]] : ['day >= ? AND day <= ? AND metric = ?', [fromDay, toDay, metric]];
@@ -1694,14 +1703,6 @@ export class D1Db implements Db {
       bucket: str(r.bucket),
       events: Number(r.events),
     }));
-  }
-  async reserveRollupCells(day: string, metric: string, cells: number): Promise<number> {
-    const total = await this.one(
-      "INSERT INTO learning_rollups (day, metric, dim, bucket, events) VALUES (?, ?, '', '', ?) ON CONFLICT(day, metric, dim, bucket) DO UPDATE SET events = events + excluded.events RETURNING events",
-      [day, metric, cells],
-      (r) => Number(r.events),
-    );
-    return total ?? cells;
   }
 
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */

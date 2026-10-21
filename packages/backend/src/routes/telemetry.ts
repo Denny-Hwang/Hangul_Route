@@ -87,7 +87,7 @@ telemetryRoutes.post('/', async (c) => {
   // The name and kept payload only: the profile id never reaches the rollup. After the answer when
   // the runtime allows it (waitUntil), so a slow D1 write never delays the 201 into a client retry.
   if (learningRollupsEnabled(c.env as RollupEnv | undefined)) {
-    const rollup = rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt }, clientKey((h) => c.req.header(h)));
+    const rollup = rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt, at: event.at }, clientKey((h) => c.req.header(h)));
     const ctx = executionContextOf(c);
     if (ctx) ctx.waitUntil(rollup);
     else await rollup;

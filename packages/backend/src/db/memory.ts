@@ -1174,24 +1174,20 @@ export class MemoryDb implements Db {
     return removed;
   }
 
-  async addRollups(day: string, keys: readonly RollupKey[]): Promise<void> {
+  async addRollups(day: string, keys: readonly RollupKey[], counter?: string): Promise<number> {
     const unique = uniqueRollupKeys(keys);
-    if (unique.length === 0) return;
+    if (unique.length === 0) return 0;
     const cells = this.rollups.get(day) ?? new Map<string, RollupRow>();
-    for (const k of unique) {
+    const bump = (k: RollupKey, by: number): number => {
       const cell = rollupCellKey(k);
-      const row = cells.get(cell);
-      cells.set(cell, { day, ...k, events: (row?.events ?? 0) + 1 });
-    }
+      const events = (cells.get(cell)?.events ?? 0) + by;
+      cells.set(cell, { day, ...k, events });
+      return events;
+    };
+    for (const k of unique) bump(k, 1);
+    const total = counter === undefined ? 0 : bump({ metric: counter, dim: '', bucket: '' }, unique.length + 1);
     this.rollups.set(day, cells);
-  }
-  async reserveRollupCells(day: string, metric: string, cells: number): Promise<number> {
-    const dayCells = this.rollups.get(day) ?? new Map<string, RollupRow>();
-    const key = { metric, dim: '', bucket: '' };
-    const events = (dayCells.get(rollupCellKey(key))?.events ?? 0) + cells;
-    dayCells.set(rollupCellKey(key), { day, ...key, events });
-    this.rollups.set(day, dayCells);
-    return events;
+    return total;
   }
   async rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]> {
     const rows: RollupRow[] = [];

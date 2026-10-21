@@ -68,9 +68,16 @@ describe('migration 0014_learning_rollups.sql · production safety', () => {
       { metric: 'goal.met', dim: '', bucket: '3' },
     ]);
     expect(await after.rollupRows('2026-10-21', '2026-10-21', undefined, 10)).toEqual([{ day: '2026-10-21', metric: 'goal.met', dim: '', bucket: '3', events: 2 }]);
-    expect(await after.reserveRollupCells('2026-10-21', 'rollup.cells', 500)).toBe(500);
-    expect(await after.reserveRollupCells('2026-10-21', 'rollup.cells', 500)).toBe(1000);
-    expect(await after.rollupRows('2026-10-21', '2026-10-21', 'rollup.cells', 10)).toEqual([{ day: '2026-10-21', metric: 'rollup.cells', dim: '', bucket: '', events: 1000 }]);
+    // With a counter, the same batch adds the rows written (cells plus the counter row) and answers the total.
+    expect(await after.addRollups('2026-10-21', [{ metric: 'goal.met', dim: '', bucket: '3' }], 'rollup.cells')).toBe(2);
+    expect(await after.addRollups('2026-10-21', [{ metric: 'goal.met', dim: '', bucket: '4' }, { metric: 'goal.met', dim: '', bucket: '5' }], 'rollup.cells')).toBe(5);
+    expect(await after.addRollups('2026-10-21', [], 'rollup.cells')).toBe(0);
+    expect(await after.rollupRows('2026-10-21', '2026-10-21', 'rollup.cells', 10)).toEqual([{ day: '2026-10-21', metric: 'rollup.cells', dim: '', bucket: '', events: 5 }]);
+    expect(await after.rollupRows('2026-10-21', '2026-10-21', 'goal.met', 10)).toEqual([
+      { day: '2026-10-21', metric: 'goal.met', dim: '', bucket: '3', events: 3 },
+      { day: '2026-10-21', metric: 'goal.met', dim: '', bucket: '4', events: 1 },
+      { day: '2026-10-21', metric: 'goal.met', dim: '', bucket: '5', events: 1 },
+    ]);
     expect(await after.rollupRows('2026-10-21', '2026-10-21', undefined, 1)).toHaveLength(1);
     d1.close();
   });
@@ -79,7 +86,7 @@ describe('migration 0014_learning_rollups.sql · production safety', () => {
     const d1 = openSqliteD1({ before: FILE });
     const db = new D1Db(d1);
     await expect(db.addRollups('2026-10-21', [{ metric: 'goal.met', dim: '', bucket: '3' }])).rejects.toThrow(/learning_rollups/);
-    await expect(db.addRollups('2026-10-21', [])).resolves.toBeUndefined();
+    await expect(db.addRollups('2026-10-21', [])).resolves.toBe(0);
     d1.close();
   });
 });

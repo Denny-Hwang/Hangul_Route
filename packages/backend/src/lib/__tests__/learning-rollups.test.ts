@@ -11,17 +11,19 @@ import {
   ROLLUP_CLIENT_CELLS_PER_HOUR,
   ROLLUP_CLIENT_DAILY_EVENTS,
   ROLLUP_EVENT_NAMES,
-  ROLLUP_GLOBAL_CELLS_PER_DAY,
+  ROLLUP_GLOBAL_ROWS_PER_DAY,
   ROLLUP_ISOLATE_CELLS_PER_DAY,
   ROLLUP_MAX_CLIENT_KEYS,
+  ROLLUP_ONCE_A_DAY_MAX_AGE_MS,
   ROLLUP_READ_LIMIT,
-  ROLLUP_RESERVE_CHUNK,
+  cappedDays,
   learningRollupsEnabled,
   minutesBucket,
   rateBucket,
   readRollups,
   rollUpEvent,
   rollupBudget,
+  rollupClientKey,
   rollupKeysFor,
   suppressSmallGroups,
 } from '../learning-rollups';
@@ -182,7 +184,8 @@ describe('rows per event', () => {
     expect(rollupKeysFor('items.seeded', { countBucket: '20-49', spreadDaysBucket: '9' })).toEqual([{ metric: 'items.seeded.count', dim: '', bucket: '20-49' }]);
     // Raw counts are bucketed on the Worker: many different values land in a few cells.
     const buckets = new Set<string>();
-    for (let n = 0; n < 2000; n += 7) for (const k of rollupKeysFor('memory.daily', { ...FULL_MEMORY_DAILY, hist: [], arms: {}, newHeld: n, minutes: n % 1441 })) buckets.add(`${k.metric}|${k.bucket}`);
+    for (let n = 0; n < 2000; n += 7)
+      for (const k of rollupKeysFor('memory.daily', { ...FULL_MEMORY_DAILY, hist: [], arms: {}, newHeld: n, minutes: n % 1441 })) buckets.add(`${k.metric}|${k.bucket}`);
     expect(buckets.size).toBeLessThanOrEqual(2 + 15 + 13);
   });
 
@@ -313,12 +316,41 @@ describe('rollUpEvent', () => {
     ]);
   });
 
-  it('reserves the global budget in chunks: one counter write per chunk of cells', async () => {
+  it('counts the rows actually written in the counter: each event adds its cells plus the counter row', async () => {
     for (let i = 0; i < 30; i += 1) await rollUpEvent(() => db, memory(), `ip-${i}`);
-    // 30 events x 14 cells = 420, inside the first chunk
-    expect(await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10)).toEqual([{ day: DAY, metric: ROLLUP_BUDGET_METRIC, dim: '', bucket: '', events: ROLLUP_RESERVE_CHUNK }]);
-    for (let i = 30; i < 40; i += 1) await rollUpEvent(() => db, memory(), `ip-${i}`);
-    expect((await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10))[0]?.events).toBe(2 * ROLLUP_RESERVE_CHUNK);
+    expect(await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10)).toEqual([{ day: DAY, metric: ROLLUP_BUDGET_METRIC, dim: '', bucket: '', events: 30 * (MAX_ROLLUP_ROWS_PER_EVENT + 1) }]);
+    await rollUpEvent(() => db, goal(), 'ip-x');
+    expect((await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10))[0]?.events).toBe(30 * (MAX_ROLLUP_ROWS_PER_EVENT + 1) + 2);
+  });
+
+  it('isolate churn does not spend the day: 100 fresh isolates sending one goal.met each write 100 cells and count 200 rows', async () => {
+    let written = 0;
+    for (let i = 0; i < 100; i += 1) {
+      rollupBudget.reset(); // a cold start: a fresh isolate holds no budget state
+      written += await rollUpEvent(() => db, goal(), `ip-${i}`);
+    }
+    expect(written).toBe(100);
+    expect((await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10))[0]?.events).toBe(200);
+  });
+
+  it(`with isolates starting and stopping all day, writes reach ${ROLLUP_GLOBAL_ROWS_PER_DAY} rows and stop just past it`, async () => {
+    let rows = 0;
+    let stopped = false;
+    for (let i = 0; i < 10_000 && !stopped; i += 1) {
+      if (i % 7 === 0) rollupBudget.reset();
+      const n = await rollUpEvent(() => db, session(), `ip-${i % 5000}`);
+      if (n === 0) stopped = true;
+      rows += n === 0 ? 0 : n + 1;
+    }
+    expect(stopped).toBe(true);
+    const counter = (await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10))[0]?.events ?? 0;
+    expect(counter).toBe(rows);
+    expect(counter).toBeGreaterThanOrEqual(ROLLUP_GLOBAL_ROWS_PER_DAY);
+    expect(counter).toBeLessThan(ROLLUP_GLOBAL_ROWS_PER_DAY + 5);
+    // A fresh isolate reads the spent counter first (a read, not a write) and writes nothing.
+    rollupBudget.reset();
+    expect(await rollUpEvent(() => db, session(), 'ip-fresh')).toBe(0);
+    expect((await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10))[0]?.events).toBe(counter);
   });
 
   it('writes nothing for a name off the allowlist and never asks for the Db', async () => {
@@ -330,12 +362,15 @@ describe('rollUpEvent', () => {
 
   it('a failing write (no table yet, no binding) is swallowed: the event is never failed by its rollup', async () => {
     const broken = {
-      reserveRollupCells: () => Promise.resolve(1),
+      rollupRows: () => Promise.resolve([]),
       addRollups: () => Promise.reject(new Error('no such table: learning_rollups')),
     } as unknown as MemoryDb;
     expect(await rollUpEvent(() => broken, goal(), 'ip-1')).toBe(0);
-    const noTable = { reserveRollupCells: () => Promise.reject(new Error('no such table: learning_rollups')) } as unknown as MemoryDb;
+    const noTable = { rollupRows: () => Promise.reject(new Error('no such table: learning_rollups')) } as unknown as MemoryDb;
+    rollupBudget.reset();
     expect(await rollUpEvent(() => noTable, goal(), 'ip-2')).toBe(0);
+    // The failed counter read is not kept: once the table is there, the next event of the day writes.
+    expect(await rollUpEvent(() => db, goal(), 'ip-2b')).toBe(1);
     expect(
       await rollUpEvent(
         () => {
@@ -345,6 +380,25 @@ describe('rollUpEvent', () => {
         'ip-3',
       ),
     ).toBe(0);
+  });
+
+  it('any other error, even while working out the cells, answers 0 and never rejects', async () => {
+    const hostile = {
+      get durationSeconds(): number {
+        throw new Error('payload getter');
+      },
+    };
+    await expect(rollUpEvent(() => db, { name: 'session.end', payload: hostile, receivedAt: AT }, 'ip-1')).resolves.toBe(0);
+  });
+
+  it('a late offline flush of a once-a-day name adds no rows; a recent one and any other name still count', async () => {
+    const old = new Date(Date.parse(AT) - ROLLUP_ONCE_A_DAY_MAX_AGE_MS - 1000).toISOString();
+    const recent = new Date(Date.parse(AT) - ROLLUP_ONCE_A_DAY_MAX_AGE_MS + 60_000).toISOString();
+    expect(await rollUpEvent(() => db, { ...goal(), at: old }, 'ip-1')).toBe(0);
+    expect(await rollUpEvent(() => db, { ...memory(), at: '2026-10-18T09:00:00.000Z' }, 'ip-1')).toBe(0);
+    expect(await rollUpEvent(() => db, { ...goal(), at: recent }, 'ip-2')).toBe(1);
+    expect(await rollUpEvent(() => db, { ...session(), at: old }, 'ip-1')).toBe(4);
+    expect((await cells(db)).find((r) => r.metric === 'goal.met')?.events).toBe(1);
   });
 
   it(`caps a client at ${ROLLUP_CLIENT_CELLS_PER_HOUR} cells an hour (cells, not events); the next hour it may write again`, async () => {
@@ -359,7 +413,7 @@ describe('rollUpEvent', () => {
     expect(minutes?.events).toBe(ROLLUP_CLIENT_CELLS_PER_HOUR / 4 + 2);
   });
 
-  it(`caps each once-a-day name at ${ROLLUP_CLIENT_DAILY_EVENTS} events a client a UTC day (a class behind one address fits)`, async () => {
+  it(`caps each once-a-day name at ${ROLLUP_CLIENT_DAILY_EVENTS} events a client a UTC day (a school behind one address fits)`, async () => {
     expect(ONCE_A_DAY_ROLLUP_NAMES).toEqual(['memory.daily', 'items.seeded', 'goal.met', 'week.goal_met']);
     for (let i = 0; i < ROLLUP_CLIENT_DAILY_EVENTS; i += 1) expect(await rollUpEvent(() => db, goal(`${DAY}T0${i % 10}:00:00.000Z`), 'school')).toBe(1);
     expect(await rollUpEvent(() => db, goal(`${DAY}T20:00:00.000Z`), 'school')).toBe(0);
@@ -382,38 +436,73 @@ describe('rollUpEvent', () => {
   });
 
   it(`tracks at most ${ROLLUP_MAX_CLIENT_KEYS} client keys an hour, so memory stays bounded`, async () => {
-    for (let i = 0; i < ROLLUP_MAX_CLIENT_KEYS; i += 1) await rollUpEvent(() => db, { name: 'exp.exposure', payload: SAMPLES['exp.exposure'], receivedAt: AT }, `ip-${i}`);
-    expect(await rollUpEvent(() => db, goal(), 'ip-late')).toBe(0);
-    expect(await rollUpEvent(() => db, goal(), 'ip-0')).toBe(1);
-    expect(await rollUpEvent(() => db, goal('2026-10-21T13:00:00.000Z'), 'ip-late')).toBe(1);
+    // A Db with room to spare, so only the key limit is under test.
+    const roomy = { rollupRows: () => Promise.resolve([]), addRollups: () => Promise.resolve(0) } as unknown as MemoryDb;
+    for (let i = 0; i < ROLLUP_MAX_CLIENT_KEYS; i += 1) await rollUpEvent(() => roomy, { name: 'exp.exposure', payload: SAMPLES['exp.exposure'], receivedAt: AT }, `ip-${i}`);
+    expect(await rollUpEvent(() => roomy, goal(), 'ip-late')).toBe(0);
+    expect(await rollUpEvent(() => roomy, goal(), 'ip-0')).toBe(1);
+    expect(await rollUpEvent(() => roomy, goal('2026-10-21T13:00:00.000Z'), 'ip-late')).toBe(1);
   });
 
-  it(`stops every isolate once ${ROLLUP_GLOBAL_CELLS_PER_DAY} cells are reserved that day (the D1 guardrail of section 3.3)`, async () => {
-    // Other isolates already reserved the day's budget.
-    await db.reserveRollupCells(DAY, ROLLUP_BUDGET_METRIC, ROLLUP_GLOBAL_CELLS_PER_DAY - ROLLUP_RESERVE_CHUNK);
+  it('keys an IPv6 caller by its /64, so rotating addresses inside one network shares one budget', async () => {
+    expect(rollupClientKey('203.0.113.9')).toBe('203.0.113.9');
+    expect(rollupClientKey('2001:0db8:0001:0002:aaaa:bbbb:cccc:dddd')).toBe('2001:db8:1:2::/64');
+    expect(rollupClientKey('2001:db8:1:2::1')).toBe('2001:db8:1:2::/64');
+    expect(rollupClientKey('2001:DB8::1')).toBe('2001:db8:0:0::/64');
+    expect(rollupClientKey('::1')).toBe('0:0:0:0::/64');
+    expect(rollupClientKey('fe80::')).toBe('fe80:0:0:0::/64');
+    expect(rollupClientKey('::ffff:192.0.2.1')).toBe('::ffff:192.0.2.1');
+    expect(rollupClientKey('anonymous')).toBe('anonymous');
+    for (let i = 0; i < ROLLUP_CLIENT_DAILY_EVENTS; i += 1) expect(await rollUpEvent(() => db, goal(), `2001:db8:1:2::${(i + 1).toString(16)}`)).toBe(1);
+    expect(await rollUpEvent(() => db, goal(), '2001:db8:1:2:ffff::9')).toBe(0);
+    expect(await rollUpEvent(() => db, goal(), '2001:db8:1:3::1')).toBe(1);
+  });
+
+  it(`stops every isolate once the day's counter reaches ${ROLLUP_GLOBAL_ROWS_PER_DAY} rows (its share of the D1 guardrail of section 3.3)`, async () => {
+    // Other isolates already wrote all but 10 rows of the day's budget.
+    const filler = Array.from({ length: ROLLUP_GLOBAL_ROWS_PER_DAY - 11 }, (_, i) => ({ metric: 'filler', dim: '', bucket: String(i) }));
+    expect(await db.addRollups(DAY, filler, ROLLUP_BUDGET_METRIC)).toBe(ROLLUP_GLOBAL_ROWS_PER_DAY - 10);
     let written = 0;
     for (let i = 0; i < 200; i += 1) written += await rollUpEvent(() => db, session(), `ip-${i}`);
-    expect(written).toBe(ROLLUP_RESERVE_CHUNK);
-    expect(await rollUpEvent(() => db, session(), 'ip-x')).toBe(0);
-    // Once spent, no isolate asks the counter again that day.
-    const spy = { reserveRollupCells: () => Promise.reject(new Error('asked again')), addRollups: () => Promise.reject(new Error('wrote')) } as unknown as MemoryDb;
+    // Two sessions (5 rows each) fit; the second reaches the cap.
+    expect(written).toBe(8);
+    expect((await db.rollupRows(DAY, DAY, ROLLUP_BUDGET_METRIC, 10))[0]?.events).toBe(ROLLUP_GLOBAL_ROWS_PER_DAY);
+    // Once the cap is seen, the isolate never asks the Db again that day.
+    const spy = { rollupRows: () => Promise.reject(new Error('asked again')), addRollups: () => Promise.reject(new Error('wrote')) } as unknown as MemoryDb;
     expect(await rollUpEvent(() => spy, session(), 'ip-y')).toBe(0);
     expect(await rollUpEvent(() => db, session('2026-10-22T00:00:00.000Z'), 'ip-x')).toBe(4);
+    expect(cappedDays(await db.rollupRows(DAY, '2026-10-22', ROLLUP_BUDGET_METRIC, 10))).toEqual([DAY]);
   });
 
-  it('a reservation answered after the day turned is not counted for the new day', async () => {
-    let release: (n: number) => void = () => undefined;
+  it('an event of a day the isolate has left never reads or writes for that day, and the new day reads its counter once', async () => {
+    let release: (rows: RollupRow[]) => void = () => undefined;
+    let reads = 0;
     const slow = {
-      reserveRollupCells: () => new Promise<number>((r) => (release = r)),
-      addRollups: () => Promise.resolve(),
+      rollupRows: () => {
+        reads += 1;
+        return new Promise<RollupRow[]>((r) => (release = r));
+      },
+      addRollups: () => Promise.reject(new Error('wrote for a day the isolate left')),
     } as unknown as MemoryDb;
-    const first = rollUpEvent(() => slow, goal(), 'ip-1');
+    const stale = rollUpEvent(() => slow, goal(), 'ip-1');
     await Promise.resolve();
-    expect(await rollUpEvent(() => db, goal('2026-10-22T00:00:00.000Z'), 'ip-1')).toBe(1);
-    release(ROLLUP_RESERVE_CHUNK);
-    // The old day's answer is ignored (the new day already reserved its own chunk), and nothing waits forever.
-    expect(await first).toBe(1);
-    expect((await db.rollupRows('2026-10-22', '2026-10-22', ROLLUP_BUDGET_METRIC, 10))[0]?.events).toBe(ROLLUP_RESERVE_CHUNK);
+    expect(reads).toBe(1);
+    const counted = { reads: 0 };
+    const next = {
+      rollupRows: (...args: Parameters<MemoryDb['rollupRows']>) => {
+        counted.reads += 1;
+        return db.rollupRows(...args);
+      },
+      addRollups: (...args: Parameters<MemoryDb['addRollups']>) => db.addRollups(...args),
+    } as unknown as MemoryDb;
+    const a = rollUpEvent(() => next, goal('2026-10-22T00:00:00.000Z'), 'ip-1');
+    const b = rollUpEvent(() => next, goal('2026-10-22T00:00:01.000Z'), 'ip-2');
+    release([]);
+    expect(await Promise.all([stale, a, b])).toEqual([0, 1, 1]);
+    expect(reads).toBe(1);
+    expect(counted.reads).toBe(1);
+    expect(await cells(db)).toEqual([]);
+    expect((await db.rollupRows('2026-10-22', '2026-10-22', ROLLUP_BUDGET_METRIC, 10))[0]?.events).toBe(4);
   });
 });
 
@@ -493,7 +582,9 @@ describe('readRollups: small groups are hidden', () => {
   });
 
   it(`refuses a read of more than ${ROLLUP_READ_LIMIT} rows instead of suppressing a partial day`, async () => {
-    const wide = { rollupRows: (_f: string, _t: string, _m: string | undefined, limit: number) => Promise.resolve(Array.from({ length: limit }, () => ({ day: DAY, metric: 'm', dim: '', bucket: '', events: 30 }))) } as unknown as MemoryDb;
+    const wide = {
+      rollupRows: (_f: string, _t: string, _m: string | undefined, limit: number) => Promise.resolve(Array.from({ length: limit }, () => ({ day: DAY, metric: 'm', dim: '', bucket: '', events: 30 }))),
+    } as unknown as MemoryDb;
     await expect(readRollups(wide, { fromDay: DAY, toDay: DAY })).rejects.toThrow(/too many rollup rows/);
   });
 });

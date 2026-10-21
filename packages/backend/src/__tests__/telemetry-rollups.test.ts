@@ -81,8 +81,8 @@ describe('POST /api/telemetry · learning_rollups', () => {
       { day: DAY, metric: 'session.end.questLeft', dim: '', bucket: '1', events: 1 },
       { day: DAY, metric: 'session.end.questLeft', dim: 'order-it', bucket: '1', events: 1 },
     ]);
-    // The only other row is the budget counter: codes and a count.
-    expect((await d1.prepare('SELECT * FROM learning_rollups WHERE metric = ?').bind(ROLLUP_BUDGET_METRIC).all()).results).toEqual([{ day: DAY, metric: ROLLUP_BUDGET_METRIC, dim: '', bucket: '', events: 500 }]);
+    // The only other row is the budget counter, codes and a count: the rows written (7 + 1 and 4 + 1).
+    expect((await d1.prepare('SELECT * FROM learning_rollups WHERE metric = ?').bind(ROLLUP_BUDGET_METRIC).all()).results).toEqual([{ day: DAY, metric: ROLLUP_BUDGET_METRIC, dim: '', bucket: '', events: 13 }]);
     const columns = (await d1.prepare("SELECT name FROM pragma_table_info('learning_rollups') ORDER BY cid").all<{ name: string }>()).results.map((r) => r.name);
     expect(columns).toEqual(['day', 'metric', 'dim', 'bucket', 'events']);
     const values = JSON.stringify(rows);
@@ -100,14 +100,18 @@ describe('POST /api/telemetry · learning_rollups', () => {
     ]);
   });
 
-  it('keys by the UTC day of ingest, not the client clock: an offline-queued event counts on the day it arrives', async () => {
+  it('keys by the UTC day of ingest, not the client clock; a late offline flush of a once-a-day name adds no rows', async () => {
+    // Queued two days ago: a late flush, so one profile is not counted twice on the day it returns.
     expect(await post({ name: 'goal.met', profileId: PROFILE, payload: { points: 3, target: 3 }, at: '2026-10-19T08:00:00.000Z' })).toBe(201);
+    // A many-a-day name from the same queue still counts, on the day it arrives.
+    expect(await post({ name: 'review.complete', profileId: PROFILE, payload: { kind: 'daily', stars: 3 }, at: '2026-10-19T08:05:00.000Z' })).toBe(201);
     vi.setSystemTime(new Date('2026-10-22T00:00:01.000Z'));
     expect(await post({ name: 'goal.met', profileId: PROFILE, payload: { points: 3, target: 3 }, at: '2026-10-21T23:59:00.000Z' })).toBe(201);
-    expect((await table()).map((r) => [r.day, r.events])).toEqual([
-      [DAY, 1],
-      ['2026-10-22', 1],
+    expect((await table()).map((r) => [r.day, r.metric, r.events])).toEqual([
+      [DAY, 'review.complete.stars', 1],
+      ['2026-10-22', 'goal.met', 1],
     ]);
+    expect(store.events.map((e) => e.name)).toEqual(['goal.met', 'review.complete', 'goal.met']);
   });
 
   it('suppresses small groups when read: 19 profile-days are hidden, 20 are shown', async () => {
