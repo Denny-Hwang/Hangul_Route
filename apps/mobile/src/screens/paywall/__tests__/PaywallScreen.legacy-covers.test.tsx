@@ -54,7 +54,7 @@ function seed(active: Profile, locale: UiLocale): void {
   useAccountStore.setState({
     parentPinHash: 'pin-hash',
     subscription: ACTIVE,
-    subscriptionCovers: { v: 1, ids: FIVE.slice(0, 4).map((p) => p.id), at: '2026-10-21T00:00:00.000Z' },
+    subscriptionCovers: { v: 1, ids: FIVE.slice(0, 4).map((p) => p.id), added: [], at: '2026-10-21T00:00:00.000Z' },
     hydrated: true,
   });
   useUiStore.setState({ parentGateOpenedAt: null });
