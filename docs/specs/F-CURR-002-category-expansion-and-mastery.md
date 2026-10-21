@@ -322,6 +322,8 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 | `streakBest` | the best run ever | max |
 | `stamps` | `Record<stampId, ISO>` | earliest |
 | `memSeededAt` | ISO | earliest |
+| `steadyWeeks` | `Record<localWeekStart, ISO>`: the local weeks whose learned days reached the weekly goal in force that week, keyed by the local date the week starts, written once when it is reached (7.4; `design/wireframes/home/goal-ring-weekly-dots.md`). The steady-weeks headline reads only its key count, so it never drops when `dayLog` passes 70 days or the goal changes | union of keys; earliest per key |
+| `stageRetroShownAt` | ISO: when the one retroactive stage summary (step 7 below) was shown | earliest |
 
 - `SessionLog` gains an optional `localDay`, written when the session is logged, so a later local-day count never depends on today's time zone.
 - `reviews[]` starts to receive `daily`, `feedback` and `stage-certificate` entries; the schema already exists. `ReviewKindSchema` gains `cell-check` and `warmup`. Because `ReviewKindSchema` is a strict enum inside `SnapshotPutSchema` and `BackupFileSchema`, row CM-3b first makes the `reviews` array lenient per entry on every read path (unknown kinds are dropped per entry, as `lenientArray` does in `sync.ts`) and deploys that to the Worker. Every row that writes a new kind is marked W→A.
