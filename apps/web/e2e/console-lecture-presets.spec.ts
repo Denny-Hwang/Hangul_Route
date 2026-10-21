@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { decodeDeck, type LectureDeck } from '@hangul-route/content-schema';
+import { touchTarget } from '@hangul-route/design-system/tokens';
 import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { API, NOW, SESSION_KEY } from './report-fixtures';
 
@@ -80,7 +81,10 @@ const ON_THE_ROUTE = {
   },
 };
 
-async function mock(page: Page, { kind = 'class', plans = [] as unknown[], now = NOW, learners = [] as unknown[] }: { kind?: 'class' | 'family'; plans?: unknown[]; now?: string; learners?: unknown[] } = {}): Promise<{ unexpected: string[] }> {
+async function mock(
+  page: Page,
+  { kind = 'class', plans = [] as unknown[], now = NOW, learners = [] as unknown[], role }: { kind?: 'class' | 'family'; plans?: unknown[]; now?: string; learners?: unknown[]; role?: string } = {},
+): Promise<{ unexpected: string[] }> {
   await page.clock.setFixedTime(new Date(now));
   await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
   const unexpected: string[] = [];
@@ -91,7 +95,7 @@ async function mock(page: Page, { kind = 'class', plans = [] as unknown[], now =
     const url = new URL(request.url());
     if (/\/roster$/.test(url.pathname)) return json(route, 200, { space: s, learners, joinCode: 'SUN234', joinCodeExpiresAt: '2099-01-01T00:00:00.000Z' });
     if (/\/plans$/.test(url.pathname)) return json(route, 200, { plans });
-    if (url.pathname === '/api/spaces') return json(route, 200, { spaces: [{ space: s, role: kind === 'family' ? 'owner' : 'teacher', counts: { learners: 0, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }] });
+    if (url.pathname === '/api/spaces') return json(route, 200, { spaces: [{ space: s, role: role ?? (kind === 'family' ? 'owner' : 'teacher'), counts: { learners: 0, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }] });
     if (url.pathname === '/api/entitlements') return json(route, 200, { entitlements: [] });
     unexpected.push(`${request.method()} ${url.pathname}`);
     return json(route, 404, null);
@@ -379,6 +383,26 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
     await expect(page.getByTestId('lecture-preset-card-word-review')).toHaveCount(0);
     expect(unexpected).toEqual([]);
   });
+
+  for (const width of [320, 1180]) {
+    test(`at ${width}: a school admin opening the page by URL reads the no-space line and Start opens /present alone (section 16)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 320 ? 640 : 820 });
+      const { unexpected } = await mock(page, { role: 'admin' });
+      await page.goto(lecturePath());
+      await expect(page.getByTestId('lecture-cannot-compose')).toContainText(l.cannotCompose);
+      const start = page.getByTestId('lecture-present-alone');
+      await expect(start).toHaveText(l.card.cta);
+      await expect(start).toHaveAttribute('href', `${APP_URL}/present`);
+      await expect(start).toHaveAttribute('target', '_blank');
+      await expect(start).toHaveAttribute('rel', 'noopener noreferrer');
+      expect((await start.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(touchTarget.min);
+      await expect(page.locator('li[data-testid^="lecture-preset-card-"]')).toHaveCount(0);
+      await expect(page.getByTestId('open-presenter')).toHaveCount(0);
+      await noSidewaysScroll(page);
+      await shot(page, `lecture-cannot-compose-${width}`);
+      expect(unexpected).toEqual([]);
+    });
+  }
 });
 
 /**
