@@ -6,7 +6,7 @@ export {};
  * from its own chunk (row CM-8, `content/stories.ts`); a test reads the shipped content as if every
  * chunk had loaded, from the first line of the test file (some build their fixtures at module
  * level). The real loaders (the manifests' literal `import()`s) run here;
- * `logic/lessons/__tests__/lesson-store.test.ts` and `logic/story/__tests__/story-store.test.ts`
+ * `logic/lessons/__tests__/lesson-store.test.ts` and `logic/story/__tests__/story-chunk-store.test.ts`
  * cover the lazy paths themselves.
  */
 const [{ lessonContent }, { storyContent }] = await Promise.all([import('../content/lessons'), import('../content/stories')]);

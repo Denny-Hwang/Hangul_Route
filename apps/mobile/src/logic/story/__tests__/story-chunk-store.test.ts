@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Story } from '@hangul-route/content-schema';
 import {
   SHELF_DEFAULTS,
   STORY_BODY_FIELDS,
   StoryChunkMismatch,
+  StoryChunkTimeout,
   createStoryStore,
+  isStoryNewBuildError,
   shelfLevelOf,
   splitStory,
   storiesOverStore,
@@ -215,5 +217,47 @@ describe('splitStory and shelfLevelOf', () => {
     expect(shelfLevelOf([{ level: 'read', scenes: 3 }, { level: 'listen', scenes: 4 }])).toBe('listen');
     expect(shelfLevelOf([{ level: 'read-along', scenes: 3 }, { level: 'read', scenes: 4 }])).toBe('read-along');
     expect(shelfLevelOf([])).toBeUndefined();
+  });
+});
+
+describe('a hung load, and which failures only a fresh page mends', () => {
+  it('a load that has not settled in time fails with StoryChunkTimeout, and a later ensure tries again', async () => {
+    vi.useFakeTimers();
+    try {
+      const calls: string[] = [];
+      let answer: ((chunk: StoryBodyChunk) => void) | undefined;
+      const store = createStoryStore({ entries }, (id) => {
+        calls.push(id);
+        return new Promise<StoryBodyChunk>((resolve) => {
+          answer = resolve;
+        });
+      }, { timeoutMs: 1_000 });
+      const first = store.ensureStories([story.id]);
+      const failed = expect(first).rejects.toBeInstanceOf(StoryChunkTimeout);
+      await vi.advanceTimersByTimeAsync(1_000);
+      await failed;
+      expect(store.isStoryReady(story.id)).toBe(false);
+      const second = store.ensureStories([story.id]);
+      expect(calls).toEqual([story.id, story.id]);
+      answer?.({ CHUNK_HASH: 'h-hangul', STORY_BODY: body });
+      await second;
+      expect(store.isStoryReady(story.id)).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a load in time is not cut off by the timer', async () => {
+    const store = createStoryStore({ entries }, () => Promise.resolve({ CHUNK_HASH: 'h-hangul', STORY_BODY: body }), { timeoutMs: 1_000 });
+    await store.ensureStories([story.id]);
+    expect(store.isStoryReady(story.id)).toBe(true);
+  });
+
+  it('another build’s chunk, or the app page served in its place, is a newer build; a network failure or a timeout is not', () => {
+    expect(isStoryNewBuildError(new StoryChunkMismatch(story.id, 'a', 'b'))).toBe(true);
+    expect(isStoryNewBuildError(new Error('Requiring unknown module "812".'))).toBe(true);
+    expect(isStoryNewBuildError(new Error('offline'))).toBe(false);
+    expect(isStoryNewBuildError(new StoryChunkTimeout(story.id, 15_000))).toBe(false);
+    expect(isStoryNewBuildError('Requiring unknown module')).toBe(false);
   });
 });

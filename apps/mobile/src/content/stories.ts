@@ -14,7 +14,12 @@ import { storyQuestSkeleton } from './story-skeleton';
 
 const extras = generated as unknown as { STORY_INLINE_BODIES?: Readonly<Record<string, StoryBody>>; STORY_FIXTURE_IDS?: readonly string[] };
 
-export const storyContent = createStoryStore({ entries: STORY_SHELF, inline: extras.STORY_INLINE_BODIES ?? {} }, loadStoryBody);
+export const storyContent = createStoryStore(
+  { entries: STORY_SHELF, inline: extras.STORY_INLINE_BODIES ?? {} },
+  loadStoryBody,
+  // A chunk comes from the precache in a frame or two; a request that hangs fails into the retry path (as the lessons').
+  { timeoutMs: 15_000 },
+);
 
 /** Every bundled story; a story's body fields read its chunk, so they hold placeholders until `storyContent` has it. */
 export const storiesAll: Story[] = storiesOverStore(STORY_SHELF, storyContent);

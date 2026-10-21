@@ -96,6 +96,22 @@ export class StoryChunkMismatch extends Error {
   }
 }
 
+/** A chunk that did not arrive in time (a hung request: flaky Wi-Fi, a captive portal); a later ensure tries again. */
+export class StoryChunkTimeout extends Error {
+  constructor(
+    readonly storyId: string,
+    readonly ms: number,
+  ) {
+    super(`story chunk ${storyId} did not load within ${ms} ms`);
+    this.name = 'StoryChunkTimeout';
+  }
+}
+
+export interface StoryStoreOptions {
+  /** A load that has not settled after this many ms fails with `StoryChunkTimeout`; none when omitted. */
+  timeoutMs?: number;
+}
+
 /**
  * True for a story chunk failure that only a fresh page can mend (the twin of `isNewBuildError` of the lesson
  * store): another build's chunk under this name, or the app's HTML page served in its place (Metro then finds
@@ -124,7 +140,8 @@ export interface StoryStore {
   version: () => number;
 }
 
-export function createStoryStore(manifest: StoryManifest, load: StoryLoader): StoryStore {
+export function createStoryStore(manifest: StoryManifest, load: StoryLoader, options: StoryStoreOptions = {}): StoryStore {
+  const { timeoutMs } = options;
   const entries = new Map(manifest.entries.map((e) => [e.id, e]));
   const bodies = new Map<string, StoryBody>(Object.entries(manifest.inline ?? {}));
   const loads = new Map<string, Promise<void>>();
@@ -136,13 +153,31 @@ export function createStoryStore(manifest: StoryManifest, load: StoryLoader): St
     for (const l of [...listeners]) l();
   };
 
+  const withinTime = <T>(storyId: string, started: Promise<T>): Promise<T> => {
+    if (timeoutMs === undefined) return started;
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new StoryChunkTimeout(storyId, timeoutMs)), timeoutMs);
+      started.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error: unknown) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
+  };
+
   const ensureStory = (storyId: string): Promise<void> => {
     const entry = entries.get(storyId);
     if (entry === undefined || bodies.has(storyId)) return Promise.resolve();
     const pending = loads.get(storyId);
     if (pending !== undefined) return pending;
-    const started = load(storyId);
-    if (started === undefined) return Promise.reject(new Error(`no loader for the story chunk of ${storyId}`));
+    const loading = load(storyId);
+    if (loading === undefined) return Promise.reject(new Error(`no loader for the story chunk of ${storyId}`));
+    const started = withinTime(storyId, loading);
     const promise = started.then(
       (mod) => {
         loads.delete(storyId);

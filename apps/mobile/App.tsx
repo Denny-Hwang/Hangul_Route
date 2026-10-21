@@ -24,6 +24,7 @@ import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 import { lessonContent } from './src/content/lessons';
+import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
 import { usePwaStore } from './src/store/pwa-store';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
@@ -38,6 +39,11 @@ const queryClient = new QueryClient({
 
 /** The root navigator's container, for the web history bridge (AMENDMENTS-DISPLAY-NAV section 7.2). */
 const navigation = createNavigationContainerRef<RootStackParamList>();
+
+/** Every lesson and story chunk (F-CURR-002 §10, rows CM-5 and CM-8); a failed one is left for the screen that needs it. */
+const prefetchContent = async (): Promise<void> => {
+  await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll()]);
+};
 
 export default function App(): React.ReactElement {
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
@@ -95,8 +101,9 @@ export default function App(): React.ReactElement {
       .then(async () => {
         if (!live) return;
         setReady(true);
-        // Then every lesson chunk, in the background on the web (F-CURR-002 §10), so the lessons stay when the network goes.
-        stopPrefetch = prefetchWhenIdle(() => lessonContent.ensureAll());
+        // Then every lesson and story chunk, in the background on the web (F-CURR-002 §10), so the lessons and the
+        // stories stay when the network goes.
+        stopPrefetch = prefetchWhenIdle(prefetchContent);
         // A curriculum's horizon moves with the calendar, network or not (F-PLAN-002 section 3.6).
         await rederiveAllLocal().catch(() => undefined);
         void useSyncStore.getState().syncAll();
@@ -112,7 +119,7 @@ export default function App(): React.ReactElement {
         // Lesson chunks or titles that failed offline load now (F-CURR-002 §10); loaded ones are not asked again.
         lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())).catch(() => undefined);
         stopPrefetch();
-        stopPrefetch = prefetchWhenIdle(() => lessonContent.ensureAll());
+        stopPrefetch = prefetchWhenIdle(prefetchContent);
       }
     });
     return () => {
