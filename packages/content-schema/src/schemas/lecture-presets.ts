@@ -379,12 +379,14 @@ function storyTime(minutes: PresetMinutes, ctx: PresetContext): Built {
   };
 }
 
-/** W: one v2 `word-review` block over recent quests and words, else the warm-up. */
+/** W: one v2 `word-review` block over recent quests and words, else the warm-up (no quest and fewer than 4 words included). */
 function wordReview(minutes: PresetMinutes, ctx: PresetContext): Built {
   const known = new Set(ctx.catalog.quests.map((q) => q.id));
   const questIds = questIdsOf(ctx.recentWords?.questIds).filter((id) => known.has(id)).slice(0, WORD_REVIEW_MAX_QUESTS);
   const vocabIds = unique((ctx.recentWords?.vocabIds ?? []).filter((id) => VocabIdSchema.max(48).safeParse(id).success)).slice(0, WORD_REVIEW_MAX_WORDS);
   if (questIds.length + vocabIds.length === 0) return warmUp(ctx, 'warm-up');
+  // Section 4.2 W: fewer than 4 words and no quest is too few for a review.
+  if (questIds.length === 0 && vocabIds.length < 4) return warmUp(ctx, 'warm-up');
   return {
     preset: 'word-review',
     blocks: [{ kind: 'word-review', questIds, vocabIds, rounds: minutes === 10 ? 5 : 10 }],
