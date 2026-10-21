@@ -251,6 +251,38 @@ describe('useConfirm', () => {
     mounted = null;
     await expect(second).resolves.toBe(false);
   });
+
+  it('two questions in one batch: the first answers no, the second gets the answer (follow-up DN-6, #737)', async () => {
+    const h = mount();
+    let first: Promise<boolean> | null = null;
+    let second: Promise<boolean> | null = null;
+    act(() => {
+      first = h.api().confirm({ title: 'A?', confirmLabel: 'Yes A' });
+      second = h.api().confirm({ title: 'B?', confirmLabel: 'Yes B' });
+    });
+    await expect(first).resolves.toBe(false);
+    expect(textOf(h.root().findAll((n) => n.type === 'h2')[0]!)).toBe('B?');
+    act(() => byTestId(h.root(), 'confirm-sheet-confirm')[0]!.props.onClick());
+    await expect(second).resolves.toBe(true);
+    expect(byTestId(h.root(), 'confirm-sheet')).toHaveLength(0);
+  });
+
+  it('an answer then a new question in one batch: the new one stays open', async () => {
+    const h = mount();
+    let first: Promise<boolean> | null = null;
+    let second: Promise<boolean> | null = null;
+    act(() => {
+      first = h.api().confirm({ title: 'A?', confirmLabel: 'Yes A' });
+    });
+    act(() => {
+      byTestId(h.root(), 'confirm-sheet-confirm')[0]!.props.onClick();
+      second = h.api().confirm({ title: 'B?', confirmLabel: 'Yes B' });
+    });
+    await expect(first).resolves.toBe(true);
+    expect(textOf(h.root().findAll((n) => n.type === 'h2')[0]!)).toBe('B?');
+    act(() => byTestId(h.root(), 'confirm-sheet-cancel')[0]!.props.onClick());
+    await expect(second).resolves.toBe(false);
+  });
 });
 
 describe('the 13 confirm sites (AMENDMENTS-DISPLAY-NAV section 8)', () => {
