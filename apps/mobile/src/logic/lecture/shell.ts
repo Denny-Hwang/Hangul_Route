@@ -100,7 +100,8 @@ export function slideLocale(input: { deck: LectureDeck | null; device: UiLocale;
 
 /**
  * Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9),
- * the story slides (PR 11), the reading slides (AMENDMENTS-LECTURE-V2 LV-S1) and the sentence builds (LV-S3).
+ * the story slides (PR 11), the reading slides (AMENDMENTS-LECTURE-V2 LV-S1), the sentence builds (LV-S3) and
+ * the write-together slides (LV-S4).
  */
 export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
   'title',
@@ -118,6 +119,7 @@ export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
   'read-along',
   'realia',
   'sentence-build',
+  'write-together',
 ]);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
@@ -321,11 +323,13 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
  * even when the question stays the same; at the whole build, where no question shows, by the
  * sentence with its romanization and meaning, as that build's move said it. Never by a tile still
  * in the bank: each move says its tile and the whole build the sentence (`buildLive`). With no
- * `reveal`, a build is named by its first question.
+ * `reveal`, a build is named by its first question. A write-together slide (LV-S4) is named by what its
+ * first build shows: a type round by its prompt, a trace round by its word, a frame by its line
+ * (`names.frame`), the name round by its own (`names.ownName`); never by an answer.
  */
 export function slideDetail(
   slide: Slide,
-  names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string; build?: string; particle?: string },
+  names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string; build?: string; particle?: string; frame?: string; ownName?: string },
   reveal?: number,
 ): string {
   switch (slide.kind) {
@@ -336,6 +340,18 @@ export function slideDetail(
       const question = (ask === 'particle' ? (names?.particle ?? names?.build) : names?.build) ?? '';
       return [...buildLineWords(slide, reveal), question].filter((w) => w !== '').join(', ');
     }
+    case 'write-together':
+      switch (slide.variant) {
+        case 'type':
+          return slide.prompt;
+        case 'trace':
+          return `${slide.word.ko}, ${slide.word.romanization}`;
+        case 'frame':
+          return names?.frame ?? '';
+        case 'own-name':
+          return names?.ownName ?? '';
+      }
+      return '';
     case 'quiz':
       switch (slide.prompt.ask) {
         case 'listen':

@@ -119,6 +119,16 @@ export const REALIA_ASK_MIN = 240;
  */
 export const REALIA_GRID_MIN = 480;
 
+/**
+ * The write-together slides (LV-S4; design/screens/presenter/lecture-v2.md "Constants", V10-V12), in stage units.
+ * `WRITE_ICON`: the pencil beside "Write on paper or on your own device" (`.write-head .where svg`).
+ */
+export const WRITE_ICON = 40;
+/** The trace ghost's outline (`--trace-stroke`, V11): reads from the back of a room at `presenter.size.glyph` and keeps the counters of ㅁ, ㅇ and ㅎ open. */
+export const TRACE_STROKE = 6;
+/** One block of the name round's sound table (`--cell-w`): 13 across the 1184-unit content area. */
+export const SOUND_CELL_W = 84;
+
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;
 

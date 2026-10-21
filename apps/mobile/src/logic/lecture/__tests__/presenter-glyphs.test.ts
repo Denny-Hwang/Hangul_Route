@@ -161,6 +161,28 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
     expect(builds.some((s) => s.bank.some((p) => 'distractor' in p))).toBe(true);
   });
 
+  it('the walk reaches every write-together slide (LV-S4): type targets, trace words, frames, banks, examples and the sound table', () => {
+    const episodes = blocks.filter((b) => b.kind === 'episode');
+    const all = [...expandDeck(deck(episodes.slice(0, 30)), lectureBundle('en'), { canPlayKorean: true }).slides, ...expandDeck(deck(episodes.slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
+    const writes = all.filter((s): s is Extract<Slide, { kind: 'write-together' }> => s.kind === 'write-together');
+    expect(new Set(writes.map((s) => s.variant))).toEqual(new Set(['type', 'trace', 'frame', 'own-name']));
+    const drawn = new Set(writes.flatMap((s) => strings(s)));
+    for (const slide of writes) {
+      const pieces =
+        slide.variant === 'type'
+          ? [slide.answer.ko]
+          : slide.variant === 'trace'
+            ? [slide.word.ko]
+            : slide.variant === 'frame'
+              ? [...slide.frame.pieces, ...slide.banks.flat().map((w) => w.ko), slide.example.ko]
+              : [...slide.frame.pieces, ...slide.groups.flat().map((b) => b.ko)];
+      for (const piece of pieces.filter((p) => p !== '')) expect(drawn.has(piece), `${slide.key} ${piece}`).toBe(true);
+    }
+    // The name round's table: 119 blocks in ten groups, every one drawn.
+    const name = writes.find((s) => s.variant === 'own-name');
+    expect(name?.variant === 'own-name' && name.groups.flat()).toHaveLength(119);
+  });
+
   it('the deck covers every listed story', () => {
     expect(blocks.filter((b) => b.kind === 'story').length).toBeGreaterThan(0);
   });

@@ -2,7 +2,19 @@ import { SLOT_MARKER } from '@hangul-route/content-schema';
 import type { FallbackReason, PlayResult } from '../audio/prompt-state';
 import type { PromptKind } from '../audio/rate';
 import type { SpokenForm } from '../audio/spoken';
-import { joinSpoken, partsShown, type BuildName, type NarrationPiece, type QuizPrompt, type RealiaSheetView, type SequenceStep } from './build-steps';
+import type { RomanizationMode } from '@hangul-route/content-schema';
+import {
+  joinSpoken,
+  partsShown,
+  soundTablePages,
+  type BuildName,
+  type FrameText,
+  type NarrationPiece,
+  type QuizPrompt,
+  type RealiaSheetView,
+  type SequenceStep,
+  type SheetText,
+} from './build-steps';
 import type { Slide } from './deck-builder';
 import { SHEET_CARDS_W, SHEET_MAX_W, SHEET_ROOMY_LINES, SHEET_W } from './stage-constants';
 
@@ -269,6 +281,40 @@ export function buildMove(slide: Of<'sentence-build'>, reveal: number): { placed
   return { placed: name === 'tile' && tile.particle !== undefined ? tile.particle.stem : tileWords(tile.ko, tile.romanization) };
 }
 
+// --- write together (AMENDMENTS-LECTURE-V2 sections 5.2 and 5.3, LV-S4) ------------------------------
+
+export interface WriteView {
+  /** The prompt's parts (a type prompt and its picture, a trace ghost, a frame): `false` on the name round's table builds, which replace its frame. */
+  frame: boolean;
+  /** A frame's word banks. */
+  bank: boolean;
+  /** The answer: a type target, a trace word's romanization and meaning, a frame's "For example". */
+  answer: boolean;
+  /** Romanization on what shows: with `romanization: 'tap'` only from the answer build; the name round's table always has it. */
+  rom: boolean;
+  /** The name round's sound table page on screen (`soundTablePages`), or `null` before it. */
+  page: number | null;
+}
+
+/**
+ * Write together slide (slide-write-together.md, V10-V12): a type or trace prompt, then the answer; a
+ * frame, its banks, then the example; the name round's frame, then each page of its sound table in its
+ * place. The answer comes only on the teacher's click (section 5.3), and with `romanization: 'tap'` its
+ * romanization with it, so the room writes from the Hangul and the prompt.
+ */
+export function writeView(slide: Of<'write-together'>, reveal: number, romanization: RomanizationMode): WriteView {
+  const shown = slide.builds.slice(0, Math.max(0, reveal + 1));
+  const answer = shown.includes(slide.variant === 'frame' ? 'example' : 'answer');
+  const tables = shown.filter((b) => b === 'table').length;
+  const rom = slide.variant === 'own-name' || (slide.variant === 'frame' ? romanization === 'always' || answer : answer);
+  return { frame: tables === 0, bank: shown.includes('bank'), answer, rom, page: tables === 0 ? null : tables - 1 };
+}
+
+/** The name round's sound table page as the stage draws it: its groups, each a row of blocks. */
+export function soundTablePage(groups: readonly (readonly SheetText[])[], page: number): ReadonlyArray<readonly SheetText[]> {
+  return soundTablePages(groups)[page] ?? [];
+}
+
 /**
  * The words on a sentence-build slide's line at `reveal`, in sentence order: each placed tile as it
  * reads aloud (Korean, romanization), a particle tile still choosing by its stem. What the stage
@@ -389,7 +435,7 @@ function frameRead(text: string): string {
  * gap and between two particles (a frame `___eul/reul meogeoyo` says eul, reul meogeoyo), and the same
  * for its romanization.
  */
-export function frameSpoken(frame: Of<'pattern'>['frame']): SpokenForm {
+export function frameSpoken(frame: FrameText): SpokenForm {
   return { text: frameRead(frame.pieces.join(SLOT_MARKER)), romanization: frameRead(frame.romanization) };
 }
 
@@ -409,7 +455,8 @@ export function frameSpoken(frame: Of<'pattern'>['frame']): SpokenForm {
  * by line and its caption's Korean chips and, once they show, its key words (at the word rate).
  * The question slides (LV-S2): a listen question its prompt (a letter or syllable round at the
  * sound rate), a reply question the other speaker's line, a realia question its key word or, with
- * none, its sheet (`quizSound`). A sentence build (LV-S3) its sentence, at every build.
+ * none, its sheet (`quizSound`). A sentence build (LV-S3) its sentence, at every build. A
+ * write-together slide (LV-S4) the Korean it shows, never its answer early (`writeSound`).
  */
 export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
   if (slide === undefined) return undefined;
@@ -454,11 +501,38 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
     case 'sentence-build':
       // The whole sentence at every build, as the learner's Sentence Builder plays it (Hear it) before it is built.
       return { spoken: slide.sentence.spoken, kind: 'sentence' };
+    case 'write-together':
+      return writeSound(slide, reveal ?? slide.builds.length - 1);
     case 'title':
     case 'story':
     case 'activity':
     case 'end':
       return undefined;
+  }
+}
+
+/**
+ * A write-together slide's sound (LV-S4): the Korean on screen, never ahead of it. A type prompt has
+ * none until its answer (the learner's Type Hangul plays nothing before the learner types either),
+ * then the target; a trace its word, at the word rate, as the learner's Trace a Word plays its block;
+ * a frame its own Korean with a pause at each gap (`frameSpoken`), then its banks' words, then the
+ * example; the name round its frame, then the blocks of the table page on screen, at the word rate.
+ */
+function writeSound(slide: Of<'write-together'>, reveal: number): SlideSound | undefined {
+  const view = writeView(slide, reveal, 'always');
+  const rate = (ko: string): PromptKind => (/\s/.test(ko.trim()) ? 'sentence' : 'word');
+  switch (slide.variant) {
+    case 'type':
+      return view.answer ? { spoken: slide.answer.spoken, kind: rate(slide.answer.ko) } : undefined;
+    case 'trace':
+      return { spoken: slide.word.spoken, kind: 'word' };
+    case 'frame':
+      if (view.answer) return { spoken: slide.example.spoken, kind: 'sentence' };
+      if (view.bank) return { spoken: joinSpoken(slide.banks.flat().map((w) => ({ text: w.ko, romanization: w.romanization }))), kind: 'word' };
+      return { spoken: frameSpoken(slide.frame), kind: 'sentence' };
+    case 'own-name':
+      if (view.page === null) return { spoken: frameSpoken(slide.frame), kind: 'sentence' };
+      return { spoken: joinSpoken(soundTablePage(slide.groups, view.page).flat().map((b) => ({ text: b.ko, romanization: b.romanization }))), kind: 'word' };
   }
 }
 

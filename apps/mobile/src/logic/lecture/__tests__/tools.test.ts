@@ -226,7 +226,23 @@ describe('gridItems (README D13)', () => {
     expect(gridItems(build, state({ slideIdx: 0 }), names).map((i) => [i.kind, i.title])).toEqual([['sentence-build', '']]);
   });
 
-  it('gridKindKey: the dictionary key of each kind (read-along is readAlong, sentence-build is build)', () => {
+  it('a write-together slide is titled by what its first build shows; a trace word has none, its meaning is the answer (LV-S4)', () => {
+    const spoken = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+    const frame = { pieces: ['제 이름은 ', '이에요/예요.'], romanization: 'je ireumeun ___ieyo/yeyo', gloss: 'My name is ___.' };
+    const write = [
+      { kind: 'write-together', key: 'w/1', builds: ['prompt', 'answer'], variant: 'type', prompt: 'Ask for water.', answer: spoken('물 주세요', 'mul juseyo', 'Water, please.') },
+      { kind: 'write-together', key: 'w/2', builds: ['prompt', 'answer'], variant: 'trace', word: spoken('아침', 'achim', 'morning') },
+      { kind: 'write-together', key: 'w/3', builds: ['frame', 'table'], variant: 'own-name', frame, groups: [[{ ko: '아', romanization: 'a' }]] },
+    ] as unknown as Slide[];
+    expect(gridItems(write, state({ slideIdx: 0 }), names).map((i) => [i.kind, i.title])).toEqual([
+      ['write-together', 'Ask for water.'],
+      ['write-together', ''],
+      ['write-together', 'My name is ___.'],
+    ]);
+  });
+
+  it('gridKindKey: the dictionary key of each kind (read-along is readAlong, sentence-build is build, write-together is write)', () => {
+    expect(gridKindKey('write-together')).toBe('write');
     expect(gridKindKey('sentence-build')).toBe('build');
     expect(gridKindKey('read-along')).toBe('readAlong');
     expect(gridKindKey('sentence')).toBe('sentence');

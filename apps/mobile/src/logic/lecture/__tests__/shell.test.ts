@@ -145,7 +145,7 @@ describe('homeStart', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides and the sentence builds (PR 6, PR 7, PR 9, PR 11, LV-S1 and LV-S3)', () => {
+  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides, the sentence builds and the write-together slides (PR 6, PR 7, PR 9, PR 11, LV-S1, LV-S3 and LV-S4)', () => {
     expect([...SHELL_SLIDE_KINDS].sort()).toEqual([
       'activity',
       'card',
@@ -162,6 +162,7 @@ describe('runDeck: the slides this build draws', () => {
       'syllable',
       'title',
       'vocab',
+      'write-together',
     ]);
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
@@ -853,5 +854,21 @@ describe('homeStart, presenterLocale and slideLocale (the presenter home, F-TCH-
     expect(slideLocale({ deck: null, device: 'en', available })).toBe('en');
     // A deck language this build does not offer is passed over.
     expect(slideLocale({ deck: es, device: 'en', available: ['en'] })).toBe('en');
+  });
+});
+
+describe('slideDetail: the write-together slides (LV-S4)', () => {
+  const names = { activity: () => '', frame: 'Fill the gap with a word from the list.', ownName: 'Write your own name in Hangul on paper.' };
+  const spoken = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const frame = { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' };
+  const of = (body: Record<string, unknown>) => ({ kind: 'write-together', key: 'w/1', builds: ['prompt', 'answer'], ...body }) as unknown as Slide;
+
+  it('names each by what its first build shows, never by its answer', () => {
+    expect(slideDetail(of({ variant: 'type', prompt: 'Ask for water.', answer: spoken('물 주세요', 'mul juseyo', 'Water, please.') }), names)).toBe('Ask for water.');
+    expect(slideDetail(of({ variant: 'trace', word: spoken('아침', 'achim', 'morning') }), names)).toBe('아침, achim');
+    expect(slideDetail(of({ variant: 'frame', frame, banks: [], example: { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '', romanization: '' } } }), names)).toBe(names.frame);
+    expect(slideDetail(of({ variant: 'own-name', frame, groups: [] }), names)).toBe(names.ownName);
+    // Without names a frame and the name round say nothing more than their kind.
+    expect(slideDetail(of({ variant: 'own-name', frame, groups: [] }))).toBe('');
   });
 });

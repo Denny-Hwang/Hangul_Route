@@ -2214,6 +2214,8 @@ export const learner = {
         realia: 'Look and read',
         /** The sentence-build slide (LV-S3): the same value as `myRoute.games.sentenceBuilder`. */
         build: 'Build a sentence',
+        /** The write-together slide (LV-S4): the same value as `slide.write.title`. */
+        write: 'Write together',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2285,6 +2287,20 @@ export const learner = {
        * the next word or, on a particle tile, the ending that fits. The room answers by pointing (LV-D9).
        */
       build: { title: 'Build the sentence together', next: 'Which word comes next?', particle: 'Which ending fits?' },
+      /**
+       * The write-together slides (LV-S4, design V10-V12; AMENDMENTS-LECTURE-V2 section 5.3, LV-D8): the kind label,
+       * the line every one carries (nothing is typed on the big screen), each variant's line, the label over a frame's
+       * filled example, and the name round's line (no name is ever typed, shown or stored). The room writes; nobody speaks.
+       */
+      write: {
+        title: 'Write together',
+        where: 'Write on paper or on your own device. Nothing is typed here.',
+        type: 'Type it on your own device, then look.',
+        trace: 'Trace it in the air, then on paper.',
+        frame: 'Fill the gap with a word from the list.',
+        example: 'For example',
+        ownName: 'Write your own name in Hangul on paper.',
+      },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

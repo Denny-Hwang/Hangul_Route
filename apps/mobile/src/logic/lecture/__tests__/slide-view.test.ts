@@ -27,7 +27,9 @@ import {
   soundPress,
   soundPrompt,
   syllableView,
+  soundTablePage,
   vocabArt,
+  writeView,
 } from '../slide-view';
 
 /**
@@ -586,5 +588,68 @@ describe('nextFitLevel: a reading slide that fits itself', () => {
   it('waits for both measures', () => {
     expect(nextFitLevel({ room: 0, content: 560, level: 0, max: 3 })).toBe(0);
     expect(nextFitLevel({ room: 504, content: 0, level: 0, max: 3 })).toBe(0);
+  });
+});
+
+describe('writeView and its sound: the write-together slides (AMENDMENTS-LECTURE-V2 sections 5.2 and 5.3, LV-S4)', () => {
+  const line = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const frame = { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' };
+  const withBuildsOf = (body: SlideBody): Extract<Slide, { kind: 'write-together' }> =>
+    ({ ...body, key: 'w/1', builds: buildsFor(body, { romanization: 'always', strokeGuide: true }) }) as Extract<Slide, { kind: 'write-together' }>;
+  const type = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Ask for water.', answer: line('물 주세요', 'mul juseyo', 'Water, please.') });
+  const tea = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Type the word for tea', answer: line('차', 'cha', 'tea') });
+  const trace = withBuildsOf({ kind: 'write-together', variant: 'trace', word: line('아침', 'achim', 'morning') });
+  const filled = withBuildsOf({
+    kind: 'write-together',
+    variant: 'frame',
+    frame,
+    banks: [[{ ko: '밥', romanization: 'bap' }, { ko: '빵', romanization: 'ppang' }]],
+    example: { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } },
+  });
+  const groups = Array.from({ length: 7 }, (_, i) => [{ ko: String.fromCharCode(0xac00 + i * 28), romanization: `b${i}` }]);
+  const own = withBuildsOf({ kind: 'write-together', variant: 'own-name', frame: { ...frame, pieces: ['제 이름은 ', '이에요/예요.'] }, groups });
+
+  it('type and trace: the answer only at the answer build; its romanization with it, in both modes', () => {
+    for (const mode of ['always', 'tap'] as const) {
+      expect(writeView(type, 0, mode)).toEqual({ frame: true, bank: false, answer: false, rom: false, page: null });
+      expect(writeView(type, 1, mode)).toEqual({ frame: true, bank: false, answer: true, rom: true, page: null });
+      expect(writeView(trace, 0, mode).answer).toBe(false);
+      expect(writeView(trace, 1, mode)).toMatchObject({ answer: true, rom: true });
+    }
+  });
+
+  it('frame: the banks, then the example; with tap every romanization waits for the example', () => {
+    expect(writeView(filled, 0, 'always')).toEqual({ frame: true, bank: false, answer: false, rom: true, page: null });
+    expect(writeView(filled, 1, 'always')).toMatchObject({ bank: true, answer: false, rom: true });
+    expect(writeView(filled, 1, 'tap')).toMatchObject({ bank: true, answer: false, rom: false });
+    expect(writeView(filled, 2, 'tap')).toMatchObject({ bank: true, answer: true, rom: true });
+  });
+
+  it('soundTablePage: five groups a page, and nothing past the last page', () => {
+    expect(soundTablePage(groups, 0)).toHaveLength(5);
+    expect(soundTablePage(groups, 1)).toEqual(groups.slice(5));
+    expect(soundTablePage(groups, 2)).toEqual([]);
+  });
+
+  it('the name round: its frame, then each table page in its place; the table always has its romanization', () => {
+    expect(writeView(own, 0, 'tap')).toEqual({ frame: true, bank: false, answer: false, rom: true, page: null });
+    expect(writeView(own, 1, 'tap')).toEqual({ frame: false, bank: false, answer: false, rom: true, page: 0 });
+    expect(writeView(own, 2, 'always')).toMatchObject({ frame: false, page: 1 });
+  });
+
+  it('Sound: the Korean on screen and never ahead of it', () => {
+    // A type prompt has nothing to play until its answer shows (playing the target would answer it).
+    expect(slideSound(type, 0)).toBeUndefined();
+    expect(slideSound(type, 1)).toEqual({ spoken: { text: '물 주세요', romanization: 'mul juseyo' }, kind: 'sentence' });
+    expect(slideSound(tea, 1)).toEqual({ spoken: { text: '차', romanization: 'cha' }, kind: 'word' });
+    expect(slideSound(tea)).toEqual(slideSound(tea, 1));
+    expect(slideSound(trace, 0)).toEqual({ spoken: { text: '아침', romanization: 'achim' }, kind: 'word' });
+    // A frame says its own Korean with a pause at each gap, then its banks, then the example.
+    expect(slideSound(filled, 0)).toEqual({ spoken: { text: '아침에, 을, 를 먹어요.', romanization: 'achime, eul, reul meogeoyo' }, kind: 'sentence' });
+    expect(slideSound(filled, 1)).toEqual({ spoken: { text: '밥, 빵', romanization: 'bap, ppang' }, kind: 'word' });
+    expect(slideSound(filled, 2)).toEqual({ spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' }, kind: 'sentence' });
+    expect(slideSound(own, 0)?.kind).toBe('sentence');
+    expect(slideSound(own, 1)).toEqual({ spoken: { text: groups.slice(0, 5).map((g) => g[0]!.ko).join(', '), romanization: 'b0, b1, b2, b3, b4' }, kind: 'word' });
+    expect(slideSound(own, 2)).toEqual({ spoken: { text: groups.slice(5).map((g) => g[0]!.ko).join(', '), romanization: 'b5, b6' }, kind: 'word' });
   });
 });

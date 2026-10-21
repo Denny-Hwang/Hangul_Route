@@ -115,6 +115,40 @@ export interface BuildTile {
 /** A place in a sentence-build bank: a tile of the sentence (its index in `tiles`), or a distractor. */
 export type BankPlace = { tile: number } | { distractor: SheetText };
 
+/**
+ * A frame with its gaps (a Discover pattern's, a Write Frame's): the Korean around each `___` slot
+ * (`pieces` has one more entry than the frame has slots, each slot drawn as a gap box, never as
+ * text), its romanization (with the `___` kept) and its meaning in the slide language.
+ */
+export interface FrameText {
+  pieces: string[];
+  romanization: string;
+  gloss: string;
+}
+
+/**
+ * How many groups of the name round's sound table one build shows (AMENDMENTS-LECTURE-V2 section 5.2,
+ * LV-0b decision V12): five groups of blocks, each with its romanization, fill the content area.
+ */
+export const SOUND_TABLE_GROUPS_PER_BUILD = 5;
+
+/**
+ * A write-together slide's own part (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3, LV-D8, LV-S4): the
+ * room writes on paper or on its own devices and the stage only shows; nothing on it takes input,
+ * and no name is ever typed, shown or stored.
+ * - `type` (Type Hangul): the prompt in the slide language and its picture, then the answer.
+ * - `trace` (Trace a Word): the word as a large outline ghost, then its romanization and meaning.
+ * - `frame` (Write Frame): the frame with its gap, each slot's word bank, then "For example" with
+ *   each gap filled by its bank's first word, the ending that fits it chosen (observation O2).
+ * - `own-name` (the free-entry name round): the frame and the round's sound table, groups of
+ *   syllable blocks, five groups a build (V12); never a name.
+ */
+export type WriteTogether =
+  | { variant: 'type'; prompt: string; picture?: string; answer: SpokenLine }
+  | { variant: 'trace'; word: SpokenLine }
+  | { variant: 'frame'; frame: FrameText; banks: SheetText[][]; example: SheetText & { spoken: SpokenForm } }
+  | { variant: 'own-name'; frame: FrameText; groups: SheetText[][] };
+
 export interface SequenceStep {
   id: string;
   gloss: string;
@@ -196,7 +230,7 @@ export type SlideBody =
    * the slide language with its `{ko:}` tokens as Korean chips (absent when a token has no
    * romanization, rule 11), and the two examples.
    */
-  | { kind: 'pattern'; frame: { pieces: string[]; romanization: string; gloss: string }; note?: NarrationPiece[]; examples: SpokenLine[] }
+  | { kind: 'pattern'; frame: FrameText; note?: NarrationPiece[]; examples: SpokenLine[] }
   /**
    * A Discover exchange (LV-S1): two lines between named speakers; Sound plays the current line and
    * lights it. `together`: no Korean voice or the deck's sound is off (section 5.1 "Text without a
@@ -216,6 +250,8 @@ export type SlideBody =
    * distractors, which are only set back at the end, never marked wrong.
    */
   | { kind: 'sentence-build'; sentence: SpokenLine; tiles: BuildTile[]; bank: BankPlace[] }
+  /** A Type Hangul, Trace a Word or Write Frame round the room writes together (LV-S4): see `WriteTogether`. */
+  | ({ kind: 'write-together' } & WriteTogether)
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
 
@@ -252,7 +288,9 @@ export type BuildName =
   | 'bank'
   | 'tile'
   | 'particle'
-  | 'whole';
+  | 'whole'
+  // Write together (LV-S4): `prompt` / `answer` (type, trace), `frame` / `bank` / `example` (frame), `frame` / `table` (own name).
+  | 'table';
 
 export interface BuildOptions {
   romanization: RomanizationMode;
@@ -320,7 +358,26 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
     case 'sentence-build':
       // A particle tile's ending is chosen at the build right after the tile reaches the line; romanization only at `whole`, in both modes.
       return ['bank', ...body.tiles.flatMap((t): BuildName[] => (t.particle !== undefined ? ['tile', 'particle'] : ['tile'])), 'whole'];
+    case 'write-together':
+      // The answer comes only on the teacher's click (section 5.3). With `tap` the romanization waits for the
+      // answer build (`writeView`), so the builds are the same in both modes; the name round's table always has it.
+      switch (body.variant) {
+        case 'type':
+        case 'trace':
+          return ['prompt', 'answer'];
+        case 'frame':
+          return ['frame', 'bank', 'example'];
+        case 'own-name':
+          return ['frame', ...soundTablePages(body.groups).map((): BuildName => 'table')];
+      }
   }
+}
+
+/** The name round's sound table as its builds show it: `SOUND_TABLE_GROUPS_PER_BUILD` groups a build, in order. */
+export function soundTablePages<T>(groups: readonly T[]): T[][] {
+  const pages: T[][] = [];
+  for (let i = 0; i < groups.length; i += SOUND_TABLE_GROUPS_PER_BUILD) pages.push(groups.slice(i, i + SOUND_TABLE_GROUPS_PER_BUILD));
+  return pages;
 }
 
 /** One part of a slide on screen: the build that showed it and whether its romanization shows. */

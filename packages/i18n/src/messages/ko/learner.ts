@@ -1655,6 +1655,7 @@ export const learner = {
         readAlong: '함께 읽기',
         realia: '보고 읽기',
         build: '문장 만들기',
+        write: '함께 써요',
       },
       title: '전체 슬라이드',
       hint: '슬라이드를 고르면 그리로 가요. 숨기기는 이번 수업에만 적용돼요.',
@@ -1705,6 +1706,15 @@ export const learner = {
       readAlong: { label: '함께 읽기' },
       realia: { ask: '잘 보고 답을 찾아요.' },
       build: { title: '함께 문장을 만들어요', next: '다음 낱말은 뭘까요?', particle: '어떤 말이 어울릴까요?' },
+      write: {
+        title: '함께 써요',
+        where: '종이나 각자 기기에 써요. 이 화면에는 아무것도 입력하지 않아요.',
+        type: '각자 기기로 입력해 보고 확인해요.',
+        trace: '허공에 따라 쓰고 종이에 써 봐요.',
+        frame: '목록에서 낱말을 골라 빈칸을 채워요.',
+        example: '예를 들면',
+        ownName: '자기 이름을 종이에 한글로 써 봐요.',
+      },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

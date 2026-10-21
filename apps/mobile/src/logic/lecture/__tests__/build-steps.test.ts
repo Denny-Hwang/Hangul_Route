@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildsFor, joinSpoken, partsShown, type BuildOptions, type SlideBody } from '../build-steps';
+import { buildsFor, joinSpoken, partsShown, soundTablePages, SOUND_TABLE_GROUPS_PER_BUILD, type BuildOptions, type SlideBody } from '../build-steps';
 
 const ALWAYS: BuildOptions = { romanization: 'always', strokeGuide: true };
 const TAP: BuildOptions = { romanization: 'tap', strokeGuide: true };
@@ -222,6 +222,42 @@ describe('buildsFor: the sentence build (AMENDMENTS-LECTURE-V2 section 5.2, LV-S
     const body: SlideBody = { kind: 'sentence-build', sentence, tiles: [{ ...tiles[0]!, particle }, tiles[1]!, tiles[2]!], bank };
     expect(buildsFor(body, ALWAYS)).toEqual(['bank', 'tile', 'particle', 'tile', 'tile', 'whole']);
     expect(buildsFor(body, TAP)).toEqual(['bank', 'tile', 'particle', 'tile', 'tile', 'whole']);
+  });
+});
+
+describe('buildsFor: write together (AMENDMENTS-LECTURE-V2 section 5.2, LV-S4)', () => {
+  const line = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
+  const frame = { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' };
+  const block = (ko: string) => ({ ko, romanization: 'x' });
+
+  it('type and trace: the prompt, then the answer; frame: the frame, its banks, the example; the same with tap', () => {
+    const type: SlideBody = { kind: 'write-together', variant: 'type', prompt: 'Ask for water.', answer: line('물 주세요', 'mul juseyo', 'Water, please.') };
+    const trace: SlideBody = { kind: 'write-together', variant: 'trace', word: line('아침', 'achim', 'morning') };
+    const filled: SlideBody = {
+      kind: 'write-together',
+      variant: 'frame',
+      frame,
+      banks: [[block('밥'), block('빵')]],
+      example: { ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } },
+    };
+    for (const opts of [ALWAYS, TAP]) {
+      expect(buildsFor(type, opts)).toEqual(['prompt', 'answer']);
+      expect(buildsFor(trace, opts)).toEqual(['prompt', 'answer']);
+      expect(buildsFor(filled, opts)).toEqual(['frame', 'bank', 'example']);
+    }
+  });
+
+  it('the name round: the frame, then a table build per five groups (V12: ten groups, two table builds)', () => {
+    const groups = (n: number) => Array.from({ length: n }, (_, i) => [block(String.fromCharCode(0xac00 + i))]);
+    const own = (n: number): SlideBody => ({ kind: 'write-together', variant: 'own-name', frame, groups: groups(n) });
+    expect(SOUND_TABLE_GROUPS_PER_BUILD).toBe(5);
+    expect(buildsFor(own(10), ALWAYS)).toEqual(['frame', 'table', 'table']);
+    expect(buildsFor(own(10), TAP)).toEqual(['frame', 'table', 'table']);
+    expect(buildsFor(own(6), ALWAYS)).toEqual(['frame', 'table', 'table']);
+    expect(buildsFor(own(5), ALWAYS)).toEqual(['frame', 'table']);
+    expect(buildsFor(own(0), ALWAYS)).toEqual(['frame']);
+    expect(soundTablePages([1, 2, 3, 4, 5, 6, 7])).toEqual([[1, 2, 3, 4, 5], [6, 7]]);
+    expect(soundTablePages([])).toEqual([]);
   });
 });
 

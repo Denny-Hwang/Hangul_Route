@@ -50,9 +50,11 @@ function silentByDesign(slide: Slide): boolean {
 /**
  * Whether the slide shows Korean at `reveal`. Every slide kind shows its Korean from build 0, but an
  * order slide, whose steps appear one per build and may be in the UI language only: until a Korean
- * step shows, it has nothing of its own to play.
+ * step shows, it has nothing of its own to play; and a Type Hangul write-together slide (LV-S4), whose
+ * prompt is in the UI language and whose Korean is the answer, shown only at its answer build.
  */
 function koreanShownAt(slide: Slide, reveal: number): boolean {
+  if (slide.kind === 'write-together') return slide.variant !== 'type' || slide.builds[reveal] === 'answer';
   if (slide.kind !== 'sequence') return true;
   const view = sequenceView(slide, reveal);
   const steps = view.mode === 'order' ? view.steps : slide.steps.slice(0, view.count);

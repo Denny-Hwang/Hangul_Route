@@ -1,7 +1,9 @@
 import {
   ALLOMORPH_PAIRS,
   discoverItemTexts,
+  fillFrame,
   parseNarration,
+  romanize,
   SLOT_MARKER,
   syllableSplit,
   wordReviewCardCap,
@@ -19,7 +21,10 @@ import {
   type Quest,
   type Realia,
   type StoryLevel,
+  type TraceWordRound,
+  type TypeHangulRound,
   type UiLocale,
+  type WriteFrameRound,
 } from '@hangul-route/content-schema';
 import { spokenFor, type SpokenForm } from '../audio/spoken';
 import { koTokenParts } from '../ko-tokens';
@@ -45,6 +50,7 @@ import {
   type BuildName,
   type BuildTile,
   type BuildOptions,
+  type FrameText,
   type KoLine,
   type NarrationPiece,
   type QuizOption,
@@ -52,6 +58,7 @@ import {
   type SequenceStep,
   type SlideBody,
   type SpokenLine,
+  type WriteTogether,
 } from './build-steps';
 
 /**
@@ -555,6 +562,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'order-it':
         buildStep(path, ref, listOf(scope.orderIt?.rounds));
         return;
+      // Write together (section 5.1, LV-S4): one slide per round; the room writes on paper or on its own devices.
+      case 'type-hangul':
+        writeStep(path, ref, listOf(scope.typeHangul?.rounds).map((round) => [round.id, typeWrite(round)]));
+        return;
+      case 'trace-word':
+        writeStep(path, ref, listOf(scope.traceWord?.rounds).map((round) => [round.id, traceWrite(round)]));
+        return;
+      case 'write-frame':
+        writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, frameWrite(round)]));
+        return;
       default:
         skip(ref, 'unsupported-step');
     }
@@ -741,6 +758,53 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       // Keyed by the round's id, so a saved resume point stays on its round when a content update adds one.
       push(`${path}/${round.id.replace(/\//g, '-')}`, { kind: 'sentence-build', sentence: spokenLine(round.sentence), tiles, bank });
     }
+  };
+
+  /**
+   * Write together (Type Hangul, Trace a Word, Write Frame; AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
+   * LV-D8, LV-S4): a write-together slide per round, in content order, keyed by the round's id. The
+   * room writes on paper or on its own devices; the stage takes no input and the answer comes only on
+   * the teacher's click. The name round (`freeEntry`) shows its frame and its sound table and never a
+   * name. Like a question, a round practises and does not teach: it joins neither `taught` nor the End
+   * slide, and it sits inside the quest's catalogue minutes. A step with no round is a counted
+   * `scope-too-small` skip.
+   */
+  const writeStep = (path: string, ref: string, rounds: ReadonlyArray<readonly [id: string, body: WriteTogether]>): void => {
+    if (rounds.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    for (const [id, body] of rounds) push(`${path}/${id.replace(/\//g, '-')}`, { kind: 'write-together', ...body });
+  };
+
+  const sheetText = (t: { ko: string; romanization: string }) => ({ ko: t.ko, romanization: t.romanization });
+
+  /** A frame's Korean around its gaps, its romanization and its meaning (as a Discover pattern's). */
+  const frameOf = (frame: KoText): FrameText => ({ pieces: frame.ko.split(SLOT_MARKER), romanization: frame.romanization, gloss: frame.en });
+
+  /** Type Hangul: the prompt (`promptEn` in the slide language) and its picture, then the target with its romanization and meaning. */
+  const typeWrite = (round: TypeHangulRound): WriteTogether => ({
+    variant: 'type',
+    prompt: round.promptEn,
+    ...(round.pictureRef !== undefined ? { picture: round.pictureRef } : {}),
+    answer: spokenLine(round.target),
+  });
+
+  /** Trace a Word: the word drawn as a ghost from the start; its romanization and meaning at the answer. */
+  const traceWrite = (round: TraceWordRound): WriteTogether => ({ variant: 'trace', word: spokenLine(round.word) });
+
+  /**
+   * Write Frame: the frame, each slot's bank, and "For example": every gap filled with its bank's first
+   * word and the ending that fits that word (`fillFrame`, observation O2: 밥 ends in a consonant, so
+   * 아침에 ___을/를 먹어요. gives 아침에 밥을 먹어요.), romanized by the converter as the learner's Write
+   * Frame does. The name round (`freeEntry`): its frame and its sound table, never a name (LV-D8).
+   */
+  const frameWrite = (round: WriteFrameRound): WriteTogether => {
+    const frame = frameOf(round.frame);
+    if (round.freeEntry) return { variant: 'own-name', frame, groups: listOf(round.soundTable?.groups).map((group) => group.map(sheetText)) };
+    const ko = fillFrame(round.frame.ko, round.slots.map((slot) => slot.bank[0]!.ko));
+    const romanization = romanize(ko).text;
+    return { variant: 'frame', frame, banks: round.slots.map((slot) => slot.bank.map(sheetText)), example: { ko, romanization, spoken: { text: ko, romanization } } };
   };
 
   const card = (path: string, id: string): void => {

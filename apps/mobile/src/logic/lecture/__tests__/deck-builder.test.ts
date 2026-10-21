@@ -2250,3 +2250,175 @@ describe('expandDeck: the sentence builds (AMENDMENTS-LECTURE-V2 sections 5.1 an
     }
   });
 });
+
+describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3, LV-D8, LV-S4)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const writeScopes: Record<string, MinigameScope> = {
+    'mg:type': {
+      kind: 'type-hangul',
+      typeHangul: {
+        rounds: [
+          { id: 't1', promptEn: 'Ask for water.', pictureRef: 'word:food-water', target: { ...kt('물 주세요', 'mul juseyo', 'Water, please.'), audioRef: 'audio/water.mp3' } },
+          { id: 't/2', promptEn: 'Type the word for tea', target: kt('차', 'cha', 'tea') },
+        ],
+      },
+    },
+    'mg:trace': { kind: 'trace-word', traceWord: { rounds: [{ id: 'w1', word: kt('아침', 'achim', 'morning') }] } },
+    'mg:frame': {
+      kind: 'write-frame',
+      writeFrame: {
+        rounds: [
+          {
+            id: 'f1',
+            frame: kt('아침에 ___을/를 먹어요.', 'achime ___eul/reul meogeoyo', 'In the morning, I eat ___.'),
+            slots: [{ id: 's1', bank: [kt('밥', 'bap', 'rice'), kt('빵', 'ppang', 'bread'), kt('사과', 'sagwa', 'apple')] }],
+            entry: 'type',
+            freeEntry: false,
+          },
+          {
+            id: 'f2',
+            frame: kt('___에 ___을/를 먹었어요.', '___e ___eul/reul meogeosseoyo', 'On ___, I ate ___.'),
+            slots: [
+              { id: 'when', bank: [kt('설날', 'seollal', "Lunar New Year's Day"), kt('추석', 'chuseok', 'Chuseok')] },
+              { id: 'what', bank: [kt('떡국', 'tteokguk', 'rice-cake soup'), kt('사과', 'sagwa', 'apple')] },
+            ],
+            entry: 'type',
+            freeEntry: false,
+          },
+          {
+            id: 'w3',
+            frame: kt('제 이름은 ___이에요/예요.', 'je ireumeun ___ieyo/yeyo', 'My name is ___.'),
+            slots: [{ id: 'name', bank: [] }],
+            entry: 'type',
+            freeEntry: true,
+            soundTable: {
+              groups: [[{ ko: '아', romanization: 'a' }], [{ ko: '가', romanization: 'ga' }, { ko: '나', romanization: 'na' }], [{ ko: '고', romanization: 'go' }], [{ ko: '구', romanization: 'gu' }], [{ ko: '그', romanization: 'geu' }], [{ ko: '기', romanization: 'gi' }]],
+              finals: [{ ko: 'ㄴ', romanization: 'n' }],
+            },
+          },
+        ],
+      },
+    },
+    'mg:type-none': { kind: 'type-hangul', typeHangul: { rounds: [] } },
+    'mg:trace-bare': { kind: 'trace-word' },
+    'mg:frame-bare': { kind: 'write-frame' },
+  };
+  const written = quest('written', [['intro'], ['practice', 'mg:type'], ['practice', 'mg:trace'], ['apply', 'mg:frame']], { rewardCardId: undefined });
+  const empty = quest('written-empty', [['practice', 'mg:type-none'], ['practice', 'mg:trace-bare'], ['apply', 'mg:frame-bare']], { rewardCardId: undefined });
+  const b = (over: Partial<LectureBundle> = {}) =>
+    bundle({
+      scopeFor: (ref) => writeScopes[ref] ?? scopes[ref],
+      questById: (id) => [written, empty].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+      ...over,
+    });
+  const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
+  type Write = Extract<Slide, { kind: 'write-together' }>;
+  const writes = (slides: readonly Slide[]) => only(slides, 'write-together') as Write[];
+
+  it('one write-together slide per round, keyed by the round, in content order; a step with no round is a counted skip', () => {
+    const { slides, skipped } = run(written.id);
+    expect(kinds(slides)).toEqual(['title', ...Array<string>(6).fill('write-together'), 'end']);
+    expect(writes(slides).map((s) => [s.key, s.variant])).toEqual([
+      ['quest:written/s2/t1', 'type'],
+      ['quest:written/s2/t-2', 'type'],
+      ['quest:written/s3/w1', 'trace'],
+      ['quest:written/s4/f1', 'frame'],
+      ['quest:written/s4/f2', 'frame'],
+      ['quest:written/s4/w3', 'own-name'],
+    ]);
+    expect(skipped).toEqual([]);
+    expect(run(empty.id).skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:type-none', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:trace-bare', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:frame-bare', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {
+    const [water, tea] = writes(run(written.id).slides);
+    expect(water).toMatchObject({
+      variant: 'type',
+      prompt: 'Ask for water.',
+      picture: 'word:food-water',
+      answer: { ko: '물 주세요', romanization: 'mul juseyo', gloss: 'Water, please.', spoken: { text: '물 주세요', romanization: 'mul juseyo', audioRef: 'audio/water.mp3' } },
+      builds: ['prompt', 'answer'],
+    });
+    expect(tea).not.toHaveProperty('picture');
+  });
+
+  it('trace: the word, its romanization and meaning; frame: the frame around its gap, the banks and the example', () => {
+    const [, , trace, frame] = writes(run(written.id).slides);
+    expect(trace).toMatchObject({ variant: 'trace', word: { ko: '아침', romanization: 'achim', gloss: 'morning' }, builds: ['prompt', 'answer'] });
+    expect(frame).toMatchObject({
+      variant: 'frame',
+      frame: { pieces: ['아침에 ', '을/를 먹어요.'], romanization: 'achime ___eul/reul meogeoyo', gloss: 'In the morning, I eat ___.' },
+      banks: [[{ ko: '밥', romanization: 'bap' }, { ko: '빵', romanization: 'ppang' }, { ko: '사과', romanization: 'sagwa' }]],
+      builds: ['frame', 'bank', 'example'],
+    });
+  });
+
+  it('the example fills each gap with its bank\'s first word and the ending that fits it (observation O2)', () => {
+    const [, , , one, two] = writes(run(written.id).slides);
+    // 밥 ends in a consonant: 을, never 를 and never both.
+    expect(one!.variant === 'frame' && one!.example).toEqual({ ko: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo', spoken: { text: '아침에 밥을 먹어요.', romanization: 'achime babeul meogeoyo' } });
+    // Two slots, each with its own bank: one chip row per bank, and both filled in the example.
+    expect(two!.variant === 'frame' && two!.banks.map((bank) => bank.map((w) => w.ko))).toEqual([['설날', '추석'], ['떡국', '사과']]);
+    expect(two!.variant === 'frame' && two!.example.ko).toBe('설날에 떡국을 먹었어요.');
+    expect(two!.variant === 'frame' && two!.example.romanization).toBe('seollare tteokgugeul meogeosseoyo');
+  });
+
+  it('the name round: its frame and its sound table, five groups a build, and never a name (LV-D8)', () => {
+    const name = writes(run(written.id).slides)[5]!;
+    expect(name.variant).toBe('own-name');
+    if (name.variant !== 'own-name') return;
+    expect(name.frame).toEqual({ pieces: ['제 이름은 ', '이에요/예요.'], romanization: 'je ireumeun ___ieyo/yeyo', gloss: 'My name is ___.' });
+    expect(name.groups.map((g) => g.map((t) => t.ko).join(''))).toEqual(['아', '가나', '고', '구', '그', '기']);
+    // Six groups: the frame, groups 1-5, group 6 (V12; the shipped table of ten groups gives two table builds).
+    expect(name.builds).toEqual(['frame', 'table', 'table']);
+    // The slide holds no example, bank or entry: nothing that could be a name.
+    expect(Object.keys(name).sort()).toEqual(['builds', 'frame', 'groups', 'key', 'kind', 'variant']);
+  });
+
+  it('a round practises and does not teach: nothing joins the End slide, the minutes are the quest\'s, the builds are the same with tap and without a voice', () => {
+    const { slides, taught, minutes } = run(written.id);
+    expect(taught).toEqual([]);
+    expect(minutes).toBe(written.estimatedMinutes);
+    expect(withBuilds(slides, { romanization: 'tap', strokeGuide: true })).toEqual(slides);
+    expect(writes(run(written.id, {}, { canPlayKorean: false }).slides)).toEqual(writes(slides));
+  });
+
+  it('every shipped type-hangul, trace-word and write-frame round becomes a write-together slide with no skip', () => {
+    const shipped = lectureBundle('en');
+    const ids = ['quest:stage6-life-q1', 'quest:stage7-letters-q1', 'quest:stage7-letters-q3', 'quest:stage7-life-q2', 'quest:stage7-rites-q2'];
+    for (const id of ids) {
+      const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id }]), shipped, VOICE);
+      const quest = shipped.questById(id)!;
+      const rounds = quest.steps.reduce((n, step) => {
+        const scope = step.minigameRef === undefined ? undefined : shipped.scopeFor(step.minigameRef);
+        return n + (scope?.typeHangul?.rounds.length ?? 0) + (scope?.traceWord?.rounds.length ?? 0) + (scope?.writeFrame?.rounds.length ?? 0);
+      }, 0);
+      expect(rounds, id).toBeGreaterThan(0);
+      expect(writes(slides), id).toHaveLength(rounds);
+      expect(skipped, id).toEqual([]);
+    }
+    // Stage 7 letters q3: the free-entry name round is the own-name slide, with the shipped ten groups in two table builds.
+    const name = writes(expandDeck(deckOf([{ kind: 'quest', id: 'quest:stage7-letters-q3' }]), shipped, VOICE).slides).find((s) => s.variant === 'own-name')!;
+    expect(name.variant === 'own-name' && name.groups).toHaveLength(10);
+    expect(name.builds).toEqual(['frame', 'table', 'table']);
+  });
+
+  it('a Spanish or Korean deck takes the prompts and meanings of the overlays; the Korean never changes', () => {
+    const id = 'quest:stage6-life-q1';
+    const en = writes(expandDeck(deckOf([{ kind: 'quest', id }]), lectureBundle('en'), VOICE).slides);
+    for (const locale of ['es', 'ko'] as const) {
+      const other = writes(expandDeck(deckOf([{ kind: 'quest', id }]), lectureBundle(locale), VOICE).slides);
+      expect(other.map((s) => s.variant === 'type' && s.answer.ko)).toEqual(en.map((s) => s.variant === 'type' && s.answer.ko));
+      other.forEach((s, i) => {
+        const was = en[i]!;
+        if (s.variant !== 'type' || was.variant !== 'type') throw new Error('type rounds only');
+        expect(s.prompt, `${locale} ${s.key}`).not.toBe(was.prompt);
+        expect(s.answer.gloss, `${locale} ${s.key}`).not.toBe(was.answer.gloss);
+      });
+    }
+  });
+});

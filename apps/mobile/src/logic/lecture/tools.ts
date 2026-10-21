@@ -138,11 +138,12 @@ export interface GridItem {
   canHide: boolean;
 }
 
-/** The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong` and `sentence-build` as `build`. */
-export type GridKindKey = Exclude<SlideKind, 'read-along' | 'sentence-build'> | 'readAlong' | 'build';
+/** The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong`, `sentence-build` as `build` and `write-together` as `write`. */
+export type GridKindKey = Exclude<SlideKind, 'read-along' | 'sentence-build' | 'write-together'> | 'readAlong' | 'build' | 'write';
 
 export function gridKindKey(kind: SlideKind): GridKindKey {
   if (kind === 'read-along') return 'readAlong';
+  if (kind === 'write-together') return 'write';
   return kind === 'sentence-build' ? 'build' : kind;
 }
 
@@ -159,6 +160,9 @@ function gridTitle(slide: Slide, names: { activity: (preset: Extract<Slide, { ki
     case 'sentence-build':
       // Like a question, nothing: its meaning shows only once the room has built the sentence.
       return '';
+    case 'write-together':
+      // What its first build shows in the slide language; a trace word's meaning is its answer, so nothing.
+      return slide.variant === 'type' ? slide.prompt : slide.variant === 'trace' ? '' : slide.frame.gloss;
     case 'title':
     case 'card':
       return slide.title;

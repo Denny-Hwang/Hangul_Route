@@ -1717,6 +1717,7 @@ export const learner = {
         readAlong: 'Leer juntos',
         realia: 'Mira y lee',
         build: 'Arma una oración',
+        write: 'Escribir en grupo',
       },
       title: 'Diapositivas',
       hint: 'Elige una diapositiva para ir a ella. Oculta una solo para esta lección.',
@@ -1767,6 +1768,15 @@ export const learner = {
       readAlong: { label: 'Leer juntos' },
       realia: { ask: 'Mira con atención y busca la respuesta.' },
       build: { title: 'Armar la oración en grupo', next: '¿Qué palabra va después?', particle: '¿Qué terminación va?' },
+      write: {
+        title: 'Escribir en grupo',
+        where: 'Escribe en papel o en tu propio dispositivo. Aquí no se escribe nada.',
+        type: 'Escríbelo en tu propio dispositivo y luego mira.',
+        trace: 'Trázalo en el aire y luego en papel.',
+        frame: 'Completa el espacio con una palabra de la lista.',
+        example: 'Por ejemplo',
+        ownName: 'Escribe tu propio nombre en hangul en papel.',
+      },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */
