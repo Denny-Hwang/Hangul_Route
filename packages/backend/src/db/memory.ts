@@ -20,6 +20,7 @@ import {
   type StoredSenderBlock,
   type StoredSenderHold,
 } from './feedback-types';
+import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
@@ -107,6 +108,9 @@ export class MemoryDb implements Db {
   private classMoves = new Map<string, StoredClassMove>();
   /** [SA] migration 0011. */
   private spaceEvents = new Map<string, SpaceEvent>();
+  /** [SA] migration 0012: the invites, and the membership keys whose row holds `promoted_from = 'teacher'`. */
+  private adminInvites = new Map<string, StoredAdminInvite>();
+  private promotedFromTeacher = new Set<string>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -236,7 +240,12 @@ export class MemoryDb implements Db {
     this.memberships.set(membershipKey(m.spaceId, m.memberKind, m.memberId), clone(m));
   }
   async removeMembership(spaceId: string, kind: MemberKind, memberId: string): Promise<boolean> {
+    this.promotedFromTeacher.delete(membershipKey(spaceId, kind, memberId));
     return this.memberships.delete(membershipKey(spaceId, kind, memberId));
+  }
+  async removeMembershipIfRole(spaceId: string, kind: MemberKind, memberId: string, role: Membership['role']): Promise<boolean> {
+    if (this.memberships.get(membershipKey(spaceId, kind, memberId))?.role !== role) return false;
+    return this.removeMembership(spaceId, kind, memberId);
   }
   async membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]> {
     return clone([...this.memberships.values()].filter((m) => m.memberKind === kind && m.memberId === memberId));
@@ -306,6 +315,120 @@ export class MemoryDb implements Db {
   }
   async membersOf(spaceId: string): Promise<Membership[]> {
     return clone([...this.memberships.values()].filter((m) => m.spaceId === spaceId));
+  }
+  async latestSpaceEvent(spaceId: string, kind: SpaceEvent['kind'], subjectAccountId: string): Promise<SpaceEvent | null> {
+    const rows = [...this.spaceEvents.values()].filter((e) => e.spaceId === spaceId && e.kind === kind && e.subjectAccountId === subjectAccountId);
+    rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    return clone(rows[0] ?? null);
+  }
+  async addMembershipIfAbsent(m: Membership): Promise<boolean> {
+    const key = membershipKey(m.spaceId, m.memberKind, m.memberId);
+    if (this.memberships.has(key)) return false;
+    this.memberships.set(key, clone(m));
+    return true;
+  }
+
+  // ---- school administrators ([SA] migration 0012): the rules of the D1 statements, each in one synchronous step ----
+
+  /** The account's role in the space, or null. */
+  private accountRole(spaceId: string, accountId: string): Membership['role'] | null {
+    return this.memberships.get(membershipKey(spaceId, 'account', accountId))?.role ?? null;
+  }
+  private adminCount(spaceId: string): number {
+    return [...this.memberships.values()].filter((m) => m.spaceId === spaceId && m.memberKind === 'account' && m.role === 'admin').length;
+  }
+  private isOpenInvite(i: StoredAdminInvite, at: string): boolean {
+    return i.acceptedAt === null && i.revokedAt === null && i.expiresAt > at;
+  }
+  private liveSchool(spaceId: string): Space | null {
+    const s = this.spaces.get(spaceId);
+    return s && s.kind === 'school' && s.archivedAt === null ? s : null;
+  }
+  private pushSpaceEvent(e: SpaceEvent): void {
+    this.spaceEvents.set(e.id, clone({ ...e, kind: SpaceEventKindSchema.parse(e.kind) }));
+  }
+  /** The `TEACHES_LIVE_CLASS` test of D1, on the live maps. */
+  private teachesLiveClass(schoolId: string, accountId: string): boolean {
+    for (const s of this.spaces.values()) {
+      if (s.parentSpaceId !== schoolId || s.kind !== 'class' || s.archivedAt !== null) continue;
+      const role = this.accountRole(s.id, accountId);
+      if (s.ownerAccountId === accountId || role === 'owner' || role === 'teacher') return true;
+    }
+    return false;
+  }
+  async createAdminInvite({ invite: i, cap, eventId }: CreateAdminInviteInput): Promise<boolean> {
+    const open = [...this.adminInvites.values()].filter((x) => x.spaceId === i.spaceId && this.isOpenInvite(x, i.createdAt)).length;
+    if (!this.liveSchool(i.spaceId) || this.adminCount(i.spaceId) + open >= cap) return false;
+    if ([...this.adminInvites.values()].some((x) => x.tokenHash === i.tokenHash) || this.adminInvites.has(i.id)) throw new Error('UNIQUE constraint failed: admin_invites');
+    this.adminInvites.set(i.id, { ...i, acceptedBy: null, acceptedAt: null, revokedAt: null });
+    this.pushSpaceEvent({ id: eventId, spaceId: i.spaceId, kind: 'admin_invite_created', actorAccountId: i.createdBy, subjectAccountId: null, subjectSpaceId: null, inviteId: i.id, createdAt: i.createdAt });
+    return true;
+  }
+  async getAdminInvite(inviteId: string): Promise<StoredAdminInvite | null> {
+    return clone(this.adminInvites.get(inviteId) ?? null);
+  }
+  async adminInviteByHash(tokenHash: string): Promise<StoredAdminInvite | null> {
+    return clone([...this.adminInvites.values()].find((i) => i.tokenHash === tokenHash) ?? null);
+  }
+  async openAdminInvites(spaceId: string, now: Date): Promise<StoredAdminInvite[]> {
+    const at = now.toISOString();
+    return clone([...this.adminInvites.values()].filter((i) => i.spaceId === spaceId && this.isOpenInvite(i, at)).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)));
+  }
+  async revokeAdminInvite({ inviteId, spaceId, actorAccountId, now, eventId }: RevokeAdminInviteInput): Promise<number> {
+    const row = this.adminInvites.get(inviteId);
+    if (!row || row.spaceId !== spaceId || row.acceptedAt !== null || row.revokedAt !== null) return 0;
+    const at = now.toISOString();
+    this.adminInvites.set(inviteId, { ...row, revokedAt: at });
+    this.pushSpaceEvent({ id: eventId, spaceId, kind: 'admin_invite_revoked', actorAccountId, subjectAccountId: null, subjectSpaceId: null, inviteId, createdAt: at });
+    return 1;
+  }
+  async acceptAdminInvite({ inviteId, spaceId, accountId, now, cap, eventId }: AcceptAdminInviteInput): Promise<boolean> {
+    const at = now.toISOString();
+    const row = this.adminInvites.get(inviteId);
+    const school = this.liveSchool(spaceId);
+    const role = this.accountRole(spaceId, accountId);
+    const gate = !!row && row.spaceId === spaceId && this.isOpenInvite(row, at) && !!school && school.ownerAccountId !== accountId && (role === null || role === 'teacher') && this.adminCount(spaceId) < cap;
+    if (!gate || !row) return false;
+    this.adminInvites.set(inviteId, { ...row, acceptedBy: accountId, acceptedAt: at });
+    const key = membershipKey(spaceId, 'account', accountId);
+    const existing = this.memberships.get(key);
+    if (!existing) {
+      this.memberships.set(key, { spaceId, memberKind: 'account', memberId: accountId, role: 'admin', joinedAt: at });
+    } else if (existing.role === 'teacher') {
+      this.memberships.set(key, { ...existing, role: 'admin' });
+      this.promotedFromTeacher.add(key);
+    }
+    this.pushSpaceEvent({ id: eventId, spaceId, kind: 'admin_joined', actorAccountId: accountId, subjectAccountId: accountId, subjectSpaceId: null, inviteId, createdAt: at });
+    return true;
+  }
+  async endAdminRole({ spaceId, accountId, actorAccountId, kind, now, eventId }: EndAdminRoleInput): Promise<EndAdminRoleResult> {
+    const key = membershipKey(spaceId, 'account', accountId);
+    const row = this.memberships.get(key);
+    if (!row || row.role !== 'admin') return null;
+    this.pushSpaceEvent({ id: eventId, spaceId, kind, actorAccountId, subjectAccountId: accountId, subjectSpaceId: null, inviteId: null, createdAt: now.toISOString() });
+    if (this.promotedFromTeacher.has(key) || this.teachesLiveClass(spaceId, accountId)) {
+      this.memberships.set(key, { ...row, role: 'teacher' });
+      this.promotedFromTeacher.delete(key);
+      return 'teacher';
+    }
+    this.memberships.delete(key);
+    return 'none';
+  }
+  async adminStaysTeacher(spaceId: string, accountId: string): Promise<boolean> {
+    const key = membershipKey(spaceId, 'account', accountId);
+    return this.memberships.get(key)?.role === 'admin' && (this.promotedFromTeacher.has(key) || this.teachesLiveClass(spaceId, accountId));
+  }
+  async purgeAdminInvites(before: Date, limit: number): Promise<number> {
+    const cut = before.toISOString();
+    let removed = 0;
+    for (const [key, i] of this.adminInvites) {
+      if (removed >= limit) break;
+      if (i.expiresAt < cut || (i.acceptedAt !== null && i.acceptedAt < cut) || (i.revokedAt !== null && i.revokedAt < cut)) {
+        this.adminInvites.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
   }
 
   async getPlan(planId: string): Promise<Plan | null> {
@@ -1049,7 +1172,8 @@ export class MemoryDb implements Db {
   }
 
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents, this.adminInvites]) m.clear();
+    this.promotedFromTeacher.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }

@@ -167,6 +167,14 @@ export const TELEMETRY_EVENT_NAMES = [
   // space.seat_refused, `kind` and `role` on space.renamed; never a name, a learner, space or account id)
   'space.seat_refused',
   'space.renamed',
+  // [SA] AMENDMENTS-SEATS-ADMINS section 6.8 (recorded by the Worker; codes only: `reason` on space.admin.accept_refused;
+  // never a token, a name, an email or an id)
+  'space.admin.invite_created',
+  'space.admin.invite_revoked',
+  'space.admin.joined',
+  'space.admin.accept_refused',
+  'space.admin.removed',
+  'space.admin.left',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
