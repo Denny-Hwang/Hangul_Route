@@ -50,8 +50,8 @@ A. Home at 320 x 568 (the strip above the hero; the rest of Home as home/next-le
  Ring (48 dp, borderWidth.thick track in border.subtle, filling clockwise in brand.primary by today's points
  over the daily goal; no number, no percentage):
   empty: the track alone
-  partly: the arc; the strip's description says "A little more for today's goal"
-  met:   the closed ring and a `check` glyph in brand.primary; "Today's goal is done"
+  partly: the arc; the strip's description says "A little more for your daily goal"
+  met:   the closed ring and a `check` glyph in brand.primary; "Daily goal done"
 
 A2. The streak line's three forms (never a drop, never "lost")
   Streak 5 days                        <- a run in progress (rest days included)
@@ -61,7 +61,7 @@ A2. The streak line's three forms (never a drop, never "lost")
 
 B. Wide and 768 (the strip spans the main column above the hero; one row)
  +--------------------------------------------------------------------------+
- | (ring) Today's goal is done  |  4 steady weeks   M T W T F S S   Streak 5 days |
+ | (ring) Daily goal done       |  4 steady weeks   M T W T F S S   Streak 5 days |
  |        Light, about 5 minutes|                   v v r v o . .                 |
  +--------------------------------------------------------------------------+
 
@@ -94,14 +94,15 @@ D. The first choice (once, on Home, after the first finished activity; E4's "no 
  +----------------------------+     "no default" arm) until a choice is made in C
 
 E. Goal moments, a banner on the Results of the activity that reached them (one line each, Hoya cheering)
- | (ring closes) Today's goal is done!                    |   <- goal.met
+ | (ring closes) Daily goal done!                         |   <- goal.met
  | (dot fills)  Week goal reached! That is 5 steady weeks. |   <- week.goal_met
 ```
 
 - **Headline** (OD-6): "N steady weeks" is the biggest text in the strip (`typography.size.bodyLg`, bold). It counts every local week whose weekly goal was reached, ever, so it only grows. With 0 it reads "Your first steady week starts here" instead of a number.
 - **Streak below**: `streakLocal.run` on the local day, rest days included; `streakBest` only appears in "Start a new run! Best run: N days". The displayed run never drops because of a sync (§4.8 step 8).
 - **No numbers of points** anywhere: the ring is a shape, the goal is time words. No "n of m": the dots are the week, never "2 of 3 days".
-- **Copy rule** (§7.4): positive nudges only ("A little more for today's goal", "N items are ready to refresh" on the Daily Review card). Never "lost", "missed", "broken", "behind", "late", "overdue", "don't lose", "keep it alive" or a countdown to midnight. No notification is sent by anything here.
+- **Two goals on Home, told apart by their words.** The hero's goal line (`home/next-lesson-hero.md`, "Goal: Stage 1 · Hangul") names a stage: where the learner's route is heading. The strip's goal is time a day and is always called the **daily goal** ("Daily goal done", "A little more for your daily goal", the sheet's "Every day"), never a bare "goal". Both stay; neither replaces the other.
+- **Copy rule** (§7.4): positive nudges only ("A little more for your daily goal", "N items are ready to refresh" on the Daily Review card). Never "lost", "missed", "broken", "behind", "late", "overdue", "don't lose", "keep it alive" or a countdown to midnight. No notification is sent by anything here.
 
 ## Interaction points
 
@@ -132,7 +133,7 @@ Exit to: C (the goals sheet) and back · the hero and cards as `home/next-lesson
 
 ## Accessibility
 
-- The strip is one button read as: "This week: Monday learned, Tuesday learned, Wednesday rest day, Thursday learned, Friday today, Saturday, Sunday. 4 steady weeks. Streak 5 days. Today's goal: Light, about 5 minutes, a little more to go. Change goals." (day names from `Intl`, full, not the narrow letters).
+- The strip is one button read as: "This week: Monday learned, Tuesday learned, Wednesday rest day, Thursday learned, Friday today, Saturday, Sunday. 4 steady weeks. Streak 5 days. Daily goal: Light, about 5 minutes, a little more to go. Change goals." (day names from `Intl`, full, not the narrow letters). Every day is read with its state, because the dots are the headline. A part with nothing to say is left out, never read as an empty pause: no streak on the first day, no daily goal before one is chosen (E4 "no default" arm).
 - C: a dialog with the title "Your goals"; radio groups "Every day" and "Every week"; focus starts on the selected daily goal; [x] "Close".
 - Targets: the strip at least `touchTarget.hero` tall; radio cards and buttons `touchTarget.min` (64); dots and the ring are not targets.
 - Colour is never the only cue: learned = fill plus `check`, rest = `rest` glyph, today = thicker outline plus semibold letter, goal met = closed ring plus `check`.
@@ -171,10 +172,9 @@ Exit to: C (the goals sheet) and back · the hero and cards as `home/next-lesson
 |---|---|
 | `learner.goals.steadyWeeks(count)` | 1 steady week / {count} steady weeks |
 | `learner.goals.firstWeek` | Your first steady week starts here |
-| `learner.goals.streak(days)` | Streak 1 day / Streak {days} days |
 | `learner.goals.newRun(best)` | Start a new run! Best run: 1 day / Start a new run! Best run: {best} days |
-| `learner.goals.today.met` | Today's goal is done |
-| `learner.goals.today.more` | A little more for today's goal |
+| `learner.goals.today.met` | Daily goal done |
+| `learner.goals.today.more` | A little more for your daily goal |
 | `learner.goals.daily.light` / `.steady` / `.strong` | Light / Steady / Strong |
 | `learner.goals.daily.time.light` / `.steady` / `.strong` | about 5 minutes / about 10 minutes / about 15 minutes |
 | `learner.goals.weekly.days(n)` | 3 days / 5 days / 7 days |
@@ -185,12 +185,12 @@ Exit to: C (the goals sheet) and back · the hero and cards as `home/next-lesson
 | `learner.goals.sheet.done.cta` | Done |
 | `learner.goals.first.title` | How much time a day suits you? |
 | `learner.goals.first.later.cta` | Not now |
-| `learner.goals.banner.dayMet` | Today's goal is done! |
+| `learner.goals.banner.dayMet` | Daily goal done! |
 | `learner.goals.banner.weekMet(count)` | Week goal reached! That is {count} steady weeks. |
-| `a11y.goals.strip(...)` | This week: {days}. {steadyWeeks}. {streak}. Today's goal: {goal}, {state}. Change goals. |
+| `a11y.goals.strip(...)` | This week: {days}. {steadyWeeks}. {streak}. Daily goal: {goal}, {state}. Change goals. (a part with no value is left out with its full stop) |
 | `a11y.goals.day.learned` / `.rest` / `.today` | learned / rest day / today |
 
-`learner.home.streak.pill` stays for the `goals`-off Home. Every string passes `review-copy` (§9.3: no `%`, no "n of m").
+The strip's streak line reuses `learner.home.streak.pill` ("Streak 1 day" / "Streak N days"), which also stays for the `goals`-off Home, so there is one streak string. Every string passes `review-copy` (§9.3: no `%`, no "n of m").
 
 ## Open questions
 

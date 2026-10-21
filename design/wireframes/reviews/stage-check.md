@@ -150,12 +150,12 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 - **offline**: plays fully offline.
 - **`stageChecks` off** (§12.2): B has no Stage Check button (See my cards becomes the primary), C has no Stage Check button; latched results stay and show again when it is back on.
 - **reduced motion**: the F-MOTION-003 ceremony's reduced variant: no burst or confetti; the title, cells and card appear at once; no star pop on F.
-- **320 x 568 and 200 % text**: B scrolls; the five mini cells keep one row (each about 48 dp, not targets) and their words go to the a11y label only when they no longer fit; the card is 2 columns wide; buttons full width.
+- **320 x 568 and 200 % text**: B scrolls; the five mini cells keep one row (each 48 dp, not targets) and their theme words keep the caption size (`maxFontSizeMultiplier` 1, as the Journey grid's theme word), so they never collide; the level words are in the group's label; the card is 2 columns wide; buttons full width.
 - **768 and wide**: B in the reading column, the card beside the places row; F in the reading column.
 
 ## Accessibility
 
-- B title is the screen heading; the places row is one group read as "Your places in Stage 2: Letters, Practiced. Food, Done. Holidays, Mastered. Nature, Done. Play, Done." (the level words of `journey/mastery-ring.md`).
+- B title is the screen heading; the places row is one group, and each place is read with its level word, as "Your places in Stage 2: Letters, Practiced. Food, Done. Holidays, Mastered. Nature, Done. Play, Done." (the level words of `journey/mastery-ring.md`).
 - Stage card: "Open card: <title>".
 - C's Stage Check button: "Stage Check, best 2 stars" once taken.
 - Results: headline, "3 stars", lines, then buttons; focus starts on the headline.
@@ -189,11 +189,11 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 
 | Key | English |
 |---|---|
-| `learner.results.stagePrize.cta(stage)` | See your Stage {stage} prize |
-| `learner.stageComplete.title(stage)` | Stage {stage} complete! |
-| `learner.stageComplete.canDo.stage2` .. `.stage7` | stage2 "You can read everyday words now!" · stage3 "You can read short sentences now!" · stage4 "You can read and answer short everyday exchanges now!" · stage5 "You can read heritage stories now!" · stage6 "You can read menus, signs and short messages now!" · stage7 "You can write a short introduction now!" |
-| `learner.stageComplete.places(stage)` | Your places in Stage {stage} |
-| `learner.stageComplete.cardTitle` | Your stage card |
+| `learner.results.upperStagePrize.cta(stage)` | See your Stage {stage} prize |
+| `learner.upperStageComplete.title(stage)` | Stage {stage} complete! |
+| `learner.upperStageComplete.canDo.stage2` .. `.stage7` | stage2 "You can read everyday words now!" · stage3 "You can read short sentences now!" · stage4 "You can read and answer short everyday exchanges now!" · stage5 "You can read heritage stories now!" · stage6 "You can read menus, signs and short messages now!" · stage7 "You can write a short introduction now!" |
+| `learner.upperStageComplete.places(stage)` | Your places in Stage {stage} |
+| `learner.upperStageComplete.cardTitle` | Your stage card |
 | `learner.stageCheck.title` | Stage Check |
 | `learner.stageCheck.offer.cta` | Take the Stage Check |
 | `learner.stageCheck.offer.body` | About 7 minutes. You can skip it. |
@@ -206,7 +206,7 @@ Exit to: `library/card-detail` · `library/gallery` · `home/todays-mission` · 
 | `learner.stageCheck.retro.body` | Here are your stage cards. |
 | `a11y.stageCheck.best(stars)` | Stage Check, best {stars} stars |
 
-The can-do lines follow the OD-12 stage wording (no speaking claim: Stage 4 is reading and answering, Stage 7 is writing). The stop sheet reuses `learner.stageReview.leave.*`, the switch `learner.stageReview.intro.hideRomanization`, the start and later buttons `learner.stageReview.intro.start` / `.later`, and star headlines `learner.dailyReview.result.headline.*`.
+**New namespace on purpose:** `learner.stageComplete.*` and `learner.results.stagePrize.cta` are the live Stage 1 strings (`results/stage1-complete.md`: "Hangul complete!", the fixed can-do line, "See your Stage 1 prize"), so Stages 2-7 get `learner.upperStageComplete.*` and `learner.results.upperStagePrize.*` and the Stage 1 leaves stay exactly as they are. The header button reuses `learner.journey.stagePrize.cta` ("See your prize"); See my cards and Back home reuse `learner.stageComplete.seeCards` / `.backHome`. The can-do lines follow the OD-12 stage wording (no speaking claim: Stage 4 is reading and answering, Stage 7 is writing). The stop sheet reuses `learner.stageReview.leave.*`, the switch `learner.stageReview.intro.hideRomanization`, the start and later buttons `learner.stageReview.intro.start` / `.later`, and star headlines `learner.dailyReview.result.headline.*`.
 
 ## Open questions
 

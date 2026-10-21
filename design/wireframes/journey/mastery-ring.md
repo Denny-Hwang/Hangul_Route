@@ -68,10 +68,10 @@ D. Next to the other marks (precedence and places, unchanged from grid-plan-and-
 
 E. The cell's page (episode/detail.md; the block under the header, also used by reviews/cell-check.md A)
  +----------------------------+
- | (ring48) Practiced         |  <- the same three segments round a 48 dp circle (the theme glyph inside),
+ | (ring48) Mastered          |  <- the same three segments round a 48 dp circle (the theme glyph inside),
  |          Ready to refresh  |     the level word (bodyLg, semibold), then at most two lines:
- |          New volume        |     "Ready to refresh" (with the sparkle; any started cell with items due)
-                                     and "New volume" (with the plus)
+ |          New volume        |     "Ready to refresh" (with the sparkle; the same rule as the map: a
+                                     level 3 cell with items due) and "New volume" (with the plus)
  | Take the Cell Check to     |  <- one hint line for the next level, below level 3:
  | reach Mastered.            |     0-1: "Keep reviewing to reach Practiced."; 2 without a Cell Check:
  +----------------------------+     this line; 2 with one: "Keep reviewing to reach Mastered."
@@ -180,4 +180,4 @@ Exit to: unchanged: the cell opens `episode/detail`
 
 ## Open questions
 
-- Spec §4.4 glows only **mastered** cells. Default used here: level 3 only. A cell at level 1 or 2 with items due shows nothing on the map; its page (E) still says "Ready to refresh". CM-20 can widen it to every started cell if the beta shows learners miss refresh cues on lower levels; the drawing is the same.
+- None blocking CM-20. Spec §4.4 glows only **mastered** cells, and this design follows it on every surface: the map (B), the cell's page (E) and `reviews/cell-check.md` A say "Ready to refresh" only for a level 3 cell with items due. A level 1 or 2 cell's due items reach the learner through the Daily Review, which is how they climb to the next level. Widening the cue to every started cell would be a spec change, not a CM-20 choice.
