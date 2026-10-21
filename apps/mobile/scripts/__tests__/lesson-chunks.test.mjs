@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PRECACHE_BUDGET,
   WEB_JS_DIR,
+  budgetIsAdvisory,
   isStartBundle,
   lessonChunkProblems,
   md5,
@@ -97,15 +98,26 @@ describe('precacheReport and its budget lines', () => {
       precache: { count: 1, raw: PRECACHE_BUDGET.learnerPrecacheRaw + 1 },
     };
     expect(precacheBudgetProblems(report)).toEqual([
-      `the start bundle is ${PRECACHE_BUDGET.startBundleRaw + 1} B raw, over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B: it must not grow`,
+      expect.stringMatching(
+        new RegExp(`^the start bundle is ${PRECACHE_BUDGET.startBundleRaw + 1} B raw, over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B: it must not grow .*raise PRECACHE_BUDGET\\.startBundleRaw`),
+      ),
       `the learner precache is ${PRECACHE_BUDGET.learnerPrecacheRaw + 1} B, over its ceiling of ${PRECACHE_BUDGET.learnerPrecacheRaw} B: row CM-5B (Save for offline) is triggered`,
     ]);
     expect(precacheBudgetProblems({ ...report, start: null, precache: { count: 0, raw: 0 } })).toEqual(['no start bundle to measure']);
     expect(reportLines({ ...report, start: null })).toHaveLength(3);
   });
 
-  it('the start bundle line is the size before CM-5; the precache line is the CM-5 measurement plus 2.5 MB', () => {
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(8_321_783);
-    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_780_718 + 2_500_000);
+  it('the start bundle line is its size after CM-5 with a small margin; the precache line is the CM-5 measurement plus 2.5 MB', () => {
+    // Measured after CM-5: 7,335,066 B (8,321,783 B before); the margin stays under 10 KB, so the bundle cannot regrow.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(7_340_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 7_335_066).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_784_580 + 2_500_000);
+  });
+
+  it('the budget only warns on the deploy build (Cloudflare Workers Builds or Pages), and fails everywhere else', () => {
+    expect(budgetIsAdvisory({ WORKERS_CI: '1' })).toBe(true);
+    expect(budgetIsAdvisory({ CF_PAGES: '1' })).toBe(true);
+    expect(budgetIsAdvisory({ CI: 'true', GITHUB_ACTIONS: 'true' })).toBe(false);
+    expect(budgetIsAdvisory({})).toBe(false);
   });
 });
