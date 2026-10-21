@@ -21,6 +21,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_BROWSE?: string;
   /** Class moves (F-SPACE-002 section 4.8; [TV] TV-D13): on unless `false`, `0`, `off` or `disabled`. */
   NEXT_PUBLIC_CLASS_TRANSFER?: string;
+  /** [OA] Use a passkey on the grown-up lock (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): on unless `false`, `0`, `off` or `disabled`. */
+  NEXT_PUBLIC_LOCK_PASSKEY?: string;
   NODE_ENV?: string;
 }
 
@@ -45,6 +47,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_REPORTS_ENABLED: process.env.NEXT_PUBLIC_REPORTS_ENABLED,
     NEXT_PUBLIC_BROWSE: process.env.NEXT_PUBLIC_BROWSE,
     NEXT_PUBLIC_CLASS_TRANSFER: process.env.NEXT_PUBLIC_CLASS_TRANSFER,
+    NEXT_PUBLIC_LOCK_PASSKEY: process.env.NEXT_PUBLIC_LOCK_PASSKEY,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -191,6 +194,16 @@ export function browseEntryShown(origin: string, env: ConsoleEnv = buildEnv()): 
  */
 export function classTransferEnabled(env: ConsoleEnv = buildEnv()): boolean {
   const value = env.NEXT_PUBLIC_CLASS_TRANSFER?.trim().toLowerCase();
+  return !(value === 'false' || value === '0' || value === 'off' || value === 'disabled');
+}
+
+/**
+ * [OA] Use a passkey on the grown-up lock (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.4 and 16): on by default; exactly
+ * `false`, `0`, `off` or `disabled` (case and spaces ignored) hides the button on a build. Only the button: the
+ * passkey rule for a sign-in on a `pin` browser and every other part of row OA-3 are always on.
+ */
+export function lockPasskeyEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const value = env.NEXT_PUBLIC_LOCK_PASSKEY?.trim().toLowerCase();
   return !(value === 'false' || value === '0' || value === 'off' || value === 'disabled');
 }
 
