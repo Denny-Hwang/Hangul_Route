@@ -23,7 +23,7 @@ import { summarize } from '../logic/sync/summarize';
 import { TRANSFER_SCOPE_KEY, deviceScopeOf } from '../logic/transfers/device-scope';
 import { getDeviceId } from '../platform/device';
 import { onInboxRead } from '../platform/inbox-events';
-import { readJson, writeJson } from '../platform/storage';
+import { readJson, readJsonStrict, writeJson } from '../platform/storage';
 import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-api';
 import { usePlanStore } from './plan-store';
 import { onProfileEdited } from './profile-edits';
@@ -298,9 +298,22 @@ export const useSyncStore = create<State & Actions>((set, get) => {
   }
 
   /**
+   * Cache the record read from storage for `learnerId`, unless a hydrate that raced the read (an edit queued
+   * meanwhile) already cached a newer one, which wins.
+   */
+  function adopt(learnerId: string, saved: Partial<Persisted> | null): LearnerSyncState {
+    const raced = get().byLearner[learnerId];
+    if (raced) return raced;
+    const state: LearnerSyncState = { ...blank(learnerId), ...(saved ?? {}) };
+    set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: state } }));
+    return state;
+  }
+
+  /**
    * One-time repair (builds before profile edits reached the server kept a rename on the device): queue every
    * registered learner's current name, level and avatar once, then set the marker. Learners not registered yet send
-   * theirs when they register.
+   * theirs when they register. A record that cannot be read stops the pass with no marker and nothing cached for that
+   * learner, so the repair runs again on the next start (F-SYNC-001 section 3.7 #10).
    */
   async function repairProfilePushes(): Promise<void> {
     if (await readJson<boolean>(PROFILE_PUSH_REPAIR_KEY)) return;
@@ -309,7 +322,17 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     // Nothing loaded yet (or a read that failed): try again on the next start rather than mark it done.
     if (!profiles.hydrated || learners.length === 0) return;
     for (const p of learners) {
-      const state = await get().hydrate(p.id);
+      let state = get().byLearner[p.id];
+      if (!state) {
+        let saved: Partial<Persisted> | null;
+        try {
+          saved = await readJsonStrict<Partial<Persisted>>(key(p.id));
+        } catch {
+          // A failed read is not "no record": a blank one here would skip the learner and mark the repair done.
+          return;
+        }
+        state = adopt(p.id, saved);
+      }
       if (!state.secret) continue;
       const previous = get().byLearner[p.id]?.pendingProfile ?? state.pendingProfile;
       update(p.id, { pendingProfile: queueRepair(previous, serverFieldsOf(p), editStamp(previous?.at)) });
@@ -399,11 +422,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       if (existing) return existing;
       const saved = await readJson<Partial<Persisted>>(key(learnerId));
       // A hydrate that raced this one (an edit queued meanwhile) wins: its record is newer than the stored one.
-      const raced = get().byLearner[learnerId];
-      if (raced) return raced;
-      const state: LearnerSyncState = { ...blank(learnerId), ...(saved ?? {}) };
-      set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: state } }));
-      return state;
+      return adopt(learnerId, saved);
     },
 
     requestSync: (learnerId) => {
