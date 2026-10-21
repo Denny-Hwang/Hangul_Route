@@ -141,7 +141,9 @@ migrations_dir = "migrations"
 # Once a day at 11:17 UTC the Worker's `scheduled` handler (src/index.ts) runs
 # the bounded retention purge: notes past 180 days, reported notes 90 days after
 # their newest report, lifted holds after 365 days, and dead rate counters, at
-# most 5 rounds of 200 rows. Cron Triggers are allowed on the Workers Free plan;
+# most 5 rounds of 200 rows. The same run first evaluates the F-CURR-002
+# guardrails (row CM-70b) and only lowers a breached ramp in remote_config.
+# Cron Triggers are allowed on the Workers Free plan;
 # the deploy command is unchanged (wrangler deploy registers the schedule).
 [triggers]
 crons = ["17 11 * * *"]

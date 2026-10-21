@@ -1722,6 +1722,10 @@ export class D1Db implements Db {
     return total ?? cells;
   }
 
+  async lowerRemoteConfigPct(flag: string, fromPct: number, toPct: number, updatedAt: string, reason: string): Promise<boolean> {
+    return (await this.changes('UPDATE remote_config SET pct = ?, updated_at = ?, reason = ? WHERE flag = ? AND pct = ? AND pct > ?', [toPct, updatedAt, reason, flag, fromPct, toPct])) > 0;
+  }
+
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */
   async reset(): Promise<void> {
     const present = new Set(await this.many("SELECT name FROM sqlite_master WHERE type = 'table'", [], (r) => str(r.name)));
