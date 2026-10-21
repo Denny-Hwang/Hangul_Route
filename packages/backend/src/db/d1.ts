@@ -750,8 +750,8 @@ export class D1Db implements Db {
     if (added === 1) return 'added';
     return (await this.membership(spaceId, 'learner', learnerId)) ? 'already' : 'refused';
   }
-  async renameSpace(spaceId: string, name: string): Promise<boolean> {
-    return (await this.changes('UPDATE spaces SET name = ? WHERE id = ? AND archived_at IS NULL', [name, spaceId])) === 1;
+  renameSpace(spaceId: string, name: string): Promise<number> {
+    return this.changes('UPDATE spaces SET name = ? WHERE id = ? AND archived_at IS NULL', [name, spaceId]);
   }
   async addSpaceEvent(e: SpaceEvent): Promise<void> {
     await this.run(

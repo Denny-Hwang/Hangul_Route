@@ -154,6 +154,37 @@ describe('[SA] a rename and a settings change at once', () => {
   });
 });
 
+describe('[SA] an archive or a delete between the read and the write (section 5.2)', () => {
+  it('changes 0: 422 archived or 404, no space_events row and no space.renamed', async () => {
+    const sch = await createSpace('principal', 'school', 'Maple School');
+    const original = db.renameSpace.bind(db);
+    db.renameSpace = async (spaceId, name) => {
+      const space = await db.getSpace(spaceId);
+      if (space) await db.putSpace({ ...space, archivedAt: new Date().toISOString() });
+      return original(spaceId, name);
+    };
+    try {
+      const r = await rename('principal', sch, 'Maple Hangul School');
+      expect([r.status, r.body.error?.code]).toEqual([422, 'archived']);
+      // a space that is gone by the re-read
+      const realGet = db.getSpace.bind(db);
+      let reads = 0;
+      db.renameSpace = async () => 0;
+      db.getSpace = async (id) => (++reads > 1 ? null : realGet(id));
+      const cls = await createSpace('teacher', 'class', 'Room 4');
+      reads = 0;
+      const gone = await rename('teacher', cls, 'Room 9');
+      expect([gone.status, gone.body.error?.code]).toEqual([404, 'not_found']);
+      db.getSpace = realGet;
+    } finally {
+      db.renameSpace = original;
+    }
+    expect(await nameOf(sch)).toBe('Maple School');
+    expect(await db.spaceEventsOf(sch, 10)).toEqual([]);
+    expect(renamedEvents()).toEqual([]);
+  });
+});
+
 describe('[SA] the school audit rows (section 6.2)', () => {
   it('a school rename writes `renamed` on the school; a class of the school `class_renamed` there, with the class', async () => {
     const sch = await createSpace('principal', 'school', 'Maple School');

@@ -79,7 +79,8 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
   return ok(c, {
     school: publicSpace(school),
     invite: isJoinCodeLive(school, now) ? { joinCode: school.joinCode, joinCodeExpiresAt: school.joinCodeExpiresAt } : { joinCode: null, joinCodeExpiresAt: null },
-    license: license ? { ...license, subjectName: school.name, active: isEntitlementActive(license, now) } : null,
+    // [SA] section 3.6: an allow-list for every caller; never a Stripe id or a promo code (billing is the owner's).
+    license: license ? { planKey: license.planKey, status: license.status, seats: license.seats, expiresAt: license.expiresAt, active: isEntitlementActive(license, now), subjectName: school.name } : null,
     // [SA] section 3.2: 50 for a licence, the contract's seats, or 50 for a school with nothing active (`licensed: false`).
     limits: { licensed: limits.licensed, students: limits.students, teachers: limits.teachers },
     canRename: renames(school, null),

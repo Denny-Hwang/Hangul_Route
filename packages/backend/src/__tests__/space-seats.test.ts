@@ -1,6 +1,7 @@
 import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS, LookupSeatSchema, SCHOOL_LEARNER_CAP, type EntitlementApply } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
+import { relinkLimiter } from '../routes/relink';
 import { lookupLimiter } from '../routes/spaces';
 import { store } from '../store';
 import { testDb as db } from './helpers/db';
@@ -51,6 +52,7 @@ const seatEvents = () => store.events.filter((e) => e.name === 'space.seat_refus
 beforeEach(async () => {
   await db.reset();
   lookupLimiter.reset();
+  relinkLimiter.reset();
   store.events.length = 0;
 });
 
@@ -62,7 +64,7 @@ describe('[SA] a family holds up to 4 learners (SA-D1)', () => {
     expect((await join(fam, fourth)).status).toBe(201);
     const fifth = await registerLearner('Jun');
     const refused = await join(fam, fifth);
-    expect([refused.status, refused.body.error?.code, refused.body.error?.details]).toEqual([409, 'cap_family', { cap: 4 }]);
+    expect([refused.status, refused.body.error?.code, refused.body.error?.details]).toEqual([409, 'cap_family', { reason: 'cap_family', cap: 4 }]);
     expect(refused.body.error?.message).toBe('This family has room for 4 learners');
     expect(await db.membership(fam.id, 'learner', fifth.learnerId)).toBeNull();
     // the 4th joins again from another screen: nothing new, 200 alreadyMember
@@ -114,12 +116,12 @@ describe('[SA] classes and schools hold up to 50 (SA-D2, SA-D3)', () => {
     const cls = await createSpace('teacher', 'class', 'Room 4');
     await fill(cls.id, FREE_CLASS_STUDENT_CAP);
     const r = await join(cls, await registerLearner());
-    expect([r.status, r.body.error?.code, r.body.error?.details]).toEqual([409, 'cap_class', { cap: 20 }]);
+    expect([r.status, r.body.error?.code, r.body.error?.details]).toEqual([409, 'cap_class', { reason: 'cap_class', cap: 20 }]);
     await entitle(cls.id);
     await fill(cls.id, GROUP_LICENSE_LEARNERS - FREE_CLASS_STUDENT_CAP - 1, 'more');
     expect((await join(cls, await registerLearner())).status).toBe(201);
     const full = await join(cls, await registerLearner());
-    expect([full.status, full.body.error?.code, full.body.error?.details]).toEqual([409, 'cap_class', { cap: 50 }]);
+    expect([full.status, full.body.error?.code, full.body.error?.details]).toEqual([409, 'cap_class', { reason: 'cap_class', cap: 50 }]);
     expect(full.body.error?.message).toBe('This class has room for 50 students');
   });
 
@@ -134,7 +136,9 @@ describe('[SA] classes and schools hold up to 50 (SA-D2, SA-D3)', () => {
     expect((await join(c, sibling)).status).toBe(201);
     await fill(c.id, 9); // 20 + 20 + 1 + 9 = 50 distinct
     const r = await join(c, await registerLearner());
-    expect([r.status, r.body.error?.code, r.body.error?.details]).toEqual([409, 'cap_school', { cap: SCHOOL_LEARNER_CAP }]);
+    // [SA] section 3.4: shipped apps map only cap_class to the class line, so a school cap answers cap_class with its reason
+    expect([r.status, r.body.error?.code, r.body.error?.details]).toEqual([409, 'cap_class', { reason: 'cap_school', cap: SCHOOL_LEARNER_CAP }]);
+    expect(r.body.error?.message).toBe('This school has room for 50 students');
     // the learner of C joins A? A is at 20: the class cap first
     expect((await join(a, sibling)).body.error?.code).toBe('cap_class');
     // a fourth class: the sibling learner holds a school seat already, so it joins
@@ -154,7 +158,7 @@ describe('[SA] classes and schools hold up to 50 (SA-D2, SA-D3)', () => {
     await fill(a.id, 30);
     expect((await join(a, await registerLearner())).status).toBe(201); // 31 in one class: no class cap
     await fill(b.id, 19); // 31 + 19 = 50
-    expect((await join(b, await registerLearner())).body.error?.code).toBe('cap_school');
+    expect((await join(b, await registerLearner())).body.error?.details).toEqual({ reason: 'cap_school', cap: 50 });
     await entitle(sch.id, { planKey: 'school_seat', seats: 60 });
     await entitle(sch.id, { planKey: 'group_license', status: 'expired' });
     expect((await join(b, await registerLearner())).status).toBe(201); // 51 of 60
@@ -162,7 +166,7 @@ describe('[SA] classes and schools hold up to 50 (SA-D2, SA-D3)', () => {
     // A's 31 learners no longer count toward the school: B's 20 of 21
     await entitle(sch.id, { planKey: 'school_seat', seats: 21 });
     expect((await join(b, await registerLearner())).status).toBe(201);
-    expect((await join(b, await registerLearner())).body.error?.details).toEqual({ cap: 21 });
+    expect((await join(b, await registerLearner())).body.error?.details).toEqual({ reason: 'cap_school', cap: 21 });
   });
 
   it('a class with its own licence in an unlicensed school: 50 in the class, 50 in the school', async () => {
@@ -172,7 +176,7 @@ describe('[SA] classes and schools hold up to 50 (SA-D2, SA-D3)', () => {
     await fill(a.id, 49);
     expect((await join(a, await registerLearner())).status).toBe(201);
     const r = await join(a, await registerLearner());
-    expect([r.body.error?.code, r.body.error?.details]).toEqual(['cap_class', { cap: 50 }]);
+    expect([r.body.error?.code, r.body.error?.details]).toEqual(['cap_class', { reason: 'cap_class', cap: 50 }]);
   });
 
   it('grandfathers a licensed class above 50: members stay and re-join, new students wait', async () => {
@@ -189,11 +193,11 @@ describe('[SA] classes and schools hold up to 50 (SA-D2, SA-D3)', () => {
     const learner = await registerLearner();
     for (const name of ['A', 'B', 'C']) expect((await join(await createSpace('teacher', 'class', name), learner)).status).toBe(201);
     const r = await join(await createSpace('teacher', 'class', 'D'), learner);
-    expect([r.body.error?.code, r.body.error?.details]).toEqual(['cap_learner', { cap: 3 }]);
+    expect([r.body.error?.code, r.body.error?.details]).toEqual(['cap_learner', { reason: 'cap_learner', cap: 3 }]);
   });
 });
 
-describe('[SA] lookup: `full` stays class-only, `seat` is learner-aware (section 3.4)', () => {
+describe('[SA] lookup: `full` is always false, `seat` is learner-aware (section 3.4)', () => {
   it('a full family: full false (shipped apps), seat full for a new learner, room for a vouched member', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
     const member = await registerLearner('Mina');
@@ -224,17 +228,58 @@ describe('[SA] lookup: `full` stays class-only, `seat` is learner-aware (section
     await fill(b.id, 20);
     await fill(c.id, 10);
     const anon = await lookup(c.joinCode);
-    expect(anon.body.data).toMatchObject({ full: true, seat: { full: true, reason: 'cap_school', cap: 50 } });
+    expect(anon.body.data).toMatchObject({ full: false, seat: { full: true, reason: 'cap_school', cap: 50 } });
     const vouched = await lookup(c.joinCode, sibling.auth, sibling.learnerId);
-    expect(vouched.body.data).toMatchObject({ full: true, seat: { full: false, reason: null, cap: null } });
+    expect(vouched.body.data).toMatchObject({ full: false, seat: { full: false, reason: null, cap: null } });
     expect((await join(c, sibling)).status).toBe(201);
   });
 
-  it('a full class: full and seat.reason cap_class; a class with room: neither', async () => {
+  it('a full class: full stays false, seat.reason cap_class; a class with room: seat not full', async () => {
     const cls = await createSpace('teacher', 'class', 'Room 4');
     expect((await lookup(cls.joinCode)).body.data).toMatchObject({ full: false, seat: { full: false, reason: null, cap: null } });
     await fill(cls.id, 20);
-    expect((await lookup(cls.joinCode)).body.data).toMatchObject({ full: true, seat: { full: true, reason: 'cap_class', cap: 20 } });
+    expect((await lookup(cls.joinCode)).body.data).toMatchObject({ full: false, seat: { full: true, reason: 'cap_class', cap: 20 } });
+  });
+});
+
+describe('[SA] relink at a cap is never blocked (section 3.4)', () => {
+  /** A rostered learner on its first device, then a new device asks to come back through the class roster. */
+  async function relinkAt(space: { id: string; joinCode: string }) {
+    const learner = await registerLearner('Returning');
+    expect((await join(space, learner)).status).toBe(201);
+    return learner;
+  }
+  const relink = (spaceId: string, code: string, learnerId: string, deviceId: string) => call('POST', `/api/spaces/${spaceId}/relink-requests`, json, { code, learnerId, deviceId });
+
+  it('a full licensed class (50) and a class of a school at 50: full false, relink succeeds and takes no seat, a new learner gets cap_class', async () => {
+    const solo = await createSpace('teacher', 'class', 'Room 4');
+    await entitle(solo.id);
+    const sch = await createSpace('principal', 'school', 'Maple School');
+    const a = await createSpace('principal', 'class', 'A', sch.id);
+    const b = await createSpace('principal', 'class', 'B', sch.id);
+    const cases: Array<{ space: { id: string; joinCode: string }; owner: string; fillTo: () => Promise<void>; reason: string }> = [
+      { space: solo, owner: 'teacher', fillTo: () => fill(solo.id, 49), reason: 'cap_class' },
+      { space: a, owner: 'principal', fillTo: () => fill(b.id, 49), reason: 'cap_school' },
+    ];
+    let n = 0;
+    for (const { space, owner, fillTo, reason } of cases) {
+      const back = await relinkAt(space);
+      await fillTo(); // the space (or its school) now holds 50
+      // the old-shape answer: `full` is false, so a shipped app shows the roster and its relink step
+      const old = await lookup(space.joinCode);
+      expect(old.body.data).toMatchObject({ full: false, seat: { full: true, reason } });
+      n += 1;
+      const deviceId = `device-newphone${n}`;
+      const created = await relink(space.id, space.joinCode, back.learnerId, deviceId);
+      expect(created.status, reason).toBe(201);
+      const rid = (created.body.data as { request: { id: string } }).request.id;
+      const before = (await db.membersOf(space.id)).filter((m) => m.memberKind === 'learner').length;
+      expect((await call('POST', `/api/spaces/${space.id}/relink-requests/${rid}/approve`, bearer(owner))).status).toBe(200);
+      expect((await db.membersOf(space.id)).filter((m) => m.memberKind === 'learner').length).toBe(before);
+      // a new learner is refused by the atomic join, as cap_class (a school cap carries its reason)
+      const fresh = await join(space, await registerLearner('New'));
+      expect([fresh.status, fresh.body.error?.code, (fresh.body.error?.details as { reason?: string }).reason]).toEqual([409, 'cap_class', reason]);
+    }
   });
 });
 

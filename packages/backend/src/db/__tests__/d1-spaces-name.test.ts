@@ -36,7 +36,7 @@ function nameContract(name: string, make: () => Db): void {
 
     it('read, rename, then putSpace with the stale copy: the stored name is the new one, the other columns are written', async () => {
       const stale = await db.getSpace('space:cls');
-      expect(await db.renameSpace('space:cls', 'Room 4B')).toBe(true);
+      expect(await db.renameSpace('space:cls', 'Room 4B')).toBe(1);
       await db.putSpace({ ...(stale as Space), settings: { consentMode: 'parent', anonymizeRoster: true }, joinCode: 'ABCDEF', joinCodeExpiresAt: T });
       expect(await db.getSpace('space:cls')).toEqual(space({ name: 'Room 4B', settings: { consentMode: 'parent', anonymizeRoster: true }, joinCode: 'ABCDEF', joinCodeExpiresAt: T }));
     });
@@ -53,9 +53,9 @@ function nameContract(name: string, make: () => Db): void {
       await db.putSpace(space({ id: 'space:new', name: 'Fresh' }));
       expect((await db.getSpace('space:new'))?.name).toBe('Fresh');
       await db.putSpace(space({ id: 'space:old', name: 'Old', archivedAt: T }));
-      expect(await db.renameSpace('space:old', 'New')).toBe(false);
+      expect(await db.renameSpace('space:old', 'New')).toBe(0);
       expect((await db.getSpace('space:old'))?.name).toBe('Old');
-      expect(await db.renameSpace('space:nope', 'New')).toBe(false);
+      expect(await db.renameSpace('space:nope', 'New')).toBe(0);
     });
   });
 }

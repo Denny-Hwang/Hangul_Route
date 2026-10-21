@@ -171,9 +171,9 @@ export interface Db {
   addLearnerWithinCaps(input: AddLearnerWithinCapsInput): Promise<'added' | 'already' | 'refused'>;
   /**
    * [SA] Renames a live space with one column-only statement (section 5.2): the name is written only here and at
-   * insert (`putSpace` never writes it on update). False when the space is gone or archived.
+   * insert (`putSpace` never writes it on update). The rows changed: 0 when the space is gone or archived.
    */
-  renameSpace(spaceId: string, name: string): Promise<boolean>;
+  renameSpace(spaceId: string, name: string): Promise<number>;
   /** [SA] One `space_events` row (section 6.2); the kind is checked against `SpaceEventKindSchema`. */
   addSpaceEvent(event: SpaceEvent): Promise<void>;
   /** [SA] A space's events, newest first, at most `limit`. */

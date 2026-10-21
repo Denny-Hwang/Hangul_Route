@@ -92,14 +92,29 @@ describe('school admin (F-SCHOOL-001)', () => {
     expect((await registerAndJoin(cls, code, 'device-a0000001', 'A')).status).toBe(201);
     const b = await registerAndJoin(cls, code, 'device-b0000001', 'B');
     expect(b.status).toBe(201);
-    expect((await call('POST', '/api/spaces/lookup', json, { code })).body.data).toMatchObject({ full: true });
+    // [SA] section 3.4: `full` is always false (relink stays reachable); `seat` names the school cap
+    expect((await call('POST', '/api/spaces/lookup', json, { code })).body.data).toMatchObject({ full: false, seat: { full: true, reason: 'cap_school', cap: 2 } });
     const third = await registerAndJoin(cls, code, 'device-c0000001', 'C');
     expect(third.status).toBe(409);
-    expect(third.code).toBe('cap_school');
+    expect(third.code).toBe('cap_class'); // a school cap answers cap_class with details.reason cap_school
     // a learner already counted in the school may join a second class
     const cls2 = await createSpace('principal', 'class', 'Second', { parentSpaceId: sch });
     const code2 = ((await db.getSpace(cls2)) as { joinCode: string }).joinCode;
     expect((await call('POST', `/api/spaces/${cls2}/join`, b.auth, { code: code2, learnerId: b.learnerId })).status).toBe(201);
     expect(((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as { usage: { students: number } }).usage.students).toBe(2);
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS section 3.6: the school view's licence is an allow-list for every caller. */
+describe('[SA] the school licence view', () => {
+  it('has exactly planKey, status, seats, expiresAt, active and subjectName, for the owner and for an admin', async () => {
+    const sch = await createSpace('principal', 'school', 'Seoul Hangul School');
+    await db.addMembership({ spaceId: sch, memberKind: 'account', memberId: 'dean', role: 'admin', joinedAt: new Date().toISOString() });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_secret', customerRef: 'cus_secret', promoCode: 'HOYA20', expiresAt: '2027-10-20T00:00:00.000Z' }, new Date());
+    for (const user of ['principal', 'dean']) {
+      const license = ((await call('GET', `/api/spaces/${sch}/school`, bearer(user))).body.data as { license: Record<string, unknown> }).license;
+      expect(Object.keys(license).sort(), user).toEqual(['active', 'expiresAt', 'planKey', 'seats', 'status', 'subjectName']);
+      expect(license).toEqual({ planKey: 'group_license', status: 'active', seats: null, expiresAt: '2027-10-20T00:00:00.000Z', active: true, subjectName: 'Seoul Hangul School' });
+    }
   });
 });

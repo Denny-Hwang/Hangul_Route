@@ -192,7 +192,7 @@ describe('learner join (§3.3)', () => {
     }
     const late = await registerLearner('device-late00001', 'Late');
     expect((await joinAs(full.space.id, late.auth, { code: full.joinCode, learnerId: late.learnerId })).body.error?.code).toBe('cap_class');
-    expect((await post('/api/spaces/lookup', json, { code: full.joinCode })).body.data).toMatchObject({ full: true });
+    expect((await post('/api/spaces/lookup', json, { code: full.joinCode })).body.data).toMatchObject({ full: false, seat: { full: true, reason: 'cap_class', cap: 20 } });
   });
 
   it('a learner joins a family with the family code', async () => {

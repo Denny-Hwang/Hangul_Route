@@ -192,15 +192,15 @@ spacesRoutes.post('/lookup', async (c) => {
     }
     roster.sort((a, b) => a.name.localeCompare(b.name));
   }
-  // `full` keeps the meaning shipped apps read (they stop on it before the name step with the class line): a class
-  // with no room for a new learner, in the class or its school; never true for a family ([SA] section 3.4).
-  const forNew = await lookupSeat(db, space, null, now);
-  const full = space.kind === 'class' && forNew.full;
+  // [SA] section 3.4: `full` is always false. Shipped apps stop on it before the class roster and its relink step, so a
+  // student at a full class (or a class of a full school) on a new device could not reach relink, which takes no
+  // seat; the atomic `/join` refuses a new learner instead. The field stays so shipped apps parse the answer.
+  const full = false;
   // [SA] `seat` is learner-aware: a learner this device vouches for (the `/join` check) who already holds the seat
   // finds room. An unvouched `learnerId` is ignored, never an error, so the lookup reveals nothing about it.
   const learnerId = parsed.data.learnerId;
   const vouched = learnerId && parseDeviceHeader(c.req.header('Authorization')) && typeof (await authorizeDevice(c, learnerId)) === 'string' ? learnerId : null;
-  const seat = vouched ? await lookupSeat(db, space, vouched, now) : forNew;
+  const seat = await lookupSeat(db, space, vouched, now);
   return ok(c, { space: { id: space.id, kind: space.kind, name: space.name }, full, seat, roster });
 });
 
@@ -304,7 +304,11 @@ spacesRoutes.patch('/:id/name', async (c) => {
   if (checked.name === space.name) return ok(c, { space: publicSpace(space), changed: false });
   const decision = renameLimiter.check(account.id);
   if (!decision.allowed) return fail(c, 'too_many_attempts', 'Too many renames: try again later', 429, { retryAfterSeconds: decision.retryAfterSeconds });
-  if (!(await db.renameSpace(space.id, checked.name))) return fail(c, 'archived', 'Unarchive the space to rename it', 422);
+  if ((await db.renameSpace(space.id, checked.name)) === 0) {
+    // An archive or a delete landed between the read and the write: say which, record nothing.
+    const now = await db.getSpace(space.id);
+    return now ? fail(c, 'archived', 'Unarchive the space to rename it', 422) : fail(c, 'not_found', 'Space not found', 404);
+  }
   const event = renameEvent(space, ctx.parent);
   if (event) {
     // After the committed rename, best effort: an audit write that fails never reports the rename as failed. A
@@ -387,7 +391,9 @@ spacesRoutes.post('/:id/join', async (c) => {
     if (taken.kind === 'refused') {
       const { code: reason, cap } = taken.refusal;
       recordServerEvent('space.seat_refused', { kind: space.kind, reason, path: 'join' });
-      return fail(c, reason, SEAT_MESSAGES[reason](cap), 409, { cap });
+      // [SA] section 3.4: a school cap answers `cap_class` (shipped apps map only `cap_class` to the class line);
+      // `details.reason` names the cap that was reached.
+      return fail(c, reason === 'cap_school' ? 'cap_class' : reason, SEAT_MESSAGES[reason](cap), 409, { reason, cap });
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
     await applyName();

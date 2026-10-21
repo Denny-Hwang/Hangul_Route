@@ -272,11 +272,11 @@ export class MemoryDb implements Db {
     }
     return learners.size < schoolCap;
   }
-  async renameSpace(spaceId: string, name: string): Promise<boolean> {
+  async renameSpace(spaceId: string, name: string): Promise<number> {
     const space = this.spaces.get(spaceId);
-    if (!space || space.archivedAt !== null) return false;
+    if (!space || space.archivedAt !== null) return 0;
     this.spaces.set(spaceId, { ...space, name });
-    return true;
+    return 1;
   }
   async addSpaceEvent(event: SpaceEvent): Promise<void> {
     if (!this.spaces.has(event.spaceId)) throw new Error('FOREIGN KEY constraint failed');

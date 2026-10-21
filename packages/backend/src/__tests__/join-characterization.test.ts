@@ -241,12 +241,15 @@ describe('/join characterization: old inline order vs classSeatCheck (F-SPACE-00
     }
 
     const r = await call('POST', `/api/spaces/${space.id}/join`, auth, { code: space.joinCode, learnerId });
-    expect({ status: r.status, code: r.body.error?.code ?? null }).toEqual(legacy);
+    // [SA] AMENDMENTS-SEATS-ADMINS section 3.4: the learner /join answers a school cap as cap_class (shipped apps map only
+    // cap_class to the class line), with details.reason naming the cap; every other code is unchanged.
+    expect({ status: r.status, code: r.body.error?.code ?? null }).toEqual(legacy.code === 'cap_school' ? { ...legacy, code: 'cap_class' } : legacy);
     if (legacy.status === 200) expect(r.body.data).toMatchObject({ alreadyMember: true });
     if (legacy.status === 201) expect(await db.membership(space.id, 'learner', learnerId)).toMatchObject({ role: 'student' });
     if (legacy.status === 409) {
-      const cap = (r.body.error?.details as { cap?: number } | undefined)?.cap;
+      const { cap, reason } = (r.body.error?.details ?? {}) as { cap?: number; reason?: string };
       expect(typeof cap).toBe('number');
+      expect(reason).toBe(legacy.code);
       expect(r.body.error?.message).toBe(SEAT_MESSAGES[legacy.code as string]?.(cap as number));
       expect(await db.membership(space.id, 'learner', learnerId)).toBeNull();
     }

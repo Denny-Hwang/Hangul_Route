@@ -76,9 +76,22 @@ export const SPACE_NAME_MAX = 40;
 /** Why a space name was refused ([SA] AMENDMENTS-SEATS-ADMINS section 5.2): `422 bad_name` `details.reason`. */
 export type SpaceNameRefusal = 'empty' | 'too_long' | 'invalid';
 
-/** Control (`Cc`) and format (`Cf`) characters, except ZWNJ U+200C and ZWJ U+200D, which some scripts need. */
-const SPACE_NAME_REFUSED = /(?![\u200C\u200D])[\p{Cc}\p{Cf}]/u;
-const SPACE_NAME_LETTER_OR_DIGIT = /[\p{L}\p{N}]/u;
+/**
+ * [SA] section 5.2 step 4: control and format characters, as an explicit deny-list (no `\p{...}`, no `u` flag:
+ * content-schema also loads in the Expo app, where Hermes support for Unicode property escapes is not guaranteed,
+ * as `display-name.ts` notes). C0 and C1 controls, soft hyphen, the Arabic letter mark, the Mongolian vowel
+ * separator, zero-width space, direction marks, bidi embeddings, overrides and isolates, invisible operators, the
+ * deprecated format characters, the byte order mark and interlinear annotation. ZWNJ U+200C and ZWJ U+200D, which
+ * some scripts need, stay allowed, as `DISPLAY_NAME_FORBIDDEN` allows them.
+ */
+export const SPACE_NAME_FORBIDDEN = /[\u0000-\u001F\u007F-\u009F\u00AD\u061C\u180E\u200B\u200E\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB]/;
+/**
+ * [SA] section 5.2 step 5: a letter or a digit, as an explicit BMP allow-list (Latin with its extensions, Greek,
+ * Cyrillic, Hebrew, Arabic, the Indic and Southeast Asian blocks, Hangul jamo and syllables, kana, CJK, full-width
+ * letters and digits). It errs toward accepting: a name with any listed character passes.
+ */
+export const SPACE_NAME_LETTER =
+  /[A-Za-z0-9\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02AF\u0370-\u03FF\u0400-\u052F\u0590-\u05FF\u0600-\u06FF\u0900-\u0DFF\u0E00-\u0EFF\u1100-\u11FF\u1E00-\u1FFF\u3040-\u30FF\u3130-\u318F\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7A3\uF900-\uFAFF\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFDC]/;
 
 /**
  * A space name as stored ([SA] section 5.2), the same on the Worker and in the console, in this order:
@@ -86,16 +99,16 @@ const SPACE_NAME_LETTER_OR_DIGIT = /[\p{L}\p{N}]/u;
  * 2. every run of JavaScript `\s` whitespace (tabs, new lines, no-break and ideographic spaces, U+FEFF and the other
  *    Unicode spaces) becomes one U+0020, then trim: tabs and new lines are collapsed, not refused;
  * 3. 1 to `SPACE_NAME_MAX` UTF-16 units (`empty`, `too_long`);
- * 4. no remaining control or format character (the bidi embeddings, overrides and isolates, zero-width space, soft
- *    hyphen and the rest), ZWNJ and ZWJ kept (`invalid`);
- * 5. at least one letter or digit (`invalid`).
+ * 4. no remaining control or format character (`SPACE_NAME_FORBIDDEN`), ZWNJ and ZWJ kept (`invalid`);
+ * 5. at least one letter or digit (`SPACE_NAME_LETTER`, `invalid`).
+ * `normalize` runs at call time only, on the Worker and in the web console (the Expo app never renames a space).
  */
 export function checkSpaceName(raw: string): { ok: true; name: string } | { ok: false; reason: SpaceNameRefusal } {
   const name = raw.normalize('NFC').replace(/\s+/g, ' ').trim();
   if (name.length === 0) return { ok: false, reason: 'empty' };
   if (name.length > SPACE_NAME_MAX) return { ok: false, reason: 'too_long' };
-  if (SPACE_NAME_REFUSED.test(name)) return { ok: false, reason: 'invalid' };
-  if (!SPACE_NAME_LETTER_OR_DIGIT.test(name)) return { ok: false, reason: 'invalid' };
+  if (SPACE_NAME_FORBIDDEN.test(name)) return { ok: false, reason: 'invalid' };
+  if (!SPACE_NAME_LETTER.test(name)) return { ok: false, reason: 'invalid' };
   return { ok: true, name };
 }
 

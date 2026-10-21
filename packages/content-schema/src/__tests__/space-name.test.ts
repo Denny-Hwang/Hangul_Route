@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LookupSeatSchema, SPACE_NAME_MAX, SpaceCreateSchema, SpaceEventKindSchema, SpaceLookupSchema, SpaceNameSchema, SpaceRenameSchema, checkSpaceName } from '../index';
+import { LookupSeatSchema, SPACE_NAME_FORBIDDEN, SPACE_NAME_LETTER, SPACE_NAME_MAX, SpaceCreateSchema, SpaceEventKindSchema, SpaceLookupSchema, SpaceNameSchema, SpaceRenameSchema, checkSpaceName } from '../index';
 
 /** [SA] AMENDMENTS-SEATS-ADMINS section 5.2: the one space-name rule of the Worker and the console. */
 describe('SpaceNameSchema ([SA] section 5.2)', () => {
@@ -51,6 +51,16 @@ describe('SpaceNameSchema ([SA] section 5.2)', () => {
     expect(SpaceNameSchema.parse('4')).toBe('4');
     expect(SpaceNameSchema.parse('Clase de Begoña')).toBe('Clase de Begoña');
     expect(SpaceNameSchema.parse('김 선생님 반')).toBe('김 선생님 반');
+  });
+
+  it('is Hermes-safe: plain BMP ranges, no Unicode property escape and no u flag (the Expo app loads this module)', () => {
+    for (const re of [SPACE_NAME_FORBIDDEN, SPACE_NAME_LETTER]) {
+      expect(re.source).not.toContain('\\p{');
+      expect(re.flags).not.toContain('u');
+    }
+    // the other refused format characters of the deny-list
+    for (const ch of ['\u061c', '\u180e', '\u200e', '\u2061', '\u206a', '\ufff9', '\u009f']) expect(SPACE_NAME_FORBIDDEN.test(`A${ch}B`), ch.codePointAt(0)?.toString(16)).toBe(true);
+    for (const name of ['Αθήνα', 'Москва', 'שלום', 'مدرسة', 'こんにちは', '学校', 'ＡＢＣ', 'ไทย', 'Nguyễn']) expect(checkSpaceName(name).ok, name).toBe(true);
   });
 
   it('puts the reason in the issue params, and the rename body uses it', () => {
