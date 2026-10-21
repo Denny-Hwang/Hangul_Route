@@ -1,6 +1,8 @@
 import { ListenPickRoundSchema, PicWordRoundSchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { jamoAll } from '../../content/jamo';
+import { AUDIO_ASSETS } from '../../content/__generated__/audio-assets';
+import { findJamo, jamoAll } from '../../content/jamo';
+import { listenPickSpeech } from '../audio/listen-pick-speech';
 import { lp, pw } from '../scope-builders';
 import * as config from '../minigame-config';
 
@@ -42,6 +44,45 @@ describe('lp.sym (sound -> written symbol)', () => {
       expect(ListenPickRoundSchema.safeParse(r).success, j.id).toBe(true);
       expect(r.prompt.ko, j.id).not.toBe(j.char);
     }
+  });
+
+  it("carries the letter's audioRef on the prompt when the record names one, and none when it does not", () => {
+    const giyeok = findJamo('jamo:giyeok')!;
+    expect(giyeok.audioRef).toBe('audio/jamo/giyeok.mp3');
+    const r = lp.sym('jamo:giyeok', TAUGHT_L1);
+    expect(r.prompt).toEqual({ ko: '가', romanization: 'ga', en: 'the letter giyeok', audioRef: 'audio/jamo/giyeok.mp3' });
+    // The options are the written symbols: no recording rides on them.
+    expect(r.options.every((o) => o.text?.audioRef === undefined)).toBe(true);
+
+    const eo = findJamo('jamo:eo')!;
+    const ref = eo.audioRef;
+    delete eo.audioRef;
+    try {
+      const bare = lp.sym('jamo:eo', TAUGHT_L1);
+      expect(bare.prompt).toEqual({ ko: '어', romanization: 'eo', en: 'the letter eo' });
+      expect('audioRef' in bare.prompt).toBe(false);
+    } finally {
+      if (ref !== undefined) eo.audioRef = ref;
+    }
+  });
+
+  it('every Stage 1 letter round is the same round with only the letter audioRef added, and no clip is bundled yet', () => {
+    let seen = 0;
+    for (const scope of Object.values(config.minigameScopes)) {
+      for (const round of scope.listenPick?.rounds ?? []) {
+        if (!round.id.startsWith('lp:sym:')) continue;
+        seen += 1;
+        const jamo = findJamo(round.answerId)!;
+        const { audioRef, ...rest } = round.prompt;
+        expect(audioRef, round.id).toBe(jamo.audioRef);
+        expect(rest, round.id).toEqual({ ko: jamo.spokenKo, romanization: jamo.spokenRomanization, en: `the letter ${jamo.nameEn}` });
+        // No file for the ref: the prompt still plays through the voice, as before (F-AUDIO-004 AD4).
+        expect(Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, audioRef!), round.id).toBe(false);
+        // Still a sound prompt: the carrier syllable at the sound rate, with the recording to try first.
+        expect(listenPickSpeech(round), round.id).toEqual({ text: jamo.spokenKo, kind: 'sound', source: 'listen-pick', audioRef });
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
   });
 
   it('rejects a batchim (those quests ask syllables) and an unknown id', () => {

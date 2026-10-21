@@ -272,7 +272,9 @@ export function createWebAudio(env: WebAudioEnv) {
       else LIVE_UTTERANCES.delete(u);
     }
     heldPrompts.clear();
-    // The unlock stays live until it answers: a `canceled` still says the engine took it.
+    // The cleared unlock leaves the set: an engine that never answers it would hold it there for the page lifetime.
+    // Its `canceled`, if one comes, still answers it: `unlockInFlight` holds it until the unlock deadline.
+    if (unlockAhead !== null) LIVE_UTTERANCES.delete(unlockAhead.u);
     unlockAhead = null;
   };
   const stillStopping = (): boolean => {
@@ -447,10 +449,10 @@ export function createWebAudio(env: WebAudioEnv) {
     // Still ahead in a busy engine: taken (a refusal answers at once). Otherwise it is gone: dropped without a word
     // (iOS, a touchend that ended a scroll) or passed over, and nothing waits behind it.
     const held = unlockAhead?.u === u && (synth.speaking || synth.pending);
-    if (!held) {
-      if (unlockAhead?.u === u) unlockAhead = null;
-      LIVE_UTTERANCES.delete(u);
-    }
+    if (!held && unlockAhead?.u === u) unlockAhead = null;
+    // Nothing waits for its answer now, so it leaves the set either way (one the engine never answers would stay
+    // for the page lifetime); a held one stays reachable through `unlockAhead` until it settles or is cleared.
+    LIVE_UTTERANCES.delete(u);
     // Unless taken or sent inside a user activation the browser reported, the next activation sends another.
     if (held || sentActive === true) finishUnlock();
   };
@@ -589,6 +591,8 @@ export function createWebAudio(env: WebAudioEnv) {
     /** The ref has a bundled recording that will be tried first (the prompt slot's `hasClip`). */
     hasClip,
     noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
+    /** Test only: how many utterances the page-wide live set holds (shared by every instance: compare to a baseline). */
+    liveUtteranceCountForTests: (): number => LIVE_UTTERANCES.size,
     dispose: (): void => {
       if (unlockTimer !== null) clearTimeout(unlockTimer);
       unlockTimer = null;

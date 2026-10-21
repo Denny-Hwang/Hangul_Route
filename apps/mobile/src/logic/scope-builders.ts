@@ -66,9 +66,13 @@ export const lp = {
       const option = findJamo(id)!;
       return { id, text: { ko: option.char, romanization: option.romanization, en: `the letter ${option.nameEn}` } };
     });
+    // The letter's recording, when the record names one, rides on the prompt (F-AUDIO-004 AD4: clip > voice > text);
+    // a ref with no bundled file still plays through the voice, so the round sounds the same until a clip ships.
+    const prompt: KoText = { ko: spoken.ko, romanization: spoken.romanization, en: `the letter ${jamo.nameEn}` };
+    if (jamo.audioRef !== undefined) prompt.audioRef = jamo.audioRef;
     return parseRound({
       id: `lp:sym:${jamoId}`,
-      prompt: { ko: spoken.ko, romanization: spoken.romanization, en: `the letter ${jamo.nameEn}` },
+      prompt,
       options,
       answerId: jamoId,
     });

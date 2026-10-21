@@ -395,6 +395,15 @@ describe('listenPickSpeech: source and speech rate (F-AUDIO-004 §3.3)', () => {
     expect(LISTEN_PICK_AUDIO_SOURCE).toBe('listen-pick');
     expect('audioRef' in listenPickSpeech(round('lp:word:x', '나무'))).toBe(false);
   });
+
+  it("a letter round with the letter's recording is still a sound: the carrier syllable at the sound rate, the clip tried first", () => {
+    expect(listenPickSpeech(round('lp:sym:jamo:giyeok', '가', { audioRef: 'audio/jamo/giyeok.mp3' }))).toEqual({
+      text: '가',
+      audioRef: 'audio/jamo/giyeok.mp3',
+      kind: 'sound',
+      source: 'listen-pick',
+    });
+  });
 });
 
 describe('optionView', () => {
