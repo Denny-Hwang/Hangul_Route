@@ -159,7 +159,11 @@ export function signUpLanding(start: string, inviteWaiting: boolean): string {
 }
 
 /** A final refusal of the invite: one calm line and Go to my home (step 8). */
-export type InviteRefusal = 'used' | 'expired' | 'revoked' | 'full' | 'owner' | 'alreadyAdmin' | 'notFound' | 'emailUnverified';
+/**
+ * `ineligible` is `409 invite_ineligible`: the account is a caregiver or student member of the school, whose role an
+ * invite never changes (only a teacher row is promoted, section 6.4); the invite stays open.
+ */
+export type InviteRefusal = 'used' | 'expired' | 'revoked' | 'full' | 'owner' | 'ineligible' | 'alreadyAdmin' | 'notFound' | 'emailUnverified';
 /**
  * A refusal that a later try can get past: its line, Try again (the stash kept) and Go to my home. `identity` is accept's
  * `503 identity_unavailable` (Clerk could not be asked: `console.adminInvite.tryAgain`, sections 6.3 item 1 and 9.4).
@@ -179,6 +183,7 @@ const REFUSAL_CODES: Readonly<Record<string, Exclude<InviteRefusal, 'alreadyAdmi
   invite_revoked: 'revoked',
   already_owner: 'owner',
   admins_full: 'full',
+  invite_ineligible: 'ineligible',
   email_unverified: 'emailUnverified',
 };
 

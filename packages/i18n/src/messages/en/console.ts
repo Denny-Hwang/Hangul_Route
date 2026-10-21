@@ -2219,6 +2219,8 @@ export const consoleMsgs = {
     revoked: 'This invite was cancelled. Ask for a new one if you need it.',
     full: (max: number) => `This school already has ${max} administrators.`,
     owner: 'You already run this school as its owner.',
+    /** `409 invite_ineligible`: a caregiver or student member of the school; an invite never changes that role (section 6.4). */
+    ineligible: "This account already has another role in this school, so it can't become an administrator here.",
     alreadyAdmin: (school: string) => `You're already an administrator of ${school}.`,
     notFound: "This link doesn't open an invite. Check that it was copied whole.",
     emailUnverified: 'To accept, your account needs a verified email. Verify it in your account settings, then open the link again.',

@@ -281,7 +281,7 @@ describe('[SA] seat and rename events (AMENDMENTS-SEATS-ADMINS section 8: codes 
 
 describe('[SA] school administrator events (AMENDMENTS-SEATS-ADMINS section 6.8: codes only)', () => {
   it('space.admin.accept_refused keeps the reason from its list only', () => {
-    for (const reason of ['used', 'expired', 'revoked', 'full', 'owner', 'not_found', 'email_unverified']) {
+    for (const reason of ['used', 'expired', 'revoked', 'full', 'owner', 'not_found', 'email_unverified', 'ineligible']) {
       expect(keptEventFields('space.admin.accept_refused', { reason, token: 'A'.repeat(43), email: 'dean@example.org', spaceId: 'space:x' }, 'profile:a')).toEqual({ profileId: undefined, payload: { reason } });
     }
     expect(keptEventFields('space.admin.accept_refused', { reason: 'dean@example.org' }, undefined).payload).toBeUndefined();

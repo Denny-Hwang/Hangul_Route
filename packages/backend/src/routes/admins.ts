@@ -190,7 +190,7 @@ adminSpaceRoutes.post('/:id/admins/leave', async (c) => {
   return ok(c, { left: true, stays });
 });
 
-type InviteState = 'open' | 'already_admin' | 'not_found' | 'used' | 'expired' | 'revoked' | 'owner' | 'full';
+type InviteState = 'open' | 'already_admin' | 'not_found' | 'used' | 'expired' | 'revoked' | 'owner' | 'ineligible' | 'full';
 
 /** Where an invite stands for this account, from one read (section 6.4); the school is the live school it opens. */
 async function inviteState(db: Db, invite: StoredAdminInvite | null, accountId: string, now: Date): Promise<{ state: InviteState; school: Space | null }> {
@@ -200,6 +200,9 @@ async function inviteState(db: Db, invite: StoredAdminInvite | null, accountId: 
   const role = (await db.membership(school.id, 'account', accountId))?.role ?? null;
   if (school.ownerAccountId === accountId || role === 'owner') return { state: 'owner', school };
   if (role === 'admin') return { state: 'already_admin', school };
+  // Only a teacher row is promoted (section 6.4, step 2); a caregiver or student member of the school is refused here,
+  // as the accept gate would refuse it, and the invite stays open for the person it was made for.
+  if (role !== null && role !== 'teacher') return { state: 'ineligible', school };
   if (invite.revokedAt !== null) return { state: 'revoked', school };
   if (invite.acceptedAt !== null) return { state: 'used', school };
   if (invite.expiresAt <= now.toISOString()) return { state: 'expired', school };
@@ -221,17 +224,20 @@ function refusal(c: Context, state: Exclude<InviteState, 'open' | 'already_admin
       return fail(c, 'invite_revoked', 'This invite was revoked', 410);
     case 'owner':
       return fail(c, 'already_owner', 'You own this school', 409);
+    case 'ineligible':
+      return fail(c, 'invite_ineligible', 'This account cannot become an administrator of this school', 409);
     case 'full':
       return fail(c, 'admins_full', 'Every administrator place is taken', 409, { max: SCHOOL_ADMIN_CAP });
   }
 }
 
-const REFUSAL_REASON: Record<Exclude<InviteState, 'open' | 'already_admin'>, 'not_found' | 'used' | 'expired' | 'revoked' | 'owner' | 'full'> = {
+const REFUSAL_REASON: Record<Exclude<InviteState, 'open' | 'already_admin'>, 'not_found' | 'used' | 'expired' | 'revoked' | 'owner' | 'ineligible' | 'full'> = {
   not_found: 'not_found',
   used: 'used',
   expired: 'expired',
   revoked: 'revoked',
   owner: 'owner',
+  ineligible: 'ineligible',
   full: 'full',
 };
 

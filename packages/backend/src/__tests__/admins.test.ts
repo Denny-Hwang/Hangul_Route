@@ -316,6 +316,22 @@ describe('[SA] POST /api/admin-invites/accept (sections 6.3, 6.4)', () => {
     expect(telemetry).not.toMatch(/dean|principal|invite:/);
   });
 
+  it.each(['caregiver', 'student'] as const)('an account whose school membership is %s: preview and accept answer 409 invite_ineligible, the invite stays open', async (role) => {
+    const { token, id } = await invite(school);
+    await db.addMembership({ spaceId: school, memberKind: 'account', memberId: 'dean', role, joinedAt: '2026-09-01T00:00:00.000Z' });
+    const seen = await preview('dean', token);
+    expect([seen.status, seen.body.error?.code]).toEqual([409, 'invite_ineligible']);
+    expect(seen.text).not.toContain('Maple School');
+    const r = await accept('dean', token);
+    expect([r.status, r.body.error?.code]).toEqual([409, 'invite_ineligible']);
+    expect(await db.getAdminInvite(id)).toMatchObject({ acceptedAt: null, revokedAt: null });
+    expect(await roleOf(school, 'dean')).toBe(role);
+    expect(adminEvents().filter((e) => e.name === 'space.admin.accept_refused')).toEqual([{ name: 'space.admin.accept_refused', payload: { reason: 'ineligible' } }]);
+    // The invite is still open for someone it can make an admin.
+    expect((await accept('kim', token)).status).toBe(200);
+    expect(await roleOf(school, 'kim')).toBe('admin');
+  });
+
   it('signed-out: 401', async () => {
     const { token } = await invite(school);
     expect((await call('POST', '/api/admin-invites/accept', json, { token })).status).toBe(401);

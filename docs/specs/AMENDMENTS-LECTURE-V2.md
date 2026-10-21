@@ -386,6 +386,7 @@ Every value below lands in the row that draws it, in all three locales, through 
 | `lecture.card.noSpace` | No class needed: you can still show a lesson. | No hace falta una clase: aun así puedes mostrar una lección. | 반이 없어도 수업을 띄울 수 있어요. |
 | `lecture.card.noSpaceFamily` | You can show a lesson without a family space. | Puedes mostrar una lección sin un espacio familiar. | 가족 공간이 없어도 수업을 띄울 수 있어요. |
 | `lecture.card.opensTab` | Opens in a new tab | Se abre en una pestaña nueva | 새 탭에서 열려요 |
+| `lecture.cannotCompose` (new, the console follow-ups row, section 16) | You can't set up lessons for this space with your role. You can still show a ready-made lesson. | Con tu rol no puedes preparar lecciones para este espacio. Aun así puedes mostrar una lección lista. | 이 공간에서 맡은 역할로는 수업을 만들 수 없어요. 그래도 준비된 수업은 띄울 수 있어요. |
 | `lecture.check.titleFamily` | Check the TV or screen | Revisa la TV o la pantalla | TV나 화면을 확인해요 |
 | `lecture.outline.block.familyCode` | Family code on the last slide | Código de familia en la última diapositiva | 마지막 슬라이드에 가족 코드 |
 | `lecture.copyHasFamilyCode` | This link holds your family join code. Anyone with the link can join until you make a new code. Copy it anyway? | Este enlace incluye el código de tu familia. Cualquiera con el enlace puede unirse hasta que crees un código nuevo. ¿Copiarlo de todos modos? | 이 링크에는 가족 참여 코드가 들어 있어요. 새 코드를 만들 때까지 링크가 있으면 누구나 참여할 수 있어요. 그래도 복사할까요? |
