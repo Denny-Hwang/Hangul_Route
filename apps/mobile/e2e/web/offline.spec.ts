@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { GROWN_UP_PREFIXES, isGrownUpPath } from '@hangul-route/content-schema';
+import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { expect, test } from './fixtures';
-import { completeChildForm } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked } from './helpers';
 
 /**
  * Resolves once the worker is active (precache complete) and controls the page. Polled through
@@ -163,4 +164,87 @@ test('grown-up pages are never cached, show the offline page without a network, 
   // Still nothing grown-up in any cache after the offline visits.
   expect((await cachedPaths(page)).filter(isConsolePath)).toEqual([]);
   expect(errors).toEqual([]);
+});
+
+/** The lesson chunk bundles this page has loaded (F-CURR-002 §10): resource entries of the current document only. */
+async function loadedLessonChunks(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    performance
+      .getEntriesByType('resource')
+      .map((e) => new URL(e.name).pathname)
+      .filter((p) => /\/_expo\/static\/js\/web\/lessons-/.test(p)),
+  );
+}
+
+const CELL_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-cell-stage\d-[a-z]+-[0-9a-f]{32}\.js$/;
+const TITLE_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-titles-(es|ko)-[0-9a-f]{32}\.js$/;
+
+/**
+ * F-CURR-002 §10 (row CM-5): the lesson bodies left the start bundle. Every cell's chunk and both title chunks
+ * are precached after one online visit; none loads at start; offline, an upper-stage lesson opens and its
+ * Discover step plays from its own chunk, loaded on demand from the precache.
+ */
+test('lesson chunks are precached, load on demand, and an upper-stage lesson plays offline (F-CURR-002 CM-5)', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Suni' });
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await controlledBySw(page);
+
+  const cached = await cachedPaths(page);
+  expect(cached.filter((p) => CELL_BUNDLE.test(p))).toHaveLength(LESSON_EPISODES.length);
+  expect(cached.filter((p) => TITLE_BUNDLE.test(p))).toHaveLength(2);
+
+  // The worker serves the shell; with the network gone, the learner home opens and no lesson chunk has loaded.
+  await page.reload();
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
+  expect(await loadedLessonChunks(page)).toEqual([]);
+
+  // Journey > Stage 2 Letters & Books: the cell page reads the manifest; Start loads that cell's chunk only.
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await page.getByRole('button', { name: journeyCellName(2, 'Letters & Books'), exact: true }).click();
+  await expect(page.getByText('Word Builder').first()).toBeVisible();
+  expect(await loadedLessonChunks(page)).toEqual([]);
+  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(headerClose(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  // Discover of the first Word Builder quest: the vowel ㅐ and its example 개, from the chunk.
+  await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+  await expect(page.getByText('ㅐ', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('개', { exact: true }).first()).toBeVisible();
+  const loaded = await loadedLessonChunks(page);
+  expect(loaded).toHaveLength(1);
+  expect(loaded[0]).toMatch(/^\/_expo\/static\/js\/web\/lessons-cell-stage2-letters-[0-9a-f]{32}\.js$/);
+  expect(errors).toEqual([]);
+});
+
+test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale only)', () => {
+  test.use({ locale: 'es-ES' });
+
+  test('the Spanish lesson titles load from their own chunk, offline too, and the Korean ones never load', async ({ page, context }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    await controlledBySw(page);
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    await expect.poll(() => loadedLessonChunks(page)).toEqual([expect.stringMatching(/^\/_expo\/static\/js\/web\/lessons-titles-es-[0-9a-f]{32}\.js$/)]);
+    expect(errors).toEqual([]);
+  });
 });

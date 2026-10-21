@@ -1,0 +1,111 @@
+// F-CURR-002 §10 (row CM-5): the lesson chunks in the PWA build, and the precache report.
+//
+// scripts/build-lessons.mjs writes a start-loaded manifest and one content-hashed chunk per
+// lesson cell (plus one title chunk per locale), each reached only through a literal `import()`.
+// Metro web emits each chunk as its own bundle, `_expo/static/js/web/<name>-<md5>.js`, and the
+// learner precache keeps every JS file. This module checks the result, the way the letter-clip
+// gaps check (audio/lib.mjs `precacheGaps`) guards the clips:
+//   - every manifest entry has exactly one bundle, named after it, that carries the manifest's
+//     hash (`CHUNK_HASH`), whose file name is the md5 of its content, and that is precached;
+//   - the start bundle names every hash (it was built from the same manifest) and carries no
+//     chunk (a static import would pull one back in: Metro then leaves an empty bundle behind);
+// and reports the start bundle, the chunks and the learner precache against their budget lines.
+// Pure, apart from `md5`/`gzipSize` helpers; pwa-postbuild.mjs feeds it the built files.
+
+import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
+
+/** The web bundle folder of an Expo export, relative to dist. */
+export const WEB_JS_DIR = '_expo/static/js/web';
+const ENTRY = /^_expo\/static\/js\/web\/index-[0-9a-f]+\.js$/;
+const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
+
+/**
+ * Budget lines of the learner build (F-CURR-002 §10 ceilings table and OD-5). Each is a reviewed
+ * one-line change with the measured numbers in its PR.
+ */
+export const PRECACHE_BUDGET = Object.freeze({
+  // The start bundle must not grow: its size before CM-5 moved the lessons out (8,321,783 B raw, measured on main at a384759ca).
+  startBundleRaw: 8_321_783,
+  // The learner precache measured after CM-5 (8,780,718 B, 35 files, the release build) + 2.5 MB; crossing it triggers CM-5B (Save for offline).
+  learnerPrecacheRaw: 11_280_718,
+});
+
+export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
+export const gzipSize = (text) => gzipSync(text).length;
+
+export const isStartBundle = (url) => ENTRY.test(url);
+
+const carries = (text, hash) => new RegExp(`CHUNK_HASH\\s*=\\s*["']${hash}["']`).test(text);
+
+/**
+ * Problems with the lesson chunks of one web build (empty = sound).
+ * @param {{ manifest: { name: string, hash: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
+ *   `manifest`: build-lessons.mjs `chunkManifest`; `bundles`: every JS file of WEB_JS_DIR; `precached`: the precache URLs.
+ */
+export function lessonChunkProblems({ manifest, bundles, precached }) {
+  const problems = [];
+  const listed = new Set(precached.map((u) => u.replace(/^\/+/, '')));
+  const starts = bundles.filter((b) => isStartBundle(b.url));
+  if (starts.length !== 1) problems.push(`expected one start bundle (${WEB_JS_DIR}/index-<hash>.js), found ${starts.length}`);
+  for (const { name, hash } of manifest) {
+    for (const start of starts) {
+      if (carries(start.text, hash)) problems.push(`${name} is in the start bundle ${start.url}: a static import pulled the chunk in`);
+      if (!start.text.includes(`"${hash}"`)) problems.push(`the start bundle ${start.url} does not name ${name}'s hash ${hash}: the shell and the chunk come from other content`);
+    }
+    const own = bundles.filter((b) => !isStartBundle(b.url) && NAMED.exec(b.url)?.[1] === name);
+    if (own.length === 0) {
+      problems.push(`${name} has no web bundle: the chunk is missing from the build`);
+      continue;
+    }
+    if (own.length > 1) problems.push(`${name} has ${own.length} web bundles: ${own.map((b) => b.url).join(', ')}`);
+    for (const bundle of own) {
+      if (!carries(bundle.text, hash)) problems.push(`${bundle.url} does not carry ${hash}, the hash the manifest names for ${name}`);
+      if (NAMED.exec(bundle.url)?.[2] !== md5(bundle.text)) problems.push(`${bundle.url}: its file name is not the md5 of its content`);
+      if (!listed.has(bundle.url)) problems.push(`${bundle.url} is missing from the precache`);
+    }
+  }
+  return problems;
+}
+
+/**
+ * The precache report: the start bundle, the lesson chunks and the whole learner precache.
+ * @param {{ manifest: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
+ */
+export function precacheReport({ manifest, bundles, precache }) {
+  const names = new Set(manifest.map((m) => m.name));
+  const start = bundles.find((b) => isStartBundle(b.url));
+  const chunks = bundles.filter((b) => names.has(NAMED.exec(b.url)?.[1] ?? ''));
+  const bytes = (text) => Buffer.byteLength(text, 'utf8');
+  return {
+    start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
+    lessonChunks: { count: chunks.length, raw: chunks.reduce((s, b) => s + bytes(b.text), 0), gzip: chunks.reduce((s, b) => s + gzipSize(b.text), 0) },
+    precache: { count: precache.count, raw: precache.size },
+  };
+}
+
+/** The report as printed lines. */
+export function reportLines(report, budget = PRECACHE_BUDGET) {
+  const lines = ['pwa-postbuild: precache report (F-CURR-002 §10)'];
+  if (report.start !== null) {
+    lines.push(`  start bundle  ${report.start.url}  ${report.start.raw} B raw  ${report.start.gzip} B gzip  (ceiling ${budget.startBundleRaw} B raw)`);
+  }
+  lines.push(`  lesson chunks  ${report.lessonChunks.count} bundles  ${report.lessonChunks.raw} B raw  ${report.lessonChunks.gzip} B gzip`);
+  lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
+  return lines;
+}
+
+/** Budget problems of the report (empty = within budget). */
+export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
+  const problems = [];
+  if (report.start === null) problems.push('no start bundle to measure');
+  else if (report.start.raw > budget.startBundleRaw) {
+    problems.push(`the start bundle is ${report.start.raw} B raw, over its ceiling of ${budget.startBundleRaw} B: it must not grow`);
+  }
+  if (report.precache.raw > budget.learnerPrecacheRaw) {
+    problems.push(
+      `the learner precache is ${report.precache.raw} B, over its ceiling of ${budget.learnerPrecacheRaw} B: row CM-5B (Save for offline) is triggered`,
+    );
+  }
+  return problems;
+}

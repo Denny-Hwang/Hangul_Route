@@ -11,7 +11,7 @@ import type {
   TypeHangulRound,
   WriteFrameRound,
 } from '@hangul-route/content-schema';
-import { lessons } from '../content/lessons';
+import { lessonContent } from '../content/lessons';
 import { lp, pw } from './scope-builders';
 import { storyScopeFor } from './story/story-ref';
 
@@ -628,9 +628,12 @@ export const minigameScopes: Record<string, MinigameScope> = {
   },
 };
 
-/** A hand-written scope, a lesson cell's scope (F-CURR-001, loads its stage module once) or a story scope. */
+/**
+ * A hand-written scope, a lesson cell's scope (F-CURR-001; from its chunk, once the screen has
+ * waited for it, F-CURR-002 §10) or a story scope.
+ */
 export function scopeFor(ref: string): MinigameScope | undefined {
-  return minigameScopes[ref] ?? lessons.scopeFor(ref) ?? storyScopeFor(ref);
+  return minigameScopes[ref] ?? lessonContent.scopeFor(ref) ?? storyScopeFor(ref);
 }
 
 // Suppress unused-import warning for type used in JSDoc

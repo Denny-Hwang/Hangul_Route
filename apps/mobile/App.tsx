@@ -22,7 +22,8 @@ import { flushQueue } from './src/platform/telemetry';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
 import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
-import { followDeviceSettings, useLocaleStore } from './src/store/locale-store';
+import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
+import { lessonContent } from './src/content/lessons';
 import { usePwaStore } from './src/store/pwa-store';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
@@ -86,6 +87,8 @@ export default function App(): React.ReactElement {
     const offInbox = registerInboxRefresh();
     void hydrateLearnerData()
       .catch(() => undefined)
+      // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen.
+      .then(() => lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())).catch(() => undefined))
       .then(async () => {
         if (!live) return;
         setReady(true);
