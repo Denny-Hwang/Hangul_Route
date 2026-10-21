@@ -1,6 +1,14 @@
-import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
+import { PIN_SET_AT_KEY, type Profile } from '@hangul-route/content-schema';
 import { create } from 'zustand';
-import type { SubscriptionState } from '../logic/entitlement';
+import { entitlementTier, type SubscriptionState } from '../logic/entitlement';
+import {
+  isLearnerProfile,
+  mergeCovers,
+  subscriptionCoversFor,
+  subscriptionCoversOf,
+  withNewerCovered,
+  type SubscriptionCovers,
+} from '../logic/legacy-subscription-covers';
 import {
   INITIAL_ATTEMPT_STATE,
   effectiveStrikes,
@@ -21,9 +29,10 @@ import {
   pinSetAtOf,
   reconcilePinEpoch as nextPinEpoch,
 } from '../logic/shell/device-gate';
-import { readJson, readJsonExact, writeJson } from '../platform/storage';
+import { readJson, readJsonExact, readJsonStrict, updateJson, writeJson } from '../platform/storage';
 import { announcePinAttempts } from '../platform/pin-attempts-channel';
 import { PIN_ATTEMPTS_LOCK, withTabLock } from '../platform/tab-lock';
+import { PROFILES_KEY, useProfileStore } from './profile-store';
 
 /**
  * Family-level account settings, persisted across sessions.
@@ -40,6 +49,8 @@ const SELF_CONSENT_KEY = 'account:selfConsentAcceptedAt';
 // Start of the 24-hour "Forgot PIN" wait (F-LEARN-001 §3.5).
 const PIN_RESET_KEY = 'account:pinResetRequestedAt';
 const SUBSCRIPTION_KEY = 'account:subscription';
+/** The learner profiles the legacy subscription covered when OA-8 first ran (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5). */
+export const SUBSCRIPTION_COVERS_KEY = 'account:subscriptionCovers';
 // Family-level grown-up PIN (F-PROF-001 §10 interim: one PIN per device until
 // parent-first onboarding ships). Attempt state persists so a force-quit
 // cannot clear an active cooldown (§3.1).
@@ -159,6 +170,8 @@ interface State {
   /** ISO time the 24-hour Forgot PIN wait started, or null. */
   pinResetRequestedAt: string | null;
   subscription: SubscriptionState | null;
+  /** `account:subscriptionCovers`; null until it is recorded, and while it is null the legacy subscription covers every profile. */
+  subscriptionCovers: SubscriptionCovers | null;
   parentPinHash: string | null;
   /** Epoch ms the current PIN was set; null for a PIN set before F-APP-001 A-6 (read as epoch 0) or no PIN yet. */
   pinSetAt: number | null;
@@ -189,6 +202,17 @@ interface Actions {
   requestPinReset: () => void;
   clearPinResetRequest: () => void;
   setSubscription: (subscription: SubscriptionState | null) => void;
+  /**
+   * Start-up step (OA-D15, section 10.5): with a premium legacy subscription and no record yet, records the learner
+   * profiles on the device now, once. Only when the profile store is hydrated, the profile list reads back strictly and
+   * the store holds at least one learner; otherwise nothing is recorded and the next start tries again.
+   */
+  recordSubscriptionCovers: (now: Date) => Promise<void>;
+  /**
+   * With a premium legacy subscription and a record, adds every newer learner it now covers to the record's `added`
+   * (in memory at once, then stored), so a covered learner stays covered through a remove and a restore (section 10.5).
+   */
+  rememberCoveredLearners: (now: Date) => Promise<void>;
   /** Stores the PIN hash; every new PIN (first set, change, Forgot PIN reset) moves the epoch to now. */
   setParentPinHash: (hash: string | null) => void;
   setPinAttempts: (state: AttemptState) => void;
@@ -219,6 +243,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   selfConsentAcceptedAt: null,
   pinResetRequestedAt: null,
   subscription: null,
+  subscriptionCovers: null,
   parentPinHash: null,
   pinSetAt: null,
   pinCreatedAt: null,
@@ -236,6 +261,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const selfConsentAcceptedAt = await readJson<string | null>(SELF_CONSENT_KEY);
     const pinResetRequestedAt = await readJson<string | null>(PIN_RESET_KEY);
     const subscription = await readJson<SubscriptionState | null>(SUBSCRIPTION_KEY);
+    const subscriptionCovers = subscriptionCoversOf(await readJson<unknown>(SUBSCRIPTION_COVERS_KEY));
     const pinHash = await readPinHash();
     const pinAttempts = await readJson<unknown>(PIN_ATTEMPTS_KEY);
     const rescueAttempts = await readJson<unknown>(RESCUE_ATTEMPTS_KEY);
@@ -257,6 +283,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       selfConsentAcceptedAt: selfConsentAcceptedAt ?? null,
       pinResetRequestedAt: pinResetRequestedAt ?? null,
       subscription: subscription ?? null,
+      subscriptionCovers,
       parentPinHash: pinHash.hash,
       pinHashReadFailed: pinHash.failed,
       pinSetAt: pinSetAtOf(pinSetAt),
@@ -308,6 +335,71 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   setSubscription: (subscription) => {
     set({ subscription });
     void writeJson(SUBSCRIPTION_KEY, subscription);
+  },
+
+  recordSubscriptionCovers: async (now) => {
+    const account = get();
+    if (!account.hydrated || account.subscriptionCovers !== null) return;
+    if (entitlementTier(account.subscription, now) !== 'premium') return;
+    const profiles = useProfileStore.getState();
+    // Nothing loaded yet, or a read that came back empty: try again on the next start (as `repairProfilePushes` does).
+    if (!profiles.hydrated || !profiles.profiles.some(isLearnerProfile)) return;
+    let storedProfiles: unknown;
+    try {
+      // The profile list must read back strictly: a failed or damaged read is not "these are all the learners".
+      storedProfiles = await readJsonStrict<unknown>(PROFILES_KEY);
+      if (!Array.isArray(storedProfiles)) return;
+      // A record this start could not read is not "no record": it is never written over. One it reads now is kept.
+      const stored = await readJsonExact<unknown>(SUBSCRIPTION_COVERS_KEY);
+      if (stored !== null) {
+        const parsed = subscriptionCoversOf(stored);
+        if (parsed && get().subscriptionCovers === null) set({ subscriptionCovers: parsed });
+        return;
+      }
+    } catch {
+      return;
+    }
+    if (get().subscriptionCovers !== null) return;
+    // Every learner in memory and every one stored (another web tab may have added one since this start read the list).
+    const fromStorage = (storedProfiles as unknown[]).filter(
+      (p): p is Pick<Profile, 'id' | 'role'> => typeof p === 'object' && p !== null && typeof (p as { id?: unknown }).id === 'string',
+    );
+    const record = subscriptionCoversFor([...useProfileStore.getState().profiles, ...fromStorage], now);
+    // One read-modify-write, so two tabs starting together still make the record once.
+    let kept = null as SubscriptionCovers | null;
+    await updateJson<unknown>(SUBSCRIPTION_COVERS_KEY, (current) => {
+      if (current === null) return record;
+      kept = subscriptionCoversOf(current);
+      return undefined;
+    });
+    if (get().subscriptionCovers === null) set({ subscriptionCovers: kept ?? record });
+  },
+
+  rememberCoveredLearners: async (now) => {
+    const account = get();
+    const record = account.subscriptionCovers;
+    if (!account.hydrated || record === null) return;
+    if (entitlementTier(account.subscription, now) !== 'premium') return;
+    const profiles = useProfileStore.getState();
+    if (!profiles.hydrated) return;
+    const next = withNewerCovered(record, profiles.profiles);
+    if (next === record) return;
+    // In memory first: no later change to the profile list in this session can take the cover back.
+    set({ subscriptionCovers: next });
+    let stored = null as SubscriptionCovers | null;
+    await updateJson<unknown>(SUBSCRIPTION_COVERS_KEY, (current) => {
+      const parsed = subscriptionCoversOf(current);
+      // A stored value that is not a record is never written over (a failed read already rejected).
+      if (parsed === null) return undefined;
+      stored = mergeCovers(parsed, next);
+      return stored === parsed ? undefined : stored;
+    });
+    // What another tab covered meanwhile is kept too.
+    const current = get().subscriptionCovers;
+    if (stored !== null && current !== null) {
+      const both = mergeCovers(stored, current);
+      if (JSON.stringify(both) !== JSON.stringify(current)) set({ subscriptionCovers: both });
+    }
   },
 
   setParentPinHash: (hash) => {
@@ -397,3 +489,21 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     void writeJson(PIN_HASH_SEEN_KEY, next.pinHashSeen);
   },
 }));
+
+let watchingCovers = false;
+
+/**
+ * From the start-up pass on, every change to the profile list (a learner made, restored or removed) remembers the newer
+ * learners the legacy subscription now covers, at once (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5). Once per app run.
+ */
+export function watchCoveredLearners(): void {
+  if (watchingCovers) return;
+  watchingCovers = true;
+  useProfileStore.subscribe((state, prev) => {
+    if (state.profiles === prev.profiles) return;
+    void useAccountStore
+      .getState()
+      .rememberCoveredLearners(new Date())
+      .catch(() => undefined);
+  });
+}
