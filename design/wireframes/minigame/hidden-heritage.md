@@ -47,7 +47,7 @@ right:     a ring (feedback.success, borderWidth.thick) around the spot stays; t
            the meaning in the UI language appears under the word ("soup"); after 0.7 s the next word
 miss:      the tapped spot gets an amber ring (feedback.nudge, with its text.primary casing) for 0.6 s, then clears; Hoya thinking,
            "Look again"; the word stays; nothing ends
-2nd miss:  the right spot gets a "look here" ring (border.focus, dashed) that stays until it is found
+2nd miss:  the right spot gets a "look here" ring (feedback.info, dashed, inside the spot) that stays until it is found
 background tap (no spot): nothing happens and nothing is scored
 done:      every word found -> the end panel (below), then back to the quest
 ```
@@ -79,6 +79,7 @@ done:      every word found -> the end panel (below), then back to the quest
 ```
 
 - **Landscape phone** (`short`): the prompt and the found slots in a column beside the scene; the scene takes the height (F-LAYOUT-001 `sideBySide`).
+- **Smallest scene: 256 dp wide** (75 units = 48 dp at 256). The scene is never drawn narrower. When the beside layout would leave it under 256 dp (a short or split-screen window), the prompt column moves under the scene and the scene takes the full content width; when even the full content width is under 256 dp, the step renders the Pic-Word Match fallback ("States"). Row CM-36's layout test covers 320 x 568, 568 x 320 (landscape `short`) and a split-screen width under 256 dp.
 - **Wide**: the scene stays within the reading width, centred; the quest player has no second pane.
 
 ## Box diagram — D. projector slide (lecture mode, the stage of `lecture-presenter.md` C)
@@ -106,7 +107,7 @@ done:      every word found -> the end panel (below), then back to the quest
 
 - **Spot** (a hit area over a drawn thing): tap → right or miss, as above. Only taps on spots are answers. The first tap on a spot for a word scores that word (`first-try.ts`, key `w<n>`); later taps are retries.
 - **[ (spk) ]**: plays the word again. **[ Skip ]** (shell): ends the step without marking unfound words.
-- **Keyboard (web)**: Tab moves through the spots in reading order (left to right, top to bottom); Enter or Space taps; the focused spot draws the `border.focus` ring at its hit area.
+- **Keyboard (web)**: Tab moves through the spots in reading order (left to right, top to bottom); Enter or Space taps. The focused spot draws the keyboard focus indicator: a **solid** `border.focus` outline at `borderWidth.thick`, **outside** the hit area (offset `spacing.xxs`). The look-here ring is **dashed**, in `feedback.info`, **inside** the spot, so focus and the hint never look alike. Every thing in the scene has a spot (targets and other things alike), so tabbing shows where things are, never which one is the answer, and focus never marks a target before its hint.
 - No drag, no pinch, no timer, no gesture that only a pointer can do.
 
 ## Navigation graph
@@ -118,8 +119,9 @@ Exit: the end panel's Continue or Skip → back to `quest/player` (step complete
 
 - **success**: A, B.
 - **empty**: a scope with fewer than three playable targets shows "(Nothing to play here)" and [ Back to quest ] (the shell's empty state).
-- **switched off** (`game.hidden-heritage` off, §12.2): the step renders its fallback, a **Pic-Word Match** board on the same targets (each target's drawn prop alone as the picture), so no quest is blocked.
+- **switched off** (`game.hidden-heritage` off, §12.2): the step renders its fallback, a **Pic-Word Match** board on the same targets, so no quest is blocked.
 - **scene not loaded** (the lazy chunk is missing offline, or unreadable): the step renders the same Pic-Word Match fallback, never an error box. Scenes are precached with the lesson bodies (§10), so offline play works after the first open.
+- **The fallback never reads the scene chunk.** Its pictures are each target's own `PictureRef` (`word:<key>` WordArt or `card:<id>` card art, drawn by `PictureArt`, all in the design system's bundled SVG), the same pictures a Pic-Word Match step of that lesson draws; a target with no picture gets `PictureArt`'s plain gloss tile, never a blank tile. The scene's props live in the chunk that may be missing, so they are never the fallback's pictures. Row CM-36 makes `picture` a required field of each target (a `PictureRef`) and adds a test that renders every `hidden-heritage` step with its scene chunk absent and no network, and expects a playable Pic-Word Match board.
 - **no device voice**: the visible sound notice of F-AUDIO-004; the written word with romanization carries the round, and nothing is lost.
 - **reduced motion**: no motion is used; rings appear and clear without fading.
 - **large text (200 %)**: the prompt and the found slots grow and wrap; the scene keeps its width, so the spots keep their size.
@@ -133,7 +135,7 @@ Exit: the end panel's Continue or Skip → back to `quest/player` (step complete
 
 ## Data needs
 
-- reads: `scopeFor(ref).hiddenHeritage` (`{ sceneId, targets: [{ id, word: KoText, spot }] }`, row CM-36) · the scene chunk (`content/scenes/<id>.json`, lazy and precached) · `romanizationMode` · the word's gloss in the UI locale (lesson items, F-I18N-001 overlays)
+- reads: `scopeFor(ref).hiddenHeritage` (`{ sceneId, targets: [{ id, word: KoText, spot, picture: PictureRef }] }`, row CM-36; `picture` is the fallback's bundled picture) · the scene chunk (`content/scenes/<id>.json`, lazy and precached) · `romanizationMode` · the word's gloss in the UI locale (lesson items, F-I18N-001 overlays)
 - writes: `host.answer('w<n>', correct)` → `quest-run-store`; `host.complete()`; review items for each target word (`memoryRecord`, §4.2) through the shell like any round
 - telemetry: `minigame.finished { kind: 'hidden-heritage', questId, stepIndex }` (existing, from `MinigameScreen`); no tap coordinates are ever sent
 
@@ -175,7 +177,7 @@ A Hidden Heritage scene is a **scene-art description** (`design/brief/illustrati
 
 | Rule | Value | Why |
 |---|---|---|
-| H-1 size | each spot at least **75 x 75 canvas units** (a rectangle or a polygon whose inner square is that big) | the scene is 400 units wide and drawn at the full content width: 288 dp at 320 px, so 75 units = **54 dp** (above the 48 dp of §7.1 and §14); 343 dp at 375 px, so 75 units = **64 dp** (`touchTarget.min`); 720 dp at 768 px = 135 dp |
+| H-1 size | each spot at least **75 x 75 canvas units** (a rectangle or a polygon whose inner square is that big), and the scene never drawn under 256 dp wide (75 units = 48 dp there; "Landscape phone" above) | the scene is 400 units wide and drawn at the full content width: 288 dp at 320 px, so 75 units = **54 dp** (above the 48 dp of §7.1 and §14); 343 dp at 375 px, so 75 units = **64 dp** (`touchTarget.min`); 720 dp at 768 px = 135 dp |
 | H-2 gaps | spots never overlap and keep **11 units** apart (8 dp at 320 px) | a tap is never on two spots |
 | H-3 covers the thing | a spot covers its drawn item's box (it may be larger, never smaller than the item) | a tap anywhere on the thing counts |
 | H-4 edges | a spot lies inside the canvas | no target is cut by the frame |
@@ -195,13 +197,13 @@ A Hidden Heritage scene is a **scene-art description** (`design/brief/illustrati
 | Hoya | at most one, scale 0.5-0.8, never a target, never covering a spot | at most one |
 | File | the scene's chunk (its description plus the props and setting it adds to the registry) **25 KB or less** raw, loaded lazily and precached with the lesson bodies (§10) | in the bundle |
 | Text in the picture | none | none |
-| Faces | calm or smiling, or faceless people | the same |
+| Faces | Hoya calm or smiling; people faceless (rule 1) | the same |
 | No violence or fear | as scene-art rule 10; a wrestling scene shows a friendly bout, nobody hurt | the same |
 | Thumb | a found thing must still read at 54 dp (its item has at least 3 shapes after the thumb variant drops details) | at 96 px |
 
 - **Contrast.** A target's main fill differs from what is behind it, and every target has an outline (`borderWidth.base`, `border.strong` or darker), so a thing never hides by colour alone. The scene is never a "where is it" puzzle by camouflage: things are findable, the word is what is learned.
-- **Rings read on any fill.** The found ring (`feedback.success`), the miss ring (`feedback.nudge`) and the look-here ring (`border.focus`, dashed) are drawn at `borderWidth.thick` with a `text.primary` casing of `borderWidth.thin` on both sides, so a ring stays visible on a gold, green or dark thing (`feedback.nudge` is the same colour as `theme.life`). The CM-36 `hidden-heritage` profile of `checkScene` draws each ring over each spot's main fill and fails when the casing is missing.
-- **Ground first.** The setting (sky, wall or ground) uses `surface.*` tokens; the things use `theme.*`, `brand.*`, `hoya.*`, `rarity.*` and `vocab.*` tokens. Never `feedback.danger`, `surface.overlay`, `surface.inkScrim` (the scene-art types forbid them); never the `feedback.success`, `feedback.nudge` or `border.focus` tokens inside a scene, because the found ring, the miss ring and the look-here ring use them.
+- **Rings read on any fill.** The found ring (`feedback.success`), the miss ring (`feedback.nudge`) and the look-here ring (`feedback.info`, dashed) are drawn at `borderWidth.thick` with a `text.primary` casing of `borderWidth.thin` on both sides, so a ring stays visible on a gold, green or dark thing (`feedback.nudge` is the same colour as `theme.life`). The CM-36 `hidden-heritage` profile of `checkScene` draws each ring over each spot's main fill and fails when the casing is missing.
+- **Ground first.** The setting (sky, wall or ground) uses `surface.*` tokens; the things use `theme.*`, `brand.*`, `hoya.*`, `rarity.*` and `vocab.*` tokens. Never `feedback.danger`, `surface.overlay`, `surface.inkScrim` (the scene-art types forbid them); never the `feedback.success`, `feedback.nudge`, `feedback.info` or `border.focus` tokens inside a scene, because the found ring, the miss ring, the look-here ring and the keyboard focus indicator use them.
 - **Reuse.** Build from the registry first (jars, baskets, figures with tintable garments). New items for a scene follow the item rules (40 shapes, 3 KB, 5 colours), carry `sourceRef` and `accuracyNote` when they show a real object, and are reviewed on the contact sheet.
 
 ### 5. Review checklist (pasted into every scene PR, CM-36 and CM-37)
@@ -211,11 +213,11 @@ A Hidden Heritage scene is a **scene-art description** (`design/brief/illustrati
 - [ ] 3-5 targets, each a taught Korean word with romanization; no English anywhere in the scene
 - [ ] Other things at least as many as targets, each with a meaning for its screen-reader name
 - [ ] Every spot at least 75 x 75 units, 11 apart, inside the canvas; tapped on the 320 contact sheet
-- [ ] Colours: tokens only, 8 or fewer, no feedback or focus tokens; every target outlined
+- [ ] Colours: tokens only, 8 or fewer, no `feedback.*` or `border.focus` tokens; every target outlined
 - [ ] The found, miss and look-here rings, with their casing, are visible on every spot (checked on the contact sheet)
-- [ ] Faceless people, calm faces, no violence or fear
+- [ ] Faceless people, Hoya calm or smiling, no violence or fear
 - [ ] Budget: 14 layers, 240 shapes, chunk 25 KB or less (`budget.test.ts`)
-- [ ] Fallback renders: the Pic-Word Match board on the same targets
+- [ ] Fallback renders: the Pic-Word Match board on the same targets, from each target's bundled `picture` (`PictureRef`), with the scene chunk absent and no network
 - [ ] Alt text: one sentence, 140 characters or fewer, no Hangul, never "Image of"; it names the setting, never the targets
 
 ## Open questions
