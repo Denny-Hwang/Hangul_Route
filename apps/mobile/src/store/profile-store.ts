@@ -27,6 +27,7 @@ import { readJson, readJsonStrict, writeJson } from '../platform/storage';
 import { PROFILES_LOCK, withTabLock } from '../platform/tab-lock';
 import { closeGrownUpSession } from './grown-up-session';
 import { notifyProfileEdited } from './profile-edits';
+import { dropProfileLock, hydrateProfileLocks } from './profile-locks';
 import { notifyProfileRemoved } from './profile-removal';
 
 /**
@@ -190,6 +191,8 @@ function flushStep(): Promise<void> {
     pending.splice(0, changes.length);
     for (const [id, at] of touched) if (touches.get(id) === at) touches.delete(id);
     forget(tombstones.ids);
+    // [OA] Row OA-5, section 13.2: a removed learner leaves the locks in the same write sequence.
+    for (const c of changes) if (c.removedId !== undefined) await dropProfileLock(c.removedId);
     remember(merged);
     followMerged(withPending(merged));
     postProfilesChanged();
@@ -374,12 +377,14 @@ export function activeProfileSelector(state: State): Profile | null {
 }
 
 /**
- * [OA] OA-D19: another tab changed the profile list (`hr-profiles`), or this page is back in front: read it again, so a
- * learner added there shows here and a removed one goes. Bound once by App.tsx; returns the unsubscribe.
+ * [OA] OA-D19: another tab changed the profile list or the locks (`hr-profiles`), or this page is back in front: read
+ * them again, so a learner added there shows here, a removed one goes and a lock set there holds here. Bound once by App.tsx; returns the unsubscribe.
  */
 export function followProfileChanges(): () => void {
   return subscribeProfilesChanged(() => {
     if (!useProfileStore.getState().hydrated) return;
     useProfileStore.getState().refresh().catch(() => undefined);
+    // [OA] Row OA-5: a lock changed in another tab shows here too (and a failed read is tried again).
+    void hydrateProfileLocks();
   });
 }
