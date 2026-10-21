@@ -88,13 +88,15 @@ Companion stories:
 
 - Profile Picker is reachable on cold launch only (locked screen pre-picker). Once a profile is active, deep-links and back-handlers can't bypass into a different profile's data.
 - VoiceOver reads each tile as `"<name>'s tiger, stage <N>. Tap to enter."`.
-- A "Sign out" button does not exist in MVP — switching profiles is the only mechanism (deletion requires Settings → Profile → Delete with PIN).
+- A "Sign out" button does not exist in MVP — switching profiles is the only mechanism.
+- **[OA] Delete lives in People on this device** (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D13, section 10.4, row OA-7a; replaces "Settings → Profile → Delete with PIN"): Grown-up area → People on this device → a learner → **Remove from this device**. It asks a PIN entered in the last 2 minutes (OA-D5b (3)), then a ConfirmSheet with the name. A learner is *saved* only when registered (`sync:<id>` has a secret) and nothing is waiting to be pushed; otherwise the app first runs `syncNow`. A saved learner gets Remove and Cancel; an unsaved one gets **Save progress first** as the main action and a second, explicit step to remove anyway (CS-12). The removal deletes the profile, its lock entry and every per-profile key, records a tombstone, and calls no server route (CS-20); removing the active learner opens the chooser, removing the last one opens Welcome.
 
 ## 4. Out of scope
 
 - **Cloud sync** of profiles across devices → Phase 2 with Clerk + D1.
 - **Teacher** / **co-parent** roles → Phase 2 (F-TCH-001 will extend the role enum).
 - **Biometric** unlock for parent (FaceID / TouchID) → Phase 2.
+- **[OA] Deleting a learner on the server** — Remove from this device (§3.6) is local only: the learner's memberships, seats and saved progress stay on the server, and the Rescue Code brings the learner back on any device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.4, row OA-7a).
 - **Profile photo upload** — MVP only allows preset avatars (privacy + COPPA simplicity).
 - **Family link** across devices (parent's phone + kid's tablet) → Phase 3.
 - **Account migration** / export / import — Phase 3.
