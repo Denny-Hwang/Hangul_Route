@@ -244,15 +244,30 @@ function spelledReading(word: string): string {
   return out;
 }
 
+/** Finals heard as a stop ([ㄱ], [ㄷ], [ㅂ]), including the clusters of verb stems (읽다, 넓다, 앉다, 삶다). */
+const OBSTRUENT_FINALS = new Set(['ㄱ', 'ㄲ', 'ㅋ', 'ㄳ', 'ㄺ', 'ㄷ', 'ㅅ', 'ㅆ', 'ㅈ', 'ㅊ', 'ㅌ', 'ㅂ', 'ㅍ', 'ㅄ', 'ㄼ', 'ㄾ', 'ㄿ', 'ㄵ', 'ㄻ']);
+/** Initials that turn tense after such a final. */
+const TENSING_INITIALS = new Set(['ㄱ', 'ㄷ', 'ㅂ', 'ㅅ', 'ㅈ']);
+
+/** Tensification (경음화), which RR does not write: 학교 [학꾜], 읽다 [익따], 식당 [식땅]. */
+function hasTensification(word: string): boolean {
+  const blocks = [...word].map((ch) => decomposeSyllable(ch) as SyllableParts);
+  return blocks.some((cur, i) => {
+    const next = blocks[i + 1];
+    return next !== undefined && OBSTRUENT_FINALS.has(cur.final) && TENSING_INITIALS.has(next.initial);
+  });
+}
+
 /**
  * True when the standard pronunciation differs from the spelling by more than liaison and
- * coda neutralisation (palatalisation 같이 [가치], nasalisation 국물 [궁물], ㅎ deletion 좋아 [조아]).
- * Changes the converter does not model (ㄴ-insertion: 십육 [심뉵]) need the explicit
- * `soundChange: true` flag on the round.
+ * coda neutralisation (palatalisation 같이 [가치], nasalisation 국물 [궁물], ㅎ deletion 좋아 [조아],
+ * tensification 학교 [학꾜]). Changes the converter does not model and the spelling does not
+ * show (ㄴ-insertion: 십육 [심뉵]; tensification after ㄹ or a nasal in a compound: 물고기
+ * [물꼬기], 눈사람 [눈싸람]) need the explicit `soundChange: true` flag on the round.
  */
 export function hasSoundChange(ko: string): boolean {
   return normalizeKo(ko)
     .split(' ')
     .map((word) => word.replace(/[^가-힣]/g, ''))
-    .some((word) => spelledReading(word) !== romanizeWord(word));
+    .some((word) => hasTensification(word) || spelledReading(word) !== romanizeWord(word));
 }

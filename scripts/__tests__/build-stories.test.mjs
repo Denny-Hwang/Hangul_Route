@@ -229,6 +229,14 @@ describe("build-stories.mjs: empty and fixture trees", () => {
     assert.deepEqual(unsorted.episodes.map((e) => e.id), ["episode:shelf-b", "episode:shelf-z"]);
   });
 
+  test("topicTags, build-time lint data (F-CURR-002 §5.1), stays out of the bundle", () => {
+    const tagged = ready({ id: "story:t", topicTags: ["tiger-tale"] });
+    const bundle = buildBundle([tagged]);
+    assert.equal("topicTags" in bundle.stories[0], false);
+    assert.equal(renderBundle({ ...bundle, held: [] }).includes("topicTags"), false);
+    assert.deepEqual(tagged.topicTags, ["tiger-tale"]);
+  });
+
   test("output is deterministic and ends with a newline", () => {
     const root = makeRoot();
     putStory(root, ready());
