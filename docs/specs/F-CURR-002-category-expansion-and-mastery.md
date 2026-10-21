@@ -905,11 +905,27 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
   - Lines are absolute, so a row that merged after this measurement and grew the start bundle can turn the next build red with no change of its own. The fix is to re-measure in the row that grew the bundle, not in the row that happens to build next; this row re-measures on its merge-time main before it merges.
   - Audio: the measurement holds no recorded clips (none are bundled yet). The clips are precached, so they count toward the same line. The row that lands the jamo recordings re-measures the precache and moves the line by the clips' measured bytes, as a reviewed one-line change, so recordings never trigger CM-5B on their own.
 
+**Decision record (row CM-8, 2026-10-21): stories on the CM-5 mechanism.**
+- **Layout.** `scripts/build-stories.mjs` writes `__generated__/stories-index.ts` (the story shelf, loaded at start) and `__generated__/story-chunks/story-<slug>.ts`, one Metro async bundle per story, with the same hashing (`chunkHash` of `build-lessons.mjs`) and the same `pwa-postbuild.mjs` checks (one bundle per chunk, carrying the shelf's hash, named by the md5 of its content, precached, never in the start bundle). `stories.generated.ts` is gone.
+- **What the shelf holds.** Each story without its body: id, state, titles, theme, kind, stage, minutes, Hoya lines, the review gate (`language`, `culture`, the advisory), the shelf, card and reward blocks, the levels of its tiers with their scene counts, and its card's keyword. Schema defaults are left out. The body is `tiers` (scenes and art), `facts`, `keywords`, `summaryEn`, `learningGoalsEn`, `origin`, `verification`, `referenceDisplay`, `errata`, `authorNotes` and the whole `review` block. The shelf episodes and quests are derived from the shelf in the app.
+- **On demand.** The reader, its games, Sources and Results wait for their story's chunk (only the header for a frame or two; a failed chunk goes to the crash screen, whose Try again loads it again). The shelf, Home and the card pages load the chunks of the stories they show, and draw each cover and card back as it arrives (the theme tint stands in). Culture notes load the stories that carry notes. All lessons, the presenter and the e2e hook mount once every chunk is in. The es and ko story overlays stay in the start bundle and apply to the body once it is in.
+- **Measured (release build, no recorded clips).**
+
+  | Measure | Size |
+  |---|---|
+  | Start bundle | 7,331,204 B raw / 1,790,976 B gzip before CM-8; 6,336,255 B raw / 1,570,349 B gzip after (-994,949 B raw; -1,985,528 B raw since before CM-5) |
+  | Story chunks (24 bundles) | 983,601 B raw / 241,018 B gzip |
+  | Generated story modules (`build-stories.mjs --report`) | 869,644 B raw / 220,524 B gzip; largest chunk `pansori-tales` 46,511 B raw |
+  | Manifest (`lessons-index.ts` 29,574 B + `stories-index.ts` 27,116 B) | 56,690 B raw, under the 60,000 B line |
+  | Learner precache | 59 files, 8,769,370 B |
+
+  The start bundle line (`PRECACHE_BUDGET.startBundleRaw`) is now 7,331,204 B, its size before CM-8, by the same rule as CM-5. The stories gzip line is 510,000 B: the measured gzip share scaled to the 2,000,000 B raw line (507,155 B), rounded up.
+
 **Ceilings.** Each ceiling is a reviewed one-line change with measured numbers in its PR. These are lazy and precached, so they put no weight on start-up (OD-5).
 
 | Budget line | Today | New ceiling |
 |---|---|---|
-| Start bundle | 8,321,783 B raw before CM-5; 7,337,815 B raw after CM-5 | must not grow at any row: 7,340,000 B raw, the CM-5 measurement plus a 2,185 B rounding margin (`PRECACHE_BUDGET.startBundleRaw`); after CM-5 and CM-8 it shrinks by about 1.5 MB raw (the lesson index and the story module leave it) |
+| Start bundle | 8,321,783 B raw before CM-5; 7,337,815 B raw after CM-5; CM8_RAW B raw after CM-8 | must not grow at any row: CM8_LINE B raw, the CM-8 measurement plus a CM8_MARGIN B rounding margin (`PRECACHE_BUDGET.startBundleRaw`; 7,340,000 B after CM-5); after CM-5 and CM-8 it shrank by CM8_SINCE B raw (the lesson index and the story module left it) |
 | `manifestRaw` (English, lessons and story shelf) | 372 KB (whole lesson index) | 60,000 B |
 | Title chunk per locale | — | 30,000 B |
 | Per cell chunk (one cell's emitted body chunk module: steps, scopes and their glosses), raw / gzip | — (largest at CM-5: 61,381 / 11,070, Stage 2 Letters & Books) | 90,000 / 16,000 (`cellChunkRaw`, `cellChunkGzip`); Volume 2 gets a chunk of its own per cell and volume (CM-40), because both volumes in one chunk would pass the line (about 120 KB for Letters & Books), and CM-40 re-measures the line |
@@ -919,7 +935,7 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 | All packs, raw / gzip | — | 750,000 / 120,000 (8 packs) |
 | Review-item index, raw / gzip | — | 150,000 / 30,000 |
 | Per story chunk, raw | — | 70,000 |
-| Stories total, raw | 1,255,855 (1,300,000 ceiling), in the start bundle | 2,000,000, precached; the gzip ceiling is set from the CM-8 measurement |
+| Stories total, raw | 1,255,855 (1,300,000 ceiling), in the start bundle | 2,000,000, precached; gzip 510,000 (set from the CM-8 measurement) |
 | Hidden Heritage scene | — | 25,000 B each |
 | Learner precache total | 8,787,329 B (CM-5, 35 files, no recorded clips) | measured + 2.5 MB = 11,287,329 B (`PRECACHE_BUDGET.learnerPrecacheRaw`); re-measured when the jamo recordings land |
 | Per-quest average, raw | 9,000 | 9,000 (unchanged) |
