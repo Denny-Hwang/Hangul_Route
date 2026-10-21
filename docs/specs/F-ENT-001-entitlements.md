@@ -5,6 +5,7 @@
 **Owner**: solo dev
 **Rollout**: Roadmap S6 — PR 1 server + device tier (§3.1–§3.4), PR 2 paywall screen (§3.5), PR 3 console billing (§3.6). Prices stay **placeholders** (owner decision: family price deferred).
 **Amended 2026-10-11 [BY]** by `AMENDMENTS-BILLING-FAMILY-YEARLY.md`: the Family plan is a **yearly subscription** ($15.30 / year, renews yearly, cancel any time), no longer a one-time lifetime purchase. The stored key stays `family_lifetime` (BY-D1).
+**Amended 2026-10-20 [SA]** by `AMENDMENTS-SEATS-ADMINS.md`: a family holds up to **4** learners, free or paid (`FAMILY_LIFETIME_LEARNERS` 5 → 4); the Group License covers up to **50** students (a stand-alone licensed class, was no cap; a licensed school, was 300); every school holds up to 50 distinct students; seats are taken atomically; checkout and portal need the owner-only `billing.manage`. Prices unchanged.
 
 Parent: roadmap §3.2 (tier rule), §7 (plans), §8 (`/entitlements/*`) · F-SUB-001 (mobile tier consumer) · F-IAP-001 / F-IAP-003 (receipts and lifecycle — converged here through `applyEntitlement`) · wireframes `console/billing.md`, `paywall/upgrade.md`
 

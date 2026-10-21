@@ -4,6 +4,7 @@
 **Scope**: `packages/content-schema` · `packages/backend` · `apps/web` (`/teach/space/:id` for school spaces)
 **Owner**: solo dev
 **Rollout**: Roadmap S7 — the last stage of the multi-persona platform
+**Amended 2026-10-20 [SA]** by `AMENDMENTS-SEATS-ADMINS.md`: a licensed school holds **50** students (was 300; teachers stay 10), an unlicensed school also holds up to 50; a school has its owner and up to **2 administrators**, added by a single-use invite link; admins run the school but billing, settings, archive and the admin list stay with the owner; the school and its classes can be renamed in place.
 
 Parent: F-SPACE-001 (spaces, `class.create`, school join code = teacher invite), F-ENT-001 (`group_license` / `school_seat`), F-CONSOLE-001 (console shell), F-TCH-001 §10 · wireframe `console/school-admin.md`
 
