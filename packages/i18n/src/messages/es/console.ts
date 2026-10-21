@@ -1815,4 +1815,12 @@ export const consoleMsgs = {
     body: 'Crea un PIN de adultos en la app para que solo los adultos abran estas páginas.',
     cta: 'Abrir la app',
   },
+  pinReset: {
+    title: 'PIN de adultos nuevo',
+    going: 'Abriendo la app para que elijas un PIN nuevo.',
+    notOwner: 'Solo la cuenta de adultos que usó este PIN aquí por última vez puede hacerlo. En la app, usa el código de rescate o la espera de 24 horas.',
+    firstSignIn: 'Esto funciona después de abrir aquí las páginas para adultos con el PIN. En la app, usa el código de rescate o la espera de 24 horas.',
+    noPin: 'Este dispositivo no tiene un PIN de adultos que restablecer.',
+    unavailable: 'Esto no está disponible ahora. Usa Olvidé el PIN en la app.',
+  },
 } satisfies DeepPartial<Messages['console']>;

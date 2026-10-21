@@ -1716,4 +1716,12 @@ export const consoleMsgs = {
     body: '어른만 이 페이지를 열 수 있게 앱에서 어른용 PIN을 만들어요.',
     cta: '앱 열기',
   },
+  pinReset: {
+    title: '새 어른용 PIN',
+    going: '새 PIN을 고를 수 있게 앱을 열고 있어요.',
+    notOwner: '이 기기에서 이 PIN을 마지막으로 쓴 어른 계정만 할 수 있어요. 앱에서 복구 코드나 24시간 기다리기를 써 주세요.',
+    firstSignIn: '어른이 이 기기에서 PIN으로 어른용 페이지를 연 적이 있어야 쓸 수 있어요. 앱에서 복구 코드나 24시간 기다리기를 써 주세요.',
+    noPin: '이 기기에는 다시 만들 어른용 PIN이 없어요.',
+    unavailable: "지금은 쓸 수 없어요. 앱의 'PIN을 잊었나요?'를 써 주세요.",
+  },
 } satisfies DeepPartial<Messages['console']>;

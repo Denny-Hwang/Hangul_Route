@@ -2247,4 +2247,16 @@ export const consoleMsgs = {
     body: 'Set a grown-up PIN in the app so only grown-ups open these pages.',
     cta: 'Open the app',
   },
+  /**
+   * [OA] Section 8.5 (row OA-6): `/account/pin-reset`, the sign-in reset page behind the lock. One title in every state;
+   * `going` while it opens the app, else one line chosen by cause and Back to learning. No name, no email, no number.
+   */
+  pinReset: {
+    title: 'New grown-up PIN',
+    going: 'Opening the app so you can choose a new PIN.',
+    notOwner: 'Only the grown-up account that last used this PIN here can do this. In the app, use the Rescue Code or the 24-hour wait.',
+    firstSignIn: 'This works after a grown-up has opened the grown-up pages here with the PIN. In the app, use the Rescue Code or the 24-hour wait.',
+    noPin: 'This device has no grown-up PIN to reset.',
+    unavailable: "This isn't available right now. Use Forgot PIN? in the app.",
+  },
 } as const;

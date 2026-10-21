@@ -86,6 +86,13 @@ export const caregiver = {
         noCode: '이 기기에는 저장된 복구 코드가 없어요. 대신 24시간 기다리기를 써 주세요.',
         badFormat: '낱말과 숫자를 모두 입력해 주세요. 예: TIGER-MOON-RIVER-APPLE-482139 (예전 코드: TIGER-MOON-4821)',
       },
+      signIn: {
+        heading: '계정으로 로그인하기',
+        caption: '이 기기를 쓰는 어른 계정으로 로그인해 주세요. 그다음 새 PIN을 골라요.',
+        button: '로그인',
+        newPinTitle: '새 어른용 PIN 고르기',
+        expired: '시간이 조금 지났어요. 새 PIN을 만들려면 다시 로그인해 주세요.',
+      },
     },
   },
 

@@ -87,6 +87,13 @@ export const caregiver = {
         noCode: 'No hay un código de rescate guardado en este dispositivo. Usa la espera de 24 horas.',
         badFormat: 'Escribe cada palabra y el número, como TIGER-MOON-RIVER-APPLE-482139 (códigos anteriores: TIGER-MOON-4821).',
       },
+      signIn: {
+        heading: 'Entra a la cuenta',
+        caption: 'Entra con la cuenta de adultos de este dispositivo. Luego elige un PIN nuevo.',
+        button: 'Entrar',
+        newPinTitle: 'Elige un PIN de adultos nuevo',
+        expired: 'Pasó un rato. Entra otra vez para crear un PIN nuevo.',
+      },
     },
   },
 
