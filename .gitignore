@@ -76,3 +76,19 @@ apps/mobile/recordings/
 # A local copy of the NIKL grade-A vocabulary list (freq-coverage) is never committed
 # until its licence is checked (F-CURR-002 §9.3, §19 assumption 4).
 *[Nn][Ii][Kk][Ll]*[Gg]rade*
+# Generated from content/ (F-CURR-002 §9.1, row CM-6): never committed. `pnpm generate`
+# (scripts/generate.mjs, GENERATED_PATHS) writes them; the turbo `generate` task and the root
+# postinstall run it. scripts/__tests__/generate.test.mjs keeps this list equal to GENERATED_PATHS.
+apps/mobile/src/content/__generated__/vocab.ts
+apps/web/src/data/vocab-catalog.ts
+apps/mobile/src/content/placement.generated.ts
+packages/content-schema/src/i18n-overlays.generated.ts
+apps/mobile/src/content/__generated__/stories-index.ts
+apps/mobile/src/content/__generated__/story-chunks/
+apps/mobile/src/content/__generated__/lessons-index.ts
+apps/mobile/src/content/__generated__/lesson-chunks/
+packages/content-schema/src/catalog/catalog.generated.ts
+apps/web/src/data/lecture-catalogue.generated.ts
+apps/web/src/data/catalogue-titles.generated.ts
+# The per-stage modules that F-CURR-002 row CM-5 retired (build-lessons.mjs removes a stale one).
+apps/mobile/src/content/__generated__/lessons-stage*.ts

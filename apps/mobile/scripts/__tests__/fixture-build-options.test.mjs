@@ -35,12 +35,14 @@ describe('fixtureBuildOptions', () => {
 describe('exportEnv', () => {
   const base = { PATH: '/bin', TMPDIR: '/tmp/x', EXPO_PUBLIC_CONTENT_GATING_ENABLED: 'true' };
 
-  it('the fixture bundle keeps the environment as it is', () => {
-    expect(exportEnv(base, { out: 'dist-e2e', contentGating: false }, '/tmp/own')).toBe(base);
+  it('the fixture bundle keeps the environment and tells Metro not to regenerate (F-CURR-002 CM-6)', () => {
+    // metro.config.js runs scripts/generate.mjs before it bundles; on this export that would put the
+    // release stories back over the fixture bundle the script just wrote.
+    expect(exportEnv(base, { out: 'dist-e2e', contentGating: false }, '/tmp/own')).toEqual({ ...base, HANGUL_ROUTE_GENERATE: 'off' });
   });
 
   it('the gating bundle turns gating on and builds on a Metro cache of its own', () => {
     const env = exportEnv({ PATH: '/bin', TMPDIR: '/tmp/x' }, { out: 'dist-e2e-gated', contentGating: true }, '/tmp/own');
-    expect(env).toEqual({ PATH: '/bin', TMPDIR: '/tmp/own', EXPO_PUBLIC_CONTENT_GATING_ENABLED: 'true' });
+    expect(env).toEqual({ PATH: '/bin', TMPDIR: '/tmp/own', EXPO_PUBLIC_CONTENT_GATING_ENABLED: 'true', HANGUL_ROUTE_GENERATE: 'off' });
   });
 });

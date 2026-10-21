@@ -37,11 +37,15 @@ export function fixtureBuildOptions(argv) {
 }
 
 /**
- * The environment of the `expo export` child: unchanged for the fixture bundle; for the gating bundle,
- * gating on and TMPDIR pointed at `ownTmp`, an empty directory, so Metro's cache (os.tmpdir()/metro-cache)
- * is one of its own.
+ * The environment of the `expo export` child. Both bundles carry HANGUL_ROUTE_GENERATE=off: the build
+ * has already run scripts/generate.mjs and written the fixture stories, and metro.config.js would
+ * otherwise regenerate stories.generated.ts without them (F-CURR-002 CM-6). The variable is read only
+ * by metro.config.js, at config time, so no transform and no cache entry depends on it. For the gating
+ * bundle, also gating on and TMPDIR pointed at `ownTmp`, an empty directory, so Metro's cache
+ * (os.tmpdir()/metro-cache) is one of its own.
  */
 export function exportEnv(base, options, ownTmp) {
-  if (!options.contentGating) return base;
-  return { ...base, TMPDIR: ownTmp, EXPO_PUBLIC_CONTENT_GATING_ENABLED: 'true' };
+  const env = { ...base, HANGUL_ROUTE_GENERATE: 'off' };
+  if (!options.contentGating) return env;
+  return { ...env, TMPDIR: ownTmp, EXPO_PUBLIC_CONTENT_GATING_ENABLED: 'true' };
 }

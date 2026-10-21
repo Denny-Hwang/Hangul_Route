@@ -1,39 +1,56 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "//#generate": {
+      "cache": false,
+      "inputs": ["content/**", "scripts/**", "apps/mobile/src/content/jamo.ts", "packages/content-schema/src/catalog/hand-stamps.json"],
+      "outputs": [
+        "apps/mobile/src/content/__generated__/vocab.ts",
+        "apps/web/src/data/vocab-catalog.ts",
+        "apps/mobile/src/content/placement.generated.ts",
+        "packages/content-schema/src/i18n-overlays.generated.ts",
+        "apps/mobile/src/content/stories.generated.ts",
+        "apps/mobile/src/content/__generated__/lessons-index.ts",
+        "apps/mobile/src/content/__generated__/lesson-chunks/**",
+        "packages/content-schema/src/catalog/catalog.generated.ts",
+        "apps/web/src/data/lecture-catalogue.generated.ts",
+        "apps/web/src/data/catalogue-titles.generated.ts"
+      ]
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "//#generate"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "@hangul-route/web#build": {
-      "dependsOn": ["^build", "typecheck"],
+      "dependsOn": ["^build", "typecheck", "//#generate"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"],
       "env": ["CONSOLE_ORIGIN"],
       "outputs": [".next/**", "!.next/cache/**", "out/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint", "//#generate"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build", "//#generate"]
     },
     "@hangul-route/web#test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "//#generate"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"]
     },
     "test:coverage": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "//#generate"],
       "outputs": ["coverage/**"]
     },
     "@hangul-route/web#test:coverage": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "//#generate"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"],
       "outputs": ["coverage/**"]
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build", "//#generate"]
     },
     "dev": {
+      "dependsOn": ["//#generate"],
       "cache": false,
       "persistent": true
     },

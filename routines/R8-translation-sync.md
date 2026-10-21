@@ -52,7 +52,7 @@ Translate from the English source; never change the English.
 
 ## Output
 - PR: `claude/i18n-<locale>-<namespace>` -> `main`, 라벨 `routine-generated`.
-- 파일: `packages/i18n/src/messages/<locale>/<namespace>.ts` (+ `index.ts` 연결), 또는 `content/i18n/<locale>/<domain>.json` (+ `node scripts/build-overlays.mjs` 로 재생성한 `i18n-overlays.generated.ts`).
+- 파일: `packages/i18n/src/messages/<locale>/<namespace>.ts` (+ `index.ts` 연결), 또는 `content/i18n/<locale>/<domain>.json` (`i18n-overlays.generated.ts` 는 F-CURR-002 CM-6 이후 커밋하지 않는다: `pnpm generate` 가 생성하고 gitignore 됨).
 - 원어민 검토자는 PR 리뷰 후 같은 PR 에 `review-ledger.json` 항목을 추가한다: `{ "<locale>": { "<namespace>": { "enSha": "<sha256 of messages/en/<namespace>.ts>", "reviewedBy": "<initials>", "reviewedAt": "YYYY-MM-DD" } } }` (namespace 파일 단위). `enSha` 는 직접 계산하지 않고 `node scripts/i18n-status.mjs` 출력의 `en` 아래 `<namespace>  enSha <hex>` 줄에서 복사한다 (CRLF 는 LF 로 해시). `reviewedBy` 는 대문자 이니셜 2-4자만 (공개 저장소: 이름, 이메일 금지; CI 가 검사). 이 루틴은 그 항목을 만들지 않는다.
 - `LOCALE_STATUS` 를 `'shipped'` 로 바꾸는 PR (PR 15 / 16) 은 사람이 연다. CI (`--base`) 가 그 PR 에서 모든 namespace 의 ledger `enSha` 가 현재 영어와 일치하는지 확인한다. §3.11 layout matrix (nightly e2e, PR 14) 는 i18n-status 가 검사하지 않으므로 그 PR 에서 수동으로 확인한다.
 

@@ -8,13 +8,15 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "generate": "node scripts/generate.mjs",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "test:scripts": "node --test scripts/__tests__/*.test.mjs",
     "typecheck": "turbo run typecheck",
     "vocab:build": "node scripts/build-vocab.mjs",
-    "vocab:check": "node scripts/build-vocab.mjs --check"
+    "vocab:check": "node scripts/build-vocab.mjs --check",
+    "postinstall": "node scripts/generate.mjs"
   },
   "engines": {
     "node": ">=20.6"

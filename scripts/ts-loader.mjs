@@ -30,7 +30,10 @@ function typescript() {
       // try the next workspace
     }
   }
-  throw new Error("typescript not found; run `pnpm install` first");
+  throw new Error(
+    "typescript not found: the generators (scripts/generate.mjs, run by the postinstall) read TypeScript through scripts/ts-loader.mjs " +
+      "and need the devDependencies; run `pnpm install` without --prod (and without NODE_ENV=production)",
+  );
 }
 
 const NOT_FOUND = new Set(["ERR_MODULE_NOT_FOUND", "ERR_UNSUPPORTED_DIR_IMPORT"]);
