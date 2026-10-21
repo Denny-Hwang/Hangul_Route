@@ -6,7 +6,6 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { createLessonStore, LessonChunkMismatch, type LessonCellChunk, type LessonManifest, type LessonTitleChunk } from '../../logic/lessons/lesson-store';
-import { StoryChunkMismatch } from '../../logic/story/story-chunk-store';
 import { buttonsNamed, byTestId, press, render, screenTexts } from '../../test-support/render';
 import { LESSON_WAITING_LINE_MS, lessonContentBindings } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
@@ -76,30 +75,16 @@ const settle = async (): Promise<void> => {
   });
 };
 
-/** The story side of the grown-up roots (row CM-8): every story chunk loads or fails when the test says so. */
-function coldStories() {
-  let ready = false;
-  const pending: Deferred<void>[] = [];
-  const stories = {
-    isAllReady: () => ready,
-    ensureAll: () => {
-      const d = deferred<void>();
-      pending.push(d);
-      return d.promise.then(() => {
-        ready = true;
-      });
-    },
-  };
-  return { stories, storyLoads: pending };
+function bindings(over: { reload?: () => boolean; answer?: (error: unknown) => Promise<boolean> } = {}) {
+  const cold = coldStore();
+  const reload = vi.fn(over.reload ?? (() => false));
+  const answer = vi.fn(over.answer ?? (async () => false));
+  const b = lessonContentBindings({ store: cold.store, locale: () => 'en', reloadForNewBuild: reload, isNewBuildAnswer: answer });
+  return { ...cold, ...b, reload, answer };
 }
 
-function bindings(over: { reload?: () => boolean; withStories?: boolean } = {}) {
-  const cold = coldStore();
-  const story = coldStories();
-  const reload = vi.fn(over.reload ?? (() => false));
-  const b = lessonContentBindings({ store: cold.store, ...(over.withStories ? { stories: story.stories } : {}), locale: () => 'en', reloadForNewBuild: reload });
-  return { ...cold, ...story, ...b, reload };
-}
+/** What Metro's web loader rejects with when a chunk's script tag fires `error` (a network failure, or HTML refused under nosniff). */
+const scriptError = (): Error => Object.assign(new Error('Loading module /_expo/static/js/web/lessons-cell-stage2-rites-0.js failed.'), { name: 'AsyncRequireError' });
 
 describe('useLessonQuestReady (the quest player and the game screen)', () => {
   function Player({ hook, questId }: { hook: (id: string) => boolean; questId: string }): React.ReactElement {
@@ -128,6 +113,8 @@ describe('useLessonQuestReady (the quest player and the game screen)', () => {
     await settle();
     const retry = buttonsNamed(r.root, TRY_AGAIN);
     expect(retry).toHaveLength(1);
+    // The URL was asked again and did not answer for a newer build: a network failure, no reload.
+    expect(t.answer).toHaveBeenCalledTimes(1);
     expect(t.reload).not.toHaveBeenCalled();
     await press(retry[0]!);
     expect(t.asked).toEqual(['episode:stage2-rites', 'episode:stage2-rites']);
@@ -144,6 +131,26 @@ describe('useLessonQuestReady (the quest player and the game screen)', () => {
     await settle();
     expect(t.reload).toHaveBeenCalledTimes(1);
     expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+  });
+
+  it('a script error whose URL now answers for a newer build (HTML refused under nosniff, a 404) reloads the page', async () => {
+    const t = bindings({ reload: () => true, answer: async () => true });
+    const r = await render(<Player hook={t.useLessonQuestReady} questId="quest:stage2-rites-q1" />);
+    const error = scriptError();
+    await act(async () => t.pending['episode:stage2-rites']?.reject(error));
+    await settle();
+    expect(t.answer).toHaveBeenCalledWith(error);
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+  });
+
+  it('a chunk that says it is of a newer build reloads without asking its URL again', async () => {
+    const t = bindings({ reload: () => true });
+    await render(<Player hook={t.useLessonQuestReady} questId="quest:stage2-rites-q1" />);
+    await act(async () => t.pending['episode:stage2-rites']?.reject(new Error('Requiring unknown module "812".')));
+    await settle();
+    expect(t.answer).not.toHaveBeenCalled();
+    expect(t.reload).toHaveBeenCalledTimes(1);
   });
 
   it('a newer-build chunk throws when the reload was refused (offline, or reloaded a moment ago)', async () => {
@@ -251,33 +258,13 @@ describe('withLessonContent (All lessons and the presenter)', () => {
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
   });
 
-  it('with the story chunks (row CM-8): waits for them too, and a story chunk that fails shows the crash screen', async () => {
-    const t = bindings({ withStories: true });
+  it('a script error whose URL now answers for a newer build reloads the page', async () => {
+    const t = bindings({ reload: () => true, answer: async () => true });
     const Wrapped = t.withLessonContent(Root);
     const r = await render(<Wrapped />);
-    for (const id of Object.keys(manifest.cells)) await act(async () => t.pending[id]?.resolve(chunkOf(id)));
+    await act(async () => t.pending['episode:stage2-rites']?.reject(scriptError()));
     await settle();
-    expect(byTestId(r.root, 'root')).toHaveLength(0);
-    expect(t.storyLoads).toHaveLength(1);
-    await act(async () => t.storyLoads[0]?.reject(new Error('offline')));
-    await settle();
-    expect(byTestId(r.root, 'root')).toHaveLength(0);
-    const retry = buttonsNamed(r.root, TRY_AGAIN);
-    expect(retry).toHaveLength(1);
-    await press(retry[0]!);
-    expect(t.storyLoads).toHaveLength(2);
-    await act(async () => t.storyLoads[1]?.resolve());
-    await settle();
-    expect(byTestId(r.root, 'root')).toHaveLength(1);
-  });
-
-  it('a story chunk of a newer build reloads the page', async () => {
-    const t = bindings({ withStories: true, reload: () => true });
-    const Wrapped = t.withLessonContent(Root);
-    const r = await render(<Wrapped />);
-    for (const id of Object.keys(manifest.cells)) await act(async () => t.pending[id]?.resolve(chunkOf(id)));
-    await act(async () => t.storyLoads[0]?.reject(new StoryChunkMismatch('story:sun-and-moon', 'h-sun', 'x')));
-    await settle();
+    expect(t.answer).toHaveBeenCalledTimes(1);
     expect(t.reload).toHaveBeenCalledTimes(1);
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
   });

@@ -19,15 +19,28 @@ let shownLocale: UiLocale = DEFAULT_LOCALE;
  * The lesson titles of Spanish and Korean are a chunk of their own, loaded for the active locale only
  * (F-CURR-002 §10): a newly chosen locale applies once its titles are in (or failed, which keeps their
  * English), so the whole screen changes language at once, never with English lesson titles left over.
+ * It waits for them `TITLES_GRACE_MS` at most (`content/lessons.ts`): past that it applies with the lesson
+ * titles in English, and the screens draw again when the chunk arrives (`useLessonTitlesVersion`).
  */
 export function useLocale(): UiLocale {
   const wanted = useLocaleStore(activeLocale);
   const settled = useSyncExternalStore(lessonContent.subscribe, () => lessonContent.titlesSettled(wanted));
+  // A title chunk that arrives after the grace draws the screen again with its titles.
+  useSyncExternalStore(lessonContent.subscribe, lessonContent.titlesVersion);
   useEffect(() => {
     if (!settled) lessonContent.ensureTitles(wanted).catch(() => undefined);
   }, [wanted, settled]);
   if (settled) shownLocale = wanted;
   return settled ? wanted : shownLocale;
+}
+
+/**
+ * Changes when the active locale's lesson titles arrive (F-CURR-002 §10): a memo of localized lesson
+ * titles (`localizeEpisode`, `localizeQuest`, `localizedRouteContent`) keys on it next to the locale,
+ * because a title chunk that arrives after `useLocale` applied its locale fills the glosses in place.
+ */
+export function useLessonTitlesVersion(): number {
+  return useSyncExternalStore(lessonContent.subscribe, lessonContent.titlesVersion);
 }
 
 /**

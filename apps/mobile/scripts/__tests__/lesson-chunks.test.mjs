@@ -1,12 +1,17 @@
 // F-CURR-002 §10 (row CM-5): the lesson chunk checks and the precache report of pwa-postbuild.mjs.
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
+import { grownUpHeadersBlock } from '../app-host/headers.mjs';
 import {
   PRECACHE_BUDGET,
   WEB_JS_DIR,
   budgetIsAdvisory,
   isStartBundle,
   lessonChunkProblems,
+  lessonChunkUrls,
   md5,
+  nosniffLessonChunks,
   precacheBudgetProblems,
   precacheReport,
   reportLines,
@@ -98,16 +103,46 @@ describe('the story chunks of row CM-8 (the same checks)', () => {
     ]);
   });
 
+  it('lists the story bundles with the lesson bundles for the nosniff check (an older build asks for either)', () => {
+    const bundles = withStory();
+    expect(lessonChunkUrls([...MANIFEST, ...STORIES], bundles)).toEqual(bundles.slice(1).map((b) => b.url));
+    expect(nosniffLessonChunks('/_expo/*\n  X-Content-Type-Options: nosniff\n', lessonChunkUrls([...MANIFEST, ...STORIES], bundles))).toContain(bundles[3].url);
+  });
+
   it('counts the story chunks apart from the lesson chunks in the report', () => {
     const bundles = withStory();
     const report = precacheReport({ manifest: MANIFEST, stories: STORIES, bundles, precache: { count: 4, size: 99 } });
     expect(report.lessonChunks.count).toBe(2);
-    expect(report.storyChunks).toEqual({ count: 1, raw: bundles[3].text.length, gzip: expect.any(Number) });
+    expect(report.storyChunks).toEqual({ count: 1, raw: bundles[3].text.length, gzip: expect.any(Number), largest: { url: bundles[3].url, raw: bundles[3].text.length } });
     const lines = reportLines(report);
     expect(lines[3]).toMatch(/^ {2}story chunks {2}1 bundles {2}\d+ B raw {2}\d+ B gzip$/);
     expect(lines).toHaveLength(5);
     // Without a story manifest the story line counts none.
-    expect(precacheReport({ manifest: MANIFEST, bundles, precache: { count: 4, size: 99 } }).storyChunks.count).toBe(0);
+    expect(precacheReport({ manifest: MANIFEST, bundles, precache: { count: 4, size: 99 } }).storyChunks).toEqual({ count: 0, raw: 0, gzip: 0, largest: null });
+  });
+
+  it('holds the built story bundles to the story lines: one bundle, the raw total and the gzip total', () => {
+    const lines = { ...PRECACHE_BUDGET, storyChunkRaw: 100, storiesRaw: 150, storiesGzip: 40 };
+    const report = {
+      start: { url: START, raw: 1, gzip: 1 },
+      lessonChunks: { count: 0, raw: 0, gzip: 0, largest: null },
+      storyChunks: { count: 2, raw: 151, gzip: 41, largest: { url: `${WEB_JS_DIR}/story-sun-and-moon-${md5('x')}.js`, raw: 101 } },
+      precache: { count: 3, raw: 153 },
+    };
+    expect(precacheBudgetProblems(report, lines)).toEqual([
+      expect.stringMatching(new RegExp(`^the story bundle ${WEB_JS_DIR}/story-sun-and-moon-[0-9a-f]{32}\\.js is 101 B raw, over the per-story ceiling of 100 B `)),
+      expect.stringMatching(/^the story bundles are 151 B raw, over the stories ceiling of 150 B /),
+      expect.stringMatching(/^the story bundles are 41 B gzip, over the stories ceiling of 40 B gzip /),
+    ]);
+    expect(precacheBudgetProblems({ ...report, storyChunks: { count: 2, raw: 150, gzip: 40, largest: { url: 'x', raw: 100 } } }, lines)).toEqual([]);
+    expect(precacheBudgetProblems({ ...report, storyChunks: { count: 0, raw: 0, gzip: 0, largest: null } }, lines)).toEqual([]);
+  });
+
+  it('the story lines on the built bundles are the lines of scripts/build-stories.mjs', async () => {
+    const { BUDGET } = await import('../../../../scripts/build-stories.mjs');
+    expect(PRECACHE_BUDGET.storyChunkRaw).toBe(BUDGET.perStoryRaw);
+    expect(PRECACHE_BUDGET.storiesRaw).toBe(BUDGET.totalRaw);
+    expect(PRECACHE_BUDGET.storiesGzip).toBe(BUDGET.totalGzip);
   });
 });
 
@@ -146,13 +181,16 @@ describe('precacheReport and its budget lines', () => {
     expect(reportLines({ ...report, start: null })).toHaveLength(3);
   });
 
-  it('the start bundle line is its size after CM-8 with a small margin; the precache line is the CM-5 measurement plus 2.5 MB', () => {
-    // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,357,584 B before CM-8, 6,364,341 B measured after CM-8;
-    // the margin stays under 10 KB, so the bundle cannot regrow.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_370_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 6_364_341).toBeLessThan(10_000);
-    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(7_335_066);
-    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_784_580 + 2_500_000);
+  it('the start bundle line is its size after CM-8 with a small margin, under the CM-5 size, so it shrank; the precache line is the CM-5 measurement plus 2.5 MB', () => {
+    // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,345,469 B measured after CM-8.
+    // The margin stays under 10 KB, so the stories (or anything else) cannot come back into the start bundle.
+    // This pins the line only; `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the
+    // real start bundle against it.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_350_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_345_469).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_345_469).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(7_337_815);
+    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
 
   it('the budget only warns on the deploy build (Cloudflare Workers Builds or Pages), and fails everywhere else', () => {
@@ -160,5 +198,27 @@ describe('precacheReport and its budget lines', () => {
     expect(budgetIsAdvisory({ CF_PAGES: '1' })).toBe(true);
     expect(budgetIsAdvisory({ CI: 'true', GITHUB_ACTIONS: 'true' })).toBe(false);
     expect(budgetIsAdvisory({})).toBe(false);
+  });
+});
+
+describe('nosniffLessonChunks', () => {
+  const urls = lessonChunkUrls(MANIFEST, sound());
+
+  it('lists the lesson chunk bundles of a build, not the start bundle', () => {
+    expect(urls).toHaveLength(MANIFEST.length);
+    expect(urls.every((u) => /^_expo\/static\/js\/web\/lessons-/.test(u))).toBe(true);
+  });
+
+  it('passes the shipped rules: public/_headers plus the grown-up block merge-console.mjs appends', () => {
+    const shipped = readFileSync(new URL('../../public/_headers', import.meta.url), 'utf8');
+    expect(nosniffLessonChunks(`${shipped}\n${grownUpHeadersBlock(GROWN_UP_PREFIXES)}`, urls)).toEqual([]);
+  });
+
+  it('fails a rule that would serve the chunks with nosniff, so a chunk request of an older build keeps reaching the reload', () => {
+    expect(nosniffLessonChunks('/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual(urls);
+    expect(nosniffLessonChunks('/_expo/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual(urls);
+    expect(nosniffLessonChunks('/teach/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual([]);
+    expect(nosniffLessonChunks('/*\n  X-Content-Type-Options: nosniff\n/_expo/*\n  ! X-Content-Type-Options\n', urls)).toEqual([]);
+    expect(nosniffLessonChunks('', urls)).toEqual([]);
   });
 });

@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { dashboardRowView, type DashboardRowView } from '../../logic/my-route/dashboard-row';
 import { buildMyRoute } from '../../logic/my-route/model';
@@ -157,13 +157,15 @@ export function LearningRouteRow({
 }): React.ReactElement | null {
   const messages = useMessages();
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const hydrated = useProgressStore((s) => s.hydratedFor.has(profileId));
   // The learner's access tier (F-ENT-003 section 3.4); re-renders when it changes, as the page does.
   const tier = useAccessTier(profileId);
   // This learner's cached inbox plans: the goal follows them (amendment section 4.1).
   const plans = usePlanStore((s) => s.byLearner[profileId]);
-  const localized = useMemo(() => localizedRouteContent(locale), [locale]);
+  const localized = useMemo(() => localizedRouteContent(locale), [locale, titles]);
   // The skills count every quest's games, so every lesson chunk loads and the counts follow (F-CURR-002 §10).
   const lessonsLoaded = useLessonContentVersion();
 

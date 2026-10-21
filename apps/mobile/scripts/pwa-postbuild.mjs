@@ -15,8 +15,9 @@
 // web bundle carrying the manifest's hash, and none is in the start bundle; the precache report
 // prints the start bundle, the chunks and the learner precache, and `--budget` (the release build,
 // build:web) fails over their budget lines (pwa/lesson-chunks.mjs); on the deploy's own build
-// (Cloudflare Workers Builds) it only warns, so a budget line never stops a deploy. Story chunks (CM-8): every
-// story's body is its own chunk of scripts/build-stories.mjs, under the same checks and in the same report.
+// (Cloudflare Workers Builds) it only warns, so a budget line never stops a deploy.
+// Story chunks (CM-8): every story's body is its own chunk of scripts/build-stories.mjs, under the same checks and
+// in the same report.
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import * as nodeModule from 'node:module';
@@ -33,7 +34,16 @@ import {
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
-import { WEB_JS_DIR, budgetIsAdvisory, lessonChunkProblems, precacheBudgetProblems, precacheReport, reportLines } from './pwa/lesson-chunks.mjs';
+import {
+  WEB_JS_DIR,
+  budgetIsAdvisory,
+  lessonChunkProblems,
+  lessonChunkUrls,
+  nosniffLessonChunks,
+  precacheBudgetProblems,
+  precacheReport,
+  reportLines,
+} from './pwa/lesson-chunks.mjs';
 
 const args = process.argv.slice(2);
 const budget = args.includes('--budget');
@@ -212,7 +222,13 @@ const storyManifest = storyBuild.readChunkManifest(repo);
 const bundles = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
   : [];
-const chunkProblems = lessonChunkProblems({ manifest: [...lessonManifest, ...storyManifest], bundles, precached: manifestUrls });
+const chunkManifest = [...lessonManifest, ...storyManifest];
+const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls });
+// A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
+const headersFile = join(dist, '_headers');
+for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls(chunkManifest, bundles))) {
+  chunkProblems.push(`${url} would be served with X-Content-Type-Options: nosniff (${headersFile}): keep nosniff off /_expo/static/js/`);
+}
 if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson and story chunks:\n  ${chunkProblems.join('\n  ')}`);
 const report = precacheReport({ manifest: lessonManifest, stories: storyManifest, bundles, precache: { count, size } });
 for (const line of reportLines(report)) process.stdout.write(`${line}\n`);

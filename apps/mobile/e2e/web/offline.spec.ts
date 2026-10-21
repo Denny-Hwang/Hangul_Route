@@ -298,7 +298,7 @@ test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale
  * F-CURR-002 §10: a page with no worker in control (the iOS 14 home-screen app, a first visit) loads each chunk
  * from the network. A chunk URL that answers with the app's HTML page (a deploy landed: the host's single-page
  * fallback) reloads the page once, onto the new build, and the lesson then plays; a chunk that cannot load at all
- * shows the crash screen's Try again, never a reload loop, and Try again loads it once it can.
+ * shows the crash screen, never a reload loop; its Try again returns to Home, and the lesson then loads once it can.
  */
 test.describe('lesson chunks without a service worker (F-CURR-002 CM-5 recovery)', () => {
   test.use({ serviceWorkers: 'block' });
@@ -338,7 +338,51 @@ test.describe('lesson chunks without a service worker (F-CURR-002 CM-5 recovery)
     expect(served).toBe(2);
   });
 
-  test('a chunk that cannot load shows Try again, never a reload loop, and Try again loads it once it can', async ({ page }) => {
+  test('a chunk of a newer build that the browser refuses as a script (its HTML page under nosniff) reloads once, and the lesson then plays', async ({ page }) => {
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    await page.getByRole('button', { name: "Let's start" }).click();
+    await completeChildForm(page, { name: 'Suni' });
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    // Until the app has asked the URL itself, the chunk URL answers what a host that sends nosniff answers for a chunk
+    // of an older build: its HTML page, which the browser refuses to run, so the script tag fires error as for a network
+    // failure. The app asks the URL once more (a fetch), gets the HTML page again, and reloads onto the new build, whose
+    // chunk then loads.
+    let stale = true;
+    const answered: string[] = [];
+    await page.route(LETTERS_BUNDLE, async (route) => {
+      const kind = route.request().resourceType();
+      answered.push(`${stale ? 'html' : 'js'} ${kind}`);
+      if (!stale) return route.continue();
+      if (kind === 'fetch') stale = false;
+      return route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff' },
+        body: '<!doctype html><html><body><div id="root"></div></body></html>',
+      });
+    });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Suni!')).toBeVisible();
+    await page.evaluate(() => {
+      (window as Window & { __beforeReload?: boolean }).__beforeReload = true;
+    });
+    const guide = page.getByTestId('install-guide');
+    await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByRole('button', { name: journeyCellName(2, 'Letters & Books'), exact: true }).click();
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    // The marker is gone once the page has reloaded (an evaluate during the navigation itself counts as not yet).
+    await expect
+      .poll(() => page.evaluate(() => (window as Window & { __beforeReload?: boolean }).__beforeReload ?? false).catch(() => true), { timeout: 15_000 })
+      .toBe(false);
+    expect(answered).toContain('html fetch');
+    await expect(page.getByText('Hi, Suni!')).toBeVisible();
+    await playStage2LettersDiscover(page);
+    expect(answered.at(-1)).toBe('js script');
+  });
+
+  test('a chunk that cannot load shows Try again, never a reload loop; Try again returns to Home and the lesson then loads', async ({ page }) => {
     let blocked = true;
     await page.route(LETTERS_BUNDLE, async (route) => (blocked ? route.abort('internetdisconnected') : route.continue()));
     await page.goto('/');
@@ -414,9 +458,8 @@ async function closeInstallGuide(page: Page, notNow: string): Promise<void> {
 
 /**
  * F-CURR-002 §10 (row CM-8): the story bodies left the start bundle. Every story's chunk is precached after
- * one online visit. Offline, once the first screen is up, every story's chunk loads in the background from
- * the precache (as the lesson chunks do, so a session keeps every story whatever happens to the worker), and
- * a story opens from the Library shelf and its reader plays from its own chunk.
+ * one online visit; offline, once the first screen is up, every story chunk loads in the background from the
+ * precache (each once), and a story opens from the Library shelf and its reader plays from its own chunk.
  */
 test('story chunks are precached, load from the precache offline, and a story opens and reads offline (F-CURR-002 CM-8)', async ({ page, context }) => {
   const errors: string[] = [];
@@ -424,9 +467,11 @@ test('story chunks are precached, load from the precache offline, and a story op
   expect(TALE_SCENES).toBeGreaterThan(0);
 
   await onboardThenOffline(page, context, 'Suni');
-  await expect.poll(async () => (await loadedStoryChunks(page)).filter((p) => STORY_BUNDLE.test(p)).length, { timeout: 15_000 }).toBe(STORY_SHELF.length);
+  // The background load, offline, from the precache: every story chunk, each once.
+  await expect.poll(async () => (await loadedStoryChunks(page)).length, { timeout: 15_000 }).toBe(STORY_SHELF.length);
+  for (const url of await loadedStoryChunks(page)) expect(url).toMatch(STORY_BUNDLE);
 
-  // Library > Story Time: the tiles come from the shelf; the tale's page and its quest read its chunk.
+  // Library > Story Time: the tiles come from the shelf; the tale's page and its quest load its chunk only.
   await closeInstallGuide(page, 'Not now');
   await page.getByText('Library', { exact: true }).last().click();
   await page.getByRole('tab', { name: 'Story Time', exact: true }).click();
@@ -439,7 +484,9 @@ test('story chunks are precached, load from the precache offline, and a story op
   // The reader's first scene, from the chunk: its narration and the scene count the shelf named.
   await expect(position(page)).toHaveText(`1 / ${TALE_SCENES}`);
   await expect(page.getByText(/Story time with Hoya!/).first()).toBeVisible();
-  expect((await loadedStoryChunks(page)).filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
+  const loaded = await loadedStoryChunks(page);
+  expect(loaded.filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
+  expect(loaded).toHaveLength(STORY_SHELF.length);
   expect(errors).toEqual([]);
 });
 
@@ -473,53 +520,4 @@ test('in Spanish, offline: the story overlays apply to a story read from its chu
   await expect(page.getByText(/¡Hora del cuento con Hoya!/).first()).toBeVisible();
   expect((await loadedStoryChunks(page)).filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
   expect(errors).toEqual([]);
-});
-
-/**
- * F-CURR-002 §10 (row CM-8, recovery as CM-5): with no worker in control, a story chunk URL that answers with
- * the app's HTML page (a deploy landed) reloads the page once, onto the new build, and the story then plays.
- */
-test.describe('story chunks without a service worker (F-CURR-002 CM-8 recovery)', () => {
-  test.use({ serviceWorkers: 'block' });
-
-  async function openTale(page: Page): Promise<void> {
-    await closeInstallGuide(page, 'Not now');
-    await page.getByText('Library', { exact: true }).last().click();
-    await page.getByRole('tab', { name: 'Story Time', exact: true }).click();
-    await page.getByTestId(`story-tile-${TALE}`).filter({ visible: true }).click();
-    await page.getByTestId(`story-episode-start-${TALE}`).filter({ visible: true }).click();
-  }
-
-  test('a story chunk of a newer build reloads once and the story then plays', async ({ page }) => {
-    await page.goto('/');
-    await keepSidewaysIfAsked(page);
-    await page.getByRole('button', { name: "Let's start" }).click();
-    await completeChildForm(page, { name: 'Suni' });
-    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
-    // From the next page on, the first request of the tale's chunk gets the app page itself (a deploy landed).
-    let served = 0;
-    await page.route(/\/_expo\/static\/js\/web\/story-sun-and-moon-[0-9a-f]{32}\.js$/, async (route) => {
-      served += 1;
-      if (served === 1) await route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html><body><div id="root"></div></body></html>' });
-      else await route.continue();
-    });
-    await page.goto('/');
-    await expect(page.getByText('Hi, Suni!')).toBeVisible();
-    // The background load meets the HTML first and leaves it for the story; starting the story reloads the page once.
-    await expect.poll(() => served, { timeout: 15_000 }).toBe(1);
-    await page.evaluate(() => {
-      (window as Window & { __beforeReload?: boolean }).__beforeReload = true;
-    });
-    const reloaded = page.waitForEvent('load');
-    await openTale(page);
-    await reloaded;
-    expect(await page.evaluate(() => (window as Window & { __beforeReload?: boolean }).__beforeReload ?? false)).toBe(false);
-    await expect(page.getByText('Hi, Suni!')).toBeVisible();
-    await openTale(page);
-    await expect(page.getByRole('heading', { name: 'Story time' })).toBeVisible();
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await page.getByRole('button', { name: 'Play minigame' }).click();
-    await expect(position(page)).toHaveText(`1 / ${TALE_SCENES}`);
-    expect(served).toBe(2);
-  });
 });

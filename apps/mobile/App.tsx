@@ -41,10 +41,10 @@ const queryClient = new QueryClient({
 /** The root navigator's container, for the web history bridge (AMENDMENTS-DISPLAY-NAV section 7.2). */
 const navigation = createNavigationContainerRef<RootStackParamList>();
 
-/** Every lesson chunk and every story chunk (F-CURR-002 §10, rows CM-5 and CM-8); one that fails is left for the screen that needs it. */
-async function prefetchChunks(): Promise<void> {
+/** Every lesson and story chunk (F-CURR-002 §10, rows CM-5 and CM-8); a failed one is left for the screen that needs it. */
+const prefetchContent = async (): Promise<void> => {
   await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll()]);
-}
+};
 
 export default function App(): React.ReactElement {
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
@@ -98,13 +98,15 @@ export default function App(): React.ReactElement {
     let stopPrefetch = (): void => {};
     void hydrateLearnerData()
       .catch(() => undefined)
-      // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen.
-      .then(() => lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())).catch(() => undefined))
+      // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen, waited
+      // for 2.5 s at most (TITLES_GRACE_MS); past that the first screen shows with English lesson titles until they arrive.
+      .then(() => lessonContent.untilTitlesSettled(activeLocale(useLocaleStore.getState())))
       .then(async () => {
         if (!live) return;
         setReady(true);
-        // Then every lesson and story chunk, in the background on the web (F-CURR-002 §10), so they stay when the network goes.
-        stopPrefetch = prefetchWhenIdle(prefetchChunks);
+        // Then every lesson and story chunk, in the background on the web (F-CURR-002 §10), so the lessons and the
+        // stories stay when the network goes.
+        stopPrefetch = prefetchWhenIdle(prefetchContent);
         // A curriculum's horizon moves with the calendar, network or not (F-PLAN-002 section 3.6).
         await rederiveAllLocal().catch(() => undefined);
         void useSyncStore.getState().syncAll();
@@ -117,10 +119,10 @@ export default function App(): React.ReactElement {
       if (event === 'back-online') {
         void flushQueue();
         void useSyncStore.getState().syncAll();
-        // Lesson and story chunks or titles that failed offline load now (F-CURR-002 §10); loaded ones are not asked again.
+        // Lesson chunks or titles that failed offline load now (F-CURR-002 §10); loaded ones are not asked again.
         lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())).catch(() => undefined);
         stopPrefetch();
-        stopPrefetch = prefetchWhenIdle(prefetchChunks);
+        stopPrefetch = prefetchWhenIdle(prefetchContent);
       }
     });
     return () => {
