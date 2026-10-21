@@ -298,10 +298,20 @@ export const useSyncStore = create<State & Actions>((set, get) => {
   }
 
   /**
-   * Cache the record read from storage for `learnerId`, unless a hydrate that raced the read (an edit queued
-   * meanwhile) already cached a newer one, which wins.
+   * The learner's sync record: the cached one, else the stored one (cached now), else a blank one when nothing is
+   * stored. Null when storage could not be read: that is not "no record", so nothing is cached and the caller writes
+   * nothing for the learner (a blank record saved over it would lose the device secret, F-SYNC-001 section 3.7 #10).
    */
-  function adopt(learnerId: string, saved: Partial<Persisted> | null): LearnerSyncState {
+  async function load(learnerId: string): Promise<LearnerSyncState | null> {
+    const existing = get().byLearner[learnerId];
+    if (existing) return existing;
+    let saved: Partial<Persisted> | null;
+    try {
+      saved = await readJsonStrict<Partial<Persisted>>(key(learnerId));
+    } catch {
+      return null;
+    }
+    // A load that raced this one (an edit queued meanwhile) wins: its record is newer than the stored one.
     const raced = get().byLearner[learnerId];
     if (raced) return raced;
     const state: LearnerSyncState = { ...blank(learnerId), ...(saved ?? {}) };
@@ -309,11 +319,16 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     return state;
   }
 
+  /** What a caller gets for a record that could not be read: never cached, never saved. */
+  function unreadable(learnerId: string): LearnerSyncState {
+    return { ...blank(learnerId), status: 'error', lastError: 'storage_unavailable' };
+  }
+
   /**
    * One-time repair (builds before profile edits reached the server kept a rename on the device): queue every
    * registered learner's current name, level and avatar once, then set the marker. Learners not registered yet send
-   * theirs when they register. A record that cannot be read stops the pass with no marker and nothing cached for that
-   * learner, so the repair runs again on the next start (F-SYNC-001 section 3.7 #10).
+   * theirs when they register. A record that cannot be read stops the pass before anything is queued, with no marker
+   * and nothing cached for that learner, so the repair runs again on the next start (F-SYNC-001 section 3.7 #10).
    */
   async function repairProfilePushes(): Promise<void> {
     if (await readJson<boolean>(PROFILE_PUSH_REPAIR_KEY)) return;
@@ -321,21 +336,13 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     const learners = profiles.profiles.filter((p) => p.role === 'learner');
     // Nothing loaded yet (or a read that failed): try again on the next start rather than mark it done.
     if (!profiles.hydrated || learners.length === 0) return;
+    // Every record is read before anything is queued: a failed read is not "no record" (a blank one would skip the
+    // learner and mark the repair done), so the pass stops there with nothing queued and runs again on the next start.
+    for (const p of learners) if (!(await load(p.id))) return;
     for (const p of learners) {
-      let state = get().byLearner[p.id];
-      if (!state) {
-        let saved: Partial<Persisted> | null;
-        try {
-          saved = await readJsonStrict<Partial<Persisted>>(key(p.id));
-        } catch {
-          // A failed read is not "no record": a blank one here would skip the learner and mark the repair done.
-          return;
-        }
-        state = adopt(p.id, saved);
-      }
-      if (!state.secret) continue;
-      const previous = get().byLearner[p.id]?.pendingProfile ?? state.pendingProfile;
-      update(p.id, { pendingProfile: queueRepair(previous, serverFieldsOf(p), editStamp(previous?.at)) });
+      const state = get().byLearner[p.id];
+      if (!state?.secret) continue;
+      update(p.id, { pendingProfile: queueRepair(state.pendingProfile, serverFieldsOf(p), editStamp(state.pendingProfile?.at)) });
     }
     await writeJson(PROFILE_PUSH_REPAIR_KEY, true);
   }
@@ -366,7 +373,9 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
   async function runSync(learnerId: string): Promise<LearnerSyncState> {
     const client = api();
-    const state = await get().hydrate(learnerId);
+    const state = await load(learnerId);
+    // A record storage could not read: no registration and no write, so the stored secret is kept for a later pass.
+    if (!state) return unreadable(learnerId);
     if (!client) return update(learnerId, { status: 'off' });
     const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
     // The edit the registration below would carry: the profile is read now, so this is the edit it holds.
@@ -417,13 +426,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
   return {
     byLearner: {},
 
-    hydrate: async (learnerId) => {
-      const existing = get().byLearner[learnerId];
-      if (existing) return existing;
-      const saved = await readJson<Partial<Persisted>>(key(learnerId));
-      // A hydrate that raced this one (an edit queued meanwhile) wins: its record is newer than the stored one.
-      return adopt(learnerId, saved);
-    },
+    hydrate: async (learnerId) => (await load(learnerId)) ?? unreadable(learnerId),
 
     requestSync: (learnerId) => {
       if (!api()) return;
@@ -459,7 +462,13 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     markProfileDirty: async (learnerId, fields) => {
       if (!hasFields(fields)) return;
-      const state = await get().hydrate(learnerId);
+      const state = await load(learnerId);
+      if (!state) {
+        // The queued edit cannot be stored without the record it belongs to. The profile keeps the new values, and
+        // clearing the repair marker has the next start's one-time repair queue them (F-SYNC-001 section 3.7 #10).
+        await writeJson(PROFILE_PUSH_REPAIR_KEY, false).catch(() => undefined);
+        return;
+      }
       const previous = get().byLearner[learnerId]?.pendingProfile ?? state.pendingProfile;
       update(learnerId, { pendingProfile: mergePending(previous, fields, editStamp(previous?.at)) });
       get().requestSync(learnerId);
