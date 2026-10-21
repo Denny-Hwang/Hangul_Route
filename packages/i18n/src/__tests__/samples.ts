@@ -906,4 +906,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.adminInvite.done': [['Maple School']],
   'console.adminInvite.full': [[2]],
   'console.adminInvite.alreadyAdmin': [['Maple School']],
+  // [SA] The learner app's full-family line with the family cap (AMENDMENTS-SEATS-ADMINS section 9.1).
+  'caregiver.join.errors.familyFull': [[4], [6]],
 };

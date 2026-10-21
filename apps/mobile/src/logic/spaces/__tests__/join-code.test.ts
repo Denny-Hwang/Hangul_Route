@@ -1,8 +1,9 @@
 import { LOCALES, findBannedWord, getMessages, type Messages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { CODE_GLYPH_EM, cleanJoinCode, codeFieldFontSize, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill, type JoinErrorCode } from '../join-code';
+import { FAMILY_LIFETIME_LEARNERS } from '@hangul-route/content-schema';
+import { CODE_GLYPH_EM, cleanJoinCode, codeFieldFontSize, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill, lookupRefusal, type JoinErrorCode } from '../join-code';
 
-const ALL: JoinErrorCode[] = ['code_not_found', 'code_expired', 'cap_learner', 'cap_class', 'not_joinable', 'learner_not_found', 'already_bound', 'too_many_attempts', 'network', 'invalid', 'unknown', 'off'];
+const ALL: JoinErrorCode[] = ['code_not_found', 'code_expired', 'cap_learner', 'cap_class', 'cap_family', 'cap_school', 'not_joinable', 'learner_not_found', 'already_bound', 'too_many_attempts', 'network', 'invalid', 'unknown', 'off'];
 const m = getMessages('en').caregiver;
 
 describe('join code helpers (F-SPACE-001 §3.5)', () => {
@@ -29,6 +30,8 @@ describe('join code helpers (F-SPACE-001 §3.5)', () => {
       'That code is too old. Ask for a new one.',
       "You're already in three classes. Leave one under Classes & family in your Profile first.",
       'This class is full. Ask your teacher.',
+      'This family already has 4 learners. Ask a grown-up in your family.',
+      'This school is full right now. Ask your teacher.',
       "That code isn't for joining as a learner. Ask for a class code.",
       'That name is not in this class anymore. Ask your teacher.',
       'This device already has that learner — switch profiles instead.',
@@ -44,6 +47,53 @@ describe('join code helpers (F-SPACE-001 §3.5)', () => {
     expect(joinErrorMessage('cap_learner', m)).toBe(m.audience.shared.joinCodeFull);
     expect(joinErrorMessage('not_joinable', m)).toBe(m.audience.shared.joinCodeNotForLearners);
     for (const c of ['cap_learner', 'not_joinable'] as const) expect(joinErrorMessage(c, m)).not.toMatch(/grown-?up/i);
+  });
+});
+
+describe('[SA] learner caps at the join (AMENDMENTS-SEATS-ADMINS section 3.4)', () => {
+  it('a full family reads familyFull with the cap the Worker sent, never the class or three-classes line', () => {
+    expect(joinErrorMessage('cap_family', m, 4)).toBe(m.join.errors.familyFull(4));
+    expect(joinErrorMessage('cap_family', m, 6)).toBe('This family already has 6 learners. Ask a grown-up in your family.');
+    expect(joinErrorMessage('cap_family', m, 4)).not.toBe(m.join.errors.classFull);
+    expect(joinErrorMessage('cap_family', m, 4)).not.toBe(m.audience.shared.joinCodeFull);
+  });
+
+  it('without a cap from the Worker, the family line reads FAMILY_LIFETIME_LEARNERS', () => {
+    expect(FAMILY_LIFETIME_LEARNERS).toBe(4);
+    expect(joinErrorMessage('cap_family', m)).toBe(m.join.errors.familyFull(FAMILY_LIFETIME_LEARNERS));
+    expect(joinErrorMessage('cap_family', m, null)).toBe(m.join.errors.familyFull(FAMILY_LIFETIME_LEARNERS));
+    // A cap below 2 is not a family cap (the line counts learners in the plural): it reads as absent.
+    for (const cap of [0, 1, -1]) expect(joinErrorMessage('cap_family', m, cap)).toBe(m.join.errors.familyFull(FAMILY_LIFETIME_LEARNERS));
+  });
+
+  it('a full school reads schoolFull and a full class classFull; neither is a code error', () => {
+    expect(joinErrorMessage('cap_school', m, 50)).toBe(m.join.errors.schoolFull);
+    expect(joinErrorMessage('cap_class', m, 50)).toBe(m.join.errors.classFull);
+    for (const c of ['cap_family', 'cap_school'] as const) expect(isCodeError(c)).toBe(false);
+  });
+
+  it('the lookup line comes from seat.reason, not from the kind of space', () => {
+    const family = { kind: 'family' as const, full: false };
+    expect(lookupRefusal({ ...family, seat: { full: true, reason: 'cap_family', cap: 4 } })).toEqual({ code: 'cap_family', cap: 4 });
+    expect(lookupRefusal({ kind: 'class', full: false, seat: { full: true, reason: 'cap_school', cap: 50 } })).toEqual({ code: 'cap_school', cap: 50 });
+    expect(lookupRefusal({ kind: 'class', full: false, seat: { full: true, reason: 'cap_class', cap: 20 } })).toEqual({ code: 'cap_class', cap: 20 });
+    // A seat with no reason (never sent by the Worker) falls back to the space's own cap.
+    expect(lookupRefusal({ ...family, seat: { full: true, reason: null, cap: null } })).toEqual({ code: 'cap_family', cap: null });
+    expect(lookupRefusal({ kind: 'class', full: false, seat: { full: true, reason: null, cap: null } })).toEqual({ code: 'cap_class', cap: null });
+  });
+
+  it('a returning family member and a sibling-class learner at a full school find room (seat.full false)', () => {
+    // The Worker answers seat.full false for a learner the device vouches for who already holds the seat.
+    expect(lookupRefusal({ kind: 'family', full: false, seat: { full: false, reason: null, cap: 4 } })).toBeNull();
+    expect(lookupRefusal({ kind: 'class', full: false, seat: { full: false, reason: null, cap: 50 } })).toBeNull();
+    // seat wins over full, so an old full: true never blocks a learner the seat lets in.
+    expect(lookupRefusal({ kind: 'class', full: true, seat: { full: false, reason: null, cap: null } })).toBeNull();
+  });
+
+  it('an old-shape lookup (no seat) still works from full: the class line, as before', () => {
+    expect(lookupRefusal({ kind: 'class', full: true, seat: null })).toEqual({ code: 'cap_class', cap: null });
+    expect(lookupRefusal({ kind: 'class', full: false, seat: null })).toBeNull();
+    expect(lookupRefusal({ kind: 'family', full: false, seat: null })).toBeNull();
   });
 });
 

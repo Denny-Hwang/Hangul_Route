@@ -28,6 +28,8 @@ vi.mock('../../platform/storage', () => ({
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { questsAll } from '../../content';
 import { isContentLocked } from '../../logic/content-access';
+import { getMessages } from '@hangul-route/i18n';
+import { planCardView } from '../../logic/paywall';
 import { readJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 import { unlockedStagesFor } from '../plan-store';
@@ -94,6 +96,22 @@ describe('tier-store (F-ENT-001 §3.4)', () => {
 
     useAccountStore.setState({ subscription: { status: 'active', plan: 'monthly', expiresAt: '2027-01-01T00:00:00.000Z' } });
     expect(effectiveTier('profile:b', now)).toEqual({ tier: 'premium', source: null });
+  });
+
+  it('[SA] a renamed space replaces the covering name after one inbox, on the Plan screen and in the saved copy (AMENDMENTS-SEATS-ADMINS section 5.4)', async () => {
+    const validUntil = '2026-09-28T12:00:00.000Z';
+    useTierStore.getState().applyInbox('profile:a', { tier: 'premium', tierSource: source, tierValidUntil: validUntil, serverTime: 't1' });
+    expect(effectiveTier('profile:a', now).source?.name).toBe('Sunday Class A');
+    const renamed = { ...source, name: 'Room 3 Tigers' };
+    useTierStore.getState().applyInbox('profile:a', { tier: 'premium', tierSource: renamed, tierValidUntil: validUntil, serverTime: 't2' });
+    // The Plan screen's "covered by {space}" reads effectiveTier.
+    expect(effectiveTier('profile:a', now)).toEqual({ tier: 'premium', source: renamed });
+    expect(mem.get('tier:profile:a')).toMatchObject({ source: renamed });
+    const covered = effectiveTier('profile:a', now);
+    expect(planCardView(covered.tier, covered.source, getMessages('en').learner.profile.plan).note).toBe('Everything is open, from Room 3 Tigers.');
+    // A restart reads the saved copy: the new name, never the old one.
+    useTierStore.setState({ byLearner: {} });
+    expect((await useTierStore.getState().hydrate('profile:a'))?.source).toEqual(renamed);
   });
 });
 

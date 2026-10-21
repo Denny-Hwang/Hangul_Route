@@ -1,4 +1,4 @@
-import type { DeviceTransferConsent, DeviceTransferCreateBody, InboxTransfer, LearnerMembership, SyncInbox } from '@hangul-route/content-schema';
+import type { DeviceTransferConsent, DeviceTransferCreateBody, InboxTransfer, LearnerMembership, LookupSeat, SyncInbox } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { flags } from '../config/flags';
 import { routeGoalInputsChanged } from '../logic/my-route/summary';
@@ -67,8 +67,9 @@ export const TRANSFERS_ON_KEY = (learnerId: string): string => `transfers-on:${l
  */
 export const TRANSFER_SELF_SET_KEY = (learnerId: string): string => `transfer-self-set:${learnerId}`;
 
+/** [SA] `seat`: the learner-aware answer (AMENDMENTS-SEATS-ADMINS section 3.4); null from an older Worker. */
 export type LookupOutcome =
-  | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean; roster: RosterName[] }
+  | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean; seat: LookupSeat | null; roster: RosterName[] }
   | { ok: false; error: JoinErrorCode };
 
 export type RelinkError = 'code_not_found' | 'code_expired' | 'learner_not_found' | 'already_bound' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'off';
@@ -78,13 +79,15 @@ export type RelinkPoll =
   | { state: 'approved'; plan: RestorePlan }
   | { state: 'error'; error: 'network' | 'not_found' | 'unknown' | 'off' };
 
-export type JoinOutcome = { ok: true; alreadyMember: boolean; membership: LearnerMembership } | { ok: false; error: JoinErrorCode };
+/** [SA] `cap`: the Worker's cap on a seat refusal (`cap_family`, `cap_class`, `cap_school`), when it sent one. */
+export type JoinOutcome = { ok: true; alreadyMember: boolean; membership: LearnerMembership } | { ok: false; error: JoinErrorCode; cap?: number };
 
 interface Actions {
   hydrate: (learnerId: string) => Promise<LearnerMembership[]>;
   /** Pull the learner's memberships from the inbox; null when offline / never synced / no API. */
   refresh: (learnerId: string) => Promise<LearnerMembership[] | null>;
-  lookup: (code: string) => Promise<LookupOutcome>;
+  /** [SA] With `learnerId`, a device that holds the learner sends it, so the answer says whether it already holds its seat. */
+  lookup: (code: string, learnerId?: string) => Promise<LookupOutcome>;
   join: (learnerId: string, spaceId: string, code: string, displayName?: string) => Promise<JoinOutcome>;
   leave: (learnerId: string, spaceId: string) => Promise<boolean>;
   /** Ask the teacher to bind this device to an existing roster learner (F-TCH-001 §10.1). */
@@ -420,11 +423,13 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       return creds ? scopeOf(learnerId, creds) : 'full';
     },
 
-    lookup: async (code) => {
+    lookup: async (code, learnerId) => {
       const client = syncApi();
       if (!client) return { ok: false, error: 'off' };
-      const result = await client.lookupSpace(code);
-      return result.status === 'ok' ? { ok: true, space: result.space, full: result.full, roster: result.roster } : { ok: false, error: result.code };
+      // A lookup never registers a device: a learner with no credentials yet takes no seat anywhere, so it is new.
+      const creds = learnerId === undefined ? null : await credentialsFor(learnerId, false);
+      const result = await client.lookupSpace(code, learnerId !== undefined && creds ? { learnerId, creds } : undefined);
+      return result.status === 'ok' ? { ok: true, space: result.space, full: result.full, seat: result.seat ?? null, roster: result.roster } : { ok: false, error: result.code };
     },
 
     join: async (learnerId, spaceId, code, displayName) => {
@@ -439,8 +444,9 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const namePlan = joinNamePlan(learnerId, displayName, await scopeOf(learnerId, creds));
       const result = await client.joinSpace(spaceId, { code, learnerId, displayName: namePlan.send }, creds);
       if (result.status !== 'ok') {
+        // [SA] The reason codes gain cap_family and cap_school (AMENDMENTS-SEATS-ADMINS section 8); codes only.
         void track({ name: 'space.join.failed', profileId: learnerId, payload: { reason: result.code } });
-        return { ok: false, error: result.code };
+        return 'cap' in result && result.cap !== undefined ? { ok: false, error: result.code, cap: result.cap } : { ok: false, error: result.code };
       }
       const current = await get().hydrate(learnerId);
       put(learnerId, [...current.filter((m) => m.spaceId !== result.membership.spaceId), result.membership]);
