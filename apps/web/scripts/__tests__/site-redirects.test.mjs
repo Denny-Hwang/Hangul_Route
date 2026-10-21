@@ -100,18 +100,23 @@ describe('redirectRules', () => {
 });
 
 describe('the design contact sheets (AMENDMENTS-SITE-NEWUSER SN-2)', () => {
-  it('send /design-preview and everything under it to the home page with a 301', () => {
+  it('send /design-preview, everything under it, and its root .html and .txt files to the home page with a 301', () => {
     expect(PREVIEW_PREFIX).toBe('/design-preview');
     expect(PREVIEW_STATUS).toBe(301);
-    expect(previewRules()).toEqual(['/design-preview / 301', '/design-preview/* / 301']);
+    expect(previewRules()).toEqual([
+      '/design-preview / 301',
+      '/design-preview/* / 301',
+      '/design-preview.html / 301',
+      '/design-preview.txt / 301',
+    ]);
   });
 
   it('follow the grown-up forwarding in the one _redirects file', () => {
     const text = siteRedirectsText(APP_ORIGIN, GROWN_UP_PREFIXES);
     expect(text.startsWith(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES))).toBe(true);
     const lines = text.trim().split('\n').filter((line) => line && !line.startsWith('#'));
-    expect(lines.slice(-2)).toEqual(previewRules());
-    expect(lines).toHaveLength(GROWN_UP_PREFIXES.length * 2 + 2);
+    expect(lines.slice(-previewRules().length)).toEqual(previewRules());
+    expect(lines).toHaveLength(GROWN_UP_PREFIXES.length * 2 + previewRules().length);
   });
 
   it('match the prefix robots.txt disallows', async () => {
@@ -131,7 +136,7 @@ describe('writeSiteRedirects', () => {
   afterEach(() => rmSync(out, { recursive: true, force: true }));
 
   it('writes out/_redirects when an origin is set, the contact sheets included', () => {
-    expect(writeSiteRedirects(out, APP_ORIGIN, GROWN_UP_PREFIXES)).toBe(GROWN_UP_PREFIXES.length * 2 + 2);
+    expect(writeSiteRedirects(out, APP_ORIGIN, GROWN_UP_PREFIXES)).toBe(GROWN_UP_PREFIXES.length * 2 + previewRules().length);
     expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(siteRedirectsText(APP_ORIGIN, GROWN_UP_PREFIXES));
   });
 
@@ -166,7 +171,7 @@ describe('the CLI', { timeout: 30_000 }, () => {
     const result = run('https://app.hangulroute.com');
     expect(result.status, result.stderr).toBe(0);
     expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(siteRedirectsText(APP_ORIGIN, GROWN_UP_PREFIXES));
-    expect(result.stdout).toContain(`site-redirects: ${GROWN_UP_PREFIXES.length * 2 + 2} rules to ${APP_ORIGIN}`);
+    expect(result.stdout).toContain(`site-redirects: ${GROWN_UP_PREFIXES.length * 2 + previewRules().length} rules to ${APP_ORIGIN}`);
   });
 
   it('forwards to the app host when CONSOLE_ORIGIN is unset (A-10)', () => {

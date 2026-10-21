@@ -21,7 +21,8 @@
 // The same file sends the design contact sheets (`/design-preview` and everything under it) to the site's home with
 // a 301 (AMENDMENTS-SITE-NEWUSER SN-2): they are review tools, not site pages. They stay in `out/` (CI checks them
 // there and attaches the export for art review, and `e2e/serve-out.mjs` serves them), and a build with the kill
-// switch, such as a test deploy, writes no `_redirects`, so it keeps them reachable.
+// switch, such as a test deploy, writes no `_redirects` (F-APP-001 section 3.13 rollback), so it keeps them reachable;
+// robots.txt still disallows them there.
 //
 //   node scripts/site-redirects.mjs [out]
 import { existsSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -78,11 +79,17 @@ export const PREVIEW_PREFIX = '/design-preview';
 export const PREVIEW_STATUS = 301;
 
 /**
- * The contact sheets' rules: `/design-preview` and `/design-preview/*` to `/` on the same host (SN-2).
+ * The contact sheets' rules: `/design-preview`, everything under it, and the export's own `design-preview.html` and
+ * `design-preview.txt` (the page and its RSC payload, at the export root) to `/` on the same host (SN-2).
  * @returns {string[]}
  */
 export function previewRules() {
-  return [`${PREVIEW_PREFIX} / ${PREVIEW_STATUS}`, `${PREVIEW_PREFIX}/* / ${PREVIEW_STATUS}`];
+  return [
+    `${PREVIEW_PREFIX} / ${PREVIEW_STATUS}`,
+    `${PREVIEW_PREFIX}/* / ${PREVIEW_STATUS}`,
+    `${PREVIEW_PREFIX}.html / ${PREVIEW_STATUS}`,
+    `${PREVIEW_PREFIX}.txt / ${PREVIEW_STATUS}`,
+  ];
 }
 
 /**
@@ -120,7 +127,7 @@ export function siteRedirectsText(origin, prefixes) {
  * @param {string} outDir the `next build` export
  * @param {string} origin from `redirectOrigin`
  * @param {readonly string[]} prefixes `GROWN_UP_PREFIXES`
- * @returns {number} the number of rules written (0 when none), the contact sheets' two included
+ * @returns {number} the number of rules written (0 when none), the contact sheets' rules included
  */
 export function writeSiteRedirects(outDir, origin, prefixes) {
   const out = resolve(outDir);
