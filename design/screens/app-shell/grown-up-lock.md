@@ -28,3 +28,5 @@ The lock shipped before this pass; it is drawn here so the shell's grown-up surf
 - No frame, no persona, no name, no number, no countdown; the same single column at every width.
 - While it decides, the page is an empty canvas (README, D12); a back/forward-cache restore covers the page with an opaque `surface.canvas` cover first.
 - Shared with `/signin`: the quiet Back to learning, the 400 px button column and the paper card (Panel D of `signin.md` reuses this card).
+
+**[OA] Use a passkey** (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4, row OA-3): a secondary button under the last button of the card, only where the browser offers a platform authenticator and the marker is not `pin`. Drawn in `design/screens/profiles/console-pin.md` (boards 1 to 3); everything above stays as drawn here.
