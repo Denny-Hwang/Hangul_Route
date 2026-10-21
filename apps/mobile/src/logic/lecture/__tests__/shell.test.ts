@@ -10,6 +10,7 @@ import { emptyRecent, rememberDeck, setLastSlide } from '../recent';
 import {
   SHELL_SLIDE_KINDS,
   blockIndexOfSlide,
+  buildLive,
   countRows,
   distinctParts,
   completePayload,
@@ -144,8 +145,24 @@ describe('homeStart', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End and the reading slides (PR 6, PR 7, PR 9, PR 11 and LV-S1)', () => {
-    expect([...SHELL_SLIDE_KINDS].sort()).toEqual(['activity', 'card', 'end', 'letter', 'pattern', 'quiz', 'read-along', 'realia', 'sentence', 'sequence', 'story', 'syllable', 'title', 'vocab']);
+  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides and the sentence builds (PR 6, PR 7, PR 9, PR 11, LV-S1 and LV-S3)', () => {
+    expect([...SHELL_SLIDE_KINDS].sort()).toEqual([
+      'activity',
+      'card',
+      'end',
+      'letter',
+      'pattern',
+      'quiz',
+      'read-along',
+      'realia',
+      'sentence',
+      'sentence-build',
+      'sequence',
+      'story',
+      'syllable',
+      'title',
+      'vocab',
+    ]);
     const deck = deckOf([
       { kind: 'episode', id: 'episode:stage1-letters' },
       { kind: 'quest', id: 'quest:stage1-life-q1' },
@@ -457,6 +474,59 @@ describe('slideDetail: the question slides (LV-S2)', () => {
     // Without the names a listen or reply question says its kind alone.
     expect(slideDetail(of('listen'))).toBe('');
     expect(slideDetail(of('reply'))).toBe('');
+  });
+});
+
+describe('the sentence builds in the live region (AMENDMENTS-LECTURE-V2 section 10, LV-S3)', () => {
+  const slides = expandDeck(deckOf([{ kind: 'quest', id: 'quest:stage3-life-q3' }, { kind: 'quest', id: 'quest:stage7-life-q2' }]), lectureBundle('en'), { canPlayKorean: true }).slides;
+  type Build = Extract<Slide, { kind: 'sentence-build' }>;
+  const builds = slides.filter((s): s is Build => s.kind === 'sentence-build');
+  const plain = builds.find((s) => s.sentence.ko === '친구가 학교에 가요.')!;
+  const particle = builds.find((s) => s.sentence.ko === '저녁에 달걀을 먹어요.')!;
+  const placed = (word: string) => `${word} placed`;
+  /** Steps forward through every build, as the teacher's clicks do, and returns what the live region says at each. */
+  const walk = (slide: Build): Array<string | undefined> => {
+    let live = buildLive(slide, 0, null, placed);
+    const said = [live.words];
+    for (let reveal = 1; reveal < slide.builds.length; reveal += 1) {
+      live = buildLive(slide, reveal, live, placed);
+      said.push(live.words);
+    }
+    return said;
+  };
+
+  it('names a sentence build by its question on arrival, never by its sentence', () => {
+    const detail = slideDetail(plain, { activity: () => '', build: 'Which word comes next?' });
+    expect(detail).toBe('Which word comes next?');
+    expect(detail).not.toContain('친구');
+    expect(slideDetail(plain)).toBe('');
+  });
+
+  it('each step forward says the tile it placed (Korean, romanization), then the sentence and its meaning at the whole build', () => {
+    expect(walk(plain)).toEqual([undefined, '친구가, chinguga placed', '학교에, hakgyoe placed', '가요, gayo placed', '친구가 학교에 가요., chinguga hakgyoe gayo, My friend goes to school.']);
+  });
+
+  it('a particle tile says its stem when it reaches the line, then the whole word once the ending that fits stays', () => {
+    expect(particle.builds).toEqual(['bank', 'tile', 'tile', 'particle', 'tile', 'whole']);
+    expect(walk(particle)).toEqual([
+      undefined,
+      '저녁에, jeonyeoge placed',
+      '달걀 placed',
+      '달걀을, dalgyareul placed',
+      '먹어요, meogeoyo placed',
+      '저녁에 달걀을 먹어요., jeonyeoge dalgyareul meogeoyo, In the evening, I eat an egg.',
+    ]);
+  });
+
+  it('a redraw at the same build keeps what was said; arriving, stepping back or jumping says the slide again', () => {
+    const once = buildLive(plain, 1, buildLive(plain, 0, null, placed), placed);
+    expect(buildLive(plain, 1, once, placed)).toBe(once);
+    expect(buildLive(plain, 0, once, placed).words).toBeUndefined();
+    expect(buildLive(plain, 3, once, placed).words).toBeUndefined();
+    expect(buildLive(particle, 1, once, placed).words).toBeUndefined();
+    // Any other slide always announces itself.
+    const title = slides[0]!;
+    expect(buildLive(title, 0, { key: title.key, reveal: -1 }, placed)).toEqual({ key: title.key, reveal: 0 });
   });
 });
 

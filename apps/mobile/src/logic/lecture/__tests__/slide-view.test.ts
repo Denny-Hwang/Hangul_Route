@@ -5,6 +5,7 @@ import { lectureBundle } from '../content';
 import { expandDeck, type Slide } from '../deck-builder';
 import {
   activityTimerMs,
+  buildMove,
   cardView,
   frameSpoken,
   markerFor,
@@ -13,6 +14,7 @@ import {
   readAlongView,
   realiaView,
   romShown,
+  sentenceBuildView,
   sentenceView,
   sheetRoomy,
   sheetUnits,
@@ -489,6 +491,61 @@ describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections
     for (const slide of realia) {
       const prompt = slide.prompt as Extract<Quiz['prompt'], { ask: 'realia' }>;
       expect(slideSound(slide)).toEqual({ spoken: prompt.key?.spoken ?? prompt.sheet.spoken, kind: 'word' });
+    }
+  });
+});
+
+describe('the sentence build at each build (AMENDMENTS-LECTURE-V2 section 5.2, LV-S3; V9)', () => {
+  type Build = Extract<Slide, { kind: 'sentence-build' }>;
+  const builds = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q3' }, { kind: 'quest', id: 'quest:stage7-life-q2' }]).filter((s): s is Build => s.kind === 'sentence-build');
+  const plain = builds.find((s) => s.sentence.ko === '친구가 학교에 가요.')!;
+  const particle = builds.find((s) => s.sentence.ko === '저녁에 달걀을 먹어요.')!;
+  const bankOf = (slide: Build, reveal: number) => {
+    const view = sentenceBuildView(slide, reveal);
+    return slide.bank.map((place, i) => [('tile' in place ? slide.tiles[place.tile]!.ko : place.distractor.ko), view.bank[i]]);
+  };
+
+  it('the bank: every line place empty, every tile in the bank, the next-word question, no meaning yet', () => {
+    expect(sentenceBuildView(plain, 0)).toEqual({ line: ['empty', 'empty', 'empty'], bank: ['tile', 'tile', 'tile', 'tile'], ask: 'next', whole: false });
+  });
+
+  it('each tile build moves the next tile to the line and leaves its ghost; the distractor stays in the bank', () => {
+    const two = sentenceBuildView(plain, 2);
+    expect(two.line).toEqual(['placed', 'placed', 'empty']);
+    expect(Object.fromEntries(bankOf(plain, 2))).toEqual({ 친구가: 'ghost', 학교에: 'ghost', 가요: 'tile', 와요: 'tile' });
+    expect(two.ask).toBe('next');
+  });
+
+  it('the whole build: every tile placed, the meaning shows, no question, and the distractor is set back (never marked)', () => {
+    const whole = sentenceBuildView(plain, plain.builds.length - 1);
+    expect(whole).toEqual({ line: ['placed', 'placed', 'placed'], bank: expect.any(Array), ask: null, whole: true });
+    expect(Object.fromEntries(bankOf(plain, plain.builds.length - 1))).toEqual({ 친구가: 'ghost', 학교에: 'ghost', 가요: 'ghost', 와요: 'set-back' });
+    // A reveal past the end is the whole build.
+    expect(sentenceBuildView(plain, 99)).toEqual(whole);
+  });
+
+  it('a particle tile shows both endings and asks which fits, until its particle build keeps the one that fits', () => {
+    expect(particle.builds).toEqual(['bank', 'tile', 'tile', 'particle', 'tile', 'whole']);
+    expect(sentenceBuildView(particle, 2)).toMatchObject({ line: ['placed', 'choosing', 'empty'], ask: 'particle', whole: false });
+    expect(sentenceBuildView(particle, 3)).toMatchObject({ line: ['placed', 'placed', 'empty'], ask: 'next', whole: false });
+    expect(particle.tiles[1]!.particle).toEqual({ stem: '달걀', choices: [{ ko: '을', romanization: 'eul' }, { ko: '를', romanization: 'reul' }], answer: 0 });
+  });
+
+  it('what each build moved: nothing at the bank, the tile (a particle tile by its stem, then its word), then the sentence', () => {
+    expect(particle.builds.map((_, reveal) => buildMove(particle, reveal))).toEqual([
+      null,
+      { placed: '저녁에, jeonyeoge' },
+      { placed: '달걀' },
+      { placed: '달걀을, dalgyareul' },
+      { placed: '먹어요, meogeoyo' },
+      { whole: '저녁에 달걀을 먹어요., jeonyeoge dalgyareul meogeoyo, In the evening, I eat an egg.' },
+    ]);
+    expect(buildMove(particle, 99)).toBeNull();
+  });
+
+  it('Sound plays the whole sentence at every build (the Hear it of the learner game), at the sentence rate', () => {
+    for (const slide of [plain, particle]) {
+      for (let reveal = 0; reveal < slide.builds.length; reveal += 1) expect(slideSound(slide, reveal)).toEqual({ spoken: slide.sentence.spoken, kind: 'sentence' });
     }
   });
 });

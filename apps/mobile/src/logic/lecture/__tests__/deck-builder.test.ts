@@ -2099,3 +2099,128 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
     expect(quizzes(run(twoTaught.id).slides, 'listen')[0]!.options.every((o) => o.gloss !== undefined)).toBe(true);
   });
 });
+
+describe('expandDeck: the sentence builds (AMENDMENTS-LECTURE-V2 sections 5.1 and 5.2, LV-S3)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const buildScopes: Record<string, MinigameScope> = {
+    // An order round with one distractor and one that reads like a word of the sentence (dropped, as in the game).
+    'mg:order': {
+      kind: 'order-it',
+      orderIt: {
+        rounds: [
+          {
+            id: 'r1',
+            sentence: { ...kt('친구가 학교에 가요.', 'chinguga hakgyoe gayo', 'My friend goes to school.'), audioRef: 'audio/friend.mp3' },
+            pictureRef: 'word:school-friend',
+            distractors: [kt('와요', 'wayo', 'comes'), kt('가요.', 'gayo', 'goes')],
+          },
+          // A particle round with a distractor (the content lists the answer second here, 을 then 를).
+          {
+            id: 'r2',
+            sentence: kt('저녁에 달걀을 먹어요.', 'jeonyeoge dalgyareul meogeoyo', 'In the evening, I eat an egg.'),
+            distractors: [kt('아침에', 'achime', 'in the morning')],
+            particle: { tile: 1, choices: [kt('를', 'reul', 'object marker'), kt('을', 'eul', 'object marker')] },
+          },
+        ],
+      },
+    },
+    // A round the game cannot play (one word only): left out and counted.
+    'mg:order-one': { kind: 'order-it', orderIt: { rounds: [{ id: 'r1', sentence: kt('가요.', 'gayo', 'I go.'), distractors: [] }] } },
+    'mg:order-none': { kind: 'order-it', orderIt: { rounds: [] } },
+    'mg:order-bare': { kind: 'order-it' },
+  };
+  const built = quest('built', [['intro'], ['practice', 'mg:order'], ['check', 'mg:order-one']], { rewardCardId: undefined });
+  const empty = quest('built-empty', [['practice', 'mg:order-none'], ['apply', 'mg:order-bare']], { rewardCardId: undefined });
+  const b = (over: Partial<LectureBundle> = {}) =>
+    bundle({
+      scopeFor: (ref) => buildScopes[ref] ?? scopes[ref],
+      questById: (id) => [built, empty].find((q) => q.id === id) ?? quests.find((q) => q.id === id),
+      ...over,
+    });
+  const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
+  type Build = Extract<Slide, { kind: 'sentence-build' }>;
+
+  it('one sentence-build slide per round, keyed by the round, and a round the game cannot play is a counted skip', () => {
+    const { slides, skipped } = run(built.id);
+    expect(kinds(slides)).toEqual(['title', 'sentence-build', 'sentence-build', 'end']);
+    expect(keys(slides).slice(1, 3)).toEqual(['quest:built/s2/r1', 'quest:built/s2/r2']);
+    expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:order-one', reason: 'scope-too-small' }]);
+    expect(run(empty.id).skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:order-none', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:order-bare', reason: 'scope-too-small' },
+    ]);
+  });
+
+  it('the sentence (meaning and what Sound says), its tiles without the sentence mark, and a bank of the tiles and the distractors', () => {
+    const [order] = only(run(built.id).slides, 'sentence-build');
+    expect(order!.sentence).toEqual({
+      ko: '친구가 학교에 가요.',
+      romanization: 'chinguga hakgyoe gayo',
+      gloss: 'My friend goes to school.',
+      spoken: { text: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo', audioRef: 'audio/friend.mp3' },
+    });
+    expect(order!.tiles).toEqual([
+      { ko: '친구가', romanization: 'chinguga' },
+      { ko: '학교에', romanization: 'hakgyoe' },
+      { ko: '가요', romanization: 'gayo' },
+    ]);
+    // 가요. reads as the tile 가요 once its mark is off: dropped, so two tiles that look alike never stand in the bank.
+    const bankText = order!.bank.map((p) => ('tile' in p ? order!.tiles[p.tile]!.ko : p.distractor.ko));
+    expect([...bankText].sort()).toEqual(['가요', '와요', '친구가', '학교에']);
+    expect(order!.bank.filter((p) => 'distractor' in p)).toEqual([{ distractor: { ko: '와요', romanization: 'wayo' } }]);
+    expect(order!.builds).toEqual(['bank', 'tile', 'tile', 'tile', 'whole']);
+  });
+
+  it('the bank is never already in sentence order, for any seed, and the same seed gives the same bank', () => {
+    for (let seed = 0; seed < 60; seed += 1) {
+      for (const slide of only(run(built.id, { seed }).slides, 'sentence-build')) {
+        const order = slide.bank.flatMap((p) => ('tile' in p ? [p.tile] : []));
+        expect(order, `seed ${seed} ${slide.key}`).not.toEqual([...order].sort((x, y) => x - y));
+        expect(new Set(order).size).toBe(slide.tiles.length);
+      }
+    }
+    expect(run(built.id, { seed: 7 }).slides).toEqual(run(built.id, { seed: 7 }).slides);
+  });
+
+  it('a particle round builds every word; its word sits in the bank as its stem, with both endings in their pair order', () => {
+    const [, particle] = only(run(built.id).slides, 'sentence-build') as Build[];
+    expect(particle!.tiles).toEqual([
+      { ko: '저녁에', romanization: 'jeonyeoge' },
+      {
+        ko: '달걀을',
+        romanization: 'dalgyareul',
+        // 을/를 as the pair is written (ALLOMORPH_PAIRS), not the content's 를, 을; the answer is 을.
+        particle: { stem: '달걀', choices: [{ ko: '을', romanization: 'eul' }, { ko: '를', romanization: 'reul' }], answer: 0 },
+      },
+      { ko: '먹어요', romanization: 'meogeoyo' },
+    ]);
+    expect(particle!.bank.some((p) => 'distractor' in p && p.distractor.ko === '아침에')).toBe(true);
+    expect(particle!.builds).toEqual(['bank', 'tile', 'tile', 'particle', 'tile', 'whole']);
+  });
+
+  it('a build tests and does not teach: nothing joins the End slide, the slides sit inside the quest minutes, the builds are the same with tap', () => {
+    const { slides, taught, minutes } = run(built.id);
+    expect(taught).toEqual([]);
+    expect(minutes).toBe(built.estimatedMinutes);
+    const tap = run(built.id, { options: { romanization: 'tap', quizRounds: 5, sound: true, strokeGuide: true } }).slides;
+    expect(only(tap, 'sentence-build').map((s) => s.builds)).toEqual(only(slides, 'sentence-build').map((s) => s.builds));
+    expect(withBuilds(slides, { romanization: 'tap', strokeGuide: true })).toEqual(slides);
+  });
+
+  it('with no Korean voice the slide is the same: the meaning and romanization still wait for the whole build', () => {
+    expect(only(run(built.id, {}, { canPlayKorean: false }).slides, 'sentence-build')).toEqual(only(run(built.id).slides, 'sentence-build'));
+  });
+
+  it('every shipped order-it round, the Stage 7 Checks included, becomes a sentence-build slide with no skip', () => {
+    const shipped = lectureBundle('en');
+    const ids = ['quest:stage3-life-q3', 'quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-letters-q2'];
+    for (const id of ids) {
+      const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id }]), shipped, VOICE);
+      const quest = shipped.questById(id)!;
+      const rounds = quest.steps.reduce((n, step) => n + (step.minigameRef === undefined ? 0 : (shipped.scopeFor(step.minigameRef)?.orderIt?.rounds.length ?? 0)), 0);
+      expect(rounds, id).toBeGreaterThan(0);
+      expect(only(slides, 'sentence-build'), id).toHaveLength(rounds);
+      expect(skipped.filter((s) => shipped.scopeFor(s.ref)?.kind === 'order-it'), id).toEqual([]);
+    }
+  });
+});

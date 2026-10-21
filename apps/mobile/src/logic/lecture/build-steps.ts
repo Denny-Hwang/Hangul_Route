@@ -99,6 +99,22 @@ export interface RealiaSheetView {
   spoken: SpokenForm;
 }
 
+/**
+ * A word tile of a sentence-build slide (LV-S3): one spaced word of the sentence without the sentence
+ * mark, as the learner's Sentence Builder draws it (so a distractor never stands out by a missing
+ * mark), and its romanized word ('' when the sentence's romanization does not split one per word).
+ * A particle round's word (`particle`) sits in the bank as its stem; on the line it shows both
+ * endings until the one that fits stays (`answer`, the index into `choices`).
+ */
+export interface BuildTile {
+  ko: string;
+  romanization: string;
+  particle?: { stem: string; choices: readonly [SheetText, SheetText]; answer: 0 | 1 };
+}
+
+/** A place in a sentence-build bank: a tile of the sentence (its index in `tiles`), or a distractor. */
+export type BankPlace = { tile: number } | { distractor: SheetText };
+
 export interface SequenceStep {
   id: string;
   gloss: string;
@@ -192,6 +208,14 @@ export type SlideBody =
    * words; or a Realia Read sheet no page of this deck showed yet (LV-S2): the sheet alone, before its questions.
    */
   | { kind: 'realia'; sheet: RealiaSheetView; caption?: NarrationPiece[]; keyWords: SpokenLine[] }
+  /**
+   * A Sentence Builder round (`order-it`, practice, apply and the Stage 7 Check; AMENDMENTS-LECTURE-V2
+   * section 5.2, LV-S3): the sentence the room builds together (its meaning and romanization at the
+   * `whole` build; Sound plays it at every build, as the learner's Hear it), its word tiles in sentence
+   * order, and the bank: the tiles shuffled with the slide's seed (never already in order) and the
+   * distractors, which are only set back at the end, never marked wrong.
+   */
+  | { kind: 'sentence-build'; sentence: SpokenLine; tiles: BuildTile[]; bank: BankPlace[] }
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
 
@@ -223,7 +247,12 @@ export type BuildName =
   | 'note'
   | 'line'
   | 'sheet'
-  | 'words';
+  | 'words'
+  // A sentence build (LV-S3): the bank, each tile moved to the line, the ending that fits, the whole sentence.
+  | 'bank'
+  | 'tile'
+  | 'particle'
+  | 'whole';
 
 export interface BuildOptions {
   romanization: RomanizationMode;
@@ -288,6 +317,9 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
     case 'realia':
       // A Realia Read sheet the deck has not shown yet has no key words (LV-S2): the sheet alone.
       return ['sheet', ...rom, ...(body.keyWords.length > 0 ? (['words', ...rom] as BuildName[]) : [])];
+    case 'sentence-build':
+      // A particle tile's ending is chosen at the build right after the tile reaches the line; romanization only at `whole`, in both modes.
+      return ['bank', ...body.tiles.flatMap((t): BuildName[] => (t.particle !== undefined ? ['tile', 'particle'] : ['tile'])), 'whole'];
   }
 }
 

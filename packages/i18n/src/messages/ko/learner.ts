@@ -1654,6 +1654,7 @@ export const learner = {
         pattern: '문장 틀',
         readAlong: '함께 읽기',
         realia: '보고 읽기',
+        build: '문장 만들기',
       },
       title: '전체 슬라이드',
       hint: '슬라이드를 고르면 그리로 가요. 숨기기는 이번 수업에만 적용돼요.',
@@ -1703,6 +1704,7 @@ export const learner = {
       pattern: { label: '문장 틀' },
       readAlong: { label: '함께 읽기' },
       realia: { ask: '잘 보고 답을 찾아요.' },
+      build: { title: '함께 문장을 만들어요', next: '다음 낱말은 뭘까요?', particle: '어떤 말이 어울릴까요?' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

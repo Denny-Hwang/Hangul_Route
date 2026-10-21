@@ -138,11 +138,12 @@ export interface GridItem {
   canHide: boolean;
 }
 
-/** The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong`. */
-export type GridKindKey = Exclude<SlideKind, 'read-along'> | 'readAlong';
+/** The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong` and `sentence-build` as `build`. */
+export type GridKindKey = Exclude<SlideKind, 'read-along' | 'sentence-build'> | 'readAlong' | 'build';
 
 export function gridKindKey(kind: SlideKind): GridKindKey {
-  return kind === 'read-along' ? 'readAlong' : kind;
+  if (kind === 'read-along') return 'readAlong';
+  return kind === 'sentence-build' ? 'build' : kind;
 }
 
 function gridTitle(slide: Slide, names: { activity: (preset: Extract<Slide, { kind: 'activity' }>['preset']) => string }): string {
@@ -155,6 +156,9 @@ function gridTitle(slide: Slide, names: { activity: (preset: Extract<Slide, { ki
       return slide.lines[0]?.gloss ?? '';
     case 'realia':
       return slide.sheet.alt;
+    case 'sentence-build':
+      // Like a question, nothing: its meaning shows only once the room has built the sentence.
+      return '';
     case 'title':
     case 'card':
       return slide.title;

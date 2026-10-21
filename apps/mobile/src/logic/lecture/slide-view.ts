@@ -167,6 +167,66 @@ export function realiaView(slide: Of<'realia'>, reveal: number): RealiaView {
   return { sheetRom: nthPart(slide.builds, reveal, 'sheet').rom, words: words.shown, wordsRom: words.rom };
 }
 
+// --- the sentence-build slide (AMENDMENTS-LECTURE-V2 section 5.2, LV-S3) ----------------------------
+
+/** A place on the sentence line: empty (a dashed box), a placed tile, or a particle tile showing both endings. */
+export type BuildLinePlace = 'empty' | 'placed' | 'choosing';
+
+/** A place in the bank: its tile, the dashed ghost a placed tile leaves, or a distractor set back at the whole build. */
+export type BuildBankPlace = 'tile' | 'ghost' | 'set-back';
+
+export interface SentenceBuildView {
+  /** One place per tile, in sentence order. */
+  line: BuildLinePlace[];
+  /** One place per bank item, in bank order: nothing in the bank moves (V9). */
+  bank: BuildBankPlace[];
+  /** The question over the line: the next word, the ending that fits, or none at the whole build. */
+  ask: 'next' | 'particle' | null;
+  /** The romanization and the meaning under the line. */
+  whole: boolean;
+}
+
+/**
+ * Sentence build slide (slide-sentence-build.md, V9): each `tile` build moves the next tile of the
+ * sentence from the bank to the line, leaving its ghost; a particle tile shows both endings until its
+ * `particle` build keeps the one that fits; at `whole` the romanization and the meaning appear and the
+ * distractors are set back (never marked).
+ */
+export function sentenceBuildView(slide: Of<'sentence-build'>, reveal: number): SentenceBuildView {
+  const shown = slide.builds.slice(0, Math.max(0, reveal + 1));
+  const placed = shown.filter((b) => b === 'tile').length;
+  const chosen = shown.filter((b) => b === 'particle').length;
+  let particles = 0;
+  const line = slide.tiles.map((tile, i): BuildLinePlace => {
+    if (i >= placed) return 'empty';
+    if (tile.particle === undefined) return 'placed';
+    particles += 1;
+    return particles > chosen ? 'choosing' : 'placed';
+  });
+  const whole = shown.includes('whole');
+  const bank = slide.bank.map((place): BuildBankPlace => ('tile' in place ? (line[place.tile] === 'empty' ? 'tile' : 'ghost') : whole ? 'set-back' : 'tile'));
+  return { line, bank, ask: whole ? null : line.includes('choosing') ? 'particle' : 'next', whole };
+}
+
+/** How a tile reads aloud: its Korean, then its romanization when it has one ("Korean, romanization", as `KoreanText`). */
+const tileWords = (ko: string, romanization: string): string => (romanization === '' ? ko : `${ko}, ${romanization}`);
+
+/**
+ * What one build of a sentence-build slide moved (section 10: a move is announced, politely): the
+ * tile placed (a particle tile by its stem, then, at its `particle` build, the whole word), or the
+ * whole sentence at the `whole` build. `null` at the bank build, which only the slide's own
+ * announcement names.
+ */
+export function buildMove(slide: Of<'sentence-build'>, reveal: number): { placed: string } | { whole: string } | null {
+  const name = slide.builds[reveal];
+  if (name === 'whole') return { whole: `${slide.sentence.ko}, ${slide.sentence.romanization}, ${slide.sentence.gloss}` };
+  if (name !== 'tile' && name !== 'particle') return null;
+  const nth = slide.builds.slice(0, reveal + 1).filter((b) => b === 'tile').length - 1;
+  const tile = slide.tiles[nth];
+  if (tile === undefined) return null;
+  return { placed: name === 'tile' && tile.particle !== undefined ? tile.particle.stem : tileWords(tile.ko, tile.romanization) };
+}
+
 /**
  * A realia sheet's lines on the stage: each line's romanization under its Korean (roomy), or, on a
  * sheet of more than `SHEET_ROOMY_LINES` lines, beside it, so the sheet fits the content area.
@@ -286,7 +346,7 @@ export function frameSpoken(frame: Of<'pattern'>['frame']): SpokenForm {
  * by line and its caption's Korean chips and, once they show, its key words (at the word rate).
  * The question slides (LV-S2): a listen question its prompt (a letter or syllable round at the
  * sound rate), a reply question the other speaker's line, a realia question its key word or, with
- * none, its sheet (`quizSound`).
+ * none, its sheet (`quizSound`). A sentence build (LV-S3) its sentence, at every build.
  */
 export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
   if (slide === undefined) return undefined;
@@ -328,6 +388,9 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
       return realiaView(slide, reveal ?? slide.builds.length - 1).words
         ? { spoken: joinSpoken(slide.keyWords.map((w) => w.spoken)), kind: 'word' }
         : { spoken: joinSpoken([slide.sheet.spoken, ...chipsSpoken(slide.caption ?? [])]), kind: 'word' };
+    case 'sentence-build':
+      // The whole sentence at every build, as the learner's Sentence Builder plays it (Hear it) before it is built.
+      return { spoken: slide.sentence.spoken, kind: 'sentence' };
     case 'title':
     case 'story':
     case 'activity':

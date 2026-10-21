@@ -7,7 +7,7 @@ import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { PAUSE_WORD, lectureBundle } from '../content';
-import { expandDeck } from '../deck-builder';
+import { expandDeck, type Slide } from '../deck-builder';
 
 /**
  * The presenter font holds every Hangul glyph the deck builder projects (F-TCH-004 §3.6, TD4).
@@ -126,6 +126,23 @@ describe('the presenter font covers the projected Hangul (F-TCH-004 §3.6)', () 
     expect([...drawn].some((t) => t.includes('을/를'))).toBe(true);
     expect(all.some((s) => s.kind === 'pattern' && s.note?.some((p) => 'ko' in p) === true)).toBe(true);
     expect(all.some((s) => s.kind === 'realia' && s.sheet.heading !== undefined && drawn.has(s.sheet.heading.ko))).toBe(true);
+  });
+
+  it("the walk reaches every sentence build (LV-S3): its tiles, a particle tile's stem and endings, and the distractors", () => {
+    const episodes = blocks.filter((b) => b.kind === 'episode');
+    const all = [...expandDeck(deck(episodes.slice(0, 30)), lectureBundle('en'), { canPlayKorean: true }).slides, ...expandDeck(deck(episodes.slice(30)), lectureBundle('en'), { canPlayKorean: true }).slides];
+    const builds = all.filter((s): s is Extract<Slide, { kind: 'sentence-build' }> => s.kind === 'sentence-build');
+    expect(builds.length).toBeGreaterThan(100);
+    const drawn = new Set(builds.flatMap((s) => strings(s)));
+    for (const slide of builds) {
+      for (const tile of slide.tiles) {
+        expect(drawn.has(tile.ko)).toBe(true);
+        if (tile.particle) for (const piece of [tile.particle.stem, ...tile.particle.choices.map((c) => c.ko)]) expect(drawn.has(piece), piece).toBe(true);
+      }
+      for (const place of slide.bank) if ('distractor' in place) expect(drawn.has(place.distractor.ko)).toBe(true);
+    }
+    expect(builds.some((s) => s.tiles.some((t) => t.particle !== undefined))).toBe(true);
+    expect(builds.some((s) => s.bank.some((p) => 'distractor' in p))).toBe(true);
   });
 
   it('the deck covers every listed story', () => {

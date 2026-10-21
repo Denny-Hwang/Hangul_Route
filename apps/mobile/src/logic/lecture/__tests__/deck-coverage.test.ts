@@ -34,6 +34,8 @@ import { expandDeck, readingSlideKey, type LectureBundle } from '../deck-builder
  * (section 1 counted 141 at LV-0: 56 sentences, 37 exchanges, 29 patterns, 19 realia). LV-S2
  * emptied the listen-pick (practice, apply and Check), tap-respond and realia-read entries: each
  * round is a question slide now, and each cell's `quiz` column is the floor it builds since then.
+ * LV-S3 emptied the order-it entries (practice, apply and the Stage 7 Check): each round is a
+ * sentence-build slide now.
  */
 
 type Skips = Readonly<Record<string, readonly [steps: number, rounds: number]>>;
@@ -56,7 +58,7 @@ interface CellRow {
 /**
  * Section 1, verbatim, with the rows the LV-S rows lowered (LV-S1: no Discover item flattened; LV-S2:
  * no listen-pick, tap-respond or realia-read step skipped, and each cell's question floor raised to
- * what it builds now). Stage 5 is the five books together.
+ * what it builds now; LV-S3: no order-it step skipped). Stage 5 is the five books together.
  */
 const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage1:letters': { quests: 3, slides: 43, wordCards: 0, differentWords: 0, quiz: 25, skipped: {}, flattened: {} },
@@ -71,21 +73,21 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage2:crafts': { quests: 3, slides: 83, wordCards: 78, differentWords: 18, quiz: 28, skipped: {}, flattened: {} },
   'stage3:letters': {
     quests: 3, slides: 16, wordCards: 11, differentWords: 11, quiz: 18,
-    skipped: { 'order-it': [3, 15] },
+    skipped: {},
     flattened: {},
   },
-  'stage3:life': { quests: 3, slides: 53, wordCards: 48, differentWords: 31, quiz: 6, skipped: { 'order-it': [3, 15] }, flattened: {} },
+  'stage3:life': { quests: 3, slides: 53, wordCards: 48, differentWords: 31, quiz: 6, skipped: {}, flattened: {} },
   'stage3:rites': {
     quests: 3, slides: 19, wordCards: 14, differentWords: 14, quiz: 18,
-    skipped: { 'order-it': [3, 15] },
+    skipped: {},
     flattened: {},
   },
   'stage3:nature': {
     quests: 3, slides: 17, wordCards: 12, differentWords: 12, quiz: 18,
-    skipped: { 'order-it': [3, 15] },
+    skipped: {},
     flattened: {},
   },
-  'stage3:crafts': { quests: 3, slides: 53, wordCards: 48, differentWords: 15, quiz: 10, skipped: { 'order-it': [3, 15] }, flattened: {} },
+  'stage3:crafts': { quests: 3, slides: 53, wordCards: 48, differentWords: 15, quiz: 10, skipped: {}, flattened: {} },
   'stage4:letters': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
   'stage4:life': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
   'stage4:rites': { quests: 3, slides: 21, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
@@ -119,27 +121,27 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
   },
   'stage7:letters': {
     quests: 3, slides: 15, wordCards: 10, differentWords: 9, quiz: 0,
-    skipped: { 'type-hangul': [2, 7], 'trace-word': [2, 8], 'order-it': [1, 4], 'write-frame': [1, 3], 'order-it check': [3, 6] },
+    skipped: { 'type-hangul': [2, 7], 'trace-word': [2, 8], 'write-frame': [1, 3] },
     flattened: {},
   },
   'stage7:life': {
     quests: 3, slides: 20, wordCards: 15, differentWords: 15, quiz: 0,
-    skipped: { 'type-hangul': [2, 8], 'write-frame': [2, 6], 'trace-word': [1, 4], 'order-it': [1, 4], 'order-it check': [3, 6] },
+    skipped: { 'type-hangul': [2, 8], 'write-frame': [2, 6], 'trace-word': [1, 4] },
     flattened: {},
   },
   'stage7:rites': {
     quests: 3, slides: 19, wordCards: 14, differentWords: 13, quiz: 0,
-    skipped: { 'order-it': [2, 8], 'write-frame': [2, 6], 'type-hangul': [1, 4], 'trace-word': [1, 4], 'order-it check': [3, 6] },
+    skipped: { 'write-frame': [2, 6], 'type-hangul': [1, 4], 'trace-word': [1, 4] },
     flattened: {},
   },
   'stage7:nature': {
     quests: 3, slides: 17, wordCards: 12, differentWords: 12, quiz: 0,
-    skipped: { 'order-it': [2, 8], 'type-hangul': [2, 7], 'trace-word': [1, 4], 'write-frame': [1, 3], 'order-it check': [3, 6] },
+    skipped: { 'type-hangul': [2, 7], 'trace-word': [1, 4], 'write-frame': [1, 3] },
     flattened: {},
   },
   'stage7:crafts': {
     quests: 3, slides: 17, wordCards: 12, differentWords: 12, quiz: 0,
-    skipped: { 'type-hangul': [3, 12], 'order-it': [2, 6], 'write-frame': [1, 3], 'order-it check': [3, 6] },
+    skipped: { 'type-hangul': [3, 12], 'write-frame': [1, 3] },
     flattened: {},
   },
 };
@@ -321,6 +323,33 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     expect(counts.sentence + counts.pattern + counts.exchange + counts.realia).toBeGreaterThanOrEqual(141);
   });
 
+  it('every shipped order-it round, the Stage 7 Checks included, has its own sentence-build slide (LV-S3)', () => {
+    let rounds = 0;
+    let built = 0;
+    for (const episodes of cells.values()) {
+      for (const episode of episodes) {
+        const deck = LectureDeckSchema.parse({ v: 1, id: 'lecture:coverage', title: 'Coverage', createdAt: '2026-10-15T00:00:00Z', seed: 1, blocks: [{ kind: 'episode', id: episode.id }] });
+        const expanded = expandDeck(deck, bundle, { canPlayKorean: true });
+        for (const questId of episode.questIds) {
+          for (const step of bundle.questById(questId)?.steps ?? []) {
+            const scope = step.minigameRef === undefined ? undefined : bundle.scopeFor(step.minigameRef);
+            for (const round of scope?.orderIt?.rounds ?? []) {
+              rounds += 1;
+              const slide = expanded.slides.find((s) => s.kind === 'sentence-build' && s.key.replace(/#\d+$/, '').endsWith(`/${questId}/${step.id}/${round.id}`));
+              if (slide?.kind !== 'sentence-build') continue;
+              built += 1;
+              // Its tiles are the sentence's words, and its bank holds each of them once.
+              expect(slide.tiles.map((t) => t.ko).join(' '), slide.key).toBe(round.sentence.ko.replace(/[.?!]+$/, ''));
+              expect(slide.bank.flatMap((p) => ('tile' in p ? [p.tile] : [])).sort(), slide.key).toEqual(slide.tiles.map((_, i) => i));
+            }
+          }
+        }
+      }
+    }
+    // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30.
+    expect({ rounds, built }).toEqual({ rounds: 135, built: 135 });
+  });
+
   it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {
     const slidesOf = (v: 1 | 2, block: LectureBlock): number =>
       expandDeck(
@@ -358,7 +387,8 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     const rounds = upper.reduce((n, [, row]) => n + Object.values(row.skipped).reduce((m, [, r]) => m + r, 0), 0);
     const flat = upper.reduce((n, [, row]) => n + Object.values(row.flattened).reduce((m, k) => m + k, 0), 0);
     // Section 1: 969 slides, 177 skipped steps holding 536 rounds and 141 flattened Discover items; LV-S1 lowered the 141 to 0;
-    // LV-S2 took out the 106 listen-pick, tap-respond and realia-read steps (287 rounds), leaving order-it, type-hangul, trace-word and write-frame.
-    expect({ slides: upper.reduce((n, [, row]) => n + row.slides, 0), steps, rounds, flat }).toEqual({ slides: 969, steps: 71, rounds: 249, flat: 0 });
+    // LV-S2 took out the 106 listen-pick, tap-respond and realia-read steps (287 rounds); LV-S3 the 38 order-it steps (135 rounds:
+    // 23 practice and apply steps holding 105, 15 Stage 7 Checks holding 30), leaving type-hangul, trace-word and write-frame.
+    expect({ slides: upper.reduce((n, [, row]) => n + row.slides, 0), steps, rounds, flat }).toEqual({ slides: 969, steps: 33, rounds: 114, flat: 0 });
   });
 });

@@ -202,6 +202,29 @@ describe('buildsFor: the reading slides (AMENDMENTS-LECTURE-V2 section 5.2, LV-S
   });
 });
 
+describe('buildsFor: the sentence build (AMENDMENTS-LECTURE-V2 section 5.2, LV-S3)', () => {
+  const sentence = { ko: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo', gloss: 'My friend goes to school.', spoken: { text: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo' } };
+  const tiles = [
+    { ko: '친구가', romanization: 'chinguga' },
+    { ko: '학교에', romanization: 'hakgyoe' },
+    { ko: '가요', romanization: 'gayo' },
+  ];
+  const bank = [{ tile: 2 }, { distractor: { ko: '와요', romanization: 'wayo' } }, { tile: 0 }, { tile: 1 }];
+
+  it('the bank, one build per tile, then the whole sentence; romanization only at the whole build, with tap too', () => {
+    const body: SlideBody = { kind: 'sentence-build', sentence, tiles, bank };
+    expect(buildsFor(body, ALWAYS)).toEqual(['bank', 'tile', 'tile', 'tile', 'whole']);
+    expect(buildsFor(body, TAP)).toEqual(['bank', 'tile', 'tile', 'tile', 'whole']);
+  });
+
+  it('a particle tile: its ending is chosen at the build right after the tile reaches the line', () => {
+    const particle = { stem: '친구', choices: [{ ko: '이', romanization: 'i' }, { ko: '가', romanization: 'ga' }] as const, answer: 1 as const };
+    const body: SlideBody = { kind: 'sentence-build', sentence, tiles: [{ ...tiles[0]!, particle }, tiles[1]!, tiles[2]!], bank };
+    expect(buildsFor(body, ALWAYS)).toEqual(['bank', 'tile', 'particle', 'tile', 'tile', 'whole']);
+    expect(buildsFor(body, TAP)).toEqual(['bank', 'tile', 'particle', 'tile', 'tile', 'whole']);
+  });
+});
+
 describe('partsShown: what a reading slide shows at a build', () => {
   it('each build but rom shows its part; with no rom builds the romanization comes with the part', () => {
     expect(partsShown(['frame', 'note', 'example', 'example'], 0)).toEqual([{ name: 'frame', rom: true }]);

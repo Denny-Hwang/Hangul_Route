@@ -1,4 +1,5 @@
 import {
+  ALLOMORPH_PAIRS,
   discoverItemTexts,
   parseNarration,
   SLOT_MARKER,
@@ -14,6 +15,7 @@ import {
   type LectureBlock,
   type LectureDeck,
   type ListenPickRound,
+  type OrderItRound,
   type Quest,
   type Realia,
   type StoryLevel,
@@ -24,6 +26,7 @@ import { koTokenParts } from '../ko-tokens';
 import { validRounds } from '../listen-pick';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
+import { buildRound, withoutMark, type SbParticle } from '../sentence-builder/progression';
 import {
   buildCultureQuizRounds,
   buildMatchSoundRounds,
@@ -38,7 +41,9 @@ import { derangeSeeded, shuffleSeeded } from '../story/seeded-order';
 import {
   buildsFor,
   joinSpoken,
+  type BankPlace,
   type BuildName,
+  type BuildTile,
   type BuildOptions,
   type KoLine,
   type NarrationPiece,
@@ -268,6 +273,25 @@ export function readingSlideKey(item: DiscoverItem, page: number, index: number)
   return `${item.type}-${anchor === undefined || anchor === '' ? `${page + 1}-${index + 1}` : anchor}`;
 }
 const REVISIT_MAX_ROUNDS = 4;
+
+/** A Sentence Builder round as the learner game reads it without its particle choice: every word is a tile to place. */
+function withoutParticle(round: OrderItRound): OrderItRound {
+  const copy = { ...round };
+  delete copy.particle;
+  return copy;
+}
+
+/**
+ * A particle tile's endings (LV-S3): in their pair's own order (이/가, 을/를, 은/는, 이에요/예요 ...,
+ * `ALLOMORPH_PAIRS`), never in the content's, which often lists the answer first; `answer` is the
+ * one that ends the word.
+ */
+function particleOf(particle: NonNullable<OrderItRound['particle']>, built: SbParticle): NonNullable<BuildTile['particle']> {
+  const [a, b] = particle.choices;
+  const ending = (c: KoText) => ({ ko: c.ko, romanization: withoutMark(c.romanization) });
+  const choices = ALLOMORPH_PAIRS.includes(`${b.ko}/${a.ko}`) ? ([ending(b), ending(a)] as const) : ([ending(a), ending(b)] as const);
+  return { stem: built.stem, choices, answer: choices[0].ko === built.answer ? 0 : 1 };
+}
 
 /**
  * The key a block's slides start with (`<blockKey>/<path>`, section 3.3); a repeated block gets
@@ -527,6 +551,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'realia-read':
         realiaReadStep(path, ref, scope.realiaRead);
         return;
+      // Sentence building (section 5.1, LV-S3): one slide per round, the Stage 7 Check's included.
+      case 'order-it':
+        buildStep(path, ref, listOf(scope.orderIt?.rounds));
+        return;
       default:
         skip(ref, 'unsupported-step');
     }
@@ -677,6 +705,37 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         textPrompt: false,
       });
     });
+  };
+
+  /**
+   * Sentence Builder (`order-it`: practice, apply and the Stage 7 Check; AMENDMENTS-LECTURE-V2
+   * section 5.2, LV-S3): a sentence-build slide per round, in content order. The tiles and the bank
+   * are the learner game's own round model (`buildRound`): the words split at their spaces without
+   * the sentence mark, a distractor that would read like a word dropped, and the bank deranged with
+   * the slide's seed, so it is never already the sentence. A particle round builds every word too
+   * (the game places the other words for the learner), with its particle word in the bank as its
+   * stem and both endings on the line until the one that fits stays. A round the game could not
+   * play is a counted `scope-too-small` skip. Like a question, a build tests and does not teach: it
+   * joins neither `taught` nor the End slide, and it sits inside the quest's catalogue minutes.
+   */
+  const buildStep = (path: string, ref: string, rounds: readonly OrderItRound[]): void => {
+    if (rounds.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    for (const round of rounds) {
+      const slideSeed = seed();
+      const order = buildRound(withoutParticle(round), slideSeed);
+      const chosen = round.particle === undefined ? undefined : buildRound(round, slideSeed)?.particle;
+      if (order === null || (round.particle !== undefined && chosen === undefined)) {
+        skip(ref, 'scope-too-small');
+        continue;
+      }
+      const tiles = order.words.map((w, i): BuildTile => (chosen !== undefined && chosen.word === i ? { ...w, particle: particleOf(round.particle!, chosen) } : { ...w }));
+      const bank = order.tray.map((t): BankPlace => (t.id.startsWith('w') ? { tile: Number(t.id.slice(1)) } : { distractor: { ko: t.ko, romanization: t.romanization } }));
+      // Keyed by the round's id, so a saved resume point stays on its round when a content update adds one.
+      push(`${path}/${round.id.replace(/\//g, '-')}`, { kind: 'sentence-build', sentence: spokenLine(round.sentence), tiles, bank });
+    }
   };
 
   const card = (path: string, id: string): void => {

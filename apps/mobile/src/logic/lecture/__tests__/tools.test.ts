@@ -220,7 +220,14 @@ describe('gridItems (README D13)', () => {
     ]);
   });
 
-  it('gridKindKey: the dictionary key of each kind (read-along is readAlong)', () => {
+  it('a sentence build has no title: like a question, its meaning shows only once the room built it (LV-S3)', () => {
+    const sentence = { ko: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo', gloss: 'My friend goes to school.', spoken: { text: '친구가 학교에 가요.', romanization: 'chinguga hakgyoe gayo' } };
+    const build = [{ kind: 'sentence-build', key: 'b/1', builds: ['bank', 'tile', 'whole'], sentence, tiles: [{ ko: '친구가', romanization: 'chinguga' }], bank: [{ tile: 0 }] }] as unknown as Slide[];
+    expect(gridItems(build, state({ slideIdx: 0 }), names).map((i) => [i.kind, i.title])).toEqual([['sentence-build', '']]);
+  });
+
+  it('gridKindKey: the dictionary key of each kind (read-along is readAlong, sentence-build is build)', () => {
+    expect(gridKindKey('sentence-build')).toBe('build');
     expect(gridKindKey('read-along')).toBe('readAlong');
     expect(gridKindKey('sentence')).toBe('sentence');
     expect(gridKindKey('vocab')).toBe('vocab');

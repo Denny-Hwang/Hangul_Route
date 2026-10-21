@@ -2212,6 +2212,8 @@ export const learner = {
         pattern: 'Sentence pattern',
         readAlong: 'Read along',
         realia: 'Look and read',
+        /** The sentence-build slide (LV-S3): the same value as `myRoute.games.sentenceBuilder`. */
+        build: 'Build a sentence',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2278,6 +2280,11 @@ export const learner = {
       readAlong: { label: 'Read along' },
       /** A realia question's line beside its key word, until "Hoya's answer" takes its place (LV-S2, design V7). */
       realia: { ask: 'Look closely and find the answer.' },
+      /**
+       * The sentence-build slide (LV-S3, design V9): its kind label, and the question over the sentence line,
+       * the next word or, on a particle tile, the ending that fits. The room answers by pointing (LV-D9).
+       */
+      build: { title: 'Build the sentence together', next: 'Which word comes next?', particle: 'Which ending fits?' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */

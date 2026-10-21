@@ -6,6 +6,7 @@ import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
 import type { PresenterState } from './controls';
 import type { RecentItem, RecentList } from './recent';
+import { buildMove } from './slide-view';
 import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
@@ -99,7 +100,7 @@ export function slideLocale(input: { deck: LectureDeck | null; device: UiLocale;
 
 /**
  * Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9),
- * the story slides (PR 11) and the reading slides (AMENDMENTS-LECTURE-V2 LV-S1).
+ * the story slides (PR 11), the reading slides (AMENDMENTS-LECTURE-V2 LV-S1) and the sentence builds (LV-S3).
  */
 export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
   'title',
@@ -116,6 +117,7 @@ export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
   'pattern',
   'read-along',
   'realia',
+  'sentence-build',
 ]);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
@@ -313,10 +315,14 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
  * key words too, as a vocab slide names its gloss): the live region speaks to
  * the presenter at the device, who holds the deck, not to the room, which sees only the stage.
  * A listen or reply question is named by its question (`names.listen`, `names.reply`), a realia
- * question by its own (LV-S2); never by an option, which would be the answer.
+ * question by its own (LV-S2); never by an option, which would be the answer. A sentence build is
+ * named by its question too (`names.build`, LV-S3), never by its sentence: each move says its tile
+ * and the whole build the sentence (`buildLive`).
  */
-export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string }): string {
+export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityPreset) => string; slot?: string; listen?: string; reply?: string; build?: string }): string {
   switch (slide.kind) {
+    case 'sentence-build':
+      return names?.build ?? '';
     case 'quiz':
       switch (slide.prompt.ask) {
         case 'listen':
@@ -358,6 +364,30 @@ export function slideDetail(slide: Slide, names?: { activity: (preset: ActivityP
     default:
       return '';
   }
+}
+
+/** What the live region says now: the slide and build it was worked out for, and a build's own words. */
+export interface BuildLive {
+  key: string;
+  reveal: number;
+  /** A sentence-build move's words; absent: the slide's own announcement. */
+  words?: string;
+}
+
+/**
+ * The live region on a sentence-build slide (section 10): one step forward on the same slide
+ * announces what it moved ("{word} placed", `placed`; the sentence with its romanization and
+ * meaning at the whole build); arriving on a slide or stepping back says the slide again. A redraw
+ * at the same build keeps what was said, so nothing is announced twice. Every other slide always
+ * has its own announcement.
+ */
+export function buildLive(slide: Slide, reveal: number, previous: BuildLive | null, placed: (word: string) => string): BuildLive {
+  const now = { key: slide.key, reveal };
+  if (previous !== null && previous.key === slide.key && previous.reveal === reveal) return previous;
+  if (slide.kind !== 'sentence-build' || previous === null || previous.key !== slide.key || reveal !== previous.reveal + 1) return now;
+  const move = buildMove(slide, reveal);
+  if (move === null) return now;
+  return { ...now, words: 'placed' in move ? placed(move.placed) : move.whole };
 }
 
 // --- start screen and stage ---------------------------------------------------------------------

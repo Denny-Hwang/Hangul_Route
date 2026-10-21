@@ -1716,6 +1716,7 @@ export const learner = {
         pattern: 'Patrón de oración',
         readAlong: 'Leer juntos',
         realia: 'Mira y lee',
+        build: 'Arma una oración',
       },
       title: 'Diapositivas',
       hint: 'Elige una diapositiva para ir a ella. Oculta una solo para esta lección.',
@@ -1765,6 +1766,7 @@ export const learner = {
       pattern: { label: 'Patrón de oración' },
       readAlong: { label: 'Leer juntos' },
       realia: { ask: 'Mira con atención y busca la respuesta.' },
+      build: { title: 'Armar la oración en grupo', next: '¿Qué palabra va después?', particle: '¿Qué terminación va?' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */
