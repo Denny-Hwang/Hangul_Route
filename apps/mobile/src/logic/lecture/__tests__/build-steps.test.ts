@@ -183,6 +183,23 @@ describe('buildsFor: the reading slides (AMENDMENTS-LECTURE-V2 section 5.2, LV-S
     expect(buildsFor(realia, ALWAYS)).toEqual(['sheet', 'words']);
     expect(buildsFor(realia, TAP)).toEqual(['sheet', 'rom', 'words', 'rom']);
   });
+
+  it('realia with no key words (a Realia Read sheet before its questions, LV-S2): the sheet alone', () => {
+    const sheetOnly: SlideBody = { ...(realia as Extract<SlideBody, { kind: 'realia' }>), keyWords: [] };
+    expect(buildsFor(sheetOnly, ALWAYS)).toEqual(['sheet']);
+    expect(buildsFor(sheetOnly, TAP)).toEqual(['sheet', 'rom']);
+  });
+
+  it("the question slides (LV-S2): question, then answer, with 'tap' too (the options' romanization waits for the answer, D2)", () => {
+    const listen: SlideBody = { kind: 'quiz', prompt: { ask: 'listen', line: line('빵', 'ppang', 'bread'), speech: 'word' }, options: [{ ko: '빵', romanization: 'ppang', correct: true }], textPrompt: false };
+    const reply: SlideBody = { kind: 'quiz', prompt: { ask: 'reply', line: line('밥 먹었어요?', 'bap meogeosseoyo', 'Have you eaten?') }, options: [], textPrompt: false };
+    const sheet = (realia as Extract<SlideBody, { kind: 'realia' }>).sheet;
+    const asked: SlideBody = { kind: 'quiz', prompt: { ask: 'realia', text: 'How much is this?', sheet }, options: [{ figure: '1,000 won', correct: true }], textPrompt: false };
+    for (const body of [listen, reply, asked]) {
+      expect(buildsFor(body, ALWAYS)).toEqual(['question', 'answer']);
+      expect(buildsFor(body, TAP)).toEqual(['question', 'answer']);
+    }
+  });
 });
 
 describe('partsShown: what a reading slide shows at a build', () => {

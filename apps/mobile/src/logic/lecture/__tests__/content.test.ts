@@ -258,9 +258,12 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
       const before = slides.slice(1, firstQuiz);
       expect(before.map((s) => (s.kind === 'letter' ? s.jamoId : s.kind))).toEqual(taughtIds);
       expect(before.every((s) => s.key.startsWith(`${id}/${discover.id}/`))).toBe(true);
-      // The Check (Listen & Pick) is not a presenter slide yet (§3.3 rule 2): a counted skip, nothing else.
+      // The Check (Listen & Pick) is a listen question per round (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2): nothing is skipped.
       const check = quest.steps.find((s) => s.kind === 'check')!;
-      expect(skipped).toEqual([{ blockIndex: 0, ref: check.minigameRef, reason: 'unsupported-step' }]);
+      expect(skipped).toEqual([]);
+      const asked = slides.filter((s) => s.key.startsWith(`${id}/${check.id}/`));
+      expect(asked.length).toBeGreaterThan(0);
+      expect(asked.every((s) => s.kind === 'quiz' && s.prompt.ask === 'listen')).toBe(true);
     }
   });
 

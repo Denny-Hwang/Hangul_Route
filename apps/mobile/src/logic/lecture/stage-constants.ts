@@ -101,6 +101,23 @@ export const SHEET_MAX_W = 700;
 export const SHEET_ROOMY_LINES = 4;
 /** A read-along turn is at most this share of the content width (slide-read-along.md). */
 export const TURN_MAX_SHARE = '78%';
+/**
+ * The question slides (LV-S2; design/screens/presenter/lecture-v2.md "Constants"): a picture option
+ * of a listen or realia question (`--pic-opt`), so two rows of options and the prompt line fit the
+ * 504-unit content area; it shrinks with its row, never grows.
+ */
+export const PIC_OPT = 112;
+/**
+ * A realia question's lead line ("Look closely and find the answer.", then "Hoya's answer" in its place)
+ * is at least this wide beside the key word; in a narrower column it goes under the key word, so the
+ * answer line never has less room than the lead line and nothing moves at the reveal (V7).
+ */
+export const REALIA_ASK_MIN = 240;
+/**
+ * The narrowest column beside a realia sheet that holds picture options in the 2 x 2 grid (two cards of a
+ * marker and a picture); a narrower one (a price-card sheet grown for a phone's text floor) lists them as rows.
+ */
+export const REALIA_GRID_MIN = 480;
 
 /** End slide fit rule (README D7): at most this many rows of letters and of words, then one "+ n more" pill. */
 export const END_MAX_ROWS = 2;

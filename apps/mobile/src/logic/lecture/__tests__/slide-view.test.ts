@@ -451,6 +451,48 @@ describe('the reading slides at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
   });
 });
 
+describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections 5.1 and 5.2, LV-S2)', () => {
+  const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
+  const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
+  const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
+  const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }]);
+  type Quiz = Extract<Slide, { kind: 'quiz' }>;
+  const asked = (slides: Slide[], ask: Quiz['prompt']['ask']): Quiz[] => slides.filter((s): s is Quiz => s.kind === 'quiz' && s.prompt.ask === ask);
+
+  it('a Stage 1 Check: a letter round plays its carrier syllable at the sound rate, a word round its word', () => {
+    const [sym, word] = asked(stage1, 'listen');
+    expect(slideSound(sym)).toEqual({ spoken: { text: '어', romanization: 'eo' }, kind: 'sound' });
+    expect(slideSound(word)?.kind).toBe('word');
+    expect(slideSound(word)?.spoken.text).toBe((word!.prompt as Extract<Quiz['prompt'], { ask: 'listen' }>).line.ko);
+  });
+
+  it('a listen question plays its prompt (a sentence at the sentence rate) at every build: the room hears it before it answers', () => {
+    const listen = asked(stage3, 'listen');
+    expect(listen.length).toBeGreaterThan(0);
+    for (const slide of listen) {
+      const prompt = slide.prompt as Extract<Quiz['prompt'], { ask: 'listen' }>;
+      expect(slideSound(slide, 0)).toEqual({ spoken: prompt.line.spoken, kind: prompt.speech });
+      expect(slideSound(slide, 0)).toEqual(slideSound(slide, 1));
+    }
+  });
+
+  it("a reply question plays the other speaker's line at the sentence rate", () => {
+    const [reply] = asked(stage4, 'reply');
+    const prompt = reply!.prompt as Extract<Quiz['prompt'], { ask: 'reply' }>;
+    expect(prompt.line.ko).toBe('밥 먹었어요?');
+    expect(slideSound(reply)).toEqual({ spoken: prompt.line.spoken, kind: 'sentence' });
+  });
+
+  it('a realia question plays its key word, else its sheet line by line, at the word rate', () => {
+    const realia = asked(stage6, 'realia');
+    expect(realia.length).toBeGreaterThan(0);
+    for (const slide of realia) {
+      const prompt = slide.prompt as Extract<Quiz['prompt'], { ask: 'realia' }>;
+      expect(slideSound(slide)).toEqual({ spoken: prompt.key?.spoken ?? prompt.sheet.spoken, kind: 'word' });
+    }
+  });
+});
+
 describe('nextFitLevel: a reading slide that fits itself', () => {
   it('steps one level more compact while the content is taller than its room, up to the last level', () => {
     expect(nextFitLevel({ room: 504, content: 560, level: 0, max: 3 })).toBe(1);

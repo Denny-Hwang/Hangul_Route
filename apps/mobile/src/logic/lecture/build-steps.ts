@@ -35,15 +35,42 @@ export type QuizPrompt =
    * A story check: its own prompt (`{target}` stands for the target word). `glossAtAnswer`: a
    * pick-meaning or fill-word check, whose target gloss would give the answer away before the reveal.
    */
-  | { ask: 'check'; text: string; target?: KoLine; glossAtAnswer?: true };
+  | { ask: 'check'; text: string; target?: KoLine; glossAtAnswer?: true }
+  /**
+   * Listen & Pick (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2; practice, apply and the Check): the room
+   * hears `line` and picks how it is written or what it shows. At the answer build `line` (its
+   * Korean, romanization and meaning) joins the question, so the room sees what it heard; without a
+   * Korean voice the teacher reads its romanization and its Hangul waits for the answer (section 3.7).
+   * `speech`: the rate Sound plays it at, as the learner's game (a letter or syllable round is a `sound`).
+   * `reply`: the room heard a line and picks the reply that fits it (a word or sentence round whose answer
+   * is not the line itself, as the Stage 4 Checks): the question is "Which answer fits?", not "Which one did you hear?".
+   */
+  | { ask: 'listen'; line: SpokenLine; speech: 'sound' | 'word' | 'sentence'; reply?: true }
+  /** Tap to Respond (LV-S2): the other speaker's line, drawn from the start; the room picks the reply that fits. */
+  | { ask: 'reply'; line: SpokenLine }
+  /**
+   * Realia Read (LV-S2): a question about the sheet that stays beside it (`text`, in the slide
+   * language), the word it is about (`key`: its Korean and romanization; its meaning would give some
+   * answers away) and the sheet line that holds the answer (`answerEntryId`), marked found at the
+   * answer build.
+   */
+  | { ask: 'realia'; text: string; sheet: RealiaSheetView; key?: SheetText & { spoken: SpokenForm }; answerEntryId?: string };
 
 /** A quiz option; the screen adds the shape + number marker by position (§3.4). */
 export interface QuizOption {
   ko?: string;
   romanization?: string;
+  /**
+   * Its meaning in the slide language. A story check's word option shows it under the word; a
+   * Listen & Pick or Tap to Respond row shows it at the answer build (V8); a picture's is its name.
+   */
   gloss?: string;
   /** A story check picture (`prop:` / `card:` ...). */
   art?: string;
+  /** A Listen & Pick or Realia Read picture (`card:` / `word:`, drawn by `PictureArt`); `gloss` names it (LV-S2). */
+  picture?: string;
+  /** A Realia Read figure: plain text with no Hangul, such as a price ("5,000 won"), drawn with the question (LV-S2). */
+  figure?: string;
   correct: boolean;
 }
 
@@ -160,7 +187,10 @@ export type SlideBody =
    * Korean voice"), so every line shows at once and none is lit.
    */
   | { kind: 'read-along'; lines: Array<SpokenLine & { speaker: string }>; together?: true }
-  /** A Discover realia page (LV-S1): the drawn sheet, its caption (`{ko:}` tokens as chips) and its key words. */
+  /**
+   * A Discover realia page (LV-S1): the drawn sheet, its caption (`{ko:}` tokens as chips) and its key
+   * words; or a Realia Read sheet no page of this deck showed yet (LV-S2): the sheet alone, before its questions.
+   */
   | { kind: 'realia'; sheet: RealiaSheetView; caption?: NarrationPiece[]; keyWords: SpokenLine[] }
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
@@ -256,7 +286,8 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
       // `together` (no Korean voice): one build shows every line, and with `tap` one more their romanization.
       return body.together === true ? ['line', ...rom] : body.lines.flatMap((): BuildName[] => ['line', ...rom]);
     case 'realia':
-      return ['sheet', ...rom, 'words', ...rom];
+      // A Realia Read sheet the deck has not shown yet has no key words (LV-S2): the sheet alone.
+      return ['sheet', ...rom, ...(body.keyWords.length > 0 ? (['words', ...rom] as BuildName[]) : [])];
   }
 }
 

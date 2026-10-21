@@ -409,6 +409,37 @@ describe('the End slide', () => {
   });
 });
 
+describe('slideDetail: the question slides (LV-S2)', () => {
+  const slides = expandDeck(
+    deckOf([
+      { kind: 'quest', id: 'quest:stage3-life-q1' },
+      { kind: 'quest', id: 'quest:stage4-life-q1' },
+      { kind: 'quest', id: 'quest:stage6-life-q3' },
+    ]),
+    lectureBundle('en'),
+    { canPlayKorean: true },
+  ).slides;
+  const of = (ask: string) => slides.find((s): s is Extract<Slide, { kind: 'quiz' }> => s.kind === 'quiz' && s.prompt.ask === ask)!;
+  const names = { activity: () => '', listen: 'Which one did you hear?', reply: 'Which answer fits?' };
+
+  it('names a listen or reply question by its question, a realia question by its own; never by an option', () => {
+    expect(slideDetail(of('listen'), names)).toBe('Which one did you hear?');
+    expect(slideDetail(of('reply'), names)).toBe('Which answer fits?');
+    const realia = of('realia');
+    expect(slideDetail(realia, names)).toBe((realia.prompt as { text: string }).text);
+    for (const ask of ['listen', 'reply', 'realia']) {
+      const detail = slideDetail(of(ask), names);
+      for (const o of of(ask).options) if (o.ko !== undefined) expect(detail).not.toContain(o.ko);
+    }
+    // A listen round that asks for the reply to what was heard (the Stage 4 Check) is named by the reply question.
+    const replyRound = slides.find((s) => s.kind === 'quiz' && s.prompt.ask === 'listen' && s.prompt.reply === true)!;
+    expect(slideDetail(replyRound, names)).toBe('Which answer fits?');
+    // Without the names a listen or reply question says its kind alone.
+    expect(slideDetail(of('listen'))).toBe('');
+    expect(slideDetail(of('reply'))).toBe('');
+  });
+});
+
 describe('slideDetail', () => {
   it('says the title, or the letter and its romanization; nothing for the End slide', () => {
     const [title, letter] = expandDeck(deckOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]), lectureBundle('en'), { canPlayKorean: true }).slides;

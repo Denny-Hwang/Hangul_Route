@@ -213,7 +213,12 @@ const wordSound = (ko: string, romanization: string): SlideSound => ({ spoken: {
 
 const koStep = (step: SequenceStep): step is SequenceStep & { ko: string; romanization: string } => step.ko !== undefined && step.romanization !== undefined;
 
-/** A question's sound: Match Sound its carrier syllable, a meaning question its word, a story check its target. */
+/**
+ * A question's sound: Match Sound its carrier syllable, a meaning question its word, a story check
+ * its target; a listen question its prompt at the rate the learner's game plays it, a reply
+ * question the other speaker's line (the sentence rate), a realia question its key word, else its
+ * sheet line by line (the word rate, as the realia page). None says an option: they are the answers.
+ */
 function quizSound(prompt: QuizPrompt): SlideSound | undefined {
   switch (prompt.ask) {
     case 'sound':
@@ -225,6 +230,12 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
     case 'odd-one-out':
       // Its letters are the answer.
       return undefined;
+    case 'listen':
+      return { spoken: prompt.line.spoken, kind: prompt.speech };
+    case 'reply':
+      return { spoken: prompt.line.spoken, kind: 'sentence' };
+    case 'realia':
+      return { spoken: prompt.key?.spoken ?? prompt.sheet.spoken, kind: 'word' };
   }
 }
 
@@ -273,6 +284,9 @@ export function frameSpoken(frame: Of<'pattern'>['frame']): SpokenForm {
  * else the frame's own Korean with a pause at each gap); a read along its current line, or every
  * line in order when they show together (each at the sentence rate); a realia page its sheet line
  * by line and its caption's Korean chips and, once they show, its key words (at the word rate).
+ * The question slides (LV-S2): a listen question its prompt (a letter or syllable round at the
+ * sound rate), a reply question the other speaker's line, a realia question its key word or, with
+ * none, its sheet (`quizSound`).
  */
 export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
   if (slide === undefined) return undefined;

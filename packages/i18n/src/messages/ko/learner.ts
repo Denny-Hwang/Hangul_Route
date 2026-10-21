@@ -1635,6 +1635,8 @@ export const learner = {
       answer: '호야의 답',
       sound: '어떤 글자의 소리일까요?',
       oddOneOut: '어느 것이 다를까요?',
+      listen: '어떤 것을 들었나요?',
+      reply: '어떤 대답이 어울릴까요?',
     },
     activity: {
       'air-write': '허공에 써 보기',
@@ -1668,6 +1670,7 @@ export const learner = {
       sentence: { label: '문장' },
       pattern: { label: '문장 틀' },
       readAlong: { label: '함께 읽기' },
+      realia: { ask: '잘 보고 답을 찾아요.' },
     },
     start: {
       /** Back to the presenter home before Start: nothing is saved or sent. */
