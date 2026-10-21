@@ -152,11 +152,11 @@ describe('precacheReport and its budget lines', () => {
   });
 
   it('the start bundle line is its size after CM-8 with a small margin, under the CM-5 size, so it shrank; the precache line is the CM-5 measurement plus 2.5 MB', () => {
-    // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, CM8_RAW B measured after CM-8.
+    // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,342,002 B measured after CM-8.
     // The margin stays under 10 KB, so the stories (or anything else) cannot come back into the start bundle.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(CM8_LINE);
-    expect(PRECACHE_BUDGET.startBundleRaw - CM8_RAW).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - CM8_RAW).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_350_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_342_002).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_342_002).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(7_337_815);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
