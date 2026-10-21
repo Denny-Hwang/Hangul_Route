@@ -51,6 +51,9 @@ describe('Grown-up area: the reset-by-wait notice', () => {
     expect(useAccountStore.getState().pinResetByWait).toBeNull();
     await press(buttonsNamed(r.root, m.resetByWaitChange)[0] as ReactTestInstance);
     expect(onChange).toHaveBeenCalledTimes(1);
+    // [OA] OA-2 review round 2: the dashboard under Change PIN no longer shows it when the grown-up comes back.
+    expect(byTestId(r.root, 'dashboard-reset-by-wait')).toHaveLength(0);
+    expect(screenTexts(r.root)).not.toContain(m.resetByWaitNotice);
     await cleanup();
     const again = await show();
     expect(byTestId(again.r.root, 'dashboard-reset-by-wait')).toHaveLength(0);

@@ -1,5 +1,5 @@
 import type { Messages } from '@hangul-route/i18n';
-import { cooldownRemainingMs, type AttemptState } from './pin-hash';
+import { cooldownRemainingMs, type AttemptState, type PauseSchedule } from './pin-hash';
 
 /**
  * [OA] How the PIN screen words a pause (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3, wireframe
@@ -27,10 +27,16 @@ export const PAUSE_HELP_FROM_ROUND = 3;
 /**
  * Whether the second line (`cooldownHelp`) shows: during a pause of the 3rd round or later, on the Grown-up area
  * destination only. `LockedProfile`, `GrownUpUse` and `CancelReset` (and every other destination) never show it,
- * so the screen a child meets most does not advertise the wait.
+ * so the screen a child meets most does not advertise the wait. Never under the `flat` schedule (the kill switch
+ * off is the 30 s pause of before, which had no second line).
  */
-export function showsPauseHelp(state: AttemptState, now: number, destination: string | undefined): boolean {
-  if (destination !== PAUSE_HELP_DESTINATION) return false;
+export function showsPauseHelp(
+  state: AttemptState,
+  now: number,
+  destination: string | undefined,
+  schedule: PauseSchedule = 'steps',
+): boolean {
+  if (schedule === 'flat' || destination !== PAUSE_HELP_DESTINATION) return false;
   return cooldownRemainingMs(state, now) > 0 && (state.strikes ?? 0) >= PAUSE_HELP_FROM_ROUND;
 }
 

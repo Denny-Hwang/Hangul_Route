@@ -120,6 +120,17 @@ for (const vp of VIEWPORTS) {
       await page.getByTestId('pin-reset-code-input').fill('tiger moon river apple 482139');
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
+      // [OA] OA-2 review round 2: choosing a new PIN is not a guess, so the creation pad is not paused.
+      const before = await readStored<string>(page, 'account:parentPinHash');
+      await expect(page.getByTestId('pin-pause-line')).toHaveCount(0);
+      await typeDigits(page, '2468');
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(page.getByText('Enter it once more')).toBeVisible();
+      await typeDigits(page, '2468');
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect.poll(() => readStored<string>(page, 'account:parentPinHash')).not.toBe(before);
+      await expect.poll(async () => (await readStored<{ strikes?: number; lockedUntil: number | null }>(page, 'account:pinAttempts'))?.strikes).toBe(0);
+      expect((await readStored<{ lockedUntil: number | null }>(page, 'account:pinAttempts'))?.lockedUntil ?? null).toBeNull();
     });
 
     test('a self-only device with a PIN says "Settings PIN" and "Create a PIN", never "grown-up"', async ({ page }) => {

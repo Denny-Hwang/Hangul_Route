@@ -152,6 +152,11 @@ export type RootStackParamList = {
      * current PIN first, then opens creation (the reset-by-wait notice's Change PIN, OA-D21).
      */
     mode?: 'setup' | 'change';
+    /**
+     * [OA] OA-D21: Change PIN on the reset-by-wait notice. Once the new PIN is stored the screen goes back to the
+     * Grown-up area that asked (gate open), instead of opening a second one.
+     */
+    returnAfterSet?: boolean;
     /** Which Forgot PIN path led here (telemetry only). */
     via?: PinResetMethod;
     /**

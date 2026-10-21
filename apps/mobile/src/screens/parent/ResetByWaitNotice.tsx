@@ -16,17 +16,27 @@ import { useUiStore } from '../../store/ui-store';
 export function ResetByWaitNotice({ onChange }: { onChange: () => void }): React.ReactElement | null {
   const m = useMessages().caregiver.pin;
   const [due] = useState(() => resetByWaitNoticeDue(useAccountStore.getState().pinResetByWait, useUiStore.getState().lastPinVerifiedAt));
+  // Once Change PIN is pressed the notice has done its job: it is gone when the grown-up comes back here.
+  const [dismissed, setDismissed] = useState(false);
   useEffect(() => {
     if (due) useAccountStore.getState().clearPinResetByWait();
   }, [due]);
-  if (!due) return null;
+  if (!due || dismissed) return null;
   return (
     <View
       testID="dashboard-reset-by-wait"
       style={{ backgroundColor: colors.feedback.infoLight, borderRadius: radii.lg, padding: spacing.md, marginBottom: spacing.lg, gap: spacing.sm }}
     >
       <Body>{m.resetByWaitNotice}</Body>
-      <Button label={m.resetByWaitChange} tone="primary" size="md" onPress={onChange} />
+      <Button
+        label={m.resetByWaitChange}
+        tone="primary"
+        size="md"
+        onPress={() => {
+          setDismissed(true);
+          onChange();
+        }}
+      />
     </View>
   );
 }

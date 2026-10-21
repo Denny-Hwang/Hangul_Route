@@ -1,6 +1,6 @@
 import { areaExitTracker, areaLeaveRoutes, routeZone, type LeaveRoute } from '../logic/profiles/session';
 import { gateOpensDirectlyNow } from '../store/gate-now';
-import { closeGrownUpSession, onGrownUpSessionClosed } from '../store/grown-up-session';
+import { closeGrownUpSession, onGrownUpSessionClosed, type SessionClosed } from '../store/grown-up-session';
 import { useUiStore } from '../store/ui-store';
 
 /** The focused route as the navigation container reports it (`key` is absent in tests). */
@@ -74,26 +74,60 @@ export interface AreaLeaveTarget {
   dispatch: (action: ResetAction) => void;
 }
 
+/** The PIN screens: a close while one is in front asks the PIN for the Grown-up area again (it was asking anyway). */
+const PIN_ROUTES: ReadonlySet<string> = new Set(['PinEntry', 'PinReset']);
+
+/** Runs `task` once the navigation the current call may still make has applied (`setTimeout` 0). */
+export type Defer = (task: () => void) => void;
+
+const nextTurn: Defer = (task) => {
+  setTimeout(task, 0);
+};
+
 /**
- * [OA] OA-D16, CS-14, OA-D5b (1): a session that ends while a Grown-up area page is in front (5 minutes in the
- * background, a change of learner) does not leave that page usable: every Grown-up area route is taken off the
- * stack and the PIN screen opens for the Grown-up area, so whoever picks the device up sees the PIN, and Cancel goes
- * back to the learner screen underneath. A close with a learner screen in front (the exit watcher) changes no
- * route; a device whose gate opens with no PIN at all (a self-only device that never set one) has nothing to ask.
- * Returns the unsubscribe.
+ * [OA] OA-D16, CS-1, CS-14, CS-15, OA-D5b (1): a grown-up session that ends never leaves a Grown-up area page usable,
+ * in front or underneath.
+ *
+ * - A Grown-up area page (or a PIN screen) in front: every Grown-up area route is taken off the stack and the PIN
+ *   screen opens for the Grown-up area, so whoever picks the device up sees the PIN, and Cancel goes back to the
+ *   learner screen underneath.
+ * - A learner screen (or onboarding) in front: the Grown-up area routes under it are taken off the stack and the
+ *   front route stays as it is, so Back or Leave from it never lands on a Grown-up area page without the PIN (a
+ *   level check started from the Placement report, Add a learner).
+ *
+ * Only a close that ended an open session acts (a learner chosen by a restore or a claim on a device with no session
+ * changes nothing). A close for a change of learner (`switch`) acts once the surface that made the change has
+ * navigated (`defer`): a retake from the Placement report or Add a learner leaves the area by itself, and what stays
+ * is checked after. A device whose gate opens with no PIN at all (a self-only device that never set one) has nothing
+ * to ask. Returns the unsubscribe.
  */
 export function leaveGrownUpAreaOnClose(
   nav: AreaLeaveTarget,
   opensWithoutPin: () => boolean = gateOpensDirectlyNow,
-  subscribe: (listener: () => void) => () => void = onGrownUpSessionClosed,
+  subscribe: (listener: (closed: SessionClosed) => void) => () => void = onGrownUpSessionClosed,
+  defer: Defer = nextTurn,
 ): () => void {
-  return subscribe(() => {
-    const route = nav.getCurrentRoute();
-    if (route === undefined || routeZone(route.name, route.params) === 'learner') return;
+  const leave = (): void => {
     if (opensWithoutPin()) return;
-    const kept = areaLeaveRoutes(nav.getRootState()?.routes ?? []);
+    const route = nav.getCurrentRoute();
+    if (route === undefined) return;
+    const routes = nav.getRootState()?.routes ?? [];
+    const frontInArea = routeZone(route.name, route.params) === 'area' || PIN_ROUTES.has(route.name);
+    if (!frontInArea) {
+      const kept = routes.filter((r) => routeZone(r.name, r.params) !== 'area');
+      if (kept.length === routes.length || kept.length === 0) return;
+      nav.dispatch({ type: 'RESET', payload: { index: kept.length - 1, routes: kept } });
+      return;
+    }
+    // A PIN screen over learner screens only (Open billing, a source link) is left as it is.
+    const kept = areaLeaveRoutes(routes);
     if (kept === null) return;
-    const routes = [...kept, { name: 'PinEntry', params: { next: 'ParentDashboard' } }];
-    nav.dispatch({ type: 'RESET', payload: { index: routes.length - 1, routes } });
+    const pinRoutes = [...kept, { name: 'PinEntry', params: { next: 'ParentDashboard' } }];
+    nav.dispatch({ type: 'RESET', payload: { index: pinRoutes.length - 1, routes: pinRoutes } });
+  };
+  return subscribe(({ reason, wasOpen }) => {
+    if (!wasOpen) return;
+    if (reason === 'switch') defer(leave);
+    else leave();
   });
 }

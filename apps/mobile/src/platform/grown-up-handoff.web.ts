@@ -6,6 +6,8 @@ import {
   handoffUrl,
   type GrownUpHandoffRequest,
 } from '../logic/shell/handoff-rules';
+import { gateDestOf, gateOpenedEvent, markerCode } from '../logic/profiles/gate-events';
+import { useAccountStore } from '../store/account-store';
 import { currentDeviceGateMarker } from '../store/device-gate';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { useUiStore } from '../store/ui-store';
@@ -35,6 +37,8 @@ export interface HandoffState {
   marker: DeviceGateMarker | null;
   lastPinVerifiedAt: number | null;
   locale: UiLocale;
+  /** [OA] Whether a PIN is stored, for the `parent.gate.opened` marker code before the marker is known. */
+  pinSet?: boolean;
 }
 
 export interface HandoffEnv {
@@ -73,6 +77,7 @@ function browserEnv(): HandoffEnv {
       marker: currentDeviceGateMarker(),
       lastPinVerifiedAt: useUiStore.getState().lastPinVerifiedAt,
       locale: activeLocale(useLocaleStore.getState()),
+      pinSet: useAccountStore.getState().parentPinHash !== null,
     }),
     track: (event) => sendEvent(event),
     assign: browserAssign,
@@ -116,18 +121,39 @@ function writeUnlock(env: HandoffEnv, value: string): void {
  * marker epoch, emits `shell.grown_up_handoff { via, target }` and opens the target (a grown-up
  * path, `safeNextPath`) or the sign-in router, always with `?lang=` (English included).
  */
-export async function openGrownUpArea(request: GrownUpHandoffRequest, env: HandoffEnv = browserEnv()): Promise<HandoffResult> {
-  const { marker, lastPinVerifiedAt, locale } = env.state();
+export async function openGrownUpArea(
+  request: GrownUpHandoffRequest,
+  env: HandoffEnv = browserEnv(),
+  options: { gateSent?: boolean } = {},
+): Promise<HandoffResult> {
+  const { marker, lastPinVerifiedAt, locale, pinSet } = env.state();
   const decision = decideHandoff({ marker, lastPinVerifiedAt, now: env.now() });
   if (decision.step === 'pin') return 'pin';
   const target = safeNextPath(request.target);
   if (decision.unlock) writeUnlock(env, JSON.stringify(decision.unlock));
+  // [OA] Section 15 (`parent.gate.opened` from every gate): a hand-off with no PIN screen is a gate that opened by
+  // itself, `session` on a fresh PIN (marker `pin`), else `open`. The PIN screen sends its own (`gateSent`).
+  const gate = options.gateSent
+    ? Promise.resolve()
+    : sendQuietly(env, gateOpenedEvent({ dest: gateDestOf('GrownUpArea'), via: marker?.gate === 'pin' ? 'session' : 'open', marker: markerCode(marker, pinSet ?? false) }));
   await trackThenLeave(
     { name: 'shell.grown_up_handoff', payload: { via: request.via, target: handoffTargetCode(request.via, target) } },
     () => env.assign(handoffUrl(target, locale)),
-    env,
+    { ...env, track: (event) => Promise.all([env.track(event), gate]).then(([sent]) => sent) },
   );
   return 'opened';
+}
+
+/** Sends `event` and never throws or rejects (telemetry is best effort). */
+function sendQuietly(env: HandoffEnv, event: TelemetryEvent): Promise<void> {
+  try {
+    return env.track(event).then(
+      () => undefined,
+      () => undefined,
+    );
+  } catch {
+    return Promise.resolve();
+  }
 }
 
 /**

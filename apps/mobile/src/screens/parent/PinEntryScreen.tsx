@@ -12,7 +12,7 @@ import {
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
@@ -116,6 +116,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const [hint, setHint] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  // [OA] `parent.gate.opened` once per gate: Change PIN checks the PIN first, then sets a new one.
+  const gateSent = useRef(false);
   const [headerHeight, setHeaderHeight] = useState(HEADER_ESTIMATE);
   // The route's ScreenHeader (Close, AMENDMENTS-DISPLAY-NAV section 7.1) sits above the title block: the pad leaves room for both.
   const [screenHeaderHeight, setScreenHeaderHeight] = useState<number>(SCREEN_HEADER_ESTIMATE);
@@ -143,7 +145,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   // The ticking `now` may be a moment old when the attempt state changes (a pause that just started): never older
   // than the clock, so a fresh pause never reads a second longer than it is.
   const clock = Math.max(now, Date.now());
-  const cooldownMs = cooldownRemainingMs(attempts, clock);
+  const schedule = flags.pinPauseStepsEnabled ? 'steps' : 'flat';
+  // [OA] CS-8: a pause holds the check of the PIN only. Choosing a new PIN (after a Rescue Code accepted during a pause,
+  // or the finished wait) is not a guess, so the creation pad is never paused.
+  const cooldownMs = mode === 'verify' ? cooldownRemainingMs(attempts, clock) : 0;
   const locked = cooldownMs > 0;
 
   // [OA] OA-D19: a pause another tab started shows here too (on arrival and whenever the app comes back in front).
@@ -183,7 +188,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   const handOff = async (): Promise<void> => {
     const { url, grownUpVia } = route.params;
-    const result = await openGrownUpArea({ via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) });
+    // The PIN screen already sent `parent.gate.opened` for this gate.
+    const result = await openGrownUpArea({ via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) }, undefined, { gateSent: true });
     // The tab is leaving; a return through the back/forward cache lands on the start screen.
     if (result === 'opened') back();
   };
@@ -296,16 +302,24 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         if (route.params.via === 'wait') markPinResetByWait(Date.now());
         void track(pinCreated(pinCreatedWhere(route.params)));
         if (route.params.via) void track(pinResetCompleted(route.params.via));
-        trackGateOpened(route.params.next, 'pin');
+        if (!gateSent.current) trackGateOpened(route.params.next, 'pin');
+        gateSent.current = true;
+        if (route.params.returnAfterSet === true) {
+          // [OA] OA-D21: Change PIN on the notice goes back to the Grown-up area that asked, with the gate open.
+          openParentGate();
+          navigation.goBack();
+          return;
+        }
         proceed();
         return;
       }
       // [OA] OA-D19: read, checked and written inside the shared attempt lock, so every tab counts the same misses.
-      const result = await verifyPinAttempt(entry, { hasher: pinHasher, schedule: flags.pinPauseStepsEnabled ? 'steps' : 'flat' });
+      const result = await verifyPinAttempt(entry, { hasher: pinHasher, schedule });
       setEntry('');
       if (result.paused) trackPinPaused(result.paused.step);
       if (result.ok) {
         trackGateOpened(route.params.next, 'pin');
+        gateSent.current = true;
         // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
         if (pinResetRequestedAt !== null) clearPinResetRequest();
         // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
@@ -324,7 +338,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       if (result.reason === 'cooldown') {
         setHint(null);
       } else {
-        const left = attemptsRemaining(result.state, Date.now());
+        const left = attemptsRemaining(result.state, Date.now(), schedule);
         setHint(left > 0 ? m.entry.triesLeft(left) : null);
       }
     } catch {
@@ -346,7 +360,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   // [OA] Section 8.3: seconds under a minute, minutes above; the help line from the 3rd pause, Grown-up area only.
   const hintText = locked ? pauseText(cooldownMs, m) : hint;
-  const pauseHelp = showsPauseHelp(attempts, clock, route.params.next);
+  const pauseHelp = mode === 'verify' && showsPauseHelp(attempts, clock, route.params.next, schedule);
   // The screen reader hears the pause once a minute (section 14), not at every second the line changes.
   const announceKey = pauseAnnounceKey(cooldownMs);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed only when the minute changes, on purpose
@@ -365,7 +379,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           tone="primary"
           size="lg"
           fullWidth
-          onPress={() => continueToGrownUpPage(route.params.url, locale)}
+          onPress={() => {
+            // [OA] Section 15: this gate opens with no PIN (none is stored), so it is sent as `open`.
+            trackGateOpened(route.params.next, 'open');
+            continueToGrownUpPage(route.params.url, locale);
+          }}
         />
         <Spacer size="sm" />
         <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={leave} />

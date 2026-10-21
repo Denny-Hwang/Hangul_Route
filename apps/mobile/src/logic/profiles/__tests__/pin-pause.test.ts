@@ -37,6 +37,9 @@ describe('[OA] showsPauseHelp: from the 3rd pause, on the Grown-up area only (CS
     expect(showsPauseHelp({ ...paused(4), lockedUntil: NOW }, NOW, 'ParentDashboard')).toBe(false);
     expect(showsPauseHelp(INITIAL_ATTEMPT_STATE, NOW, 'ParentDashboard')).toBe(false);
     expect(showsPauseHelp({ failures: [], lockedUntil: NOW + 1 }, NOW, 'ParentDashboard')).toBe(false);
+    // [OA] OA-2 review round 2: never under the flat schedule (the kill switch off).
+    expect(showsPauseHelp(paused(5), NOW, 'ParentDashboard', 'flat')).toBe(false);
+    expect(showsPauseHelp(paused(5), NOW, 'ParentDashboard', 'steps')).toBe(true);
   });
 });
 

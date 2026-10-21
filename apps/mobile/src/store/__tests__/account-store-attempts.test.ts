@@ -9,7 +9,7 @@ const disk = new Map<string, unknown>();
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (key: string) => (disk.has(key) ? structuredClone(disk.get(key)) : null)),
   readJsonStrict: vi.fn(async () => null),
-  readJsonExact: vi.fn(async () => null),
+  readJsonExact: vi.fn(async (key: string) => (disk.has(key) ? structuredClone(disk.get(key)) : null)),
   writeJson: vi.fn(async (key: string, value: unknown) => {
     disk.set(key, structuredClone(value));
   }),
@@ -107,11 +107,45 @@ describe('verifyPinAttempt: one count for every tab (OA-D19)', () => {
   it('a pause survives a restart: hydrate reads it back, legacy state included', async () => {
     for (let i = 0; i < MAX_ATTEMPTS; i += 1) await useAccountStore.getState().verifyPinAttempt('9999', { hasher, schedule: 'steps', now: () => T0 + i });
     useAccountStore.setState({ pinAttempts: INITIAL_ATTEMPT_STATE });
-    await useAccountStore.getState().hydrate();
-    expect(useAccountStore.getState().pinAttempts).toEqual({ failures: [], lockedUntil: T0 + 4 + 30_000, strikes: 1, lastMissAt: T0 + 4 });
-    disk.set('account:pinAttempts', { failures: [], lockedUntil: 5000 });
-    await useAccountStore.getState().hydrate();
-    expect(useAccountStore.getState().pinAttempts).toEqual({ failures: [], lockedUntil: 5000, strikes: 0 });
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(T0 + 5);
+    try {
+      await useAccountStore.getState().hydrate();
+      expect(useAccountStore.getState().pinAttempts).toEqual({ failures: [], lockedUntil: T0 + 4 + 30_000, strikes: 1, lastMissAt: T0 + 4 });
+      disk.set('account:pinAttempts', { failures: [], lockedUntil: 5000 });
+      await useAccountStore.getState().hydrate();
+      expect(useAccountStore.getState().pinAttempts).toEqual({ failures: [], lockedUntil: 5000, strikes: 0 });
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it('[OA] a stored pause far in the future (a clock set back, a damaged record) is cut to the longest step at every read', async () => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(T0);
+    try {
+      disk.set('account:pinAttempts', { failures: [], lockedUntil: T0 + 365 * 24 * 3_600_000, strikes: 5, lastMissAt: T0 });
+      disk.set('account:rescueAttempts', { failures: [], lockedUntil: T0 + 365 * 24 * 3_600_000, strikes: 0 });
+      await useAccountStore.getState().hydrate();
+      expect(useAccountStore.getState().pinAttempts.lockedUntil).toBe(T0 + 60 * 60_000);
+      expect(useAccountStore.getState().rescueAttempts.lockedUntil).toBe(T0 + 15 * 60_000);
+      await useAccountStore.getState().refreshAttempts(() => T0 + 1000);
+      expect(useAccountStore.getState().pinAttempts.lockedUntil).toBe(T0 + 1000 + 60 * 60_000);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it('[OA] the PIN is checked against the stored hash under the lock: another tab\'s new PIN wins over the one in memory', async () => {
+    useAccountStore.setState({ parentPinHash: 'h:1234' });
+    disk.set('account:parentPinHash', 'h:5678');
+    const old = await useAccountStore.getState().verifyPinAttempt('1234', { hasher, schedule: 'steps', now: () => T0 });
+    expect(old.ok).toBe(false);
+    expect(useAccountStore.getState().parentPinHash).toBe('h:5678');
+    const fresh = await useAccountStore.getState().verifyPinAttempt('5678', { hasher, schedule: 'steps', now: () => T0 + 1 });
+    expect(fresh.ok).toBe(true);
+    // No readable hash stored (this tab's own write still on its way): the one in memory stands.
+    disk.delete('account:parentPinHash');
+    useAccountStore.setState({ parentPinHash: 'h:2468' });
+    expect((await useAccountStore.getState().verifyPinAttempt('2468', { hasher, schedule: 'steps', now: () => T0 + 2 })).ok).toBe(true);
   });
 
   it('refreshAttempts without Web Locks shows a pause another tab started, and never shortens one shown here', async () => {
@@ -214,7 +248,12 @@ describe('attemptRescue: the Rescue Code has its own counter (section 8.3, CS-8)
 
   it('hydrate reads the rescue state back', async () => {
     disk.set('account:rescueAttempts', { failures: [], lockedUntil: T0 + 900_000 });
-    await useAccountStore.getState().hydrate();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(T0);
+    try {
+      await useAccountStore.getState().hydrate();
+    } finally {
+      clock.mockRestore();
+    }
     expect(useAccountStore.getState().rescueAttempts.lockedUntil).toBe(T0 + 900_000);
   });
 });

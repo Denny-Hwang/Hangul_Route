@@ -47,6 +47,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { syncApi } from '../../store/sync-store';
+import { gateOpensDirectlyNow } from '../../store/gate-now';
 import { passGate } from '../../store/gate-telemetry';
 
 /** Learner's cub beside the name (F-LEARN-001 §3.6). */
@@ -71,6 +72,17 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
     if (entry.screen === 'LearnerReport') navigation.navigate('LearnerReport', entry.params);
     else navigation.navigate('PinEntry', entry.params);
   };
+
+  // [OA] OA-2 review round 2 (CS-1, CS-15): the dashboard checks the gate itself whenever it comes into focus (Back or
+  // Cancel from a page above it, a level check started from here and left): with the session closed or lapsed it
+  // hands over to the PIN screen instead of staying usable. Every way in opens the gate first, so a first focus passes.
+  useEffect(
+    () =>
+      navigation.addListener('focus', () => {
+        if (!gateOpensDirectlyNow()) navigation.replace('PinEntry', { next: 'ParentDashboard' });
+      }),
+    [navigation],
+  );
 
   // Every profile's snapshot, not only the active one: the cards and the Starting spot row read them.
   useEffect(() => {
@@ -109,7 +121,13 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
 
       <Spacer size="lg" />
       <ResetByWaitNotice
-        onChange={() => navigation.navigate('PinEntry', { next: 'ParentDashboard', mode: changePinMode(useUiStore.getState().lastPinVerifiedAt, Date.now()) })}
+        onChange={() =>
+          navigation.navigate('PinEntry', {
+            next: 'ParentDashboard',
+            mode: changePinMode(useUiStore.getState().lastPinVerifiedAt, Date.now()),
+            returnAfterSet: true,
+          })
+        }
       />
       {grownUpHome ? (
         <>

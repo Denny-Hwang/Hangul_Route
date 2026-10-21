@@ -1,8 +1,9 @@
-import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
+import { PIN_SET_AT_KEY, RESCUE_PAUSE_MS } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import type { SubscriptionState } from '../logic/entitlement';
 import {
   INITIAL_ATTEMPT_STATE,
+  PIN_MAX_PAUSE_MS,
   effectiveStrikes,
   mergeAttemptStates,
   normalizeAttemptState,
@@ -75,6 +76,16 @@ function pinResetByWaitOf(raw: unknown): PinResetByWait | null {
 const unsavedAttempts = new Set<string>();
 
 /**
+ * [OA] The longest pause each counter can start: a stored pause that ends later than now plus this (a damaged
+ * record, a clock that was ahead and was set back) is cut to it at every read (`normalizeAttemptState`).
+ */
+const MAX_PAUSE_MS: Readonly<Record<string, number>> = { [PIN_ATTEMPTS_KEY]: PIN_MAX_PAUSE_MS, [RESCUE_ATTEMPTS_KEY]: RESCUE_PAUSE_MS };
+
+function readAttemptState(key: string, raw: unknown, now: number): AttemptState {
+  return normalizeAttemptState(raw, { now, maxPauseMs: MAX_PAUSE_MS[key] ?? PIN_MAX_PAUSE_MS });
+}
+
+/**
  * [OA] OA-D19: the attempt state under `key`, read again inside the `hr:pin-attempts` lock. With Web Locks every
  * write of this bundle is serialised, so the stored state is the truth (another tab's correct PIN clears the pause
  * here too), except where it cannot be: nothing readable is stored (a first use, or a read that failed) and this
@@ -85,7 +96,7 @@ const unsavedAttempts = new Set<string>();
  */
 async function sharedAttempts(key: string, own: AttemptState, locked: boolean, now: number): Promise<AttemptState> {
   const raw = await readJson<unknown>(key);
-  const stored = normalizeAttemptState(raw);
+  const stored = readAttemptState(key, raw, now);
   if (!locked || unsavedAttempts.has(key)) return mergeAttemptStates(stored, own, now);
   if (raw === null || typeof raw !== 'object') return own;
   if (typeof (raw as { strikes?: unknown }).strikes !== 'number') {
@@ -265,8 +276,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       pinCreatedAt: pinSetAtOf(pinCreatedAt) ?? pinSetAtOf(pinSetAt),
       pinHashSeen,
       // A state an older bundle wrote (no `strikes`) reads as 0 strikes; the pause it holds still runs (section 8.3).
-      pinAttempts: normalizeAttemptState(pinAttempts),
-      rescueAttempts: normalizeAttemptState(rescueAttempts),
+      pinAttempts: readAttemptState(PIN_ATTEMPTS_KEY, pinAttempts, Date.now()),
+      rescueAttempts: readAttemptState(RESCUE_ATTEMPTS_KEY, rescueAttempts, Date.now()),
       pinResetByWait: pinResetByWaitOf(pinResetByWait),
       hydrated: true,
     });
@@ -346,7 +357,13 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
       const at = now();
       const state = await sharedAttempts(PIN_ATTEMPTS_KEY, get().pinAttempts, locked, at);
-      const result = await verifyPin({ pin, storedHash: get().parentPinHash, state, now: at, hasher, schedule });
+      // [OA] OA-D19: the PIN is checked against the stored hash, read again under the lock, so a tab left open after
+      // another tab changed or reset the PIN never accepts the old one. A read that fails or finds no hash keeps the
+      // one in memory (this tab's own write may not have landed yet).
+      const stored = await readPinHash();
+      const storedHash = !stored.failed && stored.hash !== null ? stored.hash : get().parentPinHash;
+      if (storedHash !== get().parentPinHash) set({ parentPinHash: storedHash });
+      const result = await verifyPin({ pin, storedHash, state, now: at, hasher, schedule });
       set({ pinAttempts: result.state });
       await saveAttempts(PIN_ATTEMPTS_KEY, result.state);
       return result;

@@ -51,7 +51,7 @@ export interface BackgroundRuleDeps {
 const browserDeps = (): BackgroundRuleDeps => ({
   subscribe: subscribeAppVisibility,
   now: () => Date.now(),
-  close: closeGrownUpSession,
+  close: () => closeGrownUpSession('background'),
   sessionOpen: () => {
     const { parentGateOpenedAt, lastPinVerifiedAt } = useUiStore.getState();
     return parentGateOpenedAt !== null || lastPinVerifiedAt !== null;

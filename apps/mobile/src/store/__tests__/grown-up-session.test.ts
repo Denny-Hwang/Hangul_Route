@@ -79,6 +79,27 @@ describe('every other change of the active learner closes the grown-up session t
   });
 });
 
+describe('[OA] closeGrownUpSession tells why and whether a session was open (OA-2 review round 2)', () => {
+  it('passes the reason (exit by default) and wasOpen read before the clear', () => {
+    const heard = vi.fn();
+    const off = onGrownUpSessionClosed(heard);
+    closeGrownUpSession('background');
+    closeGrownUpSession();
+    useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: 5 });
+    closeGrownUpSession('switch');
+    expect(heard.mock.calls).toEqual([[{ reason: 'background', wasOpen: true }], [{ reason: 'exit', wasOpen: false }], [{ reason: 'switch', wasOpen: true }]]);
+    off();
+  });
+
+  it('a change of learner closes with the reason switch', () => {
+    const heard = vi.fn();
+    const off = onGrownUpSessionClosed(heard);
+    useProfileStore.getState().setActive('bbbb2222');
+    expect(heard).toHaveBeenCalledWith({ reason: 'switch', wasOpen: true });
+    off();
+  });
+});
+
 describe('profile-store.setActive closes the grown-up session on a change', () => {
   it('closes on a different learner and restarts the session clock', () => {
     const before = Date.now();

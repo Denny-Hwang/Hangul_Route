@@ -31,6 +31,14 @@ vi.mock('../../../platform/telemetry', () => ({
   }),
 }));
 
+const handoff = vi.hoisted(() => ({ continued: [] as unknown[] }));
+vi.mock('../../../platform/grown-up-handoff', () => ({
+  openGrownUpArea: vi.fn(async () => 'opened'),
+  continueToGrownUpPage: vi.fn((target: unknown) => void handoff.continued.push(target)),
+  clearGrownUpTab: vi.fn(),
+}));
+
+import { flags } from '../../../config/flags';
 import { useAccountStore } from '../../../store/account-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useUiStore } from '../../../store/ui-store';
@@ -221,3 +229,69 @@ describe('[OA] PinEntry hand-backs and Change PIN', () => {
     }
   });
 });
+
+async function typeNew(root: ReactTestInstance, pin: string): Promise<void> {
+  for (const digit of pin) {
+    const [key] = buttonsNamed(root, a11y.pinDigit(Number(digit)));
+    await press(key as ReactTestInstance);
+  }
+  await press(buttonsNamed(root, buttons.next)[0] as ReactTestInstance);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+// [OA] OA-2 review round 2.
+describe('[OA] PinEntry: the creation pad, Change PIN, the kill switch and the no-PIN gate', () => {
+  it('CS-8: after a Rescue Code accepted during a pause the new-PIN pad is usable; the new PIN clears the pause', async () => {
+    const state = pauseFor(60 * 60_000, 5);
+    disk.set('account:pinAttempts', state);
+    useAccountStore.setState({ pinAttempts: state });
+    const { r, navigation } = await showWith({ next: 'ParentDashboard', mode: 'setup', via: 'code' });
+    expect(screenTexts(r.root)).not.toContain("Let's take a short break. Try again in 60 min.");
+    expect(byTestId(r.root, 'pin-pause-help')).toHaveLength(0);
+    expect(buttonsNamed(r.root, a11y.pinDigit(1))[0]?.props['aria-disabled']).not.toBe(true);
+    await typeNew(r.root, '5678');
+    await typeNew(r.root, '5678');
+    expect(useAccountStore.getState().parentPinHash).toBe('h:5678');
+    expect(useAccountStore.getState().pinAttempts).toEqual({ failures: [], lockedUntil: null, strikes: 0 });
+    expect(navigation.replace).toHaveBeenCalledWith('ParentDashboard');
+  });
+
+  it('OA-D21: Change PIN from the notice goes back to the dashboard that asked, and sends one gate event', async () => {
+    const { r, navigation } = await showWith({ next: 'ParentDashboard', mode: 'change', returnAfterSet: true });
+    await typePin(r.root, '1234');
+    await typeNew(r.root, '2468');
+    await typeNew(r.root, '2468');
+    expect(useAccountStore.getState().parentPinHash).toBe('h:2468');
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+    expect(tracked.filter((e) => e.name === 'parent.gate.opened')).toHaveLength(1);
+  });
+
+  it('the kill switch off (flat 30 s pause): no help line, however many pauses', async () => {
+    const original = flags.pinPauseStepsEnabled;
+    flags.pinPauseStepsEnabled = false;
+    try {
+      const state = pauseFor(30_000, 5);
+      disk.set('account:pinAttempts', state);
+      useAccountStore.setState({ pinAttempts: state });
+      const { r } = await show('ParentDashboard');
+      expect(screenTexts(r.root)).toContain("Let's take a short break. Try again in 30s.");
+      expect(byTestId(r.root, 'pin-pause-help')).toHaveLength(0);
+    } finally {
+      flags.pinPauseStepsEnabled = original;
+    }
+  });
+
+  it('section 15: the Grown-up area with no PIN stored sends parent.gate.opened via open on Continue', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    handoff.continued.length = 0;
+    const { r } = await showWith({ next: 'GrownUpArea', url: '/parent' });
+    await press(buttonsNamed(r.root, getMessages('en').caregiver.grownUpHome.continue.cta)[0] as ReactTestInstance);
+    expect(handoff.continued).toEqual(['/parent']);
+    const opened = tracked.filter((e) => e.name === 'parent.gate.opened');
+    expect(opened).toHaveLength(1);
+    expect(opened[0]?.payload).toMatchObject({ dest: 'use', via: 'open' });
+  });
+});
+

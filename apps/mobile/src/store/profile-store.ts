@@ -82,7 +82,7 @@ function commitSet(
   const changed = closesSession(prevActiveId, next.activeId);
   set(changed ? { ...next, activeSince: now } : next);
   persist(next);
-  if (changed) closeGrownUpSession();
+  if (changed) closeGrownUpSession('switch');
 }
 
 const clock: Clock = {

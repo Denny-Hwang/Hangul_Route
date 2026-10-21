@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-const closedListeners = vi.hoisted(() => new Set<() => void>());
+type Closed = { reason: 'switch' | 'background' | 'exit'; wasOpen: boolean };
+const closedListeners = vi.hoisted(() => new Set<(closed: Closed) => void>());
 vi.mock('../../store/grown-up-session', () => ({
   closeGrownUpSession: vi.fn(),
-  onGrownUpSessionClosed: (listener: () => void) => {
+  onGrownUpSessionClosed: (listener: (closed: Closed) => void) => {
     closedListeners.add(listener);
     return () => closedListeners.delete(listener);
   },
@@ -161,16 +162,28 @@ describe('watchGrownUpAreaExit with the session (CS-1)', () => {
   });
 });
 
-function leaveNav(routes: { name: string; params?: unknown; key?: string }[]): AreaLeaveTarget & { dispatched: ResetAction[] } {
+function leaveNav(
+  start: { name: string; params?: unknown; key?: string }[],
+): AreaLeaveTarget & { dispatched: ResetAction[]; replaceFront: (route: { name: string; params?: unknown; key?: string }) => void } {
   const dispatched: ResetAction[] = [];
+  let routes = start;
   return {
     dispatched,
     getCurrentRoute: () => routes[routes.length - 1],
     getRootState: () => ({ routes }),
     dispatch: (action) => {
       dispatched.push(action);
+      routes = action.payload.routes;
+    },
+    replaceFront: (route) => {
+      routes = [...routes.slice(0, -1), route];
     },
   };
+}
+
+/** Every listener hears one close; an open session that ends for `reason` unless told otherwise. */
+function fire(closed: Partial<Closed> = {}): void {
+  for (const l of [...closedListeners]) l({ reason: 'exit', wasOpen: true, ...closed });
 }
 
 // [OA] OA-D16, CS-14: a session that ends with a Grown-up area page in front leaves it for the PIN screen.
@@ -179,7 +192,7 @@ describe('leaveGrownUpAreaOnClose', () => {
     const nav = leaveNav([{ name: 'Main', key: 'm' }, { name: 'Profile', key: 'p' }, { name: 'ParentDashboard', key: 'd' }, { name: 'LearnerReport', key: 'r' }]);
     opensWithoutPin.value = false;
     const stop = leaveGrownUpAreaOnClose(nav);
-    for (const l of [...closedListeners]) l();
+    fire();
     expect(nav.dispatched).toEqual([
       {
         type: 'RESET',
@@ -193,27 +206,100 @@ describe('leaveGrownUpAreaOnClose', () => {
   it('also from a PIN screen over the area; a stack that starts in the area keeps the learner home', () => {
     const nav = leaveNav([{ name: 'ParentDashboard' }, { name: 'PinEntry', params: { next: 'LectureMode' } }]);
     const stop = leaveGrownUpAreaOnClose(nav, () => false);
-    for (const l of [...closedListeners]) l();
+    fire();
     expect(nav.dispatched[0]?.payload.routes).toEqual([{ name: 'Main' }, { name: 'PinEntry', params: { next: 'ParentDashboard' } }]);
     stop();
   });
 
-  it('changes nothing with a learner screen in front, with no area route, or on a device whose gate needs no PIN', () => {
-    const learner = leaveNav([{ name: 'Main' }, { name: 'ParentDashboard' }, { name: 'CardDetail' }]);
+  it('changes nothing with no area route on the stack, or on a device whose gate needs no PIN', () => {
+    const learner = leaveNav([{ name: 'Main' }, { name: 'CardDetail' }]);
     const noArea = leaveNav([{ name: 'Main' }, { name: 'PinEntry', params: { next: 'Billing' } }]);
     const noPin = leaveNav([{ name: 'Main' }, { name: 'ParentDashboard' }]);
     const stops = [leaveGrownUpAreaOnClose(learner, () => false), leaveGrownUpAreaOnClose(noArea, () => false), leaveGrownUpAreaOnClose(noPin, () => true)];
-    for (const l of [...closedListeners]) l();
+    fire();
     expect(learner.dispatched).toEqual([]);
     expect(noArea.dispatched).toEqual([]);
     expect(noPin.dispatched).toEqual([]);
     for (const stop of stops) stop();
     const empty: AreaLeaveTarget = { getCurrentRoute: () => undefined, getRootState: () => undefined, dispatch: vi.fn() };
     const stop = leaveGrownUpAreaOnClose(empty, () => false, (l) => {
-      l();
+      l({ reason: 'exit', wasOpen: true });
       return () => undefined;
     });
     expect(empty.dispatch).not.toHaveBeenCalled();
     stop();
+  });
+
+  // [OA] OA-2 review round 2 (CS-1, CS-15): a learner screen in front of Grown-up area routes.
+  it('strips the area routes under a learner screen in front and keeps that screen, so Back never lands in the area', () => {
+    const nav = leaveNav([{ name: 'Main', key: 'm' }, { name: 'Profile', key: 'p' }, { name: 'ParentDashboard', key: 'd' }, { name: 'Placement', key: 'q', params: { source: 'parent' } }]);
+    const stop = leaveGrownUpAreaOnClose(nav, () => false);
+    fire();
+    expect(nav.dispatched).toEqual([
+      { type: 'RESET', payload: { index: 2, routes: [{ name: 'Main', key: 'm' }, { name: 'Profile', key: 'p' }, { name: 'Placement', key: 'q', params: { source: 'parent' } }] } },
+    ]);
+    stop();
+  });
+
+  it('acts only when a session was open: a learner chosen by a restore on a fresh device changes no route', () => {
+    const nav = leaveNav([{ name: 'Onboarding', key: 'o' }, { name: 'Restore', key: 'r' }]);
+    const deferred: Array<() => void> = [];
+    const stop = leaveGrownUpAreaOnClose(nav, () => false, undefined, (task) => deferred.push(task));
+    fire({ reason: 'switch', wasOpen: false });
+    fire({ reason: 'exit', wasOpen: false });
+    for (const task of deferred) task();
+    expect(deferred).toEqual([]);
+    expect(nav.dispatched).toEqual([]);
+    stop();
+  });
+
+  it('a change of learner acts after the switching screen navigated: a retake from the Placement report opens the check', () => {
+    const nav = leaveNav([{ name: 'Main', key: 'm' }, { name: 'ParentDashboard', key: 'd' }, { name: 'PlacementReport', key: 'r', params: { profileId: 'b' } }]);
+    const deferred: Array<() => void> = [];
+    const stop = leaveGrownUpAreaOnClose(nav, () => false, undefined, (task) => deferred.push(task));
+    fire({ reason: 'switch' });
+    expect(nav.dispatched).toEqual([]);
+    // PlacementReportScreen.retake: setActive (the close above), then replace('Placement') in the same turn.
+    nav.replaceFront({ name: 'Placement', key: 'q', params: { source: 'parent' } });
+    for (const task of deferred) task();
+    expect(nav.dispatched).toEqual([{ type: 'RESET', payload: { index: 1, routes: [{ name: 'Main', key: 'm' }, { name: 'Placement', key: 'q', params: { source: 'parent' } }] } }]);
+    stop();
+  });
+
+  it('a change of learner on a Grown-up area page that stays in front still asks the PIN for the area', () => {
+    const nav = leaveNav([{ name: 'Main', key: 'm' }, { name: 'ParentDashboard', key: 'd' }]);
+    const deferred: Array<() => void> = [];
+    const stop = leaveGrownUpAreaOnClose(nav, () => false, undefined, (task) => deferred.push(task));
+    fire({ reason: 'switch' });
+    for (const task of deferred) task();
+    expect(nav.dispatched).toEqual([{ type: 'RESET', payload: { index: 1, routes: [{ name: 'Main', key: 'm' }, { name: 'PinEntry', params: { next: 'ParentDashboard' } }] } }]);
+    stop();
+  });
+
+  it('Add a learner: onboarding in front after the switch keeps its screen; the area under it goes', () => {
+    const nav = leaveNav([{ name: 'Main', key: 'm' }, { name: 'ParentDashboard', key: 'd' }, { name: 'Onboarding', key: 'o' }]);
+    const at = nav.getCurrentRoute;
+    nav.getCurrentRoute = () => ({ ...at()!, name: 'PlacementInvite' });
+    const deferred: Array<() => void> = [];
+    const stop = leaveGrownUpAreaOnClose(nav, () => false, undefined, (task) => deferred.push(task));
+    fire({ reason: 'switch' });
+    for (const task of deferred) task();
+    expect(nav.dispatched).toEqual([{ type: 'RESET', payload: { index: 1, routes: [{ name: 'Main', key: 'm' }, { name: 'Onboarding', key: 'o' }] } }]);
+    stop();
+  });
+
+  it('the default defer waits one turn', async () => {
+    vi.useFakeTimers();
+    try {
+      const nav = leaveNav([{ name: 'Main', key: 'm' }, { name: 'ParentDashboard', key: 'd' }]);
+      const stop = leaveGrownUpAreaOnClose(nav, () => false);
+      fire({ reason: 'switch' });
+      expect(nav.dispatched).toEqual([]);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(nav.dispatched).toHaveLength(1);
+      stop();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

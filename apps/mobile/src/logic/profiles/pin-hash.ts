@@ -10,9 +10,16 @@
 import { PIN_PAUSE_STEPS_MS, PIN_STRIKE_DECAY_MS } from '@hangul-route/content-schema';
 
 export const PIN_LENGTH = 4;
-/** Wrong attempts tolerated inside ATTEMPT_WINDOW_MS before a cooldown. */
+/** Wrong attempts tolerated inside the round window before a pause. */
 export const MAX_ATTEMPTS = 5;
+/** The round window of the `flat` schedule (the kill switch's value): 5 misses within 60 s, as before OA-2. */
 export const ATTEMPT_WINDOW_MS = 60_000;
+/**
+ * [OA] The round window of the `steps` schedule (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3, OA-2 review round 2):
+ * 5 misses within 24 hours with no correct PIN in between, so a slow guesser (4 misses a minute) is paused like a fast
+ * one and the G4 worst case (about 83 days) holds at any pace. A correct PIN clears the misses at once.
+ */
+export const PIN_ROUND_WINDOW_MS = PIN_STRIKE_DECAY_MS;
 /** The flat pause of the `flat` schedule (the kill switch's value), and the first step of `PIN_PAUSE_STEPS_MS`. */
 export const COOLDOWN_MS = 30_000;
 
@@ -27,7 +34,8 @@ export interface PinHasher {
  *
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3 (OA-D7): `strikes` counts the pauses so far (0 when absent, as
  * in a state an older bundle wrote) and `lastMissAt` is the last miss (absent when none). Each round of
- * `MAX_ATTEMPTS` misses within `ATTEMPT_WINDOW_MS` starts the pause `PIN_PAUSE_STEPS_MS[min(strikes, 4)]`.
+ * `MAX_ATTEMPTS` misses within `PIN_ROUND_WINDOW_MS` (24 hours; 60 s under the `flat` schedule) starts the pause
+ * `PIN_PAUSE_STEPS_MS[min(strikes, 4)]`.
  */
 export interface AttemptState {
   /** Epoch ms of recent failures, oldest first, pruned to the window. */
@@ -56,14 +64,17 @@ const isTime = (v: unknown): v is number => typeof v === 'number' && Number.isFi
 
 /**
  * [OA] A stored attempt state, read leniently: an older bundle's state without `strikes` reads as 0 strikes, and a
- * value that is not an attempt state at all reads as the initial state (a damaged record never blocks the pad
- * for good, and never shortens a pause it can still read).
+ * value that is not an attempt state at all reads as the initial state. With `bound` (the clock and the longest
+ * pause the counter can start) a pause that ends later than `now + maxPauseMs` (a damaged record, or a clock that
+ * was ahead and was set back) is cut to that, so a record never blocks the pad for good; a pause it can still read
+ * is never shortened below what the schedule could have started.
  */
-export function normalizeAttemptState(raw: unknown): AttemptState {
+export function normalizeAttemptState(raw: unknown, bound?: { now: number; maxPauseMs: number }): AttemptState {
   if (typeof raw !== 'object' || raw === null) return INITIAL_ATTEMPT_STATE;
   const r = raw as Record<string, unknown>;
   const failures = Array.isArray(r.failures) ? r.failures.filter(isTime).sort((a, b) => a - b) : [];
-  const lockedUntil = isTime(r.lockedUntil) ? r.lockedUntil : null;
+  const stored = isTime(r.lockedUntil) ? r.lockedUntil : null;
+  const lockedUntil = stored === null || bound === undefined ? stored : Math.min(stored, bound.now + bound.maxPauseMs);
   const strikes = typeof r.strikes === 'number' && Number.isInteger(r.strikes) && r.strikes > 0 ? r.strikes : 0;
   return { failures, lockedUntil, strikes, ...(isTime(r.lastMissAt) ? { lastMissAt: r.lastMissAt } : {}) };
 }
@@ -78,6 +89,14 @@ export function effectiveStrikes(state: AttemptState, now: number): number {
   const quiet = now - state.lastMissAt;
   if (quiet < PIN_STRIKE_DECAY_MS) return strikes;
   return Math.max(0, strikes - Math.floor(quiet / PIN_STRIKE_DECAY_MS));
+}
+
+/** [OA] The longest pause the PIN pad can start (the last step), the bound for a stored `lockedUntil`. */
+export const PIN_MAX_PAUSE_MS: number = PIN_PAUSE_STEPS_MS[PIN_PAUSE_STEPS_MS.length - 1]!;
+
+/** [OA] The round window of `schedule`: 24 hours for `steps`, 60 s for `flat`. */
+export function roundWindowMs(schedule: PauseSchedule = 'steps'): number {
+  return schedule === 'flat' ? ATTEMPT_WINDOW_MS : PIN_ROUND_WINDOW_MS;
 }
 
 /** [OA] The pause the next round starts under `schedule`, given the strikes so far. */
@@ -96,9 +115,9 @@ export function isLocked(state: AttemptState, now: number): boolean {
 }
 
 /** Attempts left before the next failure triggers a cooldown. */
-export function attemptsRemaining(state: AttemptState, now: number): number {
+export function attemptsRemaining(state: AttemptState, now: number, schedule: PauseSchedule = 'steps'): number {
   if (isLocked(state, now)) return 0;
-  return Math.max(0, MAX_ATTEMPTS - prune(state.failures, now).length);
+  return Math.max(0, MAX_ATTEMPTS - prune(state.failures, now, roundWindowMs(schedule)).length);
 }
 
 function prune(failures: number[], now: number, windowMs = ATTEMPT_WINDOW_MS): number[] {
@@ -112,18 +131,20 @@ export interface MissResult {
 }
 
 /**
- * [OA] Section 8.3: the miss is recorded; on the `MAX_ATTEMPTS`th miss inside the window a pause starts of
- * `pauseMsFor(strikes)` and `strikes` grows by one (the decayed count is the base). `step` is the pause's place in
- * `PIN_PAUSE_STEPS_MS` (1 to 5; always 1 under the `flat` schedule), the `pin.paused` payload.
+ * [OA] Section 8.3: the miss is recorded; on the `MAX_ATTEMPTS`th miss inside the round window (`roundWindowMs`) a
+ * pause starts of `pauseMsFor(strikes)` and `strikes` grows by one (the decayed count is the base). `step` is the
+ * pause's place in `PIN_PAUSE_STEPS_MS` (1 to 5), the `pin.paused` payload. The `flat` schedule (the kill switch off)
+ * is the pause of before: 60 s window, always 30 s, step 1, and `strikes` never grows.
  */
 export function registerMiss(state: AttemptState, now: number, schedule: PauseSchedule = 'steps'): MissResult {
   const strikes = effectiveStrikes(state, now);
-  const failures = [...prune(state.failures, now), now];
+  const failures = [...prune(state.failures, now, roundWindowMs(schedule)), now];
   if (failures.length >= MAX_ATTEMPTS) {
     // The pause starts; the window is consumed so the next round starts clean.
     const ms = pauseMsFor(strikes, schedule);
     const step = schedule === 'flat' ? 1 : Math.min(strikes, PIN_PAUSE_STEPS_MS.length - 1) + 1;
-    return { state: { failures: [], lockedUntil: now + ms, strikes: strikes + 1, lastMissAt: now }, paused: { step, ms } };
+    const nextStrikes = schedule === 'flat' ? strikes : strikes + 1;
+    return { state: { failures: [], lockedUntil: now + ms, strikes: nextStrikes, lastMissAt: now }, paused: { step, ms } };
   }
   return { state: { failures, lockedUntil: null, strikes, lastMissAt: now }, paused: null };
 }

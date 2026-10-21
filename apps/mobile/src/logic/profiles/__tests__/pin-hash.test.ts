@@ -5,6 +5,8 @@ import {
   COOLDOWN_MS,
   INITIAL_ATTEMPT_STATE,
   MAX_ATTEMPTS,
+  PIN_MAX_PAUSE_MS,
+  PIN_ROUND_WINDOW_MS,
   attemptsRemaining,
   cooldownRemainingMs,
   createPinHash,
@@ -31,10 +33,10 @@ const fakeHasher: PinHasher = {
 
 const T0 = 1_700_000_000_000;
 
-function failNTimes(n: number, startedAt = T0, stepMs = 100): AttemptState {
+function failNTimes(n: number, startedAt = T0, stepMs = 100, schedule: 'steps' | 'flat' = 'steps'): AttemptState {
   let state = INITIAL_ATTEMPT_STATE;
   for (let i = 0; i < n; i += 1) {
-    state = registerFailure(state, startedAt + i * stepMs);
+    state = registerFailure(state, startedAt + i * stepMs, schedule);
   }
   return state;
 }
@@ -81,26 +83,39 @@ describe('attempt/cooldown state machine', () => {
     expect(cooldownRemainingMs(state, lockedAt + COOLDOWN_MS)).toBe(0);
   });
 
-  it('failures older than the 60s window do not count toward a lockout', () => {
+  it('flat schedule (the kill switch off): failures older than the 60s window do not count toward a lockout', () => {
     // 4 failures, then one more after the whole earlier burst has aged out.
-    let state = failNTimes(MAX_ATTEMPTS - 1);
+    let state = failNTimes(MAX_ATTEMPTS - 1, T0, 100, 'flat');
     const lastFailure = T0 + (MAX_ATTEMPTS - 2) * 100;
     const later = lastFailure + ATTEMPT_WINDOW_MS + 1;
-    state = registerFailure(state, later);
+    state = registerFailure(state, later, 'flat');
     expect(isLocked(state, later)).toBe(false);
-    expect(attemptsRemaining(state, later)).toBe(MAX_ATTEMPTS - 1);
+    expect(attemptsRemaining(state, later, 'flat')).toBe(MAX_ATTEMPTS - 1);
   });
 
-  it('ages failures out individually — the window slides, it does not reset', () => {
+  it('flat schedule: ages failures out individually — the window slides, it does not reset', () => {
     // 4 failures spread 20s apart, then a 5th at 80s. A 5th failure would lock
     // out if the window reset — but the oldest two have aged past 60s, so only
     // three are live and entry stays open.
-    let state = failNTimes(MAX_ATTEMPTS - 1, T0, 20_000);
+    let state = failNTimes(MAX_ATTEMPTS - 1, T0, 20_000, 'flat');
     const later = T0 + 4 * 20_000;
-    state = registerFailure(state, later);
+    state = registerFailure(state, later, 'flat');
     expect(isLocked(state, later)).toBe(false);
     expect(state.failures).toEqual([T0 + 40_000, T0 + 60_000, later]);
-    expect(attemptsRemaining(state, later)).toBe(2);
+    expect(attemptsRemaining(state, later, 'flat')).toBe(2);
+  });
+
+  it('[OA] steps schedule: misses count for 24 hours, so a slow pace still ends a round', () => {
+    let state = failNTimes(MAX_ATTEMPTS - 1, T0, 20_000);
+    const later = T0 + 4 * 20_000;
+    expect(attemptsRemaining(state, later)).toBe(1);
+    state = registerFailure(state, later);
+    expect(isLocked(state, later)).toBe(true);
+    // A miss older than the 24-hour round window ages out.
+    const old = failNTimes(MAX_ATTEMPTS - 1, T0, 100);
+    const dayLater = T0 + PIN_ROUND_WINDOW_MS + 1_000;
+    expect(attemptsRemaining(old, dayLater)).toBe(MAX_ATTEMPTS);
+    expect(isLocked(registerFailure(old, dayLater), dayLater)).toBe(false);
   });
 
   it('registerSuccess clears failures and any cooldown', () => {
@@ -257,6 +272,21 @@ describe('[OA] pause steps (OA-D7)', () => {
       state = result.state;
       at = state.lockedUntil!;
     }
+    // [OA] OA-2 review round 2: the pause of before counts no strikes, so nothing of the steps shows with it off.
+    expect(state.strikes).toBe(0);
+  });
+
+  it('[OA] slow guessing (4 misses every 59 s) is paused like fast guessing: all 10,000 PINs take at least 30 days', () => {
+    let state = INITIAL_ATTEMPT_STATE;
+    let at = T0;
+    for (let i = 0; i < 10_000; i += 1) {
+      state = registerFailure(state, at);
+      // Four misses in each 59 s, then wait for any pause that started.
+      at = Math.max(at + (59_000 / 4), state.lockedUntil ?? 0);
+    }
+    const days = (at - T0) / (24 * 3_600_000);
+    expect(days).toBeGreaterThanOrEqual(30);
+    expect(days).toBeGreaterThanOrEqual(83);
   });
 
   it('worst case on the pad, computed from the constants: 2,000 rounds of 5 take about 83 days (at least 30)', () => {
@@ -326,6 +356,12 @@ describe('[OA] stored state: legacy and damaged values', () => {
   it('keeps strikes and lastMissAt; drops anything that is not an attempt state', () => {
     expect(normalizeAttemptState({ failures: [T0], lockedUntil: null, strikes: 3, lastMissAt: T0 })).toEqual({ failures: [T0], lockedUntil: null, strikes: 3, lastMissAt: T0 });
     for (const junk of [null, undefined, 'x', 42, []]) expect(normalizeAttemptState(junk)).toEqual(INITIAL_ATTEMPT_STATE);
+    // [OA] OA-2 review round 2: a pause far in the future (a clock set back, a damaged record) is cut to the longest step.
+    expect(normalizeAttemptState({ failures: [], lockedUntil: T0 + 365 * 24 * 3_600_000, strikes: 5 }, { now: T0, maxPauseMs: PIN_MAX_PAUSE_MS }).lockedUntil).toBe(
+      T0 + PIN_MAX_PAUSE_MS,
+    );
+    expect(normalizeAttemptState({ failures: [], lockedUntil: T0 + 1000, strikes: 1 }, { now: T0, maxPauseMs: PIN_MAX_PAUSE_MS }).lockedUntil).toBe(T0 + 1000);
+    expect(PIN_MAX_PAUSE_MS).toBe(PIN_PAUSE_STEPS_MS[PIN_PAUSE_STEPS_MS.length - 1]);
     expect(normalizeAttemptState({ failures: ['a', T0, Number.NaN], lockedUntil: 'soon', strikes: -2, lastMissAt: 'x' })).toEqual({ failures: [T0], lockedUntil: null, strikes: 0 });
     expect(normalizeAttemptState({ failures: 'no', lockedUntil: null, strikes: 1.5 })).toEqual({ failures: [], lockedUntil: null, strikes: 0 });
   });
