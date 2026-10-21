@@ -436,18 +436,44 @@ describe('closing lines, footer groups, the 404 links and per-page metadata', ()
   });
 
   it('404 links', () => {
-    expect(l.notFound).toEqual({ body: 'We could not find this page.', home: 'Go to the home page', start: 'Start learning' });
+    // AMENDMENTS-SITE-NEWUSER SN-2: the page's own h1 and <title>, and a line that says why and what to do.
+    expect(l.notFound).toEqual({
+      body: 'The link may be old. Try the home page or start learning.',
+      home: 'Go to the home page',
+      start: 'Start learning',
+      title: 'Page not found',
+    });
+    expect(getMessages('es').landing.notFound.title).toBe('No encontramos esta página');
+    expect(getMessages('ko').landing.notFound.title).toBe('페이지를 찾을 수 없어요');
   });
 
-  it('per-page metadata for the three persona pages', () => {
-    expect(Object.keys(l.meta.pages)).toEqual(['learners', 'parents', 'teachers']);
+  it('per-page metadata for the three persona pages, then About, the legal pages and the notices (SN-2)', () => {
+    expect(Object.keys(l.meta.pages)).toEqual(['learners', 'parents', 'teachers', 'about', 'privacy', 'terms', 'licenses']);
     expect(l.meta.pages.learners.title).toBe('For learners — Hangul Route');
     expect(l.meta.pages.parents.title).toBe('For parents and caregivers — Hangul Route');
     expect(l.meta.pages.teachers.title).toBe('For teachers — Hangul Route');
-    for (const page of Object.values(l.meta.pages)) {
-      expect(page.description.length).toBeGreaterThan(40);
+    expect(l.meta.pages.about).toEqual({ title: 'About Hangul Route', description: 'Who makes Hangul Route and the promises we keep.' });
+    expect(l.meta.pages.privacy).toEqual({
+      title: 'Privacy Policy — Hangul Route',
+      description: 'What Hangul Route collects, who can see it, and how to delete it.',
+    });
+    expect(l.meta.pages.terms).toEqual({ title: 'Terms of Service — Hangul Route', description: 'The rules for using Hangul Route.' });
+    expect(l.meta.pages.licenses).toEqual({ title: 'Open-source notices — Hangul Route', description: 'The open-source software Hangul Route uses.' });
+    for (const [key, page] of Object.entries(l.meta.pages)) {
+      // The persona pages sell; the other four only say what the page is.
+      if (['learners', 'parents', 'teachers'].includes(key)) expect(page.description.length, key).toBeGreaterThan(40);
       // Search snippets are cut near 160 characters.
-      expect(page.description.length).toBeLessThanOrEqual(160);
+      expect(page.description.length, key).toBeLessThanOrEqual(160);
+    }
+  });
+
+  it.each(['es', 'ko'] as const)('%s: its own title and description for every page (SN-2)', (locale) => {
+    const pages = getMessages(locale).landing.meta.pages;
+    for (const [key, page] of Object.entries(pages)) {
+      const english = l.meta.pages[key as keyof typeof l.meta.pages];
+      expect(page.title, key).not.toBe(english.title);
+      expect(page.description, key).not.toBe(english.description);
+      expect(page.description.length, key).toBeLessThanOrEqual(160);
     }
   });
 

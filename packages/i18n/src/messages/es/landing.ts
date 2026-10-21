@@ -38,6 +38,22 @@ export const landing = {
         title: 'Para docentes: Hangul Route',
         description: 'Los estudiantes se unen con un código de clase, sin correos ni cuentas de estudiantes. Planifica la semana y mira quién practicó. Nunca un ranking.',
       },
+      about: {
+        title: 'Acerca de Hangul Route',
+        description: 'Quién hace Hangul Route y las promesas que cumplimos.',
+      },
+      privacy: {
+        title: 'Política de privacidad: Hangul Route',
+        description: 'Qué recoge Hangul Route, quién puede verlo y cómo borrarlo.',
+      },
+      terms: {
+        title: 'Términos del servicio: Hangul Route',
+        description: 'Las reglas para usar Hangul Route.',
+      },
+      licenses: {
+        title: 'Avisos de código abierto: Hangul Route',
+        description: 'El software de código abierto que usa Hangul Route.',
+      },
     },
   },
   brand: {
@@ -340,9 +356,10 @@ export const landing = {
     where: { app: 'App', web: 'Sitio web', server: 'Servidor', ios: 'App de iOS' },
   },
   notFound: {
-    body: 'No encontramos esta página.',
+    body: 'Puede que el enlace sea antiguo. Prueba la página de inicio o empieza a aprender.',
     home: 'Ir a la página de inicio',
     start: 'Empezar a aprender',
+    title: 'No encontramos esta página',
   },
   localeBanner: {
     label: 'Sugerencia de idioma',

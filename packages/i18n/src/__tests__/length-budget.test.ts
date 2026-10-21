@@ -88,6 +88,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.lecture.card.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the link\'s accessible description, read aloud and never drawn',
   // AMENDMENTS-LECTURE-V2 LV-6 (section 12.4): the learner app's Lecture mode card buttons, which open the presenter in a new tab.
   'caregiver.lecture.opensTab': '"Se abre en una pestaña nueva" (28) against "Opens in a new tab" (18), one letter over: the buttons\' accessible description, read aloud and never drawn (the same words as console.lecture.card.opensTab)',
+  // AMENDMENTS-SITE-NEWUSER SN-2: the 404 page's h1 and <title>.
+  'landing.notFound.title': '"No encontramos esta página" (26) against "Page not found" (14): Spanish says it as a sentence, as the old 404 line did; a page h1 that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

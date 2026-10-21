@@ -1,4 +1,11 @@
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
+import {
+  FAMILY_LIFETIME_LEARNERS,
+  FREE_CLASS_STUDENT_CAP,
+  GROUP_LICENSE_LEARNERS,
+  SCHOOL_ADMIN_CAP,
+  SCHOOL_LEARNER_CAP,
+  SCHOOL_LICENSE_TEACHERS,
+} from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../locales';
 import { en } from '../messages/en';
@@ -56,11 +63,16 @@ describe('Terms: what each plan holds (landing.legal.terms.sections.billing.para
 
   it('is the section 4 paragraph, word for word, with the numbers from the constants', () => {
     expect(sizes).toBe(
-      'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.',
+      'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school. A school owner can also invite up to 2 administrators.',
     );
     expect(sizes).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
     expect(sizes).toContain(`up to ${GROUP_LICENSE_LEARNERS} students`);
     expect(sizes).toContain(`up to ${SCHOOL_LICENSE_TEACHERS} teachers`);
+    // AMENDMENTS-SITE-NEWUSER SN-2: what a free space holds and the school administrators, from the same constants.
+    expect(sizes).toContain(
+      `Free spaces hold up to ${FAMILY_LIFETIME_LEARNERS} learners in a family, ${FREE_CLASS_STUDENT_CAP} students in a class and ${SCHOOL_LEARNER_CAP} students in a school.`,
+    );
+    expect(sizes).toContain(`A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`);
   });
 
   it('names the plans as the billing page does', () => {

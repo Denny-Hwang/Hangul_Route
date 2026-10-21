@@ -42,6 +42,22 @@ export const landing = {
         title: '선생님을 위해 — Hangul Route',
         description: '학생은 반 코드로 참여해요. 학생 이메일이나 계정은 필요 없어요. 한 주를 계획하고 누가 연습했는지 봐요. 순위는 절대 없어요.',
       },
+      about: {
+        title: 'Hangul Route 소개',
+        description: 'Hangul Route를 누가 만드는지, 그리고 우리가 지키는 약속을 알려 드려요.',
+      },
+      privacy: {
+        title: '개인정보 처리방침 — Hangul Route',
+        description: 'Hangul Route가 무엇을 모으는지, 누가 볼 수 있는지, 어떻게 지우는지 알려 드려요.',
+      },
+      terms: {
+        title: '이용약관 — Hangul Route',
+        description: 'Hangul Route를 쓸 때 지킬 규칙이에요.',
+      },
+      licenses: {
+        title: '오픈소스 라이선스 — Hangul Route',
+        description: 'Hangul Route가 쓰는 오픈소스 소프트웨어예요.',
+      },
     },
   },
   brand: {
@@ -340,9 +356,10 @@ export const landing = {
     where: { app: '앱', web: '웹사이트', server: '서버', ios: 'iOS 앱' },
   },
   notFound: {
-    body: '이 페이지를 찾을 수 없어요.',
+    body: '오래된 링크일 수 있어요. 홈으로 가거나 배우기를 시작해 보세요.',
     home: '홈으로 가기',
     start: '배우기 시작하기',
+    title: '페이지를 찾을 수 없어요',
   },
   localeBanner: {
     label: '언어 추천',

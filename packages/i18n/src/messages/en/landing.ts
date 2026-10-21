@@ -19,7 +19,14 @@
  * - The launch-news consent line (`waitlist.consentLead` + `contactLink` + `privacyLink`) must stay
  *   in step with CONSENT_TEXT_VERSION on the API.
  */
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
+import {
+  FAMILY_LIFETIME_LEARNERS,
+  FREE_CLASS_STUDENT_CAP,
+  GROUP_LICENSE_LEARNERS,
+  SCHOOL_ADMIN_CAP,
+  SCHOOL_LEARNER_CAP,
+  SCHOOL_LICENSE_TEACHERS,
+} from '@hangul-route/content-schema';
 import { plural } from '../../plural';
 
 /**
@@ -77,6 +84,23 @@ export const landing = {
       teachers: {
         title: 'For teachers — Hangul Route',
         description: 'Students join with a class code, with no student emails or accounts. Plan the week and see who practised. Never a ranking.',
+      },
+      /** AMENDMENTS-SITE-NEWUSER SN-2: About, the legal pages and the open-source notices get their own title and description too. */
+      about: {
+        title: 'About Hangul Route',
+        description: 'Who makes Hangul Route and the promises we keep.',
+      },
+      privacy: {
+        title: 'Privacy Policy — Hangul Route',
+        description: 'What Hangul Route collects, who can see it, and how to delete it.',
+      },
+      terms: {
+        title: 'Terms of Service — Hangul Route',
+        description: 'The rules for using Hangul Route.',
+      },
+      licenses: {
+        title: 'Open-source notices — Hangul Route',
+        description: 'The open-source software Hangul Route uses.',
       },
     },
   },
@@ -474,8 +498,12 @@ export const landing = {
         collect: {
           heading: 'What we collect',
           bullets: {
+            /**
+             * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level, and each of its
+             * answers goes up as a `placement.item_answered` usage event (question id, outcome, sound guide, time).
+             */
             profile: ({ levels }: LegalValues) =>
-              `Learner profile: a display nickname and a starting level the learner picks (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.`,
+              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, whether it was right, and how long it took. A real name is optional and only stored if a parent enters it.`,
             progress:
               "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
             /**
@@ -502,8 +530,9 @@ export const landing = {
              * no such history.
              */
             schoolAdmins:
-              "A school's owner can add up to two administrators with an invite link. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
-            contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
+              "A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
+            /** SN-2: parents, teachers and school administrators all sign in with an email (F-APP-001). */
+            contact: 'Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in, receipts, and account recovery.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },
         },
@@ -512,7 +541,8 @@ export const landing = {
           bullets: {
             ads: 'No advertising identifiers and no third-party ad tracking — ever.',
             location: 'No precise location.',
-            media: 'No contacts, photos, or microphone audio leaves the device. Voice mini-games process speech on-device and discard it.',
+            /** SN-2: no voice mini-game ships (voiceEchoEnabled is false) and the site promises no speaking. */
+            media: 'No contacts, photos, or microphone audio leave the device. The app does not record your voice.',
             profiles: 'No behavioral profiles sold or shared for marketing.',
           },
         },
@@ -590,7 +620,8 @@ export const landing = {
         changes: {
           heading: 'Changes to this policy',
           paragraphs: {
-            p1: 'If we make a material change, we will notify parents in the app or by email before it takes effect. The date below shows the current version.',
+            /** SN-2: the effective date renders at the top of the page (PrivacyPage.tsx). */
+            p1: 'If we make a material change, we will notify parents in the app or by email before it takes effect. The date at the top shows the current version.',
           },
         },
         contact: {
@@ -643,7 +674,7 @@ export const landing = {
              * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, the numbers from the
              * content-schema constants. Must ship before Stripe Live is ever enabled.
              */
-            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.`,
+            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Free spaces hold up to ${FAMILY_LIFETIME_LEARNERS} learners in a family, ${FREE_CLASS_STUDENT_CAP} students in a class and ${SCHOOL_LEARNER_CAP} students in a school. A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`,
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {
@@ -703,7 +734,8 @@ export const landing = {
         changes: {
           heading: 'Changes to these terms',
           paragraphs: {
-            p1: 'If we make material changes, we will notify parents in the app or by email before they take effect. The date below shows the current version.',
+            /** SN-2: the effective date renders at the top of the page (TermsPage.tsx). */
+            p1: 'If we make material changes, we will notify parents in the app or by email before they take effect. The date at the top shows the current version.',
           },
         },
         contact: {
@@ -733,11 +765,15 @@ export const landing = {
     usedIn: 'Used in',
     where: { app: 'App', web: 'Website', server: 'Server', ios: 'iOS app' },
   },
-  /** Links on the exported 404 page (F-SITE-002 §3.7); English document, as today. */
+  /**
+   * The exported 404 pages (F-SITE-002 §3.7): `out/404.html` in English and, since AMENDMENTS-SITE-NEWUSER SN-2,
+   * `out/es/404.html` and `out/ko/404.html` in their locale. `title` is the heading and the `<title>`.
+   */
   notFound: {
-    body: 'We could not find this page.',
+    body: 'The link may be old. Try the home page or start learning.',
     home: 'Go to the home page',
     start: 'Start learning',
+    title: 'Page not found',
   },
   /**
    * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): shown when the browser prefers a

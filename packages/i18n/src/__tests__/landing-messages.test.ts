@@ -78,7 +78,8 @@ describe('landing: sentences that take a value render the former text', () => {
   it('privacy and terms: the address and the level labels are passed in', () => {
     const values = { email: 'hello@example.com', levels: 'A / B' };
     expect(l.legal.privacy.sections.collect.bullets.profile(values)).toBe(
-      'Learner profile: a display nickname and a starting level the learner picks (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.',
+      // AMENDMENTS-SITE-NEWUSER SN-2: the level check can suggest the level, and its answers go up as usage events.
+      'Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, whether it was right, and how long it took. A real name is optional and only stored if a parent enters it.',
     );
     expect(l.legal.privacy.sections.emailList.paragraphs.removal(values)).toBe(
       'Removal and erasure: to be taken off the list, or to have your address erased, email hello@example.com from the address you signed up with and we will remove it.',
@@ -134,8 +135,9 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   const SPONSORED =
     'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
   // [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, before Stripe Live.
+  // SN-2: then what a free space holds and the school administrators an owner can invite.
   const SIZES =
-    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.';
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school. A school owner can also invite up to 2 administrators.';
   const privacy = l.legal.privacy.sections;
   const billing = l.legal.terms.sections.billing;
 
@@ -182,6 +184,50 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
         'In-app purchases: refunds are handled by the store under its policy. A free trial, if offered, converts to a paid subscription unless cancelled before it ends.',
     });
     expect(Object.keys(billing.bullets)).toEqual(['premium', 'renews', 'manage', 'refunds']);
+  });
+});
+
+/**
+ * AMENDMENTS-SITE-NEWUSER SN-2: facts in the Privacy Policy and the Terms that had fallen behind the app. English-
+ * authoritative (L10): es and ko show this English. No claim of legal review; the draft banner stays as it is.
+ */
+describe('legal: SN-2 accuracy (English-authoritative)', () => {
+  const privacy = l.legal.privacy.sections;
+
+  it('the account contact is the sign-in email of a parent, teacher or school administrator', () => {
+    expect(privacy.collect.bullets.contact).toBe(
+      'Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in, receipts, and account recovery.',
+    );
+  });
+
+  it('no voice is recorded: no voice mini-game ships, and the site promises no speaking', () => {
+    expect(privacy.never.bullets.media).toBe('No contacts, photos, or microphone audio leave the device. The app does not record your voice.');
+    expect(privacy.never.bullets.media).not.toMatch(/voice mini-game|process speech/i);
+  });
+
+  it('both documents point at the date at the top, where the page shows it', () => {
+    expect(privacy.changes.paragraphs.p1).toBe(
+      'If we make a material change, we will notify parents in the app or by email before it takes effect. The date at the top shows the current version.',
+    );
+    expect(l.legal.terms.sections.changes.paragraphs.p1).toBe(
+      'If we make material changes, we will notify parents in the app or by email before they take effect. The date at the top shows the current version.',
+    );
+  });
+
+  it('a school has up to three grown-ups with admin rights: the owner and two administrators', () => {
+    expect(privacy.collect.bullets.schoolAdmins.startsWith(
+      "A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights. Administrators see",
+    )).toBe(true);
+  });
+
+  it('claims no legal review, and es and ko keep the English text (L10)', () => {
+    const text = JSON.stringify([l.legal.privacy, l.legal.terms, l.meta.pages, l.notFound]);
+    expect(text).not.toMatch(/reviewed by (a )?(lawyer|counsel|attorney)|legally reviewed|native speaker|expert[- ]reviewed/i);
+    for (const locale of ['es', 'ko'] as const) {
+      const legal = getMessages(locale).landing.legal;
+      expect(legal.privacy.sections.collect.bullets.contact).toBe(privacy.collect.bullets.contact);
+      expect(legal.terms.sections.changes.paragraphs.p1).toBe(l.legal.terms.sections.changes.paragraphs.p1);
+    }
   });
 });
 
