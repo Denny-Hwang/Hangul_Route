@@ -388,10 +388,11 @@ Owner only:
 - The new-admin notice (section 6.3, item 3) above the panel.
 - **Invite an administrator** (primary) while `admins + open invites < 2`; otherwise the line `console.admins.full(max)`. Tap → the step-up dialog when needed (`StepUpDialog`) → the link in a `JoinLinkPanel`-style box (text, **Copy link**, no QR) with the consent lines `console.admins.invite.warning` and `console.admins.invite.once(date)`. Closing the box hides the link for good.
 - Open invites: "Invite made {day} · ends {date}" with **Revoke** (confirm sheet `console.admins.revokeAsk`: action `console.admins.revoke.cta`, dismiss `console.admins.revokeKeep.cta`, so the sheet never shows two cancel buttons).
+- The step-up dialog is the billing `StepUpDialog` with `console.admins.invite.stepUp.body` and `.reason` in place of the billing body and reason (SA-0b D10). After Revoke or Remove the panel says `console.admins.revoked` or `console.admins.removed(name)`; a failed Revoke, Remove or Stop says `console.admins.actionFailed`.
 - Each admin: **Remove** (confirm sheet `console.admins.removeAsk(name, school)`, with the line `console.admins.removeNote.staysTeacher` when `staysTeacher` (they own or teach a class of the school), else `console.admins.removeNote.leaves`).
 - **History**: the last 20 events, one line each (`console.admins.history.*`), names read at request time, newest first.
 
-Admin only: **Stop being an administrator** (confirm sheet `console.admins.leaveAsk(school)` with `console.admins.leaveNote.staysTeacher` or `.leaves`), then the school page as a teacher, or the teacher home when they left the school.
+Admin only: **Stop being an administrator** (confirm sheet `console.admins.leaveAsk(school)` with `console.admins.leaveNote.staysTeacher` or `.leaves`), then the teacher home with `console.admins.left(school)` in both cases (a teacher member cannot open the school page, section 6.5; SA-0b D14).
 
 ```
 +----------------------------------------------------------+
@@ -431,7 +432,7 @@ Billing page, school card for an admin: plan, status, seat counts, no actions, `
 - Name row: **Rename** shown (admins hold `space.rename` on the school).
 - Grown-ups list: **Remove** shown only where the member's `canRemove` (from `GET /:id/members`) is true: teachers yes; the owner and the other admin never. The admins themselves are managed on the admins panel, not here.
 - Learners list (a school has none directly): unchanged.
-- Anonymized roster and consent mode: the current values shown as read-only text, no switch.
+- Anonymized roster and consent mode: the current values shown as read-only text, no switch: consent mode as its option's existing label, Anonymize roster with `console.settings.privacy.anonymizeOn` or `.anonymizeOff`, then one line `console.settings.ownerOnly` (SA-0b D16).
 - Danger zone (archive, delete data): hidden.
 
 Tests: `admins-panel.test.tsx` and a settings test (`school-settings-admin.test.tsx`) cover each control for owner, admin and teacher.
@@ -583,6 +584,15 @@ Plural forms: the en and es functions use `plural()` where `{n}` / `{cap}` can b
 | `console.adminInvite.notFound` | This link doesn't open an invite. Check that it was copied whole. | Este enlace no abre ninguna invitación. Revisa que se haya copiado completo. | 이 링크로는 초대를 열 수 없어요. 링크가 모두 복사됐는지 확인해 주세요. |
 | `console.adminInvite.emailUnverified` | To accept, your account needs a verified email. Verify it in your account settings, then open the link again. | Para aceptar, tu cuenta necesita un correo verificado. Verifícalo en los ajustes de tu cuenta y vuelve a abrir el enlace. | 수락하려면 계정 이메일 인증이 필요해요. 계정 설정에서 이메일을 인증한 뒤 링크를 다시 열어 주세요. |
 | `console.adminInvite.home.cta` | Go to my home | Ir a mi inicio | 내 홈으로 |
+| `console.admins.invite.stepUp.body` (SA-0b) | Before you make an invite link, sign in again. | Antes de crear un enlace de invitación, vuelve a iniciar sesión. | 초대 링크를 만들기 전에 다시 로그인해 주세요. |
+| `console.admins.invite.stepUp.reason` (SA-0b) | This keeps the school's rosters safe on a shared device. | Así las listas de la escuela quedan protegidas en un dispositivo compartido. | 함께 쓰는 기기에서도 학교 명단을 안전하게 지켜요. |
+| `console.admins.revoked` (SA-0b) | Invite revoked. The link no longer works. | Invitación cancelada. El enlace ya no funciona. | 초대를 취소했어요. 이제 링크를 쓸 수 없어요. |
+| `console.admins.removed(name)` (SA-0b) | {name} is no longer an administrator. | {name} ya no es admin. | 관리자에서 뺐어요: {name} |
+| `console.admins.left(school)` (SA-0b) | You're no longer an administrator of {school}. | Ya no eres admin de {school}. | 관리자를 그만뒀어요. {school} |
+| `console.admins.actionFailed` (SA-0b) | Couldn't save that change. Try again. | No se pudo guardar el cambio. Inténtalo de nuevo. | 변경하지 못했어요. 다시 해 볼까요? |
+| `console.settings.ownerOnly` (SA-0b) | Only the school's owner can change these settings. | Solo quien creó la escuela puede cambiar estos ajustes. | 이 설정은 학교를 만든 분만 바꿀 수 있어요. |
+| `console.settings.privacy.anonymizeOn` (SA-0b) | Rosters show initials. | Las listas muestran iniciales. | 명단에 이니셜만 보여요. |
+| `console.settings.privacy.anonymizeOff` (SA-0b) | Rosters show names. | Las listas muestran nombres. | 명단에 이름이 보여요. |
 
 `admins.full(max)`, `adminInvite.full(max)`, `admins.about(max)` and `admins.count(n, max)` take the cap as an argument (callers pass `SCHOOL_ADMIN_CAP`); no string types the number (section 3.1). Every `cta` and short es value above is within the `length-budget.test.ts` rule (`max(8, ceil(en × 1.5))`).
 
@@ -696,6 +706,7 @@ The Terms paragraph (section 4) and the privacy paragraph (section 6.7) are Engl
 ## 15. Review log
 
 - 2026-10-20, second round, two independent reviews of PR #746, adjudicated in the same PR: lookup `full` always false so a reinstall or new device always reaches relink at a full licensed class or a school at 50, and the learner `/join` answers a school cap as `cap_class` with `details.reason` (section 3.4, section 10); SA-5 keeps the roster pick on screen at a cap; accept needs a verified email read from Clerk (`IdentityPort`), the owner sees each admin's verified email, a 7-day new-admin notice, and the consent block and privacy paragraph name every power (section 6.3, OQ-13); `GET /:id/school` `license` allow-listed (no Stripe ids, no promo code); `addMembershipIfAbsent` so a teacher-code join cannot demote a new admin; the members route on a school ends an admin role like the admins route; `memberships.promoted_from` so a promoted teacher goes back to teacher; `SpaceNameSchema` with explicit BMP ranges (Hermes); `history.someone` for a missing account; `signedInAs` with Use another account; `renameSpace` returns `changes`; the teacher self-leave cell corrected (no route); `admins.full(max)` and `adminInvite.full(max)` take the cap; the revoke sheet's dismiss `revokeKeep`; es `Renombrar`, `Anular` (length budget); ko `contactLineCaps` in 합니다체; ko colon forms and `요청해 주세요`; billing wireframes and mocks show `23 of 50 students` on licensed class payer cards and `18 of 50` on the free school; F-ENT-001, F-BILL-002 (payer rule, school admin row split, OD-8, section 5.3), the app map row #30, the roadmap and the launch history row marked [SA]; the section 10 check widened. Not taken: none (every finding fixed).
+- 2026-10-20, design row SA-0b (agent design pass, `design/screens/console/README.md`): nine strings the mocks need had no row and are added to section 9.4 (the admin step-up body and reason, since the billing ones name payments; revoked, removed, left, actionFailed; the administrator's read-only Settings lines); section 6.6 now sends an administrator who stops to the teacher home in both cases, since a teacher member cannot open the school page; section 6.6 names the step-up lines and the Settings values.
 
 - 2026-10-20, two independent reviews of PR #746, adjudicated in the same PR: added SA-0b (wireframes and mocks before SA-3 and SA-4, CLAUDE.md section 5); widened SA-0 to edit the old 5 and 300 in launch docs, billing wireframes, screens and mocks and in the F-ENT-001, F-SCHOOL-001 and F-BILL-002 bodies; recorded that a rename resets an open transfer's consent (section 5.4, OQ-12) with a hint and a test; kept lookup `full` class-only for shipped apps and added the learner-aware `seat` (section 3.4); added the own-licence-in-a-school cap rows; Settings per control for an admin with `canRemove`; admins stay assignable and ending an admin role keeps a teacher with classes; `seats.school.at` for an unlicensed school; OQ-11; school-only audit with `class_renamed`; the invite fragment captured before `GrownUpGate` with `next`, sign-up and `/start` handling; `putSpace` stops writing the name; guarded invite create and revoke; space-pinned accept gate with teacher-only promotion; no email in preview; `403 reverify_required`; NFC and format characters in names (also the whitespace-then-control order Codex flagged); no CHECK on `space_events.kind`; class-cascade removal of admins refused; `contactLineCaps` moved into SA-1 and Terms before Live.
 
