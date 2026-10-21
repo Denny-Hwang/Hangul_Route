@@ -23,7 +23,7 @@ import { codePoint, localDay as localDayOfDate, vocabOf } from '../vocab/progres
  * The report activity summary — F-REPORT-001 section 3.3.4 (RP-4). Pure: the
  * device's clock (`now`) and its calendar (`localDay`) come in, so a test can
  * stand anywhere on Earth. Every day key is the learner device's local day
- * (OD-12); the learner app's streak keeps its UTC rule and is not read here.
+ * (OD-12); the learner app's streak (`logic/streak.ts`) is not read here.
  *
  * Nothing here is per question: counts, day keys, stage keys, letter keys and
  * quest ids only (section 3.10). The result always parses with

@@ -6,22 +6,24 @@ import { holdLearnerSession } from '../store/learner-session';
 /**
  * Records practice time while a learner screen is in front (F-REPORT-001
  * section 3.3.2, RP-3b): the story reader, the stand-alone game screen and
- * the level check. The session is time only (`streak: false`, OD-19): it
- * counts toward a report's minutes and practice days and never moves the
- * learner's streak or sends `session.start`. Opened inside a quest, it joins
+ * the level check. The session is never a quest session (`streak: false`,
+ * OD-19): it counts toward a report's minutes and practice days and never
+ * moves the old streak (`streakDays`) or sends `session.start`. With
+ * `keepsRun` (the story reader) it is a learning session that keeps the
+ * local-day run (F-CURR-002 OD-14); a game or a level check does not. Opened inside a quest, it joins
  * the quest's session. It ends when another screen is pushed over it (the PIN
  * or the placement report over the level check) and begins again on return,
  * so a grown-up's time never counts as practice. No profile, or an `owner`
  * of `null` (a host other than the learner stack, such as the All lessons
  * preview), records nothing.
  */
-export function usePracticeSession(profileId: string | null | undefined, owner: string | null): void {
+export function usePracticeSession(profileId: string | null | undefined, owner: string | null, keepsRun = false): void {
   const navigation = useContext(NavigationContext);
   useEffect(() => {
     if (!profileId || owner === null) return undefined;
     const focus: FocusPorts | null = navigation
       ? { isFocused: () => navigation.isFocused(), addListener: (event, listener) => navigation.addListener(event, listener) }
       : null;
-    return holdWhileFocused(focus, () => holdLearnerSession(profileId, { owner, streak: false }));
-  }, [profileId, owner, navigation]);
+    return holdWhileFocused(focus, () => holdLearnerSession(profileId, { owner, streak: false, ...(keepsRun ? { keepsRun: true } : {}) }));
+  }, [profileId, owner, navigation, keepsRun]);
 }
