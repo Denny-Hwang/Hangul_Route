@@ -1121,6 +1121,23 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
   });
 
+  // Every shipped cell has a deep play today, so the generic path a new cell takes (openFirstQuest, then its
+  // day on the Learning Route) runs here for the first cell of the manifest: a content PR that adds a cell
+  // with no deep play never meets that path for the first time.
+  test('the generic path of a cell with no deep play: its first quest opens and its Learning Route day appears', async ({ page }) => {
+    const episode = LESSON_EPISODES[0];
+    expect(episode, 'the lesson manifest lists a cell').toBeDefined();
+    const stage = Number(episode!.stage.replace('stage', ''));
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await openJourney(page);
+    await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode!.theme]), exact: true }).click();
+    await expect(page.getByText(episode!.titleEn).first()).toBeVisible();
+    await openFirstQuest(page);
+    await expectCellOnRoute(page, stage, episode!.titleEn);
+    expect(errors).toEqual([]);
+  });
+
   for (const cell of CELLS) {
     test(`${cell.episodeId}: opens from the grid, its first quest plays (to the reward with a deep play), the Learning Route day appears`, async ({ page }) => {
       const errors: string[] = [];
