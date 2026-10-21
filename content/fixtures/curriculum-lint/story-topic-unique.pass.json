@@ -1,0 +1,47 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a new tale with its own topic and sources, next to a shipped story. Not real content.",
+  "rule": "story-topic-unique",
+  "files": {
+    "content/stories/sun-and-moon.json": {
+      "id": "story:sun-and-moon",
+      "facts": [
+        {
+          "id": "f1",
+          "claimEn": "A fact.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Folk Museum of Korea",
+              "url": "https://folkency.nfm.go.kr/topic/detail/1",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ]
+        }
+      ]
+    },
+    "content/stories/fixture-new-tale.json": {
+      "id": "story:fixture-new-tale",
+      "topicTags": [
+        "fixture-new-tale",
+        "rabbit-in-the-moon"
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claimEn": "A fact.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Folk Museum of Korea",
+              "url": "https://folkency.nfm.go.kr/topic/detail/2",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": []
+}

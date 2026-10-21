@@ -1,0 +1,80 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a new tale on a shipped story's topic, and one that cites a shipped story's source (the URL compared without a trailing slash or fragment): errors. Not real content.",
+  "rule": "story-topic-unique",
+  "files": {
+    "content/stories/sun-and-moon.json": {
+      "id": "story:sun-and-moon",
+      "facts": [
+        {
+          "id": "f1",
+          "claimEn": "A fact.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Folk Museum of Korea",
+              "url": "https://folkency.nfm.go.kr/topic/detail/1",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ]
+        }
+      ]
+    },
+    "content/stories/fixture-same-topic.json": {
+      "id": "story:fixture-same-topic",
+      "topicTags": [
+        "sun-and-moon"
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claimEn": "A fact.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Folk Museum of Korea",
+              "url": "https://folkency.nfm.go.kr/topic/detail/3",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ]
+        }
+      ]
+    },
+    "content/stories/fixture-same-source.json": {
+      "id": "story:fixture-same-source",
+      "topicTags": [
+        "fixture-same-source"
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claimEn": "A fact.",
+          "sources": [
+            {
+              "title": "Reference entry",
+              "publisher": "National Folk Museum of Korea",
+              "url": "https://FOLKENCY.nfm.go.kr/topic/detail/1/#top",
+              "accessed": "2026-10-13",
+              "quoteOrLocator": "entry for the word, sense 1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": [
+    [
+      "story-topic-unique",
+      "error",
+      "content/stories/fixture-same-source.json",
+      "facts"
+    ],
+    [
+      "story-topic-unique",
+      "error",
+      "content/stories/fixture-same-topic.json",
+      "topicTags"
+    ]
+  ]
+}

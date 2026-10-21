@@ -1,0 +1,793 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Listen & Pick in every Check, the same triple three times: warnings in Volume 1, errors in Volume 2. Not real content.",
+  "rule": "lesson-check-variety",
+  "files": {
+    "content/episodes/stage-2/nature.json": {
+      "id": "episode:stage2-nature",
+      "stage": "stage2",
+      "theme": "nature",
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "listen-pick",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q1-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "listen-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "prompt": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "b",
+                      "pictureRef": "word:other"
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "listen-pick",
+              "minigameRef": "minigame:s2-nature-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q2-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q2-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q2-check",
+              "kind": "listen-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "prompt": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "b",
+                      "pictureRef": "word:other"
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "listen-pick",
+              "minigameRef": "minigame:s2-nature-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q3-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q3-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q3-check",
+              "kind": "listen-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "prompt": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "b",
+                      "pictureRef": "word:other"
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/episodes/stage-2/nature.v2.json": {
+      "id": "episode:stage2-nature-v2",
+      "stage": "stage2",
+      "theme": "nature",
+      "volume": 2,
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-v2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q1-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q1-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "listen-pick",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q1-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "listen-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "prompt": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "b",
+                      "pictureRef": "word:other"
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-v2-q2",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q2-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q2-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "listen-pick",
+              "minigameRef": "minigame:s2-nature-q2-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q2-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q2-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q2-check",
+              "kind": "listen-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "prompt": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "b",
+                      "pictureRef": "word:other"
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-v2-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "practice",
+              "titleEn": "Play",
+              "minigameKind": "pic-word-match",
+              "minigameRef": "minigame:s2-nature-q3-practice"
+            },
+            {
+              "id": "s4",
+              "kind": "apply",
+              "titleEn": "Play",
+              "minigameKind": "card-match",
+              "minigameRef": "minigame:s2-nature-q3-apply"
+            },
+            {
+              "id": "s5",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "listen-pick",
+              "minigameRef": "minigame:s2-nature-q3-check"
+            },
+            {
+              "id": "s6",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q3-practice",
+              "kind": "pic-word-match",
+              "boards": [
+                {
+                  "pairs": [
+                    {
+                      "id": "p1",
+                      "word": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q3-apply",
+              "kind": "card-match",
+              "pairs": [
+                {
+                  "ko": "하늘",
+                  "romanization": "haneul",
+                  "en": "sky"
+                }
+              ]
+            },
+            {
+              "ref": "minigame:s2-nature-q3-check",
+              "kind": "listen-pick",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "prompt": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "pictureRef": "word:haneul"
+                    },
+                    {
+                      "id": "b",
+                      "pictureRef": "word:other"
+                    }
+                  ],
+                  "answerId": "a"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    }
+  },
+  "expect": [
+    [
+      "lesson-check-variety",
+      "warning",
+      "content/episodes/stage-2/nature.json",
+      "quests[0]"
+    ],
+    [
+      "lesson-check-variety",
+      "warning",
+      "content/episodes/stage-2/nature.json",
+      "quests[1]"
+    ],
+    [
+      "lesson-check-variety",
+      "warning",
+      "content/episodes/stage-2/nature.json",
+      "quests[1]"
+    ],
+    [
+      "lesson-check-variety",
+      "warning",
+      "content/episodes/stage-2/nature.json",
+      "quests[2]"
+    ],
+    [
+      "lesson-check-variety",
+      "warning",
+      "content/episodes/stage-2/nature.json",
+      "quests[2]"
+    ],
+    [
+      "lesson-check-variety",
+      "warning",
+      "content/episodes/stage-2/nature.json",
+      "(stage)"
+    ],
+    [
+      "lesson-check-variety",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[0]"
+    ],
+    [
+      "lesson-check-variety",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[1]"
+    ],
+    [
+      "lesson-check-variety",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[1]"
+    ],
+    [
+      "lesson-check-variety",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[2]"
+    ],
+    [
+      "lesson-check-variety",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[2]"
+    ],
+    [
+      "lesson-check-variety",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "(stage)"
+    ]
+  ]
+}

@@ -18,6 +18,14 @@
 //     verification passes. Their sources, verification and review records are a
 //     reference zone (source titles may be Korean), and a `{ko:...}` token in an
 //     English field is taught Korean, not a Korean UI string.
+//   - F-CURR-002 §9.3 (row CM-7): lintCurriculum of the same module over the whole tree, for
+//     lesson cells of every volume, content/packs/** and content/stories/*.json, and review-copy
+//     over packages/i18n/src/messages/<locale>/learner.ts when the root has them. A finding is an
+//     error for a Volume 2 cell (`volume` >= 2 or `<theme>.v<k>.json`), a pack file or a story
+//     that is not in SHIPPED_STORY_IDS, and a warning for Volume 1 cells and shipped stories
+//     (row CM-3B makes those errors). Each rule that reports prints its description once, for
+//     MAR. The report-only rules print one line each (`--reports` for details); freq-coverage
+//     reads the NIKL grade-A list from HANGUL_ROUTE_NIKL_GRADE_A, a local file outside the repo.
 //   - A gloss never opens with the romanization of the Korean it glosses ("gimbap (seaweed
 //     rice roll)" is "seaweed rice roll"): rule gloss-repeats-romanization, the one
 //     implementation in scripts/overlay-rules.mjs (glossRepeatsRomanization, F-CNT-001 §3), with
@@ -120,6 +128,10 @@ function isStoryFile(file) {
 // `culture[]` note. The same key anywhere else is checked like any other field.
 const LESSON_FILE = /^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/;
 const isLessonFile = (file) => LESSON_FILE.test(file.split(sep).join("/"));
+// F-CURR-002 §9.3: Volume 2 cells (`<theme>.v<k>.json`), pack directories and stories, linted by lintCurriculum.
+const CURRICULUM_FILE = /^content\/(?:episodes\/stage-[2-467]\/[a-z]+\.v[0-9]+\.json|packs\/.+|stories\/[^/]+\.json)$/;
+// F-CURR-002 §9.3 review-copy: the learner review strings of each UI locale, when the repo has them.
+const REVIEW_LOCALES = ["en", "es", "ko"];
 const isLessonZone = (path, k) =>
   (path.length === 0 && k === "review") ||
   (path.length === 2 && path[0] === "culture" && (k === "sources" || k === "verification"));
@@ -243,11 +255,18 @@ for (const file of files) {
 // F-PLC-001 §3.4: structure of content/placement/**.
 violations.push(...checkPlacementTree(parsedByRel));
 
-// F-CURR-001 section 5: the lesson rules of every lesson cell file.
+// F-CURR-001 section 5: the lesson rules of every lesson cell file. F-CURR-002 §9.3: the rules for
+// Volume 2 cells, pack levels and new stories (errors), and for Volume 1 and shipped stories (warnings).
 const lessonFiles = [...parsedByRel.keys()].filter((rel) => LESSON_FILE.test(rel));
-if (lessonFiles.length > 0) {
+const curriculumFiles = [...parsedByRel.keys()].filter((rel) => CURRICULUM_FILE.test(rel));
+const reviewMessageFiles = REVIEW_LOCALES.map((locale) => `packages/i18n/src/messages/${locale}/learner.ts`).filter((rel) =>
+  existsSync(join(ROOT, rel))
+);
+const curriculumWarnings = [];
+const curriculumRules = new Set();
+if (lessonFiles.length > 0 || curriculumFiles.length > 0 || reviewMessageFiles.length > 0) {
   nodeModule.register(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "ts-loader.mjs")));
-  const { lintLessonCell } = await import(
+  const lint = await import(
     pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "content-schema", "src", "lesson-lint.ts")).href
   );
   const storyFacts = new Map();
@@ -259,10 +278,51 @@ if (lessonFiles.length > 0) {
   // accessed today in Korea (UTC+9) never fails a CI run that starts before UTC midnight.
   const ctx = { today: new Date(Date.now() + 14 * 3_600_000).toISOString().slice(0, 10), storyFacts };
   for (const rel of lessonFiles) {
-    for (const f of lintLessonCell(parsedByRel.get(rel), ctx)) {
+    for (const f of lint.lintLessonCell(parsedByRel.get(rel), ctx)) {
       violations.push({ file: rel, path: f.path, rule: `${f.rule}: ${f.message}` });
     }
   }
+  const findings = lint.lintCurriculum(parsedByRel);
+  for (const rel of reviewMessageFiles) {
+    const { learner } = await import(pathToFileURL(join(ROOT, rel)).href);
+    findings.push(...lint.lintReviewStrings(learner, rel));
+  }
+  for (const f of findings) {
+    const entry = { file: f.file, path: f.path, rule: `${f.rule}: ${f.message}` };
+    (f.severity === "error" ? violations : curriculumWarnings).push(entry);
+    curriculumRules.add(f.rule);
+  }
+  for (const line of curriculumReports(lint)) console.log(line);
+  for (const rule of [...curriculumRules].sort()) {
+    if (lint.CURRICULUM_RULES[rule] !== undefined) console.log(`::notice::${rule}: ${lint.CURRICULUM_RULES[rule]}`);
+  }
+}
+
+/**
+ * The report-only rules (F-CURR-002 §9.3): one summary line each, and with --reports one line per
+ * stage or story tier. freq-coverage reads the NIKL grade-A list from a local file outside the repo
+ * (HANGUL_ROUTE_NIKL_GRADE_A), never from content/ (§19 assumption 4).
+ */
+function curriculumReports(lint) {
+  const lines = [];
+  const detail = process.argv.includes("--reports");
+  const listPath = process.env.HANGUL_ROUTE_NIKL_GRADE_A;
+  if (!listPath) {
+    lines.push("freq-coverage (report only): skipped; set HANGUL_ROUTE_NIKL_GRADE_A to a local copy of the NIKL grade-A list");
+  } else if (!existsSync(listPath)) {
+    lines.push(`freq-coverage (report only): skipped; ${listPath} does not exist`);
+  } else {
+    const rows = lint.freqCoverage(parsedByRel, lint.parseGradeAList(readFileSync(listPath, "utf8")));
+    const taught = rows.reduce((n, r) => n + r.taught, 0);
+    const onList = rows.reduce((n, r) => n + r.onList, 0);
+    lines.push(`freq-coverage (report only): ${onList} of ${taught} taught words are on the grade-A list`);
+    if (detail) for (const r of rows) lines.push(`  stage ${r.stage}: ${r.onList} of ${r.taught}`);
+  }
+  const stories = lint.storyCoverage(parsedByRel);
+  const atTarget = stories.filter((r) => r.tokens === 0 || r.taught / r.tokens >= 0.95).length;
+  lines.push(`story-coverage (report only): ${atTarget} of ${stories.length} story tiers have 95 in 100 or more tokens taught by their stage`);
+  if (detail) for (const r of stories) lines.push(`  ${r.storyId} ${r.tier} (stage ${r.recommendedStage}): ${r.taught} of ${r.tokens} tokens`);
+  return lines;
 }
 
 // F-I18N-001 §3.7: content/i18n/<locale>/*.json against the base content.
@@ -273,7 +333,7 @@ const strictLocales = (process.env.HANGUL_ROUTE_STRICT_LOCALES ?? "")
 const overlays = checkOverlayTree(parsedByRel, { strictLocales });
 violations.push(...overlays.violations);
 
-for (const w of overlays.warnings) {
+for (const w of [...curriculumWarnings, ...overlays.warnings]) {
   console.log(`::warning file=${w.file}::${w.rule} at .${w.path}`);
 }
 for (const v of violations) {

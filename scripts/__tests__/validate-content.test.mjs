@@ -724,4 +724,93 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+  // F-CURR-002 §9.3 (row CM-7): the curriculum rules, warnings for Volume 1 and errors for Volume 2,
+  // packs and new stories; review-copy on the i18n review strings; the report-only rules.
+  const runWith = (root, env = {}, args = []) =>
+    spawnSync("node", [SCRIPT, ...args], { env: { ...process.env, HANGUL_ROUTE_ROOT: root, ...env }, encoding: "utf8" });
+
+  test("a Volume 1 cell gets F-CURR-002 warnings and passes; a Volume 2 cell with the same Checks fails", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      const v1 = run(root);
+      assert.equal(v1.status, 0, v1.stdout + v1.stderr);
+      assert.match(v1.stdout, /::warning file=content\/episodes\/stage-2\/rites\.json::lesson-check-variety: the Check plays listen-pick/);
+      assert.match(v1.stdout, /::notice::lesson-check-variety: Check rotation/);
+      assert.match(v1.stdout, /story-coverage \(report only\): 0 of 0 story tiers/);
+      writeContent(root, "episodes/stage-2/rites.v2.json", { ...lessonCell(), id: "episode:stage2-rites-v2", volume: 2 });
+      const v2 = run(root);
+      assert.equal(v2.status, 1);
+      assert.match(v2.stdout, /::error file=content\/episodes\/stage-2\/rites\.v2\.json::lesson-check-variety: the Check plays listen-pick/);
+      assert.match(v2.stdout, /::error file=content\/episodes\/stage-2\/rites\.v2\.json::lesson-culture-coverage/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a pack directory without pack.json fails pack-skeleton", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "packs/numbers-time/notes.json", { about: "x" });
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /::error file=content\/packs\/numbers-time\/notes\.json::pack-skeleton: notes\.json is not part of a pack/);
+      assert.match(r.stdout, /pack-skeleton: content\/packs\/numbers-time\/pack\.json is missing/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("review-copy reads the learner review strings of packages/i18n when the root has them", () => {
+    const root = makeRoot();
+    try {
+      mkdirSync(join(root, "content"), { recursive: true });
+      writeContent(root, "vocab/x.json", { id: "x" });
+      const file = join(root, "packages/i18n/src/messages/en/learner.ts");
+      mkdirSync(dirname(file), { recursive: true });
+      writeFileSync(file, "export const learner = { stageReview: { score: (n: number, m: number): string => `${n} of ${m}` }, home: { t: '50%' } };\n");
+      const r = run(root);
+      assert.equal(r.status, 1, r.stdout + r.stderr);
+      assert.match(r.stdout, /::error file=packages\/i18n\/src\/messages\/en\/learner\.ts::review-copy: a review screen never shows an "n of m" or "n\/m" score at \.learner\.stageReview\.score/);
+      assert.doesNotMatch(r.stdout, /learner\.home/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("freq-coverage reads a local grade-A list from HANGUL_ROUTE_NIKL_GRADE_A, with --reports details", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      const list = join(root, "grade-a.txt");
+      writeFileSync(list, "1\t떡국\t명사\n");
+      const r = runWith(root, { HANGUL_ROUTE_NIKL_GRADE_A: list }, ["--reports"]);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(r.stdout, /freq-coverage \(report only\): 1 of 1 taught words are on the grade-A list/);
+      assert.match(r.stdout, /  stage 2: 1 of 1/);
+      const missing = runWith(root, { HANGUL_ROUTE_NIKL_GRADE_A: join(root, "nope.txt") });
+      assert.match(missing.stdout, /freq-coverage \(report only\): skipped; .*nope\.txt does not exist/);
+      const unset = runWith(root, { HANGUL_ROUTE_NIKL_GRADE_A: "" });
+      assert.match(unset.stdout, /freq-coverage \(report only\): skipped; set HANGUL_ROUTE_NIKL_GRADE_A/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("story-coverage lists each story tier with --reports", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "stories/fixture-sky.json", {
+        id: "story:fixture-sky",
+        recommendedStage: 2,
+        keywords: [{ id: "moon", ...kt("달", "dal", "moon") }],
+        tiers: [{ level: "read", scenes: [{ id: "s1", keyword: { id: "moon", ...kt("달", "dal", "moon") } }] }],
+      });
+      const r = runWith(root, {}, ["--reports"]);
+      assert.match(r.stdout, /story-coverage \(report only\): 1 of 1 story tiers/);
+      assert.match(r.stdout, /  story:fixture-sky read \(stage 2\): 1 of 1 tokens/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
