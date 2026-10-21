@@ -231,6 +231,19 @@ const LECTURE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
   'lecture.deck_rejected': { reason: oneOf(LECTURE_DECODE_FAILURES) },
 };
 
+/**
+ * [SA] Seat and rename events (AMENDMENTS-SEATS-ADMINS section 8), recorded by the Worker: codes only, per name.
+ * Never a name, a learner, space or account id, and never a profile id.
+ */
+const SPACE_SERVER_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = {
+  'space.seat_refused': {
+    kind: oneOf(['family', 'class']),
+    reason: oneOf(['cap_family', 'cap_class', 'cap_school', 'cap_learner']),
+    path: oneOf(['join', 'transfer', 'move']),
+  },
+  'space.renamed': { kind: oneOf(['family', 'class', 'school']), role: oneOf(['owner', 'teacher', 'admin']) },
+};
+
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
   rules: Readonly<Record<string, FieldRule>> | undefined,
@@ -261,6 +274,7 @@ export function keptEventFields(
   if (name.startsWith(NOTES_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(NOTES_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(BILLING_TELEMETRY_PREFIX)) return { profileId: undefined, payload: ruledPayload(BILLING_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(LECTURE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(LECTURE_PAYLOAD_RULES[name], payload) };
+  if (name in SPACE_SERVER_PAYLOAD_RULES) return { profileId: undefined, payload: ruledPayload(SPACE_SERVER_PAYLOAD_RULES[name], payload) };
   const codesOnly = codesOnlyValues(name);
   if (codesOnly) return { profileId: undefined, payload: codesOnlyPayload(payload, codesOnly) };
   return { profileId: typeof profileId === 'string' ? profileId : undefined, payload };

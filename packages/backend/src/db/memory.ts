@@ -1,4 +1,4 @@
-import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type ClassMoveEndReason, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type SpaceEvent, type TransferBlockReason, type TransferEndReason, type TransferSlot, SpaceEventKindSchema } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type LearnerProfileFields, type SnapshotRecord } from '../store';
 import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { assertNoteChecks, assertOneSender } from './feedback-rules';
@@ -25,6 +25,7 @@ import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEven
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type AddLearnerWithinCapsInput,
   type BillingEventInput,
   type EntitlementMerge,
   type ConsentResetReason,
@@ -104,6 +105,8 @@ export class MemoryDb implements Db {
   /** [TV] migration 0009. */
   private classScopeAcks = new Map<string, StoredClassScopeAck>();
   private classMoves = new Map<string, StoredClassMove>();
+  /** [SA] migration 0011. */
+  private spaceEvents = new Map<string, SpaceEvent>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -213,7 +216,9 @@ export class MemoryDb implements Db {
     return clone(this.spaces.get(spaceId) ?? null);
   }
   async putSpace(space: Space): Promise<void> {
-    this.spaces.set(space.id, clone(space));
+    // [SA] section 5.2: as on D1, an update keeps the stored name (written at insert and by `renameSpace` only).
+    const stored = this.spaces.get(space.id);
+    this.spaces.set(space.id, clone(stored ? { ...space, name: stored.name } : space));
   }
   async spaceByCode(code: string): Promise<Space | null> {
     return clone([...this.spaces.values()].find((s) => s.joinCode === code) ?? null);
@@ -235,6 +240,67 @@ export class MemoryDb implements Db {
   }
   async membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]> {
     return clone([...this.memberships.values()].filter((m) => m.memberKind === kind && m.memberId === memberId));
+  }
+  async addLearnerWithinCaps(input: AddLearnerWithinCapsInput): Promise<'added' | 'already' | 'refused'> {
+    // The rules of the D1 statement (section 3.3), in one synchronous step: no await between the counts and the write.
+    const { spaceId, learnerId } = input;
+    if (this.memberships.has(membershipKey(spaceId, 'learner', learnerId))) return 'already';
+    const rows = [...this.memberships.values()];
+    const liveClass = (id: string): Space | undefined => {
+      const s = this.spaces.get(id);
+      return s && s.kind === 'class' && s.archivedAt === null ? s : undefined;
+    };
+    const inSpace = rows.filter((m) => m.spaceId === spaceId && m.memberKind === 'learner').length;
+    const classes = rows.filter((m) => m.memberKind === 'learner' && m.memberId === learnerId && liveClass(m.spaceId)).length;
+    const fits =
+      (input.spaceCap === null || inSpace < input.spaceCap) &&
+      (input.learnerClassCap === null || classes < input.learnerClassCap) &&
+      this.schoolSeatFree(input.schoolId, input.schoolCap, learnerId);
+    if (!fits) return 'refused';
+    this.memberships.set(membershipKey(spaceId, 'learner', learnerId), { spaceId, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: input.joinedAt });
+    return 'added';
+  }
+  /** [SA] The school seat test of the D1 `schoolSeatCondition`, on the live maps. */
+  private schoolSeatFree(schoolId: string | null | undefined, schoolCap: number | null | undefined, learnerId: string): boolean {
+    if (schoolId === null || schoolId === undefined || schoolCap === null || schoolCap === undefined) return true;
+    const learners = new Set<string>();
+    for (const m of this.memberships.values()) {
+      const s = this.spaces.get(m.spaceId);
+      if (m.memberKind !== 'learner' || !s || s.kind !== 'class' || s.archivedAt !== null || s.parentSpaceId !== schoolId) continue;
+      if (m.memberId === learnerId) return true;
+      learners.add(m.memberId);
+    }
+    return learners.size < schoolCap;
+  }
+  async renameSpace(spaceId: string, name: string): Promise<number> {
+    const space = this.spaces.get(spaceId);
+    if (!space || space.archivedAt !== null) return 0;
+    this.spaces.set(spaceId, { ...space, name });
+    return 1;
+  }
+  async addSpaceEvent(event: SpaceEvent): Promise<void> {
+    if (!this.spaces.has(event.spaceId)) throw new Error('FOREIGN KEY constraint failed');
+    this.spaceEvents.set(event.id, clone({ ...event, kind: SpaceEventKindSchema.parse(event.kind) }));
+  }
+  async spaceEventsOf(spaceId: string, limit: number): Promise<SpaceEvent[]> {
+    return clone(
+      [...this.spaceEvents.values()]
+        .filter((e) => e.spaceId === spaceId && this.spaces.has(e.spaceId))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+        .slice(0, limit),
+    );
+  }
+  async purgeSpaceEvents(before: Date, limit: number): Promise<number> {
+    const cut = before.toISOString();
+    let removed = 0;
+    for (const [key, e] of this.spaceEvents) {
+      if (removed >= limit) break;
+      if (e.createdAt < cut) {
+        this.spaceEvents.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
   }
   async membersOf(spaceId: string): Promise<Membership[]> {
     return clone([...this.memberships.values()].filter((m) => m.spaceId === spaceId));
@@ -433,7 +499,7 @@ export class MemoryDb implements Db {
       sourceSpace?.kind === 'class' &&
       destSpace?.kind === 'class' &&
       destSpace.archivedAt === null &&
-      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap)));
+      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap) && this.schoolSeatFree(input.destSchoolId, input.destSchoolCap, learnerId)));
     if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
 
     this.transfers.set(transferId, { ...row, status: 'executed', executedAt: at, blockReason: null, updatedAt: at, rev: row.rev + 1 });
@@ -960,7 +1026,7 @@ export class MemoryDb implements Db {
       sourceSpace?.kind === 'class' &&
       destSpace?.kind === 'class' &&
       destSpace.archivedAt === null &&
-      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap)));
+      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap) && this.schoolSeatFree(input.destSchoolId, input.destSchoolCap, learnerId)));
     if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
     this.classMoves.set(id, { ...row, status: 'executed', executedAt: at, updatedAt: at, decidedAccountId: input.decider.accountId, decidedVia: input.decider.via });
     return { executed: true, ...this.swapClassMembership(learnerId, source, dest, at) };
@@ -981,7 +1047,7 @@ export class MemoryDb implements Db {
   }
 
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents]) m.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }

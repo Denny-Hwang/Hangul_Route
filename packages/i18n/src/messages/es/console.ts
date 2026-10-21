@@ -67,7 +67,8 @@ export const consoleMsgs = {
   billingCancelled: 'No se cobró nada.',
   familyLine: 'Se renueva cada año. Cancela cuando quieras en Gestionar suscripción.',
   groupLine: 'Se renueva cada año. Cancela cuando quieras en Gestionar suscripción.',
-  contactLine: '¿Más de 300 estudiantes o 10 docentes? Escríbenos para un contrato.',
+  contactLineCaps: (students: number, teachers: number) =>
+    `¿Más de ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })} o ${plural('es', teachers, { one: `${teachers} docente`, other: `${teachers} docentes` })}? Escríbenos para un contrato.`,
   promoLabel: 'Código promocional o de referido',
   promoHint: '¿Tienes un código de un docente, un amigo o una publicación? Se descuenta al pagar.',
   promoInvalid: 'Ahora no se puede usar ese código: revisa cómo se escribe o la fecha.',

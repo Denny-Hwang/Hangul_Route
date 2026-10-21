@@ -1,4 +1,4 @@
-import { isStripeSubscriptionRef, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space } from '@hangul-route/content-schema';
+import { isStripeSubscriptionRef, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space, type SpaceEvent } from '@hangul-route/content-schema';
 import type { TransferBlockReason, TransferEndReason, TransferSlot } from '@hangul-route/content-schema';
 import { isEntitlementActive } from '../lib/entitlement';
 import type { Account, Learner, LearnerDevice, LearnerProfileFields, SnapshotRecord } from '../store';
@@ -74,6 +74,20 @@ export interface StoredSummary {
  * interface; `D1Db` is the Worker's binding, `MemoryDb` the test / dev stand-in.
  * Reads return copies: mutate, then `put` — nothing is saved by reference.
  */
+/** [SA] `Db.addLearnerWithinCaps` input: every cap that applies; an absent cap is `null`. */
+export interface AddLearnerWithinCapsInput {
+  spaceId: string;
+  learnerId: string;
+  joinedAt: string;
+  /** The space's own cap: a family 4, a class 20 or 50. */
+  spaceCap: number | null;
+  /** `LEARNER_CLASS_CAP` when the space is a class (the learner's live classes), else null. */
+  learnerClassCap: number | null;
+  /** The live school above a class and its distinct-student cap. */
+  schoolId: string | null;
+  schoolCap: number | null;
+}
+
 export interface Db {
   // accounts (F-SPACE-001 §3.1)
   getAccount(id: string): Promise<Account | null>;
@@ -149,6 +163,23 @@ export interface Db {
   removeMembership(spaceId: string, kind: MemberKind, memberId: string): Promise<boolean>;
   membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]>;
   membersOf(spaceId: string): Promise<Membership[]>;
+  /**
+   * [SA] Takes one learner seat atomically (AMENDMENTS-SEATS-ADMINS section 3.3): one statement inserts the student
+   * membership only while every cap given still has room, so two joins can never both take the last seat. `added`:
+   * the row is new; `already`: the learner was a member (nothing written); `refused`: a cap was full (nothing written).
+   */
+  addLearnerWithinCaps(input: AddLearnerWithinCapsInput): Promise<'added' | 'already' | 'refused'>;
+  /**
+   * [SA] Renames a live space with one column-only statement (section 5.2): the name is written only here and at
+   * insert (`putSpace` never writes it on update). The rows changed: 0 when the space is gone or archived.
+   */
+  renameSpace(spaceId: string, name: string): Promise<number>;
+  /** [SA] One `space_events` row (section 6.2); the kind is checked against `SpaceEventKindSchema`. */
+  addSpaceEvent(event: SpaceEvent): Promise<void>;
+  /** [SA] A space's events, newest first, at most `limit`. */
+  spaceEventsOf(spaceId: string, limit: number): Promise<SpaceEvent[]>;
+  /** [SA] Deletes at most `limit` `space_events` rows created before `before` (the 400-day purge); the count removed. */
+  purgeSpaceEvents(before: Date, limit: number): Promise<number>;
 
   // plans (F-PLAN-001)
   getPlan(id: string): Promise<Plan | null>;

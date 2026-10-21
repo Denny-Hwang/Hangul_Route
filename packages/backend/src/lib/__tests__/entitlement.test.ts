@@ -1,7 +1,7 @@
 import type { Entitlement, Space, Tier, TierSource } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDb as db } from '../../__tests__/helpers/db';
-import { classCap, classIsPro, isEntitlementActive, schoolIsFull, schoolLimits, schoolUsage, tierAfterMove, tierForLearner, tierFromSpaces } from '../entitlement';
+import { accountBrowseScope, adultSpacesOf, classCap, classCapFrom, classIsPro, isEntitlementActive, learnerCapOf, schoolIsFull, schoolLimits, schoolLimitsFrom, schoolUsage, tierAfterMove, tierForLearner, tierFromSpaces } from '../entitlement';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<Entitlement>): Entitlement => ({ id: 'ent:x', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: null, promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', ...over });
@@ -63,9 +63,10 @@ describe('school limits and usage (F-SCHOOL-001 §3.1)', () => {
   it('derives limits from the licence and counts distinct learners and teachers', async () => {
     const school = space('space:sch', 'school', 'principal');
     await db.putSpace(school);
-    expect(await schoolLimits(db, school, now)).toEqual({ licensed: false, students: null, teachers: null, license: null });
+    // [SA] AMENDMENTS-SEATS-ADMINS SA-D3: a school with nothing active still holds 50 students.
+    expect(await schoolLimits(db, school, now)).toEqual({ licensed: false, students: 50, teachers: null, license: null });
     await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'group_license', status: 'active', provider: 'manual' }, now);
-    expect(await schoolLimits(db, school, now)).toMatchObject({ licensed: true, students: 300, teachers: 10 });
+    expect(await schoolLimits(db, school, now)).toMatchObject({ licensed: true, students: 50, teachers: 10 });
     await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'group_license', status: 'expired', provider: 'manual' }, now);
     await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_seat', status: 'active', provider: 'manual', seats: null }, now);
     expect(await schoolLimits(db, school, now)).toMatchObject({ licensed: true, students: null, teachers: null });
@@ -223,5 +224,94 @@ describe('tierAfterMove (F-SPACE-002 §4.3, T6b / T7)', () => {
   it('an unknown destination id is skipped', async () => {
     await member('space:cls-pro', 'profile:mover');
     expect(await tierAfterMove(db, 'profile:mover', 'space:cls-pro', 'space:nowhere', now)).toEqual({ tier: 'free', source: null });
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS section 3.2: the cap of each space, row by row. */
+describe('[SA] classCap, schoolLimitsFrom, schoolIsFull and learnerCapOf (section 3.2)', () => {
+  const license = (subjectId: string, over: Partial<Entitlement> = {}) => ent({ subjectId, planKey: 'group_license', ...over });
+  const contract = (subjectId: string, seats: number | null) => ent({ subjectId, planKey: 'school_seat', seats });
+  const schoolOf = (over: Partial<Space> = {}): Space => ({ ...space('space:sch', 'school', 'principal'), ...over });
+
+  it('classCapFrom: a covered live school decides, then the own licence, then 20', () => {
+    const sch = schoolOf();
+    // stand-alone class
+    expect(classCapFrom([], null, [], now)).toBe(20);
+    expect(classCapFrom([license('space:cls')], null, [], now)).toBe(50);
+    expect(classCapFrom([license('space:cls', { status: 'expired' })], null, [], now)).toBe(20);
+    // class in a school with nothing active: 20, or 50 with its own licence (the school cap of 50 on top)
+    expect(classCapFrom([], sch, [], now)).toBe(20);
+    expect(classCapFrom([license('space:cls')], sch, [], now)).toBe(50);
+    // class in a licensed or contracted school: no class cap, whatever the class holds
+    expect(classCapFrom([], sch, [license('space:sch')], now)).toBe(Number.POSITIVE_INFINITY);
+    expect(classCapFrom([license('space:cls')], sch, [contract('space:sch', 80)], now)).toBe(Number.POSITIVE_INFINITY);
+    // an archived school covers nothing here: the class keeps its own cap
+    expect(classCapFrom([], schoolOf({ archivedAt: 't' }), [license('space:sch')], now)).toBe(20);
+    expect(classCapFrom([license('space:cls')], schoolOf({ archivedAt: 't' }), [license('space:sch')], now)).toBe(50);
+  });
+
+  it('schoolLimitsFrom: licence 50 and 10, contract its seats, nothing active 50 unlicensed', () => {
+    expect(schoolLimitsFrom([license('space:sch')], now)).toMatchObject({ licensed: true, students: 50, teachers: 10 });
+    expect(schoolLimitsFrom([contract('space:sch', 120)], now)).toMatchObject({ licensed: true, students: 120, teachers: null });
+    expect(schoolLimitsFrom([contract('space:sch', null)], now)).toMatchObject({ licensed: true, students: null });
+    expect(schoolLimitsFrom([], now)).toEqual({ licensed: false, students: 50, teachers: null, license: null });
+    expect(schoolLimitsFrom([license('space:sch', { status: 'expired' })], now)).toMatchObject({ licensed: false, students: 50 });
+  });
+
+  it('schoolIsFull applies to an unlicensed school too, never to an archived one', async () => {
+    const sch = schoolOf();
+    await db.putSpace(sch);
+    const a = space('space:a', 'class', 'principal', 'space:sch');
+    await db.putSpace(a);
+    for (let i = 0; i < 50; i += 1) await db.addMembership({ spaceId: 'space:a', memberKind: 'learner', memberId: `profile:s${i}`, role: 'student', joinedAt: 't' });
+    expect(await schoolIsFull(db, a, now)).toBe(true);
+    expect(await schoolIsFull(db, a, now, 'profile:s3')).toBe(false); // already counted
+    await db.putSpace({ ...sch, archivedAt: 't' });
+    expect(await schoolIsFull(db, a, now)).toBe(false);
+  });
+
+  it('classCap and learnerCapOf read the same rule from the Db', async () => {
+    const sch = schoolOf();
+    await db.putSpace(sch);
+    const a = space('space:a', 'class', 'principal', 'space:sch');
+    const solo = space('space:solo', 'class', 't2');
+    const fam = space('space:fam', 'family', 'mom');
+    for (const s of [a, solo, fam]) await db.putSpace(s);
+    expect(await learnerCapOf(db, fam, now)).toEqual({ cap: 4, schoolId: null, schoolCap: null });
+    expect(await learnerCapOf(db, solo, now)).toEqual({ cap: 20, schoolId: null, schoolCap: null });
+    expect(await learnerCapOf(db, a, now)).toEqual({ cap: 20, schoolId: 'space:sch', schoolCap: 50 });
+    expect(await learnerCapOf(db, sch, now)).toEqual({ cap: null, schoolId: null, schoolCap: null });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:solo', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    expect(await classCap(db, solo, now)).toBe(50);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:a', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    expect(await learnerCapOf(db, a, now)).toEqual({ cap: 50, schoolId: 'space:sch', schoolCap: 50 });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_seat', status: 'active', provider: 'manual', seats: 200 }, now);
+    expect(await learnerCapOf(db, a, now)).toEqual({ cap: null, schoolId: 'space:sch', schoolCap: 200 });
+    expect(await classCap(db, a, now)).toBe(Number.POSITIVE_INFINITY);
+    await db.putSpace({ ...sch, archivedAt: 't' });
+    expect(await learnerCapOf(db, a, now)).toEqual({ cap: 50, schoolId: null, schoolCap: null });
+  });
+
+  it('a licensed class covers every member above the cap (grandfathered, SA-D7)', async () => {
+    const solo = space('space:solo', 'class', 't2');
+    await db.putSpace(solo);
+    for (let i = 0; i < 70; i += 1) await db.addMembership({ spaceId: 'space:solo', memberKind: 'learner', memberId: `profile:g${i}`, role: 'student', joinedAt: 't' });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:solo', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    expect((await tierForLearner(db, 'profile:g69', now)).tier).toBe('premium');
+    expect(await classIsPro(db, solo, now)).toBe(true);
+  });
+
+  it('adultSpacesOf: the payer is billing.manage, so an admin gets no browse coverage from an archived school', async () => {
+    await db.putSpace({ ...schoolOf(), archivedAt: 't' });
+    await db.addMembership({ spaceId: 'space:sch', memberKind: 'account', memberId: 'principal', role: 'owner', joinedAt: 't' });
+    await db.addMembership({ spaceId: 'space:sch', memberKind: 'account', memberId: 'ms-park', role: 'admin', joinedAt: 't' });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    expect((await adultSpacesOf(db, 'principal', now)).entries.map((e) => e.payer)).toEqual([true]);
+    expect((await adultSpacesOf(db, 'ms-park', now)).entries.map((e) => e.payer)).toEqual([false]);
+    expect(await accountBrowseScope(db, 'principal', now)).toBe('full');
+    expect(await accountBrowseScope(db, 'ms-park', now)).toBe('sampler');
+    // a live school still covers its admin
+    await db.putSpace(schoolOf());
+    expect(await accountBrowseScope(db, 'ms-park', now)).toBe('full');
   });
 });

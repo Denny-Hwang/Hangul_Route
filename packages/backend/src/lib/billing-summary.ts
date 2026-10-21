@@ -1,6 +1,5 @@
 import {
   FAMILY_LIFETIME_LEARNERS,
-  FREE_CLASS_STUDENT_CAP,
   RECEIPTS_CARD_LIMIT,
   isStripeSubscriptionRef,
   type BillingAccountCard,
@@ -21,12 +20,12 @@ import {
 import type { Db } from '../db';
 import { newestBillingEvent } from '../db/billing-rules';
 import { INVOICE_PAYMENTS_API_VERSION, STRIPE_LOOKUP_TIMEOUT_MS } from './billing-events';
-import { adultSpacesOf, isEntitlementActive, schoolLimitsFrom, schoolUsageFrom, type AdultSpace } from './entitlement';
+import { adultSpacesOf, classCapFrom, isEntitlementActive, schoolLimitsFrom, schoolUsageFrom, type AdultSpace } from './entitlement';
 import { billingLiveAllowed, stripeMode, type StripeEnv } from './stripe';
 
 /**
  * The billing home's data — F-BILL-002 B-4 (sections 4.2, 4.6, 5.2, 5.3).
- * One card per space where the account is a grown-up; the payer (`space.manage`)
+ * One card per space where the account is a grown-up; the payer (`billing.manage` [SA])
  * gets usage, actions and receipts, every viewer only coverage and status. Never
  * a learner name, a promo code, a price, a Stripe customer or a join code.
  * Reads only; no Stripe call (receipt links are fetched per click, `receiptUrl`).
@@ -120,7 +119,7 @@ interface CardPlan {
   entry: AdultSpace;
   row: Entitlement | null;
   live: boolean;
-  /** `space.manage`, except that the owner of a class inside a school is a viewer unless the class holds its own plan (the school pays, section 4.2). */
+  /** `billing.manage` ([SA]: the owner), except that the owner of a class inside a school is a viewer unless the class holds its own plan (the school pays, section 4.2). */
   payer: boolean;
 }
 
@@ -133,6 +132,13 @@ function planCard(entry: AdultSpace, reads: Pick<SummaryReads, 'rowsOf'>, now: D
   // `row` is active or past due here, so a past-due subscription Stripe still retries keeps its card and its Manage button.
   if (space.archivedAt && !(payer && row && renews(row))) return null;
   return { entry, row, live: !!row && isEntitlementActive(row, now), payer };
+}
+
+const finiteOrNull = (cap: number): number | null => (Number.isFinite(cap) ? cap : null);
+
+/** [SA] Section 3.6: a school card's seat counts are for its owner (the payer) and its admins (no longer payers, SA-D11). */
+function seesSchoolCounts(entry: Pick<AdultSpace, 'space' | 'role'>, payer: boolean): boolean {
+  return entry.space.kind === 'school' && (payer || entry.role === 'admin');
 }
 
 function spaceCard(plan: CardPlan, reads: SummaryReads, mode: StripeMode, now: Date): BillingSpaceCard {
@@ -154,17 +160,19 @@ function spaceCard(plan: CardPlan, reads: SummaryReads, mode: StripeMode, now: D
 
   let usage: Usage | null;
   if (space.kind === 'school') {
-    if (payer) {
+    if (seesSchoolCounts(entry, payer)) {
       const limits = schoolLimitsFrom(reads.rowsOf(space.id), now);
       const counts = schoolUsageFrom(space, reads.childrenOf(space.id), reads.membersOf);
       usage = { learners: counts.students, learnerCap: limits.students, teachers: counts.teachers, teacherCap: limits.teachers };
     } else {
-      usage = null; // seat counts are for payers only
+      usage = null; // seat counts are for the owner and the admins only
     }
   } else {
     const learners = reads.membersOf(space.id).filter((m) => m.memberKind === 'learner').length;
-    // Every family holds up to five learners, paid or not (AS2); a class is capped until it is covered. Viewers get the count only (section 5.3).
-    const learnerCap = !payer ? null : space.kind === 'family' ? FAMILY_LIFETIME_LEARNERS : covered ? null : FREE_CLASS_STUDENT_CAP;
+    // [SA] AMENDMENTS-SEATS-ADMINS section 3.6: every family holds up to 4 learners, paid or not; a class its
+    // `classCapFrom` cap (20 free, 50 with its own licence, none under a covered school, whose card shows the
+    // school count). Viewers get the count only (section 5.3).
+    const learnerCap = !payer ? null : space.kind === 'family' ? FAMILY_LIFETIME_LEARNERS : finiteOrNull(classCapFrom(reads.rowsOf(space.id), inSchool ? parent : null, inSchool && parent ? reads.rowsOf(parent.id) : [], now));
     usage = { learners, learnerCap, teachers: null, teacherCap: null };
   }
 
@@ -226,15 +234,15 @@ export function purchasesOpen(env: StripeEnv): boolean {
 export async function billingSummaryFor(db: Db, env: StripeEnv, accountId: string, now: Date): Promise<BillingSummary> {
   const mode = stripeMode(env);
   const adult = await adultSpacesOf(db, accountId, now);
-  const payerSchools = adult.entries.filter((e) => e.payer && e.space.kind === 'school').map((e) => e.space.id);
+  const countedSchools = adult.entries.filter((e) => seesSchoolCounts(e, e.payer)).map((e) => e.space.id);
   const planIds = [...new Set(adult.entries.flatMap((e) => (e.parent ? [e.space.id, e.parent.id] : [e.space.id])))];
-  const [rows, children] = await Promise.all([db.entitlementsForSpaces(planIds), payerSchools.length > 0 ? db.childSpacesOfSpaces(payerSchools) : Promise.resolve([])]);
+  const [rows, children] = await Promise.all([db.entitlementsForSpaces(planIds), countedSchools.length > 0 ? db.childSpacesOfSpaces(countedSchools) : Promise.resolve([])]);
   const rowsBySpace = groupBy(rows, (e) => e.subjectId);
   const rowsOf = (spaceId: string): readonly Entitlement[] => rowsBySpace.get(spaceId) ?? [];
 
   const plans = adult.entries.flatMap((entry) => planCard(entry, { rowsOf }, now) ?? []);
   const liveClasses = children.filter((s) => s.kind === 'class' && !s.archivedAt);
-  const memberIds = [...new Set([...plans.filter((p) => p.entry.space.kind !== 'school' || p.payer).map((p) => p.entry.space.id), ...liveClasses.map((s) => s.id)])];
+  const memberIds = [...new Set([...plans.filter((p) => p.entry.space.kind !== 'school' || seesSchoolCounts(p.entry, p.payer)).map((p) => p.entry.space.id), ...liveClasses.map((s) => s.id)])];
   const payerIds = plans.filter((p) => p.payer).map((p) => p.entry.space.id);
   const [members, events, account] = await Promise.all([
     memberIds.length > 0 ? db.membersOfSpaces(memberIds) : Promise.resolve([]),

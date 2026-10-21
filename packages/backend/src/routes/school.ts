@@ -6,6 +6,7 @@ import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
 import { isEntitlementActive, schoolLimits, schoolUsage } from '../lib/entitlement';
 import { isJoinCodeLive } from '../lib/join-code';
+import { hasOpenMoves } from './spaces';
 
 /** /api/spaces/:id/school + /:id/members — F-SCHOOL-001 §3.2. Aggregates only. */
 export const schoolRoutes = new Hono();
@@ -35,9 +36,12 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
   if (!school || school.kind !== 'school') return fail(c, 'not_found', 'School not found', 404);
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
-  if (!can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, school) })) return fail(c, 'forbidden', 'Not allowed for this school', 403);
+  const actor = await accountActor(db, account);
+  if (!can(actor, 'space.manage', { kind: 'space', ctx: await spaceContext(db, school) })) return fail(c, 'forbidden', 'Not allowed for this school', 403);
 
   const now = new Date();
+  // [SA] section 5.3: whether this grown-up may rename the school and each class row (an admin holds both).
+  const renames = (space: Space, parent: Space | null): boolean => can(actor, 'space.rename', { kind: 'space', ctx: { space, parent } });
   const limits = await schoolLimits(db, school, now);
   const usage = await schoolUsage(db, school);
   const classes = [];
@@ -65,6 +69,8 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
       practiced: clsPracticed,
       lastActiveAt: lastActive.sort().at(-1) ?? null,
       hasPublishedPlan: (await db.plansOf(cls.id)).some((p) => p.publishedAt && !p.archivedAt),
+      canRename: renames(cls, school),
+      openMoves: renames(cls, school) ? await hasOpenMoves(db, cls.id) : false,
     });
   }
   classes.sort((a, b) => Number(!!a.space.archivedAt) - Number(!!b.space.archivedAt) || b.space.createdAt.localeCompare(a.space.createdAt));
@@ -73,8 +79,11 @@ schoolRoutes.get('/:id/school', async (c: Context) => {
   return ok(c, {
     school: publicSpace(school),
     invite: isJoinCodeLive(school, now) ? { joinCode: school.joinCode, joinCodeExpiresAt: school.joinCodeExpiresAt } : { joinCode: null, joinCodeExpiresAt: null },
-    license: license ? { ...license, subjectName: school.name, active: isEntitlementActive(license, now) } : null,
+    // [SA] section 3.6: an allow-list for every caller; never a Stripe id or a promo code (billing is the owner's).
+    license: license ? { planKey: license.planKey, status: license.status, seats: license.seats, expiresAt: license.expiresAt, active: isEntitlementActive(license, now), subjectName: school.name } : null,
+    // [SA] section 3.2: 50 for a licence, the contract's seats, or 50 for a school with nothing active (`licensed: false`).
     limits: { licensed: limits.licensed, students: limits.students, teachers: limits.teachers },
+    canRename: renames(school, null),
     usage,
     thisWeek: { students: usage.students, practiced, classes: live.length, classesWithPlan: live.filter((k) => k.hasPublishedPlan).length },
     classes,

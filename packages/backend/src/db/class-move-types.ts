@@ -52,6 +52,9 @@ export interface ExecuteClassMoveInput {
   destCap: number;
   /** `LEARNER_CLASS_CAP`: live classes the learner may be in besides the source. */
   learnerCap: number;
+  /** [SA] The destination's live school and its distinct-student cap (as `ExecuteTransferInput`); null = none. */
+  destSchoolId?: string | null;
+  destSchoolCap?: number | null;
   now: Date;
 }
 

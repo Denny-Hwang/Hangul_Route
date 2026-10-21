@@ -80,8 +80,15 @@ export function isStripeSubscriptionRef(ref: string | null | undefined): boolean
   return typeof ref === 'string' && ref.startsWith('sub_');
 }
 
-/** A Family Plan (key `family_lifetime`) covers one family space with up to this many learners. */
-export const FAMILY_LIFETIME_LEARNERS = 5;
+/**
+ * Learners a family space holds, free or on the Family Plan (key `family_lifetime`). [SA] 4 since
+ * AMENDMENTS-SEATS-ADMINS SA-D1 (was 5): one cap for every family, so buying the plan never lowers a family's room.
+ * Learner memberships only; grown-ups are not capped (OQ-11).
+ */
+export const FAMILY_LIFETIME_LEARNERS = 4;
+
+/** [SA] Students the Group License holds: a stand-alone class with its own licence, or a licensed school (SA-D2). */
+export const GROUP_LICENSE_LEARNERS = 50;
 
 /**
  * Promotion / referral codes — F-ENT-002. The owner creates them in the Stripe
@@ -159,9 +166,18 @@ export type TierSource = z.infer<typeof TierSourceSchema>;
 export const TierSchema = z.enum(['free', 'premium']);
 export type Tier = z.infer<typeof TierSchema>;
 
-/** Group licence limits (roadmap §7): a school on `group_license` holds this many; beyond it, `school_seat` (contact us). */
-export const SCHOOL_LICENSE_STUDENTS = 300;
+/**
+ * Group licence limits (roadmap §7): a school on `group_license` holds this many; beyond it, `school_seat` (contact us).
+ * [SA] Students 50, the Group License's own number (SA-D2; was 300). Teachers unchanged (SA-D4).
+ */
+export const SCHOOL_LICENSE_STUDENTS = GROUP_LICENSE_LEARNERS;
 export const SCHOOL_LICENSE_TEACHERS = 10;
+/** [SA] Distinct students every school without a School Contract holds, licensed or not (SA-D3). */
+export const SCHOOL_LEARNER_CAP = GROUP_LICENSE_LEARNERS;
+/** [SA] School administrators besides the owner (SA-D10): 3 grown-ups with admin rights in total. */
+export const SCHOOL_ADMIN_CAP = 2;
+/** [SA] How long an administrator invite link works (SA-D10). */
+export const ADMIN_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** POST /api/spaces/:id/members body — F-SCHOOL-001 §3.2. */
 export const MemberAddSchema = z.object({

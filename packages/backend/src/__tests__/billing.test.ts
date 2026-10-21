@@ -2,6 +2,8 @@ import {
   BillingSummarySchema,
   FAMILY_LIFETIME_LEARNERS,
   FREE_CLASS_STUDENT_CAP,
+  GROUP_LICENSE_LEARNERS,
+  SCHOOL_LEARNER_CAP,
   RECEIPTS_CARD_LIMIT,
   RECEIPTS_PAGE_LIMIT,
   ReceiptViewSchema,
@@ -194,12 +196,12 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     expect(cardOf(await summaryOf('teacher'), cls)).toMatchObject({ payer: true, readOnlyReason: null, coverage: { state: 'free' }, usage: { learners: 14, learnerCap: FREE_CLASS_STUDENT_CAP }, actions: { buy: 'group_license', manage: false, contact: false } });
   });
 
-  it('owner with a license: no cap; co-teacher: read-only class card', async () => {
+  it('owner with a license: the Group License cap of 50 ([SA] section 3.6); co-teacher: read-only class card', async () => {
     const cls = await createSpace('teacher', 'class', 'Room 4');
     await addAdult(cls, 'co', 'teacher');
     await addLearners(cls, 23);
     await entitle(cls, { planKey: 'group_license' });
-    expect(cardOf(await summaryOf('teacher'), cls)).toMatchObject({ coverage: { state: 'own', planKey: 'group_license' }, usage: { learners: 23, learnerCap: null }, actions: { buy: null, manage: true } });
+    expect(cardOf(await summaryOf('teacher'), cls)).toMatchObject({ coverage: { state: 'own', planKey: 'group_license' }, usage: { learners: 23, learnerCap: GROUP_LICENSE_LEARNERS }, actions: { buy: null, manage: true } });
     expect(cardOf(await summaryOf('co'), cls)).toMatchObject({ role: 'teacher', payer: false, readOnlyReason: 'class', usage: { learners: 23, learnerCap: null }, actions: { buy: null, manage: false, contact: false }, receipts: [] });
   });
 
@@ -239,7 +241,10 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     await addAdult(sch, 'kim', 'teacher');
     const own = await createSpace('kim', 'class', 'Room 5', sch);
     await entitle(own, { planKey: 'group_license' });
-    expect(cardOf(await summaryOf('kim'), own)).toMatchObject({ payer: true, readOnlyReason: null, coverage: { state: 'own', planKey: 'group_license' }, actions: { buy: null, manage: true } });
+    // [SA] section 3.6: its own licence holds 50 while the school is not covered; once it is, the school count decides.
+    expect(cardOf(await summaryOf('kim'), own)).toMatchObject({ payer: true, readOnlyReason: null, coverage: { state: 'own', planKey: 'group_license' }, usage: { learnerCap: GROUP_LICENSE_LEARNERS }, actions: { buy: null, manage: true } });
+    await entitle(sch, { planKey: 'group_license' });
+    expect(cardOf(await summaryOf('kim'), own).usage).toMatchObject({ learnerCap: null });
   });
 
   it('class inside a school without a school plan: free, still the school manages it, no buy', async () => {
@@ -262,7 +267,7 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     expect(cardOf(await summaryOf('kim'), sch)).toMatchObject({ coverage: { state: 'free' }, usage: null, actions: { buy: null } });
   });
 
-  it('school owner and school admin are both payers: seat counts, actions, receipts', async () => {
+  it('[SA] the school owner pays; a school admin sees the seat counts read-only: no actions, no receipts (section 6.5)', async () => {
     const sch = await createSpace('principal', 'school', 'Maple School');
     await addAdult(sch, 'vice', 'admin');
     await addAdult(sch, 'kim', 'teacher');
@@ -270,16 +275,19 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     await addLearners(cls, 4);
     await entitle(sch, { planKey: 'group_license' });
     await history(sch, { planKey: 'group_license', amountCents: 15300 });
-    for (const user of ['principal', 'vice']) {
-      const c = cardOf(await summaryOf(user), sch);
-      expect(c).toMatchObject({ payer: true, readOnlyReason: null, usage: { learners: 4, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 1, teacherCap: SCHOOL_LICENSE_TEACHERS }, actions: { buy: null, manage: true, contact: true }, hasReceipts: true });
-      expect(c.receipts).toHaveLength(1);
-    }
+    const usage = { learners: 4, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 1, teacherCap: SCHOOL_LICENSE_TEACHERS };
+    const owner = cardOf(await summaryOf('principal'), sch);
+    expect(owner).toMatchObject({ payer: true, readOnlyReason: null, usage, actions: { buy: null, manage: true, contact: true }, hasReceipts: true });
+    expect(owner.receipts).toHaveLength(1);
+    const admin = cardOf(await summaryOf('vice'), sch);
+    expect(admin).toMatchObject({ role: 'admin', payer: false, readOnlyReason: 'school', usage, actions: { buy: null, manage: false, contact: false }, receipts: [], hasReceipts: false });
+    // a school teacher still sees no seat counts
+    expect(cardOf(await summaryOf('kim'), sch).usage).toBeNull();
   });
 
-  it('free school owner: Group License to buy, Contact us, counts without caps', async () => {
+  it('free school owner: Group License to buy, Contact us, the school cap of 50 and no teacher cap ([SA] SA-D3)', async () => {
     const sch = await createSpace('principal', 'school', 'Maple School');
-    expect(cardOf(await summaryOf('principal'), sch)).toMatchObject({ coverage: { state: 'free' }, usage: { learners: 0, learnerCap: null, teachers: 0, teacherCap: null }, actions: { buy: 'group_license', manage: false, contact: true } });
+    expect(cardOf(await summaryOf('principal'), sch)).toMatchObject({ coverage: { state: 'free' }, usage: { learners: 0, learnerCap: SCHOOL_LEARNER_CAP, teachers: 0, teacherCap: null }, actions: { buy: 'group_license', manage: false, contact: true } });
   });
 
   it('a school contract: own coverage for payers, no Stripe manage, Contact us', async () => {
@@ -455,7 +463,7 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
 });
 
 describe('GET /api/billing/receipts (payers only, OD-8)', () => {
-  it('lists up to 50 rows newest first for the owner and a school admin, with no Stripe call', async () => {
+  it('lists up to 50 rows newest first for the owner, with no Stripe call; [SA] a school admin is refused', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
     for (let i = 0; i < RECEIPTS_PAGE_LIMIT + 5; i += 1) await history(fam);
     const r = await call('GET', `/api/billing/receipts?id=${encodeURIComponent(fam)}`, bearer('mom'));
@@ -471,7 +479,9 @@ describe('GET /api/billing/receipts (payers only, OD-8)', () => {
     const sch = await createSpace('principal', 'school', 'Maple School');
     await addAdult(sch, 'vice', 'admin');
     await history(sch, { planKey: 'group_license' });
-    expect(((await call('GET', `/api/billing/receipts?id=${encodeURIComponent(sch)}`, bearer('vice'))).body.data as { receipts: unknown[] }).receipts).toHaveLength(1);
+    expect(((await call('GET', `/api/billing/receipts?id=${encodeURIComponent(sch)}`, bearer('principal'))).body.data as { receipts: unknown[] }).receipts).toHaveLength(1);
+    // [SA] section 6.5: receipts show the payer's name and address; an admin is not the payer.
+    expect((await call('GET', `/api/billing/receipts?id=${encodeURIComponent(sch)}`, bearer('vice'))).status).toBe(403);
   });
 
   it('refuses a caregiver, a teacher and a stranger with 403, an unknown space with 404, a missing id with 422', async () => {

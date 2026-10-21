@@ -10,6 +10,7 @@ import {
   approve,
   B,
   base,
+  bearer,
   C,
   call,
   cancel,
@@ -380,7 +381,7 @@ describe('approve: the learner slot of a teacher-started request (caregiver rout
     const created = requestOf(await create(A, 'teacher-a', classCreate()));
     const digest = await familyDigest(created.id);
     const b = await db.getSpace(B);
-    await db.putSpace({ ...b!, name: 'Renamed Class B' });
+    await db.renameSpace(b!.id, 'Renamed Class B');
     const r = await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, termsDigest: digest } });
     expect([r.status, r.body.error?.code]).toEqual([409, 'terms_changed']);
     expect((await db.getTransfer(created.id))?.learner.state).toBe('pending');
@@ -613,7 +614,7 @@ describe('freshness of the learner consent (section 4.6 step 5)', () => {
     const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
     await approve(A, 'teacher-a', created.id, { slots: ['source'] });
     const b = await db.getSpace(B);
-    await db.putSpace({ ...b!, name: 'Renamed Class B' });
+    await db.renameSpace(b!.id, 'Renamed Class B');
     const r = await approve(B, 'teacher-b', created.id, { slots: ['destination'] });
     expect(r.status).toBe(200);
     expect(requestOf(r)).toMatchObject({ status: 'requested', steps: { learner: 'waiting', source: 'yes', destination: 'yes' } });
@@ -859,5 +860,38 @@ describe('query budget of the executing paths (D1 per-invocation limit)', () => 
     const retryLarge = await executingRetry();
     expect(retryLarge).toBe(retrySmall);
     expect(retryLarge).toBeLessThanOrEqual(EXECUTING_RETRY_DB_CALLS);
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS section 5.4: a rename through `PATCH /:id/name` and the open transfers it names. */
+describe('[SA] a rename and the consent terms (section 5.4)', () => {
+  const rename = (spaceId: string, user: string, name: string) => call('PATCH', `/api/spaces/${spaceId}/name`, bearer(user), { name });
+  const openMovesOf = async (spaceId: string, user: string) => ((await call('GET', `/api/spaces/${spaceId}/roster`, bearer(user))).body.data as { openMoves: boolean }).openMoves;
+
+  it('consent given, the destination renamed: settle reports terms_changed and the request goes back to the guardian', async () => {
+    const created = await agreedFamilyMove();
+    expect(await openMovesOf(B, 'teacher-b')).toBe(true);
+    expect(await openMovesOf(A, 'teacher-a')).toBe(true);
+    expect((await rename(B, 'teacher-b', 'Saturday Class B2')).status).toBe(200);
+    // due: the guardian's page settles the request, and the consent was given to a place of another name
+    travel(AFTER_COOLING_OFF);
+    expect(requestsOf(await list(FAMILY, 'mom'))[0]).toMatchObject({ status: 'requested', learnerState: 'pending' });
+    expect(await db.getTransfer(created.id)).toMatchObject({ status: 'requested', learner: { state: 'pending' } });
+    expect((await db.transferEvents(created.id)).filter((e) => e.event === 'consent_reset').map((e) => e.detail)).toEqual([{ why: 'terms_changed' }]);
+    expect([await inClass(A), await inClass(B)]).toEqual([true, false]);
+    // the guardian agrees again to the new name; the move goes ahead after a new cooling-off
+    expect((await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent })).status).toBe(200);
+    expect((await db.getTransfer(created.id))?.status).toBe('approved');
+  });
+
+  it('openMoves is false once no open transfer names the space, and a rename then writes nothing to transfer_requests', async () => {
+    const created = await agreedFamilyMove();
+    expect((await cancel(FAMILY, 'mom', created.id)).status).toBe(200);
+    expect(await openMovesOf(B, 'teacher-b')).toBe(false);
+    const before = await db.getTransfer(created.id);
+    expect((await rename(B, 'teacher-b', 'Saturday Class B2')).status).toBe(200);
+    expect(await db.getTransfer(created.id)).toEqual(before);
+    // a space no transfer ever named
+    expect(await openMovesOf(C, 'teacher-c')).toBe(false);
   });
 });

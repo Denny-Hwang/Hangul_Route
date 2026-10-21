@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, FAMILY_LIFETIME_LEARNERS, isStripeSubscriptionRef, MemberAddSchema, PLAN_PRICING, PromoCheckSchema, PromoSchema, ReceiptVerifySchema, discountedUsd, normalizePromoCode, promoLabel, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, SyncInboxSchema, TIER_GRACE_MS } from '../index';
+import { ADMIN_INVITE_TTL_MS, CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_ADMIN_CAP, SCHOOL_LEARNER_CAP, isStripeSubscriptionRef, MemberAddSchema, PLAN_PRICING, PromoCheckSchema, PromoSchema, ReceiptVerifySchema, discountedUsd, normalizePromoCode, promoLabel, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, SyncInboxSchema, TIER_GRACE_MS } from '../index';
 
 describe('entitlement schemas (F-ENT-001 §3.1)', () => {
   const row = { id: 'ent:abc', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1', seats: null, expiresAt: null, updatedAt: 't' };
@@ -20,7 +20,8 @@ describe('entitlement schemas (F-ENT-001 §3.1)', () => {
     expect(isStripeSubscriptionRef('sub_1')).toBe(true);
     expect([isStripeSubscriptionRef('pi_1'), isStripeSubscriptionRef('cs_1'), isStripeSubscriptionRef(null), isStripeSubscriptionRef(undefined)]).toEqual([false, false, false, false]);
     expect(PLAN_PRICING.group_license).toEqual({ amountUsd: 153, per: 'year', label: '$153 / year' });
-    expect(FAMILY_LIFETIME_LEARNERS).toBe(5);
+    // [SA] AMENDMENTS-SEATS-ADMINS SA-D1: every family holds up to 4 learners (was 5); the prices above are unchanged.
+    expect(FAMILY_LIFETIME_LEARNERS).toBe(4);
     expect(EntitlementSchema.parse(row).promoCode).toBeNull();
     expect(EntitlementSchema.parse({ ...row, promoCode: 'HOYA20' }).promoCode).toBe('HOYA20');
   });
@@ -54,7 +55,10 @@ describe('entitlement schemas (F-ENT-001 §3.1)', () => {
     const rich = SyncInboxSchema.parse({ rev: 1, plans: [], memberships: [], tier: 'premium', tierSource: { kind: 'class', spaceId: 'space:c', name: 'A' }, tierValidUntil: 'u', serverTime: 't' });
     expect(rich.tierSource?.name).toBe('A');
     expect(TIER_GRACE_MS).toBe(604_800_000);
-    expect([SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS]).toEqual([300, 10]);
+    // [SA] SA-D2 to SA-D4, SA-D10: the Group License holds 50 students (a class or a school), every school 50, teachers 10.
+    expect([GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_STUDENTS, SCHOOL_LEARNER_CAP, SCHOOL_LICENSE_TEACHERS]).toEqual([50, 50, 50, 10]);
+    expect(SCHOOL_ADMIN_CAP).toBe(2);
+    expect(ADMIN_INVITE_TTL_MS).toBe(7 * 24 * 60 * 60 * 1000);
     expect(MemberAddSchema.parse({ accountId: 't2', role: 'teacher' }).role).toBe('teacher');
     expect(MemberAddSchema.safeParse({ accountId: 't2', role: 'admin' }).success).toBe(false);
   });

@@ -42,7 +42,21 @@ describe('can() — F-SPACE-001 §3.4', () => {
     const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
     const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
     const ctx = { space: family, parent: null };
-    expect([...allowedOnSpace(mom as never, ctx)].sort()).toEqual(['feedback.oversee', 'feedback.send', 'learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'space.manage', 'summary.read']);
+    expect([...allowedOnSpace(mom as never, ctx)].sort()).toEqual([
+      'admin.manage',
+      'billing.manage',
+      'feedback.oversee',
+      'feedback.send',
+      'learner.delete',
+      'plan.write',
+      'roster.manage',
+      'snapshot.read',
+      'space.archive',
+      'space.manage',
+      'space.rename',
+      'space.settings',
+      'summary.read',
+    ]);
     expect([...allowedOnSpace(dad as never, ctx)].sort()).toEqual(['feedback.oversee', 'learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'summary.read']);
     expect(can(dad, 'snapshot.read', { kind: 'learner', learnerId: 'profile:a', spaces: [ctx] })).toBe(true);
     expect(can(dad, 'space.manage', { kind: 'space', ctx })).toBe(false);
@@ -201,5 +215,70 @@ describe('feedback.send and feedback.oversee (F-FEEDBACK-001 section 6.1)', () =
       expect(onSpace(stranger, action, { ...famCtx, sendGrant: true })).toBe(false);
       expect(onSpace(odd, action, { ...classCtx, sendGrant: true })).toBe(false);
     }
+  });
+});
+
+/** [SA] AMENDMENTS-SEATS-ADMINS sections 5.1 and 6.5: rename, and the owner-only actions. */
+describe('can() — [SA] space.rename and the owner-only actions', () => {
+  const OWNER_ONLY: Action[] = ['billing.manage', 'admin.manage', 'space.settings', 'space.archive'];
+  const standalone = space('space:solo', 'class', 'solo-teacher');
+  const famCtx = { space: family, parent: null };
+  const schoolCtx = { space: school, parent: null };
+  const classCtx = { space: klass, parent: school };
+  const soloCtx = { space: standalone, parent: null };
+  const at = (actor: Actor, action: Action, ctx: { space: Space; parent: Space | null }): boolean => can(actor, action, { kind: 'space', ctx });
+
+  it('a family: the owner renames and holds every owner-only action; a caregiver none', () => {
+    const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
+    const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
+    for (const action of ['space.rename', ...OWNER_ONLY] as Action[]) {
+      expect(at(mom, action, famCtx), action).toBe(true);
+      expect(at(dad, action, famCtx), action).toBe(false);
+    }
+  });
+
+  it('a stand-alone class: the owner and a teacher member rename; only the owner holds the owner-only actions', () => {
+    const owner = account('solo-teacher', [member('space:solo', 'solo-teacher', 'owner')]);
+    const co = account('co', [member('space:solo', 'co', 'teacher')]);
+    expect(at(owner, 'space.rename', soloCtx)).toBe(true);
+    expect(at(co, 'space.rename', soloCtx)).toBe(true);
+    for (const action of OWNER_ONLY) {
+      expect(at(owner, action, soloCtx), action).toBe(true);
+      expect(at(co, action, soloCtx), action).toBe(false);
+    }
+  });
+
+  it('a school: the owner and an admin rename it; a teacher does not; only the owner holds the owner-only actions', () => {
+    const principal = account('principal', [member('space:sch', 'principal', 'owner')]);
+    const dean = account('dean', [member('space:sch', 'dean', 'admin')]);
+    const teacher = account('ms-park', [member('space:sch', 'ms-park', 'teacher')]);
+    expect([at(principal, 'space.rename', schoolCtx), at(dean, 'space.rename', schoolCtx), at(teacher, 'space.rename', schoolCtx)]).toEqual([true, true, false]);
+    for (const action of OWNER_ONLY) {
+      expect(at(principal, action, schoolCtx), action).toBe(true);
+      expect(at(dean, action, schoolCtx), action).toBe(false);
+      expect(at(teacher, action, schoolCtx), action).toBe(false);
+    }
+    // an admin still runs the school page and its invite code (space.manage stays)
+    expect(at(dean, 'space.manage', schoolCtx)).toBe(true);
+  });
+
+  it('a class of a school: its owner, its teachers and the school owner and admins rename it; other teachers of the school do not', () => {
+    const classOwner = account('teacher', [member('space:cls', 'teacher', 'owner')]);
+    const classTeacher = account('helper', [member('space:cls', 'helper', 'teacher')]);
+    const principal = account('principal', [member('space:sch', 'principal', 'owner')]);
+    const dean = account('dean', [member('space:sch', 'dean', 'admin')]);
+    const other = account('mr-lee', [member('space:sch', 'mr-lee', 'teacher')]);
+    expect([classOwner, classTeacher, principal, dean, other].map((a) => at(a, 'space.rename', classCtx))).toEqual([true, true, true, true, false]);
+    // the cascade never carries the owner-only actions to the school's owner or admins
+    for (const action of OWNER_ONLY) {
+      expect(at(principal, action, classCtx), action).toBe(false);
+      expect(at(dean, action, classCtx), action).toBe(false);
+      expect(at(classOwner, action, classCtx), action).toBe(true);
+    }
+  });
+
+  it('a learner never renames or manages a space', () => {
+    const me: Actor = { kind: 'learner', learnerId: 'profile:a' };
+    for (const action of ['space.rename', ...OWNER_ONLY] as Action[]) expect(at(me, action, famCtx), action).toBe(false);
   });
 });
