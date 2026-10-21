@@ -272,7 +272,7 @@ describe('consent text per locale', () => {
 describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMMARY_KEYS)', () => {
   const summaryKeys = Object.keys(ProgressSummarySchema.shape).sort();
 
-  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor, selfRoute, vocab and routeGoal', () => {
+  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor, selfRoute, vocab, routeGoal and memory', () => {
     expect([...TEACHER_VISIBLE_SUMMARY_KEYS]).toEqual([
       'lastActiveAt',
       'streakDays',
@@ -289,7 +289,8 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     // selfRoute: the family space reads it, a class or school never does (F-PLAN-002 section 3.10).
     // vocab: hidden until F-VOC-005 P-4b adds its consent item (P-4 shipped the console line dormant).
     // routeGoal: the family space reads it, a class or school never does (Learning Route section 9, LR-W1).
-    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal']);
+    // memory: hidden until the F-CURR-002 row that shows it to a class adds its consent item (section 4.8).
+    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory']);
   });
 
   it('allow-lists summary.activity under the activity item, whose sentence names day-by-day practice (F-REPORT-001 RP-W2)', () => {
