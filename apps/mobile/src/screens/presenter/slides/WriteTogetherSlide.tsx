@@ -18,7 +18,8 @@ export type WriteTogetherBody = Extract<Slide, { kind: 'write-together' }>;
  * Compact levels (`useFitLevel`), for a long frame, two word banks or the name round's sound table on
  * a small stage: 1 draws the Korean of a frame, a target and an example one size down (`title` to
  * `prompt`, `prompt` to `body`), the trace ghost at `presenter.size.display`, and lets each block of the
- * sound table take only its own width; 2 draws the table's blocks (no side padding) and every part's gaps tight. Never
+ * sound table take only its own width; 2 draws the table's blocks (no side padding, the rows on one shared
+ * outline) and every part's gaps tight. Never
  * below the stage text floor (18 px).
  */
 const MAX_LEVEL = 2;
@@ -43,7 +44,7 @@ export function WriteTogetherSlide({ slide, reveal, romanization }: { slide: Wri
   const fit = useFitLevel(MAX_LEVEL, unit);
   const view = writeView(slide, reveal, romanization);
   const m = messages.learner.presenter.slide.write;
-  const gap = units(unit, fit.level >= 2 ? spacing.sm : spacing.md);
+  const gap = units(unit, fit.level >= 2 ? spacing.xs : spacing.md);
   return (
     <View testID="presenter-write" {...{ dataSet: { variant: slide.variant } }} style={{ flex: 1, gap }}>
       <WriteHead title={m.title} where={m.where} />
@@ -304,9 +305,11 @@ function SoundTable({ groups, level, unit }: { groups: ReadonlyArray<readonly Sh
   const leading = level >= 2 ? 1 : typography.leading.tight;
   const tight = units(unit, level >= 2 ? spacing.xxs : spacing.xs);
   return (
-    <View testID="presenter-write-table" role="list" style={{ gap: tight }}>
+    // Level 2 stacks the rows on one shared outline (no gap, each row over the one above by a border), so a page of
+    // five rows keeps a phone's stage when the head row wraps (a Spanish or Korean line in a Linux browser's fallback font).
+    <View testID="presenter-write-table" role="list" style={{ gap: level >= 2 ? 0 : tight }}>
       {groups.map((group, g) => (
-        <View key={g} testID="presenter-write-table-row" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: tight }}>
+        <View key={g} testID="presenter-write-table-row" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: tight, marginTop: level >= 2 && g > 0 ? -border : 0 }}>
           {group.map((block) => (
             <View
               key={block.ko}
