@@ -7,6 +7,8 @@
 
 Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §3.
 
+> **Amended 2026-10-21 by `AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` [OA]** (rows OA-0b to OA-10): the §3.1 picker becomes **Who is using this?**, one chooser for every learner profile and the account's grown-up uses (Family, Teacher, School, Grown-up area), shown at launch on a shared device, on return from the grown-up pages, after 30 minutes in the background and from a Switch button; grown-up uses come from the account, never from parent or teacher device profiles (§3.2's parent profile is dropped); the PIN is the device-level `account:parentPinHash` (not `parent.<profileId>.pin_hash`, §3.5) with growing pauses and a reset by signing in on the web; learner profiles can be locked with the grown-up PIN and removed from the device in the Grown-up area; optional face or fingerprint on native builds. In-body edits land with the rows named in that amendment's section 19.
+
 ---
 
 ## 1. Context

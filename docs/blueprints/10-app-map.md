@@ -149,7 +149,7 @@ Hangul Route
 | `profiles/create-parent` | Onboarding/CreateProfile(firstRun) | 부모 PIN 1회 설정 (자녀 프로필은 폼 안에서 생성, 본인 프로필은 선택) | S | F-PROF-001 | ✓ |
 | `profiles/create-learner` | Onboarding/CreateProfile | 누가 배우나·이름·레벨·아바타 (F-LEARN-001) | S | F-PROF-001 | ✓ |
 | `onboarding/first-quest-preview` | Onboarding/FirstQuestPreview | Hoya 소개 + 첫 퀘스트 진입 | S | – | NEW |
-| `profiles/picker` | (root, cold launch) | 학습자 선택 (PIN 없음) | S | F-PROF-001 | ✓ |
+| `profiles/picker` | (root, cold launch) | 학습자 선택 (PIN 없음) — [OA] 미구현, `profiles/who-is-using` 으로 대체 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS, OA-4a) | S | F-PROF-001 | planned |
 | `profiles/pin-entry` | (modal) | 부모 확인 | S | F-PROF-001 | ✓ |
 | `profiles/switch-button` | (component) | 세션 중 전환 | S | F-PROF-001 | ✓ |
 | `home/todays-mission` (alias `home/home`) | Main/Home | 오늘 할 3가지 | S | F-HW-001 | ✓ |

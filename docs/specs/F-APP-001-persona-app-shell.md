@@ -2,6 +2,8 @@ Status: ready
 
 > **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 3.4, 6 and 7.3): the learner-to-grown-up hand-off always carries `?lang=` (the learner app's links in row DN-3, the console's in DN-5), and the console reads the device record (sections 3.7 and 3.9 here; row DN-5); every non-home console page has a top-left PageBack and the way to the learner app becomes a **Learner app** exit at the right of the header (section 3.8; row DN-6).
 
+> **Amended 2026-10-21 by `AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` [OA]**: section 3.10 is replaced by that amendment's section 5.3 (one "Who is using this?" chooser in the learner app; the **Learner app** exit and Open the app on this device open it with a `who=1` boot intent); section 3.9 gains the browser's PIN owner (`hr-shell` `pinOwner`, the account that last proved the current PIN), a reset leg that writes no trusted epoch, a reset by signing in (`/account/pin-reset`, `gate=pin-reset`) and **Use a passkey** on the lock; the console writes the account's grown-up uses for the chooser (`hr-shell` `deviceUses`, no names). Rows OA-3, OA-4b, OA-6.
+
 # F-APP-001 — One product app: app.hangulroute.com with persona sign-in (learner, family, teacher) and a home per persona
 
 > **Amendment 2026-10-15 (`AMENDMENTS-LECTURE-V2.md`).** Lecture mode gets a nav item for both personas (section 3.8 table, row `lecture`) and a card at the top of the teacher home and the family home; the learner app's grown-up area gains a Lecture mode card (web only, behind the grown-up gate and the learner app's own `EXPO_PUBLIC_LECTURE_MODE` kill switch). Rows LV-5 and LV-6 build them; the wireframe is `design/wireframes/classroom/lecture-entry-points.md`.
