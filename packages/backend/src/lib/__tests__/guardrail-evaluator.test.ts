@@ -40,14 +40,12 @@ const KIND = 'match-shape';
 
 const row = (day: string, metric: string, dim: string, bucket: string, events: number): RollupRow => ({ day, metric, dim, bucket, events });
 
-/** `quits` of `sessions` quest sessions ended mid-quest on `kind`, with the overall cells too. */
+/**
+ * `q` of `sessions` reporting sessions ended mid-quest on `kind`, as the rollups write them: the '' cells (buckets 0
+ * and 1) and, for the quits only, the kind's bucket 1 (a kind is written only for a quit).
+ */
 function quits(day: string, kind: string, q: number, sessions: number): RollupRow[] {
-  return [
-    row(day, 'session.end.questLeft', '', '0', sessions - q),
-    row(day, 'session.end.questLeft', '', '1', q),
-    row(day, 'session.end.questLeft', kind, '0', sessions - q),
-    row(day, 'session.end.questLeft', kind, '1', q),
-  ];
+  return [row(day, 'session.end.questLeft', '', '0', sessions - q), row(day, 'session.end.questLeft', '', '1', q), row(day, 'session.end.questLeft', kind, '1', q)];
 }
 
 /** Session lengths: bucket -> events. */
@@ -62,8 +60,8 @@ const streaks = (day: string, s0: number, s1: number, s2: number): RollupRow[] =
 
 const each = (days: readonly string[], f: (day: string) => RollupRow[]): RollupRow[] => days.flatMap(f);
 
-/** A healthy week: 10% quits on KIND (of 100 sessions a day) and a 6-minute median. */
-const healthy = (days: readonly string[]): RollupRow[] => each(days, (d) => [...quits(d, KIND, 10, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })]);
+/** A healthy week: 20% of 100 sessions a day quit on KIND (20 quits, so the kind's group is kept) and a 6-minute median. */
+const healthy = (days: readonly string[]): RollupRow[] => each(days, (d) => [...quits(d, KIND, 20, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })]);
 
 const flag = (over: Partial<RemoteConfigRow> = {}): RemoteConfigRow => ({ flag: 'dailyReview', on: true, pct: 50, updatedAt: STEP_AT, reason: 'owner ramp 50', ...over });
 
@@ -111,7 +109,7 @@ function simulatedDay(rand: () => number, day: string, kinds: readonly string[],
     for (let i = 0; i < perKind; i += 1) {
       const left = rand() < (quitOn[kind] ?? quit) ? '1' : '0';
       add('session.end.questLeft', '', left);
-      add('session.end.questLeft', kind, left);
+      if (left === '1') add('session.end.questLeft', kind, left);
       if (left === '1') add('session.end.leftAfterWrongStreak', '', rand() < 0.3 ? '2' : rand() < 0.5 ? '1' : '0');
       let pick = rand() * totalWeight;
       const bucket = LENGTHS.find(([, w]) => (pick -= w) < 0)?.[0] ?? '30-59';
@@ -182,8 +180,8 @@ describe('minutesQuantile', () => {
 describe('visibleGroups and the tests', () => {
   it('keeps a (day, metric, dim) group of 20 events or more, whatever its cells hold', () => {
     const kept = visibleGroups([...quits('2026-10-14', KIND, 2, 20), ...quits('2026-10-15', KIND, 2, 19)]);
-    expect(kept.every((r) => r.day === '2026-10-14')).toBe(true);
-    expect(kept.find((r) => r.dim === KIND && r.bucket === '1')?.events).toBe(2); // a cell under 20 inside a kept group stays
+    expect(kept.every((r) => r.day === '2026-10-14' && r.dim === '')).toBe(true); // the kind's group holds 2 quits
+    expect(kept.find((r) => r.bucket === '1')?.events).toBe(2); // a cell under 20 inside a kept group stays
     expect(MIN_GROUP_EVENTS).toBe(20);
   });
 
@@ -233,17 +231,26 @@ describe('guardrailBreaches (section 3.3)', () => {
   });
 
   it('quit rate: a rise of more than 2 pp that the cohort size cannot tell from noise is not a breach', () => {
-    // 10% -> 15% of 100 sessions a day on 1 kind: z = 2.75, over the 2.47 of 3 comparisons
-    expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 15, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])], BEFORE, AFTER)).toHaveLength(1);
-    // 10% -> 13% of 100 sessions a day: z = 1.6, noise at this size
-    expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 13, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])], BEFORE, AFTER)).toEqual([]);
+    // 20% -> 26% of 100 sessions a day: z = 2.6, over the 2.47 of 3 comparisons
+    expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 26, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])], BEFORE, AFTER)).toHaveLength(1);
+    // 20% -> 24% of 100 sessions a day: z = 1.7, noise at this size
+    expect(guardrailBreaches([...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 24, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])], BEFORE, AFTER)).toEqual([]);
+  });
+
+  it('quit rate per game kind: the share of all reporting sessions that quit at the kind, so a rise diluted across many kinds stays under the line', () => {
+    // 1,600 reporting sessions a day: 20 -> 32 quits at KIND is 1.25% -> 2.0% (0.75 pp), however significant
+    const day = (d: string, q: number): RollupRow[] => [...quits(d, KIND, q, 1600), ...minutes(d, { '4': 30, '6': 40, '9': 30 })];
+    expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => day(d, 20)), ...each(AFTER_DAYS, (d) => day(d, 32))], BEFORE, AFTER)).toEqual([]);
+    expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => day(d, 20)), ...each(AFTER_DAYS, (d) => day(d, 60))], BEFORE, AFTER)).toEqual([`quitRate:${KIND} 1.3%->3.8%`]);
   });
 
   it(`quit rate: a kind with no before cohort, or fewer than ${MIN_COHORT_SESSIONS} sessions in a cohort, or under 20 events a day, triggers nothing`, () => {
     const base = healthy(BEFORE_DAYS);
     expect(guardrailBreaches([...base, ...each(AFTER_DAYS, (d) => quits(d, 'build-letter', 50, 100))], BEFORE, AFTER)).toEqual([]);
-    // 14 sessions a day on 7 days is 98 sessions, under the cohort minimum, though every quit-rate rule would fire
-    expect(guardrailBreaches([...base, ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 13, 14), ...quits(d, 'build-letter', 0, 6)])], BEFORE, AFTER)).toEqual([]);
+    // 24 sessions a day on 4 days is 96 sessions, under the cohort minimum, though every one of them quit at KIND
+    expect(guardrailBreaches([...base, ...each(AFTER_DAYS.slice(0, 4), (d) => quits(d, KIND, 24, 24))], BEFORE, AFTER)).toEqual([]);
+    // 19 quits at KIND a day: the kind's group is suppressed every day, so 20% -> 47.5% is never compared
+    expect(guardrailBreaches([...base, ...each(AFTER_DAYS, (d) => quits(d, KIND, 19, 40))], BEFORE, AFTER)).toEqual([]);
     expect(guardrailBreaches([...each(BEFORE_DAYS, (d) => quits(d, KIND, 1, 19)), ...each(AFTER_DAYS, (d) => quits(d, KIND, 18, 19))], BEFORE, AFTER)).toEqual([]);
     expect(guardrailBreaches([...base, ...each(AFTER_DAYS, (d) => quits(d, KIND, 18, 19))], BEFORE, AFTER)).toEqual([]);
   });
@@ -344,13 +351,13 @@ describe('guardrailBreaches under noise (seeded, no real change)', { timeout: 30
     expect(lowered / 200).toBeLessThanOrEqual(0.06);
   });
 
-  it('still finds a real rise: one kind from 10% to 16% at 200 sessions a day among 8 kinds', () => {
+  it('still finds a real rise: one kind from 10% to 30% of its sessions at 200 sessions a day among 8 kinds (1.25% -> 3.75% of all)', () => {
     const rand = seeded(42);
     let found = 0;
     for (let i = 0; i < 50; i += 1) {
       const sample = [
         ...each(BEFORE_DAYS, (d) => simulatedDay(rand, d, KINDS.slice(0, 8), 200, 0.1)),
-        ...each(AFTER_DAYS, (d) => simulatedDay(rand, d, KINDS.slice(0, 8), 200, 0.1, { [KIND]: 0.16 })),
+        ...each(AFTER_DAYS, (d) => simulatedDay(rand, d, KINDS.slice(0, 8), 200, 0.1, { [KIND]: 0.3 })),
       ];
       if (guardrailBreaches(sample, BEFORE, AFTER).some((b) => b.startsWith(`quitRate:${KIND} `))) found += 1;
     }
@@ -374,8 +381,8 @@ describe('guardrailReason and the run log', () => {
 });
 
 describe('runGuardrailEvaluator', () => {
-  const breached = (): RollupRow[] => [...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 15, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
-  const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate:${KIND} 10.0%->15.0%`;
+  const breached = (): RollupRow[] => [...healthy(BEFORE_DAYS), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 26, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
+  const REASON = `guardrail 2026-10-21 base 2026-10-10 pct 50->10: quitRate:${KIND} 20.0%->26.0%`;
 
   it('a breach lowers the flag by one step and records the reason with updated_at; on is untouched', async () => {
     await db.putRemoteConfig(flag());
@@ -404,7 +411,7 @@ describe('runGuardrailEvaluator', () => {
     await db.putRemoteConfig(flag());
     await db.putRemoteConfig(flag({ flag: 'goals', pct: 10, updatedAt: '2026-10-12T08:00:00.000Z' }));
     // goals: before 2026-10-05..11, after 2026-10-14..20
-    rows = [...healthy(['2026-10-03', '2026-10-04', ...BEFORE_DAYS, '2026-10-11']), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 15, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
+    rows = [...healthy(['2026-10-03', '2026-10-04', ...BEFORE_DAYS, '2026-10-11']), ...each(AFTER_DAYS, (d) => [...quits(d, KIND, 26, 100), ...minutes(d, { '4': 30, '6': 40, '9': 30 })])];
     const result = await runGuardrailEvaluator(db, NOW);
     expect(result.lowered.map((l) => [l.flag, l.from, l.to])).toEqual([
       ['dailyReview', 50, 10],
@@ -475,14 +482,14 @@ describe('runGuardrailEvaluator', () => {
 
   it('after its own lowering it keeps the baseline from before the ramp, so a lower step that is still worse is lowered again', async () => {
     // owner stepped 10 -> 50 on 2026-10-07; the evaluator lowered 50 -> 10 on 2026-10-14
-    const lowered = flag({ pct: 10, updatedAt: '2026-10-14T11:17:00.000Z', reason: `guardrail 2026-10-14 base 2026-10-07 pct 50->10: quitRate:${KIND} 10.0%->25.0%` });
-    const fiftyWeek = each(['2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13'], (d) => quits(d, KIND, 25, 100));
-    const stillWorse = each(['2026-10-15', '2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20'], (d) => quits(d, KIND, 18, 100));
+    const lowered = flag({ pct: 10, updatedAt: '2026-10-14T11:17:00.000Z', reason: `guardrail 2026-10-14 base 2026-10-07 pct 50->10: quitRate:${KIND} 20.0%->35.0%` });
+    const fiftyWeek = each(['2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13'], (d) => quits(d, KIND, 35, 100));
+    const stillWorse = each(['2026-10-15', '2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20'], (d) => quits(d, KIND, 28, 100));
     rows = [...healthy(['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06']), ...fiftyWeek, ...stillWorse];
     await db.putRemoteConfig(lowered);
     const result = await runGuardrailEvaluator(db, NOW);
-    expect(result.lowered).toEqual([{ flag: 'dailyReview', from: 10, to: 0, reason: `guardrail 2026-10-21 base 2026-10-07 pct 10->0: quitRate:${KIND} 10.0%->18.0%` }]);
-    // the owner touched the row (a new note): the breached week becomes the baseline, and 18% reads as better than 25%
+    expect(result.lowered).toEqual([{ flag: 'dailyReview', from: 10, to: 0, reason: `guardrail 2026-10-21 base 2026-10-07 pct 10->0: quitRate:${KIND} 20.0%->28.0%` }]);
+    // the owner touched the row (a new note): the breached week becomes the baseline, and 28% reads as better than 35%
     await db.putRemoteConfig({ ...lowered, reason: 'owner keeps 10' });
     expect(await runGuardrailEvaluator(db, NOW)).toMatchObject({ lowered: [], kept: ['dailyReview'] });
   });
@@ -528,7 +535,7 @@ describe('runGuardrailEvaluator', () => {
     await db.putRemoteConfig(flag({ updatedAt: '2026-10-17T10:00:00.000Z' }));
     rows = [...healthy(['2026-10-10', '2026-10-11']), ...quits('2026-10-17', KIND, 90, 100), ...healthy(['2026-10-18', '2026-10-19', '2026-10-20'])];
     expect(await runGuardrailEvaluator(db, NOW)).toMatchObject({ kept: ['dailyReview'], lowered: [] });
-    rows = [...healthy(['2026-10-10']), ...quits('2026-10-20', KIND, 30, 100)];
+    rows = [...healthy(['2026-10-10']), ...quits('2026-10-20', KIND, 40, 100)];
     expect((await runGuardrailEvaluator(db, NOW)).lowered).toEqual([expect.objectContaining({ from: 50, to: 10 })]);
   });
 

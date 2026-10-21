@@ -23,8 +23,10 @@ import { MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT } from './lea
  * (2%) shared (Bonferroni) by every comparison of the run for that flag, so day-to-day noise across 20-odd game kinds
  * is not read as a breach. A step is checked on about 5 daily runs that share most of their days, so the chance a
  * healthy step is lowered stays near 2-5% per step (seeded tests measure it). A comparison runs only when both cohorts hold MIN_COHORT_SESSIONS or more.
- * - Mid-quest quit rate per game kind (`session.end.questLeft`, dim = the kind, bucket 1 of 0 + 1) up by more than
- *   2 pp, and the two-proportion z of the rise at the threshold or more.
+ * - Mid-quest quit rate per game kind up by more than 2 pp, and the two-proportion z of the rise at the threshold or
+ *   more. The rate for kind K is the rollups' own definition (`learning-rollups.ts`, `sessionEnd`): the quits at K
+ *   (`session.end.questLeft`, dim K, bucket 1; a kind is written only for a quit) over the sessions that report
+ *   `questLeft` (the '' cells, buckets 0 + 1), on the days both groups were kept.
  * - Quits after a wrong streak rising: `session.end.leftAfterWrongStreak` bucket 2 per quest session, the same z-test.
  * - Median session length (`session.end.minutes`) down by more than 10%, and the Mann-Whitney z of "sessions got
  *   shorter" at the threshold or more.
@@ -247,14 +249,24 @@ interface Rate {
   den: number;
 }
 
-/** Quit rates per game kind in a window: bucket 1 of buckets 0 + 1. */
+/**
+ * Quit rates per game kind in a window: the quits at the kind (its bucket 1) over the reporting sessions (the '' cells,
+ * buckets 0 + 1), summed over the days on which both the kind's group and the '' group were kept. A day whose kind group
+ * was suppressed says nothing about the kind, so its sessions are left out of that kind's rate too (counting it as no
+ * quits would let a suppressed group make a rise).
+ */
 function quitRates(rows: readonly RollupRow[], w: CohortWindow): Map<string, Rate> {
+  const sessions = new Map<string, number>(); // day -> reporting sessions
+  for (const r of rows) {
+    if (r.metric === QUIT && r.dim === '' && inWindow(r, w) && (r.bucket === '0' || r.bucket === '1')) sessions.set(r.day, (sessions.get(r.day) ?? 0) + r.events);
+  }
   const out = new Map<string, Rate>();
   for (const r of rows) {
-    if (r.metric !== QUIT || r.dim === '' || !inWindow(r, w) || (r.bucket !== '0' && r.bucket !== '1')) continue;
+    const den = sessions.get(r.day);
+    if (r.metric !== QUIT || r.dim === '' || r.bucket !== '1' || den === undefined || !inWindow(r, w)) continue;
     const rate = out.get(r.dim) ?? { num: 0, den: 0 };
-    rate.den += r.events;
-    if (r.bucket === '1') rate.num += r.events;
+    rate.num += r.events;
+    rate.den += den;
     out.set(r.dim, rate);
   }
   return out;
