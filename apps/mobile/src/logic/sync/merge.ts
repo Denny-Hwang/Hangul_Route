@@ -21,8 +21,8 @@ import {
   type VocabTopicProgress,
 } from '@hangul-route/content-schema';
 import { streakSessionDates } from '../sessions/session-log';
-import { computeStreak } from '../streak';
-import { codePoint, validVocab } from '../vocab/progress';
+import { computeStreak, streakFields, streakOf } from '../streak';
+import { codePoint, localDay, validVocab } from '../vocab/progress';
 
 /**
  * Deterministic snapshot merge — F-SYNC-001 §3.3. Every collection in a
@@ -397,6 +397,8 @@ function curr002Covered(local: ProgressSnapshot, server: ProgressSnapshot): bool
 export interface MergeOptions {
   /** Clock for the streak recomputation; injected for determinism. */
   now: Date;
+  /** The learner's local day for the local-day streak; the device's day of `now` when absent. */
+  today?: string;
 }
 
 export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot, opts: MergeOptions): ProgressSnapshot {
@@ -415,7 +417,7 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     sessions,
     homework: unionBy(local.homework, server.homework, (h) => h.id, mergeHomework),
     reviews: unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview),
-    // Story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
+    // The old streak, still written for older builds: story, game and level-check time never moves it (OD-19).
     streakDays: computeStreak(streakSessionDates(sessions), opts.now),
     ...(stageDoneAt ? { stageDoneAt } : {}),
     // A snapshot that predates the key keeps its shape when neither side has one.
@@ -431,6 +433,9 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     ...(questDoneAt !== undefined ? { questDoneAt } : {}),
     // F-CURR-002 section 4.8: each omitted only when neither side has the key.
     ...mergeCurr002Fields(local, server),
+    // The local-day streak (row CM-4) over the merged sessions, with each side's run as a floor, so a sync from an
+    // older build never lowers it; when neither side has one yet, the switch-over carries the old streakDays.
+    ...streakFields(streakOf([local, server], sessions, opts.today ?? localDay(opts.now))),
   };
 }
 

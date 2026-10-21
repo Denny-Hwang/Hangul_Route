@@ -489,11 +489,38 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
     expect(vocabIn(after)).toMatchObject({ box: 1, due: addDays(TODAY, 1), first: TODAY });
     expect(after.vocab?.topics.map((t) => t.topic)).toEqual(['food']);
     expect(after.updatedAt).toBe(T1.toISOString());
-    const { vocab: _v, updatedAt: _u, ...restAfter } = after;
-    const { updatedAt: _w, ...restBefore } = before;
+    const { vocab: _v, updatedAt: _u, sessions, streakLocal, streakBest, ...restAfter } = after;
+    const { updatedAt: _w, sessions: sessionsBefore, ...restBefore } = before;
     expect(restAfter).toEqual(restBefore);
+    // The finished word set (its session event) logs its learning day (F-CURR-002 OD-14): a learning session of no
+    // length, and the local-day run moves.
+    const at = T1.toISOString();
+    expect(sessions).toEqual([...sessionsBefore, { id: `session:time:learn:${at}`, profileId: 'p1', startedAt: at, endedAt: at, durationSeconds: 0, episodesTouched: [], localDay: TODAY }]);
+    expect(streakLocal).toEqual({ run: 1, lastDay: TODAY });
+    expect(streakBest).toBe(1);
+    expect(after.streakDays).toBe(before.streakDays);
     expect(stored()).toEqual(after);
     expect(notified).toEqual(['p1']);
+  });
+
+  it('word answers without a finished set log no day (F-CURR-002 OD-14)', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.sessions).toEqual(before.sessions);
+    expect(after.streakLocal).toBeUndefined();
+  });
+
+  it('a word set finished on the day after a quest continues the run', async () => {
+    const quest = { id: 'session:2026-10-10T15:00:00.000Z', profileId: 'p1', startedAt: '2026-10-10T15:00:00.000Z', episodesTouched: [], localDay: addDays(TODAY, -1) };
+    mem.set('progress:p1', { ...savedSnapshot(), sessions: [quest], streakDays: 1, streakLocal: { run: 4, lastDay: addDays(TODAY, -1) }, streakBest: 6 });
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.streakLocal).toEqual({ run: 5, lastDay: TODAY });
+    expect(after.streakBest).toBe(6);
   });
 
   it('writes nothing when every event is ignored', async () => {
@@ -1647,5 +1674,87 @@ describe('setSelfRoute (F-PLAN-002 section 3.9)', () => {
     expect(useProgressStore.getState().setSelfRoute('p1', selfRoute({ id: 'Route:Bad' }))).toBe(false);
     expect(useProgressStore.getState().byProfile['p1']).toBeUndefined();
     expect(notified).toEqual([]);
+  });
+});
+
+describe('the local-day streak in the store (F-CURR-002 row CM-4; OD-14, OD-6)', () => {
+  // The suite runs under TZ=UTC, so the device's local day is the UTC day here; logic/__tests__/streak-local.test.ts
+  // covers other zones with fixed clocks.
+  const STORY = { owner: 'story:story:sun-and-moon', streak: false, keepsRun: true } as const;
+  const GAME = { owner: 'minigame:q1:0', streak: false } as const;
+  const DAY1 = '2026-10-12';
+  const DAY2 = '2026-10-13';
+  const DAY3 = '2026-10-14';
+  const at = (day: string, time = '09:00:00.000Z'): Date => new Date(`${day}T${time}`);
+  const snap = (): ProgressSnapshot => useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+
+  beforeEach(() => {
+    resetStore();
+    vi.mocked(track).mockClear();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(at(DAY1));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  /** Begins and ends a session on `day`. */
+  function visit(options: { owner: string; streak: boolean; keepsRun?: boolean }, day: string): string | null {
+    vi.setSystemTime(at(day));
+    const { beginSession, endSession } = useProgressStore.getState();
+    const id = beginSession('p1', options);
+    if (id !== null) endSession('p1', id);
+    return id;
+  }
+
+  it('a quest session records its local day and starts the run', () => {
+    visit(QUEST, DAY1);
+    expect(snap().sessions[0]?.localDay).toBe(DAY1);
+    expect(snap()).toMatchObject({ streakDays: 1, streakLocal: { run: 1, lastDay: DAY1 }, streakBest: 1 });
+  });
+
+  it('a story keeps the run (OD-14) and leaves the old streak and session.start alone', () => {
+    visit(QUEST, DAY1);
+    vi.mocked(track).mockClear();
+    const id = visit(STORY, DAY2);
+    expect(id).toBe(`session:time:learn:${at(DAY2).toISOString()}`);
+    expect(snap()).toMatchObject({ streakDays: 1, streakLocal: { run: 2, lastDay: DAY2 }, streakBest: 2 });
+    expect(snap().sessions[1]?.localDay).toBe(DAY2);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('a stand-alone game or a level check records its day but never moves the run', () => {
+    visit(QUEST, DAY1);
+    visit(GAME, DAY2);
+    expect(snap().sessions[1]?.localDay).toBe(DAY2);
+    expect(snap().streakLocal).toEqual({ run: 1, lastDay: DAY1 });
+  });
+
+  it('a rest day keeps the run and adds nothing (OD-6)', () => {
+    visit(QUEST, DAY1);
+    visit(QUEST, DAY3);
+    expect(snap().streakLocal).toEqual({ run: 2, lastDay: DAY3 });
+    // the old UTC rule broke on the rest day; it is still written for older builds
+    expect(snap().streakDays).toBe(1);
+  });
+
+  it('a story begun over a game takes it over; a game over a story and a story inside a quest join', () => {
+    const { beginSession } = useProgressStore.getState();
+    beginSession('p1', GAME);
+    vi.setSystemTime(at(DAY1, '09:00:10.000Z'));
+    const story = beginSession('p1', STORY);
+    expect(story).toBe(`session:time:learn:${at(DAY1, '09:00:10.000Z').toISOString()}`);
+    expect(useProgressStore.getState().openSession).toMatchObject({ owner: STORY.owner, keepsRun: true });
+    expect(snap().sessions[0]).toMatchObject({ durationSeconds: 10 });
+    expect(beginSession('p1', GAME)).toBeNull();
+    resetStore();
+    beginSession('p1', QUEST);
+    expect(beginSession('p1', STORY)).toBeNull();
+  });
+
+  it('switches over on the first session: max(old streakDays, the local run), never below the old number', async () => {
+    const yesterday = { id: `session:${at(DAY1).toISOString()}`, profileId: 'p1', startedAt: at(DAY1).toISOString(), episodesTouched: [] };
+    mem.set('progress:p1', { ...savedSnapshot(), sessions: [yesterday], streakDays: 5 });
+    await useProgressStore.getState().hydrate('p1');
+    visit(QUEST, DAY2);
+    expect(snap()).toMatchObject({ streakDays: 6, streakLocal: { run: 6, lastDay: DAY2 }, streakBest: 6 });
   });
 });
