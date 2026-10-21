@@ -37,6 +37,7 @@ import { questStepLabel } from '../../logic/quest-steps';
 import { stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 
@@ -65,7 +66,13 @@ export interface QuestPlayerViewProps {
  * navigation coupling is `useFocusEffect` (applying a game's pending advance on re-focus), which the
  * browse stack's own navigation container also provides.
  */
-export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave }: QuestPlayerViewProps): React.ReactElement {
+export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement {
+  // A lesson quest's steps come from its cell's chunk (F-CURR-002 §10): until it is in (a frame or two from
+  // the precache), the screen draws only its header (and a calm status line if it takes longer), so the way back is always there.
+  return useLessonQuestReady(props.questId) ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
+}
+
+function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave }: QuestPlayerViewProps): React.ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();

@@ -20,7 +20,7 @@
     "audio:process": "node scripts/audio/process-recordings.mjs",
     "audio:check": "node scripts/audio/check-audio.mjs",
     "audio:status": "node scripts/audio/check-audio.mjs --status",
-    "build:web": "node scripts/audio/gen-audio-map.mjs && expo export --platform web --output-dir dist && node scripts/app-host/merge-console.mjs dist && node scripts/pwa-postbuild.mjs dist",
+    "build:web": "node scripts/audio/gen-audio-map.mjs && expo export --platform web --output-dir dist && node scripts/app-host/merge-console.mjs dist && node scripts/pwa-postbuild.mjs dist --budget",
     "build:web:fixtures": "node scripts/build-web-fixtures.mjs dist-e2e",
     "build:web:fixtures:gated": "node scripts/build-web-fixtures.mjs dist-e2e-gated --content-gating",
     "build:web:route": "node scripts/build-web-route.mjs",

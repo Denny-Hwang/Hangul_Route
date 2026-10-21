@@ -1,5 +1,6 @@
-import type { Episode, Quest } from '@hangul-route/content-schema';
+import type { Episode, Quest, QuestStep } from '@hangul-route/content-schema';
 import { episodesAll, questsAll } from '../../content';
+import { lessonQuestTeaches } from '../../content/lessons';
 import { playableEpisodes } from '../next-quest';
 
 /**
@@ -19,10 +20,19 @@ export function stage1QuestsFrom(episodes: readonly Episode[], quests: readonly 
 
 export const STAGE1_QUESTS: readonly Quest[] = stage1QuestsFrom(episodesAll, questsAll);
 
-/** Jamo ids the quest's Discover step introduces, in page order. */
+/**
+ * Jamo ids the quest's Discover step introduces, in page order. A lesson quest's come from the lesson
+ * manifest (F-CURR-002 §10), since its steps stay empty until its cell's chunk loads.
+ */
 export function questTeaches(quest: Quest): string[] {
+  const listed = lessonQuestTeaches(quest.id);
+  return listed !== undefined ? [...listed] : discoverJamo(quest.steps);
+}
+
+/** Jamo ids these steps' Discover pages introduce, in page order. */
+export function discoverJamo(steps: readonly QuestStep[]): string[] {
   const ids: string[] = [];
-  for (const step of quest.steps) {
+  for (const step of steps) {
     for (const page of step.discover?.pages ?? []) {
       for (const item of page.items) {
         if (item.type === 'jamo') ids.push(item.jamoId);
