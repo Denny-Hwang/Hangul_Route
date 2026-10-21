@@ -9,12 +9,18 @@
 // dev server does not reload for nothing. A content error stops the bundle with the generator's
 // message.
 //
+// One caller writes the modules itself: the e2e fixture build (scripts/build-web-fixtures.mjs) runs
+// generate.mjs, then writes the fixture stories over stories.generated.ts, and exports with
+// HANGUL_ROUTE_GENERATE=off so this step does not put the release stories back. Nothing else sets it.
+//
 // Apart from that step this is Expo's default config, the one Metro used before this file existed.
 
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const { getDefaultConfig } = require('expo/metro-config');
 
-execFileSync(process.execPath, [path.join(__dirname, '..', '..', 'scripts', 'generate.mjs')], { stdio: 'inherit' });
+if (process.env.HANGUL_ROUTE_GENERATE !== 'off') {
+  execFileSync(process.execPath, [path.join(__dirname, '..', '..', 'scripts', 'generate.mjs')], { stdio: 'inherit' });
+}
 
 module.exports = getDefaultConfig(__dirname);

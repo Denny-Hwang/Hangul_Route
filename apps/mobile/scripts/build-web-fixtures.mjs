@@ -4,6 +4,9 @@
 // reader e2e needs the `window.__hrStoryE2E` entry plus fixture-specific
 // content (`story:hangul-day`), so it runs against a bundle that holds the
 // test fixtures. This script:
+//   0. writes every module generated from content/ (scripts/generate.mjs, F-CURR-002 CM-6), since
+//      the export below tells metro.config.js not to (HANGUL_ROUTE_GENERATE=off,
+//      fixture-build-options.mjs), so Metro keeps the fixture stories of step 1,
 //   1. regenerates apps/mobile/src/content/stories.generated.ts with
 //      `build-stories.mjs --include-fixtures`, and the clip map with the
 //      fixture tones of e2e/fixtures/audio (`gen-audio-map.mjs
@@ -16,7 +19,7 @@
 //      real clip map (plain `gen-audio-map.mjs`), even when
 //      the export fails or the build is interrupted (Ctrl-C), so the fixture
 //      bundle is never left for a commit.
-// Nothing is keyed on an environment variable, so the Metro cache cannot
+// No bundled value is keyed on an environment variable, so the Metro cache cannot
 // carry the e2e entry into a later production build: the restored bundle has
 // no fixture ids and the entry stays off.
 //
@@ -36,6 +39,7 @@ import { fileURLToPath } from 'node:url';
 import { exportEnv, fixtureBuildOptions } from './fixture-build-options.mjs';
 
 const app = join(dirname(fileURLToPath(import.meta.url)), '..');
+const generateAll = join(app, '..', '..', 'scripts', 'generate.mjs');
 const generator = join(app, '..', '..', 'scripts', 'build-stories.mjs');
 const audioMap = join(app, 'scripts', 'audio', 'gen-audio-map.mjs');
 let options;
@@ -64,7 +68,8 @@ function run(command, args, env = process.env) {
   return r.status ?? 1;
 }
 
-let status = run(process.execPath, [generator, '--include-fixtures']);
+let status = run(process.execPath, [generateAll]);
+if (status === 0 && interrupted === null) status = run(process.execPath, [generator, '--include-fixtures']);
 try {
   if (status === 0 && interrupted === null) status = run(process.execPath, [audioMap, '--with-e2e-fixtures']);
   if (status === 0 && interrupted === null) {

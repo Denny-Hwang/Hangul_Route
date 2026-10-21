@@ -138,6 +138,15 @@ describe("generate.mjs: the modules are never committed", () => {
     assert.ok(config.indexOf("execFileSync(") < config.indexOf("module.exports"), "the generators run before Metro gets its config");
   });
 
+  test("the e2e fixture build writes the modules itself and keeps Metro from writing the release stories over its fixtures", () => {
+    const config = readFileSync(join(REPO, "apps", "mobile", "metro.config.js"), "utf8");
+    assert.match(config, /if \(process\.env\.HANGUL_ROUTE_GENERATE !== 'off'\) \{\n\s+execFileSync\(/);
+    const build = readFileSync(join(REPO, "apps", "mobile", "scripts", "build-web-fixtures.mjs"), "utf8");
+    const generateAt = build.indexOf("run(process.execPath, [generateAll])");
+    const fixturesAt = build.indexOf("run(process.execPath, [generator, '--include-fixtures'])");
+    assert.ok(generateAt !== -1 && fixturesAt !== -1 && generateAt < fixturesAt, "generate.mjs runs before the fixture stories are written");
+  });
+
   test("generatedFiles walks a folder output and skips what is absent", () => {
     const root = mkdtempSync(join(tmpdir(), "generate-files-"));
     roots.push(root);
