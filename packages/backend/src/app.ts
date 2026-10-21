@@ -18,6 +18,7 @@ import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 import { transferSyncRoutes } from './routes/transfer-device';
 import { classMoveRoutes, classScopeSyncRoutes } from './routes/class-moves';
+import { configRoutes } from './routes/config';
 import { transferSpaceRoutes } from './routes/transfers';
 import { waitlistRoutes } from './routes/waitlist';
 
@@ -95,6 +96,8 @@ app.route('/api/waitlist', waitlistRoutes);
 // ending an admin role; preview and accept read the token from the JSON body only.
 app.route('/api/spaces', adminSpaceRoutes);
 app.route('/api/admin-invites', adminInviteRoutes);
+// Remote config (F-CURR-002 section 12.2, CM-2): public, read-only, no identifier read; edge-cached for 300 s.
+app.route('/api/config', configRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),

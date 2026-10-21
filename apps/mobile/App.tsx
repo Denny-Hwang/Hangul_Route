@@ -24,6 +24,7 @@ import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 import { usePwaStore } from './src/store/pwa-store';
+import { startRemoteConfig } from './src/store/remote-config-store';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
 import { setProgressPersistListener } from './src/logic/sync/persist-hook';
@@ -77,6 +78,8 @@ export default function App(): React.ReactElement {
     // lessons, the presenter) applies here live; a page back in front re-reads the record.
     const unfollow = followDeviceSettings();
     void countVisit();
+    // Remote config (F-CURR-002 section 12.2): the last copy, fetched when due and on each foreground; it can only reduce.
+    const stopRemoteConfig = startRemoteConfig();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
     // Background progress sync (F-SYNC-002): debounced after every write,
@@ -112,6 +115,7 @@ export default function App(): React.ReactElement {
       off();
       offInbox();
       foreground.remove();
+      stopRemoteConfig();
       setProgressPersistListener(null);
     };
   }, [countVisit]);
