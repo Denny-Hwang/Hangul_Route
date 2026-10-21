@@ -2,7 +2,8 @@
 // F-I18N-001 §3.6 — content overlay generator (PR 12).
 //
 // Merges content/i18n/<locale>/*.json (`{ locale, domain, entries }`, locale es or ko)
-// into one checked-in module that both apps read through the workspace package:
+// into one generated module (gitignored; `pnpm generate`, F-CURR-002 row CM-6) that both apps read
+// through the workspace package:
 //
 //   packages/content-schema/src/i18n-overlays.generated.ts
 //       OVERLAYS   Overlays   { es: { <entity id>: { <field>: text } }, ko: { ... } }
@@ -18,7 +19,7 @@
 //
 // Usage:
 //   node scripts/build-overlays.mjs            write the module
-//   node scripts/build-overlays.mjs --check    fail if the checked-in module differs (CI)
+//   node scripts/build-overlays.mjs --check    determinism (CI): fail if the module an earlier run wrote (pnpm generate, the postinstall) differs from this run; generated, never committed (F-CURR-002 row CM-6)
 //
 // Dependency-free Node (same family as build-vocab.mjs / build-placement-bank.mjs).
 // Exit 0 when written / in sync, 1 on a content or drift error, 2 on a usage error.
@@ -143,7 +144,7 @@ export function main(argv, root) {
     }
     if (readFileSync(file, "utf8") !== source) {
       process.stdout.write(
-        `::error file=${rel}::generated overlays are out of date with content/i18n; run node scripts/build-overlays.mjs and commit the result\n`,
+        `::error file=${rel}::generated overlays are out of date with content/i18n; run pnpm generate (generators must be deterministic)\n`,
       );
       return 1;
     }

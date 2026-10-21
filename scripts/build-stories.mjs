@@ -17,7 +17,9 @@
 //
 // Usage:
 //   node scripts/build-stories.mjs                      write the bundle
-//   node scripts/build-stories.mjs --check              fail if the checked-in bundle differs (CI)
+//   node scripts/build-stories.mjs --check              determinism (CI): fail if the bundle an earlier run wrote
+//                                                       (pnpm generate, the postinstall) differs from this run;
+//                                                       generated, never committed (F-CURR-002 row CM-6)
 //   node scripts/build-stories.mjs --report             print sizes (bundle, per story, scene art),
 //                                                       fail over budget (CI)
 //   node scripts/build-stories.mjs --include-drafts --out <path>
@@ -495,7 +497,7 @@ export function main(argv, root) {
     }
     if (readFileSync(target, "utf8") !== source) {
       process.stdout.write(
-        `::error file=${targetRel}::generated story bundle is out of date with content/stories; run node scripts/build-stories.mjs and commit the result\n`
+        `::error file=${targetRel}::generated story bundle is out of date with content/stories; run pnpm generate (generators must be deterministic)\n`
       );
       return 1;
     }

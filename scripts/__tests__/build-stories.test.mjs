@@ -409,7 +409,7 @@ describe("build-stories.mjs: --check", () => {
     const r = run(root, ["--check"]);
     assert.equal(r.status, 1);
     assert.match(r.stdout, /::error file=apps\/mobile\/src\/content\/stories\.generated\.ts/);
-    assert.match(r.stdout, /node scripts\/build-stories\.mjs/);
+    assert.match(r.stdout, /run pnpm generate/);
   });
 
   test("fails when the checked-in bundle was edited by hand", () => {

@@ -3,7 +3,7 @@
 //
 // Reads content/placement/index.json (`{ version, warmup, files }`) and the strand
 // files it lists (`{ strand, templates }`, one question per template, English base
-// language only) and writes one checked-in module:
+// language only) and writes one generated module (gitignored; `pnpm generate`, F-CURR-002 row CM-6):
 //
 //   apps/mobile/src/content/placement.generated.ts
 //       PLACEMENT_BANK     PlacementBank      { version, templates } in file order
@@ -23,7 +23,7 @@
 //
 // Usage:
 //   node scripts/build-placement-bank.mjs            write the module
-//   node scripts/build-placement-bank.mjs --check    fail if the checked-in module differs (CI)
+//   node scripts/build-placement-bank.mjs --check    determinism (CI): fail if the module an earlier run wrote (pnpm generate, the postinstall) differs from this run; generated, never committed (F-CURR-002 row CM-6)
 //
 // Dependency-free Node (same family as build-vocab.mjs). Exit 0 when written / in sync,
 // 1 on a content or drift error, 2 on a usage error. HANGUL_ROUTE_ROOT overrides the
@@ -329,7 +329,7 @@ export function main(argv, root) {
     const found = readFileSync(file, "utf8");
     if (found !== source) {
       process.stdout.write(
-        `::error file=${rel}::generated placement bank is out of date with content/placement (${firstDifference(source, found)}); run node scripts/build-placement-bank.mjs and commit the result\n`,
+        `::error file=${rel}::generated placement bank is out of date with content/placement (${firstDifference(source, found)}); run pnpm generate (generators must be deterministic)\n`,
       );
       return 1;
     }

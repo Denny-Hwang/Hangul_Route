@@ -3,7 +3,7 @@
 //
 // Reads content/vocab/<topic>.json (one VocabTopicFile each; _senses.json is the
 // sense registry, not a topic) and the glosses of content/i18n/{es,ko}/vocab-*.json,
-// and writes two checked-in modules:
+// and writes two generated modules (gitignored; `pnpm generate`, F-CURR-002 row CM-6):
 //
 //   apps/mobile/src/content/__generated__/vocab.ts
 //       VOCAB_TOPICS  VocabTopic[]         ordered by `order`
@@ -23,7 +23,7 @@
 //
 // Usage:
 //   node scripts/build-vocab.mjs            write both modules
-//   node scripts/build-vocab.mjs --check    fail if a checked-in module differs (CI)
+//   node scripts/build-vocab.mjs --check    determinism (CI): fail if the module an earlier run wrote (pnpm generate, the postinstall) differs from this run; generated, never committed (F-CURR-002 row CM-6)
 //
 // Dependency-free Node (same family as build-stories.mjs). Exit 0 when written / in
 // sync, 1 on a content or drift error, 2 on a usage error. HANGUL_ROUTE_ROOT
@@ -328,7 +328,7 @@ export function main(argv, root) {
         const found = readFileSync(file, "utf8");
         if (found !== source) {
           process.stdout.write(
-            `::error file=${rel}::generated vocabulary module is out of date with content/vocab (${firstDifference(source, found)}); run node scripts/build-vocab.mjs and commit the result\n`
+            `::error file=${rel}::generated vocabulary module is out of date with content/vocab (${firstDifference(source, found)}); run pnpm generate (generators must be deterministic)\n`
           );
           failed = true;
         }

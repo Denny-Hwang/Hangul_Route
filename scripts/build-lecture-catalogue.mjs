@@ -2,7 +2,8 @@
 // F-TCH-004 §3.11 — lecture catalogue mirror for the console setup page (PR 10).
 //
 // The console is a static export with no content bundle, so the lecture setup
-// page lists stories and vocabulary topics from a checked-in mirror, ids and
+// page lists stories and vocabulary topics from a generated mirror (gitignored; `pnpm generate`,
+// F-CURR-002 row CM-6), ids and
 // titles only (the presenter expands the ids against its own bundle):
 //
 //   apps/web/src/data/lecture-catalogue.generated.ts
@@ -44,7 +45,7 @@
 //
 // Usage:
 //   node scripts/build-lecture-catalogue.mjs            write the modules
-//   node scripts/build-lecture-catalogue.mjs --check    fail if a checked-in module differs (CI)
+//   node scripts/build-lecture-catalogue.mjs --check    determinism (CI): fail if the module an earlier run wrote (pnpm generate, the postinstall) differs from this run; generated, never committed (F-CURR-002 row CM-6)
 //
 // Dependency-free Node (same family as build-vocab.mjs). Exit 0 when written / in
 // sync, 1 on a content or drift error, 2 on a usage error. HANGUL_ROUTE_ROOT
@@ -259,7 +260,7 @@ export function main(argv, root) {
         process.stdout.write(`::error file=${rel}::${what} is missing; run node scripts/build-lecture-catalogue.mjs\n`);
         ok = false;
       } else if (readFileSync(file, "utf8") !== source) {
-        process.stdout.write(`::error file=${rel}::${what} is out of date with ${from}; run node scripts/build-lecture-catalogue.mjs and commit the result\n`);
+        process.stdout.write(`::error file=${rel}::${what} is out of date with ${from}; run pnpm generate (generators must be deterministic)\n`);
         ok = false;
       }
     }
