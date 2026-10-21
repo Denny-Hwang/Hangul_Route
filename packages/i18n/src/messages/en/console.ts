@@ -1479,6 +1479,8 @@ export const consoleMsgs = {
     noPin: 'Set a grown-up PIN in the app, or sign in again.',
     pinRenew: 'To use the grown-up PIN here, set it again in the app, then sign in once.',
     signInOnly: 'Sign in again to open grown-up pages on this device.',
+    /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4: shown only where the browser offers one and the marker is not `pin`. */
+    passkey: { cta: 'Use a passkey' },
   },
   /**
    * The free-plan words of grown-up console surfaces (F-ENT-003 section 3.11 glossary): the
@@ -2227,5 +2229,20 @@ export const consoleMsgs = {
     /** Accept answered `503 identity_unavailable`: the sign-in service could not be asked (section 6.3 item 1); Try again. */
     tryAgain: "Couldn't check your invite right now. Try again in a moment.",
     home: { cta: 'Go to my home' },
+  },
+  /**
+   * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2 moment 3 (design D13): the persona home card, shown only while
+   * the tab's PIN hand-off is under 2 minutes old and this account is not yet the PIN owner. These strings carry no name
+   * and no email; the card names the signed-in account above them with `adminInvite.signedInAs`.
+   */
+  pinOwner: {
+    cta: 'Let this account reset the PIN here',
+    hint: 'If the grown-up PIN is forgotten, signing in to this account can set a new one on this device.',
+    done: 'Done. This account can reset the PIN here.',
+  },
+  /** [OA] Section 7.6: the set-a-PIN card on a `nopin` browser, once per browser. */
+  pinPrompt: {
+    body: 'Set a grown-up PIN in the app so only grown-ups open these pages.',
+    cta: 'Open the app',
   },
 } as const;

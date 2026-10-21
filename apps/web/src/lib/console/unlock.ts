@@ -44,6 +44,28 @@ export function touchUnlock(now: number, storage: KeyValueStorage | null = defau
 
 export function clearUnlock(storage: KeyValueStorage | null = defaultStorage()): void {
   removeItem(storage, UNLOCK_SESSION_KEY);
+  removeItem(storage, HIDDEN_AT_SESSION_KEY);
+}
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.6 (OA-D16, CS-14): when this tab was hidden (wall clock, a number
+ * only), kept beside the unlock so the 5-minute hidden rule survives a mobile browser discarding the background tab
+ * and reloading it when it is shown again. Cleared when the tab is shown and whenever the unlock is.
+ */
+export const HIDDEN_AT_SESSION_KEY = 'hr:grownup:hiddenAt';
+
+/** [OA] The stored hidden time, or null (absent, corrupt, storage refused). */
+export function readHiddenAt(storage: KeyValueStorage | null = defaultStorage()): number | null {
+  const raw = readItem(storage, HIDDEN_AT_SESSION_KEY);
+  if (raw === null) return null;
+  const at = Number(raw);
+  return raw.trim() !== '' && Number.isFinite(at) ? at : null;
+}
+
+/** [OA] Stores the hidden time; `null` removes it. */
+export function writeHiddenAt(at: number | null, storage: KeyValueStorage | null = defaultStorage()): void {
+  if (at === null) removeItem(storage, HIDDEN_AT_SESSION_KEY);
+  else writeItem(storage, HIDDEN_AT_SESSION_KEY, String(at));
 }
 
 /**

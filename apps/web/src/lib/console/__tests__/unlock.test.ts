@@ -1,7 +1,7 @@
 import { CONSOLE_SESSION_KEY, GROWN_UP_IDLE_MS, UNLOCK_SESSION_KEY } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import type { KeyValueStorage } from '../../i18n/safe-storage';
-import { UNLOCK_TOUCH_MS, clearGrownUpTab, clearUnlock, readUnlock, touchUnlock, writeSignInUnlock } from '../unlock';
+import { HIDDEN_AT_SESSION_KEY, UNLOCK_TOUCH_MS, clearGrownUpTab, clearUnlock, readHiddenAt, readUnlock, touchUnlock, writeHiddenAt, writeSignInUnlock } from '../unlock';
 
 /**
  * F-APP-001 section 3.9: `sessionStorage` `hr:grownup:unlock` of this tab. The learner app
@@ -138,5 +138,43 @@ describe('clearing', () => {
     expect(() => clearGrownUpTab(throwing)).not.toThrow();
     expect(() => clearGrownUpTab(null)).not.toThrow();
     expect(() => clearGrownUpTab()).not.toThrow();
+  });
+});
+
+describe('[OA] hr:grownup:hiddenAt: the 5-minute hidden rule across a discard (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.6)', () => {
+  it('stores a number only, reads it back, and null removes it', () => {
+    const storage = fakeStorage();
+    expect(HIDDEN_AT_SESSION_KEY).toBe('hr:grownup:hiddenAt');
+    expect(readHiddenAt(storage)).toBeNull();
+    writeHiddenAt(1_700, storage);
+    expect(storage.map.get(HIDDEN_AT_SESSION_KEY)).toBe('1700');
+    expect(readHiddenAt(storage)).toBe(1_700);
+    writeHiddenAt(null, storage);
+    expect(storage.map.has(HIDDEN_AT_SESSION_KEY)).toBe(false);
+  });
+
+  it('a corrupt or empty value reads as none', () => {
+    for (const raw of ['', ' ', 'soon', 'NaN', 'Infinity']) {
+      const storage = fakeStorage();
+      storage.map.set(HIDDEN_AT_SESSION_KEY, raw);
+      expect(readHiddenAt(storage), raw).toBeNull();
+    }
+  });
+
+  it('goes whenever the unlock goes (clearUnlock, clearGrownUpTab)', () => {
+    for (const clear of [clearUnlock, (s: KeyValueStorage) => clearGrownUpTab(s)]) {
+      const storage = fakeStorage();
+      writeSignInUnlock(1_000, storage);
+      writeHiddenAt(1_000, storage);
+      clear(storage);
+      expect(storage.map.has(HIDDEN_AT_SESSION_KEY)).toBe(false);
+    }
+  });
+
+  it('blocked storage reads as none and never throws', () => {
+    expect(readHiddenAt(throwing)).toBeNull();
+    expect(() => writeHiddenAt(1, throwing)).not.toThrow();
+    expect(() => writeHiddenAt(null, throwing)).not.toThrow();
+    expect(readHiddenAt(null)).toBeNull();
   });
 });

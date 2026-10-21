@@ -8,11 +8,13 @@ import {
   type SpaceKind,
   type SpaceRole,
 } from '@hangul-route/content-schema';
+import type { GrownUpUnlock } from '@hangul-route/content-schema';
 import { decideGrownUpLock, trustableEpoch, type DeviceGateRead } from './grown-up-lock';
+import { RESET_LEG_FACTORS, isResetLeg, pinOwnerAtSignIn, pinOwnerFingerprint, pinOwnerRecord } from './one-account';
 import { isKnownSpaceKind } from './routing';
-import { writeTrustedEpoch } from './shell-store';
+import { writePinOwner, writeTrustedEpoch } from './shell-store';
 import type { SignInProof, SignInRecord } from './signin-record';
-import { writeSignInUnlock } from './unlock';
+import { readUnlock, writeSignInUnlock } from './unlock';
 
 /**
  * Grown-up sign-in and routing on the app host (F-APP-001 A-4b; sections 3.5, 3.7, 3.9, 3.11,
@@ -65,7 +67,9 @@ export interface ClerkSignUpLike {
 /** A completed sign-in: the session it created and whether its first factor asked for a secret. */
 export function proofFromSignIn(signIn: ClerkSignInLike | null | undefined): SignInProof | null {
   if (!signIn || signIn.status !== 'complete' || !signIn.createdSessionId) return null;
-  return { sessionId: signIn.createdSessionId, secret: isSecretFactor(signIn.firstFactorVerification?.strategy) };
+  const strategy = signIn.firstFactorVerification?.strategy;
+  // [OA] The secret factor itself rides along: a passkey stays a passkey (sections 7.2 and 7.4).
+  return isSecretFactor(strategy) ? { sessionId: signIn.createdSessionId, secret: true, factor: strategy as string } : { sessionId: signIn.createdSessionId, secret: false };
 }
 
 /** Sign-up verifications that ask for a secret: a code sent to the address or the number (never an email link). */
@@ -74,11 +78,17 @@ const SECRET_SIGN_UP_CODES: ReadonlySet<string> = new Set(['email_code', 'phone_
 const verifiedWith = (verification: VerificationLike | null | undefined, strategies: ReadonlySet<string>): boolean =>
   verification?.status === 'verified' && typeof verification.strategy === 'string' && strategies.has(verification.strategy);
 
-/** A sign-up proved a secret: no external account, and its address or number was verified with a code. */
-function signUpProvedSecret(signUp: ClerkSignUpLike): boolean {
+/**
+ * A sign-up proved a secret: no external account, and its address or number was verified with a code. [OA] Returns
+ * that code's strategy (`email_code`, `phone_code`), or null when it proved none.
+ */
+function signUpSecretFactor(signUp: ClerkSignUpLike): string | null {
   const verifications = signUp.verifications;
-  if (verifications?.externalAccount?.status === 'verified') return false;
-  return verifiedWith(verifications?.emailAddress, SECRET_SIGN_UP_CODES) || verifiedWith(verifications?.phoneNumber, SECRET_SIGN_UP_CODES);
+  if (verifications?.externalAccount?.status === 'verified') return null;
+  for (const verification of [verifications?.emailAddress, verifications?.phoneNumber]) {
+    if (verifiedWith(verification, SECRET_SIGN_UP_CODES)) return verification?.strategy as string;
+  }
+  return null;
 }
 
 /**
@@ -87,7 +97,8 @@ function signUpProvedSecret(signUp: ClerkSignUpLike): boolean {
  */
 export function proofFromSignUp(signUp: ClerkSignUpLike | null | undefined): SignInProof | null {
   if (!signUp || signUp.status !== 'complete' || !signUp.createdSessionId) return null;
-  return { sessionId: signUp.createdSessionId, secret: signUpProvedSecret(signUp) };
+  const factor = signUpSecretFactor(signUp);
+  return factor ? { sessionId: signUp.createdSessionId, secret: true, factor } : { sessionId: signUp.createdSessionId, secret: false };
 }
 
 /**
@@ -97,8 +108,14 @@ export function proofFromSignUp(signUp: ClerkSignUpLike | null | undefined): Sig
  * only: an attempt that has not verified yet does not count.
  */
 export function secretVerifiedHere(signIn: ClerkSignInLike | null | undefined, signUp: ClerkSignUpLike | null | undefined): boolean {
-  if (verifiedWith(signIn?.firstFactorVerification, SECRET_FIRST_FACTORS)) return true;
-  return !!signUp && signUpProvedSecret(signUp);
+  return secretFactorVerifiedHere(signIn, signUp) !== null;
+}
+
+/** [OA] The secret factor `secretVerifiedHere` saw verified (a passkey stays a passkey), or null. */
+export function secretFactorVerifiedHere(signIn: ClerkSignInLike | null | undefined, signUp: ClerkSignUpLike | null | undefined): string | null {
+  const first = signIn?.firstFactorVerification;
+  if (verifiedWith(first, SECRET_FIRST_FACTORS)) return first?.strategy as string;
+  return signUp ? signUpSecretFactor(signUp) : null;
 }
 
 /** An OAuth or SSO first factor is waiting for its redirect: the sign-in is leaving this window. */
@@ -116,8 +133,6 @@ export function oauthSignUpStarted(signUp: ClerkSignUpLike | null | undefined): 
 }
 
 const isFresh = (at: number, now: number): boolean => now - at >= 0 && now - at < SIGNIN_PROOF_MS;
-
-const freshSecret = (record: SignInRecord | null, now: number): boolean => record?.kind === 'secret' && isFresh(record.at, now);
 
 /**
  * The page saw this tab go from signed out to signed in: a sign-in (or sign-up) completed here.
@@ -138,7 +153,9 @@ export function signedInHere(previous: string | null | undefined, current: strin
 export function proofAtSignIn(input: { sessionId: string; signIn?: ClerkSignInLike | null; signUp?: ClerkSignUpLike | null; record: SignInRecord | null; now: number }): SignInProof {
   const exact = [proofFromSignIn(input.signIn), proofFromSignUp(input.signUp)].find((proof) => proof?.sessionId === input.sessionId);
   if (exact) return exact;
-  return { sessionId: input.sessionId, secret: freshSecret(input.record, input.now) };
+  const record = input.record;
+  if (record?.kind !== 'secret' || !isFresh(record.at, input.now)) return { sessionId: input.sessionId, secret: false };
+  return record.factor ? { sessionId: input.sessionId, secret: true, factor: record.factor } : { sessionId: input.sessionId, secret: true };
 }
 
 /**
@@ -157,6 +174,27 @@ export function deviceCanLock(device: DeviceGateRead): boolean {
 
 export type AfterSignIn = 'unlock' | 'reverify' | 'none';
 
+/** [OA] The browser's marker is `pin`, or its read failed (it may be one). */
+function mayBePinBrowser(device: DeviceGateRead): boolean {
+  return device.readable ? device.marker?.gate === 'pin' : device.reason === 'failed';
+}
+
+/**
+ * [OA] Whether a secret sign-in counts as the grown-up unlock here (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4,
+ * OA-D10, OQ-21, CS-17). On a browser whose marker is `pin`, or whose read failed (it may be one), a passkey does not
+ * count: a platform authenticator may fall back to the device passcode, in a child's reach; the sign-in completes and
+ * the lock asks for the PIN or another factor. There only a factor Clerk named as a password or a code counts: an
+ * absent or unknown factor (a record from an earlier build, a factor this bundle does not know) fails closed. On the
+ * reset leg (`next` = `/account/pin-reset`) only a password, a code or a Clerk password-reset code counts, on every
+ * browser.
+ */
+export function isSecretProvingSignIn(input: { factor: string | null | undefined; device: DeviceGateRead; resetLeg: boolean }): boolean {
+  const { factor, device, resetLeg } = input;
+  if (resetLeg || mayBePinBrowser(device)) return typeof factor === 'string' && RESET_LEG_FACTORS.has(factor);
+  // Every other browser: any secret factor, a passkey included (F-APP-001 section 3.9).
+  return true;
+}
+
 /**
  * What a sign-in completed in this tab earns (section 3.9). A secret-proving sign-in writes the
  * unlock (and the trusted epoch). An OAuth or SSO sign-in does not count on its own: on a device
@@ -165,34 +203,74 @@ export type AfterSignIn = 'unlock' | 'reverify' | 'none';
  * decides on the page. A fresh OAuth hand-off record, or a secret-attempt record the page never
  * turned into a proof for this session, counts as an OAuth sign-in (fail closed).
  */
-export function planAfterSignIn(input: { record: SignInRecord | null; sessionId: string | null; device: DeviceGateRead; now: number }): AfterSignIn {
+export function planAfterSignIn(input: { record: SignInRecord | null; sessionId: string | null; device: DeviceGateRead; now: number; next?: string | null }): AfterSignIn {
   const { record, sessionId, device, now } = input;
   if (!sessionId || !record || !isFresh(record.at, now)) return 'none';
   // An OAuth hand-off from this tab whose completion the page did not see (Clerk finished it
   // before the page watched): it proved no secret.
   if (record.kind === 'proof' && record.sessionId !== sessionId) return 'none';
-  if (record.kind === 'proof' && record.secret) return 'unlock';
+  // [OA] A passkey on a `pin` browser, or a factor the reset leg does not take, signs in but unlocks nothing: the
+  // lock (or the reset page) decides, with no reverification that could be a passkey again. A secret whose factor is
+  // not named on a `pin` browser asks for the reverification (which refuses a passkey) instead of opening.
+  if (record.kind === 'proof' && record.secret) {
+    const resetLeg = isResetLeg(input.next);
+    if (isSecretProvingSignIn({ factor: record.factor, device, resetLeg })) return 'unlock';
+    if (resetLeg || record.factor === 'passkey') return 'none';
+    // Only a `pin` browser or a failed read gets here, and the lock can close on both.
+    return 'reverify';
+  }
   return deviceCanLock(device) ? 'reverify' : 'none';
 }
 
 export interface UnlockWriters {
   writeUnlock: (now: number) => boolean;
   writeEpoch: (epoch: number | null) => Promise<boolean>;
+  /** [OA] This tab's unlock before the sign-in writes its own (moment 1 of section 7.2). */
+  readUnlock?: () => GrownUpUnlock | null;
+  /** [OA] Records `accountId` (fingerprinted) as the PIN owner of `epoch`. */
+  writePinOwner?: (accountId: string, epoch: number) => Promise<boolean>;
+}
+
+/** [OA] Fingerprints the account id and writes `pinOwner`; false when either step fails. */
+export async function recordPinOwner(accountId: string, epoch: number): Promise<boolean> {
+  const record = pinOwnerRecord(await pinOwnerFingerprint(accountId), epoch);
+  return record ? writePinOwner(record) : false;
 }
 
 const BROWSER_WRITERS: UnlockWriters = {
   writeUnlock: (now) => writeSignInUnlock(now),
   writeEpoch: (epoch) => writeTrustedEpoch(epoch),
+  readUnlock: () => readUnlock(),
+  writePinOwner: recordPinOwner,
 };
+
+/**
+ * [OA] What the grant knows of the sign-in: its secret factor (null after a reverification, whose factor Clerk does not
+ * name), whether it is the reset leg, and the account that signed in.
+ */
+export interface GrantContext {
+  factor?: string | null;
+  resetLeg?: boolean;
+  accountId?: string | null;
+}
 
 /**
  * After a secret-proving sign-in (or a reverification): the `signin` unlock of this tab, and the
  * marker's epoch as the trusted one (`trustableEpoch`: a real `pin` epoch, otherwise none, which
  * forgets an earlier one). A device that could not be read leaves the trusted epoch as it was.
+ *
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2: the earlier unlock of this tab is read first; a password or a
+ * code right after a fresh PIN for the marker's epoch names this account the PIN owner (moment 1). The reset leg
+ * (`next` = `/account/pin-reset`) writes the unlock only: no trusted epoch and no owner.
  */
-export async function grantSignInUnlock(device: DeviceGateRead, now: number, writers: UnlockWriters = BROWSER_WRITERS): Promise<void> {
+export async function grantSignInUnlock(device: DeviceGateRead, now: number, writers: UnlockWriters = BROWSER_WRITERS, context: GrantContext = {}): Promise<void> {
+  const earlier = writers.readUnlock ? writers.readUnlock() : null;
   writers.writeUnlock(now);
+  const resetLeg = context.resetLeg === true;
+  if (resetLeg) return;
   if (device.readable) await writers.writeEpoch(trustableEpoch(device.marker));
+  const epoch = pinOwnerAtSignIn({ earlier, device, factor: context.factor, resetLeg, now });
+  if (epoch !== null && context.accountId && writers.writePinOwner) await writers.writePinOwner(context.accountId, epoch);
 }
 
 /** Personas from the account's spaces (`GET /api/spaces`), Family first; unknown kinds ignored. */
@@ -348,7 +426,13 @@ export interface SignInIo {
   readRecord: () => SignInRecord | null;
   clearRecord: () => void;
   readDevice: () => Promise<DeviceGateRead>;
-  grant: (device: DeviceGateRead, now: number) => Promise<void>;
+  grant: (device: DeviceGateRead, now: number, context?: GrantContext) => Promise<void>;
+}
+
+/** [OA] Where the sign-in leads (`next`) and who signed in, for the reset-leg and PIN-owner rules. */
+export interface SettleContext {
+  next?: string | null;
+  accountId?: string | null;
 }
 
 /**
@@ -358,21 +442,29 @@ export interface SignInIo {
  * (Clerk may reload the page meanwhile: the next load asks again instead of opening). Anything
  * else clears the record and asks nothing.
  */
-export async function settleSignIn(io: SignInIo, sessionId: string | null): Promise<{ reverify: DeviceGateRead } | null> {
+export async function settleSignIn(io: SignInIo, sessionId: string | null, context: SettleContext = {}): Promise<{ reverify: DeviceGateRead } | null> {
   const record = io.readRecord();
   if (!record) return null;
   const device = await withTimeout(io.readDevice, FAILED_DEVICE_READ, DEVICE_READ_TIMEOUT_MS);
   const now = io.now();
-  const plan = planAfterSignIn({ record, sessionId, device, now });
+  const plan = planAfterSignIn({ record, sessionId, device, now, next: context.next });
   if (plan === 'reverify') return { reverify: device };
-  if (plan === 'unlock') await io.grant(device, now);
+  if (plan === 'unlock') {
+    // Only a `proof` record plans an unlock; its factor, if Clerk named one.
+    const factor = (record as { factor?: string }).factor ?? null;
+    await io.grant(device, now, { factor, resetLeg: isResetLeg(context.next), accountId: context.accountId ?? null });
+  }
   io.clearRecord();
   return null;
 }
 
-/** The reverification ended: a success writes the unlock as a secret-proving sign-in would; either way the record is spent. */
-export async function finishReverify(io: SignInIo, device: DeviceGateRead, verified: boolean): Promise<void> {
-  if (verified) await io.grant(device, io.now());
+/**
+ * The reverification ended: a success writes the unlock as a secret-proving sign-in would; either way the record is
+ * spent. [OA] Clerk does not name the reverification's factor, so it names no PIN owner, and on the reset leg it
+ * writes no trusted epoch.
+ */
+export async function finishReverify(io: SignInIo, device: DeviceGateRead, verified: boolean, context: SettleContext = {}): Promise<void> {
+  if (verified) await io.grant(device, io.now(), { factor: null, resetLeg: isResetLeg(context.next), accountId: context.accountId ?? null });
   io.clearRecord();
 }
 

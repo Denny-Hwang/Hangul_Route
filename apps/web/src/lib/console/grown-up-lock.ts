@@ -127,10 +127,17 @@ const SITE_ORIGINS: ReadonlySet<string> = new Set([SITE_ORIGIN, SITE_ORIGIN.repl
  * `?lang=<the console's language>`, English included (AMENDMENTS-DISPLAY-NAV section 6): the
  * learner app uses it only to seed a device that never chose.
  */
-export function learnerHome(origin: string, locale: UiLocale): string {
+export function learnerHome(origin: string, locale: UiLocale, options: { who?: boolean } = {}): string {
   const home = isSiteOrigin(origin) ? `${APP_ORIGIN}${APP_ROUTES.learn}` : APP_ROUTES.learn;
-  return `${home}?lang=${locale}`;
+  return options.who ? `${home}?lang=${locale}&${WHO_INTENT}` : `${home}?lang=${locale}`;
 }
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.3 (OA-D12): the boot intent that opens "Who is using this?" in the
+ * learner app. The Learner app exit and Open the app on this device without a join code add it; the learner app
+ * ignores it while its chooser flag is off (section 6.2).
+ */
+export const WHO_INTENT = 'who=1';
 
 /** Whether this page runs on a site origin (the console there until F-SITE-002 S-10), not on the learner app's origin. */
 export function isSiteOrigin(origin: string): boolean {
