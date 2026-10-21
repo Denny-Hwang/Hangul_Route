@@ -146,7 +146,11 @@ const precache = {
   // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
   // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
   // anyway; the limit only decides whether it is kept for offline use.
-  maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+  // 10 MiB (was 8 MiB, [OA] row OA-7a): the AMENDMENTS-ONE-ACCOUNT-MANY-USERS rows grow the app bundle to 8,379,807 B
+  // at OA-5 (8.8 KB under 8 MiB) and 8,400,304 B with People on this device, which would leave it out of the precache
+  // and the post-build below fails on that. The limit is not a size budget; the bundle size is watched where it is
+  // measured (F-CURR-001 section 3.12, the amendment's section 16).
+  maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
 };
 
 const { count, size, warnings } = await generateSW({
