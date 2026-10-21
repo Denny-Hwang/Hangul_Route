@@ -237,7 +237,8 @@ describe('locale pages are the English pages with locale links', () => {
       const loc = locPage as { default: (p: PageProps) => JSX.Element };
       const enHtml = renderToStaticMarkup(en.default());
       const locHtml = renderToStaticMarkup(loc.default({ params: { locale } }));
-      // "Play now" carries the locale to the learner app (`?lang=`, PR 11c).
+      // "Play now" carries the locale to the learner app (`?lang=`, PR 11c), and so does Sign in (F-SITE-002 site
+      // facts, 2026-10-21): after `?persona=` when there is one (`&amp;` in the markup).
       const toLocale = (href: string): string =>
         href === '/'
           ? `/${locale}`
@@ -245,7 +246,9 @@ describe('locale pages are the English pages with locale links', () => {
             ? `/${locale}${href}`
             : href === 'https://app.hangulroute.com'
               ? `${href}?lang=${locale}`
-              : href;
+              : href.startsWith('https://app.hangulroute.com/signin')
+                ? `${href}${href.includes('?') ? '&amp;' : '?'}lang=${locale}`
+                : href;
       // The footer's locale switcher (last on the page, once a second locale ships) links the same page in every
       // shown locale, so it is the same list on every locale's page.
       const tail = shownSiteLocales().length > 1 ? shownSiteLocales().length : 0;
