@@ -488,8 +488,26 @@ export interface Db {
   /** Bounded purge: ended rows before `endedBefore`, executed rows before `executedBefore`, still-requested rows whose `expiresAt` is before `endedBefore` (an ask nobody settled). */
   purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number>;
 
+  /**
+   * [OA] Adds one to the `telemetry_daily` row of (`day`, `name`, `dims`), creating it at 1 (migration 0013,
+   * AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1). Counts only: the caller passes codes, never an id.
+   */
+  addTelemetryDaily(day: string, name: string, dims: string): Promise<void>;
+  /** [OA] Deletes at most `limit` `telemetry_daily` rows whose `day` is before `beforeDay` (YYYY-MM-DD); the count removed. */
+  purgeTelemetryDaily(beforeDay: string, limit: number): Promise<number>;
+  /** [OA] Tests only: the counters of one day, by name then dims. No route reads them. */
+  telemetryDailyOf(day: string): Promise<TelemetryDailyRow[]>;
+
   /** Tests only: wipe everything. */
   reset(): Promise<void>;
+}
+
+/** [OA] One `telemetry_daily` row (migration 0013). */
+export interface TelemetryDailyRow {
+  day: string;
+  name: string;
+  dims: string;
+  n: number;
 }
 
 /**

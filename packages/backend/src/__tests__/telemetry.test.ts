@@ -1,7 +1,9 @@
 import { TELEMETRY_EVENT_NAMES, isServerOnlyTelemetryName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
+import { TELEMETRY_DAILY_WRITES_PER_MIN, resetTelemetryDailyBudgetForTests, takeDailyWrite } from '../lib/telemetry-daily';
 import { store } from '../store';
+import { testDb } from './helpers/db';
 
 /**
  * POST /api/telemetry — the one legacy v1 route a shipped client calls
@@ -231,5 +233,108 @@ describe('POST /api/telemetry', () => {
     expect(store.events).toHaveLength(10_000);
     expect(store.events[0]?.id).toBe('event:1');
     expect(store.events.at(-1)?.name).toBe('session.end');
+  });
+});
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 15 and 15.1 (row OA-1, Worker first): the new names are accepted
+ * before any client sends them, each section 15 event is stored without a profile id, and each one (plus
+ * session.start) adds one to the anonymous telemetry_daily counter of its UTC day, with codes only.
+ */
+describe('[OA] POST /api/telemetry · section 15 names and the daily counters', () => {
+  const DAY = NOW.toISOString().slice(0, 10);
+  const rows = () => testDb.telemetryDailyOf(DAY);
+
+  beforeEach(async () => {
+    await testDb.reset();
+    resetTelemetryDailyBudgetForTests();
+  });
+
+  it('accepts the seven new names and still refuses an unknown one', async () => {
+    for (const name of ['who.shown', 'who.picked', 'pin.paused', 'pin.biometric_changed', 'profile.lock_changed', 'profile.removed', 'space.join.batch']) {
+      expect((await post({ name })).status, name).toBe(201);
+    }
+    const unknown = await post({ name: 'who.peeked', payload: { kind: 'learner' } });
+    expect(unknown.status).toBe(422);
+    expect(unknown.body.error?.code).toBe('bad_request');
+    expect(store.events).toHaveLength(7);
+  });
+
+  it('stores profile.switch and parent.gate.opened without a profile id and with codes only', async () => {
+    const sw = await post({ name: 'profile.switch', profileId: 'profile:suni', payload: { via: 'chooser', trigger: 'launch', locked: false, minutesIn: '0-2', from: 'profile:suni', to: 'profile:mina' } });
+    expect(sw.status).toBe(201);
+    expect(sw.body.data?.event.profileId).toBeUndefined();
+    expect(sw.body.data?.event.payload).toEqual({ via: 'chooser', trigger: 'launch', locked: false, minutesIn: '0-2' });
+    const gate = await post({ name: 'parent.gate.opened', profileId: 'profile:suni', payload: { dest: 'area', via: 'pin', marker: 'pin', pinEpoch: 1_700_000_000_000 } });
+    expect(gate.body.data?.event.profileId).toBeUndefined();
+    expect(gate.body.data?.event.payload).toEqual({ dest: 'area', via: 'pin', marker: 'pin' });
+    expect(JSON.stringify(store.events)).not.toMatch(/suni|mina|1700000000000/);
+  });
+
+  it('adds one per event to its day, name and kept dims, never a profile id or a dropped value', async () => {
+    const payload = { trigger: 'launch', learners: '2', grownUps: 1, anyLocked: false, resetPending: false };
+    await post({ name: 'who.shown', profileId: 'profile:suni', payload: { ...payload, name: 'Suni', deviceId: 'device:x' } });
+    await post({ name: 'who.shown', payload: { resetPending: false, anyLocked: false, grownUps: 1, learners: '2', trigger: 'launch' } });
+    await post({ name: 'who.picked', profileId: 'profile:suni', payload: { kind: 'learner', profileId: 'profile:suni' } });
+    await post({ name: 'space.join.batch', payload: { picked: 40, joined: 2, refused: 0 } });
+    await post({ name: 'session.start', profileId: 'profile:suni', payload: { source: 'pwa' } });
+    // not counted: an ordinary name
+    await post({ name: 'quest.complete', profileId: 'profile:suni', payload: { questId: 'quest:1' } });
+    expect(await rows()).toEqual([
+      { day: DAY, name: 'session.start', dims: '', n: 1 },
+      { day: DAY, name: 'space.join.batch', dims: '{"joined":2,"refused":0}', n: 1 },
+      { day: DAY, name: 'who.picked', dims: '{"kind":"learner"}', n: 1 },
+      { day: DAY, name: 'who.shown', dims: '{"anyLocked":false,"grownUps":1,"learners":"2","resetPending":false,"trigger":"launch"}', n: 2 },
+    ]);
+    expect(JSON.stringify(await rows())).not.toMatch(/profile|suni|Suni|device|quest/);
+  });
+
+  it("counts on the UTC day of the event's own time (an offline-queued event counts on its day)", async () => {
+    await post({ name: 'pin.paused', at: '2026-10-08T23:59:00.000Z', payload: { step: 2 } });
+    await post({ name: 'pin.paused', at: '2026-10-09T00:00:01.000+09:00', payload: { step: 2 } });
+    expect(await testDb.telemetryDailyOf('2026-10-08')).toEqual([
+      { day: '2026-10-08', name: 'pin.paused', dims: '{"step":2}', n: 2 },
+    ]);
+    expect(await rows()).toEqual([]);
+  });
+
+  it('stops counting past the per-isolate budget, and keeps accepting events', async () => {
+    for (let i = 0; i < TELEMETRY_DAILY_WRITES_PER_MIN; i += 1) takeDailyWrite(NOW.getTime());
+    const r = await post({ name: 'profile.lock_changed', payload: { locked: true } });
+    expect(r.status).toBe(201);
+    expect(store.events.at(-1)?.name).toBe('profile.lock_changed');
+    expect(await rows()).toEqual([]);
+    vi.setSystemTime(new Date(NOW.getTime() + 60_000));
+    await post({ name: 'profile.lock_changed', payload: { locked: true } });
+    expect(await rows()).toEqual([{ day: DAY, name: 'profile.lock_changed', dims: '{"locked":true}', n: 1 }]);
+  });
+
+  it('TELEMETRY_DAILY off writes nothing; events are still accepted', async () => {
+    const res = await app.request('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'who.picked', payload: { kind: 'add' } }) }, { TELEMETRY_DAILY: 'disabled' });
+    expect(res.status).toBe(201);
+    expect(store.events).toHaveLength(1);
+    expect(await rows()).toEqual([]);
+  });
+
+  it('a failed counter write never fails the request and is not retried', async () => {
+    const add = vi.spyOn(testDb, 'addTelemetryDaily').mockRejectedValue(new Error('D1_ERROR: no such table: telemetry_daily'));
+    try {
+      const r = await post({ name: 'profile.removed', payload: { saved: true, wasActive: false, anyway: false } });
+      expect(r.status).toBe(201);
+      expect(r.body.data?.event.payload).toEqual({ saved: true, wasActive: false, anyway: false });
+      expect(add).toHaveBeenCalledTimes(1);
+    } finally {
+      add.mockRestore();
+    }
+  });
+
+  it('hands the counter to waitUntil when the Worker gives an execution context', async () => {
+    const pending: Promise<unknown>[] = [];
+    const ctx = { waitUntil: (p: Promise<unknown>) => void pending.push(p), passThroughOnException: () => undefined, props: {} };
+    const res = await app.request('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'who.picked', payload: { kind: 'add' } }) }, {}, ctx);
+    expect(res.status).toBe(201);
+    expect(pending).toHaveLength(1);
+    await Promise.all(pending);
+    expect(await rows()).toEqual([{ day: DAY, name: 'who.picked', dims: '{"kind":"add"}', n: 1 }]);
   });
 });
