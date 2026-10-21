@@ -198,7 +198,7 @@ spacesRoutes.post('/lookup', async (c) => {
   const full = false;
   // [SA] `seat` is learner-aware: a learner this device vouches for (the `/join` check) who already holds the seat
   // finds room. An unvouched `learnerId` is ignored, never an error, so the lookup reveals nothing about it.
-  const learnerId = parsed.data.learnerId;
+  const learnerId = parsed.data.learnerId && LOOKUP_LEARNER_ID.test(parsed.data.learnerId) ? parsed.data.learnerId : null;
   const vouched = learnerId && parseDeviceHeader(c.req.header('Authorization')) && typeof (await authorizeDevice(c, learnerId)) === 'string' ? learnerId : null;
   const seat = await lookupSeat(db, space, vouched, now);
   return ok(c, { space: { id: space.id, kind: space.kind, name: space.name }, full, seat, roster });
@@ -508,6 +508,9 @@ export async function rosterSeats(db: Db, space: Space, learners: number, now: D
 }
 
 /** [SA] Whether an open class transfer names the space as its source or destination (a rename resets its consent, section 5.4). */
+/** [SA] section 3.4: the learner id shape `/lookup` may vouch for; any other value is ignored. */
+const LOOKUP_LEARNER_ID = /^profile:[a-z0-9-]+$/;
+
 export async function hasOpenMoves(db: Db, spaceId: string): Promise<boolean> {
   return (await db.openTransfersOfSpaces([spaceId], 'source')).length > 0 || (await db.openTransfersOfSpaces([spaceId], 'destination')).length > 0;
 }

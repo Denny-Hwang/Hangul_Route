@@ -287,7 +287,9 @@ export class MemoryDb implements Db {
       [...this.spaceEvents.values()]
         .filter((e) => e.spaceId === spaceId && this.spaces.has(e.spaceId))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
-        .slice(0, limit),
+        .slice(0, limit)
+        // as D1: a kind this build does not know (written by a newer Worker) is skipped, never thrown
+        .filter((e) => SpaceEventKindSchema.safeParse(e.kind).success),
     );
   }
   async purgeSpaceEvents(before: Date, limit: number): Promise<number> {

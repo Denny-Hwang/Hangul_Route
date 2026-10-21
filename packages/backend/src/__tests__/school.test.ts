@@ -107,14 +107,23 @@ describe('school admin (F-SCHOOL-001)', () => {
 
 /** [SA] AMENDMENTS-SEATS-ADMINS section 3.6: the school view's licence is an allow-list for every caller. */
 describe('[SA] the school licence view', () => {
-  it('has exactly planKey, status, seats, expiresAt, active and subjectName, for the owner and for an admin', async () => {
+  it('has exactly planKey, status, seats, expiresAt, updatedAt, active and subjectName, for the owner and for an admin', async () => {
     const sch = await createSpace('principal', 'school', 'Seoul Hangul School');
     await db.addMembership({ spaceId: sch, memberKind: 'account', memberId: 'dean', role: 'admin', joinedAt: new Date().toISOString() });
-    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_secret', customerRef: 'cus_secret', promoCode: 'HOYA20', expiresAt: '2027-10-20T00:00:00.000Z' }, new Date());
+    const at = new Date();
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_secret', customerRef: 'cus_secret', promoCode: 'HOYA20', expiresAt: '2027-10-20T00:00:00.000Z' }, at);
     for (const user of ['principal', 'dean']) {
       const license = ((await call('GET', `/api/spaces/${sch}/school`, bearer(user))).body.data as { license: Record<string, unknown> }).license;
-      expect(Object.keys(license).sort(), user).toEqual(['active', 'expiresAt', 'planKey', 'seats', 'status', 'subjectName']);
-      expect(license).toEqual({ planKey: 'group_license', status: 'active', seats: null, expiresAt: '2027-10-20T00:00:00.000Z', active: true, subjectName: 'Seoul Hangul School' });
+      expect(Object.keys(license).sort(), user).toEqual(['active', 'expiresAt', 'planKey', 'seats', 'status', 'subjectName', 'updatedAt']);
+      expect(license).toEqual({ planKey: 'group_license', status: 'active', seats: null, expiresAt: '2027-10-20T00:00:00.000Z', updatedAt: at.toISOString(), active: true, subjectName: 'Seoul Hangul School' });
     }
+  });
+
+  it('keeps updatedAt so the console reads a past-due licence inside its grace week as kept, not paused', async () => {
+    const sch = await createSpace('principal', 'school', 'Seoul Hangul School');
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'past_due', provider: 'stripe', expiresAt: '2027-10-20T00:00:00.000Z' }, twoDaysAgo);
+    const license = ((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as { license: { status: string; updatedAt: string; active: boolean } }).license;
+    expect(license).toMatchObject({ status: 'past_due', updatedAt: twoDaysAgo.toISOString(), active: true });
   });
 });

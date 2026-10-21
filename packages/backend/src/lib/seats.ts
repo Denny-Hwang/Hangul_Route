@@ -1,6 +1,6 @@
 import { LEARNER_CLASS_CAP, type LookupSeat, type SeatCapCode, type Space } from '@hangul-route/content-schema';
 import type { Db } from '../db';
-import { classCap, learnerCapOf, schoolIsFull, schoolUsage } from './entitlement';
+import { classCap, inLiveClassOfSchool, learnerCapOf, schoolIsFull, schoolUsage } from './entitlement';
 
 /**
  * Class seat checks — F-SPACE-002 §4.3. Extracted from the `/join` route so
@@ -19,13 +19,10 @@ export async function studentsIn(db: Db, spaceId: string): Promise<number> {
 
 /** Live (not archived) classes the learner is in, leaving out `excludeSpaceId` when given. */
 export async function activeClassesOf(db: Db, learnerId: string, excludeSpaceId?: string): Promise<number> {
-  let n = 0;
-  for (const m of await db.membershipsOf('learner', learnerId)) {
-    if (m.spaceId === excludeSpaceId) continue;
-    const s = await db.getSpace(m.spaceId);
-    if (s && s.kind === 'class' && !s.archivedAt) n += 1;
-  }
-  return n;
+  // [SA] two set-wise reads (the memberships, then their spaces), not one read per membership
+  const ids = (await db.membershipsOf('learner', learnerId)).map((m) => m.spaceId).filter((id) => id !== excludeSpaceId);
+  if (ids.length === 0) return 0;
+  return (await db.getSpaces(ids)).filter((s) => s.kind === 'class' && !s.archivedAt).length;
 }
 
 /**
@@ -69,7 +66,7 @@ export async function seatRefusal(db: Db, space: Space, learnerId: string | null
   if (space.kind === 'class') {
     if (learnerId && !opts?.skipLearnerCap && (await activeClassesOf(db, learnerId)) >= LEARNER_CLASS_CAP) return { code: 'cap_learner', cap: LEARNER_CLASS_CAP };
     if (caps.cap !== null && (await studentsIn(db, space.id)) >= caps.cap) return { code: 'cap_class', cap: caps.cap };
-    if (caps.schoolId !== null && caps.schoolCap !== null && !(learnerId && (await inLiveClassOf(db, caps.schoolId, learnerId)))) {
+    if (caps.schoolId !== null && caps.schoolCap !== null && !(learnerId && (await inLiveClassOfSchool(db, caps.schoolId, learnerId)))) {
       const school = await db.getSpace(caps.schoolId);
       if (school && (await schoolUsage(db, school)).students >= caps.schoolCap) return { code: 'cap_school', cap: caps.schoolCap };
     }
@@ -77,14 +74,6 @@ export async function seatRefusal(db: Db, space: Space, learnerId: string | null
   }
   if (caps.cap !== null && (await studentsIn(db, space.id)) >= caps.cap) return { code: 'cap_family', cap: caps.cap };
   return null;
-}
-
-/** Whether the learner is in a live class of the school (it already holds a school seat). */
-async function inLiveClassOf(db: Db, schoolId: string, learnerId: string): Promise<boolean> {
-  for (const s of await db.childSpaces(schoolId)) {
-    if (s.kind === 'class' && !s.archivedAt && (await db.membership(s.id, 'learner', learnerId))) return true;
-  }
-  return false;
 }
 
 /**

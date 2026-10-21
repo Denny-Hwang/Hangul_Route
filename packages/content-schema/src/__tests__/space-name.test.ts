@@ -63,6 +63,15 @@ describe('SpaceNameSchema ([SA] section 5.2)', () => {
     for (const name of ['Αθήνα', 'Москва', 'שלום', 'مدرسة', 'こんにちは', '学校', 'ＡＢＣ', 'ไทย', 'Nguyễn']) expect(checkSpaceName(name).ok, name).toBe(true);
   });
 
+  it('accepts names written only in Georgian, Amharic, Armenian, Burmese, Khmer, Tibetan, Cherokee, Bopomofo, Yi or a CJK extension, on create and on rename', () => {
+    const names = ['თბილისი', 'አማርኛ', 'Հայաստան', 'မြန်မာ', 'ខ្មែរ', 'བོད་', 'ᏣᎳᎩ', 'ㄅㄆㄇ', 'ꆈꌠ', '𠀀𠀁'];
+    for (const name of names) {
+      expect(checkSpaceName(name).ok, name).toBe(true);
+      expect(SpaceCreateSchema.safeParse({ kind: 'family', name }).success, name).toBe(true);
+      expect(SpaceRenameSchema.parse({ name }).name, name).toBe(name.normalize('NFC'));
+    }
+  });
+
   it('puts the reason in the issue params, and the rename body uses it', () => {
     const parsed = SpaceRenameSchema.safeParse({ name: '​' });
     expect(parsed.success).toBe(false);
@@ -86,7 +95,9 @@ describe('space events and lookup seat ([SA] sections 3.4 and 6.2)', () => {
   it('lookup takes an optional learner and answers a seat', () => {
     expect(SpaceLookupSchema.parse({ code: 'abcdef' })).toEqual({ code: 'ABCDEF' });
     expect(SpaceLookupSchema.parse({ code: 'ABCDEF', learnerId: 'profile:suni' }).learnerId).toBe('profile:suni');
-    expect(SpaceLookupSchema.safeParse({ code: 'ABCDEF', learnerId: 'account:x' }).success).toBe(false);
+    // a malformed learnerId still parses; the Worker treats it as unvouched (section 3.4: ignored, never an error)
+    expect(SpaceLookupSchema.parse({ code: 'ABCDEF', learnerId: 'account:x' }).learnerId).toBe('account:x');
+    expect(SpaceLookupSchema.safeParse({ code: 'ABCDEF', learnerId: 'x'.repeat(81) }).success).toBe(false);
     expect(LookupSeatSchema.parse({ full: true, reason: 'cap_family', cap: 4 })).toEqual({ full: true, reason: 'cap_family', cap: 4 });
     expect(LookupSeatSchema.safeParse({ full: true, reason: 'cap_learner', cap: 3 }).success).toBe(false);
   });
