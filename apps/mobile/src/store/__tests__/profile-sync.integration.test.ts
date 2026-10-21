@@ -11,6 +11,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 const devices = vi.hoisted(() => ({ current: new Map<string, unknown>(), id: 'device-one-0001' }));
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => devices.current.get(k) ?? null),
+  readJsonStrict: vi.fn(async (k: string) => devices.current.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     devices.current.set(k, v);
   }),
