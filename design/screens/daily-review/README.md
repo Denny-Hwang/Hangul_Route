@@ -57,11 +57,11 @@ Values that are not tokens. The rows write them as named constants, never bare l
 
 ## Checks made on the shots (Chromium, Playwright 1.63)
 
-- No sideways scroll at 320, at 768, or at 320 with 200 % text on any of the six pages (`scrollWidth` equals the viewport). Every folder has its `-320-text200.png` shot; long display words hyphenate (`hyphens: auto`) rather than overflow.
+- No sideways scroll at 320, at 768, or at 320 with 200 % text on any of the six pages (`scrollWidth` equals the viewport). Every folder has its `-320-text200.png` shot; long display words hyphenate (`hyphens: auto`) rather than overflow. That is the web mock only: the native rule for display headlines is `DISPLAY_HEADLINE_MAX_SCALE` in `reviews/daily-review.md` (200 % state).
 - Every drawn button, option, chip and cell is at least 48 x 48 (measured). Primary and full-width buttons, answer options, the close and back buttons, radio cards and segments are at least 64 tall (`touchTarget.min`; options 96). The small secondary buttons (`btn-sm`: Play again and Play on a quest row, See your prize and Stage Check on the Journey stage header) are 48 tall, the Stage 1 header pattern. Journey cells are 54 wide at 320.
 - No red anywhere: a miss uses `feedback.nudge` / `nudgeLight` with a thicker border and a dot; `feedback.danger` is not in any page.
 - No percentage, no "n of m", no "n / m", no timer, no emoji and no speaking UI in any drawn learner string of a review screen (searched in the six HTML files; the only hits are board notes, the reassurance "No timer." already shipped on the Hangul Check, and the unchanged Next lesson hero's "lesson 2 of 3" on Home, which is not a review screen).
-- Contrast (non-text, WCAG 1.4.11): the mastery keyline `border.shape` is 4.55:1 on paper, 4.29:1 on canvas, 3.84:1 on sunken; the theme tokens alone are 1.86:1 (life) to 4.58:1 (rites) on paper, so they are never the only cue. Learned day dots are `brand.primary` (5.44:1 on paper); the goal arc is `brand.primary`; round dots are `brand.secondary` (5.20:1) on a `border.shape` outline.
+- Contrast (non-text, WCAG 1.4.11): the mastery keyline `border.shape` is 4.55:1 on paper, 4.29:1 on canvas, 3.84:1 on sunken; the theme tokens alone are 1.86:1 (life) to 4.58:1 (rites) on paper, so they are never the only cue. Learned day dots are `brand.primary` (5.44:1 on paper); empty day dots are outlined in `border.shape` (4.55:1); the goal arc is `brand.primary`; round dots are `brand.secondary` (5.20:1) on a `border.shape` outline.
 
 ## Screens
 

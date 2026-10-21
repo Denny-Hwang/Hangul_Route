@@ -9,7 +9,7 @@ Mock: `design/screens/cell-check/` (shots at 320 and 768) · Built by row **CM-2
 
 Given: a learner who finished a cell's first volume, or who opens a cell they have not started and already knows some of it
 When: they tap **Take the Cell Check** on the cell's page, or **Test out** on an unstarted cell
-Then: about 3 minutes of 8-10 rounds from that cell only (at least 3 in 10 typed or built, §4.5) play in the review screen; the result shows stars; 3 stars (80 % or more right on the first try, never shown as a number) counts toward Mastered, or marks the cell Done as a test-out; any other result is a calm, useful next step, never a fail
+Then: about 3 minutes of 8-10 rounds from that cell only (at least ceil(0.3 x rounds) typed or built: 3 of 8, 9 or 10, §4.5) play in the review screen; the result shows stars; 3 stars (80 % or more right on the first try, never shown as a number) counts toward Mastered, or marks the cell Done as a test-out; any other result is a calm, useful next step, never a fail
 
 ## Screen goal
 
@@ -113,11 +113,12 @@ H. The cell's page after a test-out
 |     [ Play ]                   |  <- every quest stays replayable
 | ...                            |
 
-I. Stop the check? (over D)
+I. Stop the check? (over D; the same sheet in both modes)
 |   Stop the check?              |
-|   Nothing changes. You can     |
-|   take it again any time.      |
-|   [[ BACK TO IT ]]   [ Stop ]  |
+|   You can take it again any    |
+|   time.                        |
+|   [[ KEEP GOING ]]   [ Stop ]  |  <- the live `learner.stageReview.leave.*` sheet,
+                                       reused as it is (no claim about what is saved)
 ```
 
 - **Never on any panel**: a percentage, "8 of 10", a score, a pass mark, a timer, "failed", "not passed" or "try harder". The 80 % threshold is the 3-star tier of F-RVW-001 §3.1, so the learner only ever sees stars.
@@ -134,7 +135,7 @@ I. Stop the check? (over D)
 - E: [[ BACK TO THE MAP ]] -> `journey/grid`; [ Back to this place ] -> the cell's page. E2: the same two, with the order swapped.
 - F: [[ GO TO YOUR NEXT LESSON ]] -> the `routeNext` quest's page; [ Back to the map ] -> `journey/grid`.
 - G: [[ START THE FIRST QUEST ]] -> `quest/player` for the cell's first quest; [ Back to the map ] -> `journey/grid`.
-- I: [[ BACK TO IT ]] -> the same round; [ Stop ] -> the cell's page.
+- I: [[ KEEP GOING ]] -> the same round; [ Stop ] -> the cell's page.
 
 ## Navigation graph
 
@@ -146,16 +147,20 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 - **check, passed** (3 stars): E; `cellCheckAt` latches (earliest pass); the level rises if §4.4's other parts hold; A2 from then on.
 - **check, not 3 stars**: E2; nothing latches; items follow the spacing rule like any surface.
 - **test out, passed**: F; level 1 (Done) latches; every quest of the cell's first volume shows "Tested out" with 2 stars (H); asked items go to box 2 (right) or box 1 (miss); unasked items to box 1, spread over 3 days (§4.5).
-- **test out, not passed**: G; asked items are set by their result (right box 2, miss box 1), unasked stay unmet; the cell stays unstarted, so its first quest still teaches everything.
-- **stopped**: I -> [ Stop ]. A stopped Cell Check keeps the answers given (they count by the spacing rule, as on every surface, §4.5). A stopped test-out writes nothing: the cell has not been taught, so no item is entered.
+- **test out, not passed**: G; asked items are set by their result (right box 2, miss box 1), unasked stay unmet; the cell stays unstarted, so its first quest still teaches everything. This narrows §4.5 "Test-out details", which places unasked items without a passed/not-passed condition: see Open questions.
+- **test out and the stage**: a passed test-out writes `testedOut[cellId]` only, never `questDoneAt` or a quest's best stars (the "Tested out" pill and its 2 stars in H are drawn from `testedOut`). The stage latch keeps coming from `applyQuestResult` on a real quest run (`QuestResultOutcome.stageCompleted`, which needs every quest of the stage in `questDoneAt`), so a test-out never fires the stage ceremony, the stage card or the Stage Check. Testing out of a whole stage is CM-25 (Stage Jump Ahead, which amends F-PLC-001), not this row. The e2e "Cell Check and test-out" case asserts it: testing out of the last unfinished cell of a stage shows F, and no "See your Stage N prize".
+- **stopped**: I -> [ Stop ]. A stopped Cell Check keeps the answers given (they count by the spacing rule, as on every surface, §4.3 and §4.5) and writes no `reviews[]` entry and no `cellCheckAt`. A stopped test-out writes nothing: the cell has not been taught, so no item is entered.
+- **loading**: the round frame ([x] and the empty dots row) until the engine returns the cell's session; one frame, no spinner.
+- **store unreadable** (the memory store or IndexedDB read fails through the safe storage wrapper): the Daily Review's D page ("Nothing is waiting right now", [[ Back home ]]) with [[ Back to this place ]] in place of Back home; nothing is written and nothing latches.
 - **a cell the learner cannot open** (F-ENT-003 `closed`, the "Not open yet" preview of `episode/detail-access-preview.md`): no Test out line; nothing else changes.
 - **E3 hidden arm**: B has no Test out line; A and the Cell Check are unchanged.
-- **too few items** (a cell whose playable items are fewer than 8, for example audio missing with no device voice): the check uses what can play, at least 5 rounds; with fewer than 5 the A block shows no button and the B line is hidden.
+- **too few items** (a cell whose playable items are fewer than 8, for example audio missing with no device voice): the check uses what can play, at least `CELL_CHECK_MIN_ROUNDS` = 5 rounds (a floor below §4.5's 8-10, recorded in Open questions); with fewer than 5 the A block shows no button and the B line is hidden. The produce share stays ceil(0.3 x rounds).
 - **no sound** (F-AUDIO-004): the sound notice; recognize rounds become read rounds; the check still counts.
 - **offline**: plays fully offline (local engine, precached chunks).
 - **`cellCheck` off** (§12.2): no Cell Check block button, no Test out line; latched results ("Cell Check done", "Tested out", levels) stay and show again when it is back on.
+- **`mastery` off, `cellCheck` on** (independent flags, §12.2): A's block keeps only "Cell Check", its body line and the button (no ring, no level word, no hint); A2 keeps "Cell Check done" and [ Take it again ]; E shows the star headline ("Wonderful!") and the stars with no ring and no level word; F shows "You tested out!" and the stars with no ring. B, C, D, E2, G, H and I are unchanged.
 - **reduced motion**: the ring segment is drawn filled at once; no star pop.
-- **320 x 568 and 200 % text**: the page scrolls; the mastery block's ring keeps 48 dp and the words wrap beside it; buttons are full width.
+- **320 x 568 and 200 % text**: the page scrolls; the mastery block's ring keeps 48 dp and the words wrap beside it; buttons are full width; display headlines follow the native rule of `reviews/daily-review.md` (`DISPLAY_HEADLINE_MAX_SCALE`).
 - **768 and wide**: the page is the reading column (one pane) or the right pane (two panes); the mastery block's ring and words sit on one row.
 
 ## Accessibility
@@ -186,7 +191,7 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 ## Data needs
 
 - reads: the cell's review items (CM-10), the memory store, `cellBest`, `cellCheckAt`, `testedOut`, `questDoneAt`, `useQuestAccess()` (entitlement), the E3 arm, the `cellCheck` flag, `routeNext`
-- writes: answers to the memory store; on finish one `reviews[]` entry `{ kind: 'cell-check', resultStars, itemIds, mode }`; on a 3-star check `cellCheckAt[cellId]`; on a passed test-out `testedOut[cellId]`, `cellBest[cellId] = max(1, ...)` and the asked and unasked item states of §4.5
+- writes: answers to the memory store; on finish one `reviews[]` entry `{ kind: 'cell-check', scope: cellId, resultStars, itemIds, missedItemIds }` (no `mode` field: `ReviewEntrySchema` strips unknown keys on every parse; the mode lives in the route param during the session, a passed test-out is `testedOut[cellId]`, and `testout.finished` carries the rest for analytics); on a 3-star check `cellCheckAt[cellId]`; on a passed test-out `testedOut[cellId]`, `cellBest[cellId] = max(1, ...)` and the asked and unasked item states of §4.5; never `questDoneAt`
 - telemetry: `review.start` / `review.complete` (`kind: 'cell-check'`), `testout.finished` (§11.3), `mastery.level_up` when the level rises
 
 ## Proposed copy (English; keys for CM-21, which adds es and ko)
@@ -202,7 +207,6 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 | `learner.cellCheck.intro.start.cta` / `.later.cta` | Let's go / Maybe later |
 | `learner.cellCheck.result.tricky` | Hoya will bring the tricky ones back in your reviews. You can take the check again any time. |
 | `learner.cellCheck.result.toMap.cta` / `.toPlace.cta` | Back to the map / Back to this place |
-| `learner.cellCheck.leave.title` / `.body` | Stop the check? / Nothing changes. You can take it again any time. |
 | `learner.testOut.prompt` | Already know this? |
 | `learner.testOut.cta` | Test out |
 | `learner.testOut.title` | Test out |
@@ -213,8 +217,13 @@ Exit to: `journey/grid` · `episode/detail` · `quest/player` (G) · the `routeN
 | `learner.testOut.result.next.cta` / `.first.cta` | Go to your next lesson / Start the first quest |
 | `learner.testOut.pill` | Tested out |
 
-Star headlines reuse `learner.dailyReview.result.headline.*`; the level words are `learner.mastery.level.*` (`journey/mastery-ring.md`).
+Star headlines reuse `learner.dailyReview.result.headline.*`; the level words are `learner.mastery.level.*` (`journey/mastery-ring.md`). The stop sheet I reuses the live `learner.stageReview.leave.*` ("Stop the check?", "You can take it again any time.", "Keep going", "Stop"), the same sheet as `reviews/stage-check.md` H.
 
 ## Open questions
 
-- None blocking CM-21. Decision recorded for the row: a stopped test-out writes no item state (the spec defines only the finished case).
+- None blocking CM-21. Decisions recorded for the row, for CM-0b or CM-21 to write into §4.5 so the engine's tests assert one number each:
+  - A stopped test-out writes no item state (the spec defines only the finished case).
+  - Unasked items stay unmet on a test-out without 3 stars: the cell stays unstarted and is taught by its first quest, so placing untaught items in box 1 would review words the learner has not met. §4.5 "Test-out details" (unasked items to box 1, spread over 3 days) then applies to a passed test-out only.
+  - The produce share is ceil(0.3 x rounds) (§4.5 "at least 30 %"): 3 rounds of 8, 9 or 10, and 2 of 5.
+  - `CELL_CHECK_MIN_ROUNDS` = 5: a cell with 5 to 7 playable items still offers a shorter check; with fewer than 5 there is none.
+  - A test-out never completes a stage (see States); a whole-stage skip stays CM-25.

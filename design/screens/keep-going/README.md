@@ -5,7 +5,7 @@ Stylesheet, tokens, constants and the checks made on the shots: `design/screens/
 
 | File | Shows |
 |---|---|
-| `mock/keep-going.html` | A (the offer under Back home on a Daily Review result), B (the round: the Daily Review screen), C (a Keep going result with one more offer), D (the last offer used: one calm line), E (the collected Home card tapped: with and without an offer) |
+| `mock/keep-going.html` | A (the offer under Back home on a Daily Review result), B (the round: the Daily Review screen), C (a Keep going result with one more offer), D1 (the 3rd Keep going of today with items still due: one calm line), D2 (the pool is empty: All refreshed today), E (the collected Home card tapped: with an offer, with an empty pool, and with the 3 a day used) |
 | `shots/keep-going-320.png`, `shots/keep-going-768.png`, `shots/keep-going-320-text200.png` | the page at 320 (2x) and 768 (1x); and 320 with the text at 200 % |
 
 Decisions drawn here:
