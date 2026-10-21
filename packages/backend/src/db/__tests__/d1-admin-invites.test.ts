@@ -150,6 +150,29 @@ function adminContract(name: string, make: () => Db): void {
       expect((await db.getAdminInvite(row.id))?.acceptedAt).toBeNull();
     });
 
+    it('an accept by an account whose school row is neither absent nor teacher consumes nothing and writes no event', async () => {
+      for (const [who, role] of [['lee', 'caregiver'], ['vice', 'student']] as const) {
+        await db.addMembership({ spaceId: SCHOOL, memberKind: 'account', memberId: who, role, joinedAt: T });
+        const row = (await create(db, {}, 9)).row;
+        expect(await accept(db, row.id, who, { cap: 9 })).toBe(false);
+        expect(await roleOf(db, SCHOOL, who)).toBe(role);
+        expect((await db.getAdminInvite(row.id))?.acceptedAt).toBeNull();
+      }
+      expect(await kinds(db)).not.toContain('admin_joined');
+    });
+
+    it('removeMembershipIfRole deletes only while the row still has the role it was read with', async () => {
+      await db.addMembership({ spaceId: SCHOOL, memberKind: 'account', memberId: 'kim', role: 'teacher', joinedAt: T });
+      // kim accepts between the members route's read (teacher) and its delete
+      expect(await accept(db, (await create(db)).row.id, 'kim')).toBe(true);
+      expect(await db.removeMembershipIfRole(SCHOOL, 'account', 'kim', 'teacher')).toBe(false);
+      expect(await roleOf(db, SCHOOL, 'kim')).toBe('admin');
+      expect(await db.removeMembershipIfRole(SCHOOL, 'account', 'nobody', 'teacher')).toBe(false);
+      await db.addMembership({ spaceId: SCHOOL, memberKind: 'account', memberId: 'lee', role: 'teacher', joinedAt: T });
+      expect(await db.removeMembershipIfRole(SCHOOL, 'account', 'lee', 'teacher')).toBe(true);
+      expect(await roleOf(db, SCHOOL, 'lee')).toBeNull();
+    });
+
     it('a teacher member is promoted, keeps its join date, and records the admin_joined event with ids only', async () => {
       await db.addMembership({ spaceId: SCHOOL, memberKind: 'account', memberId: 'kim', role: 'teacher', joinedAt: '2026-09-01T00:00:00.000Z' });
       const row = (await create(db)).row;
@@ -199,7 +222,7 @@ function adminContract(name: string, make: () => Db): void {
       expect(await end('dean', 'admin_removed')).toBeNull(); // no admin row: nothing written
       expect(await end('principal', 'admin_left')).toBeNull(); // the owner row is never touched
       expect([await roleOf(db, SCHOOL, 'kim'), await roleOf(db, SCHOOL, 'vice'), await roleOf(db, SCHOOL, 'dean'), await roleOf(db, SCHOOL, 'principal')]).toEqual(['teacher', 'teacher', null, 'owner']);
-      // promoted_from was cleared: a teacher row that becomes admin again and leaves with no class goes out
+      // promoted_from was cleared on the way back; a second accept by the teacher row records it again, so ending the role again goes back to teacher
       expect(await accept(db, (await create(db, {}, 9)).row.id, 'kim', { cap: 9, now: at(4 * DAY) })).toBe(true);
       expect(await db.adminStaysTeacher(SCHOOL, 'kim')).toBe(true); // promoted again, so back to teacher again
       const ended = (await db.spaceEventsOf(SCHOOL, 50)).filter((e) => e.kind === 'admin_removed' || e.kind === 'admin_left');

@@ -163,6 +163,8 @@ export interface Db {
   membership(spaceId: string, kind: MemberKind, memberId: string): Promise<Membership | null>;
   addMembership(membership: Membership): Promise<void>;
   removeMembership(spaceId: string, kind: MemberKind, memberId: string): Promise<boolean>;
+  /** [SA] One guarded delete: removes the row only while its role is still `role` (section 6.4). Whether it removed one. */
+  removeMembershipIfRole(spaceId: string, kind: MemberKind, memberId: string, role: Membership['role']): Promise<boolean>;
   membershipsOf(kind: MemberKind, memberId: string): Promise<Membership[]>;
   membersOf(spaceId: string): Promise<Membership[]>;
   /**
@@ -207,7 +209,7 @@ export interface Db {
   revokeAdminInvite(input: RevokeAdminInviteInput): Promise<number>;
   /**
    * The accept batch (section 6.4): the gate marks the invite accepted only while it is open, the school is live and
-   * not owned by the account, the account is not already an admin or owner there and the school's admins are below
+   * not owned by the account, the account has no row there or only a teacher row and the school's admins are below
    * `cap`; then, guarded by the gate, the admin row is inserted (a teacher row is promoted and records
    * `promoted_from = 'teacher'`; no other row is ever changed) and the `admin_joined` event written. Whether it accepted.
    */

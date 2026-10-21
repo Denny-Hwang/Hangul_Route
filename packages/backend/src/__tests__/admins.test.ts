@@ -278,6 +278,9 @@ describe('[SA] POST /api/admin-invites/accept (sections 6.3, 6.4)', () => {
     });
     const down = await accept('dean', token);
     expect([down.status, down.body.error?.code]).toEqual([503, 'identity_unavailable']);
+    expect((await db.getAdminInvite(id))?.acceptedAt).toBeNull(); // a calm retry: the invite stays open
+    expect(down.text).not.toContain(token);
+    expect(JSON.stringify(adminEvents())).not.toMatch(/@|invite:|sev:/);
     setIdentityPortForTests({ primaryEmail: async (accountId) => ({ email: `${accountId}@example.org`, verified: true }) });
     expect((await accept('dean', token)).status).toBe(200);
     expect(adminEvents().filter((e) => e.name === 'space.admin.accept_refused')).toEqual([
@@ -410,6 +413,53 @@ describe('[SA] GET /api/spaces/:id/admins (section 6.4)', () => {
     expect(events.at(-1)?.kind).toBe('class_renamed');
     expect(new Set(events.map((e) => e.actorName))).toEqual(new Set(['Principal Park']));
     expect([...events].sort((a, b) => b.at.localeCompare(a.at)).map((e) => e.at)).toEqual(events.map((e) => e.at));
+  });
+
+  it("keeps the owner's view to a flat number of Db calls however long the history grows (Workers Free: 50 per invocation)", async () => {
+    await member(school, 'dean', 'admin');
+    await member(school, 'vice', 'admin');
+    const { setFallbackDb, fallbackDb } = await import('../db');
+    const original = fallbackDb();
+    const left = async (n: number) => {
+      for (let i = 0; i < n; i += 1) {
+        tick();
+        await person(`former-${n}-${i}`, `Former ${i}`);
+        await db.addSpaceEvent({ id: `sev:left-${n}-${i}`, spaceId: school, kind: 'admin_left', actorAccountId: `former-${n}-${i}`, subjectAccountId: `former-${n}-${i}`, subjectSpaceId: null, inviteId: null, createdAt: new Date().toISOString() });
+      }
+    };
+    const count = async () => {
+      await call('GET', `/api/spaces/${school}/admins`, bearer('principal')); // the first-sign-in upsert is not part of the budget
+      const calls: string[] = [];
+      setFallbackDb(
+        new Proxy(original, {
+          get(obj, prop, receiver) {
+            const value: unknown = Reflect.get(obj, prop, receiver);
+            if (typeof value !== 'function') return value;
+            return (...args: unknown[]) => {
+              calls.push(String(prop));
+              return (value as (...a: unknown[]) => unknown).apply(obj, args);
+            };
+          },
+        }),
+      );
+      try {
+        const r = await call('GET', `/api/spaces/${school}/admins`, bearer('principal'));
+        expect(r.status).toBe(200);
+        return { events: (r.body.data as { events: Array<{ subjectName: string | null }> }).events, calls };
+      } finally {
+        setFallbackDb(original);
+      }
+    };
+    await left(2);
+    const small = await count();
+    await left(20);
+    const large = await count();
+    expect(large.events).toHaveLength(20);
+    expect(large.events.every((e) => e.subjectName?.startsWith('Former '))).toBe(true);
+    expect(large.calls.length).toBe(small.calls.length);
+    expect(large.calls.length).toBeLessThanOrEqual(20);
+    // every name from one set-wise read (a getAccount left here is the dev identity port, Clerk on a deployment)
+    expect(large.calls.filter((n) => n === 'getAccounts')).toHaveLength(1);
   });
 });
 
@@ -560,6 +610,40 @@ describe('[SA] races the guarded writes settle', () => {
     });
     const data = (await call('GET', `/api/spaces/${school}/admins`, bearer('principal'))).body.data as { admins: Array<{ email: string | null }> };
     expect(data.admins.map((a) => a.email)).toEqual([null]);
+  });
+
+  it("the members route never deletes on a stale role: an accept between an admin's read and delete gets 403 owner_only", async () => {
+    await member(school, 'dean', 'admin');
+    await member(school, 'kim', 'teacher');
+    const { id } = await seededInvite(school);
+    const real = db.removeMembershipIfRole.bind(db);
+    // kim accepts an invite just after the route read kim as a teacher
+    const spy = vi.spyOn(db, 'removeMembershipIfRole').mockImplementationOnce(async (...args) => {
+      expect(await db.acceptAdminInvite({ inviteId: id, spaceId: school, accountId: 'kim', now: new Date(), cap: SCHOOL_ADMIN_CAP, eventId: 'sev:race-accept' })).toBe(true);
+      return real(...args);
+    });
+    const r = await call('DELETE', `/api/spaces/${school}/members/account/kim`, bearer('dean'));
+    spy.mockRestore();
+    expect([r.status, r.body.error?.code]).toEqual([403, 'owner_only']);
+    expect(await roleOf(school, 'kim')).toBe('admin');
+  });
+
+  it("the members route answers from the row a concurrent leave left: the owner's removal then applies the teacher rules", async () => {
+    await member(school, 'vice', 'admin');
+    const cls = await createSpace('principal', 'class', 'Room 4', { parentSpaceId: school });
+    await member(cls, 'vice', 'teacher');
+    const real = db.endAdminRole.bind(db);
+    // vice leaves (back to teacher) just after the route read vice as an admin
+    const spy = vi.spyOn(db, 'endAdminRole').mockImplementationOnce(async (input) => {
+      expect(await real({ spaceId: school, accountId: 'vice', actorAccountId: 'vice', kind: 'admin_left', now: new Date(), eventId: 'sev:race-leave' })).toBe('teacher');
+      return real(input);
+    });
+    const r = await call('DELETE', `/api/spaces/${school}/members/account/vice`, bearer('principal'));
+    spy.mockRestore();
+    expect(r.body.data).toEqual({ removed: true });
+    expect(await roleOf(school, 'vice')).toBeNull();
+    // one admin_left, no admin_removed written for a role that had already ended
+    expect((await db.spaceEventsOf(school, 10)).map((e) => e.kind).filter((k) => k.startsWith('admin_'))).toEqual(['admin_left']);
   });
 
   it('a teacher-code join or a class assignment that loses the insert to another request answers alreadyMember with the stored row', async () => {
