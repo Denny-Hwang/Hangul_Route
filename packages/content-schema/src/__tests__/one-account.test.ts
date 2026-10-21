@@ -172,11 +172,15 @@ describe('device records (sections 7.1, 7.2, 7.6, 8.5, 13.1)', () => {
     }
   });
 
-  it('ProfileLocksSchema: profile ids only, each once; rejects junk', () => {
+  it('ProfileLocksSchema: profile ids only, each once; a repeat or a malformed id is dropped, not the record; rejects junk', () => {
     expect(PROFILE_LOCKS_KEY).toBe('profiles:locks');
     expect(ProfileLocksSchema.parse({ v: 1, ids: [] })).toEqual({ v: 1, ids: [] });
     expect(ProfileLocksSchema.parse({ v: 1, ids: ['profile:a', 'profile:b-2'] }).ids).toEqual(['profile:a', 'profile:b-2']);
-    for (const junk of [{ v: 1 }, { v: 1, ids: ['Mina'] }, { v: 1, ids: [''] }, { v: 1, ids: ['profile:a', 'profile:a'] }, { v: 1, ids: 'profile:a' }, { v: 2, ids: [] }, null]) {
+    // Two tabs appending the same lock: the lock holds, once.
+    expect(ProfileLocksSchema.parse({ v: 1, ids: ['profile:a', 'profile:b-2', 'profile:a'] }).ids).toEqual(['profile:a', 'profile:b-2']);
+    // A malformed id can never match a profile: dropped, and the other locks still hold.
+    expect(ProfileLocksSchema.parse({ v: 1, ids: ['Mina', '', 'profile:a'] }).ids).toEqual(['profile:a']);
+    for (const junk of [{ v: 1 }, { v: 1, ids: [7] }, { v: 1, ids: ['profile:a', null] }, { v: 1, ids: 'profile:a' }, { v: 2, ids: [] }, null]) {
       expect(ProfileLocksSchema.safeParse(junk).success, JSON.stringify(junk)).toBe(false);
     }
   });

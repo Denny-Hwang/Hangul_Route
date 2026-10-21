@@ -109,7 +109,7 @@ export class MemoryDb implements Db {
   private classMoves = new Map<string, StoredClassMove>();
   /** [SA] migration 0011. */
   private spaceEvents = new Map<string, SpaceEvent>();
-  /** [OA] migration 0013: counters keyed by `day`, `name` and `dims` (JSON of the triple). */
+  /** [OA] migration 0015: counters keyed by `day`, `name` and `dims` (JSON of the triple). */
   private telemetryDaily = new Map<string, TelemetryDailyRow>();
   /** [SA] migration 0012: the invites, and the membership keys whose row holds `promoted_from = 'teacher'`. */
   private adminInvites = new Map<string, StoredAdminInvite>();
@@ -1174,10 +1174,12 @@ export class MemoryDb implements Db {
     return removed;
   }
 
-  async addTelemetryDaily(day: string, name: string, dims: string): Promise<void> {
-    const key = JSON.stringify([day, name, dims]);
-    const row = this.telemetryDaily.get(key);
-    this.telemetryDaily.set(key, { day, name, dims, n: (row?.n ?? 0) + 1 });
+  async addTelemetryDaily(rows: readonly TelemetryDailyRow[]): Promise<void> {
+    for (const { day, name, dims, n } of rows) {
+      const key = JSON.stringify([day, name, dims]);
+      const row = this.telemetryDaily.get(key);
+      this.telemetryDaily.set(key, { day, name, dims, n: (row?.n ?? 0) + n });
+    }
   }
   async purgeTelemetryDaily(beforeDay: string, limit: number): Promise<number> {
     let removed = 0;

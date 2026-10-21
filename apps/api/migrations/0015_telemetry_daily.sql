@@ -1,4 +1,4 @@
--- Hangul Route — D1 migration 0013 (additive): anonymous daily telemetry counters.
+-- Hangul Route — D1 migration 0015 (additive): anonymous daily telemetry counters.
 -- AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1 ([OA], OA-D18; PR OA-1).
 -- One new table; nothing existing is altered or rewritten.
 -- telemetry_daily: one row per UTC day, event name and kept payload, holding a count only. `dims` is the

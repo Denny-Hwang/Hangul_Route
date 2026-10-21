@@ -381,8 +381,16 @@ export type PinResetTicket = z.infer<typeof PinResetTicketSchema>;
 
 /** [OA] OA-D9: learner key of the profile locks (stored as `hr:profiles:locks`), outside `hr:profiles`. */
 export const PROFILE_LOCKS_KEY = 'profiles:locks';
-/** [OA] OA-D9, section 13.2: the locked learner profiles, by id, each once. Local only, never synced. */
-export const ProfileLocksSchema = z.object({ v: z.literal(1), ids: z.array(ProfileSchema.shape.id).refine(noRepeats) });
+/**
+ * [OA] OA-D9, section 13.2: the locked learner profiles, by id, each once. Local only, never synced. Tolerant in the
+ * safe direction: a repeated id (two tabs appending the same lock) is kept once and a malformed id, which can never
+ * match a profile, is dropped, so neither turns the whole record into a failed read. A record that still does not
+ * parse is a failed read (fail closed), never a missing key.
+ */
+export const ProfileLocksSchema = z.object({
+  v: z.literal(1),
+  ids: z.array(z.string()).transform((ids) => [...new Set(ids.filter((id) => ProfileSchema.shape.id.safeParse(id).success))]),
+});
 export type ProfileLocks = z.infer<typeof ProfileLocksSchema>;
 
 /** [OA] Section 7.6: the BroadcastChannel that tells console tabs to drop their unlock. */

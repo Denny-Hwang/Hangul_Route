@@ -494,8 +494,10 @@ const CLASS_MOVE_TABLES = ['class_moves', 'class_scope_acks'] as const;
 const SPACE_EVENT_TABLES = ['space_events'] as const;
 /** [SA] The table of migration 0012 (AMENDMENTS-SEATS-ADMINS section 6.2). */
 const ADMIN_INVITE_TABLES = ['admin_invites'] as const;
-/** [OA] The table of migration 0013 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1). */
+/** [OA] The table of migration 0015 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1). */
 const TELEMETRY_DAILY_TABLES = ['telemetry_daily'] as const;
+/** [OA] Rows per `telemetry_daily` upsert: four bound values each, at most 100 per D1 statement. */
+export const TELEMETRY_DAILY_ROWS_PER_STATEMENT = 25;
 const RESET_TABLES = [
   ...TELEMETRY_DAILY_TABLES,
   ...ADMIN_INVITE_TABLES,
@@ -1673,10 +1675,23 @@ export class D1Db implements Db {
     );
   }
 
-  // ---- [OA] anonymous daily counters (migration 0013) ----
+  // ---- [OA] anonymous daily counters (migration 0015) ----
 
-  addTelemetryDaily(day: string, name: string, dims: string): Promise<void> {
-    return this.run('INSERT INTO telemetry_daily (day, name, dims, n) VALUES (?, ?, ?, 1) ON CONFLICT (day, name, dims) DO UPDATE SET n = n + 1', [day, name, dims]);
+  /**
+   * One batch of multi-row upserts, `TELEMETRY_DAILY_ROWS_PER_STATEMENT` rows (100 bound values, the D1 limit) per
+   * statement: 600 rows are 24 statements, under the 50 a Free-plan invocation allows.
+   */
+  async addTelemetryDaily(rows: readonly TelemetryDailyRow[]): Promise<void> {
+    const statements: D1PreparedLike[] = [];
+    for (let i = 0; i < rows.length; i += TELEMETRY_DAILY_ROWS_PER_STATEMENT) {
+      const chunk = rows.slice(i, i + TELEMETRY_DAILY_ROWS_PER_STATEMENT);
+      statements.push(
+        this.d1
+          .prepare(`INSERT INTO telemetry_daily (day, name, dims, n) VALUES ${chunk.map(() => '(?, ?, ?, ?)').join(', ')} ON CONFLICT (day, name, dims) DO UPDATE SET n = n + excluded.n`)
+          .bind(...chunk.flatMap((r) => [r.day, r.name, r.dims, r.n])),
+      );
+    }
+    if (statements.length > 0) await this.d1.batch(statements);
   }
   purgeTelemetryDaily(beforeDay: string, limit: number): Promise<number> {
     return this.changes('DELETE FROM telemetry_daily WHERE rowid IN (SELECT rowid FROM telemetry_daily WHERE day < ? LIMIT ?)', [beforeDay, limit]);
