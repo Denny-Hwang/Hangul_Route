@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
-import { getMessages } from '@hangul-route/i18n';
+import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS, SCHOOL_ADMIN_CAP, SCHOOL_LEARNER_CAP } from '@hangul-route/content-schema';
+import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AboutPage } from '../../components/landing/AboutPage';
@@ -13,10 +13,12 @@ import { PrivacyPage } from '../../components/landing/PrivacyPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
 import { TermsPage } from '../../components/landing/TermsPage';
 import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { CONTACT_EMAIL } from '../../data/contact';
 import { siteGames } from '../../data/minigame-catalog';
-import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
+import { captureFile, showsCapture } from '../../data/site-captures';
+import { SITE_CLAIMS, showsClaim, type SiteClaims } from '../../data/site-claims';
 import { stage1Cards } from '../../data/stage1-cards';
-import { learnerStart, signIn } from '../../lib/site-links';
+import { createAccount, learnerStart, signIn } from '../../lib/site-links';
 import EnLearners from '../(en)/learners/page';
 import EnParents from '../(en)/parents/page';
 import EnTeachers from '../(en)/teachers/page';
@@ -202,7 +204,8 @@ function linesOf(html: string, title: string): string[] {
   const visible = section.replace(/<span aria-hidden="true"[^>]*>[\s\S]*?<\/span>/g, '');
   return [...visible.matchAll(/<(p|li)\b[^>]*>([\s\S]*?)<\/\1>/g)].map((m) => textOf(m[2] ?? '').trim());
 }
-const render = (Page: typeof ParentsPage, claims?: Readonly<SiteClaims>): string => renderToStaticMarkup(<Page locale="en" claims={claims} />);
+const render = (Page: typeof ParentsPage, claims?: Readonly<SiteClaims>, locale: UiLocale = 'en'): string =>
+  renderToStaticMarkup(<Page locale={locale} claims={claims} />);
 
 /**
  * The Plans block both grown-up pages share (§3.5, §3.6): the paid line only while plans are coming; host named once.
@@ -236,14 +239,21 @@ describe('/parents (S-4b)', () => {
     expect(text).toContain(P.lead);
   });
 
-  it('primary action Sign in as a parent (/signin?persona=parent), then Start learning, and the closing action', () => {
+  it('[SN] create first: Create a free family space (/signin?mode=create&persona=parent), Start learning, then the have-account link; the closing the same', () => {
     const links = linksOf(main);
-    expect(links[0]).toEqual({ href: signIn('parent'), text: P.signIn });
+    expect(links[0]).toEqual({ href: createAccount('parent', 'en'), text: P.create });
     expect(links[1]).toEqual({ href: learnerStart('en'), text: t.nav.start });
-    expect(links.at(-1)).toEqual({ href: signIn('parent'), text: P.signIn });
-    expect(signIn('parent')).toBe('/signin?persona=parent');
-    expect(main).toMatch(new RegExp(`<a href="${esc(signIn('parent'))}" class="hr-site-primary"`));
+    expect(links[2]).toEqual({ href: signIn('parent', 'en'), text: t.persona.haveAccount });
+    expect(links.slice(-2)).toEqual([
+      { href: createAccount('parent', 'en'), text: P.create },
+      { href: signIn('parent', 'en'), text: t.persona.haveAccount },
+    ]);
+    expect(createAccount('parent', 'en')).toBe('/signin?mode=create&persona=parent');
+    expect(signIn('parent', 'en')).toBe('/signin?persona=parent');
+    expect(main).toMatch(new RegExp(`<a href="${esc(createAccount('parent', 'en').replace(/&/g, '&amp;'))}" class="hr-site-primary"`));
     expect(main).toMatch(new RegExp(`<a href="${esc(learnerStart('en'))}" class="hr-site-secondary"`));
+    // The have-account link is a 64 px tall text link, not a button.
+    expect(main).toMatch(new RegExp(`<a href="${esc(signIn('parent', 'en'))}" class="hr-site-text-link"`));
   });
 
   it('sections in order with every claim off, two columns on wide screens, nothing empty', () => {
@@ -307,10 +317,12 @@ describe('/parents (S-4b)', () => {
     expect(reports).not.toContain(P.faq.whatSee.a);
   });
 
-  it('closing block: its own line labels it, then Sign in as a parent', () => {
+  it('closing block: its own line labels it, then Create and the have-account link under it', () => {
     const closing = /<section aria-labelledby="([^"]+)" class="hr-site-closing"[^>]*>([\s\S]*?)<\/section>/.exec(main);
     expect(closing?.[2]).toMatch(new RegExp(`<p id="${closing?.[1]}"[^>]*>${esc(t.persona.closing.parents.replace(/'/g, '&#x27;'))}</p>`));
-    expect(closing?.[2]).toContain(`href="${signIn('parent')}"`);
+    expect(closing?.[2]).toContain(`href="${createAccount('parent', 'en').replace(/&/g, '&amp;')}"`);
+    expect(closing?.[2]).toContain(`href="${signIn('parent', 'en')}"`);
+    expect(closing?.[2]).toMatch(/class="hr-site-closing-actions"/);
   });
 
   it('marks Parents as the current page; no ranking, no age range', () => {
@@ -336,17 +348,20 @@ describe('/teachers (S-4b)', () => {
     expect(text).toContain(T.lead);
   });
 
-  it('primary action Sign in as a teacher (/signin?persona=teacher), secondary Try it as a learner, closing action', () => {
+  it('[SN] create first: Create a free class, secondary Try it as a learner, the have-account link; the closing the same', () => {
     const links = linksOf(main);
-    expect(links[0]).toEqual({ href: signIn('teacher'), text: T.signIn });
-    expect(links[1]).toEqual({ href: learnerStart('en'), text: T.tryIt });
-    expect(links.at(-1)).toEqual({ href: signIn('teacher'), text: T.signIn });
-    expect(signIn('teacher')).toBe('/signin?persona=teacher');
-    expect(links).toHaveLength(3);
+    expect(links).toEqual([
+      { href: createAccount('teacher', 'en'), text: T.create },
+      { href: learnerStart('en'), text: T.tryIt },
+      { href: signIn('teacher', 'en'), text: t.persona.haveAccount },
+      { href: createAccount('teacher', 'en'), text: T.create },
+      { href: signIn('teacher', 'en'), text: t.persona.haveAccount },
+    ]);
+    expect(createAccount('teacher', 'en')).toBe('/signin?mode=create&persona=teacher');
   });
 
   it('sections in order with every claim off; the plan and class sections side by side on wide screens', () => {
-    expect(sectionTitles(html)).toEqual([T.setup.title, T.plan.title, T.class.title, T.privacy.title, t.persona.plansTitle, t.persona.faqTitle]);
+    expect(sectionTitles(html)).toEqual([T.setup.title, T.plan.title, T.class.title, T.schools.title, T.privacy.title, t.persona.plansTitle, t.persona.faqTitle]);
     expect(main).toMatch(/class="hr-site-row-2"/);
     expect(main).not.toMatch(/<section[^>]*>\s*<h2[^>]*>[^<]*<\/h2>\s*<\/section>/);
   });
@@ -405,10 +420,11 @@ describe('/teachers (S-4b)', () => {
     for (const { a } of Object.values(T.faq)) expect(text).toContain(a);
   });
 
-  it('closing block: its own line labels it, then Sign in as a teacher', () => {
+  it('closing block: its own line labels it, then Create and the have-account link under it', () => {
     const closing = /<section aria-labelledby="([^"]+)" class="hr-site-closing"[^>]*>([\s\S]*?)<\/section>/.exec(main);
     expect(closing?.[2]).toMatch(new RegExp(`<p id="${closing?.[1]}"[^>]*>${esc(t.persona.closing.teachers)}</p>`));
-    expect(closing?.[2]).toContain(`href="${signIn('teacher')}"`);
+    expect(closing?.[2]).toContain(`href="${createAccount('teacher', 'en').replace(/&/g, '&amp;')}"`);
+    expect(closing?.[2]).toContain(`href="${signIn('teacher', 'en')}"`);
   });
 
   it('marks Teachers as the current page', () => {
@@ -512,13 +528,18 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11), the notes lin
 describe('a build with CONSOLE_ORIGIN set or unset (S-10 default) sends both grown-up actions to the app host', () => {
   it.each(['', 'https://app.hangulroute.com'])('with CONSOLE_ORIGIN=%j', (value) => {
     vi.stubEnv('CONSOLE_ORIGIN', value);
-    expect(linksOf(mainOf(render(ParentsPage)))[0]?.href).toBe('https://app.hangulroute.com/signin?persona=parent');
+    expect(linksOf(mainOf(render(ParentsPage)))[0]?.href).toBe('https://app.hangulroute.com/signin?mode=create&persona=parent');
   });
 
-  it('Sign in as a parent / teacher go to https://app.hangulroute.com/signin?persona=…', () => {
+  it('[SN] Create and the have-account link go to https://app.hangulroute.com/signin?…, with lang off English', () => {
     vi.stubEnv('CONSOLE_ORIGIN', 'https://app.hangulroute.com');
-    expect(linksOf(mainOf(render(ParentsPage)))[0]?.href).toBe('https://app.hangulroute.com/signin?persona=parent');
-    expect(linksOf(mainOf(render(TeachersPage)))[0]?.href).toBe('https://app.hangulroute.com/signin?persona=teacher');
+    const parents = linksOf(mainOf(render(ParentsPage)));
+    expect(parents[0]?.href).toBe('https://app.hangulroute.com/signin?mode=create&persona=parent');
+    expect(parents[2]?.href).toBe('https://app.hangulroute.com/signin?persona=parent');
+    expect(linksOf(mainOf(render(TeachersPage)))[0]?.href).toBe('https://app.hangulroute.com/signin?mode=create&persona=teacher');
+    const es = linksOf(mainOf(renderToStaticMarkup(<TeachersPage locale="es" />)));
+    expect(es[0]?.href).toBe('https://app.hangulroute.com/signin?mode=create&persona=teacher&lang=es');
+    expect(es[2]?.href).toBe('https://app.hangulroute.com/signin?persona=teacher&lang=es');
   });
 });
 
@@ -618,5 +639,118 @@ describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', (
       const sizes = getMessages(locale).landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
       expect(sizes, locale).not.toMatch(/[$€£₩]|\d+\.\d+|\b153\b|\bper\s+(year|month)\b|yearly|annual|lifetime|al año|anual|연간|매년|평생/i);
     }
+  });
+});
+
+/** [SN] AMENDMENTS-SITE-NEWUSER §3.6 (SN-D8): "Use it across a whole school" on `/teachers`. */
+describe('[SN] /teachers: the schools section', () => {
+  const S = T.schools;
+  const coming = render(TeachersPage, ALL_CLAIMS_OFF);
+
+  it('sits after the media row and before Privacy for classes, four lines in order, with every claim off too', () => {
+    const titles = sectionTitles(coming);
+    expect(titles.indexOf(T.schools.title)).toBe(titles.indexOf(T.privacy.title) - 1);
+    expect(linesOf(coming, S.title)).toEqual([S.space, S.admins(SCHOOL_ADMIN_CAP), S.moves, S.size(CONTACT_EMAIL)]);
+    expect(linesOf(render(TeachersPage), S.title)).toEqual(linesOf(coming, S.title));
+    const media = mainOf(render(TeachersPage)).indexOf('hr-site-media');
+    expect(media).toBeGreaterThan(-1);
+    expect(media).toBeLessThan(mainOf(render(TeachersPage)).indexOf('id="teachers-schools"'));
+  });
+
+  it('the administrator cap and the address come from their constants: 2 administrators, the contact address as plain text', () => {
+    expect(SCHOOL_ADMIN_CAP).toBe(2);
+    expect(S.admins(SCHOOL_ADMIN_CAP)).toContain('2 more administrators');
+    expect(S.admins(1)).toContain('1 more administrator ');
+    expect(S.size(CONTACT_EMAIL)).toBe(`Need room for more students? Write to ${CONTACT_EMAIL}.`);
+    expect(S.size('x@example.org')).toBe('Need room for more students? Write to x@example.org.');
+    const section = /<section[^>]*aria-labelledby="teachers-schools"[\s\S]*?<\/section>/.exec(mainOf(coming))?.[0] ?? '';
+    expect(section).toContain(CONTACT_EMAIL);
+    expect(section).not.toMatch(/<a\b/);
+  });
+
+  it('while plans are coming: no owner-plan line and the size line names no product (OD-SN-13); on sale: the owner-plan line after the administrators', () => {
+    expect(textOf(mainOf(coming))).not.toContain(S.ownerPlan);
+    expect(textOf(mainOf(coming))).not.toContain('School Contract');
+    const onSale = render(TeachersPage, { ...ALL_CLAIMS_OFF, paidPlans: 'inApp' });
+    expect(linesOf(onSale, S.title)).toEqual([S.space, S.admins(SCHOOL_ADMIN_CAP), S.ownerPlan, S.moves, S.size(CONTACT_EMAIL)]);
+    expect(textOf(mainOf(onSale))).not.toContain(S.sizeContract(CONTACT_EMAIL));
+  });
+
+  // Owner decision (b) 2026-10-21 (OD-SN-11): no free-tier seat number on the site. `SCHOOL_LEARNER_CAP` also caps a
+  // school with no licence, so the schools section states no seat figure in any locale, with plans coming or on sale.
+  it.each(['en', 'es', 'ko'] as const)('%s: the schools section states no seat figure (owner decision (b))', (locale) => {
+    expect(SCHOOL_LEARNER_CAP).toBe(50);
+    for (const paidPlans of ['coming', 'inApp'] as const) {
+      const html = render(TeachersPage, { ...ALL_CLAIMS_OFF, paidPlans }, locale);
+      const section = /<section[^>]*aria-labelledby="teachers-schools"[\s\S]*?<\/section>/.exec(mainOf(html))?.[0] ?? '';
+      expect(section, `${locale} ${paidPlans}`).not.toBe('');
+      expect(textOf(section), `${locale} ${paidPlans}`).not.toMatch(new RegExp(`\\b${SCHOOL_LEARNER_CAP}\\b`));
+    }
+    const s = getMessages(locale).landing.persona.teachers.schools;
+    for (const line of [s.size(CONTACT_EMAIL), s.sizeContract(CONTACT_EMAIL)]) expect(line).not.toMatch(/\d/);
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s: no price, no plan term, no age word', (locale) => {
+    const s = getMessages(locale).landing.persona.teachers.schools;
+    for (const line of [s.title, s.space, s.admins(SCHOOL_ADMIN_CAP), s.ownerPlan, s.moves, s.size(CONTACT_EMAIL)]) {
+      expect(line, `${locale}: ${line}`).not.toMatch(/[$€£₩]\s?\d|\bper\s+(year|month)\b|yearly|annual|lifetime|al año|anual|연간|매년|평생|\bkids?\b|\bchild(ren)?\b/i);
+    }
+  });
+});
+
+/** [SN] AMENDMENTS-SITE-NEWUSER §3.5, §3.6, §3.13: the captures of the grown-up pages follow their claims. */
+describe('[SN] grown-up page captures follow their claims', () => {
+  const imgs = (html: string): Array<{ src: string; alt: string }> =>
+    [...mainOf(html).matchAll(/<img [^>]*src="([^"]*)"[^>]*alt="([^"]*)"/g)].map((m) => ({ src: m[1] ?? '', alt: decode(m[2] ?? '') }));
+  const srcOf = (locale: 'en' | 'es' | 'ko', name: Parameters<typeof captureFile>[1]): string => captureFile(locale, name)?.src ?? 'missing';
+
+  it('/parents today: the weekly report capture under Follow along, lazy, with its alt text', () => {
+    const html = render(ParentsPage);
+    expect(imgs(html)).toEqual([{ src: srcOf('en', 'report'), alt: t.captures.report }]);
+    const follow = /<section[^>]*aria-labelledby="parents-follow"[\s\S]*?<\/section>/.exec(mainOf(html))?.[0] ?? '';
+    expect(follow).toMatch(/<figure[\s\S]*<img [^>]*loading="lazy"/);
+  });
+
+  it('/teachers today: the class page (a phone crop below 45em) and the Lecture mode slide, two columns', () => {
+    const page = render(TeachersPage);
+    const html = mainOf(page);
+    expect(imgs(page)).toEqual([
+      { src: srcOf('en', 'class-list-narrow'), alt: t.captures.classList },
+      { src: srcOf('en', 'lecture-slide'), alt: t.captures.lectureSlide },
+    ]);
+    expect(html).toContain(`<source media="(min-width: 45em)" srcSet="${srcOf('en', 'class-list')}"`);
+    expect(html).toMatch(/class="hr-site-media hr-site-media-pair"/);
+  });
+
+  it('with every claim off: no report, class page or slide capture, and no empty media row', () => {
+    expect(imgs(render(ParentsPage, ALL_CLAIMS_OFF))).toEqual([]);
+    const teachersPage = render(TeachersPage, ALL_CLAIMS_OFF);
+    const teachers = mainOf(teachersPage);
+    expect(imgs(teachersPage)).toEqual([]);
+    expect(teachers).not.toContain('hr-site-media');
+    expect(teachers).not.toContain('<figure');
+  });
+
+  it('with lectureMode alone on, the slide alone takes the row; with teacherReports alone, the class page alone', () => {
+    const slide = render(TeachersPage, { ...ALL_CLAIMS_OFF, lectureMode: true });
+    expect(imgs(slide).map((img) => img.alt)).toEqual([t.captures.lectureSlide]);
+    expect(mainOf(slide)).toMatch(/class="hr-site-media"/);
+    const reports = render(TeachersPage, { ...ALL_CLAIMS_OFF, teacherReports: true });
+    expect(imgs(reports).map((img) => img.alt)).toEqual([t.captures.classList]);
+    expect(mainOf(reports)).toMatch(/class="hr-site-media"/);
+  });
+
+  it('parentReports alone draws the report and nothing on /teachers; teacherReports alone draws nothing on /parents', () => {
+    expect(imgs(render(ParentsPage, { ...ALL_CLAIMS_OFF, parentReports: true })).map((img) => img.alt)).toEqual([t.captures.report]);
+    expect(imgs(render(ParentsPage, { ...ALL_CLAIMS_OFF, teacherReports: true, lectureMode: true }))).toEqual([]);
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s: a capture shows exactly where its claim line shows (CLAIM_LOCALES applies to pictures), in the page locale', (locale) => {
+    expect(showsCapture(SITE_CLAIMS, 'report', locale)).toBe(showsClaim(SITE_CLAIMS, 'parentReports', locale));
+    expect(showsCapture(SITE_CLAIMS, 'class-list', locale)).toBe(showsClaim(SITE_CLAIMS, 'teacherReports', locale));
+    const html = renderToStaticMarkup(<ParentsPage locale={locale} />);
+    const report = imgs(html).find((img) => img.src === srcOf(locale, 'report'));
+    expect(Boolean(report)).toBe(showsClaim(SITE_CLAIMS, 'parentReports', locale));
+    if (report) expect(report.alt).toBe(getMessages(locale).landing.captures.report);
   });
 });

@@ -72,17 +72,19 @@ export const siteMetadata: Metadata = english.metadata;
 export const WAITLIST_COPY: Messages['landing']['waitlist'] = getMessages(DEFAULT_LOCALE).landing.waitlist;
 
 /**
- * The "View in <language>" banner's suggestions on `/` (F-I18N-001 §3.3, PR 11c): one per shown locale other
- * than English, worded in that locale's own dictionary so a visitor who prefers it can read it. Server-side:
- * the client banner receives these words and never imports the dictionary.
+ * The "View in <language>" banner's suggestions (F-I18N-001 §3.3, PR 11c): one per shown locale other than English,
+ * worded in that locale's own dictionary so a visitor who prefers it can read it. Server-side: the client banner
+ * receives these words and never imports the dictionary. [SN] AMENDMENTS-SITE-NEWUSER §3.2: the banner shows on every
+ * English page and offers the same page in the suggested locale (`sitePath(target, page)`); the English 404 passes
+ * `/`, since its unknown path would be another 404.
  */
-export function localeBannerOffers(shown: readonly UiLocale[]): Partial<Record<UiLocale, LocaleBannerOffer>> {
+export function localeBannerOffers(shown: readonly UiLocale[], page: string = '/'): Partial<Record<UiLocale, LocaleBannerOffer>> {
   const offers: Partial<Record<UiLocale, LocaleBannerOffer>> = {};
   for (const locale of shown) {
     if (locale === DEFAULT_LOCALE) continue;
     const words = getMessages(locale).landing.localeBanner;
     const { endonym, htmlLang } = LOCALE_META[locale];
-    offers[locale] = { href: sitePath(locale, '/'), lang: htmlLang, label: words.label, text: words.viewIn(endonym), dismiss: words.dismiss, close: words.close.cta };
+    offers[locale] = { href: sitePath(locale, page), lang: htmlLang, label: words.label, text: words.viewIn(endonym), dismiss: words.dismiss, close: words.close.cta };
   }
   return offers;
 }

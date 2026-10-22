@@ -130,10 +130,11 @@ describe('ratchet', () => {
 
 describe('e2e/fixtures/landing-touch-allowlist.json', () => {
   it('lists the English pages only, each sorted and unique, and says it only shrinks', () => {
-    // F-SITE-002 S-5: what is left is the unchanged launch-news form on / (its field, its button and the two links of
-    // its consent line); every other site control is at least 64 x 64, and the switcher links are too.
+    // F-SITE-002 S-5: what is left is the two links of the launch-news consent line on /; every other site control is
+    // at least 64 x 64, and the switcher links are too. [SN] AMENDMENTS-SITE-NEWUSER §3.3 item 6: the quiet launch-news
+    // form (`tone="plain"`) has a 64 px field and button, so their lines left the list.
     expect(Object.keys(allowlist.pages).sort()).toEqual(['/']);
-    expect(allowlist.pages['/']).toEqual(['a /privacy', 'a mailto:hello@hangulroute.com', 'button submit', 'input email']);
+    expect(allowlist.pages['/']).toEqual(['a /privacy', 'a mailto:hello@hangulroute.com']);
     expect(allowlist.shownLocales).toEqual({});
     for (const keys of [...Object.values(allowlist.pages), ...Object.values(allowlist.shownLocales)]) {
       expect(keys).toEqual([...new Set(keys)].sort());

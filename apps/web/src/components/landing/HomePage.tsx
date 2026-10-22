@@ -3,17 +3,15 @@ import { HoyaSvg } from '@hangul-route/design-system/scene-art/dom';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
-import { localeBannerOffers } from '../../data/landing-copy';
 import { SITE_CLAIMS, showsClaim, type SiteClaims } from '../../data/site-claims';
 import { learnerStart } from '../../lib/site-links';
-import { shownSiteLocales } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
-import { HIT, SITE_SIZES, VISUALLY_HIDDEN, cardShadow, rem } from '../../lib/site-style';
-import { LocaleBanner } from './LocaleBanner';
+import { SITE_SIZES, VISUALLY_HIDDEN, cardShadow, rem } from '../../lib/site-style';
 import { PERSONA_PAGES } from './SiteHeader';
+import { SiteCapture } from './SiteCapture';
 import { SiteShell } from './SiteShell';
 import { WaitlistForm } from './WaitlistForm';
-import { Body, PrimaryAction, Section } from './site-parts';
+import { PrimaryAction, Section, TextLink } from './site-parts';
 
 /**
  * The first letter Hoya introduces: taught Korean, passed into the bubble with its romanization (never in a message).
@@ -30,16 +28,20 @@ export interface HomePageProps {
 }
 
 /**
- * The layered home `/` (F-SITE-002 §3.3, appendix B.1; wireframe design/wireframes/site/home.md; mock
- * design/screens/site/home-hero.md and persona-card.md). L0: the tagline as the only h1, one sentence of what you do,
- * Start learning, the in-page link to `#who`, the facts line and Hoya waving. L1: the persona chooser, How it works,
- * the three promise titles, the cost line and the launch news on its band (the unchanged `WaitlistForm`). Each
- * persona is explained on its own page, so `/` has no questions block. The locale banner stays above the hero.
+ * The layered home `/` (F-SITE-002 §3.3, appendix B.1, amended by AMENDMENTS-SITE-NEWUSER §3.3; wireframes
+ * design/wireframes/site/home.md and newuser-home.md; mocks design/screens/site/home-hero.md, persona-card.md and
+ * design/screens/site/newuser/mock/<locale>/home.html). L0: the tagline as the only h1, one sentence of what you do,
+ * Start learning, the facts line right under it, then two direct links "I'm a parent" / "I'm a teacher" (SN-D4), and
+ * the hero art: the first quest's Discover page in a phone frame (a real capture in the page's locale, a tighter crop
+ * below 45em), Hoya waving beside it (SN-D5). L1: the persona chooser, How it works, the three promise titles, then the
+ * closing band, an invitation to Start learning (SN-D6), and the launch news after it in a quiet plain section
+ * (`WaitlistForm tone="plain"`). The cost block left `/` (OD-SN-3): its free line opens the band, and the plan lines
+ * live on `/parents` and `/teachers`. Each persona is explained on its own page, so `/` has no questions block. The
+ * locale banner is the shell's (every English page).
  */
 export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: HomePageProps): JSX.Element {
   const t = getMessages(locale).landing;
   const H = t.home;
-  const shown = shownSiteLocales();
   const start = learnerStart(locale);
   // Step 1 names the level check while its claim is on (F-PLC-001: placement is on for every platform).
   const steps = [
@@ -49,9 +51,6 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
   ];
   return (
     <SiteShell locale={locale} page="/">
-      {/* "View in …" on `/` only, once a second locale ships; client-only, so the static HTML is unchanged. */}
-      {locale === DEFAULT_LOCALE && shown.length > 1 ? <LocaleBanner offers={localeBannerOffers(shown)} /> : null}
-
       <section aria-labelledby="home-title" className="hr-site-hero" style={{ display: 'grid' }}>
         <div>
           <h1 id="home-title" className="hr-site-h1" style={{ margin: 0, lineHeight: typography.leading.tight, color: colors.text.primary }}>
@@ -66,54 +65,60 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
           <div className="hr-site-actions" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, marginTop: spacing.xl }}>
             <PrimaryAction href={start}>{H.hero.start}</PrimaryAction>
           </div>
-          <a
-            href="#who"
-            className="hr-site-text-link"
-            style={{
-              ...HIT,
-              justifyContent: 'flex-start',
-              marginTop: spacing.xs,
-              fontWeight: typography.weight.semibold,
-              textDecorationLine: 'underline',
-              textDecorationThickness: borderWidth.thin,
-              textUnderlineOffset: spacing.xs,
-            }}
-          >
-            {H.hero.grownUps}
-          </a>
-          <p style={{ margin: `${spacing.xs}px 0 0`, fontSize: rem(typography.size.caption), color: colors.text.muted }}>{H.hero.facts}</p>
+          {/* [SN] The facts line right under the action, then the two grown-up links (each a 64 px tall text link). */}
+          <p style={{ margin: `${spacing.sm}px 0 0`, fontSize: rem(typography.size.caption), color: colors.text.muted }}>{H.hero.facts}</p>
+          <div className="hr-site-hero-links" style={{ display: 'flex', flexWrap: 'wrap', columnGap: spacing.lg, marginTop: spacing.xs }}>
+            <TextLink href={sitePath(locale, '/parents')}>{H.hero.forParents}</TextLink>
+            <TextLink href={sitePath(locale, '/teachers')}>{H.hero.forTeachers}</TextLink>
+          </div>
         </div>
+        {/* [SN] The hero art (§3.3 item 2): every size inside the box is a percentage of it, so 200 % text never widens
+            the page. The capture is the only part with alt text; Hoya and the bubble stay decorative. */}
         <div
-          aria-hidden="true"
           className="hr-site-hero-art"
           style={{
             position: 'relative',
             justifySelf: 'center',
             width: '100%',
-            aspectRatio: '1 / 1',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-end',
             backgroundColor: colors.brand.primaryLight,
             borderRadius: radii.xxl,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             overflow: 'hidden',
           }}
         >
-          <span style={{ display: 'flex', width: SITE_SIZES.hoyaShare, aspectRatio: '1 / 1', marginBottom: spacing.xl }}>
+          <div
+            className="hr-site-hero-phone"
+            style={{
+              backgroundColor: colors.text.primary,
+              padding: `${spacing.xs}px ${spacing.xs}px 0`,
+              borderRadius: `${radii.xl}px ${radii.xl}px 0 0`,
+            }}
+          >
+            <SiteCapture
+              locale={locale}
+              name="discover-narrow"
+              wide="discover"
+              alt={t.captures.discover(FIRST_LETTER, FIRST_LETTER_ROMANIZATION)}
+              priority
+              className="hr-site-hero-capture"
+              style={{ borderRadius: `${radii.xl - spacing.xs}px ${radii.xl - spacing.xs}px 0 0` }}
+            />
+          </div>
+          <span aria-hidden="true" className="hr-site-hero-hoya" style={{ position: 'absolute', width: SITE_SIZES.heroHoyaShare, aspectRatio: '1 / 1', display: 'flex' }}>
             <HoyaSvg pose="waving" size="100%" />
           </span>
           <span
+            aria-hidden="true"
             className="hr-site-bubble"
             style={{
               position: 'absolute',
-              left: spacing.md,
-              right: spacing.md,
-              bottom: spacing.md,
-              borderRadius: radii.pill,
+              borderRadius: radii.lg,
               backgroundColor: colors.surface.paper,
               boxShadow: cardShadow(),
               fontWeight: typography.weight.semibold,
-              textAlign: 'center',
+              lineHeight: typography.leading.normal,
             }}
           >
             {H.hero.bubble(FIRST_LETTER, FIRST_LETTER_ROMANIZATION)}
@@ -121,7 +126,7 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
         </div>
       </section>
 
-      {/* tabIndex -1: the hero's in-page link moves keyboard focus here, not only the scroll position. */}
+      {/* tabIndex -1: old `#who` links still move keyboard focus here, not only the scroll position. */}
       <section id="who" tabIndex={-1} aria-labelledby="home-who" className="hr-site-section" style={{ outline: 'none' }}>
         <h2 id="home-who" className="hr-site-h2" style={{ margin: `0 0 ${spacing.md}px`, lineHeight: typography.leading.tight }}>
           {H.who.title}
@@ -230,26 +235,58 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
         </ul>
       </section>
 
-      <Section id="home-cost" title={t.plans.title}>
-        {/* Two keys in one paragraph: each stays its own text node, so a locale can word each one alone. */}
-        <Body>
-          <span>{t.plans.free.stage1}</span> <span>{t.plans.paid[claims.paidPlans]}</span>
-        </Body>
-      </Section>
-
+      {/* [SN] The closing band (§3.3 item 5): the last block asks for the one action that matters. On brand.primary the
+          focus ring is text.onPrimary (`hr-site-band`, the S-D band rule). */}
       <section
-        id="news"
-        aria-labelledby="home-news"
-        className="hr-site-news"
-        style={{ backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderRadius: radii.xxl, textAlign: 'center' }}
+        aria-labelledby="home-closing"
+        className="hr-site-band"
+        style={{
+          display: 'grid',
+          justifyItems: 'center',
+          gap: spacing.md,
+          backgroundColor: colors.brand.primary,
+          color: colors.text.onPrimary,
+          borderRadius: radii.xxl,
+          textAlign: 'center',
+        }}
       >
-        <h2 id="home-news" className="hr-site-h2" style={{ margin: `0 0 ${spacing.sm}px`, lineHeight: typography.leading.tight, color: colors.text.onPrimary }}>
+        <h2 id="home-closing" style={{ margin: 0, fontSize: rem(typography.size.title), lineHeight: typography.leading.tight, color: colors.text.onPrimary }}>
+          {H.closing.title}
+        </h2>
+        <p style={{ margin: 0, maxWidth: SITE_SIZES.leadMeasure, lineHeight: typography.leading.relaxed }}>{H.closing.body}</p>
+        <a
+          href={start}
+          className="hr-site-band-action"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: touchTarget.child,
+            minWidth: touchTarget.min,
+            maxWidth: SITE_SIZES.bandActionMax,
+            padding: `0 ${spacing.xxl}px`,
+            backgroundColor: colors.surface.paper,
+            color: colors.brand.primaryDark,
+            borderRadius: radii.pill,
+            fontWeight: typography.weight.bold,
+            fontSize: rem(typography.size.bodyLg),
+            textAlign: 'center',
+          }}
+        >
+          {t.nav.start}
+        </a>
+      </section>
+
+      {/* [SN] Launch news, quiet (§3.3 item 6): a plain section after the band, set apart by spacing.xl above its rule,
+          so it reads as optional news and not as part of the band's "no email" promise. */}
+      <section id="news" aria-labelledby="home-news" className="hr-site-section hr-site-news" style={{ marginTop: spacing.xl }}>
+        <h2 id="home-news" className="hr-site-h2" style={{ margin: `0 0 ${spacing.sm}px`, lineHeight: typography.leading.tight, color: colors.text.primary }}>
           {H.news.title}
         </h2>
-        <p style={{ margin: `0 auto ${spacing.lg}px`, maxWidth: SITE_SIZES.leadMeasure, lineHeight: typography.leading.relaxed }}>{H.news.body}</p>
+        <p style={{ margin: 0, maxWidth: SITE_SIZES.leadMeasure, lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>{H.news.body}</p>
         {/* The pre-S-5 waitlist anchor: links shared as hangulroute.com/#get still land on the form. */}
         <span id="get" aria-hidden="true" />
-        <WaitlistForm words={t.waitlist} locale={locale} />
+        <WaitlistForm words={t.waitlist} locale={locale} tone="plain" />
       </section>
     </SiteShell>
   );

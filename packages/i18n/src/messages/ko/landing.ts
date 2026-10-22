@@ -55,6 +55,7 @@ export const landing = {
     teachers: '선생님',
     signIn: '로그인',
     start: '배우기 시작하기',
+    startShort: '시작',
     skip: '본문으로 건너뛰기',
   },
   home: {
@@ -62,7 +63,8 @@ export const landing = {
       title: '나이와 상관없이, 한글을 처음부터 배워요.',
       lead: '한글은 한국어의 글자예요. 호랑이 호야와 함께 한글을 읽고, 듣고, 쓰는 법을 배워요.',
       start: '배우기 시작하기',
-      grownUps: '부모님이나 선생님인가요? 내 페이지 찾기',
+      forParents: '부모 또는 보호자예요',
+      forTeachers: '선생님이에요',
       facts: '1단계는 무료예요 · 가입 없이 바로 시작해요 · 처음 방문한 뒤에는 대부분의 기기에서 오프라인으로도 돼요',
       bubble: (letter: string, romanization: string) => `안녕하세요! 오늘 만날 글자: ${letter} (${romanization})`,
     },
@@ -96,6 +98,10 @@ export const landing = {
     promises: {
       label: '우리의 약속',
       items: { ads: '광고는 절대 없어요', safety: '아이의 안전이 먼저예요', noRed: '빨간 표시는 없어요' },
+    },
+    closing: {
+      title: '첫 한글 글자를 만나 볼까요?',
+      body: '1단계는 무료예요. 이메일도 비밀번호도 필요 없어요. 첫 퀘스트는 5분 정도면 돼요.',
     },
     news: {
       title: '출시 소식을 이메일로 받기',
@@ -173,7 +179,7 @@ export const landing = {
     parents: {
       title: '부모님과 보호자를 위해',
       lead: '부모님, 조부모님, 그리고 모든 보호자를 위해: 학습자의 데이터를 지키는 짧고 다정한 레슨이에요.',
-      signIn: '부모님으로 로그인',
+      create: '무료 가족 공간 만들기',
       learn: {
         title: '무엇을 배우나요',
         body: '먼저 한글 자모를 배워요: 5분 퀘스트로 읽기, 듣기, 쓰기를 해요.',
@@ -210,7 +216,7 @@ export const landing = {
     teachers: {
       title: '선생님을 위해',
       lead: '학생은 코드로 참여하고, 선생님은 한 주를 계획하고, 모두 자기 속도로 배워요.',
-      signIn: '선생님으로 로그인',
+      create: '무료 반 만들기',
       tryIt: '학습자로 해 보기',
       setup: {
         title: '몇 분이면 준비 끝',
@@ -236,6 +242,18 @@ export const landing = {
         browse: '그룹 라이선스가 있으면 학생이 보는 그대로 모든 레슨을 미리 볼 수 있어요.',
         lecture: '강의 모드: 1단계부터 7단계, 이야기, 낱말 묶음의 준비된 슬라이드를 프로젝터, TV, 가로로 돌린 휴대폰에 띄우고 앞에서 가르쳐요.',
       },
+      // [SN] "학교를 만든 분" is the console's word for a school's owner; "학교 계약" is
+      // `console.billing.planTitle.school_seat`. The address takes no particle (`{email} 주소로`, F-I18N-001 §3.10).
+      schools: {
+        title: '학교 전체에서 함께 써요',
+        space: '학교 공간을 만든 뒤, 선생님을 초대하거나 선생님 대신 반을 만들어요.',
+        admins: (admins: number) =>
+          `초대 링크로 관리자를 ${admins}명까지 더 추가할 수 있어요. 관리자는 반 명단과 리포트를 열고, 학교 안의 반끼리 학생을 옮길 수 있어요.`,
+        ownerPlan: '플랜은 학교를 만든 분이 관리해요.',
+        moves: '학생을 학교 안의 다른 반으로 옮길 수 있어요. 가족에게 알림이 가고, 학생은 새 코드를 입력하지 않아도 돼요.',
+        size: (email: string) => `학생 자리가 더 필요하면 ${email} 주소로 문의해 주세요.`,
+        sizeContract: (email: string) => `학생 자리가 더 필요하면 ${email} 주소로 학교 계약을 문의해 주세요.`,
+      },
       privacy: {
         title: '반을 위한 개인정보 보호',
         bullets: { initials: '반 명단에 이름 대신 이니셜을 보여 줄 수 있어요.', ads: '광고가 없고, 데이터를 팔지 않아요.' },
@@ -248,11 +266,26 @@ export const landing = {
     },
     plansTitle: '플랜',
     faqTitle: '자주 묻는 질문',
+    haveAccount: '이미 계정이 있나요? 로그인',
     closing: {
       learners: '첫 글자를 만날 준비가 됐나요?',
       parents: '학습자의 한 주를 한곳에서 봐요.',
       teachers: '이번 주, 반에 한글을 가져와요.',
     },
+  },
+  // [SN] "강의 모드" is the console's name for Lecture mode; "문화 카드" is the app's word. The taught letter and the card's
+  // word end their own phrase, so no particle follows a value.
+  captures: {
+    discover: (letter: string, romanization: string) =>
+      `휴대폰 속 앱의 첫 퀘스트 화면: 새 글자 몇 개와 소리 듣기 버튼. 첫 글자는 ${letter}(${romanization}).`,
+    home: '학습자 홈 화면: 인사, 연속 학습 일수와 모은 카드, 시작 버튼이 있는 다음 레슨.',
+    game: '미니게임: 소리를 듣고 맞는 글자를 눌러요.',
+    // The Korean UI's gloss is the word itself, so the meaning is not repeated.
+    card: (word: string, romanization: string, _meaning: string) => `한국 문화 카드: ${word}(${romanization}).`,
+    report: '학습자 한 명의 주간 리포트: 연습한 날, 잘한 점, 다음에 연습할 점.',
+    classList: '반 페이지: 반 전체의 이번 주 요약.',
+    lectureSlide: '큰 화면에 띄운 강의 모드 슬라이드: 글자, 획순, 소리.',
+    caption: { home: '홈 화면', game: '미니게임', card: '문화 카드' },
   },
   cards: {
     listLabel: '1단계 문화 카드',

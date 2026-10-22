@@ -31,8 +31,8 @@ describe('rem', () => {
 });
 
 describe('SITE_BREAKPOINTS', () => {
-  it('are the S-D constants in em: 720, 960 and 360 px, and the full content width', () => {
-    expect(SITE_BREAKPOINTS).toEqual({ wide: 45, brandName: 60, mark: 22.5, gutter: 70 });
+  it('are the S-D constants in em (720 px, 960 px for the wide brand name) with the [SN] phone brand-name ones (480, 360 on /), and the full content width', () => {
+    expect(SITE_BREAKPOINTS).toEqual({ wide: 45, brandName: 30, brandNameHome: 22.5, brandNameWide: 60, gutter: 70 });
     expect(SITE_BREAKPOINTS.gutter * 16).toBe(layout.maxWidth.full);
   });
 });
@@ -43,11 +43,17 @@ describe('SITE_SIZES', () => {
     expect(SITE_SIZES.tileMin).toBe(rem(touchTarget.child + spacing.sm));
     expect(SITE_SIZES.tileMin).toBe('5.5rem');
     expect(SITE_SIZES.leadMeasure).toBe('34em');
-    expect(SITE_SIZES.heroArtMax).toBe(`${5 * spacing.xxxl}px`);
-    expect(SITE_SIZES.heroArtMax).toBe('240px');
+    // [SN] AMENDMENTS-SITE-NEWUSER §3.3: the hero art holds the phone frame, up to 22rem on phones.
+    expect(SITE_SIZES.heroArtMax).toBe(rem(11 * spacing.xxl));
+    expect(SITE_SIZES.heroArtMax).toBe('22rem');
     expect(SITE_SIZES.heroArtMaxWide).toBe(`${layout.maxWidth.reading / 2}px`);
     expect(SITE_SIZES.heroRatio).toBe('1.4fr');
-    expect(SITE_SIZES.hoyaShare).toBe('62%');
+    expect(SITE_SIZES.heroHoyaShare).toBe('34%');
+    expect(SITE_SIZES.bandActionMax).toBe('22rem');
+    expect(SITE_SIZES.langMenuMin).toBe(rem(4 * spacing.xxxl));
+    expect(SITE_SIZES.langMenuMin).toBe('12rem');
+    expect(SITE_SIZES.phoneFrameSmall).toBe('12rem');
+    expect(SITE_SIZES.captureRowMax).toBe('34rem');
   });
 });
 
@@ -83,6 +89,7 @@ describe('siteCssVars', () => {
     expect(vars['--hr-site-hero-art-max']).toBe(SITE_SIZES.heroArtMax);
     expect(vars['--hr-site-hero-art-max-wide']).toBe(SITE_SIZES.heroArtMaxWide);
     expect(vars['--hr-site-hero-ratio']).toBe(SITE_SIZES.heroRatio);
+    expect(vars['--hr-site-lang-menu-min']).toBe(SITE_SIZES.langMenuMin);
     expect(vars['--hr-site-sunken']).toBe(colors.surface.sunken);
     expect(vars['--hr-site-size-caption']).toBe(rem(typography.size.caption));
     expect(vars['--hr-site-size-body-sm']).toBe(rem(typography.size.bodySm));
@@ -102,6 +109,7 @@ describe('siteCssVars', () => {
       SITE_SIZES.heroArtMax,
       SITE_SIZES.heroArtMaxWide,
       SITE_SIZES.heroRatio,
+      SITE_SIZES.langMenuMin,
       // Derived from tokens only (touchTarget.min, the caption size and normal leading), checked above.
       `calc(${CAPTION_HIT_OVERFLOW})`,
     ]);

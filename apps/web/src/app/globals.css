@@ -78,9 +78,98 @@ button {
   transform: none;
 }
 
-/* Header: phones show the brand and Sign in on one row; the mark steps in from 22.5em (360 px). */
-.hr-site-brand-mark {
+/*
+ * Header (AMENDMENTS-SITE-NEWUSER §3.2): phones show `[brand] … [Start][Language][Sign in]` on one row with no column
+ * gap (each control is already a 64 px hit area); Start takes the auto margin that pushes the controls right, or, where
+ * there is no phone Start (on `/` and the legal pages), the language control does. The brand mark shows at every width;
+ * the name is visually hidden (still the link's name) below 30em, from 45em to 60em, and on `/` below 22.5em.
+ */
+.hr-site-header-row {
+  position: relative;
+  column-gap: 0;
+}
+
+.hr-site-brand-name {
+  position: absolute;
+  width: var(--hr-site-border-thin);
+  height: var(--hr-site-border-thin);
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.hr-site-header-start {
+  display: inline-flex;
+  margin-left: auto;
+  padding: 0 var(--hr-site-sm);
+  font-size: var(--hr-site-size-body-sm);
+}
+
+.hr-site-header-start.hr-site-wide-only {
   display: none;
+}
+
+.hr-site-lang-push {
+  margin-left: auto;
+}
+
+/* The language control: a native disclosure; the open menu hangs from the header row at its right content edge. */
+.hr-site-lang-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--hr-site-xxs);
+  min-width: var(--hr-site-touch-min);
+  min-height: var(--hr-site-touch-min);
+  padding: 0 var(--hr-site-xs);
+  font-size: var(--hr-site-size-caption);
+  list-style: none;
+  cursor: pointer;
+}
+
+.hr-site-lang-summary::-webkit-details-marker {
+  display: none;
+}
+
+.hr-site-lang-top {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hr-site-xxs);
+}
+
+.hr-site-lang-chev-wide {
+  display: none;
+}
+
+.hr-site-lang[open] .hr-site-lang-chev-phone,
+.hr-site-lang[open] .hr-site-lang-chev-wide {
+  transform: rotate(180deg);
+}
+
+.hr-site-lang-menu {
+  position: absolute;
+  top: 100%;
+  right: var(--hr-site-gutter-compact);
+  z-index: var(--hr-site-z-sticky);
+  box-sizing: border-box;
+  min-width: min(var(--hr-site-lang-menu-min), 100vw - 2 * var(--hr-site-gutter-compact));
+  max-width: calc(100vw - 2 * var(--hr-site-gutter-compact));
+}
+
+.hr-site-lang-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hr-site-md);
+  padding: 0 var(--hr-site-lg);
+  font-size: var(--hr-site-size-body);
+}
+
+@media (hover: hover) {
+  .hr-site-lang-link:hover {
+    background-color: var(--hr-site-sunken);
+  }
 }
 
 .hr-site-nav-link {
@@ -94,7 +183,8 @@ button {
 }
 
 .hr-site-signin {
-  margin-left: auto;
+  padding: 0 var(--hr-site-sm);
+  font-size: var(--hr-site-size-body-sm);
   border-color: var(--hr-site-border-strong);
 }
 
@@ -222,8 +312,10 @@ button {
   width: 100%;
 }
 
-/* Home hero (L0): one column on phones, text and art side by side from 45em; the art is capped so the first
-   screen keeps the header, the h1, the lead and Start learning. */
+/* Home hero (L0): one column on phones, text and art side by side from 45em; the art comes after the action, so the
+   first screen keeps the header, the h1, the lead and Start learning. [SN] The art (§3.3 item 2): a phone frame with
+   the Discover capture from 40 % of the box (60 % wide) on phones, Hoya at the bottom left (34 %), the bubble above
+   Hoya at most 34 % wide, so it never covers the frame; every size is a percentage of the box. */
 .hr-site-hero {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--hr-site-xl);
@@ -232,11 +324,25 @@ button {
 
 .hr-site-hero-art {
   max-width: var(--hr-site-hero-art-max);
+  padding: var(--hr-site-lg) var(--hr-site-lg) 0;
+}
+
+.hr-site-hero-phone {
+  width: 60%;
+  margin-left: 40%;
+}
+
+.hr-site-hero-hoya {
+  left: var(--hr-site-xs);
+  bottom: var(--hr-site-md);
 }
 
 .hr-site-bubble {
+  left: var(--hr-site-sm);
+  bottom: 46%;
+  max-width: 34%;
   font-size: var(--hr-site-size-caption);
-  padding: var(--hr-site-xs) var(--hr-site-md);
+  padding: var(--hr-site-sm) var(--hr-site-md);
 }
 
 /* Persona cards (#who): one column on phones, three from 45em. The whole card is one link. */
@@ -282,15 +388,30 @@ button {
   padding-block: var(--hr-site-lg);
 }
 
-/* Launch news: the existing WaitlistForm on today's brand.primary band. border.focus is under 3:1 on
-   brand.primary, so the band's focus ring is text.onPrimary (a band rule, not a change to the form). */
-.hr-site-news {
-  margin-bottom: var(--hr-site-xl);
-  padding: var(--hr-site-lg);
+/* [SN] The home's closing band (§3.3 item 5). border.focus is under 3:1 on brand.primary, so the band's focus ring is
+   text.onPrimary (the S-D band rule). Its Start learning is full width on phones, up to its cap. */
+.hr-site-band {
+  margin-top: var(--hr-site-lg);
+  padding: var(--hr-site-xl) var(--hr-site-lg);
 }
 
-.hr-site-news :focus-visible {
+.hr-site-band :focus-visible {
   outline-color: var(--hr-site-on-primary);
+}
+
+.hr-site-band-action {
+  width: 100%;
+}
+
+/* The quiet launch news after the band: a plain section; the form is `WaitlistForm tone="plain"`. */
+.hr-site-news {
+  margin-bottom: var(--hr-site-xl);
+}
+
+/* [SN] Product captures (§3.4 to §3.6): the /teachers media row stacks on phones, two equal columns from 45em. */
+.hr-site-media {
+  display: grid;
+  gap: var(--hr-site-lg);
 }
 
 /* Footer: two columns on phones (Guide and App on the left, Company on the right), one once large text makes a
@@ -326,15 +447,99 @@ button {
   }
 }
 
+/* [SN] On `/` the phone header has no Start pill, so the brand name shows from 22.5em (360 px; OD-SN-2). */
 @media (min-width: 22.5em) {
-  .hr-site-brand-mark {
-    display: flex;
+  .hr-site-brand-home .hr-site-brand-name {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+}
+
+@media (min-width: 30em) {
+  .hr-site-brand-name {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
   }
 }
 
 @media (min-width: 45em) {
-  .hr-site-header-start {
+  .hr-site-header-start,
+  .hr-site-header-start.hr-site-wide-only {
     display: inline-flex;
+    margin-left: 0;
+    padding: 0 var(--hr-site-xl);
+    font-size: var(--hr-site-size-body);
+  }
+
+  .hr-site-header-row {
+    column-gap: var(--hr-site-xs);
+  }
+
+  .hr-site-lang-push {
+    margin-left: 0;
+  }
+
+  .hr-site-lang-summary {
+    flex-direction: row;
+    gap: var(--hr-site-xs);
+    padding: 0 var(--hr-site-sm);
+    font-size: var(--hr-site-size-body-sm);
+  }
+
+  .hr-site-lang-top {
+    display: contents;
+  }
+
+  .hr-site-lang-chev-phone {
+    display: none;
+  }
+
+  .hr-site-lang-chev-wide {
+    display: inline-block;
+  }
+
+  .hr-site-lang-menu {
+    right: var(--hr-site-gutter-regular);
+  }
+
+  .hr-site-hero-phone {
+    width: 52%;
+    margin-left: 30%;
+  }
+
+  /* The wide capture shows the top 650 / 390 of the screen. */
+  .hr-site-hero-capture {
+    aspect-ratio: 390 / 650;
+    object-fit: cover;
+    object-position: top;
+  }
+
+  .hr-site-hero-hoya {
+    left: var(--hr-site-md);
+  }
+
+  .hr-site-band {
+    padding: var(--hr-site-xxl);
+  }
+
+  .hr-site-band-action {
+    width: auto;
+  }
+
+  /* Two captures side by side; one alone takes the whole row. */
+  .hr-site-media-pair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .hr-site-closing-actions {
+    justify-items: start;
   }
 
   /*
@@ -374,10 +579,16 @@ button {
 
   .hr-site-signin {
     margin-left: var(--hr-site-xs);
+    padding: 0 var(--hr-site-lg);
+    font-size: var(--hr-site-size-body);
   }
 
-  /* 720 to 959 px: the brand shows the mark only; the mark and the name stay the link's accessible name. */
-  .hr-site-brand-name {
+  /* 720 to 959 px: the brand shows the mark only; the mark and the name stay the link's accessible name. The language
+     control likewise shows its globe and chevron only (the endonym stays in its name), so the Spanish header (Empezar,
+     three nav links, Entrar) keeps one row on tablets. */
+  .hr-site-brand-name,
+  .hr-site-brand-home .hr-site-brand-name,
+  .hr-site-lang-endonym {
     position: absolute;
     width: var(--hr-site-border-thin);
     height: var(--hr-site-border-thin);
@@ -430,11 +641,13 @@ button {
 
   .hr-site-hero-art {
     max-width: var(--hr-site-hero-art-max-wide);
+    padding-top: var(--hr-site-xl);
   }
 
   .hr-site-bubble {
+    bottom: 42%;
+    max-width: 44%;
     font-size: var(--hr-site-size-body-sm);
-    padding: var(--hr-site-sm) var(--hr-site-md);
   }
 
   .hr-site-persona-list {
@@ -448,7 +661,6 @@ button {
 
   .hr-site-news {
     margin-bottom: var(--hr-site-xxxl);
-    padding: var(--hr-site-xxl);
   }
 
   /* Grown-up pages: two columns under the page head; the top rule sits above the pair, not above each column. */
@@ -497,7 +709,9 @@ button {
 }
 
 @media (min-width: 60em) {
-  .hr-site-brand-name {
+  .hr-site-brand-name,
+  .hr-site-brand-home .hr-site-brand-name,
+  .hr-site-lang-endonym {
     position: static;
     width: auto;
     height: auto;
@@ -510,6 +724,10 @@ button {
   .hr-site-wrap {
     padding-left: var(--hr-site-gutter-wide);
     padding-right: var(--hr-site-gutter-wide);
+  }
+
+  .hr-site-lang-menu {
+    right: var(--hr-site-gutter-wide);
   }
 }
 

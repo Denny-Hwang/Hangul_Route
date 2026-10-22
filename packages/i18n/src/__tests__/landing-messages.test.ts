@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LOCALES, LOCALE_STATUS } from '../locales';
+import { LOCALES, LOCALE_META, LOCALE_STATUS } from '../locales';
 import { KIDS_ONLY_FRAMING } from '../audience';
 import { pseudoLocalize, pseudoText } from '../pseudo';
 import { fallbackPaths, getMessages } from '../resolve';
@@ -450,5 +450,149 @@ describe('landing: no words of an older site, in any locale', () => {
       const m = getMessages(locale).landing;
       expect(`${m.meta.description} ${m.plans.paid.coming}`, locale).not.toMatch(/more stages are coming|vienen más etapas|더 많은 단계가 준비/i);
     }
+  });
+});
+
+/**
+ * [SN] AMENDMENTS-SITE-NEWUSER appendix A (row SN-1): the site-entry strings, word for word in en, es and ko as the
+ * multi-agent review passed them. Values (taught Korean, the caps, the contact address, endonyms) are passed in, never
+ * typed into a message, and the removed keys are gone in every locale.
+ */
+describe('landing: the site-entry strings (AMENDMENTS-SITE-NEWUSER appendix A)', () => {
+  const APPENDIX_A: Record<'en' | 'es' | 'ko', Record<string, string>> = {
+    en: {
+      'nav.startShort': 'Start',
+      'home.hero.forParents': "I'm a parent or caregiver",
+      'home.hero.forTeachers': "I'm a teacher",
+      'home.closing.title': 'Ready for your first Korean letter?',
+      'home.closing.body': 'Stage 1 is free. No email or password. Your first quest takes about five minutes.',
+      'persona.parents.create': 'Create a free family space',
+      'persona.teachers.create': 'Create a free class',
+      'persona.haveAccount': 'Already have an account? Sign in',
+      'persona.teachers.schools.title': 'Use it across a whole school',
+      'persona.teachers.schools.space': 'Create a school space, then invite teachers or create classes for them.',
+      'persona.teachers.schools.ownerPlan': "The school's owner manages the plan.",
+      'persona.teachers.schools.moves': 'Move a student to another class in the school. Their family is told, and the student never types a new code.',
+      'captures.home': "The learner's home screen: a greeting, the streak and cards so far, and the next lesson with a Start button.",
+      'captures.game': 'A mini-game: hear a sound and tap the matching letter.',
+      'captures.report': 'A weekly report for one learner: days practiced, what went well and what to practice next.',
+      'captures.classList': "The class page: this week's summary for the whole class.",
+      'captures.lectureSlide': 'A Lecture mode slide on a big screen: a letter, its stroke order and its sound.',
+      'captures.caption.home': 'Home screen',
+      'captures.caption.game': 'A mini-game',
+      'captures.caption.card': 'A heritage card',
+    },
+    es: {
+      'nav.startShort': 'Empezar',
+      'home.hero.forParents': 'Soy madre, padre o tutor',
+      'home.hero.forTeachers': 'Soy docente',
+      'home.closing.title': '¿Vamos por tu primera letra coreana?',
+      'home.closing.body': 'La Etapa 1 es gratis. Sin correo ni contraseña. Tu primera misión dura unos cinco minutos.',
+      'persona.parents.create': 'Crear un espacio familiar gratis',
+      'persona.teachers.create': 'Crear una clase gratis',
+      'persona.haveAccount': '¿Ya tienes una cuenta? Entrar',
+      'persona.teachers.schools.title': 'Úsalo en toda una escuela',
+      'persona.teachers.schools.space': 'Crea un espacio de escuela y después invita a docentes o crea tú las clases de cada docente.',
+      'persona.teachers.schools.ownerPlan': 'El plan lo gestiona quien creó la escuela.',
+      'persona.teachers.schools.moves': 'Cambia a un estudiante a otra clase de la escuela. Se avisa a su familia, y el estudiante no tiene que escribir un código nuevo.',
+      'captures.home': 'La pantalla de inicio del estudiante: un saludo, la racha y las tarjetas hasta ahora, y la próxima lección con un botón para empezar.',
+      'captures.game': 'Un minijuego: escucha un sonido y toca la letra que corresponde.',
+      'captures.report': 'Un informe semanal de un estudiante: días de práctica, lo que salió bien y qué practicar después.',
+      'captures.classList': 'La página de la clase: el resumen de esta semana de toda la clase.',
+      'captures.lectureSlide': 'Una diapositiva del Modo proyección en pantalla grande: una letra, el orden de sus trazos y su sonido.',
+      'captures.caption.home': 'Pantalla de inicio',
+      'captures.caption.game': 'Un minijuego',
+      'captures.caption.card': 'Una tarjeta cultural',
+    },
+    ko: {
+      'nav.startShort': '시작',
+      'home.hero.forParents': '부모 또는 보호자예요',
+      'home.hero.forTeachers': '선생님이에요',
+      'home.closing.title': '첫 한글 글자를 만나 볼까요?',
+      'home.closing.body': '1단계는 무료예요. 이메일도 비밀번호도 필요 없어요. 첫 퀘스트는 5분 정도면 돼요.',
+      'persona.parents.create': '무료 가족 공간 만들기',
+      'persona.teachers.create': '무료 반 만들기',
+      'persona.haveAccount': '이미 계정이 있나요? 로그인',
+      'persona.teachers.schools.title': '학교 전체에서 함께 써요',
+      'persona.teachers.schools.space': '학교 공간을 만든 뒤, 선생님을 초대하거나 선생님 대신 반을 만들어요.',
+      'persona.teachers.schools.ownerPlan': '플랜은 학교를 만든 분이 관리해요.',
+      'persona.teachers.schools.moves': '학생을 학교 안의 다른 반으로 옮길 수 있어요. 가족에게 알림이 가고, 학생은 새 코드를 입력하지 않아도 돼요.',
+      'captures.home': '학습자 홈 화면: 인사, 연속 학습 일수와 모은 카드, 시작 버튼이 있는 다음 레슨.',
+      'captures.game': '미니게임: 소리를 듣고 맞는 글자를 눌러요.',
+      'captures.report': '학습자 한 명의 주간 리포트: 연습한 날, 잘한 점, 다음에 연습할 점.',
+      'captures.classList': '반 페이지: 반 전체의 이번 주 요약.',
+      'captures.lectureSlide': '큰 화면에 띄운 강의 모드 슬라이드: 글자, 획순, 소리.',
+      'captures.caption.home': '홈 화면',
+      'captures.caption.game': '미니게임',
+      'captures.caption.card': '문화 카드',
+    },
+  };
+
+  for (const locale of ['en', 'es', 'ko'] as const) {
+    const t = getMessages(locale).landing;
+    it(`${locale}: every appendix A string, in its own words (no English fallback)`, () => {
+      for (const [path, value] of Object.entries(APPENDIX_A[locale])) expect(lookup(t, path), path).toBe(value);
+      if (locale !== 'en') {
+        const fallback = fallbackPaths(locale).filter((path) => Object.keys(APPENDIX_A.en).some((key) => path === `landing.${key}`));
+        expect(fallback).toEqual([]);
+      }
+    });
+
+    it(`${locale}: the values are passed in (the caps, the address, the taught Korean)`, () => {
+      const S = t.persona.teachers.schools;
+      expect(S.admins(2)).toContain('2');
+      expect(S.admins(7)).toContain('7');
+      // Owner decision (b) 2026-10-21 (OD-SN-11): the size lines take the address only and state no seat figure.
+      expect(S.size('x@example.com')).toContain('x@example.com');
+      expect(S.sizeContract('x@example.com')).toContain('x@example.com');
+      expect(`${S.size('x@example.com')} ${S.sizeContract('x@example.com')}`).not.toMatch(/\d/);
+      expect(t.captures.discover('LETTER', 'ROMAN')).toContain('LETTER');
+      expect(t.captures.discover('LETTER', 'ROMAN')).toContain('(ROMAN)');
+      expect(t.captures.card('WORD', 'ROMAN', 'MEANING')).toContain('WORD');
+      expect(t.captures.card('WORD', 'ROMAN', 'MEANING')).toContain('(ROMAN)');
+    });
+
+    it(`${locale}: no endonym, no address and no Hangul is typed into a site-entry message`, () => {
+      const outputs = [
+        ...Object.keys(APPENDIX_A.en).map((path) => String(lookup(t, path))),
+        t.persona.teachers.schools.admins(2),
+        t.persona.teachers.schools.size('x@example.com'),
+        t.persona.teachers.schools.sizeContract('x@example.com'),
+        t.captures.discover('x', 'a'),
+        t.captures.card('x', 'horangi', 'tiger'),
+      ];
+      for (const out of outputs) {
+        for (const meta of Object.values(LOCALE_META)) expect(out, out).not.toContain(meta.endonym);
+        expect(out.replace('x@example.com', ''), out).not.toMatch(/@|hangulroute\.com/);
+      }
+      // Korean UI words are Korean; outside the Korean UI no Hangul is typed into these messages (taught Korean is passed in).
+      if (locale !== 'ko') for (const out of outputs) expect(out, out).not.toMatch(/[\u3131-\u318e\uac00-\ud7a3]/);
+    });
+
+    it(`${locale}: the removed keys are gone (hero grown-ups link, the persona sign-in actions)`, () => {
+      for (const path of ['home.hero.grownUps', 'persona.parents.signIn', 'persona.teachers.signIn']) expect(lookup(t, path), path).toBeUndefined();
+    });
+
+    it(`${locale}: no price, no plan term, no billing word in the schools lines while plans are not on sale`, () => {
+      const S = t.persona.teachers.schools;
+      const lines = [S.title, S.space, S.admins(2), S.moves, S.size('x@example.com')].join(' ');
+      expect(lines).not.toMatch(/\$|€|₩|\bprice\b|\bprecio\b|가격|\bper (year|month)\b|\bbilling\b|facturación|결제/i);
+    });
+  }
+
+  it('English pins: the plural administrators line and the size lines (no seat figure)', () => {
+    const S = l.persona.teachers.schools;
+    expect(S.admins(2)).toBe("Add up to 2 more administrators with an invite link. They can open class lists and reports and move students between the school's classes.");
+    expect(S.admins(1)).toBe("Add up to 1 more administrator with an invite link. They can open class lists and reports and move students between the school's classes.");
+    expect(S.size('hello@example.com')).toBe('Need room for more students? Write to hello@example.com.');
+    expect(S.sizeContract('hello@example.com')).toBe('Need room for more students? Write to hello@example.com about a School Contract.');
+    expect(l.captures.discover('x', 'a')).toBe('The app on a phone, in the first quest: new letters, starting with x (a), each with a button to hear it.');
+    expect(l.captures.card('x', 'horangi', 'tiger')).toBe('A Korean heritage card: x (horangi), meaning tiger.');
+    // es uses "admin(s)" as the console does (AMENDMENTS-SEATS-ADMINS §9.4: no gender agreement).
+    expect(getMessages('es').landing.persona.teachers.schools.admins(1)).toContain('1 admin más');
+    expect(getMessages('es').landing.persona.teachers.schools.admins(2)).toContain('2 admins más');
+    expect(getMessages('es').landing.persona.teachers.schools.size('hello@example.com')).toBe('¿Necesitas lugar para más estudiantes? Escribe a hello@example.com.');
+    expect(getMessages('ko').landing.persona.teachers.schools.size('hello@example.com')).toBe('학생 자리가 더 필요하면 hello@example.com 주소로 문의해 주세요.');
+    expect(getMessages('ko').landing.captures.card('x', 'horangi', 'tiger')).toBe('한국 문화 카드: x(horangi).');
   });
 });

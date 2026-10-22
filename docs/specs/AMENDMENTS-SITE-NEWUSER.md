@@ -121,6 +121,11 @@ Wireframe `newuser-header-language.md`; mock: every `mock/<locale>/*.html`, shot
   second row; width at least `min(12rem, 100vw - 2 gutters)` and at most `100vw - 2 gutters` (`layout.gutter.compact`). Endonyms are values from `LOCALE_META`, never message strings.
   Without JavaScript `<details>` opens and closes natively; with it, Escape and a pointer down outside close the menu and
   return focus to the summary. Not rendered while only one locale is shown (as `LocaleSwitcher`).
+- **[SN] amendment (SN-1 build):** from 45em to 60em (720 to 959 px) the summary shows the globe and the chevron only;
+  the endonym stays in the summary's accessible name (visually hidden there), as the brand shows its mark only in that
+  range. With the endonym, the Spanish header wrapped **Entrar** to a second row at 768 px. Between 720 and about 740 px
+  the Spanish header still takes two rows (no common device width falls there); e2e pins one header row at 768, 1024
+  and 1280 in every locale.
 - **The legal variant** (`/privacy`, `/terms`) gets the language control too; it still has no Start and no Sign in.
 - **Brand:** the mark shows at every width, its box sized in rem (3rem, `spacing.xxxl` / 16) so enlarged text cannot
   split it. The name shows from 30em to 45em and from 60em on every page, and **on `/` also from 22.5em (360 px) to
@@ -288,11 +293,13 @@ change heights, F-SITE-002 §3.11), and lowers a budget only with that measureme
 
 ### 3.13 Product captures [SN] (new)
 
-- **Files:** `apps/web/public/site/<locale>/<name>.<hash8>.webp` for `discover` (520 px wide), `discover-narrow`,
+- **Files:** `apps/web/public/site/captures/<locale>/<name>.<hash8>.webp` for `discover` (520 px wide), `discover-narrow`,
   `home`, `game`, `card` (400), `report`, `class-list-narrow` (600), `class-list` (720), `lecture-slide` (1080), heights
   as cropped, WebP quality 72; the hash is the file's content
   hash, written to `apps/web/src/data/site-captures.generated.ts` (`{ [locale]: { [name]: { src, width, height } } }`), so
-  `public/_headers` can mark `/site/*` `immutable` like `/_next/static/*`.
+  `public/_headers` can mark `/site/captures/*` `immutable` like `/_next/static/*`. [SN] Only content-hashed files live
+  under `/site/captures/` (`site-captures.test.ts`); other files under `/site/`, such as the unhashed share images
+  `/site/<locale>/og.png`, keep the default caching, so a new share image reaches browsers and link previews.
 - **Made by** `apps/web/scripts/site-captures.mjs` (SN-1; from `design/screens/site/newuser/tools/capture-app.mjs` and
   `capture-console.spec.ts`), run on demand by a person, never in CI or a build. It walks the release learner bundle with
   no API (setup as "Me", new to Korean, quest 1) and the console export with the reports e2e fixtures (API mocked), every
@@ -319,7 +326,7 @@ change heights, F-SITE-002 §3.11), and lowers a budget only with that measureme
   affected names (its checklist names this section); a stale capture is still the real app, so nothing fails on it. A
   capture is never taken to show a known defect; when a defect that a crop or width works around is fixed (section 11),
   the fixing PR retakes the affected captures at the standard crop.
-- **Hidden locales:** pruned with the locale (`prune-hidden-locales.mjs` removes `public/site/<locale>/` from `out/`).
+- **Hidden locales:** pruned with the locale (`prune-hidden-locales.mjs` removes `site/captures/<locale>/` and `site/<locale>/` from `out/`).
 
 ### 3.14 Head assets [SN] (new; row SN-2)
 
@@ -405,7 +412,7 @@ Values in braces are passed in. New keys unless marked changed or removed.
 | Key | en | es | ko |
 |---|---|---|---|
 | `nav.startShort` | Start | Empezar | 시작 |
-| `home.hero.forParents` | I'm a parent | Soy madre, padre o tutor | 부모 또는 보호자예요 |
+| `home.hero.forParents` | I'm a parent or caregiver | Soy madre, padre o tutor | 부모 또는 보호자예요 |
 | `home.hero.forTeachers` | I'm a teacher | Soy docente | 선생님이에요 |
 | `home.hero.grownUps` | *(removed)* | *(removed)* | *(removed)* |
 | `home.closing.title` | Ready for your first Korean letter? | ¿Vamos por tu primera letra coreana? | 첫 한글 글자를 만나 볼까요? |
@@ -416,7 +423,7 @@ Values in braces are passed in. New keys unless marked changed or removed.
 | `persona.parents.signIn`, `persona.teachers.signIn` | *(removed)* | *(removed)* | *(removed)* |
 | `persona.teachers.schools.title` | Use it across a whole school | Úsalo en toda una escuela | 학교 전체에서 함께 써요 |
 | `persona.teachers.schools.space` | Create a school space, then invite teachers or create classes for them. | Crea un espacio de escuela y después invita a docentes o crea tú las clases de cada docente. | 학교 공간을 만든 뒤, 선생님을 초대하거나 선생님 대신 반을 만들어요. |
-| `persona.teachers.schools.admins(admins)` | Add up to {admins} more administrators with an invite link. They can open class lists and reports and move students between the school's classes. *(one: "1 more administrator")* | Suma hasta {admins} administradores más con un enlace de invitación. Pueden abrir las listas y los informes de las clases y cambiar estudiantes entre las clases de la escuela. *(one: "1 administrador más")* | 초대 링크로 관리자를 {admins}명 더 추가할 수 있어요. 관리자는 반 명단과 리포트를 열고, 학교 안의 반끼리 학생을 옮길 수 있어요. |
+| `persona.teachers.schools.admins(admins)` | Add up to {admins} more administrators with an invite link. They can open class lists and reports and move students between the school's classes. *(one: "1 more administrator")* | Suma hasta {admins} admins más con un enlace de invitación. Pueden abrir las listas y los informes de las clases y cambiar estudiantes entre las clases de la escuela. *(one: "1 admin más"; "admin(s)" as in the console, AMENDMENTS-SEATS-ADMINS §9.4)* | 초대 링크로 관리자를 {admins}명 더 추가할 수 있어요. 관리자는 반 명단과 리포트를 열고, 학교 안의 반끼리 학생을 옮길 수 있어요. |
 | `persona.teachers.schools.ownerPlan` *(shown only with `paidPlans: 'inApp'`)* | The school's owner manages the plan. | El plan lo gestiona quien creó la escuela. | 플랜은 학교를 만든 분이 관리해요. |
 | `persona.teachers.schools.moves` | Move a student to another class in the school. Their family is told, and the student never types a new code. | Cambia a un estudiante a otra clase de la escuela. Se avisa a su familia, y el estudiante no tiene que escribir un código nuevo. | 학생을 학교 안의 다른 반으로 옮길 수 있어요. 가족에게 알림이 가고, 학생은 새 코드를 입력하지 않아도 돼요. |
 | `persona.teachers.schools.size(email)` *(no seat figure, owner decision (b), OD-SN-11)* | Need room for more students? Write to {email}. | ¿Necesitas espacio para más estudiantes? Escribe a {email}. | 학생 자리가 더 필요하면 {email} 주소로 문의해 주세요. |
@@ -456,6 +463,14 @@ apps' words. Spanish buttons use the infinitive ("Crear …", as "Empezar a apre
 - Console, Korean UI, learner report: "지금 1단계: Hangul": the stage name stays English in the Korean UI. (The `report`
   crop starts below that line; retaken from the heading once fixed.)
 - Console class page at 720 px: the "Notes" chip in the action row is taller than its neighbours.
+- Console class page ("This week" card): "Stage 1 anchor: 86%" (es "Clave de la Etapa 1") is console jargon a new
+  visitor will not understand, and "Jamo to revisit together: ㅂ · ㅅ" shows taught jamo without romanization. (The
+  `class-list` captures are retaken once the console row words them.)
+- Console learner report: the practice-plan actions ("Add to a plan", "Open the plan", "2 plan items are ready to
+  play") sit in the `report` crop on `/parents`, next to the Plans block, where a visitor may read "plan" as a pricing
+  plan. The next retake of `report` crops above the plan actions (or takes it with no plan items in the fixture).
+- Learner app, es `card` capture: part of a round control is cut off at the top-right edge; the next retake uses the
+  standard crop.
 
 ## 12. Review log
 
