@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-21 by `AMENDMENTS-GUEST-FIRST-LESSON.md` [GU]** (owner decision (d) of 2026-10-21): the site's Start learning can open Stage 1 quest 1 for a nameless **guest** run on a device with no profile; the name and the Privacy step come after the first quest. Section 3.15 gains a `guest` variant of the steps (`name`, then `privacy` with who is learning on it; `CreateProfile { from: 'guest' }`) with the optional email folded behind **Add an email**; the submit order of section 3.3 ends in `promoteGuest` (the profile keeps the guest's id, so no progress moves) when a live guest exists, also from Welcome's Let's start; every consent rule (no preselected answer, the under-13 latch, the guardian PIN) is unchanged. While a guest lives it counts as a learner with an unset `learnerType` in every `gateRequired` input (section 3.3), so a device with a profile asks the grown-up PIN before a guest is saved. `onboarding.started` gains `fromGuest` (section 3.8). Rows GU-1, GU-2 and GU-4.
+
 > **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 7.1 and 7.2): the web build gets a history bridge that keeps the tab's history in step with the navigator, so the browser back reaches the `beforeRemove` listener of section 3.15.4 without a linking config; every non-root screen has a top-left Back, except PlacementInvite and FirstQuestPreview, the end of first-run setup (row DN-4).
 
 # F-LEARN-001 — All-ages onboarding and profile: who is learning, reading level, consent, grown-up PIN, avatar variants

@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-21 by `AMENDMENTS-GUEST-FIRST-LESSON.md` [GU]**: a new claim `guestLesson` (`false` until row GU-7, the app's flag flip) makes `learnerStart` add `try=1`, so Start learning opens Stage 1 quest 1 straight away on a device with no profile; under the same claim Home shows one line under the hero facts and the Privacy Policy one bullet about a quest tried before a profile exists (sections 3.8 and 3.9). `AMENDMENTS-SITE-NEWUSER.md` carries the same note (the line sits in its hero, section 3.3; its `/` budgets are re-measured with the claim on). Rows GU-6 and GU-7.
+
 # F-SITE-002 — hangulroute.com becomes a short, layered intro site (one-screen hero, three persona pages, every account action on app.hangulroute.com)
 
 > **Amendment 2026-10-21 (`AMENDMENTS-SITE-NEWUSER.md`, marked [SN] there).** The new-visitor pass amends §3.2 (a language control and the Start pill in the header at every width, the locale banner on every English page), §3.3 (hero links to `/parents` and `/teachers`, a product capture as hero art, a closing call-to-action band, the launch news as a plain section, no cost block on `/`), §3.4 to §3.6 (product captures; create-first actions on the grown-up pages; a schools section on `/teachers`), §3.7 (About's action, the branded 404 per locale), §3.8 (`createAccount`) and §3.11 (new height, word and image budgets), and adds §3.13 (product captures, each shown only under the claims it depicts) and §3.14 (head assets). Rows SN-1 and SN-2; where the two specs differ, the amendment wins.
