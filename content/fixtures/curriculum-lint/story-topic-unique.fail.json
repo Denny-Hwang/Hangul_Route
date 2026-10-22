@@ -1,0 +1,1045 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): new tales on a shipped story's topic (its slug), whose own slug is a shipped story's topic tag, that cite a shipped story's source (the URL compared without a trailing slash or fragment), or that declare no topicTags: errors (the stories parse with StorySchema). Not real content.",
+  "rule": "story-topic-unique",
+  "files": {
+    "content/stories/sun-and-moon.json": {
+      "v": 1,
+      "id": "story:sun-and-moon",
+      "state": "draft",
+      "contentVer": 1,
+      "title": {
+        "ko": "해와 달",
+        "romanization": "haewa dal",
+        "en": "The Sun and the Moon"
+      },
+      "summaryEn": "A brother and sister outwit a tiger in an old Korean folk tale.",
+      "theme": "letters",
+      "kind": "folk-tale",
+      "recommendedStage": 1,
+      "minutes": 4,
+      "learningGoalsEn": [
+        "Meet 한글 (hangeul).",
+        "Hear why it was made."
+      ],
+      "origin": {
+        "type": "traditional",
+        "noteEn": "Follows the basic version in the cited encyclopedia entry.",
+        "retellingNoteEn": "Shortened and made gentler; versions differ."
+      },
+      "review": {
+        "language": "draft",
+        "culture": "draft",
+        "advisory": [
+          "mild-peril",
+          "trickery"
+        ],
+        "advisoryNoteEn": "A tiger chases the children."
+      },
+      "keywords": [
+        {
+          "id": "hae",
+          "ko": "해",
+          "romanization": "hae",
+          "en": "sun",
+          "kind": "word"
+        }
+      ],
+      "cultureNotes": [],
+      "tiers": [
+        {
+          "level": "listen",
+          "scenes": [
+            {
+              "id": "s1",
+              "narrationEn": "This is an old Korean folk tale, told in many versions.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s2",
+              "narrationEn": "A brother and sister ran from a tiger.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s3",
+              "narrationEn": "They climbed up to the sky.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s4",
+              "narrationEn": "They became the {kw:hae} and the moon.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            }
+          ],
+          "checks": [
+            {
+              "id": "c1",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c2",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c3",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            }
+          ],
+          "sequenceSceneIds": [
+            "s1",
+            "s2",
+            "s3",
+            "s4"
+          ],
+          "newKeywordIds": [
+            "hae"
+          ]
+        }
+      ],
+      "coverSceneId": "s1",
+      "facts": [
+        {
+          "id": "f1",
+          "rev": 1,
+          "scope": "in-the-tale",
+          "claimEn": "In the tale, a brother and sister escape a tiger and become the sun and the moon.",
+          "claimKo": "(the Korean claim is left out of this fixture: Hangul stays out of fixture text fields)",
+          "sources": [
+            {
+              "title": "Sun and Moon tale",
+              "publisher": "Encyclopedia of Korean Culture",
+              "url": "https://folkency.nfm.go.kr/topic/detail/1",
+              "accessed": "2026-10-09",
+              "quoteOrLocator": "Summary"
+            }
+          ]
+        }
+      ],
+      "referenceDisplay": "Sources: Cultural Heritage Administration (test fixture)",
+      "verification": {
+        "passes": 0,
+        "checkedAt": "2026-10-10",
+        "scope": "cluster",
+        "notes": "Imported from a file with no recorded verification pass."
+      },
+      "topicTags": [
+        "sun-and-moon",
+        "fixture-own-slug"
+      ]
+    },
+    "content/stories/fixture-same-topic.json": {
+      "v": 1,
+      "id": "story:fixture-same-topic",
+      "state": "draft",
+      "contentVer": 1,
+      "title": {
+        "ko": "해와 달",
+        "romanization": "haewa dal",
+        "en": "The Sun and the Moon"
+      },
+      "summaryEn": "A brother and sister outwit a tiger in an old Korean folk tale.",
+      "theme": "letters",
+      "kind": "folk-tale",
+      "recommendedStage": 1,
+      "minutes": 4,
+      "learningGoalsEn": [
+        "Meet 한글 (hangeul).",
+        "Hear why it was made."
+      ],
+      "origin": {
+        "type": "traditional",
+        "noteEn": "Follows the basic version in the cited encyclopedia entry.",
+        "retellingNoteEn": "Shortened and made gentler; versions differ."
+      },
+      "review": {
+        "language": "draft",
+        "culture": "draft",
+        "advisory": [
+          "mild-peril",
+          "trickery"
+        ],
+        "advisoryNoteEn": "A tiger chases the children."
+      },
+      "keywords": [
+        {
+          "id": "hae",
+          "ko": "해",
+          "romanization": "hae",
+          "en": "sun",
+          "kind": "word"
+        }
+      ],
+      "cultureNotes": [],
+      "tiers": [
+        {
+          "level": "listen",
+          "scenes": [
+            {
+              "id": "s1",
+              "narrationEn": "This is an old Korean folk tale, told in many versions.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s2",
+              "narrationEn": "A brother and sister ran from a tiger.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s3",
+              "narrationEn": "They climbed up to the sky.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s4",
+              "narrationEn": "They became the {kw:hae} and the moon.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            }
+          ],
+          "checks": [
+            {
+              "id": "c1",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c2",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c3",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            }
+          ],
+          "sequenceSceneIds": [
+            "s1",
+            "s2",
+            "s3",
+            "s4"
+          ],
+          "newKeywordIds": [
+            "hae"
+          ]
+        }
+      ],
+      "coverSceneId": "s1",
+      "facts": [
+        {
+          "id": "f1",
+          "rev": 1,
+          "scope": "in-the-tale",
+          "claimEn": "In the tale, a brother and sister escape a tiger and become the sun and the moon.",
+          "claimKo": "(the Korean claim is left out of this fixture: Hangul stays out of fixture text fields)",
+          "sources": [
+            {
+              "title": "Sun and Moon tale",
+              "publisher": "Encyclopedia of Korean Culture",
+              "url": "https://folkency.nfm.go.kr/topic/detail/3",
+              "accessed": "2026-10-09",
+              "quoteOrLocator": "Summary"
+            }
+          ]
+        }
+      ],
+      "referenceDisplay": "Sources: Cultural Heritage Administration (test fixture)",
+      "verification": {
+        "passes": 0,
+        "checkedAt": "2026-10-10",
+        "scope": "cluster",
+        "notes": "Imported from a file with no recorded verification pass."
+      },
+      "topicTags": [
+        "sun-and-moon"
+      ]
+    },
+    "content/stories/fixture-own-slug.json": {
+      "v": 1,
+      "id": "story:fixture-own-slug",
+      "state": "draft",
+      "contentVer": 1,
+      "title": {
+        "ko": "해와 달",
+        "romanization": "haewa dal",
+        "en": "The Sun and the Moon"
+      },
+      "summaryEn": "A brother and sister outwit a tiger in an old Korean folk tale.",
+      "theme": "letters",
+      "kind": "folk-tale",
+      "recommendedStage": 1,
+      "minutes": 4,
+      "learningGoalsEn": [
+        "Meet 한글 (hangeul).",
+        "Hear why it was made."
+      ],
+      "origin": {
+        "type": "traditional",
+        "noteEn": "Follows the basic version in the cited encyclopedia entry.",
+        "retellingNoteEn": "Shortened and made gentler; versions differ."
+      },
+      "review": {
+        "language": "draft",
+        "culture": "draft",
+        "advisory": [
+          "mild-peril",
+          "trickery"
+        ],
+        "advisoryNoteEn": "A tiger chases the children."
+      },
+      "keywords": [
+        {
+          "id": "hae",
+          "ko": "해",
+          "romanization": "hae",
+          "en": "sun",
+          "kind": "word"
+        }
+      ],
+      "cultureNotes": [],
+      "tiers": [
+        {
+          "level": "listen",
+          "scenes": [
+            {
+              "id": "s1",
+              "narrationEn": "This is an old Korean folk tale, told in many versions.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s2",
+              "narrationEn": "A brother and sister ran from a tiger.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s3",
+              "narrationEn": "They climbed up to the sky.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s4",
+              "narrationEn": "They became the {kw:hae} and the moon.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            }
+          ],
+          "checks": [
+            {
+              "id": "c1",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c2",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c3",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            }
+          ],
+          "sequenceSceneIds": [
+            "s1",
+            "s2",
+            "s3",
+            "s4"
+          ],
+          "newKeywordIds": [
+            "hae"
+          ]
+        }
+      ],
+      "coverSceneId": "s1",
+      "facts": [
+        {
+          "id": "f1",
+          "rev": 1,
+          "scope": "in-the-tale",
+          "claimEn": "In the tale, a brother and sister escape a tiger and become the sun and the moon.",
+          "claimKo": "(the Korean claim is left out of this fixture: Hangul stays out of fixture text fields)",
+          "sources": [
+            {
+              "title": "Sun and Moon tale",
+              "publisher": "Encyclopedia of Korean Culture",
+              "url": "https://folkency.nfm.go.kr/topic/detail/4",
+              "accessed": "2026-10-09",
+              "quoteOrLocator": "Summary"
+            }
+          ]
+        }
+      ],
+      "referenceDisplay": "Sources: Cultural Heritage Administration (test fixture)",
+      "verification": {
+        "passes": 0,
+        "checkedAt": "2026-10-10",
+        "scope": "cluster",
+        "notes": "Imported from a file with no recorded verification pass."
+      },
+      "topicTags": [
+        "brave-siblings"
+      ]
+    },
+    "content/stories/fixture-same-source.json": {
+      "v": 1,
+      "id": "story:fixture-same-source",
+      "state": "draft",
+      "contentVer": 1,
+      "title": {
+        "ko": "해와 달",
+        "romanization": "haewa dal",
+        "en": "The Sun and the Moon"
+      },
+      "summaryEn": "A brother and sister outwit a tiger in an old Korean folk tale.",
+      "theme": "letters",
+      "kind": "folk-tale",
+      "recommendedStage": 1,
+      "minutes": 4,
+      "learningGoalsEn": [
+        "Meet 한글 (hangeul).",
+        "Hear why it was made."
+      ],
+      "origin": {
+        "type": "traditional",
+        "noteEn": "Follows the basic version in the cited encyclopedia entry.",
+        "retellingNoteEn": "Shortened and made gentler; versions differ."
+      },
+      "review": {
+        "language": "draft",
+        "culture": "draft",
+        "advisory": [
+          "mild-peril",
+          "trickery"
+        ],
+        "advisoryNoteEn": "A tiger chases the children."
+      },
+      "keywords": [
+        {
+          "id": "hae",
+          "ko": "해",
+          "romanization": "hae",
+          "en": "sun",
+          "kind": "word"
+        }
+      ],
+      "cultureNotes": [],
+      "tiers": [
+        {
+          "level": "listen",
+          "scenes": [
+            {
+              "id": "s1",
+              "narrationEn": "This is an old Korean folk tale, told in many versions.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s2",
+              "narrationEn": "A brother and sister ran from a tiger.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s3",
+              "narrationEn": "They climbed up to the sky.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s4",
+              "narrationEn": "They became the {kw:hae} and the moon.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            }
+          ],
+          "checks": [
+            {
+              "id": "c1",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c2",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c3",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            }
+          ],
+          "sequenceSceneIds": [
+            "s1",
+            "s2",
+            "s3",
+            "s4"
+          ],
+          "newKeywordIds": [
+            "hae"
+          ]
+        }
+      ],
+      "coverSceneId": "s1",
+      "facts": [
+        {
+          "id": "f1",
+          "rev": 1,
+          "scope": "in-the-tale",
+          "claimEn": "In the tale, a brother and sister escape a tiger and become the sun and the moon.",
+          "claimKo": "(the Korean claim is left out of this fixture: Hangul stays out of fixture text fields)",
+          "sources": [
+            {
+              "title": "Sun and Moon tale",
+              "publisher": "Encyclopedia of Korean Culture",
+              "url": "https://FOLKENCY.nfm.go.kr/topic/detail/1/#top",
+              "accessed": "2026-10-09",
+              "quoteOrLocator": "Summary"
+            }
+          ]
+        }
+      ],
+      "referenceDisplay": "Sources: Cultural Heritage Administration (test fixture)",
+      "verification": {
+        "passes": 0,
+        "checkedAt": "2026-10-10",
+        "scope": "cluster",
+        "notes": "Imported from a file with no recorded verification pass."
+      },
+      "topicTags": [
+        "fixture-same-source"
+      ]
+    },
+    "content/stories/fixture-no-tags.json": {
+      "v": 1,
+      "id": "story:fixture-no-tags",
+      "state": "draft",
+      "contentVer": 1,
+      "title": {
+        "ko": "해와 달",
+        "romanization": "haewa dal",
+        "en": "The Sun and the Moon"
+      },
+      "summaryEn": "A brother and sister outwit a tiger in an old Korean folk tale.",
+      "theme": "letters",
+      "kind": "folk-tale",
+      "recommendedStage": 1,
+      "minutes": 4,
+      "learningGoalsEn": [
+        "Meet 한글 (hangeul).",
+        "Hear why it was made."
+      ],
+      "origin": {
+        "type": "traditional",
+        "noteEn": "Follows the basic version in the cited encyclopedia entry.",
+        "retellingNoteEn": "Shortened and made gentler; versions differ."
+      },
+      "review": {
+        "language": "draft",
+        "culture": "draft",
+        "advisory": [
+          "mild-peril",
+          "trickery"
+        ],
+        "advisoryNoteEn": "A tiger chases the children."
+      },
+      "keywords": [
+        {
+          "id": "hae",
+          "ko": "해",
+          "romanization": "hae",
+          "en": "sun",
+          "kind": "word"
+        }
+      ],
+      "cultureNotes": [],
+      "tiers": [
+        {
+          "level": "listen",
+          "scenes": [
+            {
+              "id": "s1",
+              "narrationEn": "This is an old Korean folk tale, told in many versions.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s2",
+              "narrationEn": "A brother and sister ran from a tiger.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s3",
+              "narrationEn": "They climbed up to the sky.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            },
+            {
+              "id": "s4",
+              "narrationEn": "They became the {kw:hae} and the moon.",
+              "factIds": [
+                "f1"
+              ],
+              "keyword": {
+                "id": "hae",
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            }
+          ],
+          "checks": [
+            {
+              "id": "c1",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c2",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            },
+            {
+              "id": "c3",
+              "kind": "detail",
+              "promptEn": "What happened?",
+              "options": [
+                {
+                  "id": "a",
+                  "en": "This",
+                  "isCorrect": true
+                },
+                {
+                  "id": "b",
+                  "en": "That",
+                  "isCorrect": false
+                }
+              ],
+              "factIds": [
+                "f1"
+              ]
+            }
+          ],
+          "sequenceSceneIds": [
+            "s1",
+            "s2",
+            "s3",
+            "s4"
+          ],
+          "newKeywordIds": [
+            "hae"
+          ]
+        }
+      ],
+      "coverSceneId": "s1",
+      "facts": [
+        {
+          "id": "f1",
+          "rev": 1,
+          "scope": "in-the-tale",
+          "claimEn": "In the tale, a brother and sister escape a tiger and become the sun and the moon.",
+          "claimKo": "(the Korean claim is left out of this fixture: Hangul stays out of fixture text fields)",
+          "sources": [
+            {
+              "title": "Sun and Moon tale",
+              "publisher": "Encyclopedia of Korean Culture",
+              "url": "https://folkency.nfm.go.kr/topic/detail/5",
+              "accessed": "2026-10-09",
+              "quoteOrLocator": "Summary"
+            }
+          ]
+        }
+      ],
+      "referenceDisplay": "Sources: Cultural Heritage Administration (test fixture)",
+      "verification": {
+        "passes": 0,
+        "checkedAt": "2026-10-10",
+        "scope": "cluster",
+        "notes": "Imported from a file with no recorded verification pass."
+      }
+    }
+  },
+  "expect": [
+    [
+      "story-topic-unique",
+      "error",
+      "content/stories/fixture-same-topic.json",
+      "topicTags"
+    ],
+    [
+      "story-topic-unique",
+      "error",
+      "content/stories/fixture-own-slug.json",
+      "topicTags"
+    ],
+    [
+      "story-topic-unique",
+      "error",
+      "content/stories/fixture-same-source.json",
+      "facts"
+    ],
+    [
+      "story-topic-unique",
+      "error",
+      "content/stories/fixture-no-tags.json",
+      "topicTags"
+    ]
+  ]
+}

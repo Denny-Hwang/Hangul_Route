@@ -1,11 +1,13 @@
 import type { SessionLog } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
+  LEARNING_SESSION_PREFIX,
   SESSION_COUNT_CAP_S,
   TIME_ONLY_SESSION_PREFIX,
   countedSeconds,
   countsForStreak,
   elapsedSeconds,
+  keepsRun,
   lastStreakDay,
   newSessionId,
   practiceTotals,
@@ -30,16 +32,32 @@ describe('logic/sessions/session-log (F-REPORT-001 section 3.3.2)', () => {
 
   it('names a streak session as today and a time-only session with its own prefix', () => {
     const at = '2026-10-12T09:00:00.000Z';
-    expect(newSessionId(at, true, [])).toBe(`session:${at}`);
-    expect(newSessionId(at, false, [])).toBe(`${TIME_ONLY_SESSION_PREFIX}${at}`);
+    expect(newSessionId(at, 'quest', [])).toBe(`session:${at}`);
+    expect(newSessionId(at, 'time', [])).toBe(`${TIME_ONLY_SESSION_PREFIX}${at}`);
     expect(TIME_ONLY_SESSION_PREFIX).toBe('session:time:');
+  });
+
+  it('names a learning session (story, word set; F-CURR-002 OD-14) under the time-only prefix, so older readers keep it time only', () => {
+    const at = '2026-10-12T09:00:00.000Z';
+    expect(LEARNING_SESSION_PREFIX).toBe('session:time:learn:');
+    expect(newSessionId(at, 'learn', [])).toBe(`session:time:learn:${at}`);
+    expect(newSessionId(at, 'learn', [session(`session:time:learn:${at}`, at)])).toBe(`session:time:learn:${at}:2`);
+    expect(countsForStreak(session(newSessionId(at, 'learn', []), at))).toBe(false);
+  });
+
+  it('keeps the local-day run for quest and learning sessions only (F-CURR-002 OD-14)', () => {
+    const at = '2026-10-12T09:00:00.000Z';
+    expect(keepsRun(session(`session:${at}`, at))).toBe(true);
+    expect(keepsRun(session(`session:time:learn:${at}`, at))).toBe(true);
+    expect(keepsRun(session(`session:time:${at}`, at))).toBe(false);
+    expect(keepsRun(session('legacy-1', at))).toBe(true);
   });
 
   it('never reuses an id already in the log', () => {
     const at = '2026-10-12T09:00:00.000Z';
     const taken = [session(`session:${at}`, at), session(`session:${at}:2`, at)];
-    expect(newSessionId(at, true, taken)).toBe(`session:${at}:3`);
-    expect(newSessionId(at, false, taken)).toBe(`session:time:${at}`);
+    expect(newSessionId(at, 'quest', taken)).toBe(`session:${at}:3`);
+    expect(newSessionId(at, 'time', taken)).toBe(`session:time:${at}`);
   });
 
   it('counts only sessions without the time-only prefix toward the streak', () => {

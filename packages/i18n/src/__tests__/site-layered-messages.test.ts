@@ -44,13 +44,18 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
 
   it('hero: the taught letter and its romanization are passed in', () => {
     expect(l.home.hero.title).toBe('Learn Hangul from zero, at any age.');
-    expect(l.home.hero.lead).toBe(
-      'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
-    );
+    // F-SITE-002 site facts (2026-10-21): the first sentence says what Hangul is, for a visitor who does not know.
+    expect(l.home.hero.lead).toBe('Hangul is the Korean alphabet. Learn to read, hear and write it with Hoya the tiger.');
     expect(l.home.hero.start).toBe('Start learning');
-    expect(l.home.hero.grownUps).toBe('Parent or teacher? Find your page');
-    expect(l.home.hero.facts).toBe('Runs in your browser · Nothing to install · The app works offline on most devices after your first visit');
-    expect(l.home.hero.bubble('x', 'g/k')).toBe("Annyeong! Let's meet x\u00a0(g/k).");
+    // [SN] AMENDMENTS-SITE-NEWUSER §3.3: two direct links replace "Parent or teacher? Find your page".
+    expect(lookup(l, 'home.hero.grownUps')).toBeUndefined();
+    expect(l.home.hero.forParents).toBe("I'm a parent or caregiver");
+    expect(l.home.hero.forTeachers).toBe("I'm a teacher");
+    // No "Nothing to install": the app offers Install. The offline hedge (OD-15) stays. "Stage 1 is free" leads, so a
+    // first-time visitor sees the cost above the fold (review of #806); "No sign-up to start" is the learner's start.
+    expect(l.home.hero.facts).toBe('Stage 1 is free · No sign-up to start · Works offline on most devices after your first visit');
+    // A greeting in the UI language: a romanized Korean word with no Hangul and no gloss breaks CLAUDE.md §1.
+    expect(l.home.hero.bubble('x', 'a')).toBe("Hi! Let's meet x\u00a0(a).");
   });
 
   it("the taught letter in Hoya's bubble keeps its romanization in the sentence (CLAUDE.md §1, F-SITE-002 §6)", () => {
@@ -74,28 +79,29 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.who.items).toEqual({
       learners: {
         title: 'Learners',
-        body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
+        body: 'Five-minute quests, a guide who never scolds, and Korean culture cards.',
       },
       parents: {
         title: 'Parents and caregivers',
-        body: 'See what your learner practises, with a grown-up gate and no ads.',
+        body: 'See what your learner practices, with a grown-up PIN and no ads.',
       },
       teachers: {
         title: 'Teachers',
-        body: 'Students join with a class code. No student emails, no accounts.',
+        body: 'Students join with a code, link or QR code. No student accounts.',
       },
     });
     expect(Object.keys(l.home.who.items)).toEqual(['learners', 'parents', 'teachers']);
   });
 
-  it('how it works: three steps in order, and the Learning Route variant of step 3', () => {
+  it('how it works: three steps in order, the level-check variant of step 1 and the Learning Route variant of step 3', () => {
     expect(l.home.how.title).toBe('How it works');
     expect(l.home.how.steps).toEqual({
-      start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
-      quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
+      start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
+      quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures.' },
       collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
     });
     expect(Object.keys(l.home.how.steps)).toEqual(['start', 'quests', 'collect']);
+    expect(l.home.how.levelBody).toBe('Pick a name and a Hoya. A level check is optional.');
     expect(l.home.how.routeBody).toBe('Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.');
   });
 
@@ -108,12 +114,15 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
   it('plans: the only cost words on the site, never a price (OD-7)', () => {
     expect(l.plans.title).toBe('What does it cost?');
     expect(l.plans.free.stage1).toBe('Stage 1 is free.');
-    expect(l.plans.paid.coming).toBe('More stages are coming, with plans for families and classes.');
+    // Later stages already ship; only the plans are still to come (F-SITE-002 site facts, 2026-10-21).
+    expect(l.plans.paid.coming).toBe('Words, sentences and stories are in the app too. Family and class plans are on the way.');
     expect(l.plans.paid.inApp).toBe('Plans for families and classes are at app.hangulroute.com.');
     expect(l.plans.managedInApp).toBe('Plans and billing are managed at app.hangulroute.com after you sign in.');
+    expect(l.plans.managedLater).toBe('When plans arrive, you will manage them at app.hangulroute.com after you sign in.');
     // [SA] SA-6: the learners each plan holds, numbers passed in (landing-plan-sizes.test.ts).
     expect(l.plans.sizes(4, 50)).toBe('The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.');
-    expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp', 'sizes']);
+    // No free limits on the site (owner decision 2026-10-21): no freeSizes key.
+    expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp', 'managedLater', 'sizes']);
     expect(Object.keys(l.plans.paid)).toEqual(['coming', 'inApp']);
   });
 
@@ -126,32 +135,41 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
   it('the free line is true with paid plans coming and on sale, so it says nothing about paid plans (F-ENT-003 OD-1)', () => {
     expect(l.plans.free.stage1).not.toMatch(/\bplans?\b|coming|app\.hangulroute\.com/i);
     // What is coming belongs to the paid line, which follows the `paidPlans` claim.
-    expect(l.plans.paid.coming).toMatch(/coming/);
-    expect(l.plans.paid.inApp).not.toMatch(/coming/);
+    expect(l.plans.paid.coming).toMatch(/on the way/);
+    expect(l.plans.paid.inApp).not.toMatch(/on the way|coming/);
   });
 
   /**
    * How the pages compose the cost words (F-SITE-002 §3.3 block 5, §3.5 and §3.6 Plans). Home: one paragraph, the
-   * free line then the paid line. Persona pages: the free line, the paid line only while plans are coming (once they
-   * are on sale, `managedInApp` already says where), then `managedInApp`. S-4b and S-5 pin the rendered output.
+   * free line then the paid line. Persona pages: the free line alone (never the free limits, owner decision
+   * 2026-10-21), then the paid line while plans are coming (the sizes line once they are on sale), then `managedLater`
+   * while plans are coming or `managedInApp` once they are on sale. S-4b and S-5 pin the rendered output.
    */
   const homeCost = (paidPlans: 'coming' | 'inApp'): string => `${l.plans.free.stage1} ${l.plans.paid[paidPlans]}`;
   const personaPlans = (paidPlans: 'coming' | 'inApp'): string[] => [
-    paidPlans === 'coming' ? `${l.plans.free.stage1} ${l.plans.paid.coming}` : l.plans.free.stage1,
-    l.plans.managedInApp,
+    l.plans.free.stage1,
+    paidPlans === 'coming' ? l.plans.paid.coming : l.plans.sizes(4, 50),
+    paidPlans === 'coming' ? l.plans.managedLater : l.plans.managedInApp,
   ];
 
   it('the cost line on the home, in both paidPlans states', () => {
-    expect(homeCost('coming')).toBe('Stage 1 is free. More stages are coming, with plans for families and classes.');
+    expect(homeCost('coming')).toBe(
+      'Stage 1 is free. Words, sentences and stories are in the app too. Family and class plans are on the way.',
+    );
     expect(homeCost('inApp')).toBe('Stage 1 is free. Plans for families and classes are at app.hangulroute.com.');
   });
 
   it('the Plans block of a persona page, in both paidPlans states, names the app host once (rule 3: no repeats)', () => {
     expect(personaPlans('coming')).toEqual([
-      'Stage 1 is free. More stages are coming, with plans for families and classes.',
+      'Stage 1 is free.',
+      'Words, sentences and stories are in the app too. Family and class plans are on the way.',
+      'When plans arrive, you will manage them at app.hangulroute.com after you sign in.',
+    ]);
+    expect(personaPlans('inApp')).toEqual([
+      'Stage 1 is free.',
+      'The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.',
       'Plans and billing are managed at app.hangulroute.com after you sign in.',
     ]);
-    expect(personaPlans('inApp')).toEqual(['Stage 1 is free.', 'Plans and billing are managed at app.hangulroute.com after you sign in.']);
     for (const state of ['coming', 'inApp'] as const) {
       expect(personaPlans(state).join(' ').match(/app\.hangulroute\.com/g), state).toHaveLength(1);
       expect(homeCost(state).match(/app\.hangulroute\.com/g)?.length ?? 0, state).toBeLessThanOrEqual(1);
@@ -159,7 +177,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
   });
 
   it('launch news: the form itself keeps landing.waitlist', () => {
-    expect(l.home.news).toEqual({ title: 'Get the launch news', body: "Leave your email and we'll send you the launch news. Nothing else." });
+    expect(l.home.news).toEqual({ title: 'Launch news by email', body: "We'll email you when family and class plans launch. Nothing else." });
   });
 });
 
@@ -205,9 +223,9 @@ describe('B.2 learners', () => {
     expect(p().route).toEqual({ title: 'Your Learning Route', body: 'One map shows where you started, where you are and what comes next.' });
   });
 
-  it('five folded questions in order; the adult and Korean answers are today’s text', () => {
+  it('five folded questions in order, then the level-check one (behind its claim); the adult and Korean answers are today’s text', () => {
     const faq = p().faq;
-    expect(Object.keys(faq)).toEqual(['signIn', 'code', 'offline', 'adult', 'korean']);
+    expect(Object.keys(faq)).toEqual(['signIn', 'code', 'offline', 'adult', 'korean', 'level']);
     expect(faq.signIn).toEqual({
       q: 'Is there a sign-in for learners?',
       a: 'No email or password needed. Open the app and choose your profile, or enter your class or family code. Moving to a new device? Use your Rescue Code.',
@@ -227,7 +245,8 @@ describe('B.2 learners', () => {
   it('the join-code answer names the labels the learner taps: Profile, Classes & family, Join a class', () => {
     const app = getMessages('en');
     const answer = p().faq.code.a;
-    expect(answer).toBe('In the app: tap Profile, then go to Classes & family and tap Join a class.');
+    // The join link (and its QR code) is a class's; the answer names it first, then the path in the app.
+    expect(answer).toBe('Open the join link your teacher shares. Or, in the app, tap Profile, go to Classes & family and tap Join a class.');
     expect(answer).toContain(app.learner.home.profileLabel);
     expect(answer).toContain(app.caregiver.spaces.title);
     expect(answer).toContain(app.caregiver.spaces.join.cta);
@@ -257,7 +276,9 @@ describe('B.3 parents', () => {
   it('lead names grandparents and every caregiver; the primary action fits one line', () => {
     expect(p().title).toBe('For parents and caregivers');
     expect(p().lead).toBe("For parents, grandparents and every caregiver: short, kind lessons that keep your learner's data private.");
-    expect(p().signIn).toBe('Sign in as a parent');
+    // [SN] AMENDMENTS-SITE-NEWUSER §3.5: create first; the sign-in action is gone.
+    expect(p().create).toBe('Create a free family space');
+    expect(lookup(getMessages('en').landing, 'persona.parents.signIn')).toBeUndefined();
   });
 
   it('what they learn, with the link to the learners page', () => {
@@ -272,7 +293,7 @@ describe('B.3 parents', () => {
     expect(p().safe.title).toBe('Safe by design');
     expect(Object.keys(p().safe.bullets)).toEqual(['ads', 'backup', 'gate', 'siblings']);
     expect(p().safe.bullets.ads).toBe('No ads, and no data sold.');
-    expect(p().safe.bullets.gate).toBe('A grown-up gate guards anything that costs money or deletes data.');
+    expect(p().safe.bullets.gate).toBe('A grown-up PIN guards anything that costs money or deletes data.');
     expect(p().safe.bullets.siblings).toBe('Siblings can share a device. Each learner keeps their own stars and cards.');
   });
 
@@ -313,12 +334,12 @@ describe('B.3 parents', () => {
   it('follow along: the base line and one line per claim', () => {
     expect(p().follow).toEqual({
       title: 'Follow along',
-      body: "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together.",
-      reports: 'Reports for today, this week, this month and all time show what went well and what to practise next.',
+      body: "Create a free family space, share its code, and see each learner's week: time practiced, quests done and letters to revisit together.",
+      reports: 'Reports for today, this week, this month and all time show what went well and what to practice next.',
       route: "Open each learner's Learning Route to see where they are and what comes next.",
       notes: 'Send a short note of encouragement that your learner sees in the app.',
       browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
-      lecture: 'Lecture mode puts a lesson on your TV so you can learn together.',
+      lecture: 'Lecture mode shows ready-made lessons from Stages 1 to 7 on a TV, a laptop or a phone turned sideways, so you can learn together.',
     });
   });
 
@@ -360,7 +381,8 @@ describe('B.4 teachers', () => {
   it('lead and both actions', () => {
     expect(p().title).toBe('For teachers');
     expect(p().lead).toBe('Students join with a code, you plan the week, and everyone learns at their own pace.');
-    expect(p().signIn).toBe('Sign in as a teacher');
+    expect(p().create).toBe('Create a free class');
+    expect(lookup(getMessages('en').landing, 'persona.teachers.signIn')).toBeUndefined();
     expect(p().tryIt).toBe('Try it as a learner');
   });
 
@@ -369,7 +391,7 @@ describe('B.4 teachers', () => {
       title: 'Set up in minutes',
       steps: {
         space: 'Sign in and create a class space.',
-        code: 'Share the class code. Students enter it in the app; no student emails or accounts.',
+        code: 'Share the class code, the join link or its QR code. Students type the code or open the link; no student emails or accounts.',
         devices: 'Students learn on any device with a browser.',
       },
     });
@@ -381,33 +403,47 @@ describe('B.4 teachers', () => {
       title: 'Plan and assign',
       bullets: {
         pick: "Pick quests for the week. They appear on each student's homework list.",
-        planner: 'Or let the planner build a term route from your class level and rhythm.',
+        planner: 'Or use Plan a term: it builds a term plan from your class level and rhythm.',
       },
     });
+  });
+
+  it('the planner line names the console page by its title, in every locale (console.curriculum.title)', () => {
+    for (const locale of LOCALES) {
+      const m = getMessages(locale);
+      expect(m.landing.persona.teachers.plan.bullets.planner, locale).toContain(m.console.curriculum.title);
+    }
+  });
+
+  it('the browse lines name the plans as the billing page does, in every locale', () => {
+    for (const locale of LOCALES) {
+      const m = getMessages(locale);
+      expect(m.landing.persona.teachers.class.browse, locale).toContain(m.console.billing.planTitle.group_license);
+    }
   });
 
   it('see how the class is doing: the base line and one line per claim, never a ranking', () => {
     expect(p().class).toEqual({
       title: 'See how the class is doing',
-      body: 'A weekly view shows who practised and which letters to revisit together. Never a ranking.',
+      body: 'A weekly view shows who practiced and which letters to revisit together. Never a ranking.',
       reports: 'Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.',
       route: "Open each student's Learning Route to see where they are and what comes next.",
       notes: 'Send students a short note of encouragement.',
-      browse: 'With a class or school plan, preview every lesson exactly as students see it.',
-      lecture: 'Lecture mode: teach from the front on a projector or TV, with ready-made lessons.',
+      browse: 'With the Group License, preview every lesson exactly as students see it.',
+      lecture: 'Lecture mode: teach from the front with ready-made slides for Stages 1 to 7, stories and word sets, on a projector, a TV or a phone turned sideways.',
     });
   });
 
   it('privacy for classes', () => {
     expect(p().privacy).toEqual({
       title: 'Privacy for classes',
-      bullets: { initials: 'Show initials only on the class list.', ads: 'No ads, and no data sold.' },
+      bullets: { initials: 'You can show initials instead of names on the class list.', ads: 'No ads, and no data sold.' },
     });
   });
 
   it('three folded questions in order', () => {
     expect(p().faq).toEqual({
-      students: { q: 'Do students need accounts?', a: 'No. They join with the class code inside the app.' },
+      students: { q: 'Do students need accounts?', a: 'No. They join with the class code, link or QR code.' },
       ranking: { q: 'Is there a leaderboard?', a: 'No. Hangul Route never ranks students against each other.' },
       try: { q: 'Can I try it first?', a: 'Yes. Open the app and play the first quests as a learner.' },
     });
@@ -435,18 +471,46 @@ describe('closing lines, footer groups, the 404 links and per-page metadata', ()
   });
 
   it('404 links', () => {
-    expect(l.notFound).toEqual({ body: 'We could not find this page.', home: 'Go to the home page', start: 'Start learning' });
+    // AMENDMENTS-SITE-NEWUSER SN-2: the page's own h1 and <title>, and a line that says why and what to do.
+    expect(l.notFound).toEqual({
+      body: 'The link may be old. Try the home page or start learning.',
+      home: 'Go to the home page',
+      start: 'Start learning',
+      title: 'Page not found',
+    });
+    expect(getMessages('es').landing.notFound.title).toBe('No encontramos esta página');
+    expect(getMessages('ko').landing.notFound.title).toBe('페이지를 찾을 수 없어요');
   });
 
-  it('per-page metadata for the three persona pages', () => {
-    expect(Object.keys(l.meta.pages)).toEqual(['learners', 'parents', 'teachers']);
+  it('per-page metadata for the three persona pages, then About, the legal pages and the notices (SN-2)', () => {
+    expect(Object.keys(l.meta.pages)).toEqual(['learners', 'parents', 'teachers', 'about', 'privacy', 'terms', 'licenses']);
     expect(l.meta.pages.learners.title).toBe('For learners — Hangul Route');
     expect(l.meta.pages.parents.title).toBe('For parents and caregivers — Hangul Route');
     expect(l.meta.pages.teachers.title).toBe('For teachers — Hangul Route');
-    for (const page of Object.values(l.meta.pages)) {
-      expect(page.description.length).toBeGreaterThan(40);
+    expect(l.meta.pages.about).toEqual({ title: 'About Hangul Route', description: 'Who makes Hangul Route and the promises we keep.' });
+    expect(l.meta.pages.privacy).toEqual({
+      title: 'Privacy Policy — Hangul Route',
+      description: 'What Hangul Route collects, who can see it, and how to delete it.',
+    });
+    expect(l.meta.pages.terms).toEqual({ title: 'Terms of Service — Hangul Route', description: 'The rules for using Hangul Route.' });
+    expect(l.meta.pages.licenses).toEqual({ title: 'Open-source notices — Hangul Route', description: 'The open-source software Hangul Route uses.' });
+    for (const [key, page] of Object.entries(l.meta.pages)) {
+      // The persona pages sell; the other four only say what the page is.
+      if (['learners', 'parents', 'teachers'].includes(key)) expect(page.description.length, key).toBeGreaterThan(40);
       // Search snippets are cut near 160 characters.
-      expect(page.description.length).toBeLessThanOrEqual(160);
+      expect(page.description.length, key).toBeLessThanOrEqual(160);
+    }
+  });
+
+  it.each(['es', 'ko'] as const)('%s: its own title and description for every page (SN-2)', (locale) => {
+    const pages = getMessages(locale).landing.meta.pages;
+    for (const [key, page] of Object.entries(pages)) {
+      const english = l.meta.pages[key as keyof typeof l.meta.pages];
+      expect(page.title, key).not.toBe(english.title);
+      expect(page.description, key).not.toBe(english.description);
+      // Translations run longer than English (the reviewed es teachers line from #806 is 164 characters), and
+      // snippets are cut by width, not a hard count: 170 for es and ko, 160 for the English above.
+      expect(page.description.length, key).toBeLessThanOrEqual(170);
     }
   });
 

@@ -8,6 +8,9 @@ import { readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import type { DeviceCredentials, SyncApiClient } from '../platform/sync-api';
 import { onProfileRemoved } from './profile-removal';
 
+/** The learner's notes (`hr:notes:<id>`); exported for the removal sweep (row OA-7a). */
+export const NOTES_KEY = notesKey;
+
 /**
  * Notes from grown-ups, per learner profile (F-FEEDBACK-001 section 6.9). Persisted through
  * `platform/storage` only, under `notes:<profileId>`, and removed with the profile. Reads and

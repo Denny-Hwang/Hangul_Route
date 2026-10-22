@@ -6,7 +6,7 @@ import { LOCALES } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import robots, { dynamic as robotsDynamic } from '../app/robots';
 import sitemap, { dynamic as sitemapDynamic } from '../app/sitemap';
-import { SITE_PAGES, SITE_URL, shownSiteLocales, siteAlternates } from '../lib/site-metadata';
+import { SITE_PAGES, SITE_URL, shownSiteLocales, siteAlternates, siteMetadataFor } from '../lib/site-metadata';
 import { sitePath } from '../lib/site-path';
 import { siteRobots, siteSitemap } from '../lib/site-surface';
 
@@ -111,6 +111,22 @@ describe('sitemap.xml (F-SITE-002 S-9)', () => {
         }
       }
     }
+  });
+
+  it('agrees with every page\'s canonical and hreflang, the English home with its slash (AMENDMENTS-SITE-NEWUSER SN-2)', () => {
+    for (const showAll of [false, true]) {
+      const entries = siteSitemap(showAll);
+      for (const locale of shownSiteLocales(showAll)) {
+        for (const page of SITE_PAGES) {
+          const { alternates } = siteMetadataFor(locale, page, showAll);
+          const entry = entries.find((item) => item.url === alternates?.canonical);
+          expect(entry, `${locale} ${page}`).toBeDefined();
+          expect(entry?.alternates?.languages).toEqual(alternates?.languages);
+        }
+      }
+    }
+    expect(siteSitemap()[0]?.url).toBe('https://hangulroute.com/');
+    expect(siteMetadataFor('en', '/').alternates?.canonical).toBe('https://hangulroute.com/');
   });
 
   it('neither file is a grown-up path, so the console role never copies them to the app host', () => {

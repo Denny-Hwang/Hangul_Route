@@ -145,12 +145,12 @@ describe('the daily scheduled handler (section 8.7 item 2)', () => {
   it('stops after the first round that leaves nothing to purge', async () => {
     const now = new Date();
     expect(await db.insertNotes(old(10, 200 * DAY, now.getTime()), [])).toBe(10);
-    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 10, rateHits: 0, classMoves: 0, spaceEvents: 0, adminInvites: 0 });
-    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 0, rateHits: 0, classMoves: 0, spaceEvents: 0, adminInvites: 0 });
+    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 10, rateHits: 0, classMoves: 0, spaceEvents: 0, adminInvites: 0, telemetryDaily: 0 });
+    expect(await runScheduledPurge(db, now)).toEqual({ rounds: 1, notes: 0, rateHits: 0, classMoves: 0, spaceEvents: 0, adminInvites: 0, telemetryDaily: 0 });
     expect(SCHEDULED_PURGE_ROUNDS * NOTE_PURGE_LIMIT).toBe(1000);
   });
 
-  it('on D1 one run prepares at most 36 statements (5 rounds of the 4-statement note step, the counter step, the class-move step and [SA] the space-event step, and [SA] one admin-invite step), under the 50 a Free-plan invocation allows', async () => {
+  it('on D1 one run prepares at most 41 purge statements (5 rounds of the 4-statement note step, the counter step, the class-move step, [SA] the space-event step and [OA] the daily-counter step, and [SA] one admin-invite step), plus the guardrail evaluator\'s read of remote_config (CM-70b), under the 50 a Free-plan invocation allows', async () => {
     const raw = openSqliteD1();
     const own = new D1Db(raw);
     await seed(own);
@@ -165,7 +165,7 @@ describe('the daily scheduled handler (section 8.7 item 2)', () => {
       batch: (statements) => raw.batch(statements),
     };
     await scheduled({ scheduledTime: now }, { DB: binding });
-    expect(prepared).toBe(SCHEDULED_PURGE_ROUNDS * 7 + 1);
+    expect(prepared).toBe(SCHEDULED_PURGE_ROUNDS * 8 + 1 + 1); // no flag is ramping, so the evaluator reads nothing else
     expect(prepared).toBeLessThan(50);
     expect((await own.notesForOversight(SUNI, { before: null, limit: 5000, now: new Date(now - 400 * DAY) })).length).toBe(100);
     raw.close();

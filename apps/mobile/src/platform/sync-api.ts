@@ -4,6 +4,7 @@ import {
   InboxVisibleSpaceSchema,
   SyncInboxSchema,
   lenientArray,
+  readSnapshotCopy,
   type DeviceTransferApproveBody,
   type DeviceTransferCreateBody,
   type DeviceTransferPreviewBody,
@@ -24,6 +25,19 @@ import {
 import { z } from 'zod';
 import type { PutResult } from '../logic/sync/engine';
 import { notifyInboxRead } from './inbox-events';
+
+/**
+ * A snapshot the server sent (GET, a 409, a Rescue Code claim, a relink) is
+ * not parsed, so it goes through the lenient read first (F-CURR-002 section
+ * 4.8): a review of a kind this build does not know is dropped and the rest
+ * kept, and each new snapshot field is read through its own schema, so a
+ * value a newer build widened never reaches this build's merge or storage.
+ */
+function readServerCopy<T extends { snapshot: ProgressSnapshot } | null | undefined>(copy: T): T {
+  if (!copy || typeof copy !== 'object' || !copy.snapshot) return copy;
+  const snapshot = readSnapshotCopy(copy.snapshot);
+  return snapshot === copy.snapshot ? copy : { ...copy, snapshot };
+}
 
 /**
  * Transport for /api/sync (F-SYNC-001 §3.2). Typed results, never throws;
@@ -82,7 +96,7 @@ export type LookupResult =
 export type JoinResult =
   | { status: 'ok'; alreadyMember: boolean; membership: LearnerMembership }
   | { status: 'error'; code: 'cap_family' | 'cap_class' | 'cap_school'; cap?: number }
-  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
+  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'forbidden' };
 
 export type LeaveResult = { status: 'ok'; left: boolean } | { status: 'error'; code: string };
 
@@ -315,7 +329,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 200) return { status: 'ok', rev: (r.body.data as { rev: number }).rev };
       if (r.status === 409) {
         const data = r.body.data as { rev: number; snapshot: ProgressSnapshot | null };
-        return { status: 'conflict', rev: data.rev, snapshot: data.snapshot };
+        return { status: 'conflict', rev: data.rev, snapshot: data.snapshot && readSnapshotCopy(data.snapshot) };
       }
       return { status: 'error', code: `http_${r.status}` };
     },
@@ -339,7 +353,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 422) return { status: 'error', code: 'invalid' };
       if (r.status !== 200) return { status: 'error', code: 'unknown' };
       const data = r.body.data as ClaimResult extends { status: 'ok' } ? never : { learner: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string }; device: { secret: string }; snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
-      return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot };
+      return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: readServerCopy(data.snapshot) };
     },
 
     /**
@@ -379,6 +393,9 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 409) return seatRefusal(code, r.body);
       if (r.status === 422) return { status: 'error', code: code === 'not_joinable' ? 'not_joinable' : 'invalid' };
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
+      // [OA] Row OA-7b: the device check refused this learner (no or a wrong secret, bound elsewhere, class-scoped).
+      // Not worth trying again, unlike a `5xx`.
+      if (r.status === 401 || r.status === 403) return { status: 'error', code: 'forbidden' };
       return { status: 'error', code: 'unknown' };
     },
 
@@ -404,7 +421,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status !== 200) return { status: 'error', code: 'unknown' };
       const data = r.body.data as { status: 'pending' | 'approved' | 'denied' | 'expired'; expiresAt: string; learner?: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string }; device?: { secret: string }; snapshot?: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
       if (data.status === 'approved' && data.learner && data.device) {
-        return { status: 'ok', state: 'approved', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot ?? null };
+        return { status: 'ok', state: 'approved', learner: data.learner, secret: data.device.secret, snapshot: readServerCopy(data.snapshot ?? null) };
       }
       if (data.status === 'approved') return { status: 'ok', state: 'pending', expiresAt: data.expiresAt }; // credentials already picked up elsewhere
       return { status: 'ok', state: data.status, expiresAt: data.expiresAt };
@@ -560,7 +577,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 404) return { status: 'none' };
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const data = r.body.data as { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null };
-      return { status: 'ok', rev: data.rev, snapshot: data.snapshot, summary: data.summary ?? null };
+      return { status: 'ok', rev: data.rev, snapshot: readSnapshotCopy(data.snapshot), summary: data.summary ?? null };
     },
   };
 }

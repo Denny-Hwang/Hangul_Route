@@ -46,6 +46,8 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { SpeakerButton } from './ReaderParts';
 import { Disclosure, SourcesHeading } from './SourcesParts';
+import { LessonWaiting } from '../lesson-content';
+import { useNoteStoriesLoaded, useNoteStoriesReady } from '../story-content';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CultureNotes'>;
 type Navigation = Props['navigation'];
@@ -72,6 +74,10 @@ export function CultureNotesScreen({ route, navigation }: Props): React.ReactEle
   const storyId = route.params?.storyId;
   const noteId = route.params?.noteId;
   const from = route.params?.from;
+  // A note's sources come from its story's chunk (F-CURR-002 §10, row CM-8): the list waits for those chunks (a frame
+  // or two from the precache), so it never flashes the empty card and a deep-linked note opens with its sources.
+  const notesReady = useNoteStoriesReady();
+  if (!notesReady) return <LessonWaiting />;
   // Navigating to a CultureNotes already in the stack replaces its params on the same mount: a new
   // target is a new visit (its sources open, it is scrolled to and reported), so the content is keyed.
   return (
@@ -103,8 +109,10 @@ function CultureNotesContent({
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
 
-  // Note text in the UI language (F-CNT-002 overlay); the taught term never changes.
-  const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale]);
+  // Note text in the UI language (F-CNT-002 overlay); the taught term never changes. A note's sources come
+  // from its story's chunk (F-CURR-002 §10), so the list fills as each arrives.
+  const noteChunks = useNoteStoriesLoaded();
+  const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale, noteChunks]);
   const notes = useMemo(() => foundNotes(defaultStoryIndex(), stories, snap), [stories, snap]);
   const view = useMemo(() => cultureNotesScreenView({ notes, storyId, noteId }), [notes, storyId, noteId]);
   const actions = useMemo(

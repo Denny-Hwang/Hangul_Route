@@ -250,6 +250,10 @@ describe('loading, banner and the offer', () => {
     expect(text).toContain(planPrice('family_lifetime', 'en'));
     expect(text).toContain(b.includesLines.family.everyLesson);
     expect(text).not.toContain(b.sections.add);
+    // Reports and notes are free for everyone: one line under the offer, never an includes line (app-first-run).
+    expect(text).not.toContain(b.includesLines.family.reports);
+    expect(text).not.toContain(b.includesLines.family.notes);
+    expect(byTestId(root, 'bill-free-for-everyone').map(textOf)).toEqual([b.freeForEveryone]);
     const cardSections = byTestId(root, 'bill-card');
     expect(cardSections.length).toBe(1);
     expect(cardSections[0]?.findAll((n) => n.props.role === 'group').length).toBe(1);

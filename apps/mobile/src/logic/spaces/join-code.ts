@@ -61,6 +61,8 @@ export type JoinErrorCode =
   | 'network'
   | 'invalid'
   | 'unknown'
+  /** [OA] `/join` answered `401` or `403`: this device cannot act for that learner (row OA-7b); reads as `unknown`. */
+  | 'forbidden'
   | 'off';
 
 /**

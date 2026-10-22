@@ -26,9 +26,10 @@ import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native
 import Svg, { Polyline } from 'react-native-svg';
 import { flags, reportsEnabledFor } from '../../config/flags';
 import { jamoAll, questsAll, stages } from '../../content';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeJamo, localizeQuest, localizeStage } from '../../logic/content-locale';
 import { buildMyRoute } from '../../logic/my-route/model';
+import { useLessonContentVersion } from '../lesson-content';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { emptySnapshot, type SkillRowView } from '../../logic/my-route/view';
 import { isParentSessionValid, parentSessionRemainingMs } from '../../logic/profiles/session';
@@ -225,11 +226,13 @@ type BodyProps = {
 };
 
 function ReportBody({ profileId, name, voice, navigation, locale, messages }: BodyProps): React.ReactElement {
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const textScale = useTypeScale();
   const stored = useProgressStore((s) => s.byProfile[profileId]);
   const hydrated = useProgressStore((s) => s.hydratedFor.has(profileId));
   const tier = useAccessTier(profileId);
-  const localized = useMemo(() => localizedRouteContent(locale), [locale]);
+  const localized = useMemo(() => localizedRouteContent(locale), [locale, titles]);
   const [period, setPeriod] = useState<ReportPeriod>('week');
   const [at, setAt] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -243,6 +246,8 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
   useEffect(() => {
     void useProgressStore.getState().hydrate(profileId);
   }, [profileId]);
+  // The skills rows count every quest's games, so every lesson chunk loads and the rows follow (F-CURR-002 §10).
+  const lessonsLoaded = useLessonContentVersion();
 
   const built = useMemo((): { view: InAppReportView; skills: ReportSkillsView | null } | null => {
     if (!hydrated) return null;
@@ -288,7 +293,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
     } catch {
       return null;
     }
-  }, [hydrated, stored, profileId, name, voice, period, at, locale, messages, tier, localized, attempt]);
+  }, [hydrated, stored, profileId, name, voice, period, at, locale, messages, tier, localized, attempt, lessonsLoaded]);
 
   // One `report.viewed` on open and on each period change or step (section 3.13), without a profile id. Keyed on
   // what the grown-up chose, not on `built`, which also changes when the progress store does. Every drawn report

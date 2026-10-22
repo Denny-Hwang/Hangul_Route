@@ -1,4 +1,10 @@
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
+import {
+  FAMILY_LIFETIME_LEARNERS,
+  FREE_CLASS_STUDENT_CAP,
+  GROUP_LICENSE_LEARNERS,
+  SCHOOL_ADMIN_CAP,
+  SCHOOL_LICENSE_TEACHERS,
+} from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../locales';
 import { en } from '../messages/en';
@@ -56,11 +62,16 @@ describe('Terms: what each plan holds (landing.legal.terms.sections.billing.para
 
   it('is the section 4 paragraph, word for word, with the numbers from the constants', () => {
     expect(sizes).toBe(
-      'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.',
+      'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to 2 administrators.',
     );
     expect(sizes).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
     expect(sizes).toContain(`up to ${GROUP_LICENSE_LEARNERS} students`);
     expect(sizes).toContain(`up to ${SCHOOL_LICENSE_TEACHERS} teachers`);
+    // AMENDMENTS-SITE-NEWUSER SN-2: the school administrators, from the same constant.
+    expect(sizes).toContain(`A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`);
+    // Owner decision 2026-10-21 (b): the free seat numbers are not published on the site, the Terms included.
+    expect(sizes).not.toMatch(/without a paid plan|free (plan|space|tier)/i);
+    expect(sizes).not.toContain(`up to ${FREE_CLASS_STUDENT_CAP} students`);
   });
 
   it('names the plans as the billing page does', () => {
@@ -73,5 +84,25 @@ describe('Terms: what each plan holds (landing.legal.terms.sections.billing.para
     for (const locale of ['es', 'ko'] as const) expect(getMessages(locale).landing.legal.terms.sections.billing.paragraphs.sizes, locale).toBe(sizes);
     expect(lookup(es, 'landing.legal.terms.sections.billing.paragraphs.sizes')).toBeUndefined();
     expect(lookup(ko, 'landing.legal.terms.sections.billing.paragraphs.sizes')).toBeUndefined();
+  });
+});
+
+/**
+ * F-SITE-002 site facts (2026-10-21). The site never states the free limits (owner decision 2026-10-21): no free
+ * sizes line in any locale. The managed line for while plans are coming is defined in every overlay.
+ */
+describe('landing.plans: no free limits, and the managed line for while plans are coming', () => {
+  it('has no free sizes line in any locale', () => {
+    for (const locale of LOCALES) {
+      expect(Object.keys(getMessages(locale).landing.plans), locale).not.toContain('freeSizes');
+    }
+    expect(lookup(es, 'landing.plans.freeSizes')).toBeUndefined();
+    expect(lookup(ko, 'landing.plans.freeSizes')).toBeUndefined();
+  });
+
+  it('es and ko overlays define the managed line for while plans are coming', () => {
+    expect(en.landing.plans.managedLater).toBe('When plans arrive, you will manage them at app.hangulroute.com after you sign in.');
+    expect(lookup(es, 'landing.plans.managedLater')).toBeTypeOf('string');
+    expect(lookup(ko, 'landing.plans.managedLater')).toBeTypeOf('string');
   });
 });

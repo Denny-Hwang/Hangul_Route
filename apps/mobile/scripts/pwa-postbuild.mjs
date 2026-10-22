@@ -11,8 +11,17 @@
 // the precached grown-ups-offline.html when offline), and the build fails if a
 // console file reaches the learner precache, by path (consoleLeaks) or by content
 // (consolePages: an HTML page that loads /_next/ code, such as a Next 404.html).
+// Lesson chunks (F-CURR-002 §10, CM-5): every chunk of the lesson manifest is its own precached
+// web bundle carrying the manifest's hash, and none is in the start bundle; the precache report
+// prints the start bundle, the chunks and the learner precache, and `--budget` (the release build,
+// build:web) fails over their budget lines (pwa/lesson-chunks.mjs); on the deploy's own build
+// (Cloudflare Workers Builds) it only warns, so a budget line never stops a deploy.
+// Story chunks (CM-8): every story's body is its own chunk of scripts/build-stories.mjs, under the same checks and
+// in the same report. Locale chunks (the es / ko UI messages and content text, one chunk per locale) and the grown-up
+// roots (the presenter, All lessons) are checked the same way (one precached bundle each, never in the start bundle)
+// and reported beside them.
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
-import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import * as nodeModule from 'node:module';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -27,8 +36,23 @@ import {
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
+import {
+  LOCALE_CHUNKS,
+  ROOT_CHUNKS,
+  WEB_JS_DIR,
+  budgetIsAdvisory,
+  lessonChunkProblems,
+  markedChunkProblems,
+  lessonChunkUrls,
+  nosniffLessonChunks,
+  precacheBudgetProblems,
+  precacheReport,
+  reportLines,
+} from './pwa/lesson-chunks.mjs';
 
-const dist = process.argv[2] ?? 'dist';
+const args = process.argv.slice(2);
+const budget = args.includes('--budget');
+const dist = args.find((a) => !a.startsWith('--')) ?? 'dist';
 
 // The workspace's TypeScript sources are read at build time through
 // scripts/ts-loader.mjs (precedent: scripts/i18n-status.mjs): the design tokens
@@ -42,10 +66,12 @@ if (typeof nodeModule.register !== 'function') {
 }
 nodeModule.register(pathToFileURL(join(repo, 'scripts', 'ts-loader.mjs')));
 const importSource = (path) => import(pathToFileURL(join(repo, path)).href);
-const [tokens, appShell, i18n] = await Promise.all([
+const [tokens, appShell, i18n, lessonBuild, storyBuild] = await Promise.all([
   importSource('packages/design-system/src/tokens.ts'),
   importSource('packages/content-schema/src/schemas/app-shell.ts'),
   importSource('packages/i18n/src/index.ts'),
+  importSource('scripts/build-lessons.mjs'),
+  importSource('scripts/build-stories.mjs'),
 ]);
 const { GROWN_UP_PREFIXES, isGrownUpPath } = appShell;
 const canvas = tokens.colors.surface.canvas;
@@ -146,7 +172,11 @@ const precache = {
   // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
   // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
   // anyway; the limit only decides whether it is kept for offline use.
-  maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+  // 10 MiB (was 8 MiB, [OA] row OA-7a): the AMENDMENTS-ONE-ACCOUNT-MANY-USERS rows grow the app bundle to 8,379,807 B
+  // at OA-5 (8.8 KB under 8 MiB) and 8,400,304 B with People on this device, which would leave it out of the precache
+  // and the post-build below fails on that. The limit is not a size budget; the bundle size is watched where it is
+  // measured (F-CURR-001 section 3.12, the amendment's section 16).
+  maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
 };
 
 const { count, size, warnings } = await generateSW({
@@ -193,5 +223,40 @@ const unprecachedJs = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => `_expo/static/js/web/${f}`).filter((url) => !manifestUrls.includes(url))
   : [];
 if (unprecachedJs.length > 0) throw new Error(`pwa-postbuild: app bundles missing from the precache (over maximumFileSizeToCacheInBytes?): ${unprecachedJs.join(', ')}`);
+// [OA] Row OA-7a review: a warning well before the limit, so the growth is seen before an offline start is at risk.
+if (existsSync(jsDir)) {
+  for (const f of readdirSync(jsDir).filter((name) => name.endsWith('.js'))) {
+    const bytes = statSync(join(jsDir, f)).size;
+    if (bytes > 0.9 * precache.maximumFileSizeToCacheInBytes) {
+      process.stdout.write(`pwa-postbuild: warning: ${f} is ${bytes} B, over 90 % of the ${precache.maximumFileSizeToCacheInBytes} B precache limit\n`);
+    }
+  }
+}
+
+// The lesson and story chunks (F-CURR-002 §10): the manifests the app was built from, read from content/ as
+// build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline fixtures, never chunks).
+const lessonManifest = lessonBuild.chunkManifest(lessonBuild.readCells(repo));
+const storyManifest = storyBuild.readChunkManifest(repo);
+const bundles = existsSync(jsDir)
+  ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
+  : [];
+const chunkManifest = [...lessonManifest, ...storyManifest];
+const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls });
+// The locale chunks (the es / ko UI messages and content text, one per locale) and the grown-up roots, under the same rules.
+chunkProblems.push(...markedChunkProblems({ bundles, precached: manifestUrls }));
+// A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
+const headersFile = join(dist, '_headers');
+for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS], bundles))) {
+  chunkProblems.push(`${url} would be served with X-Content-Type-Options: nosniff (${headersFile}): keep nosniff off /_expo/static/js/`);
+}
+if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson, story, locale and root chunks:\n  ${chunkProblems.join('\n  ')}`);
+const report = precacheReport({ manifest: lessonManifest, stories: storyManifest, locales: LOCALE_CHUNKS, roots: ROOT_CHUNKS, bundles, precache: { count, size } });
+for (const line of reportLines(report)) process.stdout.write(`${line}\n`);
+if (budget) {
+  const over = precacheBudgetProblems(report);
+  if (over.length > 0 && budgetIsAdvisory(process.env)) {
+    process.stdout.write(`pwa-postbuild: WARNING over budget (the deploy build warns only; the pull request's check fails):\n  ${over.join('\n  ')}\n`);
+  } else if (over.length > 0) throw new Error(`pwa-postbuild: over budget:\n  ${over.join('\n  ')}`);
+}
 
 process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);

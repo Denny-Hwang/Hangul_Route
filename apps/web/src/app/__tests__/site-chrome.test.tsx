@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getMessages } from '@hangul-route/i18n';
+import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_SANS } from '../../components/SiteDocument';
 import { SiteFooter } from '../../components/landing/SiteFooter';
-import { PERSONA_PAGES, SHIPPED_PERSONA_PAGES, SiteHeader } from '../../components/landing/SiteHeader';
+import { LanguageMenu } from '../../components/landing/LanguageMenu';
+import { PERSONA_PAGES, SHIPPED_PERSONA_PAGES, SiteHeader, languageMenuItems } from '../../components/landing/SiteHeader';
 import { SiteShell } from '../../components/landing/SiteShell';
 import AboutPage from '../(en)/about/page';
 import PrivacyPage from '../(en)/privacy/page';
@@ -14,10 +15,10 @@ import TermsPage from '../(en)/terms/page';
 import NotFoundPage from '../not-found';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { learnerStart, signIn } from '../../lib/site-links';
-import { SITE_PAGES } from '../../lib/site-metadata';
+import { SITE_PAGES, shownSiteLocales, type SitePage } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
 import { SITE_BREAKPOINTS } from '../../lib/site-style';
-import { withoutSwitcher } from './locale-switcher-html';
+import { withoutLanguageMenu, withoutSwitcher } from './locale-switcher-html';
 
 /**
  * The site's shared header and footer (F-SITE-002 §3.2, §6; wireframe design/wireframes/site/header-footer.md; mock
@@ -89,12 +90,17 @@ describe('every internal site link in the header and footer resolves to an expor
 const classOf = (c: Control | undefined): string => /class="([^"]*)"/.exec(c?.attrs ?? '')?.[1] ?? '';
 
 describe('SiteHeader', () => {
-  const html = renderToStaticMarkup(<SiteHeader locale="en" current="learners" />);
+  const html = renderToStaticMarkup(<SiteHeader locale="en" page="/learners" current="learners" />);
   const items = controls(html);
+  const endonyms = shownSiteLocales().map((l) => LOCALE_META[l].endonym);
+  const menuPaths = (page: SitePage): string[] => shownSiteLocales().map((l) => sitePath(l, page));
 
-  it('DOM order = visual order: skip link, brand, Start learning, the shipped persona links, Sign in', () => {
-    expect(items.map((c) => c.text)).toEqual([t.nav.skip, `${t.brand.mark}${t.brand.name}`, t.nav.start, ...personaLabels, t.nav.signIn]);
-    expect(items.map(hrefOf)).toEqual(['#content', '/', learnerStart('en'), ...personaPaths('en'), signIn()]);
+  it('DOM order = visual order: skip link, brand, Start, the shipped persona links, Language, Sign in', () => {
+    expect(items.map((c) => c.text)).toEqual([t.nav.skip, `${t.brand.mark}${t.brand.name}`, t.nav.startShort, ...personaLabels, ...endonyms, t.nav.signIn]);
+    expect(items.map(hrefOf)).toEqual(['#content', '/', learnerStart('en'), ...personaPaths('en'), ...menuPaths('/learners'), signIn()]);
+    // The language control sits between the nav and Sign in in the markup too (no CSS order).
+    expect(html.indexOf('<nav')).toBeLessThan(html.indexOf('<details'));
+    expect(html.indexOf('<details')).toBeLessThan(html.indexOf(`href="${signIn()}"`));
   });
 
   it('Sign in is the neutral grown-up sign-in (no persona hint), never /teach or /parent', () => {
@@ -109,17 +115,44 @@ describe('SiteHeader', () => {
     expect(items[1]?.attrs).not.toContain('aria-label');
   });
 
-  it('Start learning and the persona links are the phone-hidden items (one class the stylesheet hides below 720 px)', () => {
-    expect(classOf(items[2])).toContain('hr-site-wide-only');
-    expect(html).toMatch(/<nav aria-label="Main" class="[^"]*hr-site-wide-only/);
-    for (const i of [1, items.length - 1]) expect(classOf(items[i])).not.toContain('hr-site-wide-only');
+  it('[SN] the brand mark shows at every width in a rem box; the name is the stylesheet\'s (hidden only visually)', () => {
+    expect(html).toMatch(/class="hr-site-brand-mark" style="display:flex;[^"]*width:3rem;height:3rem/);
+    expect(html).toMatch(/<span class="hr-site-brand-name"[^>]*>Hangul Route<\/span>/);
+  });
+
+  it('[SN] Start shows at every width off `/`: visible "Start", accessible name "Start learning", which contains it', () => {
+    const start = items[2];
+    expect(classOf(start)).toContain('hr-site-header-start');
+    expect(classOf(start)).not.toContain('hr-site-wide-only');
+    expect(start?.text).toBe(t.nav.startShort);
+    expect(start?.attrs).toContain(`aria-label="${t.nav.start}"`);
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const words = getMessages(locale).landing.nav;
+      expect(words.start.toLowerCase(), locale).toContain(words.startShort.toLowerCase());
+    }
     // display is the stylesheet's: an inline display would beat the media query.
-    expect(items[2]?.attrs).not.toMatch(/style="[^"]*display:/);
+    expect(start?.attrs).not.toMatch(/style="[^"]*display:/);
+  });
+
+  it('[SN] on `/` Start stays wide-only (OD-SN-1) and the brand carries the home class (name from 22.5em, OD-SN-2)', () => {
+    const home = controls(renderToStaticMarkup(<SiteHeader locale="en" page="/" />));
+    expect(classOf(home[2])).toContain('hr-site-wide-only');
+    expect(classOf(home[1])).toContain('hr-site-brand-home');
+    expect(classOf(items[1])).not.toContain('hr-site-brand-home');
+    // A 404 passes page "/" but is not the home: its header has the phone Start pill.
+    const notFound = controls(renderToStaticMarkup(<SiteHeader locale="en" page="/" home={false} />));
+    expect(classOf(notFound[2])).not.toContain('hr-site-wide-only');
+    expect(classOf(notFound[1])).not.toContain('hr-site-brand-home');
+  });
+
+  it('the persona nav is the only phone-hidden group (one class the stylesheet hides below 720 px)', () => {
+    expect(html).toMatch(/<nav aria-label="Main" class="[^"]*hr-site-wide-only/);
+    for (const i of [1, 2, items.length - 1]) expect(classOf(items[i])).not.toContain('hr-site-wide-only');
     expect(html).not.toMatch(/<nav[^>]*style="[^"]*display:/);
   });
 
   it('the current page: aria-current="page", a non-colour marker, and an accessible name equal to its label', () => {
-    const current = items.filter((c) => c.attrs.includes('aria-current="page"'));
+    const current = controls(withoutLanguageMenu(html)).filter((c) => c.attrs.includes('aria-current="page"'));
     expect(current).toHaveLength(1);
     expect(current[0]?.text).toBe(t.nav.learners);
     expect(current[0]?.attrs).toContain('text-decoration-line:underline');
@@ -127,8 +160,8 @@ describe('SiteHeader', () => {
     expect(html).not.toContain('current page');
   });
 
-  it('no current page: no link is marked', () => {
-    expect(renderToStaticMarkup(<SiteHeader locale="en" />)).not.toContain('aria-current');
+  it('no current page: no nav link is marked', () => {
+    expect(withoutLanguageMenu(renderToStaticMarkup(<SiteHeader locale="en" />))).not.toContain('aria-current');
   });
 
   it('links to the app are plain <a>, persona pages stay inside the site group', () => {
@@ -141,20 +174,73 @@ describe('SiteHeader', () => {
       expect(c.attrs, c.text).toMatch(/min-height:(64|80)px/);
       expect(c.attrs, c.text).toContain('min-width:64px');
     }
+    // The language control's summary takes its hit area from the stylesheet (its layout changes at 45em).
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(rules).toMatch(/\.hr-site-lang-summary\s*\{[^}]*min-width:\s*var\(--hr-site-touch-min\);[^}]*min-height:\s*var\(--hr-site-touch-min\)/);
   });
 
-  it('a locale page links its locale: brand and persona links prefixed, the app link carries ?lang=', () => {
-    const es = controls(renderToStaticMarkup(<SiteHeader locale="es" current="learners" />));
-    expect(es.map(hrefOf)).toEqual(['#content', '/es', learnerStart('es'), ...personaPaths('es'), signIn()]);
+  it('a locale page links its locale: brand and persona links prefixed, the app link and Sign in carry ?lang=', () => {
+    const es = controls(renderToStaticMarkup(<SiteHeader locale="es" page="/learners" current="learners" />));
+    expect(es.map(hrefOf)).toEqual(['#content', '/es', learnerStart('es'), ...personaPaths('es'), ...menuPaths('/learners'), signIn(undefined, 'es')]);
+    expect(signIn(undefined, 'es')).toContain('lang=es');
     expect(personaPaths('es')).toContain('/es/learners');
     expect(learnerStart('es')).toContain('lang=es');
   });
 
-  it('the legal variant: brand and the persona links only, no Sign in and no Start learning (OD-14)', () => {
-    const legal = controls(renderToStaticMarkup(<SiteHeader locale="en" variant="legal" />));
-    expect(legal.map((c) => c.text)).toEqual([t.nav.skip, `${t.brand.mark}${t.brand.name}`, ...personaLabels]);
+  it('the legal variant: brand, the persona links and the language control; no Sign in and no Start (OD-14)', () => {
+    const legal = controls(renderToStaticMarkup(<SiteHeader locale="en" page="/privacy" variant="legal" />));
+    expect(legal.map((c) => c.text)).toEqual([t.nav.skip, `${t.brand.mark}${t.brand.name}`, ...personaLabels, ...endonyms]);
     expect(legal.map(hrefOf)).not.toContain(signIn());
     expect(legal.map(hrefOf)).not.toContain(learnerStart('en'));
+    expect(renderToStaticMarkup(<SiteHeader locale="en" page="/privacy" variant="legal" />)).toContain('class="hr-site-lang hr-site-lang-push"');
+  });
+});
+
+/** [SN] AMENDMENTS-SITE-NEWUSER §3.2: the header's language control. */
+describe('LanguageMenu in the header', () => {
+  const html = renderToStaticMarkup(<SiteHeader locale="es" page="/teachers" current="teachers" />);
+  const details = html.match(/<details class="hr-site-lang[^"]*">[\s\S]*?<\/details>/g) ?? [];
+  const menu = details[0] ?? '';
+  const links = controls(menu);
+
+  it('is one native <details>: the summary holds the globe, the hidden word "Language" and the current endonym with lang', () => {
+    expect(details).toHaveLength(1);
+    const summary = menu.match(/<summary[^>]*>([\s\S]*?)<\/summary>/)?.[1] ?? '';
+    expect(summary).toMatch(/<svg[^>]*aria-hidden="true"/);
+    expect(summary).toContain(`>${getMessages('es').landing.footer.language}</span>`);
+    expect(summary).toContain(`<span lang="es" class="hr-site-lang-endonym">${LOCALE_META.es.endonym}</span>`);
+    expect(menu).not.toMatch(/<details[^>]*\sopen/);
+  });
+
+  it('links the same page in every shown locale, by endonym, with lang and hrefLang, the current one marked', () => {
+    expect(links.map((c) => c.text)).toEqual(shownSiteLocales().map((l) => LOCALE_META[l].endonym));
+    expect(links.map(hrefOf)).toEqual(shownSiteLocales().map((l) => sitePath(l, '/teachers')));
+    for (const [i, l] of shownSiteLocales().entries()) {
+      expect(links[i]?.attrs).toContain(`hrefLang="${LOCALE_META[l].htmlLang}"`);
+      expect(links[i]?.attrs).toContain(`lang="${LOCALE_META[l].htmlLang}"`);
+      expect(links[i]?.attrs.includes('aria-current="page"'), l).toBe(l === 'es');
+    }
+    // The current one: bold and a check glyph, not colour alone.
+    expect(links.find((c) => c.attrs.includes('aria-current'))?.attrs).toContain('font-weight:700');
+    expect(menu).toMatch(/aria-current="page"[^>]*>[^<]*<span>Español<\/span><svg/);
+  });
+
+  it('on every site page: the links follow the page (the 404 passes `/`)', () => {
+    for (const page of SITE_PAGES) {
+      const items = languageMenuItems('en', page);
+      expect(items.map((i) => i.href)).toEqual(shownSiteLocales().map((l) => sitePath(l, page)));
+    }
+  });
+
+  it('the endonyms are values from LOCALE_META, never a message (a message holding an endonym fails)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const flat = JSON.stringify(getMessages(locale).landing.nav) + JSON.stringify(getMessages(locale).landing.footer);
+      for (const meta of Object.values(LOCALE_META)) expect(flat, locale).not.toContain(meta.endonym);
+    }
+  });
+
+  it('is not rendered while only one locale is shown', () => {
+    expect(renderToStaticMarkup(<LanguageMenu label="Language" items={languageMenuItems('en', '/', ['en'])} />)).toBe('');
   });
 });
 
@@ -254,7 +340,8 @@ describe('SiteFooter', () => {
 
   it('a locale page links its locale', () => {
     const es = controls(renderToStaticMarkup(<SiteFooter locale="es" page="/learners" />)).map(hrefOf);
-    expect(es).toEqual(expect.arrayContaining(['/es/learners', '/es/about', '/es/privacy', learnerStart('es')]));
+    expect(es).toEqual(expect.arrayContaining(['/es/learners', '/es/about', '/es/privacy', learnerStart('es'), signIn(undefined, 'es')]));
+    expect(es).not.toContain(signIn());
   });
 
   it('the locale switcher shows now that es and ko ship, keeps the page and marks the current locale', () => {
@@ -308,7 +395,7 @@ describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002
     expect(html).not.toContain(`href="${learnerStart('en')}"`);
     expect([...html.matchAll(/<h2 id="footer-[^"]*"[^>]*>([^<]*)<\/h2>/g)].map((m) => m[1])).toEqual([t.footer.guide, t.footer.company]);
     expect(html.match(/<main\b/g)).toHaveLength(1);
-    expect(html).toContain(t.legal.draft);
+    expect(html).not.toContain(`Draft for review`);
   });
 
   it('every link of About and the legal pages has a 64 px hit area', () => {
@@ -317,25 +404,40 @@ describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002
     }
   });
 
-  it('404: an English document in the site chrome, with Next\'s body, our line and links to / and Start learning', () => {
+  it('404: an English document in the site chrome, with Hoya waving, its h1, our line, the home link, then Start learning (SN-2, §3.7)', () => {
     const html = renderToStaticMarkup(<NotFoundPage />);
     expect(html).toMatch(/^<html lang="en">/);
-    expect(html).toContain('This page could not be found.');
+    expect(html).not.toContain('This page could not be found.');
     expect(html).toContain(t.notFound.body);
     // The shared header and footer (F-SITE-002 S-5), so a lost visitor keeps the site's way around.
     expect(controls(html)[0]?.text).toBe(t.nav.skip);
     expect(html).toMatch(/<header\b/);
     expect(html).toMatch(/<footer\b/);
     const main = /<main\b[^>]*>([\s\S]*)<\/main>/.exec(html)?.[1] ?? '';
+    expect(main.match(/<h1\b/g)).toHaveLength(1);
+    expect(main).toMatch(new RegExp(`<h1[^>]*>${t.notFound.title}</h1>`));
+    // Hoya waving (OD-SN-7: a missing page is not the visitor's miss), never a failure picture, and decorative: the h1
+    // says what happened.
+    expect(main).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-pose="waving"/);
+    expect(main).not.toContain('data-pose="thinking"');
+    // DOM order = the mock's visual order: Hoya, h1, line, the home text link, then the primary action.
+    expect(main.indexOf('data-pose="waving"')).toBeLessThan(main.indexOf('<h1'));
+    expect(main.indexOf('<h1')).toBeLessThan(main.indexOf(t.notFound.body));
     const links = controls(main);
     expect(links.map((c) => [hrefOf(c), c.text])).toEqual([
       ['/', t.notFound.home],
       [learnerStart('en'), t.notFound.start],
     ]);
+    expect(links[0]?.attrs).toContain('class="hr-site-text-link"');
+    expect(links[1]?.attrs).toContain('class="hr-site-primary"');
+    expect(links[1]?.attrs).toMatch(/min-height:80px/);
     for (const c of links) expect(c.attrs).toMatch(/min-height:(64|80)px/);
-    // Next's body is a full-screen box; inside the chrome it sizes to its content, so the links sit on the first screen.
-    expect(main).toMatch(/<div class="hr-site-404">/);
-    expect(css.replace(/\/\*[\s\S]*?\*\//g, '')).toMatch(/\.hr-site-404 > div\s*\{[^}]*height:\s*auto !important/);
+    expect(main).not.toContain('hr-site-secondary');
+    expect(css).not.toMatch(/\.hr-site-404 > div/);
+    // Hoya 4.5rem below 45em and 7rem from 45em, from the site's custom properties (§3.7).
+    expect(css).toMatch(/\.hr-site-404-hoya\s*\{[^}]*width:\s*var\(--hr-site-404-hoya\)/);
+    const wide = css.slice(css.indexOf('@media (min-width: 45em)'));
+    expect(wide).toMatch(/\.hr-site-404-hoya\s*\{[^}]*width:\s*var\(--hr-site-404-hoya-wide\)/);
   });
 });
 
@@ -364,7 +466,24 @@ describe('globals.css: the site rules', () => {
 
   it('hide the phone-hidden header items by default and show them from 45em', () => {
     expect(rules).toMatch(/\.hr-site-wide-only\s*\{\s*display:\s*none;?\s*\}/);
-    expect(rules).toMatch(/@media \(min-width: 45em\)\s*\{[^}]*\.hr-site-header-start\s*\{\s*display:\s*inline-flex/);
+    // [SN] The Start pill shows on phones, except where it is also wide-only (`/`), and in every header from 45em.
+    expect(rules).toMatch(/\n\.hr-site-header-start\s*\{\s*display:\s*inline-flex/);
+    expect(rules).toMatch(/\n\.hr-site-header-start\.hr-site-wide-only\s*\{\s*display:\s*none/);
+    expect(rules).toMatch(/@media \(min-width: 45em\)\s*\{\s*\.hr-site-header-start,\s*\.hr-site-header-start\.hr-site-wide-only\s*\{\s*display:\s*inline-flex/);
+  });
+
+  it('[SN] the brand name: visually hidden below 30em, shown to 45em, hidden to 60em (with the language endonym), shown after; on / shown from 22.5em', () => {
+    const block = (q: string): string => rules.match(new RegExp(`@media \\(min-width: ${q}\\)\\s*\\{((?:[^{}]*\\{[^{}]*\\})*)\\s*\\}`))?.[1] ?? '';
+    expect(rules).toMatch(/\n\.hr-site-brand-name\s*\{[^}]*clip:\s*rect\(0 0 0 0\)/);
+    expect(block('22.5em')).toMatch(/\.hr-site-brand-home \.hr-site-brand-name\s*\{[^}]*position:\s*static/);
+    expect(block('30em')).toMatch(/\.hr-site-brand-name\s*\{[^}]*position:\s*static/);
+    expect(block('45em')).toMatch(/\.hr-site-brand-name,\s*\.hr-site-brand-home \.hr-site-brand-name,\s*\.hr-site-lang-endonym\s*\{[^}]*position:\s*absolute/);
+    expect(block('60em')).toMatch(/\.hr-site-brand-name,\s*\.hr-site-brand-home \.hr-site-brand-name,\s*\.hr-site-lang-endonym\s*\{[^}]*position:\s*static/);
+  });
+
+  it('[SN] the language menu hangs from the header row, inside the screen less the gutters', () => {
+    expect(rules).toMatch(/\.hr-site-header-row\s*\{[^}]*position:\s*relative/);
+    expect(rules).toMatch(/\.hr-site-lang-menu\s*\{[^}]*position:\s*absolute;[^}]*max-width:\s*calc\(100vw - 2 \* var\(--hr-site-gutter-compact\)\)/);
   });
 
   it('take every value from the token custom properties (no literal colour or length)', () => {

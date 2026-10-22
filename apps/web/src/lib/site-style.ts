@@ -28,10 +28,19 @@ export function rem(px: number): string {
 export const SITE_BREAKPOINTS = {
   /** 720 px: the phone / wide switch of the header and the page layouts (spec §3.2: four 64 px links need it). */
   wide: 45,
-  /** 960 px: from here the wide header shows the brand name next to the mark (measured in S-D). */
-  brandName: 60,
-  /** 360 px: the brand mark steps in (below it the name alone keeps Sign in on one row at 320 px). */
-  mark: 22.5,
+  /**
+   * [SN] 480 px (AMENDMENTS-SITE-NEWUSER §3.2): from here to 45em the phone header shows the brand name beside the mark.
+   * Below it the four controls take the row: with Spanish labels mark 64 + Start 82 + Language 64 + Sign in 66 = 276 px
+   * of the 288 px inside a 320 px screen, so no name.
+   */
+  brandName: 30,
+  /**
+   * [SN] 360 px: on `/` (no phone Start pill, OD-SN-1) the name shows from here to 45em (OD-SN-2): mark 48 + name about
+   * 130 + Language 64 + Sign in 66 = 308 px, more than the 288 px inside a 320 px screen, less than the 328 px inside 360.
+   */
+  brandNameHome: 22.5,
+  /** 960 px: from here the wide header shows the brand name next to the mark again (measured in S-D). */
+  brandNameWide: 60,
   /** 1120 px (`layout.maxWidth.full`): the side gutter widens once the content reaches its maximum width. */
   gutter: layout.maxWidth.full / ROOT_PX,
 } as const;
@@ -47,14 +56,35 @@ export const SITE_SIZES = {
    * fit across at 320 px and fewer as text grows.
    */
   tileMin: rem(touchTarget.child + spacing.sm),
-  /** Home hero art cap on phones: 5 x `spacing.xxxl` (240 px), so the first screen keeps the h1, lead and action. */
-  heroArtMax: `${5 * spacing.xxxl}px`,
+  /**
+   * [SN] Home hero art cap on phones: 11 x `spacing.xxl` (22rem, 352 px at default text), the phone frame inside it
+   * (AMENDMENTS-SITE-NEWUSER §3.3 item 2). The art sits under the action, so the first screen still holds the h1, the
+   * lead and Start learning.
+   */
+  heroArtMax: rem(11 * spacing.xxl),
   /** Home hero art cap from 720 px: half the reading width (360 px). */
   heroArtMaxWide: `${layout.maxWidth.reading / 2}px`,
   /** Home hero text column against the art column from 720 px (`layout.mediaScale.wide`). */
   heroRatio: `${layout.mediaScale.wide}fr`,
-  /** Hoya inside the hero art square, leaving room for the bubble under Hoya. */
-  hoyaShare: '62%',
+  /** [SN] Hoya inside the hero art box, bottom left beside the phone frame (34 % of the box). */
+  heroHoyaShare: '34%',
+  /** [SN] The closing band's Start learning: full width on phones up to 22rem (11 x `spacing.xxl`), as the hero art. */
+  bandActionMax: rem(11 * spacing.xxl),
+  /** [SN] The language menu's minimum width: 4 x `spacing.xxxl` (12rem), capped by the screen less two gutters. */
+  langMenuMin: rem(4 * spacing.xxxl),
+  /** [SN] The small phone frame of the `/parents` report capture: 4 x `spacing.xxxl` (12rem), or the column if narrower. */
+  phoneFrameSmall: rem(4 * spacing.xxxl),
+  /** [SN] The `/learners` capture row: at most 17 x `spacing.xxl` (34rem), three across. */
+  captureRowMax: rem(17 * spacing.xxl),
+  /**
+   * Hoya on the 404 page below 45em: `spacing.jumbo + spacing.sm` (72 px at default text), so Start learning ends on the
+   * 320 x 568 first screen in every locale (AMENDMENTS-SITE-NEWUSER §3.7, mock `mock/<locale>/404.html`).
+   */
+  notFoundHoya: rem(spacing.jumbo + spacing.sm),
+  /** Hoya on the 404 page from 45em: `spacing.jumbo + spacing.xxxl` (112 px at default text). */
+  notFoundHoyaWide: rem(spacing.jumbo + spacing.xxxl),
+  /** The 404 line's measure (the mock's 26em): two short lines on a phone. */
+  notFoundMeasure: '26em',
 } as const;
 
 /** `#RRGGBB` as `r, g, b`, so a shadow can take the token colour with the token opacity. */
@@ -117,7 +147,10 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-tile-min': SITE_SIZES.tileMin,
     '--hr-site-hero-art-max': SITE_SIZES.heroArtMax,
     '--hr-site-hero-art-max-wide': SITE_SIZES.heroArtMaxWide,
+    '--hr-site-lang-menu-min': SITE_SIZES.langMenuMin,
     '--hr-site-hero-ratio': SITE_SIZES.heroRatio,
+    '--hr-site-404-hoya': SITE_SIZES.notFoundHoya,
+    '--hr-site-404-hoya-wide': SITE_SIZES.notFoundHoyaWide,
     '--hr-site-sunken': colors.surface.sunken,
     '--hr-site-size-caption': rem(typography.size.caption),
     /** How far a caption-size footer link's 64 px hit area reaches above and below its one line (the footer's end row). */

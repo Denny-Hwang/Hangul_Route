@@ -12,7 +12,7 @@ export type HandoffResult = 'opened' | 'pin';
 
 const WEB_ONLY = 'The grown-up hand-off is web only (F-APP-001 OD-6)';
 
-export async function openGrownUpArea(_request: GrownUpHandoffRequest): Promise<HandoffResult> {
+export async function openGrownUpArea(_request: GrownUpHandoffRequest, _env?: unknown, _options?: { gateSent?: boolean }): Promise<HandoffResult> {
   throw new Error(WEB_ONLY);
 }
 

@@ -4,7 +4,7 @@ import type { DeepPartial, Messages } from '../../types';
  * Korean public site (F-I18N-001 PR 16): metadata, the layered home, the persona pages, About, the launch-news form,
  * the 404 links and the language banner. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only
  * framing and never an age range (KIDS_ONLY_FRAMING). 해요체, plain and short. The Privacy Policy and Terms stay
- * English-authoritative (decision L10): only their notice, draft line and back link are translated here, never a leaf under
+ * English-authoritative (decision L10): only their notice and back link are translated here, never a leaf under
  * `legal.privacy` or `legal.terms`. No price anywhere. Taught Korean (the hero letter) arrives as an argument and never
  * takes a particle that changes with the final consonant.
  */
@@ -14,7 +14,7 @@ const FAQ_ADULT = {
 } as const;
 const FAQ_KOREAN = {
   q: '한국어를 조금이라도 알아야 하나요?',
-  a: '아니요 — 처음부터 시작하는 분을 위해 만들었어요. 안내는 쉽고 짧은 말로 쓰여 있고, 배우는 한국어에는 언제나 로마자 표기와 뜻이 함께 나와요.',
+  a: '아니요. 처음부터 시작하는 분을 위해 만들었어요. 메뉴는 쉬운 영어, 스페인어, 한국어로 나오고, 배우는 한국어 낱말에는 언제나 로마자 표기와 뜻이 함께 나와요.',
 } as const;
 /** The backup sentence, word for word wherever the site says where learning data lives (privacy-statements.test.ts). */
 const BACKUP_FIRST = '학습자의 별명과 진도는 기기에 저장되고, 복구 코드로 되찾을 수 있도록 저희 서버에도 백업돼요.';
@@ -25,7 +25,7 @@ export const landing = {
     title: 'Hangul Route — 호야와 함께 한글을 처음부터',
     tagline: '나이와 상관없이, 한글을 처음부터 배워요.',
     description:
-      '호랑이 호야와 함께 나이와 상관없이 한글을 처음부터 배워요. 한국계 가족, K-컬처 팬, 호기심 많은 초보자 모두를 위해서요. 5분 퀘스트로 한글 자모를 읽기, 듣기, 쓰기로 익히고, 글자를 하나 배울 때마다 한국 문화 카드를 받아요. 1단계는 무료이고 더 많은 단계가 준비되고 있어요. 광고는 절대 없어요.',
+      '호랑이 호야와 함께 나이와 상관없이 한글을 처음부터 배워요. 5분 퀘스트로 한글 자모를 익히고, 이어서 낱말, 문장, 이야기를 배워요. 1단계는 무료예요. 광고는 절대 없어요.',
     keywords: ['한글 배우기', '한글 자모', '한국어 배우기', '한국어 초보', '한국계 가족 한국어', 'K-컬처 학습', '호야'],
     ogDescription: '호랑이 호야와 함께 나이와 상관없이 한글 자모를 처음부터 배우고, 한국 문화 카드를 모아요. 1단계는 무료예요.',
     twitterDescription: '호랑이 호야와 함께 나이와 상관없이 한글 자모를 처음부터 배우고, 한국 문화 카드를 모아요.',
@@ -36,11 +36,27 @@ export const landing = {
       },
       parents: {
         title: '부모님과 보호자를 위해 — Hangul Route',
-        description: '광고 없이 어른 확인 장치가 있는 짧고 다정한 한글 레슨이에요. 무료 가족 공간을 만들고 학습자마다 한 주를 살펴봐요.',
+        description: '광고 없이 어른용 PIN이 있는 짧고 다정한 한글 레슨이에요. 무료 가족 공간을 만들고 학습자마다 한 주를 살펴봐요.',
       },
       teachers: {
         title: '선생님을 위해 — Hangul Route',
-        description: '학생은 반 코드로 참여해요. 학생 이메일이나 계정은 필요 없어요. 한 주를 계획하고 누가 연습했는지 봐요. 순위는 절대 없어요.',
+        description: '학생은 코드, 링크, QR 코드로 참여해요. 학생 이메일이나 계정은 필요 없어요. 한 주를 계획하고 누가 연습했는지 봐요. 순위는 절대 없어요.',
+      },
+      about: {
+        title: 'Hangul Route 소개',
+        description: 'Hangul Route를 누가 만드는지, 그리고 우리가 지키는 약속을 알려 드려요.',
+      },
+      privacy: {
+        title: '개인정보 처리방침 — Hangul Route',
+        description: 'Hangul Route가 무엇을 모으는지, 누가 볼 수 있는지, 어떻게 지우는지 알려 드려요.',
+      },
+      terms: {
+        title: '이용약관 — Hangul Route',
+        description: 'Hangul Route를 쓸 때 지킬 규칙이에요.',
+      },
+      licenses: {
+        title: '오픈소스 라이선스 — Hangul Route',
+        description: 'Hangul Route가 쓰는 오픈소스 소프트웨어예요.',
       },
     },
   },
@@ -55,15 +71,17 @@ export const landing = {
     teachers: '선생님',
     signIn: '로그인',
     start: '배우기 시작하기',
+    startShort: '시작',
     skip: '본문으로 건너뛰기',
   },
   home: {
     hero: {
       title: '나이와 상관없이, 한글을 처음부터 배워요.',
-      lead: '짧고 재미있는 퀘스트로 한글을 읽고, 듣고, 쓰는 법을 배워요. 호랑이 호야가 길잡이가 되어 줘요.',
+      lead: '한글은 한국어의 글자예요. 호랑이 호야와 함께 한글을 읽고, 듣고, 쓰는 법을 배워요.',
       start: '배우기 시작하기',
-      grownUps: '부모님이나 선생님인가요? 내 페이지 찾기',
-      facts: '브라우저에서 바로 돼요 · 설치할 것이 없어요 · 처음 방문한 뒤에는 대부분의 기기에서 오프라인으로도 돼요',
+      forParents: '부모 또는 보호자예요',
+      forTeachers: '선생님이에요',
+      facts: '1단계는 무료예요 · 가입 없이 바로 시작해요 · 처음 방문한 뒤에는 대부분의 기기에서 오프라인으로도 돼요',
       bubble: (letter: string, romanization: string) => `안녕하세요! 오늘 만날 글자: ${letter} (${romanization})`,
     },
     who: {
@@ -71,34 +89,39 @@ export const landing = {
       items: {
         learners: {
           title: '학습자',
-          body: '5분 퀘스트, 절대 혼내지 않는 길잡이, 그리고 모으는 재미가 있는 한국 문화 카드.',
+          body: '5분 퀘스트, 절대 혼내지 않는 길잡이, 그리고 한국 문화 카드.',
         },
         parents: {
           title: '부모님과 보호자',
-          body: '어른 확인 장치와 광고 없는 환경에서, 학습자가 무엇을 연습하는지 봐요.',
+          body: '어른용 PIN과 광고 없는 환경에서, 학습자가 무엇을 연습하는지 봐요.',
         },
         teachers: {
           title: '선생님',
-          body: '학생은 반 코드로 참여해요. 학생 이메일도, 계정도 필요 없어요.',
+          body: '학생은 코드, 링크, QR 코드로 참여해요. 학생 계정은 필요 없어요.',
         },
       },
     },
     how: {
       title: '이렇게 해요',
       steps: {
-        start: { title: '앱 열기', body: '누가 배우는지 고르고 시작해요.' },
-        quests: { title: '5분 퀘스트로 배우기', body: '글자, 소리, 첫 낱말을 화면마다 소리와 그림으로 배워요.' },
+        start: { title: '프로필 만들기', body: '이름과 호야를 골라요.' },
+        quests: { title: '5분 퀘스트로 배우기', body: '글자, 소리, 첫 낱말을 소리와 그림으로 배워요.' },
         collect: { title: '모으면서 계속하기', body: '한국 문화 카드를 받아요. 진도는 저장되고 백업돼요.' },
       },
       routeBody: '한국 문화 카드를 받고, 지금 있는 곳과 다음에 할 것을 학습 루트 전체로 한눈에 봐요.',
+      levelBody: '이름과 호야를 골라요. 수준 확인은 선택 사항이에요.',
     },
     promises: {
       label: '우리의 약속',
       items: { ads: '광고는 절대 없어요', safety: '아이의 안전이 먼저예요', noRed: '빨간 표시는 없어요' },
     },
+    closing: {
+      title: '첫 한글 글자를 만나 볼까요?',
+      body: '1단계는 무료예요. 이메일도 비밀번호도 필요 없어요. 첫 퀘스트는 5분 정도면 돼요.',
+    },
     news: {
-      title: '출시 소식 받기',
-      body: '이메일을 남겨 주시면 출시 소식을 보내 드려요. 다른 메일은 보내지 않아요.',
+      title: '출시 소식을 이메일로 받기',
+      body: '가족과 반을 위한 플랜이 출시되면 이메일로 알려 드려요. 다른 메일은 보내지 않아요.',
     },
   },
   plans: {
@@ -107,10 +130,11 @@ export const landing = {
       stage1: '1단계는 무료예요.',
     },
     paid: {
-      coming: '가족과 반을 위한 플랜과 함께 더 많은 단계가 준비되고 있어요.',
+      coming: '낱말, 문장, 이야기도 앱에 있어요. 가족과 반을 위한 플랜은 준비하고 있어요.',
       inApp: '가족과 반을 위한 플랜은 app.hangulroute.com에 있어요.',
     },
     managedInApp: '플랜과 결제는 로그인한 뒤 app.hangulroute.com에서 관리해요.',
+    managedLater: '플랜이 나오면 로그인한 뒤 app.hangulroute.com에서 관리해요.',
     // [SA] AMENDMENTS-SEATS-ADMINS 9.5: glossary 가족 플랜, 그룹 라이선스, 학습자, 학생; the count takes 명, no particle on it.
     sizes: (family: number, group: number) => `가족 플랜은 학습자 최대 ${family}명이 함께 써요. 그룹 라이선스는 반이나 학교 하나에서 학생 최대 ${group}명이 함께 써요.`,
   },
@@ -149,7 +173,7 @@ export const landing = {
         },
         code: {
           q: '참여 코드가 있어요. 어디에 입력하나요?',
-          a: '앱에서 프로필을 누른 뒤, 반과 가족으로 가서 반에 참여하기를 눌러요.',
+          a: '선생님이 공유한 참여 링크를 열어요. 또는 앱에서 프로필을 누른 뒤, 반과 가족으로 가서 반에 참여하기를 눌러요.',
         },
         offline: {
           q: '오프라인에서도 되나요?',
@@ -157,12 +181,21 @@ export const landing = {
         },
         adult: FAQ_ADULT,
         korean: FAQ_KOREAN,
+        // The button label is learner.placement.invite.knowSome in Korean, word for word (glossary: 수준 확인).
+        level: {
+          q: '한글을 조금 알아요. 처음부터 시작해야 하나요?',
+          a: '아니요. 시작할 때 ‘한국어를 조금 알아요’를 누르고 수준 확인을 해요. 호야가 어디서 시작할지 알려 줘요.',
+        },
+      },
+      after: {
+        title: '자모를 익힌 다음에는',
+        body: '낱말, 짧은 문장, 대화, 문화 이야기도 똑같이 5분 퀘스트로 배워요.',
       },
     },
     parents: {
       title: '부모님과 보호자를 위해',
       lead: '부모님, 조부모님, 그리고 모든 보호자를 위해: 학습자의 데이터를 지키는 짧고 다정한 레슨이에요.',
-      signIn: '부모님으로 로그인',
+      create: '무료 가족 공간 만들기',
       learn: {
         title: '무엇을 배우나요',
         body: '먼저 한글 자모를 배워요: 5분 퀘스트로 읽기, 듣기, 쓰기를 해요.',
@@ -173,7 +206,7 @@ export const landing = {
         bullets: {
           ads: '광고가 없고, 데이터를 팔지 않아요.',
           backup: BACKUP,
-          gate: '돈이 드는 일이나 데이터를 지우는 일은 어른 확인 장치가 지켜요.',
+          gate: '돈이 드는 일이나 데이터를 지우는 일은 어른용 PIN이 지켜요.',
           siblings: '형제자매가 기기 하나를 함께 써도 돼요. 학습자마다 자기 별과 카드를 따로 가져요.',
         },
       },
@@ -184,7 +217,7 @@ export const landing = {
         route: '학습자마다 학습 루트를 열어 지금 있는 곳과 다음에 할 것을 봐요.',
         notes: '학습자가 앱에서 보는 짧은 격려 쪽지를 보내요.',
         browse: '가족 플랜이 있으면 학습자가 보는 그대로 모든 레슨을 둘러볼 수 있어요.',
-        lecture: '강의 모드로 TV에 수업을 띄우고 함께 배워요.',
+        lecture: '강의 모드는 1단계부터 7단계까지 준비된 수업을 TV, 노트북, 가로로 돌린 휴대폰에 띄워 줘요. 함께 배워 보세요.',
       },
       faq: {
         account: { q: '학습자에게 계정이 필요한가요?', a: '아니요. 학습자는 이메일이나 비밀번호가 전혀 필요 없어요.' },
@@ -199,13 +232,13 @@ export const landing = {
     teachers: {
       title: '선생님을 위해',
       lead: '학생은 코드로 참여하고, 선생님은 한 주를 계획하고, 모두 자기 속도로 배워요.',
-      signIn: '선생님으로 로그인',
+      create: '무료 반 만들기',
       tryIt: '학습자로 해 보기',
       setup: {
         title: '몇 분이면 준비 끝',
         steps: {
           space: '로그인하고 반 공간을 만들어요.',
-          code: '반 코드를 공유해요. 학생은 앱에 코드를 입력하면 되고, 학생 이메일이나 계정은 필요 없어요.',
+          code: '반 코드, 참여 링크나 그 QR 코드를 공유해요. 학생은 코드를 입력하거나 링크를 열면 되고, 학생 이메일이나 계정은 필요 없어요.',
           devices: '학생은 브라우저가 있는 어떤 기기로든 배워요.',
         },
       },
@@ -213,7 +246,7 @@ export const landing = {
         title: '계획하고 배정하기',
         bullets: {
           pick: '한 주의 퀘스트를 골라요. 학생마다 숙제 목록에 나타나요.',
-          planner: '또는 반의 수준과 수업 리듬에 맞춰 계획 도우미가 학기 루트를 만들어 줘요.',
+          planner: '또는 학기 계획하기를 써 보세요. 반의 수준과 수업 리듬에 맞춰 학기 계획을 만들어 줘요.',
         },
       },
       class: {
@@ -222,44 +255,75 @@ export const landing = {
         reports: '학생마다 리포트, 반 전체 통계를 날짜별, 주별, 월별, 전체 기간으로 봐요. 순위는 절대 없어요.',
         route: '학생마다 학습 루트를 열어 지금 있는 곳과 다음에 할 것을 봐요.',
         notes: '학생에게 짧은 격려 쪽지를 보내요.',
-        browse: '반 플랜이나 학교 플랜이 있으면 학생이 보는 그대로 모든 레슨을 미리 볼 수 있어요.',
-        lecture: '강의 모드: 준비된 수업으로 프로젝터나 TV 앞에서 가르쳐요.',
+        browse: '그룹 라이선스가 있으면 학생이 보는 그대로 모든 레슨을 미리 볼 수 있어요.',
+        lecture: '강의 모드: 1단계부터 7단계, 이야기, 낱말 묶음의 준비된 슬라이드를 프로젝터, TV, 가로로 돌린 휴대폰에 띄우고 앞에서 가르쳐요.',
+      },
+      // [SN] "학교를 만든 분" is the console's word for a school's owner; "학교 계약" is
+      // `console.billing.planTitle.school_seat`. The address takes no particle (`{email} 주소로`, F-I18N-001 §3.10).
+      schools: {
+        title: '학교 전체에서 함께 써요',
+        space: '학교 공간을 만든 뒤, 선생님을 초대하거나 선생님 대신 반을 만들어요.',
+        admins: (admins: number) =>
+          `초대 링크로 관리자를 ${admins}명까지 더 추가할 수 있어요. 관리자는 반 명단과 리포트를 열고, 학교 안의 반끼리 학생을 옮길 수 있어요.`,
+        ownerPlan: '플랜은 학교를 만든 분이 관리해요.',
+        moves: '학생을 학교 안의 다른 반으로 옮길 수 있어요. 가족에게 알림이 가고, 학생은 새 코드를 입력하지 않아도 돼요.',
+        size: (email: string) => `학생 자리가 더 필요하면 ${email} 주소로 문의해 주세요.`,
+        sizeContract: (email: string) => `학생 자리가 더 필요하면 ${email} 주소로 학교 계약을 문의해 주세요.`,
       },
       privacy: {
         title: '반을 위한 개인정보 보호',
-        bullets: { initials: '반 명단에는 이니셜만 보여 줄 수 있어요.', ads: '광고가 없고, 데이터를 팔지 않아요.' },
+        bullets: { initials: '반 명단에 이름 대신 이니셜을 보여 줄 수 있어요.', ads: '광고가 없고, 데이터를 팔지 않아요.' },
       },
       faq: {
-        students: { q: '학생에게 계정이 필요한가요?', a: '아니요. 앱 안에서 반 코드로 참여해요.' },
+        students: { q: '학생에게 계정이 필요한가요?', a: '아니요. 반 코드, 링크, QR 코드로 참여해요.' },
         ranking: { q: '순위표가 있나요?', a: '아니요. Hangul Route는 학생끼리 순위를 매기지 않아요.' },
         try: { q: '먼저 해 볼 수 있나요?', a: '네. 앱을 열고 학습자로 첫 퀘스트를 해 보세요.' },
       },
     },
     plansTitle: '플랜',
     faqTitle: '자주 묻는 질문',
+    haveAccount: '이미 계정이 있나요? 로그인',
     closing: {
       learners: '첫 글자를 만날 준비가 됐나요?',
       parents: '학습자의 한 주를 한곳에서 봐요.',
       teachers: '이번 주, 반에 한글을 가져와요.',
     },
   },
+  // [SN] "강의 모드" is the console's name for Lecture mode; "문화 카드" is the app's word. The taught letter and the card's
+  // word end their own phrase, so no particle follows a value.
+  captures: {
+    discover: (letter: string, romanization: string) =>
+      `휴대폰 속 앱의 첫 퀘스트 화면: 새 글자 몇 개와 소리 듣기 버튼. 첫 글자는 ${letter}(${romanization}).`,
+    home: '학습자 홈 화면: 인사, 연속 학습 일수와 모은 카드, 시작 버튼이 있는 다음 레슨.',
+    game: '미니게임: 소리를 듣고 맞는 글자를 눌러요.',
+    // The Korean UI's gloss is the word itself, so the meaning is not repeated.
+    card: (word: string, romanization: string, _meaning: string) => `한국 문화 카드: ${word}(${romanization}).`,
+    report: '학습자 한 명의 주간 리포트: 연습한 날, 잘한 점, 다음에 연습할 점.',
+    classList: '반 페이지: 반 전체의 이번 주 요약.',
+    lectureSlide: '큰 화면에 띄운 강의 모드 슬라이드: 글자, 획순, 소리.',
+    caption: { home: '홈 화면', game: '미니게임', card: '문화 카드' },
+    og: (brand: string, tagline: string) => `호랑이 호야와 ${brand} 로고. 문구: ${tagline}`,
+  },
   cards: {
-    eyebrow: '모으는 재미',
-    title: (cards: number) => `문화 카드 ${cards}장. 한 장에 한국 한 조각.`,
-    body: (cards: number, common: number, uncommon: number, rare: number, legendary: number) =>
-      `글자를 하나 배울 때마다 진짜 한국 문화 한 조각을 받아요 — 라면 한 그릇, 추석 보름달, 단오 그림 속 그네. 1단계에는 카드 ${cards}장이 있어요: 보통 ${common}장, 드문 ${uncommon}장, 희귀 ${rare}장, 전설 ${legendary}장.`,
     listLabel: '1단계 문화 카드',
     rarity: { common: '보통', uncommon: '드문', rare: '희귀', legendary: '전설' },
     cardLabel: (romanization: string, meaning: string) => `한국어 낱말 ${romanization}, 뜻: ${meaning}`,
-    more: '2단계(낱말)에서 카드가 30장 넘게 더해져요. 7단계(자기표현)까지 모으면 문화 라이브러리는 175장이 돼요.',
   },
   games: {
-    eyebrow: (shipped: number, beta: number) => (beta > 0 ? `미니게임 ${shipped}개 + 베타 ${beta}개` : `미니게임 ${shipped}개`),
-    title: '하나도 공부 같지 않아요.',
-    body: '네 가지 연습(알아보기, 만들기, 활용, 복습)을 90초짜리 놀이에 담았어요. 호야는 절대 “틀렸어”라고 하지 않아요.',
     listLabel: '1단계 미니게임',
     family: { recognition: '알아보기', production: '만들기', application: '활용', review: '복습' },
     beta: '베타 — 원하면 켜기',
+    // Titles follow the app's game names (learner.myRoute.games) where it has one.
+    items: {
+      'listen-pick': { title: '듣고 고르기', blurb: '소리를 듣고 글자나 낱말을 눌러요.' },
+      'match-sound': { title: '소리 짝짓기', blurb: '글자 소리를 듣고 맞는 칸을 눌러요. 서두르지 않아도 돼요.' },
+      'build-letter': { title: '글자 만들기', blurb: '자모를 모아 진짜 한글 글자를 만들어요.' },
+      'pic-word-match': { title: '그림과 낱말', blurb: '그림을 누르고, 그다음 그 낱말을 눌러요.' },
+      'trace-stroke': { title: '글자 따라 쓰기', blurb: '획 순서를 따라가요. 손가락이 모양을 익혀요.' },
+      'odd-one-out': { title: '다른 하나 찾기', blurb: '셋은 같은 종류예요. 다른 하나를 찾을 수 있나요?' },
+      'culture-quiz': { title: '문화 퀴즈', blurb: '한국어 낱말 하나와 답 네 개가 나와요. 뜻을 골라요.' },
+      'story-sequence': { title: '이야기 순서', blurb: '카드 네 장이 이야기 하나예요. 일어난 순서대로 눌러요.' },
+    },
   },
   footer: {
     guide: '안내',
@@ -276,10 +340,10 @@ export const landing = {
   waitlist: {
     label: '내 이메일',
     placeholder: 'you@somewhere.com',
-    submit: '초대 받기',
+    submit: '출시 소식 받기',
     sending: '보내는 중',
     retry: '다시 해 보기',
-    success: '목록에 올렸어요. Hangul Route가 출시되면 이메일을 보내 드릴게요.',
+    success: '목록에 올렸어요. 가족과 반을 위한 플랜이 출시되면 이메일을 보내 드릴게요.',
     invalid: '올바른 이메일 주소를 입력해 주세요.',
     error: '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 해 보세요.',
     rateLimited: '너무 많이 시도했어요. 조금 기다렸다가 다시 해 보세요.',
@@ -295,12 +359,12 @@ export const landing = {
     lead: '작은 팀(대부분 한 사람과 호랑이 한 마리)이 만들었어요. 나이와 상관없이 한글을 처음부터 배우는 누구나를 위해 — 부모님이나 조부모님이 한국어를 하는 한국계 가족, K-팝, K-푸드, 모든 K-컬처의 팬, 그리고 호기심 많은 초보자까지 — 부끄럽지 않게, 부드럽게 시작하고 싶은 분을 위해서요.',
     promises: {
       title: '우리의 약속',
-      plainEnglish: '메뉴와 안내는 쉽고 짧은 말로 써요 (CEFR Pre-A1 수준).',
+      plainEnglish: '메뉴와 안내는 영어, 스페인어, 한국어로 나오고, 짧고 쉬운 말로 써요.',
       koreanTaught: '한국어 학습 내용은 언제나 로마자 표기와 뜻이 함께 나와요.',
       noRed: '답이 달라도 빨간 X 표시는 없어요 — 호야가 주황색으로 살짝 알려 줘요.',
-      noAds: '광고는 절대 없어요. 아이를 노린 광고도 없어요. 그게 다예요.',
+      noAds: '광고는 절대 없고, 데이터를 팔지 않아요.',
       localFirst: BACKUP_FIRST,
-      gate: '결제나 되돌릴 수 없는 일은 곱셈 문제로 된 부모 확인 장치를 거쳐요.',
+      gate: '돈이 드는 일이나 데이터를 지우는 일은 어른용 PIN이 지켜요.',
     },
     feedback: {
       title: '의견이 있나요?',
@@ -312,7 +376,6 @@ export const landing = {
   legal: {
     backHome: '← 홈으로',
     englishAuthoritative: '이 문서는 영어로 표시됩니다. 효력이 있는 것은 영어판입니다.',
-    draft: '검토용 초안입니다. 이 문서는 공개 출시 전에 자격을 갖춘 법률 전문가의 검토를 기다리는 작업 초안입니다.',
   },
   licenses: {
     title: '오픈소스 라이선스',
@@ -327,9 +390,10 @@ export const landing = {
     where: { app: '앱', web: '웹사이트', server: '서버', ios: 'iOS 앱' },
   },
   notFound: {
-    body: '이 페이지를 찾을 수 없어요.',
+    body: '오래된 링크일 수 있어요. 홈으로 가거나 배우기를 시작해 보세요.',
     home: '홈으로 가기',
     start: '배우기 시작하기',
+    title: '페이지를 찾을 수 없어요',
   },
   localeBanner: {
     label: '언어 추천',

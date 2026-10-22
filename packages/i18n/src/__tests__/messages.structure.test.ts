@@ -105,7 +105,7 @@ describe('content rules for every locale', () => {
   });
 
   it('the landing exemption is narrow: only the English spatial "behind" on the listed paths (self-check)', () => {
-    const gate = 'landing.about.promises.gate';
+    const gate = 'landing.legal.terms.sections.accounts.paragraphs.p1';
     expect(landingBannedWord('Purchases sit behind a parent-gate.', 'en', gate)).toBeNull();
     expect(landingBannedWord('Hoya never calls you lazy.', 'en', gate)).toBe('lazy');
     expect(landingBannedWord('Never fall behind.', 'en', 'landing.home.hero.lead')).toBe('behind');
@@ -122,7 +122,7 @@ describe('English-authoritative legal text (decision L10)', () => {
     for (const prefix of ENGLISH_AUTHORITATIVE_PREFIXES) {
       expect(leafPaths(en).filter((path) => path.startsWith(prefix)).length).toBeGreaterThan(10);
     }
-    expect(isEnglishAuthoritative('landing.legal.draft')).toBe(false);
+    expect(isEnglishAuthoritative('landing.legal.englishAuthoritative')).toBe(false);
     expect(isEnglishAuthoritative('landing.legal.backHome')).toBe(false);
   });
 
@@ -135,7 +135,7 @@ describe('English-authoritative legal text (decision L10)', () => {
   it('the legal text never counts as a fallback (key coverage, §3.10)', () => {
     for (const locale of ['es', 'ko'] as const) expect(fallbackPaths(locale).filter(isEnglishAuthoritative)).toEqual([]);
     // es (PR 15) and ko (PR 16) translate the notice around the English text.
-    expect(fallbackPaths('ko')).not.toContain('landing.legal.draft');
-    expect(fallbackPaths('es')).not.toContain('landing.legal.draft');
+    expect(fallbackPaths('ko')).not.toContain('landing.legal.englishAuthoritative');
+    expect(fallbackPaths('es')).not.toContain('landing.legal.englishAuthoritative');
   });
 });

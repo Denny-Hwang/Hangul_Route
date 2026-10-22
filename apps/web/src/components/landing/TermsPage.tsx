@@ -1,5 +1,5 @@
 import { LEARNER_LEVELS } from '@hangul-route/content-schema';
-import { colors, layout, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { colors, layout, spacing, typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages, type LegalValues, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
@@ -35,19 +35,6 @@ export function TermsPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): J
         <p lang={docLang} style={{ color: colors.text.muted, fontSize: rem(typography.size.caption) }}>
           {t.effective}
         </p>
-
-        <div
-          style={{
-            marginTop: spacing.md,
-            padding: spacing.md,
-            backgroundColor: colors.feedback.infoLight,
-            borderRadius: radii.md,
-            color: colors.text.secondary,
-            fontSize: rem(typography.size.caption),
-          }}
-        >
-          {legal.draft}
-        </div>
 
         {Object.values(t.sections).map((section) => (
           <section key={section.heading} lang={docLang} style={{ marginTop: spacing.xl }}>

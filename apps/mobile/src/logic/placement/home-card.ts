@@ -106,7 +106,8 @@ export function showStreakPill(streak: number): boolean {
 
 /**
  * Hoya's tip under the Homework card, by state; never "keep your streak alive" (no loss framing):
- * `first` before any quest is done, `doneToday` once a quest session counted today, `daily` otherwise.
+ * `first` before any quest is done, `doneToday` once any learning activity counted today (on the local day, as
+ * the streak reads it: F-CURR-002 OD-14), `daily` otherwise.
  */
 export type HomeTip = 'first' | 'doneToday' | 'daily';
 

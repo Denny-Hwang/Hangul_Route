@@ -3,7 +3,7 @@ import { useUiStore } from '../ui-store';
 
 describe('ui-store', () => {
   beforeEach(() => {
-    useUiStore.setState({ hapticsOn: true, parentGateOpenedAt: null, lastPinVerifiedAt: null, tabBarHeight: 0 });
+    useUiStore.setState({ hapticsOn: true, parentGateOpenedAt: null, lastPinVerifiedAt: null, lastPinTypedAt: null, tabBarHeight: 0 });
   });
 
   it('no longer holds the sound switch: mute lives in audio-store (F-AUDIO-004 AD7)', () => {
@@ -45,6 +45,13 @@ describe('ui-store', () => {
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
     useUiStore.getState().markPinVerified();
     expect(useUiStore.getState().lastPinVerifiedAt).toBeTypeOf('number');
+    expect(useUiStore.getState().lastPinTypedAt).toBe(useUiStore.getState().lastPinVerifiedAt);
+  });
+
+  it('[OA] face or fingerprint stamps the verified time but never the typed time (section 8.6, OA-9)', () => {
+    useUiStore.getState().markPinVerified('biometric');
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeTypeOf('number');
+    expect(useUiStore.getState().lastPinTypedAt).toBeNull();
   });
 
   it('opening the gate through the 15-minute session does not count as a PIN entry', () => {

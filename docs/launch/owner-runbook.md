@@ -205,6 +205,10 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | `EXPO_PUBLIC_MY_ROUTE_ENABLED` | 비워 둔다: F-ROUTE-001 R-10b 부터 기본 켜짐 (Learning Route 의 Route 탭). 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 Learning Route kill switch 확인을 한 번 한다 | R-10b 머지 후 | Route 탭 · Home 의 route strip · 리포트의 Open Learning Route 가 보인다 (en 만) |
 | `EXPO_PUBLIC_PLACEMENT_ENABLED` | 비워 둔다: F-PLC-001 P-10 부터 모든 플랫폼에서 기본 켜짐 (수준 확인, level check). F-ROUTE-001 OD-14 는 오너가 2026-10-14 에 확정했다 (F-ENT-003 OD-14 와는 다른 질문): 본인 (Me) 프로필은 결과 화면의 **Use this plan** 한 번으로 PIN 없이 주간 계획을 만든다 (PIN 이 있는 기기에서도). 아이 프로필은 어른의 PIN 뒤 리포트에서만 계획을 만든다. 스토어 빌드 조건은 충족이다 (오너 결정 2026-10-14: 스토어 앱이 없으므로 모든 플랫폼에서 수준 확인을 켜기로 오너가 정했다): 스토어에도 TestFlight 에도 네이티브 빌드가 나간 적이 없고, 첫 빌드가 P-3b 스키마를 이미 담는다. 되돌릴 때만 정확히 `false` 또는 `0` (다른 값은 켜짐으로 읽힌다). 끄기 전에 아래 "문제가 생기면" 의 수준 확인 kill switch 확인을 한 번 한다 | P-10 머지 후 | 온보딩의 "Where should we start?" 갈림길 · Home 의 "Take the level check" 카드 · Profile 의 "Find my starting spot again" 줄 · 어른 리포트 진입점이 보인다 |
 | `EXPO_PUBLIC_GROWN_UP_HOME` | 비워 두거나 `true` (같은 값): F-APP-001 A-10 (2026-10-14) 부터 기본 켜짐. S-3 (M3) 에 넣은 `true` 는 남겨 둬도 무해하다. 되돌릴 때만 `false` (또는 `0`, `off`, `no`; 대소문자와 앞뒤 공백 무관. 다른 값은 켜짐으로 읽힌다; 변수를 **지우면** 이제 켜짐) | S-3 (M3), A-10 머지 후엔 할 일 없음 | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
+| `EXPO_PUBLIC_PIN_PAUSE_STEPS` | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-2 부터 기본 켜짐 (PIN 을 5번 틀릴 때마다 쉬는 시간이 30초, 1분, 5분, 15분, 그 뒤로 60분으로 길어진다). **kill switch 일 뿐**이다: 끌 때만 `false` (또는 `0`, `off`, `no`; 대소문자·앞뒤 공백 무시, 그 밖의 값은 켜짐) → Retry deployment. 끄면 예전처럼 매번 30초만 쉰다. 학습자 전환 때 어른 세션 닫기, Rescue Code 의 따로 세는 횟수, 탭 사이 공유 횟수는 스위치가 없다 | OA-2 머지 후엔 할 일 없음 | (켜짐이 기본값) |
+| `EXPO_PUBLIC_PIN_RESET_SIGNIN` (학습자 앱) · `NEXT_PUBLIC_PIN_RESET_SIGNIN` (콘솔) | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-6 에서는 둘 다 **꺼짐**이 기본값이다 (웹의 Forgot PIN? 에서 계정으로 로그인해 새 어른용 PIN 을 만드는 길). OA-10 이 기본값을 켠다. 그 전에 미리 켤 일은 없다; 켜려면 두 변수에 모두 `true` → Retry deployment (한쪽만 켜면 학습자 앱에 버튼이 없거나 콘솔이 '지금은 쓸 수 없어요' 를 보여 준다; 두 변수는 같은 배포에서 바꾸고 학습자 앱을 먼저 배포한다. OA-10 이 켜기 전에 `pin-reset-signin.spec.ts` 의 CI 레인과 Clerk 개발 인스턴스에서 패스키 거부 확인이 먼저 있어야 한다) | 할 일 없음 (OA-10 이 켬) | 꺼짐: 버튼이 숨겨지고 `/account/pin-reset` 은 쓸 수 없다는 줄만 보인다 |
+| `EXPO_PUBLIC_BIOMETRIC_SHORTCUT` | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-9 부터 기본 켜짐 (네이티브 빌드만). 켜져 있어도 **기기마다 꺼진 채로 시작**하고, 어른이 Grown-up area 에서 PIN 을 새로 넣은 뒤 "Face or fingerprint for grown-ups" 스위치를 켜야 쓰인다. **kill switch 일 뿐**이다: 끌 때만 `false` (또는 `0`, `off`, `no`; 대소문자·앞뒤 공백 무시, 그 밖의 값은 켜짐) → Xcode 로 다시 빌드. 끄면 스위치가 숨고 이미 켠 기기의 설정도 무시되어 PIN 패드만 쓴다 | OA-9 머지 후엔 할 일 없음 | (켜짐이 기본값; 웹에는 없음) |
+| `EXPO_PUBLIC_CURR_*` (19개 스위치, 예: `EXPO_PUBLIC_CURR_DAILY_REVIEW`) · `EXPO_PUBLIC_CURR_PACKS_OFF` · `EXPO_PUBLIC_CURR_GAMES_OFF` | 비워 둔다: 바닥 (floor) 이 켜진 상태이고, 실제 켜짐과 비율은 D1 `remote_config` 가 정한다 (§K). 기능을 강제로 끌 때만 넣는다 (§K K-2 의 4) | F-CURR-002 CM-2 머지 후, 끌 때만 | 넣은 스위치의 F-CURR-002 화면은 `remote_config` 가 무엇이라 해도 숨어 있다 |
 | `EXPO_PUBLIC_SITE_URL` | `https://hangulroute.com` | S-3 | 기본값도 `https://hangulroute.com` (그다음 `EXPO_PUBLIC_CONSOLE_URL`) |
 | `EXPO_PUBLIC_CONSOLE_URL` | 삭제 | S-3 뒤, F-BILL-002 가 더 읽지 않을 때 | — |
 
@@ -515,6 +519,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 2. (선택) 콘솔에서도 처음부터 숨기려면: `hangul-route-app` 과 `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_CLASS_TRANSFER=disabled` → Retry deployment.
 3. 확인: `/health` 의 `features.classTransfer` 가 `false`.
 4. 다시 켜기: `CLASS_TRANSFER` 변수를 지우고 Deploy (콘솔 변수도 지웠으면 Retry deployment).
+5. 하루보다 오래 꺼 두면: `/teachers` 의 "Use it across a whole school" 에서 반 옮기기 문장 (`persona.teachers.schools.moves`) 을 지우는 PR 을 만들고 사이트를 다시 배포한다 (AMENDMENTS-SITE-NEWUSER §3.6, LV-D1 규칙). 한나절 정도의 사고 대응이면 사이트는 그대로 둔다.
 
 끄더라도 이미 끝난 이동, 학습 기록, 카드와 별은 바뀌지 않는다. 가족의 반 안내 확인 (class-scope acknowledgement) 은 스위치와 무관하게 계속 동작한다.
 
@@ -571,6 +576,35 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 - 발표 화면 (presenter) 이 있는 학습자 앱 웹 빌드 (`hangul-route-app`) 를 **먼저** 배포하고, 그다음 콘솔을 배포한다. 콘솔의 링크가 그 링크를 아직 읽지 못하는 발표 화면에 닿지 않게 하기 위해서다. 둘이 같은 `hangul-route-app` 빌드에 들어 있으면 한 번에 나가므로 따로 할 일이 없다. `hangul-route-web` 에도 콘솔이 있으면 `hangul-route-app` 배포가 끝난 뒤에 배포한다.
 - LV-7 을 배포하기 전에 두 프로젝트의 빌드 변수에서 `NEXT_PUBLIC_LECTURE_MODE` · `EXPO_PUBLIC_LECTURE_MODE` 를 확인한다. `false`·`0`·`off`·`no`·`disabled` 가 남아 있으면 지운다 (위 변수 표의 줄). 남겨 두면 사이트 문구와 콘솔·앱이 서로 맞지 않는다.
 
+## K. 원격 설정 (remote config, F-CURR-002 CM-2)
+
+> F-CURR-002 의 스위치 (`memoryRecord`, `dailyReview`, ..., `pack.<key>`, `game.<kind>`, 목록은 사양 section 12.2) 는 D1 표 `remote_config` 의 한 줄로 끄거나 비율을 줄인다. 원격 설정은 **줄이기만** 한다: 빌드에서 꺼진 기능 (`EXPO_PUBLIC_CURR_*=false`) 은 표가 무엇이라 해도 켜지지 않는다. 표가 비어 있으면 (CM-2 머지 직후) 모든 스위치가 기본 비율 0 이라 아무것도 켜지지 않는다. 배포 순서는 Worker 먼저 (마이그레이션 `0013_remote_config.sql` 과 `GET /api/config`, Deploy command 가 함께 적용), 그다음 학습자 앱.
+
+**K-1. 비율 바꾸기 (램프, 배포 불필요)**
+1. 대시보드 → D1 → `hangul-route` → Console 에서 한 줄 실행 (예: `dailyReview` 를 10%):
+   `INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES ('dailyReview', 1, 10, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 'ramp 10%') ON CONFLICT(flag) DO UPDATE SET "on" = excluded."on", pct = excluded.pct, updated_at = excluded.updated_at, reason = excluded.reason;`
+   `on` 은 SQL 예약어라 큰따옴표로 쓴다. `on` 은 0 또는 1, `pct` 는 0-100 만 들어간다 (표의 CHECK 가 250 같은 오타를 거부한다). 프로필마다 고정된 칸 (bucket) 으로 나뉘어 비율을 올려도 이미 켜진 학습자는 그대로 켜져 있다.
+2. 확인 (운영 요청은 이것 하나만, 공개 읽기 전용): `https://api.hangulroute.com/api/config` 에 그 줄이 `{ "on": true, "pct": 10 }` 으로 보인다. 엣지 캐시 때문에 최대 5분 늦을 수 있다.
+3. 학습자 기기에는 약 20분 안에 닿는다 (엣지 캐시 5분 + 가진 사본이 15분 넘으면 기기가 다시 읽는다: 앱을 다시 앞으로 가져올 때, 그리고 앱이 앞에 떠 있는 동안 15분마다. 그래서 숨기지 않고 켜 둔 발표 화면이나 태블릿에도 닿는다). 기기는 자기 HTTP 캐시를 쓰지 않고 (`no-store`) 매번 엣지에서 받는다. 오프라인 기기는 마지막으로 받은 값을 쓴다.
+
+**K-2. 급하게 끄기 (엣지 캐시 비우기 포함, 5분)**
+1. D1 Console: `UPDATE remote_config SET "on" = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now'), reason = '<이유>' WHERE flag = '<스위치>';` (줄이 없으면 K-1 의 INSERT 를 `"on"` 0 으로 실행).
+2. 엣지 캐시 비우기: 대시보드 → `hangulroute.com` 도메인 → Caching → Configuration → **Purge Cache** → Custom Purge → URL 에 `https://api.hangulroute.com/api/config` 한 줄 → Purge. 이렇게 하면 엣지의 5분을 건너뛰고, 다음 요청부터 새 값이 나간다.
+3. 확인: 위 K-1 의 2 처럼 주소를 열어 `"on": false` 를 본다. 기기는 사본이 15분 넘으면 새 값을 받는다 (앱을 앞으로 가져올 때, 또는 앞에 떠 있는 동안 15분마다).
+4. 더 확실히 (몇 시간 넘게 끌 때): `hangul-route-app` → Settings → Build → Variables 에 그 스위치의 빌드 변수 (`EXPO_PUBLIC_CURR_DAILY_REVIEW=false` 처럼 `EXPO_PUBLIC_CURR_` + 대문자 스네이크 이름; 팩과 게임은 `EXPO_PUBLIC_CURR_PACKS_OFF=numbers-time,k-culture` · `EXPO_PUBLIC_CURR_GAMES_OFF=cloze-pick` 처럼 쉼표 목록. 값은 정확한 팩 키 (사양 section 6) 나 라운드 종류 코드 (section 7.1), 곧 `remote_config` 의 `pack.` · `game.` 뒤 글자와 같아야 한다. 다른 글자 (`cloze` 같은) 는 아무것도 끄지 않는다) 를 넣고 **Retry deployment**. 빌드 변수가 바닥 (floor) 이라 원격 설정으로는 다시 켤 수 없다. 다시 켤 때는 변수를 지우고 Retry deployment.
+   이 빌드 변수는 웹 앱 (`hangul-route-app`, PWA) 에만 Retry deployment 로 닿는다. iOS 앱은 빌드할 때 변수가 들어가므로, 새 Xcode 빌드를 만들어 제출해야 바뀐다. 그래서 iOS 기기에는 위 1-3 (원격 `"on"` 0 과 엣지 캐시 비우기) 이 바로 끄는 방법이고, `GET /api/config` 로 결과를 확인한다.
+5. 끄는 것은 화면만이다: 진도, 카드, 기억 상태는 지워지지 않고, 다시 켜면 그대로 보인다 (사양 section 12.2 "What off does").
+
+**K-3. 자동 가드레일 (CM-70b, 할 일 없음, 확인만)**
+1. 매일 11:17 UTC 의 Cron Trigger 가 보존 기간 정리를 먼저 하고, 그다음 램프 중인 줄 (`"on"` 1, `pct` 1-99) 마다 `updated_at` 을 그 단계의 시작으로 보고, 그 뒤의 하루 단위 날 (최대 7일) 과 그 전 7일을 `learning_rollups` 로 비교한다 (사양 section 3.3 과 12.3). 단계 뒤로 하루 단위 날이 3일 지나야 비교를 시작하고, 기준 단계가 14일이 넘으면 더 보지 않는다 (`stale-step`, 자동으로 내린 뒤에는 남겨 둔 `base` 날짜로 센다). 양쪽은 같은 요일끼리 비교한다 (예: 금-일 사흘 뒤라면 단계 전의 금-일과). 롤업이 하루 한도에 닿아 중간에 멈춘 날은 그 요일과 함께 양쪽에서 뺀다. 비교 기간 전체에서 20건이 안 되는 묶음은 위반을 만들지 못하고 (단계 전 묶음이 20건 미만이면 19건으로 보고, `reason` 에 `<=` 로 적는다), 한쪽이 100 세션이 안 되는 비교도 하지 않는다. 기준선을 넘어도 통계로 분명할 때만 (우연이 아닐 때만) 위반으로 본다. 중단율은 두 줄이다: 전체 중단율 (새로 램프한 게임 종류도 여기서 잡힌다) 과 게임 종류별 중단율. 종류별 중단율은 그 종류에서 중단한 세션 수를 `questLeft` 를 보낸 전체 세션 수로 나눈 값이다 (CM-70a). 그래서 여러 종류 가운데 한 종류가 크게 나빠질 때 잡히고, 작은 변화는 전체 중단율, 세션 길이, 연속 오답 뒤 중단 줄이 본다. p90 (20분) 은 단계 전에 20분 아래였을 때만 위반으로 보니, 단계 전에 이미 20분 이상이었다면 그 램프 동안 오너가 직접 본다.
+2. 넘으면 그 줄의 `pct` 만 한 단계 내린다 (50 → 10 → 0, 사이 값은 아래 단계로). `reason` 에 `guardrail <날짜> base <단계 날짜> pct 50->10: quitRate:match-shape 10.0%->15.0%` 처럼 이유가, `updated_at` 에 시각이 남는다. 올리거나 `"on"` 을 바꾸는 일은 없다. 확인: D1 Console 에서 `SELECT flag, "on", pct, updated_at, reason FROM remote_config;`.
+3. 자동으로 내린 뒤에도 비교 기준은 `base` 의 단계 전 7일로 그대로 남는다. 그래서 내린 단계가 여전히 램프 전보다 나쁘면 다음에 한 단계 더 내린다 (10 → 0).
+4. 줄을 고치면 (K-1 의 INSERT, 또는 `reason` 만 고쳐도 `updated_at` 이 바뀌면) 그 `updated_at` 이 새 기준이 된다. 그러니 `updated_at` 은 단계를 올릴 때만 바꾼다. 다시 올리는 것은 오너만 한다 (K-1). 같은 날에는 자동 가드레일이 그 줄을 건드리지 않고, 실행 중에 오너가 고친 줄도 건드리지 않는다. `reason` 이 `guardrail` 로 시작하면 (자동으로 내렸으면) 내린 단계에서 하루 단위 날을 7일 이상 채운 뒤에 다시 올린다. 더 빨리 올리면 새 기준 7일 안에 위반이 난 날이 들어가 같은 문제를 다시 잡지 못한다.
+5. 한 번에 한 플래그만 램프한다. 지금의 지표는 플래그별 그룹이 없어서 (사양 12.3, CM-70c 전까지) 위반이 나면 그 기간에 램프 중인 플래그가 모두 한 단계씩 내려간다.
+6. 실행 결과: Cloudflare → Workers & Pages → `hangul-route-api` → Logs 에서 하루 한 줄 `guardrail.run` (내린 플래그, 비교하고 그대로 둔 플래그 `kept`, 건너뛴 플래그와 이유 코드 `changed-today` · `future-updated-at` · `too-few-days` · `stale-step` · `bad-updated-at` · `unchecked`, 그리고 `unguarded` 수) 을 본다. 저장된 로그를 보려면 같은 화면의 Settings → Observability 에서 Workers Logs 를 켠다. `future-updated-at` 이 보이면 그 줄의 `updated_at` 이 미래 시각이라 가드레일이 꺼진 상태이니 지금 시각으로 고친다. `unchecked` 는 비교할 만큼 세션이 모이지 않아 아무것도 비교하지 못했다는 뜻이다 (건강하다는 뜻이 아니다). `unguarded` 는 기다려도 자동 가드레일이 다시 보지 않는 플래그 수 (`stale-step` · `future-updated-at` · `bad-updated-at` · `unchecked`) 다. 0 이 아니면 그 플래그를 다음 단계로 올리거나, 지금 단계를 유지할 거면 K-1 로 `updated_at` 을 지금 시각으로 다시 적어 새 기준을 만든다.
+7. D1 쓰기 줄 (무료 한도의 50%) 은 롤업이 스스로 쓴 줄 수만 센다. 롤업은 하루 20,000 줄 (20%) 에서 멈추므로 이 줄은 지금 울리지 않는다 (참고용, CM-70d 전까지). 동기화를 포함한 전체 양은 D1 대시보드의 Metrics 에서 램프 중에 한 번씩 본다.
+8. 자동 가드레일을 급하게 멈추기 (배포 불필요): `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `GUARDRAIL_EVALUATOR` = `disabled` → Deploy. 다음 실행부터 가드레일은 아무것도 읽거나 쓰지 않고, 보존 기간 정리는 그대로 돈다. Logs 에는 `guardrail.run` 에 `disabled: true` 가 보인다. 다시 켤 때는 변수를 지운다 (`[vars]` 에는 넣지 않는다).
+
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
 
@@ -593,6 +627,7 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 - wrangler "outdated" 경고 (API Worker 는 wrangler 3.114): 배포에 영향 없는 안내 문구다. 업그레이드는 별도 PR 로 한다.
 - Learning Route kill switch (F-ROUTE-001 R-10b): CI 는 꺼진 빌드를 만들지 않으므로, `EXPO_PUBLIC_MY_ROUTE_ENABLED=false` 를 배포하기 전에 한 번 직접 확인한다. 빌드: Metro 캐시를 새로 (`TMPDIR=$(mktemp -d)`, `EXPO_PUBLIC_` 값은 변환 시점에 박히므로 이전 캐시를 쓰면 켜진 빌드가 나온다) `TMPDIR=$(mktemp -d) EXPO_PUBLIC_MY_ROUTE_ENABLED=false pnpm --filter @hangul-route/mobile build:web`, 그다음 `pnpm --filter @hangul-route/mobile serve:web` 으로 열어 새 학습자로 확인한다: (1) 아래 탭이 3개 (Today, Journey, Library) 이고 Route 탭이 없다, (2) Home 에 "Stage 1 progress" 막대가 보인다, (3) Journey 에 단계 줄 (stage line) 이 보인다. 결과에 커밋 SHA 를 함께 적는다. 되돌리기: 변수를 지우고 Retry deployment. 학습 기록은 어느 방향으로도 바뀌지 않는다.
 - 수준 확인 (level check) kill switch (F-PLC-001 P-10): CI 는 꺼진 빌드를 만들지 않으므로, `EXPO_PUBLIC_PLACEMENT_ENABLED=false` 를 배포하기 전에 한 번 직접 확인한다. 빌드: `TMPDIR=$(mktemp -d) EXPO_PUBLIC_PLACEMENT_ENABLED=false pnpm --filter @hangul-route/mobile build:web` (Metro 캐시를 새로), 그다음 `pnpm --filter @hangul-route/mobile serve:web` 으로 열어 새 학습자로 확인한다: (1) 프로필을 만든 뒤 "Where should we start?" 갈림길 없이 바로 "Your first card is waiting." 이 나온다, (2) Home 에 "Take the level check" 카드가 없다, (3) Profile 에 "Find my starting spot again" 줄이 없다. 결과에 커밋 SHA 를 함께 적는다. 되돌리기: 변수를 지우고 Retry deployment. 이미 저장된 수준 확인 결과는 지워지지 않고 시작 위치에 계속 쓰인다.
+- 사이트의 수준 확인 문구 (`/learners` 의 질문, 홈 How it works 1단계 줄) 는 앱 변수를 읽지 않는다. 코드 상수 `SITE_CLAIMS.levelCheck` (`apps/web/src/data/site-claims.ts`) 만 따른다. 수준 확인을 사고 대응보다 길게 (하루 넘게) 끌 때는 `SITE_CLAIMS.levelCheck` 를 `false` 로 되돌리는 한 줄 PR 을 요청한다 (테스트가 켜짐·꺼짐 두 상태를 모두 고정한다). 머지 후 사이트가 다시 배포되면 두 줄이 사라진다.
 - 테스트 기기에 P-3b (PR #200) 이전의 Xcode 또는 TestFlight 빌드가 깔려 있다면, P-10 이후에 만든 백업 파일을 가져오기 전에 `main` 에서 다시 빌드해 설치한다. 이전 빌드는 긴 Deep 결과가 든 백업 파일 전체를 `invalid` 로 거절한다.
 - 수준 확인을 켠 뒤에는 API Worker 를 F-PLC-001 P-3b (PR #200) 이전 버전으로 되돌리지 않는다. 이전 Worker 는 긴 Deep 결과 (응답 24개 초과) 가 든 스냅샷을 422 로 거절해 그 학습자의 진도 동기화가 모두 멈춘다.
 - API Worker 를 이전 버전으로 되돌릴 때 (롤백): 커리큘럼 플랜(주차가 있는 긴 플랜, F-PLAN-002)이 하나라도 게시된 뒤에는 F-PLAN-002 P2-4 (PR #232) 이전 버전으로 되돌리지 않는다. 이전 Worker 는 `plans.meta_json` 을 모르고 `?cap=curriculum` 확인도 없어서, 31–260개짜리 플랜을 모든 앱에 그대로 보낸다. 꼭 되돌려야 하면 콘솔에서 커리큘럼 플랜을 먼저 보관(Archive)하거나, 되돌리는 대신 수정 PR 을 새로 배포(roll forward)한다. D1 열(`meta_json`)은 그대로 둬도 된다.

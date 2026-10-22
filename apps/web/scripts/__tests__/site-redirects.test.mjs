@@ -13,7 +13,17 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { APP_ORIGIN, GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
 import { SITE_DEFAULT_CONSOLE_ORIGIN, grownUpOrigin } from '../../src/lib/site-links';
-import { DEFAULT_REDIRECT_ORIGIN, REDIRECT_STATUS, redirectOrigin, redirectRules, writeSiteRedirects } from '../site-redirects.mjs';
+import {
+  DEFAULT_REDIRECT_ORIGIN,
+  PREVIEW_PREFIX,
+  PREVIEW_STATUS,
+  REDIRECT_STATUS,
+  previewRules,
+  redirectOrigin,
+  redirectRules,
+  siteRedirectsText,
+  writeSiteRedirects,
+} from '../site-redirects.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SCRIPT = join(here, '..', 'site-redirects.mjs');
@@ -89,6 +99,32 @@ describe('redirectRules', () => {
   });
 });
 
+describe('the design contact sheets (AMENDMENTS-SITE-NEWUSER SN-2)', () => {
+  it('send /design-preview, everything under it, and its root .html and .txt files to the home page with a 301', () => {
+    expect(PREVIEW_PREFIX).toBe('/design-preview');
+    expect(PREVIEW_STATUS).toBe(301);
+    expect(previewRules()).toEqual([
+      '/design-preview / 301',
+      '/design-preview/* / 301',
+      '/design-preview.html / 301',
+      '/design-preview.txt / 301',
+    ]);
+  });
+
+  it('follow the grown-up forwarding in the one _redirects file', () => {
+    const text = siteRedirectsText(APP_ORIGIN, GROWN_UP_PREFIXES);
+    expect(text.startsWith(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES))).toBe(true);
+    const lines = text.trim().split('\n').filter((line) => line && !line.startsWith('#'));
+    expect(lines.slice(-previewRules().length)).toEqual(previewRules());
+    expect(lines).toHaveLength(GROWN_UP_PREFIXES.length * 2 + previewRules().length);
+  });
+
+  it('match the prefix robots.txt disallows', async () => {
+    const { siteRobots } = await import('../../src/lib/site-surface');
+    expect(siteRobots().rules).toMatchObject({ disallow: PREVIEW_PREFIX });
+  });
+});
+
 describe('writeSiteRedirects', () => {
   let out;
   beforeEach(() => {
@@ -99,9 +135,9 @@ describe('writeSiteRedirects', () => {
   });
   afterEach(() => rmSync(out, { recursive: true, force: true }));
 
-  it('writes out/_redirects when an origin is set', () => {
-    expect(writeSiteRedirects(out, APP_ORIGIN, GROWN_UP_PREFIXES)).toBe(GROWN_UP_PREFIXES.length * 2);
-    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
+  it('writes out/_redirects when an origin is set, the contact sheets included', () => {
+    expect(writeSiteRedirects(out, APP_ORIGIN, GROWN_UP_PREFIXES)).toBe(GROWN_UP_PREFIXES.length * 2 + previewRules().length);
+    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(siteRedirectsText(APP_ORIGIN, GROWN_UP_PREFIXES));
   });
 
   it('writes no file, and removes a stale one, when the origin is empty (the kill switch)', () => {
@@ -134,14 +170,14 @@ describe('the CLI', { timeout: 30_000 }, () => {
   it('writes the rules from the R-1 prefix list when CONSOLE_ORIGIN is set', () => {
     const result = run('https://app.hangulroute.com');
     expect(result.status, result.stderr).toBe(0);
-    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
-    expect(result.stdout).toContain(`site-redirects: ${GROWN_UP_PREFIXES.length * 2} rules to ${APP_ORIGIN}`);
+    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(siteRedirectsText(APP_ORIGIN, GROWN_UP_PREFIXES));
+    expect(result.stdout).toContain(`site-redirects: ${GROWN_UP_PREFIXES.length * 2 + previewRules().length} rules to ${APP_ORIGIN}`);
   });
 
   it('forwards to the app host when CONSOLE_ORIGIN is unset (A-10)', () => {
     const result = run(undefined);
     expect(result.status, result.stderr).toBe(0);
-    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(redirectRules(APP_ORIGIN, GROWN_UP_PREFIXES));
+    expect(readFileSync(join(out, '_redirects'), 'utf8')).toBe(siteRedirectsText(APP_ORIGIN, GROWN_UP_PREFIXES));
   });
 
   it('writes nothing for the kill switch CONSOLE_ORIGIN=false', () => {

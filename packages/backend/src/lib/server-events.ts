@@ -8,6 +8,8 @@ import {
   ClassMoveCompletedViaSchema,
   ClassMoveSeenOnSchema,
   ClassScopeBasisSchema,
+  CURR_TELEMETRY_NO_PROFILE,
+  CURR_TELEMETRY_PAYLOADS,
   LECTURE_DECODE_FAILURES,
   LECTURE_PRESETS,
   LearnerBasisSchema,
@@ -15,14 +17,17 @@ import {
   NOTE_PRESET_IDS,
   NOTE_REACTION_IDS,
   NOTE_REPORT_REASONS,
+  OA_TELEMETRY_PAYLOADS,
   PlanKeySchema,
   REPORT_TELEMETRY_PAYLOAD,
   REPORT_TELEMETRY_PREFIX,
+  SESSION_END_QUEST_FIELDS,
   SHELL_TELEMETRY_PAYLOADS,
   SHELL_TELEMETRY_PREFIX,
   StripeModeSchema,
   TransferInitiatorSchema,
   TransferSlotSchema,
+  isCurrTelemetryName,
   isTelemetryEventName,
   type TelemetryEventName,
 } from '@hangul-route/content-schema';
@@ -251,6 +256,21 @@ const SPACE_SERVER_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
   'space.admin.left': {},
 };
 
+/**
+ * [OA] One account, many users (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15, OA-D18): every name of the section 15
+ * table, the existing `profile.switch`, `parent.gate.opened`, `pin.reset_*` and `shell.grown_up_handoff` included, is
+ * stored without a profile id, so no event links two profiles of one device, and keeps per key only a value its
+ * documented schema (`OA_TELEMETRY_PAYLOADS`) accepts: enum codes, booleans and whole numbers in their bounds
+ * (`picked`, `joined`, `refused` 0 to 12; `grownUps` 0 to 4; `step` 1 to 5). Any other key or value is dropped,
+ * whatever a client sends. Checked first in `keptEventFields`, before every prefix rule.
+ */
+export const OA_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = Object.fromEntries(
+  Object.entries(OA_TELEMETRY_PAYLOADS).map(([name, schema]) => [
+    name,
+    Object.fromEntries(Object.entries(schema.shape as Record<string, { safeParse(value: unknown): { success: boolean } }>).map(([key, field]): [string, FieldRule] => [key, (value) => value !== undefined && field.safeParse(value).success])),
+  ]),
+);
+
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
   rules: Readonly<Record<string, FieldRule>> | undefined,
@@ -265,18 +285,49 @@ function ruledPayload(
 }
 
 /**
+ * F-CURR-002 section 11.3 names (TELEMETRY-NAMES-2 section R, row CM-3): a payload is stored only
+ * when it parses against its strict schema (ids, codes, counts and buckets only), else the event is
+ * kept without it. The profile id stays in the envelope, except on `family.goal_met` (account
+ * level), `space.goal.*` (server-only: refused on POST /api/telemetry, recorded by the Worker) and
+ * `lecture.game.finished`.
+ */
+const CURR_NO_PROFILE: ReadonlySet<string> = new Set(CURR_TELEMETRY_NO_PROFILE);
+
+/**
+ * `session.end` keeps its payload as given, as before; of the three optional CM-3 fields
+ * (`questLeft`, `leftAtKind`, `afterWrongStreak`) only a value that fits its codes is kept.
+ */
+function sessionEndPayload(payload: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  if (!payload) return undefined;
+  const kept = { ...payload };
+  for (const [key, schema] of Object.entries(SESSION_END_QUEST_FIELDS)) {
+    if (key in kept && !schema.safeParse(kept[key]).success) delete kept[key];
+  }
+  return kept;
+}
+
+/**
  * The profile id and payload stored for an event: an ordinary event keeps a
  * string profile id and its payload as given; a codes-only event keeps only its
  * codes and never a profile id; a `browse.*` event keeps only its documented
  * fields (F-BROWSE-001 section 9) and never a profile id; so does a `notes.*`
  * event (F-FEEDBACK-001 section 10), a `billing.*` event (F-BILL-002 section 10)
- * and a `lecture.*` event (AMENDMENTS-LECTURE-V2 section 11).
+ * and a `lecture.*` event (AMENDMENTS-LECTURE-V2 section 11). An F-CURR-002 name keeps its
+ * payload only when it parses (section 11.3), and `session.end` drops a CM-3 field off its codes.
+ * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS keeps only its documented fields and never a profile id (`OA_PAYLOAD_RULES`).
  */
 export function keptEventFields(
   name: TelemetryEventName,
   payload: Record<string, unknown> | undefined,
   profileId: unknown,
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
+  if (Object.hasOwn(OA_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(OA_PAYLOAD_RULES[name], payload) };
+  if (isCurrTelemetryName(name)) {
+    const parsed = CURR_TELEMETRY_PAYLOADS[name].safeParse(payload);
+    const kept = parsed.success && Object.keys(parsed.data).length > 0 ? parsed.data : undefined;
+    return { profileId: !CURR_NO_PROFILE.has(name) && typeof profileId === 'string' ? profileId : undefined, payload: kept };
+  }
+  if (name === 'session.end') return { profileId: typeof profileId === 'string' ? profileId : undefined, payload: sessionEndPayload(payload) };
   if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(BROWSE_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(NOTES_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(NOTES_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(BILLING_TELEMETRY_PREFIX)) return { profileId: undefined, payload: ruledPayload(BILLING_PAYLOAD_RULES[name], payload) };

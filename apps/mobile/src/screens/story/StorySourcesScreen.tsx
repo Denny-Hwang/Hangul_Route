@@ -23,7 +23,11 @@ import { HAND_OFF_NEEDS_TAP, openExternalUrl } from '../../platform/external-lin
 import { copyText } from '../../platform/pwa';
 import { track } from '../../platform/telemetry';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { endGrownUpSessionAfterUse } from '../../store/grown-up-session';
+import { LessonWaiting } from '../lesson-content';
+import { useStoryReady } from '../story-content';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { passGate } from '../../store/gate-telemetry';
 import { CitationText, CorrectionsList, Disclosure, FactCard, SeeFactRow, SourcesHeader, SourcesHeading } from './SourcesParts';
 
 /**
@@ -44,7 +48,13 @@ type Props = {
  * grown-up action: `PinEntry { next: 'ExternalLink', url }` unless the gate
  * opens directly, and only for an https link the story itself cites.
  */
-export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): React.ReactElement {
+export function StorySourcesScreen(props: Props): React.ReactElement {
+  // The facts and their sources come from the story's chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
+  // only its waiting state (the way back, then a calm status line if it takes longer).
+  return useStoryReady(props.route.params.storyId) ? <StorySourcesBody {...props} /> : <LessonWaiting />;
+}
+
+function StorySourcesBody({ route, navigation, ...exitProps }: Props): React.ReactElement {
   const { storyId, factId, sceneIndex, from } = route.params;
   // Learner defaults: back where it came from, else Home; a link goes through the grown-up gate.
   const learnerHome = (): void => navigation?.navigate('Main', { screen: 'Home' });
@@ -134,6 +144,8 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
   const handOff = useCallback(
     async (link: SourceLink, key: string): Promise<void> => {
       const outcome = await openExternalUrl(link.url);
+      // [OA] CS-1: the PIN served this one link; the next link asks it again.
+      endGrownUpSessionAfterUse();
       setNote(key, openLinkNote(outcome, link.url, copy));
       if (outcome === 'opened' && story) {
         void track({
@@ -167,7 +179,7 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
       setNote(key, copy.openFailed(source.url));
       return;
     }
-    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(gateOpensDirectlyNow()) === 'open');
+    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(passGate('ExternalLink', gateOpensDirectlyNow())) === 'open');
     if (route === 'hand-off') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff(link, key);

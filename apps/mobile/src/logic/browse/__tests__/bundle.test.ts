@@ -6,6 +6,7 @@ import { visibleItems, vocabTopics } from '../../../content/vocab';
 import { canDrawPicture } from '../../__tests__/drawn-pictures';
 import { wordsOfTopic } from '../../vocab/topic-view';
 import { visibleTopics } from '../../vocab/topics';
+import { createStoryStore, splitStory, storiesOverStore } from '../../story/story-chunk-store';
 import { buildBrowseBundle, defaultBrowseBundle } from '../bundle';
 import { CULTURE_ID, DRAFT_ID, TALE_ID, fixtureBundle, fixtureInput } from './browse-fixture';
 
@@ -56,6 +57,19 @@ describe('buildBrowseBundle: the story review gate', () => {
     const built = buildBrowseBundle({ ...input, episodes: [...input.episodes, mixed, unreviewedOnly] });
     expect(built.episodes.find((e) => e.id === mixed.id)?.questIds).toEqual([taleQuest]);
     expect(built.episodes.some((e) => e.id === unreviewedOnly.id)).toBe(false);
+  });
+
+  it('lists a story whose chunk is not in (still loading, or failed) from the shelf alone (F-CURR-002 §10, row CM-8)', () => {
+    const input = fixtureInput();
+    const split = input.stories.map((story) => splitStory(story, `h-${story.id}`));
+    // A store whose chunks never arrive: every body field reads its placeholder (tiers []).
+    const store = createStoryStore({ entries: split.map((s) => s.entry) }, () => new Promise(() => undefined));
+    const cold = storiesOverStore(split.map((s) => s.entry), store);
+    expect(cold.every((story) => story.tiers.length === 0)).toBe(true);
+    const built = buildBrowseBundle({ ...input, stories: cold });
+    expect(built.storyIndex.map((e) => e.questId)).toEqual(bundle.storyIndex.map((e) => e.questId));
+    expect(built.quests.map((q) => q.id)).toEqual(bundle.quests.map((q) => q.id));
+    expect(built.episodes.map((e) => e.id)).toEqual(bundle.episodes.map((e) => e.id));
   });
 
   it('a preview book episode stays as a "Coming later" placeholder', () => {

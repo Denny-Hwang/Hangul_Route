@@ -14,6 +14,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { StoryShelf } from './StoryShelf';
+import { useNoteStoriesLoaded } from '../story-content';
 
 /**
  * The Library's Culture section (F-STORY-004 §3.5; wireframe
@@ -32,8 +33,9 @@ export function CultureSection({ index }: { index: readonly StoryIndexEntry[] })
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  // Note titles in the UI language (F-CNT-002 overlay).
-  const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale]);
+  // Note titles in the UI language (F-CNT-002 overlay); a note's sources come from its story's chunk (F-CURR-002 §10).
+  const noteChunks = useNoteStoriesLoaded();
+  const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale, noteChunks]);
   const card = useMemo(() => cultureNotesCard(foundNotes(index, stories, snap), copy), [index, stories, snap, copy]);
   const hasTiles = index.some((e) => e.placement === 'shelf' && e.category === 'culture');
 

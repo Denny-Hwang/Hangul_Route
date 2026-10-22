@@ -9,6 +9,7 @@ import { gateLessonsStep } from '../../logic/browse/gate-entry';
 import type { RootStackParamList } from '../../navigation/types';
 import { openBrowseFromGate } from '../../platform/browse-handoff';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { passGate } from '../../store/gate-telemetry';
 
 /**
  * The learner app's ways into All lessons, behind the grown-up gate (F-BROWSE-001 sections 4.3 and 4.11, BR-12a).
@@ -46,7 +47,7 @@ export function GateLessonsButton({
   if (Platform.OS !== 'web') return null;
 
   const open = (): void => {
-    if (gateLessonsStep(gateOpensDirectlyNow()) === 'pin') {
+    if (gateLessonsStep(passGate('BrowseLessons', gateOpensDirectlyNow())) === 'pin') {
       navigation.navigate('PinEntry', target === undefined ? { next: 'BrowseLessons' } : { next: 'BrowseLessons', browseTarget: target });
       return;
     }

@@ -2,6 +2,7 @@ import { isLearnerRoot } from '@hangul-route/content-schema';
 import { parseBootIntent, parseJoinBootIntent, type BootIntent } from '../logic/shell/boot-intent';
 import { bounceFor } from '../logic/shell/bounce';
 import { clearGrownUpTab, forgetFreshPin, sessionArea, trackThenLeave, type SessionArea } from './grown-up-handoff.web';
+import { takePinResetTicket } from './pin-reset.web';
 import { track, type TelemetryEvent } from './telemetry';
 
 /**
@@ -65,6 +66,8 @@ export interface RootEnv {
 }
 
 let intent: BootIntent | null = null;
+/** [OA] The sign-in reset ticket this boot read (row OA-6), kept only for a `gate=pin-reset` intent. */
+let pinResetTicket: string | null = null;
 
 function onPageRestore(handler: () => void): void {
   try {
@@ -112,6 +115,10 @@ function readIntent(env: RootEnv, location: NonNullable<RootEnv['location']>): v
 
 function bootLearnerApp(env: RootEnv, location: NonNullable<RootEnv['location']>, root: AppRoot): void {
   if (root === 'app') readIntent(env, location);
+  // [OA] Section 8.5 step 5: every learner boot takes the sign-in reset ticket out of the tab (read once, CS-9); only
+  // the `gate=pin-reset` intent keeps what it read, so a ticket never waits for a later boot.
+  const ticket = takePinResetTicket(env.area());
+  pinResetTicket = intent?.kind === 'pin-reset' ? ticket : null;
   clearGrownUpTab(env.area());
   // A restored page also forgets the PIN it saw before it left: Back from a grown-up page within
   // 2 minutes of a PIN must not let the next tap skip the PIN (A-6 review).
@@ -124,6 +131,7 @@ function bootLearnerApp(env: RootEnv, location: NonNullable<RootEnv['location']>
 /** Picks the root and runs its boot step; call once, before anything mounts. */
 export function bootRoot(env: RootEnv = browserEnv()): AppRoot {
   intent = null;
+  pinResetTicket = null;
   const { location } = env;
   if (!location) return 'app';
   const root = pickRoot(location);
@@ -147,4 +155,11 @@ export function peekBootIntent(): BootIntent | null {
 
 export function consumeBootIntent(): void {
   intent = null;
+}
+
+/** [OA] The sign-in reset ticket this boot read (a JSON string), once: a second call returns null (CS-9). */
+export function takeBootPinResetTicket(): string | null {
+  const ticket = pinResetTicket;
+  pinResetTicket = null;
+  return ticket;
 }

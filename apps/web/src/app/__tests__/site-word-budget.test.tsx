@@ -7,6 +7,7 @@ import { LearnersPage } from '../../components/landing/LearnersPage';
 import { ParentsPage } from '../../components/landing/ParentsPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { SITE_CLAIMS } from '../../data/site-claims';
 
 /**
  * Visible-word budgets of the site pages without a browser (F-SITE-002 §3.11): each page rendered in its longest
@@ -16,7 +17,8 @@ import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
  * words either. The e2e budget (`e2e/site-budgets.spec.ts`) measures the real export with `innerText`.
  */
 const PERSONA_PAGE_WORDS = 550;
-const HOME_WORDS = 280;
+/** [SN] AMENDMENTS-SITE-NEWUSER §3.11: 300 (was 280), for the closing band and the hero's grown-up links. */
+const HOME_WORDS = 300;
 
 /** Removes every element `<tag …class="…name…">…</tag>` (no nesting of the same tag inside). */
 function dropByClass(html: string, tag: string, name: string): string {
@@ -26,6 +28,11 @@ function dropByClass(html: string, tag: string, name: string): string {
 /** The words a visitor reads with every fold closed. */
 function visibleWords(html: string): string[] {
   let visible = html
+    // [SN] The header's language control (§3.11): its summary counts, the visually hidden "Language" word and the
+    // endonym included; the closed menu's links do not.
+    .replace(/<details class="hr-site-lang\b[^"]*"[^>]*>\s*<summary\b[^>]*>([\s\S]*?)<\/summary>[\s\S]*?<\/details>/g, (_m, summary: string) =>
+      summary.replace(/style="[^"]*position:absolute[^"]*"/g, ''),
+    )
     // A fold shows its summary only.
     .replace(/<details\b[^>]*>\s*(<summary\b[\s\S]*?<\/summary>)[\s\S]*?<\/details>/g, '$1')
     // Decorative art and visually hidden text.
@@ -83,8 +90,13 @@ describe('visible-word budgets with every claim on (F-SITE-002 §3.11)', () => {
     }
   });
 
-  it(`/: at most ${HOME_WORDS} words`, () => {
-    const words = visibleWords(renderToStaticMarkup(<HomePage locale="en" claims={ALL_CLAIMS_ON} />));
+  // Today's claims too: with some claims off a base line can be longer than the claim line it gives way to (the
+  // home's step 3 `collect` body is longer than `routeBody`), so every claim on is not always the longest state.
+  it.each([
+    ['every claim on', ALL_CLAIMS_ON],
+    ["today's claims", SITE_CLAIMS],
+  ] as const)(`/: at most ${HOME_WORDS} words (%s)`, (_state, claims) => {
+    const words = visibleWords(renderToStaticMarkup(<HomePage locale="en" claims={claims} />));
     expect(words.length).toBeGreaterThan(80);
     expect(words.length).toBeLessThanOrEqual(HOME_WORDS);
   });
@@ -95,5 +107,16 @@ describe('visible-word budgets with every claim on (F-SITE-002 §3.11)', () => {
       '<h2 style="position:absolute;width:1px">Questions</h2><details><summary><span>Open me</span></summary><p>hidden body text</p></details>' +
       '<span aria-hidden="true">HR</span><p>one two</p>';
     expect(visibleWords(html)).toEqual(['Open', 'me', 'one', 'two']);
+  });
+
+  it('[SN] the language control counts its hidden word and the endonym, not its closed links (self-check, §3.11)', () => {
+    const html =
+      '<details class="hr-site-lang hr-site-lang-push"><summary class="hr-site-lang-summary"><span style="position:absolute;width:1px">Language</span> ' +
+      '<span lang="en">English</span></summary><ul><li><a href="/es">Español</a></li></ul></details><p>one</p>';
+    expect(visibleWords(html)).toEqual(['Language', 'English', 'one']);
+    const home = visibleWords(renderToStaticMarkup(<HomePage locale="en" claims={ALL_CLAIMS_ON} />));
+    expect(home).toContain('Language');
+    // The footer's locale switcher names Español once; the closed header menu adds nothing.
+    expect(home.filter((word) => word === 'Español')).toHaveLength(1);
   });
 });

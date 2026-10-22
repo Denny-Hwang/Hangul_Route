@@ -21,7 +21,7 @@ export const learner = {
     invitation: 'Want to learn Korean letters with me? It only takes a few minutes a day.',
     cta: "Let's start",
     restore: 'I already have progress',
-    trust: 'Start Korean from zero. Built with kids, parents, and grandparents in mind.',
+    trust: 'Start Korean from zero, at any age. No ads, ever.',
     /**
      * The grown-ups' row under the restore link (F-APP-001 A-7, section 3.6; wireframe
      * onboarding/welcome-personas.md, design/screens/app-shell/learner-entry.md D10). Web only,
@@ -1174,7 +1174,10 @@ export const learner = {
       title: 'Where should we start?',
       newToKorean: 'I am new to Korean',
       knowSome: 'I already know some Korean',
-      duration: 'It takes a few minutes. You can stop at any time.',
+      /** The sublabel under knowSome: what that choice opens (no digit, never the word test). */
+      duration: 'A short level check. You can stop at any time.',
+      /** The sublabel under newToKorean. */
+      newToKoreanHint: 'Start with the first letters.',
     },
     language: {
       title: 'Pick the language for the check',
@@ -2427,5 +2430,48 @@ export const learner = {
     scopeChild: 'A grown-up has an update about your class.',
     scopeSelf: 'There is an update about your class.',
     open: { cta: 'Open' },
+  },
+  /**
+   * [OA] "Who is using this?", the device's one chooser (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6.1 and 17.1, row
+   * OA-4a; mock design/screens/profiles/who-is-using.md). Names only on the tiles; nothing compares learners. The use
+   * rows (Family, Teacher, School, Sign in as a grown-up) are row OA-4b's; the lock lines arrive with row OA-5.
+   */
+  who: {
+    title: 'Who is using this?',
+    /** The learner tiles' section. */
+    learning: 'Learning',
+    /** The grown-up rows' section. */
+    grownUps: 'Grown-ups',
+    /** The dashed tile after the learners (gated as Add a profile is). */
+    add: 'Add a learner',
+    /** The Home header button between Display and Profile; its hint is `title`. */
+    switch: 'Switch',
+    /** The Profile screen's row that opens the chooser. */
+    profileRow: 'Who is using this?',
+    /** The Grown-up area's button that hands the device back through the chooser. */
+    switchUser: 'Switch user',
+    /** Under the title when a held join code opened the chooser (OA-D20). */
+    joinCaption: 'Pick who is joining.',
+    /** Under the Grown-up area row on a device with child profiles and no PIN yet. */
+    nopinCaption: 'A grown-up sets a PIN here.',
+    /** While a Forgot PIN wait runs (OA-D21): `time` is the local time it ends. No name, no count of tries. */
+    resetPending: (time: string) => `A new grown-up PIN can be set after ${time}. Enter the PIN to cancel.`,
+    /** Opens the PIN screen in verify mode; a correct PIN stops the wait. Also the title of that PIN screen. */
+    resetCancel: 'Cancel the wait',
+    /** [OA] Row OA-5: the caption under a locked tile's name, beside the lock glyph (on the chooser and the Profile tiles). */
+    lockedCaption: 'A grown-up opens this one.',
+    /** [OA] Row OA-5, section 13.2: under the title when the locks cannot be read, so every tile is locked (no per-tile caption). */
+    locksUnread: 'Tap a name, then a grown-up enters the PIN.',
+    /**
+     * Row OA-4b: the grown-up rows of the signed-in account's uses on this browser (web), in this order, each also the
+     * title of its PIN screen. Generic labels only, never an account name or email (CS-7). `signIn` replaces the use
+     * rows when no use is known.
+     */
+    use: {
+      family: 'Family',
+      teacher: 'Teacher',
+      school: 'School',
+      signIn: 'Sign in as a grown-up',
+    },
   },
 } as const;

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { create } from 'zustand';
 import { resumableRun, resumeClocks, type ResumeOffer, type SavedRun } from '../logic/placement/flow';
 import { readJson, removeKey, writeJson } from '../platform/storage';
+import { onProfileRemoved } from './profile-removal';
 
 /**
  * The level check in progress (F-PLC-001 section 3.1 step 8, section 3.8).
@@ -16,8 +17,12 @@ import { readJson, removeKey, writeJson } from '../platform/storage';
  * that fails keeps the run in memory for the session.
  */
 
-const runKey = (profileId: string): string => `placement-run:${profileId}`;
-const uiKey = (profileId: string): string => `placement-ui:${profileId}`;
+/** A level-check run in progress (`hr:placement-run:<id>`); exported for the removal sweep (row OA-7a). */
+export const PLACEMENT_RUN_KEY = (profileId: string): string => `placement-run:${profileId}`;
+/** The level-check invite marks (`hr:placement-ui:<id>`); exported for the removal sweep (row OA-7a). */
+export const PLACEMENT_UI_KEY = (profileId: string): string => `placement-ui:${profileId}`;
+const runKey = PLACEMENT_RUN_KEY;
+const uiKey = PLACEMENT_UI_KEY;
 
 const PlacementUiSchema = z.object({ declinedAt: z.string().optional(), dismissedAt: z.string().optional() });
 export type PlacementUi = z.infer<typeof PlacementUiSchema>;
@@ -167,3 +172,14 @@ async function mark(profileId: string, patch: PlacementUi): Promise<void> {
   store.setState((s) => ({ ui: { ...s.ui, [profileId]: ui } }));
   write(uiKey(profileId), ui);
 }
+
+// [OA] Row OA-7a (section 10.4, CS-20): a learner removed from this device leaves no level-check run or marks behind.
+onProfileRemoved((profileId) => {
+  bump(profileId);
+  usePlacementRunStore.setState((s) => {
+    const { [profileId]: _run, ...active } = s.active;
+    const { [profileId]: _ui, ...ui } = s.ui;
+    return { active, ui };
+  });
+  for (const stored of [PLACEMENT_RUN_KEY, PLACEMENT_UI_KEY]) removeKey(stored(profileId)).catch(() => undefined);
+});

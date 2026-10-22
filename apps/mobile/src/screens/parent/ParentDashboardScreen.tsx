@@ -28,10 +28,14 @@ import { FreeLessonsRow } from './FreeLessonsRow';
 import { GateLessonsButton } from './GateLessonsButton';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { LectureCard } from './LectureCard';
+import { PeopleOnDeviceCard } from './PeopleOnDeviceCard';
+import { ResetByWaitNotice } from './ResetByWaitNotice';
+import { BiometricShortcutCard } from './BiometricShortcutCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
 import { practiceTotals } from '../../logic/sessions/session-log';
+import { changePinMode } from '../../logic/profiles/pin-reset';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import { reportEntry } from '../../logic/reports/entry';
 import { useAudience } from '../../store/audience';
@@ -45,6 +49,8 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { syncApi } from '../../store/sync-store';
+import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { passGate } from '../../store/gate-telemetry';
 
 /** Learner's cub beside the name (F-LEARN-001 §3.6). */
 const AVATAR_SIZE = 40;
@@ -64,10 +70,21 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
   // else through the PIN screen when the 15-minute session has lapsed.
   const openReport = (profileId: string): void => {
     const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
-    const entry = reportEntry(profileId, opensDirectly(sessionOpen));
+    const entry = reportEntry(profileId, passGate('LearnerReport', opensDirectly(sessionOpen)));
     if (entry.screen === 'LearnerReport') navigation.navigate('LearnerReport', entry.params);
     else navigation.navigate('PinEntry', entry.params);
   };
+
+  // [OA] OA-2 review round 2 (CS-1, CS-15): the dashboard checks the gate itself whenever it comes into focus (Back or
+  // Cancel from a page above it, a level check started from here and left): with the session closed or lapsed it
+  // hands over to the PIN screen instead of staying usable. Every way in opens the gate first, so a first focus passes.
+  useEffect(
+    () =>
+      navigation.addListener('focus', () => {
+        if (!gateOpensDirectlyNow()) navigation.replace('PinEntry', { next: 'ParentDashboard' });
+      }),
+    [navigation],
+  );
 
   // Every profile's snapshot, not only the active one: the cards and the Starting spot row read them.
   useEffect(() => {
@@ -104,7 +121,36 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
         <Caption tone="muted">{m.readOnly}</Caption>
       </View>
 
+      {flags.whoChooserEnabled ? (
+        <>
+          {/* [OA] Switch user (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): hands the device back through "Who is using this?", which ends the session. */}
+          <Spacer size="sm" />
+          <Button
+            label={messages.learner.who.switchUser}
+            tone="ghost"
+            size="md"
+            fullWidth
+            onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })}
+            testID="dashboard-switch-user"
+          />
+          {/* [OA] People on this device (row OA-7a, section 10.1): every learner on the device, each opening its person page. */}
+          <Spacer size="lg" />
+          <PeopleOnDeviceCard profiles={profiles} onOpen={(profileId) => navigation.navigate('PersonOnDevice', { profileId })} />
+        </>
+      ) : null}
       <Spacer size="lg" />
+      <ResetByWaitNotice
+        onChange={() =>
+          navigation.navigate('PinEntry', {
+            next: 'ParentDashboard',
+            // [OA] Section 8.6: only a typed PIN counts here; face or fingerprint never leads to a new PIN.
+            mode: changePinMode(useUiStore.getState().lastPinTypedAt, Date.now()),
+            returnAfterSet: true,
+          })
+        }
+      />
+      {/* [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-9: native with strong face or fingerprint only; draws nothing otherwise. */}
+      <BiometricShortcutCard onNeedPin={() => navigation.navigate('PinEntry', { next: 'BiometricShortcut' })} />
       {grownUpHome ? (
         <>
           <GrownUpHomeCard onOpen={openGrownUpHome} />

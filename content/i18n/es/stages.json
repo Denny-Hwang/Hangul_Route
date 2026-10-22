@@ -19,23 +19,23 @@
     },
     "stage:stage4": {
       "title": "Diálogo",
-      "oneLiner": "Practica tus primeras conversaciones cortas de la vida real.",
+      "oneLiner": "Lee y responde diálogos cortos de todos los días.",
       "anchorSkill": "Mantén un diálogo de 4 turnos con saludo y pregunta"
     },
     "stage:stage5": {
       "title": "Historias",
-      "oneLiner": "Lee relatos cortos y cuentos populares coreanos con Hoya.",
+      "oneLiner": "Lee historias del patrimonio y cuentos con Hoya.",
       "anchorSkill": "Lee una historia de 5 oraciones y entiende el 80 % o más"
     },
     "stage:stage6": {
       "title": "Uso real",
-      "oneLiner": "Lleva el coreano al mundo: menús, letreros, llamadas.",
+      "oneLiner": "Lleva el coreano al mundo: menús, letreros y mensajes cortos.",
       "anchorSkill": "Pide comida, pregunta cómo llegar y escribe a tu primo o prima"
     },
     "stage:stage7": {
       "title": "Expresión personal",
       "oneLiner": "Di lo que piensas, sientes y creas, en coreano.",
-      "anchorSkill": "Graba una presentación personal de 1 minuto"
+      "anchorSkill": "Escribe una presentación personal corta"
     }
   }
 }

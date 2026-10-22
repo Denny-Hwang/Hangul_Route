@@ -31,8 +31,11 @@ export function SecondaryAction({ href, children }: { href: string; children: Re
   );
 }
 
-/** The page head: the page's only h1, its lead line and its actions (primary first). */
-export function PageHead({ title, lead, children }: { title: string; lead: string; children: ReactNode }): JSX.Element {
+/**
+ * The page head: the page's only h1, its lead line and its actions (primary first). `after` sits under the action row
+ * ([SN] the grown-up pages' "Already have an account? Sign in", AMENDMENTS-SITE-NEWUSER §3.5).
+ */
+export function PageHead({ title, lead, after, children }: { title: string; lead: string; after?: ReactNode; children: ReactNode }): JSX.Element {
   return (
     <section aria-labelledby="page-title" className="hr-site-page-head">
       <h1 id="page-title" className="hr-site-h1" style={{ margin: 0, lineHeight: typography.leading.tight, color: colors.text.primary }}>
@@ -52,6 +55,7 @@ export function PageHead({ title, lead, children }: { title: string; lead: strin
       <div className="hr-site-actions" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, marginTop: spacing.xl }}>
         {children}
       </div>
+      {after ? <div style={{ marginTop: spacing.xs }}>{after}</div> : null}
     </section>
   );
 }
@@ -150,7 +154,10 @@ export function Folds({ children }: { children: ReactNode }): JSX.Element {
   return <div style={{ display: 'grid', gap: spacing.sm }}>{children}</div>;
 }
 
-/** The closing block every persona page ends with: one line, labelling the block, and the primary action. */
+/**
+ * The closing block every persona page ends with: one line, labelling the block, and the primary action. [SN] The
+ * grown-up pages pass their actions inside `ClosingActions` (Create, then the have-account link under it).
+ */
 export function Closing({ id, line, children }: { id: string; line: string; children: ReactNode }): JSX.Element {
   return (
     <section aria-labelledby={id} className="hr-site-closing" style={{ backgroundColor: colors.brand.primaryLight, borderRadius: radii.xl }}>
@@ -159,6 +166,15 @@ export function Closing({ id, line, children }: { id: string; line: string; chil
       </p>
       {children}
     </section>
+  );
+}
+
+/** [SN] The closing block's action stack (AMENDMENTS-SITE-NEWUSER §3.5): the primary action, then a text link under it. */
+export function ClosingActions({ children }: { children: ReactNode }): JSX.Element {
+  return (
+    <div className="hr-site-closing-actions" style={{ display: 'grid', rowGap: spacing.xs }}>
+      {children}
+    </div>
   );
 }
 
@@ -173,21 +189,31 @@ export function Lines({ items }: { items: readonly string[] }): JSX.Element {
   );
 }
 
+const TEXT_LINK = {
+  ...HIT,
+  justifyContent: 'flex-start',
+  fontWeight: typography.weight.semibold,
+  textDecorationLine: 'underline',
+  textDecorationThickness: borderWidth.thin,
+  textUnderlineOffset: spacing.xs,
+} as const;
+
+/**
+ * [SN] A text link that leaves the site for the app (a plain `<a>`, as every app link), styled as `TextLink`: the
+ * grown-up pages' "Already have an account? Sign in" (AMENDMENTS-SITE-NEWUSER §3.5, §3.6), 64 px tall.
+ */
+export function AppTextLink({ href, children }: { href: string; children: ReactNode }): JSX.Element {
+  return (
+    <a href={href} className="hr-site-text-link" style={TEXT_LINK}>
+      {children}
+    </a>
+  );
+}
+
 /** An in-page text link to another site page (`next/link`, inside the site route group), with a 64 px hit area. */
 export function TextLink({ href, children }: { href: string; children: ReactNode }): JSX.Element {
   return (
-    <Link
-      href={href}
-      className="hr-site-text-link"
-      style={{
-        ...HIT,
-        justifyContent: 'flex-start',
-        fontWeight: typography.weight.semibold,
-        textDecorationLine: 'underline',
-        textDecorationThickness: borderWidth.thin,
-        textUnderlineOffset: spacing.xs,
-      }}
-    >
+    <Link href={href} className="hr-site-text-link" style={TEXT_LINK}>
       {children}
     </Link>
   );
@@ -212,22 +238,21 @@ export function TwoColumns({ left, right }: { left: ReactNode; right: ReactNode 
  * The Plans block of a persona page (F-SITE-002 §3.5, §3.6): the free line, the paid line only while paid plans are
  * coming (once they are on sale, the managed line already says where), then the managed line, so the app host is named
  * once. No price, no plan term and no billing link, ever. [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): once plans
- * are on sale, the sizes line takes the paid line's place, with the learner limits from content-schema.
+ * are on sale, the sizes line takes the paid line's place, with the learner limits from content-schema. The free line
+ * comes first, alone: the site never states the free limits (owner decision 2026-10-21); then the paid (or sizes)
+ * line; then the managed line: `managedLater` while plans are coming (nothing is on sale yet to manage),
+ * `managedInApp` once they are on sale.
  */
 export function PlansBlock({ locale, claims, id }: { locale: UiLocale; claims: Readonly<SiteClaims>; id: string }): JSX.Element {
   const t = getMessages(locale).landing;
   return (
     <Section id={id} title={t.persona.plansTitle}>
       <div style={{ display: 'grid', gap: spacing.sm }}>
-        {/* Two keys in one paragraph: each stays its own text node, so a locale can word each one alone. */}
+        <Body>{t.plans.free.stage1}</Body>
         <Body>
-          <span>{t.plans.free.stage1}</span>
-          {' '}
-          <span>
-            {claims.paidPlans === 'coming' ? t.plans.paid.coming : t.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS)}
-          </span>
+          {claims.paidPlans === 'coming' ? t.plans.paid.coming : t.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS)}
         </Body>
-        <Body>{t.plans.managedInApp}</Body>
+        <Body>{claims.paidPlans === 'coming' ? t.plans.managedLater : t.plans.managedInApp}</Body>
       </div>
     </Section>
   );

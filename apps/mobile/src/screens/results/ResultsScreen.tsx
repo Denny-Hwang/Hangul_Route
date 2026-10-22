@@ -35,8 +35,8 @@ import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
-import { storyById } from '../../content/stories';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { storyById, storyLevels } from '../../content/stories';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
 import { cardKoLine } from '../../logic/card-art';
 import { cursorContext } from '../../logic/cursor-context';
@@ -61,6 +61,8 @@ import { PRIZE_STAGE, opensStagePrize } from '../../logic/stage1/stage-complete'
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { resultsStoryOf, storyResultsActionEvent, storyResultsExtras } from '../../logic/story/results-extras';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
+import { storyIdOfQuest } from '../../logic/story/story-ref';
+import { useStoriesLoaded } from '../story-content';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { nextStoryAfter, storyLockFor } from '../../logic/story/story-pick';
 import { useReducedMotion } from '../../platform/motion';
@@ -75,6 +77,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
+import { passGate } from '../../store/gate-telemetry';
 import { CardArtThumb } from './CardArtThumb';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { ResultsFreeEndCelebration, ResultsOpenForYou } from './ResultsFreeEnd';
@@ -95,6 +98,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const messages = useMessages();
   const m = messages.learner.results;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const { questId, episodeId, stars, correct, total, retries = 0 } = route.params;
   const quest = questById(questId);
   const episode = episodeById(episodeId);
@@ -169,7 +174,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (!view) return null;
     const finished = view.episodeId ? episodeById(view.episodeId) : undefined;
     return { ...view, episodeTitle: finished && localizeEpisode(finished, locale).titleEn };
-  }, [outcome, locale]);
+  }, [outcome, locale, titles]);
 
   // Android/web read the live region below (a second announcement would double-read);
   // iOS VoiceOver ignores live regions, so it gets one explicit announcement for both banners.
@@ -270,7 +275,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const ask = askFor(audience, isClassOnly(memberships ?? []), messages.learner.access);
   const onAsk = (): void => {
     void track(helpAskedEvent(profileId, 'results', ask.audience));
-    const gate = askGate(gateOpensDirectlyNow(), 'results');
+    const gate = askGate(passGate('Paywall', gateOpensDirectlyNow()), 'results');
     if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
     else navigation.navigate('PinEntry', gate.params);
   };
@@ -290,11 +295,22 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   // generic buttons. Next story (F-STORY-004 `nextStoryAfter`) walks the same book or shelf category
   // and never offers a locked story; the culture-note link waits for the Culture notes route
   // (F-STORY-004 PR 4.7), so none is supplied yet.
+  // The story's tiers come from its chunk (F-CURR-002 §10, row CM-8): in already when the quest played it, loaded again
+  // after a reload. Which extras show is known from the shelf (the title and the levels), so they never shift in late.
+  const questStoryId = quest === undefined ? null : storyIdOfQuest(quest);
+  const storyChunks = useStoriesLoaded(questStoryId === null ? [] : [questStoryId]);
   const storyResults = useMemo(() => {
-    const story = resultsStoryOf(quest, (id) => {
-      const found = storyById(id);
-      return found && localizeStory(found, locale);
-    });
+    const story = resultsStoryOf(
+      quest,
+      (id) => {
+        const found = storyById(id);
+        return found && localizeStory(found, locale);
+      },
+      (id) => {
+        const found = storyById(id);
+        return found === undefined ? [] : storyLevels(found);
+      },
+    );
     if (!story) return null;
     const next = nextStoryAfter(questId, {
       entries: defaultStoryIndex(),
@@ -316,7 +332,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       messages.learner.story.results,
     );
     return { story, next, view };
-  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks]);
 
   const goHome = (): void => {
     navigation.dispatch(

@@ -3,11 +3,13 @@ import { D1Db, type D1Like } from './d1';
 import { MemoryDb } from './memory';
 import type { Db } from './types';
 
-export type { Db, NoteCursor, StoredRelink } from './types';
+export type { Db, NoteCursor, StoredRelink, TelemetryDailyRow } from './types';
 export * from './transfer-types';
 export * from './feedback-types';
 export * from './class-move-types';
 export * from './admin-types';
+export * from './remote-config-types';
+export type { RollupKey, RollupRow } from './rollup-types';
 export { D1Db, MemoryDb };
 
 /** The dev / test backend when no D1 binding is present (only where dev fallbacks are opted in — lib/runtime). */

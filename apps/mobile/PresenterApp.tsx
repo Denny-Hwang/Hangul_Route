@@ -1,6 +1,7 @@
 import { TextSizeProvider, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { DeviceDisplaySheet } from './src/components/DeviceDisplaySheet';
+import { useLocalePacks } from './src/i18n/use-messages';
 import {
   CATALOG,
   decodeDeck,
@@ -205,6 +206,9 @@ function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
   return { kind: result.kind };
 }
 
+/** The marker of this root's own web bundle (F-CURR-002 §10): the post-build check fails a start bundle that carries it. */
+export const ROOT_CHUNK = 'root-chunk:presenter';
+
 /** The presenter root: the gesture and safe-area providers, then the presenter (`useSafeAreaInsets` needs the provider above it). */
 export default function PresenterApp(): React.ReactElement {
   return (
@@ -243,8 +247,11 @@ function Presenter(): React.ReactElement {
   const deck = phase.kind === 'ready' || phase.kind === 'running' ? phase.deck : null;
   const locale: UiLocale = presenterLocale({ device: deviceLocale, available });
   const slidesIn: UiLocale = slideLocale({ deck, device: deviceLocale, available });
-  const messages = useMemo(() => getMessages(dictionaryLocale(locale)), [locale]);
-  const slideMessages = useMemo(() => getMessages(dictionaryLocale(slidesIn)), [slidesIn]);
+  // The web loads each locale's text as a chunk of its own (F-CURR-002 §10): a chunk that failed at mount and
+  // arrives later (back online) draws the chrome and the slides again in their language.
+  const packs = useLocalePacks([locale, slidesIn]);
+  const messages = useMemo(() => getMessages(dictionaryLocale(locale)), [locale, packs]);
+  const slideMessages = useMemo(() => getMessages(dictionaryLocale(slidesIn)), [slidesIn, packs]);
   // The Display (Aa) sheet of the home and the start screen.
   const [displayOpen, setDisplayOpen] = useState(false);
   const reducedMotion = useReducedMotion();

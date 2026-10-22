@@ -45,8 +45,14 @@ describe('a locale that has not shipped (fixture)', () => {
 
   it.each(['es', 'ko'] as const)('%s: its own words, noindex and no alternates while hidden', (locale) => {
     const meta = siteMetadataFor(locale, '/about', false);
-    expect(meta.title).toBe(getMessages(locale).landing.meta.title);
+    expect(meta.title).toBe(getMessages(locale).landing.meta.pages.about.title);
     expect(meta.robots).toEqual({ index: false, follow: false });
     expect(meta.alternates).toBeUndefined();
+    // No og:url and no og:locale:alternate either: a hidden page names no shown URL or locale (SN-2).
+    expect(meta.openGraph).not.toHaveProperty('url');
+    expect(meta.openGraph).not.toHaveProperty('alternateLocale');
+    // No share image: the prune takes `site/<locale>/` out of the export with the pages (§3.14).
+    expect(meta.openGraph).not.toHaveProperty('images');
+    expect(meta.twitter).toMatchObject({ card: 'summary' });
   });
 });

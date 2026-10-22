@@ -1,6 +1,5 @@
+import { BUNDLED_MESSAGE_OVERLAYS } from './bundled-messages';
 import { en } from './messages/en';
-import { es } from './messages/es/index';
-import { ko } from './messages/ko';
 import { pseudoLocaleEnabled } from './env';
 import type { UiLocale } from './locales';
 import { PSEUDO_LOCALE, pseudoLocalize } from './pseudo';
@@ -10,7 +9,14 @@ import type { DeepPartial, Messages } from './types';
 /** Locales `getMessages` accepts: the UI locales plus the QA pseudo-locale. */
 export type MessageLocale = UiLocale | typeof PSEUDO_LOCALE;
 
-const OVERLAYS: Record<UiLocale, DeepPartial<Messages>> = { en: {}, es, ko };
+/** A UI locale that has a message overlay: every one but English. */
+export type OverlayMessageLocale = Exclude<UiLocale, 'en'>;
+
+/**
+ * The es / ko overlays in hand: both from the start everywhere but the learner PWA, which registers the
+ * active locale's overlay when its chunk arrives (`bundled-messages.ts`, F-CURR-002 §10).
+ */
+const OVERLAYS: Partial<Record<UiLocale, DeepPartial<Messages>>> = { en: {}, ...BUNDLED_MESSAGE_OVERLAYS };
 
 /**
  * First defined of device, account, detected; else `en` (F-I18N-001 §3.1; one UI language per
@@ -28,9 +34,26 @@ export function resolveLocale(input: {
 const cache = new Map<MessageLocale, Messages>();
 
 /**
+ * Hands in a locale's overlay that the build did not carry from the start (the learner PWA's locale chunk,
+ * `bundled-messages.web.ts`); the next `getMessages(locale)` merges it. Registering the same overlay again
+ * changes nothing.
+ */
+export function registerMessageOverlay(locale: OverlayMessageLocale, overlay: DeepPartial<Messages>): void {
+  if (OVERLAYS[locale] === overlay) return;
+  OVERLAYS[locale] = overlay;
+  cache.delete(locale);
+}
+
+/** True when `getMessages(locale)` has the locale's own overlay: always for English and the pseudo-locale. */
+export function hasMessageOverlay(locale: MessageLocale): boolean {
+  return locale === 'en' || locale === PSEUDO_LOCALE || OVERLAYS[locale] !== undefined;
+}
+
+/**
  * The dictionary for an explicit locale: English with that locale's overlay laid
  * over it, so a missing key falls back to English. Memoised per locale.
  * `en-XA` is pseudo-localised English, and only when the build flag is set.
+ * A locale whose overlay is not in yet (the learner PWA before its locale chunk) reads English, unmemoised.
  */
 export function getMessages(locale: MessageLocale): Messages {
   if (locale === 'en') return en;
@@ -42,7 +65,9 @@ export function getMessages(locale: MessageLocale): Messages {
     cache.set(locale, pseudo);
     return pseudo;
   }
-  const merged = deepMerge<Messages>(en, OVERLAYS[locale]);
+  const overlay = OVERLAYS[locale];
+  if (overlay === undefined) return en;
+  const merged = deepMerge<Messages>(en, overlay);
   cache.set(locale, merged);
   return merged;
 }
@@ -59,7 +84,7 @@ export function dictionaryLocale(locale: UiLocale, pseudo: boolean = pseudoLocal
 /**
  * Dictionary subtrees that stay English in every locale on purpose: the Privacy Policy and the Terms of
  * Service are English-authoritative until legal review (decision L10, F-I18N-001 §4). es / ko show the
- * English text under a localized notice (`landing.legal.draft` and `backHome` stay translatable), so an
+ * English text under a localized notice (`landing.legal.englishAuthoritative` and `backHome` stay translatable), so an
  * overlay must not set a leaf under these prefixes (messages.structure.test.ts), and they are not
  * fallbacks: they never count against a locale's key coverage (§3.10 release gate).
  */
@@ -76,6 +101,6 @@ export function isEnglishAuthoritative(path: string): boolean {
  */
 export function fallbackPaths(locale: MessageLocale): string[] {
   if (locale === 'en' || locale === PSEUDO_LOCALE) return [];
-  const translated = new Set(leafPaths(OVERLAYS[locale]));
+  const translated = new Set(leafPaths(OVERLAYS[locale] ?? {}));
   return leafPaths(en).filter((path) => !translated.has(path) && !isEnglishAuthoritative(path));
 }

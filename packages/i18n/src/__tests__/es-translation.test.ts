@@ -34,7 +34,7 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
   });
 
   it('translates the legal notice around the English text', () => {
-    expect(es.landing.legal.draft).not.toBe(en.landing.legal.draft);
+    expect(es.landing.legal.englishAuthoritative).not.toBe(en.landing.legal.englishAuthoritative);
   });
 
   it('differs from English wherever English is not a shared word (brand names, codes, symbols)', () => {
@@ -96,8 +96,8 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
     expect(es.caregiver.browse.facts.level.readAlong).toBe('Leer escuchando');
     expect(cell(1)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 1 terminada');
     expect(cell(2)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 2 terminadas');
-    expect(es.landing.cards.body(1, 1, 1, 1, 1)).toContain('La Etapa 1 trae 1 tarjeta: 1 común, 1 poco común, 1 rara y 1 legendaria.');
-    expect(es.landing.cards.body(24, 12, 6, 4, 2)).toContain('La Etapa 1 trae 24 tarjetas: 12 comunes, 6 poco comunes, 4 raras y 2 legendarias.');
+    expect(es.landing.persona.learners.cards.seeAll(1)).toBe('Ver la tarjeta de la Etapa 1');
+    expect(es.landing.persona.learners.cards.seeAll(24)).toBe('Ver las 24 tarjetas de la Etapa 1');
     expect(es.report.class.headline(1, 1, 'esta semana')).toBe('1 de 1 estudiante practicó esta semana.');
     expect(es.report.class.headline(2, 5, 'esta semana')).toBe('2 de 5 estudiantes practicaron esta semana.');
   });
@@ -199,4 +199,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'learner.presenter.presets.length.option',
   // AMENDMENTS-LECTURE-V2 section 12.2 (LV-4): the console's length chip, the same "{n} min".
   'console.lecture.presets.length.option',
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4 (OA-7b): a refused seat, the name and the cap line joined by ": ".
+  'caregiver.join.who.refused',
 ];

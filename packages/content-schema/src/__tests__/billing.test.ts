@@ -85,10 +85,12 @@ describe('billing telemetry is server-only (F-BILL-002 §10, B-3)', () => {
     expect(BILLING_TELEMETRY_PREFIX).toBe('billing.');
   });
 
-  it('marks every billing.* name, and nothing else, as recorded by the Worker only', () => {
+  it('marks every billing.* name and the class goal names, and nothing else, as recorded by the Worker only', () => {
     const billing = TELEMETRY_EVENT_NAMES.filter((name) => name.startsWith(BILLING_TELEMETRY_PREFIX));
     expect(billing.length).toBeGreaterThanOrEqual(3);
-    for (const name of TELEMETRY_EVENT_NAMES) expect(isServerOnlyTelemetryName(name), name).toBe(billing.includes(name));
+    // F-CURR-002 section 11.3 (TELEMETRY-NAMES-2 section R): the class goal is recorded by the Worker (row CM-62).
+    const serverOnly: readonly string[] = [...billing, 'space.goal.set', 'space.goal.met'];
+    for (const name of TELEMETRY_EVENT_NAMES) expect(isServerOnlyTelemetryName(name), name).toBe(serverOnly.includes(name));
     expect(isServerOnlyTelemetryName('billing.made_up')).toBe(true);
     expect(isServerOnlyTelemetryName('paywall.viewed')).toBe(false);
     expect(isServerOnlyTelemetryName(undefined)).toBe(false);

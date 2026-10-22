@@ -19,7 +19,12 @@
  * - The launch-news consent line (`waitlist.consentLead` + `contactLink` + `privacyLink`) must stay
  *   in step with CONSENT_TEXT_VERSION on the API.
  */
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
+import {
+  FAMILY_LIFETIME_LEARNERS,
+  GROUP_LICENSE_LEARNERS,
+  SCHOOL_ADMIN_CAP,
+  SCHOOL_LICENSE_TEACHERS,
+} from '@hangul-route/content-schema';
 import { plural } from '../../plural';
 
 /**
@@ -32,7 +37,7 @@ const FAQ_ADULT = {
 } as const;
 const FAQ_KOREAN = {
   q: 'Do I need to know any Korean?',
-  a: 'No — starting from zero is what we built it for. Instructions are in plain, simple English. Korean only appears as the thing being learned.',
+  a: 'No. Starting from zero is what we built it for. Menus are in simple English, Spanish or Korean, and every Korean word comes with its romanization and meaning.',
 } as const;
 
 /**
@@ -56,11 +61,12 @@ export const landing = {
     title: 'Hangul Route — Learn Hangul from zero with Hoya',
     tagline: 'Learn Hangul from zero, at any age.',
     /**
-     * What is built, with no typed counts (F-SITE-002 §3.12): Stage 1, the Korean culture cards, Hoya, no ads. No
-     * stage, theme or mini-game count, and no Heritage Journey grid, which is not built yet.
+     * What is built, with no typed counts (F-SITE-002 §3.12): the alphabet, then words, sentences and stories (later
+     * stages ship: content/episodes/stage-2 to stage-7, stories and word topics), Stage 1 free, Hoya, no ads. No price,
+     * no term, and no stage, theme or mini-game count.
      */
     description:
-      'Learn Hangul from zero with Hoya the tiger, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests teach the Korean alphabet, for reading, listening and writing, and every letter earns a Korean culture card. Stage 1 is free and more stages are coming. No ads, ever.',
+      'Learn Hangul from zero with Hoya the tiger, at any age. Five-minute quests teach the Korean alphabet, then words, sentences and stories. Stage 1 is free. No ads, ever.',
     keywords: ['learn Hangul', 'Korean alphabet', 'learn Korean', 'Korean for beginners', 'heritage Korean', 'K-culture learning', 'Hoya'],
     ogDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards. Stage 1 is free.',
     twitterDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards.',
@@ -72,11 +78,28 @@ export const landing = {
       },
       parents: {
         title: 'For parents and caregivers — Hangul Route',
-        description: "Short, kind Hangul lessons with no ads and a grown-up gate. Create a free family space and see each learner's week.",
+        description: "Short, kind Hangul lessons with no ads and a grown-up PIN. Create a free family space and see each learner's week.",
       },
       teachers: {
         title: 'For teachers — Hangul Route',
-        description: 'Students join with a class code, with no student emails or accounts. Plan the week and see who practised. Never a ranking.',
+        description: 'Students join with a code, a link or a QR code, with no student emails or accounts. Plan the week and see who practiced. Never a ranking.',
+      },
+      /** AMENDMENTS-SITE-NEWUSER SN-2: About, the legal pages and the open-source notices get their own title and description too. */
+      about: {
+        title: 'About Hangul Route',
+        description: 'Who makes Hangul Route and the promises we keep.',
+      },
+      privacy: {
+        title: 'Privacy Policy — Hangul Route',
+        description: 'What Hangul Route collects, who can see it, and how to delete it.',
+      },
+      terms: {
+        title: 'Terms of Service — Hangul Route',
+        description: 'The rules for using Hangul Route.',
+      },
+      licenses: {
+        title: 'Open-source notices — Hangul Route',
+        description: 'The open-source software Hangul Route uses.',
       },
     },
   },
@@ -96,68 +119,97 @@ export const landing = {
     teachers: 'Teachers',
     signIn: 'Sign in',
     start: 'Start learning',
+    /**
+     * [SN] The header's Start pill (AMENDMENTS-SITE-NEWUSER §3.2): its visible label. Its accessible name is `start`,
+     * which contains this label in every locale (WCAG 2.5.3 Label in Name).
+     */
+    startShort: 'Start',
     skip: 'Skip to content',
   },
   /**
    * The layered home `/` (F-SITE-002 §3.3, appendix B.1). `hero.title` is the tagline; the taught letter in Hoya's
    * bubble is passed in with its romanization (CLAUDE.md §1; the page passes the letter's teaching sound value, e.g.
-   * `g/k` for the first letter). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on.
+   * `a` for the first letter, ㅏ). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on;
+   * `how.levelBody` replaces step 1's line only while the `levelCheck` claim is on.
    * The promises are titles only; their explanations live on the persona pages.
    */
   home: {
     hero: {
       title: 'Learn Hangul from zero, at any age.',
-      lead: 'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
+      lead: 'Hangul is the Korean alphabet. Learn to read, hear and write it with Hoya the tiger.',
       start: 'Start learning',
-      grownUps: 'Parent or teacher? Find your page',
-      /** Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). */
-      facts: 'Runs in your browser · Nothing to install · The app works offline on most devices after your first visit',
-      /** A no-break space keeps the letter and its romanization on one line when the bubble wraps. */
-      bubble: (letter: string, romanization: string) => `Annyeong! Let's meet ${letter}\u00a0(${romanization}).`,
+      /** [SN] The hero's two direct links to `/parents` and `/teachers` (AMENDMENTS-SITE-NEWUSER §3.3). */
+      forParents: "I'm a parent or caregiver",
+      forTeachers: "I'm a teacher",
+      /**
+       * Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). No
+       * "nothing to install": the app offers Install (PWA). "Stage 1 is free" leads, so a first-time visitor sees the
+       * cost above the fold; "No sign-up to start" is the learner's start (grown-ups do sign in, on their pages).
+       */
+      facts: 'Stage 1 is free · No sign-up to start · Works offline on most devices after your first visit',
+      /**
+       * A no-break space keeps the letter and its romanization on one line when the bubble wraps. No romanized Korean
+       * greeting: taught Korean is passed in with its romanization, never typed here (CLAUDE.md §1).
+       */
+      bubble: (letter: string, romanization: string) => `Hi! Let's meet ${letter}\u00a0(${romanization}).`,
     },
     who: {
       title: 'Who is it for?',
       items: {
         learners: {
           title: 'Learners',
-          body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
+          body: 'Five-minute quests, a guide who never scolds, and Korean culture cards.',
         },
         parents: {
           title: 'Parents and caregivers',
-          body: 'See what your learner practises, with a grown-up gate and no ads.',
+          body: 'See what your learner practices, with a grown-up PIN and no ads.',
         },
         teachers: {
           title: 'Teachers',
-          body: 'Students join with a class code. No student emails, no accounts.',
+          body: 'Students join with a code, link or QR code. No student accounts.',
         },
       },
     },
     how: {
       title: 'How it works',
       steps: {
-        start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
-        quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
+        /** The first run: a name and a Hoya (`learner.createProfile.avatarHeading` "Pick a Hoya"); "No sign-up to start" is in the hero facts. */
+        start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
+        quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures.' },
         /** "Saved and backed up": the app backs up every learner's progress with no sign-in (see `persona.parents.safe.bullets.backup`). */
         collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
       },
       routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
+      /**
+       * Step 1's line while the `levelCheck` claim is on (F-PLC-001: the level check is offered to every new profile).
+       * It follows step 1's title ("Make a profile"), and the level check comes after the profile, as in the app. One
+       * line, not a fourth step: the home's word budget (280, F-SITE-002 §3.11) is full with it.
+       */
+      levelBody: 'Pick a name and a Hoya. A level check is optional.',
     },
     promises: {
       /** The section's visually hidden heading. */
       label: 'Our promises',
       items: { ads: 'No ads, ever', safety: 'Child safety first', noRed: 'No red marks' },
     },
+    /** [SN] The closing band (AMENDMENTS-SITE-NEWUSER §3.3 item 5): an invitation to Start learning, not a form. */
+    closing: {
+      title: 'Ready for your first Korean letter?',
+      body: 'Stage 1 is free. No email or password. Your first quest takes about five minutes.',
+    },
     news: {
-      title: 'Get the launch news',
-      body: "Leave your email and we'll send you the launch news. Nothing else.",
+      /** Within "launch news" (the consent line, CONSENT_TEXT_VERSION): new stages and plans, nothing else. */
+      title: 'Launch news by email',
+      body: "We'll email you when family and class plans launch. Nothing else.",
     },
   },
   /**
    * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The home's cost line is the
-   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line, the
-   * `paid.coming` line only while plans are coming, then `managedInApp`, so the host is named once (§3.5). The free
-   * plan is all of Stage 1 (F-ENT-003 OD-1), so
-   * `free.stage1` is the same in every state and says nothing about paid plans. Plans bought on the web renew
+   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line (never
+   * the free limits, owner decision 2026-10-21), then the `paid.coming` line only while plans are coming (`sizes` once
+   * they are on sale), then `managedLater` while plans are coming or `managedInApp` once they are on sale, so the host
+   * is named once (§3.5). The free plan is all of Stage 1 (F-ENT-003 OD-1), so `free.stage1` is the same in every
+   * state and says nothing about paid plans. Plans bought on the web renew
    * yearly (BY-1): the signed-in billing page states the term (the Terms will too, S-7), and no site line names a
    * term or calls a plan one-time.
    */
@@ -167,10 +219,13 @@ export const landing = {
       stage1: 'Stage 1 is free.',
     },
     paid: {
-      coming: 'More stages are coming, with plans for families and classes.',
+      /** Later stages already ship (content/episodes/stage-2 to stage-7, stories, word topics); only plans are to come. */
+      coming: 'Words, sentences and stories are in the app too. Family and class plans are on the way.',
       inApp: 'Plans for families and classes are at app.hangulroute.com.',
     },
     managedInApp: 'Plans and billing are managed at app.hangulroute.com after you sign in.',
+    /** The managed line while plans are still coming (`paidPlans: 'coming'`): nothing is on sale yet to manage. */
+    managedLater: 'When plans arrive, you will manage them at app.hangulroute.com after you sign in.',
     /**
      * [SA] AMENDMENTS-SEATS-ADMINS sections 4 and 9.5: the learners each plan holds, the numbers passed in
      * (`FAMILY_LIFETIME_LEARNERS`, `GROUP_LICENSE_LEARNERS`). A persona Plans block shows it in the paid line's place
@@ -226,7 +281,8 @@ export const landing = {
         },
         code: {
           q: 'I have a join code. Where do I enter it?',
-          a: 'In the app: tap Profile, then go to Classes & family and tap Join a class.',
+          /** The join link and its QR code are a class's (console `space.joinLink`); a family shares its code. */
+          a: 'Open the join link your teacher shares. Or, in the app, tap Profile, go to Classes & family and tap Join a class.',
         },
         offline: {
           q: 'Does it work offline?',
@@ -234,12 +290,26 @@ export const landing = {
         },
         adult: FAQ_ADULT,
         korean: FAQ_KOREAN,
+        /**
+         * Only while the `levelCheck` claim is on. The label is `learner.placement.invite.knowSome` word for word, so
+         * the learner finds the button the answer names.
+         */
+        level: {
+          q: 'I already know some Hangul. Do I have to start at the beginning?',
+          a: 'No. When you start, tap “I already know some Korean” and take a level check. Hoya suggests where to begin.',
+        },
+      },
+      /** One paragraph under "What you learn first": what comes after Stage 1. */
+      after: {
+        title: 'After the alphabet',
+        body: 'Words, short sentences, conversations and heritage stories, in the same five-minute quests.',
       },
     },
     parents: {
       title: 'For parents and caregivers',
       lead: "For parents, grandparents and every caregiver: short, kind lessons that keep your learner's data private.",
-      signIn: 'Sign in as a parent',
+      /** [SN] The primary action: the create view of /signin (AMENDMENTS-SITE-NEWUSER §3.5). */
+      create: 'Create a free family space',
       learn: {
         title: 'What they learn',
         body: 'The Korean alphabet first: reading, listening and writing, in five-minute quests.',
@@ -259,20 +329,22 @@ export const landing = {
            */
           backup:
             "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
-          gate: 'A grown-up gate guards anything that costs money or deletes data.',
+          /** The grown-up PIN (PinEntryScreen, F-PROF-001 §3.1), the same sentence as `about.promises.gate`. */
+          gate: 'A grown-up PIN guards anything that costs money or deletes data.',
           siblings: 'Siblings can share a device. Each learner keeps their own stars and cards.',
         },
       },
       follow: {
         title: 'Follow along',
         /** True today on the console's family space. */
-        body: "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together.",
-        reports: 'Reports for today, this week, this month and all time show what went well and what to practise next.',
+        body: "Create a free family space, share its code, and see each learner's week: time practiced, quests done and letters to revisit together.",
+        reports: 'Reports for today, this week, this month and all time show what went well and what to practice next.',
         route: "Open each learner's Learning Route to see where they are and what comes next.",
         notes: 'Send a short note of encouragement that your learner sees in the app.',
         /** Names the product as the app's billing page does (`console.billing.planTitle.family_lifetime`). */
         browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
-        lecture: 'Lecture mode puts a lesson on your TV so you can learn together.',
+        /** AMENDMENTS-LECTURE-V2: Stages 1 to 7, phone landscape included. */
+        lecture: 'Lecture mode shows ready-made lessons from Stages 1 to 7 on a TV, a laptop or a phone turned sideways, so you can learn together.',
       },
       /** "What can I see?" answers with `whatSee.a`, or `whatSee.reports` while the `parentReports` claim is on. */
       faq: {
@@ -288,13 +360,14 @@ export const landing = {
     teachers: {
       title: 'For teachers',
       lead: 'Students join with a code, you plan the week, and everyone learns at their own pace.',
-      signIn: 'Sign in as a teacher',
+      /** [SN] The primary action: the create view of /signin (AMENDMENTS-SITE-NEWUSER §3.6). */
+      create: 'Create a free class',
       tryIt: 'Try it as a learner',
       setup: {
         title: 'Set up in minutes',
         steps: {
           space: 'Sign in and create a class space.',
-          code: 'Share the class code. Students enter it in the app; no student emails or accounts.',
+          code: 'Share the class code, the join link or its QR code. Students type the code or open the link; no student emails or accounts.',
           devices: 'Students learn on any device with a browser.',
         },
       },
@@ -302,25 +375,45 @@ export const landing = {
         title: 'Plan and assign',
         bullets: {
           pick: "Pick quests for the week. They appear on each student's homework list.",
-          planner: 'Or let the planner build a term route from your class level and rhythm.',
+          /** Names the console page by its title (`console.curriculum.title`). */
+          planner: 'Or use Plan a term: it builds a term plan from your class level and rhythm.',
         },
       },
       class: {
         title: 'See how the class is doing',
         /** True today (the weekly roll-up). */
-        body: 'A weekly view shows who practised and which letters to revisit together. Never a ranking.',
+        body: 'A weekly view shows who practiced and which letters to revisit together. Never a ranking.',
         reports: 'Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.',
         route: "Open each student's Learning Route to see where they are and what comes next.",
         notes: 'Send students a short note of encouragement.',
-        browse: 'With a class or school plan, preview every lesson exactly as students see it.',
-        lecture: 'Lecture mode: teach from the front on a projector or TV, with ready-made lessons.',
+        /** Names the product as the app's billing page does (`console.billing.planTitle.group_license`). */
+        browse: 'With the Group License, preview every lesson exactly as students see it.',
+        /** AMENDMENTS-LECTURE-V2: Stages 1 to 7, stories and word topics, phone landscape included. */
+        lecture: 'Lecture mode: teach from the front with ready-made slides for Stages 1 to 7, stories and word sets, on a projector, a TV or a phone turned sideways.',
+      },
+      /**
+       * [SN] "Use it across a whole school" (AMENDMENTS-SITE-NEWUSER §3.6, SN-D8). Every fact is live, so no claim gates
+       * it; the caps and the address are passed in (`SCHOOL_ADMIN_CAP`, `SCHOOL_LEARNER_CAP`, `CONTACT_EMAIL`). While
+       * plans are not on sale (`paidPlans: 'coming'`) `ownerPlan` is not shown and `size` invites a message without
+       * naming a product; `ownerPlan` follows `admins` once `paidPlans` is `'inApp'`. `sizeContract` waits for OD-SN-13.
+       */
+      schools: {
+        title: 'Use it across a whole school',
+        space: 'Create a school space, then invite teachers or create classes for them.',
+        admins: (admins: number) =>
+          `Add up to ${plural('en', admins, { one: `${admins} more administrator`, other: `${admins} more administrators` })} with an invite link. They can open class lists and reports and move students between the school's classes.`,
+        ownerPlan: "The school's owner manages the plan.",
+        moves: 'Move a student to another class in the school. Their family is told, and the student never types a new code.',
+        // No seat figure: the school cap is also the free school limit (owner decision (b) 2026-10-21, OD-SN-11).
+        size: (email: string) => `Need room for more students? Write to ${email}.`,
+        sizeContract: (email: string) => `Need room for more students? Write to ${email} about a School Contract.`,
       },
       privacy: {
         title: 'Privacy for classes',
-        bullets: { initials: 'Show initials only on the class list.', ads: 'No ads, and no data sold.' },
+        bullets: { initials: 'You can show initials instead of names on the class list.', ads: 'No ads, and no data sold.' },
       },
       faq: {
-        students: { q: 'Do students need accounts?', a: 'No. They join with the class code inside the app.' },
+        students: { q: 'Do students need accounts?', a: 'No. They join with the class code, link or QR code.' },
         ranking: { q: 'Is there a leaderboard?', a: 'No. Hangul Route never ranks students against each other.' },
         try: { q: 'Can I try it first?', a: 'Yes. Open the app and play the first quests as a learner.' },
       },
@@ -328,6 +421,8 @@ export const landing = {
     /** Section headings the persona pages share: the plans block's h2 and the folded questions' visually hidden h2. */
     plansTitle: 'Plans',
     faqTitle: 'Questions',
+    /** [SN] The text link under a grown-up page's Create action (AMENDMENTS-SITE-NEWUSER §3.5, §3.6). */
+    haveAccount: 'Already have an account? Sign in',
     /** The one line above each persona page's closing action. */
     closing: {
       learners: 'Ready for your first letter?',
@@ -335,30 +430,56 @@ export const landing = {
       teachers: 'Bring Hangul to your class this week.',
     },
   },
-  /** The heritage-card preview (`HeritageCardsPreview`); card titles and blurbs are content, not messages. */
+  /**
+   * [SN] Alt text and captions of the product captures (AMENDMENTS-SITE-NEWUSER §3.13): real screens of the app in
+   * the page's locale. Taught Korean (the hero's letter, the card's word) is passed in with its romanization, and
+   * the card's meaning is its gloss in the UI language.
+   */
+  captures: {
+    discover: (letter: string, romanization: string) =>
+      `The app on a phone, in the first quest: new letters, starting with ${letter} (${romanization}), each with a button to hear it.`,
+    home: "The learner's home screen: a greeting, the streak and cards so far, and the next lesson with a Start button.",
+    game: 'A mini-game: hear a sound and tap the matching letter.',
+    card: (word: string, romanization: string, meaning: string) => `A Korean heritage card: ${word} (${romanization}), meaning ${meaning}.`,
+    report: 'A weekly report for one learner: days practiced, what went well and what to practice next.',
+    classList: "The class page: this week's summary for the whole class.",
+    lectureSlide: 'A Lecture mode slide on a big screen: a letter, its stroke order and its sound.',
+    /** The short visible captions under the three `/learners` captures. */
+    caption: { home: 'Home screen', game: 'A mini-game', card: 'A heritage card' },
+    /**
+     * The share image of each locale (`public/site/<locale>/og.png`, §3.14, row SN-2), `og:image:alt` and
+     * `twitter:image:alt`; the brand and the locale's tagline are passed in, as the image shows them.
+     */
+    og: (brand: string, tagline: string) => `Hoya the tiger next to the words ${brand}: ${tagline}`,
+  },
+  /**
+   * The heritage-card grid in the `/learners` cards fold (`HeritageCardsPreview`). The Korean, romanization, gloss and
+   * blurb of each card are content (`data/stage1-cards.ts`, with the es / ko content overlays), not messages.
+   */
   cards: {
-    eyebrow: 'The reward loop',
-    title: (cards: number) =>
-      plural('en', cards, { one: `${cards} Heritage Card. One Korea, one card at a time.`, other: `${cards} Heritage Cards. One Korea, one card at a time.` }),
-    body: (cards: number, common: number, uncommon: number, rare: number, legendary: number) =>
-      `Every letter you learn earns a real piece of Korean culture — a ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1 ships ${plural('en', cards, { one: `${cards} card`, other: `${cards} cards` })}: ${common} common, ${uncommon} uncommon, ${rare} rare, and ${legendary} legendary.`,
     listLabel: 'Stage 1 Heritage Cards',
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' },
-    /** Accessible name of a card's Korean word: its romanization and its English meaning (content). */
+    /** Accessible name of a card's Korean word: its romanization and its meaning in the UI language (content). */
     cardLabel: (romanization: string, meaning: string) => `Korean word ${romanization}, meaning ${meaning}`,
-    more: 'Stage 2 (Words) adds 30+ cards. Stage 7 (Self-expression) caps the Heritage Library at 175.',
   },
-  /** The mini-game gallery (`MiniGamesGallery`); game titles and blurbs are content, not messages. */
+  /**
+   * The mini-game list in the `/learners` games fold (`MiniGamesGallery`). `items` holds each game's title and blurb,
+   * keyed by its kind: the Stage 1 games the app plays (`apps/mobile/src/logic/minigame-config.ts`), never a speaking one.
+   */
   games: {
-    eyebrow: (shipped: number, beta: number) => {
-      const games = plural('en', shipped, { one: `${shipped} mini-game`, other: `${shipped} mini-games` });
-      return beta > 0 ? `${games} + ${beta} in beta` : games;
-    },
-    title: 'None of them feel like school.',
-    body: 'Four families of practice — recognition, production, application, review — wrapped in 90-second loops. Hoya never says “wrong.”',
     listLabel: 'Stage 1 mini-games',
     family: { recognition: 'Recognition', production: 'Production', application: 'Application', review: 'Review' },
     beta: 'Beta — opt in',
+    items: {
+      'listen-pick': { title: 'Listen and pick', blurb: 'Hear a sound, then tap the letter or word.' },
+      'match-sound': { title: 'Match the sound', blurb: 'Hear a letter. Tap the matching tile. No rush.' },
+      'build-letter': { title: 'Build the syllable', blurb: 'Put letters together to make a real Korean syllable.' },
+      'pic-word-match': { title: 'Picture and word', blurb: 'Tap a picture, then its word.' },
+      'trace-stroke': { title: 'Trace the letter', blurb: 'Follow the stroke order. Your finger learns the shape.' },
+      'odd-one-out': { title: 'Odd one out', blurb: 'Three belong together. Can you find the one that is different?' },
+      'culture-quiz': { title: 'Culture quiz', blurb: 'A Korean word and four answers. Pick what it means.' },
+      'story-sequence': { title: 'Story sequence', blurb: 'Four cards, one story. Tap them in the order they happen.' },
+    },
   },
   footer: {
     /** The footer's group headings (F-SITE-002 §3.2). */
@@ -383,10 +504,11 @@ export const landing = {
   waitlist: {
     label: 'Your email',
     placeholder: 'you@somewhere.com',
-    submit: 'Send me the invite',
+    /** Short enough to sit beside the email field at 1280 px (one row in the #news band). */
+    submit: 'Get launch news',
     sending: 'Sending',
     retry: 'Try again',
-    success: "You're on the list. We'll email you when Hangul Route launches.",
+    success: "You're on the list. We'll email you when family and class plans launch.",
     invalid: 'Please enter a valid email address.',
     error: 'We could not reach the server. Check your connection and try again.',
     rateLimited: 'Too many tries. Please wait a little and try again.',
@@ -403,14 +525,15 @@ export const landing = {
     lead: 'Made by a small team (mostly one person and a tiger). For anyone learning Hangul from zero, at any age — heritage families whose parents or grandparents speak Korean, fans of K-pop, K-food and K-anything, and curious beginners — who want a gentle, anti-shame way in.',
     promises: {
       title: 'Our promises',
-      plainEnglish: 'Menus and instructions use plain, simple English (CEFR Pre-A1).',
-      koreanTaught: 'Korean is only used for the content being taught.',
+      plainEnglish: 'Menus and instructions use short, plain words, in English, Spanish or Korean.',
+      koreanTaught: 'Every Korean word you learn comes with its romanization and meaning.',
       /** Said in words: the page shows no cross-mark glyph (no emoji, CLAUDE.md). */
       noRed: 'No red X marks for wrong answers — Hoya nudges with amber.',
-      noAds: 'No ads, ever. No ads designed at children. Period.',
+      noAds: 'No ads, ever, and no data sold.',
       /** The first sentence of `persona.parents.safe.bullets.backup`, word for word (F-SITE-002 §3.12; privacy-statements.test.ts). */
       localFirst: "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
-      gate: 'Parent-gate behind multiplication for any commerce or destructive action.',
+      /** The grown-up PIN replaced the v1.0 math gate (PinEntryScreen, F-PROF-001 §3.1). */
+      gate: 'A grown-up PIN guards anything that costs money or deletes data.',
     },
     feedback: {
       title: 'Have feedback?',
@@ -427,11 +550,13 @@ export const landing = {
      * until legal review, and this localized line says so. Never shown on the English pages.
      */
     englishAuthoritative: 'This document is shown in English. The English version is the one that applies.',
-    draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      /** [SA] October 20, 2026: the school administrators bullet (AMENDMENTS-SEATS-ADMINS section 6.7). */
-      effective: 'Effective October 20, 2026',
+      /**
+       * October 22, 2026: the SN-2 fact fixes (level check, contact, media, school admins, date line) and the draft banner
+       * removed (owner decision 2026-10-21 (c)); the date the fixes merge.
+       */
+      effective: 'Effective October 22, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -451,14 +576,30 @@ export const landing = {
         collect: {
           heading: 'What we collect',
           bullets: {
+            /**
+             * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level. Two things leave
+             * the device, and this bullet names every field of both:
+             * - Usage events (apps/mobile/src/logic/placement/events.ts): `placement.start` (source, testLocale,
+             *   length and mode, revealMode, level), `placement.item_answered` (itemId, gate, outcome, assisted, ms,
+             *   noSound), `placement.complete` (stopReason, asked, stage and band, oralStage, beyondContent,
+             *   strandsSecure, mode), `placement.skipped` (source: onboarding or home) and `placement.override_applied`.
+             *   Every event is posted with the profileId and the client `at` time (apps/mobile/src/platform/telemetry.ts).
+             * - The result (`PlacementResultSchema`, packages/content-schema/src/schemas/placement.ts), kept in
+             *   `ProgressSnapshot.placements` (newest `PLACEMENT_KEEP` = 10) and backed up with the snapshot: id,
+             *   responses (questionId, outcome, chosenOptionId, assisted, ms, noSound), gates, strands, level, oralStage,
+             *   beyondContent, startQuestId, placedOutQuestIds, priorityTokens, needsStage, startedAt, completedAt,
+             *   source, testLocale, length, mode, revealMode, bankVersion, contentVer, catalogVersion, motivation,
+             *   stopReason and override; plus `ProgressSummary.placement` (takenAt, level, oralStage, strands,
+             *   beyondContent, overridden) from the newest result.
+             */
             profile: ({ levels }: LegalValues) =>
-              `Learner profile: a display nickname and a starting level the learner picks (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.`,
+              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it. If the learner takes the level check, it sends us usage events. When it starts: where it was started, its language and length, whether the sound guide shows by itself or after a tap, and the learner's starting level. For each answer: which question it was and which part of the check it belongs to, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took. When it ends: the level it suggests for reading and for listening, whether the learner reached the highest level the check measures, how many of the five skills it checks are secure, its length, how many questions were asked and why it stopped. We also note when the check is skipped and from which screen, and when a grown-up picks a different start. Each event carries the learner's id and the time it happened. The finished result is saved with the learner's progress and backed up to our servers with it; the app keeps the 10 most recent. Each result has an id and holds every answer (which question, which choice was picked, recorded by its id and not its words, whether it was right, wrong or not sure, whether the sound guide was used, whether the sound could play, and how long it took); how the learner did in each part of the check and in each of the five skills; the suggested levels, whether the learner reached the highest level the check measures, the first lesson, the lessons the learner can skip, up to three letters or skills to practice first, and whether the suggested level is outside the learner's plan; when the check started and ended, where it was started, its language, length and settings, and which versions of the questions and lessons it used; why the learner is learning Korean, if they picked a reason; why it stopped; and, if a grown-up picked a different start, that start and when. A short summary of the newest result (when it was taken, the suggested levels, the five skills, whether the learner reached the highest level and whether a grown-up changed the start) is saved with the learner's progress reports.`,
             progress:
               "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
             /**
              * F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. [TV] Rewritten for
              * AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D1 to TV-D5 and TV-D12, the owner's decision of 2026-10-14 (not
-             * reviewed by counsel; the draft banner above the document stays).
+             * reviewed by counsel; the draft banner was removed by owner decision 2026-10-21 (c)).
              */
             progressWho:
               "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress, see all of it, words included. Once the family has read a short update about classes in the app or the console, the teacher of a class the learner joined, and the owner and admins of that class's school, see the same progress, words included, and whether the learner gets notes from the class. We record when that update was read and whether it was read in the console or on the learner's device. Until then a class sees what it saw before: day-by-day history only from the day the learner joined, all-time totals without the first practice day, and no words.",
@@ -474,13 +615,20 @@ export const landing = {
               "Class moves: a teacher may move a learner from one class to another without asking the family first. When the teacher runs both classes, or is an admin of their school, the move happens at once; otherwise the receiving class has to accept it. Until it accepts, the receiving class sees only the learner's initials, picture and level. The family then sees a one-time notice in the app and in the console. Cards, stars and finished lessons always stay with the learner. A family can also start a move itself, and a learner can leave a class from Profile at any time. We keep a record of each move (which classes, which teacher account moved the learner and when, never a name) for 90 days after it happens.",
             /**
              * [SA] AMENDMENTS-SEATS-ADMINS section 6.7 (SA-4; SA-D10 to SA-D12, the owner's request of 2026-10-20, not
-             * reviewed by counsel; the draft banner stays): what a school's administrators see, the verified email an
+             * reviewed by counsel; the draft banner was removed by owner decision 2026-10-21 (c)): what a school's administrators see, the verified email an
              * accept needs, and the school history the owner sees (400 days). Family and stand-alone class renames keep
              * no such history.
              */
             schoolAdmins:
-              "A school's owner can add up to two administrators with an invite link. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
-            contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
+              "A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
+            /**
+             * SN-2: parents, teachers and school administrators all sign in with an email (F-APP-001). Receipts go only to
+             * the payer: an administrator gets 403 on checkout, portal and receipts of the school they administer
+             * (packages/backend space-seats.test.ts). The same account can still buy a plan for its own family or class
+             * (checkout sends account.email, entitlements.ts), so the copy is limited to the school's receipts.
+             */
+            contact:
+              'Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in and account recovery. The email of the grown-up who buys a plan is also used for that plan\'s receipts. A school administrator cannot buy or manage the school\'s plan, so their email is not used for the school\'s receipts.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },
         },
@@ -489,7 +637,8 @@ export const landing = {
           bullets: {
             ads: 'No advertising identifiers and no third-party ad tracking — ever.',
             location: 'No precise location.',
-            media: 'No contacts, photos, or microphone audio leaves the device. Voice mini-games process speech on-device and discard it.',
+            /** SN-2: no voice mini-game ships (voiceEchoEnabled is false) and the site promises no speaking. */
+            media: 'No contacts, photos, or microphone audio leave the device. The app does not record your voice.',
             profiles: 'No behavioral profiles sold or shared for marketing.',
           },
         },
@@ -567,7 +716,8 @@ export const landing = {
         changes: {
           heading: 'Changes to this policy',
           paragraphs: {
-            p1: 'If we make a material change, we will notify parents in the app or by email before it takes effect. The date below shows the current version.',
+            /** SN-2: the effective date renders at the top of the page (PrivacyPage.tsx). */
+            p1: 'If we make a material change, we will notify parents in the app or by email before it takes effect. The date at the top shows the current version.',
           },
         },
         contact: {
@@ -580,7 +730,8 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective October 20, 2026',
+      /** October 22, 2026: the SN-2 fact fixes and the draft banner removed (owner decision 2026-10-21 (c)), as the Privacy Policy. */
+      effective: 'Effective October 22, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -618,9 +769,10 @@ export const landing = {
               'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.',
             /**
              * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, the numbers from the
-             * content-schema constants. Must ship before Stripe Live is ever enabled.
+             * content-schema constants. Must ship before Stripe Live is ever enabled. SN-2 adds the administrator invite
+             * (`SCHOOL_ADMIN_CAP`); the free sizes are not published on the site (owner decision 2026-10-21 (b)).
              */
-            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.`,
+            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`,
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {
@@ -674,13 +826,15 @@ export const landing = {
         law: {
           heading: 'Governing law',
           paragraphs: {
-            p1: 'These terms are governed by the laws of the jurisdiction stated at launch. The final governing-law and dispute-resolution clauses will be confirmed with legal counsel before public release.',
+            /** Owner decision 2026-10-21 (c): no wording that a legal review happened or is pending, so the counsel sentence is gone. */
+            p1: 'These terms are governed by the laws of the jurisdiction stated at launch.',
           },
         },
         changes: {
           heading: 'Changes to these terms',
           paragraphs: {
-            p1: 'If we make material changes, we will notify parents in the app or by email before they take effect. The date below shows the current version.',
+            /** SN-2: the effective date renders at the top of the page (TermsPage.tsx). */
+            p1: 'If we make material changes, we will notify parents in the app or by email before they take effect. The date at the top shows the current version.',
           },
         },
         contact: {
@@ -710,11 +864,15 @@ export const landing = {
     usedIn: 'Used in',
     where: { app: 'App', web: 'Website', server: 'Server', ios: 'iOS app' },
   },
-  /** Links on the exported 404 page (F-SITE-002 §3.7); English document, as today. */
+  /**
+   * The exported 404 pages (F-SITE-002 §3.7): `out/404.html` in English and, since AMENDMENTS-SITE-NEWUSER SN-2,
+   * `out/es/404.html` and `out/ko/404.html` in their locale. `title` is the heading and the `<title>`.
+   */
   notFound: {
-    body: 'We could not find this page.',
+    body: 'The link may be old. Try the home page or start learning.',
     home: 'Go to the home page',
     start: 'Start learning',
+    title: 'Page not found',
   },
   /**
    * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): shown when the browser prefers a

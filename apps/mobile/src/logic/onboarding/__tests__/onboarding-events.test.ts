@@ -23,6 +23,8 @@ describe('onboarding telemetry builders (F-LEARN-001 §3.8)', () => {
     pinCreated('reset'),
     pinResetRequested('rescue_code'),
     pinResetRequested('wait'),
+    // [OA] Cancel the wait on the chooser (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a).
+    pinResetRequested('wait_cancelled'),
     pinResetCompleted('rescue_code'),
     pinResetCompleted('wait'),
   ];

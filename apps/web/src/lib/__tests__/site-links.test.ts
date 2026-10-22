@@ -3,7 +3,7 @@ import { APP_ORIGIN, APP_ROUTES, personaHint } from '@hangul-route/content-schem
 import { LOCALES } from '@hangul-route/i18n';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { appUrl } from '../console/config';
-import { CONSOLE_ORIGIN_OFF, SITE_DEFAULT_CONSOLE_ORIGIN, grownUpOrigin, learnerStart, parseConsoleOrigin, signIn, type GrownUpPersona } from '../site-links';
+import { CONSOLE_ORIGIN_OFF, SITE_DEFAULT_CONSOLE_ORIGIN, createAccount, grownUpOrigin, learnerStart, parseConsoleOrigin, signIn, type GrownUpPersona } from '../site-links';
 import { appEntryUrl } from '../site-path';
 
 /**
@@ -118,12 +118,72 @@ describe('signIn (F-APP-001 §3.7 /signin with ?persona=)', () => {
     expect(personaHint(url.searchParams)).toBe(persona);
   });
 
+  it('from /es or /ko keeps the page language (?lang=) next to the persona; English links are unchanged', () => {
+    expect(signIn('parent', 'es')).toBe('https://app.hangulroute.com/signin?persona=parent&lang=es');
+    expect(signIn('teacher', 'ko')).toBe('https://app.hangulroute.com/signin?persona=teacher&lang=ko');
+    expect(signIn(undefined, 'es')).toBe('https://app.hangulroute.com/signin?lang=es');
+    expect(signIn(undefined, 'ko')).toBe('https://app.hangulroute.com/signin?lang=ko');
+    expect(signIn('parent', 'en')).toBe(signIn('parent'));
+    expect(signIn(undefined, 'en')).toBe(signIn());
+    vi.stubEnv('CONSOLE_ORIGIN', 'false');
+    expect(signIn('parent', 'ko')).toBe('/signin?persona=parent&lang=ko');
+    expect(signIn(undefined, 'es')).toBe('/signin?lang=es');
+  });
+
+  it.each(LOCALES)('%s: the persona hint still reads back, and lang= is the page locale (appEntryUrl)', (locale) => {
+    for (const persona of PERSONAS) {
+      const url = new URL(signIn(persona, locale), 'https://hangulroute.com');
+      expect(personaHint(url.searchParams)).toBe(persona);
+      expect(url.searchParams.get('lang')).toBe(locale === 'en' ? null : locale);
+      expect(signIn(persona, locale)).toBe(appEntryUrl(signIn(persona), locale));
+    }
+  });
+
   it('takes only a grown-up persona (by type)', () => {
     expectTypeOf<GrownUpPersona>().toEqualTypeOf<'parent' | 'teacher'>();
     // @ts-expect-error learners never sign in with an email or password (F-APP-001 OD-2)
     expect(() => signIn('learner')).not.toThrow();
     // @ts-expect-error an unknown persona does not compile
     expect(() => signIn('admin')).not.toThrow();
+  });
+});
+
+describe('signIn from a locale page carries ?lang= (the sign-in page opens in the language being read)', () => {
+  it('adds lang only off English, after the persona', () => {
+    vi.stubEnv('CONSOLE_ORIGIN', 'false');
+    expect(signIn(undefined, 'en')).toBe('/signin');
+    expect(signIn('parent', 'en')).toBe('/signin?persona=parent');
+    expect(signIn('parent', 'es')).toBe('/signin?persona=parent&lang=es');
+    expect(signIn(undefined, 'ko')).toBe('/signin?lang=ko');
+  });
+});
+
+/** [SN] AMENDMENTS-SITE-NEWUSER §3.8: the create view of /signin, the grown-up pages' primary action. */
+describe('createAccount (/signin?mode=create&persona=<p>)', () => {
+  it.each(PERSONAS)('%s: the create view with the persona hint, lang only off English, on the site origin with the kill switch', (persona) => {
+    vi.stubEnv('CONSOLE_ORIGIN', 'false');
+    expect(createAccount(persona)).toBe(`${APP_ROUTES.signIn}?mode=create&persona=${persona}`);
+    expect(createAccount(persona, 'en')).toBe(`${APP_ROUTES.signIn}?mode=create&persona=${persona}`);
+    expect(createAccount(persona, 'es')).toBe(`${APP_ROUTES.signIn}?mode=create&persona=${persona}&lang=es`);
+    expect(createAccount(persona, 'ko')).toBe(`${APP_ROUTES.signIn}?mode=create&persona=${persona}&lang=ko`);
+  });
+
+  it.each(PERSONAS)('%s: on the app host by default (S-10) and with CONSOLE_ORIGIN set', (persona) => {
+    expect(createAccount(persona)).toBe(`${APP_ORIGIN}${APP_ROUTES.signIn}?mode=create&persona=${persona}`);
+    vi.stubEnv('CONSOLE_ORIGIN', 'https://app.hangulroute.com');
+    expect(createAccount(persona, 'es')).toBe(`${APP_ORIGIN}${APP_ROUTES.signIn}?mode=create&persona=${persona}&lang=es`);
+  });
+
+  it.each(PERSONAS)('%s: the /signin page reads mode=create and the persona hint back', (persona) => {
+    const url = new URL(createAccount(persona, 'ko'), 'https://hangulroute.com');
+    expect(url.searchParams.get('mode')).toBe('create');
+    expect(personaHint(url.searchParams)).toBe(persona);
+    expect(url.searchParams.get('lang')).toBe('ko');
+  });
+
+  it('takes only a grown-up persona (by type)', () => {
+    // @ts-expect-error learners never create an account (F-APP-001 OD-2)
+    expect(() => createAccount('learner')).not.toThrow();
   });
 });
 
@@ -148,7 +208,12 @@ describe('learnerStart (the learner app, unchanged behaviour)', () => {
 
 describe('never /teach, never /parent, never /account, never billing', () => {
   function everyOutput(): string[] {
-    return [signIn(), ...PERSONAS.map((persona) => signIn(persona)), ...LOCALES.map((locale) => learnerStart(locale))];
+    return [
+      signIn(),
+      ...PERSONAS.map((persona) => signIn(persona)),
+      ...LOCALES.map((locale) => learnerStart(locale)),
+      ...PERSONAS.flatMap((persona) => LOCALES.map((locale) => createAccount(persona, locale))),
+    ];
   }
 
   it.each([
@@ -158,7 +223,7 @@ describe('never /teach, never /parent, never /account, never billing', () => {
   ])('on %s', (_label, origin) => {
     vi.stubEnv('CONSOLE_ORIGIN', origin);
     const outputs = everyOutput();
-    expect(outputs).toHaveLength(3 + LOCALES.length);
+    expect(outputs).toHaveLength(3 + LOCALES.length + PERSONAS.length * LOCALES.length);
     for (const href of outputs) {
       const { pathname } = new URL(href, 'https://hangulroute.com');
       for (const forbidden of FORBIDDEN) {

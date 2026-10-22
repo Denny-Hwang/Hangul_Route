@@ -7,6 +7,9 @@ vi.mock('../../platform/storage', () => ({
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
+  removeKey: vi.fn(async (k: string) => {
+    mem.delete(k);
+  }),
 }));
 
 vi.mock('../../platform/telemetry', () => ({
@@ -14,9 +17,10 @@ vi.mock('../../platform/telemetry', () => ({
 }));
 
 import { episodesAll } from '../../content/episodes';
+import { shownStreak } from '../../logic/streak';
 import { setProgressPersistListener } from '../../logic/sync/persist-hook';
 import { readJson, writeJson } from '../../platform/storage';
-import { localDay } from '../../logic/vocab/progress';
+import { VOCAB_MAX_TOPICS, localDay } from '../../logic/vocab/progress';
 import { addDays } from '../../logic/vocab/srs';
 import { placementResult } from '../../logic/placement/__tests__/fixtures';
 import { selfRoute } from '../../logic/homework/__tests__/curriculum-fixture';
@@ -489,11 +493,73 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
     expect(vocabIn(after)).toMatchObject({ box: 1, due: addDays(TODAY, 1), first: TODAY });
     expect(after.vocab?.topics.map((t) => t.topic)).toEqual(['food']);
     expect(after.updatedAt).toBe(T1.toISOString());
-    const { vocab: _v, updatedAt: _u, ...restAfter } = after;
-    const { updatedAt: _w, ...restBefore } = before;
+    const { vocab: _v, updatedAt: _u, sessions, streakLocal, streakBest, ...restAfter } = after;
+    const { updatedAt: _w, sessions: sessionsBefore, ...restBefore } = before;
     expect(restAfter).toEqual(restBefore);
+    // The finished word set (its session event) logs its learning day (F-CURR-002 OD-14): a learning session of no
+    // length, and the local-day run moves.
+    const at = T1.toISOString();
+    expect(sessions).toEqual([...sessionsBefore, { id: `session:time:learn:${at}`, profileId: 'p1', startedAt: at, endedAt: at, durationSeconds: 0, episodesTouched: [], localDay: TODAY }]);
+    expect(streakLocal).toEqual({ run: 1, lastDay: TODAY });
+    expect(streakBest).toBe(1);
+    expect(after.streakDays).toBe(before.streakDays);
     expect(stored()).toEqual(after);
     expect(notified).toEqual(['p1']);
+  });
+
+  it('word answers without a finished set log no day (F-CURR-002 OD-14)', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.sessions).toEqual(before.sessions);
+    expect(after.streakLocal).toBeUndefined();
+  });
+
+  it('a word set finished on the day after a quest continues the run', async () => {
+    const quest = { id: 'session:2026-10-10T15:00:00.000Z', profileId: 'p1', startedAt: '2026-10-10T15:00:00.000Z', episodesTouched: [], localDay: addDays(TODAY, -1) };
+    mem.set('progress:p1', { ...savedSnapshot(), sessions: [quest], streakDays: 1, streakLocal: { run: 4, lastDay: addDays(TODAY, -1) }, streakBest: 6 });
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.streakLocal).toEqual({ run: 5, lastDay: TODAY });
+    expect(after.streakBest).toBe(6);
+  });
+
+  it('a session event the reducer ignores logs no day, though other events change the words (F-CURR-002 OD-14)', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    // an unreadable topic key: the session event is dropped, the introduced word is kept
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }, { type: 'session', topicKey: 'Not A Key!', kind: 'speed', stars: 2 }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(vocabIn(after)).toBeDefined();
+    expect(after.sessions).toEqual(before.sessions);
+    expect(after.streakLocal).toBeUndefined();
+  });
+
+  it('a session event over the topic cap logs no day', async () => {
+    const topics = Array.from({ length: VOCAB_MAX_TOPICS }, (_, i) => ({ topic: `topic-${i}`, bestStars: 1, sessions: 1, last: addDays(TODAY, -2), bestCaught: 0 }));
+    mem.set('progress:p1', { ...savedSnapshot(), vocab: { v: 1, items: [], topics } });
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }, { type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.vocab?.topics).toHaveLength(VOCAB_MAX_TOPICS);
+    expect(after.sessions).toEqual(before.sessions);
+  });
+
+  it('two word sets on one day add one learning row; the second still keeps the run', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], T1);
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'body', kind: 'speed', stars: 3 }], new Date(T1.getTime() + 60_000));
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.sessions).toHaveLength(before.sessions.length + 1);
+    expect(after.vocab?.topics.map((t) => t.sessions)).toEqual([1, 1]);
+    expect(after.streakLocal).toEqual({ run: 1, lastDay: TODAY });
   });
 
   it('writes nothing when every event is ignored', async () => {
@@ -1154,6 +1220,11 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       await useProgressStore.getState().hydrate('profile:a');
       notifyProfileRemoved('profile:a');
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      // [OA] Row OA-7a (section 10.4, CS-20): the snapshot goes too, in memory and stored.
+      await settle();
+      expect(useProgressStore.getState().byProfile['profile:a']).toBeUndefined();
+      expect(useProgressStore.getState().hydratedFor.has('profile:a')).toBe(false);
+      expect(mem.has('progress:profile:a')).toBe(false);
     });
 
     it('a malformed saved record is loaded as it is: the rules add nothing and the read still lands', async () => {
@@ -1647,5 +1718,148 @@ describe('setSelfRoute (F-PLAN-002 section 3.9)', () => {
     expect(useProgressStore.getState().setSelfRoute('p1', selfRoute({ id: 'Route:Bad' }))).toBe(false);
     expect(useProgressStore.getState().byProfile['p1']).toBeUndefined();
     expect(notified).toEqual([]);
+  });
+});
+
+describe('the local-day streak in the store (F-CURR-002 row CM-4; OD-14, OD-6)', () => {
+  // The suite runs under TZ=UTC, so the device's local day is the UTC day here; logic/__tests__/streak-local.test.ts
+  // covers other zones with fixed clocks.
+  const STORY = { owner: 'story:story:sun-and-moon', streak: false, keepsRun: true } as const;
+  const GAME = { owner: 'minigame:q1:0', streak: false } as const;
+  const DAY1 = '2026-10-12';
+  const DAY2 = '2026-10-13';
+  const DAY3 = '2026-10-14';
+  const at = (day: string, time = '09:00:00.000Z'): Date => new Date(`${day}T${time}`);
+  const snap = (): ProgressSnapshot => useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+
+  beforeEach(() => {
+    resetStore();
+    vi.mocked(track).mockClear();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(at(DAY1));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  /** Begins and ends a session on `day`. */
+  function visit(options: { owner: string; streak: boolean; keepsRun?: boolean }, day: string): string | null {
+    vi.setSystemTime(at(day));
+    const { beginSession, endSession } = useProgressStore.getState();
+    const id = beginSession('p1', options);
+    if (id !== null) endSession('p1', id);
+    return id;
+  }
+
+  it('a quest session records its local day and starts the run', () => {
+    visit(QUEST, DAY1);
+    expect(snap().sessions[0]?.localDay).toBe(DAY1);
+    expect(snap()).toMatchObject({ streakDays: 1, streakLocal: { run: 1, lastDay: DAY1 }, streakBest: 1 });
+  });
+
+  it('a story keeps the run (OD-14) and leaves the old streak and session.start alone', () => {
+    visit(QUEST, DAY1);
+    vi.mocked(track).mockClear();
+    const id = visit(STORY, DAY2);
+    expect(id).toBe(`session:time:learn:${at(DAY2).toISOString()}`);
+    expect(snap()).toMatchObject({ streakDays: 1, streakLocal: { run: 2, lastDay: DAY2 }, streakBest: 2 });
+    expect(snap().sessions[1]?.localDay).toBe(DAY2);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('a stand-alone game or a level check records its day but never moves the run', () => {
+    visit(QUEST, DAY1);
+    visit(GAME, DAY2);
+    expect(snap().sessions[1]?.localDay).toBe(DAY2);
+    expect(snap().streakLocal).toEqual({ run: 1, lastDay: DAY1 });
+  });
+
+  it('a rest day keeps the run and adds nothing (OD-6)', () => {
+    visit(QUEST, DAY1);
+    visit(QUEST, DAY3);
+    expect(snap().streakLocal).toEqual({ run: 2, lastDay: DAY3 });
+    // the old UTC rule broke on the rest day; it is still written for older builds
+    expect(snap().streakDays).toBe(1);
+  });
+
+  it('a story begun over a game takes it over; a game over a story and a story inside a quest join', () => {
+    const { beginSession } = useProgressStore.getState();
+    beginSession('p1', GAME);
+    vi.setSystemTime(at(DAY1, '09:00:10.000Z'));
+    const story = beginSession('p1', STORY);
+    expect(story).toBe(`session:time:learn:${at(DAY1, '09:00:10.000Z').toISOString()}`);
+    expect(useProgressStore.getState().openSession).toMatchObject({ owner: STORY.owner, keepsRun: true });
+    expect(snap().sessions[0]).toMatchObject({ durationSeconds: 10 });
+    expect(beginSession('p1', GAME)).toBeNull();
+    resetStore();
+    beginSession('p1', QUEST);
+    expect(beginSession('p1', STORY)).toBeNull();
+  });
+
+  it('switches over on the first session: max(old streakDays, the local run), never below the old number', async () => {
+    const yesterday = { id: `session:${at(DAY1).toISOString()}`, profileId: 'p1', startedAt: at(DAY1).toISOString(), episodesTouched: [] };
+    mem.set('progress:p1', { ...savedSnapshot(), sessions: [yesterday], streakDays: 5 });
+    await useProgressStore.getState().hydrate('p1');
+    visit(QUEST, DAY2);
+    expect(snap()).toMatchObject({ streakDays: 6, streakLocal: { run: 6, lastDay: DAY2 }, streakBest: 6 });
+  });
+});
+
+describe('the local-day streak in the store on a device in another time zone (F-CURR-002 row CM-4)', () => {
+  // The suite runs under TZ=UTC. Each case sets the process time zone, as the device has it, so the store's own
+  // local-day writer (beginSession, recordVocab) runs there; Node reads TZ again when it changes.
+  const zone = process.env.TZ;
+  const snap = (): ProgressSnapshot => useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+
+  beforeEach(() => {
+    resetStore();
+    vi.useFakeTimers({ toFake: ['Date'] });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    if (zone === undefined) delete process.env.TZ;
+    else process.env.TZ = zone;
+  });
+
+  /** Begins and ends a quest session at `iso` on a device in `tz`. */
+  function questAt(tz: string, iso: string): void {
+    process.env.TZ = tz;
+    vi.setSystemTime(new Date(iso));
+    const { beginSession, endSession } = useProgressStore.getState();
+    const id = beginSession('p1', QUEST);
+    if (id !== null) endSession('p1', id);
+  }
+
+  it.each([
+    // UTC+14: 10:30Z is 00:30 the next day, 09:30Z is 23:30; one UTC day, two local days
+    ['Pacific/Kiritimati', ['2026-10-21T09:30:00.000Z', '2026-10-21T10:30:00.000Z'], ['2026-10-21', '2026-10-22'], 2],
+    // UTC-12: 11:30Z is 23:30 the day before, 12:30Z is 00:30
+    ['Etc/GMT+12', ['2026-10-21T11:30:00.000Z', '2026-10-21T12:30:00.000Z'], ['2026-10-20', '2026-10-21'], 2],
+    // Asia/Seoul: 08:00 local every morning is 23:00Z the day before; local days in a row
+    ['Asia/Seoul', ['2026-10-19T23:00:00.000Z', '2026-10-20T23:00:00.000Z', '2026-10-21T23:00:00.000Z'], ['2026-10-20', '2026-10-21', '2026-10-22'], 3],
+    // America/Los_Angeles across the end of daylight time: 23:30 PDT, 00:30 PDT, then 23:30 PST on the 25-hour day
+    ['America/Los_Angeles', ['2026-11-01T06:30:00.000Z', '2026-11-01T07:30:00.000Z', '2026-11-02T07:30:00.000Z'], ['2026-10-31', '2026-11-01', '2026-11-01'], 2],
+  ] as const)('%s: each session records the device\'s local day, and the run counts local days', (tz, instants, days, run) => {
+    for (const iso of instants) questAt(tz, iso);
+    expect(snap().sessions.map((s) => s.localDay)).toEqual(days);
+    const last = days[days.length - 1] as string;
+    expect(snap().streakLocal).toEqual({ run, lastDay: last });
+    expect(shownStreak(snap(), last)).toBe(run);
+  });
+
+  it('America/Los_Angeles: 00:30 PST on 2 November is the next local day, after the 25-hour day', () => {
+    questAt('America/Los_Angeles', '2026-11-02T07:30:00.000Z');
+    questAt('America/Los_Angeles', '2026-11-02T08:30:00.000Z');
+    expect(snap().sessions.map((s) => s.localDay)).toEqual(['2026-11-01', '2026-11-02']);
+    expect(snap().streakLocal).toEqual({ run: 2, lastDay: '2026-11-02' });
+  });
+
+  it('Pacific/Kiritimati: a word set finished just after local midnight logs the local day, not the UTC one', async () => {
+    process.env.TZ = 'Pacific/Kiritimati';
+    const at = new Date('2026-10-21T10:30:00.000Z');
+    vi.setSystemTime(at);
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordVocab('p1', [{ type: 'session', topicKey: 'food', kind: 'speed', stars: 2 }], at);
+    expect(snap().sessions.at(-1)?.localDay).toBe('2026-10-22');
+    expect(snap().streakLocal).toEqual({ run: 1, lastDay: '2026-10-22' });
   });
 });

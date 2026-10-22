@@ -95,6 +95,7 @@
   --leading-tight: 1.15;
   --leading-normal: 1.35;
   --leading-relaxed: 1.55;
+  --tracking-tight: -0.4px; /* typography.tracking.tight (-0.4); used by the key hint, defined here in row CM-D2 */
   --family-mono: Menlo, Courier, monospace;
   --z-base: 0;
   --z-raised: 10;

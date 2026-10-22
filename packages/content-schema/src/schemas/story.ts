@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FestivalAnchorSchema } from '../catalog/schema';
 import { narrationTokenIds, narrationWordCount } from '../narration';
 import { CompanionIdSchema, PillarTagSchema } from '../pillars';
 import { ThemeKeySchema } from './heritage-card';
@@ -38,6 +39,25 @@ export function koTextExtend<T extends z.ZodRawShape>(extra: T) {
 // ---- small shared schemas -------------------------------------------------
 
 export const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+/**
+ * The catalogue version a quest joined at (F-CURR-002 §9.1, row CM-6): an integer date stamp
+ * YYYYMMDD, such as 20261105. `CATALOG_VERSION` is generated as the largest stamp; the history up to
+ * version 32 keeps its integers, all smaller than any stamp. A stamp must not be lower than main's
+ * version when its quest is added (scripts/check-added-in.mjs).
+ */
+export const AddedInSchema = z
+  .number()
+  .int()
+  .min(20260101)
+  .max(20991231)
+  .refine((stamp) => {
+    const y = Math.floor(stamp / 10000);
+    const m = Math.floor(stamp / 100) % 100;
+    const d = stamp % 100;
+    const date = new Date(Date.UTC(y, m - 1, d));
+    return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+  }, 'addedIn is a calendar date written YYYYMMDD');
 export const SceneIdSchema = z.string().regex(/^s[0-9]{1,2}$/);
 export const FactIdSchema = z.string().regex(/^f[0-9]{1,3}$/);
 export const CardIdSchema = z.string().regex(/^card:[a-z0-9-]+$/); // HeritageCardSchema.id grammar
@@ -194,6 +214,11 @@ export const StoryShelfSchema = z
     order: z.number().int().min(1).max(999),
     sampler: z.boolean().default(false),
     minutes: z.number().int().min(2).max(10),
+    /**
+     * F-CURR-002 §9.1 (row CM-6): the festival a story added after the frozen shelf is anchored to
+     * (catalog/data.ts keeps the anchors of the first 24, which state none here). One story per anchor.
+     */
+    anchor: FestivalAnchorSchema.optional(),
   })
   .strict();
 export type StoryShelf = z.infer<typeof StoryShelfSchema>;
@@ -216,6 +241,8 @@ export const StoryObjectSchema = z
     id: StoryIdSchema,
     state: z.enum(['draft', 'ready']),
     contentVer: z.number().int().min(1),
+    /** The catalogue version its listen quest joined at; required of a story added after version 32 (CM-6). */
+    addedIn: AddedInSchema.optional(),
     title: koTextExtend({}),
     summaryEn: z.string().trim().min(1).max(320),
     hoyaIntroEn: z.string().trim().min(1).max(160).optional(),
@@ -254,6 +281,17 @@ export const StoryObjectSchema = z
       .optional(),
     shelf: StoryShelfSchema.optional(),
     pillarTags: z.array(PillarTagSchema).max(3).default([]),
+    /**
+     * What the story is about, as topic slugs (`sun-and-moon`, `tiger-tale`): build-time data
+     * for the F-CURR-002 §5.1 lint `story-topic-unique`, which requires it on every story added
+     * after row CM-7 and compares it with the other stories' slugs and tags. Never shown, and dropped from the app bundle
+     * by scripts/build-stories.mjs (withoutBuildOnly).
+     */
+    topicTags: z
+      .array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/))
+      .min(1)
+      .max(5)
+      .optional(),
     companionId: CompanionIdSchema.default('hoya'),
     card: StoryCardSchema.optional(),
     facts: z.array(FactSchema).min(1).max(16),

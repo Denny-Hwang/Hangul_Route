@@ -2,9 +2,11 @@ import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS } from '@hangul-route/
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { HomePage as HomeDocument } from '../../components/landing/HomePage';
+import { LearnersPage as LearnersDocument } from '../../components/landing/LearnersPage';
 import { ParentsPage as ParentsDocument } from '../../components/landing/ParentsPage';
 import { TeachersPage as TeachersDocument } from '../../components/landing/TeachersPage';
-import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { siteMetadata } from '../../data/landing-copy';
 import { SITE_CLAIMS } from '../../data/site-claims';
 import { SITE_PAGES, siteMetadataFor } from '../../lib/site-metadata';
@@ -35,8 +37,9 @@ const COMMERCIAL_CLAIMS: ReadonlyArray<{ name: string; re: RegExp }> = [
   { name: '"every stage"', re: /\bevery\s+stage\b/i },
   { name: '"all stages"', re: /\ball\s+stages\b/i },
   { name: '"lifetime"', re: /\blifetime\b/i },
-  // The plan's name appears only in the sizes line once plans are on sale ([SA] SA-6, scanned below): OD-7 lets the site
-  // name a plan without an amount, and no other line may.
+  // The plan's name appears only once plans are on sale, in the sizes line ([SA] SA-6) and in the teachers' browse line,
+  // which shows only then (`CLAIM_REQUIRES_PAID`) and names the plan as the billing page does, the way the parents'
+  // browse line names the Family Plan (both scanned below): OD-7 lets the site name a plan without an amount.
   { name: '"Group License"', re: /\bgroup\s+license\b/i },
   { name: '"one purchase" / "pay once"', re: /\bone purchase\b|\bpay(s)?\s+once\b/i },
   { name: 'a subscription', re: /\bsubscription\b/i },
@@ -74,8 +77,16 @@ describe('site text — no prices, nothing sold that is not built', () => {
     expect([...SITE, ...LEGAL].map(([path]) => path).sort()).toEqual([...SITE_PAGES].sort());
   });
 
-  it('the home keeps the pinned cost sentence', () => {
-    expect(home).toContain('Stage 1 is free. More stages are coming, with plans for families and classes.');
+  // [SN] AMENDMENTS-SITE-NEWUSER §3.3 item 4 (OD-SN-3): the cost block left `/`; its free line opens the closing band,
+  // and the plan sentence stays on the grown-up pages.
+  it('the home opens its closing band with the free line and has no cost block; the plan sentence is on /parents and /teachers', () => {
+    const en = getMessages('en').landing;
+    expect(home).toContain(en.home.closing.body);
+    expect(en.home.closing.body.startsWith('Stage 1 is free.')).toBe(true);
+    expect(home).not.toContain(en.plans.paid.coming);
+    for (const [path, text] of SITE.filter(([p]) => p === '/parents' || p === '/teachers')) {
+      expect(text, path).toContain('Stage 1 is free. Words, sentences and stories are in the app too. Family and class plans are on the way.');
+    }
   });
 
   for (const { name, re } of COMMERCIAL_CLAIMS) {
@@ -104,6 +115,7 @@ describe('site text — no prices, nothing sold that is not built', () => {
  */
 describe('site text — the plan sizes line once plans are on sale', () => {
   const sizes = getMessages('en').landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+  const browse = getMessages('en').landing.persona.teachers.class.browse;
   const states = [
     ['the paidPlans flip', { ...SITE_CLAIMS, paidPlans: 'inApp' }],
     ['every claim on', ALL_CLAIMS_ON],
@@ -124,7 +136,8 @@ describe('site text — the plan sizes line once plans are on sale', () => {
       it(`${path} (${state}): shows the sizes line once, and nothing else on the page makes a commercial claim`, () => {
         const text = textOf(renderToStaticMarkup(<Page locale="en" claims={claims} />));
         expect(text.split(sizes)).toHaveLength(2);
-        const rest = text.split(sizes).join(' ');
+        // The teachers' browse line (paid plans on sale only) names the Group License too; nothing else may.
+        const rest = text.split(sizes).join(' ').split(browse).join(' ');
         for (const { name, re } of COMMERCIAL_CLAIMS) expect(rest, name).not.toMatch(re);
       });
     }
@@ -173,14 +186,74 @@ describe('metadata truth pass (F-SITE-002 §3.12)', () => {
     expect(text).not.toMatch(/COPPA/);
   });
 
-  // The metadata's cost clause ("more stages are coming") is the `paidPlans: 'coming'` state. The PR that flips
-  // `paidPlans` to 'inApp' must reword it in en, es and ko (section 3.9 hand-off), or this goes red.
+  // The metadata's only cost words are "Stage 1 is free", true in both `paidPlans` states (F-SITE-002 site facts,
+  // 2026-10-21): later stages ship, so it no longer says more stages are coming, and the paidPlans flip needs no
+  // metadata change.
   it.each([
-    ['en', /more stages are coming/i],
-    ['es', /vienen más etapas/i],
-    ['ko', /더 많은 단계가 준비되고 있어요/],
-  ] as const)('%s: the metadata cost clause follows the paidPlans claim', (locale, coming) => {
+    ['en', /more stages are coming/i, /Stage 1 is free/],
+    ['es', /vienen más etapas/i, /La Etapa 1 es gratis/],
+    ['ko', /더 많은 단계가 준비되고 있어요/, /1단계는 무료예요/],
+  ] as const)('%s: the metadata cost clause is true whatever the paidPlans claim says', (locale, coming, free) => {
     const text = JSON.stringify(SITE_PAGES.map((page) => siteMetadataFor(locale, page, true)));
-    expect(coming.test(text)).toBe(SITE_CLAIMS.paidPlans === 'coming');
+    expect(coming.test(text)).toBe(false);
+    expect(free.test(text)).toBe(true);
+  });
+});
+
+/**
+ * The level check (F-PLC-001; placement on for every platform since P-10) is a claim, on since the owner decision of
+ * 2026-10-21: off, neither line shows; on, `/learners` asks the level question after the Korean one and step 1 of the
+ * home's How it works names it (one line, not a fourth step: the home's word budget). Both states, in every UI locale.
+ */
+describe('site text — the level-check lines follow the levelCheck claim', () => {
+  const steps = (html: string): string[] =>
+    [...(/<section aria-labelledby="home-how"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '').matchAll(/<li\b[\s\S]*?<\/li>/g)].map((m) => textOf(m[0]).trim());
+
+  it('is on today (owner decision 2026-10-21)', () => {
+    expect(SITE_CLAIMS.levelCheck).toBe(true);
+  });
+
+  for (const locale of ['en', 'es', 'ko'] as const) {
+    const t = getMessages(locale).landing;
+    const H = t.home.how;
+    const L = t.persona.learners.faq.level;
+
+    for (const [state, base] of [
+      ['every claim off', ALL_CLAIMS_OFF],
+      ['today', SITE_CLAIMS],
+    ] as const) {
+      it(`${locale} (${state}, levelCheck off): no level question, step 1 as before`, () => {
+        const claims = { ...base, levelCheck: false };
+        const learners = textOf(renderToStaticMarkup(<LearnersDocument locale={locale} claims={claims} />));
+        expect(learners).not.toContain(L.q);
+        expect(learners).not.toContain(L.a);
+        const home = renderToStaticMarkup(<HomeDocument locale={locale} claims={claims} />);
+        expect(steps(home)).toHaveLength(3);
+        expect(steps(home)[0]).toBe(`1 ${H.steps.start.title} ${H.steps.start.body}`);
+        expect(textOf(home)).not.toContain(H.levelBody);
+      });
+
+      it(`${locale} (${state}, levelCheck on): the level question once, and step 1 names the level check`, () => {
+        const claims = { ...base, levelCheck: true };
+        const learners = textOf(renderToStaticMarkup(<LearnersDocument locale={locale} claims={claims} />));
+        expect(learners.split(L.q)).toHaveLength(2);
+        expect(learners.split(L.a)).toHaveLength(2);
+        const home = renderToStaticMarkup(<HomeDocument locale={locale} claims={claims} />);
+        const shown = steps(home);
+        expect(shown).toHaveLength(3);
+        expect(shown[0]).toBe(`1 ${H.steps.start.title} ${H.levelBody}`);
+        // The level line opens with the base line's words (it follows "Make a profile"), so the base line is not shown
+        // on its own as well: those words appear once, inside the level line.
+        expect(H.levelBody).not.toBe(H.steps.start.body);
+        expect(textOf(home).split(H.steps.start.body)).toHaveLength(2);
+      });
+    }
+  }
+
+  it('the English lines never call it a test', () => {
+    const en = getMessages('en').landing;
+    for (const line of [en.persona.learners.faq.level.q, en.persona.learners.faq.level.a, en.home.how.levelBody]) {
+      expect(line).not.toMatch(/\btest\b|\bplacement\b/i);
+    }
   });
 });

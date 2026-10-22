@@ -18,7 +18,7 @@ import { AppState } from 'react-native';
 import { flags, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../content/placement.generated';
-import { useLocale } from '../../i18n/use-messages';
+import { useLocale, useLocalePacks } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
 import { placementRouteCatalog } from '../../logic/placement/catalog';
 import { completeEvent, itemAnsweredEvent, startEvent } from '../../logic/placement/events';
@@ -457,7 +457,10 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   useEffect(() => () => stop(), []);
 
   const testLocale = flow?.testLocale ?? offer?.saved.testLocale ?? uiLocale;
-  const m = useMemo(() => getMessages(testLocale), [testLocale]);
+  // The check speaks its test language, which may differ from the UI's: on the web each language's text is a
+  // chunk of its own (F-CURR-002 §10), so every one the check can pick is loaded here, and the text follows it in.
+  const packs = useLocalePacks(availableLocales());
+  const m = useMemo(() => getMessages(testLocale), [testLocale, packs]);
   const say = useCallback(
     (text: string) => playPrompt({ text, language: speechLangOf(testLocale), kind: 'narration', source: 'placement' }),
     [testLocale],

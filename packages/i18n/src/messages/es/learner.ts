@@ -14,7 +14,7 @@ export const learner = {
     invitation: '¿Aprendemos las letras coreanas? Solo toma unos minutos al día.',
     cta: '¡Empecemos!',
     restore: 'Ya tengo progreso',
-    trust: 'Empieza el coreano desde cero. Hecho pensando en niños, padres y abuelos.',
+    trust: 'Empieza el coreano desde cero, a cualquier edad. Sin anuncios, nunca.',
     grownUps: {
       lead: '¿Acompañas a alguien que aprende?',
       parent: 'Familia o quien cuida',
@@ -872,7 +872,8 @@ export const learner = {
       title: '¿Por dónde empezamos?',
       newToKorean: 'El coreano es nuevo para mí',
       knowSome: 'Ya sé algo de coreano',
-      duration: 'Toma unos minutos. Puedes parar cuando quieras.',
+      duration: 'Una prueba de nivel corta. Puedes parar cuando quieras.',
+      newToKoreanHint: 'Empieza con las primeras letras.',
     },
     language: {
       title: 'Elige el idioma de la prueba',
@@ -1884,5 +1885,28 @@ export const learner = {
     scopeChild: 'Un adulto tiene novedades sobre tu clase.',
     scopeSelf: 'Hay novedades sobre tu clase.',
     open: { cta: 'Abrir' },
+  },
+  /** [OA] "¿Quién lo usa ahora?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.1, OA-4a): adultos, estudiante, Zona de adultos. */
+  who: {
+    title: '¿Quién lo usa ahora?',
+    learning: 'Aprender',
+    grownUps: 'Adultos',
+    add: 'Añadir un estudiante',
+    switch: 'Cambiar',
+    profileRow: '¿Quién lo usa ahora?',
+    switchUser: 'Cambiar de persona',
+    joinCaption: 'Elige quién se une.',
+    nopinCaption: 'Aquí un adulto crea un PIN.',
+    // `time` is the end of the wait as a date and time ("22 oct 2026, 6:40 p.m."): a time that ends in "p.m." takes no second period.
+    resetPending: (time: string) => `Se podrá crear un PIN de adultos nuevo a partir del ${time}${time.endsWith('.') ? '' : '.'} Escribe el PIN para cancelar la espera.`,
+    resetCancel: 'Cancelar la espera',
+    lockedCaption: 'Lo abre un adulto.',
+    locksUnread: 'Toca un nombre y un adulto escribe el PIN.',
+    use: {
+      family: 'Familia',
+      teacher: 'Docente',
+      school: 'Escuela',
+      signIn: 'Entrar como persona adulta',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;

@@ -21,7 +21,7 @@ describe('RouteProposal navigation', () => {
   it('P2-7b: set-up, preview and overview are root screens, and the gate continues to the set-up', () => {
     expectTypeOf<RootStackParamList['RouteSetup']>().toEqualTypeOf<{ profileId: string; choice?: PlanChoice }>();
     expectTypeOf<RootStackParamList['RoutePreview']>().toEqualTypeOf<{ profileId: string; setup: SetupState; replacing: string | null }>();
-    expectTypeOf<RootStackParamList['RouteOverview']>().toEqualTypeOf<{ profileId: string }>();
+    expectTypeOf<RootStackParamList['RouteOverview']>().toEqualTypeOf<{ profileId: string; viewer?: 'grownup' }>();
     expectTypeOf<'RouteSetup'>().toMatchTypeOf<GrownUpDestination>();
     const gate: RootStackParamList['PinEntry'] = { next: 'RouteSetup', profileId: 'profile:a' };
     expect(gate.next).toBe('RouteSetup');

@@ -3,7 +3,7 @@
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { LectureModeCard } from '@/components/console/LectureModeCard';
@@ -15,7 +15,7 @@ import { appUrl, browseEntryShown, lectureModeEnabled, reportsEnabled, notesEnab
 import { personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
-import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView, teacherLectureCard } from '@/lib/console/teacher-home';
+import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView, teacherLectureCard, wantsSchoolFocus, withoutSchoolFocus } from '@/lib/console/teacher-home';
 import { headRem, rem } from '@/lib/console/rem';
 
 /**
@@ -32,6 +32,10 @@ import { headRem, rem } from '@/lib/console/rem';
  * no-class state after the set-up panel. Nothing while `lectureModeEnabled()` is off. The page heading (h1, the nav
  * name, visually hidden) comes before the card in the list and loading states, so the outline starts at h1 and the
  * card and the visible Classes and School headings are h2.
+ *
+ * [OA] `?focus=school` (the chooser's School row, AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3, row OA-4b): once the
+ * list is drawn, focus moves to the first school card (the browser scrolls to what has focus; nothing scrolls without
+ * it) and the query is removed with `history.replaceState`, so a reload or a shared address does not repeat it.
  */
 
 const smallButton: CSSProperties = {
@@ -75,6 +79,12 @@ export default function HomePage(): JSX.Element {
   const homeView = items ? teacherHomeView(items) : null;
   const moves = useMovesWaiting(api, homeView?.classRows.map((item) => item.space.id) ?? []);
   const schoolMoves = useSchoolMoveLinks(api, homeView?.schoolRows.map((item) => item.space.id) ?? []);
+  // [OA] Row OA-4b: read once, on the first render in the browser.
+  const [schoolFocus] = useState(() => typeof window !== 'undefined' && wantsSchoolFocus(new URLSearchParams(window.location.search)));
+  const focusDone = useRef(false);
+  const firstSchoolCard = useRef<HTMLElement | null>(null);
+  const firstSchoolId = homeView?.schoolRows[0]?.space.id ?? null;
+  const drawn = ready && !!session && homeView !== null;
 
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
@@ -87,6 +97,15 @@ export default function HomePage(): JSX.Element {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!schoolFocus || focusDone.current || !drawn) return;
+    focusDone.current = true;
+    firstSchoolCard.current?.focus();
+    const { pathname, search, hash } = window.location;
+    const cleaned = withoutSchoolFocus(search, pathname, hash);
+    if (cleaned !== null) window.history.replaceState(window.history.state, '', cleaned);
+  }, [schoolFocus, drawn, firstSchoolId]);
 
   const frameSpaces: FrameSpaces = !api || (failed && !items) ? 'failed' : items;
   if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;
@@ -111,6 +130,8 @@ export default function HomePage(): JSX.Element {
       <article
         key={item.space.id}
         data-testid={`space-row-${item.space.id}`}
+        // [OA] The School focus target (row OA-4b): focusable by script only, never a tab stop.
+        {...(item.space.id === firstSchoolId ? { ref: firstSchoolCard, tabIndex: -1 } : {})}
         style={{
           backgroundColor: archived ? colors.surface.sunken : colors.surface.paper,
           border: `${borderWidth.thin}px solid ${colors.border.subtle}`,

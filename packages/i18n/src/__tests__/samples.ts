@@ -169,10 +169,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.join.done.already': [['Sunday Class A']],
   'landing.home.hero.bubble': [['x', 'g/k']],
   'landing.persona.learners.cards.seeAll': [[24], [1]],
-  'landing.cards.title': [[24], [1]],
-  'landing.cards.body': [[24, 10, 8, 4, 2], [1, 1, 0, 0, 0]],
   'landing.cards.cardLabel': [['gangaji', 'Puppy']],
-  'landing.games.eyebrow': [[8, 1], [9, 0], [1, 0]],
   'landing.plans.sizes': [[4, 50], [1, 1]],
   'landing.footer.copyright': [[2026]],
   'landing.localeBanner.viewIn': [['Español']],
@@ -920,4 +917,28 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.presets.chooser.showMore': [[8], [4]],
   // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
   'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
+  // The share image's alt text (AMENDMENTS-SITE-NEWUSER §3.14, row SN-2): the brand and the locale's tagline.
+  'landing.captures.og': [['Hangul Route', 'Learn Hangul from zero, at any age.']],
+  // [OA] A PIN pause of a minute or more (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-2): 1, 5, 15 and 60 minutes.
+  'caregiver.pin.cooldownMinutes': [[1], [5], [15], [60]],
+  // [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): the wait's end (a date and time, `formatReadyAt`), a learner name, a row label.
+  'learner.who.resetPending': [['Oct 22, 2026, 6:40 PM'], ['22 oct 2026, 18:40'], ['22 oct 2026, 6:40 p.m.']],
+  'a11y.who.tile': [['Mina'], ['Jo Ann']],
+  'a11y.who.grownUpRow': [['Grown-up area'], ['Family']],
+  'a11y.who.lockedTile': [['Sora'], ['Jo Ann']],
+  'a11y.who.lockedRow': [['Sora'], ['Jo Ann']],
+  'caregiver.people.removeAsk': [['Jun'], ['Jo Ann']],
+  // [OA] Who is joining? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-7b): counts, a learner name, a family name, a cap line.
+  'caregiver.join.who.result': [[0, 2], [1, 3], [2, 3], [12, 12]],
+  'caregiver.join.who.joined': [['Mina'], ['Jo Ann']],
+  'caregiver.join.who.already': [['Mina'], ['Jo Ann']],
+  'caregiver.join.who.refused': [['Sora', 'This family already has 4 learners. Ask a grown-up in your family.']],
+  'caregiver.join.who.consentTitle': [['Kim family']],
+  'caregiver.join.who.consentLine': [['Mina'], ['Jo Ann']],
+  // The site's schools section and product captures (AMENDMENTS-SITE-NEWUSER row SN-1); samples stay Latin.
+  'landing.persona.teachers.schools.admins': [[2], [1]],
+  'landing.persona.teachers.schools.size': [['hello@example.com']],
+  'landing.persona.teachers.schools.sizeContract': [['hello@example.com']],
+  'landing.captures.discover': [['x', 'a']],
+  'landing.captures.card': [['x', 'horangi', 'tiger']],
 };

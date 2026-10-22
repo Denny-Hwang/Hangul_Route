@@ -146,10 +146,10 @@ describe('the pages say what the app does, in the backup sentence', () => {
     expect(where).toContain('Data in transit is encrypted (HTTPS), and at rest it is access-controlled.');
   });
 
-  it('Privacy Policy: stays a draft for counsel, with the new effective date', () => {
+  it('Privacy Policy: no draft banner (owner decision 2026-10-21 (c)), with the new effective date', () => {
     const privacy = render(enPrivacyPage);
-    expect(privacy).toContain('pending review by qualified legal counsel');
-    expect(privacy).toContain('Effective October 20, 2026');
+    expect(privacy).not.toContain('pending review by qualified legal counsel');
+    expect(privacy).toContain('Effective October 22, 2026');
   });
 
   it('old home: the trust strip says "Child safety first" (OD-4) and makes no claim about which personal data we hold', () => {
@@ -227,7 +227,8 @@ describe('Privacy Policy: school administrators (section 6.7)', () => {
 
   it('names the powers, the verified email, what the owner sees and the 400 days', () => {
     const privacy = render(enPrivacyPage);
-    expect(privacy).toContain("A school's owner can add up to two administrators with an invite link.");
+    // AMENDMENTS-SITE-NEWUSER SN-2: the owner plus two administrators, said as one number.
+    expect(privacy).toContain("A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights.");
     expect(privacy).toContain("except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device.");
     expect(privacy).toContain('To accept, an administrator needs an account with a verified email.');
     expect(privacy).toContain('The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes.');

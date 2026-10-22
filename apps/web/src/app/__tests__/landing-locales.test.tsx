@@ -7,6 +7,11 @@ import { localeBannerOffers } from '../../data/landing-copy';
 import { HomePage as LandingPage } from '../../components/landing/HomePage';
 import { LocaleSwitcher } from '../../components/landing/LocaleSwitcher';
 import { SITE_PAGES, type SitePage, siteMetadataFor } from '../../lib/site-metadata';
+import { stage1Cards } from '../../data/stage1-cards';
+import { siteGames } from '../../data/minigame-catalog';
+import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { LearnersPage as LearnersDocument } from '../../components/landing/LearnersPage';
+import LocaleLearnersPage from '../(loc)/[locale]/learners/page';
 import { withoutSwitcher } from './locale-switcher-html';
 
 /**
@@ -72,7 +77,8 @@ describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers
     expect(html).toContain('href="/es" hrefLang="es"');
     expect(html).toContain('href="/ko" hrefLang="ko"');
     expect(html).not.toContain('<aside');
-    expect(hrefs(html).filter(isStartLearning)).toEqual([APP_URL, APP_URL, APP_URL]);
+    // Header, hero, the closing band ([SN] AMENDMENTS-SITE-NEWUSER §3.3) and footer.
+    expect(hrefs(html).filter(isStartLearning)).toEqual([APP_URL, APP_URL, APP_URL, APP_URL]);
   });
 
   it('the switcher renders nothing with one locale', () => {
@@ -84,10 +90,10 @@ describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers
   });
 });
 
-describe('Start learning from /es and /ko hands the locale to the app (?lang=): header, hero and footer', () => {
+describe('Start learning from /es and /ko hands the locale to the app (?lang=): header, hero, closing band and footer', () => {
   it.each(['es', 'ko'] as const)('%s', (locale) => {
     const html = renderToStaticMarkup(<LandingPage locale={locale} />);
-    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(3).fill(`${APP_URL}?lang=${locale}`));
+    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(4).fill(`${APP_URL}?lang=${locale}`));
   });
 });
 
@@ -132,7 +138,7 @@ describe('on a QA build every locale is offered', () => {
     const html = renderToStaticMarkup(<LocaleBannerView offer={offer} onDismiss={() => undefined} />);
     expect(html).toContain(`aria-label="${offer.label}"`);
     expect(html).toContain('lang="es"');
-    expect(html).toMatch(/<a [^>]*href="\/es"[^>]*hrefLang="es"[^>]*>Ver en Español<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/es"[^>]*hrefLang="es"[^>]*>Ver en español<\/a>/);
     expect(html).toContain(`<button type="button" aria-label="${offer.dismiss}"`);
   });
 
@@ -179,3 +185,58 @@ describe('the legal pages stay English-authoritative under a localized notice (d
   });
 });
 
+
+/**
+ * site-learners-l10n (F-SITE-002 §3.4, F-I18N-001): `/es/learners` and `/ko/learners` showed the cards' English glosses
+ * ("Puppy") and the mini-games' English titles and blurbs ("ten seconds"). Every word on the page, both folds included,
+ * is now in the page's language: the cards from the content overlays, the games from `landing.games.items`.
+ */
+describe('/es/learners and /ko/learners: the cards and the mini-games in the UI language', () => {
+  const en = getMessages('en').landing.games.items;
+  const textOf = (html: string): string =>
+    html
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&#x27;|&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ');
+  /** Whole-phrase match, so "K-pop" in a Spanish line does not count as the English gloss "K-pop music". */
+  const hasPhrase = (text: string, phrase: string): boolean =>
+    new RegExp(`(^|[^\\p{L}])${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}])`, 'u').test(text);
+
+  it('there are 24 English card glosses and 8 English game titles to look for', () => {
+    expect(stage1Cards.map((c) => c.en)).toHaveLength(24);
+    expect(siteGames).toHaveLength(8);
+  });
+
+  for (const locale of ['es', 'ko'] as const) {
+    for (const [name, html] of [
+      [`/${locale}/learners`, renderToStaticMarkup(<LocaleLearnersPage params={{ locale }} />)],
+      [`/${locale}/learners, every claim on`, renderToStaticMarkup(<LearnersDocument locale={locale} claims={ALL_CLAIMS_ON} />)],
+    ] as const) {
+      const text = textOf(html);
+
+      it(`${name}: no English card gloss or blurb, in the teaser or the card fold`, () => {
+        for (const card of stage1Cards) {
+          expect(hasPhrase(text, card.en), `${card.id} gloss "${card.en}"`).toBe(false);
+          expect(text, `${card.id} blurb`).not.toContain(card.blurb);
+          // The Korean and its romanization never change.
+          expect(text).toContain(card.ko);
+          expect(text).toContain(card.romanization);
+        }
+        expect(html).not.toMatch(/aria-label="Korean word /);
+      });
+
+      it(`${name}: no English game title or blurb, and every game in the page's language`, () => {
+        const items = getMessages(locale).landing.games.items;
+        for (const game of siteGames) {
+          expect(hasPhrase(text, en[game.kind].title), `${game.kind} title`).toBe(false);
+          expect(text, `${game.kind} blurb`).not.toContain(en[game.kind].blurb);
+          expect(text).toContain(items[game.kind].title);
+          expect(text).toContain(items[game.kind].blurb);
+        }
+        expect(text).not.toMatch(/\bten seconds\b|\bPuppy\b/);
+      });
+    }
+  }
+});

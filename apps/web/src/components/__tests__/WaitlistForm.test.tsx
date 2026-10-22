@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { colors, touchTarget } from '@hangul-route/design-system/tokens';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { WaitlistForm, WaitlistFormView } from '../landing/WaitlistForm';
+import { WaitlistForm, WaitlistFormView, type WaitlistTone } from '../landing/WaitlistForm';
 import { WAITLIST_COPY } from '../../data/landing-copy';
 import type { WaitlistState } from '../../lib/waitlist';
 
@@ -31,7 +32,7 @@ describe('WaitlistFormView · idle', () => {
     expect(html).toMatch(/<input[^>]*id="waitlist-email"[^>]*type="email"/);
     expect(html).toMatch(/autoComplete="email"|autocomplete="email"/i);
     expect(html).toMatch(/required/);
-    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Send me the invite<\/button>/);
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Get launch news<\/button>/);
   });
 
   it('has a hidden honeypot that people and screen readers skip', () => {
@@ -68,7 +69,7 @@ describe('WaitlistFormView · states', () => {
     expect(text(html)).toContain("You're on the list");
     expect(html).toMatch(/role="status"[^>]*aria-live="polite"[^>]*>[\s\S]*You&#x27;re on the list/);
     expect(html).not.toMatch(/<input/);
-    expect(html).not.toMatch(/Send me the invite/);
+    expect(html).not.toMatch(/Get launch news/);
   });
 
   it('invalid: tells the visitor what to fix, in an alert tied to the field', () => {
@@ -118,7 +119,7 @@ describe('WaitlistFormView · states', () => {
 
 describe('WaitlistForm (stateful wrapper)', () => {
   it('renders the idle form on first paint, same as the view', () => {
-    expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} />)).toContain('Send me the invite');
+    expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} />)).toContain('Get launch news');
   });
 
   it('renders the words it is given (the page passes them in its locale)', () => {
@@ -129,5 +130,40 @@ describe('WaitlistForm (stateful wrapper)', () => {
   it('links the privacy policy in the page locale (F-I18N-001 PR 11b)', () => {
     expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} />)).toMatch(/<a[^>]*href="\/privacy"/);
     expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} locale="es" />)).toMatch(/<a[^>]*href="\/es\/privacy"/);
+  });
+});
+
+/** [SN] AMENDMENTS-SITE-NEWUSER §3.3 item 6: the home's launch news sits in a plain section, `tone="plain"`. */
+describe('WaitlistFormView · tone', () => {
+  const toned = (tone?: WaitlistTone): string =>
+    renderToStaticMarkup(
+      <WaitlistFormView state={{ kind: 'idle' }} email="" website="" onEmailChange={noop} onWebsiteChange={noop} onSubmit={noop} words={WAITLIST_COPY} tone={tone} />,
+    );
+  const consentOf = (html: string): string => /<p id="waitlist-consent"[^>]*>([\s\S]*?)<\/p>/.exec(html)?.[1] ?? '';
+  const field = (html: string): string => /<input[^>]*id="waitlist-email"[^>]*>/.exec(html)?.[0] ?? '';
+  const button = (html: string): string => /<button[^>]*type="submit"[^>]*>/.exec(html)?.[0] ?? '';
+
+  it('defaults to the band: unchanged markup without the prop, 48 px controls, text on primary', () => {
+    expect(toned()).toBe(view({ kind: 'idle' }));
+    expect(toned('band')).toBe(view({ kind: 'idle' }));
+    expect(field(toned())).toContain('min-height:48px');
+    expect(consentOf(toned())).toContain(`color:${colors.text.onPrimary}`);
+  });
+
+  it('plain: secondary text, links in brand.primaryDark, field and button touchTarget.min (64) tall', () => {
+    const html = toned('plain');
+    expect(touchTarget.min).toBe(64);
+    expect(field(html)).toContain(`min-height:${touchTarget.min}px`);
+    expect(button(html)).toContain(`min-height:${touchTarget.min}px`);
+    expect(html).toMatch(new RegExp(`<p id="waitlist-consent" style="color:${colors.text.secondary}`));
+    const anchors = [...consentOf(html).matchAll(/<a [^>]*>/g)].map((m) => m[0]);
+    expect(anchors).toHaveLength(2);
+    for (const a of anchors) expect(a).toContain(`color:${colors.brand.primaryDark}`);
+    expect(html).toMatch(new RegExp(`<div role="status" aria-live="polite" style="color:${colors.text.secondary}`));
+  });
+
+  it('the consent words are byte-identical in both tones (CONSENT_TEXT_VERSION does not move)', () => {
+    expect(text(consentOf(toned('plain')))).toBe(text(consentOf(toned('band'))));
+    expect(text(toned('plain'))).toBe(text(toned('band')));
   });
 });

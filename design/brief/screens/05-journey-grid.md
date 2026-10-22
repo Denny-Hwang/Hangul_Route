@@ -115,13 +115,13 @@ Layout (top to bottom, 48px horizontal padding):
    - Stage 6 #C84B7D (Real-use)
    - Stage 7 #3D9B8C (Self-expression)
 
-   Stage titles and one-liners:
+   Stage titles and one-liners (the copy of record is apps/mobile/src/content/stages.ts; F-CURR-002 OD-12):
    - Stage 1: "Hangul" / "Meet every Korean letter and the sound it makes."
    - Stage 2: "Words" / "Stack letters into your first 60 Korean words."
    - Stage 3: "Sentences" / "Connect words into tiny, useful sentences."
-   - Stage 4: "Dialogue" / "Have your first real-life mini conversations."
-   - Stage 5: "Stories" / "Read short tales and Korean folk stories with Hoya."
-   - Stage 6: "Real-use" / "Take Korean out into the world — menus, signs, calls."
+   - Stage 4: "Dialogue" / "Read and answer short everyday exchanges."
+   - Stage 5: "Stories" / "Read heritage stories and tales with Hoya."
+   - Stage 6: "Real-use" / "Take Korean out into the world: menus, signs and short messages."
    - Stage 7: "Self-expression" / "Say what you think, feel, and create — in Korean."
 
 8. 96px gap

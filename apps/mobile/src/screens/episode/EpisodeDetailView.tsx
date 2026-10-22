@@ -25,7 +25,7 @@ import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { askFor, askGate, helpAskedEvent, isClassOnly, type AskGate } from '../../logic/access-copy';
 import {
   backToOpenLessons,
@@ -52,6 +52,7 @@ import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as Prereq
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
+import { passGate } from '../../store/gate-telemetry';
 import { episodeIntro } from '../../logic/episode/intro';
 import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
@@ -115,10 +116,12 @@ export function EpisodeDetailView({
   const m = messages.learner.episode;
   const access = messages.learner.access;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const episode = useMemo(() => {
     const source = episodeById(episodeId);
     return source && localizeEpisode(source, locale);
-  }, [episodeId, locale]);
+  }, [episodeId, locale, titles]);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
 
@@ -246,7 +249,7 @@ export function EpisodeDetailView({
   const ask = askFor(audience, isClassOnly(memberships ?? []), access);
   const onAsk = (): void => {
     void track(helpAskedEvent(profileId, 'episode', ask.audience));
-    openAsk(askGate(gateOpensDirectlyNow(), 'episode'));
+    openAsk(askGate(passGate('Paywall', gateOpensDirectlyNow()), 'episode'));
   };
   const onBackToOpen = (): void => onBackToOpenLessons(backToOpenLessons(route?.next ?? null, firstFreeTopicKey()));
 

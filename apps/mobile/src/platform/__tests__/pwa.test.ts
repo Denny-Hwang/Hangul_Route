@@ -70,7 +70,7 @@ describe('platform/pwa install API', () => {
 
   it('native: no env, no prompt, always offline-ready', async () => {
     const { appUrl, installEnv, isOfflineReady, promptInstall } = await import('../pwa');
-    expect(installEnv()).toEqual({ userAgent: '', standalone: true, hasPromptEvent: false, isWeb: false });
+    expect(installEnv()).toEqual({ userAgent: '', standalone: true, hasPromptEvent: false, isWeb: false, maxTouchPoints: 0 });
     expect(await promptInstall()).toBe(false);
     expect(isOfflineReady()).toBe(true);
     expect(appUrl()).toBe('');
@@ -106,6 +106,7 @@ describe('platform/pwa install API', () => {
       standalone: false,
       hasPromptEvent: true,
       isWeb: true,
+      maxTouchPoints: 0,
     });
     expect(web.isOfflineReady()).toBe(true);
     expect(web.appUrl()).toBe('https://app.example.com');
@@ -115,6 +116,15 @@ describe('platform/pwa install API', () => {
     expect(prompt).toHaveBeenCalled();
     // consumed: a second call has no prompt to fire
     expect(await web.promptInstall()).toBe(false);
+  });
+
+  it('web: passes the touch-point count, so an iPad that reads as a Mac gets the iOS steps', async () => {
+    vi.stubGlobal('addEventListener', vi.fn());
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
+    vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/17.4 Safari/605.1.15', maxTouchPoints: 5 });
+    expect(web.installEnv().maxTouchPoints).toBe(5);
+    vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Macintosh)' });
+    expect(web.installEnv().maxTouchPoints).toBe(0);
   });
 
   it('web: a rejected or missing prompt resolves false and clipboard errors are swallowed', async () => {
