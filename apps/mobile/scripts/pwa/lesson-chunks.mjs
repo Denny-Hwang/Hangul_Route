@@ -33,8 +33,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-5) plus a 4,531 B rounding margin. A row that adds to it raises this line with its measurement; the es / ko story
   // overlays still in the start bundle leave it with row CM-8b, before CM-46a adds narration. The phase-0 integration
   // (#802: CM-1 to CM-8, CM-70a, CM-70b on one branch) measures 6,371,165 B raw / 1,582,440 B gzip, so the line is that
-  // measurement plus an 8,835 B rounding margin.
-  startBundleRaw: 6_380_000,
+  // measurement plus an 8,835 B rounding margin. [OA] The one-account integration (#801: OA-0b to OA-9 on main
+  // 34e8f85d5) adds the chooser, PIN v2, people-on-this-device and the face or fingerprint shortcut to the shell:
+  // 6,487,010 B raw / 1,616,887 B gzip, so the line is that measurement plus a 7,990 B rounding margin.
+  startBundleRaw: 6_495_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,

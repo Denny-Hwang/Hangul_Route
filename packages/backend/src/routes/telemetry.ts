@@ -89,17 +89,17 @@ telemetryRoutes.post('/', async (c) => {
     receivedAt,
   };
   const stored = appendEvent(event);
-  const ctx = executionContextOf(c);
+  // [OA] The daily count: best effort, it never rejects.
   const count = countTelemetryDaily(() => dbFor(c), c.env as TelemetryDailyEnv | undefined, stored, now.getTime());
-  // No execution context (tests, local dev): finish the count before answering. It never rejects.
-  if (ctx) ctx.waitUntil(count);
-  else await count;
-  // The name and kept payload only: the profile id never reaches the rollup. After the answer when
-  // the runtime allows it (waitUntil), so a slow D1 write never delays the 201 into a client retry.
-  if (learningRollupsEnabled(c.env as RollupEnv | undefined)) {
-    const rollup = rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt, at: event.at }, clientKey((h) => c.req.header(h)));
-    if (ctx) ctx.waitUntil(rollup);
-    else await rollup;
-  }
+  // The name and kept payload only: the profile id never reaches the rollup. It never rejects either.
+  const rollup = learningRollupsEnabled(c.env as RollupEnv | undefined)
+    ? rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt, at: event.at }, clientKey((h) => c.req.header(h)))
+    : Promise.resolve(0);
+  // Both after the answer when the runtime allows it (one waitUntil), so a slow D1 write never delays the 201 into a
+  // client retry. No execution context (tests, local dev): finish both before answering.
+  const after = Promise.all([count, rollup]);
+  const ctx = executionContextOf(c);
+  if (ctx) ctx.waitUntil(after);
+  else await after;
   return ok(c, { event: stored }, 201);
 });

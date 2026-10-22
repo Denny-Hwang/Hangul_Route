@@ -84,8 +84,8 @@ import { cappedDays, MIN_GROUP_EVENTS, ROLLUP_BUDGET_METRIC, ROLLUP_READ_LIMIT }
  *
  * Bounded: one read of `remote_config`, then (only when a flag is ramping) one read of `learning_rollups` limited to
  * the four metrics used and to the windows of the last GUARDRAIL_MAX_STEP_AGE_DAYS + GUARDRAIL_WINDOW_DAYS days, and
- * at most MAX_GUARDRAIL_LOWERS write attempts (a refused write counts), so with the purge's 36 statements a run stays
- * at 46 of the 50 a Free-plan invocation allows.
+ * at most MAX_GUARDRAIL_LOWERS write attempts (a refused write counts), so with the purge's 41 statements ([OA] its five
+ * rounds now include the `telemetry_daily` step) a run stays at 46 of the 50 a Free-plan invocation allows.
  *
  * Kill switch: `GUARDRAIL_EVALUATOR` (a dashboard text variable, kept across deploys) stops the evaluator when set to
  * anything but `enabled`; unset is on. The purge still runs, and the run logs `guardrail.run` with `disabled: true`.
@@ -113,8 +113,11 @@ export const P90_MAX_MINUTES = 20;
 export const D1_FREE_ROWS_WRITTEN_PER_DAY = 100_000;
 /** D1 rows written per day must stay under this share of the free-tier quota. */
 export const D1_ROWS_WRITTEN_MAX_SHARE = 0.5;
-/** The most write attempts one run makes; a breached flag past it is lowered on the next day's run. */
-export const MAX_GUARDRAIL_LOWERS = 8;
+/**
+ * The most write attempts one run makes; a breached flag past it is lowered on the next day's run. 50 - 4 (margin) - 41
+ * (the purge at its worst) - 2 (the two reads) = 3; it was 8 before [OA] added the `telemetry_daily` purge step.
+ */
+export const MAX_GUARDRAIL_LOWERS = 3;
 /** `remote_config.reason` is cut to this many characters. */
 export const GUARDRAIL_REASON_MAX = 500;
 
