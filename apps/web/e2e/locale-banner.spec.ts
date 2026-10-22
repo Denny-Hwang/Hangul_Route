@@ -117,7 +117,8 @@ test.describe('es and ko ship (F-I18N-001 rows 15b / 16b)', () => {
 
     test('Start learning on /ko carries the locale to the app (header, hero, closing band and footer)', async ({ page }) => {
       await page.goto('/ko');
-      await expect(page.locator('a[href="https://app.hangulroute.com?lang=ko"]')).toHaveCount(4);
+      // [GU] GU-7: with the guestLesson claim on, each also carries the try intent after lang (F-SITE-002 3.8).
+      await expect(page.locator('a[href="https://app.hangulroute.com/?lang=ko&try=1"]')).toHaveCount(4);
     });
   });
 });

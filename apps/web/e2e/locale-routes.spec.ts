@@ -46,7 +46,8 @@ test.describe('locale routes', () => {
       await expect(main.getByRole('link', { name: t.home, exact: true })).toHaveAttribute('href', locale === 'en' ? '/' : `/${locale}`);
       await expect(main.getByRole('link', { name: t.start, exact: true })).toHaveAttribute(
         'href',
-        locale === 'en' ? 'https://app.hangulroute.com' : `https://app.hangulroute.com?lang=${locale}`,
+        // [GU] GU-7: the guestLesson claim is on, so Start learning carries the try intent (F-SITE-002 3.8).
+        locale === 'en' ? 'https://app.hangulroute.com/?try=1' : `https://app.hangulroute.com/?lang=${locale}&try=1`,
       );
       // AMENDMENTS-SITE-NEWUSER §3.7 and §8: the site's 404 body, never Next's default block, and the home text link
       // before Start learning (the mock's order).
