@@ -1,6 +1,6 @@
 # content/stories/
 
-Story mode tales: one JSON file per story, the source of truth for every heritage story in the app (F-STORY-001, decisions D4 and D14). The app never reads these files directly: `scripts/build-stories.mjs` turns the `ready` ones into `apps/mobile/src/content/stories.generated.ts`.
+Story mode tales: one JSON file per story, the source of truth for every heritage story in the app (F-STORY-001, decisions D4 and D14). The app never reads these files directly: `scripts/build-stories.mjs` turns the `ready` ones into the start-loaded shelf `apps/mobile/src/content/__generated__/stories-index.ts` and one body chunk per story under `__generated__/story-chunks/` (F-CURR-002 CM-8).
 
 Specs: `docs/specs/F-STORY-001-story-schema-pipeline.md` (schema §3.2, facts and coverage §3.3, inline terms §3.4, traditional tales §3.5, verification §3.6, versions and corrections §3.7, validators §3.8, bundle §3.9). The reader and Sources screen are F-STORY-002, checks F-STORY-003, the shelf F-STORY-004. Romanization policy: `docs/specs/F-CNT-002-romanization-policy.md`.
 
@@ -32,7 +32,7 @@ The directory is flat: `theme` is a field, not a folder. The file name must equa
 
 1. **Import (one time per research cluster).** `node scripts/import-heritage.mjs --src content/stories/research --dry-run` prints the report; `--write` writes `<slug>.json` drafts. The importer reads only `<cluster>.final.json` and never overwrites an authored story, with two explicit exceptions: `--force-draft` replaces a story that is still a draft at `contentVer` 1 (it discards any hand edits in that file), and `--allow-unfinal` also imports a non-final research file (`.revised.json` / `.draft.json`) with `verification.passes` 0. Its report is the author's to-do list: undefined terms, missing title romanizations, approximations, advisories to confirm.
 2. **Author the draft.** Title romanization and gloss, term glosses, captions, check explanations, `approximations`, art (or `artPending: true`, only when the owner accepts a text-only tile), and the traditional-tale notes. Never retype a source: facts and sources come from the research file.
-3. **Mark it `ready`** when `StoryReadySchema` passes. Regenerate the bundle (`node scripts/build-stories.mjs`) and commit both files.
+3. **Mark it `ready`** when `StoryReadySchema` passes. Regenerate the bundle (`node scripts/build-stories.mjs`, or `pnpm generate`) and commit the story file; the bundle is gitignored and generated (F-CURR-002 row CM-6). A story added after catalogue version 32 carries `"addedIn": <YYYYMMDD>`, above main's catalogue version (its listen quest's catalogue version, and the order it takes its shelf place in; `scripts/check-added-in.mjs` names the stamp to use). A festival story names its festival in `shelf.anchor` (`hangeul-day`, `seollal` or `chuseok`, one story per festival); the first 24 keep theirs in `catalog/data.ts`.
 4. **Review sign-offs** (separate passes): the language review sets `review.language: "native-reviewed"` and the culture review sets `review.culture: "culture-reviewed"`, each with `reviewedBy` and `reviewedAt`. Both reviews are the multi-agent final review (owner decision 2026-10-12, the process of the vocabulary review #185; [F-STORY-001 §3.6](../../docs/specs/F-STORY-001-story-schema-pipeline.md)), two separate passes with separate findings, each signed `reviewedBy: "MAR"` with its `reviewedAt` date. A reviewed value without both is `review-unsigned`. The story has one `reviewedBy` / `reviewedAt` pair, so it records the most recent sign-off; each pass therefore also appends one line to `verification.notes` (`MAR`, the date, and which review: language or culture) and states the same in the PR description, so the earlier sign-off is never lost. The two values are schema tokens: no copy may say a story was reviewed by a native speaker or a human expert.
 5. **Shelf and card blocks** (`shelf`, `card`) follow F-STORY-004 and F-STORY-006 once the story is reviewed and verified.
 
@@ -119,9 +119,9 @@ corepack pnpm --filter @hangul-route/content-schema test story-content      # sc
 corepack pnpm --filter @hangul-route/content-schema test romanization       # romanization suites
 node scripts/validate-content.mjs                                           # language policy (F-CNT-001)
 node scripts/build-stories.mjs                                              # regenerate the bundle
-node scripts/build-stories.mjs --check                                      # bundle matches the JSON (CI)
+node scripts/build-stories.mjs --check                                      # a fresh run gives the bundle on disk (CI determinism)
 node scripts/build-stories.mjs --report                                     # sizes and budget (CI)
-node scripts/build-overlays.mjs --check                                     # translations still match (CI)
+node scripts/build-overlays.mjs --check                                     # overlays are deterministic (CI)
 ```
 
 Lint warnings print and do not fail; errors fail the suite. Set `HANGUL_ROUTE_TODAY=YYYY-MM-DD` to run the date rules (`source-stale`, `source-accessed-invalid`) as of a fixed day.

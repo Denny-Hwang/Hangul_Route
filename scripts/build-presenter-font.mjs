@@ -33,16 +33,23 @@
 // quest and episode with the deck builder and fails on a projected Hangul glyph that is
 // not in the sidecar, so this field list cannot quietly fall behind the slides.
 //
+// Since F-CURR-002 row CM-6 the subset is built from all taught Korean (`taughtKorean`): the
+// fields above and every `ko` / `…Ko` field of the shipped letters, scopes, quests, cards, listed
+// topics and listed stories. CI checks coverage, not equality: a list that holds more than today's
+// content needs passes, so a content PR rebuilds the font only when it brings a code point the font
+// lacks. The font stays committed because the subsetter (Python) and the source font are dev-time
+// tools that CI and the deploys do not have.
+//
 // Usage:
 //   node scripts/build-presenter-font.mjs --source <NotoSansKR-Bold.otf>
 //       rebuild: subset the pinned source with pyftsubset (pip install fonttools==4.66.1
 //       brotli==1.2.0; a dev-time tool, CI never needs it), then write the glyph list
 //       (only after the subset succeeded) and report bytes
 //   node scripts/build-presenter-font.mjs --check
-//       fail if the committed glyph list differs from the content, if the committed font's
-//       character map is not exactly that list, or if a committed file is missing (CI;
-//       plain Node: node:zlib decompresses the WOFF2 tables and the cmap is read here, so
-//       CI needs no Python)
+//       coverage: fail if all taught Korean has a code point the committed glyph list lacks,
+//       if the committed font's character map is not exactly that list, or if a committed
+//       file is missing (CI; plain Node: node:zlib decompresses the WOFF2 tables and the cmap
+//       is read here, so CI needs no Python)
 //   node scripts/build-presenter-font.mjs --report
 //       print the font's size and fail over the budget
 //
@@ -211,6 +218,35 @@ export function presenterStrings({ jamo, scopes, quests, cards, extra, topicFile
       }
     }
   }
+  return out;
+}
+
+/** A field that holds taught Korean (F-CNT-001: Hangul sits only in `ko` fields, or a `…Ko` one such as `spokenKo`). */
+const isTaughtField = (field) => field === "ko" || /^[a-z][A-Za-z]*Ko$/.test(field);
+
+/** Every string of a taught-Korean field at any depth of `value`, into `out`. */
+function taughtFields(value, out, field = "") {
+  if (typeof value === "string") {
+    if (isTaughtField(field) && value.length > 0) out.push(value);
+  } else if (Array.isArray(value)) value.forEach((v) => taughtFields(v, out, field));
+  else if (isObject(value)) for (const [key, v] of Object.entries(value)) taughtFields(v, out, key);
+  return out;
+}
+
+/**
+ * All taught Korean of the shipped content (F-CURR-002 §9.1, row CM-6): what the presenter draws
+ * (`presenterStrings`) and every `ko` / `…Ko` field of the letters, the game scopes, the quests and
+ * their steps, the heritage cards, the listed vocabulary topics and the read tiers, title and keywords
+ * of the listed stories. The subset
+ * is built from this, so a later content PR whose Korean the font already holds never rebuilds it.
+ */
+export function taughtKorean(content = {}) {
+  const { jamo, scopes, quests, cards, topicFiles, stories } = content;
+  const out = presenterStrings(content);
+  for (const value of [jamo, scopes, quests, cards]) taughtFields(value, out);
+  for (const { json } of list(topicFiles)) if (isObject(json) && isObject(json.topic) && LISTED_TOPIC_STATUS.has(json.topic.status)) taughtFields(json, out);
+  // A story teaches its title, keywords and read tiers; its facts and sources quote references (Hanja, old letters).
+  for (const { json } of list(stories)) if (isObject(json) && isListedStory(json)) taughtFields([json.title, json.keywords, json.tiers], out);
   return out;
 }
 
@@ -396,16 +432,17 @@ export async function loadRepoContent(root) {
     loaderRegistered = true;
   }
   const load = (rel) => import(pathToFileURL(join(root, ...rel.split("/"))).href);
-  const [content, config, lecture, ...lessonStages] = await Promise.all([
+  const [content, config, lecture, lessons] = await Promise.all([
     load("apps/mobile/src/content/index.ts"),
     load("apps/mobile/src/logic/minigame-config.ts"),
     load("apps/mobile/src/logic/lecture/content.ts"),
-    // F-CURR-001 §3.12: the scopes of the generated lesson modules (the lesson quests come with questsAll).
-    ...[2, 3, 4, 6, 7].map((n) => load(`apps/mobile/src/content/__generated__/lessons-stage${n}.ts`)),
+    load("apps/mobile/src/content/lessons.ts"),
   ]);
+  // F-CURR-002 §10: every lesson cell's chunk (its quests' steps and its scopes), loaded as the app loads them.
+  await lessons.lessonContent.ensureAll();
   return {
     jamo: content.jamoKnown, // the Stage 1 symbols and the Word Builder ones (F-CURR-001 S2-1)
-    scopes: Object.assign({}, config.minigameScopes, ...lessonStages.map((m) => m.LESSON_SCOPES)),
+    scopes: Object.assign({}, config.minigameScopes, lessons.lessonContent.loadedScopes()),
     quests: content.questsAll,
     cards: content.heritageCardsAll,
     extra: [lecture.PAUSE_WORD.ko],
@@ -493,7 +530,7 @@ export async function main(argv, root, deps = {}) {
 
   let codePoints;
   try {
-    codePoints = glyphList(presenterStrings(await loadContent(root)));
+    codePoints = glyphList(taughtKorean(await loadContent(root)));
   } catch (error) {
     out(`::error::${error.message}\n`);
     return 1;
@@ -507,18 +544,13 @@ export async function main(argv, root, deps = {}) {
       out(`::error file=${glyphsRel}::presenter glyph list is missing; run ${REBUILD}\n`);
       return 1;
     }
-    const committed = readFileSync(glyphsFile, "utf8");
-    if (committed !== sidecar) {
-      const have = parseGlyphs(committed);
-      const want = new Set(codePoints);
-      const missing = codePoints.filter((cp) => !have.has(cp));
-      const unused = [...have].filter((cp) => !want.has(cp)).sort((a, b) => a - b);
-      const parts = [];
-      if (missing.length > 0) parts.push(`missing from the font: ${missing.map((cp) => `${hex(cp)} ${shown(cp)}`).join(", ")}`);
-      if (unused.length > 0) parts.push(`no longer used: ${unused.map((cp) => `${hex(cp)} ${shown(cp)}`).join(", ")}`);
-      if (parts.length === 0) parts.push("the file differs from the generated text");
+    // Coverage (F-CURR-002 row CM-6): the committed list may hold more than today's content needs (a
+    // removed word never forces a rebuild); it fails only when taught Korean has a code point it lacks.
+    const listed = parseGlyphs(readFileSync(glyphsFile, "utf8"));
+    const missing = codePoints.filter((cp) => !listed.has(cp));
+    if (missing.length > 0) {
       out(
-        `::error file=${glyphsRel}::presenter glyph list is out of date with the shipped content (${parts.join("; ")}); run ${REBUILD} and commit the font and the list\n`
+        `::error file=${glyphsRel}::the presenter font does not cover all taught Korean (missing: ${missing.map((cp) => `${hex(cp)} ${shown(cp)}`).join(", ")}); run ${REBUILD} and commit the font and the list\n`
       );
       return 1;
     }
@@ -531,7 +563,7 @@ export async function main(argv, root, deps = {}) {
     const fontRel = relOf(root, FONT_REL);
     let diff;
     try {
-      diff = fontDiff(join(root, ...FONT_REL), codePoints);
+      diff = fontDiff(join(root, ...FONT_REL), [...listed].sort((a, b) => a - b));
     } catch (error) {
       out(`::error file=${fontRel}::the presenter font cannot be read (${error.message}); run ${REBUILD}\n`);
       return 1;
@@ -545,7 +577,7 @@ export async function main(argv, root, deps = {}) {
       );
       return 1;
     }
-    out(`presenter glyph list and font are up to date (${codePoints.length} code points)\n`);
+    out(`presenter font covers all taught Korean (${codePoints.length} code points; the font holds ${listed.size})\n`);
     return 0;
   }
 

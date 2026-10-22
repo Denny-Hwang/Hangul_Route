@@ -16,7 +16,7 @@ import {
   type MinigameKind,
 } from './minigame';
 import { CHECK_ROUNDS, checkKindsFor, QuestObjectSchema, questRules, slotCount, type QuestStepKind } from './quest';
-import { CardIdSchema, IsoDateSchema, SourceSchema, VerificationSchema } from './story';
+import { AddedInSchema, CardIdSchema, IsoDateSchema, SourceSchema, VerificationSchema } from './story';
 
 /**
  * Lesson cells (F-CURR-001 §3.10, row C-1): one JSON file per upper-stage grid
@@ -122,6 +122,8 @@ export function scopeRoundCount(scope: LessonScope): number {
 
 export const LessonQuestSchema = QuestObjectSchema.extend({
   scopes: z.array(LessonScopeSchema).min(1).max(4),
+  /** The catalogue version the quest joined at; required of a quest added after version 32 (F-CURR-002 row CM-6). */
+  addedIn: AddedInSchema.optional(),
 })
   .superRefine(questRules)
   .superRefine((quest, ctx) => {

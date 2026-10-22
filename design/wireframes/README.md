@@ -41,6 +41,7 @@
 | `library/stories.md` · `library/culture.md` · `story/culture-notes.md` | R | F-STORY-004 §3.3-3.5 (PR 4.0; briefs `screens/23-library-stories`, `screens/24-culture-notes`) |
 | `profile/settings.md` · `parent/gate.md` | S | F-SUB-001 · (gate 통합 대상) |
 | `reviews/daily-test.md` · `feedback-review.md` · `stage-review.md` | D | F-RVW-001 |
+| `reviews/daily-review.md` (supersedes the layout of `daily-test.md`) · `reviews/keep-going.md` · `reviews/cell-check.md` (with Test out) · `reviews/stage-check.md` (Stages 2-7 ceremony, stage card, Stage Check; supersedes `stage-review.md` for Stages 2-7) · `journey/mastery-ring.md` · `home/goal-ring-weekly-dots.md` | R | F-CURR-002 §4.4, §4.5, §7.3, §7.4, §7.7, §14 (row CM-D1; mocks `design/screens/daily-review/`, `keep-going/`, `cell-check/`, `stage-check/`, `mastery-ring/`, `goal-ring-weekly-dots/`; built in CM-14, CM-17, CM-20, CM-21, CM-22) |
 | `sync/save-progress.md` · `restore.md` · `join-space.md` · `merge-notice.md` | P | roadmap multi-persona §4–6 |
 | `paywall/upgrade.md` | R | F-SUB-001 · F-IAP-001 |
 | `pwa/install-guide.md` · `pwa/system-banners.md` | P | roadmap web-pwa-offline §3 |
@@ -61,6 +62,8 @@
 | `home/notes-card.md` · `notes/list.md` · `notes/detail.md` | R | F-FEEDBACK-001 §6.5-6.7 (FB-0; built in FB-8) |
 | `minigame/sentence-builder.md` · `quest/discover-sentences.md` | R | F-CURR-001 §3.4-3.7, §3.10 (D-1: Sentence Builder `order-it` and the sentence, pattern, exchange with Read along, and realia Discover pages; mock `design/screens/minigame-sentence-builder/v1/`; built in G-1, S3-1, S4-1, G-2) |
 | `minigame/realia-read.md` | R | F-CURR-001 §3.6, §3.14 (row D-2; mock `design/screens/minigame-realia-read/`; built in G-2) |
+| `minigame/cloze-pick.md` · `minigame/syllable-build.md` · `minigame/match-shape.md` · `minigame/story-order.md` · `minigame/role-play.md` · `minigame/my-story.md` · `minigame/yut-review.md` (and the `hear` mode of `minigame/type-hangul.md`, `shell.md` F-CURR-002 section, `audio-fallback.md` W11) | R | F-CURR-002 §7.1, §4.5, §7.7 (row CM-D2; mocks `design/screens/minigame-variety/`; built in CM-30 to CM-35, CM-38, CM-39) |
+| `journey/topic-pages.md` · `journey/pack-page.md` · `minigame/hidden-heritage.md` (with the scene style guide) · `route/passport.md`; amends one line of `journey/grid.md` (horizontal scroll, page 1 only) | R | F-CURR-002 §6.1-6.4, §7.1 F7, §7.5, §12.2, §14, OD-2, OD-10 (row CM-D3; mock `design/screens/journey-topic-pages/`; built in CM-50b, CM-36, CM-60) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |

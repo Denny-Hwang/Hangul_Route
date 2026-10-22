@@ -27,6 +27,7 @@ import { useAccessTier } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
 import { useActiveRouteNext } from '../use-route-next';
 import { StoryTile } from './StoryTile';
+import { useStoriesLoaded } from '../story-content';
 
 /**
  * The story tiles of a list of index entries, shared by the Library's story sections (F-STORY-004
@@ -88,6 +89,8 @@ export function useStoryTiles(entries: readonly StoryIndexEntry[], openEpisode?:
     [tier],
   );
 
+  // Each tile's cover comes from its story's chunk (F-CURR-002 §10, row CM-8): the theme tint stands in until it arrives.
+  const coverChunks = useStoriesLoaded(useMemo(() => entries.map((e) => e.storyId), [entries]));
   const items: StoryTileItem[] = useMemo(
     () =>
       entries.map((source) => {
@@ -97,7 +100,7 @@ export function useStoryTiles(entries: readonly StoryIndexEntry[], openEpisode?:
         const inPlanWord = route?.plan.inPlanQuestIds.has(entry.questId) ? messages.learner.routeNext.tag.inPlan : null;
         return { entry, status, view: storyTileView({ entry, status, locked: isLocked(entry), copy, inPlanWord }) };
       }),
-    [entries, locale, snap, bookmarks, isLocked, copy, route, messages],
+    [entries, locale, snap, bookmarks, isLocked, copy, route, messages, coverChunks],
   );
 
   const profileId = profile?.id;

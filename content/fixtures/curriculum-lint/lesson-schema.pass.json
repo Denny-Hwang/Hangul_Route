@@ -1,0 +1,15 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a Volume 1 file that is not a lesson body is left to the F-CURR-001 rules (lintLessonCell). Not real content.",
+  "rule": "lesson-schema",
+  "files": {
+    "content/episodes/stage-2/nature.json": {
+      "id": "episode:stage2-nature",
+      "stage": "stage2",
+      "quests": []
+    },
+    "content/episodes/stage-1/cards.json": {
+      "about": "Stage 1 is not a lesson-cell directory"
+    }
+  },
+  "expect": []
+}

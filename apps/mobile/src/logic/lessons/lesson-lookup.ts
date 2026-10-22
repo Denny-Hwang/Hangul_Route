@@ -1,76 +1,9 @@
-import type { Episode, Overlays, Quest } from '@hangul-route/content-schema';
-import type { MinigameScope } from '../minigame-config';
+import type { Episode, Quest } from '@hangul-route/content-schema';
 
 /**
- * The upper-stage lesson cells at runtime (F-CURR-001 §3.10, §3.12): the headers
- * come with the start bundle, each stage's scopes come from its own module the
- * first time a scope of that stage is asked for. Pure over an injected loader, so
- * the lazy path is testable without Metro (`content/lessons.ts` binds the real one).
+ * The order the quest cursor walks the upper-stage lesson quests in (F-CURR-001 §3.12). Their
+ * content loads on demand through `lesson-store.ts` (F-CURR-002 §10).
  */
-
-export const LESSON_STAGE_NUMBERS = [2, 3, 4, 6, 7] as const;
-export type LessonStage = (typeof LESSON_STAGE_NUMBERS)[number];
-
-export interface StageModule {
-  LESSON_SCOPES: Readonly<Record<string, MinigameScope>>;
-  LESSON_SCOPE_OVERLAYS: Overlays;
-}
-
-/** `minigame:s<n>-<theme>-q<k>-<step>` -> n, for the stages that hold lesson cells. */
-const SCOPE_REF = /^minigame:s([2-467])-(?:letters|life|rites|nature|crafts)-q[1-9]-[a-z0-9-]+$/;
-
-export function lessonStageOfRef(ref: string): LessonStage | undefined {
-  const match = SCOPE_REF.exec(ref);
-  return match === null ? undefined : (Number(match[1]) as LessonStage);
-}
-
-/** Two overlay tables as one; `extra` wins on an entity both name (they never share ids). Returns `base` itself when `extra` is empty. */
-export function mergeOverlays(base: Overlays, extra: Overlays): Overlays {
-  if (Object.keys(extra.es).length === 0 && Object.keys(extra.ko).length === 0) return base;
-  return { es: { ...base.es, ...extra.es }, ko: { ...base.ko, ...extra.ko } };
-}
-
-export interface LessonLookup {
-  /** The scope of a lesson minigame ref, loading its stage module on first use; undefined for any other ref. */
-  scopeFor: (ref: string) => MinigameScope | undefined;
-  /** `base` plus the glosses of the stage module that holds `ref` (loads it); `base` for any other ref. */
-  scopeOverlaysFor: (ref: string, base: Overlays) => Overlays;
-}
-
-/**
- * `shipped` is the set of stages with at least one ready cell (from the index):
- * a ref of any other stage never loads a module. Each module is loaded once.
- */
-export function lessonLookup(load: (stage: LessonStage) => StageModule, shipped: ReadonlySet<LessonStage>): LessonLookup {
-  const loaded = new Map<LessonStage, StageModule>();
-  const moduleOf = (ref: string): StageModule | undefined => {
-    const stage = lessonStageOfRef(ref);
-    if (stage === undefined || !shipped.has(stage)) return undefined;
-    let mod = loaded.get(stage);
-    if (mod === undefined) {
-      mod = load(stage);
-      loaded.set(stage, mod);
-    }
-    return mod;
-  };
-  return {
-    scopeFor: (ref) => moduleOf(ref)?.LESSON_SCOPES[ref],
-    scopeOverlaysFor: (ref, base) => {
-      const mod = moduleOf(ref);
-      return mod === undefined ? base : mergeOverlays(base, mod.LESSON_SCOPE_OVERLAYS);
-    },
-  };
-}
-
-/** The stages that hold a shipped lesson episode. */
-export function shippedLessonStages(episodes: readonly Pick<Episode, 'stage'>[]): Set<LessonStage> {
-  const stages = new Set<LessonStage>();
-  for (const e of episodes) {
-    const n = Number(e.stage.slice('stage'.length));
-    if ((LESSON_STAGE_NUMBERS as readonly number[]).includes(n)) stages.add(n as LessonStage);
-  }
-  return stages;
-}
 
 const STAGE_RANK = (q: Quest, stageOf: ReadonlyMap<string, string>): number => Number((stageOf.get(q.id) ?? 'stage9').slice(5));
 

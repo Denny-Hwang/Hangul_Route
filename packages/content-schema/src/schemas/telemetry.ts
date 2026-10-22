@@ -184,6 +184,27 @@ export const TELEMETRY_EVENT_NAMES = [
   'profile.lock_changed',
   'profile.removed',
   'space.join.batch',
+  // F-CURR-002 section 11.3, TELEMETRY-NAMES-2 section R (row CM-3, Worker first; payloads: CURR_TELEMETRY_PAYLOADS in
+  // curr-telemetry.ts: ids, codes, counts and buckets only, never a name, free text, learner input or a profile id)
+  'memory.daily',
+  'items.seeded',
+  'mastery.level_up',
+  'stage.card_opened',
+  'testout.finished',
+  'quest.adapt',
+  'goal.set',
+  'goal.met',
+  'week.goal_met',
+  'decode.sprint.finished',
+  'stamp.earned',
+  'weekly_quest.complete',
+  'pack.opened',
+  'pack.level_complete',
+  'family.goal_met',
+  'space.goal.set',
+  'space.goal.met',
+  'lecture.game.finished',
+  'exp.exposure',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

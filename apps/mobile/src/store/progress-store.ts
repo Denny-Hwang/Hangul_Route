@@ -1,4 +1,13 @@
-import { PlacementResultSchema, ReviewEntrySchema, SelfRouteSchema, type PlacementResult, type ProgressSnapshot, type ReviewEntry, type SelfRoute } from '@hangul-route/content-schema';
+import {
+  PlacementResultSchema,
+  ReviewEntrySchema,
+  SelfRouteSchema,
+  type PlacementResult,
+  type ProgressSnapshot,
+  type ReviewEntry,
+  type SelfRoute,
+  type VocabProgress,
+} from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
@@ -8,11 +17,12 @@ import { catchUpGrantedPayload } from '../logic/awards/catch-up';
 import { missingAwards } from '../logic/awards/derive';
 import type { DerivedAward } from '../logic/awards/types';
 import { latchQuests, recordBestQuest } from '../logic/quest-progress';
-import type { SessionOptions } from '../logic/sessions/hold';
-import { elapsedSeconds, lastStreakDay, newSessionId } from '../logic/sessions/session-log';
+import { sessionKindOf, takesOver, type SessionOptions } from '../logic/sessions/hold';
+import { elapsedSeconds, keepsRun, lastStreakDay, newSessionId } from '../logic/sessions/session-log';
+import { sessionDay, withLocalStreak } from '../logic/streak';
 import { mergePlacements, mergeReview, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
-import { applyVocabEvents, emptyVocab, vocabOf, type VocabEvent } from '../logic/vocab/progress';
+import { applyVocabEvents, emptyVocab, localDay, vocabOf, type VocabEvent } from '../logic/vocab/progress';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
@@ -181,7 +191,10 @@ interface Actions {
    * ends it and takes over. An open session of another profile is ended first.
    * `streak: true` (the quest player) moves `streakDays` and sends
    * `session.start` as before; `streak: false` (story, stand-alone game, level
-   * check; OD-19) records time only.
+   * check; OD-19) records time only. A quest and a learning session
+   * (`keepsRun`: a story) keep the local-day run (`streakLocal`, F-CURR-002
+   * OD-14); a learning session begun over a time-only one takes it over too.
+   * Every session records its local day (`localDay`).
    */
   beginSession: (profileId: string, options: SessionOptions) => string | null;
   /**
@@ -393,6 +406,27 @@ function settle(profileId: string, snapshot: ProgressSnapshot): void {
   }));
 }
 
+/** Whether applying vocab events finished a word set: a topic's `sessions` count rose (an ignored event moves none). */
+function finishedWordSet(before: VocabProgress, after: VocabProgress): boolean {
+  const held = new Map(before.topics.map((t) => [t.topic, t.sessions]));
+  return after.topics.some((t) => t.sessions > (held.get(t.topic) ?? 0));
+}
+
+/**
+ * `snap` with a finished word set's day logged (F-CURR-002 OD-14): a learning
+ * session of no length (it adds no minutes, and a grown-up's session count
+ * reads quest sessions only) on the local day, and the run kept. A day that
+ * already holds a session that keeps the run gains no second one, so a busy
+ * day of word sets adds one row to the synced log, not one per set.
+ */
+function withWordSetDay(snap: ProgressSnapshot, profileId: string, clock: Date): ProgressSnapshot {
+  const at = clock.toISOString();
+  const day = localDay(clock);
+  if (snap.sessions.some((s) => keepsRun(s) && sessionDay(s) === day)) return withLocalStreak(snap, day);
+  const session = { id: newSessionId(at, 'learn', snap.sessions), profileId, startedAt: at, endedAt: at, durationSeconds: 0, episodesTouched: [], localDay: day };
+  return withLocalStreak({ ...snap, sessions: [...snap.sessions, session] }, day);
+}
+
 /** `snap` with the session ended now (its elapsed time, capped), or `undefined` when it is not there or already ended. */
 function withSessionEnded(snap: ProgressSnapshot, sessionId: string, now: string): { updated: ProgressSnapshot; durationSeconds: number } | undefined {
   const session = snap.sessions.find((s) => s.id === sessionId);
@@ -557,27 +591,32 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
 
   beginSession: (profileId, options) => {
     const open = get().openSession;
-    // Join the profile's open session, unless a quest (streak) begins over a time-only one: it takes over,
-    // so the streak moves and session.start is sent; the time-only holder's own end is then a no-op.
-    if (open?.profileId === profileId && !(options.streak && !open.streak)) return null;
+    // Join the profile's open session, unless a kind that counts for more begins over it (a quest over a story
+    // or a game, a story over a game): it takes over, so the run moves (and session.start is sent for a quest);
+    // the earlier holder's own end is then a no-op.
+    if (open?.profileId === profileId && !takesOver(open, options)) return null;
     if (open) get().endSession(open.profileId, open.sessionId);
     const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
-    const now = new Date().toISOString();
-    const sessionId = newSessionId(now, options.streak, snap.sessions);
-    const session = { id: sessionId, profileId, startedAt: now, episodesTouched: [] };
+    const clock = new Date();
+    const now = clock.toISOString();
+    const kind = sessionKindOf(options);
+    const sessionId = newSessionId(now, kind, snap.sessions);
+    const session = { id: sessionId, profileId, startedAt: now, episodesTouched: [], localDay: localDay(clock) };
     const todayKey = dayKey(now);
     const lastDay = lastStreakDay(snap.sessions);
-    // A time-only session (OD-19) leaves the streak exactly as it is.
+    // A time-only or learning session (OD-19) leaves the old streak exactly as it is.
     const streakDays = options.streak ? nextStreak(snap.streakDays, lastDay, todayKey) : snap.streakDays;
-    const updated: ProgressSnapshot = {
+    const logged: ProgressSnapshot = {
       ...snap,
       sessions: [...snap.sessions, session],
       streakDays,
       updatedAt: now,
     };
+    // A quest or a learning session keeps the local-day run (F-CURR-002 OD-14); a game or a level check does not.
+    const updated = kind === 'time' ? logged : withLocalStreak(logged, session.localDay);
     set((s) => ({
       byProfile: { ...s.byProfile, [profileId]: updated },
-      openSession: { profileId, sessionId, owner: options.owner, streak: options.streak },
+      openSession: { profileId, sessionId, owner: options.owner, streak: options.streak, ...(options.keepsRun ? { keepsRun: true } : {}) },
     }));
     persist(profileId, updated);
     if (options.streak) {
@@ -697,7 +736,11 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const current = vocabOf(snap);
     const vocab = applyVocabEvents(current, events, clock);
     if (vocab === current) return;
-    const updated: ProgressSnapshot = { ...snap, vocab, updatedAt: clock.toISOString() };
+    const at = clock.toISOString();
+    const withVocab: ProgressSnapshot = { ...snap, vocab, updatedAt: at };
+    // A finished word set (its `session` event) is a learning activity: it keeps the local-day run (F-CURR-002
+    // OD-14). It is logged as a learning session of no length, so the day is on the record every device reads.
+    const updated = finishedWordSet(current, vocab) ? withWordSetDay(withVocab, profileId, clock) : withVocab;
     const hydrated = get().hydratedFor.has(profileId);
     set((s) => ({
       byProfile: { ...s.byProfile, [profileId]: updated },

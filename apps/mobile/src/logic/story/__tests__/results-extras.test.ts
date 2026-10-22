@@ -8,6 +8,7 @@ import {
   storyResultsExtras as storyResultsExtrasWith,
   type StoryResultsInput,
 } from '../results-extras';
+import { createStoryStore, splitStory, storiesOverStore } from '../story-chunk-store';
 import { readyStory } from './story-fixture';
 
 // The words are learner.story.results (F-I18N-001 PR 7b); these tests read the dictionary.
@@ -155,6 +156,21 @@ describe('resultsStoryOf (PR 3.7: is this a story quest, and which story)', () =
     expect(resultsStoryOf(undefined, find)).toBeNull();
     expect(resultsStoryOf(quest('minigame:story-read-listen-not-bundled'), find)).toBeNull();
     expect(resultsStoryOf(quest(`minigame:story-read-read-${slug}`), find)).toBeNull();
+  });
+
+  it('knows a bundled story from its shelf before its chunk is in (F-CURR-002 §10, row CM-8), so the extras never shift in late', () => {
+    const { entry } = splitStory(story, 'h-story');
+    // A store whose chunk never arrives: the body fields hold their placeholders (no tiers).
+    const cold = createStoryStore({ entries: [entry] }, () => new Promise(() => undefined));
+    const [shelfStory] = storiesOverStore([entry], cold);
+    expect(shelfStory?.tiers).toEqual([]);
+    const fromShelf = (id: string): Story | undefined => (id === story.id ? shelfStory : undefined);
+    expect(resultsStoryOf(quest(`minigame:story-read-along-${slug}`), fromShelf)).toEqual({
+      storyId: story.id,
+      level: 'read-along',
+      title: { ko: story.title.ko, romanization: story.title.romanization, en: story.title.en },
+    });
+    expect(resultsStoryOf(quest(`minigame:story-read-read-${slug}`), fromShelf)).toBeNull();
   });
 });
 

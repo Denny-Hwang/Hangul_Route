@@ -356,3 +356,101 @@ export function routeEnabledFor(
 ): boolean {
   return f.routeEnabled && (showAll || ROUTE_REVIEWED_LOCALES.includes(locale));
 }
+
+/**
+ * The F-CURR-002 switches (section 12.2, row CM-2). Each has two parts:
+ * - a **build-time floor**: `parseKillSwitch` on its literal `EXPO_PUBLIC_CURR_*` variable (on unless it says
+ *   `false`, `0`, `off` or `no`). A `pack.<key>` or `game.<kind>` floor is off when the key is listed in
+ *   `EXPO_PUBLIC_CURR_PACKS_OFF` or `EXPO_PUBLIC_CURR_GAMES_OFF` (comma-separated exact pack keys or round-kind
+ *   codes, the text after `pack.` or `game.`, any case);
+ * - a **remote form** from `GET /api/config` (`store/remote-config-store.ts`), which can only reduce: `on: false` or
+ *   a lower `pct`, bucketed per profile (`logic/remote-config`). It never turns on a flag the build has off.
+ * When the device has never fetched the config, a flag uses its built-in pct. Every F-CURR-002 flag ships with
+ * built-in pct 0 because no surface exists yet; the row that ships a surface sets its own after the ramp.
+ * Callers read `currFlagOn(flag)` (store/remote-config-store.ts), never these tables directly.
+ */
+export const CURR_FLAGS = [
+  // Memory and review
+  'memoryRecord',
+  'dailyReview',
+  'questWarmup',
+  'missedPractice',
+  'questAdapt',
+  // Achievement
+  'mastery',
+  'cellCheck',
+  'stageChecks',
+  'upperCards',
+  // Habit
+  'goals',
+  // Content (plus `pack.<key>` and `game.<kind>`)
+  'volumes',
+  'topicPacks',
+  'decodingSprint',
+  'weeklyDrop',
+  // Social and lecture
+  'weeklyQuests',
+  'familyGoal',
+  'classGoal',
+  'lectureGames',
+  // Measurement
+  'fsrsShadow',
+] as const;
+
+export type CurrFlag = (typeof CURR_FLAGS)[number];
+/** A switch name: one of `CURR_FLAGS`, a pack (`pack.<key>`) or a new round format (`game.<kind>`). */
+export type CurrFlagName = CurrFlag | `pack.${string}` | `game.${string}`;
+
+/** The build-time floors, read by literal name so the web bundle inlines each one. */
+export const currBuildFloors: Readonly<Record<CurrFlag, boolean>> = {
+  memoryRecord: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_MEMORY_RECORD, true),
+  dailyReview: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_DAILY_REVIEW, true),
+  questWarmup: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_QUEST_WARMUP, true),
+  missedPractice: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_MISSED_PRACTICE, true),
+  questAdapt: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_QUEST_ADAPT, true),
+  mastery: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_MASTERY, true),
+  cellCheck: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_CELL_CHECK, true),
+  stageChecks: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_STAGE_CHECKS, true),
+  upperCards: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_UPPER_CARDS, true),
+  goals: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_GOALS, true),
+  volumes: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_VOLUMES, true),
+  topicPacks: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_TOPIC_PACKS, true),
+  decodingSprint: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_DECODING_SPRINT, true),
+  weeklyDrop: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_WEEKLY_DROP, true),
+  weeklyQuests: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_WEEKLY_QUESTS, true),
+  familyGoal: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_FAMILY_GOAL, true),
+  classGoal: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_CLASS_GOAL, true),
+  lectureGames: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_LECTURE_GAMES, true),
+  fsrsShadow: parseKillSwitch(process.env.EXPO_PUBLIC_CURR_FSRS_SHADOW, true),
+};
+
+/** The built-in pct of every F-CURR-002 flag, used until the device has fetched the config: 0, no surface yet. */
+export const currBuiltInPcts: Readonly<Record<CurrFlag, number>> = Object.fromEntries(CURR_FLAGS.map((f) => [f, 0])) as Record<CurrFlag, number>;
+/** The built-in pct of every `pack.<key>` and `game.<kind>` flag. */
+export const CURR_KEYED_BUILT_IN_PCT = 0;
+
+/** A comma-separated key list, trimmed and lower-cased; empty entries dropped. */
+function parseKeyList(raw: string | undefined): ReadonlySet<string> {
+  return new Set((raw ?? '').split(',').map((k) => k.trim().toLowerCase()).filter((k) => k.length > 0));
+}
+
+const packsOff = parseKeyList(process.env.EXPO_PUBLIC_CURR_PACKS_OFF);
+const gamesOff = parseKeyList(process.env.EXPO_PUBLIC_CURR_GAMES_OFF);
+
+function isCurrFlag(flag: string): flag is CurrFlag {
+  return (CURR_FLAGS as readonly string[]).includes(flag);
+}
+
+/** The build-time floor of any switch name; an unknown name is off. */
+export function currBuildFloor(flag: CurrFlagName): boolean {
+  if (isCurrFlag(flag)) return currBuildFloors[flag];
+  if (flag.startsWith('pack.')) return flag.length > 5 && !packsOff.has(flag.slice(5).toLowerCase());
+  if (flag.startsWith('game.')) return flag.length > 5 && !gamesOff.has(flag.slice(5).toLowerCase());
+  return false;
+}
+
+/** The built-in pct of any switch name; an unknown name is 0. */
+export function currBuiltInPct(flag: CurrFlagName): number {
+  if (isCurrFlag(flag)) return currBuiltInPcts[flag];
+  return CURR_KEYED_BUILT_IN_PCT;
+}

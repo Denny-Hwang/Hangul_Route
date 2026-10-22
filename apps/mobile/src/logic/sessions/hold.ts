@@ -1,13 +1,40 @@
+import type { SessionKind } from './session-log';
+
 /**
  * Holding a session while a screen is mounted (F-REPORT-001 section 3.3.2,
  * RP-3b). The quest player, the story reader, the stand-alone game screen and
  * the level check each hold one; the store keeps one owner at a time.
  */
 
-/** What a session is for: `owner` names the screen, `streak` says whether it moves the learner's streak (OD-19). */
+/**
+ * What a session is for: `owner` names the screen; `streak` says whether it
+ * is a quest session, which moves the old streak (`streakDays`) and sends
+ * `session.start` (OD-19); `keepsRun` marks a learning session (a story or a
+ * word set) that keeps the local-day run without being a quest session
+ * (F-CURR-002 OD-14). A quest session always keeps the run.
+ */
 export interface SessionOptions {
   owner: string;
   streak: boolean;
+  keepsRun?: boolean;
+}
+
+/** The kind of session these options begin. */
+export function sessionKindOf(options: Pick<SessionOptions, 'streak' | 'keepsRun'>): SessionKind {
+  if (options.streak) return 'quest';
+  return options.keepsRun === true ? 'learn' : 'time';
+}
+
+const RANK: Record<SessionKind, number> = { time: 0, learn: 1, quest: 2 };
+
+/**
+ * Whether a session begun with `next` takes over the profile's open session
+ * (`open`) instead of joining it: only a kind that counts for more does (a
+ * quest over a story or a game, a story over a game), so the run and
+ * `session.start` follow the activity that counts most.
+ */
+export function takesOver(open: Pick<SessionOptions, 'streak' | 'keepsRun'>, next: Pick<SessionOptions, 'streak' | 'keepsRun'>): boolean {
+  return RANK[sessionKindOf(next)] > RANK[sessionKindOf(open)];
 }
 
 export interface SessionHoldPorts {

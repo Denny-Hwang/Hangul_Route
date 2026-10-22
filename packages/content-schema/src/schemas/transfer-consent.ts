@@ -144,9 +144,11 @@ export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_K
  * `vocab` (F-VOC-005 section 3.8) stays hidden until the consent row for the
  * console's word lines (F-VOC-005 P-4b; P-4 shipped them dormant) moves it to the allow-list with its consent item, so the
  * consent text never lags what a teacher receives. `routeGoal` (Learning Route
- * section 9) follows the `selfRoute` precedent: family space only.
+ * section 9) follows the `selfRoute` precedent: family space only. `memory`
+ * (F-CURR-002 section 4.8) stays hidden until the row that shows it to a class
+ * adds its consent item.
  */
-export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal'] as const;
+export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory'] as const;
 export type TeacherHiddenSummaryKey = Extract<(typeof TEACHER_HIDDEN_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
 export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummaryKey, TeacherVisibleItemId>> = {

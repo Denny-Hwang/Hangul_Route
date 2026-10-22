@@ -4,6 +4,7 @@ Spec: `docs/specs/AMENDMENTS-DISPLAY-NAV.md` section 9.1 (row DN-8) · amends th
 Audience: **learner, any age** (and a grown-up handing the device to them)
 Route: learner app Home tab
 Mock: `design/screens/learner-shell/home-hero.md`
+Amended by: `home/goal-ring-weekly-dots.md` (F-CURR-002 §7.4: a week strip above the hero; the "Streak N days" pill moves into the strip as its streak line, and a "N words known" pill takes its place, `journey/mastery-ring.md` G)
 
 ## Scenario (Given-When-Then)
 

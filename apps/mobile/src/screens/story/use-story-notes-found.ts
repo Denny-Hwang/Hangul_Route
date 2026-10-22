@@ -5,6 +5,7 @@ import { storyNotesFound } from '../../logic/story/culture-notes-view';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useNoteStoriesLoaded } from '../story-content';
 
 /**
  * Whether the active learner has found this story's culture notes (a quest of
@@ -16,5 +17,7 @@ import { useProgressStore } from '../../store/progress-store';
 export function useStoryNotesFound(storyId: string): boolean {
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
   const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
-  return useMemo(() => storyNotesFound(foundNotes(defaultStoryIndex(), storiesAll, snap), storyId), [snap, storyId]);
+  // A note's sources come from its story's chunk (F-CURR-002 §10).
+  const noteChunks = useNoteStoriesLoaded();
+  return useMemo(() => storyNotesFound(foundNotes(defaultStoryIndex(), storiesAll, snap), storyId), [snap, storyId, noteChunks]);
 }

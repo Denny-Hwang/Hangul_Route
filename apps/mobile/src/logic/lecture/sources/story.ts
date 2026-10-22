@@ -6,6 +6,7 @@ import { localizeStory } from '../../content-locale';
 import { uiSpeechLang } from '../../story/reader-locale';
 import { narrationSpeechLang } from '../../story/scene-audio';
 import { buildStoryIndex } from '../../story/story-index';
+import { storyTierLevels } from '../../story/story-chunk-store';
 import type { LectureStory } from '../deck-builder';
 
 /**
@@ -46,7 +47,8 @@ export interface LectureStoryInput {
 }
 
 export function lectureStoriesFrom(input: LectureStoryInput, locale: UiLocale, overlays?: Overlays): LectureStorySource {
-  const listed = new Set(buildStoryIndex({ ...input, showUnreviewed: false }).map((entry) => entry.storyId));
+  // The shelf's levels (F-CURR-002 §10, row CM-8): the list never depends on whether a story's chunk is in yet.
+  const listed = new Set(buildStoryIndex({ ...input, showUnreviewed: false, levelsOf: storyTierLevels }).map((entry) => entry.storyId));
   const bundled = new Map(input.stories.map((story) => [story.id, story]));
   const localized = new Map<string, Story>();
   const listedStory = (id: string): Story | undefined => {

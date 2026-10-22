@@ -5,7 +5,7 @@ Extends: `design/wireframes/minigame/shell.md` (round shell), `quest/discover.md
 Audience: **any learner, any age** (CLAUDE.md §1); the same screens for everyone. Wireframe level: structure, flow, interaction points. No colours, fonts, art or final copy; text in (parentheses) is a placeholder.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean shown with romanization + gloss (`KoreanText`), `{ x }` content-driven, `(*)` fill-only marker, `<state>` a runtime state.
 
-Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine · W9 Screens that already print the Korean (A-5b) · W10 The learner audio pass: the panel under what was tapped, and the trace games' one-row form (A-12)
+Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine · W9 Screens that already print the Korean (A-5b) · W10 The learner audio pass: the panel under what was tapped, and the trace games' one-row form (A-12) · W11 The F-CURR-002 formats: where the sound notice goes (CM-D2)
 
 ---
 
@@ -304,6 +304,44 @@ Trace a Word, stacked (phone)                         Trace Stroke, side by side
 - Discover: each item card and the exchange card has its own panel under its buttons; the exchange's panel replaces the old Read along status line (nothing stays lit without sound).
 - Story Order replay: the panel sits under the replay line; each line starts the slot again; its action says that line.
 - Every panel is neutral (never red), a polite live region, and its action plays the same Korean again.
+
+---
+
+## W11 — The F-CURR-002 formats: where the sound notice goes (row CM-D2, 2026-10-21)
+
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §7.1 (every format reading, listening or writing; Dictation "With no voice it falls back to a `see` round and the sound notice"), §4.3 (with no device voice, recognize and read merge into one rung), §4.5 (`dictation-unambiguous`, the spelling round). Each format's own wireframe has its full no-voice section; this table keeps the placements in one place, next to W1-W10.
+
+| Format | What the round needs from sound | Panel | Where it shows | When | Source id |
+|---|---|---|---|---|---|
+| Cloze Pick | nothing (the sentence is said after the right tile) | status | under the prompt card | after the right tile's play fails | `cloze-pick` |
+| Dictation (Type Hangul `hear`) | the word itself | text (reader variant: Korean on screen) | under the prompt, the round now a `see` round | **at round open** when the capability is `none` and no clip plays, or sound is muted; after a second engine failure | `type-hangul-hear` |
+| Spelling round (Letters S2) | the word, but the picture or gloss settles it | status | under Hear it | after the opening play fails or a tap while muted; with `game.spelling-pick` off, the Listen & Pick fallback keeps its own shipped no-voice state | `spelling-pick` |
+| Syllable Build | the syllable (its romanization stays on screen) | text (no Korean: the block is the answer) | under the speaker | at round open for `none`; after a tap for `muted`, `error` | `syllable-build` |
+| Match Shape | nothing (the right letter's sound is an extra) | status | under the picture card or the grid | after the step's first play attempt | `match-shape` |
+| Story Order | nothing (placed lines and the replay are extras) | status | under the slot row; in the replay under the line | after a play attempt; one slot for the screen (W10 rule) | `story-order` |
+| Role Play | nothing (the partner line is printed) | status | under the newest partner bubble | after the turn's play attempt; "No Korean voice" once per scene | `role-play` |
+| My Story | nothing (finished sentences are said as an extra) | status | under the sentence | after a play attempt | `my-story` |
+| Yut Review | nothing (the throw name is printed) | (the review item's own panel) | under the item | the item's format rule | `yut-review` |
+
+```
+Dictation with no Korean voice (proactive, the round opens as see)     Role Play, a turn whose line did not play
++--------------------------------+                                    +--------------------------------+
+| (2/4) (Type this word) [ Skip ]|                                    |  <partner> ~~ 사서 ~~           |
+|  ~~ 사과 ~~ (sagwa) · (apple)  |                                    |  ~~ 여기 있어요. ~~             |
+| +----------------------------+ |                                    |  (yeogi isseoyo) (Here it is.) |
+| | (No sound? Read it here.)  | |                                    |  [ (speaker) Hear it ]         |
+| | (No Korean voice on this   | |                                    |  +--------------------------+  |
+| |  device.)                  | |                                    |  | (The sound did not play.)|  |
+| | [ How to add a voice ]     | |                                    |  | [ Try again ]            |  |
+| +----------------------------+ |                                    |  +--------------------------+  |
+|  answer row, keyboard          |                                    |  reply bubbles (pinned)        |
++--------------------------------+                                    +--------------------------------+
+```
+
+- **Reading words only.** Every line on these panels is a reading line ("No sound? Read it here.", the reason, the action). The W5 caption "Say it out loud: ga" is a Discover line and is never used by these formats: nothing in F-CURR-002 asks the learner to speak.
+- **No new panel kind.** Each placement uses the shipped `PromptPanel` (text or status variant) and `usePromptSlot`; the one new behaviour is Dictation's proactive switch to `see`, which happens before the round opens, so the screen never changes under the learner. While the capability is still `unknown` (the first 1.5 s after the app starts) a hear round holds its opening (speaker disabled, field not focused, keys inactive: a press during the hold types nothing and is not queued, nothing said) and opens once when the capability resolves: as `see` with the notice for `none` or muted, as `hear` otherwise, and as `hear` if it is still `unknown` at 1.5 s (`type-hangul.md`, Hear mode, No device voice).
+- **Rungs.** With no device voice the review engine asks recognize items at the read rung (§4.3) and never picks Dictation or the spelling round's heard prompt; a quest's authored hear round renders as above.
+- Every panel is neutral (the fallback card tone), never amber and never red, and a polite live region; every round scores normally. `audio.fallback_shown { source, reason }` uses the source ids in the table (strings, once per session, source and reason; the Worker's payload check is unchanged, which each build row confirms).
 
 ---
 

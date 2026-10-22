@@ -1,62 +1,119 @@
 #!/usr/bin/env node
-// F-STORY-001 §3.9 — story bundle generator (PR 1.4).
+// F-STORY-001 §3.9 — story bundle generator (PR 1.4); split into a start-loaded shelf and one
+// content-hashed chunk per story by F-CURR-002 §10 (row CM-8), on the chunk mechanism of row CM-5.
 //
 // Reads content/stories/*.json (not recursive: content/stories/research/ is
 // provenance, never shipped), drops `state: 'draft'` files, sorts by `id` and
-// writes apps/mobile/src/content/stories.generated.ts:
+// writes, under apps/mobile/src/content/__generated__/:
 //
-//   storiesAll     Story[]    one object literal per ready story
-//   storyEpisodes  Episode[]  one shelf episode per story with a `shelf` block
-//   storyQuests    Quest[]    its five-step quest (F-STORY-003 §3.1 skeleton)
-//   heldStoryCards HeldStoryCard[]  the card of each held story (a draft with a `card` and
-//                              a `shelf` block), so an owned card stays visible (F-STORY-006 §3.8)
+//   stories-index.ts                     the story shelf (imported at start; part of the manifest)
+//       STORY_SHELF       StoryShelfEntry[]  each story without its body: ids, titles, theme, stage,
+//                                            minutes, review gate, shelf / card / reward blocks, Hoya
+//                                            lines, the levels of its tiers, its card's keyword, and
+//                                            the hash of its chunk
+//       HELD_STORY_CARDS  HeldStoryCard[]    the card of each held story (a draft with a `card` and
+//                                            a `shelf` block), so an owned card stays visible (F-STORY-006 §3.8)
+//       loadStoryBody                        one literal `import()` per chunk
+//   story-chunks/story-<slug>.ts         one body chunk per story (on demand)
+//       CHUNK_HASH, STORY_BODY (the fields of STORY_BODY_FIELDS: tiers with their scenes and art,
+//       facts, keywords, summary, verification, ...)
+//
+// The shelf episodes and quests (F-STORY-001 §3.9 "derived, not hand-written") are derived from
+// the shelf in the app (`content/stories.ts`); `buildBundle` below is their reference and
+// apps/mobile/src/content/__tests__/story-chunks.test.ts keeps the two equal.
+//
+// Nothing imports a chunk statically: Metro splits every `import()` of the shelf into its own web
+// bundle (the PWA precaches it, the app loads it on demand) and keeps them all in the one native
+// bundle. The hash is the sha256 of the chunk's data (`chunkHash` of build-lessons.mjs, the same
+// hashing); apps/mobile/scripts/pwa-postbuild.mjs checks every chunk against the web bundle that
+// carries it (F-CURR-002 §10 decision record).
 //
 // The literals are typed by contextual typing, so `tsc --noEmit` proves the
 // data matches the schema; there is no runtime parse. The zod schema test is
 // the content gate, TypeScript is the second.
 //
 // Usage:
-//   node scripts/build-stories.mjs                      write the bundle
-//   node scripts/build-stories.mjs --check              fail if the checked-in bundle differs (CI)
-//   node scripts/build-stories.mjs --report             print sizes (bundle, per story, scene art),
-//                                                       fail over budget (CI)
-//   node scripts/build-stories.mjs --include-drafts --out <path>
-//                                                       preview bundle with drafts (never under apps/)
-//   node scripts/build-stories.mjs --include-fixtures   e2e bundle: adds the ready story fixtures of
+//   node scripts/build-stories.mjs                      write the modules (and remove the ones no longer built)
+//   node scripts/build-stories.mjs --check              determinism (CI): fail if a module an earlier run wrote
+//                                                       (pnpm generate, the postinstall) differs from this run or is
+//                                                       no longer built; generated, never committed (F-CURR-002 row CM-6)
+//   node scripts/build-stories.mjs --report             print sizes (each chunk, the shelf, the manifest with the
+//                                                       lessons, the total, scene art), fail over budget (CI)
+//   node scripts/build-stories.mjs --include-drafts --out <dir>
+//                                                       preview modules with drafts (never under apps/)
+//   node scripts/build-stories.mjs --include-fixtures   e2e modules: adds the ready story fixtures of
 //                                                       packages/content-schema/src/__fixtures__/story/
-//                                                       (F-STORY-002 §5). Never committed: --check fails
-//                                                       on it and a plain run restores the real bundle.
+//                                                       (F-STORY-002 §5) to the shelf, with their bodies inline.
+//                                                       Never committed: --check fails on it and a plain run
+//                                                       restores the real modules.
 //
 // Dependency-free Node (same family as validate-content.mjs). Exit 0 when the
-// bundle is written / in sync / within budget, 1 on a content or drift error,
-// 2 on a usage error. HANGUL_ROUTE_ROOT overrides the repo root (tests).
+// modules are written / in sync / within budget, 1 on a content, drift or budget
+// error, 2 on a usage error. HANGUL_ROUTE_ROOT overrides the repo root (tests).
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
+import { buildModules as buildLessonModules, chunkHash, readCells } from "./build-lessons.mjs";
+import { writeIfChanged } from "./write-if-changed.mjs";
 
 export const GENERATED_HEADER =
   "// GENERATED by scripts/build-stories.mjs — do not edit. Source: content/stories/*.json\n";
 
+/** The generated modules' folder, the chunks' folder under it and the shelf module. */
+export const OUT_DIR = join("apps", "mobile", "src", "content", "__generated__");
+export const CHUNK_DIR = "story-chunks";
+export const INDEX_MODULE = "stories-index.ts";
+/** The one-file bundle of F-STORY-001 (before CM-8); a run removes it and --check fails while it is there. */
+export const LEGACY_BUNDLE = join("apps", "mobile", "src", "content", "stories.generated.ts");
+
 /**
- * Bundle budget (F-STORY-001 §3.9): the launch set of 24 stories. Raising a
- * ceiling is a reviewed one-line change. `artRaw` is the scene-art share
- * (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
- * `totalRaw` was 1.0 MB until PR 1.9 gave all 24 stories a shelf block: their
- * derived shelf episodes and quests add about 50 KB raw (gzip stays in budget).
- * 1.2 MB since F-STORY-005 PR 5.6: the first Stage 5 book adds a `read` tier to
- * three stories (about 41 KB raw; gzip about 235 KB, still under 260 KB).
- * 1.3 MB and 65 KB per story since the other four Stage 5 books (PR 5.6): eleven
- * more `read` tiers add about 137 KB raw (gzip about 251 KB, still under 260 KB);
- * the largest story, pansori-tales, is about 64 KB raw.
+ * Bundle budget (F-STORY-001 §3.9, F-CURR-002 §10 and OD-5). Raising a ceiling is a reviewed
+ * one-line change with the measured numbers in its PR.
+ * - `perStoryRaw`: one story's chunk module (F-CURR-002 CM-8: 70,000 B; was 65,000 B for a story's
+ *   pretty-printed share of the one-file bundle).
+ * - `totalRaw` / `totalGzip`: the shelf and every chunk (F-CURR-002 CM-8: 2,000,000 B raw, precached,
+ *   was 1,300,000 / 260,000 for the one-file bundle in the start bundle). The gzip line is the CM-8
+ *   measurement (869,644 B raw / 220,524 B gzip for 24 stories) scaled to the raw line (507,155 B) and
+ *   rounded up.
+ * - `manifestRaw`: the start-loaded manifest, lessons-index.ts and stories-index.ts together
+ *   (F-CURR-002 CM-5 / CM-8: 60,000 B, the line of build-lessons.mjs `BUDGET.manifestRaw`). Today this line, not
+ *   `totalRaw`, sets how many stories fit (2,520 B left at CM-8, about two shelf entries); row CM-8b makes the room
+ *   before CM-46a adds to the shelf (F-CURR-002 §10, CM-8 decision record).
+ * pwa-postbuild.mjs holds the built story bundles to `perStoryRaw`, `totalRaw` and `totalGzip` too
+ * (`PRECACHE_BUDGET` of apps/mobile/scripts/pwa/lesson-chunks.mjs, kept equal by its test).
+ * - `artRaw`: the scene-art share (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
  */
 export const BUDGET = Object.freeze({
-  totalRaw: 1_300_000,
-  totalGzip: 260_000,
-  perStoryRaw: 65_000,
+  perStoryRaw: 70_000,
+  totalRaw: 2_000_000,
+  totalGzip: 510_000,
+  manifestRaw: 60_000,
   artRaw: 130_000,
 });
+
+/**
+ * The fields of a story that leave the start bundle for its chunk; every other field is in the
+ * shelf, and `review` is in both (the shelf keeps the gate only, `shelfReview`). The twin is
+ * `STORY_BODY_FIELDS` in apps/mobile/src/logic/story/story-chunk-store.ts.
+ */
+export const STORY_BODY_FIELDS = Object.freeze([
+  "v",
+  "contentVer",
+  "summaryEn",
+  "learningGoalsEn",
+  "origin",
+  "keywords",
+  "tiers",
+  "facts",
+  "referenceDisplay",
+  "verification",
+  "authorNotes",
+  "errata",
+  "review",
+]);
+
 
 // Quest copy owned by the generator (F-STORY-001 §3.9). The twin in
 // apps/mobile/src/content/story-skeleton.ts (F-STORY-005) must match.
@@ -171,11 +228,21 @@ function deriveShelf(story) {
 }
 
 /**
+ * Pure: a story without its build-time-only fields: `topicTags` (F-CURR-002 §5.1) is read by the
+ * story-topic-unique lint and never shown, so it stays out of the app bundle (§10).
+ */
+export function withoutBuildOnly(story) {
+  const { topicTags: _topicTags, ...rest } = story;
+  return rest;
+}
+
+/**
  * Pure: ready stories (already filtered and sorted by the caller or not) to
- * the three arrays. Sorting by id happens here so every caller gets it.
+ * the three arrays. Build-time-only fields are dropped (withoutBuildOnly).
+ * Sorting by id happens here so every caller gets it.
  */
 export function buildBundle(stories) {
-  const sorted = [...stories].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const sorted = stories.map(withoutBuildOnly).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const episodes = [];
   const quests = [];
   for (const story of sorted) {
@@ -215,21 +282,153 @@ export function heldStoryCards(stories) {
   return held.sort((a, b) => (a.storyId < b.storyId ? -1 : a.storyId > b.storyId ? 1 : 0));
 }
 
-function literal(value) {
-  return JSON.stringify(value, null, 2);
+// Compact literals, as build-lessons.mjs writes them: the budget measures what is emitted.
+const literal = (value) => JSON.stringify(value);
+const q = (s) => JSON.stringify(s);
+const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+/** `story:sun-and-moon` -> `story-sun-and-moon` (the chunk's file, and the name of its web bundle). */
+export const storyChunkName = (storyId) => `story-${slugOf(storyId)}`;
+
+/**
+ * Shelf fields left out when they hold the schema default (`StorySchema`); the app fills the
+ * default back in (`storiesOverStore`). Twin of `SHELF_DEFAULTS` in story-chunk-store.ts.
+ */
+export const SHELF_DEFAULTS = Object.freeze({ pillarTags: [], companionId: "hoya", cultureNotes: [] });
+
+/**
+ * The review gate as the shelf keeps it: the two sign-offs, and the advisory when there is one.
+ * The whole block (with `reviewedBy` and `reviewedAt`) is in the body.
+ */
+export function shelfReview(review) {
+  const advisory = Array.isArray(review?.advisory) ? review.advisory : [];
+  return {
+    language: review?.language,
+    culture: review?.culture,
+    ...(advisory.length > 0 ? { advisory } : {}),
+    ...(typeof review?.advisoryNoteEn === "string" ? { advisoryNoteEn: review.advisoryNoteEn } : {}),
+  };
 }
 
-export function renderBundle({ stories, episodes, quests, held = [] }) {
-  return (
-    GENERATED_HEADER +
-    "import type { Episode, HeldStoryCard, Quest, Story } from '@hangul-route/content-schema';\n\n" +
-    `export const storiesAll: Story[] = ${literal(stories)};\n\n` +
-    `export const storyEpisodes: Episode[] = ${literal(episodes)};\n\n` +
-    `export const storyQuests: Quest[] = ${literal(quests)};\n\n` +
-    `export const heldStoryCards: HeldStoryCard[] = ${literal(held)};\n`
-  );
+const isDefault = (key, value) => key in SHELF_DEFAULTS && JSON.stringify(SHELF_DEFAULTS[key]) === JSON.stringify(value);
+
+/** Pure: one story as its shelf entry (without `chunk`) and its body. */
+export function splitStory(story) {
+  const body = {};
+  const shelf = {};
+  for (const [key, value] of Object.entries(story)) {
+    if (key === "review") {
+      shelf.review = shelfReview(value);
+      body.review = value;
+    } else if (STORY_BODY_FIELDS.includes(key)) body[key] = value;
+    else if (!isDefault(key, value)) shelf[key] = value;
+  }
+  const tiers = Array.isArray(story.tiers) ? story.tiers : [];
+  shelf.levels = tiers.map((t) => ({ level: t.level, scenes: Array.isArray(t.scenes) ? t.scenes.length : 0 }));
+  const cardKeyword = story.card ? (story.keywords ?? []).find((k) => k.id === story.card.keywordId) : undefined;
+  if (cardKeyword) shelf.cardKeyword = cardKeyword;
+  return { shelf, body };
 }
 
+/**
+ * Pure: stories (sorted here) -> the shelf entries and one chunk per story, each with the hash of
+ * its data literal (the `CHUNK_HASH` its module carries and its shelf entry names).
+ */
+export function planChunks(stories) {
+  const entries = [];
+  const chunks = [];
+  for (const story of [...stories].sort(byId)) {
+    const { shelf, body } = splitStory(story);
+    const data = literal(body);
+    const hash = chunkHash(data);
+    entries.push({ ...shelf, chunk: hash });
+    chunks.push({ id: story.id, name: storyChunkName(story.id), hash, literal: data });
+  }
+  return { entries, chunks };
+}
+
+/** Pure: the chunk names and hashes the shelf names (pwa-postbuild.mjs checks the web bundles against them). */
+export function chunkManifest(stories) {
+  return planChunks(stories).chunks.map(({ name, hash }) => ({ name, hash }));
+}
+
+const loaderSource = (chunks) =>
+  "/** The body chunk of a story of the shelf; undefined for any other id. One literal `import()` per chunk (Metro resolves only literals). */\n" +
+  "export function loadStoryBody(storyId: string): Promise<StoryBodyChunk> | undefined {\n" +
+  "  switch (storyId) {\n" +
+  chunks.map((c) => `    case ${q(c.id)}:\n      return import('./${CHUNK_DIR}/${c.name}');\n`).join("") +
+  "    default:\n" +
+  "      return undefined;\n" +
+  "  }\n" +
+  "}\n";
+
+const SHELF_DOC =
+  "/**\n" +
+  " * The start-loaded story shelf (F-CURR-002 §10, row CM-8): each story without its body. A story's tiers,\n" +
+  " * scenes, art, facts and the other body fields are one content-hashed chunk, reached only through the literal\n" +
+  " * `import()`s of `loadStoryBody`: Metro emits each as its own web bundle (precached by the service worker,\n" +
+  " * loaded on demand) and keeps them in the one native bundle.\n" +
+  " */\n";
+
+function chunkModules(chunks) {
+  const modules = {};
+  for (const c of chunks) {
+    modules[`${CHUNK_DIR}/${c.name}.ts`] =
+      GENERATED_HEADER +
+      "import type { StoryBodyChunk } from '../../../logic/story/story-chunk-store';\n\n" +
+      `/** The body of ${c.id} (F-CURR-002 §10): reached only through \`loadStoryBody\` in ../${INDEX_MODULE}, never imported statically. */\n` +
+      `export const CHUNK_HASH = ${q(c.hash)};\n\n` +
+      `export const STORY_BODY: StoryBodyChunk['STORY_BODY'] = ${c.literal};\n`;
+  }
+  return modules;
+}
+
+/** Pure: the stories that ship and the held cards -> the module sources by path under OUT_DIR. */
+export function buildModules({ stories, held = [] }) {
+  const plan = planChunks(stories);
+  return {
+    [INDEX_MODULE]:
+      GENERATED_HEADER +
+      "import type { HeldStoryCard } from '@hangul-route/content-schema';\n" +
+      "import type { StoryBodyChunk, StoryShelfEntry } from '../../logic/story/story-chunk-store';\n\n" +
+      SHELF_DOC +
+      `export const STORY_SHELF: StoryShelfEntry[] = ${literal(plan.entries)};\n\n` +
+      `export const HELD_STORY_CARDS: HeldStoryCard[] = ${literal(held)};\n\n` +
+      loaderSource(plan.chunks),
+    ...chunkModules(plan.chunks),
+  };
+}
+
+/**
+ * The e2e modules (--include-fixtures). Test fixtures are written in the input form (schema
+ * defaults left out), so unlike content they are not typed literals: they go through the real
+ * schema (`parseStory`, zod defaults) when the shelf loads, and their bodies stay inline (they
+ * have no chunk). Content stories keep their typed shelf entries and their chunks.
+ */
+export function buildFixtureModules({ stories, fixtures, held = [] }) {
+  const plan = planChunks(stories);
+  const sortedFixtures = [...fixtures].sort(byId);
+  return {
+    [INDEX_MODULE]:
+      GENERATED_HEADER +
+      "// E2E FIXTURE MODULES (--include-fixtures): never commit; run node scripts/build-stories.mjs to restore.\n" +
+      "import { parseStory, type HeldStoryCard } from '@hangul-route/content-schema';\n" +
+      "import { splitStory, type StoryBody, type StoryBodyChunk, type StoryShelfEntry } from '../../logic/story/story-chunk-store';\n\n" +
+      `const contentShelf: StoryShelfEntry[] = ${literal(plan.entries)};\n\n` +
+      `const fixtures = (${literal(sortedFixtures)} as unknown[]).map((raw) => splitStory(parseStory(raw), 'inline'));\n\n` +
+      SHELF_DOC +
+      "export const STORY_SHELF: StoryShelfEntry[] = [...contentShelf, ...fixtures.map((f) => f.entry)].sort((a, b) =>\n" +
+      "  a.id < b.id ? -1 : a.id > b.id ? 1 : 0,\n" +
+      ");\n\n" +
+      "/** The fixtures' bodies: they ship in this module (an e2e build only), so they are ready at start. */\n" +
+      "export const STORY_INLINE_BODIES: Readonly<Record<string, StoryBody>> = Object.fromEntries(fixtures.map((f) => [f.entry.id, f.body]));\n\n" +
+      `export const HELD_STORY_CARDS: HeldStoryCard[] = ${literal(held)};\n\n` +
+      "/** Only an e2e build has this export: it switches on the e2e entry (apps/mobile navigation/story-e2e.tsx). */\n" +
+      `export const STORY_FIXTURE_IDS: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n\n` +
+      loaderSource(plan.chunks),
+    ...chunkModules(plan.chunks),
+  };
+}
 /**
  * Pure: bytes of every scene's `art` as compact JSON (the measure `checkScene`
  * caps at 700 per scene) and how many scenes carry art.
@@ -250,32 +449,6 @@ export function artBytes(stories) {
 }
 
 /**
- * The e2e bundle (--include-fixtures). Test fixtures are written in the input
- * form (schema defaults left out), so unlike content they are not typed
- * literals: they go through the real schema (`parseStory`, zod defaults) when
- * the module loads. Content stories keep their typed literals; episodes and
- * quests are derived from both as usual.
- */
-export function renderFixtureBundle({ stories, fixtures, episodes, quests, held = [] }) {
-  const sortedFixtures = [...fixtures].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  return (
-    GENERATED_HEADER +
-    "// E2E FIXTURE BUNDLE (--include-fixtures): never commit; run node scripts/build-stories.mjs to restore.\n" +
-    "import { parseStory, type Episode, type HeldStoryCard, type Quest, type Story } from '@hangul-route/content-schema';\n\n" +
-    `const contentStories: Story[] = ${literal(stories)};\n\n` +
-    `const fixtureStories: Story[] = (${literal(sortedFixtures)} as unknown[]).map((raw) => parseStory(raw));\n\n` +
-    "export const storiesAll: Story[] = [...contentStories, ...fixtureStories].sort((a, b) =>\n" +
-    "  a.id < b.id ? -1 : a.id > b.id ? 1 : 0,\n" +
-    ");\n\n" +
-    `export const storyEpisodes: Episode[] = ${literal(episodes)};\n\n` +
-    `export const storyQuests: Quest[] = ${literal(quests)};\n\n` +
-    `export const heldStoryCards: HeldStoryCard[] = ${literal(held)};\n\n` +
-    "/** Only an e2e bundle has this export: it switches on the e2e entry (apps/mobile navigation/story-e2e.tsx). */\n" +
-    `export const storyFixtureIds: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n`
-  );
-}
-
-/**
  * A content story as the e2e bundle (--include-fixtures) carries it: still readable, but off the
  * shelf (no `shelf`, `card` or listen reward card). The fixture specs own what the shelf, Home,
  * the Journey and the Library show, so only the fixtures may fill them; the release bundle's own
@@ -289,36 +462,54 @@ export function offShelfStory(story) {
   return Object.keys(otherRewards).length > 0 ? { ...rest, rewardCardIds: otherRewards } : rest;
 }
 
+
+const bytes = (text) => Buffer.byteLength(text, "utf8");
+const measure = (name, text) => ({ name, raw: bytes(text), gzip: gzipSync(text).length });
+
+/**
+ * Pure: bytes of each story's chunk module, the shelf module, the manifest (the lesson manifest
+ * `lessonIndex` and the shelf, both loaded at start), all story modules together (raw, and gzip of
+ * the concatenation, as build-lessons.mjs measures its total) and the scene art.
+ */
+export function sizes(stories, modules, lessonIndex = "") {
+  const perStory = stories
+    .map((s) => s.id)
+    .sort()
+    .map((id) => ({ id, ...measure(`${CHUNK_DIR}/${storyChunkName(id)}.ts`, modules[`${CHUNK_DIR}/${storyChunkName(id)}.ts`] ?? "") }));
+  const shelf = measure(INDEX_MODULE, modules[INDEX_MODULE] ?? "");
+  const all = Object.values(modules).join("");
+  return {
+    perStory,
+    shelf,
+    manifest: { raw: bytes(lessonIndex) + shelf.raw, lessons: bytes(lessonIndex) },
+    total: { raw: bytes(all), gzip: gzipSync(all).length },
+    art: artBytes(stories),
+  };
+}
+
 /** Pure: size problems as human-readable strings (empty = within budget). */
-export function checkBudget({ perStory, total, art }) {
+export function checkBudget({ perStory, manifest, total, art }) {
   const problems = [];
   for (const s of perStory) {
     if (s.raw > BUDGET.perStoryRaw) {
-      problems.push(`${s.id} is ${s.raw} B raw, over the per-story ceiling of ${BUDGET.perStoryRaw} B`);
+      problems.push(`${s.id}'s chunk is ${s.raw} B raw, over the per-story ceiling of ${BUDGET.perStoryRaw} B`);
     }
   }
+  if (manifest && manifest.raw > BUDGET.manifestRaw) {
+    problems.push(
+      `the start-loaded manifest (lessons-index.ts ${manifest.lessons} B + ${INDEX_MODULE} ${manifest.raw - manifest.lessons} B) is ${manifest.raw} B raw, over the ceiling of ${BUDGET.manifestRaw} B`
+    );
+  }
   if (total.raw > BUDGET.totalRaw) {
-    problems.push(`stories.generated.ts is ${total.raw} B raw, over the ceiling of ${BUDGET.totalRaw} B`);
+    problems.push(`the story modules are ${total.raw} B raw, over the ceiling of ${BUDGET.totalRaw} B`);
   }
   if (total.gzip > BUDGET.totalGzip) {
-    problems.push(`stories.generated.ts is ${total.gzip} B gzip, over the ceiling of ${BUDGET.totalGzip} B`);
+    problems.push(`the story modules are ${total.gzip} B gzip, over the ceiling of ${BUDGET.totalGzip} B`);
   }
   if (art && art.raw > BUDGET.artRaw) {
     problems.push(`scene art is ${art.raw} B raw over ${art.scenes} scenes, over the ceiling of ${BUDGET.artRaw} B`);
   }
   return problems;
-}
-
-function sizes(stories, source) {
-  const bytes = (text) => Buffer.byteLength(text, "utf8");
-  return {
-    perStory: stories.map((s) => {
-      const text = literal(s);
-      return { id: s.id, raw: bytes(text), gzip: gzipSync(text).length };
-    }),
-    total: { raw: bytes(source), gzip: gzipSync(source).length },
-    art: artBytes(stories),
-  };
 }
 
 // ---- file system and CLI ------------------------------------------------------
@@ -397,7 +588,7 @@ function readStories(root) {
 }
 
 const USAGE =
-  "Usage: node scripts/build-stories.mjs [--check] [--report] [--include-drafts --out <path>] [--include-fixtures] [--out <path>]";
+  "Usage: node scripts/build-stories.mjs [--check] [--report] [--include-drafts --out <dir>] [--include-fixtures] [--out <dir>]";
 
 function parseArgs(argv) {
   const opts = { check: false, report: false, includeDrafts: false, includeFixtures: false, out: undefined };
@@ -417,6 +608,23 @@ function parseArgs(argv) {
   return { opts };
 }
 
+/** The chunk names and hashes of the stories content/stories ships (pwa-postbuild.mjs reads the build's manifest from here). */
+export function readChunkManifest(root) {
+  return chunkManifest(readStories(root).filter((s) => s.state === "ready"));
+}
+
+/** The generated story files on disk that are no longer built: a chunk of a story that no longer ships. */
+export function staleFiles(dir, modules) {
+  const chunks = join(dir, CHUNK_DIR);
+  if (!existsSync(chunks)) return [];
+  return readdirSync(chunks)
+    .filter((f) => f.endsWith(".ts"))
+    .map((f) => `${CHUNK_DIR}/${f}`)
+    .filter((name) => modules[name] === undefined);
+}
+
+const relOf = (root, file) => relative(root, file).split(sep).join("/");
+
 export function main(argv, root) {
   const parsed = parseArgs(argv);
   if (parsed.error) {
@@ -424,7 +632,6 @@ export function main(argv, root) {
     return 2;
   }
   const { opts } = parsed;
-  const defaultTarget = join(root, "apps", "mobile", "src", "content", "stories.generated.ts");
 
   if (opts.includeFixtures && (opts.check || opts.report || opts.includeDrafts)) {
     process.stderr.write(
@@ -433,12 +640,12 @@ export function main(argv, root) {
     return 2;
   }
   if (opts.includeDrafts && !opts.out) {
-    process.stderr.write(`--include-drafts needs --out <path>: the app bundle never holds drafts\n${USAGE}\n`);
+    process.stderr.write(`--include-drafts needs --out <dir>: the app bundle never holds drafts\n${USAGE}\n`);
     return 2;
   }
-  const target = opts.out ? (isAbsolute(opts.out) ? opts.out : resolve(root, opts.out)) : defaultTarget;
+  const outDir = opts.out ? (isAbsolute(opts.out) ? opts.out : resolve(root, opts.out)) : join(root, OUT_DIR);
   if (opts.includeDrafts) {
-    const underApps = relative(join(root, "apps"), target);
+    const underApps = relative(join(root, "apps"), outDir);
     if (!underApps.startsWith("..") && !isAbsolute(underApps)) {
       process.stderr.write(`--include-drafts must not write under apps/ (got ${opts.out})\n${USAGE}\n`);
       return 2;
@@ -447,6 +654,7 @@ export function main(argv, root) {
 
   let bundle;
   let fixtures = [];
+  let lessonIndex = "";
   try {
     const all = readStories(root);
     const stories = all.filter((s) => s.state === "ready" || opts.includeDrafts);
@@ -454,63 +662,80 @@ export function main(argv, root) {
       fixtures = readFixtureStories(root);
       checkFixtureIds(stories, fixtures);
     }
-    bundle = { ...buildBundle(stories), held: heldStoryCards(all) };
-    if (opts.includeFixtures) {
-      const offShelf = stories.map(offShelfStory);
-      const all = buildBundle([...offShelf, ...fixtures]);
-      bundle = { ...bundle, stories: offShelf, episodes: all.episodes, quests: all.quests };
-    }
+    bundle = { stories: opts.includeFixtures ? stories.map(offShelfStory) : stories, held: heldStoryCards(all) };
+    // Derived here only to fail on a shelf story the app could not derive (no tier, no Hoya line).
+    buildBundle([...bundle.stories, ...fixtures]);
+    if (opts.report) lessonIndex = buildLessonModules(readCells(root))["lessons-index.ts"];
   } catch (error) {
     if (error instanceof ContentError) {
       process.stdout.write(`${error.message}\n`);
+    } else if (error && typeof error.file === "string") {
+      process.stdout.write(`::error file=${error.file}::${error.message}\n`);
     } else {
       process.stdout.write(`::error::${error.message}\n`);
     }
     return 1;
   }
-  const source = opts.includeFixtures ? renderFixtureBundle({ ...bundle, fixtures }) : renderBundle(bundle);
-  const targetRel = relative(root, target).split(sep).join("/");
+  const modules = opts.includeFixtures ? buildFixtureModules({ ...bundle, fixtures }) : buildModules(bundle);
+  const outRel = relOf(root, outDir);
 
   if (opts.report) {
-    const report = sizes(bundle.stories, source);
+    const report = sizes(bundle.stories, modules, lessonIndex);
     const n = report.perStory.length;
-    process.stdout.write(`Story bundle (${n} ${n === 1 ? "story" : "stories"}):\n`);
+    process.stdout.write(`Story modules (${n} ${n === 1 ? "story" : "stories"}):\n`);
     for (const s of report.perStory) {
-      process.stdout.write(`  ${s.id}  ${s.raw} B raw  ${s.gzip} B gzip\n`);
+      process.stdout.write(`  ${s.id}  chunk ${s.raw} B raw  ${s.gzip} B gzip\n`);
     }
+    process.stdout.write(`  ${INDEX_MODULE} (start)  ${report.shelf.raw} B raw  ${report.shelf.gzip} B gzip\n`);
+    process.stdout.write(
+      `  manifest (start: lessons-index.ts ${report.manifest.lessons} B + ${INDEX_MODULE})  ${report.manifest.raw} B raw (budget ${BUDGET.manifestRaw} B)\n`
+    );
     process.stdout.write(`  total  ${report.total.raw} B raw  ${report.total.gzip} B gzip\n`);
     process.stdout.write(`  scene art  ${report.art.raw} B raw over ${report.art.scenes} scenes (budget ${BUDGET.artRaw} B)\n`);
     process.stdout.write(
-      `Budget: ${BUDGET.totalRaw} B raw, ${BUDGET.totalGzip} B gzip in total, ${BUDGET.perStoryRaw} B raw per story\n`
+      `Budget: ${BUDGET.totalRaw} B raw, ${BUDGET.totalGzip} B gzip in total, ${BUDGET.perStoryRaw} B raw per story chunk\n`
     );
     const problems = checkBudget(report);
-    for (const p of problems) process.stdout.write(`::error file=${targetRel}::${p}\n`);
+    for (const p of problems) process.stdout.write(`::error file=${outRel}::${p}\n`);
     return problems.length === 0 ? 0 : 1;
   }
 
+  const stale = staleFiles(outDir, modules);
+  const legacy = opts.out ? null : join(root, LEGACY_BUNDLE);
   if (opts.check) {
-    if (!existsSync(target)) {
-      process.stdout.write(`::error file=${targetRel}::generated story bundle is missing; run node scripts/build-stories.mjs\n`);
-      return 1;
+    let drift = 0;
+    for (const [name, source] of Object.entries(modules)) {
+      const target = join(outDir, name);
+      if (!existsSync(target) || readFileSync(target, "utf8") !== source) {
+        drift += 1;
+        process.stdout.write(
+          `::error file=${relOf(root, target)}::generated story module is missing or differs from a fresh run of scripts/build-stories.mjs (generators must be deterministic); run pnpm generate\n`
+        );
+      }
     }
-    if (readFileSync(target, "utf8") !== source) {
-      process.stdout.write(
-        `::error file=${targetRel}::generated story bundle is out of date with content/stories; run node scripts/build-stories.mjs and commit the result\n`
-      );
-      return 1;
+    for (const name of stale) {
+      drift += 1;
+      process.stdout.write(`::error file=${outRel}/${name}::generated story module is no longer built; run pnpm generate (it removes it)\n`);
     }
-    process.stdout.write(`${targetRel} is up to date (${bundle.stories.length} stories)\n`);
+    if (legacy !== null && existsSync(legacy)) {
+      drift += 1;
+      process.stdout.write(`::error file=${LEGACY_BUNDLE.split(sep).join("/")}::the one-file story bundle is no longer built (F-CURR-002 CM-8); run pnpm generate (it removes it)\n`);
+    }
+    if (drift > 0) return 1;
+    process.stdout.write(`story modules are deterministic (${bundle.stories.length} stories)\n`);
     return 0;
   }
 
-  mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, source);
+  for (const name of stale) rmSync(join(outDir, name));
+  if (legacy !== null && existsSync(legacy)) rmSync(legacy);
+  for (const [name, source] of Object.entries(modules)) writeIfChanged(join(outDir, name), source);
   process.stdout.write(
-    `wrote ${targetRel}: ${bundle.stories.length + fixtures.length} stories, ${bundle.episodes.length} shelf episodes, ${bundle.quests.length} quests\n`
+    `wrote ${outRel}: ${bundle.stories.length + fixtures.length} stories (${Object.keys(modules).length} modules)` +
+      (stale.length > 0 ? `, removed ${stale.length} no longer built\n` : "\n")
   );
   if (opts.includeFixtures) {
     process.stdout.write(
-      `::warning file=${targetRel}::test fixture bundle for an e2e build: do not commit it; run node scripts/build-stories.mjs to restore\n`
+      `::warning file=${outRel}/${INDEX_MODULE}::test fixture modules for an e2e build: do not commit them; run node scripts/build-stories.mjs to restore\n`
     );
   }
   return 0;

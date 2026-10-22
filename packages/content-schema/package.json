@@ -8,6 +8,7 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./lint": "./src/lesson-lint.ts",
     "./overlays": "./overlays.ts",
     "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts",
     "./testing/lecture-decks": "./src/__tests__/fixtures/lecture-decks.ts"
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@hangul-route/test-utils": "workspace:*",
     "@vitest/coverage-v8": "^2.1.8",
+    "fast-check": "4.10.2",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   }

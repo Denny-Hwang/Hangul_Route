@@ -1,5 +1,12 @@
 import {
   PLACEMENT_KEEP,
+  mergeCellBest,
+  mergeDayLog,
+  mergeEarliest,
+  mergeGoals,
+  mergeLatchRecord,
+  mergeStreakBest,
+  mergeStreakLocal,
   type CardCollectionEntry,
   type EpisodeProgress,
   type HomeworkAssignment,
@@ -14,8 +21,8 @@ import {
   type VocabTopicProgress,
 } from '@hangul-route/content-schema';
 import { streakSessionDates } from '../sessions/session-log';
-import { computeStreak } from '../streak';
-import { codePoint, validVocab } from '../vocab/progress';
+import { computeStreak, streakFields, streakOf } from '../streak';
+import { codePoint, localDay, validVocab } from '../vocab/progress';
 
 /**
  * Deterministic snapshot merge — F-SYNC-001 §3.3. Every collection in a
@@ -349,16 +356,56 @@ function vocabCovered(local: VocabProgress | undefined, server: VocabProgress | 
   );
 }
 
+/**
+ * One session held on both sides: the local copy, with the other copy's
+ * `localDay` (F-CURR-002 section 4.8) when the local one went through a build
+ * that dropped it. A session is written once, so the two copies never hold
+ * different days.
+ */
+export function mergeSession(l: SessionLog, s: SessionLog): SessionLog {
+  return l.localDay === undefined && s.localDay !== undefined ? { ...l, localDay: s.localDay } : l;
+}
+
+/**
+ * The F-CURR-002 section 4.8 fields on both sides, by the rules the Worker
+ * applies too (`progress-merge.ts` in content-schema): max for `cellBest` and
+ * `streakBest`, earliest for the latches and `memSeededAt`, the later `setAt`
+ * for `goals`, max per day and install key for `dayLog`, the later `lastDay`
+ * for `streakLocal`. A key neither side holds stays absent.
+ */
+function mergeCurr002Fields(local: ProgressSnapshot, server: ProgressSnapshot): Partial<ProgressSnapshot> {
+  const merged: Partial<ProgressSnapshot> = {
+    cellBest: mergeCellBest(local.cellBest, server.cellBest),
+    cellCheckAt: mergeLatchRecord(local.cellCheckAt, server.cellCheckAt),
+    stageCheckAt: mergeLatchRecord(local.stageCheckAt, server.stageCheckAt),
+    testedOut: mergeLatchRecord(local.testedOut, server.testedOut),
+    goals: mergeGoals(local.goals, server.goals),
+    dayLog: mergeDayLog(local.dayLog, server.dayLog),
+    streakLocal: mergeStreakLocal(local.streakLocal, server.streakLocal),
+    streakBest: mergeStreakBest(local.streakBest, server.streakBest),
+    stamps: mergeLatchRecord(local.stamps, server.stamps),
+    memSeededAt: mergeEarliest(local.memSeededAt, server.memSeededAt),
+  };
+  return Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== undefined));
+}
+
+/** True when the server copy of every F-CURR-002 field already holds the local one (merging changes nothing). */
+function curr002Covered(local: ProgressSnapshot, server: ProgressSnapshot): boolean {
+  return JSON.stringify(mergeCurr002Fields(local, server)) === JSON.stringify(mergeCurr002Fields(server, server));
+}
+
 export interface MergeOptions {
   /** Clock for the streak recomputation; injected for determinism. */
   now: Date;
+  /** The learner's local day for the local-day streak; the device's day of `now` when absent. */
+  today?: string;
 }
 
 export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot, opts: MergeOptions): ProgressSnapshot {
   const stageDoneAt = mergeStageDoneAt(local.stageDoneAt, server.stageDoneAt);
   const questDoneAt = mergeQuestDoneAt(local.questDoneAt, server.questDoneAt);
   const vocab = mergeVocab(local.vocab, server.vocab);
-  const sessions = unionBy<SessionLog>(local.sessions, server.sessions, (x) => x.id, (l) => l).sort(
+  const sessions = unionBy<SessionLog>(local.sessions, server.sessions, (x) => x.id, mergeSession).sort(
     (a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id),
   );
   return {
@@ -370,7 +417,7 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     sessions,
     homework: unionBy(local.homework, server.homework, (h) => h.id, mergeHomework),
     reviews: unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview),
-    // Story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
+    // The old streak, still written for older builds: story, game and level-check time never moves it (OD-19).
     streakDays: computeStreak(streakSessionDates(sessions), opts.now),
     ...(stageDoneAt ? { stageDoneAt } : {}),
     // A snapshot that predates the key keeps its shape when neither side has one.
@@ -384,7 +431,32 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     ...(vocab !== undefined ? { vocab } : {}),
     // Quest latch (F-REPORT-001): omitted only when neither side has the key.
     ...(questDoneAt !== undefined ? { questDoneAt } : {}),
+    // F-CURR-002 section 4.8: each omitted only when neither side has the key.
+    ...mergeCurr002Fields(local, server),
+    // The local-day streak (row CM-4) over the merged sessions, with each side's run as a floor, so a sync from an
+    // older build never lowers it; when neither side has one yet, the switch-over carries the old streakDays.
+    ...localStreakFields(local, server, sessions, opts.today ?? localDay(opts.now)),
   };
+}
+
+/**
+ * `streakLocal` and `streakBest` for a merge. The computed run is kept under the Worker's rule against both stored
+ * ones (later `lastDay`, then the higher `run`), so the result always holds both sides even where the computation
+ * reads a stored run as no run (a run of 0, or a day too far ahead); the Worker then has nothing to add.
+ *
+ * A stored run can beat the run the merge shows only when a copy holds a longer run on the same last day that it
+ * has already shown as ended (section 7.4, the one case where a sync can end a run). The record then keeps the run
+ * as of that day, so merging the result again changes nothing.
+ */
+function localStreakFields(local: ProgressSnapshot, server: ProgressSnapshot, sessions: readonly SessionLog[], today: string): Partial<ProgressSnapshot> {
+  const computed = streakFields(streakOf([local, server], sessions, today));
+  const stored = mergeStreakLocal(local.streakLocal, server.streakLocal);
+  let streakLocal = mergeStreakLocal(computed.streakLocal, stored);
+  if (streakLocal !== undefined && computed.streakLocal !== undefined && streakLocal.run !== computed.streakLocal.run) {
+    // What the merged record reads as on its own: the run has ended, so it keeps the run as of its last day.
+    streakLocal = mergeStreakLocal(streakOf([{ sessions: [...sessions], streakLocal, streakDays: 0 }], sessions, today).local, stored);
+  }
+  return { ...computed, ...(streakLocal !== undefined ? { streakLocal } : {}) };
 }
 
 /**
@@ -431,14 +503,17 @@ export function rebaseSnapshot(base: ProgressSnapshot, ours: ProgressSnapshot, t
  * seen too (F-STORY-006 section 3.6 M3), so a cleared "New" flag still uploads.
  * Word progress counts as held when the server would gain nothing by merging
  * it (F-VOC-005 section 3.3, `vocabCovered`). A stage or quest latch entry is
- * held when the server has it at the same or an earlier time.
+ * held when the server has it at the same or an earlier time. The F-CURR-002
+ * fields are held when merging them into the server copy changes nothing.
  */
 export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): boolean {
   const has = <T>(arr: readonly T[], key: (t: T) => string) => new Set(arr.map(key));
   const q = has(server.quests, (x) => `${x.questId}:${x.stars}`);
   const c = has(server.cards, (x) => `${x.cardId}:${x.newSinceLastView ? 'new' : 'seen'}`);
   const cardHeld = (x: CardCollectionEntry): boolean => c.has(`${x.cardId}:seen`) || (x.newSinceLastView && c.has(`${x.cardId}:new`));
+  // A session is held when the server has its id, with its localDay when the local copy has one.
   const s = has(server.sessions, (x) => x.id);
+  const dated = has(server.sessions.filter((x) => x.localDay !== undefined), (x) => x.id);
   // A placement is held when the server has its id with the same or a newer override.
   const placed = new Map((server.placements ?? []).map((x) => [x.id, x]));
   const holdsPlacement = (x: PlacementResult): boolean => {
@@ -468,7 +543,8 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
     vocabCovered(local.vocab, server.vocab) &&
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every(cardHeld) &&
-    local.sessions.every((x) => s.has(x.id)) &&
+    local.sessions.every((x) => s.has(x.id) && (x.localDay === undefined || dated.has(x.id))) &&
+    curr002Covered(local, server) &&
     (local.placements ?? []).every(holdsPlacement) &&
     Object.entries(local.stageDoneAt ?? {}).every(([stage, at]) => holds(stage, at)) &&
     Object.entries(local.questDoneAt ?? {}).every(([questId, at]) => holdsFirst(questId, at))
