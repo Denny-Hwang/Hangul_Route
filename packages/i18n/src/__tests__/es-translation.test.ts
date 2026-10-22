@@ -96,8 +96,8 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
     expect(es.caregiver.browse.facts.level.readAlong).toBe('Leer escuchando');
     expect(cell(1)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 1 terminada');
     expect(cell(2)).toBe('Etapa 1 Hangul, Letras y libros: 2 historias del patrimonio, 2 terminadas');
-    expect(es.landing.cards.body(1, 1, 1, 1, 1)).toContain('La Etapa 1 trae 1 tarjeta: 1 común, 1 poco común, 1 rara y 1 legendaria.');
-    expect(es.landing.cards.body(24, 12, 6, 4, 2)).toContain('La Etapa 1 trae 24 tarjetas: 12 comunes, 6 poco comunes, 4 raras y 2 legendarias.');
+    expect(es.landing.persona.learners.cards.seeAll(1)).toBe('Ver la tarjeta de la Etapa 1');
+    expect(es.landing.persona.learners.cards.seeAll(24)).toBe('Ver las 24 tarjetas de la Etapa 1');
     expect(es.report.class.headline(1, 1, 'esta semana')).toBe('1 de 1 estudiante practicó esta semana.');
     expect(es.report.class.headline(2, 5, 'esta semana')).toBe('2 de 5 estudiantes practicaron esta semana.');
   });

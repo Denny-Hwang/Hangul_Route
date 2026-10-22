@@ -87,6 +87,7 @@ export const landing = {
         collect: { title: 'Colecciona y sigue adelante', body: 'Gana tarjetas de cultura coreana. Tu progreso se guarda y se respalda.' },
       },
       routeBody: 'Gana tarjetas de cultura coreana y mira toda tu Ruta de aprendizaje: dónde estás y qué sigue.',
+      levelBody: 'Elige quién aprende o comprueba tu nivel.',
     },
     promises: {
       label: 'Nuestras promesas',
@@ -155,6 +156,15 @@ export const landing = {
         },
         adult: FAQ_ADULT,
         korean: FAQ_KOREAN,
+        // The button label is learner.placement.invite.knowSome in Spanish, word for word; "prueba de nivel" as in the app.
+        level: {
+          q: 'Ya sé algo de hangul. ¿Tengo que empezar desde el principio?',
+          a: 'No. Al comenzar, toca Ya sé algo de coreano y haz una breve prueba de nivel. Hoya te sugiere por dónde empezar.',
+        },
+      },
+      after: {
+        title: 'Después del alfabeto',
+        body: 'Palabras, frases cortas, conversaciones e historias del patrimonio, en las mismas misiones de cinco minutos.',
       },
     },
     parents: {
@@ -243,29 +253,25 @@ export const landing = {
     },
   },
   cards: {
-    eyebrow: 'El ciclo de premios',
-    title: (cards: number) =>
-      plural('es', cards, {
-        one: `${cards} tarjeta del patrimonio. Una Corea, una tarjeta a la vez.`,
-        other: `${cards} tarjetas del patrimonio. Una Corea, una tarjeta a la vez.`,
-      }),
-    body: (cards: number, common: number, uncommon: number, rare: number, legendary: number) =>
-      `Cada letra que aprendes te da un pedazo real de la cultura coreana: un tazón de ramyeon, una luna de Chuseok, un columpio de una pintura de Dano. La Etapa 1 trae ${plural('es', cards, { one: `${cards} tarjeta`, other: `${cards} tarjetas` })}: ${plural('es', common, { one: `${common} común`, other: `${common} comunes` })}, ${plural('es', uncommon, { one: `${uncommon} poco común`, other: `${uncommon} poco comunes` })}, ${plural('es', rare, { one: `${rare} rara`, other: `${rare} raras` })} y ${plural('es', legendary, { one: `${legendary} legendaria`, other: `${legendary} legendarias` })}.`,
     listLabel: 'Tarjetas de la Etapa 1',
     rarity: { common: 'Común', uncommon: 'Poco común', rare: 'Rara', legendary: 'Legendaria' },
     cardLabel: (romanization: string, meaning: string) => `Palabra coreana ${romanization}, significa ${meaning}`,
-    more: 'La Etapa 2 (Palabras) suma más de 30 tarjetas. La Etapa 7 (Expresión propia) completa la colección en 175.',
   },
   games: {
-    eyebrow: (shipped: number, beta: number) => {
-      const games = plural('es', shipped, { one: `${shipped} minijuego`, other: `${shipped} minijuegos` });
-      return beta > 0 ? `${games} + ${beta} en beta` : games;
-    },
-    title: 'Ninguno se siente como la escuela.',
-    body: 'Cuatro familias de práctica (reconocer, producir, aplicar y repasar) en rondas de 90 segundos. Hoya nunca dice “mal”.',
     listLabel: 'Minijuegos de la Etapa 1',
     family: { recognition: 'Reconocer', production: 'Producir', application: 'Aplicar', review: 'Repasar' },
     beta: 'Beta: opcional',
+    // Titles mostly follow the app's game names (learner.myRoute.games).
+    items: {
+      'listen-pick': { title: 'Escucha y elige', blurb: 'Escucha un sonido y toca la letra o la palabra.' },
+      'match-sound': { title: 'Une el sonido', blurb: 'Escucha una letra. Toca la ficha que coincide. Sin prisa.' },
+      'build-letter': { title: 'Arma la sílaba', blurb: 'Junta letras para formar una sílaba coreana de verdad.' },
+      'pic-word-match': { title: 'Imagen y palabra', blurb: 'Toca una imagen y luego su palabra.' },
+      'trace-stroke': { title: 'Traza la letra', blurb: 'Sigue el orden de los trazos. Tu dedo aprende la forma.' },
+      'odd-one-out': { title: 'Busca el intruso', blurb: 'Tres van juntas. ¿Puedes encontrar la que es diferente?' },
+      'culture-quiz': { title: 'Trivia cultural', blurb: 'Una palabra coreana y cuatro respuestas. Elige lo que significa.' },
+      'story-sequence': { title: 'Ordena la historia', blurb: 'Cuatro tarjetas, una historia. Tócalas en el orden en que ocurren.' },
+    },
   },
   footer: {
     guide: 'Guía',

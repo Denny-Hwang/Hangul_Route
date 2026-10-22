@@ -15,6 +15,7 @@ export const ALL_CLAIMS_ON: Readonly<SiteClaims> = Object.freeze({
   feedbackNotes: true,
   browseAsLearner: true,
   lectureMode: true,
+  levelCheck: true,
 });
 
 /**
@@ -31,4 +32,5 @@ export const ALL_CLAIMS_OFF: Readonly<SiteClaims> = Object.freeze({
   feedbackNotes: false,
   browseAsLearner: false,
   lectureMode: false,
+  levelCheck: false,
 });
