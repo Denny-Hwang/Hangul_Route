@@ -20,6 +20,9 @@
 //                                                                          catalog.generated.ts
 //   build-lecture-catalogue.mjs  content/stories, vocab, i18n           -> lecture-catalogue.generated.ts,
 //                                                                          catalogue-titles.generated.ts
+//   build-review-items.mjs       content/episodes, stories, vocab and    -> review-items-index.ts, review-item-chunks/
+//                                the frozen review-item files of
+//                                packages/content-schema/src/review-items (F-CURR-002 §4.2, row CM-10)
 //
 // build-lessons.mjs reads the app's jamo (TypeScript) through scripts/ts-loader.mjs, so generation
 // needs the devDependencies (`typescript`): an install with --prod or NODE_ENV=production fails here.
@@ -66,6 +69,10 @@ export const GENERATORS = Object.freeze([
     ],
   },
   { script: "build-lecture-catalogue.mjs", outputs: ["apps/web/src/data/lecture-catalogue.generated.ts", "apps/web/src/data/catalogue-titles.generated.ts"] },
+  {
+    script: "build-review-items.mjs",
+    outputs: ["apps/mobile/src/content/__generated__/review-items-index.ts", "apps/mobile/src/content/__generated__/review-item-chunks"],
+  },
 ]);
 
 /** Every generated path, for .gitignore and the tests. */
