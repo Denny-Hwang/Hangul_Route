@@ -6,7 +6,7 @@ import { chooserTrigger, isSharedDevice, type ChooserEvent, type WhoMarker, type
 import { consumeBootIntent, peekBootIntent } from '../platform/app-root';
 import { subscribeAppVisibility } from '../platform/app-visibility';
 import { readDeviceUses } from '../platform/device-uses';
-import { takeJoinHandoff } from '../platform/join-handoff';
+import { hasJoinHandoff, takeJoinHandoff } from '../platform/join-handoff';
 import { gateProfiles } from '../logic/guest/guest-model';
 import { useAccountStore } from './account-store';
 import { useGuestStore } from './guest-store';
@@ -141,7 +141,7 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
           joinHeld: false,
           flag: true,
         });
-        if (intent?.kind === 'who') consumeBootIntent();
+        if (intent?.kind === 'who' || intent?.kind === 'try') consumeBootIntent();
         return null;
       }
       if (handed !== null) {
@@ -150,9 +150,32 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
       }
     }
   }
-  const event: ChooserEvent = intent?.kind === 'who' ? 'return' : 'launch';
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 6.1 (row GU-5, CS-G4): `try=1` with the guest switch on opens the chooser
+  // with the trigger `try`; a join held or waiting wins. With `who=1` it rides on `return` (the try tile, `launchTried`).
+  const tried = flags.guestLessonEnabled && intent?.kind === 'try';
+  launchTried = flags.guestLessonEnabled && intent?.kind === 'who' && intent.try === true;
+  const event: ChooserEvent = intent?.kind === 'who' ? 'return' : tried ? 'try' : 'launch';
   if (intent?.kind === 'who') consumeBootIntent();
-  return chooserTrigger({ event, shared, activeLocked: activeProfileLocked(), profiles: profiles.length, backgroundMs: 0, joinHeld, flag: true });
+  const trigger = chooserTrigger({
+    event,
+    shared,
+    activeLocked: activeProfileLocked(),
+    profiles: profiles.length,
+    backgroundMs: 0,
+    joinHeld: joinHeld || (tried && hasJoinHandoff()),
+    flag: true,
+  });
+  // A chooser that opens takes `try` (never left for the guest step); with no chooser the guest step takes and drops it.
+  if (intent?.kind === 'try' && trigger !== null) consumeBootIntent();
+  return trigger;
+}
+
+/** [GU] The launch took `who=1` together with `try=1` (the guest switch on): its `return` chooser draws the try tile. */
+let launchTried = false;
+
+/** [GU] Row GU-5: the launch chooser's route params, `try` set when `who=1` came with `try=1` (section 6.1). */
+export function chooserLaunchParams(trigger: WhoTrigger): { trigger: WhoTrigger; try?: true } {
+  return trigger === 'return' && launchTried ? { trigger, try: true } : { trigger };
 }
 
 // ---- [OA] Who is joining? at launch (OA-D14, OA-D20; row OA-7b) ----
@@ -331,4 +354,5 @@ export function resetChooserState(): void {
   held = null;
   batchHandoff = null;
   batchLaunchChooser = null;
+  launchTried = false;
 }

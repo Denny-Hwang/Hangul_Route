@@ -862,5 +862,12 @@ export const caregiver = {
     keep: 'Mantener',
     checking: 'Comprobando que su progreso esté guardado…',
     spacesStay: 'Su lugar en una familia o clase se mantiene. Un adulto puede cambiarlo en las páginas de la cuenta.',
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 9.2 y 16.3 (GU-5): la primera misión sin guardar. */
+    guestRow: 'Primera misión, sin guardar',
+    guestKeep: 'Conservar como estudiante',
+    guestRemove: 'Quitar la primera misión',
+    guestOnlyGate: 'Alguien probó la primera misión en este navegador y no la conservó. Crea un PIN o quita esa misión.',
+    guestRemoveAsk: '¿Quitar la primera misión?',
+    guestConfirm: 'La tarjeta y las estrellas de esta misión se quitan de este navegador.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

@@ -167,7 +167,11 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'BrowseApp', marker: 'root-chunk:browse' },
     ]);
     // [GU] Row GU-3: the guest's first quest stack.
-    expect(SCREEN_CHUNKS).toEqual([{ name: 'guest-chunk', marker: 'screen-chunk:guest' }]);
+    // [GU] Row GU-5: the grown-up side of an unsaved first quest.
+    expect(SCREEN_CHUNKS).toEqual([
+      { name: 'guest-chunk', marker: 'screen-chunk:guest' },
+      { name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' },
+    ]);
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -179,6 +183,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/navigation/guest-chunk.tsx')).toContain(`export const SCREEN_CHUNK = '${SCREEN_CHUNKS[0].marker}';`);
     // Reached only through the literal import() of navigation/guest.tsx (a static import would pull it into the start bundle).
     expect(read('src/navigation/guest.tsx')).toContain("import('./guest-chunk')");
+    expect(read('src/screens/parent/guest-keep-chunk.tsx')).toContain(`export const SCREEN_CHUNK = '${SCREEN_CHUNKS[1].marker}';`);
+    expect(read('src/screens/parent/guest-keep.tsx')).toContain("import('./guest-keep-chunk')");
   });
 
   it('passes a build where each locale is its own precached bundle carrying its marker', () => {
@@ -194,6 +200,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'PresenterApp has no web bundle: the chunk is missing from the build',
       'BrowseApp has no web bundle: the chunk is missing from the build',
       'guest-chunk has no web bundle: the chunk is missing from the build',
+      'guest-keep-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

@@ -441,5 +441,9 @@ export const a11y = {
     lockedTile: (name: string) => `${name}, locked. A grown-up PIN opens it.`,
     /** [OA] Row OA-7a: a locked learner's row in People on this device, where a tap opens the person page without a PIN. */
     lockedRow: (name: string) => `${name}, locked`,
+    /** [GU] Row GU-5 (section 14): the chooser's Try the first quest tile, as one sentence (never label and line joined). */
+    try: 'Try the first quest without a profile.',
+    /** [GU] Row GU-5: the live guest's own tile on the chooser. */
+    guest: 'First quest, not saved yet. Tap to keep going.',
   },
 } as const;

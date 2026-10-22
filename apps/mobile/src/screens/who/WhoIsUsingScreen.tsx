@@ -15,6 +15,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, Platform, View } from 'react-native';
 import { GrownUpRow } from '../../components/GrownUpRow';
+import { flags } from '../../config/flags';
 import { WhoTile } from '../../components/WhoTile';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -23,6 +24,7 @@ import { planProfileSwitch, routeZone } from '../../logic/profiles/session';
 import {
   chooserHandoff,
   grownUpRows,
+  guestTile,
   pickLanding,
   rowLabelKey,
   tileOrder,
@@ -32,8 +34,9 @@ import {
   type GrownUpRowUse,
   type WhoMarker,
 } from '../../logic/profiles/who';
-import { gateProfiles } from '../../logic/guest/guest-model';
+import { gateProfiles, isLiveGuest } from '../../logic/guest/guest-model';
 import { gateRequired } from '../../logic/profiles/learner-type';
+import { preloadGuestStack } from '../../navigation/guest';
 import { ROOT_HEADER } from '../../navigation/screen-header-variants';
 import type { RootStackParamList } from '../../navigation/types';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
@@ -42,11 +45,13 @@ import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
 import { trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry';
 import { arriveAtChooser } from '../../store/grown-up-session';
+import { startGuestFromChooser } from '../../store/guest-launch';
 import { useGuestStore } from '../../store/guest-store';
 import { useLocks } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { anyProfileLocked, heldJoin, knownUses, learnerProfiles, persistLeaving, refreshKnownUses, takeHeldJoin } from '../../store/who-chooser';
+import { openGuestStack } from '../guest/guest-exits';
 import { useBackGuard } from '../use-back-guard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WhoIsUsing'>;
@@ -70,12 +75,20 @@ const ROWS_ACROSS = 3;
  * Android back are swallowed (CS-5). Arriving here closes the grown-up session (CS-2).
  * [OA] Row OA-5: a locked learner's tile carries the lock badge and the caption and asks the grown-up PIN
  * (`LockedProfile`); while the locks cannot be read every tile is locked and one line under the title says so.
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 9.1 (row GU-5; mock `design/screens/profiles/who-is-using-guest.md`): with
+ * the guest switch on, at most one guest tile after Add a learner (`guestTile`): the live guest's own tile (**First
+ * quest**, **Not saved yet**; no progress, CS-G5), or with no live guest on a chooser the site opened (`try`, or
+ * `return` with `try`) **Try the first quest**; none with a held class code. Neither is ever locked or asks a PIN; a
+ * pick starts or resumes the guest run (`startGuestRun` closes the grown-up session, CS-G3) and selects nobody (no
+ * `profile.switch`, CS-G4).
  */
 export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactElement {
   const messages = useMessages();
   const w = messages.learner.who;
   const locale = useLocale();
   const { trigger } = route.params;
+  // [GU] `who=1` came with `try=1` (section 6.1): the `return` chooser carries the try tile too.
+  const tried = route.params.try === true;
   const allProfiles = useProfileStore((s) => s.profiles);
   const activeId = useProfileStore((s) => s.activeId);
   const setActive = useProfileStore((s) => s.setActive);
@@ -107,6 +120,13 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
     });
   const grownUps = rowsFor(uses);
   const joining = heldJoin() !== null;
+  // [GU] Section 9.1: the one guest tile, after Add a learner (the guest switch on), or none.
+  const extraTile = guestTile({ guestOn: flags.guestLessonEnabled, liveGuest: isLiveGuest(guest, allProfiles), trigger, tried, joining });
+  const hasExtra = extraTile !== null;
+  // The guest's screens are a chunk of their own: fetched while the tile shows, so a pick opens at once.
+  useEffect(() => {
+    if (hasExtra) preloadGuestStack();
+  }, [hasExtra]);
 
   // Arriving here, and coming back here from a PIN screen or the Grown-up area, ends any grown-up session (CS-2).
   // While it is in front, the Android hardware back does nothing, also when the chooser is the stack's root at launch,
@@ -240,6 +260,27 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
    * profile locks again at launch and after 5 minutes away, CS-19). The PIN screen opens that learner only, never a
    * grown-up session (CS-3); its Cancel comes back here.
    */
+  /**
+   * [GU] Section 9.1: Try the first quest (a new run) or the guest's own tile (the run resumed). What ran under the
+   * chooser is persisted first; then the `Guest` stack alone takes the root (`openGuestStack`), nobody is selected and
+   * no `profile.switch` is sent. A run that cannot start (the switch went off, no quest 1) leaves the chooser as it is.
+   */
+  const pickGuest = (kind: 'try' | 'guest'): void => {
+    if (leaving.current) return;
+    void track(whoPickedEvent(kind));
+    if (underZone() !== null && planProfileSwitch('resume', true).persistRequired) persistLeaving();
+    leaving.current = true;
+    void startGuestFromChooser().then(
+      (started) => {
+        if (started === null) leaving.current = false;
+        else openGuestStack(navigation, started);
+      },
+      () => {
+        leaving.current = false;
+      },
+    );
+  };
+
   const pickLocked = (id: string): void => {
     void track(whoPickedEvent('locked_learner'));
     navigation.navigate('PinEntry', { next: 'LockedProfile', profileId: id, lockedFrom: { via: 'chooser', trigger } });
@@ -263,7 +304,7 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
   const rowWidth = Math.floor((measured - rowGap * (ROWS_ACROSS - 1)) / ROWS_ACROSS);
 
   // Web keyboard (section 14): the grid is one tab stop; arrow keys, Home and End move it; Enter or Space picks.
-  const tileCount = learners.length + 1;
+  const tileCount = learners.length + 1 + (extraTile === null ? 0 : 1);
   const firstFocus = trigger === 'resume' ? Math.max(0, learners.findIndex((p) => p.id === activeId)) : 0;
   const [rove, setRove] = useState(firstFocus);
   const tileRefs = useRef<(View | null)[]>([]);
@@ -358,6 +399,22 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
             onPress={pickAdd}
             testID="who-add"
           />
+          {extraTile !== null ? (
+            <WhoTile
+              ref={(node) => {
+                tileRefs.current[learners.length + 1] = node;
+              }}
+              variant={extraTile}
+              label={extraTile === 'try' ? w.try : w.guest}
+              line={extraTile === 'try' ? w.trySub : w.guestCaption}
+              width={tileWidth}
+              accessibilityLabel={extraTile === 'try' ? messages.a11y.who.try : messages.a11y.who.guest}
+              tabStop={Platform.OS !== 'web' || rove === learners.length + 1}
+              onFocus={() => setRove(learners.length + 1)}
+              onPress={() => pickGuest(extraTile)}
+              testID={extraTile === 'try' ? 'who-try' : 'who-guest'}
+            />
+          ) : null}
         </View>
       </View>
 

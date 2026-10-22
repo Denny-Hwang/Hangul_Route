@@ -61,7 +61,7 @@ import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { adoptSavedGuest, guestSaveEntry, holdsFirstQuestCard, noteGuestSaved, promoteLiveGuest, recheckGuestSave } from '../../store/guest-save';
-import { liveGuestId } from '../../store/guest-store';
+import { liveGuestId, useGuestStore } from '../../store/guest-store';
 import { useProfileStore } from '../../store/profile-store';
 import { leaveGuestRunSaved, reaskGuestSavePin } from '../guest/guest-exits';
 import { syncApi } from '../../store/sync-store';
@@ -125,6 +125,9 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const firstRun = route.params?.firstRun ?? false;
   // [GU] The guest's save is the Guest stack's route (`GuestStackParamList.CreateProfile`), the same screen.
   const fromGuest = (route.params as { from?: unknown } | undefined)?.from === 'guest';
+  // [GU] Row GU-5 (section 9.2): Keep as a learner from People on this device, inside the grown-up session (`owner`).
+  // Defence in depth (GU-5 review, CS-G9, CS-G10): never inside a guest run, so the guest's own save always rechecks.
+  const [ownerKeep] = useState(() => fromGuest && (route.params as { owner?: unknown } | undefined)?.owner === true && !useGuestStore.getState().running);
   const levelCheckOn = useMemo(() => placementEntriesOn(flags.placementEnabled), []);
 
   const [step, setStep] = useState<SetupStep>(fromGuest ? 'name' : 'who');
@@ -177,6 +180,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     selfAcceptedAt,
     parentPinHash,
     ...(fromGuest ? { fromGuest } : {}),
+    ...(ownerKeep ? { owner: true } : {}),
   };
   const plan = formPlan(state);
   const missing = stepMissing(step, state);
@@ -293,7 +297,8 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     try {
       // [GU] Section 8.2, CS-G9, CS-G10: the gate is read again from storage before anything is written. A learner
       // added, a PIN set or this guest saved in another tab while the form was open never lets the save past them.
-      if (fromGuest) {
+      // [GU] Row GU-5: the owner's keep runs inside the grown-up session (the case `owner`), not the guest's gate.
+      if (fromGuest && !ownerKeep) {
         const check = await recheckGuestSave({ gated, guestId, ownPinHash: ownPinHash.current });
         if (check !== 'go') {
           await afterRecheck(check);
@@ -302,8 +307,9 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
       }
       // [GU] GU-D11: a first run on a device whose only learner is a live guest promotes it (the switch on).
       const setupPromotes = !fromGuest && firstRun && flags.guestLessonEnabled && setupPromotesGuest({ guestLive: liveGuestId() !== null, profiles: useProfileStore.getState().profiles });
+      // [GU] Row GU-5: the owner's keep is a setup form a grown-up opened (`via: 'setup'`; `gated` false, the save itself asks no PIN), not the guest's own save card.
       const guest: SubmitInput['guest'] = fromGuest
-        ? { gated, via: guestSaveEntry(), ...(consentWritten.current ? { consentGiven: true } : {}) }
+        ? { gated: ownerKeep ? false : gated, via: ownerKeep ? 'setup' : guestSaveEntry(), ...(consentWritten.current ? { consentGiven: true } : {}) }
         : setupPromotes
           ? { gated: false, via: 'setup' }
           : undefined;
@@ -319,11 +325,15 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
             setParentPinHash(hash);
           },
           setParentEmail: saveParentEmail,
-          createProfile: guest === undefined ? createProfile : promoteLiveGuest,
+          // [GU] Row GU-5: the owner's keep leaves the active learner (and so the grown-up session) as it is.
+          createProfile: guest === undefined ? createProfile : ownerKeep ? (input) => promoteLiveGuest(input, { keepActive: true }) : promoteLiveGuest,
           track: (event) => void track(event),
         },
       );
-      if (result.ok && fromGuest) {
+      if (result.ok && ownerKeep) {
+        // [GU] Section 8.4: from People on this device the save returns there; the grown-up stays in the Grown-up area.
+        navigation.getParent<NavigationProp<RootStackParamList>>()?.navigate('ParentDashboard');
+      } else if (result.ok && fromGuest) {
         // [GU] Section 8.4: Home of the new profile, the Guest stack gone, one Hoya bubble; no level-check fork.
         noteGuestSaved(result.profile.id, holdsFirstQuestCard(result.profile.id));
         leaveGuestRunSaved(navigation);

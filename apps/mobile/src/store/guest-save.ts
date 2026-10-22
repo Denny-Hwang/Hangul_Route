@@ -60,13 +60,17 @@ export function holdsFirstQuestCard(learnerId: string | null): boolean {
  * that one), or null when there is no live guest or `hr:profiles` could not be written (the guest stays, so Continue
  * can be tried again). The reducer's name rules are unchanged (an invalid name throws, as `createProfile` does).
  */
-export async function promoteLiveGuest(input: { displayName: string; ageGroup: Profile['ageGroup']; avatar: AvatarKind; learnerType: LearnerType }): Promise<Profile | null> {
+export async function promoteLiveGuest(
+  input: { displayName: string; ageGroup: Profile['ageGroup']; avatar: AvatarKind; learnerType: LearnerType },
+  options?: { keepActive?: boolean },
+): Promise<Profile | null> {
   const { record } = useGuestStore.getState();
   if (!isLiveGuest(record, useProfileStore.getState().profiles)) return null;
   const plan = promotionPlan(record, input, Date.now());
-  const outcome = await saveGuestAsProfile(record, plan);
+  // [GU] Row GU-5: `keepActive`, Keep as a learner from People on this device (section 9.2).
+  const outcome = await saveGuestAsProfile(record, plan, options);
   if (outcome.kind === 'saved') return outcome.profile;
-  if (outcome.kind === 'duplicate') return adoptSavedGuest(record.id);
+  if (outcome.kind === 'duplicate') return adoptSavedGuest(record.id, options);
   return null;
 }
 
@@ -74,12 +78,14 @@ export async function promoteLiveGuest(input: { displayName: string; ageGroup: P
  * [GU] Another tab saved this guest first (`duplicate`, or the recheck found its id in the stored list): this tab
  * reads the list again, makes that profile active and lets `hr:guest` go, so it shows that learner's Home instead of
  * a save that can never succeed. Null when the profile is not found (the form then says it could not save).
+ * [GU] Row GU-5 review: `keepActive` (the owner's Keep as a learner) treats it as already kept: no learner is switched
+ * to, so the grown-up session stays open and the save returns to People on this device.
  */
-export async function adoptSavedGuest(id: string): Promise<Profile | null> {
+export async function adoptSavedGuest(id: string, options?: { keepActive?: boolean }): Promise<Profile | null> {
   if (!useProfileStore.getState().profiles.some((p) => p.id === id)) await useProfileStore.getState().refresh().catch(() => undefined);
   const profile = useProfileStore.getState().profiles.find((p) => p.id === id) ?? null;
   if (profile === null) return null;
-  useProfileStore.getState().setActive(id);
+  if (options?.keepActive !== true) useProfileStore.getState().setActive(id);
   await useGuestStore.getState().forgetSavedGuest(id).catch(() => undefined);
   return useProfileStore.getState().profiles.find((p) => p.id === id) ?? profile;
 }
