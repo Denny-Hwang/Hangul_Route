@@ -360,6 +360,9 @@ export const landing = {
     start: '배우기 시작하기',
     title: '페이지를 찾을 수 없어요',
   },
+  captures: {
+    og: (brand: string, tagline: string) => `호랑이 호야와 ${brand} 로고. 문구: ${tagline}`,
+  },
   localeBanner: {
     label: '언어 추천',
     viewIn: (endonym: string) => `${endonym} 화면으로 보기`,

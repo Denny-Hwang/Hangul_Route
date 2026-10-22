@@ -4,7 +4,18 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { siteMetadata } from '../../data/landing-copy';
-import { SITE_ICONS, SITE_PAGES, SITE_URL, shownSiteLocales, siteAlternates, siteMetadataFor, siteNotFoundMetadata, siteUrl } from '../site-metadata';
+import {
+  SHARE_IMAGE_SIZE,
+  SITE_ICONS,
+  SITE_PAGES,
+  SITE_URL,
+  shownSiteLocales,
+  siteAlternates,
+  siteMetadataFor,
+  siteNotFoundMetadata,
+  siteShareImage,
+  siteUrl,
+} from '../site-metadata';
 import { siteSitemap } from '../site-surface';
 
 /** `alternates` as the page names them: every URL absolute on the site, the English home with its slash (SN-2). */
@@ -59,11 +70,14 @@ describe('siteMetadataFor', () => {
 
   it('English home: the site metadata, the icons, og:url and the other locales, and absolute hreflang alternates with itself as canonical', () => {
     const meta = siteMetadataFor('en', '/');
-    const { alternates, icons, openGraph, ...rest } = meta;
-    const { openGraph: siteOpenGraph, ...siteRest } = siteMetadata;
+    const { alternates, icons, openGraph, twitter, ...rest } = meta;
+    const { openGraph: siteOpenGraph, twitter: siteTwitter, ...siteRest } = siteMetadata;
     expect(rest).toEqual(siteRest);
     expect(icons).toEqual(SITE_ICONS);
-    expect(openGraph).toEqual({ ...siteOpenGraph, url: 'https://hangulroute.com/', alternateLocale: ['es_419', 'ko_KR'] });
+    const image = siteShareImage('en');
+    expect(openGraph).toEqual({ ...siteOpenGraph, url: 'https://hangulroute.com/', alternateLocale: ['es_419', 'ko_KR'], images: [image] });
+    // The large card with the share image (AMENDMENTS-SITE-NEWUSER §3.14); the site's words otherwise.
+    expect(twitter).toEqual({ ...siteTwitter, card: 'summary_large_image', images: [{ url: image.url, alt: image.alt }] });
     expect(alternates).toEqual(absoluteAlternates('/', '/'));
     // No metadataBase: Next would drop the home's slash from a URL it resolves against one (SN-2).
     expect(meta.metadataBase).toBeUndefined();
@@ -142,7 +156,7 @@ describe('siteMetadataFor', () => {
       expect(meta.title).toBe(title);
       expect(meta.description).toBe(description);
       expect(meta.openGraph).toMatchObject({ title, description, locale: LOCALE_META[locale].ogLocale });
-      expect(meta.twitter).toMatchObject({ title, description, card: 'summary' });
+      expect(meta.twitter).toMatchObject({ title, description, card: 'summary_large_image' });
     },
   );
 
@@ -204,13 +218,39 @@ describe('icons and the share card (SN-2)', () => {
     expect(siteMetadata.icons).toBeUndefined();
   });
 
-  it('is a small summary card until the site has a share image (no og:image yet)', () => {
-    for (const locale of ['en', 'es', 'ko'] as const) {
-      const meta = siteMetadataFor(locale, '/');
-      expect(meta.twitter).toMatchObject({ card: 'summary' });
-      expect(meta.openGraph).not.toHaveProperty('images');
-      expect(meta.twitter).not.toHaveProperty('images');
-    }
+  // AMENDMENTS-SITE-NEWUSER §3.14 and §8 (row SN-2): a share image per shown locale, as a large card on every page.
+  it.each((['en', 'es', 'ko'] as const).flatMap((locale) => SITE_PAGES.map((page) => [locale, page] as const)))(
+    '%s %s: an absolute 1200 x 630 og:image with the localized alt, and the large card with the same image',
+    (locale, page) => {
+      const meta = siteMetadataFor(locale, page);
+      const t = getMessages(locale).landing;
+      const image = {
+        url: `https://hangulroute.com/site/${locale}/og.png`,
+        width: 1200,
+        height: 630,
+        alt: t.captures.og(t.brand.name, t.meta.tagline),
+      };
+      expect(siteShareImage(locale)).toEqual(image);
+      expect(meta.openGraph).toMatchObject({ images: [image] });
+      expect(meta.twitter).toMatchObject({ card: 'summary_large_image', images: [{ url: image.url, alt: image.alt }] });
+    },
+  );
+
+  it.each(['en', 'es', 'ko'] as const)('%s: the share image file exists, is a 1200 x 630 PNG and at most 60 KB', (locale) => {
+    const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'public');
+    const png = readFileSync(join(publicDir, 'site', locale, 'og.png'));
+    expect(png.subarray(1, 4).toString('latin1')).toBe('PNG');
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([SHARE_IMAGE_SIZE.width, SHARE_IMAGE_SIZE.height]);
+    expect(png.length).toBeLessThanOrEqual(60 * 1024);
+    // The approved drawing (design/screens/site/newuser/head/og-<locale>.png), copied byte for byte by scripts/site-og.mjs.
+    const drawing = readFileSync(join(publicDir, '..', '..', '..', 'design', 'screens', 'site', 'newuser', 'head', `og-${locale}.png`));
+    expect(png.equals(drawing)).toBe(true);
+  });
+
+  it('the console metadata and the 404 pages keep the small card with no image (nothing to preview there)', () => {
+    expect(siteMetadata.twitter).toMatchObject({ card: 'summary' });
+    expect(siteMetadata.openGraph).not.toHaveProperty('images');
+    for (const locale of ['en', 'es', 'ko'] as const) expect(siteNotFoundMetadata(locale).openGraph).not.toHaveProperty('images');
   });
 
   it.each(['en', 'es', 'ko'] as const)('%s: og:locale:alternate names the other two locales', (locale) => {

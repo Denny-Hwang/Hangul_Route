@@ -917,4 +917,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.presets.chooser.showMore': [[8], [4]],
   // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
   'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
+  // The share image's alt text (AMENDMENTS-SITE-NEWUSER §3.14, row SN-2): the brand and the locale's tagline.
+  'landing.captures.og': [['Hangul Route', 'Learn Hangul from zero, at any age.']],
 };

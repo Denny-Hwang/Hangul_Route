@@ -235,6 +235,26 @@ describe('legal: SN-2 accuracy (English-authoritative)', () => {
   });
 });
 
+/** AMENDMENTS-SITE-NEWUSER §3.14 and appendix A (row SN-2): the share image's alt text in each locale. */
+describe('landing.captures.og: the share image alt text (SN-2)', () => {
+  it('names Hoya and the words the image shows, the brand and the tagline passed in', () => {
+    expect(l.captures.og('Hangul Route', l.meta.tagline)).toBe('Hoya the tiger next to the words Hangul Route: Learn Hangul from zero, at any age.');
+    const es = getMessages('es').landing;
+    expect(es.captures.og('Hangul Route', es.meta.tagline)).toBe('Hoya, el tigre, junto a las palabras Hangul Route: Aprende hangul desde cero, a cualquier edad.');
+    const ko = getMessages('ko').landing;
+    expect(ko.captures.og('Hangul Route', ko.meta.tagline)).toBe('호랑이 호야와 Hangul Route 로고. 문구: 나이와 상관없이, 한글을 처음부터 배워요.');
+  });
+
+  it('types neither the brand nor a tagline into the message, in any locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const out = getMessages(locale).landing.captures.og('{B}', '{T}');
+      expect(out, locale).toContain('{B}');
+      expect(out, locale).toContain('{T}');
+      expect(out, locale).not.toMatch(/Hangul Route|hangulroute/i);
+    }
+  });
+});
+
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
   it('keeps the waitlist copy (#146)', () => {
     expect(l.waitlist.submit).toBe('Send me the invite');

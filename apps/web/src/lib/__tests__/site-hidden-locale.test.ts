@@ -51,5 +51,8 @@ describe('a locale that has not shipped (fixture)', () => {
     // No og:url and no og:locale:alternate either: a hidden page names no shown URL or locale (SN-2).
     expect(meta.openGraph).not.toHaveProperty('url');
     expect(meta.openGraph).not.toHaveProperty('alternateLocale');
+    // No share image: the prune takes `site/<locale>/` out of the export with the pages (§3.14).
+    expect(meta.openGraph).not.toHaveProperty('images');
+    expect(meta.twitter).toMatchObject({ card: 'summary' });
   });
 });

@@ -36,6 +36,19 @@ export const SITE_ICONS = {
   apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
 } as const satisfies Metadata['icons'];
 
+/** The share image's size (AMENDMENTS-SITE-NEWUSER §3.14): 1200 x 630, the large-card size of Open Graph and X. */
+export const SHARE_IMAGE_SIZE = { width: 1200, height: 630 } as const;
+
+/**
+ * The share image of `locale` (§3.14, row SN-2): `public/site/<locale>/og.png` (made by `scripts/site-og.mjs` from the
+ * design drawing), absolute on `SITE_URL`, with its alt text in the locale (`landing.captures.og`, the brand and the
+ * tagline the image shows). A hidden locale's folder leaves the export with its pages (`prune-hidden-locales.mjs`).
+ */
+export function siteShareImage(locale: UiLocale): { url: string; width: number; height: number; alt: string } {
+  const t = getMessages(locale).landing;
+  return { url: siteUrl(`/site/${locale}/og.png`), ...SHARE_IMAGE_SIZE, alt: t.captures.og(t.brand.name, t.meta.tagline) };
+}
+
 /**
  * The site's pages, as English paths; `sitePath` puts the locale in front. The persona pages of F-SITE-002 (§3.4 to
  * §3.6) join as they ship: `/learners` in S-4a, `/parents` and `/teachers` in S-4b. `/licenses` is the open-source
@@ -99,7 +112,8 @@ function absoluteAlternates(canonical: string, languages: Record<string, string>
  * The metadata of `page` in `locale`. A hidden locale is `noindex` and names no alternates. With alternates the page
  * also names itself as canonical (`alternates.canonical`, also `og:url`), as search engines expect beside hreflang;
  * every one of these URLs is absolute and the English home keeps its slash, as in the sitemap (SN-2). Open Graph names
- * the other shown locales (`og:locale:alternate`), and the page carries the site's icons.
+ * the other shown locales (`og:locale:alternate`), and the page carries the site's icons and, in a shown locale, that
+ * locale's share image as a large card (`summary_large_image`; §3.14).
  */
 export function siteMetadataFor(locale: UiLocale, page: SitePage, showAll: boolean = siteShowAllLocales()): Metadata {
   const hidden = isSiteLocale(locale) && !isShippedSiteLocale(locale, showAll);
@@ -108,6 +122,7 @@ export function siteMetadataFor(locale: UiLocale, page: SitePage, showAll: boole
   const site = landingCopy(locale).metadata;
   const words = pageWords(locale, page);
   const alternateLocale = hidden ? [] : shownSiteLocales(showAll).filter((other) => other !== locale).map((other) => LOCALE_META[other].ogLocale);
+  const image = hidden ? undefined : siteShareImage(locale);
   return {
     ...site,
     ...words,
@@ -117,6 +132,12 @@ export function siteMetadataFor(locale: UiLocale, page: SitePage, showAll: boole
       ...words.openGraph,
       ...(alternates ? { url: alternates.canonical as string } : {}),
       ...(alternateLocale.length > 0 ? { alternateLocale } : {}),
+      ...(image ? { images: [image] } : {}),
+    },
+    twitter: {
+      ...site.twitter,
+      ...words.twitter,
+      ...(image ? { card: 'summary_large_image' as const, images: [{ url: image.url, alt: image.alt }] } : {}),
     },
     ...(alternates ? { alternates } : {}),
     ...(hidden ? { robots: { index: false, follow: false } } : {}),

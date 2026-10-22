@@ -360,6 +360,9 @@ export const landing = {
     start: 'Empezar a aprender',
     title: 'No encontramos esta página',
   },
+  captures: {
+    og: (brand: string, tagline: string) => `Hoya, el tigre, junto a las palabras ${brand}: ${tagline}`,
+  },
   localeBanner: {
     label: 'Sugerencia de idioma',
     viewIn: (endonym: string) => `Ver en ${endonym}`,
