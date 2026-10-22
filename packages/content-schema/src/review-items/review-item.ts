@@ -112,8 +112,15 @@ export const ReviewItemSchema = z
     stage: z.number().int().min(1).max(7),
     /** The first volume that teaches it (Volume 2 is row CM-40). */
     volume: z.number().int().min(1),
-    /** Every cell or story that teaches it or asks it in a scored round, in route order. */
+    /**
+     * The cells and stories that teach it, in route order: each one whose Discover page shows it,
+     * the first one that asks it (its home cell), and the first grid cell that asks it when a story
+     * came first. A Volume k >= 2 cell is its own id
+     * (`cellOfVolume`). These are the cells whose mastery denominator holds it (§4.4).
+     */
     cells: z.array(z.string().regex(TEACHING_CELL_RE)).min(1),
+    /** The later cells and stories that only ask it again in a scored round (a recycle), in route order: never in their denominator. */
+    asked: z.array(z.string().regex(TEACHING_CELL_RE)),
     formats: z.array(ReviewFormatSchema).min(1),
     /** The standard pronunciation differs from the spelling (§4.5): the item stays out of hear-mode rounds until recordings A-9 and A-10. */
     soundChange: z.boolean(),
@@ -129,7 +136,7 @@ export const ReviewItemSchema = z
       if (!allowed.includes(f)) issue('formats', `a ${item.kind} item is never asked as ${f}`);
     });
     if (new Set(item.formats).size !== item.formats.length) issue('formats', 'a format is listed once');
-    if (new Set(item.cells).size !== item.cells.length) issue('cells', 'a cell is listed once');
+    if (new Set([...item.cells, ...item.asked]).size !== item.cells.length + item.asked.length) issue('cells', 'a cell is listed once, in cells or in asked');
     if (item.homophoneOf.includes(item.id)) issue('homophoneOf', 'an item is not its own homophone');
   });
 export type ReviewItem = z.infer<typeof ReviewItemSchema>;
@@ -138,10 +145,10 @@ export type ReviewItem = z.infer<typeof ReviewItemSchema>;
 
 /**
  * One item as the chunk holds it, positional so the index fits its budget line:
- * [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture].
+ * [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture, asked].
  *   - romanization: '' when it is the F-CNT-002 converter's reading of `ko` (`romanize`);
  *   - en, glossKey, picture: '' when absent; glossKey abbreviated (`packGlossKey`), '=' for `<id>#gloss`;
- *   - home: an index into the chunk's `homes`; cells: indexes into its `cells`;
+ *   - home: an index into the chunk's `homes`; cells and asked: indexes into its `cells`;
  *   - meta: stage | volume << 3 | soundChange << 8; formats: a bitmask over REVIEW_FORMATS;
  *   - reply: 0, or [ko, romanization, en, glossKey] packed the same way.
  */
@@ -158,6 +165,7 @@ export type ReviewItemRow = readonly [
   homophoneOf: readonly string[],
   reply: 0 | readonly [ko: string, romanization: string, en: string, glossKey: string],
   picture: string,
+  asked: readonly number[],
 ];
 
 /** The shared strings of the rows: the cells (an episode without its `episode:` prefix, or a story) and the homes. */
@@ -166,13 +174,21 @@ export interface ReviewItemTables {
   homes: readonly string[];
 }
 
+/**
+ * A retired item as the chunk keeps it (§4.2): its id and the Korean it showed (romanization ''
+ * when it is the converter's reading), so a report can still name the item a learner's kept state
+ * belongs to. Nothing teaches it any more, so it has no gloss key (the field it pointed at went
+ * with the content) and no row: it is never selected and never in a denominator.
+ */
+export type RetiredItemRow = readonly [id: string, ko: string, romanization: string];
+
 /** The module of the `review-items` chunk (`__generated__/review-item-chunks/review-items.ts`). */
 export interface ReviewItemsChunk {
   CHUNK_HASH: string;
   REVIEW_ITEM_TABLES: ReviewItemTables;
   REVIEW_ITEM_ROWS: readonly ReviewItemRow[];
-  /** The retired ids (§4.2): in no row, as nothing teaches them; a learner's state for them stays, out of selection and denominators. */
-  REVIEW_RETIRED_IDS: readonly string[];
+  /** The retired items (§4.2): in no row, as nothing teaches them; a learner's state for them stays, out of selection and denominators. */
+  REVIEW_RETIRED: readonly RetiredItemRow[];
 }
 
 /**
@@ -253,6 +269,7 @@ export function encodeReviewItems(items: readonly ReviewItem[]): { tables: Revie
       item.homophoneOf,
       reply === undefined ? 0 : [reply.ko, packRomanization(reply.romanization, reply.ko), reply.en ?? '', packGlossKey(reply.glossKey, item.id)],
       item.picture ?? '',
+      item.asked.map((cell) => indexIn(cells, packCell(cell))),
     ];
   });
   return { tables: { cells, homes }, rows };
@@ -260,7 +277,7 @@ export function encodeReviewItems(items: readonly ReviewItem[]): { tables: Revie
 
 /** One chunk row as its item. */
 export function decodeReviewItem(row: ReviewItemRow, tables: ReviewItemTables): ReviewItem {
-  const [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture] = row;
+  const [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture, asked] = row;
   const item: ReviewItem = {
     id,
     kind: kindOfId(id) as ReviewItemKind,
@@ -270,6 +287,7 @@ export function decodeReviewItem(row: ReviewItemRow, tables: ReviewItemTables): 
     stage: meta & 7,
     volume: (meta >> 3) & 31,
     cells: cells.map((i) => unpackCell(tables.cells[i] as string)),
+    asked: asked.map((i) => unpackCell(tables.cells[i] as string)),
     formats: formatsOfMask(formats),
     soundChange: ((meta >> 8) & 1) === 1,
     homophoneOf: [...homophoneOf],
@@ -286,6 +304,17 @@ export function decodeReviewItem(row: ReviewItemRow, tables: ReviewItemTables): 
   }
   if (opt(picture) !== undefined) item.picture = picture;
   return item;
+}
+
+/** A retired item's row, its Korean packed as an item's is. */
+export function encodeRetiredItem(retired: { id: string; ko: string; romanization: string }): RetiredItemRow {
+  return [retired.id, retired.ko, packRomanization(retired.romanization, retired.ko)];
+}
+
+/** A retired item's label for a report: its id, kind, Korean and romanization. */
+export function decodeRetiredItem(row: RetiredItemRow): { id: string; kind: ReviewItemKind; ko: string; romanization: string } {
+  const [id, ko, romanization] = row;
+  return { id, kind: kindOfId(id) as ReviewItemKind, ko, romanization: opt(romanization) ?? reading(ko) };
 }
 
 /** Every item of a loaded chunk. */
@@ -314,17 +343,29 @@ export function selectableIds(ids: readonly string[], retired: RetiredIds): stri
 }
 
 /**
- * The mastery denominator of a cell (§4.4): the items its started volumes teach, minus the
- * retired ones. `volumes` are the cell's volumes the learner has started (a volume not started,
- * or one that ships later, never holds a level back).
+ * The teaching-cell id of a grid cell's volume: Volume 1 is the cell itself (`episode:stage2-life`),
+ * Volume k >= 2 its own cell (`episode:stage2-life-v2`, row CM-40). The extractor names a Volume k
+ * file's occurrences so (`sources.ts`), and the denominator reads them back so.
+ */
+export function cellOfVolume(cell: string, volume: number): string {
+  return volume >= 2 ? `${cell}-v${volume}` : cell;
+}
+
+/**
+ * The mastery denominator of a grid cell or pack level (§4.4): the items its started volumes
+ * teach (`cells`, not the recycles of `asked`), minus the retired ones, in the order given.
+ * `cell` is the grid cell's own id (`episode:stage2-life`, `episode:pack-<key>-s<n>`), never a
+ * `-v<k>` id; `volumes` are its volumes the learner has started (a volume not started, or one that
+ * ships later, never holds a level back). An item first taught in another cell and only asked
+ * again here counts in its own cells, not this one.
  */
 export function masteryDenominator(
-  items: readonly Pick<ReviewItem, 'id' | 'cells' | 'volume'>[],
+  items: readonly Pick<ReviewItem, 'id' | 'cells'>[],
   cell: string,
   volumes: readonly number[],
   retired: RetiredIds,
 ): string[] {
-  const started = new Set(volumes);
+  const teaching = new Set(volumes.filter((v) => Number.isInteger(v) && v >= 1).map((v) => cellOfVolume(cell, v)));
   const out = asSet(retired);
-  return items.filter((item) => item.cells.includes(cell) && started.has(item.volume) && !out.has(item.id)).map((item) => item.id);
+  return items.filter((item) => !out.has(item.id) && item.cells.some((c) => teaching.has(c))).map((item) => item.id);
 }

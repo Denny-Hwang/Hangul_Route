@@ -116,10 +116,16 @@ describe('allowedFormats (§4.3 rungs by kind, §4.5)', () => {
   });
   it('types and dictates a word only when it can be typed and heard without doubt', () => {
     expect(allowedFormats({ ...base, kind: 'lex', ko: '사과', picture: 'word:food-apple' })).toEqual(['hear-pick', 'read-pick', 'type-see', 'type-picture', 'dictation', 'syllable-build']);
-    expect(allowedFormats({ ...base, kind: 'lex', ko: '낫', homophoneOf: ['lex:nat~2'] })).toEqual(['hear-pick', 'read-pick', 'type-see', 'syllable-build']);
+    expect(allowedFormats({ ...base, kind: 'lex', ko: '낫', homophoneOf: ['lex:nat~2'], en: 'sickle' })).toEqual(['hear-pick', 'read-pick', 'type-see', 'syllable-build']);
     expect(allowedFormats({ ...base, kind: 'lex', ko: '학교', soundChange: true })).toEqual(['hear-pick', 'read-pick', 'type-see', 'syllable-build']);
     expect(allowedFormats({ ...base, kind: 'lex', ko: '이천 원' })).toEqual(['hear-pick', 'read-pick', 'type-see', 'dictation']);
     expect(allowedFormats({ ...base, kind: 'lex', ko: '5,000 원' })).toEqual(['hear-pick', 'read-pick']);
+  });
+  it('asks an item with a homophone by ear only when a picture or gloss can settle it (§4.5)', () => {
+    expect(allowedFormats({ ...base, kind: 'lex', ko: '낫', homophoneOf: ['lex:nat~2'] })).toEqual(['read-pick', 'type-see', 'syllable-build']);
+    expect(allowedFormats({ ...base, kind: 'lex', ko: '낫', homophoneOf: ['lex:nat~2'], picture: 'word:sickle' })).toEqual(['hear-pick', 'read-pick', 'type-see', 'type-picture', 'syllable-build']);
+    expect(allowedFormats({ ...base, kind: 'syl', ko: '입', homophoneOf: ['syl:ip~2'] })).toEqual(['read-pick', 'syllable-build']);
+    expect(allowedFormats({ ...base, kind: 'pat', ko: '같이 가요.', homophoneOf: ['pat:gachi-gayo~2'] })).toEqual(['read-pick', 'cloze-pick', 'sentence-builder']);
   });
   it('fills a frame, builds a sentence of 2-6 tiles, orders a reply of 2-6 words', () => {
     expect(allowedFormats({ ...base, kind: 'pat', ko: '___ 주세요.' })).toEqual(['read-pick', 'cloze-pick']);
@@ -162,7 +168,9 @@ describe('buildReviewItems: merge and frozen ids', () => {
       glossKey: 'quest:stage2-life-q1#steps.s2.discover.pages.0.items.0.word.gloss',
       home: 'life',
       stage: 2,
-      cells: ['episode:stage2-life', 'story:sun-and-moon', 'episode:stage3-life'],
+      // Taught in its first cell; a later story and cell only ask it again.
+      cells: ['episode:stage2-life'],
+      asked: ['story:sun-and-moon', 'episode:stage3-life'],
     });
     // A topic word's gloss, gloss key and picture are the topic file's; a swatch is no picture.
     expect(items[2]).toMatchObject({ en: 'water', glossKey: 'vocab:mul#gloss' });
@@ -176,6 +184,79 @@ describe('buildReviewItems: merge and frozen ids', () => {
     expect(placed.filter((p) => p.id === 'pat:sagwa-juseyo')).toHaveLength(2);
     // The exchange with a reply glossed leads with that reply.
     expect(items[8]?.reply).toEqual({ ko: '네.', romanization: 'ne.', glossKey: 'minigame:s2-life-q1-play#dialogue.0.options.ne.gloss' });
+  });
+
+  it('counts a later cell as teaching an item only when its Discover page shows it', () => {
+    const list = [
+      occ({ kind: 'lex', ko: '사과', en: 'apple', cell: 'episode:stage2-life', stage: 2 }),
+      occ({ kind: 'lex', ko: '사과', en: 'apple', cell: 'episode:stage2-nature', stage: 2, home: 'nature' }),
+      occ({ kind: 'lex', ko: '사과', en: 'apple', cell: 'episode:stage3-life-v2', stage: 3, volume: 2, source: 'discover', glossKey: 'quest:stage3-life-v2-q1#x' }),
+    ];
+    expect(buildReviewItems(list, EMPTY_SNAPSHOT, vocab).items[0]).toMatchObject({
+      cells: ['episode:stage2-life', 'episode:stage3-life-v2'],
+      asked: ['episode:stage2-nature'],
+      stage: 2,
+      volume: 1,
+      home: 'life',
+    });
+    // A story that asks it first has no ring: the first grid cell that asks it teaches it too.
+    const storyFirst = [
+      occ({ kind: 'lex', ko: '입', en: 'mouth', cell: 'story:shapes', stage: 1, home: 'letters' }),
+      occ({ kind: 'lex', ko: '입', en: 'mouth', cell: 'episode:stage2-letters', stage: 2, home: 'letters' }),
+      occ({ kind: 'lex', ko: '입', en: 'mouth', cell: 'episode:stage3-letters', stage: 3, home: 'letters' }),
+    ];
+    expect(buildReviewItems(storyFirst, EMPTY_SNAPSHOT, vocab).items[0]).toMatchObject({
+      cells: ['story:shapes', 'episode:stage2-letters'],
+      asked: ['episode:stage3-letters'],
+      stage: 1,
+    });
+  });
+
+  it('takes the English and its gloss key from one occurrence, else a field that glosses the same text', () => {
+    const paired = buildReviewItems(
+      [
+        occ({ kind: 'lex', ko: '제기', en: 'foot shuttlecock', glossKey: 'minigame:a#cardPairs.jegi.gloss' }),
+        occ({ kind: 'lex', ko: '제기', en: 'a shuttlecock toy you kick', source: 'discover', cell: 'episode:stage3-crafts', stage: 3 }),
+        occ({ kind: 'lex', ko: '제기', en: 'a shuttlecock toy you kick', glossKey: 'minigame:b#picWord.boards.0.pairs.p1.word.gloss', cell: 'episode:stage4-crafts', stage: 4 }),
+      ],
+      EMPTY_SNAPSHOT,
+      vocab,
+    ).items[0];
+    expect(paired).toMatchObject({ en: 'a shuttlecock toy you kick', glossKey: 'minigame:b#picWord.boards.0.pairs.p1.word.gloss' });
+    // No occurrence of the item has a key: an exchange reply that glosses the same text lends its own.
+    const lent = buildReviewItems(
+      [
+        occ({ kind: 'exc', ko: '이게 뭐예요?', en: 'What is this?', glossKey: 'minigame:c#dialogue.0.npc', reply: { ko: '지우개예요.', romanization: 'jiugaeyeyo.', en: 'It is an eraser.', glossKey: 'minigame:c#dialogue.0.options.jiugaeyeyo.gloss' } }),
+        occ({ kind: 'pat', ko: '지우개예요.', en: 'It is an eraser.' }),
+        occ({ kind: 'lex', ko: '물', en: 'water' }),
+        occ({ kind: 'lex', ko: '대구', en: 'Daegu (a city)' }),
+      ],
+      EMPTY_SNAPSHOT,
+      vocab,
+    ).items;
+    expect(lent.map((i) => [i.id, i.glossKey])).toEqual([
+      ['exc:ige-mwoyeyo', 'minigame:c#dialogue.0.npc'],
+      ['pat:jiugaeyeyo', 'minigame:c#dialogue.0.options.jiugaeyeyo.gloss'],
+      ['vocab:mul', 'vocab:mul#gloss'],
+      // Nothing glosses it anywhere: no key, never one for another English.
+      ['lex:daegu', undefined],
+    ]);
+  });
+
+  it('keeps each retired id with the Korean its frozen key names, for reports', () => {
+    const symbols = [{ id: 'jamo:bieup', char: 'ㅂ', kind: 'consonant' as const, romanization: 'b/p' }];
+    const frozen = snap(
+      { 'lex|배~pear': 'lex:bae~pear', 'sym|jamo:bieup': 'sym:bieup', 'exc|안녕|안녕': 'exc:annyeong', 'rea|realia:menu-prices': 'rea:menu-prices' },
+      { retired: ['sym:bieup', 'lex:bae~pear', 'exc:annyeong', 'rea:menu-prices'] },
+    );
+    const { retired, issues } = buildReviewItems([], frozen, vocab, symbols);
+    expect(issues).toEqual([]);
+    expect(retired).toEqual([
+      { id: 'exc:annyeong', ko: '안녕', romanization: 'annyeong' },
+      { id: 'lex:bae~pear', ko: '배', romanization: 'bae' },
+      { id: 'rea:menu-prices', ko: 'realia:menu-prices', romanization: 'realia:menu-prices' },
+      { id: 'sym:bieup', ko: 'ㅂ', romanization: 'b/p' },
+    ]);
   });
 
   it('keeps frozen ids whatever the derivation would give, and adds only new ones on --freeze', () => {
@@ -262,9 +343,10 @@ describe('reviewItemsOf: the three sources merged', () => {
     });
     expect(items.map((i) => [i.id, i.cells])).toEqual([
       ['sym:a', ['episode:stage1-letters']],
-      ['vocab:mul', ['episode:stage2-life', 'story:sun-and-moon']],
+      ['vocab:mul', ['episode:stage2-life']],
       ['lex:sagwa', ['episode:stage2-life']],
     ]);
+    expect(items.find((i) => i.id === 'vocab:mul')?.asked).toEqual(['story:sun-and-moon']);
     expect(issues.map((i) => i.code)).toEqual(['not-frozen', 'not-frozen', 'not-frozen']);
   });
 });

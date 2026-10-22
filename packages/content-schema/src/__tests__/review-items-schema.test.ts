@@ -12,6 +12,9 @@ import {
   formatsOfMask,
   isRetired,
   kindOfId,
+  cellOfVolume,
+  decodeRetiredItem,
+  encodeRetiredItem,
   masteryDenominator,
   packGlossKey,
   selectableIds,
@@ -33,7 +36,8 @@ const word: ReviewItem = {
   home: 'life',
   stage: 2,
   volume: 1,
-  cells: ['episode:stage2-life', 'story:gimjang-arirang'],
+  cells: ['episode:stage2-life'],
+  asked: ['story:gimjang-arirang'],
   formats: ['hear-pick', 'read-pick', 'type-see', 'type-picture'],
   soundChange: false,
   homophoneOf: [],
@@ -50,6 +54,7 @@ const exchange: ReviewItem = {
   stage: 4,
   volume: 2,
   cells: ['episode:pack-numbers-time-s4'],
+  asked: [],
   formats: ['hear-pick', 'read-pick'],
   soundChange: true,
   homophoneOf: ['exc:other'],
@@ -63,11 +68,12 @@ const symbol: ReviewItem = {
   stage: 1,
   volume: 1,
   cells: ['episode:stage1-life'],
+  asked: [],
   formats: ['hear-pick', 'read-pick', 'syllable-build', 'match-shape'],
   soundChange: false,
   homophoneOf: [],
 };
-const topicWord: ReviewItem = { ...word, id: 'vocab:sagwa-apple', ko: '사과', romanization: 'sagwa', en: 'apple', glossKey: 'vocab:sagwa-apple#gloss', cells: ['episode:stage2-life'] };
+const topicWord: ReviewItem = { ...word, id: 'vocab:sagwa-apple', ko: '사과', romanization: 'sagwa', en: 'apple', glossKey: 'vocab:sagwa-apple#gloss', cells: ['episode:stage2-life'], asked: [] };
 
 describe('review-item ids', () => {
   it('reads the kind from the id, and a topic word is a word', () => {
@@ -98,7 +104,8 @@ describe('ReviewItemSchema', () => {
     expect(messages({ ...word, reply: exchange.reply })).toEqual(['an exchange (exc) carries its reply, and no other kind does']);
     expect(messages({ ...exchange, reply: undefined })).toEqual(['an exchange (exc) carries its reply, and no other kind does']);
     expect(messages({ ...symbol, formats: ['hear-pick', 'hear-pick'] })).toEqual(['a format is listed once']);
-    expect(messages({ ...symbol, cells: ['episode:stage1-life', 'episode:stage1-life'] })).toEqual(['a cell is listed once']);
+    expect(messages({ ...symbol, cells: ['episode:stage1-life', 'episode:stage1-life'] })).toEqual(['a cell is listed once, in cells or in asked']);
+    expect(messages({ ...symbol, asked: ['episode:stage1-life'] })).toEqual(['a cell is listed once, in cells or in asked']);
     expect(messages({ ...symbol, homophoneOf: ['sym:bieup'] })).toEqual(['an item is not its own homophone']);
     expect(messages({ ...symbol, cells: ['quest:stage1-life-q1'] })).toHaveLength(1);
     expect(messages({ ...symbol, home: 'pack:' })).toHaveLength(1);
@@ -175,13 +182,48 @@ describe('the chunk rows', () => {
 });
 
 describe('retired ids (§4.2)', () => {
-  const items = [word, { ...symbol, cells: ['episode:stage2-life'] }, { ...topicWord, volume: 2 }];
-  it('are never selected and stay out of the mastery denominator', () => {
+  it('are never selected', () => {
     expect(isRetired('sym:bieup', ['sym:bieup'])).toBe(true);
     expect(isRetired('sym:bieup', new Set<string>())).toBe(false);
     expect(selectableIds(['lex:bae~pear', 'sym:bieup'], new Set(['sym:bieup']))).toEqual(['lex:bae~pear']);
-    expect(masteryDenominator(items, 'episode:stage2-life', [1], [])).toEqual(['lex:bae~pear', 'sym:bieup']);
-    expect(masteryDenominator(items, 'episode:stage2-life', [1, 2], ['sym:bieup'])).toEqual(['lex:bae~pear', 'vocab:sagwa-apple']);
+  });
+
+  it('keep a row a report can name them by: the id and its Korean', () => {
+    const row = encodeRetiredItem({ id: 'lex:bae~pear', ko: '배', romanization: 'bae' });
+    expect(row).toEqual(['lex:bae~pear', '배', '']);
+    expect(decodeRetiredItem(row)).toEqual({ id: 'lex:bae~pear', kind: 'lex', ko: '배', romanization: 'bae' });
+    expect(decodeRetiredItem(encodeRetiredItem({ id: 'sym:bieup', ko: 'ㅂ', romanization: 'b/p' }))).toEqual({ id: 'sym:bieup', kind: 'sym', ko: 'ㅂ', romanization: 'b/p' });
+  });
+});
+
+describe('the mastery denominator (§4.4)', () => {
+  const at = (id: string, cells: string[], asked: string[] = []) => ({ id, cells, asked });
+  // The cell ids the extractor gives (sources.ts): Volume 1 is the cell, Volume 2 its `-v2` cell.
+  const items = [
+    at('lex:sagwa', ['episode:stage2-life']),
+    at('lex:bae~pear', ['episode:stage2-life-v2']),
+    // first taught in another cell's Volume 1, taught here only in Volume 2
+    at('lex:mul', ['episode:stage2-nature', 'episode:stage2-life-v2']),
+    // first taught in another cell, only asked here again (a recycle)
+    at('lex:bap', ['episode:stage2-letters'], ['episode:stage2-life', 'episode:stage2-life-v2']),
+    at('sym:bieup', ['episode:stage2-life']),
+    at('pat:n-juseyo', ['episode:pack-numbers-time-s4']),
+  ];
+
+  it('holds the items of the started volumes of the cell, read through their -v<k> cells', () => {
+    expect(cellOfVolume('episode:stage2-life', 1)).toBe('episode:stage2-life');
+    expect(cellOfVolume('episode:stage2-life', 2)).toBe('episode:stage2-life-v2');
+    expect(masteryDenominator(items, 'episode:stage2-life', [1], [])).toEqual(['lex:sagwa', 'sym:bieup']);
+    expect(masteryDenominator(items, 'episode:stage2-life', [1, 2], [])).toEqual(['lex:sagwa', 'lex:bae~pear', 'lex:mul', 'sym:bieup']);
+    expect(masteryDenominator(items, 'episode:stage2-life', [2], [])).toEqual(['lex:bae~pear', 'lex:mul']);
+  });
+
+  it('never holds a volume not started, a recycle, or a retired item', () => {
+    expect(masteryDenominator(items, 'episode:stage2-life', [], [])).toEqual([]);
+    expect(masteryDenominator(items, 'episode:stage2-nature', [1], [])).toEqual(['lex:mul']);
+    expect(masteryDenominator(items, 'episode:stage2-letters', [1], [])).toEqual(['lex:bap']);
+    expect(masteryDenominator(items, 'episode:stage2-life', [1, 2], ['sym:bieup', 'lex:mul'])).toEqual(['lex:sagwa', 'lex:bae~pear']);
+    expect(masteryDenominator(items, 'episode:pack-numbers-time-s4', [1], [])).toEqual(['pat:n-juseyo']);
     expect(masteryDenominator(items, 'episode:stage3-life', [1, 2], [])).toEqual([]);
   });
 });

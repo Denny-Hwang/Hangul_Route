@@ -197,6 +197,7 @@ function discoverItem(c: Collector, item: Rec, questId: string, path: string, at
   const k = (field: string): string => `${questId}#${path}.${field}`;
   switch (item.type) {
     case 'jamo':
+      // The symbol is the item; its example word illustrates it and is no item (§4.2 decision record).
       if (typeof item.jamoId === 'string') c.symbol(item.jamoId, 'discover', at);
       return;
     case 'word':
@@ -206,6 +207,7 @@ function discoverItem(c: Collector, item: Rec, questId: string, path: string, at
       c.text(item.sentence, 'pat', 'discover', at, { glossKey: k('sentence.gloss'), picture: str(item.picture) });
       return;
     case 'pattern':
+      // The frame is the item; its examples illustrate it and are no items (§4.2 decision record).
       c.text(item.frame, 'pat', 'discover', at, { glossKey: k('frame.gloss') });
       return;
     case 'exchange': {
@@ -286,10 +288,23 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
       if (typeof realia.ref === 'string') {
         c.realia(realia.ref, shown, { en: str(realia.altEn), glossKey: k('realiaRead.realia.alt') }, 'round', `${at}.realia`);
       }
+      // A round's key word is one of the card's entries (its text or its value): glossed at that entry's field.
+      const entries = arr(realia.entries).filter(isRec);
+      const entryKey = (shownKey: unknown): string | undefined => {
+        if (!isRec(shownKey)) return undefined;
+        const [ko, en] = [normalizeKo(String(shownKey.ko ?? '')), str(shownKey.en)];
+        for (const [ei, entry] of entries.entries()) {
+          for (const field of ['text', 'value'] as const) {
+            const t = entry[field];
+            if (isRec(t) && normalizeKo(String(t.ko ?? '')) === ko && str(t.en) === en) return k(`realiaRead.realia.entries.${key(entry, ei)}.${field}.gloss`);
+          }
+        }
+        return undefined;
+      };
       rounds.forEach((round, ri) => {
         const rid = key(round, ri);
         const where = `${at}.rounds[${ri}]`;
-        c.text(round.key, 'loose', 'round', `${where}.key`);
+        c.text(round.key, 'loose', 'round', `${where}.key`, { glossKey: entryKey(round.key) });
         const answer = arr(round.options).filter(isRec).find((o) => o.id === round.answerId);
         if (answer !== undefined) {
           c.text(answer.text, 'loose', 'round', `${where}.answer`, { glossKey: k(`realiaRead.rounds.${rid}.options.${key(answer, 0)}.text.gloss`) });
@@ -407,8 +422,9 @@ function stage1Scope(c: Collector, ref: string, scope: Rec, at: string): void {
 }
 
 /**
- * The Stage 1 occurrences: each symbol where a Discover page teaches it, and the symbols,
- * syllable blocks and words of every scored round. Cells are the Stage 1 grid cells
+ * The Stage 1 occurrences: each Discover item (a symbol, or a word with its gloss at the quest's
+ * overlay field, as the lesson cells read theirs), and the symbols, syllable blocks and words of
+ * every scored round. A letter's example word illustrates the letter and is no item. Cells are the Stage 1 grid cells
  * (`episode:stage1-<theme>`). Read by the parity test from the live TypeScript; the build reads
  * the frozen copy (`stage1-items.json`).
  */
@@ -424,7 +440,7 @@ export function stage1Occurrences(data: Stage1Data): ItemOccurrence[] {
       const at = `${quest.id} steps[${si}]`;
       arr(isRec(step.discover) ? step.discover.pages : []).filter(isRec).forEach((page, pi) => {
         arr(page.items).filter(isRec).forEach((item, ii) => {
-          if (item.type === 'jamo' && typeof item.jamoId === 'string') c.symbol(item.jamoId, 'discover', `${at}.discover.pages[${pi}].items[${ii}]`);
+          discoverItem(c, item, quest.id, `steps.${key(step, si)}.discover.pages.${pi}.items.${ii}`, `${at}.discover.pages[${pi}].items[${ii}]`);
         });
       });
       if (!SCORED_STEPS.has(String(step.kind)) || typeof step.minigameRef !== 'string') return;

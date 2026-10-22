@@ -1,6 +1,7 @@
 import { LESSON_FILE_RE, PACK_FILE_RE, PACK_LEVEL_NAME_RE, STORY_FILE_RE } from '../lesson-lint-items';
 import type { ThemeKey } from '../schemas/heritage-card';
 import type { LessonSource } from './extract';
+import { cellOfVolume } from './review-item';
 import type { SenseGroup, TopicWord } from './stable-ids';
 import type { StorySource } from './build';
 
@@ -31,7 +32,7 @@ export function lessonSourcesOfTree(tree: ReadonlyMap<string, unknown>): LessonS
     if (cell !== null) {
       const [, stage, theme, v] = cell as unknown as [string, string, ThemeKey, string | undefined];
       const volume = v !== undefined ? Number(v) : typeof body.volume === 'number' ? body.volume : 1;
-      out.push({ file, body, cellId: `episode:stage${stage}-${theme}${volume >= 2 ? `-v${volume}` : ''}`, stage: Number(stage), home: theme, volume });
+      out.push({ file, body, cellId: cellOfVolume(`episode:stage${stage}-${theme}`, volume), stage: Number(stage), home: theme, volume });
       continue;
     }
     const pack = PACK_FILE_RE.exec(file);

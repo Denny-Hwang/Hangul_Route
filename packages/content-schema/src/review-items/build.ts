@@ -80,7 +80,7 @@ export function allOccurrences(sources: Pick<ReviewItemSources, 'stage1' | 'less
 }
 
 export function reviewItemsOf(sources: ReviewItemSources): ReviewItemsBuild {
-  return buildReviewItems(allOccurrences(sources), sources.snapshot, vocabIndex(sources.topicWords, sources.senseGroups));
+  return buildReviewItems(allOccurrences(sources), sources.snapshot, vocabIndex(sources.topicWords, sources.senseGroups), sources.stage1.symbols);
 }
 
 // ---- the committed files, one entry per line (small diffs, few conflicts) -----------------------------
