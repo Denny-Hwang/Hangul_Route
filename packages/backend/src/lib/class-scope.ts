@@ -1,4 +1,4 @@
-import { CLASS_SCOPE_TEXT_VERSION, TRANSFER_CONSENT_TEXT_VERSION, isFullScopeVersion, type ClassScope, type NotesMode, type SpaceKind } from '@hangul-route/content-schema';
+import { CLASS_SCOPE_TEXT_VERSION, TRANSFER_CONSENT_TEXT_VERSION, classScopeRank, type ClassScope, type NotesMode, type SpaceKind } from '@hangul-route/content-schema';
 import type { Db, StoredClassScopeAck } from '../db';
 
 /**
@@ -17,20 +17,30 @@ export function classScopeFullEnabled(env: ClassScopeEnv | undefined): boolean {
 }
 
 /**
+ * What a roster or report reader may read of one learner: the [TV] scope, and whether the memory counts
+ * (`summary.memory`, F-CURR-002 row CM-16) are open to it, which needs an acknowledgement at a text that lists the
+ * `memory` item (`MEMORY_SCOPE_TEXT_VERSIONS`). A family always reads both.
+ */
+export interface LearnerReadScope {
+  scope: ClassScope;
+  memory: boolean;
+}
+
+/**
  * [TV] The per-learner scope of a roster or report reader (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER
  * section 2): a family is always `full`; a class or school is `full` for a learner whose family
- * acknowledged the class-scope update at a full-scope version (TV-D4), else `base`. One set-based
- * read per request, whatever the class size. With the switch off, or when the acknowledgement read fails (for example a
- * Worker that runs before migration 0009), a class or school reads `base` for everyone: closed for privacy, open for
- * availability.
+ * acknowledged the class-scope update at a full-scope version (TV-D4), else `base`, and reads the memory counts only
+ * at a memory-scope version (row CM-16). One set-based read per request, whatever the class size. With the switch
+ * off, or when the acknowledgement read fails (for example a Worker that runs before migration 0009), a class or
+ * school reads `base` for everyone: closed for privacy, open for availability.
  */
-export async function learnerScopes(db: Db, kind: SpaceKind, learnerIds: readonly string[], env?: ClassScopeEnv): Promise<Map<string, ClassScope>> {
-  const out = new Map<string, ClassScope>();
+export async function learnerReadScopes(db: Db, kind: SpaceKind, learnerIds: readonly string[], env?: ClassScopeEnv): Promise<Map<string, LearnerReadScope>> {
+  const out = new Map<string, LearnerReadScope>();
   if (kind === 'family') {
-    for (const id of learnerIds) out.set(id, 'full');
+    for (const id of learnerIds) out.set(id, { scope: 'full', memory: true });
     return out;
   }
-  for (const id of learnerIds) out.set(id, 'base');
+  for (const id of learnerIds) out.set(id, { scope: 'base', memory: false });
   if (learnerIds.length === 0 || !classScopeFullEnabled(env)) return out;
   let acks: StoredClassScopeAck[];
   try {
@@ -38,13 +48,27 @@ export async function learnerScopes(db: Db, kind: SpaceKind, learnerIds: readonl
   } catch {
     return out;
   }
-  for (const ack of acks) if (isFullScopeVersion(ack.textVersion)) out.set(ack.learnerId, 'full');
+  for (const ack of acks) {
+    const rank = classScopeRank(ack.textVersion);
+    if (rank > 0) out.set(ack.learnerId, { scope: 'full', memory: rank === 2 });
+  }
   return out;
+}
+
+/** The [TV] scope alone, per learner (`learnerReadScopes` without the memory flag). */
+export async function learnerScopes(db: Db, kind: SpaceKind, learnerIds: readonly string[], env?: ClassScopeEnv): Promise<Map<string, ClassScope>> {
+  const scopes = await learnerReadScopes(db, kind, learnerIds, env);
+  return new Map([...scopes].map(([id, read]) => [id, read.scope]));
+}
+
+/** What a reader of `kind` may read of one learner. */
+export async function learnerReadScope(db: Db, kind: SpaceKind, learnerId: string, env?: ClassScopeEnv): Promise<LearnerReadScope> {
+  return (await learnerReadScopes(db, kind, [learnerId], env)).get(learnerId) ?? { scope: 'base', memory: false };
 }
 
 /** The scope of one learner for a viewer of `kind`. */
 export async function learnerScope(db: Db, kind: SpaceKind, learnerId: string, env?: ClassScopeEnv): Promise<ClassScope> {
-  return (await learnerScopes(db, kind, [learnerId], env)).get(learnerId) ?? 'base';
+  return (await learnerReadScope(db, kind, learnerId, env)).scope;
 }
 
 /**
@@ -58,21 +82,32 @@ export async function learnerSettingsOf(db: Db, learnerId: string): Promise<{ cl
 
 /**
  * Writes a learner's acknowledgement (TV-D4) and answers it. A newer acknowledgement replaces an older one;
- * an acknowledgement at a version that opens less than the stored one never replaces it.
+ * an acknowledgement at a version that opens less than the stored one (`classScopeRank`) never replaces it.
  */
 export async function recordClassScopeAck(db: Db, input: Omit<StoredClassScopeAck, 'ackedAt'>, now: Date): Promise<StoredClassScopeAck> {
   const stored = await db.getClassScopeAck(input.learnerId);
-  if (stored && isFullScopeVersion(stored.textVersion) && !isFullScopeVersion(input.textVersion)) return stored;
+  if (stored && classScopeRank(stored.textVersion) > classScopeRank(input.textVersion)) return stored;
   const ack: StoredClassScopeAck = { ...input, ackedAt: now.toISOString() };
   await db.putClassScopeAck(ack);
   return ack;
 }
 
 /**
- * A guardian's consent to a family-started class move recorded at the current transfer text also acknowledges
- * the class-scope update ([TV] TV-D4): that sheet lists every full-scope item. A consent at an older text does not.
+ * The class-scope text each transfer text also acknowledges: the current one lists every full-scope item, so it
+ * stands for the current class-scope text; `transfer-2026-10d` listed every one but the `memory` item (row CM-16), so
+ * it stands for `class-scope-2026-10`, the full scope without the memory counts. An older text acknowledges nothing.
+ */
+const CLASS_SCOPE_OF_TRANSFER_TEXT: Readonly<Record<string, string>> = {
+  [TRANSFER_CONSENT_TEXT_VERSION]: CLASS_SCOPE_TEXT_VERSION,
+  'transfer-2026-10d': 'class-scope-2026-10',
+};
+
+/**
+ * A guardian's consent to a family-started class move also acknowledges the class-scope update ([TV] TV-D4) that
+ * its sheet listed in full (`CLASS_SCOPE_OF_TRANSFER_TEXT`). A consent at an older text does not.
  */
 export async function ackFromTransferConsent(db: Db, learnerId: string, accountId: string, textVersion: string, now: Date): Promise<void> {
-  if (textVersion !== TRANSFER_CONSENT_TEXT_VERSION) return;
-  await recordClassScopeAck(db, { learnerId, textVersion: CLASS_SCOPE_TEXT_VERSION, basis: 'caregiver', evidence: accountId }, now);
+  const version = CLASS_SCOPE_OF_TRANSFER_TEXT[textVersion];
+  if (version === undefined) return;
+  await recordClassScopeAck(db, { learnerId, textVersion: version, basis: 'caregiver', evidence: accountId }, now);
 }

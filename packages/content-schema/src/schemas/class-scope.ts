@@ -23,10 +23,19 @@ import { TEACHER_VISIBLE_ITEM_IDS, TRANSFER_CONSENT_TEXT, type TeacherVisibleIte
 // ---------------------------------------------------------------------------
 // Versions and scope
 
-/** Bump when any class-scope line changes (a test pins a hash per locale). */
-export const CLASS_SCOPE_TEXT_VERSION = 'class-scope-2026-10';
-/** Versions whose acknowledgement opens the full scope (TV-D4). A later text that shows more leaves earlier ones out. */
-export const FULL_SCOPE_TEXT_VERSIONS: readonly string[] = ['class-scope-2026-10'];
+/**
+ * Bump when any class-scope line or listed item changes (a test pins a hash per locale).
+ * `class-scope-2026-10b`: the list names the `memory` item (F-CURR-002 section 4.8, row CM-16).
+ */
+export const CLASS_SCOPE_TEXT_VERSION = 'class-scope-2026-10b';
+/**
+ * Versions whose acknowledgement opens the full scope (TV-D4). A later text that shows more keeps the earlier ones
+ * here when it only adds an item, and names the versions that open the new item on their own list
+ * (`FULL_SCOPE_KEY_VERSIONS`): a family that read the earlier text keeps what it agreed to, nothing more.
+ */
+export const FULL_SCOPE_TEXT_VERSIONS: readonly string[] = ['class-scope-2026-10b', 'class-scope-2026-10'];
+/** Versions whose text lists the `memory` item (row CM-16): only these open `summary.memory` to a class or school. */
+export const MEMORY_SCOPE_TEXT_VERSIONS: readonly string[] = ['class-scope-2026-10b'];
 
 export const ClassScopeSchema = z.enum(['base', 'full']);
 export type ClassScope = z.infer<typeof ClassScopeSchema>;
@@ -37,6 +46,20 @@ export type ClassScopeBasis = z.infer<typeof ClassScopeBasisSchema>;
 /** Whether an acknowledgement recorded at `version` opens the full scope. */
 export function isFullScopeVersion(version: string | null | undefined): boolean {
   return typeof version === 'string' && FULL_SCOPE_TEXT_VERSIONS.includes(version);
+}
+
+/** Whether an acknowledgement recorded at `version` also opens the memory counts (its text listed the `memory` item). */
+export function isMemoryScopeVersion(version: string | null | undefined): boolean {
+  return typeof version === 'string' && MEMORY_SCOPE_TEXT_VERSIONS.includes(version);
+}
+
+/**
+ * How much an acknowledgement opens: 2 the full scope with the memory counts, 1 the full scope, 0 nothing. A stored
+ * acknowledgement is replaced only by one that opens at least as much.
+ */
+export function classScopeRank(version: string | null | undefined): 0 | 1 | 2 {
+  if (isMemoryScopeVersion(version)) return 2;
+  return isFullScopeVersion(version) ? 1 : 0;
 }
 
 /** The body of both acknowledgement routes (console and device). */
@@ -50,7 +73,7 @@ export type ClassScopeAckBody = z.infer<typeof ClassScopeAckBodySchema>;
  * Summary keys a class or school reads only at full scope; a family reads them always.
  * Each is on `TEACHER_HIDDEN_SUMMARY_KEYS` too, which keeps meaning "hidden at base scope".
  */
-export const TEACHER_FULL_SCOPE_EXTRA_KEYS = ['vocab', 'stage1Anchor', 'selfRoute', 'routeGoal'] as const;
+export const TEACHER_FULL_SCOPE_EXTRA_KEYS = ['vocab', 'stage1Anchor', 'selfRoute', 'routeGoal', 'memory'] as const;
 export type TeacherFullScopeKey = Extract<(typeof TEACHER_FULL_SCOPE_EXTRA_KEYS)[number], keyof ProgressSummary>;
 
 /** The consent item that names each full-scope key (generated lists, never typed per sheet). */
@@ -59,6 +82,15 @@ export const TEACHER_FULL_SCOPE_ITEMS: Readonly<Record<TeacherFullScopeKey, Teac
   stage1Anchor: 'letter_check',
   selfRoute: 'own_route',
   routeGoal: 'own_route',
+  memory: 'memory',
+};
+
+/**
+ * Full-scope keys that need an acknowledgement at a later text than the rest (the text that first listed their item).
+ * A family always reads them; a class or school reads them only for a learner acknowledged at one of these versions.
+ */
+export const FULL_SCOPE_KEY_VERSIONS: Readonly<Partial<Record<TeacherFullScopeKey, readonly string[]>>> = {
+  memory: MEMORY_SCOPE_TEXT_VERSIONS,
 };
 
 /** Learner settings a full-scope teacher reads on the learner report (TV-D12), and the item that names them. */

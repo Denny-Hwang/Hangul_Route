@@ -283,11 +283,22 @@ export function classReport(input: ClassReportInput): ClassReport {
   let checks = 0;
 
   let notSaved = 0;
+  // F-CURR-002 CM-16: current memory counts, summed; a member without the block (an older app, `memoryRecord` off, or
+  // not at the memory scope) adds nothing and is not counted in `memory.learners`.
+  const memory = { learners: 0, wordsKnown: 0, readyToRefresh: 0, levels: [0, 0, 0] as [number, number, number], stageChecks: 0 };
   for (const { summary, lastSyncedAt, joinedAt } of input.learners) {
     // A device that never saved progress here: a member, "not saved", never "did not practice"; never "last saved
     // more than 7 days ago" either (it never saved).
     if (summary === null) continue;
     if (staleOf(summary, lastSyncedAt, clock)) notSaved7d += 1;
+    if (summary.memory) {
+      const m = summary.memory;
+      memory.learners += 1;
+      memory.wordsKnown += m.wordsKnown;
+      memory.readyToRefresh += m.readyToRefresh;
+      memory.levels = [memory.levels[0] + m.cellBestCounts[0], memory.levels[1] + m.cellBestCounts[1], memory.levels[2] + m.cellBestCounts[2]];
+      memory.stageChecks += m.stageChecks;
+    }
     for (const letter of new Set(summary.needsPractice ?? [])) if (ReportLetterSchema.safeParse(letter).success) add(revisit, letter);
     const placement = summary.placement;
     if (placement) {
@@ -366,5 +377,6 @@ export function classReport(input: ClassReportInput): ClassReport {
     },
     levelCheck: checks > 0 ? strands : [],
     plans,
+    ...(memory.learners > 0 ? { memory } : {}),
   };
 }

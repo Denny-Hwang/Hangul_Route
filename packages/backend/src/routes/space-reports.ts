@@ -9,11 +9,13 @@ import {
   type LearnerReportResponse,
   type ReportSummary,
 } from '@hangul-route/content-schema';
+import { topDueOf, type ClassProgressCounts, type LearningSummaryResponse } from '@hangul-route/content-schema/learning-summary';
 import { Hono } from 'hono';
+import type { Db } from '../db';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
-import { learnerScope, learnerScopes, learnerSettingsOf, type ClassScopeEnv } from '../lib/class-scope';
-import { rosterSummary, type FamilyVisibleSummary } from '../lib/roster-summary';
+import { learnerReadScope, learnerReadScopes, learnerSettingsOf, type ClassScopeEnv } from '../lib/class-scope';
+import { memoryFor, rosterSummary, type FamilyVisibleSummary } from '../lib/roster-summary';
 import { recordServerEvent } from '../lib/server-events';
 import { findSpace, publicSpace, requireCan, rosterName } from './spaces';
 
@@ -92,7 +94,7 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
   if (!membership || !learner) return fail(c, 'not_member', 'This learner is not in this space', 404);
   const planIds = new Set(plans.map((p) => p.id));
   // [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2: the learner report is a student's detail view (firstTryRate kept); the scope decides the rest.
-  const scope = await learnerScope(db, space.kind, learner.id, c.env);
+  const { scope, memory } = await learnerReadScope(db, space.kind, learner.id, c.env);
   const body: LearnerReportResponse = {
     space: publicSpace(space),
     // No ageGroup: no report block uses it (section 3.8, data minimisation).
@@ -104,7 +106,8 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
       lastActiveAt: learner.lastActiveAt,
     },
     // The roster's projection for this kind and this membership: selfRoute for a family only, no activity day before joinedAt for a class.
-    summary: reportSummaryOf(rosterSummary(stored?.summary, planIds, space.kind, { joinedAt: membership.joinedAt, scope, detail: true })),
+    // F-CURR-002 CM-16: the memory counts where the acknowledged text listed them (a family always).
+    summary: reportSummaryOf(rosterSummary(stored?.summary, planIds, space.kind, { joinedAt: membership.joinedAt, scope, memory, detail: true })),
     lastSyncedAt: stored?.updatedAt ?? null,
     serverTime: new Date().toISOString(),
     scope,
@@ -151,13 +154,14 @@ spaceReportRoutes.get('/:id/class-report', async (c) => {
   const [learnerIds, stored] = await Promise.all([db.learnersOf(memberIds), db.summariesOf(memberIds)]);
   const summaries = new Map(stored.map((row) => [row.learnerId, row]));
   // [TV] each learner counts with its own scope, so a base-scope learner's words never reach a class total
-  const scopes = await learnerScopes(db, space.kind, learnerIds, c.env);
+  const scopes = await learnerReadScopes(db, space.kind, learnerIds, c.env);
   // planProgress keeps this class's own plans only (archived ones included), as on the roster.
   const planIds = new Set(plans.map((p) => p.id));
   const learners = learnerIds.map((learnerId) => {
     const row = summaries.get(learnerId);
     const joined = joinedAt.get(learnerId) ?? null;
-    return { summary: reportSummaryOf(rosterSummary(row?.summary, planIds, space.kind, { joinedAt: joined, scope: scopes.get(learnerId) })), lastSyncedAt: row?.updatedAt ?? null, joinedAt: joined };
+    const read = scopes.get(learnerId);
+    return { summary: reportSummaryOf(rosterSummary(row?.summary, planIds, space.kind, { joinedAt: joined, scope: read?.scope, memory: read?.memory })), lastSyncedAt: row?.updatedAt ?? null, joinedAt: joined };
   });
 
   const period = reportPeriodOf(c.req.query('period'));
@@ -175,6 +179,67 @@ spaceReportRoutes.get('/:id/class-report', async (c) => {
   };
   if (c.req.method === 'GET') recordServerEvent('report.viewed', { scope: 'class', space: space.kind, period });
   // A class's progress never sits in a shared browser's HTTP cache.
+  c.header('Cache-Control', 'no-store');
+  return ok(c, body);
+});
+
+/**
+ * Class-scoped learners' counts-only class progress (`POST /api/sync/learners/:id/class-progress`, F-CURR-002
+ * section 7.6, row CM-62). That route is not built yet, so nothing is stored and every learner reads null: row CM-62
+ * fills this read (one set-based select for the members) and the learning summary below counts its `topDue` ids
+ * for the class tablets that keep their memory on the device.
+ */
+export async function classProgressOf(_db: Db, _spaceId: string, _learnerIds: readonly string[]): Promise<ReadonlyMap<string, ClassProgressCounts>> {
+  return new Map();
+}
+
+/**
+ * GET /api/spaces/:id/learning-summary
+ *
+ * The teacher read route of F-CURR-002 section 8 (row CM-16): each learner's `memory` block (words known, items
+ * ready to refresh, episodes per mastery level, Stage Checks, week points, up to 8 due item ids) and a class
+ * aggregate, the items due for the most learners with how many have each one due, for `class-review` (row CM-63).
+ * It returns no item state, no answer history and no name.
+ *
+ * Who: whoever may read the space's progress summaries, the action the roster and the reports read
+ * (`summary.read`: a family caregiver or owner, a class teacher or owner, a school admin over the class; read-only,
+ * archived spaces included, section 4.9: grown-ups read and never write). Section 8 names `snapshot.read`, but
+ * `can.ts` never grants that action to a class role (a teacher never reads the saved progress itself), so it would
+ * shut out the teacher this route is for; the block is part of the summary, which `summary.read` covers. Each
+ * learner's block is projected for its own reader (`memoryFor`): a family reads every block; a class or school reads
+ * a block only where the family acknowledged the class-scope text that lists the `memory` item, and any other
+ * learner reads `memory: null` and adds nothing to the aggregate. A school has no learners of its own: 409
+ * `wrong_kind` (its admin opens the class's).
+ */
+spaceReportRoutes.get('/:id/learning-summary', async (c) => {
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const account = await requireCan(c, db, space, 'summary.read');
+  if (!('id' in account)) return account;
+  if (space.kind === 'school') return fail(c, 'wrong_kind', 'A school has no learning summary; open the class', 409);
+
+  const memberIds = (await db.membersOf(space.id)).filter((m) => m.memberKind === 'learner').map((m) => m.memberId);
+  const [learnerIds, stored] = await Promise.all([db.learnersOf(memberIds), db.summariesOf(memberIds)]);
+  const summaries = new Map(stored.map((row) => [row.learnerId, row.summary]));
+  const [scopes, progress] = await Promise.all([learnerReadScopes(db, space.kind, learnerIds, c.env), classProgressOf(db, space.id, learnerIds)]);
+  // In id order: the list never follows anyone's activity or figures.
+  const learners = [...learnerIds].sort().map((learnerId) => {
+    const read = scopes.get(learnerId);
+    return { learnerId, memory: memoryFor(summaries.get(learnerId), space.kind, { scope: read?.scope, memory: read?.memory }), classProgress: progress.get(learnerId) ?? null };
+  });
+  const counted = learners.filter((row) => row.memory !== null || row.classProgress !== null);
+  const body: LearningSummaryResponse = {
+    space: publicSpace(space),
+    learners,
+    class: {
+      learners: learners.length,
+      counted: counted.length,
+      topDue: topDueOf(counted.map((row) => [...(row.memory?.topDue ?? []), ...(row.classProgress?.topDue ?? [])])),
+    },
+    serverTime: new Date().toISOString(),
+  };
+  // A learner's progress never sits in a shared browser's HTTP cache.
   c.header('Cache-Control', 'no-store');
   return ok(c, body);
 });

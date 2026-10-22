@@ -543,6 +543,49 @@ describe('the class-scope update (TV-D2 to TV-D5)', () => {
     expect((await createTransfer(FAMILY, 'mom', { learnerId: SUNI, fromSpaceId: A, destinationSpaceId: B, code: CODE_B, consent: { ...consent, textVersion: 'transfer-2026-10c' } })).status).toBe(201);
     expect(await db.getClassScopeAck(SUNI)).toBeNull();
   });
+
+  it('F-CURR-002 CM-16: a consent at the 10d transfer text (every item but memory) acknowledges the 10 class-scope text', async () => {
+    expect((await createTransfer(FAMILY, 'mom', { learnerId: SUNI, fromSpaceId: A, destinationSpaceId: B, code: CODE_B, consent: { ...consent, textVersion: 'transfer-2026-10d' } })).status).toBe(201);
+    expect(await db.getClassScopeAck(SUNI)).toMatchObject({ textVersion: 'class-scope-2026-10', basis: 'caregiver', evidence: 'mom' });
+  });
+
+  describe('F-CURR-002 CM-16: the memory counts need the text that lists them', () => {
+    const memory = { wordsKnown: 30, readyToRefresh: 4, cellBestCounts: [3, 1, 0] as [number, number, number], stageChecks: 0, weekPoints: 8, topDue: ['lex:sagwa'] };
+    beforeEach(async () => {
+      await db.putSnapshot({ learnerId: SUNI, rev: 2, schemaVer: 1, contentVer: 'c', deviceId: PHONE, summary: { ...summary, memory }, payload: {}, updatedAt: NOW.toISOString() }, 1);
+    });
+    const earlierAck = () => db.putClassScopeAck({ learnerId: SUNI, textVersion: 'class-scope-2026-10', basis: 'caregiver', evidence: 'mom', ackedAt: OLD });
+
+    it('an acknowledgement at the 10 text keeps the full scope without the memory counts, and asks for the update again', async () => {
+      await earlierAck();
+      const row = await rosterRow(A, 'teacher-a');
+      expect(row?.scope).toBe('full');
+      expect(row?.summary).toHaveProperty('vocab');
+      expect(row?.summary).not.toHaveProperty('memory');
+      expect((await get(`/api/spaces/${FAMILY}/class-scope`, 'mom')).body.data).toEqual({ current: CLASS_SCOPE_TEXT_VERSION, learners: [{ learnerId: SUNI, name: 'Suni Kim', needed: true }] });
+      const inbox = (await call('GET', `/api/sync/learners/${SUNI}/inbox`, device(PHONE, PHONE_SECRET))).body.data;
+      expect(inbox?.classScope).toEqual({ needed: true, current: CLASS_SCOPE_TEXT_VERSION });
+      // The family always reads them.
+      const family = (await get(`/api/spaces/${FAMILY}/roster`, 'mom')).body.data as { learners: Array<{ id: string; summary: Record<string, unknown> }> };
+      expect(family.learners.find((l) => l.id === SUNI)?.summary.memory).toEqual(memory);
+    });
+
+    it('the current text opens them on the roster and the report', async () => {
+      await earlierAck();
+      expect((await ack('mom')).status).toBe(200);
+      expect((await rosterRow(A, 'teacher-a'))?.summary.memory).toEqual(memory);
+      expect(((await get(`/api/spaces/${A}/learners/${SUNI}/report`, 'teacher-a')).body.data as { summary: Record<string, unknown> }).summary.memory).toEqual(memory);
+      expect((await get(`/api/spaces/${FAMILY}/class-scope`, 'mom')).body.data).toMatchObject({ learners: [{ learnerId: SUNI, needed: false }] });
+    });
+
+    it('an acknowledgement that opens less never replaces one that opens more', async () => {
+      expect((await ack('mom')).status).toBe(200);
+      const { recordClassScopeAck } = await import('../lib/class-scope');
+      const kept = await recordClassScopeAck(db, { learnerId: SUNI, textVersion: 'class-scope-2026-10', basis: 'device', evidence: PHONE }, NOW);
+      expect(kept.textVersion).toBe(CLASS_SCOPE_TEXT_VERSION);
+      expect(await db.getClassScopeAck(SUNI)).toMatchObject({ textVersion: CLASS_SCOPE_TEXT_VERSION, basis: 'caregiver' });
+    });
+  });
 });
 
 describe('telemetry for teacher moves and the update keeps codes only (section 4.4)', () => {

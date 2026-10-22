@@ -13,7 +13,9 @@ import {
   ClassMoveIdSchema,
   ClassMovePreviewBodySchema,
   ClassScopeAckBodySchema,
+  FULL_SCOPE_KEY_VERSIONS,
   FULL_SCOPE_TEXT_VERSIONS,
+  MEMORY_SCOPE_TEXT_VERSIONS,
   ProgressSummarySchema,
   SyncInboxSchema,
   TEACHER_FULL_SCOPE_EXTRA_KEYS,
@@ -25,22 +27,41 @@ import {
   TRANSFER_CONSENT_LOCALES,
   TRANSFER_CONSENT_TEXT,
   classScopeItems,
+  classScopeRank,
   isFullScopeVersion,
+  isMemoryScopeVersion,
   type ClassScopeLineId,
   type TransferConsentLocale,
 } from '../index';
 
-/** Pinned hash of the class-scope text per version and locale: edit a word, bump CLASS_SCOPE_TEXT_VERSION. */
+/**
+ * Pinned hash of the class-scope text per version and locale: edit a word or list one more item, bump
+ * CLASS_SCOPE_TEXT_VERSION. From `class-scope-2026-10b` the hash also covers the generated list (`classScopeItems`), so
+ * a new consent item cannot reach the list without a bump; `class-scope-2026-10` was pinned over its lines and own items.
+ */
 const PINNED: Record<string, Record<TransferConsentLocale, string>> = {
   'class-scope-2026-10': {
     en: 'cc00edaebcdcedbeef4287e2d9ac9abcdf7b8e127fa67d1c30896c384f2d116d',
     ko: '691424a8a69d2b01bd75a91929ccc095096958a4daa6046e9fa2e6ba77f3caa8',
     es: '48ca589628c8f4e8e57a4c8abfa3c2372a777ff31f37a6b7b8ff40ead980b611',
   },
+  // F-CURR-002 CM-16: the list names the memory item; the lines are the 10 text's.
+  'class-scope-2026-10b': {
+    en: 'b1d4c2a835f87ae7816d122c8506d28c37cdb05fdb7d294b6ee0851159e000f1',
+    ko: 'c1c458dc3757bb5ea82e0aaed8ab99db242519c192cf5cc6bef04a37479620c9',
+    es: '284618104c8036422eac95a2a9c162a61bed4b1cebfb10427675cc0b17791ffb',
+  },
 };
 
 const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
-const canonical = (locale: TransferConsentLocale): string => JSON.stringify({ lines: CLASS_SCOPE_LINE_IDS.map((id) => [id, CLASS_SCOPE_TEXT[locale].lines[id]]), items: CLASS_SCOPE_TEXT[locale].items });
+/** The lines and the own items: what `class-scope-2026-10` pinned. */
+const linesOnly = (locale: TransferConsentLocale): string => JSON.stringify({ lines: CLASS_SCOPE_LINE_IDS.map((id) => [id, CLASS_SCOPE_TEXT[locale].lines[id]]), items: CLASS_SCOPE_TEXT[locale].items });
+const canonical = (locale: TransferConsentLocale): string =>
+  JSON.stringify({
+    lines: CLASS_SCOPE_LINE_IDS.map((id) => [id, CLASS_SCOPE_TEXT[locale].lines[id]]),
+    items: CLASS_SCOPE_TEXT[locale].items,
+    list: classScopeItems(locale).map((item) => [item.id, item.text]),
+  });
 const placeholders = (s: string): string[] => [...s.matchAll(/\{([a-z]+)\}/g)].map((m) => m[1] as string).sort();
 function sentenceWordCounts(text: string): number[] {
   return text
@@ -51,10 +72,20 @@ function sentenceWordCounts(text: string): number[] {
 }
 
 describe('[TV] class-scope versions', () => {
-  it('has one current version that opens the full scope', () => {
-    expect(CLASS_SCOPE_TEXT_VERSION).toBe('class-scope-2026-10');
-    expect(FULL_SCOPE_TEXT_VERSIONS).toEqual(['class-scope-2026-10']);
+  it('has one current version that opens the full scope, and keeps the earlier one opening what its text listed', () => {
+    expect(CLASS_SCOPE_TEXT_VERSION).toBe('class-scope-2026-10b');
+    expect(FULL_SCOPE_TEXT_VERSIONS).toEqual(['class-scope-2026-10b', 'class-scope-2026-10']);
+    expect(MEMORY_SCOPE_TEXT_VERSIONS).toEqual(['class-scope-2026-10b']);
+    expect(FULL_SCOPE_KEY_VERSIONS).toEqual({ memory: MEMORY_SCOPE_TEXT_VERSIONS });
     expect(isFullScopeVersion(CLASS_SCOPE_TEXT_VERSION)).toBe(true);
+    expect(isFullScopeVersion('class-scope-2026-10')).toBe(true);
+    expect(isMemoryScopeVersion(CLASS_SCOPE_TEXT_VERSION)).toBe(true);
+    expect(isMemoryScopeVersion('class-scope-2026-10')).toBe(false);
+    expect(isMemoryScopeVersion(null)).toBe(false);
+    expect(classScopeRank(CLASS_SCOPE_TEXT_VERSION)).toBe(2);
+    expect(classScopeRank('class-scope-2026-10')).toBe(1);
+    expect(classScopeRank('class-scope-2025-01')).toBe(0);
+    expect(classScopeRank(undefined)).toBe(0);
     expect(isFullScopeVersion('class-scope-2025-01')).toBe(false);
     expect(isFullScopeVersion(null)).toBe(false);
     expect(isFullScopeVersion(undefined)).toBe(false);
@@ -63,27 +94,37 @@ describe('[TV] class-scope versions', () => {
   it('pins a hash of every locale to the current version', () => {
     for (const locale of TRANSFER_CONSENT_LOCALES) expect(sha256(canonical(locale)), locale).toBe(PINNED[CLASS_SCOPE_TEXT_VERSION]?.[locale]);
   });
+
+  it('class-scope-2026-10b keeps the lines of the 10 text and adds the memory item to its list (F-CURR-002 CM-16)', () => {
+    for (const locale of TRANSFER_CONSENT_LOCALES) {
+      expect(sha256(linesOnly(locale)), locale).toBe(PINNED['class-scope-2026-10']?.[locale]);
+      const list = classScopeItems(locale);
+      expect(list.at(-1), locale).toEqual({ id: 'memory', text: TRANSFER_CONSENT_TEXT[locale].items.memory });
+    }
+  });
 });
 
 describe('[TV] what the full scope adds is classified and named', () => {
   const summaryKeys = Object.keys(ProgressSummarySchema.shape).sort();
 
-  it('classifies every summary key: base, full-scope extra, or never (schemaVersion, and memory until its consent item, F-CURR-002)', () => {
+  it('classifies every summary key: base, full-scope extra, or never (schemaVersion)', () => {
     const base: readonly string[] = TEACHER_VISIBLE_SUMMARY_KEYS;
     const extra: readonly string[] = TEACHER_FULL_SCOPE_EXTRA_KEYS;
-    expect([...base, ...extra, 'schemaVersion', 'memory'].sort()).toEqual(summaryKeys);
+    expect([...base, ...extra, 'schemaVersion'].sort()).toEqual(summaryKeys);
     expect(base.filter((k) => extra.includes(k))).toEqual([]);
   });
 
   it('keeps every full-scope key on the hidden list, which means hidden at base scope', () => {
     const hidden: readonly string[] = TEACHER_HIDDEN_SUMMARY_KEYS;
     for (const key of TEACHER_FULL_SCOPE_EXTRA_KEYS) expect(hidden).toContain(key);
-    expect(hidden.filter((k) => !(TEACHER_FULL_SCOPE_EXTRA_KEYS as readonly string[]).includes(k))).toEqual(['schemaVersion', 'memory']);
+    expect(hidden.filter((k) => !(TEACHER_FULL_SCOPE_EXTRA_KEYS as readonly string[]).includes(k))).toEqual(['schemaVersion']);
   });
 
   it('maps every full-scope key and the learner settings to a consent item', () => {
     expect(Object.keys(TEACHER_FULL_SCOPE_ITEMS).sort()).toEqual([...TEACHER_FULL_SCOPE_EXTRA_KEYS].sort());
-    expect(TEACHER_FULL_SCOPE_ITEMS).toEqual({ vocab: 'words', stage1Anchor: 'letter_check', selfRoute: 'own_route', routeGoal: 'own_route' });
+    expect(TEACHER_FULL_SCOPE_ITEMS).toEqual({ vocab: 'words', stage1Anchor: 'letter_check', selfRoute: 'own_route', routeGoal: 'own_route', memory: 'memory' });
+    // A key with a later text names it on FULL_SCOPE_KEY_VERSIONS, and that text lists its item (row CM-16).
+    for (const versions of Object.values(FULL_SCOPE_KEY_VERSIONS)) for (const version of versions ?? []) expect(FULL_SCOPE_TEXT_VERSIONS).toContain(version);
     expect(TEACHER_VISIBLE_SETTING_FIELDS).toEqual({ classNotes: 'learner_settings' });
     for (const item of [...Object.values(TEACHER_FULL_SCOPE_ITEMS), ...Object.values(TEACHER_VISIBLE_SETTING_FIELDS)]) {
       expect(TEACHER_VISIBLE_ITEM_IDS).toContain(item);

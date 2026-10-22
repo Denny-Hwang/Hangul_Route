@@ -40,5 +40,6 @@ export const TRANSFER_CONSENT_TEXT_KO: TransferConsentText = {
     letter_check: '한글 확인 결과와 어려웠던 글자',
     own_route: '{learner} 학습자가 고른 레슨과 학습 루트 목표',
     learner_settings: '{learner} 학습자가 반에서 쪽지를 받는지 여부',
+    memory: '아는 단어, 에피소드마다 익힌 정도, 통과한 단계 확인. 이번 주 점수와 복습할 때가 된 항목',
   },
 };

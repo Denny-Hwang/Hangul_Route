@@ -1,7 +1,9 @@
 import {
+  MemorySummarySchema,
   TEACHER_VISIBLE_SUMMARY_KEYS,
   type ActivitySummary,
   type ClassScope,
+  type MemorySummary,
   type ProgressSummary,
   type SpaceKind,
   type TeacherVisibleSummaryKey,
@@ -160,13 +162,21 @@ const STAGE1_ANCHOR_KEYS = ['met', 'checkedAt', 'tricky'] as const satisfies rea
 const SELF_ROUTE_KEYS = ['done', 'total', 'notReady', 'weeks', 'endsOn'] as const satisfies readonly (keyof NonNullable<ProgressSummary['selfRoute']>)[];
 const ROUTE_GOAL_KEYS = ['stage', 'from'] as const satisfies readonly (keyof NonNullable<ProgressSummary['routeGoal']>)[];
 
-/** What a full-scope viewer additionally reads of a learner's summary (a family always; [TV] a class or school after the acknowledgement). */
-export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute' | 'routeGoal' | 'vocab' | 'stage1Anchor'>;
+/**
+ * What a full-scope viewer additionally reads of a learner's summary (a family always; [TV] a class or school after
+ * the acknowledgement), and `memory` where the acknowledgement's text listed it (F-CURR-002 row CM-16).
+ */
+export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute' | 'routeGoal' | 'vocab' | 'stage1Anchor' | 'memory'>;
 
 export interface RosterSummaryOptions {
   joinedAt?: string | null;
   /** [TV] The learner's scope for a class or school viewer; ignored for a family (always full). Missing: base. */
   scope?: ClassScope;
+  /**
+   * F-CURR-002 row CM-16: whether a full-scope class or school reader also reads the memory counts (the family
+   * acknowledged a text that lists the `memory` item, `learnerReadScopes`). Ignored for a family (always). Missing: no.
+   */
+  memory?: boolean;
   /** [TV] The learner report (a student's detail view): `vocab.firstTryRate` is kept. The roster never sets it. */
   detail?: boolean;
 }
@@ -186,6 +196,8 @@ export interface RosterSummaryOptions {
  *   counts. `planProgress` keeps the viewing space's own plans for everyone.
  *   `vocab.firstTryRate` reaches the learner report (`detail`) only, never the
  *   roster list (F-VOC-005 section 3.8).
+ * - The memory counts (F-CURR-002 row CM-16): a family always; a full-scope class
+ *   or school only with `memory` (an acknowledgement at a memory-scope version).
  */
 export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, kind: SpaceKind, opts: RosterSummaryOptions = {}): FamilyVisibleSummary | null {
   const viewer: ActivityViewer = { kind, joinedAt: opts.joinedAt, scope: opts.scope };
@@ -200,5 +212,20 @@ export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, ki
     if (!opts.detail) delete vocab.firstTryRate;
     out.vocab = vocab as VocabSummary;
   }
+  const memory = memoryFor(summary, kind, opts);
+  if (memory) out.memory = memory;
   return out;
+}
+
+/**
+ * The memory counts a reader of `kind` may read of a stored summary (F-CURR-002 sections 4.8 and 8, row CM-16): a
+ * family always; a class or school only at full scope with `memory` (an acknowledgement at a memory-scope version).
+ * Checked whole, so only the six known keys leave and a block an older or newer writer shaped differently stays out:
+ * counts and up to 8 content ids, never an item state. Null when absent, unreadable or not open to the reader.
+ */
+export function memoryFor(summary: unknown, kind: SpaceKind, opts: Pick<RosterSummaryOptions, 'scope' | 'memory'> = {}): MemorySummary | null {
+  if (!isPlain(summary)) return null;
+  if (kind !== 'family' && (opts.scope !== 'full' || opts.memory !== true)) return null;
+  const memory = MemorySummarySchema.safeParse(summary.memory);
+  return memory.success ? memory.data : null;
 }
