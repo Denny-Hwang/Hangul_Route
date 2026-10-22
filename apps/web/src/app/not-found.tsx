@@ -13,7 +13,7 @@ export default function NotFoundPage(): JSX.Element {
   const t = getMessages('en').landing;
   return (
     <SiteDocument lang="en">
-      <SiteShell locale="en" page="/">
+      <SiteShell locale="en" page="/" notFound>
         {/* Next's body is a full-screen box; `hr-site-404` sizes it to its content so the links stay on screen. */}
         <div className="hr-site-404">
           <NotFound />

@@ -9,6 +9,8 @@ import { getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { siteMetadata } from '../../data/landing-copy';
 import { HIDDEN_LOCALE_ATTR, siteLocaleParams } from '../../lib/site-locales';
 import { shownSiteLocales } from '../../lib/site-metadata';
+import { languageMenuItems } from '../../components/landing/SiteHeader';
+import { withoutLanguageMenu } from './locale-switcher-html';
 // Every layout and page is imported here, once, and never with a dynamic import inside a test: loading a page
 // pulls in the whole landing graph (i18n dictionaries, content schema, design-system art), and inside a test body
 // that load counted against the 5 s test timeout, which a busy CI runner exceeded. Imported at the top, it runs
@@ -238,8 +240,11 @@ describe('locale pages are the English pages with locale links', () => {
       const enHtml = renderToStaticMarkup(en.default());
       const locHtml = renderToStaticMarkup(loc.default({ params: { locale } }));
       // "Play now" carries the locale to the learner app (`?lang=`, PR 11c).
+      // [SN] The grown-up create and sign-in links carry `lang` from a locale page too (AMENDMENTS-SITE-NEWUSER §3.8).
       const toLocale = (href: string): string =>
-        href === '/'
+        /\/signin\?(mode=create&amp;)?persona=/.test(href)
+          ? `${href}&amp;lang=${locale}`
+          : href === '/'
           ? `/${locale}`
           : ['/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/licenses'].includes(href)
             ? `/${locale}${href}`
@@ -249,8 +254,13 @@ describe('locale pages are the English pages with locale links', () => {
       // The footer's locale switcher (last on the page, once a second locale ships) links the same page in every
       // shown locale, so it is the same list on every locale's page.
       const tail = shownSiteLocales().length > 1 ? shownSiteLocales().length : 0;
-      const enHrefs = hrefs(enHtml);
-      const locHrefs = hrefs(locHtml);
+      // [SN] The header's language control links the same page in every shown locale, like the footer switcher: the
+      // same list on every locale's page (checked here), then read without it.
+      const menuHrefs = (html: string): string[] => hrefs(html.match(/<details class="hr-site-lang[^"]*">[\s\S]*?<\/details>/)?.[0] ?? '');
+      expect(menuHrefs(locHtml)).toEqual(menuHrefs(enHtml));
+      if (tail > 0) expect(menuHrefs(enHtml).length).toBe(languageMenuItems('en', '/').length);
+      const enHrefs = hrefs(withoutLanguageMenu(enHtml));
+      const locHrefs = hrefs(withoutLanguageMenu(locHtml));
       expect(locHrefs.slice(0, locHrefs.length - tail)).toEqual(enHrefs.slice(0, enHrefs.length - tail).map(toLocale));
       expect(locHrefs.slice(locHrefs.length - tail)).toEqual(enHrefs.slice(enHrefs.length - tail));
       if (translated(locale)) {
