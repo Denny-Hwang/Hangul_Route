@@ -431,8 +431,9 @@ for (const lang of ['en', 'es', 'ko'] as const) {
  * its `claims` prop (`forced-claims.ts`; the export keeps the claim off until GU-7). AMENDMENTS-SITE-NEWUSER section
  * 3.11's first screens hold in every locale: at 375 x 812 the two grown-up links and the brand name, at 320 x 568 the
  * header, the h1, the lead and Start learning. The hero line sits right under the facts line, above the grown-up links.
- * The heights and words are recorded (annotations) for GU-7, which re-measures them with the shipped value and changes
- * no budget.
+ * The home stays inside its height and word budgets with the line (es and ko with their 10 % allowance); spec section
+ * 13.2 leaves no budget change open, and pre-approves one fallback at 960 px and wider if this run is over. The values are
+ * recorded (annotations) for GU-7, which re-measures them with the shipped claim.
  */
 for (const lang of ['en', 'es', 'ko'] as const) {
   const t = getMessages(lang).landing;
@@ -505,17 +506,20 @@ for (const lang of ['en', 'es', 'ko'] as const) {
       }
     });
 
-    test('heights and words with the claim on (recorded for GU-7)', async ({ page }) => {
-      for (const [width, height] of [
-        [375, 812],
-        [1280, 800],
+    test('inside the home budgets with the line: height at 375 (headroom) and 1280, visible words', async ({ page }) => {
+      const allow = (value: number): number => (lang === 'en' ? value : Math.round(value * LOCALE_ALLOWANCE[lang]));
+      for (const [width, height, max] of [
+        [375, 812, HOME.phoneHeadroom],
+        [1280, 800, HOME.wideMax],
       ] as const) {
         await page.setViewportSize({ width, height });
         await openForcedHome(page, lang, 'on');
         const scroll = await page.evaluate(() => document.documentElement.scrollHeight);
         const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
-        test.info().annotations.push({ type: `guestLesson on, ${width}`, description: `height ${scroll} px, ${words} words` });
+        test.info().annotations.push({ type: `guestLesson on, ${width}`, description: `height ${scroll} px (budget ${allow(max)}), ${words} words (budget ${allow(HOME.words)})` });
+        expect(scroll, `${width} px tall`).toBeLessThanOrEqual(allow(max));
         expect(words).toBeGreaterThan(50);
+        expect(words, 'visible words').toBeLessThanOrEqual(allow(HOME.words));
       }
     });
   });
