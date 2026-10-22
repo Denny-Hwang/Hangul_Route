@@ -42,15 +42,25 @@ export interface HomePageProps {
 export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: HomePageProps): JSX.Element {
   const t = getMessages(locale).landing;
   const H = t.home;
-  const start = learnerStart(locale);
+  const start = learnerStart(locale, claims);
+  const levelCheck = showsClaim(claims, 'levelCheck', locale);
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2: while Start learning opens the first quest before any profile, step 1
+  // says so (and that the level check, or the name, comes after it) and step 3 ties the backup to adding a name.
+  const guest = showsClaim(claims, 'guestLesson', locale);
   // Step 1 names the level check while its claim is on (F-PLC-001: placement is on for every platform).
   const steps = [
-    { title: H.how.steps.start.title, body: showsClaim(claims, 'levelCheck', locale) ? H.how.levelBody : H.how.steps.start.body },
+    guest
+      ? { title: H.how.steps.start.guestTitle, body: levelCheck ? H.how.guestLevelBody : H.how.guestStartBody }
+      : { title: H.how.steps.start.title, body: levelCheck ? H.how.levelBody : H.how.steps.start.body },
     H.how.steps.quests,
-    { title: H.how.steps.collect.title, body: showsClaim(claims, 'learningRoute', locale) ? H.how.routeBody : H.how.steps.collect.body },
+    {
+      title: H.how.steps.collect.title,
+      // The Learning Route line names no backup, so it needs no guest variant.
+      body: showsClaim(claims, 'learningRoute', locale) ? H.how.routeBody : guest ? H.how.steps.collect.guestBody : H.how.steps.collect.body,
+    },
   ];
   return (
-    <SiteShell locale={locale} page="/">
+    <SiteShell locale={locale} page="/" claims={claims}>
       <section aria-labelledby="home-title" className="hr-site-hero" style={{ display: 'grid' }}>
         <div>
           <h1 id="home-title" className="hr-site-h1" style={{ margin: 0, lineHeight: typography.leading.tight, color: colors.text.primary }}>
@@ -67,6 +77,22 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
           </div>
           {/* [SN] The facts line right under the action, then the two grown-up links (each a 64 px tall text link). */}
           <p style={{ margin: `${spacing.sm}px 0 0`, fontSize: rem(typography.size.caption), color: colors.text.muted }}>{H.hero.facts}</p>
+          {/* [GU] The one guest line (section 13.2, mock design/screens/site/guest/), only with the claim on: plain text
+              under the facts line, body size in the lead's colour; it adds no second action. */}
+          {guest ? (
+            <p
+              className="hr-site-hero-guest"
+              style={{
+                margin: `${spacing.sm}px 0 0`,
+                fontSize: rem(typography.size.body),
+                lineHeight: typography.leading.normal,
+                color: colors.text.secondary,
+                maxWidth: SITE_SIZES.leadMeasure,
+              }}
+            >
+              {H.hero.guest}
+            </p>
+          ) : null}
           <div className="hr-site-hero-links" style={{ display: 'flex', flexWrap: 'wrap', columnGap: spacing.lg, marginTop: spacing.xs }}>
             <TextLink href={sitePath(locale, '/parents')}>{H.hero.forParents}</TextLink>
             <TextLink href={sitePath(locale, '/teachers')}>{H.hero.forTeachers}</TextLink>

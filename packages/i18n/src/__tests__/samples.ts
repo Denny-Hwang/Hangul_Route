@@ -945,4 +945,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.guest.later.title': [[30], [7]],
   'learner.guest.saved': [['Sam'], ['Jo Ann']],
   'learner.guest.savedNoCard': [['Sam'], ['Jo Ann']],
+  // [GU] The Privacy Policy's first-quest bullet (AMENDMENTS-GUEST-FIRST-LESSON row GU-6): GUEST_TTL_DAYS and GUEST_TTL_SHARED_DAYS.
+  'landing.legal.privacy.sections.collect.bullets.guest': [[{ email: 'hello@example.com', levels: 'New reader / Some reading', days: 30, sharedDays: 7 }]],
 };

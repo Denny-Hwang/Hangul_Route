@@ -56,10 +56,10 @@ export function ParentsPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: P
   ];
   const whatSee = showsClaim(claims, 'parentReports', locale) ? P.faq.whatSee.reports : P.faq.whatSee.a;
   return (
-    <SiteShell locale={locale} page="/parents" current="parents">
+    <SiteShell locale={locale} page="/parents" current="parents" claims={claims}>
       <PageHead title={P.title} lead={P.lead} after={haveAccount}>
         <PrimaryAction href={create}>{P.create}</PrimaryAction>
-        <SecondaryAction href={learnerStart(locale)}>{t.nav.start}</SecondaryAction>
+        <SecondaryAction href={learnerStart(locale, claims)}>{t.nav.start}</SecondaryAction>
       </PageHead>
 
       <TwoColumns

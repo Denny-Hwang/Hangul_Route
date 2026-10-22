@@ -17,7 +17,7 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14), lecture mode (AMENDMENTS-LECTURE-V2 LV-7) and the level check (F-PLC-001 P-10, owner decision 2026-10-21) on, every other feature line off', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14), lecture mode (AMENDMENTS-LECTURE-V2 LV-7) and the level check (F-PLC-001 P-10, owner decision 2026-10-21) on, every other feature line off (the guest start until GU-7)', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
@@ -28,6 +28,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       browseAsLearner: true,
       lectureMode: true,
       levelCheck: true,
+      guestLesson: false,
     });
   });
 
@@ -154,10 +155,35 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     }
   });
 
-  it('has seven feature claims', () => {
+  it('has eight feature claims', () => {
     expect(BOOLEAN_KEYS).toEqual(
-      ['browseAsLearner', 'feedbackNotes', 'learningRoute', 'lectureMode', 'levelCheck', 'parentReports', 'teacherReports'],
+      ['browseAsLearner', 'feedbackNotes', 'guestLesson', 'learningRoute', 'lectureMode', 'levelCheck', 'parentReports', 'teacherReports'],
     );
+  });
+
+  it('[GU] keeps the guest start off until GU-7 turns the learner app switch on (AMENDMENTS-GUEST-FIRST-LESSON section 13.1)', () => {
+    // The claim never runs ahead of the feature: GU-7 flips it in the PR that turns `EXPO_PUBLIC_GUEST_LESSON` on, and
+    // pins the learner app's default beside it there.
+    expect(SITE_CLAIMS.guestLesson).toBe(false);
+    for (const locale of UI_LOCALES) expect(showsClaim(SITE_CLAIMS, 'guestLesson', locale), locale).toBe(false);
+  });
+
+  it('[GU] shows the guest start lines in every UI locale, free, while its claim is on, and hides them with it off (both states pinned)', () => {
+    expect(CLAIM_LOCALES.guestLesson).toBeUndefined();
+    expect(CLAIM_REQUIRES_PAID.guestLesson).toBe(false);
+    for (const locale of UI_LOCALES) {
+      for (const paidPlans of PAID_PLANS) {
+        expect(showsClaim({ ...SITE_CLAIMS, paidPlans, guestLesson: true }, 'guestLesson', locale), locale).toBe(true);
+        expect(claimLiveIn({ ...SITE_CLAIMS, paidPlans, guestLesson: true }, 'guestLesson', locale), locale).toBe(true);
+        // The rollback of section 13.1: a PR setting the claim back to false takes every guest line off the site.
+        expect(showsClaim({ ...SITE_CLAIMS, paidPlans, guestLesson: false }, 'guestLesson', locale), locale).toBe(false);
+      }
+    }
+  });
+
+  it('[GU] the claims table names the flip row of the guest start', () => {
+    const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'site-claims.ts'), 'utf8');
+    expect(source).toMatch(/\| `guestLesson` +\| AMENDMENTS-GUEST-FIRST-LESSON GU-7 flag flip/);
   });
 
   it('shows the level-check lines (owner decision 2026-10-21) only because placement is on in the learner app (F-PLC-001 P-10)', () => {
@@ -261,6 +287,7 @@ describe('CLAIM_REQUIRES_PAID (paid feature lines need paid plans on sale)', () 
       browseAsLearner: true,
       lectureMode: false,
       levelCheck: false,
+      guestLesson: false,
     });
   });
 
@@ -297,7 +324,7 @@ describe('showsClaim', () => {
 
   it('takes only a feature claim (by type)', () => {
     expectTypeOf<BooleanClaimKey>().toEqualTypeOf<
-      'learningRoute' | 'parentReports' | 'teacherReports' | 'feedbackNotes' | 'browseAsLearner' | 'lectureMode' | 'levelCheck'
+      'learningRoute' | 'parentReports' | 'teacherReports' | 'feedbackNotes' | 'browseAsLearner' | 'lectureMode' | 'levelCheck' | 'guestLesson'
     >();
     // @ts-expect-error the cost line reads freePlan and paidPlans directly, not through showsClaim
     expect(() => showsClaim(SITE_CLAIMS, 'paidPlans', 'en')).not.toThrow();

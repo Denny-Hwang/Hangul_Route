@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { getMessages } from '@hangul-route/i18n';
+import { homePath, openForcedHome } from './forced-claims';
 import { LANDING_WIDTHS } from './landing-targets';
 
 /**
@@ -277,3 +279,65 @@ test.describe('[SN] the language menu open: no sideways scroll, the menu inside 
     }
   }
 });
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2 (row GU-6): the home with the `guestLesson` claim forced on through its
+ * `claims` prop (`forced-claims.ts`), at 320, 375, 768, 1280 and 1920 px in en, es and ko. Nothing scrolls sideways;
+ * the header, the h1, the lead and Start learning are on the first screen (568 px tall at 320, as AMENDMENTS-SITE-NEWUSER
+ * section 3.11 measures phones); from 375 px the two grown-up links are too; the line stays in the hero, under the facts
+ * line and above the grown-up links; and every Start learning carries try=1 while Sign in never does.
+ */
+const GUEST_VIEWS = [
+  { width: 320, height: 568 },
+  { width: 375, height: 812 },
+  { width: 768, height: 1024 },
+  { width: 1280, height: HEIGHT },
+  { width: 1920, height: 1080 },
+] as const;
+
+for (const lang of ['en', 'es', 'ko'] as const) {
+  const hero = getMessages(lang).landing.home.hero;
+  for (const { width, height } of GUEST_VIEWS) {
+    test(`[GU] ${homePath(lang)} at ${width} x ${height}, guestLesson forced on: first screen, the line in the hero, try=1 on Start learning`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await openForcedHome(page, lang, 'on');
+      const { doc, body } = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
+      const culprits = doc > width || body > width ? (await overflowing(page, width)).join('; ') : '';
+      expect(doc, culprits).toBeLessThanOrEqual(width);
+      expect(body, culprits).toBeLessThanOrEqual(width);
+
+      const main = page.locator('main');
+      const first = [
+        page.locator('header.hr-site-header'),
+        page.getByRole('heading', { level: 1, name: hero.title }),
+        main.getByText(hero.lead, { exact: true }),
+        main.getByRole('link', { name: hero.start, exact: true }).first(),
+        ...(width >= 375 ? [main.getByRole('link', { name: hero.forParents, exact: true }), main.getByRole('link', { name: hero.forTeachers, exact: true })] : []),
+      ];
+      for (const locator of first) {
+        await expect(locator).toBeVisible();
+        const rect = await locator.boundingBox();
+        expect((rect?.y ?? Infinity) + (rect?.height ?? 0), `${await locator.textContent()} ends on the first screen`).toBeLessThanOrEqual(height);
+        expect((rect?.x ?? -1) + (rect?.width ?? Infinity)).toBeLessThanOrEqual(width);
+      }
+
+      // The line: inside the hero's text column, under the facts line, above the grown-up links.
+      const facts = await box(page, '.hr-site-hero .hr-site-actions + p');
+      const line = await box(page, '.hr-site-hero-guest');
+      const links = await box(page, '.hr-site-hero-links');
+      const column = await box(page, '.hr-site-hero > div:first-child');
+      await expect(page.locator('.hr-site-hero-guest')).toHaveText(hero.guest);
+      expect(line.top).toBeGreaterThanOrEqual(facts.bottom - 1);
+      expect(links.top).toBeGreaterThanOrEqual(line.bottom - 1);
+      expect(line.left).toBeGreaterThanOrEqual(column.left - 0.5);
+      expect(line.right).toBeLessThanOrEqual(column.right + 0.5);
+
+      // Every Start learning (hero, closing band, header from 45em, footer) carries try=1 and nothing else new.
+      const starts = await page.locator('a[href^="https://app.hangulroute.com"]').evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
+      const learner = starts.filter((href) => !new URL(href).pathname.startsWith('/signin'));
+      expect(learner.length).toBeGreaterThanOrEqual(3);
+      for (const href of learner) expect(href).toBe(lang === 'en' ? 'https://app.hangulroute.com/?try=1' : `https://app.hangulroute.com/?lang=${lang}&try=1`);
+      for (const href of starts.filter((h) => new URL(h).pathname.startsWith('/signin'))) expect(href).not.toMatch(/[?&]try=/);
+    });
+  }
+}

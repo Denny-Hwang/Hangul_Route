@@ -3,6 +3,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { CONTACT_EMAIL } from '../../data/contact';
+import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { learnerStart, signIn } from '../../lib/site-links';
 import { shownSiteLocales, type SitePage } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
@@ -17,6 +18,8 @@ export interface SiteFooterProps {
   /** The persona page being shown: its Guide link carries `aria-current="page"` (on phones the header nav is hidden). */
   current?: PersonaPage;
   variant?: SiteChromeVariant;
+  /** [GU] Which claims show; Start learning carries `try=1` while `guestLesson` does (tests render both states). */
+  claims?: Readonly<SiteClaims>;
 }
 
 /** A footer link: 64 px tall, left-aligned; its colours change on hover, so they are the stylesheet's. */
@@ -90,7 +93,7 @@ function Group({ id, title, nav = false, children }: { id: string; title: string
  * `globals.css`). Guide links the shipped persona pages only. Then the copyright line with the open-source notices link, and the locale switcher (shown once a second locale ships). The legal
  * variant drops the App group (OD-14). No console, demo or billing link, and no old in-page anchors.
  */
-export function SiteFooter({ locale, page, current, variant = 'default' }: SiteFooterProps): JSX.Element {
+export function SiteFooter({ locale, page, current, variant = 'default', claims = SITE_CLAIMS }: SiteFooterProps): JSX.Element {
   const t = getMessages(locale).landing;
   const link = (href: string, label: ReactNode, internal: boolean): JSX.Element => (
     <li>
@@ -129,7 +132,7 @@ export function SiteFooter({ locale, page, current, variant = 'default' }: SiteF
             </Group>
             {variant === 'default' ? (
               <Group id="footer-app" title={t.footer.app}>
-                {link(learnerStart(locale), t.nav.start, false)}
+                {link(learnerStart(locale, claims), t.nav.start, false)}
                 {link(signIn(undefined, locale), t.nav.signIn, false)}
               </Group>
             ) : null}

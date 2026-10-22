@@ -96,9 +96,14 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
   it('how it works: three steps in order, the level-check variant of step 1 and the Learning Route variant of step 3', () => {
     expect(l.home.how.title).toBe('How it works');
     expect(l.home.how.steps).toEqual({
-      start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
+      // [GU] guestTitle and guestBody show only while the guestLesson claim is on (AMENDMENTS-GUEST-FIRST-LESSON 13.2).
+      start: { title: 'Make a profile', body: 'Pick a name and a Hoya.', guestTitle: 'Start right away' },
       quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures.' },
-      collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
+      collect: {
+        title: 'Collect and keep going',
+        body: 'Earn Korean culture cards. Your progress is saved and backed up.',
+        guestBody: 'Earn Korean culture cards. Add a name, and your progress is saved and backed up.',
+      },
     });
     expect(Object.keys(l.home.how.steps)).toEqual(['start', 'quests', 'collect']);
     expect(l.home.how.levelBody).toBe('Pick a name and a Hoya. A level check is optional.');
