@@ -9,6 +9,7 @@ import { publicLearner } from '../lib/learners';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { rescueHash, rescueLookupHashes } from '../lib/rescue-hash';
 import { randomRescueCode } from '../lib/rescue-words';
+import { reviewCapsOf, servedSnapshot } from '../lib/review-kinds';
 import { rescuePepper, type RuntimeEnv } from '../lib/runtime';
 import type { Learner } from '../store';
 
@@ -110,6 +111,7 @@ recoveryRoutes.post('/claim', async (c) => {
   return ok(c, {
     learner: publicLearner(learner),
     device: { deviceId, secret },
-    snapshot: record ? { rev: record.rev, snapshot: record.payload, summary: record.summary } : null,
+    // A gated review kind reaches only an app that declares it (F-CURR-002 section 13, lib/review-kinds.ts).
+    snapshot: record ? { rev: record.rev, snapshot: servedSnapshot(record.payload, reviewCapsOf(c.req.queries('cap'))), summary: record.summary } : null,
   });
 });

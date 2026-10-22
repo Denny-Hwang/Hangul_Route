@@ -36,6 +36,7 @@ import { startRemoteConfig } from './src/store/remote-config-store';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
 import { setProgressPersistListener } from './src/logic/sync/persist-hook';
+import { activateMemory, startMemory } from './src/logic/memory/boot';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -123,6 +124,8 @@ export default function App(): React.ReactElement {
     setProgressPersistListener((learnerId) => useSyncStore.getState().requestSync(learnerId));
     // Plans and memberships arrive through the inbox after each successful sync (F-PLAN-001).
     const offInbox = registerInboxRefresh();
+    // The memory store (F-CURR-002 row CM-12, shadow mode): records answers while `memoryRecord` is on for a learner.
+    const stopMemory = startMemory();
     let stopPrefetch = (): void => {};
     void hydrateLearnerData()
       .catch(() => undefined)
@@ -147,11 +150,16 @@ export default function App(): React.ReactElement {
         stopPrefetch = prefetchWhenIdle(prefetchContent);
         // A curriculum's horizon moves with the calendar, network or not (F-PLAN-002 section 3.6).
         await rederiveAllLocal().catch(() => undefined);
+        // The one-time memory seeding and the last day's memory.daily of the active learner (row CM-12).
+        activateMemory();
         void useSyncStore.getState().syncAll();
       });
     // Back in the foreground (possibly on a new day): derive the next days from the cached plans.
     const foreground = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void rederiveAllLocal().catch(() => undefined);
+      if (state === 'active') {
+        void rederiveAllLocal().catch(() => undefined);
+        activateMemory();
+      }
     });
     const off = subscribePwa((event) => {
       if (event === 'back-online') {
@@ -177,6 +185,7 @@ export default function App(): React.ReactElement {
       offInbox();
       foreground.remove();
       stopRemoteConfig();
+      stopMemory();
       setProgressPersistListener(null);
     };
   }, [countVisit]);

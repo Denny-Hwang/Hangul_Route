@@ -1,6 +1,6 @@
 import { ActivitySummarySchema, TEACHER_FULL_SCOPE_EXTRA_KEYS, TEACHER_VISIBLE_SUMMARY_KEYS, type ActivitySummary, type ProgressSummary } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { activityOf, readsFullScope, rosterSummary, teacherVisibleSummary } from '../roster-summary';
+import { activityOf, memoryFor, readsFullScope, rosterSummary, teacherVisibleSummary } from '../roster-summary';
 
 const placement = {
   takenAt: '2026-10-10T10:05:00.000Z',
@@ -408,5 +408,32 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
       expect(out && 'activity' in out).toBe(false);
       expect(out).toEqual(teacherVisibleSummary(full, own));
     }
+  });
+});
+
+describe('memoryFor and the memory counts on the roster (F-CURR-002 CM-16)', () => {
+  const memory = { wordsKnown: 30, readyToRefresh: 4, cellBestCounts: [3, 1, 0], stageChecks: 1, weekPoints: 8, topDue: ['lex:sagwa'] };
+  const stored = { schemaVersion: 1, lastActiveAt: 't', streakDays: 0, stage1: { questsDone: 0, questsTotal: 15, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 0, jamoRecognized: [], needsPractice: [], planProgress: {}, memory };
+
+  it('a family always reads the block; a class only at full scope with the memory flag', () => {
+    expect(memoryFor(stored, 'family')).toEqual(memory);
+    expect(memoryFor(stored, 'class')).toBeNull();
+    expect(memoryFor(stored, 'class', { scope: 'base', memory: true })).toBeNull();
+    expect(memoryFor(stored, 'class', { scope: 'full' })).toBeNull();
+    expect(memoryFor(stored, 'school', { scope: 'full', memory: true })).toEqual(memory);
+  });
+
+  it('copies only the known keys, and drops a block that does not parse (never a zero)', () => {
+    expect(memoryFor({ ...stored, memory: { ...memory, states: { 'lex:sagwa': { b: 3 } } } }, 'family')).toEqual(memory);
+    expect(memoryFor({ ...stored, memory: { ...memory, wordsKnown: -1 } }, 'family')).toBeNull();
+    expect(memoryFor({ ...stored, memory: undefined }, 'family')).toBeNull();
+    expect(memoryFor(null, 'family')).toBeNull();
+  });
+
+  it('rosterSummary carries it under the same rule, and never at base scope', () => {
+    expect(rosterSummary(stored, new Set(), 'family')?.memory).toEqual(memory);
+    expect(rosterSummary(stored, new Set(), 'class', { scope: 'full', memory: true })?.memory).toEqual(memory);
+    expect(rosterSummary(stored, new Set(), 'class', { scope: 'full' })).not.toHaveProperty('memory');
+    expect(rosterSummary(stored, new Set(), 'class', { scope: 'base', memory: true })).not.toHaveProperty('memory');
   });
 });

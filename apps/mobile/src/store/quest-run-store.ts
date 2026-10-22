@@ -1,6 +1,22 @@
 import { create } from 'zustand';
 import { tallyAnswer } from '../logic/first-try';
+import type { RoundAsked } from '../logic/memory/asked';
 import { starsForAccuracy } from '../logic/score';
+
+/** The first (scored) answer of a round, with what it asked (F-CURR-002 row CM-12). */
+export interface FirstRoundAnswer {
+  questId: string;
+  episodeId: string;
+  correct: boolean;
+  asked: RoundAsked;
+  at: Date;
+}
+
+let firstAnswerListener: ((answer: FirstRoundAnswer) => void) | null = null;
+/** The memory store listens here (`logic/memory/boot.ts`); null removes it. */
+export function setFirstRoundAnswerListener(listener: ((answer: FirstRoundAnswer) => void) | null): void {
+  firstAnswerListener = listener;
+}
 
 /**
  * Ephemeral state for a single quest run.
@@ -20,6 +36,8 @@ interface State {
   /** `${stepIndex}:${roundKey}` of every round already scored this run. */
   scoredRounds: readonly string[];
   pendingAdvance: boolean;
+  /** What each round missed on the first try asked, in order: Try these again on the reward step (F-CURR-002 row CM-15). */
+  missed: readonly RoundAsked[];
 }
 
 interface Actions {
@@ -33,7 +51,7 @@ interface Actions {
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
    */
-  answerRound: (roundKey: string | number, correct: boolean) => void;
+  answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked) => void;
   markStepComplete: () => void;
   goNextStep: () => void;
   consumePendingAdvance: () => void;
@@ -50,6 +68,7 @@ const blankRun = {
   retryCount: 0,
   scoredRounds: [],
   pendingAdvance: false,
+  missed: [],
 } satisfies State;
 
 export const useQuestRunStore = create<State & Actions>((set, get) => ({
@@ -63,7 +82,9 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
       stepIndex: Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0,
     }),
 
-  answerRound: (roundKey, correct) =>
+  answerRound: (roundKey, correct, asked) => {
+    const before = get();
+    const first = !before.scoredRounds.includes(`${before.stepIndex}:${roundKey}`);
     set((s) => {
       const next = tallyAnswer(
         { correct: s.correctCount, total: s.totalCount, retries: s.retryCount, scored: s.scoredRounds },
@@ -75,8 +96,18 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
         totalCount: next.total,
         retryCount: next.retries,
         scoredRounds: next.scored,
+        ...(first && !correct && asked ? { missed: [...s.missed, asked] } : {}),
       };
-    }),
+    });
+    // The first answer of a round is its first try (F-001 section 3.2): only it reaches the memory store.
+    if (first && asked && firstAnswerListener && before.questId && before.episodeId) {
+      try {
+        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct, asked, at: new Date() });
+      } catch {
+        // The round is scored; only the memory store misses the answer.
+      }
+    }
+  },
 
   markStepComplete: () => set({ pendingAdvance: true }),
 

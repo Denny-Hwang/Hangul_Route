@@ -1,6 +1,6 @@
 import { HTTPException } from 'hono/http-exception';
 import { failResponse } from '../envelope';
-import { classScopeFullEnabled } from './class-scope';
+import { classScopeFullEnabled, memorySummaryEnabled } from './class-scope';
 import { notesSendEnabled } from './notes-switch';
 import { classTransferEnabled } from './transfer';
 import { billingLiveAllowed, stripeMode } from './stripe';
@@ -31,6 +31,8 @@ export interface RuntimeEnv {
   NOTES_SEND?: string;
   /** [TV] Dashboard text variable: full-scope teacher visibility; unset = on, `disabled` = every class reads base scope. */
   CLASS_SCOPE_FULL?: string;
+  /** F-CURR-002 CM-16 dashboard text variable: the memory counts on grown-up reads; unset = on, `disabled` = left out for every reader. */
+  MEMORY_SUMMARY?: string;
 }
 
 const DEV_ENVIRONMENTS: ReadonlySet<string> = new Set(['development', 'test']);
@@ -83,8 +85,8 @@ export interface HealthReport {
   devFallbacks: boolean;
   bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean; rescuePepper: boolean; stripeLive: boolean; billingLiveAllowed: boolean };
   /** Switches the owner sets in the dashboard, so a monitor can see they took effect (F-FEEDBACK-001 section 7.8). */
-  /** [TV] `classScopeFull`: full-scope teacher visibility (TV-D15); `classTransfer`: class moves are open (on unless the kill switch `CLASS_TRANSFER=disabled` is set, TV-D13). */
-  features: { notesSend: boolean; classScopeFull: boolean; classTransfer: boolean };
+  /** [TV] `classScopeFull`: full-scope teacher visibility (TV-D15); `classTransfer`: class moves are open (on unless the kill switch `CLASS_TRANSFER=disabled` is set, TV-D13); `memorySummary`: the memory counts on grown-up reads (F-CURR-002 CM-16, `MEMORY_SUMMARY`). */
+  features: { notesSend: boolean; classScopeFull: boolean; classTransfer: boolean; memorySummary: boolean };
 }
 
 /**
@@ -109,5 +111,5 @@ export function healthReport(env: RuntimeEnv | undefined): HealthReport {
   const devFallbacks = devFallbacksAllowed(env);
   const environment = environmentName(env);
   const ready = (bindings.db && bindings.clerk) || (devFallbacks && environment !== 'production');
-  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings, features: { notesSend: notesSendEnabled(env), classScopeFull: classScopeFullEnabled(env), classTransfer: classTransferEnabled(env as { CLASS_TRANSFER?: string } | undefined) } };
+  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings, features: { notesSend: notesSendEnabled(env), classScopeFull: classScopeFullEnabled(env), classTransfer: classTransferEnabled(env as { CLASS_TRANSFER?: string } | undefined), memorySummary: memorySummaryEnabled(env) } };
 }

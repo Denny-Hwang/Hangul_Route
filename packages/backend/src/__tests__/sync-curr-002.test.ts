@@ -51,6 +51,7 @@ const fields = {
   streakBest: 9,
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
+  steadyWeeks: { '2026-10-19': '2026-10-21T09:00:00.000Z' },
 };
 const memory = { wordsKnown: 42, readyToRefresh: 7, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 18, topDue: ['lex:sagwa'] };
 
@@ -70,8 +71,9 @@ async function put(learnerId: string, auth: Record<string, string>, body: Record
 }
 
 type Stored = { snapshot: Record<string, unknown> & { reviews: Array<{ id: string }>; sessions: Array<Record<string, unknown>> }; summary: Record<string, unknown> };
+/** Read as a build that reads every CM-3b review kind (`?cap=warmup`, row CM-15; the gate itself is sync-review-gate.test.ts). */
 async function get(learnerId: string, auth: Record<string, string>): Promise<Stored> {
-  const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+  const res = await app.request(`/api/sync/learners/${learnerId}/snapshot?cap=warmup`, { headers: auth });
   return ((await res.json()) as { data: Stored }).data;
 }
 
@@ -222,7 +224,9 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     const auth = await register(DEVICE_A, 'profile:suni');
     await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews: mixedReviews }), summary });
     const fewer = snapshotFor('profile:suni', { reviews: [review('review:a', 'daily')] });
-    expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot: fewer, summary })).status).toBe(200);
+    // Sent by a build that reads every kind it holds (`?cap=warmup`); one that cannot read `warmup` keeps it (row CM-15).
+    const res = await app.request('/api/sync/learners/profile:suni/snapshot?cap=warmup', { method: 'PUT', headers: auth, body: JSON.stringify({ ...base, baseRev: 1, snapshot: fewer, summary }) });
+    expect(res.status).toBe(200);
     expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['review:a']);
   });
 
@@ -231,10 +235,59 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { ...fields, reviews: mixedReviews }), summary });
     const issued = await app.request('/api/recovery/issue', { method: 'POST', headers: auth, body: JSON.stringify({ learnerId: 'profile:suni' }) });
     const code = ((await issued.json()) as { data: { code: string } }).data.code;
-    const res = await app.request('/api/recovery/claim', { method: 'POST', headers: json, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
+    const res = await app.request('/api/recovery/claim?cap=warmup', { method: 'POST', headers: json, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
     expect(res.status).toBe(200);
     const data = ((await res.json()) as { data: { snapshot: { snapshot: Stored['snapshot'] } } }).data;
     expect(data.snapshot.snapshot.reviews.map((r) => r.id)).toEqual(keptIds);
     expect(data.snapshot.snapshot).toMatchObject(fields);
+  });
+  it('steadyWeeks (row CM-17): two devices union their latched weeks, the earliest time per week, and a week no time zone has reached is dropped', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const phone = { '2026-10-12': '2026-10-15T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' };
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { steadyWeeks: phone }), summary });
+    // A tablet that latched the week later, never saw the earlier week, and whose clock once read 2099.
+    const tablet = { '2026-10-19': '2026-10-22T08:00:00.000Z', '2099-01-05': '2026-10-22T08:00:00.000Z', '2026-10-05': '2099-01-01T00:00:00.000Z' };
+    expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot: snapshotFor('profile:suni', { steadyWeeks: tablet }), summary })).status).toBe(200);
+    const got = await get('profile:suni', auth);
+    expect(got.snapshot.steadyWeeks).toEqual({ '2026-10-05': '2026-10-22T12:00:00.000Z', ...phone });
+    // An older build leaves the key out: the count never drops.
+    await put('profile:suni', auth, { ...base, baseRev: 2, snapshot: snapshotFor('profile:suni'), summary });
+    expect(Object.keys((await get('profile:suni', auth)).snapshot.steadyWeeks as object)).toHaveLength(3);
+  });
+});
+
+describe('/api/sync snapshot: `daily` retention of 14 local days (F-CURR-002 section 4.8, row CM-14)', () => {
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-22T12:00:00.000Z'));
+    await db.reset();
+    claimLimiter.reset();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const dailyOn = (scope: string, n: number) => ({ id: `daily:${scope}:${n}`, kind: 'daily', generatedAt: `${scope}T09:00:00.000Z`, scope, itemIds: ['lex:sagwa'], resultStars: 3 });
+
+  it('stores only the daily entries within 14 days of the newest one, and every other kind as sent', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const reviews = [review('review:cert', 'stage-certificate'), dailyOn('2026-09-01', 0), dailyOn('2026-10-08', 0), dailyOn('2026-10-09', 0), dailyOn('2026-10-22', 1)];
+    expect((await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews }), summary })).status).toBe(200);
+    expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['review:cert', 'daily:2026-10-09:0', 'daily:2026-10-22:1']);
+  });
+
+  it('drops a daily entry dated past the latest local day (a clock far ahead), so it never prunes the real ones (section 13)', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const reviews = [dailyOn('2026-10-12', 0), dailyOn('2026-10-22', 0), dailyOn('2026-10-23', 0), dailyOn('2026-12-31', 0)];
+    expect((await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews }), summary })).status).toBe(200);
+    // 2026-10-23 is still a local day somewhere (UTC+14); 2026-12-31 is not.
+    expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['daily:2026-10-12:0', 'daily:2026-10-22:0', 'daily:2026-10-23:0']);
+  });
+
+  it('a list with nothing to prune is stored unchanged', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const reviews = [dailyOn('2026-10-21', 0), dailyOn('2026-10-22', 0)];
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews }), summary });
+    expect((await get('profile:suni', auth)).snapshot.reviews).toEqual(reviews);
   });
 });

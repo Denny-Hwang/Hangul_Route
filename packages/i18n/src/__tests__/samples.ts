@@ -941,4 +941,33 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.persona.teachers.schools.sizeContract': [['hello@example.com']],
   'landing.captures.discover': [['x', 'a']],
   'landing.captures.card': [['x', 'horangi', 'tiger']],
+  // The Daily Review and Keep going (F-CURR-002 row CM-14).
+  'learner.dailyReview.readyLine': [[1], [34]],
+  'learner.dailyReview.result.stronger': [[1], [6]],
+  'a11y.dailyReview.round': [[1], [10]],
+  'a11y.dailyReview.stars': [[1], [3]],
+  // F-CURR-002 CM-16: the memory counts in reports
+  'report.detail.wordsKnown': [[1], [2000]],
+  'report.detail.readyToRefresh': [[1], [2], [120]],
+  'report.detail.mastery': [[1, 1, 1], [35, 12, 4], [5, 0, 0], [0, 2, 0], [3, 0, 1]],
+  'report.detail.stageChecks': [[1], [7]],
+  'report.class.memoryFrom': [[1], [2], [30]],
+  'report.class.wordsKnown': [[1], [24000]],
+  'report.class.readyToRefresh': [[1], [600]],
+  'report.class.stageChecks': [[1], [90]],
+  // Daily and weekly goals on Home (F-CURR-002 row CM-17): counts of 1 and more, a tier with its time words, the strip's parts.
+  'learner.goals.steadyWeeks': [[0], [1], [4]],
+  'learner.goals.newRun': [[1], [12]],
+  'learner.goals.daily.label': [['Light', 'about 5 minutes'], ['Steady', 'about 10 minutes']],
+  'learner.goals.weekly.days': [[3], [5], [7]],
+  'learner.goals.sheet.fromPlan': [[1], [3]],
+  'learner.goals.banner.weekMet': [[1], [5]],
+  'a11y.goals.strip': [
+    [{ days: 'Monday learned, Tuesday rest day, Wednesday today, Thursday', steadyWeeks: '4 steady weeks', streak: 'Streak 5 days', goal: 'Light, about 5 minutes, a little more to go' }],
+    [{ days: 'Monday today, Tuesday', steadyWeeks: 'Your first steady week starts here', streak: null, goal: null }],
+  ],
+  'a11y.goals.day.learned': [['Monday'], ['Wednesday']],
+  'a11y.goals.day.learnedToday': [['Friday'], ['Wednesday']],
+  'a11y.goals.day.rest': [['Tuesday'], ['Wednesday']],
+  'a11y.goals.day.today': [['Friday'], ['Wednesday']],
 };

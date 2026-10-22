@@ -611,3 +611,34 @@ test.describe('story chunks without a service worker (F-CURR-002 CM-8 recovery)'
     expect(served).toBe(2);
   });
 });
+
+const REVIEW_BUNDLE = /^\/_expo\/static\/js\/web\/review-items-[0-9a-f]{32}\.js$/;
+
+/**
+ * F-CURR-002 §4.2, §10 (row CM-10): the review-item index is one content-hashed chunk. It is in the precache after
+ * one online visit, and nothing loads it before the review engine (row CM-13) asks: the learner home starts,
+ * online and offline, without it.
+ */
+test('the review-item chunk is precached and does not load at start (F-CURR-002 CM-10)', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  const resources = () => page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Suni' });
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await controlledBySw(page);
+  await expect.poll(async () => (await cachedPaths(page)).filter((p) => REVIEW_BUNDLE.test(p)).length, { timeout: 15_000 }).toBe(1);
+  expect((await resources()).filter((p) => REVIEW_BUNDLE.test(p))).toEqual([]);
+
+  await page.reload();
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
+  expect((await resources()).filter((p) => REVIEW_BUNDLE.test(p))).toEqual([]);
+  expect(errors).toEqual([]);
+});

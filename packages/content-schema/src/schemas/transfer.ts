@@ -40,10 +40,11 @@ export const TRANSFER_LIST_MAX = 50;
  * `transfer-2026-10c`: adds the `note_replies` item (F-FEEDBACK-001 section 7.7) to the 10b text.
  * `transfer-2026-10d`: [TV] the full-scope items (`words`, `letter_check`, `own_route`, `learner_settings`) and
  * the `teacher_moves` line, AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D6 (owner decision 2026-10-14).
+ * `transfer-2026-10e`: adds the `memory` item (F-CURR-002 section 4.8, row CM-16) to the 10d text.
  */
-export const TRANSFER_CONSENT_TEXT_VERSION = 'transfer-2026-10d';
+export const TRANSFER_CONSENT_TEXT_VERSION = 'transfer-2026-10e';
 /** The current version plus every earlier one: an older app's sheet is never locked out (TV-D5). */
-export const ACCEPTED_CONSENT_TEXT_VERSIONS: readonly string[] = ['transfer-2026-10d', 'transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10'];
+export const ACCEPTED_CONSENT_TEXT_VERSIONS: readonly string[] = ['transfer-2026-10e', 'transfer-2026-10d', 'transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10'];
 
 export const TransferStatusSchema = z.enum(['requested', 'approved', 'executed', 'declined', 'expired', 'cancelled']);
 export type TransferStatus = z.infer<typeof TransferStatusSchema>;

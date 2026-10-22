@@ -115,6 +115,8 @@ export const TEACHER_VISIBLE_ITEM_IDS = [
   'letter_check',
   'own_route',
   'learner_settings',
+  // F-CURR-002 CM-16: the memory counts (section 4.8), shown to a class once the family has read the class-scope text that names them (MEMORY_SCOPE_TEXT_VERSIONS)
+  'memory',
 ] as const;
 export type TeacherVisibleItemId = (typeof TEACHER_VISIBLE_ITEM_IDS)[number];
 
@@ -145,8 +147,10 @@ export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_K
  * console's word lines (F-VOC-005 P-4b; P-4 shipped them dormant) moves it to the allow-list with its consent item, so the
  * consent text never lags what a teacher receives. `routeGoal` (Learning Route
  * section 9) follows the `selfRoute` precedent: family space only. `memory`
- * (F-CURR-002 section 4.8) stays hidden until the row that shows it to a class
- * adds its consent item.
+ * (F-CURR-002 section 4.8) is hidden at base scope: row CM-16 gave it the
+ * `memory` consent item, and a class or school reads it only for a learner whose
+ * family acknowledged a class-scope text that names that item
+ * (`MEMORY_SCOPE_TEXT_VERSIONS`, `schemas/class-scope.ts`).
  */
 export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory'] as const;
 export type TeacherHiddenSummaryKey = Extract<(typeof TEACHER_HIDDEN_SUMMARY_KEYS)[number], keyof ProgressSummary>;
@@ -271,6 +275,7 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       letter_check: 'The Hangul Check result and letters that were tricky',
       own_route: 'Lessons {learner} picked and the Learning Route goal',
       learner_settings: 'Whether {learner} gets notes from the class',
+      memory: 'Words known, how well each episode is known and Stage Checks passed. Points this week and items ready to refresh',
     },
   },
   ko: TRANSFER_CONSENT_TEXT_KO,
@@ -307,6 +312,7 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       letter_check: 'El resultado del Repaso de hangul y las letras que costaron',
       own_route: 'Las lecciones que eligió {learner} y la meta de la Ruta de aprendizaje',
       learner_settings: 'Si {learner} recibe notas de la clase',
+      memory: 'Las palabras que conoce, qué tan bien conoce cada episodio y los Repasos de etapa superados. Los puntos de esta semana y lo que está listo para repasar',
     },
   },
 };

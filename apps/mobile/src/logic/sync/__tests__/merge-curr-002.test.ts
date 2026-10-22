@@ -23,7 +23,7 @@ const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
   streakDays: 0,
   ...over,
 });
-const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt'] as const;
+const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt', 'steadyWeeks'] as const;
 const phone: Partial<ProgressSnapshot> = {
   cellBest: { 'letters-s2': 2, 'life-s3': 1 },
   cellCheckAt: { 'letters-s2': '2026-10-20T09:00:00.000Z' },
@@ -35,6 +35,7 @@ const phone: Partial<ProgressSnapshot> = {
   streakBest: 9,
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
+  steadyWeeks: { '2026-10-12': '2026-10-15T09:00:00.000Z' },
 };
 const tablet: Partial<ProgressSnapshot> = {
   cellBest: { 'letters-s2': 1, 'nature-s2': 3 },
@@ -44,6 +45,7 @@ const tablet: Partial<ProgressSnapshot> = {
   streakLocal: { run: 6, lastDay: '2026-10-21' },
   streakBest: 6,
   memSeededAt: '2026-10-16T09:00:00.000Z',
+  steadyWeeks: { '2026-10-12': '2026-10-16T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' },
 };
 
 describe('mergeSnapshots, F-CURR-002 section 4.8 fields', () => {
@@ -59,6 +61,7 @@ describe('mergeSnapshots, F-CURR-002 section 4.8 fields', () => {
     expect(m.streakBest).toBe(9);
     expect(m.stamps).toEqual(phone.stamps);
     expect(m.memSeededAt).toBe('2026-10-14T09:00:00.000Z');
+    expect(m.steadyWeeks).toEqual({ '2026-10-12': '2026-10-15T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' });
   });
 
   it('is commutative and idempotent on the new fields', () => {
@@ -170,6 +173,7 @@ describe('mergeSnapshots, F-CURR-002 fields: property tests (fast-check)', () =>
       streakBest: opt(fc.integer({ min: 0, max: 100 })),
       stamps: latch,
       memSeededAt: opt(instant),
+      steadyWeeks: opt(fc.dictionary(fc.integer({ min: 0, max: 12 }).map((n) => new Date(Date.UTC(2026, 6, 6) + n * 7 * 86_400_000).toISOString().slice(0, 10)), instant)),
     })
     .map((fields) => ProgressSnapshotSchema.parse(JSON.parse(JSON.stringify(base(fields as Partial<ProgressSnapshot>)))) as ProgressSnapshot);
   const pick = (s: ProgressSnapshot) => Object.fromEntries(NEW_KEYS.filter((k) => s[k] !== undefined).map((k) => [k, s[k]]));
@@ -217,5 +221,41 @@ describe('mergeSnapshots, F-CURR-002 fields: property tests (fast-check)', () =>
       }),
       RUNS,
     );
+  });
+});
+
+describe('mergeSnapshots: `daily` retention of 14 local days (section 4.8, row CM-14)', () => {
+  const dailyOn = (scope: string, n: number): ProgressSnapshot['reviews'][number] => ({
+    id: `daily:${scope}:${n}`,
+    kind: 'daily',
+    generatedAt: `${scope}T09:00:00.000Z`,
+    scope,
+    itemIds: ['lex:sagwa'],
+    resultStars: 2,
+  });
+  const cert: ProgressSnapshot['reviews'][number] = { id: 'review:stage1', kind: 'stage-certificate', generatedAt: '2025-01-01T00:00:00.000Z', scope: 'stage1', itemIds: [], resultStars: 3 };
+
+  it('keeps the daily entries within 14 days of the newest on either side, and every other kind', () => {
+    const phoneSide = base({ reviews: [cert, dailyOn('2026-10-01', 0), dailyOn('2026-10-08', 0)] });
+    const tabletSide = base({ reviews: [dailyOn('2026-10-21', 0), dailyOn('2026-10-21', 1)] });
+    const ids = (s: ProgressSnapshot) => s.reviews.map((r) => r.id).sort();
+    const expected = ['daily:2026-10-08:0', 'daily:2026-10-21:0', 'daily:2026-10-21:1', 'review:stage1'];
+    expect(ids(mergeSnapshots(phoneSide, tabletSide, { now: NOW }))).toEqual(expected);
+    expect(ids(mergeSnapshots(tabletSide, phoneSide, { now: NOW }))).toEqual(expected);
+  });
+
+  it('a daily entry dated far ahead (a wrong clock) never prunes the real entries (section 13)', () => {
+    const wrongClock = base({ reviews: [dailyOn('2027-03-01', 0)] });
+    const phoneSide = base({ reviews: [dailyOn('2026-10-10', 0), dailyOn('2026-10-21', 0)] });
+    const ids = mergeSnapshots(phoneSide, wrongClock, { now: NOW })
+      .reviews.map((r) => r.id)
+      .sort();
+    expect(ids).toEqual(['daily:2026-10-10:0', 'daily:2026-10-21:0', 'daily:2027-03-01:0']);
+  });
+
+  it('a pruned entry never comes back from an older copy', () => {
+    const fresh = mergeSnapshots(base({ reviews: [dailyOn('2026-10-21', 0)] }), base({ reviews: [dailyOn('2026-09-01', 0)] }), { now: NOW });
+    expect(fresh.reviews.map((r) => r.id)).toEqual(['daily:2026-10-21:0']);
+    expect(mergeSnapshots(fresh, base({ reviews: [dailyOn('2026-09-01', 0)] }), { now: NOW }).reviews.map((r) => r.id)).toEqual(['daily:2026-10-21:0']);
   });
 });

@@ -37,6 +37,7 @@ const EXPECTED_NAMES: IconName[] = [
   'shift',
   'shift-on',
   'backspace',
+  'rest',
   'hangul-tile',
   'rice-bowl',
   'lantern',
@@ -652,5 +653,13 @@ describe('theme glyphs (Heritage Journey grid; design/components/Icon/theme-glyp
     // the cone's tip: its lowest sampled point is on the centre line
     const tip = outline(cone as IconGlyphPart).reduce((low, point) => (point[1] > low[1] ? point : low));
     expect(tip[0]).toBeCloseTo(12, 5);
+  });
+
+  it('rest is one closed crescent outline, no fill (a granted rest day on the week strip, never a cross or a miss mark)', () => {
+    expect(iconGlyphs.rest).toHaveLength(1);
+    expect(fills('rest')).toHaveLength(0);
+    const [moon] = strokes('rest');
+    expect(moon?.d).toMatch(/Z$/);
+    expect(moon?.width).toBe(2.2);
   });
 });

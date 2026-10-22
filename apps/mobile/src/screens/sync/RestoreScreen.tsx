@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { decodeBackup } from '../../logic/sync/backup';
+import { restoreMemory } from '../../logic/sync/memory-hook';
 import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueInputRows } from '../../logic/sync/rescue-code';
 import { planRestore, restoreNotice, type RestorePlan } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
@@ -83,6 +84,8 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
     const plan = planRestore(file, existingProfile ? { profile: existingProfile, snapshot: progress.ensure(existingProfile.id) } : null, new Date());
     if (plan.action === 'create') useProfileStore.getState().adoptProfile(plan.profile);
     progress.replaceSnapshot(plan.profile.id, plan.snapshot);
+    // F-CURR-002 section 4.8: the file's memory states, merged into the store (none before row CM-12).
+    await restoreMemory(plan.profile.id, file.memory);
     // The merge is a union: put the cached plans' answer back on derived homework (F-PLAN-002 section 3.6).
     await rederiveLocal(plan.profile.id);
     useSyncStore.getState().requestSync(plan.profile.id);

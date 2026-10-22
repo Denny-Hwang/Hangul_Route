@@ -36,7 +36,7 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
       items: 4,
       newHeld: 2,
       minutes: 9,
-      durableWeekBucket: '1-4',
+      durableWeekBucket: '3-4',
       dueVolumeBucket: '10-19',
       arms: {},
     },
@@ -45,7 +45,7 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
     'memory.daily',
     { hist: [], lapses: 0, items: 0, newHeld: 0, minutes: 0, durableWeekBucket: '0', dueVolumeBucket: '0' },
   ],
-  ['items.seeded', { countBucket: '500-999', spreadDaysBucket: '31+' }],
+  ['items.seeded', { countBucket: '500-999', spreadDaysBucket: '46-62' }],
   ['mastery.level_up', { cellId: 'episode:stage2-nature', level: 1 }],
   ['stage.card_opened', { stage: 'stage2' }],
   ['testout.finished', { cellId: 'episode:stage3-crafts', passed: false, items: 8, firstTryCorrect: 5 }],
@@ -115,6 +115,14 @@ describe('POST /api/telemetry, F-CURR-002 section 11.3 names (CM-3, Worker first
     expect(r.status).toBe(201);
     expect(r.body.data?.event).toMatchObject({ name: 'mastery.level_up', profileId: 'profile:suni' });
     expect(r.body.data?.event.payload).toBeUndefined();
+  });
+
+  it("stores week.goal_met with a weekly plan's days a week as its target (CM-17, F-PLAN-002 paces 2 and 4)", async () => {
+    for (const target of [2, 4]) {
+      const r = await post({ name: 'week.goal_met', profileId: 'profile:suni', payload: { days: target, target } });
+      expect(r.status).toBe(201);
+      expect(r.body.data?.event.payload).toEqual({ days: target, target });
+    }
   });
 
   it('records space.goal.* on the Worker side with its metric and target, no profile id, and the same strict filter', () => {

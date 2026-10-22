@@ -97,6 +97,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'landing.notFound.title': '"No encontramos esta página" (26) against "Page not found" (14): Spanish says it as a sentence, as the old 404 line did; a page h1 that wraps',
   // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.4 (row OA-7a): Remove from this device.
   'caregiver.people.removeAnyway': '"Quitar de todos modos" (21) against "Remove anyway" (13), one letter over: the idiom of the allow-listed console.confirm.copyAnyway; a quiet ConfirmSheet button that wraps',
+  // F-CURR-002 row CM-14: the Daily Review result's stars, read aloud only.
+  'a11y.dailyReview.stars': '"1 estrella" (10) against "1 star" (6): the one Spanish word for star; read aloud, never drawn',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

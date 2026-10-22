@@ -1,14 +1,13 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): the rule is a stub until row CM-10 adds the snapshot, so a Volume 2 cell reports nothing for it. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-10): every item a ready cell teaches has its id in the frozen-id snapshot, and an edited word keeps its id through an alias. Not real content.",
   "rule": "items-stable-id",
   "files": {
     "content/episodes/stage-2/nature.v2.json": {
       "id": "episode:stage2-nature-v2",
       "stage": "stage2",
       "theme": "nature",
-      "volume": 2,
-      "status": "draft",
-      "titleEn": "Sky and Sea",
+      "status": "ready",
+      "titleEn": "A cell",
       "quests": [
         {
           "id": "quest:stage2-nature-v2-q1",
@@ -51,102 +50,24 @@
             },
             {
               "id": "s3",
-              "kind": "practice",
-              "titleEn": "Play",
-              "minigameKind": "pic-word-match",
-              "minigameRef": "minigame:s2-nature-q1-practice"
-            },
-            {
-              "id": "s4",
-              "kind": "apply",
-              "titleEn": "Play",
-              "minigameKind": "card-match",
-              "minigameRef": "minigame:s2-nature-q1-apply"
-            },
-            {
-              "id": "s5",
-              "kind": "check",
-              "titleEn": "Play",
-              "minigameKind": "type-hangul",
-              "minigameRef": "minigame:s2-nature-q1-check"
-            },
-            {
-              "id": "s6",
               "kind": "reward",
               "titleEn": "Well done"
             }
           ],
-          "scopes": [
-            {
-              "ref": "minigame:s2-nature-q1-practice",
-              "kind": "pic-word-match",
-              "boards": [
-                {
-                  "pairs": [
-                    {
-                      "id": "p1",
-                      "word": {
-                        "ko": "하늘",
-                        "romanization": "haneul",
-                        "en": "sky"
-                      }
-                    },
-                    {
-                      "id": "p2",
-                      "word": {
-                        "ko": "별",
-                        "romanization": "byeol",
-                        "en": "star"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "ref": "minigame:s2-nature-q1-apply",
-              "kind": "card-match",
-              "pairs": [
-                {
-                  "ko": "하늘",
-                  "romanization": "haneul",
-                  "en": "sky"
-                },
-                {
-                  "ko": "별",
-                  "romanization": "byeol",
-                  "en": "star"
-                }
-              ]
-            },
-            {
-              "ref": "minigame:s2-nature-q1-check",
-              "kind": "type-hangul",
-              "rounds": [
-                {
-                  "id": "r1",
-                  "promptEn": "Type the word.",
-                  "target": {
-                    "ko": "하늘",
-                    "romanization": "haneul",
-                    "en": "sky"
-                  }
-                },
-                {
-                  "id": "r2",
-                  "promptEn": "Type the word.",
-                  "target": {
-                    "ko": "별",
-                    "romanization": "byeol",
-                    "en": "star"
-                  }
-                }
-              ]
-            }
-          ]
-        },
+          "scopes": []
+        }
+      ],
+      "volume": 2
+    },
+    "content/episodes/stage-3/nature.json": {
+      "id": "episode:stage3-nature",
+      "stage": "stage3",
+      "theme": "nature",
+      "status": "ready",
+      "titleEn": "A cell",
+      "quests": [
         {
-          "id": "quest:stage2-nature-v2-q2",
+          "id": "quest:stage3-nature-q1",
           "titleEn": "A quest",
           "estimatedMinutes": 4,
           "steps": [
@@ -163,168 +84,6 @@
                 "pages": [
                   {
                     "items": [
-                      {
-                        "type": "word",
-                        "word": {
-                          "ko": "나무",
-                          "romanization": "namu",
-                          "en": "tree"
-                        }
-                      },
-                      {
-                        "type": "word",
-                        "word": {
-                          "ko": "꽃",
-                          "romanization": "kkot",
-                          "en": "flower"
-                        }
-                      }
-                    ]
-                  }
-                ]
-              }
-            },
-            {
-              "id": "s3",
-              "kind": "practice",
-              "titleEn": "Play",
-              "minigameKind": "card-match",
-              "minigameRef": "minigame:s2-nature-q2-practice"
-            },
-            {
-              "id": "s4",
-              "kind": "apply",
-              "titleEn": "Play",
-              "minigameKind": "pic-word-match",
-              "minigameRef": "minigame:s2-nature-q2-apply"
-            },
-            {
-              "id": "s5",
-              "kind": "check",
-              "titleEn": "Play",
-              "minigameKind": "realia-read",
-              "minigameRef": "minigame:s2-nature-q2-check"
-            },
-            {
-              "id": "s6",
-              "kind": "reward",
-              "titleEn": "Well done"
-            }
-          ],
-          "scopes": [
-            {
-              "ref": "minigame:s2-nature-q2-practice",
-              "kind": "card-match",
-              "pairs": [
-                {
-                  "ko": "하늘",
-                  "romanization": "haneul",
-                  "en": "sky"
-                },
-                {
-                  "ko": "별",
-                  "romanization": "byeol",
-                  "en": "star"
-                }
-              ]
-            },
-            {
-              "ref": "minigame:s2-nature-q2-apply",
-              "kind": "pic-word-match",
-              "boards": [
-                {
-                  "pairs": [
-                    {
-                      "id": "p1",
-                      "word": {
-                        "ko": "하늘",
-                        "romanization": "haneul",
-                        "en": "sky"
-                      }
-                    },
-                    {
-                      "id": "p2",
-                      "word": {
-                        "ko": "별",
-                        "romanization": "byeol",
-                        "en": "star"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "ref": "minigame:s2-nature-q2-check",
-              "kind": "realia-read",
-              "realia": {
-                "ref": "realia:fixture-sign",
-                "entries": [
-                  {
-                    "id": "e1",
-                    "text": {
-                      "ko": "하늘",
-                      "romanization": "haneul",
-                      "en": "sky"
-                    }
-                  },
-                  {
-                    "id": "e2",
-                    "text": {
-                      "ko": "별",
-                      "romanization": "byeol",
-                      "en": "star"
-                    }
-                  }
-                ],
-                "altEn": "A drawn sign."
-              },
-              "rounds": [
-                {
-                  "id": "r1",
-                  "promptEn": "Which word is on the sign?",
-                  "options": [
-                    {
-                      "id": "a",
-                      "text": {
-                        "ko": "하늘",
-                        "romanization": "haneul",
-                        "en": "sky"
-                      }
-                    }
-                  ],
-                  "answerId": "a"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "quest:stage2-nature-v2-q3",
-          "titleEn": "A quest",
-          "estimatedMinutes": 4,
-          "steps": [
-            {
-              "id": "s1",
-              "kind": "intro",
-              "titleEn": "Hello"
-            },
-            {
-              "id": "s2",
-              "kind": "discover",
-              "titleEn": "Look and learn",
-              "discover": {
-                "pages": [
-                  {
-                    "items": [
-                      {
-                        "type": "word",
-                        "word": {
-                          "ko": "산",
-                          "romanization": "san",
-                          "en": "mountain"
-                        }
-                      },
                       {
                         "type": "word",
                         "word": {
@@ -340,113 +99,28 @@
             },
             {
               "id": "s3",
-              "kind": "practice",
-              "titleEn": "Play",
-              "minigameKind": "pic-word-match",
-              "minigameRef": "minigame:s2-nature-q3-practice"
-            },
-            {
-              "id": "s4",
-              "kind": "apply",
-              "titleEn": "Play",
-              "minigameKind": "type-hangul",
-              "minigameRef": "minigame:s2-nature-q3-apply"
-            },
-            {
-              "id": "s5",
-              "kind": "check",
-              "titleEn": "Play",
-              "minigameKind": "pic-word-match",
-              "minigameRef": "minigame:s2-nature-q3-check"
-            },
-            {
-              "id": "s6",
               "kind": "reward",
               "titleEn": "Well done"
             }
           ],
-          "scopes": [
-            {
-              "ref": "minigame:s2-nature-q3-practice",
-              "kind": "pic-word-match",
-              "boards": [
-                {
-                  "pairs": [
-                    {
-                      "id": "p1",
-                      "word": {
-                        "ko": "하늘",
-                        "romanization": "haneul",
-                        "en": "sky"
-                      }
-                    },
-                    {
-                      "id": "p2",
-                      "word": {
-                        "ko": "별",
-                        "romanization": "byeol",
-                        "en": "star"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "ref": "minigame:s2-nature-q3-apply",
-              "kind": "type-hangul",
-              "rounds": [
-                {
-                  "id": "r1",
-                  "promptEn": "Type the word.",
-                  "target": {
-                    "ko": "하늘",
-                    "romanization": "haneul",
-                    "en": "sky"
-                  }
-                },
-                {
-                  "id": "r2",
-                  "promptEn": "Type the word.",
-                  "target": {
-                    "ko": "별",
-                    "romanization": "byeol",
-                    "en": "star"
-                  }
-                }
-              ]
-            },
-            {
-              "ref": "minigame:s2-nature-q3-check",
-              "kind": "pic-word-match",
-              "boards": [
-                {
-                  "pairs": [
-                    {
-                      "id": "p1",
-                      "word": {
-                        "ko": "하늘",
-                        "romanization": "haneul",
-                        "en": "sky"
-                      }
-                    },
-                    {
-                      "id": "p2",
-                      "word": {
-                        "ko": "별",
-                        "romanization": "byeol",
-                        "en": "star"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "scopes": []
         }
-      ],
-      "culture": [],
-      "rewardCardIds": []
+      ]
+    },
+    "packages/content-schema/src/review-items/items-stable-id.json": {
+      "schemaVersion": 1,
+      "ids": {
+        "lex|별": "lex:byeol",
+        "lex|달님": "lex:dal",
+        "lex|하늘": "lex:haneul",
+        "lex|강": "lex:gang"
+      },
+      "alias": {
+        "lex|달": "lex:dal"
+      },
+      "retired": [
+        "lex:gang"
+      ]
     }
   },
   "expect": []

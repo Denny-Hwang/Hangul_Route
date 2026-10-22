@@ -14,6 +14,7 @@ import {
   insightView,
   learnerReportView,
   letterLabel,
+  memoryLinesOf,
   reportBackLink,
   reportLoadProblem,
   reportCacheKey,
@@ -953,5 +954,50 @@ describe('F-BROWSE-001 BR-11: P1 carries its quest as an All lessons target', ()
     expect(v.practiceNext?.lines.slice(1).every((line) => line.preview === null)).toBe(true);
     expect(v.wentWell?.lines.every((line) => line.preview === null)).toBe(true);
     expect(view(LEGACY, { kind: 'class', role: 'teacher' }).practiceNext?.lines[0]?.preview).toBeNull();
+  });
+});
+
+describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
+  const memory = { wordsKnown: 42, readyToRefresh: 1, cellBestCounts: [5, 2, 1] as [number, number, number], stageChecks: 1, weekPoints: 30, topDue: ['lex:sagwa'], reviewOn: true as const };
+  type LinesBlock = Extract<NonNullable<LearnerReportView['moreDetail']>['blocks'][number], { kind: 'lines' }>;
+  const memoryBlock = (v: LearnerReportView): LinesBlock | undefined =>
+    v.moreDetail?.blocks.find((b): b is LinesBlock => b.kind === 'lines' && b.heading === 'Words and review');
+
+  it('draws words known, ready to refresh, the episodes per level and Stage Checks after the letters, for a family and a class', () => {
+    for (const kind of ['family', 'class'] as const) {
+      const v = view({ ...STEADY, memory }, { kind });
+      expect(memoryBlock(v), kind).toEqual({
+        kind: 'lines',
+        heading: 'Words and review',
+        lines: ['Words known: 42', '1 item is ready to refresh', 'Episodes: 5 done, 2 practiced, 1 mastered', 'Stage Checks passed: 1'],
+      });
+      const headings = v.moreDetail?.blocks.map((b) => ('heading' in b ? b.heading : null)) ?? [];
+      expect(headings.indexOf('Words and review')).toBeGreaterThan(headings.indexOf('Letters being practiced'));
+      // No item id and no week points reach the page.
+      expect(JSON.stringify(v)).not.toMatch(/lex:sagwa|30 points/);
+    }
+  });
+
+  it('a count of 0 has no line, and a summary without the block draws none (never "0 words known")', () => {
+    expect(memoryBlock(view({ ...STEADY, memory: { ...memory, readyToRefresh: 0, stageChecks: 0 } }))?.lines).toEqual(['Words known: 42', 'Episodes: 5 done, 2 practiced, 1 mastered']);
+    expect(memoryBlock(view({ ...STEADY, memory: { ...memory, wordsKnown: 0, cellBestCounts: [0, 0, 0], stageChecks: 0 } }))?.lines).toEqual(['1 item is ready to refresh']);
+    expect(memoryBlock(view(STEADY))).toBeUndefined();
+    expect(JSON.stringify(view(STEADY))).not.toMatch(/Words known|ready to refresh/);
+  });
+
+  it('a level at 0 has no part: "Episodes: 5 done" until row CM-20 derives levels 2 and 3', () => {
+    expect(memoryBlock(view({ ...STEADY, memory: { ...memory, cellBestCounts: [5, 0, 0] } }))?.lines).toContain('Episodes: 5 done');
+    expect(memoryBlock(view({ ...STEADY, memory: { ...memory, cellBestCounts: [5, 0, 1] } }))?.lines).toContain('Episodes: 5 done, 1 mastered');
+  });
+
+  it('no items ready to refresh while the learner has no review surface (the memoryRecord shadow period)', () => {
+    const shadow = { ...memory, reviewOn: undefined, readyToRefresh: 300 };
+    expect(memoryBlock(view({ ...STEADY, memory: shadow }))?.lines).toEqual(['Words known: 42', 'Episodes: 5 done, 2 practiced, 1 mastered', 'Stage Checks passed: 1']);
+  });
+
+  it('memoryLinesOf reads in Spanish and Korean', () => {
+    const levels = { wordsKnown: 3, readyToRefresh: 2, levels: [1, 0, 0] as [number, number, number], stageChecks: 0 };
+    expect(memoryLinesOf(levels, getMessages('es'))).toEqual(['Palabras conocidas: 3', '2 elementos están listos para repasar', 'Episodios: 1 terminado']);
+    expect(memoryLinesOf(levels, getMessages('ko'))).toEqual(['아는 낱말: 3개', '복습할 때가 된 항목: 2개', '에피소드: 완료 1개']);
   });
 });

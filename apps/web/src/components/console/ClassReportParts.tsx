@@ -147,7 +147,7 @@ function LayerTwo({ block }: { block: NonNullable<ClassReportView['thisPeriod']>
   );
 }
 
-/** Layer 3: More detail, collapsed: level-check counts per strand and the homework link blocks. */
+/** Layer 3: More detail, collapsed: the memory totals (F-CURR-002 CM-16), level-check counts per strand and the homework link blocks. */
 function LayerThree({ detail }: { detail: NonNullable<ClassReportView['moreDetail']> }): JSX.Element {
   const [open, setOpen] = useState(false);
   return (
@@ -159,6 +159,17 @@ function LayerThree({ detail }: { detail: NonNullable<ClassReportView['moreDetai
         </button>
       </h2>
       <div className="hr-report-detail" id={DETAIL_ID} hidden={!open} data-testid="report-detail">
+        {detail.memory ? (
+          <div className="hr-report-detail-block" data-testid="class-memory">
+            <h3>{detail.memory.heading}</h3>
+            <ul className="hr-report-detail-lines">
+              {detail.memory.lines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            <p className="hr-class-line">{detail.memory.from}</p>
+          </div>
+        ) : null}
         {detail.levelCheck ? (
           <div className="hr-report-detail-block">
             <h3>{detail.levelCheck.heading}</h3>

@@ -1,4 +1,4 @@
-import { ClassReportSchema, ProgressSummarySchema, ReportPeriodSchema, ReportSummarySchema, isDateKey, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { CLASS_SCOPE_TEXT_VERSION, ClassReportSchema, ProgressSummarySchema, ReportPeriodSchema, ReportSummarySchema, isDateKey, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
 import { noteTransferResult } from './transfer-lock';
 import {
   readClassScope,
@@ -574,7 +574,7 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
         return state ? { ok: true, data: state } : { ok: false, error: 'unknown', status: 200, code: 'bad_response' };
       }),
     acknowledgeClassScope: (familyId: string, learnerId: string, version: string): Promise<ApiResult<{ version: string; ackedAt: string }>> =>
-      call<{ version: string; ackedAt: string }>(`${base}/${encodeURIComponent(familyId)}/learners/${encodeURIComponent(learnerId)}/class-scope`, { method: 'POST', body: JSON.stringify({ version }) }, [200], { details: true }),
+      call<{ version: string; ackedAt: string }>(`${base}/${encodeURIComponent(familyId)}/learners/${encodeURIComponent(learnerId)}/class-scope`, { method: 'POST', body: JSON.stringify({ version, shown: CLASS_SCOPE_TEXT_VERSION }) }, [200], { details: true }),
   };
 
   function classMoves(spaceId: string): string {

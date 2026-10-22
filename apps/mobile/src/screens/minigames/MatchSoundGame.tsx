@@ -104,7 +104,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
     if (jamoId === round.promptJamo.id) {
       tapLight();
       success();
-      answerRound(roundIdx, true);
+      answerRound(roundIdx, true, { jamoIds: [round.promptJamo.id], rung: 'recognize' });
       setFeedback('correct');
       setTimeout(() => {
         if (roundIdx >= rounds.length - 1) {
@@ -116,7 +116,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
       }, 700);
     } else {
       nudge();
-      answerRound(roundIdx, false);
+      answerRound(roundIdx, false, { jamoIds: [round.promptJamo.id], rung: 'recognize' });
       setFeedback('wrong');
       setLockedWrongIds([...lockedWrongIds, jamoId]);
       if (replayTimer.current) clearTimeout(replayTimer.current);

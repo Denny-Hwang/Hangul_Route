@@ -11,7 +11,8 @@
 //     chunk (a static import would pull one back in: Metro then leaves an empty bundle behind);
 // and reports the start bundle, the chunks and the learner precache against their budget lines.
 // Row CM-8 puts the story chunks of scripts/build-stories.mjs (one per story, the same hashing) through
-// the same checks: pwa-postbuild.mjs passes both manifests, and the report counts each apart.
+// the same checks: pwa-postbuild.mjs passes both manifests, and the report counts each apart. Row CM-10
+// adds the review-item chunk of scripts/build-review-items.mjs the same way, with its own budget line.
 // Pure, apart from `md5`/`gzipSize` helpers; pwa-postbuild.mjs feeds it the built files.
 
 import { createHash } from 'node:crypto';
@@ -45,8 +46,17 @@ export const PRECACHE_BUDGET = Object.freeze({
   // The start bundle shrink (F-CURR-002 §10 decision record) makes the es / ko messages and content overlays a precached
   // chunk per locale and the presenter and All lessons chunks of their own: 4,712,987 B raw / 1,237,660 B gzip on main
   // 7eb5bad61 (6,491,546 B before; 4,713,416 B raw after its review fixes); merged onto the final integration (main fc580beed, release `build:web`) it measures
-  // 4,732,797 B raw / 1,243,089 B gzip, so the line is that measurement plus a 7,203 B rounding margin.
-  startBundleRaw: 4_740_000,
+  // 4,732,797 B raw / 1,243,089 B gzip, so the line was that measurement plus a 7,203 B rounding margin (4,740,000 B).
+  // The Daily Review (F-CURR-002 row CM-14, on CM-13's head: rows CM-10 to CM-14) keeps its screen, rounds, session
+  // logic and the review engine in chunks; what stays is the route, Home's hook and card, the boot module's
+  // memoryChunk() and the English strings: 4,744,598 B raw / 1,247,230 B gzip (release `build:web` with the review
+  // fixes; 4,743,992 B before them), so the line was that measurement plus a 5,402 B rounding margin (4,750,000 B).
+  // CM-15 (the quest warm-up and Try these again) measured 4,744,698 B raw on CM-13's head (sessions and round view in
+  // a chunk of their own, planning in the memory chunk), CM-16 (the summary memory block) 4,742,801 B on CM-12's head
+  // and CM-17 (goals, in a learner chunk of their own) 4,739,306 B on main. The F-CURR-002 phase-1 integration
+  // (integrate/curr-phase1: CM-10 to CM-17 on main 82237b684) measures 4,760,960 B raw / 1,253,023 B gzip (release
+  // `build:web`), so the line is that measurement plus a 9,040 B rounding margin.
+  startBundleRaw: 4_770_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -66,6 +76,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   storyChunkRaw: 70_000,
   storiesRaw: 2_000_000,
   storiesGzip: 510_000,
+  // The review-item index (F-CURR-002 §4.2, §10 ceilings table, row CM-10): one content-hashed chunk of
+  // scripts/build-review-items.mjs, lazy and precached, held here on its built bundle and there on its module
+  // (`BUDGET`, the same lines; the test keeps them equal). Measured at CM-10: 728 items, 94,162 B raw / 19,597 B
+  // gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`).
+  reviewItemsRaw: 150_000,
+  reviewItemsGzip: 30_000,
 });
 
 export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
@@ -125,6 +141,37 @@ export const ROOT_CHUNKS = Object.freeze([
   Object.freeze({ name: 'PresenterApp', marker: 'root-chunk:presenter' }),
   Object.freeze({ name: 'BrowseApp', marker: 'root-chunk:browse' }),
 ]);
+
+/**
+ * The memory store of the learner PWA (F-CURR-002 row CM-12): its runtime (the scheduler, the seeding, the sync and
+ * `memory.daily`) is a bundle of its own, reached only through the literal `import()` of `src/logic/memory/boot.ts`,
+ * so the start bundle carries none of it. The chunk module exports its marker (`MEMORY_CHUNK`).
+ */
+export const MEMORY_CHUNKS = Object.freeze([Object.freeze({ name: 'memory-chunk', marker: 'memory-chunk:runtime' })]);
+
+/**
+ * The Daily Review of the learner PWA (F-CURR-002 row CM-14): its screen and rounds are a bundle of their own, reached
+ * only through the literal `import()` of `src/screens/reviews/DailyReviewRoute.tsx`, so the start bundle carries none
+ * of it. Its session logic and the review engine live in the memory chunk (`MEMORY_CHUNKS`, through
+ * `logic/memory/memory-chunk.ts`), so no scheduler module is shared by two chunks. The chunk module exports its marker
+ * (`DAILY_REVIEW_CHUNK`).
+ */
+export const REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'daily-review-chunk', marker: 'review-chunk:daily' })]);
+
+/**
+ * The quest warm-up and Try these again (F-CURR-002 row CM-15): the sessions and the round view are a bundle of
+ * their own (the review engine and the planning ride in the memory chunk), reached only through the literal `import()` of `src/screens/quest/quest-reviews.ts`
+ * while `questWarmup` or `missedPractice` is on, so the start bundle carries none of it. The chunk module exports its
+ * marker (`QUEST_REVIEW_CHUNK`).
+ */
+export const QUEST_REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'quest-review-chunk', marker: 'quest-review-chunk:session' })]);
+
+/**
+ * The learner chunks a switch loads (F-CURR-002 §10): the daily and weekly goals (row CM-17,
+ * `src/screens/goals/goals-chunk.ts`) are a bundle of their own, reached only through the literal `import()` of
+ * `src/store/goals-entry.ts`, so a learner with `goals` off never loads them and the start bundle does not grow.
+ */
+export const LEARNER_CHUNKS = Object.freeze([Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' })]);
 
 /**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
@@ -194,10 +241,10 @@ function chunkTotals(manifest, bundles) {
 
 /**
  * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8), the locale chunks, the grown-up
- * root chunks and the whole learner precache.
- * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
+ * root chunks, the review-item chunk (row CM-10) and the whole learner precache.
+ * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
@@ -205,6 +252,7 @@ export function precacheReport({ manifest, stories = [], locales = [], roots = [
     storyChunks: chunkTotals(stories, bundles),
     localeChunks: chunkTotals(locales, bundles),
     rootChunks: chunkTotals(roots, bundles),
+    reviewItemChunks: chunkTotals(reviewItems, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -227,6 +275,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   if (report.rootChunks !== undefined && report.rootChunks.count > 0) {
     lines.push(
       `  grown-up root chunks  ${report.rootChunks.count} bundles  ${report.rootChunks.raw} B raw  ${report.rootChunks.gzip} B gzip  (largest ${report.rootChunks.largest?.raw ?? 0} B raw, ceiling ${budget.rootChunkRaw} B each)`,
+    );
+  }
+  if (report.reviewItemChunks !== undefined && report.reviewItemChunks.count > 0) {
+    lines.push(
+      `  review-item chunk  ${report.reviewItemChunks.count} bundles  ${report.reviewItemChunks.raw} B raw  ${report.reviewItemChunks.gzip} B gzip  (ceiling ${budget.reviewItemsRaw} B raw, ${budget.reviewItemsGzip} B gzip)`,
     );
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
@@ -276,6 +329,12 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
           `(raise PRECACHE_BUDGET.${line} in apps/mobile/scripts/pwa/lesson-chunks.mjs as a reviewed one-line change with the measured numbers in the PR)`,
       );
     }
+  }
+  const reviewItems = report.reviewItemChunks;
+  if (reviewItems !== undefined) {
+    const raise = '(raise it in scripts/build-review-items.mjs BUDGET and PRECACHE_BUDGET together, as a reviewed one-line change with the measured numbers in the PR)';
+    if (reviewItems.raw > budget.reviewItemsRaw) problems.push(`the review-item bundle is ${reviewItems.raw} B raw, over its ceiling of ${budget.reviewItemsRaw} B ${raise}`);
+    if (reviewItems.gzip > budget.reviewItemsGzip) problems.push(`the review-item bundle is ${reviewItems.gzip} B gzip, over its ceiling of ${budget.reviewItemsGzip} B gzip ${raise}`);
   }
   if (report.precache.raw > budget.learnerPrecacheRaw) {
     problems.push(

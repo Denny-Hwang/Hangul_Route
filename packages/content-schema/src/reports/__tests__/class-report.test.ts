@@ -630,3 +630,45 @@ describe('hard rules (section 3.7)', () => {
     expect(report({ learners: oral, plans: CLASS_PLANS })).toEqual(class20('week'));
   });
 });
+
+describe('memory counts (F-CURR-002 CM-16)', () => {
+  const block = (wordsKnown: number, readyToRefresh: number, cellBestCounts: [number, number, number], stageChecks = 0, reviewOn = true) => ({
+    memory: { wordsKnown, readyToRefresh, cellBestCounts, stageChecks, weekPoints: 9, topDue: ['lex:sagwa'], ...(reviewOn ? { reviewOn: true as const } : {}) },
+  });
+
+  it('sums the members that carry the block, and counts them', () => {
+    const r = report({
+      now: NOW_UTC,
+      learners: [member({ '2026-10-14': {} }, block(40, 6, [5, 2, 1], 1)), member({ '2026-10-13': {} }, block(12, 0, [3, 0, 0])), member({ '2026-10-12': {} })],
+    });
+    expect(r.memory).toEqual({ learners: 2, wordsKnown: 52, readyToRefresh: 6, levels: [8, 2, 1], stageChecks: 1 });
+    expect(ClassReportSchema.parse(r)).toEqual(r);
+  });
+
+  it('adds the items ready to refresh only of learners who have the review surface (not in the shadow period)', () => {
+    const r = report({ now: NOW_UTC, learners: [member({ '2026-10-14': {} }, block(40, 6, [5, 2, 1])), member({ '2026-10-13': {} }, block(12, 300, [3, 0, 0], 0, false))] });
+    expect(r.memory).toMatchObject({ learners: 2, wordsKnown: 52, readyToRefresh: 6 });
+  });
+
+  it('carries no item id, no points and nothing per learner', () => {
+    const r = report({ now: NOW_UTC, learners: [member({ '2026-10-14': {} }, block(40, 6, [5, 2, 1]))] });
+    expect(JSON.stringify(r)).not.toMatch(/lex:|topDue|weekPoints/);
+  });
+
+  it('is omitted when no member carries the block (an older app, or not shared with the class): never a zero', () => {
+    expect(report({ now: NOW_UTC, learners: [member({ '2026-10-14': {} })] })).not.toHaveProperty('memory');
+    expect(class20('week')).not.toHaveProperty('memory');
+  });
+
+  it('reads the same on every period (current counts, not a window)', () => {
+    const learners = [member({ '2026-10-14': {} }, block(40, 6, [5, 2, 1]))];
+    const memories = (['day', 'week', 'month', 'all'] as const).map((period) => report({ now: NOW_UTC, period, learners }).memory);
+    for (const m of memories) expect(m).toEqual(memories[0]);
+  });
+
+  it('a body without the block still parses (an older Worker)', () => {
+    const r = class20('week');
+    expect(ClassReportSchema.safeParse(r).success).toBe(true);
+    expect(ClassReportSchema.safeParse({ ...r, memory: { learners: 1, wordsKnown: 1.5, readyToRefresh: 0, levels: [0, 0, 0], stageChecks: 0 } }).success).toBe(false);
+  });
+});

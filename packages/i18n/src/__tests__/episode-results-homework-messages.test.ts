@@ -108,13 +108,13 @@ describe('learner.homework (English wording as shipped)', () => {
 describe('learner.home.mission and learner.journey.availability (left by PR 6a)', () => {
   it('keeps the mission-card words the builder used to return', () => {
     const mission = m.learner.home.mission;
-    expect(mission.dailyTest.title).toBe('Quick review');
+    expect(mission.dailyReview.title).toBe('Daily Review');
     expect(mission.subtitle).toEqual({
       replay: 'One more go with Hoya',
       story: 'Story time',
       new: 'Something new today',
       assigned: 'Picked just for you',
-      dailyTest: 'About a minute with Hoya',
+      dailyReview: 'About 3 minutes',
     });
   });
 

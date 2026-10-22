@@ -138,3 +138,25 @@ Both variants show the same layers; nothing else differs. Neither shows a class 
 - **RP-7a2**: the P1 sentence names letters only. Its quest (`activity.revisit`) travels in **Add to a plan** and in **Preview**; `report.insight.letters_revisit` has no quest slot, so P1 has no quest title to link. RP-7a2 lays out the action group with room for both; F-BROWSE-001 BR-11 adds **Preview** where F-BROWSE-001 section 4.11 renders console entries (`browseEnabled()` and the console on the app origin; `openBrowse({ kind: 'quest', id }, 'report')`, content ids only). Each action renders only when the line has a `questId` (none in `legacy`, none for a quest this build's catalogue lacks); with neither, the action group is not drawn and the line is its sentence alone. Each action carries `aria-describedby` naming the line's sentence, so a links list or a voice-control user hears "Preview" with the letters it is for (the mock's `line-N` ids). RP-7a2's tests: P1 without a `questId` has no action group. RP-13 links P1's letters.
 - **RP-12**: Send a note's place is the header, beside Print, never in an insight line.
 - **RP-13**: letter links, the P4 quest title and the strand tip become `openBrowse` links; their look is drawn here. P1's quest goes through the BR-11 **Preview** action, not RP-13.
+
+## Words and review (F-CURR-002 row CM-16)
+
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` sections 3.4, 4.4, 4.8 and 4.9 · Shots: `shots/learner-report-memory-320.png`, `shots/learner-report-memory-1280.png` (a class viewer, More detail open)
+
+One more layer-3 block in More detail, drawn exactly as the other line blocks (`h3`, then one body line per count; no new part, no new token):
+
+```
+Letters being practiced / New letters this period   (as today)
+Words and review                      (h3)   report.detail.memory
+Words known: 42                              report.detail.wordsKnown
+6 items are ready to refresh                 report.detail.readyToRefresh
+Episodes: 5 done, 2 practiced, 1 mastered    report.detail.mastery (cellBestCounts)
+Stage Checks passed: 1                       report.detail.stageChecks
+Milestones / Level check / Plan              (as today)
+```
+
+- **Where.** After the letter blocks (words sit next to letters) and before Milestones. Current counts, not a window: the same block on Today, This week, This month and All time, and in the legacy state (it reads `summary.memory`, not `activity`).
+- **When.** Only when the summary carries `memory`: the learner's app records (`memoryRecord` on), and for a class or school viewer only where the family read the class-scope text that lists the `memory` item. Without the block nothing is drawn: no heading, no placeholder, never "0 words known".
+- **Anti-shame (section 7.7).** Each line only when its count is above 0 (the mastery line while any episode has a level), and the mastery line names only the levels above 0: "Episodes: 5 done" while levels 2 and 3 read 0 (until row CM-20), never "0 practiced, 0 mastered". "Items ready to refresh" shows only while the learner has the review surface (`memory.reviewOn`, `dailyReview` on): during the `memoryRecord` shadow period seeded items fall due with nothing asking them, so that line is left out. Counts only, no percentage and no comparison; "ready to refresh" is the neutral word of the mastery ring, never "overdue" or "forgotten". Item ids and week points never reach the page.
+- **Mastery levels.** Episodes at `cellBest` levels 1, 2 and 3 with the ring's words (Done, Practiced, Mastered). Row CM-12 seeds level 1; levels 2 and 3 appear once row CM-20 derives them, with no change here.
+- **Print.** More detail prints expanded (unchanged), so the block prints with it.

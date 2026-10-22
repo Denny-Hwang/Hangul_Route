@@ -170,7 +170,7 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
           } else {
             nudge();
           }
-          answerRound(effect.roundKey, effect.correct);
+          answerRound(effect.roundKey, effect.correct, { check: playerView.items[previous.index] });
           // The Hoya bubble is a polite live region on the web. Native hears the outcome and Hoya's line
           // in one announcement: a miss at once, a resolve after focus moves to Next (effect below).
           const answered = playerView.items[previous.index];

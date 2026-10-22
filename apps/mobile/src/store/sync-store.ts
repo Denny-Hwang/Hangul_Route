@@ -16,6 +16,7 @@ import {
 } from '../logic/sync/learner-profile';
 import { buildActivity, deviceLocalDay } from '../logic/reports/activity';
 import { syncLearner } from '../logic/sync/engine';
+import { memorySummaryFor, pullMemoryAfterAdopt, refreshMemorySummary } from '../logic/sync/memory-hook';
 import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
 import { createSyncScheduler } from '../logic/sync/scheduler';
@@ -189,6 +190,8 @@ export const summarizeFor = (snapshot: ProgressSnapshot) => {
     // Day-by-day report activity on this device's calendar (F-REPORT-001 RP-4, OD-12). `next` waits for F-ENT-003
     // E3-4's `routeNext`; `revisit` reads the same quest access the learner's screens do.
     activity: buildActivity({ snapshot, now, questJamo, localDay: deviceLocalDay, isQuestOpen: questOpenFor(snapshot.profileId, now, snapshot) }),
+    // The memory counts (F-CURR-002 row CM-16), as the memory store last gave them; none while the profile does not record.
+    memory: memorySummaryFor(snapshot.profileId),
   });
 };
 
@@ -424,6 +427,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       profileError = await pushProfile(learnerId, creds, client);
     }
 
+    // The summary below carries the memory counts as they are now (row CM-16): the store answers within its timeout.
+    await refreshMemorySummary(learnerId);
     const outcome = await syncLearner({
       learnerId,
       local,
@@ -583,6 +588,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       update(learnerId, { secret, rev: server?.rev ?? 0, status: 'idle', lastError: null, ...(rescueCode ? { rescueCode } : {}) });
       // Merging may have added local-only progress; push it back.
       get().requestSync(learnerId);
+      // F-CURR-002 section 4.8: the memory store pulls the learner's shards with the new credentials (row CM-12).
+      pullMemoryAfterAdopt(learnerId);
       return plan;
     },
 

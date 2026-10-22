@@ -1,5 +1,7 @@
 import {
   PLACEMENT_KEEP,
+  RETAINED_REVIEW_KINDS,
+  latestLocalDay,
   mergeCellBest,
   mergeDayLog,
   mergeEarliest,
@@ -7,6 +9,8 @@ import {
   mergeLatchRecord,
   mergeStreakBest,
   mergeStreakLocal,
+  pruneDailyReviews,
+  pruneReviews,
   type CardCollectionEntry,
   type EpisodeProgress,
   type HomeworkAssignment,
@@ -91,7 +95,32 @@ export function mergeHomework(l: HomeworkAssignment, s: HomeworkAssignment): Hom
   return { ...(l.completedAt ? l : s.completedAt ? s : l), completedAt };
 }
 
+/** Item ids of both copies, each once, the first copy's order first. */
+const unionIds = (a: readonly string[], b: readonly string[]): string[] => [...new Set([...a, ...b])];
+
+/**
+ * A day of warm-ups or of Try these again (F-CURR-002 section 4.5, row CM-15) is one entry, `<kind>:<local day>`:
+ * two copies of it hold every item either asked, the better stars and the earliest time, so the day's entry never
+ * loses a session played on another device.
+ */
+function mergeDayReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
+  const stars = Math.max(l.resultStars ?? -1, s.resultStars ?? -1);
+  const missed = l.missedItemIds === undefined && s.missedItemIds === undefined ? undefined : unionIds(l.missedItemIds ?? [], s.missedItemIds ?? []);
+  return {
+    id: l.id,
+    kind: l.kind,
+    generatedAt: earliest(l.generatedAt, s.generatedAt) ?? l.generatedAt,
+    scope: l.scope,
+    itemIds: unionIds(l.itemIds, s.itemIds),
+    ...(stars >= 0 ? { resultStars: stars as 0 | 1 | 2 | 3 } : {}),
+    ...(missed === undefined ? {} : { missedItemIds: missed }),
+  };
+}
+
+const DAY_REVIEW_KINDS: readonly string[] = RETAINED_REVIEW_KINDS;
+
 export function mergeReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
+  if (l.kind === s.kind && DAY_REVIEW_KINDS.includes(l.kind)) return mergeDayReview(l, s);
   const ls = l.resultStars ?? -1;
   const ss = s.resultStars ?? -1;
   if (ls !== ss) return ls > ss ? l : s;
@@ -371,7 +400,7 @@ export function mergeSession(l: SessionLog, s: SessionLog): SessionLog {
  * applies too (`progress-merge.ts` in content-schema): max for `cellBest` and
  * `streakBest`, earliest for the latches and `memSeededAt`, the later `setAt`
  * for `goals`, max per day and install key for `dayLog`, the later `lastDay`
- * for `streakLocal`. A key neither side holds stays absent.
+ * for `streakLocal`, the latch union for `steadyWeeks`. A key neither side holds stays absent.
  */
 function mergeCurr002Fields(local: ProgressSnapshot, server: ProgressSnapshot): Partial<ProgressSnapshot> {
   const merged: Partial<ProgressSnapshot> = {
@@ -385,6 +414,8 @@ function mergeCurr002Fields(local: ProgressSnapshot, server: ProgressSnapshot): 
     streakBest: mergeStreakBest(local.streakBest, server.streakBest),
     stamps: mergeLatchRecord(local.stamps, server.stamps),
     memSeededAt: mergeEarliest(local.memSeededAt, server.memSeededAt),
+    // Row CM-17: the steady-weeks latch, union of keys with the earliest time per week.
+    steadyWeeks: mergeLatchRecord(local.steadyWeeks, server.steadyWeeks),
   };
   return Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== undefined));
 }
@@ -416,7 +447,13 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     cards: unionBy(local.cards, server.cards, (c) => c.cardId, mergeCard),
     sessions,
     homework: unionBy(local.homework, server.homework, (h) => h.id, mergeHomework),
-    reviews: unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview),
+    // `daily` entries (the Daily Review and each Keep going) are kept for 14 local days, as the Worker keeps them (section 4.8);
+    // one dated past the latest local day of now (a clock far ahead) never sets the window (section 13).
+    // The warm-up and Try these again days are kept for 14 local days, as the Worker keeps them (section 4.8); a day
+    // after the latest local day of now (a clock that was set ahead) is dropped, so it never prunes the real days.
+    reviews: [
+      ...pruneReviews(pruneDailyReviews(unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview), { latestDay: latestLocalDay(opts.now) }), latestLocalDay(opts.now)),
+    ],
     // The old streak, still written for older builds: story, game and level-check time never moves it (OD-19).
     streakDays: computeStreak(streakSessionDates(sessions), opts.now),
     ...(stageDoneAt ? { stageDoneAt } : {}),

@@ -328,15 +328,18 @@ export const learner = {
        * the same lesson twice. It still shows done and still collects, as F-HW-001 says.
        */
       sameAsHero: 'Same as your next lesson above',
-      /** The daily-test card names itself; every other card is titled by its quest or episode (content). */
-      dailyTest: { title: 'Quick review' },
+      /**
+       * The Daily Review card (F-CURR-002 section 4.5, row CM-14) names itself; every other card is titled by its quest or
+       * episode (content). Its subtitle is plain time, never a count owed.
+       */
+      dailyReview: { title: 'Daily Review' },
       /** Keyed by `MissionSubtitle`, the code a mission card carries instead of prose. */
       subtitle: {
         replay: 'One more go with Hoya',
         story: 'Story time',
         new: 'Something new today',
         assigned: 'Picked just for you',
-        dailyTest: 'About a minute with Hoya',
+        dailyReview: 'About 3 minutes',
       },
       /**
        * The vocabulary card (F-VOC-005 section 3.7, slot 3): shown from three due words, it opens a Relaxed
@@ -2472,6 +2475,117 @@ export const learner = {
       teacher: 'Teacher',
       school: 'School',
       signIn: 'Sign in as a grown-up',
+    },
+  },
+  /**
+   * The Daily Review (F-CURR-002 sections 4.5, 7.4 and 7.7, row CM-14; design/wireframes/reviews/daily-review.md): 10 short
+   * rounds of what the learner met before, then stars and how many got stronger. Never a percentage, an "n of m", a timer,
+   * "overdue", "behind" or "missed" (the `review-copy` lint reads this namespace and `keepGoing`). The rounds reuse the
+   * games' own instructions, sound lines and Hoya lines.
+   */
+  dailyReview: {
+    title: 'Daily Review',
+    /** Above the Today cards when many items are due (section 4.3, review first): a positive nudge, never a debt. */
+    readyLine: (n: number) => plural('en', n, { one: '1 item is ready to refresh', other: `${n} items are ready to refresh` }),
+    result: {
+      /** One word per star tier (F-RVW-001 section 3.1), never a number. */
+      headline: { three: 'Wonderful!', two: 'Great work!', one: 'Good try!' },
+      /** Items whose best box rose today: a count of the learner's own items, never a ratio. */
+      stronger: (n: number) => plural('en', n, { one: '1 got stronger', other: `${n} got stronger` }),
+      noneStronger: 'Every answer helps them stick.',
+      backHome: { cta: 'Back home' },
+    },
+    /** Nothing to ask (also the end-early case with no round answered, a flag off and a store that cannot be read). */
+    allRefreshed: {
+      title: 'All refreshed today',
+      body: 'Nothing is waiting right now. Play a quest or read a story.',
+    },
+    /** The stop sheet over a round: the answers given stay recorded. */
+    leave: {
+      title: 'Stop for now?',
+      body: 'What you answered still counts.',
+      stay: { cta: 'Back to it' },
+      stop: { cta: 'Stop' },
+    },
+  },
+  /**
+   * Keep going (row CM-14; design/wireframes/reviews/keep-going.md): 10 more, optional, up to 3 times a day. Never a count
+   * of what is left and never shown as owed.
+   */
+  keepGoing: {
+    /** The Keep going button's description. */
+    offer: 'Want a few more?',
+    cta: 'Keep going',
+    /** The third Keep going of the day with items still due: one calm line instead of the offer. */
+    enough: { title: 'That is plenty for today.', body: 'Hoya will bring the rest back soon.' },
+    /** The collected Daily Review card on Home, tapped. */
+    doneToday: { title: 'Daily Review done today' },
+  },
+  /**
+   * The warm-up before a Stage 2+ quest (F-CURR-002 section 4.5, row CM-15): up to 3 earlier items, outside the six
+   * steps, nothing scored. The rounds reuse the shipped instruction lines. Read by the `review-copy` rule.
+   */
+  warmUp: {
+    pill: 'Warm-up',
+    intro: 'A quick look back before we start.',
+    skip: { cta: 'Skip warm-up' },
+    done: 'Warmed up',
+  },
+  /** Try these again on the reward step (F-CURR-002 section 4.5): the quest's misses, stars only, never required. */
+  tryAgain: {
+    cta: 'Try these again',
+    intro: 'A quick second look at the tricky ones.',
+  },
+  /**
+   * Daily and weekly goals on Home (F-CURR-002 section 7.4, OD-6, row CM-17; design/wireframes/home/goal-ring-weekly-dots.md).
+   * Plain time words, never a number of points, a percentage or "n of m". Never "lost", "missed", "broken",
+   * "behind", "late" or a countdown. "Steady" is never bare: the daily tier always carries its time words, and the
+   * steady week is its own term (es and ko give the daily tier, the plan pace and the steady week three renderings).
+   * The streak line reuses `home.streak.pill`.
+   */
+  goals: {
+    /** The headline: the weeks that reached the weekly goal, ever (it never drops). */
+    steadyWeeks: (count: number) => plural('en', count, { one: '1 steady week', other: `${count} steady weeks` }),
+    /** The headline with no steady week yet. */
+    firstWeek: 'Your first steady week starts here',
+    /** The streak line once a run has ended, until the next finished activity: the best run is kept. */
+    newRun: (best: number) => plural('en', best, { one: 'Start a new run! Best run: 1 day', other: `Start a new run! Best run: ${best} days` }),
+    today: {
+      met: 'Daily goal done',
+      more: 'A little more for your daily goal',
+    },
+    daily: {
+      light: 'Light',
+      steady: 'Steady',
+      strong: 'Strong',
+      time: { light: 'about 5 minutes', steady: 'about 10 minutes', strong: 'about 15 minutes' },
+      /** A daily tier with its time words: "Light, about 5 minutes". */
+      label: (tier: string, time: string) => `${tier}, ${time}`,
+    },
+    weekly: {
+      days: (n: number) => plural('en', n, { one: '1 day', other: `${n} days` }),
+    },
+    sheet: {
+      title: 'Your goals',
+      everyDay: 'Every day',
+      everyWeek: 'Every week',
+      steadyHelp: 'A steady week is a week you learn on as many days as you chose. They add up and never go away.',
+      restHelp: 'Rest days: Hoya keeps your streak going on up to 2 quiet days a week.',
+      /** While a weekly plan is on, the plan's days a week stand in for the weekly choice. */
+      fromPlan: (days: number) => plural('en', days, { one: '1 day, from your weekly plan', other: `${days} days, from your weekly plan` }),
+      seePlan: { cta: 'See my plan' },
+      done: { cta: 'Done' },
+    },
+    /** The first choice, once, on Home after the first finished activity. */
+    first: {
+      title: 'How much time a day suits you?',
+      later: { cta: 'Not now' },
+    },
+    /** One line on the Results of the activity that reached a goal. */
+    banner: {
+      dayMet: 'Daily goal done!',
+      weekMet: (count: number) =>
+        plural('en', count, { one: 'Week goal reached! That is 1 steady week.', other: `Week goal reached! That is ${count} steady weeks.` }),
     },
   },
 } as const;

@@ -10,6 +10,7 @@ import { ROUTE_UI_KEY } from './route-store';
 import { STORY_BOOKMARKS_KEY } from './story-store';
 import { SYNC_KEY } from './sync-store';
 import { TIER_KEY } from './tier-store';
+import { MEMORY_KEY } from '../logic/memory/keys';
 import { seenKey as ROUTE_MAP_UI_KEY } from '../logic/my-route/seen';
 
 /**
@@ -37,4 +38,5 @@ export const PER_PROFILE_KEYS: Readonly<Record<string, (profileId: string) => st
   'transfers-on': TRANSFERS_ON_KEY,
   'transfer-self-set': TRANSFER_SELF_SET_KEY,
   'story-bookmarks': STORY_BOOKMARKS_KEY,
+  memory: MEMORY_KEY,
 };

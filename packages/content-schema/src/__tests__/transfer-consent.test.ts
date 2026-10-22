@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ACCEPTED_CONSENT_TEXT_VERSIONS,
   InboxNoteSchema,
+  MemorySummarySchema,
   ProgressSummarySchema,
   TEACHER_FULL_SCOPE_ITEMS,
   TEACHER_HIDDEN_SUMMARY_KEYS,
@@ -54,13 +55,22 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
     ko: '5caf7703e8eb5d4a27ab750985d20b97b330532dbf59c4999fff04ede8459fd4',
     es: 'af2bab56c9e6e86511c7bdf717acfecc48d60d3fb2573e0a64b885c447bb7ef2',
   },
+  // F-CURR-002 CM-16: the memory item, over the 10d text.
+  'transfer-2026-10e': {
+    en: 'e9503bb81ae1d5f2e3b4191b0e47cd035261298f4e3a2f2c02a9e91e9cd8990d',
+    ko: 'b8d2db4af4e32f5e5cc6b0cb777ccc1c9482ce99b9cbcd2627800c497d568390',
+    es: '8604f3ea06663447a0649556ff06acf3186e8c7520b5560f8c630ac9b4cb13eb',
+  },
 };
 
 /** What `transfer-2026-10d` added to the 10c text, and nothing else (TV-D6). */
 const TV_ADDED: { drop: readonly TeacherVisibleItemId[]; dropLines: readonly TransferConsentLineId[] } = {
-  drop: ['words', 'letter_check', 'own_route', 'learner_settings'],
+  drop: ['words', 'letter_check', 'own_route', 'learner_settings', 'memory'],
   dropLines: ['teacher_moves'],
 };
+
+/** What `transfer-2026-10e` added to the 10d text, and nothing else (F-CURR-002 CM-16). */
+const MEMORY_ADDED: { drop: readonly TeacherVisibleItemId[] } = { drop: ['memory'] };
 
 /**
  * The canonical text the hash is taken over. `earlier` rebuilds an earlier
@@ -272,7 +282,7 @@ describe('consent text per locale', () => {
 describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMMARY_KEYS)', () => {
   const summaryKeys = Object.keys(ProgressSummarySchema.shape).sort();
 
-  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor, selfRoute, vocab, routeGoal and memory', () => {
+  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor, selfRoute, vocab, routeGoal and memory at base scope', () => {
     expect([...TEACHER_VISIBLE_SUMMARY_KEYS]).toEqual([
       'lastActiveAt',
       'streakDays',
@@ -289,7 +299,7 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     // selfRoute: the family space reads it, a class or school never does (F-PLAN-002 section 3.10).
     // vocab: hidden until F-VOC-005 P-4b adds its consent item (P-4 shipped the console line dormant).
     // routeGoal: the family space reads it, a class or school never does (Learning Route section 9, LR-W1).
-    // memory: hidden until the F-CURR-002 row that shows it to a class adds its consent item (section 4.8).
+    // memory: hidden at base scope; row CM-16 gave it the memory item, read at full scope from MEMORY_SCOPE_TEXT_VERSIONS (section 4.8).
     expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory']);
   });
 
@@ -379,6 +389,7 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       'letter_check',
       'own_route',
       'learner_settings',
+      'memory',
     ]);
   });
 });
@@ -405,13 +416,26 @@ describe('what a class sender sees of a note (F-FEEDBACK-001 section 7.7, OD-8)'
   });
 
   it('[TV] transfer-2026-10d is the 10c text plus the full-scope items and the teacher_moves line, in every locale', () => {
-    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10d');
-    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toEqual(['transfer-2026-10d', 'transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10']);
+    for (const locale of TRANSFER_CONSENT_LOCALES) {
+      expect(sha256(canonical(locale, MEMORY_ADDED)), locale).toBe(PINNED_HASHES['transfer-2026-10d']?.[locale]);
+    }
     for (const locale of TRANSFER_CONSENT_LOCALES) {
       expect(sha256(canonical(locale, TV_ADDED)), locale).toBe(PINNED_HASHES['transfer-2026-10c']?.[locale]);
     }
     expect(TRANSFER_CONSENT_TEXT.en.lines.teacher_moves).toBe('A teacher may move {learner} to another class later. We tell you when it happens.');
     expect(TRANSFER_CONSENT_LINES.find((l) => l.id === 'teacher_moves')).toEqual({ id: 'teacher_moves', when: 'always', kind: 'statement' });
+  });
+
+  it('transfer-2026-10e is the 10d text plus the memory item (F-CURR-002 CM-16), and every earlier version stays accepted', () => {
+    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10e');
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toEqual(['transfer-2026-10e', 'transfer-2026-10d', 'transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10']);
+    expect(TEACHER_VISIBLE_ITEM_IDS.at(-1)).toBe('memory');
+    expect(TEACHER_FULL_SCOPE_ITEMS.memory).toBe('memory');
+    expect(TRANSFER_CONSENT_TEXT.en.items.memory).toBe('Words known, how well each episode is known and Stage Checks passed. Points this week and items ready to refresh');
+    // It names every field of the memory block: wordsKnown, cellBestCounts, stageChecks, weekPoints, readyToRefresh and topDue.
+    // `reviewOn` is no learning record: it only says whether `readyToRefresh` may be shown (the review surface is on).
+    expect(Object.keys(MemorySummarySchema.shape).sort()).toEqual(['cellBestCounts', 'readyToRefresh', 'reviewOn', 'stageChecks', 'topDue', 'weekPoints', 'wordsKnown']);
+    expect(MemorySummarySchema.shape.reviewOn.safeParse(false).success).toBe(false);
   });
 
   it('pins a hash for the current text that no earlier version shares', () => {

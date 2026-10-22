@@ -41,7 +41,7 @@ const tuple = (f: CurriculumFinding) => [f.rule, f.severity, f.file, f.path];
 const sorted = (rows: string[][]) => [...rows].sort((a, b) => (a.join('|') < b.join('|') ? -1 : 1));
 
 /** Rules that apply to Volume 1 cells or shipped stories, so their fixtures cover both severities. */
-const BOTH_SEVERITIES: readonly CurriculumRule[] = ['lesson-new-load', 'lesson-check-variety', 'culture-source', 'dictation-unambiguous', 'story-order-text', 'review-copy'];
+const BOTH_SEVERITIES: readonly CurriculumRule[] = ['lesson-new-load', 'lesson-check-variety', 'culture-source', 'dictation-unambiguous', 'story-order-text', 'review-copy', 'items-stable-id'];
 /** Rules that never read Volume 1 or shipped stories: errors only. */
 const ERRORS_ONLY: readonly CurriculumRule[] = ['lesson-recycle', 'lesson-culture-coverage', 'pack-skeleton', 'story-topic-unique'];
 

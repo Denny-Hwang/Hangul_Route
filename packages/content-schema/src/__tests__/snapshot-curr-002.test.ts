@@ -78,6 +78,7 @@ const full = {
   streakBest: 9,
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
+  steadyWeeks: { '2026-10-12': '2026-10-15T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' },
 };
 const NEW_KEYS = Object.keys(full);
 

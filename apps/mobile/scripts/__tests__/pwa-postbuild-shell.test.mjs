@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PRECACHE_BUDGET } from '../pwa/lesson-chunks.mjs';
-import { LESSON_MANIFEST, STORY_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
+import { LESSON_MANIFEST, REVIEW_ITEM_MANIFEST, STORY_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GROWN_UP_PREFIXES, LEARNER_ROOTS, isGrownUpPath } from '@hangul-route/content-schema';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
@@ -417,6 +417,9 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(run.stdout).toMatch(/ {2}start bundle {2}_expo\/static\/js\/web\/index-abc\.js {2}\d+ B raw {2}\d+ B gzip {2}\(ceiling \d+ B raw\)/);
     expect(run.stdout).toContain(`  lesson chunks  ${LESSON_MANIFEST.length} bundles  `);
     expect(run.stdout).toContain(`  story chunks  ${STORY_MANIFEST.length} bundles  `);
+    expect(REVIEW_ITEM_MANIFEST).toEqual([{ name: 'review-items', hash: expect.stringMatching(/^[0-9a-f]{16}$/) }]);
+    expect(sw).toMatch(/"_expo\/static\/js\/web\/review-items-[0-9a-f]{32}\.js"/);
+    expect(run.stdout).toContain('  review-item chunk  1 bundles  ');
     // The locale chunks and the grown-up roots: precached and reported beside them.
     for (const name of ['locale-es', 'locale-ko', 'PresenterApp', 'BrowseApp']) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
     expect(run.stdout).toContain('  locale chunks  2 bundles  ');
