@@ -36,7 +36,7 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
       items: 4,
       newHeld: 2,
       minutes: 9,
-      durableWeekBucket: '1-4',
+      durableWeekBucket: '3-4',
       dueVolumeBucket: '10-19',
       arms: {},
     },
