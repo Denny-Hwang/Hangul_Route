@@ -8,7 +8,7 @@ import * as barrel from '../index';
 import { installContentOverlay, OVERLAYS } from '../../overlays';
 import { OVERLAYS_ES } from '../../overlays-es';
 import { OVERLAYS_KO } from '../../overlays-ko';
-import * as webTwin from '../../overlays.web';
+import * as webTwin from '../overlay-tables.web';
 import { OVERLAYS as GENERATED } from '../i18n-overlays.generated';
 
 /**
@@ -140,8 +140,15 @@ describe('content overlays stay out of the package barrel (F-I18N-001 open item 
     }
   });
 
-  it('the web twin of the subpath starts empty and holds what is installed; the eager one keeps its text', () => {
-    const { files } = valueGraph(join(PACKAGE, 'overlays.web.ts'));
+  it('the web twin sits behind a relative import, not on the subpath file, so it holds with or without `exports`', () => {
+    // Metro uses an `exports` target as written (no platform extension) but always tries `.web.ts` on a relative import.
+    expect(statSync(join(PACKAGE, 'overlays.web.ts'), { throwIfNoEntry: false })).toBeUndefined();
+    expect(valueSpecifiers(join(PACKAGE, 'overlays.ts'))).toEqual(['./src/overlay-tables']);
+    expect(statSync(join(SRC, 'overlay-tables.web.ts')).isFile()).toBe(true);
+  });
+
+  it('the web twin of the overlay tables starts empty and holds what is installed; the eager one keeps its text', () => {
+    const { files } = valueGraph(join(SRC, 'overlay-tables.web.ts'));
     expect([...files].filter((file) => file.endsWith('.generated.ts'))).toEqual([]);
     expect(webTwin.OVERLAYS).toEqual({ es: {}, ko: {} });
     webTwin.installContentOverlay('ko', { 'card:test': { title: '시험' } });

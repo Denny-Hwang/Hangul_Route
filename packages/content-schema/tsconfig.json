@@ -12,5 +12,5 @@
     "noEmit": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "overlays.ts", "overlays.web.ts", "overlays-es.ts", "overlays-ko.ts"]
+  "include": ["src/**/*.ts", "overlays.ts", "overlays-es.ts", "overlays-ko.ts"]
 }

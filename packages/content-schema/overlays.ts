@@ -8,16 +8,8 @@
  * with and without `package.json` `exports` support (Metro in Expo SDK 52 reads the
  * path, Node / Vite / TypeScript read `exports`).
  *
- * The learner PWA (Metro's web build) reads `overlays.web.ts` instead: the same `OVERLAYS`, empty at
- * start and filled by `installContentOverlay` as the active locale's chunk arrives (F-CURR-002 §10).
- * Here both locales are in from the start, so installing one again only lays the same text over it.
+ * The learner PWA (Metro's web build) gets empty tables at start, filled as the active locale's chunk
+ * arrives (F-CURR-002 §10): `src/overlay-tables.ts` has a `.web.ts` twin behind the relative import
+ * below, so the swap does not depend on how the bundler reads this subpath.
  */
-import type { OverlayLocale, Overlays } from './src/schemas/locale-overlay';
-import { OVERLAYS } from './src/i18n-overlays.generated';
-
-export { OVERLAYS };
-
-/** Lays one locale's table into `OVERLAYS` (the learner PWA's locale chunk; see `overlays.web.ts`). */
-export function installContentOverlay(locale: OverlayLocale, table: Overlays[OverlayLocale]): void {
-  Object.assign(OVERLAYS[locale], table);
-}
+export { installContentOverlay, OVERLAYS } from './src/overlay-tables';
