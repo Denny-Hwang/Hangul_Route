@@ -69,6 +69,8 @@ import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../
 import { CardDetailScreen } from '../../library/CardDetailScreen';
 import { MinigameScreen } from '../../minigames/MinigameScreen';
 import { QuestPlayerScreen } from '../../quest/QuestPlayerScreen';
+import { ProfileAvatar } from '../../../components/ProfileAvatar';
+import { ResultsScreen } from '../../results/ResultsScreen';
 import { GuestQuestPlayer } from '../GuestQuestPlayer';
 import { GuestLaterScreen } from '../GuestLaterScreen';
 import { GuestResults } from '../GuestResults';
@@ -193,6 +195,23 @@ describe('the learner screens read the active learner (5.3, activeLearnerIdSelec
     const nav = navigationDouble();
     const r = await render(<QuestPlayerScreen route={{ key: 'q', name: 'QuestPlayer', params: quest } as never} navigation={nav as never} />);
     expect(holds).toEqual([GUEST_ID]);
+    await unmount(r);
+  });
+});
+
+describe('the learner Results reads the active learner (5.3)', () => {
+  it('with a guest id that has no profile record: it draws without the name row, and writes nothing under a profile', async () => {
+    const mina = { id: 'profile:mina0001', displayName: 'Mina', ageGroup: '8-9' as const, avatar: 'hoya-blue' as const, role: 'learner' as const, createdAt: '2026-10-01T00:00:00.000Z' };
+    // Mina is the active profile on the device, but the run is the guest's: the learner is the guest's id.
+    useProfileStore.setState({ profiles: [mina], activeId: mina.id });
+    const params = { ...quest, stars: 2 as const, correct: 4, total: 5, retries: 1 };
+    const r = await render(<ResultsScreen route={{ key: 'r', name: 'Results', params } as never} navigation={navigationDouble() as never} />);
+    expect(screenTexts(r.root)).toContain(en.a11y.stars(2));
+    expect(r.root.findAllByType(ProfileAvatar)).toHaveLength(0);
+    expect(screenTexts(r.root)).not.toContain('Mina');
+    // Neither Mina's progress nor the guest's is written by the learner variant (the guest's own Results writes it).
+    expect(useProgressStore.getState().byProfile[mina.id]?.quests ?? []).toEqual([]);
+    expect(sent.filter((e) => e.profileId === mina.id)).toEqual([]);
     await unmount(r);
   });
 });

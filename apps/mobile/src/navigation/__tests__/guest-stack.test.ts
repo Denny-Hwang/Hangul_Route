@@ -26,6 +26,23 @@ const guestSources = (): string[] => [
     .map((e) => `screens/guest/${e.name}`),
 ];
 
+/**
+ * The learner components the stack's screens render (the quest player's view and its steps, every game, the card page
+ * and the card celebration). A `useNavigation()` or a link in any of them would leave the nested stack for the root,
+ * so they navigate only through the props the guest routes inject.
+ */
+const sharedSources = (): string[] => [
+  'screens/quest/QuestPlayerView.tsx',
+  'screens/quest/DiscoverStep.tsx',
+  ...readdirSync(join(SRC, 'screens/minigames'), { withFileTypes: true })
+    .filter((e) => e.isFile() && /\.tsx?$/.test(e.name))
+    .map((e) => `screens/minigames/${e.name}`),
+  'screens/library/CardDetailScreen.tsx',
+  'screens/library/CardDetailView.tsx',
+  'screens/results/CardUnlockBanner.tsx',
+  'screens/results/CardArtThumb.tsx',
+];
+
 /** The route names a source navigates to: `navigate('X'`, `replace('X'`, `push('X'`, and `name: 'X'` in a reset. */
 function targets(source: string): string[] {
   const calls = [...source.matchAll(/\.(?:navigate|replace|push)\(\s*'([A-Za-z0-9]+)'/g)].map((m) => m[1]!);
@@ -73,6 +90,25 @@ describe('the Guest stack (CS-G1)', () => {
       // No PIN destination but the save's (row GU-4); none in this row.
       expect(source, file).not.toMatch(/'PinEntry'/);
     }
+  });
+
+  it('the shared learner components it renders navigate only through injected props, and open no link (CS-G1)', () => {
+    const files = sharedSources();
+    expect(files.length).toBeGreaterThan(10);
+    for (const file of files) {
+      const source = read(file);
+      expect(source, file).not.toMatch(/useNavigation\b|\bLinking\b|openURL|getParent\(|window\.open|location\.(assign|replace|href)/);
+      // The game screen's one target is the Culture notes link of its injected `navigation`, which the guest route
+      // stubs (`push: () => undefined`, `onOpenCultureNote={null}`, pinned below); every other file names none.
+      // (A route name is capitalised; a lower-case `name:` is a game's own state.)
+      expect(targets(source).filter((n) => /^[A-Z]/.test(n)), file).toEqual(file === 'screens/minigames/MinigameScreen.tsx' ? ['CultureNotes'] : []);
+    }
+  });
+
+  it('the root stack ends a run still on whenever a route other than Guest takes focus (5.3)', () => {
+    const root = read('navigation/root.tsx');
+    expect(root).toContain("const guestRunGuard = ({ route }: { route: { name: string } }): { focus: () => void } => ({ focus: () => endGuestRunOutside(route.name) });");
+    expect(root).toContain('screenListeners={flags.guestLessonEnabled ? guestRunGuard : undefined}');
   });
 
   it('the stack registers the guest variants, never the learner\'s player or Results; a game\'s only exit is Back', () => {

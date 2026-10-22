@@ -1,5 +1,6 @@
 import { guestLeaveState, type GuestLeaveState } from '../../logic/guest/guest-run';
 import { endGuestRunTo, type GuestRoute } from '../../store/guest-launch';
+import { closeGrownUpSession } from '../../store/grown-up-session';
 
 /**
  * [GU] AMENDMENTS-GUEST-FIRST-LESSON sections 6.3 and 6.4 (row GU-3): the only ways into and out of the `Guest` stack.
@@ -22,8 +23,12 @@ interface Nested {
   getParent: () => Dispatcher | undefined;
 }
 
-/** Opens the `Guest` stack alone on the root (Welcome's Back to my quest; GU-4's save entry). */
+/**
+ * Opens the `Guest` stack alone on the root (Welcome's Back to my quest; Add my name, GU-4's save entry). CS-G3: every
+ * way into the stack closes the grown-up session first, also the ones that start no run (Add my name).
+ */
 export function openGuestStack(root: Dispatcher | undefined, route: GuestRoute): void {
+  closeGrownUpSession();
   root?.dispatch({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Guest', params: route }] } });
 }
 

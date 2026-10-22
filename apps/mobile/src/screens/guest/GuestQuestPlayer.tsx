@@ -1,6 +1,6 @@
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { questById } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { playerGuard } from '../../logic/episode-access';
@@ -25,8 +25,8 @@ export type GuestQuestPlayerProps = NativeStackScreenProps<GuestStackParamList, 
  * `design/screens/onboarding/guest-first-quest.md`): the shipped quest player with the guest ports. The learner is
  * the guest's id (`useActiveLearnerId`, no profile record); a finished run opens the guest's Results in this stack; the
  * leave sheet's Leave ends the run (`guest.left { at: 'quest' }`) and the root goes to Welcome or the chooser. The
- * quest opens the stack, so the header draws its own Close. Each step entered moves `lastAt` (a reload within 30
- * minutes reopens), the first Discover page of a new run sends `guest.first_letter`, and while this browser cannot keep
+ * quest opens the stack, so the header draws its own Close. Each step reached by play moves `lastAt` (a reload within
+ * 30 minutes reopens; the step the run opened on does not), the first Discover page of a new run sends `guest.first_letter`, and while this browser cannot keep
  * the record the storage-blocked line sits under Hoya's hello. The access guard runs as for any learner (quest 1 is in
  * the free plan); a closed answer ends the run instead of opening an episode page, which is not in this stack.
  */
@@ -73,8 +73,12 @@ export function GuestQuestPlayer({ route, navigation }: GuestQuestPlayerProps): 
 
   const stepIndex = useQuestRunStore((s) => s.stepIndex);
   const runQuest = useQuestRunStore((s) => s.questId);
+  // The step the run opened (or reopened) on is not play (GU-D12): only the steps reached after it move `lastAt`.
+  const openedOn = useRef<number | null>(null);
   useEffect(() => {
-    if (runQuest === questId) noteGuestStep(questById(questId)?.steps, stepIndex);
+    if (runQuest !== questId) return;
+    if (openedOn.current === null) openedOn.current = stepIndex;
+    noteGuestStep(questById(questId)?.steps, stepIndex, Date.now(), stepIndex !== openedOn.current);
   }, [runQuest, questId, stepIndex]);
 
   if (!settled || guard) return null;

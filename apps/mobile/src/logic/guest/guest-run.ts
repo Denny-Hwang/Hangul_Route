@@ -29,6 +29,11 @@ export interface GuestLaunchInput {
   chooserOn: boolean;
   /** A join code held in memory or handed over by the family home (OA-D20): a join wins over `try`. */
   joinHeld: boolean;
+  /**
+   * Section 6.4: the live run was ended in this tab (Close or Leave), so a reload of Welcome stays on Welcome with its
+   * waiting card instead of reopening quest 1. Only the reopen reads it; `try` and Back to my quest start the run again.
+   */
+  leftHere?: boolean;
   now: number;
 }
 
@@ -39,11 +44,12 @@ const learnerCount = (profiles: readonly GuestRuleProfile[]): number => profiles
  * live record is kept, unseen), on a device with learner profiles it never starts a guest (the chooser with the
  * trigger `try` when the chooser is on, else today's launch), and a held join code wins. On a device with no learner
  * profile it starts a guest or resumes the live one. `who=1` with `try` counts as `try` there, since the chooser has
- * nobody to show. With no intent at all, a live guest whose last play is within 30 minutes reopens. Every other
+ * nobody to show. With no intent at all, a live guest whose last play is within 30 minutes reopens, unless its run
+ * was ended in this tab (`leftHere`: Close or Leave lead to Welcome, and a reload keeps Welcome). Every other
  * intent (a `gate=`, a join, `who=1` alone) is left to the boot intent hook.
  */
 export function guestLaunchPlan(input: GuestLaunchInput): GuestLaunchPlan {
-  const { intent, profiles, guest, guestLessonEnabled, chooserOn, joinHeld, now } = input;
+  const { intent, profiles, guest, guestLessonEnabled, chooserOn, joinHeld, leftHere = false, now } = input;
   const tried = intent?.kind === 'try' || (intent?.kind === 'who' && intent.try === true);
   const take = intent?.kind === 'try';
   if (!guestLessonEnabled) return { kind: 'none', take };
@@ -54,7 +60,7 @@ export function guestLaunchPlan(input: GuestLaunchInput): GuestLaunchPlan {
     if (entry.kind === 'chooser') return { kind: 'chooser', take };
     return { kind: 'none', take };
   }
-  if (intent === null && !shared && isLiveGuest(guest, profiles) && guestReopens(guest, now)) return { kind: 'reopen', take: false };
+  if (intent === null && !shared && !leftHere && isLiveGuest(guest, profiles) && guestReopens(guest, now)) return { kind: 'reopen', take: false };
   return { kind: 'none', take };
 }
 

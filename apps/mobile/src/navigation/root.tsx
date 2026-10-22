@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
 import { batchHandoffPending, chooserLaunchTrigger } from '../store/who-chooser';
-import { takeGuestLaunch, type GuestRoute } from '../store/guest-launch';
+import { endGuestRunOutside, takeGuestLaunch, type GuestRoute } from '../store/guest-launch';
 import { BootIntentHook, LaunchBatchJoinHook } from './boot-intent';
 import { MainTabs } from './tabs';
 import type { RootStackParamList } from './types';
@@ -77,6 +77,10 @@ const PinResetModal = withOwnSafeArea(PinResetScreen);
 // `EpisodeDetail` has none (see `cellStoriesRouteId`): the cell page opens episodes with push or Back.
 const cellStoriesRouteIdOf = ({ params }: { params: RootStackParamList['CellStories'] }): string => cellStoriesRouteId(params);
 
+// [GU] Row GU-3 (AMENDMENTS-GUEST-FIRST-LESSON section 5.3, CS-G1): a guest run is in front only inside the `Guest`
+// route; any other root route taking focus ends a run still on, so no profile's quest is written under the guest's id.
+const guestRunGuard = ({ route }: { route: { name: string } }): { focus: () => void } => ({ focus: () => endGuestRunOutside(route.name) });
+
 export function RootNavigator(): React.ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const hydrated = useProfileStore((s) => s.hydrated);
@@ -128,6 +132,7 @@ export function RootNavigator(): React.ReactElement {
       {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
+        screenListeners={flags.guestLessonEnabled ? guestRunGuard : undefined}
         initialRouteName={launch.trigger !== null ? 'WhoIsUsing' : launch.guest !== null ? 'Guest' : hasProfile ? 'Main' : 'Onboarding'}
       >
         <Stack.Screen name="Onboarding" component={OnboardingStack} />

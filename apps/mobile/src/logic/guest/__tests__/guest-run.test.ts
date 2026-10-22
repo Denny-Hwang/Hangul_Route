@@ -80,6 +80,11 @@ describe('guestLaunchPlan: reload and return (section 6.4, GU-D12)', () => {
     expect(guestLaunchPlan(input({ intent: null, guest: guest({ questDone: true }), now: T0 + 60_000 }))).toEqual({ kind: 'reopen', take: false });
   });
 
+  it('a run ended in this tab (Close or Leave) never reopens on a reload: Welcome keeps its card; try still starts it', () => {
+    expect(guestLaunchPlan(input({ intent: null, guest: guest(), leftHere: true, now: T0 + 60_000 }))).toEqual({ kind: 'none', take: false });
+    expect(guestLaunchPlan(input({ intent: { kind: 'try' }, guest: guest(), leftHere: true, now: T0 + 60_000 }))).toEqual({ kind: 'start', take: true });
+  });
+
   it('later than 30 minutes: today\'s launch (Welcome shows the waiting card)', () => {
     expect(guestLaunchPlan(input({ intent: null, guest: guest(), now: T0 + GUEST_REOPEN_MS + 1 }))).toEqual({ kind: 'none', take: false });
   });
