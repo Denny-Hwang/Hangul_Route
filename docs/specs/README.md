@@ -115,6 +115,7 @@ F-XXX-<slug>.md
 - `F-APP-001-persona-app-shell.md` — app.hangulroute.com is the one product app: persona sign-in (learner, family, teacher), a home per persona with the entries to reports, notes, Learning Route and lessons, grown-up lock on shared devices, console served on the app host (B2), the route contract for the sibling specs of the wave · **ready**
   - wireframes `design/wireframes/shell/{signin,adult-frame,parent-home,teacher-home,grown-up-lock,offline}.md`, `onboarding/welcome-personas.md`, `parent/grown-up-home-card.md`
 - `F-SITE-002-marketing-site-layered.md` — hangulroute.com becomes a short, layered intro site: one-screen hero, persona chooser, `/learners`, `/parents`, `/teachers`, no billing or console links, feature lines tied to a claims table; old grown-up URLs are F-APP-001's · **ready**
+  - amended 2026-10-21 by `AMENDMENTS-SITE-NEWUSER.md` (rows SN-0 to SN-2): header language control and phone Start pill, hero links and product capture, closing call-to-action band, create-first grown-up pages, a schools section on `/teachers`, product captures per locale, share images, the branded 404 per locale, new budgets · wireframes `design/wireframes/site/newuser-*.md`, mocks `design/screens/site/newuser/`
   - wireframes `design/wireframes/site/{home,learners,parents,teachers,header-footer}.md`
 
 ### Spec wave 2026-10-13 (owner decision: the 22 "Coming later" cells)
