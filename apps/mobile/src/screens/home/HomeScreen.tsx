@@ -87,6 +87,7 @@ import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { markFreeEndSeen, readFreeEndSeen } from '../../store/free-end-seen';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { clearGuestSavedNote, guestSavedNoteFor } from '../../store/guest-save';
 import { useMembershipStore } from '../../store/membership-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { usePlanStore } from '../../store/plan-store';
@@ -374,6 +375,11 @@ export function HomeScreen(): React.ReactElement {
   const ensure = useProgressStore((s) => s.ensure);
   // The Display (Aa) sheet (AMENDMENTS-DISPLAY-NAV section 3.6): not behind the grown-up gate.
   const [displayOpen, setDisplayOpen] = useState(false);
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 8.4 (row GU-4): one Hoya bubble on the first Home after the first quest was saved.
+  const [guestSaved] = useState(() => guestSavedNoteFor(profile?.id));
+  useEffect(() => {
+    if (guestSaved !== null) clearGuestSavedNote();
+  }, [guestSaved]);
   const markCardsSeen = useProgressStore((s) => s.markCardsSeen);
   // Session-only (F-STORY-006 §3.5): the cards a reconcile added this app session.
   const catchUpListed = useProgressStore((s) => (profile ? s.catchUp[profile.id] : undefined));
@@ -946,6 +952,13 @@ export function HomeScreen(): React.ReactElement {
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>
+
+      {guestSaved !== null && profile ? (
+        <>
+          <Spacer size="lg" />
+          <HoyaBubble tone="cheering" message={guestSaved.card ? m.learner.guest.saved(profile.displayName) : m.learner.guest.savedNoCard(profile.displayName)} testID="home-guest-saved" />
+        </>
+      ) : null}
 
       {twoColumns ? (
         <>

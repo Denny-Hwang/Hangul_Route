@@ -941,4 +941,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.persona.teachers.schools.sizeContract': [['hello@example.com']],
   'landing.captures.discover': [['x', 'a']],
   'landing.captures.card': [['x', 'horangi', 'tiger']],
+  // [GU] The save after the first quest (AMENDMENTS-GUEST-FIRST-LESSON 16.2, row GU-4): the days (30, or 7), a learner name.
+  'learner.guest.later.title': [[30], [7]],
+  'learner.guest.saved': [['Sam'], ['Jo Ann']],
+  'learner.guest.savedNoCard': [['Sam'], ['Jo Ann']],
 };

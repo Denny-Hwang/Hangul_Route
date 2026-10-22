@@ -42,13 +42,12 @@ describe('the Guest stack (CS-G1)', () => {
     expect(keys).toEqual(ALLOWED);
   });
 
-  it('the navigator registers only those routes (the save\'s two come with row GU-4)', async () => {
+  it('the navigator registers exactly those routes (row GU-4 added the save\'s two)', async () => {
     const source = read('navigation/guest-chunk.tsx');
     const registered = [...source.matchAll(/<Stack\.Screen\s+name="([A-Za-z0-9]+)"/g)].map((m) => m[1]!);
-    expect(registered).toEqual(['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater']);
-    for (const name of registered) expect(ALLOWED).toContain(name);
+    expect(registered).toEqual(ALLOWED);
     // The exported list is the same, in the same order.
-    expect(source).toContain("export const GUEST_STACK_ROUTES = ['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater'] as const");
+    expect(source).toContain("export const GUEST_STACK_ROUTES = ['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater', 'CreateProfile', 'PinEntry'] as const");
   });
 
   it('every navigate target of the guest sources is a route of the stack, or the root after the run ended', () => {
@@ -70,8 +69,9 @@ describe('the Guest stack (CS-G1)', () => {
     for (const file of guestSources()) {
       const source = read(file);
       expect(source, file).not.toMatch(/Linking|openURL|window\.open|location\.(assign|replace|href)|openGrownUpArea|consoleUrl|signIn/);
-      // No PIN destination but the save's (row GU-4); none in this row.
-      expect(source, file).not.toMatch(/'PinEntry'/);
+      // No PIN destination but the save's (row GU-4, CS-G1, CS-G10): every `'PinEntry'` is `{ next: 'SaveGuest' }`.
+      expect(source, file).not.toMatch(/\.(?:navigate|replace|push)\(\s*'PinEntry'(?!, \{ next: 'SaveGuest' \}\))/);
+      expect(source, file).not.toMatch(/mode: 'setup'|next: '(?!SaveGuest')/);
     }
   });
 
@@ -101,6 +101,23 @@ describe('the Guest stack (CS-G1)', () => {
       expect(source, file).toContain('useActiveLearnerId()');
       expect(source, file).not.toContain('activeProfileSelector');
     }
+  });
+
+  it('the save\'s two learner screens: SaveGuest opens only the form, and the form leaves only for Home (row GU-4, CS-G1, CS-G2)', () => {
+    const chunk = read('navigation/guest-chunk.tsx');
+    expect(chunk).toContain('<Stack.Screen name="CreateProfile" component={GuestCreateProfileRoute}');
+    expect(chunk).toContain('<Stack.Screen name="PinEntry" component={GuestPinEntryRoute}');
+    const pin = read('screens/parent/PinEntryScreen.tsx');
+    // The correct PIN on SaveGuest: the form in its place, then return (before any gate, session or hand-off).
+    expect(pin).toMatch(/if \(result\.ok && saveGuest\) \{\s*\/\/[^\n]*\n\s*openGuestFormAfterPin\(navigation as unknown as Parameters<typeof openGuestFormAfterPin>\[0\], guestFormParams\(useProfileStore\.getState\(\)\.profiles\)\);\s*return;\s*\}/);
+    // Face or fingerprint never stands in for it, and it is never offered.
+    expect(pin).toMatch(/if \(saveGuest\) \{\s*leave\(\);\s*return;\s*\}/);
+    expect(pin).toContain('!saveGuest &&');
+    expect(read('screens/guest/guest-exits.ts')).toMatch(/navigation\.replace\('CreateProfile', params\);/);
+    // The form's guest path: the root holds Home of the new profile; no fork, no Join.
+    const form = read('screens/onboarding/CreateProfileScreen.tsx');
+    expect(form).toMatch(/if \(result\.ok && fromGuest\) \{[^}]*noteGuestSaved\([^)]*\)\);\s*leaveGuestRunSaved\(navigation\);\s*\} else if \(result\.ok\)/);
+    expect(read('screens/guest/guest-exits.ts')).toMatch(/payload: guestLeaveState\('home'\)/);
   });
 
   it('the root stack registers the Guest stack only with the guest switch on', () => {

@@ -5,6 +5,8 @@ import { GuestQuestPlayer } from '../screens/guest/GuestQuestPlayer';
 import { GuestResults } from '../screens/guest/GuestResults';
 import { CardDetailScreen } from '../screens/library/CardDetailScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
+import { CreateProfileScreen } from '../screens/onboarding/CreateProfileScreen';
+import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
 import type { GuestStackParamList } from './types';
 import { withOwnSafeArea } from './with-own-safe-area';
 
@@ -15,7 +17,7 @@ const Stack = createNativeStackNavigator<GuestStackParamList>();
  * GU-4 appends the save's `CreateProfile` and `PinEntry`. `guest-stack.test.ts` holds this list, the navigator and the
  * navigate targets of every screen in it to `GuestStackParamList`.
  */
-export const GUEST_STACK_ROUTES = ['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater'] as const satisfies readonly (keyof GuestStackParamList)[];
+export const GUEST_STACK_ROUTES = ['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater', 'CreateProfile', 'PinEntry'] as const satisfies readonly (keyof GuestStackParamList)[];
 
 /**
  * [GU] Row GU-3, F-CURR-002 section 10: this module is a chunk of its own (`guest-chunk-<md5>.js`, precached), reached
@@ -38,6 +40,19 @@ function shared<K extends keyof GuestStackParamList, P>(screen: React.ComponentT
 const CardDetailModal = withOwnSafeArea(CardDetailScreen);
 const GuestCardDetailRoute = shared<'CardDetail', React.ComponentProps<typeof CardDetailScreen>>(CardDetailModal);
 
+/**
+ * [GU] Row GU-4 (section 8.3): the save form, the learner's CreateProfile screen with `{ firstRun, from: 'guest' }`: two
+ * steps, then `promoteGuest` and Home of the new profile (the root reset in `screens/guest/guest-exits.ts`).
+ */
+const GuestCreateProfileRoute = shared<'CreateProfile', React.ComponentProps<typeof CreateProfileScreen>>(CreateProfileScreen);
+
+/**
+ * [GU] Row GU-4 (section 8.2, CS-G2, CS-G10): the verify-only PIN of the save (`next: 'SaveGuest'`), a modal measuring
+ * its own safe area as in the root stack. A correct PIN replaces it with the form; nothing else opens from it.
+ */
+const GuestPinEntryModal = withOwnSafeArea(PinEntryScreen);
+const GuestPinEntryRoute = shared<'PinEntry', React.ComponentProps<typeof PinEntryScreen>>(GuestPinEntryModal);
+
 /** A game of quest 1: Back returns to the player; the story step's Culture notes link is not drawn (not in this stack). */
 function GuestMinigameRoute({ route, navigation }: GuestScreenProps<'Minigame'>): React.ReactElement {
   return <MinigameScreen route={route} navigation={{ goBack: () => navigation.goBack(), push: () => undefined }} onOpenCultureNote={null} />;
@@ -45,7 +60,7 @@ function GuestMinigameRoute({ route, navigation }: GuestScreenProps<'Minigame'>)
 
 /**
  * The guest's first quest (sections 6.2 and 7.1): quest 1 with the guest ports (`GuestQuestPlayer`), its games, the
- * guest's Results (`GuestResults`), the card page and the Not now card, and nothing else (no tabs, no Profile, no
+ * guest's Results (`GuestResults`), the card page, the Not now card and (row GU-4) the save's form and PIN, and nothing else (no tabs, no Profile, no
  * Grown-up area, no Paywall, no Join, no notes, no Learning Route, no level check, no Lecture mode, no All lessons).
  * The root stack registers it only while `flags.guestLessonEnabled` is on; it opens at `QuestPlayer` or `GuestLater`
  * (the route's `screen` param).
@@ -58,6 +73,8 @@ export default function GuestStackNavigator(): React.ReactElement {
       <Stack.Screen name="Results" component={GuestResults} options={{ animation: 'fade', gestureEnabled: false }} />
       <Stack.Screen name="CardDetail" component={GuestCardDetailRoute} options={{ presentation: 'modal' }} />
       <Stack.Screen name="GuestLater" component={GuestLaterScreen} options={{ animation: 'fade', gestureEnabled: false }} />
+      <Stack.Screen name="CreateProfile" component={GuestCreateProfileRoute} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="PinEntry" component={GuestPinEntryRoute} options={{ presentation: 'modal' }} />
     </Stack.Navigator>
   );
 }

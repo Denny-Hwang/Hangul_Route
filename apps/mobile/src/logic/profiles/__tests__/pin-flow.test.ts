@@ -5,11 +5,13 @@ import {
   GROWN_UP_AREA,
   GROWN_UP_USE,
   LOCKED_PROFILE,
+  SAVE_GUEST,
   forCancelReset,
   forFreshPin,
   forGrownUpArea,
   forGrownUpUse,
   forLockedProfile,
+  forSaveGuest,
   grownUpAreaNoPin,
   initialPinMode,
   pinCreatedWhere,
@@ -208,5 +210,36 @@ describe('destination GrownUpUse (row OA-4b, CS-4)', () => {
   it('with no PIN stored it shows the no-PIN line (Continue opens the sign-in page)', () => {
     expect(grownUpAreaNoPin({ next: GROWN_UP_USE }, null)).toBe(true);
     expect(grownUpAreaNoPin({ next: GROWN_UP_USE }, 'hash')).toBe(false);
+  });
+});
+
+describe('[GU] destination SaveGuest (AMENDMENTS-GUEST-FIRST-LESSON section 8.2, CS-G2, CS-G10)', () => {
+  const params = { next: SAVE_GUEST };
+
+  it('is the guest\'s save', () => {
+    expect(forSaveGuest(params)).toBe(true);
+    expect(forSaveGuest({ next: LOCKED_PROFILE })).toBe(false);
+  });
+
+  it('only verifies: never setup, whatever mode or reset path is passed, and with no PIN stored', () => {
+    expect(initialPinMode(params, 'hash')).toBe('verify');
+    expect(initialPinMode(params, null)).toBe('verify');
+    expect(initialPinMode({ ...params, mode: 'setup', via: 'wait' }, null)).toBe('verify');
+    expect(initialPinMode({ ...params, mode: 'change' }, 'hash')).toBe('verify');
+    expect(verifiedGoesToSetup({ ...params, mode: 'change' })).toBe(false);
+  });
+
+  it('has no Forgot PIN?', () => {
+    expect(showForgotPin('verify', params)).toBe(false);
+  });
+
+  it('refuses with no PIN stored (back to the save card), unless the stored hash could not be read (fail closed)', () => {
+    expect(voidWithoutPin(params, null)).toBe(true);
+    expect(voidWithoutPin(params, 'hash')).toBe(false);
+    expect(voidWithoutPin(params, null, true)).toBe(false);
+  });
+
+  it('is not the grown-up area\'s no-PIN path (no Continue to a page)', () => {
+    expect(grownUpAreaNoPin(params, null)).toBe(false);
   });
 });
