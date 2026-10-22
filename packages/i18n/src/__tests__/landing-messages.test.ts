@@ -475,7 +475,7 @@ describe('landing: the site-entry strings (AMENDMENTS-SITE-NEWUSER appendix A)',
     // es uses "admin(s)" as the console does (AMENDMENTS-SEATS-ADMINS §9.4: no gender agreement).
     expect(getMessages('es').landing.persona.teachers.schools.admins(1)).toContain('1 admin más');
     expect(getMessages('es').landing.persona.teachers.schools.admins(2)).toContain('2 admins más');
-    expect(getMessages('es').landing.persona.teachers.schools.size('hello@example.com')).toBe('¿Necesitas espacio para más estudiantes? Escribe a hello@example.com.');
+    expect(getMessages('es').landing.persona.teachers.schools.size('hello@example.com')).toBe('¿Necesitas lugar para más estudiantes? Escribe a hello@example.com.');
     expect(getMessages('ko').landing.persona.teachers.schools.size('hello@example.com')).toBe('학생 자리가 더 필요하면 hello@example.com 주소로 문의해 주세요.');
     expect(getMessages('ko').landing.captures.card('x', 'horangi', 'tiger')).toBe('한국 문화 카드: x(horangi).');
   });

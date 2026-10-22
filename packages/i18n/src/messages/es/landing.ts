@@ -248,11 +248,11 @@ export const landing = {
         title: 'Úsalo en toda una escuela',
         space: 'Crea un espacio de escuela y después invita a docentes o crea tú las clases de cada docente.',
         admins: (admins: number) =>
-          `Suma hasta ${plural('es', admins, { one: `${admins} admin más`, other: `${admins} admins más` })} con un enlace de invitación. Pueden abrir las listas y los informes de las clases y cambiar estudiantes entre las clases de la escuela.`,
+          `Suma hasta ${plural('es', admins, { one: `${admins} admin más`, other: `${admins} admins más` })} con un enlace de invitación. Pueden abrir las listas y los informes de las clases y mover estudiantes entre las clases de la escuela.`,
         ownerPlan: 'El plan lo gestiona quien creó la escuela.',
         moves: 'Cambia a un estudiante a otra clase de la escuela. Se avisa a su familia, y el estudiante no tiene que escribir un código nuevo.',
-        size: (email: string) => `¿Necesitas espacio para más estudiantes? Escribe a ${email}.`,
-        sizeContract: (email: string) => `¿Necesitas espacio para más estudiantes? Escribe a ${email} para pedir un Contrato Escolar.`,
+        size: (email: string) => `¿Necesitas lugar para más estudiantes? Escribe a ${email}.`,
+        sizeContract: (email: string) => `¿Necesitas lugar para más estudiantes? Escribe a ${email} para pedir un Contrato Escolar.`,
       },
       privacy: {
         title: 'Privacidad para clases',
