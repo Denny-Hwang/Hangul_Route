@@ -162,6 +162,9 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   'shift-on': [fill('M12 4 L20.5 12.5 H15.5 V20 H8.5 V12.5 H3.5 Z')],
   // Delete the last letter: a key cap pointing left with a small cross inside (a key face, never a miss mark).
   backspace: [stroke('M9 5.5 H20.5 V18.5 H9 L3 12 Z', 2.2), stroke('M12 9.5 L16.5 14.5 M16.5 9.5 L12 14.5', 2.2)],
+  // F-CURR-002 row CM-17 (design/screens/goal-ring-weekly-dots/README.md): a granted rest day on the Home week
+  // strip, a crescent outline. It marks a rest day the app gave, never a missed one.
+  rest: [stroke('M15.5 3.5 A8.5 8.5 0 1 0 20.5 15.5 A7 7 0 0 1 15.5 3.5 Z', 2.2)],
   // The Heritage Journey theme glyphs (design/components/Icon/theme-glyphs.md): the art of a grid cell
   // and the mark beside each column label, one per theme. Decorative: the theme's words are always in
   // the cell's label and the column header. Every separate part keeps a visible gap at 20 dp.
