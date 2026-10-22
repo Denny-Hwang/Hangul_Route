@@ -114,6 +114,8 @@ describe('Welcome with a waiting quest (6.3)', () => {
     expect([...new Set(screenTexts(card))]).toEqual([g.saveTitle, g.save]);
     expect(screenTexts(byTestId(r.root, 'welcome-guest-keeps')[0]!)).toEqual([g.keeps]);
     expect(filledButtons(r.root)).toEqual([w.cta]);
+    // With a grown-up session open: Add my name closes it too before the Guest stack opens (CS-G3; GU-4's save).
+    useUiStore.setState({ parentGateOpenedAt: T0, lastPinVerifiedAt: T0 });
     await press(buttonsNamed(card, g.save)[0]!);
     // [GU] Row GU-4: the save, with the Not now card under it (Back on step 1 lands there); a first run, no PIN stored.
     expect(rootDispatch).toHaveBeenCalledWith({
@@ -121,6 +123,8 @@ describe('Welcome with a waiting quest (6.3)', () => {
       payload: { index: 0, routes: [{ name: 'Guest', state: { index: 1, routes: [{ name: 'GuestLater' }, { name: 'CreateProfile', params: { firstRun: true, from: 'guest' } }] } }] },
     });
     expect(guestSaveEntry()).toBe('welcome');
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
     // Add my name uses the guest's id without a run (GU-D15): nothing starts, nothing is sent.
     expect(useGuestStore.getState().running).toBe(false);
     expect(sent).toEqual([]);

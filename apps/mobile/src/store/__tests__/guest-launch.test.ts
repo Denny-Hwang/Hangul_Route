@@ -55,7 +55,20 @@ vi.mock('../../config/flags', async (importOriginal) => {
 
 import { GUEST_REOPEN_MS, type GuestRecord, type Profile } from '@hangul-route/content-schema';
 import { endGrownUpTab } from '../../platform/grown-up-tab';
-import { endGuestRunTo, guestFirstQuest, guestRouteFor, noteGuestQuestDone, noteGuestStep, resumeGuestFromWelcome, takeGuestLaunch } from '../guest-launch';
+import { clearFirstLetterDue, clearGuestLeft } from '../../platform/guest-tab';
+import { activeLearnerIdNow } from '../active-learner';
+import {
+  GUEST_LAUNCH_WAIT_MS,
+  GUEST_PLAY_NOTE_MS,
+  endGuestRunOutside,
+  endGuestRunTo,
+  guestFirstQuest,
+  guestRouteFor,
+  noteGuestQuestDone,
+  noteGuestStep,
+  resumeGuestFromWelcome,
+  takeGuestLaunch,
+} from '../guest-launch';
 import { useGuestStore } from '../guest-store';
 import { useProfileStore } from '../profile-store';
 import { useUiStore } from '../ui-store';
@@ -79,6 +92,8 @@ beforeEach(() => {
   handoff.waiting = false;
   switches.guest = true;
   switches.chooser = true;
+  clearGuestLeft();
+  clearFirstLetterDue();
   takeHeldJoin();
   vi.stubGlobal('navigator', { locks });
   vi.mocked(endGrownUpTab).mockClear();
@@ -88,6 +103,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -235,7 +251,37 @@ describe('noteGuestStep and the first letter (6.2, section 12)', () => {
     noteGuestStep(steps, 1, T0 + 20_000);
     noteGuestStep(steps, 1, T0 + 25_000);
     expect(named('guest.first_letter')).toEqual([{ name: 'guest.first_letter', payload: { secondsIn: '15-30' } }]);
-    await vi.waitFor(() => expect(stored()!.lastAt).toBe(iso(T0 + 25_000)));
+  });
+
+  it('a reload of a new run before Discover page 1 still sends it once (the mark is kept per tab)', async () => {
+    boot.intent = { kind: 'try' };
+    await takeGuestLaunch(T0);
+    // The reload: the tab's stores start again, the record is read back, and the run reopens (no guest.started).
+    useGuestStore.setState({ running: false });
+    expect(await takeGuestLaunch(T0 + 40_000)).toEqual({ screen: 'QuestPlayer', params: quest() });
+    expect(named('guest.started')).toHaveLength(1);
+    noteGuestStep(steps, 0, T0 + 41_000, false);
+    noteGuestStep(steps, 1, T0 + 70_000);
+    noteGuestStep(steps, 1, T0 + 80_000);
+    expect(named('guest.first_letter')).toEqual([{ name: 'guest.first_letter', payload: { secondsIn: '60+' } }]);
+  });
+
+  it('lastAt moves with play only: never for the step the run opened on, and at most once a minute (GU-D12)', async () => {
+    disk.set('guest', JSON.stringify(record()));
+    useGuestStore.setState({ record: record() });
+    await takeGuestLaunch(T0 + 5 * 60_000);
+    // A reopen followed by no Continue: the step it opened on is not play.
+    noteGuestStep(steps, 0, T0 + 5 * 60_000, false);
+    await Promise.resolve();
+    expect(stored()!.lastAt).toBe(iso(T0));
+    // Play: lastAt moves, then not again within a minute, then again after it.
+    noteGuestStep(steps, 1, T0 + 6 * 60_000);
+    await vi.waitFor(() => expect(stored()!.lastAt).toBe(iso(T0 + 6 * 60_000)));
+    noteGuestStep(steps, 2, T0 + 6 * 60_000 + GUEST_PLAY_NOTE_MS - 1);
+    await Promise.resolve();
+    expect(stored()!.lastAt).toBe(iso(T0 + 6 * 60_000));
+    noteGuestStep(steps, 2, T0 + 6 * 60_000 + GUEST_PLAY_NOTE_MS);
+    await vi.waitFor(() => expect(stored()!.lastAt).toBe(iso(T0 + 6 * 60_000 + GUEST_PLAY_NOTE_MS)));
   });
 
   it('a resumed or reopened run never sends it again (one per record); nothing outside a run', async () => {
@@ -265,6 +311,44 @@ describe('noteGuestQuestDone (7.1)', () => {
   });
 });
 
+describe('the launch\'s wait for the guest step', () => {
+  it('a profiles lock that never comes: today\'s launch after GUEST_LAUNCH_WAIT_MS, and a run started late is ended', async () => {
+    vi.useFakeTimers();
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.stubGlobal('navigator', { locks: { request: async <T>(_name: string, step: () => Promise<T>): Promise<T> => held.then(step) } });
+    boot.intent = { kind: 'try' };
+    const launch = takeGuestLaunch(T0);
+    await vi.advanceTimersByTimeAsync(GUEST_LAUNCH_WAIT_MS);
+    expect(await launch).toBeNull();
+    expect(named('guest.started')).toEqual([]);
+    release();
+    await vi.waitFor(() => expect(stored()).not.toBeNull());
+    await vi.waitFor(() => expect(useGuestStore.getState().running).toBe(false));
+  });
+});
+
+describe('endGuestRunOutside (5.3, CS-G1): a run is in front only inside the Guest route', () => {
+  it('a root route other than Guest taking focus ends a run still on, so the picked profile is the learner again', async () => {
+    useProfileStore.setState({ profiles: [], activeId: null });
+    boot.intent = { kind: 'try' };
+    await takeGuestLaunch(T0);
+    const guestId = useGuestStore.getState().record!.id;
+    endGuestRunOutside('Guest');
+    expect(activeLearnerIdNow()).toBe(guestId);
+    // Another tab made a profile; the resume chooser opened over the run here and Mina was picked.
+    useProfileStore.setState({ profiles: [mina], activeId: mina.id });
+    endGuestRunOutside('WhoIsUsing');
+    expect(useGuestStore.getState().running).toBe(false);
+    expect(activeLearnerIdNow()).toBe(mina.id);
+    expect(useGuestStore.getState().record?.id).toBe(guestId);
+    endGuestRunOutside('Main');
+    expect(sent.filter((e) => e.name === 'guest.left')).toEqual([]);
+  });
+});
+
 describe('endGuestRunTo (6.4)', () => {
   it('Close or leave in the quest: guest.left { quest }, the run ends, the record stays, Welcome next (no profile)', async () => {
     boot.intent = { kind: 'try' };
@@ -273,6 +357,13 @@ describe('endGuestRunTo (6.4)', () => {
     expect(useGuestStore.getState().running).toBe(false);
     expect(stored()).not.toBeNull();
     expect(named('guest.left')).toEqual([{ name: 'guest.left', payload: { at: 'quest' } }]);
+    // A reload of that Welcome within 30 minutes stays on Welcome; try (or Back to my quest) starts the run again.
+    expect(await takeGuestLaunch(T0 + 60_000)).toBeNull();
+    expect(useGuestStore.getState().running).toBe(false);
+    boot.intent = { kind: 'try' };
+    expect(await takeGuestLaunch(T0 + 120_000)).toEqual({ screen: 'QuestPlayer', params: quest() });
+    useGuestStore.getState().endGuestRun();
+    expect(await takeGuestLaunch(T0 + 180_000)).toEqual({ screen: 'QuestPlayer', params: quest() });
   });
 
   it('a device with profiles: the chooser while it is on, else Home; no event without an at', () => {
