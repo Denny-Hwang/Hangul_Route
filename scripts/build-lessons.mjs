@@ -750,6 +750,47 @@ export async function loadSymbolKeys(root) {
   return new Map(jamoKnown.map((jamo) => [jamo.id, symbolKeyOf(jamo)]));
 }
 
+// ---- review items (F-CURR-002 §4.2, row CM-10) ---------------------------------------------
+
+/** A file of content/packs/<key>/stage-<n>.json (row CM-50a): a pack level, read once one is ready. */
+const PACK_LEVEL_RE = /^stage-([2-467])\.json$/;
+
+/**
+ * The lesson files the review items read, as a content tree (`content/...` path -> parsed JSON): every
+ * cell file this generator reads and every pack level of content/packs/ (none until row CM-50a).
+ * Which of them count (ready ones only) is `lessonSourcesOfTree`'s, shared with the lint.
+ */
+export function lessonReviewTree(root, cells = readCells(root)) {
+  const tree = new Map(cells.map((c) => [c.file, readJson(root, join(root, ...c.file.split("/"))).json]));
+  const packs = join(root, "content", "packs");
+  if (existsSync(packs)) {
+    for (const key of readdirSync(packs).filter((name) => statSync(join(packs, name)).isDirectory()).sort(byString)) {
+      for (const name of readdirSync(join(packs, key)).filter((f) => PACK_LEVEL_RE.test(f)).sort(byString)) {
+        const { rel, json } = readJson(root, join(packs, key, name));
+        tree.set(rel, json);
+      }
+    }
+  }
+  return tree;
+}
+
+/**
+ * Every Discover item and every scored round's answer of the shipped lessons (Stages 2-4, 6, 7 and
+ * the ready pack levels) as review-item occurrences: `lessonOccurrences` of
+ * packages/content-schema/src/review-items/extract.ts over `lessonSourcesOfTree(lessonReviewTree)`.
+ * `symbols` is the app's symbol table (the frozen Stage 1 table's `symbols`).
+ * scripts/build-review-items.mjs merges them with the Stage 1 and story occurrences.
+ */
+export async function lessonReviewOccurrences(root, symbols, cells = readCells(root)) {
+  if (!loaderRegistered) {
+    register(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "ts-loader.mjs")));
+    loaderRegistered = true;
+  }
+  const at = (name) => pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "content-schema", "src", "review-items", name)).href;
+  const [{ lessonOccurrences }, { lessonSourcesOfTree }] = await Promise.all([import(at("extract.ts")), import(at("sources.ts"))]);
+  return lessonSourcesOfTree(lessonReviewTree(root, cells)).flatMap((source) => lessonOccurrences(source, symbols));
+}
+
 // ---- budget -------------------------------------------------------------------------------
 
 const measure = (name, text) => ({ name, raw: bytes(text), gzip: gzipSync(text).length });
