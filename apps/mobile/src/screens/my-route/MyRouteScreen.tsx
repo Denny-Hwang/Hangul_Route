@@ -8,12 +8,13 @@ import { View } from 'react-native';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
 import { vocabTopics } from '../../content/vocab';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeEpisode, localizeQuest } from '../../logic/content-locale';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
 import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
+import { useLessonContentVersion } from '../lesson-content';
 import { nextLessonRows, nextLessonTapEvent, type NextLessonRowView } from '../../logic/my-route/next-lessons';
 import { localizedRouteContent, routeLetterWall, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, withGoalReached, writeSeen } from '../../logic/my-route/seen';
@@ -141,6 +142,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const messages = useMessages();
   const m = messages.learner.myRoute;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId));
   const snap = useProgressStore((s) => s.byProfile[profileId]);
   // The access tier (F-ENT-003 section 3.4); re-renders when it changes, as Home and Results do.
@@ -188,13 +191,15 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const seen = seenForView({ focusKey, seenFor, focused, seen: seenRead });
 
   const [attempt, setAttempt] = useState(0);
-  const localized = useMemo(() => localizedRouteContent(locale), [locale]);
+  const localized = useMemo(() => localizedRouteContent(locale), [locale, titles]);
   // The free-end hero's Practice words: the first free word topic this build lists (LR-5b).
   const practiceTopic = useMemo(() => practiceTopicOf(vocabTopics.map((t) => t.key)), []);
 
   // Today's UTC day, read again at midnight, on focus and on foreground (F-ROUTE-001 R-7e), so the plan line and
   // the card's one next move to the new day on a page left open across the boundary.
   const today = useToday();
+  // The skills count every quest's games, so every lesson chunk loads and the counts follow (F-CURR-002 §10).
+  const lessonsLoaded = useLessonContentVersion();
   const built = useMemo((): { model: MyRouteModel; week: number | null; upcoming: RouteNextQuestResult[]; inPlan: ReadonlySet<string> } | { error: true } => {
     try {
       const snapshot = snap ?? emptySnapshot(profileId);
@@ -219,7 +224,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       return { error: true };
     }
     // `attempt` is the retry.
-  }, [snap, profileId, today, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt, variant]);
+  }, [snap, profileId, today, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt, variant, lessonsLoaded]);
   const model = 'model' in built ? built.model : null;
   const week = 'model' in built ? built.week : null;
   const upcoming = 'model' in built ? built.upcoming : null;
@@ -242,7 +247,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       inPlanQuestIds: inPlan,
       copy: { where: r.myRoute.nextLessons.where, row: r.myRoute.nextLessons.row, next: r.routeNext.tag.next, inPlan: r.routeNext.tag.inPlan },
     });
-  }, [upcoming, inPlan, messages, locale]);
+  }, [upcoming, inPlan, messages, locale, titles]);
   // The first visit that shows a reached plan goal (LR-5c, section 4.3): Hoya cheers and the card says so for this
   // visit only; the effect below records the goal and sends route_map.goal_reached. Never read-only.
   const firstReached = firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead });

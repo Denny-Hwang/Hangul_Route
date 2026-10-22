@@ -154,7 +154,7 @@ describe("build-overlays.mjs: CLI", () => {
     put(root, "content/i18n/es/cards.json", overlay("es", "cards", { "card:a": { title: "B" } }));
     const drift = run(root, ["--check"]);
     assert.equal(drift.status, 1);
-    assert.match(drift.stdout, /out of date with content\/i18n.*run node scripts\/build-overlays\.mjs/);
+    assert.match(drift.stdout, /out of date with content\/i18n.*run pnpm generate/);
   });
 
   test("malformed JSON fails with an annotation naming the file; an unknown argument exits 2", () => {

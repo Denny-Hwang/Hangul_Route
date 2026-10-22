@@ -133,7 +133,7 @@ that rule (open item for F-I18N-001 PR 15/16).
 
 ```bash
 node scripts/build-overlays.mjs           # regenerate packages/content-schema/src/i18n-overlays.generated.ts (never hand-merge it)
-node scripts/build-overlays.mjs --check   # drift detector (CI)
+node scripts/build-overlays.mjs --check   # determinism check (CI); the module is gitignored, never committed (F-CURR-002 row CM-6)
 node scripts/validate-content.mjs         # the overlay rules below
 pnpm --filter @hangul-route/mobile test -t overlays   # ids of TypeScript-resident content
 ```

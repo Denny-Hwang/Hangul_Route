@@ -4,10 +4,13 @@ import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, wait
 import { next } from './story-reader-helpers';
 
 /**
- * F-REPORT-001 section 3.3.2 (RP-3b): the story reader records practice time
- * only. Its session id is time-only (`session:time:`), it ends with its
- * elapsed time when the reader closes, a hidden page ends it and a visible
- * page begins a new one, and the learner's streak never moves (OD-19). Runs
+ * F-REPORT-001 section 3.3.2 (RP-3b): the story reader records practice time.
+ * Its session id is time-only for every older reader (`session:time:`), it
+ * ends with its elapsed time when the reader closes, a hidden page ends it and
+ * a visible page begins a new one, and the old streak (`streakDays`) never
+ * moves (OD-19). Since F-CURR-002 row CM-4 it is a learning session
+ * (`session:time:learn:`, OD-14) that records its local day and keeps the
+ * local-day run (`streakLocal`); the level check's stays time only. Runs
  * on the fixture bundle, like the other reader suites. The level check's
  * session runs only while the check is in front: the grown-up report pushed
  * over it ends it (RP-3b review).
@@ -27,7 +30,8 @@ type E2eWindow = Window & {
 
 interface Saved {
   streakDays: number;
-  sessions: Array<{ id: string; endedAt?: string; durationSeconds?: number }>;
+  streakLocal?: { run: number; lastDay: string };
+  sessions: Array<{ id: string; endedAt?: string; durationSeconds?: number; localDay?: string }>;
 }
 
 /** The time-only sessions saved for the learner (the onboarding quest's own session is left out). */
@@ -80,6 +84,10 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
     const after = await saved();
     expect(timeOnly(after).every((s) => (s.durationSeconds ?? -1) >= 0 && (s.durationSeconds ?? 0) <= 3600)).toBe(true);
     expect(after?.streakDays).toBe(streakBefore);
+    // A learning session on the local day (F-CURR-002 OD-14): it keeps the local-day run.
+    expect(timeOnly(after).every((s) => s.id.startsWith('session:time:learn:') && /^\d{4}-\d{2}-\d{2}$/.test(s.localDay ?? ''))).toBe(true);
+    expect(after?.streakLocal?.lastDay).toBe(timeOnly(after)[0]?.localDay);
+    expect(after?.streakLocal?.run ?? 0).toBeGreaterThanOrEqual(1);
   });
 
   test('the level check records a time-only session that ends while the grown-up report is in front', async ({ page }) => {
@@ -122,6 +130,8 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
     await expect(page.getByTestId('placement-report')).toBeVisible();
     await expect.poll(async () => timeOnly(await saved()).every((s) => s.endedAt !== undefined)).toBe(true);
     expect(timeOnly(await saved())).toHaveLength(1);
+    // The level check stays time only: never a learning session.
+    expect(timeOnly(await saved())[0]?.id.startsWith('session:time:learn:')).toBe(false);
     expect((await saved())?.streakDays).toBe(streakBefore);
   });
 });

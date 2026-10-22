@@ -1,0 +1,217 @@
+{
+  "$comment": "F-CURR-002 §4.7 report fixture (row CM-7): a story tier's tokens and how many its stage has taught (with a particle, or as the story's own keyword). Not real content.",
+  "rule": "story-coverage",
+  "files": {
+    "content/episodes/stage-2/nature.json": {
+      "id": "episode:stage2-nature",
+      "stage": "stage2",
+      "theme": "nature",
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/episodes/stage-3/life.json": {
+      "id": "episode:stage3-life",
+      "stage": "stage3",
+      "theme": "life",
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage3-life-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "사과",
+                          "romanization": "sagwa",
+                          "en": "apple"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s3-life-q1-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s3-life-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/stories/fixture-sky.json": {
+      "id": "story:fixture-sky",
+      "recommendedStage": 2,
+      "keywords": [
+        {
+          "id": "moon",
+          "ko": "달",
+          "romanization": "dal",
+          "en": "moon"
+        }
+      ],
+      "tiers": [
+        {
+          "level": "read",
+          "scenes": [
+            {
+              "id": "s1",
+              "narrationEn": "The sky.",
+              "line": {
+                "ko": "하늘이 별",
+                "romanization": "haneuri byeol",
+                "en": "the sky, a star"
+              }
+            },
+            {
+              "id": "s2",
+              "narrationEn": "The moon.",
+              "keyword": {
+                "id": "moon",
+                "ko": "달",
+                "romanization": "dal",
+                "en": "moon"
+              }
+            },
+            {
+              "id": "s3",
+              "narrationEn": "An apple.",
+              "line": {
+                "ko": "사과",
+                "romanization": "sagwa",
+                "en": "apple"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "report": [
+    {
+      "file": "content/stories/fixture-sky.json",
+      "storyId": "story:fixture-sky",
+      "tier": "read",
+      "recommendedStage": 2,
+      "tokens": 4,
+      "taught": 3
+    }
+  ]
+}

@@ -32,7 +32,7 @@ import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'r
 import { CardArt } from '../../components/CardArt';
 import { themes } from '../../content';
 import { awardWorld } from '../../content/award-world';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
 import { libraryShelves } from '../../logic/library/shelves';
 import { libraryExplainer } from '../../logic/awards/explainer';
@@ -76,6 +76,8 @@ export function LibraryScreen(): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.library;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -143,7 +145,7 @@ export function LibraryScreen(): React.ReactElement {
   // Earn hints name episodes in the UI language.
   const hintWorld = useMemo(
     () => ({ ...awardWorld, episodes: awardWorld.episodes.map((e) => localizeEpisode(e, locale)) }),
-    [locale],
+    [locale, titles],
   );
 
   const visible = useMemo(() => {

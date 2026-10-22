@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { holdSession, holdWhileFocused, type FocusPorts, type SessionHoldPorts } from '../hold';
+import { holdSession, holdWhileFocused, sessionKindOf, takesOver, type FocusPorts, type SessionHoldPorts } from '../hold';
 
 /**
  * F-REPORT-001 section 3.3.2 (RP-3b): a screen holds a session while it is
@@ -195,5 +195,30 @@ describe('logic/sessions/hold holdWhileFocused (F-REPORT-001 section 3.3.2)', ()
     expect(hold).toHaveBeenCalledTimes(1);
     off();
     expect(release).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('logic/sessions/hold session kinds (F-CURR-002 OD-14)', () => {
+  const QUEST = { streak: true } as const;
+  const LEARN = { streak: false, keepsRun: true } as const;
+  const TIME = { streak: false } as const;
+
+  it('names the kind: a quest, a learning session (story, word set) or a time-only one (game, level check)', () => {
+    expect(sessionKindOf(QUEST)).toBe('quest');
+    expect(sessionKindOf({ streak: true, keepsRun: false })).toBe('quest');
+    expect(sessionKindOf(LEARN)).toBe('learn');
+    expect(sessionKindOf(TIME)).toBe('time');
+    expect(sessionKindOf({ streak: false, keepsRun: false })).toBe('time');
+  });
+
+  it('takes over only a kind that counts for less', () => {
+    expect(takesOver(TIME, QUEST)).toBe(true);
+    expect(takesOver(LEARN, QUEST)).toBe(true);
+    expect(takesOver(TIME, LEARN)).toBe(true);
+    expect(takesOver(QUEST, LEARN)).toBe(false);
+    expect(takesOver(QUEST, QUEST)).toBe(false);
+    expect(takesOver(LEARN, LEARN)).toBe(false);
+    expect(takesOver(LEARN, TIME)).toBe(false);
+    expect(takesOver(TIME, TIME)).toBe(false);
   });
 });

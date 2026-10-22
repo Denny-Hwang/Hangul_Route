@@ -1,0 +1,64 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): a Volume 2 cell and a pack level that are not lesson bodies, and upper-stage files no lesson layout accepts (a .v1 name, a misspelt theme, a nested file): errors. Not real content.",
+  "rule": "lesson-schema",
+  "files": {
+    "content/episodes/stage-2/nature.v2.json": {
+      "id": "episode:stage2-nature-v2",
+      "stage": "stage2",
+      "volume": 2,
+      "quests": []
+    },
+    "content/packs/food-fixture/stage-2.json": {
+      "stage": "stage2",
+      "quests": []
+    },
+    "content/episodes/stage-2/letters.v1.json": {
+      "id": "episode:stage2-letters",
+      "stage": "stage2",
+      "quests": []
+    },
+    "content/episodes/stage-2/letter.v2.json": {
+      "id": "episode:stage2-letter-v2",
+      "stage": "stage2",
+      "volume": 2,
+      "quests": []
+    },
+    "content/episodes/stage-3/old/life.json": {
+      "id": "episode:stage3-life",
+      "stage": "stage3",
+      "quests": []
+    }
+  },
+  "expect": [
+    [
+      "lesson-schema",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests"
+    ],
+    [
+      "lesson-schema",
+      "error",
+      "content/packs/food-fixture/stage-2.json",
+      "id"
+    ],
+    [
+      "lesson-schema",
+      "error",
+      "content/episodes/stage-2/letters.v1.json",
+      "(root)"
+    ],
+    [
+      "lesson-schema",
+      "error",
+      "content/episodes/stage-2/letter.v2.json",
+      "(root)"
+    ],
+    [
+      "lesson-schema",
+      "error",
+      "content/episodes/stage-3/old/life.json",
+      "(root)"
+    ]
+  ]
+}

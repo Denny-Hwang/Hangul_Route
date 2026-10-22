@@ -6,11 +6,17 @@ import type { SessionLog } from '@hangul-route/content-schema';
  * The quest player's sessions move the learner's streak, as they always have.
  * Story, stand-alone game and level-check sessions record time only (OD-19):
  * they count toward a report's minutes and practice days, never toward the
- * streak. They are told apart by their id, which every build and the Worker
- * keep as it is, so no new snapshot field is needed: a time-only id starts
- * with `TIME_ONLY_SESSION_PREFIX`, and every streak reader (`nextStreak` in
- * the store, `computeStreak` on Home and in the sync merge) reads only the
- * other sessions.
+ * old streak (`streakDays`). They are told apart by their id, which every
+ * build and the Worker keep as it is, so no new snapshot field is needed: a
+ * time-only id starts with `TIME_ONLY_SESSION_PREFIX`, and every reader of the
+ * old streak (`nextStreak` in the store, `computeStreak` in the sync merge)
+ * reads only the other sessions.
+ *
+ * The local-day streak (F-CURR-002 OD-14, row CM-4, `logic/streak.ts`) is kept
+ * by any learning activity: a quest, a story or a word set (and a Daily
+ * Review once it ships). A story or word-set session is a learning session:
+ * time only for every older reader (its id still starts with the time-only
+ * prefix), and kept apart by `LEARNING_SESSION_PREFIX` for `keepsRun`.
  */
 
 /** A session counts at most 60 minutes, so a tab left open never inflates the minutes. */
@@ -19,16 +25,25 @@ export const SESSION_COUNT_CAP_S = 3600;
 /** The id prefix of a time-only session (OD-19). */
 export const TIME_ONLY_SESSION_PREFIX = 'session:time:';
 
+/** The id prefix of a learning session (F-CURR-002 OD-14): time only for older readers, and it keeps the local-day run. */
+export const LEARNING_SESSION_PREFIX = 'session:time:learn:';
+
 const STREAK_SESSION_PREFIX = 'session:';
 
+/** What a session is: a quest session, a learning session (story, word set) or a time-only one (game, level check). */
+export type SessionKind = 'quest' | 'learn' | 'time';
+
+const PREFIX: Record<SessionKind, string> = { quest: STREAK_SESSION_PREFIX, learn: LEARNING_SESSION_PREFIX, time: TIME_ONLY_SESSION_PREFIX };
+
 /**
- * A new session id: `session:<start>` for a streak session (today's format),
- * `session:time:<start>` for a time-only one, with `:<n>` added when the log
- * already holds that id (two sessions begun in the same millisecond), since
- * the sync merge unions sessions by id.
+ * A new session id: `session:<start>` for a quest session (today's format),
+ * `session:time:learn:<start>` for a learning session, `session:time:<start>`
+ * for a time-only one, with `:<n>` added when the log already holds that id
+ * (two sessions begun in the same millisecond), since the sync merge unions
+ * sessions by id.
  */
-export function newSessionId(startedAt: string, streak: boolean, sessions: readonly SessionLog[]): string {
-  const base = `${streak ? STREAK_SESSION_PREFIX : TIME_ONLY_SESSION_PREFIX}${startedAt}`;
+export function newSessionId(startedAt: string, kind: SessionKind, sessions: readonly SessionLog[]): string {
+  const base = `${PREFIX[kind]}${startedAt}`;
   const taken = new Set(sessions.map((s) => s.id));
   if (!taken.has(base)) return base;
   let n = 2;
@@ -36,9 +51,14 @@ export function newSessionId(startedAt: string, streak: boolean, sessions: reado
   return `${base}:${n}`;
 }
 
-/** Whether a session moves the learner's streak: every session but a time-only one. */
+/** Whether a session moves the old streak (`streakDays`): every session but a time-only one. */
 export function countsForStreak(session: Pick<SessionLog, 'id'>): boolean {
   return !session.id.startsWith(TIME_ONLY_SESSION_PREFIX);
+}
+
+/** Whether a session keeps the local-day run (F-CURR-002 OD-14): a quest session or a learning session. */
+export function keepsRun(session: Pick<SessionLog, 'id'>): boolean {
+  return countsForStreak(session) || session.id.startsWith(LEARNING_SESSION_PREFIX);
 }
 
 /** The start times of the sessions that count toward the streak, in log order. */

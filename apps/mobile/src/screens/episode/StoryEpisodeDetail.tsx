@@ -57,6 +57,7 @@ import { useStoryStore } from '../../store/story-store';
 import { CellLinkRow } from '../story/CellLinkRow';
 import { SpeakerButton } from '../story/ReaderParts';
 import { CoverFallback } from '../library/StoryTile';
+import { useStoriesLoaded } from '../story-content';
 
 const NO_BOOKMARKS = emptyBookmarks();
 /** Earned card art and the silhouette share one size (spec §3.6: `HeritageCardArt` 96). */
@@ -124,12 +125,15 @@ export function StoryEpisodeDetail({
   const romanizationMode = useRomanizationMode();
   const thumb = useMediaSize(THUMB_BASE);
 
+  // The page's stories' covers, words and notes come from their chunks (F-CURR-002 §10, row CM-8): drawn as each arrives.
+  const storyChunks = useStoriesLoaded(useMemo(() => sourceEntries.map((e) => e.storyId), [sourceEntries]));
   // Story text in the UI language (F-CNT-002 overlay); taught Korean never changes.
   const entries = useMemo(
     () => sourceEntries.map((e) => ({ ...e, story: localizeStory(e.story, locale) })),
-    [sourceEntries, locale],
+    // storyChunks: a localized copy reads the story's body once, so it is made again when a chunk arrives.
+    [sourceEntries, locale, storyChunks],
   );
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), storiesAll, snap), [snap]);
+  const notes = useMemo(() => foundNotes(defaultStoryIndex(), storiesAll, snap), [snap, storyChunks]);
   const stageDef = stageByKey(episode.stage);
   const themeDef = themeByKey(episode.theme);
   const view = useMemo(

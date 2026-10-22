@@ -13,8 +13,8 @@ import {
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import type { MissionCard } from './homework/mission-builder';
 import type { MinigameScope } from './minigame-config';
-import { lessonIndexOverlays, lessons } from '../content/lessons';
-import { mergeOverlays } from './lessons/lesson-lookup';
+import { lessonContent } from '../content/lessons';
+import { mergeOverlaysInto } from './lessons/lesson-store';
 
 /**
  * Content text in the UI language (F-I18N-001 §3.6). The screens pass `useLocale()`;
@@ -26,8 +26,15 @@ import { mergeOverlays } from './lessons/lesson-lookup';
 export const localizeCard = (card: HeritageCard, locale: UiLocale, overlays?: Overlays): HeritageCard =>
   localize(card, card.id, locale, overlays ?? OVERLAYS);
 
-/** The shipped overlays plus the glosses of the generated lesson cells (F-CURR-001 §3.10); `OVERLAYS` itself while none ships. */
-export const CONTENT_OVERLAYS: Overlays = mergeOverlays(OVERLAYS, lessonIndexOverlays);
+/**
+ * The shipped overlays plus the glosses of the generated lesson cells (F-CURR-001 §3.10): each
+ * lesson chunk's glosses join as it loads, the titles of the active locale's title chunk and the
+ * steps and game glosses of each loaded cell (F-CURR-002 §10). One table, filled in place, so every
+ * default below reads what is loaded at the time of the call.
+ */
+const contentOverlays = { es: { ...OVERLAYS.es }, ko: { ...OVERLAYS.ko } };
+lessonContent.onOverlays((extra) => mergeOverlaysInto(contentOverlays, extra));
+export const CONTENT_OVERLAYS: Overlays = contentOverlays;
 
 export const localizeEpisode = (episode: Episode, locale: UiLocale, overlays: Overlays = CONTENT_OVERLAYS): Episode =>
   localize(episode, episode.id, locale, overlays);
@@ -48,9 +55,9 @@ export const localizeJamo = (jamo: Jamo, locale: UiLocale, overlays?: Overlays):
 export const localizeStory = (story: Story, locale: UiLocale, overlays?: Overlays): Story =>
   localize(story, story.id, locale, overlays ?? OVERLAYS);
 
-/** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref (a lesson ref adds its stage's glosses). */
+/** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref (a lesson ref reads its loaded cell's glosses). */
 export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocale, overlays?: Overlays): MinigameScope =>
-  localize(scope, ref, locale, overlays ?? lessons.scopeOverlaysFor(ref, OVERLAYS));
+  localize(scope, ref, locale, overlays ?? CONTENT_OVERLAYS);
 
 /**
  * Something that carries the English title of a content entity as built (a mission card,

@@ -345,7 +345,7 @@ describe("build-placement-bank.mjs: --check", () => {
     const r = run(root, ["--check"]);
     assert.equal(r.status, 1);
     assert.match(r.stdout, /out of date with content\/placement \(line \d+: expected .*Changed/);
-    assert.match(r.stdout, /run node scripts\/build-placement-bank\.mjs and commit the result/);
+    assert.match(r.stdout, /run pnpm generate \(generators must be deterministic\)/);
   });
 
   test("hand-editing the module is caught, and invalid content fails --check too", () => {

@@ -1,4 +1,5 @@
 import { BOOK_MIN_QUESTS, type Episode, type Quest, type Story } from '@hangul-route/content-schema';
+import { storyTierLevels } from '../logic/story/story-chunk-store';
 import { storyById } from './stories';
 import { storyQuestSkeleton } from './story-skeleton';
 
@@ -89,9 +90,13 @@ function isReviewed(story: Story): boolean {
   return story.state === 'ready' && story.review.language === 'native-reviewed' && story.review.culture === 'culture-reviewed';
 }
 
-/** A story a book can play: reviewed, with a `read` tier and the Hoya lines its quest needs (`storyQuestSkeleton` throws without them). */
+/**
+ * A story a book can play: reviewed, with a `read` tier and the Hoya lines its quest needs
+ * (`storyQuestSkeleton` throws without them). The levels are the shelf's (`storyTierLevels`), known
+ * before the story's chunk loads (F-CURR-002 §10).
+ */
 function isBookReady(story: Story): boolean {
-  return isReviewed(story) && story.tiers.some((t) => t.level === 'read') && Boolean(story.hoyaIntroEn) && Boolean(story.hoyaOutroEn);
+  return isReviewed(story) && storyTierLevels(story).includes('read') && Boolean(story.hoyaIntroEn) && Boolean(story.hoyaOutroEn);
 }
 
 /**
