@@ -337,6 +337,26 @@ describe('rungs by kind and the modality ladder', () => {
     const q = buildDailyReview(ctxOf([item], { [item.id]: { st: st({ b: 4, c: 2, s: 4, d: '2026-11-20' }) } })).questions[0] as ReviewQuestion;
     expect(q).toMatchObject({ stretch: true, rung: 'produce' });
   });
+
+  it('a stretch item that fell back to box 1-2 is asked at recognize or read, like any box 1-2 item', () => {
+    const item = mk('pat:fell');
+    const q = buildDailyReview(ctxOf([item], { [item.id]: { st: st({ b: 2, c: 2, s: 4, d: '2026-11-12' }) } })).questions[0] as ReviewQuestion;
+    expect(q.stretch).toBe(true);
+    expect(['recognize', 'read']).toContain(q.rung);
+  });
+
+  it('with no device voice, the sound notice shows only for an item that would have been heard', () => {
+    // A realia item has no recognize rung, and a homophone with no picture or gloss is never heard.
+    const rea = mk('rea:menu');
+    const homophone = mk('lex:nat', { homophoneOf: ['lex:nat~2'] });
+    for (const item of [rea, homophone]) {
+      const s = buildDailyReview(ctxOf([item], { [item.id]: { st: st({ b: 1, c: 0 }) } }, { voice: false }));
+      expect(s.questions[0]).toMatchObject({ rung: 'read', voiceFallback: false });
+      expect(s.soundNotice).toBe(false);
+    }
+    const heard = mk('lex:nat', { homophoneOf: ['lex:nat~2'], en: 'day' });
+    expect(buildDailyReview(ctxOf([heard], { [heard.id]: { st: st({ b: 1, c: 0 }) } }, { voice: false })).soundNotice).toBe(true);
+  });
 });
 
 describe('listening never depends on telling homophones apart (dictation-unambiguous)', () => {
@@ -425,6 +445,22 @@ describe('credit inside sentences', () => {
   const items = [chaek, gabang, hakgyo, bae1, bae2, pat, frame, exc, twoWords];
   const dueRow = (): EngineRow => ({ st: st({ b: 2, d: TODAY, s: 2 }) });
   const states = (): Record<string, EngineRow> => ({ 'lex:chaek': dueRow(), 'lex:gabang': dueRow(), 'vocab:hakgyo': dueRow(), 'lex:bae~pear': dueRow(), 'vocab:bae-boat': dueRow() });
+
+  it('strips only an ending that fits the word before it, so a compound is not read as a shorter word', () => {
+    const mul = mk('lex:mul', { ko: '물' });
+    const cha = mk('lex:cha', { ko: '차' });
+    const index = ctxOf([mul, cha, chaek], {}).index;
+    // 물가 (prices) is not 물 with 가, which follows a vowel; 물을 and 물로 are 물.
+    expect(wordsInside(mk('pat:mulga', { ko: '물가가 비싸요.' }), index)).toEqual([]);
+    expect(wordsInside(mk('pat:mureul', { ko: '물을 마셔요.' }), index)).toEqual(['lex:mul']);
+    expect(wordsInside(mk('pat:mullo', { ko: '물로 씻어요.' }), index)).toEqual(['lex:mul']);
+    // 차가 is 차 with 가; 차이 is not 차 with 이, which follows a final consonant.
+    expect(wordsInside(mk('pat:chaga', { ko: '차가 와요.' }), index)).toEqual(['lex:cha']);
+    expect(wordsInside(mk('pat:chai', { ko: '차이가 있어요.' }), index)).toEqual([]);
+    // 책으로 and 책은 fit 책; 책는 and 책로 do not.
+    expect(wordsInside(mk('pat:chaegeuro', { ko: '책으로 배워요. 책은 좋아요.' }), index)).toEqual(['lex:chaek']);
+    expect(wordsInside(mk('pat:bad', { ko: '책는 책로' }), index)).toEqual([]);
+  });
 
   it('finds the taught words inside a sentence, a frame and an exchange, through particles and the copula', () => {
     const index = ctxOf(items, {}).index;
@@ -552,10 +588,17 @@ describe('the sessions', () => {
     const second = buildDailyReview(ctx, { dailyDueDrawn: DAILY_REVIEW_DUE_CAP - 4, keepGoingRounds: 0 });
     expect(second.questions).toHaveLength(4);
     expect(second.endsEarly).toBe(false);
+    expect(second.capped).toBe(true);
     const third = buildDailyReview(ctx, { dailyDueDrawn: DAILY_REVIEW_DUE_CAP, keepGoingRounds: 0 });
     expect(third.questions).toHaveLength(0);
     expect(third.endsEarly).toBe(false);
+    // Not an empty session to play and not "All refreshed today": the surface offers Keep going.
+    expect(third.capped).toBe(true);
     expect(canKeepGoing(ctx, { dailyDueDrawn: DAILY_REVIEW_DUE_CAP, keepGoingRounds: 0 })).toBe(true);
+    // The session size, not the cap, stops a first Daily Review of a large pool; one that runs out ends early.
+    expect(buildDailyReview(ctx).capped).toBe(false);
+    const few = pool(3);
+    expect(buildDailyReview(ctxOf(few.items, few.states), { dailyDueDrawn: 15, keepGoingRounds: 0 })).toMatchObject({ capped: false, endsEarly: true });
   });
 
   it('Keep going asks 10 more due items, up to 3 rounds a day, and is not offered when nothing is due', () => {
@@ -587,6 +630,20 @@ describe('the sessions', () => {
     expect(ids(w.questions).every((id) => id.startsWith('lex:e'))).toBe(true);
     expect(buildWarmup(ctx, { cell: 'episode:stage1-life', stage: 1 }).questions).toEqual([]);
     expect(buildWarmup(ctxOf([own], { [own.id]: { st: st() } }), { cell: 'episode:stage3-life', stage: 3 }).questions).toEqual([]);
+  });
+
+  it('the warm-up never asks a later cell’s items: a replay of an early quest asks only what came before it', () => {
+    const early = mk('lex:early', { cells: ['episode:stage2-letters'], stage: 2, home: 'letters' });
+    const sameStageLater = mk('lex:later', { cells: ['episode:stage2-crafts'], stage: 2, home: 'crafts' });
+    const laterStage = Array.from({ length: 3 }, (_, i) => mk(`lex:s6-${i}`, { cells: ['episode:stage6-life'], stage: 6 }));
+    const items = [early, sameStageLater, ...laterStage];
+    const ctx = ctxOf(items, Object.fromEntries(items.map((i) => [i.id, { st: st() }])));
+    // By stage when the route order is not given.
+    expect(ids(buildWarmup(ctx, { cell: 'episode:stage2-life', stage: 2 }).questions).sort()).toEqual(['lex:early', 'lex:later']);
+    // By route order when the quest player gives it.
+    const route = ['episode:stage2-letters', 'episode:stage2-life', 'episode:stage2-crafts', 'episode:stage6-life'];
+    const earlier = (cell: string) => route.indexOf(cell) >= 0 && route.indexOf(cell) < route.indexOf('episode:stage2-life');
+    expect(ids(buildWarmup(ctx, { cell: 'episode:stage2-life', stage: 2, earlier }).questions)).toEqual(['lex:early']);
   });
 
   it('Try these again asks the misses of the session, each once, at most 8, and skips unknown and unmet items', () => {
@@ -653,6 +710,17 @@ describe('what the engine never selects', () => {
     expect(ids(buildTryAgain(hidden, ['lex:v2', 'lex:pk', 'lex:v1']).questions)).toEqual(['lex:v1']);
     expect(cellVisible('episode:pack-numbers-time-s3-v2', { volumes: false, topicPacks: true })).toBe(false);
     expect(cellVisible('story:sun-and-moon', { volumes: false, topicPacks: false })).toBe(true);
+  });
+
+  it('a Stage 5 book 2 story is Volume 2: its only-taught items hide with volumes off, once the shelf names its volume', () => {
+    const book2 = mk('lex:eongan', { cells: ['story:eongan-letters'], stage: 5, volume: 2 });
+    const book1 = mk('lex:sun', { cells: ['story:sun-and-moon'], stage: 5 });
+    const cellVolume = (cell: string) => (cell === 'story:eongan-letters' ? 2 : undefined);
+    const states = { [book2.id]: { st: st() }, [book1.id]: { st: st() } };
+    const pooled = (visibility: EngineContext['visibility']) => duePool(ctxOf([book2, book1], states, { visibility })).map((i) => i.id).sort();
+    expect(pooled({ volumes: false, topicPacks: true, cellVolume })).toEqual(['lex:sun']);
+    expect(pooled({ volumes: true, topicPacks: true, cellVolume })).toEqual(['lex:eongan', 'lex:sun']);
+    expect(cellVisible('episode:stage2-life-v2', { volumes: false, topicPacks: true, cellVolume })).toBe(false);
   });
 });
 
