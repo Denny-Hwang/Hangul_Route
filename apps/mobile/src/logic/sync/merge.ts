@@ -7,6 +7,7 @@ import {
   mergeLatchRecord,
   mergeStreakBest,
   mergeStreakLocal,
+  pruneDailyReviews,
   type CardCollectionEntry,
   type EpisodeProgress,
   type HomeworkAssignment,
@@ -416,7 +417,8 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     cards: unionBy(local.cards, server.cards, (c) => c.cardId, mergeCard),
     sessions,
     homework: unionBy(local.homework, server.homework, (h) => h.id, mergeHomework),
-    reviews: unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview),
+    // `daily` entries (the Daily Review and each Keep going) are kept for 14 local days, as the Worker keeps them (section 4.8).
+    reviews: pruneDailyReviews(unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview)),
     // The old streak, still written for older builds: story, game and level-check time never moves it (OD-19).
     streakDays: computeStreak(streakSessionDates(sessions), opts.now),
     ...(stageDoneAt ? { stageDoneAt } : {}),

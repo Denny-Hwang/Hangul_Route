@@ -1668,6 +1668,17 @@ describe('recordReview (F-QUEST-002 §3.9)', () => {
     ]);
   });
 
+  it('a daily entry prunes the daily entries older than 14 local days (F-CURR-002 section 4.8); other kinds stay', async () => {
+    await useProgressStore.getState().hydrate('p1');
+    const s = useProgressStore.getState();
+    const daily = (scope: string) => ({ id: `daily:${scope}:a`, kind: 'daily' as const, generatedAt: `${scope}T09:00:00.000Z`, scope, itemIds: ['lex:sagwa'], resultStars: 3 as const });
+    s.recordReview('p1', entry('2026-09-01T09:00:00.000Z', 2));
+    s.recordReview('p1', daily('2026-10-01'));
+    s.recordReview('p1', daily('2026-10-09'));
+    s.recordReview('p1', daily('2026-10-22'));
+    expect(stored()?.reviews.map((r) => r.id)).toEqual(['review:stage1:2026-09-01T09:00:00.000Z', 'daily:2026-10-09:a', 'daily:2026-10-22:a']);
+  });
+
   it('never stores an entry the schema refuses', () => {
     const bad = { ...entry('2026-10-12T09:00:00.000Z', 2), kind: 'quiz' } as unknown as Parameters<ReturnType<typeof useProgressStore.getState>['recordReview']>[1];
     expect(useProgressStore.getState().recordReview('p1', bad)).toBe(false);
