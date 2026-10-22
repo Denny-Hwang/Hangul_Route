@@ -1,7 +1,7 @@
 import { TELEMETRY_DAILY_KEEP_DAYS } from '@hangul-route/content-schema';
 import type { Db, TelemetryDailyRow } from '../db';
 import type { TelemetryEvent } from '../store';
-import { OA_PAYLOAD_RULES } from './server-events';
+import { GUEST_PAYLOAD_RULES, OA_PAYLOAD_RULES } from './server-events';
 
 /**
  * [OA] Anonymous daily counters (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1, OA-D18, migration 0015). After
@@ -9,6 +9,9 @@ import { OA_PAYLOAD_RULES } from './server-events';
  * the payload the rules kept, for every section 15 name and for `session.start` (counted with empty dims, the G1
  * denominator). Counts only: the row holds no profile, device or account id, no IP address and no time finer than a
  * day; `dims` can only hold codes the rules kept. No route reads the table: the goals of section 1 are D1 queries.
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12 (row GU-1): every `guest.*` name is counted too, with the payload its
+ * rules kept, and `onboarding.started` with only `firstRun` and `fromGuest` as dims (its other keys stay in the event,
+ * not in the count; the G5 query). They share the same write budget.
  *
  * The route is anonymous and has no rate limit, and the D1 write quota is shared with every other table, so the
  * writes are bounded per isolate. Each counted event is written through at once, together with anything held, in one
@@ -57,20 +60,33 @@ export function telemetryDailyEnabled(env: TelemetryDailyEnv | undefined): boole
   return value === undefined || value === '' || value === 'enabled';
 }
 
-/** Whether a name is counted: a section 15 name, or `session.start`. */
+/**
+ * [GU] Section 12: the only `onboarding.started` keys a count keeps, each only as a boolean (never the level, the
+ * email flag or anything else the event carries).
+ */
+export const ONBOARDING_STARTED_DIM_KEYS = ['firstRun', 'fromGuest'] as const;
+
+/** Whether a name is counted: a section 15 name, `session.start`, [GU] a `guest.*` name or `onboarding.started`. */
 export function isDailyCountedName(name: string): boolean {
-  return name === 'session.start' || Object.hasOwn(OA_PAYLOAD_RULES, name);
+  return name === 'session.start' || name === 'onboarding.started' || Object.hasOwn(OA_PAYLOAD_RULES, name) || Object.hasOwn(GUEST_PAYLOAD_RULES, name);
+}
+
+/** The payload a count keeps: [GU] `onboarding.started` keeps its boolean `firstRun` and `fromGuest` only; any other name all its kept payload. */
+function dimsPayload(name: string, payload: Record<string, unknown>): Record<string, unknown> {
+  if (name !== 'onboarding.started') return payload;
+  return Object.fromEntries(ONBOARDING_STARTED_DIM_KEYS.filter((key) => typeof payload[key] === 'boolean').map((key) => [key, payload[key]]));
 }
 
 /**
  * The `dims` of a kept payload: canonical JSON with sorted keys, or `''` when nothing was kept. `session.start`
- * always counts with `''`, whatever its payload.
+ * always counts with `''`, whatever its payload; [GU] `onboarding.started` with its boolean `firstRun` and `fromGuest` only.
  */
 export function dailyDims(name: string, payload: Record<string, unknown> | undefined): string {
   if (name === 'session.start' || !payload) return '';
-  const keys = Object.keys(payload).sort();
+  const dims = dimsPayload(name, payload);
+  const keys = Object.keys(dims).sort();
   if (keys.length === 0) return '';
-  return JSON.stringify(Object.fromEntries(keys.map((key) => [key, payload[key]])));
+  return JSON.stringify(Object.fromEntries(keys.map((key) => [key, dims[key]])));
 }
 
 /** The UTC date (YYYY-MM-DD) of an ISO time, as the route stores `at` (always UTC ISO). */

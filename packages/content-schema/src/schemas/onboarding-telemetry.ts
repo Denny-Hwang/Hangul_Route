@@ -16,7 +16,9 @@ export const ONBOARDING_TELEMETRY_PAYLOADS = {
     .object({ basis: z.enum(['guardian', 'self_13plus']), hasEmail: z.boolean(), pinSet: z.boolean() })
     .strict(),
   'onboarding.started': z
-    .object({ level: LearnerLevelIdSchema, firstRun: z.boolean(), hasEmail: z.boolean() })
+    // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12: `fromGuest` (the profile was saved from a guest run, GU-4);
+    // the Worker counts this event in telemetry_daily with only `firstRun` and `fromGuest` as dims.
+    .object({ level: LearnerLevelIdSchema, firstRun: z.boolean(), hasEmail: z.boolean(), fromGuest: z.boolean().optional() })
     .strict(),
   'profile.updated': z.object({ field: z.enum(['level', 'avatar', 'name', 'learner_type']) }).strict(),
   'pin.created': z.object({ where: z.enum(['first_run', 'gate', 'reset', 'optional']) }).strict(),

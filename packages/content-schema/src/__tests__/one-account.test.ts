@@ -286,16 +286,16 @@ describe('telemetry (section 15)', () => {
 
   it('documents the codes of each payload', () => {
     const shape = OA_TELEMETRY_PAYLOADS;
-    expect(WHO_TRIGGERS).toEqual(['launch', 'return', 'resume', 'join', 'manual']);
+    expect(WHO_TRIGGERS).toEqual(['launch', 'return', 'resume', 'join', 'manual', 'try']);
     expect(shape['profile.switch'].shape.via.options).toEqual(['chooser', 'profile', 'home']);
-    expect(shape['profile.switch'].shape.trigger.options).toEqual(['launch', 'return', 'resume', 'join', 'manual', 'none']);
+    expect(shape['profile.switch'].shape.trigger.options).toEqual(['launch', 'return', 'resume', 'join', 'manual', 'try', 'none']);
     expect(shape['profile.switch'].shape.minutesIn.options).toEqual(['0-2', '2-10', '10+']);
     expect(shape['parent.gate.opened'].shape.dest.options).toEqual(['area', 'use', 'locked_profile', 'action', 'cancel_reset']);
     expect(shape['parent.gate.opened'].shape.via.options).toEqual(['pin', 'biometric', 'session', 'open']);
     expect(shape['parent.gate.opened'].shape.marker.options).toEqual(['none', 'pin', 'nopin']);
     expect(shape['who.shown'].shape.trigger.options).toEqual([...WHO_TRIGGERS]);
     expect(shape['who.shown'].shape.learners.options).toEqual(['1', '2', '3-4', '5-12', '13+']);
-    expect(shape['who.picked'].shape.kind.options).toEqual(['learner', 'locked_learner', 'grown_up', 'add', 'cancel_reset']);
+    expect(shape['who.picked'].shape.kind.options).toEqual(['learner', 'locked_learner', 'grown_up', 'add', 'cancel_reset', 'try', 'guest']);
     expect(shape['who.picked'].shape.use.unwrap().options).toEqual(['family', 'teacher', 'school', 'area', 'signin']);
     expect(shape['pin.biometric_changed'].shape.reason.options).toEqual(['user', 'pin_changed', 'enrolment_changed']);
     expect(shape['pin.reset_requested'].shape.method.options).toEqual(['rescue_code', 'wait', 'sign_in', 'wait_cancelled']);

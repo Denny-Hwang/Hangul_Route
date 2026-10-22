@@ -10,6 +10,7 @@ import {
   ClassScopeBasisSchema,
   CURR_TELEMETRY_NO_PROFILE,
   CURR_TELEMETRY_PAYLOADS,
+  GUEST_TELEMETRY_PAYLOADS,
   LECTURE_DECODE_FAILURES,
   LECTURE_PRESETS,
   LearnerBasisSchema,
@@ -256,6 +257,16 @@ const SPACE_SERVER_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
   'space.admin.left': {},
 };
 
+/** Per name, one rule per key of its strict payload schema: a value is kept only when that key's schema accepts it. */
+function rulesOfSchemas(payloads: Readonly<Record<string, { shape: unknown }>>): Readonly<Record<string, Readonly<Record<string, FieldRule>>>> {
+  return Object.fromEntries(
+    Object.entries(payloads).map(([name, schema]) => [
+      name,
+      Object.fromEntries(Object.entries(schema.shape as Record<string, { safeParse(value: unknown): { success: boolean } }>).map(([key, field]): [string, FieldRule] => [key, (value) => value !== undefined && field.safeParse(value).success])),
+    ]),
+  );
+}
+
 /**
  * [OA] One account, many users (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15, OA-D18): every name of the section 15
  * table, the existing `profile.switch`, `parent.gate.opened`, `pin.reset_*` and `shell.grown_up_handoff` included, is
@@ -264,12 +275,17 @@ const SPACE_SERVER_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
  * (`picked`, `joined`, `refused` 0 to 12; `grownUps` 0 to 4; `step` 1 to 5). Any other key or value is dropped,
  * whatever a client sends. Checked first in `keptEventFields`, before every prefix rule.
  */
-export const OA_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = Object.fromEntries(
-  Object.entries(OA_TELEMETRY_PAYLOADS).map(([name, schema]) => [
-    name,
-    Object.fromEntries(Object.entries(schema.shape as Record<string, { safeParse(value: unknown): { success: boolean } }>).map(([key, field]): [string, FieldRule] => [key, (value) => value !== undefined && field.safeParse(value).success])),
-  ]),
-);
+export const OA_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(OA_TELEMETRY_PAYLOADS);
+
+/**
+ * [GU] Guest first quest (AMENDMENTS-GUEST-FIRST-LESSON section 12, row GU-1, Worker first; CS-G7 on the server): every
+ * `guest.*` event is stored without a profile id, so no event links a guest run to the profile it may become, and
+ * keeps per key only a value its documented schema (`GUEST_TELEMETRY_PAYLOADS`) accepts: enum codes, booleans and
+ * `stars` a whole number 0 to 3. Any other key or value is dropped, whatever a client sends; a `guest.*` name without
+ * rules keeps no payload. Checked beside `OA_PAYLOAD_RULES` in `keptEventFields`, before every prefix rule.
+ */
+const GUEST_EVENT_PREFIX = 'guest.';
+export const GUEST_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(GUEST_TELEMETRY_PAYLOADS);
 
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
@@ -315,6 +331,7 @@ function sessionEndPayload(payload: Record<string, unknown> | undefined): Record
  * and a `lecture.*` event (AMENDMENTS-LECTURE-V2 section 11). An F-CURR-002 name keeps its
  * payload only when it parses (section 11.3), and `session.end` drops a CM-3 field off its codes.
  * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS keeps only its documented fields and never a profile id (`OA_PAYLOAD_RULES`).
+ * [GU] So does a `guest.*` name of AMENDMENTS-GUEST-FIRST-LESSON section 12 (`GUEST_PAYLOAD_RULES`).
  */
 export function keptEventFields(
   name: TelemetryEventName,
@@ -322,6 +339,7 @@ export function keptEventFields(
   profileId: unknown,
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
   if (Object.hasOwn(OA_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(OA_PAYLOAD_RULES[name], payload) };
+  if (name.startsWith(GUEST_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(Object.hasOwn(GUEST_PAYLOAD_RULES, name) ? GUEST_PAYLOAD_RULES[name] : undefined, payload) };
   if (isCurrTelemetryName(name)) {
     const parsed = CURR_TELEMETRY_PAYLOADS[name].safeParse(payload);
     const kept = parsed.success && Object.keys(parsed.data).length > 0 ? parsed.data : undefined;
