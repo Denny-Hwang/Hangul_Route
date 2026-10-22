@@ -37,11 +37,15 @@ const continueButton = (page: Page, label: string = en.learner.quest.continue.ct
 
 /**
  * Records, from the first script on, every route name the app shows (React Navigation writes the focused route's
- * name to `document.title` on the web) and every request the page makes.
+ * name to `document.title` on the web), every request the page makes and every page navigation.
  */
-async function watch(page: Page): Promise<{ requests: string[] }> {
+async function watch(page: Page): Promise<{ requests: string[]; navigations: string[] }> {
   const requests: string[] = [];
-  page.on('request', (request) => requests.push(request.url()));
+  const navigations: string[] = [];
+  page.on('request', (request) => {
+    requests.push(request.url());
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) navigations.push(request.url());
+  });
   await page.addInitScript(() => {
     const seen: string[] = [];
     (window as Window & { __routes?: string[] }).__routes = seen;
@@ -50,21 +54,50 @@ async function watch(page: Page): Promise<{ requests: string[] }> {
     };
     new MutationObserver(note).observe(document, { subtree: true, childList: true, characterData: true });
   });
-  return { requests };
+  return { requests, navigations };
 }
 
 const routesSeen = (page: Page): Promise<string[]> => page.evaluate(() => (window as Window & { __routes?: string[] }).__routes ?? []);
 
-/** The routes seen since the run began (the Guest stack) and up to its end (Welcome or another root). */
-function duringRun(routes: string[]): string[] {
+/** How many route names were recorded so far: taken just before the run's explicit exit (a Close or Leave tap). */
+const markRunEnd = async (page: Page): Promise<number> => (await routesSeen(page)).length;
+
+/**
+ * CS-G1 at run time: the routes from the run's start (the first `Guest`, `QuestPlayer` or `GuestLater`) up to `end`
+ * (the mark taken before the explicit exit; the whole record when the run has not ended) that are not routes of
+ * section 7.1. Every route in that window counts, so a run that reached any other route fails, however briefly.
+ */
+function forbiddenDuringRun(routes: readonly string[], end: number = routes.length): string[] {
   const start = routes.findIndex((r) => r === 'Guest' || r === 'QuestPlayer' || r === 'GuestLater');
-  if (start === -1) return [];
-  const end = routes.findIndex((r, i) => i > start && !GUEST_ROUTES.includes(r) && r !== '');
-  return routes.slice(start, end === -1 ? undefined : end);
+  if (start === -1) return ['(the run never started)'];
+  return routes.slice(start, end).filter((r) => r !== '' && !GUEST_ROUTES.includes(r));
+}
+
+/** The routes of the run's window (as above), for the asserts on what it did reach. */
+function runRoutes(routes: readonly string[], end: number = routes.length): string[] {
+  const start = routes.findIndex((r) => r === 'Guest' || r === 'QuestPlayer' || r === 'GuestLater');
+  return start === -1 ? [] : routes.slice(start, end);
+}
+
+/**
+ * After the explicit exit, the first route outside the stack: Welcome on a device with no profile (section 6.4), read
+ * as `Onboarding` (its stack, titled while it mounts) or `Welcome`.
+ */
+function firstAfterRun(routes: readonly string[], end: number): string | undefined {
+  return routes.slice(end).find((r) => r !== '' && !GUEST_ROUTES.includes(r));
 }
 
 function expectNoServerCalls(requests: string[]): void {
   expect(requests.filter((url) => /\/api\/(sync|spaces)(\/|\?|$)/.test(url))).toEqual([]);
+}
+
+/**
+ * CS-G1: no console or persona sign-in page opens during a run: the page never navigates off the learner root, and no
+ * request reaches the console's pages (`/signin`, `/start`, `/parent`, `/teach`, `/account`) or a sign-in host.
+ */
+function expectNoConsoleOrSignIn(requests: readonly string[], navigations: readonly string[]): void {
+  expect(navigations.map((url) => new URL(url).pathname).filter((path) => path !== '/')).toEqual([]);
+  expect(requests.filter((url) => /^\/(signin|start|parent|teach|account)(\/|\?|$)/.test(new URL(url).pathname) || /(^|\.)clerk\./.test(new URL(url).hostname))).toEqual([]);
 }
 
 /** Starts the guest run as the site's Start learning does (tap 1) and waits for Hoya's hello. */
@@ -74,8 +107,16 @@ async function startFromSite(page: Page, search: string = '?try=1'): Promise<voi
 }
 
 test.describe('the guest first quest (GU-3)', () => {
+  test('self-check: the run-time route check reports any route outside 7.1 up to the exit mark', () => {
+    expect(forbiddenDuringRun(['Welcome', 'Guest', 'QuestPlayer', 'ParentDashboard', 'QuestPlayer'])).toEqual(['ParentDashboard']);
+    expect(forbiddenDuringRun(['Guest', 'QuestPlayer', 'Paywall', 'Results', 'Welcome'], 4)).toEqual(['Paywall']);
+    expect(forbiddenDuringRun(['Guest', 'QuestPlayer', 'GuestLater', 'Welcome'], 3)).toEqual([]);
+    expect(firstAfterRun(['Guest', 'QuestPlayer', 'GuestLater', 'Welcome'], 3)).toBe('Welcome');
+    expect(forbiddenDuringRun(['Welcome'])).toEqual(['(the run never started)']);
+  });
+
   test('G1: /?try=1 reaches ㅏ in 2 taps on an empty device; try leaves the address; only the 7.1 routes (CS-G1, CS-G7)', async ({ page, context }) => {
-    const { requests } = await watch(page);
+    const { requests, navigations } = await watch(page);
     await startFromSite(page);
     // Tap 1 was the site's Start learning; Welcome never showed, and try left the address.
     expect(new URL(page.url()).search).toBe('');
@@ -99,16 +140,18 @@ test.describe('the guest first quest (GU-3)', () => {
     expect(guest).toMatchObject({ via: 'site', questDone: false });
     expect(guest!.id).toMatch(/^profile:[a-z0-9]+$/);
     expect(await readStored(page, 'profiles')).toBeNull();
-    // CS-G1 at run time: only the routes of 7.1, no other page or tab (no console, no sign-in).
-    expect(duringRun(await routesSeen(page)).filter((r) => !GUEST_ROUTES.includes(r))).toEqual([]);
-    expect(duringRun(await routesSeen(page))).toContain('QuestPlayer');
+    // CS-G1 at run time: every route since the run began is a route of 7.1; no other page or tab (no console, no sign-in).
+    const routes = await routesSeen(page);
+    expect(forbiddenDuringRun(routes)).toEqual([]);
+    expect(runRoutes(routes)).toContain('QuestPlayer');
     expect(new URL(page.url()).pathname).toBe('/');
     expect(context.pages()).toHaveLength(1);
     expectNoServerCalls(requests);
+    expectNoConsoleOrSignIn(requests, navigations);
   });
 
   test('quest 1 to the guest\'s Results: the card and See my card, every back opens the Not now card, Close leads to Welcome (CS-G1)', async ({ page, context }) => {
-    const { requests } = await watch(page);
+    const { requests, navigations } = await watch(page);
     await startFromSite(page);
     await continueButton(page).click();
     await passDiscover(page);
@@ -137,15 +180,19 @@ test.describe('the guest first quest (GU-3)', () => {
     // Results' Back opens the Not now card (GU-4 fills it), whose Close ends the run: Welcome asks for a name.
     await headerBack(page).click();
     await expect(page.getByTestId('guest-later')).toBeVisible();
+    const end = await markRunEnd(page);
     await page.getByTestId('guest-later-close').click();
     await expect(page.getByTestId('welcome-guest')).toContainText(g.saveTitle);
-    // CS-G1 at run time, over the whole run: the 7.1 routes only, one tab, the learner app's own address.
-    const run = duringRun(await routesSeen(page));
-    expect(run.filter((r) => !GUEST_ROUTES.includes(r))).toEqual([]);
-    expect(run).toEqual(expect.arrayContaining(['QuestPlayer', 'Results', 'CardDetail', 'GuestLater']));
+    // CS-G1 at run time, over the whole run up to its explicit end: the 7.1 routes only, then Welcome; one tab, the
+    // learner app's own address, no console or sign-in page.
+    const routes = await routesSeen(page);
+    expect(forbiddenDuringRun(routes, end)).toEqual([]);
+    expect(runRoutes(routes, end)).toEqual(expect.arrayContaining(['QuestPlayer', 'Results', 'CardDetail', 'GuestLater']));
+    expect(['Onboarding', 'Welcome']).toContain(firstAfterRun(routes, end));
     expect(new URL(page.url()).pathname).toBe('/');
     expect(context.pages()).toHaveLength(1);
     expectNoServerCalls(requests);
+    expectNoConsoleOrSignIn(requests, navigations);
     expect(await readStored(page, 'profiles')).toBeNull();
   });
 
@@ -189,15 +236,25 @@ test.describe('the guest first quest (GU-3)', () => {
     expectNoServerCalls(requests);
   });
 
-  test('Close, then Leave: Welcome with the waiting card; the record stays', async ({ page }) => {
+  test('Close, then Leave: Welcome with the waiting card; the record stays; a reload keeps Welcome', async ({ page }) => {
+    const { requests, navigations } = await watch(page);
     await acceptConfirmSheets(page);
     await startFromSite(page);
     await continueButton(page).click();
     await expect(letterA(page)).toBeVisible();
+    const end = await markRunEnd(page);
     await headerClose(page).click();
     await expect(page.getByTestId('welcome-guest')).toContainText(g.waiting);
     await expect(page.getByTestId('welcome-guest-resume')).toHaveText(g.resume);
     expect(await readStored(page, 'guest')).toMatchObject({ questDone: false });
+    const routes = await routesSeen(page);
+    expect(forbiddenDuringRun(routes, end)).toEqual([]);
+    expect(['Onboarding', 'Welcome']).toContain(firstAfterRun(routes, end));
+    // Section 6.4: the run was left in this tab, so a reload within 30 minutes stays on Welcome with its card.
+    await page.reload();
+    await expect(page.getByTestId('welcome-guest')).toContainText(g.waiting);
+    await expect(hello(page)).toHaveCount(0);
+    expectNoConsoleOrSignIn(requests, navigations);
   });
 
   test('quest 1 done: Welcome shows Add your name to keep your first quest', async ({ page }) => {
