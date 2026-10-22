@@ -288,7 +288,9 @@ export function TypeRoundView({ round, onFirst, onSolved, reducedMotion, grade: 
           layoutClass={lc}
           soundOf={keySound}
           labels={{ key: k.key, shift: k.shift, delete: k.delete, space: k.space }}
-          onKey={(jamo) => setKeys((prev) => (verdict === 'far' ? [jamo] : [...prev, jamo]))}
+          // After a far miss the field starts empty (`done` clears it) and every key builds on the ones before, as in
+          // a first try: the round stays open until the right answer, with Hoya's bubble keeping it in view.
+          onKey={(jamo) => setKeys((prev) => [...prev, jamo])}
           onDelete={() => setKeys((prev) => prev.slice(0, -1))}
           onSpace={() => setKeys((prev) => [...prev, ' '])}
         />
