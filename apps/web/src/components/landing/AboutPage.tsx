@@ -2,6 +2,7 @@ import { colors, layout, radii, spacing, typography } from '@hangul-route/design
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
+import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { learnerStart } from '../../lib/site-links';
 import { sitePath } from '../../lib/site-path';
 import { HIT, rem } from '../../lib/site-style';
@@ -14,11 +15,11 @@ import { PrimaryAction } from './site-parts';
  * AMENDMENTS-SITE-NEWUSER §3.7 (SN-D10; mock design/screens/site/newuser/mock/<locale>/about.html): Start learning
  * after the promises, where a careful visitor decides.
  */
-export function AboutPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+export function AboutPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: { locale?: UiLocale; claims?: Readonly<SiteClaims> }): JSX.Element {
   const landing = getMessages(locale).landing;
   const t = landing.about;
   return (
-    <SiteShell locale={locale} page="/about">
+    <SiteShell locale={locale} page="/about" claims={claims}>
       <div style={{ maxWidth: layout.maxWidth.reading, margin: '0 auto', paddingBlock: spacing.xl }}>
         <Link href={sitePath(locale, '/')} style={{ ...HIT, justifyContent: 'flex-start', color: colors.brand.primary, fontWeight: typography.weight.semibold }}>
           {t.backHome}
@@ -37,7 +38,7 @@ export function AboutPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): J
             <li>{t.promises.gate}</li>
           </ul>
           <div style={{ marginTop: spacing.md }}>
-            <PrimaryAction href={learnerStart(locale)}>{landing.nav.start}</PrimaryAction>
+            <PrimaryAction href={learnerStart(locale, claims)}>{landing.nav.start}</PrimaryAction>
           </div>
         </section>
 

@@ -3,6 +3,8 @@ import { colors, layout, spacing, typography } from '@hangul-route/design-system
 import { DEFAULT_LOCALE, getMessages, type LegalValues, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
+import { GUEST_TTL_DAYS, GUEST_TTL_SHARED_DAYS } from '../../data/guest-ttl';
+import { SITE_CLAIMS, showsClaim, type SiteClaims } from '../../data/site-claims';
 import { sitePath } from '../../lib/site-path';
 import { HIT, rem } from '../../lib/site-style';
 import { EnglishAuthoritativeNotice } from './EnglishAuthoritativeNotice';
@@ -15,13 +17,22 @@ type LegalItem = string | ((values: LegalValues) => string);
  * Privacy Policy — English-authoritative until legal review (F-I18N-001 L10).
  * The text is `landing.legal.privacy` in `@hangul-route/i18n`; sections and items keep its key order.
  */
-export function PrivacyPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+export function PrivacyPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: { locale?: UiLocale; claims?: Readonly<SiteClaims> }): JSX.Element {
   const legal = getMessages(locale).landing.legal;
   const t = legal.privacy;
   // English level names on purpose: the legal body stays English in every locale (L10), so it quotes the English
   // `LEARNER_LEVELS` labels, not `common.levels` (the UI-locale words the app and console draw).
-  const values: LegalValues = { email: CONTACT_EMAIL, levels: LEARNER_LEVELS.map((l) => l.label).join(' / ') };
+  const values: LegalValues = {
+    email: CONTACT_EMAIL,
+    levels: LEARNER_LEVELS.map((l) => l.label).join(' / '),
+    days: GUEST_TTL_DAYS,
+    sharedDays: GUEST_TTL_SHARED_DAYS,
+  };
   const text = (item: LegalItem): string => (typeof item === 'function' ? item(values) : item);
+  // [GU] The first-quest bullet (AMENDMENTS-GUEST-FIRST-LESSON section 13.3) shows only while the `guestLesson` claim
+  // does, so the Policy never describes a path the site does not offer.
+  const hidden: readonly LegalItem[] = showsClaim(claims, 'guestLesson', locale) ? [] : [t.sections.collect.bullets.guest];
+  const shown = (items: Record<string, LegalItem>): LegalItem[] => Object.values<LegalItem>(items).filter((item) => !hidden.includes(item));
   // The document stays English in every locale (L10): marked `lang="en"` inside a `/es` or `/ko` page, unmarked on the English page.
   const docLang = locale === DEFAULT_LOCALE ? undefined : 'en';
   return (
@@ -48,7 +59,7 @@ export function PrivacyPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
               : null}
             {'bullets' in section ? (
               <ul style={{ lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>
-                {Object.values<LegalItem>(section.bullets).map((b, i) => (
+                {shown(section.bullets).map((b, i) => (
                   <li key={i}>{text(b)}</li>
                 ))}
               </ul>

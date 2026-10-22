@@ -2,6 +2,7 @@ import { typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { localeBannerOffers } from '../../data/landing-copy';
+import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { shownSiteLocales, type SitePage } from '../../lib/site-metadata';
 import { WRAP, rem, siteCssVars } from '../../lib/site-style';
 import { LocaleBanner } from './LocaleBanner';
@@ -16,6 +17,8 @@ export interface SiteShellProps {
   variant?: SiteChromeVariant;
   /** [SN] A 404 page: its `page` is `/` (links go home), but its header is not the home's (AMENDMENTS-SITE-NEWUSER §3.2). */
   notFound?: boolean;
+  /** [GU] The page's claims, passed to the header and footer so their Start learning matches the page's (`try=1`). */
+  claims?: Readonly<SiteClaims>;
   children: ReactNode;
 }
 
@@ -28,17 +31,17 @@ export interface SiteShellProps {
  * only), offering the same page in the suggested locale; not on the legal variant. It is client-only, so the static
  * HTML is unchanged; session dismissal holds across pages.
  */
-export function SiteShell({ locale, page, current, variant = 'default', notFound = false, children }: SiteShellProps): JSX.Element {
+export function SiteShell({ locale, page, current, variant = 'default', notFound = false, claims = SITE_CLAIMS, children }: SiteShellProps): JSX.Element {
   const shown = shownSiteLocales();
   const banner = locale === DEFAULT_LOCALE && variant === 'default' && shown.length > 1;
   return (
     <div className="hr-site" style={{ ...siteCssVars(), fontSize: rem(typography.size.body), lineHeight: typography.leading.normal }}>
-      <SiteHeader locale={locale} page={page} home={page === '/' && !notFound} current={current} variant={variant} />
+      <SiteHeader locale={locale} page={page} home={page === '/' && !notFound} current={current} variant={variant} claims={claims} />
       <main id="content" tabIndex={-1} className="hr-site-wrap" style={{ ...WRAP, outline: 'none' }}>
         {banner ? <LocaleBanner offers={localeBannerOffers(shown, page)} /> : null}
         {children}
       </main>
-      <SiteFooter locale={locale} page={page} current={current} variant={variant} />
+      <SiteFooter locale={locale} page={page} current={current} variant={variant} claims={claims} />
     </div>
   );
 }

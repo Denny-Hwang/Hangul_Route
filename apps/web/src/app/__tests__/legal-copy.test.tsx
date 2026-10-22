@@ -15,6 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { PrivacyPage as PrivacyDocument } from '../../components/landing/PrivacyPage';
 import { TermsPage as TermsDocument } from '../../components/landing/TermsPage';
 import { CONTACT_EMAIL } from '../../data/contact';
+import { SITE_CLAIMS } from '../../data/site-claims';
 import PrivacyPage from '../(en)/privacy/page';
 import TermsPage from '../(en)/terms/page';
 
@@ -267,6 +268,41 @@ describe('privacy policy', () => {
 
   it('shows no draft banner and no line that a legal review is pending (owner decision 2026-10-21 (c))', () => {
     expect(privacy).not.toMatch(/\bdraft\b|legal counsel|pending review/i);
+  });
+
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.3 (row GU-6): the first-quest bullet in "What we collect", only while
+   * the `guestLesson` claim is on (GU-7 flips it and moves the effective date in the same PR, never here).
+   */
+  describe('[GU] the first-quest bullet', () => {
+    const ON = { ...SITE_CLAIMS, guestLesson: true } as const;
+    const onHtml = renderToStaticMarkup(<PrivacyDocument locale="en" claims={ON} />);
+    const on = textOf(onHtml);
+    const SENTENCES = [
+      'Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers.',
+      "When a name is added, they become that learner's progress and are backed up like any other.",
+      "A quest that is never saved is deleted by the app the next time it opens after 30 days without play (7 days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.",
+    ];
+
+    it('is not on the Policy today (the claim is off until GU-7)', () => {
+      expect(SITE_CLAIMS.guestLesson).toBe(false);
+      expect(privacy).not.toContain('Trying the first quest');
+    });
+
+    it('with the claim on: one list item in "What we collect", after every bullet shipped before it', () => {
+      const item = blocksOf(onHtml).find((block) => block.startsWith('Trying the first quest'));
+      expect(item).toBe(SENTENCES.join(' '));
+      const collect = /What we collect(.*?)What we never collect/.exec(on)?.[1] ?? '';
+      const opening = SENTENCES[0] ?? '';
+      expect(collect).toContain(opening);
+      expect(collect.indexOf(opening)).toBeGreaterThan(collect.indexOf('Basic device and diagnostic data'));
+    });
+
+    it('with the claim on: the rest of the Policy and its effective date are as shipped', () => {
+      expect(on).toContain('Effective October 22, 2026');
+      expect(on.replace(SENTENCES.join(' '), ' ').replace(/\s+/g, ' ')).toBe(privacy);
+      expect(on).not.toMatch(/\bdraft\b|legal counsel|pending review|reviewed by counsel/i);
+    });
   });
 });
 

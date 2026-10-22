@@ -43,11 +43,14 @@ export interface LearnersPageProps {
 export function LearnersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: LearnersPageProps): JSX.Element {
   const t = getMessages(locale).landing;
   const L = t.persona.learners;
-  const start = learnerStart(locale);
+  const start = learnerStart(locale, claims);
   // On the server: the content overlays never reach a client bundle (landing-client-bundle.test.ts).
   const cards = stage1CardsIn(locale, OVERLAYS);
-  // The level-check question follows "Do I need to know any Korean?", only while its claim is on.
-  const faq = [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean, ...(showsClaim(claims, 'levelCheck', locale) ? [L.faq.level] : [])];
+  // The level-check question follows "Do I need to know any Korean?", only while its claim is on. [GU] While the
+  // `guestLesson` claim is on too, the first quest comes before any screen, so the answer names Home's level-check
+  // button instead of the first run's (AMENDMENTS-GUEST-FIRST-LESSON section 13.2).
+  const level = showsClaim(claims, 'guestLesson', locale) ? { q: L.faq.level.q, a: L.faq.level.guestA } : L.faq.level;
+  const faq = [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean, ...(showsClaim(claims, 'levelCheck', locale) ? [level] : [])];
   // [SN] The card capture's alt text: its Korean word and romanization from the card data, its meaning the card's gloss
   // in the UI language (the Korean alt text names no meaning, since the Korean UI's gloss is the word itself).
   const tiger = cards.find((card) => card.id === CAPTURED_CARD);
@@ -57,7 +60,7 @@ export function LearnersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
     ...(tiger ? [{ name: 'card' as const, alt: t.captures.card(tiger.ko, tiger.romanization, tiger.gloss ?? tiger.ko), caption: t.captures.caption.card }] : []),
   ];
   return (
-    <SiteShell locale={locale} page="/learners" current="learners">
+    <SiteShell locale={locale} page="/learners" current="learners" claims={claims}>
       <PageHead title={L.title} lead={L.lead}>
         <PrimaryAction href={start}>{t.nav.start}</PrimaryAction>
       </PageHead>
