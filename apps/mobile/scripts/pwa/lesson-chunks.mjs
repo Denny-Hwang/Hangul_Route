@@ -134,6 +134,13 @@ export const ROOT_CHUNKS = Object.freeze([
 ]);
 
 /**
+ * The memory store of the learner PWA (F-CURR-002 row CM-12): its runtime (the scheduler, the seeding, the sync and
+ * `memory.daily`) is a bundle of its own, reached only through the literal `import()` of `src/logic/memory/boot.ts`,
+ * so the start bundle carries none of it. The chunk module exports its marker (`MEMORY_CHUNK`).
+ */
+export const MEMORY_CHUNKS = Object.freeze([Object.freeze({ name: 'memory-chunk', marker: 'memory-chunk:runtime' })]);
+
+/**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
  * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
  * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves

@@ -44,7 +44,8 @@ export function StoryReadGame({ scope, onFinish, onBack, onOpenCultureNote }: Pr
   // the reader reads its callbacks through a live ref, so no effect re-runs on a new identity.
   const handlers = readGameHandlers({
     saveBookmark: bookmark.save,
-    answerRound: (roundKey, correct) => useQuestRunStore.getState().answerRound(roundKey, correct),
+    answerRound: (roundKey, correct, asked) => useQuestRunStore.getState().answerRound(roundKey, correct, asked),
+    askedOf: (roundKey) => ({ checkpoint: { story: source, level, roundKey } }),
     markStepComplete: () => useQuestRunStore.getState().markStepComplete(),
     finish: onFinish,
     back: onBack,

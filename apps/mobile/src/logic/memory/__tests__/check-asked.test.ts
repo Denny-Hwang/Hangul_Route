@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { storiesAll } from '../../../content/stories';
 import { checkGameItems } from '../../story/check-game';
 import type { CheckView } from '../../story/check-view';
+import { readGameHandlers } from '../../story/read-game';
 import { askedOfCheck, askedOfCheckpoint, resolveRound } from '../resolve';
 
 /** F-CURR-002 section 4.3, row CM-12: what a story check and a reader checkpoint asked, for the memory store. */
@@ -55,5 +56,14 @@ describe('askedOfCheckpoint', () => {
     expect(askedOfCheckpoint({ story, level: tier?.level ?? 'listen', roundKey: 'cp:nope' })).toBeUndefined();
     expect(askedOfCheckpoint({ story, level: tier?.level ?? 'listen', roundKey: 'check:x' })).toBeUndefined();
     expect(askedOfCheckpoint({ story: undefined, level: 'listen', roundKey: 'cp:x' })).toBeUndefined();
+  });
+
+  it('the reader host hands what a checkpoint asked to the run with the answer', () => {
+    const answerRound = vi.fn();
+    const askedOf = vi.fn(() => ({ texts: ['배'], rung: 'read' as const }));
+    const handlers = readGameHandlers({ saveBookmark: vi.fn(), answerRound, askedOf, markStepComplete: vi.fn(), finish: vi.fn(), back: vi.fn() });
+    handlers.onAnswer('cp:x', true);
+    expect(askedOf).toHaveBeenCalledWith('cp:x');
+    expect(answerRound).toHaveBeenCalledWith('cp:x', true, { texts: ['배'], rung: 'read' });
   });
 });

@@ -38,6 +38,7 @@ import {
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
 import {
   LOCALE_CHUNKS,
+  MEMORY_CHUNKS,
   ROOT_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
@@ -246,7 +247,7 @@ const bundles = existsSync(jsDir)
 const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest];
 const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls });
 // The locale chunks (the es / ko UI messages and content text, one per locale) and the grown-up roots, under the same rules.
-chunkProblems.push(...markedChunkProblems({ bundles, precached: manifestUrls }));
+chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS], bundles, precached: manifestUrls }));
 // A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
 const headersFile = join(dist, '_headers');
 for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS], bundles))) {
