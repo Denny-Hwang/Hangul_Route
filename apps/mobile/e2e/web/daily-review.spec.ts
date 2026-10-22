@@ -1,4 +1,5 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { colors, touchTarget } from '@hangul-route/design-system/tokens';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
@@ -67,6 +68,23 @@ async function seed(page: Page, id: string, due: number, flags: Record<string, {
 
 const card = (page: Page) => page.getByRole('button', { name: /^Daily Review\. About 3 minutes\./ });
 
+/** A token hex as the browser computes it (`rgb(r, g, b)`). */
+const rgbOf = (hex: string): string => {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+};
+const AMBER = rgbOf(colors.feedback.nudge);
+const RED = rgbOf(colors.feedback.danger);
+/** The colours a miss is drawn in: the option's frame (its first child) or itself. */
+const missColors = (target: Locator): Promise<string[]> =>
+  target.evaluate((el) => {
+    const nodes = [el, ...Array.from(el.querySelectorAll('*'))];
+    return nodes.flatMap((n) => {
+      const cs = getComputedStyle(n);
+      return [cs.borderTopColor, cs.backgroundColor];
+    });
+  });
+
 /** Answers the round on screen: right, or wrong first (amber, Hoya shows the answer) and then right. */
 async function answer(page: Page, how: 'right' | 'miss-then-right'): Promise<void> {
   const prompt = page.getByTestId('daily-review-prompt');
@@ -82,8 +100,13 @@ async function answer(page: Page, how: 'right' | 'miss-then-right'): Promise<voi
     await page.getByTestId(wrongs[0] as string).click();
     await expect(page.getByTestId('daily-review-miss')).toBeVisible();
   }
+  const dots = page.getByTestId('daily-review-dots');
+  const before = await dots.getAttribute('aria-label');
   await right.click();
-  await expect(page.getByText(ko, { exact: true }).first()).toBeHidden({ timeout: 5_000 }).catch(() => undefined);
+  // The round moves on: the dots name the next round, or the session ends (the loading frame, then the result).
+  await expect
+    .poll(async () => (await page.getByTestId('daily-review-result').count()) > 0 || (await dots.count()) === 0 || (await dots.getAttribute('aria-label', { timeout: 1_000 }).catch(() => null)) !== before, { timeout: 5_000 })
+    .toBe(true);
 }
 
 async function playRounds(page: Page, n: number, firstMiss = false): Promise<void> {
@@ -93,12 +116,31 @@ async function playRounds(page: Page, n: number, firstMiss = false): Promise<voi
   }
 }
 
-async function shots(page: Page, name: string): Promise<void> {
+/**
+ * The 320 and wide shots, and at 320 x 568 the checks a shot cannot make: nothing scrolls sideways or is cut off at the
+ * right, and every button (the round's options, [x], the result's and the sheet's buttons) is at least `touchTarget.min`.
+ */
+async function shots(page: Page, name: string, targets = true): Promise<void> {
   for (const [label, size] of [
-    ['320', { width: 320, height: 720 }],
+    ['320', { width: 320, height: 568 }],
     ['wide', { width: 1280, height: 900 }],
   ] as const) {
     await page.setViewportSize(size);
+    if (label === '320') {
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), { message: `${name}: no sideways scroll at 320` }).toBe(true);
+    }
+    if (label === '320' && targets) {
+      const offenders = await page.evaluate((min) => {
+        const width = document.documentElement.clientWidth;
+        return Array.from(document.querySelectorAll('[role="button"], button'))
+          .filter((el) => (el as HTMLElement).offsetParent !== null)
+          .map((el) => ({ name: el.getAttribute('aria-label') ?? (el as HTMLElement).innerText.slice(0, 30), r: el.getBoundingClientRect() }))
+          .filter(({ r }) => r.width > 0 && r.height > 0)
+          .filter(({ r }) => r.right > width + 1 || r.height < min - 0.5 || r.width < min - 0.5)
+          .map(({ name, r }) => `${name}: ${Math.round(r.width)} x ${Math.round(r.height)} at ${Math.round(r.left)}`);
+      }, touchTarget.min);
+      expect(offenders, `${name}: buttons at 320`).toEqual([]);
+    }
     await page.screenshot({ path: test.info().outputPath(`${name}-${label}.png`), fullPage: true });
   }
   await page.setViewportSize({ width: 393, height: 851 });
@@ -142,6 +184,10 @@ test('Daily Review from slot 3: 10 read rounds, a miss in amber, then stars and 
   await page.getByTestId(wrongId as string).click();
   await expect(page.getByTestId('daily-review-miss')).toBeVisible();
   await expect(page.getByTestId('daily-review-dot-filled')).toHaveCount(1);
+  // The tapped option takes the amber nudge token, and no part of it is ever the reserved red.
+  await expect.poll(async () => (await missColors(page.getByTestId(wrongId as string))).includes(AMBER)).toBe(true);
+  expect(await missColors(page.getByTestId(wrongId as string))).not.toContain(RED);
+  expect(await missColors(page.getByTestId('daily-review-screen'))).not.toContain(RED);
   await shots(page, 'daily-review-miss');
   await page.getByTestId(`daily-review-option-${rightId}`).click();
   await playRounds2(page, 9, 2);
@@ -227,6 +273,38 @@ test('Stop for now: the sheet keeps the round; Stop goes home, keeps the answer 
   expect(((await readStored<{ reviews: Array<{ kind: string }> }>(page, `progress:${id}`))?.reviews ?? []).filter((r) => r.kind === 'daily')).toHaveLength(0);
 });
 
+test("the day's 20: two Daily Reviews stopped on their last round spend it; the next open offers Keep going, never All refreshed today", async ({ page }) => {
+  const id = await onboard(page);
+  await seed(page, id, 25);
+  /** Rounds 1 to 9 right, a miss on round 10 (its first answer is recorded), then Stop: 10 due items drawn, no entry. */
+  const stopOnLast = async (): Promise<void> => {
+    await card(page).click();
+    await playRounds(page, 9);
+    await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 10');
+    const ko = ((await page.getByTestId('daily-review-prompt').innerText()).split('\n')[0] ?? '').trim();
+    const rightId = byKo.get(ko)?.id;
+    const wrongId = await page
+      .locator('[data-testid^="daily-review-option-"]')
+      .evaluateAll((els, r) => els.map((e) => e.getAttribute('data-testid')).find((t) => t !== `daily-review-option-${r}`), rightId);
+    await page.getByTestId(wrongId as string).click();
+    await expect(page.getByTestId('daily-review-miss')).toBeVisible();
+    await page.getByRole('button', { name: 'Stop the review' }).click();
+    await page.getByRole('button', { name: 'Stop', exact: true }).click();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  };
+  await stopOnLast();
+  await stopOnLast();
+  expect(((await readStored<{ reviews: Array<{ kind: string }> }>(page, `progress:${id}`))?.reviews ?? []).filter((r) => r.kind === 'daily')).toHaveLength(0);
+  // The day's Daily Review counts as done: the card collects and opens the done-today page with Keep going.
+  await expect(page.getByRole('button', { name: /^Daily Review\. About 3 minutes\. Collected\./ })).toBeVisible();
+  await card(page).click();
+  await expect(page.getByTestId('daily-review-done-today')).toBeVisible();
+  await expect(page.getByText('Want a few more?').first()).toBeVisible();
+  await expect(page.getByText('All refreshed today')).toHaveCount(0);
+  await page.getByTestId('daily-review-keep-going').click();
+  await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 1');
+});
+
 test('review first: with more than 30 due the Daily Review leads with one positive line; the new lesson is still offered', async ({ page }) => {
   const id = await onboard(page);
   await seed(page, id, 35);
@@ -234,7 +312,8 @@ test('review first: with more than 30 due the Daily Review leads with one positi
   const order = await page.getByTestId('home-missions').locator(':scope > *').allInnerTexts();
   expect(order[0]?.startsWith('Daily Review')).toBe(true);
   expect(order).toHaveLength(3);
-  await shots(page, 'daily-review-review-first');
+  // Home's own targets are audited by the touch-target audit; here only nothing scrolls sideways at 320.
+  await shots(page, 'daily-review-review-first', false);
 });
 
 test('flags: dailyReview off keeps today\'s slot 3; memoryRecord off with dailyReview on shows no card either', async ({ page }) => {
