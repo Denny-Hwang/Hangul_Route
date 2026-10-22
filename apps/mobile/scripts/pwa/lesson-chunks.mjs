@@ -11,7 +11,8 @@
 //     chunk (a static import would pull one back in: Metro then leaves an empty bundle behind);
 // and reports the start bundle, the chunks and the learner precache against their budget lines.
 // Row CM-8 puts the story chunks of scripts/build-stories.mjs (one per story, the same hashing) through
-// the same checks: pwa-postbuild.mjs passes both manifests, and the report counts each apart.
+// the same checks: pwa-postbuild.mjs passes both manifests, and the report counts each apart. Row CM-10
+// adds the review-item chunk of scripts/build-review-items.mjs the same way, with its own budget line.
 // Pure, apart from `md5`/`gzipSize` helpers; pwa-postbuild.mjs feeds it the built files.
 
 import { createHash } from 'node:crypto';
@@ -66,6 +67,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   storyChunkRaw: 70_000,
   storiesRaw: 2_000_000,
   storiesGzip: 510_000,
+  // The review-item index (F-CURR-002 §4.2, §10 ceilings table, row CM-10): one content-hashed chunk of
+  // scripts/build-review-items.mjs, lazy and precached, held here on its built bundle and there on its module
+  // (`BUDGET`, the same lines; the test keeps them equal). Measured at CM-10: 728 items, 94,162 B raw / 19,597 B
+  // gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`).
+  reviewItemsRaw: 150_000,
+  reviewItemsGzip: 30_000,
 });
 
 export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
@@ -194,10 +201,10 @@ function chunkTotals(manifest, bundles) {
 
 /**
  * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8), the locale chunks, the grown-up
- * root chunks and the whole learner precache.
- * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
+ * root chunks, the review-item chunk (row CM-10) and the whole learner precache.
+ * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
@@ -205,6 +212,7 @@ export function precacheReport({ manifest, stories = [], locales = [], roots = [
     storyChunks: chunkTotals(stories, bundles),
     localeChunks: chunkTotals(locales, bundles),
     rootChunks: chunkTotals(roots, bundles),
+    reviewItemChunks: chunkTotals(reviewItems, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -227,6 +235,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   if (report.rootChunks !== undefined && report.rootChunks.count > 0) {
     lines.push(
       `  grown-up root chunks  ${report.rootChunks.count} bundles  ${report.rootChunks.raw} B raw  ${report.rootChunks.gzip} B gzip  (largest ${report.rootChunks.largest?.raw ?? 0} B raw, ceiling ${budget.rootChunkRaw} B each)`,
+    );
+  }
+  if (report.reviewItemChunks !== undefined && report.reviewItemChunks.count > 0) {
+    lines.push(
+      `  review-item chunk  ${report.reviewItemChunks.count} bundles  ${report.reviewItemChunks.raw} B raw  ${report.reviewItemChunks.gzip} B gzip  (ceiling ${budget.reviewItemsRaw} B raw, ${budget.reviewItemsGzip} B gzip)`,
     );
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
@@ -276,6 +289,12 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
           `(raise PRECACHE_BUDGET.${line} in apps/mobile/scripts/pwa/lesson-chunks.mjs as a reviewed one-line change with the measured numbers in the PR)`,
       );
     }
+  }
+  const reviewItems = report.reviewItemChunks;
+  if (reviewItems !== undefined) {
+    const raise = '(raise it in scripts/build-review-items.mjs BUDGET and PRECACHE_BUDGET together, as a reviewed one-line change with the measured numbers in the PR)';
+    if (reviewItems.raw > budget.reviewItemsRaw) problems.push(`the review-item bundle is ${reviewItems.raw} B raw, over its ceiling of ${budget.reviewItemsRaw} B ${raise}`);
+    if (reviewItems.gzip > budget.reviewItemsGzip) problems.push(`the review-item bundle is ${reviewItems.gzip} B gzip, over its ceiling of ${budget.reviewItemsGzip} B gzip ${raise}`);
   }
   if (report.precache.raw > budget.learnerPrecacheRaw) {
     problems.push(

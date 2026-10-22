@@ -21,7 +21,7 @@ after(() => {
   for (const r of roots) rmSync(r, { recursive: true, force: true });
 });
 
-/** A tree holding the generators' inputs: content/ and the app's jamo (the catalogue's `teaches`). */
+/** A tree holding the generators' inputs: content/, the app's jamo (the catalogue's `teaches`) and the frozen review-item files. */
 function inputTree() {
   const root = mkdtempSync(join(tmpdir(), "generate-"));
   roots.push(root);
@@ -29,6 +29,10 @@ function inputTree() {
   const jamo = join("apps", "mobile", "src", "content", "jamo.ts");
   mkdirSync(dirname(join(root, jamo)), { recursive: true });
   cpSync(join(REPO, jamo), join(root, jamo));
+  // The frozen review-item files (F-CURR-002 §4.2, row CM-10): the Stage 1 table and the frozen ids.
+  const frozen = join("packages", "content-schema", "src", "review-items");
+  mkdirSync(join(root, frozen), { recursive: true });
+  for (const name of ["stage1-items.json", "items-stable-id.json"]) cpSync(join(REPO, frozen, name), join(root, frozen, name));
   return root;
 }
 const run = (root, args = [], env = {}) =>

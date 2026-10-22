@@ -52,6 +52,7 @@
 // error, 2 on a usage error. HANGUL_ROUTE_ROOT overrides the repo root (tests).
 
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { register } from "node:module";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
@@ -611,6 +612,30 @@ function parseArgs(argv) {
 /** The chunk names and hashes of the stories content/stories ships (pwa-postbuild.mjs reads the build's manifest from here). */
 export function readChunkManifest(root) {
   return chunkManifest(readStories(root).filter((s) => s.state === "ready"));
+}
+
+/** Every story file of content/stories as a content tree (`content/stories/<slug>.json` -> the story): the review-item source of row CM-10. */
+export function storyReviewTree(root) {
+  return new Map(readStories(root).map((story) => [`content/stories/${slugOf(story.id)}.json`, story]));
+}
+
+let loaderRegistered = false;
+
+/**
+ * F-CURR-002 §4.2 (row CM-10): the taught words of each shipped story's check rounds (each check's
+ * and checkpoint's Korean target, and a Korean correct option) as review-item occurrences:
+ * `storyOccurrences` of packages/content-schema/src/review-items/extract.ts over the ready stories
+ * (`storySourcesOfTree`), read through scripts/ts-loader.mjs (so only this function needs
+ * `typescript`). Topic words keep their `vocab:` ids when scripts/build-review-items.mjs merges them.
+ */
+export async function storyReviewOccurrences(root, symbols) {
+  if (!loaderRegistered) {
+    register(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "ts-loader.mjs")));
+    loaderRegistered = true;
+  }
+  const at = (name) => pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "content-schema", "src", "review-items", name)).href;
+  const [{ storyOccurrences }, { storySourcesOfTree }] = await Promise.all([import(at("extract.ts")), import(at("sources.ts"))]);
+  return storySourcesOfTree(storyReviewTree(root)).flatMap(({ file, story }) => storyOccurrences(story, file, symbols));
 }
 
 /** The generated story files on disk that are no longer built: a chunk of a story that no longer ships. */
