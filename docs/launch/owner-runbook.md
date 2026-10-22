@@ -607,6 +607,13 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 7. D1 쓰기 줄 (무료 한도의 50%) 은 롤업이 스스로 쓴 줄 수만 센다. 롤업은 하루 20,000 줄 (20%) 에서 멈추므로 이 줄은 지금 울리지 않는다 (참고용, CM-70d 전까지). 동기화를 포함한 전체 양은 D1 대시보드의 Metrics 에서 램프 중에 한 번씩 본다.
 8. 자동 가드레일을 급하게 멈추기 (배포 불필요): `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `GUARDRAIL_EVALUATOR` = `disabled` → Deploy. 다음 실행부터 가드레일은 아무것도 읽거나 쓰지 않고, 보존 기간 정리는 그대로 돈다. Logs 에는 `guardrail.run` 에 `disabled: true` 가 보인다. 다시 켤 때는 변수를 지운다 (`[vars]` 에는 넣지 않는다).
 
+**K-4. 기억 기록 `memoryRecord` 의 그림자 기간 (F-CURR-002 CM-12, 사양 section 12.3)**
+1. `memoryRecord` 는 화면이 없다: 켜져 있는 동안 학습자의 답을 기기에 기록하고, 기존 학습자의 항목을 한 번 심고 (seeding), 하루에 한 번 `memory.daily` 를 `learning_rollups` 에 보낸다. 학습자에게 보이는 것은 없다. 빌드의 기본 비율은 0 이라 표에 줄을 넣기 전에는 아무것도 기록하지 않는다.
+2. 램프는 K-1 로 한 단계씩: 오너 자신의 프로필 2일 → 10% 7일 → 50% 7일 → 100%. 끄면 (K-2) 기록만 멈추고, 이미 기록된 상태는 지워지지 않는다.
+3. **그림자 규칙: `dailyReview` (CM-14) 는 기본 비율 0 그대로 두고, `memoryRecord` 가 2주 동안 기록한 뒤에만 램프한다.** 2주는 `memoryRecord` 의 첫 원격 단계 (표에 처음 비율을 넣은 `updated_at`) 부터 센다. 그 전에 심은 항목의 기한 분포 (`items.seeded.spreadDays`) 와 실제 기한 항목 수 (`memory.daily.dueVolume`) 를 CM-13 시뮬레이션 (가정 7) 과 비교해 맞는지 본다. 확인: D1 Console 에서 `SELECT day, metric, bucket, events FROM learning_rollups WHERE metric IN ('items.seeded.spreadDays', 'items.seeded.count', 'memory.daily.dueVolume') ORDER BY day, metric, bucket;`
+4. CM-13 과 CM-14 를 만들고 머지하는 일은 그림자 기간을 기다리지 않는다. 기다리는 것은 `dailyReview` 의 램프뿐이다.
+5. 배포 순서는 Worker 먼저: `items.seeded` 와 `memory.daily` 의 버킷 필드가 공유 경계 코드만 받는 Worker (CM-12 의 content-schema 변경) 를 먼저 배포하고, 그다음 학습자 앱.
+
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
 
