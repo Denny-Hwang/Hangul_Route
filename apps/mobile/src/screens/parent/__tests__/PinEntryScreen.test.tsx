@@ -72,7 +72,7 @@ function nav() {
   };
 }
 
-type Next = 'ParentDashboard' | 'AddProfile' | 'Paywall' | 'EditProfile' | 'CancelReset';
+type Next = 'ParentDashboard' | 'AddProfile' | 'Paywall' | 'EditProfile' | 'CancelReset' | 'JoinSpace';
 
 async function show(next: Next, navigation = nav()) {
   const route = { key: 'pin', name: 'PinEntry' as const, params: { next } };
@@ -551,6 +551,67 @@ describe('[OA] PinEntry FreshPin (the lock switch asks the PIN again)', () => {
     const { r, navigation } = await showFresh();
     expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(0);
     expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+  });
+});
+
+describe('PinEntry JoinSpace (Who is joining?, CS-11, row OA-7b)', () => {
+  async function typeSetup(root: ReactTestInstance, pin: string): Promise<void> {
+    for (let round = 0; round < 2; round++) {
+      for (const digit of pin) await press(buttonsNamed(root, a11y.pinDigit(Number(digit)))[0] as ReactTestInstance);
+      await press(buttonsNamed(root, getMessages('en').common.buttons.next)[0] as ReactTestInstance);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  }
+
+  it('a correct PIN is a fresh PIN and returns to Join, which goes on', async () => {
+    const { r, navigation } = await show('JoinSpace');
+    await typePin(r.root, '1234');
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
+    expect(tracked.find((e) => e.name === 'parent.gate.opened')?.payload).toMatchObject({ dest: 'action', via: 'pin' });
+    // CS-1: the gate return keeps the session (and the fresh PIN) for the waiting join; Join is a learner screen.
+    expect(useUiStore.getState().gateReturnPending).toBe(true);
+  });
+
+  it('a wrong PIN stays on the PIN screen and counts as no PIN', async () => {
+    const { r, navigation } = await show('JoinSpace');
+    await typePin(r.root, '9999');
+    expect(navigation.goBack).not.toHaveBeenCalled();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+  });
+
+  it('with no PIN stored, the PIN set here counts as fresh and returns to Join', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const { r, navigation } = await show('JoinSpace');
+    await typeSetup(r.root, '2468');
+    expect(useAccountStore.getState().parentPinHash).toBe('h:2468');
+    expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().gateReturnPending).toBe(true);
+  });
+
+  it('a PIN set at the end of a reset (the 24-hour wait or the Rescue Code) is not a fresh PIN for Join', async () => {
+    for (const via of ['wait', 'rescue_code'] as const) {
+      useAccountStore.setState({ parentPinHash: null });
+      useUiStore.setState({ lastPinVerifiedAt: null });
+      const navigation = nav();
+      const route = { key: 'pin', name: 'PinEntry' as const, params: { next: 'JoinSpace' as const, via } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
+      const r = await render(<PinEntryScreen route={route} navigation={navigation as any} />);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await typeSetup(r.root, '2468');
+      expect(useAccountStore.getState().parentPinHash).toBe('h:2468');
+      expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+      await cleanup();
+    }
+  });
+
+  it('a PIN set for another destination is not a fresh PIN (unchanged)', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const { r } = await show('AddProfile');
+    await typeSetup(r.root, '2468');
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
   });
 });

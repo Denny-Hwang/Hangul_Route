@@ -157,6 +157,18 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
     expect(await api.joinSpace('space:f', body, creds)).toEqual({ status: 'error', code: 'cap_family' });
   });
 
+  it('[OA] joinSpace reads a 401 or 403 (the device check refused the learner) as forbidden, a 5xx stays unknown', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(err(401, 'unauthorized'))
+      .mockResolvedValueOnce(err(403, 'forbidden'))
+      .mockResolvedValueOnce(err(403, 'scope_limited'))
+      .mockResolvedValueOnce(err(503, 'unavailable'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    const body = { code: 'K7M2X9', learnerId: 'profile:a' };
+    for (let i = 0; i < 3; i++) expect(await api.joinSpace('space:f', body, creds)).toEqual({ status: 'error', code: 'forbidden' });
+    expect(await api.joinSpace('space:f', body, creds)).toEqual({ status: 'error', code: 'unknown' });
+  });
+
   it('joinSpace sends the device header and maps every outcome', async () => {
     const okBody = { data: { alreadyMember: false, membership: { role: 'student', joinedAt: 't' }, space: { id: 'space:c', kind: 'class', name: 'A' } } };
     const fetchImpl = vi.fn<typeof fetch>()
@@ -169,7 +181,7 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
       .mockResolvedValueOnce(err(422, 'not_joinable'))
       .mockResolvedValueOnce(err(422, 'invalid_code'))
       .mockResolvedValueOnce(err(429, 'too_many_attempts'))
-      .mockResolvedValueOnce(json(401, {}))
+      .mockResolvedValueOnce(json(500, {}))
       .mockRejectedValueOnce(new Error('offline'));
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
     const body = { code: 'K7M2X9', learnerId: 'profile:a', displayName: 'Suni' };

@@ -245,10 +245,11 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(precacheBudgetProblems(atLine, lines)).toEqual([]);
   });
 
-  it('the locale chunk line sits over the largest measured chunk (ko, 901,191 B) and the root line over the presenter (245,964 B)', () => {
-    // F-CURR-002 §10 ceilings table: measured at the start bundle shrink (es 527,438 B, BrowseApp 111,404 B raw).
+  it('the locale chunk line sits over the largest measured chunk (ko, 905,927 B) and the root line over the presenter (245,964 B)', () => {
+    // F-CURR-002 §10 ceilings table: measured at the start bundle shrink (ko 901,191 B, es 527,438 B, BrowseApp
+    // 111,404 B raw) and again on the final integration's strings (main fc580beed: ko 905,927 B, es 530,463 B raw).
     expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_000_000);
-    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(901_191);
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(905_927);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBe(300_000);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBeGreaterThan(245_964);
   });
@@ -292,14 +293,17 @@ describe('precacheReport and its budget lines', () => {
   it('the start bundle line is its size after the start bundle shrink with a small margin, under every earlier size; the precache line is the CM-5 measurement plus 2.5 MB', () => {
     // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,345,469 B measured after CM-8,
     // 6,371,165 B on the phase-0 integration (#802), 6,487,010 B with [OA] the one-account integration (#801),
-    // 4,712,987 B after the start bundle shrink (the es / ko text and the grown-up roots became precached chunks;
-    // 6,491,546 B on its main). The margin stays under 10 KB, so the stories, the locale text, the grown-up roots
-    // (or anything else) cannot come back into the start bundle unseen. This pins the line only; `build:web --budget`
-    // (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_720_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_712_987).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_712_987).toBeLessThan(10_000);
-    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_487_010);
+    // 6,495,837 B with the SN-2 site strings in the bundled `landing` messages (#804, app-host build), 6,518,688 B on
+    // the final integration of OA-7b (#798), SN-1 (#813) and SN-2 (#804) (integrate/final-oa-site, release build),
+    // 4,712,987 B after the start bundle shrink on main 7eb5bad61 (the es / ko text and the grown-up roots became
+    // precached chunks; 6,491,546 B on its main), 4,732,797 B with that shrink merged onto the final integration
+    // (main fc580beed, release build). The margin stays under 10 KB, so the stories, the locale text, the grown-up
+    // roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
+    // `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_740_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
 

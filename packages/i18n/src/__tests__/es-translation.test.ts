@@ -34,7 +34,7 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
   });
 
   it('translates the legal notice around the English text', () => {
-    expect(es.landing.legal.draft).not.toBe(en.landing.legal.draft);
+    expect(es.landing.legal.englishAuthoritative).not.toBe(en.landing.legal.englishAuthoritative);
   });
 
   it('differs from English wherever English is not a shared word (brand names, codes, symbols)', () => {
@@ -199,4 +199,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'learner.presenter.presets.length.option',
   // AMENDMENTS-LECTURE-V2 section 12.2 (LV-4): the console's length chip, the same "{n} min".
   'console.lecture.presets.length.option',
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4 (OA-7b): a refused seat, the name and the cap line joined by ": ".
+  'caregiver.join.who.refused',
 ];

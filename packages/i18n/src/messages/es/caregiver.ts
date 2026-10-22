@@ -359,6 +359,24 @@ export const caregiver = {
       badFormat: 'Un código tiene 6 letras o números.',
       off: 'Esta versión no permite unirse a una clase.',
     },
+    /** [OA] "¿Quién se une?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4, OA-7b): estudiante, adultos, unirse; el nombre delante, con dos puntos. */
+    who: {
+      title: '¿Quién se une?',
+      hint: 'Elige a cada estudiante de este dispositivo que se unirá.',
+      result: (joined: number, total: number) =>
+        plural('es', joined, { one: `Se unió ${joined} de ${total}.`, other: `Se unieron ${joined} de ${total}.` }),
+      joined: (name: string) => `${name} se unió.`,
+      already: (name: string) => `${name} ya está en esta familia.`,
+      refused: (name: string, line: string) => `${name}: ${line}`,
+      takesPlace: 'Ocupa un lugar en la familia.',
+      classOnly: 'En este dispositivo, solo es para su clase.',
+      retry: 'Reintentar',
+      consentTitle: (space: string) => `¿Unirse a ${space}?`,
+      consentLine: (name: string) => `${name}: al unirse, su progreso se guarda en la cuenta.`,
+      consentSees: 'Los adultos de la familia verán cada nombre y su progreso.',
+      consentYes: 'Sí, unirse',
+      notNow: 'Ahora no',
+    },
   },
 
   install: {

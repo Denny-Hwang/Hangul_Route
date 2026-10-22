@@ -1,4 +1,14 @@
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, LEARNER_LEVELS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
+import {
+  AssessmentResponseSchema,
+  FAMILY_LIFETIME_LEARNERS,
+  GROUP_LICENSE_LEARNERS,
+  LEARNER_LEVELS,
+  PLACEMENT_KEEP,
+  PlacementResultSchema,
+  PlacementSummarySchema,
+  SCHOOL_LICENSE_TEACHERS,
+} from '@hangul-route/content-schema';
+import { colors } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -30,12 +40,14 @@ const privacy = textOf(privacyHtml);
 const terms = textOf(termsHtml);
 
 /**
- * Each heading, paragraph (the English-authoritative notice is a `<p role="note">`), list item and the draft banner
- * (a `<div>` holding only text) on its own, so a marking in one block cannot cover another. The legal pages nest no
- * block inside these, so the lazy match ends at the block's own closing tag.
+ * Each heading, paragraph (the English-authoritative notice is a `<p role="note">`), list item and `<div>` holding only
+ * text on its own, so a marking in one block cannot cover another. (The draft banner was such a `<div>` until owner
+ * decision 2026-10-21 (c); the page's wrapper `<div>` holds blocks, so it is not one.) The legal pages nest no block inside these, so the lazy match ends at the block's own closing tag.
  */
 function blocksOf(html: string): string[] {
-  return [...html.matchAll(/<(h[1-6]|p|li|div)\b[^>]*>(.*?)<\/\1>/g)].map((m) => textOf(m[2] ?? '').trim()).filter((b) => b.length > 0);
+  return [...html.matchAll(/<(h[1-6]|p|li)\b[^>]*>(.*?)<\/\1>|<div\b[^>]*>([^<]*)<\/div>/g)]
+    .map((m) => textOf(m[2] ?? m[3] ?? '').trim())
+    .filter((b) => b.length > 0);
 }
 
 /** A block split into sentences (a period followed by a space ends one; "app.hangulroute.com" does not). */
@@ -64,15 +76,92 @@ describe('privacy policy', () => {
   it('describes the learner level as a self-chosen reading level, never an age', () => {
     const labels = LEARNER_LEVELS.map((l) => l.label);
     expect(labels.length).toBeGreaterThan(0);
-    expect(privacy).toContain(`starting level the learner picks (${labels.join(' / ')})`);
+    // AMENDMENTS-SITE-NEWUSER SN-2: or the short level check suggests it, and its answers go up as usage events.
+    expect(privacy).toContain(`starting level the learner picks or a short level check suggests (${labels.join(' / ')})`);
+    expect(privacy).toContain('If the learner takes the level check, it sends us usage events.');
+    // placement.start carries the source, test locale, length and mode, revealMode and profile level;
+    // placement.item_answered the gate, the outcome (skipped as "not sure"), `assisted` (the sound guide), `noSound`
+    // and `ms`; placement.complete the suggested levels, `beyondContent`, `strandsSecure`, mode, `asked` and
+    // `stopReason`; placement.skipped and placement.override_applied are noted too.
+    expect(privacy).toContain(
+      "When it starts: where it was started, its language and length, whether the sound guide shows by itself or after a tap, and the learner's starting level.",
+    );
+    expect(privacy).toContain(
+      'For each answer: which question it was and which part of the check it belongs to, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took.',
+    );
+    expect(privacy).toContain(
+      'When it ends: the level it suggests for reading and for listening, whether the learner reached the highest level the check measures, how many of the five skills it checks are secure, its length, how many questions were asked and why it stopped.',
+    );
+    expect(privacy).toContain(
+      "We also note when the check is skipped and from which screen, and when a grown-up picks a different start. Each event carries the learner's id and the time it happened.",
+    );
     expect(privacy).toMatch(/It describes how much the learner reads, not how old they are/);
     expect(privacy).not.toMatch(/age group/i);
     expect(privacy).not.toMatch(/\b5\s*[–-]\s*7\b|\b8\s*[–-]\s*9\b|\b10\s*[–-]\s*11\b/);
     expect(terms).not.toMatch(/age group/i);
   });
 
-  it('says the privacy page was last updated 2026-10-20 (the school administrators bullet, [SA] section 6.7)', () => {
-    expect(privacy).toContain('Effective October 20, 2026');
+  /**
+   * Codex review on #804 (P1): the policy names what the app stores, not only the usage events. Each field of the
+   * stored result (`PlacementResultSchema`, backed up in `ProgressSnapshot.placements`), of each answer
+   * (`AssessmentResponseSchema`) and of the summary (`PlacementSummarySchema`) maps to the words that disclose it. A
+   * new field fails here until the Privacy Policy says what it is.
+   */
+  it('discloses every field of the stored level-check result, its answers and its summary', () => {
+    const RESULT: Record<string, string> = {
+      id: 'Each result has an id',
+      startedAt: 'when the check started and ended',
+      completedAt: 'when the check started and ended',
+      source: 'where it was started',
+      testLocale: 'its language, length and settings',
+      length: 'its language, length and settings',
+      mode: 'its language, length and settings',
+      revealMode: 'its language, length and settings',
+      bankVersion: 'which versions of the questions and lessons it used',
+      contentVer: 'which versions of the questions and lessons it used',
+      catalogVersion: 'which versions of the questions and lessons it used',
+      motivation: 'why the learner is learning Korean, if they picked a reason',
+      responses: 'holds every answer',
+      gates: 'how the learner did in each part of the check',
+      strands: 'in each of the five skills',
+      level: 'the suggested levels',
+      oralStage: 'the suggested levels',
+      beyondContent: 'whether the learner reached the highest level the check measures',
+      startQuestId: 'the first lesson',
+      placedOutQuestIds: 'the lessons the learner can skip',
+      priorityTokens: 'up to three letters or skills to practice first',
+      needsStage: "whether the suggested level is outside the learner's plan",
+      stopReason: 'why it stopped',
+      override: 'if a grown-up picked a different start, that start and when',
+    };
+    const ANSWER: Record<string, string> = {
+      questionId: 'which question',
+      chosenOptionId: 'which choice was picked, recorded by its id and not its words',
+      outcome: 'whether it was right, wrong or not sure',
+      assisted: 'whether the sound guide was used',
+      noSound: 'whether the sound could play',
+      ms: 'how long it took',
+    };
+    const SUMMARY: Record<string, string> = {
+      takenAt: 'when it was taken',
+      level: 'the suggested levels',
+      oralStage: 'the suggested levels',
+      strands: 'the five skills',
+      beyondContent: 'whether the learner reached the highest level',
+      overridden: 'whether a grown-up changed the start',
+    };
+    expect(Object.keys(PlacementResultSchema.shape).sort()).toEqual(Object.keys(RESULT).sort());
+    expect(Object.keys(AssessmentResponseSchema.shape).sort()).toEqual(Object.keys(ANSWER).sort());
+    expect(Object.keys(PlacementSummarySchema.shape).sort()).toEqual(Object.keys(SUMMARY).sort());
+    for (const words of [...Object.values(RESULT), ...Object.values(ANSWER), ...Object.values(SUMMARY)]) expect(privacy).toContain(words);
+    expect(privacy).toContain(
+      `The finished result is saved with the learner's progress and backed up to our servers with it; the app keeps the ${PLACEMENT_KEEP} most recent.`,
+    );
+    expect(privacy).toContain('is saved with the learner\'s progress reports.');
+  });
+
+  it('says the privacy page was last updated 2026-10-22 (the SN-2 fact fixes, the draft banner removed)', () => {
+    expect(privacy).toContain('Effective October 22, 2026');
   });
 
   describe('launch-news email list', () => {
@@ -158,7 +247,7 @@ describe('privacy policy', () => {
       expect(privacy).toContain('one-time notice');
       expect(terms).toContain('Classes and teachers');
       expect(terms).toContain('without asking the family first; the family is told afterwards');
-      // the owner's decision: the document claims no legal review, and keeps the draft banner
+      // the owner's decision: the document claims no legal review (and, 2026-10-21 (c), no draft banner)
       expect(`${privacy} ${terms}`).not.toMatch(/reviewed by (counsel|a lawyer|legal)|legally reviewed|approved by counsel/i);
     });
 
@@ -176,8 +265,8 @@ describe('privacy policy', () => {
     });
   });
 
-  it('is still marked as a draft pending legal review', () => {
-    expect(privacy).toContain('pending review by qualified legal counsel');
+  it('shows no draft banner and no line that a legal review is pending (owner decision 2026-10-21 (c))', () => {
+    expect(privacy).not.toMatch(/\bdraft\b|legal counsel|pending review/i);
   });
 });
 
@@ -200,8 +289,9 @@ describe('terms of service', () => {
     expect(terms).not.toMatch(/an adult creates the account/i);
   });
 
-  it('is still marked as a draft pending legal review', () => {
-    expect(terms).toContain('pending review by qualified legal counsel');
+  it('shows no draft banner and no line that a legal review is pending (owner decision 2026-10-21 (c))', () => {
+    expect(terms).not.toMatch(/\bdraft\b|legal counsel|pending review|confirmed with (legal )?counsel/i);
+    expect(terms).toContain('These terms are governed by the laws of the jurisdiction stated at launch.');
   });
 });
 
@@ -210,7 +300,8 @@ describe('terms of service', () => {
  * Stripe after signing in at app.hangulroute.com; the iPhone and Android apps go through the App Store or
  * Google Play when they offer purchases (F-ENT-001 §3.5, F-IAP-002). Web plans renew yearly until cancelled
  * (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D10). The store paragraphs stay, marked as applying to in-app purchases.
- * English is authoritative (L10), the draft banner stays, and the PR flags the wording for counsel.
+ * English is authoritative (L10) and the PR flags the wording for counsel (the draft banner was removed by owner
+ * decision 2026-10-21 (c)).
  */
 describe('payment facts (F-SITE-002 S-7)', () => {
   const CHANNELS =
@@ -391,17 +482,26 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       expect(textOf(html)).not.toMatch(/analytics/i);
     });
 
-    it.each(documents)('%s: keeps the draft banner', (_, html) => {
-      expect(textOf(html)).toContain(
-        'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
-      );
+    it.each(documents)('%s: no draft banner, and no claim that a legal review happened or is pending (owner decision 2026-10-21 (c))', (_, html) => {
+      const text = textOf(html);
+      expect(text).not.toContain('Draft for review');
+      expect(text).not.toMatch(/\bdraft\b|pending review|legal counsel/i);
+      expect(text).not.toMatch(/reviewed by (counsel|a lawyer|legal)|legally reviewed|approved by counsel/i);
     });
 
-    it('Terms of Service: the effective date moves to 2026-10-20 with the plan sizes ([SA] SA-6); the Privacy Policy keeps 2026-10-14', () => {
-      expect(terms).toContain('Effective October 20, 2026');
-      expect(terms).not.toContain('Effective October 14, 2026');
+    it.each(['en', 'es', 'ko'] as const)('%s: the documents carry no draft banner box (owner decision 2026-10-21 (c))', (locale) => {
+      for (const html of [renderToStaticMarkup(<PrivacyDocument locale={locale} />), renderToStaticMarkup(<TermsDocument locale={locale} />)]) {
+        expect(html).not.toContain(`background-color:${colors.feedback.infoLight}`);
+        expect(textOf(html)).not.toMatch(/Draft for review|Borrador para revisión|검토용 초안/);
+      }
+    });
+
+    it('both documents move to 2026-10-21 with the SN-2 fact fixes and the banner removed (the merge date)', () => {
+      expect(terms).toContain('Effective October 22, 2026');
+      expect(terms).not.toContain('Effective October 20, 2026');
       expect(terms).not.toContain('Effective May 22, 2026');
-      expect(privacy).toContain('Effective October 20, 2026');
+      expect(privacy).toContain('Effective October 22, 2026');
+      expect(privacy).not.toContain('Effective October 20, 2026');
     });
 
     it.each(['es', 'ko'] as const)('%s: shows the same English payment facts under the English-authoritative notice (L10)', (locale) => {

@@ -1,33 +1,18 @@
-// Next's own 404 body, the page the export has always written to out/404.html (the Worker serves it for
-// unknown paths), inside the site's header and footer, with our line and two ways on under it (F-SITE-002 §3.7,
-// S-5): the home page and Start learning. English, like the document around it (see layout.tsx).
-import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
-import { getMessages } from '@hangul-route/i18n';
-import NotFound from 'next/dist/client/components/not-found-error';
+// The English 404 page, the page the export writes to out/404.html; the Worker serves the nearest 404.html for an
+// unknown path (apps/web/wrangler.toml), so `/es/...` and `/ko/...` get their own (`(loc)/[locale]/404`). The body is
+// the site's (F-SITE-002 §3.7, AMENDMENTS-SITE-NEWUSER SN-2): the header and footer, the page's h1 and two ways on.
+import type { Metadata } from 'next';
 import { SiteDocument } from '../components/SiteDocument';
-import { SiteShell } from '../components/landing/SiteShell';
-import { learnerStart } from '../lib/site-links';
-import { HIT, PRIMARY_ACTION } from '../lib/site-style';
+import { NotFoundPage } from '../components/landing/NotFoundPage';
+import { siteNotFoundMetadata } from '../lib/site-metadata';
 
-export default function NotFoundPage(): JSX.Element {
-  const t = getMessages('en').landing;
+/** One `<title>`, and `noindex` alone: Next adds that line to this page itself. */
+export const metadata: Metadata = siteNotFoundMetadata('en', true);
+
+export default function EnglishNotFoundPage(): JSX.Element {
   return (
     <SiteDocument lang="en">
-      <SiteShell locale="en" page="/">
-        {/* Next's body is a full-screen box; `hr-site-404` sizes it to its content so the links stay on screen. */}
-        <div className="hr-site-404">
-          <NotFound />
-        </div>
-        <div style={{ display: 'grid', justifyItems: 'center', gap: spacing.md, paddingBottom: spacing.xxl }}>
-          <p style={{ margin: 0, color: colors.text.secondary, textAlign: 'center' }}>{t.notFound.body}</p>
-          <a href="/" style={{ ...HIT, padding: `0 ${spacing.lg}px`, color: colors.brand.primaryDark, fontWeight: typography.weight.semibold, textDecorationLine: 'underline' }}>
-            {t.notFound.home}
-          </a>
-          <a href={learnerStart('en')} className="hr-site-primary" style={PRIMARY_ACTION}>
-            {t.notFound.start}
-          </a>
-        </div>
-      </SiteShell>
+      <NotFoundPage locale="en" />
     </SiteDocument>
   );
 }

@@ -4,8 +4,8 @@ import type { DeepPartial, Messages } from '../../types';
 /**
  * Spanish public site (F-I18N-001 PR 15): metadata, the layered home, the persona pages, About, the launch-news form
  * and the 404 links. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only framing and never an age
- * range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice,
- * draft line and back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere.
+ * range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice and
+ * back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere.
  */
 const FAQ_ADULT = {
   q: 'Soy una persona adulta que empieza. ¿Se sentirá infantil?',
@@ -38,6 +38,22 @@ export const landing = {
         title: 'Para docentes: Hangul Route',
         description: 'Los estudiantes se unen con un código, un enlace o un código QR, sin correos ni cuentas de estudiantes. Planifica la semana y mira quién practicó. Nunca un ranking.',
       },
+      about: {
+        title: 'Acerca de Hangul Route',
+        description: 'Quién hace Hangul Route y las promesas que cumplimos.',
+      },
+      privacy: {
+        title: 'Política de privacidad: Hangul Route',
+        description: 'Qué recoge Hangul Route, quién puede verlo y cómo borrarlo.',
+      },
+      terms: {
+        title: 'Términos del servicio: Hangul Route',
+        description: 'Las reglas para usar Hangul Route.',
+      },
+      licenses: {
+        title: 'Avisos de código abierto: Hangul Route',
+        description: 'El software de código abierto que usa Hangul Route.',
+      },
     },
   },
   brand: {
@@ -51,6 +67,7 @@ export const landing = {
     teachers: 'Docentes',
     signIn: 'Entrar',
     start: 'Empezar a aprender',
+    startShort: 'Empezar',
     skip: 'Ir al contenido',
   },
   home: {
@@ -58,7 +75,9 @@ export const landing = {
       title: 'Aprende hangul desde cero, a cualquier edad.',
       lead: 'El hangul es el alfabeto coreano. Aprende a leerlo, escucharlo y escribirlo con Hoya.',
       start: 'Empezar a aprender',
-      grownUps: '¿Familia o docente? Busca tu página',
+      // [SN] Like the console's "Soy madre, padre, tutor o docente" (`console.signIn.create.affirm`).
+      forParents: 'Soy madre, padre o tutor',
+      forTeachers: 'Soy docente',
       facts: 'La Etapa 1 es gratis · Sin registro para empezar · Funciona sin conexión en la mayoría de los dispositivos después de tu primera visita',
       bubble: (letter: string, romanization: string) => `¡Hola! Conozcamos la letra ${letter}\u00a0(${romanization}).`,
     },
@@ -92,6 +111,10 @@ export const landing = {
     promises: {
       label: 'Nuestras promesas',
       items: { ads: 'Cero anuncios', safety: 'Seguridad infantil primero', noRed: 'Sin marcas rojas' },
+    },
+    closing: {
+      title: '¿Vamos por tu primera letra coreana?',
+      body: 'La Etapa 1 es gratis. Sin correo ni contraseña. Tu primera misión dura unos cinco minutos.',
     },
     news: {
       title: 'Noticias del lanzamiento',
@@ -171,7 +194,8 @@ export const landing = {
     parents: {
       title: 'Para madres, padres y quien cuide',
       lead: 'También para abuelas, abuelos y toda persona que cuide: lecciones cortas y amables que mantienen privados los datos de tu estudiante.',
-      signIn: 'Entrar como familia',
+      // [SN] Buttons in the infinitive, as "Empezar a aprender" and the console's "Crear una clase".
+      create: 'Crear un espacio familiar gratis',
       learn: {
         title: 'Qué aprenden',
         body: 'Primero el alfabeto coreano: leer, escuchar y escribir, en misiones de cinco minutos.',
@@ -209,7 +233,7 @@ export const landing = {
     teachers: {
       title: 'Para docentes',
       lead: 'Los estudiantes se unen con un código, tú planificas la semana y cada quien aprende a su ritmo.',
-      signIn: 'Entrar como docente',
+      create: 'Crear una clase gratis',
       tryIt: 'Probar como estudiante',
       setup: {
         title: 'Listo en minutos',
@@ -235,6 +259,18 @@ export const landing = {
         browse: 'Con la Licencia de Grupo, revisa cada lección tal como la ven tus estudiantes.',
         lecture: 'Modo proyección: enseña al frente con diapositivas listas de las Etapas 1 a 7, cuentos y temas de palabras, en un proyector, una TV o un teléfono en horizontal.',
       },
+      // [SN] "quien creó la escuela" is the console's word for a school's owner; "Contrato Escolar" is
+      // `console.billing.planTitle.school_seat`.
+      schools: {
+        title: 'Úsalo en toda una escuela',
+        space: 'Crea un espacio de escuela y después invita a docentes o crea tú las clases de cada docente.',
+        admins: (admins: number) =>
+          `Suma hasta ${plural('es', admins, { one: `${admins} admin más`, other: `${admins} admins más` })} con un enlace de invitación. Pueden abrir las listas y los informes de las clases y mover estudiantes entre las clases de la escuela.`,
+        ownerPlan: 'El plan lo gestiona quien creó la escuela.',
+        moves: 'Cambia a un estudiante a otra clase de la escuela. Se avisa a su familia, y el estudiante no tiene que escribir un código nuevo.',
+        size: (email: string) => `¿Necesitas lugar para más estudiantes? Escribe a ${email}.`,
+        sizeContract: (email: string) => `¿Necesitas lugar para más estudiantes? Escribe a ${email} para pedir un Contrato Escolar.`,
+      },
       privacy: {
         title: 'Privacidad para clases',
         bullets: { initials: 'Puedes mostrar iniciales en lugar de nombres en la lista de la clase.', ads: 'Sin anuncios y sin venta de datos.' },
@@ -247,11 +283,26 @@ export const landing = {
     },
     plansTitle: 'Planes',
     faqTitle: 'Preguntas',
+    // [SN] "Entrar" is `landing.nav.signIn`.
+    haveAccount: '¿Ya tienes una cuenta? Entrar',
     closing: {
       learners: '¿Vamos por tu primera letra?',
       parents: 'Mira la semana de tu estudiante en un solo lugar.',
       teachers: 'Lleva el hangul a tu clase esta semana.',
     },
+  },
+  // [SN] "Modo proyección" is the console's name for Lecture mode; "tarjeta cultural" is the app's word.
+  captures: {
+    discover: (letter: string, romanization: string) =>
+      `La app en un teléfono, en la primera misión: letras nuevas, empezando por ${letter} (${romanization}), cada una con un botón para escucharla.`,
+    home: 'La pantalla de inicio del estudiante: un saludo, la racha y las tarjetas hasta ahora, y la próxima lección con un botón para empezar.',
+    game: 'Un minijuego: escucha un sonido y toca la letra que corresponde.',
+    card: (word: string, romanization: string, meaning: string) => `Una tarjeta de cultura coreana: ${word} (${romanization}), que significa ${meaning}.`,
+    report: 'Un informe semanal de un estudiante: días de práctica, lo que salió bien y qué practicar después.',
+    classList: 'La página de la clase: el resumen de esta semana de toda la clase.',
+    lectureSlide: 'Una diapositiva del Modo proyección en pantalla grande: una letra, el orden de sus trazos y su sonido.',
+    caption: { home: 'Pantalla de inicio', game: 'Un minijuego', card: 'Una tarjeta cultural' },
+    og: (brand: string, tagline: string) => `Hoya, el tigre, junto a las palabras ${brand}: ${tagline}`,
   },
   cards: {
     listLabel: 'Tarjetas de la Etapa 1',
@@ -326,7 +377,6 @@ export const landing = {
   legal: {
     backHome: '← Ir al inicio',
     englishAuthoritative: 'Este documento se muestra en inglés. La versión en inglés es la que se aplica.',
-    draft: 'Borrador para revisión. Este documento es un borrador de trabajo que espera la revisión de asesoría legal calificada antes del lanzamiento público.',
   },
   licenses: {
     title: 'Avisos de código abierto',
@@ -341,9 +391,10 @@ export const landing = {
     where: { app: 'App', web: 'Sitio web', server: 'Servidor', ios: 'App de iOS' },
   },
   notFound: {
-    body: 'No encontramos esta página.',
+    body: 'Puede que el enlace sea antiguo. Prueba la página de inicio o empieza a aprender.',
     home: 'Ir a la página de inicio',
     start: 'Empezar a aprender',
+    title: 'No encontramos esta página',
   },
   localeBanner: {
     label: 'Sugerencia de idioma',

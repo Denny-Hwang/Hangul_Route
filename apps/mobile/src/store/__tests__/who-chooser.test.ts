@@ -54,6 +54,8 @@ import { useProgressStore } from '../progress-store';
 import {
   activeProfileLocked,
   anyProfileLocked,
+  batchHandoffPending,
+  batchOpensAtLaunch,
   bindChooserResume,
   chooserLaunchTrigger,
   deviceShared,
@@ -64,6 +66,8 @@ import {
   refreshKnownUses,
   resetChooserState,
   switchOffered,
+  takeBatchHandoff,
+  takeBatchLaunchChooser,
   takeHeldJoin,
   whoMarker,
   whoReturnTrigger,
@@ -97,6 +101,7 @@ beforeEach(() => {
 
 afterEach(() => {
   flags.whoChooserEnabled = false;
+  flags.multiJoinEnabled = false;
 });
 
 describe('the device as the chooser reads it', () => {
@@ -428,5 +433,78 @@ describe('persistLeaving', () => {
     persistLeaving();
     expect(useProgressStore.getState().openSession).toBeNull();
     expect(() => persistLeaving()).not.toThrow();
+  });
+});
+
+describe('[OA] Who is joining? at launch (OA-D14, OA-D20; row OA-7b)', () => {
+  beforeEach(() => {
+    flags.multiJoinEnabled = true;
+  });
+
+  it('a family hand-off code on a shared device opens Who is joining? instead of the chooser; the code stays in memory', async () => {
+    handoff.code = 'FAM234';
+    expect(await chooserLaunchTrigger(1_000)).toBeNull();
+    expect(handoff.code).toBeNull();
+    expect(heldJoin(1_000)).toBeNull();
+    expect(batchHandoffPending()).toBe(true);
+    expect(takeBatchHandoff()).toBe('FAM234');
+    expect(takeBatchHandoff()).toBeNull();
+    expect(batchHandoffPending()).toBe(false);
+  });
+
+  it('the chooser the launch would have shown waits for the end of the join, taken once (OA-D20, CS-5)', async () => {
+    handoff.code = 'FAM234';
+    expect(await chooserLaunchTrigger(1_000)).toBeNull();
+    expect(takeBatchLaunchChooser()).toBe('launch');
+    expect(takeBatchLaunchChooser()).toBeNull();
+    // reset clears it too
+    handoff.code = 'FAM234';
+    await chooserLaunchTrigger(1_000);
+    resetChooserState();
+    expect(takeBatchLaunchChooser()).toBeNull();
+  });
+
+  it('no hand-off taken for Who is joining?: nothing is deferred', async () => {
+    flags.multiJoinEnabled = false;
+    handoff.code = 'FAM234';
+    await chooserLaunchTrigger(1_000);
+    expect(takeBatchLaunchChooser()).toBeNull();
+  });
+
+  it('who=1 with the hand-off: the join wins and who=1 is taken', async () => {
+    boot.intent = { kind: 'who' };
+    handoff.code = 'FAM234';
+    expect(await chooserLaunchTrigger()).toBeNull();
+    expect(boot.intent).toBeNull();
+    expect(batchHandoffPending()).toBe(true);
+  });
+
+  it('the flag off: the hand-off is held for the chooser as before', async () => {
+    flags.multiJoinEnabled = false;
+    handoff.code = 'FAM234';
+    expect(await chooserLaunchTrigger(1_000)).toBe('join');
+    expect(heldJoin(1_000)).toEqual({ code: 'FAM234' });
+    expect(batchHandoffPending()).toBe(false);
+  });
+
+  it('a locked active profile keeps the chooser (CS-19), with the code held for the learner picked there', async () => {
+    disk.set('profiles:locks', { v: 1, ids: ['profile:mina'] });
+    handoff.code = 'FAM234';
+    expect(await chooserLaunchTrigger(1_000)).toBe('join');
+    expect(heldJoin(1_000)).toEqual({ code: 'FAM234' });
+    expect(batchHandoffPending()).toBe(false);
+  });
+
+  it('the class join link is never a batch: class codes stay one learner (the chooser asks who)', async () => {
+    boot.intent = { kind: 'join', code: 'ABC234' };
+    expect(await chooserLaunchTrigger(1_000)).toBe('join');
+    expect(batchHandoffPending()).toBe(false);
+  });
+
+  it('batchOpensAtLaunch: the flag, 2 or more learners, an unlocked active profile', () => {
+    expect(batchOpensAtLaunch()).toBe(true);
+    expect(batchOpensAtLaunch(1)).toBe(false);
+    flags.multiJoinEnabled = false;
+    expect(batchOpensAtLaunch()).toBe(false);
   });
 });

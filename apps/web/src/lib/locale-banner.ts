@@ -1,9 +1,9 @@
 import { browserStorage, readItem, writeItem, type KeyValueStorage } from './i18n/safe-storage';
 
 /**
- * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c, wireframe profile/language-picker C). It
- * suggests; it never redirects (the static export has no middleware). Kept free of the dictionary, so the
- * client banner does not load it: the page passes the words in.
+ * The "View in <language>" banner (F-I18N-001 §3.3, PR 11c, wireframe profile/language-picker C), on every English
+ * site page since AMENDMENTS-SITE-NEWUSER §3.2. It suggests; it never redirects (the static export has no
+ * middleware). Kept free of the dictionary, so the client banner does not load it: the page passes the words in.
  */
 
 /** Session storage key for "dismissed": the banner stays away for the rest of the visit. */
@@ -62,7 +62,7 @@ export function dismissLocaleBanner(storage: KeyValueStorage | null = browserSto
 
 /** One suggestion, worded in the suggested locale by the page (`localeBannerOffers` in data/landing-copy.ts). */
 export interface LocaleBannerOffer {
-  /** The locale's home, `/es`. */
+  /** The same page in the suggested locale (`/es`, `/es/parents`; on the English 404, the locale home). */
   href: string;
   /** Its `lang` / `hreflang`. */
   lang: string;

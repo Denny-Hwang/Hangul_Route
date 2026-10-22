@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react';
 import { browserLanguages, cameFromLocalePage, dismissLocaleBanner, localeBannerDismissed, localeBannerTarget, type LocaleBannerOffer } from '../../lib/locale-banner';
 
 /**
- * "View in <language>" on `/` (F-I18N-001 §3.3, PR 11c; wireframe profile/language-picker C). After mount, when
- * the browser prefers a shown locale over English and the visitor has not closed the banner this session, it
- * suggests that locale's home. It never redirects. The static HTML holds none of it, so the page is the same
+ * "View in <language>" on every English site page (F-I18N-001 §3.3, PR 11c; wireframe profile/language-picker C;
+ * [SN] AMENDMENTS-SITE-NEWUSER §3.2, SN-D3, mock shot `parents-en-375-banner.png`). After mount, when the browser
+ * prefers a shown locale over English and the visitor has not closed the banner this session, it suggests the same
+ * page in that locale. It never redirects. The static HTML holds none of it, so the page is the same
  * without JavaScript. The words arrive from the page, already in the suggested locale.
  */
 export function LocaleBanner({ offers }: { offers: Partial<Record<UiLocale, LocaleBannerOffer>> }): JSX.Element | null {
@@ -48,7 +49,7 @@ export function LocaleBannerView({ offer, onDismiss }: { offer: LocaleBannerOffe
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: spacing.sm,
-        marginBottom: spacing.lg,
+        marginTop: spacing.md,
         paddingLeft: spacing.md,
         backgroundColor: colors.feedback.infoLight,
         borderRadius: radii.md,

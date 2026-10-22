@@ -346,6 +346,23 @@ export const caregiver = {
       badFormat: '코드는 글자나 숫자 6개예요.',
       off: '이 버전에는 반 참여가 설정되어 있지 않아요.',
     },
+    /** [OA] 누가 들어가나요? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4, OA-7b): 이름 뒤에 조사를 붙이지 않고 콜론 형태로 써요. The consent step uses the shipped Join verb 참여 (`join.title`, `code.join.cta`); notNow is the transfer consent's words. */
+    who: {
+      title: '누가 들어가나요?',
+      hint: '이 기기에서 함께 들어갈 학습자를 모두 골라요.',
+      result: (joined: number, total: number) => `${total}명 중 ${joined}명이 들어갔어요.`,
+      joined: (name: string) => `${name}: 들어갔어요.`,
+      already: (name: string) => `${name}: 이미 이 가족에 있어요.`,
+      refused: (name: string, line: string) => `${name}: ${line}`,
+      takesPlace: '가족 자리를 하나 써요.',
+      classOnly: '이 기기에서는 반에만 연결돼 있어요.',
+      retry: '다시 해 보기',
+      consentTitle: (space: string) => `${space}: 참여할까요?`,
+      consentLine: (name: string) => `${name}: 참여하면 진도가 계정에 저장돼요.`,
+      consentSees: '가족의 어른이 각 이름과 진도를 보게 돼요.',
+      consentYes: '네, 참여하기',
+      notNow: '지금은 안 함',
+    },
   },
 
   install: {

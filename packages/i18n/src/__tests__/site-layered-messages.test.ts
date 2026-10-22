@@ -47,7 +47,10 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     // F-SITE-002 site facts (2026-10-21): the first sentence says what Hangul is, for a visitor who does not know.
     expect(l.home.hero.lead).toBe('Hangul is the Korean alphabet. Learn to read, hear and write it with Hoya the tiger.');
     expect(l.home.hero.start).toBe('Start learning');
-    expect(l.home.hero.grownUps).toBe('Parent or teacher? Find your page');
+    // [SN] AMENDMENTS-SITE-NEWUSER §3.3: two direct links replace "Parent or teacher? Find your page".
+    expect(lookup(l, 'home.hero.grownUps')).toBeUndefined();
+    expect(l.home.hero.forParents).toBe("I'm a parent or caregiver");
+    expect(l.home.hero.forTeachers).toBe("I'm a teacher");
     // No "Nothing to install": the app offers Install. The offline hedge (OD-15) stays. "Stage 1 is free" leads, so a
     // first-time visitor sees the cost above the fold (review of #806); "No sign-up to start" is the learner's start.
     expect(l.home.hero.facts).toBe('Stage 1 is free · No sign-up to start · Works offline on most devices after your first visit');
@@ -273,7 +276,9 @@ describe('B.3 parents', () => {
   it('lead names grandparents and every caregiver; the primary action fits one line', () => {
     expect(p().title).toBe('For parents and caregivers');
     expect(p().lead).toBe("For parents, grandparents and every caregiver: short, kind lessons that keep your learner's data private.");
-    expect(p().signIn).toBe('Sign in as a parent');
+    // [SN] AMENDMENTS-SITE-NEWUSER §3.5: create first; the sign-in action is gone.
+    expect(p().create).toBe('Create a free family space');
+    expect(lookup(getMessages('en').landing, 'persona.parents.signIn')).toBeUndefined();
   });
 
   it('what they learn, with the link to the learners page', () => {
@@ -376,7 +381,8 @@ describe('B.4 teachers', () => {
   it('lead and both actions', () => {
     expect(p().title).toBe('For teachers');
     expect(p().lead).toBe('Students join with a code, you plan the week, and everyone learns at their own pace.');
-    expect(p().signIn).toBe('Sign in as a teacher');
+    expect(p().create).toBe('Create a free class');
+    expect(lookup(getMessages('en').landing, 'persona.teachers.signIn')).toBeUndefined();
     expect(p().tryIt).toBe('Try it as a learner');
   });
 
@@ -465,18 +471,46 @@ describe('closing lines, footer groups, the 404 links and per-page metadata', ()
   });
 
   it('404 links', () => {
-    expect(l.notFound).toEqual({ body: 'We could not find this page.', home: 'Go to the home page', start: 'Start learning' });
+    // AMENDMENTS-SITE-NEWUSER SN-2: the page's own h1 and <title>, and a line that says why and what to do.
+    expect(l.notFound).toEqual({
+      body: 'The link may be old. Try the home page or start learning.',
+      home: 'Go to the home page',
+      start: 'Start learning',
+      title: 'Page not found',
+    });
+    expect(getMessages('es').landing.notFound.title).toBe('No encontramos esta página');
+    expect(getMessages('ko').landing.notFound.title).toBe('페이지를 찾을 수 없어요');
   });
 
-  it('per-page metadata for the three persona pages', () => {
-    expect(Object.keys(l.meta.pages)).toEqual(['learners', 'parents', 'teachers']);
+  it('per-page metadata for the three persona pages, then About, the legal pages and the notices (SN-2)', () => {
+    expect(Object.keys(l.meta.pages)).toEqual(['learners', 'parents', 'teachers', 'about', 'privacy', 'terms', 'licenses']);
     expect(l.meta.pages.learners.title).toBe('For learners — Hangul Route');
     expect(l.meta.pages.parents.title).toBe('For parents and caregivers — Hangul Route');
     expect(l.meta.pages.teachers.title).toBe('For teachers — Hangul Route');
-    for (const page of Object.values(l.meta.pages)) {
-      expect(page.description.length).toBeGreaterThan(40);
+    expect(l.meta.pages.about).toEqual({ title: 'About Hangul Route', description: 'Who makes Hangul Route and the promises we keep.' });
+    expect(l.meta.pages.privacy).toEqual({
+      title: 'Privacy Policy — Hangul Route',
+      description: 'What Hangul Route collects, who can see it, and how to delete it.',
+    });
+    expect(l.meta.pages.terms).toEqual({ title: 'Terms of Service — Hangul Route', description: 'The rules for using Hangul Route.' });
+    expect(l.meta.pages.licenses).toEqual({ title: 'Open-source notices — Hangul Route', description: 'The open-source software Hangul Route uses.' });
+    for (const [key, page] of Object.entries(l.meta.pages)) {
+      // The persona pages sell; the other four only say what the page is.
+      if (['learners', 'parents', 'teachers'].includes(key)) expect(page.description.length, key).toBeGreaterThan(40);
       // Search snippets are cut near 160 characters.
-      expect(page.description.length).toBeLessThanOrEqual(160);
+      expect(page.description.length, key).toBeLessThanOrEqual(160);
+    }
+  });
+
+  it.each(['es', 'ko'] as const)('%s: its own title and description for every page (SN-2)', (locale) => {
+    const pages = getMessages(locale).landing.meta.pages;
+    for (const [key, page] of Object.entries(pages)) {
+      const english = l.meta.pages[key as keyof typeof l.meta.pages];
+      expect(page.title, key).not.toBe(english.title);
+      expect(page.description, key).not.toBe(english.description);
+      // Translations run longer than English (the reviewed es teachers line from #806 is 164 characters), and
+      // snippets are cut by width, not a hard count: 170 for es and ko, 160 for the English above.
+      expect(page.description.length, key).toBeLessThanOrEqual(170);
     }
   });
 

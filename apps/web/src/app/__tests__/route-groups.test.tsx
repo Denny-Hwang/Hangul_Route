@@ -1,5 +1,4 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ReactNode } from 'react';
@@ -8,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { siteMetadata } from '../../data/landing-copy';
 import { HIDDEN_LOCALE_ATTR, siteLocaleParams } from '../../lib/site-locales';
-import { shownSiteLocales } from '../../lib/site-metadata';
+import { shownSiteLocales, siteNotFoundMetadata } from '../../lib/site-metadata';
+import { languageMenuItems } from '../../components/landing/SiteHeader';
+import { withoutLanguageMenu } from './locale-switcher-html';
 // Every layout and page is imported here, once, and never with a dynamic import inside a test: loading a page
 // pulls in the whole landing graph (i18n dictionaries, content schema, design-system art), and inside a test body
 // that load counted against the 5 s test timeout, which a busy CI runner exceeded. Imported at the top, it runs
@@ -33,6 +34,7 @@ import * as locTeachersPage from '../(loc)/[locale]/teachers/page';
 import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
 import * as locTermsPage from '../(loc)/[locale]/terms/page';
 import * as locLicensesPage from '../(loc)/[locale]/licenses/page';
+import * as locNotFoundPage from '../(loc)/[locale]/404/page';
 import * as rootLayout from '../layout';
 import * as notFoundPage from '../not-found';
 
@@ -111,20 +113,33 @@ describe('<html lang> is right in the static HTML', () => {
     expect(renderToStaticMarkup(mod.default({ children: 'x' }))).toMatch(/^<html lang="en"><body style="[^"]+">x<\/body><\/html>$/);
   });
 
-  it('the 404 page is Next\'s own body in an English document', () => {
-    const mod = notFoundPage as { default: () => JSX.Element };
+  it('the 404 page is the site\'s own body in an English document, with its one title (AMENDMENTS-SITE-NEWUSER SN-2)', () => {
+    const mod = notFoundPage as { default: () => JSX.Element; metadata: unknown };
     const html = renderToStaticMarkup(mod.default());
     expect(html).toMatch(/^<html lang="en"><body style="[^"]+">/);
-    expect(html).toContain('This page could not be found.');
+    expect(html).toContain(`>${getMessages('en').landing.notFound.title}</h1>`);
+    // Next's own body brought a second <title> ("404: This page could not be found."); it is gone.
+    expect(html).not.toContain('This page could not be found.');
+    expect(html).not.toContain('<title');
+    expect(mod.metadata).toEqual(siteNotFoundMetadata('en', true));
   });
 
-  it('not-found.tsx imports a private Next module that only Next 14 has at that path', () => {
-    // Next 15 moved it to `next/dist/client/components/http-access-fallback/error-fallback`; on an upgrade,
-    // point not-found.tsx there (or copy the markup) and bump this pin.
-    const require = createRequire(import.meta.url);
-    const { version } = require('next/package.json') as { version: string };
-    expect(version.split('.')[0]).toBe('14');
-    expect(readFileSync(join(appDir, 'not-found.tsx'), 'utf8')).toContain("from 'next/dist/client/components/not-found-error'");
+  it('not-found.tsx imports no private Next module', () => {
+    expect(readFileSync(join(appDir, 'not-found.tsx'), 'utf8')).not.toContain('next/dist/');
+  });
+
+  it.each(SITE_LOCALES)('(loc)/[locale]/404 is the 404 page of /%s: its own lang, words and links, noindex alone', (locale) => {
+    const page = locNotFoundPage as { default: (p: PageProps) => JSX.Element; generateMetadata: (p: PageProps) => unknown };
+    const layout = locLayout as { default: (p: LayoutProps) => JSX.Element };
+    const html = renderToStaticMarkup(layout.default({ children: page.default({ params: { locale } }), params: { locale } }));
+    const t = getMessages(locale).landing.notFound;
+    expect(html).toMatch(new RegExp(`^<html lang="${locale}"><body `));
+    expect(html).toContain(`>${t.title}</h1>`);
+    expect(html).toContain(t.body);
+    expect(html).toContain(`href="/${locale}"`);
+    expect(html).toContain(`?lang=${locale}"`);
+    expect(page.generateMetadata({ params: { locale } })).toEqual(siteNotFoundMetadata(locale));
+    expect(siteNotFoundMetadata(locale).robots).toEqual({ index: false });
   });
 
   it('every document renders the same body', () => {
@@ -189,6 +204,7 @@ describe('/es and /ko are prerendered and shipped (F-I18N-001 rows 15b / 16b)', 
     'parents/page': locParentsPage,
     'teachers/page': locTeachersPage,
     'licenses/page': locLicensesPage,
+    '404/page': locNotFoundPage,
   } as const;
 
   it.each(Object.keys(LOCALE_PAGES) as Array<keyof typeof LOCALE_PAGES>)('(loc)/[locale]/%s is a 404 for a locale that is not a site locale', (page) => {
@@ -237,10 +253,15 @@ describe('locale pages are the English pages with locale links', () => {
       const loc = locPage as { default: (p: PageProps) => JSX.Element };
       const enHtml = renderToStaticMarkup(en.default());
       const locHtml = renderToStaticMarkup(loc.default({ params: { locale } }));
-      // "Play now" carries the locale to the learner app (`?lang=`, PR 11c), and so does Sign in (F-SITE-002 site
-      // facts, 2026-10-21): after `?persona=` when there is one (`&amp;` in the markup).
+      // "Play now" carries the locale to the learner app (`?lang=`, PR 11c).
+      // [SN] The grown-up create and sign-in links carry `lang` from a locale page too (AMENDMENTS-SITE-NEWUSER §3.8),
+      // the header and footer Sign in (no persona) included.
       const toLocale = (href: string): string =>
-        href === '/'
+        /\/signin\?(mode=create&amp;)?persona=/.test(href)
+          ? `${href}&amp;lang=${locale}`
+          : /\/signin$/.test(href)
+            ? `${href}?lang=${locale}`
+          : href === '/'
           ? `/${locale}`
           : ['/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/licenses'].includes(href)
             ? `/${locale}${href}`
@@ -252,8 +273,13 @@ describe('locale pages are the English pages with locale links', () => {
       // The footer's locale switcher (last on the page, once a second locale ships) links the same page in every
       // shown locale, so it is the same list on every locale's page.
       const tail = shownSiteLocales().length > 1 ? shownSiteLocales().length : 0;
-      const enHrefs = hrefs(enHtml);
-      const locHrefs = hrefs(locHtml);
+      // [SN] The header's language control links the same page in every shown locale, like the footer switcher: the
+      // same list on every locale's page (checked here), then read without it.
+      const menuHrefs = (html: string): string[] => hrefs(html.match(/<details class="hr-site-lang[^"]*">[\s\S]*?<\/details>/)?.[0] ?? '');
+      expect(menuHrefs(locHtml)).toEqual(menuHrefs(enHtml));
+      if (tail > 0) expect(menuHrefs(enHtml).length).toBe(languageMenuItems('en', '/').length);
+      const enHrefs = hrefs(withoutLanguageMenu(enHtml));
+      const locHrefs = hrefs(withoutLanguageMenu(locHtml));
       expect(locHrefs.slice(0, locHrefs.length - tail)).toEqual(enHrefs.slice(0, enHrefs.length - tail).map(toLocale));
       expect(locHrefs.slice(locHrefs.length - tail)).toEqual(enHrefs.slice(enHrefs.length - tail));
       if (translated(locale)) {

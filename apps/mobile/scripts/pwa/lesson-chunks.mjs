@@ -35,15 +35,22 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#802: CM-1 to CM-8, CM-70a, CM-70b on one branch) measures 6,371,165 B raw / 1,582,440 B gzip, so the line is that
   // measurement plus an 8,835 B rounding margin. [OA] The one-account integration (#801: OA-0b to OA-9 on main
   // 34e8f85d5) adds the chooser, PIN v2, people-on-this-device and the face or fingerprint shortcut to the shell:
-  // 6,487,010 B raw / 1,616,887 B gzip, so the line was that measurement plus a 7,990 B rounding margin (6,495,000 B).
+  // 6,487,010 B raw / 1,616,887 B gzip, so the line was that measurement plus a 7,990 B rounding margin. SN-2 (#804) adds
+  // the site page titles and descriptions, the share-card caption, the 404 lines and the longer privacy text to the
+  // bundled `landing` messages: 6,495,681 B raw / 1,618,867 B gzip (release) and 6,495,837 B raw / 1,618,965 B gzip
+  // (app-host) on 8eba8de96, against 6,491,702 B raw on main 52403c87b, so the line was 6,495,837 B plus an 8,163 B margin.
+  // The final integration (integrate/final-oa-site: OA-7b #798, SN-1 #813 and SN-2 #804 on main 7eb5bad61) adds Who is
+  // joining? to the shell and the site-entry strings to the bundled `landing` messages: 6,518,688 B raw / 1,624,797 B
+  // gzip (release `build:web`), so the line was that measurement plus a 6,312 B rounding margin (6,525,000 B).
   // The start bundle shrink (F-CURR-002 §10 decision record) makes the es / ko messages and content overlays a precached
   // chunk per locale and the presenter and All lessons chunks of their own: 4,712,987 B raw / 1,237,660 B gzip on main
-  // 7eb5bad61 (6,491,546 B before), so the line is that measurement plus a 7,013 B rounding margin (4,713,416 B raw
-  // after its review fixes).
-  startBundleRaw: 4_720_000,
+  // 7eb5bad61 (6,491,546 B before; 4,713,416 B raw after its review fixes); merged onto the final integration (main fc580beed, release `build:web`) it measures
+  // 4,732,797 B raw / 1,243,089 B gzip, so the line is that measurement plus a 7,203 B rounding margin.
+  startBundleRaw: 4_740_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
-  // the start bundle shrink: ko 901,191 B, es 527,438 B raw. The line leaves about 99 KB for the stories and strings
+  // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
+  // strings, main fc580beed). The line leaves about 94 KB for the stories and strings
   // ahead (CM-46a, CM-46); a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves
   // text out (CM-8b's story overlay split).
   localeChunkRaw: 1_000_000,
