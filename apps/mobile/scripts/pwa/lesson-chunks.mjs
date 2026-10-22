@@ -50,8 +50,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // The Daily Review (F-CURR-002 row CM-14, on CM-13's head: rows CM-10 to CM-14) keeps its screen, rounds, session
   // logic and the review engine in chunks; what stays is the route, Home's hook and card, the boot module's
   // memoryChunk() and the English strings: 4,744,598 B raw / 1,247,230 B gzip (release `build:web` with the review
-  // fixes; 4,743,992 B before them), so the line is that measurement plus a 5,402 B rounding margin.
-  startBundleRaw: 4_750_000,
+  // fixes; 4,743,992 B before them), so the line was that measurement plus a 5,402 B rounding margin (4,750,000 B).
+  // CM-15 (the quest warm-up and Try these again) measured 4,744,698 B raw on CM-13's head (sessions and round view in
+  // a chunk of their own, planning in the memory chunk), CM-16 (the summary memory block) 4,742,801 B on CM-12's head
+  // and CM-17 (goals, in a learner chunk of their own) 4,739,306 B on main. The F-CURR-002 phase-1 integration
+  // (integrate/curr-phase1: CM-10 to CM-17 on main 82237b684) measures 4,760,960 B raw / 1,253,023 B gzip (release
+  // `build:web`), so the line is that measurement plus a 9,040 B rounding margin.
+  startBundleRaw: 4_770_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
