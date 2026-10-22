@@ -120,6 +120,8 @@ test.describe('the guest first quest (GU-3)', () => {
     await expect(page.getByRole('heading', { name: en.learner.results.headline.wonderful })).toBeVisible();
     await expect(page.getByText(en.learner.results.newCard.title)).toBeVisible();
     await expect(page.getByTestId('next-up-card')).toHaveCount(0);
+    // A perfect run: the cheer invites no replay, so Try this one again is not drawn (GU-0b D3).
+    await expect(page.getByRole('button', { name: en.learner.results.nextUp.again.cta, exact: true })).toHaveCount(0);
     for (const label of [en.learner.results.backHome.cta, en.learner.results.episodePage.cta]) await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(0);
     await expect.poll(() => readStored<{ questDone: boolean }>(page, 'guest')).toMatchObject({ questDone: true });
     await shot(page, 'guest-results-360');

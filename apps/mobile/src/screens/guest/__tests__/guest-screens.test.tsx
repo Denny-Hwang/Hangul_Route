@@ -70,6 +70,7 @@ import { CardDetailScreen } from '../../library/CardDetailScreen';
 import { MinigameScreen } from '../../minigames/MinigameScreen';
 import { QuestPlayerScreen } from '../../quest/QuestPlayerScreen';
 import { GuestQuestPlayer } from '../GuestQuestPlayer';
+import { GuestLaterScreen } from '../GuestLaterScreen';
 import { GuestResults } from '../GuestResults';
 
 const en = getMessages('en');
@@ -256,11 +257,60 @@ describe('GuestResults, the Results of the Guest stack (7.1)', () => {
     await unmount(r);
   });
 
+  it('Try this one again under the cheer below 3 stars and with no games played, never at perfect; it replays quest 1 here', async () => {
+    const again = en.learner.results.nextUp.again.cta;
+    const nav = navigationDouble();
+    let r = await render(inGuest(<GuestResults route={{ key: 'r', name: 'Results', params } as never} navigation={nav as never} />));
+    expect(buttonsNamed(r.root, again)).toHaveLength(0);
+    await unmount(r);
+    for (const run of [{ stars: 2 as const, correct: 1, total: 2 }, { stars: 1 as const, correct: 1, total: 3 }, { stars: 0 as const, correct: 0, total: 2 }, { stars: 0 as const, correct: 0, total: 0 }]) {
+      r = await render(inGuest(<GuestResults route={{ key: 'r', name: 'Results', params: { ...params, ...run } } as never} navigation={nav as never} />));
+      expect(buttonsNamed(r.root, again), JSON.stringify(run)).toHaveLength(1);
+      // Read after Hoya's cheer and before the card.
+      const texts = screenTexts(r.root);
+      expect(texts.indexOf(again)).toBeGreaterThan(texts.findIndex((t) => Object.values(en.learner.results.cheer).includes(t as never)));
+      await unmount(r);
+    }
+    r = await render(inGuest(<GuestResults route={{ key: 'r', name: 'Results', params: { ...params, stars: 2, correct: 1, total: 2 } } as never} navigation={nav as never} />));
+    await press(buttonsNamed(r.root, again)[0]!);
+    expect(nav.replace).toHaveBeenCalledWith('QuestPlayer', { questId: quest.questId, episodeId: quest.episodeId });
+    await unmount(r);
+  });
+
+  it('guest.quest_done once per record: a replay after quest 1 was done sends none', async () => {
+    disk.set('guest', JSON.stringify(record({ questDone: true })));
+    useGuestStore.setState({ record: record({ questDone: true }) });
+    const r = await render(inGuest(<GuestResults route={{ key: 'r', name: 'Results', params } as never} navigation={navigationDouble() as never} />));
+    expect(sent.filter((e) => e.name === 'guest.quest_done')).toEqual([]);
+    expect(useProgressStore.getState().byProfile[GUEST_ID]?.quests.some((q) => q.questId === quest.questId)).toBe(true);
+    await unmount(r);
+  });
+
   it('a run with every game skipped scores nothing and is not done', async () => {
     const nav = navigationDouble();
     const r = await render(inGuest(<GuestResults route={{ key: 'r', name: 'Results', params: { ...params, stars: 0, correct: 0, total: 0 } } as never} navigation={nav as never} />));
     expect(sent.filter((e) => e.name === 'guest.quest_done')).toEqual([]);
     expect(JSON.parse(disk.get('guest')!).questDone).toBe(false);
+    await unmount(r);
+  });
+});
+
+describe('GuestLater, the Not now card (8.6; GU-4 fills it)', () => {
+  it('Close and every back end the run (the record stays) and the root holds Welcome', async () => {
+    const nav = navigationDouble();
+    const r = await render(inGuest(<GuestLaterScreen route={{ key: 'l', name: 'GuestLater' } as never} navigation={nav as never} />));
+    const preventDefault = vi.fn();
+    for (const listener of nav.listeners) listener({ data: { action: { type: 'GO_BACK' } }, preventDefault });
+    expect(preventDefault).toHaveBeenCalled();
+    expect(nav.rootDispatch).toHaveBeenCalledWith({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Onboarding' }] } });
+    expect(useGuestStore.getState().running).toBe(false);
+    nav.rootDispatch.mockClear();
+    await press(byTestId(r.root, 'guest-later-close').find((n) => typeof n.props.onClick === 'function')!);
+    expect(nav.rootDispatch).toHaveBeenCalledWith({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Onboarding' }] } });
+    expect(useGuestStore.getState().record).not.toBeNull();
+    // It has no leading control of its own (the card's Close is the way out).
+    expect(byTestId(r.root, 'header-back')).toHaveLength(0);
+    expect(byTestId(r.root, 'header-close')).toHaveLength(0);
     await unmount(r);
   });
 });

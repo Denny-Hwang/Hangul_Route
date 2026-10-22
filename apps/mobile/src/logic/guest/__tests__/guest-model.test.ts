@@ -250,13 +250,13 @@ describe('promotionPlan (section 5.4)', () => {
 
 describe('guestResultsActions (GU-D8, GU-D10)', () => {
   it('Keep my progress and Not now in the open and verify cases; the ask-the-owner line in the owner case', () => {
-    expect(guestResultsActions({ questDone: true, saveGate: 'open' })).toEqual({ keep: true, askOwner: false, notNow: true });
-    expect(guestResultsActions({ questDone: true, saveGate: 'verify' })).toEqual({ keep: true, askOwner: false, notNow: true });
-    expect(guestResultsActions({ questDone: true, saveGate: 'owner' })).toEqual({ keep: false, askOwner: true, notNow: true });
+    expect(guestResultsActions({ questDone: true, saveGate: 'open' })).toEqual({ keep: true, askOwner: false, notNow: true, replay: false });
+    expect(guestResultsActions({ questDone: true, saveGate: 'verify' })).toEqual({ keep: true, askOwner: false, notNow: true, replay: false });
+    expect(guestResultsActions({ questDone: true, saveGate: 'owner' })).toEqual({ keep: false, askOwner: true, notNow: true, replay: false });
   });
 
   it('nothing before quest 1 is done', () => {
-    expect(guestResultsActions({ questDone: false, saveGate: 'open' })).toEqual({ keep: false, askOwner: false, notNow: false });
+    expect(guestResultsActions({ questDone: false, saveGate: 'open' })).toEqual({ keep: false, askOwner: false, notNow: false, replay: false });
   });
 });
 

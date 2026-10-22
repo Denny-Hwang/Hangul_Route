@@ -102,12 +102,16 @@ export function noteGuestStep(steps: readonly { kind: string }[] | undefined, st
   void track({ name: 'guest.first_letter', payload: { secondsIn } });
 }
 
-/** Quest 1 finished in the guest run (section 7.1): `questDone` is written and `guest.quest_done { stars }` sent. */
+/**
+ * Quest 1 finished in the guest run (section 7.1): `questDone` is written, and `guest.quest_done { stars }` is sent once
+ * per record, when it is first written (a replay sends none, so G4's denominator counts each run once).
+ */
 export function noteGuestQuestDone(stars: 0 | 1 | 2 | 3, now: number = Date.now()): void {
   const { record, running } = useGuestStore.getState();
   if (!running || record === null) return;
+  const first = !record.questDone;
   useGuestStore.getState().recordGuestPlay({ questDone: true }, now).catch(() => undefined);
-  void track({ name: 'guest.quest_done', payload: { stars } });
+  if (first) void track({ name: 'guest.quest_done', payload: { stars } });
 }
 
 /**

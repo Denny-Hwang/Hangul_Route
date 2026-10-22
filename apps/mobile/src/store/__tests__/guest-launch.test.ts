@@ -258,6 +258,10 @@ describe('noteGuestQuestDone (7.1)', () => {
     noteGuestQuestDone(2, T0 + 60_000);
     expect(named('guest.quest_done')).toEqual([{ name: 'guest.quest_done', payload: { stars: 2 } }]);
     await vi.waitFor(() => expect(stored()!.questDone).toBe(true));
+    // A replay of quest 1 (Try this one again) writes again but sends nothing: once per record (G4).
+    await vi.waitFor(() => expect(useGuestStore.getState().record?.questDone).toBe(true));
+    noteGuestQuestDone(3, T0 + 120_000);
+    expect(named('guest.quest_done')).toHaveLength(1);
   });
 });
 

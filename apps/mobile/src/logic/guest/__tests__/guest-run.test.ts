@@ -100,9 +100,23 @@ describe('guestEntry and guestResultsActions (row GU-2 rules this row acts on)',
   });
 
   it('guestResultsActions for each save case once quest 1 is done', () => {
-    expect(guestResultsActions({ questDone: true, saveGate: 'open' })).toEqual({ keep: true, askOwner: false, notNow: true });
-    expect(guestResultsActions({ questDone: true, saveGate: 'verify' })).toEqual({ keep: true, askOwner: false, notNow: true });
-    expect(guestResultsActions({ questDone: true, saveGate: 'owner' })).toEqual({ keep: false, askOwner: true, notNow: true });
+    expect(guestResultsActions({ questDone: true, saveGate: 'open', stars: 3, played: true })).toEqual({ keep: true, askOwner: false, notNow: true, replay: false });
+    expect(guestResultsActions({ questDone: true, saveGate: 'verify', stars: 2, played: true })).toEqual({ keep: true, askOwner: false, notNow: true, replay: true });
+    expect(guestResultsActions({ questDone: true, saveGate: 'owner', stars: 1, played: true })).toEqual({ keep: false, askOwner: true, notNow: true, replay: true });
+  });
+
+  it('guestResultsActions offers Try this one again at every cheer tier but perfect (7.1, GU-0b D3)', () => {
+    const replay = (stars: 0 | 1 | 2 | 3, played: boolean): boolean => guestResultsActions({ questDone: played, saveGate: 'open', stars, played }).replay;
+    // perfect: games played and 3 stars, the cheer invites nothing.
+    expect(replay(3, true)).toBe(false);
+    // nice, goodStart, brave.
+    expect(replay(2, true)).toBe(true);
+    expect(replay(1, true)).toBe(true);
+    expect(replay(0, true)).toBe(true);
+    // noGames: every game skipped ("next time").
+    expect(replay(0, false)).toBe(true);
+    // Without the run's stars nothing is offered.
+    expect(guestResultsActions({ questDone: true, saveGate: 'open' }).replay).toBe(false);
   });
 });
 
