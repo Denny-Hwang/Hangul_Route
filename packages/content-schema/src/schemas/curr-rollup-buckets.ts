@@ -15,8 +15,12 @@
 export const ROLLUP_ITEM_COUNT_EDGES = [0, 1, 2, 3, 5, 10, 20, 30, 50, 75, 100, 150, 200, 300, 500] as const;
 /** Items placed in review by seeding (`items.seeded` `countBucket`). */
 export const ROLLUP_SEEDED_COUNT_EDGES = [0, 1, 10, 20, 50, 100, 200, 300, 500, 1000, 2000] as const;
-/** Days over which seeded items fall due (`items.seeded` `spreadDaysBucket`); the edges follow the lag buckets. */
-export const ROLLUP_SPREAD_DAYS_EDGES = [0, 1, 2, 4, 8, 15, 31] as const;
+/**
+ * Days over which seeded items fall due (`items.seeded` `spreadDaysBucket`): the lag buckets up to 30
+ * days, then 31-45, 46-62 and 63-90, so the shadow check of row CM-12 (runbook K-4) can tell a seeded
+ * spread against the CM-13 simulation's gate S-c ("the spread ends by day 62"); 91+ is the open top.
+ */
+export const ROLLUP_SPREAD_DAYS_EDGES = [0, 1, 2, 4, 8, 15, 31, 46, 63, 91] as const;
 /** Study minutes on one local day (`memory.daily` `minutes`, 0 to 1440). */
 export const ROLLUP_STUDY_MINUTES_EDGES = [0, 1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120] as const;
 
