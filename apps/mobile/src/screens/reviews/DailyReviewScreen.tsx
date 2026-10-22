@@ -138,6 +138,9 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
   const answers = useRef(new Map<number, RoundAnswer>());
   const recorded = useRef<Promise<void>[]>([]);
   const allowLeave = useRef(false);
+  // A double tap never starts two sessions (two review.start events) or finishes one twice (two `daily` entries).
+  const starting = useRef(false);
+  const finishing = useRef(false);
 
   const goHome = useCallback((): void => {
     allowLeave.current = true;
@@ -148,12 +151,17 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
     async (kind: DailySessionKind): Promise<void> => {
       const w = world.current;
       const a = api.current;
-      if (w === null || a === null) return;
+      if (w === null || a === null || starting.current) return;
+      starting.current = true;
       setPhase({ kind: 'loading' });
-      const plan = await a.startSession(w, kind, locale);
-      answers.current = new Map();
-      recorded.current = [];
-      setPhase(plan === null ? { kind: 'nothing' } : { kind: 'playing', plan, index: 0 });
+      try {
+        const plan = await a.startSession(w, kind, locale);
+        answers.current = new Map();
+        recorded.current = [];
+        setPhase(plan === null ? { kind: 'nothing' } : { kind: 'playing', plan, index: 0 });
+      } finally {
+        starting.current = false;
+      }
     },
     [locale],
   );
@@ -225,12 +233,25 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
     }
     const w = world.current;
     const a = api.current;
-    if (w === null || a === null) return;
+    if (w === null || a === null || finishing.current) return;
+    finishing.current = true;
     setPhase({ kind: 'loading' });
-    void a.finishSession(w, p.plan, answers.current, recorded.current).then(({ finished, world: next }) => {
-      world.current = next;
-      setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
-    });
+    void a
+      .finishSession(w, p.plan, answers.current, recorded.current)
+      .then(({ finished, world: next }) => {
+        world.current = next;
+        setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
+      })
+      .finally(() => {
+        finishing.current = false;
+      });
+  };
+
+  // The [x]: over a round it asks "Stop for now?"; on the loading frame it leaves, home when there is no screen behind.
+  const close = (): void => {
+    if (phaseRef.current.kind === 'playing') setLeaving(true);
+    else if (navigation.canGoBack()) navigation.goBack();
+    else goHome();
   };
 
   const leaveSheet = (
@@ -256,7 +277,7 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
     return (
       <>
         <Screen tone="canvas" scrollable header={{ drawnByScreen: true }} testID="daily-review-screen">
-          <TopRow onClose={() => navigation.goBack()} filled={filled} total={total} current={index + 1} />
+          <TopRow onClose={close} filled={filled} total={total} current={index + 1} />
           <Spacer size="md" />
           {round !== undefined ? (
             <View key={index} style={{ gap: spacing.md }}>
