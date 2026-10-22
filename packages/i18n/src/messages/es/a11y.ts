@@ -296,4 +296,18 @@ export const a11y = {
     lockedTile: (name: string) => `${name}, con candado. Se abre con el PIN de adultos.`,
     lockedRow: (name: string) => `${name}, con candado`,
   },
+  goals: {
+    strip: (parts: { days: string; steadyWeeks: string; streak: string | null; goal: string | null }) =>
+      [`Esta semana: ${parts.days}.`, `${parts.steadyWeeks}.`, parts.streak === null ? null : `${parts.streak}.`, parts.goal === null ? null : `Meta del día: ${parts.goal}.`, 'Cambiar metas.']
+        .filter((part): part is string => part !== null)
+        .join(' '),
+    day: {
+      learned: (day: string) => `${day}, aprendiste`,
+      learnedToday: (day: string) => `${day}, hoy aprendiste`,
+      rest: (day: string) => `${day}, día de descanso`,
+      today: (day: string) => `${day}, hoy`,
+    },
+    state: { empty: 'lista para empezar', more: 'falta un poco', met: 'lograda' },
+    close: 'Cerrar',
+  },
 } satisfies DeepPartial<Messages['a11y']>;

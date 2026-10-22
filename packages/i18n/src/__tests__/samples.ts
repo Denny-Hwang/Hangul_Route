@@ -941,4 +941,19 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.persona.teachers.schools.sizeContract': [['hello@example.com']],
   'landing.captures.discover': [['x', 'a']],
   'landing.captures.card': [['x', 'horangi', 'tiger']],
+  // Daily and weekly goals on Home (F-CURR-002 row CM-17): counts of 1 and more, a tier with its time words, the strip's parts.
+  'learner.goals.steadyWeeks': [[0], [1], [4]],
+  'learner.goals.newRun': [[1], [12]],
+  'learner.goals.daily.label': [['Light', 'about 5 minutes'], ['Steady', 'about 10 minutes']],
+  'learner.goals.weekly.days': [[3], [5], [7]],
+  'learner.goals.sheet.fromPlan': [[1], [3]],
+  'learner.goals.banner.weekMet': [[1], [5]],
+  'a11y.goals.strip': [
+    [{ days: 'Monday learned, Tuesday rest day, Wednesday today, Thursday', steadyWeeks: '4 steady weeks', streak: 'Streak 5 days', goal: 'Light, about 5 minutes, a little more to go' }],
+    [{ days: 'Monday today, Tuesday', steadyWeeks: 'Your first steady week starts here', streak: null, goal: null }],
+  ],
+  'a11y.goals.day.learned': [['Monday'], ['Wednesday']],
+  'a11y.goals.day.learnedToday': [['Friday'], ['Wednesday']],
+  'a11y.goals.day.rest': [['Tuesday'], ['Wednesday']],
+  'a11y.goals.day.today': [['Friday'], ['Wednesday']],
 };

@@ -2474,4 +2474,56 @@ export const learner = {
       signIn: 'Sign in as a grown-up',
     },
   },
+  /**
+   * Daily and weekly goals on Home (F-CURR-002 section 7.4, OD-6, row CM-17; design/wireframes/home/goal-ring-weekly-dots.md).
+   * Plain time words, never a number of points, a percentage or "n of m". Never "lost", "missed", "broken",
+   * "behind", "late" or a countdown. "Steady" is never bare: the daily tier always carries its time words, and the
+   * steady week is its own term (es and ko give the daily tier, the plan pace and the steady week three renderings).
+   * The streak line reuses `home.streak.pill`.
+   */
+  goals: {
+    /** The headline: the weeks that reached the weekly goal, ever (it never drops). */
+    steadyWeeks: (count: number) => plural('en', count, { one: '1 steady week', other: `${count} steady weeks` }),
+    /** The headline with no steady week yet. */
+    firstWeek: 'Your first steady week starts here',
+    /** The streak line once a run has ended, until the next finished activity: the best run is kept. */
+    newRun: (best: number) => plural('en', best, { one: 'Start a new run! Best run: 1 day', other: `Start a new run! Best run: ${best} days` }),
+    today: {
+      met: 'Daily goal done',
+      more: 'A little more for your daily goal',
+    },
+    daily: {
+      light: 'Light',
+      steady: 'Steady',
+      strong: 'Strong',
+      time: { light: 'about 5 minutes', steady: 'about 10 minutes', strong: 'about 15 minutes' },
+      /** A daily tier with its time words: "Light, about 5 minutes". */
+      label: (tier: string, time: string) => `${tier}, ${time}`,
+    },
+    weekly: {
+      days: (n: number) => plural('en', n, { one: '1 day', other: `${n} days` }),
+    },
+    sheet: {
+      title: 'Your goals',
+      everyDay: 'Every day',
+      everyWeek: 'Every week',
+      steadyHelp: 'A steady week is a week you learn on the days you chose. They add up and never go away.',
+      restHelp: 'Rest days: Hoya keeps your streak going on up to 2 quiet days a week.',
+      /** While a weekly plan is on, the plan's days a week stand in for the weekly choice. */
+      fromPlan: (days: number) => plural('en', days, { one: '1 day, from your weekly plan', other: `${days} days, from your weekly plan` }),
+      seePlan: { cta: 'See my plan' },
+      done: { cta: 'Done' },
+    },
+    /** The first choice, once, on Home after the first finished activity. */
+    first: {
+      title: 'How much time a day suits you?',
+      later: { cta: 'Not now' },
+    },
+    /** One line on the Results of the activity that reached a goal. */
+    banner: {
+      dayMet: 'Daily goal done!',
+      weekMet: (count: number) =>
+        plural('en', count, { one: 'Week goal reached! That is 1 steady week.', other: `Week goal reached! That is ${count} steady weeks.` }),
+    },
+  },
 } as const;

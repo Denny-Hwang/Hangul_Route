@@ -1909,4 +1909,42 @@ export const learner = {
       signIn: 'Entrar como persona adulta',
     },
   },
+  goals: {
+    steadyWeeks: (count: number) => plural('es', count, { one: '1 semana cumplida', other: `${count} semanas cumplidas` }),
+    firstWeek: 'Tu primera semana cumplida empieza aquí',
+    newRun: (best: number) => plural('es', best, { one: '¡Empieza una racha nueva! Mejor racha: 1 día', other: `¡Empieza una racha nueva! Mejor racha: ${best} días` }),
+    today: {
+      met: 'Meta del día lograda',
+      more: 'Un poco más para tu meta del día',
+    },
+    daily: {
+      light: 'Ligero',
+      steady: 'Moderado',
+      strong: 'Intenso',
+      time: { light: 'unos 5 minutos', steady: 'unos 10 minutos', strong: 'unos 15 minutos' },
+      label: (tier: string, time: string) => `${tier}, ${time}`,
+    },
+    weekly: {
+      days: (n: number) => plural('es', n, { one: '1 día', other: `${n} días` }),
+    },
+    sheet: {
+      title: 'Tus metas',
+      everyDay: 'Cada día',
+      everyWeek: 'Cada semana',
+      steadyHelp: 'Una semana cumplida es una semana en la que aprendes los días que elegiste. Se suman y nunca se pierden.',
+      restHelp: 'Días de descanso: Hoya mantiene tu racha hasta 2 días tranquilos por semana.',
+      fromPlan: (days: number) => plural('es', days, { one: '1 día, según tu plan semanal', other: `${days} días, según tu plan semanal` }),
+      seePlan: { cta: 'Ver mi plan' },
+      done: { cta: 'Listo' },
+    },
+    first: {
+      title: '¿Cuánto tiempo al día te va bien?',
+      later: { cta: 'Ahora no' },
+    },
+    banner: {
+      dayMet: '¡Meta del día lograda!',
+      weekMet: (count: number) =>
+        plural('es', count, { one: '¡Meta de la semana lograda! Ya llevas 1 semana cumplida.', other: `¡Meta de la semana lograda! Ya llevas ${count} semanas cumplidas.` }),
+    },
+  },
 } satisfies DeepPartial<Messages['learner']>;

@@ -126,7 +126,7 @@ export const reviewCopyMessage = (problem: ReviewCopyProblem): string => PROBLEM
  * Check and the star results screen of F-RVW-001 §3.1 (shipped; the Daily Review reuses it)
  * and the F-CURR-002 review screens, by the sub-object of `learner` each row adds (Daily
  * Review and Keep going CM-14, warm-up and Try these again CM-15, Cell Check CM-21, Stage
- * Check CM-22, Pack Check CM-51). A key not present yet is skipped.
+ * Check CM-22, Pack Check CM-51), and the goals of row CM-17. A key not present yet is skipped.
  */
 export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'stageReview',
@@ -138,6 +138,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'cellCheck',
   'stageCheck',
   'packCheck',
+  // The Home goals strip, sheet and goal moments (row CM-17): no percentage, no "n of m" (section 7.4).
+  'goals',
 ];
 
 export interface ReviewStringFinding {

@@ -43,5 +43,9 @@ describe('Hermes-safe source (F-I18N-001 §3.1, §10)', () => {
       if (!NORMALIZE_ALLOWED.has(rel)) expect(/\.normalize\(/.test(text)).toBe(false);
       expect(/PluralRules/.test(text)).toBe(false);
     });
+
+    it(`${rel}: no Intl.ListFormat or week info (unverified on Hermes; the week is always Monday to Sunday, F-CURR-002 CM-17)`, () => {
+      expect(/ListFormat|getWeekInfo|weekInfo/.test(text)).toBe(false);
+    });
   }
 });

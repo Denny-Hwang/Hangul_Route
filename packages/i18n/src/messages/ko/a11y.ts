@@ -296,4 +296,18 @@ export const a11y = {
     lockedTile: (name: string) => `${name}: 잠겨 있어요. 어른용 PIN으로 열어요.`,
     lockedRow: (name: string) => `${name}: 잠겨 있어요`,
   },
+  goals: {
+    strip: (parts: { days: string; steadyWeeks: string; streak: string | null; goal: string | null }) =>
+      [`이번 주: ${parts.days}.`, `${parts.steadyWeeks}.`, parts.streak === null ? null : `${parts.streak}.`, parts.goal === null ? null : `오늘 목표: ${parts.goal}.`, '목표 바꾸기.']
+        .filter((part): part is string => part !== null)
+        .join(' '),
+    day: {
+      learned: (day: string) => `${day}: 배운 날`,
+      learnedToday: (day: string) => `${day}: 오늘 배웠어요`,
+      rest: (day: string) => `${day}: 쉬는 날`,
+      today: (day: string) => `${day}: 오늘`,
+    },
+    state: { empty: '시작 전', more: '조금 더 하면 돼요', met: '완료' },
+    close: '닫기',
+  },
 } satisfies DeepPartial<Messages['a11y']>;
