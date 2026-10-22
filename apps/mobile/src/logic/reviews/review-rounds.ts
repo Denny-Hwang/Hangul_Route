@@ -295,12 +295,18 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
   }
 }
 
-/** The meaning of a gloss key in a locale's content overlays, else the English as authored. */
+/**
+ * The meaning of an item in the UI language. In English (no overlays) it is the English as authored. In es and ko it
+ * is the gloss key's value in the locale's content overlays, and never the English: a lesson chunk not loaded yet
+ * leaves its meanings out of the overlays, and an English meaning beside Spanish or Korean ones would mix the UI
+ * languages (and give the answer away in a meaning pick). Undefined, the item is asked another way or not offered.
+ */
 export function glossFrom(overlays: Readonly<Record<string, Readonly<Record<string, string>>>> | undefined): GlossOf {
   return (key, en) => {
-    if (overlays === undefined || key === undefined) return en;
+    if (overlays === undefined) return en;
+    if (key === undefined) return undefined;
     const hash = key.indexOf('#');
     const value = hash < 0 ? undefined : overlays[key.slice(0, hash)]?.[key.slice(hash + 1)];
-    return value !== undefined && value !== '' ? value : en;
+    return value !== undefined && value !== '' ? value : undefined;
   };
 }

@@ -187,13 +187,15 @@ describe('order rounds (Sentence Builder)', () => {
 });
 
 describe('glossFrom', () => {
-  it('reads <entity>#<field> from the locale overlays, else the English', () => {
+  it('reads <entity>#<field> from the locale overlays, and never falls back to the English there', () => {
     const gloss = glossFrom({ 'vocab:sagwa-apple': { gloss: 'manzana', empty: '' } });
     expect(gloss('vocab:sagwa-apple#gloss', 'apple')).toBe('manzana');
-    expect(gloss('vocab:sagwa-apple#empty', 'apple')).toBe('apple');
-    expect(gloss('vocab:other#gloss', 'pear')).toBe('pear');
-    expect(gloss('nohash', 'x')).toBe('x');
-    expect(gloss(undefined, 'y')).toBe('y');
+    expect(gloss('vocab:sagwa-apple#empty', 'apple')).toBeUndefined();
+    expect(gloss('vocab:other#gloss', 'pear')).toBeUndefined();
+    expect(gloss('nohash', 'x')).toBeUndefined();
+    expect(gloss(undefined, 'y')).toBeUndefined();
+    // English: the meaning as authored.
     expect(glossFrom(undefined)('vocab:sagwa-apple#gloss', 'apple')).toBe('apple');
+    expect(glossFrom(undefined)(undefined, 'apple')).toBe('apple');
   });
 });

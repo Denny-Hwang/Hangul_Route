@@ -1,6 +1,6 @@
 import type { MemoryItemState, ReviewEntry } from '@hangul-route/content-schema';
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { TelemetryEvent } from '../../../platform/telemetry';
 import { emptyMemoryFile, type MemoryFile } from '../../memory/memory-file';
 import type { MemoryAnswer } from '../../memory/memory-runtime';
@@ -170,6 +170,43 @@ describe('the es and ko meanings come from the lesson chunks (offline: an item w
   });
 });
 
+describe('es and ko: no meaning in English beside the UI language (review of #831)', () => {
+  /** The overlays as the app holds them: a lesson cell's meanings are there once its chunk has loaded. */
+  function lazyOverlays(f: Fake, fails: ReadonlySet<string>): void {
+    const loaded = new Set<string>();
+    f.deps.ensureCell = async (cell) => {
+      f.cellsAsked.push(cell);
+      if (fails.has(cell)) throw new Error('offline');
+      loaded.add(cell);
+    };
+    f.deps.overlays = () => Object.fromEntries(ITEMS.filter((i) => i.cells.some((c) => loaded.has(c))).map((i) => [`vocab:${i.ko}`, { gloss: `${i.ko}-ko` }]));
+  }
+
+  it("an option whose lesson chunk cannot load is never shown in English; the options' chunks are loaded first", async () => {
+    // lex:w00x is taught only by the nature cell, which cannot load: it is neither asked nor offered.
+    const f = fake({}, 14);
+    lazyOverlays(f, new Set(['episode:stage2-nature']));
+    const { api, world } = await ready(f);
+    const plan = await api.startSession(world, 'daily', 'ko');
+    const options = plan?.rounds.flatMap((r) => (r.type === 'pick' ? r.options : [])) ?? [];
+    expect(options.length).toBeGreaterThan(0);
+    for (const o of options) {
+      expect(o.label, o.id).toMatch(/-ko$/);
+      expect(o.id).not.toBe('lex:w00x');
+    }
+    expect(plan?.rounds.map((r) => r.question.itemId)).not.toContain('lex:w00x');
+  });
+
+  it('with no lesson chunk loaded at all the session is not built with English meanings', async () => {
+    const f = fake({}, 14);
+    lazyOverlays(f, new Set(['episode:stage2-nature', 'episode:stage2-life']));
+    const { api, world } = await ready(f);
+    const plan = await api.startSession(world, 'daily', 'es');
+    const labels = plan?.rounds.flatMap((r) => (r.type === 'pick' ? r.options.map((o) => o.label) : [])) ?? [];
+    expect(labels.some((l) => l?.endsWith('-en'))).toBe(false);
+  });
+});
+
 describe('a stopped Daily Review (section 4.8 step 3)', () => {
   it("its due items count toward the day's 20 for the next Daily Review of the day; a Keep going is not counted", async () => {
     const f = fake({}, 14);
@@ -183,6 +220,34 @@ describe('a stopped Daily Review (section 4.8 step 3)', () => {
     expect((await api.startSession(world, 'daily', 'en'))?.rounds).toHaveLength(10);
     api.noteStopped(world, plan, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(await api.startSession(world, 'daily', 'en')).toBeNull();
+  });
+
+  it('once stopped Daily Reviews drew the 20, the next open offers Keep going, never "All refreshed today"', async () => {
+    const f = fake({}, 14);
+    const { api, world } = await ready(f);
+    const plan = await api.startSession(world, 'daily', 'en');
+    if (plan === null) throw new Error('no plan');
+    api.noteStopped(world, plan, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(api.openingKind(world)).toBe('daily');
+    api.noteStopped(world, plan, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    // Items are still due and no entry was written: the day's Daily Review counts as done.
+    expect(api.openingKind(world)).toBe('keep-going');
+    expect(api.doneTodayOffer(world)).toBe('offer');
+    // Home reads the device's day now: the card is collected.
+    vi.useFakeTimers({ now: NOW, toFake: ['Date'] });
+    try {
+      expect(await api.homeDailyReview('profile:a')).toMatchObject({ done: true });
+    } finally {
+      vi.useRealTimers();
+    }
+    const more = await api.startSession(world, 'keep-going', 'en');
+    expect(more?.kind).toBe('keep-going');
+    expect(more?.rounds.length).toBeGreaterThan(0);
+    // The Keep going it plays is the first of the day's 3, not read as the Daily Review.
+    const answers = new Map((more?.rounds ?? []).map((_r, i) => [i, { correct: true }] as const));
+    const { finished, world: next } = await api.finishSession(world, more as NonNullable<typeof more>, answers, [], NOW);
+    expect(finished.after).toBe('offer');
+    expect(api.openingKind(next)).toBe('keep-going');
   });
 
   it('exposes the typing tolerance for the type rounds', async () => {

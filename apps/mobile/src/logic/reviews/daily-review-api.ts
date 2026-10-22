@@ -21,7 +21,7 @@ import {
   type RoundAnswer,
 } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
-import { glossFrom, surfaceIndex, type ReviewRound } from './review-rounds';
+import { glossFrom, surfaceIndex } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
 
 /**
@@ -95,6 +95,7 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
   /** Due items the stopped Daily Reviews of a profile and local day drew (this app session; section 4.8 step 3). */
   const stoppedDrawn = new Map<string, number>();
   const drawnKey = (profileId: string, day: string): string => `${profileId}|${day}`;
+  const drawnOn = (world: ReviewWorld, day: string = world.ctx.today): number => stoppedDrawn.get(drawnKey(world.profileId, day)) ?? 0;
 
   async function readWorld(profileId: string | null, now: Date = new Date()): Promise<WorldRead> {
     if (profileId === null || !deps.on(profileId)) return { kind: 'off' };
@@ -120,42 +121,61 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
     }
   }
 
-  /** The lesson chunks hold the es and ko meanings; a cell that cannot load leaves out the items only it teaches. */
-  async function failedCells(rounds: readonly ReviewRound[], ctx: EngineContext): Promise<Set<string>> {
-    const cells = new Set<string>();
-    for (const r of rounds) for (const cell of ctx.index.byId.get(r.question.itemId)?.cells ?? []) if (cell.startsWith('episode:')) cells.add(cell);
-    const failed = await Promise.all([...cells].map((cell) => deps.ensureCell(cell).then(() => null, () => cell)));
-    return new Set(failed.filter((c): c is string => c !== null));
+  const lessonCells = (ctx: EngineContext, id: string): string[] => (ctx.index.byId.get(id)?.cells ?? []).filter((c) => c.startsWith('episode:'));
+  /** The items a plan asks, and with `options` the items its pick rounds offer beside the answer. */
+  const planItems = (plan: PlannedSession, options: boolean): string[] =>
+    plan.rounds.flatMap((r) => [r.question.itemId, ...(options && r.type === 'pick' ? r.options.map((o) => o.id) : [])]);
+
+  /**
+   * The lesson chunks hold the es and ko meanings: loads the cells of these items not tried yet (`tried` maps a cell
+   * to whether it loaded) and says whether any was tried now.
+   */
+  async function loadCells(ids: readonly string[], ctx: EngineContext, tried: Map<string, boolean>): Promise<boolean> {
+    const cells = [...new Set(ids.flatMap((id) => lessonCells(ctx, id)))].filter((c) => !tried.has(c));
+    const loaded = await Promise.all(cells.map((cell) => deps.ensureCell(cell).then(() => true, () => false)));
+    cells.forEach((cell, i) => tried.set(cell, loaded[i] === true));
+    return cells.length > 0;
   }
+
+  /** The items none of whose lesson cells could load (offline, not yet cached): skipped silently, as unplayable ones. */
+  const unloadable = (ids: readonly string[], ctx: EngineContext, tried: ReadonlyMap<string, boolean>): string[] =>
+    ids.filter((id) => {
+      const cells = lessonCells(ctx, id);
+      return cells.length > 0 && cells.every((c) => tried.get(c) === false);
+    });
 
   return {
     readWorld,
 
     async homeDailyReview(profileId) {
       const read = await readWorld(profileId);
-      return read.kind === 'ready' ? dailyReviewSummary(read.world.ctx, read.world.reviews) : null;
+      return read.kind === 'ready' ? dailyReviewSummary(read.world.ctx, read.world.reviews, drawnOn(read.world)) : null;
     },
 
-    openingKind: (world) => nextSessionKind(world.reviews, world.ctx.today),
+    openingKind: (world) => nextSessionKind(world.reviews, world.ctx.today, drawnOn(world)),
 
-    doneTodayOffer: (world) => afterSession(world.ctx, dayReviewLog(world.reviews, world.ctx.today)),
+    doneTodayOffer: (world) => afterSession(world.ctx, dayReviewLog(world.reviews, world.ctx.today, drawnOn(world))),
 
     async startSession(world, kind, locale) {
       const { ctx, reviews, profileId } = world;
-      const log = dayReviewLog(reviews, ctx.today, stoppedDrawn.get(drawnKey(profileId, ctx.today)) ?? 0);
+      const log = dayReviewLog(reviews, ctx.today, drawnOn(world));
       const seed = ctx.seed ?? '';
       let plan = planSession(ctx, log, kind, { gloss: glossFrom(undefined), seed });
       if (plan !== null && locale !== 'en') {
-        // The meanings come from the lesson chunks: load them, then build the rounds in the UI language. An item none of
-        // whose lesson chunks loaded (offline, not yet cached) is skipped silently, as an unplayable one.
-        const failed = await failedCells(plan.rounds, ctx);
-        const out = new Set(
-          plan.rounds.map((r) => r.question.itemId).filter((id) => {
-            const cells = (ctx.index.byId.get(id)?.cells ?? []).filter((c) => c.startsWith('episode:'));
-            return cells.length > 0 && cells.every((c) => failed.has(c));
-          }),
-        );
-        plan = planSession(ctx, log, kind, { gloss: glossFrom(deps.overlays(locale)), seed }, out);
+        // The meanings come from the lesson chunks: load the cells of the items asked, then build the rounds in the UI
+        // language without the items none of whose cells loaded. The options beside each answer, and the items that
+        // took a skipped item's slot, may come from cells not loaded yet: load those too and build once more. A meaning
+        // still missing is never shown in English (`glossFrom`): that option is not offered, or the item is asked
+        // another way.
+        const tried = new Map<string, boolean>();
+        await loadCells(planItems(plan, false), ctx, tried);
+        const out = new Set(unloadable(planItems(plan, false), ctx, tried));
+        const gloss = (): ReturnType<typeof glossFrom> => glossFrom(deps.overlays(locale));
+        plan = planSession(ctx, log, kind, { gloss: gloss(), seed }, out);
+        if (plan !== null && (await loadCells(planItems(plan, true), ctx, tried))) {
+          for (const id of unloadable(planItems(plan, false), ctx, tried)) out.add(id);
+          plan = planSession(ctx, log, kind, { gloss: gloss(), seed }, out);
+        }
       }
       if (plan !== null) deps.track(dailyReviewStartEvent(profileId));
       return plan;
@@ -189,7 +209,7 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       }
       const next: ReviewWorld = { ...read.world, ctx: { ...read.world.ctx, today: ctx.today, seed: ctx.seed } };
       const stronger = strongerCount(ctx.states, next.ctx.states);
-      return { finished: { stars: result.stars, stronger, after: afterSession(next.ctx, dayReviewLog(next.reviews, ctx.today)) }, world: next };
+      return { finished: { stars: result.stars, stronger, after: afterSession(next.ctx, dayReviewLog(next.reviews, ctx.today, drawnOn(world, ctx.today))) }, world: next };
     },
 
     gradeTyped,

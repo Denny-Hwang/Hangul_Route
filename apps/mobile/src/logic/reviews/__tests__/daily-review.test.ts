@@ -87,6 +87,20 @@ describe('which session, and the day log from reviews[] (keep-going.md data need
     expect(dayReviewLog([entry(TODAY, 1)], TODAY, 8).dailyDueDrawn).toBe(18);
     expect(dayReviewLog([entry(TODAY, 1)], TODAY, 30).dailyDueDrawn).toBe(20);
   });
+
+  it('stopped Daily Reviews that drew the 20 count as the day\'s Daily Review: Keep going next, every entry a Keep going', () => {
+    expect(nextSessionKind([], TODAY, 19)).toBe('daily');
+    expect(nextSessionKind([], TODAY, 20)).toBe('keep-going');
+    expect(dailyDoneOn([], TODAY, 20)).toBe(true);
+    expect(dayReviewLog([], TODAY, 20)).toEqual({ dailyDueDrawn: 20, keepGoingRounds: 0 });
+    // The Keep goings played after it: 3 a day, the first one never read as the Daily Review.
+    expect(dayReviewLog([entry(TODAY, 1), entry(TODAY, 2), entry(TODAY, 3)], TODAY, 20).keepGoingRounds).toBe(3);
+    expect(afterSession(ctxWith(25), dayReviewLog([], TODAY, 20))).toBe('offer');
+    expect(afterSession(ctxWith(25), dayReviewLog([entry(TODAY, 1), entry(TODAY, 2), entry(TODAY, 3)], TODAY, 20))).toBe('enough');
+    // Home's card is collected and the review-first line can go.
+    expect(dailyReviewSummary(ctxWith(25), [], 20).done).toBe(true);
+    expect(planSession(ctxWith(25), dayReviewLog([], TODAY, 20), 'keep-going', ROUND_INPUT)?.rounds).toHaveLength(KEEP_GOING_SIZE);
+  });
 });
 
 describe('planSession', () => {
@@ -97,7 +111,7 @@ describe('planSession', () => {
     expect(plan?.soundNotice).toBe(false);
   });
 
-  it('the 20-due cap: after 20 drawn, a Daily Review asks no due item and fills nothing (Keep going is offered)', () => {
+  it('the 20-due cap: after 20 drawn, a Daily Review asks no due item and fills nothing (the day then opens on Keep going)', () => {
     expect(planSession(ctxWith(25), { dailyDueDrawn: 20, keepGoingRounds: 0 }, 'daily', ROUND_INPUT)).toBeNull();
     const capped = planSession(ctxWith(25), { dailyDueDrawn: 15, keepGoingRounds: 0 }, 'daily', ROUND_INPUT);
     expect(capped?.rounds).toHaveLength(5);

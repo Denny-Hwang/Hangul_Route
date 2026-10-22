@@ -25,6 +25,9 @@ import { reviewStars } from './star-calc';
  *   field: it is the day's `daily` entries minus the Daily Review itself.
  * - **Section 4.8 step 3**: the Daily Reviews of a day draw at most 20 due items before Keep going. A Daily Review
  *   stopped before its end writes no entry, so the screen counts the due items such a review drew (`drawnBefore`).
+ *   Once stopped Daily Reviews alone have drawn the 20 (`dailyBudgetSpent`), the day's Daily Review counts as done:
+ *   the next session is a Keep going (never "All refreshed today" while items are due), and every `daily` entry of
+ *   the day is a Keep going.
  * - **Rounds**: the engine's questions as rounds (`review-rounds.ts`); an item that cannot be played is left out and
  *   the engine is asked again without it, so its slot goes to the next item. Fewer than 3 playable rounds where the
  *   engine offered more is the "nothing is waiting" page.
@@ -45,24 +48,34 @@ export function dailyEntriesOn(reviews: readonly ReviewEntry[], day: string): Re
   return reviews.filter((r) => r.kind === 'daily' && r.scope === day).sort((a, b) => (a.generatedAt < b.generatedAt ? -1 : a.generatedAt > b.generatedAt ? 1 : 0));
 }
 
-/** Whether today's Daily Review is finished. */
-export function dailyDoneOn(reviews: readonly ReviewEntry[], day: string): boolean {
-  return reviews.some((r) => r.kind === 'daily' && r.scope === day);
+/**
+ * Whether stopped Daily Reviews alone drew the day's 20 due items (section 4.8 step 3). A capped Daily Review with no
+ * questions is never played, so the day's Daily Review then counts as done and Keep going is offered.
+ */
+export function dailyBudgetSpent(drawnBefore: number): boolean {
+  return drawnBefore >= DAILY_REVIEW_DUE_CAP;
+}
+
+/** Whether today's Daily Review is finished (or its due budget was spent by stopped ones, `drawnBefore`). */
+export function dailyDoneOn(reviews: readonly ReviewEntry[], day: string, drawnBefore = 0): boolean {
+  return dailyBudgetSpent(drawnBefore) || reviews.some((r) => r.kind === 'daily' && r.scope === day);
 }
 
 /**
- * The day's review log for the engine: Keep going rounds taken (today's entries minus the Daily Review, never below 0)
- * and the due items the Daily Reviews drew (the finished one's items plus `drawnBefore`, those of stopped ones).
+ * The day's review log for the engine: Keep going rounds taken (today's entries minus the Daily Review, never below 0;
+ * every entry once the budget was spent by stopped reviews) and the due items the Daily Reviews drew (the finished
+ * one's items plus `drawnBefore`, those of stopped ones).
  */
 export function dayReviewLog(reviews: readonly ReviewEntry[], day: string, drawnBefore = 0): DayReviewLog {
   const today = dailyEntriesOn(reviews, day);
+  if (dailyBudgetSpent(drawnBefore)) return { dailyDueDrawn: DAILY_REVIEW_DUE_CAP, keepGoingRounds: today.length };
   const first = today[0];
   return { dailyDueDrawn: Math.min(DAILY_REVIEW_DUE_CAP, (first?.itemIds.length ?? 0) + drawnBefore), keepGoingRounds: Math.max(0, today.length - 1) };
 }
 
-/** The next session of the day: the Daily Review until it is finished, then Keep going. */
-export function nextSessionKind(reviews: readonly ReviewEntry[], day: string): DailySessionKind {
-  return dailyDoneOn(reviews, day) ? 'keep-going' : 'daily';
+/** The next session of the day: the Daily Review until it is finished (or its budget spent), then Keep going. */
+export function nextSessionKind(reviews: readonly ReviewEntry[], day: string, drawnBefore = 0): DailySessionKind {
+  return dailyDoneOn(reviews, day, drawnBefore) ? 'keep-going' : 'daily';
 }
 
 export interface PlannedSession {
@@ -102,8 +115,8 @@ export function planSession(
 }
 
 /** Home's view of the Daily Review: how many items are due, whether it was done today, and the review-first suggestion. */
-export function dailyReviewSummary(ctx: EngineContext, reviews: readonly ReviewEntry[]): { due: number; done: boolean; reviewFirst: boolean } {
-  return { due: dueCount(ctx), done: dailyDoneOn(reviews, ctx.today), reviewFirst: reviewFirst(ctx) };
+export function dailyReviewSummary(ctx: EngineContext, reviews: readonly ReviewEntry[], drawnBefore = 0): { due: number; done: boolean; reviewFirst: boolean } {
+  return { due: dueCount(ctx), done: dailyDoneOn(reviews, ctx.today, drawnBefore), reviewFirst: reviewFirst(ctx) };
 }
 
 // ---- answers and the result ------------------------------------------------------------------------------
