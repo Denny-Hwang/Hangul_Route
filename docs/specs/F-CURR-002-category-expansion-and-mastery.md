@@ -205,6 +205,43 @@ With these rules an item first met on day 0 reaches box 2 on day 1 at the earlie
 | S-d | any number of right answers to one item in one day (property test) | the box rises by 1 or less; it falls by 1 or less |
 | S-e | one quest-day introduces 8 items, then S-a | no item reaches box 3 before day 4 |
 
+**Decision record (row CM-13, 2026-10-22).**
+- **Where it lives.** `apps/mobile/src/logic/reviews/engine.ts`, pure and offline, beside `banned-text.ts` and `star-calc.ts`. It reads the item index, the learner's states (the memory store's rows, with topic words read from the `vocab` slice by `engineStates`) and the local day, and returns plans. It never writes a state; answers go to `recordAnswers` and the CM-12 spacing rule. Nothing in the app imports it yet, so the start bundle is unchanged (4,738,790 B raw on this branch, as at CM-12). CM-14 and CM-15 load it behind their own flags; there is no new flag.
+- **Selection.** The due pool is every item with a box, `d` ≤ today, not answered today, not retired, and with at least one visible source. Section 12.2: an item is skipped when every cell in its `cells` and `asked` is hidden (a `-v<k>` cell with `volumes` off, an `episode:pack-<key>-s<n>` cell with `topicPacks` or `pack.<key>` off; a story is always shown). The order is box, then due day, then FNV-1a of seed and id, then the id. The seed only moves ties.
+- **Rungs.** Box 1-2 asks at `min(c, read)`. The other one of recognize and read is a second choice, used only when it keeps the format cap. Box 3 and up asks at `c`, and `c` = 3 asks at produce. A rung with no usable format falls back to read. With no device voice the heard formats (`hear-pick`, `dictation`) are never used, recognize is asked at read, and the question carries `voiceFallback`, so the session shows the F-AUDIO-004 notice. A right answer at read passes recognize too (CM-12), so this is the two-rung ladder. The engine checks `dictation-unambiguous` again: no dictation for an item with a homophone or a sound change. A heard pick of an item with a homophone carries `cue: 'picture' | 'gloss'`, and with neither it is not heard. Topic words have no rungs in the `vocab` slice, so they are asked at read.
+- **Interleaving.** Each slot takes the first candidate in selection order, with its first way of asking, that keeps both caps. If none does, the theme cap is dropped first, then the format cap, and last the first candidate is taken as it is. So a lower-box item moves up only to break a run, and a slot is never left empty. The theme cap is off when every candidate has one theme.
+- **Sessions.**
+  - Daily Review (10): stretch items (best box 3+, not due, not answered today, `c` < 3, soonest due first) are a second tier. They are used only after every due item. Section 4.8 step 3 is read as a day cap on the Daily Reviews of a day: they draw at most 20 due items (`DayReviewLog.dailyDueDrawn`). When this cap is what holds the pool back, no stretch item fills in and Keep going is offered. `endsEarly` is set only when there is nothing left to ask.
+  - Keep going: 10 due items, never stretch, while due items remain, at most `KEEP_GOING_ROUNDS_PER_DAY` rounds a day.
+  - Warm-up: up to 3 due items before a Stage 2+ quest, from cells other than the quest's own, because the quest asks those items anyway.
+  - Try these again: the session's misses, each once, in the order missed, at most 8 (the 30-60 s of the session table).
+  - Check selector (CM-21, CM-22, pack L5): met and unmet items of the request, box first. At least 30% of the questions are at produce: the items the ladder already asks there, then the most held items that allow it. Then it interleaves.
+  - Review first: the due pool is larger than 3 × 10.
+- **Credit inside sentences.** A sentence's taught words are found in its line (and an exchange's reply). A word counts when a run of up to three words is a word item, or is one with a particle or copula ending on its last word. A spelling shared by two word items (배 the pear, 배 the boat) names neither. A credit is a read-rung right answer, placed right after the answer that earned it. It is given only to a met word that is due today, was not answered today and is not asked in the same batch, and at most once a batch. It goes through the spacing rule, so it can raise a word at most once a day. `withSentenceCredit` is the function the review surfaces call before `recordAnswers`. The simulation applies it to review sessions only, not to quest rounds, the cautious side.
+- **Typing tolerance.** `gradeTyped` normalizes both sides as the build keys items (NFC, edge punctuation off) and drops every space. It splits blocks into first letter, vowel and final, and takes the edit distance over those letters: 0 is right, 1 is hinted, 2 or more is a miss, and an empty answer is a miss. `typedAnswer` gives the answer to record.
+- **The simulation** (`__tests__/simulate.ts`, `engine-simulation.test.ts`, 5 seeds each).
+  - The learner plays this build's 107 lesson quests in route order. A cell's first-taught items are split over its quests, the cell's recycle items come in its last quest, and each new item is answered twice on the day it is met.
+  - Answers are right about 85% of the time (recognize 0.90, read 0.87, produce 0.75, plus 0.01 a box), and 5% of right produce answers are hinted. Every answer goes through `applyAnswer`, as the store records it.
+  - **"The pool" of S-a and S-b is the due pool a day leaves.** The opening pool includes what falls due that day: in S-a it is 39-45 on a median late day (about 7.8 new items a quest-day, each due again on days 1, 4, 11 and 25), whatever a session plan does. Measured on the opening pool, no engine could pass.
+  - **"One Keep going" in S-a is read as one Keep going sitting**: the learner keeps going while it is offered, up to the knob. With a single 10-item round no setting passes (0% of days).
+- **Knobs** (S-a: the share of days 30-60 whose left pool is ≤ 30; S-b: day 30 to day 60, left and opening pools).
+
+| Keep going rounds | Warm-up | Credit | S-a | S-b |
+|---|---|---|---|---|
+| 1 | 3 | on | 0.00 | fails (about 110 to 340) |
+| 2 | 3 | on | 0.35-0.42 | fails (8-30 to 157-205) |
+| 3 | 0 | on | 0.94-1.00 | fails on 3 of 5 seeds |
+| 3 | 3 | off | 1.00 | the opening pool fails on 1 of 5 seeds (32 to 72) |
+| **3** | **3** | **on** | **1.00** | **passes: left 0-24 to 0-17, opening 31-71 to 23-50** |
+
+  The engine ships at 3 rounds, a warm-up of 3 and credit on, the most the session table allows.
+- **Results at those values.**
+  - **S-a:** 100% of days 30-60 are within the line on every seed. The largest left pool is 18. G2 is 1.00 (234 items introduced in days 1-30, each with 3 spaced answers within 30 days). It also holds with no device voice.
+  - **S-b:** the review-first suggestion shows on 50-52 of the 60 days.
+  - **S-c:** this build seeds 620 items over 42 days, not the end state's 930 over 62. Every item is dated, no day holds more than 15, and the spread ends by day 62. The Daily Reviews draw at most 20 due items a day, and every seeded item is answered within the 60 days. After it, the opening pool peaks at 266 on day 41 (226 left; the seeded items' second and third reviews), and 64 are left on day 60. Section 4.3 sets no pool line for S-c.
+  - **S-d** is a fast-check property through sessions and credits.
+  - **S-e:** the earliest box 3 is day 4.
+
 **Later: an FSRS-lite shadow (row CM-72).** It predicts recall for the same items without scheduling anything, and reports calibration bins in `memory.daily`. A switch from Leitner to FSRS is a later decision, made on measured calibration after 8 weeks. It is not part of this spec's rollout.
 
 ### 4.4 Mastery
