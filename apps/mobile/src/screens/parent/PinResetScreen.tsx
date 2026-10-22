@@ -14,21 +14,26 @@ import {
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Platform, Pressable, TextInput, View } from 'react-native';
+import { useOnline } from '../../components/use-online';
+import { flags } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { pinResetRequested } from '../../logic/onboarding/onboarding-events';
 import { cooldownRemainingMs } from '../../logic/profiles/pin-hash';
 import type { PinResetMethod } from '../../logic/profiles/pin-flow';
+import { pauseText } from '../../logic/profiles/pin-pause';
 import {
-  attemptRescueCode,
   collectRescueCodes,
   formatReadyAt,
   rescueFailureMessage,
   resetWaitState,
   waitCardView,
 } from '../../logic/profiles/pin-reset';
+import { signInResetShown } from '../../logic/shell/pin-reset-ticket';
 import { RESCUE_INPUT_MAX, cleanRescueInput, rescueInputRows } from '../../logic/sync/rescue-code';
 import type { RootStackParamList } from '../../navigation/types';
+import { subscribePageRestore } from '../../platform/app-visibility';
+import { openPinResetSignIn } from '../../platform/pin-reset';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
@@ -46,19 +51,26 @@ const CODE_BORDER = 2;
  * boxes F and G (and profiles/pin-entry.md). Two offline ways to a new PIN, both keep
  * the learners, cards and progress: re-enter a Rescue Code this device already
  * stores, or wait 24 hours. Adult tone, nothing here teaches a child to try.
+ *
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 1 (row OA-6; mock `design/screens/profiles/pin-entry-v2.md`
+ * boards 7 and 8): on the web, online, with `EXPO_PUBLIC_PIN_RESET_SIGNIN` on, **Sign in to the account** comes first.
+ * Its Sign in opens `/signin?next=/account/pin-reset` in this tab and writes no unlock; the console checks that the
+ * PIN owner signed in with a password or a code and sends the tab back with a ticket (`gate=pin-reset`).
  */
 export function PinResetScreen({ route, navigation }: Props): React.ReactElement {
   const textScale = useTypeScale();
   const fieldLineHeight = codeLineHeight(textScale.size.bodyLg);
-  const { next, profileId } = route.params;
+  const { next, profileId, lockedFrom } = route.params;
   const locale = useLocale();
   const messages = useMessages();
   const m = messages.caregiver.pin;
   const profiles = useProfileStore((s) => s.profiles);
   const hydrateSync = useSyncStore((s) => s.hydrate);
   const byLearner = useSyncStore((s) => s.byLearner);
-  const attempts = useAccountStore((s) => s.pinAttempts);
-  const setPinAttempts = useAccountStore((s) => s.setPinAttempts);
+  // [OA] The Rescue Code's own counter (section 8.3): a PIN pause never blocks it.
+  const attempts = useAccountStore((s) => s.rescueAttempts);
+  const attemptRescue = useAccountStore((s) => s.attemptRescue);
+  const [busy, setBusy] = useState(false);
   const requestedAt = useAccountStore((s) => s.pinResetRequestedAt);
   const requestPinReset = useAccountStore((s) => s.requestPinReset);
 
@@ -67,6 +79,9 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   const [message, setMessage] = useState<string | null>(null);
   const [waitOpen, setWaitOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const online = useOnline();
+  const signInShown = signInResetShown({ os: Platform.OS, online, flag: flags.pinResetSignInEnabled });
+  const [leaving, setLeaving] = useState(false);
 
   // The Rescue Codes live in the per-learner sync records; load them all before
   // choosing which cards to draw, so the layout does not jump.
@@ -98,20 +113,24 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   }, [locked, wait.status]);
 
   const goToSetup = (via: PinResetMethod): void => {
-    navigation.replace('PinEntry', { next, profileId, mode: 'setup', via });
+    navigation.replace('PinEntry', { next, profileId, mode: 'setup', via, ...(lockedFrom === undefined ? {} : { lockedFrom }) });
   };
 
   const submitCode = (): void => {
-    const at = Date.now();
-    setNow(at);
-    const result = attemptRescueCode({ entry: codeInput, storedCodes: codes, state: attempts, now: at });
-    if (result.state !== attempts) setPinAttempts(result.state);
-    if (!result.ok) {
-      setMessage(rescueFailureMessage(result, m));
-      return;
-    }
-    void track(pinResetRequested('rescue_code'));
-    goToSetup('rescue_code');
+    if (busy) return;
+    setBusy(true);
+    void attemptRescue(codeInput, codes)
+      .then((result) => {
+        setNow(Date.now());
+        if (!result.ok) {
+          setMessage(rescueFailureMessage(result, m));
+          return;
+        }
+        void track(pinResetRequested('rescue_code'));
+        goToSetup('rescue_code');
+      })
+      .catch(() => undefined)
+      .finally(() => setBusy(false));
   };
 
   const view = waitCardView(wait, (readyAt) => formatReadyAt(locale, readyAt), m);
@@ -132,14 +151,24 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   useBackGuard(
     navigation,
     () => {
-      void Promise.resolve().then(() => navigation.replace('PinEntry', { next, profileId }));
+      void Promise.resolve().then(() => navigation.replace('PinEntry', { next, profileId, ...(lockedFrom === undefined ? {} : { lockedFrom }) }));
       return true;
     },
     true,
   );
 
+  // [OA] Row OA-6 review round 2: Back from `/signin` can bring this page back from the back/forward cache with the
+  // hand-off already left; Sign in is pressable again then, as the page it shows is the one the grown-up returned to.
+  useEffect(() => subscribePageRestore(() => setLeaving(false)), []);
+
+  const signIn = (): void => {
+    if (leaving) return;
+    setLeaving(true);
+    void openPinResetSignIn().catch(() => setLeaving(false));
+  };
+
   const codeRows = rescueInputRows(codeInput);
-  const codeLine = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : message;
+  const codeLine = locked ? pauseText(cooldownMs, m) : message;
   const showWait = !hasCode || waitOpen || wait.status !== 'idle';
 
   return (
@@ -151,6 +180,18 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
 
       {loaded ? (
         <>
+          {signInShown ? (
+            <>
+              <Card padding="lg" tone="paper" testID="pin-reset-signin">
+                <Heading level="prompt">{m.reset.signIn.heading}</Heading>
+                <Spacer size="sm" />
+                <Body tone="secondary">{m.reset.signIn.caption}</Body>
+                <Spacer size="md" />
+                <Button label={m.reset.signIn.button} tone="primary" size="lg" fullWidth disabled={leaving} onPress={signIn} testID="pin-reset-signin-button" />
+              </Card>
+              <Spacer size="md" />
+            </>
+          ) : null}
           {hasCode ? (
             <Card padding="lg" tone="paper">
               <Heading level="prompt">{m.reset.code.heading}</Heading>
@@ -205,7 +246,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
                 tone="primary"
                 size="lg"
                 fullWidth
-                disabled={locked || codeInput.trim().length === 0}
+                disabled={locked || busy || codeInput.trim().length === 0}
                 onPress={submitCode}
               />
               {codeLine ? (

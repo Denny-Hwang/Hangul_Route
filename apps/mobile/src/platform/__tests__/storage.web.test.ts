@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = new Map<string, string>();
+const fresh = { closed: 0 };
 vi.mock('idb-keyval', () => ({
   get: vi.fn(async (k: string) => mem.get(k)),
   set: vi.fn(async (k: string, v: string) => {
@@ -10,6 +11,12 @@ vi.mock('idb-keyval', () => ({
     mem.delete(k);
   }),
   keys: vi.fn(async () => [...mem.keys()]),
+  // [OA] A second connection to the same store: reads the same map; `closed` counts the connections closed after use.
+  createStore: vi.fn(() => {
+    const store = (_mode: string, fn: (s: { transaction: { db: { close: () => void } } }) => unknown) =>
+      Promise.resolve(fn({ transaction: { db: { close: () => void (fresh.closed += 1) } } }));
+    return store;
+  }),
   clear: vi.fn(async () => mem.clear()),
   // idb-keyval's update: the read and the write in one transaction; a throw from the callback writes nothing.
   update: vi.fn(async (k: string, next: (old: string | undefined) => string) => {
@@ -20,7 +27,7 @@ vi.mock('idb-keyval', () => ({
 
 import { get, update } from 'idb-keyval';
 import { setWriteFence } from '../storage-fence';
-import { listKeys, readJson, readJsonExact, readJsonStrict, removeKey, requestPersistence, updateJson, writeJson } from '../storage.web';
+import { listKeys, readJson, readJsonExact, readJsonExactFresh, readJsonStrict, removeKey, requestPersistence, updateJson, writeJson } from '../storage.web';
 
 describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
   beforeEach(() => mem.clear());
@@ -71,6 +78,17 @@ describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
     expect(mem.get('hr:bad')).toBe('2');
   });
 
+  it('updateJson with exact: only a missing key comes in as null; a damaged value rejects and stays as it is', async () => {
+    const seen: unknown[] = [];
+    expect(await updateJson('fresh', (current) => (seen.push(current), 1), { exact: true })).toBe(true);
+    mem.set('hr:bad', '{not json');
+    const next = vi.fn(() => 2);
+    await expect(updateJson('bad', next, { exact: true })).rejects.toThrow();
+    expect(next).not.toHaveBeenCalled();
+    expect(seen).toEqual([null]);
+    expect(mem.get('hr:bad')).toBe('{not json');
+  });
+
   it('two updates at once both land: neither overwrites the other', async () => {
     await writeJson('device:settings', {});
     await Promise.all([
@@ -110,5 +128,14 @@ describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
     vi.stubGlobal('navigator', nav);
     expect(await requestPersistence()).toBe(true);
     vi.unstubAllGlobals();
+  });
+  it('[OA] readJsonExactFresh reads on a new connection and closes it: null only when missing, a bad value throws', async () => {
+    fresh.closed = 0;
+    await writeJson('profiles:locks', { v: 1, ids: [] });
+    expect(await readJsonExactFresh('profiles:locks')).toEqual({ v: 1, ids: [] });
+    expect(await readJsonExactFresh('nope')).toBeNull();
+    mem.set('hr:bad', '{not json');
+    await expect(readJsonExactFresh('bad')).rejects.toThrow();
+    expect(fresh.closed).toBe(3);
   });
 });

@@ -1,8 +1,38 @@
-import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
+import { PIN_SET_AT_KEY, RESCUE_PAUSE_MS, type Profile } from '@hangul-route/content-schema';
 import { create } from 'zustand';
-import type { SubscriptionState } from '../logic/entitlement';
-import { INITIAL_ATTEMPT_STATE, type AttemptState } from '../logic/profiles/pin-hash';
-import { startResetWait } from '../logic/profiles/pin-reset';
+import { entitlementTier, type SubscriptionState } from '../logic/entitlement';
+import {
+  isLearnerProfile,
+  mergeCovers,
+  subscriptionCoversFor,
+  subscriptionCoversOf,
+  withNewerCovered,
+  type SubscriptionCovers,
+} from '../logic/legacy-subscription-covers';
+import {
+  INITIAL_ATTEMPT_STATE,
+  PIN_MAX_PAUSE_MS,
+  effectiveStrikes,
+  mergeAttemptStates,
+  normalizeAttemptState,
+  registerSuccess,
+  verifyPin,
+  type AttemptState,
+  type PauseSchedule,
+  type PinHasher,
+  type PinVerifyResult,
+} from '../logic/profiles/pin-hash';
+import { attemptRescueCode, startResetWait, type RescueCodeResult } from '../logic/profiles/pin-reset';
+import {
+  biometricShortcutOf,
+  shortcutRecord,
+  shortcutStale,
+  shortcutValid,
+  type BiometricShortcutRecord,
+  type ShortcutReadResult,
+  type ShortcutWrite,
+} from '../logic/profiles/biometric-shortcut';
+import { biometricChangedEvent, type BiometricChangeReason } from '../logic/profiles/gate-events';
 import {
   PIN_HASH_SEEN_KEY,
   PIN_HASH_UNREAD,
@@ -11,7 +41,13 @@ import {
   pinSetAtOf,
   reconcilePinEpoch as nextPinEpoch,
 } from '../logic/shell/device-gate';
-import { readJson, readJsonExact, writeJson } from '../platform/storage';
+import { flags } from '../config/flags';
+import { biometric } from '../platform/biometric';
+import { readJson, readJsonExact, readJsonStrict, updateJson, writeJson } from '../platform/storage';
+import { announcePinAttempts } from '../platform/pin-attempts-channel';
+import { PIN_ATTEMPTS_LOCK, withTabLock } from '../platform/tab-lock';
+import { PROFILES_KEY, useProfileStore } from './profile-store';
+import { track } from '../platform/telemetry';
 
 /**
  * Family-level account settings, persisted across sessions.
@@ -28,11 +64,98 @@ const SELF_CONSENT_KEY = 'account:selfConsentAcceptedAt';
 // Start of the 24-hour "Forgot PIN" wait (F-LEARN-001 §3.5).
 const PIN_RESET_KEY = 'account:pinResetRequestedAt';
 const SUBSCRIPTION_KEY = 'account:subscription';
+/** The learner profiles the legacy subscription covered when OA-8 first ran (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5). */
+export const SUBSCRIPTION_COVERS_KEY = 'account:subscriptionCovers';
 // Family-level grown-up PIN (F-PROF-001 §10 interim: one PIN per device until
 // parent-first onboarding ships). Attempt state persists so a force-quit
 // cannot clear an active cooldown (§3.1).
 export const PIN_HASH_KEY = 'account:parentPinHash';
 const PIN_ATTEMPTS_KEY = 'account:pinAttempts';
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3: the Rescue Code's own attempt state (same shape, 5 per 15
+ * minutes, then a flat 15-minute pause), so the code stays usable while the PIN pad is paused.
+ */
+const RESCUE_ATTEMPTS_KEY = 'account:rescueAttempts';
+/**
+ * [OA] OA-D21: `{ v: 1, at }`, written when the finished 24-hour wait sets a PIN; the next Grown-up area entry
+ * after a PIN shows the notice once and clears it. A reset by the Rescue Code (or a sign-in) writes nothing.
+ */
+const PIN_RESET_BY_WAIT_KEY = 'account:pinResetByWait';
+/**
+ * [OA] Section 8.6 (row OA-9): `{ v: 1, enabledAt, epoch }` while face or fingerprint is on for this device's PIN.
+ * The token itself lives only in SecureStore (`hr.biometricShortcut`, `platform/biometric.native.ts`).
+ */
+const BIOMETRIC_SHORTCUT_KEY = 'account:biometricShortcut';
+/** [OA] The last delete of the shortcut item, awaited before a new token is written. */
+let pendingRemove: Promise<void> = Promise.resolve();
+
+/** [OA] What a tap on Use face or fingerprint did: opened (`ok`), voided and turned off, cancelled, or nothing on. */
+export type BiometricUseResult = ShortcutReadResult | 'off';
+
+/** [OA] The record of a PIN set by the finished 24-hour wait. */
+export interface PinResetByWait {
+  v: 1;
+  at: number;
+}
+
+function pinResetByWaitOf(raw: unknown): PinResetByWait | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  return r.v === 1 && typeof r.at === 'number' && Number.isFinite(r.at) ? { v: 1, at: r.at } : null;
+}
+
+/**
+ * [OA] Attempt state keys whose last write from this tab failed (a full or refusing storage): until a write lands
+ * again, storage may hold an older state than this tab, so it is merged instead of trusted. In memory only.
+ */
+const unsavedAttempts = new Set<string>();
+
+/**
+ * [OA] The longest pause each counter can start: a stored pause that ends later than now plus this (a damaged
+ * record, a clock that was ahead and was set back) is cut to it at every read (`normalizeAttemptState`).
+ */
+const MAX_PAUSE_MS: Readonly<Record<string, number>> = { [PIN_ATTEMPTS_KEY]: PIN_MAX_PAUSE_MS, [RESCUE_ATTEMPTS_KEY]: RESCUE_PAUSE_MS };
+
+function readAttemptState(key: string, raw: unknown, now: number): AttemptState {
+  return normalizeAttemptState(raw, { now, maxPauseMs: MAX_PAUSE_MS[key] ?? PIN_MAX_PAUSE_MS });
+}
+
+/**
+ * [OA] OA-D19: the attempt state under `key`, read again inside the `hr:pin-attempts` lock. With Web Locks every
+ * write of this bundle is serialised, so the stored state is the truth (another tab's correct PIN clears the pause
+ * here too), except where it cannot be: nothing readable is stored (a first use, or a read that failed) and this
+ * tab's own state stands; a state an older bundle wrote (no `strikes`) keeps its misses and pause but not a lower
+ * step, so this tab's strikes stay (section 8.3); and after this tab's own write failed, the two are merged. Without
+ * Web Locks (native, an older browser) another tab may have written meanwhile without seeing ours, so the two are
+ * always merged (later pause, larger strikes after the decay, union of misses).
+ */
+async function sharedAttempts(key: string, own: AttemptState, locked: boolean, now: number): Promise<AttemptState> {
+  const raw = await readJson<unknown>(key);
+  const stored = readAttemptState(key, raw, now);
+  if (!locked || unsavedAttempts.has(key)) return mergeAttemptStates(stored, own, now);
+  if (raw === null || typeof raw !== 'object') return own;
+  if (typeof (raw as { strikes?: unknown }).strikes !== 'number') {
+    const strikes = effectiveStrikes(own, now);
+    return strikes === 0 ? stored : { ...stored, strikes, ...(own.lastMissAt === undefined ? {} : { lastMissAt: own.lastMissAt }) };
+  }
+  return stored;
+}
+
+/**
+ * [OA] Best effort, as every other write of this store: a storage that refuses (quota, blocked site data, a lost
+ * IndexedDB connection) never stops a correct PIN from going on, and the state stays counted in memory. A write
+ * that landed tells the other tabs to re-read.
+ */
+async function saveAttempts(key: string, state: AttemptState): Promise<void> {
+  try {
+    await writeJson(key, state);
+    unsavedAttempts.delete(key);
+    announcePinAttempts();
+  } catch {
+    unsavedAttempts.add(key);
+  }
+}
+
 /**
  * When the current PIN was made (epoch ms), F-SPACE-002 section 4.11: a PIN made less than a day ago
  * cannot attest a class move. Written with every new PIN, and moved with the epoch when an older bundle
@@ -82,6 +205,8 @@ interface State {
   /** ISO time the 24-hour Forgot PIN wait started, or null. */
   pinResetRequestedAt: string | null;
   subscription: SubscriptionState | null;
+  /** `account:subscriptionCovers`; null until it is recorded, and while it is null the legacy subscription covers every profile. */
+  subscriptionCovers: SubscriptionCovers | null;
   parentPinHash: string | null;
   /** Epoch ms the current PIN was set; null for a PIN set before F-APP-001 A-6 (read as epoch 0) or no PIN yet. */
   pinSetAt: number | null;
@@ -96,6 +221,12 @@ interface State {
    */
   pinHashReadFailed: boolean;
   pinAttempts: AttemptState;
+  /** [OA] The Rescue Code's own attempt state (`account:rescueAttempts`). */
+  rescueAttempts: AttemptState;
+  /** [OA] A PIN set by the finished 24-hour wait, until the next Grown-up area entry shows it (`account:pinResetByWait`). */
+  pinResetByWait: PinResetByWait | null;
+  /** [OA] Face or fingerprint turned on for this device (`account:biometricShortcut`), valid only for its PIN epoch. */
+  biometricShortcut: BiometricShortcutRecord | null;
   hydrated: boolean;
 }
 
@@ -108,14 +239,56 @@ interface Actions {
   requestPinReset: () => void;
   clearPinResetRequest: () => void;
   setSubscription: (subscription: SubscriptionState | null) => void;
+  /**
+   * Start-up step (OA-D15, section 10.5): with a premium legacy subscription and no record yet, records the learner
+   * profiles on the device now, once. Only when the profile store is hydrated, the profile list reads back strictly and
+   * the store holds at least one learner; otherwise nothing is recorded and the next start tries again.
+   */
+  recordSubscriptionCovers: (now: Date) => Promise<void>;
+  /**
+   * With a premium legacy subscription and a record, adds every newer learner it now covers to the record's `added`
+   * (in memory at once, then stored), so a covered learner stays covered through a remove and a restore (section 10.5).
+   */
+  rememberCoveredLearners: (now: Date) => Promise<void>;
   /** Stores the PIN hash; every new PIN (first set, change, Forgot PIN reset) moves the epoch to now. */
   setParentPinHash: (hash: string | null) => void;
   setPinAttempts: (state: AttemptState) => void;
+  /**
+   * [OA] Checks a PIN against the shared attempt state: read, verify and write run inside the `hr:pin-attempts`
+   * lock (or re-read and merged without Web Locks), so all tabs share one count (OA-D19, CS-16).
+   */
+  verifyPinAttempt: (pin: string, deps: { hasher: PinHasher; schedule: PauseSchedule; now?: () => number }) => Promise<PinVerifyResult>;
+  /** [OA] Checks a Rescue Code against its own shared attempt state, the same way (section 8.3). */
+  attemptRescue: (entry: string, storedCodes: readonly string[], now?: () => number) => Promise<RescueCodeResult>;
+  /** [OA] Re-reads the shared attempt states (under the same lock), so a pause another tab started or ended shows here too. */
+  refreshAttempts: (now?: () => number) => Promise<void>;
+  /** [OA] OA-D21: the finished 24-hour wait just set a PIN. */
+  markPinResetByWait: (at: number) => void;
+  /** [OA] The notice was shown at a Grown-up area entry. */
+  clearPinResetByWait: () => void;
+  /**
+   * [OA] Section 8.6: turns face or fingerprint on for the current PIN (the caller has a fresh PIN). Writes the
+   * SecureStore token first; the record is written only once the token is, so a cancelled prompt turns nothing on.
+   */
+  enableBiometricShortcut: (prompt: string, now?: () => number) => Promise<ShortcutWrite>;
+  /** [OA] Turns it off and deletes the item: the grown-up's switch (`user`), a new PIN or an enrolment change. */
+  disableBiometricShortcut: (reason: BiometricChangeReason) => void;
+  /**
+   * [OA] The PIN screen's Use face or fingerprint: reads the item (the system check runs). `ok` counts as a correct
+   * PIN and sets `strikes` to 0, also during a pause; `invalidated` turns the shortcut off; `cancelled` (a cancel, a
+   * failed match) changes nothing and is never a PIN miss. It never sets, changes or resets the PIN.
+   */
+  verifyBiometricShortcut: (prompt: string) => Promise<BiometricUseResult>;
   /**
    * Boot step of the device gate marker writer: a hash that differs from the one last seen was
    * changed by an older bundle, so the epoch moves to `now` before the marker is written.
    */
   reconcilePinEpoch: (now: number) => void;
+  /**
+   * [OA] Row OA-5: reads the PIN hash again after a failed read at hydrate (`pinHashReadFailed`), so a locked tile can
+   * check the PIN. A hash, or a read that now says "no PIN", replaces the unknown; another failure keeps it. Never throws.
+   */
+  retryPinHashRead: () => Promise<void>;
 }
 
 export const useAccountStore = create<State & Actions>((set, get) => ({
@@ -125,12 +298,16 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   selfConsentAcceptedAt: null,
   pinResetRequestedAt: null,
   subscription: null,
+  subscriptionCovers: null,
   parentPinHash: null,
   pinSetAt: null,
   pinCreatedAt: null,
   pinHashSeen: null,
   pinHashReadFailed: false,
   pinAttempts: INITIAL_ATTEMPT_STATE,
+  rescueAttempts: INITIAL_ATTEMPT_STATE,
+  pinResetByWait: null,
+  biometricShortcut: null,
   hydrated: false,
 
   hydrate: async () => {
@@ -140,11 +317,15 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const selfConsentAcceptedAt = await readJson<string | null>(SELF_CONSENT_KEY);
     const pinResetRequestedAt = await readJson<string | null>(PIN_RESET_KEY);
     const subscription = await readJson<SubscriptionState | null>(SUBSCRIPTION_KEY);
+    const subscriptionCovers = subscriptionCoversOf(await readJson<unknown>(SUBSCRIPTION_COVERS_KEY));
     const pinHash = await readPinHash();
-    const pinAttempts = await readJson<AttemptState | null>(PIN_ATTEMPTS_KEY);
+    const pinAttempts = await readJson<unknown>(PIN_ATTEMPTS_KEY);
+    const rescueAttempts = await readJson<unknown>(RESCUE_ATTEMPTS_KEY);
+    const pinResetByWait = await readJson<unknown>(PIN_RESET_BY_WAIT_KEY);
     const pinSetAt = await readJson<unknown>(PIN_SET_AT_KEY);
     const pinCreatedAt = await readJson<unknown>(PIN_CREATED_AT_KEY);
     const pinHashSeen = await readPinHashSeen();
+    const biometricShortcut = biometricShortcutOf(await readJson<unknown>(BIOMETRIC_SHORTCUT_KEY));
     set({
       parentEmail: parentEmail ?? null,
       consentAcceptedAt: consentAcceptedAt ?? null,
@@ -159,6 +340,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       selfConsentAcceptedAt: selfConsentAcceptedAt ?? null,
       pinResetRequestedAt: pinResetRequestedAt ?? null,
       subscription: subscription ?? null,
+      subscriptionCovers,
       parentPinHash: pinHash.hash,
       pinHashReadFailed: pinHash.failed,
       pinSetAt: pinSetAtOf(pinSetAt),
@@ -166,9 +348,17 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       // just before the upgrade still waits its day (F-SPACE-002 4.11); absent both, it predates them and counts as old enough.
       pinCreatedAt: pinSetAtOf(pinCreatedAt) ?? pinSetAtOf(pinSetAt),
       pinHashSeen,
-      pinAttempts: pinAttempts ?? INITIAL_ATTEMPT_STATE,
+      // A state an older bundle wrote (no `strikes`) reads as 0 strikes; the pause it holds still runs (section 8.3).
+      pinAttempts: readAttemptState(PIN_ATTEMPTS_KEY, pinAttempts, Date.now()),
+      rescueAttempts: readAttemptState(RESCUE_ATTEMPTS_KEY, rescueAttempts, Date.now()),
+      pinResetByWait: pinResetByWaitOf(pinResetByWait),
+      biometricShortcut,
       hydrated: true,
     });
+    // [OA] An opt-in left from another PIN (an older bundle changed it) is turned off now. A PIN that could not be
+    // read is not "no PIN": the record waits (it opens nothing while the hash is unknown).
+    const { pinSetAt: epoch, parentPinHash, pinHashReadFailed } = get();
+    if (!pinHashReadFailed && shortcutStale(biometricShortcut, epoch, parentPinHash !== null)) get().disableBiometricShortcut('pin_changed');
   },
 
   setParentEmail: (email) => {
@@ -209,6 +399,76 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     void writeJson(SUBSCRIPTION_KEY, subscription);
   },
 
+  recordSubscriptionCovers: async (now) => {
+    const account = get();
+    if (!account.hydrated || account.subscriptionCovers !== null) return;
+    if (entitlementTier(account.subscription, now) !== 'premium') return;
+    const profiles = useProfileStore.getState();
+    // Nothing loaded yet, or a read that came back empty: try again on the next start (as `repairProfilePushes` does).
+    if (!profiles.hydrated || !profiles.profiles.some(isLearnerProfile)) return;
+    let storedProfiles: unknown;
+    try {
+      // The profile list must read back strictly: a failed or damaged read is not "these are all the learners".
+      storedProfiles = await readJsonStrict<unknown>(PROFILES_KEY);
+      if (!Array.isArray(storedProfiles)) return;
+      // A record this start could not read is not "no record": it is never written over. One it reads now is kept.
+      const stored = await readJsonExact<unknown>(SUBSCRIPTION_COVERS_KEY);
+      if (stored !== null) {
+        const parsed = subscriptionCoversOf(stored);
+        if (parsed && get().subscriptionCovers === null) set({ subscriptionCovers: parsed });
+        return;
+      }
+    } catch {
+      return;
+    }
+    if (get().subscriptionCovers !== null) return;
+    // Every learner in memory and every one stored (another web tab may have added one since this start read the list).
+    const fromStorage = (storedProfiles as unknown[]).filter(
+      (p): p is Pick<Profile, 'id' | 'role'> => typeof p === 'object' && p !== null && typeof (p as { id?: unknown }).id === 'string',
+    );
+    const record = subscriptionCoversFor([...useProfileStore.getState().profiles, ...fromStorage], now);
+    // One read-modify-write, so two tabs starting together still make the record once. `exact`: only a truly missing
+    // key is null here, so a value that became damaged since the read above rejects and is never written over.
+    let kept = null as SubscriptionCovers | null;
+    await updateJson<unknown>(
+      SUBSCRIPTION_COVERS_KEY,
+      (current) => {
+        if (current === null) return record;
+        kept = subscriptionCoversOf(current);
+        return undefined;
+      },
+      { exact: true },
+    );
+    if (get().subscriptionCovers === null) set({ subscriptionCovers: kept ?? record });
+  },
+
+  rememberCoveredLearners: async (now) => {
+    const account = get();
+    const record = account.subscriptionCovers;
+    if (!account.hydrated || record === null) return;
+    if (entitlementTier(account.subscription, now) !== 'premium') return;
+    const profiles = useProfileStore.getState();
+    if (!profiles.hydrated) return;
+    const next = withNewerCovered(record, profiles.profiles);
+    if (next === record) return;
+    // In memory first: no later change to the profile list in this session can take the cover back.
+    set({ subscriptionCovers: next });
+    let stored = null as SubscriptionCovers | null;
+    await updateJson<unknown>(SUBSCRIPTION_COVERS_KEY, (current) => {
+      const parsed = subscriptionCoversOf(current);
+      // A stored value that is not a record is never written over (a failed read already rejected).
+      if (parsed === null) return undefined;
+      stored = mergeCovers(parsed, next);
+      return stored === parsed ? undefined : stored;
+    });
+    // What another tab covered meanwhile is kept too.
+    const current = get().subscriptionCovers;
+    if (stored !== null && current !== null) {
+      const both = mergeCovers(stored, current);
+      if (JSON.stringify(both) !== JSON.stringify(current)) set({ subscriptionCovers: both });
+    }
+  },
+
   setParentPinHash: (hash) => {
     // A stored PIN settles any pending Forgot PIN wait: the request is cleared
     // only after the new PIN is stored (F-LEARN-001 §3.5).
@@ -231,13 +491,125 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     if (hash !== null) void writeJson(PIN_SET_AT_KEY, pinSetAt);
     if (hash !== null) void writeJson(PIN_CREATED_AT_KEY, pinCreatedAt);
     void writeJson(PIN_HASH_SEEN_KEY, pinHashSeen);
-    void writeJson(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE);
+    // [OA] OA-D19: the setup path writes the attempt state inside the same lock as every verify.
+    void withTabLock(PIN_ATTEMPTS_LOCK, () => saveAttempts(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE)).catch(() => undefined);
     if (hadReset) void writeJson(PIN_RESET_KEY, null);
+    // [OA] Section 8.2: every new PIN (set, change, reset) turns face or fingerprint off and deletes its item, also an
+    // item left without a record (the app stopped between the token and the record write).
+    get().disableBiometricShortcut('pin_changed');
   },
 
   setPinAttempts: (state) => {
     set({ pinAttempts: state });
     void writeJson(PIN_ATTEMPTS_KEY, state);
+  },
+
+  verifyPinAttempt: (pin, { hasher, schedule, now = Date.now }) =>
+    withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
+      const at = now();
+      const state = await sharedAttempts(PIN_ATTEMPTS_KEY, get().pinAttempts, locked, at);
+      // [OA] OA-D19: the PIN is checked against the stored hash, read again under the lock, so a tab left open after
+      // another tab changed or reset the PIN never accepts the old one. A read that fails or finds no hash keeps the
+      // one in memory (this tab's own write may not have landed yet).
+      const stored = await readPinHash();
+      const storedHash = !stored.failed && stored.hash !== null ? stored.hash : get().parentPinHash;
+      if (storedHash !== get().parentPinHash) set({ parentPinHash: storedHash });
+      const result = await verifyPin({ pin, storedHash, state, now: at, hasher, schedule });
+      set({ pinAttempts: result.state });
+      await saveAttempts(PIN_ATTEMPTS_KEY, result.state);
+      return result;
+    }),
+
+  attemptRescue: (entry, storedCodes, now = Date.now) =>
+    withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
+      const at = now();
+      const state = await sharedAttempts(RESCUE_ATTEMPTS_KEY, get().rescueAttempts, locked, at);
+      const result = attemptRescueCode({ entry, storedCodes, state, now: at });
+      set({ rescueAttempts: result.state });
+      await saveAttempts(RESCUE_ATTEMPTS_KEY, result.state);
+      return result;
+    }),
+
+  refreshAttempts: (now = Date.now) =>
+    // Read under the same lock as every verify, so the stored state is the truth where Web Locks exist (another
+    // tab's correct PIN or reset clears the pause here too); without them it is merged, never shortening a pause.
+    withTabLock(PIN_ATTEMPTS_LOCK, async (locked) => {
+      const at = now();
+      const ownPin = get().pinAttempts;
+      const ownRescue = get().rescueAttempts;
+      const pinAttempts = await sharedAttempts(PIN_ATTEMPTS_KEY, ownPin, locked, at);
+      const rescueAttempts = await sharedAttempts(RESCUE_ATTEMPTS_KEY, ownRescue, locked, at);
+      // [OA] A state that changed while the read was out (a face or fingerprint success as the Face ID sheet hands
+      // the app back, CS-8; a verify without Web Locks) is newer than what was read: it wins, never the stale read.
+      set({
+        ...(get().pinAttempts === ownPin ? { pinAttempts } : {}),
+        ...(get().rescueAttempts === ownRescue ? { rescueAttempts } : {}),
+      });
+    }),
+
+  markPinResetByWait: (at) => {
+    const record: PinResetByWait = { v: 1, at };
+    set({ pinResetByWait: record });
+    void writeJson(PIN_RESET_BY_WAIT_KEY, record);
+  },
+
+  clearPinResetByWait: () => {
+    set({ pinResetByWait: null });
+    void writeJson(PIN_RESET_BY_WAIT_KEY, null);
+  },
+
+  retryPinHashRead: async () => {
+    if (!get().pinHashReadFailed) return;
+    const pinHash = await readPinHash().catch(() => ({ hash: null, failed: true }));
+    // A PIN set meanwhile in this tab wins over what the read found.
+    if (pinHash.failed || !get().pinHashReadFailed) return;
+    set({ parentPinHash: pinHash.hash, pinHashReadFailed: false });
+  },
+
+  enableBiometricShortcut: async (prompt, now = Date.now) => {
+    if (get().parentPinHash === null) return 'unavailable';
+    await pendingRemove;
+    const written = await biometric.write(prompt);
+    if (written !== 'written') return written;
+    const record = shortcutRecord(now(), get().pinSetAt);
+    set({ biometricShortcut: record });
+    await writeJson(BIOMETRIC_SHORTCUT_KEY, record);
+    void track(biometricChangedEvent(true, 'user'));
+    return 'written';
+  },
+
+  disableBiometricShortcut: (reason) => {
+    const had = get().biometricShortcut !== null;
+    // The item is deleted every time; the record and the event only when it was on.
+    if (had) {
+      set({ biometricShortcut: null });
+      void writeJson(BIOMETRIC_SHORTCUT_KEY, null);
+    }
+    // Kept, so a quick off-then-on writes the new token only after this delete (native calls may finish out of order).
+    pendingRemove = biometric.remove().catch(() => undefined);
+    if (had) void track(biometricChangedEvent(false, reason));
+  },
+
+  verifyBiometricShortcut: async (prompt) => {
+    const { biometricShortcut, pinSetAt, parentPinHash } = get();
+    // The kill switch holds here too, not only in what the screens draw.
+    if (!flags.biometricShortcutEnabled) return 'off';
+    if (!shortcutValid(biometricShortcut, pinSetAt, parentPinHash !== null)) return 'off';
+    const read = await biometric.read(prompt);
+    if (read === 'invalidated') {
+      get().disableBiometricShortcut('enrolment_changed');
+    } else if (read === 'ok') {
+      // A correct PIN for every count (section 8.3): no misses, no pause, `strikes` back to 0.
+      // Set before any await, so a refresh still reading the paused state cannot bring it back (`refreshAttempts`);
+      // the write is best effort, as for a correct PIN.
+      set({ pinAttempts: registerSuccess() });
+      // Tried twice: a reset that never reached storage would let the next refresh merge the old pause back in.
+      const save = (): Promise<void> =>
+        withTabLock(PIN_ATTEMPTS_LOCK, () => saveAttempts(PIN_ATTEMPTS_KEY, registerSuccess())).catch(() => undefined);
+      await save();
+      if (unsavedAttempts.has(PIN_ATTEMPTS_KEY)) await save();
+    }
+    return read;
   },
 
   reconcilePinEpoch: (now) => {
@@ -252,5 +624,32 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     if (moved) void writeJson(PIN_SET_AT_KEY, next.pinSetAt);
     if (moved) void writeJson(PIN_CREATED_AT_KEY, next.pinSetAt);
     void writeJson(PIN_HASH_SEEN_KEY, next.pinHashSeen);
+    // [OA] A PIN an older bundle changed is a new PIN for face or fingerprint too (section 8.6).
+    if (moved) get().disableBiometricShortcut('pin_changed');
   },
 }));
+
+let stopCoverWatch: (() => void) | null = null;
+
+/**
+ * From the start-up pass on, every change to the profile list (a learner made, restored or removed) remembers the newer
+ * learners the legacy subscription now covers, at once (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.5). Once per app run:
+ * a second call keeps the one watch. Returns the function that stops it (`stopWatchingCoveredLearners`).
+ */
+export function watchCoveredLearners(): () => void {
+  if (stopCoverWatch) return stopWatchingCoveredLearners;
+  stopCoverWatch = useProfileStore.subscribe((state, prev) => {
+    if (state.profiles === prev.profiles) return;
+    void useAccountStore
+      .getState()
+      .rememberCoveredLearners(new Date())
+      .catch(() => undefined);
+  });
+  return stopWatchingCoveredLearners;
+}
+
+/** Stops the watch of `watchCoveredLearners`, so the next call starts a new one (tests; the app never stops it). */
+export function stopWatchingCoveredLearners(): void {
+  stopCoverWatch?.();
+  stopCoverWatch = null;
+}

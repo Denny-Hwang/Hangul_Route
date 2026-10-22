@@ -53,10 +53,13 @@ describe('onboarding telemetry payloads (F-LEARN-001 §3.8, owner decision 2026-
       expect(S['pin.created'].safeParse({ where }).success).toBe(true);
     }
     expect(S['pin.created'].safeParse({ where: 'x' }).success).toBe(false);
-    for (const method of ['rescue_code', 'wait']) {
+    for (const method of ['rescue_code', 'wait', 'sign_in']) {
       expect(S['pin.reset_requested'].safeParse({ method }).success).toBe(true);
       expect(S['pin.reset_completed'].safeParse({ method }).success).toBe(true);
     }
+    // [OA] Cancel the wait is a request only.
+    expect(S['pin.reset_requested'].safeParse({ method: 'wait_cancelled' }).success).toBe(true);
+    expect(S['pin.reset_completed'].safeParse({ method: 'wait_cancelled' }).success).toBe(false);
     expect(S['pin.reset_requested'].safeParse({ method: 'email' }).success).toBe(false);
   });
 

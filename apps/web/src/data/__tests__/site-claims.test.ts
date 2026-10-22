@@ -80,15 +80,26 @@ describe('SITE_CLAIMS (what the site says today)', () => {
         expect(line, locale).not.toMatch(/[$€£]\s?\d|\d+([.,]\d+)?\s?(usd|dollars?)|lifetime|\bplan\b|\bfree\b|\bkids?\b|\bchild(ren)?\b|\bages?\b/i);
       }
     }
-    // AMENDMENTS-LECTURE-V2 section 12.5, word for word.
-    expect(en.landing.persona.parents.follow.lecture).toBe('Lecture mode puts a lesson on your TV so you can learn together.');
-    expect(en.landing.persona.teachers.class.lecture).toBe('Lecture mode: teach from the front on a projector or TV, with ready-made lessons.');
+    // AMENDMENTS-LECTURE-V2 section 12.5, brought up to what ships (F-SITE-002 site facts, 2026-10-21): Stages 1 to 7,
+    // stories and word topics, and a phone turned sideways.
+    expect(en.landing.persona.parents.follow.lecture).toBe(
+      'Lecture mode shows ready-made lessons from Stages 1 to 7 on a TV, a laptop or a phone turned sideways, so you can learn together.',
+    );
+    expect(en.landing.persona.teachers.class.lecture).toBe(
+      'Lecture mode: teach from the front with ready-made slides for Stages 1 to 7, stories and word sets, on a projector, a TV or a phone turned sideways.',
+    );
     const es = getMessages('es').landing.persona;
-    expect(es.parents.follow.lecture).toBe('El modo proyección pone una lección en tu TV para aprender en familia.');
-    expect(es.teachers.class.lecture).toBe('Modo proyección: enseña al frente con un proyector o una TV, con lecciones listas.');
+    expect(es.parents.follow.lecture).toBe(
+      'El modo proyección muestra lecciones listas de las Etapas 1 a 7 en una TV, una computadora portátil o un teléfono en horizontal, para aprender en familia.',
+    );
+    expect(es.teachers.class.lecture).toBe(
+      'Modo proyección: enseña al frente con diapositivas listas de las Etapas 1 a 7, cuentos y temas de palabras, en un proyector, una TV o un teléfono en horizontal.',
+    );
     const ko = getMessages('ko').landing.persona;
-    expect(ko.parents.follow.lecture).toBe('강의 모드로 TV에 수업을 띄우고 함께 배워요.');
-    expect(ko.teachers.class.lecture).toBe('강의 모드: 준비된 수업으로 프로젝터나 TV 앞에서 가르쳐요.');
+    expect(ko.parents.follow.lecture).toBe('강의 모드는 1단계부터 7단계까지 준비된 수업을 TV, 노트북, 가로로 돌린 휴대폰에 띄워 줘요. 함께 배워 보세요.');
+    expect(ko.teachers.class.lecture).toBe(
+      '강의 모드: 1단계부터 7단계, 이야기, 낱말 묶음의 준비된 슬라이드를 프로젝터, TV, 가로로 돌린 휴대폰에 띄우고 앞에서 가르쳐요.',
+    );
   });
 
   it('turns the notes line on only with the notes flags on by default in both apps (F-FEEDBACK-001 FB-14, OD-19)', () => {

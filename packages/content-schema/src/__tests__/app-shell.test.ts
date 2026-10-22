@@ -452,7 +452,7 @@ describe('storage names', () => {
     expect(PIN_SET_AT_KEY).toBe('account:pinSetAt');
     expect(SHELL_DB).toBe('hr-shell');
     expect(SHELL_STORE).toBe('kv');
-    expect(SHELL_KEYS).toEqual({ lastPersona: 'lastPersona', pinEpoch: 'pinEpoch' });
+    expect(SHELL_KEYS).toEqual({ lastPersona: 'lastPersona', pinEpoch: 'pinEpoch', deviceUses: 'deviceUses', pinOwner: 'pinOwner', pinPromptSeen: 'pinPromptSeen' });
     expect(UNLOCK_SESSION_KEY).toBe('hr:grownup:unlock');
     expect(CONSOLE_SESSION_KEY).toBe('hr:console:session');
     expect(JOIN_HANDOFF_KEY).toBe('hr:shell:joinCode');
@@ -469,7 +469,7 @@ describe('shell.* telemetry codes (section 3.18)', () => {
     expect(SHELL_TELEMETRY_PREFIX).toBe('shell.');
     expect(SHELL_TELEMETRY_PAYLOADS).toEqual({
       'shell.persona_chosen': { persona: ['learner', 'parent', 'teacher'], from: ['welcome', 'welcome-continue'] },
-      'shell.grown_up_handoff': { via: ['profile', 'dashboard', 'plan', 'lock'], target: ['router', 'billing', 'next'] },
+      'shell.grown_up_handoff': { via: ['profile', 'dashboard', 'plan', 'lock', 'chooser'], target: ['router', 'billing', 'next'] },
       'shell.path_bounced': { prefix: ['signin', 'start', 'teach', 'parent', 'account'] },
     });
     expect(TELEMETRY_EVENT_NAMES.filter((name) => name.startsWith(SHELL_TELEMETRY_PREFIX))).toEqual(Object.keys(SHELL_TELEMETRY_PAYLOADS));

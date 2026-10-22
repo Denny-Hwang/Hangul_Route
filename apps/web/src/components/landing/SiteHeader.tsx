@@ -139,7 +139,7 @@ export function SiteHeader({ locale, current, variant = 'default' }: SiteHeaderP
           </nav>
           {full ? (
             <a
-              href={signIn()}
+              href={signIn(undefined, locale)}
               className="hr-site-signin"
               style={{
                 ...HIT,

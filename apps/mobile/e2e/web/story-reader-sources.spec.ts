@@ -244,11 +244,12 @@ test.describe('story Sources (fixture bundle)', () => {
     await expect(page.getByTestId('story-sources-fact-f1-source-0-note')).toHaveCount(0);
     await expect.poll(() => linkOpenedEvents(page)).toEqual([{ storyId: STORY, factId: 'f1' }]);
 
-    // The grown-up session is open now: a second link opens without the PIN.
+    // [OA] CS-1 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-2): the PIN served that one link, so a second link asks it again.
     await page.getByTestId('story-sources-fact-f3-source-1-open').click();
-    await expect.poll(async () => (await opened(page)).length).toBe(2);
-    expect(await tabsCutOff(page)).toBe(true);
-    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(page.getByTestId('story-sources-title')).toBeVisible();
+    expect((await opened(page)).length).toBe(1);
 
     const opens = (await events(page)).filter((e) => e.name === 'story.sources.opened');
     expect(opens.map((e) => e.payload)).toEqual([{ storyId: STORY, from: 'scene', factId: 'f1' }]);

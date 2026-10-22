@@ -37,8 +37,9 @@ const COMMERCIAL_CLAIMS: ReadonlyArray<{ name: string; re: RegExp }> = [
   { name: '"every stage"', re: /\bevery\s+stage\b/i },
   { name: '"all stages"', re: /\ball\s+stages\b/i },
   { name: '"lifetime"', re: /\blifetime\b/i },
-  // The plan's name appears only in the sizes line once plans are on sale ([SA] SA-6, scanned below): OD-7 lets the site
-  // name a plan without an amount, and no other line may.
+  // The plan's name appears only once plans are on sale, in the sizes line ([SA] SA-6) and in the teachers' browse line,
+  // which shows only then (`CLAIM_REQUIRES_PAID`) and names the plan as the billing page does, the way the parents'
+  // browse line names the Family Plan (both scanned below): OD-7 lets the site name a plan without an amount.
   { name: '"Group License"', re: /\bgroup\s+license\b/i },
   { name: '"one purchase" / "pay once"', re: /\bone purchase\b|\bpay(s)?\s+once\b/i },
   { name: 'a subscription', re: /\bsubscription\b/i },
@@ -77,7 +78,9 @@ describe('site text — no prices, nothing sold that is not built', () => {
   });
 
   it('the home keeps the pinned cost sentence', () => {
-    expect(home).toContain('Stage 1 is free. More stages are coming, with plans for families and classes.');
+    expect(home).toContain(
+      'Stage 1 is free. Words, sentences and stories are in the app too. Family and class plans are on the way.',
+    );
   });
 
   for (const { name, re } of COMMERCIAL_CLAIMS) {
@@ -106,6 +109,7 @@ describe('site text — no prices, nothing sold that is not built', () => {
  */
 describe('site text — the plan sizes line once plans are on sale', () => {
   const sizes = getMessages('en').landing.plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
+  const browse = getMessages('en').landing.persona.teachers.class.browse;
   const states = [
     ['the paidPlans flip', { ...SITE_CLAIMS, paidPlans: 'inApp' }],
     ['every claim on', ALL_CLAIMS_ON],
@@ -126,7 +130,8 @@ describe('site text — the plan sizes line once plans are on sale', () => {
       it(`${path} (${state}): shows the sizes line once, and nothing else on the page makes a commercial claim`, () => {
         const text = textOf(renderToStaticMarkup(<Page locale="en" claims={claims} />));
         expect(text.split(sizes)).toHaveLength(2);
-        const rest = text.split(sizes).join(' ');
+        // The teachers' browse line (paid plans on sale only) names the Group License too; nothing else may.
+        const rest = text.split(sizes).join(' ').split(browse).join(' ');
         for (const { name, re } of COMMERCIAL_CLAIMS) expect(rest, name).not.toMatch(re);
       });
     }
@@ -175,15 +180,17 @@ describe('metadata truth pass (F-SITE-002 §3.12)', () => {
     expect(text).not.toMatch(/COPPA/);
   });
 
-  // The metadata's cost clause ("more stages are coming") is the `paidPlans: 'coming'` state. The PR that flips
-  // `paidPlans` to 'inApp' must reword it in en, es and ko (section 3.9 hand-off), or this goes red.
+  // The metadata's only cost words are "Stage 1 is free", true in both `paidPlans` states (F-SITE-002 site facts,
+  // 2026-10-21): later stages ship, so it no longer says more stages are coming, and the paidPlans flip needs no
+  // metadata change.
   it.each([
-    ['en', /more stages are coming/i],
-    ['es', /vienen más etapas/i],
-    ['ko', /더 많은 단계가 준비되고 있어요/],
-  ] as const)('%s: the metadata cost clause follows the paidPlans claim', (locale, coming) => {
+    ['en', /more stages are coming/i, /Stage 1 is free/],
+    ['es', /vienen más etapas/i, /La Etapa 1 es gratis/],
+    ['ko', /더 많은 단계가 준비되고 있어요/, /1단계는 무료예요/],
+  ] as const)('%s: the metadata cost clause is true whatever the paidPlans claim says', (locale, coming, free) => {
     const text = JSON.stringify(SITE_PAGES.map((page) => siteMetadataFor(locale, page, true)));
-    expect(coming.test(text)).toBe(SITE_CLAIMS.paidPlans === 'coming');
+    expect(coming.test(text)).toBe(false);
+    expect(free.test(text)).toBe(true);
   });
 });
 
@@ -229,7 +236,10 @@ describe('site text — the level-check lines follow the levelCheck claim', () =
         const shown = steps(home);
         expect(shown).toHaveLength(3);
         expect(shown[0]).toBe(`1 ${H.steps.start.title} ${H.levelBody}`);
-        expect(textOf(home)).not.toContain(H.steps.start.body);
+        // The level line opens with the base line's words (it follows "Make a profile"), so the base line is not shown
+        // on its own as well: those words appear once, inside the level line.
+        expect(H.levelBody).not.toBe(H.steps.start.body);
+        expect(textOf(home).split(H.steps.start.body)).toHaveLength(2);
       });
     }
   }

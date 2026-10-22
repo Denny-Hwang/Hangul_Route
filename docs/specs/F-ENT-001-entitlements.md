@@ -49,6 +49,7 @@ Legacy `/api/subscriptions/*` (v1 family subscription) was removed on 2026-10-09
 ### 3.4 Device
 
 - `tier-store` caches `{ tier, source, validUntil }` per learner from every inbox refresh; `effectiveTier(learnerId, now)` is premium while the cached tier is premium and `validUntil` is in the future (7-day offline grace), or while the legacy family subscription (`account-store`) is premium. `plan-store` unlocks stages from the effective tier.
+  > **Amended by AMENDMENTS-ONE-ACCOUNT-MANY-USERS (OA-8, 2026-10-21).** The legacy device subscription is capped like a family: it covers the learners recorded in `account:subscriptionCovers` (grandfathered) and newer learners up to `FAMILY_LIFETIME_LEARNERS` (4), and every profile until that record exists (section 10.5 there).
 - Settings plan card shows "Premium · covered by *<space>*" when the tier comes from a class or school.
 
 ### 3.5 Paywall (PR 2) — `paywall/upgrade`, PIN-gated

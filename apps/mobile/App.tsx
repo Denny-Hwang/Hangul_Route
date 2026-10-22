@@ -17,6 +17,10 @@ import { PwaBanners } from './src/components/PwaBanners';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
+import { leaveGrownUpAreaOnClose, watchGrownUpAreaExit } from './src/navigation/grown-up-area-exit';
+import { followProfileChanges } from './src/store/profile-store';
+import { bindChooserResume, bindRemovedElsewhere } from './src/store/who-chooser';
+import { bindGrownUpBackgroundRule } from './src/screens/parent/use-gate-lapse';
 import { subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
@@ -62,7 +66,22 @@ export default function App(): React.ReactElement {
   const stopBridge = useRef<(() => void) | null>(null);
   const startBridge = useCallback(() => {
     stopBridge.current?.();
-    stopBridge.current = installHistoryBridge(navigation);
+    const stopHistory = installHistoryBridge(navigation);
+    // [OA] OA-D5b (2), CS-1: leaving the Grown-up area, or any learner landing with a session open, closes it (always on).
+    const stopAreaExit = watchGrownUpAreaExit(navigation);
+    // [OA] OA-D16, CS-14: a session that ends with a Grown-up area page in front leaves it for the PIN screen.
+    const stopAreaLeave = leaveGrownUpAreaOnClose(navigation);
+    // [OA] Row OA-4a: back after 30 minutes on a shared device, the chooser opens over the screen (flag on only).
+    const stopResume = bindChooserResume(navigation);
+    // [OA] Row OA-7a: the learner active here removed in another tab: the chooser (or Welcome) opens (flag on only).
+    const stopRemoved = bindRemovedElsewhere(navigation);
+    stopBridge.current = () => {
+      stopRemoved();
+      stopHistory();
+      stopAreaExit();
+      stopAreaLeave();
+      stopResume();
+    };
   }, []);
   useEffect(
     () => () => {
@@ -85,6 +104,10 @@ export default function App(): React.ReactElement {
     // A language or text size chosen in another tab of this origin (the grown-up pages, All
     // lessons, the presenter) applies here live; a page back in front re-reads the record.
     const unfollow = followDeviceSettings();
+    // [OA] OA-D16: 5 minutes in the background end the grown-up session (always on).
+    const unbindBackground = bindGrownUpBackgroundRule();
+    // [OA] OA-D19: a profile list another tab changed is read again here (always on).
+    const unfollowProfiles = followProfileChanges();
     void countVisit();
     // Remote config (F-CURR-002 section 12.2): the last copy, fetched when due and on each foreground; it can only reduce.
     const stopRemoteConfig = startRemoteConfig();
@@ -132,6 +155,8 @@ export default function App(): React.ReactElement {
       unbindLevel();
       unbindGate();
       unfollow();
+      unbindBackground();
+      unfollowProfiles();
       off();
       offInbox();
       foreground.remove();

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { typeScale } from '../../../text-size';
 import { borderWidth, colors, layout as tokensLayout, spacing, touchTarget } from '../../../tokens';
 import { ConfirmSheet } from '../ConfirmSheet';
-import { actionStyle, actionTextStyle, actionsStyle, backdropStyle, sheetStyle } from '../style';
+import { actionStyle, actionTextStyle, actionsStyle, backdropStyle, quietActionStyle, quietTextStyle, sheetStyle } from '../style';
 import type { ConfirmSheetProps } from '../types';
 
 /**
@@ -15,7 +15,8 @@ const layout = vi.hoisted(() => ({ width: 'compact' as 'compact' | 'regular' }))
 const effects = vi.hoisted(() => [] as (() => void | (() => void))[]);
 const refs = vi.hoisted(() => ({ store: [] as { current: unknown }[], at: 0 }));
 const safeArea = vi.hoisted(() => ({ insets: null as { top: number; right: number; bottom: number; left: number } | null }));
-vi.mock('react-native', () => ({ Modal: 'Modal', Platform: platform, Pressable: 'Pressable', Text: 'Text', View: 'View' }));
+const announce = vi.hoisted(() => vi.fn());
+vi.mock('react-native', () => ({ AccessibilityInfo: { announceForAccessibility: announce }, Modal: 'Modal', Platform: platform, Pressable: 'Pressable', Text: 'Text', View: 'View' }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaInsetsContext: { name: 'insets' } }));
 vi.mock('../../Heading', () => ({ Body: 'Body', Heading: 'Heading' }));
 vi.mock('../../Layout', () => ({ useLayoutClass: () => ({ width: layout.width }) }));
@@ -201,5 +202,111 @@ describe('ConfirmSheet', () => {
     const row = tree.find((e) => e.type === 'View' && (e.props.style as Record<string, unknown>)?.flexDirection === 'row')!;
     expect(row).toBeDefined();
     layout.width = 'compact';
+  });
+});
+
+describe('[OA] ConfirmSheet for Remove from this device (OA-0b addendum; AMENDMENTS-ONE-ACCOUNT-MANY-USERS 10.4)', () => {
+  const buttons = (tree: El[]): [unknown, string][] =>
+    tree.filter((e) => e.type === 'Pressable' && e.props.accessibilityRole === 'button').map((b) => [b.props.testID, textOf(b)]);
+
+  it('the danger confirm is feedback.danger with the white label, only when asked; Keep stays first', () => {
+    expect(actionStyle('confirm', false, { pressed: false }, 'danger')).toMatchObject({ backgroundColor: colors.feedback.danger, borderColor: colors.feedback.danger, minHeight: touchTarget.min, width: '100%' });
+    expect(actionStyle('confirm', true, { pressed: true }, 'danger')).toMatchObject({ backgroundColor: colors.feedback.danger, borderColor: colors.text.primary, borderWidth: borderWidth.thick, flexGrow: 1 });
+    expect(actionStyle('confirm', false, { pressed: false, focused: true }, 'danger')).toMatchObject({ borderColor: colors.border.focus });
+    // The tone never reaches the safe choice, and the default confirm keeps the primary fill.
+    expect(JSON.stringify(actionStyle('cancel', false, { pressed: false }, 'danger'))).not.toContain(colors.feedback.danger);
+    expect(actionStyle('confirm', false, { pressed: false })).toMatchObject({ backgroundColor: colors.brand.primary });
+    const tree = render(props({ title: 'Remove anyway?', cancelLabel: 'Keep', confirmLabel: 'Remove', confirmTone: 'danger' }));
+    expect(buttons(tree)).toEqual([
+      ['confirm-sheet-cancel', 'Keep'],
+      ['confirm-sheet-confirm', 'Remove'],
+    ]);
+    const style = (byTestId(tree, 'confirm-sheet-confirm')!.props.style as (s: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
+    expect(style.backgroundColor).toBe(colors.feedback.danger);
+  });
+
+  it('the unsaved sheet: the main action first, the cancel, then the quiet action; a detail paragraph is described too', () => {
+    const onQuiet = vi.fn();
+    const tree = render(props({ title: 'Remove Jun?', message: 'Only on this device.', detail: 'Their place stays.', confirmLabel: 'Save progress first', cancelLabel: 'Cancel', confirmFirst: true, quietLabel: 'Remove anyway', onQuiet }));
+    expect(buttons(tree)).toEqual([
+      ['confirm-sheet-confirm', 'Save progress first'],
+      ['confirm-sheet-cancel', 'Cancel'],
+      ['confirm-sheet-quiet', 'Remove anyway'],
+    ]);
+    const sheet = byTestId(tree, 'confirm-sheet')!;
+    const ids = String(sheet.props['aria-describedby']).split(' ');
+    expect(ids.map((d) => textOf(tree.find((e) => e.props.nativeID === d)!))).toEqual(['Only on this device.', 'Their place stays.']);
+    (byTestId(tree, 'confirm-sheet-quiet')!.props.onPress as () => void)();
+    expect(onQuiet).toHaveBeenCalledTimes(1);
+    const quiet = (byTestId(tree, 'confirm-sheet-quiet')!.props.style as (s: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
+    expect(quiet).toMatchObject({ minHeight: touchTarget.min, backgroundColor: 'transparent' });
+  });
+
+  it('the quiet action is underlined secondary text, a touch target, with a focus ring and a pressed tint', () => {
+    expect(quietTextStyle(typeScale(1))).toMatchObject({ color: colors.text.secondary, textDecorationLine: 'underline' });
+    expect(quietActionStyle(true, { pressed: true, focused: true })).toMatchObject({ flexBasis: '100%', backgroundColor: colors.surface.sunken, borderColor: colors.border.focus, borderWidth: borderWidth.thick });
+    expect(quietActionStyle(false, { pressed: false })).toMatchObject({ width: '100%', borderWidth: 0 });
+  });
+
+  it('a detail without a message is the whole description; neither gives none', () => {
+    const tree = render(props({ message: undefined, detail: 'Their place stays.' }));
+    const sheet = byTestId(tree, 'confirm-sheet')!;
+    expect(textOf(tree.find((e) => e.props.nativeID === sheet.props['aria-describedby'])!)).toBe('Their place stays.');
+  });
+
+  it('busy: only the cancel, the message marked busy, no quiet action', () => {
+    const tree = render(props({ message: 'Checking...', busy: true, confirmFirst: true, quietLabel: 'Remove anyway', onQuiet: vi.fn() }));
+    expect(buttons(tree)).toEqual([['confirm-sheet-cancel', 'Keep playing']]);
+    const sheet = byTestId(tree, 'confirm-sheet')!;
+    expect(tree.find((e) => e.props.nativeID === sheet.props['aria-describedby'])!.props['aria-busy']).toBe(true);
+  });
+
+  it('a quiet label without its handler draws nothing', () => {
+    expect(byTestId(render(props({ quietLabel: 'Remove anyway' })), 'confirm-sheet-quiet')).toBeUndefined();
+  });
+
+  it('on the web the cancel takes focus even when the main action is drawn first, and again when the step changes', () => {
+    const log: string[] = [];
+    vi.stubGlobal('document', { activeElement: null, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+    const tree = render(props({ confirmFirst: true, quietLabel: 'Remove anyway', onQuiet: vi.fn() }));
+    (byTestId(tree, 'confirm-sheet-cancel') as unknown as { ref: (n: unknown) => void }).ref({ focus: () => log.push('cancel') });
+    expect((byTestId(tree, 'confirm-sheet-confirm') as unknown as { ref?: unknown }).ref).toBeFalsy();
+    effects[0]!();
+    effects[1]!();
+    expect(log).toEqual(['cancel', 'cancel']);
+    // Closed, or on native: the step effect does nothing.
+    render(props({ visible: false }));
+    expect(effects[1]!()).toBeUndefined();
+    platform.OS = 'ios';
+    render(props());
+    expect(effects[1]!()).toBeUndefined();
+    platform.OS = 'web';
+    vi.unstubAllGlobals();
+  });
+
+  it('a code line (the Rescue Code on the saved step) sits under the message, before the detail, and is described too', () => {
+    const tree = render(props({ title: 'Remove Jun?', message: 'Their progress is saved.', code: 'TIGER-MOON 1234', detail: 'Their place stays.' }));
+    expect(textOf(byTestId(tree, 'confirm-sheet-code')!)).toBe('TIGER-MOON 1234');
+    const sheet = byTestId(tree, 'confirm-sheet')!;
+    const ids = String(sheet.props['aria-describedby']).split(' ');
+    expect(ids.map((d) => textOf(tree.find((e) => e.props.nativeID === d)!))).toEqual(['Their progress is saved.', 'TIGER-MOON 1234', 'Their place stays.']);
+    expect(byTestId(render(props()), 'confirm-sheet-code')).toBeUndefined();
+  });
+
+  it('on iOS and Android a step change while open is announced; the opening and the web announce nothing', () => {
+    announce.mockClear();
+    platform.OS = 'android';
+    render(props({ title: 'Remove Jun?', message: 'Only on this device.' }));
+    const step = effects[2]!;
+    step();
+    expect(announce).not.toHaveBeenCalled();
+    step();
+    expect(announce).toHaveBeenCalledWith('Remove Jun? Only on this device.');
+    platform.OS = 'web';
+    announce.mockClear();
+    render(props());
+    effects[2]!();
+    effects[2]!();
+    expect(announce).not.toHaveBeenCalled();
   });
 });

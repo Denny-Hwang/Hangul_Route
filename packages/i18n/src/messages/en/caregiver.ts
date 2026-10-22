@@ -73,6 +73,26 @@ export const caregiver = {
     /** The wording the PIN screen and the first-run PIN field share. */
     mismatch: "Those didn't match. Let's start again.",
     cooldown: (seconds: number) => `Let's take a short break. Try again in ${seconds}s.`,
+    /** [OA] A pause of a minute or more (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3); under a minute is `cooldown`. */
+    cooldownMinutes: (n: number) => `Let's take a short break. Try again in ${n} min.`,
+    /** [OA] From the 3rd pause, on the Grown-up area destination only (CS-21). */
+    cooldownHelp: 'You can also set a new PIN with Forgot PIN?',
+    /** [OA] OA-D21: shown once at the next Grown-up area entry after a PIN set by the 24-hour wait. */
+    resetByWaitNotice: 'The grown-up PIN was changed after the 24-hour wait. If that was not you, change it now.',
+    resetByWaitChange: 'Change PIN',
+    /** [OA] Section 8.2: the lock and face or fingerprint switches are disabled with this hint while no PIN exists. */
+    needsPinFirst: 'Set a grown-up PIN first.',
+    /**
+     * [OA] Face or fingerprint for grown-ups (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.6, row OA-9), native only:
+     * `cta` above the pad in verify mode (also the system prompt's title), `toggle` and `warning` on the Grown-up
+     * area switch, `changed` in the subtitle's place after an enrolment change voided the shortcut.
+     */
+    biometric: {
+      cta: 'Use face or fingerprint',
+      toggle: 'Face or fingerprint for grown-ups',
+      warning: 'Anyone whose face or fingerprint is saved on this device can use it.',
+      changed: 'Face or fingerprint changed on this device. Enter the PIN.',
+    },
     entry: {
       createAgain: 'Enter it once more',
       verifySubtitle: 'Enter your 4-digit PIN to continue.',
@@ -110,6 +130,18 @@ export const caregiver = {
         /** Also the Restore screen's invalid-code line (`claimErrorMessage('invalid')`): one message for both. */
         badFormat:
           'Type every word and the number, like TIGER-MOON-RIVER-APPLE-482139 (older codes: TIGER-MOON-4821).',
+      },
+      /**
+       * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 (row OA-6): the third way to a new PIN, first on the web while
+       * online. `newPinTitle` titles the new-PIN screen the console's ticket opens; `expired` shows over the start screen
+       * when that ticket was too old, already used or for another PIN.
+       */
+      signIn: {
+        heading: 'Sign in to the account',
+        caption: 'Sign in as the grown-up who uses this device. Then choose a new PIN.',
+        button: 'Sign in',
+        newPinTitle: 'Choose a new grown-up PIN',
+        expired: 'That took a while. Sign in again to set a new PIN.',
       },
     },
   },
@@ -1065,5 +1097,37 @@ export const caregiver = {
     opensTab: 'Opens in a new tab',
     /** Under the card when the browser gave no new tab (a pop-up blocker, an in-app browser); the tap is kept, nothing else changes. */
     blocked: 'The new tab did not open. Allow pop-ups for this site, then try again.',
+  },
+
+  /**
+   * [OA] People on this device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.4): the lock switch of one learner, in
+   * Edit profile (row OA-5) and, with row OA-7a, on the person page. It needs a fresh grown-up PIN and is disabled
+   * with `pin.needsPinFirst` while no PIN exists.
+   */
+  people: {
+    lock: 'Lock with the grown-up PIN',
+    lockHint: "Good for a grown-up's own profile, so nobody else plays on it.",
+    /** [OA] Row OA-7a: the Grown-up area card listing every learner on the device, each row opening the person page. */
+    title: 'People on this device',
+    /** The person page's button; it asks a fresh PIN, then the ConfirmSheet below. Local only: no server call. */
+    remove: 'Remove from this device',
+    /** The ConfirmSheet's title, with the learner's name. */
+    removeAsk: (name: string) => `Remove ${name} from this device?`,
+    /** Saved: registered and nothing waiting to be pushed. */
+    removeSaved: 'Their progress is saved. Their Rescue Code brings it back on any device.',
+    /** Not saved after the sync attempt (offline, or the sync failed). */
+    removeUnsaved: 'Their progress is only on this device. Save it first to keep it.',
+    /** The unsaved sheet's main action: opens Save my progress for that learner. */
+    saveFirst: 'Save progress first',
+    /** The unsaved sheet's quiet third action; it opens the second step. */
+    removeAnyway: 'Remove anyway',
+    /** The second step's title (its Remove is the one danger-tone button, for grown-ups only). */
+    removeAnywayAsk: 'Remove anyway? Their cards and stars on this device will be gone.',
+    /** The second step's safe choice, first and focused. */
+    keep: 'Keep',
+    /** While the app tries to sync the learner before the sheet decides. */
+    checking: 'Checking that their progress is saved…',
+    /** On the saved and unsaved sheets when the learner has memberships: nothing changes on the server. */
+    spacesStay: 'Their place in a family or class stays. A grown-up can change it in the account pages.',
   },
 } as const;

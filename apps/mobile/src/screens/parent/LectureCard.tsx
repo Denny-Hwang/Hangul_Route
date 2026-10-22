@@ -12,6 +12,7 @@ import { PRESENTER_PATH } from '../../platform/presenter';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
 import { useProgressStore } from '../../store/progress-store';
 import { routeNextInputFor } from '../../store/route-next-input';
+import { passGate } from '../../store/gate-telemetry';
 
 /**
  * The Lecture mode card in the grown-up area of the learner app (AMENDMENTS-LECTURE-V2 section 3 E5, row LV-6;
@@ -134,7 +135,7 @@ export function LectureCard({
   if (Platform.OS !== 'web' || !flags.lectureModeEnabled || !presenterRootExists()) return null;
 
   const press = (href: () => string): void => {
-    if (!opensDirectly()) {
+    if (!passGate('LectureMode', opensDirectly())) {
       // An earlier "did not open" line would be stale after the PIN round trip.
       setBlocked(0);
       onGate();

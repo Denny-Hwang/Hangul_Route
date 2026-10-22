@@ -159,8 +159,8 @@ describe('scheduled · guardrail evaluator on D1', () => {
     const { raw, own, binding, prepared } = countingD1();
     await breach(own);
     await scheduled({ scheduledTime: NOW }, { DB: binding });
-    // the purge's 36 at most, then remote_config, learning_rollups and one UPDATE
-    expect(prepared()).toBeLessThanOrEqual(36 + 3);
+    // the purge's 41 at most ([OA] telemetry_daily step included), then remote_config, learning_rollups and one UPDATE
+    expect(prepared()).toBeLessThanOrEqual(41 + 3);
     expect(await own.remoteConfig()).toEqual([{ flag: 'dailyReview', on: true, pct: 10, updatedAt: new Date(NOW).toISOString(), reason: REASON }]);
     raw.close();
   });
@@ -175,7 +175,7 @@ describe('scheduled · guardrail evaluator on D1', () => {
     // dead rate counters for 5 full rounds of 200
     await own.addRateHits(Array.from({ length: SCHEDULED_PURGE_ROUNDS * NOTE_PURGE_LIMIT + 100 }, (_, i) => ({ key: `note:acct:k${i}`, at: '2026-09-01T00:00:00.000Z' })));
     await scheduled({ scheduledTime: NOW }, { DB: binding });
-    expect(prepared()).toBe(36 + 1 + 1 + MAX_GUARDRAIL_LOWERS);
+    expect(prepared()).toBe(41 + 1 + 1 + MAX_GUARDRAIL_LOWERS);
     expect(prepared()).toBeLessThanOrEqual(46);
     expect((await own.remoteConfig()).filter((r) => r.pct === 10)).toHaveLength(MAX_GUARDRAIL_LOWERS);
     raw.close();

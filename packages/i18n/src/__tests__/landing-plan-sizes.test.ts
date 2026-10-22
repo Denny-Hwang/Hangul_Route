@@ -75,3 +75,23 @@ describe('Terms: what each plan holds (landing.legal.terms.sections.billing.para
     expect(lookup(ko, 'landing.legal.terms.sections.billing.paragraphs.sizes')).toBeUndefined();
   });
 });
+
+/**
+ * F-SITE-002 site facts (2026-10-21). The site never states the free limits (owner decision 2026-10-21): no free
+ * sizes line in any locale. The managed line for while plans are coming is defined in every overlay.
+ */
+describe('landing.plans: no free limits, and the managed line for while plans are coming', () => {
+  it('has no free sizes line in any locale', () => {
+    for (const locale of LOCALES) {
+      expect(Object.keys(getMessages(locale).landing.plans), locale).not.toContain('freeSizes');
+    }
+    expect(lookup(es, 'landing.plans.freeSizes')).toBeUndefined();
+    expect(lookup(ko, 'landing.plans.freeSizes')).toBeUndefined();
+  });
+
+  it('es and ko overlays define the managed line for while plans are coming', () => {
+    expect(en.landing.plans.managedLater).toBe('When plans arrive, you will manage them at app.hangulroute.com after you sign in.');
+    expect(lookup(es, 'landing.plans.managedLater')).toBeTypeOf('string');
+    expect(lookup(ko, 'landing.plans.managedLater')).toBeTypeOf('string');
+  });
+});

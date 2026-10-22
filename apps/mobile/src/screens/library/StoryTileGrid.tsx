@@ -24,6 +24,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier } from '../../store/tier-store';
+import { passGate } from '../../store/gate-telemetry';
 import { useActiveRouteNext } from '../use-route-next';
 import { StoryTile } from './StoryTile';
 import { useStoriesLoaded } from '../story-content';
@@ -109,7 +110,7 @@ export function useStoryTiles(entries: readonly StoryIndexEntry[], openEpisode?:
         void track({ name: 'story.locked.tapped', profileId, payload: { storyId: item.entry.storyId } });
         void track(helpAskedEvent(profileId, 'library', ask.audience));
         // The grown-up gate Journey uses for a locked stage (only reachable with gating on).
-        const gate = lockedStoryGate(opensDirectly(false));
+        const gate = lockedStoryGate(passGate('Paywall', opensDirectly(false)));
         if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
         else navigation.navigate('PinEntry', gate.params);
         return;

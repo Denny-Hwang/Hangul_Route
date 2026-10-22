@@ -8,7 +8,7 @@ import { sitePath } from './site-path';
  * Per-locale metadata and hreflang for the site's pages (F-I18N-001 §3.4, PR 11c). Each page in `(en)` and
  * `(loc)/[locale]` exports `generateMetadata` from here: the title, description and Open Graph words come from
  * that locale's dictionary, and `alternates.languages` links the same page in every locale a visitor can
- * reach. While es and ko are hidden there are no alternates, so the English pages' HTML stays as it was.
+ * reach. es and ko ship (LOCALE_STATUS, 2026-10-14), so every page names its alternates; a hidden locale would name none.
  */
 
 /** The production origin: hreflang URLs are absolute, resolved against it (`metadataBase`). */

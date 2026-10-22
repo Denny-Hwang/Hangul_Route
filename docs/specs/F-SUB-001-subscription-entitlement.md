@@ -42,6 +42,7 @@ ProfileScreen status display, since Stages 2–7 content is still preview.
   tier, and for any stage when tier is `premium`.
 - Both functions are pure and unit-tested across all branches.
 - `account-store` persists the family subscription and rehydrates it.
+  > **Amended by AMENDMENTS-ONE-ACCOUNT-MANY-USERS (OA-8, 2026-10-21).** The subscription no longer covers every profile on the device: it is capped at 4 learners with grandfathering, kept in `account:subscriptionCovers` (section 10.5 there).
 - ProfileScreen shows the current plan (Free / Premium) and what it unlocks.
 - `pnpm --filter @hangul-route/mobile typecheck` and `test` pass.
 

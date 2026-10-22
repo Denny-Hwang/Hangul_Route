@@ -36,6 +36,9 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   'caregiver.dashboard.privacy.bodyDeviceOnly': ['progress "saved on the device" with no word of the backup'],
   // The create-profile form's ready line on a build with cloud saving off (F-LEARN-001 §3.2 item 6, `readyLine`).
   'learner.createProfile.ready.lineDeviceOnly': ['progress "saved on the device" with no word of the backup'],
+  // [OA] Remove from this device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.4, row OA-7a): said of one learner only
+  // after the sync check found progress the server does not hold yet, with Save progress first beside it.
+  'caregiver.people.removeUnsaved': ['"on this device only"'],
 };
 
 /** Every rendered output of every English message: strings, array items, and one output per SAMPLES row. */

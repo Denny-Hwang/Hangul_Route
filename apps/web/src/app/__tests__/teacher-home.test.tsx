@@ -225,3 +225,70 @@ describe('the teacher home (F-APP-001 A-5a)', () => {
     expect(allText(r)).toContain(en.cantReach);
   });
 });
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3, row OA-4b: the chooser's School row opens the teacher home with
+ * `focus=school`; focus moves to the first school card, then the query is removed with `history.replaceState`.
+ */
+describe('the teacher home with focus=school (row OA-4b)', () => {
+  function stubWindow(search: string) {
+    const replaced: string[] = [];
+    vi.stubGlobal('window', {
+      location: { origin: 'https://app.hangulroute.com', pathname: '/teach/home', search, hash: '' },
+      history: { state: { tree: 1 }, replaceState: (_state: unknown, _title: string, url: string) => void replaced.push(url) },
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
+    return replaced;
+  }
+
+  async function renderWithNodes(list: SpaceListItem[]) {
+    const focused: string[] = [];
+    result.list = { ok: true, data: list };
+    await act(async () => {
+      mounted = create(<HomePage />, {
+        createNodeMock: (element) => ({ focus: () => void focused.push(String((element.props as Record<string, unknown>)['data-testid'])) }),
+      });
+    });
+    return { r: mounted as unknown as ReactTestRenderer, focused };
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('moves focus to the first school card, then removes focus from the address and keeps the rest', async () => {
+    const replaced = stubWindow('?focus=school&lang=ko');
+    const second = item('sp_s2', 'school', 'owner');
+    const { r, focused } = await renderWithNodes([klass, school, second]);
+    expect(focused).toEqual(['space-row-sp_s']);
+    expect(replaced).toEqual(['/teach/home?lang=ko']);
+    // The card is a script-only focus target, never a tab stop; the others are untouched.
+    expect(byTestId(r, 'space-row-sp_s')[0]?.props.tabIndex).toBe(-1);
+    expect(byTestId(r, 'space-row-sp_s2')[0]?.props.tabIndex).toBeUndefined();
+    expect(byTestId(r, 'space-row-sp_c')[0]?.props.tabIndex).toBeUndefined();
+  });
+
+  it('without focus=school nothing is focused and the address is left alone', async () => {
+    const replaced = stubWindow('?lang=ko');
+    const { focused } = await renderWithNodes([klass, school]);
+    expect(focused).toEqual([]);
+    expect(replaced).toEqual([]);
+  });
+
+  it('with no school card the query is still removed and nothing moves', async () => {
+    const replaced = stubWindow('?focus=school');
+    const { focused } = await renderWithNodes([klass]);
+    expect(focused).toEqual([]);
+    expect(replaced).toEqual(['/teach/home']);
+  });
+
+  it('a list that failed keeps the query until the list is drawn', async () => {
+    const replaced = stubWindow('?focus=school');
+    result.list = { ok: false, error: 'network' };
+    await act(async () => {
+      mounted = create(<HomePage />, { createNodeMock: () => ({ focus: () => undefined }) });
+    });
+    expect(replaced).toEqual([]);
+  });
+});
