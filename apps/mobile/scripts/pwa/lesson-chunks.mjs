@@ -58,7 +58,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 1,253,769 B gzip (release `build:web`, cache cleared), so the line is that plus 7,895 B.
   // [GU] Row GU-5 adds the try trigger, the chooser's guest tiles, the owner's keep and the 16.3 English strings; the
   // grown-up side of an unsaved quest (People on this device's row, the guest-only gate) is a screen chunk of its own
-  // (guest-keep-chunk, 5,381 B raw): 4,771,805 B raw / 1,255,131 B gzip (release `build:web`), under the line, unchanged.
+  // (guest-keep-chunk, 5,381 B raw): 4,771,805 B raw / 1,255,131 B gzip (release `build:web`), and 4,774,256 B raw /
+  // 1,255,798 B gzip merged onto the GU-4 review head (cache cleared), under the line, unchanged.
   startBundleRaw: 4_775_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
