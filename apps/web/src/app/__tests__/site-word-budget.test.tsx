@@ -7,6 +7,7 @@ import { LearnersPage } from '../../components/landing/LearnersPage';
 import { ParentsPage } from '../../components/landing/ParentsPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { SITE_CLAIMS } from '../../data/site-claims';
 
 /**
  * Visible-word budgets of the site pages without a browser (F-SITE-002 §3.11): each page rendered in its longest
@@ -83,8 +84,13 @@ describe('visible-word budgets with every claim on (F-SITE-002 §3.11)', () => {
     }
   });
 
-  it(`/: at most ${HOME_WORDS} words`, () => {
-    const words = visibleWords(renderToStaticMarkup(<HomePage locale="en" claims={ALL_CLAIMS_ON} />));
+  // Today's claims too: with some claims off a base line can be longer than the claim line it gives way to (the
+  // home's step 3 `collect` body is longer than `routeBody`), so every claim on is not always the longest state.
+  it.each([
+    ['every claim on', ALL_CLAIMS_ON],
+    ["today's claims", SITE_CLAIMS],
+  ] as const)(`/: at most ${HOME_WORDS} words (%s)`, (_state, claims) => {
+    const words = visibleWords(renderToStaticMarkup(<HomePage locale="en" claims={claims} />));
     expect(words.length).toBeGreaterThan(80);
     expect(words.length).toBeLessThanOrEqual(HOME_WORDS);
   });

@@ -76,7 +76,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.who.items).toEqual({
       learners: {
         title: 'Learners',
-        body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
+        body: 'Five-minute quests, a guide who never scolds, and Korean culture cards.',
       },
       parents: {
         title: 'Parents and caregivers',
@@ -94,11 +94,11 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.how.title).toBe('How it works');
     expect(l.home.how.steps).toEqual({
       start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
-      quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
+      quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures.' },
       collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
     });
     expect(Object.keys(l.home.how.steps)).toEqual(['start', 'quests', 'collect']);
-    expect(l.home.how.levelBody).toBe('Pick who learns, or check your level.');
+    expect(l.home.how.levelBody).toBe('Pick a name and a Hoya. A level check is optional.');
     expect(l.home.how.routeBody).toBe('Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.');
   });
 

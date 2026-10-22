@@ -19,7 +19,10 @@
  * |                                    | and a site redeploy; a console or app kill switch alone never moves it   |
  * | `paidPlans: 'inApp'`               | a PR after the owner turns on Stripe Live (sandbox never counts)         |
  * | `levelCheck`                       | F-PLC-001 P-10 flag flip (`placementEnabled` launch default true);       |
- * |                                    | flipped on by owner decision 2026-10-21                                  |
+ * |                                    | flipped on by owner decision 2026-10-21. Rollback (as LV-D1): placement  |
+ * |                                    | off for more than an incident (`EXPO_PUBLIC_PLACEMENT_ENABLED` off for   |
+ * |                                    | more than a day) means a PR setting it back to `false` and a site        |
+ * |                                    | redeploy; the app's kill switch alone never moves it                     |
  *
  * Page components take `claims` as a prop that defaults to `SITE_CLAIMS`. F-BILL-002 B-7 reads the boolean
  * claims for its signed-in "what the plan includes" lines; `CLAIM_REQUIRES_PAID` applies to the public site only.

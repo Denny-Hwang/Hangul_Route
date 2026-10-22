@@ -83,11 +83,11 @@ export const landing = {
       title: 'Cómo funciona',
       steps: {
         start: { title: 'Crea un perfil', body: 'Elige un nombre y un Hoya.' },
-        quests: { title: 'Aprende en misiones de cinco minutos', body: 'Letras, sonidos y primeras palabras, con sonido e imágenes en cada pantalla.' },
+        quests: { title: 'Aprende en misiones de cinco minutos', body: 'Letras, sonidos y primeras palabras, con sonido e imágenes.' },
         collect: { title: 'Colecciona y sigue adelante', body: 'Gana tarjetas de cultura coreana. Tu progreso se guarda y se respalda.' },
       },
       routeBody: 'Gana tarjetas de cultura coreana y mira toda tu Ruta de aprendizaje: dónde estás y qué sigue.',
-      levelBody: 'Elige quién aprende o comprueba tu nivel.',
+      levelBody: 'Elige un nombre y un Hoya. La prueba de nivel es opcional.',
     },
     promises: {
       label: 'Nuestras promesas',
@@ -160,7 +160,7 @@ export const landing = {
         // The button label is learner.placement.invite.knowSome in Spanish, word for word; "prueba de nivel" as in the app.
         level: {
           q: 'Ya sé algo de hangul. ¿Tengo que empezar desde el principio?',
-          a: 'No. Al comenzar, toca Ya sé algo de coreano y haz una breve prueba de nivel. Hoya te sugiere por dónde empezar.',
+          a: 'No. Al comenzar, toca «Ya sé algo de coreano» y haz una prueba de nivel. Hoya te sugiere por dónde empezar.',
         },
       },
       after: {

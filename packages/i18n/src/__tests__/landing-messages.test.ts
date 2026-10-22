@@ -47,9 +47,9 @@ describe('landing: sentences that take a value render the former text', () => {
     }
     expect(l.persona.learners.faq.level).toEqual({
       q: 'I already know some Hangul. Do I have to start at the beginning?',
-      a: 'No. When you start, tap I already know some Korean and take a short level check. Hoya suggests where to begin.',
+      a: 'No. When you start, tap “I already know some Korean” and take a level check. Hoya suggests where to begin.',
     });
-    expect(l.home.how.levelBody).toBe('Pick who learns, or check your level.');
+    expect(l.home.how.levelBody).toBe('Pick a name and a Hoya. A level check is optional.');
     expect(l.persona.learners.after).toEqual({
       title: 'After the alphabet',
       body: 'Words, short sentences, conversations and heritage stories, in the same five-minute quests.',

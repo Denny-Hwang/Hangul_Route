@@ -5,9 +5,13 @@ import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNER
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { AboutPage } from '../../components/landing/AboutPage';
+import { HomePage } from '../../components/landing/HomePage';
 import { LearnersPage } from '../../components/landing/LearnersPage';
 import { ParentsPage } from '../../components/landing/ParentsPage';
+import { PrivacyPage } from '../../components/landing/PrivacyPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
+import { TermsPage } from '../../components/landing/TermsPage';
 import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { siteGames } from '../../data/minigame-catalog';
 import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
@@ -538,22 +542,35 @@ describe('persona page modules hold no console, demo, account or billing path', 
 });
 
 describe('no free limits on the site (owner decision 2026-10-21)', () => {
-  // The stand-alone free class cap is the one free limit no plan line shares (the Group License also holds 50).
+  // The stand-alone free class cap is the one free limit no plan line shares (the Group License also holds 50). The
+  // figure next to any word for a learner, or the number spelled out, counts as stating it.
   const freeClass: Record<'en' | 'es' | 'ko', RegExp> = {
-    en: new RegExp(`\\b${FREE_CLASS_STUDENT_CAP} (students?|learners?)\\b`),
-    es: new RegExp(`\\b${FREE_CLASS_STUDENT_CAP} estudiantes?\\b`),
-    ko: new RegExp(`${FREE_CLASS_STUDENT_CAP}명`),
+    en: new RegExp(`\\b(${FREE_CLASS_STUDENT_CAP}|twenty) (students?|learners?|kids?|children|child|pupils?)\\b`, 'i'),
+    es: new RegExp(`\\b(${FREE_CLASS_STUDENT_CAP}|veinte) (estudiantes?|alumn[oa]s?|niñ[oa]s?|aprendices|personas?)\\b`, 'i'),
+    ko: new RegExp(`(${FREE_CLASS_STUDENT_CAP}|스무)\\s?(명|학생)`),
   };
   const states: ReadonlyArray<Readonly<SiteClaims>> = [SITE_CLAIMS, { ...SITE_CLAIMS, paidPlans: 'inApp' }, ALL_CLAIMS_ON, ALL_CLAIMS_OFF];
 
-  it.each(['en', 'es', 'ko'] as const)('%s: no persona page states the free class limit, in any claim state', (locale) => {
-    for (const Page of [LearnersPage, ParentsPage, TeachersPage]) {
+  it.each(['en', 'es', 'ko'] as const)('%s: no persona page or the home states the free class limit, in any claim state', (locale) => {
+    for (const Page of [LearnersPage, ParentsPage, TeachersPage, HomePage]) {
       for (const claims of states) {
-        expect(textOf(mainOf(renderToStaticMarkup(<Page locale={locale} claims={claims} />))), `${locale} paidPlans ${claims.paidPlans}`).not.toMatch(
+        expect(textOf(renderToStaticMarkup(<Page locale={locale} claims={claims} />)), `${locale} paidPlans ${claims.paidPlans}`).not.toMatch(
           freeClass[locale],
         );
       }
     }
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s: About, Privacy and Terms do not state the free class limit either', (locale) => {
+    for (const Page of [AboutPage, PrivacyPage, TermsPage]) {
+      expect(textOf(renderToStaticMarkup(<Page locale={locale} />)), `${locale} ${Page.name}`).not.toMatch(freeClass[locale]);
+    }
+  });
+
+  it('the guard matches the line it exists to keep out', () => {
+    expect(`up to ${FREE_CLASS_STUDENT_CAP} students`).toMatch(freeClass.en);
+    expect(`hasta ${FREE_CLASS_STUDENT_CAP} estudiantes`).toMatch(freeClass.es);
+    expect(`최대 ${FREE_CLASS_STUDENT_CAP}명`).toMatch(freeClass.ko);
   });
 });
 

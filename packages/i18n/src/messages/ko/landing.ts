@@ -71,7 +71,7 @@ export const landing = {
       items: {
         learners: {
           title: '학습자',
-          body: '5분 퀘스트, 절대 혼내지 않는 길잡이, 그리고 모으는 재미가 있는 한국 문화 카드.',
+          body: '5분 퀘스트, 절대 혼내지 않는 길잡이, 그리고 한국 문화 카드.',
         },
         parents: {
           title: '부모님과 보호자',
@@ -87,11 +87,11 @@ export const landing = {
       title: '이렇게 해요',
       steps: {
         start: { title: '프로필 만들기', body: '이름과 호야를 골라요.' },
-        quests: { title: '5분 퀘스트로 배우기', body: '글자, 소리, 첫 낱말을 화면마다 소리와 그림으로 배워요.' },
+        quests: { title: '5분 퀘스트로 배우기', body: '글자, 소리, 첫 낱말을 소리와 그림으로 배워요.' },
         collect: { title: '모으면서 계속하기', body: '한국 문화 카드를 받아요. 진도는 저장되고 백업돼요.' },
       },
       routeBody: '한국 문화 카드를 받고, 지금 있는 곳과 다음에 할 것을 학습 루트 전체로 한눈에 봐요.',
-      levelBody: '누가 배우는지 고르거나, 수준 확인을 해요.',
+      levelBody: '이름과 호야를 골라요. 수준 확인은 선택 사항이에요.',
     },
     promises: {
       label: '우리의 약속',
@@ -162,7 +162,7 @@ export const landing = {
         // The button label is learner.placement.invite.knowSome in Korean, word for word (glossary: 수준 확인).
         level: {
           q: '한글을 조금 알아요. 처음부터 시작해야 하나요?',
-          a: '아니요. 시작할 때 ‘한국어를 조금 알아요’를 누르고 짧은 수준 확인을 해요. 호야가 어디서 시작할지 알려 줘요.',
+          a: '아니요. 시작할 때 ‘한국어를 조금 알아요’를 누르고 수준 확인을 해요. 호야가 어디서 시작할지 알려 줘요.',
         },
       },
       after: {

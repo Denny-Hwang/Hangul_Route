@@ -127,7 +127,8 @@ describe('the blocks under the hero (L1)', () => {
     // 2026-10-21); landing-claims.test.tsx pins both states.
     expect(SITE_CLAIMS.levelCheck).toBe(true);
     expect(textOf(how)).toContain(H.how.levelBody);
-    expect(textOf(how)).not.toContain(H.how.steps.start.body);
+    // The level line opens with the base line's words, which then appear once (not a second time on their own).
+    expect(textOf(how).split(H.how.steps.start.body)).toHaveLength(2);
     expect(textOf(how)).toContain(H.how.steps.quests.body);
     expect(textOf(how)).toContain(H.how.steps.collect.body);
     expect(text).not.toContain(H.how.routeBody);

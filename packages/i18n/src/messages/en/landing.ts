@@ -102,7 +102,7 @@ export const landing = {
   /**
    * The layered home `/` (F-SITE-002 §3.3, appendix B.1). `hero.title` is the tagline; the taught letter in Hoya's
    * bubble is passed in with its romanization (CLAUDE.md §1; the page passes the letter's teaching sound value, e.g.
-   * `g/k` for the first letter). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on;
+   * `a` for the first letter, ㅏ). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on;
    * `how.levelBody` replaces step 1's line only while the `levelCheck` claim is on.
    * The promises are titles only; their explanations live on the persona pages.
    */
@@ -129,7 +129,7 @@ export const landing = {
       items: {
         learners: {
           title: 'Learners',
-          body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
+          body: 'Five-minute quests, a guide who never scolds, and Korean culture cards.',
         },
         parents: {
           title: 'Parents and caregivers',
@@ -146,16 +146,17 @@ export const landing = {
       steps: {
         /** The first run: a name and a Hoya (`learner.createProfile.avatarHeading` "Pick a Hoya"); "No sign-up to start" is in the hero facts. */
         start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
-        quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
+        quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures.' },
         /** "Saved and backed up": the app backs up every learner's progress with no sign-in (see `persona.parents.safe.bullets.backup`). */
         collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
       },
       routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
       /**
        * Step 1's line while the `levelCheck` claim is on (F-PLC-001: the level check is offered to every new profile).
-       * One line, not a fourth step: the home's word budget (280, F-SITE-002 §3.11) leaves room for one more word.
+       * It follows step 1's title ("Make a profile"), and the level check comes after the profile, as in the app. One
+       * line, not a fourth step: the home's word budget (280, F-SITE-002 §3.11) is full with it.
        */
-      levelBody: 'Pick who learns, or check your level.',
+      levelBody: 'Pick a name and a Hoya. A level check is optional.',
     },
     promises: {
       /** The section's visually hidden heading. */
@@ -261,7 +262,7 @@ export const landing = {
          */
         level: {
           q: 'I already know some Hangul. Do I have to start at the beginning?',
-          a: 'No. When you start, tap I already know some Korean and take a short level check. Hoya suggests where to begin.',
+          a: 'No. When you start, tap “I already know some Korean” and take a level check. Hoya suggests where to begin.',
         },
       },
       /** One paragraph under "What you learn first": what comes after Stage 1. */

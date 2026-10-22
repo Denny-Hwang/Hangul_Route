@@ -236,7 +236,10 @@ describe('site text — the level-check lines follow the levelCheck claim', () =
         const shown = steps(home);
         expect(shown).toHaveLength(3);
         expect(shown[0]).toBe(`1 ${H.steps.start.title} ${H.levelBody}`);
-        expect(textOf(home)).not.toContain(H.steps.start.body);
+        // The level line opens with the base line's words (it follows "Make a profile"), so the base line is not shown
+        // on its own as well: those words appear once, inside the level line.
+        expect(H.levelBody).not.toBe(H.steps.start.body);
+        expect(textOf(home).split(H.steps.start.body)).toHaveLength(2);
       });
     }
   }
