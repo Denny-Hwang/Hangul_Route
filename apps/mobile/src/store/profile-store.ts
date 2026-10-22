@@ -93,7 +93,8 @@ interface Actions {
     /**
      * [GU] Row GU-5 (section 9.2): `keepActive` is **Keep as a learner** from People on this device: the active learner
      * stays active (the new learner is not switched to), so the grown-up session that asked for it stays open and the
-     * grown-up returns to the Grown-up area. A device with no active learner still makes the new one active.
+     * grown-up returns to the Grown-up area. A device with no active learner still makes the new one active, and the
+     * grown-up session stays open then too (no learner was in front to hand it to; the grown-up is still in the area).
      */
     options?: { keepActive?: boolean },
   ) => Promise<GuestPromotion>;
@@ -492,7 +493,8 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
           return;
         }
         persistActive(next.activeId);
-        if (changed) closeGrownUpSession('switch');
+        // [GU] Row GU-5 review: the owner's keep never closes the grown-up session that asked for it.
+        if (changed && options.keepActive !== true) closeGrownUpSession('switch');
         let confirmed = false;
         try {
           confirmed = storedProfileItems<Profile>(await readJsonStrict<unknown>(PROFILES_KEY)).some((p) => p.id === created.id);

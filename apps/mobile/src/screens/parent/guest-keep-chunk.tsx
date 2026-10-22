@@ -12,7 +12,7 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
 import { LinkButton } from '../../components/LinkButton';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { flags } from '../../config/flags';
@@ -20,7 +20,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { needsFreshPin } from '../../logic/profiles/session';
 import { useAccountStore } from '../../store/account-store';
-import { removeLiveGuest } from '../../store/guest-remove';
+import { gateOpensDirectlyAfterRemove, removeLiveGuest } from '../../store/guest-remove';
 import { useUiStore } from '../../store/ui-store';
 
 /**
@@ -32,6 +32,19 @@ export const SCREEN_CHUNK = 'screen-chunk:guest-keep';
 
 /** The cub beside the row's text (People on this device, D17). */
 const AVATAR_SIZE = 40;
+
+/**
+ * [GU] Row GU-5 review: a Remove whose sweep could not read the storage (nothing was removed) keeps its sheet open with
+ * the shipped `common.errors.generic` line under the message, said once to a screen reader, so the press is never
+ * silent. The line goes when the sheet closes or is confirmed again.
+ */
+function announceOnce(line: string): void {
+  try {
+    AccessibilityInfo.announceForAccessibility(line);
+  } catch {
+    // No screen reader API here: the line on the sheet still says it.
+  }
+}
 
 /** [GU] What the first-quest row needs of the Grown-up area around it. */
 export interface GuestRowActions {
@@ -51,6 +64,7 @@ export function GuestPeopleRow({ first, actions }: { first: boolean; actions: Gu
   const lastPinVerifiedAt = useUiStore((s) => s.lastPinVerifiedAt);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
   /** Remove was pressed and the fresh PIN it asked for has not come back yet. */
   const pending = useRef(false);
   const { onAskPin, subscribeFocus } = actions;
@@ -93,11 +107,17 @@ export function GuestPeopleRow({ first, actions }: { first: boolean; actions: Gu
       return;
     }
     setBusy(true);
+    setFailed(false);
+    let done = false;
     try {
-      await removeLiveGuest();
+      done = await removeLiveGuest();
     } finally {
       setBusy(false);
-      setAsking(false);
+      if (done) setAsking(false);
+      else {
+        setFailed(true);
+        announceOnce(messages.common.errors.generic);
+      }
     }
   };
 
@@ -120,10 +140,14 @@ export function GuestPeopleRow({ first, actions }: { first: boolean; actions: Gu
         visible={asking}
         title={people.guestRemoveAsk}
         message={people.guestConfirm}
+        {...(failed ? { detail: messages.common.errors.generic } : {})}
         cancelLabel={messages.common.buttons.cancel}
         confirmLabel={people.guestRemove}
         busy={busy}
-        onCancel={() => setAsking(false)}
+        onCancel={() => {
+          setAsking(false);
+          setFailed(false);
+        }}
         onConfirm={() => void confirm()}
         testID="people-guest-sheet"
       />
@@ -172,20 +196,31 @@ function PaperButton({ label, onPress, testID }: { label: string; onPress: () =>
  * first quest is kept here (no PIN, no child profile) gains one sunken box: the line, and the quiet text button
  * **Remove the first quest**, which opens its ConfirmSheet (no fresh PIN: there is no PIN yet), then the sweep, then
  * `onRemoved` (the destination opens directly, as before the guest). Plain text in reading order, not a live region.
+ * [GU] Row GU-5 review: `onRemoved` is told whether the gate opens directly now, read again from storage after the
+ * sweep (`gateOpensDirectlyAfterRemove`), so a guest saved as a child or a PIN set in another tab meanwhile never lets
+ * the destination open without the PIN. A sweep that could not read the storage keeps the sheet open with the line.
  */
-export function GuestOnlyGateBox({ onRemoved }: { onRemoved: () => void }): React.ReactElement {
+export function GuestOnlyGateBox({ onRemoved }: { onRemoved: (opensDirectly: boolean) => void }): React.ReactElement {
   const messages = useMessages();
   const people = messages.caregiver.people;
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const confirm = async (): Promise<void> => {
     if (busy) return;
     setBusy(true);
+    setFailed(false);
     try {
       const done = await removeLiveGuest();
+      if (!done) {
+        setFailed(true);
+        announceOnce(messages.common.errors.generic);
+        return;
+      }
+      const direct = await gateOpensDirectlyAfterRemove();
       setAsking(false);
-      if (done) onRemoved();
+      onRemoved(direct);
     } finally {
       setBusy(false);
     }
@@ -199,10 +234,14 @@ export function GuestOnlyGateBox({ onRemoved }: { onRemoved: () => void }): Reac
         visible={asking}
         title={people.guestRemoveAsk}
         message={people.guestConfirm}
+        {...(failed ? { detail: messages.common.errors.generic } : {})}
         cancelLabel={messages.common.buttons.cancel}
         confirmLabel={people.guestRemove}
         busy={busy}
-        onCancel={() => setAsking(false)}
+        onCancel={() => {
+          setAsking(false);
+          setFailed(false);
+        }}
         onConfirm={() => void confirm()}
         testID="pin-guest-sheet"
       />

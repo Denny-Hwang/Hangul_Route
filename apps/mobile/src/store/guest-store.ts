@@ -163,8 +163,21 @@ export const useGuestStore = create<State & Actions>((set, get) => ({
       const current = get().record;
       if (current === null || !isLiveGuest(current, useProfileStore.getState().profiles)) return;
       const record = guestPlayed(current, now, patch.questDone === true);
+      if (get().memoryOnly) {
+        set({ record });
+        return;
+      }
+      // [GU] Row GU-5 review: what is stored is read again inside the lock, so a record removed (Remove the first
+      // quest), swept, saved or replaced in another tab is never written back from this tab's memory: this run ends.
+      const read = await readStoredGuest();
+      if (read.ok) {
+        const stored = parsedRecord(read.raw);
+        if (read.raw !== undefined && (stored === null || stored.id !== current.id)) {
+          set({ record: isLiveGuest(stored, useProfileStore.getState().profiles) ? stored : null, running: false });
+          return;
+        }
+      }
       set({ record });
-      if (get().memoryOnly) return;
       const saved = await store(record);
       if (saved) postProfilesChanged();
       else set({ memoryOnly: true });

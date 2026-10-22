@@ -10,14 +10,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * row. Shown whenever a live record is kept, with the guest switch on or off; Keep as a learner only with the switch
  * on; Remove the first quest asks a fresh PIN when a PIN is stored, else the ConfirmSheet alone; then the sweep.
  */
-const removed = vi.hoisted(() => ({ calls: 0 }));
+const removed = vi.hoisted(() => ({ calls: 0, result: true }));
 vi.mock('../../../store/guest-remove', () => ({
   removeLiveGuest: vi.fn(async () => {
     removed.calls += 1;
+    if (!removed.result) return false;
     const { useGuestStore } = await import('../../../store/guest-store');
     useGuestStore.setState({ record: null, running: false });
     return true;
   }),
+  gateOpensDirectlyAfterRemove: vi.fn(async () => true),
 }));
 
 import { flags } from '../../../config/flags';
@@ -65,6 +67,7 @@ const cancelSheet = async (root: ReactTestInstance): Promise<void> => act(async 
 beforeEach(() => {
   setPlatform('web');
   removed.calls = 0;
+  removed.result = true;
   resetProfileLocks();
   flags.guestLessonEnabled = true;
   useLocaleStore.setState({ device: 'en', byProfile: {} });
@@ -183,5 +186,30 @@ describe('[GU] People on this device: the first-quest row (9.2)', () => {
     await press(byTestId(r.root, 'people-guest-remove')[0]!);
     await confirmSheet(r.root);
     await vi.waitFor(() => expect(removed.calls).toBe(1));
+  });
+
+  it('GU-5 review: a sweep that could not read the storage keeps the sheet open with the generic line; the row stays', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    removed.result = false;
+    const r = await render(<PeopleOnDeviceCard profiles={[MINA]} onOpen={vi.fn()} guest={actions()} />);
+    await press(byTestId(r.root, 'people-guest-remove')[0]!);
+    await confirmSheet(r.root);
+    expect(removed.calls).toBe(1);
+    expect(sheetOf(r.root)).toMatchObject({ visible: true, detail: en.common.errors.generic });
+    expect(byTestId(r.root, 'people-guest')).not.toHaveLength(0);
+    await cancelSheet(r.root);
+    expect(sheetOf(r.root).detail).toBeUndefined();
+  });
+
+  it('Remove from this device lists profiles only: only a learner row opens a person page, never the guest', async () => {
+    const onOpen = vi.fn();
+    const r = await render(<PeopleOnDeviceCard profiles={[MINA]} onOpen={onOpen} guest={actions()} />);
+    const buttons = r.root.findAll((n) => typeof n.type === 'string' && n.props.role === 'button' && typeof n.props.onClick === 'function');
+    for (const b of buttons) {
+      if (screenTexts(b).some((t) => t === people.guestKeep || t === people.guestRemove)) continue;
+      await press(b);
+    }
+    expect(onOpen.mock.calls.map((c) => c[0])).toEqual([MINA.id]);
+    expect(onOpen).not.toHaveBeenCalledWith(GUEST.id);
   });
 });

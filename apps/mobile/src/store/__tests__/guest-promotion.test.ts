@@ -538,6 +538,35 @@ describe('[GU] the owner keeps the guest from People on this device (row GU-5, 9
     expect(cardsOf(useProgressStore.getState().byProfile[GUEST.id])).toContain('card:book');
   });
 
+  it('GU-5 review: keepActive on a device with no learner: the new learner is active and the grown-up session stays open', async () => {
+    disk.set('profiles', JSON.stringify([]));
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: true });
+    liveGuest(false);
+    useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now() });
+    const outcome = await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()), { keepActive: true });
+    await settle();
+    expect(outcome).toMatchObject({ kind: 'saved' });
+    expect(useProfileStore.getState().activeId).toBe(GUEST.id);
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+  });
+
+  it('GU-5 review: keepActive with the guest already saved in another tab (duplicate): kept, nobody switched to, the session stays', async () => {
+    const { promoteLiveGuest } = await import('../guest-save');
+    // An id this tab has never held (the tests above saved GUEST's id here; this tab would not take it back).
+    const other: GuestRecord = { ...GUEST, id: 'profile:guest003' };
+    const saved = { ...OWNER, id: other.id, displayName: 'Mina', learnerType: 'child' as const, createdAt: STARTED };
+    disk.set('profiles', JSON.stringify([OWNER, saved]));
+    useProfileStore.setState({ profiles: [OWNER], activeId: OWNER.id, hydrated: true });
+    disk.set('guest', JSON.stringify(other));
+    useGuestStore.setState({ record: other, running: false, hydrated: true, memoryOnly: false });
+    useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now() });
+    const profile = await promoteLiveGuest(FORM, { keepActive: true });
+    await settle();
+    expect(profile?.id).toBe(other.id);
+    expect(useProfileStore.getState().activeId).toBe(OWNER.id);
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+  });
+
   it('without keepActive the saved guest is made active, as the guest\'s own save does', async () => {
     disk.set('profiles', JSON.stringify([OWNER]));
     useProfileStore.setState({ profiles: [OWNER], activeId: OWNER.id, hydrated: true });
