@@ -126,7 +126,7 @@ export async function buildFromTree(root) {
     ...(await lessonReviewOccurrences(root, stage1.symbols)),
     ...(await storyReviewOccurrences(root, stage1.symbols)),
   ];
-  const result = m.buildReviewItems(occurrences, snapshot, m.vocabIndex(topicWords, senseGroups));
+  const result = m.buildReviewItems(occurrences, snapshot, m.vocabIndex(topicWords, senseGroups), stage1.symbols);
   for (const item of result.items) {
     const parsed = m.ReviewItemSchema.safeParse(item);
     if (!parsed.success) {
@@ -134,18 +134,21 @@ export async function buildFromTree(root) {
       throw new ContentError(`review item ${item.id}: ${issue.path.join(".")}: ${issue.message}`, SNAPSHOT);
     }
   }
-  return { ...result, chunk: m.encodeReviewItems(result.items), m };
+  return { ...result, chunk: m.encodeReviewItems(result.items), retiredRows: result.retired.map(m.encodeRetiredItem), m };
 }
 
 const literal = (value) => JSON.stringify(value);
 const q = (s) => JSON.stringify(s);
 
-/** Pure: the chunk's tables and rows (`encodeReviewItems`) -> the module sources by path under OUT_DIR, and the chunk's hash. */
+/**
+ * Pure: the chunk's tables and rows (`encodeReviewItems`) and the retired items' rows
+ * (`encodeRetiredItem`, sorted by id) -> the module sources by path under OUT_DIR, and the chunk's hash.
+ */
 export function buildModules({ tables, rows }, retired = []) {
   const data = `[\n${rows.map((row) => `  ${literal(row)},`).join("\n")}\n]`;
   const shared = literal(tables);
-  const retiredIds = literal([...retired].sort());
-  const hash = chunkHash(shared + data + retiredIds);
+  const retiredRows = literal([...retired].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)));
+  const hash = chunkHash(shared + data + retiredRows);
   const modules = {
     [INDEX_MODULE]:
       GENERATED_HEADER +
@@ -167,23 +170,23 @@ export function buildModules({ tables, rows }, retired = []) {
       "}\n",
     [`${CHUNK_DIR}/${CHUNK_NAME}.ts`]:
       GENERATED_HEADER +
-      "import type { ReviewItemRow, ReviewItemTables } from '@hangul-route/content-schema/review-items';\n\n" +
+      "import type { RetiredItemRow, ReviewItemRow, ReviewItemTables } from '@hangul-route/content-schema/review-items';\n\n" +
       "/** The review items (F-CURR-002 §4.2): reached only through `loadReviewItems` in ../review-items-index.ts, never imported statically. */\n" +
       `export const CHUNK_HASH = ${q(hash)};\n\n` +
       "/** The cells and homes the rows name by index. */\n" +
       `export const REVIEW_ITEM_TABLES: ReviewItemTables = ${shared};\n\n` +
-      "/** [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture] (`decodeReviewItems`). */\n" +
+      "/** [id, ko, romanization, en, glossKey, home, meta, cells, formats, homophoneOf, reply, picture, asked] (`decodeReviewItems`). */\n" +
       `export const REVIEW_ITEM_ROWS: readonly ReviewItemRow[] = ${data};\n\n` +
-      "/** The retired ids of items-stable-id.json: never selected for review, out of every mastery denominator, their learner state kept. */\n" +
-      `export const REVIEW_RETIRED_IDS: readonly string[] = ${retiredIds};\n`,
+      "/** The retired items of items-stable-id.json, [id, ko, romanization] (`decodeRetiredItem`): never selected for review, out of every mastery denominator, their learner state kept and named in reports. */\n" +
+      `export const REVIEW_RETIRED: readonly RetiredItemRow[] = ${retiredRows};\n`,
   };
   return { modules, hash };
 }
 
 /** The chunk's name and hash, as pwa-postbuild.mjs checks it beside the lesson and story chunks. */
 export async function readChunkManifest(root) {
-  const { chunk, frozen } = await buildFromTree(root);
-  return [{ name: CHUNK_NAME, hash: buildModules(chunk, frozen.retired).hash }];
+  const { chunk, retiredRows } = await buildFromTree(root);
+  return [{ name: CHUNK_NAME, hash: buildModules(chunk, retiredRows).hash }];
 }
 
 /** Pure: the chunk module's raw and gzip bytes against the budget line (empty problems = within it). */
@@ -238,7 +241,7 @@ export async function main(argv, root) {
   }
   for (const issue of built.issues) process.stdout.write(`::warning file=${SNAPSHOT}::items-stable-id: ${issue.message}\n`);
 
-  const { modules } = buildModules(built.chunk, built.frozen.retired);
+  const { modules } = buildModules(built.chunk, built.retiredRows);
   if (mode === "--report") {
     const size = chunkSize(modules);
     process.stdout.write(`Review items: ${built.chunk.rows.length} items; chunk ${CHUNK_DIR}/${CHUNK_NAME}.ts ${size.raw} B raw, ${size.gzip} B gzip (ceiling ${BUDGET.raw} B raw, ${BUDGET.gzip} B gzip)\n`);

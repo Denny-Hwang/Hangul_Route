@@ -1,4 +1,4 @@
-import { encodeReviewItems, type ReviewItem, type ReviewItemsChunk } from '@hangul-route/content-schema/review-items';
+import { encodeRetiredItem, encodeReviewItems, type ReviewItem, type ReviewItemsChunk } from '@hangul-route/content-schema/review-items';
 import { describe, expect, it, vi } from 'vitest';
 import { reviewItemsChunk } from '../../../content/review-items';
 import { REVIEW_ITEM_COUNT } from '../../../content/__generated__/review-items-index';
@@ -14,6 +14,7 @@ const item: ReviewItem = {
   stage: 2,
   volume: 1,
   cells: ['episode:stage2-life'],
+  asked: [],
   formats: ['hear-pick', 'read-pick'],
   soundChange: false,
   homophoneOf: [],
@@ -21,7 +22,8 @@ const item: ReviewItem = {
 
 function chunkOf(hash: string, items: readonly ReviewItem[] = [item], retired: readonly string[] = []): ReviewItemsChunk {
   const { tables, rows } = encodeReviewItems(items);
-  return { CHUNK_HASH: hash, REVIEW_ITEM_TABLES: tables, REVIEW_ITEM_ROWS: rows, REVIEW_RETIRED_IDS: retired };
+  const REVIEW_RETIRED = retired.map((id) => encodeRetiredItem({ id, ko: '사과요', romanization: 'sagwayo' }));
+  return { CHUNK_HASH: hash, REVIEW_ITEM_TABLES: tables, REVIEW_ITEM_ROWS: rows, REVIEW_RETIRED };
 }
 
 describe('the review-item store (F-CURR-002 §4.2, §10)', () => {
@@ -35,6 +37,9 @@ describe('the review-item store (F-CURR-002 §4.2, §10)', () => {
     expect(a.items).toEqual([item]);
     expect(a.byId.get('lex:sagwa')).toEqual(item);
     expect([...a.retired]).toEqual(['lex:sagwa-old']);
+    // A retired item keeps its Korean for reports, and is in no row.
+    expect(a.retiredById.get('lex:sagwa-old')).toEqual({ id: 'lex:sagwa-old', kind: 'lex', ko: '사과요', romanization: 'sagwayo' });
+    expect(a.byId.has('lex:sagwa-old')).toBe(false);
     expect(await store.ensure()).toBe(a);
     expect(store.current()).toBe(a);
     expect(load).toHaveBeenCalledTimes(1);
