@@ -118,6 +118,8 @@ describe('the blocks under the hero (L1)', () => {
       expect(textOf(how)).toContain(step.title);
       expect(textOf(how)).toContain(step.body);
     }
+    // Step 1's level-check line shows only with the `levelCheck` claim on (landing-claims.test.tsx pins both states).
+    expect(textOf(how)).not.toContain(H.how.levelBody);
     expect(text).not.toContain(H.how.routeBody);
     const on = textOf(mainOf(renderToStaticMarkup(<Home locale="en" claims={{ ...SITE_CLAIMS, learningRoute: true }} />)));
     expect(on).toContain(H.how.routeBody);

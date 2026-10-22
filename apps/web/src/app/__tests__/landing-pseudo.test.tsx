@@ -2,7 +2,6 @@ import { LOCALE_META } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { CONTACT_EMAIL } from '../../data/contact';
-import { minigameCatalog } from '../../data/minigame-catalog';
 import { stage1Cards } from '../../data/stage1-cards';
 // The pages are imported here, once, not inside each test: a page load pulls in the whole landing graph, and inside
 // a test body it counted against the 5 s test timeout, which a busy CI runner exceeded. `vi.mock` below is hoisted
@@ -19,7 +18,7 @@ import TeachersPage from '../(en)/teachers/page';
  * F-I18N-001 PR 11a, §3.11: the site's pages take every word from `messages/*\/landing.ts`.
  * With the English dictionary swapped for its pseudo-localised copy (en-XA), every text node
  * and labelled attribute on the landing, About, Privacy, Terms and persona pages must be bracketed
- * pseudo text. What may stay as it is: content (heritage cards, mini-game titles and blurbs),
+ * pseudo text. What may stay as it is: content (the heritage cards; the mini-game titles and blurbs are messages),
  * taught Korean and its romanization, the contact address, and decoration the page passes in.
  */
 vi.mock('@hangul-route/i18n', async (importOriginal) => {
@@ -31,7 +30,6 @@ vi.mock('@hangul-route/i18n', async (importOriginal) => {
 const CONTENT: readonly string[] = [
   CONTACT_EMAIL,
   ...stage1Cards.flatMap((card) => [card.ko, card.romanization, card.title, card.en, card.blurb]),
-  ...minigameCatalog.flatMap((game) => [game.title, game.blurb]),
   // The footer's locale switcher names each locale by its endonym, a constant (LOCALE_META), never a message.
   ...Object.values(LOCALE_META).map((meta) => meta.endonym),
 ];

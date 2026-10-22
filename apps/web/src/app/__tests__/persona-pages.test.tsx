@@ -86,6 +86,12 @@ describe('/learners (S-4a)', () => {
     expect(text).not.toMatch(/\b(speak|speaking|say it|pronounce)\b/i);
   });
 
+  it('what you learn first ends with one paragraph on what comes after the alphabet, inside the same section', () => {
+    const section = new RegExp(`<section[^>]*>\\s*<h2[^>]*>${esc(L.learn.title)}</h2>([\\s\\S]*?)</section>`).exec(main)?.[1] ?? '';
+    expect(section).toMatch(new RegExp(`<p[^>]*><strong[^>]*>${esc(L.after.title)}</strong>${esc(L.after.body)}</p>`));
+    expect(count(text, L.after.body)).toBe(1);
+  });
+
   it('how most quests work: three numbered steps, the Hoya line with decorative art, and the mini-games fold', () => {
     expect(main).toMatch(/<ol[^>]*>/);
     for (const line of Object.values(L.quest.bullets)) expect(text).toContain(line);
@@ -115,9 +121,7 @@ describe('/learners (S-4a)', () => {
     expect(main).toMatch(new RegExp(`<summary[^>]*><span[^>]*>${L.cards.seeAll(stage1Cards.length)}</span></summary>`));
     const fold = /<details[^>]*>(?:(?!<\/details>)[\s\S])*?See all[\s\S]*?<\/details>/.exec(main)?.[0] ?? '';
     for (const card of stage1Cards) expect(fold).toContain(card.ko);
-    expect(fold).not.toMatch(/<h2\b|<section\b/);
-    expect(decode(fold)).not.toContain(t.cards.more);
-    expect(decode(fold)).not.toContain(t.cards.eyebrow);
+    expect(fold).not.toMatch(/<h2\b|<section\b|<header id/);
   });
 
   it('the games fold: the games without a speaking one, titles as h3 under the section h2, no heading, eyebrow or beta', () => {
@@ -125,9 +129,7 @@ describe('/learners (S-4a)', () => {
     expect(fold).not.toBe('');
     expect(fold).not.toMatch(/<h2\b|<section\b/);
     expect(fold.match(/<h3\b/g)).toHaveLength(siteGames.length);
-    for (const game of siteGames) expect(fold).toContain(`>${game.title}<`);
-    expect(fold).not.toContain(t.games.title);
-    expect(fold).not.toContain(t.games.body);
+    for (const game of siteGames) expect(fold).toContain(`>${t.games.items[game.kind].title}<`);
     expect(fold).not.toContain(t.games.beta);
     expect(fold).not.toMatch(/in beta/i);
   });
@@ -136,10 +138,20 @@ describe('/learners (S-4a)', () => {
     for (const m of main.matchAll(/<(ul|ol)\b([^>]*)>/g)) expect(m[2], m[0]).toContain('role="list"');
   });
 
-  it('five folded questions, in order, each a native details', () => {
+  it('five folded questions, in order, each a native details; the level-check question only with its claim on', () => {
     const questions = [...main.matchAll(/<summary[^>]*><span[^>]*>([^<]*)<\/span><\/summary>/g)].map((m) => decode(m[1] ?? ''));
+    expect(SITE_CLAIMS.levelCheck).toBe(false);
     expect(questions.slice(2)).toEqual([L.faq.signIn.q, L.faq.code.q, L.faq.offline.q, L.faq.adult.q, L.faq.korean.q]);
-    for (const { a } of Object.values(L.faq)) expect(text).toContain(a);
+    for (const { a } of [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean]) expect(text).toContain(a);
+    expect(text).not.toContain(L.faq.level.q);
+    expect(text).not.toContain(L.faq.level.a);
+  });
+
+  it('with the levelCheck claim on: the level-check question follows the Korean one, once', () => {
+    const on = mainOf(renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...ALL_CLAIMS_OFF, levelCheck: true }} />));
+    const questions = [...on.matchAll(/<summary[^>]*><span[^>]*>([^<]*)<\/span><\/summary>/g)].map((m) => decode(m[1] ?? ''));
+    expect(questions.slice(2)).toEqual([L.faq.signIn.q, L.faq.code.q, L.faq.offline.q, L.faq.adult.q, L.faq.korean.q, L.faq.level.q]);
+    expect(count(textOf(on), L.faq.level.a)).toBe(1);
   });
 
   it('every summary keeps a block box: the layout is on its inner span (older WebKit)', () => {

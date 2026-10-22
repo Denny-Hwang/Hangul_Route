@@ -38,8 +38,9 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
   const H = t.home;
   const shown = shownSiteLocales();
   const start = learnerStart(locale);
+  // Step 1 names the level check while its claim is on (F-PLC-001: placement is on for every platform).
   const steps = [
-    H.how.steps.start,
+    { title: H.how.steps.start.title, body: showsClaim(claims, 'levelCheck', locale) ? H.how.levelBody : H.how.steps.start.body },
     H.how.steps.quests,
     { title: H.how.steps.collect.title, body: showsClaim(claims, 'learningRoute', locale) ? H.how.routeBody : H.how.steps.collect.body },
   ];

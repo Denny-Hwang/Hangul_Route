@@ -10,7 +10,16 @@
  * short `en` glosses are site wording and intentionally differ from the
  * app's cards.json; the ids, titles, Korean, romanization, theme, rarity
  * and unlock must match it (stage1-cards.test.ts checks this).
+ *
+ * English is the source. In Spanish and Korean the site shows the app's
+ * content overlays (content/i18n/{es,ko}/stage1-cards.json, F-I18N-001
+ * §3.6): `stage1CardsIn` takes the gloss from the overlay's `title` and the
+ * blurb from its `blurb`. It takes the overlays as an argument, so this
+ * module never imports them: the server component that renders the cards
+ * passes `OVERLAYS` (`@hangul-route/content-schema/overlays`), and no
+ * client bundle carries them.
  */
+import { localize, type Overlays, type UiLocale } from '@hangul-route/content-schema';
 
 export type CardTheme = 'letters' | 'life' | 'rites' | 'nature' | 'crafts';
 export type CardRarity = 'common' | 'uncommon' | 'rare' | 'legendary';
@@ -47,10 +56,10 @@ export const stage1Cards: LandingCard[] = [
   { id: 'card:eomuk', title: 'Eomuk', ko: '어묵', romanization: 'eomuk', en: 'Fish cake on a stick', blurb: 'A warm winter street snack served with hot broth.', theme: 'life', rarity: 'common', unlockedBy: 'jamo:eo' },
   { id: 'card:yeou', title: 'Fox', ko: '여우', romanization: 'yeou', en: 'Fox', blurb: 'Clever and a little bit magic in old Korean tales.', theme: 'nature', rarity: 'uncommon', unlockedBy: 'jamo:yeo' },
   { id: 'card:ori', title: 'Ori', ko: '오리', romanization: 'ori', en: 'Duck', blurb: 'Brown ducks waddle around Korean ponds.', theme: 'nature', rarity: 'common', unlockedBy: 'jamo:o' },
-  { id: 'card:yong', title: 'Dragon', ko: '용', romanization: 'yong', en: 'Sky-flying water spirit', blurb: 'Korean dragons live in rivers and bring the rain.', theme: 'nature', rarity: 'legendary', unlockedBy: 'jamo:yo' },
+  { id: 'card:yong', title: 'Dragon', ko: '용', romanization: 'yong', en: 'Dragon', blurb: 'Korean dragons live in rivers and bring the rain.', theme: 'nature', rarity: 'legendary', unlockedBy: 'jamo:yo' },
   { id: 'card:usan', title: 'Usan', ko: '우산', romanization: 'usan', en: 'Umbrella', blurb: 'Korea’s rainy season lasts about a month. Keep one by the door.', theme: 'life', rarity: 'common', unlockedBy: 'jamo:u' },
   { id: 'card:yutnori', title: 'Yutnori', ko: '윷놀이', romanization: 'yunnori', en: 'Traditional New Year’s board game', blurb: 'Four wooden sticks instead of dice. A Seollal favourite.', theme: 'crafts', rarity: 'rare', unlockedBy: 'jamo:yu' },
-  { id: 'card:geune', title: 'Geune', ko: '그네', romanization: 'geune', en: 'Swing', blurb: 'Women in old paintings ride giant swings on Dano festival.', theme: 'crafts', rarity: 'uncommon', unlockedBy: 'jamo:eu' },
+  { id: 'card:geune', title: 'Geune', ko: '그네', romanization: 'geune', en: 'Swing', blurb: 'Women in old paintings ride giant swings at the Dano festival.', theme: 'crafts', rarity: 'uncommon', unlockedBy: 'jamo:eu' },
   { id: 'card:ibul', title: 'Ibul', ko: '이불', romanization: 'ibul', en: 'Warm Korean blanket', blurb: 'Many Korean homes spread padded blankets on a warm floor to sleep.', theme: 'rites', rarity: 'common', unlockedBy: 'jamo:i' },
 ];
 
@@ -65,4 +74,41 @@ export function cardsByRarity(): Record<CardRarity, LandingCard[]> {
     groups[card.rarity].push(card);
   }
   return groups;
+}
+
+/**
+ * A card as the site shows it in one UI language: the Korean and romanization never change; `gloss` and `blurb` are
+ * in the UI language. `gloss` is null where the overlay's title only repeats the Korean word or its romanization
+ * (every Korean title, and Spanish titles such as Bap): the tile then shows the word and its romanization alone,
+ * the rule the app's card face follows (a title that is the word itself is not shown twice).
+ */
+export interface SiteCard {
+  id: string;
+  ko: string;
+  romanization: string;
+  gloss: string | null;
+  blurb: string;
+  rarity: CardRarity;
+}
+
+/** Letters only, lower case: "K-pop" and "keipap" stay apart, "Bap" and "bap" match. */
+const letters = (text: string): string => text.toLowerCase().replace(/[^\p{L}]/gu, '');
+
+/** True when `title` only repeats the card's Korean word or its romanization. */
+export function echoesCard(card: Pick<LandingCard, 'ko' | 'romanization'>, title: string): boolean {
+  const t = letters(title);
+  return t === letters(card.ko) || t === letters(card.romanization);
+}
+
+/** The Stage 1 cards in `locale`: English from this file; es and ko from `overlays` (the app's content overlays). */
+export function stage1CardsIn(locale: UiLocale, overlays: Overlays): SiteCard[] {
+  return stage1Cards.map((card) => {
+    const base = { id: card.id, ko: card.ko, romanization: card.romanization, rarity: card.rarity };
+    if (locale === 'en') return { ...base, gloss: card.en, blurb: card.blurb };
+    // A field the overlay lacks keeps the English source (localize, §3.13): never a blank, never the key. Without an
+    // overlay title the gloss is the site's English gloss, as on the English page.
+    const shown = localize({ title: card.title, blurb: card.blurb }, card.id, locale, overlays);
+    const gloss = overlays[locale][card.id]?.title === undefined ? card.en : shown.title;
+    return { ...base, gloss: echoesCard(card, gloss) ? null : gloss, blurb: shown.blurb };
+  });
 }
