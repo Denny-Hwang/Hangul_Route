@@ -1,4 +1,6 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LOCALES, LOCALE_STATUS } from '@hangul-route/i18n';
@@ -14,7 +16,9 @@ import {
   type CaptureName,
 } from '../../data/site-captures';
 import { SITE_CAPTURE_FILES } from '../../data/site-captures.generated';
-import { SITE_CLAIMS, showsClaim, type BooleanClaimKey } from '../../data/site-claims';
+import { SITE_CLAIMS, showsClaim, type BooleanClaimKey, type SiteClaims } from '../../data/site-claims';
+import { ParentsPage } from '../../components/landing/ParentsPage';
+import { TeachersPage } from '../../components/landing/TeachersPage';
 import { shownSiteLocales } from '../../lib/site-metadata';
 import { CAPTURE_LOCALES, CAPTURE_NAMES as SCRIPT_NAMES, CAPTURE_WIDTHS, hash8, manifestSource, webpSize } from '../../../scripts/site-captures.mjs';
 
@@ -25,6 +29,7 @@ import { CAPTURE_LOCALES, CAPTURE_NAMES as SCRIPT_NAMES, CAPTURE_WIDTHS, hash8, 
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(here, '..', '..', '..', 'public');
+const CAPTURES = join(PUBLIC, 'site', 'captures');
 const fileOf = (src: string): string => join(PUBLIC, ...src.split('/').filter(Boolean));
 
 describe('the manifest and the files', () => {
@@ -49,7 +54,7 @@ describe('the manifest and the files', () => {
       const file = captureFile(locale, name);
       expect(file, `${locale} ${name}`).not.toBeNull();
       if (!file) continue;
-      expect(file.src).toMatch(new RegExp(`^/site/${locale}/${name}\\.[0-9a-f]{8}\\.webp$`));
+      expect(file.src).toMatch(new RegExp(`^/site/captures/${locale}/${name}\\.[0-9a-f]{8}\\.webp$`));
       const buf = readFileSync(fileOf(file.src));
       expect(webpSize(buf), `${locale} ${name}`).toEqual({ width: file.width, height: file.height });
       expect(file.width, `${locale} ${name}`).toBe(CAPTURE_WIDTHS[name]);
@@ -58,13 +63,29 @@ describe('the manifest and the files', () => {
   });
 
   it('no file on disk is missing from the manifest (an old hash left behind would ship for nothing)', () => {
-    for (const locale of readdirSync(join(PUBLIC, 'site'))) {
-      if (!statSync(join(PUBLIC, 'site', locale)).isDirectory()) continue;
+    for (const locale of readdirSync(CAPTURES)) {
+      if (!statSync(join(CAPTURES, locale)).isDirectory()) continue;
       const listed = Object.values(SITE_CAPTURE_FILES[locale as (typeof LOCALES)[number]] ?? {}).map((file) => file.src);
-      for (const name of readdirSync(join(PUBLIC, 'site', locale)).filter((file) => file.endsWith('.webp'))) {
-        expect(listed, `${locale}/${name}`).toContain(`/site/${locale}/${name}`);
+      for (const name of readdirSync(join(CAPTURES, locale)).filter((file) => file.endsWith('.webp'))) {
+        expect(listed, `${locale}/${name}`).toContain(`/site/captures/${locale}/${name}`);
       }
     }
+  });
+
+  // `public/_headers` marks `/site/captures/*` immutable for a year, so only content-hashed files may live there: an
+  // unhashed file (a share image, say) would never refresh in a browser or a link-preview cache.
+  it('the immutable cache rules cover only content-hashed files', () => {
+    const headers = readFileSync(join(PUBLIC, '_headers'), 'utf8').split('\n');
+    const immutable = headers
+      .map((line, i) => ({ path: line, next: headers[i + 1] ?? '' }))
+      .filter(({ path, next }) => /^\//.test(path) && /immutable/.test(next))
+      .map(({ path }) => path.trim());
+    expect(immutable).toEqual(['/_next/static/*', '/site/captures/*']);
+    const walk = (dir: string): string[] =>
+      readdirSync(dir).flatMap((entry) => (statSync(join(dir, entry)).isDirectory() ? walk(join(dir, entry)) : [join(dir, entry)]));
+    const files = walk(CAPTURES);
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) expect(file.slice(CAPTURES.length), file).toMatch(/^\/(en|es|ko)\/[a-z-]+\.[0-9a-f]{8}\.webp$/);
   });
 
   it('nothing is listed for a hidden locale', () => {
@@ -127,22 +148,41 @@ describe('captures follow claims', () => {
     expect(listed.has('learningRoute')).toBe(false);
   });
 
-  it.each(LOCALES)('%s: a capture shows only when every claim it lists shows (today, every claim on, every claim off)', (locale) => {
-    for (const claims of [SITE_CLAIMS, ALL_CLAIMS_ON, ALL_CLAIMS_OFF]) {
-      for (const name of CAPTURE_NAMES) {
-        const expected = CAPTURE_CLAIMS[name].every((key) => showsClaim(claims, key, locale));
-        expect(showsCapture(claims, name, locale), `${locale} ${name}`).toBe(expected);
-      }
-    }
+  it.each(LOCALES)('%s: every claim on shows every capture; every claim off shows only the claim-free ones', (locale) => {
     for (const name of CAPTURE_NAMES) {
-      expect(showsCapture(ALL_CLAIMS_OFF, name, locale)).toBe(CAPTURE_CLAIMS[name].length === 0);
+      expect(showsCapture(ALL_CLAIMS_ON, name, locale), `${locale} ${name}`).toBe(CAPTURE_CLAIMS[name].every((key) => showsClaim(ALL_CLAIMS_ON, key, locale)));
+      expect(showsCapture(ALL_CLAIMS_OFF, name, locale), `${locale} ${name}`).toBe(CAPTURE_CLAIMS[name].length === 0);
     }
+    expect(CAPTURE_NAMES.filter((name) => showsCapture(ALL_CLAIMS_ON, name, 'en'))).toEqual([...CAPTURE_NAMES]);
   });
 
-  it('a capture whose listed claim is false in SITE_CLAIMS is not shown with today’s claims', () => {
-    for (const name of CAPTURE_NAMES) {
-      const off = CAPTURE_CLAIMS[name].some((key) => !SITE_CLAIMS[key]);
-      if (off) for (const locale of LOCALES) expect(showsCapture(SITE_CLAIMS, name, locale), `${locale} ${name}`).toBe(false);
+  // One claim forced off at a time, on top of today's claims: the capture it gates leaves the rendered page too (the
+  // page reads `showsCapture`, so the table above is not the only guard). persona-pages.test.tsx covers every claim
+  // off and lectureMode alone.
+  const PAGES = { '/parents': ParentsPage, '/teachers': TeachersPage } as const;
+  const gated = (Object.entries(PAGE_CAPTURES) as Array<[keyof typeof PAGE_CAPTURES, readonly CaptureName[]]>).flatMap(([page, names]) =>
+    page in PAGES ? names.filter((name) => CAPTURE_CLAIMS[name].length > 0).flatMap((name) => CAPTURE_CLAIMS[name].map((key) => ({ page, name, key }))) : [],
+  );
+
+  it('the claim-gated captures are the grown-up pages’ ones', () => {
+    expect(gated.map(({ name, key }) => `${name}:${key}`)).toEqual([
+      'report:parentReports',
+      'class-list:teacherReports',
+      'class-list-narrow:teacherReports',
+      'lecture-slide:lectureMode',
+    ]);
+  });
+
+  it.each(gated)('$page: with $key off, the $name capture is not shown or referenced', ({ page, name, key }) => {
+    const claims: Readonly<SiteClaims> = { ...SITE_CLAIMS, [key]: false };
+    for (const locale of shownSiteLocales()) {
+      expect(showsCapture(claims, name, locale), `${locale} ${name}`).toBe(false);
+      const src = captureFile(locale, name)?.src;
+      expect(src, `${locale} ${name}`).toBeDefined();
+      const on = renderToStaticMarkup(createElement(PAGES[page as keyof typeof PAGES], { locale, claims: { ...SITE_CLAIMS, [key]: true } }));
+      const off = renderToStaticMarkup(createElement(PAGES[page as keyof typeof PAGES], { locale, claims }));
+      expect(on, `${locale} ${page} with ${key} on`).toContain(src);
+      expect(off, `${locale} ${page} with ${key} off`).not.toContain(src);
     }
   });
 });

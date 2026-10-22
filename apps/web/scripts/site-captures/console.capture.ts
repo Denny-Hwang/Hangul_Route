@@ -63,7 +63,8 @@ for (const loc of LOCS) {
     await ctx.close();
   });
   // The class page (class-list.webp wide, class-list-narrow.webp below 45em). Review round 3: no student cards, which carry
-  // the Learning Route row (`learningRoute` is off on the site) and the level check's starting spot (`levelCheck` off).
+  // the Learning Route row (`learningRoute` is off on the site) and the level check's starting spot (`levelCheck` is on
+  // since 2026-10-21, but CAPTURE_CLAIMS does not list it for this crop, so the crop leaves it out).
   // Wide: from the class name to the end of "This week" at 720 px. Narrow: the "This week" card alone at 390 px, 2x.
   for (const [tag, width, scale] of [['class-list', 720, 1], ['class-list-narrow', 390, 2]] as const) {
     test(`${tag} ${loc}`, async ({ browser }) => {

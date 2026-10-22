@@ -408,13 +408,13 @@ for (const lang of ['en', 'es', 'ko'] as const) {
       await page.goto(url);
       const srcs = await page.evaluate(() =>
         [...new Set(Array.from(document.querySelectorAll('main img[src], main source[srcset]')).map((el) => el.getAttribute('src') ?? el.getAttribute('srcset') ?? ''))].filter(
-          (src) => src.startsWith('/site/'),
+          (src) => src.startsWith('/site/captures/'),
         ),
       );
       expect(srcs.length).toBeGreaterThan(0);
       let bytes = 0;
       for (const src of srcs) {
-        expect(src).toMatch(new RegExp(`^/site/${lang}/`));
+        expect(src).toMatch(new RegExp(`^/site/captures/${lang}/[a-z-]+\\.[0-9a-f]{8}\\.webp$`));
         const res = await page.request.get(src);
         expect(res.ok(), src).toBe(true);
         expect(res.headers()['content-type']).toBe('image/webp');

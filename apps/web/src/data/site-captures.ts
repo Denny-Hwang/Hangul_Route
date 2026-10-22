@@ -1,13 +1,14 @@
 /**
  * Product captures on the site (AMENDMENTS-SITE-NEWUSER §3.13, row SN-1): real screens of the learner app and the
- * console, per UI locale, because they hold UI text. The files are `public/site/<locale>/<name>.<hash8>.webp`, made on
- * demand by `scripts/site-captures.mjs` (never in CI or a build), which also writes `site-captures.generated.ts`.
+ * console, per UI locale, because they hold UI text. The files are `public/site/captures/<locale>/<name>.<hash8>.webp`
+ * (only content-hashed files there, so `public/_headers` marks that folder immutable), made on demand by `scripts/site-captures.mjs` (never in CI or a build), which also writes `site-captures.generated.ts`.
  *
  * Captures follow claims: a page renders a capture only when `showsClaim` is true for every claim its feature needs
  * (`CAPTURE_CLAIMS`), so `CLAIM_LOCALES` and a rollback (LV-D1) apply to pictures as they do to lines, and no capture
- * shows a feature whose claim is off. The Learning Route (`learningRoute`) and the level check's starting spot stay
- * outside every crop while their claims are off; a claim-flip PR may add a capture of its feature with that claim
- * listed here (F-SITE-002 §3.9).
+ * shows a feature whose claim is off. The Learning Route (`learningRoute` is off) stays outside every crop. `levelCheck`
+ * is on since 2026-10-21 (owner decision (a)); no current crop shows the level check's starting spot, so no entry lists
+ * it. A claim-flip PR, or a retake that shows such a feature, adds that claim to the capture's entry here (F-SITE-002
+ * §3.9).
  */
 import type { UiLocale } from '@hangul-route/i18n';
 import { showsClaim, type BooleanClaimKey, type SiteClaims } from './site-claims';

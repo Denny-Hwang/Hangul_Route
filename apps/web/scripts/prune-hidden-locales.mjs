@@ -51,7 +51,8 @@ export function pruneHiddenLocales(outDir) {
     rmSync(join(outDir, `${locale}.html`), { force: true });
     rmSync(join(outDir, `${locale}.txt`), { force: true });
     rmSync(join(outDir, locale), { recursive: true, force: true });
-    // [SN] The locale's product captures hold its UI text, so they leave with it.
+    // [SN] The locale's product captures (and any other per-locale site file) hold its UI text, so they leave with it.
+    rmSync(join(outDir, 'site', 'captures', locale), { recursive: true, force: true });
     rmSync(join(outDir, 'site', locale), { recursive: true, force: true });
   }
   const left = htmlFiles(outDir).filter((file) => hiddenLocaleOf(file) !== null);
