@@ -8,7 +8,6 @@ import { DAILY_REVIEW_SIZE, KEEP_GOING_SIZE, type EngineContext, type EngineRow 
 import {
   MIN_PLAYABLE_ROUNDS,
   afterSession,
-  answersToRecord,
   dailyDoneOn,
   dailyEntriesOn,
   dailyEntry,
@@ -178,22 +177,6 @@ describe('answers, credits and the result', () => {
     expect(memoryAnswerOf(r, { correct: true, hinted: true })).toMatchObject({ hinted: true });
   });
 
-  it('credits the due words inside a right sentence once, never one the session asks itself', () => {
-    const word = mk('lex:sagwa', { ko: '사과' });
-    const other = mk('lex:bap', { ko: '밥' });
-    const sentence = mk('pat:sagwa-juseyo', { ko: '사과 주세요.' });
-    const both = mk('pat:bap-sagwa', { ko: '밥 사과 주세요.' });
-    const items = [word, other, sentence, both];
-    const index = surfaceIndex({ items, byId: new Map(items.map((i) => [i.id, i])), retired: new Set() });
-    const ctx: EngineContext = { index, states: Object.fromEntries(items.map((i) => [i.id, { st: st() }])), today: TODAY, voice: true, seed: 's' };
-    const round = (itemId: string): ReviewRound => ({ type: 'type', question: { itemId, kind: 'pat', rung: 'read', format: 'read-pick', theme: 'life', stretch: false, voiceFallback: false }, mode: 'see', target: '', answer: { ko: { ko: '', romanization: '' } } });
-    const credited = new Set<string>();
-    expect(answersToRecord(ctx, round('pat:sagwa-juseyo'), { correct: true }, new Set(['pat:sagwa-juseyo']), credited).map((a) => a.itemId)).toEqual(['pat:sagwa-juseyo', 'lex:sagwa']);
-    // 사과 was credited: not again; 밥 is asked by the session itself: not credited.
-    expect(answersToRecord(ctx, round('pat:bap-sagwa'), { correct: true }, new Set(['pat:bap-sagwa', 'lex:bap']), credited).map((a) => a.itemId)).toEqual(['pat:bap-sagwa']);
-    expect(answersToRecord(ctx, round('pat:sagwa-juseyo'), { correct: false }, new Set(), new Set()).map((a) => a.itemId)).toEqual(['pat:sagwa-juseyo']);
-  });
-
   it('stars by F-RVW-001 section 3.1 over the rounds answered; a hinted answer is not right; never 0', () => {
     const answers = (pattern: readonly (RoundAnswer | undefined)[]): Map<number, RoundAnswer> => new Map(pattern.flatMap((a, i) => (a ? [[i, a] as const] : [])));
     const right = { correct: true };
@@ -208,11 +191,11 @@ describe('answers, credits and the result', () => {
     expect(hinted.stars).toBe(1);
   });
 
-  it('"N got stronger" counts the items whose best box rose, each once', () => {
+  it('"N got stronger" counts the items whose best box rose, a new one included; a box without its best never', () => {
     const before = { a: { st: st({ s: 1 }) }, b: { st: st({ s: 3 }) }, c: { st: st({ s: 2 }) } };
     const after = { a: { st: st({ s: 2 }) }, b: { st: st({ s: 3, b: 4 }) }, c: { st: st({ s: 3 }) }, d: { st: st({ s: 1 }) } };
-    expect(strongerCount(before, after, ['a', 'a', 'b', 'c', 'd', 'zz'])).toBe(3);
-    expect(strongerCount(before, before, ['a', 'b'])).toBe(0);
+    expect(strongerCount(before, after)).toBe(3);
+    expect(strongerCount(before, before)).toBe(0);
   });
 
   it('the entry is a plain daily entry on the local day, readable by the snapshot schema', () => {

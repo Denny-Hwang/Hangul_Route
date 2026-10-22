@@ -5,12 +5,12 @@ import type { MemoryAnswer } from '../memory/memory-runtime';
 import { localDay, vocabOf } from '../vocab/progress';
 import {
   afterSession,
-  answersToRecord,
   dailyEntry,
   dailyReviewCompleteEvent,
   dailyReviewStartEvent,
   dailyReviewSummary,
   dayReviewLog,
+  memoryAnswerOf,
   nextSessionKind,
   planSession,
   sessionResult,
@@ -80,11 +80,14 @@ export interface DailyReviewApi {
   openingKind(world: ReviewWorld): DailySessionKind;
   doneTodayOffer(world: ReviewWorld): AfterSession;
   startSession(world: ReviewWorld, kind: DailySessionKind, locale: UiLocale): Promise<PlannedSession | null>;
-  /** Records a round's first answer now (its own and the credits inside it), so a stopped review keeps it. */
-  recordRound(world: ReviewWorld, plan: PlannedSession, index: number, answer: RoundAnswer, credited: Set<string>): Promise<void>;
+  /**
+   * Records a round's first answer now, so a stopped review keeps it. The memory store adds the credit inside sentences
+   * to every batch it records (section 4.3).
+   */
+  recordRound(world: ReviewWorld, plan: PlannedSession, index: number, answer: RoundAnswer): Promise<void>;
   /** A stopped Daily Review writes no entry; the due items it drew still count toward the day's 20. */
   noteStopped(world: ReviewWorld, plan: PlannedSession, answered: Iterable<number>): void;
-  finishSession(world: ReviewWorld, plan: PlannedSession, answers: ReadonlyMap<number, RoundAnswer>, recorded: readonly Promise<void>[], credited: ReadonlySet<string>, now?: Date): Promise<{ finished: FinishedSession; world: ReviewWorld }>;
+  finishSession(world: ReviewWorld, plan: PlannedSession, answers: ReadonlyMap<number, RoundAnswer>, recorded: readonly Promise<void>[], now?: Date): Promise<{ finished: FinishedSession; world: ReviewWorld }>;
   gradeTyped(target: string, typed: string): TypedGrade;
 }
 
@@ -158,11 +161,10 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       return plan;
     },
 
-    recordRound(world, plan, index, answer, credited) {
+    recordRound(world, plan, index, answer) {
       const round = plan.rounds[index];
       if (round === undefined) return Promise.resolve();
-      const sessionItems = new Set(plan.rounds.map((r) => r.question.itemId));
-      return deps.recordAnswers(world.profileId, answersToRecord(world.ctx, round, answer, sessionItems, credited));
+      return deps.recordAnswers(world.profileId, [memoryAnswerOf(round, answer)]);
     },
 
     noteStopped(world, plan, answered) {
@@ -174,7 +176,7 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       stoppedDrawn.set(key, (stoppedDrawn.get(key) ?? 0) + due);
     },
 
-    async finishSession(world, plan, answers, recorded, credited, now = new Date()) {
+    async finishSession(world, plan, answers, recorded, now = new Date()) {
       const { profileId, ctx } = world;
       await Promise.all(recorded);
       const result = sessionResult(plan.rounds, answers);
@@ -186,7 +188,7 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
         return { finished: { stars: result.stars, stronger: null, after: 'empty' }, world: { ...world, reviews: deps.reviews(profileId) ?? world.reviews } };
       }
       const next: ReviewWorld = { ...read.world, ctx: { ...read.world.ctx, today: ctx.today, seed: ctx.seed } };
-      const stronger = strongerCount(ctx.states, next.ctx.states, [...result.itemIds, ...credited]);
+      const stronger = strongerCount(ctx.states, next.ctx.states);
       return { finished: { stars: result.stars, stronger, after: afterSession(next.ctx, dayReviewLog(next.reviews, ctx.today)) }, world: next };
     },
 

@@ -137,7 +137,6 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
   const api = useRef<DailyReviewApi | null>(null);
   const answers = useRef(new Map<number, RoundAnswer>());
   const recorded = useRef<Promise<void>[]>([]);
-  const credited = useRef(new Set<string>());
   const allowLeave = useRef(false);
 
   const goHome = useCallback((): void => {
@@ -154,7 +153,6 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
       const plan = await a.startSession(w, kind, locale);
       answers.current = new Map();
       recorded.current = [];
-      credited.current = new Set();
       setPhase(plan === null ? { kind: 'nothing' } : { kind: 'playing', plan, index: 0 });
     },
     [locale],
@@ -215,7 +213,7 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
     if (p.kind !== 'playing' || w === null || a === null || answers.current.has(index)) return;
     answers.current.set(index, answer);
     setAnswered(answers.current.size);
-    recorded.current.push(a.recordRound(w, p.plan, index, answer, credited.current));
+    recorded.current.push(a.recordRound(w, p.plan, index, answer));
   };
 
   const onSolved = (): void => {
@@ -229,7 +227,7 @@ export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
     const a = api.current;
     if (w === null || a === null) return;
     setPhase({ kind: 'loading' });
-    void a.finishSession(w, p.plan, answers.current, recorded.current, credited.current).then(({ finished, world: next }) => {
+    void a.finishSession(w, p.plan, answers.current, recorded.current).then(({ finished, world: next }) => {
       world.current = next;
       setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
     });

@@ -122,7 +122,7 @@ describe('the spacing rule on topic words', () => {
   });
 });
 
-describe('fixed clocks in four time zones (the suite runs under TZ=UTC)', () => {
+describe('fixed clocks in four time zones (each test sets its zone, so the machine’s zone plays no part)', () => {
   const tz = process.env.TZ;
   afterEach(() => {
     process.env.TZ = tz;

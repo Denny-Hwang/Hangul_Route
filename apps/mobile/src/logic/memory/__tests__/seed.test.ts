@@ -1,7 +1,8 @@
 import { CATALOG, MemoryItemStateSchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { addDays, daysBetween } from '../../vocab/srs';
-import { SEED_PER_DAY, deriveSeed, seedSnapshot, type SeedInput } from '../seed';
+import { cellOfEpisode } from '../resolve';
+import { SEED_PER_DAY, deriveSeed, seedInputKey, seedSnapshot, type SeedInput } from '../seed';
 import { ITEMS, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, utcDay } from './fixtures';
 
 /**
@@ -64,14 +65,46 @@ describe('seeding at the five historical snapshot points', () => {
     }
   });
 
-  it('box 2 for items of a 3-star quest, box 1 otherwise; priority symbols at box 1 due on day 1', () => {
-    const boxes = new Set([...seeds.current.states.values()].map((s) => s.state.b));
+  it('box 2 when the item’s quests scored 3 stars, box 1 otherwise; priority symbols at box 1 due on day 1', () => {
+    const allThree = finished(20);
+    allThree.quests = allThree.quests.map((q) => ({ ...q, stars: 3 }));
+    const boxes = new Set([...deriveSeed(input(allThree)).states.values()].map((s) => s.state.b));
     expect([...boxes].sort()).toEqual([1, 2]);
     expect(seeds.current.states.get('sym:bieup')?.state).toMatchObject({ b: 1, d: addDays(SEED_DAY, 1), f: SEED_DAY });
     // Without the 3-star quests every seeded item is box 1.
     const twoStars = finished(20);
     twoStars.quests = twoStars.quests.map((q) => ({ ...q, stars: 2 }));
     expect(new Set([...deriveSeed(input(twoStars)).states.values()].map((s) => s.state.b))).toEqual(new Set([1]));
+  });
+
+  it('a cell of mixed stars seeds box 1: box 2 only when every done quest of the cells that teach the item scored 3 stars', () => {
+    const cell = LESSON_QUESTS[0]?.episodeId as string;
+    const snap = finished(20);
+    const doneCells = new Set(snap.quests.map((q) => cellOfEpisode(q.episodeId)));
+    snap.quests = snap.quests.map((q) => ({ ...q, stars: q.episodeId === cell ? 3 : 2 }));
+    expect(snap.quests.filter((q) => q.episodeId === cell).length).toBeGreaterThan(1);
+    // The items only this cell teaches among the done ones (the priority symbols are box 1 anyway).
+    const only = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && i.cells.includes(cell) && i.cells.every((c) => c === cell || !doneCells.has(c)) && !['sym:bieup', 'sym:nieun-batchim'].includes(i.id));
+    expect(only.length).toBeGreaterThan(0);
+    const three = deriveSeed(input(snap));
+    for (const i of only) expect(three.states.get(i.id)?.state.b, i.id).toBe(2);
+    const mixed = structuredClone(snap);
+    const one = mixed.quests.find((q) => q.episodeId === cell);
+    if (one) one.stars = 2;
+    const out = deriveSeed(input(mixed));
+    for (const i of only) expect(out.states.get(i.id)?.state.b, i.id).toBe(1);
+  });
+
+  it('a cell that only asks an item again dates it but never raises its box', () => {
+    const item = ITEMS.find((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && i.asked.some((c) => CATALOG.quests.some((q) => q.kind === 'lesson' && cellOfEpisode(q.episodeId) === c)));
+    expect(item).toBeDefined();
+    const askedCell = item?.asked.find((c) => CATALOG.quests.some((q) => q.kind === 'lesson' && cellOfEpisode(q.episodeId) === c)) as string;
+    const s = finished(0);
+    s.placements = [];
+    const quests = CATALOG.quests.filter((q) => q.kind === 'lesson' && cellOfEpisode(q.episodeId) === askedCell);
+    s.quests = quests.map((q) => ({ questId: q.id, episodeId: q.episodeId, startedAt: '2026-09-02T00:00:00.000Z', completedAt: '2026-09-02T00:00:00.000Z', stars: 3 as const, attempts: 1, accuracy: 1 }));
+    s.questDoneAt = Object.fromEntries(quests.map((q) => [q.id, '2026-09-02T00:00:00.000Z']));
+    expect(deriveSeed(input(s)).states.get(item?.id as string)?.state).toMatchObject({ b: 1, f: '2026-09-02' });
   });
 
   it('a quest finished after memSeededAt seeds nothing', () => {
@@ -144,6 +177,31 @@ describe('the all-107-quests fixture (scenario S-c)', () => {
     const s = finished(0);
     s.placements = [{ ...PLACEMENT, priorityTokens: ['syl:ga', 'sym:ㆍ'] }];
     expect(deriveSeed(input(s)).count).toBe(0);
+  });
+});
+
+describe('seedInputKey: when a device derives its seeded states again', () => {
+  const key = (snap: SeedInput['snapshot'], seededAt = SEEDED_AT) => seedInputKey(input(snap, seededAt));
+
+  it('is the same for the same inputs in any order, and changes with every input the derivation reads', () => {
+    const snap = finished(20);
+    const reordered = { ...snap, questDoneAt: Object.fromEntries(Object.entries(snap.questDoneAt ?? {}).reverse()), quests: [...snap.quests].reverse() };
+    expect(key(reordered)).toBe(key(snap));
+    expect(key(finished(21))).not.toBe(key(snap));
+    const starred = structuredClone(snap);
+    (starred.quests[0] as { stars: number }).stars = 3;
+    expect(key(starred)).not.toBe(key(snap));
+    expect(key({ ...snap, placements: [] })).not.toBe(key(snap));
+    expect(key(snap, '2026-10-23T08:00:00.000Z')).not.toBe(key(snap));
+    expect(seedInputKey({ ...input(snap), items: ITEMS.slice(1) })).not.toBe(key(snap));
+  });
+
+  it('a quest finished after memSeededAt changes nothing', () => {
+    const snap = finished(20);
+    const later = structuredClone(snap);
+    const extra = LESSON_QUESTS[20];
+    later.questDoneAt = { ...later.questDoneAt, [extra?.id as string]: '2026-10-25T00:00:00.000Z' };
+    expect(key(later)).toBe(key(snap));
   });
 });
 

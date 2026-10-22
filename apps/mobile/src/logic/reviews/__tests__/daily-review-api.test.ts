@@ -114,15 +114,14 @@ describe('a session, start to end', () => {
     expect(f.cellsAsked).toEqual([]);
     const answers = new Map<number, RoundAnswer>();
     const recorded: Promise<void>[] = [];
-    const credited = new Set<string>();
     plan?.rounds.forEach((_r, i) => {
       const a = { correct: i !== 0 };
       answers.set(i, a);
-      recorded.push(api.recordRound(world, plan, i, a, credited));
+      recorded.push(api.recordRound(world, plan, i, a));
     });
-    expect(api.recordRound(world, plan as NonNullable<typeof plan>, 99, { correct: true }, credited)).toBeInstanceOf(Promise);
+    expect(api.recordRound(world, plan as NonNullable<typeof plan>, 99, { correct: true })).toBeInstanceOf(Promise);
     expect(f.recorded).toHaveLength(10);
-    const { finished, world: next } = await api.finishSession(world, plan as NonNullable<typeof plan>, answers, recorded, credited, NOW);
+    const { finished, world: next } = await api.finishSession(world, plan as NonNullable<typeof plan>, answers, recorded, NOW);
     expect(finished).toEqual({ stars: 3, stronger: 9, after: 'offer' });
     expect(f.reviews).toHaveLength(1);
     expect(f.reviews[0]).toMatchObject({ kind: 'daily', scope: TODAY, resultStars: 3 });
@@ -139,7 +138,7 @@ describe('a session, start to end', () => {
     const { api, world } = await ready(f);
     const plan = await api.startSession(world, 'daily', 'en');
     f.deps.file = async () => null;
-    const { finished } = await api.finishSession(world, plan as NonNullable<typeof plan>, new Map(), [], new Set(), NOW);
+    const { finished } = await api.finishSession(world, plan as NonNullable<typeof plan>, new Map(), [], NOW);
     expect(finished).toEqual({ stars: 1, stronger: null, after: 'empty' });
   });
 

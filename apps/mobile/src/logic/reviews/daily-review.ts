@@ -8,7 +8,6 @@ import {
   buildKeepGoing,
   dueCount,
   reviewFirst,
-  withSentenceCredit,
   type DayReviewLog,
   type EngineContext,
   type EngineStates,
@@ -120,17 +119,6 @@ export function memoryAnswerOf(round: ReviewRound, answer: RoundAnswer): MemoryA
   return { itemId: round.question.itemId, rung: round.question.rung, correct: answer.correct, ...(answer.hinted ? { hinted: true } : {}) };
 }
 
-/**
- * The answers to record for one round: its own, then the credit inside sentences (section 4.3) for each due word in
- * it that the session does not ask itself and has not credited yet. `credited` is updated.
- */
-export function answersToRecord(ctx: EngineContext, round: ReviewRound, answer: RoundAnswer, sessionItems: ReadonlySet<string>, credited: Set<string>): MemoryAnswer[] {
-  const own = memoryAnswerOf(round, answer);
-  const out = withSentenceCredit(ctx, [own]).filter((a, i) => i === 0 || (!sessionItems.has(a.itemId) && !credited.has(a.itemId)));
-  for (const a of out.slice(1)) credited.add(a.itemId);
-  return out;
-}
-
 export interface SessionResult {
   stars: 1 | 2 | 3;
   /** The items asked, in order. */
@@ -150,10 +138,13 @@ export function sessionResult(rounds: readonly ReviewRound[], answers: ReadonlyM
   };
 }
 
-/** How many of `ids` got stronger: their best box rose between the two readings. A count of the learner's own items. */
-export function strongerCount(before: EngineStates, after: EngineStates, ids: Iterable<string>): number {
+/**
+ * How many items got stronger: their best box rose between the reading before the session and the one after it (the
+ * session's items and the words a right sentence credited inside it, section 4.3). A count of the learner's own items.
+ */
+export function strongerCount(before: EngineStates, after: EngineStates): number {
   let n = 0;
-  for (const id of new Set(ids)) if ((after[id]?.st.s ?? 0) > (before[id]?.st.s ?? 0)) n += 1;
+  for (const [id, row] of Object.entries(after)) if ((row?.st.s ?? 0) > (before[id]?.st.s ?? 0)) n += 1;
   return n;
 }
 

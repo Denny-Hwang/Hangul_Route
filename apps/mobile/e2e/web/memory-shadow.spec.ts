@@ -5,8 +5,9 @@ import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, p
 /**
  * F-CURR-002 row CM-12, shadow mode (section 12.3): with `memoryRecord` on for the learner, a quest's
  * scored rounds are recorded in the learner's own memory store (`hr:memory:<profileId>`) and the
- * one-time seeding latches `memSeededAt`; nothing on screen changes. With it off (the built-in pct
- * 0, or a remote off), nothing is recorded. The remote copy is the stored one: this build has no API.
+ * one-time seeding latches `memSeededAt`. With it off, nothing is recorded; turned off after it
+ * recorded (a remote off), the store is kept as it was and the home screen reads the same as with it
+ * on. The remote copy is the stored one: this build has no API, so a change takes a reload.
  */
 
 const FOODS = ['gimchi', 'bap', 'gimbap', 'jeotgarak'] as const;
@@ -27,9 +28,54 @@ async function onboard(page: Page): Promise<string> {
   return profiles?.[0]?.id ?? '';
 }
 
-async function memoryRecord(page: Page, flag: { on: boolean; pct: number }): Promise<void> {
+async function memoryRecord(page: Page, flag: { on: boolean; pct: number }, reload = false): Promise<void> {
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { memoryRecord: flag } });
+  if (reload) await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
+}
+
+/** The quests saved as done in the learner's progress: the positive signal that a quest's answers are behind us. */
+async function questsDone(page: Page, id: string): Promise<number> {
+  return Object.keys((await readStored<{ questDoneAt?: Record<string, string> }>(page, `progress:${id}`))?.questDoneAt ?? {}).length;
+}
+
+/** The home screen's text, as a learner sees it. */
+async function homeText(page: Page): Promise<string> {
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  return (await page.locator('body').innerText()).replace(/\s+/g, ' ').trim();
+}
+
+/** Food & Daily Life quest 5 (Family at the Table): Discover's three pages, skip Match Sound, build 바 보 사 수, then the Check and Results. */
+async function playFamilyQuest(page: Page): Promise<void> {
+  await page.getByText('Journey', { exact: true }).last().click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Food & Daily Life') }).click();
+  // Quest 4 is done, so the first Start is quest 5's.
+  await page.getByRole('button', { name: 'Start', exact: true }).nth(0).click();
+  // The soft-prerequisite sheet asked once already (quest 4); it may not ask again.
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(headerClose(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  for (const pageNo of [1, 2, 3]) {
+    await expect(page.getByText(`Page ${pageNo} of 3`, { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  for (const [syllable, parts] of [
+    ['바', ['ㅂ', 'ㅏ']],
+    ['보', ['ㅂ', 'ㅗ']],
+    ['사', ['ㅅ', 'ㅏ']],
+    ['수', ['ㅅ', 'ㅜ']],
+  ] as const) {
+    await expect(page.getByTestId('build-letter-speaker')).toContainText(syllable);
+    for (const part of parts) await page.getByRole('button', { name: `Korean letter ${part}, tap to select` }).click();
+  }
+  await playCheck(page);
+  await page.getByRole('button', { name: 'See results' }).click();
+  await expect(page.getByText('Next up')).toBeVisible();
 }
 
 /** Food & Daily Life quest 1: Discover, skip Match Sound, match the four Pic-Word pairs, then the Check and Results. */
@@ -40,7 +86,10 @@ async function playLifeQuest(page: Page): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(1, 'Food & Daily Life') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).nth(0).click();
-  await page.getByRole('button', { name: 'Play anyway' }).click();
+  // The soft-prerequisite sheet asked once already (quest 4); it may not ask again.
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
   await expect(headerClose(page)).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
@@ -65,7 +114,7 @@ async function shots(page: Page, name: string): Promise<void> {
   }
 }
 
-test('memoryRecord on: the rounds are recorded in the learner’s own store, the seeding latches, the screens do not change', async ({ page }) => {
+test('memoryRecord on: the rounds are recorded in the learner’s own store and the seeding latches (screenshots kept for review)', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   const id = await onboard(page);
@@ -102,8 +151,27 @@ test('memoryRecord off: the same quest records nothing and seeds nothing', async
   const id = await onboard(page);
   await memoryRecord(page, { on: false, pct: 100 });
   await playLifeQuest(page);
-  await page.waitForTimeout(1500);
+  // The quest is saved as done: its answers came and went.
+  await expect.poll(() => questsDone(page, id), { timeout: 10_000 }).toBe(1);
   expect(await readStored(page, `memory:${id}`)).toBeNull();
   expect((await readStored<{ memSeededAt?: string }>(page, `progress:${id}`))?.memSeededAt).toBeUndefined();
+  expect(errors).toEqual([]);
+});
+
+test('memoryRecord turned off after it recorded: the home screen reads the same, the next quest records nothing new, and the store is kept', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  const id = await onboard(page);
+  await memoryRecord(page, { on: true, pct: 100 });
+  await playLifeQuest(page);
+  await expect.poll(async () => Object.keys((await readStored<StoredMemory>(page, `memory:${id}`))?.rows ?? {}), { timeout: 10_000 }).toContain('lex:jeotgarak');
+  const recorded = await readStored<StoredMemory>(page, `memory:${id}`);
+  const withFlag = await homeText(page);
+
+  await memoryRecord(page, { on: false, pct: 100 }, true);
+  expect(await homeText(page)).toBe(withFlag);
+  await playFamilyQuest(page);
+  await expect.poll(() => questsDone(page, id), { timeout: 10_000 }).toBe(2);
+  expect(await readStored<StoredMemory>(page, `memory:${id}`)).toEqual(recorded);
   expect(errors).toEqual([]);
 });
