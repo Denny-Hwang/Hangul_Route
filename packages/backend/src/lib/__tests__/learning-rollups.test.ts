@@ -53,7 +53,7 @@ const FULL_MEMORY_DAILY = {
 
 const SAMPLES: Record<(typeof ROLLUP_EVENT_NAMES)[number], Record<string, unknown>> = {
   'memory.daily': FULL_MEMORY_DAILY,
-  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '31+' },
+  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '46-62' },
   'session.end': { durationSeconds: 754, streakDays: 3, questLeft: 1, leftAtKind: 'listen-pick', afterWrongStreak: 2 },
   'review.complete': { kind: 'daily', stageKey: 'stage1', symbolsCorrect: 4, wordsCorrect: 3, retries: 1, stars: 2 },
   'goal.met': { points: 7, target: 6 },
@@ -108,7 +108,7 @@ describe('rows per event', () => {
   it('maps each sample onto its documented cells', () => {
     expect(rollupKeysFor('items.seeded', SAMPLES['items.seeded'])).toEqual([
       { metric: 'items.seeded.count', dim: '', bucket: '500-999' },
-      { metric: 'items.seeded.spreadDays', dim: '', bucket: '31+' },
+      { metric: 'items.seeded.spreadDays', dim: '', bucket: '46-62' },
     ]);
     expect(rollupKeysFor('session.end', SAMPLES['session.end'])).toEqual([
       { metric: 'session.end.minutes', dim: '', bucket: '12' },
