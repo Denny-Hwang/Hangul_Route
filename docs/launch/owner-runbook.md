@@ -208,6 +208,7 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | `EXPO_PUBLIC_PIN_PAUSE_STEPS` | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-2 부터 기본 켜짐 (PIN 을 5번 틀릴 때마다 쉬는 시간이 30초, 1분, 5분, 15분, 그 뒤로 60분으로 길어진다). **kill switch 일 뿐**이다: 끌 때만 `false` (또는 `0`, `off`, `no`; 대소문자·앞뒤 공백 무시, 그 밖의 값은 켜짐) → Retry deployment. 끄면 예전처럼 매번 30초만 쉰다. 학습자 전환 때 어른 세션 닫기, Rescue Code 의 따로 세는 횟수, 탭 사이 공유 횟수는 스위치가 없다 | OA-2 머지 후엔 할 일 없음 | (켜짐이 기본값) |
 | `EXPO_PUBLIC_WHO_CHOOSER` | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-10 부터 기본 켜짐 ("Who is using this?": 학습자가 2명 이상이거나 잠긴 프로필이 있는 기기에서 앱을 열 때, 30분 넘게 다른 앱에 있다가 돌아올 때, 어른 페이지의 Learner app 에서 돌아올 때 누가 쓰는지 묻는 화면). **kill switch 일 뿐**이다: 끌 때만 `false` (또는 `0`, `off`, `no`; 대소문자·앞뒤 공백 무시, 그 밖의 값은 켜짐) → Retry deployment. 끄면 예전처럼 마지막 학습자로 바로 열리고 Home 의 Switch 버튼이 숨는다. 프로필 잠금은 꺼도 그대로 지켜진다 | OA-10 머지 후엔 할 일 없음 | (켜짐이 기본값) |
 | `EXPO_PUBLIC_MULTI_JOIN` | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-10 부터 기본 켜짐 ("Who is joining?": 학습자가 2명 이상인 기기에서 가족 코드로 여러 학습자를 한 번에 가족에 넣는 체크리스트). **kill switch 일 뿐**이다: 끌 때만 `false` (또는 `0`, `off`, `no`) → Retry deployment. 끄면 예전처럼 한 번에 한 학습자만 참여한다 | OA-10 머지 후엔 할 일 없음 | (켜짐이 기본값) |
+| `EXPO_PUBLIC_GUEST_LESSON` | 비워 둔다: [GU] AMENDMENTS-GUEST-FIRST-LESSON GU-7 부터 웹 빌드에서 기본 켜짐 (사이트의 Start learning 이 `try=1` 로 프로필 없이 1단계 퀘스트 1 을 바로 연다). 네이티브 빌드에는 넣지 않는다 (GU-D16: 넣어도 네이티브에서는 꺼짐). **kill switch 일 뿐**이다: 끌 때만 `false` (또는 `0`, `off`, `no`; 대소문자·앞뒤 공백 무시, 그 밖의 값은 켜짐) → Retry deployment. 끄는 순서와 사이트 문구 되돌리기, 멈추는 기준은 아래 §L | GU-7 머지 후엔 할 일 없음 | (켜짐이 기본값; 웹만) |
 | `EXPO_PUBLIC_PIN_RESET_SIGNIN` (학습자 앱) · `NEXT_PUBLIC_PIN_RESET_SIGNIN` (콘솔) | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-6 에서는 둘 다 **꺼짐**이 기본값이다 (웹의 Forgot PIN? 에서 계정으로 로그인해 새 어른용 PIN 을 만드는 길). OA-10 에서도 **꺼진 채로** 남았다: 켜기 전 확인 두 가지가 아직 없다 (`pin-reset-signin.spec.ts` 를 도는 필수 CI 레인, Clerk 개발 인스턴스에서 패스키 거부 확인). 그 전에 미리 켤 일은 없다; 켜려면 두 변수에 모두 `true` → Retry deployment (한쪽만 켜면 학습자 앱에 버튼이 없거나 콘솔이 '지금은 쓸 수 없어요' 를 보여 준다; 두 변수는 같은 배포에서 바꾸고 학습자 앱을 먼저 배포한다. OA-10 이 켜기 전에 `pin-reset-signin.spec.ts` 의 CI 레인과 Clerk 개발 인스턴스에서 패스키 거부 확인이 먼저 있어야 한다) | 할 일 없음 (두 확인 뒤 켜는 PR 이 따로 온다) | 꺼짐: 버튼이 숨겨지고 `/account/pin-reset` 은 쓸 수 없다는 줄만 보인다 |
 | `EXPO_PUBLIC_BIOMETRIC_SHORTCUT` | 비워 둔다: [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-9 부터 기본 켜짐 (네이티브 빌드만). 켜져 있어도 **기기마다 꺼진 채로 시작**하고, 어른이 Grown-up area 에서 PIN 을 새로 넣은 뒤 "Face or fingerprint for grown-ups" 스위치를 켜야 쓰인다. **kill switch 일 뿐**이다: 끌 때만 `false` (또는 `0`, `off`, `no`; 대소문자·앞뒤 공백 무시, 그 밖의 값은 켜짐) → Xcode 로 다시 빌드. 끄면 스위치가 숨고 이미 켠 기기의 설정도 무시되어 PIN 패드만 쓴다 | OA-9 머지 후엔 할 일 없음 | (켜짐이 기본값; 웹에는 없음) |
 | `EXPO_PUBLIC_CURR_*` (19개 스위치, 예: `EXPO_PUBLIC_CURR_DAILY_REVIEW`) · `EXPO_PUBLIC_CURR_PACKS_OFF` · `EXPO_PUBLIC_CURR_GAMES_OFF` | 비워 둔다: 바닥 (floor) 이 켜진 상태이고, 실제 켜짐과 비율은 D1 `remote_config` 가 정한다 (§K). 기능을 강제로 끌 때만 넣는다 (§K K-2 의 4) | F-CURR-002 CM-2 머지 후, 끌 때만 | 넣은 스위치의 F-CURR-002 화면은 `remote_config` 가 무엇이라 해도 숨어 있다 |
@@ -606,6 +607,25 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 6. 실행 결과: Cloudflare → Workers & Pages → `hangul-route-api` → Logs 에서 하루 한 줄 `guardrail.run` (내린 플래그, 비교하고 그대로 둔 플래그 `kept`, 건너뛴 플래그와 이유 코드 `changed-today` · `future-updated-at` · `too-few-days` · `stale-step` · `bad-updated-at` · `unchecked`, 그리고 `unguarded` 수) 을 본다. 저장된 로그를 보려면 같은 화면의 Settings → Observability 에서 Workers Logs 를 켠다. `future-updated-at` 이 보이면 그 줄의 `updated_at` 이 미래 시각이라 가드레일이 꺼진 상태이니 지금 시각으로 고친다. `unchecked` 는 비교할 만큼 세션이 모이지 않아 아무것도 비교하지 못했다는 뜻이다 (건강하다는 뜻이 아니다). `unguarded` 는 기다려도 자동 가드레일이 다시 보지 않는 플래그 수 (`stale-step` · `future-updated-at` · `bad-updated-at` · `unchecked`) 다. 0 이 아니면 그 플래그를 다음 단계로 올리거나, 지금 단계를 유지할 거면 K-1 로 `updated_at` 을 지금 시각으로 다시 적어 새 기준을 만든다.
 7. D1 쓰기 줄 (무료 한도의 50%) 은 롤업이 스스로 쓴 줄 수만 센다. 롤업은 하루 20,000 줄 (20%) 에서 멈추므로 이 줄은 지금 울리지 않는다 (참고용, CM-70d 전까지). 동기화를 포함한 전체 양은 D1 대시보드의 Metrics 에서 램프 중에 한 번씩 본다.
 8. 자동 가드레일을 급하게 멈추기 (배포 불필요): `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `GUARDRAIL_EVALUATOR` = `disabled` → Deploy. 다음 실행부터 가드레일은 아무것도 읽거나 쓰지 않고, 보존 기간 정리는 그대로 돈다. Logs 에는 `guardrail.run` 에 `disabled: true` 가 보인다. 다시 켤 때는 변수를 지운다 (`[vars]` 에는 넣지 않는다).
+
+## L. 프로필 없이 첫 퀘스트 (guest first quest, AMENDMENTS-GUEST-FIRST-LESSON GU-7, sections 1, 13.1, 15)
+
+> GU-7 부터 학습자 앱 웹 빌드의 `EXPO_PUBLIC_GUEST_LESSON` 이 기본 켜짐이고, 사이트의 `SITE_CLAIMS.guestLesson` 도 같은 PR 에서 켜졌다. 사이트의 Start learning 은 `https://app.hangulroute.com/?try=1` 로 가고, 프로필이 없는 기기에서는 Stage 1 퀘스트 1 이 바로 열린다 (첫 글자 ㅏ 까지 2번 누름; 프로필이 있는 기기는 "Who is using this?" 에서 Try the first quest 를 눌러 3번). 대시보드에서 할 일은 없다. Stripe 와는 무관하다 (Live 는 계속 꺼 둔다). 배포 순서: GU-1 (Worker 의 `guest.*` 규칙과 하루 집계) 이 운영에 먼저 나가 있어야 한다.
+
+**L-1. 멈추는 기준 (kill criteria, 하나라도 해당하면 L-2 로 끈다)**
+- G5 (`onboarding.started` 중 `firstRun: true` 의 하루 수, 7일 평균) 가 켜기 전 14일 평균의 80 % 아래로 **7일 연속** 내려간다. D1 Console: `SELECT day, SUM(n) FROM telemetry_daily WHERE name = 'onboarding.started' AND dims LIKE '%"firstRun":true%' GROUP BY day ORDER BY day DESC LIMIT 28;`
+- 운영 빌드에서 CS-G 테스트 (`apps/mobile/e2e/web/guest-child-safety.spec.ts` 의 CS-G1 ~ CS-G10, 또는 그 표가 가리키는 테스트) 가 하나라도 실패한다.
+- 저장할 때 진도를 잃었다는 신고, 또는 첫 퀘스트 중인 학습자가 어른 화면 (Grown-up area, 결제, 콘솔, 프로필 등) 에 닿았다는 신고가 하나라도 들어온다.
+
+**L-2. 끄기 (kill switch, 5분) — 앱 스위치를 먼저**
+1. `hangul-route-app` → Settings → Build → Variables → `EXPO_PUBLIC_GUEST_LESSON=false` → **Retry deployment**. 빌드 변수라서 다시 빌드·배포해야 바뀐다.
+2. 확인: `https://app.hangulroute.com/?try=1` 을 새 창 (프로필 없는 브라우저) 에서 열면 퀘스트가 아니라 Welcome 이 보인다. 끄면 `try=1` 은 무시되고, Welcome 의 카드와 "Who is using this?" 의 첫 퀘스트 타일이 숨는다. 이미 브라우저에 남은 첫 퀘스트 기록은 지우지 않는다: People on this device 의 **Remove the first quest** 와 30일 (프로필이 있는 기기는 7일) 정리는 그대로 돈다.
+3. 바로 꺼지지는 않는다: 이미 열린 탭과 설치한 PWA 는 서비스 워커가 새 번들을 받을 때까지 (업데이트를 찾은 뒤 다음 실행) 예전 번들로 첫 퀘스트를 계속 연다. 원격으로 바로 끄는 `guest_lesson` 줄 (§K 의 원격 설정) 은 CM-2 가 main 에 들어온 뒤의 첫 후속 작업이다 (사양 section 22).
+
+**L-3. 사이트 문구 되돌리기 (같은 날)**
+- 사이트는 앱 변수를 읽지 않는다. 코드 상수 `SITE_CLAIMS.guestLesson` (`apps/web/src/data/site-claims.ts`) 만 따른다.
+- 하루 넘게 끄거나, **CS-G 실패 때문에 껐다면 기간과 상관없이**, `SITE_CLAIMS.guestLesson` 을 `false` 로 되돌리는 PR 을 **같은 날** 요청하고 사이트를 다시 배포한다. 그러면 Start learning 의 `try=1`, 홈 hero 의 한 줄, How it works 와 /learners 의 첫 퀘스트 문구, 개인정보 처리방침의 첫 퀘스트 항목이 함께 사라진다. 하루 안에 다시 켜는 짧은 사고 (CS-G 실패가 아닌 경우) 라면 사이트 문구는 그대로 둔다 (앱이 꺼진 동안 `try=1` 은 Welcome 으로 간다).
+- 다시 켜기: 변수를 지우고 Retry deployment. 사이트 문구를 되돌렸다면 다시 켜는 PR 을 앱 배포가 끝난 뒤에 머지한다.
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.

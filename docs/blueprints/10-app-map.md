@@ -150,6 +150,7 @@ Hangul Route
 | `profiles/create-learner` | Onboarding/CreateProfile | 누가 배우나·이름·레벨·아바타 (F-LEARN-001) | S | F-PROF-001 | ✓ |
 | `onboarding/first-quest-preview` | Onboarding/FirstQuestPreview | Hoya 소개 + 첫 퀘스트 진입 | S | – | NEW |
 | `profiles/who-is-using` | WhoIsUsing (root, cold launch) | [OA] Who is using this?: learner tiles (one tap, no PIN; a locked tile asks the PIN), Add a learner, the grown-up rows behind the PIN (Family, Teacher, School on the web; Grown-up area). Replaces `profiles/picker`, which was never built. On since OA-10 (`EXPO_PUBLIC_WHO_CHOOSER`, kill switch) | S | F-PROF-001 §3.1, AMENDMENTS-ONE-ACCOUNT-MANY-USERS §6 | ✓ |
+| `onboarding/guest-first-quest`, `onboarding/guest-save` | Guest stack (root, `try=1`): QuestPlayer, Minigame, Results (guest), CardDetail, GuestLater, CreateProfile { from: 'guest' }, PinEntry { next: 'SaveGuest' } | [GU] Stage 1 quest 1 before any profile, then Keep my progress (a name and the Privacy step; the same id becomes the learner) or Not now; Welcome's waiting card; the chooser's Try the first quest and guest tiles. Web only, on since GU-7 (`EXPO_PUBLIC_GUEST_LESSON`, kill switch) | S | AMENDMENTS-GUEST-FIRST-LESSON §6-9 | ✓ |
 | `profiles/people-on-device` | ParentDashboard card → PersonOnDevice | [OA] People on this device: every learner, the lock switch, Remove from this device (fresh PIN, ConfirmSheet; OA-7a). A family code on a device with 2 or more learners opens Who is joining? from Join (OA-7b) | S | AMENDMENTS-ONE-ACCOUNT-MANY-USERS §10 | ✓ |
 | `profiles/pin-entry` | (modal) | 부모 확인 | S | F-PROF-001 | ✓ |
 | `profiles/switch-button` | (component) | 세션 중 전환 | S | F-PROF-001 | ✓ |
@@ -283,6 +284,20 @@ cold launch
   └─ (shared device, or the active learner locked; [OA] OA-10) ─▶ profiles/who-is-using ──(learner tile)──▶ Main tabs
                                     ├────(locked tile)───▶ profiles/pin-entry ─▶ Main tabs (no grown-up session)
                                     └────(grown-up row)──▶ profiles/pin-entry ─▶ parent/dashboard | web /parent · /teach
+
+[GU] the site's Start learning (`/?try=1`, web only; AMENDMENTS-GUEST-FIRST-LESSON, on since GU-7)
+  ├─ (profiles == 0) ─▶ Guest stack: quest/player (Stage 1 quest 1, for a nameless guest) ─▶ minigame/shell ─▶ results (guest)
+  │      results (guest) ─┬─(Keep my progress)─▶ [verify: PinEntry { next: 'SaveGuest' }, verify only] ─▶ CreateProfile { from: 'guest' }
+  │                       │                        (name, then Privacy) ─▶ promoteGuest (same id) ─▶ Main tabs (Home, one Hoya bubble)
+  │                       ├─(Not now | Back)──▶ GuestLater ─(Close)─▶ onboarding/welcome (the waiting card: Back to my quest / Add my name)
+  │                       └─(See my card)─────▶ library/card-detail ─▶ results (guest)
+  ├─ (profiles >= 1, the chooser on) ─▶ profiles/who-is-using + Try the first quest tile ─▶ Guest stack (as above; nobody selected)
+  │      a live guest shows as its own tile (no progress) ─▶ Guest stack (resume)
+  └─ gate=… or a join link in the same address win: try is dropped (CS-G4)
+  The Guest stack reaches only quest/player, minigame/shell, results, card-detail, GuestLater, CreateProfile and
+  PinEntry { next: 'SaveGuest' } (CS-G1); no grown-up route, persona home, billing, Paywall, Join, notes, level check,
+  Lecture or Profile. The owner keeps or removes an unsaved quest from People on this device (Keep as a learner,
+  Remove the first quest).
 
 Main tabs ─┬─ home/todays-mission ─┬─▶ quest/player (card ①②)
            │                       ├─▶ episode/detail (card ③ story)
