@@ -112,8 +112,6 @@ export const landing = {
     // [SA] AMENDMENTS-SEATS-ADMINS 9.5: glossary Plan Familiar, Licencia de Grupo, estudiante.
     sizes: (family: number, group: number) =>
       `El Plan Familiar es para hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })}. La Licencia de Grupo es para hasta ${plural('es', group, { one: `${group} estudiante`, other: `${group} estudiantes` })} en una clase o una escuela.`,
-    freeSizes: (family: number, cls: number, school: number) =>
-      `Los espacios gratuitos admiten hasta ${plural('es', family, { one: `${family} estudiante`, other: `${family} estudiantes` })} en una familia, ${plural('es', cls, { one: `${cls} estudiante`, other: `${cls} estudiantes` })} en una clase y ${plural('es', school, { one: `${school} estudiante`, other: `${school} estudiantes` })} en una escuela.`,
   },
   persona: {
     learners: {

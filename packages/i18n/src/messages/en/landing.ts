@@ -170,11 +170,11 @@ export const landing = {
   },
   /**
    * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The home's cost line is the
-   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line with
-   * `freeSizes`, then the `paid.coming` line only while plans are coming (`sizes` once they are on sale), then
-   * `managedLater` while plans are coming or `managedInApp` once they are on sale, so the host is named once (§3.5). The free
-   * plan is all of Stage 1 (F-ENT-003 OD-1), so
-   * `free.stage1` is the same in every state and says nothing about paid plans. Plans bought on the web renew
+   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line (never
+   * the free limits, owner decision 2026-10-21), then the `paid.coming` line only while plans are coming (`sizes` once
+   * they are on sale), then `managedLater` while plans are coming or `managedInApp` once they are on sale, so the host
+   * is named once (§3.5). The free plan is all of Stage 1 (F-ENT-003 OD-1), so `free.stage1` is the same in every
+   * state and says nothing about paid plans. Plans bought on the web renew
    * yearly (BY-1): the signed-in billing page states the term (the Terms will too, S-7), and no site line names a
    * term or calls a plan one-time.
    */
@@ -198,12 +198,6 @@ export const landing = {
      */
     sizes: (family: number, group: number) =>
       `The Family Plan is for up to ${plural('en', family, { one: `${family} learner`, other: `${family} learners` })}. The Group License is for up to ${plural('en', group, { one: `${group} student`, other: `${group} students` })} in a class or a school.`,
-    /**
-     * What a free space holds, in every Plans block and every claim state, the numbers passed in from content-schema
-     * (`FAMILY_LIFETIME_LEARNERS`, `FREE_CLASS_STUDENT_CAP` for a stand-alone class, `SCHOOL_LEARNER_CAP`). No price.
-     */
-    freeSizes: (family: number, cls: number, school: number) =>
-      `Free spaces hold up to ${plural('en', family, { one: `${family} learner`, other: `${family} learners` })} in a family, ${plural('en', cls, { one: `${cls} student`, other: `${cls} students` })} in a class and ${plural('en', school, { one: `${school} student`, other: `${school} students` })} in a school.`,
   },
   /**
    * The three persona pages (F-SITE-002 §3.4 to §3.6, appendix B.2 to B.4). Lines named after a claim (`route`,

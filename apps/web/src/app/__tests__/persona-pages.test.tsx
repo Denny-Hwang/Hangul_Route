@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS, SCHOOL_LEARNER_CAP } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -206,18 +206,13 @@ const render = (Page: typeof ParentsPage, claims?: Readonly<SiteClaims>): string
  * the paid line's place, its numbers from content-schema, never a price or a term.
  */
 const SIZES = plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
-/** What a free space holds, in every Plans block and every claim state (F-SITE-002 site facts, 2026-10-21). */
-const FREE_SIZES = plans.freeSizes(FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP);
 function expectPlans(html: string, paidPlans: SiteClaims['paidPlans']): void {
   const lines = linesOf(html, t.persona.plansTitle);
-  // The free facts come first and together (the free line and the free limits, in every claim state); then the paid or
-  // sizes line; the managed line says "when plans arrive" until they are on sale.
+  // The free line comes first, alone (the site never states the free limits, owner decision 2026-10-21); then the
+  // paid or sizes line; the managed line says "when plans arrive" until they are on sale.
   expect(lines).toEqual(
-    paidPlans === 'coming'
-      ? [`${plans.free.stage1} ${FREE_SIZES}`, plans.paid.coming, plans.managedLater]
-      : [`${plans.free.stage1} ${FREE_SIZES}`, SIZES, plans.managedInApp],
+    paidPlans === 'coming' ? [plans.free.stage1, plans.paid.coming, plans.managedLater] : [plans.free.stage1, SIZES, plans.managedInApp],
   );
-  expect(count(textOf(mainOf(html)), FREE_SIZES)).toBe(1);
   expect(textOf(mainOf(html))).not.toContain(paidPlans === 'coming' ? plans.managedInApp : plans.managedLater);
   expect(lines.join(' ').match(/app\.hangulroute\.com/g)).toHaveLength(1);
   expect(textOf(mainOf(html))).not.toContain(plans.paid.inApp);
@@ -542,6 +537,26 @@ describe('persona page modules hold no console, demo, account or billing path', 
   });
 });
 
+describe('no free limits on the site (owner decision 2026-10-21)', () => {
+  // The stand-alone free class cap is the one free limit no plan line shares (the Group License also holds 50).
+  const freeClass: Record<'en' | 'es' | 'ko', RegExp> = {
+    en: new RegExp(`\\b${FREE_CLASS_STUDENT_CAP} (students?|learners?)\\b`),
+    es: new RegExp(`\\b${FREE_CLASS_STUDENT_CAP} estudiantes?\\b`),
+    ko: new RegExp(`${FREE_CLASS_STUDENT_CAP}명`),
+  };
+  const states: ReadonlyArray<Readonly<SiteClaims>> = [SITE_CLAIMS, { ...SITE_CLAIMS, paidPlans: 'inApp' }, ALL_CLAIMS_ON, ALL_CLAIMS_OFF];
+
+  it.each(['en', 'es', 'ko'] as const)('%s: no persona page states the free class limit, in any claim state', (locale) => {
+    for (const Page of [LearnersPage, ParentsPage, TeachersPage]) {
+      for (const claims of states) {
+        expect(textOf(mainOf(renderToStaticMarkup(<Page locale={locale} claims={claims} />))), `${locale} paidPlans ${claims.paidPlans}`).not.toMatch(
+          freeClass[locale],
+        );
+      }
+    }
+  });
+});
+
 describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', () => {
   const pages = [
     ['/parents', ParentsPage],
@@ -555,8 +570,7 @@ describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', (
     for (const [path, Page] of pages) {
       const html = renderToStaticMarkup(<Page locale={locale} claims={onSale} />);
       expect(count(textOf(mainOf(html)), sizes), `${locale} ${path}`).toBe(1);
-      const free = l.plans.freeSizes(FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, SCHOOL_LEARNER_CAP);
-      expect(linesOf(html, l.persona.plansTitle), `${locale} ${path}`).toEqual([`${l.plans.free.stage1} ${free}`, sizes, l.plans.managedInApp]);
+      expect(linesOf(html, l.persona.plansTitle), `${locale} ${path}`).toEqual([l.plans.free.stage1, sizes, l.plans.managedInApp]);
     }
   });
 

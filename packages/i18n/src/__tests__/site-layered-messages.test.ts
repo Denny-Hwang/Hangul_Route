@@ -118,8 +118,8 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.plans.managedLater).toBe('When plans arrive, you will manage them at app.hangulroute.com after you sign in.');
     // [SA] SA-6: the learners each plan holds, numbers passed in (landing-plan-sizes.test.ts).
     expect(l.plans.sizes(4, 50)).toBe('The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.');
-    expect(l.plans.freeSizes(4, 20, 50)).toBe('Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school.');
-    expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp', 'managedLater', 'sizes', 'freeSizes']);
+    // No free limits on the site (owner decision 2026-10-21): no freeSizes key.
+    expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp', 'managedLater', 'sizes']);
     expect(Object.keys(l.plans.paid)).toEqual(['coming', 'inApp']);
   });
 
@@ -138,13 +138,13 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
 
   /**
    * How the pages compose the cost words (F-SITE-002 §3.3 block 5, §3.5 and §3.6 Plans). Home: one paragraph, the
-   * free line then the paid line. Persona pages: the free line with the paid line while plans are coming (the sizes
-   * line once they are on sale), then the free limits, then `managedLater` while plans are coming or `managedInApp`
-   * once they are on sale. S-4b and S-5 pin the rendered output.
+   * free line then the paid line. Persona pages: the free line alone (never the free limits, owner decision
+   * 2026-10-21), then the paid line while plans are coming (the sizes line once they are on sale), then `managedLater`
+   * while plans are coming or `managedInApp` once they are on sale. S-4b and S-5 pin the rendered output.
    */
   const homeCost = (paidPlans: 'coming' | 'inApp'): string => `${l.plans.free.stage1} ${l.plans.paid[paidPlans]}`;
   const personaPlans = (paidPlans: 'coming' | 'inApp'): string[] => [
-    `${l.plans.free.stage1} ${l.plans.freeSizes(4, 20, 50)}`,
+    l.plans.free.stage1,
     paidPlans === 'coming' ? l.plans.paid.coming : l.plans.sizes(4, 50),
     paidPlans === 'coming' ? l.plans.managedLater : l.plans.managedInApp,
   ];
@@ -158,12 +158,12 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
 
   it('the Plans block of a persona page, in both paidPlans states, names the app host once (rule 3: no repeats)', () => {
     expect(personaPlans('coming')).toEqual([
-      'Stage 1 is free. Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school.',
+      'Stage 1 is free.',
       'Words, sentences and stories are in the app too. Family and class plans are on the way.',
       'When plans arrive, you will manage them at app.hangulroute.com after you sign in.',
     ]);
     expect(personaPlans('inApp')).toEqual([
-      'Stage 1 is free. Free spaces hold up to 4 learners in a family, 20 students in a class and 50 students in a school.',
+      'Stage 1 is free.',
       'The Family Plan is for up to 4 learners. The Group License is for up to 50 students in a class or a school.',
       'Plans and billing are managed at app.hangulroute.com after you sign in.',
     ]);
