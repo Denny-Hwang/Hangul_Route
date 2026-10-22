@@ -336,3 +336,52 @@ describe('nosniffLessonChunks', () => {
     expect(nosniffLessonChunks('', urls)).toEqual([]);
   });
 });
+
+describe('the review-item chunk of row CM-10 (the same checks, its own budget line)', () => {
+  const REVIEW = [{ name: 'review-items', hash: '5555666677778888' }];
+  const reviewChunk = (hash) => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}";e.REVIEW_ITEM_ROWS=[]});`;
+    return { url: `${WEB_JS_DIR}/review-items-${md5(text)}.js`, text };
+  };
+  const withReview = () => [{ url: START, text: `${startText}var r="5555666677778888";` }, ...MANIFEST.map((m) => chunk(m.name, m.hash)), reviewChunk('5555666677778888')];
+
+  it('passes the chunk as its own precached bundle, and fails it missing from the precache', () => {
+    const bundles = withReview();
+    const manifest = [...MANIFEST, ...REVIEW];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles).slice(0, 3) })).toEqual([`${bundles[3].url} is missing from the precache`]);
+  });
+
+  it('reports it on a line of its own, before the learner precache', () => {
+    const bundles = withReview();
+    const report = precacheReport({ manifest: MANIFEST, reviewItems: REVIEW, bundles, precache: { count: 4, size: 99 } });
+    expect(report.reviewItemChunks).toEqual({ count: 1, raw: bundles[3].text.length, gzip: expect.any(Number), largest: { url: bundles[3].url, raw: bundles[3].text.length } });
+    const lines = reportLines(report);
+    expect(lines.at(-2)).toMatch(
+      new RegExp(`^ {2}review-item chunk {2}1 bundles {2}\\d+ B raw {2}\\d+ B gzip {2}\\(ceiling ${PRECACHE_BUDGET.reviewItemsRaw} B raw, ${PRECACHE_BUDGET.reviewItemsGzip} B gzip\\)$`),
+    );
+    expect(lines.at(-1)).toContain('learner precache');
+    expect(precacheBudgetProblems(report)).toEqual([]);
+  });
+
+  it('holds the built bundle to the review-item lines, raw and gzip', () => {
+    const lines = { ...PRECACHE_BUDGET, reviewItemsRaw: 100, reviewItemsGzip: 40 };
+    const report = {
+      start: { url: START, raw: 1, gzip: 1 },
+      reviewItemChunks: { count: 1, raw: 101, gzip: 41, largest: { url: 'x', raw: 101 } },
+      precache: { count: 2, raw: 102 },
+    };
+    expect(precacheBudgetProblems(report, lines)).toEqual([
+      expect.stringMatching(/^the review-item bundle is 101 B raw, over its ceiling of 100 B .*build-review-items\.mjs BUDGET/),
+      expect.stringMatching(/^the review-item bundle is 41 B gzip, over its ceiling of 40 B gzip /),
+    ]);
+    expect(precacheBudgetProblems({ ...report, reviewItemChunks: { count: 1, raw: 100, gzip: 40, largest: { url: 'x', raw: 100 } } }, lines)).toEqual([]);
+  });
+
+  it('the lines on the built bundle are the lines of scripts/build-review-items.mjs, the §10 ceiling (150,000 B raw / 30,000 B gzip)', async () => {
+    const { BUDGET } = await import('../../../../scripts/build-review-items.mjs');
+    expect(PRECACHE_BUDGET.reviewItemsRaw).toBe(BUDGET.raw);
+    expect(PRECACHE_BUDGET.reviewItemsGzip).toBe(BUDGET.gzip);
+    expect(BUDGET).toEqual({ raw: 150_000, gzip: 30_000 });
+  });
+});
