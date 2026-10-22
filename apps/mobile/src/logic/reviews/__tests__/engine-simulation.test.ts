@@ -141,9 +141,10 @@ describe('S-c: a learner with all 107 quests done, seeded, then S-a', () => {
     scenarioA(sim, DAYS);
     const unanswered = [...seed.states.keys()].filter((id) => (sim.rows[id]?.st.n ?? 0) === 0);
     expect(unanswered).toEqual([]);
-    // Section 4.3 sets no pool line for S-c. Measured on this build: the opening pool peaks at 266 on day 41 and 64 are left on day 60 (decision record, owner-visible risk).
-    expect(Math.max(...sim.days.map((d) => d.pool)), series(sim, 'pool')).toBeLessThanOrEqual(290);
-    expect(sim.days[59]?.left, series(sim, 'left')).toBeLessThanOrEqual(80);
+    // Section 4.3 sets no pool line for S-c. Measured on this build (every seeded item at box 1 under CM-12's cautious seed box): the opening
+    // pool peaks at 414 on day 42 and 190 are left on day 60 (decision record, owner-visible risk).
+    expect(Math.max(...sim.days.map((d) => d.pool)), series(sim, 'pool')).toBeLessThanOrEqual(440);
+    expect(sim.days[59]?.left, series(sim, 'left')).toBeLessThanOrEqual(210);
     expect(sim.days[59]?.left, series(sim, 'left')).toBeLessThan(Math.max(...sim.days.map((d) => d.left)));
   });
 });
