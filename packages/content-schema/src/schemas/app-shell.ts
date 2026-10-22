@@ -441,8 +441,8 @@ export const TELEMETRY_DAILY_KEEP_DAYS = 400;
 export const SCHOOL_FOCUS = { param: 'focus', value: 'school' } as const;
 export const SCHOOL_FOCUS_QUERY = `${SCHOOL_FOCUS.param}=${SCHOOL_FOCUS.value}`;
 
-/** [OA] Section 6.2: why the chooser opened. */
-export const WHO_TRIGGERS = ['launch', 'return', 'resume', 'join', 'manual'] as const;
+/** [OA] Section 6.2: why the chooser opened. [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12: `try`, a chooser the site opened with `?try=1`. */
+export const WHO_TRIGGERS = ['launch', 'return', 'resume', 'join', 'manual', 'try'] as const;
 
 const wholeIn = (min: number, max: number) => z.number().int().min(min).max(max);
 
@@ -479,7 +479,8 @@ export const OA_TELEMETRY_PAYLOADS = {
     .strict(),
   'who.picked': z
     .object({
-      kind: z.enum(['learner', 'locked_learner', 'grown_up', 'add', 'cancel_reset']),
+      // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12: `try` (Try the first quest) and `guest` (the guest's tile).
+      kind: z.enum(['learner', 'locked_learner', 'grown_up', 'add', 'cancel_reset', 'try', 'guest']),
       use: z.enum(['family', 'teacher', 'school', 'area', 'signin']).optional(),
     })
     .strict(),
