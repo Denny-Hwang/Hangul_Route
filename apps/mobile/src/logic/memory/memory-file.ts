@@ -9,7 +9,9 @@ import type { DayFacts } from './spacing';
  * sweep removes it with the rest of a learner's keys. Pure helpers over the stored shape.
  *
  * - `rows`: one per lesson, story or pack item, with its shard, its shared state (the CM-11 wire
- *   shape) and the device-only facts of the spacing rule (`DayFacts`, never uploaded).
+ *   shape) and the device-only facts of the spacing rule (`DayFacts`, never uploaded). Only answered
+ *   rows (`n` >= 1) are stored (`storedFile`); the seeded rows are derived again in memory from the
+ *   snapshot each time the store is read, so a learner's stored value stays small on native storage.
  * - `vf`: the device-only facts of topic words, whose state stays in the snapshot's `vocab` slice.
  * - `pending`: items answered here whose state has not reached the server yet (`n` >= 1 only: a
  *   seeded state is never uploaded).
@@ -101,6 +103,16 @@ export function readMemoryFile(raw: unknown): MemoryFile {
   return file;
 }
 
+/** The value to store: the file without its seeded rows (`n` = 0), which are derived again on the next read. */
+export function storedFile(file: MemoryFile): MemoryFile {
+  const rows: MemoryFile['rows'] = {};
+  for (const [id, row] of Object.entries(file.rows)) if (row.st.n >= 1) rows[id] = row;
+  return { ...file, rows };
+}
+
+/** Whether a stored value can be read as a store: missing, or an object. Anything else is damaged and is never written over. */
+export const readableStore = (raw: unknown): boolean => raw === null || raw === undefined || isRec(raw);
+
 /** Whether the store holds any state at all. */
 export const holdsStates = (file: MemoryFile): boolean => Object.keys(file.rows).length > 0;
 
@@ -157,7 +169,9 @@ export function sameState(a: MemoryItemState, b: MemoryItemState): boolean {
 
 /**
  * Folds states from elsewhere (a pull, a restored backup file) into the store with the shared merge
- * (`mergeMemoryItemState`), keeping this device's facts. Returns the ids whose state changed. With
+ * (`mergeMemoryItemState`), keeping this device's facts. An answered state replaces a seeded one
+ * whole (the seeded one is only this device's derivation), so a device that seeded before or after
+ * another device's first answer to the item ends with the same state. Returns the ids whose state changed. With
  * `markPending`, a changed answered state is queued for the server too (a restored file).
  */
 export function foldStates(file: MemoryFile, shards: Readonly<Record<string, Readonly<Record<string, MemoryItemState>>>>, markPending = false): string[] {
@@ -167,7 +181,8 @@ export function foldStates(file: MemoryFile, shards: Readonly<Record<string, Rea
     if (!MEMORY_SHARD_RE.test(shard)) continue;
     for (const [id, incoming] of Object.entries(states)) {
       const held = file.rows[id];
-      const merged = held ? mergeMemoryItemState(held.st, incoming) : incoming;
+      // A seeded state here is a derivation, not an answer: an answered state from elsewhere replaces it, as `laySeed` keeps an answered one.
+      const merged = held && (held.st.n >= 1 || incoming.n === 0) ? mergeMemoryItemState(held.st, incoming) : incoming;
       if (held && sameState(held.st, merged)) continue;
       file.rows[id] = { ...(held ?? {}), sh: held?.sh ?? shard, st: merged };
       changed.push(id);

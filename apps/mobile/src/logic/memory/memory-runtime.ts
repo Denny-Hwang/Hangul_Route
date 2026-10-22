@@ -16,10 +16,10 @@ import type { ReviewItemIndex } from '../reviews/review-items-store';
 import { applyVocabEvents, vocabOf, type VocabEvent } from '../vocab/progress';
 import { daysBetween, isDue } from '../vocab/srs';
 import { countAnswer, durableWeek, memoryDailyPayload, openDay, studyMinutes } from './daily';
-import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pushBatches, readMemoryFile, sameState, type MemoryFile } from './memory-file';
+import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pushBatches, readMemoryFile, readableStore, sameState, storedFile, type MemoryFile } from './memory-file';
 import { buildLookup, cellOfEpisode, resolveItems, resolveRound, shardOf, type ItemLookup } from './resolve';
 import { MEMORY_KEY } from './keys';
-import { deriveSeed } from './seed';
+import { deriveSeed, seedInputKey } from './seed';
 import { memorySummaryOf } from './summary';
 import { DURABLE_LAG_DAYS, applyAnswer, isItemDue, type Rung } from './spacing';
 
@@ -35,8 +35,16 @@ import { DURABLE_LAG_DAYS, applyAnswer, isItemDue, type Rung } from './spacing';
  * Every operation on a profile runs one after another (a chain per profile), on the stored value
  * `memory:<profileId>` held in memory once read. Writes are coalesced and saved shortly after; a
  * profile switch saves the outgoing profile's store and starts its push at once (`flush`). A store
- * that could not be read is never written over. Network calls run outside the chain, so a slow
- * request never holds an answer back.
+ * that could not be read, or whose stored value is damaged, is never written over. Network calls run
+ * outside the chain, so a slow request never holds an answer back.
+ *
+ * Seeded states (`n` = 0) are never stored or sent: each read of the store derives them again from
+ * the snapshot (`questDoneAt`, the stars, the placements, `memSeededAt`), and they are derived again
+ * whenever those inputs change (`seedInputKey`: a sync brought older quests, a placement or a higher
+ * star count), so two devices of one learner end with the same seeded states whatever their snapshot
+ * held when each first seeded. A learner registered for sync latches `memSeededAt` only after this
+ * device's first successful snapshot sync of the session, so a stale or blank local snapshot never
+ * latches a wrong seeding.
  */
 
 /** One answer the review surfaces (warm-up, Daily Review, Checks; rows CM-14, CM-15, CM-21, CM-22) record. */
@@ -65,6 +73,8 @@ export interface MemoryRuntimeDeps {
   snapshot(profileId: string): ProgressSnapshot | undefined;
   applySeed(profileId: string, seed: { memSeededAt: string; cellBest: Readonly<Record<string, 1>> }): string | null;
   recordVocab(profileId: string, events: readonly VocabEvent[], now: Date): void;
+  /** The server time of the learner's last snapshot sync (the inbox's `serverTime`), or null: the stamp cap of CM-11's hand-off. */
+  serverTime?(profileId: string): string | null;
   /** Whether the profile is on this device (a removed learner restored by its Rescue Code comes back). */
   profileHere(profileId: string): boolean;
   track(event: TelemetryEvent): void;
@@ -81,11 +91,14 @@ export interface MemoryRuntime {
   countVocab(profileId: string, before: VocabProgress, events: readonly VocabEvent[], clock: Date): Promise<void>;
   ensureSeeded(profileId: string): Promise<void>;
   sendDailyIfDue(profileId: string): Promise<void>;
+  /** After a successful snapshot sync of the learner: the seeding (the first latch waits for this), then the push and the pull. */
   sync(profileId: string): Promise<void>;
   pull(learnerId: string, from?: number): Promise<void>;
   backup(profileId: string): Promise<MemoryBackup | undefined>;
-  restore(profileId: string, memory: MemoryBackup): Promise<void>;
-  flush(profileId: string): Promise<void>;
+  /** Folds a backup file's states in; with `send` (the profile records now) they are queued for the server too. */
+  restore(profileId: string, memory: MemoryBackup, send?: boolean): Promise<void>;
+  /** Saves the store at once; with `send` (the profile records now) starts its push and pull. */
+  flush(profileId: string, send?: boolean): Promise<void>;
   forget(profileId: string): void;
   /** Tests and later rows: the store as held in memory (read first when needed). */
   file(profileId: string): Promise<MemoryFile | null>;
@@ -102,12 +115,15 @@ const STAMP_CLAMP_MS = 24 * 60 * 60 * 1000;
 
 /**
  * The schedule stamp `at` of an answer at `at`: the device clock, but never more than a day past the
- * latest stamp the store holds (its own answers and every state pulled from the server), so a device
- * clock set far ahead cannot make its schedule win every merge for long (CM-11's clock guard holds
- * the server side). The local day of the answer is never clamped.
+ * later of the last server time seen (the learner's last snapshot sync, CM-11's hand-off) and the
+ * latest stamp the store holds (every state pulled from the server, so a real later answer from
+ * another device is never stamped over), so a device clock set far ahead cannot make its schedule win
+ * every merge for long (CM-11's `boundMemoryStateToNow` holds the server side, also when nothing has
+ * been seen yet). The local day of the answer is never clamped.
  */
-export function stampOf(file: Pick<MemoryFile, 'rows'>, at: Date): string {
-  let latest = Number.NEGATIVE_INFINITY;
+export function stampOf(file: Pick<MemoryFile, 'rows'>, at: Date, serverTime: string | null = null): string {
+  let latest = serverTime === null ? Number.NEGATIVE_INFINITY : Date.parse(serverTime);
+  if (!Number.isFinite(latest)) latest = Number.NEGATIVE_INFINITY;
   for (const row of Object.values(file.rows)) {
     const t = Date.parse(row.st.at);
     if (t > latest) latest = t;
@@ -115,7 +131,6 @@ export function stampOf(file: Pick<MemoryFile, 'rows'>, at: Date): string {
   const ms = at.getTime();
   return new Date(Number.isFinite(latest) && ms > latest + STAMP_CLAMP_MS ? latest + STAMP_CLAMP_MS : ms).toISOString();
 }
-const PULL_PAGES = 5;
 
 /** The rung a word question asked: heard to picture is recognize, the rest read (F-VOC-005 formats). */
 const rungOfVocab = (format: string | undefined): Rung => (format === 'audio-to-image' ? 'recognize' : 'read');
@@ -126,6 +141,10 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
   const timers = new Map<string, unknown>();
   const removed = new Set<string>();
   const scopeLimited = new Set<string>();
+  /** The seed inputs whose derivation is laid in the store held in memory, per profile. */
+  const laid = new Map<string, string>();
+  /** Profiles with a successful snapshot sync this session. */
+  const synced = new Set<string>();
   let lookup: { index: ReviewItemIndex; lookup: ItemLookup } | null = null;
 
   const gone = (profileId: string): boolean => removed.has(profileId) && !deps.profileHere(profileId);
@@ -141,6 +160,26 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     return next;
   }
 
+  /**
+   * Lays the seeded states derived from the snapshot's seeding over the store held in memory, when
+   * their inputs changed since the last time (or were never laid since the read). Returns whether
+   * the seeding the store was derived from moved (`seededFrom`, which is stored).
+   */
+  async function relay(profileId: string, file: MemoryFile): Promise<boolean> {
+    await deps.hydrate(profileId);
+    const snap = deps.snapshot(profileId);
+    const seededAt = snap?.memSeededAt ?? file.seededFrom;
+    if (!snap || seededAt === null || seededAt === undefined) return false;
+    const { index } = await items();
+    const inputs = { snapshot: snap, items: index.items, retired: index.retired, quests: CATALOG.quests, seededAt, dayOf: deps.dayOf };
+    const key = seedInputKey(inputs);
+    if (laid.get(profileId) === key && file.seededFrom === seededAt) return false;
+    const moved = file.seededFrom !== seededAt;
+    laySeed(file, deriveSeed({ ...inputs, cells: CATALOG.cells }).states, seededAt);
+    laid.set(profileId, key);
+    return moved;
+  }
+
   async function load(profileId: string): Promise<MemoryFile | null> {
     if (gone(profileId)) return null;
     const held = cache.get(profileId);
@@ -151,7 +190,12 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     } catch {
       return null;
     }
+    // A damaged value (not JSON, or not an object) is neither read as empty nor written over.
+    if (!readableStore(raw)) return null;
     const file = raw === null || raw === undefined ? emptyMemoryFile() : readMemoryFile(raw);
+    // The seeded states are not stored: derive them before anything reads the store.
+    await relay(profileId, file);
+    if (gone(profileId)) return null;
     cache.set(profileId, file);
     return file;
   }
@@ -162,7 +206,7 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     timers.delete(profileId);
     const file = cache.get(profileId);
     if (!file || gone(profileId)) return;
-    await deps.write(MEMORY_KEY(profileId), file).catch(() => undefined);
+    await deps.write(MEMORY_KEY(profileId), storedFile(file)).catch(() => undefined);
   }
 
   function markDirty(profileId: string): void {
@@ -227,7 +271,7 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         if (!file) return;
         const { index } = await items();
         const day = deps.dayOf(at);
-        const iso = stampOf(file, at);
+        const iso = stampOf(file, at, deps.serverTime?.(profileId) ?? null);
         const counts = today(profileId, file, day, index.retired);
         const pending = new Set(file.pending);
         for (const a of rest) {
@@ -236,6 +280,7 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
           const row = file.rows[item.id];
           const out = applyAnswer(row?.st, row ?? {}, a, day, iso);
           file.rows[item.id] = { sh: row?.sh ?? shardOf(item), st: out.state, ...out.facts };
+          // A seeded item's first check moves its schedule but is not measured (`lagDays` null, no lapse).
           countAnswer(counts, { id: item.id, kind: item.kind, rung: a.rung, spaced: out.spaced, lagDays: out.lagDays, right: a.correct && !a.hinted, lapse: out.lapse, newHeld: out.newHeld });
           pending.add(item.id);
         }
@@ -248,35 +293,32 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     if (words.length > 0) deps.recordVocab(profileId, words, at);
   }
 
+  /** One GET a sync: CM-11's route is not paged (every shard above the cursor comes at once), and each GET writes the device's `lastSeenAt`. */
   async function pullNow(learnerId: string, net: MemoryNet, creds: { deviceId: string; secret: string }): Promise<void> {
-    for (let page = 0; page < PULL_PAGES; page += 1) {
-      const file = await run(learnerId, () => load(learnerId));
-      if (!file) return;
-      const since = file.cursor;
-      let body: unknown;
-      try {
-        const res = await net.fetch(`${net.base}/api/sync/learners/${encodeURIComponent(learnerId)}/memory?since=${since}`, {
-          method: 'GET',
-          headers: { Authorization: `Device ${creds.deviceId}:${creds.secret}` },
-        });
-        if (res.status === 403) scopeLimited.add(learnerId);
-        if (res.status !== 200) return;
-        body = ((await res.json()) as { data?: unknown }).data;
-      } catch {
-        return;
-      }
-      const parsed = MemoryPullSchema.safeParse(body);
-      if (!parsed.success) return;
-      const { cursor, shards } = parsed.data;
-      await run(learnerId, async () => {
-        const held = await load(learnerId);
-        if (!held) return;
-        foldStates(held, Object.fromEntries(shards.map((s) => [s.shard, s.states])));
-        held.cursor = cursor;
-        markDirty(learnerId);
+    const file = await run(learnerId, () => load(learnerId));
+    if (!file) return;
+    let body: unknown;
+    try {
+      const res = await net.fetch(`${net.base}/api/sync/learners/${encodeURIComponent(learnerId)}/memory?since=${file.cursor}`, {
+        method: 'GET',
+        headers: { Authorization: `Device ${creds.deviceId}:${creds.secret}` },
       });
-      if (shards.length === 0 || cursor <= since) return;
+      if (res.status === 403) scopeLimited.add(learnerId);
+      if (res.status !== 200) return;
+      body = ((await res.json()) as { data?: unknown }).data;
+    } catch {
+      return;
     }
+    const parsed = MemoryPullSchema.safeParse(body);
+    if (!parsed.success) return;
+    const { cursor, shards } = parsed.data;
+    await run(learnerId, async () => {
+      const held = await load(learnerId);
+      if (!held) return;
+      foldStates(held, Object.fromEntries(shards.map((s) => [s.shard, s.states])));
+      held.cursor = cursor;
+      markDirty(learnerId);
+    });
   }
 
   async function syncNow(profileId: string): Promise<void> {
@@ -322,7 +364,7 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     await pullNow(profileId, net, creds);
   }
 
-  return {
+  const api: MemoryRuntime = {
     async recordRound(profileId, answer) {
       const round = resolveRound(answer.asked);
       if (!round) return;
@@ -354,7 +396,8 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
             if (now) {
               const spaced = was !== undefined && was.last < day && isDue(was, day);
               const facts = { ...(file.vf[e.id] ?? {}), l: day };
-              const lagDays = spaced && was ? Math.max(0, daysBetween(facts.p ?? was.first, day)) : null;
+              // With no spaced day on this device (answered on another one, or before CM-12), the lag runs from its last answer.
+              const lagDays = spaced && was ? Math.max(0, daysBetween(facts.p ?? was.last, day)) : null;
               const right = e.correct && !e.hinted;
               if (spaced) facts.p = day;
               if (spaced && right && (lagDays ?? 0) >= DURABLE_LAG_DAYS) facts.w = day;
@@ -383,29 +426,27 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         const snap = deps.snapshot(profileId);
         const file = await load(profileId);
         if (!snap || !file) return;
-        const held = snap.memSeededAt;
-        if (held !== undefined && file.seededFrom === held) return;
-        const { index } = await items();
-        const derive = (seededAt: string) =>
-          deriveSeed({ snapshot: snap, items: index.items, retired: index.retired, quests: CATALOG.quests, cells: CATALOG.cells, seededAt, dayOf: deps.dayOf });
-        let seededFrom = held ?? deps.now().toISOString();
-        let seed = derive(seededFrom);
-        if (held === undefined) {
+        if (snap.memSeededAt === undefined) {
+          // A learner registered for sync latches only after this device's first snapshot sync, so the seeding reads every quest the other devices finished.
+          if (!synced.has(profileId)) {
+            const net = deps.net();
+            if (net !== null && (await net.creds(profileId).catch(() => null)) !== null) return;
+          }
+          const { index } = await items();
+          const seededFrom = deps.now().toISOString();
+          const seed = deriveSeed({ snapshot: snap, items: index.items, retired: index.retired, quests: CATALOG.quests, cells: CATALOG.cells, seededAt: seededFrom, dayOf: deps.dayOf });
           const latched = deps.applySeed(profileId, { memSeededAt: seededFrom, cellBest: seed.cellBest });
           if (latched === null) return;
+          // Sent once, by the device that latched; a device that derives the seeding again never sends it.
           if (latched === seededFrom) {
             const payload = CURR_TELEMETRY_PAYLOADS['items.seeded'].safeParse({
               countBucket: rollupBucketCode(seed.count, ROLLUP_SEEDED_COUNT_EDGES),
               spreadDaysBucket: rollupBucketCode(seed.spreadDays, ROLLUP_SPREAD_DAYS_EDGES),
             });
             if (payload.success) deps.track({ name: 'items.seeded', profileId, payload: payload.data });
-          } else {
-            seededFrom = latched;
-            seed = derive(seededFrom);
           }
         }
-        laySeed(file, seed.states, seededFrom);
-        markDirty(profileId);
+        if (await relay(profileId, file)) markDirty(profileId);
       });
     },
 
@@ -418,7 +459,11 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
       });
     },
 
-    sync: (profileId) => syncNow(profileId),
+    async sync(profileId) {
+      synced.add(profileId);
+      await api.ensureSeeded(profileId);
+      await syncNow(profileId);
+    },
 
     async pull(learnerId, from = 0) {
       const net = deps.net();
@@ -442,19 +487,19 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
       });
     },
 
-    async restore(profileId, memory) {
+    async restore(profileId, memory, send = true) {
       removed.delete(profileId);
       await run(profileId, async () => {
         const file = await load(profileId);
         if (!file) return;
         if (foldStates(file, memory, true).length > 0) await saveNow(profileId);
       });
-      deps.requestSync(profileId);
+      if (send) deps.requestSync(profileId);
     },
 
-    async flush(profileId) {
+    async flush(profileId, send = true) {
       await run(profileId, () => saveNow(profileId));
-      await syncNow(profileId);
+      if (send) await syncNow(profileId);
     },
 
     forget(profileId) {
@@ -463,6 +508,8 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
       if (timer !== undefined) deps.clearTimer(timer);
       timers.delete(profileId);
       cache.delete(profileId);
+      laid.delete(profileId);
+      synced.delete(profileId);
       scopeLimited.delete(profileId);
       deps.remove(MEMORY_KEY(profileId)).catch(() => undefined);
     },
@@ -480,4 +527,5 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
       });
     },
   };
+  return api;
 }

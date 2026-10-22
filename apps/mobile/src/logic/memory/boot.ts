@@ -18,7 +18,8 @@ import type { MemoryAnswer, MemoryRuntime } from './memory-runtime';
  * - Shadow mode (section 12.3): no learner-visible surface reads the store in this row.
  * - Partition: one stored value per profile (`memory:<profileId>`, in `store/profile-keys.ts`, so
  *   Remove from this device sweeps it); a removed learner's store is forgotten (`onProfileRemoved`).
- * - A switch of the active profile saves the outgoing profile's store and starts its push first.
+ * - A switch of the active profile saves the outgoing profile's store and starts its push first (the
+ *   push only while the outgoing profile records: off, nothing is sent, section 12.2).
  */
 
 export { MEMORY_KEY } from './keys';
@@ -83,25 +84,21 @@ export function startMemory(): () => void {
   });
   setMemoryStoreHook({
     backup: (profileId) => runtime().then((r) => r.backup(profileId)),
-    restore: (profileId, memory) => runtime().then((r) => r.restore(profileId, memory)),
+    restore: (profileId, memory) => runtime().then((r) => r.restore(profileId, memory, memoryRecordsFor(profileId))),
     pull: (learnerId) => (memoryRecordsFor(learnerId) ? runtime().then((r) => r.pull(learnerId)) : Promise.resolve()),
     // Row CM-16: the summary's memory block, only while the profile records (a grown-up persona never has one).
     summary: (profileId) => (memoryRecordsFor(profileId) ? runtime().then((r) => r.summary(profileId)) : Promise.resolve(undefined)),
   });
   const offSynced = onSynced((learnerId) => {
-    if (!memoryRecordsFor(learnerId)) return;
-    void quietly(async (r) => {
-      await r.ensureSeeded(learnerId);
-      await r.sync(learnerId);
-    });
+    if (memoryRecordsFor(learnerId)) void quietly((r) => r.sync(learnerId));
   });
   let active = useProfileStore.getState().activeId;
   const offProfiles = useProfileStore.subscribe((s) => {
     if (s.activeId === active) return;
     const outgoing = active;
     active = s.activeId;
-    // The outgoing profile's answers are saved and pushed before the next one records (section 4.9).
-    if (outgoing !== null && loading !== null) void quietly((r) => r.flush(outgoing));
+    // The outgoing profile's answers are saved, and pushed while it records, before the next one records (section 4.9).
+    if (outgoing !== null && loading !== null) void quietly((r) => r.flush(outgoing, memoryRecordsFor(outgoing)));
     activateMemory(active);
   });
   // The remote copy arrives after the start: a learner the ramp now includes seeds then.

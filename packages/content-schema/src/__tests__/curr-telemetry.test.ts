@@ -68,7 +68,7 @@ const daily = {
 /** One valid payload per name, as the emitting rows will send it. */
 const VALID: Record<(typeof SECTION_R)[number], Record<string, unknown>> = {
   'memory.daily': daily,
-  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '31+' },
+  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '46-62' },
   'mastery.level_up': { cellId: 'episode:stage2-life', level: 2 },
   'stage.card_opened': { stage: 'stage3' },
   'testout.finished': { cellId: 'episode:stage4-rites', passed: true, items: 10, firstTryCorrect: 9 },
@@ -321,5 +321,8 @@ describe('the bucket enums of row CM-12 (Worker first, TELEMETRY-NAMES-2 section
       expect(S.safeParse({ countBucket: raw, spreadDaysBucket: '0' }).success, raw).toBe(false);
       expect(S.safeParse({ countBucket: '0', spreadDaysBucket: raw }).success, raw).toBe(false);
     }
+    // The spread runs past 31 days (31-45, 46-62, 63-90, 91+), so the old open top is not a code.
+    expect(S.safeParse({ countBucket: '0', spreadDaysBucket: '31+' }).success).toBe(false);
+    expect(S.safeParse({ countBucket: '500-999', spreadDaysBucket: '31-45' }).success).toBe(true);
   });
 });

@@ -1,12 +1,13 @@
 import { reviewItemsChunk } from '../../content/review-items';
 import { flags } from '../../config/flags';
 import { getDeviceId } from '../../platform/device';
-import { readJsonStrict, removeKey, writeJson } from '../../platform/storage';
+import { readJsonExact, removeKey, writeJson } from '../../platform/storage';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useSyncStore } from '../../store/sync-store';
+import { useTierStore } from '../../store/tier-store';
 import { createReviewItemStore } from '../reviews/review-items-store';
 import { notifyProgressPersisted } from '../sync/persist-hook';
 import { localDay } from '../vocab/progress';
@@ -33,7 +34,8 @@ export function memoryRuntime(): MemoryRuntime {
     now: () => new Date(),
     dayOf: localDay,
     items: () => reviewItemStore.ensure(),
-    read: (key) => readJsonStrict<unknown>(key),
+    // Exact: a stored value that does not parse throws, so the runtime never takes it for "nothing stored" and writes over it.
+    read: (key) => readJsonExact<unknown>(key),
     write: (key, value) => writeJson(key, value),
     remove: (key) => removeKey(key),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
@@ -51,6 +53,7 @@ export function memoryRuntime(): MemoryRuntime {
       return useProgressStore.getState().byProfile[profileId]?.memSeededAt ?? null;
     },
     recordVocab: (profileId, events, now) => useProgressStore.getState().recordVocab(profileId, events, now),
+    serverTime: (profileId) => useTierStore.getState().byLearner[profileId]?.fetchedAt ?? null,
     profileHere: (profileId) => useProfileStore.getState().profiles.some((p) => p.id === profileId),
     track: (event) => void track(event),
     requestSync: (profileId) => useSyncStore.getState().requestSync(profileId),

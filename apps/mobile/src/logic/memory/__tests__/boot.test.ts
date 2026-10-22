@@ -38,6 +38,15 @@ const fake = vi.hoisted(() => ({
   summary: vi.fn(async () => ({ wordsKnown: 3, readyToRefresh: 1, cellBestCounts: [1, 0, 0], stageChecks: 0, weekPoints: 0, topDue: ['lex:bae~pear'] })),
 }));
 vi.mock('../memory-chunk', () => ({ memoryRuntime: () => fake }));
+// The snapshot sync's listeners, to run them as a successful sync does.
+const synced = vi.hoisted(() => ({ listeners: new Set<(learnerId: string) => void>() }));
+vi.mock('../../../store/sync-store', async (original) => ({
+  ...(await original<object>()),
+  onSynced: (listener: (learnerId: string) => void) => {
+    synced.listeners.add(listener);
+    return () => void synced.listeners.delete(listener);
+  },
+}));
 
 import type { MinigameScope } from '../../minigame-config';
 import { memoryForBackup, memorySummaryFor, pullMemoryAfterAdopt, refreshMemorySummary, restoreMemory } from '../../sync/memory-hook';
@@ -165,9 +174,31 @@ describe('the profile switch and the start', () => {
     fake.ensureSeeded.mockClear();
     useProfileStore.getState().setActive(OTHER.id);
     await settle();
-    expect(fake.flush).toHaveBeenCalledWith(LEARNER.id);
+    expect(fake.flush).toHaveBeenCalledWith(LEARNER.id, true);
     expect(fake.ensureSeeded).toHaveBeenCalledWith(OTHER.id);
     expect(fake.flush.mock.invocationCallOrder[0]).toBeLessThan(fake.ensureSeeded.mock.invocationCallOrder[0] as number);
+  });
+
+  it('memoryRecord turned off mid-session: a switch saves the outgoing store but sends nothing', async () => {
+    memoryRecord(100);
+    await recordAnswers(LEARNER.id, [{ itemId: 'lex:bae~pear', correct: true, rung: 'read' }]);
+    memoryRecord('off');
+    useProfileStore.getState().setActive(OTHER.id);
+    await settle();
+    expect(fake.flush).toHaveBeenCalledWith(LEARNER.id, false);
+    expect(fake.ensureSeeded).not.toHaveBeenCalledWith(OTHER.id);
+  });
+
+  it('a successful snapshot sync of a recording learner reaches the store (seeding, then push and pull), and nothing while off', async () => {
+    memoryRecord(100);
+    for (const listener of synced.listeners) listener(LEARNER.id);
+    await settle();
+    expect(fake.sync).toHaveBeenCalledWith(LEARNER.id);
+    fake.sync.mockClear();
+    memoryRecord('off');
+    for (const listener of synced.listeners) listener(LEARNER.id);
+    await settle();
+    expect(fake.sync).not.toHaveBeenCalled();
   });
 
   it('before the chunk ever loaded, a switch loads nothing', async () => {
@@ -199,17 +230,19 @@ describe('the backup and Rescue Code hook (row CM-11) is filled', () => {
     memoryRecord(100);
     expect(await memoryForBackup(LEARNER.id)).toEqual({ stage2: {} });
     await restoreMemory(LEARNER.id, { stage2: { 'lex:a': { b: 1, d: null, c: 0, r: 0, n: 1, f: '2026-10-01', s: 1, at: '2026-10-01T00:00:00.000Z' } } });
-    expect(fake.restore).toHaveBeenCalled();
+    expect(fake.restore).toHaveBeenCalledWith(LEARNER.id, expect.any(Object), true);
     pullMemoryAfterAdopt(LEARNER.id);
     await settle();
     expect(fake.pull).toHaveBeenCalledWith(LEARNER.id);
   });
 
-  it('memoryRecord off: an adopted learner pulls nothing', async () => {
+  it('memoryRecord off: an adopted learner pulls nothing, and a restored file is kept on the device but not sent', async () => {
     memoryRecord('off');
     pullMemoryAfterAdopt(LEARNER.id);
     await settle();
     expect(fake.pull).not.toHaveBeenCalled();
+    await restoreMemory(LEARNER.id, { stage2: { 'lex:a': { b: 1, d: null, c: 0, r: 0, n: 1, f: '2026-10-01', s: 1, at: '2026-10-01T00:00:00.000Z' } } });
+    expect(fake.restore).toHaveBeenCalledWith(LEARNER.id, expect.any(Object), false);
   });
 });
 
