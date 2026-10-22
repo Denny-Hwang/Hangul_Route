@@ -271,9 +271,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(lessonChunkUrls(SCREEN_CHUNKS, [...bundles, guest])).toEqual([guest.url]);
   });
 
-  it('[GU] the screen chunk line sits over the guest stack measured with GU-3 (7,673 B raw) with room for GU-4', () => {
+  it('[GU] the screen chunk line sits over the guest stack measured with GU-4 (11,950 B raw; 7,673 B with GU-3)', () => {
     expect(PRECACHE_BUDGET.screenChunkRaw).toBe(60_000);
-    expect(PRECACHE_BUDGET.screenChunkRaw).toBeGreaterThan(7_673);
+    expect(PRECACHE_BUDGET.screenChunkRaw).toBeGreaterThan(11_950);
   });
 
   it('holds each locale chunk and each grown-up root chunk to its own line, which a Spanish or Korean first screen waits on', () => {
@@ -348,7 +348,7 @@ describe('precacheReport and its budget lines', () => {
     // 4,712,987 B after the start bundle shrink on main 7eb5bad61 (the es / ko text and the grown-up roots became
     // precached chunks; 6,491,546 B on its main), 4,732,797 B with that shrink merged onto the final integration
     // (main fc580beed, release build), 4,744,234 B with [GU] the always-on guest rules (GU-2, release build), 4,747,423 B with its review fixes,
-    // 4,757,493 B with the guest's launch and Welcome card (GU-3),
+    // 4,757,493 B with the guest's launch and Welcome card (GU-3), 4,767,105 B with the guest's save (GU-4),
     // 4,744,598 B with rows CM-10 to CM-14 and the CM-14 review fixes (the Daily Review's
     // route, Home card and strings; its screen, rounds and engine are chunks). The margin stays under 10 KB, so the stories, the locale text,
     // the grown-up roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;

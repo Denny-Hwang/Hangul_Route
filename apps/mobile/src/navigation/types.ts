@@ -75,6 +75,8 @@ export type GrownUpDestination =
   | 'GrownUpUse'
   /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-11 (row OA-7b): Who is joining? asks a fresh PIN before a learner other than the active one joins; a correct PIN (or a new one) returns to Join, which goes on. */
   | 'JoinSpace'
+  /** [GU] AMENDMENTS-GUEST-FIRST-LESSON section 8.2 (row GU-4, CS-G2, CS-G10): Keep my progress after the first quest on a device with a PIN, in the `Guest` stack; verify only with `verifyForLockedProfile`, then the save form; never a grown-up session, never a new PIN. */
+  | 'SaveGuest'
   // add new members above this line
 ;
 

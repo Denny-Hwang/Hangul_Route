@@ -23,6 +23,11 @@ export interface FormState {
   guardianAcceptedAt: string | null;
   selfAcceptedAt: string | null;
   parentPinHash: string | null;
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 8.3 (row GU-4): the save after the first quest (`from: 'guest'`): two
+   * steps (`setupSteps`), the email folded behind **Add an email**, and no PIN part on a device that holds a PIN.
+   */
+  fromGuest?: boolean;
 }
 
 export interface FormPlan {
@@ -52,7 +57,8 @@ export function formPlan(s: FormState): FormPlan | null {
     card,
     consent,
     pinRequired,
-    pinOptional: card === 'self',
+    // [GU] CS-G10: on the guest's save the optional row only where no PIN is stored, so a submit never replaces one.
+    pinOptional: card === 'self' && (s.fromGuest !== true || s.parentPinHash === null),
     showEmail: consent !== null,
   };
 }
@@ -81,4 +87,17 @@ export function nameHint(name: string, words: NameHintMessages): string | null {
   if (error === 'too-long') return words.tooLong(NAME_MAX);
   if (error === 'unsupported-character') return words.unsupportedCharacter;
   return null;
+}
+
+/**
+ * [GU] Section 8.3 (row GU-4): the folded **Add an email (optional)** row of the guest's save. Opening it shows the
+ * field with what it held; closing it clears what was typed, so a closed row never sends an email.
+ */
+export function toggleEmailRow(row: { open: boolean; email: string }): { open: boolean; email: string } {
+  return row.open ? { open: false, email: '' } : { open: true, email: row.email };
+}
+
+/** [GU] Whether the email field is drawn: where the plan shows it, and on the guest's save only while its row is open. */
+export function emailFieldShown(plan: FormPlan | null, fromGuest: boolean, rowOpen: boolean): boolean {
+  return plan !== null && plan.showEmail && (!fromGuest || rowOpen);
 }

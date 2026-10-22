@@ -1,4 +1,5 @@
 import type { LearnerType } from '@hangul-route/content-schema';
+import { validateDisplayName } from '../profiles/profile-model';
 import { formPlan, missingStep, type FormState, type MissingStep } from './create-profile-form';
 
 /**
@@ -9,9 +10,18 @@ import { formPlan, missingStep, type FormState, type MissingStep } from './creat
  * under-13 switch; the rules of each field are still `formPlan` and
  * `missingStep` (`create-profile-form.ts`), unchanged.
  */
-export type SetupStep = 'who' | 'profile' | 'privacy';
+export type SetupStep = 'who' | 'profile' | 'privacy' | 'name';
 
 const ORDER: readonly SetupStep[] = ['who', 'profile', 'privacy'];
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 8.3 (row GU-4): the save after the first quest
+ * (`CreateProfile { from: 'guest' }`, `FormState.fromGuest`) has two steps: the name, then Privacy, which opens with
+ * who is learning (nothing preselected) and then the agreement card for the answer. Level and cub take the defaults.
+ */
+const GUEST_ORDER: readonly SetupStep[] = ['name', 'privacy'];
+
+const orderOf = (fromGuest: boolean | undefined): readonly SetupStep[] => (fromGuest === true ? GUEST_ORDER : ORDER);
 
 /** Navigator actions that are a back (the others, such as the REPLACE after submit, pass through). */
 const BACK_ACTIONS: ReadonlySet<string> = new Set(['GO_BACK', 'POP', 'POP_TO_TOP']);
@@ -25,8 +35,19 @@ const STEP_OF: Readonly<Record<MissingStep, SetupStep>> = {
   email: 'privacy',
 };
 
+/** [GU] The same on the guest's save: who is learning is asked on the Privacy step. */
+const GUEST_STEP_OF: Readonly<Record<MissingStep, SetupStep>> = {
+  who: 'privacy',
+  name: 'name',
+  agree: 'privacy',
+  pin: 'privacy',
+  email: 'privacy',
+};
+
 /** The steps this answer needs: only the question before an answer; Privacy only when a card is drawn. */
 export function setupSteps(s: FormState): SetupStep[] {
+  // [GU] The guest's save always has both steps: Privacy holds the question too.
+  if (s.fromGuest === true) return [...GUEST_ORDER];
   const plan = formPlan(s);
   if (plan === null) return ['who'];
   return plan.card === null ? ['who', 'profile'] : ['who', 'profile', 'privacy'];
@@ -34,6 +55,7 @@ export function setupSteps(s: FormState): SetupStep[] {
 
 /** "Step n of N": 1-based; three steps until the answer says otherwise. */
 export function stepPosition(step: SetupStep, s: FormState): { n: number; total: number } {
+  if (s.fromGuest === true) return { n: GUEST_ORDER.indexOf(step) + 1, total: GUEST_ORDER.length };
   const total = s.learnerType === null ? ORDER.length : setupSteps(s).length;
   return { n: ORDER.indexOf(step) + 1, total };
 }
@@ -45,23 +67,32 @@ export function stepPosition(step: SetupStep, s: FormState): { n: number; total:
  * Continue from submitting an incomplete form).
  */
 export function stepMissing(step: SetupStep, s: FormState): MissingStep | null {
+  // [GU] The guest's name step comes before the question, so it asks for the name alone.
+  if (s.fromGuest === true && step === 'name') return validateDisplayName(s.name) === null ? null : 'name';
   const missing = missingStep(s);
   if (missing === null) return null;
-  return ORDER.indexOf(STEP_OF[missing]) <= ORDER.indexOf(step) ? missing : null;
+  const order = orderOf(s.fromGuest);
+  const of = s.fromGuest === true ? GUEST_STEP_OF : STEP_OF;
+  return order.indexOf(of[missing]) <= order.indexOf(step) ? missing : null;
 }
 
 /** The step Continue opens, `'submit'` on the last one; the question stays put while it has no answer. */
 export function nextStep(step: SetupStep, s: FormState): SetupStep | 'submit' {
+  if (s.fromGuest === true) return step === 'name' ? 'privacy' : 'submit';
   if (s.learnerType === null) return 'who';
   const steps = setupSteps(s);
   const at = steps.indexOf(step);
   return at === -1 || at === steps.length - 1 ? 'submit' : steps[at + 1]!;
 }
 
-/** The step Back opens; `'leave'` on the question (the screen then goes back as before). */
-export function previousStep(step: SetupStep): SetupStep | 'leave' {
-  const at = ORDER.indexOf(step);
-  return at <= 0 ? 'leave' : ORDER[at - 1]!;
+/**
+ * The step Back opens; `'leave'` on the question (the screen then goes back as before). [GU] On the guest's save,
+ * `'leave'` on the name step (back to the save card) and the name step from Privacy, every value kept.
+ */
+export function previousStep(step: SetupStep, fromGuest = false): SetupStep | 'leave' {
+  const order = orderOf(fromGuest);
+  const at = order.indexOf(step);
+  return at <= 0 ? 'leave' : order[at - 1]!;
 }
 
 /**
@@ -97,7 +128,7 @@ export function profileVoice(learnerType: LearnerType, under13: boolean): Learne
  * that is not a back (a replace after submit, a navigate) through untouched,
  * and a step is the one to open instead of leaving.
  */
-export function systemBack(step: SetupStep, actionType: string): SetupStep | 'leave' | 'ignore' {
+export function systemBack(step: SetupStep, actionType: string, fromGuest = false): SetupStep | 'leave' | 'ignore' {
   if (!BACK_ACTIONS.has(actionType)) return 'ignore';
-  return previousStep(step);
+  return previousStep(step, fromGuest);
 }

@@ -52,7 +52,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 4,747,423 B raw / 1,247,894 B gzip with its review fixes (2,577 B left under the line; later GU rows load lazily).
   // [GU] Row GU-3 adds what must run before the first screen (the try intent, the launch's guest step, Welcome's waiting
   // card, the 16.1 strings); the guest's screens are a chunk of their own (SCREEN_CHUNKS, 7,673 B raw): 4,757,493 B raw /
-  // 1,250,848 B gzip (release `build:web`), so the line was that plus 7,507 B (4,765,000 B).
+  // 1,250,848 B gzip (release `build:web`), so the line was that plus 7,507 B; 4,759,347 B raw with its review fixes.
+  // [GU] Row GU-4 adds the save's parts of the shared start screens (CreateProfile's guest steps and folded email, the
+  // SaveGuest verify path of PinEntry, the first Home's bubble, Welcome's Add my name, the promotion for GU-D11) and the
+  // 16.2 English strings; the save card and the Not now card stay in the guest's chunk (11,950 B raw): 4,767,105 B raw /
+  // 1,253,769 B gzip (release `build:web`, cache cleared), so the line was that plus 7,895 B.
   // The Daily Review (F-CURR-002 row CM-14, on CM-13's head: rows CM-10 to CM-14) keeps its screen, rounds, session
   // logic and the review engine in chunks; what stays is the route, Home's hook and card, the boot module's
   // memoryChunk() and the English strings: 4,744,598 B raw / 1,247,230 B gzip (release `build:web` with the review

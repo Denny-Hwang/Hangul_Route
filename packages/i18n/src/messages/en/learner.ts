@@ -114,6 +114,8 @@ export const learner = {
       caption: 'Kept on this device. Learning and backup work without it.',
       placeholder: 'name@email.com',
       invalid: 'That email looks off. Check the spelling.',
+      /** [GU] Row GU-4 (AMENDMENTS-GUEST-FIRST-LESSON 8.3, 16.2): the folded row that opens the email field on the guest's save. */
+      add: 'Add an email (optional)',
     },
     pinFailed: "Couldn't set the PIN. Try again.",
     privacyLink: 'Read the Privacy Policy',
@@ -138,6 +140,16 @@ export const learner = {
       agree: 'Tick the box to agree',
       pin: 'Create the PIN',
       email: 'Check the email, or leave it empty',
+    },
+    /**
+     * [GU] Row GU-4 (AMENDMENTS-GUEST-FIRST-LESSON 8.3, 16.2): step 1 of 2 of the save after the first quest: the
+     * heading, the name field's label, and the line under it (level and cub take the defaults). Step 2 reuses the
+     * keys above unchanged.
+     */
+    guest: {
+      title: 'Keep your progress',
+      nameLabel: 'Name',
+      later: 'You can pick a Hoya and a reading level later in Profile.',
     },
   },
 
@@ -2603,5 +2615,28 @@ export const learner = {
       keeps: 'What you did in the first quest stays with the profile you make.',
     },
     memoryOnly: "This browser can't keep the quest after you close it. Add a name at the end to keep it.",
+    /**
+     * [GU] Row GU-4 (16.2). `results.*`: the save card on the first quest's Results: Hoya's line (`line` when the card
+     * is kept, else `lineNoCard`), **Keep my progress** (never "Save my progress", the Grown-up area's rescue-code
+     * action), the quiet **Not now**, the caption when a PIN is asked, and the ask-the-owner line on a device someone
+     * else uses. `later.*`: the Not now card (`days` is 30, or 7 on a device with profiles). `saved` / `savedNoCard`:
+     * Hoya's bubble on the first Home after the save.
+     */
+    results: {
+      line: 'Add a name so Hoya can keep your card and stars.',
+      lineNoCard: 'Add a name so Hoya can keep your first quest.',
+      keep: 'Keep my progress',
+      notNow: 'Not now',
+      askGrownUp: 'A grown-up on this device adds you with the PIN.',
+      askOwner: 'The person who uses this device can add you.',
+    },
+    later: {
+      title: (days: number) => `Hoya can keep your quest in this browser for up to ${days} days without play.`,
+      line: "It isn't backed up yet. Add a name to back it up and keep going.",
+      save: 'Add my name',
+      close: 'Close',
+    },
+    saved: (name: string) => `${name}, your card is in your Library.`,
+    savedNoCard: (name: string) => `${name}, your first quest is saved.`,
   },
 } as const;

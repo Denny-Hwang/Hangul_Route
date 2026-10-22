@@ -34,7 +34,9 @@ vi.mock('../../../config/flags', async (importOriginal) => {
   return { ...actual, flags: new Proxy(actual.flags, { get: (target, key) => (key === 'guestLessonEnabled' ? switches.guest : Reflect.get(target, key)) }) };
 });
 
+import { useAccountStore } from '../../../store/account-store';
 import { guestFirstQuest } from '../../../store/guest-launch';
+import { guestSaveEntry } from '../../../store/guest-save';
 import { useGuestStore } from '../../../store/guest-store';
 import { useLocaleStore } from '../../../store/locale-store';
 import { useProfileStore } from '../../../store/profile-store';
@@ -115,12 +117,30 @@ describe('Welcome with a waiting quest (6.3)', () => {
     // With a grown-up session open: Add my name closes it too before the Guest stack opens (CS-G3; GU-4's save).
     useUiStore.setState({ parentGateOpenedAt: T0, lastPinVerifiedAt: T0 });
     await press(buttonsNamed(card, g.save)[0]!);
-    expect(rootDispatch).toHaveBeenCalledWith({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Guest', params: { screen: 'GuestLater' } }] } });
+    // [GU] Row GU-4: the save, with the Not now card under it (Back on step 1 lands there); a first run, no PIN stored.
+    expect(rootDispatch).toHaveBeenCalledWith({
+      type: 'RESET',
+      payload: { index: 0, routes: [{ name: 'Guest', state: { index: 1, routes: [{ name: 'GuestLater' }, { name: 'CreateProfile', params: { firstRun: true, from: 'guest' } }] } }] },
+    });
+    expect(guestSaveEntry()).toBe('welcome');
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
     // Add my name uses the guest's id without a run (GU-D15): nothing starts, nothing is sent.
     expect(useGuestStore.getState().running).toBe(false);
     expect(sent).toEqual([]);
+    await unmount(r);
+  });
+
+  it('quest 1 done on a device with a PIN and no profile: Add my name asks the PIN first (SaveGuest, verify only)', async () => {
+    useGuestStore.setState({ record: record({ questDone: true }) });
+    useAccountStore.setState({ parentPinHash: 'salt:hash' });
+    const r = await render(welcome());
+    await press(buttonsNamed(byTestId(r.root, 'welcome-guest')[0] as ReactTestInstance, g.save)[0]!);
+    expect(rootDispatch).toHaveBeenCalledWith({
+      type: 'RESET',
+      payload: { index: 0, routes: [{ name: 'Guest', state: { index: 1, routes: [{ name: 'GuestLater' }, { name: 'PinEntry', params: { next: 'SaveGuest' } }] } }] },
+    });
+    useAccountStore.setState({ parentPinHash: null });
     await unmount(r);
   });
 

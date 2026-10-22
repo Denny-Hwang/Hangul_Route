@@ -25,6 +25,7 @@ import {
   forGrownUpArea as opensGrownUpArea,
   forLockedProfile,
   forGrownUpUse,
+  forSaveGuest,
   grownUpAreaNoPin,
   initialPinMode,
   pinCreatedWhere,
@@ -43,6 +44,7 @@ import { pauseAnnounceKey, pauseText, showsPauseHelp } from '../../logic/profile
 import { shortcutOffered } from '../../logic/profiles/biometric-shortcut';
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import { chooserHandoff, rowLabelKey } from '../../logic/profiles/who';
+import { guestFormParams } from '../../logic/guest/guest-save';
 import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { flags } from '../../config/flags';
@@ -62,6 +64,7 @@ import { useUiStore } from '../../store/ui-store';
 import { pickLanding } from '../../logic/profiles/who';
 import { routeZone } from '../../logic/profiles/session';
 import { heldJoin, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
+import { openGuestFormAfterPin } from '../guest/guest-exits';
 import { RESET_SETUP_IDLE_MS, bindResetSetupLapse, resetSetupLapseDeps } from './use-gate-lapse';
 import { useBiometricAvailability } from './use-biometric-available';
 
@@ -119,6 +122,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * [OA] Destination `JoinSpace` (row OA-7b, CS-11): Who is joining? asks the PIN before a learner other than the
  * active one joins. A correct PIN (a fresh PIN, `markPinVerified`) or a first PIN set here returns to Join, which goes on;
  * a PIN set at the end of a reset (`via`) returns too but is no fresh PIN, so Join asks it once more.
+ *
+ * [GU] Destination `SaveGuest` (AMENDMENTS-GUEST-FIRST-LESSON section 8.2, row GU-4; CS-G2, CS-G9, CS-G10): Keep my
+ * progress after the first quest on a device that holds a PIN, in the `Guest` stack. Verify only, through
+ * `verifyForLockedProfile` (strikes reset, a pending wait cleared), no Forgot PIN?: a correct PIN replaces this screen
+ * with the save form and does nothing else (no `markPinVerified`, no `openParentGate`, no `parent.gate.opened`, no
+ * fresh-PIN credit). Face or fingerprint never stands in for it (it goes back). Cancel and Close go back to the save
+ * card. With no PIN stored the screen refuses and goes back: it never creates one. It reads no grown-up session, so an
+ * open one never skips the PIN.
  */
 
 const DOT_SIZE = 20;
@@ -164,6 +175,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const cancelReset = forCancelReset(route.params);
   const lockedProfile = forLockedProfile(route.params);
   const freshPin = forFreshPin(route.params);
+  const saveGuest = forSaveGuest(route.params);
   const noPin = grownUpAreaNoPin(route.params, storedHash);
   const lockedName = useProfileStore((s) => (lockedProfile ? (s.profiles.find((p) => p.id === route.params.profileId)?.displayName ?? null) : null));
 
@@ -301,7 +313,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const voided = voidWithoutPin(route.params, storedHash, hashReadFailed);
   // [OA] A hash that could not be read at hydrate is read again on arrival, so the lock can be checked (or found void).
   useEffect(() => {
-    if ((lockedProfile || freshPin) && hashReadFailed) void retryPinHashRead();
+    if ((lockedProfile || freshPin || saveGuest) && hashReadFailed) void retryPinHashRead();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, []);
   useEffect(() => {
@@ -451,6 +463,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   /** A correct PIN, or face or fingerprint standing in for it (section 8.6): the same path for every destination. */
   const afterVerified = async (via: 'pin' | 'biometric'): Promise<void> => {
+    // [GU] CS-G2: the guest's save opens through `verifyForLockedProfile` in `submit` only; never a session from here.
+    if (saveGuest) {
+      leave();
+      return;
+    }
     // [OA] CS-3: a locked tile's PIN opens through `verifyForLockedProfile` and `openLocked` in `submit`, never here.
     // Face or fingerprint on a locked tile stays fail closed: it never marks a fresh PIN and never opens the gate.
     if (gateDestOf(route.params.next) === 'locked_profile') {
@@ -563,7 +580,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         proceed();
         return;
       }
-      if ((lockedProfile || freshPin) && useAccountStore.getState().pinHashReadFailed) {
+      if ((lockedProfile || freshPin || saveGuest) && useAccountStore.getState().pinHashReadFailed) {
         // [OA] Fail closed (13.2): the PIN hash is unknown, so it is read again before any check; while it stays
         // unknown nothing opens, no attempt is counted and the pad stays usable.
         await retryPinHashRead();
@@ -578,11 +595,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           return;
         }
       }
-      if (lockedProfile) {
+      if (lockedProfile || saveGuest) {
         // [OA] Section 6.3, CS-3: the locked-profile verify path: no gate session, no fresh PIN.
         const result = await verifyForLockedProfile(entry, { hasher: pinHasher, schedule });
         setEntry('');
         if (result.paused) trackPinPaused(result.paused.step);
+        if (result.ok && saveGuest) {
+          // [GU] CS-G2: the save form in this screen's place (the Guest stack), nothing else.
+          openGuestFormAfterPin(navigation as unknown as Parameters<typeof openGuestFormAfterPin>[0], guestFormParams(useProfileStore.getState().profiles));
+          return;
+        }
         if (result.ok) {
           trackGateOpened(route.params.next, 'pin');
           gateSent.current = true;
@@ -662,6 +684,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const biometricSlot = (available: boolean): boolean =>
     mode === 'verify' &&
     !verifiedGoesToSetup(route.params) &&
+    // [GU] The guest's save asks the typed PIN only (CS-G2).
+    !saveGuest &&
     shortcutOffered({
       flagOn: flags.biometricShortcutEnabled,
       available,
