@@ -346,6 +346,34 @@ function memoryTooLarge(c: Parameters<typeof fail>[0], message: string): Respons
   return fail(c, 'payload_too_large', message, 413, { maxStates: MEMORY_PUSH_MAX_STATES, maxBytes: MEMORY_PUSH_MAX_BYTES, maxShards: MEMORY_PUSH_MAX_SHARDS });
 }
 
+/**
+ * The request body, read until it passes `max` bytes and no further: null when it is larger. A body
+ * sent without a Content-Length (chunked) is never buffered past the cap.
+ */
+async function readBodyUpTo(request: Request, max: number): Promise<Uint8Array | null> {
+  if (request.body === null) return new Uint8Array(0);
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel().catch(() => undefined);
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
 /** A Worker that runs before migration 0016 (or a D1 outage) answers the memory routes 503; every other route is unchanged. */
 function memoryUnavailable(c: Parameters<typeof fail>[0]): Response {
   return fail(c, 'memory_unavailable', 'The memory store is not available, try again later', 503);
@@ -355,7 +383,8 @@ function memoryUnavailable(c: Parameters<typeof fail>[0]): Response {
  * The memory store's changed item states (F-CURR-002 section 4.8, row CM-11), Worker first. Full-scope
  * devices only, like the snapshot routes: a class-scoped device gets `403 scope_limited` (SEC-4) and keeps
  * its memory on the device. At most 500 states in a body of 64 KB or less, else 413. Seeded states
- * (`n` = 0) are not stored. The Worker reads only the shards the call touches, merges per item and
+ * (`n` = 0) are not stored, and an `at` ahead of the Worker's clock is bounded first (section 13,
+ * `boundMemoryStateToNow`). The Worker reads only the shards the call touches, merges per item and
  * writes the changed ones in one D1 batch, each at the learner's highest `seq` + 1. The path carries only
  * the opaque learner id; nothing here is logged.
  */
@@ -364,8 +393,8 @@ syncRoutes.post('/learners/:id/memory', async (c) => {
   const auth = await authorizeDevice(c, learnerId);
   if (typeof auth !== 'string') return auth;
   if (Number(c.req.header('content-length') ?? 0) > MEMORY_PUSH_MAX_BYTES) return memoryTooLarge(c, 'Memory body is over 64 KB');
-  const bytes = await c.req.arrayBuffer().catch(() => new ArrayBuffer(0));
-  if (bytes.byteLength > MEMORY_PUSH_MAX_BYTES) return memoryTooLarge(c, 'Memory body is over 64 KB');
+  const bytes = await readBodyUpTo(c.req.raw, MEMORY_PUSH_MAX_BYTES).catch(() => new Uint8Array(0));
+  if (bytes === null) return memoryTooLarge(c, 'Memory body is over 64 KB');
   let raw: unknown = null;
   try {
     raw = JSON.parse(new TextDecoder().decode(bytes));

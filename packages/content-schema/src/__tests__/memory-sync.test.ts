@@ -1,6 +1,10 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import {
+  MEMORY_CLOCK_SKEW_MS,
+  MEMORY_ITEM_ID_MAX,
   MEMORY_PUSH_MAX_BYTES,
   MEMORY_PUSH_MAX_SHARDS,
   MEMORY_PUSH_MAX_STATES,
@@ -10,6 +14,7 @@ import {
   MemoryPushResultSchema,
   MemoryPushSchema,
   MemoryShardKeySchema,
+  boundMemoryStateToNow,
   compareSchedule,
   countPushedShards,
   countPushedStates,
@@ -19,10 +24,12 @@ import {
   mergeMemoryShard,
   parseMemoryPush,
   pulledMemory,
+  sameMemoryItemState,
   withoutSeeded,
   type MemoryItemState,
 } from '../memory/memory-sync';
 import { BackupFileSchema, MemoryItemStateSchema as BarrelItemState } from '../index';
+import { REPO_ROOT } from './helpers/romanization-registry';
 
 /*
  * F-CURR-002 section 4.8 (row CM-11): the shared item-state merge that the Worker's shard merge and
@@ -283,7 +290,7 @@ describe('parseMemoryPush · the Worker hot path equals MemoryPushSchema', () =>
     itemState.map((st) => ({ ...st, extra: 'kept out' })),
     junk,
   );
-  const rawId = fc.constantFrom('lex:sagwa', 'vocab:bae-boat', 'sym:bieup', 'exc:annyeonghaseyo~2', 'LEX:sagwa', 'lex:', 'vocab:Bae', 'word:sagwa', '__proto__', '');
+  const rawId = fc.constantFrom('lex:sagwa', 'vocab:bae-boat', 'sym:bieup', 'exc:annyeonghaseyo~2', 'LEX:sagwa', 'lex:', 'vocab:Bae', 'word:sagwa', '__proto__', '', `lex:${'a'.repeat(60)}`, `lex:${'a'.repeat(61)}`, `vocab:${'b'.repeat(59)}`);
   const rawShard = fc.constantFrom('stage1', 'stage7', 'week', 'pack:numbers-time', 'stage8', 'pack:', 'Week', `pack:${'a'.repeat(60)}`);
   const rawBody: fc.Arbitrary<unknown> = fc.oneof(
     fc.record({ shards: fc.dictionary(rawShard, fc.oneof(fc.dictionary(rawId, rawState, { maxKeys: 3 }), junk), { maxKeys: 3 }) }),
@@ -320,5 +327,65 @@ describe('parseMemoryPush · the Worker hot path equals MemoryPushSchema', () =>
     const broken = { stage2: { 'lex:a': state(), 'lex:b': { ...state(), f: '2026-02-30' }, 'lex:c': { ...state(), f: '2026-02-30' } } };
     expect(parseMemoryPush({ shards: broken }).success).toBe(false);
     expect(parseMemoryPush({ shards: { stage2: { 'lex:a': state(), 'lex:b': { ...state(), at: '2026-02-30T10:00:00Z' } } } }).success).toBe(false);
+  });
+});
+
+describe('item id cap: one length on the push, the pull and the backup file', () => {
+  const longest = `lex:${'a'.repeat(MEMORY_ITEM_ID_MAX - 4)}`;
+  const over = `lex:${'a'.repeat(MEMORY_ITEM_ID_MAX - 3)}`;
+
+  it(`an id of ${MEMORY_ITEM_ID_MAX} characters is kept on every path; one longer is refused on the push, so it is never stored and then lost`, () => {
+    expect(longest).toHaveLength(MEMORY_ITEM_ID_MAX);
+    expect(parseMemoryPush({ shards: { stage2: { [longest]: state() } } }).success).toBe(true);
+    expect(MemoryPushSchema.safeParse({ shards: { stage2: { [longest]: state() } } }).success).toBe(true);
+    expect(parseMemoryPush({ shards: { stage2: { [over]: state() } } })).toEqual({ success: false, issues: [{ path: ['shards', 'stage2', over], code: 'invalid' }] });
+    expect(MemoryPushSchema.safeParse({ shards: { stage2: { [over]: state() } } }).success).toBe(false);
+    expect(MemoryPullSchema.parse({ cursor: 1, shards: [{ shard: 'stage2', seq: 1, states: { [longest]: state() } }] }).shards[0]?.states).toEqual({ [longest]: state() });
+    expect(BackupFileSchema.shape.memory.parse({ stage2: { [longest]: state() } })).toEqual({ stage2: { [longest]: state() } });
+  });
+
+  it('every frozen review-item id and every topic word id fits the cap (content)', () => {
+    const frozen = Object.values((JSON.parse(readFileSync(join(REPO_ROOT, 'packages/content-schema/src/review-items/items-stable-id.json'), 'utf8')) as { ids: Record<string, string> }).ids);
+    const vocabDir = join(REPO_ROOT, 'content/vocab');
+    const vocab = readdirSync(vocabDir)
+      .filter((f) => f.endsWith('.json'))
+      .flatMap((f) => [...readFileSync(join(vocabDir, f), 'utf8').matchAll(/"id"\s*:\s*"(vocab:[^"]+)"/g)].map((m) => m[1] as string));
+    expect(frozen.length).toBeGreaterThan(100);
+    expect(vocab.length).toBeGreaterThan(100);
+    expect([...frozen, ...vocab].filter((id) => id.length > MEMORY_ITEM_ID_MAX)).toEqual([]);
+  });
+});
+
+describe('boundMemoryStateToNow · the wrong-clock guard (section 13)', () => {
+  const now = new Date('2026-10-22T12:00:00.000Z');
+  const stored = state({ b: 4, d: '2026-10-26', c: 1, r: RECOGNIZE, n: 5, s: 4, at: '2026-10-22T11:00:00.000Z' });
+
+  it('a past or present at is the state itself', () => {
+    const past = state();
+    expect(boundMemoryStateToNow(past, stored, now)).toBe(past);
+    const present = state({ at: now.toISOString() });
+    expect(boundMemoryStateToNow(present, undefined, now)).toBe(present);
+  });
+
+  it('a little ahead is read as now', () => {
+    const soon = state({ at: new Date(now.getTime() + MEMORY_CLOCK_SKEW_MS).toISOString() });
+    expect(boundMemoryStateToNow(soon, stored, now)).toEqual({ ...soon, at: now.toISOString() });
+  });
+
+  it('far ahead keeps the stored schedule, so a later real answer still wins; with nothing stored it is read as now', () => {
+    const far = state({ b: 7, d: '2030-01-10', c: 3, r: PRODUCE, n: 9, s: 7, at: new Date(now.getTime() + MEMORY_CLOCK_SKEW_MS + 1).toISOString() });
+    const bounded = boundMemoryStateToNow(far, stored, now);
+    expect(mergeMemoryItemState(stored, bounded)).toEqual({ ...stored, r: RECOGNIZE | PRODUCE, n: 9, s: 7 });
+    expect(boundMemoryStateToNow(far, undefined, now)).toEqual({ ...far, at: now.toISOString() });
+    const later = state({ b: 2, at: '2026-10-22T12:30:00.000Z' });
+    expect(mergeMemoryItemState(mergeMemoryItemState(stored, bounded), later)).toMatchObject({ b: 2, at: later.at });
+  });
+
+  it('sameMemoryItemState compares the eight fields', () => {
+    expect(sameMemoryItemState(state(), state())).toBe(true);
+    for (const key of ['b', 'c', 'r', 'n', 's'] as const) expect(sameMemoryItemState(state(), state({ [key]: 0 }))).toBe(false);
+    expect(sameMemoryItemState(state(), state({ d: null }))).toBe(false);
+    expect(sameMemoryItemState(state(), state({ f: '2026-10-02' }))).toBe(false);
+    expect(sameMemoryItemState(state(), state({ at: '2026-10-22T10:00:01.000Z' }))).toBe(false);
   });
 });

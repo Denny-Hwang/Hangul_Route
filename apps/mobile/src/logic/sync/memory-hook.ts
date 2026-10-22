@@ -25,13 +25,29 @@ export function setMemoryStoreHook(next: MemoryStoreHook | null): void {
   hook = next;
 }
 
+/**
+ * How long a backup or a file restore waits for the store before it goes on without it: a store that
+ * hangs (an IndexedDB open blocked by another tab) must never stop the file from being saved or the
+ * restore from finishing.
+ */
+export const MEMORY_HOOK_TIMEOUT_MS = 3000;
+
+/** The store's answer, or a rejection once `MEMORY_HOOK_TIMEOUT_MS` has passed. */
+function withinTimeout<T>(work: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('memory store timed out')), MEMORY_HOOK_TIMEOUT_MS);
+  });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
+
 const holdsStates = (memory: MemoryBackup | undefined): memory is MemoryBackup => memory !== undefined && Object.keys(memory).length > 0;
 
-/** The `memory` key for a backup file, or undefined: no store, an empty one, or one that failed. */
+/** The `memory` key for a backup file, or undefined: no store, an empty one, or one that failed or did not answer in time. */
 export async function memoryForBackup(profileId: string): Promise<MemoryBackup | undefined> {
   if (!hook) return undefined;
   try {
-    const memory = await hook.backup(profileId);
+    const memory = await withinTimeout(hook.backup(profileId));
     return holdsStates(memory) ? memory : undefined;
   } catch {
     return undefined;
@@ -42,7 +58,7 @@ export async function memoryForBackup(profileId: string): Promise<MemoryBackup |
 export async function restoreMemory(profileId: string, memory: MemoryBackup | undefined): Promise<void> {
   if (!hook || !holdsStates(memory)) return;
   try {
-    await hook.restore(profileId, memory);
+    await withinTimeout(hook.restore(profileId, memory));
   } catch {
     // Kept as it was; the next pull from the server brings the states back.
   }

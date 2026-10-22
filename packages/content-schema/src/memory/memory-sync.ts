@@ -27,7 +27,9 @@ export type MemoryShardKey = z.infer<typeof MemoryShardKeySchema>;
  * The caps of one `POST .../memory` call: at most 500 changed item states, in a body of 64 KB or
  * less. Anything larger is answered 413 before it is merged. The CPU benchmark of row CM-11
  * (packages/backend/src/lib/__tests__/memory-shards-bench.test.ts) holds a 500-item merge inside
- * the Workers free-tier CPU budget; if it ever does not, this cap is lowered, never raised.
+ * the Workers free-tier CPU budget; if it ever does not, this cap is lowered, never raised. With real
+ * ids (up to `MEMORY_ITEM_ID_MAX`) a state is about 140 B of JSON, so the byte cap is the one a full
+ * queue meets first (about 450 states): the app splits its queue by bytes as well as by count.
  */
 export const MEMORY_PUSH_MAX_STATES = 500;
 export const MEMORY_PUSH_MAX_BYTES = 64 * 1024;
@@ -36,6 +38,21 @@ export const MEMORY_PUSH_MAX_BYTES = 64 * 1024;
  * leaves room for new packs while a call can never write more rows than a real sync touches.
  */
 export const MEMORY_PUSH_MAX_SHARDS = 24;
+
+/**
+ * The longest item id the memory store keeps, on every path: the push, the pull and the backup file's
+ * `memory` key (`MemoryBackupSchema`, 64 since row CM-3b). One cap on all three, so an id the Worker
+ * stores is never dropped on a pull or a restore. The longest frozen id today is 47 characters, and a
+ * content test holds every frozen id and topic word id under this cap.
+ */
+export const MEMORY_ITEM_ID_MAX = 64;
+const MemoryPushItemIdSchema = ReviewItemIdSchema.refine((id) => id.length <= MEMORY_ITEM_ID_MAX);
+
+/**
+ * How far ahead of the Worker's clock an item's `at` may be and still count as an answer given now (a
+ * clock a little fast): the `goals.setAt` skew of section 13.
+ */
+export const MEMORY_CLOCK_SKEW_MS = 10 * 60_000;
 
 /** One shard's item states: review item id -> state. */
 export type MemoryShardStates = Record<string, MemoryItemState>;
@@ -116,6 +133,33 @@ export function mergeMemory(a: MemoryBackup | undefined, b: MemoryBackup | undef
   return merged;
 }
 
+/** Two states with the same eight fields: a merge that returns this changed nothing. */
+export function sameMemoryItemState(a: MemoryItemState, b: MemoryItemState): boolean {
+  return a.b === b.b && a.d === b.d && a.c === b.c && a.r === b.r && a.n === b.n && a.f === b.f && a.s === b.s && a.at === b.at;
+}
+
+/**
+ * The Worker's clock guard on a pushed state, before it merges (section 13, "A wrong device clock wins
+ * every merge"). `at` is the last-writer-wins clock, so an `at` from a device clock set ahead would win
+ * `b`, `d` and `c` on the server and on every device that pulls, and freeze that item's schedule until
+ * real time passes it:
+ *
+ * - an `at` later than `now` but within `MEMORY_CLOCK_SKEW_MS` is read as `now`;
+ * - an `at` later than that keeps the stored schedule (`b`, `d`, `c` and its `at`) when the server holds
+ *   the item, so a later real answer from another device still wins on every later sync, while the
+ *   grow-only fields (`r`, `n`, `f`, `s`) still merge; with nothing stored it is read as `now`.
+ *
+ * Kept out of the merge itself, which stays pure and free of a clock. Returns the state itself when its
+ * `at` is not ahead. Row CM-12 caps the `at` it writes at the last server time seen, so it stops.
+ */
+export function boundMemoryStateToNow(state: MemoryItemState, stored: MemoryItemState | undefined, now: Date): MemoryItemState {
+  const t = Date.parse(state.at);
+  const nowMs = now.getTime();
+  if (!(t > nowMs)) return state;
+  if (t <= nowMs + MEMORY_CLOCK_SKEW_MS || stored === undefined) return { ...state, at: now.toISOString() };
+  return { ...state, b: stored.b, d: stored.d, c: stored.c, at: stored.at };
+}
+
 /** The item states of a call or a store, without the seeded ones (`n` = 0), shard by shard; a shard left empty drops. */
 export function withoutSeeded(shards: Readonly<Record<string, Readonly<MemoryShardStates>>>): Record<string, MemoryShardStates> {
   const kept: Record<string, MemoryShardStates> = {};
@@ -132,7 +176,7 @@ export function withoutSeeded(shards: Readonly<Record<string, Readonly<MemorySha
  * Unknown fields of a state are dropped, so a newer build's extra field never fails an older Worker.
  */
 export const MemoryPushSchema = z.object({
-  shards: z.record(MemoryShardKeySchema, z.record(ReviewItemIdSchema, MemoryItemStateSchema)),
+  shards: z.record(MemoryShardKeySchema, z.record(MemoryPushItemIdSchema, MemoryItemStateSchema)),
 });
 export type MemoryPush = z.infer<typeof MemoryPushSchema>;
 
@@ -176,7 +220,7 @@ export function parseMemoryPush(body: unknown): MemoryPushParse {
     if (!isPlainObject(states)) return failAt('shards', shard);
     const kept: MemoryShardStates = {};
     for (const id of Object.keys(states)) {
-      if (!REVIEW_ITEM_ID_RE.test(id) && !VOCAB_ID_RE.test(id)) return failAt('shards', shard, id);
+      if (id.length > MEMORY_ITEM_ID_MAX || (!REVIEW_ITEM_ID_RE.test(id) && !VOCAB_ID_RE.test(id))) return failAt('shards', shard, id);
       const v = states[id];
       if (!isPlainObject(v)) return failAt('shards', shard, id);
       const { b, d, c, r, n, f, s, at } = v;
@@ -224,7 +268,7 @@ export type MemoryPushResult = z.infer<typeof MemoryPushResultSchema>;
 /** `GET .../memory?since=<seq>`: the cursor a device last read, 0 for everything. */
 export const MemoryCursorSchema = z.coerce.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 
-const MemoryItemKeySchema = z.string().min(1).max(64);
+const MemoryItemKeySchema = z.string().min(1).max(MEMORY_ITEM_ID_MAX);
 
 /**
  * One shard as the pull returns it: whole, with the server `seq` it was last written at. Read

@@ -1,6 +1,6 @@
 import type { MemoryBackup } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { memoryForBackup, pullMemoryAfterAdopt, restoreMemory, setMemoryStoreHook, type MemoryStoreHook } from '../memory-hook';
+import { MEMORY_HOOK_TIMEOUT_MS, memoryForBackup, pullMemoryAfterAdopt, restoreMemory, setMemoryStoreHook, type MemoryStoreHook } from '../memory-hook';
 
 /*
  * F-CURR-002 section 4.8 (row CM-11): the hook the memory store of row CM-12 fills. With no store the
@@ -43,6 +43,21 @@ describe('memory store hook', () => {
     expect(hook.restore).toHaveBeenCalledTimes(1);
     setMemoryStoreHook(fakeHook({ restore: vi.fn(async () => Promise.reject(new Error('storage'))) }));
     await expect(restoreMemory('profile:a', memory)).resolves.toBeUndefined();
+  });
+
+  it('a store that never answers: the backup goes on without the key and the restore finishes, after the timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const never = (): Promise<never> => new Promise<never>(() => undefined);
+      setMemoryStoreHook(fakeHook({ backup: vi.fn(never), restore: vi.fn(never) }));
+      const backup = memoryForBackup('profile:a');
+      const restore = restoreMemory('profile:a', memory);
+      await vi.advanceTimersByTimeAsync(MEMORY_HOOK_TIMEOUT_MS);
+      await expect(backup).resolves.toBeUndefined();
+      await expect(restore).resolves.toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('pull after adopt: started without waiting; a failing pull is swallowed', async () => {

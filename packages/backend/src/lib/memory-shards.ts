@@ -1,4 +1,4 @@
-import { mergeMemoryShard, withoutSeeded, type MemoryShardStates } from '@hangul-route/content-schema/memory';
+import { boundMemoryStateToNow, mergeMemoryItemState, sameMemoryItemState, withoutSeeded, type MemoryItemState, type MemoryShardStates } from '@hangul-route/content-schema/memory';
 import type { Db, MemoryShardWrite, StoredMemoryShard } from '../db';
 
 /**
@@ -30,19 +30,50 @@ export function readShardStates(row: Pick<StoredMemoryShard, 'shard' | 'states'>
 }
 
 /**
- * The writes one push needs: each sent shard merged into its stored copy. A shard whose merged text
- * equals the stored text is left out, so a repeated call writes nothing. Pure: no clock, no I/O.
+ * The writes one push needs: each sent shard merged into its stored copy, item by item with the shared
+ * rule (`mergeMemoryItemState`), after the clock guard (`boundMemoryStateToNow`). A shard the merge
+ * leaves unchanged is left out, so a repeated call writes nothing. Pure apart from `now`: no I/O.
+ *
+ * CPU (section 19, assumption 8): the stored shard is parsed once and the sent states are merged into
+ * it in place, so the work per stored item is the parse and the serialize, which are native; the keys
+ * are sorted again (natively) only when the call adds an item. The stored text is in key order already,
+ * because the Worker is its only writer, so the result equals `mergeMemoryShard` of the two copies.
  */
-export function planShardWrites(stored: readonly StoredMemoryShard[], sent: Readonly<Record<string, MemoryShardStates>>): MemoryShardWrite[] {
+export function planShardWrites(stored: readonly StoredMemoryShard[], sent: Readonly<Record<string, MemoryShardStates>>, now: Date): MemoryShardWrite[] {
   const byShard = new Map(stored.map((row) => [row.shard, row]));
   const writes: MemoryShardWrite[] = [];
   for (const shard of Object.keys(sent).sort()) {
     const row = byShard.get(shard);
-    const states = JSON.stringify(mergeMemoryShard(row ? readShardStates(row) : {}, sent[shard] as MemoryShardStates));
-    if (row && states === row.states) continue;
-    writes.push({ shard, states, baseSeq: row?.seq ?? null });
+    const states = row ? readShardStates(row) : {};
+    const incoming = sent[shard] as MemoryShardStates;
+    let changed = row === undefined;
+    let added = false;
+    for (const id of Object.keys(incoming)) {
+      const prev = Object.prototype.hasOwnProperty.call(states, id) ? states[id] : undefined;
+      const next = boundMemoryStateToNow(incoming[id] as MemoryItemState, prev, now);
+      if (prev === undefined) {
+        states[id] = next;
+        added = true;
+        changed = true;
+        continue;
+      }
+      const merged = mergeMemoryItemState(prev, next);
+      if (!sameMemoryItemState(prev, merged)) {
+        states[id] = merged;
+        changed = true;
+      }
+    }
+    if (!changed) continue;
+    writes.push({ shard, states: JSON.stringify(added ? inKeyOrder(states) : states), baseSeq: row?.seq ?? null });
   }
   return writes;
+}
+
+/** The same map with its keys in code-unit order (the order `mergeMemoryShard` writes), sorted natively. */
+function inKeyOrder(states: MemoryShardStates): MemoryShardStates {
+  const ordered: MemoryShardStates = {};
+  for (const id of Object.keys(states).sort()) ordered[id] = states[id] as MemoryItemState;
+  return ordered;
 }
 
 export interface MemoryPushOutcome {
@@ -68,7 +99,7 @@ export async function pushMemory(db: Db, learnerId: string, shards: Readonly<Rec
   let written = 0;
   for (let attempt = 0; attempt < MEMORY_WRITE_ATTEMPTS && pending.length > 0; attempt += 1) {
     const sent = Object.fromEntries(pending.map((shard) => [shard, answered[shard] as MemoryShardStates]));
-    const result = await db.writeMemoryShards(learnerId, planShardWrites(await db.memoryShardsOf(learnerId, pending), sent), now.toISOString());
+    const result = await db.writeMemoryShards(learnerId, planShardWrites(await db.memoryShardsOf(learnerId, pending), sent, now), now.toISOString());
     written += result.written.length;
     pending = result.conflicts;
   }
