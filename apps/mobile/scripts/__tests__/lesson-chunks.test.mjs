@@ -214,10 +214,43 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(report.localeChunks.raw).toBe(bundles[1].text.length + bundles[2].text.length);
     expect(report.rootChunks.count).toBe(1);
     const lines = reportLines(report);
-    expect(lines[4]).toMatch(/^ {2}locale chunks {2}2 bundles {2}\d+ B raw {2}\d+ B gzip$/);
-    expect(lines[5]).toMatch(/^ {2}grown-up root chunks {2}1 bundles {2}\d+ B raw {2}\d+ B gzip$/);
+    const largestLocale = Math.max(bundles[1].text.length, bundles[2].text.length);
+    expect(lines[4]).toMatch(
+      new RegExp(`^ {2}locale chunks {2}2 bundles {2}\\d+ B raw {2}\\d+ B gzip {2}\\(largest ${largestLocale} B raw, ceiling ${PRECACHE_BUDGET.localeChunkRaw} B each\\)$`),
+    );
+    expect(lines[5]).toMatch(
+      new RegExp(`^ {2}grown-up root chunks {2}1 bundles {2}\\d+ B raw {2}\\d+ B gzip {2}\\(largest ${root.text.length} B raw, ceiling ${PRECACHE_BUDGET.rootChunkRaw} B each\\)$`),
+    );
     expect(lines[6]).toContain('learner precache  3 files  99 B');
     expect(lessonChunkUrls(LOCALE_CHUNKS, bundles)).toEqual([bundles[1].url, bundles[2].url]);
+    expect(precacheBudgetProblems(report)).toEqual([]);
+  });
+
+  it('holds each locale chunk and each grown-up root chunk to its own line, which a Spanish or Korean first screen waits on', () => {
+    const lines = { ...PRECACHE_BUDGET, localeChunkRaw: 100, rootChunkRaw: 50 };
+    const ko = `${WEB_JS_DIR}/locale-ko-${md5('ko')}.js`;
+    const presenter = `${WEB_JS_DIR}/PresenterApp-${md5('p')}.js`;
+    const report = {
+      start: { url: START, raw: 1, gzip: 1 },
+      lessonChunks: { count: 0, raw: 0, gzip: 0, largest: null },
+      localeChunks: { count: 2, raw: 180, gzip: 20, largest: { url: ko, raw: 101 } },
+      rootChunks: { count: 2, raw: 90, gzip: 10, largest: { url: presenter, raw: 51 } },
+      precache: { count: 5, raw: 272 },
+    };
+    expect(precacheBudgetProblems(report, lines)).toEqual([
+      expect.stringMatching(new RegExp(`^the locale bundle ${ko} is 101 B raw, over the per-locale ceiling of 100 B .*raise PRECACHE_BUDGET\\.localeChunkRaw`)),
+      expect.stringMatching(new RegExp(`^the grown-up root bundle ${presenter} is 51 B raw, over the per-grown-up root ceiling of 50 B .*raise PRECACHE_BUDGET\\.rootChunkRaw`)),
+    ]);
+    const atLine = { ...report, localeChunks: { ...report.localeChunks, largest: { url: ko, raw: 100 } }, rootChunks: { ...report.rootChunks, largest: { url: presenter, raw: 50 } } };
+    expect(precacheBudgetProblems(atLine, lines)).toEqual([]);
+  });
+
+  it('the locale chunk line sits over the largest measured chunk (ko, 901,191 B) and the root line over the presenter (245,964 B)', () => {
+    // F-CURR-002 §10 ceilings table: measured at the start bundle shrink (es 527,438 B, BrowseApp 111,404 B raw).
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_000_000);
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(901_191);
+    expect(PRECACHE_BUDGET.rootChunkRaw).toBe(300_000);
+    expect(PRECACHE_BUDGET.rootChunkRaw).toBeGreaterThan(245_964);
   });
 });
 
