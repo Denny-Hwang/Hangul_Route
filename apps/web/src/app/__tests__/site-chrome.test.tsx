@@ -317,7 +317,7 @@ describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002
     }
   });
 
-  it('404: an English document in the site chrome, with Hoya, its h1, our line, Start learning first and the home page (SN-2)', () => {
+  it('404: an English document in the site chrome, with Hoya waving, its h1, our line, the home link, then Start learning (SN-2, §3.7)', () => {
     const html = renderToStaticMarkup(<NotFoundPage />);
     expect(html).toMatch(/^<html lang="en">/);
     expect(html).not.toContain('This page could not be found.');
@@ -329,15 +329,28 @@ describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002
     const main = /<main\b[^>]*>([\s\S]*)<\/main>/.exec(html)?.[1] ?? '';
     expect(main.match(/<h1\b/g)).toHaveLength(1);
     expect(main).toMatch(new RegExp(`<h1[^>]*>${t.notFound.title}</h1>`));
-    // Hoya thinking, never a failure picture (anti-shame), and decorative: the h1 says what happened.
-    expect(main).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-pose="thinking"/);
+    // Hoya waving (OD-SN-7: a missing page is not the visitor's miss), never a failure picture, and decorative: the h1
+    // says what happened.
+    expect(main).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-pose="waving"/);
+    expect(main).not.toContain('data-pose="thinking"');
+    // DOM order = the mock's visual order: Hoya, h1, line, the home text link, then the primary action.
+    expect(main.indexOf('data-pose="waving"')).toBeLessThan(main.indexOf('<h1'));
+    expect(main.indexOf('<h1')).toBeLessThan(main.indexOf(t.notFound.body));
     const links = controls(main);
     expect(links.map((c) => [hrefOf(c), c.text])).toEqual([
-      [learnerStart('en'), t.notFound.start],
       ['/', t.notFound.home],
+      [learnerStart('en'), t.notFound.start],
     ]);
+    expect(links[0]?.attrs).toContain('class="hr-site-text-link"');
+    expect(links[1]?.attrs).toContain('class="hr-site-primary"');
+    expect(links[1]?.attrs).toMatch(/min-height:80px/);
     for (const c of links) expect(c.attrs).toMatch(/min-height:(64|80)px/);
+    expect(main).not.toContain('hr-site-secondary');
     expect(css).not.toMatch(/\.hr-site-404 > div/);
+    // Hoya 4.5rem below 45em and 7rem from 45em, from the site's custom properties (§3.7).
+    expect(css).toMatch(/\.hr-site-404-hoya\s*\{[^}]*width:\s*var\(--hr-site-404-hoya\)/);
+    const wide = css.slice(css.indexOf('@media (min-width: 45em)'));
+    expect(wide).toMatch(/\.hr-site-404-hoya\s*\{[^}]*width:\s*var\(--hr-site-404-hoya-wide\)/);
   });
 });
 

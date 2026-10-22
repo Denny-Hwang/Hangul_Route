@@ -48,6 +48,12 @@ describe('SITE_SIZES', () => {
     expect(SITE_SIZES.heroArtMaxWide).toBe(`${layout.maxWidth.reading / 2}px`);
     expect(SITE_SIZES.heroRatio).toBe('1.4fr');
     expect(SITE_SIZES.hoyaShare).toBe('62%');
+    // AMENDMENTS-SITE-NEWUSER §3.7: Hoya 4.5rem below 45em and 7rem from 45em on the 404 page.
+    expect(SITE_SIZES.notFoundHoya).toBe(rem(spacing.jumbo + spacing.sm));
+    expect(SITE_SIZES.notFoundHoya).toBe('4.5rem');
+    expect(SITE_SIZES.notFoundHoyaWide).toBe(rem(spacing.jumbo + spacing.xxxl));
+    expect(SITE_SIZES.notFoundHoyaWide).toBe('7rem');
+    expect(SITE_SIZES.notFoundMeasure).toBe('26em');
   });
 });
 
@@ -102,6 +108,8 @@ describe('siteCssVars', () => {
       SITE_SIZES.heroArtMax,
       SITE_SIZES.heroArtMaxWide,
       SITE_SIZES.heroRatio,
+      SITE_SIZES.notFoundHoya,
+      SITE_SIZES.notFoundHoyaWide,
       // Derived from tokens only (touchTarget.min, the caption size and normal leading), checked above.
       `calc(${CAPTION_HIT_OVERFLOW})`,
     ]);

@@ -48,10 +48,24 @@ test.describe('locale routes', () => {
         'href',
         locale === 'en' ? 'https://app.hangulroute.com' : `https://app.hangulroute.com?lang=${locale}`,
       );
+      // AMENDMENTS-SITE-NEWUSER §3.7 and §8: the site's 404 body, never Next's default block, and the home text link
+      // before Start learning (the mock's order).
+      await expect(page.locator('.next-error-h1')).toHaveCount(0);
+      await expect(page.getByText('This page could not be found.')).toHaveCount(0);
+      const order = await main.getByRole('link').evaluateAll((links) => links.map((a) => a.textContent?.trim()));
+      expect(order).toEqual([t.home, t.start]);
+      await expect(main.locator('svg[data-pose="waving"]')).toHaveCount(1);
+      // §3.2 and §8: the language links of the 404 point at each locale's home (the unknown path would be another 404).
+      const languageLinks = page.locator('footer a[hreflang]');
+      expect(await languageLinks.count()).toBeGreaterThanOrEqual(2);
+      for (const href of await languageLinks.evaluateAll((links) => links.map((a) => a.getAttribute('href')))) {
+        expect(['/', '/es', '/ko']).toContain(href);
+      }
     });
   }
 
-  // The two ways on stay on the first screen of a small phone, under the header.
+  // The two ways on stay on the first screen of a small phone, under the header (§3.7, §3.11: Start learning ends on the
+  // 320 x 568 first screen in every locale).
   for (const [width, height] of [[320, 568], [375, 812]] as const) {
     for (const [path, locale] of [['/no-such-page', 'en'], ['/es/nope', 'es'], ['/ko/nope', 'ko']] as const) {
       test(`${path} shows its two ways on in the first screen at ${width} x ${height}`, async ({ page }) => {

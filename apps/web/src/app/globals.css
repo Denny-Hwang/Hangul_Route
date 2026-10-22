@@ -272,6 +272,30 @@ button {
   box-shadow: none;
 }
 
+/*
+ * The 404 page (AMENDMENTS-SITE-NEWUSER §3.7, mock design/screens/site/newuser/mock/<locale>/404.html): Hoya, the h1,
+ * the line, the home link, then Start learning, centred; Hoya smaller and less padding below 45em so Start learning
+ * ends on the 320 x 568 first screen in every locale. From 45em: the main breakpoint block below.
+ */
+.hr-site-404 {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: var(--hr-site-sm);
+  padding-top: var(--hr-site-lg);
+  padding-bottom: var(--hr-site-xxl);
+}
+
+.hr-site-404 h1 {
+  margin: var(--hr-site-xs) 0 0;
+}
+
+.hr-site-404-hoya {
+  display: flex;
+  width: var(--hr-site-404-hoya);
+  height: var(--hr-site-404-hoya);
+}
+
 .hr-site-promises {
   padding-block: var(--hr-site-lg);
 }
@@ -400,6 +424,21 @@ button {
 
   .hr-site-actions > a {
     width: auto;
+  }
+
+  /* The 404 page from 45em (AMENDMENTS-SITE-NEWUSER §3.7): Hoya 7rem, more room around it. */
+  .hr-site-404 {
+    gap: var(--hr-site-md);
+    padding-top: var(--hr-site-xxl);
+  }
+
+  .hr-site-404 h1 {
+    margin-top: var(--hr-site-md);
+  }
+
+  .hr-site-404-hoya {
+    width: var(--hr-site-404-hoya-wide);
+    height: var(--hr-site-404-hoya-wide);
   }
 
   .hr-site-section {
