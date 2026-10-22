@@ -1,0 +1,381 @@
+import type { ThemeKey } from '@hangul-route/content-schema';
+import {
+  Body,
+  Button,
+  ConfirmSheet,
+  Heading,
+  Hoya,
+  Icon,
+  Screen,
+  Spacer,
+  StarRow,
+  borderWidth,
+  colors,
+  radii,
+  spacing,
+  touchTarget,
+  useCappedFont,
+} from '@hangul-route/design-system';
+import { CommonActions } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, View } from 'react-native';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { themeGlyph } from '../../logic/journey';
+import { memoryChunk } from '../../logic/memory/boot';
+import type { DailyReviewApi, ReviewWorld } from '../../logic/reviews/daily-review-api';
+import type { AfterSession, DailySessionKind, PlannedSession, RoundAnswer } from '../../logic/reviews/daily-review';
+import type { RootStackParamList } from '../../navigation/types';
+import { useReducedMotion } from '../../platform/motion';
+import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { RoundView } from './ReviewRounds';
+
+/**
+ * The Daily Review and Keep going (F-CURR-002 sections 4.3, 4.5, 7.4 and 7.7, row CM-14; design
+ * design/wireframes/reviews/daily-review.md and keep-going.md, design/screens/daily-review/ and keep-going/).
+ *
+ * Panels: B (a round: [x] top left, fill-only dots, the theme glyph and word, one shipped round), B2 (a miss: amber,
+ * Hoya shows the right answer), C (the result: one headline word, 1 to 3 stars, "N got stronger", Back home first,
+ * then "Want a few more?" and Keep going while items remain and fewer than 3 Keep goings were played today), D (All
+ * refreshed today: nothing to ask, the flags off, or a store that cannot be read), E (Stop for now?, over a round) and
+ * Keep going's done-today page (the collected card tapped). Never a percentage, an "n of m", a running count of
+ * misses or a timer. Behind `dailyReview` with `memoryRecord`; off, a deep link shows D.
+ */
+
+type Props = NativeStackScreenProps<RootStackParamList, 'DailyReview'>;
+
+/** The design's display headlines never break a word at 320 and 200 % text (daily-review.md, the 200 % state). */
+export const DISPLAY_HEADLINE_MAX_SCALE = 1.5;
+/** Hoya on the result and the end pages: the Hangul Check's size. */
+const END_HOYA = 120;
+/** The round dots (design/screens/daily-review/README.md constants): 8 dp dots with 4 dp gaps. */
+const ROUND_DOT = spacing.sm;
+const ROUND_DOT_GAP = spacing.xs;
+/** The loading frame's dots: a Daily Review's 10 (the engine's `DAILY_REVIEW_SIZE`, not imported: no scheduler module here). */
+const LOADING_DOTS = 10;
+
+/** One headline word per star tier (F-RVW-001 section 3.1), never a number. */
+const headlineKey = (stars: 1 | 2 | 3): 'one' | 'two' | 'three' => (stars === 3 ? 'three' : stars === 2 ? 'two' : 'one');
+
+type Phase =
+  | { kind: 'loading' }
+  | { kind: 'nothing' }
+  | { kind: 'done-today'; offer: AfterSession }
+  | { kind: 'playing'; plan: PlannedSession; index: number }
+  | { kind: 'result'; session: DailySessionKind; stars: 1 | 2 | 3; stronger: number | null; after: AfterSession };
+
+/** The dots row: fill-only, the same for right and wrong; it names the round's position and nothing else. */
+function RoundDots({ filled, total, current }: { filled: number; total: number; current: number }): React.ReactElement {
+  const m = useMessages();
+  return (
+    <View
+      accessible
+      accessibilityLabel={m.a11y.dailyReview.round(current)}
+      testID="daily-review-dots"
+      style={{ flexDirection: 'row', alignItems: 'center', gap: ROUND_DOT_GAP }}
+    >
+      {Array.from({ length: total }, (_, i) => (
+        <View
+          key={i}
+          testID={i < filled ? 'daily-review-dot-filled' : 'daily-review-dot'}
+          style={{
+            width: ROUND_DOT,
+            height: ROUND_DOT,
+            borderRadius: radii.circle,
+            borderWidth: borderWidth.thin,
+            borderColor: colors.border.shape,
+            backgroundColor: i < filled ? colors.brand.secondary : colors.surface.paper,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+/** [x] and the dots, at the top of a round and of the loading frame. */
+function TopRow({ onClose, filled, total, current }: { onClose: () => void; filled: number; total: number; current: number }): React.ReactElement {
+  const m = useMessages();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+      <Pressable
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel={m.a11y.dailyReview.close}
+        testID="daily-review-close"
+        style={{ width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', marginLeft: -spacing.md }}
+      >
+        <Icon name="close" size={spacing.xl} color={colors.text.primary} />
+      </Pressable>
+      <RoundDots filled={filled} total={total} current={current} />
+    </View>
+  );
+}
+
+function DisplayHeadline({ children, testID }: { children: string; testID?: string }): React.ReactElement {
+  const capped = useCappedFont('display', DISPLAY_HEADLINE_MAX_SCALE);
+  return (
+    <Heading level="display" align="center" style={{ fontSize: capped.fontSize }} testID={testID}>
+      {children}
+    </Heading>
+  );
+}
+
+export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
+  const m = useMessages();
+  const copy = m.learner.dailyReview;
+  const keep = m.learner.keepGoing;
+  const locale = useLocale();
+  const reducedMotion = useReducedMotion();
+  const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
+  const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
+  const [leaving, setLeaving] = useState(false);
+  // Bumped by each first answer, so the round's dot fills when it is answered.
+  const [, setAnswered] = useState(0);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const world = useRef<ReviewWorld | null>(null);
+  const api = useRef<DailyReviewApi | null>(null);
+  const answers = useRef(new Map<number, RoundAnswer>());
+  const recorded = useRef<Promise<void>[]>([]);
+  const credited = useRef(new Set<string>());
+  const allowLeave = useRef(false);
+
+  const goHome = useCallback((): void => {
+    allowLeave.current = true;
+    navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Main' }] }));
+  }, [navigation]);
+
+  const start = useCallback(
+    async (kind: DailySessionKind): Promise<void> => {
+      const w = world.current;
+      const a = api.current;
+      if (w === null || a === null) return;
+      setPhase({ kind: 'loading' });
+      const plan = await a.startSession(w, kind, locale);
+      answers.current = new Map();
+      recorded.current = [];
+      credited.current = new Set();
+      setPhase(plan === null ? { kind: 'nothing' } : { kind: 'playing', plan, index: 0 });
+    },
+    [locale],
+  );
+
+  // Opens on the Daily Review, or on the done-today page once it is finished (keep-going.md E).
+  useEffect(() => {
+    let alive = true;
+    memoryChunk()
+      .then(async (chunk) => {
+        const a = chunk.dailyReviewApi();
+        api.current = a;
+        const read = await a.readWorld(profileId);
+        if (!alive) return;
+        if (read.kind !== 'ready') {
+          setPhase({ kind: 'nothing' });
+          return;
+        }
+        world.current = read.world;
+        if (a.openingKind(read.world) === 'keep-going') setPhase({ kind: 'done-today', offer: a.doneTodayOffer(read.world) });
+        else void start('daily');
+      })
+      // The memory chunk cannot load: as a store that cannot be read, "Nothing is waiting right now".
+      .catch(() => alive && setPhase({ kind: 'nothing' }));
+    return () => {
+      alive = false;
+    };
+    // The world is read once per visit; a new profile is a new visit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
+
+  // Every way back mid-round asks "Stop for now?" first: the [x], the browser and phone back, a swipe.
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (e) => {
+        if (allowLeave.current || phaseRef.current.kind !== 'playing') return;
+        e.preventDefault();
+        setLeaving(true);
+      }),
+    [navigation],
+  );
+
+  const stopNow = (): void => {
+    const p = phaseRef.current;
+    const w = world.current;
+    // A stopped Daily Review keeps its answers (recorded as given) and writes no entry; its due items still count toward the day's 20.
+    if (p.kind === 'playing' && w !== null) api.current?.noteStopped(w, p.plan, answers.current.keys());
+    setLeaving(false);
+    allowLeave.current = true;
+    if (navigation.canGoBack()) navigation.goBack();
+    else goHome();
+  };
+
+  const onFirst = (index: number, answer: RoundAnswer): void => {
+    const p = phaseRef.current;
+    const w = world.current;
+    const a = api.current;
+    if (p.kind !== 'playing' || w === null || a === null || answers.current.has(index)) return;
+    answers.current.set(index, answer);
+    setAnswered(answers.current.size);
+    recorded.current.push(a.recordRound(w, p.plan, index, answer, credited.current));
+  };
+
+  const onSolved = (): void => {
+    const p = phaseRef.current;
+    if (p.kind !== 'playing') return;
+    if (p.index + 1 < p.plan.rounds.length) {
+      setPhase({ ...p, index: p.index + 1 });
+      return;
+    }
+    const w = world.current;
+    const a = api.current;
+    if (w === null || a === null) return;
+    setPhase({ kind: 'loading' });
+    void a.finishSession(w, p.plan, answers.current, recorded.current, credited.current).then(({ finished, world: next }) => {
+      world.current = next;
+      setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
+    });
+  };
+
+  const leaveSheet = (
+    <ConfirmSheet
+      visible={leaving}
+      title={copy.leave.title}
+      message={copy.leave.body}
+      cancelLabel={copy.leave.stay.cta}
+      confirmLabel={copy.leave.stop.cta}
+      onCancel={() => setLeaving(false)}
+      onConfirm={stopNow}
+      testID="daily-review-leave"
+    />
+  );
+
+  if (phase.kind === 'loading' || phase.kind === 'playing') {
+    const total = phase.kind === 'playing' ? phase.plan.rounds.length : LOADING_DOTS;
+    const index = phase.kind === 'playing' ? phase.index : 0;
+    const round = phase.kind === 'playing' ? phase.plan.rounds[phase.index] : undefined;
+    const filled = phase.kind === 'playing' ? index + (answers.current.has(index) ? 1 : 0) : 0;
+    const theme = round?.question.theme;
+    const themeKey = theme !== undefined && !theme.startsWith('pack:') ? (theme as ThemeKey) : undefined;
+    return (
+      <>
+        <Screen tone="canvas" scrollable header={{ drawnByScreen: true }} testID="daily-review-screen">
+          <TopRow onClose={() => navigation.goBack()} filled={filled} total={total} current={index + 1} />
+          <Spacer size="md" />
+          {round !== undefined ? (
+            <View key={index} style={{ gap: spacing.md }}>
+              {themeKey !== undefined ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} testID="daily-review-theme">
+                  <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                    <Icon name={themeGlyph(themeKey)} size={spacing.lg} color={colors.text.secondary} />
+                  </View>
+                  <Body size="sm" tone="secondary" weight="semibold">
+                    {m.learner.journey.themeWord[themeKey]}
+                  </Body>
+                </View>
+              ) : null}
+              <RoundView
+                round={round}
+                reducedMotion={reducedMotion}
+                onFirst={(answer) => onFirst(index, answer)}
+                onSolved={onSolved}
+                grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}
+              />
+            </View>
+          ) : null}
+        </Screen>
+        {leaveSheet}
+      </>
+    );
+  }
+
+  if (phase.kind === 'result') {
+    const stronger = phase.stronger;
+    const offer = phase.after === 'offer';
+    return (
+      <Screen tone="canvas" scrollable testID="daily-review-result">
+        <View style={{ alignItems: 'center', gap: spacing.sm }}>
+          <Hoya pose={phase.stars === 1 ? 'thinking' : 'cheering'} size={END_HOYA} accessibilityLabel={m.a11y.hoya(phase.stars === 1 ? 'thinking' : 'cheering')} />
+          <DisplayHeadline testID="daily-review-headline">{copy.result.headline[headlineKey(phase.stars)]}</DisplayHeadline>
+          <StarRow stars={phase.stars} size={spacing.xxxl} accessibilityLabel={m.a11y.dailyReview.stars(phase.stars)} testID="daily-review-stars" />
+          {stronger === null ? null : stronger > 0 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} testID="daily-review-stronger">
+              <Icon name="check" size={spacing.lg} color={colors.feedback.success} />
+              <Body weight="semibold">{copy.result.stronger(stronger)}</Body>
+            </View>
+          ) : (
+            <Body align="center" testID="daily-review-stronger">
+              {copy.result.noneStronger}
+            </Body>
+          )}
+          {phase.session === 'keep-going' && phase.after === 'enough' ? (
+            <View style={{ alignItems: 'center' }} testID="daily-review-enough">
+              <Body align="center" weight="semibold">
+                {keep.enough.title}
+              </Body>
+              <Body align="center">{keep.enough.body}</Body>
+            </View>
+          ) : null}
+          {phase.session === 'keep-going' && phase.after === 'empty' ? (
+            <Body align="center" weight="semibold" testID="daily-review-all-refreshed">
+              {copy.allRefreshed.title}
+            </Body>
+          ) : null}
+        </View>
+        <Spacer size="xl" />
+        <Button label={copy.result.backHome.cta} tone="primary" size="hero" fullWidth onPress={goHome} testID="daily-review-back-home" />
+        {offer ? (
+          <View style={{ alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg }} testID="daily-review-offer">
+            <Body align="center">{keep.offer}</Body>
+            <Button label={keep.cta} tone="secondary" size="lg" fullWidth accessibilityHint={keep.offer} onPress={() => void start('keep-going')} testID="daily-review-keep-going" />
+          </View>
+        ) : null}
+      </Screen>
+    );
+  }
+
+  if (phase.kind === 'done-today') {
+    return (
+      <Screen tone="canvas" scrollable testID="daily-review-done-today">
+        <View style={{ alignItems: 'center', gap: spacing.sm }}>
+          <Hoya pose="waving" size={END_HOYA} accessibilityLabel={m.a11y.hoya('waving')} />
+          <DisplayHeadline>{keep.doneToday.title}</DisplayHeadline>
+          {phase.offer === 'offer' ? <Body align="center">{keep.offer}</Body> : null}
+          {phase.offer === 'empty' ? (
+            <Body align="center" weight="semibold">
+              {copy.allRefreshed.title}
+            </Body>
+          ) : null}
+          {phase.offer === 'enough' ? (
+            <View style={{ alignItems: 'center' }}>
+              <Body align="center" weight="semibold">
+                {keep.enough.title}
+              </Body>
+              <Body align="center">{keep.enough.body}</Body>
+            </View>
+          ) : null}
+        </View>
+        <Spacer size="xl" />
+        {phase.offer === 'offer' ? (
+          // The learner came back for more on their own: Keep going is the primary here, and only here.
+          <View style={{ gap: spacing.sm }}>
+            <Button label={keep.cta} tone="primary" size="hero" fullWidth accessibilityHint={keep.offer} onPress={() => void start('keep-going')} testID="daily-review-keep-going" />
+            <Button label={copy.result.backHome.cta} tone="secondary" size="lg" fullWidth onPress={goHome} testID="daily-review-back-home" />
+          </View>
+        ) : (
+          <Button label={copy.result.backHome.cta} tone="primary" size="hero" fullWidth onPress={goHome} testID="daily-review-back-home" />
+        )}
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen tone="canvas" scrollable testID="daily-review-nothing">
+      <View style={{ alignItems: 'center', gap: spacing.sm }}>
+        <Hoya pose="cheering" size={END_HOYA} accessibilityLabel={m.a11y.hoya('cheering')} />
+        <DisplayHeadline>{copy.allRefreshed.title}</DisplayHeadline>
+        <Body align="center">{copy.allRefreshed.body}</Body>
+      </View>
+      <Spacer size="xl" />
+      <Button label={copy.result.backHome.cta} tone="primary" size="hero" fullWidth onPress={goHome} testID="daily-review-back-home" />
+    </Screen>
+  );
+}

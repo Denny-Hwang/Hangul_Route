@@ -132,6 +132,15 @@ describe('planSession', () => {
     expect(plan?.rounds.map((r) => r.question.itemId)).not.toContain('syl:ga');
   });
 
+  it('leaves out the excluded items from the start (a lesson chunk that could not load)', () => {
+    const ctx = ctxWith(12);
+    const first = planSession(ctx, dayReviewLog([], TODAY), 'daily', ROUND_INPUT);
+    const gone = new Set((first?.rounds ?? []).slice(0, 2).map((r) => r.question.itemId));
+    const again = planSession(ctx, dayReviewLog([], TODAY), 'daily', ROUND_INPUT, gone);
+    expect(again?.rounds.map((r) => r.question.itemId).some((id) => gone.has(id))).toBe(false);
+    expect(again?.rounds).toHaveLength(DAILY_REVIEW_SIZE);
+  });
+
   it('fewer than 3 playable rounds where the engine offered more is the "nothing is waiting" page', () => {
     expect(MIN_PLAYABLE_ROUNDS).toBe(3);
     const blocks = ['syl:ga', 'syl:na', 'syl:da'].map((id) => mk(id, { formats: ['read-pick'], ko: id, romanization: 'same', en: undefined }));

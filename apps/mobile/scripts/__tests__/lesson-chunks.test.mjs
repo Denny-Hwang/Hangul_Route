@@ -7,6 +7,7 @@ import {
   LOCALE_CHUNKS,
   PRECACHE_BUDGET,
   MEMORY_CHUNKS,
+  REVIEW_CHUNKS,
   ROOT_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
@@ -401,5 +402,25 @@ describe('the memory store chunk (F-CURR-002 row CM-12)', () => {
     const start = { url: START, text: 'var m="memory-chunk:runtime";' };
     expect(markedChunkProblems({ chunks: MEMORY_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`memory-chunk is in the start bundle ${START}: a static import pulled it in`]);
     expect(markedChunkProblems({ chunks: MEMORY_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
+  });
+});
+
+describe('the Daily Review chunk (F-CURR-002 row CM-14)', () => {
+  it('names the chunk the route loads, and its marker is the one the chunk module exports', () => {
+    expect(REVIEW_CHUNKS).toEqual([{ name: 'daily-review-chunk', marker: 'review-chunk:daily' }]);
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(read('src/screens/reviews/daily-review-chunk.tsx')).toContain(`export const DAILY_REVIEW_CHUNK = '${REVIEW_CHUNKS[0].marker}';`);
+    // One literal import() site; Home's card reads the memory chunk's API instead (through the boot module).
+    expect(read('src/screens/reviews/DailyReviewRoute.tsx')).toContain(`import('./daily-review-chunk')`);
+    expect(read('src/screens/home/use-daily-review-home.ts')).not.toContain('daily-review-chunk');
+    expect(read('src/logic/memory/memory-chunk.ts')).toContain('export function dailyReviewApi()');
+  });
+
+  it('fails a build that pulled the Daily Review chunk into the start bundle', () => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.DAILY_REVIEW_CHUNK="review-chunk:daily"});`;
+    const chunk = { url: `${WEB_JS_DIR}/daily-review-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var m="review-chunk:daily";' };
+    expect(markedChunkProblems({ chunks: REVIEW_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`daily-review-chunk is in the start bundle ${START}: a static import pulled it in`]);
+    expect(markedChunkProblems({ chunks: REVIEW_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
   });
 });

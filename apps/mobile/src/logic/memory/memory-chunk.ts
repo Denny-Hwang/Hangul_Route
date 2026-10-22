@@ -1,15 +1,21 @@
+import { lessonContent } from '../../content/lessons';
 import { reviewItemsChunk } from '../../content/review-items';
 import { flags } from '../../config/flags';
 import { getDeviceId } from '../../platform/device';
 import { readJsonStrict, removeKey, writeJson } from '../../platform/storage';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
+import { useAudioStore } from '../../store/audio-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { currFlagOn } from '../../store/remote-config-store';
 import { useSyncStore } from '../../store/sync-store';
+import { CONTENT_OVERLAYS } from '../content-locale';
+import { createDailyReviewApi, type DailyReviewApi } from '../reviews/daily-review-api';
 import { createReviewItemStore } from '../reviews/review-items-store';
 import { notifyProgressPersisted } from '../sync/persist-hook';
 import { localDay } from '../vocab/progress';
+import { memoryRecordsFor, recordAnswers } from './boot';
 import { createMemoryRuntime, type MemoryRuntime } from './memory-runtime';
 import { seedSnapshot } from './seed';
 
@@ -70,4 +76,35 @@ export function memoryRuntime(): MemoryRuntime {
     clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
   });
   return runtime;
+}
+
+let dailyReview: DailyReviewApi | null = null;
+
+/**
+ * The Daily Review's reads and writes (F-CURR-002 row CM-14), here with the review engine so no scheduler module is
+ * shared by two chunks. The screen's chunk and Home reach it through `memoryChunk()` of `./boot.ts`.
+ */
+export function dailyReviewApi(): DailyReviewApi {
+  dailyReview ??= createDailyReviewApi({
+    file: (profileId) => memoryRuntime().file(profileId),
+    ensureSeeded: (profileId) => memoryRuntime().ensureSeeded(profileId),
+    items: () => reviewItemStore.ensure(),
+    // With answers not recorded the review would repeat itself, so `memoryRecord` gates it too (daily-review.md).
+    on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('dailyReview', profileId),
+    visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    voice: () => {
+      const audio = useAudioStore.getState();
+      return audio.tts.state === 'ready' && !audio.muted;
+    },
+    hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
+    reviews: (profileId) => useProgressStore.getState().byProfile[profileId]?.reviews,
+    vocab: (profileId) => useProgressStore.getState().byProfile[profileId],
+    recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
+    recordAnswers: (profileId, answers) => recordAnswers(profileId, answers),
+    track: (event) => void track(event),
+    overlays: (locale) => CONTENT_OVERLAYS[locale],
+    ensureCell: (cell) => lessonContent.ensureCells([cell]),
+    random: () => Math.random(),
+  });
+  return dailyReview;
 }

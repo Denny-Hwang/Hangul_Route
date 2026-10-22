@@ -75,10 +75,17 @@ export interface PlannedSession {
 
 /**
  * The session to play, as rounds; null when there is nothing to ask (or fewer than 3 playable rounds where the engine
- * offered more): the "All refreshed today" page. A Keep going past the day's 3 is null too.
+ * offered more): the "All refreshed today" page. A Keep going past the day's 3 is null too. `exclude` leaves items out
+ * from the start (an item whose lesson chunk could not load).
  */
-export function planSession(ctx: EngineContext, log: DayReviewLog, kind: DailySessionKind, rounds: Omit<RoundInput, 'index'>): PlannedSession | null {
-  const skipped = new Set<string>();
+export function planSession(
+  ctx: EngineContext,
+  log: DayReviewLog,
+  kind: DailySessionKind,
+  rounds: Omit<RoundInput, 'index'>,
+  exclude: ReadonlySet<string> = new Set(),
+): PlannedSession | null {
+  const skipped = new Set<string>(exclude);
   let offered = 0;
   let best: ReviewRound[] = [];
   for (let attempt = 0; attempt < REBUILD_TRIES; attempt += 1) {

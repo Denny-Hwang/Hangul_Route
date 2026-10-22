@@ -23,11 +23,25 @@ import type { MemoryAnswer, MemoryRuntime } from './memory-runtime';
 
 export { MEMORY_KEY } from './keys';
 
+type MemoryChunk = typeof import('./memory-chunk');
+let chunkLoading: Promise<MemoryChunk> | null = null;
+/**
+ * The memory chunk, loaded once (and again after a failed load): the one literal `import()` of it. The Daily Review
+ * (row CM-14) reaches its API here too, so a chunk never imports another chunk.
+ */
+export function memoryChunk(): Promise<MemoryChunk> {
+  chunkLoading ??= import('./memory-chunk').catch((error: unknown) => {
+    chunkLoading = null;
+    throw error;
+  });
+  return chunkLoading;
+}
+
 let loading: Promise<MemoryRuntime> | null = null;
 let loaded: MemoryRuntime | null = null;
 /** The runtime, loading its chunk once (and again after a failed load). */
 function runtime(): Promise<MemoryRuntime> {
-  loading ??= import('./memory-chunk')
+  loading ??= memoryChunk()
     .then((m) => (loaded = m.memoryRuntime()))
     .catch((error: unknown) => {
       loading = null;
@@ -121,6 +135,7 @@ onProfileRemoved((profileId) => loaded?.forget(profileId));
 
 /** Tests only: forget the loaded chunk. */
 export function resetMemoryBootForTests(): void {
+  chunkLoading = null;
   loading = null;
   loaded = null;
 }

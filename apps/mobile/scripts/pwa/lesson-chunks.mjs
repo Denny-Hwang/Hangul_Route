@@ -141,6 +141,13 @@ export const ROOT_CHUNKS = Object.freeze([
 export const MEMORY_CHUNKS = Object.freeze([Object.freeze({ name: 'memory-chunk', marker: 'memory-chunk:runtime' })]);
 
 /**
+ * The Daily Review of the learner PWA (F-CURR-002 row CM-14): its screen, rounds, session logic and the review engine are a
+ * bundle of their own, reached only through the literal `import()` of `src/screens/reviews/DailyReviewRoute.tsx`, so the
+ * start bundle carries none of it. The chunk module exports its marker (`DAILY_REVIEW_CHUNK`).
+ */
+export const REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'daily-review-chunk', marker: 'review-chunk:daily' })]);
+
+/**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
  * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
  * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves
