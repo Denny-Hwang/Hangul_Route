@@ -60,8 +60,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // grown-up side of an unsaved quest (People on this device's row, the guest-only gate) is a screen chunk of its own
   // (guest-keep-chunk, 5,381 B raw): 4,771,805 B raw / 1,255,131 B gzip (release `build:web`), and 4,774,256 B raw /
   // 1,255,798 B gzip merged onto the GU-4 review head (cache cleared), under the line, unchanged.
-  // [GU] Row GU-7 merges GU-6 (the site's guest lines join the bundled `landing` messages) and turns the guest switch on:
-  // 4,775,226 B raw / 1,256,106 B gzip (release `build:web`, cache cleared), 226 B over, so the line is 4,780,000 B.
+  // [GU] Row GU-7 merges GU-6 and the GU-5 review fixes (the site's guest lines join the bundled `landing` messages) and turns the guest switch on:
+  // 4,775,667 B raw / 1,256,217 B gzip (release `build:web`, cache cleared), 667 B over, so the line is 4,780,000 B.
   startBundleRaw: 4_780_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
