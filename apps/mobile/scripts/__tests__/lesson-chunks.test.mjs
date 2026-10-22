@@ -6,6 +6,7 @@ import { grownUpHeadersBlock } from '../app-host/headers.mjs';
 import {
   LOCALE_CHUNKS,
   PRECACHE_BUDGET,
+  MEMORY_CHUNKS,
   ROOT_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
@@ -383,5 +384,22 @@ describe('the review-item chunk of row CM-10 (the same checks, its own budget li
     expect(PRECACHE_BUDGET.reviewItemsRaw).toBe(BUDGET.raw);
     expect(PRECACHE_BUDGET.reviewItemsGzip).toBe(BUDGET.gzip);
     expect(BUDGET).toEqual({ raw: 150_000, gzip: 30_000 });
+  });
+});
+
+describe('the memory store chunk (F-CURR-002 row CM-12)', () => {
+  it('names the chunk the boot module loads, and its marker is the one the chunk module exports', () => {
+    expect(MEMORY_CHUNKS).toEqual([{ name: 'memory-chunk', marker: 'memory-chunk:runtime' }]);
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(read('src/logic/memory/memory-chunk.ts')).toContain(`export const MEMORY_CHUNK = '${MEMORY_CHUNKS[0].marker}';`);
+    expect(read('src/logic/memory/boot.ts')).toContain(`import('./memory-chunk')`);
+  });
+
+  it('fails a build that pulled the memory chunk into the start bundle', () => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.MEMORY_CHUNK="memory-chunk:runtime"});`;
+    const chunk = { url: `${WEB_JS_DIR}/memory-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var m="memory-chunk:runtime";' };
+    expect(markedChunkProblems({ chunks: MEMORY_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`memory-chunk is in the start bundle ${START}: a static import pulled it in`]);
+    expect(markedChunkProblems({ chunks: MEMORY_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
   });
 });
