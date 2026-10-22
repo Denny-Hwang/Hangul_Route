@@ -239,6 +239,16 @@ export interface Flags {
    * `EXPO_PUBLIC_MULTI_JOIN` is a kill switch (`parseKillSwitch`). Off: the one-learner join of today.
    */
   multiJoinEnabled: boolean;
+
+  /**
+   * [GU] Try the first quest without a profile (AMENDMENTS-GUEST-FIRST-LESSON sections 6, 7 and 15, rows GU-3 to GU-5):
+   * the `try=1` boot intent, the guest run, Welcome's waiting card and the chooser's guest tiles. OFF when row GU-3
+   * lands; row GU-7 turns it on with the site claim. Web only (GU-D16, OQ-G1): a native bundle reads false whatever
+   * `EXPO_PUBLIC_GUEST_LESSON` says, and the native builds never set it. A kill switch (`parseKillSwitch`). Off:
+   * `try=1` is taken and dropped, no Welcome card, no guest run starts or reopens; a live record is kept (the sweep
+   * still runs, row GU-2).
+   */
+  guestLessonEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -265,6 +275,7 @@ const launchDefaults: Flags = {
   pinResetSignInEnabled: false,
   biometricShortcutEnabled: true,
   multiJoinEnabled: true,
+  guestLessonEnabled: false,
 };
 
 export const flags: Flags = {
@@ -297,6 +308,8 @@ export const flags: Flags = {
   pinResetSignInEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN, launchDefaults.pinResetSignInEnabled),
   biometricShortcutEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT, launchDefaults.biometricShortcutEnabled),
   multiJoinEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_MULTI_JOIN, launchDefaults.multiJoinEnabled),
+  // [GU] GU-D16: web only.
+  guestLessonEnabled: !isNativeBundle() && parseKillSwitch(process.env.EXPO_PUBLIC_GUEST_LESSON, launchDefaults.guestLessonEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

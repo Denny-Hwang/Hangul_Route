@@ -414,3 +414,60 @@ describe('gate=pin-reset (row OA-6)', () => {
     expect(bare.consume).toHaveBeenCalledTimes(1);
   });
 });
+
+// ---- [GU] AMENDMENTS-GUEST-FIRST-LESSON row GU-3 (sections 5.5, 6.1; GU-D5, CS-G4) ----
+
+describe('[GU] the try=1 boot intent', () => {
+  it('try=1 alone is the try intent and leaves the address', () => {
+    expect(parseBootIntent('?try=1')).toEqual({ intent: { kind: 'try' }, search: '', changed: true });
+    expect(parseBootIntent('try=1&try=1')).toEqual({ intent: { kind: 'try' }, search: '', changed: true });
+  });
+
+  it('with lang: only try leaves; lang and every other key stay in order', () => {
+    expect(parseBootIntent('?lang=ko&try=1')).toEqual({ intent: { kind: 'try' }, search: '?lang=ko', changed: true });
+    expect(parseBootIntent('?lang=es&try=1&x=2')).toEqual({ intent: { kind: 'try' }, search: '?lang=es&x=2', changed: true });
+  });
+
+  it('any other try value is no intent and stays where it was', () => {
+    for (const search of ['?try=0', '?try=true', '?try=', '?try=2']) expect(parseBootIntent(search), search).toEqual({ intent: null, search, changed: false });
+  });
+
+  it('a gate intent beside it wins (CS-G4) and try leaves the address too', () => {
+    expect(parseBootIntent('?try=1&gate=grown-up&next=%2Fparent')).toEqual({ intent: { kind: 'grown-up', next: '/parent' }, search: '', changed: true });
+    expect(parseBootIntent('?gate=browse&try=1&lang=ko')).toEqual({ intent: { kind: 'browse' }, search: '?lang=ko', changed: true });
+    expect(parseBootIntent('?try=1&gate=pin-reset')).toEqual({ intent: { kind: 'pin-reset' }, search: '', changed: true });
+  });
+
+  it('a gate=grown-up whose next is refused is no intent, so try still counts', () => {
+    expect(parseBootIntent('?try=1&gate=grown-up&next=https%3A%2F%2Fevil.example')).toEqual({ intent: { kind: 'try' }, search: '', changed: true });
+  });
+
+  it('with who=1: the chooser once with the return trigger, carrying the try tile (6.1)', () => {
+    expect(parseBootIntent('?who=1&try=1')).toEqual({ intent: { kind: 'who', try: true }, search: '', changed: true });
+    expect(parseBootIntent('?lang=es&try=1&who=1')).toEqual({ intent: { kind: 'who', try: true }, search: '?lang=es', changed: true });
+    // A gate still wins over both.
+    expect(parseBootIntent('?who=1&try=1&gate=browse')).toEqual({ intent: { kind: 'browse' }, search: '', changed: true });
+  });
+
+  it('with the join link: the join wins (OA-D20) and try leaves the written-back address', () => {
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?try=1&lang=ko', hash: '#c=ABC234' })).toEqual({
+      intent: { kind: 'join', code: 'ABC234' },
+      address: '/?lang=ko',
+    });
+    expect(parseJoinBootIntent({ pathname: '/join', search: '?who=1&try=1', hash: '#c=ABC234' })).toEqual({
+      intent: { kind: 'join', code: 'ABC234' },
+      address: '/',
+    });
+  });
+
+  it('is taken by the launch, never opened by the hook: a try left over is consumed and opens nothing', () => {
+    let intent: { kind: 'try' } | null = { kind: 'try' };
+    const src = { peek: vi.fn(() => intent), consume: vi.fn(() => void (intent = null)) };
+    const nav = { isReady: vi.fn(() => true), navigate: vi.fn(), addListener: vi.fn(() => () => undefined) };
+    const browse = { opensDirectly: vi.fn(() => true), open: vi.fn(() => true) };
+    openBootIntentWhenReady(nav, src, browse);
+    expect(src.consume).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(browse.open).not.toHaveBeenCalled();
+  });
+});
