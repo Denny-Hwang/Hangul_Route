@@ -3,12 +3,14 @@ import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/d
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { siteGames } from '../../data/minigame-catalog';
+import type { CaptureName } from '../../data/site-captures';
 import { SITE_CLAIMS, showsClaim, type SiteClaims } from '../../data/site-claims';
 import { stage1CardsIn } from '../../data/stage1-cards';
 import { learnerStart } from '../../lib/site-links';
-import { cardShadow, rem } from '../../lib/site-style';
+import { SITE_SIZES, cardShadow, rem } from '../../lib/site-style';
 import { HeritageCardsPreview } from './HeritageCardsPreview';
 import { MiniGamesGallery } from './MiniGamesGallery';
+import { SiteCapture } from './SiteCapture';
 import { SiteShell } from './SiteShell';
 import { Body, Bullets, Closing, Fold, Folds, PageHead, PrimaryAction, Section, Steps } from './site-parts';
 
@@ -19,6 +21,9 @@ import { Body, Bullets, Closing, Fold, Folds, PageHead, PrimaryAction, Section, 
  * A gloss that only repeats the word (`null`) is left out, as on the app's card face.
  */
 const TEASER_CARDS = 6;
+
+/** [SN] The card the `card` capture shows: the tiger card's face (AMENDMENTS-SITE-NEWUSER §3.13). */
+const CAPTURED_CARD = 'card:horangi';
 
 export interface LearnersPageProps {
   locale?: UiLocale;
@@ -43,6 +48,14 @@ export function LearnersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
   const cards = stage1CardsIn(locale, OVERLAYS);
   // The level-check question follows "Do I need to know any Korean?", only while its claim is on.
   const faq = [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean, ...(showsClaim(claims, 'levelCheck', locale) ? [L.faq.level] : [])];
+  // [SN] The card capture's alt text: its Korean word and romanization from the card data, its meaning the card's gloss
+  // in the UI language (the Korean alt text names no meaning, since the Korean UI's gloss is the word itself).
+  const tiger = cards.find((card) => card.id === CAPTURED_CARD);
+  const captures: ReadonlyArray<{ name: CaptureName; alt: string; caption: string }> = [
+    { name: 'home', alt: t.captures.home, caption: t.captures.caption.home },
+    { name: 'game', alt: t.captures.game, caption: t.captures.caption.game },
+    ...(tiger ? [{ name: 'card' as const, alt: t.captures.card(tiger.ko, tiger.romanization, tiger.gloss ?? tiger.ko), caption: t.captures.caption.card }] : []),
+  ];
   return (
     <SiteShell locale={locale} page="/learners" current="learners">
       <PageHead title={L.title} lead={L.lead}>
@@ -76,6 +89,36 @@ export function LearnersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
           </span>
           <p style={{ margin: 0, lineHeight: typography.leading.normal }}>{L.quest.hoya}</p>
         </div>
+        {/* [SN] §3.4: a sampler of real screens after Hoya's line, before the mini-games fold, always three across, each
+            with a short visible caption so it does not read as a picture of steps 1 to 3. */}
+        <ul
+          role="list"
+          style={{
+            listStyle: 'none',
+            margin: `0 0 ${spacing.md}px`,
+            padding: 0,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            alignItems: 'start',
+            gap: spacing.sm,
+            maxWidth: SITE_SIZES.captureRowMax,
+          }}
+        >
+          {captures.map(({ name, alt, caption }) => (
+            <li key={name}>
+              <figure style={{ margin: 0 }}>
+                <div style={{ backgroundColor: colors.text.primary, padding: borderWidth.thick, borderRadius: radii.lg }}>
+                  <SiteCapture locale={locale} name={name} alt={alt} style={{ borderRadius: radii.lg - borderWidth.thick }} />
+                </div>
+                <figcaption
+                  style={{ marginTop: spacing.xs, fontSize: rem(typography.size.caption), color: colors.text.secondary, textAlign: 'center', lineHeight: typography.leading.normal }}
+                >
+                  {caption}
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
         <Fold summary={L.quest.gamesFold}>
           <MiniGamesGallery locale={locale} games={siteGames} />
         </Fold>

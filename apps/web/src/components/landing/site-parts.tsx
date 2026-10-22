@@ -31,8 +31,11 @@ export function SecondaryAction({ href, children }: { href: string; children: Re
   );
 }
 
-/** The page head: the page's only h1, its lead line and its actions (primary first). */
-export function PageHead({ title, lead, children }: { title: string; lead: string; children: ReactNode }): JSX.Element {
+/**
+ * The page head: the page's only h1, its lead line and its actions (primary first). `after` sits under the action row
+ * ([SN] the grown-up pages' "Already have an account? Sign in", AMENDMENTS-SITE-NEWUSER §3.5).
+ */
+export function PageHead({ title, lead, after, children }: { title: string; lead: string; after?: ReactNode; children: ReactNode }): JSX.Element {
   return (
     <section aria-labelledby="page-title" className="hr-site-page-head">
       <h1 id="page-title" className="hr-site-h1" style={{ margin: 0, lineHeight: typography.leading.tight, color: colors.text.primary }}>
@@ -52,6 +55,7 @@ export function PageHead({ title, lead, children }: { title: string; lead: strin
       <div className="hr-site-actions" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, marginTop: spacing.xl }}>
         {children}
       </div>
+      {after ? <div style={{ marginTop: spacing.xs }}>{after}</div> : null}
     </section>
   );
 }
@@ -150,7 +154,10 @@ export function Folds({ children }: { children: ReactNode }): JSX.Element {
   return <div style={{ display: 'grid', gap: spacing.sm }}>{children}</div>;
 }
 
-/** The closing block every persona page ends with: one line, labelling the block, and the primary action. */
+/**
+ * The closing block every persona page ends with: one line, labelling the block, and the primary action. [SN] The
+ * grown-up pages pass their actions inside `ClosingActions` (Create, then the have-account link under it).
+ */
 export function Closing({ id, line, children }: { id: string; line: string; children: ReactNode }): JSX.Element {
   return (
     <section aria-labelledby={id} className="hr-site-closing" style={{ backgroundColor: colors.brand.primaryLight, borderRadius: radii.xl }}>
@@ -159,6 +166,15 @@ export function Closing({ id, line, children }: { id: string; line: string; chil
       </p>
       {children}
     </section>
+  );
+}
+
+/** [SN] The closing block's action stack (AMENDMENTS-SITE-NEWUSER §3.5): the primary action, then a text link under it. */
+export function ClosingActions({ children }: { children: ReactNode }): JSX.Element {
+  return (
+    <div className="hr-site-closing-actions" style={{ display: 'grid', rowGap: spacing.xs }}>
+      {children}
+    </div>
   );
 }
 
@@ -173,21 +189,31 @@ export function Lines({ items }: { items: readonly string[] }): JSX.Element {
   );
 }
 
+const TEXT_LINK = {
+  ...HIT,
+  justifyContent: 'flex-start',
+  fontWeight: typography.weight.semibold,
+  textDecorationLine: 'underline',
+  textDecorationThickness: borderWidth.thin,
+  textUnderlineOffset: spacing.xs,
+} as const;
+
+/**
+ * [SN] A text link that leaves the site for the app (a plain `<a>`, as every app link), styled as `TextLink`: the
+ * grown-up pages' "Already have an account? Sign in" (AMENDMENTS-SITE-NEWUSER §3.5, §3.6), 64 px tall.
+ */
+export function AppTextLink({ href, children }: { href: string; children: ReactNode }): JSX.Element {
+  return (
+    <a href={href} className="hr-site-text-link" style={TEXT_LINK}>
+      {children}
+    </a>
+  );
+}
+
 /** An in-page text link to another site page (`next/link`, inside the site route group), with a 64 px hit area. */
 export function TextLink({ href, children }: { href: string; children: ReactNode }): JSX.Element {
   return (
-    <Link
-      href={href}
-      className="hr-site-text-link"
-      style={{
-        ...HIT,
-        justifyContent: 'flex-start',
-        fontWeight: typography.weight.semibold,
-        textDecorationLine: 'underline',
-        textDecorationThickness: borderWidth.thin,
-        textUnderlineOffset: spacing.xs,
-      }}
-    >
+    <Link href={href} className="hr-site-text-link" style={TEXT_LINK}>
       {children}
     </Link>
   );

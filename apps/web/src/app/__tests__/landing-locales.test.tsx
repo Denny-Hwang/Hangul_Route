@@ -77,7 +77,8 @@ describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers
     expect(html).toContain('href="/es" hrefLang="es"');
     expect(html).toContain('href="/ko" hrefLang="ko"');
     expect(html).not.toContain('<aside');
-    expect(hrefs(html).filter(isStartLearning)).toEqual([APP_URL, APP_URL, APP_URL]);
+    // Header, hero, the closing band ([SN] AMENDMENTS-SITE-NEWUSER §3.3) and footer.
+    expect(hrefs(html).filter(isStartLearning)).toEqual([APP_URL, APP_URL, APP_URL, APP_URL]);
   });
 
   it('the switcher renders nothing with one locale', () => {
@@ -89,10 +90,10 @@ describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers
   });
 });
 
-describe('Start learning from /es and /ko hands the locale to the app (?lang=): header, hero and footer', () => {
+describe('Start learning from /es and /ko hands the locale to the app (?lang=): header, hero, closing band and footer', () => {
   it.each(['es', 'ko'] as const)('%s', (locale) => {
     const html = renderToStaticMarkup(<LandingPage locale={locale} />);
-    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(3).fill(`${APP_URL}?lang=${locale}`));
+    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(4).fill(`${APP_URL}?lang=${locale}`));
   });
 });
 

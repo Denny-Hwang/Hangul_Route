@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 // Types only: this is the landing's one client component, and a value import from the package would ship
 // the whole dictionary (every locale, the legal text) to the browser. The words come in as a prop.
@@ -23,6 +23,46 @@ const CONSENT_ID = 'waitlist-consent';
 const EMAIL_ID = 'waitlist-email';
 
 const onPrimary: CSSProperties = { color: colors.text.onPrimary };
+
+/**
+ * Where the form sits (AMENDMENTS-SITE-NEWUSER §3.3 item 6). `band` (the default, so no other caller changes): on a
+ * `brand.primary` band, centred, text in `text.onPrimary`, 48 px field and button. `plain`: on the page canvas,
+ * left-aligned, status, consent and success text in `text.secondary`, the consent line's links in `brand.primaryDark`,
+ * a bordered field and the button `touchTarget.min` (64) tall. The words are the same in both, so the consent text
+ * (and `CONSENT_TEXT_VERSION`) never changes with the tone.
+ */
+export type WaitlistTone = 'band' | 'plain';
+
+/** The band's control height (as it always was); the plain tone uses `touchTarget.min`. */
+const BAND_CONTROL = 48;
+
+interface ToneStyle {
+  wrap: CSSProperties;
+  text: CSSProperties;
+  link: CSSProperties;
+  form: CSSProperties;
+  control: number;
+  field: CSSProperties;
+}
+
+const TONES: Readonly<Record<WaitlistTone, ToneStyle>> = {
+  band: {
+    wrap: { maxWidth: 480, margin: '0 auto' },
+    text: onPrimary,
+    link: { ...onPrimary, textDecoration: 'underline' },
+    form: { justifyContent: 'center' },
+    control: BAND_CONTROL,
+    field: { border: 'none' },
+  },
+  plain: {
+    wrap: { maxWidth: 480, margin: `${spacing.md}px 0 0` },
+    text: { color: colors.text.secondary },
+    link: { color: colors.brand.primaryDark, fontWeight: typography.weight.semibold, textDecoration: 'underline' },
+    form: { justifyContent: 'flex-start' },
+    control: touchTarget.min,
+    field: { border: `${borderWidth.base}px solid ${colors.border.strong}` },
+  },
+};
 const visuallyHidden: CSSProperties = { position: 'absolute', left: -9999, width: 1, height: 1, overflow: 'hidden' };
 const mailto = `mailto:${CONTACT_EMAIL}`;
 
@@ -54,17 +94,30 @@ export interface WaitlistFormViewProps {
   words: WaitlistWords;
   /** The page's UI locale, for the privacy link (`/privacy`, `/es/privacy`); English by default. */
   locale?: UiLocale;
+  /** On the brand band (default) or on the page canvas (`plain`, the home's quiet launch news). */
+  tone?: WaitlistTone;
 }
 
-export function WaitlistFormView({ state, email, website, onEmailChange, onWebsiteChange, onSubmit, words, locale = SITE_DEFAULT_LOCALE }: WaitlistFormViewProps): JSX.Element {
+export function WaitlistFormView({
+  state,
+  email,
+  website,
+  onEmailChange,
+  onWebsiteChange,
+  onSubmit,
+  words,
+  locale = SITE_DEFAULT_LOCALE,
+  tone = 'band',
+}: WaitlistFormViewProps): JSX.Element {
   const sending = state.kind === 'sending';
   const message = messageFor(state, words);
   const done = state.kind === 'success';
+  const T = TONES[tone];
 
   return (
-    <div style={{ maxWidth: 480, margin: '0 auto' }}>
+    <div style={T.wrap}>
       {/* Polite live region: always in the DOM, so the confirmation is announced when it appears. */}
-      <div role="status" aria-live="polite" style={{ ...onPrimary, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, lineHeight: typography.leading.relaxed }}>
+      <div role="status" aria-live="polite" style={{ ...T.text, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, lineHeight: typography.leading.relaxed }}>
         {done ? words.success : null}
       </div>
       {done ? null : (
@@ -73,7 +126,7 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
             noValidate
             aria-busy={sending}
             onSubmit={onSubmit}
-            style={{ display: 'flex', gap: spacing.sm, justifyContent: 'center', flexWrap: 'wrap' }}
+            style={{ display: 'flex', gap: spacing.sm, ...T.form, flexWrap: 'wrap' }}
           >
             <label htmlFor={EMAIL_ID} style={{ position: 'absolute', left: -9999 }}>
               {words.label}
@@ -94,10 +147,10 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
               style={{
                 flex: '1 1 240px',
                 minWidth: 0,
-                minHeight: 48,
+                minHeight: T.control,
                 padding: `${spacing.sm}px ${spacing.lg}px`,
                 borderRadius: radii.pill,
-                border: 'none',
+                ...T.field,
                 fontSize: typography.size.body,
                 color: colors.text.primary,
                 backgroundColor: colors.surface.paper,
@@ -112,7 +165,7 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
               type="submit"
               disabled={sending}
               style={{
-                minHeight: 48,
+                minHeight: T.control,
                 padding: `${spacing.sm}px ${spacing.xl}px`,
                 borderRadius: radii.pill,
                 border: 'none',
@@ -154,13 +207,13 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
               ) : null}
             </p>
           ) : null}
-          <p id={CONSENT_ID} style={{ ...onPrimary, marginTop: spacing.md, marginBottom: 0, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>
+          <p id={CONSENT_ID} style={{ ...T.text, marginTop: spacing.md, marginBottom: 0, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>
             {words.consentLead}
-            <a href={mailto} style={{ ...onPrimary, textDecoration: 'underline' }}>
+            <a href={mailto} style={T.link}>
               {words.contactLink}
             </a>
             {'. '}
-            <Link href={sitePath(locale, '/privacy')} style={{ ...onPrimary, textDecoration: 'underline' }}>
+            <Link href={sitePath(locale, '/privacy')} style={T.link}>
               {words.privacyLink}
             </Link>
             .
@@ -176,9 +229,11 @@ export interface WaitlistFormProps {
   words: WaitlistWords;
   /** The page's UI locale, recorded with the signup (the API keeps en / es / ko); English by default. */
   locale?: UiLocale;
+  /** `band` (default) or `plain` (`WaitlistTone`). */
+  tone?: WaitlistTone;
 }
 
-export function WaitlistForm({ words, locale = SITE_DEFAULT_LOCALE }: WaitlistFormProps): JSX.Element {
+export function WaitlistForm({ words, locale = SITE_DEFAULT_LOCALE, tone = 'band' }: WaitlistFormProps): JSX.Element {
   const [state, setState] = useState<WaitlistState>({ kind: 'idle' });
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
@@ -190,5 +245,5 @@ export function WaitlistForm({ words, locale = SITE_DEFAULT_LOCALE }: WaitlistFo
     void submitSignup({ email, website, endpoint: apiBaseUrl(), source: 'landing', locale }).then(setState);
   };
 
-  return <WaitlistFormView state={state} email={email} website={website} onEmailChange={setEmail} onWebsiteChange={setWebsite} onSubmit={onSubmit} words={words} locale={locale} />;
+  return <WaitlistFormView state={state} email={email} website={website} onEmailChange={setEmail} onWebsiteChange={setWebsite} onSubmit={onSubmit} words={words} locale={locale} tone={tone} />;
 }

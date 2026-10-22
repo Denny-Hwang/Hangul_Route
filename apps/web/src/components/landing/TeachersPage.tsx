@@ -1,8 +1,29 @@
+import { SCHOOL_ADMIN_CAP, SCHOOL_LEARNER_CAP } from '@hangul-route/content-schema';
+import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { CONTACT_EMAIL } from '../../data/contact';
+import { showsCapture } from '../../data/site-captures';
 import { SITE_CLAIMS, showsClaim, type SiteClaims } from '../../data/site-claims';
-import { learnerStart, signIn } from '../../lib/site-links';
+import { createAccount, learnerStart, signIn } from '../../lib/site-links';
+import { cardShadow } from '../../lib/site-style';
+import { SiteCapture } from './SiteCapture';
 import { SiteShell } from './SiteShell';
-import { Bullets, Closing, Fold, Folds, Lines, PageHead, PlansBlock, PrimaryAction, SecondaryAction, Section, Steps, TwoColumns } from './site-parts';
+import {
+  AppTextLink,
+  Bullets,
+  Closing,
+  ClosingActions,
+  Fold,
+  Folds,
+  Lines,
+  PageHead,
+  PlansBlock,
+  PrimaryAction,
+  SecondaryAction,
+  Section,
+  Steps,
+  TwoColumns,
+} from './site-parts';
 
 export interface TeachersPageProps {
   locale?: UiLocale;
@@ -11,16 +32,35 @@ export interface TeachersPageProps {
 }
 
 /**
- * `/teachers` (F-SITE-002 §3.6, appendix B.4; wireframe design/wireframes/site/teachers.md; mock
- * design/screens/site/persona-page.md, same parts). Primary action Sign in as a teacher (the teacher
- * sign-in intro through `site-links`), secondary Try it as a learner. Set up in minutes is three numbered steps (one
- * row on wide screens); Plan and assign and See how the class is doing sit side by side on wide screens. The class
- * section adds one line per live claim (the browse line also needs paid plans on sale). Never a ranking, no price.
+ * `/teachers` (F-SITE-002 §3.6, appendix B.4, amended by AMENDMENTS-SITE-NEWUSER §3.6; wireframes
+ * design/wireframes/site/teachers.md and newuser-grown-up-pages.md; mocks design/screens/site/persona-page.md and
+ * design/screens/site/newuser/mock/<locale>/teachers.html). [SN] Create first: Create a free class (the create view of
+ * /signin through `site-links`), secondary Try it as a learner, "Already have an account? Sign in" under them; the
+ * closing block the same. Set up in minutes is three numbered steps (one row on wide screens); Plan and assign and See
+ * how the class is doing sit side by side on wide screens, the class section adding one line per live claim (the
+ * browse line also needs paid plans on sale). Then the media row (the class page under `teacherReports`, the Lecture
+ * mode slide under `lectureMode`; one alone takes the row, none leaves no row) and "Use it across a whole school"
+ * (every fact live, so no claim gates it; the caps from content-schema, the address from `data/contact.ts` as plain
+ * text). While plans are not on sale the administrators line names no plan and the size line names no product
+ * (OD-SN-13). Never a ranking, no price, no plan term.
  */
 export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: TeachersPageProps): JSX.Element {
   const t = getMessages(locale).landing;
   const T = t.persona.teachers;
-  const teacherSignIn = signIn('teacher');
+  const create = createAccount('teacher', locale);
+  const haveAccount = <AppTextLink href={signIn('teacher', locale)}>{t.persona.haveAccount}</AppTextLink>;
+  const classPage = showsCapture(claims, 'class-list', locale) && showsCapture(claims, 'class-list-narrow', locale);
+  const slide = showsCapture(claims, 'lecture-slide', locale);
+  const S = T.schools;
+  const schoolLines = [
+    S.space,
+    S.admins(SCHOOL_ADMIN_CAP),
+    // The owner manages the plan only once plans are on sale (review round 3, T3).
+    ...(claims.paidPlans === 'inApp' ? [S.ownerPlan] : []),
+    S.moves,
+    // OD-SN-13: `sizeContract` (naming the School Contract) waits for the owner; until then no product is named.
+    S.size(SCHOOL_LEARNER_CAP, CONTACT_EMAIL),
+  ];
   const classLines = [
     T.class.body,
     ...(showsClaim(claims, 'teacherReports', locale) ? [T.class.reports] : []),
@@ -31,8 +71,8 @@ export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
   ];
   return (
     <SiteShell locale={locale} page="/teachers" current="teachers">
-      <PageHead title={T.title} lead={T.lead}>
-        <PrimaryAction href={teacherSignIn}>{T.signIn}</PrimaryAction>
+      <PageHead title={T.title} lead={T.lead} after={haveAccount}>
+        <PrimaryAction href={create}>{T.create}</PrimaryAction>
         <SecondaryAction href={learnerStart(locale)}>{T.tryIt}</SecondaryAction>
       </PageHead>
 
@@ -53,6 +93,44 @@ export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
         }
       />
 
+      {classPage || slide ? (
+        <div className={classPage && slide ? 'hr-site-media hr-site-media-pair' : 'hr-site-media'} style={{ paddingBottom: spacing.lg }}>
+          {classPage ? (
+            <figure style={{ margin: 0 }}>
+              <div
+                style={{
+                  backgroundColor: colors.surface.paper,
+                  border: `${borderWidth.thin}px solid ${colors.border.subtle}`,
+                  borderRadius: radii.lg,
+                  boxShadow: cardShadow(),
+                  overflow: 'hidden',
+                }}
+              >
+                <SiteCapture locale={locale} name="class-list-narrow" wide="class-list" alt={t.captures.classList} />
+              </div>
+            </figure>
+          ) : null}
+          {slide ? (
+            <figure style={{ margin: 0 }}>
+              <div style={{ backgroundColor: colors.text.primary, padding: spacing.sm, borderRadius: radii.lg }}>
+                <SiteCapture locale={locale} name="lecture-slide" alt={t.captures.lectureSlide} style={{ borderRadius: radii.sm }} />
+              </div>
+            </figure>
+          ) : null}
+        </div>
+      ) : null}
+
+      <Section id="teachers-schools" title={S.title}>
+        <ul
+          role="list"
+          style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: spacing.sm, lineHeight: typography.leading.relaxed, color: colors.text.secondary }}
+        >
+          {schoolLines.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </Section>
+
       <Section id="teachers-privacy" title={T.privacy.title}>
         <Bullets items={[T.privacy.bullets.initials, T.privacy.bullets.ads]} />
       </Section>
@@ -70,7 +148,10 @@ export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
       </Section>
 
       <Closing id="teachers-closing" line={t.persona.closing.teachers}>
-        <PrimaryAction href={teacherSignIn}>{T.signIn}</PrimaryAction>
+        <ClosingActions>
+          <PrimaryAction href={create}>{T.create}</PrimaryAction>
+          {haveAccount}
+        </ClosingActions>
       </Closing>
     </SiteShell>
   );

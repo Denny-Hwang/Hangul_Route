@@ -5,7 +5,8 @@ import { JAMO_SOUND_VALUES } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { HomePage as Home } from '../../components/landing/HomePage';
+import { FIRST_LETTER, HomePage as Home } from '../../components/landing/HomePage';
+import { captureFile } from '../../data/site-captures';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { SITE_CLAIMS } from '../../data/site-claims';
 import { learnerStart } from '../../lib/site-links';
@@ -13,9 +14,11 @@ import HomePage from '../(en)/page';
 import { withoutSwitcher } from './locale-switcher-html';
 
 /**
- * The layered home `/` (F-SITE-002 §3.3, appendix B.1; wireframe design/wireframes/site/home.md; mock
- * design/screens/site/home-hero.md). L0 hero, then the persona chooser (`#who`), How it works, the three promise
- * titles, the cost line and the launch news, in that order; no questions block. Inline styles beat stylesheet rules,
+ * The layered home `/` (F-SITE-002 §3.3, appendix B.1, amended by AMENDMENTS-SITE-NEWUSER §3.3; wireframes
+ * design/wireframes/site/home.md and newuser-home.md; mocks design/screens/site/home-hero.md and
+ * design/screens/site/newuser/). L0 hero (with the two grown-up links and the Discover capture), then the persona
+ * chooser (`#who`), How it works, the three promise titles, the closing band and the quiet launch news, in that order;
+ * no cost block and no questions block. Inline styles beat stylesheet rules,
  * so what changes at the 45em breakpoint (hero columns, persona columns, band padding) is pinned to `globals.css`;
  * the pixel checks (budgets, first screen, Tab order) run in Playwright over the static export
  * (`e2e/site-budgets.spec.ts`, `e2e/landing-layout.spec.ts`).
@@ -77,26 +80,68 @@ describe('the hero (L0)', () => {
     expect(main).toMatch(new RegExp(`<a href="${esc(learnerStart('en'))}" class="hr-site-primary"[^>]*>${H.hero.start}</a>`));
   });
 
-  it('"Parent or teacher? Find your page" moves to #who, which takes focus', () => {
-    expect(main).toMatch(new RegExp(`<a[^>]*href="#who"[^>]*>${esc(H.hero.grownUps)}</a>`));
+  it('[SN] the facts line right after the primary action, then "I\'m a parent" and "I\'m a teacher" to their pages; no #who hero link', () => {
+    const hero = /<section aria-labelledby="home-title"[\s\S]*?<\/section>/.exec(main)?.[0] ?? '';
+    const actions = hero.indexOf('class="hr-site-actions"');
+    const facts = hero.indexOf(esc(H.hero.facts).replace(/\\/g, '').replace(/'/g, '&#x27;'));
+    expect(actions).toBeGreaterThan(-1);
+    expect(textOf(hero)).toContain(`${H.hero.start} ${H.hero.facts} ${H.hero.forParents} ${H.hero.forTeachers}`);
+    expect(facts === -1 || facts > actions).toBe(true);
+    const links = [...hero.matchAll(/<a [^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/g)].map((m) => [m[1], decode(m[2] ?? '')]);
+    expect(links).toEqual([
+      [learnerStart('en'), H.hero.start],
+      ['/parents', H.hero.forParents],
+      ['/teachers', H.hero.forTeachers],
+    ]);
+    for (const locale of ['es', 'ko'] as const) {
+      const loc = renderToStaticMarkup(<Home locale={locale} />);
+      expect(loc).toContain(`href="/${locale}/parents"`);
+      expect(loc).toContain(`href="/${locale}/teachers"`);
+    }
+    expect(main).not.toContain('href="#who"');
+    // Old `#who` links still land and move focus there.
     expect(main).toMatch(/<section id="who" tabindex="-1"/i);
   });
 
-  it('the facts line, and Hoya waving as decorative art with the taught letter and its romanization in the bubble', () => {
-    expect(text).toContain(H.hero.facts);
-    expect(main).toMatch(/<div aria-hidden="true" class="hr-site-hero-art"[\s\S]*?<svg[^>]*data-pose="waving"/);
-    const romanization = JAMO_SOUND_VALUES['ㄱ']?.[0] ?? '';
-    expect(romanization).toBe('g/k');
+  it('[SN] the hero art: the Discover capture in the page\'s locale with its alt text, the phone crop below 45em, loaded first', () => {
+    const romanization = JAMO_SOUND_VALUES[FIRST_LETTER]?.[0] ?? '';
+    expect(FIRST_LETTER).toBe('ㅏ');
+    expect(romanization).toBe('a');
+    const art = /<div class="hr-site-hero-art"[\s\S]*?<\/section>/.exec(main)?.[0] ?? '';
+    const narrow = captureFile('en', 'discover-narrow');
+    const wideFile = captureFile('en', 'discover');
+    expect(art).toContain(`<source media="(min-width: 45em)" srcSet="${wideFile?.src}" width="${wideFile?.width}" height="${wideFile?.height}"/>`);
+    const img = /<img [^>]*>/.exec(art)?.[0] ?? '';
+    expect(img).toContain(`src="${narrow?.src}"`);
+    expect(img).toContain(`width="${narrow?.width}" height="${narrow?.height}"`);
+    expect(decode(img)).toContain(`alt="${t.captures.discover(FIRST_LETTER, romanization)}"`);
+    expect(img).toContain('fetchpriority="high"');
+    expect(img).not.toContain('loading=');
+    expect(img).toContain('decoding="async"');
+    // Each locale shows its own screen (a capture holds UI text).
+    for (const locale of ['es', 'ko'] as const) {
+      const loc = renderToStaticMarkup(<Home locale={locale} />);
+      expect(loc).toContain(`src="${captureFile(locale, 'discover-narrow')?.src}"`);
+      expect(decode(loc)).toContain(`alt="${getMessages(locale).landing.captures.discover(FIRST_LETTER, romanization)}"`);
+    }
+  });
+
+  it('Hoya waving and the bubble stay decorative; the bubble names the capture\'s letter with its romanization', () => {
+    const romanization = JAMO_SOUND_VALUES[FIRST_LETTER]?.[0] ?? '';
+    expect(main).toMatch(/<span aria-hidden="true" class="hr-site-hero-hoya"[^>]*><svg[^>]*data-pose="waving"/);
+    expect(main).toMatch(/<span aria-hidden="true" class="hr-site-bubble"/);
     // The bubble keeps the letter and its romanization together with a no-break space; the text helper folds it.
-    expect(H.hero.bubble('ㄱ', romanization)).toContain('ㄱ\u00a0(g/k)');
-    expect(text).toContain(H.hero.bubble('ㄱ', romanization).replace(/\s+/g, ' '));
+    expect(H.hero.bubble(FIRST_LETTER, romanization)).toContain('ㅏ\u00a0(a)');
+    expect(text).toContain(H.hero.bubble(FIRST_LETTER, romanization).replace(/\s+/g, ' '));
   });
 });
 
 describe('the blocks under the hero (L1)', () => {
-  it('in order: who, how, the promises (hidden heading), cost, launch news; no questions block', () => {
-    expect(sectionTitles(html)).toEqual([H.who.title, H.how.title, H.promises.label, t.plans.title, H.news.title]);
+  it('[SN] in order: who, how, the promises (hidden heading), the closing band, launch news; no cost block, no questions block', () => {
+    expect(sectionTitles(html)).toEqual([H.who.title, H.how.title, H.promises.label, H.closing.title, H.news.title]);
     expect(main).not.toContain('<details');
+    expect(text).not.toContain(t.plans.title);
+    expect(text).not.toContain(t.plans.paid.coming);
   });
 
   it('#who: three persona cards in a list, each one link to its page, named by title and line', () => {
@@ -136,20 +181,30 @@ describe('the blocks under the hero (L1)', () => {
     expect(textOf(html)).not.toMatch(/COPPA/);
   });
 
-  it('the cost line: the free line then the paid line the claim picks, one paragraph, no price', () => {
-    const cost = /<section[^>]*>\s*<h2[^>]*>What does it cost\?<\/h2>([\s\S]*?)<\/section>/.exec(main)?.[1] ?? '';
-    expect(textOf(cost).trim()).toBe(`${t.plans.free.stage1} ${t.plans.paid.coming}`);
+  it('[SN] the closing band: its title and line, and Start learning to the app as a light pill, on brand.primary', () => {
+    const band = /<section aria-labelledby="home-closing"[\s\S]*?<\/section>/.exec(main)?.[0] ?? '';
+    expect(band).toMatch(/class="hr-site-band"/);
+    expect(band).toMatch(new RegExp(`<h2 id="home-closing"[^>]*>${esc(H.closing.title)}</h2>`));
+    expect(textOf(band)).toContain(H.closing.body);
+    expect(band).toMatch(new RegExp(`<a href="${esc(learnerStart('en'))}" class="hr-site-band-action"[^>]*min-height:80px[^>]*>${esc(t.nav.start)}</a>`));
+    // The band's first line is the free line the cost block carried (OD-SN-3); no price, no plan word.
+    expect(H.closing.body.startsWith(t.plans.free.stage1)).toBe(true);
+    expect(textOf(band)).not.toMatch(/\$|\bprice\b|\bplan\b/i);
+    // Every claim state shows the same band (paid plans on sale change nothing on /).
     const inApp = renderToStaticMarkup(<Home locale="en" claims={{ ...SITE_CLAIMS, paidPlans: 'inApp' }} />);
-    expect(textOf(inApp)).toContain(`${t.plans.free.stage1} ${t.plans.paid.inApp}`);
-    expect(textOf(inApp)).not.toContain(t.plans.paid.coming);
+    expect(textOf(inApp)).not.toContain(t.plans.paid.inApp);
   });
 
-  it('launch news (#news): the band with its heading, its line and the unchanged form', () => {
+  it('[SN] launch news (#news) after the band: a plain section with its heading, its line and the form in tone="plain"', () => {
     const news = sectionById(main, 'news');
-    expect(news).toMatch(/class="hr-site-news"/);
+    expect(main.indexOf('aria-labelledby="home-closing"')).toBeLessThan(main.indexOf('id="news"'));
+    expect(news).toMatch(/class="hr-site-section hr-site-news"/);
     expect(textOf(news)).toContain(H.news.body);
     expect(news).toMatch(/<input[^>]*id="waitlist-email"/);
     expect(news).toContain(t.waitlist.submit);
+    // tone="plain": 64 px field and button, the consent links in brand.primaryDark.
+    expect(news).toMatch(/<input[^>]*min-height:64px/);
+    expect(news).toMatch(/<button[^>]*min-height:64px/);
     // Links shared before S-5 point at the old waitlist anchor (hangulroute.com/#get); it still lands on the form.
     expect(news).toMatch(/<span id="get" aria-hidden="true"><\/span>/);
   });
@@ -188,8 +243,18 @@ describe('globals.css holds what changes at the breakpoint', () => {
     expect(rule(wide, '.hr-site-persona-list')).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
   });
 
-  it('on the launch-news band the focus ring is text.onPrimary (border.focus is under 3:1 on brand.primary)', () => {
-    expect(rule(css, '.hr-site-news :focus-visible')).toContain('outline-color: var(--hr-site-on-primary)');
+  it('[SN] on the closing band the focus ring is text.onPrimary (border.focus is under 3:1 on brand.primary)', () => {
+    expect(rule(css, '.hr-site-band :focus-visible')).toContain('outline-color: var(--hr-site-on-primary)');
+    expect(rule(css, '.hr-site-news :focus-visible')).toBe('');
+  });
+
+  it('[SN] the hero art: the phone frame from 40 % (60 % wide) on phones, from 30 % (52 %) from 45em; the bubble never wider than the gap', () => {
+    expect(rule(css, '.hr-site-hero-phone')).toBe('width: 60%; margin-left: 40%;');
+    expect(rule(wide, '.hr-site-hero-phone')).toBe('width: 52%; margin-left: 30%;');
+    expect(rule(css, '.hr-site-bubble')).toContain('max-width: 34%');
+    expect(rule(wide, '.hr-site-bubble')).toContain('max-width: 44%');
+    expect(rule(css, '.hr-site-band-action')).toBe('width: 100%;');
+    expect(rule(wide, '.hr-site-band-action')).toBe('width: auto;');
   });
 
   it('column templates are not set inline (the stylesheet must win)', () => {

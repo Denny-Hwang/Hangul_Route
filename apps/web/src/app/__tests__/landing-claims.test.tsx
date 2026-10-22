@@ -76,8 +76,16 @@ describe('site text — no prices, nothing sold that is not built', () => {
     expect([...SITE, ...LEGAL].map(([path]) => path).sort()).toEqual([...SITE_PAGES].sort());
   });
 
-  it('the home keeps the pinned cost sentence', () => {
-    expect(home).toContain('Stage 1 is free. More stages are coming, with plans for families and classes.');
+  // [SN] AMENDMENTS-SITE-NEWUSER §3.3 item 4 (OD-SN-3): the cost block left `/`; its free line opens the closing band,
+  // and the plan sentence stays on the grown-up pages.
+  it('the home opens its closing band with the free line and has no cost block; the plan sentence is on /parents and /teachers', () => {
+    const en = getMessages('en').landing;
+    expect(home).toContain(en.home.closing.body);
+    expect(en.home.closing.body.startsWith('Stage 1 is free.')).toBe(true);
+    expect(home).not.toContain(en.plans.paid.coming);
+    for (const [path, text] of SITE.filter(([p]) => p === '/parents' || p === '/teachers')) {
+      expect(text, path).toContain('Stage 1 is free. More stages are coming, with plans for families and classes.');
+    }
   });
 
   for (const { name, re } of COMMERCIAL_CLAIMS) {
