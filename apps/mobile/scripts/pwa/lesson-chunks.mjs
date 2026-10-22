@@ -46,7 +46,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // The start bundle shrink (F-CURR-002 §10 decision record) makes the es / ko messages and content overlays a precached
   // chunk per locale and the presenter and All lessons chunks of their own: 4,712,987 B raw / 1,237,660 B gzip on main
   // 7eb5bad61 (6,491,546 B before; 4,713,416 B raw after its review fixes); merged onto the final integration (main fc580beed, release `build:web`) it measures
-  // 4,732,797 B raw / 1,243,089 B gzip, so the line is that measurement plus a 7,203 B rounding margin.
+  // 4,732,797 B raw / 1,243,089 B gzip, so the line was that measurement plus a 7,203 B rounding margin (4,740,000 B).
+  // The Daily Review (F-CURR-002 row CM-14, on CM-13's head: rows CM-10 to CM-14) keeps its screen, rounds, session
+  // logic and the review engine in chunks; what stays is the route, Home's hook and card, the boot module's
+  // memoryChunk() and the English strings: 4,744,598 B raw / 1,247,230 B gzip (release `build:web` with the review
+  // fixes; 4,743,992 B before them), so the line is that measurement plus a 5,402 B rounding margin.
   startBundleRaw: 4_750_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -141,9 +145,11 @@ export const ROOT_CHUNKS = Object.freeze([
 export const MEMORY_CHUNKS = Object.freeze([Object.freeze({ name: 'memory-chunk', marker: 'memory-chunk:runtime' })]);
 
 /**
- * The Daily Review of the learner PWA (F-CURR-002 row CM-14): its screen, rounds, session logic and the review engine are a
- * bundle of their own, reached only through the literal `import()` of `src/screens/reviews/DailyReviewRoute.tsx`, so the
- * start bundle carries none of it. The chunk module exports its marker (`DAILY_REVIEW_CHUNK`).
+ * The Daily Review of the learner PWA (F-CURR-002 row CM-14): its screen and rounds are a bundle of their own, reached
+ * only through the literal `import()` of `src/screens/reviews/DailyReviewRoute.tsx`, so the start bundle carries none
+ * of it. Its session logic and the review engine live in the memory chunk (`MEMORY_CHUNKS`, through
+ * `logic/memory/memory-chunk.ts`), so no scheduler module is shared by two chunks. The chunk module exports its marker
+ * (`DAILY_REVIEW_CHUNK`).
  */
 export const REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'daily-review-chunk', marker: 'review-chunk:daily' })]);
 
