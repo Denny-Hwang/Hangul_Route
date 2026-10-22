@@ -296,4 +296,9 @@ export const a11y = {
     lockedTile: (name: string) => `${name}: 잠겨 있어요. 어른용 PIN으로 열어요.`,
     lockedRow: (name: string) => `${name}: 잠겨 있어요`,
   },
+  dailyReview: {
+    close: '복습 그만하기',
+    round: (n: number) => `${n}번째 라운드`,
+    stars: (n: number) => `별 ${n}개`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;

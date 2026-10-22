@@ -152,8 +152,8 @@ describe('slot 3: the vocabulary card first (F-VOC-005 section 3.7)', () => {
   });
 
   it('gives way to the Daily Test once it is available (its pools already hold the due words)', () => {
-    const plan = build({ vocab: NUDGE, capabilities: { dailyTestAvailable: true } });
-    expect(slot(plan, 3)?.kind).toBe('daily-test');
+    const plan = build({ vocab: NUDGE, dailyReview: { due: 5, done: false, reviewFirst: false } });
+    expect(slot(plan, 3)?.kind).toBe('daily-review');
     expect(plan.cards.some((c) => c.kind === 'vocab')).toBe(false);
   });
 });

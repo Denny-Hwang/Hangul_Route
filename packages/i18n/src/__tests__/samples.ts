@@ -941,4 +941,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.persona.teachers.schools.sizeContract': [['hello@example.com']],
   'landing.captures.discover': [['x', 'a']],
   'landing.captures.card': [['x', 'horangi', 'tiger']],
+  // The Daily Review and Keep going (F-CURR-002 row CM-14).
+  'learner.dailyReview.readyLine': [[1], [34]],
+  'learner.dailyReview.result.stronger': [[1], [6]],
+  'a11y.dailyReview.round': [[1], [10]],
+  'a11y.dailyReview.stars': [[1], [3]],
 };

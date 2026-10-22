@@ -328,15 +328,18 @@ export const learner = {
        * the same lesson twice. It still shows done and still collects, as F-HW-001 says.
        */
       sameAsHero: 'Same as your next lesson above',
-      /** The daily-test card names itself; every other card is titled by its quest or episode (content). */
-      dailyTest: { title: 'Quick review' },
+      /**
+       * The Daily Review card (F-CURR-002 section 4.5, row CM-14) names itself; every other card is titled by its quest or
+       * episode (content). Its subtitle is plain time, never a count owed.
+       */
+      dailyReview: { title: 'Daily Review' },
       /** Keyed by `MissionSubtitle`, the code a mission card carries instead of prose. */
       subtitle: {
         replay: 'One more go with Hoya',
         story: 'Story time',
         new: 'Something new today',
         assigned: 'Picked just for you',
-        dailyTest: 'About a minute with Hoya',
+        dailyReview: 'About 3 minutes',
       },
       /**
        * The vocabulary card (F-VOC-005 section 3.7, slot 3): shown from three due words, it opens a Relaxed
@@ -2473,5 +2476,49 @@ export const learner = {
       school: 'School',
       signIn: 'Sign in as a grown-up',
     },
+  },
+  /**
+   * The Daily Review (F-CURR-002 sections 4.5, 7.4 and 7.7, row CM-14; design/wireframes/reviews/daily-review.md): 10 short
+   * rounds of what the learner met before, then stars and how many got stronger. Never a percentage, an "n of m", a timer,
+   * "overdue", "behind" or "missed" (the `review-copy` lint reads this namespace and `keepGoing`). The rounds reuse the
+   * games' own instructions, sound lines and Hoya lines.
+   */
+  dailyReview: {
+    title: 'Daily Review',
+    /** Above the Today cards when many items are due (section 4.3, review first): a positive nudge, never a debt. */
+    readyLine: (n: number) => plural('en', n, { one: '1 item is ready to refresh', other: `${n} items are ready to refresh` }),
+    result: {
+      /** One word per star tier (F-RVW-001 section 3.1), never a number. */
+      headline: { three: 'Wonderful!', two: 'Great work!', one: 'Good try!' },
+      /** Items whose best box rose today: a count of the learner's own items, never a ratio. */
+      stronger: (n: number) => plural('en', n, { one: '1 got stronger', other: `${n} got stronger` }),
+      noneStronger: 'Every answer helps them stick.',
+      backHome: { cta: 'Back home' },
+    },
+    /** Nothing to ask (also the end-early case with no round answered, a flag off and a store that cannot be read). */
+    allRefreshed: {
+      title: 'All refreshed today',
+      body: 'Nothing is waiting right now. Play a quest or read a story.',
+    },
+    /** The stop sheet over a round: the answers given stay recorded. */
+    leave: {
+      title: 'Stop for now?',
+      body: 'What you answered still counts.',
+      stay: { cta: 'Back to it' },
+      stop: { cta: 'Stop' },
+    },
+  },
+  /**
+   * Keep going (row CM-14; design/wireframes/reviews/keep-going.md): 10 more, optional, up to 3 times a day. Never a count
+   * of what is left and never shown as owed.
+   */
+  keepGoing: {
+    /** The Keep going button's description. */
+    offer: 'Want a few more?',
+    cta: 'Keep going',
+    /** The third Keep going of the day with items still due: one calm line instead of the offer. */
+    enough: { title: 'That is plenty for today.', body: 'Hoya will bring the rest back soon.' },
+    /** The collected Daily Review card on Home, tapped. */
+    doneToday: { title: 'Daily Review done today' },
   },
 } as const;

@@ -129,7 +129,7 @@ const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'sta
   replay: 'replay',
   new: 'play',
   story: 'library',
-  'daily-test': 'star',
+  'daily-review': 'replay',
   explore: 'journey',
   // F-ENT-003 E3-7: the free-end card draws its own card; a practice card leads with its replay icon (or the topic or story cover).
   'free-end': 'star',

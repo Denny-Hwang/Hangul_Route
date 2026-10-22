@@ -230,13 +230,13 @@ export const learner = {
     mission: {
       heading: '오늘 호야와 함께',
       sameAsHero: '위에 있는 다음 레슨과 같아요',
-      dailyTest: { title: '빠른 복습' },
+      dailyReview: { title: '오늘의 복습' },
       subtitle: {
         replay: '호야와 한 번 더',
         story: '이야기 시간',
         new: '오늘의 새로운 것',
         assigned: '나를 위해 골랐어요',
-        dailyTest: '호야와 잠깐 함께',
+        dailyReview: '3분쯤 걸려요',
       },
       vocab: {
         title: '낱말이 준비됐어요',
@@ -1841,5 +1841,32 @@ export const learner = {
       school: '학교',
       signIn: '어른으로 로그인',
     },
+  },
+  /** 오늘의 복습 (F-CURR-002, CM-14): 별과 더 단단해진 개수만 보여 줘요. 퍼센트, 'n개 중 m개', 시간 제한은 없어요. */
+  dailyReview: {
+    title: '오늘의 복습',
+    readyLine: (n: number) => `다시 볼 것 ${n}개가 준비됐어요`,
+    result: {
+      headline: { three: '정말 멋져요!', two: '잘했어요!', one: '좋은 시도예요!' },
+      stronger: (n: number) => `${n}개가 더 단단해졌어요`,
+      noneStronger: '답할 때마다 더 오래 기억해요.',
+      backHome: { cta: '홈으로' },
+    },
+    allRefreshed: {
+      title: '오늘 복습을 다 했어요',
+      body: '지금은 기다리는 게 없어요. 퀘스트를 하거나 이야기를 읽어 봐요.',
+    },
+    leave: {
+      title: '여기서 그만할까요?',
+      body: '지금까지 답한 것도 다 반영돼요.',
+      stay: { cta: '계속하기' },
+      stop: { cta: '그만하기' },
+    },
+  },
+  keepGoing: {
+    offer: '조금 더 해 볼까요?',
+    cta: '더 복습하기',
+    enough: { title: '오늘은 이만하면 충분해요.', body: '나머지는 호야가 곧 다시 보여 줄게요.' },
+    doneToday: { title: '오늘의 복습을 마쳤어요' },
   },
 } satisfies DeepPartial<Messages['learner']>;
