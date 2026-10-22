@@ -119,7 +119,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   // (first answer per round scores), `complete` ends the step as the older games do.
   const host: MinigameHost = {
     mode: step.kind === 'check' ? 'check' : 'quest',
-    answer: (roundKey, correct) => useQuestRunStore.getState().answerRound(roundKey, correct),
+    // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
+    answer: (roundKey, correct, meta) =>
+      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
       close();

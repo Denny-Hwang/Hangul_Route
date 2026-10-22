@@ -90,7 +90,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
     if (isCorrect) {
       tapLight();
       success();
-      answerRound(turnIdx, true);
+      answerRound(turnIdx, true, { texts: [turn.npcKo], rung: 'read' });
       setFeedback('correct');
       replying.current = true;
       const reply = play(() => playPrompt(koSpeech(option, 'sentence', 'tap-respond')));
@@ -109,7 +109,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
       });
     } else {
       nudge();
-      answerRound(turnIdx, false);
+      answerRound(turnIdx, false, { texts: [turn.npcKo], rung: 'read' });
       setFeedback('wrong');
       setLockedWrong([...lockedWrong, ko]);
     }

@@ -106,7 +106,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
     if (next.length === round.componentJamoIds.length) {
       if (isCorrectWhenComplete(next)) {
         success();
-        answerRound(roundIdx, true);
+        answerRound(roundIdx, true, { texts: [round.targetSyllable], rung: 'produce' });
         setFeedback('correct');
         setTimeout(() => {
           if (roundIdx >= rounds.length - 1) {
@@ -118,7 +118,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
         }, 900);
       } else {
         nudge();
-        answerRound(roundIdx, false);
+        answerRound(roundIdx, false, { texts: [round.targetSyllable], rung: 'produce' });
         setFeedback('wrong');
         setTimeout(() => {
           setSelected([]);
