@@ -23,6 +23,11 @@
  * |                                    | off for more than an incident (`EXPO_PUBLIC_PLACEMENT_ENABLED` off for   |
  * |                                    | more than a day) means a PR setting it back to `false` and a site        |
  * |                                    | redeploy; the app's kill switch alone never moves it                     |
+ * | `guestLesson`                      | AMENDMENTS-GUEST-FIRST-LESSON GU-7 flag flip                             |
+ * |                                    | (with `EXPO_PUBLIC_GUEST_LESSON` on). Rollback (section 13.1, as LV-D1): |
+ * |                                    | the app switch off for more than a day, or killed for a CS-G failure of  |
+ * |                                    | any length, means a PR setting it back to `false` and a site redeploy    |
+ * |                                    | the same day                                                             |
  *
  * Page components take `claims` as a prop that defaults to `SITE_CLAIMS`. F-BILL-002 B-7 reads the boolean
  * claims for its signed-in "what the plan includes" lines; `CLAIM_REQUIRES_PAID` applies to the public site only.
@@ -55,6 +60,12 @@ export interface SiteClaims {
   lectureMode: boolean;
   /** F-PLC-001 level check: the learner app offers it to a new profile on every platform (`flags.placementEnabled`). */
   levelCheck: boolean;
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13: Start learning carries `try=1` and opens quest 1 before any profile
+   * (web learner app, `EXPO_PUBLIC_GUEST_LESSON`). With it on, the hero's one line, the guest variants of How it works
+   * steps 1 and 3 and the /learners level answer (section 13.2), and the Privacy Policy bullet (section 13.3) show.
+   */
+  guestLesson: boolean;
 }
 
 /** The claims that switch one feature line on or off (every key whose value is a boolean). */
@@ -78,6 +89,8 @@ export const SITE_CLAIMS: Readonly<SiteClaims> = Object.freeze({
   lectureMode: true,
   // F-PLC-001 P-10: placementEnabled is on by default in the learner app; the site says so (owner decision 2026-10-21).
   levelCheck: true,
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON GU-6: off until GU-7 turns the learner app's guest switch on in the same PR.
+  guestLesson: false,
 });
 
 /** A line about a paid feature shows only when its claim is on AND `paidPlans === 'inApp'`. */
@@ -91,6 +104,7 @@ export const CLAIM_REQUIRES_PAID: Readonly<Record<keyof SiteClaims, boolean>> = 
   browseAsLearner: true,
   lectureMode: false,
   levelCheck: false,
+  guestLesson: false,
 });
 
 /**
