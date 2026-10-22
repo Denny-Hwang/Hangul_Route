@@ -50,9 +50,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 4,744,234 B raw / 1,246,930 B gzip (release `build:web`; 4,734,519 B raw on GU-1), so the line was that plus 5,766 B;
   // 4,747,423 B raw / 1,247,894 B gzip with its review fixes.
   // [GU] Row GU-3 adds what must run before the first screen (the try intent, the launch's guest step, Welcome's waiting
-  // card, the 16.1 strings); the guest's screens are a chunk of their own (SCREEN_CHUNKS, 7,281 B raw): 4,754,165 B raw /
-  // 1,249,824 B gzip (release `build:web`), so the line is that plus 5,835 B.
-  startBundleRaw: 4_760_000,
+  // card, the 16.1 strings); the guest's screens are a chunk of their own (SCREEN_CHUNKS, 7,673 B raw): 4,757,493 B raw /
+  // 1,250,848 B gzip (release `build:web`), so the line is that plus 7,507 B.
+  startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
