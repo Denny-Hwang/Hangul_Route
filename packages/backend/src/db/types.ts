@@ -32,6 +32,8 @@ import type {
 import type { ClassMoveDecider, ClassMoveEndStatus, ExecuteClassMoveInput, ExecuteClassMoveResult, StoredClassMove, StoredClassScopeAck } from './class-move-types';
 import type { ClassMoveEndReason } from '@hangul-route/content-schema';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
+import type { RemoteConfigRow } from './remote-config-types';
+import type { RollupKey, RollupRow } from './rollup-types';
 
 export * from './transfer-types';
 export * from './class-move-types';
@@ -487,6 +489,34 @@ export interface Db {
   executeClassMove(input: ExecuteClassMoveInput): Promise<ExecuteClassMoveResult>;
   /** Bounded purge: ended rows before `endedBefore`, executed rows before `executedBefore`, still-requested rows whose `expiresAt` is before `endedBefore` (an ask nobody settled). */
   purgeClassMoves(endedBefore: Date, executedBefore: Date, limit: number): Promise<number>;
+
+  // remote config (F-CURR-002 section 12.2, row CM-2): switch values only, no identifier
+  /** Every row of `remote_config`, by flag name. A database without migration 0013 rejects (the route answers 503). */
+  remoteConfig(): Promise<RemoteConfigRow[]>;
+  /** Upsert one row by flag. Tests and tooling only: the owner edits rows in the D1 console; no route writes them. */
+  putRemoteConfig(row: RemoteConfigRow): Promise<void>;
+  // learning rollups (F-CURR-002 section 11.2, row CM-70a; migration 0014). Codes and counts only.
+  /**
+   * Adds 1 to each cell of `day` (UTC `YYYY-MM-DD`), in one batch; a key named twice still adds 1
+   * once. With `counter`, the same batch adds the rows it wrote (the cells plus the counter row) to
+   * the counter row (`counter`, dim '', bucket '') and the counter's new total is answered; else 0.
+   */
+  addRollups(day: string, keys: readonly RollupKey[], counter?: string): Promise<number>;
+  /** Stored cells from `fromDay` to `toDay` inclusive, optionally of one metric, at most `limit`, unsuppressed. Read through lib/learning-rollups (`readRollups`), which applies the suppression. */
+  rollupRows(fromDay: string, toDay: string, metric: string | undefined, limit: number): Promise<RollupRow[]>;
+  /**
+   * The guardrail evaluator's read (F-CURR-002 section 12.3, row CM-70b): the stored cells of `metrics` only, from
+   * `fromDay` to `toDay` inclusive, at most `limit`, unsuppressed. The evaluator applies its own per-(day, metric, dim)
+   * suppression and never shows a cell.
+   */
+  rollupRowsOf(fromDay: string, toDay: string, metrics: readonly string[], limit: number): Promise<RollupRow[]>;
+  /**
+   * The guardrail evaluator's only write (F-CURR-002 section 12.3, row CM-70b): sets `pct` to `toPct` with the reason and
+   * time, only while the row is still exactly as read (on, the whole-number `fromPct`, the `fromUpdatedAt`) and only
+   * when `toPct` is lower, and never touches `on`. Answers whether a row changed, so a row the owner edited in any way
+   * since it was read is left as the owner set it.
+   */
+  lowerRemoteConfigPct(flag: string, fromPct: number, fromUpdatedAt: string, toPct: number, updatedAt: string, reason: string): Promise<boolean>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

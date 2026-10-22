@@ -91,6 +91,7 @@ export const landing = {
         collect: { title: '모으면서 계속하기', body: '한국 문화 카드를 받아요. 진도는 저장되고 백업돼요.' },
       },
       routeBody: '한국 문화 카드를 받고, 지금 있는 곳과 다음에 할 것을 학습 루트 전체로 한눈에 봐요.',
+      levelBody: '누가 배우는지 고르거나, 수준 확인을 해요.',
     },
     promises: {
       label: '우리의 약속',
@@ -157,6 +158,15 @@ export const landing = {
         },
         adult: FAQ_ADULT,
         korean: FAQ_KOREAN,
+        // The button label is learner.placement.invite.knowSome in Korean, word for word (glossary: 수준 확인).
+        level: {
+          q: '한글을 조금 알아요. 처음부터 시작해야 하나요?',
+          a: '아니요. 시작할 때 ‘한국어를 조금 알아요’를 누르고 짧은 수준 확인을 해요. 호야가 어디서 시작할지 알려 줘요.',
+        },
+      },
+      after: {
+        title: '자모를 익힌 다음에는',
+        body: '낱말, 짧은 문장, 대화, 문화 이야기도 똑같이 5분 퀘스트로 배워요.',
       },
     },
     parents: {
@@ -244,22 +254,25 @@ export const landing = {
     },
   },
   cards: {
-    eyebrow: '모으는 재미',
-    title: (cards: number) => `문화 카드 ${cards}장. 한 장에 한국 한 조각.`,
-    body: (cards: number, common: number, uncommon: number, rare: number, legendary: number) =>
-      `글자를 하나 배울 때마다 진짜 한국 문화 한 조각을 받아요 — 라면 한 그릇, 추석 보름달, 단오 그림 속 그네. 1단계에는 카드 ${cards}장이 있어요: 보통 ${common}장, 드문 ${uncommon}장, 희귀 ${rare}장, 전설 ${legendary}장.`,
     listLabel: '1단계 문화 카드',
     rarity: { common: '보통', uncommon: '드문', rare: '희귀', legendary: '전설' },
     cardLabel: (romanization: string, meaning: string) => `한국어 낱말 ${romanization}, 뜻: ${meaning}`,
-    more: '2단계(낱말)에서 카드가 30장 넘게 더해져요. 7단계(자기표현)까지 모으면 문화 라이브러리는 175장이 돼요.',
   },
   games: {
-    eyebrow: (shipped: number, beta: number) => (beta > 0 ? `미니게임 ${shipped}개 + 베타 ${beta}개` : `미니게임 ${shipped}개`),
-    title: '하나도 공부 같지 않아요.',
-    body: '네 가지 연습(알아보기, 만들기, 활용, 복습)을 90초짜리 놀이에 담았어요. 호야는 절대 “틀렸어”라고 하지 않아요.',
     listLabel: '1단계 미니게임',
     family: { recognition: '알아보기', production: '만들기', application: '활용', review: '복습' },
     beta: '베타 — 원하면 켜기',
+    // Titles follow the app's game names (learner.myRoute.games) where it has one.
+    items: {
+      'listen-pick': { title: '듣고 고르기', blurb: '소리를 듣고 글자나 낱말을 눌러요.' },
+      'match-sound': { title: '소리 짝짓기', blurb: '글자 소리를 듣고 맞는 칸을 눌러요. 서두르지 않아도 돼요.' },
+      'build-letter': { title: '글자 만들기', blurb: '자모를 모아 진짜 한글 글자를 만들어요.' },
+      'pic-word-match': { title: '그림과 낱말', blurb: '그림을 누르고, 그다음 그 낱말을 눌러요.' },
+      'trace-stroke': { title: '글자 따라 쓰기', blurb: '획 순서를 따라가요. 손가락이 모양을 익혀요.' },
+      'odd-one-out': { title: '다른 하나 찾기', blurb: '셋은 같은 종류예요. 다른 하나를 찾을 수 있나요?' },
+      'culture-quiz': { title: '문화 퀴즈', blurb: '한국어 낱말 하나와 답 네 개가 나와요. 뜻을 골라요.' },
+      'story-sequence': { title: '이야기 순서', blurb: '카드 네 장이 이야기 하나예요. 일어난 순서대로 눌러요.' },
+    },
   },
   footer: {
     guide: '안내',

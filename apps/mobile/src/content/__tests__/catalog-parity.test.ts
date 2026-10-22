@@ -26,15 +26,17 @@ import { storiesAll, storyQuests } from '../stories';
 import { VOCAB_TOPICS } from '../__generated__/vocab';
 
 /**
- * Catalogue parity (F-PLAN-002 section 3.2): `packages/content-schema/src/catalog/data.ts`
- * is hand-kept, and this is the guard that keeps it equal to the shipped bundle
- * (episodes, quests, shelf stories, vocabulary topics). When it fails, the message
- * prints the corrected row to paste into `data.ts`. It replaces the hand mirror
+ * Catalogue parity (F-PLAN-002 section 3.2): this is the guard that keeps `CATALOG` equal to the
+ * shipped bundle (episodes, quests, shelf stories, vocabulary topics). Since F-CURR-002 row CM-6
+ * the rows content/ defines are generated (`catalog.generated.ts`, scripts/build-lessons.mjs), so a
+ * failure there means a generator and the bundle disagree; the Stage 1 and Stage 5 rows are still
+ * hand-kept in `packages/content-schema/src/catalog/data.ts`, and for them the message prints the
+ * corrected row to paste. It replaces the hand mirror
  * `apps/web/src/data/stage1-catalog.ts` and the two web-side parity tests (retired
  * with the web adapter in P2-6, not here).
  */
 
-const row = (value: unknown): string => `\ncorrect data.ts row: ${JSON.stringify(value)}\n`;
+const row = (value: unknown): string => `\ncorrect row (data.ts for Stage 1 and Stage 5; generated from content/ otherwise): ${JSON.stringify(value)}\n`;
 
 /** Symbol keys as the catalogue spells them: the letter, or `<letter>/final` for a batchim. */
 const symbolKeyOf = (jamo: Jamo): string => (jamo.kind === 'batchim' ? `${jamo.char}/final` : jamo.char);

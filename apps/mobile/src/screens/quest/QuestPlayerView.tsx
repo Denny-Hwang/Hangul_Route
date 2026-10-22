@@ -17,7 +17,7 @@ import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { questById } from '../../content';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import {
@@ -37,6 +37,8 @@ import { questStepLabel } from '../../logic/quest-steps';
 import { stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
+import { useStoryQuestReady } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 
@@ -65,14 +67,25 @@ export interface QuestPlayerViewProps {
  * navigation coupling is `useFocusEffect` (applying a game's pending advance on re-focus), which the
  * browse stack's own navigation container also provides.
  */
-export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave }: QuestPlayerViewProps): React.ReactElement {
+export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement {
+  // A lesson quest's steps come from its cell's chunk, and a story quest's story from the story's chunk
+  // (F-CURR-002 §10): until it is in (a frame or two from the precache), the screen draws only its header (and a
+  // calm status line if it takes longer), so the way back is always there.
+  const lessonReady = useLessonQuestReady(props.questId);
+  const storyReady = useStoryQuestReady(questById(props.questId));
+  return lessonReady && storyReady ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
+}
+
+function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave }: QuestPlayerViewProps): React.ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const quest = useMemo(() => {
     const source = questById(questId);
     return source && localizeQuest(source, locale);
-  }, [questId, locale]);
+  }, [questId, locale, titles]);
 
   const begin = useQuestRunStore((s) => s.beginQuest);
   // One leave question at a time (a second back while the sheet is open is the same question).

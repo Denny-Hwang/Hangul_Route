@@ -37,7 +37,7 @@ review record. Ids keep the placeholder ids: `episode:stage<n>-<theme>`,
 carries no note text (no screen shows a lesson note yet), so the claims a learner sees are the
 Hoya lines, Discover `noteEn` and realia captions, and the MAR culture review (pass 5) checks
 each of them against a note of the cell. The row that first draws a lesson note on screen
-emits `culture[].{id, kind, textEn}` into `lessons-index.ts` with an episode overlay path
+emits `culture[].{id, kind, textEn}` into the lesson modules with an episode overlay path
 `culture.<noteId>.text` that U-10 covers, and points the copy lints (`lesson-copies-source`,
 `lesson-national-treasure-number`) at the text it shows; no ready cell carries a culture claim
 before that row lands.
@@ -47,18 +47,40 @@ before that row lands.
 1. `node scripts/validate-content.mjs` runs the `lesson-*` rules (`packages/content-schema/src/lesson-lint.ts`).
 2. `node scripts/build-lessons.mjs` drops draft cells, fails a `ready` cell without both
    sign-offs, and writes
-   `apps/mobile/src/content/__generated__/lessons-index.ts` (episodes, quests, their glosses;
-   imported at start) and `lessons-stage<n>.ts` (the game scopes and their glosses; loaded the
-   first time a quest of that stage opens). `--check` fails on drift, `--report` on the budget
-   (9 KB raw per quest on average, 150 KB raw / 32 KB gzip per stage module, 950,000 B raw /
-   140,000 B gzip in total; F-CURR-001 section 3.12).
+   `apps/mobile/src/content/__generated__/lessons-index.ts` (the start-loaded manifest: episodes,
+   quest headers in English and the jamo each quest's Discover step teaches) and, under
+   `__generated__/lesson-chunks/`, one content-hashed
+   chunk per cell (its steps, game scopes and their glosses; loaded when one of its quests opens)
+   and one title chunk per locale (loaded for the active locale only; F-CURR-002 section 10).
+   It also writes the catalogue rows of the cells, their quests, the stories and the topics
+   (`packages/content-schema/src/catalog/catalog.generated.ts`). None of these modules is committed
+   (F-CURR-002 row CM-6): `pnpm generate` writes them, and the turbo `generate` task and the root
+   `postinstall` run it. `--check` (CI) is a determinism check: a fresh run must give the bytes an
+   earlier run wrote; `--report` fails on the budget (9 KB raw per
+   quest on average, 60,000 B raw for the manifest, 30,000 B raw per title chunk, 90,000 B raw /
+   16,000 B gzip per cell chunk, 220 KB raw /
+   40 KB gzip of game content per stage, 1,400,000 B raw / 210,000 B gzip in total).
 3. `apps/mobile/src/content/__tests__/upper-stage-curriculum.test.ts` checks U-1 .. U-10 and
    that a ready cell plays only games the app has a screen for (`PLAYABLE_KINDS`, so a game row
-   lands before the cells that use its game), and `e2e/web/journey-upper-cell.spec.ts` needs an
-   entry for every shipped cell.
-4. A shipped cell also updates `packages/content-schema/src/catalog/data.ts` (the cell, its
-   lessons, `CATALOG_VERSION` + 1 and the version's quest ids in `CATALOG_QUEST_ADDITIONS`),
-   the route-days test pins, and the presenter font (`node scripts/build-presenter-font.mjs`).
+   lands before the cells that use its game), and `e2e/web/journey-upper-cell.spec.ts` tests every
+   cell of the generated manifest (a hand-written deep play is optional).
+4. A new quest carries `"addedIn": <YYYYMMDD>` in its own cell file: today's date (UTC), or the day
+   after main's catalogue version if that is later; that is the only shared fact a
+   cell PR writes. `CATALOG_VERSION` is generated as the largest stamp (the history up to 32 keeps
+   its integers), and `node scripts/check-added-in.mjs --base origin/main` (run by
+   `build-lessons.mjs --check` in content-validation, and by `scripts/__tests__/stamp-order.test.mjs`
+   in the required CI unit job against the pull request's base branch) fails a stamp that is not
+   above main's version (an equal stamp would leave the version where it is, so a placement stored
+   between the two deploys would miss the new quest) or that is more than 14 days after the first
+   stamp the branch may use. It names the stamp to use, a one-field edit in the PR's own file; after
+   bringing a branch up to date with main, run it again. A quest main already ships keeps its stamp,
+   and the version never falls: a branch that stops shipping the quest holding main's version (a
+   ready cell turned back to draft, a removed story) fails. A hand-written quest (Stage 1, a Stage 5
+   book) is stamped in `packages/content-schema/src/catalog/hand-stamps.json` instead. A festival
+   story added after the first 24 names its anchor in its own `shelf.anchor`. The catalogue rows, the route days
+   (derived from the manifest, `route-days-manifest.test.ts`) and the e2e cell list follow by
+   themselves. The presenter font is rebuilt (`node scripts/build-presenter-font.mjs --source …`)
+   only when `--check` says the cell's Korean has a code point the font lacks.
 5. Release order for the first `CATALOG_VERSION` bump: the Worker that keeps a stored placement
    result's `catalogVersion` when an older build re-uploads it without one
    (`packages/backend/src/lib/additive-fields.ts`, row C-2) is deployed before any app build

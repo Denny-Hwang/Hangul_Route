@@ -1,6 +1,7 @@
 import type { PlacementLevel } from '../schemas/placement';
 import { questsPlacedOutAtLevel } from '../placement/level-map';
 import type { RouteCatalog } from '../placement/route-seed';
+import { GENERATED_QUEST_ADDITIONS } from './catalog.generated';
 import { CATALOG_VERSION } from './data';
 
 /**
@@ -77,12 +78,16 @@ export const CATALOG_QUEST_IDS_V8: readonly string[] = Object.freeze([
   'quest:story-joseon-records-today-listen',
 ]);
 
+/** The last hand-kept version (F-CURR-001 S7-5); from F-CURR-002 row CM-6 on, versions are `addedIn` date stamps. */
+export const LAST_HAND_KEPT_CATALOG_VERSION = 32;
+
 /**
- * The quest ids each later version added, appended by the row that bumps
- * `CATALOG_VERSION` (a cell row adds its cell's quests under its new version).
- * `catalog-versions.test.ts` fails when the catalogue holds a quest no version lists.
+ * The quest ids each version from 9 to 32 added, appended by the row that bumped
+ * `CATALOG_VERSION` (a cell row added its cell's quests under its new version). Frozen
+ * since F-CURR-002 row CM-6: a later quest carries its `addedIn` stamp in its content file (a
+ * hand-written Stage 1 or Stage 5 quest in `hand-stamps.json`).
  */
-export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.freeze({
+const HAND_KEPT_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.freeze({
   // F-CURR-001 S4-1: Read Along.
   9: Object.freeze(['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']),
   // F-CURR-001 S3-1: First Sentences.
@@ -132,6 +137,18 @@ export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>
   31: Object.freeze(['quest:stage7-nature-q1', 'quest:stage7-nature-q2', 'quest:stage7-nature-q3']),
   // F-CURR-001 S7-5: Make & Share.
   32: Object.freeze(['quest:stage7-crafts-q1', 'quest:stage7-crafts-q2', 'quest:stage7-crafts-q3']),
+});
+
+/**
+ * The quest ids each later version added: the hand-kept history up to 32, then each `addedIn`
+ * stamp with the shipped quests that carry it (`catalog.generated.ts`: the content files' stamps and
+ * those of `hand-stamps.json`, for a hand-written Stage 1 or Stage 5 quest added after 32). Every stamp (YYYYMMDD)
+ * is larger than 32, so the versions keep their order. `catalog-versions.test.ts` fails when the
+ * catalogue holds a quest no version lists.
+ */
+export const CATALOG_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = Object.freeze({
+  ...HAND_KEPT_ADDITIONS,
+  ...Object.fromEntries(Object.entries(GENERATED_QUEST_ADDITIONS).map(([stamp, ids]) => [stamp, Object.freeze([...ids])])),
 });
 
 /** The quest ids the catalogue held at `version` (versions before 8 read as 8). */

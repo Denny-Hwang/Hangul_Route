@@ -24,6 +24,8 @@ export interface FlipCardProps {
   front: React.ReactNode;
   back: React.ReactNode;
   disabled?: boolean;
+  /** True while what the card needs is still loading (a story card's back, F-CURR-002 §10): assistive tech hears it is busy. */
+  busy?: boolean;
   onFlippingChange?: (flipping: boolean) => void;
   accessibilityLabelFront: string;
   accessibilityLabelBack: string;
@@ -42,6 +44,7 @@ export function FlipCard({
   front,
   back,
   disabled = false,
+  busy = false,
   onFlippingChange,
   accessibilityLabelFront,
   accessibilityLabelBack,
@@ -100,6 +103,7 @@ export function FlipCard({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={face === 'front' ? accessibilityLabelFront : accessibilityLabelBack}
+      accessibilityState={busy ? { disabled, busy: true } : undefined}
       testID={testID}
     >
       <Animated.View style={animatedStyle}>{face === 'front' ? front : back}</Animated.View>

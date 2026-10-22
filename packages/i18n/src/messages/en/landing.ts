@@ -101,7 +101,8 @@ export const landing = {
   /**
    * The layered home `/` (F-SITE-002 §3.3, appendix B.1). `hero.title` is the tagline; the taught letter in Hoya's
    * bubble is passed in with its romanization (CLAUDE.md §1; the page passes the letter's teaching sound value, e.g.
-   * `g/k` for the first letter). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on.
+   * `g/k` for the first letter). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on;
+   * `how.levelBody` replaces step 1's line only while the `levelCheck` claim is on.
    * The promises are titles only; their explanations live on the persona pages.
    */
   home: {
@@ -141,6 +142,11 @@ export const landing = {
         collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
       },
       routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
+      /**
+       * Step 1's line while the `levelCheck` claim is on (F-PLC-001: the level check is offered to every new profile).
+       * One line, not a fourth step: the home's word budget (280, F-SITE-002 §3.11) leaves room for one more word.
+       */
+      levelBody: 'Pick who learns, or check your level.',
     },
     promises: {
       /** The section's visually hidden heading. */
@@ -234,6 +240,19 @@ export const landing = {
         },
         adult: FAQ_ADULT,
         korean: FAQ_KOREAN,
+        /**
+         * Only while the `levelCheck` claim is on. The label is `learner.placement.invite.knowSome` word for word, so
+         * the learner finds the button the answer names.
+         */
+        level: {
+          q: 'I already know some Hangul. Do I have to start at the beginning?',
+          a: 'No. When you start, tap I already know some Korean and take a short level check. Hoya suggests where to begin.',
+        },
+      },
+      /** One paragraph under "What you learn first": what comes after Stage 1. */
+      after: {
+        title: 'After the alphabet',
+        body: 'Words, short sentences, conversations and heritage stories, in the same five-minute quests.',
       },
     },
     parents: {
@@ -335,30 +354,34 @@ export const landing = {
       teachers: 'Bring Hangul to your class this week.',
     },
   },
-  /** The heritage-card preview (`HeritageCardsPreview`); card titles and blurbs are content, not messages. */
+  /**
+   * The heritage-card grid in the `/learners` cards fold (`HeritageCardsPreview`). The Korean, romanization, gloss and
+   * blurb of each card are content (`data/stage1-cards.ts`, with the es / ko content overlays), not messages.
+   */
   cards: {
-    eyebrow: 'The reward loop',
-    title: (cards: number) =>
-      plural('en', cards, { one: `${cards} Heritage Card. One Korea, one card at a time.`, other: `${cards} Heritage Cards. One Korea, one card at a time.` }),
-    body: (cards: number, common: number, uncommon: number, rare: number, legendary: number) =>
-      `Every letter you learn earns a real piece of Korean culture — a ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1 ships ${plural('en', cards, { one: `${cards} card`, other: `${cards} cards` })}: ${common} common, ${uncommon} uncommon, ${rare} rare, and ${legendary} legendary.`,
     listLabel: 'Stage 1 Heritage Cards',
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' },
-    /** Accessible name of a card's Korean word: its romanization and its English meaning (content). */
+    /** Accessible name of a card's Korean word: its romanization and its meaning in the UI language (content). */
     cardLabel: (romanization: string, meaning: string) => `Korean word ${romanization}, meaning ${meaning}`,
-    more: 'Stage 2 (Words) adds 30+ cards. Stage 7 (Self-expression) caps the Heritage Library at 175.',
   },
-  /** The mini-game gallery (`MiniGamesGallery`); game titles and blurbs are content, not messages. */
+  /**
+   * The mini-game list in the `/learners` games fold (`MiniGamesGallery`). `items` holds each game's title and blurb,
+   * keyed by its kind: the Stage 1 games the app plays (`apps/mobile/src/logic/minigame-config.ts`), never a speaking one.
+   */
   games: {
-    eyebrow: (shipped: number, beta: number) => {
-      const games = plural('en', shipped, { one: `${shipped} mini-game`, other: `${shipped} mini-games` });
-      return beta > 0 ? `${games} + ${beta} in beta` : games;
-    },
-    title: 'None of them feel like school.',
-    body: 'Four families of practice — recognition, production, application, review — wrapped in 90-second loops. Hoya never says “wrong.”',
     listLabel: 'Stage 1 mini-games',
     family: { recognition: 'Recognition', production: 'Production', application: 'Application', review: 'Review' },
     beta: 'Beta — opt in',
+    items: {
+      'listen-pick': { title: 'Listen and pick', blurb: 'Hear a sound, then tap the letter or word.' },
+      'match-sound': { title: 'Match the sound', blurb: 'Hear a letter. Tap the matching tile. No rush.' },
+      'build-letter': { title: 'Build the syllable', blurb: 'Put letters together to make a real Korean syllable.' },
+      'pic-word-match': { title: 'Picture and word', blurb: 'Tap a picture, then its word.' },
+      'trace-stroke': { title: 'Trace the letter', blurb: 'Follow the stroke order. Your finger learns the shape.' },
+      'odd-one-out': { title: 'Odd one out', blurb: 'Three belong together. Can you find the one that is different?' },
+      'culture-quiz': { title: 'Culture quiz', blurb: 'A Korean word and four answers. Pick what it means.' },
+      'story-sequence': { title: 'Story sequence', blurb: 'Four cards, one story. Tap them in the order they happen.' },
+    },
   },
   footer: {
     /** The footer's group headings (F-SITE-002 §3.2). */

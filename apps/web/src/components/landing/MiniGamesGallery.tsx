@@ -1,7 +1,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
-import { minigameCatalog, type LandingMinigame, type MinigameFamily } from '../../data/minigame-catalog';
+import { siteGames, type LandingMinigame, type MinigameFamily } from '../../data/minigame-catalog';
 import { rem } from '../../lib/site-style';
 
 const familyTint: Record<MinigameFamily, string> = {
@@ -12,27 +12,20 @@ const familyTint: Record<MinigameFamily, string> = {
 };
 
 /**
- * The mini-games gallery. `games` defaults to the whole catalogue (the old landing); `/learners` passes the games
- * without a speaking one (`siteGames`, F-SITE-002 §3.4: no speaking line). The counts come from the list shown.
- *
- * `embedded` is the gallery inside a fold of a layered-site page (F-SITE-002 §3.4): the section's h2 and the fold's
- * summary already name it, so it renders the list alone (no eyebrow, heading, body line or top margin; the game
- * titles are h3 under the section's h2), with text in rem so the browser text size scales it (§3.11).
+ * The mini-game list inside the `/learners` games fold (F-SITE-002 §3.4): the Stage 1 games without a speaking one
+ * (`siteGames`, §3.4: no speaking line). The section's h2 and the fold's summary already name it, so it renders the
+ * list alone (the game titles are h3 under the section's h2), with text in rem so the browser text size scales it
+ * (§3.11). Each title and blurb is `landing.games.items.<kind>` in the UI language.
  */
 export function MiniGamesGallery({
   locale = DEFAULT_LOCALE,
-  games = minigameCatalog,
-  embedded = false,
+  games = siteGames,
 }: {
   locale?: UiLocale;
   games?: readonly LandingMinigame[];
-  embedded?: boolean;
 }): JSX.Element {
   const t = getMessages(locale).landing.games;
-  const shippedCount = games.filter((g) => g.status === 'shipped').length;
-  const betaCount = games.length - shippedCount;
-  const size = (px: number): number | string => (embedded ? rem(px) : px);
-  const list = (
+  return (
     <div
       role="list"
       aria-label={t.listLabel}
@@ -55,7 +48,6 @@ export function MiniGamesGallery({
             display: 'flex',
             flexDirection: 'column',
             gap: spacing.sm,
-            ...(embedded ? {} : { minHeight: 200 }),
           }}
         >
           <div
@@ -72,7 +64,7 @@ export function MiniGamesGallery({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: spacing.xs,
-                fontSize: size(typography.size.caption),
+                fontSize: rem(typography.size.caption),
                 color: colors.text.secondary,
                 fontWeight: typography.weight.semibold,
                 textTransform: 'uppercase',
@@ -88,23 +80,23 @@ export function MiniGamesGallery({
           </div>
           <h3
             style={{
-              fontSize: size(typography.size.title),
+              fontSize: rem(typography.size.title),
               margin: 0,
               color: colors.text.primary,
               lineHeight: typography.leading.tight,
             }}
           >
-            {game.title}
+            {t.items[game.kind].title}
           </h3>
           <p
             style={{
-              fontSize: size(typography.size.bodySm),
+              fontSize: rem(typography.size.bodySm),
               color: colors.text.secondary,
               margin: 0,
               lineHeight: typography.leading.normal,
             }}
           >
-            {game.blurb}
+            {t.items[game.kind].blurb}
           </p>
           {game.status === 'beta' ? (
             <span
@@ -116,7 +108,7 @@ export function MiniGamesGallery({
                 backgroundColor: colors.feedback.nudgeLight,
                 color: colors.text.primary,
                 borderRadius: radii.pill,
-                fontSize: size(typography.size.caption),
+                fontSize: rem(typography.size.caption),
                 fontWeight: typography.weight.semibold,
               }}
             >
@@ -126,52 +118,5 @@ export function MiniGamesGallery({
         </article>
       ))}
     </div>
-  );
-  if (embedded) return list;
-  return (
-    <section
-      aria-labelledby="games-heading"
-      style={{ marginTop: spacing.jumbo }}
-    >
-      <header style={{ marginBottom: spacing.xl }}>
-        <span
-          style={{
-            display: 'inline-block',
-            padding: `${spacing.xs}px ${spacing.md}px`,
-            backgroundColor: colors.brand.secondaryLight,
-            color: colors.brand.secondaryDark,
-            borderRadius: radii.pill,
-            fontWeight: typography.weight.bold,
-            fontSize: typography.size.caption,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-          }}
-        >
-          {t.eyebrow(shippedCount, betaCount)}
-        </span>
-        <h2
-          id="games-heading"
-          style={{
-            fontSize: typography.size.display,
-            margin: `${spacing.sm}px 0 ${spacing.sm}px`,
-            lineHeight: typography.leading.tight,
-          }}
-        >
-          {t.title}
-        </h2>
-        <p
-          style={{
-            color: colors.text.secondary,
-            fontSize: typography.size.bodyLg,
-            maxWidth: 720,
-            margin: 0,
-          }}
-        >
-          {t.body}
-        </p>
-      </header>
-
-      {list}
-    </section>
   );
 }

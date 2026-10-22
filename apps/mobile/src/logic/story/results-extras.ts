@@ -1,6 +1,7 @@
 import type { KoText, Quest, Story, StoryLevel } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { TelemetryEvent } from '../../platform/telemetry';
+import { storyTierLevels } from './story-chunk-store';
 import { levelOfQuest, storyIdOfQuest } from './story-ref';
 
 /**
@@ -87,17 +88,21 @@ export interface ResultsStory {
  * (`storyIdOfQuest`, `levelOfQuest`), or null: not a story quest, an unknown
  * quest, or a story (or level) the bundle does not hold. Null keeps Results
  * exactly `results/celebrate` (wireframe `results/celebrate-story` error
- * state). `findStory` returns the story as shown (UI-language overlay).
+ * state). `findStory` returns the story as shown (UI-language overlay);
+ * `levelsOf` the levels of its tiers, which the default reads from the shelf
+ * for a bundled story (F-CURR-002 §10, row CM-8: known before its chunk loads,
+ * so the story extras are drawn at the first frame, never shifted in later).
  */
 export function resultsStoryOf(
   quest: Pick<Quest, 'steps'> | undefined,
   findStory: (storyId: string) => Story | undefined,
+  levelsOf: (storyId: string, shown: Story) => readonly StoryLevel[] = (_id, shown) => storyTierLevels(shown),
 ): ResultsStory | null {
   if (!quest) return null;
   const storyId = storyIdOfQuest(quest);
   const level = levelOfQuest(quest);
   const story = storyId === null ? undefined : findStory(storyId);
-  if (!story || level === null || !story.tiers.some((t) => t.level === level)) return null;
+  if (!story || storyId === null || level === null || !levelsOf(storyId, story).includes(level)) return null;
   const { ko, romanization, en } = story.title;
   return { storyId: story.id, level, title: { ko, romanization, en } };
 }

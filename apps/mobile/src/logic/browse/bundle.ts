@@ -9,6 +9,7 @@ import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../content/__generated__/vocab';
 import { freeContentRegistryFor, type FreeContentRegistry } from '../content-access';
 import { scopeFor, type MinigameScope } from '../minigame-config';
 import { buildStoryIndex, type StoryIndexEntry } from '../story/story-index';
+import { storyTierLevels } from '../story/story-chunk-store';
 import { storyReadStep } from '../story/story-ref';
 import { createVocabCatalog } from '../vocab/catalog';
 import { visibleTopics } from '../vocab/topics';
@@ -89,7 +90,8 @@ function reviewedOnly(i: Pick<BrowseBundleInput, 'episodes' | 'quests'>, index: 
 
 export function buildBrowseBundle(i: BrowseBundleInput): BrowseBundle {
   const vocab = createVocabCatalog(i.vocabTopics, i.vocabItems, { showDrafts: false });
-  const storyIndex = buildStoryIndex({ stories: i.stories, episodes: i.episodes, quests: i.quests, showUnreviewed: false });
+  // The shelf's levels (F-CURR-002 §10, row CM-8): a story whose chunk is not in yet still lists its quests and episode.
+  const storyIndex = buildStoryIndex({ stories: i.stories, episodes: i.episodes, quests: i.quests, showUnreviewed: false, levelsOf: storyTierLevels });
   const { episodes, quests } = reviewedOnly(i, storyIndex);
   return {
     stages: i.stages,

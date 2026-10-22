@@ -31,12 +31,12 @@ The file name is `<topic.key>.json`. A topic file is `{ schemaVersion: 1, topic,
 
 ```bash
 node scripts/build-vocab.mjs          # regenerate (or: pnpm run vocab:build)
-node scripts/build-vocab.mjs --check  # CI drift detector (or: pnpm run vocab:check)
+node scripts/build-vocab.mjs --check  # CI determinism check (or: pnpm run vocab:check)
 pnpm --filter @hangul-route/content-schema test    # vocab-content.test.ts and the schema tests
 node scripts/validate-content.mjs     # language policy over content/**
 ```
 
-After editing a topic file or an overlay, run the generator and commit the two generated modules with it:
+After editing a topic file or an overlay, run the generator (or `pnpm generate`). The two generated modules are gitignored, never committed (F-CURR-002 row CM-6); the turbo `generate` task and the root `postinstall` write them:
 
 - `apps/mobile/src/content/__generated__/vocab.ts` (`VOCAB_TOPICS`, `VOCAB_ITEMS` with assembled `glosses`, `VOCAB_SENSES`)
 - `apps/web/src/data/vocab-catalog.ts` (roster mirror for the console)

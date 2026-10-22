@@ -3,6 +3,7 @@ import { flags } from '../../config/flags';
 import { episodesAll } from '../../content/episodes';
 import { questsAll } from '../../content/quests';
 import { storiesAll } from '../../content/stories';
+import { storyTierLevels } from './story-chunk-store';
 import { isHomeCell } from './home-cell';
 import { storyReadStep } from './story-ref';
 
@@ -41,6 +42,11 @@ export interface BuildStoryIndexInput {
   quests: readonly Pick<Quest, 'id' | 'steps'>[];
   /** Flag `showUnreviewedStories` (dev and design-preview builds only). */
   showUnreviewed: boolean;
+  /**
+   * The levels of a story's tiers; default: its `tiers`. The app passes the shelf's levels, which
+   * are known before the story's chunk loads (F-CURR-002 §10, row CM-8).
+   */
+  levelsOf?: (story: Story) => readonly StoryLevel[];
 }
 
 /**
@@ -75,7 +81,8 @@ export function buildStoryIndex(input: BuildStoryIndexInput): StoryIndexEntry[] 
       const read = quest ? storyReadStep(quest) : null;
       const story = read ? storyById.get(read.ref.storyId) : undefined;
       if (!read || !story) continue;
-      if (!story.tiers.some((t) => t.level === read.ref.level)) continue;
+      const levels = input.levelsOf?.(story) ?? story.tiers.map((t) => t.level);
+      if (!levels.includes(read.ref.level)) continue;
       if (!input.showUnreviewed && !isProductionReady(story)) continue;
       const shelf = placement === 'shelf' ? story.shelf : undefined;
       if (placement === 'shelf' && !shelf) continue;
@@ -149,6 +156,7 @@ export function defaultStoryIndex(): readonly StoryIndexEntry[] {
     episodes: episodesAll,
     quests: questsAll,
     showUnreviewed: flags.showUnreviewedStories,
+    levelsOf: storyTierLevels,
   });
   return cached;
 }
