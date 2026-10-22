@@ -1,9 +1,19 @@
 import { LearnerProfilePatchSchema, LearnerRegisterSchema, NoteDevicePrefsPutSchema, NoteReportSchema, NoteStatePutSchema, SnapshotPutSchema, TIER_GRACE_MS, boundToNow } from '@hangul-route/content-schema';
+import {
+  MEMORY_PUSH_MAX_BYTES,
+  MEMORY_PUSH_MAX_SHARDS,
+  MEMORY_PUSH_MAX_STATES,
+  MemoryCursorSchema,
+  countPushedShards,
+  countPushedStates,
+  parseMemoryPush,
+} from '@hangul-route/content-schema/memory';
 import { Hono } from 'hono';
-import { dbFor, NOTE_INBOX_LIMIT, noteRateKey, noteRetentionCuts, type Db, type NoteDeviceScope, type StoredNote } from '../db';
-import { fail, ok } from '../envelope';
+import { dbFor, NOTE_INBOX_LIMIT, noteRateKey, noteRetentionCuts, type Db, type NoteDeviceScope, type StoredMemoryShard, type StoredNote } from '../db';
+import { fail, meta, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { preserveAdditiveFields } from '../lib/additive-fields';
+import { MemoryWriteConflict, pushMemory } from '../lib/memory-shards';
 import { tierForLearner } from '../lib/entitlement';
 import { publicLearner } from '../lib/learners';
 import { deviceReporterKey, holdAfterReport } from '../lib/note-holds';
@@ -329,4 +339,82 @@ syncRoutes.put('/learners/:id/note-prefs', async (c) => {
   const at = new Date().toISOString();
   await db.putNotePrefs({ learnerId, classes: parsed.data.classes, acknowledgedAt: parsed.data.acknowledge ? at : null, updatedAt: at, updatedVia: 'device', updatedByAccount: null });
   return ok(c, notePrefsView(await db.getNotePrefs(learnerId)));
+});
+
+/** The 413 both memory caps answer, with the caps, so a device can split its queue. */
+function memoryTooLarge(c: Parameters<typeof fail>[0], message: string): Response {
+  return fail(c, 'payload_too_large', message, 413, { maxStates: MEMORY_PUSH_MAX_STATES, maxBytes: MEMORY_PUSH_MAX_BYTES, maxShards: MEMORY_PUSH_MAX_SHARDS });
+}
+
+/** A Worker that runs before migration 0016 (or a D1 outage) answers the memory routes 503; every other route is unchanged. */
+function memoryUnavailable(c: Parameters<typeof fail>[0]): Response {
+  return fail(c, 'memory_unavailable', 'The memory store is not available, try again later', 503);
+}
+
+/**
+ * The memory store's changed item states (F-CURR-002 section 4.8, row CM-11), Worker first. Full-scope
+ * devices only, like the snapshot routes: a class-scoped device gets `403 scope_limited` (SEC-4) and keeps
+ * its memory on the device. At most 500 states in a body of 64 KB or less, else 413. Seeded states
+ * (`n` = 0) are not stored. The Worker reads only the shards the call touches, merges per item and
+ * writes the changed ones in one D1 batch, each at the learner's highest `seq` + 1. The path carries only
+ * the opaque learner id; nothing here is logged.
+ */
+syncRoutes.post('/learners/:id/memory', async (c) => {
+  const learnerId = c.req.param('id');
+  const auth = await authorizeDevice(c, learnerId);
+  if (typeof auth !== 'string') return auth;
+  if (Number(c.req.header('content-length') ?? 0) > MEMORY_PUSH_MAX_BYTES) return memoryTooLarge(c, 'Memory body is over 64 KB');
+  const bytes = await c.req.arrayBuffer().catch(() => new ArrayBuffer(0));
+  if (bytes.byteLength > MEMORY_PUSH_MAX_BYTES) return memoryTooLarge(c, 'Memory body is over 64 KB');
+  let raw: unknown = null;
+  try {
+    raw = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    raw = null;
+  }
+  if (countPushedStates(raw) > MEMORY_PUSH_MAX_STATES) return memoryTooLarge(c, 'Over 500 item states in one call');
+  if (countPushedShards(raw) > MEMORY_PUSH_MAX_SHARDS) return memoryTooLarge(c, 'Too many shards in one call');
+  // `MemoryPushSchema`'s rules, checked by hand so a 500-state call fits the free-tier CPU limit.
+  const parsed = parseMemoryPush(raw);
+  if (!parsed.success) return fail(c, 'bad_request', 'Invalid memory body', 422, { issues: parsed.issues });
+  try {
+    return ok(c, await pushMemory(dbFor(c), learnerId, parsed.data.shards, new Date()));
+  } catch (error) {
+    if (error instanceof MemoryWriteConflict) return fail(c, 'conflict', 'Memory changed on the server, send it again', 409);
+    return memoryUnavailable(c);
+  }
+});
+
+/**
+ * Every shard written after the cursor, whole, with the new cursor (F-CURR-002 section 4.8). Paging uses
+ * the server's `seq`, never a device's `at`, so a late offline upload with an old `at` still reaches every
+ * other device. A cursor past the learner's highest `seq` (the server copy was restored to an older one)
+ * reads from the start, which the idempotent merge makes harmless. Full-scope devices only, as the push.
+ * The stored shard text is passed on without being parsed again, so a pull costs no merge CPU.
+ */
+syncRoutes.get('/learners/:id/memory', async (c) => {
+  const learnerId = c.req.param('id');
+  const auth = await authorizeDevice(c, learnerId);
+  if (typeof auth !== 'string') return auth;
+  const since = MemoryCursorSchema.safeParse(c.req.query('since') ?? '0');
+  if (!since.success) return fail(c, 'bad_request', 'since must be a whole number of 0 or more', 422);
+  const db = dbFor(c);
+  let rows: StoredMemoryShard[];
+  let cursor = since.data;
+  try {
+    rows = await db.memoryShardsSince(learnerId, cursor);
+    if (rows.length === 0 && cursor > 0) {
+      const highest = await db.memoryHighestSeq(learnerId);
+      if (cursor > highest) {
+        rows = await db.memoryShardsSince(learnerId, 0);
+        cursor = highest;
+      }
+    }
+  } catch {
+    return memoryUnavailable(c);
+  }
+  for (const row of rows) cursor = Math.max(cursor, row.seq);
+  const shards = rows.map((row) => `{"shard":${JSON.stringify(row.shard)},"seq":${row.seq},"states":${row.states}}`).join(',');
+  c.header('Cache-Control', 'no-store');
+  return c.body(`{"ok":true,"data":{"cursor":${cursor},"shards":[${shards}]},"meta":${JSON.stringify(meta())}}`, 200, { 'Content-Type': 'application/json; charset=UTF-8' });
 });
