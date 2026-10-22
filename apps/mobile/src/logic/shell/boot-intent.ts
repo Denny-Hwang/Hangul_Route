@@ -51,6 +51,11 @@ export interface JoinBootIntent {
  */
 export interface WhoBootIntent {
   kind: 'who';
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 6.1 (row GU-3): `try=1` came with it, so the chooser shown once with
+   * the `return` trigger also carries the **Try the first quest** tile (row GU-5 draws it).
+   */
+  try?: true;
 }
 
 /** [OA] Section 8.5 step 5: the sign-in reset's hand-off; the ticket in `sessionStorage` holds the rest. */
@@ -58,7 +63,17 @@ export interface PinResetBootIntent {
   kind: 'pin-reset';
 }
 
-export type BootIntent = GrownUpBootIntent | BrowseBootIntent | JoinBootIntent | WhoBootIntent | PinResetBootIntent;
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON sections 5.5, 6.1, GU-D5, CS-G4 (row GU-3): `try=1`, the site's Start learning
+ * while the `guestLesson` claim is on. Only `try` leaves the address (`lang` stays). A join link or a `gate=` intent
+ * beside it wins and `try` is dropped; with `who=1` it rides on the `who` intent instead. The launch takes it
+ * (`store/guest-launch.ts`), never the hook: with the guest switch off it is taken and dropped.
+ */
+export interface TryBootIntent {
+  kind: 'try';
+}
+
+export type BootIntent = GrownUpBootIntent | BrowseBootIntent | JoinBootIntent | WhoBootIntent | PinResetBootIntent | TryBootIntent;
 
 export interface ParsedBootIntent {
   intent: BootIntent | null;
@@ -75,6 +90,9 @@ const BROWSE_GATE = 'browse';
 const WHO = 'who';
 const WHO_RETURN = '1';
 const PIN_RESET_GATE = 'pin-reset';
+/** [GU] `TRY_INTENT_PARAM` of the guest record's module (GU-D5), with its one value. */
+const TRY = 'try';
+const TRY_ON = '1';
 
 const queryOf = (params: URLSearchParams): string => {
   const rest = params.toString();
@@ -90,9 +108,11 @@ export function parseJoinBootIntent(location: { pathname: string; search: string
   const link = parseJoinLink(location);
   if (link === null) return null;
   // [OA] OA-D20: a join wins over `who=1`, which leaves the address too, so a reload does not open the chooser again.
+  // [GU] CS-G4: a join wins over `try=1` too, which leaves the address the same way.
   const params = new URLSearchParams(location.search);
-  if (params.get(WHO) !== WHO_RETURN) return { intent: { kind: 'join', code: link.code }, address: `/${location.search}` };
-  params.delete(WHO);
+  if (params.get(WHO) !== WHO_RETURN && params.get(TRY) !== TRY_ON) return { intent: { kind: 'join', code: link.code }, address: `/${location.search}` };
+  if (params.get(WHO) === WHO_RETURN) params.delete(WHO);
+  if (params.get(TRY) === TRY_ON) params.delete(TRY);
   return { intent: { kind: 'join', code: link.code }, address: `/${queryOf(params)}` };
 }
 
@@ -102,8 +122,15 @@ export function parseBootIntent(search: string): ParsedBootIntent {
   // CS-5). Any other `who` value is not an intent and stays where it was.
   const who = params.get(WHO) === WHO_RETURN;
   if (who) params.delete(WHO);
-  const whoOnly = (): ParsedBootIntent =>
-    who ? { intent: { kind: 'who' }, search: queryOf(params), changed: true } : { intent: null, search, changed: false };
+  // [GU] `try=1` leaves the address like `who=1`; a `gate=` intent beside it wins (CS-G4), and with `who=1` it rides on
+  // the `who` intent (section 6.1). Any other `try` value is not an intent and stays where it was.
+  const tried = params.get(TRY) === TRY_ON;
+  if (tried) params.delete(TRY);
+  const fallback = (): BootIntent | null => (who ? (tried ? { kind: 'who', try: true } : { kind: 'who' }) : tried ? { kind: 'try' } : null);
+  const whoOnly = (): ParsedBootIntent => {
+    const intent = fallback();
+    return intent === null ? { intent: null, search, changed: false } : { intent, search: queryOf(params), changed: true };
+  };
   const gate = params.get(GATE);
   if (gate === BROWSE_GATE) {
     params.delete(GATE);
@@ -118,7 +145,7 @@ export function parseBootIntent(search: string): ParsedBootIntent {
   params.delete(GATE);
   params.delete(NEXT);
   return {
-    intent: next === null ? (who ? { kind: 'who' } : null) : { kind: 'grown-up', next },
+    intent: next === null ? fallback() : { kind: 'grown-up', next },
     search: queryOf(params),
     changed: true,
   };
@@ -239,6 +266,9 @@ export function openBootIntentWhenReady(
     } else if (intent.kind === 'who') {
       // [OA] Opened by the hand-off itself (the chooser flag off: taken and dropped).
       who?.open();
+    } else if (intent.kind === 'try') {
+      // [GU] Row GU-3: the launch takes `try` before the root stack mounts (`store/guest-launch.ts`); one left over
+      // (an ErrorBoundary remount, the switch off) is taken and dropped, never opened here.
     } else if (browse === undefined) return true;
     else if (browse.opensDirectly()) {
       // A refused pass opens the dashboard, which says why under Open all lessons (as the PIN screen does).

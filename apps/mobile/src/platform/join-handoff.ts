@@ -6,3 +6,8 @@
 export function takeJoinHandoff(): string | null {
   return null;
 }
+
+/** [GU] Row GU-3: no hand-off on native. */
+export function hasJoinHandoff(): boolean {
+  return false;
+}

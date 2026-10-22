@@ -50,6 +50,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // [GU] Row GU-2 adds the always-on guest rules (the gates, the marker, the anonymous telemetry, the boot sweep):
   // 4,744,234 B raw / 1,246,930 B gzip (release `build:web`; 4,734,519 B raw on GU-1), so the line was that plus 5,766 B;
   // 4,747,423 B raw / 1,247,894 B gzip with its review fixes (2,577 B left under the line; later GU rows load lazily).
+  // [GU] Row GU-3 adds what must run before the first screen (the try intent, the launch's guest step, Welcome's waiting
+  // card, the 16.1 strings); the guest's screens are a chunk of their own (SCREEN_CHUNKS, 7,673 B raw): 4,757,493 B raw /
+  // 1,250,848 B gzip (release `build:web`), so the line was that plus 7,507 B (4,765,000 B).
   // The Daily Review (F-CURR-002 row CM-14, on CM-13's head: rows CM-10 to CM-14) keeps its screen, rounds, session
   // logic and the review engine in chunks; what stays is the route, Home's hook and card, the boot module's
   // memoryChunk() and the English strings: 4,744,598 B raw / 1,247,230 B gzip (release `build:web` with the review
@@ -70,6 +73,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
   // BrowseApp 111,404 B raw. The line is the presenter plus about 54 KB.
   rootChunkRaw: 300_000,
+  // [GU] Each learner screen chunk (row GU-3: the guest's first quest stack, `src/navigation/guest-chunk.tsx`), loaded
+  // the first time its screens open. Measured when GU-3 landed (see SCREEN_CHUNKS); the line leaves room for GU-4's
+  // save screens, which join the same chunk.
+  screenChunkRaw: 60_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
@@ -177,13 +184,20 @@ export const QUEST_REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'quest-r
 export const LEARNER_CHUNKS = Object.freeze([Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' })]);
 
 /**
+ * [GU] The learner screens that are chunks of their own (F-CURR-002 §10, row GU-3): the guest's first quest stack
+ * (`src/navigation/guest-chunk.tsx`), reached only through the literal `import()` of `src/navigation/guest.tsx`, so
+ * the start bundle carries none of its screens. Its module exports its marker (`SCREEN_CHUNK`).
+ */
+export const SCREEN_CHUNKS = Object.freeze([Object.freeze({ name: 'guest-chunk', marker: 'screen-chunk:guest' })]);
+
+/**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
  * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
  * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves
  * an empty bundle behind).
  * @param {{ chunks?: readonly { name: string, marker: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
  */
-export function markedChunkProblems({ chunks = [...LOCALE_CHUNKS, ...ROOT_CHUNKS], bundles, precached }) {
+export function markedChunkProblems({ chunks = [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...SCREEN_CHUNKS], bundles, precached }) {
   const problems = [];
   const listed = new Set(precached.map((u) => u.replace(/^\/+/, '')));
   const starts = bundles.filter((b) => isStartBundle(b.url));
@@ -244,10 +258,10 @@ function chunkTotals(manifest, bundles) {
 
 /**
  * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8), the locale chunks, the grown-up
- * root chunks, the review-item chunk (row CM-10) and the whole learner precache.
- * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
+ * root chunks, the review-item chunk (row CM-10), the learner screen chunks (row GU-3) and the whole learner precache.
+ * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
@@ -256,6 +270,7 @@ export function precacheReport({ manifest, stories = [], locales = [], roots = [
     localeChunks: chunkTotals(locales, bundles),
     rootChunks: chunkTotals(roots, bundles),
     reviewItemChunks: chunkTotals(reviewItems, bundles),
+    screenChunks: chunkTotals(screens, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -283,6 +298,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   if (report.reviewItemChunks !== undefined && report.reviewItemChunks.count > 0) {
     lines.push(
       `  review-item chunk  ${report.reviewItemChunks.count} bundles  ${report.reviewItemChunks.raw} B raw  ${report.reviewItemChunks.gzip} B gzip  (ceiling ${budget.reviewItemsRaw} B raw, ${budget.reviewItemsGzip} B gzip)`,
+    );
+  }
+  if (report.screenChunks !== undefined && report.screenChunks.count > 0) {
+    lines.push(
+      `  learner screen chunks  ${report.screenChunks.count} bundles  ${report.screenChunks.raw} B raw  ${report.screenChunks.gzip} B gzip  (largest ${report.screenChunks.largest?.raw ?? 0} B raw, ceiling ${budget.screenChunkRaw} B each)`,
     );
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
@@ -323,6 +343,7 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
   const ceilings = [
     [report.localeChunks, budget.localeChunkRaw, 'locale', 'localeChunkRaw'],
     [report.rootChunks, budget.rootChunkRaw, 'grown-up root', 'rootChunkRaw'],
+    [report.screenChunks, budget.screenChunkRaw, 'learner screen', 'screenChunkRaw'],
   ];
   for (const [chunks, ceiling, kind, line] of ceilings) {
     const largest = chunks?.largest;

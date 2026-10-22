@@ -1,7 +1,7 @@
 import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { availableLocales } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { LanguageChips } from '../../components/LanguageChips';
 import { LinkButton } from '../../components/LinkButton';
@@ -11,8 +11,14 @@ import { deviceChoice, languageOptions, showLanguagePickers } from '../../logic/
 import { grownUpEntriesOn, startEvent } from '../../logic/shell/entry-points';
 import type { OnboardingStackParamList, RootStackParamList } from '../../navigation/types';
 import type { NavigationProp } from '@react-navigation/native';
+import { isLiveGuest } from '../../logic/guest/guest-model';
 import { track } from '../../platform/telemetry';
+import { guestFirstQuest, resumeGuestFromWelcome } from '../../store/guest-launch';
+import { useGuestStore } from '../../store/guest-store';
 import { useLocaleStore } from '../../store/locale-store';
+import { useProfileStore } from '../../store/profile-store';
+import { preloadGuestStack } from '../../navigation/guest';
+import { openGuestStack } from '../guest/guest-exits';
 import { WelcomeGrownUps } from './WelcomeGrownUps';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'Welcome'>;
@@ -31,6 +37,11 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'Welcome'>;
  * `classLink` and the link's code: a card shows the code and what Start does, and tells a learner who already plays in
  * the installed app (whose storage the browser does not share on iOS) to type the code there. Start then runs the
  * class-code first run with the code; "I already have progress" stays next to it.
+ *
+ * [GU] Row GU-3 (AMENDMENTS-GUEST-FIRST-LESSON section 6.3): while a first quest waits on this device (a live guest,
+ * `flags.guestLessonEnabled` on), one card above Let's start (**Your first quest is waiting.** with an outlined **Back
+ * to my quest**, or once quest 1 is done **Add your name to keep your first quest.** with **Add my name**) and one line
+ * under it (`welcome.keeps`). Let's start stays the only filled button, in its place; everything else is unchanged.
  */
 export function WelcomeScreen({ navigation, route }: Props): React.ReactElement {
   const m = useMessages();
@@ -48,6 +59,26 @@ export function WelcomeScreen({ navigation, route }: Props): React.ReactElement 
     const event = startEvent(grownUps);
     if (event) void track(event);
     navigation.navigate('CreateProfile', params);
+  };
+  // [GU] Welcome's waiting card (AMENDMENTS-GUEST-FIRST-LESSON section 6.3, row GU-3; mock guest-first-quest.md D2):
+  // while a quest waits on this device (a live guest, the switch on). Back to my quest goes back into the run; once
+  // quest 1 is done, Add my name leads to the save (row GU-4 builds it; until then the Not now card).
+  const guest = useGuestStore((s) => s.record);
+  const profiles = useProfileStore((s) => s.profiles);
+  const waiting = flags.guestLessonEnabled && isLiveGuest(guest, profiles) ? guest : null;
+  // The guest's screens are a chunk of their own: fetched while the card shows, so Back to my quest opens at once.
+  const hasWaiting = waiting !== null;
+  useEffect(() => {
+    if (hasWaiting) preloadGuestStack();
+  }, [hasWaiting]);
+  const root = (): NavigationProp<RootStackParamList> | undefined => navigation.getParent() as NavigationProp<RootStackParamList> | undefined;
+  const backToQuest = (): void => {
+    void resumeGuestFromWelcome().then((route) => {
+      if (route !== null) openGuestStack(root(), route);
+    });
+  };
+  const addMyName = (): void => {
+    if (guestFirstQuest() !== null) openGuestStack(root(), { screen: 'GuestLater' });
   };
 
   return (
@@ -81,6 +112,21 @@ export function WelcomeScreen({ navigation, route }: Props): React.ReactElement 
             </Card>
           </View>
         ) : null}
+        {waiting !== null ? (
+          <View style={{ alignSelf: 'stretch' }}>
+            <Card padding="md" tone="sunken" testID="welcome-guest">
+              <Body weight="semibold" size="lg">
+                {waiting.questDone ? m.learner.guest.welcome.saveTitle : m.learner.guest.welcome.waiting}
+              </Body>
+              <Spacer size="sm" />
+              {waiting.questDone ? (
+                <Button label={m.learner.guest.welcome.save} tone="ghost" size="md" fullWidth onPress={addMyName} testID="welcome-guest-save" />
+              ) : (
+                <Button label={m.learner.guest.welcome.resume} tone="ghost" size="md" fullWidth onPress={backToQuest} testID="welcome-guest-resume" />
+              )}
+            </Card>
+          </View>
+        ) : null}
         <Button
           label={w.cta}
           tone="primary"
@@ -89,6 +135,11 @@ export function WelcomeScreen({ navigation, route }: Props): React.ReactElement 
           onPress={() => startFirstRun(classLink ? { firstRun: true, then: 'join', ...(linkCode === undefined ? {} : { code: linkCode }) } : { firstRun: true })}
           testID="welcome-start"
         />
+        {waiting !== null ? (
+          <Body tone="secondary" size="sm" align="center" style={{ maxWidth: 320 }} testID="welcome-guest-keeps">
+            {m.learner.guest.welcome.keeps}
+          </Body>
+        ) : null}
         <Button
           label={w.restore}
           tone="ghost"

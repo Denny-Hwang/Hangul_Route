@@ -1984,4 +1984,15 @@ export const learner = {
         plural('es', count, { one: '¡Meta de la semana lograda! Ya llevas 1 semana cumplida.', other: `¡Meta de la semana lograda! Ya llevas ${count} semanas cumplidas.` }),
     },
   },
+  /** [GU] Probar la primera misión sin perfil (AMENDMENTS-GUEST-FIRST-LESSON 16.1, GU-3): misión, perfil, añadir. */
+  guest: {
+    welcome: {
+      waiting: 'Tu primera misión te espera.',
+      resume: 'Volver a mi misión',
+      saveTitle: 'Añade tu nombre para conservar tu primera misión.',
+      save: 'Añadir mi nombre',
+      keeps: 'Lo que hiciste en la primera misión pasa al perfil que crees.',
+    },
+    memoryOnly: 'Este navegador no puede guardar la misión cuando lo cierres. Añade un nombre al final para conservarla.',
+  },
 } satisfies DeepPartial<Messages['learner']>;
