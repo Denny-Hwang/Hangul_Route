@@ -111,7 +111,7 @@ describe('what a round asked', () => {
     expect(askedOfScope(frame, 'w2')).toBeUndefined();
   });
 
-  it('Realia Read reads the card, the key word and the right answer', () => {
+  it('Realia Read asks the card only (one rea item), never its key word or options', () => {
     const scope = {
       kind: 'realia-read',
       realiaRead: {
@@ -119,7 +119,7 @@ describe('what a round asked', () => {
         rounds: [{ id: 'q1', questionEn: 'How much?', key: ko('라면'), options: [{ id: 'a', text: ko('삼천 원') }, { id: 'b', figure: '5,000' }], answerId: 'a' }],
       },
     } as unknown as MinigameScope;
-    expect(askedOfScope(scope, 'q1')).toEqual({ texts: [{ ko: '메뉴', kind: 'rea' }, { ko: '라면' }, { ko: '삼천 원' }], jamoIds: [], rung: 'read' });
+    expect(askedOfScope(scope, 'q1')).toEqual({ texts: [{ ko: '메뉴', kind: 'rea' }], jamoIds: [], rung: 'read' });
     expect(askedOfScope(scope, 'q2')).toBeUndefined();
     const untitled = { ...scope, realiaRead: { ...(scope.realiaRead as object), realia: { ref: 'realia:x', entries: [{ id: 'e1', text: ko('표') }], altEn: 'x' } } } as unknown as MinigameScope;
     expect(askedOfScope(untitled, 'q1')?.texts[0]).toEqual({ ko: '표', kind: 'rea' });

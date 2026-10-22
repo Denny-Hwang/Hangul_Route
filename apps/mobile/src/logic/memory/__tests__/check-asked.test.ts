@@ -22,8 +22,8 @@ const view = (over: Partial<CheckView>): CheckView => ({
 });
 
 describe('askedOfCheck', () => {
-  it('asks the Korean target and a Korean right answer, as reading', () => {
-    expect(askedOfCheck(view({ target: { ko: '배', romanization: 'bae', en: 'pear' } }))).toEqual({ texts: [{ ko: '배' }, { ko: '사과' }], jamoIds: [], rung: 'read' });
+  it('asks one item, as reading: the Korean target, else a Korean right answer', () => {
+    expect(askedOfCheck(view({ target: { ko: '배', romanization: 'bae', en: 'pear' } }))).toEqual({ texts: [{ ko: '배' }], jamoIds: [], rung: 'read' });
     expect(resolveRound({ check: view({}) })).toEqual({ texts: [{ ko: '사과' }], jamoIds: [], rung: 'read' });
   });
 

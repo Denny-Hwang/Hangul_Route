@@ -12,8 +12,11 @@ import { cellOfEpisode, shardOf } from './resolve';
  * device derives them again from `questDoneAt` and `memSeededAt`.
  *
  * 1. Every quest done in `questDoneAt` by `memSeededAt` seeds its cell's items (the items it teaches
- *    and those it asks again): box 2 when a quest of the item scored 3 stars, box 1 otherwise; `n` stays 0, so a seeded item counts in no
- *    learner-facing number until it is answered. A snapshot from before `questDoneAt` is latched
+ *    and those it asks again). Items carry their cells, not their quests, so the box takes the cautious
+ *    reading of "box 2 when the quest scored 3 stars": box 2 only when every done quest of the cells
+ *    that teach the item scored 3 stars, box 1 otherwise; a cell that only asks it again dates it but
+ *    never raises its box. `n` stays 0, so a seeded item counts in no learner-facing number until it
+ *    is answered. A snapshot from before `questDoneAt` is latched
  *    first (`latchQuests`, its one-time backfill from `completedAt`).
  * 2. The items are spread from the day after `memSeededAt`, at most 15 a day, so over
  *    `ceil(count / 15)` days: the most recent quest first (the freshest memories are checked while
@@ -75,6 +78,35 @@ function prioritySymbols(snapshot: ProgressSnapshot, items: readonly ReviewItem[
   return out;
 }
 
+/**
+ * A fingerprint of everything `deriveSeed` reads (row CM-12): the local day of `memSeededAt`, the
+ * quests done by it with their finish and whether they scored 3 stars, the route's priority tokens and
+ * the item index of this build. A device derives its seeded states again whenever this changes (a sync
+ * brought older quests or a placement, a quest's stars rose, a new build), so two devices of one
+ * learner end with the same states whatever their snapshot held when each first seeded. Cheap: no
+ * item is read.
+ */
+export function seedInputKey(input: Pick<SeedInput, 'snapshot' | 'items' | 'retired' | 'quests' | 'seededAt' | 'dayOf'>): string {
+  const { snapshot, seededAt } = input;
+  const cutoff = time(seededAt);
+  const latched = latchQuests(snapshot).questDoneAt ?? {};
+  const stars = new Map<string, number>(snapshot.quests.map((q) => [q.questId, q.stars]));
+  const known = new Set<string>([...input.quests.map((q) => q.id), ...snapshot.quests.map((q) => q.questId)]);
+  const done = Object.entries(latched)
+    .filter(([questId, at]) => known.has(questId) && time(at) <= cutoff)
+    .map(([questId, at]) => `${questId}@${time(at)}${stars.get(questId) === 3 ? '*' : ''}`)
+    .sort();
+  const route = effectiveRoute(snapshot.placements ?? [], { quests: [] }, { isEntitled: () => true, completedQuestIds: new Set() });
+  const text = [input.dayOf(new Date(seededAt)), `${input.items.length}/${input.retired.size}`, (route?.priorityTokens ?? []).join(','), ...done].join('|');
+  // FNV-1a, 32 bits: a short key held beside the store in memory.
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `${h.toString(16)}:${done.length}`;
+}
+
 export function deriveSeed(input: SeedInput): Seed {
   const { snapshot, items, retired, seededAt, dayOf } = input;
   const cutoff = time(seededAt);
@@ -84,8 +116,8 @@ export function deriveSeed(input: SeedInput): Seed {
   for (const q of snapshot.quests) if (!episodeOf.has(q.questId)) episodeOf.set(q.questId, q.episodeId);
   const starsOf = new Map<string, number>(snapshot.quests.map((q) => [q.questId, q.stars]));
 
-  // The quests done by `memSeededAt`, per teaching cell: the latest finish, the earliest, and a 3-star.
-  const byCell = new Map<string, { latest: number; earliest: number; threeStar: boolean }>();
+  // The quests done by `memSeededAt`, per teaching cell: the latest finish, the earliest, and whether every one scored 3 stars.
+  const byCell = new Map<string, { latest: number; earliest: number; allThree: boolean }>();
   const done = new Set<string>();
   for (const [questId, at] of Object.entries(latched)) {
     const t = time(at);
@@ -94,8 +126,8 @@ export function deriveSeed(input: SeedInput): Seed {
     done.add(questId);
     const cell = cellOfEpisode(episode);
     const held = byCell.get(cell);
-    const threeStar = starsOf.get(questId) === 3;
-    byCell.set(cell, held ? { latest: Math.max(held.latest, t), earliest: Math.min(held.earliest, t), threeStar: held.threeStar || threeStar } : { latest: t, earliest: t, threeStar });
+    const three = starsOf.get(questId) === 3;
+    byCell.set(cell, held ? { latest: Math.max(held.latest, t), earliest: Math.min(held.earliest, t), allThree: held.allThree && three } : { latest: t, earliest: t, allThree: three });
   }
 
   const priority = prioritySymbols(snapshot, items).filter((i) => !retired.has(i.id));
@@ -105,17 +137,20 @@ export function deriveSeed(input: SeedInput): Seed {
     if (item.id.startsWith('vocab:') || retired.has(item.id) || priorityIds.has(item.id)) continue;
     let latest = Number.NEGATIVE_INFINITY;
     let earliest = Number.POSITIVE_INFINITY;
-    let threeStar = false;
+    let teachingDone = 0;
+    let allThree = true;
     // The cells that teach it and those that ask it again (a recycle): a done quest of either has shown it.
     for (const cell of [...item.cells, ...item.asked]) {
       const c = byCell.get(cell);
       if (!c) continue;
       latest = Math.max(latest, c.latest);
       earliest = Math.min(earliest, c.earliest);
-      threeStar ||= c.threeStar;
+      if (!item.cells.includes(cell)) continue;
+      teachingDone += 1;
+      allThree &&= c.allThree;
     }
     if (!Number.isFinite(latest)) continue;
-    seeded.push({ item, box: threeStar ? 2 : MEMORY_MIN_BOX, latest, first: dayOf(new Date(earliest)) });
+    seeded.push({ item, box: teachingDone > 0 && allThree ? 2 : MEMORY_MIN_BOX, latest, first: dayOf(new Date(earliest)) });
   }
   // The most recent quest first, then the stage, then the id: a total order, so every device agrees.
   seeded.sort((a, b) => b.latest - a.latest || a.item.stage - b.item.stage || (a.item.id < b.item.id ? -1 : a.item.id > b.item.id ? 1 : 0));

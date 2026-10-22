@@ -45,7 +45,7 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
     'memory.daily',
     { hist: [], lapses: 0, items: 0, newHeld: 0, minutes: 0, durableWeekBucket: '0', dueVolumeBucket: '0' },
   ],
-  ['items.seeded', { countBucket: '500-999', spreadDaysBucket: '31+' }],
+  ['items.seeded', { countBucket: '500-999', spreadDaysBucket: '46-62' }],
   ['mastery.level_up', { cellId: 'episode:stage2-nature', level: 1 }],
   ['stage.card_opened', { stage: 'stage2' }],
   ['testout.finished', { cellId: 'episode:stage3-crafts', passed: false, items: 8, firstTryCorrect: 5 }],

@@ -24,6 +24,13 @@ import { addDays, daysBetween } from '../vocab/srs';
  * above sets that rung's bit and every lower one and moves `c` past it; a miss at the produce rung
  * sets `c` back to read and keeps the produce bit.
  *
+ * The day counts (`memory.daily`) leave out the first answer to a seeded item (`n` = 0 before it, a
+ * state the seeding derived): its lag would run from the item's first quest, often months back, so it
+ * is not measured (`lagDays` null, kept out of the lag histogram and the lapses) and it is neither
+ * durable nor newly held. Its schedule still moves by the rule. An item answered on another device
+ * has no previous spaced day here (`DayFacts.p` is device-only): its lag runs from the day its
+ * schedule last moved (`d` less its box's interval, never before `f`).
+ *
  * Facts the rule needs that the shared state does not hold ("answered today", "fell today", the day
  * of the last spaced answer) are device-only `DayFacts`, kept beside the state and never uploaded.
  * The shared state keeps the CM-11 contract: `at` moves only when `b`, `d` or `c` change, so an
@@ -67,12 +74,14 @@ export interface AnswerOutcome {
   facts: DayFacts;
   /** This answer met the item (box 0 or no state before). */
   met: boolean;
+  /** The item was seeded and never answered before this answer (`n` = 0): its first check. */
+  seeded: boolean;
   spaced: boolean;
-  /** Days since the previous spaced answer (or the first day) for a spaced answer; null otherwise. */
+  /** Days since the previous spaced answer (or the first day) for a spaced answer that is not a seeded item's first check; null otherwise. */
   lagDays: number | null;
   /** The box went down. */
   fell: boolean;
-  /** A spaced answer that was not right first try, unhinted: a lapse of section 11.3. */
+  /** A spaced answer that was not right first try, unhinted: a lapse of section 11.3 (never a seeded item's first check). */
   lapse: boolean;
   /** A spaced right answer 7 or more days after the previous spaced answer (section 3.1). */
   durable: boolean;
@@ -81,6 +90,13 @@ export interface AnswerOutcome {
 }
 
 const interval = (box: number): number => MEMORY_BOX_DAYS[Math.min(MEMORY_MAX_BOX, Math.max(0, box)) as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7];
+
+/** The day the schedule of an answered state last moved, as far as the state tells: `d` less its box's interval, never before `f`. */
+export function scheduledFrom(state: Pick<MemoryItemState, 'b' | 'd' | 'f'>): string {
+  if (state.d === null) return state.f;
+  const from = addDays(state.d, -interval(state.b));
+  return from > state.f ? from : state.f;
+}
 
 /** The state of an item met today (its Discover page or its first scored round): box 1, due tomorrow. */
 export function meetState(today: string, at: string): MemoryItemState {
@@ -114,7 +130,8 @@ export function applyAnswer(prev: MemoryItemState | undefined, prevFacts: DayFac
   const hinted = answer.correct && answer.hinted === true;
   const right = answer.correct && !hinted;
   const spaced = !met && prevFacts.l !== today && isItemDue(before, today);
-  const lagDays = spaced ? Math.max(0, daysBetween(prevFacts.p ?? before.f, today)) : null;
+  const seeded = !met && before.n === 0;
+  const lagDays = spaced && !seeded ? Math.max(0, daysBetween(prevFacts.p ?? scheduledFrom(before), today)) : null;
 
   let b = before.b;
   let d = before.d;
@@ -136,14 +153,14 @@ export function applyAnswer(prev: MemoryItemState | undefined, prevFacts: DayFac
     facts.fd = today;
   }
   const { c, r } = nextRungs(before, answer);
-  const durable = spaced && right && (lagDays ?? 0) >= DURABLE_LAG_DAYS;
+  const durable = spaced && right && !seeded && (lagDays ?? 0) >= DURABLE_LAG_DAYS;
   if (spaced) facts.p = today;
   if (durable) facts.w = today;
   const s = Math.max(before.s, b);
   const scheduleMoved = met || b !== before.b || d !== before.d || c !== before.c;
   const state: MemoryItemState = { b, d, c, r, n: before.n + 1, f: before.f, s, at: scheduleMoved ? at : before.at };
   const heldBefore = met ? 0 : before.s;
-  return { state, facts, met, spaced, lagDays, fell, lapse: spaced && !right && !hinted, durable, newHeld: heldBefore < 3 && s >= 3 };
+  return { state, facts, met, seeded, spaced, lagDays, fell, lapse: spaced && !right && !hinted && !seeded, durable, newHeld: !seeded && heldBefore < 3 && s >= 3 };
 }
 
 /** The lag bucket of section 11.3 for a number of days. */
