@@ -96,6 +96,12 @@ export interface EngineContext {
   /** Varies the tie order and the format choice; the same seed gives the same plan. */
   seed?: string;
   visibility?: SourceVisibility;
+  /**
+   * The highest rung the session asks (row CM-15): the warm-up (30 s or less) and Try these again are quick pick
+   * rounds, so an item the ladder would ask at produce is asked at read there, and the ladder moves on in the
+   * Daily Review and the Checks. A spaced right answer at any rung raises the box (CM-12), so the schedule is the same.
+   */
+  maxRung?: Rung;
 }
 
 // ---- outputs ---------------------------------------------------------------------------------------------
@@ -277,7 +283,8 @@ function stretchEntries(ctx: EngineContext, exclude: ReadonlySet<string>): { ite
 }
 
 function candidate(ctx: EngineContext, item: ReviewItem, st: MemoryItemState, stretch: boolean, wanted?: Rung): Candidate {
-  const rung = wanted ?? (stretch ? rungOfC(st.c) : rungToAsk(st));
+  const ladder = wanted ?? (stretch ? rungOfC(st.c) : rungToAsk(st));
+  const rung = ctx.maxRung !== undefined && RUNG_INDEX[ladder] > RUNG_INDEX[ctx.maxRung] ? ctx.maxRung : ladder;
   const options = optionsFor(item, rung, ctx.voice, ctx.seed ?? '', wanted === undefined && !stretch && st.b < 3);
   return { item, st, options, stretch };
 }

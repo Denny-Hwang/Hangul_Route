@@ -185,4 +185,22 @@ describe('quest-run-store', () => {
     expect(s.totalCount).toBe(1);
     expect(s.correctCount).toBe(1);
   });
+
+  it('keeps what each round missed on the first try asked, in order, for Try these again (F-CURR-002 row CM-15)', () => {
+    const store = useQuestRunStore.getState();
+    store.beginQuest('quest:x', 'episode:y');
+    store.answerRound(1, false, { texts: ['배'] });
+    store.answerRound(1, true, { texts: ['배'] });
+    store.answerRound(2, true, { texts: ['사과'] });
+    store.answerRound(3, false, { jamoIds: ['jamo:g'] });
+    // A miss with nothing asked (a game that names no item) leaves nothing to look at again.
+    store.answerRound(4, false);
+    expect(useQuestRunStore.getState().missed).toEqual([{ texts: ['배'] }, { jamoIds: ['jamo:g'] }]);
+    // The score is the one it always was: Try these again never changes it.
+    expect(useQuestRunStore.getState().correctCount).toBe(1);
+    expect(useQuestRunStore.getState().totalCount).toBe(4);
+    store.beginQuest('quest:z', 'episode:y');
+    expect(useQuestRunStore.getState().missed).toEqual([]);
+  });
 });
+

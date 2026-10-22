@@ -23,11 +23,22 @@ import type { MemoryAnswer, MemoryRuntime } from './memory-runtime';
 
 export { MEMORY_KEY } from './keys';
 
+type MemoryChunk = typeof import('./memory-chunk');
+let chunkLoad: Promise<MemoryChunk> | null = null;
+/** The chunk, loaded once (and again after a failed load). */
+function memoryChunk(): Promise<MemoryChunk> {
+  chunkLoad ??= import('./memory-chunk').catch((error: unknown) => {
+    chunkLoad = null;
+    throw error;
+  });
+  return chunkLoad;
+}
+
 let loading: Promise<MemoryRuntime> | null = null;
 let loaded: MemoryRuntime | null = null;
 /** The runtime, loading its chunk once (and again after a failed load). */
 function runtime(): Promise<MemoryRuntime> {
-  loading ??= import('./memory-chunk')
+  loading ??= memoryChunk()
     .then((m) => (loaded = m.memoryRuntime()))
     .catch((error: unknown) => {
       loading = null;
@@ -58,6 +69,21 @@ export function memoryRecordsFor(profileId: string | null): profileId is string 
 export function recordAnswers(profileId: string, answers: readonly MemoryAnswer[], at: Date = new Date()): Promise<void> {
   if (answers.length === 0 || !memoryRecordsFor(profileId)) return Promise.resolve();
   return quietly((r) => r.recordAnswers(profileId, answers, at));
+}
+
+export type QuestReviewPlanner = MemoryChunk['questReviewPlanner'];
+
+/**
+ * The planner of the quest warm-up and Try these again (rows CM-15), in the memory store's chunk with the review
+ * engine: null unless the profile records (a review planned from a pool nobody fills would be empty or stale), or
+ * when the chunk cannot load.
+ */
+export function questReviewPlanner(profileId: string): Promise<QuestReviewPlanner | null> {
+  if (!memoryRecordsFor(profileId)) return Promise.resolve(null);
+  return memoryChunk().then(
+    (m) => m.questReviewPlanner,
+    () => null,
+  );
 }
 
 /** The active learner's start: the one-time seeding and the last day's `memory.daily`, when it records. */
@@ -121,6 +147,7 @@ onProfileRemoved((profileId) => loaded?.forget(profileId));
 
 /** Tests only: forget the loaded chunk. */
 export function resetMemoryBootForTests(): void {
+  chunkLoad = null;
   loading = null;
   loaded = null;
 }

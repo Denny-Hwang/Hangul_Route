@@ -36,6 +36,8 @@ interface State {
   /** `${stepIndex}:${roundKey}` of every round already scored this run. */
   scoredRounds: readonly string[];
   pendingAdvance: boolean;
+  /** What each round missed on the first try asked, in order: Try these again on the reward step (F-CURR-002 row CM-15). */
+  missed: readonly RoundAsked[];
 }
 
 interface Actions {
@@ -66,6 +68,7 @@ const blankRun = {
   retryCount: 0,
   scoredRounds: [],
   pendingAdvance: false,
+  missed: [],
 } satisfies State;
 
 export const useQuestRunStore = create<State & Actions>((set, get) => ({
@@ -93,6 +96,7 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
         totalCount: next.total,
         retryCount: next.retries,
         scoredRounds: next.scored,
+        ...(first && !correct && asked ? { missed: [...s.missed, asked] } : {}),
       };
     });
     // The first answer of a round is its first try (F-001 section 3.2): only it reaches the memory store.
