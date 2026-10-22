@@ -145,22 +145,28 @@ export function reviewsForReader<T extends { kind: unknown }>(reviews: readonly 
 export const RETAINED_REVIEW_KINDS = ['warmup', 'feedback'] as const satisfies readonly ReviewKind[];
 export const REVIEW_RETENTION_DAYS = 14;
 
-/** The reviews after the retention rule; the list itself when nothing is pruned. */
-export function pruneReviews<T extends { kind: unknown; scope: unknown }>(reviews: readonly T[]): readonly T[] {
+/**
+ * The reviews after the retention rule; the list itself when nothing is pruned. `latestDay` (the latest local day
+ * any time zone has now, `latestLocalDay`) bounds a wrong device clock, as it bounds `dayLog`: an entry of a kept kind
+ * dated after it is dropped, so it is never the newest and cannot prune the real days (section 13, wrong device clock).
+ */
+export function pruneReviews<T extends { kind: unknown; scope: unknown }>(reviews: readonly T[], latestDay?: string): readonly T[] {
   const newest = new Map<unknown, string>();
   const day = (r: T): string | null => (typeof r.scope === 'string' && isDateKey(r.scope) ? r.scope : null);
   const retained = RETAINED_REVIEW_KINDS as readonly unknown[];
+  const ahead = (d: string): boolean => latestDay !== undefined && d > latestDay;
   for (const r of reviews) {
     const d = day(r);
-    if (d === null || !retained.includes(r.kind)) continue;
+    if (d === null || !retained.includes(r.kind) || ahead(d)) continue;
     const held = newest.get(r.kind);
     if (held === undefined || d > held) newest.set(r.kind, d);
   }
-  if (newest.size === 0) return reviews;
   const kept = reviews.filter((r) => {
     const d = day(r);
+    if (d === null || !retained.includes(r.kind)) return true;
+    if (ahead(d)) return false;
     const top = newest.get(r.kind);
-    return d === null || top === undefined || daysBetween(d, top) < REVIEW_RETENTION_DAYS;
+    return top === undefined || daysBetween(d, top) < REVIEW_RETENTION_DAYS;
   });
   return kept.length === reviews.length ? reviews : kept;
 }

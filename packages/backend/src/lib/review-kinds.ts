@@ -1,4 +1,4 @@
-import { GATED_REVIEW_KINDS, pruneReviews, reviewsForReader } from '@hangul-route/content-schema';
+import { GATED_REVIEW_KINDS, latestLocalDay, pruneReviews, reviewsForReader } from '@hangul-route/content-schema';
 
 /**
  * The minimum-app-version gate of the review kinds an app build from before row CM-3b cannot read
@@ -14,7 +14,8 @@ import { GATED_REVIEW_KINDS, pruneReviews, reviewsForReader } from '@hangul-rout
  *   section 13). A caller that declares it sends the whole list, which is stored as sent.
  * - **Retention** (`pruneReviews`, section 4.8): the warm-up and Try these again entries are kept for 14 local
  *   days after the newest of their kind, on every write, so an older build that still holds a pruned entry
- *   cannot bring it back.
+ *   cannot bring it back. A day after the latest local day any time zone has now (a device clock set ahead) is
+ *   dropped, so it never anchors the window and wipes the real days.
  *
  * Deployed before any app build that writes a gated kind (Worker first); the app keeps its flags at built-in
  * pct 0 until then.
@@ -39,7 +40,7 @@ export function servedSnapshot(payload: unknown, caps: ReadonlySet<string>): unk
 }
 
 /** The snapshot a write stores: the stored gated entries a caller that cannot read them left out are kept, then the retention. */
-export function writtenSnapshot(sent: unknown, stored: unknown, caps: ReadonlySet<string>): unknown {
+export function writtenSnapshot(sent: unknown, stored: unknown, caps: ReadonlySet<string>, now: Date = new Date()): unknown {
   if (!withReviews(sent)) return sent;
   let reviews: readonly Entry[] = sent.reviews;
   const unread = (GATED_REVIEW_KINDS as readonly unknown[]).filter((kind) => !caps.has(kind as string));
@@ -48,6 +49,6 @@ export function writtenSnapshot(sent: unknown, stored: unknown, caps: ReadonlySe
     const kept = withReviews(stored) ? stored.reviews.filter((r) => unread.includes(r.kind) && !sentIds.has(r.id)) : [];
     if (kept.length > 0) reviews = [...reviews, ...kept];
   }
-  reviews = pruneReviews(reviews);
+  reviews = pruneReviews(reviews, latestLocalDay(now));
   return reviews === sent.reviews ? sent : { ...sent, reviews };
 }

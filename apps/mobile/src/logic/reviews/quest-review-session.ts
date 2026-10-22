@@ -1,4 +1,4 @@
-import type { ReviewEntry } from '@hangul-route/content-schema';
+import { addDays, isDateKey, latestLocalDay, type ReviewEntry } from '@hangul-route/content-schema';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import type { MemoryAnswer } from '../memory/memory-runtime';
 import type { Rung } from '../memory/spacing';
@@ -86,6 +86,25 @@ export function sessionEntry(kind: QuestReviewKind, day: string, answers: readon
     entry.missedItemIds = [...new Set(answers.filter((a) => !a.correct).map((a) => a.itemId))];
   }
   return entry;
+}
+
+/**
+ * The local day a finished session's entry is written under: today, but never later than the latest local day of
+ * the last server time seen, or the day after the newest entry of its kind (so a learner offline for days still
+ * gets a day each), the `stampOf` rule of CM-12. A device clock set ahead then cannot date an entry that would be
+ * the newest for years and prune the real days (section 13, wrong device clock; the Worker and the merges also drop
+ * a day after the latest local day of now). With no server time seen, today.
+ */
+export function entryDayOf(kind: QuestReviewKind, today: string, reviews: readonly Pick<ReviewEntry, 'kind' | 'scope'>[], serverTime: string | null): string {
+  const seen = serverTime === null ? Number.NaN : Date.parse(serverTime);
+  if (!Number.isFinite(seen)) return today;
+  let bound = latestLocalDay(new Date(seen));
+  for (const r of reviews) {
+    if (r.kind !== ENTRY_KIND[kind] || !isDateKey(r.scope) || r.scope > today) continue;
+    const next = addDays(r.scope, 1);
+    if (next > bound) bound = next;
+  }
+  return today > bound ? bound : today;
 }
 
 /** `review.start` (section 11.3): the kind and how many rounds; no item, no text. */

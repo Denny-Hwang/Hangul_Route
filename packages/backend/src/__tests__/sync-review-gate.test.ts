@@ -138,6 +138,13 @@ describe('the warm-up review gate (F-CURR-002 section 13, row CM-15)', () => {
     expect((await put('profile:suni', auth, 1, [certificate, feedback('2026-08-31'), feedback('2026-09-14')])).status).toBe(200);
     expect(await reviewIds('profile:suni', auth, CAP)).toEqual(['review:stage1', 'feedback:2026-09-14', 'warmup:2026-10-08', 'warmup:2026-10-21']);
   });
+
+  it('a day after the latest local day of the server clock is dropped, so a device clock set ahead never prunes the real days', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const sent = [certificate, warmup('2026-10-08'), warmup('2031-01-01'), feedback('2026-10-08'), feedback('2031-01-01')];
+    expect((await put('profile:suni', auth, 0, sent, CAP)).status).toBe(200);
+    expect(await reviewIds('profile:suni', auth, CAP)).toEqual(['review:stage1', 'warmup:2026-10-08', 'feedback:2026-10-08']);
+  });
 });
 
 describe('reviewCapsOf', () => {

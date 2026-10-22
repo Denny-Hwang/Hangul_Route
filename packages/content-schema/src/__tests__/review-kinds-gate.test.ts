@@ -68,4 +68,19 @@ describe('the 14-day retention of warm-up and Try these again entries', () => {
     ];
     expect(pruneReviews(list)).toBe(list);
   });
+
+  it('a day after the latest local day (a clock set ahead) is dropped: it never prunes the real days nor blocks the later ones', () => {
+    const real = [entry('warmup:2026-10-10', 'warmup', '2026-10-10'), entry('feedback:2026-10-12', 'feedback', '2026-10-12', { resultStars: 2 })];
+    const ahead = [entry('warmup:2031-01-01', 'warmup', '2031-01-01'), entry('feedback:2031-01-01', 'feedback', '2031-01-01', { resultStars: 3 })];
+    // Without the bound the far day anchors the window and every real day goes.
+    expect(pruneReviews([...real, ...ahead]).map((r) => r.id)).toEqual(ahead.map((r) => r.id));
+    // With it the far day is dropped and the real ones stay.
+    expect(pruneReviews([...real, ...ahead], '2026-10-23').map((r) => r.id)).toEqual(real.map((r) => r.id));
+    // A later real day is kept, never pruned at the moment it is written.
+    const later = [...real, ...ahead, entry('warmup:2026-10-22', 'warmup', '2026-10-22')];
+    expect(pruneReviews(later, '2026-10-23').map((r) => r.id)).toEqual(['warmup:2026-10-10', 'feedback:2026-10-12', 'warmup:2026-10-22']);
+    // The latest local day itself is a real day; a list within the bound is the list itself.
+    const edge = [entry('warmup:2026-10-23', 'warmup', '2026-10-23')];
+    expect(pruneReviews(edge, '2026-10-23')).toBe(edge);
+  });
 });

@@ -1,6 +1,7 @@
 import {
   PlacementResultSchema,
   ReviewEntrySchema,
+  latestLocalDay,
   pruneReviews,
   SelfRouteSchema,
   type PlacementResult,
@@ -691,7 +692,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       ? snap.reviews.map((r) => (r.id === parsed.data.id ? mergeReview(r, parsed.data) : r))
       : [...snap.reviews, parsed.data];
     // A warm-up or Try these again day is kept for 14 local days (F-CURR-002 section 4.8, row CM-15).
-    const updated: ProgressSnapshot = { ...snap, reviews: [...pruneReviews(reviews)], updatedAt: new Date().toISOString() };
+    const now = new Date();
+    const updated: ProgressSnapshot = { ...snap, reviews: [...pruneReviews(reviews, latestLocalDay(now))], updatedAt: now.toISOString() };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
     return true;

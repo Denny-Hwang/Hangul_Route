@@ -1,6 +1,7 @@
 import {
   PLACEMENT_KEEP,
   RETAINED_REVIEW_KINDS,
+  latestLocalDay,
   mergeCellBest,
   mergeDayLog,
   mergeEarliest,
@@ -443,8 +444,9 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     cards: unionBy(local.cards, server.cards, (c) => c.cardId, mergeCard),
     sessions,
     homework: unionBy(local.homework, server.homework, (h) => h.id, mergeHomework),
-    // The warm-up and Try these again days are kept for 14 local days, as the Worker keeps them (section 4.8).
-    reviews: [...pruneReviews(unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview))],
+    // The warm-up and Try these again days are kept for 14 local days, as the Worker keeps them (section 4.8); a day
+    // after the latest local day of now (a clock that was set ahead) is dropped, so it never prunes the real days.
+    reviews: [...pruneReviews(unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview), latestLocalDay(opts.now))],
     // The old streak, still written for older builds: story, game and level-check time never moves it (OD-19).
     streakDays: computeStreak(streakSessionDates(sessions), opts.now),
     ...(stageDoneAt ? { stageDoneAt } : {}),

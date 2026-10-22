@@ -41,7 +41,8 @@ vi.mock('../../../platform/audio', async (importOriginal) => ({
 const M = getMessages('en');
 const A11Y = M.a11y.minigame.option;
 const PROFILE = 'profile:mina';
-const TODAY = '2026-11-10';
+// A day already past on any clock that runs these tests (a later one is a clock set ahead, and its entry is dropped).
+const TODAY = '2026-10-10';
 
 const seeMeaning: PickRound = {
   key: 'warmup:0:lex:mul',

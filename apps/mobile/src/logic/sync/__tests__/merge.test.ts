@@ -931,7 +931,14 @@ describe('warm-up and Try these again entries (F-CURR-002 sections 4.5 and 4.8, 
   it('a merge keeps them for 14 local days after the newest of their kind, so a union never brings a pruned day back', () => {
     const local = base({ reviews: [day('warmup', '2026-10-21', ['lex:bap']), day('feedback', '2026-10-01', ['lex:bae'], { resultStars: 2 })] });
     const server = base({ reviews: [day('warmup', '2026-10-07', ['lex:bap']), day('warmup', '2026-10-08', ['sym:g']), day('feedback', '2026-10-20', ['lex:bae'], { resultStars: 1 })] });
-    const merged = mergeSnapshots(local, server, { now: NOW });
+    const merged = mergeSnapshots(local, server, { now: new Date('2026-10-22T12:00:00.000Z') });
     expect(merged.reviews.map((r) => r.id).sort()).toEqual(['feedback:2026-10-20', 'warmup:2026-10-08', 'warmup:2026-10-21']);
+  });
+
+  it('a day after the latest local day of now (a clock that was set ahead) is dropped and prunes nothing', () => {
+    const local = base({ reviews: [day('warmup', '2031-01-01', ['lex:bap']), day('warmup', '2026-10-21', ['lex:bap'])] });
+    const server = base({ reviews: [day('warmup', '2026-10-08', ['sym:g']), day('feedback', '2031-01-01', ['lex:bae'], { resultStars: 1 })] });
+    const merged = mergeSnapshots(local, server, { now: new Date('2026-10-22T12:00:00.000Z') });
+    expect(merged.reviews.map((r) => r.id).sort()).toEqual(['warmup:2026-10-08', 'warmup:2026-10-21']);
   });
 });

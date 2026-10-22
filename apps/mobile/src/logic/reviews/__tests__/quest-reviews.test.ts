@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { buildLookup } from '../../memory/resolve';
 import { WARMUP_SIZE, type EngineContext, type EngineRow, type ReviewQuestion } from '../engine';
 import { stageNumber, tryAgainOffered, warmupOffered } from '../quest-review-gate';
-import { ENTRY_KIND, firstTryAnswer, reviewCompleteEvent, reviewStartEvent, sessionEntry, tryAgainStars } from '../quest-review-session';
+import { ENTRY_KIND, entryDayOf, firstTryAnswer, reviewCompleteEvent, reviewStartEvent, sessionEntry, tryAgainStars } from '../quest-review-session';
 import { PICK_OPTIONS, missedItemIds, pickRound, planTryAgain, planWarmup, type GlossOf } from '../quest-reviews';
 
 /**
@@ -240,5 +240,22 @@ describe('what a session leaves behind', () => {
     expect(reviewStartEvent('profile:a', 'warmup', 3)).toEqual({ name: 'review.start', profileId: 'profile:a', payload: { kind: 'warmup', items: 3 } });
     expect(reviewCompleteEvent('profile:a', 'warmup', answers, 0)).toEqual({ name: 'review.complete', profileId: 'profile:a', payload: { kind: 'warmup', items: 1, retries: 0 } });
     expect(reviewCompleteEvent('profile:a', 'again', answers, 2)).toEqual({ name: 'review.complete', profileId: 'profile:a', payload: { kind: 'feedback', items: 1, retries: 2, stars: 3 } });
+  });
+});
+
+describe('the day a session entry is written under (section 13, wrong device clock)', () => {
+  it('is today, but never later than the latest local day of the last server time seen or the day after the newest entry of its kind', () => {
+    // No server time seen: today as the device says.
+    expect(entryDayOf('warmup', '2031-01-01', [], null)).toBe('2031-01-01');
+    // A clock set years ahead is held to the day after the last server time (UTC 10-22, so 10-23 somewhere).
+    expect(entryDayOf('warmup', '2031-01-01', [], '2026-10-22T09:00:00.000Z')).toBe('2026-10-23');
+    // A right clock is never moved.
+    expect(entryDayOf('again', '2026-10-22', [], '2026-10-22T09:00:00.000Z')).toBe('2026-10-22');
+    // Offline for days: each day's entry may be one day past the newest of its kind, so the days still advance.
+    const reviews = [{ kind: 'feedback' as const, scope: '2026-10-25' }, { kind: 'warmup' as const, scope: '2026-10-27' }];
+    expect(entryDayOf('again', '2026-10-26', reviews, '2026-10-22T09:00:00.000Z')).toBe('2026-10-26');
+    expect(entryDayOf('again', '2026-10-30', reviews, '2026-10-22T09:00:00.000Z')).toBe('2026-10-26');
+    // A day of its kind after today (from that clock) never extends the bound.
+    expect(entryDayOf('warmup', '2026-10-24', [{ kind: 'warmup', scope: '2031-01-01' }], '2026-10-22T09:00:00.000Z')).toBe('2026-10-23');
   });
 });
