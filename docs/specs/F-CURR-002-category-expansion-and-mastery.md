@@ -710,6 +710,12 @@ Default Checks by stage:
 
 **Copy.** Copy may nudge positively ("2 minutes to today's goal", "4 items are ready to refresh"). It never uses loss framing, and nothing sends a nagging notification.
 
+**As shipped in row CM-17.**
+- One points API, `recordActivityPoints(profileId, kind)` (`apps/mobile/src/store/goals.ts`): quests and stories call it from Results, a word set from the progress store; the Daily Review, Keep going, Try these again and pack quests call it from their own rows. Points go under this device's install key (`hr:goals:install-key`, never in a summary, report or event).
+- Every write of `goals`, `dayLog`, `streakLocal` and `steadyWeeks` takes its time from the device clock capped at the last `meta.serverTime` seen, carried forward (section 13), and goes through `boundToNow`, so a value a wrong clock wrote earlier is brought back to now and stops being sent.
+- Rest days on the week dots follow the CM-4 run (`logic/streak.ts`), so the dots and the streak number agree: a quiet past day is a rest day while the run that holds it goes on (no week of a run has more than 2), and a crescent once drawn is never taken back. In the rare case where a later run re-anchors over an ended one in the same week, that week can show more than 2 crescents; the number Home shows is the run's.
+- The goals' logic and screens are a chunk of their own (`goals-chunk`, section 10), loaded only while `goals` is on; the start bundle carries the English strings and a small entry. `goals` keeps built-in pct 0 (the owner ramps it).
+
 ### 7.5 Weekly quests and the Passport
 
 - **Weekly quests.** Three quests a local week, picked deterministically from a 20-entry table by ISO week and a hash of the profile id. They need no storage until one is done. Examples: "Finish 2 stories", "Refresh 20 items", "Try a game you have not played", "Visit Nature twice".

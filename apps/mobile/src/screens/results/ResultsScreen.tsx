@@ -80,6 +80,7 @@ import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
 import { CardArtThumb } from './CardArtThumb';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
+import { recordActivityPointsLater, useGoalsChunk, type GoalMoment } from '../../store/goals-entry';
 import { ResultsFreeEndCelebration, ResultsOpenForYou } from './ResultsFreeEnd';
 import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
 import { samplerStoryOf } from '../home/free-end-inputs';
@@ -121,6 +122,9 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   // once when the score is written (F-STORY-006 §3.3): the quest card banner
   // and, under it, the extra-cards banner (§3.7).
   const [outcome, setOutcome] = useState<QuestResultOutcome | null>(null);
+  // What this finish reached toward the daily and weekly goals (F-CURR-002 row CM-17), for its one-line banner.
+  const [goalMoment, setGoalMoment] = useState<GoalMoment | null>(null);
+  const goals = useGoalsChunk(goalMoment !== null);
   const award = outcome?.award ?? null;
   const recordedRef = useRef(false);
 
@@ -153,6 +157,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       },
     );
     setOutcome(earned);
+    // A finished quest or story earns its daily-goal points (section 7.4); a run with every game skipped finished nothing.
+    if (total > 0) void recordActivityPointsLater(profile.id, storyIdOfQuest(quest) === null ? 'quest' : 'story').then(setGoalMoment);
     // A finished story's bookmark goes with the score write (F-STORY-004 §3.8).
     const stories = useStoryStore.getState();
     const finishedStory = bookmarkClearedByResults(quest, total, (storyId) => stories.getBookmark(profile.id, storyId));
@@ -427,6 +433,12 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
               reducedMotion={reducedMotion}
               onSeeCard={() => navigation.navigate('CardDetail', { cardId: newCard.id })}
             />
+          </>
+        ) : null}
+        {goals && goalMoment !== null && (goalMoment.dayMet || goalMoment.weekMet !== null) ? (
+          <>
+            <Spacer size="lg" />
+            <goals.GoalMomentBanner moment={goalMoment} />
           </>
         ) : null}
         {extras ? (

@@ -24,6 +24,7 @@ import {
 } from '@hangul-route/content-schema';
 import { z } from 'zod';
 import type { PutResult } from '../logic/sync/engine';
+import { noteServerTime } from './goal-clock';
 import { notifyInboxRead } from './inbox-events';
 
 /**
@@ -270,6 +271,9 @@ async function call(
   try {
     const res = await fetchImpl(url, init);
     const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    // The server's clock caps what the goals write (F-CURR-002 section 13, row CM-17).
+    const meta = body.meta;
+    if (typeof meta === 'object' && meta !== null) noteServerTime((meta as { serverTime?: unknown }).serverTime);
     return { status: res.status, body };
   } catch {
     return { status: -1, body: {} }; // network failure; callers check status first

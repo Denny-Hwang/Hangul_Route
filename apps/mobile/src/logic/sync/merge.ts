@@ -371,7 +371,7 @@ export function mergeSession(l: SessionLog, s: SessionLog): SessionLog {
  * applies too (`progress-merge.ts` in content-schema): max for `cellBest` and
  * `streakBest`, earliest for the latches and `memSeededAt`, the later `setAt`
  * for `goals`, max per day and install key for `dayLog`, the later `lastDay`
- * for `streakLocal`. A key neither side holds stays absent.
+ * for `streakLocal`, the latch union for `steadyWeeks`. A key neither side holds stays absent.
  */
 function mergeCurr002Fields(local: ProgressSnapshot, server: ProgressSnapshot): Partial<ProgressSnapshot> {
   const merged: Partial<ProgressSnapshot> = {
@@ -385,6 +385,8 @@ function mergeCurr002Fields(local: ProgressSnapshot, server: ProgressSnapshot): 
     streakBest: mergeStreakBest(local.streakBest, server.streakBest),
     stamps: mergeLatchRecord(local.stamps, server.stamps),
     memSeededAt: mergeEarliest(local.memSeededAt, server.memSeededAt),
+    // Row CM-17: the steady-weeks latch, union of keys with the earliest time per week.
+    steadyWeeks: mergeLatchRecord(local.steadyWeeks, server.steadyWeeks),
   };
   return Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== undefined));
 }

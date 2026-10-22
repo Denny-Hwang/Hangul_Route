@@ -22,6 +22,8 @@ import { elapsedSeconds, keepsRun, lastStreakDay, newSessionId } from '../logic/
 import { sessionDay, withLocalStreak } from '../logic/streak';
 import { mergePlacements, mergeReview, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
+import { emitGoalEvent } from '../logic/goals/goal-events';
+import { goalNow } from '../platform/goal-clock';
 import { applyVocabEvents, emptyVocab, localDay, vocabOf, type VocabEvent } from '../logic/vocab/progress';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -248,6 +250,12 @@ interface Actions {
    * stored; returns whether it was. Plan derivation runs separately (`usePlanStore.rederive`).
    */
   setSelfRoute: (profileId: string, route: SelfRoute) => boolean;
+  /**
+   * A goals write (F-CURR-002 row CM-17: points in `dayLog`, `goals`, the `steadyWeeks` latch) on the saved
+   * snapshot only: false, with nothing written, while the profile's saved copy has not been read (a write
+   * built on a blank record would lose to the saved points in the merge). The same object back writes nothing.
+   */
+  applyGoalWrite: (profileId: string, update: (snap: ProgressSnapshot) => ProgressSnapshot) => boolean;
 }
 
 function blankSnapshot(profileId: string): ProgressSnapshot {
@@ -421,7 +429,8 @@ function finishedWordSet(before: VocabProgress, after: VocabProgress): boolean {
  */
 function withWordSetDay(snap: ProgressSnapshot, profileId: string, clock: Date): ProgressSnapshot {
   const at = clock.toISOString();
-  const day = localDay(clock);
+  // The local day, never later than the server's clock carried forward (F-CURR-002 section 13, row CM-17).
+  const day = localDay(goalNow(clock));
   if (snap.sessions.some((s) => keepsRun(s) && sessionDay(s) === day)) return withLocalStreak(snap, day);
   const session = { id: newSessionId(at, 'learn', snap.sessions), profileId, startedAt: at, endedAt: at, durationSeconds: 0, episodesTouched: [], localDay: day };
   return withLocalStreak({ ...snap, sessions: [...snap.sessions, session] }, day);
@@ -601,7 +610,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const now = clock.toISOString();
     const kind = sessionKindOf(options);
     const sessionId = newSessionId(now, kind, snap.sessions);
-    const session = { id: sessionId, profileId, startedAt: now, episodesTouched: [], localDay: localDay(clock) };
+    // The local day the run is kept on, never later than the server's clock carried forward (section 13, row CM-17).
+    const session = { id: sessionId, profileId, startedAt: now, episodesTouched: [], localDay: localDay(goalNow(clock)) };
     const todayKey = dayKey(now);
     const lastDay = lastStreakDay(snap.sessions);
     // A time-only or learning session (OD-19) leaves the old streak exactly as it is.
@@ -718,6 +728,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     announceCatchUp(profileId, added);
     void writeJson(key(profileId), snap);
     if (snap !== snapshot) notifyProgressPersisted(profileId);
+    // The steady-weeks latch runs after every merge (F-CURR-002 row CM-17).
+    emitGoalEvent({ type: 'merged', profileId });
   },
 
   setSelfRoute: (profileId, route) => {
@@ -740,7 +752,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const withVocab: ProgressSnapshot = { ...snap, vocab, updatedAt: at };
     // A finished word set (its `session` event) is a learning activity: it keeps the local-day run (F-CURR-002
     // OD-14). It is logged as a learning session of no length, so the day is on the record every device reads.
-    const updated = finishedWordSet(current, vocab) ? withWordSetDay(withVocab, profileId, clock) : withVocab;
+    const wordSet = finishedWordSet(current, vocab);
+    const updated = wordSet ? withWordSetDay(withVocab, profileId, clock) : withVocab;
     const hydrated = get().hydratedFor.has(profileId);
     set((s) => ({
       byProfile: { ...s.byProfile, [profileId]: updated },
@@ -749,6 +762,18 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         : { ...s.pendingVocabEvents, [profileId]: [...(s.pendingVocabEvents[profileId] ?? []), { events, at: clock.toISOString() }] },
     }));
     persist(profileId, updated);
+    // A finished word set earns its daily-goal point (F-CURR-002 section 7.4, row CM-17).
+    if (wordSet) emitGoalEvent({ type: 'activity', profileId, kind: 'wordSet' });
+  },
+
+  applyGoalWrite: (profileId, update) => {
+    if (!get().hydratedFor.has(profileId) || removedNow(profileId)) return false;
+    const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
+    const updated = update(snap);
+    if (updated === snap) return true;
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    save(profileId, updated);
+    return true;
   },
 }));
 

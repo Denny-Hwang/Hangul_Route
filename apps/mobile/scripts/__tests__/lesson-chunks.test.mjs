@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
 import { grownUpHeadersBlock } from '../app-host/headers.mjs';
 import {
+  LEARNER_CHUNKS,
   LOCALE_CHUNKS,
   PRECACHE_BUDGET,
   ROOT_CHUNKS,
@@ -173,6 +174,22 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('BrowseApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[1].marker}';`);
     expect(read('src/content/locale-chunks/locale-es.ts')).toContain(`= '${LOCALE_CHUNKS[0].marker}';`);
     expect(read('src/content/locale-chunks/locale-ko.ts')).toContain(`= '${LOCALE_CHUNKS[1].marker}';`);
+  });
+
+  it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS).toEqual([{ name: 'goals-chunk', marker: 'goals-chunk:goals' }]);
+    expect(read('src/screens/goals/goals-chunk.ts')).toContain(`export const GOALS_CHUNK = '${LEARNER_CHUNKS[0].marker}';`);
+    // Reached only through the entry's literal import(): a static import would fold it back into the start bundle.
+    expect(read('src/store/goals-entry.ts')).toContain("import('../screens/goals/goals-chunk')");
+    const start = { url: START, text: 'var g=1;' };
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[0].marker}"})`;
+    const goals = { url: `${WEB_JS_DIR}/goals-chunk-${md5(text)}.js`, text };
+    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [start, goals], precached: all([start, goals]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+      `goals-chunk is in the start bundle ${START}: a static import pulled it in`,
+      'goals-chunk has no web bundle: the chunk is missing from the build',
+    ]);
   });
 
   it('passes a build where each locale is its own precached bundle carrying its marker', () => {

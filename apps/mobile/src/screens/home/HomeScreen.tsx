@@ -113,6 +113,8 @@ import { VocabMissionCard } from './VocabMissionCard';
 import { ClassUpdateHomeLines } from '../class-update/ClassUpdateHomeLines';
 import { TransferHomeLine } from '../transfer/TransferHomeLine';
 import { PinResetExpiredNotice } from '../parent/PinResetExpiredNotice';
+import { useGoalsChunk } from '../../store/goals-entry';
+import { useCurrFlag } from '../../store/remote-config-store';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -415,6 +417,12 @@ export function HomeScreen(): React.ReactElement {
   // The local-day run (F-CURR-002 row CM-4): kept by any learning activity, with 2 rest days a local week, and never
   // lowered by a sync. Once a run ends the pill waits for the next learning day; nothing says it was lost.
   const streak = useMemo(() => (snap ? shownStreak(snap, localToday) : 0), [snap, localToday]);
+
+  // Daily and weekly goals (F-CURR-002 section 7.4, OD-6, row CM-17), behind `goals`: the week strip above the hero,
+  // with the streak line in it (so the streak pill leaves the pills row). Their code is a chunk of its own, loaded
+  // only while `goals` is on (store/goals-entry.ts). Off: today's Home with the streak pill.
+  const goalsOn = useCurrFlag('goals');
+  const goals = useGoalsChunk(goalsOn && profile !== null);
 
   // The end of the free lessons (F-ENT-003 section 3.7): whether this device already celebrated it for
   // the learner, read each time Home comes into focus (Results may have just shown it). Null while read.
@@ -939,10 +947,22 @@ export function HomeScreen(): React.ReactElement {
         </View>
       </View>
 
+      {goals && profile ? (
+        <goals.GoalsHome
+          profileId={profile.id}
+          snapshot={snap}
+          today={localToday}
+          planPromptShown={planSlot !== null}
+          onSeePlan={() => {
+            if (snap?.selfRoute && snap.selfRoute.archivedAt === null) navigation.navigate('RouteOverview', { profileId: profile.id });
+            else navigation.navigate('Homework');
+          }}
+        />
+      ) : null}
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-        {/* The streak pill waits for the first day: never "Streak 0 days". */}
-        {showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
+        {/* The streak pill waits for the first day: never "Streak 0 days". With goals on, the streak is the strip's line. */}
+        {!goalsOn && showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>
