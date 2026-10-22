@@ -1,0 +1,199 @@
+import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
+import { describe, expect, it } from 'vitest';
+import type { EngineContext, ReviewQuestion } from '../engine';
+import { MAX_ORDER_TILES, SURFACE_FORMATS, glossFrom, roundFor, surfaceFormats, surfaceIndex, type OrderRound, type PickRound, type RoundInput, type TypeRound } from '../review-rounds';
+
+/**
+ * F-CURR-002 sections 4.3 and 4.5 (row CM-14): the rounds of a Daily Review. Only the formats whose rounds have
+ * shipped are drawn; a heard round never asks two spellings of one sound apart; a sound round hides the options'
+ * romanization; Sentence Builder never hands over the order; every round carries the answer Hoya shows after a miss.
+ */
+
+const ALL: Readonly<Record<ReviewItemKind, readonly ReviewFormat[]>> = {
+  sym: ['hear-pick', 'read-pick', 'syllable-build', 'match-shape'],
+  syl: ['hear-pick', 'read-pick', 'syllable-build'],
+  lex: ['hear-pick', 'read-pick', 'type-see', 'type-picture', 'dictation', 'syllable-build'],
+  pat: ['hear-pick', 'read-pick', 'cloze-pick', 'sentence-builder'],
+  exc: ['hear-pick', 'read-pick', 'sentence-builder'],
+  rea: ['read-pick', 'cloze-pick'],
+};
+
+function mk(id: string, over: Partial<ReviewItem> = {}): ReviewItem {
+  const kind = id.slice(0, 3) as ReviewItemKind;
+  return { id, kind, ko: '가', romanization: 'ga', home: 'life', stage: 2, volume: 1, cells: ['episode:stage2-life'], asked: [], formats: [...ALL[kind]], soundChange: false, homophoneOf: [], ...over };
+}
+
+const indexOf = (items: readonly ReviewItem[]): EngineContext['index'] => ({ items, byId: new Map(items.map((i) => [i.id, i])), retired: new Set() });
+const q = (itemId: string, format: ReviewFormat, over: Partial<ReviewQuestion> = {}): ReviewQuestion => ({
+  itemId,
+  kind: itemId.slice(0, 3) as ReviewItemKind,
+  rung: format === 'hear-pick' ? 'recognize' : format === 'read-pick' ? 'read' : 'produce',
+  format,
+  theme: 'life',
+  stretch: false,
+  voiceFallback: false,
+  ...over,
+});
+
+const WORDS = [
+  mk('lex:sagwa', { ko: '사과', romanization: 'sagwa', en: 'apple', picture: 'card:apple' }),
+  mk('lex:bae~pear', { ko: '배', romanization: 'bae', en: 'pear', picture: 'card:pear', homophoneOf: ['lex:bae~boat'] }),
+  mk('lex:bae~boat', { ko: '배', romanization: 'bae', en: 'boat', home: 'nature', homophoneOf: ['lex:bae~pear'] }),
+  mk('lex:bap', { ko: '밥', romanization: 'bap', en: 'cooked rice', picture: 'card:rice' }),
+  mk('lex:tteok', { ko: '떡', romanization: 'tteok', en: 'rice cake', picture: 'card:tteok' }),
+  mk('lex:namu', { ko: '나무', romanization: 'namu', en: 'tree', home: 'nature' }),
+  mk('lex:nat', { ko: '낫', romanization: 'nat', en: 'sickle', homophoneOf: ['lex:nat~2'] }),
+  mk('lex:nat~2', { ko: '낮', romanization: 'nat', en: 'daytime', homophoneOf: ['lex:nat'] }),
+];
+const SYMS = [mk('sym:giyeok', { ko: 'ㄱ', romanization: 'g/k' }), mk('sym:nieun', { ko: 'ㄴ', romanization: 'n' }), mk('sym:a', { ko: 'ㅏ', romanization: 'a' }), mk('sym:o', { ko: 'ㅗ', romanization: 'o' })];
+const PATS = [
+  mk('pat:gabangieyo', { ko: '가방이에요.', romanization: 'gabangieyo', en: 'It is a bag.' }),
+  mk('pat:sagwa-juseyo', { ko: '사과 주세요.', romanization: 'sagwa juseyo', en: 'An apple, please.' }),
+  mk('pat:n-juseyo', { ko: '___ 주세요.', romanization: '___ juseyo', en: '___, please.' }),
+  mk('pat:ne-chaegieyo', { ko: '네, 책이에요.', romanization: 'ne, chaegieyo', en: 'Yes, it is a book.' }),
+];
+const EXCS = [
+  mk('exc:ige-mwoyeyo', { ko: '이게 뭐예요?', romanization: 'ige mwoyeyo?', en: 'What is this?', reply: { ko: '지우개예요.', romanization: 'jiugaeyeyo.', en: 'It is an eraser.' } }),
+  mk('exc:nuguyeyo', { ko: '누구예요?', romanization: 'nuguyeyo?', en: 'Who is it?', reply: { ko: '할머니예요.', romanization: 'halmeoniyeyo.', en: 'It is Grandma.' } }),
+  mk('exc:annyeong', { ko: '안녕하세요!', romanization: 'annyeonghaseyo!', en: 'Hello!', reply: { ko: '네, 안녕하세요.', romanization: 'ne, annyeonghaseyo.', en: 'Yes, hello.' } }),
+];
+const REA = [mk('rea:menu', { ko: '메뉴', romanization: 'menyu', en: 'A menu on the table.' })];
+const INDEX = surfaceIndex(indexOf([...WORDS, ...SYMS, ...PATS, ...EXCS, ...REA]));
+const input = (over: Partial<RoundInput> = {}): RoundInput => ({ index: INDEX, gloss: (_k, en) => en, seed: 's', ...over });
+
+describe('the formats this surface draws', () => {
+  it('are the shipped rounds only: Listen and Pick, the read pick, Type Hangul see and picture, Sentence Builder', () => {
+    expect([...SURFACE_FORMATS].sort()).toEqual(['hear-pick', 'read-pick', 'sentence-builder', 'type-picture', 'type-see']);
+  });
+
+  it('a symbol is never heard, a frame is never heard or ordered, a realia card is left to its own surfaces', () => {
+    expect(surfaceFormats(mk('sym:a'))).toEqual(['read-pick']);
+    expect(surfaceFormats(mk('pat:n-juseyo', { ko: '___ 주세요.' }))).toEqual(['read-pick']);
+    expect(surfaceFormats(mk('pat:x', { ko: '사과 주세요.' }))).toEqual(['hear-pick', 'read-pick', 'sentence-builder']);
+    expect(surfaceFormats(mk('rea:menu'))).toEqual([]);
+    expect(surfaceFormats(mk('lex:x'))).toEqual(['hear-pick', 'read-pick', 'type-see']);
+    expect(surfaceFormats(mk('lex:x', { picture: 'card:x' }))).toEqual(['hear-pick', 'read-pick', 'type-see', 'type-picture']);
+  });
+
+  it('surfaceIndex keeps an item that loses no format as it is, drops one left with none, and is cached per index', () => {
+    const base = indexOf([mk('syl:ga'), mk('rea:menu'), mk('lex:x', { picture: 'card:x' })]);
+    const cut = surfaceIndex(base);
+    expect(cut.items.map((i) => i.id)).toEqual(['syl:ga', 'lex:x']);
+    expect(cut.byId.get('syl:ga')?.formats).toEqual(['hear-pick', 'read-pick']);
+    expect(cut.byId.has('rea:menu')).toBe(false);
+    expect(cut.retired).toBe(base.retired);
+    expect(surfaceIndex(base)).toBe(cut);
+    const whole = indexOf([mk('lex:y', { formats: ['read-pick'] })]);
+    expect(surfaceIndex(whole).items[0]).toBe(whole.items[0]);
+  });
+});
+
+describe('pick rounds', () => {
+  it('a heard word: spellings with romanization; never a homophone or a same spelling; the answer among them', () => {
+    const round = roundFor(q('lex:sagwa', 'hear-pick'), input()) as PickRound;
+    expect(round).toMatchObject({ type: 'pick', heard: true, ask: 'spelling', prompt: { ko: '사과', romanization: 'sagwa' }, answerId: 'lex:sagwa' });
+    expect(round.options.length).toBeGreaterThanOrEqual(2);
+    expect(round.options.length).toBeLessThanOrEqual(4);
+    expect(round.options.map((o) => o.id)).toContain('lex:sagwa');
+    expect(round.options.every((o) => o.ko !== undefined && o.label === undefined)).toBe(true);
+    expect(new Set(round.options.map((o) => o.ko?.ko)).size).toBe(round.options.length);
+    expect(round.answer).toEqual({ ko: { ko: '사과', romanization: 'sagwa' }, gloss: 'apple' });
+    // 낫 heard: 낮 sounds the same, so it is never an option.
+    const nat = roundFor(q('lex:nat', 'hear-pick', { cue: 'gloss' }), input()) as PickRound;
+    expect(nat.options.map((o) => o.id)).not.toContain('lex:nat~2');
+    expect(nat.cue).toEqual({ gloss: 'sickle' });
+  });
+
+  it('the same theme comes first among the other options', () => {
+    const round = roundFor(q('lex:sagwa', 'hear-pick'), input()) as PickRound;
+    const others = round.options.filter((o) => o.id !== 'lex:sagwa').map((o) => INDEX.byId.get(o.id)?.home);
+    expect(others.filter((h) => h === 'life').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('a heard homophone shows its picture cue, or its gloss; with neither the round cannot be played', () => {
+    expect((roundFor(q('lex:bae~pear', 'hear-pick', { cue: 'picture' }), input()) as PickRound).cue).toEqual({ picture: 'card:pear' });
+    expect((roundFor(q('lex:bae~boat', 'hear-pick', { cue: 'gloss' }), input()) as PickRound).cue).toEqual({ gloss: 'boat' });
+    expect(roundFor(q('lex:bae~boat', 'hear-pick', { cue: 'gloss' }), input({ gloss: () => undefined }))).toBeNull();
+  });
+
+  it('a read word: its meanings in the UI language, with pictures only when every option has one', () => {
+    const round = roundFor(q('lex:sagwa', 'read-pick'), input()) as PickRound;
+    expect(round).toMatchObject({ heard: false, ask: 'meaning' });
+    expect(round.options.every((o) => typeof o.label === 'string' && o.ko === undefined)).toBe(true);
+    expect(round.options.find((o) => o.id === 'lex:sagwa')?.label).toBe('apple');
+    const allPictures = round.options.every((o) => o.picture !== undefined);
+    const nonePictures = round.options.every((o) => o.picture === undefined);
+    expect(allPictures || nonePictures).toBe(true);
+    const es = roundFor(q('lex:sagwa', 'read-pick'), input({ gloss: (_k, en) => (en === 'apple' ? 'manzana' : en === undefined ? undefined : `${en}-es`) })) as PickRound;
+    expect(es.options.find((o) => o.id === 'lex:sagwa')?.label).toBe('manzana');
+    expect(es.answer.gloss).toBe('manzana');
+  });
+
+  it('a read symbol: the sound is shown and the options are letters (their romanization would be the answer)', () => {
+    const round = roundFor(q('sym:giyeok', 'read-pick'), input()) as PickRound;
+    expect(round).toMatchObject({ ask: 'sound', prompt: { ko: 'ㄱ', romanization: 'g/k' } });
+    expect(round.options.every((o) => o.ko !== undefined)).toBe(true);
+    expect(new Set(round.options.map((o) => o.ko?.romanization)).size).toBe(round.options.length);
+  });
+
+  it('an exchange: the line, then its reply among other replies; the answer is the reply', () => {
+    const round = roundFor(q('exc:ige-mwoyeyo', 'read-pick'), input()) as PickRound;
+    expect(round).toMatchObject({ ask: 'reply', prompt: { ko: '이게 뭐예요?' }, answer: { ko: { ko: '지우개예요.' }, gloss: 'It is an eraser.' } });
+    expect(round.options.map((o) => o.ko?.ko)).toContain('지우개예요.');
+    expect((roundFor(q('exc:nuguyeyo', 'hear-pick'), input()) as PickRound).ask).toBe('reply');
+  });
+
+  it('a kind with no other item to pick from cannot be played', () => {
+    const lone = surfaceIndex(indexOf([mk('syl:ga')]));
+    expect(roundFor(q('syl:ga', 'read-pick'), input({ index: lone }))).toBeNull();
+    expect(roundFor(q('lex:none', 'read-pick'), input())).toBeNull();
+  });
+
+  it('is deterministic for a seed', () => {
+    expect(roundFor(q('lex:sagwa', 'hear-pick'), input())).toEqual(roundFor(q('lex:sagwa', 'hear-pick'), input()));
+  });
+});
+
+describe('type rounds', () => {
+  it('see and picture, with the answer Hoya shows', () => {
+    expect(roundFor(q('lex:sagwa', 'type-see'), input())).toMatchObject({ type: 'type', mode: 'see', target: '사과', answer: { gloss: 'apple' } });
+    const pic = roundFor(q('lex:sagwa', 'type-picture'), input()) as TypeRound;
+    expect(pic).toMatchObject({ mode: 'picture', picture: 'card:apple' });
+    expect(roundFor(q('lex:namu', 'type-picture'), input())).toBeNull();
+  });
+});
+
+describe('order rounds (Sentence Builder)', () => {
+  it('the words of a sentence, shuffled, never already in order, with the meaning', () => {
+    const round = roundFor(q('pat:sagwa-juseyo', 'sentence-builder'), input()) as OrderRound;
+    expect(round).toMatchObject({ type: 'order', words: ['사과', '주세요.'], meaning: 'An apple, please.' });
+    expect(round.tiles.map((t) => t.ko)).not.toEqual(round.words);
+    expect([...round.tiles.map((t) => t.ko)].sort()).toEqual([...round.words].sort());
+    expect(new Set(round.tiles.map((t) => t.key)).size).toBe(round.tiles.length);
+    expect(round.line).toBeUndefined();
+  });
+
+  it("an exchange's reply, under its line", () => {
+    const round = roundFor(q('exc:annyeong', 'sentence-builder'), input()) as OrderRound;
+    expect(round).toMatchObject({ line: { ko: '안녕하세요!' }, words: ['네,', '안녕하세요.'], meaning: 'Yes, hello.' });
+  });
+
+  it('one word, or more than the column holds, cannot be ordered', () => {
+    expect(roundFor(q('pat:gabangieyo', 'sentence-builder'), input())).toBeNull();
+    const long = surfaceIndex(indexOf([mk('pat:long', { ko: Array.from({ length: MAX_ORDER_TILES + 1 }, (_, i) => `w${i}`).join(' ') })]));
+    expect(roundFor(q('pat:long', 'sentence-builder'), input({ index: long }))).toBeNull();
+    expect(roundFor(q('lex:sagwa', 'syllable-build'), input())).toBeNull();
+  });
+});
+
+describe('glossFrom', () => {
+  it('reads <entity>#<field> from the locale overlays, else the English', () => {
+    const gloss = glossFrom({ 'vocab:sagwa-apple': { gloss: 'manzana', empty: '' } });
+    expect(gloss('vocab:sagwa-apple#gloss', 'apple')).toBe('manzana');
+    expect(gloss('vocab:sagwa-apple#empty', 'apple')).toBe('apple');
+    expect(gloss('vocab:other#gloss', 'pear')).toBe('pear');
+    expect(gloss('nohash', 'x')).toBe('x');
+    expect(gloss(undefined, 'y')).toBe('y');
+    expect(glossFrom(undefined)('vocab:sagwa-apple#gloss', 'apple')).toBe('apple');
+  });
+});
