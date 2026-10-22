@@ -61,8 +61,8 @@ describe('landing copy (UF-02)', () => {
 });
 
 describe('cost copy says only what is true today (owner decision 2026-10-10)', () => {
-  // Payments are not live and Stages 2-7 are not built, so the landing quotes
-  // no price and sells no stage. (The rendered page is scanned for prices in
+  // Payments are not live (Stripe sandbox), so the landing quotes no price and
+  // sells nothing. The later stages ship in the app (F-SITE-002 site facts, 2026-10-21). (The rendered page is scanned for prices in
   // src/app/__tests__/landing-no-prices.test.tsx.)
   it('meta descriptions say Stage 1 is free — not "the first 12 cards"', () => {
     for (const field of [siteMetadata.description, siteMetadata.openGraph?.description].map(text)) {
@@ -71,8 +71,9 @@ describe('cost copy says only what is true today (owner decision 2026-10-10)', (
     }
   });
 
-  it('the page description also says more stages are coming (it names a 7-stage journey)', () => {
-    expect(text(siteMetadata.description)).toMatch(/more stages are coming/i);
+  it('the page description names what comes after the alphabet, and no longer says more stages are coming', () => {
+    expect(text(siteMetadata.description)).toMatch(/then words, sentences and stories/);
+    expect(text(siteMetadata.description)).not.toMatch(/more stages are coming/i);
   });
 });
 

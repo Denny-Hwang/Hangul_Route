@@ -118,6 +118,27 @@ describe('signIn (F-APP-001 §3.7 /signin with ?persona=)', () => {
     expect(personaHint(url.searchParams)).toBe(persona);
   });
 
+  it('from /es or /ko keeps the page language (?lang=) next to the persona; English links are unchanged', () => {
+    expect(signIn('parent', 'es')).toBe('https://app.hangulroute.com/signin?persona=parent&lang=es');
+    expect(signIn('teacher', 'ko')).toBe('https://app.hangulroute.com/signin?persona=teacher&lang=ko');
+    expect(signIn(undefined, 'es')).toBe('https://app.hangulroute.com/signin?lang=es');
+    expect(signIn(undefined, 'ko')).toBe('https://app.hangulroute.com/signin?lang=ko');
+    expect(signIn('parent', 'en')).toBe(signIn('parent'));
+    expect(signIn(undefined, 'en')).toBe(signIn());
+    vi.stubEnv('CONSOLE_ORIGIN', 'false');
+    expect(signIn('parent', 'ko')).toBe('/signin?persona=parent&lang=ko');
+    expect(signIn(undefined, 'es')).toBe('/signin?lang=es');
+  });
+
+  it.each(LOCALES)('%s: the persona hint still reads back, and lang= is the page locale (appEntryUrl)', (locale) => {
+    for (const persona of PERSONAS) {
+      const url = new URL(signIn(persona, locale), 'https://hangulroute.com');
+      expect(personaHint(url.searchParams)).toBe(persona);
+      expect(url.searchParams.get('lang')).toBe(locale === 'en' ? null : locale);
+      expect(signIn(persona, locale)).toBe(appEntryUrl(signIn(persona), locale));
+    }
+  });
+
   it('takes only a grown-up persona (by type)', () => {
     expectTypeOf<GrownUpPersona>().toEqualTypeOf<'parent' | 'teacher'>();
     // @ts-expect-error learners never sign in with an email or password (F-APP-001 OD-2)

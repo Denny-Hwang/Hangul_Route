@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { JAMO_SOUND_VALUES } from '@hangul-route/content-schema';
+import { CATALOG, JAMO_SOUND_VALUES } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { HomePage as Home } from '../../components/landing/HomePage';
+import { FIRST_LETTER, HomePage as Home } from '../../components/landing/HomePage';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { SITE_CLAIMS } from '../../data/site-claims';
 import { learnerStart } from '../../lib/site-links';
@@ -85,11 +85,19 @@ describe('the hero (L0)', () => {
   it('the facts line, and Hoya waving as decorative art with the taught letter and its romanization in the bubble', () => {
     expect(text).toContain(H.hero.facts);
     expect(main).toMatch(/<div aria-hidden="true" class="hr-site-hero-art"[\s\S]*?<svg[^>]*data-pose="waving"/);
-    const romanization = JAMO_SOUND_VALUES['ㄱ']?.[0] ?? '';
-    expect(romanization).toBe('g/k');
+    // ㅏ: quest 1 (`quest:stage1-letters-q1`, "Meet a, eo, g, n") teaches it first (F-QUEST-002 §3.6).
+    expect(FIRST_LETTER).toBe('ㅏ');
+    const romanization = JAMO_SOUND_VALUES['ㅏ']?.[0] ?? '';
+    expect(romanization).toBe('a');
     // The bubble keeps the letter and its romanization together with a no-break space; the text helper folds it.
-    expect(H.hero.bubble('ㄱ', romanization)).toContain('ㄱ\u00a0(g/k)');
-    expect(text).toContain(H.hero.bubble('ㄱ', romanization).replace(/\s+/g, ' '));
+    expect(H.hero.bubble('ㅏ', romanization)).toContain('ㅏ\u00a0(a)');
+    expect(text).toContain(H.hero.bubble('ㅏ', romanization).replace(/\s+/g, ' '));
+  });
+
+  it('the bubble letter is the first letter quest 1 teaches, with its taught romanization (F-QUEST-002 §3.6)', () => {
+    const first = CATALOG.quests.find((quest) => quest.id === 'quest:stage1-letters-q1');
+    expect(first?.teaches[0]).toBe(FIRST_LETTER);
+    expect(text).toContain(`${FIRST_LETTER} (${JAMO_SOUND_VALUES[FIRST_LETTER]?.[0]})`);
   });
 });
 
@@ -119,7 +127,8 @@ describe('the blocks under the hero (L1)', () => {
     // 2026-10-21); landing-claims.test.tsx pins both states.
     expect(SITE_CLAIMS.levelCheck).toBe(true);
     expect(textOf(how)).toContain(H.how.levelBody);
-    expect(textOf(how)).not.toContain(H.how.steps.start.body);
+    // The level line opens with the base line's words, which then appear once (not a second time on their own).
+    expect(textOf(how).split(H.how.steps.start.body)).toHaveLength(2);
     expect(textOf(how)).toContain(H.how.steps.quests.body);
     expect(textOf(how)).toContain(H.how.steps.collect.body);
     expect(text).not.toContain(H.how.routeBody);

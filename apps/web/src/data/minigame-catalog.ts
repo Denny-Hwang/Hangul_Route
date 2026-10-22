@@ -1,5 +1,6 @@
 /**
- * The 8 Stage 1 mini-games the `/learners` games fold lists (F-SITE-002 §3.4).
+ * The Stage 1 mini-games the `/learners` games fold lists (F-SITE-002 §3.4). No typed count here: the page counts
+ * the list.
  *
  * The list is the set of Stage 1 kinds `apps/mobile/src/logic/minigame-config.ts` configures (minigame-catalog.test.ts
  * reads that file and fails on a kind the app does not play in Stage 1), in the order a learner meets them most:

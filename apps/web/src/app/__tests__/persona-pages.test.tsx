@@ -1,13 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { AboutPage } from '../../components/landing/AboutPage';
+import { HomePage } from '../../components/landing/HomePage';
 import { LearnersPage } from '../../components/landing/LearnersPage';
 import { ParentsPage } from '../../components/landing/ParentsPage';
+import { PrivacyPage } from '../../components/landing/PrivacyPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
+import { TermsPage } from '../../components/landing/TermsPage';
 import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { siteGames } from '../../data/minigame-catalog';
 import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
@@ -208,9 +212,12 @@ const render = (Page: typeof ParentsPage, claims?: Readonly<SiteClaims>): string
 const SIZES = plans.sizes(FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS);
 function expectPlans(html: string, paidPlans: SiteClaims['paidPlans']): void {
   const lines = linesOf(html, t.persona.plansTitle);
+  // The free line comes first, alone (the site never states the free limits, owner decision 2026-10-21); then the
+  // paid or sizes line; the managed line says "when plans arrive" until they are on sale.
   expect(lines).toEqual(
-    paidPlans === 'coming' ? [`${plans.free.stage1} ${plans.paid.coming}`, plans.managedInApp] : [`${plans.free.stage1} ${SIZES}`, plans.managedInApp],
+    paidPlans === 'coming' ? [plans.free.stage1, plans.paid.coming, plans.managedLater] : [plans.free.stage1, SIZES, plans.managedInApp],
   );
+  expect(textOf(mainOf(html))).not.toContain(paidPlans === 'coming' ? plans.managedInApp : plans.managedLater);
   expect(lines.join(' ').match(/app\.hangulroute\.com/g)).toHaveLength(1);
   expect(textOf(mainOf(html))).not.toContain(plans.paid.inApp);
   expect(count(textOf(mainOf(html)), SIZES)).toBe(paidPlans === 'inApp' ? 1 : 0);
@@ -382,7 +389,8 @@ describe('/teachers (S-4b)', () => {
     expect(textOf(render(TeachersPage, { ...ALL_CLAIMS_OFF, browseAsLearner: true }))).not.toContain(T.class.browse);
     const inApp = render(TeachersPage, { ...ALL_CLAIMS_OFF, browseAsLearner: true, paidPlans: 'inApp' });
     expect(linesOf(inApp, T.class.title)).toEqual([T.class.body, T.class.browse]);
-    expect(T.class.browse).toMatch(/class or school plan/);
+    // Names the plan as the billing page does (`console.billing.planTitle.group_license`).
+    expect(T.class.browse).toContain(getMessages('en').console.billing.planTitle.group_license);
   });
 
   it('plans: both composed blocks, no price', () => {
@@ -422,7 +430,7 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11), the notes lin
     const html = render(ParentsPage);
     expect(SITE_CLAIMS.parentReports).toBe(true);
     expect(linesOf(html, P.follow.title)).toEqual([P.follow.body, P.follow.reports, P.follow.notes, P.follow.lecture]);
-    expect(P.follow.reports).toBe('Reports for today, this week, this month and all time show what went well and what to practise next.');
+    expect(P.follow.reports).toBe('Reports for today, this week, this month and all time show what went well and what to practice next.');
     const text = textOf(mainOf(html));
     expect(text).toContain(P.faq.whatSee.reports);
     expect(text).not.toContain(P.faq.whatSee.a);
@@ -455,7 +463,7 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11), the notes lin
   it('/parents: the lecture mode line under Follow along, word for word, as plain text with no link (F-SITE-002 section 3.8)', () => {
     const html = render(ParentsPage);
     expect(SITE_CLAIMS.lectureMode).toBe(true);
-    expect(P.follow.lecture).toBe('Lecture mode puts a lesson on your TV so you can learn together.');
+    expect(P.follow.lecture).toBe('Lecture mode shows ready-made lessons from Stages 1 to 7 on a TV, a laptop or a phone turned sideways, so you can learn together.');
     expect(count(textOf(mainOf(html)), P.follow.lecture)).toBe(1);
     expect(linksOf(mainOf(html)).map((link) => link.text)).not.toContain(P.follow.lecture);
     expect(html).not.toMatch(/href="[^"]*\/(present|teach|parent)\b/);
@@ -463,7 +471,9 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11), the notes lin
 
   it('/teachers: the reworded lecture mode line names the feature, as plain text with no link', () => {
     const html = render(TeachersPage);
-    expect(T.class.lecture).toBe('Lecture mode: teach from the front on a projector or TV, with ready-made lessons.');
+    expect(T.class.lecture).toBe(
+      'Lecture mode: teach from the front with ready-made slides for Stages 1 to 7, stories and word sets, on a projector, a TV or a phone turned sideways.',
+    );
     expect(T.class.lecture.startsWith('Lecture mode')).toBe(true);
     expect(count(textOf(mainOf(html)), T.class.lecture)).toBe(1);
     expect(linksOf(mainOf(html)).map((link) => link.text)).not.toContain(T.class.lecture);
@@ -531,6 +541,39 @@ describe('persona page modules hold no console, demo, account or billing path', 
   });
 });
 
+describe('no free limits on the site (owner decision 2026-10-21)', () => {
+  // The stand-alone free class cap is the one free limit no plan line shares (the Group License also holds 50). The
+  // figure next to any word for a learner, or the number spelled out, counts as stating it.
+  const freeClass: Record<'en' | 'es' | 'ko', RegExp> = {
+    en: new RegExp(`\\b(${FREE_CLASS_STUDENT_CAP}|twenty) (students?|learners?|kids?|children|child|pupils?)\\b`, 'i'),
+    es: new RegExp(`\\b(${FREE_CLASS_STUDENT_CAP}|veinte) (estudiantes?|alumn[oa]s?|niñ[oa]s?|aprendices|personas?)\\b`, 'i'),
+    ko: new RegExp(`(${FREE_CLASS_STUDENT_CAP}|스무)\\s?(명|학생)`),
+  };
+  const states: ReadonlyArray<Readonly<SiteClaims>> = [SITE_CLAIMS, { ...SITE_CLAIMS, paidPlans: 'inApp' }, ALL_CLAIMS_ON, ALL_CLAIMS_OFF];
+
+  it.each(['en', 'es', 'ko'] as const)('%s: no persona page or the home states the free class limit, in any claim state', (locale) => {
+    for (const Page of [LearnersPage, ParentsPage, TeachersPage, HomePage]) {
+      for (const claims of states) {
+        expect(textOf(renderToStaticMarkup(<Page locale={locale} claims={claims} />)), `${locale} paidPlans ${claims.paidPlans}`).not.toMatch(
+          freeClass[locale],
+        );
+      }
+    }
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s: About, Privacy and Terms do not state the free class limit either', (locale) => {
+    for (const Page of [AboutPage, PrivacyPage, TermsPage]) {
+      expect(textOf(renderToStaticMarkup(<Page locale={locale} />)), `${locale} ${Page.name}`).not.toMatch(freeClass[locale]);
+    }
+  });
+
+  it('the guard matches the line it exists to keep out', () => {
+    expect(`up to ${FREE_CLASS_STUDENT_CAP} students`).toMatch(freeClass.en);
+    expect(`hasta ${FREE_CLASS_STUDENT_CAP} estudiantes`).toMatch(freeClass.es);
+    expect(`최대 ${FREE_CLASS_STUDENT_CAP}명`).toMatch(freeClass.ko);
+  });
+});
+
 describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', () => {
   const pages = [
     ['/parents', ParentsPage],
@@ -544,7 +587,7 @@ describe('[SA] the plan sizes line (AMENDMENTS-SEATS-ADMINS section 4, SA-6)', (
     for (const [path, Page] of pages) {
       const html = renderToStaticMarkup(<Page locale={locale} claims={onSale} />);
       expect(count(textOf(mainOf(html)), sizes), `${locale} ${path}`).toBe(1);
-      expect(linesOf(html, l.persona.plansTitle), `${locale} ${path}`).toEqual([`${l.plans.free.stage1} ${sizes}`, l.plans.managedInApp]);
+      expect(linesOf(html, l.persona.plansTitle), `${locale} ${path}`).toEqual([l.plans.free.stage1, sizes, l.plans.managedInApp]);
     }
   });
 

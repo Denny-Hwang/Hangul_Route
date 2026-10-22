@@ -12,9 +12,9 @@ export function isSiteLocale(value: unknown): value is SiteLocale {
 
 /**
  * `generateStaticParams` for `[locale]`: every site locale. Next 14 refuses an empty list under
- * `output: 'export'` ("missing generateStaticParams()"), and es and ko are both hidden today, so the build
- * renders them all and a hidden one is removed from `out/` after the build (`isShippedSiteLocale`, the
- * `HIDDEN_LOCALE_ATTR` marker and `scripts/prune-hidden-locales.mjs`).
+ * `output: 'export'` ("missing generateStaticParams()"), so the build renders them all. es and ko ship
+ * (LOCALE_STATUS, 2026-10-14); a locale set back to hidden would be removed from `out/` after the build
+ * (`isShippedSiteLocale`, the `HIDDEN_LOCALE_ATTR` marker and `scripts/prune-hidden-locales.mjs`).
  */
 export function siteLocaleParams(): Array<{ locale: SiteLocale }> {
   return LOCALES.filter(isSiteLocale).map((locale) => ({ locale }));

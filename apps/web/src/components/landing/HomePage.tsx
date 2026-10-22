@@ -15,9 +15,12 @@ import { SiteShell } from './SiteShell';
 import { WaitlistForm } from './WaitlistForm';
 import { Body, PrimaryAction, Section } from './site-parts';
 
-/** The first letter Hoya introduces: taught Korean, passed into the bubble with its romanization (never in a message). */
-const FIRST_LETTER = 'ㄱ';
-/** The letter's teaching sound value (`g/k`), the romanization taught Korean always carries (CLAUDE.md §1). */
+/**
+ * The first letter Hoya introduces: taught Korean, passed into the bubble with its romanization (never in a message).
+ * ㅏ, because quest 1 (`quest:stage1-letters-q1`, "Meet a, eo, g, n") teaches it first (F-QUEST-002 §3.6).
+ */
+export const FIRST_LETTER = 'ㅏ';
+/** The letter's teaching sound value (`a`), the romanization taught Korean always carries (CLAUDE.md §1). */
 const FIRST_LETTER_ROMANIZATION = JAMO_SOUND_VALUES[FIRST_LETTER]?.[0] ?? '';
 
 export interface HomePageProps {

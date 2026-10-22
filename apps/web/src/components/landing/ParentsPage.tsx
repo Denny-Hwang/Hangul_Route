@@ -21,7 +21,7 @@ export interface ParentsPageProps {
 export function ParentsPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: ParentsPageProps): JSX.Element {
   const t = getMessages(locale).landing;
   const P = t.persona.parents;
-  const parentSignIn = signIn('parent');
+  const parentSignIn = signIn('parent', locale);
   const follow = [
     P.follow.body,
     ...(showsClaim(claims, 'parentReports', locale) ? [P.follow.reports] : []),
