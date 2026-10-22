@@ -333,7 +333,7 @@ export const landing = {
            * [GU] The answer while the `guestLesson` claim is on too: the first quest comes first, so the level check is
            * Home's card. The button is `learner.placement.homeCard.take` word for word.
            */
-          guestA: 'No. Play the first quest, add a name, then tap “Take the level check” on Home. Hoya suggests where to begin.',
+          guestA: 'No. Play the first quest, add a name, then tap “Take the level check”. Hoya suggests where to begin.',
         },
       },
       /** One paragraph under "What you learn first": what comes after Stage 1. */

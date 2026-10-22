@@ -49,7 +49,7 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.persona.learners.faq.level).toEqual({
       q: 'I already know some Hangul. Do I have to start at the beginning?',
       a: 'No. When you start, tap “I already know some Korean” and take a level check. Hoya suggests where to begin.',
-      guestA: 'No. Play the first quest, add a name, then tap “Take the level check” on Home. Hoya suggests where to begin.',
+      guestA: 'No. Play the first quest, add a name, then tap “Take the level check”. Hoya suggests where to begin.',
     });
     expect(l.home.how.levelBody).toBe('Pick a name and a Hoya. A level check is optional.');
     expect(l.persona.learners.after).toEqual({
@@ -72,6 +72,9 @@ describe('landing: sentences that take a value render the former text', () => {
       expect(m.landing.persona.learners.faq.level.guestA, locale).toContain(take);
       // The guest answer never names the first-run button a guest no longer meets before the first quest.
       expect(m.landing.persona.learners.faq.level.guestA, locale).not.toContain(m.learner.placement.invite.knowSome);
+      // GU-6 MAR: the answer names no place. The learner lands on the screen with the card after saving, and that tab is
+      // labelled Today / Hoy / 오늘 (a11y.tabs.home), never Home / Inicio / 홈.
+      expect(m.landing.persona.learners.faq.level.guestA, locale).not.toMatch(/\bHome\b|\bInicio\b|홈/);
       for (const line of [
         m.landing.home.hero.guest,
         m.landing.home.how.steps.start.guestTitle,
@@ -92,15 +95,15 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(es.home.how.guestStartBody).toBe('Juega tu primera misión y luego añade un nombre.');
     expect(es.home.how.steps.collect.guestBody).toBe('Gana tarjetas de cultura coreana. Añade un nombre y tu progreso se guarda y se respalda.');
     expect(es.persona.learners.faq.level.guestA).toBe(
-      'No. Juega la primera misión, añade un nombre y luego toca «Hacer la prueba de nivel» en Inicio. Hoya te sugiere por dónde empezar.',
+      'No. Juega la primera misión, añade un nombre y luego toca «Hacer la prueba de nivel». Hoya te sugiere por dónde empezar.',
     );
     const ko = getMessages('ko').landing;
-    expect(ko.home.hero.guest).toBe('첫 퀘스트를 바로 시작해요. 이름은 끝나고 넣어요.');
+    expect(ko.home.hero.guest).toBe('첫 퀘스트를 바로 시작해요. 이름은 마지막에 넣어요.');
     expect(ko.home.how.steps.start.guestTitle).toBe('바로 시작하기');
     expect(ko.home.how.guestLevelBody).toBe('첫 퀘스트를 해요. 수준 확인은 그다음에 해요.');
     expect(ko.home.how.guestStartBody).toBe('첫 퀘스트를 하고 나서 이름을 넣어요.');
     expect(ko.home.how.steps.collect.guestBody).toBe('한국 문화 카드를 받아요. 이름을 넣으면 진도가 저장되고 백업돼요.');
-    expect(ko.persona.learners.faq.level.guestA).toBe('아니요. 첫 퀘스트를 하고 이름을 넣은 다음, 홈에서 ‘수준 확인하기’를 눌러요. 호야가 어디서 시작할지 알려 줘요.');
+    expect(ko.persona.learners.faq.level.guestA).toBe('아니요. 첫 퀘스트를 하고 이름을 넣은 다음 ‘수준 확인하기’를 눌러요. 호야가 어디서 시작할지 알려 줘요.');
   });
 
   it('[GU] the Privacy Policy first-quest bullet is English only (L10) and takes its days as values', () => {

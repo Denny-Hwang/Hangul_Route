@@ -191,7 +191,7 @@ export const landing = {
         level: {
           q: 'Ya sé algo de hangul. ¿Tengo que empezar desde el principio?',
           a: 'No. Al comenzar, toca «Ya sé algo de coreano» y haz una prueba de nivel. Hoya te sugiere por dónde empezar.',
-          guestA: 'No. Juega la primera misión, añade un nombre y luego toca «Hacer la prueba de nivel» en Inicio. Hoya te sugiere por dónde empezar.',
+          guestA: 'No. Juega la primera misión, añade un nombre y luego toca «Hacer la prueba de nivel». Hoya te sugiere por dónde empezar.',
         },
       },
       after: {
