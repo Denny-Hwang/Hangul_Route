@@ -900,3 +900,38 @@ describe('rebaseSnapshot (issue #262: a write that lands while a sync is in flig
     expect(rebaseSnapshot(sent, ours, theirs, { now: NOW }).quests[0]).toMatchObject({ completedAt: '2026-10-11T10:00:00.000Z', attempts: 2, stars: 3 });
   });
 });
+
+describe('warm-up and Try these again entries (F-CURR-002 sections 4.5 and 4.8, row CM-15)', () => {
+  const day = (kind: 'warmup' | 'feedback', scope: string, itemIds: string[], extra: Record<string, unknown> = {}) => ({
+    id: `${kind}:${scope}`,
+    kind,
+    generatedAt: `${scope}T09:00:00.000Z`,
+    scope,
+    itemIds,
+    ...extra,
+  });
+
+  it('one entry per local day: two copies of a day hold every item asked, the best stars, the earliest time', () => {
+    const local = day('feedback', '2026-10-21', ['lex:bap', 'lex:bae'], { resultStars: 1, missedItemIds: ['lex:bae'], generatedAt: '2026-10-21T11:00:00.000Z' });
+    const server = day('feedback', '2026-10-21', ['lex:bae', 'lex:mul'], { resultStars: 3, missedItemIds: [] });
+    expect(mergeReview(local, server)).toEqual({
+      id: 'feedback:2026-10-21',
+      kind: 'feedback',
+      generatedAt: '2026-10-21T09:00:00.000Z',
+      scope: '2026-10-21',
+      itemIds: ['lex:bap', 'lex:bae', 'lex:mul'],
+      resultStars: 3,
+      missedItemIds: ['lex:bae'],
+    });
+    const warm = mergeReview(day('warmup', '2026-10-21', ['lex:bap']), day('warmup', '2026-10-21', ['sym:g']));
+    expect(warm.itemIds).toEqual(['lex:bap', 'sym:g']);
+    expect(warm).not.toHaveProperty('resultStars');
+  });
+
+  it('a merge keeps them for 14 local days after the newest of their kind, so a union never brings a pruned day back', () => {
+    const local = base({ reviews: [day('warmup', '2026-10-21', ['lex:bap']), day('feedback', '2026-10-01', ['lex:bae'], { resultStars: 2 })] });
+    const server = base({ reviews: [day('warmup', '2026-10-07', ['lex:bap']), day('warmup', '2026-10-08', ['sym:g']), day('feedback', '2026-10-20', ['lex:bae'], { resultStars: 1 })] });
+    const merged = mergeSnapshots(local, server, { now: NOW });
+    expect(merged.reviews.map((r) => r.id).sort()).toEqual(['feedback:2026-10-20', 'warmup:2026-10-08', 'warmup:2026-10-21']);
+  });
+});

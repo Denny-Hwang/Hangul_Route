@@ -1,4 +1,5 @@
 import {
+  GATED_REVIEW_KINDS,
   InboxTransferSchema,
   LookupSeatSchema,
   InboxVisibleSpaceSchema,
@@ -38,6 +39,13 @@ function readServerCopy<T extends { snapshot: ProgressSnapshot } | null | undefi
   const snapshot = readSnapshotCopy(copy.snapshot);
   return snapshot === copy.snapshot ? copy : { ...copy, snapshot };
 }
+
+/**
+ * The review kinds this build reads beyond the CM-3b set, declared on the snapshot read and write and the
+ * Rescue Code claim (F-CURR-002 section 13, row CM-15): the Worker hands a warm-up entry only to a caller that
+ * declares it, so an app build from before CM-3b, which reads reviews strictly, never receives one.
+ */
+const REVIEW_CAPS = `cap=${GATED_REVIEW_KINDS.join(',')}`;
 
 /**
  * Transport for /api/sync (F-SYNC-001 §3.2). Typed results, never throws;
@@ -320,7 +328,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       body: { baseRev: number; snapshot: ProgressSnapshot; summary: ProgressSummary },
       creds: DeviceCredentials,
     ): Promise<PutResult> {
-      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/snapshot`, {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/snapshot?${REVIEW_CAPS}`, {
         method: 'PUT',
         headers: authHeader(creds),
         body: JSON.stringify({ ...body, schemaVer: SCHEMA_VERSION, contentVer: CONTENT_VERSION }),
@@ -342,7 +350,7 @@ export function createSyncApi(opts: SyncApiOptions) {
     },
 
     async claimRescueCode(code: string, deviceId: string): Promise<ClaimResult> {
-      const r = await call(fetchImpl, `${recovery}/claim`, {
+      const r = await call(fetchImpl, `${recovery}/claim?${REVIEW_CAPS}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, deviceId }),
@@ -570,7 +578,7 @@ export function createSyncApi(opts: SyncApiOptions) {
     },
 
     async getSnapshot(learnerId: string, creds: DeviceCredentials): Promise<GetResult> {
-      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/snapshot`, {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/snapshot?${REVIEW_CAPS}`, {
         headers: authHeader(creds),
       });
       if (r.status === -1) return { status: 'error', code: 'network' };

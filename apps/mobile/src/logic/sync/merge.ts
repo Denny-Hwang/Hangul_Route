@@ -1,5 +1,6 @@
 import {
   PLACEMENT_KEEP,
+  RETAINED_REVIEW_KINDS,
   mergeCellBest,
   mergeDayLog,
   mergeEarliest,
@@ -7,6 +8,7 @@ import {
   mergeLatchRecord,
   mergeStreakBest,
   mergeStreakLocal,
+  pruneReviews,
   type CardCollectionEntry,
   type EpisodeProgress,
   type HomeworkAssignment,
@@ -91,7 +93,32 @@ export function mergeHomework(l: HomeworkAssignment, s: HomeworkAssignment): Hom
   return { ...(l.completedAt ? l : s.completedAt ? s : l), completedAt };
 }
 
+/** Item ids of both copies, each once, the first copy's order first. */
+const unionIds = (a: readonly string[], b: readonly string[]): string[] => [...new Set([...a, ...b])];
+
+/**
+ * A day of warm-ups or of Try these again (F-CURR-002 section 4.5, row CM-15) is one entry, `<kind>:<local day>`:
+ * two copies of it hold every item either asked, the better stars and the earliest time, so the day's entry never
+ * loses a session played on another device.
+ */
+function mergeDayReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
+  const stars = Math.max(l.resultStars ?? -1, s.resultStars ?? -1);
+  const missed = l.missedItemIds === undefined && s.missedItemIds === undefined ? undefined : unionIds(l.missedItemIds ?? [], s.missedItemIds ?? []);
+  return {
+    id: l.id,
+    kind: l.kind,
+    generatedAt: earliest(l.generatedAt, s.generatedAt) ?? l.generatedAt,
+    scope: l.scope,
+    itemIds: unionIds(l.itemIds, s.itemIds),
+    ...(stars >= 0 ? { resultStars: stars as 0 | 1 | 2 | 3 } : {}),
+    ...(missed === undefined ? {} : { missedItemIds: missed }),
+  };
+}
+
+const DAY_REVIEW_KINDS: readonly string[] = RETAINED_REVIEW_KINDS;
+
 export function mergeReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
+  if (l.kind === s.kind && DAY_REVIEW_KINDS.includes(l.kind)) return mergeDayReview(l, s);
   const ls = l.resultStars ?? -1;
   const ss = s.resultStars ?? -1;
   if (ls !== ss) return ls > ss ? l : s;
@@ -416,7 +443,8 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     cards: unionBy(local.cards, server.cards, (c) => c.cardId, mergeCard),
     sessions,
     homework: unionBy(local.homework, server.homework, (h) => h.id, mergeHomework),
-    reviews: unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview),
+    // The warm-up and Try these again days are kept for 14 local days, as the Worker keeps them (section 4.8).
+    reviews: [...pruneReviews(unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview))],
     // The old streak, still written for older builds: story, game and level-check time never moves it (OD-19).
     streakDays: computeStreak(streakSessionDates(sessions), opts.now),
     ...(stageDoneAt ? { stageDoneAt } : {}),

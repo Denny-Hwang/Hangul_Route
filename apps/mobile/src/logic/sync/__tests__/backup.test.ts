@@ -1,5 +1,6 @@
-import { BackupFileSchema, type MemoryBackup, type Profile, type ProgressSnapshot } from '@hangul-route/content-schema';
+import { BackupFileSchema, ReviewEntrySchema, type MemoryBackup, type Profile, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { backupFileName, decodeBackup, encodeBackup } from '../backup';
 
 const profile: Profile = { id: 'profile:a', displayName: 'Su Ni!', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' };
@@ -94,6 +95,17 @@ describe('backup file (F-SYNC-001 §3.6)', () => {
     expect(older.success).toBe(true);
     expect(older.success && 'memory' in older.data).toBe(false);
     expect(JSON.parse(text)).toMatchObject({ format: 'hangul-route-backup', version: 1 });
+  });
+  it('never writes a warm-up review into a file, so an app build from before CM-3b can still restore it (F-CURR-002 section 13, row CM-15)', () => {
+    const entry = (id: string, kind: 'warmup' | 'feedback') => ({ id, kind, generatedAt: '2026-10-21T09:00:00.000Z', scope: '2026-10-21', itemIds: ['lex:bap'] });
+    const held = { ...snapshot, reviews: [entry('warmup:2026-10-21', 'warmup'), entry('feedback:2026-10-21', 'feedback')] };
+    const text = encodeBackup(profile, held, new Date('2026-10-21T10:00:00Z'));
+    expect((JSON.parse(text) as { snapshot: ProgressSnapshot }).snapshot.reviews.map((r) => r.id)).toEqual(['feedback:2026-10-21']);
+    // A build from before CM-3b read every entry against its three kinds, strictly: the file still reads there.
+    const preCm3b = z.array(ReviewEntrySchema.extend({ kind: z.enum(['daily', 'feedback', 'stage-certificate']) }));
+    expect(preCm3b.safeParse((JSON.parse(text) as { snapshot: ProgressSnapshot }).snapshot.reviews).success).toBe(true);
+    expect(preCm3b.safeParse(held.reviews).success).toBe(false);
+    expect(held.reviews).toHaveLength(2);
   });
   it('builds a safe file name', () => {
     expect(backupFileName('Su Ni!', new Date('2026-09-21T05:00:00Z'))).toBe('hangul-route-su-ni-2026-09-21.hangulroute.json');
