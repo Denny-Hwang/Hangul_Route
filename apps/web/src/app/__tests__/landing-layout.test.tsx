@@ -80,12 +80,14 @@ describe('the hero (L0)', () => {
     expect(main).toMatch(new RegExp(`<a href="${esc(learnerStart('en'))}" class="hr-site-primary"[^>]*>${H.hero.start}</a>`));
   });
 
-  it('[SN] the facts line right after the primary action, then "I\'m a parent" and "I\'m a teacher" to their pages; no #who hero link', () => {
+  it('[SN] the facts line right after the primary action, then "I\'m a parent" and "I\'m a teacher" to their pages; no #who hero link ([GU] the guest line between, since GU-7)', () => {
     const hero = /<section aria-labelledby="home-title"[\s\S]*?<\/section>/.exec(main)?.[0] ?? '';
     const actions = hero.indexOf('class="hr-site-actions"');
     const facts = hero.indexOf(esc(H.hero.facts).replace(/\\/g, '').replace(/'/g, '&#x27;'));
     expect(actions).toBeGreaterThan(-1);
-    expect(textOf(hero)).toContain(`${H.hero.start} ${H.hero.facts} ${H.hero.forParents} ${H.hero.forTeachers}`);
+    // [GU] The guestLesson claim is on since GU-7: its one line sits under the facts line, above the grown-up links.
+    expect(SITE_CLAIMS.guestLesson).toBe(true);
+    expect(textOf(hero)).toContain(`${H.hero.start} ${H.hero.facts} ${H.hero.guest} ${H.hero.forParents} ${H.hero.forTeachers}`);
     expect(facts === -1 || facts > actions).toBe(true);
     const links = [...hero.matchAll(/<a [^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/g)].map((m) => [m[1], decode(m[2] ?? '')]);
     expect(links).toEqual([
@@ -165,19 +167,23 @@ describe('the blocks under the hero (L1)', () => {
   it('how it works: three numbered steps, title and line; the Learning Route line only with its claim', () => {
     const how = /<section[^>]*>\s*<h2[^>]*>How it works<\/h2>[\s\S]*?<\/section>/.exec(main)?.[0] ?? '';
     expect(how).toMatch(/<ol role="list"/);
-    for (const step of Object.values(H.how.steps)) expect(textOf(how)).toContain(step.title);
-    // Step 1's line names the level check while the `levelCheck` claim is on, as it is today (owner decision
-    // 2026-10-21); landing-claims.test.tsx pins both states.
+    // [GU] Today (since GU-7) both the `levelCheck` and the `guestLesson` claims are on: step 1 is the guest start that
+    // names the level check after, and step 3 ties the backup to adding a name. landing-claims.test.tsx and
+    // landing-guest-claim.test.tsx pin every combination.
     expect(SITE_CLAIMS.levelCheck).toBe(true);
-    expect(textOf(how)).toContain(H.how.levelBody);
-    // The level line opens with the base line's words, which then appear once (not a second time on their own).
-    expect(textOf(how).split(H.how.steps.start.body)).toHaveLength(2);
+    expect(SITE_CLAIMS.guestLesson).toBe(true);
+    for (const title of [H.how.steps.start.guestTitle, H.how.steps.quests.title, H.how.steps.collect.title]) expect(textOf(how)).toContain(title);
+    expect(textOf(how)).not.toContain(H.how.steps.start.title);
+    expect(textOf(how)).toContain(H.how.guestLevelBody);
+    expect(textOf(how)).not.toContain(H.how.levelBody);
     expect(textOf(how)).toContain(H.how.steps.quests.body);
-    expect(textOf(how)).toContain(H.how.steps.collect.body);
+    expect(textOf(how)).toContain(H.how.steps.collect.guestBody);
+    expect(textOf(how)).not.toContain(H.how.steps.collect.body);
     expect(text).not.toContain(H.how.routeBody);
     const on = textOf(mainOf(renderToStaticMarkup(<Home locale="en" claims={{ ...SITE_CLAIMS, learningRoute: true }} />)));
     expect(on).toContain(H.how.routeBody);
     expect(on).not.toContain(H.how.steps.collect.body);
+    expect(on).not.toContain(H.how.steps.collect.guestBody);
   });
 
   it('the promises: three titles, no body, "Child safety first" and no compliance claim (OD-4)', () => {

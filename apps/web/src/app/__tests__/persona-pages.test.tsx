@@ -148,7 +148,11 @@ describe('/learners (S-4a)', () => {
     const questions = [...main.matchAll(/<summary[^>]*><span[^>]*>([^<]*)<\/span><\/summary>/g)].map((m) => decode(m[1] ?? ''));
     expect(SITE_CLAIMS.levelCheck).toBe(true);
     expect(questions.slice(2)).toEqual([L.faq.signIn.q, L.faq.code.q, L.faq.offline.q, L.faq.adult.q, L.faq.korean.q, L.faq.level.q]);
-    for (const { a } of [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean, L.faq.level]) expect(count(text, a)).toBe(1);
+    for (const { a } of [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean]) expect(count(text, a)).toBe(1);
+    // [GU] The guestLesson claim is on since GU-7: the level answer is its guest variant (section 13.2).
+    expect(SITE_CLAIMS.guestLesson).toBe(true);
+    expect(count(text, L.faq.level.guestA)).toBe(1);
+    expect(text).not.toContain(L.faq.level.a);
     const off = textOf(mainOf(renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...SITE_CLAIMS, levelCheck: false }} />)));
     expect(off).not.toContain(L.faq.level.q);
     expect(off).not.toContain(L.faq.level.a);
@@ -242,7 +246,7 @@ describe('/parents (S-4b)', () => {
   it('[SN] create first: Create a free family space (/signin?mode=create&persona=parent), Start learning, then the have-account link; the closing the same', () => {
     const links = linksOf(main);
     expect(links[0]).toEqual({ href: createAccount('parent', 'en'), text: P.create });
-    expect(links[1]).toEqual({ href: learnerStart('en'), text: t.nav.start });
+    expect(links[1]).toEqual({ href: learnerStart('en', ALL_CLAIMS_OFF), text: t.nav.start });
     expect(links[2]).toEqual({ href: signIn('parent', 'en'), text: t.persona.haveAccount });
     expect(links.slice(-2)).toEqual([
       { href: createAccount('parent', 'en'), text: P.create },
@@ -251,7 +255,7 @@ describe('/parents (S-4b)', () => {
     expect(createAccount('parent', 'en')).toBe('/signin?mode=create&persona=parent');
     expect(signIn('parent', 'en')).toBe('/signin?persona=parent');
     expect(main).toMatch(new RegExp(`<a href="${esc(createAccount('parent', 'en').replace(/&/g, '&amp;'))}" class="hr-site-primary"`));
-    expect(main).toMatch(new RegExp(`<a href="${esc(learnerStart('en'))}" class="hr-site-secondary"`));
+    expect(main).toMatch(new RegExp(`<a href="${esc(learnerStart('en', ALL_CLAIMS_OFF))}" class="hr-site-secondary"`));
     // The have-account link is a 64 px tall text link, not a button.
     expect(main).toMatch(new RegExp(`<a href="${esc(signIn('parent', 'en'))}" class="hr-site-text-link"`));
   });
@@ -352,7 +356,7 @@ describe('/teachers (S-4b)', () => {
     const links = linksOf(main);
     expect(links).toEqual([
       { href: createAccount('teacher', 'en'), text: T.create },
-      { href: learnerStart('en'), text: T.tryIt },
+      { href: learnerStart('en', ALL_CLAIMS_OFF), text: T.tryIt },
       { href: signIn('teacher', 'en'), text: t.persona.haveAccount },
       { href: createAccount('teacher', 'en'), text: T.create },
       { href: signIn('teacher', 'en'), text: t.persona.haveAccount },
@@ -461,8 +465,10 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11), the notes lin
     expect(T.class.reports).toBe('Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.');
   });
 
-  it('/learners is unchanged by the reports claims (only the level-check claim, on today, changes it)', () => {
-    expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...ALL_CLAIMS_OFF, levelCheck: true }} />));
+  it('/learners is unchanged by the reports claims (only the level-check and guest start claims, on today, change it)', () => {
+    expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(
+      renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...ALL_CLAIMS_OFF, levelCheck: true, guestLesson: true }} />),
+    );
   });
 
   it.each(['ko', 'es'] as const)('%s: the reports lines and the notes line, since its report words are signed (F-SITE-002 G6; MAR re-review)', (locale) => {

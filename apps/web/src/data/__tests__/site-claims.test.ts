@@ -17,7 +17,7 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14), lecture mode (AMENDMENTS-LECTURE-V2 LV-7) and the level check (F-PLC-001 P-10, owner decision 2026-10-21) on, every other feature line off (the guest start until GU-7)', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14), lecture mode (AMENDMENTS-LECTURE-V2 LV-7), the level check (F-PLC-001 P-10, owner decision 2026-10-21) and the guest start (AMENDMENTS-GUEST-FIRST-LESSON GU-7) on, every other feature line off', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
@@ -28,7 +28,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       browseAsLearner: true,
       lectureMode: true,
       levelCheck: true,
-      guestLesson: false,
+      guestLesson: true,
     });
   });
 
@@ -45,12 +45,12 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     expect(SITE_CLAIMS.learningRoute).toBe(false);
   });
 
-  it('shows the reports, notes, lecture mode and level-check lines today: their flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
+  it('shows the reports, notes, lecture mode, level-check and guest start lines today: their flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
     for (const locale of UI_LOCALES) {
       const shown = BOOLEAN_KEYS.filter((key) => showsClaim(SITE_CLAIMS, key, locale));
-      // The reports lines follow REPORT_REVIEWED_LOCALES; the notes and level-check lines are live in every UI locale (FB-5b).
+      // The reports lines follow REPORT_REVIEWED_LOCALES; the notes, level-check and guest start lines are live in every UI locale (FB-5b).
       const reports = REPORT_REVIEWED_LOCALES.includes(locale) ? (['parentReports', 'teacherReports'] as const) : [];
-      expect(shown, locale).toEqual(['feedbackNotes', 'lectureMode', 'levelCheck', ...reports]);
+      expect(shown, locale).toEqual(['feedbackNotes', 'guestLesson', 'lectureMode', 'levelCheck', ...reports]);
     }
   });
 
@@ -161,11 +161,16 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     );
   });
 
-  it('[GU] keeps the guest start off until GU-7 turns the learner app switch on (AMENDMENTS-GUEST-FIRST-LESSON section 13.1)', () => {
-    // The claim never runs ahead of the feature: GU-7 flips it in the PR that turns `EXPO_PUBLIC_GUEST_LESSON` on, and
-    // pins the learner app's default beside it there.
-    expect(SITE_CLAIMS.guestLesson).toBe(false);
-    for (const locale of UI_LOCALES) expect(showsClaim(SITE_CLAIMS, 'guestLesson', locale), locale).toBe(false);
+  it('[GU] shows the guest start since GU-7, only because the learner app\'s web build turns the guest switch on (AMENDMENTS-GUEST-FIRST-LESSON section 13.1)', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+    const learnerFlags = readFileSync(join(root, 'mobile', 'src', 'config', 'flags.ts'), 'utf8');
+    // The web learner build's launch value (GU-D16: a native bundle stays off, so the default is `!isNativeBundle()`).
+    const learnerOn = /launchDefaults: Flags = \{[^}]*\bguestLessonEnabled: !isNativeBundle\(\),/.test(learnerFlags);
+    expect(learnerOn).toBe(true);
+    expect(SITE_CLAIMS.guestLesson).toBe(true);
+    for (const locale of UI_LOCALES) expect(showsClaim(SITE_CLAIMS, 'guestLesson', locale), locale).toBe(true);
+    // The claim may never run ahead of the feature: a PR turning the app switch's default off must set it back.
+    expect(!SITE_CLAIMS.guestLesson || learnerOn).toBe(true);
   });
 
   it('[GU] shows the guest start lines in every UI locale, free, while its claim is on, and hides them with it off (both states pinned)', () => {

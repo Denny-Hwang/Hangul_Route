@@ -24,7 +24,7 @@
  * |                                    | more than a day) means a PR setting it back to `false` and a site        |
  * |                                    | redeploy; the app's kill switch alone never moves it                     |
  * | `guestLesson`                      | AMENDMENTS-GUEST-FIRST-LESSON GU-7 flag flip                             |
- * |                                    | (with `EXPO_PUBLIC_GUEST_LESSON` on). Rollback (section 13.1, as LV-D1): |
+ * |                                    | (flipped on, with `EXPO_PUBLIC_GUEST_LESSON` on). Rollback (section 13.1, as LV-D1): |
  * |                                    | the app switch off for more than a day, or killed for a CS-G failure of  |
  * |                                    | any length, means a PR setting it back to `false` and a site redeploy    |
  * |                                    | the same day                                                             |
@@ -89,8 +89,8 @@ export const SITE_CLAIMS: Readonly<SiteClaims> = Object.freeze({
   lectureMode: true,
   // F-PLC-001 P-10: placementEnabled is on by default in the learner app; the site says so (owner decision 2026-10-21).
   levelCheck: true,
-  // [GU] AMENDMENTS-GUEST-FIRST-LESSON GU-6: off until GU-7 turns the learner app's guest switch on in the same PR.
-  guestLesson: false,
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON GU-7: on with the learner app's guest switch (web build) in the same PR.
+  guestLesson: true,
 });
 
 /** A line about a paid feature shows only when its claim is on AND `paidPlans === 'inApp'`. */
