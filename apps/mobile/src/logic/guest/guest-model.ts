@@ -327,13 +327,22 @@ export interface GuestResultsActions {
   askOwner: boolean;
   /** The quiet **Not now**. */
   notNow: boolean;
+  /**
+   * [GU] Row GU-3 (section 7.1, GU-0b D3): the shipped **Try this one again** under Hoya's cheer, whenever the cheer
+   * invites a replay: every tier but `perfect` (3 stars with games played). Needs the run's `stars` and `played`.
+   */
+  replay: boolean;
 }
 
-/** GU-D8, GU-D10: nothing before quest 1 is done; then Keep my progress (or the ask-the-owner line) and Not now. */
-export function guestResultsActions(input: { questDone: boolean; saveGate: GuestSaveGate }): GuestResultsActions {
-  if (!input.questDone) return { keep: false, askOwner: false, notNow: false };
+/**
+ * GU-D8, GU-D10: nothing before quest 1 is done; then Keep my progress (or the ask-the-owner line) and Not now. [GU]
+ * Row GU-3: the replay is offered unless the cheer is `perfect` (`resultsCheerMessage`: games played and 3 stars).
+ */
+export function guestResultsActions(input: { questDone: boolean; saveGate: GuestSaveGate; stars?: 0 | 1 | 2 | 3; played?: boolean }): GuestResultsActions {
+  const replay = input.stars !== undefined && !(input.played !== false && input.stars === 3);
+  if (!input.questDone) return { keep: false, askOwner: false, notNow: false, replay };
   const owner = input.saveGate === 'owner';
-  return { keep: !owner, askOwner: owner, notNow: true };
+  return { keep: !owner, askOwner: owner, notNow: true, replay };
 }
 
 /** Where a launch with the `try` intent lands (section 6.1). */

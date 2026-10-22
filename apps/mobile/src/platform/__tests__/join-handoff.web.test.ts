@@ -1,7 +1,7 @@
 import { JOIN_HANDOFF_KEY, JOIN_HANDOFF_MS } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as native from '../join-handoff';
-import { takeJoinHandoff } from '../join-handoff.web';
+import { hasJoinHandoff, takeJoinHandoff } from '../join-handoff.web';
 import type { SessionArea } from '../grown-up-handoff.web';
 
 /**
@@ -79,5 +79,24 @@ describe('takeJoinHandoff (web)', () => {
 describe('native stub', () => {
   it('has no hand-off (the family home is on the web app host only)', () => {
     expect(native.takeJoinHandoff()).toBeNull();
+  });
+});
+
+describe('[GU] hasJoinHandoff (web, row GU-3)', () => {
+  it('reads a fresh hand-off without taking it; an expired, damaged or missing one is none', () => {
+    const area = memoryArea({ [JOIN_HANDOFF_KEY]: JSON.stringify({ v: 1, code: 'ABCD23', at: NOW - 60_000 }) });
+    expect(hasJoinHandoff(area, NOW)).toBe(true);
+    expect(area.data.has(JOIN_HANDOFF_KEY)).toBe(true);
+    expect(takeJoinHandoff(area, NOW)).toBe('ABCD23');
+    expect(hasJoinHandoff(area, NOW)).toBe(false);
+    expect(hasJoinHandoff(memoryArea({ [JOIN_HANDOFF_KEY]: JSON.stringify({ v: 1, code: 'ABCD23', at: NOW - JOIN_HANDOFF_MS }) }), NOW)).toBe(false);
+    expect(hasJoinHandoff(memoryArea({ [JOIN_HANDOFF_KEY]: '{oops' }), NOW)).toBe(false);
+    expect(hasJoinHandoff(null, NOW)).toBe(false);
+  });
+
+  it('a storage that throws reads as none; native has none', () => {
+    const throwing = { getItem: () => { throw new Error('blocked'); }, setItem: () => undefined, removeItem: () => undefined };
+    expect(hasJoinHandoff(throwing, NOW)).toBe(false);
+    expect(native.hasJoinHandoff()).toBe(false);
   });
 });
