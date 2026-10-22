@@ -57,7 +57,7 @@ vi.mock('../../platform/join-handoff', () => ({ takeJoinHandoff: () => null }));
 
 import type { GuestRecord, Profile } from '@hangul-route/content-schema';
 import { useGuestStore } from '../guest-store';
-import { removeLiveGuest } from '../guest-sweep';
+import { removeLiveGuest } from '../guest-remove';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 

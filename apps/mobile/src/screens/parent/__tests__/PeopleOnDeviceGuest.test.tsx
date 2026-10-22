@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * on; Remove the first quest asks a fresh PIN when a PIN is stored, else the ConfirmSheet alone; then the sweep.
  */
 const removed = vi.hoisted(() => ({ calls: 0 }));
-vi.mock('../../../store/guest-sweep', () => ({
+vi.mock('../../../store/guest-remove', () => ({
   removeLiveGuest: vi.fn(async () => {
     removed.calls += 1;
     const { useGuestStore } = await import('../../../store/guest-store');
@@ -26,7 +26,17 @@ import { useGuestStore } from '../../../store/guest-store';
 import { useLocaleStore } from '../../../store/locale-store';
 import { resetProfileLocks } from '../../../store/profile-locks';
 import { useUiStore } from '../../../store/ui-store';
-import { byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+import { byTestId, cleanup, press, render as renderNow, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+
+/** Renders, then lets the lazy guest-keep chunk (`guest-keep.tsx`) load and draw. */
+async function render(...args: Parameters<typeof renderNow>): ReturnType<typeof renderNow> {
+  const r = await renderNow(...args);
+  await act(async () => {
+    await import('../guest-keep-chunk');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  return r;
+}
 import { PeopleOnDeviceCard } from '../PeopleOnDeviceCard';
 
 const en = getMessages('en');

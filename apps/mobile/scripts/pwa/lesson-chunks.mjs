@@ -56,6 +56,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // SaveGuest verify path of PinEntry, the first Home's bubble, Welcome's Add my name, the promotion for GU-D11) and the
   // 16.2 English strings; the save card and the Not now card stay in the guest's chunk (11,950 B raw): 4,767,105 B raw /
   // 1,253,769 B gzip (release `build:web`, cache cleared), so the line is that plus 7,895 B.
+  // [GU] Row GU-5 adds the try trigger, the chooser's guest tiles, the owner's keep and the 16.3 English strings; the
+  // grown-up side of an unsaved quest (People on this device's row, the guest-only gate) is a screen chunk of its own
+  // (guest-keep-chunk, 5,381 B raw): 4,771,805 B raw / 1,255,131 B gzip (release `build:web`), under the line, unchanged.
   startBundleRaw: 4_775_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -145,7 +148,13 @@ export const ROOT_CHUNKS = Object.freeze([
  * (`src/navigation/guest-chunk.tsx`), reached only through the literal `import()` of `src/navigation/guest.tsx`, so
  * the start bundle carries none of its screens. Its module exports its marker (`SCREEN_CHUNK`).
  */
-export const SCREEN_CHUNKS = Object.freeze([Object.freeze({ name: 'guest-chunk', marker: 'screen-chunk:guest' })]);
+export const SCREEN_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'guest-chunk', marker: 'screen-chunk:guest' }),
+  // [GU] Row GU-5: the grown-up side of an unsaved first quest (`src/screens/parent/guest-keep-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/parent/guest-keep.tsx`): People on this device's first-quest row and
+  // the guest-only gate on PIN setup.
+  Object.freeze({ name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' }),
+]);
 
 /**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each

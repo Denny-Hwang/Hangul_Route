@@ -32,7 +32,7 @@ vi.mock('../../../platform/telemetry', () => ({
 }));
 vi.mock('../../../platform/grown-up-handoff', () => ({ openGrownUpArea: vi.fn(async () => 'opened'), continueToGrownUpPage: vi.fn(), clearGrownUpTab: vi.fn() }));
 const sweep = vi.hoisted(() => ({ calls: 0, result: true }));
-vi.mock('../../../store/guest-sweep', () => ({
+vi.mock('../../../store/guest-remove', () => ({
   removeLiveGuest: vi.fn(async () => {
     sweep.calls += 1;
     if (sweep.result) {
@@ -48,7 +48,17 @@ import { useAccountStore } from '../../../store/account-store';
 import { useGuestStore } from '../../../store/guest-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useUiStore } from '../../../store/ui-store';
-import { byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+import { byTestId, cleanup, press, render as renderNow, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+
+/** Renders, then lets the lazy guest-keep chunk (`guest-keep.tsx`) load and draw. */
+async function render(...args: Parameters<typeof renderNow>): ReturnType<typeof renderNow> {
+  const r = await renderNow(...args);
+  await act(async () => {
+    await import('../guest-keep-chunk');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  return r;
+}
 import { PinEntryScreen } from '../PinEntryScreen';
 
 const en = getMessages('en');

@@ -1,7 +1,6 @@
 import {
   Body,
   Button,
-  ConfirmSheet,
   Screen,
   Spacer,
   colors,
@@ -13,10 +12,9 @@ import {
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinkButton } from '../../components/LinkButton';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { afterGateHandoff } from '../../logic/browse/gate-entry';
@@ -62,7 +60,6 @@ import { useAudience } from '../../store/audience';
 import { gateDestOf } from '../../logic/profiles/gate-events';
 import { trackGateOpened, trackPinPaused, trackProfileSwitch } from '../../store/gate-telemetry';
 import { useGuestStore } from '../../store/guest-store';
-import { removeLiveGuest } from '../../store/guest-sweep';
 import { verifyForLockedProfile } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
@@ -70,6 +67,7 @@ import { pickLanding } from '../../logic/profiles/who';
 import { routeZone } from '../../logic/profiles/session';
 import { heldJoin, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
 import { openGuestFormAfterPin } from '../guest/guest-exits';
+import { GuestOnlyGateBox } from './guest-keep';
 import { RESET_SETUP_IDLE_MS, bindResetSetupLapse, resetSetupLapseDeps } from './use-gate-lapse';
 import { useBiometricAvailability } from './use-biometric-available';
 
@@ -190,8 +188,6 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const guestRecord = useGuestStore((g) => g.record);
   const guestRunning = useGuestStore((g) => g.running);
   const deviceProfiles = useProfileStore((s) => s.profiles);
-  const [guestAsk, setGuestAsk] = useState(false);
-  const [guestBusy, setGuestBusy] = useState(false);
   const [entry, setEntry] = useState('');
   const [firstPin, setFirstPin] = useState('');
   const [hint, setHint] = useState<string | null>(null);
@@ -690,19 +686,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   // switch off too, so a grown-up asked for a PIN because of a kept record always sees why.
   const guestOnly =
     mode === 'setup-1' && !saveGuest && !guestRunning && route.params.via === undefined && guestOnlyGate({ profiles: deviceProfiles, guest: guestRecord, parentPinHash: storedHash });
-  /** [GU] Remove the first quest, confirmed: the sweep, then the destination as before the guest (`parent.gate.opened` `open`). */
-  const removeGuestHere = async (): Promise<void> => {
-    if (guestBusy) return;
-    setGuestBusy(true);
-    try {
-      const done = await removeLiveGuest();
-      setGuestAsk(false);
-      if (!done) return;
-      trackGateOpened(route.params.next, 'open');
-      proceed(false);
-    } finally {
-      setGuestBusy(false);
-    }
+  /** [GU] Remove the first quest went through (the sweep): the destination as before the guest (`parent.gate.opened` `open`). */
+  const afterGuestRemoved = (): void => {
+    trackGateOpened(route.params.next, 'open');
+    proceed(false);
   };
 
   // [OA] Section 8.3: seconds under a minute, minutes above; the help line from the 3rd pause, Grown-up area only.
@@ -857,10 +844,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           inside the measured block so the pad gets what is left. Plain text in reading order, not a live region.
         */}
         {guestOnly ? (
-          <View testID="pin-guest-only" style={{ marginTop: spacing.sm, backgroundColor: colors.surface.sunken, borderRadius: radii.md, padding: spacing.md, gap: spacing.xs }}>
-            <Body>{messages.caregiver.people.guestOnlyGate}</Body>
-            <LinkButton label={messages.caregiver.people.guestRemove} onPress={() => setGuestAsk(true)} testID="pin-guest-remove" />
-          </View>
+          <Suspense fallback={null}>
+            <GuestOnlyGateBox onRemoved={afterGuestRemoved} />
+          </Suspense>
         ) : null}
       </View>
 
@@ -924,18 +910,6 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           }
         />
       ) : null}
-      {/* [GU] Remove the first quest's ConfirmSheet: no fresh PIN (there is no PIN yet), Cancel first and focused. */}
-      <ConfirmSheet
-        visible={guestOnly && guestAsk}
-        title={messages.caregiver.people.guestRemoveAsk}
-        message={messages.caregiver.people.guestConfirm}
-        cancelLabel={messages.common.buttons.cancel}
-        confirmLabel={messages.caregiver.people.guestRemove}
-        busy={guestBusy}
-        onCancel={() => setGuestAsk(false)}
-        onConfirm={() => void removeGuestHere()}
-        testID="pin-guest-sheet"
-      />
     </Screen>
   );
 }
