@@ -1,4 +1,4 @@
-import { decodeReviewItems, type ReviewItem, type ReviewItemsChunk } from '@hangul-route/content-schema/review-items';
+import { decodeRetiredItem, decodeReviewItems, type ReviewItem, type ReviewItemsChunk } from '@hangul-route/content-schema/review-items';
 
 /**
  * The review items at runtime (F-CURR-002 §4.2, §10, row CM-10). The start bundle holds only the
@@ -28,6 +28,8 @@ export interface ReviewItemIndex {
   byId: ReadonlyMap<string, ReviewItem>;
   /** Never selected for review, out of every mastery denominator; their learner state stays. */
   retired: ReadonlySet<string>;
+  /** A retired item's Korean by its id, so a report can name the item its kept state belongs to. */
+  retiredById: ReadonlyMap<string, ReturnType<typeof decodeRetiredItem>>;
 }
 
 export interface ReviewItemStore {
@@ -44,7 +46,13 @@ export function createReviewItemStore(chunk: { hash: string; load: () => Promise
     const loaded = await chunk.load();
     if (loaded.CHUNK_HASH !== chunk.hash) throw new ReviewItemsChunkMismatch(chunk.hash, loaded.CHUNK_HASH);
     const items = decodeReviewItems(loaded);
-    index = { items, byId: new Map(items.map((item) => [item.id, item])), retired: new Set(loaded.REVIEW_RETIRED_IDS) };
+    const retired = loaded.REVIEW_RETIRED.map(decodeRetiredItem);
+    index = {
+      items,
+      byId: new Map(items.map((item) => [item.id, item])),
+      retired: new Set(retired.map((r) => r.id)),
+      retiredById: new Map(retired.map((r) => [r.id, r])),
+    };
     return index;
   };
   return {
