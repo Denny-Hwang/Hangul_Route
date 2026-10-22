@@ -686,10 +686,25 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   // switch off too, so a grown-up asked for a PIN because of a kept record always sees why.
   const guestOnly =
     mode === 'setup-1' && !saveGuest && !guestRunning && route.params.via === undefined && guestOnlyGate({ profiles: deviceProfiles, guest: guestRecord, parentPinHash: storedHash });
-  /** [GU] Remove the first quest went through (the sweep): the destination as before the guest (`parent.gate.opened` `open`). */
-  const afterGuestRemoved = (): void => {
-    trackGateOpened(route.params.next, 'open');
-    proceed(false);
+  /**
+   * [GU] Remove the first quest went through (the sweep): the destination as before the guest (`parent.gate.opened`
+   * `open`). Row GU-5 review: only when the gate, read again from storage after the sweep, opens directly; when another
+   * tab meanwhile saved the guest as a child or set a PIN, this screen stays (verify once a PIN is stored, else setup).
+   * A destination this screen returns to with `back()` (PlacementFinish, Billing, ExternalLink, LectureMode, JoinSpace,
+   * BiometricShortcut) sees no gate opened and takes one more tap, which now opens directly (section 9.2).
+   */
+  const afterGuestRemoved = (opensDirectly: boolean): void => {
+    if (opensDirectly) {
+      trackGateOpened(route.params.next, 'open');
+      proceed(false);
+      return;
+    }
+    const nextMode = initialPinMode(route.params, useAccountStore.getState().parentPinHash);
+    if (nextMode !== mode) {
+      setEntry('');
+      setFirstPin('');
+      setMode(nextMode);
+    }
   };
 
   // [OA] Section 8.3: seconds under a minute, minutes above; the help line from the 3rd pause, Grown-up area only.

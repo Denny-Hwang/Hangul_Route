@@ -1,8 +1,11 @@
-import { GUEST_KEY, GuestRecordSchema } from '@hangul-route/content-schema';
+import { GUEST_KEY, GuestRecordSchema, type Profile } from '@hangul-route/content-schema';
 import { isLiveGuest, storedIdStatus, storedRuleProfiles, unreadableGuestId, type GuestRuleProfile } from '../logic/guest/guest-model';
+import { gateOpensDirectly } from '../logic/profiles/gate-route';
+import { storedProfileItems } from '../logic/profiles/profile-merge';
 import { postProfilesChanged } from '../platform/profiles-channel';
-import { readJsonExact, removeKey } from '../platform/storage';
+import { readJsonExact, readJsonStrict, removeKey } from '../platform/storage';
 import { PROFILES_LOCK, withTabLock } from '../platform/tab-lock';
+import { useAccountStore } from './account-store';
 import { hideGuestIdWhile, readStoredGuest, useGuestStore } from './guest-store';
 import { sweepProfileKeys } from './profile-key-sweep';
 import './profile-keys';
@@ -44,6 +47,28 @@ export async function removeLiveGuest(): Promise<boolean> {
       useGuestStore.setState({ record: null, running: false, memoryOnly: false });
       return true;
     });
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * [GU] Row GU-5 review (section 9.2, CS-G10): after **Remove the first quest** on the guest-only gate, whether the
+ * destination may now open directly, read again from storage rather than this tab's memory: the PIN hash strictly
+ * (`rereadPinHash`; this tab never hears of a PIN another tab set) and the stored profile list, joined with memory.
+ * Another tab may have saved the guest as a child, added a learner or set a PIN while this sheet was open; then the
+ * gate is required and this is false. A read that fails is false (fail closed: the PIN screen stays). A profile only
+ * storage holds is read into this tab's store, so the PIN screen draws what is stored. Never throws.
+ */
+export async function gateOpensDirectlyAfterRemove(): Promise<boolean> {
+  try {
+    const pin = await useAccountStore.getState().rereadPinHash();
+    if (pin.failed) return false;
+    const stored = storedProfileItems<Profile>(await readJsonStrict<unknown>(PROFILES_KEY));
+    const memory = useProfileStore.getState().profiles;
+    const added = stored.filter((p) => !memory.some((m) => m.id === p.id));
+    if (added.length > 0) await useProfileStore.getState().refresh().catch(() => undefined);
+    return gateOpensDirectly({ profiles: [...memory, ...added], parentPinHash: pin.hash, sessionOpen: false, guest: null });
   } catch {
     return false;
   }

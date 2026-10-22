@@ -31,7 +31,7 @@ vi.mock('../../../platform/telemetry', () => ({
   }),
 }));
 vi.mock('../../../platform/grown-up-handoff', () => ({ openGrownUpArea: vi.fn(async () => 'opened'), continueToGrownUpPage: vi.fn(), clearGrownUpTab: vi.fn() }));
-const sweep = vi.hoisted(() => ({ calls: 0, result: true }));
+const sweep = vi.hoisted(() => ({ calls: 0, result: true, direct: true, pinSetElsewhere: false }));
 vi.mock('../../../store/guest-remove', () => ({
   removeLiveGuest: vi.fn(async () => {
     sweep.calls += 1;
@@ -40,6 +40,14 @@ vi.mock('../../../store/guest-remove', () => ({
       useGuestStore.setState({ record: null, running: false });
     }
     return sweep.result;
+  }),
+  // [GU] GU-5 review: the gate read again from storage after the sweep (another tab may have set a PIN meanwhile).
+  gateOpensDirectlyAfterRemove: vi.fn(async () => {
+    if (sweep.pinSetElsewhere) {
+      const { useAccountStore } = await import('../../../store/account-store');
+      useAccountStore.setState({ parentPinHash: 'h:9999' });
+    }
+    return sweep.direct;
   }),
 }));
 
@@ -91,6 +99,8 @@ beforeEach(() => {
   tracked.length = 0;
   sweep.calls = 0;
   sweep.result = true;
+  sweep.direct = true;
+  sweep.pinSetElsewhere = false;
   flags.guestLessonEnabled = true;
   useProfileStore.setState({ profiles: [self], activeId: self.id, hydrated: true });
   useAccountStore.setState({ parentPinHash: null, pinHashReadFailed: false, pinAttempts: { failures: [], lockedUntil: null, strikes: 0 } });
@@ -143,6 +153,40 @@ describe('[GU] the guest-only gate on PIN setup (9.2)', () => {
     await act(async () => sheetOf(r.root).onConfirm());
     expect(navigation.replace).not.toHaveBeenCalled();
     expect(byTestId(r.root, 'pin-guest-only')).not.toHaveLength(0);
+  });
+
+  it('a failed sweep keeps the sheet open with the generic line (never a silent press)', async () => {
+    sweep.result = false;
+    const { r, navigation } = await show();
+    await press(byTestId(r.root, 'pin-guest-remove')[0]!);
+    await act(async () => sheetOf(r.root).onConfirm());
+    expect(sheetOf(r.root)).toMatchObject({ visible: true, detail: en.common.errors.generic });
+    expect(navigation.replace).not.toHaveBeenCalled();
+    await act(async () => sheetOf(r.root).onCancel());
+    expect(sheetOf(r.root).detail).toBeUndefined();
+  });
+
+  it('GU-5 review: a guest saved as a child or a PIN set in another tab meanwhile opens nothing (the gate read again)', async () => {
+    sweep.direct = false;
+    sweep.pinSetElsewhere = true;
+    const { r, navigation } = await show({ next: 'AddProfile' });
+    await press(byTestId(r.root, 'pin-guest-remove')[0]!);
+    await act(async () => sheetOf(r.root).onConfirm());
+    expect(sweep.calls).toBe(1);
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(navigation.goBack).not.toHaveBeenCalled();
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(tracked.some((e) => e.name === 'parent.gate.opened')).toBe(false);
+    // The PIN another tab set is asked now: the guest-only box is gone and nothing was opened.
+    expect(byTestId(r.root, 'pin-guest-only')).toHaveLength(0);
+  });
+
+  it('a destination that waits underneath (the level check\'s finish) gets a back with no gate opened: one more tap opens it', async () => {
+    const { r, navigation } = await show({ next: 'PlacementFinish' });
+    await press(byTestId(r.root, 'pin-guest-remove')[0]!);
+    await act(async () => sheetOf(r.root).onConfirm());
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
   });
 
   it('the guest switch off: the line and Remove still show (a grown-up always sees why)', async () => {

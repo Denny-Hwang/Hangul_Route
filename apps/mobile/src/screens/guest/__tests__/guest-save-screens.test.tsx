@@ -558,7 +558,7 @@ describe('[GU] Keep as a learner from People on this device (row GU-5, 8.3, 9.2)
     expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
     expect(disk.has('guest')).toBe(false);
     expect(useAccountStore.getState().parentPinHash).toBe('h:1234');
-    expect(sent.filter((e) => e.name === 'guest.saved').map((e) => e.payload)).toEqual([{ gated: true, consent: 'existing', via: 'setup' }]);
+    expect(sent.filter((e) => e.name === 'guest.saved').map((e) => e.payload)).toEqual([{ gated: false, consent: 'existing', via: 'setup' }]);
     expect(sent.find((e) => e.name === 'onboarding.started')?.payload).toMatchObject({ firstRun: false, fromGuest: true });
     // No Hoya bubble for anyone's Home: the grown-up stays in the Grown-up area.
     expect(guestSavedNoteFor(GUEST_ID)).toBeNull();
@@ -568,9 +568,9 @@ describe('[GU] Keep as a learner from People on this device (row GU-5, 8.3, 9.2)
 
 describe('the gate read again at Continue: another tab changed the device while the form was open (8.2, CS-G9, CS-G10)', () => {
   const PIN_KEY = 'account:parentPinHash';
-  const open = async (nav = navigationDouble()) => {
+  const open = async (nav = navigationDouble(), extra: Record<string, unknown> = {}) => {
     noteGuestSaveEntry('results');
-    const r = await render(<CreateProfileScreen route={{ key: 'cp', name: 'CreateProfile', params: { firstRun: true, from: 'guest' } } as never} navigation={nav as never} />, {
+    const r = await render(<CreateProfileScreen route={{ key: 'cp', name: 'CreateProfile', params: { firstRun: true, from: 'guest', ...extra } } as never} navigation={nav as never} />, {
       createNodeMock: () => nodeMock(() => undefined),
     });
     await act(async () => {
@@ -619,6 +619,16 @@ describe('the gate read again at Continue: another tab changed the device while 
     expect(useAccountStore.getState().parentPinHash).toBe('h:9999');
     // The leave goes through: the step-back listener does not hold it on step 2.
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+  });
+
+  it('GU-5 review: `owner: true` inside a guest run is not the owner\'s keep: the gate is still read again (CS-G9, CS-G10)', async () => {
+    useGuestStore.setState({ running: true });
+    const { r, nav } = await open(navigationDouble(), { owner: true });
+    disk.set(PIN_KEY, JSON.stringify('h:9999'));
+    await cont(r);
+    expect(nav.replace).toHaveBeenCalledWith('PinEntry', { next: 'SaveGuest' });
+    nothingSaved();
+    expect(JSON.parse(disk.get(PIN_KEY)!)).toBe('h:9999');
   });
 
   it('this guest saved in another tab: that learner\'s Home, with nothing written here', async () => {

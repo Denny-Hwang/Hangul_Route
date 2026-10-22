@@ -146,4 +146,3 @@ async function sweepGuest(guestId: string | null, questDone: boolean): Promise<v
   await removeGuestRecord();
   void track({ name: 'guest.expired', payload: { questDone } });
 }
-

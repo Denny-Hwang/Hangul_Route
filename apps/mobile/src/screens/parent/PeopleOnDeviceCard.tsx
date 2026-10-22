@@ -17,7 +17,6 @@ const AVATAR_SIZE = 40;
 /** The lock glyph and the chevron. */
 const GLYPH = 20;
 
-
 /**
  * [OA] **People on this device** (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 10.1, 10.4, row OA-7a; wireframe
  * `profiles/people-on-device.md` Panel A, mock boards 1 and 2): the Grown-up area lists **every** learner on the
@@ -94,4 +93,3 @@ export function PeopleOnDeviceCard({
     </Card>
   );
 }
-

@@ -57,7 +57,8 @@ vi.mock('../../platform/join-handoff', () => ({ takeJoinHandoff: () => null }));
 
 import type { GuestRecord, Profile } from '@hangul-route/content-schema';
 import { useGuestStore } from '../guest-store';
-import { removeLiveGuest } from '../guest-remove';
+import { useAccountStore } from '../account-store';
+import { gateOpensDirectlyAfterRemove, removeLiveGuest } from '../guest-remove';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 
@@ -149,5 +150,58 @@ describe('[GU] removeLiveGuest (Remove the first quest, 9.2)', () => {
     expect(await removeLiveGuest()).toBe(true);
     expect(disk.has('guest')).toBe(false);
     expect(keysOf(GUEST.id)).toEqual([]);
+  });
+});
+
+describe('[GU] the gate read again after Remove on the guest-only gate (GU-5 review, 9.2, CS-G10)', () => {
+  beforeEach(() => {
+    useAccountStore.setState({ parentPinHash: null, pinHashReadFailed: false });
+  });
+
+  it('a self-only device with no PIN and the guest gone: the destination opens directly', async () => {
+    expect(await removeLiveGuest()).toBe(true);
+    expect(await gateOpensDirectlyAfterRemove()).toBe(true);
+  });
+
+  it('the guest was saved as a child in another tab between the sheet and its confirm: the gate is required', async () => {
+    const savedChild = { ...MINA, id: GUEST.id, displayName: 'Jun', learnerType: 'child' as const };
+    disk.set('profiles', JSON.stringify([MINA, savedChild]));
+    expect(await removeLiveGuest()).toBe(true);
+    // This tab's memory still holds only Mina; the stored list is read again.
+    expect(await gateOpensDirectlyAfterRemove()).toBe(false);
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toContain(GUEST.id);
+    // The saved learner's keys were never touched.
+    expect(disk.has('profiles')).toBe(true);
+  });
+
+  it('a PIN another tab set meanwhile (this tab never heard of it): the gate is required, and the PIN is now known here', async () => {
+    disk.set('account:parentPinHash', JSON.stringify('h:9999'));
+    expect(await removeLiveGuest()).toBe(true);
+    expect(await gateOpensDirectlyAfterRemove()).toBe(false);
+    expect(useAccountStore.getState().parentPinHash).toBe('h:9999');
+  });
+
+  it('a read that fails opens nothing (fail closed)', async () => {
+    expect(await removeLiveGuest()).toBe(true);
+    failing.read.add('profiles');
+    expect(await gateOpensDirectlyAfterRemove()).toBe(false);
+  });
+});
+
+describe('[GU] a play in another tab never writes a removed record back (GU-5 review)', () => {
+  it('Remove in tab A, then tab B (its record still in memory) records a play: hr:guest stays gone and B\'s run ends', async () => {
+    useGuestStore.setState({ record: GUEST, running: true, memoryOnly: false });
+    // Tab A's Remove, as storage sees it: hr:guest is gone. Tab B's store has not heard yet.
+    disk.delete('guest');
+    await useGuestStore.getState().recordGuestPlay({ questDone: true });
+    expect(disk.has('guest')).toBe(false);
+    expect(useGuestStore.getState()).toMatchObject({ record: null, running: false });
+  });
+
+  it('the stored record is this run\'s: the play is written as before', async () => {
+    useGuestStore.setState({ record: GUEST, running: true, memoryOnly: false });
+    await useGuestStore.getState().recordGuestPlay({ questDone: true });
+    expect(JSON.parse(disk.get('guest')!)).toMatchObject({ id: GUEST.id, questDone: true });
+    expect(useGuestStore.getState().running).toBe(true);
   });
 });
