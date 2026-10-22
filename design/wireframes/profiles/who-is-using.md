@@ -4,6 +4,7 @@ Spec: `docs/specs/AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` sections 5, 6, 7.3, 9, 1
 Audience: **learner** first (any age; many are children), **grown-up** second (parent, teacher, school admin on the same account)
 Route: learner app `WhoIsUsing` (root stack, above `Main`; no Back)
 Mock: `design/screens/profiles/who-is-using.md` (row OA-0b)
+Guest tiles [GU]: Panels L to O (and P for People on this device, Q for the PIN setup) are in `profiles/who-is-using-guest.md` (`AMENDMENTS-GUEST-FIRST-LESSON.md`, row GU-5)
 
 ## Scenario (Given-When-Then)
 
