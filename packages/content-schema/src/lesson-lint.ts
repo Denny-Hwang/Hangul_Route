@@ -26,6 +26,9 @@ import {
 } from './lesson-lint-items';
 import type { StageKey } from './schemas/heritage-card';
 import { LessonNoteSchema, LessonReviewSchema, isLessonSignedOff, type LessonNote } from './schemas/lesson';
+import { Stage1TableSchema, reviewItemsOf, type Stage1Table } from './review-items/build';
+import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from './review-items/sources';
+import { StableIdSnapshotSchema, type StableIdIssue } from './review-items/stable-ids';
 
 /*
  * The content lint, a build-time module (F-CURR-002 §9.3 and the F-CURR-001 lesson rules it
@@ -38,6 +41,11 @@ export * from './lesson-cell-lint';
 export * from './lesson-lint-copy';
 export * from './lesson-lint-items';
 export * from './lesson-lint-reports';
+// F-CURR-002 §4.2 (row CM-10): review-item extraction and the frozen ids, build time only like the rules.
+export * from './review-items/build';
+export * from './review-items/extract';
+export * from './review-items/sources';
+export * from './review-items/stable-ids';
 
 // =====================================================================================================
 // F-CURR-002 §9.3: the lint rules for Volume 2 cells, Topic Pack levels and new stories. Each is an
@@ -75,11 +83,7 @@ export interface CurriculumFinding {
   message: string;
 }
 
-/**
- * What each rule enforces, as `validate-content.mjs` prints it for the multi-agent review (MAR).
- * `items-stable-id` is a stub here: its snapshot of frozen ids, aliases and retired ids comes with
- * row CM-10, which extracts the review items.
- */
+/** What each rule enforces, as `validate-content.mjs` prints it for the multi-agent review (MAR). */
 export const CURRICULUM_RULES: Readonly<Record<CurriculumRule | CurriculumReport, string>> = {
   'lesson-new-load': 'At most 8 new items per quest: Discover items not taught earlier on the route, in the pack or in an earlier quest of the file (F-CURR-002 §9.3).',
   'lesson-recycle':
@@ -89,7 +93,8 @@ export const CURRICULUM_RULES: Readonly<Record<CurriculumRule | CurriculumReport
   'lesson-culture-coverage': 'At least 2 culture notes in each Volume 2 cell and at least 1 in each pack level (§5.1, §6.4).',
   'culture-source':
     'Every note has a source from the §6.6 allowlist: the publisher names the institution (its whole English name, or its Korean name) and the URL is on a host the institution runs. MAR: check each institution\'s name as of the source\'s access date (the lint knows two renames: the Korea Heritage Service was the Cultural Heritage Administration, 문화재청, before 2024-05-17, and 국립공원공단 was 국립공원관리공단 before 2019-01-17), and use Ramsar sources for Ramsar site status only.',
-  'items-stable-id': 'Review-item ids are frozen in a snapshot, with alias and retired lists (§4.2). Stub until row CM-10 adds the snapshot.',
+  'items-stable-id':
+    'Review-item ids are frozen (§4.2): every item taught by a ready cell, pack level, story or Stage 1 has its id in packages/content-schema/src/review-items/items-stable-id.json (node scripts/build-review-items.mjs --freeze adds new ones); a frozen id that is no longer taught needs an alias (the edited text\'s key -> the frozen id, so the item keeps its learner state) or its place on the retired list (removed from every round: never selected, state kept, out of mastery denominators); a retired id is never taught again; a homograph\'s gloss names one sense of content/vocab/_senses.json.',
   'pack-skeleton':
     'A pack follows the template of §6.4: pack.json lists its levels at S2, S3, S4, S6, S7 in that order (all five once the pack is ready), and each ready level has three quests, the new-item caps and its one new pattern, exchange or frame, the formats, three new realia in L4, the two pack cards and the Pack Check in L5. A draft level (the CM-50a scaffold) is checked for its ids, stage and file name only.',
   'dictation-unambiguous':
@@ -104,8 +109,8 @@ export const CURRICULUM_RULES: Readonly<Record<CurriculumRule | CurriculumReport
   'story-coverage': 'Report only: for each story tier, the share of its Korean tokens taught by the story\'s recommended stage; the authoring target is 95% (§4.7).',
 };
 
-/** Rules defined by name only, with no check yet. */
-export const CURRICULUM_STUB_RULES: readonly CurriculumRule[] = ['items-stable-id'];
+/** Rules defined by name only, with no check yet (none since row CM-10 added `items-stable-id`). */
+export const CURRICULUM_STUB_RULES: readonly CurriculumRule[] = [];
 
 /** The stories on `main` when the rules landed (row CM-7): every other story is new, so its findings are errors. */
 export const SHIPPED_STORY_IDS: ReadonlySet<string> = new Set([
@@ -862,6 +867,60 @@ function lintOverlayCopy(file: string, locale: string, raw: unknown, owned: Read
 
 type Push = (file: string, tier: CurriculumTier, f: Omit<CurriculumFinding, 'file' | 'severity'>) => void;
 
+/** The tier of the file an item was read from: its cell (an episode, a pack level, a story); Stage 1 is Volume 1. */
+function tierOfCell(cell: string, shipped: ReadonlySet<string>): CurriculumTier {
+  if (cell.startsWith('story:')) return shipped.has(cell) ? 'shipped-story' : 'new-story';
+  if (cell.startsWith('episode:pack-')) return 'pack';
+  return /-v[0-9]+$/.test(cell) ? 'volume2' : 'volume1';
+}
+
+/**
+ * `items-stable-id` (§4.2, row CM-10), over the tree when it holds the frozen-id snapshot
+ * (`REVIEW_SNAPSHOT_FILE`; validate-content.mjs adds it and the frozen Stage 1 table). An issue of an
+ * item is reported on the file that teaches it, with that file's severity; an issue of the snapshot
+ * itself (a frozen id no longer taught, an alias or retirement that names no frozen id) on the
+ * snapshot, as an error: scripts/build-review-items.mjs stops the build on those.
+ */
+function lintStableIds(tree: ReadonlyMap<string, unknown>, shipped: ReadonlySet<string>, push: Push): void {
+  const raw = tree.get(REVIEW_SNAPSHOT_FILE);
+  if (raw === undefined) return;
+  const snapshot = StableIdSnapshotSchema.safeParse(raw);
+  const stage1Raw = tree.get(REVIEW_STAGE1_FILE);
+  const stage1 = stage1Raw === undefined ? undefined : Stage1TableSchema.safeParse(stage1Raw);
+  for (const [file, parsed] of [[REVIEW_SNAPSHOT_FILE, snapshot], [REVIEW_STAGE1_FILE, stage1]] as const) {
+    if (parsed === undefined || parsed.success) continue;
+    const first = parsed.error.issues[0] as z.ZodIssue;
+    push(file, 'volume2', { rule: 'items-stable-id', path: pathOf(...first.path) || '(root)', message: `not a valid frozen review-item file: ${first.message}` });
+  }
+  if (!snapshot.success || stage1?.success === false) return;
+  const table: Stage1Table = stage1?.data ?? { schemaVersion: 1, symbols: [], occurrences: [] };
+  const { issues } = reviewItemsOf({
+    stage1: table,
+    lessons: lessonSourcesOfTree(tree),
+    stories: storySourcesOfTree(tree),
+    ...vocabOfTree(tree),
+    snapshot: snapshot.data,
+  });
+  for (const issue of issues) {
+    const where = issueWhere(issue);
+    push(where.file, issue.cell === undefined ? 'volume2' : tierOfCell(issue.cell, shipped), { rule: 'items-stable-id', path: where.path, message: issue.message });
+  }
+}
+
+/** The file and path an issue points at: the occurrence's (`<file> <path>`), else the snapshot entry. */
+function issueWhere(issue: StableIdIssue): { file: string; path: string } {
+  if (issue.at !== undefined) {
+    const space = issue.at.indexOf(' ');
+    const head = space < 0 ? issue.at : issue.at.slice(0, space);
+    // A Stage 1 occurrence is read from the frozen table (`quest:stage1-... steps[...]`).
+    if (!head.includes('/')) return { file: REVIEW_STAGE1_FILE, path: issue.at };
+    return { file: head, path: space < 0 ? '(root)' : issue.at.slice(space + 1) };
+  }
+  if (issue.code === 'retired-unknown') return { file: REVIEW_SNAPSHOT_FILE, path: `retired.${issue.id}` };
+  if (issue.code === 'alias-target-unknown' || issue.code === 'alias-clash') return { file: REVIEW_SNAPSHOT_FILE, path: `alias.${issue.key}` };
+  return { file: REVIEW_SNAPSHOT_FILE, path: `ids.${issue.key}` };
+}
+
 /**
  * Every F-CURR-002 §9.3 finding over a content tree (`content/...` path -> parsed JSON), with
  * its severity: an error for Volume 2 cells, pack files and new stories, a warning for Volume 1
@@ -962,6 +1021,7 @@ export function lintCurriculum(tree: ReadonlyMap<string, unknown>, opts: Curricu
     const overlay = OVERLAY_FILE_RE.exec(file);
     if (overlay !== null) lintOverlayCopy(file, overlay[1] as string, tree.get(file), owned, push);
   }
+  lintStableIds(tree, shipped, push);
   return findings;
 }
 
