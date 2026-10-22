@@ -28,7 +28,7 @@ import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 import { lessonContent } from './src/content/lessons';
-import { localePacks } from './src/content/locale-packs';
+import { LOCALE_BOOT_GRACE_MS, localePacks } from './src/content/locale-packs';
 import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
 import { usePwaStore } from './src/store/pwa-store';
@@ -128,11 +128,16 @@ export default function App(): React.ReactElement {
       .catch(() => undefined)
       // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen, waited
       // for 2.5 s at most (TITLES_GRACE_MS); past that the first screen shows with English lesson titles until they arrive.
-      // On the web the locale's messages and content text are a chunk of their own too, waited for until in or failed
-      // (a failed one keeps the screens in English until its next try, back online).
+      // On the web the locale's messages and content text are a chunk of their own too, waited for until in or failed,
+      // for 5 s at most (LOCALE_BOOT_GRACE_MS: a stalled request with no worker in control, the iOS 14 home-screen app or
+      // a first visit). Past that the first screen shows in English, whole, and changes to the locale when its chunk
+      // arrives (`useLocale`); a failed one keeps the screens in English until its next try, back online.
       .then(() => {
         const locale = activeLocale(useLocaleStore.getState());
-        return Promise.all([lessonContent.untilTitlesSettled(locale), localePacks.untilSettled(locale)]);
+        const packGrace = new Promise<void>((resolve) => {
+          setTimeout(resolve, LOCALE_BOOT_GRACE_MS);
+        });
+        return Promise.all([lessonContent.untilTitlesSettled(locale), Promise.race([localePacks.untilSettled(locale), packGrace])]);
       })
       .then(async () => {
         if (!live) return;

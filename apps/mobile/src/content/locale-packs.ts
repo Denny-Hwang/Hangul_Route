@@ -17,6 +17,12 @@ import { isNewBuildAnswer, reloadForNewBuild } from '../platform/new-build-reloa
  * minute, as a lesson chunk does (`platform/new-build-reload`); any other failure leaves the locale's text in
  * English until the next try (back online, or the language chosen again).
  */
+/**
+ * How long the first screen waits for the device locale's chunk (App.tsx): past it the app opens in English and
+ * changes language when the chunk arrives, so a stalled request never holds the splash for the full 15 s.
+ */
+export const LOCALE_BOOT_GRACE_MS = 5_000;
+
 export const localePacks = createLocalePackStore(loadLocalePack, {
   install: (locale, chunk) => {
     registerMessageOverlay(locale, chunk.LOCALE_MESSAGES);
