@@ -1,4 +1,4 @@
-import { addDays, dateKey } from '../curriculum/dates';
+import { addDays, dateKey, isDateKey } from '../curriculum/dates';
 import {
   DAY_LOG_INSTALL_KEYS_MAX,
   GoalsSchema,
@@ -215,4 +215,24 @@ export function boundToNow<T extends Partial<TimedFields>>(snapshot: T, now: Dat
   if (dropStreak) delete out.streakLocal;
   if (dropGoals) delete out.goals;
   return out as T;
+}
+
+/** F-CURR-002 section 4.8: `daily` review entries (the Daily Review and each Keep going) are kept for this many local days. */
+export const DAILY_REVIEW_RETENTION_DAYS = 14;
+
+/**
+ * The `daily` retention of section 4.8 (rows CM-3b and CM-14), applied after every merge on the client and in the
+ * Worker's snapshot write: the list keeps only the `daily` entries whose `scope` (the local day it was played,
+ * `YYYY-MM-DD`) is within 14 local days of the newest `daily` entry's `scope`, that day included. A `daily` entry
+ * whose scope is not a local day (none is written so) has no day to measure, so it is left as it is, like every
+ * other kind. No other kind is pruned (`cell-check` and
+ * `stage-certificate` carry best results). The rule reads no clock, so every side gives the same list and a
+ * union of pruned lists never brings a pruned entry back. Returns the list itself when nothing is pruned.
+ */
+export function pruneDailyReviews<T extends { kind: string; scope: string }>(reviews: readonly T[]): T[] {
+  let newest: string | undefined;
+  for (const r of reviews) if (r.kind === 'daily' && isDateKey(r.scope) && (newest === undefined || r.scope > newest)) newest = r.scope;
+  const from = newest === undefined ? undefined : addDays(newest, 1 - DAILY_REVIEW_RETENTION_DAYS);
+  const kept = from === undefined ? reviews : reviews.filter((r) => r.kind !== 'daily' || !isDateKey(r.scope) || r.scope >= from);
+  return kept.length === reviews.length ? (reviews as T[]) : kept;
 }
