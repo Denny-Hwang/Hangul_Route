@@ -195,7 +195,12 @@ describe('caregiver.install (the install sheet; its heading is `audience.install
       addToHome: 'Add to Home Screen',
       browserMenu: 'Browser menu',
       installApp: 'Install app / Add to Home screen',
+      // Safari for Mac (app-first-run, 2026-10-21).
+      fileMenu: 'File menu',
+      addToDock: 'Add to Dock',
     });
+    expect(getMessages('es').caregiver.install.steps).toMatchObject({ fileMenu: 'Menú Archivo', addToDock: 'Agregar al Dock' });
+    expect(getMessages('ko').caregiver.install.steps).toMatchObject({ fileMenu: '파일 메뉴', addToDock: 'Dock에 추가' });
     expect(i.install.cta).toBe('Install');
     expect(i.inAppBrowser).toBe('Open this page in Safari or Chrome first.');
     expect(i.copyLink.cta).toBe('Copy link');

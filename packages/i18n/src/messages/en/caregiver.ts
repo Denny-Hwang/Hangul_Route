@@ -464,6 +464,9 @@ export const caregiver = {
       addToHome: 'Add to Home Screen',
       browserMenu: 'Browser menu',
       installApp: 'Install app / Add to Home screen',
+      /** Safari for Mac (Sonoma and later): the File menu, then Add to Dock. */
+      fileMenu: 'File menu',
+      addToDock: 'Add to Dock',
     },
     install: { cta: 'Install' },
     inAppBrowser: 'Open this page in Safari or Chrome first.',

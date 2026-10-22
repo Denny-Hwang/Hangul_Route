@@ -315,7 +315,7 @@ Copy (English; Korean and Spanish follow F-I18N-001's review ledger). Round 2 wr
 
 | Key | English |
 |---|---|
-| `invite.duration` | It takes a few minutes. You can stop at any time. |
+| `invite.duration` | It takes a few minutes. You can stop at any time. (2026-10-21, app-first-run: now "A short level check. You can stop at any time.", the sublabel of "I already know some Korean"; F-PLC-001 section 3.12 is current) |
 | `options.mode.short.label` / `.help` / `.duration` / `.needsSound` | Short / A few picture and sound questions. / Just a few minutes. / The short check needs sound. |
 | `options.mode.standard.label` / `.help` / `.duration` | Standard / Letters, sounds, words and sentences. / Usually under 10 minutes. |
 | `options.mode.deep.label` / `.help` / `.duration` | Deep / More questions, to be extra sure. Hoya takes a break halfway. / Usually under 20 minutes. |

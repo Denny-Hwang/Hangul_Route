@@ -1,10 +1,12 @@
 import { Body, Button, Caption, Card, colors, layout, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
 import { bannerFrame } from '../logic/layout/overlay-frame';
+import { OFFLINE_READY_MS, onPwaBanner, visibleBanner, type BannerState, type PwaBanner } from '../logic/pwa/banners';
 import { applyUpdate, subscribePwa, type PwaEvent } from '../platform/pwa';
+import { useProfileStore } from '../store/profile-store';
 import { useUiStore } from '../store/ui-store';
 
 /**
@@ -20,12 +22,15 @@ import { useUiStore } from '../store/ui-store';
  * chip only inform, so they never take a tap: a control under them still
  * works. The update bar waits for a tab screen (wireframe: queued during a
  * quest, a game, results or the PIN pad), so a refresh never lands mid-quest.
+ * On a first visit the offline-ready toast waits too: it can arrive any time
+ * between Welcome and the first quest, so it is held until the first Home of
+ * the visit and shown there once, for four seconds (`logic/pwa/banners`).
  */
-type Banner = 'offline-ready' | 'update-ready' | null;
+type Banner = PwaBanner | null;
 
 export function PwaBanners(): React.ReactElement | null {
   const m = useMessages().learner.pwa;
-  const [banner, setBanner] = useState<Banner>(null);
+  const [state, setState] = useState<BannerState>({ banner: null, waitForHome: false });
   const [offline, setOffline] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = useUiStore((s) => s.tabBarHeight);
@@ -34,25 +39,36 @@ export function PwaBanners(): React.ReactElement | null {
   const headerClearance = layout.gutter[widthClass] + touchTarget.min;
   const frame = bannerFrame({ insets, tabBarHeight, gap: spacing.md, bottomGap: spacing.xl, headerClearance });
   const onTabScreen = tabBarHeight > 0;
+  const hasProfile = useProfileStore((s) => s.profiles.length > 0);
+  // A tab screen has shown since the app opened. The precache can finish after Step 3 on a slow phone, so the fork,
+  // the first-quest preview and the first quest (a profile exists, no tab screen yet) hold the toast too.
+  const seenTabScreen = useRef(false);
+  useEffect(() => {
+    if (onTabScreen) seenTabScreen.current = true;
+  }, [onTabScreen]);
 
   useEffect(() => {
     const off = subscribePwa((event: PwaEvent) => {
-      if (event === 'offline-ready') setBanner('offline-ready');
-      else if (event === 'update-ready') setBanner('update-ready');
-      else if (event === 'went-offline') setOffline(true);
+      if (event === 'offline-ready' || event === 'update-ready') {
+        // Read when the event arrives: a toast that comes before the first Home of this visit waits for it.
+        const profileNow = useProfileStore.getState().profiles.length > 0;
+        setState((prev) => onPwaBanner(prev, event, { hasProfile: profileNow, seenTabScreen: seenTabScreen.current }));
+      } else if (event === 'went-offline') setOffline(true);
       else if (event === 'back-online') setOffline(false);
     });
     return off;
   }, []);
 
-  useEffect(() => {
-    if (banner !== 'offline-ready') return;
-    const id = setTimeout(() => setBanner(null), 6000);
-    return () => clearTimeout(id);
-  }, [banner]);
+  // The update bar stays queued until a tab screen shows; a first-visit toast until the first Home.
+  const shown: Banner = visibleBanner(state, { hasProfile, onTabScreen });
 
-  // The update bar stays queued until a tab screen shows.
-  const shown: Banner = banner === 'update-ready' && !onTabScreen ? null : banner;
+  // The toast's four seconds start when it shows, not when it was queued.
+  useEffect(() => {
+    if (shown !== 'offline-ready') return;
+    const id = setTimeout(() => setState((prev) => (prev.banner === 'offline-ready' ? { banner: null, waitForHome: false } : prev)), OFFLINE_READY_MS);
+    return () => clearTimeout(id);
+  }, [shown]);
+
   if (!shown && !offline) return null;
 
   return (

@@ -26,4 +26,12 @@ describe('grown-up layouts', () => {
     expect(element.type).toBe(GrownUpLayout);
     expect(mod.metadata?.robots).toEqual({ index: false, follow: false });
   });
+
+  // app-first-run (2026-10-21): the static title is what a tab shows before the client sets the localized
+  // `console.docTitle`, and what a Spanish or Korean grown-up's tab showed for good on a slow load. It names no
+  // English-only "Console"; /signin keeps its own title (the OA rows own that page).
+  it.each(LAYOUTS.filter(([prefix]) => prefix !== '/signin'))('%s has the neutral static title', (_prefix, mod) => {
+    expect(mod.metadata?.title).toBe('Hangul Route');
+    expect(String(mod.metadata?.title)).not.toMatch(/console/i);
+  });
 });

@@ -278,42 +278,46 @@ describe('billingHomeView: order and offers', () => {
 });
 
 describe('includesLines: feature lines only while SITE_CLAIMS says the feature is live', () => {
-  it('family: base lines always; browse, reports and notes only when their claims are on', () => {
+  // app-first-run (2026-10-21): reports and notes are free on every plan (CLAIM_REQUIRES_PAID false), so a plan
+  // never lists them as what it includes; `freeForEveryone` says so once under the offers instead.
+  it('family: base lines always; browse only when its claim is on; never reports or notes', () => {
     const base = [b.includesLines.family.everyLesson, b.includesLines.family.learners(FAMILY_LIFETIME_LEARNERS), b.includesLines.family.cloudSave];
     expect(includesLines('family_lifetime', 'family', 'en', OFF)).toEqual(base);
-    expect(includesLines('family_lifetime', 'family', 'en', ALL_ON)).toEqual([...base, b.includesLines.family.browse, b.includesLines.family.reports, b.includesLines.family.notes]);
-    expect(includesLines('family_lifetime', 'family', 'en', { ...OFF, parentReports: true })).toEqual([...base, b.includesLines.family.reports]);
-    // teacherReports is not a family claim.
+    expect(includesLines('family_lifetime', 'family', 'en', ALL_ON)).toEqual([...base, b.includesLines.family.browse]);
+    expect(includesLines('family_lifetime', 'family', 'en', { ...OFF, parentReports: true, feedbackNotes: true })).toEqual(base);
     expect(includesLines('family_lifetime', 'family', 'en', { ...OFF, teacherReports: true })).toEqual(base);
   });
 
-  it('license: the class line for a class, the school line for a school ([SA] section 4); feature lines per claim', () => {
+  it('license: the class line for a class, the school line for a school ([SA] section 4); browse per claim; never reports or notes', () => {
     const base = [b.includesLines.license.everyStudent, b.includesLines.license.classLearners(GROUP_LICENSE_LEARNERS)];
     expect(includesLines('group_license', 'class', 'en', OFF)).toEqual(base);
     expect(base[1]).toBe('Up to 50 students in the class');
     expect(includesLines('group_license', 'school', 'en', OFF)).toEqual([b.includesLines.license.everyStudent, b.includesLines.license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)]);
     expect(includesLines('group_license', 'school', 'en', OFF)[1]).toBe('A school holds up to 10 teachers and 50 students');
-    expect(includesLines('group_license', 'class', 'en', ALL_ON)).toEqual([...base, b.includesLines.license.browse, b.includesLines.license.reports, b.includesLines.license.notes]);
-    expect(includesLines('group_license', 'class', 'en', { ...OFF, parentReports: true })).toEqual(base);
+    expect(includesLines('group_license', 'class', 'en', ALL_ON)).toEqual([...base, b.includesLines.license.browse]);
+    expect(includesLines('group_license', 'class', 'en', { ...OFF, teacherReports: true, feedbackNotes: true })).toEqual(base);
   });
 
-  it.each(['ko', 'es'] as const)('%s: the reports line and the notes line, since its report words are signed (MAR re-review)', (locale) => {
+  it.each(UI_LOCALES)('%s: no plan lists the free reports or notes lines, with today\'s claims or all on', (locale) => {
     const lines = getMessages(locale).console.billing.includesLines;
-    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual([...includesLines('family_lifetime', 'family', locale, OFF), lines.family.browse, lines.family.reports, lines.family.notes]);
-    expect(includesLines('group_license', 'class', locale, SITE_CLAIMS)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.reports, lines.license.notes]);
-    expect(includesLines('group_license', 'class', locale, ALL_ON)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.reports, lines.license.notes]);
+    const paidOnly = [lines.family.reports, lines.family.notes, lines.license.reports, lines.license.notes];
+    for (const claims of [SITE_CLAIMS, ALL_ON]) {
+      for (const [plan, kind] of [['family_lifetime', 'family'], ['group_license', 'class'], ['group_license', 'school']] as const) {
+        for (const line of paidOnly) expect(includesLines(plan, kind, locale, claims), `${locale} ${kind}`).not.toContain(line);
+      }
+    }
   });
 
-  it('reads SITE_CLAIMS by default, where the reports claims (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14) and the notes claim (F-FEEDBACK-001 FB-14) are on', () => {
+  it('reads SITE_CLAIMS by default, where All lessons (F-BROWSE-001 BR-14) is on', () => {
     expect(billingHomeView(summary([card()]), { now }).cards[0]?.offer?.includes).toEqual(includesLines('family_lifetime', 'family', 'en', SITE_CLAIMS));
-    expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.browse, b.includesLines.family.reports, b.includesLines.family.notes]);
-    expect(includesLines('group_license', 'class', 'en')).toEqual([...includesLines('group_license', 'class', 'en', OFF), b.includesLines.license.browse, b.includesLines.license.reports, b.includesLines.license.notes]);
+    expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.browse]);
+    expect(includesLines('group_license', 'class', 'en')).toEqual([...includesLines('group_license', 'class', 'en', OFF), b.includesLines.license.browse]);
   });
 
   it('drops the All lessons line when the build switches Lessons off, even with the claim on (F-BROWSE-001 BR-14 rollback)', () => {
     expect(includesLines('family_lifetime', 'family', 'en', ALL_ON, false)).not.toContain(b.includesLines.family.browse);
     expect(includesLines('group_license', 'class', 'en', ALL_ON, false)).not.toContain(b.includesLines.license.browse);
-    expect(includesLines('family_lifetime', 'family', 'en', ALL_ON, false)).toContain(b.includesLines.family.reports);
+    expect(includesLines('family_lifetime', 'family', 'en', ALL_ON, false)).toContain(b.includesLines.family.cloudSave);
     vi.stubEnv('NEXT_PUBLIC_BROWSE', 'false');
     try {
       expect(includesLines('family_lifetime', 'family', 'en')).not.toContain(b.includesLines.family.browse);
@@ -464,5 +468,33 @@ describe('modeBanner (the receipts page reuses it, B-8c)', () => {
     expect(modeBanner({ mode: 'none', purchasesOpen: false }, 'en')).toBe(b.notConfigured);
     expect(modeBanner({ mode: 'live', purchasesOpen: false }, 'en')).toBe(b.liveOff);
     expect(modeBanner({ mode: 'live', purchasesOpen: true }, 'en')).toBeNull();
+  });
+});
+
+describe('billingHomeView: free for everyone, once under the offers (app-first-run, 2026-10-21)', () => {
+  it('one line when the page shows an offer and the reports and notes claims are live', () => {
+    expect(view(summary([card()]), ALL_ON).freeForEveryone).toBe('Free for everyone: reports and notes.');
+    expect(b.freeForEveryone).toBe('Free for everyone: reports and notes.');
+  });
+
+  it('one line for the Add a plan block too, never one per offer', () => {
+    const two = view(summary([card(), card({ spaceId: 'space:cls', kind: 'class', name: 'Room 4', actions: { buy: 'group_license', manage: false, contact: false } })]), ALL_ON);
+    expect(two.addPlan?.offers).toHaveLength(2);
+    expect(two.freeForEveryone).toBe(b.freeForEveryone);
+    for (const offer of two.addPlan?.offers ?? []) expect(offer.includes).not.toContain(b.freeForEveryone);
+  });
+
+  it('no line without an offer, or while the reports or the notes claim is off', () => {
+    expect(view(summary([card({ actions: { buy: null, manage: true, contact: false }, coverage: own() })]), ALL_ON).freeForEveryone).toBeNull();
+    expect(view(summary([]), ALL_ON).freeForEveryone).toBeNull();
+    expect(view(summary([card()]), OFF).freeForEveryone).toBeNull();
+    expect(view(summary([card()]), { ...ALL_ON, feedbackNotes: false }).freeForEveryone).toBeNull();
+    expect(view(summary([card()]), { ...ALL_ON, parentReports: false, teacherReports: false }).freeForEveryone).toBeNull();
+  });
+
+  it.each(UI_LOCALES)('%s: the line is worded in the page language with today\'s claims', (locale) => {
+    const line = billingHomeView(summary([card()]), { now, locale }).freeForEveryone;
+    expect(line).toBe(getMessages(locale).console.billing.freeForEveryone);
+    expect(line).not.toMatch(/[$\u20ac\u20a9\d]/);
   });
 });

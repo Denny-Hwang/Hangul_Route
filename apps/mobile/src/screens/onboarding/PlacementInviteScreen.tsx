@@ -35,8 +35,9 @@ const HOYA_SIZE = touchTarget.hero + spacing.xxl;
  * design/screens/placement/flow.md): "I am new to Korean" opens the
  * first-quest preview as today
  * and only records the decline; "I already know some Korean" opens the level
- * check. Two choices of equal size and weight, neither a default; no back (the
- * profile exists). It works for a learner alone: big targets, and the
+ * check. Two choices of equal size and weight, neither a default, each with a
+ * short line under it ("Start with the first letters."; "A short level check.
+ * You can stop at any time."); no back (the profile exists). It works for a learner alone: big targets, and the
  * question is spoken on open (not with a screen reader on) and on the speaker.
  * Shown only while `flags.placementEnabled` is on and the bank parsed
  * (`logic/placement/entry`).
@@ -103,27 +104,29 @@ export function PlacementInviteScreen({ navigation, route }: Props): React.React
       </View>
       <Spacer size="xl" />
       <View style={{ gap: spacing.md }}>
-        <ForkChoice icon="play" label={copy.newToKorean} onPress={() => choose('new')} testID="placement-invite-new" />
-        <ForkChoice icon="ear" label={copy.knowSome} onPress={() => choose('knowSome')} testID="placement-invite-know" />
+        <ForkChoice icon="play" label={copy.newToKorean} hint={copy.newToKoreanHint} onPress={() => choose('new')} testID="placement-invite-new" />
+        <ForkChoice icon="ear" label={copy.knowSome} hint={copy.duration} onPress={() => choose('knowSome')} testID="placement-invite-know" />
       </View>
-      <Spacer size="lg" />
-      <Body tone="secondary" align="center">
-        {copy.duration}
-      </Body>
       <Spacer size="xl" />
     </Screen>
   );
 }
 
-/** One of the two equal choices: an icon and one line, at least `touchTarget.hero` tall. */
+/**
+ * One of the two equal choices: an icon, the choice and one short line under it saying what it opens, at least
+ * `touchTarget.hero` tall. The line belongs to its choice (it used to sit under both, where "a few minutes" read as
+ * if it applied to "I am new to Korean" too), and a screen reader hears it with the choice.
+ */
 function ForkChoice({
   icon,
   label,
+  hint,
   onPress,
   testID,
 }: {
   icon: 'play' | 'ear';
   label: string;
+  hint: string;
   onPress: () => void;
   testID: string;
 }): React.ReactElement {
@@ -132,7 +135,7 @@ function ForkChoice({
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={`${label}. ${hint}`}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
@@ -160,9 +163,14 @@ function ForkChoice({
       >
         <Icon name={icon} size={spacing.xl} color={colors.brand.primaryDark} />
       </View>
-      <Body weight="semibold" size="lg" style={{ flex: 1 }}>
-        {label}
-      </Body>
+      <View style={{ flex: 1, gap: spacing.xxs }}>
+        <Body weight="semibold" size="lg">
+          {label}
+        </Body>
+        <Body tone="secondary" size="sm" testID={`${testID}-hint`}>
+          {hint}
+        </Body>
+      </View>
     </Pressable>
   );
 }

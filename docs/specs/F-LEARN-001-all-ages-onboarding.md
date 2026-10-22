@@ -254,7 +254,7 @@ New module `apps/mobile/src/logic/audience-copy.ts` holds the strings below as `
 | `ProfileScreen.tsx:128,196,232`, `components/BackupCard.tsx:48,50` a11y | "(grown-ups only)" | family: "(PIN required)"; self without PIN: no suffix |
 | `ProfileScreen.tsx:229-233` | "Grown-up zone" | family: unchanged; self-only: "Account & backup" |
 
-Out of this table: web console wording "Kids don't need an account…", "Home — my kids", `billingKidsLine` (`apps/web/src/lib/console/copy.ts:4,7,42`, `routing.ts:42`) is audit UF-10 (teacher and parent surfaces) and belongs to the copy PR that owns the landing page; it is not a blocker here. Landing, store copy and internal docs (UF-01..04, UF-11, INT-*) are separate PRs.
+Out of this table: web console wording "Kids don't need an account…", "Home — my kids", `billingKidsLine` (`apps/web/src/lib/console/copy.ts:4,7,42`, `routing.ts:42`) is audit UF-10 (teacher and parent surfaces) and belongs to the copy PR that owns the landing page; it is not a blocker here. Landing, store copy and internal docs (UF-01..04, UF-11, INT-*) are separate PRs. **2026-10-21 (app-first-run):** the console /start lines now read "At home — the learners in my family" and "Students join with a code. They do not need an account." (`console.start.roles.family.line`, `console.start.classJoinHint`).
 
 ### 3.10 Migration and mapping of existing data
 

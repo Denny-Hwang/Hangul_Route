@@ -133,6 +133,8 @@ export interface BillingHomeView {
   /** Only when two or more payer cards can buy. */
   addPlan: { offers: BillingOfferView[]; contact: ContactRowView[] } | null;
   empty: { title: string; family: { cta: string; href: string }; class: { cta: string; href: string } } | null;
+  /** "Free for everyone: reports and notes.", once under the offers; null when the page shows no offer. */
+  freeForEveryone: string | null;
   help: { refund: string; learners: string; sharedDevice: string };
 }
 
@@ -167,7 +169,9 @@ export function contactHref(locale: UiLocale = DEFAULT_LOCALE): string {
 /**
  * What a plan includes. Feature lines appear only while `claims` says the feature is live (section 4.3). The All lessons
  * line also needs the build's Lessons switch (`browseEnabled()`, F-BROWSE-001 BR-14), so switching `NEXT_PUBLIC_BROWSE`
- * off removes the line together with every Lessons entry and Preview link.
+ * off removes the line together with every Lessons entry and Preview link. Reports and notes are free on every plan
+ * (`CLAIM_REQUIRES_PAID` false, app-first-run 2026-10-21): they are never listed here, and `freeForEveryoneLine` says
+ * so once under the offers.
  */
 export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE, claims: Readonly<SiteClaims> = SITE_CLAIMS, browseOn: boolean = browseEnabled()): string[] {
   const lines = getMessages(locale).console.billing.includesLines;
@@ -179,8 +183,6 @@ export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, loca
       family.learners(FAMILY_LIFETIME_LEARNERS),
       family.cloudSave,
       ...(browse ? [family.browse] : []),
-      ...(claimLiveIn(claims, 'parentReports', locale) ? [family.reports] : []),
-      ...(claimLiveIn(claims, 'feedbackNotes', locale) ? [family.notes] : []),
     ];
   }
   const license = lines.license;
@@ -189,9 +191,16 @@ export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, loca
     // [SA] AMENDMENTS-SEATS-ADMINS section 4: a class holds up to 50 students; a school up to 10 teachers and 50 students.
     kind === 'school' ? license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS) : license.classLearners(GROUP_LICENSE_LEARNERS),
     ...(browse ? [license.browse] : []),
-    ...(claimLiveIn(claims, 'teacherReports', locale) ? [license.reports] : []),
-    ...(claimLiveIn(claims, 'feedbackNotes', locale) ? [license.notes] : []),
   ];
+}
+
+/**
+ * "Free for everyone: reports and notes." under the offers, once, while both features are live in `locale`; null
+ * otherwise (a line for a feature that is off never renders, section 4.3).
+ */
+export function freeForEveryoneLine(locale: UiLocale = DEFAULT_LOCALE, claims: Readonly<SiteClaims> = SITE_CLAIMS): string | null {
+  const reports = claimLiveIn(claims, 'parentReports', locale) || claimLiveIn(claims, 'teacherReports', locale);
+  return reports && claimLiveIn(claims, 'feedbackNotes', locale) ? getMessages(locale).console.billing.freeForEveryone : null;
 }
 
 const day = (locale: UiLocale, iso: string): string => formatDate(locale, iso, 'monthDayYear', { utc: true });
@@ -428,6 +437,7 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
     accountCards,
     addPlan,
     empty,
+    freeForEveryone: single || addPlan ? freeForEveryoneLine(locale, claims) : null,
     help: { refund: billing.help.refund(CONTACT_EMAIL), learners: billing.help.learners, sharedDevice: billing.help.sharedDevice },
   };
 }
