@@ -132,11 +132,17 @@ describe('the Guest stack (CS-G1)', () => {
   });
 
   it('the guest variants take the learner id from the active learner, never the active profile', () => {
-    for (const file of ['screens/guest/GuestQuestPlayer.tsx', 'screens/guest/GuestResults.tsx', 'screens/quest/QuestPlayerScreen.tsx', 'screens/minigames/MinigameScreen.tsx', 'screens/library/CardDetailScreen.tsx', 'screens/results/ResultsScreen.tsx']) {
+    for (const file of ['screens/guest/GuestQuestPlayer.tsx', 'screens/guest/GuestResults.tsx', 'screens/quest/QuestPlayerScreen.tsx', 'screens/minigames/MinigameScreen.tsx', 'screens/library/CardDetailScreen.tsx', 'screens/library/CardDetailView.tsx', 'screens/results/ResultsScreen.tsx']) {
       const source = read(file);
       expect(source, file).toContain('useActiveLearnerId()');
       expect(source, file).not.toContain('activeProfileSelector');
     }
+  });
+
+  it('the mounted stack leaves for Close\'s target when another tab ends its run (6.4)', () => {
+    const source = read('navigation/guest-chunk.tsx');
+    expect(source).toContain('useLeaveWhenGuestRunLost(useNavigation());');
+    expect(read('screens/guest/guest-exits.ts')).toContain("root?.dispatch({ type: 'RESET', payload: guestLeaveState(guestRunLostTarget()) });");
   });
 
   it('the root stack registers the Guest stack only with the guest switch on', () => {

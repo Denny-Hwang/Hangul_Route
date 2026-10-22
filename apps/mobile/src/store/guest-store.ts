@@ -29,6 +29,12 @@ interface State {
   hydrated: boolean;
   /** The last write of the record failed (some private windows): the run goes on in memory only (section 7.2). */
   memoryOnly: boolean;
+  /**
+   * Section 6.4: how many times a run on in this tab was ended by another tab (its record saved, removed, swept or
+   * replaced, `refresh`). The mounted `Guest` stack watches it and resets the root (`useLeaveWhenGuestRunLost`), so
+   * the guest's screens never stay up with no run under them. Memory only.
+   */
+  runsLost: number;
 }
 
 /** How a run is entered (section 5.3): one of the record's `via` values, or a reopen of the live record (GU-D12). */
@@ -130,6 +136,7 @@ export const useGuestStore = create<State & Actions>((set, get) => ({
   running: false,
   hydrated: false,
   memoryOnly: false,
+  runsLost: 0,
 
   startGuestRun: async (via, now = Date.now()) => {
     // CS-G3: a grown-up session never continues into a guest run, from any entry.
@@ -187,7 +194,8 @@ export const useGuestStore = create<State & Actions>((set, get) => ({
     if (record === null && memoryOnly && isLiveGuest(current, profiles)) return;
     // Section 6.4: the record went (saved, removed or swept in another tab), or is another run: this tab's run ends.
     const same = record !== null && current !== null && record.id === current.id;
-    set({ record, running: running && same, memoryOnly: memoryOnly && same });
+    const lost = running && !same;
+    set({ record, running: running && same, memoryOnly: memoryOnly && same, ...(lost ? { runsLost: get().runsLost + 1 } : {}) });
   },
 
   forgetSavedGuest: async (id) => {

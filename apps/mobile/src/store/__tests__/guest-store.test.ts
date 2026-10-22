@@ -211,6 +211,31 @@ describe('one guest per device (GU-D3): a second tab adopts the live record', ()
     expect(useGuestStore.getState()).toMatchObject({ running: false, record: { id: 'profile:other001' } });
   });
 
+  it('a run on here that another tab ends counts as lost (runsLost), so the mounted Guest stack leaves; nothing else does', async () => {
+    useGuestStore.setState({ runsLost: 0 });
+    await useGuestStore.getState().startGuestRun('site', T0);
+    // The same record read again (another tab's lastAt write): still this run, not lost.
+    await useGuestStore.getState().refresh();
+    expect(useGuestStore.getState()).toMatchObject({ running: true, runsLost: 0 });
+    // Removed in another tab (saved or swept): lost once.
+    disk.delete('guest');
+    await useGuestStore.getState().refresh();
+    expect(useGuestStore.getState()).toMatchObject({ running: false, record: null, runsLost: 1 });
+    // A further refresh with no run on loses nothing more.
+    await useGuestStore.getState().refresh();
+    expect(useGuestStore.getState().runsLost).toBe(1);
+    // Replaced by another tab's run: lost again.
+    await useGuestStore.getState().startGuestRun('site', T0 + 1000);
+    disk.set('guest', JSON.stringify(record({ id: 'profile:other001' })));
+    await useGuestStore.getState().refresh();
+    expect(useGuestStore.getState()).toMatchObject({ running: false, runsLost: 2 });
+    // This tab's own exits (Close, Leave, a chooser pick) end the run without counting it as lost.
+    disk.set('guest', JSON.stringify(record({ id: 'profile:other001' })));
+    await useGuestStore.getState().startGuestRun('welcome', T0 + 2000);
+    useGuestStore.getState().endGuestRun();
+    expect(useGuestStore.getState()).toMatchObject({ running: false, runsLost: 2 });
+  });
+
   it('refresh reads nothing before the boot read, and changes nothing when the storage cannot be read', async () => {
     useGuestStore.setState({ hydrated: false });
     disk.set('guest', JSON.stringify(record()));
