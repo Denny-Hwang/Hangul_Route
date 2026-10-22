@@ -22,3 +22,8 @@ export function peekBootIntent(): BootIntent | null {
 export function consumeBootIntent(): void {
   // No intent on native.
 }
+
+/** [OA] No sign-in reset ticket on native (row OA-6). */
+export function takeBootPinResetTicket(): string | null {
+  return null;
+}

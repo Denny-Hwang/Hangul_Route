@@ -14,11 +14,28 @@ describe('learner.welcome (English wording as shipped)', () => {
       invitation: 'Want to learn Korean letters with me? It only takes a few minutes a day.',
       cta: "Let's start",
       restore: 'I already have progress',
-      trust: 'Start Korean from zero. Built with kids, parents, and grandparents in mind.',
+      trust: 'Start Korean from zero, at any age. No ads, ever.',
       // F-APP-001 A-7: the persona row (grown-up-entry-messages.test.ts owns its wording).
       grownUps: m.learner.welcome.grownUps,
       classLink: m.learner.welcome.classLink,
     });
+  });
+
+  it('names no age group anywhere on Welcome, in en, es and ko (any age learns here; app-first-run, 2026-10-21)', () => {
+    // "At any age" is the point of the trust line; the words that name a group of people by age are not allowed.
+    const AGE_GROUP: Record<'en' | 'es' | 'ko', RegExp> = {
+      en: /\b(kids?|child(ren)?|grand(parents?|children|kids?)|toddlers?|teens?|teenagers?|seniors?|ages \d)\b/i,
+      es: /niñ[oa]s?|nietos?|abuel[oa]s?|adolescentes?|mayores|peques/i,
+      ko: /아이[,들 ]|어린이|조부모|할머니|할아버지|손주|청소년|어르신/,
+    };
+    const lines = (node: unknown): string[] =>
+      typeof node === 'string' ? [node] : typeof node === 'function' ? [String((node as (a: string) => unknown)('ABC234'))] : node && typeof node === 'object' ? Object.values(node).flatMap(lines) : [];
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const welcome = getMessages(locale).learner.welcome;
+      for (const line of lines(welcome)) expect(line, `${locale}: ${line}`).not.toMatch(AGE_GROUP[locale]);
+    }
+    expect(getMessages('es').learner.welcome.trust).toBe('Empieza el coreano desde cero, a cualquier edad. Sin anuncios, nunca.');
+    expect(getMessages('ko').learner.welcome.trust).toBe('나이와 상관없이 한국어를 처음부터 시작해요. 광고는 절대 없어요.');
   });
 
   it('the class join link card on a device with no profile: the code, what Start does, where to type it in the app (review of #734)', () => {

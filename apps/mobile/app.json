@@ -23,6 +23,7 @@
       },
       "infoPlist": {
         "CFBundleDisplayName": "Hangul Route",
+        "CFBundleAllowMixedLocalizations": true,
         "UIViewControllerBasedStatusBarAppearance": true
       },
       "privacyManifests": {
@@ -89,8 +90,18 @@
         {
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Face ID opens the grown-up area when a grown-up turns it on."
+        }
       ]
     ],
+    "locales": {
+      "es": "./locales/es.json",
+      "ko": "./locales/ko.json"
+    },
     "extra": {
       "eas": {
         "projectId": "REPLACE_WITH_EAS_PROJECT_ID"

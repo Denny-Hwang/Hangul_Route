@@ -25,10 +25,10 @@ Step 1 - role                              Step 2 - name + create
 |                                    |     |  [ text field, prefilled:          |
 |  +------------------------------+  |     |    "<name> family" / "Class A" /   |
 |  | [ ] Parent / caregiver       |  |     |    "<school>" ]                    |
-|  |     1 line: home, my kids    |  |     |                                    |
+|  |     1 line: at home, family  |  |     |                                    |
 |  +------------------------------+  |     |  (teacher only)                    |
-|  | [ ] Teacher                  |  |     |  "Students join with a code -      |
-|  |     1 line: my class         |  |     |   no accounts for kids" (1 line)   |
+|  | [ ] Teacher                  |  |     |  "Students join with a code.       |
+|  |     1 line: my class         |  |     |   They do not need an account."    |
 |  +------------------------------+  |     |                                    |
 |  | [ ] School admin             |  |     |  [[ CREATE ]]                      |
 |  |     1 line: teachers + classes| |     +------------------------------------+

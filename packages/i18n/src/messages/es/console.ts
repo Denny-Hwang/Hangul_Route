@@ -132,7 +132,7 @@ export const consoleMsgs = {
   },
 
   shell: {
-    home: 'Consola',
+    home: 'Inicio',
     signOut: { cta: 'Salir' },
     backToLearning: 'App de estudiantes',
     aboutSite: 'Sobre Hangul Route',
@@ -207,7 +207,7 @@ export const consoleMsgs = {
     roleTitle: '¿Quién eres?',
     roleLabel: 'Rol',
     roles: {
-      family: { title: 'Familia', line: 'En casa: mi familia' },
+      family: { title: 'Familia', line: 'En casa: quienes aprenden en mi familia' },
       class: { title: 'Docente', line: 'Mi clase' },
       school: { title: 'Dirección escolar', line: 'Docentes y clases' },
     },
@@ -215,7 +215,7 @@ export const consoleMsgs = {
     back: { cta: 'Atrás' },
     nameTitle: { family: 'Nombre de tu familia', class: 'Nombre de tu clase', school: 'Nombre de tu escuela' },
     nameLabel: 'Nombre',
-    classJoinHint: 'Los estudiantes se unen con un código, sin cuentas de estudiantes.',
+    classJoinHint: 'Los estudiantes se unen con un código. No necesitan una cuenta.',
     nameLater: 'Puedes cambiar este nombre después.',
     create: { cta: 'Crear' },
     creating: { cta: 'Creando…' },
@@ -328,7 +328,7 @@ export const consoleMsgs = {
   },
 
   docTitle: {
-    console: 'Consola — Hangul Route',
+    console: 'Páginas de la cuenta — Hangul Route',
     signIn: 'Acceso para adultos — Hangul Route',
   },
   codeExpiry: {
@@ -513,6 +513,7 @@ export const consoleMsgs = {
         notes: 'Envía notas a tu clase',
       },
     },
+    freeForEveryone: 'Gratis para todos: informes y notas.',
     noSpaces: {
       title: 'Los planes son de una familia o de una clase.',
       family: { cta: 'Crear para mí o mi familia' },
@@ -1183,6 +1184,7 @@ export const consoleMsgs = {
     noPin: 'Crea un PIN de adultos en la app, o vuelve a iniciar sesión.',
     pinRenew: 'Para usar aquí el PIN de adultos, créalo otra vez en la app y luego inicia sesión una vez.',
     signInOnly: 'Vuelve a iniciar sesión para abrir aquí las páginas para adultos.',
+    passkey: { cta: 'Usar llave de acceso' },
   },
   access: {
     product: {
@@ -1803,5 +1805,23 @@ export const consoleMsgs = {
     emailUnverified: 'Para aceptar, tu cuenta necesita un correo verificado. Verifícalo en los ajustes de tu cuenta y vuelve a abrir el enlace.',
     tryAgain: 'No se pudo revisar la invitación ahora. Inténtalo de nuevo en un momento.',
     home: { cta: 'Ir a mi inicio' },
+  },
+  pinOwner: {
+    cta: 'Permitir que esta cuenta restablezca el PIN aquí',
+    notNow: 'Ahora no',
+    hint: 'Si se olvida el PIN de adultos, entrar a esta cuenta permite crear uno nuevo en este dispositivo.',
+    done: 'Listo. Esta cuenta puede restablecer el PIN aquí.',
+  },
+  pinPrompt: {
+    body: 'Crea un PIN de adultos en la app para que solo los adultos abran estas páginas.',
+    cta: 'Abrir la app',
+  },
+  pinReset: {
+    title: 'PIN de adultos nuevo',
+    going: 'Abriendo la app para que elijas un PIN nuevo.',
+    notOwner: 'Solo la cuenta de adulto que usó este PIN aquí por última vez puede hacerlo. En la app, usa el código de rescate o la espera de 24 horas.',
+    firstSignIn: 'Esto funciona después de abrir aquí las páginas para adultos con el PIN. En la app, usa el código de rescate o la espera de 24 horas.',
+    noPin: 'Este dispositivo no tiene un PIN de adultos que restablecer.',
+    unavailable: 'Esto no está disponible ahora. Usa Olvidé el PIN en la app.',
   },
 } satisfies DeepPartial<Messages['console']>;

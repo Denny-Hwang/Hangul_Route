@@ -167,7 +167,7 @@ export const consoleMsgs = {
    * design/screens/app-shell/adult-frame.md), and the note shown when the build has no API address.
    */
   shell: {
-    home: 'Console',
+    home: 'Home',
     signOut: { cta: 'Sign out' },
     /**
      * The way to the learner app, at the right end of the header (AMENDMENTS-DISPLAY-NAV section 7.3): it leaves the
@@ -271,7 +271,7 @@ export const consoleMsgs = {
     roleTitle: 'Who are you?',
     roleLabel: 'Role',
     roles: {
-      family: { title: 'Parent / caregiver', line: 'Home — my kids' },
+      family: { title: 'Parent / caregiver', line: 'At home — the learners in my family' },
       class: { title: 'Teacher', line: 'My class' },
       school: { title: 'School admin', line: 'Teachers and classes' },
     },
@@ -279,7 +279,7 @@ export const consoleMsgs = {
     back: { cta: 'Back' },
     nameTitle: { family: 'Name your family', class: 'Name your class', school: 'Name your school' },
     nameLabel: 'Space name',
-    classJoinHint: 'Students join with a code — no accounts for kids.',
+    classJoinHint: 'Students join with a code. They do not need an account.',
     /** [SA] AMENDMENTS-SEATS-ADMINS section 5.3: under the prefilled name field. */
     nameLater: 'You can change this name later.',
     create: { cta: 'Create' },
@@ -425,9 +425,13 @@ export const consoleMsgs = {
     failed: "Didn't go through. Try again.",
   },
 
-  /** `document.title` of the grown-up pages, in the console's language (owner items 6 and 7). */
+  /**
+   * `document.title` of the grown-up pages, in the console's language (owner items 6 and 7). The tab carries the name
+   * of the device row that opens these pages, "Account pages" (AMENDMENTS-DISPLAY-NAV section 9.4 keeps "Grown-up
+   * area" for the device's PIN-gated area only).
+   */
   docTitle: {
-    console: 'Console — Hangul Route',
+    console: 'Account pages — Hangul Route',
     signIn: 'Grown-ups sign in — Hangul Route',
   },
   /** Join-code expiry (`codeExpiry`). */
@@ -664,6 +668,11 @@ export const consoleMsgs = {
         notes: 'Send notes to your students',
       },
     },
+    /**
+     * One line under the offers (app-first-run, 2026-10-21): reports and notes are free on every plan
+     * (`CLAIM_REQUIRES_PAID` false), so they are not listed as what a plan includes.
+     */
+    freeForEveryone: 'Free for everyone: reports and notes.',
     /** A grown-up with no space yet. */
     noSpaces: {
       title: 'Plans belong to a family or a class.',
@@ -1479,6 +1488,8 @@ export const consoleMsgs = {
     noPin: 'Set a grown-up PIN in the app, or sign in again.',
     pinRenew: 'To use the grown-up PIN here, set it again in the app, then sign in once.',
     signInOnly: 'Sign in again to open grown-up pages on this device.',
+    /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4: shown only where the browser offers one and the marker is not `pin`. */
+    passkey: { cta: 'Use a passkey' },
   },
   /**
    * The free-plan words of grown-up console surfaces (F-ENT-003 section 3.11 glossary): the
@@ -2227,5 +2238,34 @@ export const consoleMsgs = {
     /** Accept answered `503 identity_unavailable`: the sign-in service could not be asked (section 6.3 item 1); Try again. */
     tryAgain: "Couldn't check your invite right now. Try again in a moment.",
     home: { cta: 'Go to my home' },
+  },
+  /**
+   * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2 moment 3 (design D13): the persona home card, shown only while
+   * the tab's PIN hand-off is under 2 minutes old and this account is not yet the PIN owner. These strings carry no name
+   * and no email; the card names the signed-in account above them with `adminInvite.signedInAs`.
+   */
+  pinOwner: {
+    cta: 'Let this account reset the PIN here',
+    /** [OA] Section 7.2 moment 3 (OA-0b): closes the card for this unlock in this tab; the words of `transfer.consent.notNow.cta`. */
+    notNow: 'Not now',
+    hint: 'If the grown-up PIN is forgotten, signing in to this account can set a new one on this device.',
+    done: 'Done. This account can reset the PIN here.',
+  },
+  /** [OA] Section 7.6: the set-a-PIN card on a `nopin` browser, once per browser. */
+  pinPrompt: {
+    body: 'Set a grown-up PIN in the app so only grown-ups open these pages.',
+    cta: 'Open the app',
+  },
+  /**
+   * [OA] Section 8.5 (row OA-6): `/account/pin-reset`, the sign-in reset page behind the lock. One title in every state;
+   * `going` while it opens the app, else one line chosen by cause and Back to learning. No name, no email, no number.
+   */
+  pinReset: {
+    title: 'New grown-up PIN',
+    going: 'Opening the app so you can choose a new PIN.',
+    notOwner: 'Only the grown-up account that last used this PIN here can do this. In the app, use the Rescue Code or the 24-hour wait.',
+    firstSignIn: 'This works after a grown-up has opened the grown-up pages here with the PIN. In the app, use the Rescue Code or the 24-hour wait.',
+    noPin: 'This device has no grown-up PIN to reset.',
+    unavailable: "This isn't available right now. Use Forgot PIN? in the app.",
   },
 } as const;

@@ -35,7 +35,7 @@ describe('console.lock (F-APP-001 section 3.9 lock screen)', () => {
 
   it('holds exactly these keys', () => {
     expect(leafPaths(lock).sort()).toEqual(
-      ['title', 'line', 'usePin.cta', 'signInAgain.cta', 'backToLearning.cta', 'pinChanged', 'firstSignIn', 'noPin', 'pinRenew', 'signInOnly'].sort(),
+      ['title', 'line', 'usePin.cta', 'signInAgain.cta', 'backToLearning.cta', 'pinChanged', 'firstSignIn', 'noPin', 'pinRenew', 'signInOnly', 'passkey.cta'].sort(),
     );
   });
 

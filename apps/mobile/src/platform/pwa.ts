@@ -1,4 +1,5 @@
 import { setStringAsync } from 'expo-clipboard';
+import type { InstallEnv } from '../logic/pwa/install-guide';
 
 /**
  * PWA lifecycle wrapper — native no-op. The web variant (`pwa.web.ts`)
@@ -21,8 +22,8 @@ export function isStandalone(): boolean {
 export function applyUpdate(): void {}
 
 /** Inputs for `logic/pwa/install-guide`; native builds never show the guide. */
-export function installEnv(): { userAgent: string; standalone: boolean; hasPromptEvent: boolean; isWeb: boolean } {
-  return { userAgent: '', standalone: true, hasPromptEvent: false, isWeb: false };
+export function installEnv(): InstallEnv {
+  return { userAgent: '', standalone: true, hasPromptEvent: false, isWeb: false, maxTouchPoints: 0 };
 }
 
 /** Fire the captured browser install prompt; resolves true when accepted. */

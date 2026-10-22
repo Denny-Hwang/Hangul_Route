@@ -4,8 +4,8 @@ import { createStore, get, type UseStore } from 'idb-keyval';
 /**
  * The learner app's only window on the shell store (F-APP-001 sections 3.5 and 3.14): the
  * console's own IndexedDB database `hr-shell`, store `kv`, outside the learner `hr:` namespace.
- * The learner app reads one key, `lastPersona`, and never writes there; Welcome's "Continue as …"
- * (A-7) uses it. A convenience: a missing IndexedDB, a store that cannot open, a failed read or
+ * The learner app reads one key here, `lastPersona`, and never writes there; Welcome's "Continue as …"
+ * (A-7) uses it. [OA] `device-uses.web.ts` reads `deviceUses` through the same reader (row OA-4b). A convenience: a missing IndexedDB, a store that cannot open, a failed read or
  * a value that is not `{ v: 1, persona }` all read as "none".
  */
 export interface ShellReader {
@@ -27,7 +27,7 @@ function indexedDbAvailable(): boolean {
  * `hr-shell` / `kv`, opened once per page and opened again after a failed read (a connection the
  * browser closed stays failed otherwise); null where the browser has no IndexedDB.
  */
-function defaultReader(): ShellReader | null {
+export function defaultReader(): ShellReader | null {
   if (!indexedDbAvailable()) return null;
   const store = (shellDb ??= createStore(SHELL_DB, SHELL_STORE));
   return {

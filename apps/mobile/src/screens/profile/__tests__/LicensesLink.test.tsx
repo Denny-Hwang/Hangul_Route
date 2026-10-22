@@ -3,6 +3,7 @@ import React from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useLocaleStore } from '../../../store/locale-store';
+import { useUiStore } from '../../../store/ui-store';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { LicensesLink } from '../LicensesLink';
 
@@ -89,6 +90,17 @@ describe('LicensesLink', () => {
     expect(screenTexts(r.root)).toContain(en.gateDone);
     await press(byTestId(r.root, 'profile-licenses-link')[0]!);
     expect(open).toHaveBeenCalledWith(URL);
+    await unmount(r);
+  });
+
+  it('[OA] CS-1: the PIN serves this one link; once it opened, the session is used up', async () => {
+    const open = vi.fn().mockResolvedValue('opened');
+    useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now() });
+    const r = await render(<LicensesLink url={URL} onGate={() => undefined} opensDirectly={() => true} open={open} handOffNeedsTap />);
+    await press(byTestId(r.root, 'profile-licenses-link')[0]!);
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
     await unmount(r);
   });
 

@@ -22,7 +22,8 @@ import { GROWN_UP_AREA } from '../profiles/pin-flow';
  * 4. then the PIN unlock carries the marker epoch, which the console checks against the epoch a
  *    grown-up confirmed by signing in.
  */
-export type GrownUpVia = 'profile' | 'dashboard' | 'plan' | 'lock';
+/** [OA] `chooser`: a Family, Teacher, School or Sign in row on "Who is using this?" (row OA-4b). */
+export type GrownUpVia = 'profile' | 'dashboard' | 'plan' | 'lock' | 'chooser';
 export type HandoffTargetCode = 'router' | 'billing' | 'next';
 
 export interface GrownUpHandoffRequest {

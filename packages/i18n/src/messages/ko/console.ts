@@ -102,7 +102,7 @@ export const consoleMsgs = {
   },
 
   shell: {
-    home: '콘솔',
+    home: '홈',
     signOut: { cta: '로그아웃' },
     backToLearning: '학습자 앱',
     aboutSite: 'Hangul Route 소개',
@@ -168,7 +168,7 @@ export const consoleMsgs = {
     roleTitle: '누구신가요?',
     roleLabel: '역할',
     roles: {
-      family: { title: '부모님 / 보호자', line: '집 — 우리 가족 학습자' },
+      family: { title: '부모님 / 보호자', line: '집에서 — 우리 가족 학습자' },
       class: { title: '선생님', line: '내 반' },
       school: { title: '학교 관리자', line: '선생님과 반' },
     },
@@ -176,7 +176,7 @@ export const consoleMsgs = {
     back: { cta: '뒤로' },
     nameTitle: { family: '가족 이름', class: '반 이름', school: '학교 이름' },
     nameLabel: '공간 이름',
-    classJoinHint: '학생은 코드로 참여해요 — 학생용 계정은 필요 없어요.',
+    classJoinHint: '학생은 코드로 참여해요. 계정은 필요 없어요.',
     nameLater: '이 이름은 나중에 바꿀 수 있어요.',
     create: { cta: '만들기' },
     creating: { cta: '만드는 중…' },
@@ -286,7 +286,7 @@ export const consoleMsgs = {
     failed: '처리되지 않았어요. 다시 해 보세요.',
   },
   docTitle: {
-    console: '콘솔 — Hangul Route',
+    console: '계정 페이지 — Hangul Route',
     signIn: '어른 로그인 — Hangul Route',
   },
   codeExpiry: {
@@ -468,6 +468,7 @@ export const consoleMsgs = {
         notes: '학생에게 쪽지 보내기',
       },
     },
+    freeForEveryone: '리포트와 쪽지는 누구나 무료예요.',
     noSpaces: {
       title: '플랜은 가족이나 반에 속해요.',
       family: { cta: '나 또는 우리 가족용으로 시작' },
@@ -1090,6 +1091,7 @@ export const consoleMsgs = {
     noPin: '앱에서 어른용 PIN을 설정하거나 다시 로그인해 주세요.',
     pinRenew: '여기서 어른용 PIN을 쓰려면 앱에서 다시 설정한 뒤 한 번 로그인해 주세요.',
     signInOnly: '이 기기에서 어른용 페이지를 열려면 다시 로그인해 주세요.',
+    passkey: { cta: '패스키 쓰기' },
   },
   access: {
     product: {
@@ -1704,5 +1706,23 @@ export const consoleMsgs = {
     emailUnverified: '수락하려면 계정 이메일 인증이 필요해요. 계정 설정에서 이메일을 인증한 뒤 링크를 다시 열어 주세요.',
     tryAgain: '지금은 초대를 확인하지 못했어요. 잠시 뒤에 다시 해 볼까요?',
     home: { cta: '내 홈으로' },
+  },
+  pinOwner: {
+    cta: '이 계정으로 여기서 PIN을 다시 만들 수 있게 하기',
+    notNow: '지금은 안 함',
+    hint: '어른용 PIN을 잊으면 이 계정으로 로그인해서 이 기기에 새 PIN을 만들 수 있어요.',
+    done: '됐어요. 이 계정으로 여기서 PIN을 다시 만들 수 있어요.',
+  },
+  pinPrompt: {
+    body: '어른만 이 페이지를 열 수 있게 앱에서 어른용 PIN을 만들어요.',
+    cta: '앱 열기',
+  },
+  pinReset: {
+    title: '새 어른용 PIN',
+    going: '새 PIN을 고를 수 있게 앱을 열고 있어요.',
+    notOwner: '이 기기에서 이 PIN을 마지막으로 쓴 어른 계정만 할 수 있어요. 앱에서 복구 코드나 24시간 기다리기를 써 주세요.',
+    firstSignIn: '어른이 이 기기에서 PIN으로 어른용 페이지를 연 적이 있어야 쓸 수 있어요. 앱에서 복구 코드나 24시간 기다리기를 써 주세요.',
+    noPin: '이 기기에는 다시 만들 어른용 PIN이 없어요.',
+    unavailable: "지금은 쓸 수 없어요. 앱의 'PIN을 잊었나요?'를 써 주세요.",
   },
 } satisfies DeepPartial<Messages['console']>;

@@ -1,5 +1,7 @@
 # Profiles/Switch-Button — avatar-corner switch on home (wireframe v1)
 
+> **Partly superseded 2026-10-21 [OA]** by `design/screens/profiles/who-is-using.md` board 13 and design decision D7 (`design/screens/profiles/README.md`; `docs/specs/AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` section 6.2): the Home **Switch** is its own button in the Home header trail and opens Who is using this? directly; the avatar stays the Profile entry, so the avatar-corner sheet below is not built. Kept for history.
+
 Spec: `docs/specs/F-PROF-001-device-profiles.md` §3.4
 Audience: **learner (5–11)** — a 5-year-old hands the tablet to a sibling without adult help
 

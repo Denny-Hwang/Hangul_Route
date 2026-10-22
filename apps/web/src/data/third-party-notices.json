@@ -3819,6 +3819,15 @@
    ]
   },
   {
+   "name": "expo-local-authentication",
+   "version": "15.0.2",
+   "license": "MIT",
+   "copyright": "(no copyright line in the package; author: 650 Industries, Inc.)",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
    "name": "expo-localization",
    "version": "16.0.1",
    "license": "MIT",
@@ -3848,6 +3857,15 @@
   {
    "name": "expo-network",
    "version": "7.0.5",
+   "license": "MIT",
+   "copyright": "(no copyright line in the package; author: 650 Industries, Inc.)",
+   "usedIn": [
+    "app"
+   ]
+  },
+  {
+   "name": "expo-secure-store",
+   "version": "14.0.1",
    "license": "MIT",
    "copyright": "(no copyright line in the package; author: 650 Industries, Inc.)",
    "usedIn": [

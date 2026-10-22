@@ -5,12 +5,14 @@ import { spacing } from '@hangul-route/design-system/tokens';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { DeviceGateRead } from '@/lib/console/grown-up-lock';
 import { learnerHome } from '@/lib/console/grown-up-lock';
+import { isResetLeg } from '@/lib/console/one-account';
 import { createConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl } from '@/lib/console/config';
 import { readDeviceGate } from '@/lib/console/device-marker';
 import { readLastPersona } from '@/lib/console/shell-store';
-import { finishReverify, grantSignInUnlock, resolveDestination, settleSignIn, type RouteIo, type SignInIo } from '@/lib/console/signin-flow';
+import { finishReverify, grantSignInUnlock, mayBePinBrowser, resolveDestination, settleSignIn, type RouteIo, type SignInIo } from '@/lib/console/signin-flow';
 import { clearSignInRecord, readSignInRecord } from '@/lib/console/signin-record';
+import { withSchoolFocus } from '@/lib/console/teacher-home';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { useLocale, useMessages } from '@/lib/i18n/locale-context';
 import { useConsoleAuth } from './auth-context';
@@ -41,7 +43,7 @@ export function browserRouterEnvironment(): RouterEnvironment {
     readRecord: () => readSignInRecord(),
     clearRecord: () => clearSignInRecord(),
     readDevice: () => readDeviceGate(),
-    grant: (device, now) => grantSignInUnlock(device, now),
+    grant: (device, now, context) => grantSignInUnlock(device, now, undefined, context),
     readLastPersona: () => readLastPersona(),
     replace: (url) => window.location.replace(url),
     assign: (url) => window.location.assign(url),
@@ -52,8 +54,11 @@ export function browserRouterEnvironment(): RouterEnvironment {
 
 type Phase = { at: 'settle' } | { at: 'reverify'; device: DeviceGateRead } | { at: 'route' } | { at: 'going'; href: string } | { at: 'error' };
 
-/** Renders Clerk's reverification and reports whether it succeeded (`ClerkReverify`); absent outside Clerk mode. */
-export type ReverifySlot = (props: { onDone: (verified: boolean) => void }) => ReactNode;
+/**
+ * Renders Clerk's reverification and reports whether it succeeded (`ClerkReverify`); absent outside Clerk mode.
+ * [OA] `refusePasskey`: a `pin` browser (or one whose read failed) and the reset leg take no passkey (section 7.4).
+ */
+export type ReverifySlot = (props: { onDone: (verified: boolean) => void; refusePasskey: boolean }) => ReactNode;
 
 export interface GrownUpRouterProps {
   /** `?next=` as read (already decoded); `acceptedNext` decides whether it is followed. */
@@ -62,9 +67,11 @@ export interface GrownUpRouterProps {
   /** Clerk mode passes its reverification; without it a reverification counts as cancelled (the lock then decides). */
   reverify?: ReverifySlot;
   environment?: RouterEnvironment;
+  /** [OA] Row OA-4b: `/teach?focus=school` carries `focus=school` to the teacher home (`withSchoolFocus`). */
+  schoolFocus?: boolean;
 }
 
-export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRouterProps): JSX.Element {
+export function GrownUpRouter({ next, hint, reverify, environment, schoolFocus = false }: GrownUpRouterProps): JSX.Element {
   const auth = useConsoleAuth();
   const m = useMessages();
   const locale = useLocale();
@@ -74,6 +81,8 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
   const [phase, setPhase] = useState<Phase>({ at: 'settle' });
   const [attempt, setAttempt] = useState(0);
   const { sessionId, getToken } = auth;
+  // [OA] Section 7.2: who signed in (fingerprinted for the PIN owner, never stored as is) and the reset leg.
+  const accountId = auth.session?.accountId ?? null;
   const api = useMemo(() => {
     const endpoint = apiBaseUrl();
     return endpoint ? createConsoleApi({ endpoint, token: getToken }) : null;
@@ -83,12 +92,13 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
   useEffect(() => {
     if (phase.at !== 'settle') return undefined;
     let live = true;
-    void settleSignIn(env, sessionId).then((result) => {
+    void settleSignIn(env, sessionId, { next, accountId }).then((result) => {
       if (live) setPhase(result ? { at: 'reverify', device: result.reverify } : { at: 'route' });
     });
     return () => {
       live = false;
     };
+    // `next` and the account are read once, with the record they belong to.
   }, [phase.at, env, sessionId]);
 
   // Step 2: spaces, last persona, one location.replace (again on Try again).
@@ -103,25 +113,27 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
       },
       readLastPersona: env.readLastPersona,
     };
-    void resolveDestination(io, { next, hint }).then((href) => {
+    void resolveDestination(io, { next, hint }).then((found) => {
       if (!live) return;
-      if (!href) {
+      if (!found) {
         setPhase({ at: 'error' });
         return;
       }
+      const href = withSchoolFocus(found, schoolFocus);
       setPhase({ at: 'going', href });
       env.replace(href);
     });
     return () => {
       live = false;
     };
-  }, [phase.at, attempt, api, env, next, hint]);
+  }, [phase.at, attempt, api, env, next, hint, schoolFocus]);
 
   if (phase.at === 'reverify') {
     const device = phase.device;
     const done = (verified: boolean): void => {
-      void finishReverify(env, device, verified).then(() => setPhase({ at: 'route' }));
+      void finishReverify(env, device, verified, { next, accountId }).then(() => setPhase({ at: 'route' }));
     };
+    const refusePasskey = isResetLeg(next) || mayBePinBrowser(device);
     return (
       <ReverifyPanel
         title={s.reverify.title}
@@ -132,7 +144,7 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
           env.assign(learnerHome(env.origin(), locale));
         }}
       >
-        {reverify ? reverify({ onDone: done }) : <CancelNow onDone={done} />}
+        {reverify ? reverify({ onDone: done, refusePasskey }) : <CancelNow onDone={done} />}
       </ReverifyPanel>
     );
   }

@@ -73,3 +73,25 @@ describe('platform/app-visibility.web', () => {
     expect(Object.keys(web).sort()).toEqual(Object.keys(native).sort());
   });
 });
+
+describe('[OA] subscribePageRestore (row OA-6 review)', () => {
+  it('on the web calls back for a page restored from the back/forward cache only, and unsubscribes', () => {
+    const listeners = new Set<(event: { persisted?: boolean }) => void>();
+    vi.stubGlobal('addEventListener', (type: string, fn: (event: { persisted?: boolean }) => void) => type === 'pageshow' && listeners.add(fn));
+    vi.stubGlobal('removeEventListener', (type: string, fn: (event: { persisted?: boolean }) => void) => type === 'pageshow' && listeners.delete(fn));
+    const listener = vi.fn();
+    const off = web.subscribePageRestore(listener);
+    listeners.forEach((fn) => fn({ persisted: false }));
+    expect(listener).not.toHaveBeenCalled();
+    listeners.forEach((fn) => fn({ persisted: true }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    off();
+    expect(listeners.size).toBe(0);
+  });
+
+  it('does nothing where there is no window, nor on native', () => {
+    vi.stubGlobal('addEventListener', undefined);
+    expect(() => web.subscribePageRestore(vi.fn())()).not.toThrow();
+    expect(() => native.subscribePageRestore(vi.fn())()).not.toThrow();
+  });
+});

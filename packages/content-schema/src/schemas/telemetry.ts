@@ -175,6 +175,15 @@ export const TELEMETRY_EVENT_NAMES = [
   'space.admin.accept_refused',
   'space.admin.removed',
   'space.admin.left',
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15 (payloads: OA_TELEMETRY_PAYLOADS in app-shell.ts; codes, booleans
+  // and bounded counts only; the Worker stores every one of them without a profileId)
+  'who.shown',
+  'who.picked',
+  'pin.paused',
+  'pin.biometric_changed',
+  'profile.lock_changed',
+  'profile.removed',
+  'space.join.batch',
   // F-CURR-002 section 11.3, TELEMETRY-NAMES-2 section R (row CM-3, Worker first; payloads: CURR_TELEMETRY_PAYLOADS in
   // curr-telemetry.ts: ids, codes, counts and buckets only, never a name, free text, learner input or a profile id)
   'memory.daily',

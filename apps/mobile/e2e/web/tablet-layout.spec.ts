@@ -841,26 +841,20 @@ for (const vp of [
   { width: 768, height: 1024 },
   { width: 1180, height: 820 },
 ] as const) {
-  test(`with no tab bar the offline-ready toast sits at the top and never covers the CTA at ${vp.width}x${vp.height}`, async ({ page }) => {
+  test(`on a first visit the offline-ready toast waits: Welcome and the form stay clear at ${vp.width}x${vp.height}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto('/');
     await keepSidewaysIfAsked(page);
     const start = page.getByRole('button', { name: "Let's start" });
     await expect(start).toBeVisible();
+    // No learner profile yet: the toast is queued for the first Home (first-run-toast.spec.ts follows it there), so
+    // it never hangs over Welcome's title or the form's step label and never covers Let's start or Continue.
     await page.evaluate(() => window.dispatchEvent(new Event('hr:offline-ready')));
-    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toBeVisible();
-    const banner = await box(page, 'pwa-banners');
-    expect(banner.y, 'toast hangs from the top').toBeLessThan(vp.height / 2);
-    expect(banner.width).toBeLessThanOrEqual(MAX_READING);
-    expect(Math.abs(banner.x - (vp.width - banner.x - banner.width))).toBeLessThanOrEqual(1);
-    expect(apart(banner, (await start.boundingBox())!), "toast clear of Let's start").toBe(true);
-
-    // The form's Continue sits in the sticky footer at the bottom: the toast stays clear of it too.
+    await page.waitForTimeout(300);
+    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toHaveCount(0);
     await start.click();
-    const cont = page.getByRole('button', { name: 'Continue' });
-    await expect(cont).toBeVisible();
-    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toBeVisible();
-    expect(apart(await box(page, 'pwa-banners'), (await cont.boundingBox())!), 'toast clear of Continue').toBe(true);
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toHaveCount(0);
   });
 }
 
@@ -871,7 +865,7 @@ for (const vp of [
   { width: 844, height: 390 },
   { width: 1180, height: 820 },
 ] as const) {
-  test(`on a quest the banners never cover "Leave quest" and the update bar waits at ${vp.width}x${vp.height}`, async ({ page }) => {
+  test(`on the first quest the banners wait and never cover "Leave quest" at ${vp.width}x${vp.height}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await onboardChild(page, { name: 'Mina' });
     const leave = headerClose(page);
@@ -880,10 +874,12 @@ for (const vp of [
       window.dispatchEvent(new Event('hr:update-ready'));
       window.dispatchEvent(new Event('hr:offline-ready'));
     });
-    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toBeVisible();
+    // A first visit, before its first Home: the toast is queued for Home (first-run-toast.spec.ts) and the update bar
+    // waits for a tab screen. The top slot on a screen with no tab bar is checked on the PIN pad below.
+    await page.waitForTimeout(300);
+    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toHaveCount(0);
     await expect(page.getByText('New lessons are ready.')).toHaveCount(0);
-    expect(apart(await box(page, 'pwa-banners'), (await leave.boundingBox())!), 'toast clear of Leave quest').toBe(true);
-    // The toast only informs: the control under the slot still takes the tap.
+    // Leave quest still takes the tap.
     await acceptConfirmSheets(page);
     await leave.click();
     await expect(leave).toHaveCount(0);

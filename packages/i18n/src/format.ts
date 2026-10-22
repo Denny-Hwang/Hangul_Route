@@ -204,3 +204,17 @@ export function describeRelativeDay(
   if (days === 1) return words.yesterday;
   return formatDate(locale, then, days < 7 ? 'weekday' : 'monthDay');
 }
+
+/**
+ * [OA] Names in the UI language's collation (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D17: the chooser's tiles from 13
+ * learners on): case and accents aside, digits as numbers ("Student 9" before "Student 10"). A runtime without that
+ * locale's data compares by code point instead. Never throws.
+ */
+export function compareNames(locale: UiLocale): (a: string, b: string) => number {
+  try {
+    const collator = new Intl.Collator(LOCALE_META[locale].htmlLang, { sensitivity: 'base', numeric: true });
+    return (a, b) => collator.compare(a, b);
+  } catch {
+    return (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  }
+}

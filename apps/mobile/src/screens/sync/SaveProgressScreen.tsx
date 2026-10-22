@@ -18,10 +18,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SaveProgress'>;
  * sync/save-progress — F-RESTORE-001 §3.3. PIN-gated; the code is shown as
  * a block a parent writes down. Rotation is last and small on purpose.
  */
-export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
+export function SaveProgressScreen({ navigation, route }: Props): React.ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.saveProgress;
-  const profile = useProfileStore(activeProfileSelector);
+  // [OA] Row OA-7a: Save progress first on the Remove sheet names its learner; otherwise the active one.
+  const forId = route.params?.profileId;
+  const active = useProfileStore(activeProfileSelector);
+  const named = useProfileStore((s) => (forId === undefined ? null : (s.profiles.find((p) => p.id === forId) ?? null)));
+  const profile = forId === undefined ? active : named;
   const learnerId = profile?.id ?? '';
   const state = useSyncStore((s) => s.byLearner[learnerId]);
   const hydrate = useSyncStore((s) => s.hydrate);

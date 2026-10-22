@@ -28,6 +28,7 @@ import { useMembershipStore } from '../../store/membership-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
+import { passGate } from '../../store/gate-telemetry';
 import { topicWords } from './topic-data';
 import { TOPIC_TILE_CHROME, TopicTile } from './TopicTile';
 
@@ -100,7 +101,7 @@ export function TopicGrid({
   const open = (view: TopicTileView): void => {
     if (view.locked) {
       void track(helpAskedEvent(profile?.id, 'library', ask.audience));
-      const gate = lockedStoryGate(opensDirectly(false));
+      const gate = lockedStoryGate(passGate('Paywall', opensDirectly(false)));
       if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
       else navigation.navigate('PinEntry', gate.params);
       return;

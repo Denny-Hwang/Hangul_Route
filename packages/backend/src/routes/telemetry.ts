@@ -5,6 +5,7 @@ import { fail, ok } from '../envelope';
 import { learningRollupsEnabled, rollUpEvent, type RollupEnv } from '../lib/learning-rollups';
 import { clientKey } from '../lib/rate-limit';
 import { appendEvent, keptEventFields } from '../lib/server-events';
+import { countTelemetryDaily, type TelemetryDailyEnv } from '../lib/telemetry-daily';
 import { id, type TelemetryEvent } from '../store';
 
 /**
@@ -24,6 +25,10 @@ import { id, type TelemetryEvent } from '../store';
  * and the log is
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
+ * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS (and `session.start`) is also counted in the
+ * anonymous `telemetry_daily` table (section 15.1, lib/telemetry-daily.ts): written through within per-isolate
+ * bounds (held and summed only past them), best effort, after the response is decided, never failing this route
+ * and never retried.
  * The log stays transient diagnostics. A name on the rollup allowlist also adds
  * 1 to a few `learning_rollups` cells (F-CURR-002 section 11.2, row CM-70a,
  * lib/learning-rollups.ts) from the kept payload alone, never the profile id;
@@ -84,13 +89,17 @@ telemetryRoutes.post('/', async (c) => {
     receivedAt,
   };
   const stored = appendEvent(event);
-  // The name and kept payload only: the profile id never reaches the rollup. After the answer when
-  // the runtime allows it (waitUntil), so a slow D1 write never delays the 201 into a client retry.
-  if (learningRollupsEnabled(c.env as RollupEnv | undefined)) {
-    const rollup = rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt, at: event.at }, clientKey((h) => c.req.header(h)));
-    const ctx = executionContextOf(c);
-    if (ctx) ctx.waitUntil(rollup);
-    else await rollup;
-  }
+  // [OA] The daily count: best effort, it never rejects.
+  const count = countTelemetryDaily(() => dbFor(c), c.env as TelemetryDailyEnv | undefined, stored, now.getTime());
+  // The name and kept payload only: the profile id never reaches the rollup. It never rejects either.
+  const rollup = learningRollupsEnabled(c.env as RollupEnv | undefined)
+    ? rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt, at: event.at }, clientKey((h) => c.req.header(h)))
+    : Promise.resolve(0);
+  // Both after the answer when the runtime allows it (one waitUntil), so a slow D1 write never delays the 201 into a
+  // client retry. No execution context (tests, local dev): finish both before answering.
+  const after = Promise.all([count, rollup]);
+  const ctx = executionContextOf(c);
+  if (ctx) ctx.waitUntil(after);
+  else await after;
   return ok(c, { event: stored }, 201);
 });

@@ -3,7 +3,7 @@
 Spec: `docs/specs/AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` sections 8.6, 10.3, 10.4, OA-D9 (rows OA-5, OA-7a, OA-7b, OA-9) · extends `profile/profile-split.md` Panel B (Grown-up area)
 Audience: **grown-up** (behind the gate)
 Routes: learner app `ParentDashboard` (Grown-up area, new section), `EditProfile` (lock switch), `JoinSpace` (Who is joining? step)
-Mock: `design/screens/profiles/people-on-device.md` (row OA-0b)
+Mock: `design/screens/profiles/people-on-device.md` (Panels A to C2) and `who-is-joining.md` (Panels D, E) (row OA-0b)
 
 ## Scenario (Given-When-Then)
 
@@ -81,9 +81,9 @@ Panel C2 — Remove anyway, second step
 +--------------------------------+
 ```
 
-"Saved" means registered and nothing waiting to be pushed; before showing the sheet the app tries to sync ("Checking that their progress is saved...").
+"Saved" means registered and nothing waiting to be pushed; before showing the sheet the app tries to sync ("Checking that their progress is saved…").
 
-Saved variant: "Their progress is saved. Their Rescue Code brings it back on any device." and, when the learner is in a family or class, "Their place in a family or class stays. A grown-up can change it in the account pages." Buttons: [[ Remove ]] [ Cancel ].
+Saved variant: "Their progress is saved. Their Rescue Code brings it back on any device.", then the learner's Rescue Code itself on its own line (row OA-7a review: Remove deletes the only copy on this device, and the sync check may just have issued it), and, when the learner is in a family or class, "Their place in a family or class stays. A grown-up can change it in the account pages." Buttons: [[ Remove ]] [ Cancel ]. A learner saved on the server with no Rescue Code on this device gets the unsaved variant (two steps).
 
 Panel D — Join with a family code, device with 3 learner profiles: Who is joining?
 
@@ -95,7 +95,7 @@ Panel D — Join with a family code, device with 3 learner profiles: Who is join
 | Pick each learner on this      |
 | device who should join.        |
 | [x] (Hoya) Mina   (active)     |
-| [x] (Hoya) Jun                 |  <- picking anyone but the active learner asks the PIN first
+| [ ] (Hoya) Jun                 |  <- only the active learner starts checked; picking anyone else asks the PIN first
 | [ ] (Hoya) Sora   [L]          |  <- a locked (grown-up's own) profile starts unchecked
 |     Takes a family place.      |
 | [[ Next ]]                     |  -> name check per learner -> one consent naming each -> joins
