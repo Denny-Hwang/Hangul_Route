@@ -20,7 +20,8 @@ import { flags } from '../../config/flags';
 import { tileOrder } from '../../logic/profiles/who';
 import { batchOffered, checklistRows, locksThatCount, type ChecklistRow } from '../../logic/spaces/join-batch';
 import { useAccountStore } from '../../store/account-store';
-import { holdJoin, learnerProfiles, readProfileLocks, takeBatchHandoff, takeBatchLaunchChooser } from '../../store/who-chooser';
+import { readProfileLocks } from '../../store/profile-locks';
+import { holdJoin, learnerProfiles, takeBatchHandoff, takeBatchLaunchChooser } from '../../store/who-chooser';
 import { JoinBatch } from './JoinBatch';
 import { JoinNameField } from './JoinNameField';
 
