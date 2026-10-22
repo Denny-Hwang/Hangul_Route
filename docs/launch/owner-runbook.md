@@ -516,6 +516,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 2. (선택) 콘솔에서도 처음부터 숨기려면: `hangul-route-app` 과 `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_CLASS_TRANSFER=disabled` → Retry deployment.
 3. 확인: `/health` 의 `features.classTransfer` 가 `false`.
 4. 다시 켜기: `CLASS_TRANSFER` 변수를 지우고 Deploy (콘솔 변수도 지웠으면 Retry deployment).
+5. 하루보다 오래 꺼 두면: `/teachers` 의 "Use it across a whole school" 에서 반 옮기기 문장 (`persona.teachers.schools.moves`) 을 지우는 PR 을 만들고 사이트를 다시 배포한다 (AMENDMENTS-SITE-NEWUSER §3.6, LV-D1 규칙). 한나절 정도의 사고 대응이면 사이트는 그대로 둔다.
 
 끄더라도 이미 끝난 이동, 학습 기록, 카드와 별은 바뀌지 않는다. 가족의 반 안내 확인 (class-scope acknowledgement) 은 스위치와 무관하게 계속 동작한다.
 
