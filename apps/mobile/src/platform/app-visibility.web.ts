@@ -31,3 +31,17 @@ export function isAppVisible(): boolean {
   const doc = (globalThis as { document?: Document }).document;
   return doc?.visibilityState !== 'hidden';
 }
+
+/**
+ * [OA] A page restored from the back/forward cache (`pageshow` with `persisted`), for the web build (row OA-6): a new-PIN
+ * screen a reset opened closes then (`bindResetSetupLapse`). Returns the unsubscribe.
+ */
+export function subscribePageRestore(listener: () => void): () => void {
+  const win = globalThis as unknown as Window;
+  if (typeof win.addEventListener !== 'function' || typeof win.removeEventListener !== 'function') return () => undefined;
+  const onShow = (event: Event): void => {
+    if ((event as { persisted?: boolean }).persisted === true) listener();
+  };
+  win.addEventListener('pageshow', onShow);
+  return () => win.removeEventListener('pageshow', onShow);
+}

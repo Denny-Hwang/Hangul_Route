@@ -125,7 +125,18 @@
     "apps/web/src/app/(console)/account/invite/page.tsx",
     "apps/web/src/components/console/LecturePresetParts.tsx",
     "apps/web/src/components/console/LectureModeCard.tsx",
-    "apps/mobile/src/screens/parent/LectureCard.tsx"
+    "apps/mobile/src/screens/parent/LectureCard.tsx",
+    "apps/mobile/src/screens/who/**",
+    "apps/mobile/src/components/WhoTile.tsx",
+    "apps/mobile/src/components/GrownUpRow.tsx",
+    "apps/mobile/src/components/WhoSwitchButton.tsx",
+    "apps/mobile/src/components/LockBadge.tsx",
+    "apps/mobile/src/screens/parent/PeopleOnDeviceCard.tsx",
+    "apps/mobile/src/screens/parent/PersonOnDeviceScreen.tsx",
+    "apps/mobile/src/components/ProfileLockCard.tsx",
+    "apps/web/src/components/console/PinResetPage.tsx",
+    "apps/web/src/app/(console)/account/pin-reset/page.tsx",
+    "apps/mobile/src/screens/parent/PinResetExpiredNotice.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

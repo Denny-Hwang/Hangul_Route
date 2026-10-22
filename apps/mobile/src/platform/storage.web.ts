@@ -1,4 +1,4 @@
-import { clear, del, get, keys, set, update } from 'idb-keyval';
+import { clear, createStore, del, get, keys, set, update } from 'idb-keyval';
 import { writePasses } from './storage-fence';
 
 /**
@@ -44,6 +44,26 @@ export async function readJsonExact<T>(key: string): Promise<T | null> {
   return JSON.parse(raw) as T;
 }
 
+/** idb-keyval's own database and object store, opened again for a fresh connection. */
+const DB_NAME = 'keyval-store';
+const STORE_NAME = 'keyval';
+
+/**
+ * [OA] `readJsonExact` on a new IndexedDB connection, for the one retry of a read that failed (AMENDMENTS-ONE-
+ * ACCOUNT-MANY-USERS section 13.2, `hr:profiles:locks`): a connection the browser closed or broke under the cached
+ * one does not fail the retry too. The new connection is closed after the read.
+ */
+export async function readJsonExactFresh<T>(key: string): Promise<T | null> {
+  const store = createStore(DB_NAME, STORE_NAME);
+  try {
+    const raw = await get<string>(KEY_PREFIX + key, store);
+    if (raw === null || raw === undefined || raw === '') return null;
+    return JSON.parse(raw) as T;
+  } finally {
+    await store('readonly', (s) => s.transaction.db.close()).catch(() => undefined);
+  }
+}
+
 /** Stores `value`; a key the write fence rejects is left untouched (F-BROWSE-001 section 4.10). */
 export async function writeJson<T>(key: string, value: T): Promise<void> {
   if (!writePasses(key, 'write')) return;
@@ -58,10 +78,11 @@ const UNCHANGED = Symbol('unchanged');
  * another call makes in between is never lost (AMENDMENTS-DISPLAY-NAV section 3.1). `next` gets
  * the stored value (null when missing or unparsable) and returns the value to store, or
  * `undefined` to store nothing. A failed read rejects and writes nothing, so a write is never made
- * over data that could not be read. A key the write fence rejects is left untouched (`next` is not
- * called). Resolves to whether a value was stored.
+ * over data that could not be read. With `exact`, a stored value that does not parse rejects too (as
+ * `readJsonExact`), so `next` gets null only for a missing key. A key the write fence rejects is left
+ * untouched (`next` is not called). Resolves to whether a value was stored.
  */
-export async function updateJson<T>(key: string, next: (current: T | null) => T | undefined): Promise<boolean> {
+export async function updateJson<T>(key: string, next: (current: T | null) => T | undefined, options?: { exact?: boolean }): Promise<boolean> {
   if (!writePasses(key, 'write')) return false;
   try {
     await update<string | undefined>(KEY_PREFIX + key, (raw) => {
@@ -69,7 +90,8 @@ export async function updateJson<T>(key: string, next: (current: T | null) => T 
       if (raw) {
         try {
           current = JSON.parse(raw) as T;
-        } catch {
+        } catch (error) {
+          if (options?.exact) throw error;
           current = null;
         }
       }

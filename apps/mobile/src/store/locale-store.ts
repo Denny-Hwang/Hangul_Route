@@ -44,7 +44,9 @@ import { onProfileRemoved } from './profile-removal';
  */
 
 const DEVICE_KEY = DEVICE_SETTINGS_KEY;
-const profileKey = (profileId: string): string => `settings:${profileId}`;
+/** The per-profile settings record (`hr:settings:<id>`); exported for the removal sweep (row OA-7a). */
+export const SETTINGS_KEY = (profileId: string): string => `settings:${profileId}`;
+const profileKey = SETTINGS_KEY;
 
 /** Where a locale change came from (telemetry payload `source`). */
 export type LocaleChangeSource = 'welcome' | 'settings' | 'handoff';

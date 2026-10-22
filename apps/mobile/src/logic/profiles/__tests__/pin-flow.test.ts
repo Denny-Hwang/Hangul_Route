@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { GROWN_UP_AREA, forGrownUpArea, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin } from '../pin-flow';
+import {
+  CANCEL_RESET,
+  FRESH_PIN,
+  GROWN_UP_AREA,
+  GROWN_UP_USE,
+  LOCKED_PROFILE,
+  forCancelReset,
+  forFreshPin,
+  forGrownUpArea,
+  forGrownUpUse,
+  forLockedProfile,
+  grownUpAreaNoPin,
+  initialPinMode,
+  pinCreatedWhere,
+  showForgotPin,
+  verifiedGoesToSetup,
+  voidWithoutPin,
+} from '../pin-flow';
 
 describe('initialPinMode: which step the PIN screen opens on', () => {
   it('verifies when a PIN is stored', () => {
@@ -76,5 +93,120 @@ describe('destination GrownUpArea (F-APP-001 section 3.9)', () => {
     expect(grownUpAreaNoPin({}, null)).toBe(false);
     expect(initialPinMode({ next: 'ParentDashboard' }, null)).toBe('setup-1');
     expect(initialPinMode({ next: 'Paywall' }, 'hash')).toBe('verify');
+  });
+});
+
+describe("[OA] mode 'change': the current PIN first, then a new one (OA-D21)", () => {
+  it('verifies first when a PIN is stored, creates at once when none is, and never on the grown-up area', () => {
+    expect(initialPinMode({ next: 'ParentDashboard', mode: 'change' }, 'h:1')).toBe('verify');
+    expect(initialPinMode({ next: 'ParentDashboard', mode: 'change' }, null)).toBe('setup-1');
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard', mode: 'change' })).toBe(true);
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard', mode: 'setup' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: 'ParentDashboard' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: GROWN_UP_AREA, mode: 'change' })).toBe(false);
+    expect(pinCreatedWhere({ next: 'ParentDashboard', mode: 'change' })).toBe('optional');
+  });
+});
+
+describe('[OA] destination CancelReset (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21, CS-4)', () => {
+  it('always verifies: it never creates or resets a PIN, whatever mode or via says', () => {
+    expect(CANCEL_RESET).toBe('CancelReset');
+    expect(forCancelReset({ next: CANCEL_RESET })).toBe(true);
+    expect(forCancelReset({ next: GROWN_UP_AREA })).toBe(false);
+    expect(initialPinMode({ next: CANCEL_RESET }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: CANCEL_RESET }, null)).toBe('verify');
+    expect(initialPinMode({ next: CANCEL_RESET, mode: 'setup', via: 'wait' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: CANCEL_RESET, mode: 'change' }, null)).toBe('verify');
+    expect(verifiedGoesToSetup({ next: CANCEL_RESET, mode: 'change' })).toBe(false);
+  });
+
+  it('offers no Forgot PIN? (a reset is already waiting) and is not the grown-up area', () => {
+    expect(showForgotPin('verify', { next: CANCEL_RESET })).toBe(false);
+    expect(forGrownUpArea({ next: CANCEL_RESET })).toBe(false);
+    expect(grownUpAreaNoPin({ next: CANCEL_RESET }, null)).toBe(false);
+  });
+});
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-5 (section 6.3, OA-D5b (3), CS-3, CS-4): a locked tile and a fresh PIN
+ * verify only and never create or reset a PIN by themselves.
+ */
+describe('[OA] destinations LockedProfile and FreshPin (CS-4)', () => {
+  it('names the destinations', () => {
+    expect(LOCKED_PROFILE).toBe('LockedProfile');
+    expect(FRESH_PIN).toBe('FreshPin');
+    expect(forLockedProfile({ next: 'LockedProfile' })).toBe(true);
+    expect(forLockedProfile({ next: 'ParentDashboard' })).toBe(false);
+    expect(forFreshPin({ next: 'FreshPin' })).toBe(true);
+    expect(forFreshPin({})).toBe(false);
+  });
+
+  it('a locked tile verifies, even with no PIN stored or mode setup; only a reset path opens setup', () => {
+    expect(initialPinMode({ next: 'LockedProfile' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile' }, null)).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile', mode: 'setup' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile', mode: 'setup', via: 'rescue_code' }, 'hash')).toBe('setup-1');
+  });
+
+  it('a fresh PIN always verifies', () => {
+    expect(initialPinMode({ next: 'FreshPin' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: 'FreshPin', mode: 'setup' }, null)).toBe('verify');
+  });
+
+  it("mode 'change' never turns a locked tile or a fresh PIN into a new PIN", () => {
+    expect(initialPinMode({ next: 'FreshPin', mode: 'change' }, null)).toBe('verify');
+    expect(initialPinMode({ next: 'LockedProfile', mode: 'change' }, null)).toBe('verify');
+    expect(verifiedGoesToSetup({ next: 'FreshPin', mode: 'change' })).toBe(false);
+    expect(verifiedGoesToSetup({ next: 'LockedProfile', mode: 'change' })).toBe(false);
+  });
+
+  it('Forgot PIN? stays on a locked tile (it leads to the reset paths) and is hidden for a fresh PIN', () => {
+    expect(showForgotPin('verify', { next: 'LockedProfile' })).toBe(true);
+    expect(showForgotPin('verify', { next: 'FreshPin' })).toBe(false);
+  });
+
+  it('with no PIN stored there is nothing to check: the lock is void and the fresh PIN has nothing to confirm', () => {
+    expect(voidWithoutPin({ next: 'LockedProfile' }, null)).toBe(true);
+    expect(voidWithoutPin({ next: 'FreshPin' }, null)).toBe(true);
+    expect(voidWithoutPin({ next: 'LockedProfile' }, 'hash')).toBe(false);
+    expect(voidWithoutPin({ next: 'LockedProfile', mode: 'setup', via: 'wait' }, null)).toBe(false);
+    expect(voidWithoutPin({ next: 'ParentDashboard' }, null)).toBe(false);
+    // A hash that could not be read is not "no PIN": nothing is void (fail closed, 13.2).
+    expect(voidWithoutPin({ next: 'LockedProfile' }, null, true)).toBe(false);
+    expect(voidWithoutPin({ next: 'FreshPin' }, null, true)).toBe(false);
+  });
+});
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4b, CS-4: the chooser's Family, Teacher, School and Sign in rows
+ * (destination `GrownUpUse`) only check the PIN: never a new or reset PIN, no Forgot PIN, and with no PIN stored the
+ * no-PIN line with Continue to the sign-in page.
+ */
+describe('destination GrownUpUse (row OA-4b, CS-4)', () => {
+  it('is the GrownUpUse destination name, and it hands off like the Grown-up area pages', () => {
+    expect(GROWN_UP_USE).toBe('GrownUpUse');
+    expect(forGrownUpUse({ next: GROWN_UP_USE })).toBe(true);
+    expect(forGrownUpUse({ next: GROWN_UP_AREA })).toBe(false);
+    expect(forGrownUpUse({})).toBe(false);
+    expect(forGrownUpArea({ next: GROWN_UP_USE })).toBe(false);
+  });
+
+  it('always opens in verify, whatever mode says and with no PIN stored (never creates or resets a PIN)', () => {
+    expect(initialPinMode({ next: GROWN_UP_USE }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE }, null)).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'setup' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'setup', via: 'rescue_code' }, null)).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'change' }, 'hash')).toBe('verify');
+    expect(initialPinMode({ next: GROWN_UP_USE, mode: 'change' }, null)).toBe('verify');
+    expect(verifiedGoesToSetup({ next: GROWN_UP_USE, mode: 'change' })).toBe(false);
+  });
+
+  it('hides Forgot PIN', () => {
+    expect(showForgotPin('verify', { next: GROWN_UP_USE })).toBe(false);
+  });
+
+  it('with no PIN stored it shows the no-PIN line (Continue opens the sign-in page)', () => {
+    expect(grownUpAreaNoPin({ next: GROWN_UP_USE }, null)).toBe(true);
+    expect(grownUpAreaNoPin({ next: GROWN_UP_USE }, 'hash')).toBe(false);
   });
 });

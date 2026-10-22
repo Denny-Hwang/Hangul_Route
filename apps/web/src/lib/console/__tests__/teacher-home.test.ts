@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView, teacherLectureCard } from '../teacher-home';
+import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView, teacherLectureCard, wantsSchoolFocus, withSchoolFocus, withoutSchoolFocus } from '../teacher-home';
 
 /** F-APP-001 A-5a, section 3.8: the teacher home's rows, its no-class state and its cross-links. */
 function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'], over: { archivedAt?: string | null; createdAt?: string } = {}): SpaceListItem {
@@ -126,5 +126,28 @@ describe('teacherLectureCard (AMENDMENTS-LECTURE-V2 E1, LV-5)', () => {
   it('nothing is drawn while lectureModeEnabled() is off', () => {
     const off = { ...on, enabled: false };
     for (const items of [[classA], [classA, classB], [], null, 'failed' as const]) expect(teacherLectureCard(items, off)).toBeNull();
+  });
+});
+
+// [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3, row OA-4b: the chooser's School row (`/teach?focus=school`).
+describe('the School focus (row OA-4b)', () => {
+  it('wantsSchoolFocus: exactly focus=school', () => {
+    expect(wantsSchoolFocus(new URLSearchParams('focus=school'))).toBe(true);
+    expect(wantsSchoolFocus(new URLSearchParams('lang=ko&focus=school'))).toBe(true);
+    for (const query of ['', 'focus=School', 'focus=sp_1', 'focus=', 'school=1']) expect(wantsSchoolFocus(new URLSearchParams(query)), query).toBe(false);
+  });
+
+  it('withSchoolFocus: only the teacher home takes it', () => {
+    expect(withSchoolFocus('/teach/home', true)).toBe('/teach/home?focus=school');
+    expect(withSchoolFocus('/teach/home', false)).toBe('/teach/home');
+    expect(withSchoolFocus('/start?persona=teacher', true)).toBe('/start?persona=teacher');
+    expect(withSchoolFocus('/parent', true)).toBe('/parent');
+  });
+
+  it('withoutSchoolFocus: removes focus and keeps everything else; null when there is none', () => {
+    expect(withoutSchoolFocus('?focus=school', '/teach/home')).toBe('/teach/home');
+    expect(withoutSchoolFocus('?lang=ko&focus=school&x=1', '/teach/home', '#top')).toBe('/teach/home?lang=ko&x=1#top');
+    expect(withoutSchoolFocus('?lang=ko', '/teach/home')).toBeNull();
+    expect(withoutSchoolFocus('', '/teach/home')).toBeNull();
   });
 });

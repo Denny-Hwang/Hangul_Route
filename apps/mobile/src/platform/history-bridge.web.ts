@@ -209,6 +209,14 @@ export function markLeaving(): void {
 }
 
 /**
+ * [OA] Whether the page is leaving for another document (`markLeaving`), and has not come back into use since. Row
+ * OA-4a: the chooser a hand-off went back to as it left keeps the unlock or pass that hand-off wrote.
+ */
+export function pageLeaving(): boolean {
+  return bridge.leaving;
+}
+
+/**
  * Starts the bridge for one root (`App`, `BrowseApp`) once its navigation container is ready;
  * returns the stop. The entry the app opens on becomes `hrNav: 0`; a reload deep in the app rewinds
  * first.

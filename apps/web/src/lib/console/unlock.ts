@@ -29,6 +29,8 @@ function writeUnlock(record: GrownUpUnlock, storage: KeyValueStorage | null): bo
 
 /** The unlock a secret-proving sign-in writes in this tab: `src: 'signin'`, no epoch. */
 export function writeSignInUnlock(now: number, storage: KeyValueStorage | null = defaultStorage()): boolean {
+  // [OA] A new unlock never inherits the reset leg's stamp of an earlier one (`RESET_LEG_SESSION_KEY`).
+  removeItem(storage, RESET_LEG_SESSION_KEY);
   return writeUnlock({ v: 1, at: now, seen: now, src: 'signin' }, storage);
 }
 
@@ -44,6 +46,51 @@ export function touchUnlock(now: number, storage: KeyValueStorage | null = defau
 
 export function clearUnlock(storage: KeyValueStorage | null = defaultStorage()): void {
   removeItem(storage, UNLOCK_SESSION_KEY);
+  removeItem(storage, HIDDEN_AT_SESSION_KEY);
+  removeItem(storage, RESET_LEG_SESSION_KEY);
+}
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.4 and 8.5 step 2 (row OA-6): the reset leg's stamp, the `at` of the
+ * `signin` unlock that a reset-leg sign-in wrote with a factor the leg accepts (a password, an email or phone code, a
+ * Clerk password-reset code, or the router's reverification that refuses a passkey). `/account/pin-reset` counts a
+ * `signin` unlock only when this stamp carries its `at`: an unlock from the ordinary leg, whatever its factor, makes
+ * the page run its own reverification. A number only, cleared whenever the unlock is.
+ */
+export const RESET_LEG_SESSION_KEY = 'hr:grownup:resetLeg';
+
+/** [OA] The stamp, or null (absent, corrupt, storage refused). */
+export function readResetLegStamp(storage: KeyValueStorage | null = defaultStorage()): number | null {
+  const raw = readItem(storage, RESET_LEG_SESSION_KEY);
+  if (raw === null) return null;
+  const at = Number(raw);
+  return raw.trim() !== '' && Number.isFinite(at) ? at : null;
+}
+
+/** [OA] Stamps the reset-leg sign-in unlock written at `at`; false when the storage refused it. */
+export function writeResetLegStamp(at: number, storage: KeyValueStorage | null = defaultStorage()): boolean {
+  return writeItem(storage, RESET_LEG_SESSION_KEY, String(at));
+}
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.6 (OA-D16, CS-14): when this tab was hidden (wall clock, a number
+ * only), kept beside the unlock so the 5-minute hidden rule survives a mobile browser discarding the background tab
+ * and reloading it when it is shown again. Cleared when the tab is shown and whenever the unlock is.
+ */
+export const HIDDEN_AT_SESSION_KEY = 'hr:grownup:hiddenAt';
+
+/** [OA] The stored hidden time, or null (absent, corrupt, storage refused). */
+export function readHiddenAt(storage: KeyValueStorage | null = defaultStorage()): number | null {
+  const raw = readItem(storage, HIDDEN_AT_SESSION_KEY);
+  if (raw === null) return null;
+  const at = Number(raw);
+  return raw.trim() !== '' && Number.isFinite(at) ? at : null;
+}
+
+/** [OA] Stores the hidden time; `null` removes it. */
+export function writeHiddenAt(at: number | null, storage: KeyValueStorage | null = defaultStorage()): void {
+  if (at === null) removeItem(storage, HIDDEN_AT_SESSION_KEY);
+  else writeItem(storage, HIDDEN_AT_SESSION_KEY, String(at));
 }
 
 /**
@@ -62,4 +109,24 @@ export function clearGrownUpTab(storage: KeyValueStorage | null = defaultStorage
   removeItem(storage, BROWSE_PASS_SESSION_KEY);
   if (options.keepInvite) keepAdminInviteThroughSignOut();
   else clearAdminInvite(storage);
+}
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2 moment 3: the spec's `pinOwnerOfferClosed`, the PIN-owner card
+ * closed for one `pin` unlock in this tab (Not now, or the first navigation away from the persona home). It holds
+ * only that unlock's `at` (a number), so a later unlock offers the card again.
+ */
+export const PIN_OWNER_OFFER_CLOSED_SESSION_KEY = 'hr:grownup:pinOwnerOfferClosed';
+
+/** [OA] The unlock time the PIN-owner card was closed for, or null (absent, corrupt, storage refused). */
+export function readPinOwnerOfferClosed(storage: KeyValueStorage | null = defaultStorage()): number | null {
+  const raw = readItem(storage, PIN_OWNER_OFFER_CLOSED_SESSION_KEY);
+  if (raw === null) return null;
+  const at = Number(raw);
+  return raw.trim() !== '' && Number.isFinite(at) ? at : null;
+}
+
+/** [OA] Closes the PIN-owner card for the unlock made at `at`. */
+export function writePinOwnerOfferClosed(at: number, storage: KeyValueStorage | null = defaultStorage()): void {
+  writeItem(storage, PIN_OWNER_OFFER_CLOSED_SESSION_KEY, String(at));
 }

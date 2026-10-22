@@ -1488,6 +1488,8 @@ export const consoleMsgs = {
     noPin: 'Set a grown-up PIN in the app, or sign in again.',
     pinRenew: 'To use the grown-up PIN here, set it again in the app, then sign in once.',
     signInOnly: 'Sign in again to open grown-up pages on this device.',
+    /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.4: shown only where the browser offers one and the marker is not `pin`. */
+    passkey: { cta: 'Use a passkey' },
   },
   /**
    * The free-plan words of grown-up console surfaces (F-ENT-003 section 3.11 glossary): the
@@ -2236,5 +2238,34 @@ export const consoleMsgs = {
     /** Accept answered `503 identity_unavailable`: the sign-in service could not be asked (section 6.3 item 1); Try again. */
     tryAgain: "Couldn't check your invite right now. Try again in a moment.",
     home: { cta: 'Go to my home' },
+  },
+  /**
+   * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 7.2 moment 3 (design D13): the persona home card, shown only while
+   * the tab's PIN hand-off is under 2 minutes old and this account is not yet the PIN owner. These strings carry no name
+   * and no email; the card names the signed-in account above them with `adminInvite.signedInAs`.
+   */
+  pinOwner: {
+    cta: 'Let this account reset the PIN here',
+    /** [OA] Section 7.2 moment 3 (OA-0b): closes the card for this unlock in this tab; the words of `transfer.consent.notNow.cta`. */
+    notNow: 'Not now',
+    hint: 'If the grown-up PIN is forgotten, signing in to this account can set a new one on this device.',
+    done: 'Done. This account can reset the PIN here.',
+  },
+  /** [OA] Section 7.6: the set-a-PIN card on a `nopin` browser, once per browser. */
+  pinPrompt: {
+    body: 'Set a grown-up PIN in the app so only grown-ups open these pages.',
+    cta: 'Open the app',
+  },
+  /**
+   * [OA] Section 8.5 (row OA-6): `/account/pin-reset`, the sign-in reset page behind the lock. One title in every state;
+   * `going` while it opens the app, else one line chosen by cause and Back to learning. No name, no email, no number.
+   */
+  pinReset: {
+    title: 'New grown-up PIN',
+    going: 'Opening the app so you can choose a new PIN.',
+    notOwner: 'Only the grown-up account that last used this PIN here can do this. In the app, use the Rescue Code or the 24-hour wait.',
+    firstSignIn: 'This works after a grown-up has opened the grown-up pages here with the PIN. In the app, use the Rescue Code or the 24-hour wait.',
+    noPin: 'This device has no grown-up PIN to reset.',
+    unavailable: "This isn't available right now. Use Forgot PIN? in the app.",
   },
 } as const;

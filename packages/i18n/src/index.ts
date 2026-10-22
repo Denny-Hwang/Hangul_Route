@@ -31,6 +31,7 @@ export {
 export { lookup } from './tree';
 export { plural, type PluralForms } from './plural';
 export {
+  compareNames,
   describeRelativeDay,
   formatDate,
   formatMinorAmount,

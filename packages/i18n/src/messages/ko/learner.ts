@@ -1820,4 +1820,26 @@ export const learner = {
     scopeSelf: '반에 관한 안내가 있어요.',
     open: { cta: '열기' },
   },
+  /** [OA] '지금 누가 쓰나요?' (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.1, OA-4a): 어른, 학습자, 어른 공간, 참여하기. */
+  who: {
+    title: '지금 누가 쓰나요?',
+    learning: '배우기',
+    grownUps: '어른',
+    add: '학습자 추가',
+    switch: '바꾸기',
+    profileRow: '지금 누가 쓰나요?',
+    switchUser: '사용자 바꾸기',
+    joinCaption: '누가 참여하는지 골라요.',
+    nopinCaption: '여기서 어른이 PIN을 만들어요.',
+    resetPending: (time: string) => `${time} 이후에 새 어른용 PIN을 만들 수 있어요. 취소하려면 PIN을 입력해요.`,
+    resetCancel: '기다리기 취소',
+    lockedCaption: '어른이 열어 줘요.',
+    locksUnread: '이름을 누르면 어른이 PIN을 입력해요.',
+    use: {
+      family: '가족',
+      teacher: '선생님',
+      school: '학교',
+      signIn: '어른으로 로그인',
+    },
+  },
 } satisfies DeepPartial<Messages['learner']>;

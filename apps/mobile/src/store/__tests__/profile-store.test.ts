@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../platform/storage', () => ({
-  readJson: vi.fn(async () => null),
-  writeJson: vi.fn(),
-}));
+vi.mock('../../platform/storage', () => {
+  const readJson = vi.fn(async (_key: string): Promise<unknown> => null);
+  // The list is read strictly (a failed read is not "no learners"); it answers what `readJson` is set to answer.
+  return { readJson, readJsonStrict: vi.fn((key: string) => readJson(key)), writeJson: vi.fn() };
+});
 
 import { readJson, writeJson } from '../../platform/storage';
 import { onProfileEdited } from '../profile-edits';
@@ -123,14 +124,16 @@ describe('profile-store', () => {
   });
 
   describe('updateProfile', () => {
-    it('applies the patch in memory and persists the profiles', () => {
+    it('applies the patch in memory and persists the profiles', async () => {
       const p = useProfileStore.getState().createProfile(input);
+      await vi.waitFor(() => expect(writeJson).toHaveBeenCalledWith('profiles:active', p.id));
       vi.mocked(writeJson).mockClear();
       useProfileStore.getState().updateProfile(p.id, { ageGroup: '10-11', avatar: 'hoya-green', learnerType: 'self' });
       const updated = useProfileStore.getState().profiles[0];
       expect(updated).toMatchObject({ ageGroup: '10-11', avatar: 'hoya-green', learnerType: 'self', displayName: 'Mina' });
-      expect(writeJson).toHaveBeenCalledWith('profiles', useProfileStore.getState().profiles);
-      expect(writeJson).toHaveBeenCalledWith('profiles:active', p.id);
+      // [OA] OA-D19: the list is written after a merge with the stored one; the active profile did not change, so its key is not.
+      await vi.waitFor(() => expect(writeJson).toHaveBeenCalledWith('profiles', useProfileStore.getState().profiles));
+      expect(writeJson).not.toHaveBeenCalledWith('profiles:active', expect.anything());
     });
 
     it('keeps the active profile and the other profiles', () => {

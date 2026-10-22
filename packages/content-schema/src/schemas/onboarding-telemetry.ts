@@ -20,6 +20,8 @@ export const ONBOARDING_TELEMETRY_PAYLOADS = {
     .strict(),
   'profile.updated': z.object({ field: z.enum(['level', 'avatar', 'name', 'learner_type']) }).strict(),
   'pin.created': z.object({ where: z.enum(['first_run', 'gate', 'reset', 'optional']) }).strict(),
-  'pin.reset_requested': z.object({ method: z.enum(['rescue_code', 'wait']) }).strict(),
-  'pin.reset_completed': z.object({ method: z.enum(['rescue_code', 'wait']) }).strict(),
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15: `sign_in` (reset by signing in, OA-6) and, on a request,
+  // `wait_cancelled` (Cancel the wait, OA-4a). The Worker stores both without a profile id.
+  'pin.reset_requested': z.object({ method: z.enum(['rescue_code', 'wait', 'sign_in', 'wait_cancelled']) }).strict(),
+  'pin.reset_completed': z.object({ method: z.enum(['rescue_code', 'wait', 'sign_in']) }).strict(),
 } as const;

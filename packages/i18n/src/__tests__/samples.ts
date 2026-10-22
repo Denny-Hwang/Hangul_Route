@@ -917,4 +917,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.presets.chooser.showMore': [[8], [4]],
   // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
   'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
+  // [OA] A PIN pause of a minute or more (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-2): 1, 5, 15 and 60 minutes.
+  'caregiver.pin.cooldownMinutes': [[1], [5], [15], [60]],
+  // [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): the wait's end (a date and time, `formatReadyAt`), a learner name, a row label.
+  'learner.who.resetPending': [['Oct 22, 2026, 6:40 PM'], ['22 oct 2026, 18:40'], ['22 oct 2026, 6:40 p.m.']],
+  'a11y.who.tile': [['Mina'], ['Jo Ann']],
+  'a11y.who.grownUpRow': [['Grown-up area'], ['Family']],
+  'a11y.who.lockedTile': [['Sora'], ['Jo Ann']],
+  'a11y.who.lockedRow': [['Sora'], ['Jo Ann']],
+  'caregiver.people.removeAsk': [['Jun'], ['Jo Ann']],
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { SITE_ORIGIN, type AdultPersona } from '@hangul-route/content-schema';
+import { SITE_ORIGIN, type AdultPersona, type DeviceUses } from '@hangul-route/content-schema';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
@@ -9,16 +9,19 @@ import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type 
 import type { ConsoleApi, SpaceListItem } from '@/lib/console/api';
 import { consoleFlashText, takeConsoleFlash, type ConsoleFlash } from '@/lib/console/console-flash';
 import { learnerHome } from '@/lib/console/grown-up-lock';
+import { deviceUsesOf } from '@/lib/console/one-account';
 import { activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
-import { readLastPersona, writeLastPersona } from '@/lib/console/shell-store';
+import { readLastPersona, writeDeviceUses, writeLastPersona } from '@/lib/console/shell-store';
 import { currentNavItem, navFlags, navItemsFor, revealScrollLeft, samePageFragment, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
+import { useConsoleAuth } from './auth-context';
 import { BrowseNoticeLine, useBrowseOpener } from './BrowseLink';
 import { useGrownUpLocation } from './grown-up-location';
 import { DisplayButton } from './DisplaySheet';
 import { PAGE_BACK_CSS, PageBack, type PageBackLink } from './PageBack';
+import { PinCards, browserPinCardsEnvironment, type PinCardsEnvironment } from './PinCards';
 import { useConsole } from './use-console';
 import { rem } from '@/lib/console/rem';
 
@@ -45,6 +48,9 @@ import { rem } from '@/lib/console/rem';
  *   that line, `min-width: fit-content`) unless the label is wider than the whole row (Lecture mode at a 300 % root
  *   at 320); then it wraps inside its tab instead of pushing the page sideways.
  * - Footer: About Hangul Route, Privacy and Terms on the site.
+ * - [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS (row OA-3): on a persona home the frame writes the account's grown-up uses
+ *   (`hr-shell` `deviceUses`, `{ v: 1, uses, at }`, from the spaces list it holds; no name, email or id) and draws the
+ *   PIN cards above the page (`PinCards`); the Learner app exit opens the learner app's chooser (`who=1`, OA-D12).
  * The frame refreshes nothing itself: `GrownUpLock` keeps the unlock fresh (A-4a review).
  */
 
@@ -60,6 +66,10 @@ export interface AdultFrameEnvironment {
   now?: () => number;
   /** Sets a fragment of the page already open (a nav target such as `/parent#lecture-mode`) and lets the page answer it. */
   showFragment?: (href: string) => void;
+  /** [OA] Section 7.1: writes `deviceUses` (shell store). Absent, nothing is written. */
+  writeDeviceUses?: (record: DeviceUses) => void;
+  /** [OA] The persona-home PIN cards' environment. Absent, the cards are not drawn. */
+  pinCards?: PinCardsEnvironment;
 }
 
 export function browserFrameEnvironment(): AdultFrameEnvironment {
@@ -81,6 +91,10 @@ export function browserFrameEnvironment(): AdultFrameEnvironment {
       win.history.replaceState(win.history.state, '', href);
       win.dispatchEvent(new HashChangeEvent('hashchange'));
     },
+    writeDeviceUses: (record) => {
+      void writeDeviceUses(record);
+    },
+    pinCards: win ? browserPinCardsEnvironment() : undefined,
   };
 }
 
@@ -261,6 +275,7 @@ export function AdultFrame({
   env?: AdultFrameEnvironment;
 }): JSX.Element {
   const { api, m, locale, signOut } = useConsole();
+  const auth = useConsoleAuth();
   const router = useRouter();
   const [browser] = useState<AdultFrameEnvironment>(() => env ?? browserFrameEnvironment());
   const [ownSpaces, setOwnSpaces] = useState<FrameSpaces>(null);
@@ -322,6 +337,13 @@ export function AdultFrame({
     if (toRecord) browser.writeLastPersona(toRecord);
   }, [toRecord, browser]);
 
+  // [OA] Section 7.1: every persona home that renders with the spaces list writes the account's uses (no names).
+  const onHome = area.kind === 'home';
+  useEffect(() => {
+    if (!onHome || !list || !browser.writeDeviceUses) return;
+    browser.writeDeviceUses(deviceUsesOf(list, (browser.now ?? Date.now)()));
+  }, [onHome, list, browser]);
+
   useEffect(() => {
     if (!soloSpace || !api) {
       setSolo(null);
@@ -373,10 +395,10 @@ export function AdultFrame({
     router.push(personaHome(persona));
   };
   // The Learner app exit: clears the grown-up unlock and the console session, then opens the learner app with the
-  // device's language (section 6).
+  // device's language (section 6) at its chooser ([OA] `who=1`, OA-D12; the label stays Learner app).
   const toLearnerApp = (): void => {
     browser.clearGrownUpTab();
-    browser.assign(learnerHome(origin, locale));
+    browser.assign(learnerHome(origin, locale, { who: true }));
   };
 
   return (
@@ -438,6 +460,16 @@ export function AdultFrame({
       </header>
       <main className="hr-frame-main">
         {back ? <PageBack href={back.href} label={back.label} /> : null}
+        {onHome && browser.pinCards ? (
+          <PinCards
+            accountId={auth.session?.accountId ?? null}
+            accountLabel={auth.session?.email ?? auth.session?.displayName ?? null}
+            home={pathname}
+            reverifySecret={auth.reverifySecret}
+            offerAllowed={auth.secretReverifyReady === true}
+            env={browser.pinCards}
+          />
+        ) : null}
         <FlashNote here={`${pathname}${search ? (search.startsWith('?') ? search : `?${search}`) : ''}`} />
         {title ? (
           <p data-testid="frame-title" style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>

@@ -62,16 +62,26 @@ interface Harness {
   area: ReturnType<typeof memoryArea>;
   log: string[];
   events: TelemetryEvent[];
+  /** [OA] `parent.gate.opened`, kept apart so the hand-off's own order stays readable. */
+  gates: TelemetryEvent[];
 }
 
-function harness(state: { marker: DeviceGateMarker | null; lastPinVerifiedAt: number | null; locale?: 'en' | 'es' | 'ko' }, area = memoryArea()): Harness {
+function harness(
+  state: { marker: DeviceGateMarker | null; lastPinVerifiedAt: number | null; locale?: 'en' | 'es' | 'ko'; pinSet?: boolean },
+  area = memoryArea(),
+): Harness {
   const log: string[] = [];
   const events: TelemetryEvent[] = [];
+  const gates: TelemetryEvent[] = [];
   const env: HandoffEnv = {
     now: () => NOW,
     area: () => area,
-    state: () => ({ marker: state.marker, lastPinVerifiedAt: state.lastPinVerifiedAt, locale: state.locale ?? 'en' }),
+    state: () => ({ marker: state.marker, lastPinVerifiedAt: state.lastPinVerifiedAt, locale: state.locale ?? 'en', pinSet: state.pinSet ?? false }),
     track: async (event) => {
+      if (event.name === 'parent.gate.opened') {
+        gates.push(event);
+        return true;
+      }
       log.push(`track ${event.name}`);
       events.push(event);
       return true;
@@ -82,7 +92,7 @@ function harness(state: { marker: DeviceGateMarker | null; lastPinVerifiedAt: nu
     },
     wait: () => new Promise(() => undefined),
   };
-  return { env, area, log, events };
+  return { env, area, log, events, gates };
 }
 
 const PIN = { v: 1, gate: 'pin', pinEpoch: 1_759_000_000_000 } as const;
@@ -168,6 +178,47 @@ describe('openGrownUpArea (web)', () => {
     };
     expect(await openGrownUpArea({ via: 'lock', target: '/parent' }, h.env)).toBe('opened');
     expect(h.log[1]).toBe('assign /parent?lang=en');
+  });
+});
+
+// [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15 (OA-2 review round 2): a hand-off that opens with no PIN screen
+// is a gate too, and sends `parent.gate.opened` (dest `use`) with codes only; the PIN screen sends its own.
+describe('[OA] openGrownUpArea sends parent.gate.opened when it opens without the PIN screen', () => {
+  it('a fresh PIN (marker pin) is via session; marker none or nopin is via open', async () => {
+    const fresh = harness({ marker: PIN, lastPinVerifiedAt: NOW - 1000, pinSet: true });
+    await openGrownUpArea({ via: 'profile' }, fresh.env);
+    expect(fresh.gates).toEqual([{ name: 'parent.gate.opened', payload: { dest: 'use', via: 'session', marker: 'pin' } }]);
+    const none = harness({ marker: { v: 1, gate: 'none' } as DeviceGateMarker, lastPinVerifiedAt: null });
+    await openGrownUpArea({ via: 'dashboard' }, none.env);
+    expect(none.gates).toEqual([{ name: 'parent.gate.opened', payload: { dest: 'use', via: 'open', marker: 'none' } }]);
+    const unknown = harness({ marker: null, lastPinVerifiedAt: null, pinSet: false });
+    await openGrownUpArea({ via: 'dashboard' }, unknown.env);
+    expect(unknown.gates[0]?.payload).toEqual({ dest: 'use', via: 'open', marker: 'nopin' });
+  });
+
+  it('sends none when the PIN screen already did (gateSent), or when the PIN is asked first', async () => {
+    const sent = harness({ marker: PIN, lastPinVerifiedAt: NOW - 1000, pinSet: true });
+    await openGrownUpArea({ via: 'lock' }, sent.env, { gateSent: true });
+    expect(sent.gates).toEqual([]);
+    expect(sent.events).toHaveLength(1);
+    const stale = harness({ marker: PIN, lastPinVerifiedAt: null, pinSet: true });
+    expect(await openGrownUpArea({ via: 'profile' }, stale.env)).toBe('pin');
+    expect(stale.gates).toEqual([]);
+  });
+
+  it('a gate event that fails to send never stops the hand-off', async () => {
+    const h = harness({ marker: PIN, lastPinVerifiedAt: NOW - 1000, pinSet: true });
+    const track = h.env.track;
+    h.env.track = (event) => (event.name === 'parent.gate.opened' ? Promise.reject(new Error('offline')) : track(event));
+    expect(await openGrownUpArea({ via: 'profile' }, h.env)).toBe('opened');
+    expect(h.log[1]).toBe('assign /signin?lang=en');
+    const throwing = harness({ marker: PIN, lastPinVerifiedAt: NOW - 1000, pinSet: true });
+    const inner = throwing.env.track;
+    throwing.env.track = (event) => {
+      if (event.name === 'parent.gate.opened') throw new Error('sync throw');
+      return inner(event);
+    };
+    expect(await openGrownUpArea({ via: 'profile' }, throwing.env)).toBe('opened');
   });
 });
 

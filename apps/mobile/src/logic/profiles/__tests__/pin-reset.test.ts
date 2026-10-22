@@ -1,20 +1,23 @@
+import { GROWN_UP_FRESH_PIN_MS, RESCUE_MAX_ATTEMPTS, RESCUE_PAUSE_MS, RESCUE_WINDOW_MS } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  ATTEMPT_WINDOW_MS,
-  COOLDOWN_MS,
   INITIAL_ATTEMPT_STATE,
   MAX_ATTEMPTS,
+  isLocked,
   registerFailure,
   type AttemptState,
 } from '../pin-hash';
 import {
   PIN_RESET_WAIT_MS,
+  RESCUE_THROTTLE,
   attemptRescueCode,
   collectRescueCodes,
   formatReadyAt,
   resetWaitState,
   rescueFailureMessage,
+  changePinMode,
+  resetByWaitNoticeDue,
   startResetWait,
   waitCardView,
 } from '../pin-reset';
@@ -84,7 +87,7 @@ describe('attemptRescueCode', () => {
     expect(result).toEqual({
       ok: false,
       reason: 'wrong-code',
-      state: registerFailure(INITIAL_ATTEMPT_STATE, NOW),
+      state: { failures: [NOW], lockedUntil: null, strikes: 0, lastMissAt: NOW },
     });
   });
 
@@ -106,26 +109,38 @@ describe('attemptRescueCode', () => {
     });
   });
 
-  it('shares the PIN throttle: the same window and cooldown as account:pinAttempts', () => {
+  it('[OA] has its own throttle: 5 wrong codes within 15 minutes, then a flat 15-minute pause (section 8.3)', () => {
+    expect(RESCUE_THROTTLE).toEqual({ max: RESCUE_MAX_ATTEMPTS, windowMs: RESCUE_WINDOW_MS, pauseMs: RESCUE_PAUSE_MS });
+    expect([RESCUE_MAX_ATTEMPTS, RESCUE_WINDOW_MS, RESCUE_PAUSE_MS]).toEqual([5, 15 * 60_000, 15 * 60_000]);
     let state: AttemptState = INITIAL_ATTEMPT_STATE;
-    for (let i = 0; i < MAX_ATTEMPTS - 1; i += 1) {
-      const r = attemptRescueCode(input('TIGER-MOON-RIVER-APPLE-000000', state));
+    for (let i = 0; i < RESCUE_MAX_ATTEMPTS - 1; i += 1) {
+      // Spread over 14 minutes: still one window.
+      const r = attemptRescueCode({ entry: 'TIGER-MOON-RIVER-APPLE-000000', storedCodes: stored, state, now: NOW + i * 3.5 * 60_000 });
       expect(r.ok).toBe(false);
       expect(r.state.lockedUntil).toBeNull();
       state = r.state;
     }
-    const locking = attemptRescueCode(input('TIGER-MOON-RIVER-APPLE-000000', state));
-    expect(locking.state).toEqual({ failures: [], lockedUntil: NOW + COOLDOWN_MS });
+    const at = NOW + 14 * 60_000;
+    const locking = attemptRescueCode({ entry: 'TIGER-MOON-RIVER-APPLE-000000', storedCodes: stored, state, now: at });
+    expect(locking.state).toEqual({ failures: [], lockedUntil: at + RESCUE_PAUSE_MS, strikes: 0, lastMissAt: at });
   });
 
-  it('wrong PIN attempts already in the window count toward the rescue-code limit', () => {
-    const afterPins: AttemptState = { failures: Array.from({ length: MAX_ATTEMPTS - 1 }, (_, i) => NOW - 2000 + i), lockedUntil: null };
-    const r = attemptRescueCode(input('TIGER-MOON-RIVER-APPLE-000000', afterPins));
-    expect(r.state.lockedUntil).toBe(NOW + COOLDOWN_MS);
+  it('[OA] the pause is flat: a second round pauses 15 minutes again', () => {
+    let state: AttemptState = { failures: [], lockedUntil: NOW, strikes: 0, lastMissAt: NOW - RESCUE_PAUSE_MS };
+    for (let i = 0; i < RESCUE_MAX_ATTEMPTS; i += 1) state = attemptRescueCode(input('TIGER-MOON-RIVER-APPLE-000000', state)).state;
+    expect(state.lockedUntil).toBe(NOW + RESCUE_PAUSE_MS);
   });
 
-  it('failures older than the window have expired', () => {
-    const stale: AttemptState = { failures: [NOW - ATTEMPT_WINDOW_MS - 1], lockedUntil: null };
+  it('[OA] is accepted during a PIN pause: the PIN attempt state is not its state (CS-8)', () => {
+    let pin: AttemptState = INITIAL_ATTEMPT_STATE;
+    for (let i = 0; i < MAX_ATTEMPTS; i += 1) pin = registerFailure(pin, NOW - 10 + i);
+    expect(isLocked(pin, NOW)).toBe(true);
+    const rescue: AttemptState = INITIAL_ATTEMPT_STATE;
+    expect(attemptRescueCode(input(NEW_CODE, rescue)).ok).toBe(true);
+  });
+
+  it('failures older than the 15-minute window have expired', () => {
+    const stale: AttemptState = { failures: [NOW - RESCUE_WINDOW_MS - 1], lockedUntil: null };
     const r = attemptRescueCode(input('TIGER-MOON-RIVER-APPLE-000000', stale));
     expect(r.state.failures).toEqual([NOW]);
   });
@@ -206,6 +221,12 @@ describe('rescueFailureMessage: calm lines for the Forgot PIN code field', () =>
     expect(rescueFailureMessage(fail('no-code'), m)).toBe('No rescue code is saved on this device. Use the 24-hour wait instead.');
   });
 
+  it('[OA] counts a pause of a minute or more in whole minutes, rounding up', () => {
+    expect(rescueFailureMessage(fail('cooldown', 15 * 60_000), m)).toBe("Let's take a short break. Try again in 15 min.");
+    expect(rescueFailureMessage(fail('cooldown', 60_000), m)).toBe("Let's take a short break. Try again in 1 min.");
+    expect(rescueFailureMessage(fail('cooldown', 61_000), m)).toBe("Let's take a short break. Try again in 2 min.");
+  });
+
   it('counts the cooldown down in whole seconds, rounding up', () => {
     expect(rescueFailureMessage(fail('cooldown', 12_000), m)).toBe("Let's take a short break. Try again in 12s.");
     expect(rescueFailureMessage(fail('cooldown', 11_001), m)).toBe("Let's take a short break. Try again in 12s.");
@@ -276,5 +297,23 @@ describe('formatReadyAt: the end of the wait as a local date and time in the UI 
       throw new RangeError('no locale data');
     });
     expect(formatReadyAt('en', READY)).toBe('Oct 11, 2026, 16:30');
+  });
+});
+
+describe('[OA] resetByWaitNoticeDue (OA-D21)', () => {
+  it('shows after a PIN entered later than the reset by the wait, never at the setup itself', () => {
+    expect(resetByWaitNoticeDue({ at: NOW }, NOW + 1)).toBe(true);
+    expect(resetByWaitNoticeDue({ at: NOW }, NOW)).toBe(false);
+    expect(resetByWaitNoticeDue({ at: NOW }, NOW - 1)).toBe(false);
+    expect(resetByWaitNoticeDue({ at: NOW }, null)).toBe(false);
+    expect(resetByWaitNoticeDue(null, NOW + 1)).toBe(false);
+  });
+});
+
+describe('[OA] changePinMode (OA-D21): Change PIN needs a fresh PIN', () => {
+  it('opens creation within 2 minutes of a PIN, and asks the current PIN first after that or without one', () => {
+    expect(changePinMode(NOW, NOW + 1000)).toBe('setup');
+    expect(changePinMode(NOW, NOW + GROWN_UP_FRESH_PIN_MS)).toBe('change');
+    expect(changePinMode(null, NOW)).toBe('change');
   });
 });

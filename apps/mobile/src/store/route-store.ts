@@ -2,12 +2,14 @@ import { CATALOG, type CurriculumDraft, type SelfRoute } from '@hangul-route/con
 import { z } from 'zod';
 import { create } from 'zustand';
 import { dayKey } from '../logic/homework/mission-builder';
+import { seenKey } from '../logic/my-route/seen';
 import { createdEvent } from '../logic/route/proposal-flow';
 import { applyCheckIn, autoRepaceDue, checkInOffer, pendingPastOf, repaceSelfRoute, repacedEvent, type CheckInOffer } from '../logic/route/repace';
 import { activeSelfRoute, archivedRoute, completedQuestIdsOf, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
-import { readJson, writeJson } from '../platform/storage';
+import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { usePlanStore } from './plan-store';
+import { onProfileRemoved } from './profile-removal';
 import { useProgressStore } from './progress-store';
 
 /**
@@ -19,7 +21,9 @@ import { useProgressStore } from './progress-store';
  * section 8); a failed write keeps the mark in memory for the session.
  */
 
-const uiKey = (profileId: string): string => `route-ui:${profileId}`;
+/** The weekly plan's prompt marks (`hr:route-ui:<id>`); exported for the removal sweep (row OA-7a). */
+export const ROUTE_UI_KEY = (profileId: string): string => `route-ui:${profileId}`;
+const uiKey = ROUTE_UI_KEY;
 
 const RouteUiSchema = z.object({
   /** The plan prompt's Not now (AM-6, OD-16). */
@@ -254,4 +258,16 @@ export const useRouteStore = create<State & Actions>((set, get) => {
       }
     },
   };
+});
+
+/**
+ * [OA] Row OA-7a (section 10.4, CS-20): a learner removed from this device leaves no plan prompt marks and no
+ * Learning Route "seen" record (`route-map-ui:<id>`, written by the My route screen through `logic/my-route/seen`).
+ */
+onProfileRemoved((profileId) => {
+  useRouteStore.setState((s) => {
+    const { [profileId]: _gone, ...ui } = s.ui;
+    return { ui };
+  });
+  for (const stored of [ROUTE_UI_KEY, seenKey]) removeKey(stored(profileId)).catch(() => undefined);
 });
