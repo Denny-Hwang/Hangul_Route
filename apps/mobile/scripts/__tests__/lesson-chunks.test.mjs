@@ -363,10 +363,11 @@ describe('precacheReport and its budget lines', () => {
     // F-CURR-002 row CM-15 measured 4,744,698 B (the quest warm-up's and Try these again's gates in the player, the
     // hand-over to Results, the preload, the review-kind gate of the sync and backup paths, the merge's retention; their
     // sessions are a chunk of their own), CM-16 4,742,801 B and CM-17 4,739,306 B, each on its own base. The phase-1
-    // integration (integrate/curr-phase1: rows CM-10 to CM-17 together) measures 4,760,960 B (release build).
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_770_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_760_960).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_760_960).toBeLessThan(10_000);
+    // integration (integrate/curr-phase1: rows CM-10 to CM-17 together) measures 4,760,960 B (release build). [GU] The
+    // guest first quest integration (integrate/guest-gu1-6: GU-0b to GU-6 on it, switch off) measures 4,804,191 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_810_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

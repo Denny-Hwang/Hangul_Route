@@ -69,8 +69,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // a chunk of their own, planning in the memory chunk), CM-16 (the summary memory block) 4,742,801 B on CM-12's head
   // and CM-17 (goals, in a learner chunk of their own) 4,739,306 B on main. The F-CURR-002 phase-1 integration
   // (integrate/curr-phase1: CM-10 to CM-17 on main 82237b684) measures 4,760,960 B raw / 1,253,023 B gzip (release
-  // `build:web`), so the line is that measurement plus a 9,040 B rounding margin.
-  startBundleRaw: 4_770_000,
+  // `build:web`), so the line was that measurement plus a 9,040 B rounding margin (4,770,000 B).
+  // [GU] The guest first quest integration (integrate/guest-gu1-6: GU-0b to GU-6, switch and site claim off, on main
+  // ece5eee02 with the phase-1 integration) measures 4,804,191 B raw / 1,265,853 B gzip (release `build:web`, Metro cache
+  // cleared): main's 4,760,960 B plus the guest rows' 41,459 B (4,774,256 B on GU-5 against 4,732,797 B on its main),
+  // 1,772 B over that sum. The line is that measurement plus a 5,809 B rounding margin.
+  startBundleRaw: 4_810_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
