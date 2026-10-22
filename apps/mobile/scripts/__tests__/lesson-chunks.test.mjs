@@ -301,9 +301,12 @@ describe('precacheReport and its budget lines', () => {
     // (main fc580beed, release build). The margin stays under 10 KB, so the stories, the locale text, the grown-up
     // roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
     // `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_740_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeLessThan(10_000);
+    // F-CURR-002 CM-16 (on the CM-10 to CM-12 head, release build): 4,742,213 B raw / 1,246,368 B gzip with the memory
+    // consent item, the summary memory block and the report lines (+3,423 B over CM-12's 4,738,790 B), so the line is
+    // 4,745,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_745_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_213).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_213).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
