@@ -998,6 +998,6 @@ describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
   it('memoryLinesOf reads in Spanish and Korean', () => {
     const levels = { wordsKnown: 3, readyToRefresh: 2, levels: [1, 0, 0] as [number, number, number], stageChecks: 0 };
     expect(memoryLinesOf(levels, getMessages('es'))).toEqual(['Palabras conocidas: 3', '2 elementos están listos para repasar', 'Episodios: 1 terminado']);
-    expect(memoryLinesOf(levels, getMessages('ko'))).toEqual(['아는 단어: 3개', '복습할 때가 된 항목: 2개', '에피소드: 완료 1개']);
+    expect(memoryLinesOf(levels, getMessages('ko'))).toEqual(['아는 낱말: 3개', '복습할 때가 된 항목: 2개', '에피소드: 완료 1개']);
   });
 });
