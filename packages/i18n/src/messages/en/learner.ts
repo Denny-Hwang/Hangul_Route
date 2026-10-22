@@ -2488,6 +2488,15 @@ export const learner = {
       school: 'School',
       signIn: 'Sign in as a grown-up',
     },
+    /**
+     * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 16.3 (row GU-5): the chooser's guest tiles, after Add a learner, with the
+     * guest switch on. `try` and `trySub`: the dashed tile on a chooser the site's Start learning opened (no live guest);
+     * `guest` and `guestCaption`: the live guest's own tile (never stars, cards, a level, a streak or a time, CS-G5).
+     */
+    try: 'Try the first quest',
+    trySub: 'No profile needed',
+    guest: 'First quest',
+    guestCaption: 'Not saved yet',
   },
   /**
    * The Daily Review (F-CURR-002 sections 4.5, 7.4 and 7.7, row CM-14; design/wireframes/reviews/daily-review.md): 10 short

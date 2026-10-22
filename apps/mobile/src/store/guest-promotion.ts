@@ -18,8 +18,9 @@ import { useProgressStore } from './progress-store';
  * - `failed` (the list could not be read or written): nothing changed; the run and `hr:guest` stay, so the save can be
  *   tried again.
  */
-export async function saveGuestAsProfile(record: GuestRecord, plan: Pick<PromotionPlan, 'profile'>): Promise<GuestPromotion> {
-  const outcome = await useProfileStore.getState().promoteGuest(record, plan.profile);
+export async function saveGuestAsProfile(record: GuestRecord, plan: Pick<PromotionPlan, 'profile'>, options?: { keepActive?: boolean }): Promise<GuestPromotion> {
+  // [GU] Row GU-5: `keepActive`, the owner's Keep as a learner (the active learner and the grown-up session stay).
+  const outcome = await useProfileStore.getState().promoteGuest(record, plan.profile, options);
   if (outcome.kind === 'failed') return outcome;
   if (outcome.kind === 'saved' && !outcome.confirmed) {
     useGuestStore.getState().endGuestRun();

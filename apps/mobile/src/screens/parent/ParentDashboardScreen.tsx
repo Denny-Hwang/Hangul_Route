@@ -14,7 +14,7 @@ import {
 import { type StageKey } from '@hangul-route/content-schema';
 import { formatDate, levelWords, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Platform, View, type TextStyle } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -86,6 +86,18 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
     [navigation],
   );
 
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 9.2 (row GU-5): People on this device's first-quest row. Keep as a learner
+  // opens the two save steps inside this grown-up session (the `owner` case; back here after the save); Remove the
+  // first quest asks a fresh PIN only where one is stored.
+  const guestRow = useMemo(
+    () => ({
+      onKeep: () => navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false, from: 'guest', owner: true } }),
+      onAskPin: () => navigation.navigate('PinEntry', { next: 'FreshPin' }),
+      subscribeFocus: (listener: () => void) => navigation.addListener('focus', listener),
+    }),
+    [navigation],
+  );
+
   // Every profile's snapshot, not only the active one: the cards and the Starting spot row read them.
   useEffect(() => {
     for (const p of profiles) void useProgressStore.getState().hydrate(p.id);
@@ -135,7 +147,7 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
           />
           {/* [OA] People on this device (row OA-7a, section 10.1): every learner on the device, each opening its person page. */}
           <Spacer size="lg" />
-          <PeopleOnDeviceCard profiles={profiles} onOpen={(profileId) => navigation.navigate('PersonOnDevice', { profileId })} />
+          <PeopleOnDeviceCard profiles={profiles} onOpen={(profileId) => navigation.navigate('PersonOnDevice', { profileId })} guest={guestRow} />
         </>
       ) : null}
       <Spacer size="lg" />

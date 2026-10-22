@@ -1157,5 +1157,20 @@ export const caregiver = {
     checking: 'Checking that their progress is saved…',
     /** On the saved and unsaved sheets when the learner has memberships: nothing changes on the server. */
     spacesStay: 'Their place in a family or class stays. A grown-up can change it in the account pages.',
+    /**
+     * [GU] AMENDMENTS-GUEST-FIRST-LESSON sections 9.2 and 16.3 (row GU-5): the row of an unsaved first quest in People on
+     * this device (no name, no chevron), shown whenever one is kept in this browser, whatever the guest switch says.
+     */
+    guestRow: 'First quest, not saved',
+    /** Opens the two save steps inside this grown-up session; the new learner keeps the quest. Only with the switch on. */
+    guestKeep: 'Keep as a learner',
+    /** The row's second button, the ConfirmSheet's confirm, and the guest-only gate's text button on PIN setup. */
+    guestRemove: 'Remove the first quest',
+    /** On the PIN setup a grown-up page shows only because an unsaved first quest is kept here (`guestOnlyGate`). */
+    guestOnlyGate: "Someone tried the first quest on this browser and didn't keep it. Set a PIN, or remove that quest.",
+    /** The ConfirmSheet's title. */
+    guestRemoveAsk: 'Remove the first quest?',
+    /** The ConfirmSheet's message: only this browser's unsaved record and its results go; nobody's saved data. */
+    guestConfirm: 'The card and stars of this quest are removed from this browser.',
   },
 } as const;

@@ -1914,6 +1914,11 @@ export const learner = {
       school: 'Escuela',
       signIn: 'Entrar como persona adulta',
     },
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 16.3 (GU-5): las fichas de invitado del selector. */
+    try: 'Prueba la primera misión',
+    trySub: 'Sin crear un perfil',
+    guest: 'Primera misión',
+    guestCaption: 'Aún sin guardar',
   },
   /** El Repaso diario (F-CURR-002, CM-14): estrellas y cuántas cosas quedaron más firmes; nunca un porcentaje, "n de m" ni reloj. */
   dailyReview: {

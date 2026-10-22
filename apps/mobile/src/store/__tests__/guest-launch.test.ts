@@ -67,6 +67,7 @@ import {
   noteGuestQuestDone,
   noteGuestStep,
   resumeGuestFromWelcome,
+  startGuestFromChooser,
   takeGuestLaunch,
 } from '../guest-launch';
 import { useGuestStore } from '../guest-store';
@@ -236,6 +237,36 @@ describe('resumeGuestFromWelcome (6.3)', () => {
   it('the switch off: nothing starts', async () => {
     switches.guest = false;
     expect(await resumeGuestFromWelcome(T0)).toBeNull();
+    expect(sent).toEqual([]);
+  });
+});
+
+describe('startGuestFromChooser (row GU-5, section 9.1)', () => {
+  it('Try the first quest: a new run, guest.started { chooser, resumed: false }, no profile selected, the session closed (CS-G3)', async () => {
+    useProfileStore.setState({ profiles: [mina], activeId: mina.id });
+    useUiStore.setState({ parentGateOpenedAt: T0, lastPinVerifiedAt: T0 });
+    expect(await startGuestFromChooser(T0)).toEqual({ screen: 'QuestPlayer', params: quest() });
+    expect(useGuestStore.getState().running).toBe(true);
+    expect(useProfileStore.getState().activeId).toBe(mina.id);
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    expect(stored()?.via).toBe('chooser');
+    expect(named('guest.started')).toEqual([{ name: 'guest.started', payload: { via: 'chooser', resumed: false } }]);
+  });
+
+  it('the guest\'s tile: the live run resumed, guest.started { chooser, resumed: true }; quest 1 done opens the Not now card', async () => {
+    useProfileStore.setState({ profiles: [mina], activeId: mina.id });
+    disk.set('guest', JSON.stringify(record({ questDone: true })));
+    useGuestStore.setState({ record: record({ questDone: true }) });
+    expect(await startGuestFromChooser(T0 + 3 * GUEST_REOPEN_MS)).toEqual({ screen: 'GuestLater' });
+    expect(named('guest.started')).toEqual([{ name: 'guest.started', payload: { via: 'chooser', resumed: true } }]);
+    // No profile.switch: nobody was selected.
+    expect(named('profile.switch')).toEqual([]);
+  });
+
+  it('the switch off: nothing starts', async () => {
+    switches.guest = false;
+    expect(await startGuestFromChooser(T0)).toBeNull();
     expect(sent).toEqual([]);
   });
 });

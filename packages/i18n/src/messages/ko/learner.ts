@@ -1847,6 +1847,11 @@ export const learner = {
       school: '학교',
       signIn: '어른으로 로그인',
     },
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 16.3 (GU-5): 고르기 화면의 손님 타일. */
+    try: '첫 퀘스트 해 보기',
+    trySub: '프로필 없어도 돼요',
+    guest: '첫 퀘스트',
+    guestCaption: '아직 저장 전이에요',
   },
   /** 오늘의 복습 (F-CURR-002, CM-14): 별과 더 단단해진 개수만 보여 줘요. 퍼센트, 'n개 중 m개', 시간 제한은 없어요. */
   dailyReview: {

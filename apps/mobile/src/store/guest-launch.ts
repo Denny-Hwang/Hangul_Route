@@ -128,6 +128,19 @@ export async function resumeGuestFromWelcome(now: number = Date.now()): Promise<
 }
 
 /**
+ * [GU] Row GU-5 (section 9.1): the chooser's **Try the first quest** tile (a new run) or the guest's own tile (the live
+ * run resumed), `guest.started { via: 'chooser', resumed }`. No profile is selected or opened (CS-G4, no
+ * `profile.switch`); `startGuestRun` closes the grown-up session first (CS-G3). Null with the switch off.
+ */
+export async function startGuestFromChooser(now: number = Date.now()): Promise<GuestRoute | null> {
+  if (!flags.guestLessonEnabled) return null;
+  const begun = await beginRun('chooser', now);
+  if (begun === null) return null;
+  void track({ name: 'guest.started', payload: { via: 'chooser', resumed: begun.resumed } });
+  return begun.route;
+}
+
+/**
  * A quest step of the guest run shown. `played`: the step was reached by play (not the step the run opened or
  * reopened on, GU-D12), so `lastAt` moves, at most once per `GUEST_PLAY_NOTE_MS`, and a reload within 30 minutes
  * reopens. The first Discover step of a new run sends `guest.first_letter { secondsIn }` once per record (section

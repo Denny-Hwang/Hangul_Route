@@ -1,10 +1,16 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { Body, Card, Heading, Icon, Spacer, borderWidth, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useMessages } from '../../i18n/use-messages';
+import { isLiveGuest } from '../../logic/guest/guest-model';
+import { useGuestStore } from '../../store/guest-store';
 import { useLocks } from '../../store/profile-locks';
+import { GuestPeopleRow } from './guest-keep';
+import type { GuestRowActions } from './guest-keep-chunk';
+
+export type { GuestRowActions };
 
 /** The cub beside each name (design/screens/profiles/people-on-device.md, D17). */
 const AVATAR_SIZE = 40;
@@ -18,12 +24,29 @@ const GLYPH = 20;
  * profile and a chevron, at least 64 high. A tap opens the person page (lock switch, Edit profile, Remove from this
  * device) without asking the PIN, so a locked row is named "<name>, locked" (`a11y.who.lockedRow`), never "a PIN
  * opens it". The caller draws it only while `EXPO_PUBLIC_WHO_CHOOSER` is on.
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 9.2 (row GU-5; mock `design/screens/profiles/who-is-using-guest.md` D13,
+ * D14): after the people, one row for an unsaved first quest whenever a live record is kept here, whatever
+ * `EXPO_PUBLIC_GUEST_LESSON` says (so a grown-up always sees and can remove the reason for a gate): the default cub
+ * and **First quest, not saved**, not a button and no chevron (there is no person page for a guest), then **Keep as a
+ * learner** (only with the switch on) and **Remove the first quest**, which asks a fresh PIN first only when a PIN is
+ * stored, then its ConfirmSheet (Cancel first and focused, never the danger tone), then the sweep (`removeLiveGuest`).
+ * The row is a chunk of its own (`guest-keep-chunk.tsx`), loaded only while a live record is kept here.
  */
-export function PeopleOnDeviceCard({ profiles, onOpen }: { profiles: readonly Profile[]; onOpen: (profileId: string) => void }): React.ReactElement | null {
+export function PeopleOnDeviceCard({
+  profiles,
+  onOpen,
+  guest: actions,
+}: {
+  profiles: readonly Profile[];
+  onOpen: (profileId: string) => void;
+  guest: GuestRowActions;
+}): React.ReactElement | null {
   const messages = useMessages();
   const learners = profiles.filter((p) => p.role === 'learner');
   const { locked } = useLocks(profiles);
-  if (learners.length === 0) return null;
+  const record = useGuestStore((s) => s.record);
+  const liveGuest = isLiveGuest(record, profiles);
+  if (learners.length === 0 && !liveGuest) return null;
   return (
     <Card padding="md" testID="people-on-device">
       <Heading level="prompt">{messages.caregiver.people.title}</Heading>
@@ -62,6 +85,11 @@ export function PeopleOnDeviceCard({ profiles, onOpen }: { profiles: readonly Pr
           </Pressable>
         );
       })}
+      {liveGuest ? (
+        <Suspense fallback={null}>
+          <GuestPeopleRow first={learners.length === 0} actions={actions} />
+        </Suspense>
+      ) : null}
     </Card>
   );
 }
