@@ -16,12 +16,13 @@ As the new-visitor pass (`../newuser/README.md`): `tools/build-guest-mocks.mjs` 
 | How it works, step 3 | "… Your progress is saved and backed up." | **Earn Korean culture cards. Add a name, and your progress is saved and backed up.** (`how.steps.collect.guestBody`) |
 | /learners, "I already know some Hangul…" | "No. When you start, tap “I already know some Korean” …" | **No. Play the first quest, add a name, then tap “Take the level check” on Home. Hoya suggests where to begin.** (`persona.learners.faq.level.guestA`) |
 
-With `levelCheck` off, step 1's body is `how.guestStartBody` (**Play your first quest, then add a name.**) under the same title, and the /learners answer is not shown (spec 13.2 table); not drawn, the layout is the same.
+With `levelCheck` off, step 1's body is `how.guestStartBody` (**Play your first quest, then add a name.**) under the same title, and the /learners answer is not shown (spec 13.2 table). Not drawn, by an explicit waiver: the layout is the same as the drawn `levelCheck`-on step 1, the line is shorter than `guestLevelBody` in every locale (en 39, es 48, ko 21 against 46, 52, 26), and its length fits (`../../onboarding/README.md`).
 
 ### D16
 
 - **The hero line** is `size.body` in `text.secondary` (the lead's colour, a step stronger than the facts line's `caption` in `text.muted`), `spacing.sm` above it, at most the lead's 34em wide. It is plain text: it names what the link already does and adds no second action, so Start learning stays the hero's one button.
 - **Step 1's title changes too.** Spec 13.2 changed only the bodies; with the claim on, "Make a profile" over "Play your first quest. Check your level after." would describe the old order (profile first). The title follows the hero's own words: **Start right away** / **Empieza ya** / **바로 시작하기** (new row `landing.home.how.steps.start.guestTitle`, spec 13.2 and 16.4 amended in this PR).
+- **Height fallback at wide widths** (fix stage, pre-approved): with the line, `/` in English at 1280 is 2,296 against 2,300. If GU-6's forced-on CI run is over a height budget at 960 px or wider, GU-6 applies, without owner input: at 960 px and wider the line drops its `spacing.sm` top margin and the hero's bottom padding takes one spacing token step smaller, together at most the line's own height; then it re-runs the first-screen and budget checks. No budget moves (spec 13.2); any budget change is a separate owner-approved spec edit.
 - **The FAQ answer quotes the button**, as the shipped answer does (“…”, «…», ‘…’), so a reader looks for those exact words on Home: en and es drafts gain the quote marks; ko already had them.
 
 ## First-screen rules and budgets (AMENDMENTS-SITE-NEWUSER section 3.11), measured on the mocks (macOS Chromium)
