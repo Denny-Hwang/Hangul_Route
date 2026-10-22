@@ -19,7 +19,12 @@
  * - The launch-news consent line (`waitlist.consentLead` + `contactLink` + `privacyLink`) must stay
  *   in step with CONSENT_TEXT_VERSION on the API.
  */
-import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_LICENSE_TEACHERS } from '@hangul-route/content-schema';
+import {
+  FAMILY_LIFETIME_LEARNERS,
+  GROUP_LICENSE_LEARNERS,
+  SCHOOL_ADMIN_CAP,
+  SCHOOL_LICENSE_TEACHERS,
+} from '@hangul-route/content-schema';
 import { plural } from '../../plural';
 
 /**
@@ -78,6 +83,23 @@ export const landing = {
       teachers: {
         title: 'For teachers — Hangul Route',
         description: 'Students join with a code, a link or a QR code, with no student emails or accounts. Plan the week and see who practiced. Never a ranking.',
+      },
+      /** AMENDMENTS-SITE-NEWUSER SN-2: About, the legal pages and the open-source notices get their own title and description too. */
+      about: {
+        title: 'About Hangul Route',
+        description: 'Who makes Hangul Route and the promises we keep.',
+      },
+      privacy: {
+        title: 'Privacy Policy — Hangul Route',
+        description: 'What Hangul Route collects, who can see it, and how to delete it.',
+      },
+      terms: {
+        title: 'Terms of Service — Hangul Route',
+        description: 'The rules for using Hangul Route.',
+      },
+      licenses: {
+        title: 'Open-source notices — Hangul Route',
+        description: 'The open-source software Hangul Route uses.',
       },
     },
   },
@@ -523,11 +545,13 @@ export const landing = {
      * until legal review, and this localized line says so. Never shown on the English pages.
      */
     englishAuthoritative: 'This document is shown in English. The English version is the one that applies.',
-    draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      /** [SA] October 20, 2026: the school administrators bullet (AMENDMENTS-SEATS-ADMINS section 6.7). */
-      effective: 'Effective October 20, 2026',
+      /**
+       * October 22, 2026: the SN-2 fact fixes (level check, contact, media, school admins, date line) and the draft banner
+       * removed (owner decision 2026-10-21 (c)); the date the fixes merge.
+       */
+      effective: 'Effective October 22, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -547,14 +571,30 @@ export const landing = {
         collect: {
           heading: 'What we collect',
           bullets: {
+            /**
+             * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level. Two things leave
+             * the device, and this bullet names every field of both:
+             * - Usage events (apps/mobile/src/logic/placement/events.ts): `placement.start` (source, testLocale,
+             *   length and mode, revealMode, level), `placement.item_answered` (itemId, gate, outcome, assisted, ms,
+             *   noSound), `placement.complete` (stopReason, asked, stage and band, oralStage, beyondContent,
+             *   strandsSecure, mode), `placement.skipped` (source: onboarding or home) and `placement.override_applied`.
+             *   Every event is posted with the profileId and the client `at` time (apps/mobile/src/platform/telemetry.ts).
+             * - The result (`PlacementResultSchema`, packages/content-schema/src/schemas/placement.ts), kept in
+             *   `ProgressSnapshot.placements` (newest `PLACEMENT_KEEP` = 10) and backed up with the snapshot: id,
+             *   responses (questionId, outcome, chosenOptionId, assisted, ms, noSound), gates, strands, level, oralStage,
+             *   beyondContent, startQuestId, placedOutQuestIds, priorityTokens, needsStage, startedAt, completedAt,
+             *   source, testLocale, length, mode, revealMode, bankVersion, contentVer, catalogVersion, motivation,
+             *   stopReason and override; plus `ProgressSummary.placement` (takenAt, level, oralStage, strands,
+             *   beyondContent, overridden) from the newest result.
+             */
             profile: ({ levels }: LegalValues) =>
-              `Learner profile: a display nickname and a starting level the learner picks (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.`,
+              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it. If the learner takes the level check, it sends us usage events. When it starts: where it was started, its language and length, whether the sound guide shows by itself or after a tap, and the learner's starting level. For each answer: which question it was and which part of the check it belongs to, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took. When it ends: the level it suggests for reading and for listening, whether the learner reached the highest level the check measures, how many of the five skills it checks are secure, its length, how many questions were asked and why it stopped. We also note when the check is skipped and from which screen, and when a grown-up picks a different start. Each event carries the learner's id and the time it happened. The finished result is saved with the learner's progress and backed up to our servers with it; the app keeps the 10 most recent. Each result has an id and holds every answer (which question, which choice was picked, recorded by its id and not its words, whether it was right, wrong or not sure, whether the sound guide was used, whether the sound could play, and how long it took); how the learner did in each part of the check and in each of the five skills; the suggested levels, whether the learner reached the highest level the check measures, the first lesson, the lessons the learner can skip, up to three letters or skills to practice first, and whether the suggested level is outside the learner's plan; when the check started and ended, where it was started, its language, length and settings, and which versions of the questions and lessons it used; why the learner is learning Korean, if they picked a reason; why it stopped; and, if a grown-up picked a different start, that start and when. A short summary of the newest result (when it was taken, the suggested levels, the five skills, whether the learner reached the highest level and whether a grown-up changed the start) is saved with the learner's progress reports.`,
             progress:
               "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
             /**
              * F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. [TV] Rewritten for
              * AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D1 to TV-D5 and TV-D12, the owner's decision of 2026-10-14 (not
-             * reviewed by counsel; the draft banner above the document stays).
+             * reviewed by counsel; the draft banner was removed by owner decision 2026-10-21 (c)).
              */
             progressWho:
               "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress, see all of it, words included. Once the family has read a short update about classes in the app or the console, the teacher of a class the learner joined, and the owner and admins of that class's school, see the same progress, words included, and whether the learner gets notes from the class. We record when that update was read and whether it was read in the console or on the learner's device. Until then a class sees what it saw before: day-by-day history only from the day the learner joined, all-time totals without the first practice day, and no words.",
@@ -570,13 +610,20 @@ export const landing = {
               "Class moves: a teacher may move a learner from one class to another without asking the family first. When the teacher runs both classes, or is an admin of their school, the move happens at once; otherwise the receiving class has to accept it. Until it accepts, the receiving class sees only the learner's initials, picture and level. The family then sees a one-time notice in the app and in the console. Cards, stars and finished lessons always stay with the learner. A family can also start a move itself, and a learner can leave a class from Profile at any time. We keep a record of each move (which classes, which teacher account moved the learner and when, never a name) for 90 days after it happens.",
             /**
              * [SA] AMENDMENTS-SEATS-ADMINS section 6.7 (SA-4; SA-D10 to SA-D12, the owner's request of 2026-10-20, not
-             * reviewed by counsel; the draft banner stays): what a school's administrators see, the verified email an
+             * reviewed by counsel; the draft banner was removed by owner decision 2026-10-21 (c)): what a school's administrators see, the verified email an
              * accept needs, and the school history the owner sees (400 days). Family and stand-alone class renames keep
              * no such history.
              */
             schoolAdmins:
-              "A school's owner can add up to two administrators with an invite link. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
-            contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
+              "A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
+            /**
+             * SN-2: parents, teachers and school administrators all sign in with an email (F-APP-001). Receipts go only to
+             * the payer: an administrator gets 403 on checkout, portal and receipts of the school they administer
+             * (packages/backend space-seats.test.ts). The same account can still buy a plan for its own family or class
+             * (checkout sends account.email, entitlements.ts), so the copy is limited to the school's receipts.
+             */
+            contact:
+              'Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in and account recovery. The email of the grown-up who buys a plan is also used for that plan\'s receipts. A school administrator cannot buy or manage the school\'s plan, so their email is not used for the school\'s receipts.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },
         },
@@ -585,7 +632,8 @@ export const landing = {
           bullets: {
             ads: 'No advertising identifiers and no third-party ad tracking — ever.',
             location: 'No precise location.',
-            media: 'No contacts, photos, or microphone audio leaves the device. Voice mini-games process speech on-device and discard it.',
+            /** SN-2: no voice mini-game ships (voiceEchoEnabled is false) and the site promises no speaking. */
+            media: 'No contacts, photos, or microphone audio leave the device. The app does not record your voice.',
             profiles: 'No behavioral profiles sold or shared for marketing.',
           },
         },
@@ -663,7 +711,8 @@ export const landing = {
         changes: {
           heading: 'Changes to this policy',
           paragraphs: {
-            p1: 'If we make a material change, we will notify parents in the app or by email before it takes effect. The date below shows the current version.',
+            /** SN-2: the effective date renders at the top of the page (PrivacyPage.tsx). */
+            p1: 'If we make a material change, we will notify parents in the app or by email before it takes effect. The date at the top shows the current version.',
           },
         },
         contact: {
@@ -676,7 +725,8 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective October 20, 2026',
+      /** October 22, 2026: the SN-2 fact fixes and the draft banner removed (owner decision 2026-10-21 (c)), as the Privacy Policy. */
+      effective: 'Effective October 22, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -714,9 +764,10 @@ export const landing = {
               'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.',
             /**
              * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, the numbers from the
-             * content-schema constants. Must ship before Stripe Live is ever enabled.
+             * content-schema constants. Must ship before Stripe Live is ever enabled. SN-2 adds the administrator invite
+             * (`SCHOOL_ADMIN_CAP`); the free sizes are not published on the site (owner decision 2026-10-21 (b)).
              */
-            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.`,
+            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`,
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {
@@ -770,13 +821,15 @@ export const landing = {
         law: {
           heading: 'Governing law',
           paragraphs: {
-            p1: 'These terms are governed by the laws of the jurisdiction stated at launch. The final governing-law and dispute-resolution clauses will be confirmed with legal counsel before public release.',
+            /** Owner decision 2026-10-21 (c): no wording that a legal review happened or is pending, so the counsel sentence is gone. */
+            p1: 'These terms are governed by the laws of the jurisdiction stated at launch.',
           },
         },
         changes: {
           heading: 'Changes to these terms',
           paragraphs: {
-            p1: 'If we make material changes, we will notify parents in the app or by email before they take effect. The date below shows the current version.',
+            /** SN-2: the effective date renders at the top of the page (TermsPage.tsx). */
+            p1: 'If we make material changes, we will notify parents in the app or by email before they take effect. The date at the top shows the current version.',
           },
         },
         contact: {
@@ -806,11 +859,23 @@ export const landing = {
     usedIn: 'Used in',
     where: { app: 'App', web: 'Website', server: 'Server', ios: 'iOS app' },
   },
-  /** Links on the exported 404 page (F-SITE-002 §3.7); English document, as today. */
+  /**
+   * The exported 404 pages (F-SITE-002 §3.7): `out/404.html` in English and, since AMENDMENTS-SITE-NEWUSER SN-2,
+   * `out/es/404.html` and `out/ko/404.html` in their locale. `title` is the heading and the `<title>`.
+   */
   notFound: {
-    body: 'We could not find this page.',
+    body: 'The link may be old. Try the home page or start learning.',
     home: 'Go to the home page',
     start: 'Start learning',
+    title: 'Page not found',
+  },
+  /**
+   * Alt text of the site's pictures (AMENDMENTS-SITE-NEWUSER appendix A). `og`: the share image of each locale
+   * (`public/site/<locale>/og.png`, §3.14, row SN-2), `og:image:alt` and `twitter:image:alt`; the brand and the
+   * locale's tagline are passed in, as the image shows them.
+   */
+  captures: {
+    og: (brand: string, tagline: string) => `Hoya the tiger next to the words ${brand}: ${tagline}`,
   },
   /**
    * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): shown when the browser prefers a

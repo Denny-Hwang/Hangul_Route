@@ -917,6 +917,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.presets.chooser.showMore': [[8], [4]],
   // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
   'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
+  // The share image's alt text (AMENDMENTS-SITE-NEWUSER §3.14, row SN-2): the brand and the locale's tagline.
+  'landing.captures.og': [['Hangul Route', 'Learn Hangul from zero, at any age.']],
   // [OA] A PIN pause of a minute or more (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-2): 1, 5, 15 and 60 minutes.
   'caregiver.pin.cooldownMinutes': [[1], [5], [15], [60]],
   // [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): the wait's end (a date and time, `formatReadyAt`), a learner name, a row label.

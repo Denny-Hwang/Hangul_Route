@@ -76,6 +76,15 @@ export const SITE_SIZES = {
   phoneFrameSmall: rem(4 * spacing.xxxl),
   /** [SN] The `/learners` capture row: at most 17 x `spacing.xxl` (34rem), three across. */
   captureRowMax: rem(17 * spacing.xxl),
+  /**
+   * Hoya on the 404 page below 45em: `spacing.jumbo + spacing.sm` (72 px at default text), so Start learning ends on the
+   * 320 x 568 first screen in every locale (AMENDMENTS-SITE-NEWUSER §3.7, mock `mock/<locale>/404.html`).
+   */
+  notFoundHoya: rem(spacing.jumbo + spacing.sm),
+  /** Hoya on the 404 page from 45em: `spacing.jumbo + spacing.xxxl` (112 px at default text). */
+  notFoundHoyaWide: rem(spacing.jumbo + spacing.xxxl),
+  /** The 404 line's measure (the mock's 26em): two short lines on a phone. */
+  notFoundMeasure: '26em',
 } as const;
 
 /** `#RRGGBB` as `r, g, b`, so a shadow can take the token colour with the token opacity. */
@@ -140,6 +149,8 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-hero-art-max-wide': SITE_SIZES.heroArtMaxWide,
     '--hr-site-lang-menu-min': SITE_SIZES.langMenuMin,
     '--hr-site-hero-ratio': SITE_SIZES.heroRatio,
+    '--hr-site-404-hoya': SITE_SIZES.notFoundHoya,
+    '--hr-site-404-hoya-wide': SITE_SIZES.notFoundHoyaWide,
     '--hr-site-sunken': colors.surface.sunken,
     '--hr-site-size-caption': rem(typography.size.caption),
     /** How far a caption-size footer link's 64 px hit area reaches above and below its one line (the footer's end row). */

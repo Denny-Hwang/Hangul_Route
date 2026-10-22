@@ -4,8 +4,8 @@ import type { DeepPartial, Messages } from '../../types';
 /**
  * Spanish public site (F-I18N-001 PR 15): metadata, the layered home, the persona pages, About, the launch-news form
  * and the 404 links. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only framing and never an age
- * range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice,
- * draft line and back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere.
+ * range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice and
+ * back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere.
  */
 const FAQ_ADULT = {
   q: 'Soy una persona adulta que empieza. ¿Se sentirá infantil?',
@@ -37,6 +37,22 @@ export const landing = {
       teachers: {
         title: 'Para docentes: Hangul Route',
         description: 'Los estudiantes se unen con un código, un enlace o un código QR, sin correos ni cuentas de estudiantes. Planifica la semana y mira quién practicó. Nunca un ranking.',
+      },
+      about: {
+        title: 'Acerca de Hangul Route',
+        description: 'Quién hace Hangul Route y las promesas que cumplimos.',
+      },
+      privacy: {
+        title: 'Política de privacidad: Hangul Route',
+        description: 'Qué recoge Hangul Route, quién puede verlo y cómo borrarlo.',
+      },
+      terms: {
+        title: 'Términos del servicio: Hangul Route',
+        description: 'Las reglas para usar Hangul Route.',
+      },
+      licenses: {
+        title: 'Avisos de código abierto: Hangul Route',
+        description: 'El software de código abierto que usa Hangul Route.',
       },
     },
   },
@@ -360,7 +376,6 @@ export const landing = {
   legal: {
     backHome: '← Ir al inicio',
     englishAuthoritative: 'Este documento se muestra en inglés. La versión en inglés es la que se aplica.',
-    draft: 'Borrador para revisión. Este documento es un borrador de trabajo que espera la revisión de asesoría legal calificada antes del lanzamiento público.',
   },
   licenses: {
     title: 'Avisos de código abierto',
@@ -375,9 +390,13 @@ export const landing = {
     where: { app: 'App', web: 'Sitio web', server: 'Servidor', ios: 'App de iOS' },
   },
   notFound: {
-    body: 'No encontramos esta página.',
+    body: 'Puede que el enlace sea antiguo. Prueba la página de inicio o empieza a aprender.',
     home: 'Ir a la página de inicio',
     start: 'Empezar a aprender',
+    title: 'No encontramos esta página',
+  },
+  captures: {
+    og: (brand: string, tagline: string) => `Hoya, el tigre, junto a las palabras ${brand}: ${tagline}`,
   },
   localeBanner: {
     label: 'Sugerencia de idioma',

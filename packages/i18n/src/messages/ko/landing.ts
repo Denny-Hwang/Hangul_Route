@@ -4,7 +4,7 @@ import type { DeepPartial, Messages } from '../../types';
  * Korean public site (F-I18N-001 PR 16): metadata, the layered home, the persona pages, About, the launch-news form,
  * the 404 links and the language banner. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only
  * framing and never an age range (KIDS_ONLY_FRAMING). 해요체, plain and short. The Privacy Policy and Terms stay
- * English-authoritative (decision L10): only their notice, draft line and back link are translated here, never a leaf under
+ * English-authoritative (decision L10): only their notice and back link are translated here, never a leaf under
  * `legal.privacy` or `legal.terms`. No price anywhere. Taught Korean (the hero letter) arrives as an argument and never
  * takes a particle that changes with the final consonant.
  */
@@ -41,6 +41,22 @@ export const landing = {
       teachers: {
         title: '선생님을 위해 — Hangul Route',
         description: '학생은 코드, 링크, QR 코드로 참여해요. 학생 이메일이나 계정은 필요 없어요. 한 주를 계획하고 누가 연습했는지 봐요. 순위는 절대 없어요.',
+      },
+      about: {
+        title: 'Hangul Route 소개',
+        description: 'Hangul Route를 누가 만드는지, 그리고 우리가 지키는 약속을 알려 드려요.',
+      },
+      privacy: {
+        title: '개인정보 처리방침 — Hangul Route',
+        description: 'Hangul Route가 무엇을 모으는지, 누가 볼 수 있는지, 어떻게 지우는지 알려 드려요.',
+      },
+      terms: {
+        title: '이용약관 — Hangul Route',
+        description: 'Hangul Route를 쓸 때 지킬 규칙이에요.',
+      },
+      licenses: {
+        title: '오픈소스 라이선스 — Hangul Route',
+        description: 'Hangul Route가 쓰는 오픈소스 소프트웨어예요.',
       },
     },
   },
@@ -359,7 +375,6 @@ export const landing = {
   legal: {
     backHome: '← 홈으로',
     englishAuthoritative: '이 문서는 영어로 표시됩니다. 효력이 있는 것은 영어판입니다.',
-    draft: '검토용 초안입니다. 이 문서는 공개 출시 전에 자격을 갖춘 법률 전문가의 검토를 기다리는 작업 초안입니다.',
   },
   licenses: {
     title: '오픈소스 라이선스',
@@ -374,9 +389,13 @@ export const landing = {
     where: { app: '앱', web: '웹사이트', server: '서버', ios: 'iOS 앱' },
   },
   notFound: {
-    body: '이 페이지를 찾을 수 없어요.',
+    body: '오래된 링크일 수 있어요. 홈으로 가거나 배우기를 시작해 보세요.',
     home: '홈으로 가기',
     start: '배우기 시작하기',
+    title: '페이지를 찾을 수 없어요',
+  },
+  captures: {
+    og: (brand: string, tagline: string) => `호랑이 호야와 ${brand} 로고. 문구: ${tagline}`,
   },
   localeBanner: {
     label: '언어 추천',

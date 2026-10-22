@@ -80,7 +80,10 @@ describe('landing: sentences that take a value render the former text', () => {
   it('privacy and terms: the address and the level labels are passed in', () => {
     const values = { email: 'hello@example.com', levels: 'A / B' };
     expect(l.legal.privacy.sections.collect.bullets.profile(values)).toBe(
-      'Learner profile: a display nickname and a starting level the learner picks (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.',
+      // AMENDMENTS-SITE-NEWUSER SN-2: the level check can suggest the level; placement.start, item_answered, complete,
+      // skipped and override_applied go up as usage events (apps/mobile/src/logic/placement/events.ts), and the full
+      // result is backed up in the sync snapshot (Codex review on #804, P1).
+      "Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it. If the learner takes the level check, it sends us usage events. When it starts: where it was started, its language and length, whether the sound guide shows by itself or after a tap, and the learner's starting level. For each answer: which question it was and which part of the check it belongs to, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took. When it ends: the level it suggests for reading and for listening, whether the learner reached the highest level the check measures, how many of the five skills it checks are secure, its length, how many questions were asked and why it stopped. We also note when the check is skipped and from which screen, and when a grown-up picks a different start. Each event carries the learner's id and the time it happened. The finished result is saved with the learner's progress and backed up to our servers with it; the app keeps the 10 most recent. Each result has an id and holds every answer (which question, which choice was picked, recorded by its id and not its words, whether it was right, wrong or not sure, whether the sound guide was used, whether the sound could play, and how long it took); how the learner did in each part of the check and in each of the five skills; the suggested levels, whether the learner reached the highest level the check measures, the first lesson, the lessons the learner can skip, up to three letters or skills to practice first, and whether the suggested level is outside the learner's plan; when the check started and ended, where it was started, its language, length and settings, and which versions of the questions and lessons it used; why the learner is learning Korean, if they picked a reason; why it stopped; and, if a grown-up picked a different start, that start and when. A short summary of the newest result (when it was taken, the suggested levels, the five skills, whether the learner reached the highest level and whether a grown-up changed the start) is saved with the learner's progress reports.",
     );
     expect(l.legal.privacy.sections.emailList.paragraphs.removal(values)).toBe(
       'Removal and erasure: to be taken off the list, or to have your address erased, email hello@example.com from the address you signed up with and we will remove it.',
@@ -136,8 +139,9 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   const SPONSORED =
     'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
   // [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, before Stripe Live.
+  // SN-2: then the school administrators an owner can invite (owner decision 2026-10-21 (b): no free seat numbers).
   const SIZES =
-    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.';
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to 2 administrators.';
   const privacy = l.legal.privacy.sections;
   const billing = l.legal.terms.sections.billing;
 
@@ -187,6 +191,76 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   });
 });
 
+/**
+ * AMENDMENTS-SITE-NEWUSER SN-2: facts in the Privacy Policy and the Terms that had fallen behind the app. English-
+ * authoritative (L10): es and ko show this English. No claim of legal review; the draft banner is gone (owner decision
+ * 2026-10-21 (c)), and nothing says a legal review happened or is pending.
+ */
+describe('legal: SN-2 accuracy (English-authoritative)', () => {
+  const privacy = l.legal.privacy.sections;
+
+  it("the account contact is the sign-in email of a parent, teacher or school administrator; the school's receipts go to its payer only", () => {
+    // Codex review on #804 (P2): an administrator cannot reach the checkout, portal or receipts of the school they
+    // administer (space-seats.test.ts); the same account may still pay for its own family or class plan.
+    expect(privacy.collect.bullets.contact).toBe(
+      "Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in and account recovery. The email of the grown-up who buys a plan is also used for that plan's receipts. A school administrator cannot buy or manage the school's plan, so their email is not used for the school's receipts.",
+    );
+  });
+
+  it('no voice is recorded: no voice mini-game ships, and the site promises no speaking', () => {
+    expect(privacy.never.bullets.media).toBe('No contacts, photos, or microphone audio leave the device. The app does not record your voice.');
+    expect(privacy.never.bullets.media).not.toMatch(/voice mini-game|process speech/i);
+  });
+
+  it('both documents point at the date at the top, where the page shows it', () => {
+    expect(privacy.changes.paragraphs.p1).toBe(
+      'If we make a material change, we will notify parents in the app or by email before it takes effect. The date at the top shows the current version.',
+    );
+    expect(l.legal.terms.sections.changes.paragraphs.p1).toBe(
+      'If we make material changes, we will notify parents in the app or by email before they take effect. The date at the top shows the current version.',
+    );
+  });
+
+  it('a school has up to three grown-ups with admin rights: the owner and two administrators', () => {
+    expect(privacy.collect.bullets.schoolAdmins.startsWith(
+      "A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights. Administrators see",
+    )).toBe(true);
+  });
+
+  it('claims no legal review, and es and ko keep the English text (L10)', () => {
+    const text = JSON.stringify([l.legal.privacy, l.legal.terms, l.meta.pages, l.notFound]);
+    expect(text).not.toMatch(/reviewed by (a )?(lawyer|counsel|attorney)|legally reviewed|native speaker|expert[- ]reviewed/i);
+    // Owner decision 2026-10-21 (c): no draft banner and no line that a legal review is pending.
+    expect(text).not.toMatch(/\bdraft\b|legal counsel|pending review|confirmed with (legal )?counsel/i);
+    expect(Object.keys(l.legal)).toEqual(['backHome', 'englishAuthoritative', 'privacy', 'terms']);
+    for (const locale of ['es', 'ko'] as const) {
+      const legal = getMessages(locale).landing.legal;
+      expect(legal.privacy.sections.collect.bullets.contact).toBe(privacy.collect.bullets.contact);
+      expect(legal.terms.sections.changes.paragraphs.p1).toBe(l.legal.terms.sections.changes.paragraphs.p1);
+    }
+  });
+});
+
+/** AMENDMENTS-SITE-NEWUSER §3.14 and appendix A (row SN-2): the share image's alt text in each locale. */
+describe('landing.captures.og: the share image alt text (SN-2)', () => {
+  it('names Hoya and the words the image shows, the brand and the tagline passed in', () => {
+    expect(l.captures.og('Hangul Route', l.meta.tagline)).toBe('Hoya the tiger next to the words Hangul Route: Learn Hangul from zero, at any age.');
+    const es = getMessages('es').landing;
+    expect(es.captures.og('Hangul Route', es.meta.tagline)).toBe('Hoya, el tigre, junto a las palabras Hangul Route: Aprende hangul desde cero, a cualquier edad.');
+    const ko = getMessages('ko').landing;
+    expect(ko.captures.og('Hangul Route', ko.meta.tagline)).toBe('호랑이 호야와 Hangul Route 로고. 문구: 나이와 상관없이, 한글을 처음부터 배워요.');
+  });
+
+  it('types neither the brand nor a tagline into the message, in any locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const out = getMessages(locale).landing.captures.og('{B}', '{T}');
+      expect(out, locale).toContain('{B}');
+      expect(out, locale).toContain('{T}');
+      expect(out, locale).not.toMatch(/Hangul Route|hangulroute/i);
+    }
+  });
+});
+
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
   it('keeps the waitlist consent line byte-identical (#146, CONSENT_TEXT_VERSION); the band speaks of launch news only', () => {
     expect(l.waitlist.consentLead).toBe(
@@ -213,15 +287,17 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     expect(JSON.stringify(l.plans)).not.toMatch(/[$€£₩]|\d+\s*(USD|dollars?)|lifetime/i);
   });
 
-  it('keeps the legal effective dates and the draft notice (#149)', () => {
+  it('keeps the legal effective dates (#149)', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
     // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
-    expect(l.legal.privacy.effective).toBe('Effective October 20, 2026');
+    // October 22, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
+    expect(l.legal.privacy.effective).toBe('Effective October 22, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
     // October 20, 2026 ([SA] SA-6): the Terms say how many learners each plan holds; the Privacy Policy is unchanged.
-    expect(l.legal.terms.effective).toBe('Effective October 20, 2026');
-    expect(l.legal.draft).toBe('Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.');
+    // October 22, 2026 (SN-2): the fact fixes and the draft banner removed, as the Privacy Policy.
+    expect(l.legal.terms.effective).toBe('Effective October 22, 2026');
+    expect('draft' in l.legal).toBe(false);
   });
 });
 

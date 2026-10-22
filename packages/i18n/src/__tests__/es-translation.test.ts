@@ -34,7 +34,7 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
   });
 
   it('translates the legal notice around the English text', () => {
-    expect(es.landing.legal.draft).not.toBe(en.landing.legal.draft);
+    expect(es.landing.legal.englishAuthoritative).not.toBe(en.landing.legal.englishAuthoritative);
   });
 
   it('differs from English wherever English is not a shared word (brand names, codes, symbols)', () => {

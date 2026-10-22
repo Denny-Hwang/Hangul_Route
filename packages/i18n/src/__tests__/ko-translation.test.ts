@@ -50,7 +50,6 @@ describe('Korean dictionary (F-I18N-001 PR 16)', () => {
     const legal = leafPaths(en).filter(isEnglishAuthoritative);
     expect(legal.length).toBeGreaterThan(10);
     for (const path of legal) expect(lookup(ko, path)).toBe(lookup(en, path));
-    expect(ko.landing.legal.draft).not.toBe(en.landing.legal.draft);
     expect(ko.landing.legal.englishAuthoritative).not.toBe(en.landing.legal.englishAuthoritative);
   });
 
@@ -239,7 +238,6 @@ const FORMAL_ALLOWED: readonly string[] = [
   'console.groupLine',
   'console.contactLineCaps',
   'landing.legal.englishAuthoritative',
-  'landing.legal.draft',
   // The class-move consent sheet's frame (F-SPACE-002 T-6d): one voice with the 합니다체 consent lines it frames.
   'console.transfer.consent.failed',
   'console.transfer.consent.readToEnd',

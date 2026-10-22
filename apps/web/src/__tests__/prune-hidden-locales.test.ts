@@ -39,6 +39,7 @@ beforeEach(() => {
   put('404.html', page('en', false));
   put('teach/space.html', page('en', false));
   put('_next/static/chunks/app/(loc)/[locale]/page.js', 'chunk');
+  put('site/en/og.png', 'png');
 });
 
 afterEach(() => rmSync(out, { recursive: true, force: true }));
@@ -52,9 +53,19 @@ describe('pruneHiddenLocales', () => {
         put(`${locale}/${sub}.html`, page(locale, true));
         put(`${locale}/${sub}.txt`, 'rsc');
       }
+      // Its share image (AMENDMENTS-SITE-NEWUSER §3.14) leaves with its pages.
+      put(`site/${locale}/og.png`, 'png');
     }
     expect(prune(out)).toEqual(['es', 'ko']);
-    expect(files()).toEqual(['404.html', '_next/static/chunks/app/(loc)/[locale]/page.js', 'about.html', 'index.html', 'index.txt', 'teach/space.html']);
+    expect(files()).toEqual([
+      '404.html',
+      '_next/static/chunks/app/(loc)/[locale]/page.js',
+      'about.html',
+      'index.html',
+      'index.txt',
+      'site/en/og.png',
+      'teach/space.html',
+    ]);
   });
 
   it('[SN] removes a hidden locale\'s product captures (`site/captures/<locale>/`) and other per-locale site files, and keeps a shipped one\'s (AMENDMENTS-SITE-NEWUSER §3.13)', () => {
@@ -76,7 +87,11 @@ describe('pruneHiddenLocales', () => {
     put('es/about.html', page('es', false));
     put('ko.html', page('ko', true));
     put('ko/about.html', page('ko', true));
+    put('site/es/og.png', 'png');
+    put('site/ko/og.png', 'png');
     expect(prune(out)).toEqual(['ko']);
+    expect(existsSync(join(out, 'site', 'es', 'og.png'))).toBe(true);
+    expect(existsSync(join(out, 'site', 'ko'))).toBe(false);
     expect(existsSync(join(out, 'es.html'))).toBe(true);
     expect(existsSync(join(out, 'es', 'about.html'))).toBe(true);
     expect(existsSync(join(out, 'ko.html'))).toBe(false);
@@ -101,7 +116,7 @@ describe('pruneHiddenLocales', () => {
       put(`${locale}/about.html`, page(locale, true));
     }
     expect(prune(out)).toEqual(['pt-BR', 'zh-Hant']);
-    expect(files()).toEqual(['404.html', '_next/static/chunks/app/(loc)/[locale]/page.js', 'about.html', 'index.html', 'index.txt', 'teach/space.html']);
+    expect(files()).toEqual(['404.html', '_next/static/chunks/app/(loc)/[locale]/page.js', 'about.html', 'index.html', 'index.txt', 'site/en/og.png', 'teach/space.html']);
   });
 
   it.each(['..', '../x', 'es/../..', 'ES', 'e', ''])('fails closed on a marker that is not a locale tag: "%s"', (bad) => {
