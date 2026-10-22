@@ -94,5 +94,6 @@ From 3 learners whose apps share these counts.         report.class.memoryFrom (
 ```
 
 - Totals over the members whose class copy carries `memory` (`ClassReport.memory`, computed by `classReport` on the Worker): never a mean, a maximum, a learner's own figure or a distribution of learners; the "from" line says how many learners the totals come from, as `withActivity` does for the day-by-day figures.
+- The mastery line names only the levels above 0 ("Episodes: 9 done" until row CM-20 derives levels 2 and 3). Items ready to refresh add up only the learners who have the review surface (`memory.reviewOn`), never the shadow period's seeded due items.
 - A total of 0 has no line; with no member carrying the block (or every total 0) there is no block, and More detail is drawn for it alone when there is no level check and no homework.
 - The same on every period (current counts).

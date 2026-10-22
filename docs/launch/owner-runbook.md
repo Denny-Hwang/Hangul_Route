@@ -615,6 +615,7 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
    - 목표 기준선 (사양 3.2): G1 은 지연 버킷 `4-7` 과 `8-14` 에서 읽는다 (G1 의 "6-8일" 은 두 버킷에 걸친다). G3 은 `newHeld` 와 `minutes`. G2 (30일 안에 처음 본 항목 중 30일 안에 간격 답 3번 이상을 받은 비율) 는 `memory.daily` 에 담는 칸이 없어 이 그림자 기간에서는 나오지 않는다. 행 CM-12b 가 Worker 먼저 G2 칸을 더하고, G2 기준선은 그때부터 센다. 이것은 `dailyReview` 램프를 막지 않는다.
 4. CM-13 과 CM-14 를 만들고 머지하는 일은 그림자 기간을 기다리지 않는다. 기다리는 것은 `dailyReview` 의 램프뿐이다.
 5. 배포 순서는 Worker 먼저: D1 마이그레이션 `0016_memory_shards` (CM-11) → Worker (CM-11 의 `/memory` 경로와, `items.seeded` 와 `memory.daily` 의 버킷 필드가 공유 경계 코드만 받는 CM-12 의 content-schema 변경) → 학습자 앱. 머지는 #822 (CM-10/CM-11) → #825 → #826 순서다.
+6. 보호자·교사가 보는 기억 숫자 (CM-16) 를 즉시 내리기 (`MEMORY_SUMMARY` kill switch, 1분): `hangul-route-api` → Settings → **Variables and Secrets** → Add → Type **Text**, 이름 `MEMORY_SUMMARY`, 값 `disabled` → **Deploy**. 다른 값도 모두 꺼짐으로 처리된다. 가족·반·학교의 보고서, 명단, `learning-summary` 경로 모두에서 아는 단어·복습할 항목·에피소드 수준 줄이 곧바로 사라진다. 저장된 숫자는 지워지지 않고, 변수를 지우면 다시 보인다. `GET /health` 의 `features.memorySummary` 로 확인한다. `memoryRecord` 를 K-2 로 끄면 새 숫자는 오지 않지만 마지막 숫자는 그날 기준의 사실로 계속 보이므로, 콘솔에서 줄을 모두 내려야 할 때는 이 변수를 쓴다.
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
