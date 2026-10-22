@@ -253,6 +253,24 @@ describe('GuestLater, the Not now card (8.6)', () => {
     expect(srFocus.map((n) => (n as { id?: string } | null)?.id)).toEqual(['guest-later-heading']);
   });
 
+  it('a back on it (the phone\'s, or the stack\'s) does what Close does: Welcome, never Results; the record stays', async () => {
+    const nav = navigationDouble();
+    const listeners: BeforeRemove[] = [];
+    nav.addListener = vi.fn((type: string, l: BeforeRemove) => {
+      if (type === 'beforeRemove') listeners.push(l);
+      return () => undefined;
+    }) as never;
+    await render(<GuestLaterScreen route={{ key: 'l', name: 'GuestLater' } as never} navigation={nav as never} />);
+    const out = { prevented: false };
+    act(() => listeners.at(-1)!({ data: { action: { type: 'GO_BACK' } }, preventDefault: () => void (out.prevented = true) }));
+    expect(out.prevented).toBe(true);
+    expect(nav.rootDispatch).toHaveBeenCalledWith({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Onboarding' }] } });
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(nav.replace).not.toHaveBeenCalled();
+    expect(useGuestStore.getState().running).toBe(false);
+    expect(useGuestStore.getState().record).not.toBeNull();
+  });
+
   it('on an owner device: 7 days, the ask-the-owner line, and Close as the one filled button', async () => {
     useProfileStore.setState({ profiles: [mina], activeId: mina.id });
     const nav = navigationDouble();
@@ -509,5 +527,114 @@ describe('GU-D11: the first-run setup on a device whose only learner is a live g
     expect(ids).toHaveLength(1);
     expect(ids[0]).not.toBe(GUEST_ID);
     expect(sent.some((e) => e.name === 'guest.saved')).toBe(false);
+  });
+});
+
+describe('the gate read again at Continue: another tab changed the device while the form was open (8.2, CS-G9, CS-G10)', () => {
+  const PIN_KEY = 'account:parentPinHash';
+  const open = async (nav = navigationDouble()) => {
+    noteGuestSaveEntry('results');
+    const r = await render(<CreateProfileScreen route={{ key: 'cp', name: 'CreateProfile', params: { firstRun: true, from: 'guest' } } as never} navigation={nav as never} />, {
+      createNodeMock: () => nodeMock(() => undefined),
+    });
+    await act(async () => {
+      r.root.findAll((n) => n.type === TextInput && n.props.accessibilityLabel === c.guest.nameLabel)[0]!.props.onChangeText('Sam');
+    });
+    await press(buttonsNamed(r.root, c.cta)[0]!);
+    await press(optionNamed(r.root, c.who.self.label)[0]!);
+    await press(r.root.findAll((n) => typeof n.type === 'string' && n.props.role === 'checkbox')[0]!);
+    return { r, nav };
+  };
+  const cont = async (r: { root: ReactTestInstance }): Promise<void> => {
+    await press(buttonsNamed(r.root, c.cta)[0]!);
+    await flush();
+  };
+  /** Nothing was written for the save: no consent, no PIN, no profile, the guest kept, no guest.saved. */
+  const nothingSaved = (): void => {
+    expect(useAccountStore.getState().selfConsentAcceptedAt).toBeNull();
+    expect(useAccountStore.getState().guardianConsentAcceptedAt).toBeNull();
+    expect(useProfileStore.getState().profiles.some((p) => p.id === GUEST_ID)).toBe(false);
+    expect(disk.has('guest')).toBe(true);
+    expect(sent.some((e) => e.name === 'guest.saved' || e.name === 'onboarding.consent_given')).toBe(false);
+  };
+
+  it('open, then a learner added elsewhere (no PIN): back to the save card, which now asks the owner; nothing saved, no PIN set (CS-G10)', async () => {
+    const { r, nav } = await open();
+    disk.set('profiles', JSON.stringify([mina]));
+    await cont(r);
+    expect(nav.goBack).toHaveBeenCalledTimes(1);
+    expect(nav.rootDispatch).not.toHaveBeenCalled();
+    nothingSaved();
+    expect(disk.has(PIN_KEY)).toBe(false);
+    expect(useAccountStore.getState().parentPinHash).toBeNull();
+    // The card under the form now draws the owner case.
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toContain(mina.id);
+  });
+
+  it('open, then a PIN set elsewhere: the SaveGuest PIN in the form\'s place, and the stored PIN is untouched (CS-G9)', async () => {
+    const { r, nav } = await open();
+    disk.set(PIN_KEY, JSON.stringify('h:9999'));
+    await cont(r);
+    expect(nav.replace).toHaveBeenCalledWith('PinEntry', { next: 'SaveGuest' });
+    expect(nav.goBack).not.toHaveBeenCalled();
+    nothingSaved();
+    expect(JSON.parse(disk.get(PIN_KEY)!)).toBe('h:9999');
+    // This tab now knows the PIN, so the save card asks it too.
+    expect(useAccountStore.getState().parentPinHash).toBe('h:9999');
+    // The leave goes through: the step-back listener does not hold it on step 2.
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+  });
+
+  it('this guest saved in another tab: that learner\'s Home, with nothing written here', async () => {
+    // A guest id this test file's tab has never seen as a profile (the merge keeps ids this tab removed out).
+    const id = 'profile:guest777';
+    disk.set('guest', JSON.stringify(record({ id })));
+    useGuestStore.setState({ record: record({ id }) });
+    const { r, nav } = await open();
+    const saved: Profile = { id, displayName: 'Sam', ageGroup: '8-9', avatar: 'hoya-blue', role: 'learner', createdAt: new Date(T0).toISOString(), learnerType: 'self' };
+    disk.set('profiles', JSON.stringify([saved]));
+    await cont(r);
+    await vi.waitFor(() => expect(nav.rootDispatch).toHaveBeenCalledWith({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Main' }] } }));
+    expect(useProfileStore.getState().activeId).toBe(id);
+    expect(useAccountStore.getState().selfConsentAcceptedAt).toBeNull();
+    expect(sent.some((e) => e.name === 'guest.saved')).toBe(false);
+    expect(disk.has('guest')).toBe(false);
+    expect(guestSavedNoteFor(id)).toEqual({ card: false });
+  });
+
+  it('the profile list cannot be read: nothing is written and the form says so (fail closed)', async () => {
+    const storage = await import('../../../platform/storage');
+    const { r, nav } = await open();
+    vi.mocked(storage.readJsonStrict).mockRejectedValueOnce(new Error('blocked'));
+    await cont(r);
+    expect(byTestId(r.root, 'create-profile-save-error')).toHaveLength(1);
+    expect(nav.goBack).not.toHaveBeenCalled();
+    nothingSaved();
+  });
+
+  it('with nothing changed, the save goes on', async () => {
+    const { r, nav } = await open();
+    await cont(r);
+    await vi.waitFor(() => expect(nav.rootDispatch).toHaveBeenCalledTimes(1));
+    expect(sent.filter((e) => e.name === 'guest.saved')).toEqual([{ name: 'guest.saved', payload: { gated: false, consent: 'new', via: 'results' } }]);
+  });
+});
+
+describe('the guest\'s Results with no save card', () => {
+  it('a back opens the Not now card without guest.left (the save was never offered)', async () => {
+    useGuestStore.setState({ record: record({ questDone: false }) });
+    const nav = navigationDouble();
+    const listeners: BeforeRemove[] = [];
+    nav.addListener = vi.fn((type: string, l: BeforeRemove) => {
+      if (type === 'beforeRemove') listeners.push(l);
+      return () => undefined;
+    }) as never;
+    const route = { key: 'r', name: 'Results', params: { questId: quest.questId, episodeId: quest.episodeId, stars: 0, correct: 0, total: 0 } };
+    const r = await render(inGuest(<GuestResults route={route as never} navigation={nav as never} />));
+    await flush();
+    expect(byTestId(r.root, 'guest-save-card')).toHaveLength(0);
+    act(() => listeners.at(-1)!({ data: { action: { type: 'GO_BACK' } }, preventDefault: () => undefined }));
+    expect(nav.replace).toHaveBeenCalledWith('GuestLater');
+    expect(sent.some((e) => e.name === 'guest.left')).toBe(false);
   });
 });

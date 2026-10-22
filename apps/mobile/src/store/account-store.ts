@@ -289,6 +289,13 @@ interface Actions {
    * check the PIN. A hash, or a read that now says "no PIN", replaces the unknown; another failure keeps it. Never throws.
    */
   retryPinHashRead: () => Promise<void>;
+  /**
+   * [GU] Row GU-4 (AMENDMENTS-GUEST-FIRST-LESSON section 8.2, CS-G9, CS-G10): the PIN hash read again from storage
+   * just before the guest's save writes anything, so a PIN another tab set while the form was open is seen (this
+   * tab's memory takes it, as `verifyPinAttempt` does). A read that fails, or finds none, keeps the hash in memory
+   * (this tab's own write may not have landed yet); `failed` only when neither is known. Never throws.
+   */
+  rereadPinHash: () => Promise<{ hash: string | null; failed: boolean }>;
 }
 
 export const useAccountStore = create<State & Actions>((set, get) => ({
@@ -564,6 +571,19 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     // A PIN set meanwhile in this tab wins over what the read found.
     if (pinHash.failed || !get().pinHashReadFailed) return;
     set({ parentPinHash: pinHash.hash, pinHashReadFailed: false });
+  },
+
+  rereadPinHash: async () => {
+    const stored = await readPinHash().catch(() => ({ hash: null, failed: true }));
+    const memory = get().parentPinHash;
+    if (stored.hash !== null) {
+      if (stored.hash !== memory || get().pinHashReadFailed) set({ parentPinHash: stored.hash, pinHashReadFailed: false });
+      return { hash: stored.hash, failed: false };
+    }
+    if (memory !== null) return { hash: memory, failed: false };
+    // A read that now says "no PIN" replaces an unknown left by the hydrate (as `retryPinHashRead`).
+    if (!stored.failed && get().pinHashReadFailed) set({ pinHashReadFailed: false });
+    return { hash: null, failed: stored.failed };
   },
 
   enableBiometricShortcut: async (prompt, now = Date.now) => {

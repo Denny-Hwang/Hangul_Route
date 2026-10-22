@@ -90,3 +90,16 @@ interface FormOpener {
 export function openGuestFormAfterPin(navigation: FormOpener, params: { firstRun: boolean; from: 'guest' }): void {
   navigation.replace('CreateProfile', params);
 }
+
+/** [GU] What the save form needs to ask the `SaveGuest` PIN in its place (the `Guest` stack's `replace`). */
+interface PinOpener {
+  replace: (screen: 'PinEntry', params: { next: 'SaveGuest' }) => void;
+}
+
+/**
+ * [GU] Row GU-4 review, section 8.2, CS-G9: a PIN was set in another tab while the form was open: the form gives way
+ * to the verify-only `SaveGuest` PIN (Cancel returns to the save card; a correct PIN opens the form again).
+ */
+export function reaskGuestSavePin(navigation: PinOpener): void {
+  navigation.replace('PinEntry', { next: 'SaveGuest' });
+}

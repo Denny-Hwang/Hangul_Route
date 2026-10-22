@@ -191,6 +191,13 @@ describe('submitProfile on a guest\'s save (sections 5.4 and 8.3)', () => {
     expect(calls).toEqual(['self', 'promote']);
   });
 
+  it('a retry after a failed promotion whose consent this form wrote: guest.saved still reports the consent as new', async () => {
+    const { d, events } = deps();
+    const state: FormState = { ...guest, learnerType: 'self', name: 'Sam', selfAcceptedAt: STAMP };
+    await submitProfile({ state, level: '8-9', avatar: 'hoya-orange', firstRun: true, guest: { gated: false, via: 'results', consentGiven: true } }, d);
+    expect(events.at(-1)).toEqual({ name: 'guest.saved', payload: { gated: false, consent: 'new', via: 'results' } });
+  });
+
   it('a promotion that could not be written answers save-failed and sends nothing', async () => {
     const { d, events } = deps({ createProfile: vi.fn(async () => null) });
     const state: FormState = { ...guest, learnerType: 'self', name: 'Sam', agreed: true };

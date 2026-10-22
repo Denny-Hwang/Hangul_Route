@@ -33,6 +33,7 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { flags } from '../../config/flags';
 import { isValidEmail } from '../../logic/email';
 import { guestSaveGate } from '../../logic/guest/guest-model';
+import { setupPromotesGuest, type GuestSaveRecheck } from '../../logic/guest/guest-save';
 import { privacyUrl } from '../../logic/links';
 import { lessonsLine, readyLine, whoCopy } from '../../logic/onboarding/create-profile-copy';
 import { emailFieldShown, formPlan, nameHint, toggleEmailRow, type FormState } from '../../logic/onboarding/create-profile-form';
@@ -59,10 +60,10 @@ import { pinHasher } from '../../platform/crypto';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
-import { guestSaveEntry, holdsFirstQuestCard, noteGuestSaved, promoteLiveGuest } from '../../store/guest-save';
+import { adoptSavedGuest, guestSaveEntry, holdsFirstQuestCard, noteGuestSaved, promoteLiveGuest, recheckGuestSave } from '../../store/guest-save';
 import { liveGuestId } from '../../store/guest-store';
 import { useProfileStore } from '../../store/profile-store';
-import { leaveGuestRunSaved } from '../guest/guest-exits';
+import { leaveGuestRunSaved, reaskGuestSavePin } from '../guest/guest-exits';
 import { syncApi } from '../../store/sync-store';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'CreateProfile'>;
@@ -132,6 +133,12 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   // [GU] The folded email row of the guest's save (closed: no email field, nothing typed is kept).
   const [emailOpen, setEmailOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // [GU] The live guest the form saves (read when it opened), a PIN hash this form wrote, a consent it wrote before a
+  // promotion failed, and a leave the recheck chose (the step-back listener lets it through).
+  const [guestId] = useState(() => (fromGuest ? liveGuestId() : null));
+  const ownPinHash = useRef<string | null>(null);
+  const consentWritten = useRef(false);
+  const leaving = useRef(false);
   const emailRef = useRef<TextInput | null>(null);
   const [learnerType, setLearnerType] = useState<LearnerType | null>(null);
   const [name, setName] = useState('');
@@ -184,6 +191,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
+        if (leaving.current) return;
         const back = systemBack(stepRef.current, e.data.action.type, fromGuest);
         if (back === 'leave' || back === 'ignore') return;
         e.preventDefault();
@@ -283,16 +291,33 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     setPinError(null);
     setSaveError(null);
     try {
+      // [GU] Section 8.2, CS-G9, CS-G10: the gate is read again from storage before anything is written. A learner
+      // added, a PIN set or this guest saved in another tab while the form was open never lets the save past them.
+      if (fromGuest) {
+        const check = await recheckGuestSave({ gated, guestId, ownPinHash: ownPinHash.current });
+        if (check !== 'go') {
+          await afterRecheck(check);
+          return;
+        }
+      }
       // [GU] GU-D11: a first run on a device whose only learner is a live guest promotes it (the switch on).
-      const setupPromotes = !fromGuest && firstRun && flags.guestLessonEnabled && liveGuestId() !== null && !useProfileStore.getState().profiles.some((p) => p.role === 'learner');
-      const guest: SubmitInput['guest'] = fromGuest ? { gated, via: guestSaveEntry() } : setupPromotes ? { gated: false, via: 'setup' } : undefined;
+      const setupPromotes = !fromGuest && firstRun && flags.guestLessonEnabled && setupPromotesGuest({ guestLive: liveGuestId() !== null, profiles: useProfileStore.getState().profiles });
+      const guest: SubmitInput['guest'] = fromGuest
+        ? { gated, via: guestSaveEntry(), ...(consentWritten.current ? { consentGiven: true } : {}) }
+        : setupPromotes
+          ? { gated: false, via: 'setup' }
+          : undefined;
       const result = await submitProfile(
         { state, level, avatar, firstRun, ...(guest === undefined ? {} : { guest }) },
         {
           hashPin: (pin) => createPinHash(pin, pinHasher),
           acceptGuardianConsent,
           acceptSelfConsent,
-          setParentPinHash,
+          setParentPinHash: (hash) => {
+            // [GU] A PIN this form set is its own on a later Continue (a promotion that failed): not one set elsewhere.
+            if (fromGuest) ownPinHash.current = hash;
+            setParentPinHash(hash);
+          },
           setParentEmail: saveParentEmail,
           createProfile: guest === undefined ? createProfile : promoteLiveGuest,
           track: (event) => void track(event),
@@ -318,11 +343,33 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
       } else if (result.reason === 'pin-failed') {
         setPinError(c.pinFailed);
       } else if (result.reason === 'save-failed') {
+        // [GU] The consent was written before the promotion failed: a later Continue still reports it as new.
+        if (fromGuest && plan !== null && plan.consent !== null) consentWritten.current = true;
         setSaveError(messages.common.errors.generic);
       }
     } finally {
       setBusy(false);
     }
+  };
+
+  /**
+   * [GU] The recheck found another case (section 8.2): back to the save card (now `owner`, or the PIN asked is gone),
+   * the `SaveGuest` PIN first (a PIN set elsewhere, CS-G9), that profile's Home (saved in another tab), or a line.
+   */
+  const afterRecheck = async (check: Exclude<GuestSaveRecheck, 'go'>): Promise<void> => {
+    if (check === 'card' || check === 'pin') {
+      leaving.current = true;
+      if (check === 'card') navigation.goBack();
+      else reaskGuestSavePin(navigation as unknown as Parameters<typeof reaskGuestSavePin>[0]);
+      return;
+    }
+    const adopted = check === 'saved' && guestId !== null ? await adoptSavedGuest(guestId) : null;
+    if (adopted === null) {
+      setSaveError(messages.common.errors.generic);
+      return;
+    }
+    noteGuestSaved(adopted.id, holdsFirstQuestCard(adopted.id));
+    leaveGuestRunSaved(navigation);
   };
 
   const onContinue = (): void => {
