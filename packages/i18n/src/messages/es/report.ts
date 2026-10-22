@@ -126,7 +126,13 @@ export const report = {
     readyToRefresh: (count: number) =>
       plural('es', count, { one: '1 elemento está listo para repasar', other: `${count} elementos están listos para repasar` }),
     mastery: (done: number, practiced: number, mastered: number) =>
-      `Episodios: ${done} ${plural('es', done, { one: 'terminado', other: 'terminados' })}, ${practiced} ${plural('es', practiced, { one: 'practicado', other: 'practicados' })}, ${mastered} ${plural('es', mastered, { one: 'dominado', other: 'dominados' })}`,
+      `Episodios: ${[
+        done > 0 ? `${done} ${plural('es', done, { one: 'terminado', other: 'terminados' })}` : '',
+        practiced > 0 ? `${practiced} ${plural('es', practiced, { one: 'practicado', other: 'practicados' })}` : '',
+        mastered > 0 ? `${mastered} ${plural('es', mastered, { one: 'dominado', other: 'dominados' })}` : '',
+      ]
+        .filter(Boolean)
+        .join(', ')}`,
     stageChecks: (count: number) => `Repasos de etapa superados: ${count}`,
   },
   insight: {

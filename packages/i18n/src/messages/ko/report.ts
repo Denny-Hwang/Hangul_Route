@@ -113,7 +113,8 @@ export const report = {
     memory: '단어와 복습',
     wordsKnown: (count: number) => `아는 단어: ${count}개`,
     readyToRefresh: (count: number) => `복습할 때가 된 항목: ${count}개`,
-    mastery: (done: number, practiced: number, mastered: number) => `에피소드: 끝냄 ${done}개, 연습함 ${practiced}개, 익힘 ${mastered}개`,
+    mastery: (done: number, practiced: number, mastered: number) =>
+      `에피소드: ${[done > 0 ? `완료 ${done}개` : '', practiced > 0 ? `연습함 ${practiced}개` : '', mastered > 0 ? `익힘 ${mastered}개` : ''].filter(Boolean).join(', ')}`,
     stageChecks: (count: number) => `통과한 단계 확인: ${count}개`,
   },
   insight: {
@@ -245,10 +246,10 @@ export const report = {
     planRow: (assigned: number, started: number, finished: number) => `받은 학습자 ${assigned}, 시작 ${started}, 완료 ${finished}`,
     empty: '아직 학습자가 없어요.',
     afterUpdate: '학습자의 앱이 업데이트되면 보여요.',
-    memoryFrom: (count: number) => `이 숫자를 공유하는 앱을 쓰는 학습자 ${count}명의 합계예요.`,
-    wordsKnown: (count: number) => `아는 단어, 모두 더해서: ${count}개`,
-    readyToRefresh: (count: number) => `복습할 때가 된 항목, 모두 더해서: ${count}개`,
-    stageChecks: (count: number) => `통과한 단계 확인, 모두 더해서: ${count}개`,
+    memoryFrom: (count: number) => `이 숫자를 공유하는 학습자 ${count}명의 합계예요.`,
+    wordsKnown: (count: number) => `아는 단어 합계: ${count}개`,
+    readyToRefresh: (count: number) => `복습할 때가 된 항목 합계: ${count}개`,
+    stageChecks: (count: number) => `통과한 단계 확인 합계: ${count}개`,
   },
   print: {
     button: '인쇄 또는 PDF로 저장',

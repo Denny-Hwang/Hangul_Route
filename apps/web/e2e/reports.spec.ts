@@ -157,6 +157,21 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(page.getByTestId('report-detail')).not.toContainText(/Words and review|Words known|ready to refresh/);
   });
 
+  test('F-CURR-002 CM-16: the memory lines at 320 px and 150 % text; a level at 0 has no part; no items ready to refresh without the review surface', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    // Until row CM-20 derives levels 2 and 3, and while the learner has no review surface (the shadow period).
+    const shadow = { ...MEMORY, cellBestCounts: [5, 0, 0], reviewOn: undefined };
+    await mockReport(page, { kind: 'family', summary: { ...STEADY, memory: shadow } });
+    await page.goto(reportUrl('family'));
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = '150%';
+    });
+    await page.getByTestId('report-more-button').click();
+    const block = page.getByTestId('report-detail').locator('.hr-report-detail-block', { has: page.getByRole('heading', { level: 3, name: 'Words and review' }) });
+    await expect(block.getByRole('listitem')).toHaveText(['Words known: 42', 'Episodes: 5 done', 'Stage Checks passed: 1']);
+    await noSidewaysScroll(page);
+  });
+
   test('tabs: arrow keys move focus, Enter selects; the period is in the URL and focus stays on the selected tab', async ({ page }) => {
     const mock = await mockReport(page, { kind: 'family' });
     await page.goto(reportUrl('family'));
@@ -504,6 +519,19 @@ test.describe('the class report (RP-8)', () => {
     await page.goto(classUrl());
     await page.getByTestId('report-more-button').click();
     await expect(page.getByTestId('class-memory')).toHaveCount(0);
+  });
+
+  test('F-CURR-002 CM-16: the memory totals at 320 px and 150 % text, with a level at 0 left out', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await mockClass(page, { memory: { learners: 3, wordsKnown: 120, readyToRefresh: 14, levels: [9, 0, 0], stageChecks: 2 } });
+    await page.goto(classUrl());
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = '150%';
+    });
+    await page.getByTestId('report-more-button').click();
+    const block = page.getByTestId('class-memory');
+    await expect(block.getByRole('listitem')).toHaveText(['Words known, added together: 120', 'Items ready to refresh, added together: 14', 'Episodes: 9 done', 'Stage Checks passed, added together: 2']);
+    await noSidewaysScroll(page);
   });
 
   test('first screen at 390 x 844: the headline without scrolling; no learner name anywhere; generic title', async ({ page }) => {

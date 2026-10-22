@@ -111,7 +111,7 @@ export const EMPTY = {
 export type Kind = 'family' | 'class';
 
 /** F-CURR-002 CM-16: the memory block of a learner whose app records it. */
-export const MEMORY = { wordsKnown: 42, readyToRefresh: 6, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 30, topDue: ['lex:sagwa', 'lex:bae~pear'] };
+export const MEMORY = { wordsKnown: 42, readyToRefresh: 6, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 30, topDue: ['lex:sagwa', 'lex:bae~pear'], reviewOn: true };
 
 export interface ReportMock {
   kind?: Kind;

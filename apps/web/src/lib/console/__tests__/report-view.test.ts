@@ -958,7 +958,7 @@ describe('F-BROWSE-001 BR-11: P1 carries its quest as an All lessons target', ()
 });
 
 describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
-  const memory = { wordsKnown: 42, readyToRefresh: 1, cellBestCounts: [5, 2, 1] as [number, number, number], stageChecks: 1, weekPoints: 30, topDue: ['lex:sagwa'] };
+  const memory = { wordsKnown: 42, readyToRefresh: 1, cellBestCounts: [5, 2, 1] as [number, number, number], stageChecks: 1, weekPoints: 30, topDue: ['lex:sagwa'], reviewOn: true as const };
   type LinesBlock = Extract<NonNullable<LearnerReportView['moreDetail']>['blocks'][number], { kind: 'lines' }>;
   const memoryBlock = (v: LearnerReportView): LinesBlock | undefined =>
     v.moreDetail?.blocks.find((b): b is LinesBlock => b.kind === 'lines' && b.heading === 'Words and review');
@@ -985,9 +985,19 @@ describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
     expect(JSON.stringify(view(STEADY))).not.toMatch(/Words known|ready to refresh/);
   });
 
+  it('a level at 0 has no part: "Episodes: 5 done" until row CM-20 derives levels 2 and 3', () => {
+    expect(memoryBlock(view({ ...STEADY, memory: { ...memory, cellBestCounts: [5, 0, 0] } }))?.lines).toContain('Episodes: 5 done');
+    expect(memoryBlock(view({ ...STEADY, memory: { ...memory, cellBestCounts: [5, 0, 1] } }))?.lines).toContain('Episodes: 5 done, 1 mastered');
+  });
+
+  it('no items ready to refresh while the learner has no review surface (the memoryRecord shadow period)', () => {
+    const shadow = { ...memory, reviewOn: undefined, readyToRefresh: 300 };
+    expect(memoryBlock(view({ ...STEADY, memory: shadow }))?.lines).toEqual(['Words known: 42', 'Episodes: 5 done, 2 practiced, 1 mastered', 'Stage Checks passed: 1']);
+  });
+
   it('memoryLinesOf reads in Spanish and Korean', () => {
     const levels = { wordsKnown: 3, readyToRefresh: 2, levels: [1, 0, 0] as [number, number, number], stageChecks: 0 };
-    expect(memoryLinesOf(levels, getMessages('es'))).toEqual(['Palabras conocidas: 3', '2 elementos están listos para repasar', 'Episodios: 1 terminado, 0 practicados, 0 dominados']);
-    expect(memoryLinesOf(levels, getMessages('ko'))).toEqual(['아는 단어: 3개', '복습할 때가 된 항목: 2개', '에피소드: 끝냄 1개, 연습함 0개, 익힘 0개']);
+    expect(memoryLinesOf(levels, getMessages('es'))).toEqual(['Palabras conocidas: 3', '2 elementos están listos para repasar', 'Episodios: 1 terminado']);
+    expect(memoryLinesOf(levels, getMessages('ko'))).toEqual(['아는 단어: 3개', '복습할 때가 된 항목: 2개', '에피소드: 완료 1개']);
   });
 });

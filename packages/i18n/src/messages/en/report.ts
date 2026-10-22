@@ -175,8 +175,12 @@ export const report = {
     memory: 'Words and review',
     wordsKnown: (count: number) => `Words known: ${count}`,
     readyToRefresh: (count: number) => plural('en', count, { one: '1 item is ready to refresh', other: `${count} items are ready to refresh` }),
-    /** Episodes at mastery level 1, 2 and 3 (`cellBestCounts`); the level words are the mastery ring's. */
-    mastery: (done: number, practiced: number, mastered: number) => `Episodes: ${done} done, ${practiced} practiced, ${mastered} mastered`,
+    /**
+     * Episodes at mastery level 1, 2 and 3 (`cellBestCounts`); the level words are the mastery ring's. A level at 0 has
+     * no part ("Episodes: 5 done" while row CM-20 has not derived levels 2 and 3), so no zero reads as a result.
+     */
+    mastery: (done: number, practiced: number, mastered: number) =>
+      `Episodes: ${[done > 0 ? `${done} done` : '', practiced > 0 ? `${practiced} practiced` : '', mastered > 0 ? `${mastered} mastered` : ''].filter(Boolean).join(', ')}`,
     stageChecks: (count: number) => `Stage Checks passed: ${count}`,
   },
   /**

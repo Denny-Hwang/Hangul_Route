@@ -331,6 +331,8 @@ describe('the memory totals (F-CURR-002 CM-16)', () => {
   it('a total of 0 has no line; all zero, or no block, draws no memory block (never a zero as a result)', () => {
     const v = view({ data: body({ ...REPORT, memory: { ...memory, readyToRefresh: 0, stageChecks: 0, levels: [0, 0, 0] } }) });
     expect(v.moreDetail?.memory?.lines).toEqual(['Words known, added together: 120']);
+    // A level at 0 has no part (levels 2 and 3 read 0 until row CM-20).
+    expect(view({ data: body({ ...REPORT, memory: { ...memory, levels: [9, 0, 0] } }) }).moreDetail?.memory?.lines).toContain('Episodes: 9 done');
     const zero = { learners: 1, wordsKnown: 0, readyToRefresh: 0, levels: [0, 0, 0] as [number, number, number], stageChecks: 0 };
     expect(view({ data: body({ ...REPORT, memory: zero }) }).moreDetail?.memory).toBeNull();
     expect(view({ data: body({ ...REPORT, memory: { ...memory, learners: 0 } }) }).moreDetail?.memory).toBeNull();
@@ -347,6 +349,8 @@ describe('the memory totals (F-CURR-002 CM-16)', () => {
     expect(es?.heading).toBe('Palabras y repaso');
     expect(es?.lines[2]).toBe('Episodios: 9 terminados, 3 practicados, 1 dominado');
     const ko = view({ data: body({ ...REPORT, memory }), locale: 'ko' }).moreDetail?.memory;
-    expect(ko?.lines[0]).toBe('아는 단어, 모두 더해서: 120개');
+    expect(ko?.lines[0]).toBe('아는 단어 합계: 120개');
+    expect(ko?.lines[2]).toBe('에피소드: 완료 9개, 연습함 3개, 익힘 1개');
+    expect(ko?.from).toBe('이 숫자를 공유하는 학습자 3명의 합계예요.');
   });
 });

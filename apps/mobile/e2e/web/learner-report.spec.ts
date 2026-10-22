@@ -91,12 +91,12 @@ async function expectPracticed(page: Page, day: string): Promise<void> {
  * F-CURR-002 row CM-16: a family device whose learner records (`memoryRecord` on, the stored remote copy) with one
  * answered word due today in the memory store; ends on the report's More detail, open.
  */
-async function memoryReport(page: Page, record: boolean): Promise<void> {
+async function memoryReport(page: Page, record: boolean, review = true): Promise<void> {
   await onboardChild(page, { name: 'Mina' });
   const id = await profileIdOf(page, 'Mina');
   const today = await localToday(page);
   const yesterday = await localToday(page, 1);
-  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { memoryRecord: { on: record, pct: 100 } } });
+  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { memoryRecord: { on: record, pct: 100 }, dailyReview: { on: review, pct: 100 } } });
   await seedStored(page, `memory:${id}`, {
     v: 1,
     rows: { 'lex:jeotgarak': { sh: 'stage2', st: { b: 2, d: today, c: 1, r: 3, n: 2, f: yesterday, s: 2, at: new Date().toISOString() } } },
@@ -130,6 +130,15 @@ test.describe('F-CURR-002 CM-16: the memory counts in the in-app report', () => 
     await shot(page, 'learner-report-memory-320');
     await page.setViewportSize({ width: 1280, height: 900 });
     await shot(page, 'learner-report-memory-wide');
+  });
+
+  test('memoryRecord on without the review surface (the shadow period): words known, no items ready to refresh', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await memoryReport(page, true, false);
+    const block = page.getByTestId('learner-report-detail-memory');
+    await expect(block).toContainText(r.detail.wordsKnown(1));
+    await expect(block).not.toContainText(/ready to refresh/);
+    await expectNoHorizontalOverflow(page, 'memory block at 320, shadow period');
   });
 
   test('memoryRecord off: no block, never a zero', async ({ page }) => {
