@@ -501,13 +501,22 @@ export const landing = {
           heading: 'What we collect',
           bullets: {
             /**
-             * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level. Its usage events
-             * (apps/mobile/src/logic/placement/events.ts): `placement.start` (test language, mode, profile level),
-             * `placement.item_answered` (question id, outcome, sound guide, `noSound`, time), `placement.complete`
-             * (suggested level, questions asked, stop reason), `placement.skipped` and `placement.override_applied`.
+             * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level. Two things leave
+             * the device, and this bullet names every field of both:
+             * - Usage events (apps/mobile/src/logic/placement/events.ts): `placement.start` (source, testLocale,
+             *   length and mode, revealMode, level), `placement.item_answered` (itemId, gate, outcome, assisted, ms,
+             *   noSound), `placement.complete` (stopReason, asked, stage and band, oralStage, beyondContent,
+             *   strandsSecure, mode), `placement.skipped` (source) and `placement.override_applied`.
+             * - The result (`PlacementResultSchema`, packages/content-schema/src/schemas/placement.ts), kept in
+             *   `ProgressSnapshot.placements` (newest `PLACEMENT_KEEP` = 10) and backed up with the snapshot: id,
+             *   responses (questionId, outcome, chosenOptionId, assisted, ms, noSound), gates, strands, level, oralStage,
+             *   beyondContent, startQuestId, placedOutQuestIds, priorityTokens, needsStage, startedAt, completedAt,
+             *   source, testLocale, length, mode, revealMode, bankVersion, contentVer, catalogVersion, motivation,
+             *   stopReason and override; plus `ProgressSummary.placement` (takenAt, level, oralStage, strands,
+             *   beyondContent, overridden) from the newest result.
              */
             profile: ({ levels }: LegalValues) =>
-              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, it sends us usage events. They include, when it starts, the language and kind of check and the learner's starting level; for each answer, which question it was, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took; and when it ends, the level it suggests, how many questions were asked and why it stopped. We also note when the check is skipped or a grown-up picks a different start. A real name is optional and only stored if a parent enters it.`,
+              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it. If the learner takes the level check, it sends us usage events. When it starts: where it was started, its language and length, whether the sound guide shows by itself or after a tap, and the learner's starting level. For each answer: which question it was and which part of the check it belongs to, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took. When it ends: the level it suggests for reading and for listening, whether the learner reached the highest level the check measures, how many of the five skills it checks are secure, its length, how many questions were asked and why it stopped. We also note when the check is skipped or a grown-up picks a different start. The finished result is saved with the learner's progress and backed up to our servers with it; the app keeps the 10 most recent. Each result has an id and holds every answer (which question, which choice was picked, recorded by its id and not its words, whether it was right, wrong or not sure, whether the sound guide was used, whether the sound could play, and how long it took); how the learner did in each part of the check and in each of the five skills; the suggested levels, the first lesson, the lessons the learner can skip, up to three letters or skills to practice first, and whether the suggested level is outside the learner's plan; when the check started and ended, where it was started, its language, length and settings, and which version of the questions it used; why the learner is learning Korean, if they picked a reason; why it stopped; and, if a grown-up picked a different start, that start and when. A short summary of the newest result (when it was taken, the suggested levels, the five skills, whether the learner reached the highest level and whether a grown-up changed the start) is saved with the learner's progress reports.`,
             progress:
               "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
             /**
@@ -535,8 +544,12 @@ export const landing = {
              */
             schoolAdmins:
               "A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights. Administrators see what the owner sees about the school's classes and students, except billing: they can open class rosters and reports, move students between the school's classes, remove students from a class, and approve a student's request to link a new device. To accept, an administrator needs an account with a verified email. The owner sees who is an administrator, with the email they sign in with, when they joined or left, and who renamed the school or one of its classes. We keep this history for 400 days.",
-            /** SN-2: parents, teachers and school administrators all sign in with an email (F-APP-001). */
-            contact: 'Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in, receipts, and account recovery.',
+            /**
+             * SN-2: parents, teachers and school administrators all sign in with an email (F-APP-001). Receipts go only to
+             * the payer: an administrator gets 403 on checkout, portal and receipts (packages/backend space-seats.test.ts).
+             */
+            contact:
+              'Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in and account recovery. The email of the grown-up who buys a plan is also used for that plan\'s receipts. School administrators cannot buy or manage a plan, so their email is never used for receipts.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },
         },
