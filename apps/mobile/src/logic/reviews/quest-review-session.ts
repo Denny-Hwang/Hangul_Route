@@ -52,7 +52,7 @@ export interface QuestReviewPlan {
   rounds: PickRound[];
   /** No device voice: recognize was asked at read, and the sound notice shows (F-AUDIO-004). */
   soundNotice: boolean;
-  /** The context the plan was built on, for the credit inside sentences when the answers are recorded. */
+  /** The context the plan was built on (its local day names the session's `reviews[]` entry). */
   ctx: EngineContext;
 }
 

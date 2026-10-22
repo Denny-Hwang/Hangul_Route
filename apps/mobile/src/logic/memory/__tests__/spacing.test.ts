@@ -125,6 +125,29 @@ describe('the box rules with the spacing rule', () => {
     expect(applyAnswer(state({ b: 3, s: 3 }), {}, right, today, AT).newHeld).toBe(false);
   });
 
+  it('a seeded item’s first check moves its schedule but is not measured: no lag, not durable, not a lapse, not newly held', () => {
+    // Seeded at box 2 from a quest of 1 September, due today: n = 0, no facts on this device.
+    const seededState = state({ b: 2, s: 2, d: today, c: 0, r: 0, n: 0, f: '2026-09-01' });
+    const first = applyAnswer(seededState, {}, right, today, AT);
+    expect(first).toMatchObject({ seeded: true, spaced: true, lagDays: null, durable: false, newHeld: false, lapse: false });
+    expect(first.state).toMatchObject({ b: 3, d: addDays(today, 7), n: 1, s: 3 });
+    expect(first.facts).toMatchObject({ l: today, p: today });
+    expect(first.facts.w).toBeUndefined();
+    const miss = applyAnswer(seededState, {}, wrong, today, AT);
+    expect(miss).toMatchObject({ seeded: true, spaced: true, lagDays: null, lapse: false, fell: true });
+    // Its next spaced answer is measured from that first check.
+    const next = applyAnswer(first.state, first.facts, right, addDays(today, 7), AT);
+    expect(next).toMatchObject({ seeded: false, lagDays: 7, durable: true });
+  });
+
+  it('an item answered on another device (no previous spaced day here) is measured from the day its schedule last moved', () => {
+    // Raised to box 3 on another device on 15 October (due 7 days later): lag 7, not 21 from its first day.
+    const elsewhere = state({ b: 3, s: 3, d: today, f: '2026-10-01' });
+    expect(applyAnswer(elsewhere, {}, right, today, AT)).toMatchObject({ lagDays: 7, durable: true });
+    // Never before the first day.
+    expect(applyAnswer(state({ b: 4, s: 4, d: today, f: '2026-10-20' }), {}, right, today, AT).lagDays).toBe(2);
+  });
+
   it('lag buckets follow section 11.3', () => {
     expect([0, 1, 2, 3, 4, 7, 8, 14, 15, 30, 31, 400].map(lagBucket)).toEqual(['0-1', '0-1', '2-3', '2-3', '4-7', '4-7', '8-14', '8-14', '15-30', '15-30', '31+', '31+']);
   });

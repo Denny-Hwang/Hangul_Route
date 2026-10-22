@@ -19,7 +19,6 @@ import { QuestReviewSession, TryAgainOffer } from '../quest-review-chunk';
 const calls = vi.hoisted(() => ({ recorded: [] as Array<{ profileId: string; answers: unknown[] }>, events: [] as Array<{ name: string; payload?: unknown }>, played: [] as string[] }));
 vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  questReviewPlanner: async () => ({ credited: (_plan: unknown, answers: unknown[]) => answers }),
   recordAnswers: async (profileId: string, answers: unknown[]) => {
     calls.recorded.push({ profileId, answers });
   },

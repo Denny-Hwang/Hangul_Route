@@ -82,6 +82,12 @@ export interface SourceVisibility {
   topicPacks: boolean;
   /** `pack.<key>`: one pack; every pack is shown when absent. */
   pack?: (key: string) => boolean;
+  /**
+   * The volume of a cell whose id does not carry it: a Stage 5 book 2 story (row CM-46) is Volume 2
+   * content, so it hides with `volumes` off. Absent, or undefined for a cell, reads the `-v<k>`
+   * suffix (none is Volume 1); every story shipped today is book 1.
+   */
+  cellVolume?: (cell: string) => number | undefined;
 }
 
 export const ALL_VISIBLE: SourceVisibility = { volumes: true, topicPacks: true };
@@ -131,6 +137,12 @@ export interface ReviewSession {
   endsEarly: boolean;
   /** The visible F-AUDIO-004 sound notice: some question fell back from a heard round. */
   soundNotice: boolean;
+  /**
+   * Daily Review only: the day's 20 due items (section 4.8 step 3) are drawn and due items remain, so
+   * the surface offers Keep going (`canKeepGoing`) instead. A capped Daily Review with no questions
+   * is never played, and is not "All refreshed today".
+   */
+  capped: boolean;
 }
 
 // ---- determinism -----------------------------------------------------------------------------------------
@@ -151,15 +163,15 @@ export function jitter(seed: string, id: string): number {
 const PACK_CELL = /^episode:pack-([a-z0-9]+(?:-[a-z0-9]+)*)-s[1-7](?:-v\d+)?$/;
 const VOLUME_CELL = /-v(\d+)$/;
 
-/** Whether the learner can see a cell that teaches or asks an item. A story is always shown. */
+/** Whether the learner can see a cell that teaches or asks an item. A book 1 story is always shown. */
 export function cellVisible(cell: string, vis: SourceVisibility): boolean {
   const pack = PACK_CELL.exec(cell);
   if (pack) {
     if (!vis.topicPacks) return false;
     if (vis.pack && !vis.pack(pack[1] as string)) return false;
   }
-  const volume = VOLUME_CELL.exec(cell);
-  if (volume && Number(volume[1]) >= 2 && !vis.volumes) return false;
+  const volume = vis.cellVolume?.(cell) ?? Number(VOLUME_CELL.exec(cell)?.[1] ?? 1);
+  if (volume >= 2 && !vis.volumes) return false;
   return true;
 }
 
@@ -222,7 +234,8 @@ function optionsFor(item: ReviewItem, wanted: Rung, voice: boolean, seed: string
   };
   const heardWanted = wanted === 'recognize' && !voice;
   const rung: Rung = heardWanted ? 'read' : wanted;
-  add(rung, heardWanted);
+  // The sound notice shows only for an item that would have had a heard round with a device voice.
+  add(rung, heardWanted && formatsAt(item, 'recognize', true, seed).length > 0);
   if (out.length === 0 && rung !== 'read') add('read', rung === 'recognize' && !voice);
   if (alternate && voice) add(rung === 'recognize' ? 'read' : 'recognize', false);
   return out;
@@ -283,7 +296,8 @@ function stretchEntries(ctx: EngineContext, exclude: ReadonlySet<string>): { ite
 }
 
 function candidate(ctx: EngineContext, item: ReviewItem, st: MemoryItemState, stretch: boolean, wanted?: Rung): Candidate {
-  const ladder = wanted ?? (stretch ? rungOfC(st.c) : rungToAsk(st));
+  // A stretch item's next rung is `c` at box 3 and up; one that fell back to box 1-2 keeps the recognize-or-read rule.
+  const ladder = wanted ?? rungToAsk(st);
   const rung = ctx.maxRung !== undefined && RUNG_INDEX[ladder] > RUNG_INDEX[ctx.maxRung] ? ctx.maxRung : ladder;
   const options = optionsFor(item, rung, ctx.voice, ctx.seed ?? '', wanted === undefined && !stretch && st.b < 3);
   return { item, st, options, stretch };
@@ -338,8 +352,8 @@ function compose(tiers: readonly { cands: readonly Candidate[]; max?: number }[]
 
 const oneTheme = (cands: readonly Candidate[]): boolean => new Set(cands.map((c) => c.item.home)).size <= 1;
 
-function session(kind: ReviewSessionKind, questions: ReviewQuestion[], endsEarly: boolean): ReviewSession {
-  return { kind, questions, endsEarly, soundNotice: questions.some((q) => q.voiceFallback) };
+function session(kind: ReviewSessionKind, questions: ReviewQuestion[], endsEarly: boolean, capped = false): ReviewSession {
+  return { kind, questions, endsEarly, soundNotice: questions.some((q) => q.voiceFallback), capped };
 }
 
 // ---- the sessions (section 4.5) ---------------------------------------------------------------------------
@@ -356,15 +370,17 @@ export const NO_REVIEWS_TODAY: DayReviewLog = { dailyDueDrawn: 0, keepGoingRound
 /**
  * Daily Review: 10 items, the due pool in selection order, at most 20 due items a day before Keep
  * going. Stretch items fill only the slots the pool cannot, and none when the day's cap is what
- * stops it (Keep going is then offered). It ends early when there is nothing to ask.
+ * stops it (`capped`: Keep going is then offered). It ends early when there is nothing to ask.
  */
 export function buildDailyReview(ctx: EngineContext, log: DayReviewLog = NO_REVIEWS_TODAY, exclude: ReadonlySet<string> = new Set()): ReviewSession {
   const due = dueEntries(ctx, exclude).map((e) => candidate(ctx, e.item, e.st, false));
   const dueSlots = Math.max(0, Math.min(DAILY_REVIEW_SIZE, DAILY_REVIEW_DUE_CAP - log.dailyDueDrawn));
-  // The day's cap stops the draw while due items remain: Keep going is offered, and no stretch item fills in.
-  const capped = due.length > dueSlots;
+  // The pool fills every slot it is allowed, and no stretch item fills in.
+  const full = due.length > dueSlots;
+  // The day's cap, not the session size, stops the draw while due items remain: Keep going is offered.
+  const capped = dueSlots < DAILY_REVIEW_SIZE && due.length > dueSlots;
   const dueIds = new Set(due.map((c) => c.item.id));
-  const stretch = capped ? [] : stretchEntries(ctx, new Set([...exclude, ...dueIds])).map((e) => candidate(ctx, e.item, e.st, true));
+  const stretch = full ? [] : stretchEntries(ctx, new Set([...exclude, ...dueIds])).map((e) => candidate(ctx, e.item, e.st, true));
   const questions = compose(
     [
       { cands: due, max: dueSlots },
@@ -373,7 +389,7 @@ export function buildDailyReview(ctx: EngineContext, log: DayReviewLog = NO_REVI
     DAILY_REVIEW_SIZE,
     !oneTheme([...due, ...stretch]),
   );
-  return session('daily', questions, !capped && questions.length < DAILY_REVIEW_SIZE);
+  return session('daily', questions, !full && questions.length < DAILY_REVIEW_SIZE, capped);
 }
 
 /** Whether to offer Keep going at the end of a review: due items remain and fewer than 3 rounds were taken today. */
@@ -390,14 +406,26 @@ export function buildKeepGoing(ctx: EngineContext, log: DayReviewLog, exclude: R
   return session('keep-going', questions, questions.length < KEEP_GOING_SIZE);
 }
 
+export interface WarmupQuest {
+  cell: string;
+  stage: number;
+  /**
+   * Whether a cell comes before the quest's cell in route order (the quest player knows the route).
+   * Absent, a cell is earlier when its stage is at most the quest's stage.
+   */
+  earlier?: (cell: string) => boolean;
+}
+
 /**
- * The warm-up before a Stage 2+ quest: up to 3 due items from earlier cells (not taught or asked
- * again by the quest's own cell, which asks them anyway). Empty, so skipped, when none are due.
+ * The warm-up before a Stage 2+ quest: up to 3 due items from earlier cells: taught by a cell before
+ * the quest's (so a replay of an early quest never asks a later stage's items), and not taught or
+ * asked again by the quest's own cell, which asks them anyway. Empty, so skipped, when none are due.
  */
-export function buildWarmup(ctx: EngineContext, quest: { cell: string; stage: number }, size: number = WARMUP_SIZE): ReviewSession {
+export function buildWarmup(ctx: EngineContext, quest: WarmupQuest, size: number = WARMUP_SIZE): ReviewSession {
   if (quest.stage < 2 || size <= 0) return session('warmup', [], true);
+  const fromEarlier = (item: ReviewItem): boolean => (quest.earlier ? item.cells.some((c) => c !== quest.cell && quest.earlier?.(c) === true) : item.stage <= quest.stage);
   const due = dueEntries(ctx, new Set())
-    .filter((e) => !e.item.cells.includes(quest.cell) && !e.item.asked.includes(quest.cell))
+    .filter((e) => !e.item.cells.includes(quest.cell) && !e.item.asked.includes(quest.cell) && fromEarlier(e.item))
     .map((e) => candidate(ctx, e.item, e.st, false));
   const questions = compose([{ cands: due }], size, !oneTheme(due));
   return session('warmup', questions, questions.length < size);
@@ -465,6 +493,25 @@ export function buildCheck(ctx: EngineContext, req: CheckRequest): ReviewSession
 
 /** Particles and copula endings a taught word may carry inside a sentence, longest first. */
 const ENDINGS = ['이에요', '입니다', '에서', '에게', '한테', '까지', '부터', '이랑', '하고', '으로', '예요', '이야', '은', '는', '이', '가', '을', '를', '도', '에', '의', '와', '과', '랑', '로', '만', '야'];
+/** Endings that follow a vowel only (가, not 이), and those that follow a final consonant only. 로 also follows ㄹ; 으로 never does. */
+const AFTER_VOWEL = new Set(['예요', '가', '는', '를', '와', '랑', '야', '로']);
+const AFTER_FINAL = new Set(['이에요', '이랑', '으로', '이야', '은', '이', '을', '과']);
+const FINAL_RIEUL = 8;
+
+/**
+ * Whether an ending fits the word it follows, by the word's last block: 가 after a vowel, 이 after a
+ * final consonant. So a compound such as 물가 is never read as 물 with 가.
+ */
+function endingFits(word: string, ending: string): boolean {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  if (code < 0 || code > 0xd7a3 - 0xac00) return false;
+  const final = code % 28;
+  if (ending === '로') return final === 0 || final === FINAL_RIEUL;
+  if (ending === '으로') return final !== 0 && final !== FINAL_RIEUL;
+  if (AFTER_VOWEL.has(ending)) return final === 0;
+  if (AFTER_FINAL.has(ending)) return final !== 0;
+  return true;
+}
 const SLOT = /^_+$/;
 
 const wordsCache = new WeakMap<object, Map<string, string[]>>();
@@ -492,7 +539,7 @@ const tokensOf = (ko: string): string[] =>
 
 /**
  * The taught words inside a sentence, frame or exchange (its line and its reply): a run of up to three
- * words that is a word item, or is one with a particle or copula ending on its last word. A spelling
+ * words that is a word item, or is one with a particle or copula ending that fits it on its last word. A spelling
  * shared by several word items (a homograph) names none, as the sentence cannot tell which.
  */
 export function wordsInside(item: Pick<ReviewItem, 'kind' | 'ko' | 'reply'>, index: EngineContext['index']): string[] {
@@ -511,7 +558,9 @@ export function wordsInside(item: Pick<ReviewItem, 'kind' | 'ko' | 'reply'>, ind
         if (ids === undefined) {
           for (const ending of ENDINGS) {
             if (phrase.length > ending.length && phrase.endsWith(ending)) {
-              ids = byKo.get(phrase.slice(0, -ending.length));
+              const word = phrase.slice(0, -ending.length);
+              if (!endingFits(word, ending)) continue;
+              ids = byKo.get(word);
               if (ids !== undefined) break;
             }
           }
@@ -529,6 +578,10 @@ export function wordsInside(item: Pick<ReviewItem, 'kind' | 'ko' | 'reply'>, ind
  * read-rung answer for each taught word inside it that is due today and not answered today. Each
  * credit follows the answer that earned it and goes through the spacing rule like any answer, so
  * it raises a word at most once a day. A word the session asks itself is not credited.
+ *
+ * The memory store applies it to every batch it records (`recordAnswers`, and so the quest rounds,
+ * story check rounds, warm-ups, reviews and Checks alike). Applying it again to a batch that already
+ * carries its credits adds nothing, because a credited word is then asked in the batch.
  */
 export function withSentenceCredit(ctx: EngineContext, answers: readonly MemoryAnswer[], enabled: boolean = CREDIT_INSIDE_SENTENCES): MemoryAnswer[] {
   if (!enabled) return [...answers];

@@ -113,12 +113,12 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       return round ? { texts: texts(text(round.sentence, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
     }
     case 'realia-read': {
+      // The round asks the card (one `rea` item, read rung, section 4.3), not its key word or options.
       const realia = scope.realiaRead;
       const round = realia?.rounds.find((r) => r.id === itemId);
       if (!realia || !round) return undefined;
-      const answer = round.options.find((o) => o.id === round.answerId);
       const shown = realia.realia.title ?? realia.realia.entries[0]?.text;
-      return { texts: texts(text(shown, 'rea'), text(round.key), text(answer?.text)), jamoIds: [], rung: 'read' };
+      return { texts: texts(text(shown, 'rea')), jamoIds: [], rung: 'read' };
     }
     case 'type-hangul': {
       const round = scope.typeHangul?.rounds.find((r) => r.id === itemId);
@@ -133,12 +133,15 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
   }
 }
 
-/** What a story check asked: its Korean target and a Korean right answer, as reading; nothing for a check with no Korean. */
+/**
+ * What a story check asked, as reading: its Korean target, one item; a check with no Korean target
+ * asks its Korean right answer instead; nothing for a check with no Korean. One answer grades one
+ * item, so a miss never lowers a word the learner was not asked to recall.
+ */
 export function askedOfCheck(view: CheckView | undefined): ResolvedRound | undefined {
   if (!view) return undefined;
-  const right = view.options.find((o) => o.id === view.correctOptionId);
-  const asked = texts(text(view.target), text(right));
-  return asked.length > 0 ? { texts: asked, jamoIds: [], rung: 'read' } : undefined;
+  const asked = text(view.target) ?? text(view.options.find((o) => o.id === view.correctOptionId));
+  return asked !== undefined ? { texts: [asked], jamoIds: [], rung: 'read' } : undefined;
 }
 
 /** What a reader checkpoint (`cp:<id>`) asked, read from its story tier like a check. */

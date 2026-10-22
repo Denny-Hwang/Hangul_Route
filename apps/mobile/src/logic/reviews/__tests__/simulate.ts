@@ -143,11 +143,11 @@ export class Sim {
     return { itemId, rung, correct: right, ...(hinted ? { hinted: true } : {}) };
   }
 
-  /** Records answers as the memory store does (`recordAnswers`). */
+  /** Records answers as the memory store does (`recordAnswers`), the credit inside sentences included. */
   record(answers: readonly MemoryAnswer[]): void {
     const day = this.today;
     const at = `${day}T12:00:00.000Z`;
-    for (const a of answers) {
+    for (const a of withSentenceCredit(this.ctx(), answers, this.knobs.credit)) {
       const item = INDEX.byId.get(a.itemId);
       if (!item || INDEX.retired.has(item.id)) continue;
       const row = this.rows[item.id];
@@ -160,12 +160,10 @@ export class Sim {
     }
   }
 
-  /** Plays a review session: every question answered by the learner, the credit inside sentences added. */
+  /** Plays a review session: every question answered by the learner. Returns the due items it drew. */
   play(session: ReviewSession | null): number {
     if (session === null) return 0;
-    const ctx = this.ctx();
-    const answers = session.questions.map((q) => this.answerOf(q.itemId, q.rung));
-    this.record(withSentenceCredit(ctx, answers, this.knobs.credit));
+    this.record(session.questions.map((q) => this.answerOf(q.itemId, q.rung)));
     return session.questions.filter((q) => !q.stretch).length;
   }
 
@@ -180,9 +178,16 @@ export class Sim {
     return true;
   }
 
-  dailyReview(): void {
+  /** Plays one Daily Review; returns the due items it drew. */
+  dailyReview(): number {
     const drawn = this.play(buildDailyReview(this.ctx(), this.log));
     this.log = { ...this.log, dailyDueDrawn: this.log.dailyDueDrawn + drawn };
+    return drawn;
+  }
+
+  /** What today's reviews have drawn so far. */
+  dayLog(): DayReviewLog {
+    return this.log;
   }
 
   keepGoing(): boolean {

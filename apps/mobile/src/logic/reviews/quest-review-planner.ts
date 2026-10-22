@@ -9,10 +9,9 @@ import { canPlayKorean } from '../audio/capability';
 import { CONTENT_OVERLAYS } from '../content-locale';
 import type { RoundAsked } from '../memory/asked';
 import type { MemoryRow } from '../memory/memory-file';
-import type { MemoryAnswer } from '../memory/memory-runtime';
 import { buildLookup, cellOfEpisode } from '../memory/resolve';
 import { localDay, vocabOf } from '../vocab/progress';
-import { buildTryAgain, buildWarmup, engineStates, withSentenceCredit, type EngineContext } from './engine';
+import { buildTryAgain, buildWarmup, engineStates, type EngineContext } from './engine';
 import { stageNumber } from './quest-review-gate';
 import type { QuestReviewPlan } from './quest-review-session';
 import { QUICK_MAX_RUNG, missedItemIds, planTryAgain, planWarmup, type GlossOf } from './quest-reviews';
@@ -94,9 +93,4 @@ export async function planQuestTryAgain(read: ReviewInputs, input: TryAgainReque
   await glossesIn(ctx, buildTryAgain({ ...ctx, maxRung: QUICK_MAX_RUNG }, missed).questions.map((q) => q.itemId));
   const plan = planTryAgain(ctx, missed, glossFor(input.locale));
   return plan.rounds.length > 0 ? plan : null;
-}
-
-/** A session's answers with the credit inside sentences (section 4.3), as the memory store records them. */
-export function creditedAnswers(plan: QuestReviewPlan, answers: readonly MemoryAnswer[]): MemoryAnswer[] {
-  return withSentenceCredit(plan.ctx, answers);
 }

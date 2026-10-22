@@ -126,8 +126,8 @@ export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessi
       recorded.current = true;
       const { answers, retries } = played.current;
       const at = new Date();
-      // The credit inside sentences is the engine's, in the memory store's chunk (loaded already: it planned this session).
-      void questReviewPlanner(profileId).then((planner) => recordAnswers(profileId, planner ? planner.credited(plan, answers) : answers, at));
+      // The memory store adds the credit inside sentences to every batch it records (section 4.3).
+      void recordAnswers(profileId, answers, at);
       if (!complete) return;
       const entry = sessionEntry(plan.kind, plan.ctx.today, answers, at);
       if (entry) useProgressStore.getState().recordReview(profileId, entry);

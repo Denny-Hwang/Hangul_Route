@@ -16,7 +16,7 @@ export const INDEX: ReviewItemIndex = { items: ITEMS, byId: new Map(ITEMS.map((i
 
 export const LESSON_QUESTS = CATALOG.quests.filter((q) => q.kind === 'lesson');
 
-/** The local day of an instant under the suite's TZ=UTC. */
+/** The local day of an instant in UTC: the tests inject the local day, so none depends on the machine's time zone. */
 export const utcDay = (d: Date): string => d.toISOString().slice(0, 10);
 
 /** A placement result whose route puts ㅂ and final ㄴ first. */

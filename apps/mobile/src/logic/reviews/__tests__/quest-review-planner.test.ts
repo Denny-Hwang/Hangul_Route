@@ -6,7 +6,7 @@ import { useAudioStore } from '../../../store/audio-store';
 import { resetRemoteConfigForTests } from '../../../store/remote-config-store';
 import type { MemoryRow } from '../../memory/memory-file';
 import { localDay } from '../../vocab/progress';
-import { creditedAnswers, glossFor, planQuestTryAgain, planQuestWarmup, type ReviewInputs } from '../quest-review-planner';
+import { glossFor, planQuestTryAgain, planQuestWarmup, type ReviewInputs } from '../quest-review-planner';
 import type { ReviewItemIndex } from '../review-items-store';
 
 vi.mock('../../../platform/storage', () => ({
@@ -96,12 +96,5 @@ describe('planning from the store', () => {
     const again = await planQuestTryAgain(read(met), { profileId: 'profile:a', episodeId: stage3.id, locale: 'en', missed: [{ texts: ['cha'] }, { texts: ['none'] }] });
     expect(again?.rounds.map((r) => r.itemId)).toEqual(['lex:cha']);
     expect(await planQuestTryAgain(read(met), { profileId: 'profile:a', episodeId: stage3.id, locale: 'en', missed: [] })).toBeNull();
-  });
-
-  it('the answers are recorded with the credit inside sentences of the engine', async () => {
-    const due = Object.fromEntries(words.map((w) => [w.id, row()]));
-    const warm = await planQuestWarmup(read(due), { profileId: 'profile:a', episodeId: stage3.id, locale: 'en' });
-    const answers = [{ itemId: 'lex:mul', correct: true, rung: 'read' as const }];
-    expect(creditedAnswers(warm!, answers)).toEqual(answers);
   });
 });
