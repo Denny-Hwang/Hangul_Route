@@ -19,6 +19,7 @@ import {
   type LearnerReportState,
   type PlacementStrand,
   type ReportCalendarKind,
+  type ReportMemory,
   type ReportPeriod,
   type ReportSummary,
   type ReportVoice,
@@ -738,6 +739,10 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
   letters(d.lettersStrong(w.name), detail.lettersStrong, detail.lettersStrongMore);
   letters(d.lettersPractising, detail.lettersPractising);
   letters(d.lettersNew, detail.lettersNew ?? []);
+  // F-CURR-002 CM-16: words known, ready to refresh, episodes per mastery level, Stage Checks; only when the summary
+  // carries the block, each line only above 0 (never "0 words known").
+  const memory = detail.memory ? memoryLinesOf(detail.memory, m) : [];
+  if (memory.length) blocks.push({ kind: 'lines', heading: d.memory, lines: memory });
   // The Milestones `h3` shows only over a milestone (every one on All time); the totals never sit under it.
   if (detail.milestones.length) {
     blocks.push({ kind: 'lines', heading: d.milestones, lines: detail.milestones.map((row) => d.milestone(row.n, w.stageTitle(row.stage), dayText(row.on, w))) });
@@ -768,6 +773,22 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
     });
   }
   return { button: m.report.section.moreDetail, blocks };
+}
+
+/**
+ * The memory lines of one learner's More detail (F-CURR-002 CM-16, `design/screens/reports/learner-report.md`): words
+ * known, items ready to refresh, the episodes at each mastery level, Stage Checks passed. A count of 0 has no line;
+ * the mastery line shows while any episode has a level.
+ */
+export function memoryLinesOf(memory: ReportMemory, m: ReturnType<typeof getMessages>): string[] {
+  const d = m.report.detail;
+  const [done, practiced, mastered] = memory.levels;
+  return [
+    ...(memory.wordsKnown > 0 ? [d.wordsKnown(memory.wordsKnown)] : []),
+    ...(memory.readyToRefresh > 0 ? [d.readyToRefresh(memory.readyToRefresh)] : []),
+    ...(done + practiced + mastered > 0 ? [d.mastery(done, practiced, mastered)] : []),
+    ...(memory.stageChecks > 0 ? [d.stageChecks(memory.stageChecks)] : []),
+  ];
 }
 
 /** An instant as its learner-local day in words (OD-12: `activity.tz`, UTC without day-by-day data); null when unreadable. */

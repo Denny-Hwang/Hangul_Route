@@ -11,6 +11,7 @@
     "./lint": "./src/lesson-lint.ts",
     "./review-items": "./src/review-items/review-item.ts",
     "./memory": "./src/memory/memory-sync.ts",
+    "./learning-summary": "./src/schemas/learning-summary.ts",
     "./overlays": "./overlays.ts",
     "./overlays-es": "./overlays-es.ts",
     "./overlays-ko": "./overlays-ko.ts",

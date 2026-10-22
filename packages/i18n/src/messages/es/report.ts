@@ -121,6 +121,19 @@ export const report = {
       self: planRow('Ruta propia', false),
       device: planRow('Planes y tareas', false),
     },
+    memory: 'Palabras y repaso',
+    wordsKnown: (count: number) => `Palabras conocidas: ${count}`,
+    readyToRefresh: (count: number) =>
+      plural('es', count, { one: '1 elemento está listo para repasar', other: `${count} elementos están listos para repasar` }),
+    mastery: (done: number, practiced: number, mastered: number) =>
+      `Episodios: ${[
+        done > 0 ? `${done} ${plural('es', done, { one: 'terminado', other: 'terminados' })}` : '',
+        practiced > 0 ? `${practiced} ${plural('es', practiced, { one: 'practicado', other: 'practicados' })}` : '',
+        mastered > 0 ? `${mastered} ${plural('es', mastered, { one: 'dominado', other: 'dominados' })}` : '',
+      ]
+        .filter(Boolean)
+        .join(', ')}`,
+    stageChecks: (count: number) => `Repasos de etapa superados: ${count}`,
   },
   insight: {
     showed_up: practicedDays,
@@ -270,6 +283,11 @@ export const report = {
       `Asignado a ${assigned}, empezado por ${started}, terminado por ${finished}`,
     empty: 'Aún no hay estudiantes.',
     afterUpdate: 'Aparece cuando los estudiantes actualicen la app.',
+    memoryFrom: (count: number) =>
+      plural('es', count, { one: 'De 1 estudiante cuya app comparte estos datos.', other: `De ${count} estudiantes cuyas apps comparten estos datos.` }),
+    wordsKnown: (count: number) => `Palabras conocidas, en total: ${count}`,
+    readyToRefresh: (count: number) => `Elementos listos para repasar, en total: ${count}`,
+    stageChecks: (count: number) => `Repasos de etapa superados, en total: ${count}`,
   },
   print: {
     button: 'Imprimir o guardar en PDF',

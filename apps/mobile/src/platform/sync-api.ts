@@ -1,4 +1,5 @@
 import {
+  CLASS_SCOPE_TEXT_VERSION,
   GATED_REVIEW_KINDS,
   InboxTransferSchema,
   LookupSeatSchema,
@@ -524,10 +525,11 @@ export function createSyncApi(opts: SyncApiOptions) {
     /**
      * [TV] PUT /learners/:id/class-scope: this full-scope device records that the learner's grown-up read the class
      * update (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4). A class tablet answers 403 `scope_limited`; an older text
-     * 422 `class_scope_stale`.
+     * 422 `class_scope_stale`. `shown` names the text this build draws (F-CURR-002 row CM-16), so the Worker records
+     * no more than the list the grown-up read.
      */
     async putClassScopeAck(learnerId: string, version: string, creds: DeviceCredentials): Promise<{ status: 'ok' } | TransferCallError> {
-      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/class-scope`, { method: 'PUT', headers: authHeader(creds), body: JSON.stringify({ version }) });
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/class-scope`, { method: 'PUT', headers: authHeader(creds), body: JSON.stringify({ version, shown: CLASS_SCOPE_TEXT_VERSION }) });
       return r.status === 200 ? { status: 'ok' } : transferError(r);
     },
 

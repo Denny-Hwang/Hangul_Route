@@ -98,6 +98,14 @@ keep_vars = true
 #                                    value) is the kill switch: every class and school reader sees the
 #                                    base scope at once; families are unaffected and acknowledgements
 #                                    still record. GET /health shows features.classScopeFull.
+# MEMORY_SUMMARY                     F-CURR-002 row CM-16: leave UNSET (on). Unset, empty or "enabled"
+#                                    lets grown-ups read a learner's memory counts (words known, items
+#                                    ready to refresh, episodes per mastery level) on family, class and
+#                                    school reports, rosters and GET /api/spaces/:id/learning-summary.
+#                                    "disabled" (or any other value) is the kill switch: the block is left
+#                                    out for every reader at once; the stored block is kept and reads
+#                                    again once the switch is back on. GET /health shows
+#                                    features.memorySummary.
 # TELEMETRY_DAILY                    [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1: leave UNSET (on).
 #                                    Unset, empty or "enabled" counts the section 15 events and
 #                                    session.start in the anonymous D1 table telemetry_daily (migration

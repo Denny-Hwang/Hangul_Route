@@ -946,4 +946,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.dailyReview.result.stronger': [[1], [6]],
   'a11y.dailyReview.round': [[1], [10]],
   'a11y.dailyReview.stars': [[1], [3]],
+  // F-CURR-002 CM-16: the memory counts in reports
+  'report.detail.wordsKnown': [[1], [2000]],
+  'report.detail.readyToRefresh': [[1], [2], [120]],
+  'report.detail.mastery': [[1, 1, 1], [35, 12, 4], [5, 0, 0], [0, 2, 0], [3, 0, 1]],
+  'report.detail.stageChecks': [[1], [7]],
+  'report.class.memoryFrom': [[1], [2], [30]],
+  'report.class.wordsKnown': [[1], [24000]],
+  'report.class.readyToRefresh': [[1], [600]],
+  'report.class.stageChecks': [[1], [90]],
 };

@@ -1,4 +1,4 @@
-import type { MemoryBackup } from '@hangul-route/content-schema';
+import type { MemoryBackup, MemorySummary } from '@hangul-route/content-schema';
 
 /**
  * The memory store's side of the backup file (F-SYNC-002) and of a Rescue Code restore (F-RESTORE-001),
@@ -16,6 +16,11 @@ export interface MemoryStoreHook {
   restore(profileId: string, memory: MemoryBackup): Promise<void>;
   /** After a Rescue Code claim or a re-link adopted the learner here: pull the shards (`GET .../memory?since=0`). */
   pull(learnerId: string): Promise<void>;
+  /**
+   * The summary's `memory` block (F-CURR-002 section 4.8, row CM-16): undefined while the profile does not record
+   * (`memoryRecord` off, a grown-up persona) or its store cannot be read, so no block is sent and reports show none.
+   */
+  summary?(profileId: string): Promise<MemorySummary | undefined>;
 }
 
 let hook: MemoryStoreHook | null = null;
@@ -68,4 +73,40 @@ export async function restoreMemory(profileId: string, memory: MemoryBackup | un
 export function pullMemoryAfterAdopt(learnerId: string): void {
   if (!hook) return;
   hook.pull(learnerId).catch(() => undefined);
+}
+
+/**
+ * The last `memory` block per profile, read synchronously by the summary the sync uploads (`summarizeFor`) and by the
+ * in-app report. Filled by `refreshMemorySummary` before each snapshot sync and when a report opens; a profile with
+ * no block (the store does not answer, or answers none) has no entry, so its summary carries no `memory` key.
+ */
+const summaries = new Map<string, MemorySummary>();
+
+/** The profile's last `memory` block, or undefined. */
+export function memorySummaryFor(profileId: string): MemorySummary | undefined {
+  return summaries.get(profileId);
+}
+
+/**
+ * Asks the store for the profile's `memory` block now, within `MEMORY_HOOK_TIMEOUT_MS`. A store that answers none
+ * removes the entry; one that fails or does not answer in time keeps the last block, so a slow store never sends a
+ * summary without it (the Worker keeps the stored block when a summary lacks one, row CM-3b).
+ */
+export async function refreshMemorySummary(profileId: string): Promise<void> {
+  if (!hook?.summary) {
+    summaries.delete(profileId);
+    return;
+  }
+  try {
+    const memory = await withinTimeout(hook.summary(profileId));
+    if (memory) summaries.set(profileId, memory);
+    else summaries.delete(profileId);
+  } catch {
+    // Kept as it was.
+  }
+}
+
+/** A removed profile's block goes with it. */
+export function forgetMemorySummary(profileId: string): void {
+  summaries.delete(profileId);
 }

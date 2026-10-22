@@ -99,9 +99,9 @@ describe('transfer constants (F-SPACE-002 §4.1)', () => {
   });
 
   it('accepts the current consent text version and every earlier one (F-REPORT-001 RP-W2, F-FEEDBACK-001 FB-1)', () => {
-    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10d');
-    // records signed with the text before F-REPORT-001 RP-W2 (10), F-FEEDBACK-001 FB-1 (10b) or [TV] TV-D6 (10c) stay valid
-    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toEqual(['transfer-2026-10d', 'transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10']);
+    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10e');
+    // records signed with the text before F-REPORT-001 RP-W2 (10), F-FEEDBACK-001 FB-1 (10b), [TV] TV-D6 (10c) or F-CURR-002 CM-16 (10d) stay valid
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toEqual(['transfer-2026-10e', 'transfer-2026-10d', 'transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10']);
   });
 });
 

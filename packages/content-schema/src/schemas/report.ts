@@ -238,6 +238,23 @@ export const ClassReportSchema = z
         }),
       )
       .max(3),
+    /**
+     * The memory counts (F-CURR-002 sections 4.4 and 4.8, row CM-16), summed over the members whose class copy
+     * carries a `memory` block (a full-scope learner whose family read the class-scope text that lists the `memory`
+     * item); `learners` is how many. Current counts, not a window: the same on every period. Totals only, never a
+     * mean, a maximum or a distribution by learner. Omitted when no member carries the block; optional, so a body from
+     * an older Worker parses.
+     */
+    memory: z
+      .object({
+        learners: Total,
+        wordsKnown: Total,
+        readyToRefresh: Total,
+        /** Episodes at mastery level 1 (Done), 2 (Practiced) and 3 (Mastered). */
+        levels: z.tuple([Total, Total, Total]),
+        stageChecks: Total,
+      })
+      .optional(),
   })
   /** Each period carries only its own bands, and `all` carries none (section 3.7). */
   .superRefine((r, ctx) => {

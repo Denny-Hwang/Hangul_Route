@@ -31,9 +31,9 @@
       "reviewedAt": "2026-10-22"
     },
     "report": {
-      "enSha": "a3e18f4d7bf7f9d402bccb05da3f7bae73ed08010461b220059f151345038c13",
+      "enSha": "9fad492d502ae85a047bfadd009ccc4653567e21d50b27e08686fe09796d86d8",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-17"
+      "reviewedAt": "2026-10-22"
     }
   },
   "ko": {
@@ -68,9 +68,9 @@
       "reviewedAt": "2026-10-22"
     },
     "report": {
-      "enSha": "a3e18f4d7bf7f9d402bccb05da3f7bae73ed08010461b220059f151345038c13",
+      "enSha": "9fad492d502ae85a047bfadd009ccc4653567e21d50b27e08686fe09796d86d8",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-17"
+      "reviewedAt": "2026-10-22"
     }
   }
 }

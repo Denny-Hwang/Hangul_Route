@@ -17,6 +17,7 @@ import {
   type LearnerReportState,
   type PlacementStrand,
   type ReportCalendarKind,
+  type ReportMemory,
   type ReportPeriod,
   type ReportVoice,
   type StageKey,
@@ -430,7 +431,7 @@ export type ReportDetailBlock =
   | { kind: 'totals'; line: string }
   /** `moreLine`: "And N more letters" after the strong tiles when more are known than they show, else null. */
   | { kind: 'letters'; key: 'strong' | 'practising' | 'new'; heading: string; tiles: ReportLetterTile[]; more: number; moreLine: string | null }
-  | { kind: 'lines'; key: 'milestones' | 'levelCheck' | 'plan'; heading: string; lines: string[] };
+  | { kind: 'lines'; key: 'memory' | 'milestones' | 'levelCheck' | 'plan'; heading: string; lines: string[] };
 
 export interface ReportMoreDetailView {
   button: string;
@@ -544,6 +545,22 @@ function localDayOf(iso: string | undefined, summary: InsightSummary): string | 
   return Number.isFinite(ms) ? todayFor(new Date(ms), summary.activity?.tz ?? 0) : null;
 }
 
+/**
+ * Words known, items ready to refresh, the episodes at each mastery level and Stage Checks passed (F-CURR-002 CM-16,
+ * `design/screens/reports/in-app-report.md`), a count of 0 with no line. No line names the learner, so both voices
+ * read them as they are; counts only, never a percentage (section 3.4).
+ */
+function memoryLines(memory: ReportMemory, m: ReportWords['m']): string[] {
+  const d = m.report.detail;
+  const [done, practiced, mastered] = memory.levels;
+  return [
+    ...(memory.wordsKnown > 0 ? [d.wordsKnown(memory.wordsKnown)] : []),
+    ...(memory.readyToRefresh > 0 ? [d.readyToRefresh(memory.readyToRefresh)] : []),
+    ...(done + practiced + mastered > 0 ? [d.mastery(done, practiced, mastered)] : []),
+    ...(memory.stageChecks > 0 ? [d.stageChecks(memory.stageChecks)] : []),
+  ];
+}
+
 function detailView(report: LearnerReport, summary: InsightSummary, w: ReportWords): ReportMoreDetailView | null {
   const detail = report.detail;
   if (detail === null) return null;
@@ -557,6 +574,9 @@ function detailView(report: LearnerReport, summary: InsightSummary, w: ReportWor
   letters('strong', w.voice === 'second' ? m.report.you.detail.lettersStrong : d.lettersStrong(w.name), detail.lettersStrong, detail.lettersStrongMore);
   letters('practising', d.lettersPractising, detail.lettersPractising);
   letters('new', d.lettersNew, detail.lettersNew ?? []);
+  // F-CURR-002 CM-16: the memory counts, only while the summary carries them (the profile records), a line only above 0.
+  const memory = detail.memory ? memoryLines(detail.memory, m) : [];
+  if (memory.length) blocks.push({ kind: 'lines', key: 'memory', heading: d.memory, lines: memory });
   if (detail.milestones.length) {
     blocks.push({
       kind: 'lines',

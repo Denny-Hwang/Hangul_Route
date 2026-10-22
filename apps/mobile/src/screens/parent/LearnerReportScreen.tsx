@@ -48,6 +48,7 @@ import {
 } from '../../logic/reports/report-view';
 import { reportSkillsView, type ReportSkillsView } from '../../logic/reports/skills-view';
 import { reportVoice } from '../../logic/reports/voice';
+import { refreshMemorySummary } from '../../logic/sync/memory-hook';
 import type { RootStackParamList } from '../../navigation/types';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
@@ -246,12 +247,24 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
   useEffect(() => {
     void useProgressStore.getState().hydrate(profileId);
   }, [profileId]);
+  // F-CURR-002 CM-16: the memory counts as the store has them now (none while the profile does not record); read-only.
+  const [memoryRead, setMemoryRead] = useState(0);
+  useEffect(() => {
+    let live = true;
+    void refreshMemorySummary(profileId).then(() => {
+      if (live) setMemoryRead((n) => n + 1);
+    });
+    return () => {
+      live = false;
+    };
+  }, [profileId]);
   // The skills rows count every quest's games, so every lesson chunk loads and the rows follow (F-CURR-002 §10).
   const lessonsLoaded = useLessonContentVersion();
 
   const built = useMemo((): { view: InAppReportView; skills: ReportSkillsView | null } | null => {
     if (!hydrated) return null;
     void attempt;
+    void memoryRead;
     try {
       const snapshot = stored ?? emptySnapshot(profileId);
       const now = new Date();
@@ -293,7 +306,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
     } catch {
       return null;
     }
-  }, [hydrated, stored, profileId, name, voice, period, at, locale, messages, tier, localized, attempt, lessonsLoaded]);
+  }, [hydrated, stored, profileId, name, voice, period, at, locale, messages, tier, localized, attempt, lessonsLoaded, memoryRead]);
 
   // One `report.viewed` on open and on each period change or step (section 3.13), without a profile id. Keyed on
   // what the grown-up chose, not on `built`, which also changes when the progress store does. Every drawn report

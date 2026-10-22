@@ -23,7 +23,7 @@ import { Hono } from 'hono';
 import { dbFor, NOTE_INBOX_LIMIT, noteRateKey, noteRetentionCuts, type Db, type NoteDeviceScope, type StoredMemoryShard, type StoredNote } from '../db';
 import { fail, meta, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
-import { preserveAdditiveFields } from '../lib/additive-fields';
+import { mergeMemoryCounts, preserveAdditiveFields } from '../lib/additive-fields';
 import { reviewCapsOf, servedSnapshot, writtenSnapshot } from '../lib/review-kinds';
 import { MemoryWriteConflict, pushMemory } from '../lib/memory-shards';
 import { tierForLearner } from '../lib/entitlement';
@@ -115,7 +115,8 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
     schemaVer: body.schemaVer,
     contentVer: body.contentVer,
     deviceId: auth,
-    summary: kept.summary,
+    // F-CURR-002 CM-16: the memory counts that never drop are combined across devices (lib/additive-fields.ts).
+    summary: mergeMemoryCounts(kept.summary, current?.summary, kept.payload),
     // A gated review kind the sender cannot read is kept from the stored copy, then the 14-day retention (section 4.8).
     payload: writtenSnapshot(payload, current?.payload, caps),
     updatedAt: new Date().toISOString(),

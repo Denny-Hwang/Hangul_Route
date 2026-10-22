@@ -107,6 +107,36 @@ export interface LearnerReportDetail {
   levelCheck: { takenAt: string; strands: { strand: PlacementStrand; status: StrandStatus }[] } | null;
   /** class: this class's plans; family: the family's plans and the self-route; device: every plan and the self-route. */
   plan: { kind: ReportViewer; plans: ReportPlanCounts | null; self: ReportPlanCounts | null } | null;
+  /**
+   * The memory counts (F-CURR-002 sections 4.4 and 4.8, row CM-16): current counts from `summary.memory`, the same on
+   * every period. Absent when the summary carries no block (an older app, `memoryRecord` off, or a class reader the
+   * family has not opened them to) or every count is 0, so a report never shows a zero as a result. A view draws
+   * each count only above 0. Episodes at levels 2 and 3 appear once row CM-20 derives them.
+   */
+  memory?: ReportMemory;
+}
+
+export interface ReportMemory {
+  wordsKnown: number;
+  readyToRefresh: number;
+  /** Episodes at mastery level 1 (Done), 2 (Practiced) and 3 (Mastered). */
+  levels: [number, number, number];
+  stageChecks: number;
+}
+
+/** The items ready to refresh a report shows: the count while the profile has the review surface, else 0 (no line). */
+export function readyToRefreshOf(memory: NonNullable<ReportSummary['memory']>): number {
+  return memory.reviewOn === true ? memory.readyToRefresh : 0;
+}
+
+/** The report's memory counts, or null without a block or with every count at 0. Item ids and week points stay out. */
+export function reportMemoryOf(memory: ReportSummary['memory']): ReportMemory | null {
+  if (!memory) return null;
+  // Items ready to refresh only while the learner has the review surface (`reviewOn`): never a growing count the
+  // learner cannot act on (the `memoryRecord` shadow period).
+  const out: ReportMemory = { wordsKnown: memory.wordsKnown, readyToRefresh: readyToRefreshOf(memory), levels: [...memory.cellBestCounts], stageChecks: memory.stageChecks };
+  const any = out.wordsKnown + out.readyToRefresh + out.levels[0] + out.levels[1] + out.levels[2] + out.stageChecks > 0;
+  return any ? out : null;
 }
 
 export interface LearnerReport {
@@ -249,8 +279,14 @@ function detailOf(
       ? { takenAt: placement.takenAt, strands: PlacementStrandSchema.options.map((strand) => ({ strand, status: placement.strands[strand] })) }
       : null,
     plan: planOf(summary, viewer),
+    ...memoryOf(summary),
   };
 }
+
+const memoryOf = (summary: ReportSummary): { memory?: ReportMemory } => {
+  const memory = reportMemoryOf(summary.memory);
+  return memory ? { memory } : {};
+};
 
 /** Valid milestones with their stage number, ascending by day. */
 function milestonesOf(activity: ActivitySummary): (ReportStage & { on: string })[] {

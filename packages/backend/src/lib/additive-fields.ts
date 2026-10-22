@@ -3,6 +3,7 @@ import {
   DayLogSchema,
   GoalsSchema,
   LatchRecordSchema,
+  MemorySummarySchema,
   ProgressSnapshotSchema,
   StreakLocalSchema,
   mergeCellBest,
@@ -308,4 +309,39 @@ export function preserveAdditiveFields<P extends object, S extends object>(
     keepStoredSummary(field.summaryKey);
   }
   return { payload: payload as P, summary: summary as S };
+}
+
+/**
+ * The memory counts of the stored summary (F-CURR-002 sections 4.4 and 4.8, row CM-16) across devices. Each device
+ * computes `summary.memory` from its own store before it pulls what other devices recorded, and the last upload
+ * replaces the summary, so a second device's lower count would replace a first device's higher one. The counts that
+ * never drop are therefore combined with what is stored and with the merged payload:
+ * - `wordsKnown`: the larger of the sent and the stored count;
+ * - `cellBestCounts`: recounted from the merged `cellBest` (levels 1, 2 and 3), which holds every device's levels,
+ *   unless that reads fewer episodes than the device counted (a key this Worker's schema drops);
+ * - `stageChecks`: the largest of the sent, the stored and the merged `stageCheckAt` count.
+ * `readyToRefresh`, `weekPoints` and `topDue` describe today on the sending device and stay as sent. A summary without
+ * a valid block, or with nothing to change, is returned as is.
+ */
+export function mergeMemoryCounts<S extends object>(summary: S, storedSummary: unknown, payload: unknown): S {
+  const inSummary = summary as Plain;
+  const sent = MemorySummarySchema.safeParse(inSummary.memory);
+  if (!sent.success) return summary;
+  const prior = isPlain(storedSummary) ? MemorySummarySchema.safeParse(storedSummary.memory) : null;
+  const stored = prior?.success ? prior.data : null;
+  const merged = { ...sent.data, cellBestCounts: [...sent.data.cellBestCounts] as [number, number, number] };
+  if (stored) merged.wordsKnown = Math.max(merged.wordsKnown, stored.wordsKnown);
+  const body = isPlain(payload) ? payload : {};
+  const cellBest = CellBestSchema.parse(body.cellBest);
+  if (cellBest) {
+    const levels: [number, number, number] = [0, 0, 0];
+    for (const level of Object.values(cellBest)) if (level >= 1 && level <= 3) levels[level - 1] += 1;
+    const total = (t: readonly number[]): number => t[0]! + t[1]! + t[2]!;
+    if (total(levels) >= total(merged.cellBestCounts)) merged.cellBestCounts = levels;
+  }
+  const stageCheckAt = LatchRecordSchema.parse(body.stageCheckAt);
+  merged.stageChecks = Math.max(merged.stageChecks, stored?.stageChecks ?? 0, stageCheckAt ? Object.keys(stageCheckAt).length : 0);
+  const out = MemorySummarySchema.safeParse(merged);
+  if (!out.success || sameJson(out.data, sent.data)) return summary;
+  return { ...inSummary, memory: out.data } as S;
 }

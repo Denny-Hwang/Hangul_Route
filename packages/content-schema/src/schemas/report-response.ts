@@ -46,6 +46,7 @@ export const ReportSummarySchema = ProgressSummarySchema.pick({
   activity: true,
   vocab: true,
   stage1Anchor: true,
+  memory: true,
 }).partial();
 export type ReportSummary = z.infer<typeof ReportSummarySchema>;
 

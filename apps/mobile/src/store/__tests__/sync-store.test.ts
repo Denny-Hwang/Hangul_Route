@@ -119,6 +119,26 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(activity).not.toHaveProperty('next');
   });
 
+  it('uploads summary.memory as the memory store gives it right before the sync, and none without a block (F-CURR-002 CM-16)', async () => {
+    const memory = { wordsKnown: 7, readyToRefresh: 2, cellBestCounts: [3, 0, 0] as [number, number, number], stageChecks: 0, weekPoints: 4, topDue: ['lex:sagwa'] };
+    const summary = vi.fn(async (id: string) => (id === 'profile:a' ? memory : undefined));
+    setMemoryStoreHook({ backup: async () => undefined, restore: async () => undefined, pull: async () => undefined, summary });
+    try {
+      const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      await useSyncStore.getState().syncNow('profile:a');
+      expect(summary).toHaveBeenCalledWith('profile:a');
+      expect(putSnapshot.mock.calls[0]?.[1].summary.memory).toEqual(memory);
+      expect(ProgressSummarySchema.parse(putSnapshot.mock.calls[0]?.[1].summary).memory).toEqual(memory);
+      // The store answers none (memoryRecord turned off): the next summary carries no block.
+      summary.mockResolvedValueOnce(undefined);
+      await useSyncStore.getState().syncNow('profile:a');
+      expect(putSnapshot.mock.calls[1]?.[1].summary).not.toHaveProperty('memory');
+    } finally {
+      setMemoryStoreHook(null);
+    }
+  });
+
   it('summary.journey counts the quests a stored level check placed out as known (F-ROUTE-001 R-7a)', async () => {
     const placedOut = ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3'];
     useProgressStore.setState({ byProfile: { 'profile:a': { ...snap([]), placements: [result({ placedOutQuestIds: placedOut })] } } });
