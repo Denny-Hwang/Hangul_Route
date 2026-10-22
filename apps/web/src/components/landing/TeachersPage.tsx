@@ -20,7 +20,7 @@ export interface TeachersPageProps {
 export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: TeachersPageProps): JSX.Element {
   const t = getMessages(locale).landing;
   const T = t.persona.teachers;
-  const teacherSignIn = signIn('teacher');
+  const teacherSignIn = signIn('teacher', locale);
   const classLines = [
     T.class.body,
     ...(showsClaim(claims, 'teacherReports', locale) ? [T.class.reports] : []),

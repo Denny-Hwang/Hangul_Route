@@ -488,8 +488,8 @@ The console does not draw `start.cta`, `next.device`, `preview.quiz`, `preview.w
 
 | Key | en | es | ko |
 |---|---|---|---|
-| `persona.teachers.class.lecture` (changed) | Lecture mode: teach from the front on a projector or TV, with ready-made lessons. | Modo proyección: enseña al frente con un proyector o una TV, con lecciones listas. | 강의 모드: 준비된 수업으로 프로젝터나 TV 앞에서 가르쳐요. |
-| `persona.parents.follow.lecture` | Lecture mode puts a lesson on your TV so you can learn together. | El modo proyección pone una lección en tu TV para aprender en familia. | 강의 모드로 TV에 수업을 띄우고 함께 배워요. |
+| `persona.teachers.class.lecture` (changed; reworded 2026-10-21, F-SITE-002 site facts) | Lecture mode: teach from the front with ready-made slides for Stages 1 to 7, stories and word sets, on a projector, a TV or a phone turned sideways. | Modo proyección: enseña al frente con diapositivas listas de las Etapas 1 a 7, cuentos y temas de palabras, en un proyector, una TV o un teléfono en horizontal. | 강의 모드: 1단계부터 7단계, 이야기, 낱말 묶음의 준비된 슬라이드를 프로젝터, TV, 가로로 돌린 휴대폰에 띄우고 앞에서 가르쳐요. |
+| `persona.parents.follow.lecture` (reworded 2026-10-21, F-SITE-002 site facts) | Lecture mode shows ready-made lessons from Stages 1 to 7 on a TV, a laptop or a phone turned sideways, so you can learn together. | El modo proyección muestra lecciones listas de las Etapas 1 a 7 en una TV, una computadora portátil o un teléfono en horizontal, para aprender en familia. | 강의 모드는 1단계부터 7단계까지 준비된 수업을 TV, 노트북, 가로로 돌린 휴대폰에 띄워 줘요. 함께 배워 보세요. |
 
 Length budgets (F-I18N-001 §3.11): every `cta` ≤ 28 in all locales (longest: "Empezar modo proyección", 23); Spanish lines over 1.5x English get an `ES_LENGTH_ALLOW_LIST` line with the reason in the row that adds them. Banned-word lint (`BANNED_WORDS`, the learner list) runs over all three locales.
 
@@ -622,6 +622,7 @@ Parallel lanes: LV-S1 to LV-S4 can run beside LV-3 / LV-4 / LV-5 once LV-2 is in
 
 ## 17. Review log
 
+- 2026-10-21, F-SITE-002 site facts (#806). Section 12.5: both site lecture lines now name what ships (Stages 1 to 7, stories and word sets; TV, laptop, projector or a phone turned sideways), en, es and ko; `landing` re-signed (MAR). No code path changes.
 - 2026-10-20, two independent reviews of PR #769, adjudicated in the same PR: the setup page clears the last space's answer when `?id=` changes on a mounted page, and a failed reload after a cannot-compose answer shows the could-not-load line with Try again (the builder draws only when `canComposeIn` answered yes); the wiring test presses Try again after a failed spaces list (builder for a composer, the no-space line otherwise) and changes `?id=` to a space whose roster read fails; en `lecture.cannotCompose` now says "ready lesson", as the card does and as es and ko already read (`console` re-signed for es and ko).
 - 2026-10-20, the console follow-ups row (follow-ups of DN-6, LV-4, LV-7 and SA-2) as built: section 16's "setup page by URL for a role that cannot compose" is done (the `canComposeIn` check on `/teach/space/lecture` and `/parent/space/lecture`, the no-space line `console.lecture.cannotCompose` pointing at `/present`, no deck built). The new string has its es and ko values from the two-lens language review (MAR) recorded in the PR; `console` re-signed for es and ko. The deferrals of fix:LV-4 (R2-3) and fix:LV-7 for this check are closed.
 

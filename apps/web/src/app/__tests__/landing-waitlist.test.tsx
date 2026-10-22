@@ -17,12 +17,14 @@ describe('landing page · launch-invite signup', () => {
     expect(html).not.toMatch(/<form[^>]*target="_blank"/);
   });
 
-  it('puts the form inside the #news band under "Get the launch news" (F-SITE-002 §3.3 block 6)', () => {
+  it('puts the form inside the #news band under "Launch news by email" (F-SITE-002 §3.3 block 6)', () => {
     const section = /<section id="news"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
-    expect(section).toContain('Get the launch news');
+    expect(section).toContain('Launch news by email');
     expect(section).toMatch(/<form/);
     expect(section).toMatch(/<input[^>]*type="email"/);
-    expect(section).toContain('Send me the invite');
+    expect(section).toContain('Get launch news');
+    // The app is live: the band never reads as a pre-launch invite (F-SITE-002 site facts, 2026-10-21).
+    expect(section).not.toMatch(/invite|when Hangul Route launches/i);
   });
 
   it('shows the consent line with a link to /privacy right under the field', () => {
@@ -34,7 +36,9 @@ describe('landing page · launch-invite signup', () => {
 
   it('promises launch news only, with no free-code or other commercial promise', () => {
     const text = html.replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, ' ');
-    expect(text).toContain("Leave your email and we'll send you the launch news.");
+    expect(text).toContain("We'll email you when family and class plans launch. Nothing else.");
+    // The consent line (CONSENT_TEXT_VERSION) is unchanged: the band's words stay within "launch news".
+    expect(text).toContain('We use your email only to send Hangul Route launch news. It is never sold or shared.');
     expect(text).not.toMatch(/family code/i);
     expect(text).not.toMatch(/launch day/i);
   });

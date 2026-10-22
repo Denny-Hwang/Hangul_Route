@@ -37,7 +37,7 @@ const FAQ_ADULT = {
 } as const;
 const FAQ_KOREAN = {
   q: 'Do I need to know any Korean?',
-  a: 'No — starting from zero is what we built it for. Instructions are in plain, simple English. Korean only appears as the thing being learned.',
+  a: 'No. Starting from zero is what we built it for. Menus are in simple English, Spanish or Korean, and every Korean word comes with its romanization and meaning.',
 } as const;
 
 /**
@@ -61,11 +61,12 @@ export const landing = {
     title: 'Hangul Route — Learn Hangul from zero with Hoya',
     tagline: 'Learn Hangul from zero, at any age.',
     /**
-     * What is built, with no typed counts (F-SITE-002 §3.12): Stage 1, the Korean culture cards, Hoya, no ads. No
-     * stage, theme or mini-game count, and no Heritage Journey grid, which is not built yet.
+     * What is built, with no typed counts (F-SITE-002 §3.12): the alphabet, then words, sentences and stories (later
+     * stages ship: content/episodes/stage-2 to stage-7, stories and word topics), Stage 1 free, Hoya, no ads. No price,
+     * no term, and no stage, theme or mini-game count.
      */
     description:
-      'Learn Hangul from zero with Hoya the tiger, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests teach the Korean alphabet, for reading, listening and writing, and every letter earns a Korean culture card. Stage 1 is free and more stages are coming. No ads, ever.',
+      'Learn Hangul from zero with Hoya the tiger, at any age. Five-minute quests teach the Korean alphabet, then words, sentences and stories. Stage 1 is free. No ads, ever.',
     keywords: ['learn Hangul', 'Korean alphabet', 'learn Korean', 'Korean for beginners', 'heritage Korean', 'K-culture learning', 'Hoya'],
     ogDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards. Stage 1 is free.',
     twitterDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards.',
@@ -77,11 +78,11 @@ export const landing = {
       },
       parents: {
         title: 'For parents and caregivers — Hangul Route',
-        description: "Short, kind Hangul lessons with no ads and a grown-up gate. Create a free family space and see each learner's week.",
+        description: "Short, kind Hangul lessons with no ads and a grown-up PIN. Create a free family space and see each learner's week.",
       },
       teachers: {
         title: 'For teachers — Hangul Route',
-        description: 'Students join with a class code, with no student emails or accounts. Plan the week and see who practised. Never a ranking.',
+        description: 'Students join with a code, a link or a QR code, with no student emails or accounts. Plan the week and see who practiced. Never a ranking.',
       },
       /** AMENDMENTS-SITE-NEWUSER SN-2: About, the legal pages and the open-source notices get their own title and description too. */
       about: {
@@ -123,52 +124,61 @@ export const landing = {
   /**
    * The layered home `/` (F-SITE-002 §3.3, appendix B.1). `hero.title` is the tagline; the taught letter in Hoya's
    * bubble is passed in with its romanization (CLAUDE.md §1; the page passes the letter's teaching sound value, e.g.
-   * `g/k` for the first letter). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on;
+   * `a` for the first letter, ㅏ). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on;
    * `how.levelBody` replaces step 1's line only while the `levelCheck` claim is on.
    * The promises are titles only; their explanations live on the persona pages.
    */
   home: {
     hero: {
       title: 'Learn Hangul from zero, at any age.',
-      lead: 'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
+      lead: 'Hangul is the Korean alphabet. Learn to read, hear and write it with Hoya the tiger.',
       start: 'Start learning',
       grownUps: 'Parent or teacher? Find your page',
-      /** Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). */
-      facts: 'Runs in your browser · Nothing to install · The app works offline on most devices after your first visit',
-      /** A no-break space keeps the letter and its romanization on one line when the bubble wraps. */
-      bubble: (letter: string, romanization: string) => `Annyeong! Let's meet ${letter}\u00a0(${romanization}).`,
+      /**
+       * Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). No
+       * "nothing to install": the app offers Install (PWA). "Stage 1 is free" leads, so a first-time visitor sees the
+       * cost above the fold; "No sign-up to start" is the learner's start (grown-ups do sign in, on their pages).
+       */
+      facts: 'Stage 1 is free · No sign-up to start · Works offline on most devices after your first visit',
+      /**
+       * A no-break space keeps the letter and its romanization on one line when the bubble wraps. No romanized Korean
+       * greeting: taught Korean is passed in with its romanization, never typed here (CLAUDE.md §1).
+       */
+      bubble: (letter: string, romanization: string) => `Hi! Let's meet ${letter}\u00a0(${romanization}).`,
     },
     who: {
       title: 'Who is it for?',
       items: {
         learners: {
           title: 'Learners',
-          body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
+          body: 'Five-minute quests, a guide who never scolds, and Korean culture cards.',
         },
         parents: {
           title: 'Parents and caregivers',
-          body: 'See what your learner practises, with a grown-up gate and no ads.',
+          body: 'See what your learner practices, with a grown-up PIN and no ads.',
         },
         teachers: {
           title: 'Teachers',
-          body: 'Students join with a class code. No student emails, no accounts.',
+          body: 'Students join with a code, link or QR code. No student accounts.',
         },
       },
     },
     how: {
       title: 'How it works',
       steps: {
-        start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
-        quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
+        /** The first run: a name and a Hoya (`learner.createProfile.avatarHeading` "Pick a Hoya"); "No sign-up to start" is in the hero facts. */
+        start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
+        quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures.' },
         /** "Saved and backed up": the app backs up every learner's progress with no sign-in (see `persona.parents.safe.bullets.backup`). */
         collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
       },
       routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
       /**
        * Step 1's line while the `levelCheck` claim is on (F-PLC-001: the level check is offered to every new profile).
-       * One line, not a fourth step: the home's word budget (280, F-SITE-002 §3.11) leaves room for one more word.
+       * It follows step 1's title ("Make a profile"), and the level check comes after the profile, as in the app. One
+       * line, not a fourth step: the home's word budget (280, F-SITE-002 §3.11) is full with it.
        */
-      levelBody: 'Pick who learns, or check your level.',
+      levelBody: 'Pick a name and a Hoya. A level check is optional.',
     },
     promises: {
       /** The section's visually hidden heading. */
@@ -176,16 +186,18 @@ export const landing = {
       items: { ads: 'No ads, ever', safety: 'Child safety first', noRed: 'No red marks' },
     },
     news: {
-      title: 'Get the launch news',
-      body: "Leave your email and we'll send you the launch news. Nothing else.",
+      /** Within "launch news" (the consent line, CONSENT_TEXT_VERSION): new stages and plans, nothing else. */
+      title: 'Launch news by email',
+      body: "We'll email you when family and class plans launch. Nothing else.",
     },
   },
   /**
    * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The home's cost line is the
-   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line, the
-   * `paid.coming` line only while plans are coming, then `managedInApp`, so the host is named once (§3.5). The free
-   * plan is all of Stage 1 (F-ENT-003 OD-1), so
-   * `free.stage1` is the same in every state and says nothing about paid plans. Plans bought on the web renew
+   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line (never
+   * the free limits, owner decision 2026-10-21), then the `paid.coming` line only while plans are coming (`sizes` once
+   * they are on sale), then `managedLater` while plans are coming or `managedInApp` once they are on sale, so the host
+   * is named once (§3.5). The free plan is all of Stage 1 (F-ENT-003 OD-1), so `free.stage1` is the same in every
+   * state and says nothing about paid plans. Plans bought on the web renew
    * yearly (BY-1): the signed-in billing page states the term (the Terms will too, S-7), and no site line names a
    * term or calls a plan one-time.
    */
@@ -195,10 +207,13 @@ export const landing = {
       stage1: 'Stage 1 is free.',
     },
     paid: {
-      coming: 'More stages are coming, with plans for families and classes.',
+      /** Later stages already ship (content/episodes/stage-2 to stage-7, stories, word topics); only plans are to come. */
+      coming: 'Words, sentences and stories are in the app too. Family and class plans are on the way.',
       inApp: 'Plans for families and classes are at app.hangulroute.com.',
     },
     managedInApp: 'Plans and billing are managed at app.hangulroute.com after you sign in.',
+    /** The managed line while plans are still coming (`paidPlans: 'coming'`): nothing is on sale yet to manage. */
+    managedLater: 'When plans arrive, you will manage them at app.hangulroute.com after you sign in.',
     /**
      * [SA] AMENDMENTS-SEATS-ADMINS sections 4 and 9.5: the learners each plan holds, the numbers passed in
      * (`FAMILY_LIFETIME_LEARNERS`, `GROUP_LICENSE_LEARNERS`). A persona Plans block shows it in the paid line's place
@@ -254,7 +269,8 @@ export const landing = {
         },
         code: {
           q: 'I have a join code. Where do I enter it?',
-          a: 'In the app: tap Profile, then go to Classes & family and tap Join a class.',
+          /** The join link and its QR code are a class's (console `space.joinLink`); a family shares its code. */
+          a: 'Open the join link your teacher shares. Or, in the app, tap Profile, go to Classes & family and tap Join a class.',
         },
         offline: {
           q: 'Does it work offline?',
@@ -268,7 +284,7 @@ export const landing = {
          */
         level: {
           q: 'I already know some Hangul. Do I have to start at the beginning?',
-          a: 'No. When you start, tap I already know some Korean and take a short level check. Hoya suggests where to begin.',
+          a: 'No. When you start, tap “I already know some Korean” and take a level check. Hoya suggests where to begin.',
         },
       },
       /** One paragraph under "What you learn first": what comes after Stage 1. */
@@ -300,20 +316,22 @@ export const landing = {
            */
           backup:
             "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
-          gate: 'A grown-up gate guards anything that costs money or deletes data.',
+          /** The grown-up PIN (PinEntryScreen, F-PROF-001 §3.1), the same sentence as `about.promises.gate`. */
+          gate: 'A grown-up PIN guards anything that costs money or deletes data.',
           siblings: 'Siblings can share a device. Each learner keeps their own stars and cards.',
         },
       },
       follow: {
         title: 'Follow along',
         /** True today on the console's family space. */
-        body: "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together.",
-        reports: 'Reports for today, this week, this month and all time show what went well and what to practise next.',
+        body: "Create a free family space, share its code, and see each learner's week: time practiced, quests done and letters to revisit together.",
+        reports: 'Reports for today, this week, this month and all time show what went well and what to practice next.',
         route: "Open each learner's Learning Route to see where they are and what comes next.",
         notes: 'Send a short note of encouragement that your learner sees in the app.',
         /** Names the product as the app's billing page does (`console.billing.planTitle.family_lifetime`). */
         browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
-        lecture: 'Lecture mode puts a lesson on your TV so you can learn together.',
+        /** AMENDMENTS-LECTURE-V2: Stages 1 to 7, phone landscape included. */
+        lecture: 'Lecture mode shows ready-made lessons from Stages 1 to 7 on a TV, a laptop or a phone turned sideways, so you can learn together.',
       },
       /** "What can I see?" answers with `whatSee.a`, or `whatSee.reports` while the `parentReports` claim is on. */
       faq: {
@@ -335,7 +353,7 @@ export const landing = {
         title: 'Set up in minutes',
         steps: {
           space: 'Sign in and create a class space.',
-          code: 'Share the class code. Students enter it in the app; no student emails or accounts.',
+          code: 'Share the class code, the join link or its QR code. Students type the code or open the link; no student emails or accounts.',
           devices: 'Students learn on any device with a browser.',
         },
       },
@@ -343,25 +361,28 @@ export const landing = {
         title: 'Plan and assign',
         bullets: {
           pick: "Pick quests for the week. They appear on each student's homework list.",
-          planner: 'Or let the planner build a term route from your class level and rhythm.',
+          /** Names the console page by its title (`console.curriculum.title`). */
+          planner: 'Or use Plan a term: it builds a term plan from your class level and rhythm.',
         },
       },
       class: {
         title: 'See how the class is doing',
         /** True today (the weekly roll-up). */
-        body: 'A weekly view shows who practised and which letters to revisit together. Never a ranking.',
+        body: 'A weekly view shows who practiced and which letters to revisit together. Never a ranking.',
         reports: 'Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.',
         route: "Open each student's Learning Route to see where they are and what comes next.",
         notes: 'Send students a short note of encouragement.',
-        browse: 'With a class or school plan, preview every lesson exactly as students see it.',
-        lecture: 'Lecture mode: teach from the front on a projector or TV, with ready-made lessons.',
+        /** Names the product as the app's billing page does (`console.billing.planTitle.group_license`). */
+        browse: 'With the Group License, preview every lesson exactly as students see it.',
+        /** AMENDMENTS-LECTURE-V2: Stages 1 to 7, stories and word topics, phone landscape included. */
+        lecture: 'Lecture mode: teach from the front with ready-made slides for Stages 1 to 7, stories and word sets, on a projector, a TV or a phone turned sideways.',
       },
       privacy: {
         title: 'Privacy for classes',
-        bullets: { initials: 'Show initials only on the class list.', ads: 'No ads, and no data sold.' },
+        bullets: { initials: 'You can show initials instead of names on the class list.', ads: 'No ads, and no data sold.' },
       },
       faq: {
-        students: { q: 'Do students need accounts?', a: 'No. They join with the class code inside the app.' },
+        students: { q: 'Do students need accounts?', a: 'No. They join with the class code, link or QR code.' },
         ranking: { q: 'Is there a leaderboard?', a: 'No. Hangul Route never ranks students against each other.' },
         try: { q: 'Can I try it first?', a: 'Yes. Open the app and play the first quests as a learner.' },
       },
@@ -428,10 +449,11 @@ export const landing = {
   waitlist: {
     label: 'Your email',
     placeholder: 'you@somewhere.com',
-    submit: 'Send me the invite',
+    /** Short enough to sit beside the email field at 1280 px (one row in the #news band). */
+    submit: 'Get launch news',
     sending: 'Sending',
     retry: 'Try again',
-    success: "You're on the list. We'll email you when Hangul Route launches.",
+    success: "You're on the list. We'll email you when family and class plans launch.",
     invalid: 'Please enter a valid email address.',
     error: 'We could not reach the server. Check your connection and try again.',
     rateLimited: 'Too many tries. Please wait a little and try again.',
@@ -448,16 +470,15 @@ export const landing = {
     lead: 'Made by a small team (mostly one person and a tiger). For anyone learning Hangul from zero, at any age — heritage families whose parents or grandparents speak Korean, fans of K-pop, K-food and K-anything, and curious beginners — who want a gentle, anti-shame way in.',
     promises: {
       title: 'Our promises',
-      plainEnglish: 'Menus and instructions use plain, simple English (CEFR Pre-A1).',
-      koreanTaught: 'Korean is only used for the content being taught.',
+      plainEnglish: 'Menus and instructions use short, plain words, in English, Spanish or Korean.',
+      koreanTaught: 'Every Korean word you learn comes with its romanization and meaning.',
       /** Said in words: the page shows no cross-mark glyph (no emoji, CLAUDE.md). */
       noRed: 'No red X marks for wrong answers — Hoya nudges with amber.',
-      /** SN-2: no age framing (CLAUDE.md audience); the first sentence of the former line. */
-      noAds: 'No ads, ever.',
+      noAds: 'No ads, ever, and no data sold.',
       /** The first sentence of `persona.parents.safe.bullets.backup`, word for word (F-SITE-002 §3.12; privacy-statements.test.ts). */
       localFirst: "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
-      /** SN-2: the gate is a grown-up PIN now, not a multiplication question; the words of `persona.parents.safe.bullets.gate`. */
-      gate: 'A grown-up gate guards anything that costs money or deletes data.',
+      /** The grown-up PIN replaced the v1.0 math gate (PinEntryScreen, F-PROF-001 §3.1). */
+      gate: 'A grown-up PIN guards anything that costs money or deletes data.',
     },
     feedback: {
       title: 'Have feedback?',

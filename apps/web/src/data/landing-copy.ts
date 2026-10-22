@@ -14,10 +14,10 @@ import { sitePath } from '../lib/site-path';
  * stay; the framing never targets children only and never names an age range.
  *
  * Cost (owner decision 2026-10-10): the landing quotes no price and sells
- * nothing that is not built. Payments are not live and Stages 2–7 are not
- * built, so it says only what is true today — Stage 1 is free — and that
- * more stages and classroom plans are coming. Concrete prices come back with
- * the launch of payments (PLAN_PRICING is their source then).
+ * nothing that is not on sale. Payments are not live (Stripe sandbox), so it
+ * says only what is true today: Stage 1 is free, the later stages are in the
+ * app too, and family and class plans are on the way. Concrete prices come
+ * back with the launch of payments (PLAN_PRICING is their source then).
  */
 
 export interface LandingCopy {

@@ -31,7 +31,7 @@ describe('WaitlistFormView · idle', () => {
     expect(html).toMatch(/<input[^>]*id="waitlist-email"[^>]*type="email"/);
     expect(html).toMatch(/autoComplete="email"|autocomplete="email"/i);
     expect(html).toMatch(/required/);
-    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Send me the invite<\/button>/);
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Get launch news<\/button>/);
   });
 
   it('has a hidden honeypot that people and screen readers skip', () => {
@@ -68,7 +68,7 @@ describe('WaitlistFormView · states', () => {
     expect(text(html)).toContain("You're on the list");
     expect(html).toMatch(/role="status"[^>]*aria-live="polite"[^>]*>[\s\S]*You&#x27;re on the list/);
     expect(html).not.toMatch(/<input/);
-    expect(html).not.toMatch(/Send me the invite/);
+    expect(html).not.toMatch(/Get launch news/);
   });
 
   it('invalid: tells the visitor what to fix, in an alert tied to the field', () => {
@@ -118,7 +118,7 @@ describe('WaitlistFormView · states', () => {
 
 describe('WaitlistForm (stateful wrapper)', () => {
   it('renders the idle form on first paint, same as the view', () => {
-    expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} />)).toContain('Send me the invite');
+    expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} />)).toContain('Get launch news');
   });
 
   it('renders the words it is given (the page passes them in its locale)', () => {

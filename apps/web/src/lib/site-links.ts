@@ -76,8 +76,12 @@ export function learnerStart(locale: UiLocale): string {
   return appEntryUrl(appUrl(), locale);
 }
 
-/** Grown-up sign-in; with a persona, the `/signin` intro for it. The header and footer pass none (neutral intro). */
-export function signIn(persona?: GrownUpPersona): string {
+/**
+ * Grown-up sign-in; with a persona, the `/signin` intro for it. The header and footer pass none (neutral intro).
+ * From `/es` or `/ko` the link also carries `?lang=` (`appEntryUrl`), so the sign-in page opens in the language
+ * the visitor was reading; English links stay as they are.
+ */
+export function signIn(persona?: GrownUpPersona, locale: UiLocale = 'en'): string {
   const href = `${grownUpOrigin()}${APP_ROUTES.signIn}`;
-  return persona ? `${href}?persona=${persona}` : href;
+  return appEntryUrl(persona ? `${href}?persona=${persona}` : href, locale);
 }

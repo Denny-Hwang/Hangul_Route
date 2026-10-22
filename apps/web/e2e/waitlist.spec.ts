@@ -25,7 +25,7 @@ test('a valid address shows the confirmation without leaving the page, and posts
   await page.goto('/');
   const start = page.url();
   await page.getByLabel('Your email').fill('learner@example.com');
-  await page.getByRole('button', { name: 'Send me the invite' }).click();
+  await page.getByRole('button', { name: 'Get launch news' }).click();
   await expect(page.getByRole('status').filter({ hasText: "You're on the list" })).toBeVisible();
   expect(page.url()).toBe(start);
   expect(requests).toHaveLength(1);
@@ -41,7 +41,7 @@ test('a typo is caught in the page, with no request', async ({ page }) => {
   });
   await page.goto('/');
   await page.getByLabel('Your email').fill('not-an-email');
-  await page.getByRole('button', { name: 'Send me the invite' }).click();
+  await page.getByRole('button', { name: 'Get launch news' }).click();
   await expect(page.locator('#waitlist-message')).toContainText('valid email address');
   await expect(page.getByLabel('Your email')).toHaveAttribute('aria-invalid', 'true');
   expect(calls).toBe(0);
@@ -56,7 +56,7 @@ test('a network failure offers a retry that then succeeds', async ({ page }) => 
   });
   await page.goto('/');
   await page.getByLabel('Your email').fill('learner@example.com');
-  await page.getByRole('button', { name: 'Send me the invite' }).click();
+  await page.getByRole('button', { name: 'Get launch news' }).click();
   await expect(page.locator('#waitlist-message')).toContainText('could not reach the server');
   await expect(page.getByLabel('Your email')).toHaveValue('learner@example.com');
   await page.getByRole('button', { name: 'Try again' }).click();
