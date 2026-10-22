@@ -21,8 +21,8 @@ const PAGES = ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/t
 const PERSONA_PAGES = [
   { path: '/', primary: 'Start learning' },
   { path: '/learners', primary: 'Start learning' },
-  { path: '/parents', primary: 'Sign in as a parent' },
-  { path: '/teachers', primary: 'Sign in as a teacher' },
+  { path: '/parents', primary: 'Create a free family space' },
+  { path: '/teachers', primary: 'Create a free class' },
 ] as const;
 /** The home hero stacks to one column below this width (globals.css, 45em). */
 const STACK_BELOW = 720;
@@ -127,21 +127,27 @@ for (const width of LANDING_WIDTHS) {
 }
 
 test.describe('the site header: keyboard focus follows the visual order (F-SITE-002 §3.2, §6)', () => {
-  /** Header stops, then the page's first stop (its primary action). Hidden phone items are out of the Tab order. */
-  const STOPS: Record<'phone' | 'wide', string[]> = {
-    phone: ['Skip to content', 'Hangul Route', 'Sign in', 'Start learning'],
+  /**
+   * Header stops, then the page's first stop (its primary action). Hidden phone items are out of the Tab order. [SN]
+   * AMENDMENTS-SITE-NEWUSER §3.2: the Start pill (visible text "Start") on phones off `/`, and the language control
+   * (its summary reads the hidden word "Language" and the endonym) before Sign in.
+   */
+  const LANGUAGE = 'Language English';
+  const STOPS: Record<'home' | 'phone' | 'wide', string[]> = {
+    home: ['Skip to content', 'Hangul Route', LANGUAGE, 'Sign in', 'Start learning'],
+    phone: ['Skip to content', 'Hangul Route', 'Start', LANGUAGE, 'Sign in', 'Start learning'],
     // Every persona page ships from S-4b (SHIPPED_PERSONA_PAGES).
-    wide: ['Skip to content', 'Hangul Route', 'Start learning', 'Learners', 'Parents', 'Teachers', 'Sign in', 'Start learning'],
+    wide: ['Skip to content', 'Hangul Route', 'Start', 'Learners', 'Parents', 'Teachers', LANGUAGE, 'Sign in', 'Start learning'],
   };
   for (const path of ['/', '/learners']) {
     for (const width of [...LANDING_WIDTHS, 1280]) {
       test(`${path} at ${width}px: skip link, brand, then the header items left to right, then the page`, async ({ page }) => {
         await page.setViewportSize({ width, height: HEIGHT });
         await page.goto(path);
-        const expected = width >= 720 ? STOPS.wide : STOPS.phone;
+        const expected = width >= 720 ? STOPS.wide : path === '/' ? STOPS.home : STOPS.phone;
         const stops = await tabStops(page, expected.length);
         // The brand mark ("HR", from 360 px) is part of the brand link's name (WCAG 2.5.3); the name is the rest.
-        expect(stops.map((stop) => stop.name.replace(/^HR\s*/, ''))).toEqual(expected);
+        expect(stops.map((stop) => stop.name.replace(/^HR\s*/, '').replace(/\s+/g, ' '))).toEqual(expected);
         // Reading order from the brand on (the skip link sits over the page while focused).
         for (let i = 2; i < stops.length; i += 1) {
           const prev = stops[i - 1];
@@ -153,27 +159,46 @@ test.describe('the site header: keyboard focus follows the visual order (F-SITE-
     }
   }
 
-  test('/ : the hero link "Parent or teacher? Find your page" moves focus to the persona chooser', async ({ page }) => {
+  test("[SN] / : the hero's grown-up links open /parents and /teachers; an old #who link still focuses the chooser", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: HEIGHT });
     await page.goto('/');
-    await page.getByRole('link', { name: 'Parent or teacher? Find your page', exact: true }).click();
-    await expect(page).toHaveURL(/#who$/);
-    await expect(page.locator('#who')).toBeFocused();
+    await page.locator('main').getByRole('link', { name: "I'm a parent", exact: true }).click();
+    await expect(page).toHaveURL(/\/parents$/);
+    await page.goto('/');
+    await page.locator('main').getByRole('link', { name: "I'm a teacher", exact: true }).click();
+    await expect(page).toHaveURL(/\/teachers$/);
+    await page.goto('/#who');
     await expect(page.locator('#who')).toBeInViewport();
+  });
+
+  test('[SN] the language menu: Escape closes it and returns focus to its summary; a tap outside closes it', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: HEIGHT });
+    await page.goto('/parents');
+    const summary = page.locator('header details.hr-site-lang > summary');
+    await summary.click();
+    await expect(page.locator('header details.hr-site-lang')).toHaveAttribute('open', '');
+    await expect(page.locator('header .hr-site-lang-menu a[hreflang="es"]')).toHaveAttribute('href', '/es/parents');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('header details.hr-site-lang')).not.toHaveAttribute('open', '');
+    await expect(summary).toBeFocused();
+    await summary.click();
+    await page.mouse.click(10, HEIGHT - 10);
+    await expect(page.locator('header details.hr-site-lang')).not.toHaveAttribute('open', '');
   });
 });
 
 test.describe('home hero: stacked and capped below 720px, two columns from 720px', () => {
   /** 600 and 719 sit between the cap and the stacking breakpoint, where the cap, not the column, sets the width. */
   for (const width of [320, 375, 600, 719]) {
-    test(`${width}px: the hero art is capped at 240 px and centred, under the text`, async ({ page }) => {
+    // [SN] AMENDMENTS-SITE-NEWUSER §3.3: the art holds the phone frame, capped at 22rem (352 px at default text).
+    test(`${width}px: the hero art is capped at 352 px and centred, under the text`, async ({ page }) => {
       await page.setViewportSize({ width, height: HEIGHT });
       await page.goto('/');
       const art = page.locator('.hr-site-hero-art').first();
       const cap = await art.evaluate((el) => getComputedStyle(el).maxWidth);
-      expect(cap).toBe('240px');
+      expect(cap).toBe('352px');
       const rect = await box(page, '.hr-site-hero-art');
-      expect(rect.right - rect.left).toBeLessThanOrEqual(240.5);
+      expect(rect.right - rect.left).toBeLessThanOrEqual(352.5);
       const parent = await art.evaluate((el) => {
         const r = (el.parentElement as HTMLElement).getBoundingClientRect();
         return { left: r.left + window.scrollX, right: r.right + window.scrollX };
@@ -196,34 +221,59 @@ test.describe('home hero: stacked and capped below 720px, two columns from 720px
 
 test.describe('Hoya is drawn square inside the hero art, and the bubble stays readable', () => {
   for (const width of [320, 375, 768, 1280]) {
-    test(`${width}px: Hoya is square, sized and inside the art box; the bubble paints above him`, async ({ page }) => {
+    test(`${width}px: Hoya is square, a third of the box and inside it; the capture is drawn; the bubble never covers the phone frame`, async ({ page }) => {
       await page.setViewportSize({ width, height: HEIGHT });
       await page.goto('/');
       const art = await box(page, '.hr-site-hero-art');
       const svg = await box(page, '.hr-site-hero-art svg[data-pose]');
       const w = svg.right - svg.left;
       const h = svg.bottom - svg.top;
-      expect(w, 'Hoya width').toBeGreaterThan(100);
+      // [SN] Hoya is 34 % of the box (§3.3 item 2).
+      expect(w / (art.right - art.left), 'Hoya is about a third of the art box').toBeGreaterThan(0.3);
+      expect(w / (art.right - art.left)).toBeLessThan(0.38);
       expect(Math.abs(w - h), `Hoya is square (${w}x${h})`).toBeLessThanOrEqual(1);
       expect(svg.left).toBeGreaterThanOrEqual(art.left - 0.5);
       expect(svg.right).toBeLessThanOrEqual(art.right + 0.5);
       expect(svg.top).toBeGreaterThanOrEqual(art.top - 0.5);
       expect(svg.bottom).toBeLessThanOrEqual(art.bottom + 0.5);
 
-      // Copy that wraps (en-XA, longer es / ko) is never covered by Hoya: stretch the bubble so it grows up over him,
-      // then hit-test it.
+      // [SN] The capture is loaded and drawn inside the phone frame, its alt text from the dictionary.
+      const capture = page.locator('.hr-site-hero-phone img');
+      await expect(capture).toHaveAttribute('alt', /^The app on a phone, in the first quest/);
+      expect(await capture.evaluate((img) => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      const phone = await box(page, '.hr-site-hero-phone');
+      expect(phone.left).toBeGreaterThanOrEqual(art.left - 0.5);
+      expect(phone.right).toBeLessThanOrEqual(art.right + 0.5);
+
+      // Copy that wraps (en-XA, longer es / ko) never covers the phone frame: stretch the bubble, then compare.
       const bubble = page.locator('.hr-site-bubble').first();
-      const onTop = await bubble.evaluate((el) => {
+      const right = await bubble.evaluate((el) => {
         el.textContent = Array.from({ length: 6 }, () => 'Hoya says a longer hello that wraps').join(' ');
-        el.scrollIntoView({ block: 'center' });
-        const r = el.getBoundingClientRect();
-        const hoya = el.parentElement?.querySelector('svg[data-pose]')?.getBoundingClientRect();
-        const overlaps = !!hoya && r.top < hoya.bottom && hoya.top < r.bottom;
-        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + 4);
-        return { overlaps, onTop: hit !== null && el.contains(hit) };
+        return el.getBoundingClientRect().right + window.scrollX;
       });
-      expect(onTop.overlaps, 'the stretched bubble reaches up over Hoya (guards the probe itself)').toBe(true);
-      expect(onTop.onTop, 'the bubble paints above Hoya').toBe(true);
+      // On phones the bubble (at most 34 %) never covers the frame (from 40 %); from 45em it sits over Hoya, inside the box.
+      if (width < STACK_BELOW) expect(right, 'the stretched bubble stays left of the phone frame').toBeLessThanOrEqual(phone.left + 0.5);
+      else expect(right, 'the stretched bubble stays inside the art box').toBeLessThanOrEqual(art.right + 0.5);
     });
+  }
+});
+
+/** [SN] AMENDMENTS-SITE-NEWUSER §4: nothing scrolls sideways with the header's language menu open. */
+test.describe('[SN] the language menu open: no sideways scroll, the menu inside the screen', () => {
+  for (const width of LANDING_WIDTHS) {
+    for (const route of PAGES) {
+      test(`${route} at ${width}px`, async ({ page }) => {
+        await page.setViewportSize({ width, height: HEIGHT });
+        await page.goto(route);
+        await page.locator('header details.hr-site-lang > summary').click();
+        const menu = await box(page, 'header .hr-site-lang-menu');
+        expect(menu.left).toBeGreaterThanOrEqual(0);
+        expect(menu.right).toBeLessThanOrEqual(width);
+        const { doc, body } = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
+        const culprits = doc > width || body > width ? (await overflowing(page, width)).join('; ') : '';
+        expect(doc, culprits).toBeLessThanOrEqual(width);
+        expect(body, culprits).toBeLessThanOrEqual(width);
+      });
+    }
   }
 });

@@ -64,6 +64,24 @@ test('a network failure offers a retry that then succeeds', async ({ page }) => 
   expect(attempt).toBe(2);
 });
 
+// [SN] AMENDMENTS-SITE-NEWUSER §3.3 item 6: the home's form sits in the quiet launch-news section after the band.
+test('[SN] the form is the plain-tone one in #news, after the closing band, with 64 px controls', async ({ page }) => {
+  await page.route(endpoint(), (route) => route.fulfill(ok));
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/');
+  const field = page.locator('#news').getByLabel('Your email');
+  await expect(field).toBeVisible();
+  const band = await page.locator('section.hr-site-band').boundingBox();
+  const form = await page.locator('#news form').boundingBox();
+  expect((form?.y ?? 0)).toBeGreaterThan((band?.y ?? Infinity) + (band?.height ?? 0));
+  for (const control of [field, page.locator('#news').getByRole('button', { name: 'Send me the invite' })]) {
+    expect((await control.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(64);
+  }
+  await field.fill('learner@example.com');
+  await page.locator('#news').getByRole('button', { name: 'Send me the invite' }).click();
+  await expect(page.locator('#news').getByRole('status').filter({ hasText: "You're on the list" })).toBeVisible();
+});
+
 test('the consent line links to the privacy policy', async ({ page }) => {
   await page.goto('/');
   const consent = page.locator('#waitlist-consent');

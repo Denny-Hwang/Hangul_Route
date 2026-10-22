@@ -27,6 +27,35 @@ test.describe('es and ko ship (F-I18N-001 rows 15b / 16b)', () => {
       await expect(page.locator(banner)).toHaveCount(0);
     });
 
+    // [SN] AMENDMENTS-SITE-NEWUSER §3.2 (SN-D3): the banner on every English page, offering the same page.
+    test('[SN] on /parents is offered /es/parents, and the link opens it', async ({ page }) => {
+      await page.goto('/parents');
+      const offer = page.locator(banner);
+      await expect(offer).toBeVisible();
+      await expect(offer.locator('a')).toHaveAttribute('href', '/es/parents');
+      await expect(offer.locator('a')).toHaveAttribute('hreflang', 'es');
+      await offer.locator('a').click();
+      await page.waitForURL((url) => url.pathname === '/es/parents');
+      await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    });
+
+    test('[SN] closed on one page, it stays closed on the next for the session', async ({ page }) => {
+      await page.goto('/teachers');
+      await page.locator(`${banner} button`).click();
+      await expect(page.locator(banner)).toHaveCount(0);
+      await page.goto('/learners');
+      await expect(page.locator('footer')).toBeVisible();
+      await page.waitForTimeout(300);
+      await expect(page.locator(banner)).toHaveCount(0);
+    });
+
+    test('[SN] not on the legal pages', async ({ page }) => {
+      await page.goto('/privacy');
+      await expect(page.getByRole('contentinfo')).toBeVisible();
+      await page.waitForTimeout(300);
+      await expect(page.locator(banner)).toHaveCount(0);
+    });
+
     test('closing it keeps it closed for the visit', async ({ page }) => {
       await page.goto('/');
       await page.locator(`${banner} button`).click();
@@ -86,9 +115,9 @@ test.describe('es and ko ship (F-I18N-001 rows 15b / 16b)', () => {
       await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     });
 
-    test('Start learning on /ko carries the locale to the app (header, hero and footer)', async ({ page }) => {
+    test('Start learning on /ko carries the locale to the app (header, hero, closing band and footer)', async ({ page }) => {
       await page.goto('/ko');
-      await expect(page.locator('a[href="https://app.hangulroute.com?lang=ko"]')).toHaveCount(3);
+      await expect(page.locator('a[href="https://app.hangulroute.com?lang=ko"]')).toHaveCount(4);
     });
   });
 });
