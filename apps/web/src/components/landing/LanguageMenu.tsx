@@ -14,7 +14,8 @@ import { VISUALLY_HIDDEN, cardShadow } from '../../lib/site-style';
  * menu is one plain link per shown locale to the same page in that locale, each 64 px tall with `lang` and `hrefLang`,
  * the current one `aria-current="page"`, bold and checked (not colour alone). Endonyms and paths come in as values from
  * the server header (`LOCALE_META`, `sitePath`): this client file imports no dictionary. Below 45em the globe and a
- * small chevron sit over the endonym in one 64 x 64 box; from 45em globe, endonym and chevron sit in a row, so each
+ * small chevron sit over the endonym in one 64 x 64 box; from 45em globe, endonym and chevron sit in a row (from 45em to
+ * 60em the endonym is visually hidden, as the brand name is there, so the header keeps one row in Spanish), so each
  * layout has its own chevron (the stylesheet shows one; nothing is reordered). Layout and the breakpoint rules are the
  * `hr-site-lang*` rules of `globals.css`.
  */
@@ -112,7 +113,9 @@ export function LanguageMenu({ label, items, push = false }: LanguageMenuProps):
           <Chevron className="hr-site-lang-chev-phone" />
         </span>
         <span style={VISUALLY_HIDDEN}>{label}</span>{' '}
-        <span lang={current.lang}>{current.endonym}</span>
+        <span lang={current.lang} className="hr-site-lang-endonym">
+          {current.endonym}
+        </span>
         <Chevron className="hr-site-lang-chev-wide" />
       </summary>
       <ul

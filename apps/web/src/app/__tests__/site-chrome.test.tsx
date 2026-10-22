@@ -207,7 +207,7 @@ describe('LanguageMenu in the header', () => {
     const summary = menu.match(/<summary[^>]*>([\s\S]*?)<\/summary>/)?.[1] ?? '';
     expect(summary).toMatch(/<svg[^>]*aria-hidden="true"/);
     expect(summary).toContain(`>${getMessages('es').landing.footer.language}</span>`);
-    expect(summary).toContain(`<span lang="es">${LOCALE_META.es.endonym}</span>`);
+    expect(summary).toContain(`<span lang="es" class="hr-site-lang-endonym">${LOCALE_META.es.endonym}</span>`);
     expect(menu).not.toMatch(/<details[^>]*\sopen/);
   });
 
@@ -455,13 +455,13 @@ describe('globals.css: the site rules', () => {
     expect(rules).toMatch(/@media \(min-width: 45em\)\s*\{\s*\.hr-site-header-start,\s*\.hr-site-header-start\.hr-site-wide-only\s*\{\s*display:\s*inline-flex/);
   });
 
-  it('[SN] the brand name: visually hidden below 30em, shown to 45em, hidden to 60em, shown after; on / shown from 22.5em', () => {
+  it('[SN] the brand name: visually hidden below 30em, shown to 45em, hidden to 60em (with the language endonym), shown after; on / shown from 22.5em', () => {
     const block = (q: string): string => rules.match(new RegExp(`@media \\(min-width: ${q}\\)\\s*\\{((?:[^{}]*\\{[^{}]*\\})*)\\s*\\}`))?.[1] ?? '';
     expect(rules).toMatch(/\n\.hr-site-brand-name\s*\{[^}]*clip:\s*rect\(0 0 0 0\)/);
     expect(block('22.5em')).toMatch(/\.hr-site-brand-home \.hr-site-brand-name\s*\{[^}]*position:\s*static/);
     expect(block('30em')).toMatch(/\.hr-site-brand-name\s*\{[^}]*position:\s*static/);
-    expect(block('45em')).toMatch(/\.hr-site-brand-name,\s*\.hr-site-brand-home \.hr-site-brand-name\s*\{[^}]*position:\s*absolute/);
-    expect(block('60em')).toMatch(/\.hr-site-brand-name,\s*\.hr-site-brand-home \.hr-site-brand-name\s*\{[^}]*position:\s*static/);
+    expect(block('45em')).toMatch(/\.hr-site-brand-name,\s*\.hr-site-brand-home \.hr-site-brand-name,\s*\.hr-site-lang-endonym\s*\{[^}]*position:\s*absolute/);
+    expect(block('60em')).toMatch(/\.hr-site-brand-name,\s*\.hr-site-brand-home \.hr-site-brand-name,\s*\.hr-site-lang-endonym\s*\{[^}]*position:\s*static/);
   });
 
   it('[SN] the language menu hangs from the header row, inside the screen less the gutters', () => {

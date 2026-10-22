@@ -583,9 +583,12 @@ button {
     font-size: var(--hr-site-size-body);
   }
 
-  /* 720 to 959 px: the brand shows the mark only; the mark and the name stay the link's accessible name. */
+  /* 720 to 959 px: the brand shows the mark only; the mark and the name stay the link's accessible name. The language
+     control likewise shows its globe and chevron only (the endonym stays in its name), so the Spanish header (Empezar,
+     three nav links, Entrar) keeps one row on tablets. */
   .hr-site-brand-name,
-  .hr-site-brand-home .hr-site-brand-name {
+  .hr-site-brand-home .hr-site-brand-name,
+  .hr-site-lang-endonym {
     position: absolute;
     width: var(--hr-site-border-thin);
     height: var(--hr-site-border-thin);
@@ -707,7 +710,8 @@ button {
 
 @media (min-width: 60em) {
   .hr-site-brand-name,
-  .hr-site-brand-home .hr-site-brand-name {
+  .hr-site-brand-home .hr-site-brand-name,
+  .hr-site-lang-endonym {
     position: static;
     width: auto;
     height: auto;

@@ -97,7 +97,7 @@ describe('LanguageMenu markup (without JavaScript)', () => {
     const summary = /<summary[^>]*>([\s\S]*?)<\/summary>/.exec(html)?.[1] ?? '';
     expect(summary).toMatch(/<svg[^>]*aria-hidden="true"/);
     expect(summary).toMatch(/<span style="[^"]*position:absolute[^"]*">Language<\/span>/);
-    expect(summary).toContain('<span lang="en">English</span>');
+    expect(summary).toContain('<span lang="en" class="hr-site-lang-endonym">English</span>');
   });
 
   it('one link per locale, each with lang and hrefLang, the current one aria-current and checked', () => {
@@ -117,6 +117,15 @@ describe('LanguageMenu markup (without JavaScript)', () => {
   it('is not rendered with one locale shown, or with no current one', () => {
     expect(renderToStaticMarkup(<LanguageMenu label="Language" items={ITEMS.slice(0, 1)} />)).toBe('');
     expect(renderToStaticMarkup(<LanguageMenu label="Language" items={ITEMS.map((item) => ({ ...item, current: false }))} />)).toBe('');
+  });
+
+  it('the endonym is visually hidden from 45em to 60em only, as the brand name (the header keeps one row in Spanish)', () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'app', 'globals.css'), 'utf8');
+    const wide = css.slice(css.indexOf('@media (min-width: 45em)'), css.indexOf('@media (min-width: 60em)'));
+    expect(wide).toMatch(/\.hr-site-brand-home \.hr-site-brand-name,\s*\.hr-site-lang-endonym \{\s*position: absolute;/);
+    const widest = css.slice(css.indexOf('@media (min-width: 60em)'));
+    expect(widest).toMatch(/\.hr-site-lang-endonym \{\s*position: static;/);
+    expect(css.slice(0, css.indexOf('@media (min-width: 45em)'))).not.toContain('.hr-site-lang-endonym');
   });
 
   it('push takes the phone auto margin (no Start pill before it)', () => {

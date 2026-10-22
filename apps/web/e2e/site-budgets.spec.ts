@@ -380,6 +380,25 @@ for (const lang of ['en', 'es', 'ko'] as const) {
   });
 }
 
+/**
+ * [SN] On tablets and laptops the header is one row in every locale (from 720 to 959 px the brand shows its mark and
+ * the language control its globe, so the Spanish labels fit beside the nav from about 740 px; between 720 and 740 px
+ * the Spanish header takes two rows, which no device width in common use falls in).
+ */
+for (const lang of ['en', 'es', 'ko'] as const) {
+  for (const width of [768, 1024, 1280]) {
+    test(`[SN] ${lang} at ${width} px: the header is one row on every site page`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      for (const path of ['/', '/learners', '/parents', '/teachers', '/about', '/privacy']) {
+        await page.goto(lang === 'en' ? path : path === '/' ? `/${lang}` : `/${lang}${path}`);
+        const { height, rows } = await headerRows(page);
+        expect(rows, `${lang} ${path}`).toBe(1);
+        expect(height, `${lang} ${path}`).toBeLessThanOrEqual(HEADER_MAX);
+      }
+    });
+  }
+}
+
 /** [SN] §3.11 image budgets: the page's own capture files, one locale, every `<picture>` source counted. */
 const IMAGE_BUDGET_KB: Readonly<Record<string, number>> = { '/': 40, '/learners': 70, '/parents': 60, '/teachers': 80 };
 for (const lang of ['en', 'es', 'ko'] as const) {
