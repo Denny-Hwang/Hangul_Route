@@ -55,6 +55,7 @@ import type { GuestRecord, Profile } from '@hangul-route/content-schema';
 import { endGrownUpTab } from '../../platform/grown-up-tab';
 import { activeLearnerIdNow, activeLearnerIdSelector } from '../active-learner';
 import { followGuestChanges, isLiveGuestId, liveGuestId, readStoredGuest, useGuestStore } from '../guest-store';
+import { hydrateGuest } from '../guest-sweep';
 import { useProfileStore } from '../profile-store';
 import { useUiStore } from '../ui-store';
 import { useAccountStore } from '../account-store';
@@ -113,8 +114,24 @@ describe('startGuestRun (5.3, CS-G3)', () => {
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
     expect(endGrownUpTab).toHaveBeenCalledTimes(1);
-    expect(started).toEqual({ resumed: true, record: record({ lastAt: iso(T0 + 60_000) }) });
+    // GU-D12, GU-D13: a reopen is no play: `lastAt` stays, and nothing is written.
+    expect(started).toEqual({ resumed: true, record: record() });
+    expect(stored()).toEqual(record());
+    expect(channel.posts).toBe(0);
     expect(useGuestStore.getState().running).toBe(true);
+  });
+
+  it('a reopen or an adopt never moves lastAt, so a record never lives longer without play (GU-D13)', async () => {
+    disk.set('guest', JSON.stringify(record({ questDone: true })));
+    for (const via of ['reopen', 'welcome', 'chooser', 'site'] as const) {
+      useGuestStore.setState({ record: null, running: false });
+      const started = await useGuestStore.getState().startGuestRun(via, T0 + 20 * 60_000);
+      expect(started).toEqual({ resumed: true, record: record({ questDone: true }) });
+    }
+    expect(stored()!.lastAt).toBe(iso(T0));
+    // Only play moves it.
+    await useGuestStore.getState().recordGuestPlay({}, T0 + 25 * 60_000);
+    expect(stored()!.lastAt).toBe(iso(T0 + 25 * 60_000));
   });
 
   it('a reopen with no live record starts nothing (the session still closes)', async () => {
@@ -164,7 +181,7 @@ describe('one guest per device (GU-D3): a second tab adopts the live record', ()
     // Another tab: its memory is empty, the storage is shared.
     useGuestStore.setState({ record: null, running: false });
     const second = await useGuestStore.getState().startGuestRun('welcome', T0 + 5_000);
-    expect(second).toEqual({ resumed: true, record: { ...first!.record, lastAt: iso(T0 + 5_000) } });
+    expect(second).toEqual({ resumed: true, record: first!.record });
     expect(stored()!.id).toBe(first!.record.id);
   });
 
@@ -250,6 +267,36 @@ describe('a record that does not parse (7.2) is no guest and is overwritten by t
     expect(await readStoredGuest()).toEqual({ ok: false });
   });
 
+  it('a start over a damaged record that names an unsaved id removes that id\'s keys first; a learner\'s keys stay', async () => {
+    disk.set('guest', JSON.stringify({ v: 9, id: 'profile:old00001', startedAt: iso(T0) }));
+    disk.set('progress:profile:old00001', '{}');
+    disk.set('plans:profile:old00001', '{}');
+    disk.set('progress:profile:mina0001', '{}');
+    const started = await useGuestStore.getState().startGuestRun('site', T0);
+    expect(started!.record.id).not.toBe('profile:old00001');
+    expect(disk.has('progress:profile:old00001')).toBe(false);
+    expect(disk.has('plans:profile:old00001')).toBe(false);
+    expect(disk.has('progress:profile:mina0001')).toBe(true);
+    expect(stored()).toEqual(started!.record);
+
+    // The id is a learner's on the stored list (the list in memory missed it), removed (tombstoned), or the lists do
+    // not read: nothing is deleted.
+    for (const setup of [
+      () => disk.set('profiles', JSON.stringify([{ id: 'profile:old00001' }])),
+      () => disk.set('profiles:tombstones', JSON.stringify({ v: 1, ids: ['profile:old00001'], at: {} })),
+      () => disk.set('profiles', JSON.stringify({ not: 'a list' })),
+      () => disk.set('profiles', '{not json'),
+    ]) {
+      disk.clear();
+      useGuestStore.setState({ record: null, running: false });
+      disk.set('guest', JSON.stringify({ v: 9, id: 'profile:old00001' }));
+      disk.set('progress:profile:old00001', '{}');
+      setup();
+      await useGuestStore.getState().startGuestRun('site', T0);
+      expect(disk.has('progress:profile:old00001')).toBe(true);
+    }
+  });
+
   it('a start over a damaged record writes a new one', async () => {
     disk.set('guest', JSON.stringify({ v: 2, id: 'profile:guest001' }));
     const started = await useGuestStore.getState().startGuestRun('site', T0);
@@ -257,6 +304,34 @@ describe('a record that does not parse (7.2) is no guest and is overwritten by t
     expect(stored()).toEqual(started!.record);
     await useGuestStore.getState().refresh();
     expect(useGuestStore.getState().record).toEqual(started!.record);
+  });
+});
+
+describe('the boot\'s repair and sweep tell the other tabs (section 6.4)', () => {
+  it('a sweep or a repair posts hr-profiles changed, and a second tab\'s run of that record ends on its refresh', async () => {
+    // This tab is the second one: its run is of the record the boot in the first tab finds.
+    await useGuestStore.getState().startGuestRun('site', T0);
+    const live = useGuestStore.getState().record!;
+    const runningTab = useGuestStore.getState();
+    channel.posts = 0;
+
+    // The first tab's boot, 40 days later: the never-saved record is swept.
+    useGuestStore.setState({ record: null, running: false, hydrated: false });
+    expect(await hydrateGuest(T0 + 40 * 24 * 60 * 60 * 1000)).toBe('sweep');
+    expect(channel.posts).toBe(1);
+    expect(stored()).toBeNull();
+
+    // Back in the second tab: the post reads hr:guest again, and the run ends.
+    useGuestStore.setState({ record: live, running: runningTab.running, hydrated: true, memoryOnly: false });
+    await useGuestStore.getState().refresh();
+    expect(useGuestStore.getState()).toMatchObject({ record: null, running: false });
+
+    // A repair posts too.
+    disk.set('guest', JSON.stringify(record()));
+    useProfileStore.setState({ profiles: [{ ...mina, id: 'profile:guest001' }] });
+    channel.posts = 0;
+    expect(await hydrateGuest(T0)).toBe('repair');
+    expect(channel.posts).toBe(1);
   });
 });
 

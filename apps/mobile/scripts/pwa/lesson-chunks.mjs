@@ -47,7 +47,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 7eb5bad61 (6,491,546 B before; 4,713,416 B raw after its review fixes); merged onto the final integration (main fc580beed, release `build:web`) it measures
   // 4,732,797 B raw / 1,243,089 B gzip, so the line is that measurement plus a 7,203 B rounding margin.
   // [GU] Row GU-2 adds the always-on guest rules (the gates, the marker, the anonymous telemetry, the boot sweep):
-  // 4,744,234 B raw / 1,246,930 B gzip (release `build:web`; 4,734,519 B raw on GU-1), so the line is that plus 5,766 B.
+  // 4,744,234 B raw / 1,246,930 B gzip (release `build:web`; 4,734,519 B raw on GU-1), so the line is that plus 5,766 B;
+  // 4,747,423 B raw / 1,247,894 B gzip with its review fixes (2,577 B left under the line; later GU rows load lazily).
   startBundleRaw: 4_750_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at

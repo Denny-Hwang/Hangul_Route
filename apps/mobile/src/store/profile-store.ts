@@ -81,14 +81,30 @@ interface Actions {
   /**
    * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 5.4 step 2 (row GU-2): saves the guest as an ordinary profile with the
    * guest's id (GU-D2, GU-D9) and the run's start as `createdAt`, appended and made active in one write under the
-   * `hr:profiles` lock. The list is read again first, and an id already on it (another tab saved the guest) is refused
-   * (`null`). The name and the other fields pass the `createProfile` reducer's validation, unchanged.
+   * `hr:profiles` lock. In one step of this tab's queue, inside the lock: the stored list is read strictly, an id
+   * already on it (another tab saved the guest) is refused (`duplicate`), the list is written and awaited, and read
+   * back (`confirmed`). A failed read or write changes nothing (`failed`). The name and the other fields pass the
+   * `createProfile` reducer's validation, unchanged (an invalid one throws). Resolves only once the write is done, so
+   * `hr:guest` is deleted after the profile is on disk, never before (section 5.4, with or without Web Locks).
    */
   promoteGuest: (
     record: GuestRecord,
     input: { displayName: string; ageGroup: Profile['ageGroup']; avatar: AvatarKind; learnerType: LearnerType },
-  ) => Promise<Profile | null>;
+  ) => Promise<GuestPromotion>;
 }
+
+/**
+ * [GU] What `promoteGuest` did (section 5.4). Only `saved` with `confirmed` lets the caller delete `hr:guest`: the
+ * profile is then on disk, read back. Any other answer keeps `hr:guest`, so the guest's progress is never left under
+ * an id that neither record names (G2, GU-D13); the next boot's hydrate repair settles a profile that did land.
+ */
+export type GuestPromotion =
+  /** The profile was written; `confirmed` when a strict read of `hr:profiles` afterwards holds its id. */
+  | { kind: 'saved'; profile: Profile; confirmed: boolean }
+  /** The stored list (or this tab) already holds the id: another tab saved the guest first. Nothing was written. */
+  | { kind: 'duplicate' }
+  /** `hr:profiles` could not be read or written: nothing changed, in memory or on disk. */
+  | { kind: 'failed' };
 
 /**
  * [OA] Every id this tab has read or written (the merge does not take back an id removed here). An id another tab
@@ -181,33 +197,36 @@ async function readStored(): Promise<{ storedRaw: unknown; tombstonesRaw: unknow
  * are told on `hr-profiles`.
  */
 function flushStep(): Promise<void> {
-  return withTabLock(PROFILES_LOCK, async () => {
-    const changes = pending.slice();
-    if (changes.length === 0) return;
-    const { storedRaw, tombstonesRaw } = await readStored();
-    const now = Date.now();
-    const read = parseTombstones(tombstonesRaw);
-    let tombstones = pruneTombstones(read, now);
-    for (const c of changes) {
-      if (c.revivedId !== undefined) tombstones = removeTombstone(tombstones, c.revivedId);
-      if (c.removedId !== undefined) tombstones = addTombstone(tombstones, c.removedId, now);
-    }
-    remember(useProfileStore.getState().profiles);
-    let merged = mergeProfileLists({ stored: storedProfileItems<Profile>(storedRaw), local: useProfileStore.getState().profiles, seen, removed: tombstones.ids });
-    for (const c of changes) merged = c.change(merged);
-    const touched = new Map(touches);
-    merged = withTouches(merged);
-    if (tombstones !== read) await writeJson(PROFILE_TOMBSTONES_KEY, tombstones);
-    await writeJson(PROFILES_KEY, merged);
-    pending.splice(0, changes.length);
-    for (const [id, at] of touched) if (touches.get(id) === at) touches.delete(id);
-    forget(tombstones.ids);
-    // [OA] Row OA-5, section 13.2: a removed learner leaves the locks in the same write sequence.
-    for (const c of changes) if (c.removedId !== undefined) await dropProfileLock(c.removedId);
-    remember(merged);
-    followMerged(withPending(merged), tombstones.ids);
-    postProfilesChanged();
-  });
+  return withTabLock(PROFILES_LOCK, flushLocked);
+}
+
+/** `flushStep`'s body, for a caller already inside the `hr:profiles` lock and the queue (`promoteGuest`). Throws when a read or write fails. */
+async function flushLocked(): Promise<void> {
+  const changes = pending.slice();
+  if (changes.length === 0) return;
+  const { storedRaw, tombstonesRaw } = await readStored();
+  const now = Date.now();
+  const read = parseTombstones(tombstonesRaw);
+  let tombstones = pruneTombstones(read, now);
+  for (const c of changes) {
+    if (c.revivedId !== undefined) tombstones = removeTombstone(tombstones, c.revivedId);
+    if (c.removedId !== undefined) tombstones = addTombstone(tombstones, c.removedId, now);
+  }
+  remember(useProfileStore.getState().profiles);
+  let merged = mergeProfileLists({ stored: storedProfileItems<Profile>(storedRaw), local: useProfileStore.getState().profiles, seen, removed: tombstones.ids });
+  for (const c of changes) merged = c.change(merged);
+  const touched = new Map(touches);
+  merged = withTouches(merged);
+  if (tombstones !== read) await writeJson(PROFILE_TOMBSTONES_KEY, tombstones);
+  await writeJson(PROFILES_KEY, merged);
+  pending.splice(0, changes.length);
+  for (const [id, at] of touched) if (touches.get(id) === at) touches.delete(id);
+  forget(tombstones.ids);
+  // [OA] Row OA-5, section 13.2: a removed learner leaves the locks in the same write sequence.
+  for (const c of changes) if (c.removedId !== undefined) await dropProfileLock(c.removedId);
+  remember(merged);
+  followMerged(withPending(merged), tombstones.ids);
+  postProfilesChanged();
 }
 
 function persistList(change: ListChange = unchanged, ids: ListIds = {}): void {
@@ -427,21 +446,59 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   },
 
   promoteGuest: async (record, input) => {
-    // The stored list first: a guest another tab saved is already a profile there.
-    await get().refresh().catch(() => undefined);
-    const { profiles, activeId } = get();
-    if (profiles.some((p) => p.id === record.id)) return null;
-    const startedAt = Date.parse(record.startedAt);
-    const now = Date.now();
-    const fixed: Clock = { now: () => (Number.isFinite(startedAt) ? startedAt : now), nextId: () => record.id.slice('profile:'.length) };
-    // The id is the guest's (`profile:` and the same suffix).
-    const result = createProfileReducer({ profiles, activeId }, input, fixed);
-    // Made active now: `lastActiveAt` is the save, `createdAt` the run's start.
-    const created: Profile = { ...result.created, lastActiveAt: new Date(now).toISOString() };
-    const next = { profiles: [...profiles, created], activeId: created.id };
-    // `adding` keeps a copy another tab stored meanwhile: never two profiles with one id.
-    commitSet(set, { profiles, activeId }, next, { now, change: adding(created), revivedId: created.id });
-    return created;
+    let outcome = { kind: 'failed' } as GuestPromotion;
+    // One step in this tab's queue and inside the `hr:profiles` lock: the duplicate check, the write and its read back.
+    await enqueue(() =>
+      withTabLock(PROFILES_LOCK, async () => {
+        let storedRaw: unknown;
+        try {
+          ({ storedRaw } = await readStored());
+        } catch {
+          return;
+        }
+        const { profiles, activeId } = get();
+        // A guest another tab saved is already a profile in the stored list.
+        if (profiles.some((p) => p.id === record.id) || storedProfileItems<Profile>(storedRaw).some((p) => p.id === record.id)) {
+          outcome = { kind: 'duplicate' };
+          return;
+        }
+        const startedAt = Date.parse(record.startedAt);
+        const now = Date.now();
+        const fixed: Clock = { now: () => (Number.isFinite(startedAt) ? startedAt : now), nextId: () => record.id.slice('profile:'.length) };
+        // The id is the guest's (`profile:` and the same suffix); the reducer's validation is unchanged (it may throw).
+        const result = createProfileReducer({ profiles, activeId }, input, fixed);
+        // Made active now: `lastActiveAt` is the save, `createdAt` the run's start.
+        const created: Profile = { ...result.created, lastActiveAt: new Date(now).toISOString() };
+        const next = { profiles: [...profiles, created], activeId: created.id };
+        const changed = closesSession(activeId, next.activeId);
+        set(changed ? { ...next, activeSince: now } : next);
+        // `adding` keeps a copy another tab stored meanwhile: never two profiles with one id.
+        const entry: PendingChange = { change: adding(created), revivedId: created.id };
+        pending.push(entry);
+        try {
+          await flushLocked();
+        } catch {
+          // The write did not land: the profile goes from memory again and nothing waits to write it.
+          const at = pending.indexOf(entry);
+          if (at >= 0) pending.splice(at, 1);
+          const current = get();
+          set({ profiles: current.profiles.filter((p) => p.id !== created.id), activeId: current.activeId === created.id ? activeId : current.activeId });
+          return;
+        }
+        persistActive(created.id);
+        if (changed) closeGrownUpSession('switch');
+        let confirmed = false;
+        try {
+          confirmed = storedProfileItems<Profile>(await readJsonStrict<unknown>(PROFILES_KEY)).some((p) => p.id === created.id);
+        } catch {
+          confirmed = false;
+        }
+        outcome = { kind: 'saved', profile: created, confirmed };
+      }),
+    );
+    // This tab shows the profile another tab saved.
+    if (outcome.kind === 'duplicate') await get().refresh().catch(() => undefined);
+    return outcome;
   },
 }));
 

@@ -1,13 +1,15 @@
 import { GUEST_KEY, GuestRecordSchema, type GuestRecord, type GuestVia } from '@hangul-route/content-schema';
 import { create } from 'zustand';
-import { guestPlayed, guestTelemetryAnonymous, isLiveGuest, newGuestRecord } from '../logic/guest/guest-model';
+import { guestPlayed, guestTelemetryAnonymous, isLiveGuest, newGuestRecord, storedIdStatus, unreadableGuestId } from '../logic/guest/guest-model';
 import { makeProfileId } from '../logic/profiles/profile-model';
 import { postProfilesChanged, subscribeProfilesChanged } from '../platform/profiles-channel';
 import { readJsonExact, readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import { PROFILES_LOCK, withTabLock } from '../platform/tab-lock';
 import { setTelemetryProfileFilter } from '../platform/telemetry-filter';
 import { closeGrownUpSession } from './grown-up-session';
-import { useProfileStore } from './profile-store';
+import { sweepProfileKeys } from './profile-key-sweep';
+import { notifyProfileRemoved } from './profile-removal';
+import { PROFILES_KEY, PROFILE_TOMBSTONES_KEY, useProfileStore } from './profile-store';
 
 /**
  * [GU] The guest first quest at run time (AMENDMENTS-GUEST-FIRST-LESSON sections 5.3, 6.4, 7.2, GU-D1 to GU-D3,
@@ -41,9 +43,12 @@ export interface GuestRunStarted {
 interface Actions {
   /**
    * Section 5.3, CS-G3: starts or resumes the guest run. Always first `closeGrownUpSession()` (for every `via` and for
-   * a reopen), then, under the `hr:profiles` lock, adopts the live record or writes a new one with a fresh id, posts
-   * `hr-profiles` `changed` and sets `running`. Never selects a profile (`profile-store.setActive` is never called). A
-   * reopen with no live record starts nothing (`null`). A write that fails keeps the run in memory (`memoryOnly`).
+   * a reopen), then, under the `hr:profiles` lock, adopts the live record as it is (its `lastAt` moves only with play,
+   * `recordGuestPlay`, GU-D12, GU-D13), or writes a new one with a fresh id and posts `hr-profiles` `changed`; then
+   * sets `running`. Never selects a profile (`profile-store.setActive` is never called). A reopen with no live record
+   * starts nothing (`null`). A write that fails keeps the run in memory (`memoryOnly`). A new record written over one
+   * that does not parse first removes the keys of the id that record still names (`unreadableGuestId`), as the sweep
+   * would, so nothing is left under an id no record names.
    */
   startGuestRun: (via: GuestStart, now?: number) => Promise<GuestRunStarted | null>;
   /** GU-D12: a quest step entered or finished: `lastAt` moves to now, `questDone` once quest 1 is finished. */
@@ -91,6 +96,25 @@ function freshGuestId(): string {
   }
 }
 
+/**
+ * Section 7.2, GU-D13: before a start writes over a stored record that does not parse, the id it still names loses
+ * its keys (every per-profile store forgets it, then the OA-7a key sweep), as the boot's sweep would remove them. Only
+ * when the stored profile list and tombstones read exactly and neither holds the id (a saved or removed learner's
+ * keys are never touched). Never throws.
+ */
+async function sweepUnreadable(raw: unknown, profiles: readonly { id: string }[]): Promise<void> {
+  const id = unreadableGuestId(raw, profiles);
+  if (id === null) return;
+  try {
+    const [rawProfiles, rawTombstones] = await Promise.all([readJsonExact<unknown>(PROFILES_KEY), readJsonExact<unknown>(PROFILE_TOMBSTONES_KEY)]);
+    if (storedIdStatus(id, rawProfiles, rawTombstones) !== 'unknown') return;
+    hideGuestIdWhile(id, () => notifyProfileRemoved(id));
+    await sweepProfileKeys([id]);
+  } catch {
+    // A list that cannot be read decides nothing: the keys stay.
+  }
+}
+
 /** Writes the record; answers whether it is stored. Never throws. */
 async function store(record: GuestRecord): Promise<boolean> {
   try {
@@ -118,16 +142,19 @@ export const useGuestStore = create<State & Actions>((set, get) => ({
       const held = get().record;
       const ownHeld = (!read.ok || get().memoryOnly) && isLiveGuest(held, profiles) ? held : null;
       const live = isLiveGuest(stored, profiles) ? stored : ownHeld;
-      let record: GuestRecord;
-      if (live !== null) record = guestPlayed(live, now);
-      else if (via === 'reopen') return null;
-      else record = newGuestRecord(freshGuestId(), via, now);
-      const resumed = live !== null;
+      if (live !== null) {
+        // Adopted as it is: nothing is written, and a run held in memory stays there.
+        set({ record: live, running: true, memoryOnly: live !== stored });
+        return { record: live, resumed: true };
+      }
+      if (via === 'reopen') return null;
+      const record = newGuestRecord(freshGuestId(), via, now);
+      if (read.ok && read.raw !== null && stored === null) await sweepUnreadable(read.raw, profiles);
       // A record storage could not read is never written over (the run goes on in memory).
       const saved = read.ok ? await store(record) : false;
       set({ record, running: true, memoryOnly: !saved });
       if (saved) postProfilesChanged();
-      return { record, resumed };
+      return { record, resumed: false };
     });
   },
 
@@ -196,9 +223,28 @@ export function followGuestChanges(): () => void {
   });
 }
 
+/** The guest id a sweep is removing (the record is no longer in the store), so `track()` still keeps it out. */
+let removing: string | null = null;
+
+/**
+ * GU-D15: runs `step` with `guestId` treated as the live guest's by the telemetry filter, for the sweep's removal (the
+ * record is gone from the store by then): an event a removal listener sends with the id goes without it.
+ */
+export function hideGuestIdWhile<T>(guestId: string, step: () => T): T {
+  const before = removing;
+  removing = guestId;
+  try {
+    return step();
+  } finally {
+    removing = before;
+  }
+}
+
 // GU-D15, CS-G7: every event `track()` sends passes the guest rule first (no `profileId` in a guest run or for the live
 // guest's id; no experiment exposure for a guest). Registered when this module loads, which the learner boot does.
 setTelemetryProfileFilter((event) => {
   const { record, running } = useGuestStore.getState();
-  return guestTelemetryAnonymous({ event, guest: record, profiles: useProfileStore.getState().profiles, running });
+  const profiles = useProfileStore.getState().profiles;
+  if (removing !== null && event.profileId === removing) return guestTelemetryAnonymous({ event, guest: null, profiles, running: true });
+  return guestTelemetryAnonymous({ event, guest: record, profiles, running });
 });
