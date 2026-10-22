@@ -9,6 +9,13 @@ import type { Db, StoredClassScopeAck } from '../db';
  */
 export interface ClassScopeEnv {
   CLASS_SCOPE_FULL?: string;
+  /**
+   * F-CURR-002 row CM-16: the Worker switch for the memory counts (`summary.memory`) on every grown-up read (family,
+   * class and school rosters, reports and the learning summary), the same pattern: on when unset, empty or `enabled`;
+   * any other value (the kill switch is `disabled`) leaves the block out for every reader at once. The stored block is
+   * kept and devices keep sending it; it reads again once the switch is back on.
+   */
+  MEMORY_SUMMARY?: string;
 }
 
 export function classScopeFullEnabled(env: ClassScopeEnv | undefined): boolean {
@@ -16,10 +23,16 @@ export function classScopeFullEnabled(env: ClassScopeEnv | undefined): boolean {
   return v === undefined || v === '' || v === 'enabled';
 }
 
+/** Whether any reader may read the memory counts (`MEMORY_SUMMARY`, row CM-16). */
+export function memorySummaryEnabled(env: ClassScopeEnv | undefined): boolean {
+  const v = env?.MEMORY_SUMMARY;
+  return v === undefined || v === '' || v === 'enabled';
+}
+
 /**
  * What a roster or report reader may read of one learner: the [TV] scope, and whether the memory counts
  * (`summary.memory`, F-CURR-002 row CM-16) are open to it, which needs an acknowledgement at a text that lists the
- * `memory` item (`MEMORY_SCOPE_TEXT_VERSIONS`). A family always reads both.
+ * `memory` item (`MEMORY_SCOPE_TEXT_VERSIONS`). A family always reads both, unless `MEMORY_SUMMARY` is off.
  */
 export interface LearnerReadScope {
   scope: ClassScope;
@@ -36,8 +49,9 @@ export interface LearnerReadScope {
  */
 export async function learnerReadScopes(db: Db, kind: SpaceKind, learnerIds: readonly string[], env?: ClassScopeEnv): Promise<Map<string, LearnerReadScope>> {
   const out = new Map<string, LearnerReadScope>();
+  const memoryOn = memorySummaryEnabled(env);
   if (kind === 'family') {
-    for (const id of learnerIds) out.set(id, { scope: 'full', memory: true });
+    for (const id of learnerIds) out.set(id, { scope: 'full', memory: memoryOn });
     return out;
   }
   for (const id of learnerIds) out.set(id, { scope: 'base', memory: false });
@@ -50,7 +64,7 @@ export async function learnerReadScopes(db: Db, kind: SpaceKind, learnerIds: rea
   }
   for (const ack of acks) {
     const rank = classScopeRank(ack.textVersion);
-    if (rank > 0) out.set(ack.learnerId, { scope: 'full', memory: rank === 2 });
+    if (rank > 0) out.set(ack.learnerId, { scope: 'full', memory: rank === 2 && memoryOn });
   }
   return out;
 }

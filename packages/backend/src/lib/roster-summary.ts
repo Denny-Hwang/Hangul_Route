@@ -174,7 +174,8 @@ export interface RosterSummaryOptions {
   scope?: ClassScope;
   /**
    * F-CURR-002 row CM-16: whether a full-scope class or school reader also reads the memory counts (the family
-   * acknowledged a text that lists the `memory` item, `learnerReadScopes`). Ignored for a family (always). Missing: no.
+   * acknowledged a text that lists the `memory` item, `learnerReadScopes`). For a family, missing reads them and only
+   * `false` (the `MEMORY_SUMMARY` switch off) leaves them out; for a class or school, missing is no.
    */
   memory?: boolean;
   /** [TV] The learner report (a student's detail view): `vocab.firstTryRate` is kept. The roster never sets it. */
@@ -219,12 +220,13 @@ export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, ki
 
 /**
  * The memory counts a reader of `kind` may read of a stored summary (F-CURR-002 sections 4.8 and 8, row CM-16): a
- * family always; a class or school only at full scope with `memory` (an acknowledgement at a memory-scope version).
+ * family always; a class or school only at full scope with `memory` (an acknowledgement at a memory-scope version);
+ * nobody with `memory: false` (the `MEMORY_SUMMARY` switch off, `learnerReadScopes`).
  * Checked whole, so only the six known keys leave and a block an older or newer writer shaped differently stays out:
  * counts and up to 8 content ids, never an item state. Null when absent, unreadable or not open to the reader.
  */
 export function memoryFor(summary: unknown, kind: SpaceKind, opts: Pick<RosterSummaryOptions, 'scope' | 'memory'> = {}): MemorySummary | null {
-  if (!isPlain(summary)) return null;
+  if (!isPlain(summary) || opts.memory === false) return null;
   if (kind !== 'family' && (opts.scope !== 'full' || opts.memory !== true)) return null;
   const memory = MemorySummarySchema.safeParse(summary.memory);
   return memory.success ? memory.data : null;

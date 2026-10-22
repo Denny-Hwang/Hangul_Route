@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ADDITIVE_FIELDS, preserveAdditiveFields } from '../additive-fields';
+import { ADDITIVE_FIELDS, mergeMemoryCounts, preserveAdditiveFields } from '../additive-fields';
 
 /*
  * F-CURR-002 section 4.8 and row CM-3b: the Worker keeps and merges the new
@@ -131,5 +131,36 @@ describe('preserveAdditiveFields (sessions[].localDay, F-CURR-002 section 4.8)',
     const same = incoming({ sessions: [session('s1', '2026-10-20')] }, {});
     expect(preserveAdditiveFields(same, stored({ sessions: [session('s1', '2026-10-20')] }, {})).payload).toBe(same.payload);
     expect(preserveAdditiveFields(same, stored({ sessions: 'x' }, {})).payload).toBe(same.payload);
+  });
+});
+
+describe('mergeMemoryCounts: the memory counts never drop across devices (F-CURR-002 CM-16)', () => {
+  const block = (over: Record<string, unknown> = {}) => ({ wordsKnown: 30, readyToRefresh: 5, cellBestCounts: [4, 1, 0], stageChecks: 1, weekPoints: 12, topDue: ['lex:sagwa'], ...over });
+  const summaryWith = (memory: unknown) => ({ schemaVersion: 1, memory });
+
+  it('a later device with lower counts keeps the higher words known and Stage Checks, and takes its own today-counts', () => {
+    // The tablet synced second, before pulling what the phone recorded.
+    const sent = summaryWith(block({ wordsKnown: 12, readyToRefresh: 2, stageChecks: 0, weekPoints: 3, topDue: ['lex:bae~pear'] }));
+    const out = mergeMemoryCounts(sent, summaryWith(block()), { stageCheckAt: { 'stage-1': '2026-10-20T00:00:00.000Z' } });
+    expect(out.memory).toEqual({ wordsKnown: 30, readyToRefresh: 2, cellBestCounts: [4, 1, 0], stageChecks: 1, weekPoints: 3, topDue: ['lex:bae~pear'] });
+  });
+
+  it('recounts the episodes per level from the merged cellBest, which holds every device’s levels', () => {
+    const sent = summaryWith(block({ cellBestCounts: [2, 0, 0] }));
+    const payload = { cellBest: { 'stage1/a': 1, 'stage1/b': 2, 'stage1/c': 1, 'stage2/a': 3 } };
+    expect(mergeMemoryCounts(sent, summaryWith(block()), payload).memory).toMatchObject({ cellBestCounts: [2, 1, 1] });
+    // Fewer episodes than the device counted (keys this Worker does not know): the device's counts stay.
+    expect(mergeMemoryCounts(summaryWith(block({ cellBestCounts: [9, 0, 0] })), null, payload).memory).toMatchObject({ cellBestCounts: [9, 0, 0] });
+  });
+
+  it('returns the summary itself when nothing changes, or when it carries no valid block', () => {
+    const sent = summaryWith(block());
+    expect(mergeMemoryCounts(sent, summaryWith(block({ wordsKnown: 3 })), {})).toBe(sent);
+    const none = { schemaVersion: 1 };
+    expect(mergeMemoryCounts(none, summaryWith(block()), {})).toBe(none);
+    const bad = summaryWith({ wordsKnown: -1 });
+    expect(mergeMemoryCounts(bad, summaryWith(block()), {})).toBe(bad);
+    // A stored block that does not parse adds nothing.
+    expect(mergeMemoryCounts(sent, summaryWith('junk'), {})).toBe(sent);
   });
 });

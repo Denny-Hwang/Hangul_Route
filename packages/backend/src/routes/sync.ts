@@ -12,7 +12,7 @@ import { Hono } from 'hono';
 import { dbFor, NOTE_INBOX_LIMIT, noteRateKey, noteRetentionCuts, type Db, type NoteDeviceScope, type StoredMemoryShard, type StoredNote } from '../db';
 import { fail, meta, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
-import { preserveAdditiveFields } from '../lib/additive-fields';
+import { mergeMemoryCounts, preserveAdditiveFields } from '../lib/additive-fields';
 import { MemoryWriteConflict, pushMemory } from '../lib/memory-shards';
 import { tierForLearner } from '../lib/entitlement';
 import { publicLearner } from '../lib/learners';
@@ -96,7 +96,8 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
     schemaVer: body.schemaVer,
     contentVer: body.contentVer,
     deviceId: auth,
-    summary: kept.summary,
+    // F-CURR-002 CM-16: the memory counts that never drop are combined across devices (lib/additive-fields.ts).
+    summary: mergeMemoryCounts(kept.summary, current?.summary, kept.payload),
     payload: kept.payload,
     updatedAt: new Date().toISOString(),
   };

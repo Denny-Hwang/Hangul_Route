@@ -162,6 +162,50 @@ describe('GET /api/spaces/:id/learning-summary (F-CURR-002 section 8, row CM-16)
     expect(off.class).toEqual({ learners: 3, counted: 0, topDue: [] });
   });
 
+  it('two devices: the later sync with a lower words-known count never lowers what grown-ups read', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const code = await issueCode('mom', fam.space.id);
+    const mina = await registerLearner('device-mina0001', 'Mina');
+    await join(fam.space.id, mina.auth, { code, learnerId: mina.learnerId });
+    await upload(mina, block(40, ['lex:sagwa']));
+    // The second upload (another device's block, computed before it pulled the first device's answers).
+    const later = { ...baseSummary, memory: block(12, ['lex:bae~pear']) };
+    const r = await call('PUT', `/api/sync/learners/${mina.learnerId}/snapshot`, mina.auth, { baseRev: 1, snapshot: snapshotFor(mina.learnerId), summary: later, schemaVer: 1, contentVer: '2026.10' });
+    expect(r.status).toBe(200);
+    expect((await read(fam.space.id, 'mom')).learners[0]?.memory).toEqual({ ...block(12, ['lex:bae~pear']), wordsKnown: 40 });
+  });
+
+  it('the MEMORY_SUMMARY kill switch leaves the block out for every reader: family and class, roster, report and this route', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const cls = await createSpace('teacher', 'class', 'Sunday Class A');
+    const mina = await registerLearner('device-mina0001', 'Mina');
+    await join(fam.space.id, mina.auth, { code: await issueCode('mom', fam.space.id), learnerId: mina.learnerId });
+    await join(cls.space.id, mina.auth, { code: cls.joinCode, learnerId: mina.learnerId });
+    await upload(mina, block(40, ['lex:sagwa']));
+    await ack(mina.learnerId, CLASS_SCOPE_TEXT_VERSION);
+    const off = { MEMORY_SUMMARY: 'disabled' };
+    for (const [spaceId, user] of [[fam.space.id, 'mom'], [cls.space.id, 'teacher']] as const) {
+      expect((await read(spaceId, user)).learners[0]?.memory, `${user} on`).toEqual(block(40, ['lex:sagwa']));
+      for (const env of [off, { MEMORY_SUMMARY: 'typo' }]) {
+        const body = await read(spaceId, user, env);
+        expect(body.learners[0]?.memory, `${user} off`).toBeNull();
+        expect(body.class).toMatchObject({ counted: 0, topDue: [] });
+      }
+      const roster = (await get(`/api/spaces/${spaceId}/roster`, bearer(user), off)).body.data as { learners: Array<{ summary: Record<string, unknown> }> };
+      expect(roster.learners[0]?.summary, `${user} roster`).not.toHaveProperty('memory');
+      const report = LearnerReportResponseSchema.parse((await get(`/api/spaces/${spaceId}/learners/${mina.learnerId}/report`, bearer(user), off)).body.data);
+      expect(report.summary, `${user} report`).not.toHaveProperty('memory');
+      if (spaceId === cls.space.id) {
+        const classReport = await get(`/api/spaces/${spaceId}/class-report?period=week`, bearer(user), off);
+        expect(classReport.status).toBe(200);
+        expect(JSON.stringify(classReport.body.data)).not.toMatch(/wordsKnown/);
+        expect(JSON.stringify((await get(`/api/spaces/${spaceId}/class-report?period=week`, bearer(user))).body.data)).toMatch(/wordsKnown/);
+      }
+    }
+    // The stored block is kept: it reads again once the switch is back on.
+    expect((await read(fam.space.id, 'mom')).learners[0]?.memory).toEqual(block(40, ['lex:sagwa']));
+  });
+
   it('answers 401 when signed out or with a learner device, 403 to an outsider and a teacher of another class, 404 for an unknown space', async () => {
     const cls = await createSpace('teacher', 'class', 'A');
     await createSpace('other-teacher', 'class', 'B');
