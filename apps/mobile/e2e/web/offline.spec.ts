@@ -521,3 +521,52 @@ test('in Spanish, offline: the story overlays apply to a story read from its chu
   expect((await loadedStoryChunks(page)).filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
   expect(errors).toEqual([]);
 });
+
+/**
+ * F-CURR-002 §10 (row CM-8, recovery as CM-5): with no worker in control, a story chunk URL that answers with
+ * the app's HTML page (a deploy landed) reloads the page once, onto the new build, and the story then plays.
+ */
+test.describe('story chunks without a service worker (F-CURR-002 CM-8 recovery)', () => {
+  test.use({ serviceWorkers: 'block' });
+
+  async function openTale(page: Page): Promise<void> {
+    await closeInstallGuide(page, 'Not now');
+    await page.getByText('Library', { exact: true }).last().click();
+    await page.getByRole('tab', { name: 'Story Time', exact: true }).click();
+    await page.getByTestId(`story-tile-${TALE}`).filter({ visible: true }).click();
+    await page.getByTestId(`story-episode-start-${TALE}`).filter({ visible: true }).click();
+  }
+
+  test('a story chunk of a newer build reloads once and the story then plays', async ({ page }) => {
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    await page.getByRole('button', { name: "Let's start" }).click();
+    await completeChildForm(page, { name: 'Suni' });
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    // From the next page on, the first request of the tale's chunk gets the app page itself (a deploy landed).
+    let served = 0;
+    await page.route(/\/_expo\/static\/js\/web\/story-sun-and-moon-[0-9a-f]{32}\.js$/, async (route) => {
+      served += 1;
+      if (served === 1) await route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html><body><div id="root"></div></body></html>' });
+      else await route.continue();
+    });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Suni!')).toBeVisible();
+    // The background load meets the HTML first and leaves it for the story; starting the story reloads the page once.
+    await expect.poll(() => served, { timeout: 15_000 }).toBe(1);
+    await page.evaluate(() => {
+      (window as Window & { __beforeReload?: boolean }).__beforeReload = true;
+    });
+    const reloaded = page.waitForEvent('load');
+    await openTale(page);
+    await reloaded;
+    expect(await page.evaluate(() => (window as Window & { __beforeReload?: boolean }).__beforeReload ?? false)).toBe(false);
+    await expect(page.getByText('Hi, Suni!')).toBeVisible();
+    await openTale(page);
+    await expect(page.getByRole('heading', { name: 'Story time' })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText(`1 / ${TALE_SCENES}`);
+    expect(served).toBe(2);
+  });
+});
