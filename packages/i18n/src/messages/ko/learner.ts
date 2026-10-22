@@ -1847,7 +1847,7 @@ export const learner = {
     title: '오늘의 복습',
     readyLine: (n: number) => `다시 볼 것 ${n}개가 준비됐어요`,
     result: {
-      headline: { three: '정말 멋져요!', two: '잘했어요!', one: '좋은 시도예요!' },
+      headline: { three: '정말 멋져요!', two: '잘했어요!', one: '잘 도전했어요!' },
       stronger: (n: number) => `${n}개가 더 단단해졌어요`,
       noneStronger: '답할 때마다 더 오래 기억해요.',
       backHome: { cta: '홈으로' },
@@ -1858,7 +1858,7 @@ export const learner = {
     },
     leave: {
       title: '여기서 그만할까요?',
-      body: '지금까지 답한 것도 다 반영돼요.',
+      body: '지금까지 답한 건 그대로 남아요.',
       stay: { cta: '계속하기' },
       stop: { cta: '그만하기' },
     },
@@ -1866,7 +1866,7 @@ export const learner = {
   keepGoing: {
     offer: '조금 더 해 볼까요?',
     cta: '더 복습하기',
-    enough: { title: '오늘은 이만하면 충분해요.', body: '나머지는 호야가 곧 다시 보여 줄게요.' },
+    enough: { title: '오늘은 이만하면 충분해요.', body: '나머지는 호야가 곧 다시 보여 줄 거예요.' },
     doneToday: { title: '오늘의 복습을 마쳤어요' },
   },
 } satisfies DeepPartial<Messages['learner']>;
