@@ -90,4 +90,9 @@ const reviewInputs: ReviewInputs = async (profileId) => {
 export const questReviewPlanner = {
   warmup: (input: WarmupRequest) => planQuestWarmup(reviewInputs, input),
   again: (input: TryAgainRequest) => planQuestTryAgain(reviewInputs, input),
+  /** Reads what the plans read, so a plan asked for soon after is quick; a failed read is only a slower plan. */
+  preload: (profileId: string): Promise<void> => reviewInputs(profileId).then(
+    () => undefined,
+    () => undefined,
+  ),
 };

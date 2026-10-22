@@ -35,6 +35,7 @@ import type { RoundAsked } from '../../logic/memory/asked';
 import { questReviewPlanner, recordAnswers } from '../../logic/memory/boot';
 import type { MemoryAnswer } from '../../logic/memory/memory-runtime';
 import {
+  entryDayOf,
   firstTryAnswer,
   reviewCompleteEvent,
   reviewStartEvent,
@@ -51,6 +52,7 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import { track } from '../../platform/telemetry';
 import { useAudioStore } from '../../store/audio-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useTierStore } from '../../store/tier-store';
 import { PictureArt } from '../minigames/PictureArt';
 
 /**
@@ -83,6 +85,12 @@ export async function planQuestWarmup(input: { profileId: string; episodeId: str
 export async function planQuestTryAgain(input: { profileId: string; episodeId: string; missed: readonly RoundAsked[]; locale: UiLocale }): Promise<QuestReviewPlan | null> {
   const planner = await questReviewPlanner(input.profileId);
   return planner ? planner.again(input) : null;
+}
+
+/** Loads what the planner reads (section 4.5 timing): the memory store's chunk, the learner's rows, the review items. */
+export async function preloadQuestReviews(profileId: string): Promise<void> {
+  const planner = await questReviewPlanner(profileId);
+  await planner?.preload(profileId);
 }
 
 // ---- the session --------------------------------------------------------------------------------------------
@@ -129,7 +137,10 @@ export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessi
       // The memory store adds the credit inside sentences to every batch it records (section 4.3).
       void recordAnswers(profileId, answers, at);
       if (!complete) return;
-      const entry = sessionEntry(plan.kind, plan.ctx.today, answers, at);
+      // The day, bounded by the last server time seen, so a clock set ahead never dates the entry years ahead.
+      const reviews = useProgressStore.getState().byProfile[profileId]?.reviews ?? [];
+      const day = entryDayOf(plan.kind, plan.ctx.today, reviews, useTierStore.getState().byLearner[profileId]?.fetchedAt ?? null);
+      const entry = sessionEntry(plan.kind, day, answers, at);
       if (entry) useProgressStore.getState().recordReview(profileId, entry);
       void track(reviewCompleteEvent(profileId, plan.kind, answers, retries));
     },

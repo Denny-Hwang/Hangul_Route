@@ -25,6 +25,8 @@ const gate = vi.hoisted(() => ({
   againPlan: null as unknown,
   hold: false,
   missedSeen: [] as unknown[],
+  preloads: [] as Array<string | null>,
+  handed: [] as unknown[],
 }));
 
 vi.mock('../quest-reviews', async () => {
@@ -55,6 +57,12 @@ vi.mock('../quest-reviews', async () => {
     questReviewChunk: async () => {
       gate.loads += 1;
       return chunk;
+    },
+    preloadQuestReviews: (profileId: string | null) => {
+      gate.preloads.push(profileId);
+    },
+    handTryAgainToResults: (session: unknown) => {
+      gate.handed.push(session);
     },
   };
 });
@@ -108,7 +116,7 @@ const stepCounter = (texts: string[]): string | undefined => texts.find((t) => /
 const plan = (kind: string) => ({ kind, rounds: [{ key: 'k' }], soundNotice: false, ctx: {} });
 
 beforeEach(() => {
-  Object.assign(gate, { warm: false, again: false, loads: 0, warmPlan: null, againPlan: null, hold: false, missedSeen: [] });
+  Object.assign(gate, { warm: false, again: false, loads: 0, warmPlan: null, againPlan: null, hold: false, missedSeen: [], preloads: [], handed: [] });
   useQuestRunStore.getState().reset();
 });
 afterEach(() => {
@@ -174,12 +182,18 @@ describe('Try these again on the reward step', () => {
     expect(screenTexts(r.root)).toContain(T.intro);
     expect(buttonsNamed(r.root, Q.seeResults.cta)).not.toHaveLength(0);
     await press(tryAgain!);
-    expect(byTestId(r.root, 'session-again')).not.toHaveLength(0);
-    expect(ports.finish).not.toHaveBeenCalled();
-    await press(byTestId(r.root, 'session-again').find((n) => typeof n.props.onClick === 'function')!);
-    // The quest's own score, as it was before Try these again: 0 of 1.
+    // The quest finishes first, with its own score (0 of 1), so Results writes it before Try these again plays there:
+    // closing the app during the session never loses the quest, its stars or its card.
     expect(ports.finish).toHaveBeenCalledTimes(1);
     expect(ports.finish.mock.calls[0]![0]).toMatchObject({ correct: 0, total: 1 });
+    expect(gate.handed).toEqual([expect.objectContaining({ questId: quest.id, profileId: 'profile:mina', plan: gate.againPlan })]);
+    expect(byTestId(r.root, 'session-again')).toHaveLength(0);
+  });
+
+  it('the player starts loading the sessions while the lesson loads, for its learner only', async () => {
+    await player(0);
+    await player(0, null);
+    expect(gate.preloads).toEqual(['profile:mina', null]);
   });
 
   it('See results skips it and finishes the quest as always', async () => {
@@ -189,7 +203,7 @@ describe('Try these again on the reward step', () => {
     expect(buttonsNamed(r.root, T.cta)).not.toHaveLength(0);
     await press(buttonsNamed(r.root, Q.seeResults.cta)[0]!);
     expect(ports.finish).toHaveBeenCalledTimes(1);
-    expect(byTestId(r.root, 'session-again')).toHaveLength(0);
+    expect(gate.handed).toEqual([]);
   });
 
   it('without a miss, with missedPractice off, or when no miss can be asked, the reward step is the one it always was', async () => {

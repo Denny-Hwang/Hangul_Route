@@ -42,7 +42,7 @@ import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
-import { questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
+import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
 
 type QuestMessages = Messages['learner']['quest'];
 
@@ -68,7 +68,7 @@ export interface QuestPlayerViewProps {
 }
 
 type QuestReviewPlan = NonNullable<Awaited<ReturnType<QuestReviewChunk['planQuestWarmup']>>>;
-/** A session outside the six steps: being planned (at most a moment), none, offered, or on screen. */
+/** A session outside the six steps: being planned (at most a moment), none, offered, or on screen (Try these again plays on Results). */
 type ReviewPhase =
   | { kind: 'none' }
   | { kind: 'deciding' }
@@ -111,6 +111,9 @@ function decide(plan: () => Promise<{ chunk: QuestReviewChunk; plan: QuestReview
  * browse stack's own navigation container also provides.
  */
 export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement {
+  // The warm-up and Try these again load while the lesson does (F-CURR-002 row CM-15); with their switches off, nothing.
+  const reviewsFor = props.reviewsFor ?? null;
+  useEffect(() => preloadQuestReviews(reviewsFor), [reviewsFor]);
   // A lesson quest's steps come from its cell's chunk, and a story quest's story from the story's chunk
   // (F-CURR-002 §10): until it is in (a frame or two from the precache), the screen draws only its header (and a
   // calm status line if it takes longer), so the way back is always there.
@@ -255,11 +258,6 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // did; Leave in the sheet runs the ports' leave (a replace or a navigate, never held here), Keep playing stays.
   useRouteBackGuard(() => {
     if (!quest || !step) return false;
-    // After the six steps the quest is done: a back from Try these again goes on to Results, never to the leave sheet.
-    if (again.kind === 'playing') {
-      finishQuest();
-      return true;
-    }
     if (onAskLeave) onAskLeave();
     else confirmQuit();
     return true;
@@ -296,10 +294,6 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   if (warmup.kind === 'playing' && reviewsFor !== null) {
     const { QuestReviewSession } = warmup.chunk;
     return <QuestReviewSession plan={warmup.plan} profileId={reviewsFor} onDone={() => setWarmup(NO_REVIEW)} />;
-  }
-  if (again.kind === 'playing' && reviewsFor !== null) {
-    const { QuestReviewSession } = again.chunk;
-    return <QuestReviewSession plan={again.plan} profileId={reviewsFor} onDone={finishQuest} />;
   }
 
   // A Discover step keeps its header and Continue in view and scrolls only its pages.
@@ -342,7 +336,14 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
             onReward && again.kind === 'deciding' ? (
               <View style={{ minHeight: touchTarget.hero }} testID="quest-try-again-deciding" />
             ) : onReward && again.kind === 'offer' ? (
-              <again.chunk.TryAgainOffer onTry={() => setAgain({ ...again, kind: 'playing' })} onSeeResults={advance} />
+              <again.chunk.TryAgainOffer
+                onTry={() => {
+                  // The quest is done: Results writes its score and card first, then plays Try these again over it.
+                  if (reviewsFor !== null) handTryAgainToResults({ questId, profileId: reviewsFor, chunk: again.chunk, plan: again.plan });
+                  advance();
+                }}
+                onSeeResults={advance}
+              />
             ) : undefined
           }
         />

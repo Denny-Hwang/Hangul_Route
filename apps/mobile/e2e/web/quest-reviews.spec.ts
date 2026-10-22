@@ -135,6 +135,9 @@ test('the warm-up opens a Stage 2 quest with earlier due words, outside its six 
   await dismissInstallGuide(page);
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(2, 'Food & Daily Life'), exact: false }).first().click();
+  // The lesson page starts loading the warm-up's chunk and what it plans from; once in, the plan is ready at Start.
+  await expect(page.getByRole('button', { name: 'Start', exact: true }).first()).toBeVisible();
+  await page.waitForLoadState('networkidle');
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
