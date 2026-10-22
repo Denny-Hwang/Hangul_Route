@@ -1,6 +1,6 @@
 import { CURR_TELEMETRY_PAYLOADS, type MemoryItemState, type ProgressSnapshot, type VocabProgress } from '@hangul-route/content-schema';
 import { mergeMemoryShard, withoutSeeded, type MemoryShardStates } from '@hangul-route/content-schema/memory';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { MinigameScope } from '../../minigame-config';
 import type { TelemetryEvent } from '../../../platform/telemetry';
 import { applyVocabEvents, type VocabEvent } from '../../vocab/progress';
@@ -25,6 +25,7 @@ function fakeServer(classDevices: ReadonlySet<string> = new Set()) {
   const rows = new Map<string, { seq: number; states: MemoryShardStates }>();
   let seq = 0;
   const posted: Array<{ learnerId: string; shards: Record<string, MemoryShardStates> }> = [];
+  const gets: string[] = [];
   const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(String(input));
     const learnerId = decodeURIComponent(url.pathname.split('/')[4] ?? '');
@@ -40,6 +41,7 @@ function fakeServer(classDevices: ReadonlySet<string> = new Set()) {
       }
       return new Response(JSON.stringify({ ok: true, data: { stored: 0, seeded: 0, written: Object.keys(kept).length } }), { status: 200 });
     }
+    gets.push(learnerId);
     const since = Number(url.searchParams.get('since') ?? 0);
     const shards = [...rows.entries()]
       .filter(([k, r]) => k.startsWith(`${learnerId}|`) && r.seq > since)
@@ -48,7 +50,7 @@ function fakeServer(classDevices: ReadonlySet<string> = new Set()) {
     const cursor = shards.reduce((m, s) => Math.max(m, s.seq), since);
     return new Response(JSON.stringify({ ok: true, data: { cursor, shards } }), { status: 200 });
   }) as typeof fetch;
-  return { fetchImpl, posted, rows };
+  return { fetchImpl, posted, rows, gets };
 }
 
 interface Device {
@@ -63,8 +65,10 @@ interface Device {
   vocabCalls: Array<{ profileId: string; events: readonly VocabEvent[] }>;
 }
 
-function device(opts: { server?: ReturnType<typeof fakeServer>; dayOf?: (d: Date) => string; failRead?: boolean; profiles?: string[]; heldSeed?: string } = {}): Device {
-  const store = new Map<string, unknown>();
+function device(
+  opts: { server?: ReturnType<typeof fakeServer>; dayOf?: (d: Date) => string; failRead?: boolean; profiles?: string[]; heldSeed?: string; store?: Map<string, unknown>; serverTime?: string } = {},
+): Device {
+  const store = opts.store ?? new Map<string, unknown>();
   const snapshots = new Map<string, ProgressSnapshot>();
   const tracked: TelemetryEvent[] = [];
   const syncs: string[] = [];
@@ -104,6 +108,7 @@ function device(opts: { server?: ReturnType<typeof fakeServer>; dayOf?: (d: Date
       void rt.countVocab(id, before, events, now);
     },
     profileHere: (id) => profiles.has(id),
+    ...(opts.serverTime !== undefined ? { serverTime: () => opts.serverTime ?? null } : {}),
     track: (e) => tracked.push(e),
     requestSync: (id) => syncs.push(id),
     net: () => (opts.server ? { base: 'https://api.test', fetch: opts.server.fetchImpl, creds: async () => ({ deviceId: 'd1', secret: 's1' }) } : null),
@@ -213,8 +218,8 @@ describe('recording from a quest round', () => {
     await d.rt.file('p1');
     expect((await d.rt.file('p1'))?.rows).toEqual({});
     const file = await d.rt.file('p1');
-    // The first spaced answer's lag runs from the word's first day (21 days).
-    expect(file?.day?.hist).toEqual({ 'lex|read|15-30': [1, 0] });
+    // No spaced day on this device yet: the lag runs from the word's last answer (12 days), not its first day.
+    expect(file?.day?.hist).toEqual({ 'lex|read|8-14': [1, 0] });
     expect(file?.vf[TOPIC.id]).toMatchObject({ l: '2026-10-22', p: '2026-10-22', w: '2026-10-22' });
   });
 
@@ -225,7 +230,7 @@ describe('recording from a quest round', () => {
     await d.rt.countVocab('p1', before, [{ type: 'introduced', id: 'vocab:x-y' }, { type: 'answer', id: TOPIC.id, correct: true, source: 'speed', format: 'audio-to-image' }], d.clock.now);
     await d.rt.countVocab('p1', { v: 1, items: [{ ...word, id: 'vocab:b-c' }], topics: [] }, [{ type: 'answer', id: 'vocab:b-c', correct: false, source: 'speed' }], d.clock.now);
     const file = await d.rt.file('p1');
-    expect(file?.day).toMatchObject({ lapses: 1, newHeld: 1, hist: { 'lex|recognize|15-30': [1, 0], 'lex|read|15-30': [0, 1] } });
+    expect(file?.day).toMatchObject({ lapses: 1, newHeld: 1, hist: { 'lex|recognize|8-14': [1, 0], 'lex|read|8-14': [0, 1] } });
   });
 });
 
@@ -267,6 +272,34 @@ describe('the profile partition and the switch', () => {
     await d.rt.recordRound('p1', round(WORD.ko, true, d.clock.now));
     await d.rt.flush('p1');
     expect(d.store.size).toBe(0);
+  });
+
+  it('a damaged stored value (not an object) is neither read as empty nor written over', async () => {
+    for (const damaged of ['{"rows": {', [1, 2, 3], 42]) {
+      const d = device();
+      d.store.set(MEMORY_KEY('p1'), damaged);
+      await d.rt.recordRound('p1', round(WORD.ko, true, d.clock.now));
+      await d.rt.flush('p1');
+      await d.runTimers();
+      expect(d.store.get(MEMORY_KEY('p1'))).toEqual(damaged);
+      expect(await d.rt.file('p1')).toBeNull();
+    }
+  });
+
+  it('memoryRecord off at the switch: flush saves the store and sends nothing; a restore while off queues but does not ask for a sync', async () => {
+    const server = fakeServer();
+    const d = device({ server });
+    await d.rt.recordRound('p1', round(WORD.ko, true, d.clock.now));
+    d.syncs.length = 0;
+    await d.rt.flush('p1', false);
+    expect(d.store.has(MEMORY_KEY('p1'))).toBe(true);
+    expect(server.posted).toEqual([]);
+    expect(server.gets).toEqual([]);
+    expect((await d.rt.file('p1'))?.pending).toEqual([WORD.id]);
+    const row = (await d.rt.file('p1'))?.rows[WORD.id] as { sh: string; st: MemoryItemState };
+    await d.rt.restore('p2', { [row.sh]: { [WORD.id]: row.st } }, false);
+    expect(d.syncs).toEqual([]);
+    expect((await d.rt.file('p2'))?.pending).toEqual([WORD.id]);
   });
 });
 
@@ -339,6 +372,79 @@ describe('seeding at runtime', () => {
     expect(d.tracked).toEqual([]);
   });
 
+  it('a registered learner latches the seeding only after this device’s first snapshot sync', async () => {
+    const server = fakeServer();
+    const d = device({ server });
+    d.snapshots.set('p1', finished(20));
+    await d.rt.ensureSeeded('p1');
+    expect(d.snapshots.get('p1')?.memSeededAt).toBeUndefined();
+    expect(d.tracked).toEqual([]);
+    await d.rt.sync('p1');
+    expect(d.snapshots.get('p1')?.memSeededAt).toBe('2026-10-22T09:00:00.000Z');
+    expect(d.tracked.filter((e) => e.name === 'items.seeded')).toHaveLength(1);
+    // A learner not registered for sync (no server) latches at once.
+    const local = device();
+    local.snapshots.set('p1', finished(20));
+    await local.rt.ensureSeeded('p1');
+    expect(local.snapshots.get('p1')?.memSeededAt).toBe('2026-10-22T09:00:00.000Z');
+  });
+
+  it('a device that seeded from a stale snapshot derives again when a sync brings older quests, and ends with the same states as the other device, sending nothing', async () => {
+    const server = fakeServer();
+    const a = device({ server });
+    a.snapshots.set('p1', finished(30));
+    await a.rt.sync('p1');
+    const seededAt = a.snapshots.get('p1')?.memSeededAt as string;
+    // Device B holds memSeededAt (synced) but only the first 5 of the quests finished before it.
+    const b = device({ server });
+    b.snapshots.set('p1', { ...finished(5), memSeededAt: seededAt });
+    await b.rt.sync('p1');
+    const before = Object.keys((await b.rt.file('p1'))?.rows ?? {}).length;
+    // A later snapshot sync brings the other 25 quests (finished before memSeededAt).
+    b.snapshots.set('p1', { ...finished(30), memSeededAt: seededAt });
+    await b.rt.sync('p1');
+    const rowsA = (await a.rt.file('p1'))?.rows ?? {};
+    const rowsB = (await b.rt.file('p1'))?.rows ?? {};
+    expect(Object.keys(rowsB).length).toBeGreaterThan(before);
+    const shared = (rows: typeof rowsA) => Object.fromEntries(Object.entries(rows).map(([id, r]) => [id, r.st]));
+    expect(shared(rowsB)).toEqual(shared(rowsA));
+    expect(b.tracked.filter((e) => e.name === 'items.seeded')).toEqual([]);
+    expect(server.posted.flatMap((p) => Object.values(p.shards).flatMap((sh) => Object.values(sh)))).toEqual([]);
+  });
+
+  it('only answered rows are stored; the seeded ones are derived again on the next read (all 107 quests: a small stored value)', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(107));
+    await d.rt.ensureSeeded('p1');
+    await d.rt.recordRound('p1', round(WORD.ko, true, d.clock.now));
+    await d.runTimers();
+    const held = await d.rt.file('p1');
+    expect(Object.keys(held?.rows ?? {}).length).toBeGreaterThan(600);
+    const stored = d.store.get(MEMORY_KEY('p1')) as { rows: Record<string, { st: { n: number } }>; seededFrom: string };
+    expect(Object.keys(stored.rows)).toEqual([WORD.id]);
+    expect(stored.seededFrom).toBe(d.snapshots.get('p1')?.memSeededAt);
+    expect(JSON.stringify(stored).length).toBeLessThan(2_000);
+    // The app starts again on the same storage: the seeded rows come back as they were.
+    const again = device({ store: d.store });
+    again.snapshots.set('p1', structuredClone(d.snapshots.get('p1') as ProgressSnapshot));
+    const reread = await again.rt.file('p1');
+    expect(reread?.rows).toEqual(held?.rows);
+  });
+
+  it('a seeded item’s first check is kept out of the day’s lag histogram and the north star', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(20));
+    await d.rt.ensureSeeded('p1');
+    const file = (await d.rt.file('p1')) as NonNullable<Awaited<ReturnType<MemoryRuntime['file']>>>;
+    const [id, row] = Object.entries(file.rows).find(([, r]) => r.st.n === 0) as [string, (typeof file.rows)[string]];
+    d.clock.now = new Date(`${row.st.d}T09:00:00.000Z`);
+    await d.rt.recordAnswers('p1', [{ itemId: id, correct: true, rung: 'read' }], d.clock.now);
+    const after = await d.rt.file('p1');
+    expect(after?.rows[id]?.st).toMatchObject({ n: 1, b: row.st.b + 1 });
+    expect(after?.day).toMatchObject({ hist: {}, lapses: 0, newHeld: 0, items: [id] });
+    expect(after?.rows[id]?.w).toBeUndefined();
+  });
+
   it('backup restore: the file’s answered states win over the seeded ones, and only answered states are in a backup', async () => {
     const a = device();
     a.snapshots.set('p1', finished(20));
@@ -379,6 +485,16 @@ describe('sync', () => {
     expect((await d.rt.file('p1'))?.pending).toEqual([WORD.id]);
   });
 
+  it('one GET a sync: the route is not paged', async () => {
+    const server = fakeServer();
+    const d = device({ server });
+    await d.rt.recordRound('p1', round(WORD.ko, true, d.clock.now));
+    await d.rt.sync('p1');
+    expect(server.gets).toEqual(['p1']);
+    await d.rt.sync('p1');
+    expect(server.gets).toEqual(['p1', 'p1']);
+  });
+
   it('a Rescue Code pull reads every shard from the start', async () => {
     const server = fakeServer();
     const a = device({ server });
@@ -403,12 +519,8 @@ describe('sync', () => {
   });
 });
 
-describe('fixed clocks in four time zones (the suite runs under TZ=UTC)', () => {
+describe('fixed clocks in four time zones (the local day is injected, so the machine’s zone plays no part)', () => {
   const zoned = (timeZone: string) => (d: Date): string => new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-  const tz = process.env.TZ;
-  afterEach(() => {
-    process.env.TZ = tz;
-  });
 
   /** Met at `first`, answered again at `second`: spaced (box 2) only when `second` is a later local day there. */
   async function twoAnswers(zone: string, first: string, second: string): Promise<{ box: number; met: string }> {
@@ -445,5 +557,19 @@ describe('the schedule stamp', () => {
     expect(stampOf({ rows: {} }, new Date('2030-01-01T00:00:00.000Z'))).toBe('2030-01-01T00:00:00.000Z');
     expect(stampOf({ rows }, new Date('2026-10-20T12:00:00.000Z'))).toBe('2026-10-20T12:00:00.000Z');
     expect(stampOf({ rows }, new Date('2030-01-01T00:00:00.000Z'))).toBe('2026-10-21T00:00:00.000Z');
+  });
+
+  it('is capped at a day past the last server time seen, even with nothing stored; a later pulled stamp still lifts the cap', () => {
+    const rows = { a: { sh: 'stage2', st: { b: 1, d: null, c: 0, r: 0, n: 1, f: '2026-10-01', s: 1, at: '2026-10-25T00:00:00.000Z' } } };
+    expect(stampOf({ rows: {} }, new Date('2030-01-01T00:00:00.000Z'), '2026-10-22T09:00:00.000Z')).toBe('2026-10-23T09:00:00.000Z');
+    expect(stampOf({ rows: {} }, new Date('2026-10-22T10:00:00.000Z'), '2026-10-22T09:00:00.000Z')).toBe('2026-10-22T10:00:00.000Z');
+    expect(stampOf({ rows }, new Date('2030-01-01T00:00:00.000Z'), '2026-10-22T09:00:00.000Z')).toBe('2026-10-26T00:00:00.000Z');
+    expect(stampOf({ rows: {} }, new Date('2030-01-01T00:00:00.000Z'), 'not a time')).toBe('2030-01-01T00:00:00.000Z');
+  });
+
+  it('the runtime stamps an answer with the server-time cap', async () => {
+    const d = device({ serverTime: '2026-10-20T09:00:00.000Z' });
+    await d.rt.recordAnswers('p1', [{ itemId: WORD.id, correct: true, rung: 'read' }], d.clock.now);
+    expect((await stateOf(d, WORD.id))?.at).toBe('2026-10-21T09:00:00.000Z');
   });
 });
