@@ -57,6 +57,18 @@ describe('pruneHiddenLocales', () => {
     expect(files()).toEqual(['404.html', '_next/static/chunks/app/(loc)/[locale]/page.js', 'about.html', 'index.html', 'index.txt', 'teach/space.html']);
   });
 
+  it('[SN] removes a hidden locale\'s product captures (`site/<locale>/`) and keeps a shipped one\'s (AMENDMENTS-SITE-NEWUSER §3.13)', () => {
+    put('es.html', page('es', false));
+    put('site/es/home.12345678.webp', 'webp');
+    put('ko.html', page('ko', true));
+    put('site/ko/home.87654321.webp', 'webp');
+    put('site/en/home.abcdef12.webp', 'webp');
+    expect(prune(out)).toEqual(['ko']);
+    expect(existsSync(join(out, 'site', 'ko'))).toBe(false);
+    expect(existsSync(join(out, 'site', 'es', 'home.12345678.webp'))).toBe(true);
+    expect(existsSync(join(out, 'site', 'en', 'home.abcdef12.webp'))).toBe(true);
+  });
+
   it('keeps a shipped locale (or every locale on a QA build)', () => {
     put('es.html', page('es', false));
     put('es/about.html', page('es', false));

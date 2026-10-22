@@ -3,7 +3,8 @@
 // `out/` before deploy. `next build` renders `/es` and `/ko` on every build (Next 14 refuses an empty
 // `generateStaticParams` under `output: 'export'`); the pages of a hidden locale carry HIDDEN_LOCALE_ATTR on
 // `<html>` (`src/lib/site-locales.ts`), and this deletes the locale's home (`es.html`, `es.txt`) and folder
-// (`es/`). It fails if a marked page is still there afterwards, so a hidden locale never reaches the site.
+// (`es/`), and its product captures (`site/es/`, AMENDMENTS-SITE-NEWUSER §3.13). It fails if a marked page is still
+// there afterwards, so a hidden locale never reaches the site.
 //
 //   node scripts/prune-hidden-locales.mjs [out]
 import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
@@ -50,6 +51,8 @@ export function pruneHiddenLocales(outDir) {
     rmSync(join(outDir, `${locale}.html`), { force: true });
     rmSync(join(outDir, `${locale}.txt`), { force: true });
     rmSync(join(outDir, locale), { recursive: true, force: true });
+    // [SN] The locale's product captures hold its UI text, so they leave with it.
+    rmSync(join(outDir, 'site', locale), { recursive: true, force: true });
   }
   const left = htmlFiles(outDir).filter((file) => hiddenLocaleOf(file) !== null);
   if (left.length > 0) {
