@@ -10,6 +10,7 @@ import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
+import { useGuestStore } from '../../store/guest-store';
 import { useMembershipStore, type LearnerTransfers } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
@@ -48,11 +49,13 @@ export function useTransferDevice(profileId: string | undefined): DeviceFacts | 
   const selfConsentAcceptedAt = useAccountStore((s) => s.selfConsentAcceptedAt);
   const parentPinHash = useAccountStore((s) => s.parentPinHash);
   const pinCreatedAt = useAccountStore((s) => s.pinCreatedAt);
+  // [GU] GU-D14: the move gate counts a live guest; the wording keeps the profile list.
+  const guest = useGuestStore((s) => s.record);
   const now = useMinuteClock();
   const profile = profiles.find((p) => p.id === profileId);
   return useMemo(
-    () => (profile ? { profile, profiles, selfConsentAcceptedAt, parentPinHash, pinCreatedAt, now } : null),
-    [profile, profiles, selfConsentAcceptedAt, parentPinHash, pinCreatedAt, now],
+    () => (profile ? { profile, profiles, guest, selfConsentAcceptedAt, parentPinHash, pinCreatedAt, now } : null),
+    [profile, profiles, guest, selfConsentAcceptedAt, parentPinHash, pinCreatedAt, now],
   );
 }
 

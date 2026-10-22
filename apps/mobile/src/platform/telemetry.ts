@@ -21,6 +21,7 @@ import type { TelemetryEventName } from '@hangul-route/content-schema';
 import { flags } from '../config/flags';
 import { arrivedSince, enqueue, requeue, takeBatch, type QueuedEvent } from '../logic/telemetry/queue';
 import { readJsonStrict, writeJson } from './storage';
+import { filteredEvent } from './telemetry-filter';
 
 /** The shared list the API whitelists — an event outside it cannot compile. */
 export type { TelemetryEventName };
@@ -245,11 +246,14 @@ function notify(event: TelemetryEvent): void {
  * Callers can `void track(...)` safely.
  */
 export async function track(
-  event: TelemetryEvent,
+  input: TelemetryEvent,
   options?: TelemetryClientOptions,
 ): Promise<boolean> {
   if (!flags.telemetryEnabled) return false;
-  if (!fenceAllows(event.name)) return false;
+  if (!fenceAllows(input.name)) return false;
+  // [GU] GU-D15: no guest run's event carries a profile id (`setTelemetryProfileFilter`).
+  const event = filteredEvent(input);
+  if (event === null) return false;
 
   // Run validation even when network is off, so dev mode catches typos.
   if (!event.name || typeof event.name !== 'string') return false;

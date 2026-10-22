@@ -3,6 +3,7 @@ import { gateOpensDirectly } from '../logic/profiles/gate-route';
 import { track } from '../platform/telemetry';
 import { useAccountStore } from './account-store';
 import { currentDeviceGateMarker } from './device-gate';
+import { useGuestStore } from './guest-store';
 import { useProfileStore } from './profile-store';
 
 /**
@@ -27,7 +28,7 @@ export function trackGateOpened(next: string | undefined, via: GateVia): void {
 export function passGate(next: string, opens: boolean): boolean {
   if (!opens) return false;
   const account = useAccountStore.getState();
-  const noGate = gateOpensDirectly({ profiles: useProfileStore.getState().profiles, parentPinHash: account.parentPinHash, sessionOpen: false });
+  const noGate = gateOpensDirectly({ profiles: useProfileStore.getState().profiles, parentPinHash: account.parentPinHash, sessionOpen: false, guest: useGuestStore.getState().record });
   trackGateOpened(next, noGate ? 'open' : 'session');
   return true;
 }

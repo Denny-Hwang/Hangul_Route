@@ -13,6 +13,7 @@ import { NO_PIN_SEEN, pinHashFingerprint } from '../../logic/shell/device-gate';
 import { readJsonExact, writeJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 import { bindDeviceGateMarker, currentDeviceGateMarker } from '../device-gate';
+import { useGuestStore } from '../guest-store';
 import { useProfileStore } from '../profile-store';
 
 /**
@@ -37,6 +38,8 @@ function profile(id: string, learnerType: 'child' | 'self' = 'child'): Profile {
 
 function resetStores(): void {
   useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
+  // [GU] Row GU-2: `hr:guest` read at boot with no guest, unless a test says otherwise.
+  useGuestStore.setState({ record: null, running: false, hydrated: true, memoryOnly: false });
   useAccountStore.setState({
     parentEmail: null,
     consentAcceptedAt: null,
@@ -238,7 +241,8 @@ describe('device gate marker writer', () => {
       vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [] : null));
       useProfileStore.setState({ profiles: [] });
       await flush();
-      expect(readJsonExact).toHaveBeenCalledTimes(4);
+      // The list and the hash, then [GU] `hr:guest` once the two agree.
+      expect(readJsonExact).toHaveBeenCalledTimes(5);
       expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }, { v: 1, gate: 'none' }]);
     });
 
@@ -357,5 +361,77 @@ describe('device gate marker writer', () => {
     useAccountStore.setState({ parentEmail: 'x@example.com' });
     await flush();
     expect(markerWrites()).toEqual([{ v: 1, gate: 'pin', pinEpoch: T0 }]);
+  });
+
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON GU-D14, CS-G6 (row GU-2): a live guest counts as a learner read as a child.
+  describe('[GU] a live guest keeps the marker off none (CS-G6)', () => {
+    const guest = { v: 1 as const, id: 'profile:guest001', startedAt: '2026-10-01T00:00:00.000Z', lastAt: '2026-10-01T00:00:00.000Z', via: 'site' as const, questDone: false };
+
+    it('a device with only a guest: nopin; with a PIN: pin; never none', async () => {
+      useGuestStore.setState({ record: guest });
+      useProfileStore.setState({ profiles: [], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }]);
+      useAccountStore.setState({ parentPinHash: HASH, pinSetAt: T0, pinHashSeen: pinHashFingerprint(HASH) });
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }, { v: 1, gate: 'pin', pinEpoch: T0 }]);
+    });
+
+    it('a self-only device without a PIN reads nopin while the guest lives, and none once it is swept', async () => {
+      const self = profile('me', 'self');
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [self] : null));
+      useGuestStore.setState({ record: guest });
+      useProfileStore.setState({ profiles: [self], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }]);
+      useGuestStore.setState({ record: null });
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }, { v: 1, gate: 'none' }]);
+    });
+
+    it('a saved guest (its id is a profile) counts as that profile only', async () => {
+      const self = { ...profile('me', 'self'), id: guest.id };
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [self] : key === 'guest' ? guest : null));
+      useGuestStore.setState({ record: guest });
+      useProfileStore.setState({ profiles: [self], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'none' }]);
+    });
+
+    it('nothing is written before hr:guest has been read (an unread guest store must not say none)', async () => {
+      useGuestStore.setState({ hydrated: false });
+      useProfileStore.setState({ profiles: [], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(currentDeviceGateMarker()).toBeNull();
+      expect(markerWrites()).toEqual([]);
+      useGuestStore.setState({ hydrated: true });
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'none' }]);
+    });
+
+    it('none is refused while the stored hr:guest holds a live guest, or a record that does not parse', async () => {
+      useProfileStore.setState({ profiles: [], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'guest' ? guest : null));
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([]);
+      unbind();
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => {
+        if (key === 'guest') throw new SyntaxError('not JSON');
+        return null;
+      });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([]);
+    });
   });
 });

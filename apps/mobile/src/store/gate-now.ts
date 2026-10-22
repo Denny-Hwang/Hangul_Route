@@ -1,6 +1,7 @@
 import { gateOpensDirectly } from '../logic/profiles/gate-route';
 import { isParentSessionValid } from '../logic/profiles/session';
 import { useAccountStore } from './account-store';
+import { useGuestStore } from './guest-store';
 import { useProfileStore } from './profile-store';
 import { useUiStore } from './ui-store';
 
@@ -16,5 +17,7 @@ export function gateOpensDirectlyNow(now: number = Date.now()): boolean {
     profiles: useProfileStore.getState().profiles,
     parentPinHash: useAccountStore.getState().parentPinHash,
     sessionOpen: isParentSessionValid(openedAt === null ? null : { openedAt, profileId: 'family' }, now),
+    // [GU] GU-D14: a live guest counts as a learner read as a child.
+    guest: useGuestStore.getState().record,
   });
 }

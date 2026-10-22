@@ -25,6 +25,7 @@ import { getDeviceId } from '../platform/device';
 import { onInboxRead } from '../platform/inbox-events';
 import { readJson, readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-api';
+import { isLiveGuestId } from './guest-store';
 import { usePlanStore } from './plan-store';
 import { onProfileEdited } from './profile-edits';
 import { onProfileRemoved } from './profile-removal';
@@ -396,6 +397,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
   const rerun = new Set<string>();
 
   async function runSync(learnerId: string): Promise<LearnerSyncState> {
+    // [GU] CS-G7 (row GU-2): a guest is no learner here until it is saved: no record, no request, nothing written.
+    if (isLiveGuestId(learnerId)) return get().byLearner[learnerId] ?? blank(learnerId);
     const client = api();
     const state = await load(learnerId);
     // A record storage could not read: no registration and no write, so the stored secret is kept for a later pass.

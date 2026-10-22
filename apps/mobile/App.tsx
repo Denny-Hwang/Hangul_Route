@@ -19,6 +19,7 @@ import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { leaveGrownUpAreaOnClose, watchGrownUpAreaExit } from './src/navigation/grown-up-area-exit';
 import { followProfileChanges } from './src/store/profile-store';
+import { followGuestChanges } from './src/store/guest-store';
 import { bindChooserResume, bindRemovedElsewhere } from './src/store/who-chooser';
 import { bindGrownUpBackgroundRule } from './src/screens/parent/use-gate-lapse';
 import { subscribePwa } from './src/platform/pwa';
@@ -113,6 +114,8 @@ export default function App(): React.ReactElement {
     const unbindBackground = bindGrownUpBackgroundRule();
     // [OA] OA-D19: a profile list another tab changed is read again here (always on).
     const unfollowProfiles = followProfileChanges();
+    // [GU] Row GU-2 (section 6.4): a guest record another tab wrote or saved is read again here (always on).
+    const unfollowGuest = followGuestChanges();
     void countVisit();
     // Remote config (F-CURR-002 section 12.2): the last copy, fetched when due and on each foreground; it can only reduce.
     const stopRemoteConfig = startRemoteConfig();
@@ -173,6 +176,7 @@ export default function App(): React.ReactElement {
       unfollow();
       unbindBackground();
       unfollowProfiles();
+      unfollowGuest();
       off();
       offInbox();
       foreground.remove();

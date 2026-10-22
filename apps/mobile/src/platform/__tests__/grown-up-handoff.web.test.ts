@@ -25,6 +25,7 @@ import type { TelemetryEvent } from '../telemetry';
 import { pinHashFingerprint } from '../../logic/shell/device-gate';
 import { useAccountStore } from '../../store/account-store';
 import { bindDeviceGateMarker } from '../../store/device-gate';
+import { useGuestStore } from '../../store/guest-store';
 import { useLocaleStore } from '../../store/locale-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
@@ -365,6 +366,8 @@ describe('openGrownUpArea with the default env (the learner stores and the brows
       hydrated: true,
     });
     useAccountStore.setState({ parentPinHash: 'salt:hash', pinSetAt: 1_759_000_000_000, pinHashSeen: pinHashFingerprint('salt:hash'), hydrated: true });
+    // [GU] Row GU-2: the writer waits for `hr:guest` too (none here).
+    useGuestStore.setState({ record: null, running: false, hydrated: true });
     const unbind = bindDeviceGateMarker();
     const area = memoryArea();
     const assign = vi.fn();
