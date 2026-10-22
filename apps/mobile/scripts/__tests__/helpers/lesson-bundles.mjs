@@ -1,11 +1,11 @@
 // Test support (F-CURR-002 §10): the lesson chunks (row CM-5) and the story chunks (row CM-8) of a stand-in
 // export, as Metro emits them. The start bundle names every hash of the repository's lesson and story
 // manifests and each chunk is its own `<name>-<md5>.js` bundle carrying its hash, so pwa-postbuild.mjs's
-// chunk check passes. The locale chunks and the grown-up roots are bundles of their own too, each carrying
-// its marker. `skip` leaves one chunk out.
+// chunk check passes. The locale chunks, the grown-up roots and the learner screen chunks ([GU] GU-3) are bundles
+// of their own too, each carrying its marker. `skip` leaves one chunk out.
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LOCALE_CHUNKS, ROOT_CHUNKS, md5 } from '../../pwa/lesson-chunks.mjs';
+import { LOCALE_CHUNKS, ROOT_CHUNKS, SCREEN_CHUNKS, md5 } from '../../pwa/lesson-chunks.mjs';
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..');
 const lessons = await import(join(repo, 'scripts', 'build-lessons.mjs'));
@@ -26,7 +26,7 @@ export function lessonBundles(skip) {
     const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}"});`;
     files[`_expo/static/js/web/${name}-${md5(text)}.js`] = text;
   }
-  for (const { name, marker } of [...LOCALE_CHUNKS, ...ROOT_CHUNKS]) {
+  for (const { name, marker } of [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...SCREEN_CHUNKS]) {
     if (name === skip) continue;
     const text = `__d(function(g,r,i,a,m,e,d){e.MARKER="${marker}"});`;
     files[`_expo/static/js/web/${name}-${md5(text)}.js`] = text;
