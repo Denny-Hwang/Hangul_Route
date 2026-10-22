@@ -1,6 +1,6 @@
 # Profiles / Who is using this? with the guest tiles: Try the first quest, the guest's own tile (wireframe v1)
 
-Spec: `docs/specs/AMENDMENTS-GUEST-FIRST-LESSON.md` sections 6.1, 9, 10 (row GU-5) · extends `profiles/who-is-using.md` (`AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` section 6) with Panels L to O; every other panel of that file is unchanged · `profiles/people-on-device.md` gains Panel P's row
+Spec: `docs/specs/AMENDMENTS-GUEST-FIRST-LESSON.md` sections 6.1, 9, 10 (row GU-5) · extends `profiles/who-is-using.md` (`AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` section 6) with Panels L to O; every other panel of that file is unchanged · `profiles/people-on-device.md` gains Panel P's row, and the PIN setup of `profiles/pin-entry-v2.md` Panel Q's line
 Audience: **anyone** arriving from the site's Start learning on a device that already has learner profiles (a family tablet, a classroom laptop); **grown-up** for Panel P
 Route: learner app `WhoIsUsing` (OA-4a), trigger `try` (new) or any trigger while a guest lives
 Web only; both `EXPO_PUBLIC_WHO_CHOOSER` and `EXPO_PUBLIC_GUEST_LESSON` on
@@ -70,15 +70,28 @@ Panel N — opened by a held class code (trigger `join`): no guest tile of any k
 
 Panel O — launch, resume or Switch without a live guest: no guest tile (as `who-is-using.md` Panel A)
 
-Panel P — People on this device (Grown-up area), a guest lives
+Panel P — People on this device (Grown-up area), a guest lives (shown whatever the guest switch says)
 
 ```
 | People on this device          |
 | (Mina row, Jun row, as OA-7a)  |
 | First quest, not saved       > |  <- the guest's row, no name
-|   [ Remove the first quest ]   |  -> fresh PIN (2 min) -> ConfirmSheet:
+|   [ Keep as a learner ]        |  -> onboarding/guest-save.md C (two steps, this grown-up session);
+|                                |     shown only while the guest switch is on
+|   [ Remove the first quest ]   |  -> fresh PIN (2 min) when a PIN is set; ConfirmSheet alone when none:
 |                                |     "The card and stars of this quest are removed from this browser."
 |                                |     -> the sweep (every per-profile key with the guest's id)
+```
+
+Panel Q — the guest-only gate: PIN setup (L8) on a device with no PIN and no child, gated only because of the guest
+
+```
+| (PIN setup of pin-entry-v2)    |
+| Someone tried the first quest  |  <- guestOnlyGate line, plain text
+| on this browser and didn't     |
+| keep it. Set a PIN, or remove  |
+| that quest.                    |
+|   [ Remove the first quest ]   |  -> ConfirmSheet -> the sweep -> the destination opens directly (as before the guest)
 ```
 
 ## Interaction points
@@ -87,7 +100,8 @@ Panel P — People on this device (Grown-up area), a guest lives
 - **The guest's tile** -> the guest run resumes (`who.picked { kind: 'guest' }`, `guest.started { via: 'chooser', resumed: true }`).
 - Learner tiles, locked tiles, Add a learner and the grown-up rows: unchanged (`who-is-using.md`).
 - Stop in a guest run on this device -> back here (trigger `manual`), where Panel M shows.
-- **Remove the first quest** (Panel P) -> fresh PIN, ConfirmSheet, the sweep; never touches the server (there is nothing there).
+- **Keep as a learner** (Panel P) -> the guest save's two steps inside the grown-up session; the profile keeps the guest's id.
+- **Remove the first quest** (Panels P and Q) -> fresh PIN only when a PIN is set, ConfirmSheet, the sweep; never touches the server (there is nothing there).
 
 ## Entry and exit
 
@@ -101,6 +115,7 @@ Exit to: `onboarding/guest-first-quest.md` Panel A · the Not now card (`onboard
 - **no guest, ordinary trigger**: O (no guest tile).
 - **switch off** (guest or chooser): `try=1` is ignored; the launch is the one of `who-is-using.md` or today's.
 - **classroom device** (13 or more profiles): the guest tile sits after Add a learner at the end of the sorted grid.
+- **narrow, large text**: at 320 px in two columns with text at Largest, each tile's label and line wrap inside its `touchTarget.hero` square in en, es ("Prueba la primera misión" / "Sin crear un perfil") and ko; never truncated.
 
 ## Accessibility
 

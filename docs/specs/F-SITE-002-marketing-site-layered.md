@@ -1,6 +1,6 @@
 Status: ready
 
-> **Amended 2026-10-21 by `AMENDMENTS-GUEST-FIRST-LESSON.md` [GU]**: a new claim `guestLesson` (`false` until row GU-7, the app's flag flip) makes `learnerStart` add `try=1`, so Start learning opens Stage 1 quest 1 straight away on a device with no profile; under the same claim Home shows one line under the hero facts and the Privacy Policy one bullet about a quest tried before a profile exists (sections 3.8 and 3.9). `AMENDMENTS-SITE-NEWUSER.md` carries the same note (the line sits in its hero, section 3.3; its `/` budgets are re-measured with the claim on). Rows GU-6 and GU-7.
+> **Amended 2026-10-21 by `AMENDMENTS-GUEST-FIRST-LESSON.md` [GU]**: a new claim `guestLesson` (`false` until row GU-7, the app's flag flip) makes `learnerStart` add `try=1`, so Start learning opens Stage 1 quest 1 straight away on a device with no profile; under the same claim Home shows one line under the hero facts, How it works steps 1 and 3 and the /learners level FAQ switch to guest variants (so the `levelCheck` copy stays true, owner decision (a) of 2026-10-21), and the Privacy Policy gains one English-only bullet (L10) about a quest tried before a profile exists (sections 3.8 and 3.9). `AMENDMENTS-SITE-NEWUSER.md` carries the same note (the line sits in its hero, section 3.3; its `/` budgets are re-measured with the claim on). Rows GU-6 and GU-7.
 
 # F-SITE-002 — hangulroute.com becomes a short, layered intro site (one-screen hero, three persona pages, every account action on app.hangulroute.com)
 

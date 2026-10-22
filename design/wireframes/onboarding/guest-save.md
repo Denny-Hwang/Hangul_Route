@@ -6,8 +6,8 @@ Route: `Guest/Results` (guest variant) -> `PinEntry { next: 'SaveGuest' }` (gate
 
 Panels:
 
-- A. Results, guest variant (card earned / no card)
-- B. The gate on a gated device
+- A. Results, guest variant (card earned / no card / a device with profiles and no PIN)
+- B. The gate on a device with a PIN (verify only)
 - C. Step 1 of 2, the name
 - D. Step 2 of 2, Privacy: who is learning, then the card, with Add an email closed and open
 - E. Not now (`GuestLater`)
@@ -43,24 +43,37 @@ A1: card earned (2 or 3 stars)       A2: no card (0 or 1 star)
 | +----------------------------+ |   |                                |
 | ( Add a name so Hoya can keep  |   | ( Add a name so Hoya can keep  |
 |   your card and stars. )       |   |   your first quest. )          |
-| [[    SAVE MY PROGRESS    ]]   |   | [[    SAVE MY PROGRESS    ]]   |  <- the ONE primary -> B (gated) or C
-| A grown-up enters the PIN to   |   |                                |  <- caption, gated device only
-| add a learner.                 |   |                                |
+| [[    KEEP MY PROGRESS    ]]   |   | [[    KEEP MY PROGRESS    ]]   |  <- the ONE primary -> B (a PIN is set) or C
+| A grown-up on this device adds |   |                                |  <- caption, only when a PIN is set (case verify)
+| you with the PIN.              |   |                                |
 |          [ Not now ]           |   |          [ Not now ]           |  <- quiet text button -> E
 +--------------------------------+   +--------------------------------+
-  Not drawn: next-quest teaser, Episode page, Back to Journey, stage prize, practice
+  Not drawn: next-quest teaser, Episode page, Back to Journey, stage prize, practice, the profile's name row,
+  the locked-quest Paywall / PinEntry hand-off
+  The save card's first line (Hoya's line) is its heading; first focus stays on the tier word.
+
+A3: case owner (learner profiles on the device, no PIN)
++--------------------------------+
+|  (Hoya, stars, card as A1/A2)  |
+| ( The person who uses this     |  <- askOwner; no Keep my progress, no PIN pad (CS-G10)
+|   device can add you. )        |
+| [[        NOT NOW         ]]   |  <- the one button -> E
++--------------------------------+
+  The owner keeps it later: Grown-up area > People on this device > First quest, not saved >
+  Keep as a learner -> C (inside their own grown-up session), see profiles/who-is-using-guest.md Panel P
 ```
 
-Panel B — the gate (any device that already holds a learner profile or a PIN)
+Panel B — the gate (a PIN is stored on the device; never PIN setup)
 
 ```
 +--------------------------------+
 | [x Close]               ( Aa ) |
-|  (PIN pad of pin-entry-v2:     |  <- verify when a PIN exists; setup on a device without one (L8)
+|  (PIN pad of pin-entry-v2:     |  <- verify only; PinEntry refuses SaveGuest when no PIN is stored
 |   dots, keys, pause line)      |
 |  (no Forgot PIN?)              |  <- hidden, as for GrownUpUse
 +--------------------------------+
   PIN ok -> C (no grown-up session: verifyForLockedProfile)    Close / Cancel -> A
+  Asked even if a grown-up session were open (guestSaveGate ignores sessionOpen; none is open in a guest run)
 ```
 
 Panel C — step 1 of 2
@@ -73,8 +86,8 @@ Panel C — step 1 of 2
 |                                |
 | Name                           |
 | [ Type a name              ]   |  <- validateDisplayName, NAME_MAX, today's hints
-| You can change the Hoya and    |
-| the reading level later in     |
+| You can pick a Hoya and a      |
+| reading level later in         |
 | Profile.                       |
 |                                |
 | [[        CONTINUE        ]]   |  -> D
@@ -99,7 +112,7 @@ D1: before an answer                 D2: "Me", Add an email closed      D3: Add 
 |     I'm a parent, guardian or  |   | | (body)                     | |  | +--------------------------+   |
 |     teacher, setting it up...  |   | | [+] Add an email (optional)| |  <- collapsed row, button with state
 | This doesn't change the        |   | | [ ] I'm 13 or older and I  | |  |                                |
-| lessons.                       |   | |     agree to the Privacy   | |  |                                |
+| lessons.                       |   | |     agree to the Privacy   | |  |                                |  <- D1 line: always lessons.plain (no level check follows)
 |                                |   | |     Policy.                | |  |                                |
 | [[   CONTINUE (disabled)  ]]   |   | | Read the Privacy Policy    | |  -> privacyUrl() (fallback line)
 | Choose who is learning         |   | | [+] Protect settings with  | |
@@ -125,12 +138,13 @@ Panel E — Not now (`GuestLater`)
 ```
 +--------------------------------+
 |          [HOYA idle]           |
-| Hoya keeps your quest in this  |  <- {days} = 30
-| browser for 30 days.           |
+| Hoya can keep your quest in    |  <- heading, first focus; {days} = 30, or 7 on a
+| this browser for up to 30 days |     device with learner profiles
+| without play.                  |
 | It isn't backed up yet. Add a  |
 | name to back it up and keep    |
 | going.                         |
-| [[      ADD MY NAME       ]]   |  -> B (gated) or C
+| [[      ADD MY NAME       ]]   |  -> B (a PIN is set) or C; case owner: the askOwner line instead
 |          [ Close ]             |  -> Welcome (no profile) or the chooser (device with profiles)
 +--------------------------------+
 ```
@@ -149,7 +163,7 @@ Panel F — the first Home of the new profile
 
 ## Interaction points
 
-- **Save my progress** -> B on a gated device (`guestSaveGated`: a learner profile or a PIN on the device), else C.
+- **Keep my progress** -> B when a PIN is stored (`guestSaveGate` `verify`), C on a device with no profile and no PIN (`open`); on a device with profiles and no PIN (`owner`) it is not drawn (A3).
 - **See my card** -> CardDetail; Close returns to A.
 - **Not now** -> E (`guest.left { at: 'save' }`); nothing is removed.
 - B: PIN ok -> C; it opens no grown-up session and gives no fresh-PIN credit. Cancel -> A.
@@ -159,8 +173,8 @@ Panel F — the first Home of the new profile
 
 ## Entry and exit
 
-Enter from: quest 1 finished in a guest run · Welcome **Add my name** (`onboarding/guest-first-quest.md` D2) · a reopen within 30 minutes after quest 1 (E)
-Exit to: learner Home (F) · Welcome · `profiles/who-is-using`
+Enter from: quest 1 finished in a guest run · Welcome **Add my name** (`onboarding/guest-first-quest.md` D2) · a reopen within 30 minutes after quest 1 (E) · People on this device **Keep as a learner** (C, grown-up session)
+Exit to: learner Home (F) · People on this device (after Keep as a learner) · Welcome · `profiles/who-is-using`
 
 ## States
 
@@ -174,7 +188,8 @@ Exit to: learner Home (F) · Welcome · `profiles/who-is-using`
 
 - Focus moves to each step's heading ("Step 2 of 2. Privacy"); after I'm under 13, to the switch note (as setup-steps).
 - **Add an email** is a disclosure button with `expanded`; opening it moves focus to the field.
-- Results reading order: Hoya, stars, card, Hoya's line, Save my progress, the gate caption, Not now.
+- Results reading order: Hoya, stars, card, Hoya's line (the save card's heading), Keep my progress, the gate caption, Not now.
+- E: its first line is the heading and takes focus when the card opens.
 - 64 dp targets; option cards at least `touchTarget.child`; text sizes up to Largest; no colour-only cue.
 
 ## Data needs
