@@ -229,10 +229,10 @@ export const DAILY_REVIEW_RETENTION_DAYS = 14;
  * `stage-certificate` carry best results). The rule reads no clock, so every side gives the same list and a
  * union of pruned lists never brings a pruned entry back. Returns the list itself when nothing is pruned.
  */
-export function pruneDailyReviews<T extends { kind: string; scope: string }>(reviews: readonly T[]): T[] {
+export function pruneDailyReviews<T extends { kind: string; scope: string }>(reviews: T[]): T[] {
   let newest: string | undefined;
   for (const r of reviews) if (r.kind === 'daily' && isDateKey(r.scope) && (newest === undefined || r.scope > newest)) newest = r.scope;
   const from = newest === undefined ? undefined : addDays(newest, 1 - DAILY_REVIEW_RETENTION_DAYS);
   const kept = from === undefined ? reviews : reviews.filter((r) => r.kind !== 'daily' || !isDateKey(r.scope) || r.scope >= from);
-  return kept.length === reviews.length ? (reviews as T[]) : kept;
+  return kept.length === reviews.length ? reviews : kept;
 }
