@@ -18,8 +18,8 @@
  * |                                    | a day, or `/present` taken down) means a PR setting it back to `false`   |
  * |                                    | and a site redeploy; a console or app kill switch alone never moves it   |
  * | `paidPlans: 'inApp'`               | a PR after the owner turns on Stripe Live (sandbox never counts)         |
- * | `levelCheck`                       | F-PLC-001 P-10 flag flip; flag already on (`placementEnabled` launch     |
- * |                                    | default true): the owner decides when the site says so                   |
+ * | `levelCheck`                       | F-PLC-001 P-10 flag flip (`placementEnabled` launch default true);       |
+ * |                                    | flipped on by owner decision 2026-10-21                                  |
  *
  * Page components take `claims` as a prop that defaults to `SITE_CLAIMS`. F-BILL-002 B-7 reads the boolean
  * claims for its signed-in "what the plan includes" lines; `CLAIM_REQUIRES_PAID` applies to the public site only.
@@ -73,8 +73,8 @@ export const SITE_CLAIMS: Readonly<SiteClaims> = Object.freeze({
   browseAsLearner: true,
   // AMENDMENTS-LECTURE-V2 LV-7: lecture mode is on by default in the console and the learner app (kill switches kept).
   lectureMode: true,
-  // F-PLC-001 P-10: placementEnabled is on by default in the learner app; the site line waits for the owner's decision.
-  levelCheck: false,
+  // F-PLC-001 P-10: placementEnabled is on by default in the learner app; the site says so (owner decision 2026-10-21).
+  levelCheck: true,
 });
 
 /** A line about a paid feature shows only when its claim is on AND `paidPlans === 'inApp'`. */

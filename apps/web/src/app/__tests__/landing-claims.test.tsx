@@ -188,16 +188,16 @@ describe('metadata truth pass (F-SITE-002 §3.12)', () => {
 });
 
 /**
- * The level check (F-PLC-001; placement on for every platform since P-10) is a claim the owner flips: off, neither
- * line shows; on, `/learners` asks the level question after the Korean one and step 1 of the home's How it works
- * names it (one line, not a fourth step: the home's word budget). Both states, in every UI locale.
+ * The level check (F-PLC-001; placement on for every platform since P-10) is a claim, on since the owner decision of
+ * 2026-10-21: off, neither line shows; on, `/learners` asks the level question after the Korean one and step 1 of the
+ * home's How it works names it (one line, not a fourth step: the home's word budget). Both states, in every UI locale.
  */
 describe('site text — the level-check lines follow the levelCheck claim', () => {
   const steps = (html: string): string[] =>
     [...(/<section aria-labelledby="home-how"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '').matchAll(/<li\b[\s\S]*?<\/li>/g)].map((m) => textOf(m[0]).trim());
 
-  it('is off today', () => {
-    expect(SITE_CLAIMS.levelCheck).toBe(false);
+  it('is on today (owner decision 2026-10-21)', () => {
+    expect(SITE_CLAIMS.levelCheck).toBe(true);
   });
 
   for (const locale of ['en', 'es', 'ko'] as const) {

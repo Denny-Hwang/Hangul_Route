@@ -114,12 +114,14 @@ describe('the blocks under the hero (L1)', () => {
   it('how it works: three numbered steps, title and line; the Learning Route line only with its claim', () => {
     const how = /<section[^>]*>\s*<h2[^>]*>How it works<\/h2>[\s\S]*?<\/section>/.exec(main)?.[0] ?? '';
     expect(how).toMatch(/<ol role="list"/);
-    for (const step of Object.values(H.how.steps)) {
-      expect(textOf(how)).toContain(step.title);
-      expect(textOf(how)).toContain(step.body);
-    }
-    // Step 1's level-check line shows only with the `levelCheck` claim on (landing-claims.test.tsx pins both states).
-    expect(textOf(how)).not.toContain(H.how.levelBody);
+    for (const step of Object.values(H.how.steps)) expect(textOf(how)).toContain(step.title);
+    // Step 1's line names the level check while the `levelCheck` claim is on, as it is today (owner decision
+    // 2026-10-21); landing-claims.test.tsx pins both states.
+    expect(SITE_CLAIMS.levelCheck).toBe(true);
+    expect(textOf(how)).toContain(H.how.levelBody);
+    expect(textOf(how)).not.toContain(H.how.steps.start.body);
+    expect(textOf(how)).toContain(H.how.steps.quests.body);
+    expect(textOf(how)).toContain(H.how.steps.collect.body);
     expect(text).not.toContain(H.how.routeBody);
     const on = textOf(mainOf(renderToStaticMarkup(<Home locale="en" claims={{ ...SITE_CLAIMS, learningRoute: true }} />)));
     expect(on).toContain(H.how.routeBody);

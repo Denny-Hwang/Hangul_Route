@@ -138,13 +138,14 @@ describe('/learners (S-4a)', () => {
     for (const m of main.matchAll(/<(ul|ol)\b([^>]*)>/g)) expect(m[2], m[0]).toContain('role="list"');
   });
 
-  it('five folded questions, in order, each a native details; the level-check question only with its claim on', () => {
+  it('six folded questions today, in order, each a native details; the level-check question (last) only with its claim on', () => {
     const questions = [...main.matchAll(/<summary[^>]*><span[^>]*>([^<]*)<\/span><\/summary>/g)].map((m) => decode(m[1] ?? ''));
-    expect(SITE_CLAIMS.levelCheck).toBe(false);
-    expect(questions.slice(2)).toEqual([L.faq.signIn.q, L.faq.code.q, L.faq.offline.q, L.faq.adult.q, L.faq.korean.q]);
-    for (const { a } of [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean]) expect(text).toContain(a);
-    expect(text).not.toContain(L.faq.level.q);
-    expect(text).not.toContain(L.faq.level.a);
+    expect(SITE_CLAIMS.levelCheck).toBe(true);
+    expect(questions.slice(2)).toEqual([L.faq.signIn.q, L.faq.code.q, L.faq.offline.q, L.faq.adult.q, L.faq.korean.q, L.faq.level.q]);
+    for (const { a } of [L.faq.signIn, L.faq.code, L.faq.offline, L.faq.adult, L.faq.korean, L.faq.level]) expect(count(text, a)).toBe(1);
+    const off = textOf(mainOf(renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...SITE_CLAIMS, levelCheck: false }} />)));
+    expect(off).not.toContain(L.faq.level.q);
+    expect(off).not.toContain(L.faq.level.a);
   });
 
   it('with the levelCheck claim on: the level-check question follows the Korean one, once', () => {
@@ -436,8 +437,8 @@ describe('today\'s claims: the reports lines (F-REPORT-001 RP-11), the notes lin
     expect(T.class.reports).toBe('Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.');
   });
 
-  it('/learners is unchanged by the reports claims', () => {
-    expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(renderToStaticMarkup(<LearnersPage locale="en" claims={ALL_CLAIMS_OFF} />));
+  it('/learners is unchanged by the reports claims (only the level-check claim, on today, changes it)', () => {
+    expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...ALL_CLAIMS_OFF, levelCheck: true }} />));
   });
 
   it.each(['ko', 'es'] as const)('%s: the reports lines and the notes line, since its report words are signed (F-SITE-002 G6; MAR re-review)', (locale) => {

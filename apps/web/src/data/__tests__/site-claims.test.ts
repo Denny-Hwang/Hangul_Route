@@ -17,7 +17,7 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14) and lecture mode (AMENDMENTS-LECTURE-V2 LV-7) on, every other feature line off (the level check waits for the owner)', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14), lecture mode (AMENDMENTS-LECTURE-V2 LV-7) and the level check (F-PLC-001 P-10, owner decision 2026-10-21) on, every other feature line off', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
@@ -27,7 +27,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       feedbackNotes: true,
       browseAsLearner: true,
       lectureMode: true,
-      levelCheck: false,
+      levelCheck: true,
     });
   });
 
@@ -44,12 +44,12 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     expect(SITE_CLAIMS.learningRoute).toBe(false);
   });
 
-  it('shows the reports and notes lines today: their flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
+  it('shows the reports, notes, lecture mode and level-check lines today: their flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
     for (const locale of UI_LOCALES) {
       const shown = BOOLEAN_KEYS.filter((key) => showsClaim(SITE_CLAIMS, key, locale));
-      // The reports lines follow REPORT_REVIEWED_LOCALES; the notes line is live in every UI locale (FB-5b).
+      // The reports lines follow REPORT_REVIEWED_LOCALES; the notes and level-check lines are live in every UI locale (FB-5b).
       const reports = REPORT_REVIEWED_LOCALES.includes(locale) ? (['parentReports', 'teacherReports'] as const) : [];
-      expect(shown, locale).toEqual(['feedbackNotes', 'lectureMode', ...reports]);
+      expect(shown, locale).toEqual(['feedbackNotes', 'lectureMode', 'levelCheck', ...reports]);
     }
   });
 
@@ -149,13 +149,13 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     );
   });
 
-  it('keeps the level-check lines off until the owner decides, though placement is already on in the learner app (F-PLC-001 P-10)', () => {
+  it('shows the level-check lines (owner decision 2026-10-21) only because placement is on in the learner app (F-PLC-001 P-10)', () => {
     const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
     const learnerFlags = readFileSync(join(root, 'mobile', 'src', 'config', 'flags.ts'), 'utf8');
     const learnerOn = /launchDefaults: Flags = \{[^}]*\bplacementEnabled: true,/.test(learnerFlags);
     expect(learnerOn).toBe(true);
-    expect(SITE_CLAIMS.levelCheck).toBe(false);
-    // The flip may never run ahead of the feature. Vacuous while the claim is false: it guards the owner's flip PR.
+    expect(SITE_CLAIMS.levelCheck).toBe(true);
+    // The claim may never run ahead of the feature: a PR turning placementEnabled's launch default off must set it back.
     expect(!SITE_CLAIMS.levelCheck || learnerOn).toBe(true);
   });
 
