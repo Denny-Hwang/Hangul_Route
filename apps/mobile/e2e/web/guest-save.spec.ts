@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Browser, BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { acceptConfirmSheets, answerForkNew, headerBack, headerClose, onboardChild, passDiscover, playCheckByIds, readStored, typeDigits, WHO_CHILD, WHO_SELF } from './helpers';
+import { acceptConfirmSheets, answerForkNew, headerBack, headerClose, onboardChild, openLettersEpisode, passDiscover, playCheckByIds, readStored, typeDigits, WHO_CHILD, WHO_SELF } from './helpers';
 import { shot } from './shots';
 import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { questsAll } from '../../src/content/quests';
@@ -19,8 +19,9 @@ import { questsAll } from '../../src/content/quests';
  * a device with a PIN asks it (`SaveGuest`, verify only), also once a learner profile appeared (CS-G9), opens no
  * grown-up session (CS-G2), draws no PIN row and leaves the PIN hash as it was (CS-G10); a device with one profile and
  * no PIN shows only the ask-the-owner line, never a PIN pad, and its PIN stays unset (CS-G10); Not now, then Add my
- * name; Back on Results opens the Not now card, whose back lands where Close does; Try this one again below 3 stars
- * replays quest 1 inside the stack; Let's start with a live guest promotes it (GU-D11); an offline save registers when
+ * name; Back on Results opens the Not now card, whose back lands where Close does; Try this one again at 1 star
+ * replays quest 1 inside the stack; Me with the optional PIN stores it on the empty device; Home's level-check card
+ * and quest 1 on the Journey after the save; Let's start with a live guest promotes it (GU-D11); an offline save registers when
  * the network returns.
  */
 test.skip(process.env.E2E_GUEST !== '1', 'needs a learner build with EXPO_PUBLIC_GUEST_LESSON=1 (E2E_GUEST=1); the switch is off until GU-7');
@@ -228,6 +229,8 @@ test.describe('the save after the first quest (GU-4)', () => {
     // Home of the new profile, no level-check fork, Hoya's one bubble.
     await expect(page.getByTestId('home-guest-saved')).toContainText(g.saved('Sam'));
     await expect(page.getByTestId('placement-invite')).toHaveCount(0);
+    // No fork was recorded, so Home's level-check card shows as for any new learner (8.4).
+    await expect(page.getByTestId('home-level-check')).toBeVisible();
     await shot(page, 'guest-save-home-360');
     await page.setViewportSize({ width: 320, height: 640 });
     await shot(page, 'guest-save-home-320');
@@ -251,6 +254,9 @@ test.describe('the save after the first quest (GU-4)', () => {
     const cardsTab = page.getByRole('tab', { name: 'Cards', exact: true });
     if ((await cardsTab.count()) > 0) await cardsTab.click();
     await expect(page.getByRole('button', { name: new RegExp(`^${titleOf(questCard.cardId)}`) }).first()).toBeVisible();
+    // Quest 1 is done on the Journey: its row on the episode page shows the stars the guest earned (G2).
+    await openLettersEpisode(page);
+    await expect(page.getByTestId(`episode-quest-${progress!.quests[0]!.questId}`).locator(`[aria-label="${en.a11y.stars(3)}"]`).first()).toBeVisible();
     // The bubble is shown once.
     await page.reload();
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
@@ -276,6 +282,27 @@ test.describe('the save after the first quest (GU-4)', () => {
     await expect(page.getByTestId('home-guest-saved')).toBeVisible();
     expect(await readStored(page, 'account:parentPinHash')).not.toBeNull();
     expect(await readStored(page, 'account:guardianConsentAcceptedAt')).not.toBeNull();
+  });
+
+  test('Me with the optional PIN on the empty device: the PIN is stored (the open case of CS-G10)', async ({ page, context }) => {
+    await mockApi(context);
+    await playToResults(page);
+    await keep(page).click();
+    await nameStep(page, 'Sam');
+    await page.getByRole('radio', { name: WHO_SELF }).click();
+    const row = page.getByRole('button', { name: c.self.pinRow });
+    await row.scrollIntoViewIfNeeded();
+    await row.click();
+    await expect(page.getByText('Create a PIN', { exact: true })).toBeVisible();
+    await typeDigits(page, '1234');
+    await expect(page.getByText('Type it again')).toBeVisible();
+    await typeDigits(page, '1234');
+    await expect(page.getByText('PIN set')).toBeVisible();
+    await page.getByRole('checkbox').click();
+    await cont(page).click();
+    await expect(page.getByTestId('home-guest-saved')).toBeVisible();
+    expect(await readStored(page, 'account:parentPinHash')).toEqual(expect.any(String));
+    expect(await readStored(page, 'account:selfConsentAcceptedAt')).not.toBeNull();
   });
 
   test('a device with a PIN: Keep my progress asks it (SaveGuest), also once a profile appeared (CS-G9); no grown-up session, no PIN row, the PIN unchanged (CS-G2, CS-G10)', async ({ page, context, browser }) => {
@@ -367,7 +394,9 @@ test.describe('the save after the first quest (GU-4)', () => {
     await page.goBack();
     await expect(heading).toBeVisible();
     await expect(page.getByTestId('guest-save-card')).toHaveCount(0);
-    // Close: Welcome asks for a name.
+    // Close: Welcome asks for a name. (The Not now card replaced Results and is the app's first history entry here,
+    // so the browser's own back from it leaves the page, as from any root screen; the stack's back acting as Close is
+    // pinned by the render test of GuestLater.)
     const end = (await routes()).length;
     await page.getByTestId('guest-later-close').click();
     await expect(page.getByTestId('welcome-guest')).toContainText(g.welcome.saveTitle);
@@ -380,10 +409,12 @@ test.describe('the save after the first quest (GU-4)', () => {
     await expect(heading).toBeVisible();
   });
 
-  test('Back on Results opens the Not now card; Try this one again below 3 stars replays quest 1 inside the stack', async ({ page, context }) => {
+  test('Back on Results opens the Not now card; Try this one again at 1 star replays quest 1 inside the stack', async ({ page, context }) => {
     await mockApi(context);
     const routes = await watchRoutes(page);
     await playToResults(page, true);
+    // One of the two Check rounds right first time: 50 %, 1 star, so no card yet (the first-quest line).
+    await expect(page.getByTestId('guest-save-heading')).toHaveText(g.results.lineNoCard);
     const again = page.getByRole('button', { name: en.learner.results.nextUp.again.cta, exact: true });
     await expect(again).toBeVisible();
     await again.click();

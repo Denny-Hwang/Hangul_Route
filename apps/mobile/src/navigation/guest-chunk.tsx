@@ -1,5 +1,5 @@
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { GuestLaterScreen } from '../screens/guest/GuestLaterScreen';
 import { GuestQuestPlayer } from '../screens/guest/GuestQuestPlayer';
 import { GuestResults } from '../screens/guest/GuestResults';
@@ -7,6 +7,7 @@ import { CardDetailScreen } from '../screens/library/CardDetailScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { CreateProfileScreen } from '../screens/onboarding/CreateProfileScreen';
 import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
+import { guardGuestNavigation } from './guest-nav-guard';
 import type { GuestStackParamList } from './types';
 import { withOwnSafeArea } from './with-own-safe-area';
 
@@ -41,17 +42,33 @@ const CardDetailModal = withOwnSafeArea(CardDetailScreen);
 const GuestCardDetailRoute = shared<'CardDetail', React.ComponentProps<typeof CardDetailScreen>>(CardDetailModal);
 
 /**
+ * [GU] Row GU-4 review (CS-G1): the save's two screens are the learner's own and name routes outside this stack, so
+ * they get a guarded `navigation` (`guest-nav-guard.ts`): moves only to this stack's routes (`PinEntry` only as
+ * `SaveGuest`), and of the root only the reset to Home of the saved learner. Anything else is dropped.
+ */
+function useGuardedNavigation<N extends object>(navigation: N): N {
+  return useMemo(() => guardGuestNavigation(navigation, GUEST_STACK_ROUTES), [navigation]);
+}
+
+/**
  * [GU] Row GU-4 (section 8.3): the save form, the learner's CreateProfile screen with `{ firstRun, from: 'guest' }`: two
  * steps, then `promoteGuest` and Home of the new profile (the root reset in `screens/guest/guest-exits.ts`).
  */
-const GuestCreateProfileRoute = shared<'CreateProfile', React.ComponentProps<typeof CreateProfileScreen>>(CreateProfileScreen);
+function GuestCreateProfileRoute({ route, navigation }: GuestScreenProps<'CreateProfile'>): React.ReactElement {
+  const guarded = useGuardedNavigation(navigation);
+  // The learner screen's own props, typed for the onboarding stack: the same route params (`{ firstRun, from }`).
+  return <CreateProfileScreen route={route as never} navigation={guarded as never} />;
+}
 
 /**
  * [GU] Row GU-4 (section 8.2, CS-G2, CS-G10): the verify-only PIN of the save (`next: 'SaveGuest'`), a modal measuring
  * its own safe area as in the root stack. A correct PIN replaces it with the form; nothing else opens from it.
  */
 const GuestPinEntryModal = withOwnSafeArea(PinEntryScreen);
-const GuestPinEntryRoute = shared<'PinEntry', React.ComponentProps<typeof PinEntryScreen>>(GuestPinEntryModal);
+function GuestPinEntryRoute({ route, navigation }: GuestScreenProps<'PinEntry'>): React.ReactElement {
+  const guarded = useGuardedNavigation(navigation);
+  return <GuestPinEntryModal route={route as never} navigation={guarded as never} />;
+}
 
 /** A game of quest 1: Back returns to the player; the story step's Culture notes link is not drawn (not in this stack). */
 function GuestMinigameRoute({ route, navigation }: GuestScreenProps<'Minigame'>): React.ReactElement {

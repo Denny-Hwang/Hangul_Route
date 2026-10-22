@@ -1863,7 +1863,7 @@ export const learner = {
       keeps: '첫 퀘스트에서 한 것은 새로 만드는 프로필로 이어져요.',
     },
     memoryOnly: '이 브라우저는 창을 닫으면 퀘스트를 간직하지 못해요. 끝나고 이름을 넣으면 간직할 수 있어요.',
-    // 변수 뒤에 조사를 붙이지 않아요: {name} 뒤는 쉼표 (16장).
+    // No particle attached to a variable: {name} is followed by a comma (section 16).
     results: {
       line: '이름을 넣으면 호야가 카드와 별을 간직해 줘요.',
       lineNoCard: '이름을 넣으면 호야가 첫 퀘스트를 간직해 줘요.',

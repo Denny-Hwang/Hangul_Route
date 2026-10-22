@@ -1,13 +1,15 @@
 import type { AvatarKind, LearnerType, Profile } from '@hangul-route/content-schema';
 import { questById } from '../content';
 import { isLiveGuest, promotionPlan } from '../logic/guest/guest-model';
-import { guestSaveTarget, type GuestSaveTarget } from '../logic/guest/guest-save';
+import { guestSaveRecheck, guestSaveTarget, type GuestSaveRecheck, type GuestSaveTarget } from '../logic/guest/guest-save';
+import { storedProfileItems } from '../logic/profiles/profile-merge';
 import type { GuestSaveVia } from '../logic/onboarding/submit-profile';
 import { guestFirstQuest } from './guest-launch';
 import { saveGuestAsProfile } from './guest-promotion';
 import { useAccountStore } from './account-store';
 import { useGuestStore } from './guest-store';
-import { useProfileStore } from './profile-store';
+import { readJsonStrict } from '../platform/storage';
+import { PROFILES_KEY, useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
 /**
@@ -68,8 +70,44 @@ export async function promoteLiveGuest(
   // [GU] Row GU-5: `keepActive`, Keep as a learner from People on this device (section 9.2).
   const outcome = await saveGuestAsProfile(record, plan, options);
   if (outcome.kind === 'saved') return outcome.profile;
-  if (outcome.kind === 'duplicate') return useProfileStore.getState().profiles.find((p) => p.id === record.id) ?? null;
+  if (outcome.kind === 'duplicate') return adoptSavedGuest(record.id);
   return null;
+}
+
+/**
+ * [GU] Another tab saved this guest first (`duplicate`, or the recheck found its id in the stored list): this tab
+ * reads the list again, makes that profile active and lets `hr:guest` go, so it shows that learner's Home instead of
+ * a save that can never succeed. Null when the profile is not found (the form then says it could not save).
+ */
+export async function adoptSavedGuest(id: string): Promise<Profile | null> {
+  if (!useProfileStore.getState().profiles.some((p) => p.id === id)) await useProfileStore.getState().refresh().catch(() => undefined);
+  const profile = useProfileStore.getState().profiles.find((p) => p.id === id) ?? null;
+  if (profile === null) return null;
+  useProfileStore.getState().setActive(id);
+  await useGuestStore.getState().forgetSavedGuest(id).catch(() => undefined);
+  return useProfileStore.getState().profiles.find((p) => p.id === id) ?? profile;
+}
+
+/**
+ * [GU] Row GU-4 review, section 8.2, CS-G9, CS-G10: the gate read again just before Continue writes anything. The PIN
+ * hash is read strictly from storage (`rereadPinHash`; this tab's memory never hears of a PIN another tab set) and
+ * the profile list too (strict, joined with memory), so a learner added, a PIN set or this guest saved in another tab
+ * while the form was open is seen. A read that fails is `retry`: nothing is written (fail closed).
+ */
+export async function recheckGuestSave(input: { gated: boolean; guestId: string | null; ownPinHash: string | null }): Promise<GuestSaveRecheck> {
+  const pin = await useAccountStore.getState().rereadPinHash();
+  let stored: Profile[] = [];
+  let listFailed = false;
+  try {
+    stored = storedProfileItems<Profile>(await readJsonStrict<unknown>(PROFILES_KEY));
+  } catch {
+    listFailed = true;
+  }
+  const memory = useProfileStore.getState().profiles;
+  const added = stored.filter((s) => !memory.some((m) => m.id === s.id));
+  // The save card under the form draws the case as it now is.
+  if (added.length > 0) await useProfileStore.getState().refresh().catch(() => undefined);
+  return guestSaveRecheck({ ...input, profiles: [...memory, ...added], parentPinHash: pin.hash, readFailed: pin.failed || listFailed });
 }
 
 /** Section 8.4: the first Home of the saved learner draws one Hoya bubble, once. */

@@ -21,7 +21,12 @@ export interface SubmitInput {
    * `guest.saved { gated, consent, via }` goes last. `gated`: the save asked the PIN (`SaveGuest`); `via`: where it
    * began (Results, Welcome's card, the Not now card, or the first-run setup, GU-D11).
    */
-  guest?: { gated: boolean; via: GuestSaveVia };
+  guest?: {
+    gated: boolean;
+    via: GuestSaveVia;
+    /** [GU] This form wrote the consent on an earlier Continue whose promotion failed: `guest.saved.consent` is still `new`. */
+    consentGiven?: boolean;
+  };
 }
 
 /** [GU] Section 12: where a guest's save began (`guest.saved.via`). */
@@ -77,6 +82,6 @@ export async function submitProfile({ state, level, avatar, firstRun, guest }: S
   if (pinHash !== null) deps.track({ ...pinCreated(learnerType === 'child' ? 'first_run' : 'optional'), profileId: profile.id });
   deps.track({ ...onboardingStarted(level, firstRun, hasEmail, guest === undefined ? undefined : true), profileId: profile.id });
   // [GU] No profile id: the Worker drops one from every `guest.*` event anyway (GU-D15).
-  if (guest !== undefined) deps.track(guestSaved(guest.gated, plan.consent === null ? 'existing' : 'new', guest.via));
+  if (guest !== undefined) deps.track(guestSaved(guest.gated, plan.consent === null && guest.consentGiven !== true ? 'existing' : 'new', guest.via));
   return { ok: true, profile };
 }

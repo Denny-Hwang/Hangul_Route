@@ -42,7 +42,8 @@ export type GuestResultsProps = NativeStackScreenProps<GuestStackParamList, 'Res
  * no grown-up session, CS-G9): Hoya's line as the card's heading (the card kept, or not yet), **Keep my progress**
  * (the one filled button; the verify-only PIN `SaveGuest` when a PIN is stored, else the form), the PIN caption in the
  * `verify` case, and the quiet **Not now**; on a device someone else uses (`owner`) only the ask-the-owner line and
- * **Not now**, filled, with no PIN pad (CS-G10). Not now and every back send `guest.left { at: 'save' }`. The first
+ * **Not now**, filled, with no PIN pad (CS-G10). Not now and every back send `guest.left { at: 'save' }` while the save
+ * card is drawn. The first
  * focus stays on the tier word (section 14).
  */
 export function GuestResults({ route, navigation }: GuestResultsProps): React.ReactElement {
@@ -93,9 +94,13 @@ export function GuestResults({ route, navigation }: GuestResultsProps): React.Re
   const rewardCardId = questById(questId)?.rewardCardId;
   const holdsCard = useProgressStore((s) => (learnerId === null ? false : (s.byProfile[learnerId]?.cards.some((c) => c.cardId === rewardCardId) ?? false)));
   const questDone = useGuestStore((s) => s.record?.questDone === true);
-  // The save offer is left (Not now, or any back): `guest.left { at: 'save' }`, then the Not now card.
+  const played = total > 0;
+  const saveGate = guestSaveGate({ profiles, parentPinHash });
+  const { replay, notNow } = guestResultsActions({ questDone: questDone || played, saveGate, stars, played });
+  // The save offer is left (Not now, or any back while the save card is drawn): `guest.left { at: 'save' }`, then the
+  // Not now card. A back from a Results with no save card (every game skipped) opens it without the event.
   const toLater = (): void => {
-    void track({ name: 'guest.left', payload: { at: 'save' } });
+    if (notNow) void track({ name: 'guest.left', payload: { at: 'save' } });
     navigation.replace('GuestLater');
   };
   const keep = (): void => {
@@ -108,9 +113,6 @@ export function GuestResults({ route, navigation }: GuestResultsProps): React.Re
     return true;
   }, true);
 
-  const played = total > 0;
-  const saveGate = guestSaveGate({ profiles, parentPinHash });
-  const { replay, notNow } = guestResultsActions({ questDone: questDone || played, saveGate, stars, played });
   const card = guestSaveCard(saveGate, holdsCard);
   const g = messages.learner.guest.results;
   const award = outcome?.award ?? null;
