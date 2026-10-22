@@ -17,7 +17,7 @@ const BOOLEAN_KEYS = KEYS.filter((key) => typeof SITE_CLAIMS[key as keyof SiteCl
 const PAID_PLANS: readonly SiteClaims['paidPlans'][] = ['coming', 'inApp'];
 
 describe('SITE_CLAIMS (what the site says today)', () => {
-  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14) and lecture mode (AMENDMENTS-LECTURE-V2 LV-7) on, every other feature line off', () => {
+  it('is what is live: Stage 1 free, plans coming, the reports lines (F-REPORT-001 RP-11), All lessons (F-BROWSE-001 BR-14), the notes line (F-FEEDBACK-001 FB-14), lecture mode (AMENDMENTS-LECTURE-V2 LV-7) and the level check (F-PLC-001 P-10, owner decision 2026-10-21) on, every other feature line off', () => {
     expect(SITE_CLAIMS).toEqual({
       freePlan: 'stage1',
       paidPlans: 'coming',
@@ -27,6 +27,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
       feedbackNotes: true,
       browseAsLearner: true,
       lectureMode: true,
+      levelCheck: true,
     });
   });
 
@@ -43,12 +44,12 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     expect(SITE_CLAIMS.learningRoute).toBe(false);
   });
 
-  it('shows the reports and notes lines today: their flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
+  it('shows the reports, notes, lecture mode and level-check lines today: their flags are on in production (F-SITE-002 section 3.9 hand-off)', () => {
     for (const locale of UI_LOCALES) {
       const shown = BOOLEAN_KEYS.filter((key) => showsClaim(SITE_CLAIMS, key, locale));
-      // The reports lines follow REPORT_REVIEWED_LOCALES; the notes line is live in every UI locale (FB-5b).
+      // The reports lines follow REPORT_REVIEWED_LOCALES; the notes and level-check lines are live in every UI locale (FB-5b).
       const reports = REPORT_REVIEWED_LOCALES.includes(locale) ? (['parentReports', 'teacherReports'] as const) : [];
-      expect(shown, locale).toEqual(['feedbackNotes', 'lectureMode', ...reports]);
+      expect(shown, locale).toEqual(['feedbackNotes', 'lectureMode', 'levelCheck', ...reports]);
     }
   });
 
@@ -142,10 +143,31 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     }
   });
 
-  it('has six feature claims', () => {
+  it('has seven feature claims', () => {
     expect(BOOLEAN_KEYS).toEqual(
-      ['browseAsLearner', 'feedbackNotes', 'learningRoute', 'lectureMode', 'parentReports', 'teacherReports'],
+      ['browseAsLearner', 'feedbackNotes', 'learningRoute', 'lectureMode', 'levelCheck', 'parentReports', 'teacherReports'],
     );
+  });
+
+  it('shows the level-check lines (owner decision 2026-10-21) only because placement is on in the learner app (F-PLC-001 P-10)', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+    const learnerFlags = readFileSync(join(root, 'mobile', 'src', 'config', 'flags.ts'), 'utf8');
+    const learnerOn = /launchDefaults: Flags = \{[^}]*\bplacementEnabled: true,/.test(learnerFlags);
+    expect(learnerOn).toBe(true);
+    expect(SITE_CLAIMS.levelCheck).toBe(true);
+    // The claim may never run ahead of the feature: a PR turning placementEnabled's launch default off must set it back.
+    expect(!SITE_CLAIMS.levelCheck || learnerOn).toBe(true);
+  });
+
+  it('shows the level-check lines in every UI locale, free, while its claim is on, and hides them with it off', () => {
+    expect(CLAIM_LOCALES.levelCheck).toBeUndefined();
+    expect(CLAIM_REQUIRES_PAID.levelCheck).toBe(false);
+    for (const locale of UI_LOCALES) {
+      for (const paidPlans of PAID_PLANS) {
+        expect(showsClaim({ ...SITE_CLAIMS, paidPlans, levelCheck: true }, 'levelCheck', locale), locale).toBe(true);
+        expect(showsClaim({ ...SITE_CLAIMS, paidPlans, levelCheck: false }, 'levelCheck', locale), locale).toBe(false);
+      }
+    }
   });
 
   it('keeps one free-plan value: all of Stage 1 is free (F-ENT-003 OD-1, so the line never flips)', () => {
@@ -227,6 +249,7 @@ describe('CLAIM_REQUIRES_PAID (paid feature lines need paid plans on sale)', () 
       feedbackNotes: false,
       browseAsLearner: true,
       lectureMode: false,
+      levelCheck: false,
     });
   });
 
@@ -263,7 +286,7 @@ describe('showsClaim', () => {
 
   it('takes only a feature claim (by type)', () => {
     expectTypeOf<BooleanClaimKey>().toEqualTypeOf<
-      'learningRoute' | 'parentReports' | 'teacherReports' | 'feedbackNotes' | 'browseAsLearner' | 'lectureMode'
+      'learningRoute' | 'parentReports' | 'teacherReports' | 'feedbackNotes' | 'browseAsLearner' | 'lectureMode' | 'levelCheck'
     >();
     // @ts-expect-error the cost line reads freePlan and paidPlans directly, not through showsClaim
     expect(() => showsClaim(SITE_CLAIMS, 'paidPlans', 'en')).not.toThrow();
