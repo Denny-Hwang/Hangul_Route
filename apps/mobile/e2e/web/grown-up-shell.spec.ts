@@ -2,7 +2,7 @@ import type { BrowserContext, Page, Route } from '@playwright/test';
 import { CONSOLE_SESSION_KEY, GROWN_UP_IDLE_MS, SHELL_DB, SHELL_KEYS, SHELL_STORE, UNLOCK_SESSION_KEY } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { forgetPin, onboardChild, openForGrownUps, readStored, unlockWithPin } from './helpers';
+import { forgetPin, homeFor, onboardChild, openForGrownUps, readStored, unlockWithPin } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -214,7 +214,9 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await expectOpen(page);
 
     await backToLearning(page).first().click();
-    await expect(page.getByText('Hi, Mina!')).toBeVisible();
+    // [OA] Row OA-10: the Learner app exit (`who=1`) lands on Who is using this? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 5.3).
+    await expect(page.getByRole('heading', { name: en.learner.who.title, exact: true })).toBeVisible();
+    await homeFor(page, 'Mina');
     expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_SESSION_KEY)).toBeNull();
 
     await page.goBack();

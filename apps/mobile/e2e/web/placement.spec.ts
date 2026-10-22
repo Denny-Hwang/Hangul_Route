@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, completeSelfForm, readStored, seedStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
+import { completeChildForm, completeSelfForm, homeFor, readStored, seedStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -166,7 +166,8 @@ async function learningRouteShowsThePlan(page: Page, name: string): Promise<void
     if (!/ERR_ABORTED/.test(String(error))) throw error;
     await page.goto('/');
   });
-  await expect(page.getByText(hi(name))).toBeVisible();
+  // [OA] Row OA-10: a device with 2 learners opens on Who is using this? at launch; the learner's tile opens Home.
+  await homeFor(page, name);
   await closeInstallGuide(page);
   await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
   await expect(page.getByTestId('my-route-screen')).toBeVisible();

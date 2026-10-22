@@ -8,12 +8,13 @@ import { shot } from './shots';
 /**
  * [OA] The chooser's grown-up use rows end to end (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4b, section 20; sections
  * 5.3, 6.1, 7.1, 12; G2, CS-1, CS-7): the rows come from the console's `deviceUses` record, a row asks the grown-up
- * PIN and opens that persona home in the same tab. It needs the merged app-host build with the chooser on and an API
- * address (the console's API is mocked by `page.route`; the grown-up is signed in through the dev auth bridge, as in
- * grown-up-shell.spec.ts), so it runs only with `E2E_WHO=1` and `GROWN_UP_SHELL_E2E=1`:
+ * PIN and opens that persona home in the same tab. It needs the merged app-host build with an API address (the
+ * console's API is mocked by `page.route`; the grown-up is signed in through the dev auth bridge, as in
+ * grown-up-shell.spec.ts), so it runs only with `GROWN_UP_SHELL_E2E=1`. The chooser is on by default since row OA-10;
+ * a bundle built with the kill switch off skips it with `E2E_WHO=0`:
  *
- *   EXPO_PUBLIC_WHO_CHOOSER=true EXPO_PUBLIC_API_BASE_URL=https://api.shell-e2e.test pnpm --filter @hangul-route/mobile build:web
- *   E2E_WHO=1 GROWN_UP_SHELL_E2E=1 pnpm --filter @hangul-route/mobile exec playwright test who-grown-up
+ *   EXPO_PUBLIC_API_BASE_URL=https://api.shell-e2e.test pnpm --filter @hangul-route/mobile build:web
+ *   GROWN_UP_SHELL_E2E=1 pnpm --filter @hangul-route/mobile exec playwright test who-grown-up
  *
  * Covered: G2 (chooser, Teacher, the PIN, the teacher home: 2 taps and 4 digits), School to the teacher home with
  * focus on its first school card and the query gone, Family to the family home, Cancel back to the chooser, CS-1 (a
@@ -21,7 +22,7 @@ import { shot } from './shots';
  * nothing), CS-7 (generic labels only, never the account's name or email), Sign in as a grown-up with no known use,
  * and the offline rows.
  */
-test.skip(process.env.E2E_WHO !== '1' || process.env.GROWN_UP_SHELL_E2E !== '1', 'needs a build with EXPO_PUBLIC_WHO_CHOOSER=true and an API address (E2E_WHO=1 GROWN_UP_SHELL_E2E=1)');
+test.skip(process.env.E2E_WHO === '0' || process.env.GROWN_UP_SHELL_E2E !== '1', 'needs a build with an API address (GROWN_UP_SHELL_E2E=1), the chooser on (not E2E_WHO=0)');
 test.use({ viewport: { width: 360, height: 740 } });
 
 const en = getMessages('en');
