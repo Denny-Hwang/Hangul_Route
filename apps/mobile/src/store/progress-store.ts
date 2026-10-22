@@ -117,6 +117,24 @@ export interface PendingVocab {
   events: readonly VocabEvent[];
   /** The clock of the call, ISO. */
   at: string;
+  /** The spacing rule was on for the call (F-CURR-002 section 4.3, row CM-12), so the replay applies it too. */
+  spacing?: boolean;
+}
+
+/**
+ * F-CURR-002 row CM-12: how word answers meet the memory model. `spacing` says whether the spacing
+ * rule of F-VOC-005 P3 (as amended by CM-0b) applies to the profile's topic words now (the
+ * `memoryRecord` switch); `recorded` hears each write of a hydrated profile, with the slice before
+ * it, so the day's `memory.daily` counts include topic words. Registered by `logic/memory/boot.ts`;
+ * with none registered the section 3.2 table applies, as before CM-12.
+ */
+export interface VocabRecordHook {
+  spacing(profileId: string): boolean;
+  recorded(profileId: string, before: VocabProgress, events: readonly VocabEvent[], clock: Date, spacing: boolean): void;
+}
+let vocabRecordHook: VocabRecordHook | null = null;
+export function setVocabRecordHook(hook: VocabRecordHook | null): void {
+  vocabRecordHook = hook;
 }
 
 type CatchUpState = Pick<State, 'catchUp' | 'catchUpFound'>;
@@ -309,7 +327,7 @@ function replayUnsaved(merged: ProgressSnapshot, unsaved: ProgressSnapshot): Pro
  */
 function replayVocab(merged: ProgressSnapshot, queued: readonly PendingVocab[]): ProgressSnapshot {
   const start = vocabOf(merged);
-  const vocab = queued.reduce((v, batch) => applyVocabEvents(v, batch.events, new Date(batch.at)), start);
+  const vocab = queued.reduce((v, batch) => applyVocabEvents(v, batch.events, new Date(batch.at), { spacing: batch.spacing === true }), start);
   return vocab === start && merged.vocab === undefined ? merged : { ...merged, vocab };
 }
 
@@ -734,7 +752,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const clock = Number.isFinite(now.getTime()) ? now : new Date();
     const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
     const current = vocabOf(snap);
-    const vocab = applyVocabEvents(current, events, clock);
+    const spacing = vocabRecordHook?.spacing(profileId) === true;
+    const vocab = applyVocabEvents(current, events, clock, { spacing });
     if (vocab === current) return;
     const at = clock.toISOString();
     const withVocab: ProgressSnapshot = { ...snap, vocab, updatedAt: at };
@@ -746,9 +765,16 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       byProfile: { ...s.byProfile, [profileId]: updated },
       pendingVocabEvents: hydrated
         ? s.pendingVocabEvents
-        : { ...s.pendingVocabEvents, [profileId]: [...(s.pendingVocabEvents[profileId] ?? []), { events, at: clock.toISOString() }] },
+        : { ...s.pendingVocabEvents, [profileId]: [...(s.pendingVocabEvents[profileId] ?? []), { events, at: clock.toISOString(), ...(spacing ? { spacing } : {}) }] },
     }));
     persist(profileId, updated);
+    if (hydrated && vocabRecordHook) {
+      try {
+        vocabRecordHook.recorded(profileId, current, events, clock, spacing);
+      } catch {
+        // The word write is saved; only the day's memory counts miss it.
+      }
+    }
   },
 }));
 
