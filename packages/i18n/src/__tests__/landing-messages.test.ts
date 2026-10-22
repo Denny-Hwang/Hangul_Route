@@ -137,7 +137,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   // [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, before Stripe Live.
   // SN-2: then what a free space holds and the school administrators an owner can invite.
   const SIZES =
-    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Without a paid plan, a family holds up to 4 learners, a class up to 20 students and a school up to 50 students. A school owner can also invite up to 2 administrators.';
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to 2 administrators.';
   const privacy = l.legal.privacy.sections;
   const billing = l.legal.terms.sections.billing;
 
@@ -189,7 +189,8 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
 /**
  * AMENDMENTS-SITE-NEWUSER SN-2: facts in the Privacy Policy and the Terms that had fallen behind the app. English-
- * authoritative (L10): es and ko show this English. No claim of legal review; the draft banner stays as it is.
+ * authoritative (L10): es and ko show this English. No claim of legal review; the draft banner is gone (owner decision
+ * 2026-10-21 (c)), and nothing says a legal review happened or is pending.
  */
 describe('legal: SN-2 accuracy (English-authoritative)', () => {
   const privacy = l.legal.privacy.sections;
@@ -223,6 +224,9 @@ describe('legal: SN-2 accuracy (English-authoritative)', () => {
   it('claims no legal review, and es and ko keep the English text (L10)', () => {
     const text = JSON.stringify([l.legal.privacy, l.legal.terms, l.meta.pages, l.notFound]);
     expect(text).not.toMatch(/reviewed by (a )?(lawyer|counsel|attorney)|legally reviewed|native speaker|expert[- ]reviewed/i);
+    // Owner decision 2026-10-21 (c): no draft banner and no line that a legal review is pending.
+    expect(text).not.toMatch(/\bdraft\b|legal counsel|pending review|confirmed with (legal )?counsel/i);
+    expect(Object.keys(l.legal)).toEqual(['backHome', 'englishAuthoritative', 'privacy', 'terms']);
     for (const locale of ['es', 'ko'] as const) {
       const legal = getMessages(locale).landing.legal;
       expect(legal.privacy.sections.collect.bullets.contact).toBe(privacy.collect.bullets.contact);
@@ -245,15 +249,17 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     expect(JSON.stringify(l.plans)).not.toMatch(/[$€£₩]|\d+\s*(USD|dollars?)|lifetime/i);
   });
 
-  it('keeps the legal effective dates and the draft notice (#149)', () => {
+  it('keeps the legal effective dates (#149)', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
     // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
-    expect(l.legal.privacy.effective).toBe('Effective October 20, 2026');
+    // October 21, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
+    expect(l.legal.privacy.effective).toBe('Effective October 21, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
     // October 20, 2026 ([SA] SA-6): the Terms say how many learners each plan holds; the Privacy Policy is unchanged.
-    expect(l.legal.terms.effective).toBe('Effective October 20, 2026');
-    expect(l.legal.draft).toBe('Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.');
+    // October 21, 2026 (SN-2): the fact fixes and the draft banner removed, as the Privacy Policy.
+    expect(l.legal.terms.effective).toBe('Effective October 21, 2026');
+    expect('draft' in l.legal).toBe(false);
   });
 });
 

@@ -21,10 +21,8 @@
  */
 import {
   FAMILY_LIFETIME_LEARNERS,
-  FREE_CLASS_STUDENT_CAP,
   GROUP_LICENSE_LEARNERS,
   SCHOOL_ADMIN_CAP,
-  SCHOOL_LEARNER_CAP,
   SCHOOL_LICENSE_TEACHERS,
 } from '@hangul-route/content-schema';
 import { plural } from '../../plural';
@@ -476,11 +474,13 @@ export const landing = {
      * until legal review, and this localized line says so. Never shown on the English pages.
      */
     englishAuthoritative: 'This document is shown in English. The English version is the one that applies.',
-    draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      /** [SA] October 20, 2026: the school administrators bullet (AMENDMENTS-SEATS-ADMINS section 6.7). */
-      effective: 'Effective October 20, 2026',
+      /**
+       * October 21, 2026: the SN-2 fact fixes (level check, contact, media, school admins, date line) and the draft banner
+       * removed (owner decision 2026-10-21 (c)); the date the fixes merge.
+       */
+      effective: 'Effective October 21, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -637,7 +637,8 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective October 20, 2026',
+      /** October 21, 2026: the SN-2 fact fixes and the draft banner removed (owner decision 2026-10-21 (c)), as the Privacy Policy. */
+      effective: 'Effective October 21, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -675,9 +676,10 @@ export const landing = {
               'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.',
             /**
              * [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, the numbers from the
-             * content-schema constants. Must ship before Stripe Live is ever enabled.
+             * content-schema constants. Must ship before Stripe Live is ever enabled. SN-2 adds the administrator invite
+             * (`SCHOOL_ADMIN_CAP`); the free sizes are not published on the site (owner decision 2026-10-21 (b)).
              */
-            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. Without a paid plan, a family holds up to ${FAMILY_LIFETIME_LEARNERS} learners, a class up to ${FREE_CLASS_STUDENT_CAP} students and a school up to ${SCHOOL_LEARNER_CAP} students. A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`,
+            sizes: `The Family Plan covers one family with up to ${FAMILY_LIFETIME_LEARNERS} learners. The Group License covers one class or one school with up to ${GROUP_LICENSE_LEARNERS} students; a school also holds up to ${SCHOOL_LICENSE_TEACHERS} teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to ${SCHOOL_ADMIN_CAP} administrators.`,
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {
@@ -731,7 +733,8 @@ export const landing = {
         law: {
           heading: 'Governing law',
           paragraphs: {
-            p1: 'These terms are governed by the laws of the jurisdiction stated at launch. The final governing-law and dispute-resolution clauses will be confirmed with legal counsel before public release.',
+            /** Owner decision 2026-10-21 (c): no wording that a legal review happened or is pending, so the counsel sentence is gone. */
+            p1: 'These terms are governed by the laws of the jurisdiction stated at launch.',
           },
         },
         changes: {

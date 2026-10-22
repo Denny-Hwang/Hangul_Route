@@ -308,7 +308,7 @@ describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002
     expect(html).not.toContain(`href="${learnerStart('en')}"`);
     expect([...html.matchAll(/<h2 id="footer-[^"]*"[^>]*>([^<]*)<\/h2>/g)].map((m) => m[1])).toEqual([t.footer.guide, t.footer.company]);
     expect(html.match(/<main\b/g)).toHaveLength(1);
-    expect(html).toContain(t.legal.draft);
+    expect(html).not.toContain(`Draft for review`);
   });
 
   it('every link of About and the legal pages has a 64 px hit area', () => {

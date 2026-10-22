@@ -1,6 +1,6 @@
 # Counsel review packet: classes, class moves and word progress (October 2026)
 
-> **Status: DRAFT for outside counsel. No legal review has taken place.** Nothing in this packet has been reviewed or approved by a lawyer. Every piece of proposed wording below is a draft written by the product team for counsel to correct, replace or reject. The live privacy policy and terms already carry the banner "Draft for review. This document is a working draft pending review by qualified legal counsel before public launch." (`packages/i18n/src/messages/en/landing.ts`, key `landing.legal.draft`).
+> **Status: DRAFT for outside counsel. No legal review has taken place.** Nothing in this packet has been reviewed or approved by a lawyer. Every piece of proposed wording below is a draft written by the product team for counsel to correct, replace or reject. The live privacy policy and terms carried the banner "Draft for review. This document is a working draft pending review by qualified legal counsel before public launch." (`landing.legal.draft`) until the owner removed it on 2026-10-21 (AMENDMENTS-SITE-NEWUSER SN-2, #804); the pages now say nothing about a legal review either way.
 >
 > **This file is public** (the repository is public). Do not add counsel's replies, privileged advice or notes of a call with counsel to this file or anywhere else in the repository; keep them outside the repository.
 >

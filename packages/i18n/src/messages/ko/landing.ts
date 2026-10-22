@@ -4,7 +4,7 @@ import type { DeepPartial, Messages } from '../../types';
  * Korean public site (F-I18N-001 PR 16): metadata, the layered home, the persona pages, About, the launch-news form,
  * the 404 links and the language banner. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only
  * framing and never an age range (KIDS_ONLY_FRAMING). 해요체, plain and short. The Privacy Policy and Terms stay
- * English-authoritative (decision L10): only their notice, draft line and back link are translated here, never a leaf under
+ * English-authoritative (decision L10): only their notice and back link are translated here, never a leaf under
  * `legal.privacy` or `legal.terms`. No price anywhere. Taught Korean (the hero letter) arrives as an argument and never
  * takes a particle that changes with the final consonant.
  */
@@ -341,7 +341,6 @@ export const landing = {
   legal: {
     backHome: '← 홈으로',
     englishAuthoritative: '이 문서는 영어로 표시됩니다. 효력이 있는 것은 영어판입니다.',
-    draft: '검토용 초안입니다. 이 문서는 공개 출시 전에 자격을 갖춘 법률 전문가의 검토를 기다리는 작업 초안입니다.',
   },
   licenses: {
     title: '오픈소스 라이선스',

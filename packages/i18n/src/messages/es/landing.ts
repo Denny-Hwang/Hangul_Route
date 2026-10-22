@@ -4,8 +4,8 @@ import type { DeepPartial, Messages } from '../../types';
 /**
  * Spanish public site (F-I18N-001 PR 15): metadata, the layered home, the persona pages, About, the launch-news form
  * and the 404 links. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only framing and never an age
- * range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice,
- * draft line and back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere.
+ * range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice and
+ * back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere.
  */
 const FAQ_ADULT = {
   q: 'Soy una persona adulta que empieza. ¿Se sentirá infantil?',
@@ -341,7 +341,6 @@ export const landing = {
   legal: {
     backHome: '← Ir al inicio',
     englishAuthoritative: 'Este documento se muestra en inglés. La versión en inglés es la que se aplica.',
-    draft: 'Borrador para revisión. Este documento es un borrador de trabajo que espera la revisión de asesoría legal calificada antes del lanzamiento público.',
   },
   licenses: {
     title: 'Avisos de código abierto',
