@@ -295,5 +295,8 @@ export const a11y = {
     grownUpRow: (label: string) => `${label}: 어른용, PIN 필요`,
     lockedTile: (name: string) => `${name}: 잠겨 있어요. 어른용 PIN으로 열어요.`,
     lockedRow: (name: string) => `${name}: 잠겨 있어요`,
+    /** [GU] GU-5: 고르기 화면의 손님 타일. */
+    try: '프로필 없이 첫 퀘스트를 해 봐요.',
+    guest: '첫 퀘스트, 아직 저장 전이에요. 눌러서 계속해요.',
   },
 } satisfies DeepPartial<Messages['a11y']>;

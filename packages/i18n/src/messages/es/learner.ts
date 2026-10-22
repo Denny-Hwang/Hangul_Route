@@ -1914,6 +1914,11 @@ export const learner = {
       school: 'Escuela',
       signIn: 'Entrar como persona adulta',
     },
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 16.3 (GU-5): las fichas de invitado del selector. */
+    try: 'Prueba la primera misión',
+    trySub: 'Sin crear un perfil',
+    guest: 'Primera misión',
+    guestCaption: 'Aún sin guardar',
   },
   /** [GU] Probar la primera misión sin perfil (AMENDMENTS-GUEST-FIRST-LESSON 16.1, GU-3): misión, perfil, añadir. */
   guest: {

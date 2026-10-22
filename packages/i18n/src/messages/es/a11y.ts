@@ -295,5 +295,8 @@ export const a11y = {
     grownUpRow: (label: string) => `${label}, para adultos, requiere PIN`,
     lockedTile: (name: string) => `${name}, con candado. Se abre con el PIN de adultos.`,
     lockedRow: (name: string) => `${name}, con candado`,
+    /** [GU] GU-5: las fichas de invitado del selector. */
+    try: 'Prueba la primera misión sin crear un perfil.',
+    guest: 'Primera misión, aún sin guardar. Toca para seguir.',
   },
 } satisfies DeepPartial<Messages['a11y']>;

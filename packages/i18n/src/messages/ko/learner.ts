@@ -1847,6 +1847,11 @@ export const learner = {
       school: '학교',
       signIn: '어른으로 로그인',
     },
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 16.3 (GU-5): 고르기 화면의 손님 타일. */
+    try: '첫 퀘스트 해 보기',
+    trySub: '프로필 없어도 돼요',
+    guest: '첫 퀘스트',
+    guestCaption: '아직 저장 전이에요',
   },
   /** [GU] 프로필 없이 첫 퀘스트 해 보기 (AMENDMENTS-GUEST-FIRST-LESSON 16.1, GU-3): 퀘스트, 프로필, 이름을 넣다. */
   guest: {
