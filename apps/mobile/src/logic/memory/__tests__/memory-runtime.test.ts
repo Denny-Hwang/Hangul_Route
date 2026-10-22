@@ -425,3 +425,24 @@ describe('the schedule stamp', () => {
     expect(stampOf({ rows }, new Date('2030-01-01T00:00:00.000Z'))).toBe('2026-10-21T00:00:00.000Z');
   });
 });
+
+describe('the summary memory block (row CM-16)', () => {
+  it('counts what the store holds after every earlier operation: a word known only once it is answered past box 2', async () => {
+    const d = device();
+    d.snapshots.set('p1', { ...finished(0), cellBest: { 'letters-s1': 1 } });
+    await d.rt.recordRound('p1', round(WORD.ko, true, d.clock.now));
+    expect(await d.rt.summary('p1')).toEqual({ wordsKnown: 0, readyToRefresh: 0, cellBestCounts: [1, 0, 0], stageChecks: 0, weekPoints: 0, topDue: [] });
+    // Tomorrow it is due (ready to refresh); a spaced right answer then lifts it to box 2 and it is known.
+    d.clock.now = new Date('2026-10-23T09:00:00.000Z');
+    expect(await d.rt.summary('p1')).toMatchObject({ wordsKnown: 0, readyToRefresh: 1, topDue: [WORD.id] });
+    await d.rt.recordAnswers('p1', [{ itemId: WORD.id, correct: true, rung: 'read' }], d.clock.now);
+    expect(await d.rt.summary('p1')).toMatchObject({ wordsKnown: 1, readyToRefresh: 0, topDue: [] });
+  });
+
+  it('is undefined while the snapshot or the store cannot be read', async () => {
+    expect(await device().rt.summary('p1')).toBeUndefined();
+    const broken = device({ failRead: true });
+    broken.snapshots.set('p1', finished(0));
+    expect(await broken.rt.summary('p1')).toBeUndefined();
+  });
+});

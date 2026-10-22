@@ -35,11 +35,12 @@ const fake = vi.hoisted(() => ({
   flush: vi.fn(async () => undefined),
   forget: vi.fn(),
   file: vi.fn(async () => null),
+  summary: vi.fn(async () => ({ wordsKnown: 3, readyToRefresh: 1, cellBestCounts: [1, 0, 0], stageChecks: 0, weekPoints: 0, topDue: ['lex:bae~pear'] })),
 }));
 vi.mock('../memory-chunk', () => ({ memoryRuntime: () => fake }));
 
 import type { MinigameScope } from '../../minigame-config';
-import { memoryForBackup, pullMemoryAfterAdopt, restoreMemory } from '../../sync/memory-hook';
+import { memoryForBackup, memorySummaryFor, pullMemoryAfterAdopt, refreshMemorySummary, restoreMemory } from '../../sync/memory-hook';
 import { applyVocabEvents } from '../../vocab/progress';
 import { notifyProfileRemoved } from '../../../store/profile-removal';
 import { useProfileStore } from '../../../store/profile-store';
@@ -209,5 +210,27 @@ describe('the backup and Rescue Code hook (row CM-11) is filled', () => {
     pullMemoryAfterAdopt(LEARNER.id);
     await settle();
     expect(fake.pull).not.toHaveBeenCalled();
+  });
+});
+
+describe('the summary memory block (row CM-16)', () => {
+  it('reaches the store for a learner who records, and is forgotten with the learner', async () => {
+    memoryRecord(100);
+    await refreshMemorySummary(LEARNER.id);
+    expect(fake.summary).toHaveBeenCalledWith(LEARNER.id);
+    expect(memorySummaryFor(LEARNER.id)).toMatchObject({ wordsKnown: 3, topDue: ['lex:bae~pear'] });
+    notifyProfileRemoved(LEARNER.id);
+    await settle();
+    expect(memorySummaryFor(LEARNER.id)).toBeUndefined();
+  });
+
+  it('memoryRecord off, or a grown-up persona: no block, and the chunk is not asked', async () => {
+    memoryRecord('off');
+    await refreshMemorySummary(LEARNER.id);
+    memoryRecord(100);
+    await refreshMemorySummary(PARENT.id);
+    expect(fake.summary).not.toHaveBeenCalled();
+    expect(memorySummaryFor(LEARNER.id)).toBeUndefined();
+    expect(memorySummaryFor(PARENT.id)).toBeUndefined();
   });
 });

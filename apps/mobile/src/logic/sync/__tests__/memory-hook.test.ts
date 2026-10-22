@@ -1,6 +1,16 @@
-import type { MemoryBackup } from '@hangul-route/content-schema';
+import type { MemoryBackup, MemorySummary } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MEMORY_HOOK_TIMEOUT_MS, memoryForBackup, pullMemoryAfterAdopt, restoreMemory, setMemoryStoreHook, type MemoryStoreHook } from '../memory-hook';
+import {
+  MEMORY_HOOK_TIMEOUT_MS,
+  forgetMemorySummary,
+  memoryForBackup,
+  memorySummaryFor,
+  pullMemoryAfterAdopt,
+  refreshMemorySummary,
+  restoreMemory,
+  setMemoryStoreHook,
+  type MemoryStoreHook,
+} from '../memory-hook';
 
 /*
  * F-CURR-002 section 4.8 (row CM-11): the hook the memory store of row CM-12 fills. With no store the
@@ -70,5 +80,54 @@ describe('memory store hook', () => {
     pullMemoryAfterAdopt('profile:a');
     await Promise.resolve();
     expect(failing).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('the summary memory block (row CM-16)', () => {
+  const block: MemorySummary = { wordsKnown: 12, readyToRefresh: 3, cellBestCounts: [4, 0, 0], stageChecks: 0, weekPoints: 5, topDue: ['lex:sagwa'] };
+  afterEach(() => {
+    forgetMemorySummary('profile:a');
+    vi.useRealTimers();
+  });
+
+  it('with no store, or a store without a summary: no block', async () => {
+    await refreshMemorySummary('profile:a');
+    expect(memorySummaryFor('profile:a')).toBeUndefined();
+    setMemoryStoreHook(fakeHook());
+    await refreshMemorySummary('profile:a');
+    expect(memorySummaryFor('profile:a')).toBeUndefined();
+  });
+
+  it('holds the store\'s block per profile; an answer of none removes it; a removed profile forgets it', async () => {
+    const summary = vi.fn(async (id: string) => (id === 'profile:a' ? block : undefined));
+    setMemoryStoreHook(fakeHook({ summary }));
+    await refreshMemorySummary('profile:a');
+    await refreshMemorySummary('profile:b');
+    expect(memorySummaryFor('profile:a')).toEqual(block);
+    expect(memorySummaryFor('profile:b')).toBeUndefined();
+    summary.mockResolvedValueOnce(undefined);
+    await refreshMemorySummary('profile:a');
+    expect(memorySummaryFor('profile:a')).toBeUndefined();
+    await refreshMemorySummary('profile:a');
+    forgetMemorySummary('profile:a');
+    expect(memorySummaryFor('profile:a')).toBeUndefined();
+  });
+
+  it('keeps the last block when the store fails or does not answer in time', async () => {
+    const summary = vi.fn(async () => block);
+    setMemoryStoreHook(fakeHook({ summary }));
+    await refreshMemorySummary('profile:a');
+    summary.mockRejectedValueOnce(new Error('storage'));
+    await refreshMemorySummary('profile:a');
+    expect(memorySummaryFor('profile:a')).toEqual(block);
+    vi.useFakeTimers();
+    summary.mockImplementationOnce(() => new Promise(() => undefined));
+    const late = refreshMemorySummary('profile:a');
+    await vi.advanceTimersByTimeAsync(MEMORY_HOOK_TIMEOUT_MS);
+    await late;
+    expect(memorySummaryFor('profile:a')).toEqual(block);
+    setMemoryStoreHook(null);
+    await refreshMemorySummary('profile:a');
+    expect(memorySummaryFor('profile:a')).toBeUndefined();
   });
 });

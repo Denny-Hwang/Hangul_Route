@@ -1,4 +1,4 @@
-import { setMemoryStoreHook } from '../sync/memory-hook';
+import { forgetMemorySummary, setMemoryStoreHook } from '../sync/memory-hook';
 import { onProfileRemoved } from '../../store/profile-removal';
 import { useProfileStore } from '../../store/profile-store';
 import { setVocabRecordHook } from '../../store/progress-store';
@@ -85,6 +85,8 @@ export function startMemory(): () => void {
     backup: (profileId) => runtime().then((r) => r.backup(profileId)),
     restore: (profileId, memory) => runtime().then((r) => r.restore(profileId, memory)),
     pull: (learnerId) => (memoryRecordsFor(learnerId) ? runtime().then((r) => r.pull(learnerId)) : Promise.resolve()),
+    // Row CM-16: the summary's memory block, only while the profile records (a grown-up persona never has one).
+    summary: (profileId) => (memoryRecordsFor(profileId) ? runtime().then((r) => r.summary(profileId)) : Promise.resolve(undefined)),
   });
   const offSynced = onSynced((learnerId) => {
     if (!memoryRecordsFor(learnerId)) return;
@@ -117,7 +119,10 @@ export function startMemory(): () => void {
 }
 
 // A removed learner's copy in memory goes with it, at once (`./keys.ts` deletes the stored value).
-onProfileRemoved((profileId) => loaded?.forget(profileId));
+onProfileRemoved((profileId) => {
+  loaded?.forget(profileId);
+  forgetMemorySummary(profileId);
+});
 
 /** Tests only: forget the loaded chunk. */
 export function resetMemoryBootForTests(): void {

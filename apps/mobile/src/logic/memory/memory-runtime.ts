@@ -5,6 +5,7 @@ import {
   ROLLUP_SPREAD_DAYS_EDGES,
   rollupBucketCode,
   type MemoryBackup,
+  type MemorySummary,
   type ProgressSnapshot,
   type VocabProgress,
 } from '@hangul-route/content-schema';
@@ -19,6 +20,7 @@ import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pus
 import { buildLookup, cellOfEpisode, resolveItems, resolveRound, shardOf, type ItemLookup } from './resolve';
 import { MEMORY_KEY } from './keys';
 import { deriveSeed } from './seed';
+import { memorySummaryOf } from './summary';
 import { DURABLE_LAG_DAYS, applyAnswer, isItemDue, type Rung } from './spacing';
 
 /**
@@ -87,6 +89,11 @@ export interface MemoryRuntime {
   forget(profileId: string): void;
   /** Tests and later rows: the store as held in memory (read first when needed). */
   file(profileId: string): Promise<MemoryFile | null>;
+  /**
+   * The summary's `memory` block today (row CM-16, `./summary.ts`), after every earlier operation on the profile;
+   * undefined while the store or the snapshot cannot be read.
+   */
+  summary(profileId: string): Promise<MemorySummary | undefined>;
 }
 
 const VOCAB_ID = /^vocab:/;
@@ -461,5 +468,16 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     },
 
     file: (profileId) => run(profileId, () => load(profileId)),
+
+    summary(profileId) {
+      return run(profileId, async () => {
+        await deps.hydrate(profileId);
+        const file = await load(profileId);
+        const snapshot = deps.snapshot(profileId);
+        if (!file || !snapshot) return undefined;
+        const { index } = await items();
+        return memorySummaryOf({ rows: file.rows, retired: index.retired, snapshot, today: deps.dayOf(deps.now()) });
+      });
+    },
   };
 }

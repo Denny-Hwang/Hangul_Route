@@ -214,6 +214,22 @@ describe('summarize: summary.activity (F-REPORT-001 section 3.3.4, RP-4)', () =>
   });
 });
 
+describe('summarize: summary.memory (F-CURR-002 section 4.8, row CM-16)', () => {
+  const memory = { wordsKnown: 12, readyToRefresh: 3, cellBestCounts: [4, 0, 0] as [number, number, number], stageChecks: 0, weekPoints: 5, topDue: ['lex:sagwa'] };
+
+  it('passes the memory block through unchanged, schemaVersion staying 1', () => {
+    const out = summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, memory });
+    expect(out.memory).toEqual(memory);
+    expect(out.schemaVersion).toBe(1);
+    expect(ProgressSummarySchema.parse(out).memory).toEqual(memory);
+  });
+
+  it('leaves the key out when the profile does not record (memoryRecord off, no store)', () => {
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {} })).not.toHaveProperty('memory');
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, memory: undefined })).not.toHaveProperty('memory');
+  });
+});
+
 describe('letterSignalsOf', () => {
   it('is the summary\'s own letter lists, so the report revisit and the summary never disagree', () => {
     const questJamo = { q1: ['ㄱ', 'ㄴ'], q2: ['ㄴ', 'ㄷ'], stage2: ['ㅁ'] };
