@@ -2474,4 +2474,20 @@ export const learner = {
       signIn: 'Sign in as a grown-up',
     },
   },
+  /**
+   * [GU] Try the first quest without a profile (AMENDMENTS-GUEST-FIRST-LESSON section 16.1, row GU-3). Never the word
+   * "guest" on screen, no age wording. `welcome.*` is Welcome's waiting card while a quest waits on a device with no
+   * profile: `waiting` + `resume` before quest 1 is done, `saveTitle` + `save` after it; `keeps` is the line under
+   * Let's start. `memoryOnly` is the plain line under Hoya's hello when this browser cannot keep the quest (7.2).
+   */
+  guest: {
+    welcome: {
+      waiting: 'Your first quest is waiting.',
+      resume: 'Back to my quest',
+      saveTitle: 'Add your name to keep your first quest.',
+      save: 'Add my name',
+      keeps: 'What you did in the first quest stays with the profile you make.',
+    },
+    memoryOnly: "This browser can't keep the quest after you close it. Add a name at the end to keep it.",
+  },
 } as const;

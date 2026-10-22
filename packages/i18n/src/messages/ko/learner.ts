@@ -1842,4 +1842,15 @@ export const learner = {
       signIn: '어른으로 로그인',
     },
   },
+  /** [GU] 프로필 없이 첫 퀘스트 해 보기 (AMENDMENTS-GUEST-FIRST-LESSON 16.1, GU-3): 퀘스트, 프로필, 이름을 넣다. */
+  guest: {
+    welcome: {
+      waiting: '첫 퀘스트가 기다리고 있어요.',
+      resume: '내 퀘스트로 돌아가기',
+      saveTitle: '이름을 넣으면 첫 퀘스트를 간직할 수 있어요.',
+      save: '내 이름 넣기',
+      keeps: '첫 퀘스트에서 한 것은 새로 만드는 프로필로 이어져요.',
+    },
+    memoryOnly: '이 브라우저는 창을 닫으면 퀘스트를 간직하지 못해요. 끝나고 이름을 넣으면 간직할 수 있어요.',
+  },
 } satisfies DeepPartial<Messages['learner']>;
