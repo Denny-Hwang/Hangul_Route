@@ -13,7 +13,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useActiveLearnerId } from '../../store/active-learner';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
@@ -80,7 +80,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   }, [ref, locale]);
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
-  const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
+  // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).
+  const activeProfileId = useActiveLearnerId() ?? undefined;
   // Practice time on the learner stack only (F-REPORT-001 section 3.3.2); inside a quest it joins the
   // quest's session. Another host (All lessons) passes no navigation and records nothing.
   usePracticeSession(activeProfileId, navigation ? `minigame:${questId}:${stepIndex}` : null);

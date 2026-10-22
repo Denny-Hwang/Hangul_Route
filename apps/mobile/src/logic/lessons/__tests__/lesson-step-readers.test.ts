@@ -31,6 +31,7 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'logic/story/reader-effects.ts': 'not a quest: a story reader step list',
   'logic/story/story-ref.ts': 'storyReadStep: browse (withLessonContent) and the story minigame refs',
   'screens/browse/BrowseItemScreen.tsx': 'All lessons: the browse root mounts through withLessonContent',
+  'screens/guest/GuestQuestPlayer.tsx': 'reads quest 1 steps once its run began, which QuestPlayerView starts behind useLessonQuestReady',
   'screens/minigames/MinigameScreen.tsx': 'behind useLessonQuestReady',
   'screens/presenter/slides/SequenceSlide.tsx': 'not a quest: a lecture slide',
   'screens/quest/QuestPlayerView.tsx': 'behind useLessonQuestReady',

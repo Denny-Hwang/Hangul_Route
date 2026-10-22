@@ -7,6 +7,7 @@ import {
   LOCALE_CHUNKS,
   PRECACHE_BUDGET,
   ROOT_CHUNKS,
+  SCREEN_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
   isStartBundle,
@@ -165,6 +166,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'PresenterApp', marker: 'root-chunk:presenter' },
       { name: 'BrowseApp', marker: 'root-chunk:browse' },
     ]);
+    // [GU] Row GU-3: the guest's first quest stack.
+    expect(SCREEN_CHUNKS).toEqual([{ name: 'guest-chunk', marker: 'screen-chunk:guest' }]);
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -173,6 +176,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('BrowseApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[1].marker}';`);
     expect(read('src/content/locale-chunks/locale-es.ts')).toContain(`= '${LOCALE_CHUNKS[0].marker}';`);
     expect(read('src/content/locale-chunks/locale-ko.ts')).toContain(`= '${LOCALE_CHUNKS[1].marker}';`);
+    expect(read('src/navigation/guest-chunk.tsx')).toContain(`export const SCREEN_CHUNK = '${SCREEN_CHUNKS[0].marker}';`);
+    // Reached only through the literal import() of navigation/guest.tsx (a static import would pull it into the start bundle).
+    expect(read('src/navigation/guest.tsx')).toContain("import('./guest-chunk')");
   });
 
   it('passes a build where each locale is its own precached bundle carrying its marker', () => {
@@ -183,10 +189,11 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
   it('fails a missing, doubled, renamed, emptied or unprecached chunk, and a marker in the start bundle', () => {
     const [start, es, ko] = build();
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es], precached: all([start, es]) })).toEqual(['locale-ko has no web bundle: the chunk is missing from the build']);
-    // By default the grown-up roots are checked too.
+    // By default the grown-up roots and the learner screen chunks are checked too.
     expect(markedChunkProblems({ bundles: [start, es, ko], precached: all([start, es, ko]) })).toEqual([
       'PresenterApp has no web bundle: the chunk is missing from the build',
       'BrowseApp has no web bundle: the chunk is missing from the build',
+      'guest-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -224,6 +231,29 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(lines[6]).toContain('learner precache  3 files  99 B');
     expect(lessonChunkUrls(LOCALE_CHUNKS, bundles)).toEqual([bundles[1].url, bundles[2].url]);
     expect(precacheBudgetProblems(report)).toEqual([]);
+  });
+
+  it('[GU] the report counts the learner screen chunks on a line of their own, held to screenChunkRaw', () => {
+    const bundles = build();
+    const guest = localeChunk('guest-chunk', 'screen-chunk:guest');
+    const report = precacheReport({ manifest: [], locales: LOCALE_CHUNKS, roots: ROOT_CHUNKS, screens: SCREEN_CHUNKS, bundles: [...bundles, guest], precache: { count: 4, size: 99 } });
+    expect(report.screenChunks.count).toBe(1);
+    expect(reportLines(report).find((line) => line.includes('learner screen chunks'))).toMatch(
+      new RegExp(`^ {2}learner screen chunks {2}1 bundles {2}\\d+ B raw {2}\\d+ B gzip {2}\\(largest ${guest.text.length} B raw, ceiling ${PRECACHE_BUDGET.screenChunkRaw} B each\\)$`),
+    );
+    expect(precacheBudgetProblems(report)).toEqual([]);
+    const tight = { ...PRECACHE_BUDGET, screenChunkRaw: guest.text.length - 1 };
+    expect(precacheBudgetProblems(report, tight)).toEqual([
+      expect.stringMatching(new RegExp(`^the learner screen bundle ${guest.url} is ${guest.text.length} B raw, over the per-learner screen ceiling .*raise PRECACHE_BUDGET\\.screenChunkRaw`)),
+    ]);
+    // Without screen chunks (an older caller) the report has none and prints no line.
+    expect(reportLines(precacheReport({ manifest: [], bundles, precache: { count: 1, size: 1 } })).some((line) => line.includes('screen chunks'))).toBe(false);
+    expect(lessonChunkUrls(SCREEN_CHUNKS, [...bundles, guest])).toEqual([guest.url]);
+  });
+
+  it('[GU] the screen chunk line sits over the guest stack measured with GU-3 (7,281 B raw) with room for GU-4', () => {
+    expect(PRECACHE_BUDGET.screenChunkRaw).toBe(60_000);
+    expect(PRECACHE_BUDGET.screenChunkRaw).toBeGreaterThan(7_281);
   });
 
   it('holds each locale chunk and each grown-up root chunk to its own line, which a Spanish or Korean first screen waits on', () => {

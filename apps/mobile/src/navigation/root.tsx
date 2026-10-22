@@ -4,12 +4,14 @@ import React, { useEffect, useState } from 'react';
 import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
 import { batchHandoffPending, chooserLaunchTrigger } from '../store/who-chooser';
+import { takeGuestLaunch, type GuestRoute } from '../store/guest-launch';
 import { BootIntentHook, LaunchBatchJoinHook } from './boot-intent';
 import { MainTabs } from './tabs';
 import type { RootStackParamList } from './types';
 import { CardDetailScreen } from '../screens/library/CardDetailScreen';
 import { EpisodeDetailScreen } from '../screens/episode/EpisodeDetailScreen';
 import { MyRouteScreen } from '../screens/my-route/MyRouteScreen';
+import { GuestStack } from './guest';
 import { OnboardingStack } from './onboarding';
 import { withOwnSafeArea } from './with-own-safe-area';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
@@ -82,15 +84,25 @@ export function RootNavigator(): React.ReactElement {
   // [OA] "Who is using this?" at launch (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.2, row OA-4a): decided once,
   // after the profiles and the profile locks are read; with the flag off it is decided at once (no chooser).
   // [OA] Row OA-7b: or the family home's hand-off code took the launch for Who is joining? (`batch`, OA-D20).
-  const [launch, setLaunch] = useState<{ decided: boolean; trigger: WhoTrigger | null; batch: boolean }>(() => ({ decided: !flags.whoChooserEnabled, trigger: null, batch: false }));
+  // [GU] Row GU-3 (AMENDMENTS-GUEST-FIRST-LESSON sections 6.1, 6.2, 6.4): then the guest step, when no chooser opens:
+  // `try=1` on a device with no learner profile, or a reload within 30 minutes of the last play, opens the `Guest`
+  // stack as the first route, so Welcome never shows first. With both flags off the launch is decided at once.
+  const [launch, setLaunch] = useState<{ decided: boolean; trigger: WhoTrigger | null; batch: boolean; guest: GuestRoute | null }>(() => ({
+    decided: !flags.whoChooserEnabled && !flags.guestLessonEnabled,
+    trigger: null,
+    batch: false,
+    guest: null,
+  }));
   useEffect(() => {
     if (launch.decided || !hydrated) return undefined;
     let live = true;
-    void chooserLaunchTrigger()
-      .catch(() => null)
-      .then((trigger) => {
-        if (live) setLaunch({ decided: true, trigger, batch: batchHandoffPending() });
-      });
+    void (async () => {
+      const trigger = flags.whoChooserEnabled ? await chooserLaunchTrigger().catch(() => null) : null;
+      const batch = batchHandoffPending();
+      // The `try` intent is always taken here (the switch off: dropped); the chooser, when it opens, comes first.
+      const guest = trigger === null && !batch ? await takeGuestLaunch().catch(() => null) : null;
+      if (live) setLaunch({ decided: true, trigger, batch, guest });
+    })();
     return () => {
       live = false;
     };
@@ -116,7 +128,7 @@ export function RootNavigator(): React.ReactElement {
       {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
-        initialRouteName={launch.trigger !== null ? 'WhoIsUsing' : hasProfile ? 'Main' : 'Onboarding'}
+        initialRouteName={launch.trigger !== null ? 'WhoIsUsing' : launch.guest !== null ? 'Guest' : hasProfile ? 'Main' : 'Onboarding'}
       >
         <Stack.Screen name="Onboarding" component={OnboardingStack} />
         <Stack.Screen name="Main" component={MainTabs} />
@@ -187,6 +199,10 @@ export function RootNavigator(): React.ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
         {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
         {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
+        {/* [GU] The guest's first quest (row GU-3): only with flags.guestLessonEnabled (web only), no swipe back. */}
+        {flags.guestLessonEnabled ? (
+          <Stack.Screen name="Guest" component={GuestStack} options={{ gestureEnabled: false, animation: 'fade' }} initialParams={launch.guest ?? undefined} />
+        ) : null}
       </Stack.Navigator>
       {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}
       <BootIntentHook />

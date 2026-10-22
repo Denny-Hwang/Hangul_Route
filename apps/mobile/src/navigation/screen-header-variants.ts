@@ -1,7 +1,7 @@
 import type { ScreenHeaderOptions } from '@hangul-route/design-system';
 import type { ScreenHeaderVariant } from '../logic/navigation/screen-header';
 import type { BrowseStackParamList } from './browse';
-import type { MainTabParamList, OnboardingStackParamList, PlacementStackParamList, RootStackParamList } from './types';
+import type { GuestStackParamList, MainTabParamList, OnboardingStackParamList, PlacementStackParamList, RootStackParamList } from './types';
 
 /**
  * The way back of every route (AMENDMENTS-DISPLAY-NAV section 7.1, row DN-4; wireframe
@@ -17,7 +17,8 @@ export type ScreenHeaderRouteName =
   | keyof OnboardingStackParamList
   | keyof MainTabParamList
   | keyof BrowseStackParamList
-  | keyof PlacementStackParamList;
+  | keyof PlacementStackParamList
+  | keyof GuestStackParamList;
 
 /**
  * A non-root screen without Back: the end of first-run setup. CreateProfile reaches both with
@@ -31,8 +32,9 @@ export type ScreenHeaderException = (typeof SCREEN_HEADER_EXCEPTIONS)[number];
 /**
  * The roots: no leading control (Welcome, the tab navigator and its four tabs, All lessons home, BrowseAccess, the onboarding stack).
  * [OA] `WhoIsUsing` (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.1, CS-5): the chooser has no Back, even pushed over a screen.
+ * [GU] `Guest` (the guest's stack) and `GuestLater` (its Not now card, AMENDMENTS-GUEST-FIRST-LESSON section 8.6).
  */
-export const SCREEN_HEADER_ROOTS = ['Onboarding', 'Main', 'Welcome', 'Home', 'Route', 'Journey', 'Library', 'BrowseHome', 'BrowseAccess', 'WhoIsUsing'] as const satisfies readonly ScreenHeaderRouteName[];
+export const SCREEN_HEADER_ROOTS = ['Onboarding', 'Main', 'Welcome', 'Home', 'Route', 'Journey', 'Library', 'BrowseHome', 'BrowseAccess', 'WhoIsUsing', 'Guest', 'GuestLater'] as const satisfies readonly ScreenHeaderRouteName[];
 
 export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, ScreenHeaderVariant>> = {
   // Containers and roots.
@@ -116,6 +118,12 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   PreviewQuest: 'close',
   PreviewFlashcards: 'close',
   PreviewEnd: 'back',
+  // [GU] The guest's first quest (row GU-3): the stack container, and the Not now card, which has no leading control
+  // and keeps the Display control (its Close is the way out, AMENDMENTS-GUEST-FIRST-LESSON section 8.6). The shared
+  // route names (QuestPlayer, Minigame, Results, CardDetail, CreateProfile, PinEntry) keep their variants above; in
+  // the guest stack the quest player and Results draw their own Close and Back (they open the stack).
+  Guest: 'none',
+  GuestLater: 'none',
   // Fixture screens of the e2e build only (never in a release bundle).
   VocabQuestionE2e: 'close',
   SentenceBuilderE2e: 'close',

@@ -7,7 +7,7 @@ import { playerGuard } from '../../logic/episode-access';
 import { learnerQuestExits, learnerQuestSession, type QuestPlayerPorts } from '../../logic/quest-flow/quest-player-ports';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
-import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useActiveLearnerId } from '../../store/active-learner';
 import { holdLearnerSession } from '../../store/learner-session';
 import { settledPlayerGuard } from '../../store/player-guard-settle';
 import { useStoryStore } from '../../store/story-store';
@@ -18,12 +18,15 @@ type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
 
 /**
  * The learner's quest player: `QuestPlayerView` with the learner ports (F-BROWSE-001 BR-5a). A study
- * session runs for the active profile, a finished run resets to Results, and Leave returns to the
+ * session runs for the active learner, a finished run resets to Results, and Leave returns to the
  * episode (its Journey pane on two panes, unless the quest was opened from another screen).
+ * [GU] Row GU-3: the learner is `useActiveLearnerId()` (the guest's id in a guest run, AMENDMENTS-GUEST-FIRST-LESSON
+ * section 5.3). The `Guest` stack plays its quest with the guest ports instead (`screens/guest/GuestQuestPlayer.tsx`,
+ * section 7.1), which name no route outside that stack.
  */
 export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElement | null {
   const { questId, episodeId, resume } = route.params;
-  const profile = useProfileStore(activeProfileSelector);
+  const learnerId = useActiveLearnerId();
   const { panes } = useLayoutClass();
   // The guard at the point of play (F-ENT-003 section 3.6), read on mount: a closed quest never
   // starts; the player replaces itself with the lesson page in preview. A quest that closes mid-run
@@ -33,7 +36,6 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   const questOpen = useQuestAccess();
   const [guard, setGuard] = useState(() => playerGuard(questOpen, questId, episodeId));
   const [settled, setSettled] = useState(() => guard === null);
-  const learnerId = profile ? profile.id : null;
   useEffect(() => {
     if (settled) return undefined;
     let live = true;
@@ -50,17 +52,17 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
     if (settled && guard) navigation.replace('EpisodeDetail', guard);
   }, [settled, guard, navigation]);
 
-  // Stable while the profile and the resume flag stay the same, so the run is not restarted.
+  // Stable while the learner and the resume flag stay the same, so the run is not restarted.
   const session = useMemo(
     () =>
       learnerQuestSession({
-        profileId: profile ? profile.id : null,
+        profileId: learnerId,
         resume,
         questById,
         bookmarkOf: (profileId, storyId) => useStoryStore.getState().getResumableBookmark(profileId, storyId),
         holdSession: holdLearnerSession,
       }),
-    [profile, resume],
+    [learnerId, resume],
   );
 
   const ports: QuestPlayerPorts = {
@@ -68,7 +70,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
     ...learnerQuestExits({
       questId,
       episodeId,
-      profileId: profile?.id,
+      profileId: learnerId ?? undefined,
       panes,
       under: () => {
         const state = navigation.getState();

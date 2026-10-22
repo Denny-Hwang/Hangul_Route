@@ -23,6 +23,11 @@ const NULL_PATHS: Readonly<Record<string, { count: number; why: string }>> = {
     count: 1,
     why: 'one frame while the run settles (or a closed quest is sent away by its guard): the screen is replaced, nothing waits on it',
   },
+  // [GU] Row GU-3: the guest's quest player, the same frame (a closed quest ends the run instead: the root is reset).
+  'screens/guest/GuestQuestPlayer.tsx#GuestQuestPlayer': {
+    count: 1,
+    why: 'one frame while the run settles (or a closed quest ends the guest run and the root is reset to Welcome): nothing waits on it',
+  },
   'screens/placement/ResultScreen.tsx#ResultScreen': {
     count: 1,
     why: 'no finished check to show: the level check routes to its result only once a check has finished, and its flow replaces the route otherwise',
@@ -39,6 +44,8 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
   withOwnSafeArea: { file: 'navigation/with-own-safe-area.tsx', delegate: 0, renders: /<SafeAreaProvider>\s*<Component \{\.\.\.props\} \/>\s*<\/SafeAreaProvider>/ },
   // The level check's routes: the screen while the run is on that route, null on a stale one (listed above).
   flowRoute: { file: 'screens/placement/context.tsx', delegate: 1, renders: /return target === name \? <Screen \/> : null;/ },
+  // [GU] The guest stack's shared learner screen (the card page): the same component, typed for the guest stack's routes.
+  shared: { file: 'navigation/guest-chunk.tsx', delegate: 0, renders: /return screen as unknown as React\.ComponentType<GuestScreenProps<K>>;/ },
 };
 
 /** Host components that only lay out what they hold: they pass when one of their children draws a `Screen`. */
@@ -310,9 +317,9 @@ function registered(path: string): { route: string; decl: Decl | null }[] {
   return out;
 }
 
-const NAVIGATORS = ['navigation/root.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx'];
+const NAVIGATORS = ['navigation/root.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx', 'navigation/guest-chunk.tsx'];
 /** Containers: the nested navigators, whose own routes are in the list. */
-const CONTAINERS = new Set(['Onboarding', 'Main']);
+const CONTAINERS = new Set(['Onboarding', 'Main', 'Guest']);
 
 describe('every registered screen draws through Screen, so its header (its way back) is drawn (AMENDMENTS-DISPLAY-NAV section 7.1)', () => {
   const routes = NAVIGATORS.flatMap((path) => registered(path).map((r) => ({ ...r, navigator: path })));

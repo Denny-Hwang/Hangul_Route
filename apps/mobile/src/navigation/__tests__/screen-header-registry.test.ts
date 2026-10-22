@@ -45,6 +45,8 @@ const routes = {
   root: stackRoutes(read('navigation/root.tsx')),
   onboarding: stackRoutes(read('navigation/onboarding.tsx')),
   browse: stackRoutes(read('navigation/browse.tsx')),
+  // [GU] Row GU-3: the guest's first quest (its own stack; GU-4 adds the save's two routes).
+  guest: stackRoutes(read('navigation/guest-chunk.tsx')),
   tabs: [...mainTabs(true)],
   placement: placementRoutes(read('screens/placement/PlacementScreen.tsx')),
 };
@@ -57,6 +59,8 @@ describe('screen header registry (AMENDMENTS-DISPLAY-NAV section 7.1)', () => {
     expect(routes.browse).toEqual(expect.arrayContaining(['BrowseHome', 'BrowseItem', 'PreviewQuest', 'BrowseAccess']));
     expect(routes.tabs).toEqual(['Home', 'Route', 'Journey', 'Library']);
     expect(routes.placement).toEqual(expect.arrayContaining(['PlacementBoot', 'PlacementItem', 'PlacementResult']));
+    expect(routes.guest).toEqual(['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater']);
+    expect(routes.root).toContain('Guest');
   });
 
   it('every registered route has a variant', () => {
