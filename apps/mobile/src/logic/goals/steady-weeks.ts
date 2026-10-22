@@ -1,5 +1,5 @@
 import { addDays, mergeLatchRecord, type Goals, type ProgressSnapshot } from '@hangul-route/content-schema';
-import { goalsInForce } from './points';
+import { DEFAULT_WEEKLY_DAYS, goalsInForce } from './points';
 import { learnedDays, learnedInWeek, weekMondayOf } from './week';
 
 /*
@@ -11,8 +11,10 @@ import { learnedDays, learnedInWeek, weekMondayOf } from './week';
  *   after a goal change and after a restore;
  * - the current week's target is an active weekly plan's days a week (F-PLAN-002), else `goals.weeklyDays`
  *   (3 by default);
- * - an earlier week whose days are still in `dayLog` is judged only against goals set before that week
- *   ended (`goals.setAt`); otherwise it is never judged late. A week any copy already latched keeps its key;
+ * - an earlier week whose days are still in `dayLog` is judged against the weekly days in force that week: a
+ *   weekly plan that covered it (`planDaysOn`), else goals set before that week ended (`goals.setAt`), else the
+ *   default 3 when no goals were ever stored; goals set only after that week ended never judge it late. A week
+ *   any copy already latched keeps its key;
  * - the merge is a union with the earliest time per week, so running the check again changes nothing.
  */
 
@@ -26,6 +28,8 @@ export interface LatchInput {
   goalsSetDay: string | undefined;
   /** An active weekly plan's days a week (F-PLAN-002), which comes first; null without one. */
   planDays: number | null;
+  /** A weekly plan's days a week on an earlier local day (F-PLAN-002), or null; omitted when no plan is known. */
+  planDaysOn?: (day: string) => number | null;
 }
 
 export interface LatchedWeek {
@@ -49,7 +53,7 @@ export function weeklyTarget(goals: Goals | undefined, planDays: number | null):
 }
 
 export function latchSteadyWeeks(input: LatchInput): LatchResult {
-  const { snapshot, today, at, goalsSetDay, planDays } = input;
+  const { snapshot, today, at, goalsSetDay, planDays, planDaysOn } = input;
   const stored = snapshot.steadyWeeks;
   const learned = learnedDays(snapshot);
   const current = weekMondayOf(today);
@@ -60,13 +64,28 @@ export function latchSteadyWeeks(input: LatchInput): LatchResult {
     if (stored?.[week] !== undefined) continue;
     let target: number;
     if (week === current) target = weeklyTarget(snapshot.goals, planDays);
-    else if (snapshot.goals !== undefined && goalsSetDay !== undefined && goalsSetDay <= addDays(week, 6)) target = snapshot.goals.weeklyDays;
-    else continue;
+    else {
+      const planned = planDaysOfWeek(week, planDaysOn);
+      if (planned !== null) target = planned;
+      else if (snapshot.goals === undefined) target = DEFAULT_WEEKLY_DAYS;
+      else if (goalsSetDay !== undefined && goalsSetDay <= addDays(week, 6)) target = snapshot.goals.weeklyDays;
+      else continue;
+    }
     const days = learnedInWeek(learned, week, today);
     if (days >= target) added.push({ week, days, target });
   }
   if (added.length === 0) return { steadyWeeks: stored, added };
   return { steadyWeeks: mergeLatchRecord(stored, Object.fromEntries(added.map((w) => [w.week, at]))), added };
+}
+
+/** The days a week of a weekly plan that covered a day of `week` (Monday first), or null. */
+function planDaysOfWeek(week: string, planDaysOn: LatchInput['planDaysOn']): number | null {
+  if (planDaysOn === undefined) return null;
+  for (let i = 0; i < 7; i += 1) {
+    const days = planDaysOn(addDays(week, i));
+    if (days !== null && days > 0) return days;
+  }
+  return null;
 }
 
 /** The headline number: the latched weeks, ever. */

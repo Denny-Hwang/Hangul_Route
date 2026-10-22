@@ -961,8 +961,9 @@ export function HomeScreen(): React.ReactElement {
       ) : null}
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-        {/* The streak pill waits for the first day: never "Streak 0 days". With goals on, the streak is the strip's line. */}
-        {!goalsOn && showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
+        {/* The streak pill waits for the first day: never "Streak 0 days". Once the goals strip is drawn, the streak is its line;
+            while its chunk loads or cannot load (offline before the precache), the pill stays. */}
+        {!(goals && profile) && showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>

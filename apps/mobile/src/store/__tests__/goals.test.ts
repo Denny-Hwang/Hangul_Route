@@ -1,4 +1,4 @@
-import { CURR_TELEMETRY_PAYLOADS, type ProgressSnapshot } from '@hangul-route/content-schema';
+import { CURR_TELEMETRY_PAYLOADS, mergeGoals, type InboxPlan, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -23,8 +23,8 @@ import { emitGoalEvent } from '../../logic/goals/goal-events';
 import { noteServerTime, resetGoalClockForTests } from '../../platform/goal-clock';
 import { track } from '../../platform/telemetry';
 import { loadGoalsChunk, recordActivityPointsLater, takeGoalMomentLater } from '../goals-entry';
-import { MOMENT_FRESH_MS, checkSteadyWeeks, planDaysFor, recordActivityPoints, resetGoalsForTests, saveGoals, takeGoalMoment } from '../goals';
-import { usePlanStore } from '../plan-store';
+import { DEFAULTS_SET_AT, MOMENT_FRESH_MS, checkSteadyWeeks, planDaysFor, recordActivityPoints, resetGoalsForTests, saveGoals, takeGoalMoment } from '../goals';
+import { PLANS_KEY, usePlanStore } from '../plan-store';
 import { useProgressStore } from '../progress-store';
 import { resetRemoteConfigForTests, useRemoteConfigStore } from '../remote-config-store';
 
@@ -52,6 +52,17 @@ async function settle(): Promise<void> {
   for (let i = 0; i < 10; i += 1) await Promise.resolve();
 }
 const at = (iso: string) => new Date(iso);
+/** A self-route (F-PLAN-002) of `days` a week whose week starts on Monday 2026-10-19. */
+function selfRoute(days: number): NonNullable<ProgressSnapshot['selfRoute']> {
+  return {
+    id: 'route:mine',
+    createdAt: '2026-10-01T00:00:00.000Z',
+    updatedAt: '2026-10-01T00:00:00.000Z',
+    archivedAt: null,
+    meta: { weeks: [{ index: 1, startDate: '2026-10-19' }], params: { sessionsPerWeek: days } },
+    items: [],
+  } as unknown as NonNullable<ProgressSnapshot['selfRoute']>;
+}
 
 beforeEach(async () => {
   mem.clear();
@@ -59,7 +70,8 @@ beforeEach(async () => {
   resetRemoteConfigForTests();
   resetGoalClockForTests();
   resetGoalsForTests();
-  usePlanStore.setState({ byLearner: {} });
+  // The learner's cached plans are read (none): the goals wait for them otherwise.
+  usePlanStore.setState({ byLearner: { [P]: [] } });
   goalsOn(true);
   seed(blank());
   // The goals module reads its clock and install key once at import.
@@ -137,6 +149,28 @@ describe('a wrong device clock (section 13): every write is capped at the last s
     expect(snap().goals).toEqual({ daily: 6, weeklyDays: 5, setAt: '2026-10-22T14:00:00.000Z' });
   });
 
+  it('the latch check on Home open brings a far-future value back to now too', () => {
+    seed(blank({ dayLog: { '2099-01-01': { [KEY]: 3 } }, steadyWeeks: { '2098-12-29': '2099-01-01T00:00:00.000Z' } }));
+    noteServerTime('2026-10-22T12:00:00.000Z', at('2026-10-22T12:00:00.000Z'));
+    checkSteadyWeeks(P, at('2026-10-22T12:00:00.000Z'));
+    expect(snap().dayLog).toEqual({});
+    expect(snap().steadyWeeks ?? {}).toEqual({});
+  });
+
+  it("a session's local day (CM-4) takes the cap only while goals is on; off, the device clock as CM-4 shipped", () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(at('2099-01-01T01:00:00.000Z'));
+    noteServerTime('2026-10-22T12:00:00.000Z', at('2099-01-01T00:00:00.000Z'));
+    const store = useProgressStore.getState();
+    const on = store.beginSession(P, { owner: 'test', streak: false, keepsRun: true });
+    expect(snap().sessions.at(-1)?.localDay).toBe('2026-10-22');
+    if (on) store.endSession(P, on);
+    goalsOn(false);
+    seed(blank());
+    useProgressStore.getState().beginSession(P, { owner: 'test', streak: false, keepsRun: true });
+    expect(snap().sessions.at(-1)?.localDay).toBe('2099-01-01');
+  });
+
   it('a right clock is used as it is', () => {
     noteServerTime('2026-10-22T12:00:00.000Z', at('2026-10-22T12:00:05.000Z'));
     recordActivityPoints(P, 'quest', at('2026-10-22T11:59:00.000Z'));
@@ -156,7 +190,7 @@ describe('saveGoals', () => {
     expect(sent('goal.set')).toHaveLength(1);
     seed(blank());
     saveGoals(P, { daily: 3, weeklyDays: 3 }, { quiet: true, deviceNow: at('2026-10-21T09:00:00.000Z') });
-    expect(snap().goals).toEqual({ daily: 3, weeklyDays: 3, setAt: '2026-10-21T09:00:00.000Z' });
+    expect(snap().goals).toEqual({ daily: 3, weeklyDays: 3, setAt: DEFAULTS_SET_AT });
     expect(sent('goal.set')).toHaveLength(1);
   });
 
@@ -213,6 +247,77 @@ describe('the store\'s events: a finished word set and every merge', () => {
     expect(Object.keys(snap().steadyWeeks ?? {})).toEqual(['2026-10-19']);
     expect(sent('week.goal_met')).toHaveLength(1);
     expect(takeGoalMoment(P)).toBeNull();
+  });
+});
+
+describe('the weekly days in force come from a weekly plan when one is on', () => {
+  it('a plan of 2 days a week latches on the second learned day and sends week.goal_met with the plan\'s target', () => {
+    seed(blank({ selfRoute: selfRoute(2), dayLog: { '2026-10-19': { [KEY]: 3 } } }));
+    const moment = recordActivityPoints(P, 'quest', at('2026-10-20T09:00:00.000Z'));
+    expect(moment?.weekMet).toBe(1);
+    expect(sent('week.goal_met').map((e) => e.payload)).toEqual([{ days: 2, target: 2 }]);
+    expect(CURR_TELEMETRY_PAYLOADS['week.goal_met'].safeParse({ days: 4, target: 4 }).success).toBe(true);
+  });
+
+  it('a class plan of 5 days not read yet: the latch waits for it and never latches the week against 3 days', async () => {
+    const plan = {
+      id: 'plan:class-a',
+      spaceId: 'space:class-a',
+      spaceKind: 'class',
+      spaceName: 'Class A',
+      title: 'Week plan',
+      items: [],
+      publishedAt: '2026-10-01T00:00:00.000Z',
+      updatedAt: '2026-10-01T00:00:00.000Z',
+      meta: { weeks: [{ index: 1, startDate: '2026-10-19' }], params: { sessionsPerWeek: 5 } },
+    } as unknown as InboxPlan;
+    mem.set(PLANS_KEY(P), [plan]);
+    usePlanStore.setState({ byLearner: {} });
+    seed(blank({ dayLog: { '2026-10-19': { [KEY]: 3 }, '2026-10-20': { [KEY]: 3 }, '2026-10-21': { [KEY]: 3 } } }));
+    checkSteadyWeeks(P, at('2026-10-21T12:00:00.000Z'));
+    expect(snap().steadyWeeks).toBeUndefined();
+    await settle();
+    expect(usePlanStore.getState().byLearner[P]).toHaveLength(1);
+    expect(snap().steadyWeeks).toBeUndefined();
+    expect(sent('week.goal_met')).toEqual([]);
+    expect(planDaysFor(P, snap(), at('2026-10-21T12:00:00.000Z'))).toBe(5);
+  });
+});
+
+describe('Not now keeps the defaults without beating a real choice', () => {
+  it('stores the defaults with the earliest setAt and sends nothing; a choice from another device wins either merge order', () => {
+    saveGoals(P, { daily: 3, weeklyDays: 3 }, { quiet: true, deviceNow: at('2026-10-21T09:00:00.000Z') });
+    const notNow = snap().goals;
+    expect(notNow).toEqual({ daily: 3, weeklyDays: 3, setAt: DEFAULTS_SET_AT });
+    expect(sent('goal.set')).toEqual([]);
+    const tablet = { daily: 10 as const, weeklyDays: 5 as const, setAt: '2026-10-20T09:00:00.000Z' };
+    expect(mergeGoals(notNow, tablet)).toEqual(tablet);
+    expect(mergeGoals(tablet, notNow)).toEqual(tablet);
+    // A real choice on this device later is stamped now and sends goal.set.
+    saveGoals(P, { daily: 6, weeklyDays: 3 }, { deviceNow: at('2026-10-21T10:00:00.000Z') });
+    expect(snap().goals).toEqual({ daily: 6, weeklyDays: 3, setAt: '2026-10-21T10:00:00.000Z' });
+    expect(sent('goal.set').map((e) => e.payload)).toEqual([{ daily: 6, weeklyDays: 3 }]);
+  });
+});
+
+describe('the store path under a zoned clock (TZ set for the test, the suite runs under TZ=UTC)', () => {
+  const zones: Array<[string, string, string]> = [
+    // [zone, instant, the local day the point lands on]
+    ['Pacific/Kiritimati', '2026-10-21T11:00:00.000Z', '2026-10-22'],
+    ['Etc/GMT+12', '2026-10-21T11:00:00.000Z', '2026-10-20'],
+    ['Asia/Seoul', '2026-10-21T15:30:00.000Z', '2026-10-22'],
+    ['America/Los_Angeles', '2026-10-21T05:00:00.000Z', '2026-10-20'],
+    // The night the clocks go back (2026-11-01): 01:30 comes twice, both on the 1st.
+    ['America/Los_Angeles', '2026-11-01T09:30:00.000Z', '2026-11-01'],
+  ];
+  const held = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = held;
+  });
+  it.each(zones)('%s at %s writes dayLog on %s', (zone, instant, local) => {
+    process.env.TZ = zone;
+    recordActivityPoints(P, 'quest', at(instant));
+    expect(Object.keys(snap().dayLog ?? {})).toEqual([local]);
   });
 });
 

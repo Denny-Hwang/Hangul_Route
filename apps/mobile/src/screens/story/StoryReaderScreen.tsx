@@ -1,11 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { storyById } from '../../content/stories';
 import { backOrHome, resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { sourcesRouteParams, type SourcesRouteParams } from '../../logic/story/source-link';
 import { useLocale } from '../../i18n/use-messages';
 import { readerStory } from '../../logic/story/reader-locale';
 import type { RootStackParamList } from '../../navigation/types';
+import { recordActivityPointsLater } from '../../store/goals-entry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { LessonWaiting } from '../lesson-content';
 import { useStoryReady } from '../story-content';
@@ -43,7 +44,8 @@ const NOTHING = (): void => undefined;
  * Entered from "Read it again" (F-STORY-003 Results, F-STORY-004 shelf and
  * episode page). Done, Close and the back gesture return to where it came from.
  * On the learner stack it records practice time (F-REPORT-001 section 3.3.2)
- * in a learning session that keeps the local-day run (F-CURR-002 OD-14).
+ * in a learning session that keeps the local-day run (F-CURR-002 OD-14), and
+ * reaching its end earns a story's daily-goal points (section 7.4, row CM-17).
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
 export function StoryReaderScreen(props: Props): React.ReactElement {
@@ -73,6 +75,16 @@ function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, 
     );
   }, [navigation, onBack, onHome]);
   const leave = exits.back;
+  // The end reached (Done on the last scene, never Close) is a finished story: its points, once per reading.
+  const earned = useRef(false);
+  const finish = onDone ?? leave;
+  const onFinish = useCallback((): void => {
+    if (navigation && profileId && !earned.current) {
+      earned.current = true;
+      void recordActivityPointsLater(profileId, 'story');
+    }
+    finish();
+  }, [finish, navigation, profileId]);
 
   const openSources = useCallback(
     (from: 'reader' | 'end', index: number): void => {
@@ -101,7 +113,7 @@ function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, 
       initialIndex={sceneIndex ?? 0}
       onSceneChange={NOTHING}
       onAnswer={NOTHING}
-      onFinish={onDone ?? leave}
+      onFinish={onFinish}
       onClose={leave}
       onOpenSources={openSources}
       onOpenCultureNote={openCultureNote}

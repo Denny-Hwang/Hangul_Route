@@ -3,7 +3,7 @@ import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { DEFAULT_WEEKLY_DAYS } from '../../logic/goals/points';
-import { goalStripView } from '../../logic/goals/strip-view';
+import { goalStripView, sheetChoiceToSave } from '../../logic/goals/strip-view';
 import { checkSteadyWeeks, planDaysFor, saveGoals } from '../../store/goals';
 import { usePlanStore } from '../../store/plan-store';
 import { GoalFirstChoice } from './GoalFirstChoice';
@@ -56,8 +56,8 @@ export function GoalsHome({ profileId, snapshot, today, planPromptShown, onSeePl
         planDays={view.fromPlan ? view.weeklyDays : null}
         onSave={(choice) => {
           setOpen(false);
-          // With a weekly plan on only the daily goal changes; the stored weekly goal applies again when it ends.
-          saveGoals(profileId, view.fromPlan ? { ...choice, weeklyDays: view.weeklyGoal } : choice);
+          const next = sheetChoiceToSave(view, snapshot?.goals !== undefined, choice);
+          if (next !== null) saveGoals(profileId, next);
         }}
         onSeePlan={() => {
           setOpen(false);

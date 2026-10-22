@@ -2507,7 +2507,7 @@ export const learner = {
       title: 'Your goals',
       everyDay: 'Every day',
       everyWeek: 'Every week',
-      steadyHelp: 'A steady week is a week you learn on the days you chose. They add up and never go away.',
+      steadyHelp: 'A steady week is a week you learn on as many days as you chose. They add up and never go away.',
       restHelp: 'Rest days: Hoya keeps your streak going on up to 2 quiet days a week.',
       /** While a weekly plan is on, the plan's days a week stand in for the weekly choice. */
       fromPlan: (days: number) => plural('en', days, { one: '1 day, from your weekly plan', other: `${days} days, from your weekly plan` }),

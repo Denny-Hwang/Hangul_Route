@@ -14,6 +14,7 @@ import { shot } from './shots';
  */
 
 const m = getMessages('en');
+const ko = getMessages('ko');
 const NOW = new Date('2026-10-23T10:00:00.000Z');
 const [MON, TUE, THU, FRI] = ['2026-10-19', '2026-10-20', '2026-10-22', '2026-10-23'];
 
@@ -113,11 +114,41 @@ test.describe('Home week strip (goals on)', () => {
   });
 });
 
+test.describe('Home week strip in Korean (goals on)', () => {
+  test('320: the headline counts weeks with 주, the strip and the sheet never scroll sideways', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await learnerWith(page, () => ({
+      sessions: [quest(MON, 1), quest(TUE, 2), quest(THU, 3)],
+      dayLog: { [MON]: { 'ik-e2e0000000000000': 3 }, [TUE]: { 'ik-e2e0000000000000': 3 }, [THU]: { 'ik-e2e0000000000000': 3 } },
+      goals: { daily: 3, weeklyDays: 3, setAt: '2026-10-01T00:00:00.000Z' },
+      steadyWeeks: { '2026-10-12': '2026-10-15T09:00:00.000Z' },
+    }));
+    await seedStored(page, 'device:settings', { uiLocale: 'ko', uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
+    await expect(page.getByTestId('goal-headline')).toHaveText(ko.learner.goals.steadyWeeks(2));
+    await expect(page.getByRole('button', { name: /^이번 주: / })).toHaveAccessibleName(new RegExp(`${ko.learner.goals.steadyWeeks(2)}\\.`));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.getByRole('button', { name: /^이번 주: / }).click();
+    const sheet = page.getByRole('dialog', { name: ko.learner.goals.sheet.title });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByText(ko.learner.goals.sheet.steadyHelp)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    const box = await sheet.boundingBox();
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(320);
+    await shot(page, 'goals-sheet-ko-320');
+  });
+});
+
 test('goals off (the built-in pct 0): no strip, the streak pill as before', async ({ page }) => {
   await page.clock.install({ time: NOW });
   await page.setViewportSize({ width: 320, height: 800 });
   await onboardChild(page, { name: 'Dani', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
+  const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+  await seedStored(page, `progress:${profileId}`, snapshotFor(profileId, { sessions: [quest(THU, 1), quest(FRI, 2)].map((s) => ({ ...s, profileId })) }));
+  await expect(page.getByText('Hi, Dani!')).toBeVisible();
   await expect(page.getByTestId('home-goal-strip')).toHaveCount(0);
+  // The kill switch keeps today's Home: the streak is the pill in the pills row.
+  await expect(page.getByText(m.learner.home.streak.pill(2), { exact: true })).toBeVisible();
 });

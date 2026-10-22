@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { onGoalEvent } from '../logic/goals/goal-events';
 import type { ActivityKind } from '../logic/goals/points';
+import { setSessionDayGate } from '../platform/goal-clock';
 import type { GoalMoment } from './goals';
 import { currFlagOn } from './remote-config-store';
 
@@ -76,6 +77,9 @@ export function takeGoalMomentLater(profileId: string): Promise<GoalMoment | nul
     () => null,
   );
 }
+
+// A session's local day takes the server-clock cap only while `goals` is on (section 13; off is CM-4 as shipped).
+setSessionDayGate((profileId) => currFlagOn('goals', profileId));
 
 // A word set the progress store recorded, and every snapshot a sync or restore hands back (the latch runs after it).
 onGoalEvent((event) => {

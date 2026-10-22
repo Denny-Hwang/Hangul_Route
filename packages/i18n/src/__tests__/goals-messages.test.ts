@@ -53,7 +53,7 @@ function outputs(dict: Dict): string[] {
 
 const LOSS: Readonly<Record<keyof typeof LOCALES, RegExp>> = {
   en: /\b(lost|lose|missed|miss|broken|break|behind|late|overdue|keep it alive|don't lose|fail)/i,
-  es: /(perd|rot[oa]|atrasad|tarde|fall|no pierdas)/i,
+  es: /(perd|pierd|rot[oa]|atrasad|tarde|fall)/i,
   ko: /(잃|놓쳤|놓친|끊|실패|늦)/,
 };
 
@@ -79,6 +79,10 @@ describe('goals copy (F-CURR-002 row CM-17)', () => {
     expect([en.learner.goals.steadyWeeks(1), en.learner.goals.steadyWeeks(2)]).toEqual(['1 steady week', '2 steady weeks']);
     expect([es.learner.goals.steadyWeeks(1), es.learner.goals.steadyWeeks(2)]).toEqual(['1 semana cumplida', '2 semanas cumplidas']);
     expect(es.learner.goals.banner.weekMet(1)).toContain('1 semana cumplida.');
+    // Weeks are counted with 주, set apart from the term, so it never reads as "n times a week" (주 n번).
+    expect([ko.learner.goals.steadyWeeks(1), ko.learner.goals.steadyWeeks(3)]).toEqual(['목표를 채운 주: 1주', '목표를 채운 주: 3주']);
+    expect(ko.learner.goals.banner.weekMet(3)).toBe('이번 주 목표 달성! 목표를 채운 주가 모두 3주예요.');
+    expect(ko.learner.goals.steadyWeeks(3)).not.toMatch(/주\s*\d+\s*번/);
     expect(es.learner.goals.sheet.fromPlan(1)).toBe('1 día, según tu plan semanal');
     expect(en.learner.goals.weekly.days(1)).toBe('1 day');
   });

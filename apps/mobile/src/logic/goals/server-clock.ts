@@ -25,11 +25,13 @@ export function readServerTime(serverTime: unknown, deviceNow: Date): ServerCloc
 
 /**
  * The time to write: the device clock, capped at the server's clock carried forward. A device clock that
- * moved back since the reading carries nothing forward (the cap is then the server time seen).
+ * moved back since the reading (a fast clock that was set right) makes the reading unusable: the device
+ * clock is used until a fresh server time arrives (the Worker's `boundToNow` still bounds what it sends),
+ * so days learned offline after the fix never collapse onto the day of the old reading.
  */
 export function cappedNow(deviceNow: Date, seen: ServerClockSeen | null): Date {
   const device = deviceNow.getTime();
-  if (seen === null || !Number.isFinite(device)) return deviceNow;
-  const cap = seen.serverMs + Math.max(0, device - seen.deviceMs);
+  if (seen === null || !Number.isFinite(device) || device < seen.deviceMs) return deviceNow;
+  const cap = seen.serverMs + (device - seen.deviceMs);
   return device > cap ? new Date(cap) : deviceNow;
 }

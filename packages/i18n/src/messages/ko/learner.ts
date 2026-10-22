@@ -1843,7 +1843,7 @@ export const learner = {
     },
   },
   goals: {
-    steadyWeeks: (count: number) => `목표를 채운 주 ${count}번`,
+    steadyWeeks: (count: number) => `목표를 채운 주: ${count}주`,
     firstWeek: '목표를 채우는 첫 주가 여기서 시작돼요',
     newRun: (best: number) => `새 연속 기록을 시작해요! 최고 기록: ${best}일`,
     today: {
@@ -1876,7 +1876,7 @@ export const learner = {
     },
     banner: {
       dayMet: '오늘 목표 완료!',
-      weekMet: (count: number) => `이번 주 목표 달성! 목표를 채운 주가 ${count}번이에요.`,
+      weekMet: (count: number) => `이번 주 목표 달성! 목표를 채운 주가 모두 ${count}주예요.`,
     },
   },
 } satisfies DeepPartial<Messages['learner']>;

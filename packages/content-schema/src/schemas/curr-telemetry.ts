@@ -149,7 +149,8 @@ export const CURR_TELEMETRY_PAYLOADS = {
   'quest.adapt': z.object({ questId: z.string().regex(QUEST_ID_RE).max(64), dir: z.enum(['compact', 'scaffold']) }).strict(),
   'goal.set': z.object({ daily: DailyGoalSchema, weeklyDays: WeeklyDaysSchema }).strict(),
   'goal.met': z.object({ points: wholeUpTo(1000), target: DailyGoalSchema }).strict(),
-  'week.goal_met': z.object({ days: wholeUpTo(7), target: WeeklyDaysSchema }).strict(),
+  // `target` is the weekly days in force that week: the goal's 3, 5 or 7, or a weekly plan's days a week (F-PLAN-002, 1 to 7).
+  'week.goal_met': z.object({ days: wholeUpTo(7), target: z.number().int().min(1).max(7) }).strict(),
   'decode.sprint.finished': z
     .object({ rateBucket: TelemetryBucketSchema, probeRateBucket: TelemetryBucketSchema, sprintIndexBucket: TelemetryBucketSchema })
     .strict(),

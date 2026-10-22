@@ -23,7 +23,7 @@ import { sessionDay, withLocalStreak } from '../logic/streak';
 import { mergePlacements, mergeReview, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { emitGoalEvent } from '../logic/goals/goal-events';
-import { goalNow } from '../platform/goal-clock';
+import { sessionDayNow } from '../platform/goal-clock';
 import { applyVocabEvents, emptyVocab, localDay, vocabOf, type VocabEvent } from '../logic/vocab/progress';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -429,8 +429,8 @@ function finishedWordSet(before: VocabProgress, after: VocabProgress): boolean {
  */
 function withWordSetDay(snap: ProgressSnapshot, profileId: string, clock: Date): ProgressSnapshot {
   const at = clock.toISOString();
-  // The local day, never later than the server's clock carried forward (F-CURR-002 section 13, row CM-17).
-  const day = localDay(goalNow(clock));
+  // With `goals` on, never later than the server's clock carried forward (F-CURR-002 section 13, row CM-17).
+  const day = localDay(sessionDayNow(profileId, clock));
   if (snap.sessions.some((s) => keepsRun(s) && sessionDay(s) === day)) return withLocalStreak(snap, day);
   const session = { id: newSessionId(at, 'learn', snap.sessions), profileId, startedAt: at, endedAt: at, durationSeconds: 0, episodesTouched: [], localDay: day };
   return withLocalStreak({ ...snap, sessions: [...snap.sessions, session] }, day);
@@ -610,8 +610,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const now = clock.toISOString();
     const kind = sessionKindOf(options);
     const sessionId = newSessionId(now, kind, snap.sessions);
-    // The local day the run is kept on, never later than the server's clock carried forward (section 13, row CM-17).
-    const session = { id: sessionId, profileId, startedAt: now, episodesTouched: [], localDay: localDay(goalNow(clock)) };
+    // The local day the run is kept on (`sessionDayNow`: capped at the server's clock while `goals` is on).
+    const session = { id: sessionId, profileId, startedAt: now, episodesTouched: [], localDay: localDay(sessionDayNow(profileId, clock)) };
     const todayKey = dayKey(now);
     const lastDay = lastStreakDay(snap.sessions);
     // A time-only or learning session (OD-19) leaves the old streak exactly as it is.

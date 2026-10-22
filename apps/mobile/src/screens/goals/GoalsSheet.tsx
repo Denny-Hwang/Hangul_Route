@@ -183,10 +183,13 @@ export function GoalsSheet({ visible, daily, weeklyGoal, planDays, onSave, onSee
                     refFn={selected ? (node) => (selectedRef.current = node) : undefined}
                   >
                     <Mark selected={selected} />
-                    <Body weight="semibold">{g.daily[tier]}</Body>
-                    <Body size="sm" tone="secondary">
-                      {g.daily.time[tier]}
-                    </Body>
+                    {/* The tier and its time words wrap under each other at 320 px with large text, never past the card. */}
+                    <View style={{ flex: 1, flexShrink: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.md, rowGap: spacing.xxs }}>
+                      <Body weight="semibold">{g.daily[tier]}</Body>
+                      <Body size="sm" tone="secondary">
+                        {g.daily.time[tier]}
+                      </Body>
+                    </View>
                   </Radio>
                 );
               })}

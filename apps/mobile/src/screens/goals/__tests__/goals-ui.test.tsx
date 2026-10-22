@@ -102,7 +102,7 @@ describe('GoalsSheet', () => {
     const root = await draw(<GoalsSheet visible daily={3} weeklyGoal={3} planDays={null} onSave={onSave} onSeePlan={() => undefined} />);
     const text = textOf(root);
     for (const line of ['Your goals', 'Every day', 'Light', 'about 5 minutes', 'Steady', 'about 10 minutes', 'Strong', 'about 15 minutes', 'Every week', '3 days', '5 days', '7 days']) expect(text).toContain(line);
-    expect(text).toContain('A steady week is a week you learn on the days you chose. They add up and never go away.');
+    expect(text).toContain('A steady week is a week you learn on as many days as you chose. They add up and never go away.');
     expect(text).toContain('Rest days: Hoya keeps your streak going on up to 2 quiet days a week.');
     const radio = (id: string) => root.find((n) => n.props.testID === id && n.props.accessibilityRole === 'radio');
     expect(radio('goals-daily-light').props.accessibilityState).toEqual({ checked: true });

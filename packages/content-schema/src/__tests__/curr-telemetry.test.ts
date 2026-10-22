@@ -226,6 +226,11 @@ describe('id, code and count fields of the other section R payloads', () => {
     expect(S['goal.set'].safeParse({ daily: 3, weeklyDays: 4 }).success).toBe(false);
     expect(S['goal.met'].safeParse({ points: 7, target: 7 }).success).toBe(false);
     expect(S['week.goal_met'].safeParse({ days: 8, target: 7 }).success).toBe(false);
+    // A weekly plan's days a week (F-PLAN-002 paces 2 to 4, up to 7) is the target while the plan is on.
+    for (const target of [1, 2, 4, 6]) expect(S['week.goal_met'].safeParse({ days: 3, target }).success).toBe(true);
+    expect(S['week.goal_met'].safeParse({ days: 3, target: 0 }).success).toBe(false);
+    expect(S['week.goal_met'].safeParse({ days: 3, target: 8 }).success).toBe(false);
+    expect(S['week.goal_met'].safeParse({ days: 3, target: 2.5 }).success).toBe(false);
   });
 
   it('takes quest, pack and stamp ids in their id formats and codes as short codes', () => {

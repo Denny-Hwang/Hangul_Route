@@ -40,6 +40,23 @@ export function goalNow(deviceNow: Date = new Date()): Date {
   return cappedNow(deviceNow, seen);
 }
 
+/** Whether the cap applies to a session's local day: `goals` on for the profile (set by `store/goals-entry.ts`). */
+let sessionCapOn: (profileId: string) => boolean = () => false;
+
+/** `store/goals-entry.ts` passes the `goals` switch, so this module stays free of the remote config. */
+export function setSessionDayGate(gate: (profileId: string) => boolean): void {
+  sessionCapOn = gate;
+}
+
+/**
+ * The clock a session's local day (CM-4 `streakLocal`) is taken from: with `goals` on, `goalNow`, so the dots,
+ * `dayLog` and the run agree; with `goals` off, the device clock exactly as CM-4 shipped (the kill switch takes
+ * the cap back out).
+ */
+export function sessionDayNow(profileId: string, deviceNow: Date): Date {
+  return sessionCapOn(profileId) ? goalNow(deviceNow) : deviceNow;
+}
+
 /** Test seam. */
 export function resetGoalClockForTests(): void {
   seen = null;

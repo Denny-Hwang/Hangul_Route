@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { ProgressSnapshot, SessionLog } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { goalStripView, headlineOf, ringLineOf, streakTextOf, stripLabelOf, tierLabelOf } from '../strip-view';
+import { goalStripView, headlineOf, ringLineOf, sheetChoiceToSave, streakTextOf, stripLabelOf, tierLabelOf } from '../strip-view';
 
 /*
  * The Home week strip's view (F-CURR-002 section 7.4, OD-6, row CM-17; design/wireframes/home/goal-ring-weekly-dots.md
@@ -79,5 +79,22 @@ describe('goalStripView', () => {
   it('offers the first choice once something is finished and no goals are stored', () => {
     expect(goalStripView(snapshot({ sessions: [quest(MON)] }), WED, null).offerFirstChoice).toBe(true);
     expect(goalStripView(snapshot({ sessions: [quest(MON)], goals: { daily: 3, weeklyDays: 3, setAt: '2026-10-19T00:00:00.000Z' } }), WED, null).offerFirstChoice).toBe(false);
+  });
+});
+
+describe('sheetChoiceToSave', () => {
+  const defaults = { daily: 3 as const, weeklyGoal: 3 as const, fromPlan: false };
+  it('closing on the defaults with no goals stored saves nothing, so the first choice still comes', () => {
+    expect(sheetChoiceToSave(defaults, false, { daily: 3, weeklyDays: 3 })).toBeNull();
+  });
+  it('a changed choice, or any close once goals are stored, is saved', () => {
+    expect(sheetChoiceToSave(defaults, false, { daily: 6, weeklyDays: 3 })).toEqual({ daily: 6, weeklyDays: 3 });
+    expect(sheetChoiceToSave(defaults, false, { daily: 3, weeklyDays: 5 })).toEqual({ daily: 3, weeklyDays: 5 });
+    expect(sheetChoiceToSave(defaults, true, { daily: 3, weeklyDays: 3 })).toEqual({ daily: 3, weeklyDays: 3 });
+  });
+  it('with a weekly plan on only the daily goal changes', () => {
+    const plan = { daily: 3 as const, weeklyGoal: 5 as const, fromPlan: true };
+    expect(sheetChoiceToSave(plan, true, { daily: 10, weeklyDays: 3 })).toEqual({ daily: 10, weeklyDays: 5 });
+    expect(sheetChoiceToSave(plan, false, { daily: 3, weeklyDays: 3 })).toBeNull();
   });
 });

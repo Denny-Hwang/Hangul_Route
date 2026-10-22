@@ -24,10 +24,12 @@ describe('cappedNow', () => {
     expect(cappedNow(new Date('2099-01-01T02:00:00.000Z'), ahead).toISOString()).toBe('2026-10-22T14:00:00.000Z');
   });
 
-  it('a device clock that moved back since the reading carries nothing forward', () => {
+  it('a device clock that moved back since the reading drops it: the corrected clock writes the real day', () => {
+    // The reading was taken while the clock said 2099; the clock is then set right, 3 days later in real time.
     const ahead = readServerTime('2026-10-22T12:00:00.000Z', new Date('2099-01-01T00:00:00.000Z'));
-    const back = new Date('2098-12-31T00:00:00.000Z');
-    expect(cappedNow(back, ahead).toISOString()).toBe('2026-10-22T12:00:00.000Z');
+    const corrected = new Date('2026-10-25T09:00:00.000Z');
+    expect(cappedNow(corrected, ahead)).toBe(corrected);
+    expect(cappedNow(new Date('2026-10-28T09:00:00.000Z'), ahead).toISOString()).toBe('2026-10-28T09:00:00.000Z');
   });
 
   it('reads only a parseable server time, and an unreadable device clock is kept', () => {

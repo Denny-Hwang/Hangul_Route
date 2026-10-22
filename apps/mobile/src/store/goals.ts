@@ -61,6 +61,18 @@ export function planDaysFor(profileId: string, snapshot: Pick<ProgressSnapshot, 
   return planDaysInForce(sourcesOf(plans, snapshot?.selfRoute ?? null), utcDayKey(now));
 }
 
+/** A weekly plan's days a week on a given (earlier) day, for the latch's earlier weeks. */
+function planDaysOnFor(profileId: string, snapshot: Pick<ProgressSnapshot, 'selfRoute'>): (day: string) => number | null {
+  const sources = sourcesOf(usePlanStore.getState().byLearner[profileId] ?? [], snapshot.selfRoute ?? null);
+  return (day) => planDaysInForce(sources, day);
+}
+
+/**
+ * The `setAt` of the defaults the first choice's Not now keeps: earlier than any real choice, so a choice made on
+ * another device that has not synced here yet always wins the merge (`mergeGoals`, the later `setAt`).
+ */
+export const DEFAULTS_SET_AT = '1970-01-01T00:00:00.000Z';
+
 /** `snap` with the steady-weeks latch run on `now`, and the weeks it added. */
 function latched(profileId: string, snap: ProgressSnapshot, now: Date): { snap: ProgressSnapshot; added: LatchedWeek[] } {
   const result = latchSteadyWeeks({
@@ -69,6 +81,7 @@ function latched(profileId: string, snap: ProgressSnapshot, now: Date): { snap: 
     at: now.toISOString(),
     goalsSetDay: snap.goals ? localDay(new Date(snap.goals.setAt)) : undefined,
     planDays: planDaysFor(profileId, snap, now),
+    planDaysOn: planDaysOnFor(profileId, snap),
   });
   return result.added.length === 0 ? { snap, added: [] } : { snap: { ...snap, steadyWeeks: result.steadyWeeks }, added: result.added };
 }
@@ -77,12 +90,17 @@ function sendWeeks(profileId: string, added: readonly LatchedWeek[]): void {
   for (const week of added) send('week.goal_met', profileId, { days: week.days, target: week.target });
 }
 
-/** True once the profile's saved copy and the goals clock are read; otherwise starts both and calls `then` after. */
+/**
+ * True once the profile's saved copy, its cached weekly plans and the goals clock are read; otherwise starts all
+ * three and calls `then` after. The plans come first in the weekly days in force (section 4.8): a week judged before
+ * they are read could latch against 3 days instead of the plan's, and a latch never drops.
+ */
 function ready(profileId: string, then: () => void): boolean {
   const store = useProgressStore.getState();
-  if (store.hydratedFor.has(profileId) && clockLoaded) return true;
-  void Promise.all([store.hydrate(profileId), clockReady]).then(() => {
-    if (useProgressStore.getState().hydratedFor.has(profileId)) then();
+  const plans = usePlanStore.getState();
+  if (store.hydratedFor.has(profileId) && plans.byLearner[profileId] !== undefined && clockLoaded) return true;
+  void Promise.all([store.hydrate(profileId), plans.hydrate(profileId), clockReady]).then(() => {
+    if (useProgressStore.getState().hydratedFor.has(profileId) && usePlanStore.getState().byLearner[profileId] !== undefined) then();
   });
   return false;
 }
@@ -127,7 +145,8 @@ export function recordActivityPoints(profileId: string, kind: ActivityKind, devi
  * Saves the learner's goals (the sheet, or the first choice). With a weekly plan on, only the daily goal changes
  * (the plan's days are the weekly days in force). Sends `goal.set` when the goals in force changed or none were
  * stored, and runs the latch at once: lowering the weekly days to the days already learned latches the week now.
- * `quiet` saves without `goal.set` (the first choice's Not now keeps the defaults).
+ * `quiet` saves without `goal.set` (the first choice's Not now keeps the defaults): with no goals stored yet, the
+ * defaults are stored with `DEFAULTS_SET_AT`, so they never overwrite a real choice from another device.
  */
 export function saveGoals(profileId: string, choice: { daily: DailyGoal; weeklyDays: WeeklyDays }, options: { quiet?: boolean; deviceNow?: Date } = {}): void {
   if (!currFlagOn('goals', profileId)) return;
@@ -139,7 +158,8 @@ export function saveGoals(profileId: string, choice: { daily: DailyGoal; weeklyD
     const snap = boundToNow(stored, now);
     const held = snap.goals;
     changed = held === undefined || held.daily !== choice.daily || held.weeklyDays !== choice.weeklyDays;
-    const goals = changed || held === undefined ? { daily: choice.daily, weeklyDays: choice.weeklyDays, setAt: now.toISOString() } : held;
+    const setAt = held === undefined && options.quiet === true ? DEFAULTS_SET_AT : now.toISOString();
+    const goals = changed || held === undefined ? { daily: choice.daily, weeklyDays: choice.weeklyDays, setAt } : held;
     const result = latched(profileId, goals === held ? snap : { ...snap, goals, updatedAt: now.toISOString() }, now);
     added = result.added;
     return result.snap;
@@ -155,7 +175,8 @@ export function checkSteadyWeeks(profileId: string, deviceNow: Date = new Date()
   const now = goalNow(deviceNow);
   let added: LatchedWeek[] = [];
   useProgressStore.getState().applyGoalWrite(profileId, (stored) => {
-    const result = latched(profileId, stored, now);
+    // Like every goals write, a value a wrong clock wrote earlier is brought back to now first.
+    const result = latched(profileId, boundToNow(stored, now), now);
     added = result.added;
     return result.snap;
   });

@@ -83,8 +83,20 @@ describe('latchSteadyWeeks', () => {
     expect(latchSteadyWeeks(input(before, day(1))).added).toEqual([{ week: day(-7), days: 3, target: 3 }]);
     const setAfter = snapshot({ goals: goals(3, '2026-10-20T00:00:00.000Z'), dayLog: logOf(days) });
     expect(latchSteadyWeeks(input(setAfter, day(1))).added).toEqual([]);
+    // No goals ever stored: the default 3 was in force that week.
     const none = snapshot({ dayLog: logOf(days) });
-    expect(latchSteadyWeeks(input(none, day(1))).added).toEqual([]);
+    expect(latchSteadyWeeks(input(none, day(1))).added).toEqual([{ week: day(-7), days: 3, target: 3 }]);
+  });
+
+  it("an earlier week a weekly plan covered is judged against the plan's days, before the goals", () => {
+    const days = [day(-7), day(-6), day(-5)];
+    const covered = (d: string) => (d >= day(-7) && d <= day(-1) ? 5 : null);
+    const snap = snapshot({ goals: goals(3, '2026-10-01T00:00:00.000Z'), dayLog: logOf(days) });
+    expect(latchSteadyWeeks(input(snap, day(1), { planDaysOn: covered })).added).toEqual([]);
+    const two = (d: string) => (d === day(-3) ? 2 : null);
+    // A plan of 2 days judges the week even when the goals were set after it ended.
+    const late = snapshot({ goals: goals(7, '2026-10-20T00:00:00.000Z'), dayLog: logOf(days) });
+    expect(latchSteadyWeeks(input(late, day(1), { planDaysOn: two })).added).toEqual([{ week: day(-7), days: 3, target: 2 }]);
   });
 
   it("with a weekly plan on, the plan's days are the target of the current week", () => {

@@ -55,6 +55,20 @@ export function goalStripView(snapshot: ProgressSnapshot | undefined, today: str
   };
 }
 
+/**
+ * What the goals sheet saves when it closes: with a weekly plan on only the daily goal changes (the stored weekly goal
+ * applies again when the plan ends). Closing on the goals it opened with while none are stored is no choice: null,
+ * so nothing is stored or sent and the first choice (D) still comes.
+ */
+export function sheetChoiceToSave(
+  view: Pick<GoalStripView, 'daily' | 'weeklyGoal' | 'fromPlan'>,
+  goalsStored: boolean,
+  choice: { daily: DailyGoal; weeklyDays: WeeklyDays },
+): { daily: DailyGoal; weeklyDays: WeeklyDays } | null {
+  const next = view.fromPlan ? { daily: choice.daily, weeklyDays: view.weeklyGoal } : choice;
+  return !goalsStored && next.daily === view.daily && next.weeklyDays === view.weeklyGoal ? null : next;
+}
+
 /** The headline text. */
 export function headlineOf(view: Pick<GoalStripView, 'steadyWeeks'>, m: Messages['learner']['goals']): string {
   return view.steadyWeeks > 0 ? m.steadyWeeks(view.steadyWeeks) : m.firstWeek;
