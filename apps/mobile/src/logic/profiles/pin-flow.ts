@@ -83,12 +83,25 @@ export function forGrownUpUse(params: PinRouteParams): boolean {
 }
 
 /**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 8.2, CS-G2, CS-G9, CS-G10 (row GU-4): **Keep my progress** after the
+ * first quest on a device that holds a PIN. Verify only, through `verifyForLockedProfile` (strikes reset, a pending
+ * wait cleared): a correct PIN opens the save form and nothing else: no `markPinVerified`, no `openParentGate`, no
+ * fresh-PIN credit. No Forgot PIN?. With no PIN stored the screen refuses (back to the save card): it never sets one.
+ */
+export const SAVE_GUEST = 'SaveGuest';
+
+/** [GU] Whether the screen was opened by the guest's save. */
+export function forSaveGuest(params: PinRouteParams): boolean {
+  return params.next === SAVE_GUEST;
+}
+
+/**
  * The step the screen opens on. `GrownUpArea` never creates or resets a PIN (F-APP-001 section
  * 3.9): it always verifies, whatever `mode` says, so a child cannot make a PIN that opens the
  * grown-up area. With no PIN stored it shows `grownUpAreaNoPin` instead of the pad.
  */
 export function initialPinMode(params: PinRouteParams, storedHash: string | null): PinMode {
-  if (forGrownUpArea(params) || forGrownUpUse(params) || forCancelReset(params) || forFreshPin(params)) return 'verify';
+  if (forGrownUpArea(params) || forGrownUpUse(params) || forCancelReset(params) || forFreshPin(params) || forSaveGuest(params)) return 'verify';
   // [OA] A locked tile never opens setup by itself (no Forgot PIN shortcut to setup): only the reset paths' new PIN.
   if (forLockedProfile(params)) return params.mode === 'setup' && params.via !== undefined ? 'setup-1' : 'verify';
   if (params.mode === 'change') return storedHash === null ? 'setup-1' : 'verify';
@@ -101,7 +114,7 @@ export function initialPinMode(params: PinRouteParams, storedHash: string | null
  * grown-up inside the Grown-up area changes the PIN there).
  */
 export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boolean {
-  return mode === 'verify' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params) && !forFreshPin(params);
+  return mode === 'verify' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params) && !forFreshPin(params) && !forSaveGuest(params);
 }
 
 /**
@@ -110,7 +123,8 @@ export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boole
  * that could not be read (`hashReadFailed`) is not "no PIN": nothing is void then (fail closed, section 13.2).
  */
 export function voidWithoutPin(params: PinRouteParams, storedHash: string | null, hashReadFailed = false): boolean {
-  return storedHash === null && !hashReadFailed && (forFreshPin(params) || (forLockedProfile(params) && params.mode !== 'setup'));
+  // [GU] The guest's save with no PIN stored is refused (CS-G10): the screen goes back, it never opens setup.
+  return storedHash === null && !hashReadFailed && (forFreshPin(params) || forSaveGuest(params) || (forLockedProfile(params) && params.mode !== 'setup'));
 }
 
 /**
@@ -133,6 +147,12 @@ export function pinCreatedWhere(params: PinRouteParams): 'gate' | 'reset' | 'opt
  */
 export function verifiedGoesToSetup(params: PinRouteParams): boolean {
   return (
-    params.mode === 'change' && !forGrownUpArea(params) && !forGrownUpUse(params) && !forCancelReset(params) && !forFreshPin(params) && !forLockedProfile(params)
+    params.mode === 'change' &&
+    !forGrownUpArea(params) &&
+    !forGrownUpUse(params) &&
+    !forCancelReset(params) &&
+    !forFreshPin(params) &&
+    !forLockedProfile(params) &&
+    !forSaveGuest(params)
   );
 }

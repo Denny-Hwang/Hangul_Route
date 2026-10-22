@@ -1,4 +1,5 @@
 import { guestLeaveState, type GuestLeaveState } from '../../logic/guest/guest-run';
+import { guestSaveStack, type GuestSaveStack, type GuestSaveTarget } from '../../logic/guest/guest-save';
 import { endGuestRunTo, guestRunLostTarget, type GuestRoute } from '../../store/guest-launch';
 import { closeGrownUpSession } from '../../store/grown-up-session';
 
@@ -11,7 +12,11 @@ import { closeGrownUpSession } from '../../store/grown-up-session';
 /** `CommonActions.reset`, written out so Welcome loads this module without the navigation package (as `who-chooser`). */
 interface ResetAction {
   type: 'RESET';
-  payload: GuestLeaveState | { index: 0; routes: [{ name: 'Guest'; params: GuestRoute }] };
+  payload:
+    | GuestLeaveState
+    | { index: 0; routes: [{ name: 'Guest'; params: GuestRoute }] }
+    // [GU] Row GU-4: Welcome's Add my name opens the stack with the Not now card under the save.
+    | { index: 0; routes: [{ name: 'Guest'; state: GuestSaveStack }] };
 }
 
 /** What these exits need of a navigation object: its parent (the root stack), or the root itself. */
@@ -48,4 +53,62 @@ export function leaveGuestRun(navigation: Nested, at: 'quest' | null): void {
  */
 export function leaveLostGuestRun(root: Dispatcher | undefined): void {
   root?.dispatch({ type: 'RESET', payload: guestLeaveState(guestRunLostTarget()) });
+}
+
+/** [GU] What the save's openers need of the `Guest` stack's navigation (Results and the Not now card). */
+interface SaveOpener {
+  navigate: (screen: GuestSaveTarget['screen'], params: GuestSaveTarget['params']) => void;
+}
+
+/**
+ * [GU] Row GU-4, section 8.2: **Keep my progress** and **Add my name** open the save inside the `Guest` stack: the
+ * verify-only PIN (`SaveGuest`) when a PIN is stored, else the form. Nothing on an `owner` device (`target` null).
+ */
+export function openGuestSave(navigation: SaveOpener, target: GuestSaveTarget | null): void {
+  if (target === null) return;
+  if (target.screen === 'PinEntry') navigation.navigate('PinEntry', { next: 'SaveGuest' });
+  else navigation.navigate('CreateProfile', target.params);
+}
+
+/**
+ * [GU] Row GU-4, section 6.3: Welcome's **Add my name**: the `Guest` stack alone on the root, opened on the save. CS-G3:
+ * the grown-up session is closed first, as for every way into the stack.
+ */
+export function openGuestSaveStack(root: Dispatcher | undefined, target: GuestSaveTarget): void {
+  closeGrownUpSession();
+  root?.dispatch({ type: 'RESET', payload: { index: 0, routes: [{ name: 'Guest', state: guestSaveStack(target) }] } });
+}
+
+/**
+ * [GU] Row GU-4, section 8.4: after the save, Home of the new profile: the root holds `Main` alone, so nothing of the
+ * `Guest` stack is left under it. The run has ended (the save ends it, `saveGuestAsProfile`).
+ */
+export function leaveGuestRunSaved(navigation: Nested): void {
+  navigation.getParent()?.dispatch({ type: 'RESET', payload: guestLeaveState('home') });
+}
+
+/** [GU] What the `SaveGuest` PIN screen needs to open the form in its place (the `Guest` stack's `replace`). */
+interface FormOpener {
+  replace: (screen: 'CreateProfile', params: { firstRun: boolean; from: 'guest' }) => void;
+}
+
+/**
+ * [GU] Row GU-4, section 8.2, CS-G2: a correct `SaveGuest` PIN opens the save form in the PIN screen's place, and
+ * nothing else (Back on its first step returns to the save card).
+ */
+export function openGuestFormAfterPin(navigation: FormOpener, params: { firstRun: boolean; from: 'guest' }): void {
+  navigation.replace('CreateProfile', params);
+}
+
+/** [GU] What the save form needs to ask the `SaveGuest` PIN in its place (the `Guest` stack's `replace`). */
+interface PinOpener {
+  replace: (screen: 'PinEntry', params: { next: 'SaveGuest' }) => void;
+}
+
+/**
+ * [GU] Row GU-4 review, section 8.2, CS-G9: a PIN was set in another tab while the form was open: the form gives way
+ * to the verify-only `SaveGuest` PIN (Cancel returns to the save card; a correct PIN opens the form again).
+ */
+export function reaskGuestSavePin(navigation: PinOpener): void {
+  navigation.replace('PinEntry', { next: 'SaveGuest' });
 }

@@ -21,7 +21,10 @@ export function whoCopy(words: CreateProfileWords, learnerType: LearnerType): Wh
   return learnerType === 'self' ? words.profile.self : words.profile.child;
 }
 
-/** The line under "Who is learning?": it names the level check only on a build that offers it (F-PLC-001 §3.10). */
-export function lessonsLine(words: CreateProfileWords, levelCheckOn: boolean): string {
-  return levelCheckOn ? words.lessons.withCheck : words.lessons.plain;
+/**
+ * The line under "Who is learning?": it names the level check only on a build that offers it (F-PLC-001 §3.10).
+ * [GU] Never on the guest's save (AMENDMENTS-GUEST-FIRST-LESSON section 8.3): no level check follows it.
+ */
+export function lessonsLine(words: CreateProfileWords, levelCheckOn: boolean, fromGuest = false): string {
+  return levelCheckOn && !fromGuest ? words.lessons.withCheck : words.lessons.plain;
 }

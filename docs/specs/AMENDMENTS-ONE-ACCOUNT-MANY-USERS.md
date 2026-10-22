@@ -312,6 +312,7 @@ A grown-up page under the existing `/account` prefix, behind the lock (the forgo
 - 4 digits, salted SHA-256 (`expo-crypto`), device-level `account:parentPinHash`, dots only, the attempt state persisted (`account:pinAttempts`) so a force-quit keeps a pause.
 - The marker, the epoch (`account:pinSetAt`), the fingerprint (`account:pinHashSeen`), the trusted epoch and every rule of F-APP-001 section 3.9.
 - `GrownUpArea` and the new `GrownUpUse` and `LockedProfile` destinations never create or reset a PIN.
+- [GU] Row GU-4 (`AMENDMENTS-GUEST-FIRST-LESSON.md` section 8.2, CS-G2, CS-G9, CS-G10): the destination `SaveGuest` (appended to `GrownUpDestination`) is verify only. It opens in the guest's `Guest` stack when **Keep my progress** is pressed on a device that holds a PIN; a correct PIN goes through `verifyForLockedProfile` (strikes reset, a pending reset cleared, as any correct PIN) and replaces the PIN screen with the save form, and does nothing else: no `markPinVerified`, no `openParentGate`, no `parent.gate.opened`, no fresh-PIN credit for `openGrownUpArea` or the fresh-PIN controls. No **Forgot PIN?**, no face or fingerprint. Cancel returns to the save card. With no PIN stored the screen refuses and goes back: it never opens setup. It reads no grown-up session, so an open one never skips it. Its pauses are section 8.3's, unchanged.
 
 ### 8.2 Set-up
 

@@ -51,8 +51,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 4,747,423 B raw / 1,247,894 B gzip with its review fixes.
   // [GU] Row GU-3 adds what must run before the first screen (the try intent, the launch's guest step, Welcome's waiting
   // card, the 16.1 strings); the guest's screens are a chunk of their own (SCREEN_CHUNKS, 7,673 B raw): 4,757,493 B raw /
-  // 1,250,848 B gzip (release `build:web`), so the line is that plus 7,507 B.
-  startBundleRaw: 4_765_000,
+  // 1,250,848 B gzip (release `build:web`), so the line was that plus 7,507 B; 4,759,347 B raw with its review fixes.
+  // [GU] Row GU-4 adds the save's parts of the shared start screens (CreateProfile's guest steps and folded email, the
+  // SaveGuest verify path of PinEntry, the first Home's bubble, Welcome's Add my name, the promotion for GU-D11) and the
+  // 16.2 English strings; the save card and the Not now card stay in the guest's chunk (11,950 B raw): 4,767,105 B raw /
+  // 1,253,769 B gzip (release `build:web`, cache cleared), so the line is that plus 7,895 B.
+  startBundleRaw: 4_775_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

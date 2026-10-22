@@ -59,7 +59,7 @@ describe('screen header registry (AMENDMENTS-DISPLAY-NAV section 7.1)', () => {
     expect(routes.browse).toEqual(expect.arrayContaining(['BrowseHome', 'BrowseItem', 'PreviewQuest', 'BrowseAccess']));
     expect(routes.tabs).toEqual(['Home', 'Route', 'Journey', 'Library']);
     expect(routes.placement).toEqual(expect.arrayContaining(['PlacementBoot', 'PlacementItem', 'PlacementResult']));
-    expect(routes.guest).toEqual(['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater']);
+    expect(routes.guest).toEqual(['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater', 'CreateProfile', 'PinEntry']);
     expect(routes.root).toContain('Guest');
   });
 

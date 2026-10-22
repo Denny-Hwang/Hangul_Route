@@ -82,6 +82,7 @@ export const learner = {
       caption: '이 기기에만 저장해요. 이메일이 없어도 배우고 백업할 수 있어요.',
       placeholder: '이름@email.com',
       invalid: '이메일이 맞지 않는 것 같아요. 철자를 확인해요.',
+      add: '이메일 추가하기 (선택)',
     },
     pinFailed: 'PIN을 설정하지 못했어요. 다시 해 보세요.',
     privacyLink: '개인정보 처리방침 읽기',
@@ -99,6 +100,11 @@ export const learner = {
       agree: '동의 칸에 표시해요',
       pin: 'PIN을 만들어요',
       email: '이메일을 확인하거나 비워 두세요',
+    },
+    guest: {
+      title: '진도 간직하기',
+      nameLabel: '이름',
+      later: '호야와 읽기 수준은 나중에 프로필에서 고를 수 있어요.',
     },
   },
 
@@ -1852,5 +1858,22 @@ export const learner = {
       keeps: '첫 퀘스트에서 한 것은 새로 만드는 프로필로 이어져요.',
     },
     memoryOnly: '이 브라우저는 창을 닫으면 퀘스트를 간직하지 못해요. 끝나고 이름을 넣으면 간직할 수 있어요.',
+    // No particle attached to a variable: {name} is followed by a comma (section 16).
+    results: {
+      line: '이름을 넣으면 호야가 카드와 별을 간직해 줘요.',
+      lineNoCard: '이름을 넣으면 호야가 첫 퀘스트를 간직해 줘요.',
+      keep: '내 진도 간직하기',
+      notNow: '나중에',
+      askGrownUp: '이 기기의 어른이 PIN으로 추가해 줘요.',
+      askOwner: '이 기기를 쓰는 사람이 추가해 줄 수 있어요.',
+    },
+    later: {
+      title: (days: number) => `호야가 이 브라우저에 퀘스트를 간직할 수 있어요. 퀘스트를 하지 않으면 최대 ${days}일까지예요.`,
+      line: '아직 백업되지 않았어요. 이름을 넣으면 백업되고 계속할 수 있어요.',
+      save: '내 이름 넣기',
+      close: '닫기',
+    },
+    saved: (name: string) => `${name}, 카드가 라이브러리에 있어요.`,
+    savedNoCard: (name: string) => `${name}, 첫 퀘스트를 저장했어요.`,
   },
 } satisfies DeepPartial<Messages['learner']>;

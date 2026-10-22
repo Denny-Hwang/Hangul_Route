@@ -13,12 +13,13 @@ import type { OnboardingStackParamList, RootStackParamList } from '../../navigat
 import type { NavigationProp } from '@react-navigation/native';
 import { isLiveGuest } from '../../logic/guest/guest-model';
 import { track } from '../../platform/telemetry';
-import { guestFirstQuest, resumeGuestFromWelcome } from '../../store/guest-launch';
+import { resumeGuestFromWelcome } from '../../store/guest-launch';
+import { beginGuestSaveFromWelcome } from '../../store/guest-save';
 import { useGuestStore } from '../../store/guest-store';
 import { useLocaleStore } from '../../store/locale-store';
 import { useProfileStore } from '../../store/profile-store';
 import { preloadGuestStack } from '../../navigation/guest';
-import { openGuestStack } from '../guest/guest-exits';
+import { openGuestSaveStack, openGuestStack } from '../guest/guest-exits';
 import { WelcomeGrownUps } from './WelcomeGrownUps';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'Welcome'>;
@@ -62,7 +63,7 @@ export function WelcomeScreen({ navigation, route }: Props): React.ReactElement 
   };
   // [GU] Welcome's waiting card (AMENDMENTS-GUEST-FIRST-LESSON section 6.3, row GU-3; mock guest-first-quest.md D2):
   // while a quest waits on this device (a live guest, the switch on). Back to my quest goes back into the run; once
-  // quest 1 is done, Add my name leads to the save (row GU-4 builds it; until then the Not now card).
+  // quest 1 is done, Add my name opens the save (row GU-4): the form, or the SaveGuest PIN, with the Not now card under it.
   const guest = useGuestStore((s) => s.record);
   const profiles = useProfileStore((s) => s.profiles);
   const waiting = flags.guestLessonEnabled && isLiveGuest(guest, profiles) ? guest : null;
@@ -78,7 +79,8 @@ export function WelcomeScreen({ navigation, route }: Props): React.ReactElement 
     });
   };
   const addMyName = (): void => {
-    if (guestFirstQuest() !== null) openGuestStack(root(), { screen: 'GuestLater' });
+    const target = beginGuestSaveFromWelcome();
+    if (target !== null) openGuestSaveStack(root(), target);
   };
 
   return (
