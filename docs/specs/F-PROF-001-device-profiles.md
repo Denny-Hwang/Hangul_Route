@@ -33,26 +33,29 @@ Companion stories:
 
 ## 3. Acceptance criteria
 
-### 3.1 Profile picker (cold launch)
+### 3.1 Who is using this? (cold launch) — [OA] replaces the profile picker
 
-- **Given** the app launches and ≥ 1 profile exists,
-  **when** the launch screen finishes,
-  **then** the **Profile Picker** renders with all profiles as avatar tiles (≥ 96 × 96 dp each, max 8 visible, scroll if more).
-- **Given** a learner profile tile is tapped,
+**[OA]** Rewritten by AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-10 (amendment section 6; wireframe `design/wireframes/profiles/who-is-using.md`, which supersedes `profiles/picker.md`). The picker this section used to describe, with a parent profile tile behind a PIN, was never built; the device's one chooser is **Who is using this?** (`WhoIsUsing`, `logic/profiles/who.ts`), on by default since OA-10 behind the kill switch `EXPO_PUBLIC_WHO_CHOOSER`.
+
+- **Given** the device is shared (2 or more learner profiles, or any locked profile, or any known grown-up use; a self-only device with marker `none` and one learner is not shared by a known use alone), or the active profile is locked,
+  **when** the app launches,
+  **then** Who is using this? renders: one tile per learner profile (`ProfileAvatar` and the name, at least `touchTarget.hero`, two columns on a phone, more on wider layouts), **Add a learner**, then the grown-up rows (amendment section 6.1). It has no Back and swallows the Android back (CS-5). A single-learner device opens that learner's Home as before.
+- **Given** a learner tile is tapped,
   **when** the tap registers,
-  **then** the home screen renders for that profile within ≤ 300 ms (no PIN, no loading screen — pre-warm on app launch).
-- **Given** a parent profile tile is tapped,
+  **then** that learner's Home renders within 300 ms (no PIN, no loading screen; amendment G7, measured as a p95 on the release build). A locked tile asks the grown-up PIN (or face or fingerprint) and opens no grown-up session (CS-3).
+- **Given** a grown-up row is tapped (Family, Teacher, School on the web, or Grown-up area),
   **when** the tap registers,
-  **then** a **PIN entry** modal appears requiring 4 digits. After 5 wrong attempts within 60 s, cooldown 30 s before retry ([OA] since OA-2: 5 within 24 hours, then the longer pauses of section 3.5).
+  **then** the PIN screen asks the grown-up PIN; Cancel returns to the chooser (amendment section 5.3, CS-1, CS-7). Pauses after repeated misses are those of section 3.5 (5 misses within 24 hours, then the longer pauses).
+- The chooser also opens with the `who=1` boot intent (the console's Learner app exit), with a held join code (OA-D20), after 30 minutes in the background on a shared device (5 minutes when the active profile is locked), and from Home **Switch**, Profile **Who is using this?** and the Grown-up area's **Switch user**. Arriving there closes the grown-up session (CS-2). No tile shows progress, stars, cards, level, streak, a space name or a time (CS-6).
 
 ### 3.2 Profile creation
 
 - **Given** an empty install (no profiles yet),
   **when** the app launches,
-  **then** a one-time onboarding flow runs: parent creates **parent profile first** (name + PIN) → then adds 1+ learner profiles (name + avatar choice).
-- **Given** a parent profile exists,
-  **when** parent goes to "Add another child",
-  **then** they can create additional learner profiles without re-entering PIN within the same session (15-min session window).
+  **then** Welcome and onboarding run: **Who is learning?** ("Me" / "My child or a student"), then the learner's name, level and avatar (F-LEARN-001). **[OA]** There is no parent profile (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D2, row OA-10): grown-up uses come from the account (Family, Teacher, School) and from the device's Grown-up area, never from a device profile. The grown-up PIN is the device-level `account:parentPinHash`, set in the create form for a child profile (optional for a self profile) or at the first Grown-up area entry (section 10).
+- **Given** a grown-up PIN exists,
+  **when** a grown-up adds another learner (Add a learner on the chooser or on Profile),
+  **then** the PIN is asked and the new learner is created; the learner list is shared across tabs (OA-D19).
   **[OA]** AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-1 and OA-D5b (row OA-2): the 15-minute session now counts only inside the Grown-up area stack and for the one action that asked for the PIN; Profile is a learner screen, so Add a learner there asks the PIN each time, and every change of the active learner (a new learner made active included) ends the session.
 - **Amended by F-LEARN-001 (2026-10-10)**: the create form first asks **Who is learning?** ("Me" / "My child or a student"), stored locally as `learnerType` (`child` | `self`; a profile without it counts as `child`). `ageGroup` stays the stored field but is an **opaque level id** (`5-7` / `8-9` / `10-11`), not an age: the app shows `levelLabel()` ("Pictures first", "Some reading", "Reads easily") and never prints an age or an age range. The level is chosen in the form (default "Some reading"). A parent PIN is created in the form for a child profile and is optional for a self profile.
 - Avatars: **5** preset Hoya variants (tiger cub), one per culture-theme Pillar — 글이 (Letters) · 살이 (Life) · 예리 (Rites; respelled from 례이 on 2026-10-10, F-CNT-002 C9) · 솔이 (Nature) · 솜이 (Crafts). These are illustrations, not learner names. Each cub has its own fur colour decided by the avatar name (`hoya-blue` is blue; `hoya.fur*` tokens, `hoyaVariantColors`), with the English label under it in pickers ("Book Tiger", "Home Tiger", "Feast Tiger", "Mountain Tiger", "Craft Tiger"); see `design/components/ProfileAvatar/spec.md`. Names: free text, 1–12 chars, no emojis, no Korean/Chinese (UI is English).
@@ -128,8 +131,8 @@ delegates to these reducers.
 
 ### Integration
 
-- Create parent + 2 learners → profile picker shows 3 tiles → switch from learner A to learner B → A's Journey untouched, B's Journey loaded.
-- Cold launch with no profiles → onboarding forces parent first, learner second.
+- **[OA]** (row OA-10) Create 2 learners → Who is using this? shows 2 tiles and the Grown-up area row → switch from learner A to learner B → A's Journey untouched, B's Journey loaded.
+- **[OA]** Cold launch with no profiles → Welcome, then Who is learning? and the first learner; no parent profile is created.
 - 5 wrong PIN attempts → 30 s cooldown → 6th attempt rejected until cooldown ends.
 
 ### Platform wrapper — `apps/mobile/src/platform/`
@@ -140,7 +143,7 @@ delegates to these reducers.
 
 ### E2E (Detox, nightly)
 
-- First launch → create parent (PIN 1234) → create learner "Suni" → home renders for Suni → tap switch → back to picker → tap parent → PIN modal → enter PIN → dashboard placeholder loads.
+- ~~First launch → create parent (PIN 1234) → create learner "Suni" → home renders for Suni → tap switch → back to picker → tap parent → PIN modal → enter PIN → dashboard placeholder loads.~~ **[OA]** Replaced by the Playwright web e2e of AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 20 (`who-is-using.spec.ts`, `who-grown-up.spec.ts`, `who-locked.spec.ts`, `child-safety.spec.ts`), on the release build with the chooser on (row OA-10).
 
 ## 7. Rollout
 

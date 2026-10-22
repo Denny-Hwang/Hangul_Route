@@ -149,7 +149,8 @@ Hangul Route
 | `profiles/create-parent` | Onboarding/CreateProfile(firstRun) | 부모 PIN 1회 설정 (자녀 프로필은 폼 안에서 생성, 본인 프로필은 선택) | S | F-PROF-001 | ✓ |
 | `profiles/create-learner` | Onboarding/CreateProfile | 누가 배우나·이름·레벨·아바타 (F-LEARN-001) | S | F-PROF-001 | ✓ |
 | `onboarding/first-quest-preview` | Onboarding/FirstQuestPreview | Hoya 소개 + 첫 퀘스트 진입 | S | – | NEW |
-| `profiles/picker` | (root, cold launch) | 학습자 선택 (PIN 없음) — [OA] 미구현, `profiles/who-is-using` 으로 대체 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS, OA-4a) | S | F-PROF-001 | planned |
+| `profiles/who-is-using` | WhoIsUsing (root, cold launch) | [OA] Who is using this?: learner tiles (one tap, no PIN; a locked tile asks the PIN), Add a learner, the grown-up rows behind the PIN (Family, Teacher, School on the web; Grown-up area). Replaces `profiles/picker`, which was never built. On since OA-10 (`EXPO_PUBLIC_WHO_CHOOSER`, kill switch) | S | F-PROF-001 §3.1, AMENDMENTS-ONE-ACCOUNT-MANY-USERS §6 | ✓ |
+| `profiles/people-on-device` | ParentDashboard card → PersonOnDevice | [OA] People on this device: every learner, the lock switch, Remove from this device (fresh PIN, ConfirmSheet; OA-7a). A family code on a device with 2 or more learners opens Who is joining? from Join (OA-7b) | S | AMENDMENTS-ONE-ACCOUNT-MANY-USERS §10 | ✓ |
 | `profiles/pin-entry` | (modal) | 부모 확인 | S | F-PROF-001 | ✓ |
 | `profiles/switch-button` | (component) | 세션 중 전환 | S | F-PROF-001 | ✓ |
 | `home/todays-mission` (alias `home/home`) | Main/Home | 오늘 할 3가지 | S | F-HW-001 | ✓ |
@@ -278,8 +279,10 @@ Hangul Route
 cold launch
   ├─ (profiles == 0) ─▶ onboarding/welcome ─▶ profiles/create-parent ─▶ profiles/create-learner
   │                                                                          └─▶ onboarding/first-quest-preview ─▶ quest/player
-  └─ (profiles ≥ 1) ─▶ profiles/picker ──(learner tap)──▶ Main tabs
-                                    └────(parent tap)───▶ profiles/pin-entry ─▶ parent/dashboard
+  ├─ (1 learner, not shared) ─▶ Main tabs
+  └─ (shared device, or the active learner locked; [OA] OA-10) ─▶ profiles/who-is-using ──(learner tile)──▶ Main tabs
+                                    ├────(locked tile)───▶ profiles/pin-entry ─▶ Main tabs (no grown-up session)
+                                    └────(grown-up row)──▶ profiles/pin-entry ─▶ parent/dashboard | web /parent · /teach
 
 Main tabs ─┬─ home/todays-mission ─┬─▶ quest/player (card ①②)
            │                       ├─▶ episode/detail (card ③ story)
@@ -293,7 +296,7 @@ results/celebrate ─┬─▶ episode/detail (next quest)
                    └─▶ Main tabs (reset)
 
 profile/settings ─┬─▶ profiles/pin-entry (modal; 첫 진입 시 PIN 설정) ─▶ parent/dashboard
-                  ├─▶ profiles/picker (switch)
+                  ├─▶ profiles/who-is-using (Who is using this?; also Home Switch and the Grown-up area's Switch user)
                   └─▶ onboarding (add learner)
 ```
 
@@ -315,7 +318,7 @@ profile/settings ─┬─▶ sync/save-progress (Rescue Code)
                   ├─▶ sync/join-space
                   ├─▶ paywall/upgrade  (parent-gated: profiles/pin-entry 선행)
                   └─▶ console/account  (parent-gated)
-onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ profiles/picker
+onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ profiles/who-is-using (shared device) · Main tabs
                                                                 └─▶ sync/merge-notice (로컬 진도 있을 때)
 (앱 업데이트 후 첫 세션, reconcile 이 카드를 더했을 때) home/todays-mission ─▶ home/cards-catch-up ─▶ library/earn-hints (New pill)
 results/celebrate (에피소드·스테이지·세트 완료 런) ─▶ results/extra-cards ─▶ library/card-detail (뒷면: library/card-back-citation)
