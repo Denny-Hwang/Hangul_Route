@@ -10,9 +10,11 @@ import { isItemDue } from './spacing';
  * chunk. Grown-ups read it in reports, the console and (row CM-63) `class-review` (section 4.9); no learner screen
  * reads it in this row, and a learner never sees any of it as a percentage (section 3.4).
  *
- * - `wordsKnown`: `lex` items (lesson words) at best box 2 or higher with at least one real answer (`n` >= 1), plus
- *   topic words at best box 2 or higher with a recorded answer (`seen` >= 1). A seeded box alone never counts. Only
- *   monotonic fields are read (`s`, `n`, `bestBox`, `seen`), retired items included, so the count never drops.
+ * - `wordsKnown`: `lex` items (lesson words) at best box 2 or higher with at least one real answer (`n` >= 1) of which
+ *   at least one was right (`r` >= 1), plus topic words at best box 2 or higher with a recorded answer (`seen` >= 1).
+ *   A seeded box alone never counts, nor a seeded box followed only by wrong answers (seeding writes `s` with `n` 0,
+ *   and a wrong answer leaves `s` where it was). Only monotonic fields are read (`s`, `r`, `n`, `bestBox`, `seen`),
+ *   retired items included, so the count never drops.
  * - `readyToRefresh`: the due pool today (memory items that are not retired and topic words), seeded items included,
  *   as the runtime's own `duePool`.
  * - `cellBestCounts`: episodes (cells and pack levels) at `cellBest` level 1, 2 and 3. Row CM-12 seeds level 1; row
@@ -21,6 +23,8 @@ import { isItemDue } from './spacing';
  * - `weekPoints`: the points of this ISO week, Monday to today, from `dayLog` (row CM-17); 0 without it.
  * - `topDue`: up to 8 due item ids in selection order (section 4.3): the lowest box first, then the oldest due day,
  *   then a jitter seeded by the item id, so it is deterministic.
+ * - `reviewOn`: present (true) only while the profile has the review surface (`dailyReview`, row CM-14), so a report
+ *   shows `readyToRefresh` only when the learner can act on it, never during the `memoryRecord` shadow period.
  */
 
 /** A word is known from this best box (section 4.4). */
@@ -36,6 +40,8 @@ export interface MemorySummaryInput {
   snapshot: Pick<ProgressSnapshot, 'cellBest' | 'stageCheckAt' | 'dayLog' | 'vocab'>;
   /** The device's local day. */
   today: string;
+  /** Whether the profile has the review surface (`currFlagOn('dailyReview')`). */
+  reviewOn?: boolean;
 }
 
 const cap = (n: number): number => Math.min(n, MEMORY_SUMMARY_COUNT_MAX);
@@ -62,11 +68,11 @@ interface Due {
   due: string;
 }
 
-export function memorySummaryOf({ rows, retired, snapshot, today }: MemorySummaryInput): MemorySummary {
+export function memorySummaryOf({ rows, retired, snapshot, today, reviewOn = false }: MemorySummaryInput): MemorySummary {
   let wordsKnown = 0;
   const due: Due[] = [];
   for (const [id, { st }] of Object.entries(rows)) {
-    if (id.startsWith(LEX) && st.s >= WORDS_KNOWN_BOX && st.n >= 1) wordsKnown += 1;
+    if (id.startsWith(LEX) && st.s >= WORDS_KNOWN_BOX && st.n >= 1 && st.r >= 1) wordsKnown += 1;
     if (!retired.has(id) && isItemDue(st, today) && st.d !== null) due.push({ id, box: st.b, due: st.d });
   }
   const words: readonly VocabItemState[] = vocabOf(snapshot).items;
@@ -94,5 +100,6 @@ export function memorySummaryOf({ rows, retired, snapshot, today }: MemorySummar
     stageChecks: cap(Object.keys(snapshot.stageCheckAt ?? {}).length),
     weekPoints: cap(weekPoints),
     topDue: due.slice(0, TOP_DUE_MAX).map((row) => row.id),
+    ...(reviewOn ? { reviewOn: true as const } : {}),
   };
 }

@@ -104,9 +104,9 @@ export interface MemoryRuntime {
   file(profileId: string): Promise<MemoryFile | null>;
   /**
    * The summary's `memory` block today (row CM-16, `./summary.ts`), after every earlier operation on the profile;
-   * undefined while the store or the snapshot cannot be read.
+   * undefined while the store or the snapshot cannot be read. `reviewOn`: the profile has the review surface.
    */
-  summary(profileId: string): Promise<MemorySummary | undefined>;
+  summary(profileId: string, opts?: { reviewOn?: boolean }): Promise<MemorySummary | undefined>;
 }
 
 const VOCAB_ID = /^vocab:/;
@@ -516,14 +516,14 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
 
     file: (profileId) => run(profileId, () => load(profileId)),
 
-    summary(profileId) {
+    summary(profileId, opts) {
       return run(profileId, async () => {
         await deps.hydrate(profileId);
         const file = await load(profileId);
         const snapshot = deps.snapshot(profileId);
         if (!file || !snapshot) return undefined;
         const { index } = await items();
-        return memorySummaryOf({ rows: file.rows, retired: index.retired, snapshot, today: deps.dayOf(deps.now()) });
+        return memorySummaryOf({ rows: file.rows, retired: index.retired, snapshot, today: deps.dayOf(deps.now()), reviewOn: opts?.reviewOn === true });
       });
     },
   };

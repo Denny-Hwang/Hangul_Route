@@ -632,8 +632,8 @@ describe('hard rules (section 3.7)', () => {
 });
 
 describe('memory counts (F-CURR-002 CM-16)', () => {
-  const block = (wordsKnown: number, readyToRefresh: number, cellBestCounts: [number, number, number], stageChecks = 0) => ({
-    memory: { wordsKnown, readyToRefresh, cellBestCounts, stageChecks, weekPoints: 9, topDue: ['lex:sagwa'] },
+  const block = (wordsKnown: number, readyToRefresh: number, cellBestCounts: [number, number, number], stageChecks = 0, reviewOn = true) => ({
+    memory: { wordsKnown, readyToRefresh, cellBestCounts, stageChecks, weekPoints: 9, topDue: ['lex:sagwa'], ...(reviewOn ? { reviewOn: true as const } : {}) },
   });
 
   it('sums the members that carry the block, and counts them', () => {
@@ -643,6 +643,11 @@ describe('memory counts (F-CURR-002 CM-16)', () => {
     });
     expect(r.memory).toEqual({ learners: 2, wordsKnown: 52, readyToRefresh: 6, levels: [8, 2, 1], stageChecks: 1 });
     expect(ClassReportSchema.parse(r)).toEqual(r);
+  });
+
+  it('adds the items ready to refresh only of learners who have the review surface (not in the shadow period)', () => {
+    const r = report({ now: NOW_UTC, learners: [member({ '2026-10-14': {} }, block(40, 6, [5, 2, 1])), member({ '2026-10-13': {} }, block(12, 300, [3, 0, 0], 0, false))] });
+    expect(r.memory).toMatchObject({ learners: 2, wordsKnown: 52, readyToRefresh: 6 });
   });
 
   it('carries no item id, no points and nothing per learner', () => {

@@ -42,6 +42,13 @@ describe('memorySummaryOf: words known (section 4.4)', () => {
     expect(m.wordsKnown).toBe(0);
   });
 
+  it('never counts a seeded box followed only by wrong answers: box 2 came from seeding, not from an answer', () => {
+    // Seeded at box 2 (a 3-star quest), then one wrong answer: n 1, r 0, s still 2.
+    expect(of({ 'lex:sagwa': row({ s: 2, b: 1, n: 1, r: 0, c: 0 }) }).wordsKnown).toBe(0);
+    // The first right answer after it counts.
+    expect(of({ 'lex:sagwa': row({ s: 2, b: 2, n: 2, r: 1 }) }).wordsKnown).toBe(1);
+  });
+
   it('keeps a retired word it knew: the counter only grows', () => {
     expect(of({ 'lex:old': row({ s: 3, n: 2 }) }, snap(), new Set(['lex:old'])).wordsKnown).toBe(1);
   });
@@ -110,6 +117,13 @@ describe('memorySummaryOf: mastery counts, Stage Checks and week points', () => 
     const m = of({});
     expect(m).toEqual({ wordsKnown: 0, readyToRefresh: 0, cellBestCounts: [0, 0, 0], stageChecks: 0, weekPoints: 0, topDue: [] });
     expect(MemorySummarySchema.parse(m)).toEqual(m);
+  });
+
+  it('says the review surface is on only when it is (reports show the items ready to refresh only then)', () => {
+    expect(of({})).not.toHaveProperty('reviewOn');
+    const on = memorySummaryOf({ rows: {}, retired: new Set(), snapshot: snap(), today: TODAY, reviewOn: true });
+    expect(on.reviewOn).toBe(true);
+    expect(MemorySummarySchema.parse(on)).toEqual(on);
   });
 
   it('caps every count at the schema bound, so a block always parses', () => {

@@ -15,7 +15,7 @@ import {
   type ReportPeriod,
 } from '../schemas/report';
 import type { ReportSummary } from '../schemas/report-response';
-import { teachingOrder } from './learner-report';
+import { readyToRefreshOf, teachingOrder } from './learner-report';
 import { addMonths, firstRowDayOf, lettersIn, monthOf, rowsFromOf, sumDays, todayFor, windowOf, type DaySums } from './windows';
 
 /**
@@ -295,7 +295,7 @@ export function classReport(input: ClassReportInput): ClassReport {
       const m = summary.memory;
       memory.learners += 1;
       memory.wordsKnown += m.wordsKnown;
-      memory.readyToRefresh += m.readyToRefresh;
+      memory.readyToRefresh += readyToRefreshOf(m);
       memory.levels = [memory.levels[0] + m.cellBestCounts[0], memory.levels[1] + m.cellBestCounts[1], memory.levels[2] + m.cellBestCounts[2]];
       memory.stageChecks += m.stageChecks;
     }

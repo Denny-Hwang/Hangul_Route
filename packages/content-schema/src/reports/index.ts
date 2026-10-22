@@ -38,6 +38,7 @@ export {
   type LearnerReportDetail,
   type LearnerReport,
   reportMemoryOf,
+  readyToRefreshOf,
   type ReportMemory,
 } from './learner-report';
 export {

@@ -124,10 +124,17 @@ export interface ReportMemory {
   stageChecks: number;
 }
 
+/** The items ready to refresh a report shows: the count while the profile has the review surface, else 0 (no line). */
+export function readyToRefreshOf(memory: NonNullable<ReportSummary['memory']>): number {
+  return memory.reviewOn === true ? memory.readyToRefresh : 0;
+}
+
 /** The report's memory counts, or null without a block or with every count at 0. Item ids and week points stay out. */
 export function reportMemoryOf(memory: ReportSummary['memory']): ReportMemory | null {
   if (!memory) return null;
-  const out: ReportMemory = { wordsKnown: memory.wordsKnown, readyToRefresh: memory.readyToRefresh, levels: [...memory.cellBestCounts], stageChecks: memory.stageChecks };
+  // Items ready to refresh only while the learner has the review surface (`reviewOn`): never a growing count the
+  // learner cannot act on (the `memoryRecord` shadow period).
+  const out: ReportMemory = { wordsKnown: memory.wordsKnown, readyToRefresh: readyToRefreshOf(memory), levels: [...memory.cellBestCounts], stageChecks: memory.stageChecks };
   const any = out.wordsKnown + out.readyToRefresh + out.levels[0] + out.levels[1] + out.levels[2] + out.stageChecks > 0;
   return any ? out : null;
 }

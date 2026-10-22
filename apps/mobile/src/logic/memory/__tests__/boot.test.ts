@@ -250,11 +250,18 @@ describe('the summary memory block (row CM-16)', () => {
   it('reaches the store for a learner who records, and is forgotten with the learner', async () => {
     memoryRecord(100);
     await refreshMemorySummary(LEARNER.id);
-    expect(fake.summary).toHaveBeenCalledWith(LEARNER.id);
+    // dailyReview is not in the copy (built-in pct 0): the shadow period, so the block says no review surface.
+    expect(fake.summary).toHaveBeenCalledWith(LEARNER.id, { reviewOn: false });
     expect(memorySummaryFor(LEARNER.id)).toMatchObject({ wordsKnown: 3, topDue: ['lex:bae~pear'] });
     notifyProfileRemoved(LEARNER.id);
     await settle();
     expect(memorySummaryFor(LEARNER.id)).toBeUndefined();
+  });
+
+  it('asks for the review surface flag of that profile once dailyReview is on for it', async () => {
+    useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { memoryRecord: { on: true, pct: 100 }, dailyReview: { on: true, pct: 100 } } } });
+    await refreshMemorySummary(LEARNER.id);
+    expect(fake.summary).toHaveBeenCalledWith(LEARNER.id, { reviewOn: true });
   });
 
   it('memoryRecord off, or a grown-up persona: no block, and the chunk is not asked', async () => {

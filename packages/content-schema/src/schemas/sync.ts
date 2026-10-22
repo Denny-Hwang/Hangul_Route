@@ -125,6 +125,12 @@ export const MemorySummarySchema = z.object({
   weekPoints: memoryCount,
   /** The review items due first, at most 8. */
   topDue: z.array(z.string().min(1).max(64)).max(8),
+  /**
+   * F-CURR-002 row CM-16: true while the profile has the review surface (`dailyReview`, row CM-14), so a grown-up's
+   * report shows `readyToRefresh` only when the learner can act on it; absent (false) during the `memoryRecord`
+   * shadow period, when seeded items fall due with nothing asking them (section 4.8 shadow rule).
+   */
+  reviewOn: z.literal(true).optional(),
 });
 export type MemorySummary = z.infer<typeof MemorySummarySchema>;
 

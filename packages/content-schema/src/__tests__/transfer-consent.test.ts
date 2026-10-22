@@ -433,7 +433,9 @@ describe('what a class sender sees of a note (F-FEEDBACK-001 section 7.7, OD-8)'
     expect(TEACHER_FULL_SCOPE_ITEMS.memory).toBe('memory');
     expect(TRANSFER_CONSENT_TEXT.en.items.memory).toBe('Words known, how well each episode is known and Stage Checks passed. Points this week and items ready to refresh');
     // It names every field of the memory block: wordsKnown, cellBestCounts, stageChecks, weekPoints, readyToRefresh and topDue.
-    expect(Object.keys(MemorySummarySchema.shape).sort()).toEqual(['cellBestCounts', 'readyToRefresh', 'stageChecks', 'topDue', 'weekPoints', 'wordsKnown']);
+    // `reviewOn` is no learning record: it only says whether `readyToRefresh` may be shown (the review surface is on).
+    expect(Object.keys(MemorySummarySchema.shape).sort()).toEqual(['cellBestCounts', 'readyToRefresh', 'reviewOn', 'stageChecks', 'topDue', 'weekPoints', 'wordsKnown']);
+    expect(MemorySummarySchema.shape.reviewOn.safeParse(false).success).toBe(false);
   });
 
   it('pins a hash for the current text that no earlier version shares', () => {

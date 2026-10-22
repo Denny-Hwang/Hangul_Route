@@ -86,8 +86,10 @@ export function startMemory(): () => void {
     backup: (profileId) => runtime().then((r) => r.backup(profileId)),
     restore: (profileId, memory) => runtime().then((r) => r.restore(profileId, memory, memoryRecordsFor(profileId))),
     pull: (learnerId) => (memoryRecordsFor(learnerId) ? runtime().then((r) => r.pull(learnerId)) : Promise.resolve()),
-    // Row CM-16: the summary's memory block, only while the profile records (a grown-up persona never has one).
-    summary: (profileId) => (memoryRecordsFor(profileId) ? runtime().then((r) => r.summary(profileId)) : Promise.resolve(undefined)),
+    // Row CM-16: the summary's memory block, only while the profile records (a grown-up persona never has one); it
+    // says whether the review surface is on, so reports show the items ready to refresh only then.
+    summary: (profileId) =>
+      memoryRecordsFor(profileId) ? runtime().then((r) => r.summary(profileId, { reviewOn: currFlagOn('dailyReview', profileId) })) : Promise.resolve(undefined),
   });
   const offSynced = onSynced((learnerId) => {
     if (memoryRecordsFor(learnerId)) void quietly((r) => r.sync(learnerId));
