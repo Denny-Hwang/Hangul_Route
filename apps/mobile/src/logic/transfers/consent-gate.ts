@@ -1,4 +1,5 @@
-import type { DeviceAttestKind, InboxTransfer, LearnerType, ProfileRole, TransferInitiator, TransferLearnerRoute } from '@hangul-route/content-schema';
+import type { DeviceAttestKind, GuestRecord, InboxTransfer, LearnerType, ProfileRole, TransferInitiator, TransferLearnerRoute } from '@hangul-route/content-schema';
+import { gateProfiles } from '../guest/guest-model';
 import { effectiveLearnerType, gateRequired } from '../profiles/learner-type';
 
 /**
@@ -27,6 +28,8 @@ export interface DeviceFacts {
   profile: ProfileLike;
   /** Every profile on the device (the gate depends on all of them, F-LEARN-001 L7). */
   profiles: readonly ProfileLike[];
+  /** [GU] GU-D14 (row GU-2): the device's guest record; a live one counts in the gate as a learner read as a child. */
+  guest?: GuestRecord | null;
   selfConsentAcceptedAt: string | null;
   parentPinHash: string | null;
   /** `account:pinCreatedAt` (epoch ms), else the PIN epoch `account:pinSetAt`; null for a PIN older than both keys, which counts as old enough. */
@@ -50,7 +53,7 @@ export function deviceAttest(d: DeviceFacts): AttestOutcome {
 }
 
 /** Whether a move action goes through the grown-up PIN screen (F-LEARN-001 L7, `gate-route.ts`). */
-const gatedOn = (d: DeviceFacts): boolean => gateRequired({ profiles: d.profiles, parentPinHash: d.parentPinHash });
+const gatedOn = (d: DeviceFacts): boolean => gateRequired({ profiles: gateProfiles(d.profiles, d.guest), parentPinHash: d.parentPinHash });
 
 // ---------------------------------------------------------------------------
 // Lenient inbox values (an older app, a newer server)

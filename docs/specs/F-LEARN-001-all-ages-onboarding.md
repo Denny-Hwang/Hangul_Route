@@ -125,6 +125,8 @@ export function pinRequiredForNewProfile(i: { learnerType: LearnerType; parentPi
   // learnerType === 'child' && parentPinHash === null
 ```
 
+[GU] Row GU-2 (`AMENDMENTS-GUEST-FIRST-LESSON.md` GU-D14): every `gateRequired` caller takes `gateProfiles(profiles, guest)` (`logic/guest/guest-model.ts`): while a guest lives (`hr:guest` with an id not on the profile list) it counts as one more learner whose `learnerType` is unset (read as `'child'`). The callers: `gateOpensDirectly` (`gate-route.ts`, every grown-up entry), the device gate marker (`logic/shell/device-gate.ts`), the transfer consent gate (`consent-gate.ts`), the placement report gate (`PlacementScreen.tsx`), the chooser's marker and `isSharedDevice` (`who.ts`). The wording readers of `deviceAudience` keep the profile list.
+
 `store/account-store.ts` gains (keys follow the file's `account:` convention, all via `platform/storage`):
 
 | State | Key | Meaning |
