@@ -35,6 +35,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.story.sequence.replay.play.cta': 'the standard Spanish player word "Reproducir", inside the 28-character cta budget',
   'learner.myRoute.gains.stars': '"Estrellas" (9) against "Stars" (5), a one-word label',
   'landing.waitlist.privacyLink': 'the document name "Política de privacidad", one letter over, a link inside the consent line',
+  'landing.home.hero.forParents':
+    'the console\'s inclusive "Soy madre, padre o tutor" (`console.signIn.create.affirm`) for "I\'m a parent", a text link on its own row (AMENDMENTS-SITE-NEWUSER appendix A; site text-link budget 36)',
+  'landing.captures.caption.home': '"Pantalla de inicio", one letter over, a caption under its capture that wraps (AMENDMENTS-SITE-NEWUSER §3.4)',
   'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
   'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',
   'learner.library.toFind.next': 'the standard Spanish word "Siguiente" (9) against "Next" (4), with its noun ("Siguiente tarjeta"); a label above the card that wraps',
@@ -322,10 +325,19 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       [
         'pill action',
         24,
-        ['landing.nav.start', 'landing.home.hero.start', 'landing.persona.parents.signIn', 'landing.persona.teachers.signIn', 'landing.persona.teachers.tryIt'],
+        ['landing.nav.start', 'landing.home.hero.start', 'landing.persona.teachers.tryIt'],
       ],
+      // [SN] AMENDMENTS-SITE-NEWUSER §3.5, §3.6: the grown-up pages' Create actions (the primary pill, which may take two
+      // lines at 320 px; measured on the mocks, the Create button ends on the 320 x 568 first screen in every locale).
+      ['create action', 34, ['landing.persona.parents.create', 'landing.persona.teachers.create']],
+      // [SN] §3.2: the phone header's Start pill sits beside Language and Sign in on one 320 px row.
+      ['header Start pill', 8, ['landing.nav.startShort']],
       // Text links that are not `cta` leaves, so the general CTA budget skips them (S-3 review 3).
-      ['text link', 36, ['landing.home.hero.grownUps', 'landing.persona.parents.learn.link']],
+      [
+        'text link',
+        36,
+        ['landing.home.hero.forParents', 'landing.home.hero.forTeachers', 'landing.persona.haveAccount', 'landing.persona.parents.learn.link'],
+      ],
       ['skip link and 404 action', 24, ['landing.nav.skip', 'landing.notFound.home', 'landing.notFound.start']],
     ];
     for (const locale of LOCALES) {

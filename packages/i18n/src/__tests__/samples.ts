@@ -917,4 +917,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.lecture.presets.chooser.showMore': [[8], [4]],
   // The learner app's grown-up Lecture mode card (AMENDMENTS-LECTURE-V2 row LV-6).
   'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
+  // The site's schools section and product captures (AMENDMENTS-SITE-NEWUSER row SN-1); samples stay Latin.
+  'landing.persona.teachers.schools.admins': [[2], [1]],
+  'landing.persona.teachers.schools.size': [[50, 'hello@example.com']],
+  'landing.persona.teachers.schools.sizeContract': [[50, 'hello@example.com']],
+  'landing.captures.discover': [['x', 'a']],
+  'landing.captures.card': [['x', 'horangi', 'tiger']],
 };

@@ -96,6 +96,11 @@ export const landing = {
     teachers: 'Teachers',
     signIn: 'Sign in',
     start: 'Start learning',
+    /**
+     * [SN] The header's Start pill (AMENDMENTS-SITE-NEWUSER §3.2): its visible label. Its accessible name is `start`,
+     * which contains this label in every locale (WCAG 2.5.3 Label in Name).
+     */
+    startShort: 'Start',
     skip: 'Skip to content',
   },
   /**
@@ -110,7 +115,9 @@ export const landing = {
       title: 'Learn Hangul from zero, at any age.',
       lead: 'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
       start: 'Start learning',
-      grownUps: 'Parent or teacher? Find your page',
+      /** [SN] The hero's two direct links to `/parents` and `/teachers` (AMENDMENTS-SITE-NEWUSER §3.3). */
+      forParents: "I'm a parent",
+      forTeachers: "I'm a teacher",
       /** Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). */
       facts: 'Runs in your browser · Nothing to install · The app works offline on most devices after your first visit',
       /** A no-break space keeps the letter and its romanization on one line when the bubble wraps. */
@@ -152,6 +159,11 @@ export const landing = {
       /** The section's visually hidden heading. */
       label: 'Our promises',
       items: { ads: 'No ads, ever', safety: 'Child safety first', noRed: 'No red marks' },
+    },
+    /** [SN] The closing band (AMENDMENTS-SITE-NEWUSER §3.3 item 5): an invitation to Start learning, not a form. */
+    closing: {
+      title: 'Ready for your first Korean letter?',
+      body: 'Stage 1 is free. No email or password. Your first quest takes about five minutes.',
     },
     news: {
       title: 'Get the launch news',
@@ -258,7 +270,8 @@ export const landing = {
     parents: {
       title: 'For parents and caregivers',
       lead: "For parents, grandparents and every caregiver: short, kind lessons that keep your learner's data private.",
-      signIn: 'Sign in as a parent',
+      /** [SN] The primary action: the create view of /signin (AMENDMENTS-SITE-NEWUSER §3.5). */
+      create: 'Create a free family space',
       learn: {
         title: 'What they learn',
         body: 'The Korean alphabet first: reading, listening and writing, in five-minute quests.',
@@ -307,7 +320,8 @@ export const landing = {
     teachers: {
       title: 'For teachers',
       lead: 'Students join with a code, you plan the week, and everyone learns at their own pace.',
-      signIn: 'Sign in as a teacher',
+      /** [SN] The primary action: the create view of /signin (AMENDMENTS-SITE-NEWUSER §3.6). */
+      create: 'Create a free class',
       tryIt: 'Try it as a learner',
       setup: {
         title: 'Set up in minutes',
@@ -334,6 +348,23 @@ export const landing = {
         browse: 'With a class or school plan, preview every lesson exactly as students see it.',
         lecture: 'Lecture mode: teach from the front on a projector or TV, with ready-made lessons.',
       },
+      /**
+       * [SN] "Use it across a whole school" (AMENDMENTS-SITE-NEWUSER §3.6, SN-D8). Every fact is live, so no claim gates
+       * it; the caps and the address are passed in (`SCHOOL_ADMIN_CAP`, `SCHOOL_LEARNER_CAP`, `CONTACT_EMAIL`). While
+       * plans are not on sale (`paidPlans: 'coming'`) `ownerPlan` is not shown and `size` invites a message without
+       * naming a product; `ownerPlan` follows `admins` once `paidPlans` is `'inApp'`. `sizeContract` waits for OD-SN-13.
+       */
+      schools: {
+        title: 'Use it across a whole school',
+        space: 'Create a school space, then invite teachers or create classes for them.',
+        admins: (admins: number) =>
+          `Add up to ${plural('en', admins, { one: `${admins} more administrator`, other: `${admins} more administrators` })} with an invite link. They can open class lists and reports and move students between the school's classes.`,
+        ownerPlan: "The school's owner manages the plan.",
+        moves: 'Move a student to another class in the school. Their family is told, and the student never types a new code.',
+        size: (students: number, email: string) => `A school holds up to ${students} students. Need more? Write to ${email}.`,
+        sizeContract: (students: number, email: string) =>
+          `A school holds up to ${students} students. Need more? Write to ${email} about a School Contract.`,
+      },
       privacy: {
         title: 'Privacy for classes',
         bullets: { initials: 'Show initials only on the class list.', ads: 'No ads, and no data sold.' },
@@ -347,12 +378,31 @@ export const landing = {
     /** Section headings the persona pages share: the plans block's h2 and the folded questions' visually hidden h2. */
     plansTitle: 'Plans',
     faqTitle: 'Questions',
+    /** [SN] The text link under a grown-up page's Create action (AMENDMENTS-SITE-NEWUSER §3.5, §3.6). */
+    haveAccount: 'Already have an account? Sign in',
     /** The one line above each persona page's closing action. */
     closing: {
       learners: 'Ready for your first letter?',
       parents: "See your learner's week in one place.",
       teachers: 'Bring Hangul to your class this week.',
     },
+  },
+  /**
+   * [SN] Alt text and captions of the product captures (AMENDMENTS-SITE-NEWUSER §3.13): real screens of the app in
+   * the page's locale. Taught Korean (the hero's letter, the card's word) is passed in with its romanization, and
+   * the card's meaning is its gloss in the UI language.
+   */
+  captures: {
+    discover: (letter: string, romanization: string) =>
+      `The app on a phone, in the first quest: new letters, starting with ${letter} (${romanization}), each with a button to hear it.`,
+    home: "The learner's home screen: a greeting, the streak and cards so far, and the next lesson with a Start button.",
+    game: 'A mini-game: hear a sound and tap the matching letter.',
+    card: (word: string, romanization: string, meaning: string) => `A Korean heritage card: ${word} (${romanization}), meaning ${meaning}.`,
+    report: 'A weekly report for one learner: days practiced, what went well and what to practice next.',
+    classList: "The class page: this week's summary for the whole class.",
+    lectureSlide: 'A Lecture mode slide on a big screen: a letter, its stroke order and its sound.',
+    /** The short visible captions under the three `/learners` captures. */
+    caption: { home: 'Home screen', game: 'A mini-game', card: 'A heritage card' },
   },
   /**
    * The heritage-card grid in the `/learners` cards fold (`HeritageCardsPreview`). The Korean, romanization, gloss and
