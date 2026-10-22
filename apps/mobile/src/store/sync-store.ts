@@ -16,6 +16,7 @@ import {
 } from '../logic/sync/learner-profile';
 import { buildActivity, deviceLocalDay } from '../logic/reports/activity';
 import { syncLearner } from '../logic/sync/engine';
+import { pullMemoryAfterAdopt } from '../logic/sync/memory-hook';
 import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
 import { createSyncScheduler } from '../logic/sync/scheduler';
@@ -583,6 +584,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       update(learnerId, { secret, rev: server?.rev ?? 0, status: 'idle', lastError: null, ...(rescueCode ? { rescueCode } : {}) });
       // Merging may have added local-only progress; push it back.
       get().requestSync(learnerId);
+      // F-CURR-002 section 4.8: the memory store pulls the learner's shards with the new credentials (row CM-12).
+      pullMemoryAfterAdopt(learnerId);
       return plan;
     },
 

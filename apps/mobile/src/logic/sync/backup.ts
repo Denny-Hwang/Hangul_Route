@@ -3,6 +3,7 @@ import {
   BACKUP_VERSION,
   BackupFileSchema,
   type BackupFile,
+  type MemoryBackup,
   type Profile,
   type ProgressSnapshot,
 } from '@hangul-route/content-schema';
@@ -21,14 +22,17 @@ function withoutPinHash(profile: Profile): Profile {
 /**
  * Server-less backup file — F-SYNC-001 §3.6. A parent can keep this file
  * anywhere; `decodeBackup` never throws. [OA] The exported profile carries no `parentPinHash`.
+ * F-CURR-002 section 4.8 (row CM-11): the memory store's states go in an optional `memory` key, only
+ * when there are any (`memoryForBackup`); `BACKUP_VERSION` stays 1 and an older app ignores the key.
  */
-export function encodeBackup(profile: Profile, snapshot: ProgressSnapshot, exportedAt: Date): string {
+export function encodeBackup(profile: Profile, snapshot: ProgressSnapshot, exportedAt: Date, memory?: MemoryBackup): string {
   const file: BackupFile = {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt: exportedAt.toISOString(),
     profile: withoutPinHash(profile),
     snapshot,
+    ...(memory && Object.keys(memory).length > 0 ? { memory } : {}),
   };
   return JSON.stringify(file, null, 2);
 }
