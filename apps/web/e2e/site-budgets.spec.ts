@@ -1,6 +1,5 @@
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { homePath, openForcedHome } from './forced-claims';
 
 /**
  * Length and glance budgets of the layered site (F-SITE-002 §3.11), over the static export, in Chromium.
@@ -427,45 +426,26 @@ for (const lang of ['en', 'es', 'ko'] as const) {
 }
 
 /**
- * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2 (row GU-6): the home with the `guestLesson` claim forced on through
- * its `claims` prop (`forced-claims.ts`; the export keeps the claim off until GU-7). AMENDMENTS-SITE-NEWUSER section
- * 3.11's first screens hold in every locale: at 375 x 812 the two grown-up links and the brand name, at 320 x 568 the
- * header, the h1, the lead and Start learning. The hero line sits right under the facts line, above the grown-up links.
- * The home stays inside its height and word budgets with the line (es and ko with their 10 % allowance); spec section
- * 13.2 leaves no budget change open, and pre-approves one fallback at 960 px and wider if this run is over. The values are
- * recorded (annotations) for GU-7, which re-measures them with the shipped claim.
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2 (rows GU-6 and GU-7): the home as shipped since GU-7, with the
+ * `guestLesson` claim on in `SITE_CLAIMS` (GU-6 measured it forced on through the page's `claims` prop; GU-7 measures
+ * the export itself). AMENDMENTS-SITE-NEWUSER section 3.11's first screens hold in every locale: at 375 x 812 the two
+ * grown-up links and the brand name, at 320 x 568 the header, the h1, the lead and Start learning. The hero line sits
+ * right under the facts line, above the grown-up links. The home stays inside its height and word budgets with the line
+ * (es and ko with their 10 % allowance); no budget changes (section 13.2). The values are recorded as annotations.
  */
+const homePath = (locale: 'en' | 'es' | 'ko'): string => (locale === 'en' ? '/' : `/${locale}`);
+async function openHome(page: Page, locale: 'en' | 'es' | 'ko'): Promise<void> {
+  await page.goto(homePath(locale));
+  await page.waitForLoadState('load');
+}
+
 for (const lang of ['en', 'es', 'ko'] as const) {
   const t = getMessages(lang).landing;
   const hero = t.home.hero;
-  test.describe(`[GU] ${homePath(lang)} with the guestLesson claim forced on`, () => {
-    test('the harness measures what ships: with today\'s claims its home is the export\'s home, box for box', async ({ page }) => {
-      const measure = async (): Promise<number[]> =>
-        page.evaluate(() => {
-          const out = [document.documentElement.scrollHeight];
-          for (const selector of ['header.hr-site-header', '#home-title', '.hr-site-lead', '.hr-site-hero-links', '#home-how', '.hr-site-band']) {
-            const r = document.querySelector(selector)?.getBoundingClientRect();
-            out.push(Math.round(r?.top ?? -1), Math.round(r?.height ?? -1));
-          }
-          return out;
-        });
-      for (const [width, height] of [
-        [375, 812],
-        [1280, 800],
-      ] as const) {
-        await page.setViewportSize({ width, height });
-        await page.goto(homePath(lang));
-        const shipped = await measure();
-        await openForcedHome(page, lang, 'off');
-        await expect(page.locator('.hr-site-hero-guest')).toHaveCount(0);
-        const harness = await measure();
-        for (const [i, value] of harness.entries()) expect(Math.abs(value - (shipped[i] ?? NaN)), `${width}: value ${i}`).toBeLessThanOrEqual(2);
-      }
-    });
-
+  test.describe(`[GU] ${homePath(lang)} with the guestLesson claim as shipped (on)`, () => {
     test('at 375 x 812: the grown-up links and the brand name on the first screen; the line under the facts line, above the links', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 812 });
-      await openForcedHome(page, lang, 'on');
+      await openHome(page, lang);
       const main = page.locator('main');
       const line = main.getByText(hero.guest, { exact: true });
       await expect(line).toBeVisible();
@@ -491,7 +471,7 @@ for (const lang of ['en', 'es', 'ko'] as const) {
 
     test('at 320 x 568: the header, the h1, the lead and Start learning on the first screen', async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 568 });
-      await openForcedHome(page, lang, 'on');
+      await openHome(page, lang);
       const parts: Array<[string, Locator]> = [
         ['header', page.locator('header.hr-site-header')],
         ['h1', page.getByRole('heading', { level: 1, name: hero.title })],
@@ -513,10 +493,10 @@ for (const lang of ['en', 'es', 'ko'] as const) {
         [1280, 800, HOME.wideMax],
       ] as const) {
         await page.setViewportSize({ width, height });
-        await openForcedHome(page, lang, 'on');
+        await openHome(page, lang);
         const scroll = await page.evaluate(() => document.documentElement.scrollHeight);
         const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
-        test.info().annotations.push({ type: `guestLesson on, ${width}`, description: `height ${scroll} px (budget ${allow(max)}), ${words} words (budget ${allow(HOME.words)})` });
+        test.info().annotations.push({ type: `guestLesson shipped on, ${width}`, description: `height ${scroll} px (budget ${allow(max)}), ${words} words (budget ${allow(HOME.words)})` });
         expect(scroll, `${width} px tall`).toBeLessThanOrEqual(allow(max));
         expect(words).toBeGreaterThan(50);
         expect(words, 'visible words').toBeLessThanOrEqual(allow(HOME.words));
