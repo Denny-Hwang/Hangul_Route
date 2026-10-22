@@ -1,3 +1,4 @@
+import type { InstallEnv } from '../logic/pwa/install-guide';
 import type { PwaEvent, PwaListener } from './pwa';
 
 export type { PwaEvent, PwaListener };
@@ -52,13 +53,15 @@ function shell(): ShellWindow | null {
   return w && typeof w.addEventListener === 'function' ? w : null;
 }
 
-export function installEnv(): { userAgent: string; standalone: boolean; hasPromptEvent: boolean; isWeb: boolean } {
+export function installEnv(): InstallEnv {
   const w = shell();
+  const touch = w?.navigator?.maxTouchPoints;
   return {
     userAgent: w?.navigator?.userAgent ?? '',
     standalone: isStandalone(),
     hasPromptEvent: !!w?.__hrInstallPrompt,
     isWeb: true,
+    maxTouchPoints: typeof touch === 'number' ? touch : 0,
   };
 }
 

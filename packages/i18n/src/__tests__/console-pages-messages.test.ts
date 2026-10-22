@@ -14,7 +14,7 @@ const c = getMessages('en').console;
 
 describe('console shell (ui.tsx)', () => {
   it('keeps the header words', () => {
-    expect(c.shell.home).toBe('Console');
+    expect(c.shell.home).toBe('Home');
     expect(c.shell.signOut.cta).toBe('Sign out');
     expect(c.shell.noApi).toBe('The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.');
   });
@@ -47,18 +47,30 @@ describe('start page (teach/start/page.tsx, routing.ts ROLE_CARDS and prefillNam
     expect(s.title).toBe('New space');
     expect(s.roleTitle).toBe('Who are you?');
     expect(s.roleLabel).toBe('Role');
-    expect(s.roles.family).toEqual({ title: 'Parent / caregiver', line: 'Home — my kids' });
+    expect(s.roles.family).toEqual({ title: 'Parent / caregiver', line: 'At home — the learners in my family' });
     expect(s.roles.class).toEqual({ title: 'Teacher', line: 'My class' });
     expect(s.roles.school).toEqual({ title: 'School admin', line: 'Teachers and classes' });
     expect(s.continue.cta).toBe('Continue');
     expect(s.back.cta).toBe('Back');
   });
 
+  it('any-age words on the role and name steps, in en, es and ko (app-first-run, 2026-10-21)', () => {
+    // A family's learners may be adults, and a class code is for students of any age.
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const s = getMessages(locale).console.start;
+      for (const line of [s.roles.family.line, s.classJoinHint]) expect(line, locale).not.toMatch(/\bkids?\b|child|niñ|아이|어린이/i);
+    }
+    expect(getMessages('es').console.start.roles.family.line).toBe('En casa: quienes aprenden en mi familia');
+    expect(getMessages('es').console.start.classJoinHint).toBe('Los estudiantes se unen con un código. No necesitan una cuenta.');
+    expect(getMessages('ko').console.start.roles.family.line).toBe('집에서 — 우리 가족 학습자');
+    expect(getMessages('ko').console.start.classJoinHint).toBe('학생은 코드로 참여해요. 계정은 필요 없어요.');
+  });
+
   it('keeps the name step, one title per kind', () => {
     const s = c.start;
     expect(s.nameTitle).toEqual({ family: 'Name your family', class: 'Name your class', school: 'Name your school' });
     expect(s.nameLabel).toBe('Space name');
-    expect(s.classJoinHint).toBe('Students join with a code — no accounts for kids.');
+    expect(s.classJoinHint).toBe('Students join with a code. They do not need an account.');
     expect(s.create.cta).toBe('Create');
     expect(s.creating.cta).toBe('Creating…');
     expect(s.signInAgain).toBe('Please sign in again.');

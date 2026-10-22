@@ -72,6 +72,8 @@ export const BILLING_CSS = `
 .hr-bill-includes{display:flex;flex-direction:column;gap:${rem(spacing.xs)}}
 .hr-bill-includes li{display:flex;gap:${rem(spacing.sm)};align-items:flex-start;font-size:${rem(typography.size.bodySm)}}
 .hr-bill-includes svg{flex:none;margin-top:${rem(spacing.xxs)}}
+.hr-bill-free{display:flex;gap:${rem(spacing.sm)};align-items:flex-start;color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)}}
+.hr-bill-free svg{flex:none;margin-top:${rem(spacing.xxs)}}
 .hr-bill-price{font-size:${rem(typography.size.prompt)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
 .hr-bill-price-promo{font-size:${rem(typography.size.body)}}
 .hr-bill-disclosure>summary{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};color:${colors.brand.secondaryDark};font-weight:${typography.weight.semibold};cursor:pointer;list-style:none}
@@ -393,6 +395,19 @@ export function AddPlanSection({
         ))}
       </div>
     </section>
+  );
+}
+
+/**
+ * "Free for everyone: reports and notes." once under the offers (app-first-run, 2026-10-21): reports and notes come
+ * with every plan, the free one too, so no offer lists them as what it adds.
+ */
+export function FreeForEveryone({ text }: { text: string }): JSX.Element {
+  return (
+    <p className="hr-bill-free" data-testid="bill-free-for-everyone">
+      <IconSvg name="check" size={GLYPH} color={colors.feedback.success} />
+      <span>{text}</span>
+    </p>
   );
 }
 

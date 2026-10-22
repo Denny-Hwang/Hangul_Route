@@ -235,6 +235,8 @@ Wireframe `library/cards-collected-first.md`; mock `design/screens/learner-shell
 
 The device's gated area has one name in every place that leads to it or speaks of it: **Grown-up area** / **Zona de adultos** / **어른 공간**. `caregiver.audience.family.zoneLabel` and `.pinVerifyTitle` ("Grown-up zone"), `caregiver.dashboard.title` ("Family Dashboard") change to it; the lines that already say "grown-up area" stay. The row that opens the web pages, "Grown-up home", becomes **Account pages** (`caregiver.grownUpHome.title`, `learner.profile.grownUpHome.title` and `.selfTitle`), so no second "grown-up" name is left. A self-only device still never says "grown-up" (**Account & backup**).
 
+2026-10-21 (app-first-run): the browser tab of those web pages (`console.docTitle.console`) carries the same row name, **Account pages — Hangul Route** / **Páginas de la cuenta — Hangul Route** / **계정 페이지 — Hangul Route** (it said "Console — Hangul Route"), so the tab never gives the web pages a second grown-up name.
+
 ### 9.5 "Got a class code?"
 
 A link row on Profile, **Got a class code?** with the line "Join a class or a family with the code you were given." It opens the existing Join screen (`JoinSpace`, F-SPACE-001; not gated, as the Classes & family card's Join is today), so a learner does not need to find the card that moved to the Grown-up area.
