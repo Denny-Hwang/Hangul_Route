@@ -26,9 +26,12 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 const APP_URL = 'https://app.hangulroute.com';
-/** Start learning: the app root, with or without ?lang= (Sign in also links to the app host since F-SITE-002 S-10). */
-const isStartLearning = (href: string): boolean => href === APP_URL || href.startsWith(`${APP_URL}?`);
-const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '');
+/**
+ * Start learning: the app root, with or without ?lang= (Sign in also links to the app host since F-SITE-002 S-10), and
+ * with the `try=1` boot intent while the `guestLesson` claim is on ([GU] AMENDMENTS-GUEST-FIRST-LESSON GU-7).
+ */
+const isStartLearning = (href: string): boolean => href === APP_URL || href.startsWith(`${APP_URL}?`) || href.startsWith(`${APP_URL}/?`);
+const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => (m[1] ?? '').replace(/&amp;/g, '&'));
 
 type Meta = ReturnType<typeof siteMetadataFor>;
 const EN_PAGES: Record<SitePage, () => Promise<{ generateMetadata: () => Meta }>> = {
@@ -70,7 +73,7 @@ describe('every site page exports its own metadata', () => {
 });
 
 describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers them', () => {
-  it('the footer switcher lists all three, no banner in the static HTML, and Start learning goes to the app as it is', () => {
+  it('the footer switcher lists all three, no banner in the static HTML, and Start learning goes to the app (with try=1, GU-7)', () => {
     const html = renderToStaticMarkup(<LandingPage locale="en" />);
     expect(html).toContain(`aria-label="${getMessages('en').landing.footer.language}"`);
     expect(html).toContain('href="/" hrefLang="en"');
@@ -78,7 +81,7 @@ describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers
     expect(html).toContain('href="/ko" hrefLang="ko"');
     expect(html).not.toContain('<aside');
     // Header, hero, the closing band ([SN] AMENDMENTS-SITE-NEWUSER §3.3) and footer.
-    expect(hrefs(html).filter(isStartLearning)).toEqual([APP_URL, APP_URL, APP_URL, APP_URL]);
+    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(4).fill(`${APP_URL}/?try=1`));
   });
 
   it('the switcher renders nothing with one locale', () => {
@@ -90,10 +93,10 @@ describe('es and ko ship (F-I18N-001 rows 15b / 16b): the English landing offers
   });
 });
 
-describe('Start learning from /es and /ko hands the locale to the app (?lang=): header, hero, closing band and footer', () => {
+describe('Start learning from /es and /ko hands the locale to the app (?lang=, then try=1 since GU-7): header, hero, closing band and footer', () => {
   it.each(['es', 'ko'] as const)('%s', (locale) => {
     const html = renderToStaticMarkup(<LandingPage locale={locale} />);
-    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(4).fill(`${APP_URL}?lang=${locale}`));
+    expect(hrefs(html).filter(isStartLearning)).toEqual(Array(4).fill(`${APP_URL}/?lang=${locale}&try=1`));
   });
 });
 

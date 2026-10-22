@@ -8,12 +8,10 @@ import { questsAll } from '../../src/content/quests';
 
 /**
  * [GU] AMENDMENTS-GUEST-FIRST-LESSON row GU-5 (sections 6.1, 9.1, 9.2, 10, 14 and 19): the chooser's guest tiles and
- * People on this device's first-quest row, on the learner export. The guest switch is off until row GU-7, so this runs
- * on a bundle built with it on (the chooser is on by default since OA-10), with a sync API that never reaches a real
- * host:
- *
- *   EXPO_PUBLIC_GUEST_LESSON=1 EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
- *   E2E_GUEST=1 pnpm --filter @hangul-route/mobile exec playwright test who-guest
+ * People on this device's first-quest row, on the learner export. The chooser is on by default since OA-10 and the
+ * guest switch since GU-7, so this runs on the release build (`build:web`) in every pull request's shards (any sync
+ * call is answered by the mock below; the release build makes none). A bundle built with the guest kill switch off
+ * skips it with `E2E_GUEST=0`.
  *
  * Covered: a device with 2 profiles, `/?try=1` opens the chooser with Try the first quest, and ㅏ shows in 3 taps (G1:
  * Start learning, the tile, Continue on Hoya's hello); nobody is selected (CS-G4); the tile's start closes the grown-up
@@ -25,7 +23,7 @@ import { questsAll } from '../../src/content/quests';
  * owner sets a PIN and keeps the guest from People on this device, and the quest's card is in the new learner's
  * Library (G2); and Remove the first quest on that PIN setup opens the Grown-up area directly, as before the guest.
  */
-test.skip(process.env.E2E_GUEST !== '1', 'needs a learner build with EXPO_PUBLIC_GUEST_LESSON=1 (E2E_GUEST=1); the switch is off until GU-7');
+test.skip(process.env.E2E_GUEST === '0', 'a build with the kill switch EXPO_PUBLIC_GUEST_LESSON=false (E2E_GUEST=0)');
 test.use({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block' });
 
 const en = getMessages('en');
