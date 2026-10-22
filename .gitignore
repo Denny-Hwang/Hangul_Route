@@ -92,5 +92,7 @@ apps/mobile/src/content/__generated__/lesson-chunks/
 packages/content-schema/src/catalog/catalog.generated.ts
 apps/web/src/data/lecture-catalogue.generated.ts
 apps/web/src/data/catalogue-titles.generated.ts
+apps/mobile/src/content/__generated__/review-items-index.ts
+apps/mobile/src/content/__generated__/review-item-chunks/
 # The per-stage modules that F-CURR-002 row CM-5 retired (build-lessons.mjs removes a stale one).
 apps/mobile/src/content/__generated__/lessons-stage*.ts
