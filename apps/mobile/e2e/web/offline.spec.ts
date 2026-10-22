@@ -152,6 +152,14 @@ test('grown-up pages are never cached, show the offline page without a network, 
     await expect(page.locator('link[rel="manifest"]'), url).toBeAttached();
     expect(await page.evaluate(() => typeof (window as Window & { __hrApplyUpdate?: unknown }).__hrApplyUpdate), url).toBe('function');
     await expect(page.getByRole('heading', { name: "You're offline" }), url).toHaveCount(0);
+    // The presenter and All lessons are chunks of their own (F-CURR-002 §10): offline each loads from the
+    // precache and mounts its own screen, never the waiting or crash screen.
+    const root = { '/present': 'PresenterApp', '/browse': 'BrowseApp' }[url];
+    if (root === undefined) continue;
+    if (url === '/present') await expect(page.getByTestId('presenter-home'), url).toBeVisible();
+    else await expect(page.getByTestId('browse-access').or(page.getByTestId('browse-route')).first(), url).toBeVisible();
+    const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+    expect(loaded.filter((p) => new RegExp(`/_expo/static/js/web/${root}-[0-9a-f]{32}\\.js$`).test(p)), url).toHaveLength(1);
   }
   // /teacher is a plain learner path: the learner home itself.
   await expect(page.getByText('Hi, Suni!')).toBeVisible();

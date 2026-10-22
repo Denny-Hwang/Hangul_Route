@@ -6,10 +6,10 @@ import { setDocumentLang } from '../platform/locale';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 
 /**
- * Hooks over the tested locale store and `getMessages` (F-I18N-001 §3.2). No unit
- * test of their own — the mobile vitest config cannot render hooks, like
- * `platform/motion.ts` — and `e2e/web/locale.spec.ts` exercises them. Business
- * logic never imports these: it takes a message subtree or a locale as a parameter.
+ * Hooks over the tested locale store and `getMessages` (F-I18N-001 §3.2). The render
+ * tests `screens/__tests__/use-locale-{grace,titles,packs}.test.tsx` cover their chunk
+ * gates, and `e2e/web/locale.spec.ts` exercises them in the app. Business logic never
+ * imports these: it takes a message subtree or a locale as a parameter.
  */
 
 /** The locale the screens last drew in: kept while a newly chosen locale's lesson titles or locale chunk load. */
