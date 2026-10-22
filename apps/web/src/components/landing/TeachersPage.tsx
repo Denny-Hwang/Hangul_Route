@@ -1,4 +1,4 @@
-import { SCHOOL_ADMIN_CAP, SCHOOL_LEARNER_CAP } from '@hangul-route/content-schema';
+import { SCHOOL_ADMIN_CAP } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { CONTACT_EMAIL } from '../../data/contact';
@@ -40,8 +40,8 @@ export interface TeachersPageProps {
  * how the class is doing sit side by side on wide screens, the class section adding one line per live claim (the
  * browse line also needs paid plans on sale). Then the media row (the class page under `teacherReports`, the Lecture
  * mode slide under `lectureMode`; one alone takes the row, none leaves no row) and "Use it across a whole school"
- * (every fact live, so no claim gates it; the caps from content-schema, the address from `data/contact.ts` as plain
- * text). While plans are not on sale the administrators line names no plan and the size line names no product
+ * (every fact live, so no claim gates it; the administrator cap from content-schema, the address from `data/contact.ts`
+ * as plain text; no school seat figure, owner decision (b) 2026-10-21). While plans are not on sale the administrators line names no plan and the size line names no product
  * (OD-SN-13). Never a ranking, no price, no plan term.
  */
 export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: TeachersPageProps): JSX.Element {
@@ -59,7 +59,8 @@ export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
     ...(claims.paidPlans === 'inApp' ? [S.ownerPlan] : []),
     S.moves,
     // OD-SN-13: `sizeContract` (naming the School Contract) waits for the owner; until then no product is named.
-    S.size(SCHOOL_LEARNER_CAP, CONTACT_EMAIL),
+    // OD-SN-11 / owner decision (b) 2026-10-21: no seat figure (the school cap is also the free school limit).
+    S.size(CONTACT_EMAIL),
   ];
   const classLines = [
     T.class.body,

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FAMILY_LIFETIME_LEARNERS, GROUP_LICENSE_LEARNERS, SCHOOL_ADMIN_CAP, SCHOOL_LEARNER_CAP } from '@hangul-route/content-schema';
-import { getMessages } from '@hangul-route/i18n';
+import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LearnersPage } from '../../components/landing/LearnersPage';
@@ -200,7 +200,8 @@ function linesOf(html: string, title: string): string[] {
   const visible = section.replace(/<span aria-hidden="true"[^>]*>[\s\S]*?<\/span>/g, '');
   return [...visible.matchAll(/<(p|li)\b[^>]*>([\s\S]*?)<\/\1>/g)].map((m) => textOf(m[2] ?? '').trim());
 }
-const render = (Page: typeof ParentsPage, claims?: Readonly<SiteClaims>): string => renderToStaticMarkup(<Page locale="en" claims={claims} />);
+const render = (Page: typeof ParentsPage, claims?: Readonly<SiteClaims>, locale: UiLocale = 'en'): string =>
+  renderToStaticMarkup(<Page locale={locale} claims={claims} />);
 
 /**
  * The Plans block both grown-up pages share (§3.5, §3.6): the paid line only while plans are coming; host named once.
@@ -606,19 +607,19 @@ describe('[SN] /teachers: the schools section', () => {
   it('sits after the media row and before Privacy for classes, four lines in order, with every claim off too', () => {
     const titles = sectionTitles(coming);
     expect(titles.indexOf(T.schools.title)).toBe(titles.indexOf(T.privacy.title) - 1);
-    expect(linesOf(coming, S.title)).toEqual([S.space, S.admins(SCHOOL_ADMIN_CAP), S.moves, S.size(SCHOOL_LEARNER_CAP, CONTACT_EMAIL)]);
+    expect(linesOf(coming, S.title)).toEqual([S.space, S.admins(SCHOOL_ADMIN_CAP), S.moves, S.size(CONTACT_EMAIL)]);
     expect(linesOf(render(TeachersPage), S.title)).toEqual(linesOf(coming, S.title));
     const media = mainOf(render(TeachersPage)).indexOf('hr-site-media');
     expect(media).toBeGreaterThan(-1);
     expect(media).toBeLessThan(mainOf(render(TeachersPage)).indexOf('id="teachers-schools"'));
   });
 
-  it('the caps and the address come from their constants: 2 administrators, 50 students, the contact address as plain text', () => {
-    expect([SCHOOL_ADMIN_CAP, SCHOOL_LEARNER_CAP]).toEqual([2, 50]);
+  it('the administrator cap and the address come from their constants: 2 administrators, the contact address as plain text', () => {
+    expect(SCHOOL_ADMIN_CAP).toBe(2);
     expect(S.admins(SCHOOL_ADMIN_CAP)).toContain('2 more administrators');
     expect(S.admins(1)).toContain('1 more administrator ');
-    expect(S.size(SCHOOL_LEARNER_CAP, CONTACT_EMAIL)).toBe(`A school holds up to 50 students. Need more? Write to ${CONTACT_EMAIL}.`);
-    expect(S.size(7, 'x@example.org')).toBe('A school holds up to 7 students. Need more? Write to x@example.org.');
+    expect(S.size(CONTACT_EMAIL)).toBe(`Need room for more students? Write to ${CONTACT_EMAIL}.`);
+    expect(S.size('x@example.org')).toBe('Need room for more students? Write to x@example.org.');
     const section = /<section[^>]*aria-labelledby="teachers-schools"[\s\S]*?<\/section>/.exec(mainOf(coming))?.[0] ?? '';
     expect(section).toContain(CONTACT_EMAIL);
     expect(section).not.toMatch(/<a\b/);
@@ -628,13 +629,27 @@ describe('[SN] /teachers: the schools section', () => {
     expect(textOf(mainOf(coming))).not.toContain(S.ownerPlan);
     expect(textOf(mainOf(coming))).not.toContain('School Contract');
     const onSale = render(TeachersPage, { ...ALL_CLAIMS_OFF, paidPlans: 'inApp' });
-    expect(linesOf(onSale, S.title)).toEqual([S.space, S.admins(SCHOOL_ADMIN_CAP), S.ownerPlan, S.moves, S.size(SCHOOL_LEARNER_CAP, CONTACT_EMAIL)]);
-    expect(textOf(mainOf(onSale))).not.toContain(S.sizeContract(SCHOOL_LEARNER_CAP, CONTACT_EMAIL));
+    expect(linesOf(onSale, S.title)).toEqual([S.space, S.admins(SCHOOL_ADMIN_CAP), S.ownerPlan, S.moves, S.size(CONTACT_EMAIL)]);
+    expect(textOf(mainOf(onSale))).not.toContain(S.sizeContract(CONTACT_EMAIL));
+  });
+
+  // Owner decision (b) 2026-10-21 (OD-SN-11): no free-tier seat number on the site. `SCHOOL_LEARNER_CAP` also caps a
+  // school with no licence, so the schools section states no seat figure in any locale, with plans coming or on sale.
+  it.each(['en', 'es', 'ko'] as const)('%s: the schools section states no seat figure (owner decision (b))', (locale) => {
+    expect(SCHOOL_LEARNER_CAP).toBe(50);
+    for (const paidPlans of ['coming', 'inApp'] as const) {
+      const html = render(TeachersPage, { ...ALL_CLAIMS_OFF, paidPlans }, locale);
+      const section = /<section[^>]*aria-labelledby="teachers-schools"[\s\S]*?<\/section>/.exec(mainOf(html))?.[0] ?? '';
+      expect(section, `${locale} ${paidPlans}`).not.toBe('');
+      expect(textOf(section), `${locale} ${paidPlans}`).not.toMatch(new RegExp(`\\b${SCHOOL_LEARNER_CAP}\\b`));
+    }
+    const s = getMessages(locale).landing.persona.teachers.schools;
+    for (const line of [s.size(CONTACT_EMAIL), s.sizeContract(CONTACT_EMAIL)]) expect(line).not.toMatch(/\d/);
   });
 
   it.each(['en', 'es', 'ko'] as const)('%s: no price, no plan term, no age word', (locale) => {
     const s = getMessages(locale).landing.persona.teachers.schools;
-    for (const line of [s.title, s.space, s.admins(SCHOOL_ADMIN_CAP), s.ownerPlan, s.moves, s.size(SCHOOL_LEARNER_CAP, CONTACT_EMAIL)]) {
+    for (const line of [s.title, s.space, s.admins(SCHOOL_ADMIN_CAP), s.ownerPlan, s.moves, s.size(CONTACT_EMAIL)]) {
       expect(line, `${locale}: ${line}`).not.toMatch(/[$€£₩]\s?\d|\bper\s+(year|month)\b|yearly|annual|lifetime|al año|anual|연간|매년|평생|\bkids?\b|\bchild(ren)?\b/i);
     }
   });

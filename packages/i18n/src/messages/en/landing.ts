@@ -116,7 +116,7 @@ export const landing = {
       lead: 'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
       start: 'Start learning',
       /** [SN] The hero's two direct links to `/parents` and `/teachers` (AMENDMENTS-SITE-NEWUSER §3.3). */
-      forParents: "I'm a parent",
+      forParents: "I'm a parent or caregiver",
       forTeachers: "I'm a teacher",
       /** Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). */
       facts: 'Runs in your browser · Nothing to install · The app works offline on most devices after your first visit',
@@ -361,9 +361,9 @@ export const landing = {
           `Add up to ${plural('en', admins, { one: `${admins} more administrator`, other: `${admins} more administrators` })} with an invite link. They can open class lists and reports and move students between the school's classes.`,
         ownerPlan: "The school's owner manages the plan.",
         moves: 'Move a student to another class in the school. Their family is told, and the student never types a new code.',
-        size: (students: number, email: string) => `A school holds up to ${students} students. Need more? Write to ${email}.`,
-        sizeContract: (students: number, email: string) =>
-          `A school holds up to ${students} students. Need more? Write to ${email} about a School Contract.`,
+        // No seat figure: the school cap is also the free school limit (owner decision (b) 2026-10-21, OD-SN-11).
+        size: (email: string) => `Need room for more students? Write to ${email}.`,
+        sizeContract: (email: string) => `Need room for more students? Write to ${email} about a School Contract.`,
       },
       privacy: {
         title: 'Privacy for classes',

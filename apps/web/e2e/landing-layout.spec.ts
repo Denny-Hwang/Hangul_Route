@@ -162,7 +162,7 @@ test.describe('the site header: keyboard focus follows the visual order (F-SITE-
   test("[SN] / : the hero's grown-up links open /parents and /teachers; an old #who link still focuses the chooser", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: HEIGHT });
     await page.goto('/');
-    await page.locator('main').getByRole('link', { name: "I'm a parent", exact: true }).click();
+    await page.locator('main').getByRole('link', { name: "I'm a parent or caregiver", exact: true }).click();
     await expect(page).toHaveURL(/\/parents$/);
     await page.goto('/');
     await page.locator('main').getByRole('link', { name: "I'm a teacher", exact: true }).click();

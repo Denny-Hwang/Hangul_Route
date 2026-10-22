@@ -50,7 +50,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.hero.start).toBe('Start learning');
     // [SN] AMENDMENTS-SITE-NEWUSER §3.3: two direct links replace "Parent or teacher? Find your page".
     expect(lookup(l, 'home.hero.grownUps')).toBeUndefined();
-    expect(l.home.hero.forParents).toBe("I'm a parent");
+    expect(l.home.hero.forParents).toBe("I'm a parent or caregiver");
     expect(l.home.hero.forTeachers).toBe("I'm a teacher");
     expect(l.home.hero.facts).toBe('Runs in your browser · Nothing to install · The app works offline on most devices after your first visit');
     expect(l.home.hero.bubble('x', 'g/k')).toBe("Annyeong! Let's meet x\u00a0(g/k).");

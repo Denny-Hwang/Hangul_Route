@@ -250,9 +250,8 @@ export const landing = {
           `초대 링크로 관리자를 ${admins}명 더 추가할 수 있어요. 관리자는 반 명단과 리포트를 열고, 학교 안의 반끼리 학생을 옮길 수 있어요.`,
         ownerPlan: '플랜은 학교를 만든 분이 관리해요.',
         moves: '학생을 학교 안의 다른 반으로 옮길 수 있어요. 가족에게 알림이 가고, 학생은 새 코드를 입력하지 않아도 돼요.',
-        size: (students: number, email: string) => `학교 하나에 학생은 최대 ${students}명이에요. 더 필요하면 ${email} 주소로 문의해 주세요.`,
-        sizeContract: (students: number, email: string) =>
-          `학교 하나에 학생은 최대 ${students}명이에요. 더 필요하면 ${email} 주소로 학교 계약을 문의해 주세요.`,
+        size: (email: string) => `학생 자리가 더 필요하면 ${email} 주소로 문의해 주세요.`,
+        sizeContract: (email: string) => `학생 자리가 더 필요하면 ${email} 주소로 학교 계약을 문의해 주세요.`,
       },
       privacy: {
         title: '반을 위한 개인정보 보호',

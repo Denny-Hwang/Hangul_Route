@@ -919,8 +919,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.lecture.next': [['Mina'], ['Jo Ann']],
   // The site's schools section and product captures (AMENDMENTS-SITE-NEWUSER row SN-1); samples stay Latin.
   'landing.persona.teachers.schools.admins': [[2], [1]],
-  'landing.persona.teachers.schools.size': [[50, 'hello@example.com']],
-  'landing.persona.teachers.schools.sizeContract': [[50, 'hello@example.com']],
+  'landing.persona.teachers.schools.size': [['hello@example.com']],
+  'landing.persona.teachers.schools.sizeContract': [['hello@example.com']],
   'landing.captures.discover': [['x', 'a']],
   'landing.captures.card': [['x', 'horangi', 'tiger']],
 };

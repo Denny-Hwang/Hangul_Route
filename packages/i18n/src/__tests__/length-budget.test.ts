@@ -36,7 +36,7 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.myRoute.gains.stars': '"Estrellas" (9) against "Stars" (5), a one-word label',
   'landing.waitlist.privacyLink': 'the document name "Política de privacidad", one letter over, a link inside the consent line',
   'landing.home.hero.forParents':
-    'the console\'s inclusive "Soy madre, padre o tutor" (`console.signIn.create.affirm`) for "I\'m a parent", a text link on its own row (AMENDMENTS-SITE-NEWUSER appendix A; site text-link budget 36)',
+    'the console\'s inclusive "Soy madre, padre o tutor" (`console.signIn.create.affirm`) for "I\'m a parent or caregiver", a text link on its own row (AMENDMENTS-SITE-NEWUSER appendix A; site text-link budget 36)',
   'landing.captures.caption.home': '"Pantalla de inicio", one letter over, a caption under its capture that wraps (AMENDMENTS-SITE-NEWUSER §3.4)',
   'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
   'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',

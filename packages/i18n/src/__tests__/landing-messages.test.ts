@@ -346,7 +346,7 @@ describe('landing: the site-entry strings (AMENDMENTS-SITE-NEWUSER appendix A)',
   const APPENDIX_A: Record<'en' | 'es' | 'ko', Record<string, string>> = {
     en: {
       'nav.startShort': 'Start',
-      'home.hero.forParents': "I'm a parent",
+      'home.hero.forParents': "I'm a parent or caregiver",
       'home.hero.forTeachers': "I'm a teacher",
       'home.closing.title': 'Ready for your first Korean letter?',
       'home.closing.body': 'Stage 1 is free. No email or password. Your first quest takes about five minutes.',
@@ -426,9 +426,10 @@ describe('landing: the site-entry strings (AMENDMENTS-SITE-NEWUSER appendix A)',
       const S = t.persona.teachers.schools;
       expect(S.admins(2)).toContain('2');
       expect(S.admins(7)).toContain('7');
-      expect(S.size(50, 'x@example.com')).toContain('50');
-      expect(S.size(51, 'x@example.com')).toContain('x@example.com');
-      expect(S.sizeContract(50, 'x@example.com')).toContain('x@example.com');
+      // Owner decision (b) 2026-10-21 (OD-SN-11): the size lines take the address only and state no seat figure.
+      expect(S.size('x@example.com')).toContain('x@example.com');
+      expect(S.sizeContract('x@example.com')).toContain('x@example.com');
+      expect(`${S.size('x@example.com')} ${S.sizeContract('x@example.com')}`).not.toMatch(/\d/);
       expect(t.captures.discover('LETTER', 'ROMAN')).toContain('LETTER');
       expect(t.captures.discover('LETTER', 'ROMAN')).toContain('(ROMAN)');
       expect(t.captures.card('WORD', 'ROMAN', 'MEANING')).toContain('WORD');
@@ -439,8 +440,8 @@ describe('landing: the site-entry strings (AMENDMENTS-SITE-NEWUSER appendix A)',
       const outputs = [
         ...Object.keys(APPENDIX_A.en).map((path) => String(lookup(t, path))),
         t.persona.teachers.schools.admins(2),
-        t.persona.teachers.schools.size(50, 'x@example.com'),
-        t.persona.teachers.schools.sizeContract(50, 'x@example.com'),
+        t.persona.teachers.schools.size('x@example.com'),
+        t.persona.teachers.schools.sizeContract('x@example.com'),
         t.captures.discover('x', 'a'),
         t.captures.card('x', 'horangi', 'tiger'),
       ];
@@ -458,21 +459,24 @@ describe('landing: the site-entry strings (AMENDMENTS-SITE-NEWUSER appendix A)',
 
     it(`${locale}: no price, no plan term, no billing word in the schools lines while plans are not on sale`, () => {
       const S = t.persona.teachers.schools;
-      const lines = [S.title, S.space, S.admins(2), S.moves, S.size(50, 'x@example.com')].join(' ');
+      const lines = [S.title, S.space, S.admins(2), S.moves, S.size('x@example.com')].join(' ');
       expect(lines).not.toMatch(/\$|€|₩|\bprice\b|\bprecio\b|가격|\bper (year|month)\b|\bbilling\b|facturación|결제/i);
     });
   }
 
-  it('English pins: the plural administrators line and the size lines', () => {
+  it('English pins: the plural administrators line and the size lines (no seat figure)', () => {
     const S = l.persona.teachers.schools;
     expect(S.admins(2)).toBe("Add up to 2 more administrators with an invite link. They can open class lists and reports and move students between the school's classes.");
     expect(S.admins(1)).toBe("Add up to 1 more administrator with an invite link. They can open class lists and reports and move students between the school's classes.");
-    expect(S.size(50, 'hello@example.com')).toBe('A school holds up to 50 students. Need more? Write to hello@example.com.');
-    expect(S.sizeContract(50, 'hello@example.com')).toBe('A school holds up to 50 students. Need more? Write to hello@example.com about a School Contract.');
+    expect(S.size('hello@example.com')).toBe('Need room for more students? Write to hello@example.com.');
+    expect(S.sizeContract('hello@example.com')).toBe('Need room for more students? Write to hello@example.com about a School Contract.');
     expect(l.captures.discover('x', 'a')).toBe('The app on a phone, in the first quest: new letters, starting with x (a), each with a button to hear it.');
     expect(l.captures.card('x', 'horangi', 'tiger')).toBe('A Korean heritage card: x (horangi), meaning tiger.');
-    expect(getMessages('es').landing.persona.teachers.schools.admins(1)).toContain('1 administrador más');
-    expect(getMessages('ko').landing.persona.teachers.schools.size(50, 'hello@example.com')).toBe('학교 하나에 학생은 최대 50명이에요. 더 필요하면 hello@example.com 주소로 문의해 주세요.');
+    // es uses "admin(s)" as the console does (AMENDMENTS-SEATS-ADMINS §9.4: no gender agreement).
+    expect(getMessages('es').landing.persona.teachers.schools.admins(1)).toContain('1 admin más');
+    expect(getMessages('es').landing.persona.teachers.schools.admins(2)).toContain('2 admins más');
+    expect(getMessages('es').landing.persona.teachers.schools.size('hello@example.com')).toBe('¿Necesitas espacio para más estudiantes? Escribe a hello@example.com.');
+    expect(getMessages('ko').landing.persona.teachers.schools.size('hello@example.com')).toBe('학생 자리가 더 필요하면 hello@example.com 주소로 문의해 주세요.');
     expect(getMessages('ko').landing.captures.card('x', 'horangi', 'tiger')).toBe('한국 문화 카드: x(horangi).');
   });
 });
