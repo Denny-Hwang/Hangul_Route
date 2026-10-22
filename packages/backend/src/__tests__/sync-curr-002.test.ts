@@ -259,6 +259,14 @@ describe('/api/sync snapshot: `daily` retention of 14 local days (F-CURR-002 sec
     expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['review:cert', 'daily:2026-10-09:0', 'daily:2026-10-22:1']);
   });
 
+  it('drops a daily entry dated past the latest local day (a clock far ahead), so it never prunes the real ones (section 13)', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const reviews = [dailyOn('2026-10-12', 0), dailyOn('2026-10-22', 0), dailyOn('2026-10-23', 0), dailyOn('2026-12-31', 0)];
+    expect((await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews }), summary })).status).toBe(200);
+    // 2026-10-23 is still a local day somewhere (UTC+14); 2026-12-31 is not.
+    expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['daily:2026-10-12:0', 'daily:2026-10-22:0', 'daily:2026-10-23:0']);
+  });
+
   it('a list with nothing to prune is stored unchanged', async () => {
     const auth = await register(DEVICE_A, 'profile:suni');
     const reviews = [dailyOn('2026-10-21', 0), dailyOn('2026-10-22', 0)];

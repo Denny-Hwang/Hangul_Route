@@ -7,7 +7,8 @@ import { DAILY_REVIEW_RETENTION_DAYS, pruneDailyReviews, type ReviewEntry } from
  * F-CURR-002 section 4.8, `daily` retention (rows CM-3b and CM-14): the Daily Review and each Keep going
  * are `daily` entries whose `scope` is the local day they were played; after every merge, on the client and
  * in the Worker, only the `daily` entries within 14 days of the newest one's `scope` are kept. No other kind
- * is ever pruned. The rule needs no clock, so every side gives the same list.
+ * is ever pruned. The window needs no clock, so every side gives the same list; the latest local day of now only
+ * keeps a scope written by a clock far ahead from setting it (section 13).
  */
 
 const daily = (scope: string, n = 0): ReviewEntry => ({
@@ -52,16 +53,48 @@ describe('pruneDailyReviews (section 4.8)', () => {
   });
 
   it('a year of daily use (a Daily Review and 3 Keep goings every day) stays under 64 daily entries', () => {
+    // Entries as the app writes them: a random id, 10 item ids and the ones missed (dailyEntry in the app).
+    const realistic = (scope: string, n: number): ReviewEntry => ({
+      id: `daily:${scope}:${(0x7fffffff - n * 7919).toString(36)}`,
+      kind: 'daily',
+      generatedAt: `${scope}T18:${String(10 + n).padStart(2, '0')}:42.123Z`,
+      scope,
+      itemIds: Array.from({ length: 10 }, (_, i) => `lex:word-${String(n * 10 + i).padStart(3, '0')}~sense`),
+      resultStars: 2,
+      missedItemIds: Array.from({ length: 3 }, (_, i) => `lex:word-${String(n * 10 + i).padStart(3, '0')}~sense`),
+    });
     let list: ReviewEntry[] = [certificate];
     for (let day = 0; day < 366; day += 1) {
       const scope = addDays('2026-01-01', day);
-      for (let n = 0; n < 4; n += 1) list = pruneDailyReviews([...list, daily(scope, n)]);
+      for (let n = 0; n < 4; n += 1) list = pruneDailyReviews([...list, realistic(scope, n)]);
       expect(list.filter((r) => r.kind === 'daily').length).toBeLessThan(64);
     }
     expect(list.filter((r) => r.kind === 'daily')).toHaveLength(56);
     expect(list).toContain(certificate);
-    // The size of the kept list, as JSON, is bounded too (about 100 B an entry).
-    expect(JSON.stringify(list).length).toBeLessThan(64 * 200);
+    // The size of the kept list, as JSON, is bounded too: about 400 B an entry, so under 32 KB in all.
+    const bytes = new TextEncoder().encode(JSON.stringify(list)).length;
+    expect(bytes).toBeGreaterThan(56 * 300);
+    expect(bytes).toBeLessThan(32 * 1024);
+  });
+
+  it('a daily scope past the latest local day (a clock far ahead) never prunes the real entries, today included', () => {
+    const latestDay = '2026-10-23';
+    const future = daily('2026-11-30', 9);
+    const real = [daily('2026-10-01'), daily('2026-10-15'), daily('2026-10-22'), daily('2026-10-22', 1)];
+    // Unbounded, the far-future entry anchors the window and prunes every real one (the bug the bound fixes).
+    expect(pruneDailyReviews([...real, future])).toEqual([future]);
+    // The app keeps it as it is; it sets no window, so only the 14-day rule from today's entries applies.
+    expect(pruneDailyReviews([...real, future], { latestDay })).toEqual([daily('2026-10-15'), daily('2026-10-22'), daily('2026-10-22', 1), future]);
+    // The Worker drops it.
+    expect(pruneDailyReviews([...real, future], { latestDay, dropLater: true })).toEqual([daily('2026-10-15'), daily('2026-10-22'), daily('2026-10-22', 1)]);
+    // The entry just written for today stays after a pulled future one.
+    expect(pruneDailyReviews([future, daily('2026-10-22', 5)], { latestDay })).toEqual([future, daily('2026-10-22', 5)]);
+    // A scope on the latest day itself is a real one (a time zone ahead of UTC).
+    const ahead = [daily('2026-10-23'), daily('2026-10-09')];
+    expect(pruneDailyReviews(ahead, { latestDay, dropLater: true })).toEqual([daily('2026-10-23')]);
+    const onlyFuture = [future];
+    expect(pruneDailyReviews(onlyFuture, { latestDay })).toBe(onlyFuture);
+    expect(pruneDailyReviews(onlyFuture, { latestDay, dropLater: true })).toEqual([]);
   });
 
   it('gives the same result on every side: idempotent, and a union of pruned lists prunes to the prune of the union', () => {
